@@ -198,7 +198,27 @@ private:
 };
 
 int httpHeaderParseQuotedString(const char *start, const int len, String *val);
-int httpHeaderParseQuotedString(const char *start, const int len, SBuf &val);
+
+class ParseException: public TextException {
+    public:
+    ParseException(const char *message, const SourceLocation &location) :
+        TextException(message, location)
+        {}
+};
+/**
+ * Parses a quoted-string field (RFC 2616 section 2.2), complains if
+ * something went wrong, returns non-zero on success.
+ * Un-escapes quoted-pair characters found within the string.
+ * start should point at the first double-quote.
+ *
+ * Can throw a ParseError if parsing has an error
+ *
+ * XXX: This is meant to be a temporary bridge to support moving from
+ * String to SBuf. Compared to the String-based variant, it contains
+ * a performance regression. The underlying code needs to be reimplemented
+ * here, avoiding the performance regression
+ */
+SBuf SlowlyParseQuotedString(const char *start, const int len);
 
 /// quotes string using RFC 7230 quoted-string rules
 SBuf httpHeaderQuoteString(const char *raw);

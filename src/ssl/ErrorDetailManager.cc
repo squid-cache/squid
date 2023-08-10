@@ -238,20 +238,27 @@ Ssl::ErrorDetailFile::parse()
                 entry.error_no = ssl_error;
                 entry.name = StringToSBuf(errorName);
                 String tmp = parser.getByName("detail");
-                const int detailsParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), entry.detail);
-                tmp = parser.getByName("descr");
-                const int descrParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), entry.descr);
-                // TODO: Validate "descr" and "detail" field values.
-
-                if (!detailsParseOk || !descrParseOk) {
-                    debugs(83, DBG_IMPORTANT, "WARNING: missing important field for detail error: " <<  errorName);
+                try {
+                    entry.detail = SlowlyParseQuotedString(tmp.termedBuf(), tmp.size());
+                } catch (ParseException &) {
+                    debugs(83, DBG_IMPORTANT, "WARNING: missing important field for detail error: " << entry.name);
                     return false;
                 }
+                tmp = parser.getByName("descr");
+                try {
+                    entry.descr = SlowlyParseQuotedString(tmp.termedBuf(), tmp.size());
+                } catch (ParseException &) {
+                    debugs(83, DBG_IMPORTANT, "WARNING: missing important description for detail error: " << entry.name);
+                    return false;
+                }
+                // TODO: Validate "descr" and "detail" field values.
 
-            } else if (!Ssl::ErrorIsOptional(errorName.termedBuf())) {
-                debugs(83, DBG_IMPORTANT, "WARNING: invalid error detail name: " << errorName);
-                return false;
-            }
+                }
+                else if (!Ssl::ErrorIsOptional(errorName.termedBuf()))
+                {
+                    debugs(83, DBG_IMPORTANT, "WARNING: invalid error detail name: " << errorName);
+                    return false;
+                }
 
         }// else {only spaces and black lines; just ignore}
 

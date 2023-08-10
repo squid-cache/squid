@@ -234,17 +234,15 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
     return 1;
 }
 
-/**
- * Temporary bridge for the String-based variant to support conversion
- * from SquidString to SBuf
- * TODO: make this the primary implementation
- */
-int httpHeaderParseQuotedString(const char *start, const int len, SBuf &val)
+SBuf
+SlowlyParseQuotedString(const char *start, const int len)
 {
     String s;
     auto rv = httpHeaderParseQuotedString(start, len, &s);
-    val = StringToSBuf(s);
-    return rv;
+    if (0 == rv)
+        throw ParseException("Cannot parse quoted string",Here());
+
+    return StringToSBuf(s);
 }
 
 SBuf
