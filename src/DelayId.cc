@@ -22,8 +22,8 @@
 #include "DelayPools.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
-#include "SquidConfig.h"
 #include "sbuf/StringConvert.h"
+#include "SquidConfig.h"
 
 DelayId::DelayId () : pool_ (0), compositeId(nullptr), markedAsNoDelay(false)
 {}

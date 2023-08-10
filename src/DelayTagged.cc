@@ -116,7 +116,7 @@ DelayTagged::id(CompositePoolNode::CompositeSelectionDetails &details)
     return new Id(this, details.tag);
 }
 
-DelayTaggedBucket::DelayTaggedBucket(const SBuf &aTag) : tag (aTag)
+DelayTaggedBucket::DelayTaggedBucket(const SBuf &aTag): tag(aTag)
 {
     debugs(77, 3, "DelayTaggedBucket::DelayTaggedBucket");
 }
@@ -133,7 +133,7 @@ DelayTaggedBucket::stats(StoreEntry *entry) const
     theBucket.stats(entry);
 }
 
-DelayTagged::Id::Id(DelayTagged::Pointer aDelayTagged, const SBuf &aTag) : theTagged(aDelayTagged)
+DelayTagged::Id::Id(DelayTagged::Pointer aDelayTagged, const SBuf &aTag): theTagged(aDelayTagged)
 {
     theBucket = new DelayTaggedBucket(aTag);
     DelayTaggedBucket::Pointer const *existing = theTagged->buckets.find(theBucket, DelayTaggedCmp);
