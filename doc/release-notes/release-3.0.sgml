@@ -19,7 +19,7 @@ This new release is available for download from <url url="http://www.squid-cache
 
 A large number of the show-stopper bugs have been fixed along with general improvements to the ICAP support and additional Languages.
 
-We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting"> for how to submit a 
+We welcome feedback and bug reports. If you find a bug, please see <url url="https://wiki.squid-cache.org/SquidFaq/BugReporting"> for how to submit a
 report with a stack trace.
 
 <sect>Known issues

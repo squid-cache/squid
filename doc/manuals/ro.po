@@ -1226,7 +1226,7 @@ msgstr ""
 msgid ""
 "This manual page only lists the command line arguments.  For details on how "
 "to configure Squid see the file B<@SYSCONFDIR@/squid.conf.documented,> the "
-"Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the "
+"Squid wiki FAQ and examples at https://wiki.squid-cache.org/ , or the "
 "configuration manual on the Squid home page"
 msgstr ""
 

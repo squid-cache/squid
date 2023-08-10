@@ -185,7 +185,7 @@ msgstr ""
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:86 helpers/basic_auth/LDAP/basic_ldap_auth.8:312 helpers/basic_auth/NCSA/basic_ncsa_auth.8:58 helpers/basic_auth/PAM/basic_pam_auth.8:100 helpers/basic_auth/RADIUS/basic_radius_auth.8:111 helpers/external_acl/ldap_group/squid_ldap_group.8:261 helpers/external_acl/session/squid_session.8:80 helpers/external_acl/unix_group/squid_unix_group.8:82 src/squid.8.in:251
 msgid ""
 "Bug reports need to be made in English.  See "
-"http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you "
+"https://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you "
 "need to include with your bug report."
 msgstr ""
 
@@ -1245,7 +1245,7 @@ msgstr ""
 msgid ""
 "This manual page only lists the command line arguments.  For details on how "
 "to configure Squid see the file B<@SYSCONFDIR@/squid.conf.documented,> the "
-"Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the "
+"Squid wiki FAQ and examples at https://wiki.squid-cache.org/ , or the "
 "configuration manual on the Squid home page"
 msgstr ""
 
@@ -1562,7 +1562,7 @@ msgstr ""
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:67 tools/squidclient.1:179
 msgid ""
-"See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what "
+"See https://wiki.squid-cache.org/SquidFaq/BugReporting for details of what "
 "you need to include with your bug report."
 msgstr ""
 
