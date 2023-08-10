@@ -676,7 +676,7 @@ Security::ErrorDetail::err_descr() const
     if (!error_no)
         return "[No Error]";
 #if USE_OPENSSL
-    if (const char *err = detailEntry.descr.termedBuf())
+    if (const char *err = detailEntry.descr.c_str())
         return err;
 #endif
     return "[Not available]";
