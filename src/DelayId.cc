@@ -24,7 +24,6 @@
 #include "HttpRequest.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
-#include "sbuf/StringConvert.h"
 
 DelayId::DelayId () : pool_ (0), compositeId(nullptr), markedAsNoDelay(false)
 {}
