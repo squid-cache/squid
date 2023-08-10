@@ -95,7 +95,6 @@ public:
     std::string ifdef;
     LineList doc;
     LineList cfgLines; ///< between CONFIG_START and CONFIG_END
-
     int array_flag = 0; ///< TYPE is a raw array[] declaration
 
     /// whether this is a "REPETITIONS: update" entry

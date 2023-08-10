@@ -150,7 +150,7 @@ public:
     bool encryptTransport = false;
 };
 
-// TODO: Move this declaration?
+// TODO: Move this declaration.
 /// A combination of PeerOptions and the corresponding Context. Used by Squid
 /// TLS client code.
 class PeerContext: public RefCountable
@@ -158,7 +158,7 @@ class PeerContext: public RefCountable
 public:
     explicit PeerContext(ConfigParser &);
 
-    /// XXX: Document.
+    /// creates TLS context reflecting the configured options
     void open();
 
     PeerOptions options; ///< context configuration
@@ -168,8 +168,7 @@ public:
     std::unique_ptr<ACLList> preconditions; // XXX: Use std::unique_ptr<>
 };
 
-// TODO: Move this declaration
-
+// TODO: Move this declaration.
 /// Manages PeerContext objects representing all
 /// tls_outgoing_options_for_retries directives in squid.conf.
 class PeerContexts
@@ -178,11 +177,8 @@ public:
     /// parses a single tls_outgoing_options_for_retries directive
     void parseOneDirective(ConfigParser &);
 
-    /// XXX: Document.
+    /// opens all configured contexts; \sa PeerContext::open()
     void open();
-
-    /// report configured contexts using squid.conf syntax
-    // TODO: void dump(std::ostream &) const;
 
     /// transaction-matching PeerContext (or nil)
     PeerContextPointer findContext(ACLChecklist &) const;
