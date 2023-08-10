@@ -62,7 +62,7 @@ private:
         MEMPROXY_CLASS(DelayTagged::Id);
 
     public:
-        Id(RefCount<DelayTagged>, const SBuf &);
+        Id(const RefCount<DelayTagged> &, const SBuf &);
         ~Id() override;
         int bytesWanted (int min, int max) const override;
         void bytesIn(int qty) override;

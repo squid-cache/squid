@@ -133,7 +133,7 @@ DelayTaggedBucket::stats(StoreEntry *entry) const
     theBucket.stats(entry);
 }
 
-DelayTagged::Id::Id(DelayTagged::Pointer aDelayTagged, const SBuf &aTag): theTagged(aDelayTagged)
+DelayTagged::Id::Id(const DelayTagged::Pointer &aDelayTagged, const SBuf &aTag): theTagged(aDelayTagged)
 {
     theBucket = new DelayTaggedBucket(aTag);
     DelayTaggedBucket::Pointer const *existing = theTagged->buckets.find(theBucket, DelayTaggedCmp);
