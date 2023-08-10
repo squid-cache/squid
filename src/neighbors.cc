@@ -514,7 +514,6 @@ neighbors_init(void)
     neighborsRegisterWithCacheManager();
 
     if (Comm::IsConnOpen(icpIncomingConn)) {
-        using RawCachePeers = std::vector<CachePeer *, PoolingAllocator<CachePeer*> >;
         RawCachePeers peersToRemove;
 
         for (const auto &thisPeer: CurrentCachePeers()) {
