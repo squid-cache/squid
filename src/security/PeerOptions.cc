@@ -852,7 +852,6 @@ Security::PeerContext::open()
         throw TextException("failed to initialize a TLS context for Squid-originated connections", Here());
 
 #if USE_OPENSSL
-    // XXX: Check whether this is needed for retries.
     Ssl::useSquidUntrusted(raw.get());
 #endif
 }
