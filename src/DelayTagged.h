@@ -21,7 +21,6 @@
 #include "DelaySpec.h"
 #include "sbuf/SBuf.h"
 #include "splay.h"
-#include "sbuf/StringConvert.h"
 
 /// \ingroup DelayPoolsAPI
 class DelayTaggedBucket : public RefCountable
@@ -63,11 +62,7 @@ private:
         MEMPROXY_CLASS(DelayTagged::Id);
 
     public:
-<<<<<<< HEAD
         Id(const RefCount<DelayTagged> &, const SBuf &);
-=======
-        Id (RefCount<DelayTagged>, const SBuf &);
->>>>>>> 5a8372f875 (Convert Strings to SBu)
         ~Id() override;
         int bytesWanted (int min, int max) const override;
         void bytesIn(int qty) override;
