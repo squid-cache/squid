@@ -31,7 +31,7 @@ public:
     typedef RefCount<DelayTaggedBucket> Pointer;
 
     void stats(StoreEntry *)const;
-    DelayTaggedBucket(const SBuf &aTag);
+    explicit DelayTaggedBucket(const SBuf &aTag);
     ~DelayTaggedBucket() override;
     DelayBucket theBucket;
     const SBuf tag;
