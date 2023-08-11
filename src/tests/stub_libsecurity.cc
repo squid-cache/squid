@@ -108,6 +108,8 @@ EncryptorAnswer &PeerConnector::answer() STUB_RETREF(EncryptorAnswer)
 
 #include "security/PeerOptions.h"
 Security::PeerOptions Security::ProxyOutgoingConfig;
+Security::FuturePeerContextPointer Security::DefaultOutgoingContext;
+
 Security::PeerOptions::PeerOptions() {
 #if USE_OPENSSL
     parsedOptions = 0;

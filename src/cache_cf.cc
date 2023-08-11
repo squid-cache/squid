@@ -998,7 +998,7 @@ configDoConfigure(void)
 #if USE_OPENSSL
         Ssl::useSquidUntrusted(Config.ssl_client.sslContext.get());
 #endif
-        Config.ssl_client.defaultContext = MakeFuture(Security::ProxyOutgoingConfig, Config.ssl_client.sslContext);
+        Security::DefaultOutgoingContext = MakeFuture(Security::ProxyOutgoingConfig, Config.ssl_client.sslContext);
     }
 
     if (Config.ssl_client.retriesContexts)
@@ -3944,7 +3944,7 @@ configFreeMemory(void)
     free_all();
     Dns::ResolveClientAddressesAsap = false;
     Config.ssl_client.sslContext.reset();
-    Config.ssl_client.defaultContext = nullptr;
+    Security::DefaultOutgoingContext = nullptr;
 #if USE_OPENSSL
     Ssl::unloadSquidUntrusted();
 #endif

@@ -27,7 +27,7 @@ Security::BlindPeerConnector::peerContext() const
     if (peer && peer->secure.encryptTransport)
         return peer->peerContext();
 
-    return tlsContext_ ? tlsContext_ : ::Config.ssl_client.defaultContext;
+    return tlsContext_ ? tlsContext_ : DefaultOutgoingContext;
 }
 
 bool
