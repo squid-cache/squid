@@ -3088,9 +3088,10 @@ DOC_START
 	Enables same-destination retries (with new custom TLS options) after
 	ERR_SECURE_CONNECT_FAIL.
 
-		tls_outgoing_options_for_retries [option]... [if [!]<acl>...]
+		tls_outgoing_options_for_retries <option>... [if [!]<acl>...]
 
-	See tls_outgoing_options for options documentation.
+	See tls_outgoing_options for documentation of recognized options,
+	including "ciphers=..." and "cafile=...".
 
 	This directive is consulted whenever an attempt to establish a TLS
 	connection with an origin server or cache_peer fails with

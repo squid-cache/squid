@@ -833,6 +833,12 @@ Security::PeerContext::PeerContext(ConfigParser &parser)
             break; // no more options and no ACLs
     }
     options.parseOptions();
+
+    if (!options.encryptTransport) {
+        // either no explicit options at all, or the last option was "disable"
+        // TODO: Auto-report failed directive name when reporting parsing exceptions
+        throw TextException("tls_outgoing_options_for_retries requires TLS options", Here());
+    }
 }
 
 void
