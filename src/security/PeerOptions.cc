@@ -932,25 +932,3 @@ Configuration::Component<Security::PeerContexts*>::Free(Security::PeerContexts *
 
 } // namespace Configuration
 
-/* Security::FuturePeerContext */
-
-Security::FuturePeerContext::FuturePeerContext(PeerOptions &o, const ContextPointer &c):
-    options(o),
-    raw(c)
-{
-}
-
-Security::FuturePeerContextPointer
-MakeFuture(const Security::PeerContextPointer &ctx)
-{
-    if (!ctx)
-        return nullptr;
-    return new Security::FuturePeerContext(ctx->options, ctx->raw);
-}
-
-Security::FuturePeerContextPointer
-MakeFuture(Security::PeerOptions &options, const Security::ContextPointer &rawContext)
-{
-    return new Security::FuturePeerContext(options, rawContext);
-}
-

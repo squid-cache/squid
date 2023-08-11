@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "base/ClpMap.h"
 #include "compat/cppunit.h"
-#include "SquidConfig.h"
 #include "unitTestMain.h"
 
 #include <ctime>
@@ -67,8 +66,6 @@ protected:
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestClpMap );
-
-class SquidConfig Config;
 
 void
 TestClpMap::addSequenceOfEntriesToMap(Map &m, size_t count, const Map::mapped_type startWith, const Map::Ttl ttl)

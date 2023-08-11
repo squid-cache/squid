@@ -194,7 +194,10 @@ public:
 class FuturePeerContext: public RefCountable
 {
 public:
-    FuturePeerContext(PeerOptions &, const ContextPointer &);
+    FuturePeerContext(PeerOptions &o, const ContextPointer &c): options(o), raw(c)
+    {
+    }
+
     PeerOptions &options; ///< TLS context configuration
     const ContextPointer &raw; ///< TLS context configured using options
 };
@@ -210,9 +213,20 @@ void parse_securePeerOptions(Security::PeerOptions *);
 #define dump_securePeerOptions(e,n,x) do { (e)->appendf(n); (x).dumpCfg((e),""); (e)->append("\n",1); } while(false)
 
 // for modern code forced to use this shim
-Security::FuturePeerContextPointer MakeFuture(const Security::PeerContextPointer &);
+inline Security::FuturePeerContextPointer
+MakeFuture(const Security::PeerContextPointer &ctx)
+{
+    if (!ctx)
+        return nullptr;
+    return new Security::FuturePeerContext(ctx->options, ctx->raw);
+}
+
 // for legacy code that will be refactored/removed together with this shim
-Security::FuturePeerContextPointer MakeFuture(Security::PeerOptions &, const Security::ContextPointer &);
+inline Security::FuturePeerContextPointer
+MakeFuture(Security::PeerOptions &options, const Security::ContextPointer &rawContext)
+{
+    return new Security::FuturePeerContext(options, rawContext);
+}
 
 #endif /* SQUID_SRC_SECURITY_PEEROPTIONS_H */
 
