@@ -3094,8 +3094,7 @@ DOC_START
 	including "ciphers=..." and "cafile=...".
 
 	This directive is consulted whenever an attempt to establish a TLS
-	connection with an origin server or cache_peer fails with
-	ERR_SECURE_CONNECT_FAIL:
+	connection with an origin server fails with ERR_SECURE_CONNECT_FAIL:
 
 	* If no rules are configured or if no configured rules matched, Squid does
 	  not treat ERR_SECURE_CONNECT_FAIL outcome specially (i.e. Squid may
@@ -3120,6 +3119,10 @@ DOC_START
 	Directives are evaluated in configuration order. The first matching
 	directive wins and stops further evaluation. A directive without ACLs
 	always matches when evaluated.
+
+	This feature has no effect on TLS cache_peers. Admins should use
+	cache_peer directives to customize TLS settings for those connections.
+	However, TLS connections through plain-text cache_peers may be retried.
 
 	This directive is handy in environments where Squid should communicate
 	using strict TLS options by default (see tls_outgoing_options) but may

@@ -511,6 +511,16 @@ FwdState::reactToSecureConnectFailure()
         return;
     }
 
+    if (const auto cachePeer = destinationReceipt->getPeer()) {
+        if (cachePeer->secure.encryptTransport) {
+            debugs(17, 5, "will not retry a connection to TLS cache_peer: " << destinationReceipt);
+            return;
+        }
+        // else: ERR_SECURE_CONNECT_FAIL implies that we were just tunneling
+        // through a plain-text cache_peer to a TLS origin server and may need
+        // to retry that TLS connection to the origin server with new options.
+    }
+
     if (destinationReceipt.tlsContext()) {
         debugs(17, 3, "will not retry twice: " << destinationReceipt);
         return;
