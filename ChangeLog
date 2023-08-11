@@ -1,3 +1,8 @@
+Changes in squid-6.3 (some time in September 2023):
+
+	- ESI: Fix build [-Wsingle-bit-bitfield-constant-conversion]
+	- ... and documentation updates
+
 Changes in squid-6.2 (06 Aug 2023):
 
 	- Bug 5187: Work around REQMOD satisfaction regression
