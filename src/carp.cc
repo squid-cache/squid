@@ -59,9 +59,6 @@ carpInit(void)
 
     RawCachePeers rawCarpPeers;
     for (auto p = Config.peers; p; p = p->next) {
-        if (!cbdataReferenceValid(p))
-            continue;
-
         if (!p->options.carp)
             continue;
 
