@@ -892,22 +892,25 @@ helper::handleFewerServers(const bool madeProgress)
 }
 
 void
-helper::handleNoServers()
+helper::clearQueue()
 {
-    Assure(!GetFirstAvailable(this));
+    if (queue.empty())
+        return;
+
+    Assure(!childs.n_active);
+
     // no helper servers means nobody can advance our queued transactions
-    if (queue.size()) {
-        debugs(80, DBG_CRITICAL, "ERROR: Dropping " << queue.size() << ' ' <<
-               id_name << " helper requests due to lack of helper processes");
-        // similar to HelperServerBase::dropQueued()
-        while (const auto r = nextRequest()) {
-            void *cbdata;
-            if (cbdataReferenceValidDone(r->request.data, &cbdata)) {
-                r->reply.result = Helper::Unknown;
-                r->request.callback(cbdata, r->reply);
-            }
-            delete r;
+
+    debugs(80, DBG_CRITICAL, "ERROR: Dropping " << queue.size() << ' ' <<
+           id_name << " helper requests due to lack of helper processes");
+    // similar to HelperServerBase::dropQueued()
+    while (const auto r = nextRequest()) {
+        void *cbdata;
+        if (cbdataReferenceValidDone(r->request.data, &cbdata)) {
+            r->reply.result = Helper::Unknown;
+            r->request.callback(cbdata, r->reply);
         }
+        delete r;
     }
 }
 
@@ -1542,30 +1545,28 @@ static void
 helperKickQueue(helper * hlp)
 {
     Helper::Xaction *r;
+    helper_server *srv;
 
-    if (auto *srv = GetFirstAvailable(hlp)) {
-        while (srv && (r = hlp->nextRequest())) {
-            helperDispatch(srv, r);
-            srv = GetFirstAvailable(hlp);
-        }
-    } else {
-        hlp->handleNoServers();
-    }
+    while ((srv = GetFirstAvailable(hlp)) && (r = hlp->nextRequest()))
+        helperDispatch(srv, r);
+
+    if (!hlp->childs.n_active)
+        hlp->clearQueue();
 }
 
 static void
 helperStatefulKickQueue(statefulhelper * hlp)
 {
     Helper::Xaction *r;
-
-    if (auto *srv = StatefulGetFirstAvailable(hlp)) {
-        while (srv && (r = hlp->nextRequest())) {
-            helperStatefulDispatch(srv, r);
-            srv = StatefulGetFirstAvailable(hlp);
-        }
-    } else {
-        hlp->handleNoServers();
+    helper_stateful_server *srv;
+    while ((srv = StatefulGetFirstAvailable(hlp)) && (r = hlp->nextRequest())) {
+        debugs(84, 5, "found srv-" << srv->index);
+        hlp->reserveServer(srv);
+        helperStatefulDispatch(srv, r);
     }
+
+    if (!hlp->childs.n_active)
+        hlp->clearQueue();
 }
 
 static void
