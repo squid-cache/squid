@@ -165,7 +165,7 @@ public:
     ContextPointer raw; ///< context configured using options
 
     /// restrict usage to matching transactions
-    std::unique_ptr<ACLList> preconditions; // XXX: Use std::unique_ptr<>
+    std::unique_ptr<ACLList> preconditions;
 };
 
 // TODO: Move this declaration.

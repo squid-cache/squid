@@ -499,7 +499,7 @@ FwdState::reactToZeroSizeObject()
     }
 }
 
-/// ERR_SECURE_CONNECT_FAIL requires special adjustments
+/// ERR_SECURE_CONNECT_FAIL may require special adjustments
 void
 FwdState::reactToSecureConnectFailure()
 {
@@ -1044,14 +1044,14 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
     HttpRequest::Pointer requestPointer = request;
     const auto callback = asyncCallback(17, 4, FwdState::connectedToPeer, this);
     const auto sslNegotiationTimeout = connectingTimeout(conn);
-    const auto &tlsOptions = destinationReceipt.tlsContext();
+    const auto &tlsContext = MakeFuture(destinationReceipt.tlsContext());
     Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
     if (request->flags.sslPeek)
-        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, MakeFuture(tlsOptions), clientConn, callback, al, sslNegotiationTimeout);
+        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, tlsContext, clientConn, callback, al, sslNegotiationTimeout);
     else
 #endif
-        connector = new Security::BlindPeerConnector(requestPointer, conn, MakeFuture(tlsOptions), callback, al, sslNegotiationTimeout);
+        connector = new Security::BlindPeerConnector(requestPointer, conn, tlsContext, callback, al, sslNegotiationTimeout);
     connector->noteFwdPconnUse = true;
     encryptionWait.start(connector, callback);
 }

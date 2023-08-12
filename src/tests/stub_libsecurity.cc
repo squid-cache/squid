@@ -80,7 +80,7 @@ PeerConnector::PeerConnector(
     const Security::FuturePeerContextPointer &,
     const AsyncCallback<EncryptorAnswer> &,
     const AccessLogEntryPointer &,
-    const time_t):
+    time_t):
     AsyncJob("Security::PeerConnector") {STUB}
 PeerConnector::~PeerConnector() STUB
 void PeerConnector::start() STUB
