@@ -227,18 +227,20 @@ IpCacheLookupForwarder::IpCacheLookupForwarder(IPH *fun, void *data):
 }
 
 void
-IpCacheLookupForwarder::finalCallback(const Dns::CachedIps *addrs, const Dns::LookupDetails &details)
+IpCacheLookupForwarder::finalCallback(const Dns::CachedIps * const possiblyEmptyAddrs, const Dns::LookupDetails &details)
 {
+    // TODO: Consider removing nil-supplying IpcacheStats.invalid code and refactoring accordingly.
+    // may be nil but is never empty
+    const auto addrs = (possiblyEmptyAddrs && possiblyEmptyAddrs->empty()) ? nullptr : possiblyEmptyAddrs;
+
     debugs(14, 7, addrs << " " << details);
     if (receiverObj.set()) {
         if (auto receiver = receiverObj.valid())
             receiver->noteIps(addrs, details);
         receiverObj.clear();
     } else if (receiverFun) {
-        if (receiverData.valid()) {
-            const Dns::CachedIps *emptyIsNil = (addrs && !addrs->empty()) ? addrs : nullptr;
-            receiverFun(emptyIsNil, details, receiverData.validDone());
-        }
+        if (receiverData.valid())
+            receiverFun(addrs, details, receiverData.validDone());
         receiverFun = nullptr;
     }
 }
