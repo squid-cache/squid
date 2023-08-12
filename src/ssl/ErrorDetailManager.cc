@@ -73,7 +73,7 @@ Ssl::ErrorDetailsList::getErrorDetail(Security::ErrorCode value)
 {
     const ErrorDetails::const_iterator it = theList.find(value);
     if (it != theList.end()) {
-        SBuf rv(it->second.detail);
+        static SBuf rv(it->second.detail);
         return rv.c_str();
     }
 
