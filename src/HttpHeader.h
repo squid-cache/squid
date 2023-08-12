@@ -211,7 +211,7 @@ class ParseException: public TextException {
  * Un-escapes quoted-pair characters found within the string.
  * start should point at the first double-quote.
  *
- * Can throw a ParseError if parsing has an error
+ * Can throw a ParseException if parsing fails
  *
  * XXX: This is meant to be a temporary bridge to support moving from
  * String to SBuf. Compared to the String-based variant, it contains
