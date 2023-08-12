@@ -86,7 +86,8 @@ private:
     const char *cn() const;
     const char *notbefore() const;
     const char *notafter() const;
-    const char *err_code() const;
+    const SBuf err_code() const;
+    const char *err_code_legacy() const;
     const char *err_descr() const;
     const char *err_lib_error() const;
     size_t convert(const char *code, const char **value) const;

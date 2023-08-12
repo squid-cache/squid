@@ -45,7 +45,7 @@ public:
      * \return true on success, false otherwise
      */
     bool getRecord(Security::ErrorCode value, ErrorDetailEntry &entry);
-    const char *getErrorDescr(Security::ErrorCode value); ///< an error description for an error if exist in list.
+    const SBuf getErrorDescr(Security::ErrorCode value); ///< an error description for an error if exist in list. Returns empty SBuf if not found
     const char *getErrorDetail(Security::ErrorCode value); ///< an error details for an error if exist in list.
 
     String errLanguage; ///< The language of the error-details.txt template, if any
@@ -75,7 +75,7 @@ public:
      * \return true on success, false otherwise
      */
     bool getErrorDetail(Security::ErrorCode value, const HttpRequest::Pointer &request, ErrorDetailEntry &entry);
-    const char *getDefaultErrorDescr(Security::ErrorCode value); ///< the default error description for a given error
+    const SBuf getDefaultErrorDescr(Security::ErrorCode value); ///< the default error description for a given error
     const char *getDefaultErrorDetail(Security::ErrorCode value); ///< the default error details for a given error
 
 private:

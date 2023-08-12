@@ -39,7 +39,8 @@ GetErrorName(const Security::ErrorCode code, const bool prefixRawCode = false)
 }
 
 /// A short description of the TLS error "value"
-const char *GetErrorDescr(Security::ErrorCode value);
+const SBuf
+GetErrorDescr(Security::ErrorCode value);
 
 /// \return true if the TLS error is optional and may not be supported by current squid version
 bool ErrorIsOptional(const char *name);

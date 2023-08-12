@@ -498,7 +498,7 @@ Security::ErrorDetail::setPeerCertificate(const CertPointer &cert)
 SBuf
 Security::ErrorDetail::brief() const
 {
-    SBuf buf(err_code()); // TODO: Upgrade err_code()/etc. to return SBuf.
+    SBuf buf = err_code();
 
     if (lib_error_no) {
 #if USE_OPENSSL
@@ -657,21 +657,26 @@ Security::ErrorDetail::notafter() const
 }
 
 /// textual representation of error_no
-const char *
+const SBuf
 Security::ErrorDetail::err_code() const
 {
 #if USE_OPENSSL
     // try detailEntry first because it is faster
-    if (const char *err = detailEntry.name.c_str())
-        return err;
+    return detailEntry.name;
 #endif
 
-    return ErrorNameFromCode(error_no);
+    return SBuf(ErrorNameFromCode(error_no));
+}
+
+const char *
+Security::ErrorDetail::err_code_legacy() const
+{
+    static SBuf rv = err_code();
+    return rv.c_str();
 }
 
 /// short description of error_no
-const char *
-Security::ErrorDetail::err_descr() const
+const char *Security::ErrorDetail::err_descr() const
 {
     if (!error_no)
         return "[No Error]";
@@ -723,7 +728,7 @@ Security::ErrorDetail::convert(const char *code, const char **value) const
         {"ssl_cn", &ErrorDetail::cn},
         {"ssl_notbefore", &ErrorDetail::notbefore},
         {"ssl_notafter", &ErrorDetail::notafter},
-        {"err_name", &ErrorDetail::err_code},
+        {"err_name", &ErrorDetail::err_code_legacy},
         {"ssl_error_descr", &ErrorDetail::err_descr},
         {"ssl_lib_error", &ErrorDetail::err_lib_error}
     };

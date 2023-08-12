@@ -57,16 +57,15 @@ Ssl::ErrorDetailsList::getRecord(Security::ErrorCode value, ErrorDetailEntry &en
     return false;
 }
 
-const char *
+const SBuf
 Ssl::ErrorDetailsList::getErrorDescr(Security::ErrorCode value)
 {
     const ErrorDetails::const_iterator it = theList.find(value);
     if (it != theList.end()) {
-        SBuf rv(it->second.descr);
-        return rv.c_str();
+        return it->second.descr;
     }
 
-    return nullptr;
+    return SBuf();
 }
 
 const char *
@@ -168,7 +167,7 @@ Ssl::ErrorDetailsManager::getErrorDetail(Security::ErrorCode value, const HttpRe
     return false;
 }
 
-const char *
+const SBuf
 Ssl::ErrorDetailsManager::getDefaultErrorDescr(Security::ErrorCode value)
 {
     return theDefaultErrorDetails->getErrorDescr(value);
