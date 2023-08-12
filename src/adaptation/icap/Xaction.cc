@@ -57,7 +57,7 @@ public:
     Security::FuturePeerContextPointer peerContext() const override {
         // XXX: We should be able to keep the options part constant.
         auto &cfg = const_cast<Adaptation::ServiceConfig&>(icapService->cfg());
-        return MakeFuture(cfg.secure, icapService->sslContext);
+        return MakeLikeFuture(cfg.secure, icapService->sslContext);
     }
 
 private:

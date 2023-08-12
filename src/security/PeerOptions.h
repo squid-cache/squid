@@ -215,18 +215,20 @@ void parse_securePeerOptions(Security::PeerOptions *);
 #define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
 #define dump_securePeerOptions(e,n,x) do { (e)->appendf(n); (x).dumpCfg((e),""); (e)->append("\n",1); } while(false)
 
-// for modern code forced to use this shim
+// For modern code forced to use this shim.
+// XXX: Replace calls with the call parameter.
 inline Security::FuturePeerContextPointer
-MakeFuture(const Security::PeerContextPointer &ctx)
+PassThroughFuture(const Security::PeerContextPointer &ctx)
 {
     if (!ctx)
         return nullptr;
     return new Security::FuturePeerContext(ctx->options, ctx->raw);
 }
 
-// for legacy code that will be refactored/removed together with this shim
+// For legacy code that will be refactored/removed together with this shim.
+// XXX: Replace calls with the right Security::ContextPointer object.
 inline Security::FuturePeerContextPointer
-MakeFuture(Security::PeerOptions &options, const Security::ContextPointer &rawContext)
+MakeLikeFuture(Security::PeerOptions &options, const Security::ContextPointer &rawContext)
 {
     return new Security::FuturePeerContext(options, rawContext);
 }

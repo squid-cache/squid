@@ -998,7 +998,7 @@ configDoConfigure(void)
 #if USE_OPENSSL
         Ssl::useSquidUntrusted(Config.ssl_client.sslContext.get());
 #endif
-        Security::DefaultOutgoingContext = MakeFuture(Security::ProxyOutgoingConfig, Config.ssl_client.sslContext);
+        Security::DefaultOutgoingContext = MakeLikeFuture(Security::ProxyOutgoingConfig, Config.ssl_client.sslContext);
     }
 
     if (Config.ssl_client.retriesContexts)
