@@ -542,7 +542,6 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
         format = "SSL handshake error (%err_name)";
 
     SBuf errDetailStr;
-    assert(format);
     auto remainder = format;
     while (auto p = strchr(remainder, '%')) {
         errDetailStr.append(remainder, p - remainder);
