@@ -25,11 +25,25 @@ namespace Ssl
 
 class ErrorDetailEntry
 {
-public:
+private:
     Security::ErrorCode error_no = 0; ///< TLS error; \see Security::ErrorCode
-    SBuf name; ///< a name for the error
+    SBuf name;   ///< a name for the error
     SBuf detail; ///< for error page %D macro expansion; may contain macros
     SBuf descr;  ///< short error description (for use in debug messages or error pages)
+
+public:
+    bool isSet() { return error_no != 0; }
+    ErrorDetailEntry() = default;
+    ErrorDetailEntry(Security::ErrorCode anErrorNumber, SBuf aName,
+        SBuf aDetail, SBuf aDescription) :
+        error_no(anErrorNumber), name(aName), detail(aDetail), descr(aDescription)
+        {}
+    ErrorDetailEntry(const ErrorDetailEntry& ) = default;
+    ErrorDetailEntry& operator=(const ErrorDetailEntry&) = default;
+    Security::ErrorCode getErrorNumber() const { return error_no; }
+    const SBuf getName() const { return name; }
+    const SBuf getDetail() const{ return detail; }
+    const SBuf getDescription() const { return descr; }
 };
 
 /**

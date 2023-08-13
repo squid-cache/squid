@@ -533,8 +533,10 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
 {
     char const *format = nullptr;
 #if USE_OPENSSL
-    if (Ssl::ErrorDetailsManager::GetInstance().getErrorDetail(error_no, request, detailEntry))
-        format = detailEntry.detail.c_str();
+    if (Ssl::ErrorDetailsManager::GetInstance().getErrorDetail(error_no, request, detailEntry)) {
+        static SBuf s(detailEntry.getDetail());
+        format = s.c_str(); // underlying storage is safe for the lifetime
+    }
 #else
     (void)request;
 #endif
@@ -661,7 +663,7 @@ Security::ErrorDetail::err_code() const
 {
 #if USE_OPENSSL
     // try detailEntry first because it is faster
-    return detailEntry.name;
+    return detailEntry.getName();
 #endif
 
     return SBuf(ErrorNameFromCode(error_no));
@@ -680,9 +682,8 @@ const char *Security::ErrorDetail::err_descr() const
     if (!error_no)
         return "[No Error]";
 #if USE_OPENSSL
-    // if (const char *err = detailEntry.descr.c_str()) {
-    if (!detailEntry.descr.isEmpty()) {
-        static SBuf rv(detailEntry.descr);
+    if (detailEntry.isSet()) {
+        static SBuf rv(detailEntry.getDescription());
         return rv.c_str();
     }
 #endif
@@ -723,6 +724,7 @@ Security::ErrorDetail::err_lib_error() const
 size_t
 Security::ErrorDetail::convert(const char *code, const char **value) const
 {
+    // TODO change this to return SBuf
     typedef const char *(ErrorDetail::*PartDescriber)() const;
     static const std::map<const char*, PartDescriber> PartDescriberByCode = {
         {"ssl_subject", &ErrorDetail::subject},
@@ -735,6 +737,7 @@ Security::ErrorDetail::convert(const char *code, const char **value) const
         {"ssl_lib_error", &ErrorDetail::err_lib_error}
     };
 
+    // TODO why are we doing this? can't we just lookup the map above?
     for (const auto &pair: PartDescriberByCode) {
         const auto len = strlen(pair.first);
         if (strncmp(code, pair.first, len) == 0) {

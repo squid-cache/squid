@@ -59,7 +59,7 @@ Ssl::ErrorDetailsList::getErrorDescr(Security::ErrorCode value)
 {
     const ErrorDetails::const_iterator it = theList.find(value);
     if (it != theList.end()) {
-        return it->second.descr;
+        return it->second.getDescription();
     }
 
     return SBuf();
@@ -70,7 +70,7 @@ Ssl::ErrorDetailsList::getErrorDetail(Security::ErrorCode value)
 {
     const ErrorDetails::const_iterator it = theList.find(value);
     if (it != theList.end()) {
-        static SBuf rv(it->second.detail);
+        static SBuf rv(it->second.getDetail());
         return rv.c_str();
     }
 
@@ -230,23 +230,28 @@ Ssl::ErrorDetailFile::parse()
                     return false;
                 }
 
-                ErrorDetailEntry &entry = theDetails->theList[ssl_error];
-                entry.error_no = ssl_error;
-                entry.name = StringToSBuf(errorName);
+                // ErrorDetailEntry &entry = theDetails->theList[ssl_error];
+                // entry.error_no = ssl_error;
+                // entry.name = StringToSBuf(errorName);
+                const SBuf entryName = StringToSBuf(errorName);
                 String tmp = parser.getByName("detail");
+                SBuf entryDetail, entryDescr;
                 try {
-                    entry.detail = SlowlyParseQuotedString(tmp.termedBuf(), tmp.size());
+                    entryDetail = SlowlyParseQuotedString(tmp.termedBuf(), tmp.size());
                 } catch (ParseException &) {
-                    debugs(83, DBG_IMPORTANT, "WARNING: missing important field for detail error: " << entry.name);
+                    debugs(83, DBG_IMPORTANT, "WARNING: missing important field for detail error: " << entryName);
                     return false;
                 }
                 tmp = parser.getByName("descr");
                 try {
-                    entry.descr = SlowlyParseQuotedString(tmp.termedBuf(), tmp.size());
+                    entryDescr = SlowlyParseQuotedString(tmp.termedBuf(), tmp.size());
                 } catch (ParseException &) {
-                    debugs(83, DBG_IMPORTANT, "WARNING: missing important description for detail error: " << entry.name);
+                    debugs(83, DBG_IMPORTANT, "WARNING: missing important description for detail error: " << entryName);
                     return false;
                 }
+                theDetails->theList[ssl_error] = ErrorDetailEntry(
+                    ssl_error, entryName, entryDetail, entryDescr
+                );
                 // TODO: Validate "descr" and "detail" field values.
 
                 }
