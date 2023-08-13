@@ -2738,6 +2738,18 @@ tests_testEventLoop_LDADD = \
 	$(XTRA_LIBS)
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 
+check_PROGRAMS += tests/testHttpHeaderTools
+tests_testHttpHeaderTools_SOURCES = \
+	tests/testHttpHeaderTools.cc
+nodist_tests_testHttpHeaderTools_SOURCES = \
+	tests/stub_libtime.cc
+tests_testHttpHeaderTools_LDADD = \
+	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testHttpHeaderTools_LDFLAGS = $(LIBADD_DL)
+
 ## Run the unit tests. check_PROGRAMS only builds the binaries.
 TESTS += $(check_PROGRAMS) testHeaders
 
