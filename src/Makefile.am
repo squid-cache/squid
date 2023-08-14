@@ -2740,13 +2740,57 @@ tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpHeaderTools
 tests_testHttpHeaderTools_SOURCES = \
+	globals.cc \
+	HttpHdrContRange.cc \
+	HttpHdrRange.cc \
+	HttpHeader.cc \
+	HttpHeaderTools.cc \
+	String.cc \
+	StrList.cc \
 	tests/testHttpHeaderTools.cc
 nodist_tests_testHttpHeaderTools_SOURCES = \
-	tests/stub_libtime.cc
+	tests/stub_access_log.cc \
+	tests/stub_acl_libapi.cc \
+	tests/stub_cache_cf.cc \
+	tests/stub_cache_manager.cc \
+	tests/stub_cbdata.cc \
+	tests/stub_client_side.cc \
+	tests/stub_debug.cc \
+	tests/stub_errorpage.cc \
+	tests/stub_ETag.cc \
+	tests/stub_fatal.cc \
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_HttpHdrCc.cc \
+	tests/stub_HttpHdrSc.cc \
+	tests/stub_HttpReply.cc \
+	tests/stub_HttpRequest.cc \
+	tests/stub_libanyp.cc \
+	tests/stub_libformat.cc \
+	tests/stub_libhttp.cc \
+	tests/stub_libip.cc \
+	tests/stub_libipc.cc \
+	tests/stub_libmem.cc \
+	tests/stub_libmgr.cc \
+	tests/stub_libsecurity.cc \
+	tests/stub_libtime.cc \
+	tests/stub_MemBuf.cc \
+	tests/stub_mime.cc \
+	tests/stub_StatHist.cc \
+	tests/stub_store_stats.cc \
+	tests/stub_store.cc
 tests_testHttpHeaderTools_LDADD = \
+	acl/libstate.la \
 	base/libbase.la \
+	libsquid.la \
+	sbuf/libsbuf.la \
+	security/libsecurity.la \
+	parser/libparser.la \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
+	$(SSL_LIBS) \
+	$(SSLLIB) \
+	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpHeaderTools_LDFLAGS = $(LIBADD_DL)
 

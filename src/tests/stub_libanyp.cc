@@ -40,3 +40,4 @@ int matchDomainName(const char *, const char *, enum MatchDomainNameFlags) STUB_
 bool urlCheckRequest(const HttpRequest *) STUB_RETVAL(false)
 void urlExtMethodConfigure() STUB
 
+const char *AnyP::ProtocolType_str[] = {""};
