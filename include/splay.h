@@ -24,7 +24,7 @@ public:
     Value data;
     mutable SplayNode<V> *left;
     mutable SplayNode<V> *right;
-    mutable SplayNode<V> *visit_thread_up;
+    mutable SplayNode<V> *visitThreadUp;
 
     SplayNode<V> const * start() const;
     SplayNode<V> const * finish() const;
@@ -92,7 +92,7 @@ private:
 SQUIDCEXTERN int splayLastResult;
 
 template<class V>
-SplayNode<V>::SplayNode(const Value &someData): data(someData), left(nullptr), right(nullptr), visit_thread_up(nullptr) {}
+SplayNode<V>::SplayNode(const Value &someData): data(someData), left(nullptr), right(nullptr), visitThreadUp(nullptr) {}
 
 template<class V>
 SplayNode<V> const *
@@ -235,7 +235,7 @@ Splay<V>::visitEach(Visitor &visitor) const
 {
     // In-order walk through tree using modified Morris Traversal: To avoid a
     // leftover thread up (and, therefore, a fatal loop in the tree) due to a
-    // visitor exception, we use an extra pointer visit_thread_up instead of
+    // visitor exception, we use an extra pointer visitThreadUp instead of
     // manipulating the right child link and interfering with other methods
     // that use that link.
     // This also helps to distinguish between up and down movements, eliminating
@@ -246,22 +246,22 @@ Splay<V>::visitEach(Visitor &visitor) const
         return;
 
     auto cur = head;
-    auto moved_up = false;
-    cur->visit_thread_up = nullptr;
+    auto movedUp = false;
+    cur->visitThreadUp = nullptr;
 
     while (cur) {
-        if (!cur->left || moved_up) {
+        if (!cur->left || movedUp) {
             // no (unvisited) left subtree, so handle current node ...
             const auto old = cur;
             if (cur->right) {
                 // ... and descent into right subtree
                 cur = cur->right;
-                moved_up = false;
+                movedUp = false;
             }
-            else if (cur->visit_thread_up) {
+            else if (cur->visitThreadUp) {
                 // ... or back up the thread
-                cur = cur->visit_thread_up;
-                moved_up = true;
+                cur = cur->visitThreadUp;
+                movedUp = true;
             } else {
                 // end of traversal
                 cur = nullptr;
@@ -274,15 +274,15 @@ Splay<V>::visitEach(Visitor &visitor) const
             // find right-most child in left tree
             auto rmc = cur->left;
             while (rmc->right) {
-                rmc->visit_thread_up = nullptr; // cleanup old threads on the way
+                rmc->visitThreadUp = nullptr; // cleanup old threads on the way
                 rmc = rmc->right;
             }
             // create thread up back to cur
-            rmc->visit_thread_up = cur;
+            rmc->visitThreadUp = cur;
 
             // finally descent into left subtree
             cur = cur->left;
-            moved_up = false;
+            movedUp = false;
         }
     }
 }
