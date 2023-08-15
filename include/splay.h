@@ -72,15 +72,14 @@ public:
 
     const_iterator end() const;
 
-    /// left-to-right visit of data fields in all nodes
-    template <typename DataVisitor> void visit(DataVisitor &) const;
+    /// left-to-right visit of all stored Values
+    template <typename ValueVisitor> void visit(ValueVisitor &) const;
 
 private:
     mutable SplayNode<V> * head;
     size_t elements;
 
-    /// internal left-to-right walk through all nodes
-    // used by visit() and also by destroy()
+    /// left-to-right walk through all nodes
     template <typename NodeVisitor> void visitEach(NodeVisitor &) const;
 };
 
@@ -230,16 +229,14 @@ template <class Visitor>
 void
 Splay<V>::visitEach(Visitor &visitor) const
 {
-    // in-order walk through tree using modified Morris Traversal:
-    // to avoid a left-over thread up due to an exception in this
-    // method (and therefor a fatal loop in the tree), we use
-    // an extra pointer visit_thread_up, that doesn't interfere
-    // with other methods instead of manipulating the right child
-    // link.
-    // This also helps to distinguish between up and down movements
-    // and therefor we do not need to descent into left subtree
-    // a second time after traversing the thread to find the loop
-    // cut the thread.
+    // In-order walk through tree using modified Morris Traversal: To avoid a
+    // leftover thread up (and, therefore, a fatal loop in the tree) due to a
+    // visitor exception, we use an extra pointer visit_thread_up instead of
+    // manipulating the right child link and interfering with other methods
+    // that use that link.
+    // This also helps to distinguish between up and down movements, eliminating
+    // the need to descent into left subtree a second time after traversing the
+    // thread to find the loop cut the thread.
 
     if (head == nullptr)
         return;
@@ -250,8 +247,7 @@ Splay<V>::visitEach(Visitor &visitor) const
 
     while (cur != nullptr) {
         if (cur->left == nullptr or moved_up) {
-            // no (unvisited) left subtree, so
-            // handle current node ...
+            // no (unvisited) left subtree, so handle current node ...
             auto old = cur;
             if (cur->right) {
                 // ... and descent into right subtree
@@ -259,7 +255,7 @@ Splay<V>::visitEach(Visitor &visitor) const
                 moved_up = false;
             }
             else if (cur->visit_thread_up) {
-                // .. or back up the thread
+                // ... or back up the thread
                 cur = cur->visit_thread_up;
                 moved_up = true;
             } else {
@@ -267,6 +263,7 @@ Splay<V>::visitEach(Visitor &visitor) const
                 cur = nullptr;
             }
             visitor(old);
+            // old may be destroyed here
         } else {
             // first descent into left subtree
 
@@ -366,7 +363,6 @@ Splay<V>:: destroy(SPLAYFREE *free_func)
         const auto destroyer = [free_func](SplayNode<V> *node) { free_func(node->data); delete node; };
         visitEach(destroyer);
 
-        // cleanup
         head = nullptr;
 
         elements = 0;
