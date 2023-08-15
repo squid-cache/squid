@@ -2785,6 +2785,7 @@ tests_testHttpHeaderTools_LDADD = \
 	sbuf/libsbuf.la \
 	security/libsecurity.la \
 	parser/libparser.la \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \

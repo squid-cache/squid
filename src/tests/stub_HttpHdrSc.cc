@@ -13,7 +13,7 @@
 #include "tests/STUB.h"
 
 void httpHdrScInitModule(void) STUB_NOP
-HdrSc* httpHdrScParseCreate(const String & ) STUB_RETVAL(nullptr)
+HttpHdrSc* httpHdrScParseCreate(const String & ) STUB_RETVAL(nullptr)
 bool HttpHdrSc::parse(const String * ) STUB_RETVAL(false)
 void HttpHdrScTarget::packInto(Packable * ) const STUB
 void HttpHdrSc::packInto(Packable *) const STUB
