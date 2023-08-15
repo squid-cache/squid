@@ -81,7 +81,7 @@ private:
 
     /// internal left-to-right walk through all nodes
     // used by visit() and also by destroy()
-    template <typename NodeVisitor> void visitEach(NodeVisitor &);
+    template <typename NodeVisitor> void visitEach(NodeVisitor &) const;
 };
 
 SQUIDCEXTERN int splayLastResult;
@@ -228,7 +228,7 @@ SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const
 template <class V>
 template <class Visitor>
 void
-Splay<V>::visitEach(Visitor &visitor)
+Splay<V>::visitEach(Visitor &visitor) const
 {
     // in-order walk through tree using modified Morris Traversal:
     // to avoid a left-over thread up due to an exception in this
@@ -291,9 +291,8 @@ template <class Visitor>
 void
 Splay<V>::visit(Visitor &visitor) const
 {
-    const auto internalVisitor = [&visitor](SplayNode<V> *node) { visitor(node->data); };
-    // we have to remove const-ness at this stage to use non-const visitEach
-    const_cast<Splay<V> *>(this)->visitEach(internalVisitor);
+    const auto internalVisitor = [&visitor](const SplayNode<V> *node) { visitor(node->data); };
+    visitEach(internalVisitor);
 }
 
 template <class V>
