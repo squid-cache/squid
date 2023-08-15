@@ -48,8 +48,10 @@ public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
     typedef void SPLAYFREE(Value &);
-    static void DefaultFree (Value &aValue) {delete aValue;}
     typedef const SplayConstIterator<V> const_iterator;
+
+    static void DefaultFree(Value &v) { delete v; }
+
     Splay():head(nullptr), elements (0) {}
 
     template <class FindValue> Value const *find (FindValue const &, int( * compare)(FindValue const &a, Value const &b)) const;
@@ -76,17 +78,17 @@ public:
     template <typename ValueVisitor> void visit(ValueVisitor &) const;
 
 private:
-    mutable SplayNode<V> * head;
-    size_t elements;
-
     /// left-to-right walk through all nodes
     template <typename NodeVisitor> void visitEach(NodeVisitor &) const;
+
+    mutable SplayNode<V> * head;
+    size_t elements;
 };
 
 SQUIDCEXTERN int splayLastResult;
 
 template<class V>
-SplayNode<V>::SplayNode (Value const &someData) : data(someData), left(nullptr), right(nullptr), visit_thread_up(nullptr) {}
+SplayNode<V>::SplayNode(const Value &someData): data(someData), left(nullptr), right(nullptr), visit_thread_up(nullptr) {}
 
 template<class V>
 SplayNode<V> const *
@@ -95,7 +97,6 @@ SplayNode<V>::start() const
     auto cur = this;
     while (cur->left)
         cur = cur->left;
-
     return cur;
 }
 
@@ -106,7 +107,6 @@ SplayNode<V>::finish() const
     auto cur = this;
     while (cur->right)
         cur = cur->right;
-
     return cur;
 }
 
@@ -238,17 +238,17 @@ Splay<V>::visitEach(Visitor &visitor) const
     // the need to descent into left subtree a second time after traversing the
     // thread to find the loop cut the thread.
 
-    if (head == nullptr)
+    if (!head)
         return;
 
     auto cur = head;
-    bool moved_up = false;
+    auto moved_up = false;
     cur->visit_thread_up = nullptr;
 
-    while (cur != nullptr) {
-        if (cur->left == nullptr or moved_up) {
+    while (cur) {
+        if (!cur->left || moved_up) {
             // no (unvisited) left subtree, so handle current node ...
-            auto old = cur;
+            const auto old = cur;
             if (cur->right) {
                 // ... and descent into right subtree
                 cur = cur->right;
