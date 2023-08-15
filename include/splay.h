@@ -72,8 +72,8 @@ public:
 
     const_iterator end() const;
 
-    /// left-to-right visit of all nodes
-    template <class Visitor> void visit(Visitor &v) const;
+    /// left-to-right visit of data fields in all nodes
+    template <typename DataVisitor> void visit(DataVisitor &) const;
 
 private:
     mutable SplayNode<V> * head;
@@ -81,7 +81,7 @@ private:
 
     /// internal left-to-right walk through all nodes
     // used by visit() and also by destroy()
-    template <class Visitor> void visit_or_destroy(Visitor &v, bool deleteNode = false);
+    template <typename NodeVisitor> void visitEach(NodeVisitor &);
 };
 
 SQUIDCEXTERN int splayLastResult;
@@ -228,7 +228,7 @@ SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const
 template <class V>
 template <class Visitor>
 void
-Splay<V>::visit_or_destroy(Visitor &visitor, bool deleteNode)
+Splay<V>::visitEach(Visitor &visitor)
 {
     // in-order walk through tree using modified Morris Traversal:
     // to avoid a left-over thread up due to an exception in this
@@ -266,9 +266,7 @@ Splay<V>::visit_or_destroy(Visitor &visitor, bool deleteNode)
                 // end of traversal
                 cur = nullptr;
             }
-            visitor(old->data);
-            if (deleteNode)
-                delete old;
+            visitor(old);
         } else {
             // first descent into left subtree
 
@@ -293,8 +291,9 @@ template <class Visitor>
 void
 Splay<V>::visit(Visitor &visitor) const
 {
-    // we have to remove const-ness at this stage to use non-const visit_or_destroy
-    const_cast<Splay<V> *>(this)->visit_or_destroy(visitor, false);
+    const auto internalVisitor = [&visitor](SplayNode<V> *node) { visitor(node->data); };
+    // we have to remove const-ness at this stage to use non-const visitEach
+    const_cast<Splay<V> *>(this)->visitEach(internalVisitor);
 }
 
 template <class V>
@@ -365,7 +364,8 @@ void
 Splay<V>:: destroy(SPLAYFREE *free_func)
 {
     if (free_func) {
-        visit_or_destroy(free_func, true);
+        const auto destroyer = [free_func](SplayNode<V> *node) { free_func(node->data); delete node; };
+        visitEach(destroyer);
 
         // cleanup
         head = nullptr;
