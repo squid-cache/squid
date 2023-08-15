@@ -42,12 +42,16 @@ template <class V>
 class SplayConstIterator;
 
 template <class V>
+class SplayIterator;
+
+template <class V>
 class Splay
 {
 public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
     typedef void SPLAYFREE(Value &);
+    typedef SplayIterator<V> iterator;
     typedef const SplayConstIterator<V> const_iterator;
 
     static void DefaultFree(Value &v) { delete v; }
