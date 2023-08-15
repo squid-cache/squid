@@ -359,14 +359,12 @@ template <class V>
 void
 Splay<V>:: destroy(SPLAYFREE *free_func)
 {
-    if (free_func) {
-        const auto destroyer = [free_func](SplayNode<V> *node) { free_func(node->data); delete node; };
-        visitEach(destroyer);
+    const auto destroyer = [free_func](SplayNode<V> *node) { free_func(node->data); delete node; };
+    visitEach(destroyer);
 
-        head = nullptr;
+    head = nullptr;
 
-        elements = 0;
-    }
+    elements = 0;
 }
 
 template <class V>
