@@ -136,8 +136,7 @@ main(int, char *[])
 
     {
         /* test void * splay containers */
-        Splay<void *> *top = new Splay<void *>();
-        top->insert(static_cast<void*>(new intnode(101)), compareintvoid);
+        const auto top = new Splay<void *>();
 
         for (int i = 0; i < 100; ++i) {
             intnode *I = (intnode *)xcalloc(sizeof(intnode), 1);
@@ -156,8 +155,7 @@ main(int, char *[])
     /* test typesafe splay containers */
     {
         /* intnode* */
-        Splay<intnode *> *safeTop = new Splay<intnode *>();
-        safeTop->insert(new intnode(101), compareint);
+        const auto safeTop = new Splay<intnode *>();
 
         for ( int i = 0; i < 100; ++i) {
             intnode *I;
@@ -173,8 +171,7 @@ main(int, char *[])
     }
     {
         /* intnode */
-        Splay<intnode> *safeTop = new Splay<intnode>();
-        safeTop->insert(101, compareintref);
+        const auto safeTop = new Splay<intnode>();
 
         for (int i = 0; i < 100; ++i) {
             intnode I;
