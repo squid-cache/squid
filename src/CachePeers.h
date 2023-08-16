@@ -30,12 +30,12 @@ public:
     void remove(CachePeer *);
 
     /// the number of currently stored (i.e. added and not removed) cache_peers
-    size_t size() const { return storage.size(); }
+    auto size() const { return storage.size(); }
 
     /* peer iterators forming a sequence for C++ range-based for loop API */
     using const_iterator = Storage::const_iterator;
-    const_iterator begin() const { return storage.cbegin(); }
-    const_iterator end() const { return storage.cend(); }
+    auto begin() const { return storage.cbegin(); }
+    auto end() const { return storage.cend(); }
 
     /// A CachePeer to query next when scanning all peer caches in hope to fetch
     /// a remote cache hit. \sa neighborsUdpPing()
