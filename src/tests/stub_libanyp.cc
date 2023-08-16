@@ -33,6 +33,7 @@ SBuf &AnyP::Uri::authority(bool) const STUB_RETVAL(nil)
 SBuf &AnyP::Uri::absolute() const STUB_RETVAL(nil)
 void urlInitialize() STUB
 const char *urlCanonicalFakeHttps(const HttpRequest *) STUB_RETVAL(nullptr)
+char *urlCanonicalCleanWithoutRequest(const SBuf &, const HttpRequestMethod &, const AnyP::UriScheme &) STUB_RETVAL(nullptr)
 bool urlIsRelative(const char *) STUB_RETVAL(false)
 char *urlRInternal(const char *, unsigned short, const char *, const char *) STUB_RETVAL(nullptr)
 char *urlInternal(const char *, const char *) STUB_RETVAL(nullptr)

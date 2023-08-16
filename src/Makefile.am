@@ -1664,10 +1664,10 @@ tests_testDiskIO_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
+	$(LIBCPPUNIT_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
-	$(LIBCPPUNIT_LIBS) \
-	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
@@ -2755,30 +2755,43 @@ nodist_tests_testHttpHeaderTools_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_fatal.cc \
+    tests/stub_HttpHeader.cc \
+	tests/stub_HttpReply.cc \
+	tests/stub_HttpRequest.cc \
 	tests/stub_libanyp.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libhttp.cc \
 	tests/stub_libip.cc \
+    tests/stub_libipc.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libtime.cc \
 	tests/stub_mime.cc \
+	tests/stub_neighbors.cc \
 	tests/stub_store.cc \
-	tests/stub_store_stats.cc
+	tests/stub_store_stats.cc \
+    ConfigParser.cc \
+    HttpHdrContRange.cc \
+    HttpHdrRange.cc \
+    HttpHeaderTools.cc \
+    Notes.cc \
+    String.cc \
+    StrList.cc \
+    tests/stub_acl_libapi.cc
 tests_testHttpHeaderTools_LDADD = \
-	base/libbase.la \
-	sbuf/libsbuf.la \
-	parser/libparser.la \
 	acl/libstate.la \
-	security/libsecurity.la \
+	parser/libparser.la \
+	base/libbase.la \
 	libsquid.la \
+	security/libsecurity.la \
+	$(SSL_LIBS) \
+	sbuf/libsbuf.la \
+	$(SSLLIB) \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
 	$(LIBCPPUNIT_LIBS) \
-	$(SSL_LIBS) \
-	$(SSLLIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpHeaderTools_LDFLAGS = $(LIBADD_DL)
