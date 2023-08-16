@@ -31,7 +31,7 @@ public:
  * These codes indicate how the request was received
  * and some details about its processing pathway.
  *
- * see also http://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid_result_codes
+ * see also https://wiki.squid-cache.org/SquidFaq/SquidLogs#squid-result-codes
  * for details on particular components.
  */
 typedef enum {

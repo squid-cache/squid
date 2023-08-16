@@ -61,9 +61,6 @@ carpInit(void)
     for (const auto &peer: CurrentCachePeers()) {
         const auto p = peer.get();
 
-        if (!cbdataReferenceValid(p))
-            continue;
-
         if (!p->options.carp)
             continue;
 
