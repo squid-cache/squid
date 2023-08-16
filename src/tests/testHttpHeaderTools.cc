@@ -34,7 +34,7 @@ protected:
 CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpHeaderTools );
 void TestHttpHeaderTools::testHttpHeaderParseInt()
 {
-    // test success case
+    // test we can successfully parse valid integers
     {
         std::string intmax(std::to_string(INT_MAX));
         std::string overflowing(std::to_string(static_cast<unsigned int>(INT_MAX) + 1));
@@ -43,31 +43,59 @@ void TestHttpHeaderTools::testHttpHeaderParseInt()
             {"-1", -1},
             {"1", 1},
             {"65535", 65535},
-            {"1h", 1},  // ignore trailing characters
-            {"0x1", 0}, // doesn't parse hex
-            {" 1", 1},  // ignore leading space
             {intmax.c_str(), INT_MAX},
-            {overflowing.c_str(), INT_MIN}, //ouch. Overflow doesn't error
         };
         for (const auto &i : testCases) {
-            int output = 0;
+            int output = INT_MIN;
             int rv = httpHeaderParseInt(i.first, &output);
             CPPUNIT_ASSERT_EQUAL(i.second, output);
             CPPUNIT_ASSERT_EQUAL(1, rv);
         }
     }
 
-    // non-integer strings rejected
+    // things we can parse although they are not valid integers
     {
         static std::map<const char *, int> testCases = {
-            {"v", 0},
-            {"h1", 0},
+            {"1h", 1},  // ignore trailing characters
+            {"0x1", 0}, // doesn't parse hex
+            {" 1", 1},  // ignore leading space
+        };
+        for (const auto &i : testCases)
+        {
+            int output = INT_MIN;
+            int rv = httpHeaderParseInt(i.first, &output);
+            CPPUNIT_ASSERT_EQUAL(i.second, output);
+            CPPUNIT_ASSERT_EQUAL(1, rv);
+        }
+    }
+    // things we should fail, but don't
+    {
+        std::string overflowing(std::to_string(static_cast<unsigned int>(INT_MAX) + 1));
+        static std::map<const char *, int> testCases = {
+            {"1h", 1},  // ignore trailing characters
+            {"0x1", 0}, // doesn't parse hex
+            {" 1", 1},  // ignore leading space
+            {overflowing.c_str(), INT_MIN}, // ouch. Overflow doesn't error
+        };
+        for (const auto &i : testCases)
+        {
+            int output = INT_MIN;
+            int rv = httpHeaderParseInt(i.first, &output);
+            CPPUNIT_ASSERT_EQUAL(i.second, output);
+            CPPUNIT_ASSERT_EQUAL(1, rv);
+        }
+    }
+    // Things we correctly fail to parse
+    {
+        static std::vector<std::string> testCases = {
+            "v",
+            "h1",
         };
         for (const auto &i : testCases) {
-            int output;
-            int rv = httpHeaderParseInt(i.first, &output);
+            int output = INT_MIN;
+            int rv = httpHeaderParseInt(i.c_str(), &output);
             CPPUNIT_ASSERT_EQUAL(0, rv);
-            CPPUNIT_ASSERT_EQUAL(i.second, output);
+            CPPUNIT_ASSERT_EQUAL(0, output);
         }
     }
 }
@@ -91,7 +119,7 @@ void TestHttpHeaderTools::testHttpHeaderParseOffset()
         };
         for (const auto &i : testCases)
         {
-            int64_t value = 0;
+            int64_t value = -1;
             char* endPtr = nullptr;
             bool rv = httpHeaderParseOffset( std::get<0>(i), &value, &endPtr);
             CPPUNIT_ASSERT_EQUAL(std::get<1>(i), value);
