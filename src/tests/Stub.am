@@ -13,11 +13,14 @@ STUB_SOURCE = \
 	tests/stub_CachePeer.cc \
 	tests/stub_CollapsedForwarding.cc \
 	tests/stub_CommIO.cc \
+	tests/stub_ConfigParser.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_ETag.cc \
 	tests/stub_EventLoop.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpControlMsg.cc \
+	tests/stub_HttpHdrCc.cc \
+	tests/stub_HttpHdrSc.cc \
 	tests/stub_HttpHeader.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
@@ -32,6 +35,7 @@ STUB_SOURCE = \
 	tests/stub_UdsOp.cc \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
+	tests/stub_acl_libapi.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_carp.cc \
@@ -66,6 +70,7 @@ STUB_SOURCE = \
 	tests/stub_libhttp.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_libip.cc \
+	tests/stub_libipc.cc \
 	tests/stub_liblog.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libmgr.cc \

@@ -2743,6 +2743,10 @@ tests_testHttpHeaderTools_SOURCES = \
 	tests/testHttpHeaderTools.cc
 nodist_tests_testHttpHeaderTools_SOURCES = \
 	$(TESTSOURCES) \
+	tests/stub_ETag.cc \
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_MemBuf.cc \
+	tests/stub_StatHist.cc \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
@@ -2750,9 +2754,7 @@ nodist_tests_testHttpHeaderTools_SOURCES = \
 	tests/stub_client_side.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
-	tests/stub_ETag.cc \
 	tests/stub_fatal.cc \
-	tests/stub_HelperChildConfig.cc \
 	tests/stub_libanyp.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libhttp.cc \
@@ -2761,22 +2763,20 @@ nodist_tests_testHttpHeaderTools_SOURCES = \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libtime.cc \
-	tests/stub_MemBuf.cc \
 	tests/stub_mime.cc \
-	tests/stub_StatHist.cc \
-	tests/stub_store_stats.cc \
-	tests/stub_store.cc
+	tests/stub_store.cc \
+	tests/stub_store_stats.cc
 tests_testHttpHeaderTools_LDADD = \
-	acl/libstate.la \
 	base/libbase.la \
-	libsquid.la \
 	sbuf/libsbuf.la \
-	security/libsecurity.la \
 	parser/libparser.la \
+	acl/libstate.la \
+	security/libsecurity.la \
+	libsquid.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBCPPUNIT_LIBS) \
 	$(SSL_LIBS) \
 	$(SSLLIB) \
 	$(LIBNETTLE_LIBS) \
