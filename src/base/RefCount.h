@@ -27,6 +27,12 @@ class RefCount
 {
 
 public:
+    template<typename... Args>
+    inline static auto Make(Args&&... args) {
+        return RefCount<C>(new C(std::forward<Args>(args)...));
+    }
+
+public:
     RefCount () : p_ (nullptr) {}
 
     RefCount (C const *p) : p_(p) { reference (*this); }
