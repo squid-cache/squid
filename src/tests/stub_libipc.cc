@@ -22,3 +22,4 @@ void Ipc::Inquirer::callException(const std::exception &) STUB
 void Ipc::Inquirer::start() STUB
 const char*Ipc::Inquirer::status() const STUB_RETVAL("")
 void Ipc::Inquirer::cleanup() STUB
+

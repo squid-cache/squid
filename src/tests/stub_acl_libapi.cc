@@ -13,7 +13,7 @@
 
 #include "acl/Acl.h"
 #include "sbuf/SBuf.h"
-void Acl::RegisterMaker(TypeName , Maker ) STUB
+void Acl::RegisterMaker(TypeName, Maker ) STUB
 void Acl::SetKey(SBuf &, const char *, const char *) STUB
 ACL* ACL::FindByName(const char *) STUB_RETVAL(nullptr)
 ACL::ACL() {}

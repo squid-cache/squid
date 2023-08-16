@@ -31,7 +31,6 @@ protected:
     void testHttpHeaderParseOffset();
 };
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpHeaderTools );
 void TestHttpHeaderTools::testHttpHeaderParseInt()
 {
