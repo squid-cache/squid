@@ -110,16 +110,16 @@ void TestHttpHeaderTools::testHttpHeaderParseOffset()
             {"0", 0, true, true},
             {"1", 1, true, true},
             {"-1", -1, true, true},
-            {"a", 0, false, false},
+            {"a", INT_MIN, false, false},
             {"1h", 1, true, true}, // ignore trailing characters
             {" 1", 1, true, true}, // ignore leading space
             {"1 ", 1, true, true}, // ignore trailing space
-            {"", 0, false, false}, // empty value
-            {overflowing.c_str(), 0, false, false}, // overflow
+            {"", INT_MIN, false, false}, // empty value
+            {overflowing.c_str(), INT_MIN, false, false}, // overflow
         };
         for (const auto &i : testCases)
         {
-            int64_t value = -1;
+            int64_t value = INT_MIN;
             char* endPtr = nullptr;
             bool rv = httpHeaderParseOffset( std::get<0>(i), &value, &endPtr);
             CPPUNIT_ASSERT_EQUAL(std::get<1>(i), value);
