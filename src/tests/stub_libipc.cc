@@ -16,9 +16,9 @@ Ipc::Inquirer::~Inquirer() STUB_NOP
 void Ipc::Inquirer::swanSong() STUB
 void Ipc::Inquirer::inquire() STUB
 void Ipc::Inquirer::handleRemoteAck(Response::Pointer) STUB
-bool Ipc::Inquirer::doneAll() const STUB
-void Ipc::Inquirer::handleException(const std::exception&) STUB
-void Ipc::Inquirer::callException(const std::exception&) STUB
+bool Ipc::Inquirer::doneAll() const STUB_RETVAL(true)
+void Ipc::Inquirer::handleException(const std::exception &) STUB
+void Ipc::Inquirer::callException(const std::exception &) STUB
 void Ipc::Inquirer::start() STUB
-const char*Ipc::Inquirer::status() const STUB
+const char*Ipc::Inquirer::status() const STUB_RETVAL("")
 void Ipc::Inquirer::cleanup() STUB

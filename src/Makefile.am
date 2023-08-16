@@ -2740,18 +2740,6 @@ tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpHeaderTools
 tests_testHttpHeaderTools_SOURCES = \
-	HttpHdrContRange.cc \
-	HttpHdrRange.cc \
-	HttpHeader.cc \
-	HttpHeaderTools.cc \
-	String.cc \
-	StrList.cc \
-	tests/stub_acl_libapi.cc \
-	tests/stub_HttpHdrCc.cc \
-	tests/stub_HttpHdrSc.cc \
-	tests/stub_HttpReply.cc \
-	tests/stub_HttpRequest.cc \
-	tests/stub_libipc.cc \
 	tests/testHttpHeaderTools.cc
 nodist_tests_testHttpHeaderTools_SOURCES = \
 	$(TESTSOURCES) \

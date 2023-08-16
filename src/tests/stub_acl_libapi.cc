@@ -57,14 +57,9 @@ Acl::Answer const & ACLChecklist::fastCheck() STUB_RETVAL(anAclAnswer)
 
 #include "acl/Options.h"
 const Acl::Options & Acl::NoOptions() {static const Options none; return none;}
-
-
 #include "acl/Acl.h"
 bool ACL::requiresAle() const STUB_RETVAL(false)
 bool ACL::requiresReply() const STUB_RETVAL(false)
 bool ACL::requiresRequest() const STUB_RETVAL(false)
 void ACL::Initialize() STUB
-
 void ACL::operator delete(void*) STUB_NOP
-
-

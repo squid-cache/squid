@@ -26,8 +26,6 @@ class TestHttpHeaderTools: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testHttpHeaderParseOffset );
     CPPUNIT_TEST_SUITE_END();
 
-public:
-
 protected:
     void testHttpHeaderParseInt();
     void testHttpHeaderParseOffset();
@@ -35,8 +33,6 @@ protected:
 
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpHeaderTools );
-
-
 void TestHttpHeaderTools::testHttpHeaderParseInt()
 {
     // test success case
@@ -54,14 +50,15 @@ void TestHttpHeaderTools::testHttpHeaderParseInt()
             {intmax.c_str(), INT_MAX},
             {overflowing.c_str(), INT_MIN}, //ouch. Overflow doesn't error
         };
-        for (const auto& i : testCases ) {
+        for (const auto &i : testCases) {
             int output = 0;
             int rv = httpHeaderParseInt(i.first, &output);
             CPPUNIT_ASSERT_EQUAL(i.second, output);
             CPPUNIT_ASSERT_EQUAL(1, rv);
         }
     }
-    // test fail case
+
+    // non-integer strings rejected
     {
         static std::map<const char *, int> testCases = {
             {"v", 0},
@@ -79,7 +76,7 @@ void TestHttpHeaderTools::testHttpHeaderParseInt()
 void TestHttpHeaderTools::testHttpHeaderParseOffset()
 {
     {
-        // tuple fields: strign to test, expected value,
+        // tuple fields: string to test, expected value,
         //  expected return value, bool if endPtr is expected to not be nullptr
         std::string overflowing(std::to_string(static_cast<uint64_t>(LLONG_MAX) + 1));
         std::list<std::tuple<const char *, int64_t, bool, bool>> testCases = {
