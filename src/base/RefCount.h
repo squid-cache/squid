@@ -66,10 +66,7 @@ public:
         return *this;
     }
 
-    /// Specialization to allow "foo = nullptr" to unset a refcounted Pointer.
-    /// Assignment of raw-pointers including void* are otherwise prohibited.
-    constexpr RefCount &operator =(const nullptr_t) {
-        if(p_)
+    RefCount &operator =(std::nullptr_t) {
             dereference();
         return *this;
     }
