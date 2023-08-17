@@ -3897,7 +3897,8 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
         storeAppendPrintf(e, " ssl-bump");
 #endif
 
-    s->secure.dumpCfg(e, "tls-");
+    PackableStream os(*e);
+    s->secure.dumpCfg(os, "tls-");
 }
 
 static void

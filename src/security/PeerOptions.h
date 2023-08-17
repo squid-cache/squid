@@ -67,7 +67,7 @@ public:
     void updateSessionOptions(Security::SessionPointer &);
 
     /// output squid.conf syntax with 'pfx' prefix on parameters for the stored settings
-    virtual void dumpCfg(Packable *, const char *pfx) const;
+    virtual void dumpCfg(std::ostream &, const char *pfx) const;
 
 private:
     ParsedPortFlags parseFlags();
@@ -153,7 +153,7 @@ extern PeerOptions ProxyOutgoingConfig;
 // parse the tls_outgoing_options directive
 void parse_securePeerOptions(Security::PeerOptions *);
 #define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
-#define dump_securePeerOptions(e,n,x) do { (e)->appendf(n); (x).dumpCfg((e),""); (e)->append("\n",1); } while(false)
+#define dump_securePeerOptions(e,n,x) do { (e)->appendf(n); PackableStream os(*e); (x).dumpCfg(os,""); (e)->append("\n",1); } while(false)
 
 #endif /* SQUID_SRC_SECURITY_PEEROPTIONS_H */
 

@@ -13,6 +13,7 @@
 #include "anyp/PortCfg.h"
 #include "base/EnumIterator.h"
 #include "base/IoManip.h"
+#include "base/PackableStream.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "comm/Connection.h"
@@ -1546,7 +1547,8 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
     else if (p->connection_auth == 2)
         storeAppendPrintf(sentry, " connection-auth=auto");
 
-    p->secure.dumpCfg(sentry,"tls-");
+    PackableStream os(*sentry);
+    p->secure.dumpCfg(os,"tls-");
     storeAppendPrintf(sentry, "\n");
 }
 

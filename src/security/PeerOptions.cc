@@ -102,51 +102,51 @@ Security::PeerOptions::parse(const char *token)
 }
 
 void
-Security::PeerOptions::dumpCfg(Packable *p, const char *pfx) const
+Security::PeerOptions::dumpCfg(std::ostream &os, const char *pfx) const
 {
     if (!encryptTransport) {
-        p->appendf(" %sdisable", pfx);
+        os << pfx << "disable";
         return; // no other settings are relevant
     }
 
     for (auto &i : certs) {
         if (!i.certFile.isEmpty())
-            p->appendf(" %scert=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(i.certFile));
+            os << ' ' << pfx << "cert=" << i.certFile;
 
         if (!i.privateKeyFile.isEmpty() && i.privateKeyFile != i.certFile)
-            p->appendf(" %skey=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(i.privateKeyFile));
+            os << ' ' << pfx << "key=" << i.privateKeyFile;
     }
 
     if (!sslOptions.isEmpty())
-        p->appendf(" %soptions=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslOptions));
+        os << ' ' << pfx << sslOptions;
 
     if (!sslCipher.isEmpty())
-        p->appendf(" %scipher=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslCipher));
+        os << ' ' << pfx << sslCipher;
 
     for (auto i : caFiles) {
-        p->appendf(" %scafile=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(i));
+        os << ' ' << pfx <<  "cafile=" << i;
     }
 
     if (!caDir.isEmpty())
-        p->appendf(" %scapath=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(caDir));
+        os << ' ' << pfx << "capath=" << caDir;
 
     if (!crlFile.isEmpty())
-        p->appendf(" %scrlfile=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(crlFile));
+        os << ' ' << pfx << "crlfile=" << crlFile;
 
     if (!sslFlags.isEmpty())
-        p->appendf(" %sflags=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslFlags));
+        os << ' ' << pfx << "flags=" << sslFlags;
 
     if (flags.tlsDefaultCa.configured()) {
         // default ON for peers / upstream servers
         // default OFF for listening ports
         if (flags.tlsDefaultCa)
-            p->appendf(" %sdefault-ca", pfx);
+            os << ' ' << pfx << "default-ca";
         else
-            p->appendf(" %sdefault-ca=off", pfx);
+            os << ' ' << pfx << "default-ca=off";
     }
 
     if (!flags.tlsNpn)
-        p->appendf(" %sno-npn", pfx);
+        os << ' ' << pfx << "no-npn";
 }
 
 void
