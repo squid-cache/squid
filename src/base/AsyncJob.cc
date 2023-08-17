@@ -20,6 +20,8 @@
 
 InstanceIdDefinitions(AsyncJob, "job");
 
+std::set<AsyncJob *> AsyncJob::Jobs;
+
 void
 AsyncJob::Start(const Pointer &job)
 {
@@ -32,6 +34,8 @@ AsyncJob::AsyncJob(const char *aTypeName) :
 {
     debugs(93,5, "AsyncJob constructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
+    Assure(!Jobs.count(this));
+    Jobs.insert(this);
 }
 
 AsyncJob::~AsyncJob()
@@ -39,6 +43,8 @@ AsyncJob::~AsyncJob()
     debugs(93,5, "AsyncJob destructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
     assert(!started_ || swanSang_);
+    Assure(Jobs.count(this) == 1);
+    Jobs.erase(this);
 }
 
 void AsyncJob::start()

@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "base/PackableStream.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "client_side.h"
@@ -94,6 +95,7 @@ static OBJH statDigestBlob;
 static OBJH statUtilization;
 static OBJH statCountersHistograms;
 static OBJH statClientRequests;
+static OBJH statJobs;
 void GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours);
 void DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry);
 void GetInfo(Mgr::InfoActionData& stats);
@@ -1191,6 +1193,10 @@ statRegisterWithCacheManager(void)
     Mgr::RegisterAction("active_requests",
                         "Client-side Active Requests",
                         statClientRequests, 0, 1);
+    Mgr::RegisterAction("jobs",
+                        "all jobs",
+                        statJobs, 0, 1);
+
 #if USE_AUTH
     Mgr::RegisterAction("username_cache",
                         "Active Cached Usernames",
@@ -1831,6 +1837,15 @@ statClientRequests(StoreEntry * s)
 #endif
 
         storeAppendPrintf(s, "\n");
+    }
+}
+
+static void
+statJobs(StoreEntry *e)
+{
+    PackableStream os(*e);
+    for (const auto job: AsyncJob::Jobs) {
+        os << job->status() << "\n";
     }
 }
 

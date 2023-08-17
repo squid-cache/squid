@@ -249,6 +249,7 @@ Comm::ConnOpener::keepFd()
 void
 Comm::ConnOpener::start()
 {
+	AsyncJob::start();
     Must(conn_ != nullptr);
 
     /* outbound sockets have no need to be protocol agnostic. */

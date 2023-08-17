@@ -13,6 +13,8 @@
 #include "base/InstanceId.h"
 #include "cbdata.h"
 
+#include <set>
+
 template <class Cbc>
 class CbcPointer;
 
@@ -44,6 +46,8 @@ public:
     /// successfully (i.e. without throwing).
     static void Start(const Pointer &job);
 
+    virtual const char *status() const; ///< for debugging, starts with space
+
 protected:
     // XXX: temporary method to replace "delete this" in jobs-in-transition.
     // Will be replaced with calls to mustStop() when transition is complete.
@@ -57,7 +61,6 @@ protected:
     virtual void start(); ///< called by AsyncStart; do not call directly
     virtual bool doneAll() const; ///< whether positive goal has been reached
     virtual void swanSong() {}; ///< internal cleanup; do not call directly
-    virtual const char *status() const; ///< for debugging, starts with space
 
 public:
     bool canBeCalled(AsyncCall &call) const; ///< whether we can be called
@@ -72,6 +75,7 @@ public:
 
     const InstanceId<AsyncJob> id; ///< job identifier
 
+    static std::set<AsyncJob *> Jobs;
 protected:
     // external destruction prohibited to ensure swanSong() is called
     ~AsyncJob() override;
