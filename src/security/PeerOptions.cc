@@ -105,7 +105,7 @@ void
 Security::PeerOptions::dumpCfg(std::ostream &os, const char *pfx) const
 {
     if (!encryptTransport) {
-        os << pfx << "disable";
+        os << ' ' << pfx << "disable";
         return; // no other settings are relevant
     }
 
@@ -118,13 +118,13 @@ Security::PeerOptions::dumpCfg(std::ostream &os, const char *pfx) const
     }
 
     if (!sslOptions.isEmpty())
-        os << ' ' << pfx << sslOptions;
+        os << ' ' << pfx << "options=" << sslOptions;
 
     if (!sslCipher.isEmpty())
-        os << ' ' << pfx << sslCipher;
+        os << ' ' << pfx << "cipher=" << sslCipher;
 
     for (auto i : caFiles) {
-        os << ' ' << pfx <<  "cafile=" << i;
+        os << ' ' << pfx << "cafile=" << i;
     }
 
     if (!caDir.isEmpty())
