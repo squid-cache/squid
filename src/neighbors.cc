@@ -1548,7 +1548,7 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
         storeAppendPrintf(sentry, " connection-auth=auto");
 
     PackableStream os(*sentry);
-    p->secure.dumpCfg(os,"tls-");
+    p->secure.dumpCfg(os, "tls-");
     storeAppendPrintf(sentry, "\n");
 }
 

@@ -153,7 +153,7 @@ extern PeerOptions ProxyOutgoingConfig;
 // parse the tls_outgoing_options directive
 void parse_securePeerOptions(Security::PeerOptions *);
 #define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
-#define dump_securePeerOptions(e,n,x) do { (e)->appendf(n); PackableStream os(*e); (x).dumpCfg(os,""); (e)->append("\n",1); } while(false)
+#define dump_securePeerOptions(e,n,x) do { PackableStream os_(*(e)); os_ << n; (x).dumpCfg(os_,""); os_ << '\n'; } while (false)
 
 #endif /* SQUID_SRC_SECURITY_PEEROPTIONS_H */
 
