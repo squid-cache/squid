@@ -12,15 +12,18 @@
 #include "base/AsyncCall.h"
 #include "base/AsyncJob.h"
 #include "base/AsyncJobCalls.h"
+#include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "cbdata.h"
+#include "mgr/Registration.h"
 #include "MemBuf.h"
+#include "Store.h"
 
 #include <ostream>
 
 InstanceIdDefinitions(AsyncJob, "job");
 
-std::set<AsyncJob *> AsyncJob::Jobs;
+AsyncJob::Jobs AsyncJob::Jobs_;
 
 void
 AsyncJob::Start(const Pointer &job)
@@ -34,8 +37,7 @@ AsyncJob::AsyncJob(const char *aTypeName) :
 {
     debugs(93,5, "AsyncJob constructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
-    Assure(!Jobs.count(this));
-    Jobs.insert(this);
+    Jobs_.insert(this);
 }
 
 AsyncJob::~AsyncJob()
@@ -43,8 +45,7 @@ AsyncJob::~AsyncJob()
     debugs(93,5, "AsyncJob destructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
     assert(!started_ || swanSang_);
-    Assure(Jobs.count(this) == 1);
-    Jobs.erase(this);
+    Jobs_.erase(this);
 }
 
 void AsyncJob::start()
@@ -183,5 +184,19 @@ const char *AsyncJob::status() const
     buf.terminate();
 
     return buf.content();
+}
+
+void
+AsyncJob::stat(StoreEntry *e)
+{
+    PackableStream os(*e);
+    for (const auto job: Jobs_)
+        os << job->status() << "\n";
+}
+
+void
+AsyncJob::RegisterWithCacheManager()
+{
+    Mgr::RegisterAction("jobs", "all jobs", &AsyncJob::stat, 0, 1);
 }
 
