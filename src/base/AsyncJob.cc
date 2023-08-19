@@ -197,6 +197,6 @@ AsyncJob::stat(StoreEntry *e)
 void
 AsyncJob::RegisterWithCacheManager()
 {
-    Mgr::RegisterAction("jobs", "all jobs", &AsyncJob::stat, 0, 1);
+    Mgr::RegisterAction("jobs", "All jobs", &AsyncJob::stat, 0, 1);
 }
 
