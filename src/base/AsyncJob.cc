@@ -190,8 +190,16 @@ void
 AsyncJob::stat(StoreEntry *e)
 {
     PackableStream os(*e);
-    for (const auto job: Jobs_)
-        os << job->status() << "\n";
+    const char *ident = "    ";
+    for (const auto job: Jobs_) {
+        os << ident << job->id.prefix() << job->id.value << ":\n";
+        os << ident << ident << "type: " << job->typeName << '\n';
+        os << ident << ident << "status:" << job->status() << '\n';
+        if (!job->started_)
+            os << ident << ident << "started: false\n";
+        if (job->stopReason)
+            os << ident << ident << "stopped: " << job->stopReason << '\n';
+    }
 }
 
 void
