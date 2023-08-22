@@ -199,6 +199,7 @@ squid_SOURCES = \
 	CacheManager.h \
 	CachePeer.cc \
 	CachePeer.h \
+	CachePeers.h \
 	ClientInfo.h \
 	ClientRequestContext.h \
 	CollapsedForwarding.cc \
@@ -526,6 +527,7 @@ squid_LDADD = \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 
 if ENABLE_LOADABLE_MODULES
@@ -1954,6 +1956,7 @@ tests_test_http_range_LDADD = \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 
@@ -2337,6 +2340,7 @@ tests_testHttpRequest_LDADD = \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
@@ -2584,8 +2588,7 @@ tests_testCacheManager_SOURCES = \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testCacheManager_SOURCES = \
-	$(BUILT_SOURCES) \
-	tests/stub_libtime.cc
+	$(BUILT_SOURCES)
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	libsquid.la \
@@ -2620,6 +2623,7 @@ tests_testCacheManager_LDADD = \
 	mem/libmem.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
+	time/libtime.la \
 	debug/libdebug.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -2632,6 +2636,7 @@ tests_testCacheManager_LDADD = \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 

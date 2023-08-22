@@ -57,7 +57,18 @@ TestLookupTable::testLookupTableLookup()
     CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("six")), ENUM_6);
     CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("seven")), ENUM_7);
 
+    // element found despite a different key spelling
+    CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("One")), ENUM_1);
+    CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("fOUr")), ENUM_4);
+    CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("seveN")), ENUM_7);
+
     // element not found
     CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("eleventy")), ENUM_INVALID);
+}
+
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
 }
 

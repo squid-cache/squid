@@ -148,17 +148,17 @@ ssl_temp_rsa_cb(SSL *, int, int keylen)
 
     default:
         debugs(83, DBG_IMPORTANT, "ERROR: ssl_temp_rsa_cb: Unexpected key length " << keylen);
-        return NULL;
+        return nullptr;
     }
 
     if (rsa == NULL) {
         debugs(83, DBG_IMPORTANT, "ERROR: ssl_temp_rsa_cb: Failed to generate key " << keylen);
-        return NULL;
+        return nullptr;
     }
 
     if (newkey) {
         if (Debug::Enabled(83, 5))
-            PEM_write_RSAPrivateKey(debug_log, rsa, NULL, NULL, 0, NULL, NULL);
+            PEM_write_RSAPrivateKey(debug_log, rsa, nullptr, nullptr, 0, nullptr, nullptr);
 
         debugs(83, DBG_IMPORTANT, "Generated ephemeral RSA key of length " << keylen);
     }
@@ -1052,7 +1052,7 @@ Ssl::verifySslCertificate(const Security::ContextPointer &ctx, CertificateProper
     X509 ***pCert = (X509 ***)ctx->cert;
     X509 * cert = pCert && *pCert ? **pCert : NULL;
 #elif SQUID_SSLGETCERTIFICATE_BUGGY
-    X509 * cert = NULL;
+    X509 * cert = nullptr;
     assert(0);
 #else
     // Temporary ssl for getting X509 certificate from SSL_CTX.

@@ -239,7 +239,7 @@ tool_sasl_bind(LDAP * ld, char *binddn, char *ssl)
     char *sasl_secprops;
     /*
      * char  *sasl_secprops = (char *)"maxssf=56";
-     * char  *sasl_secprops = NULL;
+     * char  *sasl_secprops = nullptr;
      */
     struct berval passwd = {};
     void *defaults;

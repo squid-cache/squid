@@ -1132,8 +1132,10 @@ oid2addr(oid * id, Ip::Address &addr, u_int size)
 }
 
 int
-ACLSNMPCommunityStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::SnmpCommunityCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     return data->match (checklist->snmp_community);
 }
 

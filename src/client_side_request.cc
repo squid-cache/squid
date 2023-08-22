@@ -532,7 +532,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
                                 http->getConn() != nullptr && http->getConn()->getAuth() != nullptr ?
                                 http->getConn()->getAuth() : http->request->auth_user_request);
 #else
-                                NULL);
+                                nullptr);
 #endif
     node = (clientStreamNode *)http->client_stream.tail->data;
     clientStreamRead(node, http, node->readBuffer);
@@ -912,9 +912,6 @@ clientHierarchical(ClientHttpRequest * http)
 
     if (request->url.getScheme() == AnyP::PROTO_HTTP)
         return method.respMaybeCacheable();
-
-    if (request->url.getScheme() == AnyP::PROTO_CACHE_OBJECT)
-        return 0;
 
     return 1;
 }
@@ -2057,8 +2054,13 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
         bpc.checkIn();
     }
 
-    if (adaptedBodySource->exhausted())
+    if (adaptedBodySource->exhausted()) {
+        // XXX: Setting receivedWholeAdaptedReply here is a workaround for a
+        // regression, as described in https://bugs.squid-cache.org/show_bug.cgi?id=5187#c6
+        receivedWholeAdaptedReply = true;
+        debugs(85, DBG_IMPORTANT, "WARNING: Squid bug 5187 workaround triggered");
         endRequestSatisfaction();
+    }
     // else wait for more body data
 }
 

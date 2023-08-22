@@ -28,7 +28,6 @@ typedef enum {
     PROTO_COAP,
     PROTO_COAPS,
     PROTO_WAIS,
-    PROTO_CACHE_OBJECT,
     PROTO_ICP,
 #if USE_HTCP
     PROTO_HTCP,

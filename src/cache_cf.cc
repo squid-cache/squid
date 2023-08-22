@@ -320,7 +320,7 @@ parseManyConfigFiles(char* files, int depth)
     char* file = strwordtok(files, &saveptr);
     while (file != NULL) {
         error_count += parseOneConfigFile(file, depth);
-        file = strwordtok(NULL, &saveptr);
+        file = strwordtok(nullptr, &saveptr);
     }
 #endif /* HAVE_GLOB */
     return error_count;
@@ -761,7 +761,7 @@ configDoConfigure(void)
     if (Config.max_filedescriptors > 0) {
         debugs(0, DBG_IMPORTANT, "WARNING: max_filedescriptors disabled. Operating System setrlimit(RLIMIT_NOFILE) is missing.");
     }
-#elif USE_SELECT || USE_SELECT_WIN32
+#elif USE_SELECT
     if (Config.max_filedescriptors > FD_SETSIZE) {
         debugs(0, DBG_IMPORTANT, "WARNING: max_filedescriptors limited to " << FD_SETSIZE << " by select() algorithm.");
     }
@@ -2391,7 +2391,7 @@ parse_peer(CachePeer ** head)
 
 #if USE_CACHE_DIGESTS
     if (!p->options.no_digest)
-        peerDigestCreate(p);
+        p->digest = new PeerDigest(p);
 #endif
 
     if (p->secure.encryptTransport)
@@ -4374,7 +4374,7 @@ public:
 
 Ssl::BumpMode sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
 
-RunnerRegistrationEntry(sslBumpCfgRr);
+DefineRunnerRegistrator(sslBumpCfgRr);
 
 void
 sslBumpCfgRr::finalizeConfig()

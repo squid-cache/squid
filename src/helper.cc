@@ -44,18 +44,16 @@ const size_t ReadBufSize(32*1024);
 static IOCB helperHandleRead;
 static IOCB helperStatefulHandleRead;
 static void Enqueue(helper * hlp, Helper::Xaction *);
-static helper_server *GetFirstAvailable(const helper * hlp);
-static helper_stateful_server *StatefulGetFirstAvailable(statefulhelper * hlp);
+static helper_server *GetFirstAvailable(const helper::Pointer &);
+static helper_stateful_server *StatefulGetFirstAvailable(const statefulhelper::Pointer &);
 static void helperDispatch(helper_server * srv, Helper::Xaction * r);
 static void helperStatefulDispatch(helper_stateful_server * srv, Helper::Xaction * r);
-static void helperKickQueue(helper * hlp);
-static void helperStatefulKickQueue(statefulhelper * hlp);
+static void helperKickQueue(const helper::Pointer &);
+static void helperStatefulKickQueue(const statefulhelper::Pointer &);
 static void helperStatefulServerDone(helper_stateful_server * srv);
 static void StatefulEnqueue(statefulhelper * hlp, Helper::Xaction * r);
 
-CBDATA_CLASS_INIT(helper);
 CBDATA_CLASS_INIT(helper_server);
-CBDATA_CLASS_INIT(statefulhelper);
 CBDATA_CLASS_INIT(helper_stateful_server);
 
 InstanceIdDefinitions(HelperServerBase, "Hlpr");
@@ -169,7 +167,6 @@ helper_server::~helper_server()
     -- parent->childs.n_running;
 
     assert(requests.empty());
-    cbdataReferenceDone(parent);
 }
 
 void
@@ -193,12 +190,10 @@ helper_stateful_server::~helper_stateful_server()
     -- parent->childs.n_running;
 
     assert(requests.empty());
-
-    cbdataReferenceDone(parent);
 }
 
 void
-helperOpenServers(helper * hlp)
+helperOpenServers(const helper::Pointer &hlp)
 {
     char *s;
     char *progname;
@@ -251,6 +246,8 @@ helperOpenServers(helper * hlp)
 
     assert(nargs <= HELPER_MAX_ARGS);
 
+    int successfullyStarted = 0;
+
     for (k = 0; k < need_new; ++k) {
         getCurrentTime();
         rfd = wfd = -1;
@@ -268,6 +265,7 @@ helperOpenServers(helper * hlp)
             continue;
         }
 
+        ++successfullyStarted;
         ++ hlp->childs.n_running;
         ++ hlp->childs.n_active;
         srv = new helper_server;
@@ -285,7 +283,7 @@ helperOpenServers(helper * hlp)
         srv->nextRequestId = 0;
         srv->replyXaction = nullptr;
         srv->ignoreToEom = false;
-        srv->parent = cbdataReference(hlp);
+        srv->parent = hlp;
         dlinkAddTail(srv, &srv->link, &hlp->servers);
 
         if (rfd == wfd) {
@@ -317,6 +315,13 @@ helperOpenServers(helper * hlp)
         comm_read(srv->readPipe, srv->rbuf, srv->rbuf_sz - 1, call);
     }
 
+    // Call handleFewerServers() before hlp->last_restart is updated because
+    // that method uses last_restart to measure the delay since previous start.
+    // TODO: Refactor last_restart code to measure failure frequency rather than
+    // detecting a helper #X failure that is being close to the helper #Y start.
+    if (successfullyStarted < need_new)
+        hlp->handleFewerServers(false);
+
     hlp->last_restart = squid_curtime;
     safe_free(shortname);
     safe_free(procname);
@@ -329,7 +334,7 @@ helperOpenServers(helper * hlp)
  * helperStatefulOpenServers: create the stateful child helper processes
  */
 void
-helperStatefulOpenServers(statefulhelper * hlp)
+helperStatefulOpenServers(const statefulhelper::Pointer &hlp)
 {
     char *shortname;
     const char *args[HELPER_MAX_ARGS+1]; // save space for a NULL terminator
@@ -376,6 +381,8 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
     assert(nargs <= HELPER_MAX_ARGS);
 
+    int successfullyStarted = 0;
+
     for (int k = 0; k < need_new; ++k) {
         getCurrentTime();
         int rfd = -1;
@@ -395,6 +402,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
             continue;
         }
 
+        ++successfullyStarted;
         ++ hlp->childs.n_running;
         ++ hlp->childs.n_active;
         helper_stateful_server *srv = new helper_stateful_server;
@@ -408,7 +416,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
         srv->writePipe->fd = wfd;
         srv->rbuf = (char *)memAllocBuf(ReadBufSize, &srv->rbuf_sz);
         srv->roffset = 0;
-        srv->parent = cbdataReference(hlp);
+        srv->parent = hlp;
         srv->reservationStart = 0;
 
         dlinkAddTail(srv, &srv->link, &hlp->servers);
@@ -436,6 +444,13 @@ helperStatefulOpenServers(statefulhelper * hlp)
         comm_read(srv->readPipe, srv->rbuf, srv->rbuf_sz - 1, call);
     }
 
+    // Call handleFewerServers() before hlp->last_restart is updated because
+    // that method uses last_restart to measure the delay since previous start.
+    // TODO: Refactor last_restart code to measure failure frequency rather than
+    // detecting a helper #X failure that is being close to the helper #Y start.
+    if (successfullyStarted < need_new)
+        hlp->handleFewerServers(false);
+
     hlp->last_restart = squid_curtime;
     safe_free(shortname);
     safe_free(procname);
@@ -457,7 +472,7 @@ helper::submitRequest(Helper::Xaction *r)
 
 /// handles helperSubmit() and helperStatefulSubmit() failures
 static void
-SubmissionFailure(helper *hlp, HLPCB *callback, void *data)
+SubmissionFailure(const helper::Pointer &hlp, HLPCB *callback, void *data)
 {
     auto result = Helper::Error;
     if (!hlp) {
@@ -470,7 +485,7 @@ SubmissionFailure(helper *hlp, HLPCB *callback, void *data)
 }
 
 void
-helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
+helperSubmit(const helper::Pointer &hlp, const char *buf, HLPCB * callback, void *data)
 {
     if (!hlp || !hlp->trySubmit(buf, callback, data))
         SubmissionFailure(hlp, callback, data);
@@ -564,7 +579,7 @@ helper::submit(const char *buf, HLPCB * callback, void *data)
 /// Submit request or callback the caller with a Helper::Error error.
 /// If the reservation is not set then reserves a new helper.
 void
-helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, const Helper::ReservationId & reservation)
+helperStatefulSubmit(const statefulhelper::Pointer &hlp, const char *buf, HLPCB * callback, void *data, const Helper::ReservationId & reservation)
 {
     if (!hlp || !hlp->trySubmit(buf, callback, data, reservation))
         SubmissionFailure(hlp, callback, data);
@@ -736,8 +751,20 @@ helper::willOverload() const {
     return queueFull() && !(childs.needNew() || GetFirstAvailable(this));
 }
 
+helper::Pointer
+helper::Make(const char *name)
+{
+    return new helper(name);
+}
+
+statefulhelper::Pointer
+statefulhelper::Make(const char *name)
+{
+    return new statefulhelper(name);
+}
+
 void
-helperShutdown(helper * hlp)
+helperShutdown(const helper::Pointer &hlp)
 {
     dlink_node *link = hlp->servers.head;
 
@@ -774,7 +801,7 @@ helperShutdown(helper * hlp)
 }
 
 void
-helperStatefulShutdown(statefulhelper * hlp)
+helperStatefulShutdown(const statefulhelper::Pointer &hlp)
 {
     dlink_node *link = hlp->servers.head;
     helper_stateful_server *srv;
@@ -838,15 +865,9 @@ helper::handleKilledServer(HelperServerBase *srv, bool &needsNewServers)
         --childs.n_active;
         debugs(84, DBG_CRITICAL, "WARNING: " << id_name << " #" << srv->index << " exited");
 
-        if (childs.needNew() > 0) {
-            debugs(80, DBG_IMPORTANT, "Too few " << id_name << " processes are running (need " << childs.needNew() << "/" << childs.n_max << ")");
+        handleFewerServers(srv->stats.replies >= 1);
 
-            if (childs.n_active < childs.n_startup && last_restart > squid_curtime - 30) {
-                if (srv->stats.replies < 1)
-                    fatalf("The %s helpers are crashing too rapidly, need help!\n", id_name);
-                else
-                    debugs(80, DBG_CRITICAL, "ERROR: The " << id_name << " helpers are crashing too rapidly, need help!");
-            }
+        if (childs.needNew() > 0) {
             srv->flags.shutdown = true;
             needsNewServers = true;
         }
@@ -854,9 +875,29 @@ helper::handleKilledServer(HelperServerBase *srv, bool &needsNewServers)
 }
 
 void
+helper::handleFewerServers(const bool madeProgress)
+{
+    const auto needNew = childs.needNew();
+
+    if (!needNew)
+        return; // some server(s) have died, but we still have enough
+
+    debugs(80, DBG_IMPORTANT, "Too few " << id_name << " processes are running (need " << needNew << "/" << childs.n_max << ")" <<
+           Debug::Extra << "active processes: " << childs.n_active <<
+           Debug::Extra << "processes configured to start at (re)configuration: " << childs.n_startup);
+
+    if (childs.n_active < childs.n_startup && last_restart > squid_curtime - 30) {
+        if (madeProgress)
+            debugs(80, DBG_CRITICAL, "ERROR: The " << id_name << " helpers are crashing too rapidly, need help!");
+        else
+            fatalf("The %s helpers are crashing too rapidly, need help!", id_name);
+    }
+}
+
+void
 helper_server::HelperServerClosed(helper_server *srv)
 {
-    helper *hlp = srv->getParent();
+    const auto hlp = srv->parent;
 
     bool needsNewServers = false;
     hlp->handleKilledServer(srv, needsNewServers);
@@ -871,11 +912,11 @@ helper_server::HelperServerClosed(helper_server *srv)
 }
 
 // XXX: Almost duplicates helper_server::HelperServerClosed() because helperOpenServers() is not a virtual method of the `helper` class
-// TODO: Fix the `helper` class hierarchy to use CbdataParent and virtual functions.
+// TODO: Fix the `helper` class hierarchy to use virtual functions.
 void
 helper_stateful_server::HelperServerClosed(helper_stateful_server *srv)
 {
-    statefulhelper *hlp = static_cast<statefulhelper *>(srv->getParent());
+    const auto hlp = srv->parent;
 
     bool needsNewServers = false;
     hlp->handleKilledServer(srv, needsNewServers);
@@ -913,7 +954,7 @@ helper_server::popRequest(int request_number)
 
 /// Calls back with a pointer to the buffer with the helper output
 static void
-helperReturnBuffer(helper_server * srv, helper * hlp, char * msg, size_t msgSize, char * msgEnd)
+helperReturnBuffer(helper_server * srv, const helper::Pointer &hlp, char * msg, size_t msgSize, char * msgEnd)
 {
     if (Helper::Xaction *r = srv->replyXaction) {
         const bool hasSpace = r->reply.accumulate(msg, msgSize);
@@ -980,7 +1021,7 @@ static void
 helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::Flag flag, int, void *data)
 {
     helper_server *srv = (helper_server *)data;
-    helper *hlp = srv->parent;
+    const auto hlp = srv->parent;
     assert(cbdataReferenceValid(data));
 
     /* Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us */
@@ -1097,7 +1138,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
 {
     char *t = nullptr;
     helper_stateful_server *srv = (helper_stateful_server *)data;
-    statefulhelper *hlp = srv->parent;
+    const auto hlp = srv->parent;
     assert(cbdataReferenceValid(data));
 
     /* Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us */
@@ -1270,7 +1311,7 @@ helper::nextRequest()
 }
 
 static helper_server *
-GetFirstAvailable(const helper * hlp)
+GetFirstAvailable(const helper::Pointer &hlp)
 {
     dlink_node *n;
     helper_server *srv;
@@ -1316,7 +1357,7 @@ GetFirstAvailable(const helper * hlp)
 }
 
 static helper_stateful_server *
-StatefulGetFirstAvailable(statefulhelper * hlp)
+StatefulGetFirstAvailable(const statefulhelper::Pointer &hlp)
 {
     dlink_node *n;
     helper_stateful_server *srv = nullptr;
@@ -1388,7 +1429,7 @@ helperDispatchWriteDone(const Comm::ConnectionPointer &, char *, size_t, Comm::F
 static void
 helperDispatch(helper_server * srv, Helper::Xaction * r)
 {
-    helper *hlp = srv->parent;
+    const auto hlp = srv->parent;
     const uint64_t reqId = ++srv->nextRequestId;
 
     if (!cbdataReferenceValid(r->request.data)) {
@@ -1435,7 +1476,7 @@ helperStatefulDispatchWriteDone(const Comm::ConnectionPointer &, char *, size_t,
 static void
 helperStatefulDispatch(helper_stateful_server * srv, Helper::Xaction * r)
 {
-    statefulhelper *hlp = srv->parent;
+    const auto hlp = srv->parent;
 
     if (!cbdataReferenceValid(r->request.data)) {
         debugs(84, DBG_IMPORTANT, "ERROR: helperStatefulDispatch: invalid callback data");
@@ -1469,7 +1510,7 @@ helperStatefulDispatch(helper_stateful_server * srv, Helper::Xaction * r)
     srv->requests.push_back(r);
     srv->dispatch_time = current_time;
     AsyncCall::Pointer call = commCbCall(5,5, "helperStatefulDispatchWriteDone",
-                                         CommIoCbPtrFun(helperStatefulDispatchWriteDone, hlp));
+                                         CommIoCbPtrFun(helperStatefulDispatchWriteDone, srv));
     Comm::Write(srv->writePipe, r->request.buf, strlen(r->request.buf), call, nullptr);
     debugs(84, 5, "helperStatefulDispatch: Request sent to " <<
            hlp->id_name << " #" << srv->index << ", " <<
@@ -1481,7 +1522,7 @@ helperStatefulDispatch(helper_stateful_server * srv, Helper::Xaction * r)
 }
 
 static void
-helperKickQueue(helper * hlp)
+helperKickQueue(const helper::Pointer &hlp)
 {
     Helper::Xaction *r;
     helper_server *srv;
@@ -1491,7 +1532,7 @@ helperKickQueue(helper * hlp)
 }
 
 static void
-helperStatefulKickQueue(statefulhelper * hlp)
+helperStatefulKickQueue(const statefulhelper::Pointer &hlp)
 {
     Helper::Xaction *r;
     helper_stateful_server *srv;

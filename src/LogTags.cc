@@ -59,7 +59,7 @@ LogTags::update(const LogTags_ot t)
 }
 
 /*
- * This method is documented in http://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid_result_codes
+ * This method is documented in https://wiki.squid-cache.org/SquidFaq/SquidLogs#squid-result-codes
  * Please keep the wiki up to date
  */
 const char *
