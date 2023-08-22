@@ -102,10 +102,11 @@ public:
         return p != p_;
     }
 
-private:
+    // TODO private:
     /// use public Make() instead
     RefCount(C * const p): p_(p) { reference(*this); }
 
+private:
     void dereference(C const *newP = nullptr) {
         /* Setting p_ first is important:
         * we may be freed ourselves as a result of
