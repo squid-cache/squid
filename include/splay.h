@@ -240,7 +240,7 @@ Splay<V>::visitEach(Visitor &visitor) const
     // that use that link.
     // This also helps to distinguish between up and down movements, eliminating
     // the need to descent into left subtree a second time after traversing the
-    // thread to find the loop cut the thread.
+    // thread to find the loop and remove the temporary thread.
 
     if (!head)
         return;
