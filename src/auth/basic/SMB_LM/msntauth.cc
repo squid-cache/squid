@@ -60,7 +60,7 @@ struct domaincontroller {
 typedef std::vector<domaincontroller> domaincontrollers_t;
 domaincontrollers_t domaincontrollers;
 
-bool
+static bool
 validate_user(char *username, char *password)
 {
     for (domaincontrollers_t::iterator dc = domaincontrollers.begin(); dc != domaincontrollers.end(); ++dc) {
@@ -74,7 +74,7 @@ validate_user(char *username, char *password)
 }
 
 static char instructions[] = "Usage instructions: basic_nsnt_auth <domainname>/<domaincontroller> [<domainname>/<domaincontroller> ...]";
-void
+static void
 display_usage_instructions()
 {
     using std::endl;
