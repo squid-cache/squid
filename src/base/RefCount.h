@@ -69,6 +69,8 @@ public:
         return *this;
     }
 
+    RefCount &operator =(std::nullptr_t) { dereference(); return *this; }
+
     explicit operator bool() const { return p_; }
 
     bool operator !() const { return !p_; }

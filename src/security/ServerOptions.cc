@@ -136,26 +136,26 @@ Security::ServerOptions::parse(const char *token)
 }
 
 void
-Security::ServerOptions::dumpCfg(Packable *p, const char *pfx) const
+Security::ServerOptions::dumpCfg(std::ostream &os, const char *pfx) const
 {
     // dump out the generic TLS options
-    Security::PeerOptions::dumpCfg(p, pfx);
+    Security::PeerOptions::dumpCfg(os, pfx);
 
     if (!encryptTransport)
         return; // no other settings are relevant
 
     // dump the server-only options
     if (!dh.isEmpty())
-        p->appendf(" %sdh=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(dh));
+        os << ' ' << pfx << "dh=" << dh;
 
     if (!generateHostCertificates)
-        p->appendf(" %sgenerate-host-certificates=off", pfx);
+        os << ' ' << pfx << "generate-host-certificates=off";
 
     if (dynamicCertMemCacheSize != 4*1024*1024) // 4MB default, no 'tls-' prefix
-        p->appendf(" dynamic_cert_mem_cache_size=%zubytes", dynamicCertMemCacheSize);
+        os << ' ' << "dynamic_cert_mem_cache_size=" << dynamicCertMemCacheSize << "bytes";
 
     if (!staticContextSessionId.isEmpty())
-        p->appendf(" %scontext=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(staticContextSessionId));
+        os << ' ' << pfx << "context=" << staticContextSessionId;
 }
 
 Security::ContextPointer
