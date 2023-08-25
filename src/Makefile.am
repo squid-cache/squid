@@ -2744,7 +2744,7 @@ TESTS += $(check_PROGRAMS) testHeaders
 ## Special Universal .h dependency test script
 ## aborts if error encountered
 testHeaders: $(srcdir)/*.h $(srcdir)/DiskIO/*.h $(srcdir)/DiskIO/*/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
+	$(MAKE) $(^:.h=.hdrtest)
 ## src/repl/ has no .h files and its own makefile.
 
 CLEANFILES += testHeaders

@@ -93,7 +93,7 @@ TESTS += testHeaders
 ## Special Universal .h dependency test script
 ## aborts if error encountered
 testHeaders: $(srcdir)/*.h $(srcdir)/os/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
+	$(MAKE) $(^:.h=.hdrtest)
 
 CLEANFILES += testHeaders
 

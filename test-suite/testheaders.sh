@@ -26,7 +26,6 @@ TRUE=${TRUE:-/bin/true}
 exitCode=0
 
 for f in $@; do
-	echo -n "Testing ${f} ..."
     t="testhdr_`basename ${f}`"
     if [ ! -f "$t.o" -o $f -nt "$t.o" ]; then
         echo >$t.cc <<EOF
@@ -36,9 +35,9 @@ for f in $@; do
 int main( int argc, char* argv[] ) { return 0; }
 EOF
         if ${cc} -c -o $t.o $t.cc ; then
-            echo "Ok."
+            echo "Testing ${f} ... Ok."
         else
-            echo "Fail."
+            echo "Testing ${f} ... Fail."
             exitCode=1
         fi
         rm $t.cc $t.o

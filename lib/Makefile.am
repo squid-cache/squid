@@ -81,7 +81,7 @@ tests_testRFC1738_LDFLAGS = $(LIBADD_DL)
 ## Special Universal .h dependency test script
 ## aborts if error encountered
 testHeaders: $(top_srcdir)/include/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
+	$(MAKE) $(^:.h=.hdrtest)
 
 TESTS += testHeaders
 CLEANFILES += testHeaders
