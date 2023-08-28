@@ -169,6 +169,9 @@ public:
     /// are expected.
     static void SettleSyslog();
 
+    /// returns true once for each different filename and line number, then false
+    static bool Once(const char * aFileName, const uint32_t aLineNo);
+
 private:
     static void FormatStream(std::ostream &);
     static void LogMessage(const Context &);
@@ -204,6 +207,24 @@ void ResyncDebugLog(FILE *newDestination);
             Debug::Finish(); \
         } \
    } while (/*CONSTCOND*/ 0)
+
+#define debugs_once(SECTION, LEVEL, CONTENT)                          \
+    do                                                                \
+    {                                                                 \
+        const int _dbg_level = (LEVEL);                               \
+        if (Debug::Enabled((SECTION), _dbg_level) &&                  \
+            Debug::Once(__FILE__, __LINE__))                          \
+        {                                                             \
+            std::ostream &_dbo = Debug::Start((SECTION), _dbg_level); \
+            if (_dbg_level > DBG_IMPORTANT)                           \
+            {                                                         \
+                _dbo << (SECTION) << ',' << _dbg_level << "| "        \
+                     << Here() << ": ";                               \
+            }                                                         \
+            _dbo << CONTENT;                                          \
+            Debug::Finish();                                          \
+        }                                                             \
+    } while (/*CONSTCOND*/ 0)
 
 /// Does not change the stream being manipulated. Exists for its side effect:
 /// In a debugs() context, forces the message to become a syslog ALERT.

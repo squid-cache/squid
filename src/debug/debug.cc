@@ -22,6 +22,8 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <set>
+#include <utility>
 
 char *Debug::debugOptions = nullptr;
 int Debug::override_X = 0;
@@ -1151,6 +1153,13 @@ Debug::SettleSyslog()
 #endif /* HAVE_SYSLOG */
 
     Module().syslogChannel.stopEarlyMessageCollection();
+}
+
+bool
+Debug::Once(const char * aFileName, const uint32_t aLineNo)
+{
+    static std::set<std::pair<const char *, const uint32_t> > seen;
+    return seen.emplace(std::make_pair(aFileName,aLineNo)).second;
 }
 
 void
