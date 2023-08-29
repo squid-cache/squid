@@ -163,26 +163,30 @@ internalHostname(void)
 }
 
 bool
-internalWithMyHostname(const AnyP::Uri &url, const AnyP::PortCfg &listener)
+internalUriTargetingListeningPort(const AnyP::Uri &url, const AnyP::PortCfg &listeningPort)
 {
     // different port numbers is a fast NO
-    if (url.port() != listener.s.port())
+    if (url.port() != listeningPort.s.port())
         return false;
 
-    // a "localhost" URL matches an explicit localhost port IP or a wildcard port IP
-    const bool receivedAtLocalhost = (listener.s.isLocalhost() || listener.s.isAnyAddr());
+    // accept raw-IP URL matching a port configured with explicit IP:port settings
+    if (url.hostIsNumeric() && !listeningPort.s.isAnyAddr() && url.hostIP() == listeningPort.s)
+        return true;
+
+    // accept "localhost" URL matching an explicit localhost port IP or a wildcard port IP
+    const bool receivedAtLocalhost = (listeningPort.s.isLocalhost() || listeningPort.s.isAnyAddr());
     if (receivedAtLocalhost && strcasecmp(url.host(), "localhost") == 0)
         return true;
 
-    // accel ports with defaultsite= can also match
-    if (listener.defaultsite && strcasecmp(url.host(), listener.defaultsite) == 0)
+    // accept URL matching a ports configured defaultsite=
+    if (listeningPort.defaultsite && strcasecmp(url.host(), listeningPort.defaultsite) == 0)
         return true;
 
     // accept visible_hostname, unique_hostname, or machines hostname()
     if (strcasecmp(url.host(), internalHostname()) == 0)
         return true;
 
-    // matching any one of the hostname_aliases
+    // accept any one of the hostname_aliases
     for (const auto *w = Config.hostnameAliases; w; w = w->next) {
         if (strcasecmp(url.host(), w->key) == 0)
             return true;

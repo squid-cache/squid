@@ -13,4 +13,5 @@
 #include "tests/STUB.h"
 
 char *internalLocalUri(const char *, const SBuf &) STUB_RETVAL(nullptr)
-bool internalWithMyHostname(const AnyP::Uri &, const AnyP::PortCfg &) STUB_RETVAL(false)
+bool internalUriTargetingListeningPort(const AnyP::Uri &, const AnyP::PortCfg &) STUB_RETVAL(false)
+
