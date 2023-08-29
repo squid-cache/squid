@@ -146,7 +146,7 @@ jobs:
         uses: github/codeql-action/init@v2
 
       - name: Build Squid
-        run: ./test-builds.sh check ./test-suite/buildtests/layer-02-maximus.opts
+        run: ./test-builds.sh ./test-suite/buildtests/layer-02-maximus.opts
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
