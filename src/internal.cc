@@ -165,11 +165,11 @@ internalHostname(void)
 bool
 internalWithMyHostname(const AnyP::Uri &url, const AnyP::PortCfg &listener)
 {
-    // different ports is a fast NO
+    // different port numbers is a fast NO
     if (url.port() != listener.s.port())
         return false;
 
-    // "localhost" in URL can match wildcard IP, or explicit localhost-IP listeners
+    // a "localhost" URL matches an explicit localhost port IP or a wildcard port IP
     const bool receivedAtLocalhost = (listener.s.isLocalhost() || listener.s.isAnyAddr());
     if (receivedAtLocalhost && strcasecmp(url.host(), "localhost") == 0)
         return true;
@@ -182,7 +182,7 @@ internalWithMyHostname(const AnyP::Uri &url, const AnyP::PortCfg &listener)
     if (strcasecmp(url.host(), internalHostname()) == 0)
         return true;
 
-    // accept hostname_aliases directive
+    // matching any one of the hostname_aliases
     for (const auto *w = Config.hostnameAliases; w; w = w->next) {
         if (strcasecmp(url.host(), w->key) == 0)
             return true;
@@ -190,3 +190,4 @@ internalWithMyHostname(const AnyP::Uri &url, const AnyP::PortCfg &listener)
 
     return false; // no match
 }
+
