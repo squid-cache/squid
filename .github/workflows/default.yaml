@@ -107,7 +107,7 @@ jobs:
           sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
-          sudo apt-get --quiet=2 install linuxdoc-tools
+          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin
 
       - name: Checkout sources
         uses: actions/checkout@v3
@@ -137,7 +137,7 @@ jobs:
           sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
-          sudo apt-get --quiet=2 install linuxdoc-tools
+          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin
 
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -146,9 +146,7 @@ jobs:
         uses: github/codeql-action/init@v2
 
       - name: Build Squid
-        run: |
-          ./bootstrap.sh
-          ./test-builds.sh ./test-suite/buildtests/layer-02-maximus.opts
+        run: ./test-builds.sh check ./test-suite/buildtests/layer-02-maximus.opts
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
