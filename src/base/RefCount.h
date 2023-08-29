@@ -31,8 +31,9 @@ public:
     inline static auto Make(Args&&... args) {
         return RefCount<C>(new C(std::forward<Args>(args)...));
     }
-
     RefCount () : p_ (nullptr) {}
+
+    RefCount (C const *p) : p_(p) { reference (*this); }
 
     ~RefCount() {
         dereference();
@@ -103,10 +104,6 @@ public:
     {
         return p != p_;
     }
-
-    // TODO private:
-    /// use public Make() instead
-    RefCount(C * const p): p_(p) { reference(*this); }
 
 private:
     void dereference(C const *newP = nullptr) {
