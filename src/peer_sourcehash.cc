@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
@@ -42,8 +43,6 @@ peerSourceHashInit(void)
     int K;
     int k;
     double P_last, X_last, Xn;
-    CachePeer *p;
-    CachePeer **P;
     char *t;
     /* Clean up */
 
@@ -55,7 +54,7 @@ peerSourceHashInit(void)
     n_sourcehash_peers = 0;
     /* find out which peers we have */
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: CurrentCachePeers()) {
         if (!p->options.sourcehash)
             continue;
 
@@ -76,8 +75,11 @@ peerSourceHashInit(void)
 
     sourcehash_peers = (CachePeer **)xcalloc(n_sourcehash_peers, sizeof(*sourcehash_peers));
 
+    auto P = sourcehash_peers;
     /* Build a list of the found peers and calculate hashes and load factors */
-    for (P = sourcehash_peers, p = Config.peers; p; p = p->next) {
+    for (const auto &peer: CurrentCachePeers()) {
+        const auto p = peer.get();
+
         if (!p->options.sourcehash)
             continue;
 
@@ -125,7 +127,7 @@ peerSourceHashInit(void)
 
     for (k = 1; k <= K; ++k) {
         double Kk1 = (double) (K - k + 1);
-        p = sourcehash_peers[k - 1];
+        const auto p = sourcehash_peers[k - 1];
         p->sourcehash.load_multiplier = (Kk1 * (p->sourcehash.load_factor - P_last)) / Xn;
         p->sourcehash.load_multiplier += pow(X_last, Kk1);
         p->sourcehash.load_multiplier = pow(p->sourcehash.load_multiplier, 1.0 / Kk1);
@@ -195,7 +197,6 @@ peerSourceHashSelectParent(PeerSelector *ps)
 static void
 peerSourceHashCachemgr(StoreEntry * sentry)
 {
-    CachePeer *p;
     int sumfetches = 0;
     storeAppendPrintf(sentry, "%24s %10s %10s %10s %10s\n",
                       "Hostname",
@@ -204,10 +205,10 @@ peerSourceHashCachemgr(StoreEntry * sentry)
                       "Factor",
                       "Actual");
 
-    for (p = Config.peers; p; p = p->next)
+    for (const auto &p: CurrentCachePeers())
         sumfetches += p->stats.fetches;
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: CurrentCachePeers()) {
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
                           p->name, p->sourcehash.hash,
                           p->sourcehash.load_multiplier,

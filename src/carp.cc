@@ -58,7 +58,9 @@ carpInit(void)
     /* find out which peers we have */
 
     RawCachePeers rawCarpPeers;
-    for (auto p = Config.peers; p; p = p->next) {
+    for (const auto &peer: CurrentCachePeers()) {
+        const auto p = peer.get();
+
         if (!p->options.carp)
             continue;
 

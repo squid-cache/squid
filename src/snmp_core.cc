@@ -13,6 +13,7 @@
 #include "base/AsyncCallbacks.h"
 #include "base/CbcPointer.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "client_db.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -26,6 +27,7 @@
 #include "snmp_core.h"
 #include "SnmpRequest.h"
 #include "SquidConfig.h"
+#include "SquidMath.h"
 #include "tools.h"
 
 static void snmpPortOpened(Ipc::StartListeningAnswer&);
@@ -724,9 +726,9 @@ static oid *
 peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 {
     oid *instance = nullptr;
-    CachePeer *peers = Config.peers;
+    const auto peersAvailable = CurrentCachePeers().size();
 
-    if (peers == nullptr) {
+    if (!peersAvailable) {
         debugs(49, 6, "snmp peer_Inst: No Peers.");
         current = current->parent->parent->parent->leaves[1];
         while ((current) && (!current->parsefunction))
@@ -746,9 +748,9 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         int no = name[current->len] ;
         int i;
         // Note: This works because the Config.peers keeps its index according to its position.
-        for ( i=0 ; peers && (i < no) ; peers = peers->next, ++i ) ;
+        for (i = 0; Less(i, peersAvailable) && Less(i, no); ++i);
 
-        if (peers) {
+        if (Less(i, peersAvailable)) {
             debugs(49, 6, "snmp peer_Inst: Encode peer #" << i);
             instance = (oid *)xmalloc(sizeof(*name) * (current->len + 1 ));
             memcpy(instance, name, (sizeof(*name) * current->len ));

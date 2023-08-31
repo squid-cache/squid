@@ -48,6 +48,7 @@ public:
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
+    /// n-th cache_peer directive, starting with 1
     u_int index = 0;
 
     /// cache_peer name (if explicitly configured) or hostname (otherwise).
@@ -179,7 +180,6 @@ public:
     Ip::Address addresses[10];
     int n_addresses = 0;
     int rr_count = 0;
-    CachePeer *next = nullptr;
     int testing_now = 0;
 
     struct {
