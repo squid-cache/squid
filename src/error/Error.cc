@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "debug/Stream.h"
+#include "error/Details.h"
 #include "error/Error.h"
 
 void
@@ -24,8 +25,7 @@ Error::update(const Error &recent)
     // may result in more details available if they only become available later
     if (category == ERR_NONE)
         category = recent.category; // may still be ERR_NONE
-    if (!detail)
-        detail = recent.detail; // may still be nil
+    ErrorDetails::Merge(detail, recent.detail); // may still be nil
 }
 
 std::ostream &
