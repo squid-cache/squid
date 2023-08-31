@@ -15,6 +15,7 @@
 #include "base/Lock.h"
 
 #include <iostream>
+#include <utility>
 
 /**
  * Template for Reference Counting pointers.
