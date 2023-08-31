@@ -11,15 +11,23 @@
 
 #include "error/Detail.h"
 #include "error/forward.h"
+#include "mem/PoolingAllocator.h"
 
 #include <iosfwd>
+#include <vector>
+
+/// zero or more unique ErrorDetail objects
+using ErrorDetails = std::vector<ErrorDetailPointer, PoolingAllocator<ErrorDetailPointer> >;
+
+/// prints all details separated by '+' (or, if there are no details, nothing)
+std::ostream &operator <<(std::ostream &os, const ErrorDetails &);
 
 /// a transaction problem
 class Error {
 public:
     Error() = default;
     Error(const err_type c): category(c) {} ///< support implicit conversions
-    Error(const err_type c, const ErrorDetailPointer &d): category(c), detail(d) {}
+    Error(const err_type c, const ErrorDetailPointer &d): category(c), details(1, d) {}
 
     explicit operator bool() const { return category != ERR_NONE; }
 
@@ -27,13 +35,17 @@ public:
     void update(const Error &);
 
     /// convenience wrapper for update(Error)
-    void update(const err_type c, const ErrorDetailPointer &d) { update(Error(c, d)); }
+    void update(err_type, const ErrorDetailPointer &);
 
     /// switch to the default "no error information" state
     void clear() { *this = Error(); }
 
     err_type category = ERR_NONE; ///< primary error classification (or ERR_NONE)
-    ErrorDetailPointer detail; ///< additional details about the error
+    ErrorDetails details; ///< additional details about the error
+
+private:
+    bool startUpdate(err_type, bool);
+    void updateDetails(const ErrorDetailPointer &);
 };
 
 extern const char *err_type_str[];

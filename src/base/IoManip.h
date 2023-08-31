@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <optional>
 
 /// Safely prints an object pointed to by the given pointer: [label]<object>
 /// Prints nothing at all if the pointer is nil.
@@ -100,6 +101,49 @@ inline AsHex<Integer> asHex(const Integer n) { return AsHex<Integer>(n); }
 
 /// Prints the first n data bytes using hex notation. Does nothing if n is 0.
 void PrintHex(std::ostream &, const char *data, size_t n);
+
+/// std::ostream manipulator to print containers as flat lists
+template <typename Container>
+class AsList
+{
+public:
+    explicit AsList(const Container &c): container(c) {}
+
+    /// a character to print before the first item (if any)
+    auto &prefixedBy(const char ch) { prefix = ch; return *this; }
+
+    /// a character to print between consecutive items (if any)
+    auto &delimitedBy(const char ch) { delimiter = ch; return *this; }
+
+public:
+    const Container &container; ///< zero or more items to print
+
+    std::optional<char> prefix; ///< \copydoc prefixedBy()
+    std::optional<char> delimiter; ///< \copydoc delimitedBy()
+};
+
+template <class Container>
+inline std::ostream &
+operator <<(std::ostream &os, const AsList<Container> &manipulator)
+{
+    bool opened = false;
+    for (const auto &item: manipulator.container) {
+        if (!opened) {
+            if (manipulator.prefix)
+                os << *manipulator.prefix;
+            opened = true;
+        } else {
+            if (manipulator.delimiter)
+                os << *manipulator.delimiter;
+        }
+        os << item;
+    }
+    return os;
+}
+
+/// a helper to ease AsList object creation
+template <typename Container>
+inline auto asList(const Container &c) { return AsList<Container>(c); }
 
 #endif /* SQUID_SRC_BASE_IO_MANIP_H */
 

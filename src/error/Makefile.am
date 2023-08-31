@@ -19,8 +19,6 @@ noinst_LTLIBRARIES = liberror.la
 liberror_la_SOURCES = \
 	Detail.cc \
 	Detail.h \
-	Details.cc \
-	Details.h \
 	Error.cc \
 	Error.h \
 	ExceptionErrorDetail.h \

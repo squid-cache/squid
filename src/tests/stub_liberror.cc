@@ -16,9 +16,11 @@
 const char * err_type_str[ERR_MAX] = {};
 
 void Error::update(const Error &) STUB_NOP
+void Error::update(err_type, const ErrorDetailPointer &) STUB_NOP
 
 std::ostream &operator <<(std::ostream &os, const Error &) STUB_RETVAL(os)
 std::ostream &operator <<(std::ostream &os, const ErrorDetail::Pointer &) STUB_RETVAL(os)
+std::ostream &operator <<(std::ostream &os, const ErrorDetails &) STUB_RETVAL(os)
 
 ErrorDetail::Pointer MakeNamedErrorDetail(const char *) STUB_RETVAL(ErrorDetail::Pointer())
 
