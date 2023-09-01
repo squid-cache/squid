@@ -17,14 +17,12 @@
 #
 cc="${1}"
 shift
-for dir in /usr/bin /usr/local/bin /usr/gnu/bin
-do
-	test -x ${dir}/true && TRUE=${dir}/true
-done
-TRUE=${TRUE:-/bin/true}
 
 exitCode=0
 
+echo "1..$#"
+testNum=1
+exitCode=0
 for f in $@; do
     t="testhdr_`basename ${f}`"
     if [ ! -f "$t.o" -o $f -nt "$t.o" ]; then
@@ -35,16 +33,15 @@ for f in $@; do
 int main( int argc, char* argv[] ) { return 0; }
 EOF
         if ${cc} -c -o $t.o $t.cc ; then
-            echo "Testing ${f} ... Ok."
+            echo "ok ${testNum} - ${f}"
         else
-            echo "Testing ${f} ... Fail."
+            echo "not ok ${testNum} - ${f}"
             exitCode=1
         fi
         rm $t.cc $t.o
+        testNum=`expr ${testNum} + 1`
     fi
-    test $exitCode -eq 0 || break
 done
 
 #who ever said that the test program needs to be meaningful?
-test $exitCode -eq 0 && cp ${TRUE} testHeaders
 exit $exitCode

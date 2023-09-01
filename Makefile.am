@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AUTOMAKE_OPTIONS = dist-bzip2 1.5 foreign
+AUTOMAKE_OPTIONS = dist-bzip2 1.5 foreign parallel-tests
 
 SUBDIRS = compat contrib doc errors icons
 
@@ -47,6 +47,10 @@ install-pinger:
 	chmod 4711 $(DESTDIR)$(DEFAULT_PINGER)
 
 ## hack to insert the test first, before building recursive child directories
+
+TEST_EXTENSIONS = .hdrtest
+hdrtest_LOG_COMPILER = $(srcdir)/test-suite/testheaders.sh
+
 check: have-cppunit check-recursive
 
 have-cppunit:

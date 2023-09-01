@@ -2747,6 +2747,6 @@ testHeaders: $(srcdir)/*.h $(srcdir)/DiskIO/*.h $(srcdir)/DiskIO/*/*.h
 	$(MAKE) $(^:.h=.hdrtest)
 ## src/repl/ has no .h files and its own makefile.
 
-CLEANFILES += testHeaders
+# CLEANFILES += testHeaders
 .PHONY: testHeaders
 
