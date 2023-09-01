@@ -216,7 +216,7 @@ msgstr ""
 msgid ""
 "This manual page only lists the command line arguments.  For details on how "
 "to configure B<squid> see the file B<@DEFAULT_CONFIG_FILE@.documented,> the "
-"Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the "
+"Squid wiki FAQ and examples at https://wiki.squid-cache.org/ , or the "
 "configuration manual on the B<squid> home page http://www.squid-"
 "cache.org/Doc/config/"
 msgstr ""
@@ -575,7 +575,7 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:188
 msgid ""
-"B<The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq> B<The Squid "
+"B<The Squid FAQ wiki https://wiki.squid-cache.org/SquidFaq> B<The Squid "
 "Configuration Manual http://www.squid-cache.org/Doc/config/>"
 msgstr ""
 

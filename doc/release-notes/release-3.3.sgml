@@ -21,13 +21,13 @@ This new release is available for download from <url url="http://www.squid-cache
 <p>A large number of the design flaws in SSL-Bump feature have been fixed along with general improvements all around.
 While this release is not fully bug-free we believe it is ready for use in production on many systems.
 
-<p>We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting">
+<p>We welcome feedback and bug reports. If you find a bug, please see <url url="https://wiki.squid-cache.org/SquidFaq/BugReporting">
  for how to submit a report with a stack trace.
 
 <sect1>Known issues
 <p>
 Although this release is deemed good enough for use in many setups, please note the existence of 
-<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.3" name="open bugs against Squid-3.3">.
+<url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.3" name="open bugs against Squid-3.3">.
 
 
 <sect1>Changes since earlier releases of Squid-3.3
@@ -76,7 +76,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>SSL-Bump Server First
-<p>Details at <url url="http://wiki.squid-cache.org/Features/BumpSslServerFirst">.
+<p>Details at <url url="https://wiki.squid-cache.org/Features/BumpSslServerFirst">.
 
 <p>When an intercepted connection is received, Squid first connects
    to the server using SSL and receives the server certificate.
@@ -122,7 +122,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 </itemize>
 
 <sect1>Server Certificate Mimic
-<p>Details at <url url="http://wiki.squid-cache.org/Features/MimicSslServerCert">.
+<p>Details at <url url="https://wiki.squid-cache.org/Features/MimicSslServerCert">.
 
 <p>One of the SslBump features serious drawbacks is the loss of
    information embedded in SSL server certificate.

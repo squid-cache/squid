@@ -28,7 +28,6 @@ public:
     mutable SplayNode<V> *left;
     mutable SplayNode<V> *right;
     void destroy(SPLAYFREE * = DefaultFree);
-    void walk(SPLAYWALKEE *, void *callerState);
     SplayNode<V> const * start() const;
     SplayNode<V> const * finish() const;
 
@@ -95,19 +94,6 @@ SQUIDCEXTERN int splayLastResult;
 
 template<class V>
 SplayNode<V>::SplayNode (Value const &someData) : data(someData), left(nullptr), right (nullptr) {}
-
-template<class V>
-void
-SplayNode<V>::walk(SPLAYWALKEE * walkee, void *state)
-{
-    if (left)
-        left->walk(walkee, state);
-
-    walkee(data, state);
-
-    if (right)
-        right->walk(walkee, state);
-}
 
 template<class V>
 SplayNode<V> const *

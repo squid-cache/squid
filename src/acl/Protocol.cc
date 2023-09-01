@@ -9,17 +9,13 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Protocol.h"
-#include "acl/ProtocolData.h"
-#include "acl/Strategised.h"
 #include "HttpRequest.h"
 
-/* explicit template instantiation required for some systems */
-
-template class ACLStrategised<AnyP::ProtocolType>;
-
 int
-ACLProtocolStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::ProtocolCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     return data->match(checklist->request->url.getScheme());
 }
 
