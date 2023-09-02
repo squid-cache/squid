@@ -856,14 +856,13 @@ helper::~helper()
     // us, its parent, alive due to reference counting. The idle=1 minimum means
     // that either there has to be at least one server alive, or the last
     // attempt to start a server has failed. If such an attempt fails,
-    // handleFewerServers() is called to drain the queue.
+    // handleKilledServer() is called to drain the queue.
     assert(queue.empty());
 }
 
 void
-helper::handleKilledServer(HelperServerBase *srv, bool &needsNewServers)
+helper::handleKilledServer(HelperServerBase *srv)
 {
-    needsNewServers = false;
     if (!srv->flags.shutdown) {
         assert(childs.n_active > 0);
         --childs.n_active;
@@ -873,9 +872,13 @@ helper::handleKilledServer(HelperServerBase *srv, bool &needsNewServers)
 
         if (childs.needNew() > 0) {
             srv->flags.shutdown = true;
-            needsNewServers = true;
+            debugs(80, DBG_IMPORTANT, "Starting new helpers");
+            helperOpenServers(helper::Pointer(this));
         }
     }
+
+    if (!childs.n_active)
+        dropQueued();
 }
 
 void
@@ -899,7 +902,7 @@ helper::handleFewerServers(const bool madeProgress)
 }
 
 void
-helper::clearQueue()
+helper::dropQueued()
 {
     if (queue.empty())
         return;
@@ -924,17 +927,8 @@ helper::clearQueue()
 void
 helper_server::HelperServerClosed(helper_server *srv)
 {
-    const auto hlp = srv->parent;
-
-    bool needsNewServers = false;
-    hlp->handleKilledServer(srv, needsNewServers);
-    if (needsNewServers) {
-        debugs(80, DBG_IMPORTANT, "Starting new helpers");
-        helperOpenServers(hlp);
-    }
-
+    srv->parent->handleKilledServer(srv);
     srv->dropQueued();
-
     delete srv;
 }
 
@@ -943,17 +937,8 @@ helper_server::HelperServerClosed(helper_server *srv)
 void
 helper_stateful_server::HelperServerClosed(helper_stateful_server *srv)
 {
-    const auto hlp = srv->parent;
-
-    bool needsNewServers = false;
-    hlp->handleKilledServer(srv, needsNewServers);
-    if (needsNewServers) {
-        debugs(80, DBG_IMPORTANT, "Starting new helpers");
-        helperStatefulOpenServers(hlp);
-    }
-
+    srv->parent->handleKilledServer(srv);
     srv->dropQueued();
-
     delete srv;
 }
 
@@ -1558,7 +1543,7 @@ helperKickQueue(const helper::Pointer &hlp)
         helperDispatch(srv, r);
 
     if (!hlp->childs.n_active)
-        hlp->clearQueue();
+        hlp->dropQueued();
 }
 
 static void
@@ -1573,7 +1558,7 @@ helperStatefulKickQueue(const statefulhelper::Pointer &hlp)
     }
 
     if (!hlp->childs.n_active)
-        hlp->clearQueue();
+        hlp->dropQueued();
 }
 
 static void

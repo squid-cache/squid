@@ -88,19 +88,19 @@ public:
     /// already overloaded helpers return true
     bool willOverload() const;
 
-    /// Updates interall statistics and start new helper server processes after
+    /// Updates internal statistics and starts new helper server processes after
     /// an unexpected server exit
-    /// \param needsNewServers true if new servers must started, false otherwise
-    void handleKilledServer(HelperServerBase *srv, bool &needsNewServers);
+    void handleKilledServer(HelperServerBase *);
 
     /// Reacts to unexpected server death(s), including a failure to start server(s)
     /// and an unexpected exit of a previously started server. \sa handleKilledServer()
     /// \param madeProgress whether the died server(s) responded to any requests
     void handleFewerServers(bool madeProgress);
 
-    /// de-queues all requests and sends a Helper::Unknown answer to callers
+    /// satisfies all queued requests with a Helper::Unknown answer
+    /// \prec no existing servers will be able to process queued requests
     /// \sa HelperServerBase::dropQueued()
-    void clearQueue();
+    void dropQueued();
 
 public:
     wordlist *cmdline = nullptr;
