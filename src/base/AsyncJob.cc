@@ -15,9 +15,9 @@
 #include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "cbdata.h"
-#include "mgr/Registration.h"
 #include "mem/PoolingAllocator.h"
 #include "MemBuf.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 
 #include <ostream>
