@@ -20,10 +20,11 @@
 #include "Store.h"
 
 #include <ostream>
+#include <unordered_set>
 
 InstanceIdDefinitions(AsyncJob, "job");
 
-AsyncJob::Jobs AsyncJob::Jobs_;
+static std::unordered_set<AsyncJob *, std::hash<AsyncJob *>, std::equal_to<AsyncJob *>, PoolingAllocator<AsyncJob *> > Jobs_;
 
 void
 AsyncJob::Start(const Pointer &job)
@@ -187,24 +188,25 @@ const char *AsyncJob::status() const
 }
 
 void
-AsyncJob::stat(StoreEntry *e)
+AsyncJob::ReportAllJobs(StoreEntry *e)
 {
     PackableStream os(*e);
-    const char *ident = "    ";
+    // this loop uses YAML syntax, but AsyncJob::status() still needs to be adjusted to use YAML
+    const char *indent = "    ";
     for (const auto job: Jobs_) {
-        os << ident << job->id.prefix() << job->id.value << ":\n";
-        os << ident << ident << "type: " << job->typeName << '\n';
-        os << ident << ident << "status:" << job->status() << '\n';
+        os << indent << job->id.prefix() << job->id.value << ":\n";
+        os << indent << indent << "type: " << job->typeName << '\n';
+        os << indent << indent << "status:" << job->status() << '\n';
         if (!job->started_)
-            os << ident << ident << "started: false\n";
+            os << indent << indent << "started: false\n";
         if (job->stopReason)
-            os << ident << ident << "stopped: " << job->stopReason << '\n';
+            os << indent << indent << "stopped: '" << job->stopReason << "'\n";
     }
 }
 
 void
 AsyncJob::RegisterWithCacheManager()
 {
-    Mgr::RegisterAction("jobs", "All jobs", &AsyncJob::stat, 0, 1);
+    Mgr::RegisterAction("jobs", "All AsyncJob objects", &AsyncJob::ReportAllJobs, 0, 1);
 }
 

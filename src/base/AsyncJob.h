@@ -14,8 +14,6 @@
 #include "cbdata.h"
 #include "mem/PoolingAllocator.h"
 
-#include <unordered_set>
-
 template <class Cbc>
 class CbcPointer;
 
@@ -47,7 +45,6 @@ public:
     /// successfully (i.e. without throwing).
     static void Start(const Pointer &job);
 
-    /// registers the 'jobs' cache manager action
     static void RegisterWithCacheManager();
 
 protected:
@@ -82,8 +79,8 @@ protected:
     // external destruction prohibited to ensure swanSong() is called
     ~AsyncJob() override;
 
-    /// writes all existing jobs' statuses into a StoreEntry
-    static void stat(StoreEntry *);
+    /// writes a cache manager report about all jobs existing in this worker
+    static void ReportAllJobs(StoreEntry *);
 
     const char *stopReason; ///< reason for forcing done() to be true
     const char *typeName; ///< kid (leaf) class name, for debugging
@@ -91,10 +88,6 @@ protected:
 
     bool started_ = false; ///< Start() has finished successfully
     bool swanSang_ = false; ///< swanSong() was called
-
-private:
-    using Jobs = std::unordered_set<AsyncJob *, std::hash<AsyncJob *>, std::equal_to<AsyncJob *>, PoolingAllocator<AsyncJob *> >;
-    static Jobs Jobs_; ///< all existing AsyncJob objects
 };
 
 #endif /* SQUID_ASYNC_JOB_H */
