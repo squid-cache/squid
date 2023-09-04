@@ -1350,13 +1350,13 @@ ErrorState::BuildHttpReply()
     if (request) {
         if (detail)
             request->detailError(type, detail);
-        if (const auto errnoDetail = SysErrorDetail::NewIfAny(xerrno))
-            request->detailError(type, errnoDetail);
+        // call unconditionally to update err_code when there are no details
+        request->detailError(type, SysErrorDetail::NewIfAny(xerrno));
     } else if (ale) {
         if (detail)
             ale->updateError(Error(type, detail));
-        if (const auto errnoDetail = SysErrorDetail::NewIfAny(xerrno))
-            ale->updateError(Error(type, errnoDetail));
+        // call unconditionally to update err_code when there are no details
+        ale->updateError(Error(type, SysErrorDetail::NewIfAny(xerrno)));
     }
 
     return rep;
