@@ -16,6 +16,7 @@
 #include "base/TextException.h"
 #include "cbdata.h"
 #include "mgr/Registration.h"
+#include "mem/PoolingAllocator.h"
 #include "MemBuf.h"
 #include "Store.h"
 
