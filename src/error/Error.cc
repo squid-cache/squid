@@ -13,49 +13,46 @@
 #include "debug/Stream.h"
 #include "error/Error.h"
 
-/// reports the state before the update and updates category (if necessary)
-/// \retval false indicates that the caller should quit (without any further
-/// action like reporting update parameters and updating Error details)
-bool
-Error::startUpdate(const err_type recentCategory, const bool hasDetails)
+void
+Error::update(const err_type recentCategory)
 {
-    if (!recentCategory && !hasDetails)
-        return false; // no changes
+    if (recentCategory == ERR_NONE)
+        return; // no category given
 
-    if (*this)
-        debugs(4, 5, "old: " << *this);
+    if (category == recentCategory)
+        return; // no new category given
 
-    // checking category and detail separately may cause inconsistency, but
-    // may result in more details available if they only become available later
-    if (category == ERR_NONE)
-        category = recentCategory; // may still be ERR_NONE
+    if (category != ERR_NONE) {
+        debugs(4, 5, "ignoring: " << errorTypeName(recentCategory) << "; keeping " << *this);
+        return; // the category given earlier has won
+    }
 
-    return true;
+    category = recentCategory;
+    debugs(4, 3, "new: " << errorTypeName(category));
 }
 
-/// update existing details with the given one (if necessary)
 void
 Error::update(const ErrorDetail::Pointer &recentDetail)
 {
     if (!recentDetail)
-        return;
+        return; // no new detail given
 
     // an error can only have a few details so linear search is faster than indexing
     for (const auto &oldDetail: details) {
         if (recentDetail->equals(*oldDetail))
-            return; // already present
+            return; // the given detail is already present
     }
+
     details.push_back(recentDetail);
+    debugs(4, 3, "new: " << recentDetail);
 }
 
 void
 Error::update(const Error &recent)
 {
-    if (!startUpdate(recent.category, !recent.details.empty()))
-        return; // no changes
-
-    debugs(4, 3, "recent: " << recent);
-
+    // checking category and detail separately may cause inconsistency, but
+    // may result in more details available if they only become available later
+    update(recent.category);
     for (const auto &recentDetail: recent.details)
         update(recentDetail);
 }
@@ -65,13 +62,7 @@ Error::update(const err_type recentCategory, const ErrorDetail::Pointer &recentD
 {
     // Optimization: Do not simply call update(Error(...)) here because that
     // would require allocating and freeing heap memory for storing the detail.
-
-    if (!startUpdate(recentCategory, recentDetail != nullptr))
-        return; // no changes
-
-    // again, avoid heap operations
-    debugs(4, 3, "recent: " << Error(recentCategory) << '/' << recentDetail);
-
+    update(recentCategory);
     update(recentDetail);
 }
 

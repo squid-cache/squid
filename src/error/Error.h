@@ -38,7 +38,13 @@ public:
     /// more convenient and faster alternative to calling update(Error(c, d))
     void update(err_type, const ErrorDetailPointer &);
 
+    /// if necessary, stores the given error category (if any), leaving details unchanged;
+    /// the first non-ERR_NONE category wins;
+    /// more convenient alternative to calling update(Error(c))
+    void update(err_type);
+
     /// records an additional error detail (if any), leaving category unchanged
+    /// more convenient and faster alternative to calling update(Error(ERR_NONE, d))
     /// \param detail either nil or a pointer to a new or an already known detail
     void update(const ErrorDetailPointer &detail);
 
