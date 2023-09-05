@@ -195,7 +195,7 @@ AsyncJob::ReportAllJobs(StoreEntry *e)
     // this loop uses YAML syntax, but AsyncJob::status() still needs to be adjusted to use YAML
     const char *indent = "    ";
     for (const auto job: Jobs_) {
-        os << indent << job->id.prefix() << job->id.value << ":\n";
+        os << indent << job->id << ":\n";
         os << indent << indent << "type: '" << job->typeName << "'\n";
         os << indent << indent << "status:" << job->status() << '\n';
         if (!job->started_)
