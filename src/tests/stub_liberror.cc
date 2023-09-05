@@ -15,6 +15,8 @@
 
 const char * err_type_str[ERR_MAX] = {};
 
+void Error::update(err_type) STUB_NOP
+void Error::update(const ErrorDetailPointer &) STUB_NOP
 void Error::update(const Error &) STUB_NOP
 void Error::update(err_type, const ErrorDetailPointer &) STUB_NOP
 
