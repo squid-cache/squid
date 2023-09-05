@@ -57,9 +57,6 @@ public:
     /// without duplicates or nil pointers. The order/timing of update() calls
     /// is used to approximate detail discovery time.
     ErrorDetails details;
-
-private:
-    bool startUpdate(err_type, bool);
 };
 
 extern const char *err_type_str[];
