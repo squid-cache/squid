@@ -779,7 +779,9 @@ helperShutdown(const helper::Pointer &hlp)
         }
 
         assert(hlp->childs.n_active > 0);
-        -- hlp->childs.n_active;
+        if (!(--hlp->childs.n_active))
+            hlp->dropQueued();
+
         srv->flags.shutdown = true; /* request it to shut itself down */
 
         if (srv->flags.closing) {
