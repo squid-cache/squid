@@ -1120,10 +1120,6 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
-    static const SBuf cache_object("cache_object://");
-    if (hp->requestUri().startsWith(cache_object))
-        return nullptr; /* already in good shape */
-
     // XXX: re-use proper URL parser for this
     SBuf url = hp->requestUri(); // use full provided URI if we abort
     do { // use a loop so we can break out of it
@@ -1407,11 +1403,9 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
 
     } else if (internalCheck(hp->requestUri())) { // NP: only matches relative-URI
         /* internal URL mode */
-        /* prepend our name & port */
+        // XXX: By prepending our name and port, we create an absolute URL
+        // that may mismatch the (yet unparsed) Host header in the request.
         http->uri = xstrdup(internalLocalUri(nullptr, hp->requestUri()));
-        // We just re-wrote the URL. Must replace the Host: header.
-        //  But have not parsed there yet!! flag for local-only handling.
-        http->flags.internal = true;
 
     } else if (port->flags.accelSurrogate) {
         /* accelerator mode */
@@ -1644,13 +1638,13 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     if (internalCheck(request->url.path())) {
         if (internalHostnameIs(request->url.host()) && request->url.port() == getMyPort()) {
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true));
-            http->flags.internal = true;
+            request->flags.internal = true;
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->url.path())) {
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (global_internal_static on)");
             request->url.setScheme(AnyP::PROTO_HTTP, "http");
             request->url.host(internalHostname());
             request->url.port(getMyPort());
-            http->flags.internal = true;
+            request->flags.internal = true;
             http->setLogUriToRequestUri();
         } else
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
@@ -1658,11 +1652,6 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         if (ForSomeCacheManager(request->url.path()))
             request->flags.disableCacheUse("cache manager URL");
     }
-
-    request->flags.internal = http->flags.internal;
-
-    if (request->url.getScheme() == AnyP::PROTO_CACHE_OBJECT)
-        request->flags.disableCacheUse("cache_object URL scheme");
 
     if (!isFtp) {
         // XXX: for non-HTTP messages instantiate a different Http::Message child type
@@ -2120,7 +2109,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
                                     repContext->http->uri,
                                     CachePeer,
                                     repContext->http->request,
-                                    inBuf, NULL);
+                                    inBuf, nullptr);
         context->pullData();
     } else {
         // close or otherwise we may get stuck as nobody will notice the error?
@@ -2817,7 +2806,7 @@ ConnStateData::getSslContextDone(Security::ContextPointer &ctx)
         debugs(33, 2, "Failed to generate TLS context for " << tlsConnectHostOrIp);
     }
 
-    // If generated ssl context = NULL, try to use static ssl context.
+    // If generated ssl context = nullptr, try to use static ssl context.
     if (!ctx) {
         if (!port->secure.staticContext) {
             debugs(83, DBG_IMPORTANT, "Closing " << clientConnection->remote << " as lacking TLS context");

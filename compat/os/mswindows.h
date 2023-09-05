@@ -580,32 +580,6 @@ getsockopt(int s, int l, int o, void * v, socklen_t * n)
 }
 #define getsockopt(s,l,o,v,n) Squid::getsockopt(s,l,o,v,n)
 
-#if HAVE_DECL_INETNTOPA || HAVE_DECL_INET_NTOP
-inline char *
-inet_ntop(int af, const void *src, char *dst, size_t size)
-{
-#if HAVE_DECL_INETNTOPA
-    return (char*)InetNtopA(af, const_cast<void*>(src), dst, size);
-#else // HAVE_DECL_INET_NTOP
-    return ::inet_ntop(af, src, dst, size);
-#endif
-}
-#define inet_ntop(a,s,d,l) Squid::inet_ntop(a,s,d,l)
-#endif // let compat/inet_ntop.h deal with it
-
-#if HAVE_DECL_INETPTONA || HAVE_DECL_INET_PTON
-inline char *
-inet_pton(int af, const void *src, char *dst)
-{
-#if HAVE_DECL_INETPTONA
-    return (char*)InetPtonA(af, const_cast<void*>(src), dst);
-#else // HAVE_DECL_INET_PTON
-    return ::inet_pton(af, src, dst);
-#endif
-}
-#define inet_pton(a,s,d) Squid::inet_pton(a,s,d)
-#endif // let compat/inet_pton.h deal with it
-
 /* Simple ioctl() emulation */
 inline int
 ioctl(int s, int c, void * a)
@@ -910,15 +884,6 @@ size_t getpagesize();
 SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
 SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
 SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
-
-/* gcc doesn't recognize the Windows native 64 bit formatting tags causing
- * the compile fail, so we must disable the check on native Windows.
- */
-#if __GNUC__
-#define PRINTF_FORMAT_ARG1
-#define PRINTF_FORMAT_ARG2
-#define PRINTF_FORMAT_ARG3
-#endif
 
 /* XXX: the logic around this is a bit warped:
  *   we #define ACL unconditionally at the top of this file,

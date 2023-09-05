@@ -476,7 +476,10 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
             assert(fetch->old_entry->mem_obj->request);
 
-            Store::Root().updateOnNotModified(fetch->old_entry, *fetch->entry);
+            if (!Store::Root().updateOnNotModified(fetch->old_entry, *fetch->entry)) {
+                peerDigestFetchAbort(fetch, buf, "header update failure after a 304 response");
+                return -1;
+            }
 
             /* get rid of 304 reply */
             storeUnregister(fetch->sc, fetch->entry, fetch);
@@ -489,7 +492,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
             /* preserve request -- we need its size to update counters */
             /* requestUnlink(r); */
-            /* fetch->entry->mem_obj->request = NULL; */
+            /* fetch->entry->mem_obj->request = nullptr; */
 
             if (!fetch->pd->cd) {
                 peerDigestFetchAbort(fetch, buf, "304 without the old in-memory digest");

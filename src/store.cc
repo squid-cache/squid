@@ -35,6 +35,7 @@
 #include "mgr/StoreIoAction.h"
 #include "repl_modules.h"
 #include "RequestFlags.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "stmem.h"
@@ -1442,8 +1443,14 @@ StoreEntry::updateOnNotModified(const StoreEntry &e304)
     // update reply before calling timestampsSet() below
     const auto &oldReply = mem_obj->freshestReply();
     const auto updatedReply = oldReply.recreateOnNotModified(e304.mem_obj->baseReply());
-    if (updatedReply) // HTTP 304 brought in new information
+    if (updatedReply) { // HTTP 304 brought in new information
+        if (updatedReply->prefixLen() > Config.maxReplyHeaderSize) {
+            throw TextException(ToSBuf("cannot update the cached response because its updated ",
+                                       updatedReply->prefixLen(), "-byte header would exceed ",
+                                       Config.maxReplyHeaderSize, "-byte reply_header_max_size"), Here());
+        }
         mem_obj->updateReply(*updatedReply);
+    }
     // else continue to use the previous update, if any
 
     if (!timestampsSet() && !updatedReply)

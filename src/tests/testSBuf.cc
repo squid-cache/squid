@@ -1190,3 +1190,9 @@ TestSBuf::testSBufHash()
     }
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

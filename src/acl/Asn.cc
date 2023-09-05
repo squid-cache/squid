@@ -11,11 +11,10 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/Asn.h"
-#include "acl/Checklist.h"
 #include "acl/DestinationAsn.h"
 #include "acl/DestinationIp.h"
+#include "acl/FilledChecklist.h"
 #include "acl/SourceAsn.h"
-#include "acl/Strategised.h"
 #include "base/CharacterSet.h"
 #include "FwdState.h"
 #include "HttpReply.h"
@@ -517,19 +516,19 @@ ACLASN::parse()
     }
 }
 
-/* explicit template instantiation required for some systems */
-
-template class ACLStrategised<Ip::Address>;
-
 int
-ACLSourceASNStrategy::match (ACLData<Ip::Address> * &data, ACLFilledChecklist *checklist)
+Acl::SourceAsnCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     return data->match(checklist->src_addr);
 }
 
 int
-ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::DestinationAsnCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->url.host(), IP_LOOKUP_IF_MISS);
 
     if (ia) {

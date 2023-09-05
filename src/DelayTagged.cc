@@ -110,13 +110,13 @@ DelayIdComposite::Pointer
 
 DelayTagged::id(CompositePoolNode::CompositeSelectionDetails &details)
 {
-    if (!details.tag.size())
+    if (!details.tag.length())
         return new NullDelayId;
 
     return new Id(this, details.tag);
 }
 
-DelayTaggedBucket::DelayTaggedBucket(String &aTag) : tag (aTag)
+DelayTaggedBucket::DelayTaggedBucket(const SBuf &aTag): tag(aTag)
 {
     debugs(77, 3, "DelayTaggedBucket::DelayTaggedBucket");
 }
@@ -129,11 +129,11 @@ DelayTaggedBucket::~DelayTaggedBucket()
 void
 DelayTaggedBucket::stats(StoreEntry *entry) const
 {
-    storeAppendPrintf(entry, " " SQUIDSTRINGPH ":", SQUIDSTRINGPRINT(tag));
+    storeAppendPrintf(entry, " " SQUIDSBUFPH ":", SQUIDSBUFPRINT(tag));
     theBucket.stats(entry);
 }
 
-DelayTagged::Id::Id(DelayTagged::Pointer aDelayTagged, String &aTag) : theTagged(aDelayTagged)
+DelayTagged::Id::Id(const DelayTagged::Pointer &aDelayTagged, const SBuf &aTag): theTagged(aDelayTagged)
 {
     theBucket = new DelayTaggedBucket(aTag);
     DelayTaggedBucket::Pointer const *existing = theTagged->buckets.find(theBucket, DelayTaggedCmp);

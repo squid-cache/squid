@@ -393,7 +393,7 @@ private:
     TransientsMap::Owner *mapOwner = nullptr;
 };
 
-RunnerRegistrationEntry(TransientsRr);
+DefineRunnerRegistrator(TransientsRr);
 
 void
 TransientsRr::useConfig()

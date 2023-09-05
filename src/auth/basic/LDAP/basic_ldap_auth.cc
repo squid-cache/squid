@@ -126,7 +126,7 @@ typedef WINLDAPAPI ULONG(LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OU
 typedef WINLDAPAPI ULONG(LDAPAPI * PFldap_start_tls_s) (IN PLDAP, OUT PULONG, OUT LDAPMessage **, IN PLDAPControlA *, IN PLDAPControlA *);
 #endif /* LDAP_UNICODE */
 PFldap_start_tls_s Win32_ldap_start_tls_s;
-#define ldap_start_tls_s(l,s,c) Win32_ldap_start_tls_s(l,NULL,NULL,s,c)
+#define ldap_start_tls_s(l,s,c) Win32_ldap_start_tls_s(l, nullptr, nullptr,s,c)
 #endif /* LDAP_VERSION3 */
 
 #else
@@ -155,7 +155,7 @@ static int bind_once = 0;
 static int noreferrals = 0;
 static int aliasderef = LDAP_DEREF_NEVER;
 #if defined(NETSCAPE_SSL)
-static const char *sslpath = NULL;
+static const char *sslpath = nullptr;
 static int sslinit = 0;
 #endif
 static int connect_timeout = 0;
@@ -275,7 +275,7 @@ open_ldap_connection(const char *ldapServer, int port)
 #endif
 #if NETSCAPE_SSL
         if (sslpath) {
-            if (!sslinit && (ldapssl_client_init(sslpath, NULL) != LDAP_SUCCESS)) {
+            if (!sslinit && (ldapssl_client_init(sslpath, nullptr) != LDAP_SUCCESS)) {
                 fprintf(stderr, "\nUnable to initialise SSL with cert path %s\n",
                         sslpath);
                 exit(EXIT_FAILURE);

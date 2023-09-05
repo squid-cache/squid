@@ -75,20 +75,20 @@ public:
     ClientHttpRequest *http;
 
     struct {
-        int passthrough:1;
-        int oktosend:1;
-        int finished:1;
+        unsigned int passthrough:1;
+        unsigned int oktosend:1;
+        unsigned int finished:1;
 
         /* an error has occurred, send full body replies
          * regardless. Note that we don't fail midstream
          * because we buffer until we can not fail
          */
-        int error:1;
+        unsigned int error:1;
 
-        int finishedtemplate:1; /* we've read the entire template */
-        int clientwantsdata:1; /* we need to satisfy a read request */
-        int kicked:1; /* note on reentering the kick routine */
-        int detached:1; /* our downstream has detached */
+        unsigned int finishedtemplate:1; /* we've read the entire template */
+        unsigned int clientwantsdata:1; /* we need to satisfy a read request */
+        unsigned int kicked:1; /* note on reentering the kick routine */
+        unsigned int detached:1; /* our downstream has detached */
     } flags;
 
     err_type errorpage; /* if we error what page to use */
@@ -123,7 +123,7 @@ public:
         ParserState();
         void freeResources();
         void popAll();
-        int parsing:1; /* libexpat is not reentrant on the same context */
+        unsigned int parsing:1; /* libexpat is not reentrant on the same context */
 
     private:
         bool inited_;

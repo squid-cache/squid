@@ -52,6 +52,10 @@ public:
 /// prints active (i.e., thrown but not yet handled) exception
 std::ostream &CurrentException(std::ostream &);
 
+/// If there is an active (i.e., thrown but not yet handled) exception, reports
+/// it on a dedicated DebugExtra line. Otherwise, does nothing.
+std::ostream &CurrentExceptionExtra(std::ostream &);
+
 /// efficiently prints TextException
 std::ostream &operator <<(std::ostream &, const TextException &);
 

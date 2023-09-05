@@ -8,15 +8,23 @@
 
 #ifndef SQUID_ACLTIME_H
 #define SQUID_ACLTIME_H
-#include "acl/Data.h"
-#include "acl/Strategised.h"
 
-class ACLTimeStrategy : public ACLStrategy<time_t>
+#include "acl/ParameterizedNode.h"
+#include "acl/TimeData.h"
+#include "mem/AllocatorProxy.h"
+
+namespace Acl
 {
 
+/// a "time" ACL
+class CurrentTimeCheck: public ParameterizedNode<ACLTimeData>
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLTIME_H */
 

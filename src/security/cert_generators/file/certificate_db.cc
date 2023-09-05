@@ -49,7 +49,7 @@ void Ssl::Lock::lock()
 {
 
 #if _SQUID_WINDOWS_
-    hFile = CreateFile(TEXT(filename.c_str()), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    hFile = CreateFile(TEXT(filename.c_str()), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE)
 #else
     fd = open(filename.c_str(), O_RDWR);

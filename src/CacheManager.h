@@ -34,6 +34,9 @@ class CacheManager
 public:
     typedef std::vector<Mgr::ActionProfilePointer> Menu;
 
+    /// initial URL path characters that identify cache manager requests
+    static const SBuf &WellKnownUrlPathPrefix();
+
     void registerProfile(char const * action, char const * desc,
                          OBJH * handler,
                          int pw_req_flag, int atomic);

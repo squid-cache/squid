@@ -29,7 +29,6 @@ libcomm_la_SOURCES = \
 	ModKqueue.cc \
 	ModPoll.cc \
 	ModSelect.cc \
-	ModSelectWin32.cc \
 	Read.cc \
 	Read.h \
 	Tcp.cc \

@@ -265,3 +265,9 @@ TestMath::testNaturalSum()
     CPPUNIT_ASSERT_EQUAL(expires, result);
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

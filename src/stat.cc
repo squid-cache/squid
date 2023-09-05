@@ -1135,7 +1135,7 @@ DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry)
 
 #if USE_POLL
     storeAppendPrintf(sentry, "syscalls.polls = %f/sec\n", stats.syscalls_selects);
-#elif defined(USE_SELECT) || defined(USE_SELECT_WIN32)
+#elif USE_SELECT
     storeAppendPrintf(sentry, "syscalls.selects = %f/sec\n", stats.syscalls_selects);
 #endif
 

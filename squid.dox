@@ -632,7 +632,7 @@ GENERATE_TESTLIST      = YES
 # list. This list is created by putting \bug commands in the documentation.
 # The default value is: YES.
 
-GENERATE_BUGLIST       = YES
+GENERATE_BUGLIST       = NO
 
 # The GENERATE_DEPRECATEDLIST tag can be used to enable (YES) or disable (NO)
 # the deprecated list. This list is created by putting \deprecated commands in
@@ -2098,7 +2098,6 @@ PREDEFINED             = __cplusplus \
                          USE_POLL \
                          USE_QOS_TOS \
                          USE_SELECT \
-                         USE_SELECT_WIN32 \
                          USE_SOLARIS_KRB5 \
                          USE_SQUID_ESI \
                          USE_SQUID_EUI \

@@ -25,7 +25,7 @@
 
 SQUIDCEXTERN LPCRITICAL_SECTION dbg_mutex;
 void WIN32_ExceptionHandlerCleanup(void);
-static LPTOP_LEVEL_EXCEPTION_FILTER Win32_Old_ExceptionHandler = NULL;
+static LPTOP_LEVEL_EXCEPTION_FILTER Win32_Old_ExceptionHandler = nullptr;
 
 int
 Win32__WSAFDIsSet(int fd, fd_set FAR * set)

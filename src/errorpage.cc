@@ -1322,7 +1322,7 @@ ErrorState::BuildHttpReply()
          * If error page auto-negotiate is enabled in any way, send the Vary.
          * RFC 2616 section 13.6 and 14.44 says MAY and SHOULD do this.
          * We have even better reasons though:
-         * see http://wiki.squid-cache.org/KnowledgeBase/VaryNotCaching
+         * see https://wiki.squid-cache.org/KnowledgeBase/VaryNotCaching
          */
         if (!Config.errorDirectory) {
             /* We 'negotiated' this ONLY from the Accept-Language. */
