@@ -196,7 +196,7 @@ AsyncJob::ReportAllJobs(StoreEntry *e)
     const char *indent = "    ";
     for (const auto job: Jobs_) {
         os << indent << job->id.prefix() << job->id.value << ":\n";
-        os << indent << indent << "type: " << job->typeName << '\n';
+        os << indent << indent << "type: '" << job->typeName << "'\n";
         os << indent << indent << "status:" << job->status() << '\n';
         if (!job->started_)
             os << indent << indent << "started: false\n";
