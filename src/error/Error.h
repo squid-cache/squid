@@ -19,8 +19,9 @@
 /// zero or more details of a single error
 using ErrorDetails = std::vector<ErrorDetailPointer, PoolingAllocator<ErrorDetailPointer> >;
 
-/// prints all details separated by '+' (or, if there are no details, nothing)
-std::ostream &operator <<(std::ostream &os, const ErrorDetails &);
+/// prints all given details separated by '+';
+/// if no details were given, prints nothing
+std::ostream &operator <<(std::ostream &, const ErrorDetails &);
 
 /// a transaction problem
 class Error {
