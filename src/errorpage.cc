@@ -1348,15 +1348,12 @@ ErrorState::BuildHttpReply()
     // Make sure error codes get back to the client side for logging and
     // error tracking.
     if (request) {
-        if (detail)
-            request->detailError(type, detail);
-        if (const auto errnoDetail = SysErrorDetail::NewIfAny(xerrno))
-            request->detailError(type, errnoDetail);
+        request->error.update(type, detail);
+        request->error.update(SysErrorDetail::NewIfAny(xerrno));
     } else if (ale) {
-        if (detail)
-            ale->updateError(Error(type, detail));
-        if (const auto errnoDetail = SysErrorDetail::NewIfAny(xerrno))
-            ale->updateError(Error(type, errnoDetail));
+        Error err(type, detail);
+        err.update(SysErrorDetail::NewIfAny(xerrno));
+        ale->updateError(err);
     }
 
     return rep;
