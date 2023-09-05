@@ -35,8 +35,11 @@ Error::startUpdate(const err_type recentCategory, const bool hasDetails)
 
 /// update existing details with the given one (if necessary)
 void
-Error::updateDetails(const ErrorDetail::Pointer &recentDetail)
+Error::update(const ErrorDetail::Pointer &recentDetail)
 {
+    if (!recentDetail)
+        return;
+
     // an error can only have a few details so linear search is faster than indexing
     for (const auto &oldDetail: details) {
         if (recentDetail->equals(*oldDetail))
@@ -52,19 +55,24 @@ Error::update(const Error &recent)
         return; // no changes
 
     debugs(4, 3, "recent: " << recent);
+
     for (const auto &recentDetail: recent.details)
-        updateDetails(recentDetail);
+        update(recentDetail);
 }
 
 void
 Error::update(const err_type recentCategory, const ErrorDetail::Pointer &recentDetail)
 {
+    // Optimization: Do not simply call update(Error(...)) here because that
+    // would require allocating and freeing heap memory for storing the detail.
+
     if (!startUpdate(recentCategory, recentDetail != nullptr))
         return; // no changes
 
-    debugs(4, 3, "recent: " << Error(recentCategory, recentDetail));
-    if (recentDetail)
-        updateDetails(recentDetail);
+    // again, avoid heap operations
+    debugs(4, 3, "recent: " << Error(recentCategory) << '/' << recentDetail);
+
+    update(recentDetail);
 }
 
 std::ostream &

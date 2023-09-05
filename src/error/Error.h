@@ -16,7 +16,7 @@
 #include <iosfwd>
 #include <vector>
 
-/// zero or more unique ErrorDetail objects
+/// zero or more non-nil pointers to unique ErrorDetail objects
 using ErrorDetails = std::vector<ErrorDetailPointer, PoolingAllocator<ErrorDetailPointer> >;
 
 /// prints all details separated by '+' (or, if there are no details, nothing)
@@ -27,7 +27,7 @@ class Error {
 public:
     Error() = default;
     Error(const err_type c): category(c) {} ///< support implicit conversions
-    Error(const err_type c, const ErrorDetailPointer &d): category(c), details(1, d) {}
+    Error(const err_type c, const ErrorDetailPointer &d): Error(c) { update(d); }
 
     explicit operator bool() const { return category != ERR_NONE; }
 
@@ -37,6 +37,10 @@ public:
     /// convenience wrapper for update(Error)
     void update(err_type, const ErrorDetailPointer &);
 
+    /// records an additional error detail (if any), leaving category unchanged
+    /// \param detail either nil or a pointer to a new or an already known detail
+    void update(const ErrorDetailPointer &detail);
+
     /// switch to the default "no error information" state
     void clear() { *this = Error(); }
 
@@ -45,7 +49,6 @@ public:
 
 private:
     bool startUpdate(err_type, bool);
-    void updateDetails(const ErrorDetailPointer &);
 };
 
 extern const char *err_type_str[];
