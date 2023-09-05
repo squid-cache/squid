@@ -25,7 +25,13 @@
 
 InstanceIdDefinitions(AsyncJob, "job");
 
-static std::unordered_set<AsyncJob *, std::hash<AsyncJob *>, std::equal_to<AsyncJob *>, PoolingAllocator<AsyncJob *> > Jobs_;
+/// a set of all AsyncJob objects in existence
+static auto &
+AllJobs()
+{
+    static const auto jobs = new std::unordered_set<AsyncJob *, std::hash<AsyncJob *>, std::equal_to<AsyncJob *>, PoolingAllocator<AsyncJob *> >();
+    return *jobs;
+}
 
 void
 AsyncJob::Start(const Pointer &job)
@@ -39,7 +45,7 @@ AsyncJob::AsyncJob(const char *aTypeName) :
 {
     debugs(93,5, "AsyncJob constructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
-    Jobs_.insert(this);
+    AllJobs().insert(this);
 }
 
 AsyncJob::~AsyncJob()
@@ -47,7 +53,7 @@ AsyncJob::~AsyncJob()
     debugs(93,5, "AsyncJob destructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
     assert(!started_ || swanSang_);
-    Jobs_.erase(this);
+    AllJobs().erase(this);
 }
 
 void AsyncJob::start()
@@ -194,7 +200,7 @@ AsyncJob::ReportAllJobs(StoreEntry *e)
     PackableStream os(*e);
     // this loop uses YAML syntax, but AsyncJob::status() still needs to be adjusted to use YAML
     const char *indent = "    ";
-    for (const auto job: Jobs_) {
+    for (const auto job: AllJobs()) {
         os << indent << job->id << ":\n";
         os << indent << indent << "type: '" << job->typeName << "'\n";
         os << indent << indent << "status:" << job->status() << '\n';
