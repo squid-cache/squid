@@ -16,7 +16,7 @@
 #include <iosfwd>
 #include <vector>
 
-/// zero or more non-nil pointers to unique ErrorDetail objects
+/// zero or more details of a single error
 using ErrorDetails = std::vector<ErrorDetailPointer, PoolingAllocator<ErrorDetailPointer> >;
 
 /// prints all details separated by '+' (or, if there are no details, nothing)
@@ -52,7 +52,11 @@ public:
     void clear() { *this = Error(); }
 
     err_type category = ERR_NONE; ///< primary error classification (or ERR_NONE)
-    ErrorDetails details; ///< additional details about the error
+
+    /// Zero or more details of a single error, in temporal order of discovery
+    /// without duplicates or nil pointers. The order/timing of update() calls
+    /// is used to approximate detail discovery time.
+    ErrorDetails details;
 
 private:
     bool startUpdate(err_type, bool);
