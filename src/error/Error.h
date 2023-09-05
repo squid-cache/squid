@@ -34,7 +34,8 @@ public:
     /// if necessary, stores the given error information (if any)
     void update(const Error &);
 
-    /// convenience wrapper for update(Error)
+    /// if necessary, stores the given error information (if any);
+    /// more convenient and faster alternative to calling update(Error(c, d))
     void update(err_type, const ErrorDetailPointer &);
 
     /// records an additional error detail (if any), leaving category unchanged
