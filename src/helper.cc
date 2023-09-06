@@ -779,8 +779,7 @@ helperShutdown(const helper::Pointer &hlp)
         }
 
         assert(hlp->childs.n_active > 0);
-        if (!(--hlp->childs.n_active))
-            hlp->dropQueued();
+        -- hlp->childs.n_active;
 
         srv->flags.shutdown = true; /* request it to shut itself down */
 
@@ -800,6 +799,9 @@ helperShutdown(const helper::Pointer &hlp)
          */
         srv->closePipesSafely(hlp->id_name);
     }
+
+    if (!hlp->childs.n_active)
+        hlp->dropQueued();
 }
 
 void
@@ -854,11 +856,10 @@ helper::~helper()
     /* note, don't free id_name, it probably points to static memory */
 
     // An non-empty queue would leak Helper::Xaction objects, stalling any
-    // pending (and even future collapsed) transactions. A live server will keep
-    // us, its parent, alive due to reference counting. The idle=1 minimum means
-    // that either there has to be at least one server alive, or the last
-    // attempt to start a server has failed. If such an attempt fails,
-    // handleKilledServer() is called to drain the queue.
+    // pending (and even future collapsed) transactions. To avoid stalling
+    // transactions, we must dropQueued(). We ought to do that when we
+    // discover that no progress is possible rather than here (but we are
+    // still alive due to reference counting).
     assert(queue.empty());
 }
 
@@ -874,13 +875,36 @@ helper::handleKilledServer(HelperServerBase *srv)
 
         if (childs.needNew() > 0) {
             srv->flags.shutdown = true;
-            debugs(80, DBG_IMPORTANT, "Starting new helpers");
             helperOpenServers(helper::Pointer(this));
         }
     }
 
     if (!childs.n_active)
         dropQueued();
+}
+
+void
+helper::dropQueued()
+{
+    if (queue.empty())
+        return;
+
+    Assure(!childs.n_active);
+    Assure(!GetFirstAvailable(this));
+
+    // no helper servers means nobody can advance our queued transactions
+
+    debugs(80, DBG_CRITICAL, "ERROR: Dropping " << queue.size() << ' ' <<
+           id_name << " helper requests due to lack of helper processes");
+    // similar to HelperServerBase::dropQueued()
+    while (const auto r = nextRequest()) {
+        void *cbdata;
+        if (cbdataReferenceValidDone(r->request.data, &cbdata)) {
+            r->reply.result = Helper::Unknown;
+            r->request.callback(cbdata, r->reply);
+        }
+        delete r;
+    }
 }
 
 void
@@ -900,29 +924,6 @@ helper::handleFewerServers(const bool madeProgress)
             debugs(80, DBG_CRITICAL, "ERROR: The " << id_name << " helpers are crashing too rapidly, need help!");
         else
             fatalf("The %s helpers are crashing too rapidly, need help!", id_name);
-    }
-}
-
-void
-helper::dropQueued()
-{
-    if (queue.empty())
-        return;
-
-    Assure(!childs.n_active);
-
-    // no helper servers means nobody can advance our queued transactions
-
-    debugs(80, DBG_CRITICAL, "ERROR: Dropping " << queue.size() << ' ' <<
-           id_name << " helper requests due to lack of helper processes");
-    // similar to HelperServerBase::dropQueued()
-    while (const auto r = nextRequest()) {
-        void *cbdata;
-        if (cbdataReferenceValidDone(r->request.data, &cbdata)) {
-            r->reply.result = Helper::Unknown;
-            r->request.callback(cbdata, r->reply);
-        }
-        delete r;
     }
 }
 
