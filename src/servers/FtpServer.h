@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -60,10 +60,10 @@ class Server: public ConnStateData
 
 public:
     explicit Server(const MasterXaction::Pointer &xact);
-    virtual ~Server() override;
+    ~Server() override;
 
     /* AsyncJob API */
-    virtual void callException(const std::exception &e) override;
+    void callException(const std::exception &e) override;
 
     /// Called by Ftp::Client class when it is start receiving or
     /// sending data.
@@ -93,21 +93,21 @@ protected:
     };
 
     /* ConnStateData API */
-    virtual Http::Stream *parseOneRequest() override;
-    virtual void processParsedRequest(Http::StreamPointer &context) override;
-    virtual void notePeerConnection(Comm::ConnectionPointer conn) override;
-    virtual void clientPinnedConnectionClosed(const CommCloseCbParams &io) override;
-    virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData) override;
-    virtual int pipelinePrefetchMax() const override;
-    virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) override;
-    virtual time_t idleTimeout() const override;
+    Http::Stream *parseOneRequest() override;
+    void processParsedRequest(Http::StreamPointer &context) override;
+    void notePeerConnection(Comm::ConnectionPointer conn) override;
+    void clientPinnedConnectionClosed(const CommCloseCbParams &io) override;
+    void handleReply(HttpReply *header, StoreIOBuffer receivedData) override;
+    int pipelinePrefetchMax() const override;
+    bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) override;
+    time_t idleTimeout() const override;
 
     /* BodyPipe API */
-    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer) override;
-    virtual void noteBodyConsumerAborted(BodyPipe::Pointer ptr) override;
+    void noteMoreBodySpaceAvailable(BodyPipe::Pointer) override;
+    void noteBodyConsumerAborted(BodyPipe::Pointer ptr) override;
 
     /* AsyncJob API */
-    virtual void start() override;
+    void start() override;
 
     /* Comm callbacks */
     static void AcceptCtrlConnection(const CommAcceptCbParams &params);

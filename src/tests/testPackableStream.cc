@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,26 +9,29 @@
 #include "squid.h"
 #include "base/PackableStream.h"
 #include "CapturingStoreEntry.h"
+#include "compat/cppunit.h"
 #include "Store.h"
-#include "testPackableStream.h"
 #include "testStore.h"
 
 #include <iomanip>
 #include <cppunit/TestAssert.h>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testPackableStream );
-
-/* init memory pools */
-
-void testPackableStream::setUp()
+class TestPackableStream : public CPPUNIT_NS::TestFixture
 {
-    Mem::Init();
-}
+    CPPUNIT_TEST_SUITE(TestPackableStream);
+    CPPUNIT_TEST(testGetStream);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testGetStream();
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestPackableStream );
 
 // TODO: test streaming to a MemBuf as well.
 
 void
-testPackableStream::testGetStream()
+TestPackableStream::testGetStream()
 {
     /* Setup a store root so we can create a StoreEntry */
     Store::Init();
@@ -58,4 +61,6 @@ testPackableStream::testGetStream()
     delete anEntry; // does the unlock()
     Store::FreeMemory();
 }
+
+// This test uses main() from ./testStore.cc.
 

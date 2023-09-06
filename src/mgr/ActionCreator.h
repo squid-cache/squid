@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ class ActionCreator: public RefCountable
 public:
     typedef RefCount<ActionCreator> Pointer;
 
-    virtual ~ActionCreator() {}
+    ~ActionCreator() override {}
 
     /// returns a pointer to the new Action object for cmd; never nil
     virtual ActionPointer create(const CommandPointer &cmd) const = 0;

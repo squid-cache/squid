@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -227,7 +227,7 @@ Comm::ConnOpener::closeFd()
     // "Select" state. It will not clear ours. XXX: It should always clear
     // because a callback may have been active but was called before comm_close
     // Update: we now do this in cleanFd()
-    // Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, NULL, NULL, 0);
+    // Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, nullptr, nullptr, 0);
 
     comm_close(temporaryFd_);
     temporaryFd_ = -1;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -100,13 +100,6 @@ mem_hdr::freeDataUpto(int64_t target_offset)
     return lowestOffset ();
 }
 
-int
-mem_hdr::appendToNode(mem_node *aNode, const char *data, int maxLength)
-{
-    size_t result = writeAvailable (aNode, aNode->nodeBuffer.offset + aNode->nodeBuffer.length,maxLength, data);
-    return result;
-}
-
 size_t
 mem_hdr::writeAvailable(mem_node *aNode, int64_t location, size_t amount, char const *source)
 {
@@ -137,35 +130,6 @@ void
 mem_hdr::appendNode (mem_node *aNode)
 {
     nodes.insert (aNode, NodeCompare);
-}
-
-void
-mem_hdr::makeAppendSpace()
-{
-    if (!nodes.size()) {
-        appendNode (new mem_node (0));
-        return;
-    }
-
-    if (!nodes.finish()->data->space())
-        appendNode (new mem_node (endOffset()));
-
-    assert (nodes.finish()->data->space());
-}
-
-void
-mem_hdr::internalAppend(const char *data, int len)
-{
-    debugs(19, 6, "memInternalAppend: " << this << " len " << len);
-
-    while (len > 0) {
-        makeAppendSpace();
-        int copied = appendToNode (nodes.finish()->data, data, len);
-        assert (copied);
-
-        len -= copied;
-        data += copied;
-    }
 }
 
 /* returns a mem_node that contains location..
@@ -404,17 +368,6 @@ size_t
 mem_hdr::size() const
 {
     return nodes.size();
-}
-
-mem_node const *
-mem_hdr::start() const
-{
-    const SplayNode<mem_node *> * result = nodes.start();
-
-    if (result)
-        return result->data;
-
-    return nullptr;
 }
 
 const Splay<mem_node *> &

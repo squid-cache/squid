@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,8 +14,8 @@
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Xaction.h"
 #include "base/AsyncCallbacks.h"
+#include "base/IoManip.h"
 #include "base/JobWait.h"
-#include "base/Optional.h"
 #include "base/TextException.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -34,11 +34,13 @@
 #include "security/PeerConnector.h"
 #include "SquidConfig.h"
 
+#include <optional>
+
 namespace Ssl
 {
 /// A simple PeerConnector for Secure ICAP services. No SslBump capabilities.
 class IcapPeerConnector: public Security::PeerConnector {
-    CBDATA_CLASS(IcapPeerConnector);
+    CBDATA_CHILD(IcapPeerConnector);
 public:
     IcapPeerConnector(
         Adaptation::Icap::ServiceRep::Pointer &service,
@@ -50,15 +52,15 @@ public:
         Security::PeerConnector(aServerConn, aCallback, alp, timeout), icapService(service) {}
 
     /* Security::PeerConnector API */
-    virtual bool initialize(Security::SessionPointer &);
-    virtual void noteNegotiationDone(ErrorState *error);
-    virtual Security::ContextPointer getTlsContext() {
+    bool initialize(Security::SessionPointer &) override;
+    void noteNegotiationDone(ErrorState *error) override;
+    Security::ContextPointer getTlsContext() override {
         return icapService->sslContext;
     }
 
 private:
     /* Acl::ChecklistFiller API */
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     Adaptation::Icap::ServiceRep::Pointer icapService;
 };
@@ -132,11 +134,27 @@ void Adaptation::Icap::Xaction::start()
     Adaptation::Initiate::start();
 }
 
+// TODO: Make reusable by moving this (and the printing operator from
+// ip/Address.h that this code is calling) into ip/print.h or similar.
+namespace Ip {
+
+inline std::ostream &
+operator <<(std::ostream &os, const std::optional<Address> &optional)
+{
+    if (optional.has_value())
+        os << optional.value();
+    else
+        os << "[no IP]";
+    return os;
+}
+
+}
+
 static void
 icapLookupDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
 {
     Adaptation::Icap::Xaction *xa = static_cast<Adaptation::Icap::Xaction *>(data);
-    const auto &addr = ia ? Optional<Ip::Address>(ia->current()) : Optional<Ip::Address>();
+    const auto &addr = ia ? std::optional<Ip::Address>(ia->current()) : std::optional<Ip::Address>();
     CallJobHere1(93, 5, CbcPointer<Adaptation::Icap::Xaction>(xa), Adaptation::Icap::Xaction, dnsLookupDone, addr);
 }
 
@@ -168,7 +186,7 @@ Adaptation::Icap::Xaction::openConnection()
 }
 
 void
-Adaptation::Icap::Xaction::dnsLookupDone(Optional<Ip::Address> addr)
+Adaptation::Icap::Xaction::dnsLookupDone(std::optional<Ip::Address> addr)
 {
     assert(waitingForDns);
     waitingForDns = false;

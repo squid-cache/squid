@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -73,7 +73,6 @@ const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion 
 
 #include "security/PeerConnector.h"
 class TlsNegotiationDetails: public RefCountable {};
-CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 namespace Security
 {
 PeerConnector::PeerConnector(const Comm::ConnectionPointer &, const AsyncCallback<EncryptorAnswer> &, const AccessLogEntryPointer &, const time_t):
@@ -98,7 +97,7 @@ void PeerConnector::bail(ErrorState *) STUB
 void PeerConnector::sendSuccess() STUB
 void PeerConnector::callBack() STUB
 void PeerConnector::disconnect() STUB
-void PeerConnector::countFailingConnection() STUB
+void PeerConnector::countFailingConnection(const ErrorState *) STUB
 void PeerConnector::recordNegotiationDetails() STUB
 EncryptorAnswer &PeerConnector::answer() STUB_RETREF(EncryptorAnswer)
 }
@@ -119,7 +118,7 @@ void Security::PeerOptions::updateContextCa(Security::ContextPointer &) STUB
 void Security::PeerOptions::updateContextCrl(Security::ContextPointer &) STUB
 void Security::PeerOptions::updateContextTrust(Security::ContextPointer &) STUB
 void Security::PeerOptions::updateSessionOptions(Security::SessionPointer &) STUB
-void Security::PeerOptions::dumpCfg(Packable*, char const*) const STUB
+void Security::PeerOptions::dumpCfg(std::ostream &, char const*) const STUB
 void Security::PeerOptions::parseOptions() STUB
 void parse_securePeerOptions(Security::PeerOptions *) STUB
 
@@ -127,7 +126,7 @@ void parse_securePeerOptions(Security::PeerOptions *) STUB
 //Security::ServerOptions::ServerOptions(const Security::ServerOptions &) STUB
 Security::ServerOptions &Security::ServerOptions::operator=(Security::ServerOptions const&) STUB_RETVAL(*this);
 void Security::ServerOptions::parse(const char *) STUB
-void Security::ServerOptions::dumpCfg(Packable *, const char *) const STUB
+void Security::ServerOptions::dumpCfg(std::ostream &, const char *) const STUB
 Security::ContextPointer Security::ServerOptions::createBlankContext() const STUB_RETVAL(Security::ContextPointer())
 void Security::ServerOptions::initServerContexts(AnyP::PortCfg&) STUB
 bool Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &) STUB_RETVAL(false)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,16 +48,16 @@ public:
     void operator delete(void *);
 
     ACLIP() : data(nullptr) {}
-    ~ACLIP();
+    ~ACLIP() override;
 
     typedef Splay<acl_ip_data *> IPSplay;
 
-    virtual char const *typeString() const = 0;
-    virtual void parse();
+    char const *typeString() const override = 0;
+    void parse() override;
     //    virtual bool isProxyAuth() const {return true;}
-    virtual int match(ACLChecklist *checklist) = 0;
-    virtual SBufList dump() const;
-    virtual bool empty () const;
+    int match(ACLChecklist *checklist) override = 0;
+    SBufList dump() const override;
+    bool empty () const override;
 
 protected:
 

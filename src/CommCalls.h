@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -172,12 +172,12 @@ public:
         CommDialerParamsT<Params_>(aJob->toCbdata()),
         method(aMeth) {}
 
-    virtual bool canDial(AsyncCall &c) {
+    bool canDial(AsyncCall &c) override {
         return JobDialer<C>::canDial(c) &&
                this->params.syncWithComm();
     }
 
-    virtual void print(std::ostream &os) const {
+    void print(std::ostream &os) const override {
         os << '(';
         this->params.print(os);
         os << ')';
@@ -187,7 +187,7 @@ public:
     Method method;
 
 protected:
-    virtual void doDial() { ((&(*this->job))->*method)(this->params); }
+    void doDial() override { ((&(*this->job))->*method)(this->params); }
 };
 
 // accept (IOACB) dialer
@@ -203,7 +203,7 @@ public:
 
     void dial();
 
-    virtual void print(std::ostream &os) const;
+    void print(std::ostream &os) const override;
 
 public:
     IOACB *handler;
@@ -219,7 +219,7 @@ public:
     CommConnectCbPtrFun(CNCB *aHandler, const Params &aParams);
     void dial();
 
-    virtual void print(std::ostream &os) const;
+    void print(std::ostream &os) const override;
 
 public:
     CNCB *handler;
@@ -235,7 +235,7 @@ public:
     CommIoCbPtrFun(IOCB *aHandler, const Params &aParams);
     void dial();
 
-    virtual void print(std::ostream &os) const;
+    void print(std::ostream &os) const override;
 
 public:
     IOCB *handler;
@@ -251,7 +251,7 @@ public:
     CommCloseCbPtrFun(CLCB *aHandler, const Params &aParams);
     void dial();
 
-    virtual void print(std::ostream &os) const;
+    void print(std::ostream &os) const override;
 
 public:
     CLCB *handler;
@@ -266,7 +266,7 @@ public:
     CommTimeoutCbPtrFun(CTCB *aHandler, const Params &aParams);
     void dial();
 
-    virtual void print(std::ostream &os) const;
+    void print(std::ostream &os) const override;
 
 public:
     CTCB *handler;
@@ -290,16 +290,16 @@ public:
         AsyncCall(o.debugSection, o.debugLevel, o.name),
         dialer(o.dialer) {}
 
-    ~CommCbFunPtrCallT() {}
+    ~CommCbFunPtrCallT() override {}
 
-    virtual CallDialer* getDialer() { return &dialer; }
+    CallDialer* getDialer() override { return &dialer; }
 
 public:
     Dialer dialer;
 
 protected:
-    inline virtual bool canFire();
-    inline virtual void fire();
+    inline bool canFire() override;
+    inline void fire() override;
 
 private:
     CommCbFunPtrCallT & operator=(const CommCbFunPtrCallT &); // not defined. not permitted.

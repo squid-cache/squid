@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -373,7 +373,7 @@ Comm::DoSelect(int msec)
                     DEBUG_DEVPOLL ? 0 : 8,
                     "Calling read handler on FD " << fd
                 );
-                F->read_handler = NULL;
+                F->read_handler = nullptr;
                 hdl(fd, F->read_data);
                 ++ statCounter.select_fds;
             } else {
@@ -383,7 +383,7 @@ Comm::DoSelect(int msec)
                     "no read handler for FD " << fd
                 );
                 // remove interest since no handler exist for this event.
-                SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+                SetSelect(fd, COMM_SELECT_READ, nullptr, nullptr, 0);
             }
         }
 
@@ -395,7 +395,7 @@ Comm::DoSelect(int msec)
                     DEBUG_DEVPOLL ? 0 : 8,
                     "Calling write handler on FD " << fd
                 );
-                F->write_handler = NULL;
+                F->write_handler = nullptr;
                 hdl(fd, F->write_data);
                 ++ statCounter.select_fds;
             } else {
@@ -405,7 +405,7 @@ Comm::DoSelect(int msec)
                     "no write handler for FD " << fd
                 );
                 // remove interest since no handler exist for this event.
-                SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+                SetSelect(fd, COMM_SELECT_WRITE, nullptr, nullptr, 0);
             }
         }
     }

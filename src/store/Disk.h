@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ public:
     typedef RefCount<Disk> Pointer;
 
     explicit Disk(char const *aType);
-    virtual ~Disk();
+    ~Disk() override;
     virtual void reconfigure() = 0;
     char const *type() const;
 
@@ -43,16 +43,16 @@ public:
     virtual void diskFull();
 
     /* Controlled API */
-    virtual void create() override;
-    virtual StoreEntry *get(const cache_key *) override;
-    virtual uint64_t maxSize() const override { return max_size; }
-    virtual uint64_t minSize() const override;
-    virtual int64_t maxObjectSize() const override;
-    virtual void getStats(StoreInfoStats &stats) const override;
-    virtual void stat(StoreEntry &) const override;
-    virtual void reference(StoreEntry &e) override;
-    virtual bool dereference(StoreEntry &e) override;
-    virtual void maintain() override;
+    void create() override;
+    StoreEntry *get(const cache_key *) override;
+    uint64_t maxSize() const override { return max_size; }
+    uint64_t minSize() const override;
+    int64_t maxObjectSize() const override;
+    void getStats(StoreInfoStats &stats) const override;
+    void stat(StoreEntry &) const override;
+    void reference(StoreEntry &e) override;
+    bool dereference(StoreEntry &e) override;
+    void maintain() override;
     /// whether this disk storage is capable of serving multiple workers
     virtual bool smpAware() const = 0;
 
@@ -119,8 +119,8 @@ public:
     /// check whether we can store the entry; if we can, report current load
     virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const = 0;
 
-    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) = 0;
-    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) = 0;
+    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *) = 0;
+    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *) = 0;
 
     bool canLog(StoreEntry const &e)const;
     virtual void openLog();

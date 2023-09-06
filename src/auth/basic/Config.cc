@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,7 @@
 /* Basic Scheme */
 static AUTHSSTATS authenticateBasicStats;
 
-helper *basicauthenticators = nullptr;
+Helper::ClientPointer basicauthenticators;
 
 static int authbasic_initialised = 0;
 
@@ -109,7 +109,6 @@ Auth::Basic::Config::done()
         helperShutdown(basicauthenticators);
     }
 
-    delete basicauthenticators;
     basicauthenticators = nullptr;
 
     if (authenticateProgram)
@@ -305,7 +304,7 @@ Auth::Basic::Config::init(Auth::SchemeConfig *)
         authbasic_initialised = 1;
 
         if (basicauthenticators == nullptr)
-            basicauthenticators = new helper("basicauthenticator");
+            basicauthenticators = helper::Make("basicauthenticator");
 
         basicauthenticators->cmdline = authenticateProgram;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -97,11 +97,6 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
                 return;
             }
 
-#if HEADERS_LOG
-            /* should be done in the store rather than every recipient?  */
-            headersLog(0, 0, http->request->method, rep);
-
-#endif
             rep = nullptr;
         }
     }

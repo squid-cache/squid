@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,13 +28,13 @@ public:
     static Pointer Create(const CommandPointer &cmd, OBJH *aHandler);
 
     /* Action API */
-    virtual void respond(const Request& request);
+    void respond(const Request& request) override;
     // we cannot aggregate because we do not even know what the handler does
-    virtual bool aggregatable() const { return false; }
+    bool aggregatable() const override { return false; }
 
 protected:
     /* Action API */
-    virtual void dump(StoreEntry *entry);
+    void dump(StoreEntry *entry) override;
 
 private:
     OBJH *handler; ///< legacy function that collects and dumps info
@@ -47,7 +47,7 @@ public:
     explicit FunActionCreator(OBJH *aHandler): handler(aHandler) {}
 
     /* ActionCreator API */
-    virtual Action::Pointer create(const CommandPointer &cmd) const {
+    Action::Pointer create(const CommandPointer &cmd) const override {
         return FunAction::Create(cmd, handler);
     }
 

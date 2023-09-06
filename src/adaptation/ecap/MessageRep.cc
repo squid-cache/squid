@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -152,8 +152,6 @@ Adaptation::Ecap::FirstLineRep::protocol() const
     case AnyP::PROTO_HTCP:
         return protocolHtcp;
 #endif
-    case AnyP::PROTO_CACHE_OBJECT:
-        return protocolCacheObj;
     case AnyP::PROTO_ICY:
         return protocolIcy;
     case AnyP::PROTO_COAP:

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,11 +10,11 @@
 #define SQUID_LOG_FORMATTEDLOG_H_
 
 #include "acl/forward.h"
-#include "base/Optional.h"
 #include "log/Formats.h"
 #include "log/forward.h"
 
 #include <iosfwd>
+#include <optional>
 
 class ConfigParser;
 
@@ -70,7 +70,7 @@ public:
     size_t bufferSize = 8*MAX_URL;
 
     /// how many log files to retain when rotating. Default: obey logfile_rotate
-    Optional<unsigned int> rotationsToKeep;
+    std::optional<unsigned int> rotationsToKeep;
 
     /// whether unrecoverable errors (e.g., dropping a log record) kill worker
     bool fatal = true;

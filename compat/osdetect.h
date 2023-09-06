@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -66,7 +66,6 @@
 
 #elif defined(__MINGW32__) || defined(__MINGW__)
 #define _SQUID_MINGW_ 1
-#define _SQUID_WINDOWS_ 1
 
 #elif defined(WIN32) || defined(WINNT) || defined(__WIN32__) || defined(__WIN32)
 #define _SQUID_WINDOWS_ 1

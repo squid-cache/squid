@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,18 +9,23 @@
 #ifndef SQUID_ACLHTTPREPHEADER_H
 #define SQUID_ACLHTTPREPHEADER_H
 
-#include "acl/Strategised.h"
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 #include "HttpHeader.h"
 
-/// \ingroup ACLAPI
-class ACLHTTPRepHeaderStrategy : public ACLStrategy<HttpHeader*>
+namespace Acl
 {
 
+/// a "rep_header" ACL
+class HttpRepHeaderCheck: public ParameterizedNode< ACLData<HttpHeader*> >
+{
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
-    virtual bool requiresReply() const { return true; }
+    /* ACL API */
+    int match(ACLChecklist *) override;
+    bool requiresReply() const override { return true; }
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLHTTPREPHEADER_H */
 

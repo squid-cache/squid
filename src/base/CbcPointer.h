@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -143,9 +143,6 @@ template<class Cbc>
 void
 CbcPointer<Cbc>::clear()
 {
-#if USE_CBDATA_DEBUG
-    debugs(45, 3, "cbc=" << (void*)cbc << ", lock=" << (void*)lock);
-#endif
     cbdataReferenceDone(lock); // lock may be nil before and will be nil after
     cbc = nullptr;
 }

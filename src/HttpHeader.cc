@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 55    HTTP Header */
 
 #include "squid.h"
+#include "base/Assure.h"
 #include "base/CharacterSet.h"
 #include "base/EnumIterator.h"
 #include "base/Raw.h"
@@ -143,12 +144,6 @@ httpHeaderInitModule(void)
 /*
  * HttpHeader Implementation
  */
-
-HttpHeader::HttpHeader() : owner (hoNone), len (0), conflictingContentLength_(false)
-{
-    entries.reserve(32);
-    httpHeaderMaskInit(&mask, 0);
-}
 
 HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0), conflictingContentLength_(false)
 {
@@ -757,32 +752,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
 
     entries.push_back(e);
 
-    /* increment header length, allow for ": " and crlf */
-    len += e->name.length() + 2 + e->value.size() + 2;
-}
-
-/* inserts an entry;
- * does not call e->clone() so one should not reuse "*e"
- */
-void
-HttpHeader::insertEntry(HttpHeaderEntry * e)
-{
-    assert(e);
-    assert(any_valid_header(e->id));
-
-    debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
-
-    // Http::HdrType::BAD_HDR is filtered out by assert_any_valid_header
-    if (CBIT_TEST(mask, e->id)) {
-        ++ headerStatsTable[e->id].repCount;
-    } else {
-        CBIT_SET(mask, e->id);
-    }
-
-    entries.insert(entries.begin(),e);
-
-    /* increment header length, allow for ": " and crlf */
-    len += e->name.length() + 2 + e->value.size() + 2;
+    len += e->length();
 }
 
 bool
@@ -991,10 +961,7 @@ HttpHeader::addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from)
         if (!strVia.isEmpty())
             strVia.append(", ", 2);
         strVia.append(buf);
-        // XXX: putStr() still suffers from String size limits
-        Must(strVia.length() < String::SizeMaxXXX());
-        delById(Http::HdrType::VIA);
-        putStr(Http::HdrType::VIA, strVia.c_str());
+        updateOrAddStr(Http::HdrType::VIA, strVia);
     }
 }
 
@@ -1042,15 +1009,14 @@ HttpHeader::putAuth(const char *auth_scheme, const char *realm)
 }
 
 void
-HttpHeader::putCc(const HttpHdrCc * cc)
+HttpHeader::putCc(const HttpHdrCc &cc)
 {
-    assert(cc);
     /* remove old directives if any */
     delById(Http::HdrType::CACHE_CONTROL);
     /* pack into mb */
     MemBuf mb;
     mb.init();
-    cc->packInto(&mb);
+    cc.packInto(&mb);
     /* put */
     addEntry(new HttpHeaderEntry(Http::HdrType::CACHE_CONTROL, SBuf(), mb.buf));
     /* cleanup */
@@ -1112,6 +1078,43 @@ HttpHeader::putExt(const char *name, const char *value)
     assert(name && value);
     debugs(55, 8, this << " adds ext entry " << name << " : " << value);
     addEntry(new HttpHeaderEntry(Http::HdrType::OTHER, SBuf(name), value));
+}
+
+void
+HttpHeader::updateOrAddStr(const Http::HdrType id, const SBuf &newValue)
+{
+    assert(any_registered_header(id));
+    assert(Http::HeaderLookupTable.lookup(id).type == Http::HdrFieldType::ftStr);
+
+    // XXX: HttpHeaderEntry::value suffers from String size limits
+    Assure(newValue.length() < String::SizeMaxXXX());
+
+    if (!CBIT_TEST(mask, id)) {
+        auto newValueCopy = newValue; // until HttpHeaderEntry::value becomes SBuf
+        addEntry(new HttpHeaderEntry(id, SBuf(), newValueCopy.c_str()));
+        return;
+    }
+
+    auto foundSameName = false;
+    for (auto &e: entries) {
+        if (!e || e->id != id)
+            continue;
+
+        if (foundSameName) {
+            // get rid of this repeated same-name entry
+            delete e;
+            e = nullptr;
+            continue;
+        }
+
+        if (newValue.cmp(e->value.termedBuf()) != 0)
+            e->value.assign(newValue.rawContent(), newValue.plength());
+
+        foundSameName = true;
+        // continue to delete any repeated same-name entries
+    }
+    assert(foundSameName);
+    debugs(55, 5, "synced: " << Http::HeaderLookupTable.lookup(id).name << ": " << newValue);
 }
 
 int

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,7 @@
 bool
 Security::KeyData::loadCertificates()
 {
-    debugs(83, DBG_IMPORTANT, "Using certificate in " << certFile);
+    debugs(83, 2, "from " << certFile);
     cert.reset(); // paranoid: ensure cert is unset
 
 #if USE_OPENSSL
@@ -44,32 +44,40 @@ Security::KeyData::loadCertificates()
     }
 
     try {
-        // selected bundled certificates in sending order: wireCerts = cert + chain
-        CertList wireCerts(1, cert);
+        // Squid sends `cert` (loaded above) followed by certificates in `chain`
+        // (formed below by loading and sorting the remaining certificates).
 
-        while (const auto bundledCert = Ssl::ReadOptionalCertificate(bio)) {
-            assert(!wireCerts.empty()); // this->cert is there (at least)
+        // load all the remaining configured certificates
+        CertList candidates;
+        while (const auto c = Ssl::ReadOptionalCertificate(bio))
+            candidates.emplace_back(c);
 
-            // We cannot chain any certificate after a self-signed certificate. This
-            // check also protects the IssuedBy() check below from adding duplicated
-            // (i.e. listed multiple times in the bundle) self-signed certificates.
-            if (SelfSigned(*wireCerts.back())) {
-                debugs(83, DBG_PARSE_NOTE(2), "WARNING: Ignoring certificate after a self-signed one: " << *bundledCert);
-                continue; // ... but keep going to report all ignored certificates
-            }
+        // Push certificates into `chain` in on-the-wire order, as defined by
+        // RFC 8446 Section 4.4.2: "Each following certificate SHOULD directly
+        // certify the one immediately preceding it."
+        while (!candidates.empty()) {
+            const auto precedingCert = chain.empty() ? cert : chain.back();
 
-            // add the bundled certificate if it extends the chain further
-            if (IssuedBy(*wireCerts.back(), *bundledCert)) {
-                debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << *bundledCert);
-                // OpenSSL API requires that we order certificates such that the
-                // chain can be appended directly into the on-wire traffic.
-                chain.emplace_back(bundledCert);
-                wireCerts.emplace_back(bundledCert);
-                continue;
-            }
+            // We cannot chain any certificate after a self-signed certificate.
+            // This check also protects the IssuedBy() search below from adding
+            // duplicated (i.e. listed multiple times) self-signed certificates.
+            if (SelfSigned(*precedingCert))
+                break;
 
-            debugs(83, DBG_PARSE_NOTE(2), "WARNING: Ignoring certificate that does not extend the chain: " << *bundledCert);
+            const auto issuerPos = std::find_if(candidates.begin(), candidates.end(), [&](const CertPointer &i) {
+                return IssuedBy(*precedingCert, *i);
+            });
+            if (issuerPos == candidates.end())
+                break;
+
+            const auto &issuer = *issuerPos;
+            debugs(83, DBG_PARSE_NOTE(3), "Adding CA certificate: " << *issuer);
+            chain.emplace_back(issuer);
+            candidates.erase(issuerPos);
         }
+
+        for (const auto &c: candidates)
+            debugs(83, DBG_IMPORTANT, "WARNING: Ignoring certificate that does not extend the chain: " << *c);
     }
     catch (...) {
         // TODO: Reject configs with malformed intermediate certs instead.
@@ -128,7 +136,7 @@ Security::KeyData::loadCertificates()
 bool
 Security::KeyData::loadX509PrivateKeyFromFile()
 {
-    debugs(83, DBG_IMPORTANT, "Using key in " << privateKeyFile);
+    debugs(83, 2, "from " << privateKeyFile);
 
 #if USE_OPENSSL
     const char *keyFilename = privateKeyFile.c_str();

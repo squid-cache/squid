@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,6 @@
 #include "comm/Loops.h"
 #include "debug/Messages.h"
 #include "debug/Stream.h"
-#include "error/SysErrorDetail.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
@@ -318,23 +317,5 @@ fdAdjustReserved(void)
     debugs(51, DBG_CRITICAL, "Reserved FD adjusted from " << RESERVED_FD << " to " << newReserve <<
            " due to failures (" << (Squid_MaxFD - newReserve) << "/" << Squid_MaxFD << " file descriptors available)");
     RESERVED_FD = newReserve;
-}
-
-/* Comm::Descriptor */
-
-Comm::Descriptor::Descriptor(const int fd, const unsigned int type, const char * const description): fd_(fd)
-{
-    fd_open(fd_, type, description);
-}
-
-Comm::Descriptor::~Descriptor()
-{
-    if (fd_ >= 0) {
-        fd_close(fd_);
-        if (close(fd_) != 0) {
-            const auto savedErrno = errno;
-            debugs(51, 7, "failed to close FD " << fd_ << ReportSysError(savedErrno));
-        }
-    }
 }
 

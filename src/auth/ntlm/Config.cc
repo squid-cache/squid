@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,7 +33,7 @@
 /* NTLM Scheme */
 static AUTHSSTATS authenticateNTLMStats;
 
-statefulhelper *ntlmauthenticators = nullptr;
+Helper::StatefulClientPointer ntlmauthenticators;
 static int authntlm_initialised = 0;
 
 static hash_table *proxy_auth_cache = nullptr;
@@ -64,7 +64,6 @@ Auth::Ntlm::Config::done()
     if (!shutting_down)
         return;
 
-    delete ntlmauthenticators;
     ntlmauthenticators = nullptr;
 
     if (authenticateProgram)
@@ -89,7 +88,7 @@ Auth::Ntlm::Config::init(Auth::SchemeConfig *)
         authntlm_initialised = 1;
 
         if (ntlmauthenticators == nullptr)
-            ntlmauthenticators = new statefulhelper("ntlmauthenticator");
+            ntlmauthenticators = statefulhelper::Make("ntlmauthenticator");
 
         if (!proxy_auth_cache)
             proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
@@ -163,13 +162,13 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
             request->flags.proxyKeepalive = false;
-        /* [[fallthrough]] */
+            [[fallthrough]];
 
         case Auth::Ok:
-        /* Special case: authentication finished OK but disallowed by ACL.
-         * Need to start over to give the client another chance.
-         */
-        /* [[fallthrough]] */
+            /* Special case: authentication finished OK but disallowed by ACL.
+             * Need to start over to give the client another chance.
+             */
+            [[fallthrough]];
 
         case Auth::Unchecked:
             /* semantic change: do not drop the connection.

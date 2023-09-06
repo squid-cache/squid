@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -50,7 +50,7 @@ static BIO_METHOD SquidMethods = {
     squid_bio_write,
     squid_bio_read,
     squid_bio_puts,
-    NULL, // squid_bio_gets not supported
+    nullptr, // squid_bio_gets not supported
     squid_bio_ctrl,
     squid_bio_create,
     squid_bio_destroy,

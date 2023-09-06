@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,7 +26,6 @@
 #include "SquidMath.h"
 #include "StatCounters.h"
 #include "store_key_md5.h"
-#include "StoreSearchUFS.h"
 #include "StoreSwapLogData.h"
 #include "tools.h"
 #include "UFSSwapDir.h"
@@ -47,10 +46,10 @@ public:
     UFSCleanLog(SwapDir *aSwapDir) : sd(aSwapDir) {}
 
     /// Get the next entry that is a candidate for clean log writing
-    virtual const StoreEntry *nextEntry();
+    const StoreEntry *nextEntry() override;
 
     /// "write" an entry to the clean log file.
-    virtual void write(StoreEntry const &);
+    void write(StoreEntry const &) override;
 
     SBuf cur;
     SBuf newLog;
@@ -543,15 +542,15 @@ Fs::Ufs::UFSSwapDir::dereference(StoreEntry & e)
 }
 
 StoreIOState::Pointer
-Fs::Ufs::UFSSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * aCallback, void *callback_data)
+Fs::Ufs::UFSSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STIOCB * const aCallback, void * const callback_data)
 {
-    return IO->create (this, &e, file_callback, aCallback, callback_data);
+    return IO->create(this, &e, aCallback, callback_data);
 }
 
 StoreIOState::Pointer
-Fs::Ufs::UFSSwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * aCallback, void *callback_data)
+Fs::Ufs::UFSSwapDir::openStoreIO(StoreEntry &e, StoreIOState::STIOCB * const aCallback, void * const callback_data)
 {
-    return IO->open (this, &e, file_callback, aCallback, callback_data);
+    return IO->open(this, &e, aCallback, callback_data);
 }
 
 int
@@ -1079,7 +1078,7 @@ Fs::Ufs::UFSSwapDir::HandleCleanEvent()
          * swap directories
          */
         static std::mt19937 mt(RandomSeed32());
-        xuniform_int_distribution<> dist(0, j);
+        std::uniform_int_distribution<> dist(0, j);
         swap_index = dist(mt);
     }
 

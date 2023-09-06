@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,6 @@
 #ifndef SQUID__SRC_BASE_CLPMAP_H
 #define SQUID__SRC_BASE_CLPMAP_H
 
-#include "base/Optional.h"
 #include "mem/PoolingAllocator.h"
 #include "SquidMath.h"
 #include "time/gadgets.h"
@@ -17,6 +16,7 @@
 #include <functional>
 #include <limits>
 #include <list>
+#include <optional>
 #include <unordered_map>
 
 template<class Value>
@@ -40,8 +40,32 @@ template <class Key, class Value, uint64_t MemoryUsedBy(const Value &) = Default
 class ClpMap
 {
 public:
+    using key_type = Key;
+    using mapped_type = Value;
+
     /// maximum desired entry caching duration (a.k.a. TTL), in seconds
     using Ttl = int;
+
+    /// the keeper of cache entry Key, Value, and caching-related entry metadata
+    class Entry
+    {
+    public:
+        Entry(const Key &, const Value &, const Ttl);
+
+        /// whether the entry is stale
+        bool expired() const { return expires < squid_curtime; }
+
+    public:
+        Key key; ///< the entry search key; see ClpMap::get()
+        Value value; ///< cached value provided by the map user
+        time_t expires = 0; ///< get() stops returning the entry after this time
+        uint64_t memCounted = 0; ///< memory accounted for this entry in our ClpMap
+    };
+
+    /// Entries in LRU order
+    using Entries = std::list<Entry, PoolingAllocator<Entry> >;
+    using EntriesIterator = typename Entries::iterator;
+    using ConstEntriesIterator = typename Entries::const_iterator;
 
     explicit ClpMap(const uint64_t capacity) { setMemLimit(capacity); }
     ClpMap(uint64_t capacity, Ttl defaultTtl);
@@ -84,33 +108,22 @@ public:
     /// The number of currently stored entries, including expired ones
     size_t entries() const { return entries_.size(); }
 
+    /// Read-only traversal of all cached entries in LRU order, least recently
+    /// used entry first. Stored expired entries (if any) are included. Any map
+    /// modification may invalidate these iterators and their derivatives.
+    ConstEntriesIterator cbegin() const { return entries_.cbegin(); }
+    ConstEntriesIterator cend() const { return entries_.cend(); }
+    /// range-based `for` loop support; \sa cbegin()
+    ConstEntriesIterator begin() const { return cbegin(); }
+    ConstEntriesIterator end() const { return cend(); }
+
 private:
-    /// the keeper of cache entry Key, Value, and caching-related entry metadata
-    class Entry
-    {
-    public:
-        Entry(const Key &, const Value &, const Ttl);
-
-        /// whether the entry is stale
-        bool expired() const { return expires < squid_curtime; }
-
-    public:
-        Key key; ///< the entry search key; see ClpMap::get()
-        Value value; ///< cached value provided by the map user
-        time_t expires = 0; ///< get() stops returning the entry after this time
-        uint64_t memCounted = 0; ///< memory accounted for this entry in our ClpMap
-    };
-
-    /// Entries in LRU order
-    using Entries = std::list<Entry, PoolingAllocator<Entry> >;
-    using EntriesIterator = typename Entries::iterator;
-
     using IndexItem = std::pair<const Key, EntriesIterator>;
     /// key:entry_position mapping for fast entry lookups by key
     using Index = std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItem> >;
     using IndexIterator = typename Index::iterator;
 
-    static Optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
+    static std::optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
 
     void trim(uint64_t wantSpace);
     void erase(const IndexIterator &);
@@ -183,7 +196,7 @@ ClpMap<Key, Value, MemoryUsedBy>::get(const Key &key)
 }
 
 template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
-Optional<uint64_t>
+std::optional<uint64_t>
 ClpMap<Key, Value, MemoryUsedBy>::MemoryCountedFor(const Key &k, const Value &v)
 {
     // Both storage and index store keys, but we count keySz once, assuming that
@@ -224,10 +237,10 @@ ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &v, const Ttl 
         return false; // will never fit
     trim(wantSpace);
 
-    entries_.emplace_front(key, v, ttl); // TODO: After C++17 migration, use the return value
+    auto &addedEntry = entries_.emplace_front(key, v, ttl);
     index_.emplace(key, entries_.begin());
 
-    entries_.begin()->memCounted = wantSpace;
+    addedEntry.memCounted = wantSpace;
     memUsed_ += wantSpace;
     assert(memUsed_ >= wantSpace); // no overflows
     return true;

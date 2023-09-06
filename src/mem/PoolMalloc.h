@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,29 +28,27 @@
  *     might be the way to go.
  */
 
-#include "mem/Pool.h"
+#include "mem/Allocator.h"
 
 #include <stack>
 
 /// \ingroup MemPoolsAPI
-class MemPoolMalloc : public MemImplementingAllocator
+class MemPoolMalloc : public Mem::Allocator
 {
 public:
     MemPoolMalloc(char const *label, size_t aSize);
-    ~MemPoolMalloc();
-    virtual bool idleTrigger(int shift) const;
-    virtual void clean(time_t maxage);
+    ~MemPoolMalloc() override;
 
-    /**
-     \param stats   Object to be filled with statistical data about pool.
-     \retval        Number of objects in use, ie. allocated.
-     */
-    virtual int getStats(MemPoolStats * stats, int accumulate);
+    /* Mem::Allocator API */
+    size_t getStats(Mem::PoolStats &) override;
+    bool idleTrigger(int) const override;
+    void clean(time_t) override;
 
-    virtual int getInUseCount();
 protected:
-    virtual void *allocate();
-    virtual void deallocate(void *, bool aggressive);
+    /* Mem::Allocator API */
+    void *allocate() override;
+    void deallocate(void *) override;
+
 private:
     std::stack<void *> freelist;
 };

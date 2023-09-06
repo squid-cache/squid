@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -211,13 +211,13 @@ public:
      * \note arguments may be evaluated more than once, be careful
      *       of side-effects
      */
-    SBuf& Printf(const char *fmt, ...);
+    SBuf& Printf(const char *fmt, ...) PRINTF_FORMAT_ARG2;
 
     /** Append operation with printf-style arguments
      * \note arguments may be evaluated more than once, be careful
      *       of side-effects
      */
-    SBuf& appendf(const char *fmt, ...);
+    SBuf& appendf(const char *fmt, ...)  PRINTF_FORMAT_ARG2;
 
     /** Append operation, with vsprintf(3)-style arguments.
      * \note arguments may be evaluated more than once, be careful

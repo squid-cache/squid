@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -148,17 +148,17 @@ ssl_temp_rsa_cb(SSL *, int, int keylen)
 
     default:
         debugs(83, DBG_IMPORTANT, "ERROR: ssl_temp_rsa_cb: Unexpected key length " << keylen);
-        return NULL;
+        return nullptr;
     }
 
     if (rsa == NULL) {
         debugs(83, DBG_IMPORTANT, "ERROR: ssl_temp_rsa_cb: Failed to generate key " << keylen);
-        return NULL;
+        return nullptr;
     }
 
     if (newkey) {
         if (Debug::Enabled(83, 5))
-            PEM_write_RSAPrivateKey(debug_log, rsa, NULL, NULL, 0, NULL, NULL);
+            PEM_write_RSAPrivateKey(debug_log, rsa, nullptr, nullptr, 0, nullptr, nullptr);
 
         debugs(83, DBG_IMPORTANT, "Generated ephemeral RSA key of length " << keylen);
     }
@@ -351,7 +351,8 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             if (check) {
                 ACLFilledChecklist *filledCheck = Filled(check);
                 const auto savedErrors = filledCheck->sslErrors;
-                filledCheck->sslErrors = new Security::CertErrors(Security::CertError(error_no, broken_cert));
+                const auto sslErrors = std::make_unique<Security::CertErrors>(Security::CertError(error_no, broken_cert));
+                filledCheck->sslErrors = sslErrors.get();
                 filledCheck->serverCert = peer_cert;
                 if (check->fastCheck().allowed()) {
                     debugs(83, 3, "bypassing SSL error " << error_no << " in " << *peer_cert);
@@ -359,7 +360,6 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 } else {
                     debugs(83, 5, "confirming SSL error " << error_no);
                 }
-                delete filledCheck->sslErrors;
                 filledCheck->sslErrors = savedErrors;
                 filledCheck->serverCert.reset();
             }
@@ -727,7 +727,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
         // TODO: support loading multiple cert/key pairs
         auto &keys = peer.certs.front();
         if (!keys.certFile.isEmpty()) {
-            debugs(83, DBG_IMPORTANT, "Using certificate in " << keys.certFile);
+            debugs(83, 2, "loading client certificate from " << keys.certFile);
 
             const char *certfile = keys.certFile.c_str();
             if (!SSL_CTX_use_certificate_chain_file(ctx.get(), certfile)) {
@@ -736,7 +736,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
                        certfile, Security::ErrorString(ssl_error));
             }
 
-            debugs(83, DBG_IMPORTANT, "Using private key in " << keys.privateKeyFile);
+            debugs(83, 2, "loading private key from " << keys.privateKeyFile);
             const char *keyfile = keys.privateKeyFile.c_str();
             ssl_ask_password(ctx.get(), keyfile);
 
@@ -1052,7 +1052,7 @@ Ssl::verifySslCertificate(const Security::ContextPointer &ctx, CertificateProper
     X509 ***pCert = (X509 ***)ctx->cert;
     X509 * cert = pCert && *pCert ? **pCert : NULL;
 #elif SQUID_SSLGETCERTIFICATE_BUGGY
-    X509 * cert = NULL;
+    X509 * cert = nullptr;
     assert(0);
 #else
     // Temporary ssl for getting X509 certificate from SSL_CTX.

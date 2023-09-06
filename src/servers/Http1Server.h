@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,30 +19,30 @@ namespace One
 /// Manages a connection from an HTTP/1 or HTTP/0.9 client.
 class Server: public ConnStateData
 {
-    CBDATA_CLASS(Server);
+    CBDATA_CHILD(Server);
 
 public:
     Server(const MasterXaction::Pointer &xact, const bool beHttpsServer);
-    virtual ~Server() {}
+    ~Server() override {}
 
     void readSomeHttpData();
 
 protected:
     /* ConnStateData API */
-    virtual Http::Stream *parseOneRequest();
-    virtual void processParsedRequest(Http::StreamPointer &context);
-    virtual void handleReply(HttpReply *rep, StoreIOBuffer receivedData);
-    virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
-    virtual int pipelinePrefetchMax() const;
-    virtual time_t idleTimeout() const;
-    virtual void noteTakeServerConnectionControl(ServerConnectionContext);
+    Http::Stream *parseOneRequest() override;
+    void processParsedRequest(Http::StreamPointer &context) override;
+    void handleReply(HttpReply *rep, StoreIOBuffer receivedData) override;
+    bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) override;
+    int pipelinePrefetchMax() const override;
+    time_t idleTimeout() const override;
+    void noteTakeServerConnectionControl(ServerConnectionContext) override;
 
     /* BodyPipe API */
-    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
-    virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
+    void noteMoreBodySpaceAvailable(BodyPipe::Pointer) override;
+    void noteBodyConsumerAborted(BodyPipe::Pointer) override;
 
     /* AsyncJob API */
-    virtual void start();
+    void start() override;
 
     void proceedAfterBodyContinuation(Http::StreamPointer context);
 

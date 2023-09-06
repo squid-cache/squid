@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -45,7 +45,7 @@ public:
         memset(&flags, 0, sizeof(flags));
     }
 
-    ~ESIContext();
+    ~ESIContext() override;
 
     enum esiKick_t {
         ESI_KICK_FAILED,
@@ -55,8 +55,8 @@ public:
     };
 
     /* when esi processing completes */
-    void provideData(ESISegment::Pointer, ESIElement *source);
-    void fail (ESIElement *source, char const*anError = nullptr);
+    void provideData(ESISegment::Pointer, ESIElement *source) override;
+    void fail (ESIElement *source, char const*anError = nullptr) override;
     void startRead();
     void finishRead();
     bool reading() const;
@@ -75,20 +75,20 @@ public:
     ClientHttpRequest *http;
 
     struct {
-        int passthrough:1;
-        int oktosend:1;
-        int finished:1;
+        unsigned int passthrough:1;
+        unsigned int oktosend:1;
+        unsigned int finished:1;
 
         /* an error has occurred, send full body replies
          * regardless. Note that we don't fail midstream
          * because we buffer until we can not fail
          */
-        int error:1;
+        unsigned int error:1;
 
-        int finishedtemplate:1; /* we've read the entire template */
-        int clientwantsdata:1; /* we need to satisfy a read request */
-        int kicked:1; /* note on reentering the kick routine */
-        int detached:1; /* our downstream has detached */
+        unsigned int finishedtemplate:1; /* we've read the entire template */
+        unsigned int clientwantsdata:1; /* we need to satisfy a read request */
+        unsigned int kicked:1; /* note on reentering the kick routine */
+        unsigned int detached:1; /* our downstream has detached */
     } flags;
 
     err_type errorpage; /* if we error what page to use */
@@ -123,7 +123,7 @@ public:
         ParserState();
         void freeResources();
         void popAll();
-        int parsing:1; /* libexpat is not reentrant on the same context */
+        unsigned int parsing:1; /* libexpat is not reentrant on the same context */
 
     private:
         bool inited_;
@@ -153,10 +153,10 @@ private:
     void updateCachedAST();
     bool hasCachedAST() const;
     void getCachedAST();
-    virtual void start(const char *el, const char **attr, size_t attrCount);
-    virtual void end(const char *el);
-    virtual void parserDefault (const char *s, int len);
-    virtual void parserComment (const char *s);
+    void start(const char *el, const char **attr, size_t attrCount) override;
+    void end(const char *el) override;
+    void parserDefault (const char *s, int len) override;
+    void parserComment (const char *s) override;
     bool processing;
 };
 

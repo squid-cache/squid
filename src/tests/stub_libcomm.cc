@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -85,5 +85,5 @@ void Comm::Write(const Comm::ConnectionPointer &, MemBuf *, AsyncCall::Pointer &
 void Comm::WriteCancel(const Comm::ConnectionPointer &, const char *) STUB
 /*PF*/ void Comm::HandleWrite(int, void*) STUB
 
-std::ostream &operator << (std::ostream &os, const Comm::Connection &) STUB_RETVAL(os << "[Connection object]")
+std::ostream &Comm::operator <<(std::ostream &os, const Connection &) STUB_RETVAL(os << "[Connection object]")
 

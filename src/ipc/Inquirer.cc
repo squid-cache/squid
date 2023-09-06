@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,8 +20,6 @@
 
 #include <algorithm>
 #include <unordered_map>
-
-CBDATA_NAMESPACED_CLASS_INIT(Ipc, Inquirer);
 
 Ipc::RequestId::Index Ipc::Inquirer::LastRequestId = 0;
 

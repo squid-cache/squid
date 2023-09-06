@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,16 +37,16 @@ class AcceptLimiter;
  */
 class TcpAcceptor : public AsyncJob
 {
-    CBDATA_CLASS(TcpAcceptor);
+    CBDATA_CHILD(TcpAcceptor);
 
 public:
     typedef CbcPointer<Comm::TcpAcceptor> Pointer;
 
 private:
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
-    virtual const char *status() const;
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
+    const char *status() const override;
 
     TcpAcceptor(const TcpAcceptor &); // not implemented.
 
@@ -100,7 +100,7 @@ private:
     static void doAccept(int fd, void *data);
 
     void acceptOne();
-    Comm::Flag oldAccept(Comm::ConnectionPointer &details);
+    bool acceptInto(Comm::ConnectionPointer &);
     void setListen();
     void handleClosure(const CommCloseCbParams &io);
     /// whether we are listening on one of the squid.conf *ports

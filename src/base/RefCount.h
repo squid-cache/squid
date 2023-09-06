@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,6 +15,7 @@
 #include "base/Lock.h"
 
 #include <iostream>
+#include <utility>
 
 /**
  * Template for Reference Counting pointers.
@@ -27,6 +28,12 @@ class RefCount
 {
 
 public:
+    /// creates a new C object using given C constructor arguments (if any)
+    /// \returns a refcounting pointer to the created object
+    template<typename... Args>
+    inline static auto Make(Args&&... args) {
+        return RefCount<C>(new C(std::forward<Args>(args)...));
+    }
     RefCount () : p_ (nullptr) {}
 
     RefCount (C const *p) : p_(p) { reference (*this); }
@@ -66,6 +73,8 @@ public:
         return *this;
     }
 
+    RefCount &operator =(std::nullptr_t) { dereference(); return *this; }
+
     explicit operator bool() const { return p_; }
 
     bool operator !() const { return !p_; }
@@ -85,6 +94,18 @@ public:
 
     bool operator != (const RefCount &p) const {
         return p.p_ != p_;
+    }
+
+    template <class Other>
+    bool operator ==(const Other * const p) const
+    {
+        return p == p_;
+    }
+
+    template <class Other>
+    bool operator !=(const Other * const p) const
+    {
+        return p != p_;
     }
 
 private:

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,7 +34,7 @@ public:
     /// Submit crtd message to external crtd server.
     static void Submit(CrtdMessage const & message, HLPCB * callback, void *data);
 private:
-    static helper * ssl_crtd; ///< helper for management of ssl_crtd.
+    static ::Helper::ClientPointer ssl_crtd; ///< helper for management of ssl_crtd.
 };
 #endif
 
@@ -53,7 +53,7 @@ public:
     /// Submit crtd request message to external crtd server.
     static void Submit(const Ssl::CertValidationRequest &, const Callback &);
 private:
-    static helper * ssl_crt_validator; ///< helper for management of ssl_crtd.
+    static ::Helper::ClientPointer ssl_crt_validator; ///< helper for management of ssl_crtd.
 public:
     typedef ClpMap<SBuf, CertValidationResponse::Pointer, CertValidationResponse::MemoryUsedByResponse> CacheType;
     static CacheType *HelperCache; ///< cache for cert validation helper

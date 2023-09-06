@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,17 +19,13 @@
 #include "dns/rfc2671.h"
 #include "util.h"
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cassert>
+#include <cstring>
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #if HAVE_MEMORY_H
 #include <memory.h>
-#endif
-#if HAVE_ASSERT_H
-#include <assert.h>
 #endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>

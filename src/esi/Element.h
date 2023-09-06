@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,7 +32,7 @@ struct esiTreeParent : public RefCountable {
 
     virtual void fail(ESIElement * /* source */, char const * /* reason */ = nullptr) {}
 
-    virtual ~esiTreeParent() {}
+    ~esiTreeParent() override {}
 };
 
 typedef RefCount<esiTreeParent> esiTreeParentPtr;

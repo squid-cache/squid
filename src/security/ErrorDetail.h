@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -56,8 +56,8 @@ public:
 #endif
 
     /* ErrorDetail API */
-    virtual SBuf brief() const;
-    virtual SBuf verbose(const HttpRequestPointer &) const;
+    SBuf brief() const override;
+    SBuf verbose(const HttpRequestPointer &) const override;
 
     /// \returns error category; \see ErrorCode
     ErrorCode errorNo() const { return error_no; }
@@ -126,17 +126,17 @@ ErrorCode ErrorCodeFromName(const char *name);
 /// \param prefixRawCode whether to prefix raw codes with "SSL_ERR="
 const char *ErrorNameFromCode(ErrorCode err, bool prefixRawCode = false);
 
-} // namespace Security
-
 /// Dump the given Security::ErrorDetail via a possibly nil pointer (for
 /// debugging). Unfortunately, without this, compilers pick generic RefCount<T>
 /// operator "<<" overload (with T=Security::ErrorDetail) instead of the
 /// overload provided by the parent ErrorDetail class (that we call here).
 inline std::ostream &
-operator <<(std::ostream &os, const Security::ErrorDetail::Pointer &p)
+operator <<(std::ostream &os, const ErrorDetail::Pointer &p)
 {
     return operator <<(os, ::ErrorDetail::Pointer(p));
 }
+
+} // namespace Security
 
 #endif
 

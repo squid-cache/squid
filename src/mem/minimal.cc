@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 
 /// The number of currently alive objects (poor man's meter.alloc=meter.inuse).
 /// Technically, this is supposed to be a per-allocator statistics, but
-/// AllocatorProxy is not a MemAllocator so we maintain a global counter
+/// AllocatorProxy is not a Mem::Allocator so we maintain a global counter
 /// instead. We probably do not have to maintain this statistics at all.
 static int Alive = 0;
 
@@ -36,8 +36,8 @@ Mem::AllocatorProxy::inUseCount() const
     return Alive;
 }
 
-int
-Mem::AllocatorProxy::getStats(MemPoolStats *)
+size_t
+Mem::AllocatorProxy::getStats(PoolStats &)
 {
     return Alive;
 }
@@ -78,6 +78,12 @@ void *
 memAllocRigid(const size_t netSize)
 {
     return xmalloc(netSize);
+}
+
+void
+memFreeRigid(void * const buf, size_t)
+{
+    xfree(buf);
 }
 
 void

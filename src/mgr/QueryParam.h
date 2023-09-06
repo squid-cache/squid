@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ public:
 
 public:
     QueryParam(Type aType): type(aType) {}
-    virtual ~QueryParam() {}
+    ~QueryParam() override {}
     virtual void pack(Ipc::TypedMsgHdr& msg) const = 0; ///< store parameter into msg
     virtual void unpackValue(const Ipc::TypedMsgHdr& msg) = 0; ///< load parameter value from msg
 

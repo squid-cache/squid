@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -172,6 +172,8 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
 
     if (dataWritten) // treat zero-length responses as incomplete
         fwd->markStoredReplyAsWhole("whois received/stored the entire response");
+    else
+        fwd->fail(new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scBadGateway, fwd->request, fwd->al));
 
     fwd->complete();
     debugs(75, 3, "whoisReadReply: Done: " << entry->url());

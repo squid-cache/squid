@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -101,8 +101,10 @@ logfile_mod_udp_linestart(Logfile *)
 }
 
 static void
-logfile_mod_udp_lineend(Logfile *)
+logfile_mod_udp_lineend(Logfile *lf)
 {
+    if (!Config.onoff.buffered_logs)
+        lf->f_flush(lf);
 }
 
 static void

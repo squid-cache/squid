@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,15 +32,15 @@
 #    define KERBEROS_APPLE_DEPRECATED(x)
 #  endif
 #  if HAVE_BROKEN_HEIMDAL_KRB5_H && defined(__cplusplus)
-     extern "C" {
+extern "C" {
 #      include <krb5.h>
-     }
+}
 #  elif HAVE_BROKEN_SOLARIS_KRB5_H && defined(__cplusplus)
 #    define KRB5INT_BEGIN_DECLS extern "C" {
 #    define KRB5INT_END_DECLS
-     extern "C" {
+extern "C" {
 #      include <krb5.h>
-     /* broken Solaris krb5.h contains the closing } */
+    /* broken Solaris krb5.h contains the closing } */
 #  else
 #    include <krb5.h>
 #  endif

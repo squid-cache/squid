@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,8 +47,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
-#include <sys/types.h>
 #include <memory.h>
+
+#if HAVE_REGEX_H
+#include <regex.h>
+#endif
+
+#include <sys/types.h>
 
 int
 readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )

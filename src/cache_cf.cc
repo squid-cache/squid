@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,6 +25,7 @@
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
@@ -320,7 +321,7 @@ parseManyConfigFiles(char* files, int depth)
     char* file = strwordtok(files, &saveptr);
     while (file != NULL) {
         error_count += parseOneConfigFile(file, depth);
-        file = strwordtok(NULL, &saveptr);
+        file = strwordtok(nullptr, &saveptr);
     }
 #endif /* HAVE_GLOB */
     return error_count;
@@ -443,7 +444,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     int err_count = 0;
     int is_pipe = 0;
 
-    debugs(3, DBG_IMPORTANT, "Processing Configuration File: " << file_name << " (depth " << depth << ")");
+    debugs(3, Important(68), "Processing Configuration File: " << file_name << " (depth " << depth << ")");
     if (depth > 16) {
         fatalf("WARNING: can't include %s: includes are nested too deeply (>16)!\n", file_name);
         return 1;
@@ -761,7 +762,7 @@ configDoConfigure(void)
     if (Config.max_filedescriptors > 0) {
         debugs(0, DBG_IMPORTANT, "WARNING: max_filedescriptors disabled. Operating System setrlimit(RLIMIT_NOFILE) is missing.");
     }
-#elif USE_SELECT || USE_SELECT_WIN32
+#elif USE_SELECT
     if (Config.max_filedescriptors > FD_SETSIZE) {
         debugs(0, DBG_IMPORTANT, "WARNING: max_filedescriptors limited to " << FD_SETSIZE << " by select() algorithm.");
     }
@@ -961,7 +962,7 @@ configDoConfigure(void)
 #endif
 
     if (Security::ProxyOutgoingConfig.encryptTransport) {
-        debugs(3, DBG_IMPORTANT, "Initializing https:// proxy context");
+        debugs(3, 2, "initializing https:// proxy context");
         Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
         if (!Config.ssl_client.sslContext) {
 #if USE_OPENSSL
@@ -975,17 +976,17 @@ configDoConfigure(void)
 #endif
     }
 
-    for (CachePeer *p = Config.peers; p != nullptr; p = p->next) {
+    for (const auto &p: CurrentCachePeers()) {
 
         // default value for ssldomain= is the peer host/IP
         if (p->secure.sslDomain.isEmpty())
             p->secure.sslDomain = p->host;
 
         if (p->secure.encryptTransport) {
-            debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " TLS context");
+            debugs(3, 2, "initializing TLS context for cache_peer " << *p);
             p->sslContext = p->secure.createClientContext(true);
             if (!p->sslContext) {
-                debugs(3, DBG_CRITICAL, "ERROR: Could not initialize cache_peer " << p->name << " TLS context");
+                debugs(3, DBG_CRITICAL, "ERROR: Could not initialize TLS context for cache_peer " << *p);
                 self_destruct();
                 return;
             }
@@ -995,7 +996,7 @@ configDoConfigure(void)
     for (AnyP::PortCfgPointer s = HttpPortList; s != nullptr; s = s->next) {
         if (!s->secure.encryptTransport)
             continue;
-        debugs(3, DBG_IMPORTANT, "Initializing " << AnyP::UriScheme(s->transport.protocol) << "_port " << s->s << " TLS contexts");
+        debugs(3, 2, "initializing " << AnyP::UriScheme(s->transport.protocol) << "_port " << s->s << " TLS contexts");
         s->secure.initServerContexts(*s);
     }
 
@@ -2068,12 +2069,16 @@ peer_type_str(const peer_t type)
 }
 
 static void
-dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
+dump_peer(StoreEntry * entry, const char *name, const CachePeers *peers)
 {
+    if (!peers)
+        return;
+
     NeighborTypeDomainList *t;
     LOCAL_ARRAY(char, xname, 128);
 
-    while (p != nullptr) {
+    for (const auto &peer: *peers) {
+        const auto p = peer.get();
         storeAppendPrintf(entry, "%s %s %s %d %d name=%s",
                           name,
                           p->host,
@@ -2094,8 +2099,6 @@ dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
                               peer_type_str(t->type),
                               t->domain);
         }
-
-        p = p->next;
     }
 }
 
@@ -2160,7 +2163,7 @@ GetUdpService(void)
 }
 
 static void
-parse_peer(CachePeer ** head)
+parse_peer(CachePeers **peers)
 {
     char *host_str = ConfigParser::NextToken();
     if (!host_str) {
@@ -2174,10 +2177,8 @@ parse_peer(CachePeer ** head)
         return;
     }
 
-    CachePeer *p = new CachePeer;
-    p->host = xstrdup(host_str);
-    Tolower(p->host);
-    p->name = xstrdup(host_str);
+    const auto p = new CachePeer(host_str);
+
     p->type = parseNeighborType(token);
 
     if (p->type == PEER_MULTICAST) {
@@ -2271,12 +2272,12 @@ parse_peer(CachePeer ** head)
 
         } else if (!strcmp(token, "carp")) {
             if (p->type != PEER_PARENT)
-                fatalf("parse_peer: non-parent carp peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("non-parent carp cache_peer ", *p), Here());
 
             p->options.carp = true;
         } else if (!strncmp(token, "carp-key=", 9)) {
             if (p->options.carp != true)
-                fatalf("parse_peer: carp-key specified on non-carp peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("carp-key specified on non-carp cache_peer ", *p), Here());
             p->options.carp_key.set = true;
             char *nextkey=token+strlen("carp-key="), *key=nextkey;
             for (; key; key = nextkey) {
@@ -2299,15 +2300,15 @@ parse_peer(CachePeer ** head)
         } else if (!strcmp(token, "userhash")) {
 #if USE_AUTH
             if (p->type != PEER_PARENT)
-                fatalf("parse_peer: non-parent userhash peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("non-parent userhash cache_peer ", *p), Here());
 
             p->options.userhash = true;
 #else
-            fatalf("parse_peer: userhash requires authentication. peer %s/%d\n", p->host, p->http_port);
+            throw TextException(ToSBuf("missing authentication support; required for userhash cache_peer ", *p), Here());
 #endif
         } else if (!strcmp(token, "sourcehash")) {
             if (p->type != PEER_PARENT)
-                fatalf("parse_peer: non-parent sourcehash peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("non-parent sourcehash cache_peer ", *p), Here());
 
             p->options.sourcehash = true;
 
@@ -2340,10 +2341,7 @@ parse_peer(CachePeer ** head)
         } else if (!strcmp(token, "originserver")) {
             p->options.originserver = true;
         } else if (!strncmp(token, "name=", 5)) {
-            safe_free(p->name);
-
-            if (token[5])
-                p->name = xstrdup(token + 5);
+            p->rename(token + 5);
         } else if (!strncmp(token, "forceddomain=", 13)) {
             safe_free(p->domain);
             if (token[13])
@@ -2381,11 +2379,12 @@ parse_peer(CachePeer ** head)
         }
     }
 
-    if (peerFindByName(p->name))
-        fatalf("ERROR: cache_peer %s specified twice\n", p->name);
+    if (findCachePeerByName(p->name))
+        throw TextException(ToSBuf("cache_peer ", *p, " specified twice"), Here());
 
     if (p->max_conn > 0 && p->max_conn < p->standby.limit)
-        fatalf("ERROR: cache_peer %s max-conn=%d is lower than its standby=%d\n", p->host, p->max_conn, p->standby.limit);
+        throw TextException(ToSBuf("cache_peer ", *p, " max-conn=", p->max_conn,
+                                   " is lower than its standby=", p->standby.limit), Here());
 
     if (p->weight < 1)
         p->weight = 1;
@@ -2395,28 +2394,27 @@ parse_peer(CachePeer ** head)
 
 #if USE_CACHE_DIGESTS
     if (!p->options.no_digest)
-        peerDigestCreate(p);
+        p->digest = new PeerDigest(p);
 #endif
 
     if (p->secure.encryptTransport)
         p->secure.parseOptions();
 
-    p->index =  ++Config.npeers;
+    if (!*peers)
+        *peers = new CachePeers;
 
-    while (*head != nullptr)
-        head = &(*head)->next;
+    (*peers)->add(p);
 
-    *head = p;
+    p->index = (*peers)->size();
 
     peerClearRRStart();
 }
 
 static void
-free_peer(CachePeer ** P)
+free_peer(CachePeers ** const peers)
 {
-    delete *P;
-    *P = nullptr;
-    Config.npeers = 0;
+    delete *peers;
+    *peers = nullptr;
 }
 
 static void
@@ -2509,31 +2507,16 @@ free_denyinfo(AclDenyInfoList ** list)
 static void
 parse_peer_access(void)
 {
-    char *host = ConfigParser::NextToken();
-    if (!host) {
-        self_destruct();
-        return;
-    }
-
-    CachePeer *p = peerFindByName(host);
-    if (!p) {
-        debugs(15, DBG_CRITICAL, "ERROR: " << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
-        return;
-    }
-
+    auto &p = LegacyParser.cachePeer("cache_peer_access peer-name");
     std::string directive = "peer_access ";
-    directive += host;
-    aclParseAccessLine(directive.c_str(), LegacyParser, &p->access);
+    directive += p.name;
+    aclParseAccessLine(directive.c_str(), LegacyParser, &p.access);
 }
 
 static void
 parse_hostdomaintype(void)
 {
-    char *host = ConfigParser::NextToken();
-    if (!host) {
-        self_destruct();
-        return;
-    }
+    auto &p = LegacyParser.cachePeer("neighbor_type_domain peer-name");
 
     char *type = ConfigParser::NextToken();
     if (!type) {
@@ -2543,18 +2526,12 @@ parse_hostdomaintype(void)
 
     char *domain = nullptr;
     while ((domain = ConfigParser::NextToken())) {
-        CachePeer *p = peerFindByName(host);
-        if (!p) {
-            debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
-            return;
-        }
-
         auto *l = static_cast<NeighborTypeDomainList *>(xcalloc(1, sizeof(NeighborTypeDomainList)));
         l->type = parseNeighborType(type);
         l->domain = xstrdup(domain);
 
         NeighborTypeDomainList **L = nullptr;
-        for (L = &(p->typelist); *L; L = &((*L)->next));
+        for (L = &p.typelist; *L; L = &((*L)->next));
         *L = l;
     }
 }
@@ -3922,7 +3899,8 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
         storeAppendPrintf(e, " ssl-bump");
 #endif
 
-    s->secure.dumpCfg(e, "tls-");
+    PackableStream os(*e);
+    s->secure.dumpCfg(os, "tls-");
 }
 
 static void
@@ -4394,12 +4372,12 @@ class sslBumpCfgRr: public ::RegisteredRunner
 public:
     static Ssl::BumpMode lastDeprecatedRule;
     /* RegisteredRunner API */
-    virtual void finalizeConfig();
+    void finalizeConfig() override;
 };
 
 Ssl::BumpMode sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
 
-RunnerRegistrationEntry(sslBumpCfgRr);
+DefineRunnerRegistrator(sslBumpCfgRr);
 
 void
 sslBumpCfgRr::finalizeConfig()

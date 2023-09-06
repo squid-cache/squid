@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,13 +23,13 @@ class AllOf: public Acl::InnerNode
 
 public:
     /* ACL API */
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual SBufList dump() const;
+    char const *typeString() const override;
+    void parse() override;
+    SBufList dump() const override;
 
 private:
     /* Acl::InnerNode API */
-    virtual int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const;
+    int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const override;
 };
 
 } // namespace Acl

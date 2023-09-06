@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -356,11 +356,12 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     case Helper::TT:
         debugs(29, DBG_IMPORTANT, "ERROR: Digest auth does not support the result code received. Using the wrong helper program? received: " << reply);
-    // [[fallthrough]] to handle this as an ERR response
+        [[fallthrough]]; // to handle this as an ERR response
 
     case Helper::TimedOut:
     case Helper::BrokenHelper:
-    // [[fallthrough]] to (silently) handle this as an ERR response
+        [[fallthrough]]; // to (silently) handle this as an ERR response
+
     // TODO retry the broken lookup on another helper?
     case Helper::Error: {
         /* allow this because the digest_request pointer is purely local */

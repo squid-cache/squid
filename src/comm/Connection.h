@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -77,7 +77,7 @@ public:
     Connection();
 
     /** Clear the connection properties and close any open socket. */
-    virtual ~Connection();
+    ~Connection() override;
 
     /// To prevent accidental copying of Connection objects that we started to
     /// open or that are open, use cloneProfile() instead.
@@ -138,8 +138,8 @@ public:
     const Security::NegotiationHistory *hasTlsNegotiations() const {return tlsHistory;}
 
     /* CodeContext API */
-    virtual ScopedId codeContextGist() const override;
-    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
+    ScopedId codeContextGist() const override;
+    std::ostream &detailCodeContext(std::ostream &os) const override;
 
 public:
     /** Address/Port for the Squid end of a TCP link. */
@@ -193,17 +193,17 @@ private:
     Security::NegotiationHistory *tlsHistory;
 };
 
-}; // namespace Comm
-
-std::ostream &operator << (std::ostream &os, const Comm::Connection &conn);
+std::ostream &operator <<(std::ostream &, const Connection &);
 
 inline std::ostream &
-operator << (std::ostream &os, const Comm::ConnectionPointer &conn)
+operator <<(std::ostream &os, const ConnectionPointer &conn)
 {
     if (conn != nullptr)
         os << *conn;
     return os;
 }
+
+} // namespace Comm
 
 #endif
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,15 +9,21 @@
 #ifndef SQUID_ACLLOCALPORT_H
 #define SQUID_ACLLOCALPORT_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 
-/// \ingroup ACLAPI
-class ACLLocalPortStrategy : public ACLStrategy<int>
+namespace Acl
 {
 
+/// a "localport" ACL
+class LocalPortCheck: public ParameterizedNode< ACLData<int> >
+{
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLLOCALPORT_H */
 

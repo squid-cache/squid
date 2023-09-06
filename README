@@ -1,7 +1,7 @@
 SQUID Web Proxy Cache                        http://www.squid-cache.org/
 ------------------------------------------------------------------------
 
-Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 
 Squid software is distributed under GPLv2+ license and includes 
 contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@ Please see the COPYING and CONTRIBUTORS files for details.
 For support, please use the following resources:
 
     * General help and support:  squid-users@lists.squid-cache.org
-    * Public bug reports:        http://bugs.squid-cache.org/
+    * Public bug reports:        https://bugs.squid-cache.org/
     * Security bug reports:      squid-bugs@lists.squid-cache.org
     * Development discussions:   squid-dev@lists.squid-cache.org
 

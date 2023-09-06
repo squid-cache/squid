@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,8 +16,8 @@ class ACLSourceIP : public ACLIP
     MEMPROXY_CLASS(ACLSourceIP);
 
 public:
-    virtual char const *typeString() const;
-    virtual int match(ACLChecklist *checklist);
+    char const *typeString() const override;
+    int match(ACLChecklist *checklist) override;
 };
 
 #endif /* SQUID_ACLSOURCEIP_H */

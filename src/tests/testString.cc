@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,23 +7,35 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "mem/forward.h"
 #include "SquidString.h"
-#include "testString.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testString );
+/*
+ * test the store framework
+ */
 
-/* init memory pools */
-
-void
-testString::setUp()
+class TestString : public CPPUNIT_NS::TestFixture
 {
-    Mem::Init();
-}
+    CPPUNIT_TEST_SUITE(TestString);
+    CPPUNIT_TEST(testCmpDefault);
+    CPPUNIT_TEST(testCmpEmptyString);
+    CPPUNIT_TEST(testCmpNotEmptyDefault);
+    CPPUNIT_TEST(testSubstr);
+
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testCmpDefault();
+    void testCmpEmptyString();
+    void testCmpNotEmptyDefault();
+    void testSubstr();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestString);
 
 void
-testString::testCmpDefault()
+TestString::testCmpDefault()
 {
     String left, right;
     /* two default strings are equal */
@@ -33,7 +45,7 @@ testString::testCmpDefault()
 }
 
 void
-testString::testCmpEmptyString()
+TestString::testCmpEmptyString()
 {
     String left("");
     String right;
@@ -48,7 +60,7 @@ testString::testCmpEmptyString()
 }
 
 void
-testString::testCmpNotEmptyDefault()
+TestString::testCmpNotEmptyDefault()
 {
     String left("foo");
     String right;
@@ -62,11 +74,25 @@ testString::testCmpNotEmptyDefault()
     CPPUNIT_ASSERT(right.cmp("foo", 1) < 0);
 }
 
-void testString::testSubstr()
+void TestString::testSubstr()
 {
     String s("0123456789");
     String check=s.substr(3,5);
     String ref("34");
     CPPUNIT_ASSERT(check == ref);
+}
+
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override { Mem::Init(); }
+};
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -9,7 +9,6 @@ include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
 SUBDIRS = one url_rewriters
-DIST_SUBDIRS = one url_rewriters
 
 noinst_LTLIBRARIES = libhttp.la
 

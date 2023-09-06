@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -133,11 +133,11 @@ dnl Or, a shell script (config.test) which returns 0 exit status if
 dnl the helper is to be built.
 AC_DEFUN([SQUID_CHECK_HELPER],[
   AS_IF([test "x$helper" = "x$1"],[
-    AS_IF([test -d "$ac_top_srcdir/src/$2/$1"],[
+    AS_IF([test -d "$srcdir/src/$2/$1"],[
       dnl find helpers providing autoconf M4 requirement checks
       m4_include(m4_echo([src/$2/$1/required.m4]))
       dnl find helpers not yet converted to autoconf (or third party drop-in's)
-      AS_IF([test -f "$ac_top_srcdir/src/$2/$1/config.test" && sh "$ac_top_srcdir/src/$2/$1/config.test" "$squid_host_os"],[
+      AS_IF([test -f "$srcdir/src/$2/$1/config.test" && sh "$srcdir/src/$2/$1/config.test" "$squid_host_os"],[
         BUILD_HELPER="$1"
       ])
       AS_IF(
@@ -164,13 +164,13 @@ AC_DEFUN([SQUID_HELPER_FEATURE_CHECK],[
   AS_IF([test "x$enable_$1" = "x"],[enable_$1=$2],
     [test "x$enable_$1" = "xnone"],[enable_$1=""])
   AS_IF([test "x$enable_$1" = "xyes"],[
-    SQUID_LOOK_FOR_MODULES([$$ac_top_srcdir/src/$3], enable_$1)
+    SQUID_LOOK_FOR_MODULES([$srcdir/src/$3], enable_$1)
     auto_helpers=yes
   ])
   SQUID_CLEANUP_MODULES_LIST([enable_$1])
   AC_MSG_NOTICE([checking $3 helpers: $enable_$1])
   AS_IF([test "x$enable_$1" != "xno" -a "x$enable_$1" != "x"],[
-    SQUID_CHECK_EXISTING_MODULES([$$ac_top_srcdir/src/$3],[enable_$1])
+    SQUID_CHECK_EXISTING_MODULES([$srcdir/src/$3],[enable_$1])
     for helper in $enable_$1 ; do
       $4
     done
@@ -212,6 +212,31 @@ dnl aborts with an error specified as the second argument if the first argument 
 dnl contain either "yes" or "no"
 AC_DEFUN([SQUID_YESNO],[
   AS_IF([test "$1" != "yes" -a "$1" != "no"],[AC_MSG_ERROR([Bad argument for $2: "$1". Expecting "yes", "no", or no argument.])])
+])
+
+dnl Check that a library is actually available, useable,
+dnl and where its pieces are (eg headers and hack macros)
+dnl Parameters for this macro are:
+dnl 1) library name (without 'lib' prefix)
+dnl 2) necessary library checks (to be executed by this macro unless the use of the library is disabled)
+dnl   These checks should set LIBFOO_LIBS automake variable (on success)
+dnl   and ensure that it is empty or unset (on failures).
+AC_DEFUN([SQUID_CHECK_LIB_WORKS],[
+AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
+  $2
+  AS_IF([! test -z m4_toupper(m4_translit(["$LIB$1_LIBS"], [-+.], [___]))],[
+    m4_toupper(m4_translit([CPPFLAGS="$LIB$1_CFLAGS $CPPFLAGS"], [-+.], [___]))
+    m4_toupper(m4_translit([LIB$1_LIBS="$LIB$1_PATH $LIB$1_LIBS"], [-+.], [___]))
+    AC_MSG_NOTICE([Library '$1' support: m4_translit([${with_$1:=yes (auto)} m4_toupper($LIB$1_LIBS)], [-+.], [___])])
+    m4_translit([with_$1], [-+.], [___])=yes
+  ],[m4_translit([test "x$with_$1" = "xyes"], [-+.], [___])],[
+    AC_MSG_ERROR([Required library '$1' not found])
+  ],[
+    m4_translit([with_$1], [-+.], [___])=no
+    AC_MSG_NOTICE([Library '$1' support: no (auto)])
+  ])
+])
+AC_SUBST(m4_toupper(m4_translit([LIB$1_LIBS], [-+.], [___])))
 ])
 
 dnl check the build parameters for a library to auto-enable

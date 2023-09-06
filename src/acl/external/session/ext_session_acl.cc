@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -280,7 +280,7 @@ int main(int argc, char **argv)
         switch (opt) {
         case 'T':
             fixed_timeout = 1;
-        /* [[fallthrough]] */
+            [[fallthrough]];
         case 't':
             session_ttl = strtol(optarg, nullptr, 0);
             break;

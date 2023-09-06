@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,12 +24,12 @@ class TransactionInitiator : public ACL
 public:
     TransactionInitiator(char const *);
 
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual int match(ACLChecklist *checklist);
-    virtual bool requiresRequest() const { return true; }
-    virtual SBufList dump() const;
-    virtual bool empty () const;
+    char const *typeString() const override;
+    void parse() override;
+    int match(ACLChecklist *checklist) override;
+    bool requiresRequest() const override { return true; }
+    SBufList dump() const override;
+    bool empty () const override;
 
 protected:
     char const *class_;

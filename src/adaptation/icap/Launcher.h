@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,13 +48,13 @@ class Launcher: public Adaptation::Initiate, public Adaptation::Initiator
 {
 public:
     Launcher(const char *aTypeName, Adaptation::ServicePointer &aService);
-    virtual ~Launcher();
+    ~Launcher() override;
 
     // Adaptation::Initiate: asynchronous communication with the initiator
-    void noteInitiatorAborted();
+    void noteInitiatorAborted() override;
 
     // Adaptation::Initiator: asynchronous communication with the current transaction
-    virtual void noteAdaptationAnswer(const Answer &answer);
+    void noteAdaptationAnswer(const Answer &answer) override;
     virtual void noteXactAbort(XactAbortInfo info);
 
 private:
@@ -63,9 +63,9 @@ private:
 
 protected:
     // Adaptation::Initiate API implementation
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
     // creates the right ICAP transaction using stored configuration params
     virtual Xaction *createXaction() = 0;

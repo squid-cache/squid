@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -229,7 +229,8 @@ main() {
     fi
     echo "Starting point: $STARTING_POINT (`git rev-parse $STARTING_POINT`)"
 
-    checks="$@"
+    local checks="$@"
+
     if test -z "$checks"
     then
         local default_checks="
@@ -243,5 +244,5 @@ main() {
     run_checks $checks
 }
 
-main
+main "$@"
 exit $?

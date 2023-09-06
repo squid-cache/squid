@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,6 +29,12 @@ typedef const char *TypeName;
 typedef ACL *(*Maker)(TypeName typeName);
 /// use the given ACL Maker for all ACLs of the named type
 void RegisterMaker(TypeName typeName, Maker maker);
+
+/// Validate and store the ACL key parameter for ACL types
+/// declared using "acl aclname type key argument..." declaration that
+/// require unique key values (if any) for each aclname+type combination.
+/// Key comparison is case-insensitive.
+void SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey);
 
 } // namespace Acl
 
@@ -167,10 +173,8 @@ public:
     bool implicit = false;
 };
 
-} // namespace Acl
-
 inline std::ostream &
-operator <<(std::ostream &o, const Acl::Answer a)
+operator <<(std::ostream &o, const Answer a)
 {
     switch (a) {
     case ACCESS_DENIED:
@@ -188,6 +192,8 @@ operator <<(std::ostream &o, const Acl::Answer a)
     }
     return o;
 }
+
+} // namespace Acl
 
 /// \ingroup ACLAPI
 class acl_proxy_auth_match_cache

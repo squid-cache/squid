@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,11 +20,11 @@ class ACLAtStepData : public ACLData<XactionStep>
 
 public:
     ACLAtStepData();
-    virtual ~ACLAtStepData();
-    bool match(XactionStep);
-    virtual SBufList dump() const;
-    void parse();
-    bool empty() const;
+    ~ACLAtStepData() override;
+    bool match(XactionStep) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override;
 
     std::list<XactionStep> values;
 };

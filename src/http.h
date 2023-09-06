@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@ class String;
 
 class HttpStateData : public Client
 {
-    CBDATA_CLASS(HttpStateData);
+    CBDATA_CHILD(HttpStateData);
 
 public:
 
@@ -42,7 +42,7 @@ public:
     };
 
     HttpStateData(FwdState *);
-    ~HttpStateData();
+    ~HttpStateData() override;
 
     static void httpBuildRequestHeader(HttpRequest * request,
                                        StoreEntry * entry,
@@ -50,13 +50,13 @@ public:
                                        HttpHeader * hdr_out,
                                        const Http::StateFlags &flags);
 
-    virtual const Comm::ConnectionPointer & dataConnection() const;
+    const Comm::ConnectionPointer & dataConnection() const override;
     /* should be private */
     bool sendRequest();
     void processReplyHeader();
-    void processReplyBody();
+    void processReplyBody() override;
     void readReply(const CommIoCbParams &io);
-    virtual void maybeReadVirginBody(); // read response data from the network
+    void maybeReadVirginBody() override; // read response data from the network
 
     // Checks whether the response is cacheable/shareable.
     ReuseDecision::Answers reusableReply(ReuseDecision &decision);
@@ -76,7 +76,7 @@ public:
 
 protected:
     /* Client API */
-    virtual void noteDelayAwareReadChance();
+    void noteDelayAwareReadChance() override;
 
     void processReply();
     void proceedAfter1xx();
@@ -104,13 +104,13 @@ private:
     bool continueAfterParsingHeader();
     void truncateVirginBody();
 
-    virtual void start();
-    virtual void haveParsedReplyHeaders();
-    virtual bool getMoreRequestBody(MemBuf &buf);
-    virtual void closeServer(); // end communication with the server
-    virtual bool doneWithServer() const; // did we end communication?
-    virtual void abortAll(const char *reason); // abnormal termination
-    virtual bool mayReadVirginReplyBody() const;
+    void start() override;
+    void haveParsedReplyHeaders() override;
+    bool getMoreRequestBody(MemBuf &buf) override;
+    void closeServer() override; // end communication with the server
+    bool doneWithServer() const override; // did we end communication?
+    void abortAll(const char *reason) override; // abnormal termination
+    bool mayReadVirginReplyBody() const override;
 
     void abortTransaction(const char *reason) { abortAll(reason); } // abnormal termination
 
@@ -127,19 +127,20 @@ private:
 
     // consuming request body
     virtual void handleMoreRequestBodyAvailable();
-    virtual void handleRequestBodyProducerAborted();
+    void handleRequestBodyProducerAborted() override;
 
     void writeReplyBody();
     bool decodeAndWriteReplyBody();
     bool finishingBrokenPost();
     bool finishingChunkedRequest();
-    void doneSendingRequestBody();
+    void doneSendingRequestBody() override;
     void requestBodyHandler(MemBuf &);
-    virtual void sentRequestBody(const CommIoCbParams &io);
+    void sentRequestBody(const CommIoCbParams &io) override;
     void wroteLast(const CommIoCbParams &io);
     void sendComplete();
     void httpStateConnClosed(const CommCloseCbParams &params);
     void httpTimeout(const CommTimeoutCbParams &params);
+    void markPrematureReplyBodyEofFailure();
 
     mb_size_t buildRequestPrefix(MemBuf * mb);
     void forwardUpgrade(HttpHeader&);

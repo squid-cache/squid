@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,6 +22,7 @@
 #include "DelayPools.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 
 DelayId::DelayId () : pool_ (0), compositeId(nullptr), markedAsNoDelay(false)
@@ -102,12 +103,10 @@ DelayId::DelayClient(ClientHttpRequest * http, HttpReply *reply)
         if (DelayPools::delay_data[pool].theComposite().getRaw() && ch.fastCheck().allowed()) {
 
             DelayId result (pool + 1);
-            CompositePoolNode::CompositeSelectionDetails details;
-            details.src_addr = ch.src_addr;
+            CompositePoolNode::CompositeSelectionDetails details(ch.src_addr, StringToSBuf(r->tag));
 #if USE_AUTH
             details.user = r->auth_user_request;
 #endif
-            details.tag = r->tag;
             result.compositePosition(DelayPools::delay_data[pool].theComposite()->id(details));
             return result;
         }

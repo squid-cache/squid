@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -187,7 +187,7 @@ class StoreRootEngine : public AsyncEngine
 {
 
 public:
-    int checkEvents(int) {
+    int checkEvents(int) override {
         Store::Root().callback();
         return EVENT_IDLE;
     };
@@ -197,13 +197,7 @@ class SignalEngine: public AsyncEngine
 {
 
 public:
-#if KILL_PARENT_OPT
-    SignalEngine(): parentKillNotified(false) {
-        parentPid = getppid();
-    }
-#endif
-
-    virtual int checkEvents(int timeout);
+    int checkEvents(int timeout) override;
 
 private:
     static void StopEventLoop(void *) {
@@ -225,11 +219,6 @@ private:
 
     void doShutdown(time_t wait);
     void handleStoppedChild();
-
-#if KILL_PARENT_OPT
-    bool parentKillNotified;
-    pid_t parentPid;
-#endif
 };
 
 int
@@ -286,23 +275,10 @@ SignalEngine::doShutdown(time_t wait)
     debugs(1, Important(2), "Preparing for shutdown after " << statCounter.client_http.requests << " requests");
     debugs(1, Important(3), "Waiting " << wait << " seconds for active connections to finish");
 
-#if KILL_PARENT_OPT
-    if (!IamMasterProcess() && !parentKillNotified && ShutdownSignal > 0 && parentPid > 1) {
-        debugs(1, DBG_IMPORTANT, "Killing master process, pid " << parentPid);
-        if (kill(parentPid, ShutdownSignal) < 0) {
-            int xerrno = errno;
-            debugs(1, DBG_IMPORTANT, "kill " << parentPid << ": " << xstrerr(xerrno));
-        }
-        parentKillNotified = true;
-    }
-#endif
-
     if (shutting_down) {
-#if !KILL_PARENT_OPT
         // Already a shutdown signal has received and shutdown is in progress.
         // Shutdown as soon as possible.
         wait = 0;
-#endif
     } else {
         shutting_down = 1;
 
@@ -948,7 +924,6 @@ mainReconfigureFinish(void *)
     CpuAffinityReconfigure();
 
     setUmask(Config.umask);
-    Mem::Report();
     setEffectiveUser();
     Debug::UseCacheLog();
     ipcache_restart();      /* clear stuck entries */
@@ -1226,9 +1201,6 @@ mainInitialize(void)
 #endif
 
     FwdState::initModule();
-    /* register the modules in the cache manager menus */
-
-    cbdataRegisterWithCacheManager();
     SBufStatsAction::RegisterWithCacheManager();
 
     /* These use separate calls so that the comm loops can eventually
@@ -1333,7 +1305,7 @@ OnTerminate()
         return;
     terminating = true;
 
-    debugs(1, DBG_CRITICAL, "FATAL: Dying from an exception handling failure; exception: " << CurrentException);
+    debugs(1, DBG_CRITICAL, "FATAL: Dying after an undetermined failure" << CurrentExceptionExtra);
 
     Debug::PrepareToDie();
     abort();
@@ -1465,9 +1437,58 @@ StartUsingConfig()
     }
 }
 
+/// register all known modules for handling future RegisteredRunner events
+static void
+RegisterModules()
+{
+    // These registration calls do not represent a RegisteredRunner "event". The
+    // modules registered here should be initialized later, during those events.
+
+    // RegisteredRunner event handlers should not depend on handler call order
+    // and, hence, should not depend on the registration call order below.
+
+    CallRunnerRegistrator(ClientDbRr);
+    CallRunnerRegistrator(CollapsedForwardingRr);
+    CallRunnerRegistrator(MemStoreRr);
+    CallRunnerRegistrator(PeerPoolMgrsRr);
+    CallRunnerRegistrator(SharedMemPagesRr);
+    CallRunnerRegistrator(SharedSessionCacheRr);
+    CallRunnerRegistrator(TransientsRr);
+    CallRunnerRegistratorIn(Dns, ConfigRr);
+
+#if HAVE_DISKIO_MODULE_IPCIO
+    CallRunnerRegistrator(IpcIoRr);
+#endif
+
+#if HAVE_AUTH_MODULE_NTLM
+    CallRunnerRegistrator(NtlmAuthRr);
+#endif
+
+#if USE_OPENSSL
+    CallRunnerRegistrator(sslBumpCfgRr);
+#endif
+
+#if USE_SQUID_ESI && HAVE_LIBEXPAT
+    CallRunnerRegistratorIn(Esi, ExpatRr);
+#endif
+
+#if USE_SQUID_ESI && HAVE_LIBXML2
+    CallRunnerRegistratorIn(Esi, Libxml2Rr);
+#endif
+
+#if HAVE_FS_ROCK
+    CallRunnerRegistratorIn(Rock, SwapDirRr);
+#endif
+}
+
 int
 SquidMain(int argc, char **argv)
 {
+    // We must register all modules before the first RunRegisteredHere() call.
+    // We do it ASAP/here so that we do not need to move this code when we add
+    // earlier hooks to the RegisteredRunner API.
+    RegisterModules();
+
     const CommandLine cmdLine(argc, argv, shortOpStr, squidOptions);
 
     ConfigureCurrentKid(cmdLine);
@@ -1582,8 +1603,6 @@ SquidMain(int argc, char **argv)
                    (opt_parse_cfg_only ? " Run squid -k parse and check for errors." : ""));
             parse_err = 1;
         }
-
-        Mem::Report();
 
         if (opt_parse_cfg_only || parse_err > 0)
             return parse_err;
@@ -1907,7 +1926,7 @@ watch_child(const CommandLine &masterCommand)
 #ifdef TIOCNOTTY
 
     if ((i = open("/dev/tty", O_RDWR | O_TEXT)) >= 0) {
-        ioctl(i, TIOCNOTTY, NULL);
+        ioctl(i, TIOCNOTTY, nullptr);
         close(i);
     }
 

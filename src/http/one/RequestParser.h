@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,12 +36,12 @@ public:
     RequestParser &operator =(const RequestParser &) = default;
     RequestParser(RequestParser &&) = default;
     RequestParser &operator =(RequestParser &&) = default;
-    virtual ~RequestParser() {}
+    ~RequestParser() override {}
 
     /* Http::One::Parser API */
-    virtual void clear() {*this = RequestParser();}
-    virtual Http1::Parser::size_type firstLineSize() const;
-    virtual bool parse(const SBuf &aBuf);
+    void clear() override {*this = RequestParser();}
+    Http1::Parser::size_type firstLineSize() const override;
+    bool parse(const SBuf &aBuf) override;
 
     /// the HTTP method if this is a request message
     const HttpRequestMethod & method() const {return method_;}

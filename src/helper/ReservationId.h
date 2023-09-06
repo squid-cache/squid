@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,13 +36,13 @@ private:
     uint64_t id = 0; ///< uniquely identifies this reservation
 };
 
-}; // namespace Helper
-
 inline std::ostream &
-operator <<(std::ostream &os, const Helper::ReservationId &id)
+operator <<(std::ostream &os, const ReservationId &id)
 {
     return id.print(os);
 }
+
+}; // namespace Helper
 
 namespace std {
 /// default hash functor to support std::unordered_map<HelperReservationId, *>

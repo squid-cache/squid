@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -58,14 +58,14 @@ protected:
 public:
     static Pointer Create(const Mgr::CommandPointer &aCmd);
     /* Action API */
-    virtual void add(const Mgr::Action& action);
-    virtual void pack(Ipc::TypedMsgHdr& hdrMsg) const;
-    virtual void unpack(const Ipc::TypedMsgHdr& hdrMsg);
+    void add(const Mgr::Action& action) override;
+    void pack(Ipc::TypedMsgHdr& hdrMsg) const override;
+    void unpack(const Ipc::TypedMsgHdr& hdrMsg) override;
 
 protected:
     /* Action API */
-    virtual void collect();
-    virtual void dump(StoreEntry* entry);
+    void collect() override;
+    void dump(StoreEntry* entry) override;
 
 private:
     DiskdActionData data;

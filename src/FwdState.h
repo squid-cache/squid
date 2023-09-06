@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,7 +31,6 @@
 
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
-class ErrorState;
 class HttpRequest;
 class PconnPool;
 class ResolvedPeers;
@@ -56,7 +55,7 @@ class FwdState: public RefCountable, public PeerSelectionInitiator
 
 public:
     typedef RefCount<FwdState> Pointer;
-    virtual ~FwdState();
+    ~FwdState() override;
     static void initModule();
 
     /// Initiates request forwarding to a peer or origin server.
@@ -85,7 +84,6 @@ public:
 
     void handleUnregisteredServerEnd();
     int reforward();
-    bool reforwardableStatus(const Http::StatusCode s) const;
     void serverClosed();
     void connectStart();
     void connectDone(const Comm::ConnectionPointer & conn, Comm::Flag status, int xerrno);
@@ -112,8 +110,8 @@ private:
     void stopAndDestroy(const char *reason);
 
     /* PeerSelectionInitiator API */
-    virtual void noteDestination(Comm::ConnectionPointer conn) override;
-    virtual void noteDestinationsEnd(ErrorState *selectionError) override;
+    void noteDestination(Comm::ConnectionPointer conn) override;
+    void noteDestinationsEnd(ErrorState *selectionError) override;
 
     bool transporting() const;
 
@@ -154,6 +152,7 @@ private:
 
     /// whether we have used up all permitted forwarding attempts
     bool exhaustedTries() const;
+    void updateAttempts(int);
 
     /// \returns the time left for this connection to become connected or 1 second if it is less than one second left
     time_t connectingTimeout(const Comm::ConnectionPointer &conn) const;

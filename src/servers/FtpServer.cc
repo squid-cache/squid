@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -743,8 +743,7 @@ Ftp::Server::parseOneRequest()
     request->http_ver = Http::ProtocolVersion(Ftp::ProtocolVersion().major, Ftp::ProtocolVersion().minor);
 
     // Our fake Request-URIs are not distinctive enough for caching to work
-    request->flags.cachable = false; // XXX: reset later by maybeCacheable()
-    request->flags.noCache = true;
+    request->flags.disableCacheUse("FTP command wrapper");
 
     request->header.putStr(Http::HdrType::FTP_COMMAND, cmd.c_str());
     request->header.putStr(Http::HdrType::FTP_ARGUMENTS, params.c_str()); // may be ""
@@ -1649,10 +1648,10 @@ Ftp::Server::setDataCommand()
     HttpRequest *const request = http->request;
     assert(request != nullptr);
     HttpHeader &header = request->header;
-    header.delById(Http::HdrType::FTP_COMMAND);
-    header.putStr(Http::HdrType::FTP_COMMAND, "PASV");
-    header.delById(Http::HdrType::FTP_ARGUMENTS);
-    header.putStr(Http::HdrType::FTP_ARGUMENTS, "");
+    static const SBuf pasvValue("PASV");
+    header.updateOrAddStr(Http::HdrType::FTP_COMMAND, pasvValue);
+    static const SBuf emptyValue("");
+    header.updateOrAddStr(Http::HdrType::FTP_ARGUMENTS, emptyValue);
     debugs(9, 5, "client data command converted to fake PASV");
 }
 
@@ -1742,8 +1741,7 @@ Ftp::Server::setReply(const int code, const char *msg)
     assert(repContext != nullptr);
 
     RequestFlags reqFlags;
-    reqFlags.cachable = false; // force releaseRequest() in storeCreateEntry()
-    reqFlags.noCache = true;
+    reqFlags.disableCacheUse("FTP response wrapper");
     repContext->createStoreEntry(http->request->method, reqFlags);
     http->storeEntry()->replaceHttpReply(reply);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -63,11 +63,11 @@ private:
     HttpHeader hdr;
 
     struct {
-        int language:1;
-        int cookie:1;
-        int host:1;
-        int referer:1;
-        int useragent:1;
+        unsigned int language:1;
+        unsigned int cookie:1;
+        unsigned int host:1;
+        unsigned int referer:1;
+        unsigned int useragent:1;
     } flags;
 
 public:
@@ -101,21 +101,21 @@ class ESIVariableCookie : public ESIVarState::Variable
 {
 
 public:
-    virtual void eval (ESIVarState &state, char const *, char const *) const;
+    void eval (ESIVarState &state, char const *, char const *) const override;
 };
 
 class ESIVariableHost : public ESIVarState::Variable
 {
 
 public:
-    virtual void eval (ESIVarState &state, char const *, char const *) const;
+    void eval (ESIVarState &state, char const *, char const *) const override;
 };
 
 class ESIVariableLanguage : public ESIVarState::Variable
 {
 
 public:
-    virtual void eval (ESIVarState &state, char const *, char const *) const;
+    void eval (ESIVarState &state, char const *, char const *) const override;
 };
 
 class ESIVariableQuery : public ESIVarState::Variable
@@ -123,8 +123,8 @@ class ESIVariableQuery : public ESIVarState::Variable
 
 public:
     ESIVariableQuery(char const *uri);
-    ~ESIVariableQuery();
-    virtual void eval (ESIVarState &state, char const *, char const *) const;
+    ~ESIVariableQuery() override;
+    void eval (ESIVarState &state, char const *, char const *) const override;
     char const *queryString() const;
 
     struct _query_elem const *queryVector() const;
@@ -140,16 +140,16 @@ class ESIVariableReferer : public ESIVarState::Variable
 {
 
 public:
-    virtual void eval (ESIVarState &state, char const *, char const *) const;
+    void eval (ESIVarState &state, char const *, char const *) const override;
 };
 
 class ESIVariableUserAgent : public ESIVarState::Variable
 {
 
 public:
-    ~ESIVariableUserAgent();
+    ~ESIVariableUserAgent() override;
     ESIVariableUserAgent (ESIVarState &state);
-    virtual void eval (ESIVarState &state, char const *, char const *) const;
+    void eval (ESIVarState &state, char const *, char const *) const override;
 
 private:
     static char const * esiUserOs[];

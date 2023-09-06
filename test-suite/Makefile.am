@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -18,7 +18,7 @@ LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
-EXTRA_PROGRAMS = mem_node_test splay tcp-banger2
+EXTRA_PROGRAMS = mem_node_test splay
 
 EXTRA_DIST = \
 	$(srcdir)/squidconf/* \
@@ -43,8 +43,7 @@ TESTS += \
 	splay\
 	mem_node_test\
 	mem_hdr_test\
-	$(ESI_TESTS) \
-	squid-conf-tests
+	$(ESI_TESTS)
 
 ## Sort by alpha - any build failures are significant.
 check_PROGRAMS += \
@@ -54,9 +53,6 @@ check_PROGRAMS += \
 		splay \
 		syntheticoperators \
 		VirtualDeleteOperator
-
-
-tcp_banger2_LDADD = $(top_builddir)/lib/libmiscutil.la
 
 #do not include stub_libmem.cc here, as it would override libmem.la in
 # several tests whose purpose is testing libmem itself.
@@ -136,10 +132,12 @@ VirtualDeleteOperator_SOURCES = \
 	VirtualDeleteOperator.cc \
 	stub_libmem.cc
 
+installcheck-local: squid-conf-tests
+
 squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
 	@failed=0; cfglist="$(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf"; rm -f $@ || $(TRUE); \
 	for cfg in $$cfglist ; do \
-		$(srcdir)/test-squid-conf.sh $(top_builddir) $$cfg || \
+		$(srcdir)/test-squid-conf.sh $(top_builddir) $(sbindir) $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
 				sed s%$(top_builddir)/src/%% | \
 				sed s%$(srcdir)/squidconf/%% ; \
@@ -151,6 +149,6 @@ squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.de
 				sed s%$(srcdir)/squidconf/%% ; \
 		else break; fi; \
 	done; \
-	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; fi
+	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; else exit 1; fi
 
-CLEANFILES += squid-conf-tests
+CLEANFILES += squid-conf-tests squid-stderr.log

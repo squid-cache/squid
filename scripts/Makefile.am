@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@ EXTRA_DIST	= AnnounceCache.pl access-log-matrix.pl cache-compare.pl \
 		fileno-to-pathname.pl flag_truncs.pl icp-test.pl \
 		find-alive.pl trace-job.pl trace-master.pl \
 		trace-context.pl \
-		icpserver.pl tcp-banger.pl udp-banger.pl upgrade-1.0-store.pl \
+		icpserver.pl udp-banger.pl upgrade-1.0-store.pl \
 		update-contributors.pl \
 		calc-must-ids.pl calc-must-ids.sh
 

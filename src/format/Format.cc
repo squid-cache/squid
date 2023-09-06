@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -508,7 +508,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_LOCAL_LISTENING_PORT:
             if (const auto port = FindListeningPortNumber(nullptr, al.getRaw())) {
-                outint = port;
+                outint = *port;
                 doint = 1;
             }
             break;
@@ -602,6 +602,18 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             outtv = al->cache.start_time;
             doSec = 1;
             break;
+
+        case LFT_BUSY_TIME: {
+            const auto &stopwatch = al->busyTime;
+            if (stopwatch.ran()) {
+                // make sure total() returns nanoseconds compatible with outoff
+                using nanos = std::chrono::duration<decltype(outoff), std::nano>;
+                const nanos n = stopwatch.total();
+                outoff = n.count();
+                dooff = true;
+            }
+        }
+        break;
 
         case LFT_TIME_TO_HANDLE_REQUEST:
             outtv = al->cache.trTime;
@@ -1005,6 +1017,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             out = hier_code_str[al->hier.code];
             break;
 
+        case LFT_SQUID_REQUEST_ATTEMPTS:
+            outint = al->requestAttempts;
+            doint = 1;
+            break;
+
         case LFT_MIME_TYPE:
             out = al->http.content_type;
             break;
@@ -1041,8 +1058,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_CLIENT_REQ_URLPORT:
-            if (al->request) {
-                outint = al->request->url.port();
+            if (al->request && al->request->url.port()) {
+                outint = *al->request->url.port();
                 doint = 1;
             }
             break;
@@ -1117,8 +1134,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SERVER_REQ_URLPORT:
-            if (al->adapted_request) {
-                outint = al->adapted_request->url.port();
+            if (al->adapted_request && al->adapted_request->url.port()) {
+                outint = *al->adapted_request->url.port();
                 doint = 1;
             }
             break;

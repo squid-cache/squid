@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -112,17 +112,24 @@ struct hash<SBuf>
 };
 }
 
-/** hash functor for SBufs, meant so support case-insensitive std::unordered_map
- *
- * Typical use:
- * \code
- * auto m = std::unordered_map<SBuf, ValueType, CaseInsensitiveSBufHash>();
- * \endcode
- */
+/// hash functor for case-insensitive SBufs
+/// \sa std::hash<SBuf>
 class CaseInsensitiveSBufHash
 {
 public:
     std::size_t operator()(const SBuf &) const noexcept;
+};
+
+/// equality functor for case-insensitive SBufs
+/// \sa std::equal_to<SBuf>
+class CaseInsensitiveSBufEqual
+{
+public:
+    bool operator()(const SBuf &lhs, const SBuf &rhs) const
+    {
+        // Optimization: Do not iterate strings of different lengths.
+        return lhs.length() == rhs.length() && (lhs.compare(rhs, caseInsensitive) == 0);
+    }
 };
 
 #endif /* SQUID_SBUFALGOS_H_ */

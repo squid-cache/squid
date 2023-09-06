@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -70,7 +70,7 @@ public:
     }
 
 private:
-    typedef std::unordered_map<const SBuf, EnumType, Hasher> lookupTable_t;
+    using lookupTable_t = std::unordered_map<const SBuf, EnumType, Hasher, CaseInsensitiveSBufEqual>;
     lookupTable_t lookupTable;
     EnumType invalidValue;
 };

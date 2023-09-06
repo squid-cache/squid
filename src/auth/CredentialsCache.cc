@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,19 +26,19 @@ public:
         whichCache(c)
     {}
 
-    virtual ~CredentialCacheRr() {
+    ~CredentialCacheRr() override {
         debugs(29, 5, "Terminating Auth credentials cache: " << name);
         // invalidate the CBDATA reference.
         // causes Auth::*::User::Cache() to produce nil / invalid pointer
         delete whichCache.get();
     }
 
-    virtual void endingShutdown() override {
+    void endingShutdown() override {
         debugs(29, 5, "Clearing Auth credentials cache: " << name);
         whichCache->reset();
     }
 
-    virtual void syncConfig() override {
+    void syncConfig() override {
         debugs(29, 5, "Reconfiguring Auth credentials cache: " << name);
         whichCache->doConfigChangeCleanup();
     }

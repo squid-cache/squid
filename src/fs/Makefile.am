@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -23,8 +23,6 @@ libufs_la_SOURCES = \
 	ufs/RebuildState.h \
 	ufs/StoreFSufs.cc \
 	ufs/StoreFSufs.h \
-	ufs/StoreSearchUFS.cc \
-	ufs/StoreSearchUFS.h \
 	ufs/UFSStoreState.cc \
 	ufs/UFSStoreState.h \
 	ufs/UFSStrategy.cc \

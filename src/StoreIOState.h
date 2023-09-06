@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,18 +29,6 @@ public:
     typedef void STRCB(void *their_data, const char *buf, ssize_t len, StoreIOState::Pointer self);
 
     /*
-     * STFNCB is the "store file number callback."  It is called
-     * when an underlying storage module has allocated the swap
-     * file number and also indicates that the swap file has been
-     * opened for reading or writing.  STFNCB functions are passed
-     * to storeCreate() and storeOpen().  Examples of STFNCB callbacks
-     * are:
-     * storeSwapInFileNotify
-     * storeSwapOutFileNotify
-     */
-    typedef void STFNCB(void *their_data, int errflag, StoreIOState::Pointer self);
-
-    /*
      * STIOCB is the "store close callback" for store files.  It
      * is called when the store file is closed.  STIOCB functions
      * are passed to storeCreate() and storeOpen(). Examples of
@@ -54,8 +42,8 @@ public:
     void *operator new (size_t amount);
     void operator delete (void *address);
 
-    StoreIOState(StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data);
-    virtual ~StoreIOState();
+    StoreIOState(StoreIOState::STIOCB *, void *cbData);
+    ~StoreIOState() override;
 
     off_t offset() const {return offset_;}
 
@@ -85,7 +73,6 @@ public:
     StoreEntry *e;      /* Need this so the FS layers can play god */
     mode_t mode;
     off_t offset_; ///< number of bytes written or read for this entry so far
-    STFNCB *file_callback;  // XXX: Unused. TODO: Remove.
     STIOCB *callback;
     void *callback_data;
 
@@ -99,8 +86,8 @@ public:
     } flags;
 };
 
-StoreIOState::Pointer storeCreate(StoreEntry *, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
-StoreIOState::Pointer storeOpen(StoreEntry *, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
+StoreIOState::Pointer storeCreate(StoreEntry *, StoreIOState::STIOCB *, void *);
+StoreIOState::Pointer storeOpen(StoreEntry *, StoreIOState::STIOCB *, void *);
 void storeClose(StoreIOState::Pointer, int how);
 void storeRead(StoreIOState::Pointer, char *, size_t, off_t, StoreIOState::STRCB *, void *);
 void storeIOWrite(StoreIOState::Pointer, char const *, size_t, off_t, FREE *);

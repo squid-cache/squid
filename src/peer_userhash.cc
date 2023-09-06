@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,7 @@
 
 #include "auth/UserRequest.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
@@ -47,8 +48,6 @@ peerUserHashInit(void)
     int K;
     int k;
     double P_last, X_last, Xn;
-    CachePeer *p;
-    CachePeer **P;
     char *t;
     /* Clean up */
 
@@ -62,7 +61,7 @@ peerUserHashInit(void)
 
     peerUserHashRegisterWithCacheManager();
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: CurrentCachePeers()) {
         if (!p->options.userhash)
             continue;
 
@@ -81,8 +80,11 @@ peerUserHashInit(void)
 
     userhash_peers = (CachePeer **)xcalloc(n_userhash_peers, sizeof(*userhash_peers));
 
+    auto P = userhash_peers;
     /* Build a list of the found peers and calculate hashes and load factors */
-    for (P = userhash_peers, p = Config.peers; p; p = p->next) {
+    for (const auto &peer: CurrentCachePeers()) {
+        const auto p = peer.get();
+
         if (!p->options.userhash)
             continue;
 
@@ -130,7 +132,7 @@ peerUserHashInit(void)
 
     for (k = 1; k <= K; ++k) {
         double Kk1 = (double) (K - k + 1);
-        p = userhash_peers[k - 1];
+        const auto p = userhash_peers[k - 1];
         p->userhash.load_multiplier = (Kk1 * (p->userhash.load_factor - P_last)) / Xn;
         p->userhash.load_multiplier += pow(X_last, Kk1);
         p->userhash.load_multiplier = pow(p->userhash.load_multiplier, 1.0 / Kk1);
@@ -185,7 +187,7 @@ peerUserHashSelectParent(PeerSelector *ps)
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
         score = combined_hash * tp->userhash.load_multiplier;
-        debugs(39, 3, "peerUserHashSelectParent: " << tp->name << " combined_hash " << combined_hash  <<
+        debugs(39, 3, *tp << " combined_hash " << combined_hash <<
                " score " << std::setprecision(0) << score);
 
         if ((score > high_score) && peerHTTPOkay(tp, ps)) {
@@ -195,7 +197,7 @@ peerUserHashSelectParent(PeerSelector *ps)
     }
 
     if (p)
-        debugs(39, 2, "peerUserHashSelectParent: selected " << p->name);
+        debugs(39, 2, "selected " << *p);
 
     return p;
 }
@@ -203,7 +205,6 @@ peerUserHashSelectParent(PeerSelector *ps)
 static void
 peerUserHashCachemgr(StoreEntry * sentry)
 {
-    CachePeer *p;
     int sumfetches = 0;
     storeAppendPrintf(sentry, "%24s %10s %10s %10s %10s\n",
                       "Hostname",
@@ -212,10 +213,10 @@ peerUserHashCachemgr(StoreEntry * sentry)
                       "Factor",
                       "Actual");
 
-    for (p = Config.peers; p; p = p->next)
+    for (const auto &p: CurrentCachePeers())
         sumfetches += p->stats.fetches;
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: CurrentCachePeers()) {
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
                           p->name, p->userhash.hash,
                           p->userhash.load_multiplier,

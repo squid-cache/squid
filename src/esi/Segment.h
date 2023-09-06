@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,7 @@ public:
 
     ESISegment() : len(0), next(nullptr) {*buf = 0;}
     ESISegment(ESISegment const &);
-    ~ESISegment() {}
+    ~ESISegment() override {}
 
     ESISegment::Pointer cloneList() const;
     char *listToChar() const;

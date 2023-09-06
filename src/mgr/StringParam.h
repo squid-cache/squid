@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,8 +24,8 @@ class StringParam: public QueryParam
 public:
     StringParam();
     StringParam(const String& aString);
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual void unpackValue(const Ipc::TypedMsgHdr& msg);
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    void unpackValue(const Ipc::TypedMsgHdr& msg) override;
     const String& value() const;
 
 private:

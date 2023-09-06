@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -72,10 +72,10 @@ SwapMetaExtract(Item &item, const char * &input, const void *end)
     input += sizeof(item);
 }
 
-} // namespace Store
-
 /// writes a short human-readable summary of the given SwapMetaView object
-std::ostream &operator <<(std::ostream &, const Store::SwapMetaView &);
+std::ostream &operator <<(std::ostream &, const SwapMetaView &);
+
+} // namespace Store
 
 #endif /* SQUID_SRC_STORE_SWAPMETAVIEW_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -265,17 +265,17 @@ main(int argc, char *argv[])
                         exit(EXIT_FAILURE);
                     }
 
-                    entries.emplace_back(name);
+                    auto &newEntry = entries.emplace_back(name);
 
                     while ((aliasname = strtok(nullptr, WS)) != nullptr)
-                        entries.back().alias.push_front(aliasname);
+                        newEntry.alias.push_front(aliasname);
 
                     state = s1;
                 } else if (!strcmp(buff, "EOF")) {
                     state = sEXIT;
                 } else if (!strcmp(buff, "COMMENT_START")) {
-                    entries.emplace_back("comment");
-                    entries.back().loc = "none";
+                    auto &newEntry = entries.emplace_back("comment");
+                    newEntry.loc = "none";
                     state = sDOC;
                 } else {
                     errorMsg(input_filename, linenum, buff);
@@ -515,7 +515,7 @@ gen_default(const EntryList &head, std::ostream &fout)
         }
     }
 
-    fout << "    cfg_filename = NULL;" << std::endl <<
+    fout << "    cfg_filename = nullptr;" << std::endl <<
          "}" << std::endl << std::endl;
     return rc;
 }
@@ -555,7 +555,7 @@ gen_default_if_none(const EntryList &head, std::ostream &fout)
             fout << "#endif" << std::endl;
     }
 
-    fout << "    cfg_filename = NULL;" << std::endl <<
+    fout << "    cfg_filename = nullptr;" << std::endl <<
          "}" << std::endl << std::endl;
 }
 
@@ -588,7 +588,7 @@ gen_default_postscriptum(const EntryList &head, std::ostream &fout)
             fout << "#endif" << std::endl;
     }
 
-    fout << "    cfg_filename = NULL;" << std::endl <<
+    fout << "    cfg_filename = nullptr;" << std::endl <<
          "}" << std::endl << std::endl;
 }
 
@@ -615,7 +615,7 @@ Entry::genParseAlias(const std::string &aName, std::ostream &fout) const
         fout << "parse_" << type << "(&" << loc << (array_flag ? "[0]" : "") << ");";
     }
     fout << std::endl;
-    fout << "        cfg_directive = NULL;" << std::endl;
+    fout << "        cfg_directive = nullptr;" << std::endl;
     if (ifdef.size()) {
         fout <<
              "#else" << std::endl <<
@@ -651,7 +651,7 @@ gen_parse(const EntryList &head, std::ostream &fout)
          "\tchar\t*token;\n"
          "\tif ((token = strtok(buff, w_space)) == NULL) \n"
          "\t\treturn 1;\t/* ignore empty lines */\n"
-         "\tConfigParser::SetCfgLine(strtok(NULL, \"\"));\n";
+         "\tConfigParser::SetCfgLine(strtok(nullptr, \"\"));\n";
 
     for (const auto &e : head)
         e.genParse(fout);
@@ -851,7 +851,7 @@ gen_quote_escape(const std::string &var)
         case '"':
         case '\\':
             esc += '\\';
-        /* [[fallthrough]] */
+            [[fallthrough]];
         default:
             esc += c;
         }

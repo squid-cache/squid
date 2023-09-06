@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,11 +21,11 @@ class ACLMethodData : public ACLData<HttpRequestMethod>
 
 public:
     ACLMethodData() {}
-    virtual ~ACLMethodData();
-    bool match(HttpRequestMethod);
-    virtual SBufList dump() const;
-    void parse();
-    bool empty() const {return values.empty();}
+    ~ACLMethodData() override;
+    bool match(HttpRequestMethod) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override {return values.empty();}
 
     std::list<HttpRequestMethod> values;
 

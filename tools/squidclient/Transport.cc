@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -431,7 +431,7 @@ doTlsHandshake(const char *type)
 static bool
 loadTlsParameters()
 {
-    const char *err = NULL;
+    const char *err = nullptr;
     int x;
     if ((x = gnutls_priority_set_direct(Transport::Config.session, Transport::Config.params, &err)) != GNUTLS_E_SUCCESS) {
         if (x == GNUTLS_E_INVALID_REQUEST)

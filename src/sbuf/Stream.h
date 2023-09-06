@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -62,10 +62,8 @@ template <typename... Args>
 inline
 SBuf ToSBuf(Args&&... args)
 {
-    // TODO: Make this code readable after requiring C++17.
     SBufStream out;
-    using expander = int[];
-    (void)expander {0, (void(out << std::forward<Args>(args)),0)...};
+    (out << ... << args);
     return out.buf();
 }
 

@@ -1,11 +1,11 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[6.0.0-VCS],[http://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[7.0.0-VCS],[https://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -27,8 +27,8 @@ m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/tdb.m4])
 m4_include([acinclude/lib-checks.m4])
-m4_include([acinclude/ax_cxx_compile_stdcxx_11.m4])
-m4_include([acinclude/ax_cxx_0x_types.m4])
+m4_include([acinclude/ax_cxx_compile_stdcxx.m4])
+m4_include([acinclude/win32-sspi.m4])
 
 PRESET_CFLAGS="$CFLAGS"
 PRESET_CXXFLAGS="$CXXFLAGS"
@@ -55,9 +55,7 @@ AM_PROG_CC_C_O
 AC_PROG_CXX
 
 # AC_USE_SYSTEM_EXTENSIONS should be called before any macros that run the C compiler.
-AS_IF([test "x$squid_host_os" = "solaris" -a "x$GCC" = "xyes"],[
-  AC_USE_SYSTEM_EXTENSIONS
-])
+AC_USE_SYSTEM_EXTENSIONS
 
 AC_LANG([C++])
 
@@ -77,8 +75,16 @@ AS_IF([test "x${enable_arch_native}" != "xno"],[
   SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
 ])
 
-# might be cross-compiling.
-# NP: BUILDCXXFLAGS defined at the end of configure after CXXFLAGS fully known.
+# If the user did not specify a C++ version.
+user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "(-)std="`
+AS_IF([test "x$user_cxx" = "x"],[
+  # Check for C++17 compiler support
+  # May change CXX.
+  AX_CXX_COMPILE_STDCXX([17],[noext],[mandatory])
+])
+
+# Prerequisite: CXX has been finalized.
+# BUILDCXXFLAGS are defined later, after CXXFLAGS have been finalized.
 AC_ARG_VAR([BUILDCXX],[path to compiler for building compile-time tools. e.g. cf_gen])
 AS_IF([test "x$HOSTCXX" != "x" -a "x$BUILDCXX" = "x"],[
   AC_MSG_WARN([Cross-compiling with HOSTCXX is deprecated. Use BUILDCXX instead.])
@@ -91,13 +97,6 @@ AS_IF([test "x$BUILDCXX" = "x"],[
   ])
 ])
 AC_SUBST(BUILDCXX)
-
-# If the user did not specify a C++ version.
-user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "(-)std="`
-AS_IF([test "x$user_cxx" = "x"],[
-  # Check for C++11 compiler support
-  AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
-])
 
 # test for programs
 AC_PROG_RANLIB
@@ -133,6 +132,9 @@ AC_SUBST(AR_R)
 
 AC_PATH_PROG(LINUXDOC, linuxdoc, $FALSE)
 AM_CONDITIONAL(ENABLE_RELEASE_DOCS, test "x${ac_cv_path_LINUXDOC}" != "x$FALSE")
+
+SQUID_RELEASE=`echo $VERSION | cut -d. -f1`
+AC_SUBST(SQUID_RELEASE)
 
 # pre-define DEFAULT_PREFIX, some modules need it.
 AS_IF([test "${prefix}" = "NONE"],[squid_prefix=$ac_default_prefix],[squid_prefix=$prefix])
@@ -185,15 +187,20 @@ AM_CONDITIONAL(ENABLE_WIN32_IPC,[test "x$squid_host_os" = "xmingw"])
 
 AS_CASE(["$squid_host_os"],
   [mingw],[
-    AC_PATH_PROG(WIN32_PSAPI, psapi.dll, none)
     CFLAGS="$CFLAGS -mthreads"
     CXXFLAGS="$CXXFLAGS -mthreads -static-libgcc -static-libstdc++"
-    AS_IF([test "x$ac_cv_path_WIN32_PSAPI" = "xnone"],[
-      AC_MSG_NOTICE([PSAPI.DLL is recommended to run Squid on Windows NT Platform])
-      AC_MSG_NOTICE([Please see PSAPI.DLL section on doc/win32-relnotes.html.])
-    ],[
-      AC_DEFINE(HAVE_WIN32_PSAPI,1,[Define if you have PSAPI.DLL on Windows systems])
-      LIBS="$LIBS -lpsapi"
+    dnl Check for Winsock only on MinGW
+    SQUID_CHECK_WINSOCK_LIB
+    AC_CHECK_HEADERS([ws2tcpip.h winsock2.h windows.h],,,[
+#if HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
+#if HAVE_WINDOWS_H
+#include <windows.h>
+#endif
     ])
     MINGW_LIBS="-lmingwex"
     AC_SUBST(MINGW_LIBS)
@@ -305,10 +312,9 @@ AS_IF([test "$squid_cv_cc_simplified" = "gcc-4"],[
     #    in unit tests. Disable that
     SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wno-unused-private-field])
 
-    # ...=2: This flexibility level allows GCC to "understand" our fallthrough
-    # comments. TODO: Switch to [[fallthrough]] attributes with C++17.
-    SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wimplicit-fallthrough=2])
-    AS_IF([test "x$squid_cv_cc_arg_wimplicit_fallthrough_2" != "xyes"], [
+    # ...=5: Do not trust comments about fallthrough cases (GCC).
+    SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wimplicit-fallthrough=5])
+    AS_IF([test "x$squid_cv_cc_arg_wimplicit_fallthrough_5" != "xyes"], [
         SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wno-implicit-fallthrough])
     ])
 ])
@@ -354,16 +360,6 @@ AC_ARG_ENABLE(optimizations,
   ])
 ])
 
-AC_ARG_ENABLE(debug-cbdata,
-  AS_HELP_STRING([--enable-debug-cbdata],
-      [Provide some debug information in cbdata]), [
-  SQUID_YESNO([$enableval],[--enable-debug-cbdata])
-])
-SQUID_DEFINE_BOOL(USE_CBDATA_DEBUG,${enable_debug_cbdata:=no},
-    [Enable support for cbdata debug information])
-AC_MSG_NOTICE([cbdata debugging enabled: $enable_debug_cbdata])
-
-
 dnl Nasty hack to get autoconf 2.64 on Linux to run.
 dnl all other uses of RUN_IFELSE are wrapped inside CACHE_CHECK which breaks on 2.64
 AC_RUN_IFELSE([AC_LANG_SOURCE([[ int main(int argc, char **argv) { return 0; } ]])],[],[],[:])
@@ -383,7 +379,7 @@ AC_ARG_WITH(aufs-threads,
   AS_HELP_STRING([--with-aufs-threads=N_THREADS],
     [Tune the number of worker threads for the aufs object store.]), [
   AS_CASE([$withval],
-    [[[0-9]]*],[squid_opt_aufs_threads=$withval],
+    [@<:@0-9@:>@*],[squid_opt_aufs_threads=$withval],
     AC_MSG_ERROR(--with-aufs-threads expects a numeric argument)
   )
 ])
@@ -395,10 +391,10 @@ AS_IF([test "x$squid_opt_aufs_threads" != "x"],[
 
 ## TODO check if this is necessary, LT_INIT does these checks
 SQUID_AUTO_LIB(dl,[dynamic linking],[LIBDL])
-AS_IF([test "x$with_dl" != "xno"],[
-  CXXFLAGS="$LIBDL_CFLAGS $CXXFLAGS"
+SQUID_CHECK_LIB_WORKS(dl,[
   LDFLAGS="$LIBDL_PATH $LDFLAGS"
-  AC_CHECK_LIB(dl, dlopen)
+  AC_CHECK_LIB(dl, dlopen,[LIBDL_LIBS="-ldl"])
+  LIBS="$LIBDL_LIBS $LIBS"
 ])
 
 AC_DEFUN([LIBATOMIC_CHECKER],[
@@ -433,6 +429,30 @@ AS_IF([test "x$libatomic_checker_result" = "xno"],[
 ])])
 SQUID_STATE_ROLLBACK(LIBATOMIC)
 AC_SUBST(ATOMICLIB)
+
+SQUID_AUTO_LIB(psapi,[Windows PSAPI.dll],[LIBPSAPI])
+AS_IF([test "x$with_psapi" != "xno"],[
+  SQUID_STATE_SAVE(squid_psapi_state)
+  CPPFLAGS="$LIBPSAPI_CFLAGS $CPPFLAGS"
+  LIBS="$LIBPSAPI_PATH $LIBS"
+  AC_CHECK_LIB([psapi],[K32GetProcessMemoryInfo],[LIBPSAPI_LIBS="-lpsapi"])
+  AC_CHECK_HEADER([psapi.h],,,[
+#if HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+  ])
+  SQUID_STATE_ROLLBACK(squid_psapi_state)
+  AS_IF([test "x$LIBPSAPI_LIBS" != "x"],[
+    CXXFLAGS="$LIBPSAPI_CFLAGS $CXXFLAGS"
+    LIBPSAPI_LIBS="$LIBPSAPI_PATH $LIBPSAPI_LIBS"
+  ],[test "x$with_psapi" = "xyes"],[
+    AC_MSG_ERROR([Required library PSAPI.dll not found])
+  ],[
+    AC_MSG_NOTICE([Library PSAPI.dll not found.])
+  ])
+])
+AC_MSG_NOTICE([Using Windows PSAPI.dll library: ${with_psapi:=auto}])
+AC_SUBST(LIBPSAPI_LIBS)
 
 AC_SEARCH_LIBS([shm_open], [rt])
 AS_IF([test "x$ac_cv_search_shm_open" != "xno"],[
@@ -962,16 +982,6 @@ SQUID_DEFINE_BOOL(USE_WCCPv2,${enable_wccpv2:=yes},
             [Define to enable WCCP V2])
 AC_MSG_NOTICE([Web Cache Coordination V2 Protocol enabled: $enable_wccpv2])
 
-AC_ARG_ENABLE(kill-parent-hack,
-  AS_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]), [
-  SQUID_YESNO([$enableval],[--enable-kill-parent-hack])
-])
-SQUID_DEFINE_BOOL(KILL_PARENT_OPT,${enable_kill_parent_hack:=no},
-                   [A dangerous feature which causes Squid to kill its parent
-                    process (presumably the RunCache script) upon receipt
-                    of SIGTERM or SIGINT. Deprecated, Use with caution.])
-AC_MSG_NOTICE([Kill parent on shutdown hack enabled: $enable_kill_parent_hack])
-
 AC_ARG_ENABLE(snmp,
   AS_HELP_STRING([--disable-snmp],[Disable SNMP monitoring support]), [
   SQUID_YESNO([$enableval],[--enable-snmp])
@@ -1063,7 +1073,7 @@ AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 
 # Cryptograhic libraries
 SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
-AS_IF(test "x$with_nettle" != "xno"],[
+SQUID_CHECK_LIB_WORKS(nettle,[
   SQUID_STATE_SAVE(squid_nettle_state)
   PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[],[
     CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
@@ -1072,17 +1082,7 @@ AS_IF(test "x$with_nettle" != "xno"],[
   AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
   SQUID_CHECK_NETTLE_BASE64
   SQUID_STATE_ROLLBACK(squid_nettle_state)
-  AS_IF([test "x$LIBNETTLE_LIBS" != "x"],[
-    CXXFLAGS="$LIBNETTLE_CFLAGS $CXXFLAGS"
-    LIBNETTLE_LIBS="$LIBNETTLE_PATH $LIBNETTLE_LIBS"
-  ],[test "x$with_nettle" = "xyes"],[
-    AC_MSG_ERROR([Required library nettle not found])
-  ],[
-    AC_MSG_NOTICE([Library nettle not found.])
-  ])
 ])
-AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
-AC_SUBST(LIBNETTLE_LIBS)
 
 dnl Check for libcrypt
 CRYPTLIB=
@@ -1097,7 +1097,7 @@ SSLLIB=""
 
 SQUID_AUTO_LIB(gnutls,[GnuTLS crypto],[LIBGNUTLS])
 AH_TEMPLATE(USE_GNUTLS,[GnuTLS support is available])
-AS_IF([test "x$with_gnutls" != "xno"],[
+SQUID_CHECK_LIB_WORKS(gnutls,[
   SQUID_STATE_SAVE(squid_gnutls_state)
 
   # User may have provided a custom location for GnuTLS. Otherwise...
@@ -1113,22 +1113,16 @@ AS_IF([test "x$with_gnutls" != "xno"],[
     ## by testing for a 3.4.0+ function which we use
     AC_CHECK_LIB(gnutls,gnutls_pcert_export_x509,[LIBGNUTLS_LIBS="-lgnutls"])
   ])
-  AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h)
+  # if any of the required headers is not found, signal we can't support gnutls
+  AC_CHECK_HEADERS([gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h], [], [LIBGNUTLS_LIBS=""])
 
   SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
 
-  AS_IF([test "x$with_gnutls" = "xyes" -a "x$LIBGNUTLS_LIBS" = "x"],[
-    AC_MSG_ERROR([Required GnuTLS library not found])
-  ])
   AS_IF([test "x$LIBGNUTLS_LIBS" != "x"],[
-    CXXFLAGS="$LIBGNUTLS_CFLAGS $CXXFLAGS"
     SSLLIB="$LIBGNUTLS_PATH $LIBGNUTLS_LIBS $SSLLIB"
     AC_DEFINE(USE_GNUTLS,1,[GnuTLS support is available])
-  ],[
-    with_gnutls=no
   ])
 ])
-AC_MSG_NOTICE([GnuTLS library support: ${with_gnutls:=auto} ${LIBGNUTLS_PATH} ${LIBGNUTLS_LIBS}])
 
 dnl User may specify OpenSSL is needed from a non-standard location
 SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[LIBOPENSSL])
@@ -1629,7 +1623,7 @@ AC_SUBST(KRB5INCS)
 AC_SUBST(KRB5LIBS)
 
 SQUID_AUTO_LIB(ldap,[LDAP],[LIBLDAP])
-AS_IF([test "x$with_ldap" != "xno"],[
+SQUID_CHECK_LIB_WORKS(ldap,[
   dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked
   dnl only with Windows LDAP libraries using -lwldap32
   AS_IF([test "$squid_host_os" = "mingw"],[
@@ -1656,21 +1650,11 @@ AS_IF([test "x$with_ldap" != "xno"],[
     AC_CHECK_HEADERS(mozldap/ldap.h)
     SQUID_CHECK_LDAP_API
   ])
-
-  AS_IF([test "x$LIBLDAP_LIBS" != "x"],[
-    CPPFLAGS="$LIBLDAP_CFLAGS $CPPFLAGS"
-    LIBLDAP_LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS"
-  ],[test "x$with_ldap" = "xyes"],[
-    AC_MSG_ERROR([Required library ldap not found])
-  ],[
-    AC_MSG_NOTICE([Library ldap not found.])
-  ])
 ])
-AC_SUBST(LIBLDAP_LIBS)
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
 AH_TEMPLATE(USE_SYSTEMD,[systemd support is available])
-AS_IF([test "x$with_systemd" != "xno"],[
+SQUID_CHECK_LIB_WORKS(systemd,[
   SQUID_STATE_SAVE(squid_systemd_state)
   LIBS="$LIBS $LIBSYSTEMD_PATH"
   PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd],,[
@@ -1681,16 +1665,9 @@ AS_IF([test "x$with_systemd" != "xno"],[
   SQUID_STATE_ROLLBACK(squid_systemd_state)
 
   AS_IF([test "x$LIBSYSTEMD_LIBS" != "x"],[
-    CXXFLAGS="$LIBSYSTEMD_CFLAGS $CXXFLAGS"
-    LIBSYSTEMD_LIBS="$LIBSYSTEMD_PATH $LIBSYSTEMD_LIBS"
     AC_DEFINE(USE_SYSTEMD,1,[systemd support is available])
-  ],[test "x$with_systemd" = "xyes"],[
-    AC_MSG_ERROR([Required systemd library not found])
-  ],[
-    AC_MSG_NOTICE([Library for systemd support not found])
   ])
 ])
-AC_MSG_NOTICE([systemd library support: $with_systemd $LIBSYSTEMD_LIBS])
 
 AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
@@ -1702,7 +1679,7 @@ AC_MSG_NOTICE([Forw/Via database enabled: $enable_forw_via_db])
 
 AC_ARG_ENABLE(cache-digests,
   AS_HELP_STRING([--enable-cache-digests],
-   [Use Cache Digests. See http://wiki.squid-cache.org/SquidFaq/CacheDigests]),[
+   [Use Cache Digests. See https://wiki.squid-cache.org/SquidFaq/CacheDigests]),[
   SQUID_YESNO([$enableval],[--enable-cache-digests])
 ])
 SQUID_DEFINE_BOOL(USE_CACHE_DIGESTS,${enable_cache_digests:=no},
@@ -1719,17 +1696,14 @@ dnl override those handled earlier for io loop method manual override
 AC_ARG_ENABLE(select,
   AS_HELP_STRING([--disable-select],[Disable select(2) support.]),[
   SQUID_YESNO([$enableval],[--enable-select])
-  AS_IF([test "x$enableval" = "xyes"],[
-    squid_opt_io_loop_engine="select"
-    AS_IF([test "x$squid_host_os" = "xmingw"],[squid_opt_io_loop_engine="select_win32"])
-  ])
+  AS_IF([test "x$enableval" = "xyes"],[squid_opt_io_loop_engine="select"])
 ])
 AC_MSG_NOTICE([enabling select syscall for net I/O: ${enable_select:=auto}])
 
 AC_ARG_ENABLE(poll,
   AS_HELP_STRING([--disable-poll],[Disable poll(2) support.]),[
   SQUID_YESNO([$enableval],[--enable-poll])
-  AS_IF(["x$enableval" = "xyes"],[squid_opt_io_loop_engine="poll"])
+  AS_IF([test "x$enableval" = "xyes"],[squid_opt_io_loop_engine="poll"])
 ])
 AC_MSG_NOTICE([enabling poll syscall for net I/O: ${enable_poll:=auto}])
 
@@ -1881,26 +1855,14 @@ AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto
 
 dnl Look for libnetfilter_conntrack options (needed for QOS netfilter marking)
 SQUID_AUTO_LIB(netfilter-conntrack,[Netfilter conntrack],[LIBNETFILTER_CONNTRACK])
-AC_MSG_NOTICE([Linux Netfilter Conntrack support requested: ${with_netfilter_conntrack:=auto}])
-AS_IF([test "x$with_netfilter_conntrack" != "xno"],[
+SQUID_CHECK_LIB_WORKS(netfilter-conntrack,[
   LDFLAGS="$LIBNETFILTER_CONNTRACK_PATH $LDFLAGS"
   CPPFLAGS="$LIBNETFILTER_CONNTRACK_CFLAGS $CPPFLAGS"
-  AC_SEARCH_LIBS([nfct_query], [netfilter_conntrack],,[
-    AS_IF([test "x$with_netfilter_conntrack" = "xyes"],[
-      AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack library not found])
-    ])
-    with_netfilter_conntrack=no
-  ])
+  AC_SEARCH_LIBS([nfct_query],[netfilter_conntrack],[LIBNETFILTER_CONNTRACK_LIBS="-lnetfilter_conntrack"])
   AC_CHECK_HEADERS([ \
     libnetfilter_conntrack/libnetfilter_conntrack.h \
     libnetfilter_conntrack/libnetfilter_conntrack_tcp.h
-  ],,[
-    AS_IF([test "x$with_netfilter_conntrack" = "xyes"],[
-      AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack headers not found])
-    ])
-    with_netfilter_conntrack=no
-  ])
-  AS_IF([test "x$with_netfilter_conntrack" != "xno"],[with_netfilter_conntrack=yes])
+  ],,[LIBNETFILTER_CONNTRACK_LIBS=""])
 ])
 
 dnl Enable Large file support
@@ -2035,6 +1997,7 @@ SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,[Enable support for authentication])
 AM_CONDITIONAL(ENABLE_AUTH, test "x$enable_auth" != "xno")
 AUTH_MODULES=""
 require_smblib="no"
+require_sspi="no"
 
 AC_ARG_ENABLE(auth-basic,
   AS_HELP_STRING([--enable-auth-basic="list of helpers"],
@@ -2095,6 +2058,7 @@ done
 AC_SUBST(AUTH_MODULES)
 AC_SUBST(AUTH_LIBS_TO_BUILD)
 AM_CONDITIONAL(ENABLE_SMBLIB, test "x$require_smblib" = "xyes")
+AM_CONDITIONAL(ENABLE_SSPI, test "x$require_sspi" = "xyes")
 
 dnl Select logging daemon helpers to build
 AC_ARG_ENABLE(log-daemon-helpers,
@@ -2228,7 +2192,7 @@ SQUID_DEFINE_BOOL(X_ACCELERATOR_VARY,${enable_x_accelerator_vary:=no},
 AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
 SQUID_AUTO_LIB(cppunit,[cppunit test framework],[LIBCPPUNIT])
-AS_IF([test "x$with_cppunit" != "xno"],[
+SQUID_CHECK_LIB_WORKS(cppunit,[
   LIBCPPUNIT_LIBS="$LIBCPPUNIT_PATH -lcppunit"
   PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[
     squid_cv_cppunit_version="`pkg-config --modversion cppunit`"
@@ -2366,20 +2330,13 @@ AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[
 #endif
 ])
 
-dnl Override rusage() detect on MinGW because is emulated in source code
-AS_IF([test "$squid_host_os" = "mingw"],[
-  AC_DEFINE(HAVE_STRUCT_RUSAGE)
-  ac_cv_func_getrusage="yes"
-  AC_MSG_NOTICE([Using own rusage on Windows.])
-],[
-  AC_CHECK_TYPE(struct rusage,AC_DEFINE(HAVE_STRUCT_RUSAGE,1,[The system provides struct rusage]),,[
+AC_CHECK_TYPE(struct rusage,AC_DEFINE(HAVE_STRUCT_RUSAGE,1,[The system provides struct rusage]),,[
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif
-  ])
 ])
 
 AC_CHECK_MEMBERS([struct iphdr.ip_hl],,,[
@@ -2419,16 +2376,9 @@ AC_CHECK_TYPE([bool])
 #need the defines for PRId64
 AC_CHECK_SIZEOF(int64_t)
 AC_CHECK_SIZEOF(long)
-#need the defines for PRIuSIZE
-AC_CHECK_SIZEOF(size_t)
 #need the define for overflow checks
 AC_CHECK_SIZEOF(off_t)
 AC_CHECK_SIZEOF(size_t)
-
-dnl Some C++11 types we try to use
-AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS
-SQUID_CXX_STD_UNDERLYING_TYPE
-SQUID_CXX_STD_IS_TRIVIALLY_COPYABLE
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
@@ -2463,22 +2413,11 @@ AC_CHECK_TYPE(cpu_set_t,
 #endif
 ])
 
-# check for compiler support of %zu printf macro
-AH_TEMPLATE(PRIuSIZE,[Compiler supports %zu printf macro])
-AC_MSG_CHECKING([for compiler %zu support])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <stdio.h>
-  ]],[[size_t n=1;printf("%zu",n);]])],[
-    AC_DEFINE(PRIuSIZE,"zu")
-    AC_MSG_RESULT(yes)
-  ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
-
-
 dnl Check for special functions
 AC_FUNC_ALLOCA
 
 SQUID_AUTO_LIB(cap,[Linux capabilities],[LIBCAP])
-AS_IF([test "x$with_cap" != "xno"],[
+SQUID_CHECK_LIB_WORKS(cap,[
   SQUID_STATE_SAVE(squid_libcap_state)
   CXXFLAGS="$LIBCAP_CFLAGS $CXXFLAGS"
   LDFLAGS="$LIBCAP_PATH $LDFLAGS"
@@ -2492,18 +2431,9 @@ AS_IF([test "x$with_cap" != "xno"],[
   SQUID_STATE_ROLLBACK(squid_libcap_state)
 
   AS_IF([test "x$LIBCAP_LIBS" != "x"],[
-    with_cap=yes
-    CPPFLAGS="$LIBCAP_CFLAGS $CPPFLAGS"
-    LIBCAP_LIBS="$LIBCAP_PATH $LIBCAP_LIBS"
     AC_DEFINE(USE_LIBCAP,1,[Linux capabilities library support])
-  ],[test "x$with_cap" = "xyes"],[
-    AC_MSG_ERROR([Required library libcap not found])
-  ],[
-    AC_MSG_NOTICE([Library libcap not found])
-    with_cap=no
   ])
 ])
-AC_MSG_NOTICE([Linux capabilities support enabled: ${with_cap} ${LIBCAP_LIBS}])
 
 dnl Check for needed libraries
 AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
@@ -2512,24 +2442,6 @@ AC_SEARCH_LIBS([__res_search],[resolv])
 AC_SEARCH_LIBS([bind],[socket])
 AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
 AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
-dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
-AS_IF([test "x$squid_host_os" = "xmingw"],[
-  SQUID_CHECK_WINSOCK_LIB
-  AC_CHECK_HEADERS( \
-    windows.h \
-    ws2tcpip.h \
-    iphlpapi.h ,,,[
-#if HAVE_WINSOCK2_H
-#include <winsock2.h>
-#endif
-#if HAVE_WINDOWS_H
-#include <windows.h>
-#endif
-#if HAVE_WS2TCPIP_H
-#include <ws2tcpip.h>
-#endif
-  ])
-])
 
 # check that we have unix sockets
 SQUID_CHECK_UNIX_SOCKET
@@ -2561,7 +2473,7 @@ dnl --with-maxfd present for compatibility with Squid-2.
 dnl undocumented in ./configure --help  to encourage using the Squid-3 directive
 AC_ARG_WITH(maxfd,,[
   AS_CASE([$withval],
-    [[[0-9]]*],[
+    [@<:@0-9@:>@*],[
       squid_filedescriptors_num=$withval
       AC_MSG_NOTICE([forcing default of $squid_filedescriptors_num filedescriptors (user-forced)])
     ],
@@ -2571,14 +2483,14 @@ AC_ARG_WITH(maxfd,,[
 
 AC_ARG_WITH(filedescriptors,
   AS_HELP_STRING([--with-filedescriptors=NUMBER],
-    [Force squid to support NUMBER filedescriptors]),
+    [Force squid to support NUMBER filedescriptors]),[
   AS_CASE([$withval],
-    [[[0-9]]*],[
+    [@<:@0-9@:>@*],[
       squid_filedescriptors_num=$withval
       AC_MSG_NOTICE([forcing default of $squid_filedescriptors_num filedescriptors (user-forced)])],
     [AC_MSG_ERROR([--with-filedescriptors expects a numeric argument])]
   )
-)
+])
 
 SQUID_CHECK_DEFAULT_FD_SETSIZE
 SQUID_CHECK_MAXFD
@@ -2748,35 +2660,6 @@ AC_REPLACE_FUNCS(\
 	tempnam \
 )
 
-AC_CHECK_DECLS([getaddrinfo,getnameinfo,inet_ntop,inet_pton,InetNtopA,InetPtonA],,,[
-/*
- * BSD requires sys/types.h, sys/socket.h, netinet/in.h, netdb.h, arpa/inet.h
- * Linux requires sys/types.h, sys/socket.h, arpa/inet.h
- * Windows requires sys/socket.h, winsock2.h, ws2tcpip.h
- */
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-#if HAVE_NETDB_H
-#include <netdb.h>
-#endif
-#if HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-#if HAVE_WINSOCK2_H
-#include <winsock2.h>
-#endif
-#if HAVE_WS2TCPIP_H
-#include <ws2tcpip.h>
-#endif
-])
-
 # Magic which checks whether we are forcing a type of comm loop we
 # are actually going to (ab)use.
 # Mostly ripped from squid-commloops, thanks to adrian and benno
@@ -2793,8 +2676,6 @@ AS_IF([test "x$squid_opt_io_loop_engine" != "x"],
   squid_opt_io_loop_engine="poll",
   [test "x$enable_select" != "xno" -a "x$ac_cv_func_select" = "xyes"],
   squid_opt_io_loop_engine="select",
-  [test "x$enable_select" != "xno" -a "x$squid_host_os" = "xmingw"],
-  squid_opt_io_loop_engine="select_win32",
   [
     AC_MSG_WARN([Eep!  Cannot find epoll, kqueue, /dev/poll, poll or select!])
     AC_MSG_WARN([Will try select and hope for the best.])
@@ -2807,7 +2688,6 @@ AC_MSG_NOTICE([Using ${squid_opt_io_loop_engine} for the IO loop.])
 AM_CONDITIONAL(ENABLE_POLL, test "x$squid_opt_io_loop_engine" = "xpoll")
 AM_CONDITIONAL(ENABLE_EPOLL, test "x$squid_opt_io_loop_engine" = "xepoll")
 AM_CONDITIONAL(ENABLE_SELECT, test "x$squid_opt_io_loop_engine" = "xselect")
-AM_CONDITIONAL(ENABLE_SELECT_WIN32, test "x$squid_opt_io_loop_engine" = "xselect_win32")
 AM_CONDITIONAL(ENABLE_KQUEUE, test "x$squid_opt_io_loop_engine" = "xkqueue")
 AM_CONDITIONAL(ENABLE_DEVPOLL, test "x$squid_opt_io_loop_engine" = "xdevpoll")
 
@@ -2816,7 +2696,6 @@ AS_CASE([$squid_opt_io_loop_engine],
   [devpoll],[AC_DEFINE(USE_DEVPOLL,1,[Use /dev/poll for the IO loop])],
   [poll],[AC_DEFINE(USE_POLL,1,[Use poll() for the IO loop])],
   [kqueue],[AC_DEFINE(USE_KQUEUE,1,[Use kqueue() for the IO loop])],
-  [select_win32],[AC_DEFINE(USE_SELECT_WIN32,1,[Use Winsock select() for the IO loop])],
   [select],[AC_DEFINE(USE_SELECT,1,[Use select() for the IO loop])],
 )
 
@@ -2996,36 +2875,6 @@ AS_IF(test "x$enable_zph_qos" = "xyes"],[
 ])
 
 AC_CHECK_LIB(regex, regexec, [REGEXLIB="-lregex"],[REGEXLIB=''])
-AC_ARG_ENABLE(gnuregex,
-  AS_HELP_STRING([--enable-gnuregex],
-                 [Compile GNUregex.  Unless you have reason to use
-                 this option, you should not enable it.
-                 This library file is usually only required on Windows and
-                 very old Unix boxes which do not have their own regex
-                 library built in.]), [
-  SQUID_YESNO([$enableval],[--enable-gnuregex])
-])
-# force-enable on old solaris
-AS_IF([test "x${enable_gnuregex:=auto}" = "xauto"],[
-  AS_CASE(["$host"],
-    [*-sun-solaris2.[[0-4]]],[enable_gnuregex="yes"]
-  )
-])
-
-# try detecting if it is needed
-AS_IF([test "x$enable_gnuregex" = "xauto"],[
-  SQUID_CHECK_REGEX_WORKS
-  AS_IF([test "x$squid_cv_regex_works" = "xyes"],[enable_gnuregex=no],[enable_gnuregex=yes])
-])
-AC_MSG_CHECKING(if GNUregex needs to be compiled)
-AC_MSG_RESULT($enable_gnuregex)
-AS_IF([test "x$enable_gnuregex" = "xyes"],[
-  # for some reason (force-enable, test..) gnuregex was found as needed. Override any system lib
-  REGEXLIB=""
-])
-#if no reason was found to enable gnuregex, disable it
-AS_IF([test "x$enable_gnuregex" = "xauto"],[enable_gnuregex=no])
-SQUID_DEFINE_BOOL(USE_GNUREGEX,$enable_gnuregex,[Define if we should use GNU regex])
 AC_SUBST(REGEXLIB)
 
 SQUID_DETECT_UDP_SND_BUFSIZE
@@ -3096,6 +2945,7 @@ AC_SUBST(XTRA_LIBS)
 AC_SUBST(SQUID_CFLAGS)
 AC_SUBST(SQUID_CXXFLAGS)
 
+# Prerequisite: CXXFLAGS have been finalized.
 AC_ARG_VAR([BUILDCXXFLAGS],[C++ compiler flags for building compile-time tools. e.g. cf_gen])
 AS_IF([test "x$BUILDCXXFLAGS" = "x"],[
   # if we are NOT cross-compiling, use the default build flags for cf_gen and friends
@@ -3137,6 +2987,7 @@ AC_CONFIG_FILES([
 	lib/rfcnb/Makefile
 	lib/smblib/Makefile
 	lib/snmplib/Makefile
+	lib/sspi/Makefile
 	scripts/Makefile
 	src/Makefile
 	src/acl/Makefile

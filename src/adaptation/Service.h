@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,7 +32,7 @@ public:
 
 public:
     explicit Service(const ServiceConfigPointer &aConfig);
-    virtual ~Service();
+    ~Service() override;
 
     virtual bool probed() const = 0; // see comments above
     virtual bool broken() const;

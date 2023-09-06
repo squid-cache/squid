@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -109,8 +109,8 @@ protected:
      \param ttl n(129...192) : 64 >= n >= 1
      \param ttl n(193...)    : n < 255
      *
-     \bug BUG? ttl<0 can produce high hop values
-     \bug BUG? ttl>255 can produce zero or negative hop values
+     * XXX: BUG? ttl<0 can produce high hop values
+     * XXX: BUG? ttl>255 can produce zero or negative hop values
      */
     int ipHops(int ttl);
 

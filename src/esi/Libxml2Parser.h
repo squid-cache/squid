@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -52,11 +52,11 @@ class ESILibxml2Parser : public ESIParser
 
 public:
     ESILibxml2Parser(ESIParserClient *);
-    ~ESILibxml2Parser();
+    ~ESILibxml2Parser() override;
     /* true on success */
-    bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
-    long int lineNumber() const;
-    char const * errorString() const;
+    bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream) override;
+    long int lineNumber() const override;
+    char const * errorString() const override;
 
     ESIParserClient *getClient() { return theClient; }
 

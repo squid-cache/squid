@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -67,6 +67,7 @@ static TokenTableEntry TokenTable2C[] = {
     TokenTableEntry("<pt", LFT_PEER_RESPONSE_TIME),
     TokenTableEntry("<tt", LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME),
     TokenTableEntry("dt", LFT_DNS_WAIT_TIME),
+    TokenTableEntry("busy_time", LFT_BUSY_TIME),
 
     TokenTableEntry(">ha", LFT_ADAPTED_REQUEST_HEADER),
     TokenTableEntry(">ha", LFT_ADAPTED_REQUEST_ALL_HEADERS),
@@ -146,6 +147,7 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry(">handshake", LFT_CLIENT_HANDSHAKE),
     TokenTableEntry("err_code", LFT_SQUID_ERROR ),
     TokenTableEntry("err_detail", LFT_SQUID_ERROR_DETAIL ),
+    TokenTableEntry("request_attempts", LFT_SQUID_REQUEST_ATTEMPTS),
     TokenTableEntry("note", LFT_NOTE ),
     TokenTableEntry("credentials", LFT_CREDENTIALS),
     TokenTableEntry("master_xaction", LFT_MASTER_XACTION),

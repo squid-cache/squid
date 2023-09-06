@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,7 +38,7 @@ public:
     explicit ServerBump(ClientHttpRequest *http, StoreEntry *e = nullptr, Ssl::BumpMode mode = Ssl::bumpServerFirst);
     ~ServerBump();
     void attachServerSession(const Security::SessionPointer &); ///< Sets the server TLS session object
-    const Security::CertErrors *sslErrors() const; ///< SSL [certificate validation] errors
+    Security::CertErrors *sslErrors() const; ///< SSL [certificate validation] errors
 
     /// whether there was a successful connection to (and peeking at) the origin server
     bool connectedOk() const {return entry && entry->isEmpty();}

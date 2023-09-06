@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -353,6 +353,12 @@ MemObject::policyLowestOffsetToKeep(bool swap) const
      */
     int64_t lowest_offset = lowestMemReaderOffset();
 
+    // XXX: Remove the last (Config.onoff.memory_cache_first-based) condition
+    // and update keepForLocalMemoryCache() accordingly. The caller wants to
+    // remove all local memory that is safe to remove. Honoring caching
+    // preferences is its responsibility. Our responsibility is safety. The
+    // situation was different when ff4b33f added that condition -- there was no
+    // keepInLocalMemory/keepForLocalMemoryCache() call guard back then.
     if (endOffset() < lowest_offset ||
             endOffset() - inmem_lo > (int64_t)Config.Store.maxInMemObjSize ||
             (swap && !Config.onoff.memory_cache_first))

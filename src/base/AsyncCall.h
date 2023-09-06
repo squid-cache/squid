@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,7 +42,7 @@ public:
     typedef RefCount <AsyncCall> Pointer;
 
     AsyncCall(int aDebugSection, int aDebugLevel, const char *aName);
-    virtual ~AsyncCall();
+    ~AsyncCall() override;
 
     void make(); // fire if we can; handles general call debugging
 
@@ -133,18 +133,18 @@ public:
         AsyncCall(o.debugSection, o.debugLevel, o.name),
         dialer(o.dialer) {}
 
-    ~AsyncCallT() {}
+    ~AsyncCallT() override {}
 
-    CallDialer *getDialer() { return &dialer; }
+    CallDialer *getDialer() override { return &dialer; }
 
     Dialer dialer;
 
 protected:
-    virtual bool canFire() {
+    bool canFire() override {
         return AsyncCall::canFire() &&
                dialer.canDial(*this);
     }
-    virtual void fire() { dialer.dial(*this); }
+    void fire() override { dialer.dial(*this); }
 
 private:
     AsyncCallT & operator=(const AsyncCallT &); // not defined. call assignments not permitted.

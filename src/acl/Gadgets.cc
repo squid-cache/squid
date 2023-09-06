@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,11 +17,8 @@
  */
 
 #include "squid.h"
-#include "acl/Acl.h"
 #include "acl/AclDenyInfoList.h"
-#include "acl/Checklist.h"
 #include "acl/Gadgets.h"
-#include "acl/Strategised.h"
 #include "acl/Tree.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"

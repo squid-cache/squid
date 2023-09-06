@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,13 +28,13 @@ class ACLASN : public ACLData<Ip::Address>
 
 public:
     ACLASN() : data(nullptr) {}
-    virtual ~ACLASN();
+    ~ACLASN() override;
 
-    virtual bool match(Ip::Address);
-    virtual SBufList dump() const;
-    virtual void parse();
-    bool empty() const;
-    virtual void prepareForUse();
+    bool match(Ip::Address) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override;
+    void prepareForUse() override;
 
 private:
     CbDataList<int> *data;

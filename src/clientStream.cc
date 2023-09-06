@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -72,9 +72,9 @@
  *
  \code
    mycontext = thisObject->data;
-   thisObject->data = NULL;
+   thisObject->data = nullptr;
    delete thisObject->head;
-   mycontext = NULL;
+   mycontext = nullptr;
    return;
  \endcode
  *
@@ -154,8 +154,7 @@ clientStreamCallback(clientStreamNode * thisObject, ClientHttpRequest * http,
     assert(thisObject && http && thisObject->node.next);
     next = thisObject->next();
 
-    debugs(87, 3, "clientStreamCallback: Calling " << next->callback << " with cbdata " <<
-           next->data.getRaw() << " from node " << thisObject);
+    debugs(87, 3, thisObject << " gives " << next->data << ' ' << replyBuffer);
     next->callback(next, http, rep, replyBuffer);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,13 +11,14 @@
 #include "acl/AnnotationData.h"
 #include "acl/FilledChecklist.h"
 #include "HttpRequest.h"
-#include "Notes.h"
 
 int
-ACLAnnotateTransactionStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::AnnotateTransactionCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     if (const auto request = checklist->request) {
-        ACLAnnotationData *tdata = dynamic_cast<ACLAnnotationData*>(data);
+        const auto tdata = dynamic_cast<ACLAnnotationData*>(data.get());
         assert(tdata);
         tdata->annotate(request->notes(), &delimiters.value, checklist->al);
         return 1;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -94,13 +94,13 @@ public:
     explicit NullaryMemFunT(const CbcPointer<Job> &aJob, Method aMethod):
         JobDialer<Job>(aJob), method(aMethod) {}
 
-    virtual void print(std::ostream &os) const {  os << "()"; }
+    void print(std::ostream &os) const override {  os << "()"; }
 
 public:
     Method method;
 
 protected:
-    virtual void doDial() { ((&(*this->job))->*method)(); }
+    void doDial() override { ((&(*this->job))->*method)(); }
 };
 
 template <class Job, class Data, class Argument1 = Data>
@@ -112,14 +112,14 @@ public:
                           const Data &anArg1): JobDialer<Job>(aJob),
         method(aMethod), arg1(anArg1) {}
 
-    virtual void print(std::ostream &os) const {  os << '(' << arg1 << ')'; }
+    void print(std::ostream &os) const override {  os << '(' << arg1 << ')'; }
 
 public:
     Method method;
     Data arg1;
 
 protected:
-    virtual void doDial() { ((&(*this->job))->*method)(arg1); }
+    void doDial() override { ((&(*this->job))->*method)(arg1); }
 };
 
 // ... add more as needed
@@ -176,9 +176,18 @@ JobDialer<Job>::dial(AsyncCall &call)
     } catch (const std::exception &e) {
         debugs(call.debugSection, 3,
                call.name << " threw exception: " << e.what());
+        if (!job) {
+            debugs(call.debugSection, DBG_CRITICAL, "ERROR: Squid BUG: Job invalidated during " <<
+                   call.name << " that threw exception: " << e.what());
+            return; // see also: bug 4981, commit e3b6f15, and XXX in Http::Stream class description
+        }
         job->callException(e);
     }
 
+    if (!job) {
+        debugs(call.debugSection, DBG_CRITICAL, "ERROR: Squid BUG: Job invalidated during " << call.name);
+        return;
+    }
     job->callEnd(); // may delete job
 }
 

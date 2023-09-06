@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,9 +34,6 @@ ACLFilledChecklist::ACLFilledChecklist() :
 #if SQUID_SNMP
     snmp_community(nullptr),
 #endif
-#if USE_OPENSSL
-    sslErrors(nullptr),
-#endif
     requestErrorType(ERR_MAX),
     conn_(nullptr),
     fd_(-1),
@@ -60,10 +57,6 @@ ACLFilledChecklist::~ACLFilledChecklist()
     HTTPMSGUNLOCK(reply);
 
     cbdataReferenceDone(conn_);
-
-#if USE_OPENSSL
-    cbdataReferenceDone(sslErrors);
-#endif
 
     debugs(28, 4, "ACLFilledChecklist destroyed " << this);
 }
@@ -227,9 +220,6 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
 #endif
 #if SQUID_SNMP
     snmp_community(nullptr),
-#endif
-#if USE_OPENSSL
-    sslErrors(nullptr),
 #endif
     requestErrorType(ERR_MAX),
     conn_(nullptr),
