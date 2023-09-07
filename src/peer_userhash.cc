@@ -28,8 +28,9 @@
 
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
-static int n_userhash_peers = 0;
-static CachePeer **userhash_peers = nullptr;
+/// userhash peers ordered by their userhash weight
+static SelectedCachePeers TheUserHashPeers;
+
 static OBJH peerUserHashCachemgr;
 static void peerUserHashRegisterWithCacheManager(void);
 
@@ -45,23 +46,19 @@ void
 peerUserHashInit(void)
 {
     int W = 0;
-    int K;
-    int k;
     double P_last, X_last, Xn;
     char *t;
     /* Clean up */
 
-    for (k = 0; k < n_userhash_peers; ++k) {
-        cbdataReferenceDone(userhash_peers[k]);
-    }
-
-    safe_free(userhash_peers);
-    n_userhash_peers = 0;
+    TheUserHashPeers.clear();
     /* find out which peers we have */
 
     peerUserHashRegisterWithCacheManager();
 
+    RawCachePeers rawUserHashPeers;
     for (const auto &p: CurrentCachePeers()) {
+        const auto peer = p.get();
+
         if (!p->options.userhash)
             continue;
 
@@ -70,27 +67,16 @@ peerUserHashInit(void)
         if (p->weight == 0)
             continue;
 
-        ++n_userhash_peers;
+        rawUserHashPeers.push_back(peer);
 
         W += p->weight;
     }
 
-    if (n_userhash_peers == 0)
+    if (rawUserHashPeers.empty())
         return;
 
-    userhash_peers = (CachePeer **)xcalloc(n_userhash_peers, sizeof(*userhash_peers));
-
-    auto P = userhash_peers;
-    /* Build a list of the found peers and calculate hashes and load factors */
-    for (const auto &peer: CurrentCachePeers()) {
-        const auto p = peer.get();
-
-        if (!p->options.userhash)
-            continue;
-
-        if (p->weight == 0)
-            continue;
-
+    /* calculate hashes and load factors */
+    for (const auto &p: rawUserHashPeers) {
         /* calculate this peers hash */
         p->userhash.hash = 0;
 
@@ -106,13 +92,10 @@ peerUserHashInit(void)
 
         if (floor(p->userhash.load_factor * 1000.0) == 0.0)
             p->userhash.load_factor = 0.0;
-
-        /* add it to our list of peers */
-        *P++ = cbdataReference(p);
     }
 
     /* Sort our list on weight */
-    qsort(userhash_peers, n_userhash_peers, sizeof(*userhash_peers), peerSortWeight);
+    qsort(rawUserHashPeers.data(), rawUserHashPeers.size(), sizeof(decltype(rawUserHashPeers)::value_type), peerSortWeight);
 
     /* Calculate the load factor multipliers X_k
      *
@@ -122,7 +105,7 @@ peerUserHashInit(void)
      * X_k = pow (X_k, {1/(K-k+1)})
      * simplified to have X_1 part of the loop
      */
-    K = n_userhash_peers;
+    const auto K = rawUserHashPeers.size();
 
     P_last = 0.0;       /* Empty P_0 */
 
@@ -130,9 +113,9 @@ peerUserHashInit(void)
 
     X_last = 0.0;       /* Empty X_0, nullifies the first pow statement */
 
-    for (k = 1; k <= K; ++k) {
+    for (size_t k = 1; k <= K; ++k) {
         double Kk1 = (double) (K - k + 1);
-        const auto p = userhash_peers[k - 1];
+        const auto p = rawUserHashPeers[k - 1];
         p->userhash.load_multiplier = (Kk1 * (p->userhash.load_factor - P_last)) / Xn;
         p->userhash.load_multiplier += pow(X_last, Kk1);
         p->userhash.load_multiplier = pow(p->userhash.load_multiplier, 1.0 / Kk1);
@@ -140,6 +123,8 @@ peerUserHashInit(void)
         X_last = p->userhash.load_multiplier;
         P_last = p->userhash.load_factor;
     }
+
+    TheUserHashPeers.assign(rawUserHashPeers.begin(), rawUserHashPeers.end());
 }
 
 static void
@@ -152,17 +137,15 @@ peerUserHashRegisterWithCacheManager(void)
 CachePeer *
 peerUserHashSelectParent(PeerSelector *ps)
 {
-    int k;
     const char *c;
     CachePeer *p = nullptr;
-    CachePeer *tp;
     unsigned int user_hash = 0;
     unsigned int combined_hash;
     double score;
     double high_score = 0;
     const char *key = nullptr;
 
-    if (n_userhash_peers == 0)
+    if (TheUserHashPeers.empty())
         return nullptr;
 
     assert(ps);
@@ -181,8 +164,10 @@ peerUserHashSelectParent(PeerSelector *ps)
         user_hash += ROTATE_LEFT(user_hash, 19) + *c;
 
     /* select CachePeer */
-    for (k = 0; k < n_userhash_peers; ++k) {
-        tp = userhash_peers[k];
+    for (const auto &tp: TheUserHashPeers) {
+        if (!tp)
+            continue; // peer gone
+
         combined_hash = (user_hash ^ tp->userhash.hash);
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
@@ -190,8 +175,8 @@ peerUserHashSelectParent(PeerSelector *ps)
         debugs(39, 3, *tp << " combined_hash " << combined_hash <<
                " score " << std::setprecision(0) << score);
 
-        if ((score > high_score) && peerHTTPOkay(tp, ps)) {
-            p = tp;
+        if ((score > high_score) && peerHTTPOkay(tp.get(), ps)) {
+            p = tp.get();
             high_score = score;
         }
     }
@@ -213,10 +198,15 @@ peerUserHashCachemgr(StoreEntry * sentry)
                       "Factor",
                       "Actual");
 
-    for (const auto &p: CurrentCachePeers())
+    for (const auto &p: TheUserHashPeers) {
+        if (!p)
+            continue;
         sumfetches += p->stats.fetches;
+    }
 
     for (const auto &p: CurrentCachePeers()) {
+        if (!p)
+            continue;
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
                           p->name, p->userhash.hash,
                           p->userhash.load_multiplier,
