@@ -780,7 +780,6 @@ helperShutdown(const helper::Pointer &hlp)
 
         assert(hlp->childs.n_active > 0);
         -- hlp->childs.n_active;
-
         srv->flags.shutdown = true; /* request it to shut itself down */
 
         if (srv->flags.closing) {
@@ -855,11 +854,11 @@ helper::~helper()
 {
     /* note, don't free id_name, it probably points to static memory */
 
-    // An non-empty queue would leak Helper::Xaction objects, stalling any
+    // A non-empty queue would leak Helper::Xaction objects, stalling any
     // pending (and even future collapsed) transactions. To avoid stalling
     // transactions, we must dropQueued(). We ought to do that when we
-    // discover that no progress is possible rather than here (but we are
-    // still alive due to reference counting).
+    // discover that no progress is possible rather than here because
+    // reference counting may keep this object alive for a long time.
     assert(queue.empty());
 }
 
@@ -875,7 +874,7 @@ helper::handleKilledServer(HelperServerBase *srv)
 
         if (childs.needNew() > 0) {
             srv->flags.shutdown = true;
-            helperOpenServers(helper::Pointer(this));
+            helperOpenServers(this);
         }
     }
 
