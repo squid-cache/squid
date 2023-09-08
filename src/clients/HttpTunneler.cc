@@ -339,7 +339,7 @@ Http::Tunneler::bailOnResponseError(const char *error, HttpReply *errorReply)
 
     ErrorState *err;
     if (errorReply) {
-        err = new ErrorState(request.getRaw(), errorReply);
+        err = new ErrorState(request.getRaw(), errorReply, al);
     } else {
         // with no reply suitable for relaying, answer with 502 (Bad Gateway)
         err = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al);

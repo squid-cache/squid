@@ -446,6 +446,9 @@ TunnelStateData::retryOrBail(const char *context)
     // sendNewError() and sendSavedErrorOr(), used in "error detected" cases.
     if (!savedError)
         saveError(new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request.getRaw(), al));
+
+    al->updateError(Error(savedError->type, savedError->detail));
+
     const auto canSendError = Comm::IsConnOpen(client.conn) && !client.dirty &&
                               clientExpectsConnectResponse();
     if (canSendError)
@@ -1166,6 +1169,7 @@ tunnelStart(ClientHttpRequest * http)
             http->updateLoggingTags(LOG_TCP_TUNNEL);
             err = new ErrorState(ERR_FORWARDING_DENIED, Http::scForbidden, request, http->al);
             http->al->http.code = Http::scForbidden;
+            http->al->updateError(Error(err->type, err->detail));
             errorSend(http->getConn()->clientConnection, err);
             return;
         }
