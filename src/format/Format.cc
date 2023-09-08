@@ -1004,8 +1004,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SQUID_ERROR_DETAIL:
             if (const auto error = al->error()) {
-                if (const auto detail = error->detail) {
-                    sb = detail->brief();
+                if (!error->details.empty()) {
+                    sb = ToSBuf(error->details);
                     out = sb.c_str();
                 }
             }
