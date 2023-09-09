@@ -453,10 +453,6 @@ TunnelStateData::retryOrBail(const char *context)
         return sendError(savedError, bailDescription ? bailDescription : context);
     *status_ptr = savedError->httpStatus;
 
-    // TODO: Refactor FwdState::updateAleWithFinalError(), this code, and
-    // ErrorState::BuildHttpReply() to ensure consistent/efficient ALE updates.
-    al->updateError(Error(savedError->type, savedError->detail));
-
     if (noConnections())
         return deleteThis();
 
