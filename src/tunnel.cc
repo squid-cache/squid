@@ -1169,7 +1169,6 @@ tunnelStart(ClientHttpRequest * http)
             http->updateLoggingTags(LOG_TCP_TUNNEL);
             err = new ErrorState(ERR_FORWARDING_DENIED, Http::scForbidden, request, http->al);
             http->al->http.code = Http::scForbidden;
-            http->al->updateError(Error(err->type, err->detail));
             errorSend(http->getConn()->clientConnection, err);
             return;
         }
