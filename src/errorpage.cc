@@ -1277,8 +1277,7 @@ HttpReply *
 ErrorState::BuildHttpReply()
 {
     // Make sure error codes get back to the client side for logging and
-    // error tracking. XXX: ErrorState should only reflect already recorded
-    // information instead of being responsible for updating records.
+    // error tracking.
     if (request) {
         request->error.update(type, detail);
         request->error.update(SysErrorDetail::NewIfAny(xerrno));
