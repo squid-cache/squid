@@ -98,7 +98,6 @@ public:
     void doneWithControlMsg() override;
 
     /// Traffic parsing
-    bool clientParseRequests();
     void readNextRequest();
 
     /// try to make progress on a transaction or read more I/O
@@ -443,6 +442,7 @@ private:
 
     void checkLogging();
 
+    void parseRequests();
     void clientAfterReadingRequests();
     bool concurrentRequestQueueFilled() const;
 
