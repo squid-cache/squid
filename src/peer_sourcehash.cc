@@ -201,7 +201,7 @@ peerSourceHashCachemgr(StoreEntry * sentry)
         sumfetches += p->stats.fetches;
     }
 
-    for (const auto &p: CurrentCachePeers()) {
+    for (const auto &p: SourceHashPeers()) {
         if (!p)
             continue;
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
