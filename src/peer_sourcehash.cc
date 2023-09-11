@@ -24,7 +24,12 @@
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
 /// sourcehash peers ordered by their sourcehash weight
-static SelectedCachePeers TheSourceHashPeers;
+static auto &
+SourceHashPeers()
+{
+    static const auto hashPeers = new SelectedCachePeers();
+    return *hashPeers;
+}
 
 static OBJH peerSourceHashCachemgr;
 static void peerSourceHashRegisterWithCacheManager(void);
@@ -45,7 +50,7 @@ peerSourceHashInit(void)
     char *t;
     /* Clean up */
 
-    TheSourceHashPeers.clear();
+    SourceHashPeers().clear();
     /* find out which peers we have */
 
     RawCachePeers rawSourceHashPeers;
@@ -119,7 +124,7 @@ peerSourceHashInit(void)
         P_last = p->sourcehash.load_factor;
     }
 
-    TheSourceHashPeers.assign(rawSourceHashPeers.begin(), rawSourceHashPeers.end());
+    SourceHashPeers().assign(rawSourceHashPeers.begin(), rawSourceHashPeers.end());
 }
 
 static void
@@ -141,7 +146,7 @@ peerSourceHashSelectParent(PeerSelector *ps)
     const char *key = nullptr;
     char ntoabuf[MAX_IPSTRLEN];
 
-    if (TheSourceHashPeers.empty())
+    if (SourceHashPeers().empty())
         return nullptr;
 
     assert(ps);
@@ -156,7 +161,7 @@ peerSourceHashSelectParent(PeerSelector *ps)
         user_hash += ROTATE_LEFT(user_hash, 19) + *c;
 
     /* select CachePeer */
-    for (const auto &tp: TheSourceHashPeers) {
+    for (const auto &tp: SourceHashPeers()) {
         if (!tp)
             continue; // peer gone
 
@@ -190,7 +195,7 @@ peerSourceHashCachemgr(StoreEntry * sentry)
                       "Factor",
                       "Actual");
 
-    for (const auto &p: TheSourceHashPeers) {
+    for (const auto &p: SourceHashPeers()) {
         if (!p)
             continue;
         sumfetches += p->stats.fetches;
