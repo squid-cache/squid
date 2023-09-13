@@ -190,7 +190,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
 {
     Parser::Tokenizer tok(uri.path());
 
-    Assure(tok.skip(WellKnownUrlPathPrefix()));
+    Assure(tok.skip(WellKnownUrlPathPrefix()) || tok.skip('/'));
 
     Mgr::Command::Pointer cmd = new Mgr::Command();
     cmd->params.httpUri = SBufToString(uri.absolute());
