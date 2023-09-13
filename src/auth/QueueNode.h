@@ -10,7 +10,9 @@
 #define SQUID_SRC_AUTH_QUEUENODE_H
 
 #include "auth/forward.h"
+#include "auth/UserRequest.h"
 #include "cbdata.h"
+#include "mem/AllocatorProxy.h"
 
 namespace Auth
 {

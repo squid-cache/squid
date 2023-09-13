@@ -11,6 +11,7 @@
 
 #if HAVE_AUTH_MODULE_DIGEST
 
+#include "auth/digest/Config.h"
 #include "auth/UserRequest.h"
 
 class ConnStateData;
