@@ -11,6 +11,8 @@
 
 #include "ip/forward.h"
 
+#include <ostream>
+
 class SBuf;
 
 namespace Ip

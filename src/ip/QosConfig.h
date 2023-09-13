@@ -10,6 +10,8 @@
 #define SQUID_QOSCONFIG_H
 
 #include "acl/forward.h"
+#include "cbdata.h"
+#include "comm/forward.h"
 #include "hier_code.h"
 #include "ip/forward.h"
 #include "ip/NfMarkConfig.h"
