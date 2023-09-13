@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_HTTP_STREAM_H
 #define SQUID_SRC_HTTP_STREAM_H
 
+#include "clientStreamForward.h"
 #include "http/forward.h"
 #include "mem/forward.h"
 #include "StoreIOBuffer.h"
