@@ -9,6 +9,7 @@
 #ifndef SQUID_ACLSOURCEDOMAIN_H
 #define SQUID_ACLSOURCEDOMAIN_H
 
+#include "acl/Checklist.h"
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
 #include "dns/forward.h"

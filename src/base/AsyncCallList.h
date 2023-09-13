@@ -9,6 +9,7 @@
 #ifndef SQUID_BASE_ASYNCCALLLIST_H
 #define SQUID_BASE_ASYNCCALLLIST_H
 
+#include "base/AsyncCall.h"
 #include "base/forward.h"
 #include "base/RefCount.h"
 

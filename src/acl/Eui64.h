@@ -10,13 +10,10 @@
 #define SQUID_ACLEUI64_H
 
 #include "acl/Acl.h"
+#include "eui/Eui64.h"
 
 #include <set>
 
-namespace Eui
-{
-class Eui64;
-};
 
 class ACLEui64 : public ACL
 {
