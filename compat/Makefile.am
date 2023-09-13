@@ -93,8 +93,6 @@ TESTS += testHeaders
 ## Special Universal .h dependency test script
 ## aborts if error encountered
 testHeaders: $(srcdir)/*.h $(srcdir)/os/*.h
-	$(MAKE) $(^:.h=.hdrtest)
+	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 
 CLEANFILES += testHeaders
-
-.PHONY: testHeaders

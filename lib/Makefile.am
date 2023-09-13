@@ -81,8 +81,7 @@ tests_testRFC1738_LDFLAGS = $(LIBADD_DL)
 ## Special Universal .h dependency test script
 ## aborts if error encountered
 testHeaders: $(top_srcdir)/include/*.h
-	$(MAKE) $(^:.h=.hdrtest)
+	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 
 TESTS += testHeaders
 CLEANFILES += testHeaders
-.PHONY: testHeaders

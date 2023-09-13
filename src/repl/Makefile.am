@@ -28,7 +28,7 @@ TESTS += testHeaders
 ## Special Universal .h dependency test script
 ## aborts if error encountered
 testHeaders: $(srcdir)/heap/*.h
-	$(MAKE) $(^:.h=.hdrtest)
+	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 ## ./ has no .h files.
 ## ./lru/ has no .h files.
 

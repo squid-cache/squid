@@ -71,7 +71,7 @@ TESTS += testHeaders
 ## Special Universal .h dependency test script
 ## aborts if error encountered
 testHeaders: $(srcdir)/ufs/*.h $(srcdir)/rock/*.h
-	$(MAKE) $(^:.h=.hdrtest)
+	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 ## diskd/ has no .h files
 ## aufs/ has no .h files
 ## ./ has no .h files

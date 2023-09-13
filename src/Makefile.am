@@ -2741,12 +2741,9 @@ tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 ## Run the unit tests. check_PROGRAMS only builds the binaries.
 TESTS += $(check_PROGRAMS) testHeaders
 
-## Special Universal .h dependency test script
-## aborts if error encountered
 testHeaders: $(srcdir)/*.h $(srcdir)/DiskIO/*.h $(srcdir)/DiskIO/*/*.h
-	$(MAKE) $(^:.h=.hdrtest)
+	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 ## src/repl/ has no .h files and its own makefile.
 
-# CLEANFILES += testHeaders
-.PHONY: testHeaders
+CLEANFILES += testHeaders
 

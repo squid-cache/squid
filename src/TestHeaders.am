@@ -14,12 +14,9 @@ TESTS += testHeaders
 ## .h dependency test script
 ## aborts build process on errors; XXX: even with "make -k"
 testHeaders: $(srcdir)/*.h
-	$(MAKE) $(^:.h=.hdrtest)
+	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 
 ## XXX: this is only needed because testheaders.sh creates a dummy file called
 ## testHeaders and distclean does not know about it.
 ## Remove when testheaders.sh and its users are fixed.
 CLEANFILES += testHeaders
-
-
-.PHONY: testHeaders
