@@ -13,6 +13,7 @@
 
 #if USE_DELAY_POOLS
 #include "DelayIdComposite.h"
+#include "mem/AllocatorProxy.h"
 
 class NullDelayId : public DelayIdComposite
 {

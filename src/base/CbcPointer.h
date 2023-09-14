@@ -12,7 +12,6 @@
 #include "base/TextException.h"
 #include "cbdata.h"
 #include "debug/Stream.h"
-#include "errorpage.h"
 
 /**
  \ingroup CBDATAAPI
