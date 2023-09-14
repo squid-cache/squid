@@ -19,6 +19,8 @@
 #include "ssl/ErrorDetailManager.h"
 #endif
 
+#include <iosfwd>
+
 namespace Security {
 
 /// Details a TLS-related error. Two kinds of errors can be detailed:
@@ -81,16 +83,15 @@ private:
     ErrorDetail(ErrorCode err, int aSysErrorNo);
 
     /* methods for formatting error details using admin-configurable %codes */
-    const char *subject() const;
-    const char *ca_name() const;
-    const char *cn() const;
-    const char *notbefore() const;
-    const char *notafter() const;
-    const SBuf err_code() const;
-    const char *err_code_legacy() const;
-    const char *err_descr() const;
-    const char *err_lib_error() const;
-    size_t convert(const char *code, const char **value) const;
+    void subject(std::ostream &os) const;
+    void ca_name(std::ostream &os) const;
+    void cn(std::ostream &os) const;
+    void notbefore(std::ostream &os) const;
+    void notafter(std::ostream &os) const;
+    void err_code(std::ostream &os) const;
+    void err_descr(std::ostream &os) const;
+    void err_lib_error(std::ostream &os) const;
+    size_t convert(const char *code, std::ostream &os) const;
 
     CertPointer peer_cert; ///< A pointer to the peer certificate
     CertPointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)
