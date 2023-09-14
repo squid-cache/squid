@@ -11,6 +11,8 @@
 
 #if USE_AUTH
 
+#include "RefCount.h"
+
 #include <vector>
 
 /// HTTP Authentication
