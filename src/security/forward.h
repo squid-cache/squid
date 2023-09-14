@@ -21,6 +21,7 @@
 #include <limits>
 #if USE_OPENSSL
 #include "compat/openssl.h"
+#include "security/LockingPointer.h"
 #if HAVE_OPENSSL_BN_H
 #include <openssl/bn.h>
 #endif
@@ -75,6 +76,16 @@ typedef X509 Certificate;
 typedef struct gnutls_x509_crt_int Certificate;
 #else
 typedef struct notls_x509 Certificate;
+#endif
+
+#if USE_OPENSSL
+// Macro to be used to define the C++ equivalent function of an extern "C"
+// function. The C++ function suffixed with the _cpp extension
+#define CtoCpp1(function, argument)                     \
+    extern "C++" inline void function##_cpp(argument a) \
+    {                                                   \
+        function(a);                                    \
+    }
 #endif
 
 #if USE_OPENSSL
