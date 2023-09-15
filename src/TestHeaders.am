@@ -16,7 +16,5 @@ TESTS += testHeaders
 testHeaders: $(srcdir)/*.h
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 
-## XXX: this is only needed because testheaders.sh creates a dummy file called
-## testHeaders and distclean does not know about it.
-## Remove when testheaders.sh and its users are fixed.
+## needed to remove artifacts used to signal header compile success
 CLEANFILES += testHeaders
