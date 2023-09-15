@@ -102,7 +102,7 @@ public:
     /* RegisteredRunner API */
     void useConfig() override;
 };
-RunnerRegistrationEntry(ClientDbRr);
+DefineRunnerRegistrator(ClientDbRr);
 
 void
 ClientDbRr::useConfig()

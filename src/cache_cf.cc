@@ -4374,7 +4374,7 @@ public:
 
 Ssl::BumpMode sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
 
-RunnerRegistrationEntry(sslBumpCfgRr);
+DefineRunnerRegistrator(sslBumpCfgRr);
 
 void
 sslBumpCfgRr::finalizeConfig()
