@@ -575,7 +575,7 @@ Security::ErrorDetail::subject(std::ostream &os) const
 }
 
 #if USE_OPENSSL
-/// helper function to collect CNs using Ssl::matchX509CommonNames()
+/// a helper class to print CNs extracted using Ssl::matchX509CommonNames()
 class CommonNamesPrinter
 {
 public:
@@ -748,9 +748,9 @@ Security::ErrorDetail::err_lib_error(std::ostream &os) const
  \retval 0 for unsupported codes
 */
 size_t
-Security::ErrorDetail::convert(const char *code, std::ostream &os) const
+Security::ErrorDetail::convert(const char * const code, std::ostream &os) const
 {
-    typedef void (ErrorDetail::*PartDescriber)(std::ostream &os) const; // XXX: use using
+    using PartDescriber = void (ErrorDetail::*)(std::ostream &os) const;
     static const std::map<const char*, PartDescriber> PartDescriberByCode = {
         {"ssl_subject", &ErrorDetail::subject},
         {"ssl_ca_name", &ErrorDetail::ca_name},
@@ -762,7 +762,8 @@ Security::ErrorDetail::convert(const char *code, std::ostream &os) const
         {"ssl_lib_error", &ErrorDetail::err_lib_error}
     };
 
-    // TODO: Adjust the above map to find matching codes without looping.
+    // We can refactor the map to find matches without looping, but that
+    // requires a "starts with" comparison function -- `code` length is unknown.
     for (const auto &pair: PartDescriberByCode) {
         const auto len = strlen(pair.first);
         if (strncmp(code, pair.first, len) == 0) {

@@ -19,8 +19,6 @@
 #include "ssl/ErrorDetailManager.h"
 #endif
 
-#include <iosfwd>
-
 namespace Security {
 
 /// Details a TLS-related error. Two kinds of errors can be detailed:
@@ -82,6 +80,7 @@ public:
 private:
     ErrorDetail(ErrorCode err, int aSysErrorNo);
 
+    // TODO: Rename to printCamelCaseDetailName()?
     /* methods for formatting error details using admin-configurable %codes */
     void subject(std::ostream &os) const;
     void ca_name(std::ostream &os) const;
