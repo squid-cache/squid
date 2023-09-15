@@ -18,6 +18,7 @@ class ReservationId
 {
 public:
     static ReservationId Next();
+    static ReservationId Nil();
 
     bool reserved() const { return id > 0; }
 

@@ -18,6 +18,13 @@ Helper::ReservationId::Next()
     return reservation;
 }
 
+Helper::ReservationId
+Helper::ReservationId::Nil()
+{
+    static ReservationId nil;
+    return nil;
+}
+
 std::ostream &
 Helper::ReservationId::print(std::ostream &os) const
 {
