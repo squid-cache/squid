@@ -553,7 +553,7 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
             os << '%';
         remainder = p + formattingCodeLen;
     }
-    os.write(remainder, strlen(remainder));
+    os << remainder;
     return os.buf();
 }
 
