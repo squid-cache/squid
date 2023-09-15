@@ -11,7 +11,9 @@
 #ifndef SQUID_REFRESH_H_
 #define SQUID_REFRESH_H_
 
+class HttpRequest;
 class RefreshPattern;
+class StoreEntry;
 
 void refreshAddToList(const char *, int, time_t, int, time_t);
 bool refreshIsCachable(const StoreEntry *);

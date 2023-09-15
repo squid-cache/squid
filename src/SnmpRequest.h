@@ -10,7 +10,10 @@
 #define SQUID_SNMPREQUEST_H_
 
 #if SQUID_SNMP
+#include "ip/Address.h"
 #include "snmp_session.h"
+
+class ACLChecklist;
 
 // POD
 class SnmpRequest
