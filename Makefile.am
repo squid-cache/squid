@@ -49,7 +49,6 @@ install-pinger:
 ## hack to insert the test first, before building recursive child directories
 
 TEST_EXTENSIONS = .hdrtest
-hdrtest_LOG_COMPILER = $(srcdir)/test-suite/testheaders.sh
 
 check: have-cppunit check-recursive
 

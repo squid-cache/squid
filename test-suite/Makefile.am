@@ -24,8 +24,7 @@ EXTRA_DIST = \
 	$(srcdir)/squidconf/* \
 	test-functionality.sh \
 	test-sources.sh \
-	test-squid-conf.sh \
-	testheaders.sh
+	test-squid-conf.sh
 
 ESI_ALL_TESTS = \
 	ESIExpressions

@@ -90,8 +90,7 @@ testPreCompiler_LDFLAGS=
 #
 TESTS += testHeaders
 
-## Special Universal .h dependency test script
-## aborts if error encountered
+testHeaders_SOURCES = $(top_srcdir)/test-suite/testHeader.cc.in
 testHeaders: $(srcdir)/*.h $(srcdir)/os/*.h
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 

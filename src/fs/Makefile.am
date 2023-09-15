@@ -77,5 +77,3 @@ testHeaders: $(srcdir)/ufs/*.h $(srcdir)/rock/*.h
 ## ./ has no .h files
 
 CLEANFILES += testHeaders
-
-.PHONY: testHeaders
