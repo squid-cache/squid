@@ -77,7 +77,7 @@ subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(
 EXTENSIONS=.hdrtest
 .h.hdrtest:
 	@echo "testing header $<"
-	@sed 's%[@]HEADER[@]%${<}%' $(top_srcdir)/test-suite/testHeader.cc.in | \
-		$(CXXCOMPILE) -x c++ -c -o "$@" - ; \
+	@sed 's%[@]HEADER[@]%${<}%' $(top_srcdir)/test-suite/testHeader.cc.in >$@.cc ;\
+		$(CXXCOMPILE) -c -o "$@" $@.cc ; \
 		if test $$? -eq 0 ; then  echo "ok - $<"; else echo "not ok - $<"; exit 1; fi; \
-		$(RM) $@
+		$(RM) $@.cc $@
