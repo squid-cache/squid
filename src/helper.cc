@@ -557,19 +557,20 @@ helper::prepSubmit()
     return false;
 }
 
+/// If possible, submit request. Otherwise, either kill Squid or return false.
 bool
-helper::trySubmit(const char *buf, HLPCB * callback, void *data)
+helper::trySubmit(const char *buf, HLPCB * callback, void *data, const Helper::ReservationId &reservation)
 {
     if (!prepSubmit())
         return false; // request was dropped
 
-    submit(buf, callback, data); // will send or queue
+    submit(buf, callback, data, reservation); // will send or queue
     return true; // request submitted or queued
 }
 
 /// dispatches or enqueues a helper requests; does not enforce queue limits
 void
-helper::submit(const char *buf, HLPCB * callback, void *data)
+helper::submit(const char *buf, HLPCB * callback, void *data, const Helper::ReservationId &)
 {
     Helper::Xaction *r = new Helper::Xaction(callback, data, buf);
     submitRequest(r);
@@ -583,17 +584,6 @@ helperStatefulSubmit(const statefulhelper::Pointer &hlp, const char *buf, HLPCB 
 {
     if (!hlp || !hlp->trySubmit(buf, callback, data, reservation))
         SubmissionFailure(hlp, callback, data);
-}
-
-/// If possible, submit request. Otherwise, either kill Squid or return false.
-bool
-statefulhelper::trySubmit(const char *buf, HLPCB * callback, void *data, const Helper::ReservationId & reservation)
-{
-    if (!prepSubmit())
-        return false; // request was dropped
-
-    submit(buf, callback, data, reservation); // will send or queue
-    return true; // request submitted or queued
 }
 
 void

@@ -76,7 +76,7 @@ public:
     Helper::Xaction *nextRequest();
 
     /// If possible, submit request. Otherwise, either kill Squid or return false.
-    bool trySubmit(const char *buf, HLPCB * callback, void *data);
+    bool trySubmit(const char *buf, HLPCB *, void *data, const Helper::ReservationId & = Helper::ReservationId::Nil());
 
     /// Submits a request to the helper or add it to the queue if none of
     /// the servers is available.
@@ -134,7 +134,7 @@ protected:
     bool overloaded() const;
     void syncQueueStats();
     bool prepSubmit();
-    void submit(const char *buf, HLPCB * callback, void *data);
+    virtual void submit(const char *buf, HLPCB *, void *data, const Helper::ReservationId &);
 };
 
 class statefulhelper : public helper
@@ -162,8 +162,8 @@ private:
     /// \return the previously reserved server (if the reservation is still valid) or nil
     helper_stateful_server *findServer(const Helper::ReservationId & reservation);
 
-    void submit(const char *buf, HLPCB * callback, void *data, const Helper::ReservationId & reservation);
-    bool trySubmit(const char *buf, HLPCB * callback, void *data, const Helper::ReservationId & reservation);
+    /* helper API */
+    void submit(const char *, HLPCB *, void *, const Helper::ReservationId &) override;
 
     ///< reserved servers indexed by reservation IDs
     Reservations reservations;
