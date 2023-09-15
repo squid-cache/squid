@@ -78,7 +78,7 @@ typedef struct gnutls_x509_crt_int Certificate;
 typedef struct notls_x509 Certificate;
 #endif
 
-#if USE_OPENSSL
+#if USE_OPENSSL || USE_GNUTLS
 // Macro to be used to define the C++ equivalent function of an extern "C"
 // function. The C++ function suffixed with the _cpp extension
 #define CtoCpp1(function, argument)                     \
@@ -89,8 +89,8 @@ typedef struct notls_x509 Certificate;
 #endif
 
 #if USE_OPENSSL
-CtoCpp1(X509_free, X509 *);
-typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref> > CertPointer;
+    CtoCpp1(X509_free, X509 *);
+    typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref>> CertPointer;
 #elif USE_GNUTLS
 typedef std::shared_ptr<struct gnutls_x509_crt_int> CertPointer;
 #else
