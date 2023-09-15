@@ -41,9 +41,9 @@ public:
     ErrorDetailEntry(const ErrorDetailEntry& ) = default;
     ErrorDetailEntry& operator=(const ErrorDetailEntry&) = default;
     Security::ErrorCode getErrorNumber() const { return error_no; }
-    const SBuf getName() const { return name; }
-    const SBuf getDetail() const{ return detail; }
-    const SBuf getDescription() const { return descr; }
+    SBuf getName() const { return name; }
+    SBuf getDetail() const{ return detail; }
+    SBuf getDescription() const { return descr; }
 };
 
 /**
@@ -59,7 +59,7 @@ public:
      * \return true on success, false otherwise
      */
     bool getRecord(Security::ErrorCode value, ErrorDetailEntry &entry);
-    const SBuf getErrorDescr(Security::ErrorCode value); ///< an error description for an error if exist in list. Returns empty SBuf if not found
+    SBuf getErrorDescr(Security::ErrorCode value); ///< an error description for an error if exist in list. Returns empty SBuf if not found
     const char *getErrorDetail(Security::ErrorCode value); ///< an error details for an error if exist in list.
 
     String errLanguage; ///< The language of the error-details.txt template, if any
@@ -89,7 +89,7 @@ public:
      * \return true on success, false otherwise
      */
     bool getErrorDetail(Security::ErrorCode value, const HttpRequest::Pointer &request, ErrorDetailEntry &entry);
-    const SBuf getDefaultErrorDescr(Security::ErrorCode value); ///< the default error description for a given error
+    SBuf getDefaultErrorDescr(Security::ErrorCode value); ///< the default error description for a given error
     const char *getDefaultErrorDetail(Security::ErrorCode value); ///< the default error details for a given error
 
 private:

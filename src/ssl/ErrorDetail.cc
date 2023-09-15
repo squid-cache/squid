@@ -155,7 +155,7 @@ Ssl::ErrorIsOptional(const char *name)
     return false;
 }
 
-const SBuf
+SBuf
 Ssl::GetErrorDescr(Security::ErrorCode value)
 {
     return ErrorDetailsManager::GetInstance().getDefaultErrorDescr(value);
