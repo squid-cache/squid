@@ -13,6 +13,7 @@
 #include "acl/ParameterizedNode.h"
 #include "ssl/support.h"
 
+class X509;
 namespace Acl
 {
 
