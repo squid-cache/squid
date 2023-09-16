@@ -23,6 +23,7 @@
 #include "MessageDelayPools.h"
 #endif
 #include "Notes.h"
+#include "security/Context.h"
 #include "security/forward.h"
 #if USE_OPENSSL
 #include "ssl/support.h"

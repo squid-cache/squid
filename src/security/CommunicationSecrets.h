@@ -11,6 +11,7 @@
 
 #include "sbuf/SBuf.h"
 #include "security/forward.h"
+#include "security/Session.h"
 
 #include <iosfwd>
 

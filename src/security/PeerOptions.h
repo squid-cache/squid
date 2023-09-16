@@ -11,6 +11,8 @@
 
 #include "base/YesNoNone.h"
 #include "ConfigParser.h"
+#include "security/Context.h"
+#include "security/Session.h"
 #include "security/forward.h"
 #include "security/KeyData.h"
 

@@ -8,18 +8,17 @@
 
 #ifndef SQUID_SRC_SECURITY_FORWARD_H
 #define SQUID_SRC_SECURITY_FORWARD_H
-#if !IN_TESTHEADERS
 
 #include "base/CbDataList.h"
 #include "base/forward.h"
-#include "security/Context.h"
-#include "security/Session.h"
+#include "security/LockingPointer.h"
 
 #if USE_GNUTLS && HAVE_GNUTLS_ABSTRACT_H
 #include <gnutls/abstract.h>
 #endif
 #include <list>
 #include <limits>
+#include <memory>
 #if USE_OPENSSL
 #include "compat/openssl.h"
 #include "security/LockingPointer.h"
@@ -79,7 +78,7 @@ typedef struct gnutls_x509_crt_int Certificate;
 typedef struct notls_x509 Certificate;
 #endif
 
-#if USE_OPENSSL || USE_GNUTLS
+#if USE_OPENSSL || USE_GNUTLS || IN_TESTHEADERS
 // Macro to be used to define the C++ equivalent function of an extern "C"
 // function. The C++ function suffixed with the _cpp extension
 #define CtoCpp1(function, argument)                     \
@@ -245,6 +244,5 @@ enum {
     SQUID_TLS_ERR_END
 };
 
-#endif /* IN_TESTHEADERS */
 #endif /* SQUID_SRC_SECURITY_FORWARD_H */
 
