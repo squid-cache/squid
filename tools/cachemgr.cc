@@ -277,7 +277,7 @@ auth_html(const char *host, int port, const char *user_name)
     printf("  if (x.readyState==4) {\n");
     printf("   if ((x.status>=200 && x.status <= 299) || x.status==401) {\n");
     printf("    var v = x.getResponseHeader('Server');\n");
-    printf("    if (v.substring(0,8) == 'squid/3.' && (v[8]=='H' || parseInt(v.substring(8)) >= 2)) {\n");
+    printf("    if (v.substring(0,6) == 'squid/' || v == 'squid') {\n");
     printf("     var d = document.getElementById('H' + s + 'mgr');\n");
     printf("     if (d.innerHTML == '') d.innerHTML = '<h2>HTTP' + (s=='s'?'S':'') + ' Managed Proxies</h2>';\n");
     printf("     d.innerHTML = d.innerHTML + '<p>Host: <a href=\"http' + s + '://' + t + '/squid-internal-mgr/\">' + t + '</a></p>';\n");
