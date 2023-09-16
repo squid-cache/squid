@@ -807,7 +807,7 @@ process_request(cachemgr_request * req)
     }
 
     if (req->action == nullptr) {
-        req->action = xstrdup("");
+        req->action = xstrdup("menu");
     }
 
     if (strcmp(req->action, "authenticate") == 0) {
