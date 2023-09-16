@@ -283,11 +283,10 @@ auth_html(const char *host, int port, const char *user_name)
     printf("     d.innerHTML = d.innerHTML + '<p>Host: <a href=\"http' + s + '://' + t + '/squid-internal-mgr/\">' + t + '</a></p>';\n");
     printf("     var sv = document.getElementById('server');\n");
     printf("     var op = sv.getElementsByTagName('OPTION');\n");
-    printf("     for(var i=0; i<op.length; i++) {\n");
-    printf("      if (op[i].innerHTML == t) {\n");
-    printf("       sv.removeChild(op[i]);\n");
-    printf("       i--;\n");
-    printf(" }}}}}}\n");
+    printf("     for(var i=0; i<op.length; i++) { if (op[i].innerHTML == t) { sv.removeChild(op[i]); i--; }}\n");
+    printf("     if (sv.getElementsByTagName('OPTION').length == 0) {\n");
+    printf("      document.getElementById('Cmgr').innerHTML = '';\n");
+    printf(" }}}}}\n");
     printf(" x.send(null);\n");
     printf("}\n");
     printf("</script>\n");
