@@ -72,7 +72,7 @@ TestCbcPointer::testConstruction()
         CPPUNIT_ASSERT_EQUAL(expect, ptr.get());
 
         // invalidated by delete operator
-        delete ptr.get();
+        delete expect;
         // memory should remain valid while ptr is set
         CPPUNIT_ASSERT_EQUAL(static_cast<void*>(expect), expect->toCbdata());
         CPPUNIT_ASSERT_EQUAL(expect, ptr.raw());
