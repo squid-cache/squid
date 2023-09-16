@@ -8,6 +8,7 @@
 
 #ifndef SQUID_SRC_SECURITY_FORWARD_H
 #define SQUID_SRC_SECURITY_FORWARD_H
+#if !IN_TESTHEADERS
 
 #include "base/CbDataList.h"
 #include "base/forward.h"
@@ -244,5 +245,6 @@ enum {
     SQUID_TLS_ERR_END
 };
 
+#endif /* IN_TESTHEADERS */
 #endif /* SQUID_SRC_SECURITY_FORWARD_H */
 
