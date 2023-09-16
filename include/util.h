@@ -13,6 +13,11 @@
 #include <arpa/inet.h>
 #endif
 
+/* used for testHeaders */
+#ifndef SQUIDCEXTERN
+#define SQUIDCEXTERN
+#endif
+
 SQUIDCEXTERN void Tolower(char *);
 
 SQUIDCEXTERN double xpercent(double part, double whole);
