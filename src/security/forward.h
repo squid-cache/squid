@@ -11,6 +11,7 @@
 
 #include "base/CbDataList.h"
 #include "base/forward.h"
+#include "security/LockingPointer.h"
 
 #if USE_GNUTLS && HAVE_GNUTLS_ABSTRACT_H
 #include <gnutls/abstract.h>
@@ -20,7 +21,6 @@
 #include <memory>
 #if USE_OPENSSL
 #include "compat/openssl.h"
-#include "security/LockingPointer.h"
 #if HAVE_OPENSSL_BN_H
 #include <openssl/bn.h>
 #endif
