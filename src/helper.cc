@@ -43,23 +43,23 @@ const size_t ReadBufSize(32*1024);
 
 static IOCB helperHandleRead;
 static IOCB helperStatefulHandleRead;
-static void Enqueue(helper * hlp, Helper::Xaction *);
-static helper_server *GetFirstAvailable(const helper::Pointer &);
+static void Enqueue(Helper::Client *, Helper::Xaction *);
+static Helper::Session *GetFirstAvailable(const Helper::Client::Pointer &);
 static helper_stateful_server *StatefulGetFirstAvailable(const statefulhelper::Pointer &);
-static void helperDispatch(helper_server * srv, Helper::Xaction * r);
+static void helperDispatch(Helper::Session *, Helper::Xaction *);
 static void helperStatefulDispatch(helper_stateful_server * srv, Helper::Xaction * r);
-static void helperKickQueue(const helper::Pointer &);
+static void helperKickQueue(const Helper::Client::Pointer &);
 static void helperStatefulKickQueue(const statefulhelper::Pointer &);
 static void helperStatefulServerDone(helper_stateful_server * srv);
 static void StatefulEnqueue(statefulhelper * hlp, Helper::Xaction * r);
 
-CBDATA_CLASS_INIT(helper_server);
+CBDATA_NAMESPACED_CLASS_INIT(Helper, Session);
 CBDATA_CLASS_INIT(helper_stateful_server);
 
-InstanceIdDefinitions(HelperServerBase, "Hlpr");
+InstanceIdDefinitions(Helper::SessionBase, "Hlpr");
 
 void
-HelperServerBase::initStats()
+Helper::SessionBase::initStats()
 {
     stats.uses=0;
     stats.replies=0;
@@ -69,7 +69,7 @@ HelperServerBase::initStats()
 }
 
 void
-HelperServerBase::closePipesSafely(const char *id_name)
+Helper::SessionBase::closePipesSafely(const char *id_name)
 {
 #if _SQUID_WINDOWS_
     shutdown(writePipe->fd, SD_BOTH);
@@ -97,7 +97,7 @@ HelperServerBase::closePipesSafely(const char *id_name)
 }
 
 void
-HelperServerBase::closeWritePipeSafely(const char *id_name)
+Helper::SessionBase::closeWritePipeSafely(const char *id_name)
 {
 #if _SQUID_WINDOWS_
     shutdown(writePipe->fd, (readPipe->fd == writePipe->fd ? SD_BOTH : SD_SEND));
@@ -123,11 +123,11 @@ HelperServerBase::closeWritePipeSafely(const char *id_name)
 }
 
 void
-HelperServerBase::dropQueued()
+Helper::SessionBase::dropQueued()
 {
     while (!requests.empty()) {
         // XXX: re-schedule these on another helper?
-        Helper::Xaction *r = requests.front();
+        const auto r = requests.front();
         requests.pop_front();
         void *cbdata;
         if (cbdataReferenceValidDone(r->request.data, &cbdata)) {
@@ -139,7 +139,7 @@ HelperServerBase::dropQueued()
     }
 }
 
-HelperServerBase::~HelperServerBase()
+Helper::SessionBase::~SessionBase()
 {
     if (rbuf) {
         memFreeBuf(rbuf_sz, rbuf);
@@ -147,7 +147,7 @@ HelperServerBase::~HelperServerBase()
     }
 }
 
-helper_server::~helper_server()
+Helper::Session::~Session()
 {
     wqueue->clean();
     delete wqueue;
@@ -170,9 +170,9 @@ helper_server::~helper_server()
 }
 
 void
-helper_server::dropQueued()
+Helper::Session::dropQueued()
 {
-    HelperServerBase::dropQueued();
+    SessionBase::dropQueued();
     requestsIndex.clear();
 }
 
@@ -193,7 +193,7 @@ helper_stateful_server::~helper_stateful_server()
 }
 
 void
-helperOpenServers(const helper::Pointer &hlp)
+helperOpenServers(const Helper::Client::Pointer &hlp)
 {
     char *s;
     char *progname;
@@ -201,7 +201,6 @@ helperOpenServers(const helper::Pointer &hlp)
     char *procname;
     const char *args[HELPER_MAX_ARGS+1]; // save space for a NULL terminator
     char fd_note_buf[FD_DESC_SZ];
-    helper_server *srv;
     int nargs = 0;
     int k;
     pid_t pid;
@@ -268,7 +267,7 @@ helperOpenServers(const helper::Pointer &hlp)
         ++successfullyStarted;
         ++ hlp->childs.n_running;
         ++ hlp->childs.n_active;
-        srv = new helper_server;
+        const auto srv = new Helper::Session;
         srv->hIpc = hIpc;
         srv->pid = pid;
         srv->initStats();
@@ -301,12 +300,12 @@ helperOpenServers(const helper::Pointer &hlp)
         if (wfd != rfd)
             commSetNonBlocking(wfd);
 
-        AsyncCall::Pointer closeCall = asyncCall(5,4, "helper_server::HelperServerClosed", cbdataDialer(helper_server::HelperServerClosed, srv));
+        AsyncCall::Pointer closeCall = asyncCall(5,4, "Helper::Session::HelperServerClosed", cbdataDialer(Helper::Session::HelperServerClosed, srv));
         comm_add_close_handler(rfd, closeCall);
 
         if (hlp->timeout && hlp->childs.concurrency) {
-            AsyncCall::Pointer timeoutCall = commCbCall(84, 4, "helper_server::requestTimeout",
-                                             CommTimeoutCbPtrFun(helper_server::requestTimeout, srv));
+            AsyncCall::Pointer timeoutCall = commCbCall(84, 4, "Helper::Session::requestTimeout",
+                                             CommTimeoutCbPtrFun(Helper::Session::requestTimeout, srv));
             commSetConnTimeout(srv->readPipe, hlp->timeout, timeoutCall);
         }
 
@@ -458,11 +457,9 @@ helperStatefulOpenServers(const statefulhelper::Pointer &hlp)
 }
 
 void
-helper::submitRequest(Helper::Xaction *r)
+Helper::Client::submitRequest(Helper::Xaction * const r)
 {
-    helper_server *srv;
-
-    if ((srv = GetFirstAvailable(this)))
+    if (const auto srv = GetFirstAvailable(this))
         helperDispatch(srv, r);
     else
         Enqueue(this, r);
@@ -472,7 +469,7 @@ helper::submitRequest(Helper::Xaction *r)
 
 /// handles helperSubmit() and helperStatefulSubmit() failures
 static void
-SubmissionFailure(const helper::Pointer &hlp, HLPCB *callback, void *data)
+SubmissionFailure(const Helper::Client::Pointer &hlp, HLPCB *callback, void *data)
 {
     auto result = Helper::Error;
     if (!hlp) {
@@ -485,7 +482,7 @@ SubmissionFailure(const helper::Pointer &hlp, HLPCB *callback, void *data)
 }
 
 void
-helperSubmit(const helper::Pointer &hlp, const char *buf, HLPCB * callback, void *data)
+helperSubmit(const Helper::Client::Pointer &hlp, const char *buf, HLPCB * callback, void *data)
 {
     if (!hlp || !hlp->trySubmit(buf, callback, data))
         SubmissionFailure(hlp, callback, data);
@@ -493,18 +490,18 @@ helperSubmit(const helper::Pointer &hlp, const char *buf, HLPCB * callback, void
 
 /// whether queuing an additional request would overload the helper
 bool
-helper::queueFull() const {
+Helper::Client::queueFull() const {
     return stats.queue_size >= static_cast<int>(childs.queue_size);
 }
 
 bool
-helper::overloaded() const {
+Helper::Client::overloaded() const {
     return stats.queue_size > static_cast<int>(childs.queue_size);
 }
 
 /// synchronizes queue-dependent measurements with the current queue state
 void
-helper::syncQueueStats()
+Helper::Client::syncQueueStats()
 {
     if (overloaded()) {
         if (overloadStart) {
@@ -531,7 +528,7 @@ helper::syncQueueStats()
 /// returns true if and only if the submission should proceed
 /// may kill Squid if the helper remains overloaded for too long
 bool
-helper::prepSubmit()
+Helper::Client::prepSubmit()
 {
     // re-sync for the configuration may have changed since the last submission
     syncQueueStats();
@@ -558,7 +555,7 @@ helper::prepSubmit()
 }
 
 bool
-helper::trySubmit(const char *buf, HLPCB * callback, void *data)
+Helper::Client::trySubmit(const char * const buf, HLPCB *callback, void *data)
 {
     if (!prepSubmit())
         return false; // request was dropped
@@ -569,9 +566,9 @@ helper::trySubmit(const char *buf, HLPCB * callback, void *data)
 
 /// dispatches or enqueues a helper requests; does not enforce queue limits
 void
-helper::submit(const char *buf, HLPCB * callback, void *data)
+Helper::Client::submit(const char * const buf, HLPCB * const callback, void *data)
 {
-    Helper::Xaction *r = new Helper::Xaction(callback, data, buf);
+    const auto r = new Helper::Xaction(callback, data, buf);
     submitRequest(r);
     debugs(84, DBG_DATA, Raw("buf", buf, strlen(buf)));
 }
@@ -689,7 +686,7 @@ statefulhelper::submit(const char *buf, HLPCB * callback, void *data, const Help
 }
 
 void
-helper::packStatsInto(Packable *p, const char *label) const
+Helper::Client::packStatsInto(Packable * const p, const char * const label) const
 {
     if (label)
         p->appendf("%s:\n", label);
@@ -715,9 +712,9 @@ helper::packStatsInto(Packable *p, const char *label) const
                "Request");
 
     for (dlink_node *link = servers.head; link; link = link->next) {
-        HelperServerBase *srv = static_cast<HelperServerBase *>(link->data);
+        const auto srv = static_cast<SessionBase *>(link->data);
         assert(srv);
-        Helper::Xaction *xaction = srv->requests.empty() ? nullptr : srv->requests.front();
+        const auto xaction = srv->requests.empty() ? nullptr : srv->requests.front();
         double tt = 0.001 * (xaction ? tvSubMsec(xaction->request.dispatch_time, current_time) : tvSubMsec(srv->dispatch_time, srv->answer_time));
         p->appendf("%7u\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "\t%11" PRIu64 "\t%c%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
                    srv->index.value,
@@ -747,14 +744,14 @@ helper::packStatsInto(Packable *p, const char *label) const
 }
 
 bool
-helper::willOverload() const {
+Helper::Client::willOverload() const {
     return queueFull() && !(childs.needNew() || GetFirstAvailable(this));
 }
 
-helper::Pointer
-helper::Make(const char *name)
+Helper::Client::Pointer
+Helper::Client::Make(const char * const name)
 {
-    return new helper(name);
+    return new Client(name);
 }
 
 statefulhelper::Pointer
@@ -764,13 +761,12 @@ statefulhelper::Make(const char *name)
 }
 
 void
-helperShutdown(const helper::Pointer &hlp)
+helperShutdown(const Helper::Client::Pointer &hlp)
 {
     dlink_node *link = hlp->servers.head;
 
     while (link) {
-        helper_server *srv;
-        srv = (helper_server *)link->data;
+        const auto srv = static_cast<Helper::Session *>(link->data);
         link = link->next;
 
         if (srv->flags.shutdown) {
@@ -847,17 +843,17 @@ helperStatefulShutdown(const statefulhelper::Pointer &hlp)
     }
 }
 
-helper::~helper()
+Helper::Client::~Client()
 {
     /* note, don't free id_name, it probably points to static memory */
 
     // TODO: if the queue is not empty it will leak Helper::Request's
     if (!queue.empty())
-        debugs(84, DBG_CRITICAL, "WARNING: freeing " << id_name << " helper with " << stats.queue_size << " requests queued");
+        debugs(84, DBG_CRITICAL, "WARNING: freeing " << id_name << " helper client with " << stats.queue_size << " requests queued");
 }
 
 void
-helper::handleKilledServer(HelperServerBase *srv, bool &needsNewServers)
+Helper::Client::handleKilledServer(SessionBase * const srv, bool &needsNewServers)
 {
     needsNewServers = false;
     if (!srv->flags.shutdown) {
@@ -875,7 +871,7 @@ helper::handleKilledServer(HelperServerBase *srv, bool &needsNewServers)
 }
 
 void
-helper::handleFewerServers(const bool madeProgress)
+Helper::Client::handleFewerServers(const bool madeProgress)
 {
     const auto needNew = childs.needNew();
 
@@ -895,7 +891,7 @@ helper::handleFewerServers(const bool madeProgress)
 }
 
 void
-helper_server::HelperServerClosed(helper_server *srv)
+Helper::Session::HelperServerClosed(Session * const srv)
 {
     const auto hlp = srv->parent;
 
@@ -911,8 +907,8 @@ helper_server::HelperServerClosed(helper_server *srv)
     delete srv;
 }
 
-// XXX: Almost duplicates helper_server::HelperServerClosed() because helperOpenServers() is not a virtual method of the `helper` class
-// TODO: Fix the `helper` class hierarchy to use virtual functions.
+// XXX: Almost duplicates Helper::Session::HelperServerClosed() because helperOpenServers() is not a virtual method of the `Helper::Client` class
+// TODO: Fix the `Helper::Client` class hierarchy to use virtual functions.
 void
 helper_stateful_server::HelperServerClosed(helper_stateful_server *srv)
 {
@@ -931,10 +927,10 @@ helper_stateful_server::HelperServerClosed(helper_stateful_server *srv)
 }
 
 Helper::Xaction *
-helper_server::popRequest(int request_number)
+Helper::Session::popRequest(const int request_number)
 {
-    Helper::Xaction *r = nullptr;
-    helper_server::RequestIndex::iterator it;
+    Xaction *r = nullptr;
+    RequestIndex::iterator it;
     if (parent->childs.concurrency) {
         // If concurrency supported retrieve request from ID
         it = requestsIndex.find(request_number);
@@ -954,7 +950,7 @@ helper_server::popRequest(int request_number)
 
 /// Calls back with a pointer to the buffer with the helper output
 static void
-helperReturnBuffer(helper_server * srv, const helper::Pointer &hlp, char * msg, size_t msgSize, char * msgEnd)
+helperReturnBuffer(Helper::Session * srv, const Helper::Client::Pointer &hlp, char * msg, size_t msgSize, char * msgEnd)
 {
     if (Helper::Xaction *r = srv->replyXaction) {
         const bool hasSpace = r->reply.accumulate(msg, msgSize);
@@ -1020,7 +1016,7 @@ helperReturnBuffer(helper_server * srv, const helper::Pointer &hlp, char * msg, 
 static void
 helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::Flag flag, int, void *data)
 {
-    helper_server *srv = (helper_server *)data;
+    const auto srv = static_cast<Helper::Session *>(data);
     const auto hlp = srv->parent;
     assert(cbdataReferenceValid(data));
 
@@ -1241,7 +1237,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
 
 /// Handles a request when all running helpers, if any, are busy.
 static void
-Enqueue(helper * hlp, Helper::Xaction * r)
+Enqueue(Helper::Client * const hlp, Helper::Xaction * const r)
 {
     hlp->queue.push(r);
     ++ hlp->stats.queue_size;
@@ -1299,7 +1295,7 @@ StatefulEnqueue(statefulhelper * hlp, Helper::Xaction * r)
 }
 
 Helper::Xaction *
-helper::nextRequest()
+Helper::Client::nextRequest()
 {
     if (queue.empty())
         return nullptr;
@@ -1310,12 +1306,11 @@ helper::nextRequest()
     return r;
 }
 
-static helper_server *
-GetFirstAvailable(const helper::Pointer &hlp)
+static Helper::Session *
+GetFirstAvailable(const Helper::Client::Pointer &hlp)
 {
     dlink_node *n;
-    helper_server *srv;
-    helper_server *selected = nullptr;
+    Helper::Session *selected = nullptr;
     debugs(84, 5, "GetFirstAvailable: Running servers " << hlp->childs.n_running);
 
     if (hlp->childs.n_running == 0)
@@ -1323,7 +1318,7 @@ GetFirstAvailable(const helper::Pointer &hlp)
 
     /* Find "least" loaded helper (approx) */
     for (n = hlp->servers.head; n != nullptr; n = n->next) {
-        srv = (helper_server *)n->data;
+        const auto srv = static_cast<Helper::Session *>(n->data);
 
         if (selected && selected->stats.pending <= srv->stats.pending)
             continue;
@@ -1403,7 +1398,7 @@ StatefulGetFirstAvailable(const statefulhelper::Pointer &hlp)
 static void
 helperDispatchWriteDone(const Comm::ConnectionPointer &, char *, size_t, Comm::Flag flag, int, void *data)
 {
-    helper_server *srv = (helper_server *)data;
+    const auto srv = static_cast<Helper::Session *>(data);
 
     srv->writebuf->clean();
     delete srv->writebuf;
@@ -1427,7 +1422,7 @@ helperDispatchWriteDone(const Comm::ConnectionPointer &, char *, size_t, Comm::F
 }
 
 static void
-helperDispatch(helper_server * srv, Helper::Xaction * r)
+helperDispatch(Helper::Session * const srv, Helper::Xaction * const r)
 {
     const auto hlp = srv->parent;
     const uint64_t reqId = ++srv->nextRequestId;
@@ -1439,14 +1434,14 @@ helperDispatch(helper_server * srv, Helper::Xaction * r)
     }
 
     r->request.Id = reqId;
-    helper_server::Requests::iterator it = srv->requests.insert(srv->requests.end(), r);
+    Helper::Session::Requests::iterator it = srv->requests.insert(srv->requests.end(), r);
     r->request.dispatch_time = current_time;
 
     if (srv->wqueue->isNull())
         srv->wqueue->init();
 
     if (hlp->childs.concurrency) {
-        srv->requestsIndex.insert(helper_server::RequestIndex::value_type(reqId, it));
+        srv->requestsIndex.insert(Helper::Session::RequestIndex::value_type(reqId, it));
         assert(srv->requestsIndex.size() == srv->requests.size());
         srv->wqueue->appendf("%" PRIu64 " %s", reqId, r->request.buf);
     } else
@@ -1522,10 +1517,10 @@ helperStatefulDispatch(helper_stateful_server * srv, Helper::Xaction * r)
 }
 
 static void
-helperKickQueue(const helper::Pointer &hlp)
+helperKickQueue(const Helper::Client::Pointer &hlp)
 {
-    Helper::Xaction *r;
-    helper_server *srv;
+    Helper::Xaction *r = nullptr;
+    Helper::Session *srv = nullptr;
 
     while ((srv = GetFirstAvailable(hlp)) && (r = hlp->nextRequest()))
         helperDispatch(srv, r);
@@ -1555,11 +1550,11 @@ helperStatefulServerDone(helper_stateful_server * srv)
 }
 
 void
-helper_server::checkForTimedOutRequests(bool const retry)
+Helper::Session::checkForTimedOutRequests(bool const retry)
 {
     assert(parent->childs.concurrency);
     while(!requests.empty() && requests.front()->request.timedOut(parent->timeout)) {
-        Helper::Xaction *r = requests.front();
+        const auto r = requests.front();
         RequestIndex::iterator it;
         it = requestsIndex.find(r->request.Id);
         assert(it != requestsIndex.end());
@@ -1594,16 +1589,16 @@ helper_server::checkForTimedOutRequests(bool const retry)
 }
 
 void
-helper_server::requestTimeout(const CommTimeoutCbParams &io)
+Helper::Session::requestTimeout(const CommTimeoutCbParams &io)
 {
     debugs(26, 3, io.conn);
-    helper_server *srv = static_cast<helper_server *>(io.data);
+    const auto srv = static_cast<Session *>(io.data);
 
     srv->checkForTimedOutRequests(srv->parent->retryTimedOut);
 
-    debugs(84, 3, io.conn << " establish new helper_server::requestTimeout");
-    AsyncCall::Pointer timeoutCall = commCbCall(84, 4, "helper_server::requestTimeout",
-                                     CommTimeoutCbPtrFun(helper_server::requestTimeout, srv));
+    debugs(84, 3, io.conn << " establish a new timeout");
+    AsyncCall::Pointer timeoutCall = commCbCall(84, 4, "Helper::Session::requestTimeout",
+                                     CommTimeoutCbPtrFun(Session::requestTimeout, srv));
 
     const int timeSpent = srv->requests.empty() ? 0 : (squid_curtime - srv->requests.front()->request.dispatch_time.tv_sec);
     const int timeLeft = max(1, (static_cast<int>(srv->parent->timeout) - timeSpent));
