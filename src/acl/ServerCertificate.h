@@ -11,9 +11,9 @@
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
+#include "security/forward.h"
 #include "ssl/support.h"
 
-class X509;
 namespace Acl
 {
 
