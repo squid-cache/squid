@@ -10,6 +10,8 @@
 #define SQUID_SRC_HTTP_STREAM_H
 
 #include "clientStreamForward.h"
+#include "comm/forward.h"
+#include "debug/Stream.h"
 #include "error/Error.h"
 #include "http/forward.h"
 #include "log/forward.h"
