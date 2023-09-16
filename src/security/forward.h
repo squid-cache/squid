@@ -11,7 +11,6 @@
 
 #include "base/CbDataList.h"
 #include "base/forward.h"
-#include "security/LockingPointer.h"
 
 #if USE_GNUTLS && HAVE_GNUTLS_ABSTRACT_H
 #include <gnutls/abstract.h>
@@ -89,8 +88,8 @@ typedef struct notls_x509 Certificate;
 #endif
 
 #if USE_OPENSSL
-    CtoCpp1(X509_free, X509 *);
-    typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref>> CertPointer;
+CtoCpp1(X509_free, X509 *);
+typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref>> CertPointer;
 #elif USE_GNUTLS
 typedef std::shared_ptr<struct gnutls_x509_crt_int> CertPointer;
 #else
