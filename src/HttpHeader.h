@@ -214,7 +214,7 @@ namespace Http {
  * a performance regression. The underlying code needs to be reimplemented
  * here, avoiding the performance regression
  */
-SBuf SlowlyParseQuotedString(const char *description, const char *start, int length);
+SBuf SlowlyParseQuotedString(const char *description, const char *start, size_t length);
 
 }
 

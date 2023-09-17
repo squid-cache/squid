@@ -236,7 +236,7 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
 }
 
 SBuf
-Http::SlowlyParseQuotedString(const char * const description, const char * const start, const int length)
+Http::SlowlyParseQuotedString(const char * const description, const char * const start, const size_t length)
 {
     String s;
     if (!httpHeaderParseQuotedString(start, length, &s))
