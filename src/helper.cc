@@ -930,10 +930,9 @@ Helper::Xaction *
 Helper::Session::popRequest(const int request_number)
 {
     Xaction *r = nullptr;
-    RequestIndex::iterator it;
     if (parent->childs.concurrency) {
         // If concurrency supported retrieve request from ID
-        it = requestsIndex.find(request_number);
+        const auto it = requestsIndex.find(request_number);
         if (it != requestsIndex.end()) {
             r = *(it->second);
             requests.erase(it->second);
@@ -1235,6 +1234,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
     }
 }
 
+// TODO: replace the first argument with a reference
 /// Handles a request when all running helpers, if any, are busy.
 static void
 Enqueue(Helper::Client * const hlp, Helper::Xaction * const r)
@@ -1434,7 +1434,7 @@ helperDispatch(Helper::Session * const srv, Helper::Xaction * const r)
     }
 
     r->request.Id = reqId;
-    Helper::Session::Requests::iterator it = srv->requests.insert(srv->requests.end(), r);
+    const auto it = srv->requests.insert(srv->requests.end(), r);
     r->request.dispatch_time = current_time;
 
     if (srv->wqueue->isNull())

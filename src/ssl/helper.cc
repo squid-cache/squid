@@ -72,7 +72,7 @@ operator <<(std::ostream &os, const Ssl::GeneratorRequest &gr)
 /// pending Ssl::Helper requests (to all certificate generator helpers combined)
 static Ssl::GeneratorRequests TheGeneratorRequests;
 
-Helper::Client::Pointer Ssl::Helper::ssl_crtd = nullptr;
+Helper::Client::Pointer Ssl::Helper::ssl_crtd;
 
 void Ssl::Helper::Init()
 {
@@ -166,7 +166,7 @@ Ssl::HandleGeneratorReply(void *data, const ::Helper::Reply &reply)
 }
 #endif //USE_SSL_CRTD
 
-Helper::Client::Pointer Ssl::CertValidationHelper::ssl_crt_validator = nullptr;
+Helper::Client::Pointer Ssl::CertValidationHelper::ssl_crt_validator;
 
 void Ssl::CertValidationHelper::Init()
 {

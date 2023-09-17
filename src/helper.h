@@ -30,10 +30,10 @@
 #include <queue>
 #include <unordered_map>
 
+class CommTimeoutCbParams;
+class MemBuf;
 class Packable;
 class wordlist;
-class MemBuf;
-class CommTimeoutCbParams;
 
 namespace Helper
 {
@@ -225,7 +225,7 @@ public:
         bool shutdown;
     } flags;
 
-    typedef std::list<Xaction *> Requests;
+    using Requests = std::list<Xaction *>;
     Requests requests; ///< requests in order of submission/expiration
 
     struct {
