@@ -83,6 +83,7 @@ bool HttpHeader::Isolate(const char **, size_t, const char **, const char **) ST
 bool HttpHeader::needUpdate(const HttpHeader *) const STUB_RETVAL(false)
 bool HttpHeader::skipUpdateHeader(const Http::HdrType) const STUB_RETVAL(false)
 int httpHeaderParseQuotedString(const char *, const int, String *) STUB_RETVAL(-1)
+SBuf Http::SlowlyParseQuotedString(const char *, const char *, const int) STUB_RETVAL(SBuf())
 SBuf httpHeaderQuoteString(const char *) STUB_RETVAL(SBuf())
 void httpHeaderCalcMask(HttpHeaderMask *, Http::HdrType [], size_t) STUB
 void httpHeaderInitModule() STUB

@@ -30,7 +30,7 @@ static SBuf
 SlowlyParseQuotedField(const char * const description, const HttpHeader &parser, const char * const fieldName)
 {
     const auto fieldValue = parser.getByName(fieldName);
-    return SlowlyParseQuotedString(description, fieldValue.termedBuf(), fieldValue.size());
+    return Http::SlowlyParseQuotedString(description, fieldValue.termedBuf(), fieldValue.size());
 }
 
 Ssl::ErrorDetailEntry::ErrorDetailEntry(const SBuf &aName, const HttpHeader &fields):

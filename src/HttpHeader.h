@@ -199,6 +199,8 @@ private:
 
 int httpHeaderParseQuotedString(const char *start, const int len, String *val);
 
+namespace Http {
+
 /**
  * Parses a quoted-string field (RFC 2616 section 2.2), complains if
  * something went wrong, returns non-zero on success.
@@ -213,6 +215,8 @@ int httpHeaderParseQuotedString(const char *start, const int len, String *val);
  * here, avoiding the performance regression
  */
 SBuf SlowlyParseQuotedString(const char *description, const char *start, int length);
+
+}
 
 /// quotes string using RFC 7230 quoted-string rules
 SBuf httpHeaderQuoteString(const char *raw);
