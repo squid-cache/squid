@@ -42,7 +42,8 @@ namespace Mgr
 {
 class ActionPasswordList;
 } // namespace Mgr
-class CachePeer;
+
+class CachePeers;
 class CustomLog;
 class CpuAffinityMap;
 class DebugMessages;
@@ -242,7 +243,7 @@ public:
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
     wordlist *mcast_group_list;
-    CachePeer *peers;
+    CachePeers *peers;
     int npeers;
 
     struct {
