@@ -532,19 +532,17 @@ Security::ErrorDetail::brief() const
 SBuf
 Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
 {
-    char const *format = nullptr;
+    std::optional<SBuf> customFormat;
 #if USE_OPENSSL
-    if (Ssl::ErrorDetailsManager::GetInstance().getErrorDetail(error_no, request, detailEntry)) {
-        static SBuf s(detailEntry.getDetail());
-        format = s.c_str(); // underlying storage is safe for the lifetime
-    }
+    if (const auto errorDetail = Ssl::ErrorDetailsManager::GetInstance().findDetail(error_no, request))
+        customFormat = errorDetail->detail;
 #else
     (void)request;
 #endif
-    if (!format)
-        format = "SSL handshake error (%err_name)";
+    auto format = customFormat ? customFormat->c_str() : "SSL handshake error (%err_name)";
 
     SBufStream os;
+    assert(format);
     auto remainder = format;
     while (auto p = strchr(remainder, '%')) {
         os.write(remainder, p - remainder);
@@ -690,8 +688,8 @@ Security::ErrorDetail::err_code(std::ostream &os) const
 {
 #if USE_OPENSSL
     // try detailEntry first because it is faster
-    if (!detailEntry.getName().isEmpty()) {
-        os << detailEntry.getName();
+    if (detailEntry) {
+        os << detailEntry->name;
         return;
     }
 #endif
@@ -708,8 +706,8 @@ Security::ErrorDetail::err_descr(std::ostream &os) const
     }
 
 #if USE_OPENSSL
-    if (detailEntry.isSet()) {
-        os << detailEntry.getDescription();
+    if (detailEntry) {
+        os << detailEntry->descr;
         return;
     }
 #endif

@@ -340,9 +340,8 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         } else // remember another error number
             errs->push_back_unique(Security::CertError(error_no, broken_cert, depth));
 
-        SBuf err_descr = Ssl::GetErrorDescr(error_no);
-        if (!err_descr.isEmpty())
-            debugs(83, 5, err_descr << ": " << *peer_cert);
+        if (const auto descritpion = Ssl::GetErrorDescr(error_no))
+            debugs(83, 5, *descritpion << ": " << *peer_cert);
         else
             debugs(83, DBG_IMPORTANT, "ERROR: SSL unknown certificate error " << error_no << " in " << *peer_cert);
 

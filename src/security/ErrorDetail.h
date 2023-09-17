@@ -19,6 +19,10 @@
 #include "ssl/ErrorDetailManager.h"
 #endif
 
+#if USE_OPENSSL
+#include <optional>
+#endif
+
 namespace Security {
 
 /// Details a TLS-related error. Two kinds of errors can be detailed:
@@ -112,7 +116,7 @@ private:
     int ioErrorNo = 0;
 
     using ErrorDetailEntry = Ssl::ErrorDetailEntry;
-    mutable ErrorDetailEntry detailEntry;
+    mutable std::optional<ErrorDetailEntry> detailEntry;
 #else
     // other TLS libraries do not use custom ErrorDetail members
 #endif

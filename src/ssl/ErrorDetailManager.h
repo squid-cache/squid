@@ -25,25 +25,13 @@ namespace Ssl
 
 class ErrorDetailEntry
 {
-private:
-    Security::ErrorCode error_no = 0; ///< TLS error; \see Security::ErrorCode
-    SBuf name;   ///< a name for the error
-    SBuf detail; ///< for error page %D macro expansion; may contain macros
-    SBuf descr;  ///< short error description (for use in debug messages or error pages)
-
 public:
-    bool isSet() { return error_no != 0; }
-    ErrorDetailEntry() = default;
-    ErrorDetailEntry(Security::ErrorCode anErrorNumber, SBuf aName,
-        SBuf aDetail, SBuf aDescription) :
-        error_no(anErrorNumber), name(aName), detail(aDetail), descr(aDescription)
-        {}
-    ErrorDetailEntry(const ErrorDetailEntry& ) = default;
-    ErrorDetailEntry& operator=(const ErrorDetailEntry&) = default;
-    Security::ErrorCode getErrorNumber() const { return error_no; }
-    SBuf getName() const { return name; }
-    SBuf getDetail() const{ return detail; }
-    SBuf getDescription() const { return descr; }
+    /// extracts quoted detail and descr fields from the given header
+    ErrorDetailEntry(const SBuf &aName, const HttpHeader &);
+
+    SBuf name; ///< a name for the error
+    SBuf detail; ///< for error page %D macro expansion; may contain macros
+    SBuf descr; ///< short error description (for use in debug messages or error pages)
 };
 
 /**
@@ -54,13 +42,10 @@ class ErrorDetailsList : public RefCountable
 {
 public:
     typedef RefCount<ErrorDetailsList> Pointer;
-    /**
-     * Retrieves the error details  for a given error to "entry" object
-     * \return true on success, false otherwise
-     */
-    bool getRecord(Security::ErrorCode value, ErrorDetailEntry &entry);
-    SBuf getErrorDescr(Security::ErrorCode value); ///< an error description for an error if exist in list. Returns empty SBuf if not found
-    const char *getErrorDetail(Security::ErrorCode value); ///< an error details for an error if exist in list.
+
+    /// looks up metadata details for a given error (or nil); returned pointer
+    /// is invalidated by any non-constant operation on the list object
+    const ErrorDetailEntry *findRecord(Security::ErrorCode) const;
 
     String errLanguage; ///< The language of the error-details.txt template, if any
     typedef std::map<Security::ErrorCode, ErrorDetailEntry> ErrorDetails;
@@ -85,21 +70,22 @@ public:
      * the default error details.
      * \param value the error code
      * \param request the current HTTP request.
-     * \param entry where to store error details
-     * \return true on success, false otherwise
      */
-    bool getErrorDetail(Security::ErrorCode value, const HttpRequest::Pointer &request, ErrorDetailEntry &entry);
-    SBuf getDefaultErrorDescr(Security::ErrorCode value); ///< the default error description for a given error
-    const char *getDefaultErrorDetail(Security::ErrorCode value); ///< the default error details for a given error
+    const ErrorDetailEntry *findDetail(Security::ErrorCode value, const HttpRequest::Pointer &request) const;
+
+    /// Default error details for the given TLS error known to Squid (or, if the
+    /// error is unknown, nil). Use findDetail() instead when the error is tied
+    /// to a specific request.
+    const ErrorDetailEntry *findDefaultDetail(Security::ErrorCode) const;
 
 private:
     /// Return cached error details list for a given language if exist
-    ErrorDetailsList::Pointer getCachedDetails(const char *lang);
+    ErrorDetailsList::Pointer getCachedDetails(const char *lang) const;
     /// cache the given error details list.
-    void cacheDetails(ErrorDetailsList::Pointer &errorDetails);
+    void cacheDetails(ErrorDetailsList::Pointer &errorDetails) const;
 
     typedef std::map<std::string, ErrorDetailsList::Pointer> Cache;
-    Cache cache; ///< the error details list cache
+    mutable Cache cache; ///< the error details list cache
     ErrorDetailsList::Pointer theDefaultErrorDetails; ///< the default error details list
 
     /// An instance of ErrorDetailsManager to be used by squid (ssl/ErrorDetails.*)

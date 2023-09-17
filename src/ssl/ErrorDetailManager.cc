@@ -25,6 +25,21 @@ void Ssl::errorDetailClean()
     Ssl::ErrorDetailsManager::Shutdown();
 }
 
+/// XXX: Document this Ssl::ErrorDetailEntry construction helper function
+static SBuf
+SlowlyParseQuotedField(const HttpHeader &parser, const char *fieldName)
+{
+    const auto fieldValue = parser.getByName(fieldName);
+    return SlowlyParseQuotedString(fieldValue.termedBuf(), fieldValue.size());
+}
+
+Ssl::ErrorDetailEntry::ErrorDetailEntry(const SBuf &aName, const HttpHeader &fields):
+    name(aName),
+    detail(SlowlyParseQuotedField(fields, "detail")),
+    descr(SlowlyParseQuotedField(fields, "descr"))
+{
+}
+
 namespace Ssl
 {
 
@@ -43,38 +58,11 @@ private:
 }// namespace Ssl
 
 /******************/
-bool
-Ssl::ErrorDetailsList::getRecord(Security::ErrorCode value, ErrorDetailEntry &entry)
+const Ssl::ErrorDetailEntry *
+Ssl::ErrorDetailsList::findRecord(Security::ErrorCode value) const
 {
     const ErrorDetails::const_iterator it = theList.find(value);
-    if (it != theList.end()) {
-        entry = it->second;
-        return true;
-    }
-    return false;
-}
-
-SBuf
-Ssl::ErrorDetailsList::getErrorDescr(Security::ErrorCode value)
-{
-    const ErrorDetails::const_iterator it = theList.find(value);
-    if (it != theList.end()) {
-        return it->second.getDescription();
-    }
-
-    return SBuf();
-}
-
-const char *
-Ssl::ErrorDetailsList::getErrorDetail(Security::ErrorCode value)
-{
-    const ErrorDetails::const_iterator it = theList.find(value);
-    if (it != theList.end()) {
-        static SBuf rv(it->second.getDetail());
-        return rv.c_str();
-    }
-
-    return nullptr;
+    return it != theList.end() ? &it->second : nullptr;
 }
 
 Ssl::ErrorDetailsManager *Ssl::ErrorDetailsManager::TheDetailsManager = nullptr;
@@ -101,7 +89,7 @@ Ssl::ErrorDetailsManager::ErrorDetailsManager()
     detailTmpl.loadDefault();
 }
 
-Ssl::ErrorDetailsList::Pointer Ssl::ErrorDetailsManager::getCachedDetails(const char *lang)
+Ssl::ErrorDetailsList::Pointer Ssl::ErrorDetailsManager::getCachedDetails(const char *lang) const
 {
     Cache::iterator it;
     it = cache.find(lang);
@@ -113,7 +101,7 @@ Ssl::ErrorDetailsList::Pointer Ssl::ErrorDetailsManager::getCachedDetails(const 
     return nullptr;
 }
 
-void Ssl::ErrorDetailsManager::cacheDetails(ErrorDetailsList::Pointer &errorDetails)
+void Ssl::ErrorDetailsManager::cacheDetails(ErrorDetailsList::Pointer &errorDetails) const
 {
     const char *lang = errorDetails->errLanguage.termedBuf();
     assert(lang);
@@ -121,8 +109,8 @@ void Ssl::ErrorDetailsManager::cacheDetails(ErrorDetailsList::Pointer &errorDeta
         cache[lang] = errorDetails;
 }
 
-bool
-Ssl::ErrorDetailsManager::getErrorDetail(Security::ErrorCode value, const HttpRequest::Pointer &request, ErrorDetailEntry &entry)
+const Ssl::ErrorDetailEntry *
+Ssl::ErrorDetailsManager::findDetail(const Security::ErrorCode value, const HttpRequest::Pointer &request) const
 {
 #if USE_ERR_LOCALES
     String hdr;
@@ -148,32 +136,21 @@ Ssl::ErrorDetailsManager::getErrorDetail(Security::ErrorCode value, const HttpRe
             }
         }
 
-        if (errDetails != nullptr && errDetails->getRecord(value, entry))
-            return true;
+        assert(errDetails);
+        if (const auto entry = errDetails->findRecord(value))
+            return entry;
     }
 #else
     (void)request;
 #endif
 
-    // else try the default
-    if (theDefaultErrorDetails->getRecord(value, entry)) {
-        debugs(83, 8, "Found default details record for error: " << GetErrorName(value));
-        return true;
-    }
-
-    return false;
+    return findDefaultDetail(value);
 }
 
-SBuf
-Ssl::ErrorDetailsManager::getDefaultErrorDescr(Security::ErrorCode value)
+const Ssl::ErrorDetailEntry *
+Ssl::ErrorDetailsManager::findDefaultDetail(const Security::ErrorCode value) const
 {
-    return theDefaultErrorDetails->getErrorDescr(value);
-}
-
-const char *
-Ssl::ErrorDetailsManager::getDefaultErrorDetail(Security::ErrorCode value)
-{
-    return theDefaultErrorDetails->getErrorDetail(value);
+    return theDefaultErrorDetails->findRecord(value);
 }
 
 // Use HttpHeaders parser to parse error-details.txt files
@@ -225,41 +202,23 @@ Ssl::ErrorDetailFile::parse()
             Security::ErrorCode ssl_error = Ssl::GetErrorCode(errorName.termedBuf());
             if (ssl_error != SSL_ERROR_NONE) {
 
-                if (theDetails->getErrorDetail(ssl_error)) {
+                if (theDetails->findRecord(ssl_error)) {
                     debugs(83, DBG_IMPORTANT, "WARNING: duplicate entry: " << errorName);
                     return false;
                 }
 
-                // ErrorDetailEntry &entry = theDetails->theList[ssl_error];
-                // entry.error_no = ssl_error;
-                // entry.name = StringToSBuf(errorName);
-                const SBuf entryName = StringToSBuf(errorName);
-                String tmp = parser.getByName("detail");
-                SBuf entryDetail, entryDescr;
                 try {
-                    entryDetail = SlowlyParseQuotedString(tmp.termedBuf(), tmp.size());
-                } catch (ParseException &) {
-                    debugs(83, DBG_IMPORTANT, "WARNING: missing important field for detail error: " << entryName);
+                    theDetails->theList.try_emplace(ssl_error, StringToSBuf(errorName), parser);
+                }
+                catch (...) {
+                    // TODO: Reject the whole file on this and surrounding problems.
+                    debugs(83, DBG_IMPORTANT, "ERROR: Ignoring bad " << errorName << " detail entry: " << CurrentException);
                     return false;
                 }
-                tmp = parser.getByName("descr");
-                try {
-                    entryDescr = SlowlyParseQuotedString(tmp.termedBuf(), tmp.size());
-                } catch (ParseException &) {
-                    debugs(83, DBG_IMPORTANT, "WARNING: missing important description for detail error: " << entryName);
-                    return false;
-                }
-                theDetails->theList[ssl_error] = ErrorDetailEntry(
-                    ssl_error, entryName, entryDetail, entryDescr
-                );
-                // TODO: Validate "descr" and "detail" field values.
-
-                }
-                else if (!Ssl::ErrorIsOptional(errorName.termedBuf()))
-                {
-                    debugs(83, DBG_IMPORTANT, "WARNING: invalid error detail name: " << errorName);
-                    return false;
-                }
+            } else if (!Ssl::ErrorIsOptional(errorName.termedBuf())) {
+                debugs(83, DBG_IMPORTANT, "WARNING: invalid error detail name: " << errorName);
+                return false;
+            }
 
         }// else {only spaces and black lines; just ignore}
 
