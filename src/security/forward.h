@@ -30,6 +30,9 @@
 #if HAVE_OPENSSL_RSA_H
 #include <openssl/rsa.h>
 #endif
+#if HAVE_OPENSSL_X509_H
+#include <openssl/x509.h>
+#endif
 #endif /* USE_OPENSSL */
 #include <unordered_set>
 

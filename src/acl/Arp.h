@@ -9,6 +9,7 @@
 #ifndef SQUID_ACLARP_H
 #define SQUID_ACLARP_H
 
+#if USE_SQUID_EUI
 #include "acl/Acl.h"
 #include "eui/Eui48.h"
 
@@ -35,5 +36,6 @@ protected:
     AclArpData_t aclArpData;
 };
 
+#endif /* USE_SQUID_EUI */
 #endif /* SQUID_ACLARP_H */
 

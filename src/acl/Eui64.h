@@ -8,6 +8,7 @@
 
 #ifndef SQUID_ACLEUI64_H
 #define SQUID_ACLEUI64_H
+#if USE_SQUID_EUI
 
 #include "acl/Acl.h"
 #include "eui/Eui64.h"
@@ -35,5 +36,6 @@ protected:
     char const *class_;
 };
 
+#endif /* USE_SQUID_EUI */
 #endif /* SQUID_ACLEUI64_H */
 

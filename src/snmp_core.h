@@ -11,11 +11,14 @@
 #ifndef SQUID_SNMP_CORE_H
 #define SQUID_SNMP_CORE_H
 
+#if SQUID_SNMP
+
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
 #include "cache_snmp.h"
 #include "comm/forward.h"
 #include "ip/forward.h"
+#include "snmp_vars.h"
 
 class MemBuf;
 
@@ -66,5 +69,6 @@ public:
 
 } // namespace Acl
 
+#endif /* SQUID_SNMP */
 #endif /* SQUID_SNMP_CORE_H */
 
