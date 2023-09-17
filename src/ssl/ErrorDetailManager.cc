@@ -27,16 +27,16 @@ void Ssl::errorDetailClean()
 
 /// XXX: Document this Ssl::ErrorDetailEntry construction helper function
 static SBuf
-SlowlyParseQuotedField(const HttpHeader &parser, const char *fieldName)
+SlowlyParseQuotedField(const char * const description, const HttpHeader &parser, const char * const fieldName)
 {
     const auto fieldValue = parser.getByName(fieldName);
-    return SlowlyParseQuotedString(fieldValue.termedBuf(), fieldValue.size());
+    return SlowlyParseQuotedString(description, fieldValue.termedBuf(), fieldValue.size());
 }
 
 Ssl::ErrorDetailEntry::ErrorDetailEntry(const SBuf &aName, const HttpHeader &fields):
     name(aName),
-    detail(SlowlyParseQuotedField(fields, "detail")),
-    descr(SlowlyParseQuotedField(fields, "descr"))
+    detail(SlowlyParseQuotedField("error 'detail' field", fields, "detail")),
+    descr(SlowlyParseQuotedField("error 'descr' field", fields, "descr"))
 {
 }
 
