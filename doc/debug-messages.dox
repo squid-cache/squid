@@ -66,5 +66,6 @@ ID Message gist
 66 WARNING: BCP 177 violation. Detected non-functional IPv6 loopback.
 67 WARNING: BCP 177 violation. IPv6 transport forced OFF by build parameters.
 68 Processing Configuration File: ... (depth ...)
+69 WARNING: Unsupported or unexpected from-helper annotation with a name reserved for Squid use: ...advice: If this is a custom annotation, rename it to add a trailing underscore: ...
 \endverbatim
 */
