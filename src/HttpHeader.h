@@ -202,17 +202,18 @@ int httpHeaderParseQuotedString(const char *start, const int len, String *val);
 namespace Http {
 
 /**
- * Parses a quoted-string field (RFC 2616 section 2.2), complains if
- * something went wrong, returns non-zero on success.
- * Un-escapes quoted-pair characters found within the string.
- * start should point at the first double-quote.
+ * Parses an HTTP quoted-string sequence (RFC 9110, Section 5.6.4).
  *
- * Can throw a ParseException if parsing fails
+ * \param a brief human-friendly description of the string being parsed
+ * \param start input buffer (an opening double-quote is expected at *start)
+ * \param length is the number of characters in the given buffer
  *
- * XXX: This is meant to be a temporary bridge to support moving from
- * String to SBuf. Compared to the String-based variant, it contains
- * a performance regression. The underlying code needs to be reimplemented
- * here, avoiding the performance regression
+ * \returns string contents with open/closing quotes stripped and any quoted-pairs decoded
+ *
+ * Avoid this slow function on performance-sensitive code paths.
+ * TODO: Replace with an efficient, SBuf-friendly implementation.
+ *
+ * \sa httpHeaderParseQuotedString() for a String-friendly function.
  */
 SBuf SlowlyParseQuotedString(const char *description, const char *start, size_t length);
 
