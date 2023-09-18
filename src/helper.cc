@@ -849,7 +849,7 @@ Helper::Client::~Client()
 
     // TODO: if the queue is not empty it will leak Helper::Request's
     if (!queue.empty())
-        debugs(84, DBG_CRITICAL, "WARNING: freeing " << id_name << " helper client with " << stats.queue_size << " requests queued");
+        debugs(84, DBG_CRITICAL, "WARNING: freeing " << id_name << " helper with " << stats.queue_size << " requests queued");
 }
 
 void
