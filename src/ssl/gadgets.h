@@ -27,6 +27,9 @@
 #if HAVE_OPENSSL_X509V3_H
 #include <openssl/x509v3.h>
 #endif
+#if HAVE_OPENSSL_PEM_H
+#include <openssl/pem.h>
+#endif
 
 namespace Ssl
 {
