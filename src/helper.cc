@@ -542,7 +542,7 @@ Helper::Client::prepSubmit()
     if (squid_curtime - overloadStart <= 180)
         return true; // also OK: overload has not persisted long enough to panic
 
-    if (childs.onPersistentOverload == Helper::ChildConfig::actDie)
+    if (childs.onPersistentOverload == ChildConfig::actDie)
         fatalf("Too many queued %s requests; see on-persistent-overload.", id_name);
 
     if (!droppedRequests) {
@@ -568,7 +568,7 @@ Helper::Client::trySubmit(const char * const buf, HLPCB *callback, void *data)
 void
 Helper::Client::submit(const char * const buf, HLPCB * const callback, void *data)
 {
-    const auto r = new Helper::Xaction(callback, data, buf);
+    const auto r = new Xaction(callback, data, buf);
     submitRequest(r);
     debugs(84, DBG_DATA, Raw("buf", buf, strlen(buf)));
 }

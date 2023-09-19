@@ -104,7 +104,7 @@ public:
     dlink_list servers;
     std::queue<Xaction *> queue;
     const char *id_name = nullptr;
-    Helper::ChildConfig childs;    ///< Configuration settings for number running.
+    ChildConfig childs;    ///< Configuration settings for number running.
     int ipc_type = 0;
     Ip::Address addr;
     unsigned int droppedRequests = 0; ///< requests not sent during helper overload
@@ -197,7 +197,7 @@ public:
     /// whether the server is locked for exclusive use by a client
     virtual bool reserved() = 0;
 
-    /// dequeues and sends a Helper::Unknown answer to all queued requests
+    /// dequeues and sends an Unknown answer to all queued requests
     virtual void dropQueued();
 
 public:
