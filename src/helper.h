@@ -90,12 +90,12 @@ public:
     /// already overloaded helpers return true
     bool willOverload() const;
 
-    /// Updates interall statistics and start new helper processes after
+    /// Updates internal statistics and starts new helper processes after
     /// an unexpected server exit
     /// \param needsNewServers true if new helper(s) must be started, false otherwise
     void handleKilledServer(SessionBase *, bool &needsNewServers);
 
-    /// Reacts to unexpected helper death(s), including a failure to start helper(s)
+    /// Reacts to unexpected helper process death(s), including a failure to start helper(s)
     /// and an unexpected exit of a previously started helper. \sa handleKilledServer()
     /// \param madeProgress whether the died helper(s) responded to any requests
     void handleFewerServers(bool madeProgress);
