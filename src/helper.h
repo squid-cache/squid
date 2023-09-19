@@ -47,6 +47,7 @@ public:
 };
 
 class SessionBase;
+
 /**
  * Managers a set of individual helper processes with a common queue of requests.
  *
@@ -104,7 +105,7 @@ public:
     dlink_list servers;
     std::queue<Xaction *> queue;
     const char *id_name = nullptr;
-    ChildConfig childs;    ///< Configuration settings for number running.
+    ChildConfig childs; ///< Configuration settings for number running.
     int ipc_type = 0;
     Ip::Address addr;
     unsigned int droppedRequests = 0; ///< requests not sent during helper overload
@@ -139,7 +140,7 @@ protected:
 } // namespace Helper
 
 // TODO: Rename to a *Client.
-class statefulhelper : public Helper::Client
+class statefulhelper: public Helper::Client
 {
 public:
     using Pointer = RefCount<statefulhelper>;
@@ -147,7 +148,6 @@ public:
 
     ~statefulhelper() override = default;
 
-public:
     static Pointer Make(const char *name);
 
     /// reserve the given server
@@ -173,11 +173,13 @@ private:
 
 namespace Helper
 {
+
 /// represents a single helper process
 class SessionBase: public CbdataParent
 {
 public:
     ~SessionBase() override;
+
     /** Closes pipes to the helper safely.
      * Handles the case where the read and write pipes are the same FD.
      *
@@ -204,6 +206,7 @@ public:
     /// Helper program identifier; does not change when contents do,
     ///   including during assignment
     const InstanceId<SessionBase> index;
+
     int pid;
     Ip::Address addr;
     Comm::ConnectionPointer readPipe;
@@ -240,7 +243,7 @@ public:
 
 /// represents a single "stateless helper" process;
 /// supports concurrent helper requests
-class Session : public SessionBase
+class Session: public SessionBase
 {
     CBDATA_CHILD(Session);
 
@@ -266,6 +269,7 @@ public:
     RequestIndex requestsIndex; ///< maps request IDs to requests
 
     ~Session() override;
+
     /// Search in queue for the request with requestId, return the related
     /// Xaction object and remove it from queue.
     /// If concurrency is disabled then the requestId is ignored and the
@@ -292,7 +296,7 @@ public:
 // TODO: Rename to a *Session, matching renamed statefulhelper.
 /// represents a single "stateful helper" process;
 /// supports exclusive transaction reservations
-class helper_stateful_server : public Helper::SessionBase
+class helper_stateful_server: public Helper::SessionBase
 {
     CBDATA_CHILD(helper_stateful_server);
 
