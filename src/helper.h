@@ -128,7 +128,7 @@ public:
 
 protected:
     /// \param name admin-visible helper category (with this process lifetime)
-    explicit Client(const char *name): id_name(name) {}
+    explicit Client(const char * const name): id_name(name) {}
 
     bool queueFull() const;
     bool overloaded() const;
@@ -159,7 +159,7 @@ public:
 private:
     friend void helperStatefulSubmit(const statefulhelper::Pointer &, const char *buf, HLPCB *, void *cbData, const Helper::ReservationId &);
 
-    explicit statefulhelper(const char *name): Helper::Client(name) {}
+    explicit statefulhelper(const char * const name): Helper::Client(name) {}
 
     /// \return the previously reserved server (if the reservation is still valid) or nil
     helper_stateful_server *findServer(const Helper::ReservationId & reservation);
