@@ -91,7 +91,6 @@ testPreCompiler_LDFLAGS=
 TESTS += testHeaders
 
 testHeaders: $(srcdir)/*.h $(srcdir)/os/*.h $(top_srcdir)/test-suite/testHeader.cc.in
-	echo testHeaders rule: PWD=$PWD
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 
 CLEANFILES += testHeaders
