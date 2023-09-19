@@ -223,7 +223,7 @@ storeIdStats(StoreEntry * sentry)
 }
 
 static void
-constructHelperQuery(const char *name, const Helper::Client::Pointer &hlp, HLPCB *replyHandler, ClientHttpRequest * http, HLPCB *handler, void *data, Format::Format *requestExtrasFmt)
+constructHelperQuery(const char * const name, const Helper::Client::Pointer &hlp, HLPCB * const replyHandler, ClientHttpRequest * const http, HLPCB * const handler, void * const data, Format::Format * const requestExtrasFmt)
 {
     char buf[MAX_REDIRECTOR_REQUEST_STRLEN];
     int sz;

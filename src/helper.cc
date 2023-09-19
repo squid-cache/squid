@@ -69,7 +69,7 @@ Helper::SessionBase::initStats()
 }
 
 void
-Helper::SessionBase::closePipesSafely(const char *id_name)
+Helper::SessionBase::closePipesSafely(const char * const id_name)
 {
 #if _SQUID_WINDOWS_
     shutdown(writePipe->fd, SD_BOTH);
@@ -97,7 +97,7 @@ Helper::SessionBase::closePipesSafely(const char *id_name)
 }
 
 void
-Helper::SessionBase::closeWritePipeSafely(const char *id_name)
+Helper::SessionBase::closeWritePipeSafely(const char * const id_name)
 {
 #if _SQUID_WINDOWS_
     shutdown(writePipe->fd, (readPipe->fd == writePipe->fd ? SD_BOTH : SD_SEND));
@@ -482,7 +482,7 @@ SubmissionFailure(const Helper::Client::Pointer &hlp, HLPCB *callback, void *dat
 }
 
 void
-helperSubmit(const Helper::Client::Pointer &hlp, const char *buf, HLPCB * callback, void *data)
+helperSubmit(const Helper::Client::Pointer &hlp, const char * const buf, HLPCB * const callback, void * const data)
 {
     if (!hlp || !hlp->trySubmit(buf, callback, data))
         SubmissionFailure(hlp, callback, data);
@@ -555,7 +555,7 @@ Helper::Client::prepSubmit()
 }
 
 bool
-Helper::Client::trySubmit(const char * const buf, HLPCB *callback, void *data)
+Helper::Client::trySubmit(const char * const buf, HLPCB * const callback, void * const data)
 {
     if (!prepSubmit())
         return false; // request was dropped
@@ -566,7 +566,7 @@ Helper::Client::trySubmit(const char * const buf, HLPCB *callback, void *data)
 
 /// dispatches or enqueues a helper requests; does not enforce queue limits
 void
-Helper::Client::submit(const char * const buf, HLPCB * const callback, void *data)
+Helper::Client::submit(const char * const buf, HLPCB * const callback, void * const data)
 {
     const auto r = new Xaction(callback, data, buf);
     submitRequest(r);
@@ -949,7 +949,7 @@ Helper::Session::popRequest(const int request_number)
 
 /// Calls back with a pointer to the buffer with the helper output
 static void
-helperReturnBuffer(Helper::Session * srv, const Helper::Client::Pointer &hlp, char * msg, size_t msgSize, char * msgEnd)
+helperReturnBuffer(Helper::Session * srv, const Helper::Client::Pointer &hlp, char * const msg, const size_t msgSize, const char * const msgEnd)
 {
     if (Helper::Xaction *r = srv->replyXaction) {
         const bool hasSpace = r->reply.accumulate(msg, msgSize);
