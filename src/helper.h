@@ -173,7 +173,7 @@ private:
 
 namespace Helper
 {
-/// represents a single helper process abstraction
+/// represents a single helper process
 class SessionBase: public CbdataParent
 {
 public:
@@ -238,7 +238,7 @@ public:
     void initStats();
 };
 
-/// represents a single helper process,
+/// represents a single "stateless helper" process;
 /// supports concurrent helper requests
 class Session : public SessionBase
 {
@@ -290,8 +290,8 @@ public:
 } // namespace Helper
 
 // TODO: Rename to a *Session, matching renamed statefulhelper.
-/// represents a single helper process that may be
-/// reserved by a transaction for sequential helper requests
+/// represents a single "stateful helper" process;
+/// supports exclusive transaction reservations
 class helper_stateful_server : public Helper::SessionBase
 {
     CBDATA_CHILD(helper_stateful_server);
