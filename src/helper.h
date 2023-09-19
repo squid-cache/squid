@@ -145,7 +145,7 @@ public:
     using Pointer = RefCount<statefulhelper>;
     typedef std::unordered_map<Helper::ReservationId, helper_stateful_server *> Reservations;
 
-    ~statefulhelper() override {}
+    ~statefulhelper() override = default;
 
 public:
     static Pointer Make(const char *name);
