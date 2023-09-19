@@ -1234,7 +1234,6 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
     }
 }
 
-// TODO: replace the first argument with a reference
 /// Handles a request when all running helpers, if any, are busy.
 static void
 Enqueue(Helper::Client * const hlp, Helper::Xaction * const r)
