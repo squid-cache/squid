@@ -138,7 +138,7 @@ protected:
 
 } // namespace Helper
 
-// TODO: rename to a *Session
+// TODO: Rename to a *Client.
 class statefulhelper : public Helper::Client
 {
 public:
@@ -289,7 +289,7 @@ public:
 
 } // namespace Helper
 
-// TODO: rename to a *Session
+// TODO: Rename to a *Session, matching renamed statefulhelper.
 /// represents a single helper process that may be
 /// reserved by a transaction for sequential helper requests
 class helper_stateful_server : public Helper::SessionBase
