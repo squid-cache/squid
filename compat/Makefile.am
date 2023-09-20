@@ -90,7 +90,8 @@ testPreCompiler_LDFLAGS=
 #
 TESTS += testHeaders
 
-testHeaders: $(srcdir)/*.h $(srcdir)/os/*.h $(top_srcdir)/test-suite/testHeader.cc.in
+# testHeaders: $(srcdir)/*.h $(srcdir)/os/*.h $(top_srcdir)/test-suite/testHeader.cc.in
+testHeaders: $(SOURCES) $(top_srcdir)/test-suite/testHeader.cc.in
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 
 CLEANFILES += testHeaders
