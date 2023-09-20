@@ -6,6 +6,7 @@
 ##
 
 include $(top_srcdir)/src/Common.am
+include $(top_srcdir)/src/TestHeaders.am
 
 ## we need our local files too (but avoid -I. at all costs)
 AM_CPPFLAGS += -I$(srcdir)
@@ -21,16 +22,3 @@ libheap_a_SOURCES = \
 	heap/store_heap_replacement.h \
 	heap/store_repl_heap.cc
 
-
-## Until such time as we have a makefile in src/repl/heap etc.
-TESTS += testHeaders
-
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(srcdir)/heap/*.h
-	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
-## ./ has no .h files.
-## ./lru/ has no .h files.
-
-CLEANFILES += testHeaders
-.PHONY: testHeaders
