@@ -2741,7 +2741,8 @@ tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 ## Run the unit tests. check_PROGRAMS only builds the binaries.
 TESTS += $(check_PROGRAMS) testHeaders
 
-testHeaders: $(srcdir)/*.h $(srcdir)/DiskIO/*.h $(srcdir)/DiskIO/*/*.h
+# Can't use SOURCES because we need to filter out tests
+testHeaders: $(libsquid_la_SOURCES) $(squid_SOURCES) $(EXTRA_squid_SOURCES) $(unlinkd_SOURCES)
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 ## src/repl/ has no .h files and its own makefile.
 
