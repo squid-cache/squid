@@ -6,6 +6,7 @@
 ##
 
 include $(top_srcdir)/src/Common.am
+include $(top_srcdir)/src/TestHeaders.am
 
 EXTRA_LTLIBRARIES = libaufs.la libdiskd.la libufs.la librock.la
 noinst_LTLIBRARIES =  $(STORE_LIBS_TO_BUILD) libfs.la
@@ -65,15 +66,3 @@ ufs/clean: clean
 rock/all: librock.la
 rock/clean: clean
 
-
-TESTS += testHeaders
-
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(srcdir)/ufs/*.h $(srcdir)/rock/*.h
-	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
-## diskd/ has no .h files
-## aufs/ has no .h files
-## ./ has no .h files
-
-CLEANFILES += testHeaders
