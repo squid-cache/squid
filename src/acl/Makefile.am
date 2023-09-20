@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 SUBDIRS= external
 
@@ -197,3 +196,12 @@ if ENABLE_EUI
 libacls_la_SOURCES += $(ARP_ACLS)
 endif
 EXTRA_libacls_la_SOURCES += $(ARP_ACLS)
+
+
+TESTS += testHeaders
+
+testHeaders: $(SOURCES)
+	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
+
+## needed to remove artifacts used to signal header compile success
+CLEANFILES += testHeaders

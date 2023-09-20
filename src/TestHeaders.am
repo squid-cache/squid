@@ -7,8 +7,6 @@
 
 TESTS += testHeaders
 
-## .h dependency test script
-## aborts build process on errors; XXX: even with "make -k"
 testHeaders: $(srcdir)/*.h
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 
