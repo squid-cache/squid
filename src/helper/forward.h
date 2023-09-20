@@ -11,10 +11,8 @@
 
 #include "base/forward.h"
 
-class helper;
 class statefulhelper;
 
-class helper_server;
 class helper_stateful_server;
 
 /// helper protocol primitives
@@ -24,7 +22,10 @@ namespace Helper
 class Reply;
 class Request;
 
-using ClientPointer = RefCount<helper>;
+class Client;
+class Session;
+
+using ClientPointer = RefCount<Client>;
 using StatefulClientPointer = RefCount<statefulhelper>;
 
 } // namespace Helper

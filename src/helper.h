@@ -30,6 +30,8 @@
 #include <queue>
 #include <unordered_map>
 
+class CommTimeoutCbParams;
+class MemBuf;
 class Packable;
 class wordlist;
 
@@ -43,9 +45,9 @@ public:
     Helper::Request request;
     Helper::Reply reply;
 };
-}
 
-class HelperServerBase;
+class SessionBase;
+
 /**
  * Managers a set of individual helper processes with a common queue of requests.
  *
@@ -61,26 +63,26 @@ class HelperServerBase;
  * If an overloaded helper has been overloaded for 3+ minutes, an attempt to use
  *   it results in on-persistent-overload action, which may kill worker.
  */
-class helper: public RefCountable
+class Client: public RefCountable
 {
 public:
-    using Pointer = RefCount<helper>;
+    using Pointer = RefCount<Client>;
 
-    /// \returns a newly created instance of the named helper
+    /// \returns a newly created instance of the named helper client
     /// \param name admin-visible helper category (with this process lifetime)
     static Pointer Make(const char *name);
 
-    ~helper();
+    virtual ~Client();
 
     /// \returns next request in the queue, or nil.
-    Helper::Xaction *nextRequest();
+    Xaction *nextRequest();
 
     /// If possible, submit request. Otherwise, either kill Squid or return false.
     bool trySubmit(const char *buf, HLPCB * callback, void *data);
 
     /// Submits a request to the helper or add it to the queue if none of
     /// the servers is available.
-    void submitRequest(Helper::Xaction *r);
+    void submitRequest(Xaction *);
 
     /// Dump some stats about the helper state to a Packable object
     void packStatsInto(Packable *p, const char *label = nullptr) const;
@@ -88,22 +90,22 @@ public:
     /// already overloaded helpers return true
     bool willOverload() const;
 
-    /// Updates interall statistics and start new helper server processes after
+    /// Updates internal statistics and starts new helper processes after
     /// an unexpected server exit
-    /// \param needsNewServers true if new servers must started, false otherwise
-    void handleKilledServer(HelperServerBase *srv, bool &needsNewServers);
+    /// \param needsNewServers true if new helper(s) must be started, false otherwise
+    void handleKilledServer(SessionBase *, bool &needsNewServers);
 
-    /// Reacts to unexpected server death(s), including a failure to start server(s)
-    /// and an unexpected exit of a previously started server. \sa handleKilledServer()
-    /// \param madeProgress whether the died server(s) responded to any requests
+    /// Reacts to unexpected helper process death(s), including a failure to start helper(s)
+    /// and an unexpected exit of a previously started helper. \sa handleKilledServer()
+    /// \param madeProgress whether the died helper(s) responded to any requests
     void handleFewerServers(bool madeProgress);
 
 public:
     wordlist *cmdline = nullptr;
     dlink_list servers;
-    std::queue<Helper::Xaction *> queue;
+    std::queue<Xaction *> queue;
     const char *id_name = nullptr;
-    Helper::ChildConfig childs;    ///< Configuration settings for number running.
+    ChildConfig childs; ///< Configuration settings for number running.
     int ipc_type = 0;
     Ip::Address addr;
     unsigned int droppedRequests = 0; ///< requests not sent during helper overload
@@ -125,10 +127,8 @@ public:
     } stats;
 
 protected:
-    friend void helperSubmit(const helper::Pointer &, const char *buf, HLPCB * callback, void *data);
-
     /// \param name admin-visible helper category (with this process lifetime)
-    explicit helper(const char *name): id_name(name) {}
+    explicit Client(const char * const name): id_name(name) {}
 
     bool queueFull() const;
     bool overloaded() const;
@@ -137,15 +137,17 @@ protected:
     void submit(const char *buf, HLPCB * callback, void *data);
 };
 
-class statefulhelper : public helper
+} // namespace Helper
+
+// TODO: Rename to a *Client.
+class statefulhelper: public Helper::Client
 {
 public:
     using Pointer = RefCount<statefulhelper>;
     typedef std::unordered_map<Helper::ReservationId, helper_stateful_server *> Reservations;
 
-    inline ~statefulhelper() {}
+    ~statefulhelper() override = default;
 
-public:
     static Pointer Make(const char *name);
 
     /// reserve the given server
@@ -157,7 +159,7 @@ public:
 private:
     friend void helperStatefulSubmit(const statefulhelper::Pointer &, const char *buf, HLPCB *, void *cbData, const Helper::ReservationId &);
 
-    explicit statefulhelper(const char *name): helper(name) {}
+    explicit statefulhelper(const char * const name): Helper::Client(name) {}
 
     /// \return the previously reserved server (if the reservation is still valid) or nil
     helper_stateful_server *findServer(const Helper::ReservationId & reservation);
@@ -169,11 +171,15 @@ private:
     Reservations reservations;
 };
 
-/// represents a single helper process abstraction
-class HelperServerBase: public CbdataParent
+namespace Helper
+{
+
+/// represents a single helper process
+class SessionBase: public CbdataParent
 {
 public:
-    ~HelperServerBase() override;
+    ~SessionBase() override;
+
     /** Closes pipes to the helper safely.
      * Handles the case where the read and write pipes are the same FD.
      *
@@ -193,13 +199,14 @@ public:
     /// whether the server is locked for exclusive use by a client
     virtual bool reserved() = 0;
 
-    /// dequeues and sends a Helper::Unknown answer to all queued requests
+    /// dequeues and sends an Unknown answer to all queued requests
     virtual void dropQueued();
 
 public:
     /// Helper program identifier; does not change when contents do,
     ///   including during assignment
-    const InstanceId<HelperServerBase> index;
+    const InstanceId<SessionBase> index;
+
     int pid;
     Ip::Address addr;
     Comm::ConnectionPointer readPipe;
@@ -221,7 +228,7 @@ public:
         bool shutdown;
     } flags;
 
-    typedef std::list<Helper::Xaction *> Requests;
+    using Requests = std::list<Xaction *>;
     Requests requests; ///< requests in order of submission/expiration
 
     struct {
@@ -234,14 +241,11 @@ public:
     void initStats();
 };
 
-class MemBuf;
-class CommTimeoutCbParams;
-
-// TODO: Rename to StatelessHelperServer and rename HelperServerBase to HelperServer.
-/// represents a single "stateless helper" process
-class helper_server : public HelperServerBase
+/// represents a single "stateless helper" process;
+/// supports concurrent helper requests
+class Session: public SessionBase
 {
-    CBDATA_CHILD(helper_server);
+    CBDATA_CHILD(Session);
 
 public:
     uint64_t nextRequestId;
@@ -249,13 +253,13 @@ public:
     MemBuf *wqueue;
     MemBuf *writebuf;
 
-    helper::Pointer parent;
+    Client::Pointer parent;
 
     /// The helper request Xaction object for the current reply .
     /// A helper reply may be distributed to more than one of the retrieved
     /// packets from helper. This member stores the Xaction object as long as
     /// the end-of-message for current reply is not retrieved.
-    Helper::Xaction *replyXaction;
+    Xaction *replyXaction;
 
     /// Whether to ignore current message, because it is timed-out or other reason
     bool ignoreToEom;
@@ -264,18 +268,19 @@ public:
     typedef std::map<uint64_t, Requests::iterator> RequestIndex;
     RequestIndex requestsIndex; ///< maps request IDs to requests
 
-    ~helper_server() override;
+    ~Session() override;
+
     /// Search in queue for the request with requestId, return the related
     /// Xaction object and remove it from queue.
     /// If concurrency is disabled then the requestId is ignored and the
     /// Xaction of the next request in queue is retrieved.
-    Helper::Xaction *popRequest(int requestId);
+    Xaction *popRequest(int requestId);
 
     /// Run over the active requests lists and forces a retry, or timedout reply
     /// or the configured "on timeout response" for timedout requests.
     void checkForTimedOutRequests(bool const retry);
 
-    /*HelperServerBase API*/
+    /* SessionBase API */
     bool reserved() override {return false;}
     void dropQueued() override;
 
@@ -283,12 +288,15 @@ public:
     static void requestTimeout(const CommTimeoutCbParams &io);
 
     /// close handler to handle exited server processes
-    static void HelperServerClosed(helper_server *srv);
+    static void HelperServerClosed(Session *);
 };
 
-// TODO: Rename to StatefulHelperServer and rename HelperServerBase to HelperServer.
-/// represents a single "stateful helper" process
-class helper_stateful_server : public HelperServerBase
+} // namespace Helper
+
+// TODO: Rename to a *Session, matching renamed statefulhelper.
+/// represents a single "stateful helper" process;
+/// supports exclusive transaction reservations
+class helper_stateful_server: public Helper::SessionBase
 {
     CBDATA_CHILD(helper_stateful_server);
 
@@ -313,11 +321,11 @@ public:
     time_t reservationStart; ///< when the last `reservation` was made
 };
 
-void helperOpenServers(const helper::Pointer &);
+void helperOpenServers(const Helper::Client::Pointer &);
 void helperStatefulOpenServers(const statefulhelper::Pointer &);
-void helperSubmit(const helper::Pointer &, const char *buf, HLPCB *, void *cbData);
+void helperSubmit(const Helper::Client::Pointer &, const char *buf, HLPCB *, void *cbData);
 void helperStatefulSubmit(const statefulhelper::Pointer &, const char *buf, HLPCB *, void *cbData, uint64_t reservation);
-void helperShutdown(const helper::Pointer &);
+void helperShutdown(const Helper::Client::Pointer &);
 void helperStatefulShutdown(const statefulhelper::Pointer &);
 
 #endif /* SQUID_HELPER_H */

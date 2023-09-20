@@ -100,7 +100,7 @@ public:
 
     Helper::ChildConfig children;
 
-    helper::Pointer theHelper;
+    Helper::Client::Pointer theHelper;
 
     hash_table *cache;
 
@@ -1113,7 +1113,7 @@ externalAclInit(void)
             p->cache = hash_create((HASHCMP *) strcmp, hashPrime(1024), hash4);
 
         if (!p->theHelper)
-            p->theHelper = helper::Make("external_acl_type");
+            p->theHelper = Helper::Client::Make("external_acl_type");
 
         p->theHelper->cmdline = p->cmdline;
 
