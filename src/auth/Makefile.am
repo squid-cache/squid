@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 SUBDIRS = $(AUTH_MODULES)
 DIST_SUBDIRS = basic digest negotiate ntlm
@@ -64,3 +63,12 @@ Type.cc: Type.h $(top_srcdir)/src/mk-string-arrays.awk
 	$(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk < $(srcdir)/Type.h > $@ || (rm -f $@ ; exit 1)
 
 CLEANFILES += CredentialState.cc Type.cc
+
+
+TESTS += testHeaders
+
+testHeaders: $(SOURCES)
+	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
+
+## needed to remove artifacts used to signal header compile success
+CLEANFILES += testHeaders
