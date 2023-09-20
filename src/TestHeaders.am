@@ -7,7 +7,7 @@
 
 TESTS += testHeaders
 
-testHeaders: $(srcdir)/*.h
+testHeaders: $(SOURCES)
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 
 ## needed to remove artifacts used to signal header compile success

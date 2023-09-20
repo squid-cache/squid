@@ -76,10 +76,11 @@ subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(
 
 EXTENSIONS=.hdrtest
 .h.hdrtest:
+	filepath=`echo $< | sed 's/^[/\.]*//' `; \
 	srcfile=`basename $@`; \
 		sed 's%[@]HEADER[@]%${<}%' "$(top_srcdir)/test-suite/testHeader.cc.in" >"$$srcfile.cc" && \
 		$(CXXCOMPILE) -DIN_TESTHEADERS=1 -c -o "$$srcfile" "$$srcfile.cc" ; \
-		if test $$? -eq 0 ; then  echo "ok - $$srcfile"; else echo "not ok - $$srcfile"; exit 1; fi; \
+		if test $$? -eq 0 ; then  echo "ok - $$filepath"; else echo "not ok - $$filepath"; exit 1; fi; \
 		$(RM) "$$srcfile.cc" "$$srcfile"
 
 # nothing to do, skip
