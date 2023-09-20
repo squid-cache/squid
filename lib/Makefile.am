@@ -78,9 +78,8 @@ tests_testRFC1738_LDADD= \
 tests_testRFC1738_LDFLAGS = $(LIBADD_DL)
 
 
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(top_srcdir)/include/*.h
+## SOURCES cannot be used here
+testHeaders: $(top_srcdir)/include/*.h $(top_srcdir)/test-suite/testHeader.cc.in
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 
 TESTS += testHeaders
