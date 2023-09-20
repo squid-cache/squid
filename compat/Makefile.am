@@ -9,6 +9,7 @@
 #
 
 include $(top_srcdir)/src/Common.am
+include $(top_srcdir)/src/TestHeaders.am
 
 # Ideally this would be 100% inline functions and macro wrappers.
 
@@ -85,13 +86,3 @@ testPreCompiler_SOURCES = \
 	testPreCompiler.cc
 testPreCompiler_LDADD= $(LIBCPPUNIT_LIBS)
 testPreCompiler_LDFLAGS=
-
-# os/ subdir prevents us using src/TestHeaders.am
-#
-TESTS += testHeaders
-
-# testHeaders: $(srcdir)/*.h $(srcdir)/os/*.h $(top_srcdir)/test-suite/testHeader.cc.in
-testHeaders: $(SOURCES) $(top_srcdir)/test-suite/testHeader.cc.in
-	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
-
-CLEANFILES += testHeaders
