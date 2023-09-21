@@ -1049,6 +1049,8 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
                hlp->id_name << " #" << srv->index << ", " << (int)len <<
                " bytes '" << srv->rbuf << "'");
 
+        srv->roffset = 0;
+        srv->rbuf[0] = '\0';
         srv->closePipesSafely(hlp->id_name);
         return;
     }
@@ -1167,6 +1169,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
                hlp->id_name << " #" << srv->index << ", " << (int)len <<
                " bytes '" << srv->rbuf << "'");
 
+        srv->roffset = 0;
         srv->closePipesSafely(hlp->id_name);
         return;
     }
