@@ -17,7 +17,7 @@ namespace Acl
 {
 
 /// a "server_cert_fingerprint" ACL
-class ServerCertificateCheck: public ParameterizedNode< ACLData<X509 *> >
+class ServerCertificateCheck : public ParameterizedNode<ACLData<Security::Certificate *>>
 {
 public:
     /* ACL API */
