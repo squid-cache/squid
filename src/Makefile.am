@@ -2742,7 +2742,7 @@ tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 TESTS += $(check_PROGRAMS) testHeaders
 
 # Can't use SOURCES because we need to filter out unit tests
-testHeaders: $(libsquid_la_SOURCES) $(squid_SOURCES) $(EXTRA_squid_SOURCES) $(unlinkd_SOURCES)
+testHeaders: $(SOURCES) $(top_srcdir)/test-suite/testHeader.cc.in
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 ## src/repl/ has no .h files and its own makefile.
 
