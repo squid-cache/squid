@@ -80,8 +80,9 @@ EXTENSIONS=.hdrtest
 	srcfile=`basename $@`; \
 	sed 's%[@]HEADER[@]%${<}%' "$(top_srcdir)/test-suite/testHeader.cc.in" >"$$srcfile.cc" && \
 	if $(CXXCOMPILE) -DIN_TESTHEADERS=1 -c -o "$$srcfile" "$$srcfile.cc" ; \
-	then echo "ok - $$filepath"; else echo "not ok - $$filepath"; exit 1; fi; \
-	$(RM) "$$srcfile.cc" "$$srcfile"
+	then echo "ok - $$filepath"; $(RM) "$$srcfile.cc" "$$srcfile"; \
+	else echo "not ok - $$filepath"; exit 1; fi
+
 
 # nothing to do, skip
 .cc.hdrtest:
