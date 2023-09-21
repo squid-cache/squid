@@ -456,8 +456,11 @@ munge_menu_line(MemBuf &out, const char *buf, cachemgr_request * req)
     char *a_url;
     char *buf_copy;
 
-    const char bufLen = strlen(buf);
-    if (bufLen < 1 || *buf != ' ') {
+    const auto bufLen = strlen(buf);
+    if (bufLen < 1)
+        return; // nothing to append
+
+    if (*buf != ' ') {
         out.append(buf, bufLen);
         return;
     }
