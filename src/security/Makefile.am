@@ -6,8 +6,7 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-# XXX dependencies make this a proper mess
-# include $(top_srcdir)/src/TestHeaders.am
+include $(top_srcdir)/src/TestHeaders.am
 
 SUBDIRS= cert_generators cert_validators
 
