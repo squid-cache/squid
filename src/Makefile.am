@@ -771,7 +771,7 @@ check_PROGRAMS += tests/testRandomUuid
 tests_testRandomUuid_SOURCES = \
 	tests/testRandomUuid.cc
 nodist_tests_testRandomUuid_SOURCES = \
-	RandomUuid.h \
+	base/RandomUuid.h \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc
 tests_testRandomUuid_LDADD = \
