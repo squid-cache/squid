@@ -8,11 +8,12 @@
 
 #ifndef SQUID_ACLCERTIFICATEDATA_H
 #define SQUID_ACLCERTIFICATEDATA_H
-#if !IN_TESTHEADERS
+#if USE_OPENSSL
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "acl/StringData.h"
+#include "security/forward.h"
 #include "ssl/support.h"
 #include <string>
 #include <list>
