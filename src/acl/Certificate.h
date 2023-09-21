@@ -17,7 +17,7 @@ namespace Acl
 {
 
 /// a "user_cert" or "ca_cert" ACL
-class ClientCertificateCheck : public ParameterizedNode<ACLData<Security::Certificate *>>
+class ClientCertificateCheck: public ParameterizedNode<ACLData<Security::Certificate *> >
 {
 public:
     /* ACL API */
