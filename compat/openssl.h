@@ -18,11 +18,8 @@
 
 #ifndef OPENSSL_COMPAT_H
 #define OPENSSL_COMPAT_H
-#if !IN_TESTHEADERS
 
-#if !USE_OPENSSL
-#error compat/openssl.h depends on USE_OPENSSL
-#endif
+#if USE_OPENSSL
 
 #include <algorithm>
 
@@ -318,6 +315,6 @@ SQUID_OPENSSL_init_ssl(void)
 #endif
 }
 
-#endif /* IN_TESTHEADERS */
+#endif /* USE_OPENSSL */
 #endif /* OPENSSL_COMPAT_H */
 
