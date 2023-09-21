@@ -85,4 +85,3 @@ EXTENSIONS=.hdrtest
 
 # nothing to do, skip
 .cc.hdrtest:
-qless
