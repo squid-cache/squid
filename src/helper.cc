@@ -1045,12 +1045,12 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
 
     if (!srv->stats.pending && !srv->stats.timedout) {
         /* someone spoke without being spoken to */
-        debugs(84, DBG_IMPORTANT, "ERROR: helperHandleRead: unexpected read from " <<
+        debugs(84, DBG_IMPORTANT, "ERROR: Killing helper process after an unexpected read from " <<
                hlp->id_name << " #" << srv->index << ", " << (int)len <<
                " bytes '" << srv->rbuf << "'");
 
-        srv->roffset = 0;
-        srv->rbuf[0] = '\0';
+        srv->closePipesSafely(hlp->id_name);
+        return;
     }
 
     bool needsMore = false;
@@ -1163,7 +1163,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
 
     if (srv->requests.empty()) {
         /* someone spoke without being spoken to */
-        debugs(84, DBG_IMPORTANT, "ERROR: helperStatefulHandleRead: unexpected read from " <<
+        debugs(84, DBG_IMPORTANT, "ERROR: Killing helper process after an unexpected read from " <<
                hlp->id_name << " #" << srv->index << ", " << (int)len <<
                " bytes '" << srv->rbuf << "'");
 
