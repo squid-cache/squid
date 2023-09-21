@@ -78,7 +78,7 @@ tests_testRFC1738_LDADD= \
 tests_testRFC1738_LDFLAGS = $(LIBADD_DL)
 
 
-## SOURCES cannot be used here
+## SOURCES cannot be used here: the header files we want to test are in include/
 testHeaders: $(top_srcdir)/include/*.h $(top_srcdir)/test-suite/testHeader.cc.in
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 
