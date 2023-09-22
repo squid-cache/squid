@@ -2746,10 +2746,8 @@ tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 ## Run the unit tests. check_PROGRAMS only builds the binaries.
 TESTS += $(check_PROGRAMS) testHeaders
 
-# Can't use SOURCES because we need to filter out unit tests
 testHeaders: $(SOURCES) $(top_srcdir)/test-suite/testHeader.cc.in
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
-## src/repl/ has no .h files and its own makefile.
 
 CLEANFILES += testHeaders
 
