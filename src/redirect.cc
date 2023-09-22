@@ -363,7 +363,7 @@ redirectInit(void)
         if (Config.onUrlRewriteTimeout.action == toutActUseConfiguredResponse)
             redirectors->onTimedOutResponse.assign(Config.onUrlRewriteTimeout.response);
 
-        helperOpenServers(redirectors);
+        redirectors->openSessions();
     }
 
     if (Config.Program.store_id) {
@@ -384,7 +384,7 @@ redirectInit(void)
 
         storeIds->retryBrokenHelper = true; // XXX: make this configurable ?
 
-        helperOpenServers(storeIds);
+        storeIds->openSessions();
     }
 
     if (Config.redirector_extras) {
