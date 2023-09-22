@@ -6,7 +6,7 @@
 ##
 
 TESTS += testHeaders
-# append to the variable DONOTTEST with space-separated list
+# append to the variable EXCLUDE_FROM_HDR_TESTING with space-separated list
 # of header files to be skipped in the testing phase.
 # NOTE: only files in the same directory as Makefiule.am are supported
 

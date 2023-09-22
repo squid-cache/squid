@@ -45,7 +45,7 @@ DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" \
 CLEANFILES =
 check_PROGRAMS =
 TESTS =
-DONOTTEST =
+EXCLUDE_FROM_HDR_TESTING =
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
@@ -80,7 +80,7 @@ EXTENSIONS=.hdrtest
 	@srcfilepath=`echo $< | $(SED) 's%^$(top_srcdir)/%%'`; \
 	srcfile=`basename $$srcfilepath`; \
 	tgtfile=`basename $@`; \
-	if test "" != "$(DONOTTEST)" && echo "$(DONOTTEST)" | $(TR) ' ' '\n' | $(GREP) -x -q "$$srcfile" ; then \
+	if test "" != "$(EXCLUDE_FROM_HDR_TESTING)" && echo "$(EXCLUDE_FROM_HDR_TESTING)" | $(TR) ' ' '\n' | $(GREP) -x -q "$$srcfile" ; then \
 		echo "skip - $$srcfilepath"; \
 		exit 0; \
 	fi; \
