@@ -6,6 +6,7 @@
 ##
 
 include $(top_srcdir)/src/Common.am
+include $(top_srcdir)/src/TestHeaders.am
 
 DNSSOURCE = \
 	dns_internal.cc
@@ -2742,12 +2743,3 @@ tests_testEventLoop_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
-
-## Run the unit tests. check_PROGRAMS only builds the binaries.
-TESTS += $(check_PROGRAMS) testHeaders
-
-testHeaders: $(SOURCES) $(top_srcdir)/test-suite/testHeader.cc.in
-	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
-
-CLEANFILES += testHeaders
-
