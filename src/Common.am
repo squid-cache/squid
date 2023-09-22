@@ -81,7 +81,7 @@ EXTENSIONS=.hdrtest
 	srcfile=`basename $$srcfilepath`; \
 	tgtfile=`basename $@`; \
 	if test "" != "$(DONOTTEST)" && echo "$(DONOTTEST)" | $(TR) ' ' '\n' | $(GREP) -x -q "$$srcfile" ; then \
-		echo "skip - $$srcfile"; \
+		echo "skip - $$srcfilepath"; \
 		exit 0; \
 	fi; \
 	$(SED) "s%[@]HEADER[@]%${<}%" "$(top_srcdir)/test-suite/testHeader.cc.in" >"$$tgtfile.cc" && \
