@@ -245,9 +245,5 @@ enum {
     SQUID_TLS_ERR_END
 };
 
-#if !USE_OPENSSL
-using X509 = Security::Certificate;
-#endif
-
 #endif /* SQUID_SRC_SECURITY_FORWARD_H */
 
