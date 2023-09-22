@@ -123,18 +123,14 @@ Helper::SessionBase::closeWritePipeSafely(const char * const id_name)
 }
 
 void
-Helper::SessionBase::dropQueued()
+Helper::SessionBase::dropQueued(Client &client)
 {
     while (!requests.empty()) {
         // XXX: re-schedule these on another helper?
         const auto r = requests.front();
         requests.pop_front();
-        void *cbdata;
-        if (cbdataReferenceValidDone(r->request.data, &cbdata)) {
-            r->reply.result = Helper::Unknown;
-            r->request.callback(cbdata, r->reply);
-        }
-
+        r->reply.result = Helper::Unknown;
+        client.callBack(*r);
         delete r;
     }
 }
@@ -170,9 +166,9 @@ Helper::Session::~Session()
 }
 
 void
-Helper::Session::dropQueued()
+Helper::Session::dropQueued(Client &client)
 {
-    SessionBase::dropQueued();
+    SessionBase::dropQueued(client);
     requestsIndex.clear();
 }
 
@@ -573,6 +569,18 @@ Helper::Client::submit(const char * const buf, HLPCB * const callback, void * co
     debugs(84, DBG_DATA, Raw("buf", buf, strlen(buf)));
 }
 
+void
+Helper::Client::callBack(Xaction &r)
+{
+    const auto callback = r.request.callback;
+    Assure(callback);
+
+    r.request.callback = nullptr;
+    void *cbdata = nullptr;
+    if (cbdataReferenceValidDone(r.request.data, &cbdata))
+        callback(cbdata, r.reply);
+}
+
 /// Submit request or callback the caller with a Helper::Error error.
 /// If the reservation is not set then reserves a new helper.
 void
@@ -664,7 +672,7 @@ statefulhelper::submit(const char *buf, HLPCB * callback, void *data, const Help
         if (!lastServer) {
             debugs(84, DBG_CRITICAL, "ERROR: Helper " << id_name << " reservation expired (" << reservation << ")");
             r->reply.result = Helper::TimedOut;
-            r->request.callback(r->request.data, r->reply);
+            callBack(*r);
             delete r;
             return;
         }
@@ -902,7 +910,7 @@ Helper::Session::HelperServerClosed(Session * const srv)
         helperOpenServers(hlp);
     }
 
-    srv->dropQueued();
+    srv->dropQueued(*hlp);
 
     delete srv;
 }
@@ -921,7 +929,7 @@ helper_stateful_server::HelperServerClosed(helper_stateful_server *srv)
         helperStatefulOpenServers(hlp);
     }
 
-    srv->dropQueued();
+    srv->dropQueued(*hlp);
 
     delete srv;
 }
@@ -971,11 +979,7 @@ helperReturnBuffer(Helper::Session * srv, const Helper::Client::Pointer &hlp, ch
                 debugs(84, DBG_IMPORTANT, "ERROR: helper: " << r->reply << ", attempt #" << (r->request.retries + 1) << " of 2");
                 retry = true;
             } else {
-                HLPCB *callback = r->request.callback;
-                r->request.callback = nullptr;
-                void *cbdata = nullptr;
-                if (cbdataReferenceValidDone(r->request.data, &cbdata))
-                    callback(cbdata, r->reply);
+                hlp->callBack(*r);
             }
         }
 
@@ -1201,7 +1205,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
         if (r && cbdataReferenceValid(r->request.data)) {
             r->reply.finalize();
             r->reply.reservationId = srv->reservationId;
-            r->request.callback(r->request.data, r->reply);
+            hlp->callBack(*r);
         } else {
             debugs(84, DBG_IMPORTANT, "StatefulHandleRead: no callback data registered");
             called = 0;
@@ -1489,7 +1493,7 @@ helperStatefulDispatch(helper_stateful_server * srv, Helper::Xaction * r)
         /* we don't care about releasing this helper. The request NEVER
          * gets to the helper. So we throw away the return code */
         r->reply.result = Helper::Unknown;
-        r->request.callback(r->request.data, r->reply);
+        hlp->callBack(*r);
         /* throw away the placeholder */
         delete r;
         /* and push the queue. Note that the callback may have submitted a new
@@ -1560,23 +1564,22 @@ Helper::Session::checkForTimedOutRequests(bool const retry)
         requestsIndex.erase(it);
         requests.pop_front();
         debugs(84, 2, "Request " << r->request.Id << " timed-out, remove it from queue");
-        void *cbdata;
         bool retried = false;
         if (retry && r->request.retries < MAX_RETRIES && cbdataReferenceValid(r->request.data)) {
             debugs(84, 2, "Retry request " << r->request.Id);
             ++r->request.retries;
             parent->submitRequest(r);
             retried = true;
-        } else if (cbdataReferenceValidDone(r->request.data, &cbdata)) {
+        } else if (cbdataReferenceValid(r->request.data)) {
             if (!parent->onTimedOutResponse.isEmpty()) {
                 if (r->reply.accumulate(parent->onTimedOutResponse.rawContent(), parent->onTimedOutResponse.length()))
                     r->reply.finalize();
                 else
                     r->reply.result = Helper::TimedOut;
-                r->request.callback(cbdata, r->reply);
+                parent->callBack(*r);
             } else {
                 r->reply.result = Helper::TimedOut;
-                r->request.callback(cbdata, r->reply);
+                parent->callBack(*r);
             }
         }
         --stats.pending;
