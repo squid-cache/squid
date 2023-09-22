@@ -8,7 +8,6 @@
 
 #ifndef SQUID_ACLCERTIFICATEDATA_H
 #define SQUID_ACLCERTIFICATEDATA_H
-#if USE_OPENSSL
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -47,6 +46,5 @@ private:
     Ssl::GETX509ATTRIBUTE *sslAttributeCall;
 };
 
-#endif /* IN_TESTHEADERS */
 #endif /* SQUID_ACLCERTIFICATEDATA_H */
 
