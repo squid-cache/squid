@@ -77,18 +77,18 @@ subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(
 
 EXTENSIONS=.hdrtest
 .h.hdrtest:
-	@srcfilepath=`echo $< | $(SED) 's%^$(top_srcdir)/%%'`; \
-	srcfile=`basename $$srcfilepath`; \
-	tgtfile=`basename $@`; \
-	if test "" != "$(EXCLUDE_FROM_HDR_TESTING)" && echo "$(EXCLUDE_FROM_HDR_TESTING)" | $(TR) ' ' '\n' | $(GREP) -x -q "$$srcfile" ; then \
-		echo "skip - $$srcfilepath"; \
+	@SrcFilePath=`echo $< | $(SED) 's%^$(top_srcdir)/%%'`; \
+	SrcFileName=`basename $$SrcFilePath`; \
+	TargetFileName=`basename $@`; \
+	if test "" != "$(EXCLUDE_FROM_HDR_TESTING)" && echo "$(EXCLUDE_FROM_HDR_TESTING)" | $(TR) ' ' '\n' | $(GREP) -x -q "$$SrcFileName" ; then \
+		echo "skip - $$SrcFilePath"; \
 		exit 0; \
 	fi; \
-	$(SED) "s%[@]HEADER[@]%${<}%" "$(top_srcdir)/test-suite/testHeader.cc.in" >"$$tgtfile.cc" && \
-	echo "$(CXXCOMPILE) -DIN_TESTHEADERS=1 -c -o" "$$tgtfile" "$$tgtfile.cc" && \
-	if $(CXXCOMPILE) -DIN_TESTHEADERS=1 -c -o "$$tgtfile" "$$tgtfile.cc" ; \
-	then echo "ok - $$srcfilepath"; $(RM) "$$tgtfile.cc" "$$tgtfile"; \
-	else echo "not ok - $$srcfilepath"; exit 1; fi
+	$(SED) "s%[@]HEADER[@]%${<}%" "$(top_srcdir)/test-suite/testHeader.cc.in" >"$$TargetFileName.cc" && \
+	echo "$(CXXCOMPILE) -DIN_TESTHEADERS=1 -c -o" "$$TargetFileName" "$$TargetFileName.cc" && \
+	if $(CXXCOMPILE) -DIN_TESTHEADERS=1 -c -o "$$TargetFileName" "$$TargetFileName.cc" ; \
+	then echo "ok - $$SrcFilePath"; $(RM) "$$TargetFileName.cc" "$$TargetFileName"; \
+	else echo "not ok - $$SrcFilePath"; exit 1; fi
 
 # nothing to do, skip
 .cc.hdrtest:
