@@ -80,7 +80,7 @@ EXTENSIONS=.hdrtest
 	@SrcFilePath=`echo $< | $(SED) 's%^$(top_srcdir)/%%'`; \
 	SrcFileName=`basename $$SrcFilePath`; \
 	TargetFileName=`basename $@`; \
-	if test "$(EXCLUDE_FROM_HDR_TESTING)" != "" && echo "$(EXCLUDE_FROM_HDR_TESTING)" | $(TR) ' ' '\n' | $(GREP) -x -q "$$SrcFileName" ; then \
+	if test "$(EXCLUDE_FROM_HDR_TESTING)" != "" && echo "$(EXCLUDE_FROM_HDR_TESTING)" | $(TR) ' ' '\n' | $(FGREP) -x -q "$$SrcFileName" ; then \
 		echo "header-test: skip - $$SrcFilePath"; \
 		exit 0; \
 	fi; \
