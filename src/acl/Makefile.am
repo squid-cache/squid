@@ -162,21 +162,23 @@ libacls_la_SOURCES = \
 EXTRA_libacls_la_SOURCES =
 
 SSL_ACLS = \
-        CertificateData.cc \
-        CertificateData.h  \
-        Certificate.cc \
-        Certificate.h  \
+	CertificateData.cc \
+	CertificateData.h  \
+	Certificate.cc \
+	Certificate.h  \
 	ServerCertificate.cc \
 	ServerCertificate.h \
 	ServerName.cc \
 	ServerName.h \
-        SslError.cc \
-        SslError.h \
-        SslErrorData.cc \
-        SslErrorData.h
+	SslError.cc \
+	SslError.h \
+	SslErrorData.cc \
+	SslErrorData.h
 
 if ENABLE_SSL
 libacls_la_SOURCES += $(SSL_ACLS)
+else
+DONOTTEST += $(SSL_ACLS)
 endif
 EXTRA_libacls_la_SOURCES += $(SSL_ACLS)
 
@@ -188,6 +190,8 @@ ADAPT_ACLS= \
 
 if ENABLE_ADAPTATION
 libacls_la_SOURCES += $(ADAPT_ACLS)
+else
+DONOTTEST += $(ADAPT_ACLS)
 endif
 EXTRA_libacls_la_SOURCES += $(ADAPT_ACLS)
 
@@ -195,5 +199,7 @@ ARP_ACLS = Arp.cc Arp.h Eui64.cc Eui64.h
 
 if ENABLE_EUI
 libacls_la_SOURCES += $(ARP_ACLS)
+else
+DONOTTEST += $(ARP_ACLS)
 endif
 EXTRA_libacls_la_SOURCES += $(ARP_ACLS)

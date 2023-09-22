@@ -6,6 +6,9 @@
 ##
 
 TESTS += testHeaders
+# append to the variable DONOTTEST with space-separated list
+# of header files to be skipped in the testing phase.
+# NOTE: only files in the same directory as Makefiule.am are supported
 
 testHeaders: $(SOURCES) $(top_srcdir)/test-suite/testHeader.cc.in
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@

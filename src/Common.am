@@ -45,6 +45,7 @@ DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" \
 CLEANFILES =
 check_PROGRAMS =
 TESTS =
+DONOTTEST =
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
@@ -76,13 +77,18 @@ subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(
 
 EXTENSIONS=.hdrtest
 .h.hdrtest:
-	filepath=`echo $< | sed 's/^[/\.]*//' `; \
-	srcfile=`basename $@`; \
-	sed 's%[@]HEADER[@]%${<}%' "$(top_srcdir)/test-suite/testHeader.cc.in" >"$$srcfile.cc" && \
-	if $(CXXCOMPILE) -DIN_TESTHEADERS=1 -c -o "$$srcfile" "$$srcfile.cc" ; \
-	then echo "ok - $$filepath"; $(RM) "$$srcfile.cc" "$$srcfile"; \
-	else echo "not ok - $$filepath"; exit 1; fi
-
+	@srcfilepath=`echo $< | $(SED) 's%^$(top_srcdir)/%%'`; \
+	srcfile=`basename $$srcfilepath`; \
+	tgtfile=`basename $@`; \
+	if test "" != "$(DONOTTEST)" && echo "$(DONOTTEST)" | $(TR) ' ' '\n' | $(GREP) -x -q "$$srcfile" ; then \
+		echo "skip - $$srcfile"; \
+		exit 0; \
+	fi; \
+	$(SED) "s%[@]HEADER[@]%${<}%" "$(top_srcdir)/test-suite/testHeader.cc.in" >"$$tgtfile.cc" && \
+	echo "$(CXXCOMPILE) -DIN_TESTHEADERS=1 -c -o" "$$tgtfile" "$$tgtfile.cc" && \
+	if $(CXXCOMPILE) -DIN_TESTHEADERS=1 -c -o "$$tgtfile" "$$tgtfile.cc" ; \
+	then echo "ok - $$srcfilepath"; $(RM) "$$tgtfile.cc" "$$tgtfile"; \
+	else echo "not ok - $$srcfilepath"; exit 1; fi
 
 # nothing to do, skip
 .cc.hdrtest:
