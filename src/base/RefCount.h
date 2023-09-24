@@ -15,6 +15,7 @@
 #include "base/Lock.h"
 
 #include <iostream>
+#include <utility>
 
 /**
  * Template for Reference Counting pointers.
@@ -27,6 +28,12 @@ class RefCount
 {
 
 public:
+    /// creates a new C object using given C constructor arguments (if any)
+    /// \returns a refcounting pointer to the created object
+    template<typename... Args>
+    inline static auto Make(Args&&... args) {
+        return RefCount<C>(new C(std::forward<Args>(args)...));
+    }
     RefCount () : p_ (nullptr) {}
 
     RefCount (C const *p) : p_(p) { reference (*this); }
