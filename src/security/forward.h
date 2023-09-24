@@ -81,7 +81,7 @@ typedef struct gnutls_x509_crt_int Certificate;
 typedef struct notls_x509 Certificate;
 #endif
 
-#if USE_OPENSSL || USE_GNUTLS || IN_TESTHEADERS
+#if USE_OPENSSL || USE_GNUTLS
 // Macro to be used to define the C++ equivalent function of an extern "C"
 // function. The C++ function suffixed with the _cpp extension
 #define CtoCpp1(function, argument)                     \
