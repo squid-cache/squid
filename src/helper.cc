@@ -1234,7 +1234,6 @@ Enqueue(Helper::Client * const hlp, Helper::Xaction * const r)
 
     /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
     if (hlp->childs.needNew() > 0) {
-        debugs(84, DBG_CRITICAL, "Starting new " << hlp->id_name << " helpers...");
         hlp->openSessions();
         return;
     }
@@ -1263,7 +1262,6 @@ StatefulEnqueue(statefulhelper * hlp, Helper::Xaction * r)
 
     /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
     if (hlp->childs.needNew() > 0) {
-        debugs(84, DBG_CRITICAL, "Starting new " << hlp->id_name << " helpers...");
         hlp->openSessions();
         return;
     }
