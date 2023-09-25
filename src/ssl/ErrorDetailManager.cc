@@ -25,7 +25,7 @@ void Ssl::errorDetailClean()
     Ssl::ErrorDetailsManager::Shutdown();
 }
 
-/// XXX: Document this Ssl::ErrorDetailEntry construction helper function
+/// ErrorDetailEntry constructor helper that extracts a quoted HTTP field value
 static SBuf
 SlowlyParseQuotedField(const char * const description, const HttpHeader &parser, const char * const fieldName)
 {
@@ -215,6 +215,7 @@ Ssl::ErrorDetailFile::parse()
                     debugs(83, DBG_IMPORTANT, "ERROR: Ignoring bad " << errorName << " detail entry: " << CurrentException);
                     return false;
                 }
+
             } else if (!Ssl::ErrorIsOptional(errorName.termedBuf())) {
                 debugs(83, DBG_IMPORTANT, "WARNING: invalid error detail name: " << errorName);
                 return false;
