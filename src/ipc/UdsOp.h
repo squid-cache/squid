@@ -42,7 +42,7 @@ protected:
     Comm::ConnectionPointer &conn(); ///< creates if needed and returns raw UDS socket descriptor
 
     /// call timedout() if no UDS messages in a given number of seconds
-    void setTimeout(int seconds, const char *handlerName);
+    void setTimeout(time_t seconds, const char *handlerName);
     void clearTimeout(); ///< remove previously set timeout, if any
 
     void setOptions(int newOptions); ///< changes socket options
@@ -92,7 +92,7 @@ private:
 private:
     TypedMsgHdr message; ///< what to send
     int retries; ///< how many times to try after a write error
-    int timeout; ///< total time to send the message
+    time_t timeout; ///< total time to send the message
     bool sleeping; ///< whether we are waiting to retry a failed write
     bool writing; ///< whether Comm started and did not finish writing
 
