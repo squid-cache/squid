@@ -304,7 +304,7 @@ Auth::Basic::Config::init(Auth::SchemeConfig *)
         authbasic_initialised = 1;
 
         if (basicauthenticators == nullptr)
-            basicauthenticators = helper::Make("basicauthenticator");
+            basicauthenticators = Helper::Client::Make("basicauthenticator");
 
         basicauthenticators->cmdline = authenticateProgram;
 

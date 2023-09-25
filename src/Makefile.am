@@ -1691,6 +1691,7 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	String.cc \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
+	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_client_side.cc \
 	tests/stub_debug.cc \
