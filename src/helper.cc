@@ -1599,8 +1599,8 @@ Helper::Session::requestTimeout(const CommTimeoutCbParams &io)
     AsyncCall::Pointer timeoutCall = commCbCall(84, 4, "Helper::Session::requestTimeout",
                                      CommTimeoutCbPtrFun(Session::requestTimeout, srv));
 
-    const int timeSpent = srv->requests.empty() ? 0 : (squid_curtime - srv->requests.front()->request.dispatch_time.tv_sec);
-    const int timeLeft = max(1, (static_cast<int>(srv->parent->timeout) - timeSpent));
+    const time_t timeSpent = srv->requests.empty() ? 0 : (squid_curtime - srv->requests.front()->request.dispatch_time.tv_sec);
+    const time_t timeLeft = max(static_cast<time_t>(1), srv->parent->timeout - timeSpent);
 
     commSetConnTimeout(io.conn, timeLeft, timeoutCall);
 }
