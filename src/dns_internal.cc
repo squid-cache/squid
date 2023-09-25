@@ -834,7 +834,7 @@ idnsDoSendQueryVC(nsvc *vc)
 
     // Comm needs seconds but idnsCheckQueue() will check the exact timeout
     const auto timeout = (Config.Timeout.idns_query % 1000 ?
-                         Config.Timeout.idns_query + 1000 : Config.Timeout.idns_query) / 1000;
+                          Config.Timeout.idns_query + 1000 : Config.Timeout.idns_query) / 1000;
     AsyncCall::Pointer nil;
 
     commSetConnTimeout(vc->conn, timeout, nil);
