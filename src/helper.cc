@@ -1600,7 +1600,8 @@ Helper::Session::requestTimeout(const CommTimeoutCbParams &io)
                                      CommTimeoutCbPtrFun(Session::requestTimeout, srv));
 
     const time_t timeSpent = srv->requests.empty() ? 0 : (squid_curtime - srv->requests.front()->request.dispatch_time.tv_sec);
-    const auto timeLeft = max(static_cast<time_t>(1), srv->parent->timeout - timeSpent);
+    const time_t minimumNewTimeout = 1; // second
+    const auto timeLeft = max(minimumNewTimeout, srv->parent->timeout - timeSpent);
 
     commSetConnTimeout(io.conn, timeLeft, timeoutCall);
 }
