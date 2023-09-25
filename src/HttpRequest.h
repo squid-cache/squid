@@ -259,6 +259,11 @@ public:
     /// Use it in contexts where the Parser object not available.
     bool parseHeader(const char *buffer, const size_t size);
 
+    /// adjusts the adapted (or redirected) request with a new (overwritten) URL
+    void redirected();
+    /// adjusts the request with an internal URL
+    void applyInternalSettings();
+
 private:
     mutable int64_t rangeOffsetLimit;  /* caches the result of getRangeOffsetLimit */
 

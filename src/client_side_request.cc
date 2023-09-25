@@ -1222,9 +1222,6 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                     new_request->url = tmpUrl;
                     debugs(61, 2, "URL-rewriter diverts URL from " << old_request->effectiveRequestUri() << " to " << new_request->effectiveRequestUri());
 
-                    // update the new request to flag the re-writing was done on it
-                    new_request->flags.redirected = true;
-
                     // unlink bodypipe from the old request. Not needed there any longer.
                     if (old_request->body_pipe != nullptr) {
                         old_request->body_pipe = nullptr;
@@ -1233,6 +1230,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                     }
 
                     http->resetRequest(new_request);
+                    new_request->redirected();
                     old_request = nullptr;
                 } else {
                     debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
@@ -1963,10 +1961,10 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
     assert(msg);
 
     if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
-        // update the new message to flag whether URL re-writing was done on it
-        if (request->effectiveRequestUri() != new_req->effectiveRequestUri())
-            new_req->flags.redirected = true;
+        const auto uriChanged = request->effectiveRequestUri() != new_req->effectiveRequestUri();
         resetRequest(new_req);
+        if (uriChanged)
+            new_req->redirected();
         assert(request->method.id());
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {
         debugs(85,3, "REQMOD reply is HTTP reply");
