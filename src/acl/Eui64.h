@@ -15,7 +15,6 @@
 
 #include <set>
 
-
 class ACLEui64 : public ACL
 {
     MEMPROXY_CLASS(ACLEui64);

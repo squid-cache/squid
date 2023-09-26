@@ -27,13 +27,13 @@ endif
 
 noinst_LTLIBRARIES = libcompatsquid.la
 libcompatsquid_la_SOURCES = \
+	$(COMPAT_SSL_SOURCES) \
 	assert.cc \
 	assert.h \
 	cmsg.h \
 	compat.cc \
 	compat.h \
 	compat_shared.h \
-	$(COMPAT_SSL_SOURCES) \
 	cppunit.h \
 	cpu.h \
 	debug.cc \
