@@ -5,10 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-TESTS += testHeaders
-# append to the variable EXCLUDE_FROM_HDR_TESTING with space-separated list
-# of header files to be skipped in the testing phase.
-# NOTE: only files in the same directory as Makefiule.am are supported
 
 testHeaders: $(SOURCES) $(top_srcdir)/test-suite/testHeader.cc.in
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@

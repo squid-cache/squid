@@ -45,6 +45,9 @@ DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" \
 CLEANFILES =
 check_PROGRAMS =
 TESTS =
+TESTS += testHeaders
+# A space-separated list of header files to be skipped by
+# testHeaders during "make check"
 EXCLUDE_FROM_HDR_TESTING =
 
 AM_CPPFLAGS = \
