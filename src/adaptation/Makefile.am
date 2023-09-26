@@ -55,3 +55,4 @@ if ENABLE_ICAP_CLIENT
 SUBDIRS += icap
 libadaptation_la_LIBADD += icap/libicap.la
 endif
+
