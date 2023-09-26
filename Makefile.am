@@ -48,6 +48,8 @@ install-pinger:
 
 ## hack to insert the test first, before building recursive child directories
 
+TEST_EXTENSIONS = .hdrtest
+
 check: have-cppunit check-recursive
 
 have-cppunit:
