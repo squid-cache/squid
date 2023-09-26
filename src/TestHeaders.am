@@ -10,6 +10,3 @@ testHeaders: $(SOURCES) $(top_srcdir)/test-suite/testHeader.cc.in
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 
 TESTS += testHeaders
-
-## needed to remove artifacts used to signal header compile success
-# CLEANFILES += testHeaders
