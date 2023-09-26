@@ -41,6 +41,8 @@ Ssl::ErrorDetailEntry::ErrorDetailEntry(const SBuf &aName, const HttpHeader &fie
     detail(SlowlyParseQuotedField("error 'detail' field", fields, "detail")),
     descr(SlowlyParseQuotedField("error 'descr' field", fields, "descr"))
 {
+    // TODO: Warn about and report extra/unrecognized error detail fields.
+    // TODO: Validate formatting %codes inside parsed quoted field values.
 }
 
 namespace Ssl
