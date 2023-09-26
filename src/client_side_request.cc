@@ -41,6 +41,7 @@
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "internal.h"
 #include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"
 #include "ipcache.h"
@@ -1229,8 +1230,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                                " from request " << old_request << " to " << new_request);
                     }
 
-                    http->resetRequest(new_request);
-                    new_request->redirected();
+                    http->resetRequestXXX(new_request, true);
                     old_request = nullptr;
                 } else {
                     debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
@@ -1623,13 +1623,42 @@ ClientHttpRequest::initRequest(HttpRequest *aRequest)
 }
 
 void
-ClientHttpRequest::resetRequest(HttpRequest *newRequest)
+ClientHttpRequest::resetRequestXXX(HttpRequest *newRequest, const bool uriChanged)
 {
     assert(request != newRequest);
     clearRequest();
     assignRequest(newRequest);
     xfree(uri);
     uri = SBufToCstring(request->effectiveRequestUri());
+
+    if (uriChanged) {
+        request->flags.redirected = true;
+        checkForInternalAccess();
+    }
+}
+
+void
+ClientHttpRequest::checkForInternalAccess()
+{
+    if (!internalCheck(request->url.path()))
+        return;
+
+    if (internalHostnameIs(request->url.host()) && request->url.port() == getMyPort()) {
+        debugs(33, 3, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true));
+        request->flags.internal = true;
+    } else if (Config.onoff.global_internal_static && internalStaticCheck(request->url.path())) {
+        debugs(33, 3, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (global_internal_static on)");
+        request->url.setScheme(AnyP::PROTO_HTTP, "http");
+        request->url.host(internalHostname());
+        request->url.port(getMyPort());
+        request->flags.internal = true;
+        setLogUriToRequestUri();
+    } else {
+        debugs(33, 3, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
+    }
+
+    if (ForSomeCacheManager(request->url.path()))
+        request->flags.disableCacheUse("cache manager URL");
 }
 
 void
@@ -1962,9 +1991,7 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
 
     if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
         const auto uriChanged = request->effectiveRequestUri() != new_req->effectiveRequestUri();
-        resetRequest(new_req);
-        if (uriChanged)
-            new_req->redirected();
+        resetRequestXXX(new_req, uriChanged);
         assert(request->method.id());
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {
         debugs(85,3, "REQMOD reply is HTTP reply");

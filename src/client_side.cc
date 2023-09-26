@@ -1619,8 +1619,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     }
 #endif
 
-    if (internalCheck(request->url.path()))
-        request->applyInternalSettings();
+    http->checkForInternalAccess();
 
     if (!isFtp) {
         // XXX: for non-HTTP messages instantiate a different Http::Message child type

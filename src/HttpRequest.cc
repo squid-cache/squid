@@ -26,13 +26,11 @@
 #include "HttpHdrCc.h"
 #include "HttpHeaderRange.h"
 #include "HttpRequest.h"
-#include "internal.h"
 #include "log/Config.h"
 #include "MemBuf.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "Store.h"
-#include "tools.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -721,43 +719,6 @@ HttpRequest::parseHeader(const char *buffer, const size_t size)
 {
     Http::ContentLengthInterpreter clen;
     return header.parse(buffer, size, clen);
-}
-
-void
-HttpRequest::redirected()
-{
-    flags.redirected = true;
-    if (internalCheck(url.path()))
-        applyInternalSettings();
-}
-
-void
-HttpRequest::applyInternalSettings()
-{
-    Assure(internalCheck(url.path()));
-
-    if (internalHostnameIs(url.host()) && url.port() == getMyPort()) {
-        debugs(33, 3, "internal URL found: " << url.getScheme() << "://" << url.authority(true));
-        flags.internal = true;
-    } else if (Config.onoff.global_internal_static && internalStaticCheck(url.path())) {
-        debugs(33, 3, "internal URL found: " << url.getScheme() << "://" << url.authority(true) << " (global_internal_static on)");
-        url.setScheme(AnyP::PROTO_HTTP, "http");
-        url.host(internalHostname());
-        url.port(getMyPort());
-        flags.internal = true;
-
-        Assure(clientConnectionManager.valid());
-        Http::StreamPointer context = clientConnectionManager->pipeline.front();
-        Assure(context);
-        Assure(context->http);
-        context->http->setLogUriToRequestUri();
-    } else {
-        debugs(33, 3, "internal URL found: " << url.getScheme() << "://" << url.authority(true) << " (not this proxy)");
-    }
-
-    if (ForSomeCacheManager(url.path()))
-        flags.disableCacheUse("cache manager URL");
-
 }
 
 ConnStateData *

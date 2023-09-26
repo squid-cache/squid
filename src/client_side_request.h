@@ -74,13 +74,20 @@ public:
 
     /// Initializes the current request with the virgin request.
     /// Call this method when the virgin request becomes known.
-    /// To update the current request later, use resetRequest().
+    /// To update the current request later, use resetRequestXXX().
     void initRequest(HttpRequest *);
 
     /// Resets the current request to the latest adapted or redirected
     /// request. Call this every time adaptation or redirection changes
     /// the request. To set the virgin request, use initRequest().
-    void resetRequest(HttpRequest *);
+    /// \param uriChanged whether the new request URI differs from the
+    /// current request URI.
+    // XXX: unify the uriChanged condition calculation in callers and move
+    // it to the method itself.
+    void resetRequestXXX(HttpRequest *, bool uriChanged);
+
+    /// Checks whether the current request is internal and adjusts it accordingly.
+    void checkForInternalAccess();
 
     /// update the code in the transaction processing tags
     void updateLoggingTags(const LogTags_ot code) { al->cache.code.update(code); }
@@ -121,12 +128,12 @@ public:
     /// Request currently being handled by ClientHttpRequest.
     /// Usually remains nil until the virgin request header is parsed or faked.
     /// Starts as a virgin request; see initRequest().
-    /// Adaptation and redirections replace it; see resetRequest().
+    /// Adaptation and redirections replace it; see resetRequestXXX().
     HttpRequest * const request = nullptr;
 
     /// Usually starts as a URI received from the client, with scheme and host
     /// added if needed. Is used to create the virgin request for initRequest().
-    /// URIs of adapted/redirected requests replace it via resetRequest().
+    /// URIs of adapted/redirected requests replace it via resetRequestXXX().
     char *uri = nullptr;
 
     // TODO: remove this field and store the URI directly in al->url
