@@ -13,10 +13,10 @@
 #include <arpa/inet.h>
 #endif
 
-/* used for testHeaders */
-#ifndef SQUIDCEXTERN
-#define SQUIDCEXTERN
-#endif
+// /* used for testHeaders */
+// #ifndef SQUIDCEXTERN
+// #define SQUIDCEXTERN
+// #endif
 
 SQUIDCEXTERN void Tolower(char *);
 
