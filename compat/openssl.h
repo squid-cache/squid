@@ -19,8 +19,6 @@
 #ifndef OPENSSL_COMPAT_H
 #define OPENSSL_COMPAT_H
 
-#if 1 || USE_OPENSSL
-
 #include <algorithm>
 
 #if HAVE_OPENSSL_ASN1_H
@@ -315,6 +313,5 @@ SQUID_OPENSSL_init_ssl(void)
 #endif
 }
 
-#endif /* USE_OPENSSL */
 #endif /* OPENSSL_COMPAT_H */
 
