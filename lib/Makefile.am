@@ -77,4 +77,4 @@ tests_testRFC1738_LDADD= \
 
 tests_testRFC1738_LDFLAGS = $(LIBADD_DL)
 
-INCLUDE_IN_HDR_TESTING += $(top_srcdir)/include/*.h
+testHeaders: $(top_srcdir)/include/*.h

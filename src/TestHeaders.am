@@ -6,7 +6,7 @@
 ##
 
 
-testHeaders: $(SOURCES) $(noinst_HEADERS) $(EXTRA_DIST) $(INCLUDE_IN_HDR_TESTING) $(top_srcdir)/test-suite/testHeader.cc.in
+testHeaders: $(SOURCES) $(noinst_HEADERS) $(EXTRA_DIST) $(top_srcdir)/test-suite/testHeader.cc.in
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 
 TESTS += testHeaders

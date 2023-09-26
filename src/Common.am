@@ -49,9 +49,8 @@ TESTS =
 # testHeaders during "make check"
 EXCLUDE_FROM_HDR_TESTING =
 
-# A space-separated list of header files to be tested
-# in addition to SOURCES during "make check"
-INCLUDE_IN_HDR_TESTING =
+# to add more headers to be tested, add an empty target named
+# 'testHeaders' with the list of headers to be tested.
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
