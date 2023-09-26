@@ -11,6 +11,7 @@
 
 #include "base/CbDataList.h"
 #include "base/forward.h"
+#include "base/ToCpp.h"
 #include "security/LockingPointer.h"
 
 #if USE_GNUTLS && HAVE_GNUTLS_ABSTRACT_H
@@ -81,15 +82,6 @@ typedef struct gnutls_x509_crt_int Certificate;
 typedef struct notls_x509 Certificate;
 #endif
 
-#if USE_OPENSSL || USE_GNUTLS
-// Macro to be used to define the C++ equivalent function of an extern "C"
-// function. The C++ function suffixed with the _cpp extension
-#define CtoCpp1(function, argument)                     \
-    extern "C++" inline void function##_cpp(argument a) \
-    {                                                   \
-        function(a);                                    \
-    }
-#endif
 
 #if USE_OPENSSL
 CtoCpp1(X509_free, X509 *);

@@ -68,6 +68,7 @@ libbase_la_SOURCES = \
 	SupportOrVeto.h \
 	TextException.cc \
 	TextException.h \
+	ToCpp.h \
 	TypeTraits.h \
 	YesNoNone.h \
 	forward.h
