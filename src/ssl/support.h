@@ -17,7 +17,6 @@
 #include "comm/forward.h"
 #include "compat/openssl.h"
 #include "sbuf/SBuf.h"
-#include "security/forward.h"
 #include "security/Session.h"
 #include "ssl/gadgets.h"
 
