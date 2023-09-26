@@ -94,6 +94,3 @@ subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(
 	if $(CXXCOMPILE) -c -o "$$TargetFileName" "$$TargetFileName.cc" ; \
 	then echo "header-test: ok - $$SrcFilePath"; $(RM) "$$TargetFileName.cc" "$$TargetFileName"; \
 	else echo "header-test: not ok - $$SrcFilePath"; exit 1; fi
-
-# nothing to do, skip
-.cc.hdrtest:
