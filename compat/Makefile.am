@@ -9,7 +9,6 @@
 #
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 # Ideally this would be 100% inline functions and macro wrappers.
 

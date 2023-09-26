@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 EXTRA_LTLIBRARIES = libaufs.la libdiskd.la libufs.la librock.la
 noinst_LTLIBRARIES =  $(STORE_LIBS_TO_BUILD) libfs.la
