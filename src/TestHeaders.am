@@ -10,3 +10,4 @@ testHeaders: $(SOURCES) $(INCLUDE_IN_HDR_TESTING) $(top_srcdir)/test-suite/testH
 	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
 
 TESTS += testHeaders
+CLEANFILES += testHeaders
