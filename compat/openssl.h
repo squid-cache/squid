@@ -19,7 +19,7 @@
 #ifndef OPENSSL_COMPAT_H
 #define OPENSSL_COMPAT_H
 
-#if USE_OPENSSL
+#if 1 || USE_OPENSSL
 
 #include <algorithm>
 

@@ -15,6 +15,16 @@ include $(top_srcdir)/src/TestHeaders.am
 
 # Port Specific Configurations
 
+COMPAT_SSL_ALL_SOURCES = \
+	openssl.h
+
+if ENABLE_SSL
+COMPAT_SSL_SOURCES = $(COMPAT_SSL_ALL_SOURCES)
+else
+COMPAT_SSL_SOURCES =
+EXCLUDE_FROM_HDR_TESTING += $(COMPAT_SSL_ALL_SOURCES)
+endif
+
 noinst_LTLIBRARIES = libcompatsquid.la
 libcompatsquid_la_SOURCES = \
 	assert.cc \
@@ -23,6 +33,7 @@ libcompatsquid_la_SOURCES = \
 	compat.cc \
 	compat.h \
 	compat_shared.h \
+	$(COMPAT_SSL_SOURCES) \
 	cppunit.h \
 	cpu.h \
 	debug.cc \
@@ -35,7 +46,6 @@ libcompatsquid_la_SOURCES = \
 	memrchr.cc \
 	memrchr.h \
 	mswindows.cc \
-	openssl.h \
 	os/aix.h \
 	os/android.h \
 	os/dragonfly.h \
