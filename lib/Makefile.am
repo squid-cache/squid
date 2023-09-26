@@ -6,6 +6,7 @@
 ##
 
 include $(top_srcdir)/src/Common.am
+include $(top_srcdir)/src/TestHeaders.am
 
 SUBDIRS=
 EXTRA_DIST=
@@ -77,10 +78,4 @@ tests_testRFC1738_LDADD= \
 
 tests_testRFC1738_LDFLAGS = $(LIBADD_DL)
 
-
-## SOURCES cannot be used here: the header files we want to test are in include/
-testHeaders: $(top_srcdir)/include/*.h $(top_srcdir)/test-suite/testHeader.cc.in
-	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
-
-TESTS += testHeaders
-CLEANFILES += testHeaders
+INCLUDE_IN_HDR_TESTING += $(top_srcdir)/include/*.h
