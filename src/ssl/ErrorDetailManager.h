@@ -11,8 +11,8 @@
 
 #include "base/RefCount.h"
 #include "HttpRequest.h"
-#include "SquidString.h"
 #include "sbuf/SBuf.h"
+#include "SquidString.h"
 #include "ssl/support.h"
 
 #include <map>
@@ -82,7 +82,7 @@ private:
     /// Return cached error details list for a given language if exist
     ErrorDetailsList::Pointer getCachedDetails(const char *lang) const;
     /// cache the given error details list.
-    void cacheDetails(ErrorDetailsList::Pointer &errorDetails) const;
+    void cacheDetails(const ErrorDetailsList::Pointer &errorDetails) const;
 
     typedef std::map<std::string, ErrorDetailsList::Pointer> Cache;
     mutable Cache cache; ///< the error details list cache

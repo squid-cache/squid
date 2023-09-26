@@ -89,7 +89,8 @@ Ssl::ErrorDetailsManager::ErrorDetailsManager()
     detailTmpl.loadDefault();
 }
 
-Ssl::ErrorDetailsList::Pointer Ssl::ErrorDetailsManager::getCachedDetails(const char *lang) const
+Ssl::ErrorDetailsList::Pointer
+Ssl::ErrorDetailsManager::getCachedDetails(const char * const lang) const
 {
     Cache::iterator it;
     it = cache.find(lang);
@@ -101,7 +102,8 @@ Ssl::ErrorDetailsList::Pointer Ssl::ErrorDetailsManager::getCachedDetails(const 
     return nullptr;
 }
 
-void Ssl::ErrorDetailsManager::cacheDetails(ErrorDetailsList::Pointer &errorDetails) const
+void
+Ssl::ErrorDetailsManager::cacheDetails(const ErrorDetailsList::Pointer &errorDetails) const
 {
     const char *lang = errorDetails->errLanguage.termedBuf();
     assert(lang);

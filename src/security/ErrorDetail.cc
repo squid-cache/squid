@@ -599,6 +599,8 @@ CommonNamesPrinter::PrintName(void * const printer, ASN1_STRING * const name)
     return 1;
 }
 
+/// prints an HTML-quoted version of the given common name (as a part of the
+/// printed names list)
 void
 CommonNamesPrinter::printName(const ASN1_STRING * const name)
 {
