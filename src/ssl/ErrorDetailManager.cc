@@ -13,6 +13,7 @@
 #include "errorpage.h"
 #include "http/ContentLengthInterpreter.h"
 #include "mime_header.h"
+#include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 
 void Ssl::errorDetailInitialize()
@@ -29,9 +30,9 @@ void Ssl::errorDetailClean()
 static SBuf
 SlowlyParseQuotedField(const char * const description, const HttpHeader &parser, const char * const fieldName)
 {
-    const auto fieldValue = parser.getByName(fieldName);
-    // XXX: The call below crashes (inside legacy code) if fieldName is not found.
-    // XXX: The official code crashes in the equivalent way as well.
+    String fieldValue;
+    if (!parser.hasNamed(fieldName, strlen(fieldName), &fieldValue))
+        throw TextException(ToSBuf("Missing ", description), Here());
     return Http::SlowlyParseQuotedString(description, fieldValue.termedBuf(), fieldValue.size());
 }
 
