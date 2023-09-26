@@ -30,6 +30,8 @@ static SBuf
 SlowlyParseQuotedField(const char * const description, const HttpHeader &parser, const char * const fieldName)
 {
     const auto fieldValue = parser.getByName(fieldName);
+    // XXX: The call below crashes (inside legacy code) if fieldName is not found.
+    // XXX: The official code crashes in the equivalent way as well.
     return Http::SlowlyParseQuotedString(description, fieldValue.termedBuf(), fieldValue.size());
 }
 
@@ -213,7 +215,9 @@ Ssl::ErrorDetailFile::parse()
                     theDetails->theList.try_emplace(ssl_error, StringToSBuf(errorName), parser);
                 }
                 catch (...) {
-                    // TODO: Reject the whole file on this and surrounding problems.
+                    // TODO: Reject the whole file on this and surrounding problems instead of
+                    // keeping/using just the previously parsed entries while telling the admin
+                    // that we "failed to find or read error text file error-details.txt".
                     debugs(83, DBG_IMPORTANT, "ERROR: Ignoring bad " << errorName << " detail entry: " << CurrentException);
                     return false;
                 }
