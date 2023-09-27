@@ -22,9 +22,6 @@
 #include "MessageBucket.h"
 #endif
 
-class clientStreamNode;
-class ClientHttpRequest;
-
 namespace Http
 {
 
