@@ -21,14 +21,14 @@
 #if HAVE_OPENSSL_ASN1_H
 #include <openssl/asn1.h>
 #endif
+#if HAVE_OPENSSL_PEM_H
+#include <openssl/pem.h>
+#endif
 #if HAVE_OPENSSL_TXT_DB_H
 #include <openssl/txt_db.h>
 #endif
 #if HAVE_OPENSSL_X509V3_H
 #include <openssl/x509v3.h>
-#endif
-#if HAVE_OPENSSL_PEM_H
-#include <openssl/pem.h>
 #endif
 
 namespace Ssl
