@@ -15,7 +15,7 @@
 #include "base/Lock.h"
 #include "client_side.h"
 #include "comm/forward.h"
-#include "http/Stream.h"
+#include "http/forward.h"
 
 namespace Ftp
 {
