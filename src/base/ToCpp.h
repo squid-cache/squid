@@ -11,7 +11,8 @@
 
 #ifdef __cplusplus
 
-// function. The C++ function suffixed with the _cpp extension
+/// Defines a C++ equivalent of an extern "C" function.
+/// The defined C++ function name uses a _cpp suffix.
 #define CtoCpp1(function, argument)                     \
     extern "C++" inline void function##_cpp(argument a) \
     {                                                   \
