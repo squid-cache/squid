@@ -15,7 +15,6 @@
 
 #include <memory>
 
-// TODO: Use CtoCpp1() from security/LockingPointer.h by moving that into base/ToCpp.h or similar.
 /// C++ wrapper for the legacy xmalloc()/xcalloc() deallocator
 /// \sa xfree_cppwrapper() with a slightly different (FREE-matching) signature.
 CtoCpp1(xfree, const void *const)
