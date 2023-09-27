@@ -10,7 +10,6 @@
 #define SQUID_BASE_ASYNCCALLLIST_H
 
 #include "base/AsyncCall.h"
-#include "base/forward.h"
 #include "base/RefCount.h"
 
 /// An efficient (but intrusive) AsyncCall storage preserving FIFO order.
