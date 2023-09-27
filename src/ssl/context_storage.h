@@ -18,7 +18,6 @@
 #include "mgr/Action.h"
 #include "mgr/Command.h"
 #include "security/Context.h"
-#include "security/forward.h"
 #include "ssl/gadgets.h"
 
 #include <list>
