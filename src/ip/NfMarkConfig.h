@@ -11,7 +11,7 @@
 
 #include "ip/forward.h"
 
-#include <ostream>
+#include <iosfwd>
 
 class SBuf;
 
