@@ -13,7 +13,6 @@
 
 #include "base/RefCount.h"
 #include "base/TypeTraits.h"
-#include "ipc/forward.h"
 #include "ipc/QuestionerId.h"
 #include "ipc/RequestId.h"
 
