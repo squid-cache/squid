@@ -193,7 +193,7 @@ helper_stateful_server::~helper_stateful_server()
 }
 
 void
-helperOpenServers(const Helper::Client::Pointer &hlp)
+Helper::Client::openSessions()
 {
     char *s;
     char *progname;
@@ -208,6 +208,8 @@ helperOpenServers(const Helper::Client::Pointer &hlp)
     int wfd;
     void * hIpc;
     wordlist *w;
+    // Helps reducing diff. TODO: remove
+    const auto hlp = this;
 
     if (hlp->cmdline == nullptr)
         return;
@@ -327,18 +329,15 @@ helperOpenServers(const Helper::Client::Pointer &hlp)
     helperKickQueue(hlp);
 }
 
-/**
- * DPW 2007-05-08
- *
- * helperStatefulOpenServers: create the stateful child helper processes
- */
 void
-helperStatefulOpenServers(const statefulhelper::Pointer &hlp)
+statefulhelper::openSessions()
 {
     char *shortname;
     const char *args[HELPER_MAX_ARGS+1]; // save space for a NULL terminator
     char fd_note_buf[FD_DESC_SZ];
     int nargs = 0;
+    // Helps reducing diff. TODO: remove
+    const auto hlp = this;
 
     if (hlp->cmdline == nullptr)
         return;
@@ -891,38 +890,30 @@ Helper::Client::handleFewerServers(const bool madeProgress)
 }
 
 void
-Helper::Session::HelperServerClosed(Session * const srv)
+Helper::Client::sessionClosed(SessionBase &session)
 {
-    const auto hlp = srv->parent;
-
     bool needsNewServers = false;
-    hlp->handleKilledServer(srv, needsNewServers);
+    handleKilledServer(&session, needsNewServers);
     if (needsNewServers) {
         debugs(80, DBG_IMPORTANT, "Starting new helpers");
-        helperOpenServers(hlp);
+        openSessions();
     }
+}
 
+void
+Helper::Session::HelperServerClosed(Session * const srv)
+{
+    srv->parent->sessionClosed(*srv);
     srv->dropQueued();
-
     delete srv;
 }
 
-// XXX: Almost duplicates Helper::Session::HelperServerClosed() because helperOpenServers() is not a virtual method of the `Helper::Client` class
-// TODO: Fix the `Helper::Client` class hierarchy to use virtual functions.
+// XXX: Essentially duplicates Helper::Session::HelperServerClosed() until we add SessionBase::helper().
 void
 helper_stateful_server::HelperServerClosed(helper_stateful_server *srv)
 {
-    const auto hlp = srv->parent;
-
-    bool needsNewServers = false;
-    hlp->handleKilledServer(srv, needsNewServers);
-    if (needsNewServers) {
-        debugs(80, DBG_IMPORTANT, "Starting new helpers");
-        helperStatefulOpenServers(hlp);
-    }
-
+    srv->parent->sessionClosed(*srv);
     srv->dropQueued();
-
     delete srv;
 }
 
@@ -1248,8 +1239,7 @@ Enqueue(Helper::Client * const hlp, Helper::Xaction * const r)
 
     /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
     if (hlp->childs.needNew() > 0) {
-        debugs(84, DBG_CRITICAL, "Starting new " << hlp->id_name << " helpers...");
-        helperOpenServers(hlp);
+        hlp->openSessions();
         return;
     }
 
@@ -1277,8 +1267,7 @@ StatefulEnqueue(statefulhelper * hlp, Helper::Xaction * r)
 
     /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
     if (hlp->childs.needNew() > 0) {
-        debugs(84, DBG_CRITICAL, "Starting new " << hlp->id_name << " helpers...");
-        helperStatefulOpenServers(hlp);
+        hlp->openSessions();
         return;
     }
 

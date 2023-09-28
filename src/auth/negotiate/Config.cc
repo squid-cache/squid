@@ -102,7 +102,7 @@ Auth::Negotiate::Config::init(Auth::SchemeConfig *)
 
         negotiateauthenticators->ipc_type = IPC_STREAM;
 
-        helperStatefulOpenServers(negotiateauthenticators);
+        negotiateauthenticators->openSessions();
     }
 }
 
