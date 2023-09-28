@@ -11,7 +11,7 @@
 #ifndef SQUID_REFRESH_H_
 #define SQUID_REFRESH_H_
 
-class HttpRequest;
+#include "http/forward.h"
 class RefreshPattern;
 class StoreEntry;
 
