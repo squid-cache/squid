@@ -47,7 +47,6 @@ install-pinger:
 	chmod 4711 $(DESTDIR)$(DEFAULT_PINGER)
 
 ## hack to insert the test first, before building recursive child directories
-
 check: have-cppunit check-recursive
 
 have-cppunit:
