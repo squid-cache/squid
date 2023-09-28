@@ -12,8 +12,7 @@
 #define SQUID_REFRESH_H_
 
 #include "http/forward.h"
-class RefreshPattern;
-class StoreEntry;
+#include "store/forward.h"
 
 void refreshAddToList(const char *, int, time_t, int, time_t);
 bool refreshIsCachable(const StoreEntry *);
@@ -23,6 +22,8 @@ int refreshCheckHTCP(const StoreEntry *, HttpRequest *);
 int refreshCheckDigest(const StoreEntry *, time_t delta);
 time_t getMaxAge(const char *url);
 void refreshInit(void);
+
+class RefreshPattern;
 const RefreshPattern *refreshLimits(const char *url);
 
 #endif /* SQUID_REFRESH_H_ */
