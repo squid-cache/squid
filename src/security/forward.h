@@ -63,7 +63,6 @@
 /// argument-dependent lookup for operator "<<" (Certificate) works inside
 /// functions declared in Security and global namespaces.
 struct notls_x509 {};
-
 #endif
 
 /// Network/connection security abstraction layer
