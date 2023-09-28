@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_CERTIFICATE_H
 #define SQUID_SRC_SECURITY_CERTIFICATE_H
 
-#include "sbuf/SBuf.h"
+#include "sbuf/forward.h"
 #include "security/forward.h"
 
 // The accessing/testing functions below require a non-constant Certificate when
