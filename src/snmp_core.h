@@ -11,7 +11,6 @@
 #ifndef SQUID_SNMP_CORE_H
 #define SQUID_SNMP_CORE_H
 
-#if SQUID_SNMP
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
@@ -69,6 +68,5 @@ public:
 
 } // namespace Acl
 
-#endif /* SQUID_SNMP */
 #endif /* SQUID_SNMP_CORE_H */
 
