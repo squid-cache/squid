@@ -28,8 +28,8 @@ testHeaders: $(SOURCES) $(noinst_HEADERS) $(EXTRA_DIST) $(top_srcdir)/test-suite
 	$(SED) "s%[@]HEADER[@]%${<}%" "$(top_srcdir)/test-suite/testHeader.cc.in" >"$$TargetFileName.cc" && \
 	echo "$(CXXCOMPILE) -c -o" "$$TargetFileName" "$$TargetFileName.cc" && \
 	if $(CXXCOMPILE) -c -o "$$TargetFileName" "$$TargetFileName.cc" ; \
-	then echo "header-test: ok - $$SrcFilePath"; $(RM) "$$TargetFileName.cc" "$$TargetFileName"; \
-	else echo "header-test: not ok - $$SrcFilePath"; exit 1; fi
+		then echo "header-test: ok - $$SrcFilePath"; $(RM) "$$TargetFileName.cc" "$$TargetFileName"; \
+		else echo "header-test: not ok - $$SrcFilePath"; exit 1; fi
 
 TESTS += testHeaders
 CLEANFILES += testHeaders
