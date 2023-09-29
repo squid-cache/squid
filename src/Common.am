@@ -45,12 +45,8 @@ DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" \
 CLEANFILES =
 check_PROGRAMS =
 TESTS =
-# A space-separated list of header files to be skipped by
-# testHeaders during "make check"
-EXCLUDE_FROM_HDR_TESTING =
 
-# to add more headers to be tested, add an empty target named
-# 'testHeaders' with the list of headers to be tested.
+
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
@@ -79,19 +75,5 @@ COMPAT_LIB = $(top_builddir)/compat/libcompatsquid.la $(LIBPROFILER)
 
 ## Some helpers are written in Perl and need the local shell defined properly
 subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(RM) -f $@ ; exit 1)
-
-.h.hdrtest:
-	@SrcFilePath=`echo $< | $(SED) 's%^$(top_srcdir)/%%'`; \
-	SrcFileName=`basename $$SrcFilePath`; \
-	TargetFileName=`basename $@`; \
-	if test "$(EXCLUDE_FROM_HDR_TESTING)" != "" && echo "$(EXCLUDE_FROM_HDR_TESTING)" | $(TR) ' ' '\n' | $(FGREP) -x -q "$$SrcFileName" ; then \
-		echo "header-test: skip - $$SrcFilePath"; \
-		exit 0; \
-	fi; \
-	$(SED) "s%[@]HEADER[@]%${<}%" "$(top_srcdir)/test-suite/testHeader.cc.in" >"$$TargetFileName.cc" && \
-	echo "$(CXXCOMPILE) -c -o" "$$TargetFileName" "$$TargetFileName.cc" && \
-	if $(CXXCOMPILE) -c -o "$$TargetFileName" "$$TargetFileName.cc" ; \
-	then echo "header-test: ok - $$SrcFilePath"; $(RM) "$$TargetFileName.cc" "$$TargetFileName"; \
-	else echo "header-test: not ok - $$SrcFilePath"; exit 1; fi
 
 include $(top_srcdir)/src/TestHeaders.am
