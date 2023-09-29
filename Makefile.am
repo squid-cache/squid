@@ -7,7 +7,7 @@
 
 # v1.13 has decent parallel-tests implementation. We require
 # parallel-tests (enabled by default in v1.13) because XXX.
-AUTOMAKE_OPTIONS = dist-bzip2 1.13 foreign
+AUTOMAKE_OPTIONS = dist-bzip2 1.5 foreign
 
 SUBDIRS = compat contrib doc errors icons
 
