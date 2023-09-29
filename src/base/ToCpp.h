@@ -9,7 +9,6 @@
 #ifndef SQUID_SRC_BASE_TOCPP_H
 #define SQUID_SRC_BASE_TOCPP_H
 
-#ifdef __cplusplus
 
 /// Defines a C++ equivalent of an extern "C" function.
 /// The defined C++ function name uses a _cpp suffix.
@@ -19,5 +18,4 @@
         function(a);                                    \
     }
 
-#endif /* __cplusplus */
 #endif /* SQUID_SRC_BASE_TOCPP_H */
