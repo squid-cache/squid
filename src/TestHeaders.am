@@ -10,7 +10,7 @@
 EXCLUDE_FROM_HDR_TESTING =
 
 
-# to test additional header files to those tested by default,
+# to test header files in addition to those tested by default,
 # add an empty target named 'testHeaders' depending on the additional
 # headers to test
 
