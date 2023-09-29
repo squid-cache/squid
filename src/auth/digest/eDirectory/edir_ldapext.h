@@ -6,7 +6,6 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-
 #if HAVE_LDAP_H
 #include <ldap.h>
 #endif
