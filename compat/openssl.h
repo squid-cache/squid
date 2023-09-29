@@ -19,6 +19,10 @@
 #ifndef OPENSSL_COMPAT_H
 #define OPENSSL_COMPAT_H
 
+#if !USE_OPENSSL
+#error compat/openssl.h depends on USE_OPENSSL
+#endif
+
 #include <algorithm>
 
 #if HAVE_OPENSSL_ASN1_H
