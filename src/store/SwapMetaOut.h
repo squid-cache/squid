@@ -17,7 +17,7 @@
 
 /// C++ wrapper for the legacy xmalloc()/xcalloc() deallocator
 /// \sa xfree_cppwrapper() with a slightly different (FREE-matching) signature.
-CtoCpp1(xfree, const void *const)
+CtoCpp1(xfree, const void *)
 
 // TODO: Move AllocedBuf and xfree_cpp() to src/base/Memory.h or similar.
 /// memory allocated by xmalloc() or xcalloc(), to be freed by xfree()
