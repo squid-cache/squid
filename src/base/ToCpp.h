@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef BASE_TOCPP_H
-#define BASE_TOCPP_H
+#ifndef SQUID_SRC_BASE_TOCPP_H
+#define SQUID_SRC_BASE_TOCPP_H
 
 #ifdef __cplusplus
 
@@ -20,4 +20,4 @@
     }
 
 #endif /* __cplusplus */
-#endif /* BASE_TOCPP_H */
+#endif /* SQUID_SRC_BASE_TOCPP_H */
