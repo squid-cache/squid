@@ -74,7 +74,7 @@ public:
 
     /// Initializes the current request with the virgin request.
     /// Call this method when the virgin request becomes known.
-    /// To update the current request later, use resetRequestXXX().
+    /// To update the current request later, use resetRequest().
     void initRequest(HttpRequest *);
 
     /// Resets the current request to the latest adapted or redirected
@@ -129,12 +129,12 @@ public:
     /// Request currently being handled by ClientHttpRequest.
     /// Usually remains nil until the virgin request header is parsed or faked.
     /// Starts as a virgin request; see initRequest().
-    /// Adaptation and redirections replace it; see resetRequestXXX().
+    /// Adaptation and redirections replace it; see resetRequest().
     HttpRequest * const request = nullptr;
 
     /// Usually starts as a URI received from the client, with scheme and host
     /// added if needed. Is used to create the virgin request for initRequest().
-    /// URIs of adapted/redirected requests replace it via resetRequestXXX().
+    /// URIs of adapted/redirected requests replace it via resetRequest().
     char *uri = nullptr;
 
     // TODO: remove this field and store the URI directly in al->url
