@@ -1623,6 +1623,13 @@ ClientHttpRequest::initRequest(HttpRequest *aRequest)
 }
 
 void
+ClientHttpRequest::resetRequest(HttpRequest *newRequest)
+{
+    const auto uriChanged = request->effectiveRequestUri() != newRequest->effectiveRequestUri();
+    resetRequestXXX(newRequest, uriChanged);
+}
+
+void
 ClientHttpRequest::resetRequestXXX(HttpRequest *newRequest, const bool uriChanged)
 {
     assert(request != newRequest);
@@ -1990,8 +1997,7 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
     assert(msg);
 
     if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
-        const auto uriChanged = request->effectiveRequestUri() != new_req->effectiveRequestUri();
-        resetRequestXXX(new_req, uriChanged);
+        resetRequest(new_req);
         assert(request->method.id());
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {
         debugs(85,3, "REQMOD reply is HTTP reply");

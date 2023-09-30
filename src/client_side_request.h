@@ -80,6 +80,7 @@ public:
     /// Resets the current request to the latest adapted or redirected
     /// request. Call this every time adaptation or redirection changes
     /// the request. To set the virgin request, use initRequest().
+    void resetRequest(HttpRequest *);
     /// \param uriChanged whether the new request URI differs from the
     /// current request URI.
     // XXX: unify the uriChanged condition calculation in callers and move
