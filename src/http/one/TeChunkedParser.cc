@@ -91,6 +91,11 @@ Http::One::TeChunkedParser::parseChunkSize(Tokenizer &tok)
 {
     Must(theChunkSize <= 0); // Should(), really
 
+    static const SBuf bannedHexPrefixLower("0x");
+    static const SBuf bannedHexPrefixUpper("0X");
+    if (tok.skip(bannedHexPrefixLower) || tok.skip(bannedHexPrefixUpper))
+        throw TextException("chunk starts with 0x", Here());
+
     int64_t size = -1;
     if (tok.int64(size, 16, false) && !tok.atEnd()) {
         if (size < 0)
@@ -121,7 +126,7 @@ Http::One::TeChunkedParser::parseChunkMetadataSuffix(Tokenizer &tok)
     // bad or insufficient input, like in the code below. TODO: Expand up.
     try {
         parseChunkExtensions(tok); // a possibly empty chunk-ext list
-        skipLineTerminator(tok);
+        tok.skipRequired("CRLF after [chunk-ext]", Http1::CrLf());
         buf_ = tok.remaining();
         parsingStage_ = theChunkSize ? Http1::HTTP_PARSE_CHUNK : Http1::HTTP_PARSE_MIME;
         return true;
@@ -209,7 +214,7 @@ Http::One::TeChunkedParser::parseChunkEnd(Tokenizer &tok)
     Must(theLeftBodySize == 0); // Should(), really
 
     try {
-        skipLineTerminator(tok);
+        tok.skipRequired("chunk CRLF", Http1::CrLf());
         buf_ = tok.remaining(); // parse checkpoint
         theChunkSize = 0; // done with the current chunk
         parsingStage_ = Http1::HTTP_PARSE_CHUNK_SZ;
