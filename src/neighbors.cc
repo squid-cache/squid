@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
@@ -1367,71 +1368,76 @@ neighborDumpPeers(StoreEntry * sentry)
 void
 dump_peer_options(StoreEntry * sentry, CachePeer * p)
 {
+    PackableStream os(*sentry);
+
     if (p->options.proxy_only)
-        storeAppendPrintf(sentry, " proxy-only");
+        os << " proxy-only";
 
     if (p->options.no_query)
-        storeAppendPrintf(sentry, " no-query");
+        os << " no-query";
 
     if (p->options.background_ping)
-        storeAppendPrintf(sentry, " background-ping");
+        os << " background-ping";
 
     if (p->options.no_digest)
-        storeAppendPrintf(sentry, " no-digest");
+        os << " no-digest";
 
     if (p->options.default_parent)
-        storeAppendPrintf(sentry, " default");
+        os << " default";
 
     if (p->options.roundrobin)
-        storeAppendPrintf(sentry, " round-robin");
+        os << " round-robin";
 
     if (p->options.carp)
-        storeAppendPrintf(sentry, " carp");
+        os << " carp";
 
 #if USE_AUTH
     if (p->options.userhash)
-        storeAppendPrintf(sentry, " userhash");
+        os << " userhash";
 #endif
 
     if (p->options.sourcehash)
-        storeAppendPrintf(sentry, " sourcehash");
+        os << " sourcehash";
 
     if (p->options.weighted_roundrobin)
-        storeAppendPrintf(sentry, " weighted-round-robin");
+        os << " weighted-round-robin";
 
     if (p->options.mcast_responder)
-        storeAppendPrintf(sentry, " multicast-responder");
+        os << " multicast-responder";
 
 #if PEER_MULTICAST_SIBLINGS
     if (p->options.mcast_siblings)
-        storeAppendPrintf(sentry, " multicast-siblings");
+        os << " multicast-siblings";
 #endif
 
     if (p->weight != 1)
-        storeAppendPrintf(sentry, " weight=%d", p->weight);
+        os << " weight=" << p->weight;
 
     if (p->options.closest_only)
-        storeAppendPrintf(sentry, " closest-only");
+        os << " closest-only";
 
 #if USE_HTCP
     if (p->options.htcp) {
-        storeAppendPrintf(sentry, " htcp");
+        os << " htcp";
         if (p->options.htcp_oldsquid || p->options.htcp_no_clr || p->options.htcp_no_purge_clr || p->options.htcp_only_clr) {
             bool doneopts = false;
             if (p->options.htcp_oldsquid) {
-                storeAppendPrintf(sentry, "oldsquid");
+                os << "oldsquid";
                 doneopts = true;
             }
             if (p->options.htcp_no_clr) {
-                storeAppendPrintf(sentry, "%sno-clr",(doneopts?",":"="));
+                os << (doneopts ? "," : "=")
+                    << "no-clr";
                 doneopts = true;
             }
             if (p->options.htcp_no_purge_clr) {
-                storeAppendPrintf(sentry, "%sno-purge-clr",(doneopts?",":"="));
+                os << (doneopts ? "," : "=")
+                   << "no-purge-clr";
                 doneopts = true;
             }
             if (p->options.htcp_only_clr) {
-                storeAppendPrintf(sentry, "%sonly-clr",(doneopts?",":"="));
+                os << (doneopts ? "," : "=")
+                     << "only-clr";
                 //doneopts = true; // uncomment if more opts are added
             }
         }
@@ -1439,59 +1445,59 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
 #endif
 
     if (p->options.no_netdb_exchange)
-        storeAppendPrintf(sentry, " no-netdb-exchange");
+        os << " no-netdb-exchange";
 
 #if USE_DELAY_POOLS
     if (p->options.no_delay)
-        storeAppendPrintf(sentry, " no-delay");
+        os << " no-delay";
 #endif
 
     if (p->login)
-        storeAppendPrintf(sentry, " login=%s", p->login);
+        os << " login=" << p->login;
 
     if (p->mcast.ttl > 0)
-        storeAppendPrintf(sentry, " ttl=%d", p->mcast.ttl);
+        os << " ttl=" << p->mcast.ttl;
 
     if (p->connect_timeout_raw > 0)
-        storeAppendPrintf(sentry, " connect-timeout=%ld", p->connect_timeout_raw);
+        os << " connect-timeout=" << p->connect_timeout_raw;
 
     if (p->connect_fail_limit != PEER_TCP_MAGIC_COUNT)
-        storeAppendPrintf(sentry, " connect-fail-limit=%d", p->connect_fail_limit);
+        os << " connect-fail-limit=" << p->connect_fail_limit;
 
 #if USE_CACHE_DIGESTS
 
     if (p->digest_url)
-        storeAppendPrintf(sentry, " digest-url=%s", p->digest_url);
+        os << " digest-url=" << p->digest_url;
 
 #endif
 
     if (p->options.allow_miss)
-        storeAppendPrintf(sentry, " allow-miss");
+        os << " allow-miss";
 
     if (p->options.no_tproxy)
-        storeAppendPrintf(sentry, " no-tproxy");
+        os << " no-tproxy";
 
     if (p->max_conn > 0)
-        storeAppendPrintf(sentry, " max-conn=%d", p->max_conn);
+        os << " max-conn=" << p->max_conn;
+
     if (p->standby.limit > 0)
-        storeAppendPrintf(sentry, " standby=%d", p->standby.limit);
+        os << " standby=" << p->standby.limit;
 
     if (p->options.originserver)
-        storeAppendPrintf(sentry, " originserver");
+        os << " originserver";
 
     if (p->domain)
-        storeAppendPrintf(sentry, " forceddomain=%s", p->domain);
+        os << " domain=" << p->domain;
 
     if (p->connection_auth == 0)
-        storeAppendPrintf(sentry, " connection-auth=off");
+        os << " connection-auth=off";
     else if (p->connection_auth == 1)
-        storeAppendPrintf(sentry, " connection-auth=on");
+        os << " connection-auth=on";
     else if (p->connection_auth == 2)
-        storeAppendPrintf(sentry, " connection-auth=auto");
+        os << " connection-auth=auto";
 
-    PackableStream os(*sentry);
     p->secure.dumpCfg(os, "tls-");
-    storeAppendPrintf(sentry, "\n");
+    os << "\n";
 }
 
 static void
