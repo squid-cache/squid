@@ -1487,7 +1487,7 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
         os << " originserver";
 
     if (p->domain)
-        os << " domain=" << p->domain;
+        os << " forceddomain=" << p->domain;
 
     if (p->connection_auth == 0)
         os << " connection-auth=off";
