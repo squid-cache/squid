@@ -1421,7 +1421,7 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
         if (p->options.htcp_oldsquid || p->options.htcp_no_clr || p->options.htcp_no_purge_clr || p->options.htcp_only_clr) {
             bool doneopts = false;
             if (p->options.htcp_oldsquid) {
-                os << "oldsquid";
+                os << (doneopts ? ',' : '=') << "oldsquid";
                 doneopts = true;
             }
             if (p->options.htcp_no_clr) {
