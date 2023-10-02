@@ -1426,18 +1426,15 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
                 doneopts = true;
             }
             if (p->options.htcp_no_clr) {
-                os << (doneopts ? "," : "=")
-                    << "no-clr";
+                os << (doneopts ? "," : "=") << "no-clr";
                 doneopts = true;
             }
             if (p->options.htcp_no_purge_clr) {
-                os << (doneopts ? "," : "=")
-                   << "no-purge-clr";
+                os << (doneopts ? "," : "=") << "no-purge-clr";
                 doneopts = true;
             }
             if (p->options.htcp_only_clr) {
-                os << (doneopts ? "," : "=")
-                     << "only-clr";
+                os << (doneopts ? "," : "=") << "only-clr";
                 //doneopts = true; // uncomment if more opts are added
             }
         }
