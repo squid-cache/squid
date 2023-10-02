@@ -41,7 +41,7 @@ EOF
             echo "Fail."
             exitCode=1
         fi
-        rm $t.cc $t.o
+        rm -f $t.cc $t.o
     fi
     test $exitCode -eq 0 || break
 done

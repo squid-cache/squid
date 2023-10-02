@@ -189,7 +189,7 @@ helper_stateful_server::~helper_stateful_server()
 }
 
 void
-helperOpenServers(const Helper::Client::Pointer &hlp)
+Helper::Client::openSessions()
 {
     char *s;
     char *progname;
@@ -204,6 +204,8 @@ helperOpenServers(const Helper::Client::Pointer &hlp)
     int wfd;
     void * hIpc;
     wordlist *w;
+    // Helps reducing diff. TODO: remove
+    const auto hlp = this;
 
     if (hlp->cmdline == nullptr)
         return;
@@ -323,18 +325,15 @@ helperOpenServers(const Helper::Client::Pointer &hlp)
     helperKickQueue(hlp);
 }
 
-/**
- * DPW 2007-05-08
- *
- * helperStatefulOpenServers: create the stateful child helper processes
- */
 void
-helperStatefulOpenServers(const statefulhelper::Pointer &hlp)
+statefulhelper::openSessions()
 {
     char *shortname;
     const char *args[HELPER_MAX_ARGS+1]; // save space for a NULL terminator
     char fd_note_buf[FD_DESC_SZ];
     int nargs = 0;
+    // Helps reducing diff. TODO: remove
+    const auto hlp = this;
 
     if (hlp->cmdline == nullptr)
         return;
@@ -899,38 +898,30 @@ Helper::Client::handleFewerServers(const bool madeProgress)
 }
 
 void
-Helper::Session::HelperServerClosed(Session * const srv)
+Helper::Client::sessionClosed(SessionBase &session)
 {
-    const auto hlp = srv->parent;
-
     bool needsNewServers = false;
-    hlp->handleKilledServer(srv, needsNewServers);
+    handleKilledServer(&session, needsNewServers);
     if (needsNewServers) {
         debugs(80, DBG_IMPORTANT, "Starting new helpers");
-        helperOpenServers(hlp);
+        openSessions();
     }
+}
 
-    srv->dropQueued(*hlp);
-
+void
+Helper::Session::HelperServerClosed(Session * const srv)
+{
+    srv->parent->sessionClosed(*srv);
+    srv->dropQueued(*srv->parent);
     delete srv;
 }
 
-// XXX: Almost duplicates Helper::Session::HelperServerClosed() because helperOpenServers() is not a virtual method of the `Helper::Client` class
-// TODO: Fix the `Helper::Client` class hierarchy to use virtual functions.
+// XXX: Essentially duplicates Helper::Session::HelperServerClosed() until we add SessionBase::helper().
 void
 helper_stateful_server::HelperServerClosed(helper_stateful_server *srv)
 {
-    const auto hlp = srv->parent;
-
-    bool needsNewServers = false;
-    hlp->handleKilledServer(srv, needsNewServers);
-    if (needsNewServers) {
-        debugs(80, DBG_IMPORTANT, "Starting new helpers");
-        helperStatefulOpenServers(hlp);
-    }
-
-    srv->dropQueued(*hlp);
-
+    srv->parent->sessionClosed(*srv);
+    srv->dropQueued(*srv->parent);
     delete srv;
 }
 
@@ -1044,12 +1035,14 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
 
     if (!srv->stats.pending && !srv->stats.timedout) {
         /* someone spoke without being spoken to */
-        debugs(84, DBG_IMPORTANT, "ERROR: helperHandleRead: unexpected read from " <<
+        debugs(84, DBG_IMPORTANT, "ERROR: Killing helper process after an unexpected read from " <<
                hlp->id_name << " #" << srv->index << ", " << (int)len <<
                " bytes '" << srv->rbuf << "'");
 
         srv->roffset = 0;
         srv->rbuf[0] = '\0';
+        srv->closePipesSafely(hlp->id_name);
+        return;
     }
 
     bool needsMore = false;
@@ -1158,16 +1151,17 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
 
     srv->roffset += len;
     srv->rbuf[srv->roffset] = '\0';
-    Helper::Xaction *r = srv->requests.front();
     debugs(84, DBG_DATA, Raw("accumulated", srv->rbuf, srv->roffset));
 
-    if (r == nullptr) {
+    if (srv->requests.empty()) {
         /* someone spoke without being spoken to */
-        debugs(84, DBG_IMPORTANT, "ERROR: helperStatefulHandleRead: unexpected read from " <<
+        debugs(84, DBG_IMPORTANT, "ERROR: Killing helper process after an unexpected read from " <<
                hlp->id_name << " #" << srv->index << ", " << (int)len <<
                " bytes '" << srv->rbuf << "'");
 
         srv->roffset = 0;
+        srv->closePipesSafely(hlp->id_name);
+        return;
     }
 
     if ((t = strchr(srv->rbuf, hlp->eom))) {
@@ -1182,7 +1176,9 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
         *t = '\0';
     }
 
-    if (r && !r->reply.accumulate(srv->rbuf, t ? (t - srv->rbuf) : srv->roffset)) {
+    const auto r = srv->requests.front();
+
+    if (!r->reply.accumulate(srv->rbuf, t ? (t - srv->rbuf) : srv->roffset)) {
         debugs(84, DBG_IMPORTANT, "ERROR: Disconnecting from a " <<
                "helper that overflowed " << srv->rbuf_sz << "-byte " <<
                "Squid input buffer: " << hlp->id_name << " #" << srv->index);
@@ -1202,7 +1198,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
         srv->requests.pop_front(); // we already have it in 'r'
         int called = 1;
 
-        if (r && cbdataReferenceValid(r->request.data)) {
+        if (cbdataReferenceValid(r->request.data)) {
             r->reply.finalize();
             r->reply.reservationId = srv->reservationId;
             hlp->callBack(*r);
@@ -1247,8 +1243,7 @@ Enqueue(Helper::Client * const hlp, Helper::Xaction * const r)
 
     /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
     if (hlp->childs.needNew() > 0) {
-        debugs(84, DBG_CRITICAL, "Starting new " << hlp->id_name << " helpers...");
-        helperOpenServers(hlp);
+        hlp->openSessions();
         return;
     }
 
@@ -1276,8 +1271,7 @@ StatefulEnqueue(statefulhelper * hlp, Helper::Xaction * r)
 
     /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
     if (hlp->childs.needNew() > 0) {
-        debugs(84, DBG_CRITICAL, "Starting new " << hlp->id_name << " helpers...");
-        helperStatefulOpenServers(hlp);
+        hlp->openSessions();
         return;
     }
 
@@ -1602,8 +1596,9 @@ Helper::Session::requestTimeout(const CommTimeoutCbParams &io)
     AsyncCall::Pointer timeoutCall = commCbCall(84, 4, "Helper::Session::requestTimeout",
                                      CommTimeoutCbPtrFun(Session::requestTimeout, srv));
 
-    const int timeSpent = srv->requests.empty() ? 0 : (squid_curtime - srv->requests.front()->request.dispatch_time.tv_sec);
-    const int timeLeft = max(1, (static_cast<int>(srv->parent->timeout) - timeSpent));
+    const time_t timeSpent = srv->requests.empty() ? 0 : (squid_curtime - srv->requests.front()->request.dispatch_time.tv_sec);
+    const time_t minimumNewTimeout = 1; // second
+    const auto timeLeft = max(minimumNewTimeout, srv->parent->timeout - timeSpent);
 
     commSetConnTimeout(io.conn, timeLeft, timeoutCall);
 }
