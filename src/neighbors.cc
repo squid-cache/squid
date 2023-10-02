@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
