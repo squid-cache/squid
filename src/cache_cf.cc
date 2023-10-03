@@ -2977,7 +2977,7 @@ dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
     if (var % 1000)
         os << name << ' ' << var << " milliseconds\n";
     else
-        os << name << ' ' << var/1000 << " seconds\n";
+        os << name << ' ' << (var/1000) << " seconds\n";
 }
 
 static void
