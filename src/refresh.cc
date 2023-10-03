@@ -89,7 +89,7 @@ static RefreshPattern DefaultRefresh(nullptr);
  * \return A pointer to the refresh_pattern parameters to use, or nullptr if there is no match.
  */
 const RefreshPattern *
-refreshLimits(const char *url)
+refreshLimits(const SBuf &url)
 {
     for (auto R = Config.Refresh; R; R = R->next) {
         ++(R->stats.matchTests);
@@ -284,8 +284,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
      *   2. the "." rule from the config file
      *   3. the default "." rule
      */
-    // XXX: performance regression. c_str() reallocates
-    const RefreshPattern *R = (uri != nilUri) ? refreshLimits(uri.c_str()) : refreshFirstDotRule();
+    const RefreshPattern *R = (uri != nilUri) ? refreshLimits(uri) : refreshFirstDotRule();
     if (nullptr == R)
         R = &DefaultRefresh;
 
@@ -630,8 +629,9 @@ refreshCheckDigest(const StoreEntry * entry, time_t delta)
  * \retval REFRESH_DEFAULT_MAX if there are no explicit limits configured
  */
 time_t
-getMaxAge(const char *url)
+getMaxAge(const char *aUrl)
 {
+    const SBuf url(aUrl);
     const RefreshPattern *R;
     debugs(22, 3, "getMaxAge: '" << url << "'");
 

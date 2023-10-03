@@ -87,38 +87,38 @@ static MimeEntry **MimeTableTail = &MimeTable;
 static MimeEntry *
 mimeGetEntry(const char *fn, int skip_encodings)
 {
-    MimeEntry *m;
-    char *t;
-    char *name = xstrdup(fn);
+    MimeEntry *m = nullptr;
+    SBuf name(fn);
 
-    do {
-        t = nullptr;
-
+    while (!name.isEmpty())
+    {
         for (m = MimeTable; m; m = m->next) {
             if (m->pattern.match(name))
                 break;
         }
 
         if (!skip_encodings)
-            (void) 0;
-        else if (m == nullptr)
-            (void) 0;
-        else if (strcmp(m->content_type, dash_str))
-            (void) 0;
-        else if (!strcmp(m->content_encoding, dash_str))
-            (void) 0;
-        else {
-            /* Assume we matched /\.\w$/ and cut off the last extension */
-            if ((t = strrchr(name, '.'))) {
-                *t = '\0';
-            } else {
-                /* What? A encoding without a extension? */
-                m = nullptr;
-            }
-        }
-    } while (t);
+            break;
+        if (!m)
+            break;
+        if (strcmp(m->content_type, dash_str) != 0)
+            break;
+        if (strcmp(m->content_encoding, dash_str) == 0)
+            break;
 
-    xfree(name);
+        /* Assume we matched /\.\w$/ and cut off the last extension */
+        const auto end = name.rfind('.');
+        if (end != SBuf::npos) {
+            name.chop(0, end);
+            continue;
+        } else {
+            /* What? A encoding without a extension? */
+            m = nullptr;
+        }
+
+        break;
+    }
+
     return m;
 }
 

@@ -38,6 +38,13 @@ RegexPattern::~RegexPattern()
     regfree(&regex);
 }
 
+bool
+RegexPattern::match(const SBuf &str) const
+{
+    SBuf tmp = str;
+    return regexec(&regex, tmp.c_str(), 0, nullptr, 0) == 0;
+}
+
 void
 RegexPattern::print(std::ostream &os, const RegexPattern * const previous) const
 {

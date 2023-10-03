@@ -307,7 +307,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
      * condition
      */
 #define REFRESH_OVERRIDE(flag) \
-    ((R = (R ? R : refreshLimits(entry->mem_obj->storeId()))) , \
+    ((R = (R ? R : refreshLimits(SBuf(entry->mem_obj->storeId())))) , \
     (R && R->flags.flag))
 #else
 #define REFRESH_OVERRIDE(flag) 0
