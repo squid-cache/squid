@@ -26,6 +26,7 @@
 #endif
 #endif
 #include <map>
+#include <optional>
 
 namespace Security {
 
