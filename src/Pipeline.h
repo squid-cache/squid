@@ -10,7 +10,7 @@
 #define SQUID_SRC_PIPELINE_H
 
 #include "base/RefCount.h"
-#include "http/forward.h"
+#include "http/Stream.h"
 
 #include <list>
 

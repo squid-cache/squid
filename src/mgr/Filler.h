@@ -12,7 +12,7 @@
 #define SQUID_MGR_FILLER_H
 
 #include "comm/forward.h"
-#include "ipc/forward.h"
+#include "ipc/RequestId.h"
 #include "mgr/Action.h"
 #include "mgr/StoreToCommWriter.h"
 

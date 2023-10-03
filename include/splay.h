@@ -10,6 +10,7 @@
 #define SQUID_SPLAY_H
 
 #include "fatal.h"
+#include <cstddef>
 #include <stack>
 
 // private class of Splay. Do not use directly

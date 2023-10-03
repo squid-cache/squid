@@ -10,6 +10,8 @@
 #define SQUID_SNMPREQUEST_H_
 
 #if SQUID_SNMP
+#include "acl/forward.h"
+#include "ip/Address.h"
 #include "snmp_session.h"
 
 // POD

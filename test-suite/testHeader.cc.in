@@ -6,9 +6,16 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#if HAVE_LDAP_H
-#include <ldap.h>
-#endif
+/*
+ * This file is used to test whether Squid header files can be compiled on their own.
+ * See the testHeaders target in src/TestHeaders.am.
+ */
 
-int nds_get_password(LDAP *ld, char *object_dn, size_t * pwd_len, char *pwd);
+#include "squid.h"
+#include "@HEADER@"
+
+int
+main(int, char **) {
+    return 0;
+}
 

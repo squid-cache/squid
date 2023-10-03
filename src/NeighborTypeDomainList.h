@@ -9,6 +9,8 @@
 #ifndef SQUID_NEIGHBORTYPEDOMAINLIST_H_
 #define SQUID_NEIGHBORTYPEDOMAINLIST_H_
 
+#include "enums.h"
+
 /// representation of a neighbor_type_domain configuration directive. A POD
 class NeighborTypeDomainList
 {

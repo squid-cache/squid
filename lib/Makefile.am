@@ -77,12 +77,4 @@ tests_testRFC1738_LDADD= \
 
 tests_testRFC1738_LDFLAGS = $(LIBADD_DL)
 
-
-## Special Universal .h dependency test script
-## aborts if error encountered
 testHeaders: $(top_srcdir)/include/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
-
-TESTS += testHeaders
-CLEANFILES += testHeaders
-.PHONY: testHeaders
