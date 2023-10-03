@@ -46,7 +46,7 @@
 
 static AUTHSSTATS authenticateDigestStats;
 
-helper *digestauthenticators = nullptr;
+Helper::ClientPointer digestauthenticators;
 
 static hash_table *digest_nonce_cache;
 
@@ -525,7 +525,7 @@ Auth::Digest::Config::init(Auth::SchemeConfig *)
         authdigest_initialised = 1;
 
         if (digestauthenticators == nullptr)
-            digestauthenticators = new helper("digestauthenticator");
+            digestauthenticators = Helper::Client::Make("digestauthenticator");
 
         digestauthenticators->cmdline = authenticateProgram;
 
@@ -533,7 +533,7 @@ Auth::Digest::Config::init(Auth::SchemeConfig *)
 
         digestauthenticators->ipc_type = IPC_STREAM;
 
-        helperOpenServers(digestauthenticators);
+        digestauthenticators->openSessions();
     }
 }
 
@@ -559,7 +559,6 @@ Auth::Digest::Config::done()
     if (!shutting_down)
         return;
 
-    delete digestauthenticators;
     digestauthenticators = nullptr;
 
     if (authenticateProgram)

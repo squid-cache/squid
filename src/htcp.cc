@@ -14,6 +14,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
@@ -1272,9 +1273,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 static void
 htcpForwardClr(char *buf, int sz)
 {
-    CachePeer *p;
-
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: CurrentCachePeers()) {
         if (!p->options.htcp) {
             continue;
         }

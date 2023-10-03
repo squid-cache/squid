@@ -24,7 +24,12 @@
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
 /// CARP cache_peers ordered by their CARP weight
-static SelectedCachePeers TheCarpPeers;
+static auto &
+CarpPeers()
+{
+    static const auto carpPeers = new SelectedCachePeers();
+    return *carpPeers;
+}
 
 static OBJH carpCachemgr;
 
@@ -50,7 +55,7 @@ carpInit(void)
     char *t;
     /* Clean up */
 
-    TheCarpPeers.clear();
+    CarpPeers().clear();
 
     /* initialize cache manager before we have a chance to leave the execution path */
     carpRegisterWithCacheManager();
@@ -58,9 +63,8 @@ carpInit(void)
     /* find out which peers we have */
 
     RawCachePeers rawCarpPeers;
-    for (auto p = Config.peers; p; p = p->next) {
-        if (!cbdataReferenceValid(p))
-            continue;
+    for (const auto &peer: CurrentCachePeers()) {
+        const auto p = peer.get();
 
         if (!p->options.carp)
             continue;
@@ -127,7 +131,7 @@ carpInit(void)
         P_last = p->carp.load_factor;
     }
 
-    TheCarpPeers.assign(rawCarpPeers.begin(), rawCarpPeers.end());
+    CarpPeers().assign(rawCarpPeers.begin(), rawCarpPeers.end());
 }
 
 CachePeer *
@@ -142,14 +146,14 @@ carpSelectParent(PeerSelector *ps)
     double score;
     double high_score = 0;
 
-    if (TheCarpPeers.empty())
+    if (CarpPeers().empty())
         return nullptr;
 
     /* calculate hash key */
     debugs(39, 2, "carpSelectParent: Calculating hash for " << request->effectiveRequestUri());
 
     /* select CachePeer */
-    for (const auto &tp: TheCarpPeers) {
+    for (const auto &tp: CarpPeers()) {
         if (!tp)
             continue; // peer gone
 
@@ -218,13 +222,13 @@ carpCachemgr(StoreEntry * sentry)
                       "Factor",
                       "Actual");
 
-    for (const auto &p: TheCarpPeers) {
+    for (const auto &p: CarpPeers()) {
         if (!p)
             continue;
         sumfetches += p->stats.fetches;
     }
 
-    for (const auto &p: TheCarpPeers) {
+    for (const auto &p: CarpPeers()) {
         if (!p)
             continue;
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",

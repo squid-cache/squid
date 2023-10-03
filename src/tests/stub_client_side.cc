@@ -14,7 +14,7 @@
 #include "tests/STUB.h"
 
 #include "client_side.h"
-bool ConnStateData::clientParseRequests() STUB_RETVAL(false)
+void ConnStateData::parseRequests() STUB
 void ConnStateData::readNextRequest() STUB
 bool ConnStateData::isOpen() const STUB_RETVAL(false)
 void ConnStateData::kick() STUB

@@ -51,7 +51,7 @@ Ipc::UdsOp::conn()
     return conn_;
 }
 
-void Ipc::UdsOp::setTimeout(int seconds, const char *handlerName)
+void Ipc::UdsOp::setTimeout(time_t seconds, const char *handlerName)
 {
     typedef CommCbMemFunT<UdsOp, CommTimeoutCbParams> Dialer;
     AsyncCall::Pointer handler = asyncCall(54,5, handlerName,

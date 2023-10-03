@@ -75,7 +75,7 @@ private:
     int getNextFile(sfileno *, int *size);
     bool fromLog;
     bool _done;
-    /// \bug (callback) should be hidden behind a proper human readable name
+    // TODO: (callback) should be hidden behind a proper human readable name
     void (callback)(void *cbdata);
     void *cbdata;
 };

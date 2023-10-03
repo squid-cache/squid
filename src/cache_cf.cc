@@ -25,6 +25,7 @@
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
@@ -975,7 +976,7 @@ configDoConfigure(void)
 #endif
     }
 
-    for (CachePeer *p = Config.peers; p != nullptr; p = p->next) {
+    for (const auto &p: CurrentCachePeers()) {
 
         // default value for ssldomain= is the peer host/IP
         if (p->secure.sslDomain.isEmpty())
@@ -2068,12 +2069,16 @@ peer_type_str(const peer_t type)
 }
 
 static void
-dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
+dump_peer(StoreEntry * entry, const char *name, const CachePeers *peers)
 {
+    if (!peers)
+        return;
+
     NeighborTypeDomainList *t;
     LOCAL_ARRAY(char, xname, 128);
 
-    while (p != nullptr) {
+    for (const auto &peer: *peers) {
+        const auto p = peer.get();
         storeAppendPrintf(entry, "%s %s %s %d %d name=%s",
                           name,
                           p->host,
@@ -2094,8 +2099,6 @@ dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
                               peer_type_str(t->type),
                               t->domain);
         }
-
-        p = p->next;
     }
 }
 
@@ -2160,7 +2163,7 @@ GetUdpService(void)
 }
 
 static void
-parse_peer(CachePeer ** head)
+parse_peer(CachePeers **peers)
 {
     char *host_str = ConfigParser::NextToken();
     if (!host_str) {
@@ -2397,22 +2400,21 @@ parse_peer(CachePeer ** head)
     if (p->secure.encryptTransport)
         p->secure.parseOptions();
 
-    p->index =  ++Config.npeers;
+    if (!*peers)
+        *peers = new CachePeers;
 
-    while (*head != nullptr)
-        head = &(*head)->next;
+    (*peers)->add(p);
 
-    *head = p;
+    p->index = (*peers)->size();
 
     peerClearRRStart();
 }
 
 static void
-free_peer(CachePeer ** P)
+free_peer(CachePeers ** const peers)
 {
-    delete *P;
-    *P = nullptr;
-    Config.npeers = 0;
+    delete *peers;
+    *peers = nullptr;
 }
 
 static void
@@ -3897,7 +3899,8 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
         storeAppendPrintf(e, " ssl-bump");
 #endif
 
-    s->secure.dumpCfg(e, "tls-");
+    PackableStream os(*e);
+    s->secure.dumpCfg(os, "tls-");
 }
 
 static void

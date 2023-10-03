@@ -1,3 +1,12 @@
+Changes in squid-6.3 (03 Sep 2023):
+
+	- Bug 5294: ERR_CANNOT_FORWARD returned instead of ERR_DNS_FAIL
+	- Bug 4981: Work around in-call job invalidation bugs
+	- basic_smb_lm_auth: fix 'no previous declaration' warnings
+	- CacheManager: require /squid-internal-mgr/ URL path prefix
+	- ESI: Fix build [-Wsingle-bit-bitfield-constant-conversion]
+	- ... and some documentation changes
+
 Changes in squid-6.2 (06 Aug 2023):
 
 	- Bug 5187: Work around REQMOD satisfaction regression

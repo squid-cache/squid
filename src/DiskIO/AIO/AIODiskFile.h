@@ -28,7 +28,7 @@ public:
     AIODiskFile (char const *path, AIODiskIOStrategy *);
     ~AIODiskFile() override;
 
-    /// \bug the code has this as "IORequestor::Pointer callback"
+    // XXX: the code has this as "IORequestor::Pointer callback"
     void open(int flags, mode_t mode, RefCount<IORequestor> callback) override;
 
     void create (int, mode_t, RefCount<IORequestor>) override;

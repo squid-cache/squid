@@ -13,8 +13,10 @@
 #include "anyp/PortCfg.h"
 #include "base/EnumIterator.h"
 #include "base/IoManip.h"
+#include "base/PackableStream.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "debug/Messages.h"
@@ -51,7 +53,6 @@
 
 bool peerAllowedToUse(const CachePeer *, PeerSelector *);
 static int peerWouldBePinged(const CachePeer *, PeerSelector *);
-static void neighborRemove(CachePeer *);
 static void neighborAlive(CachePeer *, const MemObject *, const icp_common_t *);
 #if USE_HTCP
 static void neighborAliveHtcp(CachePeer *, const MemObject *, const HtcpReplyData *);
@@ -70,12 +71,11 @@ static IRCB peerCountHandleIcpReply;
 
 static void neighborIgnoreNonPeer(const Ip::Address &, icp_opcode);
 static OBJH neighborDumpPeers;
-static void dump_peers(StoreEntry * sentry, CachePeer * peers);
+static void dump_peers(StoreEntry *, CachePeers *);
 
 static unsigned short echo_port;
 
 static int NLateReplies = 0;
-static CachePeer *first_ping = nullptr;
 
 const char *
 neighborTypeStr(const CachePeer * p)
@@ -97,13 +97,12 @@ whichPeer(const Ip::Address &from)
 {
     int j;
 
-    CachePeer *p = nullptr;
     debugs(15, 3, "whichPeer: from " << from);
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: CurrentCachePeers()) {
         for (j = 0; j < p->n_addresses; ++j) {
             if (from == p->addresses[j] && from.port() == p->icp.port) {
-                return p;
+                return p.get();
             }
         }
     }
@@ -272,11 +271,10 @@ peerHTTPOkay(const CachePeer * p, PeerSelector * ps)
 int
 neighborsCount(PeerSelector *ps)
 {
-    CachePeer *p = nullptr;
     int count = 0;
 
-    for (p = Config.peers; p; p = p->next)
-        if (peerWouldBePinged(p, ps))
+    for (const auto &p: CurrentCachePeers())
+        if (peerWouldBePinged(p.get(), ps))
             ++count;
 
     debugs(15, 3, "neighborsCount: " << count);
@@ -292,7 +290,9 @@ getFirstUpParent(PeerSelector *ps)
 
     CachePeer *p = nullptr;
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &peer: CurrentCachePeers()) {
+        p = peer.get();
+
         if (!neighborUp(p))
             continue;
 
@@ -315,10 +315,10 @@ getRoundRobinParent(PeerSelector *ps)
     assert(ps);
     HttpRequest *request = ps->request;
 
-    CachePeer *p;
     CachePeer *q = nullptr;
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &peer: CurrentCachePeers()) {
+        const auto p = peer.get();
         if (!p->options.roundrobin)
             continue;
 
@@ -357,11 +357,12 @@ getWeightedRoundRobinParent(PeerSelector *ps)
     assert(ps);
     HttpRequest *request = ps->request;
 
-    CachePeer *p;
     CachePeer *q = nullptr;
     int weighted_rtt;
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &peer: CurrentCachePeers()) {
+        const auto p = peer.get();
+
         if (!p->options.weighted_roundrobin)
             continue;
 
@@ -378,11 +379,11 @@ getWeightedRoundRobinParent(PeerSelector *ps)
     }
 
     if (q && q->rr_count > 1000000)
-        for (p = Config.peers; p; p = p->next) {
+        for (const auto &p: CurrentCachePeers()) {
             if (!p->options.weighted_roundrobin)
                 continue;
 
-            if (neighborType(p, request->url) != PEER_PARENT)
+            if (neighborType(p.get(), request->url) != PEER_PARENT)
                 continue;
 
             p->rr_count = 0;
@@ -446,10 +447,8 @@ peerClearRRStart(void)
 void
 peerClearRR()
 {
-    CachePeer *p = nullptr;
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: CurrentCachePeers())
         p->rr_count = 1;
-    }
 }
 
 void
@@ -477,9 +476,9 @@ getDefaultParent(PeerSelector *ps)
     assert(ps);
     HttpRequest *request = ps->request;
 
-    CachePeer *p = nullptr;
+    for (const auto &peer: CurrentCachePeers()) {
+        const auto p = peer.get();
 
-    for (p = Config.peers; p; p = p->next) {
         if (neighborType(p, request->url) != PEER_PARENT)
             continue;
 
@@ -499,45 +498,6 @@ getDefaultParent(PeerSelector *ps)
     return nullptr;
 }
 
-CachePeer *
-getNextPeer(CachePeer * p)
-{
-    return p->next;
-}
-
-CachePeer *
-getFirstPeer(void)
-{
-    return Config.peers;
-}
-
-static void
-neighborRemove(CachePeer * target)
-{
-    CachePeer *p = nullptr;
-    CachePeer **P = nullptr;
-    p = Config.peers;
-    P = &Config.peers;
-
-    while (p) {
-        if (target == p)
-            break;
-
-        P = &p->next;
-
-        p = p->next;
-    }
-
-    if (p) {
-        *P = p->next;
-        p->next = nullptr;
-        delete p;
-        --Config.npeers;
-    }
-
-    first_ping = Config.peers;
-}
-
 static void
 neighborsRegisterWithCacheManager()
 {
@@ -551,16 +511,13 @@ neighbors_init(void)
 {
     struct servent *sep = nullptr;
     const char *me = getMyHostname();
-    CachePeer *thisPeer = nullptr;
-    CachePeer *next = nullptr;
 
     neighborsRegisterWithCacheManager();
 
     if (Comm::IsConnOpen(icpIncomingConn)) {
+        RawCachePeers peersToRemove;
 
-        for (thisPeer = Config.peers; thisPeer; thisPeer = next) {
-            next = thisPeer->next;
-
+        for (const auto &thisPeer: CurrentCachePeers()) {
             if (0 != strcmp(thisPeer->host, me))
                 continue;
 
@@ -571,8 +528,15 @@ neighbors_init(void)
                 debugs(15, DBG_IMPORTANT, "WARNING: Peer looks like this host." <<
                        Debug::Extra << "Ignoring cache_peer " << *thisPeer);
 
-                neighborRemove(thisPeer);
+                peersToRemove.push_back(thisPeer.get());
+                break; // avoid warning about (and removing) the same CachePeer twice
             }
+        }
+
+        while (peersToRemove.size()) {
+            const auto p = peersToRemove.back();
+            peersToRemove.pop_back();
+            DeleteConfigured(p);
         }
     }
 
@@ -580,8 +544,6 @@ neighbors_init(void)
 
     sep = getservbyname("echo", "udp");
     echo_port = sep ? ntohs((unsigned short) sep->s_port) : 7;
-
-    first_ping = Config.peers;
 }
 
 int
@@ -594,8 +556,6 @@ neighborsUdpPing(HttpRequest * request,
 {
     const char *url = entry->url();
     MemObject *mem = entry->mem_obj;
-    CachePeer *p = nullptr;
-    int i;
     int reqnum = 0;
     int flags;
     int peers_pinged = 0;
@@ -616,9 +576,8 @@ neighborsUdpPing(HttpRequest * request,
 
     reqnum = icpSetCacheKey((const cache_key *)entry->key);
 
-    for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
-        if (p == nullptr)
-            p = Config.peers;
+    for (size_t i = 0; i < Config.peers->size(); ++i) {
+        const auto p = &Config.peers->nextPeerToPing(i);
 
         debugs(15, 5, "candidate: " << *p);
 
@@ -708,9 +667,6 @@ neighborsUdpPing(HttpRequest * request,
         if ((p->type != PEER_MULTICAST) && (p->stats.probe_start == 0))
             p->stats.probe_start = squid_curtime;
     }
-
-    if ((first_ping = first_ping->next) == nullptr)
-        first_ping = Config.peers;
 
     /*
      * How many replies to expect?
@@ -802,25 +758,17 @@ neighborsDigestSelect(PeerSelector *ps)
     int best_rtt = 0;
     int choice_count = 0;
     int ichoice_count = 0;
-    CachePeer *p;
     int p_rtt;
-    int i;
 
     if (!request->flags.hierarchical)
         return nullptr;
 
     storeKeyPublicByRequest(request);
 
-    for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
-        lookup_t lookup;
+    for (size_t i = 0; i < Config.peers->size(); ++i) {
+        const auto p = &Config.peers->nextPeerToPing(i);
 
-        if (!p)
-            p = Config.peers;
-
-        if (i == 1)
-            first_ping = p;
-
-        lookup = peerDigestLookup(p, ps);
+        const auto lookup = peerDigestLookup(p, ps);
 
         if (lookup == LOOKUP_NONE)
             continue;
@@ -1082,7 +1030,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
             if (100 * p->icp.counts[ICP_DENIED] / p->stats.pings_acked > 95) {
                 debugs(15, DBG_CRITICAL, "Disabling cache_peer " << *p <<
                        " because over 95% of its replies are UDP_DENIED");
-                neighborRemove(p);
+                DeleteConfigured(p);
                 p = nullptr;
             } else {
                 neighborCountIgnored(p);
@@ -1098,14 +1046,11 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
 CachePeer *
 findCachePeerByName(const char * const name)
 {
-    CachePeer *p = nullptr;
-
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: CurrentCachePeers()) {
         if (!strcasecmp(name, p->name))
-            break;
+            return p.get();
     }
-
-    return p;
+    return nullptr;
 }
 
 int
@@ -1209,8 +1154,6 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
 static void
 peerRefreshDNS(void *data)
 {
-    CachePeer *p = nullptr;
-
     if (eventFind(peerRefreshDNS, nullptr))
         eventDelete(peerRefreshDNS, nullptr);
 
@@ -1220,8 +1163,8 @@ peerRefreshDNS(void *data)
         return;
     }
 
-    for (p = Config.peers; p; p = p->next)
-        ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
+    for (const auto &p: CurrentCachePeers())
+        ipcache_nbgethostbyname(p->host, peerDNSConfigure, p.get());
 
     /* Reconfigure the peers every hour */
     eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 3600.0, 1);
@@ -1546,12 +1489,13 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
     else if (p->connection_auth == 2)
         storeAppendPrintf(sentry, " connection-auth=auto");
 
-    p->secure.dumpCfg(sentry,"tls-");
+    PackableStream os(*sentry);
+    p->secure.dumpCfg(os, "tls-");
     storeAppendPrintf(sentry, "\n");
 }
 
 static void
-dump_peers(StoreEntry * sentry, CachePeer * peers)
+dump_peers(StoreEntry *sentry, CachePeers *peers)
 {
     char ntoabuf[MAX_IPSTRLEN];
     int i;
@@ -1559,7 +1503,8 @@ dump_peers(StoreEntry * sentry, CachePeer * peers)
     if (peers == nullptr)
         storeAppendPrintf(sentry, "There are no neighbors installed.\n");
 
-    for (CachePeer *e = peers; e; e = e->next) {
+    for (const auto &peer: *peers) {
+        const auto e = peer.get();
         assert(e->host != nullptr);
         storeAppendPrintf(sentry, "\n%-11.11s: %s\n",
                           neighborTypeStr(e),
@@ -1720,10 +1665,9 @@ neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Addres
 void
 neighborsHtcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &method, htcp_clr_reason reason)
 {
-    CachePeer *p;
     char buf[128];
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: CurrentCachePeers()) {
         if (!p->options.htcp) {
             continue;
         }
@@ -1734,7 +1678,7 @@ neighborsHtcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &m
             continue;
         }
         debugs(15, 3, "neighborsHtcpClear: sending CLR to " << p->in_addr.toUrl(buf, 128));
-        htcpClear(e, req, method, p, reason);
+        htcpClear(e, req, method, p.get(), reason);
     }
 }
 

@@ -103,9 +103,9 @@ First Version: 26. May 1997
 =head1 REPORTING BUGS
 
 Bug reports need to be made in English.
-See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+See https://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
 
-Report bugs or bug fixes using http://bugs.squid-cache.org/
+Report bugs or bug fixes using https://bugs.squid-cache.org/
 
 Report serious security bugs to I<Squid Bugs <squid-bugs@lists.squid-cache.org>>
 
@@ -115,7 +115,7 @@ Report ideas for new improvements to the I<Squid Developers mailing list <squid-
 
 squid (8), GPL (7),
 
-The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq
+The Squid FAQ wiki https://wiki.squid-cache.org/SquidFaq
 
 The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
 
@@ -144,7 +144,7 @@ $| = 1;
 my $status = undef;
 
 # Process lines of the form 'channel-ID URL ip-address/fqdn ident method'
-# See http://wiki.squid-cache.org/Features/AddonHelpers for details
+# See https://wiki.squid-cache.org/Features/AddonHelpers for details
 
 while ( <> ) {
     my ($cid, $url, $remainder) = split;
