@@ -16,7 +16,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = mem time debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+SUBDIRS = mem time debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs quic repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -485,6 +485,7 @@ squid_LDADD = \
 	servers/libservers.la \
 	ftp/libftp.la \
 	helper/libhelper.la \
+	quic/libquic.la \
 	http/libhttp.la \
 	dns/libdns.la \
 	base/libbase.la \
@@ -1929,6 +1930,7 @@ tests_test_http_range_LDADD = \
 	acl/libstate.la \
 	acl/libapi.la \
 	proxyp/libproxyp.la \
+	quic/libquic.la \
 	parser/libparser.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -2319,6 +2321,7 @@ tests_testHttpRequest_LDADD = \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	proxyp/libproxyp.la \
+	quic/libquic.la \
 	parser/libparser.la \
 	dns/libdns.la \
 	base/libbase.la \
@@ -2606,6 +2609,7 @@ tests_testCacheManager_LDADD = \
 	helper/libhelper.la \
 	http/libhttp.la \
 	proxyp/libproxyp.la \
+	quic/libquic.la \
 	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
