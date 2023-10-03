@@ -140,7 +140,7 @@ public:
 
     /// Matches (or resumes matching of) a child node while maintaning
     /// resumption breadcrumbs if a [grand]child node goes async.
-    bool matchChild(const Acl::InnerNode *parent, Acl::Nodes::const_iterator pos, const ACL *child);
+    bool matchChild(const Acl::InnerNode *parent, Acl::Nodes::const_iterator pos, const Acl::Node *child);
 
     /// Whether we should continue to match tree nodes or stop/pause.
     bool keepMatching() const { return !finished() && !asyncInProgress(); }

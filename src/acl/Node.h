@@ -6,10 +6,9 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_H
-#define SQUID_ACL_H
+#ifndef SQUID_ACL_NODE_H
+#define SQUID_ACL_NODE_H
 
-#include "acl/forward.h"
 #include "acl/Options.h"
 #include "cbdata.h"
 #include "defines.h"
@@ -26,7 +25,7 @@ namespace Acl {
 /// the ACL type name known to admins
 typedef const char *TypeName;
 /// a "factory" function for making ACL objects (of some ACL child type)
-typedef ACL *(*Maker)(TypeName typeName);
+typedef Node *(*Maker)(TypeName typeName);
 /// use the given ACL Maker for all ACLs of the named type
 void RegisterMaker(TypeName typeName, Maker maker);
 
@@ -36,26 +35,23 @@ void RegisterMaker(TypeName typeName, Maker maker);
 /// Key comparison is case-insensitive.
 void SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey);
 
-} // namespace Acl
-
 /// A configurable condition. A node in the ACL expression tree.
 /// Can evaluate itself in FilledChecklist context.
 /// Does not change during evaluation.
-/// \ingroup ACLAPI
-class ACL
+class Node
 {
 
 public:
     void *operator new(size_t);
     void operator delete(void *);
 
-    static void ParseAclLine(ConfigParser &parser, ACL ** head);
+    static void ParseAclLine(ConfigParser &parser, Node ** head);
     static void Initialize();
-    static ACL *FindByName(const char *name);
+    static Node *FindByName(const char *name);
 
-    ACL();
-    ACL(ACL &&) = delete; // no copying of any kind
-    virtual ~ACL();
+    Node();
+    Node(Node &&) = delete; // no copying of any kind
+    virtual ~Node();
 
     /// sets user-specified ACL name and squid.conf context
     void context(const char *name, const char *configuration);
@@ -86,11 +82,11 @@ public:
 
     char name[ACL_NAME_SZ];
     char *cfgline;
-    ACL *next; // XXX: remove or at least use refcounting
+    Node *next; // XXX: remove or at least use refcounting
     bool registered; ///< added to the global list of ACLs via aclRegister()
 
 private:
-    /// Matches the actual data in checklist against this ACL.
+    /// Matches the actual data in checklist against this Node.
     virtual int match(ACLChecklist *checklist) = 0; // XXX: missing const
 
     /// whether our (i.e. shallow) match() requires checklist to have a AccessLogEntry
@@ -101,13 +97,15 @@ private:
     virtual bool requiresReply() const;
 
     // TODO: Rename to globalOptions(); these are not the only supported options
-    /// \returns (linked) 'global' Options supported by this ACL
-    virtual const Acl::Options &options() { return Acl::NoOptions(); }
+    /// \returns (linked) 'global' Options supported by this Node
+    virtual const Options &options() { return NoOptions(); }
 
-    /// \returns (linked) "line" Options supported by this ACL
-    /// \see ACL::options()
-    virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
+    /// \returns (linked) "line" Options supported by this Node
+    /// \see Node::options()
+    virtual const Options &lineOptions() { return NoOptions(); }
 };
+
+} // namespace Acl
 
 /// \ingroup ACLAPI
 typedef enum {
@@ -213,7 +211,6 @@ public:
 
 /// \ingroup ACLAPI
 /// XXX: find a way to remove or at least use a refcounted ACL pointer
-extern const char *AclMatchedName;  /* NULL */
+extern const char *AclMatchedName;  /* nullptr */
 
-#endif /* SQUID_ACL_H */
-
+#endif /* SQUID_ACL_NODE_H */

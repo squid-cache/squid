@@ -7,9 +7,9 @@
  */
 
 #include "squid.h"
-#include "acl/Acl.h"
 #include "acl/AnnotationData.h"
 #include "acl/Checklist.h"
+#include "acl/Node.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"

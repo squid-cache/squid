@@ -9,7 +9,6 @@
 /* DEBUG: section 82    External ACL */
 
 #include "squid.h"
-#include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
 #include "cache_cf.h"
 #include "client_side.h"
@@ -1151,7 +1150,7 @@ ExternalACLLookup::checkForAsync(ACLChecklist *checklist)const
 {
     /* TODO: optimise this - we probably have a pointer to this
      * around somewhere */
-    ACL *acl = ACL::FindByName(AclMatchedName);
+    const auto acl = Acl::Node::FindByName(AclMatchedName);
     assert(acl);
     ACLExternal *me = dynamic_cast<ACLExternal *> (acl);
     assert (me);

@@ -9,7 +9,6 @@
 #ifndef SQUID_ACLTIMEDATA_H
 #define SQUID_ACLTIMEDATA_H
 
-#include "acl/Acl.h"
 #include "acl/Data.h"
 
 class ACLTimeData : public ACLData<time_t>

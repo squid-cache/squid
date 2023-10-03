@@ -9,7 +9,7 @@
 #ifndef SQUID_ACLARP_H
 #define SQUID_ACLARP_H
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 
 #include <set>
 
@@ -19,7 +19,7 @@ class Eui48;
 };
 
 /// \ingroup ACLAPI
-class ACLARP : public ACL
+class ACLARP : public Acl::Node
 {
     MEMPROXY_CLASS(ACLARP);
 

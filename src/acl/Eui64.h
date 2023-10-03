@@ -9,7 +9,7 @@
 #ifndef SQUID_ACLEUI64_H
 #define SQUID_ACLEUI64_H
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 
 #include <set>
 
@@ -18,7 +18,7 @@ namespace Eui
 class Eui64;
 };
 
-class ACLEui64 : public ACL
+class ACLEui64 : public Acl::Node
 {
     MEMPROXY_CLASS(ACLEui64);
 

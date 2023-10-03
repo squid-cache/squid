@@ -9,8 +9,8 @@
 #ifndef SQUID_ACLHTTPSTATUS_H
 #define SQUID_ACLHTTPSTATUS_H
 
-#include "acl/Acl.h"
 #include "acl/Checklist.h"
+#include "acl/Node.h"
 #include "splay.h"
 
 /// \ingroup ACLAPI
@@ -24,7 +24,7 @@ struct acl_httpstatus_data {
 };
 
 /// \ingroup ACLAPI
-class ACLHTTPStatus : public ACL
+class ACLHTTPStatus : public Acl::Node
 {
     MEMPROXY_CLASS(ACLHTTPStatus);
 

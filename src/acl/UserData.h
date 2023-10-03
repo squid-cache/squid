@@ -9,7 +9,6 @@
 #ifndef SQUID_ACLUSERDATA_H
 #define SQUID_ACLUSERDATA_H
 
-#include "acl/Acl.h"
 #include "acl/Data.h"
 #include "sbuf/SBuf.h"
 

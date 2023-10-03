@@ -14,8 +14,6 @@ noinst_LTLIBRARIES = libapi.la libstate.la libacls.la
 
 ## General data-independent ACL API
 libapi_la_SOURCES = \
-	Acl.cc \
-	Acl.h \
 	BoolOps.cc \
 	BoolOps.h \
 	Checklist.cc \
@@ -23,6 +21,8 @@ libapi_la_SOURCES = \
 	ChecklistFiller.h \
 	InnerNode.cc \
 	InnerNode.h \
+	Node.cc \
+	Node.h \
 	Options.cc \
 	Options.h \
 	Tree.cc \

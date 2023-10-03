@@ -9,7 +9,6 @@
 #ifndef SQUID_ACLMETHODDATA_H
 #define SQUID_ACLMETHODDATA_H
 
-#include "acl/Acl.h"
 #include "acl/Data.h"
 #include "http/RequestMethod.h"
 

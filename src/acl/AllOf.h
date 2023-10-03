@@ -17,12 +17,12 @@ namespace Acl
 /// Configurable all-of ACL. Each ACL line is a conjunction of ACLs.
 /// Uses AndNode and OrNode to handle squid.conf configuration where multiple
 /// acl all-of lines are always ORed together.
-class AllOf: public Acl::InnerNode
+class AllOf: public InnerNode
 {
     MEMPROXY_CLASS(AllOf);
 
 public:
-    /* ACL API */
+    /* Acl::Node API */
     char const *typeString() const override;
     void parse() override;
     SBufList dump() const override;

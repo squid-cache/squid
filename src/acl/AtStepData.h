@@ -9,9 +9,9 @@
 #ifndef SQUID_ACLATSTEPDATA_H
 #define SQUID_ACLATSTEPDATA_H
 
-#include "acl/Acl.h"
 #include "acl/Data.h"
 #include "XactionStep.h"
+
 #include <list>
 
 class ACLAtStepData : public ACLData<XactionStep>

@@ -7,8 +7,8 @@
  */
 
 #include "squid.h"
-#include "acl/Acl.h"
 #include "acl/Gadgets.h"
+#include "acl/Node.h"
 #include "ClientDelayConfig.h"
 #include "ConfigParser.h"
 #include "Parsing.h"

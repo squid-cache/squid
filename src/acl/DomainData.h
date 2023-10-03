@@ -9,7 +9,6 @@
 #ifndef SQUID_ACLDOMAINDATA_H
 #define SQUID_ACLDOMAINDATA_H
 
-#include "acl/Acl.h"
 #include "acl/Data.h"
 #include "splay.h"
 

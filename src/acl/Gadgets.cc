@@ -30,7 +30,7 @@
 #include <set>
 #include <algorithm>
 
-typedef std::set<ACL*> AclSet;
+using AclSet = std::set<Acl::Node *>;
 /// Accumulates all ACLs to facilitate their clean deletion despite reuse.
 static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
 
@@ -76,9 +76,7 @@ aclIsProxyAuth(const char *name)
 
     debugs(28, 5, "aclIsProxyAuth: called for " << name);
 
-    ACL *a;
-
-    if ((a = ACL::FindByName(name))) {
+    if (const auto a = Acl::Node::FindByName(name)) {
         debugs(28, 5, "aclIsProxyAuth: returning " << a->isProxyAuth());
         return a->isProxyAuth();
     }
@@ -218,7 +216,7 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
 }
 
 void
-aclRegister(ACL *acl)
+aclRegister(Acl::Node *acl)
 {
     if (!acl->registered) {
         if (!RegisteredAcls)
@@ -231,7 +229,7 @@ aclRegister(ACL *acl)
 /// remove registered acl from the centralized deletion set
 static
 void
-aclDeregister(ACL *acl)
+aclDeregister(Acl::Node *acl)
 {
     if (acl->registered) {
         if (RegisteredAcls)
@@ -246,13 +244,13 @@ aclDeregister(ACL *acl)
 
 /// called to delete ALL Acls.
 void
-aclDestroyAcls(ACL ** head)
+aclDestroyAcls(Acl::Node ** head)
 {
     *head = nullptr; // Config.aclList
     if (AclSet *acls = RegisteredAcls) {
         debugs(28, 8, "deleting all " << acls->size() << " ACLs");
         while (!acls->empty()) {
-            ACL *acl = *acls->begin();
+            const auto acl = *acls->begin();
             // We use centralized deletion (this function) so ~ACL should not
             // delete other ACLs, but we still deregister first to prevent any
             // accesses to the being-deleted ACL via RegisteredAcls.

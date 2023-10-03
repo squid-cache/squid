@@ -9,7 +9,6 @@
 #ifndef SQUID_ACLPROTOCOLDATA_H
 #define SQUID_ACLPROTOCOLDATA_H
 
-#include "acl/Acl.h"
 #include "acl/Data.h"
 #include "anyp/ProtocolType.h"
 

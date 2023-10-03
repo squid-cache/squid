@@ -46,11 +46,11 @@ Acl::AllOf::doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const
 void
 Acl::AllOf::parse()
 {
-    Acl::InnerNode *whole = nullptr;
-    ACL *oldNode = empty() ? nullptr : nodes.front();
+    InnerNode *whole = nullptr;
+    Node *oldNode = empty() ? nullptr : nodes.front();
 
     // optimization: this logic reduces subtree hight (number of tree levels)
-    if (Acl::OrNode *oldWhole = dynamic_cast<Acl::OrNode*>(oldNode)) {
+    if (auto *oldWhole = dynamic_cast<OrNode*>(oldNode)) {
         // this acl saw multiple lines before; add another one to the old node
         whole = oldWhole;
     } else if (oldNode) {
@@ -61,7 +61,7 @@ Acl::AllOf::parse()
         wholeCtx.appendf("(%s lines)", name);
         wholeCtx.terminate();
 
-        Acl::OrNode *newWhole = new Acl::OrNode;
+        auto *newWhole = new OrNode;
         newWhole->context(wholeCtx.content(), oldNode->cfgline);
         newWhole->add(oldNode); // old (i.e. first) line
         nodes.front() = whole = newWhole;
@@ -79,7 +79,7 @@ Acl::AllOf::parse()
     lineCtx.appendf("(%s line #%d)", name, lineId);
     lineCtx.terminate();
 
-    Acl::AndNode *line = new AndNode;
+    auto *line = new AndNode;
     line->context(lineCtx.content(), config_input_line);
     line->lineParse();
 

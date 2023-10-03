@@ -9,7 +9,7 @@
 #ifndef SQUID_ACLCONNMARK_H
 #define SQUID_ACLCONNMARK_H
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 #include "ip/forward.h"
 #include "ip/NfMarkConfig.h"
 #include "parser/Tokenizer.h"
@@ -18,12 +18,12 @@
 
 namespace Acl {
 
-class ConnMark : public ACL
+class ConnMark : public Node
 {
     MEMPROXY_CLASS(ConnMark);
 
 public:
-    /* ACL API */
+    /* Acl::Node API */
     char const *typeString() const override;
     void parse() override;
     int match(ACLChecklist *checklist) override;

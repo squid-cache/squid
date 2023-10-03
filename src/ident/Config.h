@@ -11,7 +11,7 @@
 
 #if USE_IDENT
 
-#include "acl/Acl.h"
+#include "acl/forward.h"
 
 namespace Ident
 {

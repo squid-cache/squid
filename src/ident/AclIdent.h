@@ -12,6 +12,7 @@
 #if USE_IDENT
 
 #include "acl/Checklist.h"
+#include "acl/Data.h"
 
 /// \ingroup ACLAPI
 class IdentLookup : public ACLChecklist::AsyncState
@@ -26,11 +27,8 @@ private:
     static void LookupDone(const char *ident, void *data);
 };
 
-#include "acl/Acl.h"
-#include "acl/Data.h"
-
 /// \ingroup ACLAPI
-class ACLIdent : public ACL
+class ACLIdent : public Acl::Node
 {
     MEMPROXY_CLASS(ACLIdent);
 
@@ -38,7 +36,7 @@ public:
     ACLIdent(ACLData<char const *> *newData, char const *);
     ~ACLIdent() override;
 
-    /* ACL API */
+    /* Acl::Node API */
     char const *typeString() const override;
     void parse() override;
     bool isProxyAuth() const override {return true;}
@@ -47,7 +45,7 @@ public:
     bool empty () const override;
 
 private:
-    /* ACL API */
+    /* Acl::Node API */
     const Acl::Options &lineOptions() override;
 
     ACLData<char const *> *data;

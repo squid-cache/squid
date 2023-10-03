@@ -11,7 +11,6 @@
 
 #if USE_AUTH
 
-#include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "acl/Data.h"
 
@@ -27,7 +26,7 @@ private:
     static void LookupDone(void *data);
 };
 
-class ACLProxyAuth : public ACL
+class ACLProxyAuth : public Acl::Node
 {
     MEMPROXY_CLASS(ACLProxyAuth);
 
@@ -35,7 +34,7 @@ public:
     ~ACLProxyAuth() override;
     ACLProxyAuth(ACLData<char const *> *, char const *);
 
-    /* ACL API */
+    /* Acl::Node API */
     char const *typeString() const override;
     void parse() override;
     bool isProxyAuth() const override {return true;}
@@ -47,7 +46,7 @@ public:
     int matchForCache(ACLChecklist *checklist) override;
 
 private:
-    /* ACL API */
+    /* Acl::Node API */
     const Acl::Options &lineOptions() override;
 
     int matchProxyAuth(ACLChecklist *);
