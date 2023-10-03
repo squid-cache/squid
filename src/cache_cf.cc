@@ -2948,7 +2948,8 @@ parse_TokenOrQuotedString(char **var)
 static void
 dump_time_t(StoreEntry * entry, const char *name, time_t var)
 {
-    storeAppendPrintf(entry, "%s %d seconds\n", name, (int) var);
+    PackableStream os(*entry);
+    os << name << ' ' << var << " seconds\n";
 }
 
 void
@@ -2970,10 +2971,11 @@ free_time_t(time_t * var)
 static void
 dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
 {
+    PackableStream os(*entry);
     if (var % 1000)
-        storeAppendPrintf(entry, "%s %" PRId64 " milliseconds\n", name, var);
+        os << name << ' ' << var << " milliseconds\n";
     else
-        storeAppendPrintf(entry, "%s %d seconds\n", name, (int)(var/1000) );
+        os << name << ' ' << (var/1000) << " seconds\n";
 }
 
 static void
