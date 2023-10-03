@@ -1502,8 +1502,10 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
     char ntoabuf[MAX_IPSTRLEN];
     int i;
 
-    if (peers == nullptr)
+    if (!peers) {
         storeAppendPrintf(sentry, "There are no neighbors installed.\n");
+        return;
+    }
 
     for (const auto &peer: *peers) {
         const auto e = peer.get();
