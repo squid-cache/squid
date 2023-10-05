@@ -501,7 +501,7 @@ Security::ErrorDetail::brief() const
 {
     SBufStream os;
 
-    err_code(os);
+    printErrorCode(os);
 
     if (lib_error_no) {
 #if USE_OPENSSL
@@ -547,7 +547,7 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
     auto remainder = format;
     while (auto p = strchr(remainder, '%')) {
         os.write(remainder, p - remainder);
-        const auto formattingCodeLen = convert(++p, os);
+        const auto formattingCodeLen = convertErrorCodeToDescription(++p, os);
         if (!formattingCodeLen)
             os << '%';
         remainder = p + formattingCodeLen;
@@ -558,7 +558,7 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
 
 /// textual representation of the subject of the broken certificate
 void
-Security::ErrorDetail::subject(std::ostream &os) const
+Security::ErrorDetail::printSubject(std::ostream &os) const
 {
     if (broken_cert) {
         auto buf = SubjectName(*broken_cert);
@@ -620,7 +620,7 @@ CommonNamesPrinter::printName(const ASN1_STRING * const name)
 
 /// a list of the broken certificates CN and alternate names
 void
-Security::ErrorDetail::cn(std::ostream &os) const
+Security::ErrorDetail::printCommonName(std::ostream &os) const
 {
 #if USE_OPENSSL
     if (broken_cert.get()) {
@@ -635,7 +635,7 @@ Security::ErrorDetail::cn(std::ostream &os) const
 
 /// the issuer of the broken certificate
 void
-Security::ErrorDetail::ca_name(std::ostream &os) const
+Security::ErrorDetail::printCaName(std::ostream &os) const
 {
     if (broken_cert) {
         auto buf = IssuerName(*broken_cert);
@@ -651,7 +651,7 @@ Security::ErrorDetail::ca_name(std::ostream &os) const
 
 /// textual representation of the "not before" field of the broken certificate
 void
-Security::ErrorDetail::notbefore(std::ostream &os) const
+Security::ErrorDetail::printNotBefore(std::ostream &os) const
 {
 #if USE_OPENSSL
     if (broken_cert.get()) {
@@ -669,7 +669,7 @@ Security::ErrorDetail::notbefore(std::ostream &os) const
 
 /// textual representation of the "not after" field of the broken certificate
 void
-Security::ErrorDetail::notafter(std::ostream &os) const
+Security::ErrorDetail::printNotAfter(std::ostream &os) const
 {
 #if USE_OPENSSL
     if (broken_cert.get()) {
@@ -687,7 +687,7 @@ Security::ErrorDetail::notafter(std::ostream &os) const
 
 /// textual representation of error_no
 void
-Security::ErrorDetail::err_code(std::ostream &os) const
+Security::ErrorDetail::printErrorCode(std::ostream &os) const
 {
 #if USE_OPENSSL
     // try detailEntry first because it is faster
@@ -701,7 +701,7 @@ Security::ErrorDetail::err_code(std::ostream &os) const
 
 /// short description of error_no
 void
-Security::ErrorDetail::err_descr(std::ostream &os) const
+Security::ErrorDetail::printErrorDescription(std::ostream &os) const
 {
     if (!error_no) {
         os << "[No Error]";
@@ -720,7 +720,7 @@ Security::ErrorDetail::err_descr(std::ostream &os) const
 
 /// textual representation of lib_error_no
 void
-Security::ErrorDetail::err_lib_error(std::ostream &os) const
+Security::ErrorDetail::printErrorLibError(std::ostream &os) const
 {
     if (errReason.size() > 0)
         os << errReason;
@@ -749,18 +749,18 @@ Security::ErrorDetail::err_lib_error(std::ostream &os) const
  \retval 0 for unsupported codes
 */
 size_t
-Security::ErrorDetail::convert(const char * const code, std::ostream &os) const
+Security::ErrorDetail::convertErrorCodeToDescription(const char * const code, std::ostream &os) const
 {
     using PartDescriber = void (ErrorDetail::*)(std::ostream &os) const;
     static const std::map<const char*, PartDescriber> PartDescriberByCode = {
-        {"ssl_subject", &ErrorDetail::subject},
-        {"ssl_ca_name", &ErrorDetail::ca_name},
-        {"ssl_cn", &ErrorDetail::cn},
-        {"ssl_notbefore", &ErrorDetail::notbefore},
-        {"ssl_notafter", &ErrorDetail::notafter},
-        {"err_name", &ErrorDetail::err_code},
-        {"ssl_error_descr", &ErrorDetail::err_descr},
-        {"ssl_lib_error", &ErrorDetail::err_lib_error}
+        {"ssl_subject", &ErrorDetail::printSubject},
+        {"ssl_ca_name", &ErrorDetail::printCaName},
+        {"ssl_cn", &ErrorDetail::printCommonName},
+        {"ssl_notbefore", &ErrorDetail::printNotBefore},
+        {"ssl_notafter", &ErrorDetail::printNotAfter},
+        {"err_name", &ErrorDetail::printErrorCode},
+        {"ssl_error_descr", &ErrorDetail::printErrorDescription},
+        {"ssl_lib_error", &ErrorDetail::printErrorLibError}
     };
 
     // We can refactor the map to find matches without looping, but that

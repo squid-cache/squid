@@ -84,17 +84,16 @@ public:
 private:
     ErrorDetail(ErrorCode err, int aSysErrorNo);
 
-    // TODO: Rename to printCamelCaseDetailName()?
     /* methods for formatting error details using admin-configurable %codes */
-    void subject(std::ostream &os) const;
-    void ca_name(std::ostream &os) const;
-    void cn(std::ostream &os) const;
-    void notbefore(std::ostream &os) const;
-    void notafter(std::ostream &os) const;
-    void err_code(std::ostream &os) const;
-    void err_descr(std::ostream &os) const;
-    void err_lib_error(std::ostream &os) const;
-    size_t convert(const char *code, std::ostream &os) const;
+    void printSubject(std::ostream &os) const;
+    void printCaName(std::ostream &os) const;
+    void printCommonName(std::ostream &os) const;
+    void printNotBefore(std::ostream &os) const;
+    void printNotAfter(std::ostream &os) const;
+    void printErrorCode(std::ostream &os) const;
+    void printErrorDescription(std::ostream &os) const;
+    void printErrorLibError(std::ostream &os) const;
+    size_t convertErrorCodeToDescription(const char *code, std::ostream &os) const;
 
     CertPointer peer_cert; ///< A pointer to the peer certificate
     CertPointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)
