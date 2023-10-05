@@ -137,13 +137,22 @@ Http::One::TeChunkedParser::parseChunkMetadataSuffix(Tokenizer &tok)
     // other exceptions bubble up to kill message parsing
 }
 
-/// Parses the chunk-ext list (RFC 7230 section 4.1.1 and its Errata #4667):
+/// Parses the chunk-ext list (RFC 9112 section 7.1.1:
 /// chunk-ext = *( BWS ";" BWS chunk-ext-name [ BWS "=" BWS chunk-ext-val ] )
 void
 Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok)
 {
     do {
-        ParseBws(tok); // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
+        // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
+        // causing RFC 7230 Errata #4667
+
+        // Use strict BWS definition here to avoid consuming
+        // from our callers "[chunk-ext] CRLF" sequence when
+        // using the relaxed_header_parser.
+        if (const auto count = tok.skipAll(CharacterSet::WSP)) {
+            // Generating BWS is a MUST-level violation so warn about it as needed.
+            debugs(33, ErrorLevel(), "found " << count << " BWS octets");
+        }
 
         if (!tok.skip(';'))
             return; // reached the end of extensions (if any)
@@ -169,7 +178,13 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
 
     const auto extName = tok.prefix("chunk-ext-name", CharacterSet::TCHAR);
 
-    ParseBws(tok);
+    // Use strict BWS definition here to avoid consuming
+    // from our callers "[chunk-ext] CRLF" sequence when
+    // using the relaxed_header_parser on missing chunk-ext-val.
+    if (const auto count = tok.skipAll(CharacterSet::WSP)) {
+        // Generating BWS is a MUST-level violation so warn about it as needed.
+        debugs(33, ErrorLevel(), "found " << count << " BWS octets");
+    }
 
     if (!tok.skip('='))
         return; // parsed a valueless chunk-ext
