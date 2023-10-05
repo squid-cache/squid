@@ -31,8 +31,7 @@ static SBuf
 SlowlyParseQuotedField(const char * const description, const HttpHeader &parser, const char * const fieldName)
 {
     String fieldValue;
-    if (!parser.hasNamed(fieldName, strlen(fieldName), &fieldValue))
-        throw TextException(ToSBuf("Missing ", description), Here());
+    parser.hasNamed(fieldName, strlen(fieldName), &fieldValue);
     return Http::SlowlyParseQuotedString(description, fieldValue.termedBuf(), fieldValue.size());
 }
 
