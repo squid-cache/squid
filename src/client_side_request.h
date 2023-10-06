@@ -81,10 +81,10 @@ public:
     /// request. Call this every time adaptation or redirection changes
     /// the request. To set the virgin request, use initRequest().
     void resetRequest(HttpRequest *);
-    /// \param uriChanged whether the new request URI differs from the
-    /// current request URI.
-    // XXX: unify the uriChanged condition calculation in callers and move
-    // it to the method itself.
+
+    // XXX: unify the uriChanged condition calculation with resetRequest() callers, removing this method
+    /// resetRequest() variation for callers with custom URI change detection logic
+    /// \param uriChanged whether the new request URI differs from the current request URI
     void resetRequestXXX(HttpRequest *, bool uriChanged);
 
     /// Checks whether the current request is internal and adjusts it accordingly.
