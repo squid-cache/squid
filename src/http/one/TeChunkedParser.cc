@@ -140,25 +140,19 @@ Http::One::TeChunkedParser::parseChunkMetadataSuffix(Tokenizer &tok)
 /// Parses the chunk-ext list (RFC 9112 section 7.1.1:
 /// chunk-ext = *( BWS ";" BWS chunk-ext-name [ BWS "=" BWS chunk-ext-val ] )
 void
-Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &callerTok)
 {
     do {
-        // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
-        // causing RFC 7230 Errata #4667
+        auto tok = callerTok;
 
-        // Use strict BWS definition here to avoid consuming
-        // from our callers "[chunk-ext] CRLF" sequence when
-        // using the relaxed_header_parser.
-        if (const auto count = tok.skipAll(CharacterSet::WSP)) {
-            // Generating BWS is a MUST-level violation so warn about it as needed.
-            debugs(33, ErrorLevel(), "found " << count << " BWS octets");
-        }
+        ParseBws(tok); // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
 
         if (!tok.skip(';'))
             return; // reached the end of extensions (if any)
 
         parseOneChunkExtension(tok);
         buf_ = tok.remaining(); // got one extension
+        callerTok = tok;
     } while (true);
 }
 
@@ -172,19 +166,15 @@ Http::One::ChunkExtensionValueParser::Ignore(Tokenizer &tok, const SBuf &extName
 /// Parses a single chunk-ext list element:
 /// chunk-ext = *( BWS ";" BWS chunk-ext-name [ BWS "=" BWS chunk-ext-val ] )
 void
-Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
+Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &callerTok)
 {
+    auto tok = callerTok;
+
     ParseBws(tok); // Bug 4492: ICAP servers send SP before chunk-ext-name
 
     const auto extName = tok.prefix("chunk-ext-name", CharacterSet::TCHAR);
 
-    // Use strict BWS definition here to avoid consuming
-    // from our callers "[chunk-ext] CRLF" sequence when
-    // using the relaxed_header_parser on missing chunk-ext-val.
-    if (const auto count = tok.skipAll(CharacterSet::WSP)) {
-        // Generating BWS is a MUST-level violation so warn about it as needed.
-        debugs(33, ErrorLevel(), "found " << count << " BWS octets");
-    }
+    ParseBws(tok);
 
     if (!tok.skip('='))
         return; // parsed a valueless chunk-ext
@@ -196,6 +186,8 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
         customExtensionValueParser->parse(tok, extName);
     else
         ChunkExtensionValueParser::Ignore(tok, extName);
+
+    callerTok = tok;
 }
 
 bool
