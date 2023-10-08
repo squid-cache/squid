@@ -173,6 +173,7 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &callerTok)
     ParseBws(tok); // Bug 4492: ICAP servers send SP before chunk-ext-name
 
     const auto extName = tok.prefix("chunk-ext-name", CharacterSet::TCHAR);
+    callerTok = tok; // in case we determine that this is a valueless chunk-ext
 
     ParseBws(tok);
 
