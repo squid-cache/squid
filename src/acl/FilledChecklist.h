@@ -75,7 +75,7 @@ public:
     SBuf dst_peer_name;
     char *dst_rdns;
 
-    HttpRequestPointer request;
+    HttpRequest::Pointer request;
     HttpReply *reply;
 
     char rfc931[USER_IDENT_SZ];
