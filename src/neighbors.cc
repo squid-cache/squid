@@ -760,6 +760,9 @@ neighborsDigestSelect(PeerSelector *ps)
     int ichoice_count = 0;
     int p_rtt;
 
+    if (!Config.peers)
+        return nullptr;
+
     if (!request->flags.hierarchical)
         return nullptr;
 
