@@ -120,7 +120,7 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *cl) const
     /* make sure someone created auth_user_request for us */
     assert(checklist->auth_user_request != nullptr);
     assert(checklist->auth_user_request->valid());
-    checklist->auth_user_request->start(checklist->request, checklist->al, LookupDone, checklist);
+    checklist->auth_user_request->start(checklist->request.getRaw(), checklist->al, LookupDone, checklist);
 }
 
 void
