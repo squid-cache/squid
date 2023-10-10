@@ -765,32 +765,34 @@ neighborsDigestSelect(PeerSelector *ps)
 
     storeKeyPublicByRequest(request);
 
-    for (size_t i = 0; i < Config.peers->size(); ++i) {
-        const auto p = &Config.peers->nextPeerToPing(i);
+    if (Config.peers) {
+        for (size_t i = 0; i < Config.peers->size(); ++i) {
+            const auto p = &Config.peers->nextPeerToPing(i);
 
-        const auto lookup = peerDigestLookup(p, ps);
+            const auto lookup = peerDigestLookup(p, ps);
 
-        if (lookup == LOOKUP_NONE)
-            continue;
+            if (lookup == LOOKUP_NONE)
+                continue;
 
-        ++choice_count;
+            ++choice_count;
 
-        if (lookup == LOOKUP_MISS)
-            continue;
+            if (lookup == LOOKUP_MISS)
+                continue;
 
-        p_rtt = netdbHostRtt(p->host);
+            p_rtt = netdbHostRtt(p->host);
 
-        debugs(15, 5, "cache_peer " << *p << " rtt: " << p_rtt);
+            debugs(15, 5, "cache_peer " << *p << " rtt: " << p_rtt);
 
-        /* is this CachePeer better than others in terms of rtt ? */
-        if (!best_p || (p_rtt && p_rtt < best_rtt)) {
-            best_p = p;
-            best_rtt = p_rtt;
+            /* is this CachePeer better than others in terms of rtt ? */
+            if (!best_p || (p_rtt && p_rtt < best_rtt)) {
+                best_p = p;
+                best_rtt = p_rtt;
 
-            if (p_rtt)      /* informative choice (aka educated guess) */
-                ++ichoice_count;
+                if (p_rtt)      /* informative choice (aka educated guess) */
+                    ++ichoice_count;
 
-            debugs(15, 4, "cache_peer " << *p << " leads with rtt " << best_rtt);
+                debugs(15, 4, "cache_peer " << *p << " leads with rtt " << best_rtt);
+            }
         }
     }
 
