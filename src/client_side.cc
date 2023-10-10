@@ -1620,7 +1620,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 #endif
 
     if (internalCheck(request->url.path())) {
-        if (internalHostnameIs(request->url.host()) && request->url.port() == getMyPort()) {
+        if (internalUriTargetingListeningPort(request->url, *(conn->port))) {
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true));
             request->flags.internal = true;
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->url.path())) {

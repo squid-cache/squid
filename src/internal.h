@@ -14,6 +14,7 @@
 #ifndef SQUID_INTERNAL_H_
 #define SQUID_INTERNAL_H_
 
+#include "anyp/forward.h"
 #include "comm/forward.h"
 #include "log/forward.h"
 #include "sbuf/forward.h"
@@ -27,7 +28,9 @@ bool internalStaticCheck(const SBuf &urlPath);
 char *internalLocalUri(const char *dir, const SBuf &name);
 char *internalRemoteUri(bool, const char *, unsigned short, const char *, const SBuf &);
 const char *internalHostname(void);
-int internalHostnameIs(const char *);
+/// whether the given internal URI targets the listening port it was received on
+/// \prec internalCheck() is true for the given URI
+bool internalUriTargetingListeningPort(const AnyP::Uri &, const AnyP::PortCfg &);
 
 /// whether the given request URL path points to a cache manager (not
 /// necessarily running on this Squid instance)

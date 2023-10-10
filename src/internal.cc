@@ -162,18 +162,36 @@ internalHostname(void)
     return host;
 }
 
-int
-internalHostnameIs(const char *arg)
+bool
+internalUriTargetingListeningPort(const AnyP::Uri &url, const AnyP::PortCfg &listeningPort)
 {
-    wordlist *w;
+    // different port numbers is a fast NO
+    if (url.port() != listeningPort.s.port())
+        return false;
 
-    if (0 == strcmp(arg, internalHostname()))
-        return 1;
+    // accept raw-IP URL matching a port configured with explicit IP:port settings
+    if (url.hostIsNumeric() && !listeningPort.s.isAnyAddr() && url.hostIP() == listeningPort.s)
+        return true;
 
-    for (w = Config.hostnameAliases; w; w = w->next)
-        if (0 == strcmp(arg, w->key))
-            return 1;
+    // accept "localhost" URL matching an explicit localhost port IP or a wildcard port IP
+    const bool receivedAtLocalhost = (listeningPort.s.isLocalhost() || listeningPort.s.isAnyAddr());
+    if (receivedAtLocalhost && strcasecmp(url.host(), "localhost") == 0)
+        return true;
 
-    return 0;
+    // accept URL matching a ports configured defaultsite=
+    if (listeningPort.defaultsite && strcasecmp(url.host(), listeningPort.defaultsite) == 0)
+        return true;
+
+    // accept visible_hostname, unique_hostname, or machines hostname()
+    if (strcasecmp(url.host(), internalHostname()) == 0)
+        return true;
+
+    // accept any one of the hostname_aliases
+    for (const auto *w = Config.hostnameAliases; w; w = w->next) {
+        if (strcasecmp(url.host(), w->key) == 0)
+            return true;
+    }
+
+    return false; // no match
 }
 
