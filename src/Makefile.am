@@ -2759,6 +2759,7 @@ nodist_tests_testHtmlQuote_SOURCES = \
 	$(TESTSOURCES)
 tests_testHtmlQuote_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
+	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
