@@ -10,6 +10,7 @@
 #define SQUID_SPLAY_H
 
 #include "fatal.h"
+#include <cstddef>
 #include <stack>
 
 // private class of Splay. Do not use directly
@@ -19,15 +20,13 @@ class SplayNode
 public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
-    typedef void SPLAYFREE(Value &);
-    typedef void SPLAYWALKEE(Value const & nodedata, void *state);
-    static void DefaultFree (Value &aValue) {delete aValue;}
 
     SplayNode<V> (Value const &);
     Value data;
     mutable SplayNode<V> *left;
     mutable SplayNode<V> *right;
-    void destroy(SPLAYFREE * = DefaultFree);
+    mutable SplayNode<V> *visitThreadUp;
+
     SplayNode<V> const * start() const;
     SplayNode<V> const * finish() const;
 
@@ -38,12 +37,7 @@ public:
     /// look in the splay for data for where compare(data,candidate) == true.
     /// return NULL if not found, a pointer to the sought data if found.
     template <class FindValue> SplayNode<V> * splay(const FindValue &data, int( * compare)(FindValue const &a, Value const &b)) const;
-
-    /// recursively visit left nodes, this node, and then right nodes
-    template <class Visitor> void visit(Visitor &v) const;
 };
-
-typedef SplayNode<void *> splayNode;
 
 template <class V>
 class SplayConstIterator;
@@ -60,6 +54,9 @@ public:
     typedef void SPLAYFREE(Value &);
     typedef SplayIterator<V> iterator;
     typedef const SplayConstIterator<V> const_iterator;
+
+    static void DefaultFree(Value &v) { delete v; }
+
     Splay():head(nullptr), elements (0) {}
 
     template <class FindValue> Value const *find (FindValue const &, int( * compare)(FindValue const &a, Value const &b)) const;
@@ -68,7 +65,7 @@ public:
 
     void remove(Value const &, SPLAYCMP *compare);
 
-    void destroy(SPLAYFREE * = SplayNode<V>::DefaultFree);
+    void destroy(SPLAYFREE * = DefaultFree);
 
     SplayNode<V> const * start() const;
 
@@ -82,10 +79,13 @@ public:
 
     const_iterator end() const;
 
-    /// recursively visit all nodes, in left-to-right order
-    template <class Visitor> void visit(Visitor &v) const;
+    /// left-to-right visit of all stored Values
+    template <typename ValueVisitor> void visit(ValueVisitor &) const;
 
 private:
+    /// left-to-right walk through all nodes
+    template <typename NodeVisitor> void visitEach(NodeVisitor &) const;
+
     mutable SplayNode<V> * head;
     size_t elements;
 };
@@ -93,41 +93,26 @@ private:
 SQUIDCEXTERN int splayLastResult;
 
 template<class V>
-SplayNode<V>::SplayNode (Value const &someData) : data(someData), left(nullptr), right (nullptr) {}
+SplayNode<V>::SplayNode(const Value &someData): data(someData), left(nullptr), right(nullptr), visitThreadUp(nullptr) {}
 
 template<class V>
 SplayNode<V> const *
 SplayNode<V>::start() const
 {
-    if (left)
-        return left->start();
-
-    return this;
+    auto cur = this;
+    while (cur->left)
+        cur = cur->left;
+    return cur;
 }
 
 template<class V>
 SplayNode<V> const *
 SplayNode<V>::finish() const
 {
-    if (right)
-        return right->finish();
-
-    return this;
-}
-
-template<class V>
-void
-SplayNode<V>::destroy(SPLAYFREE * free_func)
-{
-    if (left)
-        left->destroy(free_func);
-
-    if (right)
-        right->destroy(free_func);
-
-    free_func(data);
-
-    delete this;
+    auto cur = this;
+    while (cur->right)
+        cur = cur->right;
+    return cur;
 }
 
 template<class V>
@@ -247,13 +232,60 @@ SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const
 template <class V>
 template <class Visitor>
 void
-SplayNode<V>::visit(Visitor &visitor) const
+Splay<V>::visitEach(Visitor &visitor) const
 {
-    if (left)
-        left->visit(visitor);
-    visitor(data);
-    if (right)
-        right->visit(visitor);
+    // In-order walk through tree using modified Morris Traversal: To avoid a
+    // leftover thread up (and, therefore, a fatal loop in the tree) due to a
+    // visitor exception, we use an extra pointer visitThreadUp instead of
+    // manipulating the right child link and interfering with other methods
+    // that use that link.
+    // This also helps to distinguish between up and down movements, eliminating
+    // the need to descent into left subtree a second time after traversing the
+    // thread to find the loop and remove the temporary thread.
+
+    if (!head)
+        return;
+
+    auto cur = head;
+    auto movedUp = false;
+    cur->visitThreadUp = nullptr;
+
+    while (cur) {
+        if (!cur->left || movedUp) {
+            // no (unvisited) left subtree, so handle current node ...
+            const auto old = cur;
+            if (cur->right) {
+                // ... and descent into right subtree
+                cur = cur->right;
+                movedUp = false;
+            }
+            else if (cur->visitThreadUp) {
+                // ... or back up the thread
+                cur = cur->visitThreadUp;
+                movedUp = true;
+            } else {
+                // end of traversal
+                cur = nullptr;
+            }
+            visitor(old);
+            // old may be destroyed here
+        } else {
+            // first descent into left subtree
+
+            // find right-most child in left tree
+            auto rmc = cur->left;
+            while (rmc->right) {
+                rmc->visitThreadUp = nullptr; // cleanup old threads on the way
+                rmc = rmc->right;
+            }
+            // create thread up back to cur
+            rmc->visitThreadUp = cur;
+
+            // finally descent into left subtree
+            cur = cur->left;
+            movedUp = false;
+        }
+    }
 }
 
 template <class V>
@@ -261,8 +293,8 @@ template <class Visitor>
 void
 Splay<V>::visit(Visitor &visitor) const
 {
-    if (head)
-        head->visit(visitor);
+    const auto internalVisitor = [&visitor](const SplayNode<V> *node) { visitor(node->data); };
+    visitEach(internalVisitor);
 }
 
 template <class V>
@@ -332,8 +364,8 @@ template <class V>
 void
 Splay<V>:: destroy(SPLAYFREE *free_func)
 {
-    if (head)
-        head->destroy(free_func);
+    const auto destroyer = [free_func](SplayNode<V> *node) { free_func(node->data); delete node; };
+    visitEach(destroyer);
 
     head = nullptr;
 

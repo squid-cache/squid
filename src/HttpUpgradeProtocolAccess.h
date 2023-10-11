@@ -12,6 +12,7 @@
 #include "acl/forward.h"
 #include "sbuf/SBuf.h"
 
+#include <deque>
 #include <map>
 
 /// a reference to a protocol name[/version] string; no 0-termination is assumed
@@ -39,6 +40,8 @@ vAinB(const ProtocolView &a, const ProtocolView &b)
     // Optimization: Do not assert(a.name == b.name).
     return b.version.isEmpty() || (a.version == b.version);
 }
+
+class ConfigParser;
 
 /// Allows or blocks HTTP Upgrade protocols (see http_upgrade_request_protocols)
 class HttpUpgradeProtocolAccess

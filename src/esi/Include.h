@@ -14,6 +14,7 @@
 #include "esi/Context.h"
 #include "esi/Element.h"
 #include "esi/Segment.h"
+#include "HttpHeader.h"
 
 class ESIInclude;
 typedef RefCount<ESIInclude> ESIIncludePtr;

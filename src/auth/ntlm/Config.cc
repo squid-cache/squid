@@ -101,7 +101,7 @@ Auth::Ntlm::Config::init(Auth::SchemeConfig *)
 
         ntlmauthenticators->ipc_type = IPC_STREAM;
 
-        helperStatefulOpenServers(ntlmauthenticators);
+        ntlmauthenticators->openSessions();
     }
 }
 

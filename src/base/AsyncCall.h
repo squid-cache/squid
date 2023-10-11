@@ -10,6 +10,7 @@
 #define SQUID_ASYNCCALL_H
 
 #include "base/CodeContext.h"
+#include "base/forward.h"
 #include "base/InstanceId.h"
 #include "event.h"
 #include "RefCount.h"
@@ -39,7 +40,7 @@ class CallDialer;
 class AsyncCall: public RefCountable
 {
 public:
-    typedef RefCount <AsyncCall> Pointer;
+    using Pointer = AsyncCallPointer;
 
     AsyncCall(int aDebugSection, int aDebugLevel, const char *aName);
     ~AsyncCall() override;

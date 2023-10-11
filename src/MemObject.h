@@ -12,6 +12,7 @@
 #include "base/DelayedAsyncCalls.h"
 #include "dlink.h"
 #include "http/RequestMethod.h"
+#include "HttpReply.h"
 #include "RemovalPolicy.h"
 #include "SquidString.h"
 #include "stmem.h"

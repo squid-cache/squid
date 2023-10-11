@@ -16,9 +16,9 @@ void helperSubmit(const Helper::Client::Pointer &, const char *, HLPCB *, void *
 void helperStatefulSubmit(const statefulhelper::Pointer &, const char *, HLPCB *, void *, const Helper::ReservationId &) STUB
 Helper::Client::~Client() STUB
 void Helper::Client::packStatsInto(Packable *, const char *) const STUB
+void Helper::Client::openSessions() STUB
 
 void helperShutdown(const Helper::Client::Pointer &) STUB
 void helperStatefulShutdown(const statefulhelper::Pointer &) STUB
-void helperOpenServers(const Helper::Client::Pointer &) STUB
-void helperStatefulOpenServers(const statefulhelper::Pointer &) STUB
+void statefulhelper::openSessions() STUB
 

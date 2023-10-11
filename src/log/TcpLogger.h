@@ -13,9 +13,13 @@
 #include "base/JobWait.h"
 #include "comm/forward.h"
 #include "ip/Address.h"
+#include "log/forward.h"
 
 #include <list>
 
+class CommCloseCbParams;
+class CommConnectCbParams;
+class CommIoCbParams;
 class MemBlob;
 typedef RefCount<MemBlob> MemBlobPointer;
 

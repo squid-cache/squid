@@ -16,6 +16,7 @@
 #include "cache_snmp.h"
 #include "comm/forward.h"
 #include "ip/forward.h"
+#include "snmp_vars.h"
 
 class MemBuf;
 
