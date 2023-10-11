@@ -18,9 +18,16 @@
 CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 namespace Security
 {
+BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &, const Comm::ConnectionPointer & aServerConn,
+                                       const AsyncCallback<EncryptorAnswer> & aCallback,
+                                       const AccessLogEntryPointer &alp,
+                                       const time_t) :
+    AsyncJob("Security::BlindPeerConnector"),
+    Security::PeerConnector(aServerConn, aCallback, alp, 0)
+{}
+
 bool BlindPeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
-Security::ContextPointer BlindPeerConnector::getTlsContext() STUB_RETVAL(Security::ContextPointer())
-void BlindPeerConnector::noteNegotiationDone(ErrorState *) STUB
+Security::ContextPointer BlindPeerConnector::getTlsContext() STUB_RETVAL(Security::ContextPointer()) void BlindPeerConnector::noteNegotiationDone(ErrorState *) STUB
 }
 
 #include "security/EncryptorAnswer.h"
