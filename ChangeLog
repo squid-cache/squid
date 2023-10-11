@@ -4,9 +4,14 @@ Changes in squid-6.4 (15 Oct 2023):
 	- Regression: Do not use static initialization to register modules
 	- Bug 5301: cachemgr.cgi not showing new manager interface URLs
 	- Bug 5300: cachemgr.cgi assertion
+	- Fix handling of large HTTP headers in storeClientCopy()
+	- Fix store_client caller leak on certain errors
+	- Miss if an HTTP 304 update would exceed reply_header_max_size
 	- HTTP: Improve handling of empty lines received prior to request-line
 	- Y2038: improve printing of time settings
 	- Extend cache_log_message to problematic from-helper annotations
+	- Add some HTTP revalidation tests
+	- Improve unit test harness
 
 Changes in squid-6.3 (03 Sep 2023):
 
