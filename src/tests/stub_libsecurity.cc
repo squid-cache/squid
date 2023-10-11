@@ -24,7 +24,7 @@ BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &, const Comm::Connect
                                        const time_t) :
     AsyncJob("Security::BlindPeerConnector"),
     Security::PeerConnector(aServerConn, aCallback, alp, 0)
-STUB_NOP
+{STUB_NOP}
 
 bool BlindPeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
 Security::ContextPointer BlindPeerConnector::getTlsContext() STUB_RETVAL(Security::ContextPointer())
