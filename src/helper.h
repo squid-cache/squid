@@ -101,7 +101,7 @@ public:
 
     /// satisfies all queued requests with a Helper::Unknown answer
     /// \prec no existing servers will be able to process queued requests
-    /// \sa HelperServerBase::dropQueued()
+    /// \sa SessionBase::dropQueued()
     void dropQueued();
 
     /// sends transaction response to the transaction initiator
