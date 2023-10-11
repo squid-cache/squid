@@ -799,8 +799,8 @@ helperShutdown(const helper::Pointer &hlp)
         srv->closePipesSafely(hlp->id_name);
     }
 
-    if (!hlp->childs.n_active)
-        hlp->dropQueued();
+    Assure(!hlp->childs.n_active);
+    hlp->dropQueued();
 }
 
 void
