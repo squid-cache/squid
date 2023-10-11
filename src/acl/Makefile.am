@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 SUBDIRS= external
 
@@ -177,6 +176,8 @@ SSL_ACLS = \
 
 if ENABLE_SSL
 libacls_la_SOURCES += $(SSL_ACLS)
+else
+EXCLUDE_FROM_HDR_TESTING += $(SSL_ACLS)
 endif
 EXTRA_libacls_la_SOURCES += $(SSL_ACLS)
 
@@ -188,6 +189,8 @@ ADAPT_ACLS= \
 
 if ENABLE_ADAPTATION
 libacls_la_SOURCES += $(ADAPT_ACLS)
+else
+EXCLUDE_FROM_HDR_TESTING += $(ADAPT_ACLS)
 endif
 EXTRA_libacls_la_SOURCES += $(ADAPT_ACLS)
 
@@ -195,5 +198,7 @@ ARP_ACLS = Arp.cc Arp.h Eui64.cc Eui64.h
 
 if ENABLE_EUI
 libacls_la_SOURCES += $(ARP_ACLS)
+else
+EXCLUDE_FROM_HDR_TESTING += $(ARP_ACLS)
 endif
 EXTRA_libacls_la_SOURCES += $(ARP_ACLS)

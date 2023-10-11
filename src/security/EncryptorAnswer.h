@@ -10,7 +10,7 @@
 #define SQUID_SECURITY_ENCRYPTORANSWER_H
 
 #include "base/CbcPointer.h"
-#include "comm/forward.h"
+#include "comm/Connection.h"
 
 class ErrorState;
 

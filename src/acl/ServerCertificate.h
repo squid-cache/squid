@@ -11,6 +11,7 @@
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
+#include "security/forward.h"
 #include "ssl/support.h"
 
 namespace Acl

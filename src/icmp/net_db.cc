@@ -18,6 +18,7 @@
 
 #include "squid.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "cbdata.h"
 #include "event.h"
 #include "fde.h"
@@ -1233,7 +1234,8 @@ netdbExchangeStart(void *data)
 static CachePeer *
 findUsableParentAtHostname(PeerSelector *ps, const char * const hostname, const HttpRequest &request)
 {
-    for (auto p = Config.peers; p; p = p->next) {
+    for (const auto &peer: CurrentCachePeers()) {
+        const auto p = peer.get();
         // Both fields should be lowercase, but no code ensures that invariant.
         // TODO: net_db_peer should point to CachePeer instead of its hostname!
         if (strcasecmp(p->host, hostname) != 0)

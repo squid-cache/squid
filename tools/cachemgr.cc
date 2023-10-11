@@ -277,11 +277,16 @@ auth_html(const char *host, int port, const char *user_name)
     printf("  if (x.readyState==4) {\n");
     printf("   if ((x.status>=200 && x.status <= 299) || x.status==401) {\n");
     printf("    var v = x.getResponseHeader('Server');\n");
-    printf("    if (v.substring(0,8) == 'squid/3.' && (v[8]=='H' || parseInt(v.substring(8)) >= 2)) {\n");
+    printf("    if (v.substring(0,6) == 'squid/' || v == 'squid') {\n");
     printf("     var d = document.getElementById('H' + s + 'mgr');\n");
     printf("     if (d.innerHTML == '') d.innerHTML = '<h2>HTTP' + (s=='s'?'S':'') + ' Managed Proxies</h2>';\n");
     printf("     d.innerHTML = d.innerHTML + '<p>Host: <a href=\"http' + s + '://' + t + '/squid-internal-mgr/\">' + t + '</a></p>';\n");
-    printf(" }}}}\n");
+    printf("     var sv = document.getElementById('server');\n");
+    printf("     var op = sv.getElementsByTagName('OPTION');\n");
+    printf("     for(var i=0; i<op.length; i++) { if (op[i].innerHTML == t) { sv.removeChild(op[i]); i--; }}\n");
+    printf("     if (sv.getElementsByTagName('OPTION').length == 0) {\n");
+    printf("      document.getElementById('Cmgr').innerHTML = '';\n");
+    printf(" }}}}}\n");
     printf(" x.send(null);\n");
     printf("}\n");
     printf("</script>\n");
@@ -451,8 +456,11 @@ munge_menu_line(MemBuf &out, const char *buf, cachemgr_request * req)
     char *a_url;
     char *buf_copy;
 
-    const char bufLen = strlen(buf);
-    if (bufLen < 1 || *buf != ' ') {
+    const auto bufLen = strlen(buf);
+    if (bufLen < 1)
+        return; // nothing to append
+
+    if (*buf != ' ') {
         out.append(buf, bufLen);
         return;
     }
@@ -802,7 +810,7 @@ process_request(cachemgr_request * req)
     }
 
     if (req->action == nullptr) {
-        req->action = xstrdup("");
+        req->action = xstrdup("menu");
     }
 
     if (strcmp(req->action, "authenticate") == 0) {

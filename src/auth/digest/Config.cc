@@ -525,7 +525,7 @@ Auth::Digest::Config::init(Auth::SchemeConfig *)
         authdigest_initialised = 1;
 
         if (digestauthenticators == nullptr)
-            digestauthenticators = helper::Make("digestauthenticator");
+            digestauthenticators = Helper::Client::Make("digestauthenticator");
 
         digestauthenticators->cmdline = authenticateProgram;
 
@@ -533,7 +533,7 @@ Auth::Digest::Config::init(Auth::SchemeConfig *)
 
         digestauthenticators->ipc_type = IPC_STREAM;
 
-        helperOpenServers(digestauthenticators);
+        digestauthenticators->openSessions();
     }
 }
 

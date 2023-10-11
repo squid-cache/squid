@@ -41,12 +41,14 @@ SNMP_ALL_SOURCE = \
 	snmp_core.cc \
 	snmp_agent.h \
 	snmp_agent.cc
+
 if ENABLE_SNMP
 SNMP_SOURCE = $(SNMP_ALL_SOURCE)
 SUBDIRS += snmp
 SNMP_LIBS = snmp/libsnmp.la $(SNMPLIB)
 else
 SNMP_SOURCE =
+EXCLUDE_FROM_HDR_TESTING += $(SNMP_ALL_SOURCE)
 endif
 
 if ENABLE_ADAPTATION
@@ -100,10 +102,14 @@ if ENABLE_DELAY_POOLS
 DELAY_POOL_SOURCE = $(DELAY_POOL_ALL_SOURCE)
 else
 DELAY_POOL_SOURCE =
+EXCLUDE_FROM_HDR_TESTING += $(DELAY_POOL_ALL_SOURCE)
 endif
 
+KNOWN_HTCP_SOURCE = htcp.cc htcp.h
 if ENABLE_HTCP
-HTCPSOURCE = htcp.cc htcp.h
+HTCPSOURCE = $(KNOWN_HTCP_SOURCE)
+else
+EXCLUDE_FROM_HDR_TESTING += $(KNOWN_HTCP_SOURCE)
 endif
 
 if ENABLE_UNLINKD
@@ -199,6 +205,7 @@ squid_SOURCES = \
 	CacheManager.h \
 	CachePeer.cc \
 	CachePeer.h \
+	CachePeers.cc \
 	CachePeers.h \
 	ClientInfo.h \
 	ClientRequestContext.h \
@@ -771,7 +778,7 @@ check_PROGRAMS += tests/testRandomUuid
 tests_testRandomUuid_SOURCES = \
 	tests/testRandomUuid.cc
 nodist_tests_testRandomUuid_SOURCES = \
-	RandomUuid.h \
+	base/RandomUuid.h \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc
 tests_testRandomUuid_LDADD = \
@@ -1690,6 +1697,7 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	String.cc \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
+	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_client_side.cc \
 	tests/stub_debug.cc \
@@ -1741,6 +1749,8 @@ tests_test_http_range_SOURCES = \
 	CacheDigest.h \
 	CachePeer.cc \
 	CachePeer.h \
+	CachePeers.cc \
+	CachePeers.h \
 	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
@@ -2124,6 +2134,8 @@ tests_testHttpRequest_SOURCES = \
 	CacheDigest.h \
 	CachePeer.cc \
 	CachePeer.h \
+	CachePeers.cc \
+	CachePeers.h \
 	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
@@ -2420,6 +2432,8 @@ tests_testCacheManager_SOURCES = \
 	tests/testCacheManager.cc \
 	CachePeer.cc \
 	CachePeer.h \
+	CachePeers.cc \
+	CachePeers.h \
 	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
@@ -2737,16 +2751,3 @@ tests_testEventLoop_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
-
-## Run the unit tests. check_PROGRAMS only builds the binaries.
-TESTS += $(check_PROGRAMS) testHeaders
-
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(srcdir)/*.h $(srcdir)/DiskIO/*.h $(srcdir)/DiskIO/*/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
-## src/repl/ has no .h files and its own makefile.
-
-CLEANFILES += testHeaders
-.PHONY: testHeaders
-

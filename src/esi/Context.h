@@ -16,6 +16,7 @@
 #include "esi/Parser.h"
 #include "http/forward.h"
 #include "http/StatusCode.h"
+#include "HttpReply.h"
 
 class ESIVarState;
 class ClientHttpRequest;

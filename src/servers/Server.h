@@ -17,6 +17,8 @@
 #include "BodyPipe.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "error/forward.h"
+#include "http/Stream.h"
 #include "log/forward.h"
 #include "Pipeline.h"
 #include "sbuf/SBuf.h"

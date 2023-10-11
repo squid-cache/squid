@@ -304,7 +304,7 @@ Auth::Basic::Config::init(Auth::SchemeConfig *)
         authbasic_initialised = 1;
 
         if (basicauthenticators == nullptr)
-            basicauthenticators = helper::Make("basicauthenticator");
+            basicauthenticators = Helper::Client::Make("basicauthenticator");
 
         basicauthenticators->cmdline = authenticateProgram;
 
@@ -312,7 +312,7 @@ Auth::Basic::Config::init(Auth::SchemeConfig *)
 
         basicauthenticators->ipc_type = IPC_STREAM;
 
-        helperOpenServers(basicauthenticators);
+        basicauthenticators->openSessions();
     }
 }
 

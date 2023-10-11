@@ -10,7 +10,7 @@
 #define SQUID_SRC_CLIENTS_HTTP_TUNNELERANSWER_H
 
 #include "base/CbcPointer.h"
-#include "comm/forward.h"
+#include "comm/Connection.h"
 #include "http/StatusCode.h"
 #include "sbuf/SBuf.h"
 

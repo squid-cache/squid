@@ -28,13 +28,6 @@
 
 #endif /* USE_OPENSSL */
 
-// Macro to be used to define the C++ equivalent function of an extern "C"
-// function. The C++ function suffixed with the _cpp extension
-#define CtoCpp1(function, argument) \
-        extern "C++" inline void function ## _cpp(argument a) { \
-            function(a); \
-        }
-
 namespace Security
 {
 

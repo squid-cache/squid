@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_STORE_SWAPMETAVIEW_H
 #define SQUID_SRC_STORE_SWAPMETAVIEW_H
 
+#include "base/TextException.h"
 #include "store/SwapMeta.h"
 
 #include <iosfwd>
