@@ -27,7 +27,8 @@ BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &, const Comm::Connect
 STUB_NOP
 
 bool BlindPeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
-Security::ContextPointer BlindPeerConnector::getTlsContext() STUB_RETVAL(Security::ContextPointer()) void BlindPeerConnector::noteNegotiationDone(ErrorState *) STUB
+Security::ContextPointer BlindPeerConnector::getTlsContext() STUB_RETVAL(Security::ContextPointer())
+void BlindPeerConnector::noteNegotiationDone(ErrorState *) STUB
 }
 
 #include "security/EncryptorAnswer.h"
