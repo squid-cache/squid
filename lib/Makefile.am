@@ -46,7 +46,7 @@ EXTRA_libmiscutil_la_SOURCES = \
 
 libmiscencoding_la_SOURCES = \
 	base64.c \
-	html_quote.c \
+	html_quote.cc \
 	md5.c \
 	rfc1738.c \
 	rfc2617.c
