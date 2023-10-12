@@ -5,7 +5,6 @@ Changes in squid-6.4 (15 Oct 2023):
 	- Bug 5301: cachemgr.cgi not showing new manager interface URLs
 	- Bug 5300: cachemgr.cgi assertion
 	- HTTP: Improve handling of empty lines received prior to request-line
-	- RFC 9112: Improve HTTP chunked encoding compliance
 	- Y2038: improve printing of time settings
 	- Extend cache_log_message to problematic from-helper annotations
 
