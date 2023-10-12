@@ -44,6 +44,11 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<tag>cache_object URI</tag>
 	<p>Cache manager is no longer accessible by URIs with cache_object scheme.
 
+    <tag>cachemgr</tag>
+    <p>The 'cachemgr' tool is no longer supported and distributed with squid.
+    A plethora of tools, such as curl, wget, or any web browser,
+    can be used in its place
+
 	<tag>non_peers</tag>
 	<p>Removed the <em>mgr:non_peers</em> report. Squid still ignores
 	unexpected ICP responses but no longer remembers the details that comprised
