@@ -59,7 +59,7 @@ html_quote(const char *string)
          */
         if (!escape && (ch <= 0x1F || ch >= 0x7f) && ch != '\n' && ch != '\r' && ch != '\t') {
             static char dec_encoded[7];
-            snprintf(dec_encoded, sizeof dec_encoded, "&#%3d;", (int) ch);
+            snprintf(dec_encoded, sizeof dec_encoded, "&#%d;", static_cast<int>(ch));
             escape = dec_encoded;
         }
         if (escape) {
