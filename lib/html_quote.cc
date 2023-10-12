@@ -12,7 +12,6 @@
 
 #include <cstring>
 #include <unordered_map>
-#include <string>
 
 
 const std::unordered_map<char,const char *> htmlEntities = {
@@ -31,7 +30,6 @@ const CharacterSet htmlSpecialCharacters("html entities","<>&\"\'");
 char *
 html_quote(const char *string)
 {
-    static std::string bufStr;
     static char *buf = nullptr;
     static size_t bufsize = 0;
     const char *src;
@@ -44,9 +42,7 @@ html_quote(const char *string)
         xfree(buf);
         bufsize = strlen(string) * 6 + 1;
         buf = static_cast<char*>(xcalloc(bufsize, 1));
-        bufStr.reserve(bufsize*1.5);
     }
-    bufStr.clear();
     for (src = string, dst = buf; *src; src++) {
         const char *escape = NULL;
         const unsigned char ch = *src;
@@ -71,16 +67,13 @@ html_quote(const char *string)
             /* Ok, An escaped form was found above. Use it */
             strncpy(dst, escape, 7);
             dst += strlen(escape);
-            bufStr.append(escape);
         } else {
             /* Apparently there is no need to escape this character */
             *dst++ = ch;
-            bufStr.append(1, ch);
         }
     }
     /* Nullterminate and return the result */
     *dst = '\0';
-    assert(bufStr.size() == strlen(buf));
-    return (bufStr.c_str());
+    return (buf);
 }
 
