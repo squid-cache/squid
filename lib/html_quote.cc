@@ -12,6 +12,7 @@
 
 #include <cstring>
 #include <unordered_map>
+#include <string>
 
 
 const std::unordered_map<char,const char *> htmlEntities = {
@@ -24,13 +25,14 @@ const std::unordered_map<char,const char *> htmlEntities = {
 const CharacterSet htmlSpecialCharacters("html entities","<>&\"\'");
 
 /*
- *  html_do_quote - Returns a static buffer containing the quoted
- *  string.git ad
+ *  html_quote - Returns a static buffer containing the quoted
+ *  string.
  */
 char *
 html_quote(const char *string)
 {
-    static char *buf;
+    static std::string bufStr;
+    static char *buf = nullptr;
     static size_t bufsize = 0;
     const char *src;
     char *dst;
@@ -38,11 +40,13 @@ html_quote(const char *string)
     /* XXX This really should be implemented using a MemPool, but
      * MemPools are not yet available in lib...
      */
-    if (buf == NULL || strlen(string) * 6 > bufsize) {
+    if (!buf || strlen(string) * 6 > bufsize) {
         xfree(buf);
         bufsize = strlen(string) * 6 + 1;
         buf = static_cast<char*>(xcalloc(bufsize, 1));
+        bufStr.reserve(bufsize*1.5);
     }
+    bufStr.clear();
     for (src = string, dst = buf; *src; src++) {
         const char *escape = NULL;
         const unsigned char ch = *src;
@@ -67,13 +71,16 @@ html_quote(const char *string)
             /* Ok, An escaped form was found above. Use it */
             strncpy(dst, escape, 7);
             dst += strlen(escape);
+            bufStr.append(escape);
         } else {
             /* Apparently there is no need to escape this character */
             *dst++ = ch;
+            bufStr.append(1, ch);
         }
     }
     /* Nullterminate and return the result */
     *dst = '\0';
-    return (buf);
+    assert(bufStr.size() == strlen(buf));
+    return (bufStr.c_str());
 }
 
