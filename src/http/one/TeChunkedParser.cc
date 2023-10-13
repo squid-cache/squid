@@ -91,6 +91,11 @@ Http::One::TeChunkedParser::parseChunkSize(Tokenizer &tok)
 {
     Must(theChunkSize <= 0); // Should(), really
 
+    static const SBuf bannedHexPrefixLower("0x");
+    static const SBuf bannedHexPrefixUpper("0X");
+    if (tok.skip(bannedHexPrefixLower) || tok.skip(bannedHexPrefixUpper))
+        throw TextException("chunk starts with 0x", Here());
+
     int64_t size = -1;
     if (tok.int64(size, 16, false) && !tok.atEnd()) {
         if (size < 0)
@@ -121,7 +126,7 @@ Http::One::TeChunkedParser::parseChunkMetadataSuffix(Tokenizer &tok)
     // bad or insufficient input, like in the code below. TODO: Expand up.
     try {
         parseChunkExtensions(tok); // a possibly empty chunk-ext list
-        skipLineTerminator(tok);
+        tok.skipRequired("CRLF after [chunk-ext]", Http1::CrLf());
         buf_ = tok.remaining();
         parsingStage_ = theChunkSize ? Http1::HTTP_PARSE_CHUNK : Http1::HTTP_PARSE_MIME;
         return true;
@@ -132,12 +137,14 @@ Http::One::TeChunkedParser::parseChunkMetadataSuffix(Tokenizer &tok)
     // other exceptions bubble up to kill message parsing
 }
 
-/// Parses the chunk-ext list (RFC 7230 section 4.1.1 and its Errata #4667):
+/// Parses the chunk-ext list (RFC 9112 section 7.1.1:
 /// chunk-ext = *( BWS ";" BWS chunk-ext-name [ BWS "=" BWS chunk-ext-val ] )
 void
-Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &callerTok)
 {
     do {
+        auto tok = callerTok;
+
         ParseBws(tok); // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
 
         if (!tok.skip(';'))
@@ -145,6 +152,7 @@ Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok)
 
         parseOneChunkExtension(tok);
         buf_ = tok.remaining(); // got one extension
+        callerTok = tok;
     } while (true);
 }
 
@@ -158,11 +166,14 @@ Http::One::ChunkExtensionValueParser::Ignore(Tokenizer &tok, const SBuf &extName
 /// Parses a single chunk-ext list element:
 /// chunk-ext = *( BWS ";" BWS chunk-ext-name [ BWS "=" BWS chunk-ext-val ] )
 void
-Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
+Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &callerTok)
 {
+    auto tok = callerTok;
+
     ParseBws(tok); // Bug 4492: ICAP servers send SP before chunk-ext-name
 
     const auto extName = tok.prefix("chunk-ext-name", CharacterSet::TCHAR);
+    callerTok = tok; // in case we determine that this is a valueless chunk-ext
 
     ParseBws(tok);
 
@@ -176,6 +187,8 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
         customExtensionValueParser->parse(tok, extName);
     else
         ChunkExtensionValueParser::Ignore(tok, extName);
+
+    callerTok = tok;
 }
 
 bool
@@ -209,7 +222,7 @@ Http::One::TeChunkedParser::parseChunkEnd(Tokenizer &tok)
     Must(theLeftBodySize == 0); // Should(), really
 
     try {
-        skipLineTerminator(tok);
+        tok.skipRequired("chunk CRLF", Http1::CrLf());
         buf_ = tok.remaining(); // parse checkpoint
         theChunkSize = 0; // done with the current chunk
         parsingStage_ = Http1::HTTP_PARSE_CHUNK_SZ;

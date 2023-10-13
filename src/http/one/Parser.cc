@@ -65,16 +65,10 @@ Http::One::Parser::DelimiterCharacters()
 void
 Http::One::Parser::skipLineTerminator(Tokenizer &tok) const
 {
-    if (tok.skip(Http1::CrLf()))
-        return;
-
     if (Config.onoff.relaxed_header_parser && tok.skipOne(CharacterSet::LF))
         return;
 
-    if (tok.atEnd() || (tok.remaining().length() == 1 && tok.remaining().at(0) == '\r'))
-        throw InsufficientInput();
-
-    throw TexcHere("garbage instead of CRLF line terminator");
+    tok.skipRequired("line-terminating CRLF", Http1::CrLf());
 }
 
 /// all characters except the LF line terminator
