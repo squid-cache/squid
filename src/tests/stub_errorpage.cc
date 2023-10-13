@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "HttpReply.h"
 
 #define STUB_API "errorpage.cc"
