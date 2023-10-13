@@ -147,6 +147,18 @@ Parser::Tokenizer::skipAll(const CharacterSet &tokenChars)
     return success(prefixLen);
 }
 
+void
+Parser::Tokenizer::skipRequired(const char *description, const SBuf &tokenToSkip)
+{
+    if (skip(tokenToSkip) || tokenToSkip.isEmpty())
+        return;
+
+    if (tokenToSkip.startsWith(buf_))
+        throw InsufficientInput();
+
+    throw TextException(ToSBuf("cannot skip ", description), Here());
+}
+
 bool
 Parser::Tokenizer::skipOne(const CharacterSet &chars)
 {
