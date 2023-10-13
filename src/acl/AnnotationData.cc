@@ -10,6 +10,7 @@
 #include "acl/Acl.h"
 #include "acl/AnnotationData.h"
 #include "acl/Checklist.h"
+#include "sbuf/SBuf.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
@@ -23,8 +24,9 @@ SBufList
 ACLAnnotationData::dump() const
 {
     SBufList sl;
-    if (const char *strNotes = notes->toString())
-        sl.push_back(SBuf(strNotes));
+    auto strNotes = notes->toString();
+    if (!strNotes.isEmpty())
+        sl.push_back(strNotes);
     return sl;
 }
 

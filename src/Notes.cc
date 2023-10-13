@@ -116,12 +116,11 @@ Note::dump(StoreEntry *entry, const char *k)
 }
 
 SBuf
-Note::toString(const char *sep) const
+Note::toString(const SBuf &sep) const
 {
     SBuf result;
     for (const auto &val: values)
-        result.appendf("%.*s: %.*s%s", key().length(), key().rawContent(),
-                       val->value().length(), val->value().rawContent(), sep);
+        result.append(key()).append(": ",2).append(val->value()).append(sep);
     return result;
 }
 
@@ -258,14 +257,15 @@ Notes::dump(StoreEntry *entry, const char *key)
         n->dump(entry, key);
 }
 
-const char *
+SBuf
 Notes::toString(const char *sep) const
 {
     static SBuf result;
+    SBuf separator(sep);
     result.clear();
     for (const auto &note: notes)
-        result.append(note->toString(sep));
-    return result.isEmpty() ? nullptr : result.c_str();
+        result.append(note->toString(separator));
+    return result;
 }
 
 bool

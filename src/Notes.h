@@ -11,6 +11,7 @@
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
+#include "sbuf/SBuf.h"
 #include "format/Format.h"
 #include "mem/forward.h"
 #include "SquidString.h"
@@ -93,7 +94,7 @@ public:
     void dump(StoreEntry *entry, const char *key);
     /// For the key and all its Values compile a string of
     /// "Key: Value" pairs separated by sep string.
-    SBuf toString(const char *sep) const;
+    SBuf toString(const SBuf &sep) const;
 
 private:
     SBuf theKey; ///< The note key
@@ -139,7 +140,7 @@ public:
     bool empty() const { return notes.empty(); }
     /// Convert Notes list to a string consist of "Key: Value"
     /// entries separated by sep string.
-    const char *toString(const char *sep = "\r\n") const;
+    SBuf toString(const char *sep = "\r\n") const;
     void updateNotePairs(NotePairsPointer pairs, const CharacterSet *delimiters,
                          const AccessLogEntryPointer &al);
 private:
