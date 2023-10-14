@@ -10,6 +10,7 @@
 #include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "base/IoManip.h"
 #include "client_side.h"
 #include "ConfigParser.h"
 #include "globals.h"
@@ -261,11 +262,12 @@ SBuf
 Notes::toString(const char *sep) const
 {
     static SBuf result;
-    SBuf separator(sep);
-    result.clear();
-    for (const auto &note: notes)
-        result.append(note->toString(separator));
-    return result;
+    static SBufStream ss(result);
+    ss.clearBuf();
+    ss << AsList(notes).delimitedBy(sep[0]); // WIP!
+    // for (const auto &note : notes)
+    //     result.append(note->toString(separator));
+    return ss.buf();
 }
 
 bool
