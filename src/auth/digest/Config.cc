@@ -833,6 +833,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
                 debugs(29, 9, "Found noncecount '" << digest_request->nc << "'");
             } else {
                 debugs(29, 9, "Invalid nc '" << value << "' in '" << temp << "'");
+                digest_request->nc[0] = 0;
             }
             break;
 
