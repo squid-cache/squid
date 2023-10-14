@@ -69,7 +69,7 @@ Error::update(const err_type recentCategory, const ErrorDetail::Pointer &recentD
 std::ostream &
 operator <<(std::ostream &os, const ErrorDetails &details)
 {
-    os << AsList(details).delimitedBy('+');
+    os << AsList(details).delimitedBy("+");
     return os;
 }
 
@@ -77,7 +77,7 @@ std::ostream &
 operator <<(std::ostream &os, const Error &error)
 {
     os << errorTypeName(error.category);
-    os << AsList(error.details).prefixedBy('/').delimitedBy('+');
+    os << AsList(error.details).prefixedBy("/").delimitedBy("+");
     return os;
 }
 
