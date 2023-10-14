@@ -827,8 +827,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
 
         case DIGEST_NC:
             if (value.size() == 8) {
-                // For historical reasons, the nc value MUST be exactly 8 hexadecimal
-                // digits.
+                // for historical reasons, the nc value MUST be exactly 8 bytes
                 xstrncpy(digest_request->nc, value.rawBuf(), value.size() + 1);
                 debugs(29, 9, "Found noncecount '" << digest_request->nc << "'");
             } else {
