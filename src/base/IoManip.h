@@ -109,10 +109,10 @@ public:
     explicit AsList(const Container &c): container(c) {}
 
     /// a c-string to print before the first item (if any). Caller must ensure lifetime.
-    auto &prefixedBy(const char *ch) { prefix = ch; return *this; }
+    auto &prefixedBy(const char * const p) { prefix = p; return *this; }
 
     /// a c-string to print between consecutive items (if any). Caller must ensure lifetime.
-    auto &delimitedBy(const char *ch) { delimiter = ch; return *this; }
+    auto &delimitedBy(const char * const d) { delimiter = d; return *this; }
 
 public:
     const Container &container; ///< zero or more items to print
