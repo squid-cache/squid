@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__SRC_HTML_FORWARD_H
-#define SQUID__SRC_HTML_FORWARD_H
+#ifndef SQUID__SRC_HTML_QUOTING_H
+#define SQUID__SRC_HTML_QUOTING_H
 
 /// HTML Document tools
 namespace Html
@@ -17,5 +17,5 @@ namespace Html
 
 char *html_quote(const char *);
 
-#endif /* SQUID__SRC_HTML_FORWARD_H */
+#endif /* SQUID__SRC_HTML_QUOTING_H */
 

@@ -12,4 +12,4 @@ noinst_LTLIBRARIES = libhtml.la
 
 libhtml_la_SOURCES = \
 	Quoting.cc \
-	forward.h
+	Quoting.h

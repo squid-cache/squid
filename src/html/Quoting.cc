@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "html/forward.h"
+#include "html/Quoting.h"
 
 /*
  *  HTML defines these characters as special entities that should be quoted.
