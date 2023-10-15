@@ -14,8 +14,19 @@ include $(top_srcdir)/src/Common.am
 
 # Port Specific Configurations
 
+COMPAT_SSL_ALL_SOURCES = \
+	openssl.h
+
+if ENABLE_SSL
+COMPAT_SSL_SOURCES = $(COMPAT_SSL_ALL_SOURCES)
+else
+COMPAT_SSL_SOURCES =
+EXCLUDE_FROM_HDR_TESTING += $(COMPAT_SSL_ALL_SOURCES)
+endif
+
 noinst_LTLIBRARIES = libcompatsquid.la
 libcompatsquid_la_SOURCES = \
+	$(COMPAT_SSL_SOURCES) \
 	assert.cc \
 	assert.h \
 	cmsg.h \
@@ -29,20 +40,11 @@ libcompatsquid_la_SOURCES = \
 	eui64_aton.c \
 	eui64_aton.h \
 	fdsetsize.h \
-	getaddrinfo.cc \
-	getaddrinfo.h \
-	getnameinfo.cc \
-	getnameinfo.h \
-	inet_ntop.cc \
-	inet_ntop.h \
-	inet_pton.cc \
-	inet_pton.h \
 	initgroups.h \
 	krb5.h \
 	memrchr.cc \
 	memrchr.h \
 	mswindows.cc \
-	openssl.h \
 	os/aix.h \
 	os/android.h \
 	os/dragonfly.h \
@@ -50,10 +52,10 @@ libcompatsquid_la_SOURCES = \
 	os/hpux.h \
 	os/linux.h \
 	os/macosx.h \
+	os/mingw.h \
 	os/mswindows.h \
 	os/netbsd.h \
 	os/openbsd.h \
-	os/opensolaris_10_netdb.h \
 	os/os2.h \
 	os/qnx.h \
 	os/sgi.h \
@@ -93,16 +95,3 @@ testPreCompiler_SOURCES = \
 	testPreCompiler.cc
 testPreCompiler_LDADD= $(LIBCPPUNIT_LIBS)
 testPreCompiler_LDFLAGS=
-
-# os/ subdir prevents us using src/TestHeaders.am
-#
-TESTS += testHeaders
-
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(srcdir)/*.h $(srcdir)/os/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
-
-CLEANFILES += testHeaders
-
-.PHONY: testHeaders

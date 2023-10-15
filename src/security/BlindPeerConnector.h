@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_SECURITY_BLINDPEERCONNECTOR_H
 #define SQUID_SRC_SECURITY_BLINDPEERCONNECTOR_H
 
+#include "http/forward.h"
+#include "HttpRequest.h"
 #include "security/PeerConnector.h"
 
 class ErrorState;

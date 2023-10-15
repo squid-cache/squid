@@ -41,6 +41,7 @@
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "internal.h"
 #include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"
 #include "ipcache.h"
@@ -532,7 +533,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
                                 http->getConn() != nullptr && http->getConn()->getAuth() != nullptr ?
                                 http->getConn()->getAuth() : http->request->auth_user_request);
 #else
-                                NULL);
+                                nullptr);
 #endif
     node = (clientStreamNode *)http->client_stream.tail->data;
     clientStreamRead(node, http, node->readBuffer);
@@ -913,9 +914,6 @@ clientHierarchical(ClientHttpRequest * http)
     if (request->url.getScheme() == AnyP::PROTO_HTTP)
         return method.respMaybeCacheable();
 
-    if (request->url.getScheme() == AnyP::PROTO_CACHE_OBJECT)
-        return 0;
-
     return 1;
 }
 
@@ -1225,9 +1223,6 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                     new_request->url = tmpUrl;
                     debugs(61, 2, "URL-rewriter diverts URL from " << old_request->effectiveRequestUri() << " to " << new_request->effectiveRequestUri());
 
-                    // update the new request to flag the re-writing was done on it
-                    new_request->flags.redirected = true;
-
                     // unlink bodypipe from the old request. Not needed there any longer.
                     if (old_request->body_pipe != nullptr) {
                         old_request->body_pipe = nullptr;
@@ -1235,7 +1230,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                                " from request " << old_request << " to " << new_request);
                     }
 
-                    http->resetRequest(new_request);
+                    http->resetRequestXXX(new_request, true);
                     old_request = nullptr;
                 } else {
                     debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
@@ -1630,11 +1625,47 @@ ClientHttpRequest::initRequest(HttpRequest *aRequest)
 void
 ClientHttpRequest::resetRequest(HttpRequest *newRequest)
 {
+    const auto uriChanged = request->effectiveRequestUri() != newRequest->effectiveRequestUri();
+    resetRequestXXX(newRequest, uriChanged);
+}
+
+void
+ClientHttpRequest::resetRequestXXX(HttpRequest *newRequest, const bool uriChanged)
+{
     assert(request != newRequest);
     clearRequest();
     assignRequest(newRequest);
     xfree(uri);
     uri = SBufToCstring(request->effectiveRequestUri());
+
+    if (uriChanged) {
+        request->flags.redirected = true;
+        checkForInternalAccess();
+    }
+}
+
+void
+ClientHttpRequest::checkForInternalAccess()
+{
+    if (!internalCheck(request->url.path()))
+        return;
+
+    if (internalHostnameIs(request->url.host()) && request->url.port() == getMyPort()) {
+        debugs(33, 3, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true));
+        request->flags.internal = true;
+    } else if (Config.onoff.global_internal_static && internalStaticCheck(request->url.path())) {
+        debugs(33, 3, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (global_internal_static on)");
+        request->url.setScheme(AnyP::PROTO_HTTP, "http");
+        request->url.host(internalHostname());
+        request->url.port(getMyPort());
+        request->flags.internal = true;
+        setLogUriToRequestUri();
+    } else {
+        debugs(33, 3, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
+    }
+
+    if (ForSomeCacheManager(request->url.path()))
+        request->flags.disableCacheUse("cache manager URL");
 }
 
 void
@@ -1966,9 +1997,6 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
     assert(msg);
 
     if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
-        // update the new message to flag whether URL re-writing was done on it
-        if (request->effectiveRequestUri() != new_req->effectiveRequestUri())
-            new_req->flags.redirected = true;
         resetRequest(new_req);
         assert(request->method.id());
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {
@@ -2057,8 +2085,13 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
         bpc.checkIn();
     }
 
-    if (adaptedBodySource->exhausted())
+    if (adaptedBodySource->exhausted()) {
+        // XXX: Setting receivedWholeAdaptedReply here is a workaround for a
+        // regression, as described in https://bugs.squid-cache.org/show_bug.cgi?id=5187#c6
+        receivedWholeAdaptedReply = true;
+        debugs(85, DBG_IMPORTANT, "WARNING: Squid bug 5187 workaround triggered");
         endRequestSatisfaction();
+    }
     // else wait for more body data
 }
 

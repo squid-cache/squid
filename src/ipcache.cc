@@ -164,7 +164,7 @@ public:
     void addGood(const rfc1035_rr &rr, Specs &specs);
 
     /// remembers the last error seen, overwriting any previous errors
-    void latestError(const char *text, const int debugLevel = 3);
+    void latestError(const char *text);
 
 protected:
     void updateTtl(const unsigned int rrTtl);
@@ -227,18 +227,20 @@ IpCacheLookupForwarder::IpCacheLookupForwarder(IPH *fun, void *data):
 }
 
 void
-IpCacheLookupForwarder::finalCallback(const Dns::CachedIps *addrs, const Dns::LookupDetails &details)
+IpCacheLookupForwarder::finalCallback(const Dns::CachedIps * const possiblyEmptyAddrs, const Dns::LookupDetails &details)
 {
+    // TODO: Consider removing nil-supplying IpcacheStats.invalid code and refactoring accordingly.
+    // may be nil but is never empty
+    const auto addrs = (possiblyEmptyAddrs && possiblyEmptyAddrs->empty()) ? nullptr : possiblyEmptyAddrs;
+
     debugs(14, 7, addrs << " " << details);
     if (receiverObj.set()) {
         if (auto receiver = receiverObj.valid())
             receiver->noteIps(addrs, details);
         receiverObj.clear();
     } else if (receiverFun) {
-        if (receiverData.valid()) {
-            const Dns::CachedIps *emptyIsNil = (addrs && !addrs->empty()) ? addrs : nullptr;
-            receiverFun(emptyIsNil, details, receiverData.validDone());
-        }
+        if (receiverData.valid())
+            receiverFun(addrs, details, receiverData.validDone());
         receiverFun = nullptr;
     }
 }
@@ -452,9 +454,9 @@ ipcacheCallback(ipcache_entry *i, const bool hit, const int wait)
 }
 
 void
-ipcache_entry::latestError(const char *text, const int debugLevel)
+ipcache_entry::latestError(const char *text)
 {
-    debugs(14, debugLevel, "ERROR: DNS failure while resolving " << name() << ": " << text);
+    debugs(14, 3, "ERROR: DNS failure while resolving " << name() << ": " << text);
     safe_free(error_message);
     error_message = xstrdup(text);
 }
@@ -543,8 +545,15 @@ ipcache_entry::updateTtl(const unsigned int rrTtl)
                                 Config.positiveDnsTtl); // largest value allowed
 
     const time_t rrExpires = squid_curtime + ttl;
-    if (rrExpires < expires)
+    if (addrs.size() <= 1) {
+        debugs(14, 5, "use first " << ttl << " from RR TTL " << rrTtl);
         expires = rrExpires;
+    } else if (rrExpires < expires) {
+        debugs(14, 5, "use smaller " << ttl << " from RR TTL " << rrTtl << "; was: " << (expires - squid_curtime));
+        expires = rrExpires;
+    } else {
+        debugs(14, 7, "ignore " << ttl << " from RR TTL " << rrTtl << "; keep: " << (expires - squid_curtime));
+    }
 }
 
 /// \ingroup IPCacheInternal
@@ -568,7 +577,7 @@ ipcacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *e
         i->expires = squid_curtime + Config.negativeDnsTtl;
 
         if (!i->error_message) {
-            i->latestError("No valid address records", DBG_IMPORTANT);
+            i->latestError("No valid address records");
             if (i->sawCname)
                 ++IpcacheStats.cname_only;
         }

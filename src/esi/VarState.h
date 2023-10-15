@@ -63,11 +63,11 @@ private:
     HttpHeader hdr;
 
     struct {
-        int language:1;
-        int cookie:1;
-        int host:1;
-        int referer:1;
-        int useragent:1;
+        unsigned int language:1;
+        unsigned int cookie:1;
+        unsigned int host:1;
+        unsigned int referer:1;
+        unsigned int useragent:1;
     } flags;
 
 public:

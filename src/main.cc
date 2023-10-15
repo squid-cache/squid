@@ -1203,6 +1203,8 @@ mainInitialize(void)
     FwdState::initModule();
     SBufStatsAction::RegisterWithCacheManager();
 
+    AsyncJob::RegisterWithCacheManager();
+
     /* These use separate calls so that the comm loops can eventually
      * coexist.
      */
@@ -1305,7 +1307,7 @@ OnTerminate()
         return;
     terminating = true;
 
-    debugs(1, DBG_CRITICAL, "FATAL: Dying from an exception handling failure; exception: " << CurrentException);
+    debugs(1, DBG_CRITICAL, "FATAL: Dying after an undetermined failure" << CurrentExceptionExtra);
 
     Debug::PrepareToDie();
     abort();
@@ -1437,9 +1439,58 @@ StartUsingConfig()
     }
 }
 
+/// register all known modules for handling future RegisteredRunner events
+static void
+RegisterModules()
+{
+    // These registration calls do not represent a RegisteredRunner "event". The
+    // modules registered here should be initialized later, during those events.
+
+    // RegisteredRunner event handlers should not depend on handler call order
+    // and, hence, should not depend on the registration call order below.
+
+    CallRunnerRegistrator(ClientDbRr);
+    CallRunnerRegistrator(CollapsedForwardingRr);
+    CallRunnerRegistrator(MemStoreRr);
+    CallRunnerRegistrator(PeerPoolMgrsRr);
+    CallRunnerRegistrator(SharedMemPagesRr);
+    CallRunnerRegistrator(SharedSessionCacheRr);
+    CallRunnerRegistrator(TransientsRr);
+    CallRunnerRegistratorIn(Dns, ConfigRr);
+
+#if HAVE_DISKIO_MODULE_IPCIO
+    CallRunnerRegistrator(IpcIoRr);
+#endif
+
+#if HAVE_AUTH_MODULE_NTLM
+    CallRunnerRegistrator(NtlmAuthRr);
+#endif
+
+#if USE_OPENSSL
+    CallRunnerRegistrator(sslBumpCfgRr);
+#endif
+
+#if USE_SQUID_ESI && HAVE_LIBEXPAT
+    CallRunnerRegistratorIn(Esi, ExpatRr);
+#endif
+
+#if USE_SQUID_ESI && HAVE_LIBXML2
+    CallRunnerRegistratorIn(Esi, Libxml2Rr);
+#endif
+
+#if HAVE_FS_ROCK
+    CallRunnerRegistratorIn(Rock, SwapDirRr);
+#endif
+}
+
 int
 SquidMain(int argc, char **argv)
 {
+    // We must register all modules before the first RunRegisteredHere() call.
+    // We do it ASAP/here so that we do not need to move this code when we add
+    // earlier hooks to the RegisteredRunner API.
+    RegisterModules();
+
     const CommandLine cmdLine(argc, argv, shortOpStr, squidOptions);
 
     ConfigureCurrentKid(cmdLine);
@@ -1877,7 +1928,7 @@ watch_child(const CommandLine &masterCommand)
 #ifdef TIOCNOTTY
 
     if ((i = open("/dev/tty", O_RDWR | O_TEXT)) >= 0) {
-        ioctl(i, TIOCNOTTY, NULL);
+        ioctl(i, TIOCNOTTY, nullptr);
         close(i);
     }
 

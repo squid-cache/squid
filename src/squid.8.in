@@ -51,7 +51,7 @@ Squid is derived from the ARPA\-funded Harvest Project.
 This manual page only lists the command line arguments.
 For details on how to configure Squid see the file 
 .BI @SYSCONFDIR@/squid.conf.documented,
-the Squid wiki FAQ and examples at http://wiki.squid-cache.org/ ,
+the Squid wiki FAQ and examples at https://wiki.squid-cache.org/ ,
 or the configuration manual on the Squid home page
 .if !'po4a'hide' http://www.squid-cache.org/Doc/config/
 .
@@ -269,9 +269,9 @@ Questions on the usage of this program can be sent to the
 .
 .SH REPORTING BUGS
 Bug reports need to be made in English.
-See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+See https://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
 .PP
-Report bugs or bug fixes using http://bugs.squid-cache.org/
+Report bugs or bug fixes using https://bugs.squid-cache.org/
 .PP
 Report serious security bugs to
 .I Squid Bugs <squid-bugs@lists.squid-cache.org>
@@ -290,7 +290,7 @@ Report ideas for new improvements to the
 .if !'po4a'hide' .B ext_unix_group_acl "(8), "
 .br
 The Squid FAQ wiki
-.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.if !'po4a'hide' https://wiki.squid-cache.org/SquidFaq
 .br
 The Squid Configuration Manual
 .if !'po4a'hide' http://www.squid-cache.org/Doc/config/

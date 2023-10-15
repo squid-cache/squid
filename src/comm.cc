@@ -592,7 +592,7 @@ commUnsetFdTimeout(int fd)
 }
 
 int
-commSetConnTimeout(const Comm::ConnectionPointer &conn, int timeout, AsyncCall::Pointer &callback)
+commSetConnTimeout(const Comm::ConnectionPointer &conn, time_t timeout, AsyncCall::Pointer &callback)
 {
     debugs(5, 3, conn << " timeout " << timeout);
     assert(Comm::IsConnOpen(conn));

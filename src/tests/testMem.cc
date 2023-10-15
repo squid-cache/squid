@@ -80,3 +80,9 @@ TestMem::testMemProxy()
     CPPUNIT_ASSERT_EQUAL(otherthing->aValue, 0);
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

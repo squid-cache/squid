@@ -137,7 +137,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
             *c = '\0';
             length = c - buf;
             if (debug_enabled)
-                fprintf(stderr, "%s| %s: Got '%s' from squid (length: %" PRIuSIZE ").\n",
+                fprintf(stderr, "%s| %s: Got '%s' from squid (length: %zu).\n",
                         LogTime(), PROGRAM, buf, length);
         } else {
             if (debug_enabled)
@@ -182,7 +182,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
         }
         length = BASE64_DECODE_LENGTH(strlen(buf+3));
         if (debug_enabled)
-            fprintf(stderr, "%s| %s: Decode '%s' (decoded length: %" PRIuSIZE ").\n",
+            fprintf(stderr, "%s| %s: Decode '%s' (decoded length: %zu).\n",
                     LogTime(), PROGRAM, buf + 3, length);
 
         safe_free(token);

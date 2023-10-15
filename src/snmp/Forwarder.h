@@ -11,6 +11,7 @@
 #ifndef SQUID_SNMPX_FORWARDER_H
 #define SQUID_SNMPX_FORWARDER_H
 
+#include "ip/forward.h"
 #include "ipc/Forwarder.h"
 #include "snmp/Pdu.h"
 #include "snmp/Session.h"

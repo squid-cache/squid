@@ -13,6 +13,7 @@
 #include "neighbors.h"
 #include "NeighborTypeDomainList.h"
 #include "pconn.h"
+#include "PeerDigest.h"
 #include "PeerPoolMgr.h"
 #include "SquidConfig.h"
 #include "util.h"
@@ -40,11 +41,11 @@ CachePeer::~CachePeer()
     aclDestroyAccessList(&access);
 
 #if USE_CACHE_DIGESTS
-    cbdataReferenceDone(digest);
+    void *digestTmp = nullptr;
+    if (cbdataReferenceValidDone(digest, &digestTmp))
+        peerDigestNotePeerGone(static_cast<PeerDigest *>(digestTmp));
     xfree(digest_url);
 #endif
-
-    delete next;
 
     xfree(login);
 

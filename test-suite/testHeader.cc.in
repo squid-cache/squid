@@ -6,8 +6,16 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_COMM_POLL_H
-#define SQUID_COMM_POLL_H
+/*
+ * This file is used to test whether Squid header files can be compiled on their own.
+ * See the testHeaders target in src/TestHeaders.am.
+ */
 
-#endif /* SQUID_COMM_POLL_H */
+#include "squid.h"
+#include "@HEADER@"
+
+int
+main(int, char **) {
+    return 0;
+}
 

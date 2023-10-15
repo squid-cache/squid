@@ -10,13 +10,9 @@
 #define SQUID_ACLARP_H
 
 #include "acl/Acl.h"
+#include "eui/Eui48.h"
 
 #include <set>
-
-namespace Eui
-{
-class Eui48;
-};
 
 /// \ingroup ACLAPI
 class ACLARP : public ACL

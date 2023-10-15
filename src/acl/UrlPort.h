@@ -9,15 +9,22 @@
 #ifndef SQUID_ACLURLPORT_H
 #define SQUID_ACLURLPORT_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 
-class ACLUrlPortStrategy : public ACLStrategy<int>
+namespace Acl
 {
 
+/// a "port" ACL
+class UrlPortCheck: public ParameterizedNode< ACLData<int> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLURLPORT_H */
 

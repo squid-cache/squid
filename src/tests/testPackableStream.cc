@@ -22,21 +22,11 @@ class TestPackableStream : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testGetStream);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testGetStream();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestPackableStream );
-
-/* init memory pools */
-
-void TestPackableStream::setUp()
-{
-    Mem::Init();
-}
 
 // TODO: test streaming to a MemBuf as well.
 
@@ -71,4 +61,6 @@ TestPackableStream::testGetStream()
     delete anEntry; // does the unlock()
     Store::FreeMemory();
 }
+
+// This test uses main() from ./testStore.cc.
 

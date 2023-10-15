@@ -34,7 +34,6 @@ public:
     void saveState();
     void restoreState();
     void purgeRequest ();
-    void sendClientUpstreamResponse();
     void doGetMoreData();
     void identifyStoreObject();
     void identifyFoundObject(StoreEntry *entry, const char *detail);
@@ -60,7 +59,7 @@ public:
     void processExpired();
     clientStream_status_t replyStatus();
     void processMiss();
-    void traceReply(clientStreamNode * node);
+    void traceReply();
     const char *storeId() const { return (http->store_id.size() > 0 ? http->store_id.termedBuf() : http->uri); }
 
     Http::StatusCode purgeStatus;
@@ -69,14 +68,13 @@ public:
     LogTags *loggingTags() const override;
 
     ClientHttpRequest *http;
-    /// Base reply header bytes received from Store.
-    /// Compatible with ClientHttpRequest::Out::offset.
-    /// Not to be confused with ClientHttpRequest::Out::headers_sz.
-    int headers_sz;
     store_client *sc;       /* The store_client we're using */
-    size_t reqsize;
-    size_t reqofs;
-    char tempbuf[HTTP_REQBUF_SZ];   ///< a temporary buffer if we need working storage
+
+    /// Buffer dedicated to receiving storeClientCopy() responses to generated
+    /// revalidation requests. These requests cannot use next()->readBuffer
+    /// because the latter keeps the contents of the stale HTTP response during
+    /// revalidation. sendClientOldEntry() uses that contents.
+    char tempbuf[HTTP_REQBUF_SZ];
 
     struct Flags {
         Flags() : storelogiccomplete(0), complete(0), headersSent(false) {}
@@ -93,9 +91,10 @@ private:
 
     clientStreamNode *getNextNode() const;
     void makeThisHead();
-    bool errorInStream(StoreIOBuffer const &result, size_t const &sizeToProcess)const ;
+    bool errorInStream(const StoreIOBuffer &result) const;
+    bool matchesStreamBodyBuffer(const StoreIOBuffer &) const;
     void sendStreamError(StoreIOBuffer const &result);
-    void pushStreamData(StoreIOBuffer const &result, char *source);
+    void pushStreamData(const StoreIOBuffer &);
     clientStreamNode * next() const;
     HttpReply *reply;
     void processReplyAccess();
@@ -107,10 +106,12 @@ private:
     int checkTransferDone();
     void processOnlyIfCachedMiss();
     bool processConditional();
+    void noteStreamBufferredBytes(const StoreIOBuffer &);
     void cacheHit(StoreIOBuffer result);
     void handleIMSReply(StoreIOBuffer result);
     void sendMoreData(StoreIOBuffer result);
-    void triggerInitialStoreRead();
+    void triggerInitialStoreRead(STCB = SendMoreData);
+    void requestMoreBodyFromStore();
     void sendClientOldEntry();
     void purgeAllCached();
     /// attempts to release the cached entry
@@ -127,6 +128,13 @@ private:
     void sendPreconditionFailedError();
     void sendNotModified();
     void sendNotModifiedOrPreconditionFailedError();
+    void sendClientUpstreamResponse(const StoreIOBuffer &upstreamResponse);
+
+    /// Reduces a chance of an accidental direct storeClientCopy() call that
+    /// (should but) forgets to invalidate our lastStreamBufferedBytes. This
+    /// function is not defined; decltype() syntax prohibits "= delete", but
+    /// function usage will trigger deprecation warnings and linking errors.
+    static decltype(::storeClientCopy) storeClientCopy [[deprecated]];
 
     /// Classification of the initial Store lookup.
     /// This very first lookup happens without the Vary-driven key augmentation.
@@ -138,8 +146,6 @@ private:
     store_client *old_sc;
     time_t old_lastmod;
     String old_etag;
-    size_t old_reqofs;
-    size_t old_reqsize;
 
     bool deleting;
 
@@ -150,6 +156,12 @@ private:
     } CollapsedRevalidation;
 
     CollapsedRevalidation collapsedRevalidation;
+
+    /// HTTP response body bytes stored in our Client Stream buffer (if any)
+    StoreIOBuffer lastStreamBufferedBytes;
+
+    // TODO: Remove after moving the meat of this function into a method.
+    friend CSR clientGetMoreData;
 };
 
 // TODO: move to SideAgent parent, when we have one

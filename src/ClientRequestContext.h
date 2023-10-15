@@ -9,8 +9,10 @@
 #ifndef SQUID_CLIENTREQUESTCONTEXT_H
 #define SQUID_CLIENTREQUESTCONTEXT_H
 
+#include "acl/forward.h"
 #include "base/RefCount.h"
 #include "cbdata.h"
+#include "defines.h"
 #include "dns/forward.h"
 #include "helper/forward.h"
 #include "ipcache.h"

@@ -45,7 +45,7 @@
 #if HAVE_PRIV_H
 #include <priv.h>
 #endif
-#if HAVE_WIN32_PSAPI
+#if HAVE_PSAPI_H
 #include <psapi.h>
 #endif
 #if HAVE_SYS_STAT_H
@@ -137,7 +137,7 @@ mail_warranty(void)
     char *filename;
     // XXX tempnam is obsolete since POSIX.2008-1
     // tmpfile is not an option, we want the created files to stick around
-    if ((filename = tempnam(NULL, APP_SHORTNAME)) == NULL ||
+    if ((filename = tempnam(nullptr, APP_SHORTNAME)) == NULL ||
             (fp = fopen(filename, "w")) == NULL) {
         umask(prev_umask);
         return;
@@ -180,7 +180,7 @@ void
 squid_getrusage(struct rusage *r)
 {
     memset(r, '\0', sizeof(struct rusage));
-#if HAVE_GETRUSAGE && defined(RUSAGE_SELF) && !_SQUID_WINDOWS_
+#if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
 #if _SQUID_SOLARIS_
     /* Solaris 2.5 has getrusage() permission bug -- Arjan de Vet */
     enter_suid();
@@ -192,7 +192,7 @@ squid_getrusage(struct rusage *r)
     leave_suid();
 #endif
 
-#elif _SQUID_WINDOWS_ && HAVE_WIN32_PSAPI
+#elif defined(PSAPI_VERSION)
     // Windows has an alternative method if there is no POSIX getrusage defined.
     if (WIN32_OS_version >= _WIN_OS_WINNT) {
         /* On Windows NT and later call PSAPI.DLL for process Memory */
@@ -776,7 +776,7 @@ setMaxFD(void)
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_NOFILE: " << xstrerr(xerrno));
     } else if (Config.max_filedescriptors > 0) {
-#if USE_SELECT || USE_SELECT_WIN32
+#if USE_SELECT
         /* select() breaks if this gets set too big */
         if (Config.max_filedescriptors > FD_SETSIZE) {
             rl.rlim_cur = FD_SETSIZE;

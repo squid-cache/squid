@@ -13,6 +13,7 @@
 
 #include "base/AsyncCall.h"
 #include "base/Subscription.h"
+#include "ip/Address.h"
 #include "ipc/QuestionerId.h"
 #include "ipc/RequestId.h"
 #include "ipc/StartListening.h"

@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 noinst_LTLIBRARIES = \
 	libcomm.la \
@@ -29,7 +28,6 @@ libcomm_la_SOURCES = \
 	ModKqueue.cc \
 	ModPoll.cc \
 	ModSelect.cc \
-	ModSelectWin32.cc \
 	Read.cc \
 	Read.h \
 	Tcp.cc \
