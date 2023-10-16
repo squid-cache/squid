@@ -25,6 +25,7 @@
 #include "StrList.h"
 
 #include <algorithm>
+#include <ostream>
 #include <string>
 
 Note::Value::~Value()
@@ -123,6 +124,14 @@ Note::toString(const SBuf &sep) const
     for (const auto &val: values)
         result.append(key()).append(": ",2).append(val->value()).append(sep);
     return result;
+}
+
+std::ostream&
+operator <<(std::ostream &os, const Note &note)
+{
+    for (const auto &val : values)
+        os << key() << ": " << val->value();
+    return os;
 }
 
 const Notes::Keys &
@@ -264,11 +273,11 @@ Notes::toString(const char *sep) const
     static SBuf result;
     static SBufStream ss(result);
     ss.clearBuf();
-    ss << AsList(notes).delimitedBy(sep[0]); // WIP!
-    // for (const auto &note : notes)
-    //     result.append(note->toString(separator));
+    ss << AsList(notes).delimitedBy(sep[0]); // WIP, requires PR #1519 to properly implement
     return ss.buf();
 }
+
+
 
 bool
 NotePairs::find(SBuf &resultNote, const char *noteKey, const char *sep) const
