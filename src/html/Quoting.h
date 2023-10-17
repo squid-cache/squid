@@ -9,7 +9,6 @@
 #ifndef SQUID__SRC_HTML_QUOTING_H
 #define SQUID__SRC_HTML_QUOTING_H
 
-
 char *html_quote(const char *);
 
 #endif /* SQUID__SRC_HTML_QUOTING_H */
