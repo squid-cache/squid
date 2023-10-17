@@ -9,11 +9,6 @@
 #ifndef SQUID__SRC_HTML_QUOTING_H
 #define SQUID__SRC_HTML_QUOTING_H
 
-/// HTML Document tools
-namespace Html
-{
-// nothing yet
-} // namespace Html
 
 char *html_quote(const char *);
 
