@@ -21,7 +21,7 @@ namespace Security
 BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &, const Comm::ConnectionPointer & aServerConn,
                                        const AsyncCallback<EncryptorAnswer> & aCallback,
                                        const AccessLogEntryPointer &alp,
-                                       const time_t) :
+                                       time_t) :
     AsyncJob("Security::BlindPeerConnector"),
     Security::PeerConnector(aServerConn, aCallback, alp, 0)
 {STUB_NOP}
