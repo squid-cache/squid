@@ -833,7 +833,7 @@ matchDomainName(const char *h, const char *d, MatchDomainNameFlags flags)
 
     dl = strlen(d);
     if (dl == 0)
-    	return 1;
+        return 1;
 
     /*
      * Start at the ends of the two strings and work towards the
