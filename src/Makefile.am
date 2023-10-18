@@ -1735,8 +1735,8 @@ tests_testHtmlQuote_SOURCES = \
 nodist_tests_testHtmlQuote_SOURCES = \
 	$(TESTSOURCES)
 tests_testHtmlQuote_LDADD= \
-	base/libbase.la \
 	html/libhtml.la \
+	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
