@@ -8,8 +8,7 @@ Changes in squid-6.4 (22 Oct 2023):
 	- Fix userinfo percent-encoding
 	- Fix store_client caller memory leak on certain errors
 	- Fix validation of certificates with CN=*
-	- Remove serialized HTTP headers from storeClientCopy()
-	- Replaced clientReplyContext::tempBuffer with old_reqofs
+	- Fix handling of large stored response headers
 	- Miss if a HTTP/304 update would exceed reply_header_max_size
 	- RFC 9112: Improve HTTP chunked encoding compliance
 	- HTTP: Improve handling of empty lines received prior to request-line
