@@ -757,7 +757,7 @@ collectAuthors ()
     # but do not add committers (--format='    %cn <%ce>').
 
     # add collected new (co-)authors, if any, to CONTRIBUTORS
-    if ./scripts/update-contributors.pl < authors.tmp > CONTRIBUTORS.new
+    if ./scripts/update-contributors.pl --quiet < authors.tmp > CONTRIBUTORS.new
     then
         updateIfChanged CONTRIBUTORS CONTRIBUTORS.new  \
             "A human PR description should match: $vettedCommitPhraseRegex"
