@@ -35,7 +35,7 @@ my $VerboseOutput = 1;
 GetOptions(
     'quiet' => sub { $VerboseOutput = 0 },
     'verbose+' => \$VerboseOutput, 'v+' => \$VerboseOutput,
-    );
+    ) or die("$0: Bad command line arguments\n");
 
 my @VettedContributors = ();
 my @NewContributors = ();
