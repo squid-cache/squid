@@ -6,16 +6,10 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_HTML_QUOTE_H
-#define _SQUID_HTML_QUOTE_H
-
-#ifdef __cplusplus
-extern "C"
-#else
-extern
-#endif
+#ifndef SQUID__SRC_HTML_QUOTING_H
+#define SQUID__SRC_HTML_QUOTING_H
 
 char *html_quote(const char *);
 
-#endif /* _SQUID_HTML_QUOTE_H */
+#endif /* SQUID__SRC_HTML_QUOTING_H */
 

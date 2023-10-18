@@ -3056,6 +3056,7 @@ AC_CONFIG_FILES([
 	src/fs/Makefile
 	src/ftp/Makefile
 	src/helper/Makefile
+	src/html/Makefile
 	src/http/Makefile
 	src/http/one/Makefile
 	src/http/url_rewriters/Makefile

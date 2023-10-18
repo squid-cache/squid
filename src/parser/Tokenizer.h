@@ -115,6 +115,13 @@ public:
      */
     SBuf::size_type skipAll(const CharacterSet &discardables);
 
+    /** skips a given character sequence (string);
+     * does nothing if the sequence is empty
+     *
+     * \throws exception on mismatching prefix or InsufficientInput
+     */
+    void skipRequired(const char *description, const SBuf &tokenToSkip);
+
     /** Removes a single trailing character from the set.
      *
      * \return whether a character was removed
