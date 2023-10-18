@@ -16,7 +16,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = mem time debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+SUBDIRS = mem time debug base anyp helper dns html ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -256,7 +256,6 @@ squid_SOURCES = \
 	HttpHdrScTarget.h \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderMask.h \
 	HttpHeaderRange.h \
@@ -519,6 +518,7 @@ squid_LDADD = \
 	$(REGEXLIB) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
+	html/libhtml.la \
 	$(SNMP_LIBS) \
 	mem/libmem.la \
 	store/libstore.la \
@@ -1028,7 +1028,6 @@ tests_testRock_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1198,7 +1197,6 @@ tests_testUfs_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1371,7 +1369,6 @@ tests_testStore_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1535,7 +1532,6 @@ tests_testDiskIO_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1778,7 +1774,6 @@ tests_test_http_range_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1951,6 +1946,7 @@ tests_test_http_range_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	mgr/libmgr.la \
+	html/libhtml.la \
 	sbuf/libsbuf.la \
 	debug/libdebug.la \
 	store/libstore.la \
@@ -2036,7 +2032,6 @@ tests_testHttpReply_SOURCES = \
 	HttpHdrScTarget.h \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderMask.h \
 	HttpHeaderTools.cc \
@@ -2163,7 +2158,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -2329,6 +2323,7 @@ tests_testHttpRequest_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	mgr/libmgr.la \
+	html/libhtml.la \
 	anyp/libanyp.la \
 	$(SNMP_LIBS) \
 	icmp/libicmp.la \
@@ -2462,7 +2457,6 @@ tests_testCacheManager_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -2633,6 +2627,7 @@ tests_testCacheManager_LDADD = \
 	anyp/libanyp.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
+	html/libhtml.la \
 	$(SNMP_LIBS) \
 	mem/libmem.la \
 	store/libstore.la \
