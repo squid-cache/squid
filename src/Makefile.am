@@ -1727,6 +1727,21 @@ EXTRA_DIST += \
 	tests/testACLMaxUserIP.cc
 endif
 
+## Tests of html/*
+
+check_PROGRAMS += tests/testHtmlQuote
+tests_testHtmlQuote_SOURCES = \
+	tests/testHtmlQuote.cc
+nodist_tests_testHtmlQuote_SOURCES = \
+	$(TESTSOURCES)
+tests_testHtmlQuote_LDADD= \
+	base/libbase.la \
+	html/libhtml.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testHtmlQuote_LDFLAGS = $(LIBADD_DL)
+
 ## Tests of http/* and HTTP Protocol objects
 
 check_PROGRAMS += tests/test_http_range
@@ -2746,16 +2761,3 @@ tests_testEventLoop_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
-
-check_PROGRAMS += tests/testHtmlQuote
-tests_testHtmlQuote_SOURCES = \
-	tests/testHtmlQuote.cc
-nodist_tests_testHtmlQuote_SOURCES = \
-	$(TESTSOURCES)
-tests_testHtmlQuote_LDADD= \
-	$(top_builddir)/lib/libmiscencoding.la \
-	base/libbase.la \
-	$(LIBCPPUNIT_LIBS) \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-tests_testHtmlQuote_LDFLAGS = $(LIBADD_DL)
