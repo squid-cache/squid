@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
-#include "html_quote.h"
+#include "html/Quoting.h"
 
 #include <cstring>
 #include <unordered_map>
