@@ -29,7 +29,7 @@ my $SkippedBadLines = 0;
 
 # Brief display by default.
 # Use --quiet for no output
-# Repeat -v or --verbose for more details
+# Use -v or --verbose for more details, repeating them for even more details.
 my $VerboseOutput = 1;
 
 GetOptions(
