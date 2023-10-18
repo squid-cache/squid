@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "compat/cppunit.h"
-#include "html_quote.h"
+#include "html/Quoting.h"
 #include "unitTestMain.h"
 
 #include <cstring>
