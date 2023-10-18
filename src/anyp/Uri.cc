@@ -174,6 +174,10 @@ urlInitialize(void)
     assert(0 == matchDomainName("*.foo.com", ".foo.com", mdnHonorWildcards));
     assert(0 != matchDomainName("*.foo.com", "foo.com", mdnHonorWildcards));
 
+    assert(0 != matchDomainName("foo.com", ""));
+    assert(0 != matchDomainName("foo.com", "", mdnHonorWildcards));
+    assert(0 != matchDomainName("foo.com", "", mdnRejectSubsubDomains));
+
     /* more cases? */
 }
 
@@ -748,6 +752,8 @@ matchDomainName(const char *h, const char *d, MatchDomainNameFlags flags)
         return -1;
 
     dl = strlen(d);
+    if (dl == 0)
+        return 1;
 
     /*
      * Start at the ends of the two strings and work towards the
