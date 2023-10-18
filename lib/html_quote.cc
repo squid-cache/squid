@@ -25,7 +25,7 @@ const CharacterSet htmlSpecialCharacters("html entities","<>&\"\'");
 
 /*
  *  html_do_quote - Returns a static buffer containing the quoted
- *  string.git ad
+ *  string.
  */
 char *
 html_quote(const char *string)
