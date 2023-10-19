@@ -37,7 +37,16 @@ testHtmlQuote::test_html_quote_cstr()
     CPPUNIT_ASSERT_EQUAL(std::string("foo&amp;bar"), std::string(html_quote("foo&bar")));
     CPPUNIT_ASSERT_EQUAL(std::string("some&#39;thing"), std::string(html_quote("some'thing")));
     CPPUNIT_ASSERT_EQUAL(std::string("some&quot;thing"), std::string(html_quote("some\"thing")));
-    CPPUNIT_ASSERT_EQUAL(std::string("&#31;"), std::string(html_quote("\x1f")));
+
+    for (unsigned char ch = 1; ch < 0xff; ++ch) {
+        unsigned char buf[2] = {ch, '\0'};
+        char *quoted = html_quote(reinterpret_cast<char *>(buf));
+        if (strlen(quoted) == 1) {
+            CPPUNIT_ASSERT_EQUAL(static_cast<int>(ch), static_cast<int>(quoted[0]));
+        } else {
+            CPPUNIT_ASSERT_EQUAL(std::string("&#") + std::to_string(ch) + std::string(";"), std::string(quoted));
+        }
+    }
 }
 
 void testHtmlQuote::testPerformance()
