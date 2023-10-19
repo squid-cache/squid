@@ -13,13 +13,12 @@
 #include <cstring>
 #include <unordered_map>
 
-
 const std::unordered_map<char,const char *> htmlEntities = {
     {'<', "&lt;"},
     {'>', "&gt;"},
     {'"', "&quot;"},
     {'&', "&amp;"},
-    {'\'', "&#39;"}
+    {'\'', "&apos;"}
 };
 const CharacterSet htmlSpecialCharacters("html entities","<>&\"\'");
 
