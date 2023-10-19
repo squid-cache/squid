@@ -21,7 +21,7 @@ class testHtmlQuote: public CPPUNIT_NS::TestFixture
     // CPPUNIT_TEST(testPerformance);
     CPPUNIT_TEST_SUITE_END();
 
-    protected:
+protected:
     void test_html_quote_cstr();
     void testPerformance();
 };
