@@ -13,14 +13,6 @@
 #include <cstring>
 #include <unordered_map>
 
-const std::unordered_map<char,const char *> htmlEntities = {
-    {'<', "&lt;"},
-    {'>', "&gt;"},
-    {'"', "&quot;"},
-    {'&', "&amp;"},
-    {'\'', "&apos;"}
-};
-const CharacterSet htmlSpecialCharacters("html entities","<>&\"\'");
 
 /*
  *  html_do_quote - Returns a static buffer containing the quoted
@@ -29,6 +21,15 @@ const CharacterSet htmlSpecialCharacters("html entities","<>&\"\'");
 char *
 html_quote(const char *string)
 {
+    static const CharacterSet htmlSpecialCharacters("html entities", "<>&\"\'");
+    static const std::unordered_map<char, const char *> htmlEntities = {
+        {'<', "&lt;"},
+        {'>', "&gt;"},
+        {'"', "&quot;"},
+        {'&', "&amp;"},
+        {'\'', "&apos;"}
+    };
+
     static char *buf;
     static size_t bufsize = 0;
     const char *src;
