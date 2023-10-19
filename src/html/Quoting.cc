@@ -45,9 +45,6 @@ html_quote(const char *string)
         const char *escape = NULL;
         const unsigned char ch = *src;
 
-        /* Walk thru the list of HTML Entities that must be quoted to
-         * display safely
-         */
         if (htmlSpecialCharacters[ch]) {
             escape = htmlEntities.at(ch); // guaranteed to exist
         }
