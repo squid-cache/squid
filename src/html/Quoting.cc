@@ -13,9 +13,6 @@
 #include <cstring>
 #include <unordered_map>
 
-/*
- *  html_do_quote - Returns a static buffer containing the quoted string.
- */
 char *
 html_quote(const char *string)
 {
