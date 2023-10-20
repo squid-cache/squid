@@ -47,6 +47,10 @@ testHtmlQuote::test_html_quote_cstr()
             CPPUNIT_ASSERT_EQUAL(';', quoted[strlen(quoted)-1]);
         }
     }
+
+    CPPUNIT_ASSERT_EQUAL(std::string("&lt;&gt;&quot;&amp;&apos;"), std::string(html_quote("<>\"&'")));
+    CPPUNIT_ASSERT_EQUAL(std::string("&gt;"), std::string(html_quote(">")));
+    CPPUNIT_ASSERT_EQUAL(std::string("&#163;"), std::string(html_quote("\xa3")));
 }
 
 void testHtmlQuote::testPerformance()
