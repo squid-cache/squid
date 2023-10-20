@@ -35,7 +35,7 @@ testHtmlQuote::test_html_quote_cstr()
     CPPUNIT_ASSERT_EQUAL(std::string("bar"), std::string(html_quote("bar")));
     CPPUNIT_ASSERT_EQUAL(std::string("foo&lt;bar&gt;gazonk"), std::string(html_quote("foo<bar>gazonk")));
     CPPUNIT_ASSERT_EQUAL(std::string("foo&amp;bar"), std::string(html_quote("foo&bar")));
-    CPPUNIT_ASSERT_EQUAL(std::string("some&#39;thing"), std::string(html_quote("some'thing")));
+    CPPUNIT_ASSERT_EQUAL(std::string("some&apos;thing"), std::string(html_quote("some'thing")));
     CPPUNIT_ASSERT_EQUAL(std::string("some&quot;thing"), std::string(html_quote("some\"thing")));
 
     for (unsigned char ch = 1; ch < 0xff; ++ch) {
@@ -45,6 +45,9 @@ testHtmlQuote::test_html_quote_cstr()
             CPPUNIT_ASSERT_EQUAL(static_cast<int>(ch), static_cast<int>(quoted[0]));
         } else {
             CPPUNIT_ASSERT_EQUAL(std::string("&#") + std::to_string(ch) + std::string(";"), std::string(quoted));
+        }
+        if (quoted[0]=='&') {
+            CPPUNIT_ASSERT_EQUAL(';', quoted[strlen(quoted)-1]);
         }
     }
 }
