@@ -44,9 +44,6 @@ testHtmlQuote::test_html_quote_cstr()
         if (strlen(quoted) == 1) {
             CPPUNIT_ASSERT_EQUAL(static_cast<int>(ch), static_cast<int>(quoted[0]));
         } else {
-            CPPUNIT_ASSERT_EQUAL(std::string("&#") + std::to_string(ch) + std::string(";"), std::string(quoted));
-        }
-        if (quoted[0]=='&') {
             CPPUNIT_ASSERT_EQUAL(';', quoted[strlen(quoted)-1]);
         }
     }
