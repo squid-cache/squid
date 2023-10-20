@@ -37,20 +37,24 @@ testHtmlQuote::test_html_quote_cstr()
     CPPUNIT_ASSERT_EQUAL(std::string("foo&amp;bar"), std::string(html_quote("foo&bar")));
     CPPUNIT_ASSERT_EQUAL(std::string("some&apos;thing"), std::string(html_quote("some'thing")));
     CPPUNIT_ASSERT_EQUAL(std::string("some&quot;thing"), std::string(html_quote("some\"thing")));
+    CPPUNIT_ASSERT_EQUAL(std::string("&lt;&gt;&quot;&amp;&apos;"), std::string(html_quote("<>\"&'")));
+    CPPUNIT_ASSERT_EQUAL(std::string("&gt;"), std::string(html_quote(">")));
+    CPPUNIT_ASSERT_EQUAL(std::string("&#163;"), std::string(html_quote("\xa3")));
 
     for (unsigned char ch = 1; ch < 0xff; ++ch) {
         unsigned char buf[2] = {ch, '\0'};
         char *quoted = html_quote(reinterpret_cast<char *>(buf));
+
         if (strlen(quoted) == 1) {
             CPPUNIT_ASSERT_EQUAL(static_cast<int>(ch), static_cast<int>(quoted[0]));
         } else {
             CPPUNIT_ASSERT_EQUAL(';', quoted[strlen(quoted)-1]);
         }
+        if (strlen(quoted) > 1 && quoted[0] == '&' && quoted[1] == '#') {
+            CPPUNIT_ASSERT(strlen(quoted) > 3);
+            CPPUNIT_ASSERT(strlen(quoted) <= 6);
+        }
     }
-
-    CPPUNIT_ASSERT_EQUAL(std::string("&lt;&gt;&quot;&amp;&apos;"), std::string(html_quote("<>\"&'")));
-    CPPUNIT_ASSERT_EQUAL(std::string("&gt;"), std::string(html_quote(">")));
-    CPPUNIT_ASSERT_EQUAL(std::string("&#163;"), std::string(html_quote("\xa3")));
 }
 
 void testHtmlQuote::testPerformance()
