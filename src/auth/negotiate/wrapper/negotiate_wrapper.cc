@@ -224,6 +224,13 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
                         LogTime(), PROGRAM);
                 return 0;
             }
+
+            if (!memchr(tbuff, '\n', sizeof(tbuff) - 1)) {
+                fprintf(stderr, "%s| %s: Oversized NTLM helper response\n",
+                        LogTime(), PROGRAM);
+                return 0;
+            }
+
             /*
              * Need to translate NTLM reply to Negotiate reply:
              *  AF user => AF blob user
@@ -253,6 +260,12 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
                     return 1;
                 }
                 fprintf(stderr, "%s| %s: Error reading Kerberos helper response\n",
+                        LogTime(), PROGRAM);
+                return 0;
+            }
+
+            if (!memchr(buff, '\n', sizeof(buff) - 1)) {
+                fprintf(stderr, "%s| %s: Oversized Kerberos helper response\n",
                         LogTime(), PROGRAM);
                 return 0;
             }
