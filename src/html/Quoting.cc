@@ -16,6 +16,7 @@
 char *
 html_quote(const char *string)
 {
+    // for syntax, see https://html.spec.whatwg.org/#character-references
     static const CharacterSet htmlSpecialCharacters("html entities", "<>&\"\'");
     static const std::unordered_map<char, const char *> htmlEntities = {
         {'<', "&lt;"},
