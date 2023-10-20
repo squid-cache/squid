@@ -1,3 +1,21 @@
+Changes in squid-6.4 (22 Oct 2023):
+
+	- Regression: Restore support for legacy cache_object cache manager requests
+	- Regression: Do not use static initialization to register modules
+	- Bug 5301: cachemgr.cgi not showing new manager interface URLs
+	- Bug 5300: cachemgr.cgi assertion
+	- Fix stack buffer overflow when parsing Digest Authorization
+	- Fix userinfo percent-encoding
+	- Fix store_client caller memory leak on certain errors
+	- Fix validation of certificates with CN=*
+	- Fix handling of large stored response headers
+	- Miss if a HTTP/304 update would exceed reply_header_max_size
+	- RFC 9112: Improve HTTP chunked encoding compliance
+	- HTTP: Improve handling of empty lines received prior to request-line
+	- Y2038: improve printing of time settings
+	- Extend cache_log_message to problematic from-helper annotations
+	- ... and several Continuous Integration improvements
+
 Changes in squid-6.3 (03 Sep 2023):
 
 	- Bug 5294: ERR_CANNOT_FORWARD returned instead of ERR_DNS_FAIL
