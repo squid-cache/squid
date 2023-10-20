@@ -43,11 +43,12 @@ testHtmlQuote::test_html_quote_cstr()
 
     for (unsigned char ch = 1; ch < 0xff; ++ch) {
         unsigned char buf[2] = {ch, '\0'};
-        char *quoted = html_quote(reinterpret_cast<char *>(buf));
+        auto quoted = html_quote(reinterpret_cast<char *>(buf));
 
         if (strlen(quoted) == 1) {
             CPPUNIT_ASSERT_EQUAL(static_cast<int>(ch), static_cast<int>(quoted[0]));
         } else {
+            CPPUNIT_ASSERT(strlen(quoted) > 1);
             CPPUNIT_ASSERT_EQUAL(';', quoted[strlen(quoted)-1]);
         }
         if (strlen(quoted) > 1 && quoted[0] == '&' && quoted[1] == '#') {
