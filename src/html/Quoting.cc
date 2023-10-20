@@ -31,8 +31,7 @@ html_quote(const char *string)
     const char *src;
     char *dst;
 
-    /* XXX This really should be implemented using a MemPool, but
-     * MemPools are not yet available in lib...
+    /* XXX This really should be implemented using a MemPool
      */
     if (buf == nullptr || strlen(string) * 6 > bufsize) {
         xfree(buf);
