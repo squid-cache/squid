@@ -2959,6 +2959,23 @@ AS_IF([test "x$BUILDCXXFLAGS" = "x"],[
 ])
 AC_SUBST(BUILDCXXFLAGS)
 
+# Fuzzer option
+AC_ARG_ENABLE([fuzzer],
+  AS_HELP_STRING([--enable-fuzzer],
+    [Enable fuzzing @<:@default=no@:>@]),
+  [
+case "$enableval" in
+    no) fuzzer= ;;
+    yes) fuzzer="-fsanitize=fuzzer" ;;
+    *) fuzzer="$enableval" ;;
+esac
+if test x"$fuzzer" != x; then
+  AC_SUBST([FUZZ_DECODE_ENGINE], ["$fuzzer"])
+fi
+  ])
+
+AM_CONDITIONAL([ENABLE_FUZZ_DECODE], [test x"$fuzzer" != x])
+
 AC_MSG_NOTICE([BUILD LIBRARIES: $LIBS])
 AC_MSG_NOTICE([BUILD EXTRA LIBRARIES: $XTRA_LIBS])
 AC_MSG_NOTICE([BUILD OBJECTS: $OBJS])

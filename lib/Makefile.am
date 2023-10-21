@@ -77,3 +77,13 @@ tests_testRFC1738_LDADD= \
 tests_testRFC1738_LDFLAGS = $(LIBADD_DL)
 
 testHeaders: $(top_srcdir)/include/*.h
+
+if ENABLE_FUZZ_DECODE
+EXTRA_PROGRAMS = fuzzRFC1738
+fuzzRFC1738_SOURCES = tests/fuzzRFC1738.cc
+fuzzRFC1738_LDADD = \
+    $(top_builddir)/lib/libmiscutil.la \
+    $(top_builddir)/lib/libmiscencoding.la \
+    $(COMPAT_LIB) \
+    $(FUZZ_DECODE_ENGINE)
+endif

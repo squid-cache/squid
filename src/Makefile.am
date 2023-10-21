@@ -2746,3 +2746,56 @@ tests_testEventLoop_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
+
+if ENABLE_FUZZ_DECODE
+EXTRA_PROGRAMS =+ fuzzHttp1Parser fuzzRFC1035
+
+fuzzHttp1Parser_SOURCES = \
+	tests/stub_HelperChildConfig.cc \
+	tests/fuzzHttp1Parser.cc \
+	MemBuf.cc \
+	MemBuf.h \
+	tests/stub_MemObject.cc \
+	String.cc \
+	tests/stub_cache_cf.cc \
+	cache_cf.h \
+	tests/stub_cache_manager.cc \
+	tests/stub_cbdata.cc \
+	tests/stub_comm.cc \
+	tests/stub_debug.cc \
+	tests/stub_event.cc \
+	tests/stub_libanyp.cc \
+	tests/stub_libmem.cc \
+	tests/stub_libsecurity.cc \
+	mime_header.cc \
+	mime_header.h \
+	tests/stub_stmem.cc \
+	tests/stub_store.cc \
+	tests/stub_store_stats.cc \
+	tests/stub_tools.cc \
+	tools.h \
+	wordlist.cc \
+	wordlist.h
+fuzzHttp1Parser_LDADD= \
+	http/libhttp.la \
+	parser/libparser.la \
+	anyp/libanyp.la \
+	SquidConfig.o \
+	base/libbase.la \
+	ip/libip.la \
+	sbuf/libsbuf.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(SSLLIB) \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS) \
+	$(FUZZ_DECODE_ENGINE)
+
+fuzzRFC1035_SOURCES = \
+	tests/fuzzRFC1035.cc
+fuzzRFC1035_LDADD = \
+	dns/libdns.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS) \
+	$(FUZZ_DECODE_ENGINE)
+endif
