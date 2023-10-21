@@ -3092,7 +3092,6 @@ AC_CONFIG_FILES([
 	tools/apparmor/Makefile
 	tools/helper-mux/Makefile
 	tools/purge/Makefile
-	tools/squidclient/Makefile
 	tools/systemd/Makefile
 	tools/sysvinit/Makefile
 ])

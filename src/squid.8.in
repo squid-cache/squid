@@ -282,7 +282,6 @@ Report ideas for new improvements to the
 .
 .SH SEE ALSO
 .if !'po4a'hide' .B cachemgr.cgi "(8), "
-.if !'po4a'hide' .B squidclient "(1), "
 .if !'po4a'hide' .B basic_pam_auth "(8), "
 .if !'po4a'hide' .B basic_ldap_auth "(8), "
 .if !'po4a'hide' .B ext_ldap_group_acl "(8), "
