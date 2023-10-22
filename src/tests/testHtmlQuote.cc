@@ -61,7 +61,7 @@ testHtmlQuote::test_html_quote_cstr()
 void testHtmlQuote::testPerformance()
 {
     const char *input = "<script>alert('Hello, world!');</script>";
-    const char *expected_output = "&lt;script&gt;alert(&#39;Hello, world!&#39;);&lt;/script&gt;";
+    const char *expected_output = "&lt;script&gt;alert(&apos;Hello, world!&apos;);&lt;/script&gt;";
     const int num_iterations = 10000000;
     const char *output = html_quote(input);
 
@@ -74,8 +74,6 @@ void testHtmlQuote::testPerformance()
     }
     clock_t end_time = clock();
 
-    std::cout << "\nexpected: " << expected_output << '\n'
-              << "actual  : " << output << '\n';
     CPPUNIT_ASSERT_EQUAL(0, strcmp(output, expected_output));
     // Calculate the average time per call
     double elapsed_time = static_cast<double>(end_time - start_time) / CLOCKS_PER_SEC;

@@ -7,24 +7,57 @@
  */
 
 #include "squid.h"
-#include "base/CharacterSet.h"
 #include "html/Quoting.h"
 
+#include <array>
 #include <cstring>
-#include <unordered_map>
+
+class HtmlSpecialCharacters {
+private:
+    std::array<const char *, 256> escapeMap = {};
+
+public:
+    HtmlSpecialCharacters();
+    ~HtmlSpecialCharacters();
+    const char *operator[](unsigned char ch) const { return escapeMap[ch]; }
+};
+HtmlSpecialCharacters::HtmlSpecialCharacters()
+{
+    static std::array<std::pair<unsigned char, const char *>, 5> const escapePairs = {
+        std::make_pair('<', "&lt;"),
+        std::make_pair('>', "&gt;"),
+        std::make_pair('"', "&quot;"),
+        std::make_pair('&', "&amp;"),
+        std::make_pair('\'', "&apos;")
+    };
+    const size_t maxEscapeLength = 7;
+    /* Encode control chars just to be on the safe side, and make
+     * sure all 8-bit characters are encoded to protect from buggy
+     * clients
+     */
+    for (uint32_t ch = 1; ch < 256; ++ch) {
+        if ((ch <= 0x1F || ch >= 0x7f) && ch != '\n' && ch != '\r' && ch != '\t') {
+            escapeMap[ch] = static_cast<char *>(xcalloc(maxEscapeLength, 1));
+            snprintf(const_cast<char*>(escapeMap[ch]), sizeof escapeMap[ch], "&#%d;", static_cast<int>(ch));
+        }
+    }
+    for (auto &pair: escapePairs) {
+        escapeMap[pair.first] = static_cast<char *>(xcalloc(maxEscapeLength, 1));
+        xstrncpy(const_cast<char*>(escapeMap[pair.first]), pair.second, maxEscapeLength);
+    }
+}
+HtmlSpecialCharacters::~HtmlSpecialCharacters()
+{
+    for (auto &escape: escapeMap) {
+        xfree(escape);
+    }
+}
 
 char *
 html_quote(const char *string)
 {
     // for syntax, see https://html.spec.whatwg.org/#character-references
-    static const CharacterSet htmlSpecialCharacters("html entities", "<>&\"\'");
-    static const std::unordered_map<char, const char *> htmlEntities = {
-        {'<', "&lt;"},
-        {'>', "&gt;"},
-        {'"', "&quot;"},
-        {'&', "&amp;"},
-        {'\'', "&apos;"}
-    };
+    static const auto htmlSpecialCharacters = HtmlSpecialCharacters();
 
     static char *buf;
     static size_t bufsize = 0;
@@ -42,18 +75,8 @@ html_quote(const char *string)
         const char *escape = nullptr;
         const unsigned char ch = *src;
 
-        if (htmlSpecialCharacters[ch]) {
-            escape = htmlEntities.at(ch); // guaranteed to exist
-        }
-        /* Encode control chars just to be on the safe side, and make
-         * sure all 8-bit characters are encoded to protect from buggy
-         * clients
-         */
-        if (!escape && (ch <= 0x1F || ch >= 0x7f) && ch != '\n' && ch != '\r' && ch != '\t') {
-            static char dec_encoded[7];
-            snprintf(dec_encoded, sizeof dec_encoded, "&#%d;", static_cast<int>(ch));
-            escape = dec_encoded;
-        }
+        escape = htmlSpecialCharacters[ch];
+
         if (escape) {
             /* Ok, An escaped form was found above. Use it */
             strncpy(dst, escape, 7);
