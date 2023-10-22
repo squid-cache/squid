@@ -40,11 +40,15 @@ extern "C" int LLVMFuzzerTestOneInput(const char *data, size_t size)
     SBuf ioBuf;
     Http1::RequestParser hp;
 
+    hp.clear();
     ioBuf.clear();
     ioBuf.append(data, size);
 
-    hp.clear();
-    hp.parse(ioBuf);
+    try {
+        hp.parse(ioBuf);
+    } catch (...) { 
+        /* Only care about memory bugs not exception */
+    }
 
     return 0;
 }
