@@ -47,7 +47,7 @@ extern "C" int LLVMFuzzerTestOneInput(const char *data, size_t size)
     try {
         hp.parse(ioBuf);
     } catch (...) { 
-        /* Only care about memory bugs not exception */
+        /* Only memory bugs not exception */
     }
 
     return 0;
