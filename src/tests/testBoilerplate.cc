@@ -7,10 +7,31 @@
  */
 
 #include "squid.h"
-#include "testBoilerplate.h"
+#include "compat/cppunit.h"
 #include "unitTestMain.h"
 
 #include <stdexcept>
+
+/*
+ * demonstration test file, as new idioms are made they will
+ * be shown in the TestBoilerplate source.
+ *
+ * If a class declaration is only used in more than one source file,
+ * then move the declaration to a separate header file
+ */
+
+class TestBoilerplate: public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE( TestBoilerplate );
+    /* note the statement here and then the actual prototype below */
+    CPPUNIT_TEST( testDemonstration );
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+
+protected:
+    void testDemonstration();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestBoilerplate );
 
