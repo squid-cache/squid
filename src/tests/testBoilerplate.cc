@@ -13,11 +13,10 @@
 #include <stdexcept>
 
 /*
- * demonstration test file, as new idioms are made they will
- * be shown in the TestBoilerplate source.
+ * This is a rough example of a typical unit test file.
  *
- * If a class declaration is only used in more than one source file,
- * then move the declaration to a separate header file
+ * If the class declaration is used in more than one source file,
+ * then place that declaration into a dedicated header file instead.
  */
 
 class TestBoilerplate: public CPPUNIT_NS::TestFixture
@@ -26,8 +25,6 @@ class TestBoilerplate: public CPPUNIT_NS::TestFixture
     /* note the statement here and then the actual prototype below */
     CPPUNIT_TEST( testDemonstration );
     CPPUNIT_TEST_SUITE_END();
-
-public:
 
 protected:
     void testDemonstration();
