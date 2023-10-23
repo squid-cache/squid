@@ -139,8 +139,7 @@ ESIAssign::makeUsable(esiTreeParentPtr aParent, ESIVarState &aVarState) const
 void
 ESIAssign::finish()
 {
-    if (varState)
-        cbdataReferenceDone (varState);
+    cbdataReferenceDone (varState);
 
     if (parent.getRaw())
         parent = nullptr;
