@@ -13,23 +13,13 @@
 #include "acl/Ip.h"
 #include "ipcache.h"
 
-class DestinationIPLookup : public ACLChecklist::AsyncState
-{
-
-public:
-    static DestinationIPLookup *Instance();
-    void checkForAsync(ACLChecklist *)const override;
-
-private:
-    static DestinationIPLookup instance_;
-    static IPH LookupDone;
-};
-
 class ACLDestinationIP : public ACLIP
 {
     MEMPROXY_CLASS(ACLDestinationIP);
 
 public:
+    static ACLChecklist::AsyncStarter StartLookup;
+
     char const *typeString() const override;
     const Acl::Options &options() override;
     int match(ACLChecklist *checklist) override;

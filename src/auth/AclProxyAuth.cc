@@ -52,7 +52,7 @@ ACLProxyAuth::parse()
 int
 ACLProxyAuth::match(ACLChecklist *checklist)
 {
-    auto answer = AuthenticateAcl(checklist);
+    auto answer = AuthenticateAcl(checklist, *this);
 
     // convert to tri-state ACL match 1,0,-1
     switch (answer) {
@@ -102,18 +102,10 @@ ACLProxyAuth::valid() const
     return true;
 }
 
-ProxyAuthLookup ProxyAuthLookup::instance_;
-
-ProxyAuthLookup *
-ProxyAuthLookup::Instance()
-{
-    return &instance_;
-}
-
 void
-ProxyAuthLookup::checkForAsync(ACLChecklist *cl) const
+ACLProxyAuth::StartLookup(ACLChecklist &cl, const ACL &)
 {
-    ACLFilledChecklist *checklist = Filled(cl);
+    const auto checklist = Filled(&cl);
 
     debugs(28, 3, "checking password via authenticator");
 
@@ -124,7 +116,7 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *cl) const
 }
 
 void
-ProxyAuthLookup::LookupDone(void *data)
+ACLProxyAuth::LookupDone(void *data)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
 
@@ -139,7 +131,7 @@ ProxyAuthLookup::LookupDone(void *data)
         }
     }
 
-    checklist->resumeNonBlockingCheck(ProxyAuthLookup::Instance());
+    checklist->resumeNonBlockingCheck(StartLookup);
 }
 
 int

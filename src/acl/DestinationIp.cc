@@ -17,6 +17,8 @@
 #include "HttpRequest.h"
 #include "SquidConfig.h"
 
+static void LookupDone(const ipcache_addrs *, const Dns::LookupDetails &, void *data);
+
 char const *
 ACLDestinationIP::typeString() const
 {
@@ -76,7 +78,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
     } else if (!checklist->request->flags.destinationIpLookedUp) {
         /* No entry in cache, lookup not attempted */
         debugs(28, 3, "can't yet compare '" << name << "' ACL for " << checklist->request->url.host());
-        if (checklist->goAsync(DestinationIPLookup::Instance()))
+        if (checklist->goAsync(StartLookup, *this))
             return -1;
         // else fall through to mismatch, hiding the lookup failure (XXX)
     }
@@ -84,27 +86,19 @@ ACLDestinationIP::match(ACLChecklist *cl)
     return 0;
 }
 
-DestinationIPLookup DestinationIPLookup::instance_;
-
-DestinationIPLookup *
-DestinationIPLookup::Instance()
-{
-    return &instance_;
-}
-
 void
-DestinationIPLookup::checkForAsync(ACLChecklist *cl)const
+ACLDestinationIP::StartLookup(ACLChecklist &cl, const ACL &)
 {
-    ACLFilledChecklist *checklist = Filled(cl);
+    const auto checklist = Filled(&cl);
     ipcache_nbgethostbyname(checklist->request->url.host(), LookupDone, checklist);
 }
 
-void
-DestinationIPLookup::LookupDone(const ipcache_addrs *, const Dns::LookupDetails &details, void *data)
+static void
+LookupDone(const ipcache_addrs *, const Dns::LookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     checklist->request->flags.destinationIpLookedUp = true;
     checklist->request->recordLookup(details);
-    checklist->resumeNonBlockingCheck(DestinationIPLookup::Instance());
+    checklist->resumeNonBlockingCheck(ACLDestinationIP::StartLookup);
 }
 
