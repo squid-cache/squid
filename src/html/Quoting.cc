@@ -28,7 +28,7 @@ static auto& MakeEscapeSequences()
      * sure all 8-bit characters are encoded to protect from buggy
      * clients
      */
-    for (uint32_t ch = 1; ch < 256; ++ch) {
+    for (uint32_t ch = 0; ch < 256; ++ch) {
         if ((ch <= 0x1F || ch >= 0x7f) && ch != '\n' && ch != '\r' && ch != '\t') {
             escapeMap[ch] = static_cast<char *>(xcalloc(maxEscapeLength, 1));
             snprintf(const_cast<char*>(escapeMap[ch]), sizeof escapeMap[ch], "&#%d;", static_cast<int>(ch));
