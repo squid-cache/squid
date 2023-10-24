@@ -13,7 +13,7 @@
 #include <cstring>
 
 
-static auto& MakeEscapeSequences()
+static const auto MakeEscapeSequences()
 {
     static std::array<std::pair<unsigned char, const char *>, 5> const escapePairs = {
         std::make_pair('<', "&lt;"),
@@ -52,18 +52,17 @@ html_quote(const char *string)
     const char *src;
     char *dst;
 
-    /* XXX This really should be implemented using a MemPool
-     */
-    if (buf == nullptr || strlen(string) * 6 > bufsize) {
+    /* XXX This really should be implemented using a MemPool, but
+     * MemPools are not yet available in lib... */
+    if (!buf || strlen(string) * 6 > bufsize) {
         xfree(buf);
         bufsize = strlen(string) * 6 + 1;
-        buf = static_cast<char*>(xcalloc(bufsize, 1));
+        buf = static_cast<char *>(xcalloc(bufsize, 1));
     }
     for (src = string, dst = buf; *src; src++) {
-        const char *escape = nullptr;
         const unsigned char ch = *src;
 
-        escape = htmlSpecialCharacters[ch];
+        const auto escape = htmlSpecialCharacters[ch];
 
         if (escape) {
             /* Ok, An escaped form was found above. Use it */
