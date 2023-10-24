@@ -12,16 +12,8 @@
 #include <array>
 #include <cstring>
 
-class HtmlSpecialCharacters {
-private:
-    std::array<const char *, 256> escapeMap = {};
 
-public:
-    HtmlSpecialCharacters();
-    ~HtmlSpecialCharacters();
-    const char *operator[](unsigned char ch) const { return escapeMap[ch]; }
-};
-HtmlSpecialCharacters::HtmlSpecialCharacters()
+static auto& MakeEscapeSequences()
 {
     static std::array<std::pair<unsigned char, const char *>, 5> const escapePairs = {
         std::make_pair('<', "&lt;"),
@@ -30,6 +22,7 @@ HtmlSpecialCharacters::HtmlSpecialCharacters()
         std::make_pair('&', "&amp;"),
         std::make_pair('\'', "&apos;")
     };
+    static std::array<const char *, 256> escapeMap = {};
     const size_t maxEscapeLength = 7;
     /* Encode control chars just to be on the safe side, and make
      * sure all 8-bit characters are encoded to protect from buggy
@@ -45,19 +38,15 @@ HtmlSpecialCharacters::HtmlSpecialCharacters()
         escapeMap[pair.first] = static_cast<char *>(xcalloc(maxEscapeLength, 1));
         xstrncpy(const_cast<char*>(escapeMap[pair.first]), pair.second, maxEscapeLength);
     }
+    return escapeMap;
 }
-HtmlSpecialCharacters::~HtmlSpecialCharacters()
-{
-    for (auto &escape: escapeMap) {
-        xfree(escape);
-    }
-}
+
 
 char *
 html_quote(const char *string)
 {
     // for syntax, see https://html.spec.whatwg.org/#character-references
-    static const auto htmlSpecialCharacters = HtmlSpecialCharacters();
+    static const auto htmlSpecialCharacters = MakeEscapeSequences();
 
     static char *buf;
     static size_t bufsize = 0;
