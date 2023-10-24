@@ -45,7 +45,6 @@ static auto& MakeEscapeSequences()
 char *
 html_quote(const char *string)
 {
-    // for syntax, see https://html.spec.whatwg.org/#character-references
     static const auto htmlSpecialCharacters = MakeEscapeSequences();
 
     static char *buf;
