@@ -1703,6 +1703,7 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	globals.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
+	tests/stub_libformat.cc \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
@@ -2694,8 +2695,6 @@ tests_testConfigParser_SOURCES = \
 	tests/testConfigParser.cc
 nodist_tests_testConfigParser_SOURCES = \
 	ConfigParser.cc \
-	tests/stub_SBuf.cc \
-	String.cc \
 	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_debug.cc \
@@ -2703,6 +2702,9 @@ nodist_tests_testConfigParser_SOURCES = \
 	tests/stub_libmem.cc \
 	tests/stub_neighbors.cc
 tests_testConfigParser_LDADD = \
+	format/libformat.la \
+	parser/libparser.la \
+	sbuf/libsbuf.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \

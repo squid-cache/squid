@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "compat/cppunit.h"
 #include "ConfigParser.h"
-#include "SquidString.h"
+#include "sbuf/SBuf.h"
 #include "unitTestMain.h"
 
 /*
@@ -23,7 +23,6 @@ class TestConfigParser : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE_END();
 
 protected:
-    bool doParseQuotedTest(const char *, const char *);
     void testParseQuoted();
 };
 
@@ -31,62 +30,29 @@ CPPUNIT_TEST_SUITE_REGISTRATION( TestConfigParser );
 
 int shutting_down = 0;
 
-bool TestConfigParser::doParseQuotedTest(const char *s, const char *expectInterp)
+void
+TestConfigParser::testParseQuoted()
 {
-    char cfgline[2048];
-    char cfgparam[2048];
-    snprintf(cfgline, 2048, "%s", s);
+    const std::array<std::pair<SBuf, SBuf>, 6> tokens = {{
+ { SBuf("SingleToken"), SBuf("SingleToken") },
+ { SBuf("\"This is a quoted \\\"string\\\" by me\""), SBuf("This is a quoted \"string\" by me") },
+ { SBuf("\"escape sequence test: \\\\\\\\\\\"\\\\\\\"\\\\\\\\\\\"\""), SBuf("escape sequence test: \\\\\"\\\"\\\\\"") },
+ { SBuf("\"\\\\beginning and end test\\\"\""), SBuf("\\beginning and end test\"") },
+ { SBuf("\"\\\"\""), SBuf("\"") },
+ { SBuf("\"\\\\\""), SBuf("\\") }
+}};
 
-    // Keep the initial value on cfgparam. The ConfigParser  methods will write on cfgline
-    strncpy(cfgparam, cfgline, sizeof(cfgparam)-1);
-    cfgparam[sizeof(cfgparam)-1] = '\0';
+    for(const auto &t : tokens) {
 
-    // Initialize parser to point to the start of quoted string
-    ConfigParser::SetCfgLine(cfgline);
-    String unEscaped = ConfigParser::NextToken();
+        const auto quoted = ConfigParser::QuoteString(t.second);
+        CPPUNIT_ASSERT_EQUAL(t.first, quoted);
 
-    const bool interpOk = (unEscaped.cmp(expectInterp) == 0);
-    if (!interpOk) {
-        printf("%25s: %s\n%25s: %s\n%25s: %s\n",
-               "Raw configuration", cfgparam,
-               "Expected interpretation", expectInterp,
-               "Actual interpretation", unEscaped.termedBuf());
+        auto *line = SBufToCstring(t.first);
+        ConfigParser::SetCfgLine(line);
+        const SBuf found(ConfigParser::NextToken());
+        CPPUNIT_ASSERT_EQUAL(t.second, found);
+        xfree(line);
     }
-
-    const char *quoted = ConfigParser::QuoteString(unEscaped);
-    bool quotedOk = (strcmp(cfgparam, quoted)==0);
-    if (!quotedOk) {
-        printf("%25s: %s\n%25s: %s\n%25s: %s\n",
-               "Raw configuration", cfgparam,
-               "Parsed and quoted", quoted,
-               "parsed value was", unEscaped.termedBuf());
-    }
-
-    return quotedOk && interpOk ;
-}
-
-void TestConfigParser::testParseQuoted()
-{
-    // SingleToken
-    CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("SingleToken", "SingleToken"));
-
-    // This is a quoted "string" by me
-    CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"This is a quoted \\\"string\\\" by me\"",
-                         "This is a quoted \"string\" by me"));
-
-    // escape sequence test: \\"\"\\"
-    CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"escape sequence test: \\\\\\\\\\\"\\\\\\\"\\\\\\\\\\\"\"",
-                         "escape sequence test: \\\\\"\\\"\\\\\""));
-
-    // \beginning and end test"
-    CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"\\\\beginning and end test\\\"\"",
-                         "\\beginning and end test\""));
-
-    // "
-    CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"\\\"\"", "\""));
-
-    /* \ */
-    CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"\\\\\"", "\\"));
 }
 
 int
