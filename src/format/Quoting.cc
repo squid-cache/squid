@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "format/Quoting.h"
+#include "parser/Tokenizer.h"
 
 static const char c2x[] =
     "000102030405060708090a0b0c0d0e0f"
@@ -122,3 +123,29 @@ Format::QuoteMimeBlob(const char *header)
     return buf;
 }
 
+SBuf
+Format::DquoteString(const SBuf &src)
+{
+    static CharacterSet unreserved = CharacterSet("unreserved", "\"\\").complement();
+
+    SBuf quotedStr;
+    quotedStr.append('"');
+
+    Parser::Tokenizer tok(src);
+    while (!tok.atEnd()) {
+        SBuf found;
+        if (tok.prefix(found, unreserved))
+            quotedStr.append(found);
+
+        if (!tok.atEnd()) {
+            char c = tok.buf()[0];
+            quotedStr.append('\\');
+            quotedStr.append(c);
+            tok.skip(c);
+        }
+    }
+
+    quotedStr.append('"');
+
+    return quotedStr;
+}

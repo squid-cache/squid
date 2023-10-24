@@ -17,3 +17,7 @@ bool Format::Format::parse(char const*) STUB_RETVAL(false)
 Format::Format::Format(char const*) STUB
 Format::Format::~Format() STUB
 
+#include "format/Quoting.h"
+char *Format::QuoteUrlEncodeUsername(const char *) STUB_RETVAL(nullptr)
+char *Format::QuoteMimeBlob(const char *) STUB_RETVAL(nullptr)
+SBuf Format::DquoteString(const SBuf &) STUB_RETVAL(SBuf())

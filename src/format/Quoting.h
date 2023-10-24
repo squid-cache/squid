@@ -9,6 +9,8 @@
 #ifndef _SQUID_FORMAT_QUOTING_H
 #define _SQUID_FORMAT_QUOTING_H
 
+#include "sbuf/SBuf.h"
+
 namespace Format
 {
 
@@ -21,6 +23,14 @@ char * QuoteUrlEncodeUsername(const char *name);
  * \return A dynamically allocated string. recipient is responsible for free()'ing
  */
 char *QuoteMimeBlob(const char *header);
+
+/** Double-quote a string.
+ * Applies shell-escaping for dquote (") and backslash (\) in the string.
+ * May accept empty strings.
+ *
+ * \return double-quoted string
+ */
+SBuf DquoteString(const SBuf &);
 
 }; // namespace Format
 
