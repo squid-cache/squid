@@ -10,8 +10,10 @@
 #include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "base/PackableStream.h"
 #include "client_side.h"
 #include "ConfigParser.h"
+#include "format/Quoting.h"
 #include "globals.h"
 #include "http/Stream.h"
 #include "HttpReply.h"
@@ -107,11 +109,12 @@ Note::updateNotePairs(NotePairs::Pointer pairs, const CharacterSet *delimiters, 
 void
 Note::dump(StoreEntry *entry, const char *k)
 {
+    PackableStream out(*entry);
     for (const auto &v: values) {
-        storeAppendPrintf(entry, "%s %.*s %s",
-                          k, key().length(), key().rawContent(), ConfigParser::QuoteString(SBufToString(v->value())));
+        out << k << ' ' << key() << ' ' << Format::DquoteString(v->value());
+        out.flush();
         dump_acl_list(entry, v->aclList);
-        storeAppendPrintf(entry, "\n");
+        out << "\n";
     }
 }
 
