@@ -13,7 +13,7 @@
 #include <cstring>
 
 
-static const auto MakeEscapeSequences()
+static const auto& MakeEscapeSequences()
 {
     static std::array<std::pair<unsigned char, const char *>, 5> const escapePairs = {
         std::make_pair('<', "&lt;"),
@@ -22,7 +22,7 @@ static const auto MakeEscapeSequences()
         std::make_pair('&', "&amp;"),
         std::make_pair('\'', "&apos;")
     };
-    std::array<const char *, 256> escapeMap = {};
+    static auto escapeMap = new std::array<const char *, 256>{};
     const size_t maxEscapeLength = 7;
     /* Encode control chars just to be on the safe side, and make
      * sure all 8-bit characters are encoded to protect from buggy
@@ -30,15 +30,15 @@ static const auto MakeEscapeSequences()
      */
     for (uint32_t ch = 0; ch < 256; ++ch) {
         if ((ch <= 0x1F || ch >= 0x7f) && ch != '\n' && ch != '\r' && ch != '\t') {
-            escapeMap[ch] = static_cast<char *>(xcalloc(maxEscapeLength, 1));
-            snprintf(const_cast<char*>(escapeMap[ch]), sizeof escapeMap[ch], "&#%d;", static_cast<int>(ch));
+            (*escapeMap)[ch] = static_cast<char *>(xcalloc(maxEscapeLength, 1));
+            snprintf(const_cast<char*>((*escapeMap)[ch]), sizeof escapeMap[ch], "&#%d;", static_cast<int>(ch));
         }
     }
     for (auto &pair: escapePairs) {
-        escapeMap[pair.first] = static_cast<char *>(xcalloc(maxEscapeLength, 1));
-        xstrncpy(const_cast<char*>(escapeMap[pair.first]), pair.second, maxEscapeLength);
+        (*escapeMap)[pair.first] = static_cast<char *>(xcalloc(maxEscapeLength, 1));
+        xstrncpy(const_cast<char*>((*escapeMap)[pair.first]), pair.second, maxEscapeLength);
     }
-    return escapeMap;
+    return *escapeMap;
 }
 
 
