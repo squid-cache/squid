@@ -2185,7 +2185,7 @@ esiWhen::~esiWhen()
 {
     safe_free (unevaluatedExpression);
 
-    cbdataReferenceDone (varState);
+    cbdataReferenceDone(varState);
 }
 
 void
