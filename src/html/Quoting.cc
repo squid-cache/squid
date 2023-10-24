@@ -22,7 +22,7 @@ static const auto MakeEscapeSequences()
         std::make_pair('&', "&amp;"),
         std::make_pair('\'', "&apos;")
     };
-    static std::array<const char *, 256> escapeMap = {};
+    std::array<const char *, 256> escapeMap = {};
     const size_t maxEscapeLength = 7;
     /* Encode control chars just to be on the safe side, and make
      * sure all 8-bit characters are encoded to protect from buggy
