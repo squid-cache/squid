@@ -63,9 +63,7 @@ html_quote(const char *string)
     for (src = string, dst = buf; *src; src++) {
         const unsigned char ch = *src;
 
-        const auto escape = htmlSpecialCharacters[ch];
-
-        if (escape) {
+        if (const auto escape = htmlSpecialCharacters[ch]) {
             /* Ok, An escaped form was found above. Use it */
             strncpy(dst, escape, 7);
             dst += strlen(escape);
