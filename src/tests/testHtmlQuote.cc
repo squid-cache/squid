@@ -48,12 +48,13 @@ testHtmlQuote::test_html_quote_cstr()
         if (strlen(quoted) == 1) {
             CPPUNIT_ASSERT_EQUAL(static_cast<int>(ch), static_cast<int>(quoted[0]));
         } else {
-            CPPUNIT_ASSERT(strlen(quoted) > 1);
+            CPPUNIT_ASSERT(strlen(quoted) >= 3);
+            CPPUNIT_ASSERT_EQUAL('&', quoted[0]);
             CPPUNIT_ASSERT_EQUAL(';', quoted[strlen(quoted)-1]);
-        }
-        if (strlen(quoted) > 1 && quoted[0] == '&' && quoted[1] == '#') {
-            CPPUNIT_ASSERT(strlen(quoted) > 3);
-            CPPUNIT_ASSERT(strlen(quoted) <= 6);
+            if (quoted[1] == '#') {
+                CPPUNIT_ASSERT(strlen(quoted) > 3);
+                CPPUNIT_ASSERT(strlen(quoted) <= 6);
+            }
         }
     }
 }
