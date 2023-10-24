@@ -53,7 +53,8 @@ html_quote(const char *string)
     char *dst;
 
     /* XXX This really should be implemented using a MemPool, but
-     * MemPools are not yet available in lib... */
+     * MemPools are not yet available in lib...
+     */
     if (!buf || strlen(string) * 6 > bufsize) {
         xfree(buf);
         bufsize = strlen(string) * 6 + 1;
