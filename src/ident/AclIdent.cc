@@ -55,7 +55,7 @@ ACLIdent::parse()
 int
 ACLIdent::match(ACLChecklist *cl)
 {
-    ACLFilledChecklist *checklist = Filled(cl);
+    const auto checklist = Filled(cl);
     if (checklist->rfc931[0]) {
         return data->match(checklist->rfc931);
     } else if (checklist->conn() != nullptr && checklist->conn()->clientConnection != nullptr && checklist->conn()->clientConnection->rfc931[0]) {

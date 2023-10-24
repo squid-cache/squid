@@ -29,7 +29,7 @@ class ACLChecklist
 public:
 
     /// a function that initiates asynchronous ACL checks; see goAsync()
-    using AsyncStarter = void (ACLChecklist &, const ACL &acl);
+    using AsyncStarter = void (ACLChecklist &, const ACL &);
 
 public:
     ACLChecklist();
@@ -104,7 +104,7 @@ public:
 
     /// If slow lookups are allowed, switches into "async in progress" state.
     /// Otherwise, returns false; the caller is expected to handle the failure.
-    bool goAsync(const AsyncStarter &, const ACL &acl);
+    bool goAsync(const AsyncStarter &, const ACL &);
 
     /// Matches (or resumes matching of) a child node while maintaning
     /// resumption breadcrumbs if a [grand]child node goes async.
