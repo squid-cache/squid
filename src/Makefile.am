@@ -761,6 +761,8 @@ tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
 # dependency-based list so that simpler code is tested before more complex code
 # which uses it.
 
+TESTS += $(check_PROGRAMS)
+
 ## Tests of SquidMath.h
 check_PROGRAMS += tests/testMath
 tests_testMath_SOURCES = \
