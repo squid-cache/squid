@@ -126,9 +126,10 @@ Format::QuoteMimeBlob(const char *header)
 SBuf
 Format::DquoteString(const SBuf &src)
 {
-    static CharacterSet unreserved = CharacterSet("unreserved", "\"\\").complement();
+    static const auto unreserved = CharacterSet("reserved", "\"\\").complement("unreserved");
 
     SBuf quotedStr;
+    quotedStr.reserveSpace(src.length() + 2);
     quotedStr.append('"');
 
     Parser::Tokenizer tok(src);

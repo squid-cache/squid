@@ -114,7 +114,7 @@ Note::dump(StoreEntry *entry, const char *k)
         out << k << ' ' << key() << ' ' << Format::DquoteString(v->value());
         out.flush();
         dump_acl_list(entry, v->aclList);
-        out << "\n";
+        out << '\n';
     }
 }
 

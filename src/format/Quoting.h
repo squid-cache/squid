@@ -25,8 +25,7 @@ char * QuoteUrlEncodeUsername(const char *name);
 char *QuoteMimeBlob(const char *header);
 
 /** Double-quote a string.
- * Applies shell-escaping for dquote (") and backslash (\) in the string.
- * May accept empty strings.
+ * Escapes each dquote (") and backslash (\) character with a backslash.
  *
  * \return double-quoted string
  */
