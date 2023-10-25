@@ -72,6 +72,10 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
     acl PURGE method PURGE
     ... and http_access allow PURGE traffic as/if needed ...
 </verb>
+    any HTTP client (such as curl) can then be used to evict objects from the cache, for example:
+<verb>
+$ curl -XPURGE --proxy http://127.0.0.1:3128 http://url.to/evict/
+</verb>
    Alternatively the HTCP <em>CLR</em> mechanism can be used.
 
 
