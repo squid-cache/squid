@@ -13,7 +13,7 @@
 #include <cstring>
 
 
-static const auto& MakeEscapeSequences()
+static const auto & MakeEscapeSequences()
 {
     static std::array<std::pair<unsigned char, const char *>, 5> const escapePairs = {
         std::make_pair('<', "&lt;"),
