@@ -6753,11 +6753,14 @@ TYPE: b_size_t
 DEFAULT: 64 KB
 LOC: Config.maxRequestHeaderSize
 DOC_START
-	This specifies the maximum size for HTTP headers in a request.
-	Request headers are usually relatively small (about 512 bytes).
-	Placing a limit on the request header size will catch certain
-	bugs (for example with persistent connections) and possibly
-	buffer-overflow or denial-of-service attacks.
+	This directives limits the header size of a received HTTP request
+	(including request-line). Increasing this limit beyond its 64 KB default
+	exposes certain old Squid code to various denial-of-service attacks. This
+	limit also applies to received FTP commands.
+
+	This limit has no direct affect on Squid memory consumption.
+
+	Squid does not check this limit when sending requests.
 DOC_END
 
 NAME: reply_header_max_size
@@ -6766,11 +6769,14 @@ TYPE: b_size_t
 DEFAULT: 64 KB
 LOC: Config.maxReplyHeaderSize
 DOC_START
-	This specifies the maximum size for HTTP headers in a reply.
-	Reply headers are usually relatively small (about 512 bytes).
-	Placing a limit on the reply header size will catch certain
-	bugs (for example with persistent connections) and possibly
-	buffer-overflow or denial-of-service attacks.
+	This directives limits the header size of a received HTTP response
+	(including status-line). Increasing this limit beyond its 64 KB default
+	exposes certain old Squid code to various denial-of-service attacks. This
+	limit also applies to FTP command responses.
+
+	Squid also checks this limit when loading hit responses from disk cache.
+
+	Squid does not check this limit when sending responses.
 DOC_END
 
 NAME: request_body_max_size

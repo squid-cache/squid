@@ -1900,8 +1900,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
         String strFwd = hdr_in->getList(Http::HdrType::X_FORWARDED_FOR);
 
-        // if we cannot double strFwd size, then it grew past 50% of the limit
-        if (!strFwd.canGrowBy(strFwd.size())) {
+        // Detect unreasonably long header values. And paranoidly check String
+        // limits: a String ought to accommodate two reasonable-length values.
+        if (strFwd.size() > 32*1024 || !strFwd.canGrowBy(strFwd.size())) {
             // There is probably a forwarding loop with Via detection disabled.
             // If we do nothing, String will assert on overflow soon.
             // TODO: Terminate all transactions with huge XFF?
