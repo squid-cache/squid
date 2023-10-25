@@ -126,7 +126,7 @@ Format::QuoteMimeBlob(const char *header)
 SBuf
 Format::DquoteString(const SBuf &src)
 {
-    static const auto unreserved = CharacterSet("reserved", "\"\\").complement("unreserved");
+    static const auto unreserved = CharacterSet("reserved", "\r\n\"\\").complement("unreserved");
 
     SBuf quotedStr;
     quotedStr.reserveSpace(src.length() + 2);
@@ -141,7 +141,16 @@ Format::DquoteString(const SBuf &src)
         if (!tok.atEnd()) {
             char c = tok.buf()[0];
             quotedStr.append('\\');
-            quotedStr.append(c);
+            switch (c) {
+            case 'r':
+                quotedStr.append('r');
+                break;
+            case 'n':
+                quotedStr.append('n');
+                break;
+            default:
+                quotedStr.append(c);
+            }
             tok.skip(c);
         }
     }
