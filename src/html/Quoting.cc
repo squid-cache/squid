@@ -13,7 +13,7 @@
 #include <cstring>
 
 
-static const auto & MakeEscapeSequences()
+static const auto & EscapeSequences()
 {
     static std::array<std::pair<unsigned char, const char *>, 5> const escapePairs = {
         std::make_pair('<', "&lt;"),
@@ -48,7 +48,7 @@ static const auto & MakeEscapeSequences()
 char *
 html_quote(const char *string)
 {
-    static const auto htmlSpecialCharacters = MakeEscapeSequences();
+    static const auto htmlSpecialCharacters = EscapeSequences();
 
     static char *buf;
     static size_t bufsize = 0;
