@@ -15,13 +15,6 @@
 
 static const auto & EscapeSequences()
 {
-    static std::array<std::pair<unsigned char, const char *>, 5> const escapePairs = {
-        std::make_pair('<', "&lt;"),
-        std::make_pair('>', "&gt;"),
-        std::make_pair('"', "&quot;"),
-        std::make_pair('&', "&amp;"),
-        std::make_pair('\'', "&apos;")
-    };
     static auto escapeMap = new std::array<const char *, 256>{};
     if ((*escapeMap)['<']) {
         return *escapeMap;
@@ -37,10 +30,11 @@ static const auto & EscapeSequences()
             snprintf(const_cast<char*>((*escapeMap)[ch]), sizeof escapeMap[ch], "&#%d;", static_cast<int>(ch));
         }
     }
-    for (auto &pair: escapePairs) {
-        (*escapeMap)[pair.first] = static_cast<char *>(xcalloc(maxEscapeLength, 1));
-        xstrncpy(const_cast<char*>((*escapeMap)[pair.first]), pair.second, maxEscapeLength);
-    }
+    (*escapeMap)['<'] = "&lt;";
+    (*escapeMap)['>'] = "&gt;";
+    (*escapeMap)['"'] = "&quot;";
+    (*escapeMap)['&'] = "&amp;";
+    (*escapeMap)['\''] = "&apos;";
     return *escapeMap;
 }
 
