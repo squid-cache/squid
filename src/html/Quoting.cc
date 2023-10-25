@@ -44,7 +44,7 @@ static const auto & EscapeSequences()
 char *
 html_quote(const char *string)
 {
-    static const auto htmlSpecialCharacters = EscapeSequences();
+    static const auto &escapeSequences = EscapeSequences();
 
     static char *buf;
     static size_t bufsize = 0;
@@ -62,7 +62,7 @@ html_quote(const char *string)
     for (src = string, dst = buf; *src; src++) {
         const unsigned char ch = *src;
 
-        if (const auto escape = htmlSpecialCharacters[ch]) {
+        if (const auto escape = escapeSequences[ch]) {
             /* Ok, An escaped form was found above. Use it */
             strncpy(dst, escape, 7);
             dst += strlen(escape);
