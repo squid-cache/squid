@@ -60,7 +60,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <sect1>Removed purge tool
 <p>The <em>purge</em> tool (also known as <em>squidpurge</em>, and <em>squid-purge</em>)
-   was limited to managing UFS/AUFS/DiskD caches.
+   was limited to managing UFS/AUFS/DiskD caches and had problems parsing non-trivial squid.conf files.
 
 <p>The cache contents display and search it provided can be obtained with a script
    searching the cache manager <em>objects</em> report.
