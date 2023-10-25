@@ -50,7 +50,13 @@ make_month(const char *s)
     char month[3];
 
     month[0] = xtoupper(*s);
+    if (!month[0])
+        return -1; // protects *(s + 1) below
+
     month[1] = xtolower(*(s + 1));
+    if (!month[1])
+        return -1; // protects *(s + 2) below
+
     month[2] = xtolower(*(s + 2));
 
     for (i = 0; i < 12; i++)
