@@ -70,7 +70,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
    the method. Like so:
 <verb>
     acl PURGE method PURGE
-    http_access allow manager PURGE
+    ... and http_access allow PURGE traffic as/if needed ...
 </verb>
    Alternatively the HTCP <em>CLR</em> mechanism can be used.
 
