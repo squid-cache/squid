@@ -43,10 +43,6 @@ TestConfigParser::testParseQuoted()
 }};
 
     for(const auto &t : tokens) {
-
-        const auto quoted = ConfigParser::QuoteString(t.second);
-        CPPUNIT_ASSERT_EQUAL(t.first, quoted);
-
         auto *line = SBufToCstring(t.first);
         ConfigParser::SetCfgLine(line);
         const SBuf found(ConfigParser::NextToken());

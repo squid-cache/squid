@@ -9,13 +9,11 @@
 #include "squid.h"
 #include "acl/Gadgets.h"
 #include "base/Here.h"
-#include "base/CharacterSet.h"
 #include "base/RegexPattern.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "fatal.h"
-#include "format/Quoting.h"
 #include "globals.h"
 #include "neighbors.h"
 #include "sbuf/Stream.h"
@@ -530,18 +528,6 @@ ConfigParser::NextQuotedToken()
     char *token = NextToken();
     ConfigParser::RecognizeQuotedValues = saveRecognizeQuotedValues;
     return token;
-}
-
-SBuf
-ConfigParser::QuoteString(const SBuf &var)
-{
-    static CharacterSet alphanumeric = CharacterSet::ALPHA + CharacterSet::DIGIT;
-
-    // skip if nothing to do
-    if (var.findFirstNotOf(alphanumeric) == SBuf::npos)
-        return var;
-
-    return Format::DquoteString(var);
 }
 
 void

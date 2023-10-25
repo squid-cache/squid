@@ -82,7 +82,6 @@ public:
 
     static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);
-    static SBuf QuoteString(const SBuf &);
     static void ParseWordList(wordlist **list);
 
     /**
