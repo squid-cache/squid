@@ -23,6 +23,9 @@ static const auto& MakeEscapeSequences()
         std::make_pair('\'', "&apos;")
     };
     static auto escapeMap = new std::array<const char *, 256>{};
+    if ((*escapeMap)['<']) {
+        return *escapeMap;
+    }
     const size_t maxEscapeLength = 7;
     /* Encode control chars just to be on the safe side, and make
      * sure all 8-bit characters are encoded to protect from buggy
