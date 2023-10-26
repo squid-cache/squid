@@ -247,9 +247,12 @@ sub update_defaults()
     }
 }
 
+my $linecount = 0;
+my @ifelse = {};
 while (<>) {
     chomp;
     last if (/^EOF$/);
+    $linecount++;
     if ($_ =~ /^NAME: (.*)$/) {
         my (@aliases) = split(/ /, $1);
         $data = {};
@@ -267,8 +270,28 @@ while (<>) {
         $data->{'default_doc'} = "";
         $data->{'default_if_none'} = "";
 
-        print "DEBUG: new option: $name\n" if $verbose;
+        print "DEBUG: line $linecount: new option: $name\n" if $verbose;
         next;
+    } elsif ($_ =~ /^IF (.*)$/) {
+        my $cond = $1;
+        push(@ifelse, $1);
+        if (! exists $defines{$1}) {
+            print "NOTICE: line $linecount: unknown ./configure option '$1'\n";
+        } else {
+            $cond = $defines{$1};
+        }
+        if ($state eq "doc") {
+            $data->{"doc"} .= "if " . $cond . "\n";
+        } elsif ($state eq "comment") {
+            $comment .= "if " . $cond . "\n";
+        }
+    } elsif ($_ =~ /^ENDIF$/) {
+        pop(@ifelse);
+        if ($state eq "doc") {
+            $data->{"doc"} .= "endif\n";
+        } elsif ($state eq "comment") {
+            $comment .= "endif\n";
+        }
     } elsif ($_ =~ /^COMMENT: (.*)$/) {
         $data->{"comment"} = $1;
     } elsif ($_ =~ /^TYPE: (.*)$/) {
@@ -280,6 +303,11 @@ while (<>) {
         } else {
             $data->{"default"} .= "$name $1\n";
         }
+    } elsif ($_ =~ /^POSTSCRIPTUM: (.*)$/) {
+        if ($data->{"default"} eq "none") {
+            $data->{"default"} = "";
+        }
+        $data->{"default"} .= "$name $1\n";
     } elsif ($_ =~ /^DEFAULT_DOC: (.*)$/) {
         $data->{"default_doc"} .= "$1\n";
     } elsif ($_ =~ /^DEFAULT_IF_NONE: (.*)$/) {
@@ -323,7 +351,7 @@ while (<>) {
     } elsif (/^#/) {
         next;
     } elsif ($_ ne "") {
-        print "NOTICE: unknown line '$_'\n";
+        print "NOTICE: line $linecount: unknown line '$_'\n";
     }
 }
 end_options;
