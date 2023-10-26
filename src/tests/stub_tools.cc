@@ -67,7 +67,6 @@ void debugObj(int, int, const char *, void *, ObjPackMethod) STUB
 void parseEtcHosts(void) STUB
 int getMyPort(void) STUB_RETVAL(0)
 void setUmask(mode_t) STUB
-void strwordquote(MemBuf *, const char *) STUB
 void keepCapabilities(void) STUB
 pid_t WaitForOnePid(pid_t, PidStatus &, int) STUB_RETVAL(0)
 

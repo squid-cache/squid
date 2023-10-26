@@ -1504,15 +1504,13 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                     newout = rfc1738_escape(out);
                     break;
 
-                case LOG_QUOTE_SHELL: {
-                    MemBuf mbq;
-                    mbq.init();
-                    strwordquote(&mbq, out);
-                    newout = mbq.content();
-                    mbq.stolen = 1;
-                    newfree = 1;
-                }
-                break;
+                case LOG_QUOTE_SHELL:
+                    sb = DquoteString(SBuf(out));
+                    if (dofree)
+                        xfree(out);
+                    out = sb.c_str();
+                    dofree = 0;
+                    break;
 
                 case LOG_QUOTE_RAW:
                     break;

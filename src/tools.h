@@ -14,8 +14,6 @@
 #include "sbuf/SBuf.h"
 #include "typedefs.h"
 
-class MemBuf;
-
 extern int DebugSignal;
 
 /// The Squid -n parameter service name.
@@ -25,7 +23,6 @@ extern SBuf service_name;
 void parseEtcHosts(void);
 int getMyPort(void);
 void setUmask(mode_t mask);
-void strwordquote(MemBuf * mb, const char *str);
 
 class Packable;
 

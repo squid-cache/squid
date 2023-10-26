@@ -19,6 +19,7 @@
 #include "ExternalACL.h"
 #include "ExternalACLEntry.h"
 #include "fde.h"
+#include "format/Quoting.h"
 #include "format/Token.h"
 #include "helper.h"
 #include "helper/Reply.h"
@@ -783,11 +784,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
                     const char *quoted = rfc1738_escape(arg->key);
                     sb.append(quoted, strlen(quoted));
                 } else {
-                    static MemBuf mb2;
-                    mb2.init();
-                    strwordquote(&mb2, arg->key);
-                    sb.append(mb2.buf, mb2.size);
-                    mb2.clean();
+                    sb.append(Format::DquoteString(SBuf(arg->key)));
                 }
             }
 
