@@ -178,7 +178,7 @@ internalUriTargetingListeningPort(const AnyP::Uri &url, const AnyP::PortCfg &lis
     if (receivedAtLocalhost && strcasecmp(url.host(), "localhost") == 0)
         return true;
 
-    // accept URL matching a ports configured defaultsite=
+    // accept a URL with host matching port's defaultsite=host
     if (listeningPort.defaultsite && strcasecmp(url.host(), listeningPort.defaultsite) == 0)
         return true;
 
