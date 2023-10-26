@@ -170,8 +170,8 @@ internalUriTargetingListeningPort(const AnyP::Uri &url, const AnyP::PortCfg &lis
         return false;
 
     // accept raw-IP URL matching a port configured with a specific IP address
-    if (url.hostIsNumeric() && !listeningPort.s.isAnyAddr() && url.hostIP() == listeningPort.s)
-        return true;
+    if (url.hostIsNumeric() && !listeningPort.s.isAnyAddr())
+        return url.hostIP() == listeningPort.s;
 
     // accept "localhost" URL matching an explicit localhost port IP or a wildcard port IP
     const bool receivedAtLocalhost = (listeningPort.s.isLocalhost() || listeningPort.s.isAnyAddr());
