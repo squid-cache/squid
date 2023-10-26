@@ -151,16 +151,13 @@ public:
     }
 
 private:
-    // TODO: Remove diff reduction.
-    using AsyncState = AsyncStarter;
-
     /// Calls non-blocking check callback with the answer and destroys self.
     void checkCallback(Acl::Answer answer);
 
     void matchAndFinish();
 
-    void changeState(AsyncState *);
-    AsyncState *asyncState() const;
+    void changeState(AsyncStarter *);
+    AsyncStarter *asyncState() const;
 
     const Acl::Tree *accessList;
 public:
@@ -203,7 +200,7 @@ private: /* internal methods */
 
     enum AsyncStage { asyncNone, asyncStarting, asyncRunning, asyncFailed };
     AsyncStage asyncStage_;
-    AsyncState *state_;
+    AsyncStarter *state_;
     Breadcrumb matchLoc_; ///< location of the node running matches() now
     Breadcrumb asyncLoc_; ///< currentNode_ that called goAsync()
     unsigned asyncLoopDepth_; ///< how many times the current async state has resumed

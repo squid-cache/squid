@@ -139,7 +139,7 @@ ACLChecklist::goAsync(const AsyncStarter &starter, const ACL &acl)
     changeState(&starter);
     starter(*this, acl); // this is supposed to go async
 
-    // Did AsyncState object actually go async? If not, tell the caller.
+    // Did starter() actually go async? If not, tell the caller.
     if (asyncStage_ != asyncStarting) {
         assert(asyncStage_ == asyncFailed);
         asyncStage_ = asyncNone; // sanity restored
@@ -196,7 +196,7 @@ ACLChecklist::~ACLChecklist()
 }
 
 void
-ACLChecklist::changeState (AsyncState *newState)
+ACLChecklist::changeState (AsyncStarter *newState)
 {
     /* only change from null to active and back again,
      * not active to active.
@@ -207,7 +207,7 @@ ACLChecklist::changeState (AsyncState *newState)
     state_ = newState;
 }
 
-ACLChecklist::AsyncState *
+ACLChecklist::AsyncStarter *
 ACLChecklist::asyncState() const
 {
     return state_;
