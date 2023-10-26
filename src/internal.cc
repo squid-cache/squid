@@ -169,7 +169,7 @@ internalUriTargetingListeningPort(const AnyP::Uri &url, const AnyP::PortCfg &lis
     if (url.port() != listeningPort.s.port())
         return false;
 
-    // accept raw-IP URL matching a port configured with explicit IP:port settings
+    // accept raw-IP URL matching a port configured with a specific IP address
     if (url.hostIsNumeric() && !listeningPort.s.isAnyAddr() && url.hostIP() == listeningPort.s)
         return true;
 
