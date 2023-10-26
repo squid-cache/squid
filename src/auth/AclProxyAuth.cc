@@ -131,7 +131,7 @@ ACLProxyAuth::LookupDone(void *data)
         }
     }
 
-    checklist->resumeNonBlockingCheck(StartLookup);
+    checklist->resumeNonBlockingCheck();
 }
 
 int

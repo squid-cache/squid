@@ -116,7 +116,7 @@ ACLIdent::LookupDone(const char *ident, void *data)
     if (checklist->conn() != nullptr && checklist->conn()->clientConnection != nullptr && !checklist->conn()->clientConnection->rfc931[0])
         xstrncpy(checklist->conn()->clientConnection->rfc931, checklist->rfc931, USER_IDENT_SZ);
 
-    checklist->resumeNonBlockingCheck(ACLIdent::StartLookup);
+    checklist->resumeNonBlockingCheck();
 }
 
 #endif /* USE_IDENT */

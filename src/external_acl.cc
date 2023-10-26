@@ -1150,7 +1150,7 @@ ACLExternal::LookupDone(void *data, const ExternalACLEntryPointer &result)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
     checklist->extacl_entry = result;
-    checklist->resumeNonBlockingCheck(ACLExternal::StartLookup);
+    checklist->resumeNonBlockingCheck();
 }
 
 ACLExternal::ACLExternal(char const *theClass) : data(nullptr), class_(xstrdup(theClass))

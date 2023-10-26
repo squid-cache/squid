@@ -136,7 +136,6 @@ ACLChecklist::goAsync(const AsyncStarter &starter, const ACL &acl)
     ++asyncLoopDepth_;
 
     asyncStage_ = asyncStarting;
-    changeState(&starter);
     starter(*this, acl); // this is supposed to go async
 
     // Did starter() actually go async? If not, tell the caller.
@@ -181,7 +180,6 @@ ACLChecklist::ACLChecklist() :
     finished_(false),
     answer_(ACCESS_DENIED),
     asyncStage_(asyncNone),
-    state_(nullptr),
     asyncLoopDepth_(0)
 {
 }
@@ -193,24 +191,6 @@ ACLChecklist::~ACLChecklist()
     changeAcl(nullptr);
 
     debugs(28, 4, "ACLChecklist::~ACLChecklist: destroyed " << this);
-}
-
-void
-ACLChecklist::changeState (AsyncStarter *newState)
-{
-    /* only change from null to active and back again,
-     * not active to active.
-     * relax this once conversion to states is complete
-     * RBC 02 2003
-     */
-    assert (!state_ || !newState);
-    state_ = newState;
-}
-
-ACLChecklist::AsyncStarter *
-ACLChecklist::asyncState() const
-{
-    return state_;
 }
 
 /**
@@ -243,11 +223,8 @@ ACLChecklist::nonBlockingCheck(ACLCB * callback_, void *callback_data_)
 }
 
 void
-ACLChecklist::resumeNonBlockingCheck(const AsyncStarter &starter)
+ACLChecklist::resumeNonBlockingCheck()
 {
-    assert(asyncState() == &starter);
-    changeState(nullptr);
-
     if (asyncStage_ == asyncStarting) { // oops, we did not really go async
         asyncStage_ = asyncFailed; // goAsync() checks for that
         // Do not fall through to resume checks from the async callback. Let

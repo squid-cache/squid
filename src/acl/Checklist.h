@@ -156,9 +156,6 @@ private:
 
     void matchAndFinish();
 
-    void changeState(AsyncStarter *);
-    AsyncStarter *asyncState() const;
-
     const Acl::Tree *accessList;
 public:
 
@@ -167,7 +164,7 @@ public:
 
     /// Resumes non-blocking check started by nonBlockingCheck() and
     /// suspended until some async operation updated Squid state.
-    void resumeNonBlockingCheck(const AsyncStarter &);
+    void resumeNonBlockingCheck();
 
 private: /* internal methods */
     /// Position of a child node within an ACL tree.
@@ -200,7 +197,6 @@ private: /* internal methods */
 
     enum AsyncStage { asyncNone, asyncStarting, asyncRunning, asyncFailed };
     AsyncStage asyncStage_;
-    AsyncStarter *state_;
     Breadcrumb matchLoc_; ///< location of the node running matches() now
     Breadcrumb asyncLoc_; ///< currentNode_ that called goAsync()
     unsigned asyncLoopDepth_; ///< how many times the current async state has resumed
