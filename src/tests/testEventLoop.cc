@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "AsyncEngine.h"
+#include "base/AsyncEngine.h"
 #include "compat/cppunit.h"
 #include "EventLoop.h"
 #include "time/Engine.h"

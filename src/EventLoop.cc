@@ -9,8 +9,8 @@
 /* DEBUG: section 01    Main Loop */
 
 #include "squid.h"
-#include "AsyncEngine.h"
 #include "base/AsyncCallQueue.h"
+#include "base/AsyncEngine.h"
 #include "debug/Stream.h"
 #include "EventLoop.h"
 #include "fatal.h"
