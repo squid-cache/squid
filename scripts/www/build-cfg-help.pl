@@ -248,7 +248,7 @@ sub update_defaults()
 }
 
 my $linecount = 0;
-my @ifelse = {};
+my @ifelse = ();
 while (<>) {
     chomp;
     last if (/^EOF$/);
@@ -274,8 +274,8 @@ while (<>) {
         next;
     } elsif ($_ =~ /^IF (.*)$/) {
         my $cond = $1;
-        push(@ifelse, $1);
-        if (! exists $defines{$1}) {
+        push(@ifelse, "$.: $1");
+        if (! defined $defines{$1}) {
             print "NOTICE: line $linecount: unknown ./configure option '$1'\n";
         } else {
             $cond = $defines{$1};
