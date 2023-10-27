@@ -32,6 +32,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 <itemize>
 	<item>removed support for the cache_object URI scheme
 	<item>Cache Manager changes
+	<item>Removed purge tool
 </itemize>
 
 <p>Most user-facing changes are reflected in squid.conf (see further below).
@@ -56,6 +57,27 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	cache.log at debugging level 1 (with an exponential backoff).
 
 </descrip>
+
+<sect1>Removed purge tool
+<p>The <em>purge</em> tool (also known as <em>squidpurge</em>, and <em>squid-purge</em>)
+   was limited to managing UFS/AUFS/DiskD caches and had problems parsing non-trivial squid.conf files.
+
+<p>The cache contents display and search it provided can be obtained with a script
+   searching the cache manager <em>objects</em> report.
+
+<p>This tool used the custom <em>PURGE</em> HTTP method to remove cache
+   objects. This can be performed directly on any Squid configured to allow
+   the method. Like so:
+<verb>
+    acl PURGE method PURGE
+    http_access allow localhost PURGE
+</verb>
+    Any HTTP client (such as curl) can then be used to evict objects from the cache, for example:
+<verb>
+    curl -XPURGE --proxy http://127.0.0.1:3128 http://url.to/evict/
+</verb>
+   Alternatively the HTCP <em>CLR</em> mechanism can be used.
+
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
