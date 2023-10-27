@@ -44,7 +44,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
    bundled with Squid.
 
 <sect2>Removal of the <em>squidclient</em> tool.
-<p>Popular command-line tools such as <em>curl</em> or <em>wget</em> 
+<p>Popular command-line tools such as <em>curl</em> or <em>wget</em>
    provide equivalent features.
 
 <sect2>Removal of the <em>cachemgr.cgi</em> tool.
