@@ -247,12 +247,10 @@ sub update_defaults()
     }
 }
 
-my $linecount = 0;
 my @ifelse = ();
 while (<>) {
     chomp;
     last if (/^EOF$/);
-    $linecount++;
     if ($_ =~ /^NAME: (.*)$/) {
         my (@aliases) = split(/ /, $1);
         $data = {};
@@ -270,13 +268,13 @@ while (<>) {
         $data->{'default_doc'} = "";
         $data->{'default_if_none'} = "";
 
-        print "DEBUG: line $linecount: new option: $name\n" if $verbose;
+        print "DEBUG: line $.: new option: $name\n" if $verbose;
         next;
     } elsif ($_ =~ /^IF (.*)$/) {
         my $cond = $1;
         push(@ifelse, "$.: $1");
         if (! defined $defines{$1}) {
-            print "NOTICE: line $linecount: unknown ./configure option '$1'\n";
+            print "NOTICE: line $.: unknown ./configure option '$1'\n";
         } else {
             $cond = $defines{$1};
         }
@@ -351,7 +349,7 @@ while (<>) {
     } elsif (/^#/) {
         next;
     } elsif ($_ ne "") {
-        print "NOTICE: line $linecount: unknown line '$_'\n";
+        print "NOTICE: line $.: unknown line '$_'\n";
     }
 }
 end_options;
