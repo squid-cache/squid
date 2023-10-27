@@ -45,11 +45,8 @@ StoreIOState::~StoreIOState()
 {
     debugs(20,3, "StoreIOState::~StoreIOState: " << this);
 
-    if (read.callback_data)
-        cbdataReferenceDone(read.callback_data);
-
-    if (callback_data)
-        cbdataReferenceDone(callback_data);
+    cbdataReferenceDone(read.callback_data);
+    cbdataReferenceDone(callback_data);
 }
 
 bool StoreIOState::touchingStoreEntry() const
