@@ -352,6 +352,10 @@ while (<>) {
         print "NOTICE: line $.: unknown line '$_'\n";
     }
 }
+my $condition;
+foreach $condition (@ifelse) {
+    print "ERROR: missing ENDIF for '$condition'\n";
+}
 end_options;
 print $index "<p><a href=\"index_all.html\">Alphabetic index</a></p>\n" if $format eq "splithtml";
 print $index "<p><a href=\"#index\">Alphabetic index</a></p>\n" if $format eq "singlehtml";
