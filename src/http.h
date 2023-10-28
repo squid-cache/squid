@@ -124,6 +124,8 @@ private:
      *         regardless of whether the grow actually happened.
      */
     bool maybeMakeSpaceAvailable(bool grow);
+    size_t calcReadBufferCapacityLimit() const;
+    size_t calcReadBufferSpaceToReserve() const;
 
     // consuming request body
     virtual void handleMoreRequestBodyAvailable();
