@@ -58,8 +58,7 @@ Rock::IoState::~IoState()
     // assert(!readableAnchor_);
     assert(shutting_down || !writeableAnchor_);
 
-    if (callback_data)
-        cbdataReferenceDone(callback_data);
+    cbdataReferenceDone(callback_data);
     theFile = nullptr;
 
     e->unlock("rock I/O");

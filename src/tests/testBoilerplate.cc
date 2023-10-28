@@ -7,10 +7,28 @@
  */
 
 #include "squid.h"
-#include "testBoilerplate.h"
+#include "compat/cppunit.h"
 #include "unitTestMain.h"
 
 #include <stdexcept>
+
+/*
+ * This is a rough example of a typical unit test file.
+ *
+ * If the class declaration is used in more than one source file,
+ * then place that declaration into a dedicated header file instead.
+ */
+
+class TestBoilerplate: public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE( TestBoilerplate );
+    /* note the statement here and then the actual prototype below */
+    CPPUNIT_TEST( testDemonstration );
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testDemonstration();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestBoilerplate );
 

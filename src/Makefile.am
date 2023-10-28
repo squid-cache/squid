@@ -747,8 +747,7 @@ TESTSOURCES= \
 ## involved in writing tests.
 check_PROGRAMS += tests/testBoilerplate
 tests_testBoilerplate_SOURCES = \
-	tests/testBoilerplate.cc \
-	tests/testBoilerplate.h
+	tests/testBoilerplate.cc
 nodist_tests_testBoilerplate_SOURCES = \
 	$(TESTSOURCES)
 tests_testBoilerplate_LDADD= \
