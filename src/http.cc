@@ -54,7 +54,6 @@
 #include "RefreshPattern.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
-#include "SquidMath.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "StrList.h"
@@ -1444,27 +1443,9 @@ HttpStateData::decodeAndWriteReplyBody()
             lastChunk = 1;
             flags.do_next_read = false;
             markParsedVirginReplyAsWhole("http parsed last-chunk");
-            return true;
-        }
-
-        if (eof) {
+        } else if (eof) {
             markPrematureReplyBodyEofFailure();
-            return true; // what we got is valid, albeit incomplete
         }
-
-        // XXX: This logic assumes that zero calcReadBufferSpaceToReserve() is
-        // a permanent state, but that assumption is wrong: We may drain inBuf
-        // later, allowing us to resume chunked decoding progress.
-        if (httpChunkDecoder->needsMoreData() && calcReadBufferSpaceToReserve() == 0) {
-            debugs(11, 2, "failed to parse chunked encoding because " <<
-                   inBuf.length() << "-byte chunked encoding metadata size reached or exceeded " <<
-                   calcReadBufferSpaceToReserve() << "-byte buffering limit");
-            return false; // we cannot make progress; probably a framing error
-        }
-
-        // httpChunkDecoder needs more input (and we just checked that we can
-        // read more because we are not at EOF and inBuf can store more bytes)
-        // or more space (and we have provided that by consuming decodedData)
         return true;
     }
     catch (...) {
@@ -1624,88 +1605,32 @@ HttpStateData::maybeReadVirginBody()
     Comm::Read(serverConnection, call);
 }
 
-/// Desired inBuf capacity based on various capacity preferences/limits:
-/// * a smaller buffer may not hold enough for look-ahead header/body parsers;
-/// * a smaller buffer may result in inefficient tiny network reads;
-/// * a bigger buffer may waste memory;
-/// * a bigger buffer may exceed SBuf storage capabilities (SBuf::maxSize);
-size_t
-HttpStateData::calcReadBufferCapacityLimit() const
-{
-    if (!flags.headers_parsed)
-        return Config.maxReplyHeaderSize;
-
-    // XXX: Our inBuf is not used to maintain the read-ahead gap, and using
-    // Config.readAheadGap like this creates huge read buffers for large
-    // read_ahead_gap values. TODO: Switch to using tcp_recv_bufsize as the
-    // primary read buffer capacity factor.
-    //
-    // TODO: Cannot reuse throwing NaturalCast() here. Consider removing
-    // .value() dereference in NaturalCast() or add/use NaturalCastOrMax().
-    const auto configurationPreferences = NaturalSum<size_t>(Config.readAheadGap).value_or(SBuf::maxSize);
-
-    // TODO: Integrate with flags.headers_parsed, reflect TeChunkedParser
-    // trailer parsing requirements, and move to parserLookAheadDistance().
-    const size_t lookAheadMinimum = httpChunkDecoder ? 64 : 0;
-
-    // even if we do not need to look ahead, we have to receive data
-    const size_t progressMinimum = 1;
-
-    const auto combinedMaximum = std::max({configurationPreferences, lookAheadMinimum, progressMinimum});
-    return std::min<size_t>(combinedMaximum, SBuf::maxSize);
-}
-
-/// the maximum number of additional bytes we would like to read(2)
-/// \retval 0 indicates that we should not read (at least for now)
-size_t
-HttpStateData::calcReadBufferSpaceToReserve() const
-{
-    if (eof) {
-        debugs(11, 5, "at EOF with " << inBuf.length());
-        return 0;
-    }
-
-    const auto maxCapacity = calcReadBufferCapacityLimit();
-    if (inBuf.length() >= maxCapacity) {
-        debugs(11, 5, "no usable space: " << inBuf.length() << " >= " << maxCapacity << "; current space: " << inBuf.spaceSize());
-        return 0;
-    }
-
-    const auto maxSpace = maxCapacity - inBuf.length();
-    debugs(11, 7, maxSpace << '=' << maxCapacity << '-' << inBuf.length() << "; current space: " << inBuf.spaceSize());
-    assert(maxSpace > 0); // paranoid
-
-    // apply various accumulation limits
-    const auto limitedSpace = Client::calcBufferSpaceToReserve(inBuf.spaceSize(), maxSpace);
-
-    // TODO: Account for entry->bytesWanted() here, not in readReply().
-
-    // When other limits allow us to read just 1 or 2 bytes from the socket, we
-    // delay the read to work around delay pool implementation problems.
-    // TODO: Confirm those problems and set to zero when delay pools are disabled.
-    const size_t MinReadSize = 3; // TODO: Make global and reuse.
-    return (limitedSpace >= MinReadSize) ? limitedSpace : 0;
-}
-
 bool
 HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
 {
-    const auto desiredSpace = calcReadBufferSpaceToReserve();
+    // how much we are allowed to buffer
+    const int limitBuffer = (flags.headers_parsed ? Config.readAheadGap : Config.maxReplyHeaderSize);
 
-    if (!desiredSpace) {
+    if (limitBuffer < 0 || inBuf.length() >= (SBuf::size_type)limitBuffer) {
         // when buffer is at or over limit already
-        debugs(11, DBG_DATA, "will not read into " << inBuf.length() << "-byte buffer that has {" << inBuf << "}");
+        debugs(11, 7, "will not read up to " << limitBuffer << ". buffer has (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+        debugs(11, DBG_DATA, "buffer has {" << inBuf << "}");
         // Process next response from buffer
         processReply();
         return false;
     }
 
-    const auto read_size = desiredSpace; // diff reducer
-    assert(read_size >= 2); // TODO: Use MinReadSize
+    // how much we want to read
+    const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), (limitBuffer - inBuf.length()));
+
+    if (!read_size) {
+        debugs(11, 7, "will not read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+        return false;
+    }
 
     // just report whether we could grow or not, do not actually do it
     if (doGrow)
-        return true;
+        return (read_size >= 2);
 
     // we may need to grow the buffer
     inBuf.reserveSpace(read_size);
@@ -1713,10 +1638,7 @@ HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
            " read up to " << read_size << " bytes info buf(" << inBuf.length() << "/" << inBuf.spaceSize() <<
            ") from " << serverConnection);
 
-    // TODO: Use MinReadSize
-    assert(inBuf.spaceSize() >= 2); // only read if there is 1+ bytes of space available
-
-    return true;
+    return (inBuf.spaceSize() >= 2); // only read if there is 1+ bytes of space available
 }
 
 /// called after writing the very last request byte (body, last-chunk, etc)
