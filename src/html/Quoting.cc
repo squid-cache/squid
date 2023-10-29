@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "sbuf/SBuf.h"
 #include "html/Quoting.h"
 
 #include <array>
@@ -15,25 +16,24 @@
 
 static const auto & EscapeSequences()
 {
-    static auto escapeMap = new std::array<const char *, 256>{};
-    if ((*escapeMap)['<']) {
+    static auto escapeMap = new std::array<SBuf, 256>{};
+    auto &em = *escapeMap;
+    if (!em['<'].isEmpty()) {
         return *escapeMap;
     }
-    (*escapeMap)['<'] = "&lt;";
-    (*escapeMap)['>'] = "&gt;";
-    (*escapeMap)['"'] = "&quot;";
-    (*escapeMap)['&'] = "&amp;";
-    (*escapeMap)['\''] = "&apos;";
+    em['<'] = "&lt;";
+    em['>'] = "&gt;";
+    em['"'] = "&quot;";
+    em['&'] = "&amp;";
+    em['\''] = "&apos;";
 
-    const size_t maxEscapeLength = 7;
     /* Encode control chars just to be on the safe side, and make
      * sure all 8-bit characters are encoded to protect from buggy
      * clients
      */
     for (uint32_t ch = 0; ch < 256; ++ch) {
-        if (!(*escapeMap)[ch] && (ch <= 0x1F || ch >= 0x7f) && ch != '\n' && ch != '\r' && ch != '\t') {
-            (*escapeMap)[ch] = static_cast<char *>(xcalloc(maxEscapeLength, 1));
-            snprintf(const_cast<char*>((*escapeMap)[ch]), sizeof escapeMap[ch], "&#%d;", static_cast<int>(ch));
+        if (em[ch].isEmpty() && (ch <= 0x1F || ch >= 0x7f) && ch != '\n' && ch != '\r' && ch != '\t') {
+            em[ch] = SBuf().Printf("&#%d;", static_cast<int>(ch));
         }
     }
 
@@ -62,10 +62,11 @@ html_quote(const char *string)
     for (src = string, dst = buf; *src; src++) {
         const unsigned char ch = *src;
 
-        if (const auto escape = escapeSequences[ch]) {
+        const auto escape = escapeSequences[ch];
+        if (!escape.isEmpty()) {
             /* Ok, An escaped form was found above. Use it */
-            strncpy(dst, escape, 7);
-            dst += strlen(escape);
+            escape.copy(dst, 7);
+            dst += escape.length();
         } else {
             /* Apparently there is no need to escape this character */
             *dst++ = ch;
