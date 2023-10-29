@@ -164,6 +164,9 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
+	<tag>--enable-cachemgr-hostname=</tag>
+	<p>The <em>cachemgr.cgi</em> tool this option relates to has been removed.
+
 	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
 	<p>The code enabled by this preprocessor macro has not built for many
 	   years, indicating that the feature is unused.
