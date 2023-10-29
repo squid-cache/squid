@@ -353,7 +353,7 @@ while (<>) {
     }
 }
 foreach my $condition (@ifelse) {
-    print "ERROR: missing ENDIF for '$condition'\n";
+    print "ERROR: missing ENDIF to match $condition\n";
 }
 end_options;
 print $index "<p><a href=\"index_all.html\">Alphabetic index</a></p>\n" if $format eq "splithtml";
