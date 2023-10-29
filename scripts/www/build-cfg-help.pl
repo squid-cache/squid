@@ -352,8 +352,7 @@ while (<>) {
         print "NOTICE: line $.: unknown line '$_'\n";
     }
 }
-my $condition;
-foreach $condition (@ifelse) {
+foreach my $condition (@ifelse) {
     print "ERROR: missing ENDIF for '$condition'\n";
 }
 end_options;
