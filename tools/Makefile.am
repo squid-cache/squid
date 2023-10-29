@@ -5,5 +5,5 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-SUBDIRS = apparmor helper-mux purge systemd sysvinit
+SUBDIRS = apparmor helper-mux systemd sysvinit
 EXTRA_DIST = helper-ok-dying.pl helper-ok.pl
