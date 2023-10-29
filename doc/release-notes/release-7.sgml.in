@@ -30,7 +30,6 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>removed support for the cache_object URI scheme
 	<item>Cache Manager changes
 	<item>Removed purge tool
 </itemize>
@@ -40,23 +39,28 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 <sect1>Cache Manager changes<label id="mgr">
 <p>For more information about the Cache Manager feature, see <url url="https://wiki.squid-cache.org/Features/CacheManager/Index" name="wiki">.
 
-<p>
-<descrip>
-	<tag>cache_object URI</tag>
-	<p>Cache manager is no longer accessible by URIs with cache_object scheme.
+<p>In order to reduce workload on the Squid development team we have chosen to stop
+   providing several tools related to Cache Manager which have previously been
+   bundled with Squid.
 
-    <tag>cachemgr</tag>
-    <p>The 'cachemgr' tool is no longer supported and distributed with squid.
-    A plethora of tools, such as curl, wget, or any web browser,
-    can be used in its place
+<sect2>Removal of the <em>squidclient</em> tool.
+<p>Popular command-line tools such as <em>curl</em> or <em>wget</em>
+   provide equivalent features.
 
-	<tag>non_peers</tag>
-	<p>Removed the <em>mgr:non_peers</em> report. Squid still ignores
-	unexpected ICP responses but no longer remembers the details that comprised
-	the removed report. The senders of these ICP messages are still reported to
-	cache.log at debugging level 1 (with an exponential backoff).
+<sect2>Removal of the <em>cachemgr.cgi</em> tool.
+<p>Access to the Cache Manager API is available by sending HTTP(S) requests
+   directly to Squid with the URL-path prefix <em>/squid-internal-mgr/</em>.
+   A plethora of tools, such as curl, wget, or any web browser, can be used
+   instead of cachemgr.cgi.
 
-</descrip>
+<sect2>Removal of the <em>cache_object:</em> URI scheme.
+<p>This custom scheme does not conform to RFC 3986 URI sytax. It has been replaced
+   with Cache Manager access through HTTP and HTTPS URLs.
+
+<sect2>Removal of <em>non_peers</em> Report
+<p>Squid still ignores unexpected ICP responses but no longer remembers the
+   details that comprised the removed report. The senders of these ICP messages
+   are still reported to cache.log at debugging level 1 (with an exponential backoff).
 
 <sect1>Removed purge tool
 <p>The <em>purge</em> tool (also known as <em>squidpurge</em>, and <em>squid-purge</em>)
@@ -160,6 +164,9 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
+	<tag>--enable-cachemgr-hostname=</tag>
+	<p>The <em>cachemgr.cgi</em> tool this option relates to has been removed.
+
 	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
 	<p>The code enabled by this preprocessor macro has not built for many
 	   years, indicating that the feature is unused.
