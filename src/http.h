@@ -114,16 +114,9 @@ private:
 
     void abortTransaction(const char *reason) { abortAll(reason); } // abnormal termination
 
-    /**
-     * determine if read buffer can have space made available
-     * for a read.
-     *
-     * \param grow  whether to actually expand the buffer
-     *
-     * \return whether the buffer can be grown to provide space
-     *         regardless of whether the grow actually happened.
-     */
-    bool maybeMakeSpaceAvailable(bool grow);
+    size_t calcReadBufferCapacityLimit() const;
+    std::optional<size_t> canBufferMoreReplyBytes() const;
+    size_t maybeMakeSpaceAvailable(const size_t maxReadSize);
 
     // consuming request body
     virtual void handleMoreRequestBodyAvailable();

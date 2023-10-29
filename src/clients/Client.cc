@@ -1019,6 +1019,8 @@ Client::adjustBodyBytesRead(const int64_t delta)
     if (bodyBytesRead < 0)
         bodyBytesRead = 0;
 
+    debugs(11, 7, bodyBytesRead << '+' << delta << '=' << (bodyBytesRead+delta));
+
     bodyBytesRead += delta; // supports negative and zero deltas
 
     // check for overflows ("infinite" response?) and underflows (a bug)
