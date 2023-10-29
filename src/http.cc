@@ -1522,9 +1522,8 @@ HttpStateData::processReplyBody()
             }
 
             flags.do_next_read = true;
-            maybeReadVirginBody();
-            return;
         }
+        break;
 
         case COMPLETE_PERSISTENT_MSG: {
             debugs(11, 5, "processReplyBody: COMPLETE_PERSISTENT_MSG from " << serverConnection);
@@ -1577,8 +1576,7 @@ HttpStateData::processReplyBody()
             return;
         }
 
-    // TODO: Remove "else" after ENTRY_ABORTED handling above to simplify this logic.
-    assert(!"unreachable code because all ENTRY_ABORTED and persistentConnStatus() outcomes are handled above");
+    maybeReadVirginBody();
 }
 
 bool
@@ -1638,15 +1636,10 @@ HttpStateData::calcReadBufferCapacityLimit() const
     // .value() dereference in NaturalCast() or add/use NaturalCastOrMax().
     const auto configurationPreferences = NaturalSum<size_t>(Config.readAheadGap).value_or(SBuf::maxSize);
 
-    // TODO: Integrate with flags.headers_parsed, reflect TeChunkedParser
-    // trailer parsing requirements, and move to parserLookAheadDistance().
-    const size_t lookAheadMinimum = httpChunkDecoder ? 64 : 0;
+    // TODO: Honor TeChunkedParser look-ahead and trailer parsing requirements
+    // (when explicit configurationPreferences are set too low).
 
-    // even if we do not need to look ahead, we have to receive data
-    const size_t progressMinimum = 1;
-
-    const auto combinedMaximum = std::max({configurationPreferences, lookAheadMinimum, progressMinimum});
-    return std::min<size_t>(combinedMaximum, SBuf::maxSize);
+    return std::min<size_t>(configurationPreferences, SBuf::maxSize);
 }
 
 /// The maximum number of virgin reply bytes we may buffer before we violate
