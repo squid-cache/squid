@@ -15,6 +15,8 @@
 #include "http/StateFlags.h"
 #include "sbuf/SBuf.h"
 
+#include <optional>
+
 class FwdState;
 class HttpHeader;
 class String;
@@ -116,7 +118,7 @@ private:
 
     size_t calcReadBufferCapacityLimit() const;
     std::optional<size_t> canBufferMoreReplyBytes() const;
-    size_t maybeMakeSpaceAvailable(const size_t maxReadSize);
+    size_t maybeMakeSpaceAvailable(size_t maxReadSize);
 
     // consuming request body
     virtual void handleMoreRequestBodyAvailable();
