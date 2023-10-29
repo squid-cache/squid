@@ -1734,9 +1734,12 @@ check_PROGRAMS += tests/testHtmlQuote
 tests_testHtmlQuote_SOURCES = \
 	tests/testHtmlQuote.cc
 nodist_tests_testHtmlQuote_SOURCES = \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	$(TESTSOURCES)
 tests_testHtmlQuote_LDADD= \
 	html/libhtml.la \
+	sbuf/libsbuf.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
