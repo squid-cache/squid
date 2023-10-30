@@ -487,19 +487,22 @@ store_client::canReadFromMemory() const
            parsingBuffer->spaceSize();
 }
 
-/// The offset of the next stored HTTP response byte wanted by the client.
+/// The minimum offset of the next stored HTTP response byte we expect to read.
+/// Depending on the timing of this call, the actual offset may be very
+/// different (e.g., when the client switches from getting response headers at
+/// offset zero to reading the first Content-Range range at some huge offset).
 int64_t
 store_client::nextHttpReadOffset() const
 {
-    Assure(parsingBuffer);
     const auto &mem = entry->mem();
     const auto hdr_sz = mem.baseReply().hdr_sz;
+    const auto parsedSize = parsingBuffer ? parsingBuffer->contentSize() : 0;
     // Certain SMP cache manager transactions do not store HTTP headers in
     // mem_hdr; they store just a kid-specific piece of the future report body.
     // In such cases, hdr_sz ought to be zero. In all other (known) cases,
     // mem_hdr contains HTTP response headers (positive hdr_sz if parsed)
     // followed by HTTP response body. This code math accommodates all cases.
-    return NaturalSum<int64_t>(hdr_sz, copyInto.offset, parsingBuffer->contentSize()).value();
+    return NaturalSum<int64_t>(hdr_sz, copyInto.offset, parsedSize).value();
 }
 
 /// Copies at least some of the requested body bytes from MemObject memory,
