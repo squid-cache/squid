@@ -16,6 +16,7 @@
 #include "mem/forward.h"
 #include "SquidString.h"
 
+#include <iosfwd>
 #include <string>
 #include <vector>
 
@@ -100,6 +101,7 @@ private:
     SBuf theKey; ///< The note key
     Values values; ///< The possible values list for the note
 };
+
 
 class ConfigParser;
 

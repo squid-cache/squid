@@ -129,8 +129,8 @@ Note::toString(const SBuf &sep) const
 std::ostream&
 operator <<(std::ostream &os, const Note &note)
 {
-    for (const auto &val : values)
-        os << key() << ": " << val->value();
+    for (const auto &val : note.values)
+        os << val->key() << ": " << val->value();
     return os;
 }
 
@@ -276,8 +276,6 @@ Notes::toString(const char *sep) const
     ss << AsList(notes).delimitedBy(sep[0]); // WIP, requires PR #1519 to properly implement
     return ss.buf();
 }
-
-
 
 bool
 NotePairs::find(SBuf &resultNote, const char *noteKey, const char *sep) const
