@@ -82,7 +82,7 @@ public:
     /// \retval -N should not occur.
     // TODO: Callers do not expect negative offset. Verify that the return
     // value cannot be negative and convert to unsigned in this case.
-    int64_t readOffset() const { return nextHttpReadOffset(); }
+    int64_t readOffset() const { return copyInto.offset; }
 
     int getType() const;
 
