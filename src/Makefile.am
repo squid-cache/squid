@@ -1734,9 +1734,9 @@ check_PROGRAMS += tests/testHtmlQuote
 tests_testHtmlQuote_SOURCES = \
 	tests/testHtmlQuote.cc
 nodist_tests_testHtmlQuote_SOURCES = \
+	$(TESTSOURCES) \
 	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
-	$(TESTSOURCES)
+	tests/stub_libmem.cc
 tests_testHtmlQuote_LDADD= \
 	html/libhtml.la \
 	sbuf/libsbuf.la \

@@ -7,16 +7,15 @@
  */
 
 #include "squid.h"
-#include "sbuf/SBuf.h"
 #include "html/Quoting.h"
+#include "sbuf/SBuf.h"
 
 #include <array>
 #include <cstring>
 
-
 static const auto & EscapeSequences()
 {
-    static auto escapeMap = new std::array<SBuf, 256>{};
+    static auto escapeMap = new std::array<SBuf, 256> {};
     auto &em = *escapeMap;
     if (!em['<'].isEmpty()) {
         return *escapeMap;
@@ -39,7 +38,6 @@ static const auto & EscapeSequences()
 
     return *escapeMap;
 }
-
 
 char *
 html_quote(const char *string)
