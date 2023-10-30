@@ -442,8 +442,6 @@ squid_SOURCES = \
 	wccp.h \
 	wccp2.cc \
 	wccp2.h \
-	whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 
@@ -1911,8 +1909,6 @@ tests_test_http_range_SOURCES = \
 	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
-	tests/stub_whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_test_http_range_SOURCES = \
@@ -2296,8 +2292,6 @@ tests_testHttpRequest_SOURCES = \
 	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
-	tests/stub_whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testHttpRequest_SOURCES = \
@@ -2592,8 +2586,6 @@ tests_testCacheManager_SOURCES = \
 	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
-	tests/stub_whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testCacheManager_SOURCES = \
