@@ -61,13 +61,13 @@ html_quote(const char *string)
         const unsigned char ch = *src;
 
         const auto & escape = escapeSequences[ch];
-        if (!escape.isEmpty()) {
+        if (escape.isEmpty()) {
+            /* Apparently there is no need to escape this character */
+            *dst++ = ch;
+        } else {
             /* Ok, An escaped form was found above. Use it */
             escape.copy(dst, 7);
             dst += escape.length();
-        } else {
-            /* Apparently there is no need to escape this character */
-            *dst++ = ch;
         }
     }
     /* Nullterminate and return the result */
