@@ -124,9 +124,7 @@ protected:
      * detect and skip the CRLF or (if tolerant) LF line terminator
      * consume from the tokenizer.
      *
-     * \throws exception on bad or InsuffientInput.
-     * \retval true only if line terminator found.
-     * \retval false incomplete or missing line terminator, need more data.
+     * \throws exception on bad or InsufficientInput
      */
     void skipLineTerminator(Tokenizer &) const;
 

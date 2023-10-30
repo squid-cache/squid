@@ -105,8 +105,7 @@ ClientRequestContext::~ClientRequestContext()
      * still have one
      */
 
-    if (http)
-        cbdataReferenceDone(http);
+    cbdataReferenceDone(http);
 
     delete error;
     debugs(85,3, "ClientRequestContext destructed, this=" << this);
@@ -257,8 +256,7 @@ ClientHttpRequest::~ClientHttpRequest()
 
     delete calloutContext;
 
-    if (conn_)
-        cbdataReferenceDone(conn_);
+    cbdataReferenceDone(conn_);
 
     /* moving to the next connection is handled by the context free */
     dlinkDelete(&active, &ClientActiveRequests);

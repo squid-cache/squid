@@ -5,5 +5,10 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-SUBDIRS = apparmor helper-mux systemd sysvinit
-EXTRA_DIST = helper-ok-dying.pl helper-ok.pl
+include $(top_srcdir)/src/Common.am
+
+noinst_LTLIBRARIES = libhtml.la
+
+libhtml_la_SOURCES = \
+	Quoting.cc \
+	Quoting.h

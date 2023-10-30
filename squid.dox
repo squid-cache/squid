@@ -2074,7 +2074,6 @@ PREDEFINED             = __cplusplus \
                          USE_ASYNC_IO \
                          USE_AUTH \
                          USE_CACHE_DIGESTS \
-                         USE_CLASSFUL \
                          USE_DELAY_POOLS \
                          USE_DEVPOLL \
                          USE_DLMALLOC \
