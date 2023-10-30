@@ -1128,7 +1128,7 @@ DOC_START
 	acl aclname dst [-n] ip-address/mask ...	# URL host's IP address [slow]
 	acl aclname localip ip-address/mask ... # IP address the client connected to [fast]
 
-if USE_SQUID_EUI
+IF USE_SQUID_EUI
 	acl aclname arp      mac-address ...
 	acl aclname eui64    eui64-address ...
 	  # [fast]
@@ -1148,7 +1148,7 @@ if USE_SQUID_EUI
 	  #
 	  # IPv6 protocol does not contain ARP. MAC/EUI is either
 	  # encoded directly in the IPv6 address or not available.
-endif
+ENDIF
 	acl aclname clientside_mark mark[/mask] ...
 	  # matches CONNMARK of an accepted connection [fast]
 	  # DEPRECATED. Use the 'client_connection_mark' instead.
@@ -1500,7 +1500,7 @@ endif
 	  #  acl hasWhatMyLoggingDaemonNeeds has request
 	  #  acl hasWhatMyLoggingDaemonNeeds has response
 
-acl aclname at_step step
+	acl aclname at_step step
 	  # match against the current request processing step [fast]
 	  # Valid steps are:
 	  #   GeneratingCONNECT: Generating HTTP CONNECT request headers
@@ -7536,8 +7536,8 @@ LOC: Config.onoff.httpd_suppress_version_string
 DOC_START
 	Do not send Squid version string in HTTP metadata and generated content
 	such as HTML error pages. Squid version string is still present in certain
-	SNMP responses, cachemgr.cgi output, squidclient User-Agent request header
-	field, various console output, and cache.log.
+	SNMP responses, HTTP(S) Server response header field,
+        various console output, and cache.log.
 DOC_END
 
 NAME: visible_hostname

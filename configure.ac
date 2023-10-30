@@ -993,23 +993,6 @@ AS_IF([test "x$enable_snmp" = "xyes"],[SNMPLIB="../lib/snmplib/libsnmplib.la"])
 AC_MSG_NOTICE([SNMP support enabled: $enable_snmp])
 AC_SUBST(SNMPLIB)
 
-AC_ARG_ENABLE(cachemgr-hostname,
-  AS_HELP_STRING([--enable-cachemgr-hostname=hostname],
-                 [Make cachemgr.cgi default to this host.
-                  If unspecified, uses the name of the build-host]), [
-  AS_CASE([$enableval],
-    [yes],[
-      AC_DEFINE(CACHEMGR_HOSTNAME,[getfullhostname()],
-        [If you are upset that the cachemgr.cgi form comes up with the hostname field blank, then define this to getfullhostname()])
-      AC_MSG_NOTICE([Cachemgr default hostname == host where cachemgr runs])
-    ],
-    [no],[:],
-    [
-      AC_DEFINE_UNQUOTED(CACHEMGR_HOSTNAME,"${enableval}")
-      AC_MSG_NOTICE([Cachemgr default hostname set to ${enableval}])
-  ])
-])
-
 AC_ARG_ENABLE(eui,
   AS_HELP_STRING([--disable-eui],
                  [Disable use of ARP / MAC/ EUI (ether address)]), [
