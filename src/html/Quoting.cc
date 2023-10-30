@@ -62,7 +62,7 @@ html_quote(const char *string)
     for (src = string, dst = buf; *src; src++) {
         const unsigned char ch = *src;
 
-        const auto escape = escapeSequences[ch];
+        const auto & escape = escapeSequences[ch];
         if (!escape.isEmpty()) {
             /* Ok, An escaped form was found above. Use it */
             escape.copy(dst, 7);
