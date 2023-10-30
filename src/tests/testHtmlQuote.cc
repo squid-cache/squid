@@ -18,7 +18,6 @@ class testHtmlQuote: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(testHtmlQuote);
     CPPUNIT_TEST(test_html_quote_cstr);
-    // CPPUNIT_TEST(testPerformance);
     CPPUNIT_TEST_SUITE_END();
 
 protected:
@@ -57,32 +56,6 @@ testHtmlQuote::test_html_quote_cstr()
             }
         }
     }
-}
-
-void testHtmlQuote::testPerformance()
-{
-    const char *input = "<script>alert('Hello, world!');</script>";
-    const char *expected_output = "&lt;script&gt;alert(&apos;Hello, world!&apos;);&lt;/script&gt;";
-    const int num_iterations = 10000000;
-    const char *output = html_quote(input);
-
-    // Measure the time taken to call html_quote repeatedly
-    clock_t start_time = clock();
-    for (int i = 0; i < num_iterations; i++)
-    {
-        output = html_quote(input);
-        CPPUNIT_ASSERT_EQUAL(0, strcmp(output, expected_output));
-    }
-    clock_t end_time = clock();
-
-    CPPUNIT_ASSERT_EQUAL(0, strcmp(output, expected_output));
-    // Calculate the average time per call
-    double elapsed_time = static_cast<double>(end_time - start_time) / CLOCKS_PER_SEC;
-    double time_per_call = elapsed_time / num_iterations;
-
-    // Check that the time per call is reasonable
-    double max_time_per_call = 0.0001; // 0.1 milliseconds
-    CPPUNIT_ASSERT(time_per_call < max_time_per_call);
 }
 
 int main(int argc, char *argv[])
