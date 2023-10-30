@@ -12,7 +12,6 @@
 #include "base/RefCount.h"
 #include "HttpRequest.h"
 #include "sbuf/SBuf.h"
-#include "SquidString.h"
 #include "ssl/support.h"
 
 #include <map>
@@ -47,7 +46,7 @@ public:
     /// is invalidated by any non-constant operation on the list object
     const ErrorDetailEntry *findRecord(Security::ErrorCode) const;
 
-    String errLanguage; ///< The language of the error-details.txt template, if any
+    SBuf errLanguage; ///< The language of the error-details.txt template, if any
     typedef std::map<Security::ErrorCode, ErrorDetailEntry> ErrorDetails;
     ErrorDetails theList; ///< The list of error details entries
 };
@@ -84,7 +83,7 @@ private:
     /// cache the given error details list.
     void cacheDetails(const ErrorDetailsList::Pointer &errorDetails) const;
 
-    typedef std::map<std::string, ErrorDetailsList::Pointer> Cache;
+    typedef std::map<SBuf, ErrorDetailsList::Pointer> Cache;
     mutable Cache cache; ///< the error details list cache
     ErrorDetailsList::Pointer theDefaultErrorDetails; ///< the default error details list
 
