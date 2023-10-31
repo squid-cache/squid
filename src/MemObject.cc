@@ -167,7 +167,7 @@ struct LowestMemReader : public unary_function<store_client, void> {
 
     void operator() (store_client const &x) {
         if (x.getType() == STORE_MEM_CLIENT)
-            current = std::min(current, x.readOffset());
+            current = std::min(current, x.discardableHttpEnd());
     }
 
     int64_t current;

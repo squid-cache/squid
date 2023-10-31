@@ -74,15 +74,8 @@ public:
     explicit store_client(StoreEntry *);
     ~store_client();
 
-    /// An offset into the stored response bytes, including the HTTP response
-    /// headers (if any). Note that this offset does not include Store entry
-    /// metadata, because it is not a part of the stored response.
-    /// \retval 0 means the client wants to read HTTP response headers.
-    /// \retval +N the response byte that the client wants to read next.
-    /// \retval -N should not occur.
-    // TODO: Callers do not expect negative offset. Verify that the return
-    // value cannot be negative and convert to unsigned in this case.
-    int64_t readOffset() const { return copyInto.offset; }
+    /// the client will not use HTTP response bytes with lower offsets (if any)
+    auto discardableHttpEnd() const { return discardableHttpEnd_; }
 
     int getType() const;
 
@@ -175,7 +168,15 @@ private:
 
     /// Storage and metadata associated with the current copy() request. Ought
     /// to be ignored when not answering a copy() request.
+    /// * copyInto.offset is the requested HTTP response body offset;
+    /// * copyInto.data is the client-owned, client-provided result buffer;
+    /// * copyInto.length is the size of the .data result buffer;
+    /// * copyInto.flags are unused by this class.
     StoreIOBuffer copyInto;
+
+    // TODO: Convert to uint64_t after fixing mem_hdr::endOffset() and friends.
+    /// \copydoc discardableHttpEnd()
+    int64_t discardableHttpEnd_ = 0;
 
     /// the total number of finishCallback() calls
     uint64_t answers;
