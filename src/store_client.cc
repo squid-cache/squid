@@ -163,6 +163,16 @@ store_client::finishCallback()
         result = parsingBuffer->packBack();
     result.flags.error = object_ok ? 0 : 1;
 
+    // TODO: Move object_ok handling above into this `if` statement.
+    if (object_ok) {
+        // works for zero hdr_sz cases as well; see also: nextHttpReadOffset()
+        discardableHttpEnd_ = NaturalSum<int64_t>(entry->mem().baseReply().hdr_sz, result.offset, result.length).value();
+    } else {
+        // object_ok is sticky, so we will not be able to use any response bytes
+        discardableHttpEnd_ = entry->mem().endOffset();
+    }
+    debugs(90, 7, "with " << result << "; discardableHttpEnd_=" << discardableHttpEnd_);
+
     // no HTTP headers and no body bytes (but not because there was no space)
     atEof_ = !sendingHttpHeaders() && !result.length && copyInto.length;
 
@@ -264,6 +274,9 @@ store_client::copy(StoreEntry * anEntry,
     Assure(!copyInto.offset || answeredOnce());
 
     parsingBuffer.emplace(copyInto);
+
+    discardableHttpEnd_ = nextHttpReadOffset();
+    debugs(90, 7, "discardableHttpEnd_=" << discardableHttpEnd_);
 
     static bool copying (false);
     assert (!copying);
