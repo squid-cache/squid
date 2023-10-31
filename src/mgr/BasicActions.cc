@@ -31,7 +31,7 @@ Mgr::IndexAction::IndexAction(const Command::Pointer &aCmd): Action(aCmd)
 }
 
 void
-Mgr::IndexAction::dump(StoreEntry *)
+Mgr::IndexAction::print(std::ostream &)
 {
     debugs(16, 5, MYNAME);
 }
@@ -47,19 +47,19 @@ Mgr::MenuAction::MenuAction(const Command::Pointer &aCmd): Action(aCmd)
     debugs(16, 5, MYNAME);
 }
 
+/// Display the available Cache Manager actions.
+/// This report uses cachemgr.cgi table syntax:
+///   table-row = SP 1*VCHAR 1*( HTAB 0*VCHAR )
 void
-Mgr::MenuAction::dump(StoreEntry* entry)
+Mgr::MenuAction::print(std::ostream &os)
 {
-    debugs(16, 5, MYNAME);
-    Must(entry != nullptr);
+    const auto &menu = CacheManager::GetInstance()->menu();
 
-    typedef CacheManager::Menu::const_iterator Iterator;
-    const CacheManager::Menu& menu = CacheManager::GetInstance()->menu();
-
-    for (Iterator a = menu.begin(); a != menu.end(); ++a) {
-        storeAppendPrintf(entry, " %-22s\t%-32s\t%s\n",
-                          (*a)->name, (*a)->desc,
-                          CacheManager::GetInstance()->ActionProtection(*a));
+    for (const auto &a : menu) {
+        os << ' ' << a->name
+           << '\t' << a->desc
+           << '\t' << CacheManager::GetInstance()->ActionProtection(a)
+           << '\n';
     }
 }
 
@@ -75,7 +75,7 @@ Mgr::ShutdownAction::ShutdownAction(const Command::Pointer &aCmd): Action(aCmd)
 }
 
 void
-Mgr::ShutdownAction::dump(StoreEntry *)
+Mgr::ShutdownAction::print(std::ostream &)
 {
     debugs(16, DBG_CRITICAL, "Shutdown by Cache Manager command.");
     shut_down(SIGTERM);
@@ -94,10 +94,10 @@ Mgr::ReconfigureAction::ReconfigureAction(const Command::Pointer &aCmd):
 }
 
 void
-Mgr::ReconfigureAction::dump(StoreEntry* entry)
+Mgr::ReconfigureAction::print(std::ostream &os)
 {
     debugs(16, DBG_IMPORTANT, "Reconfigure by Cache Manager command.");
-    storeAppendPrintf(entry, "Reconfiguring Squid Process ....");
+    os << "Reconfiguring Squid Process .... \n";
     reconfigure(SIGHUP);
 }
 
@@ -113,10 +113,10 @@ Mgr::RotateAction::RotateAction(const Command::Pointer &aCmd): Action(aCmd)
 }
 
 void
-Mgr::RotateAction::dump(StoreEntry* entry)
+Mgr::RotateAction::print(std::ostream &os)
 {
     debugs(16, DBG_IMPORTANT, "Rotate Logs by Cache Manager command.");
-    storeAppendPrintf(entry, "Rotating Squid Process Logs ....");
+    os << "Rotating Squid Process Logs .... \n";
 #if defined(_SQUID_LINUX_THREADS_)
     rotate_logs(SIGQUIT);
 #else
@@ -137,13 +137,12 @@ Mgr::OfflineToggleAction::OfflineToggleAction(const Command::Pointer &aCmd):
 }
 
 void
-Mgr::OfflineToggleAction::dump(StoreEntry* entry)
+Mgr::OfflineToggleAction::print(std::ostream &os)
 {
     Config.onoff.offline = !Config.onoff.offline;
     debugs(16, DBG_IMPORTANT, "offline_mode now " << (Config.onoff.offline ? "ON" : "OFF") << " by Cache Manager request.");
 
-    storeAppendPrintf(entry, "offline_mode is now %s\n",
-                      Config.onoff.offline ? "ON" : "OFF");
+    os << "offline_mode is now " << (Config.onoff.offline ? "ON" : "OFF") << '\n';
 }
 
 void
