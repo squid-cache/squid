@@ -82,7 +82,7 @@ private:
     /// cache the given error details list.
     void cacheDetails(const ErrorDetailsList::Pointer &errorDetails) const;
 
-    typedef std::map<SBuf, ErrorDetailsList::Pointer> Cache;
+    using Cache = std::map<SBuf, ErrorDetailsList::Pointer>;
     mutable Cache cache; ///< the error details list cache
     ErrorDetailsList::Pointer theDefaultErrorDetails; ///< the default error details list
 
