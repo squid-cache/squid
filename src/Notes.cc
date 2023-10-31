@@ -118,20 +118,13 @@ Note::dump(StoreEntry *entry, const char *k)
 }
 
 SBuf
-Note::toString(const SBuf &sep) const
+Note::toString(const char *sep) const
 {
-    SBuf result;
-    for (const auto &val: values)
-        result.append(key()).append(": ",2).append(val->value()).append(sep);
-    return result;
-}
-
-std::ostream&
-operator <<(std::ostream &os, const Note &note)
-{
-    for (const auto &val : note.values)
-        os << val->key() << ": " << val->value();
-    return os;
+    SBufStream result;
+    result << AsList(values).delimitedBy(sep);
+    if (!values.empty())
+        result << sep;
+    return result.buf();
 }
 
 const Notes::Keys &
@@ -270,11 +263,10 @@ Notes::dump(StoreEntry *entry, const char *key)
 SBuf
 Notes::toString(const char *sep) const
 {
-    static SBuf result;
-    static SBufStream ss(result);
-    ss.clearBuf();
-    ss << AsList(notes).delimitedBy(sep); // WIP, requires PR #1519 to properly implement
-    return ss.buf();
+    SBufStream result;
+    for (const auto &note: notes)
+        result << note->toString(sep); // cannot use AsList() because we need to pass in sep
+    return result.buf();
 }
 
 bool

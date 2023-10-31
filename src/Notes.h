@@ -95,7 +95,7 @@ public:
     void dump(StoreEntry *entry, const char *key);
     /// For the key and all its Values compile a string of
     /// "Key: Value" pairs separated by sep string.
-    SBuf toString(const SBuf &sep) const;
+    SBuf toString(const char *sep) const;
 
 private:
     SBuf theKey; ///< The note key
