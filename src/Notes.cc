@@ -273,7 +273,7 @@ Notes::toString(const char *sep) const
     static SBuf result;
     static SBufStream ss(result);
     ss.clearBuf();
-    ss << AsList(notes).delimitedBy(sep[0]); // WIP, requires PR #1519 to properly implement
+    ss << AsList(notes).delimitedBy(sep); // WIP, requires PR #1519 to properly implement
     return ss.buf();
 }
 
