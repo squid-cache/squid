@@ -34,6 +34,7 @@ const char * Mgr::Action::name() const STUB_RETVAL(nullptr)
 static Mgr::Command static_Command;
 const Mgr::Command & Mgr::Action::command() const STUB_RETVAL(static_Command)
 StoreEntry * Mgr::Action::createStoreEntry() const STUB_RETVAL(nullptr)
+void Mgr::Action::dump(StoreEntry *) STUB
 static Mgr::Action::Pointer dummyAction;
 
 #include "mgr/ActionParams.h"
