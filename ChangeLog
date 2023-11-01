@@ -1,3 +1,10 @@
+Changes in squid-6.5 (5 Nov 2023):
+
+	- Fix handling of expanding HTTP header values
+	- Fix RFC 1123 date parsing
+	- Gracefully shutdown when helper process startup fails
+	- Y2038: Fix cache_peer connect-timeout reporting
+
 Changes in squid-6.4 (22 Oct 2023):
 
 	- Regression: Restore support for legacy cache_object cache manager requests
