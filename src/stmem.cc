@@ -95,8 +95,6 @@ mem_hdr::freeDataUpto(int64_t target_offset)
             break;
     }
 
-    assert (lowestOffset () <= target_offset);
-
     return lowestOffset ();
 }
 
