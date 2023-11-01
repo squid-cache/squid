@@ -1,5 +1,6 @@
 Changes in squid-6.5 (5 Nov 2023):
 
+	- Bug 5309: frequent "lowestOffset () <= target_offset" assertion
 	- Fix handling of expanding HTTP header values
 	- Fix RFC 1123 date parsing
 	- Gracefully shutdown when helper process startup fails
