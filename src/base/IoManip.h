@@ -111,6 +111,9 @@ public:
     /// a c-string to print before the first item (if any). Caller must ensure lifetime.
     auto &prefixedBy(const char * const p) { prefix = p; return *this; }
 
+    /// a c-string to print after the last item (if any). Caller must ensure lifetime.
+    auto &suffixedBy(const char * const p) { suffix = p; return *this; }
+
     /// a c-string to print between consecutive items (if any). Caller must ensure lifetime.
     auto &delimitedBy(const char * const d) { delimiter = d; return *this; }
 
@@ -118,6 +121,7 @@ public:
     const Container &container; ///< zero or more items to print
 
     const char *prefix = nullptr; ///< \copydoc prefixedBy()
+    const char *suffix = nullptr; ///< \copydoc suffixedBy()
     const char *delimiter = nullptr; ///< \copydoc delimitedBy()
 };
 
@@ -137,6 +141,8 @@ operator <<(std::ostream &os, const AsList<Container> &manipulator)
         }
         os << item;
     }
+    if (opened && manipulator.suffix)
+        os << manipulator.suffix;
     return os;
 }
 
