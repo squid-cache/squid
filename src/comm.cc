@@ -364,6 +364,12 @@ comm_openex(int sock_type,
     /* Create socket for accepting new connections. */
     ++ statCounter.syscalls.sock.sockets;
 
+    if (!Ip::EnableIpv6 && addr.isIPv6()) {
+        debugs(50, 2, "refusing to open an IPv6 socket when IPv6 support is disabled: " << addr);
+        errno = ENOTSUP;
+        return -1;
+    }
+
     /* Setup the socket addrinfo details for use */
     addr.getAddrInfo(AI);
     AI->ai_socktype = sock_type;
