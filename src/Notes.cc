@@ -109,10 +109,11 @@ Note::updateNotePairs(NotePairs::Pointer pairs, const CharacterSet *delimiters, 
 void
 Note::dump(StoreEntry *entry, const char *k)
 {
+    PackableStream os(*entry);
     for (const auto &v: values) {
-        storeAppendPrintf(entry, "%s " SQUIDSBUFPH " %s",
-                          k, SQUIDSBUFPRINT(key()), ConfigParser::QuoteString(SBufToString(v->value())));
-        dump_acl_list(entry, v->aclList);
+        os << k << " " << key() << " " << ConfigParser::QuoteString(SBufToString(v->value()));
+        os.flush();
+        dump_acl_list(entry, v->aclList); //TODO: can we be less roundabout and keep on using streams?
         storeAppendPrintf(entry, "\n");
     }
 }
