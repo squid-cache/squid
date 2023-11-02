@@ -24,9 +24,8 @@ SBufList
 ACLAnnotationData::dump() const
 {
     SBufList sl;
-    auto strNotes = notes->toString();
-    if (!strNotes.isEmpty())
-        sl.push_back(strNotes);
+    if (!notes->empty())
+        sl.push_back(notes->toString());
     return sl;
 }
 
