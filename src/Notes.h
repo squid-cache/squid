@@ -249,7 +249,7 @@ public:
 
     /// Convert NotePairs list to a string consist of "Key: Value"
     /// entries separated by sep string.
-    const char *toString(const char *sep = "\r\n") const;
+    SBuf toString(const char *sep = "\r\n") const;
 
     /// \returns true if there are not entries in the list
     bool empty() const {return entries.empty();}

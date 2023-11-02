@@ -280,15 +280,13 @@ NotePairs::find(SBuf &resultNote, const char *noteKey, const char *sep) const
     return resultNote.length();
 }
 
-const char *
+SBuf
 NotePairs::toString(const char *sep) const
 {
-    static SBuf result;
-    result.clear();
+    SBufStream result;
     for (const auto &e: entries)
-        result.appendf("%.*s: %.*s%s", e->name().length(), e->name().rawContent(),
-                       e->value().length(), e->value().rawContent(), sep);
-    return result.isEmpty() ? nullptr : result.c_str();
+        result << e->name() << ": " << e->value() << sep;
+    return result.buf();
 }
 
 const char *
