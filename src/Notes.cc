@@ -111,7 +111,7 @@ Note::dump(StoreEntry *entry, const char *k)
     for (const auto &v: values) {
         os << k << " " << key() << " " << ConfigParser::QuoteString(SBufToString(v->value()));
         os.flush();
-        dump_acl_list(entry, v->aclList); //TODO: can we be less roundabout and keep on using streams?
+        dump_acl_list(entry, v->aclList);
         storeAppendPrintf(entry, "\n");
     }
 }
