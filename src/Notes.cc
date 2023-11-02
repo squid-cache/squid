@@ -122,9 +122,7 @@ SBuf
 Note::toString(const char *sep) const
 {
     SBufStream result;
-    result << AsList(values).delimitedBy(sep);
-    if (!values.empty())
-        result << sep;
+    result << AsList(values).delimitedBy(sep).suffixedBy(sep);
     return result.buf();
 }
 
