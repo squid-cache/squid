@@ -20,4 +20,6 @@ libclients_la_SOURCES = \
 	HttpTunneler.h \
 	HttpTunnelerAnswer.cc \
 	HttpTunnelerAnswer.h \
+	WhoisGateway.cc \
+	WhoisGateway.h \
 	forward.h

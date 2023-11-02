@@ -9,6 +9,7 @@
 /* DEBUG: section 75    WHOIS protocol */
 
 #include "squid.h"
+#include "clients/WhoisGateway.h"
 #include "comm.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
@@ -20,7 +21,6 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
-#include "whois.h"
 
 #include <cerrno>
 
