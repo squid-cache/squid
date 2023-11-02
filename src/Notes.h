@@ -102,7 +102,6 @@ private:
     Values values; ///< The possible values list for the note
 };
 
-
 class ConfigParser;
 
 /**
