@@ -247,8 +247,9 @@ acl_ip_data::FactoryParse(const char *t)
      * A nod to IANA; we include the entire class space in case
      * they manage to find a way to recover and use it */
     if (strcmp(t, "ipv4") == 0) {
-        q->mask.setNoAddr();
-        q->mask.applyMask(0, AF_INET);
+        q->addr1.setAnyAddr();
+        q->addr1.setIPv4();
+        q->mask = q->addr1;
         return q;
     }
 
