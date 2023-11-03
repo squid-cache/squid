@@ -12,8 +12,8 @@
 #include "debug/Stream.h"
 #include "globals.h"
 #include "helper/ChildConfig.h"
-#include "sbuf/SBuf.h"
 #include "Parsing.h"
+#include "sbuf/SBuf.h"
 
 #include <cstring>
 
