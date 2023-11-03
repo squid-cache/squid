@@ -14,7 +14,7 @@
 #include "ipc/forward.h"
 #include "mgr/forward.h"
 
-#include <ostream>
+#include <iosfwd>
 
 class StoreEntry;
 
