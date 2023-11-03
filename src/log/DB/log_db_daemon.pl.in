@@ -392,7 +392,7 @@ my @db_fields = qw(
     );
 
 # perform db connection
-my $dsn = "DBI:mysql:database=$database" . ($host ne "localhost" ? ":$host" : "");
+my $dsn = "DBI:mysql:database=$database" . ($host ne "localhost" ? ";host=$host" : "");
 my $dbh;
 my $sth;
 eval {
