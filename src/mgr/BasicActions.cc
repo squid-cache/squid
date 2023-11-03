@@ -47,8 +47,7 @@ Mgr::MenuAction::MenuAction(const Command::Pointer &aCmd): Action(aCmd)
     debugs(16, 5, MYNAME);
 }
 
-/// Display the available Cache Manager actions.
-/// This report uses cachemgr.cgi table syntax:
+/// A table summarizing available Cache Manager actions:
 ///   table-row = SP 1*VCHAR 1*( HTAB 0*VCHAR )
 void
 Mgr::MenuAction::print(std::ostream &os)
