@@ -17,7 +17,6 @@
 #include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidString.h"
 
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

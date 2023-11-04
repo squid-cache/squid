@@ -89,5 +89,4 @@ STUB_SOURCE = \
 	tests/stub_tools.cc \
 	tests/stub_tunnel.cc \
 	tests/stub_wccp2.cc \
-	tests/stub_whois.cc \
 	tests/stub_wordlist.cc

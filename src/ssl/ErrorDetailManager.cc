@@ -98,7 +98,7 @@ Ssl::ErrorDetailsList::Pointer
 Ssl::ErrorDetailsManager::getCachedDetails(const char * const lang) const
 {
     Cache::iterator it;
-    it = cache.find(lang);
+    it = cache.find(SBuf(lang));
     if (it != cache.end()) {
         debugs(83, 8, "Found template details in cache for language: " << lang);
         return it->second;
@@ -110,8 +110,7 @@ Ssl::ErrorDetailsManager::getCachedDetails(const char * const lang) const
 void
 Ssl::ErrorDetailsManager::cacheDetails(const ErrorDetailsList::Pointer &errorDetails) const
 {
-    const char *lang = errorDetails->errLanguage.termedBuf();
-    assert(lang);
+    const auto &lang = errorDetails->errLanguage;
     if (cache.find(lang) == cache.end())
         cache[lang] = errorDetails;
 }

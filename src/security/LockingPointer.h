@@ -12,6 +12,8 @@
 #include "base/Assure.h"
 #include "base/HardFun.h"
 
+#include <cstddef>
+
 #if USE_OPENSSL
 #include "compat/openssl.h"
 #if HAVE_OPENSSL_CRYPTO_H

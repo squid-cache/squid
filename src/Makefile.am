@@ -442,8 +442,6 @@ squid_SOURCES = \
 	wccp.h \
 	wccp2.cc \
 	wccp2.h \
-	whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 
@@ -747,8 +745,7 @@ TESTSOURCES= \
 ## involved in writing tests.
 check_PROGRAMS += tests/testBoilerplate
 tests_testBoilerplate_SOURCES = \
-	tests/testBoilerplate.cc \
-	tests/testBoilerplate.h
+	tests/testBoilerplate.cc
 nodist_tests_testBoilerplate_SOURCES = \
 	$(TESTSOURCES)
 tests_testBoilerplate_LDADD= \
@@ -760,6 +757,8 @@ tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
 # Unit Tests are listed below by sub-directory with order matching the SUBDIRS
 # dependency-based list so that simpler code is tested before more complex code
 # which uses it.
+
+TESTS += $(check_PROGRAMS)
 
 ## Tests of SquidMath.h
 check_PROGRAMS += tests/testMath
@@ -1910,8 +1909,6 @@ tests_test_http_range_SOURCES = \
 	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
-	tests/stub_whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_test_http_range_SOURCES = \
@@ -2295,8 +2292,6 @@ tests_testHttpRequest_SOURCES = \
 	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
-	tests/stub_whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testHttpRequest_SOURCES = \
@@ -2591,8 +2586,6 @@ tests_testCacheManager_SOURCES = \
 	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
-	tests/stub_whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testCacheManager_SOURCES = \

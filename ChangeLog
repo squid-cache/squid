@@ -1,3 +1,11 @@
+Changes in squid-6.5 (5 Nov 2023):
+
+	- Bug 5309: frequent "lowestOffset () <= target_offset" assertion
+	- Bug 4977: Remove mem_hdr::freeDataUpto() assertion
+	- Fix handling of expanding HTTP header values
+	- Fix RFC 1123 date parsing
+	- Gracefully shutdown when helper process startup fails
+
 Changes in squid-6.4 (22 Oct 2023):
 
 	- Regression: Restore support for legacy cache_object cache manager requests
@@ -3433,7 +3441,7 @@ Squid-2 ChangeLog of versions fully ported to Squid-3 follows.
 Changes to squid-2.6.STABLE22 (19 October 2008)
 
 	- Bug #2396: Correct the opening of the PF device file.
-	- Make --with-large-files and --with-build-envirnment=default play
+	- Make --with-large-files and --with-build-environment=default play
 	  nice together
 	- Workaround for Linux-2.6.24 & 2.6.25 netfiler_ipv4.h include header
 	  __u32 problem
