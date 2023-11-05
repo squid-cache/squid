@@ -263,9 +263,8 @@ Notes::dump(StoreEntry *entry, const char *key)
         n->dump(entry, key);
 }
 
-// only used in mgr:config
 SBuf
-Notes::toString() const
+Notes::dump() const
 {
     SBufStream result;
     const char *separator = "";

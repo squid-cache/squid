@@ -25,7 +25,7 @@ ACLAnnotationData::dump() const
 {
     SBufList sl;
     if (!notes->empty())
-        sl.push_back(notes->toString());
+        sl.push_back(notes->dump());
     return sl;
 }
 
