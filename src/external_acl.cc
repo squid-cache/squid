@@ -1014,7 +1014,7 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
 /// Asks the helper (if needed) or returns the [cached] result (otherwise).
 /// Does not support "background" lookups. See also: ACLExternal::Start().
 void
-ACLExternal::StartLookup(ACLChecklist &checklist, const ACL &acl)
+ACLExternal::StartLookup(ACLFilledChecklist &checklist, const ACL &acl)
 {
     const auto &me = dynamic_cast<const ACLExternal&>(acl);
     me.startLookup(&checklist, me.data, false);
@@ -1023,11 +1023,10 @@ ACLExternal::StartLookup(ACLChecklist &checklist, const ACL &acl)
 // If possible, starts an asynchronous lookup of an external ACL.
 // Otherwise, asserts (or bails if background refresh is requested).
 void
-ACLExternal::startLookup(ACLChecklist *checklist, external_acl_data *acl, bool inBackground) const
+ACLExternal::startLookup(ACLFilledChecklist *ch, external_acl_data *acl, bool inBackground) const
 {
     external_acl *def = acl->def;
 
-    ACLFilledChecklist *ch = Filled(checklist);
     const char *key = makeExternalAclKey(ch, acl);
     assert(key); // XXX: will fail if EXT_ACL_IDENT case needs an async lookup
 
@@ -1059,7 +1058,7 @@ ACLExternal::startLookup(ACLChecklist *checklist, external_acl_data *acl, bool i
 
     if (!inBackground) {
         state->callback = &LookupDone;
-        state->callback_data = cbdataReference(checklist);
+        state->callback_data = cbdataReference(ch);
     }
 
     if (oldstate) {

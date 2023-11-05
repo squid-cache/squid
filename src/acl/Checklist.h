@@ -29,7 +29,7 @@ class ACLChecklist
 public:
 
     /// a function that initiates asynchronous ACL checks; see goAsync()
-    using AsyncStarter = void (ACLChecklist &, const ACL &);
+    using AsyncStarter = void (ACLFilledChecklist &, const ACL &);
 
 public:
     ACLChecklist();

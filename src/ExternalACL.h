@@ -42,7 +42,7 @@ public:
 private:
     static ACLChecklist::AsyncStarter StartLookup;
     static void LookupDone(void *data, const ExternalACLEntryPointer &);
-    void startLookup(ACLChecklist *, external_acl_data *, bool inBackground) const;
+    void startLookup(ACLFilledChecklist *, external_acl_data *, bool inBackground) const;
     Acl::Answer aclMatchExternal(external_acl_data *, ACLFilledChecklist *) const;
     char *makeExternalAclKey(ACLFilledChecklist *, external_acl_data *) const;
 

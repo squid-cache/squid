@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/Checklist.h"
+#include "acl/FilledChecklist.h"
 #include "acl/Tree.h"
 #include "debug/Stream.h"
 
@@ -136,7 +137,7 @@ ACLChecklist::goAsync(const AsyncStarter &starter, const ACL &acl)
     ++asyncLoopDepth_;
 
     asyncStage_ = asyncStarting;
-    starter(*this, acl); // this is supposed to go async
+    starter(*Filled(this), acl); // this is supposed to go async
 
     // Did starter() actually go async? If not, tell the caller.
     if (asyncStage_ != asyncStarting) {

@@ -88,14 +88,13 @@ ACLIdent::empty () const
 }
 
 void
-ACLIdent::StartLookup(ACLChecklist &cl, const ACL &)
+ACLIdent::StartLookup(ACLFilledChecklist &cl, const ACL &)
 {
-    ACLFilledChecklist *checklist = Filled(&cl);
-    const ConnStateData *conn = checklist->conn();
+    const ConnStateData *conn = cl.conn();
     // check that ACLIdent::match() tested this lookup precondition
     assert(conn && Comm::IsConnOpen(conn->clientConnection));
     debugs(28, 3, "Doing ident lookup" );
-    Ident::Start(checklist->conn()->clientConnection, LookupDone, checklist);
+    Ident::Start(cl.conn()->clientConnection, LookupDone, &cl);
 }
 
 void

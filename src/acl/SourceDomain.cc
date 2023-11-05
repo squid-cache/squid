@@ -20,9 +20,9 @@
 static void LookupDone(const char *, const Dns::LookupDetails &, void *data);
 
 static void
-StartLookup(ACLChecklist &checklist, const ACL &)
+StartLookup(ACLFilledChecklist &checklist, const ACL &)
 {
-    fqdncache_nbgethostbyaddr(Filled(&checklist)->src_addr, LookupDone, &checklist);
+    fqdncache_nbgethostbyaddr(checklist.src_addr, LookupDone, &checklist);
 }
 
 static void

@@ -87,10 +87,9 @@ ACLDestinationIP::match(ACLChecklist *cl)
 }
 
 void
-ACLDestinationIP::StartLookup(ACLChecklist &cl, const ACL &)
+ACLDestinationIP::StartLookup(ACLFilledChecklist &cl, const ACL &)
 {
-    const auto checklist = Filled(&cl);
-    ipcache_nbgethostbyname(checklist->request->url.host(), LookupDone, checklist);
+    ipcache_nbgethostbyname(cl.request->url.host(), LookupDone, &cl);
 }
 
 static void
