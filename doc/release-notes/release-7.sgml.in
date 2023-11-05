@@ -151,6 +151,12 @@ This section gives an account of those changes in three categories:
 	<tag>--without-psapi</tag>
 	<p>Disable auto-detection of Windows PSAPI library.
 
+	<tag>CPPFLAGS=-DINCOMING_FACTOR=</tag>
+	<p>Control the listening sockets responsiveness.
+	   The higher the INCOMING_FACTOR, the slower the algorithm will
+	   respond to load spikes/increases/decreases in demand. A value
+	   between 3 and 8 is recommended. Default is 5.
+
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">

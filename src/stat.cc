@@ -1230,9 +1230,11 @@ statCountersInitSpecial(StatCounters * C)
      * Cache Digest Stuff
      */
     C->cd.on_xition_count.enumInit(CacheDigestHashFuncCount);
-    C->comm_udp_incoming.enumInit(INCOMING_UDP_MAX);
-    C->comm_dns_incoming.enumInit(INCOMING_DNS_MAX);
-    C->comm_tcp_incoming.enumInit(INCOMING_TCP_MAX);
+#if USE_POLL || USE_SELECT
+    C->comm_udp.init(INCOMING_UDP_MAX);
+    C->comm_dns.init(INCOMING_DNS_MAX);
+    C->comm_tcp.init(INCOMING_TCP_MAX);
+#endif
     C->select_fds_hist.enumInit(256);   /* was SQUID_MAXFD, but it is way too much. It is OK to crop this statistics */
 }
 
