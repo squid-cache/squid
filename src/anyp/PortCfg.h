@@ -15,7 +15,6 @@
 #include "base/CodeContext.h"
 #include "comm/Connection.h"
 #include "comm/Tcp.h"
-#include "sbuf/SBuf.h"
 #include "security/ServerOptions.h"
 
 namespace AnyP
