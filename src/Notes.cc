@@ -268,10 +268,11 @@ SBuf
 Notes::toString() const
 {
     SBufStream result;
-    result << "starting";
-    for (const auto &note: notes)
-        result << note->toString(" ");
-    result << "ending";
+    const char *separator = "";
+    for (const auto &note: notes) {
+        result << separator << note->toString(" ");
+        separator = " ";
+    }
     return result.buf();
 }
 
