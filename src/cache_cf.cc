@@ -1495,8 +1495,8 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
     while (ae != nullptr) {
         debugs(3, 3, "dump_acl: " << name << " " << ae->name);
         os << name << " " << ae->name << " " << ae->typeString() << " "
-            << AsList(ae->dumpOptions()).delimitedBy(" ") << " "
-            << AsList(ae->dump()).delimitedBy(" ") << "\n";
+           << AsList(ae->dumpOptions()).delimitedBy(" ") << " "
+           << AsList(ae->dump()).delimitedBy(" ") << "\n";
         ae = ae->next;
     }
 }
