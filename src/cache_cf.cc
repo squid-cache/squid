@@ -21,6 +21,7 @@
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #include "AuthReg.h"
+#include "base/IoManip.h"
 #include "base/PackableStream.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
@@ -1490,16 +1491,12 @@ free_SBufList(SBufList *list)
 static void
 dump_acl(StoreEntry * entry, const char *name, ACL * ae)
 {
+    PackableStream os(*entry);
     while (ae != nullptr) {
         debugs(3, 3, "dump_acl: " << name << " " << ae->name);
-        storeAppendPrintf(entry, "%s %s %s ",
-                          name,
-                          ae->name,
-                          ae->typeString());
-        SBufList tail;
-        tail.splice(tail.end(), ae->dumpOptions());
-        tail.splice(tail.end(), ae->dump()); // ACL parameters
-        dump_SBufList(entry, tail);
+        os << name << " " << ae->name << " " << ae->typeString() << " "
+            << AsList(ae->dumpOptions()).delimitedBy(" ") << " "
+            << AsList(ae->dump()).delimitedBy(" ") << "\n";
         ae = ae->next;
     }
 }
