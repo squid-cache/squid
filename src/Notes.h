@@ -141,7 +141,7 @@ public:
     bool empty() const { return notes.empty(); }
     /// Convert Notes list to a string consist of "Key: Value"
     /// entries separated by sep string.
-    SBuf toString(const char *sep = "\r\n") const;
+    SBuf toString() const;
     void updateNotePairs(NotePairsPointer pairs, const CharacterSet *delimiters,
                          const AccessLogEntryPointer &al);
 private:

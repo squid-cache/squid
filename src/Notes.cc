@@ -120,7 +120,13 @@ SBuf
 Note::toString(const char *sep) const
 {
     SBufStream result;
-    result << AsList(values).delimitedBy(sep).suffixedBy(sep);
+    auto needSeparator = false;
+    for (const auto &v: values) {
+        if (needSeparator)
+            result << sep;
+        result << key() << "=" << v->value();
+        needSeparator = true;
+    }
     return result.buf();
 }
 
@@ -257,12 +263,15 @@ Notes::dump(StoreEntry *entry, const char *key)
         n->dump(entry, key);
 }
 
+// only used in mgr:config
 SBuf
-Notes::toString(const char *sep) const
+Notes::toString() const
 {
     SBufStream result;
+    result << "starting";
     for (const auto &note: notes)
-        result << note->toString(sep); // cannot use AsList() because we need to pass in sep
+        result << note->toString(" ");
+    result << "ending";
     return result.buf();
 }
 
