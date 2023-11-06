@@ -324,11 +324,11 @@ ACL::parseFlags()
 }
 
 void
-ACL::dumpWhole(std::ostream &os)
+ACL::dumpWhole(const char * const directiveName, std::ostream &os)
 {
     // XXX: No lineOptions() call here because we do not remember ACL "line"
     // boundaries and associated "line" options; we cannot report them.
-    os << name << ' ' << typeString() << options() <<
+    os << directiveName << ' ' << name << ' ' << typeString() << options() <<
         asList(dump()).prefixedBy(" ").delimitedBy(" ") <<
         '\n';
 }

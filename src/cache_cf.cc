@@ -1494,7 +1494,7 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
     PackableStream os(*entry);
     while (ae != nullptr) {
         debugs(3, 3, "dump_acl: " << name << " " << ae->name);
-        ae->dumpWhole(os << name << ' ');
+        ae->dumpWhole(name, os);
         ae = ae->next;
     }
 }
