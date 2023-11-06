@@ -21,7 +21,6 @@
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #include "AuthReg.h"
-#include "base/IoManip.h"
 #include "base/PackableStream.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
