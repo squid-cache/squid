@@ -25,6 +25,8 @@ public:
     int match(ACLChecklist *checklist) override;
 
 private:
+    static void LookupDone(const ipcache_addrs *, const Dns::LookupDetails &, void *data);
+
     Acl::BooleanOptionValue lookupBanned; ///< are DNS lookups allowed?
 };
 

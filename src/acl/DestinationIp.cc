@@ -17,8 +17,6 @@
 #include "HttpRequest.h"
 #include "SquidConfig.h"
 
-static void LookupDone(const ipcache_addrs *, const Dns::LookupDetails &, void *data);
-
 char const *
 ACLDestinationIP::typeString() const
 {
@@ -92,8 +90,8 @@ ACLDestinationIP::StartLookup(ACLFilledChecklist &cl, const ACL &)
     ipcache_nbgethostbyname(cl.request->url.host(), LookupDone, &cl);
 }
 
-static void
-LookupDone(const ipcache_addrs *, const Dns::LookupDetails &details, void *data)
+void
+ACLDestinationIP::LookupDone(const ipcache_addrs *, const Dns::LookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     checklist->request->flags.destinationIpLookedUp = true;
