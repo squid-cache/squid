@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,10 +11,12 @@
 #ifndef SQUID_SNMP_CORE_H
 #define SQUID_SNMP_CORE_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 #include "cache_snmp.h"
 #include "comm/forward.h"
 #include "ip/forward.h"
+#include "snmp_vars.h"
 
 class MemBuf;
 
@@ -52,11 +54,18 @@ const char * snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf);
 void addr2oid(Ip::Address &addr, oid *Dest);
 void oid2addr(oid *Dest, Ip::Address &addr, u_int code);
 
-class ACLSNMPCommunityStrategy: public ACLStrategy<char const *>
+namespace Acl
+{
+
+/// an "snmp_community" ACL
+class SnmpCommunityCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    virtual int match (ACLData<MatchType> *&data, ACLFilledChecklist *checklist) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
 };
+
+} // namespace Acl
 
 #endif /* SQUID_SNMP_CORE_H */
 

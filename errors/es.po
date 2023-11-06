@@ -850,7 +850,7 @@ msgid ""
 "example, you can not POST a Gopher request."
 msgstr ""
 "Squid no admite todos los m&eacute;todos para todos los protocolos de "
-"acceso. Por ejemplo, no se puede hacer un POST a un servidor Gopher."
+"acceso."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -859,7 +859,7 @@ msgid ""
 "is currently not supported."
 msgstr ""
 "Squid no admite todos los m&eacute;todos para todos los protocolos de "
-"acceso. Por ejemplo, no se puede hacer un POST a un servidor Gopher."
+"acceso."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""
@@ -1090,7 +1090,7 @@ msgid ""
 "misconfigured."
 msgstr ""
 "Este caché no transmitirá su solicitud, ya que intenta imponer una relación "
-"de conexión. Quizás el cliente en% i es un caché que se ha desconfigurado."
+"de conexión. Quizás el cliente en %i es un caché que se ha desconfigurado."
 
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:29-1
 #, fuzzy

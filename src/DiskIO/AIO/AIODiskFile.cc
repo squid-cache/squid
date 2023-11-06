@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "DiskIO/AIO/AIODiskFile.h"
 #include "DiskIO/AIO/AIODiskIOStrategy.h"
 #include "DiskIO/IORequestor.h"
@@ -64,12 +64,12 @@ AIODiskFile::open(int flags, mode_t, RefCount<IORequestor> callback)
     ioRequestor = callback;
 
     if (fd < 0) {
-        debugs(79, 3, HERE << ": got failure (" << errno << ")");
+        debugs(79, 3, "got failure (" << errno << ")");
         error(true);
     } else {
         closed = false;
         ++store_open_disk_fd;
-        debugs(79, 3, HERE << ": opened FD " << fd);
+        debugs(79, 3, "opened FD " << fd);
     }
 
     callback->ioCompletedNotification();
@@ -113,7 +113,7 @@ AIODiskFile::read(ReadRequest *request)
 
     qe->aq_e_type = AQ_ENTRY_READ;
 
-    qe->aq_e_free = NULL;
+    qe->aq_e_free = nullptr;
 
     qe->aq_e_buf =  request->buf;
 
@@ -211,7 +211,7 @@ AIODiskFile::close ()
 
     fd = -1;
     closed = true;
-    assert (ioRequestor != NULL);
+    assert (ioRequestor != nullptr);
     ioRequestor->closeCompleted();
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,17 +12,13 @@
 #define STUB_API "helper.cc"
 #include "tests/STUB.h"
 
-void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data) STUB
-void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver) STUB
-helper::~helper() STUB
-CBDATA_CLASS_INIT(helper);
-void helper::packStatsInto(Packable *p, const char *label) const STUB
+void helperSubmit(const Helper::Client::Pointer &, const char *, HLPCB *, void *) STUB
+void helperStatefulSubmit(const statefulhelper::Pointer &, const char *, HLPCB *, void *, const Helper::ReservationId &) STUB
+Helper::Client::~Client() STUB
+void Helper::Client::packStatsInto(Packable *, const char *) const STUB
+void Helper::Client::openSessions() STUB
 
-void helperShutdown(helper * hlp) STUB
-void helperStatefulShutdown(statefulhelper * hlp) STUB
-void helperOpenServers(helper * hlp) STUB
-void helperStatefulOpenServers(statefulhelper * hlp) STUB
-helper_stateful_server *helperStatefulDefer(statefulhelper * hlp) STUB_RETVAL(NULL)
-void helperStatefulReleaseServer(helper_stateful_server * srv) STUB
-CBDATA_CLASS_INIT(statefulhelper);
+void helperShutdown(const Helper::Client::Pointer &) STUB
+void helperStatefulShutdown(const statefulhelper::Pointer &) STUB
+void statefulhelper::openSessions() STUB
 

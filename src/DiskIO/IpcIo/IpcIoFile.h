@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,9 +32,9 @@ namespace IpcIo
 /// what kind of I/O the disker needs to do or have done
 typedef enum { cmdNone, cmdOpen, cmdRead, cmdWrite } Command;
 
-} // namespace IpcIo
+std::ostream &operator <<(std::ostream &, Command);
 
-std::ostream &operator <<(std::ostream &, IpcIo::Command);
+} // namespace IpcIo
 
 /// converts DiskIO requests to IPC queue messages
 class IpcIoMsg
@@ -51,6 +51,7 @@ public:
     off_t offset;
     size_t len;
     Ipc::Mem::PageId page;
+    pid_t workerPid; ///< the process ID of the I/O requestor
 
     IpcIo::Command command; ///< what disker is supposed to do or did
     struct timeval start; ///< when the I/O request was converted to IpcIoMsg
@@ -70,23 +71,23 @@ public:
     typedef RefCount<IpcIoFile> Pointer;
 
     IpcIoFile(char const *aDb);
-    virtual ~IpcIoFile();
+    ~IpcIoFile() override;
 
     /* DiskFile API */
-    virtual void configure(const Config &cfg);
-    virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
-    virtual void create(int flags, mode_t mode, RefCount<IORequestor> callback);
-    virtual void read(ReadRequest *);
-    virtual void write(WriteRequest *);
-    virtual void close();
-    virtual bool error() const;
-    virtual int getFD() const;
-    virtual bool canRead() const;
-    virtual bool canWrite() const;
-    virtual bool ioInProgress() const;
+    void configure(const Config &cfg) override;
+    void open(int flags, mode_t mode, RefCount<IORequestor> callback) override;
+    void create(int flags, mode_t mode, RefCount<IORequestor> callback) override;
+    void read(ReadRequest *) override;
+    void write(WriteRequest *) override;
+    void close() override;
+    bool error() const override;
+    int getFD() const override;
+    bool canRead() const override;
+    bool canWrite() const override;
+    bool ioInProgress() const override;
 
     /// handle open response from coordinator
-    static void HandleOpenResponse(const Ipc::StrandSearchResponse &response);
+    static void HandleOpenResponse(const Ipc::StrandMessage &);
 
     /// handle queue push notifications from worker or disker
     static void HandleNotification(const Ipc::TypedMsgHdr &msg);
@@ -98,7 +99,7 @@ public:
 
 protected:
     friend class IpcIoPendingRequest;
-    void openCompleted(const Ipc::StrandSearchResponse *const response);
+    void openCompleted(const Ipc::StrandMessage *);
     void readCompleted(ReadRequest *readRequest, IpcIoMsg *const response);
     void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
     bool canWait() const;
@@ -127,9 +128,12 @@ private:
     static void DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo);
     static bool WaitBeforePop();
 
+    static void HandleMessagesAtStart();
+
 private:
     const String dbName; ///< the name of the file we are managing
-    int diskId; ///< the process ID of the disker we talk to
+    const pid_t myPid; ///< optimization: cached process ID of our process
+    int diskId; ///< the kid ID of the disker we talk to
     RefCount<IORequestor> ioRequestor;
 
     bool error_; ///< whether we have seen at least one I/O error (XXX)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -58,7 +58,7 @@ RefCount<DiskFile>
 AIODiskIOStrategy::newFile (char const *path)
 {
     if (shedLoad()) {
-        return NULL;
+        return nullptr;
     }
 
     return new AIODiskFile (path, this);
@@ -134,8 +134,8 @@ AIODiskIOStrategy::callback()
                 buf = aqe->aq_e_buf;
                 type = aqe->aq_e_type;
                 callback_valid = cbdataReferenceValidDone(aqe->aq_e_callback_data, &cbdata);
-                AIODiskFile * theFile = NULL;
-                void *theFileVoid = NULL;
+                AIODiskFile * theFile = nullptr;
+                void *theFileVoid = nullptr;
                 void *theTmpFile = aqe->theFile;
                 bool fileOk = cbdataReferenceValidDone(theTmpFile, &theFileVoid);
 
@@ -191,7 +191,7 @@ AIODiskIOStrategy::statfs(StoreEntry &) const
 ConfigOption *
 AIODiskIOStrategy::getOptionTree() const
 {
-    return NULL;
+    return nullptr;
 }
 
 /*

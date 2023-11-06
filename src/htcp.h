@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 
 #if USE_HTCP
 
+#include "enums.h"
 #include "http/forward.h"
 #include "HttpHeader.h"
 #include "ip/forward.h"
@@ -44,6 +45,8 @@ void neighborsHtcpReply(const cache_key *, HtcpReplyData *, const Ip::Address &)
 
 /// \ingroup ServerProtocolHTCP
 void htcpOpenPorts(void);
+
+class CachePeer;
 
 /**
  * \ingroup ServerProtocolHTCP

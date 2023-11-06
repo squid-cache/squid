@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 SUBDIRS= id_rewriters
 
@@ -22,5 +21,15 @@ libstore_la_SOURCES = \
 	Disks.h \
 	LocalSearch.cc \
 	LocalSearch.h \
+	ParsingBuffer.cc \
+	ParsingBuffer.h \
 	Storage.h \
+	SwapMeta.cc \
+	SwapMeta.h \
+	SwapMetaIn.cc \
+	SwapMetaIn.h \
+	SwapMetaOut.cc \
+	SwapMetaOut.h \
+	SwapMetaView.cc \
+	SwapMetaView.h \
 	forward.h

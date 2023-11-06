@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,12 +37,12 @@ bool ContentLengthInterpreter::checkList(const String &) STUB_RETVAL(false)
 #include "http/Message.h"
 namespace Http
 {
-Message::Message(http_hdr_owner_type) {STUB}
+Message::Message(const http_hdr_owner_type owner): header(owner) {STUB}
 Message::~Message() {STUB}
 void Message::packInto(Packable *, bool) const STUB
 void Message::setContentLength(int64_t) STUB
 bool Message::persistent() const STUB_RETVAL(false)
-void Message::putCc(const HttpHdrCc *) STUB
+void Message::putCc(const HttpHdrCc &) STUB
 bool Message::parse(const char *, const size_t, bool, Http::StatusCode *) STUB_RETVAL(false)
 bool Message::parseCharBuf(const char *, ssize_t) STUB_RETVAL(false)
 int Message::httpMsgParseStep(const char *, int, int) STUB_RETVAL(-1)
@@ -61,14 +61,13 @@ const SBuf MethodType_sb[1] = {SBuf()};
 #include "http/RegisteredHeaders.h"
 namespace Http
 {
-HeaderTableRecord::HeaderTableRecord() {STUB_NOP}
 HeaderTableRecord::HeaderTableRecord(const char *) {STUB_NOP}
 HeaderTableRecord::HeaderTableRecord(const char *, Http::HdrType, Http::HdrFieldType, int) {STUB}
 HeaderLookupTable_t::HeaderLookupTable_t() {STUB_NOP}
 const HeaderTableRecord& HeaderLookupTable_t::lookup(const char *, const std::size_t) const STUB_RETVAL(BadHdr)
 const HeaderLookupTable_t HeaderLookupTable;
 }
-std::ostream &operator<< (std::ostream&os, Http::HdrType) STUB_RETVAL(os)
+std::ostream &Http::operator <<(std::ostream &os, HdrType) STUB_RETVAL(os)
 
 #include "http/RequestMethod.h"
 HttpRequestMethod::HttpRequestMethod(const SBuf &) {STUB}
@@ -93,6 +92,7 @@ void StatusLine::init() STUB
 void StatusLine::clean() STUB
 void StatusLine::set(const AnyP::ProtocolVersion &, Http::StatusCode, const char *) STUB
 const char *StatusLine::reason() const STUB_RETVAL(nullptr)
+size_t StatusLine::packedLength() const STUB_RETVAL(0)
 void StatusLine::packInto(Packable *) const STUB
 bool StatusLine::parse(const String &, const char *, const char *) STUB_RETVAL(false)
 }
@@ -118,7 +118,7 @@ void Stream::buildRangeHeader(HttpReply *) STUB
 clientStreamNode *Stream::getTail() const STUB_RETVAL(nullptr)
 clientStreamNode *Stream::getClientReplyContext() const STUB_RETVAL(nullptr)
 ConnStateData *Stream::getConn() const STUB_RETVAL(nullptr)
-void Stream::noteIoError(const int) STUB
+void Stream::noteIoError(const Error &, const LogTagsErrors &) STUB
 void Stream::finished() STUB
 void Stream::initiateClose(const char *) STUB
 void Stream::deferRecipientForLater(clientStreamNode *, HttpReply *, StoreIOBuffer) STUB

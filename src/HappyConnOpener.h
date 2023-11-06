@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,10 +8,13 @@
 
 #ifndef SQUID_HAPPYCONNOPENER_H
 #define SQUID_HAPPYCONNOPENER_H
+#include "base/AsyncCallbacks.h"
+#include "base/JobWait.h"
 #include "base/RefCount.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
+#include "errorpage.h"
 #include "http/forward.h"
 #include "log/forward.h"
 #include "ResolvedPeers.h"
@@ -105,31 +108,9 @@ class HappyConnOpener: public AsyncJob
 public:
     typedef HappyConnOpenerAnswer Answer;
 
-    /// AsyncCall dialer for our callback. Gives us access to callback Answer.
-    template <class Initiator>
-    class CbDialer: public CallDialer, public Answer {
-    public:
-        // initiator method to receive our answer
-        typedef void (Initiator::*Method)(Answer &);
-
-        CbDialer(Method method, Initiator *initiator): initiator_(initiator), method_(method) {}
-        virtual ~CbDialer() = default;
-
-        /* CallDialer API */
-        bool canDial(AsyncCall &) { return initiator_.valid(); }
-        void dial(AsyncCall &) {((*initiator_).*method_)(*this); }
-        virtual void print(std::ostream &os) const override {
-            os << '(' << static_cast<const Answer&>(*this) << ')';
-        }
-
-    private:
-        CbcPointer<Initiator> initiator_; ///< object to deliver the answer to
-        Method method_; ///< initiator_ method to call with the answer
-    };
-
 public:
-    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart, int tries, const AccessLogEntryPointer &al);
-    virtual ~HappyConnOpener() override;
+    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCallback<Answer> &, const HttpRequestPointer &, time_t aFwdStart, int tries, const AccessLogEntryPointer &);
+    ~HappyConnOpener() override;
 
     /// configures reuse of old connections
     void allowPersistent(bool permitted) { allowPconn_ = permitted; }
@@ -156,41 +137,49 @@ private:
     /// a connection opening attempt in progress (or falsy)
     class Attempt {
     public:
+        /// HappyConnOpener method implementing a ConnOpener callback
+        using CallbackMethod = void (HappyConnOpener::*)(const CommConnectCbParams &);
+
+        Attempt(const CallbackMethod method, const char *methodName);
+
         explicit operator bool() const { return static_cast<bool>(path); }
 
         /// reacts to a natural attempt completion (successful or otherwise)
-        void finish() { clear(); }
+        void finish();
 
         /// aborts an in-progress attempt
         void cancel(const char *reason);
 
         PeerConnectionPointer path; ///< the destination we are connecting to
-        AsyncCall::Pointer connector; ///< our opener callback
-        Comm::ConnOpener::Pointer opener; ///< connects to path and calls us
 
-    private:
-        /// cleans up after the attempt ends (successfully or otherwise)
-        void clear() { path = nullptr; connector = nullptr; opener = nullptr; }
+        /// waits for a connection to the peer to be established/opened
+        JobWait<Comm::ConnOpener> connWait;
+
+        const CallbackMethod callbackMethod; ///< ConnOpener calls this method
+        const char * const callbackMethodName; ///< for callbackMethod debugging
     };
+    friend std::ostream &operator <<(std::ostream &, const Attempt &);
 
     /* AsyncJob API */
-    virtual void start() override;
-    virtual bool doneAll() const override;
-    virtual void swanSong() override;
-    virtual const char *status() const override;
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
+    const char *status() const override;
 
-    void maybeOpenAnotherPrimeConnection();
+    void maybeOpenPrimeConnection();
+    void maybeOpenSpareConnection();
 
     void maybeGivePrimeItsChance();
     void stopGivingPrimeItsChance();
     void stopWaitingForSpareAllowance();
-    void maybeOpenSpareConnection();
 
     void startConnecting(Attempt &, PeerConnectionPointer &);
     void openFreshConnection(Attempt &, PeerConnectionPointer &);
     bool reuseOldConnection(PeerConnectionPointer &);
 
-    void connectDone(const CommConnectCbParams &);
+    void notePrimeConnectDone(const CommConnectCbParams &);
+    void noteSpareConnectDone(const CommConnectCbParams &);
+    void handleConnOpenerAnswer(Attempt &, const CommConnectCbParams &, const char *connDescription);
 
     void checkForNewConnection();
 
@@ -208,7 +197,8 @@ private:
 
     const time_t fwdStart; ///< requestor start time
 
-    AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
+    /// answer destination
+    AsyncCallback<Answer> callback_;
 
     /// Candidate paths. Shared with the initiator. May not be finalized yet.
     ResolvedPeersPointer destinations;
@@ -250,7 +240,8 @@ private:
     /// the request that needs a to-server connection
     HttpRequestPointer cause;
 
-    /// number of connection opening attempts, including those in the requestor
+    /// number of our finished connection opening attempts (including pconn
+    /// reuses) plus previously finished attempts supplied by the requestor
     int n_tries;
 
     /// Reason to ran out of time or attempts

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -21,16 +21,3 @@ libheap_a_SOURCES = \
 	heap/store_heap_replacement.h \
 	heap/store_repl_heap.cc
 
-
-## Until such time as we have a makefile in src/repl/heap etc.
-TESTS += testHeaders
-
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(srcdir)/heap/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
-## ./ has no .h files.
-## ./lru/ has no .h files.
-
-CLEANFILES += testHeaders
-.PHONY: testHeaders

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,11 +9,12 @@
 #ifndef SQUID_MEMOBJECT_H
 #define SQUID_MEMOBJECT_H
 
-#include "CommRead.h"
+#include "base/DelayedAsyncCalls.h"
 #include "dlink.h"
 #include "http/RequestMethod.h"
+#include "HttpReply.h"
 #include "RemovalPolicy.h"
-#include "SquidString.h"
+#include "sbuf/SBuf.h"
 #include "stmem.h"
 #include "store/forward.h"
 #include "StoreIOBuffer.h"
@@ -89,6 +90,15 @@ public:
     bool appliedUpdates = false;
 
     void stat (MemBuf * mb) const;
+
+    /// The offset of the last memory-stored HTTP response byte plus one.
+    /// * HTTP response headers (if any) are stored at offset zero.
+    /// * HTTP response body byte[n] usually has offset (hdr_sz + n), where
+    ///   hdr_sz is the size of stored HTTP response headers (zero if none); and
+    ///   n is the corresponding byte offset in the whole resource body.
+    ///   However, some 206 (Partial Content) response bodies are stored (and
+    ///   retrieved) as regular 200 response bodies, disregarding offsets of
+    ///   their body parts. \sa HttpStateData::decideIfWeDoRanges().
     int64_t endOffset () const;
 
     /// sets baseReply().hdr_sz (i.e. written reply headers size) to endOffset()
@@ -169,6 +179,20 @@ public:
     class XitTable
     {
     public:
+        /// associate our StoreEntry with a Transients entry at the given index
+        void open(const int32_t anIndex, const Io anIo)
+        {
+            index = anIndex;
+            io = anIo;
+        }
+
+        /// stop associating our StoreEntry with a Transients entry
+        void close()
+        {
+            index = -1;
+            io = Store::ioDone;
+        }
+
         int32_t index = -1; ///< entry position inside the in-transit table
         Io io = ioUndecided; ///< current I/O state
     };
@@ -192,7 +216,7 @@ public:
     PeerSelector *ircb_data = nullptr;
 
     /// used for notifying StoreEntry writers about 3rd-party initiated aborts
-    AsyncCall::Pointer abortCallback;
+    AsyncCallPointer abortCallback;
     RemovalPolicyNode repl;
     int id = 0;
     int64_t object_sz = -1;
@@ -203,17 +227,17 @@ public:
 
     SBuf vary_headers;
 
-    void delayRead(DeferredRead const &);
+    void delayRead(const AsyncCallPointer &);
     void kickReads();
 
 private:
     HttpReplyPointer reply_; ///< \see baseReply()
     HttpReplyPointer updatedReply_; ///< \see updatedReply()
 
-    mutable String storeId_; ///< StoreId for our entry (usually request URI)
-    mutable String logUri_;  ///< URI used for logging (usually request URI)
+    mutable SBuf storeId_; ///< StoreId for our entry (usually request URI)
+    mutable SBuf logUri_;  ///< URI used for logging (usually request URI)
 
-    DeferredReadManager deferredReads;
+    DelayedAsyncCalls deferredReads;
 };
 
 /** global current memory removal policy */

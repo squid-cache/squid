@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,8 @@
 #define SQUID_RESOLVEDPEERS_H
 
 #include "base/RefCount.h"
-#include "comm/forward.h"
+#include "comm/Connection.h"
+#include "mem/AllocatorProxy.h"
 
 #include <iosfwd>
 #include <limits>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,12 +10,13 @@
 
 #include "squid.h"
 #include "anyp/Uri.h"
+#include "base/Raw.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "parser/Tokenizer.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
-#include "SquidString.h"
+#include "SquidMath.h"
 
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -70,7 +71,7 @@ AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &ignore)
     while (!tk.atEnd()) {
         // TODO: Add Tokenizer::parseOne(void).
         const auto ch = tk.remaining()[0];
-        output.appendf("%%%02X", static_cast<unsigned int>(ch)); // TODO: Optimize using a table
+        output.appendf("%%%02X", static_cast<unsigned int>(static_cast<unsigned char>(ch))); // TODO: Optimize using a table
         (void)tk.skip(ch);
 
         if (tk.prefix(goodSection, ignore))
@@ -97,8 +98,7 @@ AnyP::Uri::SlashPath()
 void
 AnyP::Uri::host(const char *src)
 {
-    hostAddr_.setEmpty();
-    hostAddr_ = src;
+    hostAddr_.fromHost(src);
     if (hostAddr_.isAnyAddr()) {
         xstrncpy(host_, src, sizeof(host_));
         hostIsNumeric_ = false;
@@ -113,10 +113,11 @@ AnyP::Uri::host(const char *src)
 SBuf
 AnyP::Uri::hostOrIp() const
 {
-    static char ip[MAX_IPSTRLEN];
-    if (hostIsNumeric())
-        return SBuf(hostIP().toStr(ip, sizeof(ip)));
-    else
+    if (hostIsNumeric()) {
+        static char ip[MAX_IPSTRLEN];
+        const auto hostStrLen = hostIP().toHostStr(ip, sizeof(ip));
+        return SBuf(ip, hostStrLen);
+    } else
         return SBuf(host());
 }
 
@@ -173,6 +174,10 @@ urlInitialize(void)
     assert(0 == matchDomainName("*.foo.com", ".foo.com", mdnHonorWildcards));
     assert(0 != matchDomainName("*.foo.com", "foo.com", mdnHonorWildcards));
 
+    assert(0 != matchDomainName("foo.com", ""));
+    assert(0 != matchDomainName("foo.com", "", mdnHonorWildcards));
+    assert(0 != matchDomainName("foo.com", "", mdnRejectSubsubDomains));
+
     /* more cases? */
 }
 
@@ -192,15 +197,8 @@ uriParseScheme(Parser::Tokenizer &tok)
      * Scheme names consist of a sequence of characters beginning with a
      * letter and followed by any combination of letters, digits, plus
      * ("+"), period ("."), or hyphen ("-").
-     *
-     * The underscore ("_") required to match "cache_object://" squid
-     * special URI scheme.
      */
-    static const auto schemeChars =
-#if USE_HTTP_VIOLATIONS
-        CharacterSet("special", "_") +
-#endif
-        CharacterSet("scheme", "+.-") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+    static const auto schemeChars = CharacterSet("scheme", "+.-") + CharacterSet::ALPHA + CharacterSet::DIGIT;
 
     SBuf str;
     if (tok.prefix(str, schemeChars, 16) && tok.skip(':') && CharacterSet::ALPHA[str.at(0)]) {
@@ -257,8 +255,8 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         LOCAL_ARRAY(char, login, MAX_URL);
         LOCAL_ARRAY(char, foundHost, MAX_URL);
         LOCAL_ARRAY(char, urlpath, MAX_URL);
-        char *t = NULL;
-        char *q = NULL;
+        char *t = nullptr;
+        char *q = nullptr;
         int foundPort;
         int l;
         int i;
@@ -284,24 +282,19 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         AnyP::UriScheme scheme;
 
         if (method == Http::METHOD_CONNECT) {
-            /*
-             * RFC 7230 section 5.3.3:  authority-form = authority
-             *  "excluding any userinfo and its "@" delimiter"
-             *
-             * RFC 3986 section 3.2:    authority = [ userinfo "@" ] host [ ":" port ]
-             *
-             * As an HTTP(S) proxy we assume HTTPS (443) if no port provided.
-             */
-            foundPort = 443;
+            // For CONNECTs, RFC 9110 Section 9.3.6 requires "only the host and
+            // port number of the tunnel destination, separated by a colon".
 
-            // XXX: use tokenizer
-            auto B = tok.buf();
-            const char *url = B.c_str();
+            const auto rawHost = parseHost(tok);
+            Assure(rawHost.length() < sizeof(foundHost));
+            SBufToCstring(foundHost, rawHost);
 
-            if (sscanf(url, "[%[^]]]:%d", foundHost, &foundPort) < 1)
-                if (sscanf(url, "%[^:]:%d", foundHost, &foundPort) < 1)
-                    return false;
+            if (!tok.skip(':'))
+                throw TextException("missing required :port in CONNECT target", Here());
+            foundPort = parsePort(tok);
 
+            if (!tok.remaining().isEmpty())
+                throw TextException("garbage after host:port in CONNECT target", Here());
         } else {
 
             scheme = uriParseScheme(tok);
@@ -343,8 +336,9 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                 return false;
             *dst = '\0';
 
-            // bug 3074: received 'path' starting with '?', '#', or '\0' implies '/'
-            if (*src == '?' || *src == '#' || *src == '\0') {
+            // We are looking at path-abempty.
+            if (*src != '/') {
+                // path-empty, including the end of the `src` c-string cases
                 urlpath[0] = '/';
                 dst = &urlpath[1];
             } else {
@@ -358,18 +352,17 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             /* We -could- be at the end of the buffer here */
             if (i > l)
                 return false;
-            /* If the URL path is empty we set it to be "/" */
-            if (dst == urlpath) {
-                *dst = '/';
-                ++dst;
-            }
             *dst = '\0';
 
-            foundPort = scheme.defaultPort(); // may be reset later
+            // If the parsed scheme has no (known) default port, and there is no
+            // explicit port, then we will reject the zero port during foundPort
+            // validation, often resulting in a misleading 400/ERR_INVALID_URL.
+            // TODO: Remove this hack when switching to Tokenizer-based parsing.
+            foundPort = scheme.defaultPort().value_or(0); // may be reset later
 
             /* Is there any login information? (we should eventually parse it above) */
             t = strrchr(foundHost, '@');
-            if (t != NULL) {
+            if (t != nullptr) {
                 strncpy((char *) login, (char *) foundHost, sizeof(login)-1);
                 login[sizeof(login)-1] = '\0';
                 t = strrchr(login, '@');
@@ -408,7 +401,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                     /* RFC 2732 states IPv6 "SHOULD" be bracketed. allowing for times when its not. */
                     /* RFC 3986 'update' simply modifies this to an "is" with no emphasis at all! */
                     /* therefore we MUST accept the case where they are not bracketed at all. */
-                    t = NULL;
+                    t = nullptr;
                 }
             }
 
@@ -467,15 +460,6 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             debugs(23, 3, "Invalid port '" << foundPort << "'");
             return false;
         }
-
-#if HARDCODE_DENY_PORTS
-        /* These ports are filtered in the default squid.conf, but
-         * maybe someone wants them hardcoded... */
-        if (foundPort == 7 || foundPort == 9 || foundPort == 19) {
-            debugs(23, DBG_CRITICAL, MYNAME << "Deny access to port " << foundPort);
-            return false;
-        }
-#endif
 
         if (stringHasWhitespace(urlpath)) {
             debugs(23, 2, "URI has whitespace: {" << rawUrl << "}");
@@ -566,6 +550,89 @@ AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
     debugs(23, 3, "Split URI into proto=urn, nid=" << nid << ", " << Raw("path",path().rawContent(),path().length()));
 }
 
+/// Extracts and returns a (suspected but only partially validated) uri-host
+/// IPv6address, IPv4address, or reg-name component. This function uses (and
+/// quotes) RFC 3986, Section 3.2.2 syntax rules.
+SBuf
+AnyP::Uri::parseHost(Parser::Tokenizer &tok) const
+{
+    // host = IP-literal / IPv4address / reg-name
+
+    // XXX: CharacterSets below reject uri-host values containing whitespace
+    // (e.g., "10.0.0. 1"). That is not a bug, but the uri_whitespace directive
+    // can be interpreted as if it applies to uri-host and this code. TODO: Fix
+    // uri_whitespace and the code using it to exclude uri-host (and URI scheme,
+    // port, etc.) from that directive scope.
+
+    // IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
+    if (tok.skip('[')) {
+        // Add "." because IPv6address in RFC 3986 includes ls32, which includes
+        // IPv4address: ls32 = ( h16 ":" h16 ) / IPv4address
+        // This set rejects IPvFuture that needs a "v" character.
+        static const CharacterSet IPv6chars = (
+                CharacterSet::HEXDIG + CharacterSet("colon", ":") + CharacterSet("period", ".")).rename("IPv6");
+        SBuf ipv6ish;
+        if (!tok.prefix(ipv6ish, IPv6chars))
+            throw TextException("malformed or unsupported bracketed IP address in uri-host", Here());
+
+        if (!tok.skip(']'))
+            throw TextException("IPv6 address is missing a closing bracket in uri-host", Here());
+
+        // This rejects bracketed IPv4address and domain names because they lack ":".
+        if (ipv6ish.find(':') == SBuf::npos)
+            throw TextException("bracketed IPv6 address is missing a colon in uri-host", Here());
+
+        // This rejects bracketed non-IP addresses that our caller would have
+        // otherwise mistaken for a domain name (e.g., '[127.0.0:1]').
+        Ip::Address ipv6check;
+        if (!ipv6check.fromHost(ipv6ish.c_str()))
+            throw TextException("malformed bracketed IPv6 address in uri-host", Here());
+
+        return ipv6ish;
+    }
+
+    // no brackets implies we are looking at IPv4address or reg-name
+
+    // XXX: This code does not detect/reject some bad host values (e.g. "!#$%&"
+    // and "1.2.3.4.5"). TODO: Add more checks here, after migrating the
+    // non-CONNECT uri-host parsing code to use us.
+
+    SBuf otherHost; // IPv4address-ish or reg-name-ish;
+    // ":" is not in TCHAR so we will stop before any port specification
+    if (tok.prefix(otherHost, CharacterSet::TCHAR))
+        return otherHost;
+
+    throw TextException("malformed IPv4 address or host name in uri-host", Here());
+}
+
+/// Extracts and returns an RFC 3986 URI authority port value (with additional
+/// restrictions). The RFC defines port as a possibly empty sequence of decimal
+/// digits. We reject certain ports (that are syntactically valid from the RFC
+/// point of view) because we are worried that Squid and other traffic handlers
+/// may dangerously mishandle unusual (and virtually always bogus) port numbers.
+/// Rejected ports cannot be successfully used by Squid itself.
+int
+AnyP::Uri::parsePort(Parser::Tokenizer &tok) const
+{
+    if (tok.skip('0'))
+        throw TextException("zero or zero-prefixed port", Here());
+
+    int64_t rawPort = 0;
+    if (!tok.int64(rawPort, 10, false)) // port = *DIGIT
+        throw TextException("malformed or missing port", Here());
+
+    Assure(rawPort > 0);
+    constexpr KnownPort portMax = 65535; // TODO: Make this a class-scope constant and REuse it.
+    constexpr auto portStorageMax = std::numeric_limits<Port::value_type>::max();
+    static_assert(!Less(portStorageMax, portMax), "Port type can represent the maximum valid port number");
+    if (Less(portMax, rawPort))
+        throw TextException("huge port", Here());
+
+    // TODO: Return KnownPort after migrating the non-CONNECT uri-host parsing
+    // code to use us (so that foundPort "int" disappears or starts using Port).
+    return NaturalCast<int>(rawPort);
+}
+
 void
 AnyP::Uri::touch()
 {
@@ -583,10 +650,14 @@ AnyP::Uri::authority(bool requirePort) const
         authorityWithPort_.append(host());
         authorityHttp_ = authorityWithPort_;
 
-        // authorityForm_ only has :port if it is non-default
-        authorityWithPort_.appendf(":%u",port());
-        if (port() != getScheme().defaultPort())
-            authorityHttp_ = authorityWithPort_;
+        if (port().has_value()) {
+            authorityWithPort_.appendf(":%hu", *port());
+            // authorityHttp_ only has :port for known non-default ports
+            if (port() != getScheme().defaultPort())
+                authorityHttp_ = authorityWithPort_;
+        }
+        // else XXX: We made authorityWithPort_ that does not have a port.
+        // TODO: Audit callers and refuse to give out broken authorityWithPort_.
     }
 
     return requirePort ? authorityWithPort_ : authorityHttp_;
@@ -760,6 +831,8 @@ matchDomainName(const char *h, const char *d, MatchDomainNameFlags flags)
         return -1;
 
     dl = strlen(d);
+    if (dl == 0)
+        return 1;
 
     /*
      * Start at the ends of the two strings and work towards the
@@ -841,10 +914,9 @@ matchDomainName(const char *h, const char *d, MatchDomainNameFlags flags)
 /*
  * return true if we can serve requests for this method.
  */
-int
+bool
 urlCheckRequest(const HttpRequest * r)
 {
-    int rc = 0;
     /* protocol "independent" methods
      *
      * actually these methods are specific to HTTP:
@@ -857,7 +929,7 @@ urlCheckRequest(const HttpRequest * r)
      */
 
     if (r->method == Http::METHOD_CONNECT)
-        return 1;
+        return true;
 
     // we support OPTIONS and TRACE directed at us (with a 501 reply, for now)
     // we also support forwarding OPTIONS and TRACE, except for the *-URI ones
@@ -865,62 +937,52 @@ urlCheckRequest(const HttpRequest * r)
         return (r->header.getInt64(Http::HdrType::MAX_FORWARDS) == 0 || r->url.path() != AnyP::Uri::Asterisk());
 
     if (r->method == Http::METHOD_PURGE)
-        return 1;
+        return true;
 
     /* does method match the protocol? */
     switch (r->url.getScheme()) {
 
     case AnyP::PROTO_URN:
-
     case AnyP::PROTO_HTTP:
-
-    case AnyP::PROTO_CACHE_OBJECT:
-        rc = 1;
-        break;
+        return true;
 
     case AnyP::PROTO_FTP:
-
-        if (r->method == Http::METHOD_PUT)
-            rc = 1;
-
-    case AnyP::PROTO_GOPHER:
+        if (r->method == Http::METHOD_PUT ||
+                r->method == Http::METHOD_GET ||
+                r->method == Http::METHOD_HEAD )
+            return true;
+        return false;
 
     case AnyP::PROTO_WAIS:
-
     case AnyP::PROTO_WHOIS:
-        if (r->method == Http::METHOD_GET)
-            rc = 1;
-        else if (r->method == Http::METHOD_HEAD)
-            rc = 1;
-
-        break;
+        if (r->method == Http::METHOD_GET ||
+                r->method == Http::METHOD_HEAD)
+            return true;
+        return false;
 
     case AnyP::PROTO_HTTPS:
-#if USE_OPENSSL
-        rc = 1;
-#elif USE_GNUTLS
-        rc = 1;
+#if USE_OPENSSL || USE_GNUTLS
+        return true;
 #else
         /*
-        * Squid can't originate an SSL connection, so it should
-        * never receive an "https:" URL.  It should always be
-        * CONNECT instead.
-        */
-        rc = 0;
+         * Squid can't originate an SSL connection, so it should
+         * never receive an "https:" URL.  It should always be
+         * CONNECT instead.
+         */
+        return false;
 #endif
-        break;
 
     default:
-        break;
+        return false;
     }
 
-    return rc;
+    /* notreached */
+    return false;
 }
 
 AnyP::Uri::Uri(AnyP::UriScheme const &aScheme) :
     scheme_(aScheme),
-    hostIsNumeric_(false),
-    port_(0)
+    hostIsNumeric_(false)
 {
     *host_=0;
 }
@@ -929,28 +991,29 @@ AnyP::Uri::Uri(AnyP::UriScheme const &aScheme) :
 char *
 AnyP::Uri::cleanup(const char *uri)
 {
-    int flags = 0;
     char *cleanedUri = nullptr;
     switch (Config.uri_whitespace) {
-    case URI_WHITESPACE_ALLOW:
-        flags |= RFC1738_ESCAPE_NOSPACE;
-    // fall through to next case
-    case URI_WHITESPACE_ENCODE:
-        flags |= RFC1738_ESCAPE_UNESCAPED;
+    case URI_WHITESPACE_ALLOW: {
+        const auto flags = RFC1738_ESCAPE_NOSPACE | RFC1738_ESCAPE_UNESCAPED;
         cleanedUri = xstrndup(rfc1738_do_escape(uri, flags), MAX_URL);
+        break;
+    }
+
+    case URI_WHITESPACE_ENCODE:
+        cleanedUri = xstrndup(rfc1738_do_escape(uri, RFC1738_ESCAPE_UNESCAPED), MAX_URL);
         break;
 
     case URI_WHITESPACE_CHOP: {
-        flags |= RFC1738_ESCAPE_UNESCAPED;
         const auto pos = strcspn(uri, w_space);
         char *choppedUri = nullptr;
         if (pos < strlen(uri))
             choppedUri = xstrndup(uri, pos + 1);
-        cleanedUri = xstrndup(rfc1738_do_escape(choppedUri ? choppedUri : uri, flags), MAX_URL);
+        cleanedUri = xstrndup(rfc1738_do_escape(choppedUri ? choppedUri : uri,
+                                                RFC1738_ESCAPE_UNESCAPED), MAX_URL);
         cleanedUri[pos] = '\0';
         xfree(choppedUri);
+        break;
     }
-    break;
 
     case URI_WHITESPACE_DENY:
     case URI_WHITESPACE_STRIP:
@@ -970,8 +1033,8 @@ AnyP::Uri::cleanup(const char *uri)
         *q = '\0';
         cleanedUri = xstrndup(rfc1738_escape_unescaped(tmp_uri), MAX_URL);
         xfree(tmp_uri);
+        break;
     }
-    break;
     }
 
     assert(cleanedUri);
