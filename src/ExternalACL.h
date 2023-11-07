@@ -40,7 +40,7 @@ public:
     bool empty () const override;
 
 private:
-    static ACLChecklist::AsyncStarter StartLookup;
+    static void StartLookup(ACLFilledChecklist &, const ACL &);
     static void LookupDone(void *data, const ExternalACLEntryPointer &);
     void startLookup(ACLFilledChecklist *, external_acl_data *, bool inBackground) const;
     Acl::Answer aclMatchExternal(external_acl_data *, ACLFilledChecklist *) const;

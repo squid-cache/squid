@@ -21,7 +21,7 @@ class ACLIdent : public ACL
     MEMPROXY_CLASS(ACLIdent);
 
 public:
-    static ACLChecklist::AsyncStarter StartLookup;
+    static void StartLookup(ACLFilledChecklist &, const ACL &);
 
     ACLIdent(ACLData<char const *> *newData, char const *);
     ~ACLIdent() override;

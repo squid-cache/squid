@@ -20,7 +20,7 @@ class ACLProxyAuth : public ACL
     MEMPROXY_CLASS(ACLProxyAuth);
 
 public:
-    static ACLChecklist::AsyncStarter StartLookup;
+    static void StartLookup(ACLFilledChecklist &, const ACL &);
 
     ~ACLProxyAuth() override;
     ACLProxyAuth(ACLData<char const *> *, char const *);
