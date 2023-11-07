@@ -713,7 +713,7 @@ Rock::Rebuild::failure(const char * const msg, const int errNo)
 
     SBufStream error;
     error << "Cannot rebuild rock cache_dir index for " << sd->filePath <<
-        Debug::Extra << "problem: " << msg;
+          Debug::Extra << "problem: " << msg;
     if (errNo)
         error << Debug::Extra << "I/O error: " << xstrerr(errNo);
     error << Debug::Extra << "scan progress: " << Math::int64Percent(loadingPos, dbSlotLimit) << '%';
