@@ -84,7 +84,7 @@ private:
     bool importEntry(Ipc::StoreMapAnchor &anchor, const sfileno slotId, const DbCellHeader &header);
     void freeBadEntry(const sfileno fileno, const char *eDescription);
 
-    void failure(const char *msg, int errNo);
+    void failure(const char *msg, int errNo = 0);
 
     LoadingEntry loadingEntry(const sfileno fileNo);
     void startNewEntry(const sfileno fileno, const SlotId slotId, const DbCellHeader &header);

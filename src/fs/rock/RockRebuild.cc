@@ -11,8 +11,6 @@
 #include "squid.h"
 #include "base/AsyncJobCalls.h"
 #include "debug/Messages.h"
-#include "error/ExceptionErrorDetail.h"
-#include "error/SysErrorDetail.h"
 #include "fs/rock/RockDbCell.h"
 #include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"
@@ -700,7 +698,9 @@ Rock::Rebuild::swanSong()
 void
 Rock::Rebuild::callException(const std::exception &)
 {
-	throw;
+    // For now, treat all Rebuild exceptions as fatal errors rather than letting
+    // the default callException() implementation to silently stop this job.
+    throw;
 }
 
 /// a helper to handle rebuild-killing I/O errors
