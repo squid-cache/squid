@@ -698,40 +698,27 @@ Rock::Rebuild::swanSong()
 }
 
 void
-Rock::Rebuild::callException(const std::exception &e)
+Rock::Rebuild::callException(const std::exception &)
 {
-    ErrorDetail::Pointer errorDetail;
-    if (const auto tex = dynamic_cast<const TextException*>(&e))
-        errorDetail = new ExceptionErrorDetail(tex->id());
-    else
-        errorDetail = new ExceptionErrorDetail(Here().id());
-    failure(ToSBuf(e.what(),
-        Debug::Extra, errorDetail).c_str());
-    // fatal failure() substitutes default AsyncJob::callException(e) handling
+	throw;
 }
 
+/// a helper to handle rebuild-killing I/O errors
 void
-Rock::Rebuild::failure(const char *msg, int errNo)
+Rock::Rebuild::failure(const char * const msg, const int errNo)
 {
     assert(sd);
     debugs(47,5, sd->index << " slot " << loadingPos << " at " <<
            dbOffset << " <= " << dbSize);
 
-    auto error = ToSBuf("Cannot rebuild rock cache_dir index for ", sd->filePath,
-        Debug::Extra, "problem: ", msg,
-        Debug::Extra, "scan progress: ", Math::int64Percent(loadingPos, dbSlotLimit), '%');
+    SBufStream error;
+    error << "Cannot rebuild rock cache_dir index for " << sd->filePath <<
+        Debug::Extra << "problem: " << msg;
+    if (errNo)
+        error << Debug::Extra << "I/O error: " << xstrerr(errNo);
+    error << Debug::Extra << "scan progress: " << Math::int64Percent(loadingPos, dbSlotLimit) << '%';
 
-    if (errNo) {
-        auto detail = SysErrorDetail::NewIfAny(errNo);
-        error.append(ToSBuf(Debug::Extra, detail));
-/*        error.append(ToSBuf(Debug::Extra, "I/O error: ", xstrerr(errNo)));
-        // XXX: squid -z is only useful for ENOENT, but ENOENT is detected in
-        // SwapDir and prevents our Rebuild job from starting.
-        if (errNo == ENOENT)
-            error.append(ToSBuf(Debug::Extra, "hint: Do you need to run 'squid -z' to initialize cache_dir(s)?")); */
-    }
-
-    fatal(error.c_str());
+    throw TextException(error.buf(), Here());
 }
 
 /// adds slot to the free slot index
