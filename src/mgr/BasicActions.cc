@@ -30,12 +30,6 @@ Mgr::IndexAction::IndexAction(const Command::Pointer &aCmd): Action(aCmd)
     debugs(16, 5, MYNAME);
 }
 
-void
-Mgr::IndexAction::report(std::ostream &)
-{
-    debugs(16, 5, MYNAME);
-}
-
 Mgr::MenuAction::Pointer
 Mgr::MenuAction::Create(const Command::Pointer &cmd)
 {
@@ -96,7 +90,7 @@ void
 Mgr::ReconfigureAction::report(std::ostream &os)
 {
     debugs(16, DBG_IMPORTANT, "Reconfigure by Cache Manager command.");
-    os << "Reconfiguring Squid Process .... \n";
+    os << "Reconfiguring Squid Process ... \n";
     reconfigure(SIGHUP);
 }
 
@@ -115,7 +109,7 @@ void
 Mgr::RotateAction::report(std::ostream &os)
 {
     debugs(16, DBG_IMPORTANT, "Rotate Logs by Cache Manager command.");
-    os << "Rotating Squid Process Logs .... \n";
+    os << "Rotating Squid Process Logs ... \n";
 #if defined(_SQUID_LINUX_THREADS_)
     rotate_logs(SIGQUIT);
 #else
