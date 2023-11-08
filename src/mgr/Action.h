@@ -79,13 +79,13 @@ protected:
     virtual void collect() {}
 
     /// write manager report output to a stream.
-    virtual void print(std::ostream &) {}
+    virtual void report(std::ostream &) {}
 
     /** start writing action-specific info to Store entry;
      * may collect info during dump, especially if collect() did nothing
      * non-atomic() actions may continue writing asynchronously after returning
      *
-     * \deprecated implement collect() and print() instead
+     * \deprecated implement collect() and report() instead
      */
     virtual void dump(StoreEntry *);
 

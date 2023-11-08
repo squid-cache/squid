@@ -49,27 +49,27 @@ void Mgr::ActionWriter::start() STUB
 
 #include "mgr/BasicActions.h"
 Mgr::Action::Pointer Mgr::MenuAction::Create(const Mgr::CommandPointer &) STUB_RETVAL(dummyAction)
-void Mgr::MenuAction::print(std::ostream &) STUB
+void Mgr::MenuAction::report(std::ostream &) STUB
 //protected:
 //Mgr::MenuAction::MenuAction(const CommandPointer &cmd) STUB
 
 Mgr::Action::Pointer Mgr::ShutdownAction::Create(const Mgr::CommandPointer &) STUB_RETVAL(dummyAction)
-void Mgr::ShutdownAction::print(std::ostream &) STUB
+void Mgr::ShutdownAction::report(std::ostream &) STUB
 // protected:
 //Mgr::ShutdownAction::ShutdownAction(const CommandPointer &) STUB
 
 Mgr::Action::Pointer Mgr::ReconfigureAction::Create(const Mgr::CommandPointer &) STUB_RETVAL(dummyAction)
-void Mgr::ReconfigureAction::print(std::ostream &) STUB
+void Mgr::ReconfigureAction::report(std::ostream &) STUB
 //protected:
 //Mgr::ReconfigureAction::ReconfigureAction(const CommandPointer &) STUB
 
 Mgr::Action::Pointer Mgr::RotateAction::Create(const Mgr::CommandPointer &) STUB_RETVAL(dummyAction)
-void Mgr::RotateAction::print(std::ostream &) STUB
+void Mgr::RotateAction::report(std::ostream &) STUB
 //protected:
 //Mgr::RotateAction::RotateAction(const CommandPointer &) STUB
 
 Mgr::Action::Pointer Mgr::OfflineToggleAction::Create(const CommandPointer &) STUB_RETVAL(dummyAction)
-void Mgr::OfflineToggleAction::print(std::ostream &) STUB
+void Mgr::OfflineToggleAction::report(std::ostream &) STUB
 //protected:
 //Mgr::OfflineToggleAction::OfflineToggleAction(const CommandPointer &) STUB
 

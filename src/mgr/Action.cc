@@ -113,7 +113,7 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
         entry->replaceHttpReply(rep);
     }
 
-    dump(entry); // TODO: replace with print() when all children are converted
+    dump(entry); // TODO: replace with report() when all children are converted
 
     entry->flush();
 
@@ -125,6 +125,6 @@ void
 Mgr::Action::dump(StoreEntry *entry)
 {
     PackableStream out(*entry);
-    print(out);
+    report(out);
 }
 

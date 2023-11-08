@@ -31,7 +31,7 @@ Mgr::IndexAction::IndexAction(const Command::Pointer &aCmd): Action(aCmd)
 }
 
 void
-Mgr::IndexAction::print(std::ostream &)
+Mgr::IndexAction::report(std::ostream &)
 {
     debugs(16, 5, MYNAME);
 }
@@ -50,7 +50,7 @@ Mgr::MenuAction::MenuAction(const Command::Pointer &aCmd): Action(aCmd)
 /// A table summarizing available Cache Manager actions:
 ///   table-row = SP 1*VCHAR 1*( HTAB 0*VCHAR )
 void
-Mgr::MenuAction::print(std::ostream &os)
+Mgr::MenuAction::report(std::ostream &os)
 {
     const auto &menu = CacheManager::GetInstance()->menu();
 
@@ -74,7 +74,7 @@ Mgr::ShutdownAction::ShutdownAction(const Command::Pointer &aCmd): Action(aCmd)
 }
 
 void
-Mgr::ShutdownAction::print(std::ostream &)
+Mgr::ShutdownAction::report(std::ostream &)
 {
     debugs(16, DBG_CRITICAL, "Shutdown by Cache Manager command.");
     shut_down(SIGTERM);
@@ -93,7 +93,7 @@ Mgr::ReconfigureAction::ReconfigureAction(const Command::Pointer &aCmd):
 }
 
 void
-Mgr::ReconfigureAction::print(std::ostream &os)
+Mgr::ReconfigureAction::report(std::ostream &os)
 {
     debugs(16, DBG_IMPORTANT, "Reconfigure by Cache Manager command.");
     os << "Reconfiguring Squid Process .... \n";
@@ -112,7 +112,7 @@ Mgr::RotateAction::RotateAction(const Command::Pointer &aCmd): Action(aCmd)
 }
 
 void
-Mgr::RotateAction::print(std::ostream &os)
+Mgr::RotateAction::report(std::ostream &os)
 {
     debugs(16, DBG_IMPORTANT, "Rotate Logs by Cache Manager command.");
     os << "Rotating Squid Process Logs .... \n";
@@ -136,7 +136,7 @@ Mgr::OfflineToggleAction::OfflineToggleAction(const Command::Pointer &aCmd):
 }
 
 void
-Mgr::OfflineToggleAction::print(std::ostream &os)
+Mgr::OfflineToggleAction::report(std::ostream &os)
 {
     Config.onoff.offline = !Config.onoff.offline;
     debugs(16, DBG_IMPORTANT, "offline_mode now " << (Config.onoff.offline ? "ON" : "OFF") << " by Cache Manager request.");
