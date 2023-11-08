@@ -182,10 +182,18 @@ public:
     {
         if (configured()) {
             os << ' ' << (disabled() ? offName : onName);
-            if (valued())
-                os << '=' << recipient_->value;
+            if (valued()) {
+                os << '=';
+                printValue(os);
+            }
         }
         // else do not report the implicit default
+    }
+
+    /// used in print() to print the option if configured
+    void printValue(std::ostream &os) const
+    {
+        os << '=' << recipient_->value;
     }
 
 private:
