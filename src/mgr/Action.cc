@@ -124,7 +124,7 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 void
 Mgr::Action::dump(StoreEntry *entry)
 {
-    PackableStream out(*entry);
-    report(out);
+    PackableStream os(*entry);
+    report(os);
 }
 
