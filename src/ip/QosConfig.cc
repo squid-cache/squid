@@ -19,6 +19,8 @@
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "Parsing.h"
+#include "sbuf/Stream.h"
+#include "Store.h"
 
 #include <cerrno>
 #include <limits>
@@ -465,64 +467,61 @@ Ip::Qos::Config::parseConfigLine()
  * which means no StoreEntry references. Just a basic char* buffer.
 */
 void
-Ip::Qos::Config::dumpConfigLine(char *entry, const char *name) const
+Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *name) const
 {
-    char *p = entry;
     if (isHitTosActive()) {
-
-        p += snprintf(p, 11, "%s", name); // strlen("qos_flows ");
-        p += snprintf(p, 4, "%s", "tos");
+        os << name << " tos";
 
         if (tosLocalHit > 0) {
-            p += snprintf(p, 16, " local-hit=0x%02X", tosLocalHit);
+            os << " local-hit=" << AsHex(tosLocalHit);
         }
         if (tosSiblingHit > 0) {
-            p += snprintf(p, 18, " sibling-hit=0x%02X", tosSiblingHit);
+            os << " sibling-hit=" << AsHex(tosSiblingHit);
         }
         if (tosParentHit > 0) {
-            p += snprintf(p, 17, " parent-hit=0x%02X", tosParentHit);
+            os << " parent-hit=" << AsHex(tosParentHit);
         }
         if (tosMiss > 0) {
-            p += snprintf(p, 11, " miss=0x%02X", tosMiss);
+            os << " miss=" << AsHex(tosMiss);
             if (tosMissMask!=0xFFU) {
-                p += snprintf(p, 6, "/0x%02X", tosMissMask);
+                os << '/' << AsHex(tosMissMask);
             }
         }
         if (preserveMissTos == 0) {
-            p += snprintf(p, 23, " disable-preserve-miss");
+            os << " disable-preserve-miss";
         }
         if (preserveMissTos && preserveMissTosMask != 0) {
-            p += snprintf(p, 16, " miss-mask=0x%02X", preserveMissTosMask);
+            os << " miss-mask=" << AsHex(preserveMissTosMask);
         }
-        p += snprintf(p, 2, "\n");
+        os << "\n";
+
     }
 
     if (isHitNfmarkActive()) {
-        p += snprintf(p, 11, "%s", name); // strlen("qos_flows ");
-        p += snprintf(p, 5, "%s", "mark");
+        os << name << " mark";
 
         if (markLocalHit > 0) {
-            p += snprintf(p, 22, " local-hit=0x%02X", markLocalHit);
+            os << " local-hit=" << AsHex(markLocalHit);
         }
         if (markSiblingHit > 0) {
-            p += snprintf(p, 24, " sibling-hit=0x%02X", markSiblingHit);
+            os << " sibling-hit=" << AsHex(markSiblingHit);
         }
         if (markParentHit > 0) {
-            p += snprintf(p, 23, " parent-hit=0x%02X", markParentHit);
+            os << " parent-hit=" << AsHex(markParentHit);
         }
         if (markMiss > 0) {
-            p += snprintf(p, 17, " miss=0x%02X", markMiss);
+            os << " miss=" << AsHex(markMiss);
             if (markMissMask!=0xFFFFFFFFU) {
-                p += snprintf(p, 12, "/0x%02X", markMissMask);
+                os << '/' << AsHex(markMissMask);
             }
         }
         if (preserveMissMark == false) {
-            p += snprintf(p, 23, " disable-preserve-miss");
+            os << " disable-preserve-miss";
         }
         if (preserveMissMark && preserveMissMarkMask != 0) {
-            p += snprintf(p, 22, " miss-mask=0x%02X", preserveMissMarkMask);
+            os << " miss-mask=" << AsHex(preserveMissMarkMask);
         }
-        p += snprintf(p, 2, "\n");
+        os << "\n";
     }
 }
 
@@ -640,3 +639,9 @@ Ip::Qos::Config::isAclTosActive() const
     return false;
 }
 
+void
+dump_QosConfig(StoreEntry * entry, const char *name, const Ip::Qos::Config &config)
+{
+    PackableStream os(*entry);
+    config.dumpConfigLine(os, name);
+}
