@@ -242,7 +242,6 @@ public:
 /// Globally available instance of Qos::Config
 extern Config TheConfig;
 
-
 } // namespace Qos
 
 } // namespace Ip
