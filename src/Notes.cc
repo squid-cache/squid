@@ -110,7 +110,6 @@ Note::dump(StoreEntry *entry, const char *k)
     PackableStream os(*entry);
     for (const auto &v: values) {
         os << k << " " << key() << " " << ConfigParser::QuoteString(SBufToString(v->value()));
-        os.flush();
         dump_acl_list(entry, v->aclList);
         storeAppendPrintf(entry, "\n");
     }
