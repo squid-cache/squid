@@ -473,25 +473,25 @@ Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *name) const
         os << name << " tos";
 
         if (tosLocalHit > 0) {
-            os << " local-hit=" << AsHex(tosLocalHit);
+            os << " local-hit=" << asHex(tosLocalHit);
         }
         if (tosSiblingHit > 0) {
-            os << " sibling-hit=" << AsHex(tosSiblingHit);
+            os << " sibling-hit=" << asHex(tosSiblingHit);
         }
         if (tosParentHit > 0) {
-            os << " parent-hit=" << AsHex(tosParentHit);
+            os << " parent-hit=" << asHex(tosParentHit);
         }
         if (tosMiss > 0) {
-            os << " miss=" << AsHex(tosMiss);
+            os << " miss=" << asHex(tosMiss);
             if (tosMissMask!=0xFFU) {
-                os << '/' << AsHex(tosMissMask);
+                os << '/' << asHex(tosMissMask);
             }
         }
         if (preserveMissTos == 0) {
             os << " disable-preserve-miss";
         }
         if (preserveMissTos && preserveMissTosMask != 0) {
-            os << " miss-mask=" << AsHex(preserveMissTosMask);
+            os << " miss-mask=" << asHex(preserveMissTosMask);
         }
         os << "\n";
 
@@ -501,25 +501,25 @@ Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *name) const
         os << name << " mark";
 
         if (markLocalHit > 0) {
-            os << " local-hit=" << AsHex(markLocalHit);
+            os << " local-hit=" << asHex(markLocalHit);
         }
         if (markSiblingHit > 0) {
-            os << " sibling-hit=" << AsHex(markSiblingHit);
+            os << " sibling-hit=" << asHex(markSiblingHit);
         }
         if (markParentHit > 0) {
-            os << " parent-hit=" << AsHex(markParentHit);
+            os << " parent-hit=" << asHex(markParentHit);
         }
         if (markMiss > 0) {
-            os << " miss=" << AsHex(markMiss);
+            os << " miss=" << asHex(markMiss);
             if (markMissMask!=0xFFFFFFFFU) {
-                os << '/' << AsHex(markMissMask);
+                os << '/' << asHex(markMissMask);
             }
         }
         if (preserveMissMark == false) {
             os << " disable-preserve-miss";
         }
         if (preserveMissMark && preserveMissMarkMask != 0) {
-            os << " miss-mask=" << AsHex(preserveMissMarkMask);
+            os << " miss-mask=" << asHex(preserveMissMarkMask);
         }
         os << "\n";
     }
