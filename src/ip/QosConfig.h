@@ -247,7 +247,7 @@ extern Config TheConfig;
 } // namespace Ip
 
 /* legacy parser access wrappers */
-inline void parse_QosConfig(Ip::Qos::Config * theConfig) { theConfig->parseConfigLine(); }
+inline void parse_QosConfig(Ip::Qos::Config * c) { c->parseConfigLine(); }
 inline void free_QosConfig(Ip::Qos::Config *) {}
 void dump_QosConfig(StoreEntry *, const char *, const Ip::Qos::Config &);
 
