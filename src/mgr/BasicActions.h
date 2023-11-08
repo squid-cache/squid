@@ -27,7 +27,7 @@ class IndexAction: public Action
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    void report(std::ostream &) override;
+    void report(std::ostream &) override {}
 
 protected:
     IndexAction(const CommandPointer &cmd);
