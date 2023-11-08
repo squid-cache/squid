@@ -76,12 +76,14 @@ operator <<(std::ostream &os, const RawPointerT<Pointer> &pd)
 }
 
 /// std::ostream manipulator to print integers as hex numbers prefixed by 0x
+/// Normally used through the asHex() convenience function
 template <class Integer>
 class AsHex
 {
 public:
-    explicit AsHex(const Integer n): io_manip(n) {}
+    explicit AsHex(const Integer n, const size_t w=0) : io_manip(n), width(w) {}
     Integer io_manip; ///< the integer to print
+    size_t width; ///< the width to use number of digits to print
 };
 
 template <class Integer>
@@ -89,14 +91,16 @@ inline std::ostream &
 operator <<(std::ostream &os, const AsHex<Integer> number)
 {
     const auto oldFlags = os.flags();
-    os << std::hex << std::showbase << number.io_manip;
+    os << "0x" << std::hex <<
+        std::setfill('0') << std::setw(number.width) <<
+        number.io_manip;
     os.setf(oldFlags);
     return os;
 }
 
-/// a helper to ease AsHex object creation
+/// helpers to ease AsHex object creation
 template <class Integer>
-inline AsHex<Integer> asHex(const Integer n) { return AsHex<Integer>(n); }
+inline AsHex<Integer> asHex(const Integer n, const size_t w=0) { return AsHex<Integer>(n, w); }
 
 /// Prints the first n data bytes using hex notation. Does nothing if n is 0.
 void PrintHex(std::ostream &, const char *data, size_t n);
