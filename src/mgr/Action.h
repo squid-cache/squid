@@ -85,7 +85,7 @@ protected:
      * may collect info during dump, especially if collect() did nothing
      * non-atomic() actions may continue writing asynchronously after returning
      *
-     * \deprecated implement collect() and report() instead
+     * \deprecated implement report() instead
      */
     virtual void dump(StoreEntry *);
 
