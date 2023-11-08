@@ -193,7 +193,7 @@ public:
     /// used in print() to print the option if configured
     void printValue(std::ostream &os) const
     {
-        os << '=' << recipient_->value;
+        os << recipient_->value;
     }
 
 private:
