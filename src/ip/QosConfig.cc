@@ -494,7 +494,7 @@ Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *name) const
             os << " miss-mask=" << asHex(preserveMissTosMask);
         }
         os << "\n";
-
+        return;
     }
 
     if (isHitNfmarkActive()) {
