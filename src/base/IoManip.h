@@ -81,9 +81,10 @@ template <class Integer>
 class AsHex
 {
 public:
-    explicit AsHex(const Integer n, const size_t w=0) : io_manip(n), width(w) {}
+    explicit AsHex(const Integer n) : io_manip(n) {}
+    auto &minDigits(const size_t w) { width = w; return *this; }
     Integer io_manip; ///< the integer to print
-    size_t width; ///< the width to use number of digits to print
+    size_t width = 0; ///< the width to use number of digits to print
 };
 
 template <class Integer>
@@ -100,7 +101,7 @@ operator <<(std::ostream &os, const AsHex<Integer> number)
 
 /// helpers to ease AsHex object creation
 template <class Integer>
-inline AsHex<Integer> asHex(const Integer n, const size_t w=0) { return AsHex<Integer>(n, w); }
+inline AsHex<Integer> asHex(const Integer n) { return AsHex<Integer>(n); }
 
 /// Prints the first n data bytes using hex notation. Does nothing if n is 0.
 void PrintHex(std::ostream &, const char *data, size_t n);
