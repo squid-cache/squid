@@ -84,7 +84,7 @@ public:
     explicit AsHex(const Integer n) : io_manip(n) {}
     auto &minDigits(const size_t w) { width = w; return *this; }
     Integer io_manip; ///< the integer to print
-    size_t width = 0; ///< the width to use number of digits to print
+    size_t width = 0; ///< the minimum number of digits to print after the 0x prefix
 };
 
 template <class Integer>
