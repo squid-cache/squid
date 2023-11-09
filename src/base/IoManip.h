@@ -92,9 +92,11 @@ inline std::ostream &
 operator <<(std::ostream &os, const AsHex<Integer> number)
 {
     const auto oldFlags = os.flags();
+    const auto savedFill = os.fill('0');
     os << "0x" << std::hex <<
-        std::setfill('0') << std::setw(number.width) <<
+        std::setw(number.width) <<
         number.io_manip;
+    os.fill(savedFill);
     os.setf(oldFlags);
     return os;
 }
