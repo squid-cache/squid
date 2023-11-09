@@ -104,7 +104,7 @@ public:
 
     /// If slow lookups are allowed, switches into "async in progress" state.
     /// Otherwise, returns false; the caller is expected to handle the failure.
-    bool goAsync(const AsyncStarter &, const ACL &);
+    bool goAsync(AsyncStarter, const ACL &);
 
     /// Matches (or resumes matching of) a child node while maintaning
     /// resumption breadcrumbs if a [grand]child node goes async.
