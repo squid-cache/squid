@@ -102,7 +102,7 @@ operator <<(std::ostream &os, const AsHex<Integer> number)
     return os;
 }
 
-/// helpers to ease AsHex object creation
+/// a helper to ease AsHex object creation
 template <class Integer>
 inline AsHex<Integer> asHex(const Integer n) { return AsHex<Integer>(n); }
 
