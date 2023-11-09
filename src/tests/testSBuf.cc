@@ -1206,12 +1206,8 @@ TestSBuf::testSBufHash()
 void
 TestIoManip::testAsHex()
 {
-    SBufStream os;
-    os << asHex(0xa0);
-    CPPUNIT_ASSERT_EQUAL(SBuf("0xa0"), os.buf());
-    os.clearBuf();
-    os << asHex(0xa0).minDigits(4);
-    CPPUNIT_ASSERT_EQUAL(SBuf("0x00a0"), os.buf());
+    CPPUNIT_ASSERT_EQUAL(SBuf("0xa0"), ToSBuf(asHex(0xa0)));
+    CPPUNIT_ASSERT_EQUAL(SBuf("0x00a0"), ToSBuf(asHex(0xa0).minDigits(4)));
 }
 
 int
