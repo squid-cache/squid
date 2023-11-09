@@ -262,16 +262,14 @@ Notes::dump(StoreEntry *entry, const char *key)
         n->dump(entry, key);
 }
 
-SBuf
-Notes::dump() const
+void
+Notes::dump(ostream& os) const
 {
-    SBufStream result;
     const char *separator = "";
     for (const auto &note: notes) {
-        result << separator << note->toString(" ");
+        os << separator << note->toString(" ");
         separator = " ";
     }
-    return result.buf();
 }
 
 bool

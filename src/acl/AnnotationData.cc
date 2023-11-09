@@ -16,6 +16,7 @@
 #include "debug/Stream.h"
 #include "format/Format.h"
 #include "sbuf/Algorithms.h"
+#include "sbuf/Stream.h"
 
 ACLAnnotationData::ACLAnnotationData()
     : notes(new Notes("annotation_data")) {}
@@ -23,10 +24,10 @@ ACLAnnotationData::ACLAnnotationData()
 SBufList
 ACLAnnotationData::dump() const
 {
-    SBufList sl;
+    SBufStream os;
     if (!notes->empty())
-        sl.push_back(notes->dump());
-    return sl;
+        notes->dump(os);
+    return SBufList{os.buf()};
 }
 
 void

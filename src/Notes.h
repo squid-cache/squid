@@ -139,9 +139,8 @@ public:
     iterator end() { return notes.end(); }
     /// \returns true if the notes list is empty
     bool empty() const { return notes.empty(); }
-    /// Convert Notes list to a string consist of "Key: Value"
-    /// entries separated by sep string.
-    SBuf dump() const;
+    /// print notes as list of "key=value" expression, suitable for mgr:config
+    void dump(std::ostream& ) const;
     void updateNotePairs(NotePairsPointer pairs, const CharacterSet *delimiters,
                          const AccessLogEntryPointer &al);
 private:
