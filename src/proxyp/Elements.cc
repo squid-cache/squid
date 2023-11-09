@@ -72,29 +72,7 @@ ProxyProtocol::NameToFieldType(const SBuf &name)
 ProxyProtocol::Two::FieldType
 ProxyProtocol::IntegerToFieldType(const SBuf &rawInteger)
 {
-    int64_t tlvType = 0;
-
-    Parser::Tokenizer ptok(rawInteger);
-    if (ptok.skip('0')) {
-        if (!ptok.atEnd())
-            throw TexcHere(ToSBuf("Invalid PROXY protocol TLV type value. ",
-                                  "Expected a decimal integer without leading zeros but got '",
-                                  rawInteger, "'")); // e.g., 077, 0xFF, or 0b101
-        // tlvType stays zero
-    } else {
-        Must(ptok.int64(tlvType, 10, false)); // the first character is a DIGIT
-        if (!ptok.atEnd())
-            throw TexcHere(ToSBuf("Invalid PROXY protocol TLV type value. ",
-                                  "Trailing garbage after ", tlvType, " in '",
-                                  rawInteger, "'")); // e.g., 1.0 or 5e0
-    }
-
-    const auto limit = std::numeric_limits<uint8_t>::max();
-    if (tlvType > limit)
-        throw TexcHere(ToSBuf("Invalid PROXY protocol TLV type value. ",
-                              "Expected an integer less than ", limit,
-                              " but got '", tlvType, "'"));
-
+    const auto tlvType = ParseInteger<int64_t>("proxy protocol TLV type value", rawInteger);
     return Two::FieldType(tlvType);
 }
 

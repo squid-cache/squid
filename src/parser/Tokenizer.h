@@ -179,5 +179,62 @@ private:
 
 } /* namespace Parser */
 
+#include "sbuf/Stream.h"
+
+/// parses a decimal integer that fits the specified Integer type
+template <typename Integer>
+static Integer
+ParseInteger(const char *description, const SBuf &rawInput)
+{
+    Parser::Tokenizer tok(rawInput);
+    if (tok.skip('0')) {
+        if (!tok.atEnd()) {
+            // e.g., 077, 0xFF, 0b101, or 0.1
+            throw TextException(ToSBuf("Malformed ", description,
+                                ": Expected a decimal integer without leading zeros but got '",
+                                rawInput, "'"), Here());
+        }
+        return Integer(0);
+    }
+    // else the value might still be zero (e.g., -0)
+
+    const auto lowerLimit = std::numeric_limits<Integer>::min();
+    const auto upperLimit = std::numeric_limits<Integer>::max();
+
+    // check that our caller is compatible with Tokenizer::int64() use below
+    using ParsedInteger = int64_t;
+    static_assert(lowerLimit >= std::numeric_limits<ParsedInteger>::min());
+    static_assert(upperLimit <= std::numeric_limits<ParsedInteger>::max());
+
+    ParsedInteger rawInteger = 0;
+    if (!tok.int64(rawInteger, 10, true)) {
+        // e.g., FF
+        throw TextException(ToSBuf("Malformed ", description,
+                            ": Expected a decimal integer but got '",
+                            rawInput, "'"), Here());
+    }
+
+    if (!tok.atEnd()) {
+        // e.g., 1,000, 1.0, or 1e6
+        throw TextException(ToSBuf("Malformed ", description,
+                            ": Trailing garbage after ", rawInteger, " in '",
+                            rawInput, "'"), Here());
+    }
+
+    if (rawInteger > upperLimit) {
+        throw TextException(ToSBuf("Malformed ", description,
+                            ": Expected an integer value not exceeding ", upperLimit,
+                            " but got ", rawInteger), Here());
+    }
+
+    if (rawInteger < lowerLimit) {
+        throw TextException(ToSBuf("Malformed ", description,
+                            ": Expected an integer value not below ", lowerLimit,
+                            " but got ", rawInteger), Here());
+    }
+
+    return Integer(rawInteger);
+}
+
 #endif /* SQUID_PARSER_TOKENIZER_H_ */
 
