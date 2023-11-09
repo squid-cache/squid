@@ -95,7 +95,8 @@ operator <<(std::ostream &os, const AsHex<Integer> number)
     const auto savedFill = os.fill('0');
     os << "0x" << std::hex <<
         std::setw(number.width) <<
-        number.io_manip;
+        number.io_manip <<
+        std::setw(0);
     os.fill(savedFill);
     os.setf(oldFlags);
     return os;
