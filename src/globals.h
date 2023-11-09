@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,6 @@
 #include "hash.h"
 #include "IoStats.h"
 #include "rfc2181.h"
-#include "sbuf/SBuf.h"
 
 extern char *ConfigFile;    /* NULL */
 extern char *IcpOpcodeStr[];

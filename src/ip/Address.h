@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -363,8 +363,8 @@ operator << (std::ostream &os, const Address &ipa)
 class Address_list
 {
 public:
-    Address_list() { next = NULL; };
-    ~Address_list() { if (next) delete next; next = NULL; };
+    Address_list() { next = nullptr; };
+    ~Address_list() { if (next) delete next; next = nullptr; };
 
     Address s;
     Address_list *next;

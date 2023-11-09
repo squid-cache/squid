@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,12 +37,6 @@
 #endif
 #endif
 
-#if !defined(CACHEMGR_HOSTNAME)
-#define CACHEMGR_HOSTNAME ""
-#else
-#define CACHEMGR_HOSTNAME_DEFINED 1
-#endif
-
 #if SQUID_DETECT_UDP_SO_SNDBUF > 16384
 #define SQUID_UDP_SO_SNDBUF 16384
 #else
@@ -53,13 +47,6 @@
 #define SQUID_UDP_SO_RCVBUF 16384
 #else
 #define SQUID_UDP_SO_RCVBUF SQUID_DETECT_UDP_SO_RCVBUF
-#endif
-
-/*
- * Determine if this is a leak check build or standard
- */
-#if PURIFY || WITH_VALGRIND
-#define LEAK_CHECK_MODE 1
 #endif
 
 /* temp hack: needs to be pre-defined for now. */

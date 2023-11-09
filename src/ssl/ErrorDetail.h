@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,8 @@
 #define _SQUID_SSL_ERROR_DETAIL_H
 
 #include "security/ErrorDetail.h"
+
+#include <optional>
 
 // TODO: Remove Security::X wrappers and move the remaining configurable error
 // details (i.e. templates/error-details.txt) code to src/security/ErrorDetail.
@@ -38,8 +40,9 @@ GetErrorName(const Security::ErrorCode code, const bool prefixRawCode = false)
     return Security::ErrorNameFromCode(code, prefixRawCode);
 }
 
-/// A short description of the TLS error "value"
-const char *GetErrorDescr(Security::ErrorCode value);
+/// a short description of the given TLS error known to Squid (or, if the error
+/// is unknown, nothing)
+std::optional<SBuf> GetErrorDescr(Security::ErrorCode);
 
 /// \return true if the TLS error is optional and may not be supported by current squid version
 bool ErrorIsOptional(const char *name);

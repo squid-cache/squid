@@ -1,0 +1,2 @@
+expect-failure ERROR:.configuration.failure:.POSIX.regcomp.*failure
+

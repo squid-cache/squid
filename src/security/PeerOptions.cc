@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "base/Packable.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fatal.h"
 #include "globals.h"
 #include "parser/Tokenizer.h"
@@ -55,7 +55,7 @@ Security::PeerOptions::parse(const char *token)
         KeyData &t = certs.back();
         t.privateKeyFile = SBuf(token + 4);
     } else if (strncmp(token, "version=", 8) == 0) {
-        debugs(0, DBG_PARSE_NOTE(1), "UPGRADE WARNING: SSL version= is deprecated. Use options= and tls-min-version= to limit protocols instead.");
+        debugs(0, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: SSL version= is deprecated. Use options= and tls-min-version= to limit protocols instead.");
         sslVersion = xatoi(token + 8);
     } else if (strncmp(token, "min-version=", 12) == 0) {
         tlsMinVersion = SBuf(token + 12);
@@ -102,51 +102,51 @@ Security::PeerOptions::parse(const char *token)
 }
 
 void
-Security::PeerOptions::dumpCfg(Packable *p, const char *pfx) const
+Security::PeerOptions::dumpCfg(std::ostream &os, const char *pfx) const
 {
     if (!encryptTransport) {
-        p->appendf(" %sdisable", pfx);
+        os << ' ' << pfx << "disable";
         return; // no other settings are relevant
     }
 
     for (auto &i : certs) {
         if (!i.certFile.isEmpty())
-            p->appendf(" %scert=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(i.certFile));
+            os << ' ' << pfx << "cert=" << i.certFile;
 
         if (!i.privateKeyFile.isEmpty() && i.privateKeyFile != i.certFile)
-            p->appendf(" %skey=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(i.privateKeyFile));
+            os << ' ' << pfx << "key=" << i.privateKeyFile;
     }
 
     if (!sslOptions.isEmpty())
-        p->appendf(" %soptions=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslOptions));
+        os << ' ' << pfx << "options=" << sslOptions;
 
     if (!sslCipher.isEmpty())
-        p->appendf(" %scipher=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslCipher));
+        os << ' ' << pfx << "cipher=" << sslCipher;
 
     for (auto i : caFiles) {
-        p->appendf(" %scafile=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(i));
+        os << ' ' << pfx << "cafile=" << i;
     }
 
     if (!caDir.isEmpty())
-        p->appendf(" %scapath=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(caDir));
+        os << ' ' << pfx << "capath=" << caDir;
 
     if (!crlFile.isEmpty())
-        p->appendf(" %scrlfile=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(crlFile));
+        os << ' ' << pfx << "crlfile=" << crlFile;
 
     if (!sslFlags.isEmpty())
-        p->appendf(" %sflags=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslFlags));
+        os << ' ' << pfx << "flags=" << sslFlags;
 
     if (flags.tlsDefaultCa.configured()) {
         // default ON for peers / upstream servers
         // default OFF for listening ports
         if (flags.tlsDefaultCa)
-            p->appendf(" %sdefault-ca", pfx);
+            os << ' ' << pfx << "default-ca";
         else
-            p->appendf(" %sdefault-ca=off", pfx);
+            os << ' ' << pfx << "default-ca=off";
     }
 
     if (!flags.tlsNpn)
-        p->appendf(" %sno-npn", pfx);
+        os << ' ' << pfx << "no-npn";
 }
 
 void
@@ -293,134 +293,134 @@ Security::PeerOptions::createClientContext(bool setOptions)
 /// set of options we can parse and what they map to
 static struct ssl_option {
     const char *name;
-    long value;
+    Security::ParsedOptions value;
 
 } ssl_options[] = {
 
-#if SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
+#if defined(SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG)
     {
         "NETSCAPE_REUSE_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
     },
 #endif
-#if SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
+#if defined(SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG)
     {
         "SSLREF2_REUSE_CERT_TYPE_BUG", SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
     },
 #endif
-#if SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
+#if defined(SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER)
     {
         "MICROSOFT_BIG_SSLV3_BUFFER", SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
     },
 #endif
-#if SSL_OP_SSLEAY_080_CLIENT_DH_BUG
+#if defined(SSL_OP_SSLEAY_080_CLIENT_DH_BUG)
     {
         "SSLEAY_080_CLIENT_DH_BUG", SSL_OP_SSLEAY_080_CLIENT_DH_BUG
     },
 #endif
-#if SSL_OP_TLS_D5_BUG
+#if defined(SSL_OP_TLS_D5_BUG)
     {
         "TLS_D5_BUG", SSL_OP_TLS_D5_BUG
     },
 #endif
-#if SSL_OP_TLS_BLOCK_PADDING_BUG
+#if defined(SSL_OP_TLS_BLOCK_PADDING_BUG)
     {
         "TLS_BLOCK_PADDING_BUG", SSL_OP_TLS_BLOCK_PADDING_BUG
     },
 #endif
-#if SSL_OP_TLS_ROLLBACK_BUG
+#if defined(SSL_OP_TLS_ROLLBACK_BUG)
     {
         "TLS_ROLLBACK_BUG", SSL_OP_TLS_ROLLBACK_BUG
     },
 #endif
-#if SSL_OP_ALL
+#if defined(SSL_OP_ALL)
     {
-        "ALL", (long)SSL_OP_ALL
+        "ALL", SSL_OP_ALL
     },
 #endif
-#if SSL_OP_SINGLE_DH_USE
+#if defined(SSL_OP_SINGLE_DH_USE)
     {
         "SINGLE_DH_USE", SSL_OP_SINGLE_DH_USE
     },
 #endif
-#if SSL_OP_EPHEMERAL_RSA
+#if defined(SSL_OP_EPHEMERAL_RSA)
     {
         "EPHEMERAL_RSA", SSL_OP_EPHEMERAL_RSA
     },
 #endif
-#if SSL_OP_PKCS1_CHECK_1
+#if defined(SSL_OP_PKCS1_CHECK_1)
     {
         "PKCS1_CHECK_1", SSL_OP_PKCS1_CHECK_1
     },
 #endif
-#if SSL_OP_PKCS1_CHECK_2
+#if defined(SSL_OP_PKCS1_CHECK_2)
     {
         "PKCS1_CHECK_2", SSL_OP_PKCS1_CHECK_2
     },
 #endif
-#if SSL_OP_NETSCAPE_CA_DN_BUG
+#if defined(SSL_OP_NETSCAPE_CA_DN_BUG)
     {
         "NETSCAPE_CA_DN_BUG", SSL_OP_NETSCAPE_CA_DN_BUG
     },
 #endif
-#if SSL_OP_NON_EXPORT_FIRST
+#if defined(SSL_OP_NON_EXPORT_FIRST)
     {
         "NON_EXPORT_FIRST", SSL_OP_NON_EXPORT_FIRST
     },
 #endif
-#if SSL_OP_CIPHER_SERVER_PREFERENCE
+#if defined(SSL_OP_CIPHER_SERVER_PREFERENCE)
     {
         "CIPHER_SERVER_PREFERENCE", SSL_OP_CIPHER_SERVER_PREFERENCE
     },
 #endif
-#if SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
+#if defined(SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG)
     {
         "NETSCAPE_DEMO_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
     },
 #endif
-#if SSL_OP_NO_SSLv3
+#if defined(SSL_OP_NO_SSLv3)
     {
         "NO_SSLv3", SSL_OP_NO_SSLv3
     },
 #endif
-#if SSL_OP_NO_TLSv1
+#if defined(SSL_OP_NO_TLSv1)
     {
         "NO_TLSv1", SSL_OP_NO_TLSv1
     },
 #else
     { "NO_TLSv1", 0 },
 #endif
-#if SSL_OP_NO_TLSv1_1
+#if defined(SSL_OP_NO_TLSv1_1)
     {
         "NO_TLSv1_1", SSL_OP_NO_TLSv1_1
     },
 #else
     { "NO_TLSv1_1", 0 },
 #endif
-#if SSL_OP_NO_TLSv1_2
+#if defined(SSL_OP_NO_TLSv1_2)
     {
         "NO_TLSv1_2", SSL_OP_NO_TLSv1_2
     },
 #else
     { "NO_TLSv1_2", 0 },
 #endif
-#if SSL_OP_NO_TLSv1_3
+#if defined(SSL_OP_NO_TLSv1_3)
     {
         "NO_TLSv1_3", SSL_OP_NO_TLSv1_3
     },
 #else
     { "NO_TLSv1_3", 0 },
 #endif
-#if SSL_OP_NO_COMPRESSION
+#if defined(SSL_OP_NO_COMPRESSION)
     {
         "No_Compression", SSL_OP_NO_COMPRESSION
     },
 #endif
-#if SSL_OP_NO_TICKET
+#if defined(SSL_OP_NO_TICKET)
     {
         "NO_TICKET", SSL_OP_NO_TICKET
     },
 #endif
-#if SSL_OP_SINGLE_ECDH_USE
+#if defined(SSL_OP_SINGLE_ECDH_USE)
     {
         "SINGLE_ECDH_USE", SSL_OP_SINGLE_ECDH_USE
     },
@@ -429,7 +429,7 @@ static struct ssl_option {
         "", 0
     },
     {
-        NULL, 0
+        nullptr, 0
     }
 };
 #endif /* USE_OPENSSL */
@@ -455,7 +455,7 @@ Security::PeerOptions::parseOptions()
 
 #if USE_OPENSSL
     ::Parser::Tokenizer tok(str);
-    long op = 0;
+    ParsedOptions op = 0;
 
     while (!tok.atEnd()) {
         enum {
@@ -472,7 +472,8 @@ Security::PeerOptions::parseOptions()
         static const CharacterSet optChars = CharacterSet("TLS-option", "_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
         int64_t hex = 0;
         SBuf option;
-        long value = 0;
+        ParsedOptions value = 0;
+        bool found = false;
 
         // Bug 4429: identify the full option name before determining text or numeric
         if (tok.prefix(option, optChars)) {
@@ -481,14 +482,16 @@ Security::PeerOptions::parseOptions()
             for (struct ssl_option *opttmp = ssl_options; opttmp->name; ++opttmp) {
                 if (option.cmp(opttmp->name) == 0) {
                     value = opttmp->value;
+                    found = true;
                     break;
                 }
             }
 
             // Special case.. hex specification
             ::Parser::Tokenizer tmp(option);
-            if (!value && tmp.int64(hex, 16, false) && tmp.atEnd()) {
+            if (!found && tmp.int64(hex, 16, false) && tmp.atEnd()) {
                 value = hex;
+                found = true;
             }
         }
 
@@ -502,7 +505,7 @@ Security::PeerOptions::parseOptions()
                 break;
             }
         } else {
-            debugs(83, DBG_PARSE_NOTE(1), "ERROR: Unknown TLS option " << option);
+            debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: " << (found?"Unsupported":"Unknown") << " TLS option " << option);
         }
 
         static const CharacterSet delims("TLS-option-delim",":,");
@@ -512,9 +515,10 @@ Security::PeerOptions::parseOptions()
 
     }
 
-#if SSL_OP_NO_SSLv2
+#if defined(SSL_OP_NO_SSLv2)
     // compliance with RFC 6176: Prohibiting Secure Sockets Layer (SSL) Version 2.0
-    op = op | SSL_OP_NO_SSLv2;
+    if (SSL_OP_NO_SSLv2)
+        op |= SSL_OP_NO_SSLv2;
 #endif
     parsedOptions = op;
 
@@ -619,7 +623,7 @@ Security::PeerOptions::loadCrlFile()
         return;
     }
 
-    while (X509_CRL *crl = PEM_read_bio_X509_CRL(in,NULL,NULL,NULL)) {
+    while (X509_CRL *crl = PEM_read_bio_X509_CRL(in,nullptr,nullptr,nullptr)) {
         parsedCrl.emplace_back(Security::CrlPointer(crl));
     }
     BIO_free(in);

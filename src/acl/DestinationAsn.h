@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,18 +9,23 @@
 #ifndef SQUID_ACLDESTINATIONASN_H
 #define SQUID_ACLDESTINATIONASN_H
 
-#include "acl/Asn.h"
-#include "acl/Strategy.h"
-#include "ip/Address.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
+#include "ip/forward.h"
 
-/// \ingroup ACLAPI
-class ACLDestinationASNStrategy : public ACLStrategy<Ip::Address>
+namespace Acl
 {
 
+/// a "dst_as" ACL
+class DestinationAsnCheck: public ParameterizedNode< ACLData<Ip::Address> >
+{
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
-    virtual bool requiresRequest() const {return true;}
+    /* ACL API */
+    int match(ACLChecklist *) override;
+    bool requiresRequest() const override {return true;}
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLDESTINATIONASN_H */
 

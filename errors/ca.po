@@ -834,8 +834,7 @@ msgid ""
 "example, you can not POST a Gopher request."
 msgstr ""
 "La <i>cache</i> no admet tots els tipus de petici&oacute; per a tots els "
-"protocols. Per exemple, no es pot fer una petici&oacute; tipus POST en el "
-"protocol Gopher."
+"protocols."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -844,8 +843,7 @@ msgid ""
 "is currently not supported."
 msgstr ""
 "La <i>cache</i> no admet tots els tipus de petici&oacute; per a tots els "
-"protocols. Per exemple, no es pot fer una petici&oacute; tipus POST en el "
-"protocol Gopher."
+"protocols."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 #, fuzzy

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,13 +12,26 @@
 #include "base/AsyncCall.h"
 #include "base/AsyncJob.h"
 #include "base/AsyncJobCalls.h"
+#include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "cbdata.h"
+#include "mem/PoolingAllocator.h"
 #include "MemBuf.h"
+#include "mgr/Registration.h"
+#include "Store.h"
 
 #include <ostream>
+#include <unordered_set>
 
 InstanceIdDefinitions(AsyncJob, "job");
+
+/// a set of all AsyncJob objects in existence
+static auto &
+AllJobs()
+{
+    static const auto jobs = new std::unordered_set<AsyncJob *, std::hash<AsyncJob *>, std::equal_to<AsyncJob *>, PoolingAllocator<AsyncJob *> >();
+    return *jobs;
+}
 
 void
 AsyncJob::Start(const Pointer &job)
@@ -28,10 +41,11 @@ AsyncJob::Start(const Pointer &job)
 }
 
 AsyncJob::AsyncJob(const char *aTypeName) :
-    stopReason(NULL), typeName(aTypeName), inCall(NULL)
+    stopReason(nullptr), typeName(aTypeName), inCall(nullptr)
 {
     debugs(93,5, "AsyncJob constructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
+    AllJobs().insert(this);
 }
 
 AsyncJob::~AsyncJob()
@@ -39,6 +53,7 @@ AsyncJob::~AsyncJob()
     debugs(93,5, "AsyncJob destructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
     assert(!started_ || swanSang_);
+    AllJobs().erase(this);
 }
 
 void AsyncJob::start()
@@ -51,7 +66,7 @@ void AsyncJob::deleteThis(const char *aReason)
 {
     Must(aReason);
     stopReason = aReason;
-    if (inCall != NULL) {
+    if (inCall != nullptr) {
         // if we are in-call, then the call wrapper will delete us
         debugs(93, 4, typeName << " will NOT delete in-call job, reason: " << stopReason);
         return;
@@ -78,7 +93,7 @@ void AsyncJob::mustStop(const char *aReason)
         return;
     }
 
-    Must(inCall != NULL); // otherwise nobody will delete us if we are done()
+    Must(inCall != nullptr); // otherwise nobody will delete us if we are done()
     Must(aReason);
     if (!stopReason) {
         stopReason = aReason;
@@ -91,7 +106,7 @@ void AsyncJob::mustStop(const char *aReason)
 bool AsyncJob::done() const
 {
     // stopReason, set in mustStop(), overwrites all other conditions
-    return stopReason != NULL || doneAll();
+    return stopReason != nullptr || doneAll();
 }
 
 bool AsyncJob::doneAll() const
@@ -101,10 +116,10 @@ bool AsyncJob::doneAll() const
 
 bool AsyncJob::canBeCalled(AsyncCall &call) const
 {
-    if (inCall != NULL) {
+    if (inCall != nullptr) {
         // This may happen when we have bugs or some module is not calling
         // us asynchronously (comm used to do that).
-        debugs(93, 5, HERE << inCall << " is in progress; " <<
+        debugs(93, 5, inCall << " is in progress; " <<
                call << " cannot reenter the job.");
         return call.cancel("reentrant job call");
     }
@@ -154,13 +169,13 @@ void AsyncJob::callEnd()
         delete this; // this is the only place where a started job is deleted
 
         // careful: this object does not exist any more
-        debugs(93, 6, HERE << *inCallSaved << " ended " << thisSaved);
+        debugs(93, 6, *inCallSaved << " ended " << thisSaved);
         return;
     }
 
     debugs(inCall->debugSection, inCall->debugLevel,
            typeName << " status out:" << status());
-    inCall = NULL;
+    inCall = nullptr;
 }
 
 // returns a temporary string depicting transaction status, for debugging
@@ -170,12 +185,35 @@ const char *AsyncJob::status() const
     buf.reset();
 
     buf.append(" [", 2);
-    if (stopReason != NULL) {
+    if (stopReason != nullptr) {
         buf.appendf("Stopped, reason:%s", stopReason);
     }
     buf.appendf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
 
     return buf.content();
+}
+
+void
+AsyncJob::ReportAllJobs(StoreEntry *e)
+{
+    PackableStream os(*e);
+    // this loop uses YAML syntax, but AsyncJob::status() still needs to be adjusted to use YAML
+    const char *indent = "    ";
+    for (const auto job: AllJobs()) {
+        os << indent << job->id << ":\n";
+        os << indent << indent << "type: '" << job->typeName << "'\n";
+        os << indent << indent << "status:" << job->status() << '\n';
+        if (!job->started_)
+            os << indent << indent << "started: false\n";
+        if (job->stopReason)
+            os << indent << indent << "stopped: '" << job->stopReason << "'\n";
+    }
+}
+
+void
+AsyncJob::RegisterWithCacheManager()
+{
+    Mgr::RegisterAction("jobs", "All AsyncJob objects", &AsyncJob::ReportAllJobs, 0, 1);
 }
 

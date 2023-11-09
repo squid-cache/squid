@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,16 +21,6 @@
  * DO *NOT* MAKE ANY CHANGES below here unless you know what you're doing...*
  *--------------------------------------------------------------------------*
  ****************************************************************************/
-
-/* we target Windows XP and later - some API are missing otherwise */
-#if _SQUID_MINGW_
-#if WINVER < 0x0501
-#undef WINVER
-#define WINVER 0x0501
-#undef _WIN32_WINNT
-#define _WIN32_WINNT WINVER
-#endif
-#endif /* _SQUID_MINGW_ */
 
 #include "compat/initgroups.h"
 
@@ -54,19 +44,6 @@
 #pragma warning( disable : 4290 )
 #pragma warning( disable : 4996 )
 #endif
-#endif
-
-/* Some MinGW version defines min() and max() as macros
-   causing the fail of the build process. The following
-   #define will disable that definition
- */
-#if defined(__GNUC__) && !NOMINMAX
-#define NOMINMAX
-#endif
-
-/// some builds of MinGW do not define IPV6_V6ONLY socket option
-#if !defined(IPV6_V6ONLY)
-#define IPV6_V6ONLY 27
 #endif
 
 #if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
@@ -112,7 +89,7 @@ typedef unsigned long ino_t;
 #define vsnprintf _vsnprintf
 #endif
 
-/*  Microsoft C Compiler and CygWin need these. MinGW does not */
+/*  Microsoft C Compiler and CygWin need these. */
 #if defined(_MSC_VER) || _SQUID_CYGWIN_
 SQUIDCEXTERN int WIN32_ftruncate(int fd, off_t size);
 #define ftruncate WIN32_ftruncate
@@ -237,12 +214,6 @@ SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #define SIGUSR1 30  /* user defined signal 1 */
 #define SIGUSR2 31  /* user defined signal 2 */
 
-#if _SQUID_MINGW_
-typedef unsigned char boolean;
-typedef unsigned char u_char;
-typedef unsigned int u_int;
-#endif
-
 #if defined(_MSC_VER)
 typedef int uid_t;
 typedef int gid_t;
@@ -281,8 +252,6 @@ struct timezone {
 #include <errno.h>
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
-#elif HAVE_WINSOCK_H
-#include <winsock.h>
 #endif
 
 #if !_SQUID_CYGWIN_
@@ -310,8 +279,6 @@ struct timezone {
 #endif
 
 #include <io.h>
-
-typedef char * caddr_t;
 
 #ifndef _PATH_DEVNULL
 #define _PATH_DEVNULL "NUL"
@@ -426,11 +393,6 @@ SQUIDCEXTERN _CRTIMP ioinfo * __pioinfo[];
 SQUIDCEXTERN int __cdecl _free_osfhnd(int);
 #endif
 
-#if _SQUID_MINGW_
-__MINGW_IMPORT ioinfo * __pioinfo[];
-SQUIDCEXTERN int _free_osfhnd(int);
-#endif
-
 SQUIDCEXTERN THREADLOCAL int ws32_result;
 
 #if defined(__cplusplus)
@@ -508,7 +470,7 @@ namespace Squid
 
 /*
  * Each of these functions is defined in the Squid namespace so as not to
- * clash with the winsock.h and winsock2.h definitions.
+ * clash with the winsock2.h definitions.
  * It is then paired with a #define to cause these wrappers to be used by
  * the main code instead of those system definitions.
  *
@@ -617,28 +579,6 @@ getsockopt(int s, int l, int o, void * v, socklen_t * n)
         return 0;
 }
 #define getsockopt(s,l,o,v,n) Squid::getsockopt(s,l,o,v,n)
-
-inline char *
-inet_ntop(int af, const void *src, char *dst, size_t size)
-{
-#if HAVE_DECL_INETNTOPA
-    return (char*)InetNtopA(af, const_cast<void*>(src), dst, size);
-#else
-    return ::inet_ntop(af, src, dst, size);
-#endif
-}
-#define inet_ntop(a,s,d,l) Squid::inet_ntop(a,s,d,l)
-
-inline char *
-inet_pton(int af, const void *src, char *dst)
-{
-#if HAVE_DECL_INETPTONA
-    return (char*)InetPtonA(af, const_cast<void*>(src), dst);
-#else
-    return ::inet_pton(af, src, dst);
-#endif
-}
-#define inet_pton(a,s,d) Squid::inet_pton(a,s,d)
 
 /* Simple ioctl() emulation */
 inline int
@@ -935,11 +875,6 @@ setgid (gid_t gid)
     return 0;
 }
 
-/* for some reason autoconf misdetects getpagesize.. */
-#if HAVE_GETPAGESIZE && _SQUID_MINGW_
-#undef HAVE_GETPAGESIZE
-#endif
-
 #if !HAVE_GETPAGESIZE
 /* And now we define a compatibility layer */
 size_t getpagesize();
@@ -949,15 +884,6 @@ size_t getpagesize();
 SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
 SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
 SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
-
-/* gcc doesn't recognize the Windows native 64 bit formatting tags causing
- * the compile fail, so we must disable the check on native Windows.
- */
-#if __GNUC__
-#define PRINTF_FORMAT_ARG1
-#define PRINTF_FORMAT_ARG2
-#define PRINTF_FORMAT_ARG3
-#endif
 
 /* XXX: the logic around this is a bit warped:
  *   we #define ACL unconditionally at the top of this file,
@@ -990,24 +916,6 @@ SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
 
 void openlog(const char *ident, int logopt, int facility);
 void syslog(int priority, const char *fmt, ...);
-#endif
-
-#if _SQUID_MINGW_
-/* MinGW missing bits from sys/wait.h */
-/* A status looks like:
- *  <2 bytes info> <2 bytes code>
- *
- *  <code> == 0, child has exited, info is the exit value
- *  <code> == 1..7e, child has exited, info is the signal number.
- *  <code> == 7f, child has stopped, info was the signal number.
- *  <code> == 80, there was a core dump.
- */
-#define WIFEXITED(w)    (((w) & 0xff) == 0)
-#define WIFSIGNALED(w)  (((w) & 0x7f) > 0 && (((w) & 0x7f) < 0x7f))
-#define WIFSTOPPED(w)   (((w) & 0xff) == 0x7f)
-#define WEXITSTATUS(w)  (((w) >> 8) & 0xff)
-#define WTERMSIG(w) ((w) & 0x7f)
-#define WSTOPSIG    WEXITSTATUS
 #endif
 
 /* prototypes */

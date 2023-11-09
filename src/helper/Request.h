@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,8 +9,10 @@
 #ifndef _SQUID_SRC_HELPER_REQUEST_H
 #define _SQUID_SRC_HELPER_REQUEST_H
 
+#include "cbdata.h"
 #include "helper/forward.h"
-#include "SquidTime.h"
+#include "mem/AllocatorProxy.h"
+#include "time/gadgets.h"
 
 namespace Helper
 {
@@ -21,10 +23,10 @@ class Request
 
 public:
     Request(HLPCB *c, void *d, const char *b) :
-        buf(b ? xstrdup(b) : NULL),
+        buf(b ? xstrdup(b) : nullptr),
         callback(c),
         data(cbdataReference(d)),
-        placeholder(b == NULL),
+        placeholder(b == nullptr),
         Id(0),
         retries(0)
     {

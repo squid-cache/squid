@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,7 +35,6 @@
 #include "comm/Loops.h"
 #include "fde.h"
 #include "globals.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 
@@ -45,19 +44,6 @@
 #endif
 
 #define KE_LENGTH        128
-
-/* jlemon goofed up and didn't add EV_SET until fbsd 4.3 */
-
-#ifndef EV_SET
-#define EV_SET(kevp, a, b, c, d, e, f) do {     \
-        (kevp)->ident = (a);                    \
-        (kevp)->filter = (b);                   \
-        (kevp)->flags = (c);                    \
-        (kevp)->fflags = (d);                   \
-        (kevp)->data = (e);                     \
-        (kevp)->udata = (f);                    \
-} while(0)
-#endif
 
 static void kq_update_events(int, short, PF *);
 static int kq;
@@ -115,7 +101,7 @@ kq_update_events(int fd, short filter, PF * handler)
         if (kqoff == kqmax - 1) {
             int ret;
 
-            ret = kevent(kq, kqlst, kqmax, NULL, 0, &zero_timespec);
+            ret = kevent(kq, kqlst, kqmax, nullptr, 0, &zero_timespec);
             /* jdc -- someone needs to do error checking... */
 
             if (ret == -1) {
@@ -169,7 +155,7 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->flags.open || (!handler && !client_data && !timeout));
-    debugs(5, 5, HERE << "FD " << fd << ", type=" << type <<
+    debugs(5, 5, "FD " << fd << ", type=" << type <<
            ", handler=" << handler << ", client_data=" << client_data <<
            ", timeout=" << timeout);
 
@@ -250,7 +236,7 @@ Comm::DoSelect(int msec)
 
     for (i = 0; i < num; ++i) {
         int fd = (int) ke[i].ident;
-        PF *hdl = NULL;
+        PF *hdl = nullptr;
         fde *F = &fd_table[fd];
 
         if (ke[i].flags & EV_ERROR) {
@@ -261,14 +247,14 @@ Comm::DoSelect(int msec)
 
         if (ke[i].filter == EVFILT_READ || F->flags.read_pending) {
             if ((hdl = F->read_handler) != NULL) {
-                F->read_handler = NULL;
+                F->read_handler = nullptr;
                 hdl(fd, F->read_data);
             }
         }
 
         if (ke[i].filter == EVFILT_WRITE) {
             if ((hdl = F->write_handler) != NULL) {
-                F->write_handler = NULL;
+                F->write_handler = nullptr;
                 hdl(fd, F->write_data);
             }
         }

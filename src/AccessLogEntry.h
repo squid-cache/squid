@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,7 @@
 #include "MessageSizes.h"
 #include "Notes.h"
 #include "proxyp/forward.h"
-#include "sbuf/SBuf.h"
+#include "sbuf/forward.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif
@@ -44,16 +44,21 @@ public:
     typedef RefCount<AccessLogEntry> Pointer;
 
     AccessLogEntry();
-    virtual ~AccessLogEntry();
+    ~AccessLogEntry() override;
 
     /* CodeContext API */
-    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
-    virtual ScopedId codeContextGist() const override;
+    std::ostream &detailCodeContext(std::ostream &os) const override;
+    ScopedId codeContextGist() const override;
 
     /// Fetch the client IP log string into the given buffer.
     /// Knows about several alternate locations of the IP
     /// including indirect forwarded-for IP if configured to log that
     void getLogClientIp(char *buf, size_t bufsz) const;
+
+    /// %>A: Compute client FQDN if possible, using the supplied buf if needed.
+    /// \returns result for immediate logging (not necessarily pointing to buf)
+    /// Side effect: Enables reverse DNS lookups of future client addresses.
+    const char *getLogClientFqdn(char *buf, size_t bufSize) const;
 
     /// Fetch the client IDENT string, or nil if none is available.
     const char *getClientIdent() const;
@@ -194,6 +199,12 @@ public:
     /// key:value pairs set by squid.conf note directive and
     /// key=value pairs returned from URL rewrite/redirect helper
     NotePairs::Pointer notes;
+
+    /// The total number of finished attempts to establish a connection.
+    /// Excludes discarded HappyConnOpener attempts. Includes failed
+    /// HappyConnOpener attempts and [always successful] persistent connection
+    /// reuse. See %request_attempts.
+    int requestAttempts = 0;
 
     /// see ConnStateData::proxyProtocolHeader_
     ProxyProtocol::HeaderPointer proxyProtocolHeader;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,13 +22,10 @@
 #include "MemBuf.h"
 #include "mime_header.h"
 #include "RequestFlags.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
 #include "tools.h"
 #include "urn.h"
-
-#define URN_REQBUF_SZ   4096
 
 class UrnState : public StoreClient
 {
@@ -40,7 +37,7 @@ public:
     void start (HttpRequest *, StoreEntry *);
     void setUriResFromRequest(HttpRequest *);
 
-    virtual ~UrnState();
+    ~UrnState() override;
 
     StoreEntry *entry = nullptr;
     store_client *sc = nullptr;
@@ -49,13 +46,13 @@ public:
     HttpRequest::Pointer urlres_r;
     AccessLogEntry::Pointer ale; ///< details of the requesting transaction
 
-    char reqbuf[URN_REQBUF_SZ] = { '\0' };
-    int reqofs = 0;
+    /// for receiving a URN resolver reply body from Store and interpreting it
+    Store::ParsingBuffer parsingBuffer;
 
 private:
     /* StoreClient API */
-    virtual LogTags *loggingTags() const { return ale ? &ale->cache.code : nullptr; }
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    LogTags *loggingTags() const override { return ale ? &ale->cache.code : nullptr; }
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     char *urlres = nullptr;
 };
@@ -71,7 +68,7 @@ typedef struct {
 } url_entry;
 
 static STCB urnHandleReply;
-static url_entry *urnParseReply(const char *inbuf, const HttpRequestMethod&);
+static url_entry *urnParseReply(const SBuf &, const HttpRequestMethod &);
 static const char *const crlf = "\r\n";
 
 CBDATA_CLASS_INIT(UrnState);
@@ -96,14 +93,14 @@ static url_entry *
 urnFindMinRtt(url_entry * urls, const HttpRequestMethod &, int *rtt_ret)
 {
     int min_rtt = 0;
-    url_entry *u = NULL;
-    url_entry *min_u = NULL;
+    url_entry *u = nullptr;
+    url_entry *min_u = nullptr;
     int i;
     int urlcnt = 0;
     debugs(52, 3, "urnFindMinRtt");
-    assert(urls != NULL);
+    assert(urls != nullptr);
 
-    for (i = 0; NULL != urls[i].url; ++i)
+    for (i = 0; nullptr != urls[i].url; ++i)
         ++urlcnt;
 
     debugs(53, 3, "urnFindMinRtt: Counted " << i << " URLs");
@@ -171,7 +168,7 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     entry->lock("UrnState::start");
     setUriResFromRequest(r);
 
-    if (urlres_r == NULL)
+    if (urlres_r == nullptr)
         return;
 
     auto urlEntry = storeGetPublic(urlres, Http::METHOD_GET);
@@ -190,13 +187,8 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
         sc = storeClientListAdd(urlres_e, this);
     }
 
-    reqofs = 0;
-    StoreIOBuffer tempBuffer;
-    tempBuffer.offset = reqofs;
-    tempBuffer.length = URN_REQBUF_SZ;
-    tempBuffer.data = reqbuf;
     storeClientCopy(sc, urlres_e,
-                    tempBuffer,
+                    parsingBuffer.makeInitialSpace(),
                     urnHandleReply,
                     this);
 }
@@ -238,19 +230,14 @@ urnHandleReply(void *data, StoreIOBuffer result)
     UrnState *urnState = static_cast<UrnState *>(data);
     StoreEntry *e = urnState->entry;
     StoreEntry *urlres_e = urnState->urlres_e;
-    char *s = NULL;
-    size_t k;
-    HttpReply *rep;
     url_entry *urls;
     url_entry *u;
     url_entry *min_u;
     ErrorState *err;
     int i;
     int urlcnt = 0;
-    char *buf = urnState->reqbuf;
-    StoreIOBuffer tempBuffer;
 
-    debugs(52, 3, "urnHandleReply: Called with size=" << result.length << ".");
+    debugs(52, 3, result << " with " << *e);
 
     if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED) || result.flags.error) {
         delete urnState;
@@ -263,59 +250,39 @@ urnHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    /* Update reqofs to point to where in the buffer we'd be */
-    urnState->reqofs += result.length;
-
-    /* Handle reqofs being bigger than normal */
-    if (urnState->reqofs >= URN_REQBUF_SZ) {
-        delete urnState;
-        return;
-    }
+    urnState->parsingBuffer.appended(result.data, result.length);
 
     /* If we haven't received the entire object (urn), copy more */
-    if (urlres_e->store_status == STORE_PENDING) {
-        Must(result.length > 0); // zero length ought to imply STORE_OK
-        tempBuffer.offset = urnState->reqofs;
-        tempBuffer.length = URN_REQBUF_SZ - urnState->reqofs;
-        tempBuffer.data = urnState->reqbuf + urnState->reqofs;
+    if (!urnState->sc->atEof()) {
+        const auto bufferedBytes = urnState->parsingBuffer.contentSize();
+        const auto remainingSpace = urnState->parsingBuffer.space().positionAt(bufferedBytes);
+
+        if (!remainingSpace.length) {
+            debugs(52, 3, "ran out of buffer space after " << bufferedBytes << " bytes");
+            // TODO: Here and in other error cases, send ERR_URN_RESOLVE to client.
+            delete urnState;
+            return;
+        }
+
         storeClientCopy(urnState->sc, urlres_e,
-                        tempBuffer,
+                        remainingSpace,
                         urnHandleReply,
                         urnState);
         return;
     }
 
-    /* we know its STORE_OK */
-    k = headersEnd(buf, urnState->reqofs);
-
-    if (0 == k) {
-        debugs(52, DBG_IMPORTANT, "urnHandleReply: didn't find end-of-headers for " << e->url()  );
-        delete urnState;
-        return;
-    }
-
-    s = buf + k;
-    // TODO: Check whether we should parse urlres_e reply, as before 528b2c61.
-    rep = new HttpReply;
-    rep->parseCharBuf(buf, k);
-    debugs(52, 3, "reply exists, code=" << rep->sline.status() << ".");
-
-    if (rep->sline.status() != Http::scOkay) {
+    const auto &peerReply = urlres_e->mem().baseReply();
+    debugs(52, 3, "got reply, code=" << peerReply.sline.status());
+    if (peerReply.sline.status() != Http::scOkay) {
         debugs(52, 3, "urnHandleReply: failed.");
         err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw(), urnState->ale);
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
-        delete rep;
         delete urnState;
         return;
     }
 
-    delete rep;
-
-    while (xisspace(*s))
-        ++s;
-
-    urls = urnParseReply(s, urnState->request->method);
+    urls = urnParseReply(urnState->parsingBuffer.toSBuf(), urnState->request->method);
 
     if (!urls) {     /* unknown URN error */
         debugs(52, 3, "urnTranslateDone: unknown URN " << e->url());
@@ -331,7 +298,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     debugs(53, 3, "urnFindMinRtt: Counted " << i << " URLs");
 
-    min_u = urnFindMinRtt(urls, urnState->request->method, NULL);
+    min_u = urnFindMinRtt(urls, urnState->request->method, nullptr);
     qsort(urls, urlcnt, sizeof(*urls), url_entry_sort);
     e->buffer();
     SBuf body;
@@ -362,9 +329,9 @@ urnHandleReply(void *data, StoreIOBuffer result)
         "<ADDRESS>\n"
         "Generated by %s@%s\n"
         "</ADDRESS>\n",
-        APP_FULLNAME, getMyHostname());
-    rep = new HttpReply;
-    rep->setHeaders(Http::scFound, NULL, "text/html", mb->length(), 0, squid_curtime);
+        visible_appname_string, getMyHostname());
+    const auto rep = new HttpReply;
+    rep->setHeaders(Http::scFound, nullptr, "text/html", mb->length(), 0, squid_curtime);
 
     if (min_u) {
         rep->header.putStr(Http::HdrType::LOCATION, min_u->url);
@@ -385,9 +352,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
 }
 
 static url_entry *
-urnParseReply(const char *inbuf, const HttpRequestMethod& m)
+urnParseReply(const SBuf &inBuf, const HttpRequestMethod &m)
 {
-    char *buf = xstrdup(inbuf);
     char *token;
     url_entry *list;
     url_entry *old;
@@ -396,7 +362,14 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
     debugs(52, 3, "urnParseReply");
     list = (url_entry *)xcalloc(n + 1, sizeof(*list));
 
-    for (token = strtok(buf, crlf); token; token = strtok(NULL, crlf)) {
+    // XXX: Switch to tokenizer-based parsing.
+    const auto allocated = SBufToCstring(inBuf);
+
+    auto buf = allocated;
+    while (xisspace(*buf))
+        ++buf;
+
+    for (token = strtok(buf, crlf); token; token = strtok(nullptr, crlf)) {
         debugs(52, 3, "urnParseReply: got '" << token << "'");
 
         if (i == n) {
@@ -431,7 +404,7 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
     }
 
     debugs(52, 3, "urnParseReply: Found " << i << " URLs");
-    xfree(buf);
+    xfree(allocated);
     return list;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@
 
 #include "squid.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "cbdata.h"
 #include "event.h"
 #include "fde.h"
@@ -33,8 +34,8 @@
 #include "mime_header.h"
 #include "neighbors.h"
 #include "PeerSelectState.h"
+#include "sbuf/SBuf.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
 #include "tools.h"
@@ -48,8 +49,6 @@
 #include "icmp/IcmpSquid.h"
 #include "ipcache.h"
 #include "StoreClient.h"
-
-#define NETDB_REQBUF_SZ 4096
 
 typedef enum {
     STATE_NONE,
@@ -66,7 +65,6 @@ public:
         p(aPeer),
         r(theReq)
     {
-        *buf = 0;
         assert(r);
         // TODO: check if we actually need to do this. should be implicit
         r->http_ver = Http::ProtocolVersion();
@@ -82,19 +80,19 @@ public:
     StoreEntry *e = nullptr;
     store_client *sc = nullptr;
     HttpRequestPointer r;
-    int64_t used = 0;
-    size_t buf_sz = NETDB_REQBUF_SZ;
-    char buf[NETDB_REQBUF_SZ];
-    int buf_ofs = 0;
+
+    /// for receiving a NetDB reply body from Store and interpreting it
+    Store::ParsingBuffer parsingBuffer;
+
     netdb_conn_state_t connstate = STATE_HEADER;
 };
 
 CBDATA_CLASS_INIT(netdbExchangeState);
 
-static hash_table *addr_table = NULL;
-static hash_table *host_table = NULL;
+static hash_table *addr_table = nullptr;
+static hash_table *host_table = nullptr;
 
-Ip::Address networkFromInaddr(const Ip::Address &a);
+static Ip::Address networkFromInaddr(const Ip::Address &a);
 static void netdbRelease(netdbEntry * n);
 
 static void netdbHashInsert(netdbEntry * n, Ip::Address &addr);
@@ -107,22 +105,20 @@ static net_db_peer *netdbPeerByName(const netdbEntry * n, const char *);
 static net_db_peer *netdbPeerAdd(netdbEntry * n, CachePeer * e);
 static const char *netdbPeerName(const char *name);
 static IPH netdbSendPing;
-static FREE netdbFreeNameEntry;
-static FREE netdbFreeNetdbEntry;
 static STCB netdbExchangeHandleReply;
 
 /* We have to keep a local list of CachePeer names.  The Peers structure
  * gets freed during a reconfigure.  We want this database to
  * remain persisitent, so _net_db_peer->peername points into this
  * linked list */
-static wordlist *peer_names = NULL;
+static wordlist *peer_names = nullptr;
 
 static void
 netdbHashInsert(netdbEntry * n, Ip::Address &addr)
 {
     networkFromInaddr(addr).toStr(n->network, MAX_IPSTRLEN);
     n->key = n->network;
-    assert(hash_lookup(addr_table, n->network) == NULL);
+    assert(hash_lookup(addr_table, n->network) == nullptr);
     hash_join(addr_table, n);
 }
 
@@ -131,7 +127,7 @@ netdbHashDelete(const char *key)
 {
     hash_link *hptr = (hash_link *)hash_lookup(addr_table, key);
 
-    if (hptr == NULL) {
+    if (hptr == nullptr) {
         debug_trap("netdbHashDelete: key not found");
         return;
     }
@@ -154,15 +150,15 @@ static void
 netdbHostInsert(netdbEntry * n, const char *hostname)
 {
     net_db_name *x = new net_db_name(hostname, n);
-    assert(hash_lookup(host_table, hostname) == NULL);
+    assert(hash_lookup(host_table, hostname) == nullptr);
     hash_join(host_table, x);
 }
 
 static void
 netdbHostDelete(const net_db_name * x)
 {
-    assert(x != NULL);
-    assert(x->net_db_entry != NULL);
+    assert(x != nullptr);
+    assert(x->net_db_entry != nullptr);
 
     netdbEntry *n = x->net_db_entry;
     -- n->link_count;
@@ -182,7 +178,7 @@ static netdbEntry *
 netdbLookupHost(const char *key)
 {
     net_db_name *x = (net_db_name *) hash_lookup(host_table, key);
-    return x ? x->net_db_entry : NULL;
+    return x ? x->net_db_entry : nullptr;
 }
 
 static void
@@ -196,9 +192,9 @@ netdbRelease(netdbEntry * n)
         netdbHostDelete(x);
     }
 
-    n->hosts = NULL;
+    n->hosts = nullptr;
     safe_free(n->peers);
-    n->peers = NULL;
+    n->peers = nullptr;
     n->n_peers = 0;
     n->n_peers_alloc = 0;
 
@@ -230,7 +226,6 @@ netdbPurgeLRU(void)
     netdbEntry **list;
     int k = 0;
     int list_count = 0;
-    int removed = 0;
     list = (netdbEntry **)xcalloc(netdbEntry::UseCount(), sizeof(netdbEntry *));
     hash_first(addr_table);
 
@@ -250,8 +245,6 @@ netdbPurgeLRU(void)
             break;
 
         netdbRelease(*(list + k));
-
-        ++removed;
     }
 
     xfree(list);
@@ -276,7 +269,7 @@ netdbAdd(Ip::Address &addr)
     if (netdbEntry::UseCount() > Config.Netdb.high)
         netdbPurgeLRU();
 
-    if ((n = netdbLookupAddr(addr)) == NULL) {
+    if ((n = netdbLookupAddr(addr)) == nullptr) {
         n = new netdbEntry;
         netdbHashInsert(n, addr);
     }
@@ -288,21 +281,21 @@ static void
 netdbSendPing(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
 {
     Ip::Address addr;
-    char *hostname = NULL;
+    char *hostname = nullptr;
     static_cast<generic_cbdata *>(data)->unwrap(&hostname);
     netdbEntry *n;
     netdbEntry *na;
     net_db_name *x;
     net_db_name **X;
 
-    if (ia == NULL) {
+    if (ia == nullptr) {
         xfree(hostname);
         return;
     }
 
     addr = ia->current();
 
-    if ((n = netdbLookupHost(hostname)) == NULL) {
+    if ((n = netdbLookupHost(hostname)) == nullptr) {
         n = netdbAdd(addr);
         netdbHostInsert(n, hostname);
     } else if ((na = netdbLookupAddr(addr)) != n) {
@@ -310,15 +303,15 @@ netdbSendPing(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
          *hostname moved from 'network n' to 'network na'!
          */
 
-        if (na == NULL)
+        if (na == nullptr)
             na = netdbAdd(addr);
 
         debugs(38, 3, "netdbSendPing: " << hostname << " moved from " << n->network << " to " << na->network);
 
         x = (net_db_name *) hash_lookup(host_table, hostname);
 
-        if (x == NULL) {
-            debugs(38, DBG_IMPORTANT, "netdbSendPing: net_db_name list bug: " << hostname << " not found");
+        if (x == nullptr) {
+            debugs(38, DBG_IMPORTANT, "ERROR: Squid BUG: net_db_name list bug: " << hostname << " not found");
             xfree(hostname);
             return;
         }
@@ -352,7 +345,7 @@ netdbSendPing(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
     xfree(hostname);
 }
 
-Ip::Address
+static Ip::Address
 networkFromInaddr(const Ip::Address &in)
 {
     Ip::Address out;
@@ -365,22 +358,6 @@ networkFromInaddr(const Ip::Address &in)
         debugs(14, 5, "networkFromInaddr : Masked IPv6 Address to " << in << "/64 routing part.");
         return out;
     }
-
-#if USE_CLASSFUL
-    struct in_addr b;
-
-    in.getInAddr(b);
-
-    if (IN_CLASSC(b.s_addr))
-        b.s_addr &= IN_CLASSC_NET;
-    else if (IN_CLASSB(b.s_addr))
-        b.s_addr &= IN_CLASSB_NET;
-    else if (IN_CLASSA(b.s_addr))
-        b.s_addr &= IN_CLASSA_NET;
-
-    out = b;
-
-#endif
 
     debugs(14, 5, "networkFromInaddr : Masked IPv4 Address to " << out << "/24.");
 
@@ -416,7 +393,7 @@ netdbPeerByName(const netdbEntry * n, const char *peername)
             return p;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 static net_db_peer *
@@ -529,7 +506,7 @@ netdbSaveState(void *)
     debugs(38, DBG_IMPORTANT, "NETDB state saved; " <<
            count << " entries, " <<
            tvSubMsec(start, current_time) << " msec" );
-    eventAddIsh("netdbSaveState", netdbSaveState, NULL, 3600.0, 1);
+    eventAddIsh("netdbSaveState", netdbSaveState, nullptr, 3600.0, 1);
 }
 
 static void
@@ -584,21 +561,21 @@ netdbReloadState(void)
         q = strtok(t, w_space);
         t = s + 1;
 
-        if (NULL == q)
+        if (nullptr == q)
             continue;
 
         if (! (addr = q) )
             continue;
 
-        if (netdbLookupAddr(addr) != NULL)  /* no dups! */
+        if (netdbLookupAddr(addr) != nullptr)  /* no dups! */
             continue;
 
-        if ((q = strtok(NULL, w_space)) == NULL)
+        if ((q = strtok(nullptr, w_space)) == nullptr)
             continue;
 
         N.pings_sent = atoi(q);
 
-        if ((q = strtok(NULL, w_space)) == NULL)
+        if ((q = strtok(nullptr, w_space)) == nullptr)
             continue;
 
         N.pings_recv = atoi(q);
@@ -611,22 +588,22 @@ netdbReloadState(void)
 
         N.pings_recv = 1;
 
-        if ((q = strtok(NULL, w_space)) == NULL)
+        if ((q = strtok(nullptr, w_space)) == nullptr)
             continue;
 
         N.hops = atof(q);
 
-        if ((q = strtok(NULL, w_space)) == NULL)
+        if ((q = strtok(nullptr, w_space)) == nullptr)
             continue;
 
         N.rtt = atof(q);
 
-        if ((q = strtok(NULL, w_space)) == NULL)
+        if ((q = strtok(nullptr, w_space)) == nullptr)
             continue;
 
         N.next_ping_time = (time_t) atoi(q);
 
-        if ((q = strtok(NULL, w_space)) == NULL)
+        if ((q = strtok(nullptr, w_space)) == nullptr)
             continue;
 
         N.last_use_time = (time_t) atoi(q);
@@ -637,8 +614,8 @@ netdbReloadState(void)
 
         netdbHashInsert(n, addr);
 
-        while ((q = strtok(NULL, w_space)) != NULL) {
-            if (netdbLookupHost(q) != NULL) /* no dups! */
+        while ((q = strtok(nullptr, w_space)) != nullptr) {
+            if (netdbLookupHost(q) != nullptr) /* no dups! */
                 continue;
 
             netdbHostInsert(n, q);
@@ -668,43 +645,24 @@ netdbPeerName(const char *name)
 }
 
 static void
-netdbFreeNetdbEntry(void *data)
-{
-    netdbEntry *n = (netdbEntry *)data;
-    safe_free(n->peers);
-    delete n;
-}
-
-static void
-netdbFreeNameEntry(void *data)
-{
-    net_db_name *x = (net_db_name *)data;
-    delete x;
-}
-
-static void
 netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 {
     Ip::Address addr;
 
     netdbExchangeState *ex = (netdbExchangeState *)data;
-    int rec_sz = 0;
-    int o;
 
     struct in_addr line_addr;
     double rtt;
     double hops;
-    char *p;
     int j;
-    size_t hdr_sz;
     int nused = 0;
-    int size;
-    int oldbufofs = ex->buf_ofs;
 
-    rec_sz = 0;
+    size_t rec_sz = 0; // received record size (TODO: make const)
     rec_sz += 1 + sizeof(struct in_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
+    // to make progress without growing buffer space, we must parse at least one record per call
+    Assure(rec_sz <= ex->parsingBuffer.capacity());
     debugs(38, 3, "netdbExchangeHandleReply: " << receivedData.length << " read bytes");
 
     if (!ex->p.valid()) {
@@ -713,65 +671,29 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         return;
     }
 
-    debugs(38, 3, "netdbExchangeHandleReply: for '" << ex->p->host << ":" << ex->p->http_port << "'");
+    debugs(38, 3, "for " << *ex->p);
 
-    if (receivedData.length == 0 && !receivedData.flags.error) {
-        debugs(38, 3, "netdbExchangeHandleReply: Done");
+    if (receivedData.flags.error) {
         delete ex;
         return;
     }
 
-    p = ex->buf;
-
-    /* Get the size of the buffer now */
-    size = ex->buf_ofs + receivedData.length;
-    debugs(38, 3, "netdbExchangeHandleReply: " << size << " bytes buf");
-
-    /* Check if we're still doing headers */
-
     if (ex->connstate == STATE_HEADER) {
-
-        ex->buf_ofs += receivedData.length;
-
-        /* skip reply headers */
-
-        if ((hdr_sz = headersEnd(p, ex->buf_ofs))) {
-            debugs(38, 5, "netdbExchangeHandleReply: hdr_sz = " << hdr_sz);
-            const auto scode = ex->e->mem().baseReply().sline.status();
-            assert(scode != Http::scNone);
-            debugs(38, 3, "netdbExchangeHandleReply: reply status " << scode);
-
-            if (scode != Http::scOkay) {
-                delete ex;
-                return;
-            }
-
-            assert((size_t)ex->buf_ofs >= hdr_sz);
-
-            /*
-             * Now, point p to the part of the buffer where the data
-             * starts, and update the size accordingly
-             */
-            assert(ex->used == 0);
-            ex->used = hdr_sz;
-            size = ex->buf_ofs - hdr_sz;
-            p += hdr_sz;
-
-            /* Finally, set the conn state mode to STATE_BODY */
-            ex->connstate = STATE_BODY;
-        } else {
-            StoreIOBuffer tempBuffer;
-            tempBuffer.offset = ex->buf_ofs;
-            tempBuffer.length = ex->buf_sz - ex->buf_ofs;
-            tempBuffer.data = ex->buf + ex->buf_ofs;
-            /* Have more headers .. */
-            storeClientCopy(ex->sc, ex->e, tempBuffer,
-                            netdbExchangeHandleReply, ex);
+        const auto scode = ex->e->mem().baseReply().sline.status();
+        assert(scode != Http::scNone);
+        debugs(38, 3, "reply status " << scode);
+        if (scode != Http::scOkay) {
+            delete ex;
             return;
         }
+        ex->connstate = STATE_BODY;
     }
 
     assert(ex->connstate == STATE_BODY);
+
+    ex->parsingBuffer.appended(receivedData.data, receivedData.length);
+    auto p = ex->parsingBuffer.c_str(); // current parsing position
+    auto size = ex->parsingBuffer.contentSize(); // bytes we still need to parse
 
     /* If we get here, we have some body to parse .. */
     debugs(38, 5, "netdbExchangeHandleReply: start parsing loop, size = " << size);
@@ -781,6 +703,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         addr.setAnyAddr();
         hops = rtt = 0.0;
 
+        size_t o; // current record parsing offset
         for (o = 0; o < rec_sz;) {
             switch ((int) *(p + o)) {
 
@@ -807,7 +730,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
                 break;
 
             default:
-                debugs(38, DBG_IMPORTANT, "netdbExchangeHandleReply: corrupt data, aborting");
+                debugs(38, DBG_IMPORTANT, "ERROR: netdbExchangeHandleReply: corrupt data, aborting");
                 delete ex;
                 return;
             }
@@ -818,8 +741,6 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
         assert(o == rec_sz);
 
-        ex->used += rec_sz;
-
         size -= rec_sz;
 
         p += rec_sz;
@@ -827,32 +748,8 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         ++nused;
     }
 
-    /*
-     * Copy anything that is left over to the beginning of the buffer,
-     * and adjust buf_ofs accordingly
-     */
-
-    /*
-     * Evilly, size refers to the buf size left now,
-     * ex->buf_ofs is the original buffer size, so just copy that
-     * much data over
-     */
-    memmove(ex->buf, ex->buf + (ex->buf_ofs - size), size);
-
-    ex->buf_ofs = size;
-
-    /*
-     * And don't re-copy the remaining data ..
-     */
-    ex->used += size;
-
-    /*
-     * Now the tricky bit - size _included_ the leftover bit from the _last_
-     * storeClientCopy. We don't want to include that, or our offset will be wrong.
-     * So, don't count the size of the leftover buffer we began with.
-     * This can _disappear_ when we're not tracking offsets ..
-     */
-    ex->used -= oldbufofs;
+    const auto parsedSize = ex->parsingBuffer.contentSize() - size;
+    ex->parsingBuffer.consume(parsedSize);
 
     debugs(38, 3, "netdbExchangeHandleReply: size left over in this buffer: " << size << " bytes");
 
@@ -860,20 +757,26 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
            " entries, (x " << rec_sz << " bytes) == " << nused * rec_sz <<
            " bytes total");
 
-    debugs(38, 3, "netdbExchangeHandleReply: used " << ex->used);
-
     if (EBIT_TEST(ex->e->flags, ENTRY_ABORTED)) {
         debugs(38, 3, "netdbExchangeHandleReply: ENTRY_ABORTED");
         delete ex;
-    } else if (ex->e->store_status == STORE_PENDING) {
-        StoreIOBuffer tempBuffer;
-        tempBuffer.offset = ex->used;
-        tempBuffer.length = ex->buf_sz - ex->buf_ofs;
-        tempBuffer.data = ex->buf + ex->buf_ofs;
-        debugs(38, 3, "netdbExchangeHandleReply: EOF not received");
-        storeClientCopy(ex->sc, ex->e, tempBuffer,
-                        netdbExchangeHandleReply, ex);
+        return;
     }
+
+    if (ex->sc->atEof()) {
+        if (const auto leftoverBytes = ex->parsingBuffer.contentSize())
+            debugs(38, 2, "discarding a partially received record due to Store EOF: " << leftoverBytes);
+        delete ex;
+        return;
+    }
+
+    // TODO: To protect us from a broken peer sending an "infinite" stream of
+    // new addresses, limit the cumulative number of received bytes or records?
+
+    const auto remainingSpace = ex->parsingBuffer.space().positionAt(receivedData.offset + receivedData.length);
+    // rec_sz is at most buffer capacity, and we consume all fully loaded records
+    Assure(remainingSpace.length);
+    storeClientCopy(ex->sc, ex->e, remainingSpace, netdbExchangeHandleReply, ex);
 }
 
 #endif /* USE_ICMP */
@@ -897,7 +800,7 @@ netdbInit(void)
 
     host_table = hash_create((HASHCMP *) strcmp, n, hash_string);
 
-    eventAddIsh("netdbSaveState", netdbSaveState, NULL, 3600.0, 1);
+    eventAddIsh("netdbSaveState", netdbSaveState, nullptr, 3600.0, 1);
 
     netdbReloadState();
 
@@ -910,7 +813,7 @@ netdbPingSite(const char *hostname)
 #if USE_ICMP
     netdbEntry *n;
 
-    if ((n = netdbLookupHost(hostname)) != NULL)
+    if ((n = netdbLookupHost(hostname)) != nullptr)
         if (n->next_ping_time > squid_curtime)
             return;
 
@@ -929,7 +832,7 @@ netdbHandlePingReply(const Ip::Address &from, int hops, int rtt)
     int N;
     debugs(38, 3, "netdbHandlePingReply: from " << from);
 
-    if ((n = netdbLookupAddr(from)) == NULL)
+    if ((n = netdbLookupAddr(from)) == nullptr)
         return;
 
     N = ++n->pings_recv;
@@ -951,21 +854,6 @@ netdbHandlePingReply(const Ip::Address &from, int hops, int rtt)
     (void)from;
     (void)hops;
     (void)rtt;
-#endif
-}
-
-void
-netdbFreeMemory(void)
-{
-#if USE_ICMP
-    hashFreeItems(addr_table, netdbFreeNetdbEntry);
-    hashFreeMemory(addr_table);
-    addr_table = NULL;
-    hashFreeItems(host_table, netdbFreeNameEntry);
-    hashFreeMemory(host_table);
-    host_table = NULL;
-    wordlistDestroy(&peer_names);
-    peer_names = NULL;
 #endif
 }
 
@@ -1075,7 +963,7 @@ netdbHostData(const char *host, int *samp, int *rtt, int *hops)
 #if USE_ICMP
     netdbEntry *n = netdbLookupHost(host);
 
-    if (n == NULL)
+    if (n == nullptr)
         return;
 
     *samp = n->pings_recv;
@@ -1105,12 +993,12 @@ netdbUpdatePeer(const AnyP::Uri &url, CachePeer *e, int irtt, int ihops)
     debugs(38, 3, url.host() << ", " << ihops << " hops, " << irtt << " rtt");
     n = netdbLookupHost(url.host());
 
-    if (n == NULL) {
+    if (n == nullptr) {
         debugs(38, 3, "host " << url.host() << " not found");
         return;
     }
 
-    if ((p = netdbPeerByName(n, e->host)) == NULL)
+    if ((p = netdbPeerByName(n, e->host)) == nullptr)
         p = netdbPeerAdd(n, e);
 
     p->rtt = rtt;
@@ -1152,12 +1040,12 @@ netdbExchangeUpdatePeer(Ip::Address &addr, CachePeer * e, double rtt, double hop
 
     n = netdbLookupAddr(addr);
 
-    if (n == NULL)
+    if (n == nullptr)
         n = netdbAdd(addr);
 
-    assert(NULL != n);
+    assert(nullptr != n);
 
-    if ((p = netdbPeerByName(n, e->host)) == NULL)
+    if ((p = netdbPeerByName(n, e->host)) == nullptr)
         p = netdbPeerAdd(n, e);
 
     p->rtt = rtt;
@@ -1188,7 +1076,7 @@ netdbDeleteAddrNetwork(Ip::Address &addr)
 #if USE_ICMP
     netdbEntry *n = netdbLookupAddr(addr);
 
-    if (n == NULL)
+    if (n == nullptr)
         return;
 
     debugs(38, 3, "netdbDeleteAddrNetwork: " << n->network);
@@ -1215,7 +1103,7 @@ netdbBinaryExchange(StoreEntry * s)
 
     struct in_addr line_addr;
     s->buffer();
-    reply->setHeaders(Http::scOkay, "OK", NULL, -1, squid_curtime, -2);
+    reply->setHeaders(Http::scOkay, "OK", nullptr, -1, squid_curtime, -2);
     s->replaceHttpReply(reply);
     rec_sz = 0;
     rec_sz += 1 + sizeof(struct in_addr);
@@ -1281,7 +1169,7 @@ netdbBinaryExchange(StoreEntry * s)
     memFree(buf, MEM_4K_BUF);
 #else
 
-    reply->setHeaders(Http::scBadRequest, "Bad Request", NULL, -1, squid_curtime, -2);
+    reply->setHeaders(Http::scBadRequest, "Bad Request", nullptr, -1, squid_curtime, -2);
     s->replaceHttpReply(reply);
     storeAppendPrintf(s, "NETDB support not compiled into this Squid cache.\n");
 #endif
@@ -1297,26 +1185,21 @@ netdbExchangeStart(void *data)
     static const SBuf netDB("netdb");
     char *uri = internalRemoteUri(p->secure.encryptTransport, p->host, p->http_port, "/squid-internal-dynamic/", netDB);
     debugs(38, 3, "Requesting '" << uri << "'");
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcmp);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initIcmp>();
     HttpRequestPointer req(HttpRequest::FromUrlXXX(uri, mx));
 
     if (!req) {
-        debugs(38, DBG_IMPORTANT, MYNAME << ": Bad URI " << uri);
+        debugs(38, DBG_IMPORTANT, "ERROR: " << MYNAME << ": Bad URI " << uri);
         return;
     }
 
     netdbExchangeState *ex = new netdbExchangeState(p, req);
     ex->e = storeCreateEntry(uri, uri, RequestFlags(), Http::METHOD_GET);
-    assert(NULL != ex->e);
-
-    StoreIOBuffer tempBuffer;
-    tempBuffer.length = ex->buf_sz;
-    tempBuffer.data = ex->buf;
+    assert(nullptr != ex->e);
 
     ex->sc = storeClientListAdd(ex->e, ex);
+    storeClientCopy(ex->sc, ex->e, ex->parsingBuffer.makeInitialSpace(), netdbExchangeHandleReply, ex);
 
-    storeClientCopy(ex->sc, ex->e, tempBuffer,
-                    netdbExchangeHandleReply, ex);
     ex->r->flags.loopDetected = true;   /* cheat! -- force direct */
 
     // XXX: send as Proxy-Authenticate instead
@@ -1329,6 +1212,32 @@ netdbExchangeStart(void *data)
 #endif
 }
 
+#if USE_ICMP
+/// a netdbClosestParent() helper to find the first usable parent CachePeer
+/// responsible for the given hostname
+static CachePeer *
+findUsableParentAtHostname(PeerSelector *ps, const char * const hostname, const HttpRequest &request)
+{
+    for (const auto &peer: CurrentCachePeers()) {
+        const auto p = peer.get();
+        // Both fields should be lowercase, but no code ensures that invariant.
+        // TODO: net_db_peer should point to CachePeer instead of its hostname!
+        if (strcasecmp(p->host, hostname) != 0)
+            continue;
+
+        if (neighborType(p, request.url) != PEER_PARENT)
+            continue;
+
+        if (!peerHTTPOkay(p, ps))
+            continue;
+
+        return p;
+    }
+
+    return nullptr;
+}
+#endif
+
 CachePeer *
 netdbClosestParent(PeerSelector *ps)
 {
@@ -1336,26 +1245,25 @@ netdbClosestParent(PeerSelector *ps)
     assert(ps);
     HttpRequest *request = ps->request;
 
-    CachePeer *p = NULL;
     netdbEntry *n;
     const ipcache_addrs *ia;
     net_db_peer *h;
     int i;
     n = netdbLookupHost(request->url.host());
 
-    if (NULL == n) {
+    if (nullptr == n) {
         /* try IP addr */
         ia = ipcache_gethostbyname(request->url.host(), 0);
 
-        if (NULL != ia)
+        if (nullptr != ia)
             n = netdbLookupAddr(ia->current());
     }
 
-    if (NULL == n)
-        return NULL;
+    if (nullptr == n)
+        return nullptr;
 
     if (0 == n->n_peers)
-        return NULL;
+        return nullptr;
 
     n->last_use_time = squid_curtime;
 
@@ -1371,23 +1279,13 @@ netdbClosestParent(PeerSelector *ps)
             if (n->rtt < h->rtt)
                 break;
 
-        p = peerFindByName(h->peername);
-
-        if (NULL == p)      /* not found */
-            continue;
-
-        if (neighborType(p, request->url) != PEER_PARENT)
-            continue;
-
-        if (!peerHTTPOkay(p, ps))  /* not allowed */
-            continue;
-
-        return p;
+        if (const auto p = findUsableParentAtHostname(ps, h->peername, *request))
+            return p;
     }
 
 #else
     (void)ps;
 #endif
-    return NULL;
+    return nullptr;
 }
 

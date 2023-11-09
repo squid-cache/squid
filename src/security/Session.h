@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 
 #include "base/HardFun.h"
 #include "comm/forward.h"
-#include "security/forward.h"
+#include "security/Context.h"
 #include "security/LockingPointer.h"
 
 #include <memory>

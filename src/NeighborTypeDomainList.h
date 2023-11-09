@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,8 @@
 
 #ifndef SQUID_NEIGHBORTYPEDOMAINLIST_H_
 #define SQUID_NEIGHBORTYPEDOMAINLIST_H_
+
+#include "enums.h"
 
 /// representation of a neighbor_type_domain configuration directive. A POD
 class NeighborTypeDomainList

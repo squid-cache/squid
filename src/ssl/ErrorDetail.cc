@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "errorpage.h"
 #include "fatal.h"
+#include "sbuf/SBuf.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/ErrorDetailManager.h"
 
@@ -57,7 +58,7 @@ static const char *OptionalSslErrors[] = {
     "X509_V_ERR_OCSP_VERIFY_NEEDED",
     "X509_V_ERR_OCSP_VERIFY_FAILED",
     "X509_V_ERR_OCSP_CERT_UNKNOWN",
-    NULL
+    nullptr
 };
 
 struct SslErrorAlias {
@@ -92,7 +93,7 @@ static SslErrorAlias TheSslErrorShortcutsArray[] = {
     {"certUntrusted", certUntrusted},
     {"ssl::certSelfSigned", certSelfSigned},
     {"certSelfSigned", certSelfSigned},
-    {NULL, NULL}
+    {nullptr, nullptr}
 };
 
 // Use std::map to optimize search.
@@ -118,7 +119,7 @@ Ssl::ParseErrorString(const char *name, Security::Errors &errors)
     }
 
     if (xisdigit(*name)) {
-        const long int value = strtol(name, NULL, 0);
+        const long int value = strtol(name, nullptr, 0);
         if ((SQUID_TLS_ERR_OFFSET < value && value < SQUID_TLS_ERR_END) || // custom
                 (value >= 0)) { // an official error, including SSL_ERROR_NONE
             errors.emplace(value);
@@ -147,16 +148,18 @@ Ssl::ParseErrorString(const char *name, Security::Errors &errors)
 bool
 Ssl::ErrorIsOptional(const char *name)
 {
-    for (int i = 0; OptionalSslErrors[i] != NULL; ++i) {
+    for (int i = 0; OptionalSslErrors[i] != nullptr; ++i) {
         if (strcmp(name, OptionalSslErrors[i]) == 0)
             return true;
     }
     return false;
 }
 
-const char *
+std::optional<SBuf>
 Ssl::GetErrorDescr(Security::ErrorCode value)
 {
-    return ErrorDetailsManager::GetInstance().getDefaultErrorDescr(value);
+    if (const auto detail = ErrorDetailsManager::GetInstance().findDefaultDetail(value))
+        return detail->descr;
+    return std::nullopt;
 }
 

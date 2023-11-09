@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,16 +28,24 @@
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "store/Disks.h"
 #include "tools.h"
 #include "wordlist.h"
 
 #include <cerrno>
+#if HAVE_SYS_CAPABILITY_H
+#include <sys/capability.h>
+#endif
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
 #endif
-#if HAVE_WIN32_PSAPI
+#if HAVE_SYS_PROCCTL_H
+#include <sys/procctl.h>
+#endif
+#if HAVE_PRIV_H
+#include <priv.h>
+#endif
+#if HAVE_PSAPI_H
 #include <psapi.h>
 #endif
 #if HAVE_SYS_STAT_H
@@ -106,7 +114,7 @@ dead_msg(void)
 static void
 mail_warranty(void)
 {
-    FILE *fp = NULL;
+    FILE *fp = nullptr;
     static char command[256];
 
     /*
@@ -121,7 +129,7 @@ mail_warranty(void)
 #if HAVE_MKSTEMP
     char filename[] = "/tmp/squid-XXXXXX";
     int tfd = mkstemp(filename);
-    if (tfd < 0 || (fp = fdopen(tfd, "w")) == NULL) {
+    if (tfd < 0 || (fp = fdopen(tfd, "w")) == nullptr) {
         umask(prev_umask);
         return;
     }
@@ -129,7 +137,7 @@ mail_warranty(void)
     char *filename;
     // XXX tempnam is obsolete since POSIX.2008-1
     // tmpfile is not an option, we want the created files to stick around
-    if ((filename = tempnam(NULL, APP_SHORTNAME)) == NULL ||
+    if ((filename = tempnam(nullptr, APP_SHORTNAME)) == NULL ||
             (fp = fopen(filename, "w")) == NULL) {
         umask(prev_umask);
         return;
@@ -172,7 +180,7 @@ void
 squid_getrusage(struct rusage *r)
 {
     memset(r, '\0', sizeof(struct rusage));
-#if HAVE_GETRUSAGE && defined(RUSAGE_SELF) && !_SQUID_WINDOWS_
+#if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
 #if _SQUID_SOLARIS_
     /* Solaris 2.5 has getrusage() permission bug -- Arjan de Vet */
     enter_suid();
@@ -184,7 +192,7 @@ squid_getrusage(struct rusage *r)
     leave_suid();
 #endif
 
-#elif _SQUID_WINDOWS_ && HAVE_WIN32_PSAPI
+#elif defined(PSAPI_VERSION)
     // Windows has an alternative method if there is no POSIX getrusage defined.
     if (WIN32_OS_version >= _WIN_OS_WINNT) {
         /* On Windows NT and later call PSAPI.DLL for process Memory */
@@ -273,6 +281,50 @@ rusage_pagefaults(struct rusage *r)
 #endif
 }
 
+/// Make the process traceable if possible. Call setTraceability() instead!
+/// Traceable processes may support attachment via ptrace(2) or ktrace(2),
+/// debugging sysctls, hwpmc(4), dtrace(1) and core dumping.
+static void
+makeTraceable()
+{
+    const auto handleError = [](const char * const syscall, const int savedErrno) {
+        throw TextException(ToSBuf(syscall, " failure: ", xstrerr(savedErrno)), Here());
+    };
+#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
+    if (prctl(PR_SET_DUMPABLE, 1) != 0)
+        handleError("prctl(PR_SET_DUMPABLE)", errno);
+#elif HAVE_PROCCTL && defined(PROC_TRACE_CTL)
+    // TODO: when FreeBSD 14 becomes the lowest version, we can
+    // possibly save one getpid syscall, for now still necessary.
+    int traceable = PROC_TRACE_CTL_ENABLE;
+    if (procctl(P_PID, getpid(), PROC_TRACE_CTL, &traceable) != 0)
+        handleError("procctl(PROC_TRACE_CTL_ENABLE)", errno);
+#elif HAVE_SETPFLAGS
+    if (setpflags(__PROC_PROTECT, 0) != 0)
+        handleError("setpflags(__PROC_PROTECT)", errno);
+#else
+    debugs(50, 2, "WARNING: Assuming this process is traceable");
+    (void)handleError; // just "use" the variable; there is no error here
+#endif
+}
+
+/// Make the process traceable if necessary.
+/// \sa makeTraceable()
+static void
+setTraceability()
+{
+    // for now, setting coredump_dir is required to make the process traceable
+    if (!Config.coredump_dir)
+        return;
+
+    try {
+        makeTraceable();
+    } catch (...) {
+        debugs(50, DBG_IMPORTANT, "ERROR: Cannot make the process traceable:" <<
+               Debug::Extra << "exception: " << CurrentException);
+    }
+}
+
 void
 PrintRusage(void)
 {
@@ -358,6 +410,7 @@ death(int sig)
         puts(dead_msg());
     }
 
+    Debug::PrepareToDie();
     abort();
 }
 
@@ -415,10 +468,10 @@ getMyHostname(void)
 {
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     static int present = 0;
-    struct addrinfo *AI = NULL;
+    struct addrinfo *AI = nullptr;
     Ip::Address sa;
 
-    if (Config.visibleHostname != NULL)
+    if (Config.visibleHostname != nullptr)
         return Config.visibleHostname;
 
     if (present)
@@ -426,7 +479,7 @@ getMyHostname(void)
 
     host[0] = '\0';
 
-    if (HttpPortList != NULL && sa.isAnyAddr())
+    if (HttpPortList != nullptr && sa.isAnyAddr())
         sa = HttpPortList->s;
 
     /*
@@ -437,7 +490,7 @@ getMyHostname(void)
 
         sa.getAddrInfo(AI);
         /* we are looking for a name. */
-        if (getnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, NULL, 0, NI_NAMEREQD ) == 0) {
+        if (getnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, nullptr, 0, NI_NAMEREQD ) == 0) {
             /* DNS lookup successful */
             /* use the official name from DNS lookup */
             debugs(50, 4, "getMyHostname: resolved " << sa << " to '" << host << "'");
@@ -464,7 +517,7 @@ getMyHostname(void)
         memset(&hints, 0, sizeof(addrinfo));
         hints.ai_flags = AI_CANONNAME;
 
-        if (getaddrinfo(host, NULL, NULL, &AI) == 0) {
+        if (getaddrinfo(host, nullptr, nullptr, &AI) == 0) {
             /* DNS lookup successful */
             /* use the official name from DNS lookup */
             debugs(50, 6, "getMyHostname: '" << host << "' has DNS resolution.");
@@ -493,7 +546,7 @@ getMyHostname(void)
 const char *
 uniqueHostname(void)
 {
-    debugs(21, 3, HERE << " Config: '" << Config.uniqueHostname << "'");
+    debugs(21, 3, " Config: '" << Config.uniqueHostname << "'");
     return Config.uniqueHostname ? Config.uniqueHostname : getMyHostname();
 }
 
@@ -514,7 +567,7 @@ leave_suid(void)
 
         if (setgid(Config2.effectiveGroupID) < 0) {
             int xerrno = errno;
-            debugs(50, DBG_CRITICAL, "ALERT: setgid: " << xstrerr(xerrno));
+            debugs(50, DBG_CRITICAL, "ERROR: setgid: " << xstrerr(xerrno));
         }
     }
 
@@ -522,7 +575,7 @@ leave_suid(void)
         return;
 
     /* Started as a root, check suid option */
-    if (Config.effectiveUser == NULL)
+    if (Config.effectiveUser == nullptr)
         return;
 
     debugs(21, 3, "leave_suid: PID " << getpid() << " giving up root, becoming '" << Config.effectiveUser << "'");
@@ -531,11 +584,11 @@ leave_suid(void)
 
         if (setgid(Config2.effectiveGroupID) < 0) {
             int xerrno = errno;
-            debugs(50, DBG_CRITICAL, "ALERT: setgid: " << xstrerr(xerrno));
+            debugs(50, DBG_CRITICAL, "ERROR: setgid: " << xstrerr(xerrno));
         }
 
         if (initgroups(Config.effectiveUser, Config2.effectiveGroupID) < 0) {
-            debugs(50, DBG_CRITICAL, "ALERT: initgroups: unable to set groups for User " <<
+            debugs(50, DBG_CRITICAL, "ERROR: initgroups: unable to set groups for User " <<
                    Config.effectiveUser << " and Group " <<
                    (unsigned) Config2.effectiveGroupID << "");
         }
@@ -562,14 +615,7 @@ leave_suid(void)
 #endif
 
     restoreCapabilities(true);
-
-#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
-    /* Set Linux DUMPABLE flag */
-    if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0) {
-        int xerrno = errno;
-        debugs(50, 2, "ALERT: prctl: " << xstrerr(xerrno));
-    }
-#endif
+    setTraceability();
 }
 
 /* Enter a privilegied section */
@@ -589,14 +635,8 @@ enter_suid(void)
         debugs(21, 3, "setuid(0) failed: " << xstrerr(xerrno));
     }
 #endif
-#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
-    /* Set Linux DUMPABLE flag */
 
-    if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0) {
-        int xerrno = errno;
-        debugs(50, 2, "ALERT: prctl: " << xstrerr(xerrno));
-    }
-#endif
+    setTraceability();
 }
 
 /* Give up the possibility to gain privilegies.
@@ -621,14 +661,7 @@ no_suid(void)
     }
 
     restoreCapabilities(false);
-
-#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
-    /* Set Linux DUMPABLE flag */
-    if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0) {
-        int xerrno = errno;
-        debugs(50, 2, "ALERT: prctl: " << xstrerr(xerrno));
-    }
-#endif
+    setTraceability();
 }
 
 bool
@@ -743,7 +776,7 @@ setMaxFD(void)
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_NOFILE: " << xstrerr(xerrno));
     } else if (Config.max_filedescriptors > 0) {
-#if USE_SELECT || USE_SELECT_WIN32
+#if USE_SELECT
         /* select() breaks if this gets set too big */
         if (Config.max_filedescriptors > FD_SETSIZE) {
             rl.rlim_cur = FD_SETSIZE;
@@ -817,7 +850,7 @@ setSystemLimits(void)
     }
 #endif /* RLIMIT_DATA */
     if (Config.max_filedescriptors > Squid_MaxFD) {
-        debugs(50, DBG_IMPORTANT, "NOTICE: Could not increase the number of filedescriptors");
+        debugs(50, DBG_IMPORTANT, "WARNING: Could not increase the number of filedescriptors");
     }
 
 #if HAVE_SETRLIMIT && defined(RLIMIT_VMEM) && !_SQUID_CYGWIN_
@@ -846,7 +879,7 @@ squid_signal(int sig, SIGHDLR * func, int flags)
     sa.sa_flags = flags;
     sigemptyset(&sa.sa_mask);
 
-    if (sigaction(sig, &sa, NULL) < 0) {
+    if (sigaction(sig, &sa, nullptr) < 0) {
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "sigaction: sig=" << sig << " func=" << func << ": " << xstrerr(xerrno));
     }
@@ -953,7 +986,7 @@ parseEtcHosts(void)
 
         nt = strpbrk(lt, w_space);
 
-        if (nt == NULL)     /* empty line */
+        if (nt == nullptr)     /* empty line */
             continue;
 
         *nt = '\0';     /* null-terminate the address */
@@ -965,7 +998,7 @@ parseEtcHosts(void)
         SBufList hosts;
 
         while ((nt = strpbrk(lt, w_space))) {
-            char *host = NULL;
+            char *host = nullptr;
 
             if (nt == lt) { /* multiple spaces */
                 debugs(1, 5, "etc_hosts: multiple spaces, skipping");
@@ -1008,19 +1041,19 @@ int
 getMyPort(void)
 {
     AnyP::PortCfgPointer p;
-    if ((p = HttpPortList) != NULL) {
+    if ((p = HttpPortList) != nullptr) {
         // skip any special interception ports
-        while (p != NULL && p->flags.isIntercepted())
+        while (p != nullptr && p->flags.isIntercepted())
             p = p->next;
-        if (p != NULL)
+        if (p != nullptr)
             return p->s.port();
     }
 
-    if ((p = FtpPortList) != NULL) {
+    if ((p = FtpPortList) != nullptr) {
         // skip any special interception ports
-        while (p != NULL && p->flags.isIntercepted())
+        while (p != nullptr && p->flags.isIntercepted())
             p = p->next;
-        if (p != NULL)
+        if (p != nullptr)
             return p->s.port();
     }
 
@@ -1146,11 +1179,7 @@ restoreCapabilities(bool keep)
 pid_t
 WaitForOnePid(pid_t pid, PidStatus &status, int flags)
 {
-#if _SQUID_NEXT_
-    if (pid < 0)
-        return wait3(&status, flags, NULL);
-    return wait4(pid, &status, flags, NULL);
-#elif _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_
     return 0; // function not used on Windows
 #else
     return waitpid(pid, &status, flags);

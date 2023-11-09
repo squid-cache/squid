@@ -25,7 +25,7 @@ command\-line
 .PP
 .B squid
 is a high\-performance proxy caching server for web clients,
-supporting FTP, gopher, ICAP, ICP, HTCP and HTTP data objects.
+supporting FTP, ICAP, ICP, HTCP and HTTP data objects.
 Unlike traditional caching software, 
 Squid handles all requests in a single, non-blocking process.
 .PP
@@ -51,7 +51,7 @@ Squid is derived from the ARPA\-funded Harvest Project.
 This manual page only lists the command line arguments.
 For details on how to configure Squid see the file 
 .BI @SYSCONFDIR@/squid.conf.documented,
-the Squid wiki FAQ and examples at http://wiki.squid-cache.org/ ,
+the Squid wiki FAQ and examples at https://wiki.squid-cache.org/ ,
 or the configuration manual on the Squid home page
 .if !'po4a'hide' http://www.squid-cache.org/Doc/config/
 .
@@ -222,11 +222,6 @@ your build of Squid. The online configuration manual is also available for
 a full reference of options.
 .BR see http://www.squid-cache.org/Doc/config/
 .
-.if !'po4a'hide' .IP "cachemgr.conf"
-The main configuration file for the web
-.B cachemgr.cgi
-tools.
-.
 .if !'po4a'hide' .IP "msntauth.conf"
 The main configuration file for the Sample MSNT authenticator.
 .
@@ -256,7 +251,7 @@ see CREDITS for a list of major code contributing copyright holders.
 .
 .SH COPYRIGHT
 .PP
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -269,9 +264,9 @@ Questions on the usage of this program can be sent to the
 .
 .SH REPORTING BUGS
 Bug reports need to be made in English.
-See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+See https://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
 .PP
-Report bugs or bug fixes using http://bugs.squid-cache.org/
+Report bugs or bug fixes using https://bugs.squid-cache.org/
 .PP
 Report serious security bugs to
 .I Squid Bugs <squid-bugs@lists.squid-cache.org>
@@ -281,8 +276,6 @@ Report ideas for new improvements to the
 .if !'po4a'hide' <squid-dev@lists.squid-cache.org>
 .
 .SH SEE ALSO
-.if !'po4a'hide' .B cachemgr.cgi "(8), "
-.if !'po4a'hide' .B squidclient "(1), "
 .if !'po4a'hide' .B basic_pam_auth "(8), "
 .if !'po4a'hide' .B basic_ldap_auth "(8), "
 .if !'po4a'hide' .B ext_ldap_group_acl "(8), "
@@ -290,7 +283,7 @@ Report ideas for new improvements to the
 .if !'po4a'hide' .B ext_unix_group_acl "(8), "
 .br
 The Squid FAQ wiki
-.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.if !'po4a'hide' https://wiki.squid-cache.org/SquidFaq
 .br
 The Squid Configuration Manual
 .if !'po4a'hide' http://www.squid-cache.org/Doc/config/

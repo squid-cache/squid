@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -81,8 +81,6 @@
 #include "acl/SslError.h"
 #include "acl/SslErrorData.h"
 #endif
-#include "acl/Strategised.h"
-#include "acl/Strategy.h"
 #include "acl/StringData.h"
 #if USE_OPENSSL
 #include "acl/ServerCertificate.h"
@@ -108,6 +106,85 @@
 #if SQUID_SNMP
 #include "snmp_core.h"
 #endif
+#include "sbuf/Stream.h"
+
+namespace Acl
+{
+
+/// Constructs a ParameterizedNode-derived ACL (specified as a Parent class).
+/// This template exists to avoid placing a variant of this ACL construction
+/// code in each ParameterizedNode-derived ACL class just to pass through
+/// TypeName and Parameters onto ParameterizedNode (and to add MEMPROXY_CLASS).
+template <class Parent>
+class FinalizedParameterizedNode: public Parent
+{
+    MEMPROXY_CLASS(Acl::FinalizedParameterizedNode<Parent>);
+
+public:
+    using Parameters = typename Parent::Parameters;
+    using Parent::data;
+
+    /// Replaces generic memory allocator label X set by our MEMPROXY_CLASS(X)
+    /// with an admin-friendly label based on the given acltype-like name.
+    /// Normally, our class constructor sets the right allocator label using the
+    /// actlype name, but that algorithm results in unstable and misleading
+    /// labels when the same instantiation of this template class is used for
+    /// _multiple_ acltype names. Calling this method corrects that behavior.
+    /// \prec this method must be called at most once
+    /// \prec if called, this method must be called before the class constructor
+    static void PreferAllocatorLabelPrefix(const char * const suffix)
+    {
+        assert(!PreferredAllocatorLabelSuffix); // must be called at most once
+        assert(!FinalPoolLabel); // must be called before the class constructor
+        assert(suffix);
+        PreferredAllocatorLabelSuffix = suffix;
+    }
+
+    FinalizedParameterizedNode(TypeName typeName, Parameters * const params):
+        typeName_(typeName)
+    {
+        Assure(!data); // base classes never set this data member
+        data.reset(params);
+        Assure(data); // ... but we always do
+
+        FinalizePoolLabel(typeName);
+    }
+
+    ~FinalizedParameterizedNode() override = default;
+
+    /* ACL API */
+    const char *typeString() const override { return typeName_; }
+
+private:
+    /// A constructor helper function that replaces generic memory allocator
+    /// label X set by our MEMPROXY_CLASS(X) with an admin-friendly label based
+    /// on the acltype name from squid.conf. Meant to be called from the
+    /// constructor so that no mgr:mem report lists this C++ template class
+    /// statistics using label X. Repeated calls are allowed but have no effect.
+    /// \sa PreferAllocatorLabelPrefix()
+    static void FinalizePoolLabel(const TypeName typeName)
+    {
+        if (FinalPoolLabel)
+            return; // the label has been finalized already
+
+        assert(typeName);
+        const auto label = ToSBuf("acltype=", PreferredAllocatorLabelSuffix ? PreferredAllocatorLabelSuffix : typeName);
+        FinalPoolLabel = SBufToCstring(label);
+        Pool().relabel(FinalPoolLabel);
+    }
+
+    /// if set, overrules FinalizePoolLabel() argument
+    inline static const char *PreferredAllocatorLabelSuffix = nullptr;
+
+    /// custom allocator label set by FinalizePoolLabel()
+    inline static const char *FinalPoolLabel = nullptr;
+
+    // TODO: Consider storing the spelling used by the admin instead.
+    /// the "acltype" name in its canonical spelling
+    TypeName typeName_;
+};
+
+} // namespace Acl
 
 // Not in src/acl/ because some of the ACLs it registers are not in src/acl/.
 void
@@ -122,58 +199,72 @@ Acl::Init()
     RegisterMaker("all-of", [](TypeName)->ACL* { return new Acl::AllOf; }); // XXX: Add name parameter to ctor
     RegisterMaker("any-of", [](TypeName)->ACL* { return new Acl::AnyOf; }); // XXX: Add name parameter to ctor
     RegisterMaker("random", [](TypeName name)->ACL* { return new ACLRandom(name); });
-    RegisterMaker("time", [](TypeName name)->ACL* { return new ACLStrategised<time_t>(new ACLTimeData, new ACLTimeStrategy, name); });
-    RegisterMaker("src_as", [](TypeName name)->ACL* { return new ACLStrategised<Ip::Address>(new ACLASN, new ACLSourceASNStrategy, name); });
-    RegisterMaker("dst_as", [](TypeName name)->ACL* { return new ACLStrategised<Ip::Address>(new ACLASN, new ACLDestinationASNStrategy, name); });
-    RegisterMaker("browser", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLRequestHeaderStrategy<Http::HdrType::USER_AGENT>, name); });
-    RegisterMaker("dstdomain", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLDomainData, new ACLDestinationDomainStrategy, name); });
-    RegisterMaker("dstdom_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLDestinationDomainStrategy, name); });
+    RegisterMaker("time", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::CurrentTimeCheck>(name, new ACLTimeData); });
+    RegisterMaker("src_as", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SourceAsnCheck>(name, new ACLASN); });
+    RegisterMaker("dst_as", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::DestinationAsnCheck>(name, new ACLASN); });
+    RegisterMaker("browser", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::RequestHeaderCheck<Http::HdrType::USER_AGENT> >(name, new ACLRegexData); });
+
+    RegisterMaker("dstdomain", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::DestinationDomainCheck>(name, new ACLDomainData); });
+    RegisterMaker("dstdom_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::DestinationDomainCheck>(name, new ACLRegexData); });
+    Acl::FinalizedParameterizedNode<Acl::DestinationDomainCheck>::PreferAllocatorLabelPrefix("dstdomain+");
+
     RegisterMaker("dst", [](TypeName)->ACL* { return new ACLDestinationIP; }); // XXX: Add name parameter to ctor
-    RegisterMaker("hier_code", [](TypeName name)->ACL* { return new ACLStrategised<hier_code>(new ACLHierCodeData, new ACLHierCodeStrategy, name); });
-    RegisterMaker("rep_header", [](TypeName name)->ACL* { return new ACLStrategised<HttpHeader*>(new ACLHTTPHeaderData, new ACLHTTPRepHeaderStrategy, name); });
-    RegisterMaker("req_header", [](TypeName name)->ACL* { return new ACLStrategised<HttpHeader*>(new ACLHTTPHeaderData, new ACLHTTPReqHeaderStrategy, name); });
+    RegisterMaker("hier_code", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::HierCodeCheck>(name, new ACLHierCodeData); });
+    RegisterMaker("rep_header", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::HttpRepHeaderCheck>(name, new ACLHTTPHeaderData); });
+    RegisterMaker("req_header", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::HttpReqHeaderCheck>(name, new ACLHTTPHeaderData); });
     RegisterMaker("http_status", [](TypeName name)->ACL* { return new ACLHTTPStatus(name); });
     RegisterMaker("maxconn", [](TypeName name)->ACL* { return new ACLMaxConnection(name); });
-    RegisterMaker("method", [](TypeName name)->ACL* { return new ACLStrategised<HttpRequestMethod>(new ACLMethodData, new ACLMethodStrategy, name); });
+    RegisterMaker("method", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::MethodCheck>(name, new ACLMethodData); });
     RegisterMaker("localip", [](TypeName)->ACL* { return new ACLLocalIP; }); // XXX: Add name parameter to ctor
-    RegisterMaker("localport", [](TypeName name)->ACL* { return new ACLStrategised<int>(new ACLIntRange, new ACLLocalPortStrategy, name); });
-    RegisterMaker("myportname", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLMyPortNameStrategy, name); });
-    RegisterMaker("peername", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLPeerNameStrategy, name); });
-    RegisterMaker("peername_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLPeerNameStrategy, name); });
-    RegisterMaker("proto", [](TypeName name)->ACL* { return new ACLStrategised<AnyP::ProtocolType>(new ACLProtocolData, new ACLProtocolStrategy, name); });
-    RegisterMaker("referer_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLRequestHeaderStrategy<Http::HdrType::REFERER>, name); });
-    RegisterMaker("rep_mime_type", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLReplyHeaderStrategy<Http::HdrType::CONTENT_TYPE>, name); });
-    RegisterMaker("req_mime_type", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLRequestHeaderStrategy<Http::HdrType::CONTENT_TYPE>, name); });
-    RegisterMaker("srcdomain", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLDomainData, new ACLSourceDomainStrategy, name); });
-    RegisterMaker("srcdom_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLSourceDomainStrategy, name); });
+    RegisterMaker("localport", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::LocalPortCheck>(name, new ACLIntRange); });
+    RegisterMaker("myportname", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::MyPortNameCheck>(name, new ACLStringData); });
+
+    RegisterMaker("peername", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::PeerNameCheck>(name, new ACLStringData); });
+    RegisterMaker("peername_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::PeerNameCheck>(name, new ACLRegexData); });
+    Acl::FinalizedParameterizedNode<Acl::PeerNameCheck>::PreferAllocatorLabelPrefix("peername+");
+
+    RegisterMaker("proto", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::ProtocolCheck>(name, new ACLProtocolData); });
+    RegisterMaker("referer_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::RequestHeaderCheck<Http::HdrType::REFERER> >(name, new ACLRegexData); });
+    RegisterMaker("rep_mime_type", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::ReplyHeaderCheck<Http::HdrType::CONTENT_TYPE> >(name, new ACLRegexData); });
+    RegisterMaker("req_mime_type", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::RequestHeaderCheck<Http::HdrType::CONTENT_TYPE> >(name, new ACLRegexData); });
+
+    RegisterMaker("srcdomain", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SourceDomainCheck>(name, new ACLDomainData); });
+    RegisterMaker("srcdom_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SourceDomainCheck>(name, new ACLRegexData); });
+    Acl::FinalizedParameterizedNode<Acl::SourceDomainCheck>::PreferAllocatorLabelPrefix("srcdomain+");
+
     RegisterMaker("src", [](TypeName)->ACL* { return new ACLSourceIP; }); // XXX: Add name parameter to ctor
-    RegisterMaker("url_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLUrlStrategy, name); });
-    RegisterMaker("urllogin", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLUrlLoginStrategy, name); });
-    RegisterMaker("urlpath_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLUrlPathStrategy, name); });
-    RegisterMaker("port", [](TypeName name)->ACL* { return new ACLStrategised<int>(new ACLIntRange, new ACLUrlPortStrategy, name); });
+    RegisterMaker("url_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::UrlCheck>(name, new ACLRegexData); });
+    RegisterMaker("urllogin", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::UrlLoginCheck>(name, new ACLRegexData); });
+    RegisterMaker("urlpath_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::UrlPathCheck>(name, new ACLRegexData); });
+    RegisterMaker("port", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::UrlPortCheck>(name, new ACLIntRange); });
     RegisterMaker("external", [](TypeName name)->ACL* { return new ACLExternal(name); });
-    RegisterMaker("squid_error", [](TypeName name)->ACL* { return new ACLStrategised<err_type>(new ACLSquidErrorData, new ACLSquidErrorStrategy, name); });
+    RegisterMaker("squid_error", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SquidErrorCheck>(name, new ACLSquidErrorData); });
     RegisterMaker("connections_encrypted", [](TypeName name)->ACL* { return new Acl::ConnectionsEncrypted(name); });
-    RegisterMaker("tag", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLTagStrategy, name); });
-    RegisterMaker("note", [](TypeName name)->ACL* { return new ACLStrategised<NotePairs::Entry*>(new ACLNoteData, new ACLNoteStrategy, name); });
-    RegisterMaker("annotate_client", [](TypeName name)->ACL* { return new ACLStrategised<NotePairs::Entry*>(new ACLAnnotationData, new ACLAnnotateClientStrategy, name); });
-    RegisterMaker("annotate_transaction", [](TypeName name)->ACL* { return new ACLStrategised<NotePairs::Entry*>(new ACLAnnotationData, new ACLAnnotateTransactionStrategy, name); });
-    RegisterMaker("has", [](TypeName name)->ACL* {return new ACLStrategised<ACLChecklist *>(new ACLHasComponentData, new ACLHasComponentStrategy, name); });
+    RegisterMaker("tag", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::TagCheck>(name, new ACLStringData); });
+    RegisterMaker("note", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::NoteCheck>(name, new ACLNoteData); });
+    RegisterMaker("annotate_client", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::AnnotateClientCheck>(name, new ACLAnnotationData); });
+    RegisterMaker("annotate_transaction", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::AnnotateTransactionCheck>(name, new ACLAnnotationData); });
+    RegisterMaker("has", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::HasComponentCheck>(name, new ACLHasComponentData); });
     RegisterMaker("transaction_initiator", [](TypeName name)->ACL* {return new TransactionInitiator(name);});
 
 #if USE_LIBNETFILTERCONNTRACK
-    RegisterMaker("clientside_mark", [](TypeName name)->ACL* { return new Acl::ConnMark; });
-    RegisterMaker("client_connection_mark", [](TypeName name)->ACL* { return new Acl::ConnMark; });
+    RegisterMaker("clientside_mark", [](TypeName)->ACL* { return new Acl::ConnMark; }); // XXX: Add name parameter to ctor
+    RegisterMaker("client_connection_mark", [](TypeName)->ACL* { return new Acl::ConnMark; }); // XXX: Add name parameter to ctor
 #endif
 
 #if USE_OPENSSL
-    RegisterMaker("ssl_error", [](TypeName name)->ACL* { return new ACLStrategised<const Security::CertErrors *>(new ACLSslErrorData, new ACLSslErrorStrategy, name); });
-    RegisterMaker("user_cert", [](TypeName name)->ACL* { return new ACLStrategised<X509*>(new ACLCertificateData(Ssl::GetX509UserAttribute, "*"), new ACLCertificateStrategy, name); });
-    RegisterMaker("ca_cert", [](TypeName name)->ACL* { return new ACLStrategised<X509*>(new ACLCertificateData(Ssl::GetX509CAAttribute, "*"), new ACLCertificateStrategy, name); });
-    RegisterMaker("server_cert_fingerprint", [](TypeName name)->ACL* { return new ACLStrategised<X509*>(new ACLCertificateData(Ssl::GetX509Fingerprint, "-sha1", true), new ACLServerCertificateStrategy, name); });
-    RegisterMaker("at_step", [](TypeName name)->ACL* { return new ACLStrategised<XactionStep>(new ACLAtStepData, new ACLAtStepStrategy, name); });
-    RegisterMaker("ssl::server_name", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLServerNameData, new ACLServerNameStrategy, name); });
-    RegisterMaker("ssl::server_name_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLServerNameStrategy, name); });
+    RegisterMaker("ssl_error", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::CertificateErrorCheck>(name, new ACLSslErrorData); });
+
+    RegisterMaker("user_cert", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::ClientCertificateCheck>(name, new ACLCertificateData(Ssl::GetX509UserAttribute, "*")); });
+    RegisterMaker("ca_cert", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::ClientCertificateCheck>(name, new ACLCertificateData(Ssl::GetX509CAAttribute, "*")); });
+    Acl::FinalizedParameterizedNode<Acl::ClientCertificateCheck>::PreferAllocatorLabelPrefix("user_cert+");
+
+    RegisterMaker("server_cert_fingerprint", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::ServerCertificateCheck>(name, new ACLCertificateData(Ssl::GetX509Fingerprint, nullptr, true)); });
+    RegisterMaker("at_step", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::AtStepCheck>(name, new ACLAtStepData); });
+
+    RegisterMaker("ssl::server_name", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::ServerNameCheck>(name, new ACLServerNameData); });
+    RegisterMaker("ssl::server_name_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::ServerNameCheck>(name, new ACLRegexData); });
+    Acl::FinalizedParameterizedNode<Acl::ServerNameCheck>::PreferAllocatorLabelPrefix("ssl::server_name+");
 #endif
 
 #if USE_SQUID_EUI
@@ -195,11 +286,11 @@ Acl::Init()
 #endif
 
 #if USE_ADAPTATION
-    RegisterMaker("adaptation_service", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLAdaptationServiceData, new ACLAdaptationServiceStrategy, name); });
+    RegisterMaker("adaptation_service", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::AdaptationServiceCheck>(name, new ACLAdaptationServiceData); });
 #endif
 
 #if SQUID_SNMP
-    RegisterMaker("snmp_community", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLSNMPCommunityStrategy, name); });
+    RegisterMaker("snmp_community", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SnmpCommunityCheck>(name, new ACLStringData); });
 #endif
 }
 

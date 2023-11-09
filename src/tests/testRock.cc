@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "ConfigParser.h"
 #include "DiskIO/DiskIOModule.h"
 #include "fde.h"
@@ -22,7 +23,6 @@
 #include "store/Disks.h"
 #include "StoreFileSystem.h"
 #include "StoreSearch.h"
-#include "testRock.h"
 #include "testStoreSupport.h"
 #include "unitTestMain.h"
 
@@ -36,14 +36,41 @@
 
 #define TESTDIR "tr"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testRock );
+/*
+ * test the store framework
+ */
 
-extern REMOVALPOLICYCREATE createRemovalPolicy_lru;
+class TestRock : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestRock);
+    CPPUNIT_TEST(testRockCreate);
+    CPPUNIT_TEST(testRockSwapOut);
+    CPPUNIT_TEST_SUITE_END();
 
-static char cwd[MAXPATHLEN];
+public:
+    TestRock() : rr(nullptr) {}
+    void setUp() override;
+    void tearDown() override;
+
+    typedef RefCount<Rock::SwapDir> SwapDirPointer;
+
+protected:
+    void commonInit();
+    void storeInit();
+    StoreEntry *createEntry(const int i);
+    StoreEntry *addEntry(const int i);
+    StoreEntry *getEntry(const int i);
+    void testRockCreate();
+    void testRockSwapOut();
+
+private:
+    SwapDirPointer store;
+    Rock::SwapDirRr *rr;
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestRock);
 
 static void
-addSwapDir(testRock::SwapDirPointer aStore)
+addSwapDir(TestRock::SwapDirPointer aStore)
 {
     allocate_new_swapdir(Config.cacheSwap);
     Config.cacheSwap.swapDirs[Config.cacheSwap.n_configured] = aStore.getRaw();
@@ -51,28 +78,18 @@ addSwapDir(testRock::SwapDirPointer aStore)
 }
 
 void
-testRock::setUp()
+TestRock::setUp()
 {
     CPPUNIT_NS::TestFixture::setUp();
 
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 
-    Config.memShared.defaultTo(false);
-    Config.shmLocking.defaultTo(false);
-
-    // use current directory for shared segments (on path-based OSes)
-    Ipc::Mem::Segment::BasePath = getcwd(cwd,MAXPATHLEN);
-    if (Ipc::Mem::Segment::BasePath == NULL)
-        Ipc::Mem::Segment::BasePath = ".";
-
     Store::Init();
 
     store = new Rock::SwapDir();
 
     addSwapDir(store);
-
-    commonInit();
 
     char *path=xstrdup(TESTDIR);
 
@@ -95,18 +112,18 @@ testRock::setUp()
 }
 
 void
-testRock::tearDown()
+TestRock::tearDown()
 {
     CPPUNIT_NS::TestFixture::tearDown();
 
     Store::FreeMemory();
 
-    store = NULL;
+    store = nullptr;
 
     free_cachedir(&Config.cacheSwap);
 
     rr->finishShutdown(); // deletes rr
-    rr = NULL;
+    rr = nullptr;
 
     // TODO: do this once, or each time.
     // safe_free(Config.replPolicy->type);
@@ -117,45 +134,7 @@ testRock::tearDown()
 }
 
 void
-testRock::commonInit()
-{
-    static bool inited = false;
-
-    if (inited)
-        return;
-
-    StoreFileSystem::SetupAllFs();
-
-    Config.Store.avgObjectSize = 1024;
-    Config.Store.objectsPerBucket = 20;
-    Config.Store.maxObjectSize = 2048;
-
-    Config.store_dir_select_algorithm = xstrdup("round-robin");
-
-    Config.replPolicy = new RemovalPolicySettings;
-    Config.replPolicy->type = xstrdup("lru");
-    Config.replPolicy->args = NULL;
-
-    /* garh garh */
-    storeReplAdd("lru", createRemovalPolicy_lru);
-
-    visible_appname_string = xstrdup(APP_FULLNAME);
-
-    Mem::Init();
-
-    fde::Init();
-
-    comm_init();
-
-    httpHeaderInitModule(); /* must go before any header processing (e.g. the one in errorInitialize) */
-
-    mem_policy = createRemovalPolicy(Config.replPolicy);
-
-    inited = true;
-}
-
-void
-testRock::storeInit()
+TestRock::storeInit()
 {
     /* ok, ready to use */
     Store::Root().init();
@@ -186,10 +165,10 @@ storeId(const int i)
 }
 
 StoreEntry *
-testRock::createEntry(const int i)
+TestRock::createEntry(const int i)
 {
     RequestFlags flags;
-    flags.cachable = true;
+    flags.cachable.support();
     StoreEntry *const pe =
         storeCreateEntry(storeId(i), "dummy log url", flags, Http::METHOD_GET);
     auto &rep = pe->mem().adjustableBaseReply();
@@ -201,7 +180,7 @@ testRock::createEntry(const int i)
 }
 
 StoreEntry *
-testRock::addEntry(const int i)
+TestRock::addEntry(const int i)
 {
     StoreEntry *const pe = createEntry(i);
 
@@ -216,13 +195,13 @@ testRock::addEntry(const int i)
 }
 
 StoreEntry *
-testRock::getEntry(const int i)
+TestRock::getEntry(const int i)
 {
     return storeGetPublic(storeId(i), Http::METHOD_GET);
 }
 
 void
-testRock::testRockCreate()
+TestRock::testRockCreate()
 {
     struct stat sb;
 
@@ -234,7 +213,7 @@ testRock::testRockCreate()
 }
 
 void
-testRock::testRockSwapOut()
+TestRock::testRockSwapOut()
 {
     storeInit();
 
@@ -255,7 +234,7 @@ testRock::testRockSwapOut()
 
         CPPUNIT_ASSERT_EQUAL(SWAPOUT_DONE, pe->swap_status);
 
-        pe->unlock("testRock::testRockSwapOut priming");
+        pe->unlock("TestRock::testRockSwapOut priming");
     }
 
     CPPUNIT_ASSERT_EQUAL((uint64_t)5, store->currentCount());
@@ -268,7 +247,7 @@ testRock::testRockSwapOut()
         CPPUNIT_ASSERT_EQUAL(SWAPOUT_NONE, pe->swap_status);
         CPPUNIT_ASSERT_EQUAL(-1, pe->swap_dirn);
         CPPUNIT_ASSERT_EQUAL(-1, pe->swap_filen);
-        pe->unlock("testRock::testRockSwapOut e#3");
+        pe->unlock("TestRock::testRockSwapOut e#3");
 
         // after marking the old entry as deleted
         StoreEntry *const pe2 = getEntry(4);
@@ -285,7 +264,7 @@ testRock::testRockSwapOut()
 
         CPPUNIT_ASSERT_EQUAL(SWAPOUT_DONE, pe3->swap_status);
 
-        pe->unlock("testRock::testRockSwapOut e#4");
+        pe->unlock("TestRock::testRockSwapOut e#4");
     }
 
     // try to swap out entry to a used locked slot
@@ -306,8 +285,8 @@ testRock::testRockSwapOut()
         StockEventLoop loop;
         loop.run();
 
-        pe->unlock("testRock::testRockSwapOut e#5.1");
-        pe2->unlock("testRock::testRockSwapOut e#5.2");
+        pe->unlock("TestRock::testRockSwapOut e#5.1");
+        pe2->unlock("TestRock::testRockSwapOut e#5.2");
 
         // pe2 has the same public key as pe so it marks old pe for release
         // here, we add another entry #5 into the now-available slot
@@ -317,7 +296,7 @@ testRock::testRockSwapOut()
         CPPUNIT_ASSERT(pe3->swap_filen >= 0);
         loop.run();
         CPPUNIT_ASSERT_EQUAL(SWAPOUT_DONE, pe3->swap_status);
-        pe3->unlock("testRock::testRockSwapOut e#5.3");
+        pe3->unlock("TestRock::testRockSwapOut e#5.3");
     }
 
     CPPUNIT_ASSERT_EQUAL((uint64_t)6, store->currentCount());
@@ -325,12 +304,62 @@ testRock::testRockSwapOut()
     // try to get and release all entries
     for (int i = 0; i < 6; ++i) {
         StoreEntry *const pe = getEntry(i);
-        CPPUNIT_ASSERT(pe != NULL);
+        CPPUNIT_ASSERT(pe != nullptr);
 
         pe->release(); // destroys pe
 
         StoreEntry *const pe2 = getEntry(i);
-        CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), pe2);
+        CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(nullptr), pe2);
     }
+}
+
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
+
+void
+MyTestProgram::startup()
+{
+    Config.memShared.defaultTo(false);
+    Config.shmLocking.defaultTo(false);
+
+    // use current directory for shared segments (on path-based OSes)
+    static char cwd[MAXPATHLEN];
+    Ipc::Mem::Segment::BasePath = getcwd(cwd, MAXPATHLEN);
+    if (!Ipc::Mem::Segment::BasePath)
+        Ipc::Mem::Segment::BasePath = ".";
+
+    Config.Store.avgObjectSize = 1024;
+    Config.Store.objectsPerBucket = 20;
+    Config.Store.maxObjectSize = 2048;
+
+    Config.store_dir_select_algorithm = xstrdup("round-robin");
+
+    Config.replPolicy = new RemovalPolicySettings;
+    Config.replPolicy->type = xstrdup("lru");
+    Config.replPolicy->args = nullptr;
+
+    /* garh garh */
+    extern REMOVALPOLICYCREATE createRemovalPolicy_lru;
+    storeReplAdd("lru", createRemovalPolicy_lru);
+
+    visible_appname_string = xstrdup(APP_FULLNAME);
+
+    Mem::Init();
+    fde::Init();
+    comm_init();
+    httpHeaderInitModule(); /* must go before any header processing (e.g. the one in errorInitialize) */
+
+    mem_policy = createRemovalPolicy(Config.replPolicy);
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

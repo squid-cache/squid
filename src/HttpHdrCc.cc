@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -96,7 +96,7 @@ HttpHdrCc::parse(const String & str)
 {
     const char *item;
     const char *p;      /* '=' parameter */
-    const char *pos = NULL;
+    const char *pos = nullptr;
     int ilen;
     int nlen;
 

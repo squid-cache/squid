@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,6 +44,8 @@ public:
     /// successfully (i.e. without throwing).
     static void Start(const Pointer &job);
 
+    static void RegisterWithCacheManager();
+
 protected:
     // XXX: temporary method to replace "delete this" in jobs-in-transition.
     // Will be replaced with calls to mustStop() when transition is complete.
@@ -74,7 +76,10 @@ public:
 
 protected:
     // external destruction prohibited to ensure swanSong() is called
-    virtual ~AsyncJob();
+    ~AsyncJob() override;
+
+    /// writes a cache manager report about all jobs existing in this worker
+    static void ReportAllJobs(StoreEntry *);
 
     const char *stopReason; ///< reason for forcing done() to be true
     const char *typeName; ///< kid (leaf) class name, for debugging

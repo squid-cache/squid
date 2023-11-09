@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,26 +8,42 @@
 
 #include "squid.h"
 #include "base/AsyncCallQueue.h"
+#include "compat/cppunit.h"
 #include "event.h"
 #include "MemBuf.h"
-#include "tests/testEvent.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testEvent );
+/*
+ * test the event module.
+ */
 
-/* init legacy static-initialized modules */
-
-void
-testEvent::setUp()
+class TestEvent : public CPPUNIT_NS::TestFixture
 {
-    Mem::Init();
-}
+    CPPUNIT_TEST_SUITE(TestEvent);
+    CPPUNIT_TEST(testCreate);
+    CPPUNIT_TEST(testDump);
+    CPPUNIT_TEST(testFind);
+    CPPUNIT_TEST(testCheckEvents);
+    CPPUNIT_TEST(testSingleton);
+    CPPUNIT_TEST(testCancel);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testCreate();
+    void testDump();
+    void testFind();
+    void testCheckEvents();
+    void testSingleton();
+    void testCancel();
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestEvent );
 
 /*
  * Test creating a Scheduler
  */
 void
-testEvent::testCreate()
+TestEvent::testCreate()
 {
     EventScheduler scheduler = EventScheduler();
 }
@@ -46,7 +62,7 @@ public:
 /* submit two callbacks, and cancel one, then dispatch and only the other should run.
  */
 void
-testEvent::testCancel()
+TestEvent::testCancel()
 {
     EventScheduler scheduler;
     CalledEvent event;
@@ -62,7 +78,7 @@ testEvent::testCancel()
 
 // submit two callbacks, and then dump the queue.
 void
-testEvent::testDump()
+TestEvent::testDump()
 {
     EventScheduler scheduler;
     CalledEvent event;
@@ -114,7 +130,7 @@ testEvent::testDump()
 /* submit two callbacks, and find the right one.
  */
 void
-testEvent::testFind()
+TestEvent::testFind()
 {
     EventScheduler scheduler;
     CalledEvent event;
@@ -126,7 +142,7 @@ testEvent::testFind()
 
 /* do a trivial test of invoking callbacks */
 void
-testEvent::testCheckEvents()
+TestEvent::testCheckEvents()
 {
     EventScheduler scheduler;
     CalledEvent event;
@@ -147,9 +163,23 @@ testEvent::testCheckEvents()
 
 /* for convenience we have a singleton scheduler */
 void
-testEvent::testSingleton()
+TestEvent::testSingleton()
 {
     EventScheduler *scheduler = dynamic_cast<EventScheduler *>(EventScheduler::GetInstance());
-    CPPUNIT_ASSERT(NULL != scheduler);
+    CPPUNIT_ASSERT(nullptr != scheduler);
+}
+
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override { Mem::Init(); }
+};
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

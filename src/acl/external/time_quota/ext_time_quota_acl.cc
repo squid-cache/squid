@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -287,11 +287,11 @@ static void readConfig(const char *filename)
             if ((username = strtok(line, "\t ")) != NULL) {
 
                 /* get the time budget */
-                if ((budget = strtok(NULL, "/")) == NULL) {
+                if ((budget = strtok(nullptr, "/")) == NULL) {
                     fprintf(stderr, "ERROR: missing 'budget' field on line %u of '%s'.\n", lineCount, filename);
                     continue;
                 }
-                if ((period = strtok(NULL, "/")) == NULL) {
+                if ((period = strtok(nullptr, "/")) == NULL) {
                     fprintf(stderr, "ERROR: missing 'period' field on line %u of '%s'.\n", lineCount, filename);
                     continue;
                 }
@@ -438,7 +438,7 @@ int main(int argc, char **argv)
     }
 
     log_info("Starting %s\n", __FILE__);
-    setbuf(stdout, NULL);
+    setbuf(stdout, nullptr);
 
     init_db();
 

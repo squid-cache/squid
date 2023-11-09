@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,7 +17,7 @@
 #include "comm/forward.h"
 #include "compat/openssl.h"
 #include "sbuf/SBuf.h"
-#include "security/forward.h"
+#include "security/Session.h"
 #include "ssl/gadgets.h"
 
 #if HAVE_OPENSSL_X509V3_H
@@ -137,7 +137,7 @@ extern std::vector<const char *>BumpModeStr;
  */
 inline const char *bumpMode(int bm)
 {
-    return (0 <= bm && bm < Ssl::bumpEnd) ? Ssl::BumpModeStr.at(bm) : NULL;
+    return (0 <= bm && bm < Ssl::bumpEnd) ? Ssl::BumpModeStr.at(bm) : nullptr;
 }
 
 /// certificates indexed by issuer name

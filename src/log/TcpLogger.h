@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,9 +13,13 @@
 #include "base/JobWait.h"
 #include "comm/forward.h"
 #include "ip/Address.h"
+#include "log/forward.h"
 
 #include <list>
 
+class CommCloseCbParams;
+class CommConnectCbParams;
+class CommIoCbParams;
 class MemBlob;
 typedef RefCount<MemBlob> MemBlobPointer;
 
@@ -28,7 +32,7 @@ namespace Log
  */
 class TcpLogger : public AsyncJob
 {
-    CBDATA_CLASS(TcpLogger);
+    CBDATA_CHILD(TcpLogger);
 
 public:
     typedef CbcPointer<TcpLogger> Pointer;
@@ -38,7 +42,7 @@ public:
 
 protected:
     TcpLogger(size_t, bool, Ip::Address);
-    virtual ~TcpLogger();
+    ~TcpLogger() override;
 
     /// Called when Squid is reconfiguring (or exiting) to give us a chance to
     /// flush remaining buffers and end this job w/o loss of data. No new log
@@ -53,9 +57,9 @@ protected:
     void flush();
 
     /* AsyncJob API */
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
 private:
     /* Logfile API. Map c-style Logfile calls to TcpLogger method calls. */

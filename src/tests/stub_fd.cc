@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 #define STUB_API "fd.cc"
 #include "tests/STUB.h"
 
-fde *fde::Table = NULL;
+fde *fde::Table = nullptr;
 
 int fdNFree(void) STUB_RETVAL(-1)
 void fd_open(int, unsigned int, const char *) STUB

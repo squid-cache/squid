@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,8 +12,10 @@
 #include "HttpRequest.h"
 
 int
-ACLUrlPortStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::UrlPortCheck::match(ACLChecklist * const ch)
 {
-    return data->match(checklist->request->url.port());
+    const auto checklist = Filled(ch);
+
+    return data->match(checklist->request->url.port().value_or(0));
 }
 

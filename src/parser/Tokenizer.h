@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -114,6 +114,13 @@ public:
      * \returns the number of skipped characters
      */
     SBuf::size_type skipAll(const CharacterSet &discardables);
+
+    /** skips a given character sequence (string);
+     * does nothing if the sequence is empty
+     *
+     * \throws exception on mismatching prefix or InsufficientInput
+     */
+    void skipRequired(const char *description, const SBuf &tokenToSkip);
 
     /** Removes a single trailing character from the set.
      *

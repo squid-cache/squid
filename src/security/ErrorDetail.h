@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,6 +17,10 @@
 
 #if USE_OPENSSL
 #include "ssl/ErrorDetailManager.h"
+#endif
+
+#if USE_OPENSSL
+#include <optional>
 #endif
 
 namespace Security {
@@ -41,7 +45,7 @@ public:
 
     /// Details a server-side certificate verification failure.
     /// If `broken` is nil, then the broken certificate is the peer certificate.
-    ErrorDetail(ErrorCode err_no, const CertPointer &peer, const CertPointer &broken, const char *aReason = NULL);
+    ErrorDetail(ErrorCode err_no, const CertPointer &peer, const CertPointer &broken, const char *aReason = nullptr);
 
 #if USE_OPENSSL
     /// Details (or starts detailing) a non-validation failure.
@@ -56,8 +60,8 @@ public:
 #endif
 
     /* ErrorDetail API */
-    virtual SBuf brief() const;
-    virtual SBuf verbose(const HttpRequestPointer &) const;
+    SBuf brief() const override;
+    SBuf verbose(const HttpRequestPointer &) const override;
 
     /// \returns error category; \see ErrorCode
     ErrorCode errorNo() const { return error_no; }
@@ -81,15 +85,15 @@ private:
     ErrorDetail(ErrorCode err, int aSysErrorNo);
 
     /* methods for formatting error details using admin-configurable %codes */
-    const char *subject() const;
-    const char *ca_name() const;
-    const char *cn() const;
-    const char *notbefore() const;
-    const char *notafter() const;
-    const char *err_code() const;
-    const char *err_descr() const;
-    const char *err_lib_error() const;
-    size_t convert(const char *code, const char **value) const;
+    void printSubject(std::ostream &os) const;
+    void printCaName(std::ostream &os) const;
+    void printCommonName(std::ostream &os) const;
+    void printNotBefore(std::ostream &os) const;
+    void printNotAfter(std::ostream &os) const;
+    void printErrorCode(std::ostream &os) const;
+    void printErrorDescription(std::ostream &os) const;
+    void printErrorLibError(std::ostream &os) const;
+    size_t convertErrorCodeToDescription(const char *code, std::ostream &os) const;
 
     CertPointer peer_cert; ///< A pointer to the peer certificate
     CertPointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)
@@ -111,7 +115,7 @@ private:
     int ioErrorNo = 0;
 
     using ErrorDetailEntry = Ssl::ErrorDetailEntry;
-    mutable ErrorDetailEntry detailEntry;
+    mutable std::optional<ErrorDetailEntry> detailEntry;
 #else
     // other TLS libraries do not use custom ErrorDetail members
 #endif
@@ -126,7 +130,17 @@ ErrorCode ErrorCodeFromName(const char *name);
 /// \param prefixRawCode whether to prefix raw codes with "SSL_ERR="
 const char *ErrorNameFromCode(ErrorCode err, bool prefixRawCode = false);
 
+/// Dump the given Security::ErrorDetail via a possibly nil pointer (for
+/// debugging). Unfortunately, without this, compilers pick generic RefCount<T>
+/// operator "<<" overload (with T=Security::ErrorDetail) instead of the
+/// overload provided by the parent ErrorDetail class (that we call here).
+inline std::ostream &
+operator <<(std::ostream &os, const ErrorDetail::Pointer &p)
+{
+    return operator <<(os, ::ErrorDetail::Pointer(p));
 }
+
+} // namespace Security
 
 #endif
 

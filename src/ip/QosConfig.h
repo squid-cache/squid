@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,8 @@
 #define SQUID_QOSCONFIG_H
 
 #include "acl/forward.h"
+#include "cbdata.h"
+#include "comm/forward.h"
 #include "hier_code.h"
 #include "ip/forward.h"
 #include "ip/NfMarkConfig.h"
@@ -30,7 +32,7 @@ class acl_tos
     CBDATA_CLASS(acl_tos);
 
 public:
-    acl_tos() : next(NULL), aclList(NULL), tos(0) {}
+    acl_tos() : next(nullptr), aclList(nullptr), tos(0) {}
     ~acl_tos();
 
     acl_tos *next;
@@ -44,7 +46,7 @@ class acl_nfmark
     CBDATA_CLASS(acl_nfmark);
 
 public:
-    acl_nfmark() : next(NULL), aclList(NULL) {}
+    acl_nfmark() : next(nullptr), aclList(nullptr) {}
     ~acl_nfmark();
 
     acl_nfmark *next;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,7 @@ class Client:
 
 public:
     Client(FwdState *);
-    virtual ~Client();
+    ~Client() override;
 
     /// \return primary or "request data connection"
     virtual const Comm::ConnectionPointer & dataConnection() const = 0;
@@ -44,9 +44,9 @@ public:
     // BodyConsumer: consume request body or adapted response body.
     // The implementation just calls the corresponding HTTP or ICAP handle*()
     // method, depending on the pipe.
-    virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);
-    virtual void noteBodyProductionEnded(BodyPipe::Pointer);
-    virtual void noteBodyProducerAborted(BodyPipe::Pointer);
+    void noteMoreBodyDataAvailable(BodyPipe::Pointer) override;
+    void noteBodyProductionEnded(BodyPipe::Pointer) override;
+    void noteBodyProducerAborted(BodyPipe::Pointer) override;
 
     /// read response data from the network
     virtual void maybeReadVirginBody() = 0;
@@ -64,19 +64,19 @@ public:
 
 #if USE_ADAPTATION
     // Adaptation::Initiator API: start an ICAP transaction and receive adapted headers.
-    virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);
-    virtual void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group);
+    void noteAdaptationAnswer(const Adaptation::Answer &answer) override;
+    void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group) override;
 
     // BodyProducer: provide virgin response body to ICAP.
-    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer );
-    virtual void noteBodyConsumerAborted(BodyPipe::Pointer );
+    void noteMoreBodySpaceAvailable(BodyPipe::Pointer ) override;
+    void noteBodyConsumerAborted(BodyPipe::Pointer ) override;
 #endif
     virtual bool getMoreRequestBody(MemBuf &buf);
     virtual void processReplyBody() = 0;
 
 //AsyncJob virtual methods
-    virtual void swanSong();
-    virtual bool doneAll() const;
+    void swanSong() override;
+    bool doneAll() const override;
 
 public: // should be protected
     void serverComplete();     /**< call when no server communication is expected */
@@ -112,6 +112,10 @@ protected:
     virtual bool doneWithServer() const = 0;   /**< did we end communication? */
     /// whether we may receive more virgin response body bytes
     virtual bool mayReadVirginReplyBody() const = 0;
+
+    /// Called when a previously delayed dataConnection() read may be possible.
+    /// \sa delayRead()
+    virtual void noteDelayAwareReadChance() = 0;
 
     /// Entry-dependent callbacks use this check to quit if the entry went bad
     bool abortOnBadEntry(const char *abortReason);
@@ -159,6 +163,10 @@ protected:
     size_t calcBufferSpaceToReserve(const size_t space, const size_t wantSpace) const;
 
     void adjustBodyBytesRead(const int64_t delta);
+
+    /// Defer reading until it is likely to become possible.
+    /// Eventually, noteDelayAwareReadChance() will be called.
+    void delayRead();
 
     // These should be private
     int64_t currentOffset = 0;  /**< Our current offset in the StoreEntry */

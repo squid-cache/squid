@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,16 +9,11 @@
 /* DEBUG: section 28    Access Control */
 
 #include "squid.h"
-#include "acl/DomainData.h"
 #include "acl/FilledChecklist.h"
-#include "acl/RegexData.h"
 #include "acl/ServerName.h"
 #include "client_side.h"
-#include "fde.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
-#include "ipcache.h"
-#include "SquidString.h"
 #include "ssl/bio.h"
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
@@ -36,7 +31,7 @@ aclHostDomainCompare( char *const &a, char * const &b)
 bool
 ACLServerNameData::match(const char *host)
 {
-    if (host == NULL)
+    if (host == nullptr)
         return 0;
 
     debugs(28, 3, "checking '" << host << "'");
@@ -46,16 +41,8 @@ ACLServerNameData::match(const char *host)
 
     debugs(28, 3, "'" << host << "' " << (result ? "found" : "NOT found"));
 
-    return (result != NULL);
+    return (result != nullptr);
 
-}
-
-ACLData<char const *> *
-ACLServerNameData::clone() const
-{
-    /* Splay trees don't clone yet. */
-    assert (!domains);
-    return new ACLServerNameData;
 }
 
 /// A helper function to be used with Ssl::matchX509CommonNames().
@@ -86,9 +73,11 @@ check_cert_domain( void *check_data, ASN1_STRING *cn_data)
 }
 
 int
-ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::ServerNameCheck::match(ACLChecklist * const ch)
 {
-    assert(checklist != NULL && checklist->request != NULL);
+    const auto checklist = Filled(ch);
+
+    assert(checklist != nullptr && checklist->request != nullptr);
 
     const char *serverName = nullptr;
     SBuf clientSniKeeper; // because c_str() is not constant
@@ -112,7 +101,7 @@ ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *ch
             serverName = clientRequestedServerName;
         else { // either no options or useServerProvided
             if (X509 *peer_cert = (conn->serverBump() ? conn->serverBump()->serverCert.get() : nullptr))
-                return Ssl::matchX509CommonNames(peer_cert, (void *)data, check_cert_domain<MatchType>);
+                return Ssl::matchX509CommonNames(peer_cert, data.get(), check_cert_domain<const char*>);
             if (!useServerProvided)
                 serverName = clientRequestedServerName;
         }
@@ -125,17 +114,12 @@ ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *ch
 }
 
 const Acl::Options &
-ACLServerNameStrategy::options()
+Acl::ServerNameCheck::options()
 {
-    static const Acl::BooleanOption ClientRequested;
-    static const Acl::BooleanOption ServerProvided;
-    static const Acl::BooleanOption Consensus;
-    static const Acl::Options MyOptions = {
-        {"--client-requested", &ClientRequested},
-        {"--server-provided", &ServerProvided},
-        {"--consensus", &Consensus}
-    };
-
+    static const Acl::BooleanOption ClientRequested("--client-requested");
+    static const Acl::BooleanOption ServerProvided("--server-provided");
+    static const Acl::BooleanOption Consensus("--consensus");
+    static const Acl::Options MyOptions = { &ClientRequested, &ServerProvided, &Consensus };
     ClientRequested.linkWith(&useClientRequested);
     ServerProvided.linkWith(&useServerProvided);
     Consensus.linkWith(&useConsensus);
@@ -143,7 +127,7 @@ ACLServerNameStrategy::options()
 }
 
 bool
-ACLServerNameStrategy::valid() const
+Acl::ServerNameCheck::valid() const
 {
     int optionCount = 0;
 

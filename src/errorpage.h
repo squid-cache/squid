@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,6 +23,8 @@
 #include "SquidString.h"
 /* auth/UserRequest.h is empty unless USE_AUTH is defined */
 #include "auth/UserRequest.h"
+
+#include <optional>
 
 /// error page callback
 typedef void ERCB(int fd, void *, size_t);
@@ -93,7 +95,7 @@ public:
     ErrorState() = delete; // not implemented.
 
     /// creates an ERR_RELAY_REMOTE error
-    ErrorState(HttpRequest * request, HttpReply *);
+    ErrorState(HttpRequest * request, HttpReply *, const AccessLogEntryPointer &);
 
     ~ErrorState();
 
@@ -118,7 +120,7 @@ private:
     typedef ErrorPage::Build Build;
 
     /// initializations shared by public constructors
-    explicit ErrorState(err_type type);
+    ErrorState(err_type, const AccessLogEntryPointer &);
 
     /// locates the right error page template for this error and compiles it
     SBuf buildBody();
@@ -175,8 +177,7 @@ public:
     HttpRequestPointer request;
     char *url = nullptr;
     int xerrno = 0;
-    unsigned short port = 0;
-    String dnsError; ///< DNS lookup error message
+    std::optional<SBuf> dnsError; ///< DNS lookup error message
     time_t ttl = 0;
 
     Ip::Address src_addr;
