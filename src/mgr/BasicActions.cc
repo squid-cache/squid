@@ -48,12 +48,19 @@ Mgr::MenuAction::report(std::ostream &os)
 {
     const auto &menu = CacheManager::GetInstance()->menu();
 
+    const auto savedFlags = os.flags();
+    const auto savedFill = os.fill();
+
+    os << std::left;
     for (const auto &a : menu) {
-        os << ' ' << a->name
-           << '\t' << a->desc
+        os << ' ' << std::setw(22) << a->name << std::setw(0)
+           << '\t' << std::setw(32) << a->desc << std::setw(0)
            << '\t' << CacheManager::GetInstance()->ActionProtection(a)
            << '\n';
     }
+
+    os.fill(savedFill);
+    os.flags(savedFlags);
 }
 
 Mgr::ShutdownAction::Pointer
