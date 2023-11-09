@@ -19,6 +19,7 @@
 #include "mgr/ActionParams.h"
 #include "mgr/ActionProfile.h"
 #include "mgr/Command.h"
+#include "mgr/ReportStream.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
 #include "Store.h"
@@ -124,7 +125,7 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 void
 Mgr::Action::dump(StoreEntry *entry)
 {
-    PackableStream os(*entry);
+    ReportPlain os(*entry); // default: text/plain;charset=utf-8
     report(os);
 }
 

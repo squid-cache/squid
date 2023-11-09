@@ -15,6 +15,7 @@
 #include "mgr/ActionProfile.h"
 #include "mgr/BasicActions.h"
 #include "mgr/Registration.h"
+#include "mgr/ReportStream.h"
 #include "protos.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -41,23 +42,42 @@ Mgr::MenuAction::MenuAction(const Command::Pointer &aCmd): Action(aCmd)
     debugs(16, 5, MYNAME);
 }
 
+void
+Mgr::MenuAction::dump(StoreEntry *e)
+{
+    // TODO get Accept header from e->mem()->request to decide here and contentType()?
+
+    ReportStreamPointer os;
+    if (strncasecmp(contentType(), "text/yaml", 9) == 0) {
+        os = new Mgr::ReportYaml(*e);
+    } else {
+        os = new Mgr::ReportPlain(*e);
+    }
+    *os << MgrReportStart;
+    report(*os);
+    *os << MgrReportEnd;
+}
+
 /// A table summarizing available Cache Manager actions:
 ///   table-row = SP 1*VCHAR 1*( HTAB 0*VCHAR )
 void
-Mgr::MenuAction::report(std::ostream &os)
+Mgr::MenuAction::report(Mgr::ReportStream &os)
 {
     const auto &menu = CacheManager::GetInstance()->menu();
 
     const auto savedFlags = os.flags();
     const auto savedFill = os.fill();
 
-    os << std::left;
+    os << "Cache Manager menu:" << std::endl;
+    os << MgrTableStart;
     for (const auto &a : menu) {
-        os << ' ' << std::setw(22) << a->name << std::setw(0)
-           << '\t' << std::setw(32) << a->desc << std::setw(0)
-           << '\t' << CacheManager::GetInstance()->ActionProtection(a)
-           << '\n';
+        os << MgrTableRowStart
+           << MgrTableCellStart << std::setw(22) << a->name << std::setw(0) << MgrTableCellEnd
+           << MgrTableCellStart << std::setw(32) << a->desc << std::setw(0) << MgrTableCellEnd
+           << MgrTableCellStart << CacheManager::GetInstance()->ActionProtection(a) << MgrTableCellEnd
+           << MgrTableRowEnd;
     }
+    os << MgrTableEnd;
 
     os.fill(savedFill);
     os.flags(savedFlags);
@@ -75,7 +95,7 @@ Mgr::ShutdownAction::ShutdownAction(const Command::Pointer &aCmd): Action(aCmd)
 }
 
 void
-Mgr::ShutdownAction::report(std::ostream &)
+Mgr::ShutdownAction::report(ReportStream &)
 {
     debugs(16, DBG_CRITICAL, "Shutdown by Cache Manager command.");
     shut_down(SIGTERM);
@@ -94,7 +114,7 @@ Mgr::ReconfigureAction::ReconfigureAction(const Command::Pointer &aCmd):
 }
 
 void
-Mgr::ReconfigureAction::report(std::ostream &os)
+Mgr::ReconfigureAction::report(ReportStream &os)
 {
     debugs(16, DBG_IMPORTANT, "Reconfigure by Cache Manager command.");
     os << "Reconfiguring Squid Process ... \n";
@@ -113,7 +133,7 @@ Mgr::RotateAction::RotateAction(const Command::Pointer &aCmd): Action(aCmd)
 }
 
 void
-Mgr::RotateAction::report(std::ostream &os)
+Mgr::RotateAction::report(ReportStream &os)
 {
     debugs(16, DBG_IMPORTANT, "Rotate Logs by Cache Manager command.");
     os << "Rotating Squid Process Logs ... \n";
@@ -137,7 +157,7 @@ Mgr::OfflineToggleAction::OfflineToggleAction(const Command::Pointer &aCmd):
 }
 
 void
-Mgr::OfflineToggleAction::report(std::ostream &os)
+Mgr::OfflineToggleAction::report(ReportStream &os)
 {
     Config.onoff.offline = !Config.onoff.offline;
     debugs(16, DBG_IMPORTANT, "offline_mode now " << (Config.onoff.offline ? "ON" : "OFF") << " by Cache Manager request.");

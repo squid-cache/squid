@@ -23,6 +23,9 @@ class ActionPasswordList;
 class ActionProfile;
 class ActionWriter;
 class Command;
+class ReportStream;
+class ReportPlain;
+class ReportYaml;
 class Request;
 class Response;
 class QueryParam;
@@ -32,6 +35,7 @@ typedef RefCount<Action> ActionPointer;
 typedef RefCount<ActionProfile> ActionProfilePointer;
 typedef RefCount<ActionCreator> ActionCreatorPointer;
 typedef RefCount<Command> CommandPointer;
+typedef RefCount<ReportStream> ReportStreamPointer;
 
 typedef ActionPointer (ClassActionCreationHandler)(const CommandPointer &cmd);
 

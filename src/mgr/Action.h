@@ -79,7 +79,7 @@ protected:
     virtual void collect() {}
 
     /// write manager report output to a stream.
-    virtual void report(std::ostream &) {}
+    virtual void report(ReportStream &) {}
 
     /** start writing action-specific info to Store entry;
      * may collect info during dump, especially if collect() did nothing

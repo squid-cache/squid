@@ -27,7 +27,7 @@ class IndexAction: public Action
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    void report(std::ostream &) override {}
+    void report(ReportStream &) override {}
 
 protected:
     IndexAction(const CommandPointer &cmd);
@@ -39,7 +39,9 @@ class MenuAction: public Action
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    void report(std::ostream &) override;
+    const char *contentType() const override { return "text/html;charset=utf-8"; }
+    void dump(StoreEntry *) override;
+    void report(ReportStream &) override;
 
 protected:
     MenuAction(const CommandPointer &cmd);
@@ -51,7 +53,7 @@ class ShutdownAction: public Action
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    void report(std::ostream &) override;
+    void report(ReportStream &) override;
 
 protected:
     ShutdownAction(const CommandPointer &cmd);
@@ -63,7 +65,7 @@ class ReconfigureAction: public Action
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    void report(std::ostream &) override;
+    void report(ReportStream &) override;
 
 protected:
     ReconfigureAction(const CommandPointer &cmd);
@@ -75,7 +77,7 @@ class RotateAction: public Action
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    void report(std::ostream &) override;
+    void report(ReportStream &) override;
 
 protected:
     RotateAction(const CommandPointer &cmd);
@@ -87,7 +89,7 @@ class OfflineToggleAction: public Action
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    void report(std::ostream &) override;
+    void report(ReportStream &) override;
 
 protected:
     OfflineToggleAction(const CommandPointer &cmd);
