@@ -30,6 +30,8 @@ namespace Format
 typedef enum {
     LFT_NONE,           /* dummy */
 
+    LFT_BYTE, ///< %byte{value}
+
     /* arbitrary string between tokens */
     LFT_STRING,
 
