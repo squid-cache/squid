@@ -84,9 +84,11 @@ public:
     explicit AsHex(const Integer n) : io_manip(n) {}
     auto &minDigits(const size_t w) { width = w; return *this; }
     auto &printPrefix(bool p) { printPrefix_ = p; return *this; }
+    auto &upperCase(bool u) { upperCase_ = u; return *this; }
     Integer io_manip; ///< the integer to print
     size_t width = 0; ///< the minimum number of digits to print after the 0x prefix
     bool printPrefix_ = true; ///< output 0x prefix
+    bool upperCase_ = false; ///< output in uppercase?
 };
 
 template <class Integer>
@@ -97,6 +99,8 @@ operator <<(std::ostream &os, const AsHex<Integer> number)
     const auto savedFill = os.fill('0');
     if (number.printPrefix_)
         os << "0x" ;
+    if (number.upperCase_)
+        os << std::uppercase;
     os << std::hex <<
         std::setw(number.width) <<
         number.io_manip <<
