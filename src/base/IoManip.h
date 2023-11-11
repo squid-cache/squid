@@ -83,8 +83,10 @@ class AsHex
 public:
     explicit AsHex(const Integer n) : io_manip(n) {}
     auto &minDigits(const size_t w) { width = w; return *this; }
+    auto &printPrefix(bool p) { printPrefix_ = p; return *this; }
     Integer io_manip; ///< the integer to print
     size_t width = 0; ///< the minimum number of digits to print after the 0x prefix
+    bool printPrefix_ = true; ///< output 0x prefix
 };
 
 template <class Integer>
@@ -93,7 +95,9 @@ operator <<(std::ostream &os, const AsHex<Integer> number)
 {
     const auto oldFlags = os.flags();
     const auto savedFill = os.fill('0');
-    os << "0x" << std::hex <<
+    if (number.printPrefix_)
+        os << "0x" ;
+    os << std::hex <<
         std::setw(number.width) <<
         number.io_manip <<
         std::setw(0);
