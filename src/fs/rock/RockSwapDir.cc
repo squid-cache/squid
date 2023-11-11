@@ -789,7 +789,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STIOCB * const cbIo, voi
     sio->file(theFile);
 
     debugs(47,5, "dir " << index << " has old filen: " <<
-            asHex(sio->swap_filen).minDigits(8).upperCase().printPrefix(false);
+            asHex(sio->swap_filen).minDigits(8).upperCase().printPrefix(false));
 
     // When StoreEntry::swap_filen for e was set by our anchorEntry(), e had a
     // public key, but it could have gone private since then (while keeping the
