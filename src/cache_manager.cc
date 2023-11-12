@@ -326,7 +326,6 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
         err->url = xstrdup(entry->url());
         err->detailError(new ExceptionErrorDetail(Here().id()));
         errorAppendEntry(entry, err);
-        entry->expires = squid_curtime;
         return;
     }
 
