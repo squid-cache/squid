@@ -11,7 +11,7 @@
 #include "format/Token.h"
 #include "format/TokenTableEntry.h"
 #include "globals.h"
-#include "parser/Tokenizer.h"
+#include "parser/ToInteger.h"
 #include "proxyp/Elements.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -482,7 +482,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
         if (!data.string)
             throw TextException("logformat %byte requires a parameter (e.g., %byte{10})", Here());
         // TODO: Convert Format::Token::data.string to SBuf.
-        if (const auto v = ParseInteger<uint8_t>("logformat %byte{value}", SBuf(data.string)))
+        if (const auto v = Parser::UnsignedDecimalInteger<uint8_t>("logformat %byte{value}", SBuf(data.string)))
             data.byteValue = v;
         else
             throw TextException("logformat %byte{n} does not support zero n values yet", Here());

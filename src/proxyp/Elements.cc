@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "parser/ToInteger.h"
 #include "parser/Tokenizer.h"
 #include "proxyp/Elements.h"
 #include "sbuf/Stream.h"
@@ -72,7 +73,7 @@ ProxyProtocol::NameToFieldType(const SBuf &name)
 ProxyProtocol::Two::FieldType
 ProxyProtocol::IntegerToFieldType(const SBuf &rawInteger)
 {
-    const auto tlvType = ParseInteger<int64_t>("proxy protocol TLV type value", rawInteger);
+    const auto tlvType = Parser::UnsignedDecimalInteger<int64_t>("proxy protocol TLV type value", rawInteger);
     return Two::FieldType(tlvType);
 }
 
