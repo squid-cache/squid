@@ -12,6 +12,8 @@
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 
+#include <limits>
+
 namespace Parser
 {
 
