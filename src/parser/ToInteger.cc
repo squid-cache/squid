@@ -11,10 +11,10 @@
 #include "parser/ToInteger.h"
 #include "parser/Tokenizer.h"
 
-int64_t
-Parser::DecimalInteger_(const char *description, const SBuf &rawInput, const int64_t min, const int64_t max)
+Parser::Impl::ParsedInteger
+Parser::Impl::DecimalInteger_(const char *description, const SBuf &rawInput, const ParsedInteger min, const ParsedInteger max)
 {
-    Parser::Tokenizer tok(rawInput);
+    Tokenizer tok(rawInput);
     if (tok.skip('0')) {
         if (!tok.atEnd()) {
             // e.g., 077, 0xFF, 0b101, or 0.1
@@ -26,7 +26,7 @@ Parser::DecimalInteger_(const char *description, const SBuf &rawInput, const int
     }
     // else the value might still be zero (e.g., -0)
 
-    int64_t rawInteger = 0;
+    ParsedInteger rawInteger = 0;
     if (!tok.int64(rawInteger, 10, true)) {
         // e.g., FF
         throw TextException(ToSBuf("Malformed ", description,

@@ -17,17 +17,22 @@
 namespace Parser
 {
 
+namespace Impl
+{
+
+using ParsedInteger = int64_t;
+
 /// parses the entire rawInput as a decimal integer value fitting the [min..max] range
-int64_t DecimalInteger_(const char *description, const SBuf &rawInput, const int64_t min, const int64_t max);
+ParsedInteger DecimalInteger_(const char *description, const SBuf &rawInput, ParsedInteger min, ParsedInteger max);
+
     
 template <typename Integer>
-static Integer
+Integer
 DecimalInteger_(const char *description, const SBuf &rawInput)
 {
     const auto lowerLimit = std::numeric_limits<Integer>::min();
     const auto upperLimit = std::numeric_limits<Integer>::max();
 
-    using ParsedInteger = int64_t;
     const auto parsedMin = std::numeric_limits<ParsedInteger>::min(); 
     const auto parsedMax = std::numeric_limits<ParsedInteger>::max(); 
 
@@ -37,20 +42,22 @@ DecimalInteger_(const char *description, const SBuf &rawInput)
     return DecimalInteger_(description, rawInput, lowerLimit, upperLimit);
 }
 
+}
+
 /// parses a decimal integer that fits the specified Integer type
 template <typename Integer>
-static Integer
+Integer
 SignedDecimalInteger(const char *description, const SBuf &rawInput) 
 {
-    return DecimalInteger_<Integer>(description, rawInput);
+    return Impl::DecimalInteger_<Integer>(description, rawInput);
 }
 
 /// parses a decimal non-negative integer that fits the specified Integer type
 template <typename Integer>
-static Integer
+Integer
 UnsignedDecimalInteger(const char *description, const SBuf &rawInput)
 {
-    const auto result = DecimalInteger_<Integer>(description, rawInput);
+    const auto result = Impl::DecimalInteger_<Integer>(description, rawInput);
     if (result < 0) {
         throw TextException(ToSBuf("Malformed ", description,
                             ": Expected a non-negative integer value but got ", rawInput), Here());
