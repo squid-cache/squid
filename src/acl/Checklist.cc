@@ -112,7 +112,7 @@ ACLChecklist::matchChild(const Acl::InnerNode *current, Acl::Nodes::const_iterat
 }
 
 bool
-ACLChecklist::goAsync(const AsyncStarter starter, const ACL &acl)
+ACLChecklist::goAsync(AsyncStarter starter, const ACL &acl)
 {
     assert(!asyncInProgress());
     assert(matchLoc_.parent);
