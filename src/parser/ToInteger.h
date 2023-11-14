@@ -26,6 +26,7 @@ using RawInteger = int64_t;
 /// parses the entire rawInput as a decimal integer value in the given range
 RawInteger DecimalInteger(const char *description, const SBuf &rawInput, RawInteger minValue, RawInteger maxValue);
 
+/// parses the entire rawInput as a decimal integer value in the Integer-supported range
 template <typename Integer>
 Integer
 DecimalInteger(const char *description, const SBuf &rawInput)
