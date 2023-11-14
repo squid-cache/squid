@@ -22,17 +22,14 @@ Ip::NfMarkConfig::Parse(const SBuf &token)
     Parser::Tokenizer tokenizer(token);
 
     static const CharacterSet Slash("/", "/");
-    SBuf rawMark;
-    SBuf rawMask;
-    nfmark_t mark = 0;
     nfmark_t mask = 0xffffffff;
+    SBuf rawMark;
     if(tokenizer.token(rawMark, Slash))
         mask = Parser::UnsignedDecimalInteger<nfmark_t>("NfMarkConfig", tokenizer.remaining());
     else
         rawMark = tokenizer.remaining();
-    tokenizer.reset(SBuf());
 
-    mark = Parser::UnsignedDecimalInteger<nfmark_t>("NfMarkConfig",  rawMark);
+    const auto mark = Parser::UnsignedDecimalInteger<nfmark_t>("NfMarkConfig",  rawMark);
     return Ip::NfMarkConfig(mark, mask);
 }
 

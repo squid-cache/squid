@@ -293,9 +293,9 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             if (!tok.skip(':'))
                 throw TextException("missing required :port in CONNECT target", Here());
 
-            const auto rawPort = tok.remaining();
-            tok.reset(SBuf());
+            const auto rawPort = tok.buf();
             foundPort = parsePort(rawPort);
+            tok.reset(SBuf());
         } else {
 
             scheme = uriParseScheme(tok);
