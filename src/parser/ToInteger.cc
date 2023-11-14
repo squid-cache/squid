@@ -10,10 +10,11 @@
 #include "parser/ToInteger.h"
 #include "parser/Tokenizer.h"
 
-Parser::Detail_::RawInteger
-Parser::Detail_::DecimalInteger(const char *description, const SBuf &rawInput, const RawInteger minValue, const RawInteger maxValue)
+/// Parser::Detail_::DecimalInteger() helper that disregards value range limits
+static Parser::Detail_::RawInteger
+ParseDecimalInteger(const char * const description, const SBuf &rawInput)
 {
-    Tokenizer tok(rawInput);
+    Parser::Tokenizer tok(rawInput);
 
     // prohibit leading zeros
     if (tok.skip('0')) {
@@ -27,7 +28,7 @@ Parser::Detail_::DecimalInteger(const char *description, const SBuf &rawInput, c
     }
     // else the value might still be zero (e.g., -0)
 
-    RawInteger rawInteger = 0;
+    Parser::Detail_::RawInteger rawInteger = 0;
     if (!tok.int64(rawInteger, 10, true)) {
         // e.g., FF
         throw TextException(ToSBuf("Malformed ", description,
@@ -41,6 +42,14 @@ Parser::Detail_::DecimalInteger(const char *description, const SBuf &rawInput, c
                                    ": Trailing garbage after ", rawInteger, " in '",
                                    rawInput, "'"), Here());
     }
+
+    return rawInteger;
+}
+
+Parser::Detail_::RawInteger
+Parser::Detail_::DecimalInteger(const char *description, const SBuf &rawInput, const RawInteger minValue, const RawInteger maxValue)
+{
+    const auto rawInteger = ParseDecimalInteger(description, rawInput);
 
     if (rawInteger < minValue) {
         throw TextException(ToSBuf("Malformed ", description,
