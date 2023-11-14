@@ -25,7 +25,6 @@ using ParsedInteger = int64_t;
 /// parses the entire rawInput as a decimal integer value fitting the [min..max] range
 ParsedInteger DecimalInteger_(const char *description, const SBuf &rawInput, ParsedInteger min, ParsedInteger max);
 
-
 template <typename Integer>
 Integer
 DecimalInteger_(const char *description, const SBuf &rawInput)
@@ -60,7 +59,7 @@ UnsignedDecimalInteger(const char *description, const SBuf &rawInput)
     const auto result = Impl::DecimalInteger_<Integer>(description, rawInput);
     if (result < 0) {
         throw TextException(ToSBuf("Malformed ", description,
-                            ": Expected a non-negative integer value but got ", rawInput), Here());
+                                   ": Expected a non-negative integer value but got ", rawInput), Here());
     }
     return result;
 }
