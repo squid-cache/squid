@@ -30,10 +30,10 @@ namespace Format
 typedef enum {
     LFT_NONE,           /* dummy */
 
-    LFT_BYTE,
-
     /* arbitrary string between tokens */
     LFT_STRING,
+
+    LFT_BYTE,
 
     /* client TCP connection remote end details */
     LFT_CLIENT_IP_ADDRESS,
