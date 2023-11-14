@@ -409,8 +409,9 @@ store_client::doCopy(StoreEntry *anEntry)
             return; // failure
     }
 
-    // send any immediately available body bytes even if we also sendHttpHeaders
-    if (canReadFromMemory()) {
+    // Send any immediately available body bytes unless we sendHttpHeaders.
+    // TODO: Send those body bytes when we sendHttpHeaders as well.
+    if (!sendHttpHeaders && canReadFromMemory()) {
         readFromMemory();
         noteNews(); // will sendHttpHeaders (if needed) as well
         flags.store_copying = false;
@@ -496,6 +497,7 @@ store_client::canReadFromMemory() const
 {
     const auto &mem = entry->mem();
     const auto memReadOffset = nextHttpReadOffset();
+    // XXX: This (lo <= offset < end) logic does not support Content-Range gaps.
     return mem.inmem_lo <= memReadOffset && memReadOffset < mem.endOffset() &&
            parsingBuffer->spaceSize();
 }
