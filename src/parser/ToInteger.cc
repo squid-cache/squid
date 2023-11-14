@@ -11,8 +11,8 @@
 #include "parser/ToInteger.h"
 #include "parser/Tokenizer.h"
 
-Parser::Impl::ParsedInteger
-Parser::Impl::DecimalInteger_(const char *description, const SBuf &rawInput, const ParsedInteger min, const ParsedInteger max)
+Parser::Detail_::ParsedInteger
+Parser::Detail_::DecimalInteger_(const char *description, const SBuf &rawInput, const ParsedInteger min, const ParsedInteger max)
 {
     Tokenizer tok(rawInput);
     if (tok.skip('0')) {

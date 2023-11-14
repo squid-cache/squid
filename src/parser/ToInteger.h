@@ -17,7 +17,7 @@
 namespace Parser
 {
 
-namespace Impl
+namespace Detail_
 {
 
 using ParsedInteger = int64_t;
@@ -41,14 +41,14 @@ DecimalInteger_(const char *description, const SBuf &rawInput)
     return DecimalInteger_(description, rawInput, lowerLimit, upperLimit);
 }
 
-}
+} // namespace Detail_
 
 /// parses a decimal integer that fits the specified Integer type
 template <typename Integer>
 Integer
 SignedDecimalInteger(const char *description, const SBuf &rawInput)
 {
-    return Impl::DecimalInteger_<Integer>(description, rawInput);
+    return Detail_::DecimalInteger_<Integer>(description, rawInput);
 }
 
 /// parses a decimal non-negative integer that fits the specified Integer type
@@ -56,7 +56,7 @@ template <typename Integer>
 Integer
 UnsignedDecimalInteger(const char *description, const SBuf &rawInput)
 {
-    const auto result = Impl::DecimalInteger_<Integer>(description, rawInput);
+    const auto result = Detail_::DecimalInteger_<Integer>(description, rawInput);
     if (result < 0) {
         throw TextException(ToSBuf("Malformed ", description,
                                    ": Expected a non-negative integer value but got ", rawInput), Here());
