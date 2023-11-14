@@ -64,7 +64,7 @@ UnsignedDecimalInteger(const char *description, const SBuf &rawInput)
     return result;
 }
 
-} /* namespace Parser */
+} // namespace Parser
 
 #endif /* SQUID_PARSER_TOINTEGER_H */
 
