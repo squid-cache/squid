@@ -13,6 +13,7 @@
 #include "base/Raw.h"
 #include "globals.h"
 #include "HttpRequest.h"
+#include "parser/ToInteger.h"
 #include "parser/Tokenizer.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
@@ -291,10 +292,10 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
 
             if (!tok.skip(':'))
                 throw TextException("missing required :port in CONNECT target", Here());
-            foundPort = parsePort(tok);
 
-            if (!tok.remaining().isEmpty())
-                throw TextException("garbage after host:port in CONNECT target", Here());
+            const auto rawPort = tok.remaining();
+            tok.reset(SBuf());
+            foundPort = parsePort(rawPort);
         } else {
 
             scheme = uriParseScheme(tok);
@@ -612,25 +613,13 @@ AnyP::Uri::parseHost(Parser::Tokenizer &tok) const
 /// may dangerously mishandle unusual (and virtually always bogus) port numbers.
 /// Rejected ports cannot be successfully used by Squid itself.
 int
-AnyP::Uri::parsePort(Parser::Tokenizer &tok) const
+AnyP::Uri::parsePort(const SBuf &rawPort) const
 {
-    if (tok.skip('0'))
-        throw TextException("zero or zero-prefixed port", Here());
-
-    int64_t rawPort = 0;
-    if (!tok.int64(rawPort, 10, false)) // port = *DIGIT
-        throw TextException("malformed or missing port", Here());
-
-    Assure(rawPort > 0);
-    constexpr KnownPort portMax = 65535; // TODO: Make this a class-scope constant and REuse it.
-    constexpr auto portStorageMax = std::numeric_limits<Port::value_type>::max();
-    static_assert(!Less(portStorageMax, portMax), "Port type can represent the maximum valid port number");
-    if (Less(portMax, rawPort))
-        throw TextException("huge port", Here());
+    const auto port = Parser::UnsignedDecimalInteger<KnownPort>("port", rawPort);
 
     // TODO: Return KnownPort after migrating the non-CONNECT uri-host parsing
     // code to use us (so that foundPort "int" disappears or starts using Port).
-    return NaturalCast<int>(rawPort);
+    return NaturalCast<int>(port);
 }
 
 void
