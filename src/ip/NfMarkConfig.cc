@@ -10,35 +10,29 @@
 #include "base/IoManip.h"
 #include "ConfigParser.h"
 #include "ip/NfMarkConfig.h"
+#include "parser/ToInteger.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
 #include <limits>
-
-static nfmark_t
-getNfmark(Parser::Tokenizer &tokenizer, const SBuf &token)
-{
-    int64_t number;
-    if (!tokenizer.int64(number, 0, false))
-        throw TexcHere(ToSBuf("NfMarkConfig: invalid value '", tokenizer.buf(), "' in '", token, "'"));
-
-    if (number > std::numeric_limits<nfmark_t>::max())
-        throw TexcHere(ToSBuf("NfMarkConfig: number, ", number, "in '", token, "' is too big"));
-
-    return static_cast<nfmark_t>(number);
-}
 
 Ip::NfMarkConfig
 Ip::NfMarkConfig::Parse(const SBuf &token)
 {
     Parser::Tokenizer tokenizer(token);
 
-    const nfmark_t mark = getNfmark(tokenizer, token);
-    const nfmark_t mask = tokenizer.skip('/') ? getNfmark(tokenizer, token) : 0xffffffff;
+    static const CharacterSet Slash("/", "/");
+    SBuf rawMark;
+    SBuf rawMask;
+    nfmark_t mark = 0;
+    nfmark_t mask = 0xffffffff;
+    if(tokenizer.token(rawMark, Slash))
+        mask = Parser::UnsignedDecimalInteger<nfmark_t>("NfMarkConfig", tokenizer.remaining());
+    else
+        rawMark = tokenizer.remaining();
+    tokenizer.reset(SBuf());
 
-    if (!tokenizer.atEnd())
-        throw TexcHere(ToSBuf("NfMarkConfig: trailing garbage in '", token, "'"));
-
+    mark = Parser::UnsignedDecimalInteger<nfmark_t>("NfMarkConfig",  rawMark);
     return Ip::NfMarkConfig(mark, mask);
 }
 
