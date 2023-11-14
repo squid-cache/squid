@@ -148,7 +148,7 @@ private:
     void parseUrn(Parser::Tokenizer&);
 
     SBuf parseHost(Parser::Tokenizer &) const;
-    int parsePort(const SBuf &) const;
+    int parsePort(Parser::Tokenizer &) const;
 
     /**
      \par
