@@ -7,14 +7,15 @@
  */
 
 #include "squid.h"
-
 #include "parser/ToInteger.h"
 #include "parser/Tokenizer.h"
 
-Parser::Detail_::ParsedInteger
-Parser::Detail_::DecimalInteger_(const char *description, const SBuf &rawInput, const ParsedInteger min, const ParsedInteger max)
+Parser::Detail_::RawInteger
+Parser::Detail_::DecimalInteger(const char *description, const SBuf &rawInput, const RawInteger minValue, const RawInteger maxValue)
 {
     Tokenizer tok(rawInput);
+
+    // prohibit leading zeros
     if (tok.skip('0')) {
         if (!tok.atEnd()) {
             // e.g., 077, 0xFF, 0b101, or 0.1
@@ -26,7 +27,7 @@ Parser::Detail_::DecimalInteger_(const char *description, const SBuf &rawInput, 
     }
     // else the value might still be zero (e.g., -0)
 
-    ParsedInteger rawInteger = 0;
+    RawInteger rawInteger = 0;
     if (!tok.int64(rawInteger, 10, true)) {
         // e.g., FF
         throw TextException(ToSBuf("Malformed ", description,
@@ -41,15 +42,15 @@ Parser::Detail_::DecimalInteger_(const char *description, const SBuf &rawInput, 
                                    rawInput, "'"), Here());
     }
 
-    if (rawInteger > max) {
+    if (rawInteger < minValue) {
         throw TextException(ToSBuf("Malformed ", description,
-                                   ": Expected an integer value not exceeding ", max,
+                                   ": Expected an integer value not below ", minValue,
                                    " but got ", rawInteger), Here());
     }
 
-    if (rawInteger < min) {
+    if (rawInteger > maxValue) {
         throw TextException(ToSBuf("Malformed ", description,
-                                   ": Expected an integer value not below ", min,
+                                   ": Expected an integer value not exceeding ", maxValue,
                                    " but got ", rawInteger), Here());
     }
 

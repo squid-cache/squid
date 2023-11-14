@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PARSER_TOINTEGER_H
-#define SQUID_PARSER_TOINTEGER_H
+#ifndef SQUID_SRC_PARSER_TOINTEGER_H
+#define SQUID_SRC_PARSER_TOINTEGER_H
 
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
@@ -20,25 +20,30 @@ namespace Parser
 namespace Detail_
 {
 
-using ParsedInteger = int64_t;
+/// for simplicity sake, we manipulate all integers using this single large type
+using RawInteger = int64_t;
 
-/// parses the entire rawInput as a decimal integer value fitting the [min..max] range
-ParsedInteger DecimalInteger_(const char *description, const SBuf &rawInput, ParsedInteger min, ParsedInteger max);
+/// parses the entire rawInput as a decimal integer value in the given range
+RawInteger DecimalInteger(const char *description, const SBuf &rawInput, RawInteger minValue, RawInteger maxValue);
 
 template <typename Integer>
 Integer
-DecimalInteger_(const char *description, const SBuf &rawInput)
+DecimalInteger(const char *description, const SBuf &rawInput)
 {
-    const auto lowerLimit = std::numeric_limits<Integer>::min();
-    const auto upperLimit = std::numeric_limits<Integer>::max();
+    /* make sure our RawInteger can represent caller-requested Integer */
 
-    const auto parsedMin = std::numeric_limits<ParsedInteger>::min();
-    const auto parsedMax = std::numeric_limits<ParsedInteger>::max();
+    const auto callerMin = std::numeric_limits<Integer>::min();
+    const auto callerMax = std::numeric_limits<Integer>::max();
 
-    static_assert(lowerLimit >= parsedMin);
-    static_assert(upperLimit <= parsedMax);
+    const auto rawMin = std::numeric_limits<RawInteger>::min();
+    const auto rawMax = std::numeric_limits<RawInteger>::max();
 
-    return DecimalInteger_(description, rawInput, lowerLimit, upperLimit);
+    static_assert(callerMin >= rawMin);
+    static_assert(callerMax <= rawMax);
+
+    // with the checks above, casting between RawInteger and Integer is safe (as
+    // long as DecimalInteger() implementations obeys passed caller limits)
+    return DecimalInteger(description, rawInput, callerMin, callerMax);
 }
 
 } // namespace Detail_
@@ -48,7 +53,7 @@ template <typename Integer>
 Integer
 SignedDecimalInteger(const char *description, const SBuf &rawInput)
 {
-    return Detail_::DecimalInteger_<Integer>(description, rawInput);
+    return Detail_::DecimalInteger<Integer>(description, rawInput);
 }
 
 /// parses a decimal non-negative integer that fits the specified Integer type
@@ -56,7 +61,7 @@ template <typename Integer>
 Integer
 UnsignedDecimalInteger(const char *description, const SBuf &rawInput)
 {
-    const auto result = Detail_::DecimalInteger_<Integer>(description, rawInput);
+    const auto result = Detail_::DecimalInteger<Integer>(description, rawInput);
     if (result < 0) {
         throw TextException(ToSBuf("Malformed ", description,
                                    ": Expected a non-negative integer value but got ", rawInput), Here());
@@ -66,5 +71,5 @@ UnsignedDecimalInteger(const char *description, const SBuf &rawInput)
 
 } // namespace Parser
 
-#endif /* SQUID_PARSER_TOINTEGER_H */
+#endif /* SQUID_SRC_PARSER_TOINTEGER_H */
 
