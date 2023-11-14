@@ -63,6 +63,8 @@ Integer
 UnsignedDecimalInteger(const char *description, const SBuf &rawInput)
 {
     const auto result = Detail_::DecimalInteger<Integer>(description, rawInput);
+    // XXX: This code allows '-0' as valid input, but callers like
+    // ProxyProtocol::IntegerToFieldType() do not want to allow that!
     if (result < 0) {
         throw TextException(ToSBuf("Malformed ", description,
                                    ": Expected a non-negative integer value but got ", rawInput), Here());

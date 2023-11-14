@@ -73,7 +73,7 @@ ProxyProtocol::NameToFieldType(const SBuf &name)
 ProxyProtocol::Two::FieldType
 ProxyProtocol::IntegerToFieldType(const SBuf &rawInteger)
 {
-    const auto tlvType = Parser::UnsignedDecimalInteger<int64_t>("proxy protocol TLV type value", rawInteger);
+    const auto tlvType = Parser::UnsignedDecimalInteger<uint8_t>("PROXY protocol TLV type value", rawInteger);
     return Two::FieldType(tlvType);
 }
 
