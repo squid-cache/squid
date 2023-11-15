@@ -315,7 +315,7 @@ ParseUnsignedDecimalInteger(const char *description, const SBuf &rawInput)
 
     ParsedInteger rawValue = 0;
     if (!tok.int64(rawValue, 10, false)) {
-        // e.g., FF
+        // e.g., FF or -0
         throw TextException(ToSBuf("Malformed ", description,
                             ": Expected a decimal integer but got '",
                             rawInput, "'"), Here());
