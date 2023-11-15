@@ -305,16 +305,16 @@ ParseUnsignedDecimalInteger(const char *description, const SBuf &rawInput)
     }
     // else the value might still be zero (e.g., -0)
 
-    constexpr auto lowerLimit = std::numeric_limits<Integer>::min();
-    constexpr auto upperLimit = std::numeric_limits<Integer>::max();
+    constexpr auto minValue = std::numeric_limits<Integer>::min();
+    constexpr auto maxValue = std::numeric_limits<Integer>::max();
 
     // check that our caller is compatible with Tokenizer::int64() use below
     using ParsedInteger = int64_t;
-    static_assert(lowerLimit >= std::numeric_limits<ParsedInteger>::min());
-    static_assert(upperLimit <= std::numeric_limits<ParsedInteger>::max());
+    static_assert(minValue >= std::numeric_limits<ParsedInteger>::min());
+    static_assert(maxValue <= std::numeric_limits<ParsedInteger>::max());
 
-    ParsedInteger rawInteger = 0;
-    if (!tok.int64(rawInteger, 10, false)) {
+    ParsedInteger rawValue = 0;
+    if (!tok.int64(rawValue, 10, false)) {
         // e.g., FF
         throw TextException(ToSBuf("Malformed ", description,
                             ": Expected a decimal integer but got '",
@@ -324,23 +324,23 @@ ParseUnsignedDecimalInteger(const char *description, const SBuf &rawInput)
     if (!tok.atEnd()) {
         // e.g., 1,000, 1.0, or 1e6
         throw TextException(ToSBuf("Malformed ", description,
-                            ": Trailing garbage after ", rawInteger, " in '",
+                            ": Trailing garbage after ", rawValue, " in '",
                             rawInput, "'"), Here());
     }
 
-    if (rawInteger > upperLimit) {
+    if (rawValue > maxValue) {
         throw TextException(ToSBuf("Malformed ", description,
-                            ": Expected an integer value not exceeding ", upperLimit,
-                            " but got ", rawInteger), Here());
+                            ": Expected an integer value not exceeding ", maxValue,
+                            " but got ", rawValue), Here());
     }
 
-    if (rawInteger < lowerLimit) {
+    if (rawValue < minValue) {
         throw TextException(ToSBuf("Malformed ", description,
-                            ": Expected an integer value not below ", lowerLimit,
-                            " but got ", rawInteger), Here());
+                            ": Expected an integer value not below ", minValue,
+                            " but got ", rawValue), Here());
     }
 
-    return Integer(rawInteger);
+    return Integer(rawValue);
 }
 
 /* parses a single token. Returns the token length in characters,
