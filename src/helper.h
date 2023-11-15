@@ -322,7 +322,7 @@ public:
     void reserve();
     void clearReservation();
 
-    /* HelperServerBase API */
+    /* Helper::SessionBase API */
     bool reserved() override {return reservationId.reserved();}
     Helper::Client &helper() override { return *parent; }
 
