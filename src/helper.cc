@@ -298,7 +298,8 @@ Helper::Client::openSessions()
         if (wfd != rfd)
             commSetNonBlocking(wfd);
 
-        AsyncCall::Pointer closeCall = asyncCall(5,4, "Helper::Session::HelperServerClosed", cbdataDialer(Helper::Session::HelperServerClosed, srv));
+        AsyncCall::Pointer closeCall = asyncCall(5, 4, "Helper::Session::HelperServerClosed", cbdataDialer(SessionBase::HelperServerClosed,
+                    static_cast<Helper::SessionBase *>(srv)));
         comm_add_close_handler(rfd, closeCall);
 
         if (hlp->timeout && hlp->childs.concurrency) {
@@ -430,7 +431,8 @@ statefulhelper::openSessions()
         if (wfd != rfd)
             commSetNonBlocking(wfd);
 
-        AsyncCall::Pointer closeCall = asyncCall(5,4, "helper_stateful_server::HelperServerClosed", cbdataDialer(helper_stateful_server::HelperServerClosed, srv));
+        AsyncCall::Pointer closeCall = asyncCall(5, 4, "helper_stateful_server::HelperServerClosed", cbdataDialer(Helper::SessionBase::HelperServerClosed,
+                    static_cast<Helper::SessionBase *>(srv)));
         comm_add_close_handler(rfd, closeCall);
 
         AsyncCall::Pointer call = commCbCall(5,4, "helperStatefulHandleRead",
@@ -909,19 +911,10 @@ Helper::Client::sessionClosed(SessionBase &session)
 }
 
 void
-Helper::Session::HelperServerClosed(Session * const srv)
+Helper::SessionBase::HelperServerClosed(SessionBase * const srv)
 {
-    srv->parent->sessionClosed(*srv);
-    srv->dropQueued(*srv->parent);
-    delete srv;
-}
-
-// XXX: Essentially duplicates Helper::Session::HelperServerClosed() until we add SessionBase::helper().
-void
-helper_stateful_server::HelperServerClosed(helper_stateful_server *srv)
-{
-    srv->parent->sessionClosed(*srv);
-    srv->dropQueued(*srv->parent);
+    srv->helper().sessionClosed(*srv);
+    srv->dropQueued(srv->helper());
     delete srv;
 }
 

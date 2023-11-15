@@ -193,6 +193,9 @@ class SessionBase: public CbdataParent
 public:
     ~SessionBase() override;
 
+    /// close handler to handle exited server processes
+    static void HelperServerClosed(SessionBase *);
+
     /** Closes pipes to the helper safely.
      * Handles the case where the read and write pipes are the same FD.
      *
@@ -211,6 +214,9 @@ public:
     // TODO: Teach each child to report its child-specific state instead.
     /// whether the server is locked for exclusive use by a client
     virtual bool reserved() = 0;
+
+    /// our creator (parent) object
+    virtual Client &helper() = 0;
 
     /// dequeues and sends an Unknown answer to all queued requests
     virtual void dropQueued(Client &);
@@ -296,12 +302,10 @@ public:
     /* SessionBase API */
     bool reserved() override {return false;}
     void dropQueued(Client &) override;
+    Client &helper() override { return *parent; }
 
     /// Read timeout handler
     static void requestTimeout(const CommTimeoutCbParams &io);
-
-    /// close handler to handle exited server processes
-    static void HelperServerClosed(Session *);
 };
 
 } // namespace Helper
@@ -320,9 +324,7 @@ public:
 
     /* HelperServerBase API */
     bool reserved() override {return reservationId.reserved();}
-
-    /// close handler to handle exited server processes
-    static void HelperServerClosed(helper_stateful_server *srv);
+    Helper::Client &helper() override { return *parent; }
 
     statefulhelper::Pointer parent;
 
