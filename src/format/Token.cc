@@ -298,8 +298,8 @@ ParseUnsignedDecimalInteger(const char *description, const SBuf &rawInput)
         if (!tok.atEnd()) {
             // e.g., 077, 0xFF, 0b101, or 0.1
             throw TextException(ToSBuf("Malformed ", description,
-                                ": Expected a decimal integer without leading zeros but got '",
-                                rawInput, "'"), Here());
+                                       ": Expected a decimal integer without leading zeros but got '",
+                                       rawInput, "'"), Here());
         }
         return Integer(0);
     }
@@ -317,27 +317,27 @@ ParseUnsignedDecimalInteger(const char *description, const SBuf &rawInput)
     if (!tok.int64(rawValue, 10, false)) {
         // e.g., FF or -0
         throw TextException(ToSBuf("Malformed ", description,
-                            ": Expected a decimal integer but got '",
-                            rawInput, "'"), Here());
+                                   ": Expected a decimal integer but got '",
+                                   rawInput, "'"), Here());
     }
 
     if (!tok.atEnd()) {
         // e.g., 1,000, 1.0, or 1e6
         throw TextException(ToSBuf("Malformed ", description,
-                            ": Trailing garbage after ", rawValue, " in '",
-                            rawInput, "'"), Here());
+                                   ": Trailing garbage after ", rawValue, " in '",
+                                   rawInput, "'"), Here());
     }
 
     if (rawValue > maxValue) {
         throw TextException(ToSBuf("Malformed ", description,
-                            ": Expected an integer value not exceeding ", maxValue,
-                            " but got ", rawValue), Here());
+                                   ": Expected an integer value not exceeding ", maxValue,
+                                   " but got ", rawValue), Here());
     }
 
     if (rawValue < minValue) {
         throw TextException(ToSBuf("Malformed ", description,
-                            ": Expected an integer value not below ", minValue,
-                            " but got ", rawValue), Here());
+                                   ": Expected an integer value not below ", minValue,
+                                   " but got ", rawValue), Here());
     }
 
     return Integer(rawValue);
