@@ -287,10 +287,11 @@ Format::Token::scanForToken(TokenTableEntry const table[], const char *cur)
     return cur;
 }
 
-/// parses a decimal integer that fits the specified Integer type
+// TODO: Reduce code duplication across this and other custom integer parsers.
+/// interprets input as an unsigned decimal integer that fits the specified Integer type
 template <typename Integer>
 static Integer
-ParseInteger(const char *description, const SBuf &rawInput)
+ParseUnsignedDecimalInteger(const char *description, const SBuf &rawInput)
 {
     Parser::Tokenizer tok(rawInput);
     if (tok.skip('0')) {
@@ -313,7 +314,7 @@ ParseInteger(const char *description, const SBuf &rawInput)
     static_assert(upperLimit <= std::numeric_limits<ParsedInteger>::max());
 
     ParsedInteger rawInteger = 0;
-    if (!tok.int64(rawInteger, 10, true)) {
+    if (!tok.int64(rawInteger, 10, false)) {
         // e.g., FF
         throw TextException(ToSBuf("Malformed ", description,
                             ": Expected a decimal integer but got '",
@@ -537,7 +538,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
         if (!data.string)
             throw TextException("logformat %byte requires a parameter (e.g., %byte{10})", Here());
         // TODO: Convert Format::Token::data.string to SBuf.
-        if (const auto v = ParseInteger<uint8_t>("logformat %byte{value}", SBuf(data.string)))
+        if (const auto v = ParseUnsignedDecimalInteger<uint8_t>("logformat %byte{value}", SBuf(data.string)))
             data.byteValue = v;
         else
             throw TextException("logformat %byte{n} does not support zero n values yet", Here());
