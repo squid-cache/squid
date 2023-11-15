@@ -11,7 +11,7 @@
 #include "format/Token.h"
 #include "format/TokenTableEntry.h"
 #include "globals.h"
-#include "parser/ToInteger.h"
+#include "parser/Tokenizer.h"
 #include "proxyp/Elements.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -287,6 +287,61 @@ Format::Token::scanForToken(TokenTableEntry const table[], const char *cur)
     return cur;
 }
 
+/// parses a decimal integer that fits the specified Integer type
+template <typename Integer>
+static Integer
+ParseInteger(const char *description, const SBuf &rawInput)
+{
+    Parser::Tokenizer tok(rawInput);
+    if (tok.skip('0')) {
+        if (!tok.atEnd()) {
+            // e.g., 077, 0xFF, 0b101, or 0.1
+            throw TextException(ToSBuf("Malformed ", description,
+                                ": Expected a decimal integer without leading zeros but got '",
+                                rawInput, "'"), Here());
+        }
+        return Integer(0);
+    }
+    // else the value might still be zero (e.g., -0)
+
+    const auto lowerLimit = std::numeric_limits<Integer>::min();
+    const auto upperLimit = std::numeric_limits<Integer>::max();
+
+    // check that our caller is compatible with Tokenizer::int64() use below
+    using ParsedInteger = int64_t;
+    static_assert(lowerLimit >= std::numeric_limits<ParsedInteger>::min());
+    static_assert(upperLimit <= std::numeric_limits<ParsedInteger>::max());
+
+    ParsedInteger rawInteger = 0;
+    if (!tok.int64(rawInteger, 10, true)) {
+        // e.g., FF
+        throw TextException(ToSBuf("Malformed ", description,
+                            ": Expected a decimal integer but got '",
+                            rawInput, "'"), Here());
+    }
+
+    if (!tok.atEnd()) {
+        // e.g., 1,000, 1.0, or 1e6
+        throw TextException(ToSBuf("Malformed ", description,
+                            ": Trailing garbage after ", rawInteger, " in '",
+                            rawInput, "'"), Here());
+    }
+
+    if (rawInteger > upperLimit) {
+        throw TextException(ToSBuf("Malformed ", description,
+                            ": Expected an integer value not exceeding ", upperLimit,
+                            " but got ", rawInteger), Here());
+    }
+
+    if (rawInteger < lowerLimit) {
+        throw TextException(ToSBuf("Malformed ", description,
+                            ": Expected an integer value not below ", lowerLimit,
+                            " but got ", rawInteger), Here());
+    }
+
+    return Integer(rawInteger);
+}
+
 /* parses a single token. Returns the token length in characters,
  * and fills in the lt item with the token information.
  * def is for sure null-terminated
@@ -482,7 +537,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
         if (!data.string)
             throw TextException("logformat %byte requires a parameter (e.g., %byte{10})", Here());
         // TODO: Convert Format::Token::data.string to SBuf.
-        if (const auto v = Parser::UnsignedDecimalInteger<uint8_t>("logformat %byte{value}", SBuf(data.string)))
+        if (const auto v = ParseInteger<uint8_t>("logformat %byte{value}", SBuf(data.string)))
             data.byteValue = v;
         else
             throw TextException("logformat %byte{n} does not support zero n values yet", Here());
