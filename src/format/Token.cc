@@ -293,6 +293,9 @@ template <typename Integer>
 static Integer
 ParseUnsignedDecimalInteger(const char *description, const SBuf &rawInput)
 {
+    constexpr auto minValue = std::numeric_limits<Integer>::min();
+    constexpr auto maxValue = std::numeric_limits<Integer>::max();
+
     Parser::Tokenizer tok(rawInput);
     if (tok.skip('0')) {
         if (!tok.atEnd()) {
@@ -301,12 +304,12 @@ ParseUnsignedDecimalInteger(const char *description, const SBuf &rawInput)
                                        ": Expected a decimal integer without leading zeros but got '",
                                        rawInput, "'"), Here());
         }
+        // for simplicity, we currently assume that zero is always in range
+        static_assert(minValue <= 0);
+        static_assert(0 <= maxValue);
         return Integer(0);
     }
     // else the value might still be zero (e.g., -0)
-
-    constexpr auto minValue = std::numeric_limits<Integer>::min();
-    constexpr auto maxValue = std::numeric_limits<Integer>::max();
 
     // check that our caller is compatible with Tokenizer::int64() use below
     using ParsedInteger = int64_t;
