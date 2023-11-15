@@ -17,6 +17,7 @@ SUBSTITUTE=sed "\
 	s%@SYSCONFDIR@%$(sysconfdir)%g;\
 	"
 
-## Example of how to substitute:
-## squid.8: $(srcdir)/squid.8.in Makefile
-##	$(SUBSTITUTE) < $(srcdir)/squid.8.in > $@
+%.8: %.md
+	$(SUBSTITUTE) < $(srcdir)/`basename $<` | \
+	$(PANDOC) -t man -f gfm -s -V title:`basename -s .md "$<"` -V section:8 -o $@
+
