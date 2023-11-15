@@ -318,9 +318,10 @@ ParseUnsignedDecimalInteger(const char *description, const SBuf &rawInput)
 
     ParsedInteger rawValue = 0;
     if (!tok.int64(rawValue, 10, false)) {
-        // e.g., FF or -0
+        // e.g., FF, -1, or 18446744073709551616
+        // TODO: Provide better diagnostic for values exceeding int64_t maximum.
         throw TextException(ToSBuf("Malformed ", description,
-                                   ": Expected a decimal integer but got '",
+                                   ": Expected an unsigned decimal integer but got '",
                                    rawInput, "'"), Here());
     }
 
