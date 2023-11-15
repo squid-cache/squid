@@ -2965,7 +2965,7 @@ SQUID_DEFINE_BOOL(USE_QOS_TOS,${enable_zph_qos:=yes},
           [Enable Zero Penalty Hit QOS. When set, Squid will alter the
            TOS field of HIT responses to help policing network traffic])
 AC_MSG_NOTICE([ZPH QOS enabled: $enable_zph_qos])
-AS_IF(test "x$enable_zph_qos" = "xyes"],[
+AS_IF([test "x$enable_zph_qos" = "xyes"],[
   AC_MSG_NOTICE([QOS netfilter mark preservation enabled: $with_netfilter_conntrack])
   SQUID_DEFINE_BOOL(USE_LIBNETFILTERCONNTRACK,${with_netfilter_conntrack:=no},
     [Enable support for QOS netfilter mark preservation])
