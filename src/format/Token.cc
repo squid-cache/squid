@@ -305,8 +305,8 @@ ParseUnsignedDecimalInteger(const char *description, const SBuf &rawInput)
     }
     // else the value might still be zero (e.g., -0)
 
-    const auto lowerLimit = std::numeric_limits<Integer>::min();
-    const auto upperLimit = std::numeric_limits<Integer>::max();
+    constexpr auto lowerLimit = std::numeric_limits<Integer>::min();
+    constexpr auto upperLimit = std::numeric_limits<Integer>::max();
 
     // check that our caller is compatible with Tokenizer::int64() use below
     using ParsedInteger = int64_t;
