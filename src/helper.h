@@ -194,7 +194,7 @@ public:
     ~SessionBase() override;
 
     /// close handler to handle exited server processes
-    void helperServerClosed(int &);
+    static void HelperServerClosed(SessionBase *);
 
     /** Closes pipes to the helper safely.
      * Handles the case where the read and write pipes are the same FD.

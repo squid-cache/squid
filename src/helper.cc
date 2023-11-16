@@ -9,7 +9,6 @@
 /* DEBUG: section 84    Helper process maintenance */
 
 #include "squid.h"
-#include "base/AsyncCallbacks.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/Packable.h"
 #include "base/Raw.h"
@@ -75,7 +74,7 @@ Helper::SessionBase::closePipesSafely()
 #if _SQUID_WINDOWS_
     shutdown(writePipe->fd, SD_BOTH);
 #endif
-    auto id_name = helper().id_name;
+
     flags.closing = true;
     if (readPipe->fd == writePipe->fd)
         readPipe->fd = -1;
@@ -87,13 +86,11 @@ Helper::SessionBase::closePipesSafely()
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(84, DBG_IMPORTANT, "WARNING: " << id_name <<
+            debugs(84, DBG_IMPORTANT, "WARNING: " << helper().id_name <<
                    " #" << index << " (PID " << (long int)pid << ") didn't exit in 5 seconds");
         }
         CloseHandle(hIpc);
     }
-#else
-    (void)id_name;
 #endif
 }
 
@@ -103,7 +100,7 @@ Helper::SessionBase::closeWritePipeSafely()
 #if _SQUID_WINDOWS_
     shutdown(writePipe->fd, (readPipe->fd == writePipe->fd ? SD_BOTH : SD_SEND));
 #endif
-    auto id_name = helper().id_name;
+
     flags.closing = true;
     if (readPipe->fd == writePipe->fd)
         readPipe->fd = -1;
@@ -113,13 +110,11 @@ Helper::SessionBase::closeWritePipeSafely()
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(84, DBG_IMPORTANT, "WARNING: " << id_name <<
+            debugs(84, DBG_IMPORTANT, "WARNING: " << helper().id_name <<
                    " #" << index << " (PID " << (long int)pid << ") didn't exit in 5 seconds");
         }
         CloseHandle(hIpc);
     }
-#else
-    (void)id_name;
 #endif
 }
 
@@ -299,7 +294,7 @@ Helper::Client::openSessions()
         if (wfd != rfd)
             commSetNonBlocking(wfd);
 
-        AsyncCall::Pointer closeCall = asyncCall(5, 4, "Helper::Session::HelperServerClosed", callbackDialer(&Helper::SessionBase::helperServerClosed,
+        AsyncCall::Pointer closeCall = asyncCall(5, 4, "Helper::Session::HelperServerClosed", cbdataDialer(SessionBase::HelperServerClosed,
                     static_cast<Helper::SessionBase *>(srv)));
 
         comm_add_close_handler(rfd, closeCall);
@@ -433,7 +428,7 @@ statefulhelper::openSessions()
         if (wfd != rfd)
             commSetNonBlocking(wfd);
 
-        AsyncCall::Pointer closeCall = asyncCall(5, 4, "Helper::Session::HelperServerClosed", callbackDialer(&Helper::SessionBase::helperServerClosed,
+        AsyncCall::Pointer closeCall = asyncCall(5, 4, "helper_stateful_server::HelperServerClosed", cbdataDialer(Helper::SessionBase::HelperServerClosed,
                     static_cast<Helper::SessionBase *>(srv)));
 
         comm_add_close_handler(rfd, closeCall);
@@ -914,11 +909,11 @@ Helper::Client::sessionClosed(SessionBase &session)
 }
 
 void
-Helper::SessionBase::helperServerClosed(int &)
+Helper::SessionBase::HelperServerClosed(SessionBase * const srv)
 {
-    helper().sessionClosed(*this);
-    dropQueued();
-    delete this;
+    srv->helper().sessionClosed(*srv);
+    srv->dropQueued();
+    delete srv;
 }
 
 Helper::Xaction *
