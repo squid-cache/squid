@@ -194,14 +194,14 @@ public:
     ~SessionBase() override;
 
     /// close handler to handle exited server processes
-    static void HelperServerClosed(SessionBase *);
+    void helperServerClosed(int &);
 
     /** Closes pipes to the helper safely.
      * Handles the case where the read and write pipes are the same FD.
      *
      * \param name displayed for the helper being shutdown if logging an error
      */
-    void closePipesSafely(const char *name);
+    void closePipesSafely();
 
     /** Closes the reading pipe.
      * If the read and write sockets are the same the write pipe will
@@ -209,17 +209,17 @@ public:
      *
      * \param name displayed for the helper being shutdown if logging an error
      */
-    void closeWritePipeSafely(const char *name);
+    void closeWritePipeSafely();
 
     // TODO: Teach each child to report its child-specific state instead.
     /// whether the server is locked for exclusive use by a client
     virtual bool reserved() = 0;
 
     /// our creator (parent) object
-    virtual Client &helper() = 0;
+    virtual Client &helper() const = 0;
 
     /// dequeues and sends an Unknown answer to all queued requests
-    virtual void dropQueued(Client &);
+    virtual void dropQueued();
 
 public:
     /// Helper program identifier; does not change when contents do,
@@ -301,8 +301,8 @@ public:
 
     /* SessionBase API */
     bool reserved() override {return false;}
-    void dropQueued(Client &) override;
-    Client &helper() override { return *parent; }
+    void dropQueued() override;
+    Client &helper() const override { return *parent; }
 
     /// Read timeout handler
     static void requestTimeout(const CommTimeoutCbParams &io);
@@ -324,7 +324,7 @@ public:
 
     /* Helper::SessionBase API */
     bool reserved() override {return reservationId.reserved();}
-    Helper::Client &helper() override { return *parent; }
+    Helper::Client &helper() const override { return *parent; }
 
     statefulhelper::Pointer parent;
 

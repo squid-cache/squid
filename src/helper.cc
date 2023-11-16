@@ -9,6 +9,7 @@
 /* DEBUG: section 84    Helper process maintenance */
 
 #include "squid.h"
+#include "base/AsyncCallbacks.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/Packable.h"
 #include "base/Raw.h"
@@ -69,12 +70,12 @@ Helper::SessionBase::initStats()
 }
 
 void
-Helper::SessionBase::closePipesSafely(const char * const id_name)
+Helper::SessionBase::closePipesSafely()
 {
 #if _SQUID_WINDOWS_
     shutdown(writePipe->fd, SD_BOTH);
 #endif
-
+    auto id_name = helper().id_name;
     flags.closing = true;
     if (readPipe->fd == writePipe->fd)
         readPipe->fd = -1;
@@ -97,12 +98,12 @@ Helper::SessionBase::closePipesSafely(const char * const id_name)
 }
 
 void
-Helper::SessionBase::closeWritePipeSafely(const char * const id_name)
+Helper::SessionBase::closeWritePipeSafely()
 {
 #if _SQUID_WINDOWS_
     shutdown(writePipe->fd, (readPipe->fd == writePipe->fd ? SD_BOTH : SD_SEND));
 #endif
-
+    auto id_name = helper().id_name;
     flags.closing = true;
     if (readPipe->fd == writePipe->fd)
         readPipe->fd = -1;
@@ -123,14 +124,14 @@ Helper::SessionBase::closeWritePipeSafely(const char * const id_name)
 }
 
 void
-Helper::SessionBase::dropQueued(Client &client)
+Helper::SessionBase::dropQueued()
 {
     while (!requests.empty()) {
         // XXX: re-schedule these on another helper?
         const auto r = requests.front();
         requests.pop_front();
         r->reply.result = Helper::Unknown;
-        client.callBack(*r);
+        helper().callBack(*r);
         delete r;
     }
 }
@@ -155,7 +156,7 @@ Helper::Session::~Session()
     }
 
     if (Comm::IsConnOpen(writePipe))
-        closeWritePipeSafely(parent->id_name);
+        closeWritePipeSafely();
 
     dlinkDelete(&link, &parent->servers);
 
@@ -166,9 +167,9 @@ Helper::Session::~Session()
 }
 
 void
-Helper::Session::dropQueued(Client &client)
+Helper::Session::dropQueued()
 {
-    SessionBase::dropQueued(client);
+    SessionBase::dropQueued();
     requestsIndex.clear();
 }
 
@@ -176,7 +177,7 @@ helper_stateful_server::~helper_stateful_server()
 {
     /* TODO: walk the local queue of requests and carry them all out */
     if (Comm::IsConnOpen(writePipe))
-        closeWritePipeSafely(parent->id_name);
+        closeWritePipeSafely();
 
     parent->cancelReservation(reservationId);
 
@@ -298,8 +299,9 @@ Helper::Client::openSessions()
         if (wfd != rfd)
             commSetNonBlocking(wfd);
 
-        AsyncCall::Pointer closeCall = asyncCall(5, 4, "Helper::Session::HelperServerClosed", cbdataDialer(SessionBase::HelperServerClosed,
+        AsyncCall::Pointer closeCall = asyncCall(5, 4, "Helper::Session::HelperServerClosed", callbackDialer(&Helper::SessionBase::helperServerClosed,
                     static_cast<Helper::SessionBase *>(srv)));
+
         comm_add_close_handler(rfd, closeCall);
 
         if (hlp->timeout && hlp->childs.concurrency) {
@@ -431,8 +433,9 @@ statefulhelper::openSessions()
         if (wfd != rfd)
             commSetNonBlocking(wfd);
 
-        AsyncCall::Pointer closeCall = asyncCall(5, 4, "helper_stateful_server::HelperServerClosed", cbdataDialer(Helper::SessionBase::HelperServerClosed,
+        AsyncCall::Pointer closeCall = asyncCall(5, 4, "Helper::Session::HelperServerClosed", callbackDialer(&Helper::SessionBase::helperServerClosed,
                     static_cast<Helper::SessionBase *>(srv)));
+
         comm_add_close_handler(rfd, closeCall);
 
         AsyncCall::Pointer call = commCbCall(5,4, "helperStatefulHandleRead",
@@ -801,7 +804,7 @@ helperShutdown(const Helper::Client::Pointer &hlp)
         /* the rest of the details is dealt with in the helperServerFree
          * close handler
          */
-        srv->closePipesSafely(hlp->id_name);
+        srv->closePipesSafely();
     }
 }
 
@@ -848,7 +851,7 @@ helperStatefulShutdown(const statefulhelper::Pointer &hlp)
         /* the rest of the details is dealt with in the helperStatefulServerFree
          * close handler
          */
-        srv->closePipesSafely(hlp->id_name);
+        srv->closePipesSafely();
     }
 }
 
@@ -911,11 +914,11 @@ Helper::Client::sessionClosed(SessionBase &session)
 }
 
 void
-Helper::SessionBase::HelperServerClosed(SessionBase * const srv)
+Helper::SessionBase::helperServerClosed(int &)
 {
-    srv->helper().sessionClosed(*srv);
-    srv->dropQueued(srv->helper());
-    delete srv;
+    helper().sessionClosed(*this);
+    dropQueued();
+    delete this;
 }
 
 Helper::Xaction *
@@ -949,7 +952,7 @@ helperReturnBuffer(Helper::Session * srv, const Helper::Client::Pointer &hlp, ch
             debugs(84, DBG_IMPORTANT, "ERROR: Disconnecting from a " <<
                    "helper that overflowed " << srv->rbuf_sz << "-byte " <<
                    "Squid input buffer: " << hlp->id_name << " #" << srv->index);
-            srv->closePipesSafely(hlp->id_name);
+            srv->closePipesSafely();
             return;
         }
 
@@ -996,7 +999,7 @@ helperReturnBuffer(Helper::Session * srv, const Helper::Client::Pointer &hlp, ch
     if (!srv->flags.shutdown) {
         helperKickQueue(hlp);
     } else if (!srv->flags.closing && !srv->stats.pending) {
-        srv->closeWritePipeSafely(srv->parent->id_name);
+        srv->closeWritePipeSafely();
     }
 }
 
@@ -1018,7 +1021,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
     debugs(84, 5, "helperHandleRead: " << len << " bytes from " << hlp->id_name << " #" << srv->index);
 
     if (flag != Comm::OK || len == 0) {
-        srv->closePipesSafely(hlp->id_name);
+        srv->closePipesSafely();
         return;
     }
 
@@ -1034,7 +1037,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
 
         srv->roffset = 0;
         srv->rbuf[0] = '\0';
-        srv->closePipesSafely(hlp->id_name);
+        srv->closePipesSafely();
         return;
     }
 
@@ -1138,7 +1141,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
            hlp->id_name << " #" << srv->index);
 
     if (flag != Comm::OK || len == 0) {
-        srv->closePipesSafely(hlp->id_name);
+        srv->closePipesSafely();
         return;
     }
 
@@ -1153,7 +1156,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
                " bytes '" << srv->rbuf << "'");
 
         srv->roffset = 0;
-        srv->closePipesSafely(hlp->id_name);
+        srv->closePipesSafely();
         return;
     }
 
@@ -1175,7 +1178,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
         debugs(84, DBG_IMPORTANT, "ERROR: Disconnecting from a " <<
                "helper that overflowed " << srv->rbuf_sz << "-byte " <<
                "Squid input buffer: " << hlp->id_name << " #" << srv->index);
-        srv->closePipesSafely(hlp->id_name);
+        srv->closePipesSafely();
         return;
     }
     /**
@@ -1534,7 +1537,7 @@ helperStatefulServerDone(helper_stateful_server * srv)
     if (!srv->flags.shutdown) {
         helperStatefulKickQueue(srv->parent);
     } else if (!srv->flags.closing && !srv->reserved() && !srv->stats.pending) {
-        srv->closeWritePipeSafely(srv->parent->id_name);
+        srv->closeWritePipeSafely();
         return;
     }
 }
