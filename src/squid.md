@@ -1,11 +1,11 @@
 
 # NAME
 
-squid - HTTP web proxy caching server
+**squid** - HTTP web proxy caching server
 
 # SYNOPSIS
 
-squid [-dhisrvzCFNRSVYX] [-\-foreground] [-l facility] [-f file] [-[au] port] [-k signal] [-n service] [-O command]
+**squid** [-dhisrvzCFNRSVYX] [-\-foreground] [-l facility] [-f file] [-[au] port] [-k signal] [-n service] [-O command]
 
 # DESCRIPTION
 
@@ -18,7 +18,7 @@ Squid keeps meta data and especially hot objects cached in RAM,
 caches DNS lookups, supports non-blocking DNS lookups, and
 implements negative caching of failed requests.
 
-Squid supports SSL, extensive access controls, and full request
+Squid supports TLS, extensive access controls, and full request
 logging.  By using the lightweight Internet Cache Protocols ICP,
 HTCP or CARP, Squid caches can be arranged in a hierarchy or
 mesh for additional bandwidth savings.
@@ -44,7 +44,7 @@ details on how to configure Squid see the file
 : Specify HTTP port number where Squid should listen for
   requests, in addition to any
   [http_port](http://www.squid-cache.org/Doc/config/html_port/)
-  in **squid.conf**
+  in **@SYSCONFDIR@/squid.conf**
 
 -C
 : Do not catch fatal signals.
@@ -53,7 +53,7 @@ details on how to configure Squid see the file
 : Write debugging to stderr also.
 
 -f file
-: Use the given config-file instead of @SYSCONFDIR@/squid.conf .
+: Use the given file instead of @SYSCONFDIR@/squid.conf .
   If the file name starts with a **!** or **|** then it is
   assumed to be an external command or command line. Can for
   example be used to pre\-process the configuration before it is
@@ -69,8 +69,7 @@ details on how to configure Squid see the file
 -i
 : Install as a Windows Service (see **"-n"** option).
 
--k reconfigure | rotate | shutdown | interrupt | kill | debug |
- check | parse
+-k [ reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse ]
 : Parse configuration file, then send signal to running copy
   (except **"-k parse"**) and exit.
 

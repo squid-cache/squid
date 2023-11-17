@@ -7,6 +7,9 @@
 
 include $(top_srcdir)/src/Common.am
 
+man_MANS = squid.8
+doc_DATA = squid.md
+
 DNSSOURCE = \
 	dns_internal.cc
 
@@ -672,21 +675,6 @@ cf.data: cf.data.pre Makefile
 
 repl_modules.cc: repl_modules.sh Makefile
 	$(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.cc
-
-include $(top_srcdir)/doc/manuals/Substitute.am
-
-squid.md: $(srcdir)/squid.md.in Makefile
-	$(SUBSTITUTE) < $(srcdir)/squid.md.in > $@
-
-doc_DATA = squid.md
-EXTRA_DIST += squid.md.in
-CLEANFILES += squid.md
-
-squid.8: squid.md
-	$(PANDOC) -t man -s -V "title:squid" -V "section:8" -o $@ $<
-
-man_MANS = squid.8
-CLEANFILES += squid.8
 
 install-data-local: install-sysconfDATA install-dataDATA
 	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
