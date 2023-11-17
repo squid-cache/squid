@@ -27,6 +27,12 @@
 #include <iomanip>
 
 /* forward declarations */
+static void memFree32B(void *);
+static void memFree64B(void *);
+static void memFree128B(void *);
+static void memFree256B(void *);
+static void memFree512B(void *);
+static void memFree1K(void *);
 static void memFree2K(void *);
 static void memFree4K(void *);
 static void memFree8K(void *);
@@ -310,7 +316,25 @@ memFindBufSizeType(size_t net_size, size_t * gross_size)
     mem_type type;
     size_t size;
 
-    if (net_size <= 2 * 1024) {
+    if (net_size <= 32) {
+        type = MEM_32B_BUF;
+        size = 32;
+    } else if (net_size <= 64) {
+        type = MEM_64B_BUF;
+        size = 64;
+    } else if (net_size <= 128) {
+        type = MEM_128B_BUF;
+        size = 128;
+    } else if (net_size <= 256) {
+        type = MEM_256B_BUF;
+        size = 256;
+    } else if (net_size <= 512) {
+        type = MEM_512B_BUF;
+        size = 512;
+    } else if (net_size <= 1024) {
+        type = MEM_1K_BUF;
+        size = 1024;
+    } else if (net_size <= 2 * 1024) {
         type = MEM_2K_BUF;
         size = 2 * 1024;
     } else if (net_size <= 4 * 1024) {
@@ -439,6 +463,12 @@ Mem::Init(void)
      * that are never used or used only once; perhaps we should simply use
      * malloc() for those? @?@
      */
+    memDataInit(MEM_32B_BUF, "32B Buffer", 32, 10, false);
+    memDataInit(MEM_64B_BUF, "64B Buffer", 64, 10, false);
+    memDataInit(MEM_128B_BUF, "128B Buffer", 128, 10, false);
+    memDataInit(MEM_256B_BUF, "256B Buffer", 256, 10, false);
+    memDataInit(MEM_512B_BUF, "512B Buffer", 512, 10, false);
+    memDataInit(MEM_1K_BUF, "1K Buffer", 1024, 10, false);
     memDataInit(MEM_2K_BUF, "2K Buffer", 2048, 10, false);
     memDataInit(MEM_4K_BUF, "4K Buffer", 4096, 10, false);
     memDataInit(MEM_8K_BUF, "8K Buffer", 8192, 10, false);
@@ -506,6 +536,42 @@ memInUse(mem_type type)
 /* ick */
 
 void
+memFree32B(void *p)
+{
+    memFree(p, MEM_32B_BUF);
+}
+
+void
+memFree64B(void *p)
+{
+    memFree(p, MEM_64B_BUF);
+}
+
+void
+memFree128B(void *p)
+{
+    memFree(p, MEM_128B_BUF);
+}
+
+void
+memFree256B(void *p)
+{
+    memFree(p, MEM_256B_BUF);
+}
+
+void
+memFree512B(void *p)
+{
+    memFree(p, MEM_512B_BUF);
+}
+
+void
+memFree1K(void *p)
+{
+    memFree(p, MEM_1K_BUF);
+}
+
+void
 memFree2K(void *p)
 {
     memFree(p, MEM_2K_BUF);
@@ -551,6 +617,24 @@ FREE *
 memFreeBufFunc(size_t size)
 {
     switch (size) {
+
+    case 32:
+        return memFree32B;
+
+    case 64:
+        return memFree64B;
+
+    case 128:
+        return memFree128B;
+
+    case 256:
+        return memFree256B;
+
+    case 512:
+        return memFree512B;
+
+    case 1024:
+        return memFree1K;
 
     case 2 * 1024:
         return memFree2K;

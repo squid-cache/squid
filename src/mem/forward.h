@@ -39,6 +39,12 @@ typedef void FREE(void *);
 /// Types of memory pool which do not yet use MEMPROXY_CLASS() API
 typedef enum {
     MEM_NONE,
+    MEM_32B_BUF,
+    MEM_64B_BUF,
+    MEM_128B_BUF,
+    MEM_256B_BUF,
+    MEM_512B_BUF,
+    MEM_1K_BUF,
     MEM_2K_BUF,
     MEM_4K_BUF,
     MEM_8K_BUF,
