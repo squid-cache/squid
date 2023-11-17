@@ -120,13 +120,11 @@ GetStrPool(size_t type)
 
 /// \returns the best-fit string pool or nil
 static Mem::Allocator *
-memFindStringPool(size_t net_size, bool fuzzy)
+memFindStringPool(size_t net_size)
 {
     for (unsigned int i = 0; i < mem_str_pool_count; ++i) {
         auto &pool = GetStrPool(i);
-        if (fuzzy && net_size < pool.objectSize)
-            return &pool;
-        if (net_size == pool.objectSize)
+        if (net_size <= pool.objectSize)
             return &pool;
     }
     return nullptr;
@@ -235,7 +233,7 @@ memAllocRigid(size_t net_size)
 {
     // TODO: Use memAllocBuf() instead (after it stops zeroing memory).
 
-    if (const auto pool = memFindStringPool(net_size, true)) {
+    if (const auto pool = memFindStringPool(net_size)) {
         ++StrCountMeter;
         StrVolumeMeter += pool->objectSize;
         return pool->alloc();
@@ -260,9 +258,7 @@ memStringCount()
 void
 memFreeRigid(void *buf, size_t net_size)
 {
-    // TODO: Use memFreeBuf() instead (after removing fuzzy=false pool search).
-
-    if (const auto pool = memFindStringPool(net_size, true)) {
+    if (const auto pool = memFindStringPool(net_size)) {
         pool->freeOne(buf);
         StrVolumeMeter -= pool->objectSize;
         --StrCountMeter;
