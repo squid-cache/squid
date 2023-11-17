@@ -19,5 +19,5 @@ SUBSTITUTE=sed "\
 
 %.8: %.md
 	$(SUBSTITUTE) < $(srcdir)/`basename $<` | \
-	$(PANDOC) -t man -f markdown -s -V title:`basename -s .md "$<"` -V section:8 -o $@
+	$(PANDOC) -t man -f commonmark -s -V title:`basename -s .md "$<"` -V section:8 -o $@
 
