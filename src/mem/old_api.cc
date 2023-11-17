@@ -191,16 +191,10 @@ Mem::Stats(StoreEntry * sentry)
 }
 
 /*
- * public routines
- */
-
-/*
  * we have a limit on _total_ amount of idle memory so we ignore max_pages for now.
  * Will ignore repeated calls for the same pool type.
- *
- * Relies on Mem::Init() having been called beforehand.
  */
-void
+static void
 memDataInit(mem_type type, const char *name, size_t size, int, bool doZero)
 {
     assert(name && size);
@@ -436,9 +430,10 @@ Mem::Init(void)
     memDataInit(MEM_16K_BUF, "16K Buffer", 16384, 10, false);
     memDataInit(MEM_32K_BUF, "32K Buffer", 32768, 10, false);
     memDataInit(MEM_64K_BUF, "64K Buffer", 65536, 10, false);
-    memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0);
-    memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0);
-    memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0);
+    // TODO: make these objects use MEMPROXY_CLASS() and drop the doZero parameter
+    memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0, true);
+    memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0, true);
+    memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0, true);
     GetPool(MEM_MD5_DIGEST)->setChunkSize(512 * 1024);
 
     MemIsInitialized = true;
