@@ -198,16 +198,12 @@ public:
 
     /** Closes pipes to the helper safely.
      * Handles the case where the read and write pipes are the same FD.
-     *
-     * \param name displayed for the helper being shutdown if logging an error
      */
     void closePipesSafely();
 
     /** Closes the reading pipe.
      * If the read and write sockets are the same the write pipe will
      * also be closed. Otherwise its left open for later handling.
-     *
-     * \param name displayed for the helper being shutdown if logging an error
      */
     void closeWritePipeSafely();
 
