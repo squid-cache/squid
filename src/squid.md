@@ -5,7 +5,17 @@
 
 # SYNOPSIS
 
-**squid** [-dhisrvzCFNRSVYX] [-\-foreground] [-l facility] [-f file] [-[au] port] [-k signal] [-n service] [-O command]
+**squid** [-dsCFNRSXY] [-\-foreground] [-l facility] [-f file] [-[au] port] [-k signal] [-n service]
+
+**squid** -[hv]
+
+**squid** -n service -i [-dsX] [-\-foreground] [-l facility]
+
+**squid** -n service -r [-dsX] [-\-foreground] [-l facility]
+
+**squid** -n service -O command [-ds] [-\-foreground] [-l facility]
+
+**squid** -z [-NS] [-dsX] [-\-foreground] [-l facility] [-f file] [-n service]
 
 # DESCRIPTION
 
