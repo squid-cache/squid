@@ -421,7 +421,7 @@ Mem::Init(void)
     /**
      * Then initialize all pools.
      * \par
-     * Starting with generic 32B - 64kB buffr pools, then specific object types.
+     * Starting with generic buffer pools, then specific object types.
      * \par
      * It does not hurt much to have a lot of pools since sizeof(MemPool) is
      * small; someday we will figure out what to do with all the entries here
