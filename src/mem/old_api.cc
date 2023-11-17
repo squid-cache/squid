@@ -230,30 +230,10 @@ memFree(void *p, int type)
     GetPool(type)->freeOne(p);
 }
 
-/* allocate a variable size buffer using best-fit string pool */
-void *
-memAllocString(size_t net_size, size_t * gross_size)
-{
-    assert(gross_size);
-
-    if (const auto pool = memFindStringPool(net_size, true)) {
-        *gross_size = pool->objectSize;
-        assert(*gross_size >= net_size);
-        ++StrCountMeter;
-        StrVolumeMeter += *gross_size;
-        return pool->alloc();
-    }
-
-    *gross_size = net_size;
-    ++StrCountMeter;
-    StrVolumeMeter += *gross_size;
-    return xcalloc(1, net_size);
-}
-
 void *
 memAllocRigid(size_t net_size)
 {
-    // TODO: Use memAllocString() instead (after it stops zeroing memory).
+    // TODO: Use memAllocBuf() instead (after it stops zeroing memory).
 
     if (const auto pool = memFindStringPool(net_size, true)) {
         ++StrCountMeter;
@@ -277,25 +257,10 @@ memStringCount()
     return result;
 }
 
-/* free buffer allocated with memAllocString() */
-void
-memFreeString(size_t size, void *buf)
-{
-    assert(buf);
-
-    if (const auto pool = memFindStringPool(size, false))
-        pool->freeOne(buf);
-    else
-        xfree(buf);
-
-    --StrCountMeter;
-    StrVolumeMeter -= size;
-}
-
 void
 memFreeRigid(void *buf, size_t net_size)
 {
-    // TODO: Use memFreeString() instead (after removing fuzzy=false pool search).
+    // TODO: Use memFreeBuf() instead (after removing fuzzy=false pool search).
 
     if (const auto pool = memFindStringPool(net_size, true)) {
         pool->freeOne(buf);
