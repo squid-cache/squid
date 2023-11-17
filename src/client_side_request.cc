@@ -75,6 +75,9 @@
 #endif
 
 #if FOLLOW_X_FORWARDED_FOR
+#if !defined(MAX_X_FORWARDED_HOP)
+#define MAX_X_FORWARDED_HOP 16
+#endif
 static void clientFollowXForwardedForCheck(Acl::Answer answer, void *data);
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
@@ -437,7 +440,8 @@ clientFollowXForwardedForCheck(Acl::Answer answer, void *data)
                 /* override the default src_addr tested if we have to go deeper than one level into XFF */
                 Filled(calloutContext->acl_checklist)->src_addr = request->indirect_client_addr;
             }
-            calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
+            if (++calloutContext->currentXffHopNumber < MAX_X_FORWARDED_HOP)
+                calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
             return;
         }
     }
