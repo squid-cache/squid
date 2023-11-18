@@ -45,8 +45,9 @@ Mem::AllocatorProxy::getStats(PoolStats &)
 void *
 memAllocBuf(const size_t netSize, size_t * const grossSize)
 {
-    *grossSize = netSize;
-    return xcalloc(1, netSize);
+    if (grossSize)
+        *grossSize = netSize;
+    return xmalloc(1, netSize);
 }
 
 void *
@@ -60,18 +61,6 @@ void
 memFree(void *memory, int)
 {
     xfree(memory);
-}
-
-void *
-memAllocRigid(const size_t netSize)
-{
-    return xmalloc(netSize);
-}
-
-void
-memFreeRigid(void * const buf, size_t)
-{
-    xfree(buf);
 }
 
 void
