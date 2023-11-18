@@ -421,6 +421,14 @@ memConfigure(void)
     MemPools::GetInstance().setIdleLimit(new_pool_limit);
 }
 
+static mem_type &
+operator++(mem_type &aMem)
+{
+    auto tmp = static_cast<int>(aMem);
+    aMem = static_cast<mem_type>(++tmp);
+    return aMem;
+}
+
 void
 Mem::Init(void)
 {
@@ -450,35 +458,17 @@ Mem::Init(void)
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0);
     GetPool(MEM_MD5_DIGEST)->setChunkSize(512 * 1024);
 
+    // Test that all entries are initialized
+    for (auto t = MEM_NONE; ++t < MEM_MAX;) {
+        // If you hit this assertion, then you forgot to add a
+        // memDataInit() line for type 't'.
+        assert(GetPool(t));
+    }
+
     MemIsInitialized = true;
 
     // finally register with the cache manager
     Mgr::RegisterAction("mem", "Memory Utilization", Mem::Stats, 0, 1);
-}
-
-static mem_type &
-operator++(mem_type &aMem)
-{
-    int tmp = (int)aMem;
-    aMem = (mem_type)(++tmp);
-    return aMem;
-}
-
-/*
- * Test that all entries are initialized
- */
-void
-memCheckInit(void)
-{
-    mem_type t = MEM_NONE;
-
-    while (++t < MEM_MAX) {
-        /*
-         * If you hit this assertion, then you forgot to add a
-         * memDataInit() line for type 't'.
-         */
-        assert(GetPool(t));
-    }
 }
 
 void
