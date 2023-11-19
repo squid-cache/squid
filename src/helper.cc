@@ -801,6 +801,9 @@ helperShutdown(const Helper::Client::Pointer &hlp)
          */
         srv->closePipesSafely();
     }
+
+    Assure(!hlp->childs.n_active);
+    hlp->dropQueued();
 }
 
 void
@@ -854,15 +857,17 @@ Helper::Client::~Client()
 {
     /* note, don't free id_name, it probably points to static memory */
 
-    // TODO: if the queue is not empty it will leak Helper::Request's
-    if (!queue.empty())
-        debugs(84, DBG_CRITICAL, "WARNING: freeing " << id_name << " helper with " << stats.queue_size << " requests queued");
+    // A non-empty queue would leak Helper::Xaction objects, stalling any
+    // pending (and even future collapsed) transactions. To avoid stalling
+    // transactions, we must dropQueued(). We ought to do that when we
+    // discover that no progress is possible rather than here because
+    // reference counting may keep this object alive for a long time.
+    assert(queue.empty());
 }
 
 void
-Helper::Client::handleKilledServer(SessionBase * const srv, bool &needsNewServers)
+Helper::Client::handleKilledServer(SessionBase * const srv)
 {
-    needsNewServers = false;
     if (!srv->flags.shutdown) {
         assert(childs.n_active > 0);
         --childs.n_active;
@@ -872,8 +877,32 @@ Helper::Client::handleKilledServer(SessionBase * const srv, bool &needsNewServer
 
         if (childs.needNew() > 0) {
             srv->flags.shutdown = true;
-            needsNewServers = true;
+            openSessions();
         }
+    }
+
+    if (!childs.n_active)
+        dropQueued();
+}
+
+void
+Helper::Client::dropQueued()
+{
+    if (queue.empty())
+        return;
+
+    Assure(!childs.n_active);
+    Assure(!GetFirstAvailable(this));
+
+    // no helper servers means nobody can advance our queued transactions
+
+    debugs(80, DBG_CRITICAL, "ERROR: Dropping " << queue.size() << ' ' <<
+           id_name << " helper requests due to lack of helper processes");
+    // similar to SessionBase::dropQueued()
+    while (const auto r = nextRequest()) {
+        r->reply.result = Helper::Unknown;
+        callBack(*r);
+        delete r;
     }
 }
 
@@ -898,20 +927,9 @@ Helper::Client::handleFewerServers(const bool madeProgress)
 }
 
 void
-Helper::Client::sessionClosed(SessionBase &session)
+Helper::Session::HelperServerClosed(Session * const srv)
 {
-    bool needsNewServers = false;
-    handleKilledServer(&session, needsNewServers);
-    if (needsNewServers) {
-        debugs(80, DBG_IMPORTANT, "Starting new helpers");
-        openSessions();
-    }
-}
-
-void
-Helper::SessionBase::HelperServerClosed(SessionBase * const srv)
-{
-    srv->helper().sessionClosed(*srv);
+    srv->helper().handleKilledServer(srv);
     srv->dropQueued();
     delete srv;
 }
@@ -1512,6 +1530,9 @@ helperKickQueue(const Helper::Client::Pointer &hlp)
 
     while ((srv = GetFirstAvailable(hlp)) && (r = hlp->nextRequest()))
         helperDispatch(srv, r);
+
+    if (!hlp->childs.n_active)
+        hlp->dropQueued();
 }
 
 static void
@@ -1524,6 +1545,9 @@ helperStatefulKickQueue(const statefulhelper::Pointer &hlp)
         hlp->reserveServer(srv);
         helperStatefulDispatch(srv, r);
     }
+
+    if (!hlp->childs.n_active)
+        hlp->dropQueued();
 }
 
 static void

@@ -92,13 +92,17 @@ public:
 
     /// Updates internal statistics and starts new helper processes after
     /// an unexpected server exit
-    /// \param needsNewServers true if new helper(s) must be started, false otherwise
-    void handleKilledServer(SessionBase *, bool &needsNewServers);
+    void handleKilledServer(SessionBase *);
 
     /// Reacts to unexpected helper process death(s), including a failure to start helper(s)
     /// and an unexpected exit of a previously started helper. \sa handleKilledServer()
     /// \param madeProgress whether the died helper(s) responded to any requests
     void handleFewerServers(bool madeProgress);
+
+    /// satisfies all queued requests with a Helper::Unknown answer
+    /// \prec no existing servers will be able to process queued requests
+    /// \sa SessionBase::dropQueued()
+    void dropQueued();
 
     /// sends transaction response to the transaction initiator
     void callBack(Xaction &);
@@ -106,9 +110,6 @@ public:
     /// Starts required helper process(es).
     /// The caller is responsible for checking that new processes are needed.
     virtual void openSessions();
-
-    /// handles exited helper process
-    void sessionClosed(SessionBase &);
 
 public:
     wordlist *cmdline = nullptr;
