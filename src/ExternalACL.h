@@ -9,6 +9,7 @@
 #ifndef SQUID_EXTERNALACL_H
 #define SQUID_EXTERNALACL_H
 
+#include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "base/RefCount.h"
 
@@ -16,31 +17,11 @@ class external_acl;
 class external_acl_data;
 class StoreEntry;
 
-class ExternalACLLookup : public ACLChecklist::AsyncState
-{
-
-public:
-    static ExternalACLLookup *Instance();
-    void checkForAsync(ACLChecklist *)const override;
-
-    // If possible, starts an asynchronous lookup of an external ACL.
-    // Otherwise, asserts (or bails if background refresh is requested).
-    static void Start(ACLChecklist *checklist, external_acl_data *acl, bool bg);
-
-private:
-    static ExternalACLLookup instance_;
-    static void LookupDone(void *data, const ExternalACLEntryPointer &result);
-};
-
-#include "acl/Acl.h"
-
 class ACLExternal : public ACL
 {
     MEMPROXY_CLASS(ACLExternal);
 
 public:
-    static void ExternalAclLookup(ACLChecklist * ch, ACLExternal *);
-
     ACLExternal(char const *);
     ~ACLExternal() override;
 
@@ -58,7 +39,13 @@ public:
     bool valid () const override;
     bool empty () const override;
 
-protected:
+private:
+    static void StartLookup(ACLFilledChecklist &, const ACL &);
+    static void LookupDone(void *data, const ExternalACLEntryPointer &);
+    void startLookup(ACLFilledChecklist *, external_acl_data *, bool inBackground) const;
+    Acl::Answer aclMatchExternal(external_acl_data *, ACLFilledChecklist *) const;
+    char *makeExternalAclKey(ACLFilledChecklist *, external_acl_data *) const;
+
     external_acl_data *data;
     char const *class_;
 };

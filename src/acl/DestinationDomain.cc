@@ -16,28 +16,21 @@
 #include "fqdncache.h"
 #include "HttpRequest.h"
 
-DestinationDomainLookup DestinationDomainLookup::instance_;
+static void LookupDone(const char *, const Dns::LookupDetails &, void *data);
 
-DestinationDomainLookup *
-DestinationDomainLookup::Instance()
+static void
+StartLookup(ACLFilledChecklist &cl, const ACL &)
 {
-    return &instance_;
+    fqdncache_nbgethostbyaddr(cl.dst_addr, LookupDone, &cl);
 }
 
-void
-DestinationDomainLookup::checkForAsync(ACLChecklist *cl) const
-{
-    ACLFilledChecklist *checklist = Filled(cl);
-    fqdncache_nbgethostbyaddr(checklist->dst_addr, LookupDone, checklist);
-}
-
-void
-DestinationDomainLookup::LookupDone(const char *, const Dns::LookupDetails &details, void *data)
+static void
+LookupDone(const char *, const Dns::LookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     checklist->markDestinationDomainChecked();
     checklist->request->recordLookup(details);
-    checklist->resumeNonBlockingCheck(DestinationDomainLookup::Instance());
+    checklist->resumeNonBlockingCheck();
 }
 
 /* Acl::DestinationDomainCheck */
@@ -93,7 +86,7 @@ Acl::DestinationDomainCheck::match(ACLChecklist * const ch)
     } else if (!checklist->destinationDomainChecked()) {
         // TODO: Using AclMatchedName here is not OO correct. Should find a way to the current acl
         debugs(28, 3, "Can't yet compare '" << AclMatchedName << "' ACL for " << checklist->request->url.host());
-        if (checklist->goAsync(DestinationDomainLookup::Instance()))
+        if (checklist->goAsync(StartLookup, *this))
             return -1;
         // else fall through to "none" match, hiding the lookup failure (XXX)
     }

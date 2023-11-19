@@ -32,18 +32,5 @@ private:
 
 } // namespace Acl
 
-/// \ingroup ACLAPI
-class DestinationDomainLookup : public ACLChecklist::AsyncState
-{
-
-public:
-    static DestinationDomainLookup *Instance();
-    void checkForAsync(ACLChecklist *)const override;
-
-private:
-    static DestinationDomainLookup instance_;
-    static void LookupDone(const char *, const Dns::LookupDetails &, void *);
-};
-
 #endif /* SQUID_ACLDESTINATIONDOMAIN_H */
 

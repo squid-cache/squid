@@ -116,7 +116,7 @@ int
 ACLMaxUserIP::match(ACLChecklist *cl)
 {
     ACLFilledChecklist *checklist = Filled(cl);
-    auto answer = AuthenticateAcl(checklist);
+    auto answer = AuthenticateAcl(checklist, *this);
     int ti;
 
     // convert to tri-state ACL match 1,0,-1
