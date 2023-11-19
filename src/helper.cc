@@ -927,7 +927,7 @@ Helper::Client::handleFewerServers(const bool madeProgress)
 }
 
 void
-Helper::Session::HelperServerClosed(Session * const srv)
+Helper::SessionBase::HelperServerClosed(SessionBase * const srv)
 {
     srv->helper().handleKilledServer(srv);
     srv->dropQueued();
