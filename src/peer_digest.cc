@@ -396,11 +396,11 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
         return;
     }
 
-    assert(fetch->pd && receivedData.data);
+    assert(fetch->pd);
     /* The existing code assumes that the received pointer is
      * where we asked the data to be put
      */
-    assert(fetch->buf + fetch->bufofs == receivedData.data);
+    assert(!receivedData.data || fetch->buf + fetch->bufofs == receivedData.data);
 
     /* Update the buffer size */
     fetch->bufofs += receivedData.length;
@@ -682,7 +682,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     }
 
     /* continue checking (maybe-successful eof case) */
-    if (!reason && !size) {
+    if (!reason && !size && fetch->state != DIGEST_READ_REPLY) {
         if (!pd->cd)
             reason = "null digest?!";
         else if (fetch->mask_offset != pd->cd->mask_size)
