@@ -732,7 +732,7 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
     assert(p->digest->cd);
     /* does digest predict a hit? */
 
-    if (!p->digest->cd->contains(key))
+    if (key && !p->digest->cd->contains(key))
         return LOOKUP_MISS;
 
     debugs(15, 5, "HIT for cache_peer " << *p);
