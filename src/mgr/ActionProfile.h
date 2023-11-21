@@ -12,7 +12,6 @@
 #define SQUID_MGR_ACTION_PROFILE_H
 
 #include "mgr/ActionCreator.h"
-#include "mgr/forward.h"
 #include "sbuf/SBuf.h"
 
 namespace Mgr
@@ -33,7 +32,7 @@ public:
 
 public:
     const SBuf name; ///< action label to uniquely identify this action
-    const char *desc; ///< action description to build an action menu list
+    const SBuf desc; ///< action description to build an action menu list
     bool isPwReq; ///< whether password is required to perform the action
     bool isAtomic; ///< whether action dumps everything in one dump() call
     ActionCreatorPointer creator; ///< creates Action objects with this profile
