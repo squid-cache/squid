@@ -774,13 +774,11 @@ urlIsRelative(const char *url)
     if (*url == '\0')
         return true; // path-empty
 
+    // Url is relative
+    // network-path reference, aka. 'scheme-relative URI' or
+    // path-absolute, aka 'absolute-path reference'
     if (*url == '/') {
-        // RFC 3986 section 5.2.3
-        // path-absolute   ; begins with "/" but not "//"
-        if (url[1] == '/')
-            return true; // network-path reference, aka. 'scheme-relative URI'
-        else
-            return true; // path-absolute, aka 'absolute-path reference'
+        return true;
     }
 
     for (const auto *p = url; *p != '\0' && *p != '/' && *p != '?' && *p != '#'; ++p) {
