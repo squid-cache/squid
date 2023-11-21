@@ -13,6 +13,8 @@
 
 #include "compat/cmsg.h"
 #include "ipc/Messages.h"
+#include "sbuf/forward.h"
+
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -57,6 +59,8 @@ public:
     /* access to message parts for selected commonly-used part types */
     void getString(String &s) const; ///< load variable-length string
     void putString(const String &s); ///< store variable-length string
+    void getString(SBuf &) const; ///< load variable-length string
+    void putString(const SBuf &); ///< store variable-length string
     int getInt() const; ///< load an integer
     void putInt(int n); ///< store an integer
     void getFixed(void *raw, size_t size) const; ///< always load size bytes
