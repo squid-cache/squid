@@ -11,6 +11,7 @@
 #ifndef SQUID_MGR_ACTION_PARAMS_H
 #define SQUID_MGR_ACTION_PARAMS_H
 
+#include "anyp/Uri.h"
 #include "http/RequestMethod.h"
 #include "ipc/forward.h"
 #include "mgr/QueryParams.h"
@@ -30,8 +31,8 @@ public:
 
 public:
     /* details of the client HTTP request that caused the action */
-    String httpUri; ///< HTTP request URI
     HttpRequestMethod httpMethod; ///< HTTP request method
+    AnyP::Uri httpUri; ///< HTTP request URI
     RequestFlags httpFlags; ///< HTTP request flags
     String httpOrigin;       ///< HTTP Origin: header (if any)
 

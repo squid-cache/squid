@@ -151,7 +151,7 @@ Ipc::TypedMsgHdr::putString(const String &s)
 void
 Ipc::TypedMsgHdr::getString(SBuf &s) const
 {
-    const int length = getInt();
+    const size_t length = getInt();
     Must(length <= maxSize);
     auto *p = s.rawAppendStart(length);
     getRaw(p, length);

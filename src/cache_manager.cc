@@ -171,7 +171,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     Assure(tok.skip(WellKnownUrlPathPrefix()));
 
     Mgr::Command::Pointer cmd = new Mgr::Command();
-    cmd->params.httpUri = SBufToString(uri.absolute());
+    cmd->params.httpUri = uri;
 
     static const auto fieldChars = CharacterSet("mgr-field", "?#").complement();
 
