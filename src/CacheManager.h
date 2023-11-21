@@ -43,8 +43,8 @@ public:
     void registerProfile(char const * action, char const * desc,
                          Mgr::ClassActionCreationHandler *handler,
                          int pw_req_flag, int atomic);
-    Mgr::ActionProfilePointer findAction(char const * action) const;
-    Mgr::Action::Pointer createNamedAction(const char *actionName);
+    Mgr::ActionProfilePointer findAction(const SBuf &) const;
+    Mgr::Action::Pointer createNamedAction(const SBuf &);
     Mgr::Action::Pointer createRequestedAction(const Mgr::ActionParams &);
     const Menu& menu() const { return menu_; }
 
@@ -64,7 +64,7 @@ protected:
     Mgr::CommandPointer ParseUrl(const AnyP::Uri &);
     void ParseHeaders(const HttpRequest * request, Mgr::ActionParams &params);
     int CheckPassword(const Mgr::Command &cmd);
-    char *PasswdGet(Mgr::ActionPasswordList *, const char *);
+    char *PasswdGet(Mgr::ActionPasswordList *, const SBuf &);
 
     void registerProfile(const Mgr::ActionProfilePointer &profile);
 

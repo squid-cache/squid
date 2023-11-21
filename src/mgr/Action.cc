@@ -45,7 +45,7 @@ Mgr::Action::atomic() const
     return command().profile->isAtomic;
 }
 
-const char*
+const SBuf &
 Mgr::Action::name() const
 {
     return command().profile->name;

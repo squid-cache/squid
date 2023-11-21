@@ -113,7 +113,7 @@ TestCacheManager::testRegister()
     CPPUNIT_ASSERT(manager != nullptr);
 
     manager->registerProfile("sample", "my sample", &dummy_action, false, false);
-    Mgr::Action::Pointer action = manager->createNamedAction("sample");
+    Mgr::Action::Pointer action = manager->createNamedAction(SBuf("sample"));
     CPPUNIT_ASSERT(action != nullptr);
 
     const Mgr::ActionProfile::Pointer profile = action->command().profile;
@@ -121,7 +121,7 @@ TestCacheManager::testRegister()
     CPPUNIT_ASSERT(profile->creator != nullptr);
     CPPUNIT_ASSERT_EQUAL(false, profile->isPwReq);
     CPPUNIT_ASSERT_EQUAL(false, profile->isAtomic);
-    CPPUNIT_ASSERT_EQUAL(String("sample"), String(action->name()));
+    CPPUNIT_ASSERT_EQUAL(SBuf("sample"), action->name());
 
     StoreEntry *sentry=new StoreEntry();
     sentry->flags=0x25; //arbitrary test value

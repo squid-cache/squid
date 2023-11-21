@@ -105,23 +105,15 @@ CacheManager::registerProfile(char const * action, char const * desc,
     registerProfile(profile);
 }
 
-/**
- \ingroup CacheManagerInternal
- * Locates an action in the actions registry ActionsList.
-\retval NULL  if Action not found
-\retval CacheManagerAction* if the action was found
- */
+/// Locates an action in the actions registry ActionsList.
 Mgr::ActionProfile::Pointer
-CacheManager::findAction(char const * action) const
+CacheManager::findAction(const SBuf &action) const
 {
-    Must(action != nullptr);
-    Menu::const_iterator a;
-
-    debugs(16, 5, "CacheManager::findAction: looking for action " << action);
-    for (a = menu_.begin(); a != menu_.end(); ++a) {
-        if (0 == strcmp((*a)->name, action)) {
+    debugs(16, 5, "looking for action " << action);
+    for (const auto &a : menu_) {
+        if (a->name == action) {
             debugs(16, 6, " found");
-            return *a;
+            return a;
         }
     }
 
@@ -130,9 +122,9 @@ CacheManager::findAction(char const * action) const
 }
 
 Mgr::Action::Pointer
-CacheManager::createNamedAction(const char *actionName)
+CacheManager::createNamedAction(const SBuf &actionName)
 {
-    Must(actionName);
+    Must(!actionName.isEmpty());
 
     Mgr::Command::Pointer cmd = new Mgr::Command;
     cmd->profile = findAction(actionName);
@@ -147,7 +139,7 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
 {
     Mgr::Command::Pointer cmd = new Mgr::Command;
     cmd->params = params;
-    cmd->profile = findAction(params.actionName.termedBuf());
+    cmd->profile = findAction(params.actionName);
     Must(cmd->profile != nullptr);
     return cmd->profile->creator->create(cmd);
 }
@@ -188,9 +180,9 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
         static const SBuf indexReport("index");
         action = indexReport;
     }
-    cmd->params.actionName = SBufToString(action);
+    cmd->params.actionName = action;
 
-    const auto profile = findAction(action.c_str());
+    const auto profile = findAction(action);
     if (!profile)
         throw TextException(ToSBuf("action '", action, "' not found"), Here());
 
@@ -265,7 +257,7 @@ int
 CacheManager::CheckPassword(const Mgr::Command &cmd)
 {
     assert(cmd.profile != nullptr);
-    const char *action = cmd.profile->name;
+    const auto action = cmd.profile->name;
     char *pwd = PasswdGet(Config.passwd_list, action);
 
     debugs(16, 4, "CacheManager::CheckPassword for action " << action);
@@ -309,7 +301,8 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
         return;
     }
 
-    const char *actionName = cmd->profile->name;
+    // TODO make const when HttpHeader::putAuth() takes SBuf
+    auto actionName = cmd->profile->name;
 
     entry->expires = squid_curtime;
 
@@ -347,7 +340,7 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
          * add Authenticate header using action name as a realm because
          * password depends on the action
          */
-        rep->header.putAuth("Basic", actionName);
+        rep->header.putAuth("Basic", actionName.c_str());
 #endif
 
         const auto originOrNil = request->header.getStr(Http::HdrType::ORIGIN);
@@ -373,7 +366,7 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
            actionName << "'" );
 
     // special case: an index page
-    if (!strcmp(cmd->profile->name, "index")) {
+    if (actionName.cmp("index") == 0) {
         ErrorState err(MGR_INDEX, Http::scOkay, request, ale);
         err.url = xstrdup(entry->url());
         HttpReply *rep = err.BuildHttpReply();
@@ -428,11 +421,11 @@ CacheManager::ActionProtection(const Mgr::ActionProfile::Pointer &profile)
  * for the action she queried
  */
 char *
-CacheManager::PasswdGet(Mgr::ActionPasswordList * a, const char *action)
+CacheManager::PasswdGet(Mgr::ActionPasswordList * a, const SBuf &action)
 {
     while (a) {
         for (auto &w : a->actions) {
-            if (w.cmp(action) == 0)
+            if (w == action)
                 return a->passwd;
 
             static const SBuf allAction("all");

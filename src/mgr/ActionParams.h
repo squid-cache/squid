@@ -36,7 +36,7 @@ public:
     String httpOrigin;       ///< HTTP Origin: header (if any)
 
     /* action parameters extracted from the client HTTP request */
-    String actionName; ///< action name (and credentials realm)
+    SBuf actionName; ///< action name (and credentials realm)
     String userName; ///< user login name; currently only used for logging
     String password; ///< user password; used for acceptance check and cleared
     QueryParams queryParams;

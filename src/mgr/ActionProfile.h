@@ -13,6 +13,7 @@
 
 #include "mgr/ActionCreator.h"
 #include "mgr/forward.h"
+#include "sbuf/SBuf.h"
 
 namespace Mgr
 {
@@ -31,7 +32,7 @@ public:
     }
 
 public:
-    const char *name; ///< action label to uniquely identify this action
+    const SBuf name; ///< action label to uniquely identify this action
     const char *desc; ///< action description to build an action menu list
     bool isPwReq; ///< whether password is required to perform the action
     bool isAtomic; ///< whether action dumps everything in one dump() call
