@@ -102,6 +102,18 @@ Acl::SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey)
                         Here());
 }
 
+ScopedId
+Acl::ParsingContext::codeContextGist() const {
+    return ScopedId("ACL");
+}
+
+std::ostream &
+Acl::ParsingContext::detailCodeContext(std::ostream &os) const
+{
+    return os << Debug::Extra << "acl name: " << name_ <<
+        Debug::Extra << "configuration context: " << ConfigParser::CurrentLocation();
+}
+
 void *
 ACL::operator new (size_t)
 {
@@ -273,17 +285,12 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
      * Here we set AclMatchedName in case we need to use it in a
      * warning message in aclDomainCompare().
      */
-    AclMatchedName = A->name;   /* ugly */
-
-    A->parseFlags();
-
-    /*split the function here */
-    A->parse();
-
-    /*
-     * Clear AclMatchedName from our temporary hack
-     */
-    AclMatchedName = nullptr;  /* ugly */
+    CallContextCreator([A] {
+        const auto parseContext = Acl::ParsingContext::Pointer::Make(A->name);
+        CodeContext::Reset(parseContext);
+        A->parseFlags();
+        A->parse();
+    });
 
     if (!new_acl)
         return;

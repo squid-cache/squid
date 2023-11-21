@@ -11,6 +11,7 @@
 
 #include "acl/forward.h"
 #include "acl/Options.h"
+#include "base/CodeContext.h"
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
@@ -35,6 +36,22 @@ void RegisterMaker(TypeName typeName, Maker maker);
 /// require unique key values (if any) for each aclname+type combination.
 /// Key comparison is case-insensitive.
 void SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey);
+
+/// CodeContext of the ACL being parsed
+class ParsingContext : public CodeContext
+{
+public:
+    using Pointer = RefCount<ParsingContext>;
+
+    ParsingContext(const char *name) : name_(name) {}
+
+    /* CodeContext API */
+    ScopedId codeContextGist() const override;
+    std::ostream &detailCodeContext(std::ostream &os) const override;
+
+private:
+    const char *name_; ///< the parsed ACL name
+};
 
 } // namespace Acl
 

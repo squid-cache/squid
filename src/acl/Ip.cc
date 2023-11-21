@@ -141,7 +141,7 @@ acl_ip_data::NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b)
         }
         debugs(28, DBG_CRITICAL, "WARNING: (" << (bina?'B':'A') << ") '" << buf_n1 << "' is a subnetwork of (" << (bina?'A':'B') << ") '" << buf_n2 << "'");
         debugs(28, DBG_CRITICAL, "WARNING: because of this '" << (bina?buf_n2:buf_n1) << "' is ignored to keep splay tree searching predictable");
-        debugs(28, DBG_CRITICAL, "WARNING: You should probably remove '" << buf_n1 << "' from the ACL named '" << AclMatchedName << "'");
+        debugs(28, DBG_CRITICAL, "WARNING: You should probably remove '" << buf_n1 << "' from the ACL");
     }
 
     return ret;
