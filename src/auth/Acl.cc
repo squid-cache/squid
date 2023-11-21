@@ -25,7 +25,7 @@
  * \retval ACCESS_ALLOWED       user authenticated and authorized
  */
 Acl::Answer
-AuthenticateAcl(ACLChecklist *ch)
+AuthenticateAcl(ACLChecklist *ch, const ACL &acl)
 {
     ACLFilledChecklist *checklist = Filled(ch);
     const auto request = checklist->request;
@@ -68,7 +68,7 @@ AuthenticateAcl(ACLChecklist *ch)
         break;
 
     case AUTH_ACL_HELPER:
-        if (checklist->goAsync(ProxyAuthLookup::Instance()))
+        if (checklist->goAsync(ACLProxyAuth::StartLookup, acl))
             debugs(28, 4, "returning " << ACCESS_DUNNO << " sending credentials to helper.");
         else
             debugs(28, 2, "cannot go async; returning " << ACCESS_DUNNO);
