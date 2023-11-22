@@ -63,6 +63,8 @@ public:
      * the callback will still happen and needs to be handled (usually dropped).
      */
     Comm::ConnectionPointer listenConn;
+    
+    virtual ~Channel() = default;
 
 private:
     AsyncCall::Pointer closer; ///< Comm close handler callback
@@ -74,7 +76,7 @@ class CtrlChannel: public Ftp::Channel
 {
 public:
     CtrlChannel();
-    virtual ~CtrlChannel();
+    ~CtrlChannel() override;
 
     char *buf;
     size_t size;
@@ -95,7 +97,7 @@ class DataChannel: public Ftp::Channel
 {
 public:
     DataChannel();
-    ~DataChannel();
+    ~DataChannel() override;
 
     void addr(const Ip::Address &addr); ///< import host and port
 
