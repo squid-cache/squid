@@ -21,7 +21,6 @@
 Mgr::Response::Response(const Ipc::RequestId aRequestId, const Action::Pointer anAction):
     Ipc::Response(aRequestId), action(anAction)
 {
-    Must(!action || !action->name().isEmpty()); // if there is an action, it must be named
 }
 
 Mgr::Response::Response(const Ipc::TypedMsgHdr &msg)
