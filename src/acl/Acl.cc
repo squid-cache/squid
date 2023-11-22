@@ -281,10 +281,6 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         new_acl = 0;
     }
 
-    /*
-     * Here we set AclMatchedName in case we need to use it in a
-     * warning message in aclDomainCompare().
-     */
     CallContextCreator([A] {
         const auto parseContext = Acl::ParsingContext::Pointer::Make(A->name);
         CodeContext::Reset(parseContext);
