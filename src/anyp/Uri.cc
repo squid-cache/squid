@@ -774,10 +774,9 @@ urlIsRelative(const char *url)
     if (*url == '\0')
         return true; // path-empty
 
-    // Url is relative
-    // network-path reference, aka. 'scheme-relative URI' or
-    // path-absolute, aka 'absolute-path reference'
     if (*url == '/') {
+        // network-path reference (a.k.a. 'scheme-relative URI') or
+        // path-absolute (a.k.a. 'absolute-path reference')
         return true;
     }
 
