@@ -362,6 +362,123 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
     return ad_groups;
 }
 
+
+char *
+get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid){
+
+    if (ResourceGroupDomainSid!= 0) {
+        uint8_t rev;
+        uint64_t idauth;
+        char dli[256];
+        char *ag;
+        int l;
+
+        align(4);
+
+        uint32_t nauth = get4byt();
+
+        size_t length = 1+1+6+nauth*4;
+
+            ag=(char *)xcalloc((length+1)*sizeof(char),1);
+            // the first byte is a length of the SID
+            ag[0] = (char) length;
+            memcpy((void *)&ag[1],(const void*)&p[bpos],1);
+            memcpy((void *)&ag[2],(const void*)&p[bpos+1],1);
+            ag[2] = ag[2]+1;
+            memcpy((void *)&ag[3],(const void*)&p[bpos+2],6+nauth*4);
+
+
+
+        /* mainly for debug only */
+        rev = get1byt();
+        bpos = bpos + 1; /*nsub*/
+        idauth = get6byt_be();
+
+        snprintf(dli,sizeof(dli),"S-%d-%lu",rev,(long unsigned int)idauth);
+        for ( l=0; l<(int)nauth; l++ ) {
+            uint32_t sauth;
+            sauth = get4byt();
+            snprintf((char *)&dli[strlen(dli)],sizeof(dli)-strlen(dli),"-%u",sauth);
+        }
+        debug((char *) "%s| %s: INFO: Got ResourceGroupDomainSid %s\n", LogTime(), PROGRAM, dli);
+        return ag;
+    }
+
+    return nullptr;
+}
+
+char *
+get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t ResourceGroupIds, uint32_t ResourceGroupCount){
+    size_t group_domain_sid_len = resource_group_domain_sid[0];
+    char *ag;
+    size_t length;
+
+    resource_group_domain_sid++; //now it points to the actual data
+
+
+    if (ResourceGroupIds!= 0) {
+        uint32_t ngroup;
+        int l;
+
+        align(4);
+        ngroup = get4byt();
+        if ( ngroup != ResourceGroupCount) {
+            debug((char *) "%s| %s: ERROR: Group encoding error => ResourceGroupCount: %d Array size: %d\n",
+                  LogTime(), PROGRAM, ResourceGroupCount, ngroup);
+            return nullptr;
+        }
+        debug((char *) "%s| %s: INFO: Found %d Resource Group rids\n", LogTime(), PROGRAM, ResourceGroupCount);
+
+        //make a group template which begins with the ResourceGroupDomainID
+        length = group_domain_sid_len+4;  //+4 for a rid
+        ag=(char *)xcalloc(length*sizeof(char),1);
+        memcpy((void *)ag,(const void*)resource_group_domain_sid, group_domain_sid_len);
+
+
+        for ( l=0; l<(int)ResourceGroupCount; l++) {
+            uint32_t sauth;
+            memcpy((void *)&ag[group_domain_sid_len],(const void*)&p[bpos],4);
+
+            if (!pstrcat(ad_groups," group=")) {
+                debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
+                      LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
+		xfree(ag);
+		return nullptr;
+            }
+
+
+            struct base64_encode_ctx ctx;
+            base64_encode_init(&ctx);
+            const uint32_t expectedSz = base64_encode_len(length) +1 /* terminator */;
+            char *b64buf = static_cast<char *>(xcalloc(expectedSz, 1));
+            size_t blen = base64_encode_update(&ctx, b64buf, length, reinterpret_cast<uint8_t*>(ag));
+            blen += base64_encode_final(&ctx, b64buf+blen);
+            b64buf[expectedSz-1] = '\0';
+            if (!pstrcat(ad_groups, reinterpret_cast<char*>(b64buf))) {
+                debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
+                      LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
+		xfree(ag);
+		xfree(b64buf);
+		return nullptr;
+            }
+            xfree(b64buf);
+
+
+
+            sauth = get4byt();
+            debug((char *) "%s| %s: Info: Got rid: %u\n", LogTime(), PROGRAM, sauth);
+            /* attribute */
+            bpos = bpos+4;
+        }
+
+        xfree(ag);
+	return ad_groups;
+    }
+
+    return nullptr;
+}
+
+
 char *
 get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
 {
@@ -379,13 +496,13 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     uint32_t LogonDomainId=0;
     uint32_t SidCount=0;
     uint32_t ExtraSids=0;
-    /*
     uint32_t ResourceGroupDomainSid=0;
     uint32_t ResourceGroupCount=0;
     uint32_t ResourceGroupIds=0;
-    */
     char **Rids=nullptr;
     int l=0;
+
+    char * resource_group_domain_sid=nullptr;
 
     if (!ad_groups) {
         debug((char *) "%s| %s: ERR: No space to store groups\n",
@@ -454,11 +571,11 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     bpos = bpos+40;
     SidCount = get4byt();
     ExtraSids = get4byt();
-    /* 4 bytes ResourceGroupDomainSid
-     * 4 bytes ResourceGroupCount
-     * 4 bytes ResourceGroupIds
-     */
-    bpos = bpos+12;
+
+    ResourceGroupDomainSid = get4byt();
+    ResourceGroupCount = get4byt();
+    ResourceGroupIds = get4byt();
+
     /*
      * Read all data from structure => Now check pointers
      */
@@ -483,7 +600,15 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     if ((ad_groups = getextrasids(ad_groups,ExtraSids,SidCount))==nullptr)
         goto k5clean;
 
+    resource_group_domain_sid = get_resource_group_domain_sid(ResourceGroupDomainSid);
+    if(resource_group_domain_sid && ResourceGroupCount && ResourceGroupIds){
+        get_resource_groups(ad_groups, resource_group_domain_sid, ResourceGroupIds, ResourceGroupCount);
+    }
+
     debug((char *) "%s| %s: INFO: Read %d of %d bytes \n", LogTime(), PROGRAM, bpos, (int)ad_data->length);
+
+    if(resource_group_domain_sid) xfree(resource_group_domain_sid);
+
     if (Rids) {
         for ( l=0; l<(int)GroupCount; l++) {
             xfree(Rids[l]);
@@ -493,6 +618,8 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     krb5_free_data(context, ad_data);
     return ad_groups;
 k5clean:
+    if(resource_group_domain_sid) xfree(resource_group_domain_sid);
+
     if (Rids) {
         for ( l=0; l<(int)GroupCount; l++) {
             xfree(Rids[l]);
