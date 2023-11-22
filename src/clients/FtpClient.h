@@ -74,7 +74,7 @@ class CtrlChannel: public Ftp::Channel
 {
 public:
     CtrlChannel();
-    ~CtrlChannel();
+    virtual ~CtrlChannel();
 
     char *buf;
     size_t size;
