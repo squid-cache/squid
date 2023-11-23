@@ -124,7 +124,8 @@ CacheManager::findAction(const SBuf &action) const
 Mgr::Action::Pointer
 CacheManager::createNamedAction(const SBuf &actionName)
 {
-    Must(!actionName.isEmpty());
+    if (actionName.isEmpty())
+        return nullptr;
 
     Mgr::Command::Pointer cmd = new Mgr::Command;
     cmd->profile = findAction(actionName);
