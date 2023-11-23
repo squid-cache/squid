@@ -77,11 +77,11 @@ public:
     bool no_cache_done = false;
     bool interpreted_req_hdrs = false;
     bool toClientMarkingDone = false;
-    bool readNextRequest = false; ///< whether Squid should read after error handling
 #if USE_OPENSSL
     bool sslBumpCheckDone = false;
 #endif
 
+    bool readNextRequest = false; ///< whether Squid should read after error handling
     ErrorState *error = nullptr; ///< saved error page for centralized/delayed processing
 
 #if FOLLOW_X_FORWARDED_FOR
