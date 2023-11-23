@@ -446,6 +446,11 @@ clientFollowXForwardedForCheck(Acl::Answer answer, void *data)
                 calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
                 return;
             }
+            const auto headerName = Http::HeaderLookupTable.lookup(Http::HdrType::X_FORWARDED_FOR).name;
+            debugs(28, DBG_CRITICAL, "ERROR: Ignoring trailing " << headerName << " addresses" <<
+                   Debug::Extra << "addresses allowed by follow_x_forwarded_for: " << calloutContext->currentXffHopNumber <<
+                   Debug::Extra << "last/accepted address: " << request->indirect_client_addr <<
+                   Debug::Extra << "ignored trailing addresses: " << request->x_forwarded_for_iterator);
             // fall through to resume clientAccessCheck() processing
         }
     }
