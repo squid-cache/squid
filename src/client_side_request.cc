@@ -442,9 +442,11 @@ clientFollowXForwardedForCheck(Acl::Answer answer, void *data)
                 /* override the default src_addr tested if we have to go deeper than one level into XFF */
                 Filled(calloutContext->acl_checklist)->src_addr = request->indirect_client_addr;
             }
-            if (++calloutContext->currentXffHopNumber < SQUID_X_FORWARDED_FOR_HOP_MAX)
+            if (++calloutContext->currentXffHopNumber < SQUID_X_FORWARDED_FOR_HOP_MAX) {
                 calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
-            return;
+                return;
+            }
+            // fall through to resume clientAccessCheck() processing
         }
     }
 
