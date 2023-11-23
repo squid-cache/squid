@@ -83,7 +83,7 @@ public:
     ErrorState *error = nullptr; ///< saved error page for centralized/delayed processing
     bool readNextRequest = false; ///< whether Squid should read after error handling
 #if FOLLOW_X_FORWARDED_FOR
-    uint32_t currentXffHopNumber = 0; ///< number of X-Forwarded-For header values processed so far
+    size_t currentXffHopNumber = 0; ///< number of X-Forwarded-For header values processed so far
 #endif
 };
 
