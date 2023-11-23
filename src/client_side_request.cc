@@ -77,7 +77,7 @@
 #if FOLLOW_X_FORWARDED_FOR
 
 #if !defined(SQUID_X_FORWARDED_FOR_HOP_MAX)
-#define SQUID_X_FORWARDED_FOR_HOP_MAX 16
+#define SQUID_X_FORWARDED_FOR_HOP_MAX 64
 #endif
 
 static void clientFollowXForwardedForCheck(Acl::Answer answer, void *data);
