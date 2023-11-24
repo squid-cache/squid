@@ -23,9 +23,9 @@ EscapeSequences()
 
     // Encode control chars just to be on the safe side and make sure all 8-bit
     // characters are encoded to protect from buggy clients.
-    for (uint32_t ch = 0; ch < 256; ++ch) {
+    for (int ch = 0; ch < 256; ++ch) {
         if ((ch <= 0x1F || ch >= 0x7f) && ch != '\n' && ch != '\r' && ch != '\t') {
-            em[ch] = SBuf().Printf("&#%d;", static_cast<int>(ch));
+            em[ch] = SBuf().Printf("&#%d;", ch);
         }
     }
 
