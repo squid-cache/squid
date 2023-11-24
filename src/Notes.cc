@@ -115,18 +115,15 @@ Note::dump(StoreEntry *entry, const char *k)
     }
 }
 
-SBuf
-Note::toString(const char *sep) const
+void
+Note::printAsAnnotationAclParameters(std::ostream &os) const
 {
-    SBufStream result;
-    auto needSeparator = false;
+    auto separator = "";
     for (const auto &v: values) {
-        if (needSeparator)
-            result << sep;
-        result << key() << "=" << v->value();
-        needSeparator = true;
+        os << separator;
+        os << key() << (v->method() == Value::mhReplace ? "=" : "+=") << v->value();
+        separator = " ";
     }
-    return result.buf();
 }
 
 const Notes::Keys &
@@ -263,11 +260,12 @@ Notes::dump(StoreEntry *entry, const char *key)
 }
 
 void
-Notes::dump(std::ostream &os) const
+Notes::printAsAnnotationAclParameters(std::ostream &os) const
 {
     const char *separator = "";
     for (const auto &note: notes) {
-        os << separator << note->toString(" ");
+        os << separator;
+        note->printAsAnnotationAclParameters(os);
         separator = " ";
     }
 }

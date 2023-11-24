@@ -93,9 +93,10 @@ public:
     void updateNotePairs(NotePairsPointer pairs, const CharacterSet *delimiters, const AccessLogEntryPointer &al);
     /// Dump the single Note to the given StoreEntry object.
     void dump(StoreEntry *entry, const char *key);
-    /// For the key and all its Values compile a string of
-    /// "Key: Value" pairs separated by sep string.
-    SBuf toString(const char *sep) const;
+
+    /// prints using "annotate_transaction acl parameter" format, one key=value
+    /// or key+=value parameter per stored value
+    void printAsAnnotationAclParameters(std::ostream &) const;
 
 private:
     SBuf theKey; ///< The note key
@@ -128,8 +129,9 @@ public:
     /// Parses an annotate line with "key=value" or "key+=value" formats.
     void parseKvPair();
 
-    /// Dump the notes list to the given StoreEntry object.
-    void dump(StoreEntry *entry, const char *name);
+    /// prints notes using "note" squid.conf directive format, one directive per stored note
+    void dump(StoreEntry *entry, const char *directiveName);
+
     /// clean the notes list
     void clean() { notes.clear(); }
 
@@ -139,8 +141,11 @@ public:
     iterator end() { return notes.end(); }
     /// \returns true if the notes list is empty
     bool empty() const { return notes.empty(); }
-    /// print notes as list of "key=value" expression, suitable for mgr:config
-    void dump(std::ostream& ) const;
+
+    /// print notes using "annotate_transaction acl parameters" format, one
+    /// key=value parameter per note
+    void printAsAnnotationAclParameters(std::ostream &) const;
+
     void updateNotePairs(NotePairsPointer pairs, const CharacterSet *delimiters,
                          const AccessLogEntryPointer &al);
 private:
