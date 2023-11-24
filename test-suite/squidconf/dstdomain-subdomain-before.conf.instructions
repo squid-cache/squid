@@ -1,0 +1,1 @@
+expect-failure ERROR:.configuration.failure:.*is.a.subdomain.of.*You.need.to.remove
