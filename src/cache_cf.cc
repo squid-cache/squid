@@ -568,8 +568,6 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                 } catch (...) {
                     // fatal for now
                     debugs(3, DBG_CRITICAL, "ERROR: configuration failure: " << CurrentException);
-                    // do not duplicate context in self_destruct() messages
-                    CodeContext::Reset();
                     self_destruct();
                 }
             }
