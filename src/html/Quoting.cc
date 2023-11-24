@@ -13,7 +13,8 @@
 #include <array>
 #include <cstring>
 
-static const auto & EscapeSequences()
+static const auto &
+EscapeSequences()
 {
     static auto escapeMap = new std::array<SBuf, 256> {};
     auto &em = *escapeMap;
@@ -26,10 +27,8 @@ static const auto & EscapeSequences()
     em['&'] = "&amp;";
     em['\''] = "&apos;";
 
-    /* Encode control chars just to be on the safe side, and make
-     * sure all 8-bit characters are encoded to protect from buggy
-     * clients
-     */
+    // Encode control chars just to be on the safe side and make sure all 8-bit
+    // characters are encoded to protect from buggy clients.
     for (uint32_t ch = 0; ch < 256; ++ch) {
         if (em[ch].isEmpty() && (ch <= 0x1F || ch >= 0x7f) && ch != '\n' && ch != '\r' && ch != '\t') {
             em[ch] = SBuf().Printf("&#%d;", static_cast<int>(ch));
@@ -60,7 +59,7 @@ html_quote(const char *string)
     for (src = string, dst = buf; *src; src++) {
         const unsigned char ch = *src;
 
-        const auto & escape = escapeSequences[ch];
+        const auto &escape = escapeSequences[ch];
         if (escape.isEmpty()) {
             /* Apparently there is no need to escape this character */
             *dst++ = ch;

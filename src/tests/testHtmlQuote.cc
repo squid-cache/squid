@@ -14,9 +14,9 @@
 #include <cstring>
 #include <iostream>
 
-class testHtmlQuote: public CPPUNIT_NS::TestFixture
+class TestHtmlQuote: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE(testHtmlQuote);
+    CPPUNIT_TEST_SUITE(TestHtmlQuote);
     CPPUNIT_TEST(test_html_quote_cstr);
     CPPUNIT_TEST_SUITE_END();
 
@@ -25,10 +25,10 @@ protected:
     void testPerformance();
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testHtmlQuote );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestHtmlQuote );
 
 void
-testHtmlQuote::test_html_quote_cstr()
+TestHtmlQuote::test_html_quote_cstr()
 {
     CPPUNIT_ASSERT_EQUAL(std::string(""), std::string(html_quote("")));
     CPPUNIT_ASSERT_EQUAL(std::string("bar"), std::string(html_quote("bar")));
@@ -58,7 +58,8 @@ testHtmlQuote::test_html_quote_cstr()
     }
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     return TestProgram().run(argc, argv);
 }
