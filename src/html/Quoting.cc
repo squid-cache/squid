@@ -42,8 +42,7 @@ char *
 html_quote(const char *string)
 {
     static const auto &escapeSequences = EscapeSequences();
-
-    static char *buf;
+    static char *buf = nullptr;
     static size_t bufsize = 0;
     const char *src;
     char *dst;
@@ -60,13 +59,13 @@ html_quote(const char *string)
         const unsigned char ch = *src;
 
         const auto &escape = escapeSequences[ch];
-        if (escape.isEmpty()) {
-            /* Apparently there is no need to escape this character */
-            *dst++ = ch;
-        } else {
+        if (!escape.isEmpty()) {
             /* Ok, An escaped form was found above. Use it */
             escape.copy(dst, 7);
             dst += escape.length();
+        } else {
+            /* Apparently there is no need to escape this character */
+            *dst++ = ch;
         }
     }
     /* Nullterminate and return the result */
