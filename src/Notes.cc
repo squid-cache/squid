@@ -263,7 +263,7 @@ Notes::dump(StoreEntry *entry, const char *key)
 }
 
 void
-Notes::dump(ostream& os) const
+Notes::dump(std::ostream &os) const
 {
     const char *separator = "";
     for (const auto &note: notes) {
