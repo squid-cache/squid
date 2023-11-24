@@ -139,9 +139,9 @@ acl_ip_data::NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b)
             a->toStr(buf_n1, 3*(MAX_IPSTRLEN+1));
             b->toStr(buf_n2, 3*(MAX_IPSTRLEN+1));
         }
-        debugs(28, DBG_CRITICAL, "WARNING: (" << (bina?'B':'A') << ") '" << buf_n1 << "' is a subnetwork of (" << (bina?'A':'B') << ") '" << buf_n2 << "'" <<
-                Debug::Extra << "because of this '" << (bina?buf_n2:buf_n1) << "' is ignored to keep splay tree searching predictable" <<
-                Debug::Extra <<  "you should probably remove '" << buf_n1 << "' from the ACL");
+        debugs(28, DBG_CRITICAL, "WARNING: (" << (bina?'B':'A') << ") '" << buf_n1 << "' is a subnetwork of (" << (bina?'A':'B') << ") '" << buf_n2 << "'. " <<
+                "Because of this '" << (bina?buf_n2:buf_n1) << "' is ignored to keep splay tree searching predictable. " <<
+                "You should probably remove '" << buf_n1 << "' from the ACL.");
     }
 
     return ret;

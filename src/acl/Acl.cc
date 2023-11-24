@@ -104,7 +104,7 @@ Acl::SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey)
 
 ScopedId
 Acl::ParsingContext::codeContextGist() const {
-    return ScopedId("ACL");
+    return ScopedId("acl");
 }
 
 std::ostream &
@@ -225,6 +225,10 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     }
 
     xstrncpy(aclname, t, ACL_NAME_SZ);
+
+    const auto parseContext = Acl::ParsingContext::Pointer::Make(aclname);
+    CodeContext::Reset(parseContext);
+
     /* snarf the ACL type */
     const char *theType;
 
@@ -281,12 +285,10 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         new_acl = 0;
     }
 
-    CallContextCreator([A] {
-        const auto parseContext = Acl::ParsingContext::Pointer::Make(A->name);
-        CodeContext::Reset(parseContext);
-        A->parseFlags();
-        A->parse();
-    });
+    A->parseFlags();
+
+    /*split the function here */
+    A->parse();
 
     if (!new_acl)
         return;

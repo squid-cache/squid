@@ -559,13 +559,17 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                 err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
             } else {
                 try {
-                    if (!parse_line(tmp_line)) {
-                        debugs(3, DBG_CRITICAL, ConfigParser::CurrentLocation() << ": unrecognized: '" << tmp_line << "'");
-                        ++err_count;
-                    }
+                    CallContextCreator([&] {
+                        if (!parse_line(tmp_line)) {
+                            debugs(3, DBG_CRITICAL, ConfigParser::CurrentLocation() << ": unrecognized: '" << tmp_line << "'");
+                            ++err_count;
+                        }
+                    });
                 } catch (...) {
                     // fatal for now
                     debugs(3, DBG_CRITICAL, "ERROR: configuration failure: " << CurrentException);
+                    // do not duplicate context in self_destruct() messages
+                    CodeContext::Reset();
                     self_destruct();
                 }
             }
@@ -605,7 +609,11 @@ parseConfigFileOrThrow(const char *file_name)
     configFreeMemory();
 
     ACLMethodData::ThePurgeCount = 0;
-    default_all();
+
+    // TODO: wrap each parse_line() instead
+    CallContextCreator([] {
+        default_all();
+    });
 
     err_count = parseOneConfigFile(file_name, 0);
 
