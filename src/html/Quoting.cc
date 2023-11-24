@@ -17,9 +17,9 @@ static const auto & EscapeSequences()
 {
     static auto escapeMap = new std::array<SBuf, 256> {};
     auto &em = *escapeMap;
-    if (!em['<'].isEmpty()) {
-        return *escapeMap;
-    }
+    if (!em['<'].isEmpty())
+        return em;
+
     em['<'] = "&lt;";
     em['>'] = "&gt;";
     em['"'] = "&quot;";
@@ -36,7 +36,7 @@ static const auto & EscapeSequences()
         }
     }
 
-    return *escapeMap;
+    return em;
 }
 
 char *
