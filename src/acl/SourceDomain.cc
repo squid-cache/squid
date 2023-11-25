@@ -45,8 +45,7 @@ Acl::SourceDomainCheck::match(ACLChecklist * const ch)
     if (fqdn) {
         return data->match(fqdn);
     } else if (!checklist->sourceDomainChecked()) {
-        // TODO: Using AclMatchedName here is not OO correct. Should find a way to the current acl
-        debugs(28, 3, "aclMatchAcl: Can't yet compare '" << AclMatchedName << "' ACL for '" << checklist->src_addr << "'");
+        debugs(28, 3, "aclMatchAcl: Can't yet compare '" << name << "' ACL for '" << checklist->src_addr << "'");
         if (checklist->goAsync(StartLookup, *this))
             return -1;
         // else fall through to "none" match, hiding the lookup failure (XXX)
