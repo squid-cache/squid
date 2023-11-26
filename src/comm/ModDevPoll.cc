@@ -31,6 +31,7 @@
 
 #if USE_DEVPOLL
 
+#include "base/IoManip.h"
 #include "comm/Loops.h"
 #include "fd.h"
 #include "fde.h"
@@ -351,7 +352,7 @@ Comm::DoSelect(int msec)
             5,
             DEBUG_DEVPOLL ? 0 : 8,
             "got FD " << fd
-            << ",events=" << std::hex << do_poll.dp_fds[i].revents
+            << ",events=" << asHex(do_poll.dp_fds[i].revents).printPrefix(false)
             << ",monitoring=" << devpoll_state[fd].state
             << ",F->read_handler=" << F->read_handler
             << ",F->write_handler=" << F->write_handler
