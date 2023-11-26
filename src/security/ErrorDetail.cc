@@ -507,7 +507,7 @@ Security::ErrorDetail::brief() const
 #if USE_OPENSSL
         // TODO: Log ERR_error_string_n() instead, despite length, whitespace?
         // Example: `error:1408F09C:SSL routines:ssl3_get_record:http request`.
-        os << "+TLS_LIB_ERR=" << std::hex << std::uppercase << lib_error_no << std::nouppercase << std::dec;
+        os << "+TLS_LIB_ERR=" << asHex(lib_error_no).upperCase().printPrefix(false);
 #elif USE_GNUTLS
         os << '+' << gnutls_strerror_name(lib_error_no);
 #endif
