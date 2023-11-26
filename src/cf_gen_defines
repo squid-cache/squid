@@ -24,6 +24,8 @@ BEGIN {
 	define["FOLLOW_X_FORWARDED_FOR&&LINUX_NETFILTER"]="--enable-follow-x-forwarded-for and --enable-linux-netfilter"
 	define["FOLLOW_X_FORWARDED_FOR&&USE_ADAPTATION"]="--enable-follow-x-forwarded-for and (--enable-icap-client and/or --enable-ecap)"
 	define["FOLLOW_X_FORWARDED_FOR&&USE_DELAY_POOLS"]="--enable-follow-x-forwarded-for and --enable-delay-pools"
+	define["HAVE_AUTH_MODULE_BASIC"]="--enable-auth-basic"
+	define["HAVE_AUTH_MODULE_DIGEST"]="--enable-auth-digest"
 	define["HAVE_MSTATS&&HAVE_GNUMALLOC_H"]="GNU Malloc with mstats()"
 	define["ICAP_CLIENT"]="--enable-icap-client"
 	define["SO_MARK&&USE_LIBCAP"]="Packet MARK (Linux)"

@@ -23,7 +23,6 @@
 #include "http/Stream.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
-#include "HttpHeaderFieldInfo.h"
 #include "HttpHeaderTools.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"

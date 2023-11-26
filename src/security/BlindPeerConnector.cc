@@ -86,3 +86,13 @@ Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
     }
 }
 
+Security::BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &aRequest,
+        const Comm::ConnectionPointer &aServerConn,
+        const AsyncCallback<EncryptorAnswer> &aCallback,
+        const AccessLogEntryPointer &alp,
+        time_t timeout) :
+    AsyncJob("Security::BlindPeerConnector"),
+    Security::PeerConnector(aServerConn, aCallback, alp, timeout)
+{
+    request = aRequest;
+}

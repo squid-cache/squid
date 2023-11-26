@@ -1619,23 +1619,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     }
 #endif
 
-    if (internalCheck(request->url.path())) {
-        if (internalHostnameIs(request->url.host()) && request->url.port() == getMyPort()) {
-            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true));
-            request->flags.internal = true;
-        } else if (Config.onoff.global_internal_static && internalStaticCheck(request->url.path())) {
-            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (global_internal_static on)");
-            request->url.setScheme(AnyP::PROTO_HTTP, "http");
-            request->url.host(internalHostname());
-            request->url.port(getMyPort());
-            request->flags.internal = true;
-            http->setLogUriToRequestUri();
-        } else
-            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
-
-        if (ForSomeCacheManager(request->url.path()))
-            request->flags.disableCacheUse("cache manager URL");
-    }
+    http->checkForInternalAccess();
 
     if (!isFtp) {
         // XXX: for non-HTTP messages instantiate a different Http::Message child type
@@ -3934,8 +3918,7 @@ ConnStateData::unpinConnection(const bool andClose)
 {
     debugs(33, 3, pinning.serverConnection);
 
-    if (pinning.peer)
-        cbdataReferenceDone(pinning.peer);
+    cbdataReferenceDone(pinning.peer);
 
     if (Comm::IsConnOpen(pinning.serverConnection)) {
         if (pinning.closeHandler != nullptr) {

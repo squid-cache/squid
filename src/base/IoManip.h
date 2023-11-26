@@ -13,7 +13,6 @@
 
 #include <iostream>
 #include <iomanip>
-#include <optional>
 
 /// Safely prints an object pointed to by the given pointer: [label]<object>
 /// Prints nothing at all if the pointer is nil.
@@ -109,17 +108,21 @@ class AsList
 public:
     explicit AsList(const Container &c): container(c) {}
 
-    /// a character to print before the first item (if any)
-    auto &prefixedBy(const char ch) { prefix = ch; return *this; }
+    /// a c-string to print before the first item (if any). Caller must ensure lifetime.
+    auto &prefixedBy(const char * const p) { prefix = p; return *this; }
 
-    /// a character to print between consecutive items (if any)
-    auto &delimitedBy(const char ch) { delimiter = ch; return *this; }
+    /// a c-string to print after the last item (if any). Caller must ensure lifetime.
+    auto &suffixedBy(const char * const p) { suffix = p; return *this; }
+
+    /// a c-string to print between consecutive items (if any). Caller must ensure lifetime.
+    auto &delimitedBy(const char * const d) { delimiter = d; return *this; }
 
 public:
     const Container &container; ///< zero or more items to print
 
-    std::optional<char> prefix; ///< \copydoc prefixedBy()
-    std::optional<char> delimiter; ///< \copydoc delimitedBy()
+    const char *prefix = nullptr; ///< \copydoc prefixedBy()
+    const char *suffix = nullptr; ///< \copydoc suffixedBy()
+    const char *delimiter = nullptr; ///< \copydoc delimitedBy()
 };
 
 template <class Container>
@@ -130,14 +133,16 @@ operator <<(std::ostream &os, const AsList<Container> &manipulator)
     for (const auto &item: manipulator.container) {
         if (!opened) {
             if (manipulator.prefix)
-                os << *manipulator.prefix;
+                os << manipulator.prefix;
             opened = true;
         } else {
             if (manipulator.delimiter)
-                os << *manipulator.delimiter;
+                os << manipulator.delimiter;
         }
         os << item;
     }
+    if (opened && manipulator.suffix)
+        os << manipulator.suffix;
     return os;
 }
 

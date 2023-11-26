@@ -16,7 +16,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = mem time debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+SUBDIRS = mem time debug base anyp helper dns html ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -256,7 +256,6 @@ squid_SOURCES = \
 	HttpHdrScTarget.h \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderMask.h \
 	HttpHeaderRange.h \
@@ -443,8 +442,6 @@ squid_SOURCES = \
 	wccp.h \
 	wccp2.cc \
 	wccp2.h \
-	whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 
@@ -519,6 +516,7 @@ squid_LDADD = \
 	$(REGEXLIB) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
+	html/libhtml.la \
 	$(SNMP_LIBS) \
 	mem/libmem.la \
 	store/libstore.la \
@@ -747,8 +745,7 @@ TESTSOURCES= \
 ## involved in writing tests.
 check_PROGRAMS += tests/testBoilerplate
 tests_testBoilerplate_SOURCES = \
-	tests/testBoilerplate.cc \
-	tests/testBoilerplate.h
+	tests/testBoilerplate.cc
 nodist_tests_testBoilerplate_SOURCES = \
 	$(TESTSOURCES)
 tests_testBoilerplate_LDADD= \
@@ -760,6 +757,8 @@ tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
 # Unit Tests are listed below by sub-directory with order matching the SUBDIRS
 # dependency-based list so that simpler code is tested before more complex code
 # which uses it.
+
+TESTS += $(check_PROGRAMS)
 
 ## Tests of SquidMath.h
 check_PROGRAMS += tests/testMath
@@ -1028,7 +1027,6 @@ tests_testRock_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1198,7 +1196,6 @@ tests_testUfs_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1371,7 +1368,6 @@ tests_testStore_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1535,7 +1531,6 @@ tests_testDiskIO_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1731,6 +1726,24 @@ EXTRA_DIST += \
 	tests/testACLMaxUserIP.cc
 endif
 
+## Tests of html/*
+
+check_PROGRAMS += tests/testHtmlQuote
+tests_testHtmlQuote_SOURCES = \
+	tests/testHtmlQuote.cc
+nodist_tests_testHtmlQuote_SOURCES = \
+	$(TESTSOURCES) \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc
+tests_testHtmlQuote_LDADD= \
+	html/libhtml.la \
+	sbuf/libsbuf.la \
+	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testHtmlQuote_LDFLAGS = $(LIBADD_DL)
+
 ## Tests of http/* and HTTP Protocol objects
 
 check_PROGRAMS += tests/test_http_range
@@ -1778,7 +1791,6 @@ tests_test_http_range_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1915,8 +1927,6 @@ tests_test_http_range_SOURCES = \
 	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
-	tests/stub_whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_test_http_range_SOURCES = \
@@ -1951,6 +1961,7 @@ tests_test_http_range_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	mgr/libmgr.la \
+	html/libhtml.la \
 	sbuf/libsbuf.la \
 	debug/libdebug.la \
 	store/libstore.la \
@@ -2036,7 +2047,6 @@ tests_testHttpReply_SOURCES = \
 	HttpHdrScTarget.h \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderMask.h \
 	HttpHeaderTools.cc \
@@ -2163,7 +2173,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -2301,8 +2310,6 @@ tests_testHttpRequest_SOURCES = \
 	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
-	tests/stub_whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testHttpRequest_SOURCES = \
@@ -2329,6 +2336,7 @@ tests_testHttpRequest_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	mgr/libmgr.la \
+	html/libhtml.la \
 	anyp/libanyp.la \
 	$(SNMP_LIBS) \
 	icmp/libicmp.la \
@@ -2462,7 +2470,6 @@ tests_testCacheManager_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -2597,8 +2604,6 @@ tests_testCacheManager_SOURCES = \
 	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
-	tests/stub_whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testCacheManager_SOURCES = \
@@ -2633,6 +2638,7 @@ tests_testCacheManager_LDADD = \
 	anyp/libanyp.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
+	html/libhtml.la \
 	$(SNMP_LIBS) \
 	mem/libmem.la \
 	store/libstore.la \

@@ -1260,8 +1260,6 @@ mainInitialize(void)
 
 #endif
 
-    memCheckInit();
-
 #if USE_LOADABLE_MODULES
     LoadableModulesConfigure(Config.loadable_module_names);
 #endif

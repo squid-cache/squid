@@ -7,19 +7,8 @@
 
 include $(top_srcdir)/src/Common.am
 
-noinst_LTLIBRARIES = libclients.la
+noinst_LTLIBRARIES = libhtml.la
 
-libclients_la_SOURCES = \
-	Client.cc \
-	Client.h \
-	FtpClient.cc \
-	FtpClient.h \
-	FtpGateway.cc \
-	FtpRelay.cc \
-	HttpTunneler.cc \
-	HttpTunneler.h \
-	HttpTunnelerAnswer.cc \
-	HttpTunnelerAnswer.h \
-	WhoisGateway.cc \
-	WhoisGateway.h \
-	forward.h
+libhtml_la_SOURCES = \
+	Quoting.cc \
+	Quoting.h

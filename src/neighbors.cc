@@ -707,9 +707,9 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
 #if USE_CACHE_DIGESTS
     assert(ps);
     HttpRequest *request = ps->request;
-    const cache_key *key = request ? storeKeyPublicByRequest(request) : nullptr;
-    assert(p);
     assert(request);
+
+    assert(p);
     debugs(15, 5, "cache_peer " << *p);
     /* does the peeer have a valid digest? */
 
@@ -732,7 +732,7 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
     assert(p->digest->cd);
     /* does digest predict a hit? */
 
-    if (!p->digest->cd->contains(key))
+    if (!p->digest->cd->contains(storeKeyPublicByRequest(request)))
         return LOOKUP_MISS;
 
     debugs(15, 5, "HIT for cache_peer " << *p);
@@ -759,6 +759,9 @@ neighborsDigestSelect(PeerSelector *ps)
     int choice_count = 0;
     int ichoice_count = 0;
     int p_rtt;
+
+    if (!Config.peers)
+        return nullptr;
 
     if (!request->flags.hierarchical)
         return nullptr;

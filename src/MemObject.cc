@@ -52,24 +52,24 @@ MemObject::inUseCount()
 const char *
 MemObject::storeId() const
 {
-    if (!storeId_.size()) {
+    if (storeId_.isEmpty()) {
         debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: Missing MemObject::storeId value");
         dump();
         storeId_ = "[unknown_URI]";
     }
-    return storeId_.termedBuf();
+    return storeId_.c_str();
 }
 
 const char *
 MemObject::logUri() const
 {
-    return logUri_.size() ? logUri_.termedBuf() : storeId();
+    return logUri_.isEmpty() ? storeId() : logUri_.c_str();
 }
 
 bool
 MemObject::hasUris() const
 {
-    return storeId_.size();
+    return !storeId_.isEmpty();
 }
 
 void
@@ -83,7 +83,7 @@ MemObject::setUris(char const *aStoreId, char const *aLogUri, const HttpRequestM
 
     // fast pointer comparison for a common storeCreateEntry(url,url,...) case
     if (!aLogUri || aLogUri == aStoreId)
-        logUri_.clean(); // use storeId_ by default to minimize copying
+        logUri_.clear(); // use storeId_ by default to minimize copying
     else
         logUri_ = aLogUri;
 
@@ -167,7 +167,7 @@ struct LowestMemReader : public unary_function<store_client, void> {
 
     void operator() (store_client const &x) {
         if (x.getType() == STORE_MEM_CLIENT)
-            current = std::min(current, x.readOffset());
+            current = std::min(current, x.discardableHttpEnd());
     }
 
     int64_t current;
