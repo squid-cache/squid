@@ -9,6 +9,7 @@
 /* DEBUG: section 37    ICMP Routines */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "comm.h"
 #include "comm/Loops.h"
 #include "defines.h"
@@ -241,7 +242,7 @@ IcmpSquid::Open(void)
 
 #if _SQUID_WINDOWS_
 
-    debugs(37, 4, "Pinger handle: 0x" << std::hex << hIpc << std::dec << ", PID: " << pid);
+    debugs(37, 4, "Pinger handle: " << asHex(hIpc) << ", PID: " << pid);
 
 #endif /* _SQUID_WINDOWS_ */
     return icmp_sock;
