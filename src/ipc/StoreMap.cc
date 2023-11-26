@@ -856,7 +856,7 @@ Ipc::StoreMap::validateHit(const sfileno fileno)
            "    expires=" << anchor.basics.expires << "\n" <<
            "    lastmod=" << anchor.basics.lastmod << "\n" <<
            "    refcount=" << anchor.basics.refcount << "\n" <<
-           "    flags=0x" << std::hex << anchor.basics.flags << std::dec << "\n" <<
+           "    flags=" << asHex(anchor.basics.flags) << "\n" <<
            "    start=" << anchor.start << "\n" <<
            "    splicingPoint=" << anchor.splicingPoint << "\n" <<
            "    lock=" << anchor.lock << "\n" <<
