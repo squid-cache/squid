@@ -280,7 +280,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
     // if object_size is still unknown, the entry was probably aborted
     if (errflag || e->objectLen() < 0) {
         debugs(20, 2, "storeSwapOutFileClosed: dirno " << e->swap_dirn << ", swapfile " <<
-                asHex(e->swap_filen).minDigits(8).upperCase() <<
+                asHex(e->swap_filen).minDigits(8).upperCase().printPrefix(false) <<
                 ", errflag=" << errflag);
 
         if (errflag == DISK_NO_SPACE_LEFT) {
@@ -300,7 +300,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
         /* swapping complete */
         debugs(20, 3, "storeSwapOutFileClosed: SwapOut complete: '" << e->url() << "' to " <<
                e->swap_dirn  << ", " <<
-               asHex(e->swap_filen).minDigits(8).upperCase());
+               asHex(e->swap_filen).minDigits(8).upperCase().printPrefix(false));
         debugs(20, 5, "swap_file_sz = " <<
                e->objectLen() << " + " << mem->swap_hdr_sz);
 
