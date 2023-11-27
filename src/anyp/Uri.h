@@ -35,17 +35,19 @@ public:
     Uri(): hostIsNumeric_(false) { *host_ = 0; }
     Uri(AnyP::UriScheme const &aScheme);
     Uri(const Uri &other) {
-        this->operator =(other);
-    }
-    Uri &operator =(const Uri &o) {
-        scheme_ = o.scheme_;
-        userInfo_ = o.userInfo_;
-        memcpy(host_, o.host_, sizeof(host_));
-        hostIsNumeric_ = o.hostIsNumeric_;
-        hostAddr_ = o.hostAddr_;
-        port_ = o.port_;
-        path_ = o.path_;
+        scheme_ = other.scheme_;
+        userInfo_ = other.userInfo_;
+        memcpy(host_, other.host_, sizeof(host_));
+        hostIsNumeric_ = other.hostIsNumeric_;
+        hostAddr_ = other.hostAddr_;
+        port_ = other.port_;
+        path_ = other.path_;
         touch();
+    }
+
+    Uri &operator=(const Uri &other) {
+        Uri tmp(other);
+        swap(tmp);
         return *this;
     }
 
@@ -57,6 +59,18 @@ public:
         port_ = std::nullopt;
         touch();
     }
+
+    void swap(Uri& other)
+    {
+        std::swap(scheme_, other.scheme_);
+        std::swap(userInfo_, other.userInfo_);
+        memcpy(host_, other.host_, sizeof(host_));
+        std::swap(hostIsNumeric_, other.hostIsNumeric_);
+        std::swap(hostAddr_, other.hostAddr_);
+        std::swap(port_, other.port_);
+        std::swap(path_, other.path_);
+    }
+
     void touch(); ///< clear the cached URI display forms
 
     bool parse(const HttpRequestMethod &, const SBuf &url);
