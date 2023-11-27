@@ -1119,11 +1119,8 @@ parse_obsolete(const char *name)
 
         // add the value as unquoted-string because the old values did not support whitespace
         const char *token = ConfigParser::NextQuotedOrToEol();
-
-        if (!token) {
-            debugs(3, DBG_CRITICAL, "ERROR: cannot parse value for directive: " << name);
-            self_destruct();
-        }
+        if (!token)
+            throw TextException(ToSBuf("missing required parameter for obsolete directive: ", name), Here());
 
         tmp.append(token, strlen(token));
         Security::ProxyOutgoingConfig.parse(tmp.c_str());
