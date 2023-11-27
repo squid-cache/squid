@@ -52,6 +52,9 @@ public:
     /// \returns whether the indexing was necessary (and, hence, started)
     static bool Start(SwapDir &dir);
 
+    /* AsyncJob API */
+    virtual void callException(const std::exception &) override;
+
 protected:
     /// whether the current kid is responsible for rebuilding the given cache_dir
     static bool IsResponsible(const SwapDir &);

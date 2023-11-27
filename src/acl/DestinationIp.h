@@ -13,28 +13,20 @@
 #include "acl/Ip.h"
 #include "ipcache.h"
 
-class DestinationIPLookup : public ACLChecklist::AsyncState
-{
-
-public:
-    static DestinationIPLookup *Instance();
-    void checkForAsync(ACLChecklist *)const override;
-
-private:
-    static DestinationIPLookup instance_;
-    static IPH LookupDone;
-};
-
 class ACLDestinationIP : public ACLIP
 {
     MEMPROXY_CLASS(ACLDestinationIP);
 
 public:
+    static void StartLookup(ACLFilledChecklist &, const ACL &);
+
     char const *typeString() const override;
     const Acl::Options &options() override;
     int match(ACLChecklist *checklist) override;
 
 private:
+    static void LookupDone(const ipcache_addrs *, const Dns::LookupDetails &, void *data);
+
     Acl::BooleanOptionValue lookupBanned; ///< are DNS lookups allowed?
 };
 
