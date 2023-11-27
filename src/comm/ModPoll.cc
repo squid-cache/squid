@@ -492,11 +492,11 @@ static void
 commIncomingStats(StoreEntry * sentry)
 {
     storeAppendPrintf(sentry, "Current incoming_udp_interval: %d\n",
-                      statCounter.comm_udp.interval >> INCOMING_FACTOR);
+                      statCounter.comm_udp.interval >> Comm::Incoming::Factor);
     storeAppendPrintf(sentry, "Current incoming_dns_interval: %d\n",
-                      statCounter.comm_dns.interval >> INCOMING_FACTOR);
+                      statCounter.comm_dns.interval >> Comm::Incoming::Factor);
     storeAppendPrintf(sentry, "Current incoming_tcp_interval: %d\n",
-                      statCounter.comm_tcp.interval >> INCOMING_FACTOR);
+                      statCounter.comm_tcp.interval >> Comm::Incoming::Factor);
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "Histogram of events per incoming socket type\n");
     storeAppendPrintf(sentry, "ICP Messages handled per comm_poll_udp_incoming() call:\n");

@@ -32,7 +32,7 @@ namespace Comm
  *
  * Caveats:
  *
- *   \copydoc INCOMING_FACTOR
+ *   \copydoc Comm::Incoming::Factor
  *
  *   \copydoc Comm::Incoming::MaxInterval
  */
@@ -40,19 +40,20 @@ class Incoming
 {
 public:
 #if !defined(INCOMING_FACTOR)
+#define INCOMING_FACTOR 5
+#endif
     /**
      * The higher the INCOMING_FACTOR, the slower the algorithm will
      * respond to load spikes/increases/decreases in demand. A value
      * between 3 and 8 is recommended.
      */
-#define INCOMING_FACTOR 5
-#endif
+    static const int Factor = INCOMING_FACTOR;
 
     /**
      * Magic upper limit on interval.
      * At the largest value the cache will effectively be idling.
      */
-    static const int MaxInterval = (256 << INCOMING_FACTOR);
+    static const int MaxInterval = (256 << Factor);
 
     // TODO replace with constructor initialization
     void init(int n) { nMaximum = n; history.enumInit(n); }
@@ -82,17 +83,17 @@ public:
      *
      * \return whether it is time to check incoming sockets.
      */
-    bool check() { return (++ioEvents > (interval >> INCOMING_FACTOR)); }
+    bool check() { return (++ioEvents > (interval >> Factor)); }
 
     /*
      * How many normal I/O events to process before checking
      * incoming sockets again.
      *
      * \note We store the interval multiplied by a factor of
-     *       (2^INCOMING_FACTOR) to have some pseudo-floating
+     *       (2^Factor) to have some pseudo-floating
      *       point precision.
      */
-    int interval = (16 << INCOMING_FACTOR);
+    int interval = (16 << Factor);
 
     /** History of I/O events timing on listening ports.
      *
