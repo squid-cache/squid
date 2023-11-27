@@ -92,14 +92,14 @@ void
 RandomUuid::print(std::ostream &os) const
 {
     os <<
-       asHex(timeLow).printPrefix(false).minDigits(8)  << '-' <<
-       asHex(timeMid).printPrefix(false).minDigits(4) << '-' <<
-       asHex(timeHiAndVersion).printPrefix(false).minDigits(4) << '-' <<
-       asHex(clockSeqHiAndReserved).printPrefix(false).minDigits(2) <<
-       asHex(clockSeqLow).printPrefix(false).minDigits(2) << '-';
+       asHex(timeLow).minDigits(8)  << '-' <<
+       asHex(timeMid).minDigits(4) << '-' <<
+       asHex(timeHiAndVersion).minDigits(4) << '-' <<
+       asHex(clockSeqHiAndReserved).minDigits(2) <<
+       asHex(clockSeqLow).minDigits(2) << '-';
 
     for (size_t i = 0; i < sizeof(node); ++i)
-        os << asHex(node[i]).printPrefix(false).minDigits(2);
+        os << asHex(node[i]).minDigits(2);
 }
 
 bool

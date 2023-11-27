@@ -54,7 +54,7 @@ ACLTimeData::match(time_t when)
     while (data) {
         debugs(28, 3, "aclMatchTime: checking " << t  << " in " <<
                data->start  << "-" << data->stop  << ", weekbits=" <<
-               asHex(data->weekbits).printPrefix(false));
+               asHex(data->weekbits));
 
         if (t >= data->start && t <= data->stop && (data->weekbits & (1 << tm.tm_wday)))
             return 1;

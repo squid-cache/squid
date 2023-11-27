@@ -30,7 +30,7 @@ Fs::Ufs::UFSStoreState::ioCompletedNotification()
         opening = false;
         debugs(79, 3, "UFSStoreState::ioCompletedNotification - opening: dirno " <<
             swap_dirn << ", fileno " <<
-            asHex(swap_filen).printPrefix(false).minDigits(8) <<
+            asHex(swap_filen).minDigits(8) <<
             " status " << theFile->error());
 
         assert (FILE_MODE(mode) == O_RDONLY);
@@ -43,7 +43,7 @@ Fs::Ufs::UFSStoreState::ioCompletedNotification()
         creating = false;
         debugs(79, 3, "UFSStoreState::ioCompletedNotification - creating: dirno " <<
             swap_dirn  << ", fileno " <<
-            asHex(swap_filen).printPrefix(false).minDigits(8) <<
+            asHex(swap_filen).minDigits(8) <<
             " status "<< theFile->error());
 
         openDone();
@@ -54,7 +54,7 @@ Fs::Ufs::UFSStoreState::ioCompletedNotification()
     assert (!(closing ||opening));
     debugs(79, 3, "UFSStoreState::ioCompletedNotification - error: dirno " <<
         swap_dirn  << ", fileno " <<
-        asHex(swap_filen).printPrefix(false).minDigits(8) <<
+        asHex(swap_filen).minDigits(8) <<
         " status "<< theFile->error());
 
     /* Ok, notification past open means an error has occurred */
@@ -93,7 +93,7 @@ Fs::Ufs::UFSStoreState::closeCompleted()
     assert (closing);
     debugs(79, 3, "UFSStoreState::closeCompleted: dirno " << swap_dirn  <<
         ", fileno " <<
-        asHex(swap_filen).printPrefix(false).minDigits(8) <<
+        asHex(swap_filen).minDigits(8) <<
         " status " << theFile->error());
 
     if (theFile->error()) {
@@ -119,7 +119,7 @@ void
 Fs::Ufs::UFSStoreState::close(int)
 {
     debugs(79, 3, "UFSStoreState::close: dirno " << swap_dirn << ", fileno " <<
-        asHex(swap_filen).printPrefix(false).minDigits(8).upperCase());
+        asHex(swap_filen).minDigits(8).upperCase());
     tryClosing(); // UFS does not distinguish different closure types
 }
 
@@ -142,7 +142,7 @@ Fs::Ufs::UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCa
     read.callback = aCallback;
     read.callback_data = cbdataReference(aCallbackData);
     debugs(79, 3, "UFSStoreState::read_: dirno " << swap_dirn  << ", fileno " <<
-        asHex(swap_filen).printPrefix(false).minDigits(8));
+        asHex(swap_filen).minDigits(8));
     offset_ = aOffset;
     read_buf = buf;
     reading = true;
@@ -161,7 +161,7 @@ bool
 Fs::Ufs::UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE * free_func)
 {
     debugs(79, 3, "UFSStoreState::write: dirno " << swap_dirn  << ", fileno " <<
-        asHex(swap_filen).printPrefix(false).minDigits(8));
+        asHex(swap_filen).minDigits(8));
 
     if (theFile->error()) {
         debugs(79, DBG_IMPORTANT, "ERROR: avoid write on theFile with error");
@@ -235,7 +235,7 @@ Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int, RefCount<Re
     reading = false;
     debugs(79, 3, "UFSStoreState::readCompleted: dirno " << swap_dirn <<
         ", fileno " <<
-        asHex(swap_filen).printPrefix(false).minDigits(8) <<
+        asHex(swap_filen).minDigits(8) <<
         " len "<< len);
 
     if (len > 0)
@@ -276,7 +276,7 @@ void
 Fs::Ufs::UFSStoreState::writeCompleted(int, size_t len, RefCount<WriteRequest>)
 {
     debugs(79, 3, "UFSStoreState::writeCompleted: dirno " << swap_dirn << ", fileno " <<
-        asHex(swap_filen).printPrefix(false).minDigits(8).upperCase() <<
+        asHex(swap_filen).minDigits(8).upperCase() <<
         ", len " << len);
     /*
      * DPW 2006-05-24

@@ -1206,10 +1206,10 @@ TestSBuf::testSBufHash()
 void
 TestIoManip::testAsHex()
 {
-    CPPUNIT_ASSERT_EQUAL(SBuf("0xa0"), ToSBuf(asHex(0xa0)));
-    CPPUNIT_ASSERT_EQUAL(SBuf("0x00a0"), ToSBuf(asHex(0xa0).minDigits(4)));
-    CPPUNIT_ASSERT_EQUAL(SBuf("0x4"), ToSBuf(asHex(0x00004).minDigits(0)));
-    CPPUNIT_ASSERT_EQUAL(SBuf("0x12345"), ToSBuf(asHex(0x12345).minDigits(2)));
+    CPPUNIT_ASSERT_EQUAL(SBuf("a0"), ToSBuf(asHex(0xa0)));
+    CPPUNIT_ASSERT_EQUAL(SBuf("00a0"), ToSBuf(asHex(0xa0).minDigits(4)));
+    CPPUNIT_ASSERT_EQUAL(SBuf("4"), ToSBuf(asHex(0x00004).minDigits(0)));
+    CPPUNIT_ASSERT_EQUAL(SBuf("12345"), ToSBuf(asHex(0x12345).minDigits(2)));
 }
 
 int

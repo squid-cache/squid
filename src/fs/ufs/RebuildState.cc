@@ -299,7 +299,7 @@ Fs::Ufs::RebuildState::rebuildFromSwapLog()
 
     debugs(47, 3, swap_log_op_str[(int) swapData.op]  << " " <<
            storeKeyText(swapData.key)  << " " <<
-           asHex(swapData.swap_filen).printPrefix(false).upperCase().minDigits(8));
+           asHex(swapData.swap_filen).upperCase().minDigits(8));
 
     if (swapData.op == SWAP_LOG_ADD) {
         (void) 0;
@@ -356,9 +356,9 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
     int fd = -1;
     int dirs_opened = 0;
     debugs(47, 3, "flag=" << flags.init  << ", " <<
-           sd->index  << ": /" << asHex(curlvl1).printPrefix(false).upperCase().minDigits(2) <<
+           sd->index  << ": /" << asHex(curlvl1).upperCase().minDigits(2) <<
            "/" <<
-           asHex(curlvl2).printPrefix(false).upperCase().minDigits(2));
+           asHex(curlvl2).upperCase().minDigits(2));
 
     if (done)
         return -2;
@@ -410,7 +410,7 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
             }
 
             if (!UFSSwapDir::FilenoBelongsHere(fn, sd->index, curlvl1, curlvl2)) {
-                debugs(47, 3, asHex(fn).printPrefix(false).upperCase().minDigits(8) <<
+                debugs(47, 3, asHex(fn).upperCase().minDigits(8) <<
                        " does not belong in " << sd->index  << "/" <<
                        curlvl1  << "/" << curlvl2);
 

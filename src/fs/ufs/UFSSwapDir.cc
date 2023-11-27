@@ -341,7 +341,7 @@ void
 Fs::Ufs::UFSSwapDir::dumpEntry(StoreEntry &e) const
 {
     debugs(47, DBG_CRITICAL, "UFSSwapDir::dumpEntry: FILENO " <<
-        asHex(e.swap_filen).printPrefix(false).upperCase().minDigits(8) <<
+        asHex(e.swap_filen).upperCase().minDigits(8) <<
         ", PATH " << fullPath(e.swap_filen, nullptr));
     e.dump(0);
 }
@@ -799,7 +799,7 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
 {
     StoreEntry *e = nullptr;
     debugs(47, 5, storeKeyText(key) << ", fileno=" <<
-        asHex(file_number).printPrefix(false).upperCase().minDigits(8));
+        asHex(file_number).upperCase().minDigits(8));
     /* if you call this you'd better be sure file_number is not
      * already in use! */
     e = new StoreEntry();
@@ -1164,7 +1164,7 @@ void
 Fs::Ufs::UFSSwapDir::unlinkFile(sfileno f)
 {
     debugs(79, 3, "unlinking fileno " <<
-        asHex(f).printPrefix(false).upperCase().minDigits(8) <<
+        asHex(f).upperCase().minDigits(8) <<
         " '" << fullPath(f,nullptr) << "'");
     /* commonUfsDirMapBitReset(this, f); */
     IO->unlinkFile(fullPath(f,nullptr));
@@ -1378,7 +1378,7 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
 
     for (n = 0; n < k; ++n) {
         debugs(36, 3, "Cleaning file " <<
-            asHex(files[n]).printPrefix(false).upperCase().minDigits(8));
+            asHex(files[n]).upperCase().minDigits(8));
         SBuf p2(p1);
         p2.appendf("/%08X", files[n]);
         safeunlink(p2.c_str(), 0);

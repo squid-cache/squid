@@ -28,11 +28,11 @@ public:
 
     /* ErrorDetail API */
     SBuf brief() const override {
-        return ToSBuf("exception=", asHex(exceptionId));
+        return ToSBuf("exception=0x", asHex(exceptionId));
     }
 
     SBuf verbose(const HttpRequestPointer &) const override {
-        return ToSBuf("Exception (ID=", asHex(exceptionId), ')');
+        return ToSBuf("Exception (ID=0x", asHex(exceptionId), ')');
     }
 
 private:

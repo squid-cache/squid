@@ -854,7 +854,7 @@ storeDirSwapLog(const StoreEntry * e, int op)
            swap_log_op_str[op] << " " <<
            e->getMD5Text() << " " <<
            e->swap_dirn << " " <<
-           asHex(e->swap_filen).printPrefix(false).upperCase().minDigits(8));
+           asHex(e->swap_filen).upperCase().minDigits(8));
 
     e->disk().logEntry(*e, op);
 }

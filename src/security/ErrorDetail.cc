@@ -453,7 +453,7 @@ Security::ErrorDetail::ErrorDetail(const ErrorCode err, const int aSysErrorNo):
 #if USE_OPENSSL
     /// Extract and remember errors stored internally by the TLS library.
     if ((lib_error_no = ERR_get_error())) {
-        debugs(83, 7, "got " << asHex(lib_error_no));
+        debugs(83, 7, "got 0x" << asHex(lib_error_no));
         // more errors may be stacked
         // TODO: Save/detail all stacked errors by always flushing stale ones.
         ForgetErrors();
@@ -507,7 +507,7 @@ Security::ErrorDetail::brief() const
 #if USE_OPENSSL
         // TODO: Log ERR_error_string_n() instead, despite length, whitespace?
         // Example: `error:1408F09C:SSL routines:ssl3_get_record:http request`.
-        os << "+TLS_LIB_ERR=" << asHex(lib_error_no).upperCase().printPrefix(false);
+        os << "+TLS_LIB_ERR=" << asHex(lib_error_no).upperCase();
 #elif USE_GNUTLS
         os << '+' << gnutls_strerror_name(lib_error_no);
 #endif

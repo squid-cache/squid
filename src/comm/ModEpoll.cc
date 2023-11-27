@@ -254,7 +254,7 @@ Comm::DoSelect(int msec)
         F = &fd_table[fd];
         CodeContext::Reset(F->codeContext);
         debugs(5, DEBUG_EPOLL ? 0 : 8, "got FD " << fd << " events=" <<
-               asHex(cevents->events).printPrefix(false) << " monitoring=" << F->epoll_state <<
+               asHex(cevents->events) << " monitoring=" << F->epoll_state <<
                " F->read_handler=" << F->read_handler << " F->write_handler=" << F->write_handler);
 
         // TODO: add EPOLLPRI??

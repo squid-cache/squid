@@ -242,7 +242,7 @@ IcmpSquid::Open(void)
 
 #if _SQUID_WINDOWS_
 
-    debugs(37, 4, "Pinger handle: " << asHex(hIpc) << ", PID: " << pid);
+    debugs(37, 4, "Pinger handle: 0x" << asHex(hIpc) << ", PID: " << pid);
 
 #endif /* _SQUID_WINDOWS_ */
     return icmp_sock;
