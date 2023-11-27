@@ -8,8 +8,8 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
-#include "base/TextException.h"
 #include "base/IoManip.h"
+#include "base/TextException.h"
 #include "compat/cppunit.h"
 #include "event.h"
 #include "HttpReply.h"

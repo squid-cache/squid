@@ -280,8 +280,8 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
     // if object_size is still unknown, the entry was probably aborted
     if (errflag || e->objectLen() < 0) {
         debugs(20, 2, "storeSwapOutFileClosed: dirno " << e->swap_dirn << ", swapfile " <<
-                asHex(e->swap_filen).minDigits(8).upperCase() <<
-                ", errflag=" << errflag);
+               asHex(e->swap_filen).minDigits(8).upperCase() <<
+               ", errflag=" << errflag);
 
         if (errflag == DISK_NO_SPACE_LEFT) {
             /* TODO: this should be handle by the link from store IO to
