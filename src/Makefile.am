@@ -7,8 +7,10 @@
 
 include $(top_srcdir)/src/Common.am
 
+dist_doc_DATA = squid.md
+
 man_MANS = squid.8
-doc_DATA = squid.md
+CLEANFILES += squid.8
 
 DNSSOURCE = \
 	dns_internal.cc
