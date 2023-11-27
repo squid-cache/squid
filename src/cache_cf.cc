@@ -1120,7 +1120,7 @@ parse_obsolete(const char *name)
         // add the value as unquoted-string because the old values did not support whitespace
         const char *token = ConfigParser::NextQuotedOrToEol();
 
-        if (nullptr == token) {
+        if (!token) {
             debugs(3, DBG_CRITICAL, "ERROR: cannot parse value for directive: " << name);
             self_destruct();
         }
