@@ -65,8 +65,8 @@ TestIoManip::testAsHex()
     ss.str("");
 
     // check that flags are preserved
-    ss << std::uppercase << "a" << asHex(0xa0) << asHex(0xa0).upperCase() << "b";
-    CPPUNIT_ASSERT_EQUAL(std::string("aa0A0b"), ss.str());
+    ss << std::uppercase << std::hex << 0xa << asHex(0xa0) << asHex(0xa0).upperCase() << 0xb;
+    CPPUNIT_ASSERT_EQUAL(std::string("Aa0A0B"), ss.str());
     ss.str("");
 }
 
