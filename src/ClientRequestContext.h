@@ -80,6 +80,10 @@ public:
 #endif
     ErrorState *error; ///< saved error page for centralized/delayed processing
     bool readNextRequest; ///< whether Squid should read after error handling
+
+#if FOLLOW_X_FORWARDED_FOR
+    size_t currentXffHopNumber = 0; ///< number of X-Forwarded-For header values processed so far
+#endif
 };
 
 #endif /* SQUID_CLIENTREQUESTCONTEXT_H */
