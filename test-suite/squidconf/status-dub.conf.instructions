@@ -1,1 +1,1 @@
-expect-message WARNING:.*is.a.subrange.of.*Because.of.this.*isignored
+expect-message WARNING:..200..is.a.subrange.of..200.

@@ -116,7 +116,7 @@ CallAndRestore_(const CodeContext::Pointer &funContext, Fun &&fun)
     const auto savedCodeContext(CodeContext::Current());
     CodeContext::Reset(funContext);
     fun();
-    CodeContext::Reset(funContext);
+    CodeContext::Reset(savedCodeContext);
 }
 
 /// Executes service `callback` in `callbackContext`. If an exception occurs,

@@ -1,1 +1,1 @@
-expect-message WARNING:.*is.a.subdomain.of.*You.should.remove
+expect-message WARNING:..a.example.com..is.a.subdomain.of...example.com.

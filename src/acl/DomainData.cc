@@ -82,14 +82,14 @@ aclDomainCompare(T const &a, T const &b)
             bool d3big = (strlen(d3) > strlen(d4)); // Always suggest removing the longer one.
             const auto longer = d3big ? d3 : d4;
             const auto shorter = d3big ? d4 : d3;
-            debugs(28, DBG_IMPORTANT, "WARNING: '" << longer << "' is a subdomain of '" << shorter << "'. " <<
+            debugs(28, DBG_IMPORTANT, "WARNING: '" << longer << "' is a subdomain of '" << shorter << "'" <<
                     Debug::Extra << "You should remove '" << longer << "' from the ACL");
             debugs(28, 2, "Ignore '" << d3 << "' to keep splay tree searching predictable");
         }
     } else if (ret == 0) {
         // It may be an exact duplicate. No problem. Just drop.
         if (strcmp(d1,d2)==0) {
-            debugs(28, DBG_PARSE_NOTE(2), "WARNING: '" << d2 << "' is duplicated in the list. " <<
+            debugs(28, DBG_PARSE_NOTE(2), "WARNING: '" << d2 << "' is duplicated in the list." <<
                     Debug::Extra << "You should remove one '" << d2 << "' from the ACL");
             return ret;
         }
@@ -99,8 +99,8 @@ aclDomainCompare(T const &a, T const &b)
         bool d1big = (strlen(d1) > strlen(d2)); // Always suggest removing the longer one.
         const auto longer = d1big ? d1 : d2;
         const auto shorter = d1big ? d2 : d1;
-        throw TextException(ToSBuf("'", longer, "' is a subdomain of '", shorter, "'. ",
-                    "You need to remove '", longer, "' from the ACL."), Here());
+        throw TextException(ToSBuf("'", longer, "' is a subdomain of '", shorter, "'",
+                    Debug::Extra, "You need to remove '", longer, "' from the ACL"), Here());
     }
 
     return ret;
