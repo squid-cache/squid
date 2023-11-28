@@ -106,6 +106,19 @@ public:
     CodeContext::Pointer savedCodeContext;
 };
 
+/// Executes a 'fun' in `funContext`. If an exception occurs,
+/// the callContext is preserved, so that the exception is associated with
+/// the call that triggered it.
+template <typename Fun>
+inline void
+CallAndRestore_(const CodeContext::Pointer &funContext, Fun &&fun)
+{
+    const auto savedCodeContext(CodeContext::Current());
+    CodeContext::Reset(funContext);
+    fun();
+    CodeContext::Reset(funContext);
+}
+
 /// Executes service `callback` in `callbackContext`. If an exception occurs,
 /// the callback context is preserved, so that the exception is associated with
 /// the callback that triggered them (rather than with the service).
@@ -116,10 +129,19 @@ inline void
 CallBack(const CodeContext::Pointer &callbackContext, Fun &&callback)
 {
     // TODO: Consider catching exceptions and letting CodeContext handle them.
-    const auto savedCodeContext(CodeContext::Current());
-    CodeContext::Reset(callbackContext);
-    callback();
-    CodeContext::Reset(savedCodeContext);
+    CallAndRestore_(callbackContext, callback);
+}
+
+/// Executes parser `parse` in `parserContext`. If an exception occurs,
+/// the parser context is preserved, so that the exception is associated with
+/// the call that triggered it.
+///
+/// Specific parser code initiated by parse_line() should use this function.
+template <typename Fun>
+inline void
+CallContextParser(const CodeContext::Pointer &parserContext, Fun &&parse)
+{
+    CallAndRestore_(parserContext, parse);
 }
 
 /// Executes `service` in `serviceContext` but due to automatic caller context

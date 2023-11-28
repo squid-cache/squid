@@ -38,8 +38,6 @@ void
 ConfigParser::destruct()
 {
     shutting_down = 1;
-    // do not duplicate context in destruct() messages
-    CodeContext::Reset();
     if (!CfgFiles.empty()) {
         std::ostringstream message;
         CfgFile *f = CfgFiles.top();

@@ -205,9 +205,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 {
     /* we're already using strtok() to grok the line */
     char *t = nullptr;
-    ACL *A = nullptr;
     LOCAL_ARRAY(char, aclname, ACL_NAME_SZ);
-    int new_acl = 0;
 
     /* snarf the ACL name */
 
@@ -226,9 +224,14 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 
     xstrncpy(aclname, t, ACL_NAME_SZ);
 
-    const auto parseContext = Acl::ParsingContext::Pointer::Make(aclname);
-    CodeContext::Reset(parseContext);
+    CallContextParser(Acl::ParsingContext::Pointer::Make(aclname), [&] {
+        ParseNamed(parser, head, aclname);
+    });
+}
 
+void
+ACL::ParseNamed(ConfigParser &parser, ACL ** head, const char *aclname)
+{
     /* snarf the ACL type */
     const char *theType;
 
@@ -269,6 +272,8 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         theType = "client_connection_mark";
     }
 
+    ACL *A = nullptr;
+    int new_acl = 0;
     if ((A = FindByName(aclname)) == nullptr) {
         debugs(28, 3, "aclParseAclLine: Creating ACL '" << aclname << "'");
         A = Acl::Make(theType);

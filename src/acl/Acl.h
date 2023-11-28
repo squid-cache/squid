@@ -128,6 +128,9 @@ private:
     /// \returns (linked) "line" Options supported by this ACL
     /// \see ACL::options()
     virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
+
+    /// parses the rest of ACL line following ACL name
+    static void ParseNamed(ConfigParser &, ACL ** head, const char *name);
 };
 
 /// \ingroup ACLAPI

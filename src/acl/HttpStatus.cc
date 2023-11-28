@@ -49,8 +49,8 @@ int acl_httpstatus_data::compare(acl_httpstatus_data* const& a, acl_httpstatus_d
         const SBuf sa = a->toStr();
         const SBuf sb = b->toStr();
         debugs(28, DBG_CRITICAL, "WARNING: '" << sa << "' is a subrange of '" << sb << "'. " <<
-                "Because of this '" << sa << "' is ignored to keep splay tree searching predictable. " <<
-                "You should probably remove '" << sb << "' from the ACL.");
+                Debug::Extra << "Because of this '" << sa << "' is ignored to keep splay tree searching predictable" <<
+                Debug::Extra << "You should probably remove '" << sb << "' from the ACL");
     }
 
     return ret;
