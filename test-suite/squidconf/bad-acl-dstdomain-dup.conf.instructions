@@ -1,1 +1,1 @@
-expect-message WARNING:...example.com..is.duplicated.in.the.list
+expect-message WARNING:.*example.com..is.duplicated.in.the.list

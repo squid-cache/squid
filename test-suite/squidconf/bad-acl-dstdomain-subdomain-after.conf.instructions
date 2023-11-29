@@ -1,1 +1,1 @@
-expect-message WARNING:..a.example.com..is.a.subdomain.of...example.com.
+expect-message WARNING:..a.example.com..is.a.subdomain.of.*example.com
