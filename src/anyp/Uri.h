@@ -34,22 +34,12 @@ class Uri
 public:
     Uri(): hostIsNumeric_(false) { *host_ = 0; }
     Uri(AnyP::UriScheme const &aScheme);
-    Uri(const Uri &other) {
-        scheme_ = other.scheme_;
-        userInfo_ = other.userInfo_;
-        memcpy(host_, other.host_, sizeof(host_));
-        hostIsNumeric_ = other.hostIsNumeric_;
-        hostAddr_ = other.hostAddr_;
-        port_ = other.port_;
-        path_ = other.path_;
-        touch();
-    }
 
-    Uri &operator=(const Uri &other) {
-        Uri tmp(other);
-        swap(tmp);
-        return *this;
-    }
+    Uri(const Uri &other) = default;
+    Uri &operator=(const Uri &other) = default;
+
+    Uri(Uri &&other) = default;
+    Uri &operator=(Uri &&other) = default;
 
     void clear() {
         scheme_=AnyP::PROTO_NONE;
@@ -58,17 +48,6 @@ public:
         hostAddr_.setEmpty();
         port_ = std::nullopt;
         touch();
-    }
-
-    void swap(Uri& other)
-    {
-        std::swap(scheme_, other.scheme_);
-        std::swap(userInfo_, other.userInfo_);
-        memcpy(host_, other.host_, sizeof(host_));
-        std::swap(hostIsNumeric_, other.hostIsNumeric_);
-        std::swap(hostAddr_, other.hostAddr_);
-        std::swap(port_, other.port_);
-        std::swap(path_, other.path_);
     }
 
     void touch(); ///< clear the cached URI display forms
