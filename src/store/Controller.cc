@@ -203,7 +203,7 @@ Store::Controller::configure()
 
     // TODO: move this into a memory cache class when we have one
     const int64_t memMax = static_cast<int64_t>(min(Config.Store.maxInMemObjSize, Config.memMaxSize));
-    const int64_t disksMax = swapDir ? swapDir->maxObjectSize() : 0;
+    const int64_t disksMax = swapDir->maxObjectSize();
     store_maxobjsize = std::max(disksMax, memMax);
 }
 
