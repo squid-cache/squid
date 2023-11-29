@@ -34,12 +34,10 @@ class Uri
 public:
     Uri(): hostIsNumeric_(false) { *host_ = 0; }
     Uri(AnyP::UriScheme const &aScheme);
-
-    Uri(const Uri &other) = default;
-    Uri &operator=(const Uri &other) = default;
-
-    Uri(Uri &&other) = default;
-    Uri &operator=(Uri &&other) = default;
+    Uri(const Uri &) = default;
+    Uri(Uri &&) = default;
+    Uri &operator =(const Uri &) = default;
+    Uri &operator =(Uri &&) = default;
 
     void clear() {
         scheme_=AnyP::PROTO_NONE;
@@ -49,7 +47,6 @@ public:
         port_ = std::nullopt;
         touch();
     }
-
     void touch(); ///< clear the cached URI display forms
 
     bool parse(const HttpRequestMethod &, const SBuf &url);
