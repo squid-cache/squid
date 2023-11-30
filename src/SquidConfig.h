@@ -447,8 +447,8 @@ public:
     MessageDelayConfig MessageDelay;
 #endif
 
-    struct {
-        struct {
+    struct CommIncoming {
+        struct Measure {
             int average;
             int min_poll;
         } dns, udp, tcp;
