@@ -150,7 +150,6 @@ Store::Controller::stat(StoreEntry &output) const
     if (sharedMemStore)
         sharedMemStore->stat(output);
 
-    /* now the disks */
     disks->stat(output);
 }
 
@@ -453,7 +452,7 @@ Store::Controller::peek(const cache_key *key)
         }
     }
 
-    if (StoreEntry *e = disks->get(key)) {
+    if (const auto e = disks->get(key)) {
         debugs(20, 3, "got disk-cached entry: " << *e);
         return e;
     }
