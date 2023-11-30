@@ -73,7 +73,6 @@ void memFreeBuf(size_t size, void *);
 void memFreeRigid(void *, size_t net_size);
 FREE *memFreeBufFunc(size_t size);
 int memInUse(mem_type);
-void memDataInit(mem_type, const char *, size_t, int, bool doZero = true);
 size_t memStringCount();
 
 #endif /* _SQUID_SRC_MEM_FORWARD_H */
