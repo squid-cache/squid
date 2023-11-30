@@ -79,12 +79,7 @@ then
         then
             # Skip test unless the given macro is #defined in autoconf.h
             defineName=$p1
-
-            if test -n "$p2"
-            then
-                echo "$here: ERROR: Bad $instructionName instruction: Unexpected second parameter: $p2";
-                exit 1;
-            fi
+            defineValue=$p2
 
             autoconfHeader="$top_builddir/include/autoconf.h"
             if ! grep -q -w "$defineName" $autoconfHeader
@@ -96,6 +91,12 @@ then
             if grep -q "# *undef *\b$defineName\b" $autoconfHeader
             then
                 echo "$here: WARNING: Skipping $configFile test because $defineName is not defined in $autoconfHeader";
+                exit 0;
+            fi
+
+            if ! grep -q "# *define *\b$defineName\b $defineValue" $autoconfHeader
+            then
+                echo "$here: WARNING: Skipping $configFile test because $defineName is not $defineValue in $autoconfHeader";
                 exit 0;
             fi
 
