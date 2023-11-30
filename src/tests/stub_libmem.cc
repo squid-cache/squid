@@ -70,7 +70,6 @@ void memFreeBuf(size_t, void *buf) {xfree(buf);}
 static void cxx_xfree(void * ptr) {xfree(ptr);}
 FREE *memFreeBufFunc(size_t) {return cxx_xfree;}
 int memInUse(mem_type) STUB_RETVAL(0)
-void memDataInit(mem_type, const char *, size_t, int, bool) STUB_NOP
 
 #include "mem/Pool.h"
 static MemPools tmpMemPools;
