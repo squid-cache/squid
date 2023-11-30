@@ -94,7 +94,7 @@ then
                 exit 0;
             fi
 
-            if ! grep -q "# *define *\b$defineName\b $defineValue" $autoconfHeader
+            if ! grep -q "# *define *\b$defineName\b $defineValue *$" $autoconfHeader
             then
                 echo "$here: WARNING: Skipping $configFile test because $defineName is not $defineValue in $autoconfHeader";
                 exit 0;
