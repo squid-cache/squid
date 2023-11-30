@@ -149,7 +149,7 @@ private:
     void checkTransients(const StoreEntry &) const;
     void checkFoundCandidate(const StoreEntry &) const;
 
-    Disks *swapDir; ///< summary view of all disk caches
+    Disks *disks; ///< summary view of all disk caches
     Memory *sharedMemStore; ///< memory cache that multiple workers can use
     bool localMemStore; ///< whether local (non-shared) memory cache is enabled
 
