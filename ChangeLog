@@ -9,7 +9,7 @@ Changes in squid-6.6 (5 Dec 2023):
 	- log_db_daemon: Fix DSN construction
 	- Limit the number of allowed X-Forwarded-For hops
 	- Do not update StoreEntry expiration after errorAppendEntry()
-	- more gracefully handle errors when sending data during respons
+	- improve handling of response sending errors
 
 Changes in squid-6.5 (5 Nov 2023):
 
