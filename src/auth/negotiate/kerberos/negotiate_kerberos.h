@@ -135,8 +135,6 @@ void getustr(RPC_UNICODE_STRING *string);
 char **getgids(char **Rids, uint32_t GroupIds, uint32_t GroupCount);
 char *getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t  GroupCount);
 char *getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount);
-char *get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid);
-char *get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t ResourceGroupIds, uint32_t ResourceGroupCount);
 uint64_t get6byt_be(void);
 uint32_t get4byt(void);
 uint16_t get2byt(void);
