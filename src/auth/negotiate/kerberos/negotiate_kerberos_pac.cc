@@ -49,6 +49,12 @@ static unsigned char *p;
 extern int
 check_k5_err(krb5_context context, const char *function, krb5_error_code code);
 
+static char *
+get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid);
+static char *
+get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t ResourceGroupIds, uint32_t ResourceGroupCount);
+
+
 void
 align(int n)
 {
@@ -363,7 +369,7 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
 }
 
 
-char *
+static char *
 get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid){
 
     if (ResourceGroupDomainSid!= 0) {
@@ -407,7 +413,7 @@ get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid){
     return nullptr;
 }
 
-char *
+static char *
 get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t ResourceGroupIds, uint32_t ResourceGroupCount){
     size_t group_domain_sid_len = resource_group_domain_sid[0];
     char *ag;
