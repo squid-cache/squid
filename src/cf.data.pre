@@ -4685,6 +4685,13 @@ DOC_START
 	Format codes:
 
 		%	a literal % character
+
+		byte{value}	Adds a single byte with the given value (e.g., %byte{10}
+			adds an ASCII LF character a.k.a. "new line" or "\n"). The value
+			parameter is required and must be a positive decimal integer not
+			exceeding 255. Zero-valued bytes (i.e. ASCII NUL characters) are
+			not yet supported.
+
 		sn	Unique sequence number per log line entry
 		err_code    The ID of an error response served by Squid or
 				a similar internal error identifier.
