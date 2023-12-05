@@ -1,3 +1,16 @@
+Changes in squid-6.6 (5 Dec 2023):
+
+	- Bug 5328: Fix ESI build with libxml2 v2.12.0
+	- Bug 5319: QOS Netfilter MARK preservation is always disabled
+	- Bug 5318: peer_digest.cc:399: "fetch->pd && receivedData.data"
+	- Bug 5317: FATAL attempt to read data from memory
+	- Bug 5154: Do not open IPv6 sockets when IPv6 is disabled
+	- FTP: Ignore credentials with a NUL-prefixed username
+	- log_db_daemon: Fix DSN construction
+	- Limit the number of allowed X-Forwarded-For hops
+	- Do not update StoreEntry expiration after errorAppendEntry()
+	- improve handling of response sending errors
+
 Changes in squid-6.5 (5 Nov 2023):
 
 	- Bug 5309: frequent "lowestOffset () <= target_offset" assertion
