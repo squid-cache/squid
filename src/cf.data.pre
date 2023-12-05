@@ -763,11 +763,24 @@ IF HAVE_AUTH_MODULE_BASIC
 		use the max_user_ip ACL in an http_access rule.
 
 	"casesensitive" on|off
-		Specifies if usernames are case sensitive. Most user databases
-		are case insensitive allowing the same username to be spelled
-		using both lower and upper case letters, but some are case
-		sensitive. This makes a big difference for user_max_ip ACL
-		processing and similar.
+		Specifies whether upper case letters in client-sent usernames are
+		preserved. By default and when explicitly set to "off", a username
+		extracted from Proxy-Authorization or Authorization request header is
+		forced to lower case before user credentials are checked or stored.
+
+		Most user databases are case insensitive, allowing the same username to be
+		spelled using both lower and upper case letters. For such databases, any
+		casesenstive setting should work, but forcing usernames to lower case may
+		still make a big difference for Squid internal caches like those used by
+		an external ACL with %un logformat code in FORMAT and a user_max_ip ACL.
+
+		When working with a case sensitive database, set casesensitive to "on".
+
+		Squid ACLs like proxy_auth are case-sensitive by default. An ACL using
+		upper case letters in user names (e.g., `acl badGuys proxy_auth Bob`)
+		will not match any user with Basic Authentication credentials unless
+		casesensitive is explicitly turned "on" (to preserve "Bob" username
+		instead of converting it to "bob" before the ACL is checked).
 
 ENDIF
 IF HAVE_AUTH_MODULE_DIGEST
