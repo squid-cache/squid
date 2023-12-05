@@ -99,7 +99,7 @@ operator <<(std::ostream &os, const AsHex<Integer> number)
        std::setw(number.width) <<
        number.io_manip;
     os.fill(savedFill);
-    os.setf(oldFlags);
+    os.flags(oldFlags);
     return os;
 }
 
