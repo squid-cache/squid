@@ -368,7 +368,8 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
 }
 
 static char *
-get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid) {
+get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid)
+{
 
     if (ResourceGroupDomainSid!= 0) {
         uint8_t rev;
