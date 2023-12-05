@@ -54,7 +54,6 @@ get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid);
 static char *
 get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t ResourceGroupIds, uint32_t ResourceGroupCount);
 
-
 void
 align(int n)
 {
@@ -368,9 +367,8 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
     return ad_groups;
 }
 
-
 static char *
-get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid){
+get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid) {
 
     if (ResourceGroupDomainSid!= 0) {
         uint8_t rev;
@@ -385,15 +383,13 @@ get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid){
 
         size_t length = 1+1+6+nauth*4;
 
-            ag=(char *)xcalloc((length+1)*sizeof(char),1);
-            // the first byte is a length of the SID
-            ag[0] = (char) length;
-            memcpy((void *)&ag[1],(const void*)&p[bpos],1);
-            memcpy((void *)&ag[2],(const void*)&p[bpos+1],1);
-            ag[2] = ag[2]+1;
-            memcpy((void *)&ag[3],(const void*)&p[bpos+2],6+nauth*4);
-
-
+        ag=(char *)xcalloc((length+1)*sizeof(char),1);
+        // the first byte is a length of the SID
+        ag[0] = (char) length;
+        memcpy((void *)&ag[1],(const void*)&p[bpos],1);
+        memcpy((void *)&ag[2],(const void*)&p[bpos+1],1);
+        ag[2] = ag[2]+1;
+        memcpy((void *)&ag[3],(const void*)&p[bpos+2],6+nauth*4);
 
         /* mainly for debug only */
         rev = get1byt();
@@ -414,13 +410,12 @@ get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid){
 }
 
 static char *
-get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t ResourceGroupIds, uint32_t ResourceGroupCount){
+get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t ResourceGroupIds, uint32_t ResourceGroupCount) {
     size_t group_domain_sid_len = resource_group_domain_sid[0];
     char *ag;
     size_t length;
 
     resource_group_domain_sid++; //now it points to the actual data
-
 
     if (ResourceGroupIds!= 0) {
         uint32_t ngroup;
@@ -440,7 +435,6 @@ get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t R
         ag=(char *)xcalloc(length*sizeof(char),1);
         memcpy((void *)ag,(const void*)resource_group_domain_sid, group_domain_sid_len);
 
-
         for ( l=0; l<(int)ResourceGroupCount; l++) {
             uint32_t sauth;
             memcpy((void *)&ag[group_domain_sid_len],(const void*)&p[bpos],4);
@@ -448,10 +442,9 @@ get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t R
             if (!pstrcat(ad_groups," group=")) {
                 debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
                       LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
-		xfree(ag);
-		return nullptr;
+		        xfree(ag);
+		        return nullptr;
             }
-
 
             struct base64_encode_ctx ctx;
             base64_encode_init(&ctx);
@@ -463,13 +456,11 @@ get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t R
             if (!pstrcat(ad_groups, reinterpret_cast<char*>(b64buf))) {
                 debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
                       LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
-		xfree(ag);
-		xfree(b64buf);
-		return nullptr;
+		        xfree(ag);
+		        xfree(b64buf);
+		        return nullptr;
             }
             xfree(b64buf);
-
-
 
             sauth = get4byt();
             debug((char *) "%s| %s: Info: Got rid: %u\n", LogTime(), PROGRAM, sauth);
@@ -478,12 +469,11 @@ get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t R
         }
 
         xfree(ag);
-	return ad_groups;
+	    return ad_groups;
     }
 
     return nullptr;
 }
-
 
 char *
 get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
@@ -607,7 +597,7 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
         goto k5clean;
 
     resource_group_domain_sid = get_resource_group_domain_sid(ResourceGroupDomainSid);
-    if(resource_group_domain_sid && ResourceGroupCount && ResourceGroupIds){
+    if(resource_group_domain_sid && ResourceGroupCount && ResourceGroupIds) {
         get_resource_groups(ad_groups, resource_group_domain_sid, ResourceGroupIds, ResourceGroupCount);
     }
 
