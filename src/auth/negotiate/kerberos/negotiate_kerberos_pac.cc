@@ -411,7 +411,8 @@ get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid)
 }
 
 static char *
-get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t ResourceGroupIds, uint32_t ResourceGroupCount) {
+get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t ResourceGroupIds, uint32_t ResourceGroupCount)
+{
     size_t group_domain_sid_len = resource_group_domain_sid[0];
     char *ag;
     size_t length;
