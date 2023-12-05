@@ -75,7 +75,7 @@ operator <<(std::ostream &os, const RawPointerT<Pointer> &pd)
     return os;
 }
 
-/// std::ostream manipulator to print integers as hex numbers prefixed by 0x
+/// std::ostream manipulator to print integers as hex numbers
 /// Normally used through the asHex() convenience function
 template <class Integer>
 class AsHex
@@ -85,7 +85,7 @@ public:
     auto &minDigits(const size_t w) { width = w; return *this; }
     auto &upperCase(bool u = true) { upperCase_ = u; return *this; }
     Integer io_manip; ///< the integer to print
-    size_t width = 0; ///< the minimum number of digits to print after the 0x prefix
+    size_t width = 0; ///< the minimum number of digits to print
     bool upperCase_ = false; ///< output in uppercase?
 };
 
