@@ -97,8 +97,7 @@ operator <<(std::ostream &os, const AsHex<Integer> number)
     const auto savedFill = os.fill('0');
     os << std::hex << (number.upperCase_ ? std::uppercase : std::nouppercase) <<
        std::setw(number.width) <<
-       number.io_manip <<
-       std::setw(0);
+       number.io_manip;
     os.fill(savedFill);
     os.setf(oldFlags);
     return os;
