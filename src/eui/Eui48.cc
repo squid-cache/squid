@@ -12,6 +12,7 @@
 
 #if USE_SQUID_EUI
 
+#include "base/IoManip.h"
 #include "debug/Stream.h"
 #include "eui/Eui48.h"
 #include "globals.h"
@@ -187,13 +188,13 @@ Eui::Eui48::lookup(const Ip::Address &c)
             return false;
         }
 
-        debugs(28, 4, "id=" << (void*)this << " got address "<< std::setfill('0') << std::hex <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff));
+        debugs(28, 4, "id=" << static_cast<void*>(this) << " got address " <<
+               asHex(arpReq.arp_ha.sa_data[0] & 0xff).minDigits(2) << ":" <<
+               asHex(arpReq.arp_ha.sa_data[1] & 0xff).minDigits(2) << ":" <<
+               asHex(arpReq.arp_ha.sa_data[2] & 0xff).minDigits(2) << ":" <<
+               asHex(arpReq.arp_ha.sa_data[3] & 0xff).minDigits(2) << ":" <<
+               asHex(arpReq.arp_ha.sa_data[4] & 0xff).minDigits(2) << ":" <<
+               asHex(arpReq.arp_ha.sa_data[5] & 0xff).minDigits(2));
 
         set(arpReq.arp_ha.sa_data, 6);
         return true;
