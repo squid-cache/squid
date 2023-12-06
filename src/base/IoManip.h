@@ -114,17 +114,18 @@ public:
     explicit AsHex(const Integer n) : io_manip(n) {}
 
     /// Sets the minimum number of digits to print. If the integer has fewer
-    /// digits than the given width, then we print leading zero(s). Otherwise,
-    /// this method has no effect.
-    auto &minDigits(const size_t w) { width = w; return *this; }
+    /// digits than the given width, then we also print leading zero(s).
+    /// Otherwise, this method has no effect.
+    auto &minDigits(const size_t w) { forcePadding = w; return *this; }
 
     /// Print hex digits in upper (or, with a false parameter value, lower) case.
     auto &upperCase(const bool u = true) { forceCase = u; return *this; }
 
     Integer io_manip; ///< the integer to print
 
-    ///< \copydoc minDigits(). The default is to use stream's field width.
-    std::optional<size_t> width;
+    ///< \copydoc minDigits(). The default is to use stream's field width and
+    ///stream's fill character.
+    std::optional<size_t> forcePadding;
 
     ///< \copydoc upperCase(). The default is to use stream's std::uppercase flag.
     std::optional<bool> forceCase;
@@ -140,8 +141,8 @@ operator <<(std::ostream &os, const AsHex<Integer> number)
     if (number.forceCase)
         os << (*number.forceCase ? std::uppercase : std::nouppercase);
 
-    if (number.width) {
-        os.width(*number.width);
+    if (number.forcePadding) {
+        os.width(*number.forcePadding);
         os.fill('0');
     }
 
