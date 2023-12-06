@@ -94,6 +94,30 @@ struct arpreq {
  *       Solaris code by R. Gancarz <radekg@solaris.elektrownia-lagisza.com.pl>
  */
 
+/// I/O manipulator to print EUI48 addresses
+template <typename HardwareAddress>
+class AsEui48 {
+public:
+    /// caller is responsible for the passed address storage lifetime
+    explicit AsEui48(const HardwareAddress * const a): hardwareAddress(a) {}
+    const HardwareAddress * const hardwareAddress;
+};
+
+template <typename HardwareAddress>
+static std::ostream &
+operator <<(std::ostream &os, const AsEui48<HardwareAddress> &manipulator)
+{
+    const auto &ha = *manipulator.hardwareAddress;
+    os <<
+       asHex(ha.sa_data[0] & 0xff).minDigits(2) << ':' <<
+       asHex(ha.sa_data[1] & 0xff).minDigits(2) << ':' <<
+       asHex(ha.sa_data[2] & 0xff).minDigits(2) << ':' <<
+       asHex(ha.sa_data[3] & 0xff).minDigits(2) << ':' <<
+       asHex(ha.sa_data[4] & 0xff).minDigits(2) << ':' <<
+       asHex(ha.sa_data[5] & 0xff).minDigits(2);
+    return os;
+}
+
 bool
 Eui::Eui48::decode(const char *asc)
 {
@@ -188,13 +212,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
             return false;
         }
 
-        debugs(28, 4, "id=" << static_cast<void*>(this) << " got address " <<
-               asHex(arpReq.arp_ha.sa_data[0] & 0xff).minDigits(2) << ":" <<
-               asHex(arpReq.arp_ha.sa_data[1] & 0xff).minDigits(2) << ":" <<
-               asHex(arpReq.arp_ha.sa_data[2] & 0xff).minDigits(2) << ":" <<
-               asHex(arpReq.arp_ha.sa_data[3] & 0xff).minDigits(2) << ":" <<
-               asHex(arpReq.arp_ha.sa_data[4] & 0xff).minDigits(2) << ":" <<
-               asHex(arpReq.arp_ha.sa_data[5] & 0xff).minDigits(2));
+        debugs(28, 4, "id=" << static_cast<void*>(this) << " got address " << AsEui48(&arpReq.arp_ha));
 
         set(arpReq.arp_ha.sa_data, 6);
         return true;
@@ -266,14 +284,8 @@ Eui::Eui48::lookup(const Ip::Address &c)
             continue;
         }
 
-        debugs(28, 4, "id=" << (void*)this << " got address "<< std::setfill('0') << std::hex <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff)  << " on "<<
-               std::setfill(' ') << ifr->ifr_name);
+        debugs(28, 4, "id=" << static_cast<void*>(this) << " got address " << AsEui48(&arpReq.arp_ha) <<
+               " on " << ifr->ifr_name);
 
         set(arpReq.arp_ha.sa_data, 6);
 
@@ -324,13 +336,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
             return false;
         }
 
-        debugs(28, 4, "Got address "<< std::setfill('0') << std::hex <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff));
+        debugs(28, 4, "Got address " << AsEui48(&arpReq.arp_ha));
 
         set(arpReq.arp_ha.sa_data, 6);
         return true;
@@ -430,13 +436,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
         return false;
     }
 
-    debugs(28, 4, "Got address "<< std::setfill('0') << std::hex <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff));
+    debugs(28, 4, "Got address " << AsEui48(&arpReq.arp_ha));
 
     set(arpReq.arp_ha.sa_data, 6);
     return true;
@@ -495,13 +495,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
         return false;
     }
 
-    debugs(28, 4, "Got address "<< std::setfill('0') << std::hex <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff));
+    debugs(28, 4, "Got address " << AsEui48(&arpReq.arp_ha));
 
     set(arpReq.arp_ha.sa_data, 6);
     return true;
