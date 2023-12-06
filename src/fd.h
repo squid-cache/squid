@@ -11,7 +11,7 @@
 #ifndef SQUID_FD_H_
 #define SQUID_FD_H_
 
-/// what kind of operation to count traffic for in fd_bytes()
+/// distinguishes reading/importing I/O operations from their writing/exporting counterparts
 enum class IoDirection {
     Read,
     Write
