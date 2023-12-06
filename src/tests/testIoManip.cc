@@ -96,6 +96,26 @@ TestIoManip::testAsHex()
     ss << std::oct << 9 << asHex(0xA) << 11;
     CPPUNIT_ASSERT_EQUAL(std::string("11a13"), ss.str());
     resetStream(ss);
+
+    // original std::setw() is honored
+    ss << std::setw(4) << asHex(0x1);
+    CPPUNIT_ASSERT_EQUAL(std::string("   1"), ss.str());
+    resetStream(ss);
+
+    // original std::setw() is consumed (by the printed number)
+    ss << std::setw(4) << asHex(0x1) << 2;
+    CPPUNIT_ASSERT_EQUAL(std::string("   12"), ss.str());
+    resetStream(ss);
+
+    // original std::setfill() is honored
+    ss << std::setfill('.') << std::setw(4) << asHex(0x2);
+    CPPUNIT_ASSERT_EQUAL(std::string("...2"), ss.str());
+    resetStream(ss);
+
+    // original std::setfill() is preserved
+    ss << std::setfill('.') << asHex(0x3).minDigits(2) << std::setw(4) << 4;
+    CPPUNIT_ASSERT_EQUAL(std::string("03...4"), ss.str());
+    resetStream(ss);
 }
 
 int
