@@ -29,6 +29,21 @@ void
 TestIoManip::testAsHex()
 {
     std::ostringstream ss;
+
+    // assumption used by cases below: the stream defaults to lowercase
+    ss << std::hex << 0xABC;
+    CPPUNIT_ASSERT_EQUAL(std::string("abc"), ss.str());
+    ss.str("");
+
+    // XXX: Bad assumption:
+    // assumption used by cases below: str("") resets formatting
+    ss << std::uppercase << std::hex << 0xABC;
+    CPPUNIT_ASSERT_EQUAL(std::string("ABC"), ss.str());
+    ss.str("");
+    ss << 0xABC;
+    CPPUNIT_ASSERT_EQUAL(std::string("2748"), ss.str()); // XXX: Gets "ABC" instead
+    ss.str("");
+
     // standard output
     ss << asHex(0xa0);
     CPPUNIT_ASSERT_EQUAL(std::string("a0"), ss.str());
@@ -54,24 +69,29 @@ TestIoManip::testAsHex()
     CPPUNIT_ASSERT_EQUAL(std::string("12345"), ss.str());
     ss.str("");
 
-    // uppercase flag
+    // honor uppercase flag
     ss << asHex(0xa0).upperCase();
     CPPUNIT_ASSERT_EQUAL(std::string("A0"), ss.str());
     ss.str("");
 
-    // uppercase flag, check it is reset
+    // honored uppercase is cleared afterwords
     ss << asHex(0xa0).upperCase() << asHex(0xa0);
     CPPUNIT_ASSERT_EQUAL(std::string("A0a0"), ss.str());
     ss.str("");
 
-    // check that flags are preserved
-    ss << std::uppercase << std::hex << 0xa << asHex(0xa0) << asHex(0xa0).upperCase() << 0xb;
-    CPPUNIT_ASSERT_EQUAL(std::string("Aa0A0B"), ss.str());
+    // original std::uppercase is honored
+    ss << std::uppercase << std::hex << 0xA << asHex(0xB) << 0xC;
+    CPPUNIT_ASSERT_EQUAL(std::string("ABC"), ss.str());
     ss.str("");
 
-    // check that flags are not cleared by string op
-    ss << std::uppercase << std::hex << 0xa << asHex(0xa0) << asHex(0xa0).upperCase() << " " << 0xb;
-    CPPUNIT_ASSERT_EQUAL(std::string("Aa0A0B"), ss.str());
+    // original std::uppercase is preserved
+    ss << std::uppercase << std::hex << 0xA << asHex(0xB).upperCase(false) << 0xC;
+    CPPUNIT_ASSERT_EQUAL(std::string("AbC"), ss.str());
+    ss.str("");
+
+    // original std::oct is preserved
+    ss << std::oct << 9 << asHex(0xA) << 11;
+    CPPUNIT_ASSERT_EQUAL(std::string("11a13"), ss.str());
     ss.str("");
 }
 
