@@ -639,9 +639,8 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STIOCB * const cbIo, v
     sio->writeableAnchor_ = slot;
 
     debugs(47,5, "dir " << index << " created new filen " <<
-           asHex(sio->swap_filen).minDigits(8).upperCase()
-           << " starting at "
-           << diskOffset(sio->swap_filen));
+           asHex(sio->swap_filen).minDigits(8).upperCase() <<
+           " starting at " << diskOffset(sio->swap_filen));
 
     sio->file(theFile);
 
@@ -668,9 +667,8 @@ Rock::SwapDir::createUpdateIO(const Ipc::StoreMapUpdate &update, StoreIOState::S
     sio->writeableAnchor_ = update.fresh.anchor;
 
     debugs(47,5, "dir " << index << " updating filen " <<
-           asHex(sio->swap_filen).minDigits(8).upperCase()
-           << " starting at "
-           << diskOffset(sio->swap_filen));
+           asHex(sio->swap_filen).minDigits(8).upperCase() <<
+           " starting at " << diskOffset(sio->swap_filen));
 
     sio->file(theFile);
     return sio;

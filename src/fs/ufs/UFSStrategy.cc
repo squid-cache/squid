@@ -59,8 +59,7 @@ Fs::Ufs::UFSStrategy::open(SwapDir * const SD, StoreEntry * const e,
                            StoreIOState::STIOCB * aCallback, void *callback_data)
 {
     assert (((UFSSwapDir *)SD)->IO == this);
-    debugs(79, 3, "fileno " <<
-           asHex(e->swap_filen).upperCase().minDigits(8));
+    debugs(79, 3, "fileno " << asHex(e->swap_filen).upperCase().minDigits(8));
 
     /* to consider: make createstate a private UFSStrategy call */
     StoreIOState::Pointer sio = createState (SD, e, aCallback, callback_data);

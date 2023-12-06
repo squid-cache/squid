@@ -1424,7 +1424,7 @@ idnsCheckQueue(void *)
         }
 
         debugs(78, 3, "idnsCheckQueue: ID " << q->xact_id <<
-               " QID 0x" << asHex(q->query_id).minDigits(4) << ": timeout" );
+               " QID 0x" << asHex(q->query_id).minDigits(4) << ": timeout");
 
         dlinkDelete(&q->lru, &lru_list);
         q->pending = 0;

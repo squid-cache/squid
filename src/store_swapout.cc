@@ -45,8 +45,7 @@ storeSwapOutStart(StoreEntry * e)
      * metadata there is to store
      */
     debugs(20, 5, "storeSwapOutStart: Begin SwapOut '" << e->url() << "' to dirno " <<
-           e->swap_dirn << ", fileno " <<
-           asHex(e->swap_filen).minDigits(8).upperCase());
+           e->swap_dirn << ", fileno " << asHex(e->swap_filen).minDigits(8).upperCase());
     /* If we start swapping out objects with OutOfBand Metadata,
      * then this code needs changing
      */
@@ -299,8 +298,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
     } else {
         /* swapping complete */
         debugs(20, 3, "storeSwapOutFileClosed: SwapOut complete: '" << e->url() << "' to " <<
-               e->swap_dirn  << ", " <<
-               asHex(e->swap_filen).minDigits(8).upperCase());
+               e->swap_dirn  << ", " << asHex(e->swap_filen).minDigits(8).upperCase());
         debugs(20, 5, "swap_file_sz = " <<
                e->objectLen() << " + " << mem->swap_hdr_sz);
 

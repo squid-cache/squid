@@ -161,8 +161,7 @@ Ssl::Bio::stateChanged(const SSL *ssl, int where, int)
     // else if (where & SSL_CB_HANDSHAKE_DONE)
     //    debugs(83, 9, "SSL connection established");
 
-    debugs(83, 7, "FD " << fd_ << " now: 0x" <<
-           asHex(where) << ' ' <<
+    debugs(83, 7, "FD " << fd_ << " now: 0x" << asHex(where) << ' ' <<
            SSL_state_string(ssl) << " (" << SSL_state_string_long(ssl) << ")");
 }
 
