@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <optional>
 
 /// Safely prints an object pointed to by the given pointer: [label]<object>
 /// Prints nothing at all if the pointer is nil.
@@ -82,11 +83,22 @@ class AsHex
 {
 public:
     explicit AsHex(const Integer n) : io_manip(n) {}
+
+    /// Sets the minimum number of digits to print. If the integer has fewer
+    /// digits than the given width, then we print leading zero(s). Otherwise,
+    /// this method has no effect.
     auto &minDigits(const size_t w) { width = w; return *this; }
-    auto &upperCase(bool u = true) { upperCase_ = u; return *this; }
+
+    /// Print hex digits in upper (or, with a false parameter value, lower) case.
+    auto &upperCase(const bool u = true) { forceCase = u; return *this; }
+
     Integer io_manip; ///< the integer to print
-    size_t width = 0; ///< the minimum number of digits to print
-    bool upperCase_ = false; ///< output in uppercase?
+
+    ///< \copydoc minDigits(). The default is to use stream's field width.
+    std::optional<size_t> width;
+
+    ///< \copydoc upperCase(). The default is to use stream's std::uppercase flag.
+    std::optional<bool> forceCase;
 };
 
 template <class Integer>
@@ -94,11 +106,19 @@ inline std::ostream &
 operator <<(std::ostream &os, const AsHex<Integer> number)
 {
     const auto oldFlags = os.flags();
-    const auto savedFill = os.fill('0');
-    os << std::hex << (number.upperCase_ ? std::uppercase : std::nouppercase) <<
-       std::setw(number.width) <<
-       number.io_manip;
-    os.fill(savedFill);
+    const auto oldFill = os.fill();
+
+    if (number.forceCase)
+        os << (*number.forceCase ? std::uppercase : std::nouppercase);
+
+    if (number.width) {
+        os.width(*number.width);
+        os.fill('0');
+    }
+
+    os << std::hex << number.io_manip;
+
+    os.fill(oldFill);
     os.flags(oldFlags);
     return os;
 }
