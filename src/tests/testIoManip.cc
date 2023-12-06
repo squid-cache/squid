@@ -62,12 +62,22 @@ TestIoManip::testAsHex()
     CPPUNIT_ASSERT_EQUAL(std::string("12345"), ss.str());
     resetStream(ss);
 
-    // honor uppercase flag
+    // upperCase() forces uppercase
     ss << asHex(0xa0).upperCase();
     CPPUNIT_ASSERT_EQUAL(std::string("A0"), ss.str());
     resetStream(ss);
 
-    // honored uppercase is cleared afterwords
+    // upperCase(true) forces uppercase
+    ss << asHex(0xa0).upperCase(true);
+    CPPUNIT_ASSERT_EQUAL(std::string("A0"), ss.str());
+    resetStream(ss);
+
+    // upperCase(false) forces lowercase
+    ss << std::uppercase << asHex(0xABC).upperCase(false);
+    CPPUNIT_ASSERT_EQUAL(std::string("abc"), ss.str());
+    resetStream(ss);
+
+    // upperCase() effects are not leaked into the stream
     ss << asHex(0xa0).upperCase() << asHex(0xa0);
     CPPUNIT_ASSERT_EQUAL(std::string("A0a0"), ss.str());
     resetStream(ss);
