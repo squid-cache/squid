@@ -146,7 +146,11 @@ operator <<(std::ostream &os, const AsHex<Integer> number)
         os.fill('0');
     }
 
-    os << std::hex << number.io_manip;
+    // When Integer is smaller than int, the unary plus converts the stored
+    // value into an equivalent integer because C++ "arithmetic operators do not
+    // accept types smaller than int as arguments, and integral promotions are
+    // automatically applied". For larger integer types, plus is a no-op.
+    os << std::hex << +number.io_manip;
 
     os.fill(oldFill);
     os.flags(oldFlags);

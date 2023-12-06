@@ -60,6 +60,20 @@ TestIoManip::testAsHex()
     // negative values as negative hex integers. AsHex has the same limitation.
     CPPUNIT_ASSERT_EQUAL(std::string("80000000"), toStdString(asHex(std::numeric_limits<int32_t>::min())));
 
+    // integer and integer-like types that std::ostream formats specially by default
+    CPPUNIT_ASSERT_EQUAL(std::string("0"), toStdString(asHex(false)));
+    CPPUNIT_ASSERT_EQUAL(std::string("1"), toStdString(asHex(true)));
+    CPPUNIT_ASSERT_EQUAL(std::string("5a"), toStdString(asHex('Z')));
+    CPPUNIT_ASSERT_EQUAL(std::string("77"), toStdString(asHex(int8_t(0x77))));
+    CPPUNIT_ASSERT_EQUAL(std::string("ff"), toStdString(asHex(uint8_t(0xFF))));
+
+    // other interesting integer-like types we may want to print
+    enum { enumValue = 0xABCD };
+    CPPUNIT_ASSERT_EQUAL(std::string("abcd"), toStdString(asHex(enumValue)));
+    struct { uint8_t bitField:2; } s;
+    s.bitField = 3; // TODO: Convert to default initializer after switching to C++20.
+    CPPUNIT_ASSERT_EQUAL(std::string("3"), toStdString(asHex(s.bitField)));
+
     // padding with zeros works
     CPPUNIT_ASSERT_EQUAL(std::string("1"), toStdString(asHex(1).minDigits(1)));
     CPPUNIT_ASSERT_EQUAL(std::string("01"), toStdString(asHex(1).minDigits(2)));
