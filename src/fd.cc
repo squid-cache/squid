@@ -223,16 +223,16 @@ fd_note(int fd, const char *s)
 }
 
 void
-fd_bytes(int fd, int len, const FdOps type)
+fd_bytes(int fd, int len, const IoDirection type)
 {
     fde *F = &fd_table[fd];
 
     if (len < 0)
         return;
 
-    assert(type == FdOps::Read || type == FdOps::Write);
+    assert(type == IoDirection::Read || type == IoDirection::Write);
 
-    if (type == FdOps::Read)
+    if (type == IoDirection::Read)
         F->bytes_read += len;
     else
         F->bytes_written += len;

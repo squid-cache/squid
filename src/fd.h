@@ -12,7 +12,7 @@
 #define SQUID_FD_H_
 
 /// what kind of operation to count traffic for in fd_bytes()
-enum class FdOps {
+enum class IoDirection {
     Read,
     Write
 };
@@ -20,7 +20,7 @@ enum class FdOps {
 void fd_close(int fd);
 void fd_open(int fd, unsigned int type, const char *);
 void fd_note(int fd, const char *);
-void fd_bytes(int fd, int len, const FdOps);
+void fd_bytes(int fd, int len, const IoDirection);
 void fdDumpOpen(void);
 int fdUsageHigh(void);
 void fdAdjustReserved(void);

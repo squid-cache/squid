@@ -94,7 +94,7 @@ Comm::ReadNow(CommIoCbParams &params, SBuf &buf)
 
     if (retval > 0) { // data read most common case
         buf.rawAppendFinish(inbuf, retval);
-        fd_bytes(params.conn->fd, retval, FdOps::Read);
+        fd_bytes(params.conn->fd, retval, IoDirection::Read);
         params.flag = Comm::OK;
         params.size = retval;
 
@@ -150,7 +150,7 @@ Comm::HandleRead(int fd, void *data)
     /* See if we read anything */
     /* Note - read 0 == socket EOF, which is a valid read */
     if (retval >= 0) {
-        fd_bytes(fd, retval, FdOps::Read);
+        fd_bytes(fd, retval, IoDirection::Read);
         ccb->offset = retval;
         ccb->finish(Comm::OK, 0);
         return;
