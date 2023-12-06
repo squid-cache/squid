@@ -15,6 +15,35 @@
 #include <iomanip>
 #include <optional>
 
+/// \section Custom manipulator tuning methods
+///
+/// Our convenience manipulator/wrapper classes often have methods that tune
+/// their "printing" effects (e.g., AsHex::minDigits()). STL streams also have
+/// manipulators that tune how subsequent operator "<<" parameters are printed
+/// (e.g., std::setw()). The calling code can also print various decorations
+/// (i.e. prefixes and suffixes). The following principles are useful when
+/// deciding what manipulator methods to add and how to implement them:
+///
+/// \li Add a manipulator method if callers would otherwise have to restore
+/// stream format after calling the manipulator. For example, AsHex::toUpper()
+/// frees callers from doing `std::uppercase << asHex(n) << std::nouppercase`.
+///
+/// \li Add a manipulator method if callers would otherwise have to use
+/// conditionals to get the same effect. For example, AsList::prefixedBy() frees
+/// callers from doing `(c.empty() ? "" : "/") << asList(c)`.
+///
+/// \li Add a manipulator method if callers would otherwise have to repeat a
+/// combination of actions to get the right effect. For example,
+/// AsList::minDigits() prevents duplication of the following caller code:
+/// `std::setfill('0') << std::setw(8) << asHex(n)`.
+///
+/// \li Avoid adding a manipulator method that can be _fully_ replaced with a
+/// _single_ caller item. For example, do not add AsX::foo() if callers can do
+/// `bar << asX(y)` or `asX(y) << bar` and get exactly the same effect.
+///
+/// \li Manipulators should honor existing stream formatting to the extent
+/// possible (e.g., AsHex honors std::uppercase by default).
+
 /// Safely prints an object pointed to by the given pointer: [label]<object>
 /// Prints nothing at all if the pointer is nil.
 template <class Pointer>
