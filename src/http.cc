@@ -1704,7 +1704,7 @@ HttpStateData::wroteLast(const CommIoCbParams &io)
     // TODO: Extract common parts.
 
     if (io.size > 0) {
-        fd_bytes(io.fd, io.size, FdOpts::WRITE);
+        fd_bytes(io.fd, io.size, FdOps::WRITE);
         statCounter.server.all.kbytes_out += io.size;
         statCounter.server.http.kbytes_out += io.size;
     }
