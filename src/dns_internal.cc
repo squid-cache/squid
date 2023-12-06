@@ -998,10 +998,10 @@ idnsSendQuery(idns_query * q)
     } while ( (x<0 && y<0) && q->nsends % nsCount != 0);
 
     if (y > 0) {
-        fd_bytes(DnsSocketB, y, FdOpts::WRITE);
+        fd_bytes(DnsSocketB, y, FdOps::WRITE);
     }
     if (x > 0) {
-        fd_bytes(DnsSocketA, x, FdOpts::WRITE);
+        fd_bytes(DnsSocketA, x, FdOps::WRITE);
     }
 
     ++ nameservers[nsn].nqueries;
@@ -1357,7 +1357,7 @@ idnsRead(int fd, void *)
             break;
         }
 
-        fd_bytes(fd, len, FdOpts::READ);
+        fd_bytes(fd, len, FdOps::READ);
 
         assert(N);
         ++(*N);

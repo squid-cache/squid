@@ -369,7 +369,7 @@ Client::sentRequestBody(const CommIoCbParams &io)
     requestSender = nullptr;
 
     if (io.size > 0) {
-        fd_bytes(io.fd, io.size, FdOpts::WRITE);
+        fd_bytes(io.fd, io.size, FdOps::WRITE);
         statCounter.server.all.kbytes_out += io.size;
         // kids should increment their counters
     }
