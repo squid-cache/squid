@@ -11,6 +11,7 @@
 #ifndef SQUID_FD_H_
 #define SQUID_FD_H_
 
+/// what kind of operation to count traffic for in fd_bytes()
 enum class FdOps {
     READ,
     WRITE
