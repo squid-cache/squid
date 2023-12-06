@@ -111,7 +111,7 @@ template <class Integer>
 class AsHex
 {
 public:
-    explicit AsHex(const Integer n) : io_manip(n) {}
+    explicit AsHex(const Integer n): io_manip(n) {}
 
     /// Sets the minimum number of digits to print. If the integer has fewer
     /// digits than the given width, then we also print leading zero(s).
