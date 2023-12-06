@@ -32,50 +32,63 @@ resetStream(std::ostringstream &dirty)
     dirty.swap(clean);
 }
 
+/// returns the result of printing the given manipulator
+template <typename Integer>
+static std::string
+toStdString(const AsHex<Integer> &manipulator)
+{
+    std::ostringstream os;
+    os << manipulator;
+    return os.str();
+}
+
 void
 TestIoManip::testAsHex()
 {
-    std::ostringstream ss;
+    // basic values
+    CPPUNIT_ASSERT_EQUAL(std::string("0"), toStdString(asHex(0)));
+    CPPUNIT_ASSERT_EQUAL(std::string("123abc"), toStdString(asHex(0x123abc)));
 
-    // standard output
-    ss << asHex(0xa0);
-    CPPUNIT_ASSERT_EQUAL(std::string("a0"), ss.str());
-    resetStream(ss);
+    // large values
+    CPPUNIT_ASSERT_EQUAL(std::string("7fffffffffffffff"), toStdString(asHex(std::numeric_limits<int64_t>::max())));
+    CPPUNIT_ASSERT_EQUAL(std::string("ffffffffffffffff"), toStdString(asHex(std::numeric_limits<uint64_t>::max())));
 
-    // zero-padded
-    ss << asHex(0xa0).minDigits(4);
-    CPPUNIT_ASSERT_EQUAL(std::string("00a0"), ss.str());
-    resetStream(ss);
+    // negative values
+    // C++ defines printing with std::hex in terms of calling std::printf() with
+    // %x (or %X) conversion specifier; printf(%x) interprets its value argument
+    // as an unsigned integer, making it impossible for std::hex to print
+    // negative values as negative hex integers. AsHex has the same limitation.
+    CPPUNIT_ASSERT_EQUAL(std::string("80000000"), toStdString(asHex(std::numeric_limits<int32_t>::min())));
 
-    // leading zeros
-    ss << asHex(0x00004);
-    CPPUNIT_ASSERT_EQUAL(std::string("4"), ss.str());
-    resetStream(ss);
+    // padding with zeros works
+    CPPUNIT_ASSERT_EQUAL(std::string("1"), toStdString(asHex(1).minDigits(1)));
+    CPPUNIT_ASSERT_EQUAL(std::string("01"), toStdString(asHex(1).minDigits(2)));
+    CPPUNIT_ASSERT_EQUAL(std::string("001"), toStdString(asHex(1).minDigits(3)));
 
-    // leading zeros
-    ss << asHex(0x00004).minDigits(0);
-    CPPUNIT_ASSERT_EQUAL(std::string("4"), ss.str());
-    resetStream(ss);
+    // padding with zeros works even for zero values
+    CPPUNIT_ASSERT_EQUAL(std::string("0000"), toStdString(asHex(0).minDigits(4)));
 
-    // exceed minDigits
-    ss << asHex(0x12345).minDigits(2);
-    CPPUNIT_ASSERT_EQUAL(std::string("12345"), ss.str());
-    resetStream(ss);
+    // minDigits() does not truncate
+    CPPUNIT_ASSERT_EQUAL(std::string("1"), toStdString(asHex(0x1).minDigits(0)));
+    CPPUNIT_ASSERT_EQUAL(std::string("12"), toStdString(asHex(0x12).minDigits(1)));
+    CPPUNIT_ASSERT_EQUAL(std::string("123"), toStdString(asHex(0x123).minDigits(2)));
 
     // upperCase() forces uppercase
-    ss << asHex(0xa0).upperCase();
-    CPPUNIT_ASSERT_EQUAL(std::string("A0"), ss.str());
-    resetStream(ss);
+    CPPUNIT_ASSERT_EQUAL(std::string("A"), toStdString(asHex(0xA).upperCase()));
+    CPPUNIT_ASSERT_EQUAL(std::string("1A2B"), toStdString(asHex(0x1a2b).upperCase(true)));
 
-    // upperCase(true) forces uppercase
-    ss << asHex(0xa0).upperCase(true);
-    CPPUNIT_ASSERT_EQUAL(std::string("A0"), ss.str());
-    resetStream(ss);
+    std::ostringstream ss;
 
     // upperCase(false) forces lowercase
     ss << std::uppercase << asHex(0xABC).upperCase(false);
     CPPUNIT_ASSERT_EQUAL(std::string("abc"), ss.str());
     resetStream(ss);
+
+    // a combination of formatting options
+    CPPUNIT_ASSERT_EQUAL(std::string("01A"), toStdString(asHex(0x1A).upperCase().minDigits(3)));
+
+    // Test the effects of stream formatting flags on AsHex printing and the
+    // effects of AsHex printing on stream formatting flags.
 
     // upperCase() effects are not leaked into the stream
     ss << asHex(0xa0).upperCase() << asHex(0xa0);
