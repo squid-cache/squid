@@ -286,8 +286,6 @@ struct timezone {
 
 #undef FD_CLOSE
 #undef FD_OPEN
-#undef FD_READ
-#undef FD_WRITE
 
 #ifndef EISCONN
 #define EISCONN WSAEISCONN
