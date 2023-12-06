@@ -230,9 +230,9 @@ fd_bytes(int fd, int len, const FdOps type)
     if (len < 0)
         return;
 
-    assert(type == FdOps::READ || type == FdOps::WRITE);
+    assert(type == FdOps::Read || type == FdOps::Write);
 
-    if (type == FdOps::READ)
+    if (type == FdOps::Read)
         F->bytes_read += len;
     else
         F->bytes_written += len;

@@ -217,7 +217,7 @@ diskHandleWrite(int fd, void *)
 
     ++ statCounter.syscalls.disk.writes;
 
-    fd_bytes(fd, len, FdOps::WRITE);
+    fd_bytes(fd, len, FdOps::Write);
 
     if (len < 0) {
         if (!ignoreErrno(xerrno)) {
@@ -422,7 +422,7 @@ diskHandleRead(int fd, void *data)
 
     ++ statCounter.syscalls.disk.reads;
 
-    fd_bytes(fd, len, FdOps::READ);
+    fd_bytes(fd, len, FdOps::Read);
 
     if (len < 0) {
         if (ignoreErrno(xerrno)) {

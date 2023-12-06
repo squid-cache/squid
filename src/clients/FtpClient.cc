@@ -379,7 +379,7 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
     assert(ctrl.offset < ctrl.size);
 
     if (io.flag == Comm::OK && io.size > 0) {
-        fd_bytes(io.fd, io.size, FdOps::READ);
+        fd_bytes(io.fd, io.size, FdOps::Read);
     }
 
     if (io.flag != Comm::OK) {
@@ -858,7 +858,7 @@ Ftp::Client::writeCommandCallback(const CommIoCbParams &io)
     debugs(9, 5, "wrote " << io.size << " bytes");
 
     if (io.size > 0) {
-        fd_bytes(io.fd, io.size, FdOps::WRITE);
+        fd_bytes(io.fd, io.size, FdOps::Write);
         statCounter.server.all.kbytes_out += io.size;
         statCounter.server.ftp.kbytes_out += io.size;
     }

@@ -13,8 +13,8 @@
 
 /// what kind of operation to count traffic for in fd_bytes()
 enum class FdOps {
-    READ,
-    WRITE
+    Read,
+    Write
 };
 
 void fd_close(int fd);
