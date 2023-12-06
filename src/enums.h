@@ -19,9 +19,9 @@ enum fd_type {
     FD_UNKNOWN
 };
 
-enum {
-    FD_READ,
-    FD_WRITE
+enum class FdOpts {
+    READ,
+    WRITE
 };
 
 typedef enum {
