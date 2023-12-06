@@ -19,11 +19,6 @@ enum fd_type {
     FD_UNKNOWN
 };
 
-enum class FdOpts {
-    READ,
-    WRITE
-};
-
 typedef enum {
     PEER_NONE,
     PEER_SIBLING,
