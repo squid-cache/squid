@@ -18,6 +18,7 @@
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
+#include "base/IoManip.h"
 #include "client_db.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -614,7 +615,7 @@ icpPktDump(icp_common_t * pkt)
     debugs(12, 9, "version: "<< std::left << std::setw(8) << pkt->version);
     debugs(12, 9, "length:  "<< std::left << std::setw(8) << ntohs(pkt->length));
     debugs(12, 9, "reqnum:  "<< std::left << std::setw(8) << ntohl(pkt->reqnum));
-    debugs(12, 9, "flags:   "<< std::left << std::hex << std::setw(8) << ntohl(pkt->flags));
+    debugs(12, 9, "flags:   "<< std::left << std::setw(8) << asHex(ntohl(pkt->flags)));
     a = (struct in_addr)pkt->shostid;
     debugs(12, 9, "shostid: " << a );
     debugs(12, 9, "payload: " << (char *) pkt + sizeof(icp_common_t));
