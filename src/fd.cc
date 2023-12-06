@@ -223,7 +223,7 @@ fd_note(int fd, const char *s)
 }
 
 void
-fd_bytes(int fd, int len, const IoDirection type)
+fd_bytes(int fd, int len, IoDirection type)
 {
     fde *F = &fd_table[fd];
 
