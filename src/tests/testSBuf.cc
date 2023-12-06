@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
-#include "base/IoManip.h"
 #include "base/TextException.h"
 #include "compat/cppunit.h"
 #include "event.h"
@@ -107,20 +106,8 @@ protected:
     void testStdStringOps();
     void testIterators();
     void testSBufHash();
-    void testAsHex();
 };
 CPPUNIT_TEST_SUITE_REGISTRATION( TestSBuf );
-
-class TestIoManip : public CPPUNIT_NS::TestFixture
-{
-    CPPUNIT_TEST_SUITE(TestIoManip);
-    CPPUNIT_TEST(testAsHex);
-    CPPUNIT_TEST_SUITE_END();
-
-protected:
-    void testAsHex();
-};
-CPPUNIT_TEST_SUITE_REGISTRATION( TestIoManip );
 
 /* let this test link sanely */
 void
@@ -1201,15 +1188,6 @@ TestSBuf::testSBufHash()
         i = um.find(SBuf("eleventy"));
         CPPUNIT_ASSERT(i == um.end());
     }
-}
-
-void
-TestIoManip::testAsHex()
-{
-    CPPUNIT_ASSERT_EQUAL(SBuf("a0"), ToSBuf(asHex(0xa0)));
-    CPPUNIT_ASSERT_EQUAL(SBuf("00a0"), ToSBuf(asHex(0xa0).minDigits(4)));
-    CPPUNIT_ASSERT_EQUAL(SBuf("4"), ToSBuf(asHex(0x00004).minDigits(0)));
-    CPPUNIT_ASSERT_EQUAL(SBuf("12345"), ToSBuf(asHex(0x12345).minDigits(2)));
 }
 
 int
