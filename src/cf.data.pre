@@ -588,14 +588,31 @@ DOC_START
 	different helper, but not unconfigure the helper completely.
 
 	Please note that while this directive defines how Squid processes
-	authentication it does not automatically activate authentication.
-	To use authentication you must in addition make use of ACLs based
-	on login name in http_access (proxy_auth, proxy_auth_regex or
-	external with %LOGIN used in the format tag). The browser will be
-	challenged for authentication on the first such acl encountered
-	in http_access processing and will also be re-challenged for new
-	login credentials if the request is being denied by a proxy_auth
-	type acl.
+	authentication it does not automatically activate authentication. For a
+	given transaction, (re)authentication is requested in two primary cases
+	detailed below: initial authentication and re-authentication.
+
+	A client without credentials is requested to authenticate if one of the
+	following ACLs is evaluated by an http_access or adapted_http_access rule:
+
+		* proxy_auth ACL
+		* proxy_auth_regex ACL
+		* max_user_ip ACL
+		* external ACL with %ul logformat %code used in FORMAT parameters
+		* external ACL with %LOGIN macro used in FORMAT parameters;
+		  this legacy macro currently behaves the same as %ul logformat %code
+
+	A client with credentials is requested to re-authenticate if http_access
+	or adapted_http_access denies its request _and_ the last evaluated ACL was
+	either proxy_auth, proxy_auth_regex, ident, ident_regex, or an external
+	ACL with %ul or %LOGIN parameter (regardless of whether that last
+	evaluated ACL matched the denied request). Note that a max_user_ip ACL
+	does not have this effect: Requests denied after evaluating max_user_ip
+	trigger an HTTP 403 (Forbidden) response rather than re-authentication.
+
+	In both initial authentication and re-authentication cases, client access
+	is denied, typically with an HTTP 407 (Proxy Authentication Required) or
+	an HTTP 401 (Unauthorized) response.
 
 	WARNING: authentication can't be used in a transparently intercepting
 	proxy as the client then thinks it is talking to an origin server and
