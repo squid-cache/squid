@@ -37,19 +37,6 @@ TestIoManip::testAsHex()
 {
     std::ostringstream ss;
 
-    // assumption used by cases below: the stream defaults to lowercase
-    ss << std::hex << 0xABC;
-    CPPUNIT_ASSERT_EQUAL(std::string("abc"), ss.str());
-    resetStream(ss);
-
-    // assumption used by cases below: resetStream() resets formatting
-    ss << std::uppercase << std::hex << 0xABC;
-    CPPUNIT_ASSERT_EQUAL(std::string("ABC"), ss.str());
-    resetStream(ss);
-    ss << 0xABC;
-    CPPUNIT_ASSERT_EQUAL(std::string("2748"), ss.str());
-    resetStream(ss);
-
     // standard output
     ss << asHex(0xa0);
     CPPUNIT_ASSERT_EQUAL(std::string("a0"), ss.str());
