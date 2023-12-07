@@ -111,7 +111,7 @@ Note::printAsNoteDirective(StoreEntry * const entry, const char * const directiv
     for (const auto &v: values) {
         os << directiveName << ' ' << key() << ' ' << ConfigParser::QuoteString(SBufToString(v->value()));
         dump_acl_list(entry, v->aclList);
-        storeAppendPrintf(entry, "\n");
+        os << '\n';
     }
 }
 
