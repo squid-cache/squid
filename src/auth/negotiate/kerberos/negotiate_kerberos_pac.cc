@@ -370,36 +370,59 @@ get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid)
         uint8_t rev;
         uint64_t idauth;
         char dli[256];
-        char *ag;
+        char *sid;
         int l;
 
         align(4);
 
+        // ResourceGroupDomainSid structure:
+        //  4 bytes nauth
+        //  1 byte revision  = 1
+        //  1 byte nsub (it is equal to the number of dashes minus two)
+        //  6 bytes idauth   (for NT Authority it is 5)
+        //  4 bytes sauth1
+        //  ... nauth timss
+        //  4 bytes sauthN
+
         uint32_t nauth = get4byt();
 
+        // check if nauth math will produce invalid length values on 32-bit
+        static uint32_t maxGidCount = (UINT32_MAX-4-1-1-6)/4;
+        if (nauth > maxGidCount) {
+            debug((char *) "%s| %s: ERROR: Too many subAuths in the ResourceGroupDomainSID: nauth = %d > %d\n",
+                  LogTime(), PROGRAM, nauth, maxGidCount);
+            return nullptr;
+        }
+
+        // length = revision[1byte]+nsub[1byte]+idauth[6bytes]+nauth*sauth[4bytes]
         size_t length = 1+1+6+nauth*4;
 
-        ag=(char *)xcalloc((length+1)*sizeof(char),1);
-        // the first byte is a length of the SID
-        ag[0] = (char) length;
-        memcpy((void *)&ag[1],(const void*)&p[bpos],1);
-        memcpy((void *)&ag[2],(const void*)&p[bpos+1],1);
-        ag[2] = ag[2]+1;
-        memcpy((void *)&ag[3],(const void*)&p[bpos+2],6+nauth*4);
+        sid=(char *)xcalloc((length+sizeof(uint32_t))*sizeof(char), 1); // +sizeof(uint32_t) for storing length of a SID
+        // 4 bytes SID length
+        // 1 byte revision
+        // 1 byte nsub
+        // 6 bytes+nauth*4bytes idauth+sauths
+        ((uint32_t*)sid)[0] = length;
+        memcpy((void *)&sid[4], (const void*)&p[bpos], 1);
+        memcpy((void *)&sid[5], (const void*)&p[bpos+1], 1);
+        sid[5] = sid[5]+1;  // ++ as it will be used in a rid concatenation
+        memcpy((void *)&sid[6], (const void*)&p[bpos+2], 6+nauth*4);
 
         /* mainly for debug only */
         rev = get1byt();
-        bpos = bpos + 1; /*nsub*/
+        bpos = bpos + 1; /* nsub */
         idauth = get6byt_be();
 
-        snprintf(dli,sizeof(dli),"S-%d-%lu",rev,(long unsigned int)idauth);
+        int rv = snprintf(dli, sizeof(dli), "S-%d-%lu", rev, (long unsigned int)idauth);
+        assert(rv>0);
         for ( l=0; l<(int)nauth; l++ ) {
             uint32_t sauth;
             sauth = get4byt();
-            snprintf((char *)&dli[strlen(dli)],sizeof(dli)-strlen(dli),"-%u",sauth);
+            rv = snprintf((char *)&dli[strlen(dli)], sizeof(dli)-strlen(dli), "-%u",sauth);
+            assert(rv>0);
         }
         debug((char *) "%s| %s: INFO: Got ResourceGroupDomainSid %s\n", LogTime(), PROGRAM, dli);
-        return ag;
+        return sid;
     }
 
     return nullptr;
@@ -408,11 +431,22 @@ get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid)
 static char *
 get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t ResourceGroupIds, uint32_t ResourceGroupCount)
 {
-    size_t group_domain_sid_len = resource_group_domain_sid[0];
-    char *ag;
+    size_t group_domain_sid_len = *((uint32_t*)resource_group_domain_sid); // length is passed in the first 4 bytes
+    char *st;
     size_t length;
+    int first_group = 1;
 
-    resource_group_domain_sid++; //now it points to the actual data
+    if (!ad_groups) {
+        debug((char *) "%s| %s: ERR: No space to store resource groups\n",
+              LogTime(), PROGRAM);
+        return nullptr;
+    }
+
+    if (strlen(ad_groups)) {
+        first_group = 0;
+    }
+
+    resource_group_domain_sid += sizeof(uint32_t); // now it points to the actual data
 
     if (ResourceGroupIds!= 0) {
         uint32_t ngroup;
@@ -420,42 +454,54 @@ get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t R
 
         align(4);
         ngroup = get4byt();
-        if ( ngroup != ResourceGroupCount) {
-            debug((char *) "%s| %s: ERROR: Group encoding error => ResourceGroupCount: %d Array size: %d\n",
+        if (ngroup != ResourceGroupCount) {
+            debug((char *) "%s| %s: ERROR: Group encoding error => ResourceGroupCount: %d != Array size: %d\n",
                   LogTime(), PROGRAM, ResourceGroupCount, ngroup);
             return nullptr;
         }
         debug((char *) "%s| %s: INFO: Found %d Resource Group rids\n", LogTime(), PROGRAM, ResourceGroupCount);
 
-        //make a group template which begins with the ResourceGroupDomainID
-        length = group_domain_sid_len+4;  //+4 for a rid
-        ag=(char *)xcalloc(length*sizeof(char),1);
-        memcpy((void *)ag,(const void*)resource_group_domain_sid, group_domain_sid_len);
+        // make a group template which begins with the ResourceGroupDomainID
+        length = group_domain_sid_len+4;  // +4 for a rid concatenation
+        st = (char *)xcalloc(length*sizeof(char), 1);
 
-        for ( l=0; l<(int)ResourceGroupCount; l++) {
+        memcpy((void *)st, (const void*)resource_group_domain_sid, group_domain_sid_len); // template
+
+        for (l=0; l<(int)ResourceGroupCount; l++) {
             uint32_t sauth;
-            memcpy((void *)&ag[group_domain_sid_len],(const void*)&p[bpos],4);
+            memcpy((void *)&st[group_domain_sid_len], (const void*)&p[bpos], 4);  // rid concatenation
 
-            if (!pstrcat(ad_groups," group=")) {
-                debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
-                      LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
-		        xfree(ag);
-		        return nullptr;
+            if (first_group) {
+                if (!pstrcpy(ad_groups, "group=")) {
+                   debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
+                         LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
+                   xfree(st);
+                   return nullptr;
+                }
+                first_group = 0;
+
+            } else {
+                if (!pstrcat(ad_groups, " group=")) {
+                    debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
+                          LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
+                    xfree(st);
+                    return nullptr;
+                }
             }
 
             struct base64_encode_ctx ctx;
             base64_encode_init(&ctx);
             const uint32_t expectedSz = base64_encode_len(length) +1 /* terminator */;
             char *b64buf = static_cast<char *>(xcalloc(expectedSz, 1));
-            size_t blen = base64_encode_update(&ctx, b64buf, length, reinterpret_cast<uint8_t*>(ag));
+            size_t blen = base64_encode_update(&ctx, b64buf, length, reinterpret_cast<uint8_t*>(st));
             blen += base64_encode_final(&ctx, b64buf+blen);
             b64buf[expectedSz-1] = '\0';
             if (!pstrcat(ad_groups, reinterpret_cast<char*>(b64buf))) {
                 debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
                       LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
-		        xfree(ag);
-		        xfree(b64buf);
-		        return nullptr;
+                xfree(st);
+                xfree(b64buf);
+                return nullptr;
             }
             xfree(b64buf);
 
@@ -465,8 +511,8 @@ get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t R
             bpos = bpos+4;
         }
 
-        xfree(ag);
-	    return ad_groups;
+        xfree(st);
+        return ad_groups;
     }
 
     return nullptr;
