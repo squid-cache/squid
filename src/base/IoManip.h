@@ -105,13 +105,13 @@ operator <<(std::ostream &os, const RawPointerT<Pointer> &pd)
     return os;
 }
 
-/// std::ostream manipulator to print integers as hex numbers
-/// Normally used through the asHex() convenience function
+/// std::ostream manipulator to print integers and alike as hex numbers.
+/// Normally used through the asHex() convenience function.
 template <class Integer>
 class AsHex
 {
 public:
-    // Without this assertion, asHex(pointer) and AsHex(3.14) compile, but the
+    // Without this assertion, asHex(pointer) and AsHex(3.14) compile, but their
     // caller is likely confused about the actual argument type and expects
     // different output. Enum values are not integral types but arguably do not
     // cause similar problems.
