@@ -223,19 +223,21 @@ fd_note(int fd, const char *s)
 }
 
 void
-fd_bytes(int fd, int len, IoDirection type)
+fd_bytes(const int fd, const int len, const IoDirection direction)
 {
     fde *F = &fd_table[fd];
 
     if (len < 0)
         return;
 
-    assert(type == IoDirection::Read || type == IoDirection::Write);
-
-    if (type == IoDirection::Read)
+    switch (direction) {
+    case IoDirection::Read:
         F->bytes_read += len;
-    else
+        break;
+    case IoDirection::Write:
         F->bytes_written += len;
+        break;
+    }
 }
 
 void
