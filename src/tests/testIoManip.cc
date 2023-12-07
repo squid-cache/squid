@@ -112,6 +112,11 @@ TestIoManip::testAsHex()
     CPPUNIT_ASSERT_EQUAL(std::string("A0a0"), ss.str());
     resetStream(ss);
 
+    // original std::showbase is honored
+    ss << std::showbase << asHex(1);
+    CPPUNIT_ASSERT_EQUAL(std::string("0x1"), ss.str());
+    resetStream(ss);
+
     // original std::uppercase is honored
     ss << std::uppercase << std::hex << 0xA << asHex(0xB) << 0xC;
     CPPUNIT_ASSERT_EQUAL(std::string("ABC"), ss.str());
