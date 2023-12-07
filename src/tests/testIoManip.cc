@@ -11,10 +11,11 @@
 #include "compat/cppunit.h"
 #include "unitTestMain.h"
 
+#include <cstdint>
 #include <limits>
 #include <sstream>
 
-class TestIoManip : public CPPUNIT_NS::TestFixture
+class TestIoManip: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestIoManip);
     CPPUNIT_TEST(testAsHex);
@@ -23,6 +24,7 @@ class TestIoManip : public CPPUNIT_NS::TestFixture
 protected:
     void testAsHex();
 };
+
 CPPUNIT_TEST_SUITE_REGISTRATION( TestIoManip );
 
 /// resets the given stream, including any formatting
