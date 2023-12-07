@@ -349,7 +349,7 @@ Comm::DoSelect(int msec)
             DEBUG_DEVPOLL ? 0 : 8,
             "got FD " << fd
             << ",events=" << asHex(do_poll.dp_fds[i].revents)
-            << ",monitoring=" << devpoll_state[fd].state
+            << ",monitoring=" << asHex(devpoll_state[fd].state)
             << ",F->read_handler=" << F->read_handler
             << ",F->write_handler=" << F->write_handler
         );
