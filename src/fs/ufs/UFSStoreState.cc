@@ -116,7 +116,7 @@ Fs::Ufs::UFSStoreState::close(int)
 {
     // TODO: De-duplicate position printing Fs::Ufs code and fix upperCase() inconsistency.
     debugs(79, 3, "dirno " << swap_dirn <<
-           ", fileno " << asHex(swap_filen).minDigits(8).upperCase());
+           ", fileno " << asHex(swap_filen).upperCase().minDigits(8));
     tryClosing(); // UFS does not distinguish different closure types
 }
 
@@ -272,7 +272,7 @@ void
 Fs::Ufs::UFSStoreState::writeCompleted(int, size_t len, RefCount<WriteRequest>)
 {
     debugs(79, 3, "dirno " << swap_dirn <<
-           ", fileno " << asHex(swap_filen).minDigits(8).upperCase() <<
+           ", fileno " << asHex(swap_filen).upperCase().minDigits(8) <<
            ", len " << len);
     /*
      * DPW 2006-05-24

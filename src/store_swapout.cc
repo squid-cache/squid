@@ -45,7 +45,7 @@ storeSwapOutStart(StoreEntry * e)
      * metadata there is to store
      */
     debugs(20, 5, "storeSwapOutStart: Begin SwapOut '" << e->url() << "' to dirno " <<
-           e->swap_dirn << ", fileno " << asHex(e->swap_filen).minDigits(8).upperCase());
+           e->swap_dirn << ", fileno " << asHex(e->swap_filen).upperCase().minDigits(8));
     /* If we start swapping out objects with OutOfBand Metadata,
      * then this code needs changing
      */
@@ -279,7 +279,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
     // if object_size is still unknown, the entry was probably aborted
     if (errflag || e->objectLen() < 0) {
         debugs(20, 2, "storeSwapOutFileClosed: dirno " << e->swap_dirn << ", swapfile " <<
-               asHex(e->swap_filen).minDigits(8).upperCase() <<
+               asHex(e->swap_filen).upperCase().minDigits(8) <<
                ", errflag=" << errflag);
 
         if (errflag == DISK_NO_SPACE_LEFT) {
@@ -298,7 +298,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
     } else {
         /* swapping complete */
         debugs(20, 3, "storeSwapOutFileClosed: SwapOut complete: '" << e->url() << "' to " <<
-               e->swap_dirn  << ", " << asHex(e->swap_filen).minDigits(8).upperCase());
+               e->swap_dirn  << ", " << asHex(e->swap_filen).upperCase().minDigits(8));
         debugs(20, 5, "swap_file_sz = " <<
                e->objectLen() << " + " << mem->swap_hdr_sz);
 

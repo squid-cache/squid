@@ -1928,7 +1928,7 @@ StoreEntry::attachToDisk(const sdirno dirn, const sfileno fno, const swap_status
 {
     debugs(88, 3, "attaching entry with key " << getMD5Text() << " : " <<
            swapStatusStr[status] << " " << dirn << " " <<
-           asHex(fno).minDigits(8).upperCase());
+           asHex(fno).upperCase().minDigits(8));
     checkDisk();
     swap_dirn = dirn;
     swap_filen = fno;
