@@ -11,6 +11,7 @@
 #include "compat/cppunit.h"
 #include "unitTestMain.h"
 
+#include <limits>
 #include <sstream>
 
 class TestIoManip : public CPPUNIT_NS::TestFixture
