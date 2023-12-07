@@ -111,6 +111,12 @@ template <class Integer>
 class AsHex
 {
 public:
+    // Without this assertion, asHex(pointer) and AsHex(3.14) compile, but the
+    // caller is likely confused about the actual argument type and expects
+    // different output. Enum values are not integral types but arguably do not
+    // cause similar problems.
+    static_assert(std::is_integral<Integer>::value || std::is_enum<Integer>::value);
+
     explicit AsHex(const Integer n): io_manip(n) {}
 
     /// Sets the minimum number of digits to print. If the integer has fewer
