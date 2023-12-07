@@ -252,9 +252,9 @@ public:
     /// \returns true if the key/value pair is already stored
     bool hasPair(const SBuf &key, const SBuf &value) const;
 
-    /// Convert NotePairs list to a string consist of "Key: Value"
-    /// entries separated by sep string.
-    SBuf toString(const char *sep = "\r\n") const;
+    /// Reports all entries (if any), printing exactly four items for each:
+    /// entry name, nameValueSeparator, entry value, and entry terminator.
+    void print(std::ostream &os, const char *nameValueSeparator, const char *entryTerminator) const;
 
     /// \returns true if there are not entries in the list
     bool empty() const {return entries.empty();}

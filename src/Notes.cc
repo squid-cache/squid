@@ -284,13 +284,11 @@ NotePairs::find(SBuf &resultNote, const char *noteKey, const char *sep) const
     return resultNote.length();
 }
 
-SBuf
-NotePairs::toString(const char *sep) const
+void
+NotePairs::print(std::ostream &os, const char * const nameValueSeparator, const char * const entryTerminator) const
 {
-    SBufStream result;
     for (const auto &e: entries)
-        result << e->name() << ": " << e->value() << sep;
-    return result.buf();
+        os << e->name() << nameValueSeparator << e->value() << entryTerminator;
 }
 
 const char *
