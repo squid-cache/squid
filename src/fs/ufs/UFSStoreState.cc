@@ -42,7 +42,7 @@ Fs::Ufs::UFSStoreState::ioCompletedNotification()
         creating = false;
         debugs(79, 3, "creating: dirno " << swap_dirn <<
                ", fileno " << asHex(swap_filen).minDigits(8) <<
-               " status "<< theFile->error());
+               " status " << theFile->error());
 
         openDone();
 
@@ -52,7 +52,7 @@ Fs::Ufs::UFSStoreState::ioCompletedNotification()
     assert (!(closing ||opening));
     debugs(79, 3, "error: dirno " << swap_dirn <<
            ", fileno " << asHex(swap_filen).minDigits(8) <<
-           " status "<< theFile->error());
+           " status " << theFile->error());
 
     /* Ok, notification past open means an error has occurred */
     assert (theFile->error());
@@ -232,7 +232,7 @@ Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int, RefCount<Re
     reading = false;
     debugs(79, 3, "dirno " << swap_dirn <<
            ", fileno " << asHex(swap_filen).minDigits(8) <<
-           " len "<< len);
+           " len " << len);
 
     if (len > 0)
         offset_ += len;

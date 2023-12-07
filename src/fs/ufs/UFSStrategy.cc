@@ -96,8 +96,7 @@ Fs::Ufs::UFSStrategy::create(SwapDir * const SD, StoreEntry * const e,
     assert (((UFSSwapDir *)SD)->IO == this);
     /* Allocate a number */
     sfileno filn = ((UFSSwapDir *)SD)->mapBitAllocate();
-    debugs(79, 3, "fileno " <<
-           asHex(filn).upperCase().minDigits(8));
+    debugs(79, 3, "fileno " << asHex(filn).upperCase().minDigits(8));
 
     /* Shouldn't we handle a 'bitmap full' error here? */
 

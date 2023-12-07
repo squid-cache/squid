@@ -1161,8 +1161,8 @@ Fs::Ufs::UFSSwapDir::validFileno(sfileno filn, int flag) const
 void
 Fs::Ufs::UFSSwapDir::unlinkFile(sfileno f)
 {
-    debugs(79, 3, "unlinking fileno " << asHex(f).upperCase().minDigits(8) <<
-           " '" << fullPath(f,nullptr) << "'");
+    debugs(79, 3, "unlinking fileno " << asHex(f).upperCase().minDigits(8) << " '" <<
+           fullPath(f,nullptr) << "'");
     /* commonUfsDirMapBitReset(this, f); */
     IO->unlinkFile(fullPath(f,nullptr));
 }
