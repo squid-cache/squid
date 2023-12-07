@@ -604,7 +604,6 @@ icpHandleIcpV2(int fd, Ip::Address &from, char *buf, int len)
     }
 }
 
-
 void
 icpHandleUdp(int sock, void *)
 {
