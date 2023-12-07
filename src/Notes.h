@@ -91,8 +91,9 @@ public:
     bool match(HttpRequest *request, HttpReply *reply, const AccessLogEntryPointer &al, SBuf &matched);
     const SBuf &key() const { return theKey; }
     void updateNotePairs(NotePairsPointer pairs, const CharacterSet *delimiters, const AccessLogEntryPointer &al);
-    /// Dump the single Note to the given StoreEntry object.
-    void dump(StoreEntry *entry, const char *key);
+
+    /// prints key and value(s) using a "note" directive format (including directive name)
+    void printAsNoteDirective(StoreEntry *, const char *directiveName) const;
 
     /// prints using "annotate_transaction acl parameter" format, one key=value
     /// or key+=value parameter per stored value
@@ -130,7 +131,7 @@ public:
     void parseKvPair();
 
     /// prints notes using "note" squid.conf directive format, one directive per stored note
-    void dump(StoreEntry *entry, const char *directiveName);
+    void printAsNoteDirectives(StoreEntry *entry, const char *directiveName) const;
 
     /// clean the notes list
     void clean() { notes.clear(); }

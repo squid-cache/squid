@@ -105,11 +105,11 @@ Note::updateNotePairs(NotePairs::Pointer pairs, const CharacterSet *delimiters, 
 }
 
 void
-Note::dump(StoreEntry *entry, const char *k)
+Note::printAsNoteDirective(StoreEntry * const entry, const char * const directiveName) const
 {
     PackableStream os(*entry);
     for (const auto &v: values) {
-        os << k << " " << key() << " " << ConfigParser::QuoteString(SBufToString(v->value()));
+        os << directiveName << ' ' << key() << ' ' << ConfigParser::QuoteString(SBufToString(v->value()));
         dump_acl_list(entry, v->aclList);
         storeAppendPrintf(entry, "\n");
     }
@@ -253,10 +253,10 @@ Notes::updateNotePairs(NotePairs::Pointer pairs, const CharacterSet *delimiters,
 }
 
 void
-Notes::dump(StoreEntry *entry, const char *key)
+Notes::printAsNoteDirectives(StoreEntry *entry, const char * const directiveName) const
 {
     for (const auto &n: notes)
-        n->dump(entry, key);
+        n->printAsNoteDirective(entry, directiveName);
 }
 
 void
