@@ -412,8 +412,8 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
             if (!UFSSwapDir::FilenoBelongsHere(fn, sd->index, curlvl1, curlvl2)) {
                 debugs(47, 3, asHex(fn).upperCase().minDigits(8) <<
                        " does not belong in " << sd->index  << "/" <<
-                       curlvl1  << "/" << curlvl2);
-
+                       asHex(curlvl1).upperCase().minDigits(2) << "/" <<
+                       asHex(curlvl2).upperCase().minDigits(2));
                 continue;
             }
 
