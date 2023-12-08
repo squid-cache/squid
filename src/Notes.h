@@ -131,7 +131,7 @@ public:
     void parseKvPair();
 
     /// Prints notes using "note" squid.conf directive format, one directive per stored note.
-    void printAsNoteDirectives(StoreEntry *entry, const char *directiveName) const;
+    void printAsNoteDirectives(StoreEntry *, const char *directiveName) const;
 
     /// clean the notes list
     void clean() { notes.clear(); }
