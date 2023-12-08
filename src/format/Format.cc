@@ -1406,7 +1406,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 }
                 out = sb.c_str();
                 quote = 1;
-            } else { // no note specified, concatenate all of them
+            } else {
+                // No specific annotation requested. Report all annotations.
+
                 // if no argument given use default "\r\n" as notes separator
                 const char *separator = fmt->data.string ? tmp : "\r\n";
                 SBufStream os;
