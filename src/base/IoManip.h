@@ -101,5 +101,54 @@ inline AsHex<Integer> asHex(const Integer n) { return AsHex<Integer>(n); }
 /// Prints the first n data bytes using hex notation. Does nothing if n is 0.
 void PrintHex(std::ostream &, const char *data, size_t n);
 
+/// std::ostream manipulator to print containers as flat lists
+template <typename Container>
+class AsList
+{
+public:
+    explicit AsList(const Container &c): container(c) {}
+
+    /// a c-string to print before the first item (if any). Caller must ensure lifetime.
+    auto &prefixedBy(const char * const p) { prefix = p; return *this; }
+
+    /// a c-string to print after the last item (if any). Caller must ensure lifetime.
+    auto &suffixedBy(const char * const p) { suffix = p; return *this; }
+
+    /// a c-string to print between consecutive items (if any). Caller must ensure lifetime.
+    auto &delimitedBy(const char * const d) { delimiter = d; return *this; }
+
+public:
+    const Container &container; ///< zero or more items to print
+
+    const char *prefix = nullptr; ///< \copydoc prefixedBy()
+    const char *suffix = nullptr; ///< \copydoc suffixedBy()
+    const char *delimiter = nullptr; ///< \copydoc delimitedBy()
+};
+
+template <class Container>
+inline std::ostream &
+operator <<(std::ostream &os, const AsList<Container> &manipulator)
+{
+    bool opened = false;
+    for (const auto &item: manipulator.container) {
+        if (!opened) {
+            if (manipulator.prefix)
+                os << manipulator.prefix;
+            opened = true;
+        } else {
+            if (manipulator.delimiter)
+                os << manipulator.delimiter;
+        }
+        os << item;
+    }
+    if (opened && manipulator.suffix)
+        os << manipulator.suffix;
+    return os;
+}
+
+/// a helper to ease AsList object creation
+template <typename Container>
+inline auto asList(const Container &c) { return AsList<Container>(c); }
+
 #endif /* SQUID_SRC_BASE_IO_MANIP_H */
 

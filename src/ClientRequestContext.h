@@ -9,8 +9,10 @@
 #ifndef SQUID_CLIENTREQUESTCONTEXT_H
 #define SQUID_CLIENTREQUESTCONTEXT_H
 
+#include "acl/forward.h"
 #include "base/RefCount.h"
 #include "cbdata.h"
+#include "defines.h"
 #include "dns/forward.h"
 #include "helper/forward.h"
 #include "ipcache.h"
@@ -78,8 +80,13 @@ public:
 #if USE_OPENSSL
     bool sslBumpCheckDone = false;
 #endif
-    ErrorState *error = nullptr; ///< saved error page for centralized/delayed processing
+
     bool readNextRequest = false; ///< whether Squid should read after error handling
+    ErrorState *error = nullptr; ///< saved error page for centralized/delayed processing
+
+#if FOLLOW_X_FORWARDED_FOR
+    size_t currentXffHopNumber = 0; ///< number of X-Forwarded-For header values processed so far
+#endif
 };
 
 #endif /* SQUID_CLIENTREQUESTCONTEXT_H */

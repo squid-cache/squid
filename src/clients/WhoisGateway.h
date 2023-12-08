@@ -11,6 +11,8 @@
 #ifndef SQUID_WHOIS_H_
 #define SQUID_WHOIS_H_
 
+#include "clients/forward.h"
+
 /**
  * \defgroup ServerProtocolWhoisAPI Server-Side WHOIS API
  * \ingroup ServerProtocol

@@ -143,17 +143,14 @@ TODO: decide what to do for comm_poll() since its either obsolete or uses other 
 \section CacheManager Cache Manager
 \par
 	This provides access to certain information needed by the
-	cache administrator.  A companion program, cachemgr.cgi
-	can be used to make this information available via a Web
-	browser.  Cache manager requests to Squid are made with a
-	special URL of the form
+	cache administrator. Cache manager requests to Squid are
+	made with a special URL of the form
 \code
-	cache_object://hostname/operation
+	http://hostname:3128/squid-internal-mgr/menu
 \endcode
 	The cache manager provides essentially "read-only" access
 	to information.  It does not provide a method for configuring
 	Squid while it is running.
-TODO: get cachemgr.cgi documenting
 
 \section NetworkMeasurementDB Network Measurement Database
 \par

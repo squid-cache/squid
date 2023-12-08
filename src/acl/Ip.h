@@ -64,6 +64,14 @@ protected:
     int match(const Ip::Address &);
     IPSplay *data;
 
+private:
+    bool parseGlobal(const char *);
+
+    /// whether match() should return 1 for any IPv4 parameter
+    bool matchAnyIpv4 = false;
+
+    /// whether match() should return 1 for any IPv6 parameter
+    bool matchAnyIpv6 = false;
 };
 
 #endif /* SQUID_ACLIP_H */

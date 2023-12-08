@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_BLINDPEERCONNECTOR_H
 #define SQUID_SRC_SECURITY_BLINDPEERCONNECTOR_H
 
+#include "http/forward.h"
 #include "security/PeerConnector.h"
 
 class ErrorState;
@@ -22,15 +23,10 @@ class BlindPeerConnector: public Security::PeerConnector {
 public:
     BlindPeerConnector(HttpRequestPointer &aRequest,
                        const Comm::ConnectionPointer &aServerConn,
-                       const Security::FuturePeerContextPointer &aPeerContextPointer,
+                       const Security::FuturePeerContextPointer &,
                        const AsyncCallback<EncryptorAnswer> &aCallback,
                        const AccessLogEntryPointer &alp,
-                       const time_t timeout = 0) :
-        AsyncJob("Security::BlindPeerConnector"),
-        Security::PeerConnector(aServerConn, aPeerContextPointer, aCallback, alp, timeout)
-    {
-        request = aRequest;
-    }
+                       time_t timeout = 0);
 
     /* Security::PeerConnector API */
 

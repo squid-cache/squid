@@ -11,14 +11,15 @@
 
 #include "base/CbDataList.h"
 #include "base/forward.h"
-#include "security/Context.h"
-#include "security/Session.h"
+#include "base/ToCpp.h"
+#include "security/LockingPointer.h"
 
 #if USE_GNUTLS && HAVE_GNUTLS_ABSTRACT_H
 #include <gnutls/abstract.h>
 #endif
 #include <list>
 #include <limits>
+#include <memory>
 #if USE_OPENSSL
 #include "compat/openssl.h"
 #if HAVE_OPENSSL_BN_H
@@ -29,6 +30,9 @@
 #endif
 #if HAVE_OPENSSL_RSA_H
 #include <openssl/rsa.h>
+#endif
+#if HAVE_OPENSSL_X509_H
+#include <openssl/x509.h>
 #endif
 #endif /* USE_OPENSSL */
 #include <unordered_set>

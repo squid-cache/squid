@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 SUBDIRS = $(AUTH_MODULES)
 DIST_SUBDIRS = basic digest negotiate ntlm

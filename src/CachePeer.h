@@ -51,6 +51,7 @@ public:
     /// TLS settings for communicating with this TLS cache_peer (or nil)
     Security::FuturePeerContextPointer peerContext();
 
+    /// n-th cache_peer directive, starting with 1
     u_int index = 0;
 
     /// cache_peer name (if explicitly configured) or hostname (otherwise).
@@ -182,7 +183,6 @@ public:
     Ip::Address addresses[10];
     int n_addresses = 0;
     int rr_count = 0;
-    CachePeer *next = nullptr;
     int testing_now = 0;
 
     struct {

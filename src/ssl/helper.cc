@@ -16,7 +16,6 @@
 #include "Parsing.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
-#include "SquidString.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
@@ -72,7 +71,7 @@ operator <<(std::ostream &os, const Ssl::GeneratorRequest &gr)
 /// pending Ssl::Helper requests (to all certificate generator helpers combined)
 static Ssl::GeneratorRequests TheGeneratorRequests;
 
-helper *Ssl::Helper::ssl_crtd = nullptr;
+Helper::Client::Pointer Ssl::Helper::ssl_crtd;
 
 void Ssl::Helper::Init()
 {
@@ -86,7 +85,7 @@ void Ssl::Helper::Init()
     if (!found)
         return;
 
-    ssl_crtd = new helper("sslcrtd_program");
+    ssl_crtd = ::Helper::Client::Make("sslcrtd_program");
     ssl_crtd->childs.updateLimits(Ssl::TheConfig.ssl_crtdChildren);
     ssl_crtd->ipc_type = IPC_STREAM;
     // The crtd messages may contain the eol ('\n') character. We are
@@ -102,7 +101,7 @@ void Ssl::Helper::Init()
         }
         safe_free(tmp_begin);
     }
-    helperOpenServers(ssl_crtd);
+    ssl_crtd->openSessions();
 }
 
 void Ssl::Helper::Shutdown()
@@ -111,7 +110,6 @@ void Ssl::Helper::Shutdown()
         return;
     helperShutdown(ssl_crtd);
     wordlistDestroy(&ssl_crtd->cmdline);
-    delete ssl_crtd;
     ssl_crtd = nullptr;
 }
 
@@ -167,7 +165,7 @@ Ssl::HandleGeneratorReply(void *data, const ::Helper::Reply &reply)
 }
 #endif //USE_SSL_CRTD
 
-helper *Ssl::CertValidationHelper::ssl_crt_validator = nullptr;
+Helper::Client::Pointer Ssl::CertValidationHelper::ssl_crt_validator;
 
 void Ssl::CertValidationHelper::Init()
 {
@@ -183,7 +181,7 @@ void Ssl::CertValidationHelper::Init()
     if (!found)
         return;
 
-    ssl_crt_validator = new helper("ssl_crt_validator");
+    ssl_crt_validator = ::Helper::Client::Make("ssl_crt_validator");
     ssl_crt_validator->childs.updateLimits(Ssl::TheConfig.ssl_crt_validator_Children);
     ssl_crt_validator->ipc_type = IPC_STREAM;
     // The crtd messages may contain the eol ('\n') character. We are
@@ -223,7 +221,7 @@ void Ssl::CertValidationHelper::Init()
         }
         xfree(tmp_begin);
     }
-    helperOpenServers(ssl_crt_validator);
+    ssl_crt_validator->openSessions();
 
     //WARNING: initializing static member in an object initialization method
     assert(HelperCache == nullptr);
@@ -236,7 +234,6 @@ void Ssl::CertValidationHelper::Shutdown()
         return;
     helperShutdown(ssl_crt_validator);
     wordlistDestroy(&ssl_crt_validator->cmdline);
-    delete ssl_crt_validator;
     ssl_crt_validator = nullptr;
 
     // CertValidationHelper::HelperCache is a static member, it is not good policy to

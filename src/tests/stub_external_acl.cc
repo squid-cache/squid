@@ -22,11 +22,6 @@ bool ACLExternal::valid () const STUB_RETVAL(false)
 bool ACLExternal::empty () const STUB_RETVAL(false)
 int ACLExternal::match(ACLChecklist *) STUB_RETVAL(0)
 SBufList ACLExternal::dump() const STUB_RETVAL(SBufList())
-void ACLExternal::ExternalAclLookup(ACLChecklist *, ACLExternal *) STUB
-void ExternalACLLookup::Start(ACLChecklist *, external_acl_data *, bool) STUB
 void externalAclInit(void) STUB_NOP
 void externalAclShutdown(void) STUB_NOP
-ExternalACLLookup * ExternalACLLookup::Instance() STUB_RETVAL(nullptr)
-void ExternalACLLookup::checkForAsync(ACLChecklist *) const STUB
-void ExternalACLLookup::LookupDone(void *, const ExternalACLEntryPointer &) STUB
 

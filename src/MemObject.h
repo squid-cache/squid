@@ -12,8 +12,9 @@
 #include "base/DelayedAsyncCalls.h"
 #include "dlink.h"
 #include "http/RequestMethod.h"
+#include "HttpReply.h"
 #include "RemovalPolicy.h"
-#include "SquidString.h"
+#include "sbuf/SBuf.h"
 #include "stmem.h"
 #include "store/forward.h"
 #include "StoreIOBuffer.h"
@@ -233,8 +234,8 @@ private:
     HttpReplyPointer reply_; ///< \see baseReply()
     HttpReplyPointer updatedReply_; ///< \see updatedReply()
 
-    mutable String storeId_; ///< StoreId for our entry (usually request URI)
-    mutable String logUri_;  ///< URI used for logging (usually request URI)
+    mutable SBuf storeId_; ///< StoreId for our entry (usually request URI)
+    mutable SBuf logUri_;  ///< URI used for logging (usually request URI)
 
     DelayedAsyncCalls deferredReads;
 };

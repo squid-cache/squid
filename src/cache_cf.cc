@@ -25,6 +25,7 @@
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
@@ -1004,7 +1005,7 @@ configDoConfigure(void)
     if (Config.ssl_client.retriesContexts)
         Config.ssl_client.retriesContexts->open();
 
-    for (CachePeer *p = Config.peers; p != nullptr; p = p->next) {
+    for (const auto &p: CurrentCachePeers()) {
 
         // default value for ssldomain= is the peer host/IP
         if (p->secure.sslDomain.isEmpty())
@@ -1035,6 +1036,18 @@ configDoConfigure(void)
                " Change client_request_buffer_max or request_header_max_size limits.",
                (uint32_t)Config.maxRequestBufferSize, (uint32_t)Config.maxRequestHeaderSize);
     }
+
+    // Warn about the dangers of exceeding String limits when manipulating HTTP
+    // headers. Technically, we do not concatenate _requests_, so we could relax
+    // their check, but we keep the two checks the same for simplicity sake.
+    const auto safeRawHeaderValueSizeMax = (String::SizeMaxXXX()+1)/3;
+    // TODO: static_assert(safeRawHeaderValueSizeMax >= 64*1024); // no WARNINGs for default settings
+    if (Config.maxRequestHeaderSize > safeRawHeaderValueSizeMax)
+        debugs(3, DBG_CRITICAL, "WARNING: Increasing request_header_max_size beyond " << safeRawHeaderValueSizeMax <<
+               " bytes makes Squid more vulnerable to denial-of-service attacks; configured value: " << Config.maxRequestHeaderSize << " bytes");
+    if (Config.maxReplyHeaderSize > safeRawHeaderValueSizeMax)
+        debugs(3, DBG_CRITICAL, "WARNING: Increasing reply_header_max_size beyond " << safeRawHeaderValueSizeMax <<
+               " bytes makes Squid more vulnerable to denial-of-service attacks; configured value: " << Config.maxReplyHeaderSize << " bytes");
 
     /*
      * Disable client side request pipelining if client_persistent_connections OFF.
@@ -1135,6 +1148,9 @@ parse_obsolete(const char *name)
 
         // add the value as unquoted-string because the old values did not support whitespace
         const char *token = ConfigParser::NextQuotedOrToEol();
+        if (!token)
+            throw TextException(ToSBuf("missing required parameter for obsolete directive: ", name), Here());
+
         tmp.append(token, strlen(token));
         Security::ProxyOutgoingConfig.parse(tmp.c_str());
     }
@@ -1506,16 +1522,10 @@ free_SBufList(SBufList *list)
 static void
 dump_acl(StoreEntry * entry, const char *name, ACL * ae)
 {
+    PackableStream os(*entry);
     while (ae != nullptr) {
         debugs(3, 3, "dump_acl: " << name << " " << ae->name);
-        storeAppendPrintf(entry, "%s %s %s ",
-                          name,
-                          ae->name,
-                          ae->typeString());
-        SBufList tail;
-        tail.splice(tail.end(), ae->dumpOptions());
-        tail.splice(tail.end(), ae->dump()); // ACL parameters
-        dump_SBufList(entry, tail);
+        ae->dumpWhole(name, os);
         ae = ae->next;
     }
 }
@@ -2097,12 +2107,16 @@ peer_type_str(const peer_t type)
 }
 
 static void
-dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
+dump_peer(StoreEntry * entry, const char *name, const CachePeers *peers)
 {
+    if (!peers)
+        return;
+
     NeighborTypeDomainList *t;
     LOCAL_ARRAY(char, xname, 128);
 
-    while (p != nullptr) {
+    for (const auto &peer: *peers) {
+        const auto p = peer.get();
         storeAppendPrintf(entry, "%s %s %s %d %d name=%s",
                           name,
                           p->host,
@@ -2123,8 +2137,6 @@ dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
                               peer_type_str(t->type),
                               t->domain);
         }
-
-        p = p->next;
     }
 }
 
@@ -2189,7 +2201,7 @@ GetUdpService(void)
 }
 
 static void
-parse_peer(CachePeer ** head)
+parse_peer(CachePeers **peers)
 {
     char *host_str = ConfigParser::NextToken();
     if (!host_str) {
@@ -2426,22 +2438,21 @@ parse_peer(CachePeer ** head)
     if (p->secure.encryptTransport)
         p->secure.parseOptions();
 
-    p->index =  ++Config.npeers;
+    if (!*peers)
+        *peers = new CachePeers;
 
-    while (*head != nullptr)
-        head = &(*head)->next;
+    (*peers)->add(p);
 
-    *head = p;
+    p->index = (*peers)->size();
 
     peerClearRRStart();
 }
 
 static void
-free_peer(CachePeer ** P)
+free_peer(CachePeers ** const peers)
 {
-    delete *P;
-    *P = nullptr;
-    Config.npeers = 0;
+    delete *peers;
+    *peers = nullptr;
 }
 
 static void
@@ -2977,7 +2988,8 @@ parse_TokenOrQuotedString(char **var)
 static void
 dump_time_t(StoreEntry * entry, const char *name, time_t var)
 {
-    storeAppendPrintf(entry, "%s %d seconds\n", name, (int) var);
+    PackableStream os(*entry);
+    os << name << ' ' << var << " seconds\n";
 }
 
 void
@@ -2999,10 +3011,11 @@ free_time_t(time_t * var)
 static void
 dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
 {
+    PackableStream os(*entry);
     if (var % 1000)
-        storeAppendPrintf(entry, "%s %" PRId64 " milliseconds\n", name, var);
+        os << name << ' ' << var << " milliseconds\n";
     else
-        storeAppendPrintf(entry, "%s %d seconds\n", name, (int)(var/1000) );
+        os << name << ' ' << (var/1000) << " seconds\n";
 }
 
 static void
@@ -3926,7 +3939,8 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
         storeAppendPrintf(e, " ssl-bump");
 #endif
 
-    s->secure.dumpCfg(e, "tls-");
+    PackableStream os(*e);
+    s->secure.dumpCfg(os, "tls-");
 }
 
 static void

@@ -1203,6 +1203,8 @@ mainInitialize(void)
     FwdState::initModule();
     SBufStatsAction::RegisterWithCacheManager();
 
+    AsyncJob::RegisterWithCacheManager();
+
     /* These use separate calls so that the comm loops can eventually
      * coexist.
      */
@@ -1258,8 +1260,6 @@ mainInitialize(void)
 
 #endif
 
-    memCheckInit();
-
 #if USE_LOADABLE_MODULES
     LoadableModulesConfigure(Config.loadable_module_names);
 #endif
@@ -1305,7 +1305,7 @@ OnTerminate()
         return;
     terminating = true;
 
-    debugs(1, DBG_CRITICAL, "FATAL: Dying from an exception handling failure; exception: " << CurrentException);
+    debugs(1, DBG_CRITICAL, "FATAL: Dying after an undetermined failure" << CurrentExceptionExtra);
 
     Debug::PrepareToDie();
     abort();

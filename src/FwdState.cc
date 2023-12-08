@@ -21,6 +21,7 @@
 #include "client_side.h"
 #include "clients/forward.h"
 #include "clients/HttpTunneler.h"
+#include "clients/WhoisGateway.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Loops.h"
@@ -55,7 +56,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 #include "urn.h"
-#include "whois.h"
 #if USE_OPENSSL
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"

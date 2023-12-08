@@ -9,7 +9,9 @@
 #ifndef _SQUID_SRC_HELPER_REQUEST_H
 #define _SQUID_SRC_HELPER_REQUEST_H
 
+#include "cbdata.h"
 #include "helper/forward.h"
+#include "mem/AllocatorProxy.h"
 #include "time/gadgets.h"
 
 namespace Helper

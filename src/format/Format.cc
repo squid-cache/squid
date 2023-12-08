@@ -399,6 +399,12 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             out = "";
             break;
 
+        case LFT_BYTE:
+            tmp[0] = static_cast<char>(fmt->data.byteValue);
+            tmp[1] = '\0';
+            out = tmp;
+            break;
+
         case LFT_STRING:
             out = fmt->data.string;
             break;
@@ -1004,8 +1010,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SQUID_ERROR_DETAIL:
             if (const auto error = al->error()) {
-                if (const auto detail = error->detail) {
-                    sb = detail->brief();
+                if (!error->details.empty()) {
+                    sb = ToSBuf(error->details);
                     out = sb.c_str();
                 }
             }

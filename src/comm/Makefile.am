@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 noinst_LTLIBRARIES = \
 	libcomm.la \
@@ -21,6 +20,8 @@ libcomm_la_SOURCES = \
 	Connection.cc \
 	Connection.h \
 	Flag.h \
+	Incoming.cc \
+	Incoming.h \
 	IoCallback.cc \
 	IoCallback.h \
 	Loops.h \

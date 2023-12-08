@@ -11,6 +11,8 @@
 #ifndef SQUID_IP_IPINTERCEPT_H
 #define SQUID_IP_IPINTERCEPT_H
 
+#include "comm/forward.h"
+
 namespace Ip
 {
 

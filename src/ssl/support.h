@@ -17,7 +17,7 @@
 #include "comm/forward.h"
 #include "compat/openssl.h"
 #include "sbuf/SBuf.h"
-#include "security/forward.h"
+#include "security/Session.h"
 #include "ssl/gadgets.h"
 
 #if HAVE_OPENSSL_X509V3_H

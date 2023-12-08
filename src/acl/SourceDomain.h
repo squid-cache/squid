@@ -9,6 +9,7 @@
 #ifndef SQUID_ACLSOURCEDOMAIN_H
 #define SQUID_ACLSOURCEDOMAIN_H
 
+#include "acl/Checklist.h"
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
 #include "dns/forward.h"
@@ -25,18 +26,6 @@ public:
 };
 
 } // namespace Acl
-
-class SourceDomainLookup : public ACLChecklist::AsyncState
-{
-
-public:
-    static SourceDomainLookup *Instance();
-    void checkForAsync(ACLChecklist *)const override;
-
-private:
-    static SourceDomainLookup instance_;
-    static void LookupDone(const char *, const Dns::LookupDetails &, void *);
-};
 
 #endif /* SQUID_ACLSOURCEDOMAIN_H */
 
