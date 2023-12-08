@@ -44,9 +44,8 @@ public:
     /// parses the first and any subsequent directive occurrence, updating T
     static void ParseAndUpdate(T &, ConfigParser &);
 
-    // TODO: Upgrade to std::ostream after upgrading Security::PeerOptions::dumpCfg()
     /// reports the given T instance configuration in squid.conf format
-    static void PrintDirectives(StoreEntry *, const T &, const char *directiveName);
+    static void PrintDirectives(std::ostream &, const T &, const char *directiveName);
 
     /* code adding "TYPE: T" to cf.data.pre must specialize this */
 

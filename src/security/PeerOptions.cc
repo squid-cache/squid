@@ -910,11 +910,8 @@ Configuration::Component<Security::PeerContexts*>::ParseAndUpdate(Security::Peer
 
 template <>
 void
-Configuration::Component<Security::PeerContexts*>::PrintDirectives(StoreEntry * const e, Security::PeerContexts * const & contexts, const char * const directiveName)
+Configuration::Component<Security::PeerContexts*>::PrintDirectives(std::ostream &os, Security::PeerContexts * const & contexts, const char * const directiveName)
 {
-    Assure(e);
-    PackableStream os(*e);
-
     Assure(contexts);
     for (const auto &context: contexts->contexts) {
         os << directiveName;

@@ -719,7 +719,9 @@ DumpUpdatingDirective(const T &raw, StoreEntry * const entry, const char * const
     if (!SawDirective(raw))
         return; // not configured
 
-    Configuration::Component<T>::PrintDirectives(entry, raw, directiveName);
+    Assure(entry);
+    PackableStream os(*entry);
+    Configuration::Component<T>::PrintDirectives(os, raw, directiveName);
 }
 
 /// frees any resources associated with the given raw SquidConfig data member
