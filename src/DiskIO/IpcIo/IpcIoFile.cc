@@ -741,7 +741,7 @@ diskerRead(IpcIoMsg &ipcIo)
     char *const buf = Ipc::Mem::PagePointer(ipcIo.page);
     const ssize_t read = pread(TheFile, buf, min(ipcIo.len, Ipc::Mem::PageSize()), ipcIo.offset);
     ++statCounter.syscalls.disk.reads;
-    fd_bytes(TheFile, read, FD_READ);
+    fd_bytes(TheFile, read, IoDirection::Read);
 
     if (read >= 0) {
         ipcIo.xerrno = 0;
@@ -773,7 +773,7 @@ diskerWriteAttempts(IpcIoMsg &ipcIo)
     for (int attempts = 1; attempts <= attemptLimit; ++attempts) {
         const ssize_t result = pwrite(TheFile, buf, toWrite, offset);
         ++statCounter.syscalls.disk.writes;
-        fd_bytes(TheFile, result, FD_WRITE);
+        fd_bytes(TheFile, result, IoDirection::Write);
 
         if (result < 0) {
             ipcIo.xerrno = errno;
