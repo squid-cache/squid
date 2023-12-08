@@ -402,6 +402,12 @@ Ftp::Gateway::loginParser(const SBuf &login, bool escaped)
     if (login.isEmpty())
         return;
 
+    if (!login[0]) {
+        debugs(9, 2, "WARNING: Ignoring FTP credentials that start with a NUL character");
+        // TODO: Either support credentials with NUL characters (in any position) or ban all of them.
+        return;
+    }
+
     const SBuf::size_type colonPos = login.find(':');
 
     /* If there was a username part with at least one character use it.
@@ -1042,9 +1048,8 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
     /* Test URL login syntax. Overrides any headers received. */
     loginParser(request->url.userInfo(), true);
 
-    /* name is missing. that's fatal. */
-    if (!user[0])
-        fatal("FTP login parsing destroyed username info");
+    // XXX: We we keep default "anonymous" instead of properly supporting empty usernames.
+    Assure(user[0]);
 
     /* name + password == success */
     if (password[0])

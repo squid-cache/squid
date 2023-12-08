@@ -23,7 +23,7 @@
 #include "MessageSizes.h"
 #include "Notes.h"
 #include "proxyp/forward.h"
-#include "sbuf/SBuf.h"
+#include "sbuf/forward.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif

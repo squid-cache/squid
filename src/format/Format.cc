@@ -399,6 +399,12 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             out = "";
             break;
 
+        case LFT_BYTE:
+            tmp[0] = static_cast<char>(fmt->data.byteValue);
+            tmp[1] = '\0';
+            out = tmp;
+            break;
+
         case LFT_STRING:
             out = fmt->data.string;
             break;

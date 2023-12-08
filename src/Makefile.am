@@ -1726,6 +1726,24 @@ EXTRA_DIST += \
 	tests/testACLMaxUserIP.cc
 endif
 
+## Tests of html/*
+
+check_PROGRAMS += tests/testHtmlQuote
+tests_testHtmlQuote_SOURCES = \
+	tests/testHtmlQuote.cc
+nodist_tests_testHtmlQuote_SOURCES = \
+	$(TESTSOURCES) \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc
+tests_testHtmlQuote_LDADD= \
+	html/libhtml.la \
+	sbuf/libsbuf.la \
+	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testHtmlQuote_LDFLAGS = $(LIBADD_DL)
+
 ## Tests of http/* and HTTP Protocol objects
 
 check_PROGRAMS += tests/test_http_range
