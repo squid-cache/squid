@@ -10,6 +10,7 @@
 #include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "acl/Tree.h"
 #include "base/IoManip.h"
 #include "client_side.h"
 #include "ConfigParser.h"
@@ -110,7 +111,16 @@ Note::printAsNoteDirective(StoreEntry * const entry, const char * const directiv
     PackableStream os(*entry);
     for (const auto &v: values) {
         os << directiveName << ' ' << key() << ' ' << ConfigParser::QuoteString(SBufToString(v->value()));
-        dump_acl_list(entry, v->aclList);
+        if (v->aclList) {
+            // TODO: Use Acl::dump() after fixing the XXX in dump_acl_list().
+            for (const auto &item: v->aclList->treeDump("", &Acl::AllowOrDeny)) {
+                if (item.isEmpty()) // treeDump("") adds this prefix
+                    continue;
+                if (item.cmp("\n") == 0) // treeDump() adds this suffix
+                    continue;
+                os << ' ' << item; // ACL name
+            }
+        }
         os << '\n';
     }
 }
