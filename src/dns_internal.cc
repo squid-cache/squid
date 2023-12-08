@@ -979,10 +979,19 @@ idnsSendQuery(idns_query * q)
             idnsSendQueryVC(q, nsn);
             x = y = 0;
         } else {
-            if (DnsSocketB >= 0 && nameservers[nsn].S.isIPv6())
+            if (DnsSocketB >= 0 && nameservers[nsn].S.isIPv6()) {
                 y = comm_udp_sendto(DnsSocketB, nameservers[nsn].S, q->buf, q->sz);
-            else if (DnsSocketA >= 0)
+                if (y > 0) {
+                    // XXX: setup fd_table[] properly so we can use FD_WRITE_METHOD()
+                    fd_table[DnsSocketB].bytesWritten(y);
+                }
+            } else if (DnsSocketA >= 0) {
                 x = comm_udp_sendto(DnsSocketA, nameservers[nsn].S, q->buf, q->sz);
+                if (x > 0) {
+                    // XXX: setup fd_table[] properly so we can use FD_WRITE_METHOD()
+                    fd_table[DnsSocketA].bytesWritten(x);
+                }
+            }
         }
         int xerrno = errno;
 
@@ -996,13 +1005,6 @@ idnsSendQuery(idns_query * q)
             debugs(50, DBG_IMPORTANT, MYNAME << "FD " << DnsSocketA << ": sendto: " << xstrerr(xerrno));
 
     } while ( (x<0 && y<0) && q->nsends % nsCount != 0);
-
-    if (y > 0) {
-        fd_bytes(DnsSocketB, y, FD_WRITE);
-    }
-    if (x > 0) {
-        fd_bytes(DnsSocketA, x, FD_WRITE);
-    }
 
     ++ nameservers[nsn].nqueries;
     q->queue_t = current_time;
@@ -1357,7 +1359,8 @@ idnsRead(int fd, void *)
             break;
         }
 
-        fd_bytes(fd, len, FD_READ);
+        // XXX: setup fd_table[] properly so we can use FD_READ_METHOD()
+        fd_table[fd].bytesRead(len);
 
         assert(N);
         ++(*N);

@@ -19,6 +19,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "fatal.h"
+#include "fde.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "ipc/StartListening.h"
@@ -361,6 +362,8 @@ snmpHandleUdp(int sock, void *)
 
     if (len > 0) {
         debugs(49, 3, "snmpHandleUdp: FD " << sock << ": received " << len << " bytes from " << from << ".");
+        // XXX: setup fd_table[] properly so we can use FD_READ_METHOD()
+        fd_table[sock].bytesRead(len);
 
         snmp_rq = (SnmpRequest *)xcalloc(1, sizeof(SnmpRequest));
         snmp_rq->buf = (u_char *) buf;
@@ -446,7 +449,11 @@ snmpConstructReponse(SnmpRequest * rq)
 
     if (RespPDU != nullptr) {
         snmp_build(&rq->session, RespPDU, rq->outbuf, &rq->outlen);
-        comm_udp_sendto(rq->sock, rq->from, rq->outbuf, rq->outlen);
+        const auto result = comm_udp_sendto(rq->sock, rq->from, rq->outbuf, rq->outlen);
+        if (result > 0) {
+            // XXX: setup fd_table[] properly so we can use FD_WRITE_METHOD()
+            fd_table[rq->sock].bytesWritten(result);
+        }
         snmp_free_pdu(RespPDU);
     }
 }

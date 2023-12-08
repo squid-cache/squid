@@ -217,8 +217,6 @@ diskHandleWrite(int fd, void *)
 
     ++ statCounter.syscalls.disk.writes;
 
-    fd_bytes(fd, len, FD_WRITE);
-
     if (len < 0) {
         if (!ignoreErrno(xerrno)) {
             status = xerrno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
@@ -421,8 +419,6 @@ diskHandleRead(int fd, void *data)
         F->disk.offset += len;
 
     ++ statCounter.syscalls.disk.reads;
-
-    fd_bytes(fd, len, FD_READ);
 
     if (len < 0) {
         if (ignoreErrno(xerrno)) {

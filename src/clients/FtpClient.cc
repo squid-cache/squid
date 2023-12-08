@@ -378,10 +378,6 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
 
     assert(ctrl.offset < ctrl.size);
 
-    if (io.flag == Comm::OK && io.size > 0) {
-        fd_bytes(io.fd, io.size, FD_READ);
-    }
-
     if (io.flag != Comm::OK) {
         debugs(50, ignoreErrno(io.xerrno) ? 3 : DBG_IMPORTANT,
                "ERROR: FTP control reply read failure: " << xstrerr(io.xerrno));
@@ -858,7 +854,6 @@ Ftp::Client::writeCommandCallback(const CommIoCbParams &io)
     debugs(9, 5, "wrote " << io.size << " bytes");
 
     if (io.size > 0) {
-        fd_bytes(io.fd, io.size, FD_WRITE);
         statCounter.server.all.kbytes_out += io.size;
         statCounter.server.ftp.kbytes_out += io.size;
     }

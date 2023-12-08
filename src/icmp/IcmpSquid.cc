@@ -13,6 +13,7 @@
 #include "comm/Loops.h"
 #include "defines.h"
 #include "fd.h"
+#include "fde.h"
 #include "icmp/IcmpConfig.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
@@ -102,6 +103,9 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
         /** All other send errors are ignored. */
     } else if (x != slen) {
         debugs(37, DBG_IMPORTANT, "Wrote " << x << " of " << slen << " bytes");
+    } else {
+        // XXX: setup fd_table[] properly so we can use FD_WRITE_METHOD()
+        fd_table[icmp_sock].bytesWritten(x);
     }
 }
 
@@ -153,6 +157,9 @@ IcmpSquid::Recv()
     F = preply.from;
 
     F.port(0);
+
+    // XXX: setup fd_table[] properly so we can use FD_READ_METHOD()
+    fd_table[icmp_sock].bytesRead(n);
 
     switch (preply.opcode) {
 

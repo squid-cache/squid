@@ -91,7 +91,6 @@ Comm::HandleWrite(int fd, void *data)
     }
 #endif /* USE_DELAY_POOLS */
 
-    fd_bytes(fd, len, FD_WRITE);
     ++statCounter.syscalls.sock.writes;
     // After each successful partial write,
     // reset fde::writeStart to the current time.

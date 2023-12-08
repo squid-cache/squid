@@ -38,7 +38,6 @@ logfileWriteWrapper(Logfile * lf, const void *buf, size_t len)
     size_t s;
     s = FD_WRITE_METHOD(ll->fd, (char const *) buf, len);
     int xerrno = errno;
-    fd_bytes(ll->fd, s, FD_WRITE);
 
     if (s == len)
         return;

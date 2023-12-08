@@ -16,6 +16,7 @@
 #include "comm/Loops.h"
 #include "event.h"
 #include "fatal.h"
+#include "fde.h"
 #include "SquidConfig.h"
 #include "wccp.h"
 
@@ -202,6 +203,9 @@ wccpHandleUdp(int sock, void *)
     if (len < 0)
         return;
 
+    // XXX: setup fd_table[] properly so we can use FD_READ_METHOD()
+    fd_table[sock].bytesRead(len);
+
     if (from != Config.Wccp.router)
         return;
 
@@ -280,6 +284,10 @@ wccpHereIam(void *)
     double interval = 10.0; // TODO: make this configurable, possibly negotiate with the router.
     ssize_t sent = comm_udp_send(theWccpConnection, &wccp_here_i_am, sizeof(wccp_here_i_am), 0);
 
+    // XXX: setup fd_table[] properly so we can use FD_WRITE_METHOD()
+    if (sent > 0)
+        fd_table[theWccpConnection].bytesWritten(sent);
+
     // if we failed to send the whole lot, try again at a shorter interval (20%)
     if (sent != sizeof(wccp_here_i_am)) {
         int xerrno = errno;
@@ -357,6 +365,9 @@ wccpAssignBuckets(void)
                   buf,
                   wab_len + WCCP_BUCKETS + cache_len,
                   0);
+    // XXX: setup fd_table[] properly so we can use FD_WRITE_METHOD()
+    fd_table[theWccpConnection].bytesWritten(wab_len + WCCP_BUCKETS + cache_len);
+
     last_change = 0;
     xfree(buf);
 }
