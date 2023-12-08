@@ -24,9 +24,11 @@ ACLAnnotationData::ACLAnnotationData()
 SBufList
 ACLAnnotationData::dump() const
 {
+    if (notes->empty())
+        return SBufList();
+
     SBufStream os;
-    if (!notes->empty())
-        notes->printAsAnnotationAclParameters(os);
+    notes->printAsAnnotationAclParameters(os);
     return SBufList{os.buf()};
 }
 
