@@ -130,7 +130,11 @@ public:
 
     PeerConnectionPointer() = default;
     PeerConnectionPointer(std::nullptr_t): PeerConnectionPointer() {} ///< implicit nullptr conversion
-    PeerConnectionPointer(const Comm::ConnectionPointer &conn, const size_type pos, const Security::PeerContextPointer &tlsParameters): connection_(conn), position_(pos), tlsContext_(tlsParameters) {}
+    PeerConnectionPointer(const Comm::ConnectionPointer &conn, const size_type pos, const Security::PeerContextPointer &ctx):
+        connection_(conn),
+        position_(pos),
+        tlsContext_(ctx)
+    {}
 
     /* read-only pointer API; for Connection assignment, see finalize() */
     explicit operator bool() const { return static_cast<bool>(connection_); }
