@@ -11,7 +11,6 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "acl/Tree.h"
-#include "base/IoManip.h"
 #include "client_side.h"
 #include "ConfigParser.h"
 #include "globals.h"
