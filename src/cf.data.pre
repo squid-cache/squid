@@ -3137,7 +3137,7 @@ DOC_START
 	directive wins and stops further evaluation. A directive without ACLs
 	always matches when evaluated.
 
-	This feature has no effect on TLS cache_peers. Admins should use
+	This directive has no effect on TLS cache_peers. Admins should use
 	cache_peer directives to customize TLS settings for those connections.
 	However, TLS connections through plain-text cache_peers may be retried.
 
@@ -3151,12 +3151,12 @@ DOC_START
 	to rely on browser-initiated retries or may be dealing with a user agent
 	that does not retry (to Squid admin's satisfaction).
 
-	This feature focuses on establishing a secure connection in an environment
-	where multiple TLS options are acceptable to the admin. Squid does not yet
-	check whether the available same-destination persistent connection has
-	matching TLS options. Similarly, Squid does not yet check whether the
-	matched custom TLS options differ from the options used for the first
-	attempt. Such verification may be unconditionally enabled later.
+	This directive is meant for environments where using any configured TLS
+	options variant is acceptable to the admin: Squid does not yet check
+	whether the available same-destination persistent connection has matching
+	TLS options. Similarly, Squid does not yet check whether the matched
+	custom TLS options differ from the options used for the first attempt.
+	Such verification may be unconditionally enabled later.
 
 	The following configuration sketch illustrates how to downgrade TLS
 	security level for transactions matching some custom shouldRetry ACL:
