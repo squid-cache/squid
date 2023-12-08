@@ -196,9 +196,7 @@ public:
 class FuturePeerContext: public RefCountable
 {
 public:
-    FuturePeerContext(PeerOptions &o, const ContextPointer &c): options(o), raw(c)
-    {
-    }
+    FuturePeerContext(PeerOptions &o, const ContextPointer &c): options(o), raw(c) {}
 
     PeerOptions &options; ///< TLS context configuration
     const ContextPointer &raw; ///< TLS context configured using options
