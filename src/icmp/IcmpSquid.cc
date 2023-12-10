@@ -9,7 +9,6 @@
 /* DEBUG: section 37    ICMP Routines */
 
 #include "squid.h"
-#include "base/IoManip.h"
 #include "comm.h"
 #include "comm/Loops.h"
 #include "defines.h"
