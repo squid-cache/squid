@@ -12,6 +12,8 @@
 #include "base/RefCount.h"
 #include "comm/Connection.h"
 #include "mem/AllocatorProxy.h"
+#include "security/PeerOptions.h"
+#include "security/Session.h"
 
 #include <iosfwd>
 #include <limits>
