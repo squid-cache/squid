@@ -19,11 +19,12 @@ CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 namespace Security
 {
 BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &, const Comm::ConnectionPointer & aServerConn,
+                                       const FuturePeerContextPointer &aPeerContextPointer,
                                        const AsyncCallback<EncryptorAnswer> & aCallback,
                                        const AccessLogEntryPointer &alp,
                                        time_t) :
     AsyncJob("Security::BlindPeerConnector"),
-    Security::PeerConnector(aServerConn, aCallback, alp, 0)
+    Security::PeerConnector(aServerConn, aPeerContextPointer, aCallback, alp, 0)
 {STUB_NOP}
 
 bool BlindPeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
