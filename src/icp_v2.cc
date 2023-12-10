@@ -18,7 +18,6 @@
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
-#include "base/IoManip.h"
 #include "client_db.h"
 #include "comm.h"
 #include "comm/Connection.h"
