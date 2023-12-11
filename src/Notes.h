@@ -11,9 +11,9 @@
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
-#include "sbuf/forward.h"
 #include "format/Format.h"
 #include "mem/forward.h"
+#include "sbuf/forward.h"
 #include "SquidString.h"
 
 #include <iosfwd>
