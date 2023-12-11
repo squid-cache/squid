@@ -82,7 +82,6 @@ public:
 
     static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);
-    static const char *QuoteString(const String &var);
     static void ParseWordList(wordlist **list);
 
     /**
