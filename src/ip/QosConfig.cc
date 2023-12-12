@@ -468,10 +468,10 @@ static auto asQosConfigHex(const Integer n) { return asHex(n).upperCase().minDig
 
 /// report configuration using qos_flows syntax
 void
-Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *name) const
+Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *directiveName) const
 {
     if (isHitTosActive()) {
-        os << name << " tos";
+        os << directiveName << " tos";
 
         if (tosLocalHit > 0) {
             os << " local-hit=0x" << asQosConfigHex(tosLocalHit);
@@ -499,7 +499,7 @@ Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *name) const
     }
 
     if (isHitNfmarkActive()) {
-        os << name << " mark";
+        os << directiveName << " mark";
 
         if (markLocalHit > 0) {
             os << " local-hit=0x" << asQosConfigHex(markLocalHit);
