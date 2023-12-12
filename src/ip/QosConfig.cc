@@ -461,6 +461,12 @@ Ip::Qos::Config::parseConfigLine()
     }
 }
 
+
+// helper function for printing configuration values
+template <class Integer>
+static auto asQosConfigHex(const Integer n) { return asHex(n).upperCase().minDigits(2); }
+
+
 /**
  * NOTE: Due to the low-level nature of the library these
  * objects are part of the dump function must be self-contained.
@@ -473,25 +479,25 @@ Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *name) const
         os << name << " tos";
 
         if (tosLocalHit > 0) {
-            os << " local-hit=0x" << asHex(tosLocalHit).minDigits(2);
+            os << " local-hit=0x" << asQosConfigHex(tosLocalHit);
         }
         if (tosSiblingHit > 0) {
-            os << " sibling-hit=0x" << asHex(tosSiblingHit).minDigits(2);
+            os << " sibling-hit=0x" << asQosConfigHex(tosSiblingHit);
         }
         if (tosParentHit > 0) {
-            os << " parent-hit=0x" << asHex(tosParentHit).minDigits(2);
+            os << " parent-hit=0x" << asQosConfigHex(tosParentHit);
         }
         if (tosMiss > 0) {
-            os << " miss=0x" << asHex(tosMiss).minDigits(2);
+            os << " miss=0x" << asQosConfigHex(tosMiss);
             if (tosMissMask!=0xFFU) {
-                os << "/0x" << asHex(tosMissMask).minDigits(2);
+                os << "/0x" << asQosConfigHex(tosMissMask);
             }
         }
         if (preserveMissTos == 0) {
             os << " disable-preserve-miss";
         }
         if (preserveMissTos && preserveMissTosMask != 0) {
-            os << " miss-mask=0x" << asHex(preserveMissTosMask).minDigits(2);
+            os << " miss-mask=0x" << asQosConfigHex(preserveMissTosMask);
         }
         os << "\n";
         return;
@@ -501,25 +507,25 @@ Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *name) const
         os << name << " mark";
 
         if (markLocalHit > 0) {
-            os << " local-hit=0x" << asHex(markLocalHit).minDigits(2);
+            os << " local-hit=0x" << asQosConfigHex(markLocalHit);
         }
         if (markSiblingHit > 0) {
-            os << " sibling-hit=0x" << asHex(markSiblingHit).minDigits(2);
+            os << " sibling-hit=0x" << asQosConfigHex(markSiblingHit);
         }
         if (markParentHit > 0) {
-            os << " parent-hit=0x" << asHex(markParentHit).minDigits(2);
+            os << " parent-hit=0x" << asQosConfigHex(markParentHit);
         }
         if (markMiss > 0) {
-            os << " miss=0x" << asHex(markMiss).minDigits(2);
+            os << " miss=0x" << asQosConfigHex(markMiss);
             if (markMissMask!=0xFFFFFFFFU) {
-                os << "/0x" << asHex(markMissMask).minDigits(2);
+                os << "/0x" << asQosConfigHex(markMissMask);
             }
         }
         if (preserveMissMark == false) {
             os << " disable-preserve-miss";
         }
         if (preserveMissMark && preserveMissMarkMask != 0) {
-            os << " miss-mask=" << asHex(preserveMissMarkMask).minDigits(2);
+            os << " miss-mask=" << asQosConfigHex(preserveMissMarkMask);
         }
         os << "\n";
     }
