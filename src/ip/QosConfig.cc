@@ -466,12 +466,7 @@ Ip::Qos::Config::parseConfigLine()
 template <class Integer>
 static auto asQosConfigHex(const Integer n) { return asHex(n).upperCase().minDigits(2); }
 
-
-/**
- * NOTE: Due to the low-level nature of the library these
- * objects are part of the dump function must be self-contained.
- * which means no StoreEntry references. Just a basic char* buffer.
-*/
+/// report configuration using qos_flows syntax
 void
 Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *name) const
 {
