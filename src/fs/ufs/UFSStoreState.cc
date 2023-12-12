@@ -9,6 +9,7 @@
 /* DEBUG: section 79    Storage Manager UFS Interface */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/DiskIOStrategy.h"
 #include "DiskIO/ReadRequest.h"
@@ -27,10 +28,9 @@ Fs::Ufs::UFSStoreState::ioCompletedNotification()
 {
     if (opening) {
         opening = false;
-        debugs(79, 3, "UFSStoreState::ioCompletedNotification: dirno " <<
-               swap_dirn  << ", fileno "<< std::setfill('0') << std::hex <<
-               std::setw(8) << swap_filen  << " status "<< std::setfill(' ') <<
-               std::dec << theFile->error());
+        debugs(79, 3, "opening: dirno " << swap_dirn <<
+               ", fileno " << asHex(swap_filen).minDigits(8) <<
+               " status " << theFile->error());
 
         assert (FILE_MODE(mode) == O_RDONLY);
         openDone();
@@ -40,10 +40,9 @@ Fs::Ufs::UFSStoreState::ioCompletedNotification()
 
     if (creating) {
         creating = false;
-        debugs(79, 3, "UFSStoreState::ioCompletedNotification: dirno " <<
-               swap_dirn  << ", fileno "<< std::setfill('0') << std::hex <<
-               std::setw(8) << swap_filen  << " status "<< std::setfill(' ') <<
-               std::dec << theFile->error());
+        debugs(79, 3, "creating: dirno " << swap_dirn <<
+               ", fileno " << asHex(swap_filen).minDigits(8) <<
+               " status " << theFile->error());
 
         openDone();
 
@@ -51,9 +50,9 @@ Fs::Ufs::UFSStoreState::ioCompletedNotification()
     }
 
     assert (!(closing ||opening));
-    debugs(79, 3, "diskd::ioCompleted: dirno " << swap_dirn  << ", fileno "<<
-           std::setfill('0') << std::hex << std::setw(8) << swap_filen  <<
-           " status "<< std::setfill(' ') << std::dec << theFile->error());
+    debugs(79, 3, "error: dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).minDigits(8) <<
+           " status " << theFile->error());
 
     /* Ok, notification past open means an error has occurred */
     assert (theFile->error());
@@ -89,10 +88,9 @@ void
 Fs::Ufs::UFSStoreState::closeCompleted()
 {
     assert (closing);
-    debugs(79, 3, "UFSStoreState::closeCompleted: dirno " << swap_dirn  <<
-           ", fileno "<< std::setfill('0') << std::hex << std::setw(8) <<
-           swap_filen  << " status "<< std::setfill(' ') << std::dec <<
-           theFile->error());
+    debugs(79, 3, "dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).minDigits(8) <<
+           " status " << theFile->error());
 
     if (theFile->error()) {
         debugs(79,3, "theFile->error() ret " << theFile->error());
@@ -116,8 +114,9 @@ Fs::Ufs::UFSStoreState::closeCompleted()
 void
 Fs::Ufs::UFSStoreState::close(int)
 {
-    debugs(79, 3, "UFSStoreState::close: dirno " << swap_dirn  << ", fileno "<<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
+    // TODO: De-duplicate position printing Fs::Ufs code and fix upperCase() inconsistency.
+    debugs(79, 3, "dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).upperCase().minDigits(8));
     tryClosing(); // UFS does not distinguish different closure types
 }
 
@@ -139,8 +138,8 @@ Fs::Ufs::UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCa
 
     read.callback = aCallback;
     read.callback_data = cbdataReference(aCallbackData);
-    debugs(79, 3, "UFSStoreState::read_: dirno " << swap_dirn  << ", fileno "<<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
+    debugs(79, 3, "dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).minDigits(8));
     offset_ = aOffset;
     read_buf = buf;
     reading = true;
@@ -158,8 +157,8 @@ Fs::Ufs::UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCa
 bool
 Fs::Ufs::UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE * free_func)
 {
-    debugs(79, 3, "UFSStoreState::write: dirn " << swap_dirn  << ", fileno "<<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
+    debugs(79, 3, "dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).minDigits(8));
 
     if (theFile->error()) {
         debugs(79, DBG_IMPORTANT, "ERROR: avoid write on theFile with error");
@@ -231,9 +230,9 @@ Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int, RefCount<Re
 {
     assert (result.getRaw());
     reading = false;
-    debugs(79, 3, "UFSStoreState::readCompleted: dirno " << swap_dirn  <<
-           ", fileno "<< std::setfill('0') << std::hex << std::setw(8) <<
-           swap_filen  << " len "<< std::setfill(' ') << std::dec << len);
+    debugs(79, 3, "dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).minDigits(8) <<
+           " len " << len);
 
     if (len > 0)
         offset_ += len;
@@ -272,8 +271,8 @@ Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int, RefCount<Re
 void
 Fs::Ufs::UFSStoreState::writeCompleted(int, size_t len, RefCount<WriteRequest>)
 {
-    debugs(79, 3, "dirno " << swap_dirn << ", fileno " <<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen <<
+    debugs(79, 3, "dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).upperCase().minDigits(8) <<
            ", len " << len);
     /*
      * DPW 2006-05-24
