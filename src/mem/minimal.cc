@@ -47,7 +47,7 @@ memAllocBuf(const size_t netSize, size_t * const grossSize)
 {
     if (grossSize)
         *grossSize = netSize;
-    return xmalloc(1, netSize);
+    return xmalloc(netSize);
 }
 
 void *
