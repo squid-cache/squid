@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "acl/Gadgets.h"
 #include "base/IoManip.h"
+#include "base/PackableStream.h"
 #include "cache_cf.h"
 #include "comm/Connection.h"
 #include "compat/cmsg.h"
@@ -19,7 +20,6 @@
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "Parsing.h"
-#include "sbuf/Stream.h"
 #include "Store.h"
 
 #include <cerrno>
