@@ -129,11 +129,12 @@ public:
 
     Integer io_manip; ///< the integer to print
 
-    ///< \copydoc minDigits(). The default is to use stream's field width and
-    ///stream's fill character.
+    /// \copydoc minDigits()
+    /// The default is to use stream's field width and stream's fill character.
     std::optional<size_t> forcePadding;
 
-    ///< \copydoc upperCase(). The default is to use stream's std::uppercase flag.
+    /// \copydoc upperCase()
+    /// The default is to use stream's std::uppercase flag.
     std::optional<bool> forceCase;
 };
 
