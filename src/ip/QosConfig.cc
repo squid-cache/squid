@@ -462,7 +462,7 @@ Ip::Qos::Config::parseConfigLine()
 }
 
 
-// helper function for printing configuration values
+/// helper function for printing Ip::Qos::Config mark and tos values
 template <class Integer>
 static auto asQosConfigHex(const Integer n) { return asHex(n).upperCase().minDigits(2); }
 
