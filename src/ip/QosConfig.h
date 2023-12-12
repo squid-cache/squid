@@ -249,7 +249,7 @@ extern Config TheConfig;
 /* legacy parser access wrappers */
 inline void parse_QosConfig(Ip::Qos::Config * c) { c->parseConfigLine(); }
 inline void free_QosConfig(Ip::Qos::Config *) {}
-void dump_QosConfig(StoreEntry *, const char *, const Ip::Qos::Config &);
+void dump_QosConfig(StoreEntry *, const char * directiveName, const Ip::Qos::Config &);
 
 #endif /* SQUID_QOSCONFIG_H */
 
