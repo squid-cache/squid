@@ -730,7 +730,7 @@ ipcache_gethostbyname(const char *name, int flags)
 {
     ipcache_entry *i = nullptr;
     assert(name);
-    debugs(14, 3, "ipcache_gethostbyname: '" << name  << "', flags=" << asHex(flags));
+    debugs(14, 3, "'" << name  << "', flags=" << asHex(flags));
     ++IpcacheStats.requests;
     i = ipcache_get(name);
 
