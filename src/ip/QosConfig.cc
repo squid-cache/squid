@@ -473,25 +473,25 @@ Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *name) const
         os << name << " tos";
 
         if (tosLocalHit > 0) {
-            os << " local-hit=0x" << asHex(tosLocalHit);
+            os << " local-hit=0x" << asHex(tosLocalHit).minDigits(2);
         }
         if (tosSiblingHit > 0) {
-            os << " sibling-hit=0x" << asHex(tosSiblingHit);
+            os << " sibling-hit=0x" << asHex(tosSiblingHit).minDigits(2);
         }
         if (tosParentHit > 0) {
-            os << " parent-hit=0x" << asHex(tosParentHit);
+            os << " parent-hit=0x" << asHex(tosParentHit).minDigits(2);
         }
         if (tosMiss > 0) {
-            os << " miss=0x" << asHex(tosMiss);
+            os << " miss=0x" << asHex(tosMiss).minDigits(2);
             if (tosMissMask!=0xFFU) {
-                os << "/0x" << asHex(tosMissMask);
+                os << "/0x" << asHex(tosMissMask).minDigits(2);
             }
         }
         if (preserveMissTos == 0) {
             os << " disable-preserve-miss";
         }
         if (preserveMissTos && preserveMissTosMask != 0) {
-            os << " miss-mask=0x" << asHex(preserveMissTosMask);
+            os << " miss-mask=0x" << asHex(preserveMissTosMask).minDigits(2);
         }
         os << "\n";
         return;
@@ -501,25 +501,25 @@ Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *name) const
         os << name << " mark";
 
         if (markLocalHit > 0) {
-            os << " local-hit=0x" << asHex(markLocalHit);
+            os << " local-hit=0x" << asHex(markLocalHit).minDigits(2);
         }
         if (markSiblingHit > 0) {
-            os << " sibling-hit=0x" << asHex(markSiblingHit);
+            os << " sibling-hit=0x" << asHex(markSiblingHit).minDigits(2);
         }
         if (markParentHit > 0) {
-            os << " parent-hit=0x" << asHex(markParentHit);
+            os << " parent-hit=0x" << asHex(markParentHit).minDigits(2);
         }
         if (markMiss > 0) {
-            os << " miss=0x" << asHex(markMiss);
+            os << " miss=0x" << asHex(markMiss).minDigits(2);
             if (markMissMask!=0xFFFFFFFFU) {
-                os << "/0x" << asHex(markMissMask);
+                os << "/0x" << asHex(markMissMask).minDigits(2);
             }
         }
         if (preserveMissMark == false) {
             os << " disable-preserve-miss";
         }
         if (preserveMissMark && preserveMissMarkMask != 0) {
-            os << " miss-mask=" << asHex(preserveMissMarkMask);
+            os << " miss-mask=" << asHex(preserveMissMarkMask).minDigits(2);
         }
         os << "\n";
     }
