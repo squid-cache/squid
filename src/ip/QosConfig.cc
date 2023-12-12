@@ -641,8 +641,8 @@ Ip::Qos::Config::isAclTosActive() const
 }
 
 void
-dump_QosConfig(StoreEntry * entry, const char *name, const Ip::Qos::Config &config)
+dump_QosConfig(StoreEntry * const entry, const char * const directiveName, const Ip::Qos::Config &config)
 {
     PackableStream os(*entry);
-    config.dumpConfigLine(os, name);
+    config.dumpConfigLine(os, directiveName);
 }
