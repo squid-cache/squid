@@ -91,7 +91,7 @@ int Ip::Qos::setSockNfmark(const Comm::ConnectionPointer &, nfmark_t) STUB_RETVA
 int Ip::Qos::setSockNfmark(const int, nfmark_t) STUB_RETVAL(-1)
 Ip::Qos::Config::Config() STUB_NOP
 void Ip::Qos::Config::parseConfigLine() STUB
-void Ip::Qos::Config::dumpConfigLine(std::ostream&, const char *) const STUB
+void Ip::Qos::Config::dumpConfigLine(std::ostream &, const char *) const STUB
 bool Ip::Qos::Config::isAclNfmarkActive() const STUB_RETVAL(false)
 bool Ip::Qos::Config::isAclTosActive() const STUB_RETVAL(false)
 Ip::Qos::Config Ip::Qos::TheConfig;
