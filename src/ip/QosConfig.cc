@@ -473,25 +473,25 @@ Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *name) const
         os << name << " tos";
 
         if (tosLocalHit > 0) {
-            os << " local-hit=" << asHex(tosLocalHit);
+            os << " local-hit=0x" << asHex(tosLocalHit);
         }
         if (tosSiblingHit > 0) {
-            os << " sibling-hit=" << asHex(tosSiblingHit);
+            os << " sibling-hit=0x" << asHex(tosSiblingHit);
         }
         if (tosParentHit > 0) {
-            os << " parent-hit=" << asHex(tosParentHit);
+            os << " parent-hit=0x" << asHex(tosParentHit);
         }
         if (tosMiss > 0) {
-            os << " miss=" << asHex(tosMiss);
+            os << " miss=0x" << asHex(tosMiss);
             if (tosMissMask!=0xFFU) {
-                os << '/' << asHex(tosMissMask);
+                os << "/0x" << asHex(tosMissMask);
             }
         }
         if (preserveMissTos == 0) {
             os << " disable-preserve-miss";
         }
         if (preserveMissTos && preserveMissTosMask != 0) {
-            os << " miss-mask=" << asHex(preserveMissTosMask);
+            os << " miss-mask=0x" << asHex(preserveMissTosMask);
         }
         os << "\n";
         return;
@@ -501,18 +501,18 @@ Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *name) const
         os << name << " mark";
 
         if (markLocalHit > 0) {
-            os << " local-hit=" << asHex(markLocalHit);
+            os << " local-hit=0x" << asHex(markLocalHit);
         }
         if (markSiblingHit > 0) {
-            os << " sibling-hit=" << asHex(markSiblingHit);
+            os << " sibling-hit=0x" << asHex(markSiblingHit);
         }
         if (markParentHit > 0) {
-            os << " parent-hit=" << asHex(markParentHit);
+            os << " parent-hit=0x" << asHex(markParentHit);
         }
         if (markMiss > 0) {
-            os << " miss=" << asHex(markMiss);
+            os << " miss=0x" << asHex(markMiss);
             if (markMissMask!=0xFFFFFFFFU) {
-                os << '/' << asHex(markMissMask);
+                os << "/0x" << asHex(markMissMask);
             }
         }
         if (preserveMissMark == false) {
