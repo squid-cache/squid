@@ -127,9 +127,9 @@ ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, 
     /* handle unsupported versions */
 
     const uint16_t vRaw = (vMajor << 8) | vMinor;
-    debugs(83, 7, "unsupported: " << asHex(vRaw));
+    debugs(83, 7, "unsupported: 0x" << asHex(vRaw));
     if (beStrict)
-        throw TextException(ToSBuf("unsupported TLS version: ", asHex(vRaw)), Here());
+        throw TextException(ToSBuf("unsupported TLS version: 0x", asHex(vRaw)), Here());
     // else hide unsupported version details from the caller behind PROTO_NONE
     return AnyP::ProtocolVersion();
 }
