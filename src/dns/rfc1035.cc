@@ -137,11 +137,11 @@ rfc1035NamePack(char *buf, size_t sz, const char *name)
         off += rfc1035LabelPack(buf + off, sz - off, t);
     xfree(copy);
 
-    // Put terminate NULL label at the end
-    *(buf + off) = 0;
-    off++;
+    // Add a terminating 0-size label
+    assert(off < sz);
+    buf[off] = 0;
+    ++off;
 
-    assert(off <= sz);
     return off;
 }
 
