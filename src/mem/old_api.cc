@@ -40,23 +40,14 @@ static void memFree16K(void *);
 static void memFree32K(void *);
 static void memFree64K(void *);
 
-/* local prototypes */
-static void memStringStats(std::ostream &);
-
 /* module locals */
 static double xm_time = 0;
 static double xm_deltat = 0;
-
-/* string pools */
-#define mem_str_pool_count 6
 
 struct PoolMeta {
     const char *name;
     size_t obj_size;
 };
-
-static Mem::Meter StrCountMeter;
-static Mem::Meter StrVolumeMeter;
 
 static Mem::Meter HugeBufCountMeter;
 static Mem::Meter HugeBufVolumeMeter;
@@ -82,96 +73,16 @@ GetPool(size_t type)
     return pools[type];
 }
 
-static Mem::Allocator &
-GetStrPool(size_t type)
-{
-    static Mem::Allocator *strPools[mem_str_pool_count];
-    static bool initialized = false;
-
-    static const PoolMeta PoolAttrs[mem_str_pool_count] = {
-        {"Short Strings", Mem::Allocator::RoundedSize(36)}, /* to fit rfc1123 and similar */
-        {"Medium Strings", Mem::Allocator::RoundedSize(128)}, /* to fit most urls */
-        {"Long Strings", Mem::Allocator::RoundedSize(512)},
-        {"1KB Strings", Mem::Allocator::RoundedSize(1024)},
-        {"4KB Strings", Mem::Allocator::RoundedSize(4*1024)},
-        {"16KB Strings", Mem::Allocator::RoundedSize(16*1024)}
-    };
-
-    if (!initialized) {
-        memset(strPools, '\0', sizeof(strPools));
-
-        /** Lastly init the string pools. */
-        for (int i = 0; i < mem_str_pool_count; ++i) {
-            strPools[i] = memPoolCreate(PoolAttrs[i].name, PoolAttrs[i].obj_size);
-            strPools[i]->zeroBlocks(false);
-
-            if (strPools[i]->objectSize != PoolAttrs[i].obj_size)
-                debugs(13, DBG_IMPORTANT, "WARNING: " << PoolAttrs[i].name <<
-                       " is " << strPools[i]->objectSize <<
-                       " bytes instead of requested " <<
-                       PoolAttrs[i].obj_size << " bytes");
-        }
-
-        initialized = true;
-    }
-
-    return *strPools[type];
-}
-
-/// \returns the best-fit string pool or nil
-static Mem::Allocator *
-memFindStringPool(size_t net_size)
-{
-    for (unsigned int i = 0; i < mem_str_pool_count; ++i) {
-        auto &pool = GetStrPool(i);
-        if (net_size <= pool.objectSize)
-            return &pool;
-    }
-    return nullptr;
-}
-
-static void
-memStringStats(std::ostream &stream)
-{
-    int i;
-    int pooled_count = 0;
-    size_t pooled_volume = 0;
-    /* heading */
-    stream << "String Pool\t Impact\t\t\n \t (%strings)\t (%volume)\n";
-    /* table body */
-
-    for (i = 0; i < mem_str_pool_count; ++i) {
-        const auto &pool = GetStrPool(i);
-        const auto plevel = pool.meter.inuse.currentLevel();
-        stream << std::setw(20) << std::left << pool.label;
-        stream << std::right << "\t " << xpercentInt(plevel, StrCountMeter.currentLevel());
-        stream << "\t " << xpercentInt(plevel * pool.objectSize, StrVolumeMeter.currentLevel()) << "\n";
-        pooled_count += plevel;
-        pooled_volume += plevel * pool.objectSize;
-    }
-
-    /* malloc strings */
-    stream << std::setw(20) << std::left << "Other Strings";
-    stream << std::right << "\t ";
-    stream << xpercentInt(StrCountMeter.currentLevel() - pooled_count, StrCountMeter.currentLevel()) << "\t ";
-    stream << xpercentInt(StrVolumeMeter.currentLevel() - pooled_volume, StrVolumeMeter.currentLevel()) << "\n\n";
-}
-
-static void
-memBufStats(std::ostream & stream)
-{
-    stream << "Large buffers: " <<
-           HugeBufCountMeter.currentLevel() << " (" <<
-           HugeBufVolumeMeter.currentLevel() / 1024 << " KB)\n";
-}
-
 void
 Mem::Stats(StoreEntry * sentry)
 {
     PackableStream stream(*sentry);
     Report(stream);
-    memStringStats(stream);
-    memBufStats(stream);
+
+    stream << "Large buffers: " <<
+           HugeBufCountMeter.currentLevel() << " (" <<
+           HugeBufVolumeMeter.currentLevel() / 1024 << " KB)\n";
+
 #if WITH_VALGRIND
     if (RUNNING_ON_VALGRIND) {
         long int leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
@@ -220,48 +131,6 @@ memFree(void *p, int type)
 {
     assert(GetPool(type));
     GetPool(type)->freeOne(p);
-}
-
-void *
-memAllocRigid(size_t net_size)
-{
-    // TODO: Use memAllocBuf() instead (after it stops zeroing memory).
-
-    if (const auto pool = memFindStringPool(net_size)) {
-        ++StrCountMeter;
-        StrVolumeMeter += pool->objectSize;
-        return pool->alloc();
-    }
-
-    ++StrCountMeter;
-    StrVolumeMeter += net_size;
-    return xmalloc(net_size);
-}
-
-size_t
-memStringCount()
-{
-    size_t result = 0;
-
-    for (int counter = 0; counter < mem_str_pool_count; ++counter)
-        result += GetStrPool(counter).getInUseCount();
-
-    return result;
-}
-
-void
-memFreeRigid(void *buf, size_t net_size)
-{
-    if (const auto pool = memFindStringPool(net_size)) {
-        pool->freeOne(buf);
-        StrVolumeMeter -= pool->objectSize;
-        --StrCountMeter;
-        return;
-    }
-
-    xfree(buf);
-    StrVolumeMeter -= net_size;
-    --StrCountMeter;
 }
 
 /* Find the best fit MEM_X_BUF type */
@@ -328,8 +197,8 @@ memAllocBuf(size_t net_size, size_t * gross_size)
         return memAllocate(type);
     else {
         ++HugeBufCountMeter;
-        HugeBufVolumeMeter += *gross_size;
-        return xcalloc(1, net_size);
+        HugeBufVolumeMeter += net_size;
+        return xmalloc(net_size);
     }
 }
 
