@@ -1453,8 +1453,10 @@ TunnelStateData::startConnecting()
 void
 TunnelStateData::usePinned()
 {
-    Must(request);
+    Assure(request);
     const auto connManager = request->pinnedConnection();
+    Assure(connManager);
+
     try {
         const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
         debugs(26, 7, "pinned peer connection: " << serverConn);
@@ -1471,7 +1473,7 @@ TunnelStateData::usePinned()
         const auto reused = true;
         connectDone(serverConn, connManager->pinning.host, reused);
     } catch (ErrorState * const error) {
-        syncHierNote(nullptr, connManager ? connManager->pinning.host : request->url.host());
+        syncHierNote(nullptr, connManager->pinning.host);
         // XXX: Honor clientExpectsConnectResponse() before replying.
         // a PINNED path failure is fatal; do not wait for more paths
         sendError(error, "pinned path failure");
