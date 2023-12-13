@@ -197,7 +197,7 @@ memAllocBuf(size_t net_size, size_t * gross_size)
         return memAllocate(type);
     else {
         ++HugeBufCountMeter;
-        HugeBufVolumeMeter += *gross_size;
+        HugeBufVolumeMeter += net_size;
         return xmalloc(net_size);
     }
 }
