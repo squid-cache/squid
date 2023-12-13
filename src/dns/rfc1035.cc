@@ -104,12 +104,11 @@ rfc1035LabelPack(char *buf, size_t sz, const char *label)
     assert(!strchr(label, '.'));
 
     int off = 0;
-    size_t len = strlen(label);
+    auto len = strlen(label);
     if (len > RFC1035_MAXLABELSZ)
         len = RFC1035_MAXLABELSZ;
     assert(sz >= len + 1);
-
-    *buf = (char) len;
+    *(buf + off) = (char) len;
     off++;
     memcpy(buf + off, label, len);
     off += len;
@@ -137,7 +136,7 @@ rfc1035NamePack(char *buf, size_t sz, const char *name)
         off += rfc1035LabelPack(buf + off, sz - off, t);
     xfree(copy);
 
-    // Add a terminating 0-size label
+    // add a terminating root (i.e. zero length) label
     assert(off < sz);
     buf[off] = 0;
     ++off;
