@@ -60,6 +60,8 @@ public:
             char *element;
             char separator;
         } header;
+
+        uint8_t byteValue; // %byte{} parameter or zero
     } data;
     int widthMin; ///< minimum field width
     int widthMax; ///< maximum field width

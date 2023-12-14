@@ -9,6 +9,7 @@
 /* DEBUG: section 54    Interprocess Communication */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "ipc/StoreMap.h"
 #include "sbuf/SBuf.h"
 #include "SquidConfig.h"
@@ -856,7 +857,7 @@ Ipc::StoreMap::validateHit(const sfileno fileno)
            "    expires=" << anchor.basics.expires << "\n" <<
            "    lastmod=" << anchor.basics.lastmod << "\n" <<
            "    refcount=" << anchor.basics.refcount << "\n" <<
-           "    flags=0x" << std::hex << anchor.basics.flags << std::dec << "\n" <<
+           "    flags=0x" << asHex(anchor.basics.flags) << "\n" <<
            "    start=" << anchor.start << "\n" <<
            "    splicingPoint=" << anchor.splicingPoint << "\n" <<
            "    lock=" << anchor.lock << "\n" <<
