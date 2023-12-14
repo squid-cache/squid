@@ -230,11 +230,7 @@ HERE(std::ostream& s)
  *
  * debugs(1,1, MYNAME << "WARNING: some message");
  */
-#ifdef __PRETTY_FUNCTION__
-#define MYNAME __PRETTY_FUNCTION__ << " "
-#else
-#define MYNAME __FUNCTION__ << " "
-#endif
+#define MYNAME __func__ << " "
 
 /* some uint8_t do not like streaming control-chars (values 0-31, 127+) */
 inline std::ostream& operator <<(std::ostream &os, const uint8_t d)

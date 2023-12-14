@@ -551,7 +551,7 @@ Store::Controller::freeMemorySpace(const int bytesRequired)
     int removed = 0;
     while (const auto entry = walker->Next(walker)) {
         // Abandoned memory cache entries are purged during memory shortage.
-        entry->abandon(__FUNCTION__); // may delete entry
+        entry->abandon(__func__); // may delete entry
         ++removed;
 
         if (memoryCacheHasSpaceFor(pagesRequired))
