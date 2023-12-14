@@ -1453,7 +1453,7 @@ TunnelStateData::startConnecting()
 void
 TunnelStateData::usePinned()
 {
-    assert(request);
+    Must(request);
     const auto connManager = request->pinnedConnection();
     Comm::ConnectionPointer serverConn = nullptr;
 
