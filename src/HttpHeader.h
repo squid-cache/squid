@@ -60,6 +60,9 @@ public:
     int getInt() const;
     int64_t getInt64() const;
 
+    /// expected number of bytes written by packInto(), including ": " and CRLF
+    size_t length() const { return name.length() + 2 + value.size() + 2; }
+
     Http::HdrType id;
     SBuf name;
     String value;
@@ -72,7 +75,6 @@ class HttpHeader
 {
 
 public:
-    HttpHeader();
     explicit HttpHeader(const http_hdr_owner_type owner);
     HttpHeader(const HttpHeader &other);
     ~HttpHeader();
@@ -106,7 +108,6 @@ public:
     void delAt(HttpHeaderPos pos, int &headers_deleted);
     void refreshMask();
     void addEntry(HttpHeaderEntry * e);
-    void insertEntry(HttpHeaderEntry * e);
     String getList(Http::HdrType id) const;
     bool getList(Http::HdrType id, String *s) const;
     bool conflictingContentLength() const { return conflictingContentLength_; }
@@ -197,6 +198,26 @@ private:
 };
 
 int httpHeaderParseQuotedString(const char *start, const int len, String *val);
+
+namespace Http {
+
+/**
+ * Parses an HTTP quoted-string sequence (RFC 9110, Section 5.6.4).
+ *
+ * \param a brief human-friendly description of the string being parsed
+ * \param start input buffer (an opening double-quote is expected at *start)
+ * \param length is the number of characters in the given buffer
+ *
+ * \returns string contents with open/closing quotes stripped and any quoted-pairs decoded
+ *
+ * Avoid this slow function on performance-sensitive code paths.
+ * TODO: Replace with an efficient, SBuf-friendly implementation.
+ *
+ * \sa httpHeaderParseQuotedString() for a String-friendly function.
+ */
+SBuf SlowlyParseQuotedString(const char *description, const char *start, size_t length);
+
+}
 
 /// quotes string using RFC 7230 quoted-string rules
 SBuf httpHeaderQuoteString(const char *raw);

@@ -60,12 +60,12 @@ struct domaincontroller {
 typedef std::vector<domaincontroller> domaincontrollers_t;
 domaincontrollers_t domaincontrollers;
 
-bool
+static bool
 validate_user(char *username, char *password)
 {
     for (domaincontrollers_t::iterator dc = domaincontrollers.begin(); dc != domaincontrollers.end(); ++dc) {
         //std::cerr << "testing against " << dc->server << std::endl;
-        const int rv = Valid_User(username, password, dc->server.c_str(), NULL, dc->domain.c_str());
+        const int rv = Valid_User(username, password, dc->server.c_str(), nullptr, dc->domain.c_str());
         //std::cerr << "check result: " << rv << std::endl;
         if (rv == NTV_NO_ERROR)
             return true;
@@ -74,7 +74,7 @@ validate_user(char *username, char *password)
 }
 
 static char instructions[] = "Usage instructions: basic_nsnt_auth <domainname>/<domaincontroller> [<domainname>/<domaincontroller> ...]";
-void
+static void
 display_usage_instructions()
 {
     using std::endl;
@@ -91,7 +91,7 @@ main(int argc, char **argv)
     int err = 0;
 
     openlog("basic_smb_lm_auth", LOG_PID, LOG_USER);
-    setbuf(stdout, NULL);
+    setbuf(stdout, nullptr);
 
     for (int j = 1; j < argc; ++j) {
         std::string arg = argv[j];

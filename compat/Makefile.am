@@ -14,8 +14,19 @@ include $(top_srcdir)/src/Common.am
 
 # Port Specific Configurations
 
+COMPAT_SSL_ALL_SOURCES = \
+	openssl.h
+
+if ENABLE_SSL
+COMPAT_SSL_SOURCES = $(COMPAT_SSL_ALL_SOURCES)
+else
+COMPAT_SSL_SOURCES =
+EXCLUDE_FROM_HDR_TESTING += $(COMPAT_SSL_ALL_SOURCES)
+endif
+
 noinst_LTLIBRARIES = libcompatsquid.la
 libcompatsquid_la_SOURCES = \
+	$(COMPAT_SSL_SOURCES) \
 	assert.cc \
 	assert.h \
 	cmsg.h \
@@ -34,7 +45,6 @@ libcompatsquid_la_SOURCES = \
 	memrchr.cc \
 	memrchr.h \
 	mswindows.cc \
-	openssl.h \
 	os/aix.h \
 	os/android.h \
 	os/dragonfly.h \
@@ -85,16 +95,3 @@ testPreCompiler_SOURCES = \
 	testPreCompiler.cc
 testPreCompiler_LDADD= $(LIBCPPUNIT_LIBS)
 testPreCompiler_LDFLAGS=
-
-# os/ subdir prevents us using src/TestHeaders.am
-#
-TESTS += testHeaders
-
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(srcdir)/*.h $(srcdir)/os/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
-
-CLEANFILES += testHeaders
-
-.PHONY: testHeaders

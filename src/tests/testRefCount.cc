@@ -196,3 +196,9 @@ TestRefCount::testDoubleInheritToSingleInherit()
     CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

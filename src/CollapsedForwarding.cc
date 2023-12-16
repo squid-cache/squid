@@ -186,7 +186,7 @@ private:
     Ipc::MultiQueue::Owner *owner;
 };
 
-RunnerRegistrationEntry(CollapsedForwardingRr);
+DefineRunnerRegistrator(CollapsedForwardingRr);
 
 void CollapsedForwardingRr::create()
 {

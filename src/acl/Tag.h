@@ -9,14 +9,21 @@
 #ifndef SQUID_ACLTAG_H
 #define SQUID_ACLTAG_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 
-class ACLTagStrategy : public ACLStrategy<const char *>
+namespace Acl
 {
 
+/// a "tag" ACL
+class TagCheck: public ParameterizedNode< ACLData<const char *> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLMYPORTNAME_H */
 

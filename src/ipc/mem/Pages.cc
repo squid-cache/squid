@@ -103,7 +103,7 @@ private:
     Ipc::Mem::PagePool::Owner *owner;
 };
 
-RunnerRegistrationEntry(SharedMemPagesRr);
+DefineRunnerRegistrator(SharedMemPagesRr);
 
 void
 SharedMemPagesRr::useConfig()

@@ -6,16 +6,16 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_HTML_QUOTE_H
-#define _SQUID_HTML_QUOTE_H
+/*
+ * This file is used to test whether Squid header files can be compiled on their own.
+ * See the testHeaders target in src/TestHeaders.am.
+ */
 
-#ifdef __cplusplus
-extern "C"
-#else
-extern
-#endif
+#include "squid.h"
+#include "@HEADER@"
 
-char *html_quote(const char *);
-
-#endif /* _SQUID_HTML_QUOTE_H */
+int
+main(int, char **) {
+    return 0;
+}
 

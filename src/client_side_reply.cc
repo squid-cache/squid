@@ -440,12 +440,18 @@ clientReplyContext::handleIMSReply(const StoreIOBuffer result)
 
     // origin replied 304
     if (status == Http::scNotModified) {
-        http->updateLoggingTags(LOG_TCP_REFRESH_UNMODIFIED);
-        http->request->flags.staleIfHit = false; // old_entry is no longer stale
-
         // TODO: The update may not be instantaneous. Should we wait for its
         // completion to avoid spawning too much client-disassociated work?
-        Store::Root().updateOnNotModified(old_entry, *http->storeEntry());
+        if (!Store::Root().updateOnNotModified(old_entry, *http->storeEntry())) {
+            old_entry->release(true);
+            restoreState();
+            http->updateLoggingTags(LOG_TCP_MISS);
+            processMiss();
+            return;
+        }
+
+        http->updateLoggingTags(LOG_TCP_REFRESH_UNMODIFIED);
+        http->request->flags.staleIfHit = false; // old_entry is no longer stale
 
         // if client sent IMS
         if (http->request->flags.ims && !old_entry->modifiedSince(http->request->ims, http->request->imslen)) {
@@ -611,7 +617,7 @@ clientReplyContext::cacheHit(const StoreIOBuffer result)
         http->updateLoggingTags(LOG_TCP_MISS);
         processMiss();
         return;
-    } else if (!http->flags.internal && refreshCheckHTTP(e, r)) {
+    } else if (!r->flags.internal && refreshCheckHTTP(e, r)) {
         debugs(88, 5, "clientCacheHit: in refreshCheck() block");
         /*
          * We hold a stale copy; it needs to be validated
@@ -834,7 +840,7 @@ clientReplyContext::blockedHit() const
     if (!Config.accessList.sendHit)
         return false; // hits are not blocked by default
 
-    if (http->flags.internal)
+    if (http->request->flags.internal)
         return false; // internal content "hits" cannot be blocked
 
     const auto &rep = http->storeEntry()->mem().freshestReply();
@@ -1413,18 +1419,6 @@ clientReplyContext::buildReplyHeader()
 
     /* Signal keep-alive or close explicitly */
     hdr->putStr(Http::HdrType::CONNECTION, request->flags.proxyKeepalive ? "keep-alive" : "close");
-
-#if ADD_X_REQUEST_URI
-    /*
-     * Knowing the URI of the request is useful when debugging persistent
-     * connections in a client; we cannot guarantee the order of http headers,
-     * but X-Request-URI is likely to be the very last header to ease use from a
-     * debugger [hdr->entries.count-1].
-     */
-    hdr->putStr(Http::HdrType::X_REQUEST_URI,
-                http->memOjbect()->url ? http->memObject()->url : http->uri);
-
-#endif
 
     /* Surrogate-Control requires Surrogate-Capability from upstream to pass on */
     if ( hdr->has(Http::HdrType::SURROGATE_CONTROL) ) {

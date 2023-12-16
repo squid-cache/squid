@@ -987,7 +987,7 @@ private:
     Ipc::Mem::Owner<MemStoreMapExtras> *extrasOwner; ///< PageIds Owner
 };
 
-RunnerRegistrationEntry(MemStoreRr);
+DefineRunnerRegistrator(MemStoreRr);
 
 void
 MemStoreRr::claimMemoryNeeds()

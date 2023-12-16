@@ -198,10 +198,10 @@ msgstr "RAPPORT de BUGS"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:85 helpers/basic_auth/LDAP/basic_ldap_auth.8:311 helpers/basic_auth/NCSA/basic_ncsa_auth.8:57 helpers/basic_auth/PAM/basic_pam_auth.8:99 helpers/basic_auth/RADIUS/basic_radius_auth.8:110 helpers/external_acl/ldap_group/squid_ldap_group.8:260 helpers/external_acl/session/squid_session.8:79 helpers/external_acl/unix_group/squid_unix_group.8:81 src/squid.8.in:250 tools/cachemgr.cgi.8.in:67 tools/squidclient.1:179
-msgid "Report bugs or bug fixes using http://bugs.squid-cache.org/"
+msgid "Report bugs or bug fixes using https://bugs.squid-cache.org/"
 msgstr ""
 "Pour signaler un bug ou une correction de bug utilisez "
-"http://bugs.squid-cache.org/"
+"https://bugs.squid-cache.org/"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:88 helpers/basic_auth/LDAP/basic_ldap_auth.8:314 helpers/basic_auth/NCSA/basic_ncsa_auth.8:60 helpers/basic_auth/PAM/basic_pam_auth.8:102 helpers/basic_auth/RADIUS/basic_radius_auth.8:113 helpers/external_acl/ldap_group/squid_ldap_group.8:263 helpers/external_acl/session/squid_session.8:82 helpers/external_acl/unix_group/squid_unix_group.8:84 src/squid.8.in:253 tools/cachemgr.cgi.8.in:70 tools/squidclient.1:182
@@ -1551,13 +1551,13 @@ msgstr "Squid est dérivé du Projet Harvest avec le financement d'ARPA."
 msgid ""
 "This manual page only lists the command line arguments.  For details on how "
 "to configure Squid see the file B<@SYSCONFDIR@/squid.conf.documented,> the "
-"Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the "
+"Squid wiki FAQ and examples at https://wiki.squid-cache.org/ , or the "
 "configuration manual on the Squid home page"
 msgstr ""
 "Ce manuel répertorie uniquement la liste des arguments de commandes. Pour "
 "plus de détails sur la façon de configurer Squid, consulter le fichier "
 "B<@SYSCONFDIR@/squid.conf.documented>, vous pouvez aussi consulter le site "
-"wiki http://wiki.squid-cache.org/ pour les FAQ et les exemples Squid, "
+"wiki https://wiki.squid-cache.org/ pour les FAQ et les exemples Squid, "
 "ou consulter le manuel de configuration sur la Page d'accueil Squid."
 
 #. type: Plain text

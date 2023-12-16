@@ -23,6 +23,8 @@ class Scheme;
 class SchemeConfig;
 typedef std::vector<Auth::SchemeConfig *> ConfigVector;
 
+class UserRequest;
+
 } // namespace Auth
 
 #endif /* USE_AUTH */

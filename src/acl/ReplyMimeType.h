@@ -17,8 +17,10 @@
 
 template <>
 inline int
-ACLReplyHeaderStrategy<Http::HdrType::CONTENT_TYPE>::match(ACLData<char const *> * &data, ACLFilledChecklist *checklist)
+Acl::ReplyHeaderCheck<Http::HdrType::CONTENT_TYPE>::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     char const *theHeader = checklist->reply->header.getStr(Http::HdrType::CONTENT_TYPE);
 
     if (nullptr == theHeader)

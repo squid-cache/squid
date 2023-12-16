@@ -17,7 +17,6 @@
 #include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidString.h"
 
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -174,6 +173,10 @@ urlInitialize(void)
     assert(0 == matchDomainName("*.foo.com", ".x.foo.com", mdnHonorWildcards));
     assert(0 == matchDomainName("*.foo.com", ".foo.com", mdnHonorWildcards));
     assert(0 != matchDomainName("*.foo.com", "foo.com", mdnHonorWildcards));
+
+    assert(0 != matchDomainName("foo.com", ""));
+    assert(0 != matchDomainName("foo.com", "", mdnHonorWildcards));
+    assert(0 != matchDomainName("foo.com", "", mdnRejectSubsubDomains));
 
     /* more cases? */
 }
@@ -772,12 +775,9 @@ urlIsRelative(const char *url)
         return true; // path-empty
 
     if (*url == '/') {
-        // RFC 3986 section 5.2.3
-        // path-absolute   ; begins with "/" but not "//"
-        if (url[1] == '/')
-            return true; // network-path reference, aka. 'scheme-relative URI'
-        else
-            return true; // path-absolute, aka 'absolute-path reference'
+        // network-path reference (a.k.a. 'scheme-relative URI') or
+        // path-absolute (a.k.a. 'absolute-path reference')
+        return true;
     }
 
     for (const auto *p = url; *p != '\0' && *p != '/' && *p != '?' && *p != '#'; ++p) {
@@ -828,6 +828,8 @@ matchDomainName(const char *h, const char *d, MatchDomainNameFlags flags)
         return -1;
 
     dl = strlen(d);
+    if (dl == 0)
+        return 1;
 
     /*
      * Start at the ends of the two strings and work towards the

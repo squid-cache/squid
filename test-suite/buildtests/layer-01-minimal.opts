@@ -51,7 +51,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-wccp \
 	--disable-wccpv2 \
 	--disable-snmp \
-	--disable-cachemgr-hostname \
 	--disable-eui \
 	--disable-htcp \
 	--disable-ssl-crtd \

@@ -137,7 +137,7 @@ mail_warranty(void)
     char *filename;
     // XXX tempnam is obsolete since POSIX.2008-1
     // tmpfile is not an option, we want the created files to stick around
-    if ((filename = tempnam(NULL, APP_SHORTNAME)) == NULL ||
+    if ((filename = tempnam(nullptr, APP_SHORTNAME)) == NULL ||
             (fp = fopen(filename, "w")) == NULL) {
         umask(prev_umask);
         return;
@@ -776,7 +776,7 @@ setMaxFD(void)
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_NOFILE: " << xstrerr(xerrno));
     } else if (Config.max_filedescriptors > 0) {
-#if USE_SELECT || USE_SELECT_WIN32
+#if USE_SELECT
         /* select() breaks if this gets set too big */
         if (Config.max_filedescriptors > FD_SETSIZE) {
             rl.rlim_cur = FD_SETSIZE;

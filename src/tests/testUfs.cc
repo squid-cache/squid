@@ -266,3 +266,9 @@ TestUfs::testUfsDefaultEngine()
         throw std::runtime_error("Failed to clean test work directory");
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

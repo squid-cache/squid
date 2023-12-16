@@ -82,6 +82,14 @@ public:
     /// the request. To set the virgin request, use initRequest().
     void resetRequest(HttpRequest *);
 
+    // XXX: unify the uriChanged condition calculation with resetRequest() callers, removing this method
+    /// resetRequest() variation for callers with custom URI change detection logic
+    /// \param uriChanged whether the new request URI differs from the current request URI
+    void resetRequestXXX(HttpRequest *, bool uriChanged);
+
+    /// Checks whether the current request is internal and adjusts it accordingly.
+    void checkForInternalAccess();
+
     /// update the code in the transaction processing tags
     void updateLoggingTags(const LogTags_ot code) { al->cache.code.update(code); }
 
@@ -157,7 +165,6 @@ public:
 
     struct Flags {
         bool accel = false;
-        bool internal = false;
         bool done_copying = false;
     } flags;
 
