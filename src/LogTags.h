@@ -31,7 +31,7 @@ public:
  * These codes indicate how the request was received
  * and some details about its processing pathway.
  *
- * see also http://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid_result_codes
+ * see also https://wiki.squid-cache.org/SquidFaq/SquidLogs#squid-result-codes
  * for details on particular components.
  */
 typedef enum {
@@ -53,7 +53,7 @@ typedef enum {
     LOG_TCP_DENIED_REPLY,
     LOG_TCP_OFFLINE_HIT,
     LOG_TCP_REDIRECT,
-    LOG_TCP_TUNNEL,             // a binary tunnel was established for this transaction
+    LOG_TCP_TUNNEL, ///< an attempt to establish a bidirectional TCP tunnel
     LOG_UDP_HIT,
     LOG_UDP_MISS,
     LOG_UDP_DENIED,

@@ -9,6 +9,7 @@
 /* DEBUG: section 83    SSL accelerator support */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "ssl/support.h"
 
 /* support.cc says this is needed */
@@ -50,7 +51,7 @@ static BIO_METHOD SquidMethods = {
     squid_bio_write,
     squid_bio_read,
     squid_bio_puts,
-    NULL, // squid_bio_gets not supported
+    nullptr, // squid_bio_gets not supported
     squid_bio_ctrl,
     squid_bio_create,
     squid_bio_destroy,
@@ -160,7 +161,7 @@ Ssl::Bio::stateChanged(const SSL *ssl, int where, int)
     // else if (where & SSL_CB_HANDSHAKE_DONE)
     //    debugs(83, 9, "SSL connection established");
 
-    debugs(83, 7, "FD " << fd_ << " now: 0x" << std::hex << where << std::dec << ' ' <<
+    debugs(83, 7, "FD " << fd_ << " now: 0x" << asHex(where) << ' ' <<
            SSL_state_string(ssl) << " (" << SSL_state_string_long(ssl) << ")");
 }
 

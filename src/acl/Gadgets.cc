@@ -17,11 +17,8 @@
  */
 
 #include "squid.h"
-#include "acl/Acl.h"
 #include "acl/AclDenyInfoList.h"
-#include "acl/Checklist.h"
 #include "acl/Gadgets.h"
-#include "acl/Strategised.h"
 #include "acl/Tree.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"

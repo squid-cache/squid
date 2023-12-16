@@ -56,9 +56,9 @@
 #include <ldap.h>
 
 #endif
-#include <wchar.h>
 
 #include "edir_ldapext.h"
+#include <cwchar>
 
 #define NMASLDAP_GET_LOGIN_CONFIG_REQUEST   "2.16.840.1.113719.1.39.42.100.3"
 #define NMASLDAP_GET_LOGIN_CONFIG_RESPONSE  "2.16.840.1.113719.1.39.42.100.4"

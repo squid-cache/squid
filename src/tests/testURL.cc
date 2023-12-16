@@ -8,21 +8,41 @@
 
 #include "squid.h"
 
-#include <cppunit/TestAssert.h>
-
 #include "anyp/Uri.h"
+#include "compat/cppunit.h"
 #include "debug/Stream.h"
-#include "tests/testURL.h"
 #include "unitTestMain.h"
 
+#include <cppunit/TestAssert.h>
 #include <sstream>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestUri );
+/*
+ * test the Anyp::Uri-related classes
+ */
 
-/* init memory pools */
+class TestUri : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestUri);
+    CPPUNIT_TEST(testConstructScheme);
+    CPPUNIT_TEST(testDefaultConstructor);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testConstructScheme();
+    void testDefaultConstructor();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestUri);
+
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
 
 void
-TestUri::setUp()
+MyTestProgram::startup()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -59,5 +79,11 @@ TestUri::testDefaultConstructor()
     auto *urlPointer = new AnyP::Uri;
     CPPUNIT_ASSERT(urlPointer != nullptr);
     delete urlPointer;
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

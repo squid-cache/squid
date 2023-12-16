@@ -29,9 +29,8 @@ TypedOption<CharacterSetOptionValue>::import(const SBuf &rawValue) const
 }
 
 template <>
-inline
-void
-TypedOption<CharacterSetOptionValue>::print(std::ostream &os) const
+inline void
+TypedOption<CharacterSetOptionValue>::printValue(std::ostream &os) const
 {
     recipient_->value.printChars(os); // TODO: Quote if needed.
 }

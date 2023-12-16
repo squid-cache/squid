@@ -7,20 +7,32 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "mem/forward.h"
 #include "SquidString.h"
-#include "testString.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestString );
+/*
+ * test the store framework
+ */
 
-/* init memory pools */
-
-void
-TestString::setUp()
+class TestString : public CPPUNIT_NS::TestFixture
 {
-    Mem::Init();
-}
+    CPPUNIT_TEST_SUITE(TestString);
+    CPPUNIT_TEST(testCmpDefault);
+    CPPUNIT_TEST(testCmpEmptyString);
+    CPPUNIT_TEST(testCmpNotEmptyDefault);
+    CPPUNIT_TEST(testSubstr);
+
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testCmpDefault();
+    void testCmpEmptyString();
+    void testCmpNotEmptyDefault();
+    void testSubstr();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestString);
 
 void
 TestString::testCmpDefault()
@@ -68,5 +80,19 @@ void TestString::testSubstr()
     String check=s.substr(3,5);
     String ref("34");
     CPPUNIT_ASSERT(check == ref);
+}
+
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override { Mem::Init(); }
+};
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

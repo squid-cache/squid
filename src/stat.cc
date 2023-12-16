@@ -12,6 +12,7 @@
 #include "AccessLogEntry.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "client_side.h"
 #include "client_side_request.h"
 #include "comm/Connection.h"
@@ -1135,7 +1136,7 @@ DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry)
 
 #if USE_POLL
     storeAppendPrintf(sentry, "syscalls.polls = %f/sec\n", stats.syscalls_selects);
-#elif defined(USE_SELECT) || defined(USE_SELECT_WIN32)
+#elif USE_SELECT
     storeAppendPrintf(sentry, "syscalls.selects = %f/sec\n", stats.syscalls_selects);
 #endif
 
@@ -1229,9 +1230,11 @@ statCountersInitSpecial(StatCounters * C)
      * Cache Digest Stuff
      */
     C->cd.on_xition_count.enumInit(CacheDigestHashFuncCount);
-    C->comm_udp_incoming.enumInit(INCOMING_UDP_MAX);
-    C->comm_dns_incoming.enumInit(INCOMING_DNS_MAX);
-    C->comm_tcp_incoming.enumInit(INCOMING_TCP_MAX);
+#if USE_POLL || USE_SELECT
+    C->comm_udp.init(INCOMING_UDP_MAX);
+    C->comm_dns.init(INCOMING_DNS_MAX);
+    C->comm_tcp.init(INCOMING_TCP_MAX);
+#endif
     C->select_fds_hist.enumInit(256);   /* was SQUID_MAXFD, but it is way too much. It is OK to crop this statistics */
 }
 
@@ -1574,7 +1577,6 @@ statPeerSelect(StoreEntry * sentry)
 {
 #if USE_CACHE_DIGESTS
     StatCounters *f = &statCounter;
-    CachePeer *peer;
     const int tot_used = f->cd.times_used + f->icp.times_used;
 
     /* totals */
@@ -1583,7 +1585,7 @@ statPeerSelect(StoreEntry * sentry)
     /* per-peer */
     storeAppendPrintf(sentry, "\nPer-peer statistics:\n");
 
-    for (peer = getFirstPeer(); peer; peer = getNextPeer(peer)) {
+    for (const auto &peer: CurrentCachePeers()) {
         if (peer->digest)
             peerDigestStatsReport(peer->digest, sentry);
         else

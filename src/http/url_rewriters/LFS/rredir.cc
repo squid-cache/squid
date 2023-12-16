@@ -44,8 +44,8 @@
  */
 
 #include <unistd.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstring>
+#include <cctype>
 
 #define ACCESS_LOCAL_DIR        "/var/lib/httpd/htdocs/local/rredir"
 #define REDIRECT_TO_URL         "http://www.hacom.nl/local/rredir"
@@ -59,7 +59,7 @@ main()
     int tlu = 0;
 
     /* make standard output line buffered */
-    if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
+    if (setvbuf(stdout, nullptr, _IOLBF, 0) != 0)
         exit(EXIT_FAILURE);
 
     /* speed up the access() calls below */

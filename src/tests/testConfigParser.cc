@@ -7,18 +7,29 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "ConfigParser.h"
 #include "SquidString.h"
-#include "tests/testConfigParser.h"
 #include "unitTestMain.h"
+
+/*
+ * test the ConfigParser framework
+ */
+
+class TestConfigParser : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestConfigParser);
+    CPPUNIT_TEST(testParseQuoted);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    bool doParseQuotedTest(const char *, const char *);
+    void testParseQuoted();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestConfigParser );
 
 int shutting_down = 0;
-
-void TestConfigParser::setUp()
-{
-}
 
 bool TestConfigParser::doParseQuotedTest(const char *s, const char *expectInterp)
 {
@@ -76,5 +87,11 @@ void TestConfigParser::testParseQuoted()
 
     /* \ */
     CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"\\\\\"", "\\"));
+}
+
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
 }
 

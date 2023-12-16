@@ -182,14 +182,17 @@ public:
     {
         if (configured()) {
             os << ' ' << (disabled() ? offName : onName);
-            if (valued())
-                os << '=' << recipient_->value;
+            if (valued()) {
+                os << '=';
+                printValue(os);
+            }
         }
         // else do not report the implicit default
     }
 
 private:
     void import(const SBuf &rawValue) const { recipient_->value = rawValue; }
+    void printValue(std::ostream &os) const { os << recipient_->value; }
 
     // The "mutable" specifier demarcates set-once Option kind/behavior from the
     // ever-changing recipient of the actual admin-configured option value.

@@ -15,7 +15,7 @@
 #include "acl/Acl.h" /* for Acl::Answer */
 
 #include "auth/Acl.h"
-Acl::Answer AuthenticateAcl(ACLChecklist *) STUB_RETVAL(ACCESS_DENIED)
+Acl::Answer AuthenticateAcl(ACLChecklist *, const ACL &) STUB_RETVAL(ACCESS_DENIED)
 
 #include "auth/AclMaxUserIp.h"
 ACLMaxUserIP::ACLMaxUserIP (char const *) STUB
@@ -37,9 +37,6 @@ int ACLProxyAuth::match(ACLChecklist *) STUB_RETVAL(0)
 SBufList ACLProxyAuth::dump() const STUB_RETVAL(SBufList())
 bool ACLProxyAuth::empty () const STUB_RETVAL(false)
 bool ACLProxyAuth::valid () const STUB_RETVAL(false)
-ProxyAuthLookup * ProxyAuthLookup::Instance() STUB_RETVAL(nullptr)
-void ProxyAuthLookup::checkForAsync(ACLChecklist *) const STUB
-void ProxyAuthLookup::LookupDone(void *) STUB
 int ACLProxyAuth::matchForCache(ACLChecklist *) STUB_RETVAL(0)
 int ACLProxyAuth::matchProxyAuth(ACLChecklist *) STUB_RETVAL(0)
 const Acl::Options &ACLProxyAuth::lineOptions() STUB_RETVAL(Acl::NoOptions())

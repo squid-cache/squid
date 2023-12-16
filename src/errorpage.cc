@@ -20,7 +20,7 @@
 #include "fde.h"
 #include "format/Format.h"
 #include "fs_io.h"
-#include "html_quote.h"
+#include "html/Quoting.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -678,15 +678,16 @@ ErrorState::NewForwarding(err_type type, HttpRequestPointer &request, const Acce
     return new ErrorState(type, status, request.getRaw(), ale);
 }
 
-ErrorState::ErrorState(err_type t) :
+ErrorState::ErrorState(const err_type t, const AccessLogEntry::Pointer &anAle):
     type(t),
     page_id(t),
-    callback(nullptr)
+    callback(nullptr),
+    ale(anAle)
 {
 }
 
 ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, const AccessLogEntry::Pointer &anAle) :
-    ErrorState(t)
+    ErrorState(t, anAle)
 {
     if (page_id >= ERR_MAX && ErrorDynamicPages[page_id - ERR_MAX]->page_redirect != Http::scNone)
         httpStatus = ErrorDynamicPages[page_id - ERR_MAX]->page_redirect;
@@ -697,12 +698,10 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, c
         request = req;
         src_addr = req->client_addr;
     }
-
-    ale = anAle;
 }
 
-ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply) :
-    ErrorState(ERR_RELAY_REMOTE)
+ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply, const AccessLogEntry::Pointer &anAle):
+    ErrorState(ERR_RELAY_REMOTE, anAle)
 {
     Must(errorReply);
     response_ = errorReply;
@@ -1277,6 +1276,17 @@ ErrorState::validate()
 HttpReply *
 ErrorState::BuildHttpReply()
 {
+    // Make sure error codes get back to the client side for logging and
+    // error tracking.
+    if (request) {
+        request->error.update(type, detail);
+        request->error.update(SysErrorDetail::NewIfAny(xerrno));
+    } else if (ale) {
+        Error err(type, detail);
+        err.update(SysErrorDetail::NewIfAny(xerrno));
+        ale->updateError(err);
+    }
+
     if (response_)
         return response_.getRaw();
 
@@ -1322,7 +1332,7 @@ ErrorState::BuildHttpReply()
          * If error page auto-negotiate is enabled in any way, send the Vary.
          * RFC 2616 section 13.6 and 14.44 says MAY and SHOULD do this.
          * We have even better reasons though:
-         * see http://wiki.squid-cache.org/KnowledgeBase/VaryNotCaching
+         * see https://wiki.squid-cache.org/KnowledgeBase/VaryNotCaching
          */
         if (!Config.errorDirectory) {
             /* We 'negotiated' this ONLY from the Accept-Language. */
@@ -1343,15 +1353,6 @@ ErrorState::BuildHttpReply()
         }
 
         rep->body.set(body);
-    }
-
-    // Make sure error codes get back to the client side for logging and
-    // error tracking.
-    if (request) {
-        if (detail)
-            request->detailError(type, detail);
-        else
-            request->detailError(type, SysErrorDetail::NewIfAny(xerrno));
     }
 
     return rep;

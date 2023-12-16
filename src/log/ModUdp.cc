@@ -42,7 +42,7 @@ logfile_mod_udp_write(Logfile * lf, const char *buf, size_t len)
     l_udp_t *ll = (l_udp_t *) lf->data;
     ssize_t s;
     s = write(ll->fd, (char const *) buf, len);
-    fd_bytes(ll->fd, s, FD_WRITE);
+    fd_bytes(ll->fd, s, IoDirection::Write);
 #if 0
     // TODO: Enable after polishing to properly log these errors.
     if (s < 0) {
@@ -101,8 +101,10 @@ logfile_mod_udp_linestart(Logfile *)
 }
 
 static void
-logfile_mod_udp_lineend(Logfile *)
+logfile_mod_udp_lineend(Logfile *lf)
 {
+    if (!Config.onoff.buffered_logs)
+        lf->f_flush(lf);
 }
 
 static void

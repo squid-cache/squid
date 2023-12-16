@@ -11,6 +11,8 @@
 
 #include "ip/forward.h"
 
+#include <iosfwd>
+
 class SBuf;
 
 namespace Ip

@@ -82,7 +82,11 @@ public:
 
     virtual void prepareForUse() {}
 
-    SBufList dumpOptions(); ///< \returns approximate options configuration
+    // TODO: Find a way to make options() and this method constant
+    /// Prints aggregated "acl" (or similar) directive configuration, including
+    /// the given directive name, ACL name, ACL type, and ACL parameters. The
+    /// printed parameters are collected from all same-name "acl" directives.
+    void dumpWhole(const char *directiveName, std::ostream &);
 
     char name[ACL_NAME_SZ];
     char *cfgline;

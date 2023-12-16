@@ -21,9 +21,9 @@
 
 /* C++ bindings */
 #else
+#include <cctype>
 #include <sys/types.h>
 #include <utility>
-#include <ctype.h>
 
 /* TODO: parameterize this to be more generic -
 * i.e. M-ary internal node sizes etc

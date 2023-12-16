@@ -14,6 +14,7 @@
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "error/forward.h"
+#include "HttpRequest.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -22,8 +23,6 @@
 
 class CachePeer;
 class ConnStateData;
-class HttpRequest;
-class HttpReply;
 
 /** \ingroup ACLAPI
     ACLChecklist filled with specific data, representing Squid and transaction
@@ -76,7 +75,7 @@ public:
     SBuf dst_peer_name;
     char *dst_rdns;
 
-    HttpRequest *request;
+    HttpRequest::Pointer request;
     HttpReply *reply;
 
     char rfc931[USER_IDENT_SZ];
@@ -87,11 +86,12 @@ public:
     char *snmp_community;
 #endif
 
+    // TODO: RefCount errors; do not ignore them because their "owner" is gone!
     /// TLS server [certificate validation] errors, in undefined order.
     /// The errors are accumulated as Squid goes through validation steps
     /// and server certificates. They are cleared on connection retries.
     /// For sslproxy_cert_error checks, contains just the current/last error.
-    const Security::CertErrors *sslErrors;
+    CbcPointer<Security::CertErrors> sslErrors;
 
     /// Peer certificate being checked by ssl_verify_cb() and by
     /// Security::PeerConnector class. In other contexts, the peer

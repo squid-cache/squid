@@ -7,7 +7,6 @@
 
 include $(top_srcdir)/src/Common.am
 
-DIST_SUBDIRS = ntlmauth rfcnb smblib libTrie snmplib
 SUBDIRS=
 EXTRA_DIST=
 
@@ -16,6 +15,9 @@ SUBDIRS += libTrie
 endif
 if ENABLE_SNMP
 SUBDIRS += snmplib
+endif
+if ENABLE_SSPI
+SUBDIRS += sspi
 endif
 
 install: all
@@ -26,16 +28,6 @@ noinst_LTLIBRARIES = \
 	libmisccontainers.la \
 	libmiscutil.la
 
-#
-# Some libraries are only available on Windows
-# and others are unable to be built.
-#
-if ENABLE_WIN32SPECIFIC
-noinst_LTLIBRARIES += libsspwin32.la
-libsspwin32_la_SOURCES = sspwin32.cc
-else
-EXTRA_DIST += sspwin32.cc
-endif
 if ENABLE_SMBLIB
 # smblib is the only user of the rfcnb library
 SUBDIRS += rfcnb smblib
@@ -54,7 +46,6 @@ EXTRA_libmiscutil_la_SOURCES = \
 
 libmiscencoding_la_SOURCES = \
 	base64.c \
-	html_quote.c \
 	md5.c \
 	rfc1738.c \
 	rfc2617.c
@@ -75,8 +66,7 @@ TESTS += tests/testRFC1738
 check_PROGRAMS += tests/testRFC1738
 
 tests_testRFC1738_SOURCES = \
-	tests/testRFC1738.cc \
-	tests/testRFC1738.h
+	tests/testRFC1738.cc
 
 tests_testRFC1738_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -86,12 +76,4 @@ tests_testRFC1738_LDADD= \
 
 tests_testRFC1738_LDFLAGS = $(LIBADD_DL)
 
-
-## Special Universal .h dependency test script
-## aborts if error encountered
 testHeaders: $(top_srcdir)/include/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
-
-TESTS += testHeaders
-CLEANFILES += testHeaders
-.PHONY: testHeaders

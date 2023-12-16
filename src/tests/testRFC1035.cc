@@ -7,11 +7,35 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "dns/rfc1035.h"
-#include "testRFC1035.h"
 #include "unitTestMain.h"
 
-#include <cassert>
+// #include <cassert>
+
+/*
+ * test the DNS resolver RFC 1035 Engine
+ */
+
+class TestRfc1035 : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestRfc1035);
+    CPPUNIT_TEST(testHeaderUnpack);
+    CPPUNIT_TEST(testParseAPacket);
+
+    CPPUNIT_TEST(testBugPacketHeadersOnly);
+    CPPUNIT_TEST(testBugPacketEndingOnCompressionPtr);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+protected:
+    void testHeaderUnpack();
+    void testParseAPacket();
+
+    // bugs.
+    void testBugPacketEndingOnCompressionPtr();
+    void testBugPacketHeadersOnly();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestRfc1035 );
 
@@ -136,5 +160,11 @@ void TestRfc1035::testBugPacketHeadersOnly()
     CPPUNIT_ASSERT(0 == memcmp("The DNS reply message is corrupt or could not be safely parsed.", rfc1035ErrorMessage(res), 63));
     CPPUNIT_ASSERT(res < 0);
     CPPUNIT_ASSERT(msg == nullptr);
+}
+
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
 }
 

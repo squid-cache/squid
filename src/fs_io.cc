@@ -89,7 +89,7 @@ file_close(int fd)
          * open files, so we won't allow delayed close.
          */
         while (!diskWriteIsComplete(fd))
-            diskHandleWrite(fd, NULL);
+            diskHandleWrite(fd, nullptr);
 #else
         F->flags.close_request = true;
         debugs(6, 2, "file_close: FD " << fd << ", delaying close");
@@ -211,17 +211,17 @@ diskHandleWrite(int fd, void *)
     len = FD_WRITE_METHOD(fd,
                           fdd->write_q->buf + fdd->write_q->buf_offset,
                           fdd->write_q->len - fdd->write_q->buf_offset);
+    const auto xerrno = errno;
 
     debugs(6, 3, "diskHandleWrite: FD " << fd << " len = " << len);
 
     ++ statCounter.syscalls.disk.writes;
 
-    fd_bytes(fd, len, FD_WRITE);
+    fd_bytes(fd, len, IoDirection::Write);
 
     if (len < 0) {
-        if (!ignoreErrno(errno)) {
-            status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
-            int xerrno = errno;
+        if (!ignoreErrno(xerrno)) {
+            status = xerrno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
             debugs(50, DBG_IMPORTANT, "ERROR: diskHandleWrite: FD " << fd << ": disk write failure: " << xstrerr(xerrno));
 
             /*
@@ -422,7 +422,7 @@ diskHandleRead(int fd, void *data)
 
     ++ statCounter.syscalls.disk.reads;
 
-    fd_bytes(fd, len, FD_READ);
+    fd_bytes(fd, len, IoDirection::Read);
 
     if (len < 0) {
         if (ignoreErrno(xerrno)) {
@@ -494,7 +494,7 @@ FileRename(const SBuf &from, const SBuf &to)
         return true;
 
     int xerrno = errno;
-    debugs(21, (errno == ENOENT ? 2 : DBG_IMPORTANT), "ERROR: Cannot rename " << from << " to " << to << ": " << xstrerr(xerrno));
+    debugs(21, (xerrno == ENOENT ? 2 : DBG_IMPORTANT), "ERROR: Cannot rename " << from << " to " << to << ": " << xstrerr(xerrno));
 
     return false;
 }

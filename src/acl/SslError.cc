@@ -9,11 +9,12 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/SslError.h"
-#include "acl/SslErrorData.h"
 
 int
-ACLSslErrorStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::CertificateErrorCheck::match(ACLChecklist * const ch)
 {
-    return data->match (checklist->sslErrors);
+    const auto checklist = Filled(ch);
+
+    return data->match(checklist->sslErrors.get());
 }
 

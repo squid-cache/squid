@@ -20,6 +20,7 @@
 #include <vector>
 
 class HttpRequest;
+class HttpReply;
 
 /**
  * a CacheManager - the menu system for interacting with squid.
@@ -32,6 +33,9 @@ class CacheManager
 {
 public:
     typedef std::vector<Mgr::ActionProfilePointer> Menu;
+
+    /// initial URL path characters that identify cache manager requests
+    static const SBuf &WellKnownUrlPathPrefix();
 
     void registerProfile(char const * action, char const * desc,
                          OBJH * handler,
@@ -48,6 +52,11 @@ public:
 
     static CacheManager* GetInstance();
     const char *ActionProtection(const Mgr::ActionProfilePointer &profile);
+
+    /// Add HTTP response headers specific/common to all cache manager replies,
+    /// including cache manager errors and Action reports.
+    /// \param httpOrigin the value of Origin header in the trigger HTTP request (or nil)
+    static void PutCommonResponseHeaders(HttpReply &, const char *httpOrigin);
 
 protected:
     CacheManager() {} ///< use Instance() instead

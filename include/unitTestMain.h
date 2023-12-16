@@ -21,13 +21,42 @@
 #include <cppunit/TestResultCollector.h>
 #include <cppunit/TestRunner.h>
 
+/// implements test program's main() function while enabling customization
+class TestProgram
+{
+public:
+    virtual ~TestProgram() = default;
+
+    /// Runs before all tests.
+    /// Does nothing by default.
+    virtual void startup() {}
+
+    /// Implements main(), combining all the steps.
+    /// Must be called from main().
+    /// \returns desired main() result.
+    int run(int argc, char *argv[]);
+
+private:
+    bool runTests();
+};
+
 int
-main(int, char *[])
+TestProgram::run(int, char *[])
 {
 #if ENABLE_DEBUG_SECTION
     Debug::Levels[ENABLE_DEBUG_SECTION] = 99;
 #endif
 
+    startup();
+    const auto result = runTests();
+    return result ? 0 : 1;
+}
+
+/// runs all tests registered with CPPUNIT_TEST_SUITE_REGISTRATION() calls
+/// \returns whether all tests were successful
+bool
+TestProgram::runTests()
+{
     // Create the event manager and test controller
     CPPUNIT_NS::TestResult controller;
 
@@ -51,7 +80,7 @@ main(int, char *[])
     CPPUNIT_NS::CompilerOutputter outputter( &result, std::cerr );
     outputter.write();
 
-    return result.wasSuccessful() ? 0 : 1;
+    return result.wasSuccessful();
 }
 
 #endif /* SQUID_INCLUDE_UNITTESTMAIN_H */

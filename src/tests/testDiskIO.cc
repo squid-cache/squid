@@ -7,22 +7,44 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "DiskIO/DiskIOModule.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "MemObject.h"
 #include "Store.h"
 #include "StoreFileSystem.h"
-#include "testDiskIO.h"
 #include "testStoreSupport.h"
 #include "unitTestMain.h"
 
 #include <stdexcept>
 
+/*
+ * test the DiskIO framework
+ */
+
+class TestDiskIO : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestDiskIO);
+    CPPUNIT_TEST(testFindDefault);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testFindDefault();
+};
+
 CPPUNIT_TEST_SUITE_REGISTRATION( TestDiskIO );
 
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
+
 void
-TestDiskIO::setUp()
+MyTestProgram::startup()
 {
     Mem::Init();
     DiskIOModule::SetupAllModules();
@@ -39,5 +61,11 @@ TestDiskIO::testFindDefault()
     /* disabled. we don't expect ANY */
     CPPUNIT_ASSERT(module == NULL);
 #endif
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

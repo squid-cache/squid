@@ -8,11 +8,28 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
+#include "compat/cppunit.h"
 #include "parser/Tokenizer.h"
-#include "tests/testTokenizer.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestTokenizer );
+class TestTokenizer : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestTokenizer);
+    CPPUNIT_TEST(testTokenizerPrefix);
+    CPPUNIT_TEST(testTokenizerSuffix);
+    CPPUNIT_TEST(testTokenizerSkip);
+    CPPUNIT_TEST(testTokenizerToken);
+    CPPUNIT_TEST(testTokenizerInt64);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testTokenizerPrefix();
+    void testTokenizerSuffix();
+    void testTokenizerSkip();
+    void testTokenizerToken();
+    void testTokenizerInt64();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestTokenizer);
 
 SBuf text("GET http://resource.com/path HTTP/1.1\r\n"
           "Host: resource.com\r\n"
@@ -189,12 +206,6 @@ TestTokenizer::testTokenizerSuffix()
 }
 
 void
-TestTokenizer::testCharacterSet()
-{
-
-}
-
-void
 TestTokenizer::testTokenizerInt64()
 {
     // successful parse in base 10
@@ -314,5 +325,11 @@ TestTokenizer::testTokenizerInt64()
         CPPUNIT_ASSERT_EQUAL(SBuf("row"),t.buf());
 
     }
+}
+
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
 }
 

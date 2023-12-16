@@ -1,3 +1,83 @@
+Changes in squid-6.6 (5 Dec 2023):
+
+	- Bug 5328: Fix ESI build with libxml2 v2.12.0
+	- Bug 5319: QOS Netfilter MARK preservation is always disabled
+	- Bug 5318: peer_digest.cc:399: "fetch->pd && receivedData.data"
+	- Bug 5317: FATAL attempt to read data from memory
+	- Bug 5154: Do not open IPv6 sockets when IPv6 is disabled
+	- FTP: Ignore credentials with a NUL-prefixed username
+	- log_db_daemon: Fix DSN construction
+	- Limit the number of allowed X-Forwarded-For hops
+	- Do not update StoreEntry expiration after errorAppendEntry()
+	- improve handling of response sending errors
+
+Changes in squid-6.5 (5 Nov 2023):
+
+	- Bug 5309: frequent "lowestOffset () <= target_offset" assertion
+	- Bug 4977: Remove mem_hdr::freeDataUpto() assertion
+	- Fix handling of expanding HTTP header values
+	- Fix RFC 1123 date parsing
+	- Gracefully shutdown when helper process startup fails
+
+Changes in squid-6.4 (22 Oct 2023):
+
+	- Regression: Restore support for legacy cache_object cache manager requests
+	- Regression: Do not use static initialization to register modules
+	- Bug 5301: cachemgr.cgi not showing new manager interface URLs
+	- Bug 5300: cachemgr.cgi assertion
+	- Fix stack buffer overflow when parsing Digest Authorization
+	- Fix userinfo percent-encoding
+	- Fix store_client caller memory leak on certain errors
+	- Fix validation of certificates with CN=*
+	- Fix handling of large stored response headers
+	- Miss if a HTTP/304 update would exceed reply_header_max_size
+	- RFC 9112: Improve HTTP chunked encoding compliance
+	- HTTP: Improve handling of empty lines received prior to request-line
+	- Y2038: improve printing of time settings
+	- Extend cache_log_message to problematic from-helper annotations
+	- ... and several Continuous Integration improvements
+
+Changes in squid-6.3 (03 Sep 2023):
+
+	- Bug 5294: ERR_CANNOT_FORWARD returned instead of ERR_DNS_FAIL
+	- Bug 4981: Work around in-call job invalidation bugs
+	- basic_smb_lm_auth: fix 'no previous declaration' warnings
+	- CacheManager: require /squid-internal-mgr/ URL path prefix
+	- ESI: Fix build [-Wsingle-bit-bitfield-constant-conversion]
+	- ... and some documentation changes
+
+Changes in squid-6.2 (06 Aug 2023):
+
+	- Bug 5187: Work around REQMOD satisfaction regression
+	- Bug 5290: pure virtual call in Ftp::Client constructor
+	- Fix memory leak when reconfiguring multiline all-of ACLs
+	- ... and a lot of code cleanups
+	- ... and some portability fixes on GNU/Hurd and MSWindows
+
+Changes in squid-6.1 (06 Jul 2023):
+
+	- Bug 5278: Log %err_code for "early" request handling errors
+	- Do not cache (and do not serve cached) cache manager responses
+	- Fix key equality comparison in LookupTable map
+	- Honor DNS RR TTLs larger than negative_dns_ttl
+	- ... and some documentation changes
+
+Changes in squid-6.0.3 (07 Jun 2023):
+
+	- Bug 5148: Log %Ss of failed tunnels as TCP_TUNNEL
+	- Do not leak Security::CertErrors created in X509_verify_cert()
+	- Do not erase aborted StoreMap entries that are still being read
+	- Fix build in environments lacking syslog
+	- Fix build failures in some environments due to time_t type conflicts in libdebug
+	- Remove obsolete caddr_t
+	- ... and some documentation changes
+
+Changes in squid-6.0.2 (30 Apr 2023):
+
+	- Avoid excessive disk I/O in some environments
+	- ... and several build and portability fixes
+	- ... and all fixes from 5.9
+
 Changes in squid-6.0.1 (28 Feb 2023):
 
 	- Bug 5256: Intercepting port fails to accept
@@ -12,6 +92,7 @@ Changes in squid-6.0.1 (28 Feb 2023):
 	- Bug 5021: Add a script to fix spelling error with codespell
 	- Bug 4946: client_side_request.cc: "request != newRequest"
 	- Bug 4832: '!schemeAccess' assertion on exit
+	- Bug 4572: squidclient: Remove deprecated cache_object:// support
 	- Bug 4528: ICAP transactions quit on async DNS lookups
 	- Add scripts/trace-context.pl: a debugging tool
 	- Remove cache_diff tool
@@ -40,7 +121,6 @@ Changes in squid-6.0.1 (28 Feb 2023):
 	- ext_lm_group_acl: Improved username handling
 	- negotiate_wrapper: ensure null-termination of strings
 	- pinger: Fix MAX_PKT{4,6}_SZ to account for icmpEchoData padding
-	- squidclient: Remove deprecated cache_object:// support
 	- HTTP: Replaced X-Cache and X-Cache-Lookup headers with Cache-Status
 	- HTTP: Update Host, Via, and other headers in-place when possible
 	- HTTP: Update status code 413 compliance
@@ -109,6 +189,12 @@ Changes in squid-6.0.1 (28 Feb 2023):
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
 	- ... and all fixes from 5.8
+
+Changes in squid-5.9 (30 Apr 2023):
+
+	- Improve reply_body_max_size matching accuracy
+	- ... and some documentation changes
+	- ... and many portability fixes
 
 Changes in squid-5.8 (28 Feb 2023):
 
@@ -3368,7 +3454,7 @@ Squid-2 ChangeLog of versions fully ported to Squid-3 follows.
 Changes to squid-2.6.STABLE22 (19 October 2008)
 
 	- Bug #2396: Correct the opening of the PF device file.
-	- Make --with-large-files and --with-build-envirnment=default play
+	- Make --with-large-files and --with-build-environment=default play
 	  nice together
 	- Workaround for Linux-2.6.24 & 2.6.25 netfiler_ipv4.h include header
 	  __u32 problem

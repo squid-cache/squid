@@ -46,7 +46,7 @@
 
 static AUTHSSTATS authenticateDigestStats;
 
-helper *digestauthenticators = nullptr;
+Helper::ClientPointer digestauthenticators;
 
 static hash_table *digest_nonce_cache;
 
@@ -525,7 +525,7 @@ Auth::Digest::Config::init(Auth::SchemeConfig *)
         authdigest_initialised = 1;
 
         if (digestauthenticators == nullptr)
-            digestauthenticators = new helper("digestauthenticator");
+            digestauthenticators = Helper::Client::Make("digestauthenticator");
 
         digestauthenticators->cmdline = authenticateProgram;
 
@@ -533,7 +533,7 @@ Auth::Digest::Config::init(Auth::SchemeConfig *)
 
         digestauthenticators->ipc_type = IPC_STREAM;
 
-        helperOpenServers(digestauthenticators);
+        digestauthenticators->openSessions();
     }
 }
 
@@ -559,7 +559,6 @@ Auth::Digest::Config::done()
     if (!shutting_down)
         return;
 
-    delete digestauthenticators;
     digestauthenticators = nullptr;
 
     if (authenticateProgram)
@@ -827,11 +826,15 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
             break;
 
         case DIGEST_NC:
-            if (value.size() != 8) {
+            if (value.size() == 8) {
+                // for historical reasons, the nc value MUST be exactly 8 bytes
+                static_assert(sizeof(digest_request->nc) == 8 + 1);
+                xstrncpy(digest_request->nc, value.rawBuf(), value.size() + 1);
+                debugs(29, 9, "Found noncecount '" << digest_request->nc << "'");
+            } else {
                 debugs(29, 9, "Invalid nc '" << value << "' in '" << temp << "'");
+                digest_request->nc[0] = 0;
             }
-            xstrncpy(digest_request->nc, value.rawBuf(), value.size() + 1);
-            debugs(29, 9, "Found noncecount '" << digest_request->nc << "'");
             break;
 
         case DIGEST_CNONCE:

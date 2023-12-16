@@ -14,10 +14,8 @@
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
+#include <cctype>
 #include <cerrno>
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
 
 /// convenience method: consumes up to n bytes, counts, and returns them
 SBuf
@@ -145,6 +143,18 @@ Parser::Tokenizer::skipAll(const CharacterSet &tokenChars)
     }
     debugs(24, 8, "skipping all in " << tokenChars.name << " len " << prefixLen);
     return success(prefixLen);
+}
+
+void
+Parser::Tokenizer::skipRequired(const char *description, const SBuf &tokenToSkip)
+{
+    if (skip(tokenToSkip) || tokenToSkip.isEmpty())
+        return;
+
+    if (tokenToSkip.startsWith(buf_))
+        throw InsufficientInput();
+
+    throw TextException(ToSBuf("cannot skip ", description), Here());
 }
 
 bool

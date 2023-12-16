@@ -22,6 +22,11 @@
 
 #include <chrono>
 #include <thread>
+#include <cstdlib>
+
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 static const char *hello_string = "hi there\n";
 #ifndef HELLO_BUF_SZ
@@ -362,6 +367,22 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     PutEnvironment();
+
+    // A dup(2) wrapper that reports and exits the process on errors. The
+    // exiting logic is only suitable for this child process context.
+    const auto dupOrExit = [prog,name](const int oldFd) {
+        const auto newFd = dup(oldFd);
+        if (newFd < 0) {
+            const auto savedErrno = errno;
+            debugs(54, DBG_CRITICAL, "ERROR: Helper process initialization failure: " << name <<
+                   Debug::Extra << "helper (CHILD) PID: " << getpid() <<
+                   Debug::Extra << "helper program name: " << prog <<
+                   Debug::Extra << "dup(2) system call error for FD " << oldFd << ": " << xstrerr(savedErrno));
+            _exit(EXIT_FAILURE);
+        }
+        return newFd;
+    };
+
     /*
      * This double-dup stuff avoids problems when one of
      *  crfd, cwfd, or debug_log are in the rage 0-2.
@@ -369,17 +390,16 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     do {
         /* First make sure 0-2 is occupied by something. Gets cleaned up later */
-        x = dup(crfd);
-        assert(x > -1);
-    } while (x < 3 && x > -1);
+        x = dupOrExit(crfd);
+    } while (x < 3);
 
     close(x);
 
-    t1 = dup(crfd);
+    t1 = dupOrExit(crfd);
 
-    t2 = dup(cwfd);
+    t2 = dupOrExit(cwfd);
 
-    t3 = dup(fileno(debug_log));
+    t3 = dupOrExit(fileno(debug_log));
 
     assert(t1 > 2 && t2 > 2 && t3 > 2);
 

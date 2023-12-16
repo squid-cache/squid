@@ -7,10 +7,31 @@
  */
 
 #include "squid.h"
-#include "tests/testEnumIterator.h"
+#include "base/EnumIterator.h"
+#include "compat/cppunit.h"
 #include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
+
+class TestEnumIterator : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestEnumIterator);
+    CPPUNIT_TEST(testForwardIter);
+    CPPUNIT_TEST(testReverseIter);
+    CPPUNIT_TEST(testBidirectionalIter);
+    CPPUNIT_TEST(testRangeFor);
+    CPPUNIT_TEST(testRangeForRange);
+    CPPUNIT_TEST(testUnsignedEnum);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testForwardIter();
+    void testReverseIter();
+    void testBidirectionalIter();
+    void testRangeFor();
+    void testRangeForRange();
+    void testUnsignedEnum();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestEnumIterator );
 
@@ -139,5 +160,11 @@ TestEnumIterator::testUnsignedEnum()
             break;
     }
     CPPUNIT_ASSERT_EQUAL(5,j);
+}
+
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
 }
 

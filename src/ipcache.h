@@ -199,6 +199,7 @@ public:
     /// Called when nbgethostbyname() fully resolves the name.
     /// The `ips` may contain both bad and good IP addresses, but each good IP
     /// (if any) is guaranteed to had been previously reported via noteIp().
+    /// When no IPs were obtained, `ips` is nil.
     virtual void noteIps(const CachedIps *ips, const LookupDetails &details) = 0;
 
     /// Called when/if nbgethostbyname() discovers a new good IP address.

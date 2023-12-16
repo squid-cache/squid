@@ -13,7 +13,7 @@ libexec_PROGRAMS= ntlm_sspi_auth
 ntlm_sspi_auth_SOURCES = ntlm_sspi_auth.cc
 ntlm_sspi_auth_LDADD= \
 	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
-	$(top_builddir)/lib/libsspwin32.la \
+	$(top_builddir)/lib/sspi/libsspwin32.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	-lnetapi32 \

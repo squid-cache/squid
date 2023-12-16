@@ -19,7 +19,7 @@
 
 class ACLChecklist;
 /// \ingroup AuthAPI
-Acl::Answer AuthenticateAcl(ACLChecklist *ch);
+Acl::Answer AuthenticateAcl(ACLChecklist *, const ACL &);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTH_ACL_H */

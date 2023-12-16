@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "DiskIO/DiskIOModule.h"
 #include "fde.h"
 #include "fs/ufs/UFSSwapDir.h"
@@ -19,14 +20,30 @@
 #include "Store.h"
 #include "store/Disks.h"
 #include "testStoreSupport.h"
-#include "testUfs.h"
 #include "unitTestMain.h"
 
 #include <stdexcept>
 
 #define TESTDIR "TestUfs_Store"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestUfs );
+/*
+ * test the store framework
+ */
+
+class TestUfs : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestUfs);
+    CPPUNIT_TEST(testUfsSearch);
+    CPPUNIT_TEST(testUfsDefaultEngine);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+protected:
+    void commonInit();
+    void testUfsSearch();
+    void testUfsDefaultEngine();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestUfs);
 
 typedef RefCount<Fs::Ufs::UFSSwapDir> MySwapDirPointer;
 extern REMOVALPOLICYCREATE createRemovalPolicy_lru; /* XXX fails with --enable-removal-policies=heap */
@@ -247,5 +264,11 @@ TestUfs::testUfsDefaultEngine()
 
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
+}
+
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
 }
 

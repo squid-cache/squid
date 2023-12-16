@@ -71,7 +71,7 @@ MemBlob::MemBlob(const char *buffer, const MemBlob::size_type bufSize) :
 MemBlob::~MemBlob()
 {
     if (mem || capacity)
-        memFreeString(capacity,mem);
+        memFreeBuf(capacity, mem);
     Stats.liveBytes -= capacity;
     --Stats.live;
     SBufStats::RecordMemBlobSizeAtDestruct(capacity);
@@ -91,7 +91,7 @@ MemBlob::memAlloc(const size_type minSize)
     size_t actualAlloc = minSize;
 
     Must(!mem);
-    mem = static_cast<char*>(memAllocString(actualAlloc, &actualAlloc));
+    mem = static_cast<char*>(memAllocBuf(actualAlloc, &actualAlloc));
     Must(mem);
 
     capacity = actualAlloc;

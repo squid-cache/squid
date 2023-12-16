@@ -30,10 +30,57 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>
+	<item>Cache Manager changes
+	<item>Removed purge tool
 </itemize>
 
-Most user-facing changes are reflected in squid.conf (see below).
+<p>Most user-facing changes are reflected in squid.conf (see further below).
+
+<sect1>Cache Manager changes<label id="mgr">
+<p>For more information about the Cache Manager feature, see <url url="https://wiki.squid-cache.org/Features/CacheManager/Index" name="wiki">.
+
+<p>In order to reduce workload on the Squid development team we have chosen to stop
+   providing several tools related to Cache Manager which have previously been
+   bundled with Squid.
+
+<sect2>Removal of the <em>squidclient</em> tool.
+<p>Popular command-line tools such as <em>curl</em> or <em>wget</em>
+   provide equivalent features.
+
+<sect2>Removal of the <em>cachemgr.cgi</em> tool.
+<p>Access to the Cache Manager API is available by sending HTTP(S) requests
+   directly to Squid with the URL-path prefix <em>/squid-internal-mgr/</em>.
+   A plethora of tools, such as curl, wget, or any web browser, can be used
+   instead of cachemgr.cgi.
+
+<sect2>Removal of the <em>cache_object:</em> URI scheme.
+<p>This custom scheme does not conform to RFC 3986 URI sytax. It has been replaced
+   with Cache Manager access through HTTP and HTTPS URLs.
+
+<sect2>Removal of <em>non_peers</em> Report
+<p>Squid still ignores unexpected ICP responses but no longer remembers the
+   details that comprised the removed report. The senders of these ICP messages
+   are still reported to cache.log at debugging level 1 (with an exponential backoff).
+
+<sect1>Removed purge tool
+<p>The <em>purge</em> tool (also known as <em>squidpurge</em>, and <em>squid-purge</em>)
+   was limited to managing UFS/AUFS/DiskD caches and had problems parsing non-trivial squid.conf files.
+
+<p>The cache contents display and search it provided can be obtained with a script
+   searching the cache manager <em>objects</em> report.
+
+<p>This tool used the custom <em>PURGE</em> HTTP method to remove cache
+   objects. This can be performed directly on any Squid configured to allow
+   the method. Like so:
+<verb>
+    acl PURGE method PURGE
+    http_access allow localhost PURGE
+</verb>
+    Any HTTP client (such as curl) can then be used to evict objects from the cache, for example:
+<verb>
+    curl -XPURGE --proxy http://127.0.0.1:3128 http://url.to/evict/
+</verb>
+   Alternatively the HTCP <em>CLR</em> mechanism can be used.
 
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
@@ -57,14 +104,33 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
-	<p>No changed directives in this version.
+	<tag>buffered_logs</tag>
+	<p>Honor the <em>off</em> setting in 'udp' access_log module.
+
+	<tag>cachemgr_passwd</tag>
+	<p>Removed the <em>non_peers</em> action. See the Cache Manager
+	<ref id="mgr" name="section"> for details.
 
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
 <p>
 <descrip>
-	<p>No removed directives in this version.
+	<tag>mcast_miss_addr</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_ttl</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_port</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_encode_key</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
 
 </descrip>
 
@@ -82,7 +148,14 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p>No new options in this version.
+	<tag>--without-psapi</tag>
+	<p>Disable auto-detection of Windows PSAPI library.
+
+	<tag>CPPFLAGS=-DINCOMING_FACTOR=</tag>
+	<p>Control the listening sockets responsiveness with poll(2) and select(2).
+	   The higher the INCOMING_FACTOR, the slower the algorithm will
+	   respond to load spikes/increases/decreases in demand. A value
+	   between 3 and 8 is recommended. Default is 5.
 
 </descrip>
 
@@ -97,7 +170,16 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
-	<p>No removed options in this version.
+	<tag>--enable-cachemgr-hostname=</tag>
+	<p>The <em>cachemgr.cgi</em> tool this option relates to has been removed.
+
+	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
+	<p>The code enabled by this preprocessor macro has not built for many
+	   years, indicating that the feature is unused.
+
+	<tag>CPPFLAGS=-DMULTICAST_MISS_STREAM</tag>
+	<p>The code enabled by this preprocessor macro has not built for many
+	   years, indicating that the feature is unused.
 
 </descrip>
 

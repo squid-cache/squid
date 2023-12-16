@@ -12,8 +12,10 @@
 #include "HttpRequest.h"
 
 int
-ACLSquidErrorStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::SquidErrorCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     if (checklist->requestErrorType != ERR_MAX)
         return data->match(checklist->requestErrorType);
     else if (checklist->request)

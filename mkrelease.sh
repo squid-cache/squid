@@ -53,11 +53,6 @@ if [ ${name} != ${PACKAGE}-${VERSION} ]; then
 	exit 1
 fi
 RELEASE=`echo $VERSION | cut -d. -f1,1 | cut -d- -f1`
-NOTES_VERSION=`grep "$VERSION" doc/release-notes/release-${RELEASE}.sgml`
-if test "x$NOTES_VERSION" = "x"; then
-	echo "ERROR! Release Notes HTML version numbers do not match!"
-	exit 1
-fi
 ed -s configure.ac <<EOS
 g/${VERSION}-VCS/ s//${VERSION}/
 w
@@ -82,21 +77,8 @@ chmod 444 $2
 }
 inst $tmpdir/${name}.tar.gz	$dst/${name}.tar.gz
 inst $tmpdir/${name}.tar.bz2	$dst/${name}.tar.bz2
-inst $tmpdir/CONTRIBUTORS	$dst/CONTRIBUTORS.txt
-inst $tmpdir/COPYING		$dst/COPYING.txt
-inst $tmpdir/README		$dst/README.txt
-inst $tmpdir/CREDITS		$dst/CREDITS.txt
-inst $tmpdir/SPONSORS		$dst/SPONSORS.txt
 inst $tmpdir/ChangeLog		$dst/ChangeLog.txt
 if [ -f $tmpdir/doc/release-notes/release-$RELEASE.html ]; then
-    cat $tmpdir/doc/release-notes/release-$RELEASE.html | sed -e '
-	s/"ChangeLog"/"ChangeLog.txt"/g;
-    ' > $tmpdir/RELEASENOTES.html
-    touch -r $tmpdir/doc/release-notes/release-$RELEASE.html $tmpdir/RELEASENOTES.html
     inst $tmpdir/RELEASENOTES.html $dst/${name}-RELEASENOTES.html
     ln -sf ${name}-RELEASENOTES.html $dst/RELEASENOTES.html
-fi
-if [ -f $dst/changesets/.update ]; then
-    rm -f $dst/changesets/$tag.html
-    $dst/changesets/.update
 fi

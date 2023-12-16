@@ -11,6 +11,7 @@
 
 #if USE_HTCP
 
+#include "enums.h"
 #include "http/forward.h"
 #include "HttpHeader.h"
 #include "ip/forward.h"
@@ -44,6 +45,8 @@ void neighborsHtcpReply(const cache_key *, HtcpReplyData *, const Ip::Address &)
 
 /// \ingroup ServerProtocolHTCP
 void htcpOpenPorts(void);
+
+class CachePeer;
 
 /**
  * \ingroup ServerProtocolHTCP

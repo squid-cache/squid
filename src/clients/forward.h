@@ -14,10 +14,6 @@
 class FwdState;
 class HttpRequest;
 
-class AsyncJob;
-template <class Cbc> class CbcPointer;
-typedef CbcPointer<AsyncJob> AsyncJobPointer;
-
 namespace Http
 {
 class Tunneler;

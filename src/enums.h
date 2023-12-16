@@ -19,11 +19,6 @@ enum fd_type {
     FD_UNKNOWN
 };
 
-enum {
-    FD_READ,
-    FD_WRITE
-};
-
 typedef enum {
     PEER_NONE,
     PEER_SIBLING,
@@ -202,7 +197,6 @@ enum {
 typedef enum {
     DIGEST_READ_NONE,
     DIGEST_READ_REPLY,
-    DIGEST_READ_HEADERS,
     DIGEST_READ_CBLOCK,
     DIGEST_READ_MASK,
     DIGEST_READ_DONE
