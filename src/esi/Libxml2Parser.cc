@@ -144,7 +144,7 @@ ESILibxml2Parser::lineNumber() const
 char const *
 ESILibxml2Parser::errorString() const
 {
-    xmlErrorPtr error = xmlGetLastError();
+    const auto error = xmlGetLastError();
 
     if (error == nullptr)
         return nullptr;

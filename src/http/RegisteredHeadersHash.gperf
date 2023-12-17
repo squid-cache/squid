@@ -94,7 +94,6 @@ Vary, Http::HdrType::VARY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKin
 Via, Http::HdrType::VIA, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
 WWW-Authenticate, Http::HdrType::WWW_AUTHENTICATE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 X-Forwarded-For, Http::HdrType::X_FORWARDED_FOR, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
-X-Request-URI, Http::HdrType::X_REQUEST_URI, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 X-Squid-Error, Http::HdrType::X_SQUID_ERROR, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 X-Accelerator-Vary, Http::HdrType::HDR_X_ACCELERATOR_VARY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 X-Next-Services, Http::HdrType::X_NEXT_SERVICES, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader

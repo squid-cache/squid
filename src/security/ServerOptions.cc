@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
+#include "base/IoManip.h"
 #include "base/Packable.h"
 #include "cache_cf.h"
 #include "error/SysErrorDetail.h"
@@ -380,7 +381,7 @@ Security::ServerOptions::loadDhParams()
     int codes;
     if (DH_check(dhp, &codes) == 0) {
         if (codes) {
-            debugs(83, DBG_IMPORTANT, "WARNING: Failed to verify DH parameters '" << dhParamsFile << "' (" << std::hex << codes << ")");
+            debugs(83, DBG_IMPORTANT, "WARNING: Failed to verify DH parameters '" << dhParamsFile << "' (" << asHex(codes) << ")");
             DH_free(dhp);
             dhp = nullptr;
         }

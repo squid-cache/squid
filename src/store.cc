@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/AsyncCbdataCalls.h"
+#include "base/IoManip.h"
 #include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "CacheDigest.h"
@@ -1927,8 +1928,7 @@ StoreEntry::attachToDisk(const sdirno dirn, const sfileno fno, const swap_status
 {
     debugs(88, 3, "attaching entry with key " << getMD5Text() << " : " <<
            swapStatusStr[status] << " " << dirn << " " <<
-           std::hex << std::setw(8) << std::setfill('0') <<
-           std::uppercase << fno);
+           asHex(fno).upperCase().minDigits(8));
     checkDisk();
     swap_dirn = dirn;
     swap_filen = fno;

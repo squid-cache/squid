@@ -796,11 +796,11 @@ Debug::LogMessage(const Context &context)
 
             if (!InitializeCriticalSectionAndSpinCount(dbg_mutex, 4000)) {
                 if (const auto logFile = TheLog.file()) {
-                    fprintf(logFile, "FATAL: %s: can't initialize critical section\n", __FUNCTION__);
+                    fprintf(logFile, "FATAL: %s: can't initialize critical section\n", __func__);
                     fflush(logFile);
                 }
 
-                fprintf(stderr, "FATAL: %s: can't initialize critical section\n", __FUNCTION__);
+                fprintf(stderr, "FATAL: %s: can't initialize critical section\n", __func__);
                 abort();
             } else
                 InitializeCriticalSection(dbg_mutex);

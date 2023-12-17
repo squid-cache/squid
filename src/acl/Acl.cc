@@ -329,8 +329,8 @@ ACL::dumpWhole(const char * const directiveName, std::ostream &os)
     // XXX: No lineOptions() call here because we do not remember ACL "line"
     // boundaries and associated "line" options; we cannot report them.
     os << directiveName << ' ' << name << ' ' << typeString() << options() <<
-        asList(dump()).prefixedBy(" ").delimitedBy(" ") <<
-        '\n';
+       asList(dump()).prefixedBy(" ").delimitedBy(" ") <<
+       '\n';
 }
 
 /* ACL result caching routines */

@@ -38,6 +38,7 @@
  * OpenSSL libraries linked into openldap. See http://www.openssl.org/
  */
 #include "squid.h"
+#include "base/IoManip.h"
 #include "helper/protocol_defines.h"
 #include "rfc1738.h"
 #include "util.h"
@@ -634,7 +635,7 @@ ldap_escape_value(const std::string &src)
         case '(':
         case ')':
         case '\\':
-            str << '\\' << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(c);
+            str << '\\' << asHex(c).minDigits(2);
             break;
         default:
             str << c;

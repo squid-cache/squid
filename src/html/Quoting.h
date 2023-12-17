@@ -9,6 +9,11 @@
 #ifndef SQUID__SRC_HTML_QUOTING_H
 #define SQUID__SRC_HTML_QUOTING_H
 
+/** Obtain a static buffer containing an HTML-encoded version of the given c-string.
+ *
+ * HTML reserved characters are replaced with character references
+ * per https://html.spec.whatwg.org/#character-references
+ */
 char *html_quote(const char *);
 
 #endif /* SQUID__SRC_HTML_QUOTING_H */

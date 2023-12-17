@@ -399,6 +399,12 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             out = "";
             break;
 
+        case LFT_BYTE:
+            tmp[0] = static_cast<char>(fmt->data.byteValue);
+            tmp[1] = '\0';
+            out = tmp;
+            break;
+
         case LFT_STRING:
             out = fmt->data.string;
             break;
@@ -1401,16 +1407,20 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 out = sb.c_str();
                 quote = 1;
             } else {
+                // No specific annotation requested. Report all annotations.
+
                 // if no argument given use default "\r\n" as notes separator
                 const char *separator = fmt->data.string ? tmp : "\r\n";
+                SBufStream os;
 #if USE_ADAPTATION
                 Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
-                if (ah && ah->metaHeaders && !ah->metaHeaders->empty())
-                    sb.append(ah->metaHeaders->toString(separator));
+                if (ah && ah->metaHeaders)
+                    ah->metaHeaders->print(os, ": ", separator);
 #endif
-                if (al->notes && !al->notes->empty())
-                    sb.append(al->notes->toString(separator));
+                if (al->notes)
+                    al->notes->print(os, ": ", separator);
 
+                sb = os.buf();
                 out = sb.c_str();
                 quote = 1;
             }

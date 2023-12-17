@@ -284,11 +284,6 @@ struct timezone {
 #define _PATH_DEVNULL "NUL"
 #endif
 
-#undef FD_CLOSE
-#undef FD_OPEN
-#undef FD_READ
-#undef FD_WRITE
-
 #ifndef EISCONN
 #define EISCONN WSAEISCONN
 #endif

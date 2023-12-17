@@ -33,6 +33,8 @@ typedef enum {
     /* arbitrary string between tokens */
     LFT_STRING,
 
+    LFT_BYTE,
+
     /* client TCP connection remote end details */
     LFT_CLIENT_IP_ADDRESS,
     LFT_CLIENT_FQDN,

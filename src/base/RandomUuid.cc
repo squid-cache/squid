@@ -91,22 +91,15 @@ RandomUuid::serialize() const
 void
 RandomUuid::print(std::ostream &os) const
 {
-    const auto savedFlags = os.flags();
-    const auto savedFill = os.fill('0');
-
-    os << std::hex;
-
     os <<
-       std::setw(8) << timeLow  << '-' <<
-       std::setw(4) << timeMid << '-' <<
-       std::setw(4) << timeHiAndVersion << '-' <<
-       std::setw(2) << +clockSeqHiAndReserved << std::setw(2) << +clockSeqLow << '-';
+       asHex(timeLow).minDigits(8)  << '-' <<
+       asHex(timeMid).minDigits(4) << '-' <<
+       asHex(timeHiAndVersion).minDigits(4) << '-' <<
+       asHex(clockSeqHiAndReserved).minDigits(2) <<
+       asHex(clockSeqLow).minDigits(2) << '-';
 
     for (size_t i = 0; i < sizeof(node); ++i)
-        os << std::setw(2) << +node[i];
-
-    os.fill(savedFill);
-    os.flags(savedFlags);
+        os << asHex(node[i]).minDigits(2);
 }
 
 bool

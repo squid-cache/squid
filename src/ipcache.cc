@@ -9,6 +9,7 @@
 /* DEBUG: section 14    IP Cache */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "CacheManager.h"
 #include "cbdata.h"
 #include "debug/Messages.h"
@@ -729,7 +730,7 @@ ipcache_gethostbyname(const char *name, int flags)
 {
     ipcache_entry *i = nullptr;
     assert(name);
-    debugs(14, 3, "ipcache_gethostbyname: '" << name  << "', flags=" << std::hex << flags);
+    debugs(14, 3, "'" << name  << "', flags=" << asHex(flags));
     ++IpcacheStats.requests;
     i = ipcache_get(name);
 

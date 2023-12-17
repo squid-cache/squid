@@ -40,9 +40,6 @@ SOFTWARE.
 
 #define SID_MAX_LEN 64
 
-#define READ        1
-#define WRITE       0
-
 #define SNMP_RESERVE1    0
 #define SNMP_RESERVE2    1
 #define SNMP_COMMIT      2

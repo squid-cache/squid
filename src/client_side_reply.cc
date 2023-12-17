@@ -298,7 +298,7 @@ clientReplyContext::processExpired()
                 entry = e;
                 entry->lock("clientReplyContext::processExpired#alreadyRevalidating");
             } else {
-                e->abandon(__FUNCTION__);
+                e->abandon(__func__);
                 // assume mayInitiateCollapsing() would fail too
                 collapsingAllowed = false;
             }
@@ -924,7 +924,7 @@ clientReplyContext::purgeDoPurge()
             const auto err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr,
                                               http->getConn(), http->request, http->al);
             startError(err);
-            entry->abandon(__FUNCTION__);
+            entry->abandon(__func__);
             return;
         }
         firstFound = true;
@@ -1419,18 +1419,6 @@ clientReplyContext::buildReplyHeader()
 
     /* Signal keep-alive or close explicitly */
     hdr->putStr(Http::HdrType::CONNECTION, request->flags.proxyKeepalive ? "keep-alive" : "close");
-
-#if ADD_X_REQUEST_URI
-    /*
-     * Knowing the URI of the request is useful when debugging persistent
-     * connections in a client; we cannot guarantee the order of http headers,
-     * but X-Request-URI is likely to be the very last header to ease use from a
-     * debugger [hdr->entries.count-1].
-     */
-    hdr->putStr(Http::HdrType::X_REQUEST_URI,
-                http->memOjbect()->url ? http->memObject()->url : http->uri);
-
-#endif
 
     /* Surrogate-Control requires Surrogate-Capability from upstream to pass on */
     if ( hdr->has(Http::HdrType::SURROGATE_CONTROL) ) {
