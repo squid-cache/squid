@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "acl/Gadgets.h"
 #include "base/IoManip.h"
+#include "base/PackableStream.h"
 #include "cache_cf.h"
 #include "comm/Connection.h"
 #include "compat/cmsg.h"
@@ -19,6 +20,7 @@
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "Parsing.h"
+#include "Store.h"
 
 #include <cerrno>
 #include <limits>
@@ -459,70 +461,67 @@ Ip::Qos::Config::parseConfigLine()
     }
 }
 
-/**
- * NOTE: Due to the low-level nature of the library these
- * objects are part of the dump function must be self-contained.
- * which means no StoreEntry references. Just a basic char* buffer.
-*/
-void
-Ip::Qos::Config::dumpConfigLine(char *entry, const char *name) const
-{
-    char *p = entry;
-    if (isHitTosActive()) {
+/// helper function for printing Ip::Qos::Config mark and tos values
+template <class Integer>
+static auto asQosConfigHex(const Integer n) { return asHex(n).upperCase().minDigits(2); }
 
-        p += snprintf(p, 11, "%s", name); // strlen("qos_flows ");
-        p += snprintf(p, 4, "%s", "tos");
+/// report configuration using qos_flows syntax
+void
+Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *directiveName) const
+{
+    if (isHitTosActive()) {
+        os << directiveName << " tos";
 
         if (tosLocalHit > 0) {
-            p += snprintf(p, 16, " local-hit=0x%02X", tosLocalHit);
+            os << " local-hit=0x" << asQosConfigHex(tosLocalHit);
         }
         if (tosSiblingHit > 0) {
-            p += snprintf(p, 18, " sibling-hit=0x%02X", tosSiblingHit);
+            os << " sibling-hit=0x" << asQosConfigHex(tosSiblingHit);
         }
         if (tosParentHit > 0) {
-            p += snprintf(p, 17, " parent-hit=0x%02X", tosParentHit);
+            os << " parent-hit=0x" << asQosConfigHex(tosParentHit);
         }
         if (tosMiss > 0) {
-            p += snprintf(p, 11, " miss=0x%02X", tosMiss);
+            os << " miss=0x" << asQosConfigHex(tosMiss);
             if (tosMissMask!=0xFFU) {
-                p += snprintf(p, 6, "/0x%02X", tosMissMask);
+                os << "/0x" << asQosConfigHex(tosMissMask);
             }
         }
         if (preserveMissTos == 0) {
-            p += snprintf(p, 23, " disable-preserve-miss");
+            os << " disable-preserve-miss";
         }
         if (preserveMissTos && preserveMissTosMask != 0) {
-            p += snprintf(p, 16, " miss-mask=0x%02X", preserveMissTosMask);
+            os << " miss-mask=0x" << asQosConfigHex(preserveMissTosMask);
         }
-        p += snprintf(p, 2, "\n");
+        os << "\n";
+        return;
     }
 
     if (isHitNfmarkActive()) {
-        p += snprintf(p, 11, "%s", name); // strlen("qos_flows ");
-        p += snprintf(p, 5, "%s", "mark");
+        os << directiveName << " mark";
 
         if (markLocalHit > 0) {
-            p += snprintf(p, 22, " local-hit=0x%02X", markLocalHit);
+            os << " local-hit=0x" << asQosConfigHex(markLocalHit);
         }
         if (markSiblingHit > 0) {
-            p += snprintf(p, 24, " sibling-hit=0x%02X", markSiblingHit);
+            os << " sibling-hit=0x" << asQosConfigHex(markSiblingHit);
         }
         if (markParentHit > 0) {
-            p += snprintf(p, 23, " parent-hit=0x%02X", markParentHit);
+            os << " parent-hit=0x" << asQosConfigHex(markParentHit);
         }
         if (markMiss > 0) {
-            p += snprintf(p, 17, " miss=0x%02X", markMiss);
+            os << " miss=0x" << asQosConfigHex(markMiss);
             if (markMissMask!=0xFFFFFFFFU) {
-                p += snprintf(p, 12, "/0x%02X", markMissMask);
+                os << "/0x" << asQosConfigHex(markMissMask);
             }
         }
         if (preserveMissMark == false) {
-            p += snprintf(p, 23, " disable-preserve-miss");
+            os << " disable-preserve-miss";
         }
         if (preserveMissMark && preserveMissMarkMask != 0) {
-            p += snprintf(p, 22, " miss-mask=0x%02X", preserveMissMarkMask);
+            os << " miss-mask=" << asQosConfigHex(preserveMissMarkMask);
         }
-        p += snprintf(p, 2, "\n");
+        os << "\n";
     }
 }
 
@@ -640,3 +639,9 @@ Ip::Qos::Config::isAclTosActive() const
     return false;
 }
 
+void
+dump_QosConfig(StoreEntry * const entry, const char * const directiveName, const Ip::Qos::Config &config)
+{
+    PackableStream os(*entry);
+    config.dumpConfigLine(os, directiveName);
+}
