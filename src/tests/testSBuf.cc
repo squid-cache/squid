@@ -19,6 +19,7 @@
 #include "tests/SBufFindTest.h"
 #include "unitTestMain.h"
 
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <unordered_map>
@@ -64,6 +65,7 @@ class TestSBuf : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testStdStringOps);
     CPPUNIT_TEST(testIterators);
     CPPUNIT_TEST(testSBufHash);
+    CPPUNIT_TEST(testStdAlgorithm);
     //    CPPUNIT_TEST( testDumpStats ); //fake test, to print alloc stats
     CPPUNIT_TEST_SUITE_END();
 
@@ -106,6 +108,7 @@ protected:
     void testStdStringOps();
     void testIterators();
     void testSBufHash();
+    void testStdAlgorithm();
 };
 CPPUNIT_TEST_SUITE_REGISTRATION( TestSBuf );
 
@@ -1187,6 +1190,23 @@ TestSBuf::testSBufHash()
 
         i = um.find(SBuf("eleventy"));
         CPPUNIT_ASSERT(i == um.end());
+    }
+}
+
+void
+TestSBuf::testStdAlgorithm()
+{
+    {
+        SBuf src("foo"), dst;
+        std::copy(src.begin(), src.end(), std::back_inserter(dst));
+        CPPUNIT_ASSERT_EQUAL(dst, src);
+    }
+
+    {
+        SBuf src("foo"), dst;
+        std::copy_if(src.begin(), src.end(), std::back_inserter(dst),
+            [](char c) { return c != 'o'; });
+        CPPUNIT_ASSERT_EQUAL(dst, SBuf("f"));
     }
 }
 

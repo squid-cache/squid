@@ -96,6 +96,7 @@ public:
     typedef MemBlob::size_type size_type;
     typedef SBufIterator const_iterator;
     typedef SBufReverseIterator const_reverse_iterator;
+    using value_type = char;
     static const size_type npos = 0xffffffff; // max(uint32_t)
 
     /// Maximum size of a SBuf. By design it MUST be < MAX(size_type)/2. Currently 256Mb.
@@ -191,6 +192,9 @@ public:
 
     /// Append a single character. The character may be NUL (\0).
     SBuf& append(const char c);
+
+    /// Append a single character, compatibly with std::string::push_back()
+    void push_back(const char c) { append(c); }
 
     /** Append operation for C-style strings.
      *
