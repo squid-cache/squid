@@ -64,6 +64,9 @@ extern char *rfc1738_do_escape(const char *url, int flags);
  */
 extern void rfc1738_unescape(char *url);
 
+/// convert a single-digit hex ascii character to its corresponding value
+extern int HextDigitToInt(char);
+
 #ifdef __cplusplus
 }
 #endif

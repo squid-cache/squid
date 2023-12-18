@@ -123,11 +123,8 @@ rfc1738_do_escape(const char *url, int flags)
     return (buf);
 }
 
-/*
- * Converts a ascii hex code into a binary character.
- */
-static int
-fromhex(char ch)
+int
+HextDigitToInt(char ch)
 {
     if (ch >= '0' && ch <= '9')
         return ch - '0';
@@ -155,10 +152,10 @@ rfc1738_unescape(char *s)
         } else {
             /* decode */
             int v1, v2, x;
-            v1 = fromhex(s[j + 1]);
+            v1 = HextDigitToInt(s[j + 1]);
             if (v1 < 0)
                 continue;  /* non-hex or \0 */
-            v2 = fromhex(s[j + 2]);
+            v2 = HextDigitToInt(s[j + 2]);
             if (v2 < 0)
                 continue;  /* non-hex or \0 */
             x = v1 << 4 | v2;
