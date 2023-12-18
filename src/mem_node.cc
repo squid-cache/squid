@@ -13,7 +13,7 @@
 #include "mem_node.h"
 
 #include <cstddef>
-
+#include <type_traits>
 
 static ptrdiff_t makeMemNodeDataOffset();
 
