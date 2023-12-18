@@ -12,6 +12,10 @@
 #include "mem/Pool.h"
 #include "mem_node.h"
 
+#include <cstddef>
+
+static_assert(std::is_standard_layout<mem_node>::value, "the behavior of offsetof(mem_node) is defined");
+
 static ptrdiff_t makeMemNodeDataOffset();
 
 static ptrdiff_t _mem_node_data_offset = makeMemNodeDataOffset();
@@ -23,8 +27,7 @@ static ptrdiff_t _mem_node_data_offset = makeMemNodeDataOffset();
 static ptrdiff_t
 makeMemNodeDataOffset()
 {
-    mem_node *p = nullptr;
-    return ptrdiff_t(&p->data);
+    return ptrdiff_t(offsetof(mem_node, data));
 }
 
 /*
