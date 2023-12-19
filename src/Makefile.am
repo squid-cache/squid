@@ -9,8 +9,10 @@ include $(top_srcdir)/src/Common.am
 
 dist_doc_DATA = squid.md
 
+if ENABLE_PANDOC_DOC
 man_MANS = squid.8
 CLEANFILES += squid.8
+endif
 
 DNSSOURCE = \
 	dns_internal.cc
