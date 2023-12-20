@@ -14,7 +14,9 @@
 #include "debug/Stream.h"
 #include "HttpReply.h"
 
+#include <algorithm>
 #include <climits>
+#include <iostream>
 
 static void aclParseHTTPStatusList(Splay<acl_httpstatus_data *> **curlist);
 static int aclHTTPStatusCompare(acl_httpstatus_data * const &a, acl_httpstatus_data * const &b);
@@ -35,25 +37,6 @@ acl_httpstatus_data::toStr() const
     else
         rv.Printf("%d-%d", status1, status2);
     return rv;
-}
-
-int acl_httpstatus_data::compare(acl_httpstatus_data* const& a, acl_httpstatus_data* const& b)
-{
-    int ret;
-    ret = aclHTTPStatusCompare(b, a);
-
-    if (ret != 0)
-        ret = aclHTTPStatusCompare(a, b);
-
-    if (ret == 0) {
-        const SBuf sa = a->toStr();
-        const SBuf sb = b->toStr();
-        debugs(28, DBG_CRITICAL, "WARNING: '" << sa << "' is a subrange of '" << sb << "'");
-        debugs(28, DBG_CRITICAL, "WARNING: because of this '" << sa << "' is ignored to keep splay tree searching predictable");
-        debugs(28, DBG_CRITICAL, "WARNING: You should probably remove '" << sb << "' from the ACL named '" << AclMatchedName << "'");
-    }
-
-    return ret;
 }
 
 ACLHTTPStatus::ACLHTTPStatus (char const *theClass) : data(nullptr), class_ (theClass)
@@ -104,12 +87,55 @@ ACLHTTPStatus::parse()
     aclParseHTTPStatusList (&data);
 }
 
+static std::ostream &
+operator <<(std::ostream &os, const acl_httpstatus_data &status)
+{
+    os << status.toStr();
+    return os;
+}
+
+template <typename Item, typename SplayT>
+static void
+aclInsertWithoutOverlaps(SplayT &container, Item *newItem, typename SplayT::SPLAYCMP comparator)
+{
+    while (const auto oldItemPointer = container.insert(newItem, comparator)) {
+        const auto oldItem = *oldItemPointer;
+        assert(oldItem);
+
+        if (oldItem->contains(*newItem)) {
+            debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Ignoring " << *newItem << " because it is already covered by " << *oldItem <<
+                   Debug::Extra << "advice: Remove value " << *newItem << " from the ACL named " << AclMatchedName);
+            delete newItem;
+            return;
+        }
+
+        if (newItem->contains(*oldItem)) {
+            debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Ignoring " << *oldItem << " because it is covered by " << *newItem <<
+                   Debug::Extra << "advice: Remove value " << *oldItem << " from the ACL named " << AclMatchedName);
+            container.remove(oldItem, comparator);
+            delete oldItem;
+            continue; // still need to insert newItem (and it may conflict with other old items)
+        }
+
+        const auto minLeft = std::min(oldItem->status1, newItem->status1);
+        const auto maxRight = std::max(oldItem->status2, newItem->status2);
+        const auto combinedItem = new acl_httpstatus_data(minLeft, maxRight);
+        debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Merging overlapping " << *newItem << " and " << *oldItem << " into " << *combinedItem <<
+               Debug::Extra << "advice: Replace values " << *newItem << " and " << *oldItem << " with " << *combinedItem << " in the ACL named " << AclMatchedName);
+        delete newItem;
+        newItem = combinedItem;
+        container.remove(oldItem, comparator);
+        delete oldItem;
+        continue; // still need to insert updated newItem (and it may conflict with other old items)
+    }
+}
+
 void
 aclParseHTTPStatusList(Splay<acl_httpstatus_data *> **curlist)
 {
     while (char *t = ConfigParser::strtokFile()) {
         if (acl_httpstatus_data *q = aclParseHTTPStatusData(t))
-            (*curlist)->insert(q, acl_httpstatus_data::compare);
+            aclInsertWithoutOverlaps(**curlist, q, aclHTTPStatusCompare);
     }
 }
 
@@ -132,13 +158,13 @@ aclMatchHTTPStatus(Splay<acl_httpstatus_data*> **dataptr, const Http::StatusCode
 static int
 aclHTTPStatusCompare(acl_httpstatus_data * const &a, acl_httpstatus_data * const &b)
 {
-    if (a->status1 < b->status1)
-        return 1;
+    if (a->status2 < b->status1)
+        return 1; // the entire range a is to the left of range b
 
     if (a->status1 > b->status2)
-        return -1;
+        return -1; // the entire range a is to the right of range b
 
-    return 0;
+    return 0; // equal or partially overlapping ranges
 }
 
 struct HttpStatusAclDumpVisitor {

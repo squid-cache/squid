@@ -20,7 +20,8 @@ struct acl_httpstatus_data {
     acl_httpstatus_data(int, int);
     SBuf toStr() const; // was toStr
 
-    static int compare(acl_httpstatus_data* const& a, acl_httpstatus_data* const& b);
+    /// whether our range includes all statuses from their range
+    auto contains(const acl_httpstatus_data &them) const { return status1 <= them.status1 && them.status2 <= status2; }
 };
 
 /// \ingroup ACLAPI
