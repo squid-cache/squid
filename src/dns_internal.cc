@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/CodeContext.h"
 #include "base/InstanceId.h"
+#include "base/IoManip.h"
 #include "base/Random.h"
 #include "base/RunnersRegistry.h"
 #include "comm.h"
@@ -1169,7 +1170,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
         return;
     }
 
-    debugs(78, 3, "idnsGrokReply: QID 0x" << std::hex <<   message->id << ", " << std::dec << n << " answers");
+    debugs(78, 3, "idnsGrokReply: QID 0x" << asHex(message->id) << ", " << n << " answers");
 
     idns_query *q = idnsFindQuery(message->id);
 
@@ -1423,8 +1424,7 @@ idnsCheckQueue(void *)
         }
 
         debugs(78, 3, "idnsCheckQueue: ID " << q->xact_id <<
-               " QID 0x"  << std::hex << std::setfill('0')  <<
-               std::setw(4) << q->query_id << ": timeout" );
+               " QID 0x" << asHex(q->query_id).minDigits(4) << ": timeout");
 
         dlinkDelete(&q->lru, &lru_list);
         q->pending = 0;
@@ -1433,8 +1433,8 @@ idnsCheckQueue(void *)
             idnsSendQuery(q);
         } else {
             debugs(78, 2, "idnsCheckQueue: ID " << q->xact_id <<
-                   " QID 0x" << std::hex << q->query_id <<
-                   " : giving up after " << std::dec << q->nsends << " tries and " <<
+                   " QID 0x" << asHex(q->query_id) <<
+                   ": giving up after " << q->nsends << " tries and " <<
                    std::setw(5)<< std::setprecision(2) << tvSubDsec(q->start_t, current_time) << " seconds");
 
             if (q->rcode != 0)
@@ -1727,7 +1727,7 @@ idnsSendSlaveAAAAQuery(idns_query *master)
     q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query, Config.dns.packet_max);
 
     debugs(78, 3, "buf is " << q->sz << " bytes for " << q->name <<
-           ", id = 0x" << std::hex << q->query_id);
+           ", id = 0x" << asHex(q->query_id));
     if (!q->sz) {
         delete q;
         return;
@@ -1791,7 +1791,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     }
 
     debugs(78, 3, "idnsALookup: buf is " << q->sz << " bytes for " << q->name <<
-           ", id = 0x" << std::hex << q->query_id);
+           ", id = 0x" << asHex(q->query_id));
 
     idnsCheckMDNS(q);
     idnsStartQuery(q, callback, data);
@@ -1834,7 +1834,7 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
     }
 
     debugs(78, 3, "idnsPTRLookup: buf is " << q->sz << " bytes for " << ip <<
-           ", id = 0x" << std::hex << q->query_id);
+           ", id = 0x" << asHex(q->query_id));
 
     q->permit_mdns = Config.onoff.dns_mdns;
     idnsStartQuery(q, callback, data);

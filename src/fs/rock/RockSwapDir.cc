@@ -9,6 +9,7 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "cache_cf.h"
 #include "CollapsedForwarding.h"
 #include "ConfigOption.h"
@@ -638,8 +639,7 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STIOCB * const cbIo, v
     sio->writeableAnchor_ = slot;
 
     debugs(47,5, "dir " << index << " created new filen " <<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
-           sio->swap_filen << std::dec << " starting at " <<
+           asHex(sio->swap_filen).upperCase().minDigits(8) << " starting at " <<
            diskOffset(sio->swap_filen));
 
     sio->file(theFile);
@@ -667,8 +667,7 @@ Rock::SwapDir::createUpdateIO(const Ipc::StoreMapUpdate &update, StoreIOState::S
     sio->writeableAnchor_ = update.fresh.anchor;
 
     debugs(47,5, "dir " << index << " updating filen " <<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
-           sio->swap_filen << std::dec << " starting at " <<
+           asHex(sio->swap_filen).upperCase().minDigits(8) << " starting at " <<
            diskOffset(sio->swap_filen));
 
     sio->file(theFile);
@@ -788,8 +787,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STIOCB * const cbIo, voi
     sio->file(theFile);
 
     debugs(47,5, "dir " << index << " has old filen: " <<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
-           sio->swap_filen);
+           asHex(sio->swap_filen).upperCase().minDigits(8));
 
     assert(slot->sameKey(static_cast<const cache_key*>(e.key)));
     // For collapsed disk hits: e.swap_file_sz and slot->basics.swap_file_sz
