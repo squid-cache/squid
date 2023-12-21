@@ -9,6 +9,7 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "debug/Messages.h"
@@ -853,7 +854,7 @@ storeDirSwapLog(const StoreEntry * e, int op)
            swap_log_op_str[op] << " " <<
            e->getMD5Text() << " " <<
            e->swap_dirn << " " <<
-           std::hex << std::uppercase << std::setfill('0') << std::setw(8) << e->swap_filen);
+           asHex(e->swap_filen).upperCase().minDigits(8));
 
     e->disk().logEntry(*e, op);
 }

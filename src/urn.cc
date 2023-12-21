@@ -178,12 +178,12 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
         sc = storeClientListAdd(urlres_e, this);
         FwdState::Start(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw(), ale);
         if (urlEntry) {
-            urlEntry->abandon(__FUNCTION__);
+            urlEntry->abandon(__func__);
             urlEntry = nullptr;
         }
     } else {
         urlres_e = urlEntry;
-        urlres_e->lock("UrnState::start");
+        urlres_e->lock(__func__);
         sc = storeClientListAdd(urlres_e, this);
     }
 

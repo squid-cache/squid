@@ -4580,7 +4580,7 @@ static void parse_note(Notes *notes)
 
 static void dump_note(StoreEntry *entry, const char *name, Notes &notes)
 {
-    notes.dump(entry, name);
+    notes.printAsNoteDirectives(entry, name);
 }
 
 static void free_note(Notes *notes)
