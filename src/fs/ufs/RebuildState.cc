@@ -9,6 +9,7 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "fs_io.h"
 #include "globals.h"
 #include "RebuildState.h"
@@ -297,9 +298,8 @@ Fs::Ufs::RebuildState::rebuildFromSwapLog()
     swapData.swap_filen &= 0x00FFFFFF;
 
     debugs(47, 3, swap_log_op_str[(int) swapData.op]  << " " <<
-           storeKeyText(swapData.key)  << " "<< std::setfill('0') <<
-           std::hex << std::uppercase << std::setw(8) <<
-           swapData.swap_filen);
+           storeKeyText(swapData.key) << " " <<
+           asHex(swapData.swap_filen).upperCase().minDigits(8));
 
     if (swapData.op == SWAP_LOG_ADD) {
         (void) 0;
@@ -356,9 +356,9 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
     int fd = -1;
     int dirs_opened = 0;
     debugs(47, 3, "flag=" << flags.init  << ", " <<
-           sd->index  << ": /"<< std::setfill('0') << std::hex <<
-           std::uppercase << std::setw(2) << curlvl1  << "/" << std::setw(2) <<
-           curlvl2);
+           sd->index << ": /" <<
+           asHex(curlvl1).upperCase().minDigits(2) << "/" <<
+           asHex(curlvl2).upperCase().minDigits(2));
 
     if (done)
         return -2;
@@ -410,11 +410,10 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
             }
 
             if (!UFSSwapDir::FilenoBelongsHere(fn, sd->index, curlvl1, curlvl2)) {
-                debugs(47, 3, std::setfill('0') <<
-                       std::hex << std::uppercase << std::setw(8) << fn  <<
-                       " does not belong in " << std::dec << sd->index  << "/" <<
-                       curlvl1  << "/" << curlvl2);
-
+                debugs(47, 3, asHex(fn).upperCase().minDigits(8) <<
+                       " does not belong in " << sd->index  << "/" <<
+                       asHex(curlvl1).upperCase().minDigits(2) << "/" <<
+                       asHex(curlvl2).upperCase().minDigits(2));
                 continue;
             }
 

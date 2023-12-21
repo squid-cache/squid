@@ -11,6 +11,7 @@
 #define CLEAN_BUF_SZ 16384
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "base/Random.h"
 #include "cache_cf.h"
 #include "ConfigOption.h"
@@ -340,8 +341,8 @@ Fs::Ufs::UFSSwapDir::~UFSSwapDir()
 void
 Fs::Ufs::UFSSwapDir::dumpEntry(StoreEntry &e) const
 {
-    debugs(47, DBG_CRITICAL, "FILENO "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e.swap_filen);
-    debugs(47, DBG_CRITICAL, "PATH " << fullPath(e.swap_filen, nullptr)   );
+    debugs(47, DBG_CRITICAL, "FILENO " << asHex(e.swap_filen).upperCase().minDigits(8) <<
+           ", PATH " << fullPath(e.swap_filen, nullptr));
     e.dump(0);
 }
 
@@ -797,8 +798,7 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
                                     int)
 {
     StoreEntry *e = nullptr;
-    debugs(47, 5, storeKeyText(key)  <<
-           ", fileno="<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << file_number);
+    debugs(47, 5, storeKeyText(key) << ", fileno=" << asHex(file_number).upperCase().minDigits(8));
     /* if you call this you'd better be sure file_number is not
      * already in use! */
     e = new StoreEntry();
@@ -1162,8 +1162,7 @@ Fs::Ufs::UFSSwapDir::validFileno(sfileno filn, int flag) const
 void
 Fs::Ufs::UFSSwapDir::unlinkFile(sfileno f)
 {
-    debugs(79, 3, "unlinking fileno " <<  std::setfill('0') <<
-           std::hex << std::uppercase << std::setw(8) << f << " '" <<
+    debugs(79, 3, "unlinking fileno " << asHex(f).upperCase().minDigits(8) << " '" <<
            fullPath(f,nullptr) << "'");
     /* commonUfsDirMapBitReset(this, f); */
     IO->unlinkFile(fullPath(f,nullptr));
@@ -1376,7 +1375,7 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
         k = 10;
 
     for (n = 0; n < k; ++n) {
-        debugs(36, 3, "Cleaning file "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << files[n]);
+        debugs(36, 3, "Cleaning file " << asHex(files[n]).upperCase().minDigits(8));
         SBuf p2(p1);
         p2.appendf("/%08X", files[n]);
         safeunlink(p2.c_str(), 0);
