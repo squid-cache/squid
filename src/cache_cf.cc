@@ -2404,7 +2404,7 @@ parse_peer(CachePeers **peers)
 #if USE_CACHE_DIGESTS
     if (!p->options.no_digest) {
         const auto pd = new PeerDigest(p);
-        p->digest = cbdataReference(pd);
+        p->digest = cbdataReference(pd); // CachePeer destructor unlocks
     }
 #endif
 
