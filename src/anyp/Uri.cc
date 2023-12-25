@@ -96,30 +96,38 @@ AnyP::Uri::Decode(const SBuf &buf)
     SBuf output;
     output.reserveSpace(buf.length()); // worst case: buf is not encoded
 
-    for (int i = 0; i < buf.length(); ++i) {
-        const auto ch = buf[i];
+    const auto end = buf.end();
+    for (auto i = buf.begin(); i != end; ++i) {
+        const auto ch = *i;
         if (ch != '%') {
             output.append(ch);
             continue;
         }
-        if (i + 1 < buf.length() && buf[i+1] == '%') {
-            output.append('%');
-            ++i;
+        // ch is '%', let's peek one ahead
+        const auto ch1 = *(++i);
+        if (i == end) {
+            // '%' is the last character, so it's not encoded
+            output.append(ch);
+            break;
+        }
+        if  (ch1 == '%') {
+            // met "%%"; output "%" and continue
+            output.append(ch);
             continue;
         }
-        if (i + 2 < buf.length()) {
-            const auto v1 = buf[i + 1];
-            const auto v2 = buf[i + 2];
-            if (hex && hex2) {
-                const auto decoded = xdigitToInt(hex) * 16 + xdigitToInt(hex2);
-                output.append(decoded);
-                i += 2;
-                continue;
-            }
+        const auto ch2 = *(++i);
+        const auto hex1 = HextDigitToInt(ch1);
+        const auto hex2 = HextDigitToInt(ch2);
+        if (hex1 && hex2) {
+            const auto decoded = hex1 << 4 | hex2;
+            output.append(decoded);
+            continue;
+        } else {
+            output.append(ch).append(ch1).append(ch2);
         }
-        output.append(ch);
     }
 
+    return output;
 }
 
 
