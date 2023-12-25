@@ -1197,16 +1197,16 @@ void
 TestSBuf::testStdAlgorithm()
 {
     {
-        SBuf src("foo"), dst;
+        SBuf src(fox), dst;
         std::copy(src.begin(), src.end(), std::back_inserter(dst));
-        CPPUNIT_ASSERT_EQUAL(dst, src);
+        CPPUNIT_ASSERT_EQUAL(src, dst);
     }
 
     {
-        SBuf src("foo"), dst;
+        SBuf src(fox), dst;
         std::copy_if(src.begin(), src.end(), std::back_inserter(dst),
             [](char c) { return c != 'o'; });
-        CPPUNIT_ASSERT_EQUAL(dst, SBuf("f"));
+        CPPUNIT_ASSERT_EQUAL(SBuf("The quick brwn fx jumped ver the lazy dg"), dst);
     }
 }
 
