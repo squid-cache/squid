@@ -97,7 +97,7 @@ int fail_debug_enabled = 0;
 #endif
 
 /* returns 1 on success, 0 on failure */
-int
+static int
 Valid_Group(char *UserName, char *Group)
 {
     int result = FALSE;
@@ -164,122 +164,13 @@ Valid_Group(char *UserName, char *Group)
     return result;
 }
 
-char * AllocStrFromLSAStr(LSA_UNICODE_STRING LsaStr)
-{
-    size_t len;
-    static char * target;
-
-    len = LsaStr.Length/sizeof(WCHAR) + 1;
-
-    /* allocate buffer for str + null termination */
-    safe_free(target);
-    target = (char *)xmalloc(len);
-    if (target == NULL)
-        return nullptr;
-
-    /* copy unicode buffer */
-    WideCharToMultiByte(CP_ACP, 0, LsaStr.Buffer, LsaStr.Length, target, len, nullptr, nullptr);
-
-    /* add null termination */
-    target[len-1] = '\0';
-    return target;
-}
-
-char * GetDomainName(void)
-
-{
-    LSA_HANDLE PolicyHandle;
-    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
-    NTSTATUS status;
-    PPOLICY_PRIMARY_DOMAIN_INFO ppdiDomainInfo;
-    PWKSTA_INFO_100 pwkiWorkstationInfo;
-    DWORD netret;
-    char * DomainName = nullptr;
-
-    /*
-     * Always initialize the object attributes to all zeroes.
-     */
-    memset(&ObjectAttributes, '\0', sizeof(ObjectAttributes));
-
-    /*
-     * You need the local workstation name. Use NetWkstaGetInfo at level
-     * 100 to retrieve a WKSTA_INFO_100 structure.
-     *
-     * The wki100_computername field contains a pointer to a UNICODE
-     * string containing the local computer name.
-     */
-    netret = NetWkstaGetInfo(nullptr, 100, (LPBYTE *)&pwkiWorkstationInfo);
-    if (netret == NERR_Success) {
-        /*
-         * We have the workstation name in:
-         * pwkiWorkstationInfo->wki100_computername
-         *
-         * Next, open the policy object for the local system using
-         * the LsaOpenPolicy function.
-         */
-        status = LsaOpenPolicy(
-                     nullptr,
-                     &ObjectAttributes,
-                     GENERIC_READ | POLICY_VIEW_LOCAL_INFORMATION,
-                     &PolicyHandle
-                 );
-
-        /*
-         * Error checking.
-         */
-        if (status) {
-            debug("OpenPolicy Error: %ld\n", status);
-        } else {
-
-            /*
-             * You have a handle to the policy object. Now, get the
-             * domain information using LsaQueryInformationPolicy.
-             */
-            status = LsaQueryInformationPolicy(PolicyHandle,
-                                               PolicyPrimaryDomainInformation,
-                                               (void **)&ppdiDomainInfo);
-            if (status) {
-                debug("LsaQueryInformationPolicy Error: %ld\n", status);
-            } else  {
-
-                /* Get name in usable format */
-                DomainName = AllocStrFromLSAStr(ppdiDomainInfo->Name);
-
-                /*
-                 * Check the Sid pointer, if it is null, the
-                 * workstation is either a stand-alone computer
-                 * or a member of a workgroup.
-                 */
-                if (ppdiDomainInfo->Sid) {
-
-                    /*
-                     * Member of a domain. Display it in debug mode.
-                     */
-                    debug("Member of Domain %s\n",DomainName);
-                } else {
-                    DomainName = nullptr;
-                }
-            }
-        }
-
-        /*
-         * Clean up all the memory buffers created by the LSA and
-         * Net* APIs.
-         */
-        NetApiBufferFree(pwkiWorkstationInfo);
-        LsaFreeMemory((LPVOID)ppdiDomainInfo);
-    } else
-        debug("NetWkstaGetInfo Error: %ld\n", netret);
-    return DomainName;
-}
-
 /*
  * Fills auth with the user's credentials.
  *
  * In case of problem returns one of the
  * codes defined in libntlmauth/ntlmauth.h
  */
-NtlmError
+static NtlmError
 ntlm_check_auth(ntlm_authenticate * auth, char *user, char *domain, int auth_length)
 {
     char credentials[DNLEN+UNLEN+2];    /* we can afford to waste */
@@ -334,7 +225,7 @@ ntlm_check_auth(ntlm_authenticate * auth, char *user, char *domain, int auth_len
     return NtlmError::None;
 }
 
-void
+static void
 helperfail(const char *reason)
 {
 #if FAIL_DEBUG
@@ -352,7 +243,7 @@ helperfail(const char *reason)
  */
 char *my_program_name = nullptr;
 
-void
+static void
 usage()
 {
     fprintf(stderr,
@@ -365,7 +256,7 @@ usage()
             my_program_name);
 }
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt, had_error = 0;
@@ -420,7 +311,7 @@ token_decode(size_t *decodedLen, uint8_t decoded[], const char *buf)
     return true;
 }
 
-int
+static int
 manage_request()
 {
     ntlmhdr *fast_header;
@@ -468,7 +359,9 @@ manage_request()
     if ((strlen(buf) > 3) && NTLM_packet_debug_enabled) {
         if (!token_decode(&decodedLen, decoded, buf+3))
             return 1;
-        strncpy(helper_command, buf, 2);
+        helper_command[0] = buf[0];
+        helper_command[1] = buf[1];
+        helper_command[2] = '\0';
         debug("Got '%s' from Squid with data:\n", helper_command);
         hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
     } else
