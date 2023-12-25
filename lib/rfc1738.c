@@ -127,7 +127,7 @@ rfc1738_do_escape(const char *url, int flags)
  * Converts a ascii hex code into a binary character.
  */
 int
-HextDigitToInt(char ch)
+HextDigitToInt(const char ch)
 {
     if (ch >= '0' && ch <= '9')
         return ch - '0';
