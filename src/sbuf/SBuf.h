@@ -193,7 +193,7 @@ public:
     /// Append a single character. The character may be NUL (\0).
     SBuf& append(const char c);
 
-    /// Append a single character, compatibly with std::string::push_back()
+    /// Append a single character, which may be '\0'
     void push_back(const char c) { append(c); }
 
     /** Append operation for C-style strings.
