@@ -225,7 +225,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 
     if (handle == NULL) {   /*if null we aren't connected, but it shouldn't happen */
         debug("Weird, we've been disconnected\n");
-        ntlm_errno = NtlmError::NtlmNotConnected;
+        ntlm_errno = NtlmError::NotConnected;
         return nullptr;
     }
 

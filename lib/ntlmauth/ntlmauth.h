@@ -39,7 +39,7 @@ enum class NtlmError
     ProtocolError,
     LoginEror,
     UntrustedDomain,
-    NtlmNotConnected,
+    NotConnected,
     SspiError,
     BadNtGroup,
     BadRequest,
