@@ -81,6 +81,42 @@ AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &ignore)
     return output;
 }
 
+SBuf
+AnyP::Uri::Decode(const SBuf &buf)
+{
+    if (buf.isEmpty())
+        return buf;
+
+    SBuf output;
+    output.reserveSpace(buf.length()); // worst case: buf is not encoded
+
+    for (int i = 0; i < buf.length(); ++i) {
+        const auto ch = buf[i];
+        if (ch != '%') {
+            output.append(ch);
+            continue;
+        }
+        if (i + 1 < buf.length() && buf[i+1] == '%') {
+            output.append('%');
+            ++i;
+            continue;
+        }
+        if (i + 2 < buf.length()) {
+            const auto v1 = buf[i + 1];
+            const auto v2 = buf[i + 2];
+            if (hex && hex2) {
+                const auto decoded = xdigitToInt(hex) * 16 + xdigitToInt(hex2);
+                output.append(decoded);
+                i += 2;
+                continue;
+            }
+        }
+        output.append(ch);
+    }
+
+}
+
+
 const SBuf &
 AnyP::Uri::Asterisk()
 {

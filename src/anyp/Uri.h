@@ -113,6 +113,10 @@ public:
     /// the provided set of expected characters.
     static SBuf Encode(const SBuf &, const CharacterSet &expected);
 
+
+    /// %-decode characters an a buffer
+    static SBuf Decode(const SBuf &);
+
     /**
      * The authority-form URI for currently stored values.
      *

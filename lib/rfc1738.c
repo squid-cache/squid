@@ -123,6 +123,9 @@ rfc1738_do_escape(const char *url, int flags)
     return (buf);
 }
 
+/*
+ * Converts a ascii hex code into a binary character.
+ */
 int
 HextDigitToInt(char ch)
 {
