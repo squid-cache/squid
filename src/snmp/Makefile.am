@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -6,14 +6,12 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 noinst_LTLIBRARIES = libsnmp.la
 
 libsnmp_la_SOURCES = \
 	Forwarder.cc \
 	Forwarder.h \
-	forward.h \
 	Inquirer.cc \
 	Inquirer.h \
 	Pdu.cc \
@@ -25,4 +23,5 @@ libsnmp_la_SOURCES = \
 	Session.cc \
 	Session.h \
 	Var.cc \
-	Var.h
+	Var.h \
+	forward.h

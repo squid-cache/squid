@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -178,7 +178,7 @@ main(int argc, char *argv[])
     TypeList types;
     enum State state;
     int rc = 0;
-    char *ptr = NULL;
+    char *ptr = nullptr;
     char buff[MAX_LINE];
     std::ifstream fp;
     std::stack<std::string> IFDEFS;
@@ -206,7 +206,7 @@ main(int argc, char *argv[])
         if (!type || type[0] == '#')
             continue;
         Type t(type);
-        while ((dep = strtok(NULL, WS)) != NULL) {
+        while ((dep = strtok(nullptr, WS)) != nullptr) {
             t.depend.push_front(dep);
         }
         types.push_front(t);
@@ -237,7 +237,7 @@ main(int argc, char *argv[])
             *t = '\0';
 
         if (strncmp(buff, "IF ", 3) == 0) {
-            if ((ptr = strtok(buff + 3, WS)) == NULL) {
+            if ((ptr = strtok(buff + 3, WS)) == nullptr) {
                 errorMsg(input_filename, linenum, "Missing IF parameter");
                 exit(EXIT_FAILURE);
             }
@@ -260,22 +260,22 @@ main(int argc, char *argv[])
                 } else if (!strncmp(buff, "NAME:", 5)) {
                     char *name, *aliasname;
 
-                    if ((name = strtok(buff + 5, WS)) == NULL) {
+                    if ((name = strtok(buff + 5, WS)) == nullptr) {
                         errorMsg(input_filename, linenum, buff);
                         exit(EXIT_FAILURE);
                     }
 
-                    entries.emplace_back(name);
+                    auto &newEntry = entries.emplace_back(name);
 
-                    while ((aliasname = strtok(NULL, WS)) != NULL)
-                        entries.back().alias.push_front(aliasname);
+                    while ((aliasname = strtok(nullptr, WS)) != nullptr)
+                        newEntry.alias.push_front(aliasname);
 
                     state = s1;
                 } else if (!strcmp(buff, "EOF")) {
                     state = sEXIT;
                 } else if (!strcmp(buff, "COMMENT_START")) {
-                    entries.emplace_back("comment");
-                    entries.back().loc = "none";
+                    auto &newEntry = entries.emplace_back("comment");
+                    newEntry.loc = "none";
                     state = sDOC;
                 } else {
                     errorMsg(input_filename, linenum, buff);
@@ -326,14 +326,14 @@ main(int argc, char *argv[])
 
                     curr.defaults.docs.push_back(ptr);
                 } else if (!strncmp(buff, "LOC:", 4)) {
-                    if ((ptr = strtok(buff + 4, WS)) == NULL) {
+                    if ((ptr = strtok(buff + 4, WS)) == nullptr) {
                         errorMsg(input_filename, linenum, buff);
                         exit(EXIT_FAILURE);
                     }
 
                     curr.loc = ptr;
                 } else if (!strncmp(buff, "TYPE:", 5)) {
-                    if ((ptr = strtok(buff + 5, WS)) == NULL) {
+                    if ((ptr = strtok(buff + 5, WS)) == nullptr) {
                         errorMsg(input_filename, linenum, buff);
                         exit(EXIT_FAILURE);
                     }
@@ -347,7 +347,7 @@ main(int argc, char *argv[])
                     checkDepend(curr.name, ptr, types, entries);
                     curr.type = ptr;
                 } else if (!strncmp(buff, "IFDEF:", 6)) {
-                    if ((ptr = strtok(buff + 6, WS)) == NULL) {
+                    if ((ptr = strtok(buff + 6, WS)) == nullptr) {
                         errorMsg(input_filename, linenum, buff);
                         exit(EXIT_FAILURE);
                     }
@@ -369,8 +369,7 @@ main(int argc, char *argv[])
                     state = sSTART;
                 } else if (strcmp(buff, "CONFIG_START") == 0) {
                     state = sCFGLINES;
-                } else { // if (buff != NULL) {
-                    assert(buff != NULL);
+                } else {
                     entries.back().doc.push_back(buff);
                 }
                 break;
@@ -378,16 +377,13 @@ main(int argc, char *argv[])
             case sCFGLINES:
                 if (strcmp(buff, "CONFIG_END") == 0) {
                     state = sDOC;
-                } else { // if (buff != NULL) {
-                    assert(buff != NULL);
+                } else {
                     entries.back().cfgLines.push_back(buff);
                 }
                 break;
-#if 0
             case sEXIT:
                 assert(0);      /* should never get here */
                 break;
-#endif
             }
 
     }
@@ -519,7 +515,7 @@ gen_default(const EntryList &head, std::ostream &fout)
         }
     }
 
-    fout << "    cfg_filename = NULL;" << std::endl <<
+    fout << "    cfg_filename = nullptr;" << std::endl <<
          "}" << std::endl << std::endl;
     return rc;
 }
@@ -559,7 +555,7 @@ gen_default_if_none(const EntryList &head, std::ostream &fout)
             fout << "#endif" << std::endl;
     }
 
-    fout << "    cfg_filename = NULL;" << std::endl <<
+    fout << "    cfg_filename = nullptr;" << std::endl <<
          "}" << std::endl << std::endl;
 }
 
@@ -592,7 +588,7 @@ gen_default_postscriptum(const EntryList &head, std::ostream &fout)
             fout << "#endif" << std::endl;
     }
 
-    fout << "    cfg_filename = NULL;" << std::endl <<
+    fout << "    cfg_filename = nullptr;" << std::endl <<
          "}" << std::endl << std::endl;
 }
 
@@ -613,11 +609,13 @@ Entry::genParseAlias(const std::string &aName, std::ostream &fout) const
         fout << "        parse_obsolete(token);";
     } else if (!loc.size() || loc.compare("none") == 0) {
         fout << "parse_" << type << "();";
+    } else if (type.find("::") != std::string::npos) {
+        fout << "ParseDirective<" << type << ">(" << loc << ", LegacyParser);";
     } else {
         fout << "parse_" << type << "(&" << loc << (array_flag ? "[0]" : "") << ");";
     }
     fout << std::endl;
-    fout << "        cfg_directive = NULL;" << std::endl;
+    fout << "        cfg_directive = nullptr;" << std::endl;
     if (ifdef.size()) {
         fout <<
              "#else" << std::endl <<
@@ -653,7 +651,7 @@ gen_parse(const EntryList &head, std::ostream &fout)
          "\tchar\t*token;\n"
          "\tif ((token = strtok(buff, w_space)) == NULL) \n"
          "\t\treturn 1;\t/* ignore empty lines */\n"
-         "\tConfigParser::SetCfgLine(strtok(NULL, \"\"));\n";
+         "\tConfigParser::SetCfgLine(strtok(nullptr, \"\"));\n";
 
     for (const auto &e : head)
         e.genParse(fout);
@@ -670,7 +668,7 @@ gen_dump(const EntryList &head, std::ostream &fout)
          "static void" << std::endl <<
          "dump_config(StoreEntry *entry)" << std::endl <<
          "{" << std::endl <<
-         "    debugs(5, 4, HERE);" << std::endl;
+         "    debugs(5, 4, MYNAME);" << std::endl;
 
     for (const auto &e : head) {
 
@@ -683,7 +681,10 @@ gen_dump(const EntryList &head, std::ostream &fout)
         if (e.ifdef.size())
             fout << "#if " << e.ifdef << std::endl;
 
-        fout << "    dump_" << e.type << "(entry, \"" << e.name << "\", " << e.loc << ");" << std::endl;
+        if (e.type.find("::") != std::string::npos)
+            fout << "    DumpDirective<" << e.type << ">(" << e.loc << ", entry, \"" << e.name << "\");\n";
+        else
+            fout << "    dump_" << e.type << "(entry, \"" << e.name << "\", " << e.loc << ");" << std::endl;
 
         if (e.ifdef.size())
             fout << "#endif" << std::endl;
@@ -699,7 +700,7 @@ gen_free(const EntryList &head, std::ostream &fout)
          "static void" << std::endl <<
          "free_all(void)" << std::endl <<
          "{" << std::endl <<
-         "    debugs(5, 4, HERE);" << std::endl;
+         "    debugs(5, 4, MYNAME);" << std::endl;
 
     for (const auto &e : head) {
         if (!e.loc.size() || e.loc.compare("none") == 0)
@@ -711,7 +712,10 @@ gen_free(const EntryList &head, std::ostream &fout)
         if (e.ifdef.size())
             fout << "#if " << e.ifdef << std::endl;
 
-        fout << "    free_" << e.type << "(&" << e.loc << (e.array_flag ? "[0]" : "") << ");" << std::endl;
+        if (e.type.find("::") != std::string::npos)
+            fout << "    FreeDirective<" << e.type << ">(" << e.loc << ");\n";
+        else
+            fout << "    free_" << e.type << "(&" << e.loc << (e.array_flag ? "[0]" : "") << ");" << std::endl;
 
         if (e.ifdef.size())
             fout << "#endif" << std::endl;
@@ -842,13 +846,14 @@ gen_quote_escape(const std::string &var)
     static std::string esc;
     esc.clear();
 
-    for (int i = 0; i < var.length(); ++i) {
-        switch (var[i]) {
+    for (const auto c : var) {
+        switch (c) {
         case '"':
         case '\\':
             esc += '\\';
+            [[fallthrough]];
         default:
-            esc += var[i];
+            esc += c;
         }
     }
 

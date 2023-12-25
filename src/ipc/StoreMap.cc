@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,7 +51,7 @@ Ipc::StoreMap::Init(const SBuf &path, const int sliceLimit)
     return owner;
 }
 
-Ipc::StoreMap::StoreMap(const SBuf &aPath): cleaner(NULL), path(aPath),
+Ipc::StoreMap::StoreMap(const SBuf &aPath): cleaner(nullptr), path(aPath),
     fileNos(shm_old(FileNos)(StoreMapFileNosId(path).c_str())),
     anchors(shm_old(Anchors)(StoreMapAnchorsId(path).c_str())),
     slices(shm_old(Slices)(StoreMapSlicesId(path).c_str())),
@@ -99,6 +99,43 @@ Ipc::StoreMap::forgetWritingEntry(sfileno fileno)
     debugs(54, 8, "closed entry " << fileno << " for writing " << path);
 }
 
+const Ipc::StoreMap::Anchor *
+Ipc::StoreMap::openOrCreateForReading(const cache_key *const key, sfileno &fileno)
+{
+    debugs(54, 5, "opening/creating entry with key " << storeKeyText(key)
+           << " for reading " << path);
+
+    // start with reading so that we do not overwrite an existing unlocked entry
+    auto idx = fileNoByKey(key);
+    if (const auto anchor = openForReadingAt(idx, key)) {
+        fileno = idx;
+        return anchor;
+    }
+
+    // the competing openOrCreateForReading() workers race to create a new entry
+    idx = fileNoByKey(key);
+    if (auto anchor = openForWritingAt(idx)) {
+        anchor->setKey(key);
+        anchor->lock.switchExclusiveToShared();
+        // race ended
+        assert(anchor->complete());
+        fileno = idx;
+        debugs(54, 5, "switched entry " << fileno << " from writing to reading " << path);
+        return anchor;
+    }
+
+    // we lost the above race; see if the winner-created entry is now readable
+    // TODO: Do some useful housekeeping work here to give the winner more time.
+    idx = fileNoByKey(key);
+    if (const auto anchor = openForReadingAt(idx, key)) {
+        fileno = idx;
+        return anchor;
+    }
+
+    // slow entry creator or some other problem
+    return nullptr;
+}
+
 Ipc::StoreMap::Anchor *
 Ipc::StoreMap::openForWriting(const cache_key *const key, sfileno &fileno)
 {
@@ -111,7 +148,7 @@ Ipc::StoreMap::openForWriting(const cache_key *const key, sfileno &fileno)
         return anchor;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 Ipc::StoreMap::Anchor *
@@ -128,7 +165,7 @@ Ipc::StoreMap::openForWritingAt(const sfileno fileno, bool overwriteExisting)
             lock.unlockExclusive();
             debugs(54, 5, "cannot open existing entry " << fileno <<
                    " for writing " << path);
-            return NULL;
+            return nullptr;
         }
 
         // free if the entry was used, keeping the entry locked
@@ -147,7 +184,7 @@ Ipc::StoreMap::openForWritingAt(const sfileno fileno, bool overwriteExisting)
 
     debugs(54, 5, "cannot open busy entry " << fileno <<
            " for writing " << path);
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -216,15 +253,14 @@ Ipc::StoreMap::abortWriting(const sfileno fileno)
     debugs(54, 5, "aborting entry " << fileno << " for writing " << path);
     Anchor &s = anchorAt(fileno);
     assert(s.writing());
-    s.lock.appending = false; // locks out any new readers
-    if (!s.lock.readers) {
+    if (!s.lock.appending || s.lock.stopAppendingAndRestoreExclusive()) {
         freeChain(fileno, s, false);
-        debugs(54, 5, "closed clean entry " << fileno << " for writing " << path);
+        debugs(54, 5, "closed idle entry " << fileno << " for writing " << path);
     } else {
         s.waitingToBeFreed = true;
         s.writerHalted = true;
         s.lock.unlockExclusive();
-        debugs(54, 5, "closed dirty entry " << fileno << " for writing " << path);
+        debugs(54, 5, "closed busy entry " << fileno << " for writing " << path);
     }
 }
 
@@ -409,7 +445,7 @@ Ipc::StoreMap::openForReading(const cache_key *const key, sfileno &fileno)
         fileno = idx;
         return anchor; // locked for reading
     }
-    return NULL;
+    return nullptr;
 }
 
 const Ipc::StoreMap::Anchor *
@@ -421,21 +457,21 @@ Ipc::StoreMap::openForReadingAt(const sfileno fileno, const cache_key *const key
     if (!s.lock.lockShared()) {
         debugs(54, 5, "cannot open busy entry " << fileno <<
                " for reading " << path);
-        return NULL;
+        return nullptr;
     }
 
     if (s.empty()) {
         s.lock.unlockShared();
         debugs(54, 7, "cannot open empty entry " << fileno <<
                " for reading " << path);
-        return NULL;
+        return nullptr;
     }
 
     if (s.waitingToBeFreed) {
         s.lock.unlockShared();
         debugs(54, 7, "cannot open marked entry " << fileno <<
                " for reading " << path);
-        return NULL;
+        return nullptr;
     }
 
     if (!s.sameKey(key)) {
@@ -808,7 +844,7 @@ Ipc::StoreMap::validateHit(const sfileno fileno)
 
     ++statCounter.hitValidation.failures;
 
-    debugs(54, DBG_IMPORTANT, "BUG: purging corrupted cache entry " << fileno <<
+    debugs(54, DBG_IMPORTANT, "ERROR: Squid BUG: purging corrupted cache entry " << fileno <<
            " from " << path <<
            " expected swap_file_sz=" << expectedByteCount <<
            " actual swap_file_sz=" << actualByteCount <<
@@ -948,12 +984,18 @@ Ipc::StoreMapAnchor::exportInto(StoreEntry &into) const
     into.lastModified(basics.lastmod);
     into.swap_file_sz = basics.swap_file_sz;
     into.refcount = basics.refcount;
+
+    // Some basics.flags are not meaningful and should not be overwritten here.
+    // ENTRY_REQUIRES_COLLAPSING is one of them. TODO: check other flags.
     const bool collapsingRequired = into.hittingRequiresCollapsing();
     into.flags = basics.flags;
-    // There are possibly several flags we do not need to overwrite,
-    // and ENTRY_REQUIRES_COLLAPSING is one of them.
-    // TODO: check for other flags.
-    into.setCollapsingRequirement(collapsingRequired);
+    // Avoid into.setCollapsingRequirement() here: We only restore the bit we
+    // just cleared in the assignment above, while that method debugging will
+    // falsely imply that the collapsing requirements have changed.
+    if (collapsingRequired)
+        EBIT_SET(into.flags, ENTRY_REQUIRES_COLLAPSING);
+    else
+        EBIT_CLR(into.flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 void

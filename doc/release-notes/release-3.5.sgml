@@ -21,13 +21,13 @@ This new release is available for download from <url url="http://www.squid-cache
 <p>Some interesting new features adding system flexibility have been added along with general improvements all around.
    While this release is not fully bug-free we believe it is ready for use in production on many systems.
 
-<p>We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting">
+<p>We welcome feedback and bug reports. If you find a bug, please see <url url="https://wiki.squid-cache.org/SquidFaq/BugReporting">
    for how to submit a report with a stack trace.
 
 <sect1>Known issues
 <p>
 Although this release is deemed good enough for use in many setups, please note the existence of 
-<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.5" name="open bugs against Squid-3.5">.
+<url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.5" name="open bugs against Squid-3.5">.
 
 <sect1>Changes since earlier releases of Squid-3.5
 <p>
@@ -72,7 +72,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Support libecap v1.0
-<p>Details at <url url="http://wiki.squid-cache.org/Features/eCAP">.
+<p>Details at <url url="https://wiki.squid-cache.org/Features/eCAP">.
 
 <p>The new libecap version allows Squid to better check the version of
   the eCAP adapter being loaded as well as the version of the eCAP library
@@ -98,8 +98,8 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Support named services
-<p>Details at <url url="http://wiki.squid-cache.org/MultipleInstances">.
-<p>Terminology details at <url url="http://wiki.squid-cache.org/Features/SmpScale#Terminology">.
+<p>Details at <url url="https://wiki.squid-cache.org/MultipleInstances">.
+<p>Terminology details at <url url="https://wiki.squid-cache.org/Features/SmpScale#terminology">.
 
 <p>The command line option <em>-n</em> assigns a name to the Squid service
    instance to be used as a unique identifier for all SMP processes run as
@@ -189,7 +189,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Native FTP Relay
-<p>Details at <url url="http://wiki.squid-cache.org/Features/FtpRelay">.
+<p>Details at <url url="https://wiki.squid-cache.org/Features/FtpRelay">.
 
 <p>Squid is now capable of accepting native FTP commands and relaying native
    FTP messages between FTP clients and FTP servers. Native FTP commands
@@ -245,7 +245,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>Squid can be configured by adding an <em>http_port</em>
    with the <em>require-proxy-header</em> mode flag. The <em>proxy_protocol_access</em>
-   must also be configured with <em>src</em> ACLs to whitelist proxies which are
+   must also be configured with <em>src</em> ACLs to permit proxies which are
    trusted to send correct client details.
 
 <p>Forward-proxy traffic from a client proxy:
@@ -310,7 +310,7 @@ There have been changes to Squid's configuration file since Squid-3.4.
 <p>Squid supports reading configuration option parameters from external
    files using the syntax <em>parameters("/path/filename")</em>. For example:
 <verb>
-    acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
+    acl allowlist dstdomain parameters("/etc/squid/allowlist.txt")
 </verb>
 
 <p>The squid.conf macro <em>${service_name}</em> is added to provide the service name
@@ -683,7 +683,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.

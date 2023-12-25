@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,7 +47,7 @@ public:
         enum Method { mhReplace, mhAppend };
 
         Value(const char *aVal, const bool quoted, const char *descr, const Method method = mhReplace);
-        ~Value();
+        ~Value() override;
         Value(const Value&) = delete;
         Value &operator=(const Value&) = delete;
 
@@ -114,9 +114,9 @@ public:
     typedef NotesList::iterator iterator; ///< iterates over the notes list
     typedef NotesList::const_iterator const_iterator; ///< iterates over the notes list
 
-    explicit Notes(const char *aDescr, const Keys *extraBlacklist = nullptr, bool allowFormatted = true);
+    explicit Notes(const char *aDescr, const Keys *extraReservedKeys = nullptr, bool allowFormatted = true);
     Notes() = default;
-    ~Notes() { notes.clear(); }
+    ~Notes() override { notes.clear(); }
     Notes(const Notes&) = delete;
     Notes &operator=(const Notes&) = delete;
 
@@ -146,7 +146,7 @@ private:
     /// Makes sure the given key is not on the given list of banned names.
     void banReservedKey(const SBuf &key, const Keys &banned) const;
 
-    /// Verifies that the key is not blacklisted (fatal error) and
+    /// Verifies that the key is not reserved (fatal error) and
     /// does not contain special characters (non-fatal error).
     void validateKey(const SBuf &key) const;
 
@@ -160,10 +160,10 @@ private:
     NotesList notes; ///< The Note::Pointer objects array list
     const char *descr = nullptr; ///< identifies note source in error messages
 
-    Keys blacklist; ///< a list of additional prohibited key names
+    Keys reservedKeys; ///< a list of additional prohibited key names
     bool formattedValues = false; ///< whether to expand quoted logformat %codes
 
-    static const Notes::Keys &BlackList(); ///< always prohibited key names
+    static const Notes::Keys &ReservedKeys(); ///< always prohibited key names
 };
 
 /**

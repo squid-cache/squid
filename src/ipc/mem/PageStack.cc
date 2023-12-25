@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,12 +10,13 @@
 
 #include "squid.h"
 
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
 
 #include <cmath>
 #include <algorithm>
+#include <limits>
 
 /*
 

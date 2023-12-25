@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,10 @@
 #ifndef SQUID_SRC_SECURITY_LOCKINGPOINTER_H
 #define SQUID_SRC_SECURITY_LOCKINGPOINTER_H
 
+#include "base/Assure.h"
 #include "base/HardFun.h"
+
+#include <cstddef>
 
 #if USE_OPENSSL
 #include "compat/openssl.h"
@@ -26,13 +29,6 @@
         }
 
 #endif /* USE_OPENSSL */
-
-// Macro to be used to define the C++ equivalent function of an extern "C"
-// function. The C++ function suffixed with the _cpp extension
-#define CtoCpp1(function, argument) \
-        extern "C++" inline void function ## _cpp(argument a) { \
-            function(a); \
-        }
 
 namespace Security
 {
@@ -57,13 +53,19 @@ public:
     /// a helper label to simplify this objects API definitions below
     typedef Security::LockingPointer<T, UnLocker, Locker> SelfType;
 
+    /// constructs a nil smart pointer
+    constexpr LockingPointer(): raw(nullptr) {}
+
+    /// constructs a nil smart pointer from nullptr
+    constexpr LockingPointer(std::nullptr_t): raw(nullptr) {}
+
     /**
-     * Construct directly from a raw pointer.
-     * This action requires that the producer of that pointer has already
-     * created one reference lock for the object pointed to.
-     * Our destructor will do the matching unlock.
+     * Construct directly from a (possibly nil) raw pointer. If the supplied
+     * pointer is not nil, it is expected that its producer has already created
+     * one reference lock for the object pointed to, and our destructor will do
+     * the matching unlock.
      */
-    explicit LockingPointer(T *t = nullptr): raw(nullptr) {
+    explicit LockingPointer(T *t): raw(nullptr) {
         // de-optimized for clarity about non-locking
         resetWithoutLocking(t);
     }
@@ -94,6 +96,7 @@ public:
     bool operator ==(const SelfType &o) const { return (o.get() == raw); }
     bool operator !=(const SelfType &o) const { return (o.get() != raw); }
 
+    T &operator *() const { Assure(raw); return *raw; }
     T *operator ->() const { return raw; }
 
     /// Returns raw and possibly nullptr pointer

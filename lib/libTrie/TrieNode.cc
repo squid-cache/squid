@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,10 +13,10 @@
 #include <unistd.h>
 #endif
 
-TrieNode::TrieNode() : _privateData(NULL)
+TrieNode::TrieNode() : _privateData(nullptr)
 {
     for (int i = 0; i < 256; ++i)
-        internal[i] = NULL;
+        internal[i] = nullptr;
 }
 
 TrieNode::~TrieNode()

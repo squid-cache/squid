@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,6 +15,7 @@
 #include "base/Lock.h"
 
 #include <iostream>
+#include <utility>
 
 /**
  * Template for Reference Counting pointers.
@@ -27,7 +28,13 @@ class RefCount
 {
 
 public:
-    RefCount () : p_ (NULL) {}
+    /// creates a new C object using given C constructor arguments (if any)
+    /// \returns a refcounting pointer to the created object
+    template<typename... Args>
+    inline static auto Make(Args&&... args) {
+        return RefCount<C>(new C(std::forward<Args>(args)...));
+    }
+    RefCount () : p_ (nullptr) {}
 
     RefCount (C const *p) : p_(p) { reference (*this); }
 
@@ -40,7 +47,7 @@ public:
     }
 
     RefCount (RefCount &&p) : p_(std::move(p.p_)) {
-        p.p_=NULL;
+        p.p_=nullptr;
     }
 
     /// Base::Pointer = Derived::Pointer
@@ -61,10 +68,12 @@ public:
     RefCount& operator = (RefCount&& p) {
         if (this != &p) {
             dereference(p.p_);
-            p.p_ = NULL;
+            p.p_ = nullptr;
         }
         return *this;
     }
+
+    RefCount &operator =(std::nullptr_t) { dereference(); return *this; }
 
     explicit operator bool() const { return p_; }
 
@@ -87,8 +96,20 @@ public:
         return p.p_ != p_;
     }
 
+    template <class Other>
+    bool operator ==(const Other * const p) const
+    {
+        return p == p_;
+    }
+
+    template <class Other>
+    bool operator !=(const Other * const p) const
+    {
+        return p != p_;
+    }
+
 private:
-    void dereference(C const *newP = NULL) {
+    void dereference(C const *newP = nullptr) {
         /* Setting p_ first is important:
         * we may be freed ourselves as a result of
         * delete p_;
@@ -112,7 +133,7 @@ private:
 template <class C>
 inline std::ostream &operator <<(std::ostream &os, const RefCount<C> &p)
 {
-    if (p != NULL)
+    if (p != nullptr)
         return os << p.getRaw() << '*' << p->LockCount();
     else
         return os << "NULL";

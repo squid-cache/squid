@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,9 +11,9 @@
 #include "acl/HasComponentData.h"
 
 int
-ACLHasComponentStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::HasComponentCheck::match(ACLChecklist * const checklist)
 {
-    ACLHasComponentData *cdata = dynamic_cast<ACLHasComponentData*>(data);
+    const auto cdata = dynamic_cast<ACLHasComponentData*>(data.get());
     assert(cdata);
     return cdata->match(checklist);
 }

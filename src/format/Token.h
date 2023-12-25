@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -60,6 +60,8 @@ public:
             char *element;
             char separator;
         } header;
+
+        uint8_t byteValue; // %byte{} parameter or zero
     } data;
     int widthMin; ///< minimum field width
     int widthMax; ///< maximum field width

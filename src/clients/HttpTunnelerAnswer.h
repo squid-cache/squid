@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #define SQUID_SRC_CLIENTS_HTTP_TUNNELERANSWER_H
 
 #include "base/CbcPointer.h"
-#include "comm/forward.h"
+#include "comm/Connection.h"
 #include "http/StatusCode.h"
 #include "sbuf/SBuf.h"
 
@@ -47,7 +47,7 @@ public:
     Comm::ConnectionPointer conn;
 };
 
-std::ostream &operator <<(std::ostream &, const Http::TunnelerAnswer &);
+std::ostream &operator <<(std::ostream &, const TunnelerAnswer &);
 
 } // namespace Http
 

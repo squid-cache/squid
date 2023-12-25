@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -55,7 +55,7 @@ HttpHdrRangeSpec::Create(const char *field, int flen)
     HttpHdrRangeSpec spec;
 
     if (!spec.parseInit(field, flen))
-        return NULL;
+        return nullptr;
 
     return new HttpHdrRangeSpec(spec);
 }
@@ -193,6 +193,8 @@ HttpHdrRangeSpec::mergeWith(const HttpHdrRangeSpec * donor)
             offset <= donor->offset && donor->offset < rhs;
     }
 
+#else
+    (void)donor;
 #endif
     return merged;
 }
@@ -211,7 +213,7 @@ HttpHdrRange::ParseCreate(const String * range_spec)
 
     if (!r->parseInit(range_spec)) {
         delete r;
-        r = NULL;
+        r = nullptr;
     }
 
     return r;
@@ -222,11 +224,11 @@ bool
 HttpHdrRange::parseInit(const String * range_spec)
 {
     const char *item;
-    const char *pos = NULL;
+    const char *pos = nullptr;
     int ilen;
     assert(range_spec);
     ++ParsedCount;
-    debugs(64, 8, "parsing range field: '" << range_spec << "'");
+    debugs(64, 8, "parsing range field: '" << *range_spec << "'");
     /* check range type */
 
     if (range_spec->caseCmp("bytes=", 6))
@@ -247,7 +249,7 @@ HttpHdrRange::parseInit(const String * range_spec)
                 delete specs.back();
                 specs.pop_back();
             }
-            debugs(64, 2, "ignoring invalid range field: '" << range_spec << "'");
+            debugs(64, 2, "ignoring invalid range field: '" << *range_spec << "'");
             break;
         }
 
@@ -526,30 +528,13 @@ HttpHdrRange::offsetLimitExceeded(const int64_t limit) const
     return true;
 }
 
-bool
-HttpHdrRange::contains(const HttpHdrRangeSpec& r) const
-{
-    assert(r.length >= 0);
-    HttpHdrRangeSpec::HttpRange rrange(r.offset, r.offset + r.length);
-
-    for (const_iterator i = begin(); i != end(); ++i) {
-        HttpHdrRangeSpec::HttpRange irange((*i)->offset, (*i)->offset + (*i)->length);
-        HttpHdrRangeSpec::HttpRange intersection = rrange.intersection(irange);
-
-        if (intersection.start == irange.start && intersection.size() == irange.size())
-            return true;
-    }
-
-    return false;
-}
-
 const HttpHdrRangeSpec *
 HttpHdrRangeIter::currentSpec() const
 {
     if (pos != end)
         return *pos;
 
-    return NULL;
+    return nullptr;
 }
 
 void

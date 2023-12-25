@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,9 +10,11 @@
 
 #include "squid.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
+#include "peer_sourcehash.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -21,8 +23,14 @@
 
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
-static int n_sourcehash_peers = 0;
-static CachePeer **sourcehash_peers = NULL;
+/// sourcehash peers ordered by their sourcehash weight
+static auto &
+SourceHashPeers()
+{
+    static const auto hashPeers = new SelectedCachePeers();
+    return *hashPeers;
+}
+
 static OBJH peerSourceHashCachemgr;
 static void peerSourceHashRegisterWithCacheManager(void);
 
@@ -38,23 +46,17 @@ void
 peerSourceHashInit(void)
 {
     int W = 0;
-    int K;
-    int k;
     double P_last, X_last, Xn;
-    CachePeer *p;
-    CachePeer **P;
     char *t;
     /* Clean up */
 
-    for (k = 0; k < n_sourcehash_peers; ++k) {
-        cbdataReferenceDone(sourcehash_peers[k]);
-    }
-
-    safe_free(sourcehash_peers);
-    n_sourcehash_peers = 0;
+    SourceHashPeers().clear();
     /* find out which peers we have */
 
-    for (p = Config.peers; p; p = p->next) {
+    RawCachePeers rawSourceHashPeers;
+    for (const auto &p: CurrentCachePeers()) {
+        const auto peer = p.get();
+
         if (!p->options.sourcehash)
             continue;
 
@@ -63,26 +65,18 @@ peerSourceHashInit(void)
         if (p->weight == 0)
             continue;
 
-        ++n_sourcehash_peers;
+        rawSourceHashPeers.push_back(peer);
 
         W += p->weight;
     }
 
     peerSourceHashRegisterWithCacheManager();
 
-    if (n_sourcehash_peers == 0)
+    if (rawSourceHashPeers.empty())
         return;
 
-    sourcehash_peers = (CachePeer **)xcalloc(n_sourcehash_peers, sizeof(*sourcehash_peers));
-
-    /* Build a list of the found peers and calculate hashes and load factors */
-    for (P = sourcehash_peers, p = Config.peers; p; p = p->next) {
-        if (!p->options.sourcehash)
-            continue;
-
-        if (p->weight == 0)
-            continue;
-
+    /* calculate hashes and load factors */
+    for (const auto &p: rawSourceHashPeers) {
         /* calculate this peers hash */
         p->sourcehash.hash = 0;
 
@@ -98,13 +92,10 @@ peerSourceHashInit(void)
 
         if (floor(p->sourcehash.load_factor * 1000.0) == 0.0)
             p->sourcehash.load_factor = 0.0;
-
-        /* add it to our list of peers */
-        *P++ = cbdataReference(p);
     }
 
     /* Sort our list on weight */
-    qsort(sourcehash_peers, n_sourcehash_peers, sizeof(*sourcehash_peers), peerSortWeight);
+    qsort(rawSourceHashPeers.data(), rawSourceHashPeers.size(), sizeof(decltype(rawSourceHashPeers)::value_type), peerSortWeight);
 
     /* Calculate the load factor multipliers X_k
      *
@@ -114,7 +105,7 @@ peerSourceHashInit(void)
      * X_k = pow (X_k, {1/(K-k+1)})
      * simplified to have X_1 part of the loop
      */
-    K = n_sourcehash_peers;
+    const auto K = rawSourceHashPeers.size();
 
     P_last = 0.0;       /* Empty P_0 */
 
@@ -122,9 +113,9 @@ peerSourceHashInit(void)
 
     X_last = 0.0;       /* Empty X_0, nullifies the first pow statement */
 
-    for (k = 1; k <= K; ++k) {
+    for (size_t k = 1; k <= K; ++k) {
         double Kk1 = (double) (K - k + 1);
-        p = sourcehash_peers[k - 1];
+        const auto p = rawSourceHashPeers[k - 1];
         p->sourcehash.load_multiplier = (Kk1 * (p->sourcehash.load_factor - P_last)) / Xn;
         p->sourcehash.load_multiplier += pow(X_last, Kk1);
         p->sourcehash.load_multiplier = pow(p->sourcehash.load_multiplier, 1.0 / Kk1);
@@ -132,6 +123,8 @@ peerSourceHashInit(void)
         X_last = p->sourcehash.load_multiplier;
         P_last = p->sourcehash.load_factor;
     }
+
+    SourceHashPeers().assign(rawSourceHashPeers.begin(), rawSourceHashPeers.end());
 }
 
 static void
@@ -144,19 +137,17 @@ peerSourceHashRegisterWithCacheManager(void)
 CachePeer *
 peerSourceHashSelectParent(PeerSelector *ps)
 {
-    int k;
     const char *c;
-    CachePeer *p = NULL;
-    CachePeer *tp;
+    CachePeer *p = nullptr;
     unsigned int user_hash = 0;
     unsigned int combined_hash;
     double score;
     double high_score = 0;
-    const char *key = NULL;
+    const char *key = nullptr;
     char ntoabuf[MAX_IPSTRLEN];
 
-    if (n_sourcehash_peers == 0)
-        return NULL;
+    if (SourceHashPeers().empty())
+        return nullptr;
 
     assert(ps);
     HttpRequest *request = ps->request;
@@ -170,23 +161,25 @@ peerSourceHashSelectParent(PeerSelector *ps)
         user_hash += ROTATE_LEFT(user_hash, 19) + *c;
 
     /* select CachePeer */
-    for (k = 0; k < n_sourcehash_peers; ++k) {
-        tp = sourcehash_peers[k];
+    for (const auto &tp: SourceHashPeers()) {
+        if (!tp)
+            continue; // peer gone
+
         combined_hash = (user_hash ^ tp->sourcehash.hash);
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
         score = combined_hash * tp->sourcehash.load_multiplier;
-        debugs(39, 3, "peerSourceHashSelectParent: " << tp->name << " combined_hash " << combined_hash  <<
+        debugs(39, 3, *tp << " combined_hash " << combined_hash  <<
                " score " << std::setprecision(0) << score);
 
-        if ((score > high_score) && peerHTTPOkay(tp, ps)) {
-            p = tp;
+        if ((score > high_score) && peerHTTPOkay(tp.get(), ps)) {
+            p = tp.get();
             high_score = score;
         }
     }
 
     if (p)
-        debugs(39, 2, "peerSourceHashSelectParent: selected " << p->name);
+        debugs(39, 2, "selected " << *p);
 
     return p;
 }
@@ -194,7 +187,6 @@ peerSourceHashSelectParent(PeerSelector *ps)
 static void
 peerSourceHashCachemgr(StoreEntry * sentry)
 {
-    CachePeer *p;
     int sumfetches = 0;
     storeAppendPrintf(sentry, "%24s %10s %10s %10s %10s\n",
                       "Hostname",
@@ -203,10 +195,15 @@ peerSourceHashCachemgr(StoreEntry * sentry)
                       "Factor",
                       "Actual");
 
-    for (p = Config.peers; p; p = p->next)
+    for (const auto &p: SourceHashPeers()) {
+        if (!p)
+            continue;
         sumfetches += p->stats.fetches;
+    }
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: SourceHashPeers()) {
+        if (!p)
+            continue;
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
                           p->name, p->sourcehash.hash,
                           p->sourcehash.load_multiplier,

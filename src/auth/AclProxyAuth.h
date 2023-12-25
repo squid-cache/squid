@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,42 +15,33 @@
 #include "acl/Checklist.h"
 #include "acl/Data.h"
 
-class ProxyAuthLookup : public ACLChecklist::AsyncState
-{
-
-public:
-    static ProxyAuthLookup *Instance();
-    virtual void checkForAsync(ACLChecklist *) const;
-
-private:
-    static ProxyAuthLookup instance_;
-    static void LookupDone(void *data);
-};
-
 class ACLProxyAuth : public ACL
 {
     MEMPROXY_CLASS(ACLProxyAuth);
 
 public:
-    ~ACLProxyAuth();
+    static void StartLookup(ACLFilledChecklist &, const ACL &);
+
+    ~ACLProxyAuth() override;
     ACLProxyAuth(ACLData<char const *> *, char const *);
-    ACLProxyAuth(ACLProxyAuth const &);
-    ACLProxyAuth &operator =(ACLProxyAuth const &);
 
     /* ACL API */
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual bool isProxyAuth() const {return true;}
-    virtual void parseFlags();
-    virtual int match(ACLChecklist *checklist);
-    virtual SBufList dump() const;
-    virtual bool valid() const;
-    virtual bool empty() const;
-    virtual bool requiresRequest() const {return true;}
-    virtual ACL *clone() const;
-    virtual int matchForCache(ACLChecklist *checklist);
+    char const *typeString() const override;
+    void parse() override;
+    bool isProxyAuth() const override {return true;}
+    int match(ACLChecklist *checklist) override;
+    SBufList dump() const override;
+    bool valid() const override;
+    bool empty() const override;
+    bool requiresRequest() const override {return true;}
+    int matchForCache(ACLChecklist *checklist) override;
 
 private:
+    static void LookupDone(void *data);
+
+    /* ACL API */
+    const Acl::Options &lineOptions() override;
+
     int matchProxyAuth(ACLChecklist *);
     ACLData<char const *> *data;
     char const *type_;

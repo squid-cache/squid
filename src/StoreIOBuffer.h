@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,7 @@ class StoreIOBuffer
 {
 
 public:
-    StoreIOBuffer():length(0), offset (0), data (NULL) {flags.error = 0;}
+    StoreIOBuffer():length(0), offset (0), data (nullptr) {flags.error = 0;}
 
     StoreIOBuffer(size_t aLength, int64_t anOffset, char *someData) :
         length (aLength), offset (anOffset), data (someData) {
@@ -42,6 +42,9 @@ public:
     Range<int64_t> range() const {
         return Range<int64_t>(offset, offset + length);
     }
+
+    /// convenience method for changing the offset of a being-configured buffer
+    StoreIOBuffer &positionAt(const int64_t newOffset) { offset = newOffset; return *this; }
 
     void dump() const {
         if (fwrite(data, length, 1, stderr)) {}

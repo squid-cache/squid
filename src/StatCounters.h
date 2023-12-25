@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 #define STATCOUNTERS_H_
 
 #include "base/ByteCounter.h"
+#include "comm/Incoming.h"
 #include "StatHist.h"
 
 #if USE_CACHE_DIGESTS
@@ -121,9 +122,11 @@ public:
     double cputime = 0.0;
 
     struct timeval timestamp;
-    StatHist comm_udp_incoming;
-    StatHist comm_dns_incoming;
-    StatHist comm_tcp_incoming;
+#if USE_POLL || USE_SELECT
+    Comm::Incoming comm_dns;
+    Comm::Incoming comm_tcp;
+    Comm::Incoming comm_udp;
+#endif
     StatHist select_fds_hist;
 
     struct {

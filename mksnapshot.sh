@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -123,7 +123,7 @@ if (groff --help >/dev/null); then
 	if [ ! -d ${tmpdir}/doc/manuals ] ; then
 		mkdir -p ${tmpdir}/doc/manuals
 	fi
-	for f in `ls -1 ${tmpdir}/helpers/*/*/*.8 ${tmpdir}/src/*.8 ${tmpdir}/src/*/*.8 ${tmpdir}/tools/squidclient/*.1 ${tmpdir}/tools/*.8 ./helpers/*/*/*.8 2>/dev/null` ; do
+	for f in `ls -1 ${tmpdir}/helpers/*/*/*.8 ${tmpdir}/src/*.8 ${tmpdir}/src/*/*.8 ${tmpdir}/tools/*.8 ./helpers/*/*/*.8 2>/dev/null` ; do
 		cp $f ${tmpdir}/doc/manuals/
 	done
 	for f in `ls -1 ${tmpdir}/doc/manuals/*.1  ${tmpdir}/doc/manuals/*.8 2>/dev/null` ; do

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,19 +25,19 @@
  * \retval ACCESS_ALLOWED       user authenticated and authorized
  */
 Acl::Answer
-AuthenticateAcl(ACLChecklist *ch)
+AuthenticateAcl(ACLChecklist *ch, const ACL &acl)
 {
     ACLFilledChecklist *checklist = Filled(ch);
-    HttpRequest *request = checklist->request;
+    const auto request = checklist->request;
     Http::HdrType headertype;
 
-    if (NULL == request) {
+    if (!request) {
         fatal ("requiresRequest SHOULD have been true for this ACL!!");
         return ACCESS_DENIED;
     } else if (request->flags.sslBumped) {
         debugs(28, 5, "SslBumped request: It is an encapsulated request do not authenticate");
-        checklist->auth_user_request = checklist->conn() != NULL ? checklist->conn()->getAuth() : request->auth_user_request;
-        if (checklist->auth_user_request != NULL)
+        checklist->auth_user_request = checklist->conn() != nullptr ? checklist->conn()->getAuth() : request->auth_user_request;
+        if (checklist->auth_user_request != nullptr)
             return ACCESS_ALLOWED;
         else
             return ACCESS_DENIED;
@@ -45,7 +45,7 @@ AuthenticateAcl(ACLChecklist *ch)
         /* WWW authorization on accelerated requests */
         headertype = Http::HdrType::AUTHORIZATION;
     } else if (request->flags.intercepted || request->flags.interceptTproxy) {
-        debugs(28, DBG_IMPORTANT, "NOTICE: Authentication not applicable on intercepted requests.");
+        debugs(28, DBG_IMPORTANT, "WARNING: Authentication not applicable on intercepted requests.");
         return ACCESS_DENIED;
     } else {
         /* Proxy authorization on proxy requests */
@@ -55,12 +55,12 @@ AuthenticateAcl(ACLChecklist *ch)
     /* get authed here */
     /* Note: this fills in auth_user_request when applicable */
     const AuthAclState result = Auth::UserRequest::tryToAuthenticateAndSetAuthUser(
-                                    &checklist->auth_user_request, headertype, request,
+                                    &checklist->auth_user_request, headertype, checklist->request.getRaw(),
                                     checklist->conn(), checklist->src_addr, checklist->al);
     switch (result) {
 
     case AUTH_ACL_CANNOT_AUTHENTICATE:
-        debugs(28, 4, HERE << "returning " << ACCESS_DENIED << " user authenticated but not authorised.");
+        debugs(28, 4, "returning " << ACCESS_DENIED << " user authenticated but not authorised.");
         return ACCESS_DENIED;
 
     case AUTH_AUTHENTICATED:
@@ -68,14 +68,14 @@ AuthenticateAcl(ACLChecklist *ch)
         break;
 
     case AUTH_ACL_HELPER:
-        if (checklist->goAsync(ProxyAuthLookup::Instance()))
+        if (checklist->goAsync(ACLProxyAuth::StartLookup, acl))
             debugs(28, 4, "returning " << ACCESS_DUNNO << " sending credentials to helper.");
         else
             debugs(28, 2, "cannot go async; returning " << ACCESS_DUNNO);
         return ACCESS_DUNNO; // XXX: break this down into DUNNO, EXPIRED_OK, EXPIRED_BAD states
 
     case AUTH_ACL_CHALLENGE:
-        debugs(28, 4, HERE << "returning " << ACCESS_AUTH_REQUIRED << " sending authentication challenge.");
+        debugs(28, 4, "returning " << ACCESS_AUTH_REQUIRED << " sending authentication challenge.");
         /* Client is required to resend the request with correct authentication
          * credentials. (This may be part of a stateful auth protocol.)
          * The request is denied.

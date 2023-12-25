@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -16,7 +16,7 @@
 #
 # By default, a hand-picked subset of Squid repository sources is fixed.
 #
-# See ${WHITE_LIST} below for the list of allowed misspellings.
+# See ${ALLOW_LIST} below for the list of allowed misspellings.
 #
 
 set -e
@@ -33,9 +33,9 @@ if ! git diff --quiet; then
     exit 1
 fi
 
-WHITE_LIST=scripts/codespell-whitelist.txt
-if test ! -f "${WHITE_LIST}"; then
-    echo "${WHITE_LIST} does not exist"
+IGNORE_LIST=scripts/codespell-ignorelist.txt
+if test ! -f "${IGNORE_LIST}"; then
+    echo "${IGNORE_LIST} does not exist"
     exit 1
 fi
 
@@ -62,7 +62,7 @@ for FILENAME in `git ls-files "$@"`; do
     *.sql|\
     errors/templates/ERR_*|\
     INSTALL|README|QUICKSTART)
-        if ! codespell -d -q 3 -w -I "${WHITE_LIST}" ${FILENAME}; then
+        if ! codespell -d -q 3 -w -I "${IGNORE_LIST}" ${FILENAME}; then
             echo "codespell failed for ${FILENAME}"
             exit 1
 	fi

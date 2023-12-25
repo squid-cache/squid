@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,23 +47,31 @@ public:
     void *operator new(size_t);
     void operator delete(void *);
 
-    ACLIP() : data(NULL) {}
-    ~ACLIP();
+    ACLIP() : data(nullptr) {}
+    ~ACLIP() override;
 
     typedef Splay<acl_ip_data *> IPSplay;
 
-    virtual char const *typeString() const = 0;
-    virtual void parse();
+    char const *typeString() const override = 0;
+    void parse() override;
     //    virtual bool isProxyAuth() const {return true;}
-    virtual int match(ACLChecklist *checklist) = 0;
-    virtual SBufList dump() const;
-    virtual bool empty () const;
+    int match(ACLChecklist *checklist) override = 0;
+    SBufList dump() const override;
+    bool empty () const override;
 
 protected:
 
     int match(const Ip::Address &);
     IPSplay *data;
 
+private:
+    bool parseGlobal(const char *);
+
+    /// whether match() should return 1 for any IPv4 parameter
+    bool matchAnyIpv4 = false;
+
+    /// whether match() should return 1 for any IPv6 parameter
+    bool matchAnyIpv6 = false;
 };
 
 #endif /* SQUID_ACLIP_H */

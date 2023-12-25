@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID_CACHEMANAGER_H
 #define SQUID_CACHEMANAGER_H
 
+#include "anyp/forward.h"
 #include "comm/forward.h"
 #include "log/forward.h"
 #include "mgr/Action.h"
@@ -19,6 +20,7 @@
 #include <vector>
 
 class HttpRequest;
+class HttpReply;
 
 /**
  * a CacheManager - the menu system for interacting with squid.
@@ -31,6 +33,9 @@ class CacheManager
 {
 public:
     typedef std::vector<Mgr::ActionProfilePointer> Menu;
+
+    /// initial URL path characters that identify cache manager requests
+    static const SBuf &WellKnownUrlPathPrefix();
 
     void registerProfile(char const * action, char const * desc,
                          OBJH * handler,
@@ -48,10 +53,15 @@ public:
     static CacheManager* GetInstance();
     const char *ActionProtection(const Mgr::ActionProfilePointer &profile);
 
+    /// Add HTTP response headers specific/common to all cache manager replies,
+    /// including cache manager errors and Action reports.
+    /// \param httpOrigin the value of Origin header in the trigger HTTP request (or nil)
+    static void PutCommonResponseHeaders(HttpReply &, const char *httpOrigin);
+
 protected:
     CacheManager() {} ///< use Instance() instead
 
-    Mgr::CommandPointer ParseUrl(const char *url);
+    Mgr::CommandPointer ParseUrl(const AnyP::Uri &);
     void ParseHeaders(const HttpRequest * request, Mgr::ActionParams &params);
     int CheckPassword(const Mgr::Command &cmd);
     char *PasswdGet(Mgr::ActionPasswordList *, const char *);
