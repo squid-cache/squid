@@ -25,11 +25,13 @@ class TestUri : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE(TestUri);
     CPPUNIT_TEST(testConstructScheme);
     CPPUNIT_TEST(testDefaultConstructor);
+    CPPUNIT_TEST(testEncodeDecode);
     CPPUNIT_TEST_SUITE_END();
 
 protected:
     void testConstructScheme();
     void testDefaultConstructor();
+    void testEncodeDecode();
 };
 CPPUNIT_TEST_SUITE_REGISTRATION(TestUri);
 
@@ -81,9 +83,44 @@ TestUri::testDefaultConstructor()
     delete urlPointer;
 }
 
+void
+TestUri::testEncodeDecode()
+{
+    std::vector<std::pair<const char *, const char *>>
+        testCasesEncode = {
+            {"foo", "foo"},
+            {"foo%", "foo%25"},
+            {"fo%o", "fo%25o"},
+            {"fo%%o", "fo%25%25o"}
+            } ,
+        testCasesDecode = {
+            {"foo", "foo"},
+            {"foo%", "foo%"},
+            {"foo%%", "foo%"},
+            {"foo%25", "foo%"},
+            {"foo%2", "foo%2"},
+            {"fo%o", "fo%o"},
+            {"fo%2o", "fo%2o"},
+            {"fo%25o", "fo%o"},
+            {"fo%%o", "fo%o"},
+            {"fo%25%25o", "fo%%o"},
+            {"fo%20o", "fo o"}
+            }
+        ;
+
+    for (const auto &testCase: testCasesEncode) {
+        // static char buffer[1024];
+        CPPUNIT_ASSERT_EQUAL(SBuf(testCase.first), AnyP::Uri::Decode(AnyP::Uri::Rfc3986Encode(SBuf(testCase.first))));
+        CPPUNIT_ASSERT_EQUAL(SBuf(testCase.second), AnyP::Uri::Rfc3986Encode(SBuf(testCase.first)));
+    };
+
+    for (const auto &testCase: testCasesDecode) {
+        CPPUNIT_ASSERT_EQUAL(SBuf(testCase.second), AnyP::Uri::Decode(SBuf(testCase.first)));
+    };
+}
+
 int
 main(int argc, char *argv[])
 {
     return MyTestProgram().run(argc, argv);
 }
-
