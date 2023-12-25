@@ -109,7 +109,6 @@ TestUri::testEncodeDecode()
         ;
 
     for (const auto &testCase: testCasesEncode) {
-        // static char buffer[1024];
         CPPUNIT_ASSERT_EQUAL(SBuf(testCase.first), AnyP::Uri::Decode(AnyP::Uri::Rfc3986Encode(SBuf(testCase.first))));
         CPPUNIT_ASSERT_EQUAL(SBuf(testCase.second), AnyP::Uri::Rfc3986Encode(SBuf(testCase.first)));
     };
