@@ -113,6 +113,8 @@ public:
     /// the provided set of expected characters.
     static SBuf Encode(const SBuf &, const CharacterSet &expected);
 
+    /// %-encode characters according to RFC 3986 specification
+    static SBuf Rfc3986Encode(const SBuf &);
 
     /// %-decode characters an a buffer
     static SBuf Decode(const SBuf &);
