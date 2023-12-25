@@ -191,10 +191,10 @@ public:
     SBuf& append(const SBuf & S);
 
     /// Append a single character. The character may be NUL (\0).
-    SBuf& append(const char c);
+    SBuf& append(const char c) { push_back(c); return *this; }
 
     /// Append a single character, which may be '\0'
-    void push_back(const char c) { append(c); }
+    void push_back(const char c);
 
     /** Append operation for C-style strings.
      *
