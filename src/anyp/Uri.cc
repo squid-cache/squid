@@ -103,33 +103,43 @@ AnyP::Uri::Decode(const SBuf &buf)
             output.append(ch);
             continue;
         }
-        // ch is '%', let's peek one ahead
-        const auto ch1 = *(++i);
+        // ch is '%', let's look ahead
+        ++i;
         if (i == end) {
             // '%' is the last character, so it's not encoded
             output.append(ch);
             break;
         }
-        if  (ch1 == '%') {
+        const auto ch1 = *i;
+        if (ch1 == '%') {
             // met "%%"; output "%" and continue
             output.append(ch);
             continue;
         }
-        const auto ch2 = *(++i);
         const auto hex1 = HextDigitToInt(ch1);
-        const auto hex2 = HextDigitToInt(ch2);
-        if (hex1 && hex2) {
-            const auto decoded = hex1 << 4 | hex2;
-            output.append(decoded);
+        if (hex1 == -1) {
+            // ch1 is not a hex digit, so it's not encoded
+            output.append(ch).append(ch1);
             continue;
-        } else {
-            output.append(ch).append(ch1).append(ch2);
         }
+        ++i;
+        if (i == end) {
+            // end is one-past-last, so ch2 is actually garbage
+            output.append(ch).append(ch1);
+            break;
+        }
+        const auto ch2 = *i;
+        const auto hex2 = HextDigitToInt(ch2);
+        if (hex2 == -1) {
+            // ch2 is not a hex digit, so it's not encoded
+            output.append(ch).append(ch1).append(ch2);
+            continue;
+        }
+        const auto decoded = hex1 << 4 | hex2;
+        output.append(decoded);
     }
-
     return output;
 }
-
 
 const SBuf &
 AnyP::Uri::Asterisk()
