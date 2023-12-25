@@ -111,12 +111,14 @@ public:
     static const CharacterSet OBSTEXT;
 
     // HTTP character sets, RFC 7232
-    // etagc
     static const CharacterSet ETAGC;
 
     // HTTP character sets, RFC 7235
     // token68 (internal characters only, excludes '=' terminator)
     static const CharacterSet TOKEN68C;
+
+    // URI percent-encoding unreserved character set, RFC 3986
+    static const CharacterSet RFC3986_UNRESERVED;
 
 private:
     /** index of characters in this set
