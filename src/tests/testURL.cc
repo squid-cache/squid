@@ -107,6 +107,8 @@ TestUri::testEncodeDecode()
             {SBuf("fo%25%25o"), SBuf("fo%%o")},
             {SBuf("fo%20o"), SBuf("fo o")},
             {SBuf("fo%00o"), SBuf("fo\0o",4)},
+            {SBuf("f%4%20o"), SBuf("f%4 o")},
+            {SBuf("f%4%%20o%"), SBuf("f%4%20o%")},
             }
         ;
 
