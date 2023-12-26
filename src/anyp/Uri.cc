@@ -124,7 +124,7 @@ AnyP::Uri::Decode(const SBuf &buf)
         }
         ++i;
         if (i == end) {
-            // end is one-past-last, so ch2 is actually garbage
+            // end is one-past-last, so the %-encoded triplet is incomplete
             output.append(ch).append(ch1);
             break;
         }
