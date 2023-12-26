@@ -111,11 +111,6 @@ AnyP::Uri::Decode(const SBuf &buf)
             break;
         }
         const auto ch1 = *i;
-        if (ch1 == '%') {
-            // met "%%"; output "%" and continue
-            output.append(ch);
-            continue;
-        }
         const auto hex1 = HextDigitToInt(ch1);
         if (hex1 == -1) {
             // ch1 is not a hex digit, so it's not encoded
