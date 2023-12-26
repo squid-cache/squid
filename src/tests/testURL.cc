@@ -86,35 +86,37 @@ TestUri::testDefaultConstructor()
 void
 TestUri::testEncodeDecode()
 {
-    std::vector<std::pair<const char *, const char *>>
+    std::vector<std::pair<SBuf, SBuf>>
         testCasesEncode = {
-            {"foo", "foo"},
-            {"foo%", "foo%25"},
-            {"fo%o", "fo%25o"},
-            {"fo%%o", "fo%25%25o"}
-            } ,
+            {SBuf("foo"), SBuf("foo")},
+            {SBuf("foo%"), SBuf("foo%25")},
+            {SBuf("fo%o"), SBuf("fo%25o")},
+            {SBuf("fo%%o"), SBuf("fo%25%25o")},
+            {SBuf("fo\0o",4), SBuf("fo%00o")},
+            },
         testCasesDecode = {
-            {"foo", "foo"},
-            {"foo%", "foo%"},
-            {"foo%%", "foo%"},
-            {"foo%25", "foo%"},
-            {"foo%2", "foo%2"},
-            {"fo%o", "fo%o"},
-            {"fo%2o", "fo%2o"},
-            {"fo%25o", "fo%o"},
-            {"fo%%o", "fo%o"},
-            {"fo%25%25o", "fo%%o"},
-            {"fo%20o", "fo o"}
+            {SBuf("foo"), SBuf("foo")},
+            {SBuf("foo%"), SBuf("foo%")},
+            {SBuf("foo%%"), SBuf("foo%")},
+            {SBuf("foo%25"), SBuf("foo%")},
+            {SBuf("foo%2"), SBuf("foo%2")},
+            {SBuf("fo%o"), SBuf("fo%o")},
+            {SBuf("fo%2o"), SBuf("fo%2o")},
+            {SBuf("fo%25o"), SBuf("fo%o")},
+            {SBuf("fo%%o"), SBuf("fo%o")},
+            {SBuf("fo%25%25o"), SBuf("fo%%o")},
+            {SBuf("fo%20o"), SBuf("fo o")},
+            {SBuf("fo%00o"), SBuf("fo\0o",4)},
             }
         ;
 
     for (const auto &testCase: testCasesEncode) {
-        CPPUNIT_ASSERT_EQUAL(SBuf(testCase.first), AnyP::Uri::Decode(AnyP::Uri::Rfc3986Encode(SBuf(testCase.first))));
+        CPPUNIT_ASSERT_EQUAL(testCase.first, AnyP::Uri::Decode(AnyP::Uri::Rfc3986Encode(testCase.first)));
         CPPUNIT_ASSERT_EQUAL(SBuf(testCase.second), AnyP::Uri::Rfc3986Encode(SBuf(testCase.first)));
     };
 
     for (const auto &testCase: testCasesDecode) {
-        CPPUNIT_ASSERT_EQUAL(SBuf(testCase.second), AnyP::Uri::Decode(SBuf(testCase.first)));
+        CPPUNIT_ASSERT_EQUAL(testCase.second, AnyP::Uri::Decode(testCase.first));
     };
 }
 
