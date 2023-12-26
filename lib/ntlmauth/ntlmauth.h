@@ -13,10 +13,6 @@
 /* Endian functions are usually handled by the OS but not always. */
 #include "ntlmauth/support_endian.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Used internally. Microsoft seems to think this is right, I believe them.
  * Right. */
 #define NTLM_MAX_FIELD_LENGTH 300   /* max length of an NTLMSSP field */
@@ -187,10 +183,6 @@ NtlmError ntlm_unpack_auth(const ntlm_authenticate *auth,
                      char *user,
                      char *domain,
                      const int32_t size);
-
-#if __cplusplus
-}
-#endif
 
 #endif /* SQUID_NTLMAUTH_H */
 
