@@ -190,11 +190,11 @@ public:
      */
     SBuf& append(const SBuf & S);
 
-    /// \copydoc push_back(char c)
+    /// \copydoc push_back(char)
     SBuf& append(const char c) { push_back(c); return *this; }
 
     /// Append a single character. The character may be NUL (\0).
-    void push_back(const char c);
+    void push_back(char);
 
     /** Append operation for C-style strings.
      *
