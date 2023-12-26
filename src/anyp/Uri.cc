@@ -106,7 +106,7 @@ AnyP::Uri::Decode(const SBuf &buf)
         // ch is '%', let's look ahead
         ++i;
         if (i == end) {
-            // '%' is the last character, so it's not encoded
+            // '%' at the end of input does not start a pct-encoded sequence
             output.append(ch);
             break;
         }
