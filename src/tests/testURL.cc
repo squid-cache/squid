@@ -9,6 +9,7 @@
 #include "squid.h"
 
 #include "anyp/Uri.h"
+#include "base/TextException.h"
 #include "compat/cppunit.h"
 #include "debug/Stream.h"
 #include "unitTestMain.h"
@@ -92,33 +93,39 @@ TestUri::testEncodeDecode()
             {SBuf("foo%"), SBuf("foo%25")},
             {SBuf("fo%o"), SBuf("fo%25o")},
             {SBuf("fo%%o"), SBuf("fo%25%25o")},
-            {SBuf("fo\0o",4), SBuf("fo%00o")},
-            },
+            {SBuf("fo\0o", 4), SBuf("fo%00o")},
+        },
         testCasesDecode = {
             {SBuf("foo"), SBuf("foo")},
-            {SBuf("foo%"), SBuf("foo%")},
-            {SBuf("foo%%"), SBuf("foo%")},
             {SBuf("foo%25"), SBuf("foo%")},
-            {SBuf("foo%2"), SBuf("foo%2")},
-            {SBuf("fo%o"), SBuf("fo%o")},
-            {SBuf("fo%2o"), SBuf("fo%2o")},
             {SBuf("fo%25o"), SBuf("fo%o")},
-            {SBuf("fo%%o"), SBuf("fo%o")},
             {SBuf("fo%25%25o"), SBuf("fo%%o")},
             {SBuf("fo%20o"), SBuf("fo o")},
-            {SBuf("fo%00o"), SBuf("fo\0o",4)},
-            {SBuf("f%4%20o"), SBuf("f%4 o")},
-            {SBuf("f%4%%20o%"), SBuf("f%4%20o%")},
-            }
-        ;
+            {SBuf("fo%00o"), SBuf("fo\0o", 4)},
+        };
+    std::vector<SBuf> testCaseInvalidDecode = {
+        SBuf("%"),
+        SBuf("foo%"),
+        SBuf("foo%2"),
+        SBuf("foo%%"),
+        SBuf("fo%%o"),
+        SBuf("fo%o"),
+        SBuf("fo%2o"),
+        SBuf("f%4%20o"),
+        SBuf("f%4%%20o%"),
+    };
 
     for (const auto &testCase: testCasesEncode) {
         CPPUNIT_ASSERT_EQUAL(testCase.first, AnyP::Uri::Decode(AnyP::Uri::Rfc3986Encode(testCase.first)));
-        CPPUNIT_ASSERT_EQUAL(SBuf(testCase.second), AnyP::Uri::Rfc3986Encode(SBuf(testCase.first)));
+        CPPUNIT_ASSERT_EQUAL(testCase.second, AnyP::Uri::Rfc3986Encode(testCase.first));
     };
 
     for (const auto &testCase: testCasesDecode) {
         CPPUNIT_ASSERT_EQUAL(testCase.second, AnyP::Uri::Decode(testCase.first));
+    };
+
+    for (const auto &testCase: testCaseInvalidDecode) {
+        CPPUNIT_ASSERT_THROW(AnyP::Uri::Decode(testCase), TextException);
     };
 }
 
