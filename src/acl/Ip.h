@@ -20,13 +20,21 @@ class acl_ip_data
 
 public:
     static acl_ip_data *FactoryParse(char const *);
-    static int NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b);
 
     acl_ip_data ();
 
     acl_ip_data (Ip::Address const &, Ip::Address const &, Ip::Address const &, acl_ip_data *);
     void toStr(char *buf, int len) const;
     SBuf toSBuf() const;
+
+    /// minimum (masked) address that matches this configured ACL value
+    Ip::Address firstAddress() const;
+
+    /// maximum (masked) address that matches this configured ACL value
+    Ip::Address lastAddress() const;
+
+    /// whether our range includes all addresses from their range
+    auto contains(const acl_ip_data &them) const { return firstAddress() <= them.firstAddress() && them.lastAddress() <= lastAddress(); }
 
     Ip::Address addr1;
 

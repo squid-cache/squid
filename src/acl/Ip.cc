@@ -77,6 +77,32 @@ acl_ip_data::toSBuf() const
     return SBuf(tmpbuf);
 }
 
+Ip::Address
+acl_ip_data::firstAddress() const
+{
+    auto ip = addr1;
+    if (!mask.isNoAddr())
+        ip.applyMask(mask);
+    return ip;
+}
+
+Ip::Address
+acl_ip_data::lastAddress() const
+{
+    auto ip = addr2.isAnyAddr() ? addr1 : addr2;
+    if (!mask.isNoAddr())
+        ip.turnMaskedBitsOn(mask);
+    return ip;
+}
+
+/// reports acl_ip_data using squid.conf ACL value format
+static std::ostream &
+operator <<(std::ostream &os, const acl_ip_data &ip)
+{
+    os << ip.toSBuf();
+    return os;
+}
+
 /*
  * aclIpAddrNetworkCompare - The guts of the comparison for IP ACLs
  * matching checks.  The first argument (p) is a "host" address,
@@ -108,43 +134,17 @@ aclIpAddrNetworkCompare(acl_ip_data * const &p, acl_ip_data * const &q)
     }
 }
 
-/*
- * acl_ip_data::NetworkCompare - Compare two acl_ip_data entries.  Strictly
- * used by the splay insertion routine.  It emits a warning if it
- * detects a "collision" or overlap that would confuse the splay
- * sorting algorithm.  Much like aclDomainCompare.
- * The first argument (p) is a "host" address, i.e. the IP address of a cache client.
- * The second argument (b) is a "network" address that might have a subnet and/or range.
- * We mask the host address bits with the network subnet mask.
- */
-int
-acl_ip_data::NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b)
+/// Splay::SPLAYCMP function for any two acl_ip_data values
+static int
+compareRanges(acl_ip_data * const &a, acl_ip_data * const &b)
 {
-    int ret;
-    bool bina = true;
-    ret = aclIpAddrNetworkCompare(b, a);
+    if (a->lastAddress() < b->firstAddress())
+        return -1; // the entire range a is to the left of range b
 
-    if (ret != 0) {
-        bina = false;
-        ret = aclIpAddrNetworkCompare(a, b);
-    }
+    if (a->firstAddress() > b->lastAddress())
+        return +1; // the entire range a is to the right of range b
 
-    if (ret == 0) {
-        char buf_n1[3*(MAX_IPSTRLEN+1)];
-        char buf_n2[3*(MAX_IPSTRLEN+1)];
-        if (bina) {
-            b->toStr(buf_n1, 3*(MAX_IPSTRLEN+1));
-            a->toStr(buf_n2, 3*(MAX_IPSTRLEN+1));
-        } else {
-            a->toStr(buf_n1, 3*(MAX_IPSTRLEN+1));
-            b->toStr(buf_n2, 3*(MAX_IPSTRLEN+1));
-        }
-        debugs(28, DBG_CRITICAL, "WARNING: (" << (bina?'B':'A') << ") '" << buf_n1 << "' is a subnetwork of (" << (bina?'A':'B') << ") '" << buf_n2 << "'");
-        debugs(28, DBG_CRITICAL, "WARNING: because of this '" << (bina?buf_n2:buf_n1) << "' is ignored to keep splay tree searching predictable");
-        debugs(28, DBG_CRITICAL, "WARNING: You should probably remove '" << buf_n1 << "' from the ACL named '" << AclMatchedName << "'");
-    }
-
-    return ret;
+    return 0; // equal or partially overlapping ranges
 }
 
 /**
@@ -367,6 +367,19 @@ acl_ip_data::FactoryParse(const char *t)
     if (changed)
         debugs(28, DBG_CRITICAL, "WARNING: aclIpParseIpData: Netmask masks away part of the specified IP in '" << t << "'");
 
+    // TODO: Either switch to compareRanges() in match() (it does not have these
+    // problems) OR warn that some (or even all) addresses will never match this
+    // configured ACL value when `q->addr1.applyMask()` above is positive:
+    //
+    // * A single configured IP value will never match:
+    //   A.matchIPAddr(q->addr1) in aclIpAddrNetworkCompare() will not return 0.
+    //   For example, `acl x src 127.0.0.1/24` does not match any address.
+    //
+    // * A configured IP range will not match any q->addr1/mask IPs:
+    //   (A >= q->addr1) in aclIpAddrNetworkCompare() is false and
+    //   A.matchIPAddr(q->addr1) will not return 0.
+    //   For example, `acl y src 10.0.0.1-10.0.0.255/24` does not match 10.0.0.1.
+
     debugs(28,9, "Parsed: " << q->addr1 << "-" << q->addr2 << "/" << q->mask << "(/" << q->mask.cidr() <<")");
 
     /* 1.2.3.4/255.255.255.0  --> 1.2.3.0 */
@@ -422,6 +435,51 @@ ACLIP::parseGlobal(const char * const token)
     return false;
 }
 
+template <typename Item> Item *MakeCombined(const Item &a, const Item &b);
+
+template <>
+acl_ip_data *
+MakeCombined<acl_ip_data>(const acl_ip_data &a, const acl_ip_data &b)
+{
+    const auto minLeft = std::min(a.firstAddress(), b.firstAddress());
+    const auto maxRight = std::max(a.lastAddress(), b.lastAddress());
+    return new acl_ip_data(minLeft, maxRight, Ip::Address::NoAddr(), nullptr);
+}
+
+template <typename Item, typename SplayT>
+static void
+aclInsertWithoutOverlaps(SplayT &container, Item *newItem, typename SplayT::SPLAYCMP comparator)
+{
+    while (const auto oldItemPointer = container.insert(newItem, comparator)) {
+        const auto oldItem = *oldItemPointer;
+        assert(oldItem);
+
+        if (oldItem->contains(*newItem)) {
+            debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Ignoring " << *newItem << " because it is already covered by " << *oldItem <<
+                   Debug::Extra << "advice: Remove value " << *newItem << " from the ACL named " << AclMatchedName);
+            delete newItem;
+            return;
+        }
+
+        if (newItem->contains(*oldItem)) {
+            debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Ignoring " << *oldItem << " because it is covered by " << *newItem <<
+                   Debug::Extra << "advice: Remove value " << *oldItem << " from the ACL named " << AclMatchedName);
+            container.remove(oldItem, comparator);
+            delete oldItem;
+            continue; // still need to insert newItem (and it may conflict with other old items)
+        }
+
+        const auto combinedItem = MakeCombined<Item>(*oldItem, *newItem);
+        debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Merging overlapping " << *newItem << " and " << *oldItem << " into " << *combinedItem <<
+               Debug::Extra << "advice: Replace values " << *newItem << " and " << *oldItem << " with " << *combinedItem << " in the ACL named " << AclMatchedName);
+        delete newItem;
+        newItem = combinedItem;
+        container.remove(oldItem, comparator);
+        delete oldItem;
+        continue; // still need to insert updated newItem (and it may conflict with other old items)
+    }
+}
+
 void
 ACLIP::parse()
 {
@@ -438,8 +496,7 @@ ACLIP::parse()
             /* pop each result off the list and add it to the data tree individually */
             acl_ip_data *next_node = q->next;
             q->next = nullptr;
-            if (!data->find(q,acl_ip_data::NetworkCompare))
-                data->insert(q, acl_ip_data::NetworkCompare);
+            aclInsertWithoutOverlaps(*data, q, compareRanges);
             q = next_node;
         }
     }
