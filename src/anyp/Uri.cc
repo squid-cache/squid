@@ -105,31 +105,18 @@ AnyP::Uri::Decode(const SBuf &buf)
         }
         // ch is '%', let's look ahead
         ++i;
-        if (i == end) {
-            // '%' at the end of input does not start a pct-encoded sequence
-            output.append(ch);
-            break;
-        }
+        if (i == end)
+            throw TextException("incomplete %-encoded triplet at end of input", Here());
         const auto ch1 = *i;
-        const auto hex1 = HextDigitToInt(ch1);
-        if (hex1 == -1) {
-            // ch1 is not a hex digit, so it's not encoded
-            output.append(ch).append(ch1);
-            continue;
-        }
         ++i;
-        if (i == end) {
-            // end is one-past-last, so the %-encoded triplet is incomplete
-            output.append(ch).append(ch1);
-            break;
-        }
+        if (i == end)
+            throw TextException("incomplete %-encoded triplet at end of input", Here());
         const auto ch2 = *i;
+        const auto hex1 = HextDigitToInt(ch1);
         const auto hex2 = HextDigitToInt(ch2);
-        if (hex2 == -1) {
-            // ch2 is not a hex digit, so it's not encoded
-            output.append(ch).append(ch1).append(ch2);
-            continue;
-        }
+        if (hex1 == -1 || hex2 == -1)
+            throw TextException("invalid %-encoded triplet", Here());
+
         const auto decoded = hex1 << 4 | hex2;
         output.append(decoded);
     }
