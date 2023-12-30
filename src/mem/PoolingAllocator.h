@@ -22,8 +22,8 @@ public:
     using value_type = Value;
     PoolingAllocator() noexcept {}
     template <class Other> PoolingAllocator(const PoolingAllocator<Other> &) noexcept {}
-    value_type *allocate(std::size_t n) { return static_cast<value_type*>(memAllocRigid(n*sizeof(value_type))); }
-    void deallocate(value_type *vp, std::size_t n) noexcept { memFreeRigid(vp, n*sizeof(value_type)); }
+    value_type *allocate(std::size_t n) { return static_cast<value_type*>(memAllocBuf(n*sizeof(value_type), nullptr)); }
+    void deallocate(value_type *vp, std::size_t n) noexcept { memFreeBuf(n*sizeof(value_type), vp); }
 
     template <class OtherValue>
     struct rebind {

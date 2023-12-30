@@ -2402,8 +2402,10 @@ parse_peer(CachePeers **peers)
         p->connect_fail_limit = 10;
 
 #if USE_CACHE_DIGESTS
-    if (!p->options.no_digest)
-        p->digest = new PeerDigest(p);
+    if (!p->options.no_digest) {
+        const auto pd = new PeerDigest(p);
+        p->digest = cbdataReference(pd); // CachePeer destructor unlocks
+    }
 #endif
 
     if (p->secure.encryptTransport)
@@ -4580,7 +4582,7 @@ static void parse_note(Notes *notes)
 
 static void dump_note(StoreEntry *entry, const char *name, Notes &notes)
 {
-    notes.dump(entry, name);
+    notes.printAsNoteDirectives(entry, name);
 }
 
 static void free_note(Notes *notes)
