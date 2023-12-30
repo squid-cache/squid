@@ -295,7 +295,7 @@ Helper::Client::openSessions()
             commSetNonBlocking(wfd);
 
         AsyncCall::Pointer closeCall = asyncCall(5, 4, "Helper::Session::HelperServerClosed", cbdataDialer(SessionBase::HelperServerClosed,
-                    static_cast<Helper::SessionBase *>(srv)));
+                                       static_cast<Helper::SessionBase *>(srv)));
 
         comm_add_close_handler(rfd, closeCall);
 
@@ -429,7 +429,7 @@ statefulhelper::openSessions()
             commSetNonBlocking(wfd);
 
         AsyncCall::Pointer closeCall = asyncCall(5, 4, "helper_stateful_server::HelperServerClosed", cbdataDialer(Helper::SessionBase::HelperServerClosed,
-                    static_cast<Helper::SessionBase *>(srv)));
+                                       static_cast<Helper::SessionBase *>(srv)));
 
         comm_add_close_handler(rfd, closeCall);
 
