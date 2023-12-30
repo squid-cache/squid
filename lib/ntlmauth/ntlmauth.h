@@ -180,9 +180,9 @@ typedef struct _ntlm_authenticate {
 
 /** Unpack username and domain out of a packet payload. */
 NtlmError ntlm_unpack_auth(const ntlm_authenticate *auth,
-                     char *user,
-                     char *domain,
-                     const int32_t size);
+                           char *user,
+                           char *domain,
+                           const int32_t size);
 
 #endif /* SQUID_NTLMAUTH_H */
 
