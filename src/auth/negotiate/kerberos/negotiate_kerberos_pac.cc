@@ -366,15 +366,13 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
 }
 
 static char *
-get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid)
+get_resource_group_domain_sid(const uint32_t ResourceGroupDomainSid, size_t &length)
 {
 
     if (ResourceGroupDomainSid != 0) {
         uint8_t rev;
         uint64_t idauth;
         char dli[256];
-        char *sid;
-        int l;
 
         align(4);
 
@@ -398,18 +396,16 @@ get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid)
         }
 
         // length = revision[1byte]+nsub[1byte]+idauth[6bytes]+nauth*sauth[4bytes]
-        size_t length = 1 + 1 + 6 + nauth*4;
+        length = 1 + 1 + 6 + nauth*4;
 
-        sid=(char *)xcalloc((length + sizeof(uint32_t))*sizeof(char), 1); // +sizeof(uint32_t) for storing length of a SID
-        // 4 bytes SID length
+        auto sid = static_cast<char *>(xcalloc(length, 1));
         // 1 byte revision
         // 1 byte nsub
         // 6 bytes+nauth*4bytes idauth+sauths
-        ((uint32_t*)sid)[0] = length;
-        memcpy((void *)&sid[4], (const void*)&p[bpos], 1);
-        memcpy((void *)&sid[5], (const void*)&p[bpos+1], 1);
-        sid[5] = sid[5]+1;  // ++ as it will be used in a rid concatenation
-        memcpy((void *)&sid[6], (const void*)&p[bpos+2], 6 + nauth*4);
+        memcpy((void *)&sid[0], (const void*)&p[bpos], 1);
+        memcpy((void *)&sid[1], (const void*)&p[bpos+1], 1);
+        sid[1]++;  // ++ as it will be used in a rid concatenation
+        memcpy((void *)&sid[2], (const void*)&p[bpos+2], 6 + nauth*4);
 
         /* mainly for debug only */
         rev = get1byt();
@@ -418,7 +414,7 @@ get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid)
 
         int rv = snprintf(dli, sizeof(dli), "S-%d-%lu", rev, (long unsigned int)idauth);
         assert(rv > 0);
-        for (l=0; l<(int)nauth; l++) {
+        for (int l=0; l<(int)nauth; l++) {
             uint32_t sauth;
             sauth = get4byt();
             rv = snprintf((char *)&dli[strlen(dli)], sizeof(dli) - strlen(dli), "-%u", sauth);
@@ -428,64 +424,51 @@ get_resource_group_domain_sid(uint32_t ResourceGroupDomainSid)
         return sid;
     }
 
+    length = 0;
     return nullptr;
 }
 
-static char *
-get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t ResourceGroupIds, uint32_t ResourceGroupCount)
+static bool
+get_resource_groups(char *ad_groups, uint32_t ResourceGroupDomainSid,  uint32_t ResourceGroupIds, uint32_t ResourceGroupCount)
 {
-    size_t group_domain_sid_len = *((uint32_t*)resource_group_domain_sid); // length is passed in the first 4 bytes
-    char *st;
-    size_t length;
-    int first_group = 1;
-
     if (!ad_groups) {
         debug((char *) "%s| %s: ERR: No space to store resource groups\n",
               LogTime(), PROGRAM);
-        return nullptr;
+        return false;
     }
 
-    if (strlen(ad_groups)) {
-        first_group = 0;
-    }
+    size_t group_domain_sid_len = 0;
 
-    resource_group_domain_sid += sizeof(uint32_t); // now it points to the actual data
+    const auto resource_group_domain_sid = get_resource_group_domain_sid(ResourceGroupDomainSid, group_domain_sid_len);
+    if (!resource_group_domain_sid) return false;
+
 
     if (ResourceGroupIds != 0) {
         uint32_t ngroup;
-        int l;
 
         align(4);
         ngroup = get4byt();
         if (ngroup != ResourceGroupCount) {
             debug((char *) "%s| %s: ERROR: Group encoding error => ResourceGroupCount: %d != Array size: %d\n",
                   LogTime(), PROGRAM, ResourceGroupCount, ngroup);
-            return nullptr;
+            xfree(resource_group_domain_sid);
+            return false;
         }
         debug((char *) "%s| %s: INFO: Found %d Resource Group rids\n", LogTime(), PROGRAM, ResourceGroupCount);
 
-        // make a group template which begins with the ResourceGroupDomainID
-        length = group_domain_sid_len + 4;  // +4 for a rid concatenation
-        st = (char *)xcalloc(length*sizeof(char), 1);
+        // prepare a group template which begins with the resource_group_domain_sid
+        size_t length = group_domain_sid_len + 4;  // +4 for a rid concatenation
+        auto *st = static_cast<char *>(xcalloc(length, 1));
 
         memcpy((void *)st, (const void*)resource_group_domain_sid, group_domain_sid_len); // template
 
-        for (l=0; l < (int)ResourceGroupCount; l++) {
+        for (int l=0; l < (int)ResourceGroupCount; l++) {
             uint32_t sauth;
             memcpy((void *)&st[group_domain_sid_len], (const void*)&p[bpos], 4);  // rid concatenation
 
-            if (first_group) {
-                if (!pstrcpy(ad_groups, "group=")) {
-                   debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
-                         LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
-                }
-                first_group = 0;
-
-            } else {
-                if (!pstrcat(ad_groups, " group=")) {
-                    debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
-                          LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
-                }
+            if (!pstrcat(ad_groups, " group=")) {
+                debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
+                      LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
             }
 
             struct base64_encode_ctx ctx;
@@ -510,7 +493,8 @@ get_resource_groups(char *ad_groups, char *resource_group_domain_sid, uint32_t R
         xfree(st);
     }
 
-    return ad_groups;
+    xfree(resource_group_domain_sid);
+    return true;
 }
 
 char *
@@ -536,8 +520,6 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     uint32_t ResourceGroupIds=0;
     char **Rids=nullptr;
     int l=0;
-
-    char * resource_group_domain_sid=nullptr;
 
     if (!ad_groups) {
         debug((char *) "%s| %s: ERR: No space to store groups\n",
@@ -633,26 +615,22 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     ad_groups = getdomaingids(ad_groups,LogonDomainId,Rids,GroupCount);
 
     // https://learn.microsoft.com/en-us/previous-versions/aa302203(v=msdn.10)?redirectedfrom=MSDN#top-level-pac-structure
-    if (UserFlags & LOGON_EXTRA_SIDS) { // EXTRA_SIDS structures are present and valid
+    if (UserFlags & LOGON_EXTRA_SIDS) // EXTRA_SIDS structures are present and valid
+    {
         debug((char *) "%s| %s: Info: EXTRA_SIDS are present\n", LogTime(), PROGRAM);
         if ((ad_groups = getextrasids(ad_groups,ExtraSids,SidCount)) == nullptr)
             goto k5clean;
     }
-    if (UserFlags & LOGON_RESOURCE_GROUPS) { // RESOURCE_GROUPS structures are present and valid
+
+    if (UserFlags & LOGON_RESOURCE_GROUPS // RESOURCE_GROUPS structures are present and valid
+     && ResourceGroupDomainSid && ResourceGroupIds && ResourceGroupCount) 
+    { 
         debug((char *) "%s| %s: Info: RESOURCE_GROUPS are present\n", LogTime(), PROGRAM);
-        resource_group_domain_sid = get_resource_group_domain_sid(ResourceGroupDomainSid);
-        if (resource_group_domain_sid && ResourceGroupCount && ResourceGroupIds) {
-            if ((ad_groups = get_resource_groups(ad_groups,
-                                                 resource_group_domain_sid,
-                                                 ResourceGroupIds,
-                                                 ResourceGroupCount)) == nullptr)
-                goto k5clean;
-        }
+        if (!get_resource_groups(ad_groups, ResourceGroupDomainSid, ResourceGroupIds, ResourceGroupCount))
+            goto k5clean;
     }
 
     debug((char *) "%s| %s: INFO: Read %d of %d bytes \n", LogTime(), PROGRAM, bpos, (int)ad_data->length);
-
-    if (resource_group_domain_sid) xfree(resource_group_domain_sid);
 
     if (Rids) {
         for ( l=0; l<(int)GroupCount; l++) {
@@ -662,9 +640,8 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     }
     krb5_free_data(context, ad_data);
     return ad_groups;
-k5clean:
-    if(resource_group_domain_sid) xfree(resource_group_domain_sid);
 
+k5clean:
     if (Rids) {
         for ( l=0; l<(int)GroupCount; l++) {
             xfree(Rids[l]);
