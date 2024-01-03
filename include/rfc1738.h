@@ -64,7 +64,6 @@ extern char *rfc1738_do_escape(const char *url, int flags);
  */
 extern void rfc1738_unescape(char *url);
 
-
 #ifdef __cplusplus
 }
 #endif
