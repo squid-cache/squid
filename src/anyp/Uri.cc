@@ -137,7 +137,7 @@ AnyP::Uri::Decode(const SBuf &buf)
         if (hex1 == -1 || hex2 == -1)
             throw TextException("invalid %-encoded triplet", Here());
 
-        const auto decoded = hex1 << 4 | hex2;
+        const char decoded = hex1 << 4 | hex2;
         output.append(decoded);
     }
     return output;
