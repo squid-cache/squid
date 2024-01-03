@@ -18,6 +18,9 @@
 #include "SquidConfig.h"
 #include "SquidMath.h"
 
+#include <array>
+#include <climits>
+
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
@@ -30,6 +33,23 @@ static const char valid_hostname_chars[] =
     "0123456789-."
     "[:]"
     ;
+
+class HexDigitToIntMap {
+public:
+    HexDigitToIntMap() {
+        map_.fill(-1);
+        for (int i = '0'; i <= '9'; ++i)
+            map_[i] = i - '0';
+        for (int i = 'A'; i <= 'F'; ++i)
+            map_[i] = i - 'A' + 10;
+        for (int i = 'a'; i <= 'f'; ++i)
+            map_[i] = i - 'a' + 10;
+    }
+    int operator() (const char ch) const { return ch >= 0 && ch < CHAR_MAX ? map_[ch] : -1; }
+    private:
+    std::array<int,CHAR_MAX+1> map_;
+};
+static const HexDigitToIntMap HextDigitToInt;
 
 /// Characters which are valid within a URI userinfo section
 static const CharacterSet &
