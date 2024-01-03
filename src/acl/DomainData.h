@@ -25,7 +25,8 @@ public:
     void parse() override;
     bool empty() const override;
 
-    Splay<char *> *domains;
+    using SplayT = Splay<char *>;
+    SplayT *domains;
 };
 
 #endif /* SQUID_ACLDOMAINDATA_H */
