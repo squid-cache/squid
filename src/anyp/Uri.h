@@ -116,8 +116,7 @@ public:
     /// %-encode all characters except "unreserved" ones, as defined by RFC 3986
     static SBuf Rfc3986Encode(const SBuf &);
 
-    /// %-decode characters an a buffer. Throws TextException if the input
-    /// is invalid
+    /// %-decode the given buffer
     static SBuf Decode(const SBuf &);
 
     /**
