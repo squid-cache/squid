@@ -47,7 +47,7 @@ public:
         for (int i = 'a'; i <= 'f'; ++i)
             map_[i] = i - 'a' + 10;
     }
-    int operator() (const char ch) const { return ch >= 0 ? map_[ch] : -1; }
+    int operator() (const char ch) const { assert(ch >= 0); return map_[ch]; }
     private:
     std::array<int,CHAR_MAX+1> map_;
 };
