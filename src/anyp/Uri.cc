@@ -33,7 +33,9 @@ static const char valid_hostname_chars[] =
     "0123456789-."
     "[:]"
     ;
+static const CharacterSet HexDigits("hexdigits", "0123456789ABCDEFabcdef");
 
+// lookup cache for
 class HexDigitToIntMap {
 public:
     HexDigitToIntMap() {
@@ -116,29 +118,31 @@ AnyP::Uri::Decode(const SBuf &buf)
     SBuf output;
     output.reserveSpace(buf.length()); // worst case: buf is not encoded
 
-    const auto end = buf.end();
-    for (auto i = buf.begin(); i != end; ++i) {
-        const auto ch = *i;
-        if (ch != '%') {
-            output.append(ch);
-            continue;
-        }
-        // ch is '%', let's look ahead
-        ++i;
-        if (i == end)
+    Parser::Tokenizer tok(buf);
+    SBuf token;
+    static const auto unencodedOctets = CharacterSet("unencoded", "%").complement();
+
+    tok.prefix(token, unencodedOctets);
+    output.append(token);
+
+    while (!tok.atEnd())
+    {
+        if (!tok.skip('%')) // should never happen
             throw TextException("incomplete %-encoded triplet at end of input", Here());
-        const auto ch1 = *i;
-        ++i;
-        if (i == end)
-            throw TextException("incomplete %-encoded triplet at end of input", Here());
-        const auto ch2 = *i;
-        const auto hex1 = HextDigitToInt(ch1);
-        const auto hex2 = HextDigitToInt(ch2);
+
+        if (!tok.prefix(token, HexDigits, 2) || token.length() != 2)
+            throw TextException("incomplete or invalid %-encoded triplet", Here());
+
+        const auto hex1 = HextDigitToInt(token[0]);
+        const auto hex2 = HextDigitToInt(token[1]);
         if (hex1 == -1 || hex2 == -1)
             throw TextException("invalid %-encoded triplet", Here());
 
         const char decoded = hex1 << 4 | hex2;
         output.append(decoded);
+
+        if (tok.prefix(token, unencodedOctets))
+            output.append(token);
     }
     return output;
 }
