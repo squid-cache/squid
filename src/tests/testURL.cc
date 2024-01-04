@@ -26,13 +26,15 @@ class TestUri : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE(TestUri);
     CPPUNIT_TEST(testConstructScheme);
     CPPUNIT_TEST(testDefaultConstructor);
-    CPPUNIT_TEST(testEncodeDecode);
+    CPPUNIT_TEST(testEncode);
+    CPPUNIT_TEST(testDecode);
     CPPUNIT_TEST_SUITE_END();
 
 protected:
     void testConstructScheme();
     void testDefaultConstructor();
-    void testEncodeDecode();
+    void testEncode();
+    void testDecode();
 };
 CPPUNIT_TEST_SUITE_REGISTRATION(TestUri);
 
@@ -85,7 +87,7 @@ TestUri::testDefaultConstructor()
 }
 
 void
-TestUri::testEncodeDecode()
+TestUri::testEncode()
 {
     std::vector<std::pair<SBuf, SBuf>>
         testCasesEncode = {
@@ -94,7 +96,18 @@ TestUri::testEncodeDecode()
             {SBuf("fo%o"), SBuf("fo%25o")},
             {SBuf("fo%%o"), SBuf("fo%25%25o")},
             {SBuf("fo\0o", 4), SBuf("fo%00o")},
-        },
+        };
+    for (const auto &testCase : testCasesEncode)
+    {
+        CPPUNIT_ASSERT_EQUAL(testCase.first, AnyP::Uri::Decode(AnyP::Uri::Rfc3986Encode(testCase.first)));
+        CPPUNIT_ASSERT_EQUAL(testCase.second, AnyP::Uri::Rfc3986Encode(testCase.first));
+    };
+}
+
+void
+TestUri::testDecode()
+{
+    std::vector<std::pair<SBuf, SBuf>>
         testCasesDecode = {
             {SBuf("foo"), SBuf("foo")},
             {SBuf("foo%25"), SBuf("foo%")},
@@ -113,11 +126,6 @@ TestUri::testEncodeDecode()
         SBuf("fo%2o"),
         SBuf("f%4%20o"),
         SBuf("f%4%%20o%"),
-    };
-
-    for (const auto &testCase: testCasesEncode) {
-        CPPUNIT_ASSERT_EQUAL(testCase.first, AnyP::Uri::Decode(AnyP::Uri::Rfc3986Encode(testCase.first)));
-        CPPUNIT_ASSERT_EQUAL(testCase.second, AnyP::Uri::Rfc3986Encode(testCase.first));
     };
 
     for (const auto &testCase: testCasesDecode) {
