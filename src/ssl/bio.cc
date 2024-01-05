@@ -327,13 +327,7 @@ Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
         if (!parser_.parseHello(rbuf)) {
             // need more data to finish parsing
             BIO_set_retry_read(table);
-            if (BIO_next(table)){
-                // KTLS
-                return giveBuffered(buf, size);
-            }
-            else{
-                return -1;
-            }
+            return -1;
         }
         parsedHandshake = true; // done parsing (successfully)
     }
