@@ -11,14 +11,13 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/HttpStatus.h"
+#include "acl/SplayInserter.h"
 #include "debug/Stream.h"
 #include "HttpReply.h"
 
 #include <algorithm>
 #include <climits>
-#include <iostream>
 
-static void aclParseHTTPStatusList(Splay<acl_httpstatus_data *> **curlist);
 static int aclHTTPStatusCompare(acl_httpstatus_data * const &a, acl_httpstatus_data * const &b);
 static int aclMatchHTTPStatus(Splay<acl_httpstatus_data*> **dataptr, Http::StatusCode status);
 
@@ -37,6 +36,38 @@ acl_httpstatus_data::toStr() const
     else
         rv.Printf("%d-%d", status1, status2);
     return rv;
+}
+
+template <>
+int
+Acl::SplayInserter<acl_httpstatus_data>::Compare(const Value &a, const Value &b)
+{
+    return aclHTTPStatusCompare(a, b);
+}
+
+template <>
+bool
+Acl::SplayInserter<acl_httpstatus_data>::AcontainsEntireB(const Value &a, const Value &b)
+{
+    return a->status1 <= b->status1 && b->status2 <= a->status2;
+}
+
+template <>
+Acl::SplayInserter<acl_httpstatus_data>::Value
+Acl::SplayInserter<acl_httpstatus_data>::MakeCombinedValue(const Value &a, const Value &b)
+{
+    const auto minLeft = std::min(a->status1, b->status1);
+    const auto maxRight = std::max(a->status2, b->status2);
+    return new acl_httpstatus_data(minLeft, maxRight);
+}
+
+/// reports acl_httpstatus_data using squid.conf http_status ACL value format
+static std::ostream &
+operator <<(std::ostream &os, const acl_httpstatus_data *status)
+{
+    if (status)
+        os << status->toStr();
+    return os;
 }
 
 ACLHTTPStatus::ACLHTTPStatus (char const *theClass) : data(nullptr), class_ (theClass)
@@ -84,58 +115,10 @@ ACLHTTPStatus::parse()
     if (!data)
         data = new Splay<acl_httpstatus_data*>();
 
-    aclParseHTTPStatusList (&data);
-}
-
-static std::ostream &
-operator <<(std::ostream &os, const acl_httpstatus_data &status)
-{
-    os << status.toStr();
-    return os;
-}
-
-template <typename Item, typename SplayT>
-static void
-aclInsertWithoutOverlaps(SplayT &container, Item *newItem, typename SplayT::SPLAYCMP comparator)
-{
-    while (const auto oldItemPointer = container.insert(newItem, comparator)) {
-        const auto oldItem = *oldItemPointer;
-        assert(oldItem);
-
-        if (oldItem->contains(*newItem)) {
-            debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Ignoring " << *newItem << " because it is already covered by " << *oldItem <<
-                   Debug::Extra << "advice: Remove value " << *newItem << " from the ACL named " << AclMatchedName);
-            delete newItem;
-            return;
-        }
-
-        if (newItem->contains(*oldItem)) {
-            debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Ignoring " << *oldItem << " because it is covered by " << *newItem <<
-                   Debug::Extra << "advice: Remove value " << *oldItem << " from the ACL named " << AclMatchedName);
-            container.remove(oldItem, comparator);
-            delete oldItem;
-            continue; // still need to insert newItem (and it may conflict with other old items)
-        }
-
-        const auto minLeft = std::min(oldItem->status1, newItem->status1);
-        const auto maxRight = std::max(oldItem->status2, newItem->status2);
-        const auto combinedItem = new acl_httpstatus_data(minLeft, maxRight);
-        debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Merging overlapping " << *newItem << " and " << *oldItem << " into " << *combinedItem <<
-               Debug::Extra << "advice: Replace values " << *newItem << " and " << *oldItem << " with " << *combinedItem << " in the ACL named " << AclMatchedName);
-        delete newItem;
-        newItem = combinedItem;
-        container.remove(oldItem, comparator);
-        delete oldItem;
-        continue; // still need to insert updated newItem (and it may conflict with other old items)
-    }
-}
-
-void
-aclParseHTTPStatusList(Splay<acl_httpstatus_data *> **curlist)
-{
+    Acl::SplayInserter<acl_httpstatus_data> inserter(*data);
     while (char *t = ConfigParser::strtokFile()) {
         if (acl_httpstatus_data *q = aclParseHTTPStatusData(t))
-            aclInsertWithoutOverlaps(**curlist, q, aclHTTPStatusCompare);
+            inserter.insert(std::move(q));
     }
 }
 

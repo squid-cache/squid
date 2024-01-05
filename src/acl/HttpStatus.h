@@ -15,13 +15,13 @@
 
 /// \ingroup ACLAPI
 struct acl_httpstatus_data {
+    /// for Acl::SplayInserter use
+    using SplayT = Splay<acl_httpstatus_data *>;
+
     int status1, status2;
     acl_httpstatus_data(int);
     acl_httpstatus_data(int, int);
     SBuf toStr() const; // was toStr
-
-    /// whether our range includes all statuses from their range
-    auto contains(const acl_httpstatus_data &them) const { return status1 <= them.status1 && them.status2 <= status2; }
 };
 
 /// \ingroup ACLAPI
