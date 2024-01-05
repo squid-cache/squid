@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <climits>
 
+static void aclParseHTTPStatusList(Splay<acl_httpstatus_data *> **curlist);
 static int aclHTTPStatusCompare(acl_httpstatus_data * const &a, acl_httpstatus_data * const &b);
 static int aclMatchHTTPStatus(Splay<acl_httpstatus_data*> **dataptr, Http::StatusCode status);
 
@@ -40,21 +41,21 @@ acl_httpstatus_data::toStr() const
 
 template <>
 int
-Acl::SplayInserter<acl_httpstatus_data>::Compare(const Value &a, const Value &b)
+Acl::SplayInserter<acl_httpstatus_data*>::Compare(const Value &a, const Value &b)
 {
     return aclHTTPStatusCompare(a, b);
 }
 
 template <>
 bool
-Acl::SplayInserter<acl_httpstatus_data>::AcontainsEntireB(const Value &a, const Value &b)
+Acl::SplayInserter<acl_httpstatus_data*>::AcontainsEntireB(const Value &a, const Value &b)
 {
     return a->status1 <= b->status1 && b->status2 <= a->status2;
 }
 
 template <>
-Acl::SplayInserter<acl_httpstatus_data>::Value
-Acl::SplayInserter<acl_httpstatus_data>::MakeCombinedValue(const Value &a, const Value &b)
+Acl::SplayInserter<acl_httpstatus_data*>::Value
+Acl::SplayInserter<acl_httpstatus_data*>::MakeCombinedValue(const Value &a, const Value &b)
 {
     const auto minLeft = std::min(a->status1, b->status1);
     const auto maxRight = std::max(a->status2, b->status2);
@@ -115,10 +116,15 @@ ACLHTTPStatus::parse()
     if (!data)
         data = new Splay<acl_httpstatus_data*>();
 
-    Acl::SplayInserter<acl_httpstatus_data> inserter(*data);
+    aclParseHTTPStatusList (&data);
+}
+
+void
+aclParseHTTPStatusList(Splay<acl_httpstatus_data *> **curlist)
+{
     while (char *t = ConfigParser::strtokFile()) {
         if (acl_httpstatus_data *q = aclParseHTTPStatusData(t))
-            inserter.insert(std::move(q));
+            Acl::SplayInserter<acl_httpstatus_data*>::Merge(**curlist, std::move(q));
     }
 }
 

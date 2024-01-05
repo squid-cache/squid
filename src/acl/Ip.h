@@ -19,9 +19,6 @@ class acl_ip_data
     MEMPROXY_CLASS(acl_ip_data);
 
 public:
-    /// for Acl::SplayInserter use
-    using SplayT = Splay<acl_ip_data *>;
-
     static acl_ip_data *FactoryParse(char const *);
 
     acl_ip_data ();

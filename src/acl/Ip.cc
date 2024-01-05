@@ -100,7 +100,7 @@ acl_ip_data::lastAddress() const
 
 template <>
 int
-Acl::SplayInserter<acl_ip_data>::Compare(const Value &a, const Value &b)
+Acl::SplayInserter<acl_ip_data*>::Compare(const Value &a, const Value &b)
 {
     if (a->lastAddress() < b->firstAddress())
         return -1; // the entire range a is to the left of range b
@@ -113,14 +113,14 @@ Acl::SplayInserter<acl_ip_data>::Compare(const Value &a, const Value &b)
 
 template <>
 bool
-Acl::SplayInserter<acl_ip_data>::AcontainsEntireB(const Value &a, const Value &b)
+Acl::SplayInserter<acl_ip_data*>::AcontainsEntireB(const Value &a, const Value &b)
 {
     return a->firstAddress() <= b->firstAddress() && b->lastAddress() <= a->lastAddress();
 }
 
 template <>
-Acl::SplayInserter<acl_ip_data>::Value
-Acl::SplayInserter<acl_ip_data>::MakeCombinedValue(const Value &a, const Value &b)
+Acl::SplayInserter<acl_ip_data*>::Value
+Acl::SplayInserter<acl_ip_data*>::MakeCombinedValue(const Value &a, const Value &b)
 {
     const auto minLeft = std::min(a->firstAddress(), b->firstAddress());
     const auto maxRight = std::max(a->lastAddress(), b->lastAddress());
@@ -387,7 +387,7 @@ acl_ip_data::FactoryParse(const char *t)
     if (changed)
         debugs(28, DBG_CRITICAL, "WARNING: aclIpParseIpData: Netmask masks away part of the specified IP in '" << t << "'");
 
-    // TODO: Either switch match() to Acl::SplayInserter<acl_ip_data>::Compare()
+    // TODO: Either switch match() to Acl::SplayInserter<acl_ip_data*>::Compare()
     // range logic (that does not have these problems) OR warn that some (or
     // even all) addresses will never match this configured ACL value when
     // `q->addr1.applyMask()` above is positive:
@@ -462,7 +462,6 @@ ACLIP::parse()
     if (data == nullptr)
         data = new IPSplay();
 
-    Acl::SplayInserter<acl_ip_data> inserter(*data);
     while (char *t = ConfigParser::strtokFile()) {
         if (parseGlobal(t))
             continue;
@@ -473,7 +472,7 @@ ACLIP::parse()
             /* pop each result off the list and add it to the data tree individually */
             acl_ip_data *next_node = q->next;
             q->next = nullptr;
-            inserter.insert(std::move(q));
+            Acl::SplayInserter<acl_ip_data*>::Merge(*data, std::move(q));
             q = next_node;
         }
     }

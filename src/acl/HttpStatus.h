@@ -15,9 +15,6 @@
 
 /// \ingroup ACLAPI
 struct acl_httpstatus_data {
-    /// for Acl::SplayInserter use
-    using SplayT = Splay<acl_httpstatus_data *>;
-
     int status1, status2;
     acl_httpstatus_data(int);
     acl_httpstatus_data(int, int);

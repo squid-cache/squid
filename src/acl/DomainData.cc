@@ -135,7 +135,7 @@ ACLDomainData::dump() const
 
 template <>
 int
-Acl::SplayInserter<ACLDomainData>::Compare(const Value &a, const Value &b)
+Acl::SplayInserter<char*>::Compare(const Value &a, const Value &b)
 {
     // If X represents a set of matching domain names (e.g., .example.com), then
     // matchDomainName(X, Y) uses a single domain name from X by removing the
@@ -159,7 +159,7 @@ Acl::SplayInserter<ACLDomainData>::Compare(const Value &a, const Value &b)
 
 template <>
 bool
-Acl::SplayInserter<ACLDomainData>::AcontainsEntireB(const Value &a, const Value &b)
+Acl::SplayInserter<char*>::AcontainsEntireB(const Value &a, const Value &b)
 {
     // A value that starts with a dot matches a set of the corresponding domain
     // names. Other values are individual domain names that match themselves.
@@ -182,8 +182,8 @@ Acl::SplayInserter<ACLDomainData>::AcontainsEntireB(const Value &a, const Value 
 }
 
 template <>
-Acl::SplayInserter<ACLDomainData>::Value
-Acl::SplayInserter<ACLDomainData>::MakeCombinedValue(const Value &, const Value &)
+Acl::SplayInserter<char*>::Value
+Acl::SplayInserter<char*>::MakeCombinedValue(const Value &, const Value &)
 {
     Assure(!"domain name sets cannot partially overlap");
     return nullptr; // unreachable code
@@ -191,7 +191,7 @@ Acl::SplayInserter<ACLDomainData>::MakeCombinedValue(const Value &, const Value 
 
 template <>
 void
-Acl::SplayInserter<ACLDomainData>::DestroyValue(Value v)
+Acl::SplayInserter<char*>::DestroyValue(Value v)
 {
     xfree(v);
 }
@@ -202,10 +202,9 @@ ACLDomainData::parse()
     if (!domains)
         domains = new Splay<char *>();
 
-    Acl::SplayInserter<ACLDomainData> inserter(*domains);
     while (char *t = ConfigParser::strtokFile()) {
         Tolower(t);
-        inserter.insert(xstrdup(t));
+        Acl::SplayInserter<char*>::Merge(*domains, xstrdup(t));
     }
 }
 
