@@ -172,7 +172,7 @@ public:
 private:
     int readAndGive(char *buf, const int size, BIO *table);
     int readAndParse(char *buf, const int size, BIO *table);
-    int readAndBuffer(BIO *table);
+    int readAndBuffer(BIO *table, const int size);
     int giveBuffered(char *buf, const int size);
 
     /// SSL client features extracted from ClientHello message or SSL object

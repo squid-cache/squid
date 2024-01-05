@@ -1110,6 +1110,7 @@ SQUID_CHECK_LIB_WORKS(gnutls,[
 dnl User may specify OpenSSL is needed from a non-standard location
 SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[LIBOPENSSL])
 AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
+AH_TEMPLATE(USE_OPENSSL_KTLS,[OpenSSL Kernel TLS Offload])
 ## OpenSSL is default disable due to licensing issues on some OS
 AS_IF([test "x$with_openssl" = "xyes"],[
   CPPFLAGS="$LIBOPENSSL_CFLAGS $CPPFLAGS"
@@ -1169,6 +1170,10 @@ AS_IF([test "x$with_openssl" = "xyes"],[
     CXXFLAGS="$LIBOPENSSL_CFLAGS $CXXFLAGS"
     SSLLIB="$LIBOPENSSL_PATH $LIBOPENSSL_LIBS $SSLLIB"
     AC_DEFINE(USE_OPENSSL,1,[OpenSSL support is available])
+    
+    AS_IF([ test "x$with_openssl_ktls" = "xyes" ],[
+      AC_DEFINE(USE_OPENSSL_KTLS,1,[Use OpenSSL Kernel TLS Offload])
+    ])
 
     # check for API functions
     SQUID_CHECK_LIBCRYPTO_API

@@ -80,6 +80,10 @@ Ssl::Bio::Create(const int fd, Security::Io::Type type)
 
     if (BIO *bio = BIO_new(useMethod)) {
         BIO_int_ctrl(bio, BIO_C_SET_FD, type, fd);
+        #if USE_OPENSSL_KTLS
+        BIO *bio_sock = BIO_new_socket(fd, BIO_NOCLOSE);
+        bio = BIO_push(bio, bio_sock);
+        #endif
         return bio;
     }
     return nullptr;
@@ -108,7 +112,11 @@ int Ssl::Bio::write(const char *buf, int size, BIO *table)
 #if _SQUID_WINDOWS_
     const int result = socket_write_method(fd_, buf, size);
 #else
+    #if USE_OPENSSL_KTLS
+    const int result = BIO_write(BIO_next(table), buf, size);
+    #else
     const int result = default_write_method(fd_, buf, size);
+    #endif
 #endif
     const int xerrno = errno;
     debugs(83, 5, "FD " << fd_ << " wrote " << result << " <= " << size);
@@ -131,7 +139,11 @@ Ssl::Bio::read(char *buf, int size, BIO *table)
 #if _SQUID_WINDOWS_
     const int result = socket_read_method(fd_, buf, size);
 #else
+    #if USE_OPENSSL_KTLS
+    const int result = BIO_read(BIO_next(table), buf, size);
+    #else
     const int result = default_read_method(fd_, buf, size);
+    #endif
 #endif
     const int xerrno = errno;
     debugs(83, 5, "FD " << fd_ << " read " << result << " <= " << size);
@@ -286,7 +298,7 @@ Ssl::ServerBio::readAndGive(char *buf, const int size, BIO *table)
         return giveBuffered(buf, size);
 
     if (record_) {
-        const int result = readAndBuffer(table);
+        const int result = readAndBuffer(table, size);
         if (result <= 0)
             return result;
         return giveBuffered(buf, size);
@@ -300,7 +312,7 @@ Ssl::ServerBio::readAndGive(char *buf, const int size, BIO *table)
 int
 Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
 {
-    const int result = readAndBuffer(table);
+    const int result = readAndBuffer(table, size);
     if (result <= 0)
         return result;
 
@@ -308,7 +320,11 @@ Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
         if (!parser_.parseHello(rbuf)) {
             // need more data to finish parsing
             BIO_set_retry_read(table);
+            #if USE_OPENSSL_KTLS
+            return giveBuffered(buf, size);
+            #else
             return -1;
+            #endif
         }
         parsedHandshake = true; // done parsing (successfully)
     }
@@ -324,10 +340,15 @@ Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
 /// Reads more data into the read buffer. Returns either the number of bytes
 /// read or, on errors (including "try again" errors), a negative number.
 int
-Ssl::ServerBio::readAndBuffer(BIO *table)
+Ssl::ServerBio::readAndBuffer(BIO *table, const int size)
 {
+    #if USE_OPENSSL_KTLS
+    char *space = rbuf.rawAppendStart(size);
+    const int result = Ssl::Bio::read(space, size, table);
+    #else
     char *space = rbuf.rawAppendStart(SQUID_TCP_SO_RCVBUF);
     const int result = Ssl::Bio::read(space, SQUID_TCP_SO_RCVBUF, table);
+    #endif
     if (result <= 0)
         return result;
 
@@ -549,7 +570,11 @@ squid_bio_ctrl(BIO *table, int cmd, long arg1, void *arg2)
         case BIO_CTRL_WPENDING:
     */
     default:
+        #if USE_OPENSSL_KTLS
+        return BIO_ctrl(BIO_next(table), cmd, arg1, arg2);
+        #else
         return 0;
+        #endif
 
     }
 

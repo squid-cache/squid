@@ -136,6 +136,10 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         const int fd = conn->fd;
 
 #if USE_OPENSSL
+		#if USE_OPENSSL_KTLS
+	    SSL_set_options(session.get(), SSL_OP_ENABLE_KTLS);
+	    #endif
+    	
         // without BIO, we would call SSL_set_fd(ssl.get(), fd) instead
         if (BIO *bio = Ssl::Bio::Create(fd, type)) {
             Ssl::Bio::Link(session.get(), bio); // cannot fail
