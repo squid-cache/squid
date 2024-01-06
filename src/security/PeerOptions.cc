@@ -425,6 +425,11 @@ static struct ssl_option {
         "SINGLE_ECDH_USE", SSL_OP_SINGLE_ECDH_USE
     },
 #endif
+#if defined(SSL_OP_ENABLE_KTLS)
+    {
+        "ENABLE_KTLS", SSL_OP_ENABLE_KTLS
+    },
+#endif
     {
         "", 0
     },

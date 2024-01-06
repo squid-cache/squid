@@ -2441,6 +2441,10 @@ DOC_START
 				      understanding the TLS extension due
 				      to ambiguous specification in RFC4507.
 
+			    ENABLE_KTLS
+				      Enable OpenSSL Kernel TLS offload on 
+				      supported platforms.
+
 			    ALL       Enable various bug workarounds
 				      suggested as "harmless" by OpenSSL
 				      Be warned that this reduces SSL/TLS
