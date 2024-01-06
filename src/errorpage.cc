@@ -114,11 +114,11 @@ public:
 class BuildErrorPrinter
 {
 public:
-    BuildErrorPrinter(const SBuf &anInputLocation, int aPage, const char *aMsg, const char *theErrorLocation):
+    BuildErrorPrinter(const SBuf &anInputLocation, int aPage, const char *aMsg, const char *anErrorLocation):
         inputLocation(anInputLocation),
         page_id(aPage),
         msg(aMsg),
-        errorLocation(theErrorLocation)
+        errorLocation(anErrorLocation)
     {}
 
     /// reports error details (for admin-visible exceptions and debugging)
