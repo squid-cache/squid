@@ -136,7 +136,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         const int fd = conn->fd;
 
 #if USE_OPENSSL
-        #if USE_OPENSSL_KTLS && !_SQUID_WINDOWS_
+        #if OPENSSL_KTLS_SUPPORT
 	    SSL_set_options(session.get(), SSL_OP_ENABLE_KTLS);
 	    #endif
     	

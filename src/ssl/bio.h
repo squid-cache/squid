@@ -62,7 +62,9 @@ public:
 protected:
     const int fd_; ///< the SSL socket we are reading and writing
     SBuf rbuf;  ///< Used to buffer input data.
+#if OPENSSL_KTLS_SUPPORT
     SBuf rbuf_toPeek;  ///< Used to peek input data.
+#endif
 };
 
 /// BIO node to handle socket IO for squid client side
@@ -174,10 +176,10 @@ private:
     int readAndGive(char *buf, const int size, BIO *table);
     int readAndParse(char *buf, const int size, BIO *table);
     int readAndBuffer(BIO *table, const int size);
-    #if USE_OPENSSL_KTLS && !_SQUID_WINDOWS_
+#if OPENSSL_KTLS_SUPPORT
     int readAndParseKtls(char *buf, const int size, BIO *table);
     int peekAndBuffer(BIO *table);
-    #endif
+#endif
     int giveBuffered(char *buf, const int size);
 
     /// SSL client features extracted from ClientHello message or SSL object

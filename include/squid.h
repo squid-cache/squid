@@ -61,5 +61,9 @@ using namespace Squid;
 
 #define LOCAL_ARRAY(type, name, size) static type name[size]
 
+#if _SQUID_FREEBSD_
+#define OPENSSL_KTLS_SUPPORT 1
+#endif
+
 #endif /* SQUID_CONFIG_H */
 
