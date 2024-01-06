@@ -1435,13 +1435,13 @@ ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRe
 
 /// react to a compile() error
 /// \param msg  description of what went wrong
-/// \param data  approximate start of the problematic input
-/// \param  forceBypass whether detection of this error was introduced late,
+/// \param errorLocation approximate start of the problematic input
+/// \param forceBypass whether detection of this error was introduced late,
 /// after old configurations containing this error could have been
 /// successfully validated and deployed (i.e. the admin may not be
 /// able to fix this newly detected but old problem quickly)
 void
-ErrorState::noteBuildError_(const char *msg, const char *data, const bool forceBypass)
+ErrorState::noteBuildError_(const char *msg, const char *errorLocation, const bool forceBypass)
 {
     using ErrorPage::BuildErrorPrinter;
     const auto runtime = !starting_up;
@@ -1462,9 +1462,9 @@ ErrorState::noteBuildError_(const char *msg, const char *data, const bool forceB
         if (starting_up && seenErrors <= 10)
             debugs(4, debugLevel, "WARNING: The following configuration error will be fatal in future Squid versions");
 
-        debugs(4, debugLevel, "ERROR: " << BuildErrorPrinter(inputLocation, page_id, msg, data));
+        debugs(4, debugLevel, "ERROR: " << BuildErrorPrinter(inputLocation, page_id, msg, errorLocation));
     } else {
-        throw TexcHere(ToSBuf(BuildErrorPrinter(inputLocation, page_id, msg, data)));
+        throw TexcHere(ToSBuf(BuildErrorPrinter(inputLocation, page_id, msg, errorLocation)));
     }
 }
 
