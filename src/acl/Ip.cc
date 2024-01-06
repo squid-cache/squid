@@ -10,8 +10,8 @@
 
 #include "squid.h"
 #include "acl/Checklist.h"
-#include "acl/SplayInserter.h"
 #include "acl/Ip.h"
+#include "acl/SplayInserter.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
