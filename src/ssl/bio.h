@@ -173,9 +173,11 @@ public:
 private:
     int readAndGive(char *buf, const int size, BIO *table);
     int readAndParse(char *buf, const int size, BIO *table);
-    int readAndParseKtls(char *buf, const int size, BIO *table);
     int readAndBuffer(BIO *table, const int size);
+    #if USE_OPENSSL_KTLS && !_SQUID_WINDOWS_
+    int readAndParseKtls(char *buf, const int size, BIO *table);
     int peekAndBuffer(BIO *table);
+    #endif
     int giveBuffered(char *buf, const int size);
 
     /// SSL client features extracted from ClientHello message or SSL object
