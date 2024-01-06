@@ -362,6 +362,11 @@ Ssl::ServerBio::readAndBuffer(BIO *table, const int size)
 
 /// Read and give everything to our parser. (KTLS support ver.)
 /// When/if parsing is finished (successfully or not), start giving to OpenSSL.
+///
+/// Note:
+/// if using KTLS, we must not consume more socket data than the caller (OpenSSL) expects.
+/// Otherwise, the session establishment potentially fails depending on the timing of packet arrival.
+/// Therefore, we peek the socket here and ensure we do not consume the socket data more than required.
 int
 Ssl::ServerBio::readAndParseKtls(char *buf, const int size, BIO *table)
 {
@@ -372,7 +377,14 @@ Ssl::ServerBio::readAndParseKtls(char *buf, const int size, BIO *table)
     try {
         if (!parser_.parseHello(rbuf_toPeek)) {
             // need more data to finish parsing
-            readAndBuffer(table, result);   // safe to read
+            const int result2 = readAndBuffer(table, result);   // safe to read "result" at most
+            if ( result2 != result ){
+                debugs(83, DBG_IMPORTANT, "WARNING: expected to read " << result << " bytes but read: " << result2 );
+
+                // clone rbuf
+                rbuf_toPeek.clear();
+                rbuf_toPeek.append(rbuf);
+            }
             BIO_set_retry_read(table);
             return -1;
         }
@@ -389,7 +401,7 @@ Ssl::ServerBio::readAndParseKtls(char *buf, const int size, BIO *table)
     return giveBuffered(buf, size);
 }
 
-/// Peeks more data into the read buffer. Returns either the number of bytes
+/// Peeks more data into the peek buffer. Returns either the number of bytes
 /// peeked or, on errors (including "try again" errors), a negative number.
 int
 Ssl::ServerBio::peekAndBuffer(BIO *table)
