@@ -22,6 +22,7 @@ do
 	test -x ${dir}/true && TRUE=${dir}/true
 done
 TRUE=${TRUE:-/bin/true}
+RM=${RM:-rm -f}
 
 exitCode=0
 
@@ -41,7 +42,7 @@ EOF
             echo "Fail."
             exitCode=1
         fi
-        rm $t.cc $t.o
+        ${RM} $t.cc $t.o
     fi
     test $exitCode -eq 0 || break
 done
