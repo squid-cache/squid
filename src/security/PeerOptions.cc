@@ -806,6 +806,19 @@ Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
 #endif
 }
 
+#if OPENSSL_KTLS_SUPPORT
+void
+Security::PeerOptions::updateSessionOptionsOnlyKtls(Security::SessionPointer &s)
+{
+    parseOptions();
+    
+    debugs(83, 5, "set OpenSSL options (KTLS only) for session=" << s << ", Options=" << (parsedOptions & SSL_OP_ENABLE_KTLS));
+    // XXX: Options already set before (via the context) are not cleared!
+    SSL_set_options(s.get(), (parsedOptions & SSL_OP_ENABLE_KTLS));
+
+}
+#endif
+
 void
 parse_securePeerOptions(Security::PeerOptions *opt)
 {

@@ -138,7 +138,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
 #if USE_OPENSSL
 
         #if OPENSSL_KTLS_SUPPORT
-        opts.updateSessionOptions(session);
+        opts.updateSessionOptionsOnlyKtls(session);
         const int enable_ktls = ((SSL_get_options(session.get()) & SSL_OP_ENABLE_KTLS) != 0);
         #else
         const int enable_ktls = 0;

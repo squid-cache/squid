@@ -68,6 +68,11 @@ public:
     /// setup any library-specific options that can be set for the given session
     void updateSessionOptions(Security::SessionPointer &);
 
+#if OPENSSL_KTLS_SUPPORT
+    /// setup ktls options that can be set for the given session
+    void updateSessionOptionsOnlyKtls(Security::SessionPointer &);
+#endif
+
     /// output squid.conf syntax with 'pfx' prefix on parameters for the stored settings
     virtual void dumpCfg(std::ostream &, const char *pfx) const;
 
