@@ -62,6 +62,7 @@ public:
 protected:
     const int fd_; ///< the SSL socket we are reading and writing
     SBuf rbuf;  ///< Used to buffer input data.
+    SBuf rbuf_toPeek;  ///< Used to peek input data.
 };
 
 /// BIO node to handle socket IO for squid client side
@@ -172,7 +173,8 @@ public:
 private:
     int readAndGive(char *buf, const int size, BIO *table);
     int readAndParse(char *buf, const int size, BIO *table);
-    int readAndBuffer(BIO *table, int size);
+    int readAndBuffer(BIO *table, const int size);
+    int peekAndBuffer(BIO *table);
     int giveBuffered(char *buf, const int size);
 
     /// SSL client features extracted from ClientHello message or SSL object

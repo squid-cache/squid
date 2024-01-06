@@ -305,7 +305,7 @@ Ssl::ServerBio::readAndGive(char *buf, const int size, BIO *table)
         return giveBuffered(buf, size);
 
     if (record_) {
-        const int result = readAndBuffer(table, size);
+        const int result = readAndBuffer(table, SQUID_TCP_SO_RCVBUF);
         if (result <= 0)
             return result;
         return giveBuffered(buf, size);
@@ -319,21 +319,14 @@ Ssl::ServerBio::readAndGive(char *buf, const int size, BIO *table)
 int
 Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
 {
-    int read_size = size;
-    if ( read_size > 0 && BIO_next(table) ){
-        // KTLS
-        read_size = size - rbuf.length();
-        if ( read_size <= 0 ){
-            read_size = 1;   // TODO: more efficient way ?
-        }
-    }
-    const int result = readAndBuffer(table, read_size);
+    const int result = peekAndBuffer(table);
     if (result <= 0)
         return result;
 
     try {
-        if (!parser_.parseHello(rbuf)) {
+        if (!parser_.parseHello(rbuf_toPeek)) {
             // need more data to finish parsing
+            readAndBuffer(table, result);   // safe to read
             BIO_set_retry_read(table);
             return -1;
         }
@@ -345,24 +338,48 @@ Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
         parseError = true;
     }
 
+    rbuf_toPeek.clear();
+
     return giveBuffered(buf, size);
 }
 
 /// Reads more data into the read buffer. Returns either the number of bytes
 /// read or, on errors (including "try again" errors), a negative number.
 int
-Ssl::ServerBio::readAndBuffer(BIO *table, int size)
+Ssl::ServerBio::readAndBuffer(BIO *table, const int size)
 {
-    if ( ! BIO_next(table) ){
-    	// not KTLS
-        size = SQUID_TCP_SO_RCVBUF;
-    }
     char *space = rbuf.rawAppendStart(size);
     const int result = Ssl::Bio::read(space, size, table);
     if (result <= 0)
         return result;
 
     rbuf.rawAppendFinish(space, result);
+    return result;
+}
+
+/// Peeks more data into the read buffer. Returns either the number of bytes
+/// peeked or, on errors (including "try again" errors), a negative number.
+int
+Ssl::ServerBio::peekAndBuffer(BIO *table)
+{
+    char *space = rbuf_toPeek.rawAppendStart(SQUID_TCP_SO_RCVBUF);
+    const int result = recv( fd_, space, SQUID_TCP_SO_RCVBUF, MSG_PEEK );
+    if (result <= 0){
+        const int xerrno = errno;
+        debugs(83, 5, "FD " << fd_ << " peek " << result << " <= " << SQUID_TCP_SO_RCVBUF);
+
+        BIO_clear_retry_flags(table);
+        if (result < 0) {
+            const bool ignoreError = ignoreErrno(xerrno) != 0;
+            debugs(83, 5, "error: " << xerrno << " ignored: " << ignoreError);
+            if (ignoreError)
+                BIO_set_retry_read(table);
+        }
+
+        return result;
+    }
+
+    rbuf_toPeek.rawAppendFinish(space, result);
     return result;
 }
 
