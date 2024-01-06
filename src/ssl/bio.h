@@ -54,7 +54,7 @@ public:
 
     /// Creates a low-level BIO table, creates a high-level Ssl::Bio object
     /// for a given socket, and then links the two together via BIO_C_SET_FD.
-    static BIO *Create(const int fd, Security::Io::Type type);
+    static BIO *Create(const int fd, Security::Io::Type type, const int enable_ktls);
     /// Tells ssl connection to use BIO and monitor state via stateChanged()
     static void Link(SSL *ssl, BIO *bio);
 

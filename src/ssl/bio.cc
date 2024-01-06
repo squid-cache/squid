@@ -60,7 +60,7 @@ static BIO_METHOD SquidMethods = {
 #endif
 
 BIO *
-Ssl::Bio::Create(const int fd, Security::Io::Type type)
+Ssl::Bio::Create(const int fd, Security::Io::Type type, const int enable_ktls)
 {
 #if HAVE_LIBCRYPTO_BIO_METH_NEW
     if (!SquidMethods) {
@@ -81,8 +81,10 @@ Ssl::Bio::Create(const int fd, Security::Io::Type type)
     if (BIO *bio = BIO_new(useMethod)) {
         BIO_int_ctrl(bio, BIO_C_SET_FD, type, fd);
         #if OPENSSL_KTLS_SUPPORT
-        if (BIO *bio_sock = BIO_new_socket(fd, BIO_NOCLOSE)) {
-            bio = BIO_push(bio, bio_sock);
+        if (enable_ktls){
+            if (BIO *bio_sock = BIO_new_socket(fd, BIO_NOCLOSE)) {
+                bio = BIO_push(bio, bio_sock);
+            }
         }
         #endif
         return bio;
