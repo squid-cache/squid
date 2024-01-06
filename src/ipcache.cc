@@ -9,6 +9,7 @@
 /* DEBUG: section 14    IP Cache */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "CacheManager.h"
 #include "cbdata.h"
 #include "debug/Messages.h"
@@ -227,18 +228,20 @@ IpCacheLookupForwarder::IpCacheLookupForwarder(IPH *fun, void *data):
 }
 
 void
-IpCacheLookupForwarder::finalCallback(const Dns::CachedIps *addrs, const Dns::LookupDetails &details)
+IpCacheLookupForwarder::finalCallback(const Dns::CachedIps * const possiblyEmptyAddrs, const Dns::LookupDetails &details)
 {
+    // TODO: Consider removing nil-supplying IpcacheStats.invalid code and refactoring accordingly.
+    // may be nil but is never empty
+    const auto addrs = (possiblyEmptyAddrs && possiblyEmptyAddrs->empty()) ? nullptr : possiblyEmptyAddrs;
+
     debugs(14, 7, addrs << " " << details);
     if (receiverObj.set()) {
         if (auto receiver = receiverObj.valid())
             receiver->noteIps(addrs, details);
         receiverObj.clear();
     } else if (receiverFun) {
-        if (receiverData.valid()) {
-            const Dns::CachedIps *emptyIsNil = (addrs && !addrs->empty()) ? addrs : nullptr;
-            receiverFun(emptyIsNil, details, receiverData.validDone());
-        }
+        if (receiverData.valid())
+            receiverFun(addrs, details, receiverData.validDone());
         receiverFun = nullptr;
     }
 }
@@ -543,8 +546,15 @@ ipcache_entry::updateTtl(const unsigned int rrTtl)
                                 Config.positiveDnsTtl); // largest value allowed
 
     const time_t rrExpires = squid_curtime + ttl;
-    if (rrExpires < expires)
+    if (addrs.size() <= 1) {
+        debugs(14, 5, "use first " << ttl << " from RR TTL " << rrTtl);
         expires = rrExpires;
+    } else if (rrExpires < expires) {
+        debugs(14, 5, "use smaller " << ttl << " from RR TTL " << rrTtl << "; was: " << (expires - squid_curtime));
+        expires = rrExpires;
+    } else {
+        debugs(14, 7, "ignore " << ttl << " from RR TTL " << rrTtl << "; keep: " << (expires - squid_curtime));
+    }
 }
 
 /// \ingroup IPCacheInternal
@@ -720,7 +730,7 @@ ipcache_gethostbyname(const char *name, int flags)
 {
     ipcache_entry *i = nullptr;
     assert(name);
-    debugs(14, 3, "ipcache_gethostbyname: '" << name  << "', flags=" << std::hex << flags);
+    debugs(14, 3, "'" << name  << "', flags=" << asHex(flags));
     ++IpcacheStats.requests;
     i = ipcache_get(name);
 

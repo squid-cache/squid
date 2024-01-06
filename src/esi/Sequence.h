@@ -40,7 +40,7 @@ public:
     size_t processedcount;
 
     struct {
-        int dovars:1; /* for esiVar */
+        unsigned int dovars:1; /* for esiVar */
     } flags;
     void finish() override;
 

@@ -10,7 +10,7 @@
 #define SQUID_SRC_SECURITY_COMMUNICATION_SECRETS_H
 
 #include "sbuf/SBuf.h"
-#include "security/forward.h"
+#include "security/Session.h"
 
 #include <iosfwd>
 

@@ -14,6 +14,7 @@
 #include "acl/Gadgets.h"
 #include "acl/Options.h"
 #include "anyp/PortCfg.h"
+#include "base/IoManip.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
@@ -322,25 +323,14 @@ ACL::parseFlags()
     Acl::ParseFlags(allOptions);
 }
 
-SBufList
-ACL::dumpOptions()
+void
+ACL::dumpWhole(const char * const directiveName, std::ostream &os)
 {
-    SBufList result;
-
-    const auto &myOptions = options();
     // XXX: No lineOptions() call here because we do not remember ACL "line"
     // boundaries and associated "line" options; we cannot report them.
-
-    // optimization: most ACLs do not have myOptions
-    // this check also works around dump_SBufList() adding ' ' after empty items
-    if (!myOptions.empty()) {
-        SBufStream stream;
-        stream << myOptions;
-        const SBuf optionsImage = stream.buf();
-        if (!optionsImage.isEmpty())
-            result.push_back(optionsImage);
-    }
-    return result;
+    os << directiveName << ' ' << name << ' ' << typeString() << options() <<
+       asList(dump()).prefixedBy(" ").delimitedBy(" ") <<
+       '\n';
 }
 
 /* ACL result caching routines */

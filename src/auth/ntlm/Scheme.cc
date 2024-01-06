@@ -23,7 +23,8 @@ public:
         debugs(29, 2, "Initialized Authentication Scheme '" << type << "'");
     }
 };
-RunnerRegistrationEntry(NtlmAuthRr);
+
+DefineRunnerRegistrator(NtlmAuthRr);
 
 Auth::Scheme::Pointer
 Auth::Ntlm::Scheme::GetInstance()

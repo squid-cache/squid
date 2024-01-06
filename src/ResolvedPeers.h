@@ -10,7 +10,8 @@
 #define SQUID_RESOLVEDPEERS_H
 
 #include "base/RefCount.h"
-#include "comm/forward.h"
+#include "comm/Connection.h"
+#include "mem/AllocatorProxy.h"
 
 #include <iosfwd>
 #include <limits>

@@ -101,7 +101,7 @@ kq_update_events(int fd, short filter, PF * handler)
         if (kqoff == kqmax - 1) {
             int ret;
 
-            ret = kevent(kq, kqlst, kqmax, NULL, 0, &zero_timespec);
+            ret = kevent(kq, kqlst, kqmax, nullptr, 0, &zero_timespec);
             /* jdc -- someone needs to do error checking... */
 
             if (ret == -1) {
@@ -236,7 +236,7 @@ Comm::DoSelect(int msec)
 
     for (i = 0; i < num; ++i) {
         int fd = (int) ke[i].ident;
-        PF *hdl = NULL;
+        PF *hdl = nullptr;
         fde *F = &fd_table[fd];
 
         if (ke[i].flags & EV_ERROR) {
@@ -247,14 +247,14 @@ Comm::DoSelect(int msec)
 
         if (ke[i].filter == EVFILT_READ || F->flags.read_pending) {
             if ((hdl = F->read_handler) != NULL) {
-                F->read_handler = NULL;
+                F->read_handler = nullptr;
                 hdl(fd, F->read_data);
             }
         }
 
         if (ke[i].filter == EVFILT_WRITE) {
             if ((hdl = F->write_handler) != NULL) {
-                F->write_handler = NULL;
+                F->write_handler = nullptr;
                 hdl(fd, F->write_data);
             }
         }

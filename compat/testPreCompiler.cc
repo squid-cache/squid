@@ -193,3 +193,9 @@ TestPreCompiler::testIfDefOr()
     CPPUNIT_ASSERT(!undefinedOrUndefinedC);
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

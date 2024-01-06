@@ -35,7 +35,7 @@
 #include "MemObject.h"
 #include "mgr/Registration.h"
 #include "NullDelayId.h"
-#include "SquidString.h"
+#include "sbuf/SBuf.h"
 #include "Store.h"
 #include "StoreClient.h"
 
@@ -256,11 +256,11 @@ CommonPool::Factory(unsigned char _class, CompositePoolNode::Pointer& compositeC
 
     case 1:
         compositeCopy = new Aggregate;
-        result->typeLabel = "1";
+        result->typeLabel = SBuf("1");
         break;
 
     case 2:
-        result->typeLabel = "2";
+        result->typeLabel = SBuf("2");
         {
             DelayVector::Pointer temp = new DelayVector;
             compositeCopy = temp.getRaw();
@@ -270,7 +270,7 @@ CommonPool::Factory(unsigned char _class, CompositePoolNode::Pointer& compositeC
         break;
 
     case 3:
-        result->typeLabel = "3";
+        result->typeLabel = SBuf("3");
         {
             DelayVector::Pointer temp = new DelayVector;
             compositeCopy = temp.getRaw();
@@ -281,7 +281,7 @@ CommonPool::Factory(unsigned char _class, CompositePoolNode::Pointer& compositeC
         break;
 
     case 4:
-        result->typeLabel = "4";
+        result->typeLabel = SBuf("4");
         {
             DelayVector::Pointer temp = new DelayVector;
             compositeCopy = temp.getRaw();
@@ -295,7 +295,7 @@ CommonPool::Factory(unsigned char _class, CompositePoolNode::Pointer& compositeC
         break;
 
     case 5:
-        result->typeLabel = "5";
+        result->typeLabel = SBuf("5");
         compositeCopy = new DelayTagged;
         break;
 
@@ -544,7 +544,7 @@ DelayPools::Stats(StoreEntry * sentry)
 
     for (unsigned short i = 0; i < DelayPools::pools(); ++i) {
         if (DelayPools::delay_data[i].theComposite().getRaw()) {
-            storeAppendPrintf(sentry, "Pool: %d\n\tClass: %s\n\n", i + 1, DelayPools::delay_data[i].pool->theClassTypeLabel());
+            storeAppendPrintf(sentry, "Pool: %d\n\tClass: " SQUIDSBUFPH "\n\n", i + 1, SQUIDSBUFPRINT(DelayPools::delay_data[i].pool->classTypeLabel()));
             DelayPools::delay_data[i].theComposite()->stats (sentry);
         } else
             storeAppendPrintf(sentry, "\tMisconfigured pool.\n\n");

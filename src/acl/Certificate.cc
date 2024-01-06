@@ -16,17 +16,15 @@
 #if USE_OPENSSL
 
 #include "acl/Certificate.h"
-#include "acl/CertificateData.h"
-#include "acl/Checklist.h"
-#include "client_side.h"
+#include "acl/FilledChecklist.h"
 #include "fde.h"
 #include "globals.h"
-#include "http/Stream.h"
-#include "HttpRequest.h"
 
 int
-ACLCertificateStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::ClientCertificateCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     const int fd = checklist->fd();
     const bool goodDescriptor = 0 <= fd && fd <= Biggest_FD;
     auto ssl = goodDescriptor ? fd_table[fd].ssl.get() : nullptr;

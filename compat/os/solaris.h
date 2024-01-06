@@ -71,25 +71,10 @@ SQUIDCEXTERN int getpagesize(void);
 SQUIDCEXTERN int gethostname(char *, int);
 #endif
 
-/*
- * SunStudio CC does not define C++ portability API __FUNCTION__
- */
-#if defined(__SUNPRO_CC) && !defined(__FUNCTION__)
-#define __FUNCTION__ ""
-#endif
-
 /* Bug 2500: Solaris 10/11 require s6_addr* defines. */
 //#define s6_addr8   _S6_un._S6_u8
 //#define s6_addr16  _S6_un._S6_u16
 #define s6_addr32  _S6_un._S6_u32
-
-/* Bug 3057: Solaris 9 defines struct addrinfo with size_t instead of socklen_t
- *           this causes binary incompatibility on 64-bit systems.
- *  Fix this by bundling a copy of the OpenSolaris 10 netdb.h to use instead.
- */
-#if defined(__sparcv9)
-#include "compat/os/opensolaris_10_netdb.h"
-#endif
 
 /* Solaris 10 lacks SUN_LEN */
 #if !defined(SUN_LEN)

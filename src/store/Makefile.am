@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 SUBDIRS= id_rewriters
 
@@ -22,6 +21,8 @@ libstore_la_SOURCES = \
 	Disks.h \
 	LocalSearch.cc \
 	LocalSearch.h \
+	ParsingBuffer.cc \
+	ParsingBuffer.h \
 	Storage.h \
 	SwapMeta.cc \
 	SwapMeta.h \

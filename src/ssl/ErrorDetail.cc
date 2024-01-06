@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "errorpage.h"
 #include "fatal.h"
+#include "sbuf/SBuf.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/ErrorDetailManager.h"
 
@@ -154,9 +155,11 @@ Ssl::ErrorIsOptional(const char *name)
     return false;
 }
 
-const char *
+std::optional<SBuf>
 Ssl::GetErrorDescr(Security::ErrorCode value)
 {
-    return ErrorDetailsManager::GetInstance().getDefaultErrorDescr(value);
+    if (const auto detail = ErrorDetailsManager::GetInstance().findDefaultDetail(value))
+        return detail->descr;
+    return std::nullopt;
 }
 

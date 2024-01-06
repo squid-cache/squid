@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/AsyncCbdataCalls.h"
+#include "base/IoManip.h"
 #include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "CacheDigest.h"
@@ -35,6 +36,7 @@
 #include "mgr/StoreIoAction.h"
 #include "repl_modules.h"
 #include "RequestFlags.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "stmem.h"
@@ -256,6 +258,8 @@ StoreEntry::storeClientType() const
 
     assert(mem_obj);
 
+    debugs(20, 7, *this << " inmem_lo=" << mem_obj->inmem_lo);
+
     if (mem_obj->inmem_lo)
         return STORE_DISK_CLIENT;
 
@@ -283,6 +287,7 @@ StoreEntry::storeClientType() const
                 return STORE_MEM_CLIENT;
             }
         }
+        debugs(20, 7, "STORE_OK STORE_DISK_CLIENT");
         return STORE_DISK_CLIENT;
     }
 
@@ -302,10 +307,18 @@ StoreEntry::storeClientType() const
     if (swap_status == SWAPOUT_NONE)
         return STORE_MEM_CLIENT;
 
+    // TODO: The above "must make this a mem client" logic contradicts "Slight
+    // weirdness" logic in store_client::doCopy() that converts hits to misses
+    // on startSwapin() failures. We should probably attempt to open a swapin
+    // file _here_ instead (and avoid STORE_DISK_CLIENT designation for clients
+    // that fail to do so). That would also address a similar problem with Rock
+    // store that does not yet support swapin during SWAPOUT_WRITING.
+
     /*
      * otherwise, make subsequent clients read from disk so they
      * can not delay the first, and vice-versa.
      */
+    debugs(20, 7, "STORE_PENDING STORE_DISK_CLIENT");
     return STORE_DISK_CLIENT;
 }
 
@@ -1431,8 +1444,14 @@ StoreEntry::updateOnNotModified(const StoreEntry &e304)
     // update reply before calling timestampsSet() below
     const auto &oldReply = mem_obj->freshestReply();
     const auto updatedReply = oldReply.recreateOnNotModified(e304.mem_obj->baseReply());
-    if (updatedReply) // HTTP 304 brought in new information
+    if (updatedReply) { // HTTP 304 brought in new information
+        if (updatedReply->prefixLen() > Config.maxReplyHeaderSize) {
+            throw TextException(ToSBuf("cannot update the cached response because its updated ",
+                                       updatedReply->prefixLen(), "-byte header would exceed ",
+                                       Config.maxReplyHeaderSize, "-byte reply_header_max_size"), Here());
+        }
         mem_obj->updateReply(*updatedReply);
+    }
     // else continue to use the previous update, if any
 
     if (!timestampsSet() && !updatedReply)
@@ -1909,8 +1928,7 @@ StoreEntry::attachToDisk(const sdirno dirn, const sfileno fno, const swap_status
 {
     debugs(88, 3, "attaching entry with key " << getMD5Text() << " : " <<
            swapStatusStr[status] << " " << dirn << " " <<
-           std::hex << std::setw(8) << std::setfill('0') <<
-           std::uppercase << fno);
+           asHex(fno).upperCase().minDigits(8));
     checkDisk();
     swap_dirn = dirn;
     swap_filen = fno;

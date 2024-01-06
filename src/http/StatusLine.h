@@ -47,6 +47,9 @@ public:
     /// retrieve the reason string for this status line
     const char *reason() const;
 
+    /// expected size of packInto() output
+    size_t packedLength() const;
+
     /// pack fields into a Packable object
     void packInto(Packable *) const;
 

@@ -14,6 +14,7 @@
 #include "esi/Context.h"
 #include "esi/Element.h"
 #include "esi/Segment.h"
+#include "HttpHeader.h"
 
 class ESIInclude;
 typedef RefCount<ESIInclude> ESIIncludePtr;
@@ -47,9 +48,9 @@ public:
     void subRequestDone (ESIStreamContext::Pointer, bool);
 
     struct {
-        int onerrorcontinue:1; /* on error return zero data */
-        int failed:1; /* Failed to process completely */
-        int finished:1; /* Finished getting subrequest data */
+        unsigned int onerrorcontinue:1; /* on error return zero data */
+        unsigned int failed:1; /* Failed to process completely */
+        unsigned int finished:1; /* Finished getting subrequest data */
     } flags;
     ESIStreamContext::Pointer src;
     ESIStreamContext::Pointer alt;

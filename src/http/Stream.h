@@ -9,15 +9,18 @@
 #ifndef SQUID_SRC_HTTP_STREAM_H
 #define SQUID_SRC_HTTP_STREAM_H
 
+#include "clientStreamForward.h"
+#include "comm/forward.h"
+#include "debug/Stream.h"
+#include "error/Error.h"
 #include "http/forward.h"
+#include "log/forward.h"
 #include "mem/forward.h"
+#include "servers/forward.h"
 #include "StoreIOBuffer.h"
 #if USE_DELAY_POOLS
 #include "MessageBucket.h"
 #endif
-
-class clientStreamNode;
-class ClientHttpRequest;
 
 namespace Http
 {

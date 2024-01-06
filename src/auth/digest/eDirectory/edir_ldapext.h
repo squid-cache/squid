@@ -6,5 +6,9 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
+#if HAVE_LDAP_H
+#include <ldap.h>
+#endif
+
 int nds_get_password(LDAP *ld, char *object_dn, size_t * pwd_len, char *pwd);
 

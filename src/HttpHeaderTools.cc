@@ -23,10 +23,11 @@
 #include "http/Stream.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
-#include "HttpHeaderFieldInfo.h"
 #include "HttpHeaderTools.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "sbuf/Stream.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StrList.h"
@@ -231,6 +232,15 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
     if (!val->termedBuf())
         val->assign("", 0);
     return 1;
+}
+
+SBuf
+Http::SlowlyParseQuotedString(const char * const description, const char * const start, const size_t length)
+{
+    String s;
+    if (!httpHeaderParseQuotedString(start, length, &s))
+        throw TextException(ToSBuf("Cannot parse ", description, " as a quoted string"), Here());
+    return StringToSBuf(s);
 }
 
 SBuf

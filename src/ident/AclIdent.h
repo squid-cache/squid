@@ -11,22 +11,8 @@
 
 #if USE_IDENT
 
-#include "acl/Checklist.h"
-
-/// \ingroup ACLAPI
-class IdentLookup : public ACLChecklist::AsyncState
-{
-
-public:
-    static IdentLookup *Instance();
-    void checkForAsync(ACLChecklist *)const override;
-
-private:
-    static IdentLookup instance_;
-    static void LookupDone(const char *ident, void *data);
-};
-
 #include "acl/Acl.h"
+#include "acl/Checklist.h"
 #include "acl/Data.h"
 
 /// \ingroup ACLAPI
@@ -35,6 +21,8 @@ class ACLIdent : public ACL
     MEMPROXY_CLASS(ACLIdent);
 
 public:
+    static void StartLookup(ACLFilledChecklist &, const ACL &);
+
     ACLIdent(ACLData<char const *> *newData, char const *);
     ~ACLIdent() override;
 
@@ -47,6 +35,8 @@ public:
     bool empty () const override;
 
 private:
+    static void LookupDone(const char *ident, void *data);
+
     /* ACL API */
     const Acl::Options &lineOptions() override;
 

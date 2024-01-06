@@ -176,8 +176,8 @@ ESIVariableQuery::ESIVariableQuery(char const *uri) : query (nullptr), query_sz 
             ++query_pos;
         }
 
-        query = (_query_elem *)memReallocBuf(query, query_elements * sizeof (struct _query_elem),
-                                             &query_sz);
+        query = static_cast<_query_elem *>(memAllocBuf(query_elements * sizeof(struct _query_elem), &query_sz));
+        memset(query, 0, query_sz);
         query_pos = query_start + 1;
         n = 0;
 

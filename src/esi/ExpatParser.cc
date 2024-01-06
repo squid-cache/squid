@@ -32,9 +32,9 @@ private:
     std::unique_ptr<ESIParser::Register> registration;
 };
 
-RunnerRegistrationEntry(ExpatRr);
-
 }
+
+DefineRunnerRegistratorIn(Esi, ExpatRr);
 
 EsiParserDefinition(ESIExpatParser);
 
