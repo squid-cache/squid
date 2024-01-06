@@ -114,11 +114,11 @@ public:
 class BuildErrorPrinter
 {
 public:
-    BuildErrorPrinter(const SBuf &anInputLocation, int aPage, const char *aMsg, const char *aData):
+    BuildErrorPrinter(const SBuf &anInputLocation, int aPage, const char *aMsg, const char *theErrorLocation):
         inputLocation(anInputLocation),
         page_id(aPage),
         msg(aMsg),
-        data(aData)
+        errorLocation(theErrorLocation)
     {}
 
     /// reports error details (for admin-visible exceptions and debugging)
@@ -131,7 +131,7 @@ public:
     const SBuf &inputLocation;
     const int page_id;
     const char *msg;
-    const char *data;
+    const char *errorLocation;
 };
 
 static inline std::ostream &
@@ -1490,11 +1490,11 @@ ErrorPage::BuildErrorPrinter::print(std::ostream &os) const {
 
     // TODO: Add support for prefix printing to Raw
     const size_t maxContextLength = 15; // plus "..."
-    if (strlen(data) > maxContextLength) {
-        os.write(data, maxContextLength);
+    if (strlen(errorLocation) > maxContextLength) {
+        os.write(errorLocation, maxContextLength);
         os << "...";
     } else {
-        os << data;
+        os << errorLocation;
     }
 
     // XXX: We should not be converting (inner) exception to text if we are
