@@ -1437,7 +1437,7 @@ ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRe
 /// react to a compile() error
 /// \param msg  description of what went wrong
 /// \param errorLocation approximate start of the problematic input
-/// \param forceBypass whether detection of this error was introduced late,
+/// \param  forceBypass whether detection of this error was introduced late,
 /// after old configurations containing this error could have been
 /// successfully validated and deployed (i.e. the admin may not be
 /// able to fix this newly detected but old problem quickly)
