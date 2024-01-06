@@ -76,7 +76,7 @@ expectMessages()
         exit 1
     fi
 
-    messageRegexFilename="squid-expected-msgs.tmp"
+    messageRegexFilename="squid-expected-messages"
     if ! :> $messageRegexFilename
     then
         echo "$where: ERROR: Cannot create a temporary file named $messageRegexFilename"

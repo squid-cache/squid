@@ -153,6 +153,6 @@ squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.de
 
 CLEANFILES += \
 	squid-conf-tests \
+	squid-expected-messages \
 	squid-stderr.log \
-	squid-stderr.log.unmatched \
-	squid-expected-msgs.tmp
+	squid-stderr.log.unmatched
