@@ -1442,7 +1442,7 @@ ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRe
 /// successfully validated and deployed (i.e. the admin may not be
 /// able to fix this newly detected but old problem quickly)
 void
-ErrorState::noteBuildError_(const char *msg, const char *errorLocation, const bool forceBypass)
+ErrorState::noteBuildError_(const char *const msg, const char * const errorLocation, const bool forceBypass)
 {
     using ErrorPage::BuildErrorPrinter;
     const auto runtime = !starting_up;
