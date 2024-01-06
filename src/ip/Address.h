@@ -195,7 +195,7 @@ public:
     void applyClientMask(const Address &mask);
 
     /// Set bits of the stored IP address on if they are on in the given mask.
-    /// For example, applying /24 mask to 127.0.0.1 produces 127.0.0.255.
+    /// For example, supplying a /24 mask turns 127.0.0.1 into 127.0.0.255.
     /// \sa applyMask(const Address &)
     void turnMaskedBitsOn(const Address &mask);
 

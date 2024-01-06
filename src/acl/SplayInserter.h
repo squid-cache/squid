@@ -35,21 +35,25 @@ private:
     /// SplayInserter users are expected to specialize all or most of the static
     /// methods below. Most of these methods have no generic implementation.
 
-    /// whether the set of values matched by `a` contains the entire set of
-    /// values matched by `b`, including cases where `a` is identical to `b`
-    static bool AcontainsEntireB(const Value &a, const Value &b);
-
-    /// Creates a new Value that matches all individual values matched by `a`
-    /// and all individual values matched by `b` but no other values.
-    /// \prec the two sets of values matched by `a` and `b` overlap
-    static Value MakeCombinedValue(const Value &a, const Value &b);
-
     /// A Splay::SPLAYCMP function for comparing parsed ACL parameter values.
     /// This function must work correctly with all valid ACL parameter values,
     /// including those representing sets or ranges. The order specified by this
     /// function must be the same as the order specified by the SPLAYCMP
     /// function used later by ACL::match().
+    /// \retval 0 The two values overlap. Here, two values overlap if they are
+    /// identical, if one contains all values from another, and if one contains
+    /// at least one value from another.
     static int Compare(const Value &, const Value &);
+
+    /// whether the set of values matched by `a` contains the entire set of
+    /// values matched by `b`, including cases where `a` is identical to `b`
+    /// \prec The two values overlap: Compare(a, b) == 0
+    static bool AcontainsEntireB(const Value &a, const Value &b);
+
+    /// Creates a new Value that matches all individual values matched by `a`
+    /// and all individual values matched by `b` but no other values.
+    /// \prec The two values overlap: Compare(a, b) == 0
+    static Value MakeCombinedValue(const Value &a, const Value &b);
 
     /// A Splay::SPLAYFREE-like function that destroys parsed ACL parameter values.
     static void DestroyValue(Value v) { delete v; }

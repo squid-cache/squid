@@ -141,8 +141,8 @@ Acl::SplayInserter<char*>::Compare(const Value &a, const Value &b)
     // matchDomainName(X, Y) uses a single domain name from X by removing the
     // leading dot (e.g., example.com). We call that name "the root of X". If X
     // is a single domain name, then its root is X itself. Since domain sets
-    // cannot have _partial_ overlaps (unlike integer ranges), testing roots is
-    // enough to detect duplicates and establish correct set order.
+    // cannot have _partial_ overlaps (unlike IP or integer ranges), testing
+    // roots is enough to detect duplicates and establish correct set order.
 
     if (matchDomainName(b, a)) {
         // Set A does not contain B's root. If set B contains A's root, then the
@@ -152,7 +152,7 @@ Acl::SplayInserter<char*>::Compare(const Value &a, const Value &b)
         // in match().
         return matchDomainName(a, b);
     } else {
-        // signal duplicates because set A contains B's root (at least)
+        // Signal duplicates because set A contains B's root (at least).
         return 0;
     }
 }

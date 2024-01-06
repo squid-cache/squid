@@ -23,7 +23,7 @@ expectFailure=no
 messageRegex=""
 
 # If set, expect stderr messages matching regexes in the named file.
-# See expectMessages() and matchEachRegex()
+# See expectMessages() and matchEachRegex().
 messageRegexFilename=""
 
 expectMessage()
@@ -59,7 +59,7 @@ expectMessages()
 
     if test -n "$messageRegexFilename"
     then
-        echo "$where: ERROR: Repeated message-setting instruction";
+        echo "$where: ERROR: Repeated message-setting instruction"
         exit 1
     fi
 

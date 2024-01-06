@@ -61,6 +61,8 @@ public:
 
     template <class FindValue> Value const *find (FindValue const &, int( * compare)(FindValue const &a, Value const &b)) const;
 
+    /// If the given value matches a stored one, returns that matching value.
+    /// Otherwise, stores the given unique value and returns nil.
     const Value *insert(const Value &, SPLAYCMP *);
 
     void remove(Value const &, SPLAYCMP *compare);
