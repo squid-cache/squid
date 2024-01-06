@@ -291,6 +291,10 @@ Ssl::ServerBio::read(char *buf, int size, BIO *table)
 {
     if (parsedHandshake) // done parsing TLS Hello
         return readAndGive(buf, size, table);
+#if USE_OPENSSL_KTLS && !_SQUID_WINDOWS_
+    else if (BIO_next(table)) // KTLS
+        return readAndParseKtls(buf, size, table);
+#endif
     else
         return readAndParse(buf, size, table);
 }
@@ -319,6 +323,48 @@ Ssl::ServerBio::readAndGive(char *buf, const int size, BIO *table)
 int
 Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
 {
+    const int result = readAndBuffer(table, SQUID_TCP_SO_RCVBUF);
+    if (result <= 0)
+        return result;
+
+    try {
+        if (!parser_.parseHello(rbuf)) {
+            // need more data to finish parsing
+            BIO_set_retry_read(table);
+            return -1;
+        }
+        parsedHandshake = true; // done parsing (successfully)
+    }
+    catch (const std::exception &ex) {
+        debugs(83, 2, "parsing error on FD " << fd_ << ": " << ex.what());
+        parsedHandshake = true; // done parsing (due to an error)
+        parseError = true;
+    }
+
+    return giveBuffered(buf, size);
+}
+
+/// Reads more data into the read buffer. Returns either the number of bytes
+/// read or, on errors (including "try again" errors), a negative number.
+int
+Ssl::ServerBio::readAndBuffer(BIO *table, const int size)
+{
+    char *space = rbuf.rawAppendStart(size);
+    const int result = Ssl::Bio::read(space, size, table);
+    if (result <= 0)
+        return result;
+
+    rbuf.rawAppendFinish(space, result);
+    return result;
+}
+
+#if USE_OPENSSL_KTLS && !_SQUID_WINDOWS_
+
+/// Read and give everything to our parser. (KTLS support ver.)
+/// When/if parsing is finished (successfully or not), start giving to OpenSSL.
+int
+Ssl::ServerBio::readAndParseKtls(char *buf, const int size, BIO *table)
+{
     const int result = peekAndBuffer(table);
     if (result <= 0)
         return result;
@@ -341,20 +387,6 @@ Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
     rbuf_toPeek.clear();
 
     return giveBuffered(buf, size);
-}
-
-/// Reads more data into the read buffer. Returns either the number of bytes
-/// read or, on errors (including "try again" errors), a negative number.
-int
-Ssl::ServerBio::readAndBuffer(BIO *table, const int size)
-{
-    char *space = rbuf.rawAppendStart(size);
-    const int result = Ssl::Bio::read(space, size, table);
-    if (result <= 0)
-        return result;
-
-    rbuf.rawAppendFinish(space, result);
-    return result;
 }
 
 /// Peeks more data into the read buffer. Returns either the number of bytes
@@ -382,6 +414,7 @@ Ssl::ServerBio::peekAndBuffer(BIO *table)
     rbuf_toPeek.rawAppendFinish(space, result);
     return result;
 }
+#endif
 
 /// give previously buffered bytes to OpenSSL
 /// returns the number of bytes given

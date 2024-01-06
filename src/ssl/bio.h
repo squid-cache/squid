@@ -173,6 +173,7 @@ public:
 private:
     int readAndGive(char *buf, const int size, BIO *table);
     int readAndParse(char *buf, const int size, BIO *table);
+    int readAndParseKtls(char *buf, const int size, BIO *table);
     int readAndBuffer(BIO *table, const int size);
     int peekAndBuffer(BIO *table);
     int giveBuffered(char *buf, const int size);
