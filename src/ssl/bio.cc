@@ -319,7 +319,15 @@ Ssl::ServerBio::readAndGive(char *buf, const int size, BIO *table)
 int
 Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
 {
-    const int result = readAndBuffer(table, size);
+    int read_size = size;
+    if ( read_size > 0 && BIO_next(table) ){
+        // KTLS
+        read_size = size - rbuf.length();
+        if ( read_size <= 0 ){
+            read_size = 1;   // TODO: more efficient way ?
+        }
+    }
+    const int result = readAndBuffer(table, read_size);
     if (result <= 0)
         return result;
 
