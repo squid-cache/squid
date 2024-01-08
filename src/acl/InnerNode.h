@@ -15,7 +15,7 @@
 namespace Acl
 {
 
-typedef std::vector<AclNode*> Nodes; ///< a collection of nodes
+using Nodes = std::vector<AclNode*>; ///< a collection of nodes
 
 /// An intermediate AclNode tree node. Manages a collection of child tree nodes.
 class InnerNode: public AclNode
@@ -50,7 +50,7 @@ protected:
     int match(ACLChecklist *checklist) override;
 
     // XXX: use refcounting instead of raw pointers
-    std::vector<AclNode*> nodes; ///< children nodes of this intermediate node
+    Nodes nodes; ///< children nodes of this intermediate node
 };
 
 } // namespace Acl
