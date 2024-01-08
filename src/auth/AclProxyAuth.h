@@ -15,17 +15,17 @@
 #include "acl/Checklist.h"
 #include "acl/Data.h"
 
-class ACLProxyAuth : public ACL
+class ACLProxyAuth : public AclNode
 {
     MEMPROXY_CLASS(ACLProxyAuth);
 
 public:
-    static void StartLookup(ACLFilledChecklist &, const ACL &);
+    static void StartLookup(ACLFilledChecklist &, const AclNode &);
 
     ~ACLProxyAuth() override;
     ACLProxyAuth(ACLData<char const *> *, char const *);
 
-    /* ACL API */
+    /* AclNode API */
     char const *typeString() const override;
     void parse() override;
     bool isProxyAuth() const override {return true;}
@@ -39,7 +39,7 @@ public:
 private:
     static void LookupDone(void *data);
 
-    /* ACL API */
+    /* AclNode API */
     const Acl::Options &lineOptions() override;
 
     int matchProxyAuth(ACLChecklist *);

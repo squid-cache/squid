@@ -25,9 +25,9 @@ namespace Acl {
 
 /// the ACL type name known to admins
 typedef const char *TypeName;
-/// a "factory" function for making ACL objects (of some ACL child type)
-typedef ACL *(*Maker)(TypeName typeName);
-/// use the given ACL Maker for all ACLs of the named type
+/// a "factory" function for making AclNode objects (of some AclNode child type)
+typedef AclNode *(*Maker)(TypeName typeName);
+/// use the given AclNode Maker for all ACLs of the named type
 void RegisterMaker(TypeName typeName, Maker maker);
 
 /// Validate and store the ACL key parameter for ACL types
@@ -42,31 +42,31 @@ void SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey);
 /// Can evaluate itself in FilledChecklist context.
 /// Does not change during evaluation.
 /// \ingroup ACLAPI
-class ACL
+class AclNode
 {
 
 public:
     void *operator new(size_t);
     void operator delete(void *);
 
-    static void ParseAclLine(ConfigParser &parser, ACL ** head);
+    static void ParseAclLine(ConfigParser &parser, AclNode ** head);
     static void Initialize();
-    static ACL *FindByName(const char *name);
+    static AclNode *FindByName(const char *name);
 
-    ACL();
-    ACL(ACL &&) = delete; // no copying of any kind
-    virtual ~ACL();
+    AclNode();
+    AclNode(AclNode &&) = delete; // no copying of any kind
+    virtual ~AclNode();
 
     /// sets user-specified ACL name and squid.conf context
     void context(const char *name, const char *configuration);
 
-    /// Orchestrates matching checklist against the ACL using match(),
+    /// Orchestrates matching checklist against the AclNode using match(),
     /// after checking preconditions and while providing debugging.
     /// \return true if and only if there was a successful match.
     /// Updates the checklist state on match, async, and failure.
     bool matches(ACLChecklist *checklist) const;
 
-    /// configures ACL options, throwing on configuration errors
+    /// configures AclNode options, throwing on configuration errors
     void parseFlags();
 
     /// parses node representation in squid.conf; dies on failures
@@ -90,11 +90,11 @@ public:
 
     char name[ACL_NAME_SZ];
     char *cfgline;
-    ACL *next; // XXX: remove or at least use refcounting
+    AclNode *next; // XXX: remove or at least use refcounting
     bool registered; ///< added to the global list of ACLs via aclRegister()
 
 private:
-    /// Matches the actual data in checklist against this ACL.
+    /// Matches the actual data in checklist against this AclNode.
     virtual int match(ACLChecklist *checklist) = 0; // XXX: missing const
 
     /// whether our (i.e. shallow) match() requires checklist to have a AccessLogEntry
@@ -105,27 +105,27 @@ private:
     virtual bool requiresReply() const;
 
     // TODO: Rename to globalOptions(); these are not the only supported options
-    /// \returns (linked) 'global' Options supported by this ACL
+    /// \returns (linked) 'global' Options supported by this AclNode
     virtual const Acl::Options &options() { return Acl::NoOptions(); }
 
-    /// \returns (linked) "line" Options supported by this ACL
-    /// \see ACL::options()
+    /// \returns (linked) "line" Options supported by this AclNode
+    /// \see AclNode::options()
     virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
 };
 
 /// \ingroup ACLAPI
 typedef enum {
-    // Authorization ACL result states
+    // Authorization AclNode result states
     ACCESS_DENIED,
     ACCESS_ALLOWED,
     ACCESS_DUNNO,
 
-    // Authentication ACL result states
+    // Authentication AclNode result states
     ACCESS_AUTH_REQUIRED,    // Missing Credentials
 } aclMatchCode;
 
 /// \ingroup ACLAPI
-/// ACL check answer
+/// AclNode check answer
 namespace Acl {
 
 class Answer
@@ -216,7 +216,7 @@ public:
 };
 
 /// \ingroup ACLAPI
-/// XXX: find a way to remove or at least use a refcounted ACL pointer
+/// XXX: find a way to remove or at least use a refcounted AclNode pointer
 extern const char *AclMatchedName;  /* NULL */
 
 #endif /* SQUID_ACL_H */

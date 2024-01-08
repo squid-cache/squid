@@ -20,7 +20,7 @@ namespace Acl
 class CurrentTimeCheck: public ParameterizedNode<ACLTimeData>
 {
 public:
-    /* ACL API */
+    /* AclNode API */
     int match(ACLChecklist *) override;
 };
 

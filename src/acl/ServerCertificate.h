@@ -21,7 +21,7 @@ namespace Acl
 class ServerCertificateCheck: public ParameterizedNode< ACLData<X509 *> >
 {
 public:
-    /* ACL API */
+    /* AclNode API */
     int match(ACLChecklist *) override;
 };
 

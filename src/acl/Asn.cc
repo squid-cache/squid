@@ -116,7 +116,7 @@ static int printRadixNode(struct squid_radix_node *rn, void *sentry);
 }
 #endif
 
-void asnAclInitialize(ACL * acls);
+void asnAclInitialize(AclNode * acls);
 
 static void destroyRadixNodeInfo(as_info *);
 

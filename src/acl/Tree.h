@@ -15,7 +15,7 @@
 namespace Acl
 {
 
-/// An ORed set of rules at the top of the ACL expression tree, providing two
+/// An ORed set of rules at the top of the AclNode expression tree, providing two
 /// unique properties: cbdata protection and optional rule actions.
 class Tree: public OrNode
 {
@@ -36,8 +36,8 @@ public:
     Answer lastAction() const;
 
     /// appends and takes control over the rule with a given action
-    void add(ACL *rule, const Answer &action);
-    void add(ACL *rule); ///< same as InnerNode::add()
+    void add(AclNode *rule, const Answer &action);
+    void add(AclNode *rule); ///< same as InnerNode::add()
 
 protected:
     /// Acl::OrNode API

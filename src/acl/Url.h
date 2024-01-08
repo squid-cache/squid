@@ -19,7 +19,7 @@ namespace Acl
 class UrlCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    /* ACL API */
+    /* AclNode API */
     int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
 };

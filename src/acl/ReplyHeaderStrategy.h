@@ -23,7 +23,7 @@ template <Http::HdrType header>
 class ReplyHeaderCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    /* ACL API */
+    /* AclNode API */
     int match(ACLChecklist *) override;
     bool requiresReply() const override {return true;}
 };

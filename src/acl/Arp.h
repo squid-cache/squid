@@ -15,7 +15,7 @@
 #include <set>
 
 /// \ingroup ACLAPI
-class ACLARP : public ACL
+class ACLARP : public AclNode
 {
     MEMPROXY_CLASS(ACLARP);
 

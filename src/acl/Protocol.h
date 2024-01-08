@@ -20,7 +20,7 @@ namespace Acl
 class ProtocolCheck: public ParameterizedNode< ACLData<AnyP::ProtocolType> >
 {
 public:
-    /* ACL API */
+    /* AclNode API */
     int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
 };

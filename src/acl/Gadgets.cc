@@ -10,9 +10,9 @@
  * DEBUG: section 28    Access Control
  *
  * This file contains ACL routines that are not part of the
- * ACL class, nor any other class yet, and that need to be
+ * AclNode class, nor any other class yet, and that need to be
  * factored into appropriate places. They are here to reduce
- * unneeded dependencies between the ACL class and the rest
+ * unneeded dependencies between the AclNode class and the rest
  * of squid.
  */
 
@@ -30,7 +30,7 @@
 #include <set>
 #include <algorithm>
 
-typedef std::set<ACL*> AclSet;
+typedef std::set<AclNode*> AclSet;
 /// Accumulates all ACLs to facilitate their clean deletion despite reuse.
 static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
 
@@ -76,9 +76,9 @@ aclIsProxyAuth(const char *name)
 
     debugs(28, 5, "aclIsProxyAuth: called for " << name);
 
-    ACL *a;
+    AclNode *a;
 
-    if ((a = ACL::FindByName(name))) {
+    if ((a = AclNode::FindByName(name))) {
         debugs(28, 5, "aclIsProxyAuth: returning " << a->isProxyAuth());
         return a->isProxyAuth();
     }
@@ -187,7 +187,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
 size_t
 aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
 {
-    // accommodate callers unable to convert their ACL list context to string
+    // accommodate callers unable to convert their AclNode list context to string
     if (!label)
         label = "...";
 
@@ -218,7 +218,7 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
 }
 
 void
-aclRegister(ACL *acl)
+aclRegister(AclNode *acl)
 {
     if (!acl->registered) {
         if (!RegisteredAcls)
@@ -231,7 +231,7 @@ aclRegister(ACL *acl)
 /// remove registered acl from the centralized deletion set
 static
 void
-aclDeregister(ACL *acl)
+aclDeregister(AclNode *acl)
 {
     if (acl->registered) {
         if (RegisteredAcls)
@@ -246,16 +246,16 @@ aclDeregister(ACL *acl)
 
 /// called to delete ALL Acls.
 void
-aclDestroyAcls(ACL ** head)
+aclDestroyAcls(AclNode ** head)
 {
     *head = nullptr; // Config.aclList
     if (AclSet *acls = RegisteredAcls) {
         debugs(28, 8, "deleting all " << acls->size() << " ACLs");
         while (!acls->empty()) {
-            ACL *acl = *acls->begin();
-            // We use centralized deletion (this function) so ~ACL should not
+            AclNode *acl = *acls->begin();
+            // We use centralized deletion (this function) so ~AclNode should not
             // delete other ACLs, but we still deregister first to prevent any
-            // accesses to the being-deleted ACL via RegisteredAcls.
+            // accesses to the being-deleted AclNode via RegisteredAcls.
             assert(acl->registered); // make sure we are making progress
             aclDeregister(acl);
             delete acl;

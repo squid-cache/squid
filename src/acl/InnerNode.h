@@ -15,10 +15,10 @@
 namespace Acl
 {
 
-typedef std::vector<ACL*> Nodes; ///< a collection of nodes
+typedef std::vector<AclNode*> Nodes; ///< a collection of nodes
 
-/// An intermediate ACL tree node. Manages a collection of child tree nodes.
-class InnerNode: public ACL
+/// An intermediate AclNode tree node. Manages a collection of child tree nodes.
+class InnerNode: public AclNode
 {
 public:
     // No ~InnerNode() to delete children. They are aclRegister()ed instead.
@@ -29,7 +29,7 @@ public:
     /// the number of children nodes
     Nodes::size_type childrenCount() const { return nodes.size(); }
 
-    /* ACL API */
+    /* AclNode API */
     void prepareForUse() override;
     bool empty() const override;
     SBufList dump() const override;
@@ -39,18 +39,18 @@ public:
     size_t lineParse();
 
     /// appends the node to the collection and takes control over it
-    void add(ACL *node);
+    void add(AclNode *node);
 
 protected:
     /// checks whether the nodes match, starting with the given one
     /// kids determine what a match means for their type of intermediate nodes
     virtual int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const = 0;
 
-    /* ACL API */
+    /* AclNode API */
     int match(ACLChecklist *checklist) override;
 
     // XXX: use refcounting instead of raw pointers
-    std::vector<ACL*> nodes; ///< children nodes of this intermediate node
+    std::vector<AclNode*> nodes; ///< children nodes of this intermediate node
 };
 
 } // namespace Acl

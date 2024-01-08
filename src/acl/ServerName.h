@@ -26,7 +26,7 @@ namespace Acl
 class ServerNameCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    /* ACL API */
+    /* AclNode API */
     int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
     const Acl::Options &options() override;

@@ -19,7 +19,7 @@ namespace Acl
 class HasComponentCheck: public ParameterizedNode< ACLData<ACLChecklist *> >
 {
 public:
-    /* ACL API */
+    /* AclNode API */
     int match(ACLChecklist *) override;
 };
 

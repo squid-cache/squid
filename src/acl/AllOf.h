@@ -22,7 +22,7 @@ class AllOf: public Acl::InnerNode
     MEMPROXY_CLASS(AllOf);
 
 public:
-    /* ACL API */
+    /* AclNode API */
     char const *typeString() const override;
     void parse() override;
     SBufList dump() const override;

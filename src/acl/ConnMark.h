@@ -18,12 +18,12 @@
 
 namespace Acl {
 
-class ConnMark : public ACL
+class ConnMark : public AclNode
 {
     MEMPROXY_CLASS(ConnMark);
 
 public:
-    /* ACL API */
+    /* AclNode API */
     char const *typeString() const override;
     void parse() override;
     int match(ACLChecklist *checklist) override;

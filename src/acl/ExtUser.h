@@ -15,7 +15,7 @@
 #include "acl/Checklist.h"
 #include "acl/Data.h"
 
-class ACLExtUser : public ACL
+class ACLExtUser : public AclNode
 {
     MEMPROXY_CLASS(ACLExtUser);
 
@@ -23,7 +23,7 @@ public:
     ACLExtUser(ACLData<char const *> *newData, char const *);
     ~ACLExtUser() override;
 
-    /* ACL API */
+    /* AclNode API */
     char const *typeString() const override;
     void parse() override;
     int match(ACLChecklist *checklist) override;
@@ -31,7 +31,7 @@ public:
     bool empty () const override;
 
 private:
-    /* ACL API */
+    /* AclNode API */
     const Acl::Options &lineOptions() override;
 
     ACLData<char const *> *data;

@@ -14,7 +14,7 @@
 
 /* Acl::NotNode */
 
-Acl::NotNode::NotNode(ACL *acl)
+Acl::NotNode::NotNode(AclNode *acl)
 {
     assert(acl);
     Must(strlen(acl->name) <= sizeof(name)-2);

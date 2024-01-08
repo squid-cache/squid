@@ -20,7 +20,7 @@ class AnyOf: public Acl::OrNode
     MEMPROXY_CLASS(AnyOf);
 
 public:
-    /* ACL API */
+    /* AclNode API */
     char const *typeString() const override;
     void parse() override;
 };

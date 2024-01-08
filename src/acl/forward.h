@@ -11,7 +11,7 @@
 
 #include "base/RefCount.h"
 
-class ACL;
+class AclNode;
 class ACLChecklist;
 class ACLFilledChecklist;
 class ACLList;

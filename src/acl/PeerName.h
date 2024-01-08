@@ -19,7 +19,7 @@ namespace Acl
 class PeerNameCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    /* ACL API */
+    /* AclNode API */
     int match(ACLChecklist *) override;
 };
 

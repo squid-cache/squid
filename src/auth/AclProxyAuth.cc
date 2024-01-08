@@ -103,7 +103,7 @@ ACLProxyAuth::valid() const
 }
 
 void
-ACLProxyAuth::StartLookup(ACLFilledChecklist &cl, const ACL &)
+ACLProxyAuth::StartLookup(ACLFilledChecklist &cl, const AclNode &)
 {
     debugs(28, 3, "checking password via authenticator");
 
