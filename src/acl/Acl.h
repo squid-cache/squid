@@ -24,9 +24,9 @@ class ConfigParser;
 namespace Acl {
 
 /// the ACL type name known to admins
-typedef const char *TypeName;
+using TypeName = const char *;
 /// a "factory" function for making AclNode objects (of some AclNode child type)
-typedef AclNode *(*Maker)(TypeName typeName);
+using Maker = AclNode *(*)(TypeName typeName);
 /// use the given AclNode Maker for all ACLs of the named type
 void RegisterMaker(TypeName typeName, Maker maker);
 
