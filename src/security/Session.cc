@@ -136,14 +136,13 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         const int fd = conn->fd;
 
 #if USE_OPENSSL
-
-        #if OPENSSL_KTLS_SUPPORT
+#if OPENSSL_KTLS_SUPPORT
         opts.updateSessionOptionsOnlyKtls(session);
-        const int enable_ktls = ((SSL_get_options(session.get()) & SSL_OP_ENABLE_KTLS) != 0);
+        const auto enable_ktls = ((SSL_get_options(session.get()) & SSL_OP_ENABLE_KTLS) != 0);
         debugs(83, 5, "KTLS: " << enable_ktls << " for TLS session=" << (void*)session.get());
-        #else
-        const int enable_ktls = 0;
-        #endif
+#else
+        const auto enable_ktls = false;
+#endif
 
         // without BIO, we would call SSL_set_fd(ssl.get(), fd) instead
         if (BIO *bio = Ssl::Bio::Create(fd, type, enable_ktls)) {
