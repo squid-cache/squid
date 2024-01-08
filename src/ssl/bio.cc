@@ -80,13 +80,12 @@ Ssl::Bio::Create(const int fd, Security::Io::Type type, const int enable_ktls)
 
     if (BIO *bio = BIO_new(useMethod)) {
         BIO_int_ctrl(bio, BIO_C_SET_FD, type, fd);
-        #if OPENSSL_KTLS_SUPPORT
-        if (enable_ktls){
-            if (BIO *bio_sock = BIO_new_socket(fd, BIO_NOCLOSE)) {
+        if (enable_ktls) {
+#if OPENSSL_KTLS_SUPPORT
+            if (BIO *bio_sock = BIO_new_socket(fd, BIO_NOCLOSE))
                 bio = BIO_push(bio, bio_sock);
-            }
+#endif
         }
-        #endif
         return bio;
     }
     return nullptr;
@@ -112,19 +111,16 @@ Ssl::Bio::~Bio()
 int Ssl::Bio::write(const char *buf, int size, BIO *table)
 {
     errno = 0;
-#if OPENSSL_KTLS_SUPPORT
     int result;
-    if (BIO_next(table)){
-    	// KTLS
+#if OPENSSL_KTLS_SUPPORT
+    if (BIO_next(table))
         result = BIO_write(BIO_next(table), buf, size);
-    }
-    else{
-        result = default_write_method(fd_, buf, size);
-    }
-#elif _SQUID_WINDOWS_
-    const int result = socket_write_method(fd_, buf, size);
+    else
+#endif
+#if _SQUID_WINDOWS_
+        result = socket_write_method(fd_, buf, size);
 #else
-    const int result = default_write_method(fd_, buf, size);
+        result = default_write_method(fd_, buf, size);
 #endif
     const int xerrno = errno;
     debugs(83, 5, "FD " << fd_ << " wrote " << result << " <= " << size);
@@ -144,19 +140,16 @@ int
 Ssl::Bio::read(char *buf, int size, BIO *table)
 {
     errno = 0;
-#if OPENSSL_KTLS_SUPPORT
     int result;
-    if (BIO_next(table)){
-    	// KTLS
+#if OPENSSL_KTLS_SUPPORT
+    if (BIO_next(table))
         result = BIO_read(BIO_next(table), buf, size);
-    }
-    else{
-        result = default_read_method(fd_, buf, size);
-    }
-#elif _SQUID_WINDOWS_
-    const int result = socket_read_method(fd_, buf, size);
+    else
+#endif
+#if _SQUID_WINDOWS_
+        result = socket_read_method(fd_, buf, size);
 #else
-    const int result = default_read_method(fd_, buf, size);
+        result = default_read_method(fd_, buf, size);
 #endif
     const int xerrno = errno;
     debugs(83, 5, "FD " << fd_ << " read " << result << " <= " << size);
@@ -298,7 +291,7 @@ Ssl::ServerBio::read(char *buf, int size, BIO *table)
     if (parsedHandshake) // done parsing TLS Hello
         return readAndGive(buf, size, table);
 #if OPENSSL_KTLS_SUPPORT
-    else if (BIO_next(table)) // KTLS
+    else if (BIO_next(table))
         return readAndParseKtls(buf, size, table);
 #endif
     else
@@ -365,12 +358,10 @@ Ssl::ServerBio::readAndBuffer(BIO *table, const int size)
 }
 
 #if OPENSSL_KTLS_SUPPORT
-
 /// Read and give everything to our parser. (KTLS support ver.)
 /// When/if parsing is finished (successfully or not), start giving to OpenSSL.
 ///
-/// Note:
-/// if using KTLS, we must not consume more socket data than the caller (OpenSSL) expects.
+/// \note If using KTLS, we must not consume more socket data than the caller (OpenSSL) expects.
 /// Otherwise, the session establishment potentially fails depending on the timing of packet arrival.
 /// Therefore, we peek the socket here and ensure we do not consume the socket data more than required.
 int
@@ -432,7 +423,7 @@ Ssl::ServerBio::peekAndBuffer(BIO *table)
     rbuf_toPeek.rawAppendFinish(space, result);
     return result;
 }
-#endif
+#endif /* OPENSSL_KTLS_SUPPORT */
 
 /// give previously buffered bytes to OpenSSL
 /// returns the number of bytes given
@@ -648,12 +639,10 @@ squid_bio_ctrl(BIO *table, int cmd, long arg1, void *arg2)
         case BIO_CTRL_WPENDING:
     */
     default:
-    	#if OPENSSL_KTLS_SUPPORT
-        if (BIO_next(table)){
-        	// KTLS
+#if OPENSSL_KTLS_SUPPORT
+        if (BIO_next(table))
             return BIO_ctrl(BIO_next(table), cmd, arg1, arg2);
-        }
-        #endif
+#endif
         return 0;
 
     }
