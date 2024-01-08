@@ -60,7 +60,7 @@ static BIO_METHOD SquidMethods = {
 #endif
 
 BIO *
-Ssl::Bio::Create(const int fd, Security::Io::Type type, const int enable_ktls)
+Ssl::Bio::Create(const int fd, Security::Io::Type type, const bool enable_ktls)
 {
 #if HAVE_LIBCRYPTO_BIO_METH_NEW
     if (!SquidMethods) {
