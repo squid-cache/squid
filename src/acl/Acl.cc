@@ -118,13 +118,13 @@ AclNode *
 AclNode::FindByName(const char *name)
 {
     AclNode *a;
-    debugs(28, 9, "AclNode::FindByName '" << name << "'");
+    debugs(28, 9, "name=" << name);
 
     for (a = Config.aclList; a; a = a->next)
         if (!strcasecmp(a->name, name))
             return a;
 
-    debugs(28, 9, "AclNode::FindByName found no match");
+    debugs(28, 9, "found no match");
 
     return nullptr;
 }
@@ -364,7 +364,7 @@ AclNode::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
         auth_match = (acl_proxy_auth_match_cache *)link->data;
 
         if (auth_match->acl_data == this) {
-            debugs(28, 4, "AclNode::cacheMatchAcl: cache hit on acl '" << name << "' (" << this << ")");
+            debugs(28, 4, "cache hit on acl '" << name << "' (" << this << ")");
             return auth_match->matchrv;
         }
 
@@ -373,7 +373,7 @@ AclNode::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
 
     auth_match = new acl_proxy_auth_match_cache(matchForCache(checklist), this);
     dlinkAddTail(auth_match, &auth_match->link, cache);
-    debugs(28, 4, "AclNode::cacheMatchAcl: miss for '" << name << "'. Adding result " << auth_match->matchrv);
+    debugs(28, 4, "miss for acl '" << name << "'. Adding result " << auth_match->matchrv);
     return auth_match->matchrv;
 }
 
@@ -427,7 +427,7 @@ AclNode::~AclNode()
 void
 AclNode::Initialize()
 {
-    AclNode *a = Config.aclList;
+    auto *a = Config.aclList;
     debugs(53, 3, "AclNode::Initialize");
 
     while (a) {

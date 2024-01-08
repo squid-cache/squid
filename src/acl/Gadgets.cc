@@ -76,9 +76,7 @@ aclIsProxyAuth(const char *name)
 
     debugs(28, 5, "aclIsProxyAuth: called for " << name);
 
-    AclNode *a;
-
-    if ((a = AclNode::FindByName(name))) {
+    if (const auto *a = AclNode::FindByName(name)) {
         debugs(28, 5, "aclIsProxyAuth: returning " << a->isProxyAuth());
         return a->isProxyAuth();
     }
@@ -252,7 +250,7 @@ aclDestroyAcls(AclNode ** head)
     if (AclSet *acls = RegisteredAcls) {
         debugs(28, 8, "deleting all " << acls->size() << " ACLs");
         while (!acls->empty()) {
-            AclNode *acl = *acls->begin();
+            auto *acl = *acls->begin();
             // We use centralized deletion (this function) so ~AclNode should not
             // delete other ACLs, but we still deregister first to prevent any
             // accesses to the being-deleted AclNode via RegisteredAcls.
