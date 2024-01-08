@@ -82,7 +82,7 @@ Ssl::Bio::Create(const int fd, Security::Io::Type type, const bool enable_ktls)
         BIO_int_ctrl(bio, BIO_C_SET_FD, type, fd);
         if (enable_ktls) {
 #if OPENSSL_KTLS_SUPPORT
-            if (BIO *bio_sock = BIO_new_socket(fd, BIO_NOCLOSE))
+            if (auto *bio_sock = BIO_new_socket(fd, BIO_NOCLOSE))
                 bio = BIO_push(bio, bio_sock);
 #endif
         }
@@ -375,8 +375,8 @@ Ssl::ServerBio::readAndParseKtls(char *buf, const int size, BIO *table)
         if (!parser_.parseHello(rbuf_toPeek)) {
             // need more data to finish parsing
             const int result2 = readAndBuffer(table, result);   // safe to read "result" at most
-            if ( result2 != result ){
-                debugs(83, DBG_IMPORTANT, "WARNING: expected to read " << result << " bytes but read: " << result2 );
+            if (result2 != result) {
+                debugs(83, DBG_IMPORTANT, "WARNING: expected to read " << result << " bytes but read: " << result2);
 
                 // clone rbuf
                 rbuf_toPeek.clear();
@@ -394,7 +394,6 @@ Ssl::ServerBio::readAndParseKtls(char *buf, const int size, BIO *table)
     }
 
     rbuf_toPeek.clear();
-
     return giveBuffered(buf, size);
 }
 
@@ -404,19 +403,18 @@ int
 Ssl::ServerBio::peekAndBuffer(BIO *table)
 {
     char *space = rbuf_toPeek.rawAppendStart(SQUID_TCP_SO_RCVBUF);
-    const int result = recv( fd_, space, SQUID_TCP_SO_RCVBUF, MSG_PEEK );
+    const auto result = recv(fd_, space, SQUID_TCP_SO_RCVBUF, MSG_PEEK);
     if (result <= 0){
-        const int xerrno = errno;
+        const auto xerrno = errno;
         debugs(83, 5, "FD " << fd_ << " peek " << result << " <= " << SQUID_TCP_SO_RCVBUF);
 
         BIO_clear_retry_flags(table);
         if (result < 0) {
-            const bool ignoreError = ignoreErrno(xerrno) != 0;
+            const auto ignoreError = (ignoreErrno(xerrno) != 0);
             debugs(83, 5, "error: " << xerrno << " ignored: " << ignoreError);
             if (ignoreError)
                 BIO_set_retry_read(table);
         }
-
         return result;
     }
 
