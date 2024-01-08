@@ -60,7 +60,7 @@ Make(TypeName typeName)
         assert(false); // not reached
     }
 
-    AclNode *result = (pos->second)(pos->first);
+    auto *result = (pos->second)(pos->first);
     debugs(28, 4, typeName << '=' << result);
     assert(result);
     return result;
@@ -117,10 +117,9 @@ void AclNode::operator delete(void *)
 AclNode *
 AclNode::FindByName(const char *name)
 {
-    AclNode *a;
     debugs(28, 9, "name=" << name);
 
-    for (a = Config.aclList; a; a = a->next)
+    for (auto *a = Config.aclList; a; a = a->next)
         if (!strcasecmp(a->name, name))
             return a;
 
