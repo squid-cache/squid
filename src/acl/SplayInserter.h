@@ -40,10 +40,12 @@ private:
     /// including those representing sets or ranges. The order specified by this
     /// function must be the same as the order specified by the SPLAYCMP
     /// function used later by ACL::match().
-    /// \retval 0 The two values overlap. Here, two values overlap if they are
-    /// identical, if one contains all values from another, and if one contains
-    /// at least one value from another.
-    static int Compare(const Value &, const Value &);
+    /// \retval -1 when a < b (this function defines what "less" means in Merge() context)
+    /// \retval +1 when b < a
+    /// \retval 0 all other cases (i.e. when a and b overlap)
+    /// Here, two values overlap if they are identical, if one contains all
+    /// values from another, or if one contains at least one value from another.
+    static int Compare(const Value &a, const Value &b);
 
     /// whether the set of values matched by `a` contains the entire set of
     /// values matched by `b`, including cases where `a` is identical to `b`
