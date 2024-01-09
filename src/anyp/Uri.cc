@@ -127,8 +127,8 @@ AnyP::Uri::Decode(const SBuf &buf)
 
     while (!tok.atEnd())
     {
-        if (!tok.skip('%')) // should never happen
-            throw TextException("incomplete %-encoded triplet at end of input", Here());
+        const auto foundPercent = tok.skip('%');
+        Assure2(foundPercent, "Error decoding Uri: '%' expected but not found");
 
         if (!tok.prefix(token, HexDigits, 2) || token.length() != 2)
             throw TextException("incomplete or invalid %-encoded triplet", Here());
