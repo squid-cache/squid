@@ -362,7 +362,7 @@ MimeIcon::load()
 
     if (const auto e = storeGetPublic(url_, Http::METHOD_GET)) {
         // do not overwrite an already stored icon
-        e->abandon(__FUNCTION__);
+        e->abandon(__func__);
         return;
     }
 

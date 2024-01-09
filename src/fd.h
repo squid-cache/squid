@@ -11,10 +11,16 @@
 #ifndef SQUID_FD_H_
 #define SQUID_FD_H_
 
+/// distinguishes reading/importing I/O operations from their writing/exporting counterparts
+enum class IoDirection {
+    Read,
+    Write
+};
+
 void fd_close(int fd);
 void fd_open(int fd, unsigned int type, const char *);
 void fd_note(int fd, const char *);
-void fd_bytes(int fd, int len, unsigned int type);
+void fd_bytes(int fd, int len, IoDirection);
 void fdDumpOpen(void);
 int fdUsageHigh(void);
 void fdAdjustReserved(void);
