@@ -255,7 +255,7 @@ static void free_configuration_includes_quoted_values(bool *recognizeQuotedValue
 static void parse_on_unsupported_protocol(acl_access **access);
 static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
 static void free_on_unsupported_protocol(acl_access **access);
-static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, AclNode *acl = nullptr);
+static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, Acl::AclNode *acl = nullptr);
 static void parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuards);
 static void dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocolAccess *protoGuards);
 static void free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuards);
@@ -1491,7 +1491,7 @@ free_SBufList(SBufList *list)
 }
 
 static void
-dump_acl(StoreEntry * entry, const char *name, AclNode * ae)
+dump_acl(StoreEntry * entry, const char *name, Acl::AclNode * ae)
 {
     PackableStream os(*entry);
     while (ae != nullptr) {
@@ -1502,13 +1502,13 @@ dump_acl(StoreEntry * entry, const char *name, AclNode * ae)
 }
 
 static void
-parse_acl(AclNode ** ae)
+parse_acl(Acl::AclNode ** ae)
 {
-    AclNode::ParseAclLine(LegacyParser, ae);
+    Acl::AclNode::ParseAclLine(LegacyParser, ae);
 }
 
 static void
-free_acl(AclNode ** ae)
+free_acl(Acl::AclNode ** ae)
 {
     aclDestroyAcls(ae);
 }
@@ -2024,7 +2024,7 @@ dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 #endif /* USE_AUTH */
 
 static void
-ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, AclNode *acl)
+ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, Acl::AclNode *acl)
 {
     assert(access);
     SBuf name;
@@ -4724,7 +4724,7 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
         *ftp_epsv = nullptr;
 
         if (ftpEpsvDeprecatedAction == Acl::Answer(ACCESS_DENIED)) {
-            if (auto *a = AclNode::FindByName("all"))
+            if (auto *a = Acl::AclNode::FindByName("all"))
                 ParseAclWithAction(ftp_epsv, ftpEpsvDeprecatedAction, "ftp_epsv", a);
             else {
                 self_destruct();

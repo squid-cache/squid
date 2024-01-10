@@ -806,7 +806,7 @@ serverConnectionsOpen(void)
         icmpEngine.Open();
         netdbInit();
         asnInit();
-        AclNode::Initialize();
+        Acl::AclNode::Initialize();
         peerSelectInit();
 
         carpInit();

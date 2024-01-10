@@ -1014,7 +1014,7 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
 /// Asks the helper (if needed) or returns the [cached] result (otherwise).
 /// Does not support "background" lookups. See also: ACLExternal::Start().
 void
-ACLExternal::StartLookup(ACLFilledChecklist &checklist, const AclNode &acl)
+ACLExternal::StartLookup(ACLFilledChecklist &checklist, const Acl::AclNode &acl)
 {
     const auto &me = dynamic_cast<const ACLExternal&>(acl);
     me.startLookup(&checklist, me.data, false);

@@ -28,7 +28,7 @@
 
 class fde;
 
-// TODO: move to new AclNode framework
+// TODO: move to new Acl::AclNode framework
 class acl_tos
 {
     CBDATA_CLASS(acl_tos);
@@ -42,7 +42,7 @@ public:
     tos_t tos;
 };
 
-// TODO: move to new AclNode framework
+// TODO: move to new Acl::AclNode framework
 class acl_nfmark
 {
     CBDATA_CLASS(acl_nfmark);

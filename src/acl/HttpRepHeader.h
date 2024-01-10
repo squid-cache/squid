@@ -20,7 +20,7 @@ namespace Acl
 class HttpRepHeaderCheck: public ParameterizedNode< ACLData<HttpHeader*> >
 {
 public:
-    /* AclNode API */
+    /* Acl::AclNode API */
     int match(ACLChecklist *) override;
     bool requiresReply() const override { return true; }
 };

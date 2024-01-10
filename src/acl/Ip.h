@@ -41,7 +41,7 @@ private:
     static bool DecodeMask(const char *asc, Ip::Address &mask, int string_format_type);
 };
 
-class ACLIP : public AclNode
+class ACLIP : public Acl::AclNode
 {
 public:
     void *operator new(size_t);

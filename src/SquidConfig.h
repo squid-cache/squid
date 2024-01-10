@@ -353,7 +353,7 @@ public:
 
     std::chrono::nanoseconds paranoid_hit_validation;
 
-    class AclNode *aclList;
+    class Acl::AclNode *aclList;
 
     struct {
         acl_access *http;

@@ -13,13 +13,13 @@
 
 #include "acl/Acl.h"
 
-// AclNode-related code used by authentication-related code. This code is not in
+// Acl::AclNode-related code used by authentication-related code. This code is not in
 // auth/Gadgets to avoid making auth/libauth dependent on acl/libstate because
 // acl/libstate already depends on auth/libauth.
 
 class ACLChecklist;
 /// \ingroup AuthAPI
-Acl::Answer AuthenticateAcl(ACLChecklist *, const AclNode &);
+Acl::Answer AuthenticateAcl(ACLChecklist *, const Acl::AclNode &);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTH_ACL_H */

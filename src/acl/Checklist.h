@@ -29,7 +29,7 @@ class ACLChecklist
 public:
 
     /// a function that initiates asynchronous ACL checks; see goAsync()
-    using AsyncStarter = void (ACLFilledChecklist &, const AclNode &);
+    using AsyncStarter = void (ACLFilledChecklist &, const Acl::AclNode &);
 
 public:
     ACLChecklist();
@@ -104,11 +104,11 @@ public:
 
     /// If slow lookups are allowed, switches into "async in progress" state.
     /// Otherwise, returns false; the caller is expected to handle the failure.
-    bool goAsync(AsyncStarter, const AclNode &);
+    bool goAsync(AsyncStarter, const Acl::AclNode &);
 
     /// Matches (or resumes matching of) a child node while maintaning
     /// resumption breadcrumbs if a [grand]child node goes async.
-    bool matchChild(const Acl::InnerNode *parent, Acl::Nodes::const_iterator pos, const AclNode *child);
+    bool matchChild(const Acl::InnerNode *parent, Acl::Nodes::const_iterator pos, const Acl::AclNode *child);
 
     /// Whether we should continue to match tree nodes or stop/pause.
     bool keepMatching() const { return !finished() && !asyncInProgress(); }
@@ -130,7 +130,7 @@ public:
 
     // XXX: ACLs that need request or reply have to use ACLFilledChecklist and
     // should do their own checks so that we do not have to povide these two
-    // for AclNode::checklistMatches to use
+    // for Acl::AclNode::checklistMatches to use
     virtual bool hasRequest() const = 0;
     virtual bool hasReply() const = 0;
     virtual bool hasAle() const = 0;
@@ -167,7 +167,7 @@ public:
     void resumeNonBlockingCheck();
 
 private: /* internal methods */
-    /// Position of a child node within an AclNode tree.
+    /// Position of a child node within an Acl::AclNode tree.
     class Breadcrumb
     {
     public:
@@ -176,11 +176,11 @@ private: /* internal methods */
         bool operator ==(const Breadcrumb &b) const { return parent == b.parent && (!parent || position == b.position); }
         bool operator !=(const Breadcrumb &b) const { return !this->operator ==(b); }
         void clear() { parent = nullptr; }
-        const Acl::InnerNode *parent; ///< intermediate node in the AclNode tree
+        const Acl::InnerNode *parent; ///< intermediate node in the Acl::AclNode tree
         Acl::Nodes::const_iterator position; ///< child position inside parent
     };
 
-    /// possible outcomes when trying to match a single AclNode node in a list
+    /// possible outcomes when trying to match a single Acl::AclNode node in a list
     typedef enum { nmrMatch, nmrMismatch, nmrFinished, nmrNeedsAsync }
     NodeMatchingResult;
 
@@ -203,7 +203,7 @@ private: /* internal methods */
 
     bool callerGone();
 
-    /// suspended (due to an async lookup) matches() in the AclNode tree
+    /// suspended (due to an async lookup) matches() in the Acl::AclNode tree
     std::stack<Breadcrumb> matchPath;
     /// the list of actions which must ignored during acl checks
     std::vector<Acl::Answer> bannedActions_;

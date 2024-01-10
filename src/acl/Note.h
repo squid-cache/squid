@@ -31,7 +31,7 @@ public:
 class NoteCheck: public Acl::AnnotationCheck
 {
 public:
-    /* AclNode API */
+    /* Acl::AclNode API */
     int match(ACLChecklist *) override;
     bool requiresRequest() const override { return true; }
 

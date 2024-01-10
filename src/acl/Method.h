@@ -20,7 +20,7 @@ namespace Acl
 class MethodCheck: public ParameterizedNode< ACLData<HttpRequestMethod> >
 {
 public:
-    /* AclNode API */
+    /* Acl::AclNode API */
     int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
 };

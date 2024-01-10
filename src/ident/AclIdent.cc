@@ -88,7 +88,7 @@ ACLIdent::empty () const
 }
 
 void
-ACLIdent::StartLookup(ACLFilledChecklist &cl, const AclNode &)
+ACLIdent::StartLookup(ACLFilledChecklist &cl, const Acl::AclNode &)
 {
     const ConnStateData *conn = cl.conn();
     // check that ACLIdent::match() tested this lookup precondition

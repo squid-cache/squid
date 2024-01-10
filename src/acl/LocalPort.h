@@ -19,7 +19,7 @@ namespace Acl
 class LocalPortCheck: public ParameterizedNode< ACLData<int> >
 {
 public:
-    /* AclNode API */
+    /* Acl::AclNode API */
     int match(ACLChecklist *) override;
 };
 

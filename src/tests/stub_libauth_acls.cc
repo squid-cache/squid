@@ -15,7 +15,7 @@
 #include "acl/Acl.h" /* for Acl::Answer */
 
 #include "auth/Acl.h"
-Acl::Answer AuthenticateAcl(ACLChecklist *, const AclNode &) STUB_RETVAL(ACCESS_DENIED)
+Acl::Answer AuthenticateAcl(ACLChecklist *, const Acl::AclNode &) STUB_RETVAL(ACCESS_DENIED)
 
 #include "auth/AclMaxUserIp.h"
 ACLMaxUserIP::ACLMaxUserIP (char const *) STUB

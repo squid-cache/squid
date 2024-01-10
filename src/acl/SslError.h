@@ -20,7 +20,7 @@ namespace Acl
 class CertificateErrorCheck: public ParameterizedNode< ACLData<const Security::CertErrors *> >
 {
 public:
-    /* AclNode API */
+    /* Acl::AclNode API */
     int match(ACLChecklist *) override;
 };
 

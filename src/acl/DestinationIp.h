@@ -18,7 +18,7 @@ class ACLDestinationIP : public ACLIP
     MEMPROXY_CLASS(ACLDestinationIP);
 
 public:
-    static void StartLookup(ACLFilledChecklist &, const AclNode &);
+    static void StartLookup(ACLFilledChecklist &, const Acl::AclNode &);
 
     char const *typeString() const override;
     const Acl::Options &options() override;

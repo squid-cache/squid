@@ -11,7 +11,6 @@
 
 #include "base/RefCount.h"
 
-class AclNode;
 class ACLChecklist;
 class ACLFilledChecklist;
 class ACLList;
@@ -22,6 +21,7 @@ class AclSizeLimit;
 namespace Acl
 {
 
+class AclNode;
 class Address;
 class AndNode;
 class Answer;
