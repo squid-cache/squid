@@ -117,15 +117,15 @@ Acl::SplayInserter<char*>::Compare(const Value &a, const Value &b)
 
 template <>
 bool
-Acl::SplayInserter<char*>::AcontainsEntireB(const Value &a, const Value &b)
+Acl::SplayInserter<char*>::IsSubset(const Value &a, const Value &b)
 {
     // A value that starts with a dot matches a set of the corresponding domain
     // names. Other values are individual domain names that match themselves.
     // \sa matchDomainName()
 
     if (*a == '.' && *b == '.') {
-        // A and B are overlapping sets. Fewer characters imply a bigger set.
-        return strlen(a) <= strlen(b);
+        // A and B are overlapping sets. More characters imply a smaller set.
+        return strlen(a) >= strlen(b);
     }
 
     if (*a != '.' && *b != '.') {
@@ -135,8 +135,9 @@ Acl::SplayInserter<char*>::AcontainsEntireB(const Value &a, const Value &b)
 
     // Either A or B is a set. The other one is a domain name inside that set.
     // That domain name may use fewer or more characters (e.g., both example.com
-    // and x.example.com domains belong to the same .example.com set).
-    return *a == '.';
+    // and x.example.com domains belong to the same .example.com set), so we
+    // cannot use a strlen()-based test here.
+    return *b == '.';
 }
 
 template <>

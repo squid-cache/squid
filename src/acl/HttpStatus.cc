@@ -48,9 +48,9 @@ Acl::SplayInserter<acl_httpstatus_data*>::Compare(const Value &a, const Value &b
 
 template <>
 bool
-Acl::SplayInserter<acl_httpstatus_data*>::AcontainsEntireB(const Value &a, const Value &b)
+Acl::SplayInserter<acl_httpstatus_data*>::IsSubset(const Value &a, const Value &b)
 {
-    return a->status1 <= b->status1 && b->status2 <= a->status2;
+    return b->status1 <= a->status1 && a->status2 <= b->status2;
 }
 
 template <>

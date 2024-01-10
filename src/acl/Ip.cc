@@ -113,9 +113,9 @@ Acl::SplayInserter<acl_ip_data*>::Compare(const Value &a, const Value &b)
 
 template <>
 bool
-Acl::SplayInserter<acl_ip_data*>::AcontainsEntireB(const Value &a, const Value &b)
+Acl::SplayInserter<acl_ip_data*>::IsSubset(const Value &a, const Value &b)
 {
-    return a->firstAddress() <= b->firstAddress() && b->lastAddress() <= a->lastAddress();
+    return b->firstAddress() <= a->firstAddress() && a->lastAddress() <= b->lastAddress();
 }
 
 template <>

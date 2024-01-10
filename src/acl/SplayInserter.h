@@ -50,7 +50,7 @@ private:
     /// whether the set of values matched by `a` contains the entire set of
     /// values matched by `b`, including cases where `a` is identical to `b`
     /// \prec The two values overlap: Compare(a, b) == 0
-    static bool AcontainsEntireB(const Value &a, const Value &b);
+    static bool IsSubset(const Value &a, const Value &b);
 
     /// Creates a new Value that matches all individual values matched by `a`
     /// and all individual values matched by `b` but no other values.
@@ -72,14 +72,14 @@ Acl::SplayInserter<DataValue>::Merge(Splay<Value> &storage, Value &&newItem)
         const auto oldItem = *oldItemPointer;
         assert(oldItem);
 
-        if (AcontainsEntireB(oldItem, newItem)) {
+        if (IsSubset(newItem, oldItem)) {
             debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Ignoring " << newItem << " because it is already covered by " << oldItem <<
                    Debug::Extra << "advice: Remove value " << newItem << " from the ACL named " << AclMatchedName);
             DestroyValue(newItem);
             return;
         }
 
-        if (AcontainsEntireB(newItem, oldItem)) {
+        if (IsSubset(oldItem, newItem)) {
             debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Ignoring earlier " << oldItem << " because it is covered by " << newItem <<
                    Debug::Extra << "advice: Remove value " << oldItem << " from the ACL named " << AclMatchedName);
             storage.remove(oldItem, comparator);
