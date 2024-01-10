@@ -70,7 +70,6 @@ Acl::SplayInserter<DataValue>::Merge(Splay<Value> &storage, Value &&newItem)
     const auto comparator = &SplayInserter<Value>::Compare;
     while (const auto oldItemPointer = storage.insert(newItem, comparator)) {
         const auto oldItem = *oldItemPointer;
-        assert(oldItem);
 
         if (IsSubset(newItem, oldItem)) {
             debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Ignoring " << newItem << " because it is already covered by " << oldItem <<
