@@ -308,7 +308,12 @@ Ssl::ServerBio::readAndGive(char *buf, const int size, BIO *table)
         return giveBuffered(buf, size);
 
     if (record_) {
-        const int result = readAndBuffer(table, SQUID_TCP_SO_RCVBUF);
+        int read_size = SQUID_TCP_SO_RCVBUF;
+#if OPENSSL_KTLS_SUPPORT
+        if (BIO_next(table))
+            read_size = size;
+#endif
+        const int result = readAndBuffer(table, read_size);
         if (result <= 0)
             return result;
         return giveBuffered(buf, size);
@@ -361,9 +366,11 @@ Ssl::ServerBio::readAndBuffer(BIO *table, const int size)
 /// Read and give everything to our parser. (KTLS support ver.)
 /// When/if parsing is finished (successfully or not), start giving to OpenSSL.
 ///
-/// \note If using KTLS, we must not consume more socket data than the caller (OpenSSL) expects.
-/// Otherwise, the session establishment potentially fails depending on the timing of packet arrival.
-/// Therefore, we peek the socket here and ensure we do not consume the socket data more than required.
+/// \note If using KTLS, we should not in general consume more data from OS socket buffer 
+/// than the caller (OpenSSL) expects. Otherwise, the session establishment potentially 
+/// fails depending on (for example) the timing of packet arrival by reading past the handshake boundary.
+/// However, the current Squid needs to catch the TLS Hello message before passing it to OpenSSL.
+/// Therefore, we peek the socket here and ensure we do not consume the socket buffer more than allowed.
 int
 Ssl::ServerBio::readAndParseKtls(char *buf, const int size, BIO *table)
 {
