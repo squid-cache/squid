@@ -9,7 +9,9 @@
 #ifndef SQUID_ACLCHECKLIST_H
 #define SQUID_ACLCHECKLIST_H
 
+#include "acl/Acl.h"
 #include "acl/InnerNode.h"
+#include "cbdata.h"
 #include <stack>
 #include <vector>
 

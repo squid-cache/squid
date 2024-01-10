@@ -9,7 +9,7 @@
 #ifndef SQUID_ACLARP_H
 #define SQUID_ACLARP_H
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 #include "eui/Eui48.h"
 
 #include <set>

@@ -15,6 +15,7 @@
 #include "acl/Address.h"
 #include "acl/Gadgets.h"
 #include "acl/MethodData.h"
+#include "acl/Node.h"
 #include "acl/Tree.h"
 #include "anyp/PortCfg.h"
 #include "anyp/UriScheme.h"

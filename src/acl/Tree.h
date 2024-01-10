@@ -9,7 +9,9 @@
 #ifndef SQUID_ACL_TREE_H
 #define SQUID_ACL_TREE_H
 
+#include "acl/Acl.h"
 #include "acl/BoolOps.h"
+#include "cbdata.h"
 #include "sbuf/List.h"
 
 namespace Acl

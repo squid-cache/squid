@@ -9,7 +9,7 @@
 #ifndef SQUID_ACLEUI64_H
 #define SQUID_ACLEUI64_H
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 #include "eui/Eui64.h"
 
 #include <set>

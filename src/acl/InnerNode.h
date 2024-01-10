@@ -9,7 +9,7 @@
 #ifndef SQUID_ACL_INNER_NODE_H
 #define SQUID_ACL_INNER_NODE_H
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 #include <vector>
 
 namespace Acl

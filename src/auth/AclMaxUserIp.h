@@ -11,7 +11,7 @@
 
 #if USE_AUTH
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 #include "auth/UserRequest.h"
 
 class ACLMaxUserIP : public Acl::Node

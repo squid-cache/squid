@@ -9,7 +9,7 @@
 #ifndef SQUID_ACLMAXCONNECTION_H
 #define SQUID_ACLMAXCONNECTION_H
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 
 /// \ingroup ACLAPI
 class ACLMaxConnection : public Acl::Node

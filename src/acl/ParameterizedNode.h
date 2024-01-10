@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_ACL_PARAMETERIZEDNODE_H
 #define SQUID_SRC_ACL_PARAMETERIZEDNODE_H
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 #include "base/Assure.h"
 
 #include <memory>

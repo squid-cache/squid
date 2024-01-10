@@ -9,8 +9,8 @@
 #ifndef SQUID_ACLIP_H
 #define SQUID_ACLIP_H
 
-#include "acl/Acl.h"
 #include "acl/Data.h"
+#include "acl/Node.h"
 #include "ip/Address.h"
 #include "splay.h"
 

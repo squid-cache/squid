@@ -59,6 +59,7 @@
 #include "acl/MethodData.h"
 #include "acl/MyPortName.h"
 #include "acl/Note.h"
+#include "acl/Node.h"
 #include "acl/NoteData.h"
 #include "acl/PeerName.h"
 #include "acl/Protocol.h"
