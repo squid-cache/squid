@@ -14,7 +14,7 @@
 
 #include <set>
 
-class ACLEui64 : public Acl::AclNode
+class ACLEui64 : public Acl::Node
 {
     MEMPROXY_CLASS(ACLEui64);
 

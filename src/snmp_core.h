@@ -61,7 +61,7 @@ namespace Acl
 class SnmpCommunityCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    /* Acl::AclNode API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
 };
 

@@ -15,7 +15,7 @@
 #include <iosfwd>
 #include <vector>
 
-// After line continuation is handled by the preprocessor, an Acl::AclNode object
+// After line continuation is handled by the preprocessor, an Acl::Node object
 // configuration can be visualized as a sequence of same-name "acl ..." lines:
 //
 // L1: acl exampleA typeT parameter1 -i parameter2 parameter3
@@ -27,7 +27,7 @@
 //
 // * Global (e.g., "-n"): Applies to all parameters regardless of where the
 //   option was discovered/parsed (e.g., "-n" on L3 affects parameter2 on L1).
-//   Declared by Acl::AclNode class kids (or equivalent) via Acl::AclNode::options().
+//   Declared by Acl::Node class kids (or equivalent) via Acl::Node::options().
 //
 // * Line (e.g., "-i"): Applies to the yet unparsed ACL parameters of the
 //   current "acl ..." line (e.g., "-i" on L1 has no effect on parameter4 on L2)

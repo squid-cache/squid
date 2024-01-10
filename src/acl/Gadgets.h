@@ -19,13 +19,13 @@ class dlink_list;
 class StoreEntry;
 class wordlist;
 
-/// Register an Acl::AclNode object for future deletion. Repeated registrations are OK.
+/// Register an Acl::Node object for future deletion. Repeated registrations are OK.
 /// \ingroup ACLAPI
-void aclRegister(Acl::AclNode *acl);
+void aclRegister(Acl::Node *acl);
 /// \ingroup ACLAPI
 void aclDestroyAccessList(acl_access **list);
 /// \ingroup ACLAPI
-void aclDestroyAcls(Acl::AclNode **);
+void aclDestroyAcls(Acl::Node **);
 /// \ingroup ACLAPI
 void aclDestroyAclList(ACLList **);
 /// Parses a single line of a "action followed by acls" directive (e.g., http_access).
@@ -54,7 +54,7 @@ void aclParseDenyInfoLine(AclDenyInfoList **);
 /// \ingroup ACLAPI
 void aclDestroyDenyInfoList(AclDenyInfoList **);
 /// \ingroup ACLAPI
-wordlist *aclDumpGeneric(const Acl::AclNode *);
+wordlist *aclDumpGeneric(const Acl::Node *);
 /// \ingroup ACLAPI
 void aclCacheMatchFlush(dlink_list * cache);
 /// \ingroup ACLAPI

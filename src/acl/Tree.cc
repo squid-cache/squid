@@ -41,7 +41,7 @@ Acl::Tree::actionAt(const Nodes::size_type pos) const
 }
 
 void
-Acl::Tree::add(Acl::AclNode *rule, const Acl::Answer &action)
+Acl::Tree::add(Acl::Node *rule, const Acl::Answer &action)
 {
     // either all rules have actions or none
     assert(nodes.size() == actions.size());
@@ -50,7 +50,7 @@ Acl::Tree::add(Acl::AclNode *rule, const Acl::Answer &action)
 }
 
 void
-Acl::Tree::add(Acl::AclNode *rule)
+Acl::Tree::add(Acl::Node *rule)
 {
     // either all rules have actions or none
     assert(actions.empty());

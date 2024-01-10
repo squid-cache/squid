@@ -20,7 +20,7 @@ namespace Acl
 class SourceAsnCheck: public ParameterizedNode< ACLData<Ip::Address> >
 {
 public:
-    /* Acl::AclNode API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
 };
 

@@ -21,7 +21,7 @@ class AclSizeLimit;
 namespace Acl
 {
 
-class AclNode;
+class Node;
 class Address;
 class AndNode;
 class Answer;

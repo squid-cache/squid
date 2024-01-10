@@ -24,7 +24,7 @@ struct acl_httpstatus_data {
 };
 
 /// \ingroup ACLAPI
-class ACLHTTPStatus : public Acl::AclNode
+class ACLHTTPStatus : public Acl::Node
 {
     MEMPROXY_CLASS(ACLHTTPStatus);
 

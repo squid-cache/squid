@@ -24,10 +24,10 @@ class NotNode: public InnerNode
     MEMPROXY_CLASS(NotNode);
 
 public:
-    explicit NotNode(Acl::AclNode *acl);
+    explicit NotNode(Acl::Node *acl);
 
 private:
-    /* Acl::AclNode API */
+    /* Acl::Node API */
     char const *typeString() const override;
     void parse() override;
     SBufList dump() const override;
@@ -64,7 +64,7 @@ public:
     /// on its action
     virtual bool bannedAction(ACLChecklist *, Nodes::const_iterator) const;
 
-    /* Acl::AclNode API */
+    /* Acl::Node API */
     char const *typeString() const override;
     void parse() override;
 

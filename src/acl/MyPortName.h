@@ -19,7 +19,7 @@ namespace Acl
 class MyPortNameCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    /* Acl::AclNode API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
 };
 

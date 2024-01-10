@@ -25,7 +25,7 @@
  * \retval ACCESS_ALLOWED       user authenticated and authorized
  */
 Acl::Answer
-AuthenticateAcl(ACLChecklist *ch, const Acl::AclNode &acl)
+AuthenticateAcl(ACLChecklist *ch, const Acl::Node &acl)
 {
     ACLFilledChecklist *checklist = Filled(ch);
     const auto request = checklist->request;

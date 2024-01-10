@@ -11,7 +11,7 @@
 
 #include "acl/Acl.h"
 
-class ACLRandom : public Acl::AclNode
+class ACLRandom : public Acl::Node
 {
     MEMPROXY_CLASS(ACLRandom);
 

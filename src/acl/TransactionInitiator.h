@@ -17,7 +17,7 @@ namespace Acl
 {
 
 /// transaction_initiator ACL
-class TransactionInitiator : public Acl::AclNode
+class TransactionInitiator : public Acl::Node
 {
     MEMPROXY_CLASS(TransactionInitiator);
 

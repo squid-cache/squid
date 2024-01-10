@@ -20,7 +20,7 @@ namespace Acl
 class HierCodeCheck: public ParameterizedNode< ACLData<hier_code> >
 {
 public:
-    /* Acl::AclNode API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
 };

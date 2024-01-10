@@ -16,17 +16,17 @@
 #include "acl/Data.h"
 
 /// \ingroup ACLAPI
-class ACLIdent : public Acl::AclNode
+class ACLIdent : public Acl::Node
 {
     MEMPROXY_CLASS(ACLIdent);
 
 public:
-    static void StartLookup(ACLFilledChecklist &, const Acl::AclNode &);
+    static void StartLookup(ACLFilledChecklist &, const Acl::Node &);
 
     ACLIdent(ACLData<char const *> *newData, char const *);
     ~ACLIdent() override;
 
-    /* Acl::AclNode API */
+    /* Acl::Node API */
     char const *typeString() const override;
     void parse() override;
     bool isProxyAuth() const override {return true;}
@@ -37,7 +37,7 @@ public:
 private:
     static void LookupDone(const char *ident, void *data);
 
-    /* Acl::AclNode API */
+    /* Acl::Node API */
     const Acl::Options &lineOptions() override;
 
     ACLData<char const *> *data;

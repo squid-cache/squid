@@ -15,7 +15,7 @@
 namespace Acl
 {
 
-class ConnectionsEncrypted : public Acl::AclNode
+class ConnectionsEncrypted : public Acl::Node
 {
     MEMPROXY_CLASS(ConnectionsEncrypted);
 

@@ -79,7 +79,7 @@ ACLChecklist::preCheck(const char *what)
 }
 
 bool
-ACLChecklist::matchChild(const Acl::InnerNode *current, Acl::Nodes::const_iterator pos, const Acl::AclNode *child)
+ACLChecklist::matchChild(const Acl::InnerNode *current, Acl::Nodes::const_iterator pos, const Acl::Node *child)
 {
     assert(current && child);
 
@@ -112,7 +112,7 @@ ACLChecklist::matchChild(const Acl::InnerNode *current, Acl::Nodes::const_iterat
 }
 
 bool
-ACLChecklist::goAsync(AsyncStarter starter, const Acl::AclNode &acl)
+ACLChecklist::goAsync(AsyncStarter starter, const Acl::Node &acl)
 {
     assert(!asyncInProgress());
     assert(matchLoc_.parent);
@@ -207,7 +207,7 @@ ACLChecklist::nonBlockingCheck(ACLCB * callback_, void *callback_data_)
     callback_data = cbdataReference(callback_data_);
     asyncCaller_ = true;
 
-    /** The Acl::AclNode List should NEVER be NULL when calling this method.
+    /** The Acl::Node List should NEVER be NULL when calling this method.
      * Always caller should check for NULL and handle appropriate to its needs first.
      * We cannot select a sensible default for all callers here. */
     if (accessList == nullptr) {

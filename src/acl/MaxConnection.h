@@ -12,7 +12,7 @@
 #include "acl/Acl.h"
 
 /// \ingroup ACLAPI
-class ACLMaxConnection : public Acl::AclNode
+class ACLMaxConnection : public Acl::Node
 {
     MEMPROXY_CLASS(ACLMaxConnection);
 
