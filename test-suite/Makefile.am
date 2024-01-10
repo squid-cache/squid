@@ -155,4 +155,5 @@ CLEANFILES += \
 	squid-conf-tests \
 	squid-expected-messages \
 	squid-stderr.log \
+	squid-stderr.log.next \
 	squid-stderr.log.unmatched
