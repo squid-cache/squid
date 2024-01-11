@@ -30,7 +30,7 @@
 #include <set>
 #include <algorithm>
 
-typedef std::set<Acl::Node*> AclSet;
+using AclSet = std::set<Acl::Node *>;
 /// Accumulates all ACLs to facilitate their clean deletion despite reuse.
 static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
 
@@ -185,7 +185,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
 size_t
 aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
 {
-    // accommodate callers unable to convert their Acl::Node list context to string
+    // accommodate callers unable to convert their ACL list context to string
     if (!label)
         label = "...";
 

@@ -207,7 +207,7 @@ ACLChecklist::nonBlockingCheck(ACLCB * callback_, void *callback_data_)
     callback_data = cbdataReference(callback_data_);
     asyncCaller_ = true;
 
-    /** The Acl::Node List should NEVER be NULL when calling this method.
+    /** The ACL list should NEVER be NULL when calling this method.
      * Always caller should check for NULL and handle appropriate to its needs first.
      * We cannot select a sensible default for all callers here. */
     if (accessList == nullptr) {

@@ -132,7 +132,7 @@ public:
 
     // XXX: ACLs that need request or reply have to use ACLFilledChecklist and
     // should do their own checks so that we do not have to povide these two
-    // for Acl::Node::checklistMatches to use
+    // for ACL::checklistMatches to use
     virtual bool hasRequest() const = 0;
     virtual bool hasReply() const = 0;
     virtual bool hasAle() const = 0;
@@ -178,11 +178,11 @@ private: /* internal methods */
         bool operator ==(const Breadcrumb &b) const { return parent == b.parent && (!parent || position == b.position); }
         bool operator !=(const Breadcrumb &b) const { return !this->operator ==(b); }
         void clear() { parent = nullptr; }
-        const Acl::InnerNode *parent; ///< intermediate node in the Acl::Node tree
+        const Acl::InnerNode *parent; ///< intermediate node in the ACL tree
         Acl::Nodes::const_iterator position; ///< child position inside parent
     };
 
-    /// possible outcomes when trying to match a single Acl::Node node in a list
+    /// possible outcomes when trying to match a single ACL node in a list
     typedef enum { nmrMatch, nmrMismatch, nmrFinished, nmrNeedsAsync }
     NodeMatchingResult;
 
@@ -205,7 +205,7 @@ private: /* internal methods */
 
     bool callerGone();
 
-    /// suspended (due to an async lookup) matches() in the Acl::Node tree
+    /// suspended (due to an async lookup) matches() in the ACL tree
     std::stack<Breadcrumb> matchPath;
     /// the list of actions which must ignored during acl checks
     std::vector<Acl::Answer> bannedActions_;
