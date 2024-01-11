@@ -119,7 +119,7 @@ namespace Acl
 template <class Parent>
 class FinalizedParameterizedNode: public Parent
 {
-    MEMPROXY_CLASS(Acl::FinalizedParameterizedNode<Parent>);
+    MEMPROXY_CLASS(FinalizedParameterizedNode<Parent>);
 
 public:
     using Parameters = typename Parent::Parameters;
@@ -265,7 +265,7 @@ Acl::Init()
 
     RegisterMaker("ssl::server_name", [](TypeName name)->Node* { return new FinalizedParameterizedNode<ServerNameCheck>(name, new ACLServerNameData); });
     RegisterMaker("ssl::server_name_regex", [](TypeName name)->Node* { return new FinalizedParameterizedNode<ServerNameCheck>(name, new ACLRegexData); });
-    FinalizedParameterizedNode<Acl::ServerNameCheck>::PreferAllocatorLabelPrefix("ssl::server_name+");
+    FinalizedParameterizedNode<ServerNameCheck>::PreferAllocatorLabelPrefix("ssl::server_name+");
 #endif
 
 #if USE_SQUID_EUI
@@ -287,11 +287,11 @@ Acl::Init()
 #endif
 
 #if USE_ADAPTATION
-    RegisterMaker("adaptation_service", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::AdaptationServiceCheck>(name, new ACLAdaptationServiceData); });
+    RegisterMaker("adaptation_service", [](TypeName name)->Node* { return new FinalizedParameterizedNode<AdaptationServiceCheck>(name, new ACLAdaptationServiceData); });
 #endif
 
 #if SQUID_SNMP
-    RegisterMaker("snmp_community", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::SnmpCommunityCheck>(name, new ACLStringData); });
+    RegisterMaker("snmp_community", [](TypeName name)->Node* { return new FinalizedParameterizedNode<SnmpCommunityCheck>(name, new ACLStringData); });
 #endif
 }
 
