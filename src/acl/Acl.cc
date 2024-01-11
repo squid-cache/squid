@@ -37,7 +37,7 @@ public:
     bool operator()(TypeName a, TypeName b) const { return strcmp(a, b) < 0; }
 };
 
-/// Acl::Node makers indexed by Acl::Node type name
+/// Acl::Node makers indexed by Node type name
 typedef std::map<TypeName, Maker, TypeNameCmp> Makers;
 
 /// registered Acl::Node Makers
@@ -48,7 +48,7 @@ TheMakers()
     return Registry;
 }
 
-/// creates an Acl::Node object of the named (and already registered) Acl::Node child type
+/// creates an Acl::Node object of the named (and already registered) Node child type
 static
 Acl::Node *
 Make(TypeName typeName)
@@ -168,7 +168,7 @@ Acl::Node::matches(ACLChecklist *checklist) const
             checklist->verifyAle();
 
         // have to cast because old match() API is missing const
-        result = const_cast<Acl::Node*>(this)->match(checklist);
+        result = const_cast<Node*>(this)->match(checklist);
     }
 
     const char *extra = checklist->asyncInProgress() ? " async" : "";
@@ -188,11 +188,11 @@ Acl::Node::context(const char *aName, const char *aCfgLine)
 }
 
 void
-Acl::Node::ParseAclLine(ConfigParser &parser, Acl::Node ** head)
+Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
 {
     /* we're already using strtok() to grok the line */
     char *t = nullptr;
-    Acl::Node *A = nullptr;
+    Node *A = nullptr;
     LOCAL_ARRAY(char, aclname, ACL_NAME_SZ);
     int new_acl = 0;
 
