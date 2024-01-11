@@ -140,6 +140,7 @@ static void dump_ecap_service_type(StoreEntry *, const char *, const Adaptation:
 static void free_ecap_service_type(Adaptation::Ecap::Config *);
 #endif
 
+static void parseAddressToken(Ip::Address *, const char *);
 static peer_t parseNeighborType(const char *s);
 
 static const char *const T_NANOSECOND_STR = "nanosecond";
@@ -1557,6 +1558,13 @@ parse_address(Ip::Address *addr)
         return;
     }
 
+    parseAddressToken(addr, token);
+}
+
+/// parses a given "TYPE: address" directive value token (or equivalent)
+static void
+parseAddressToken(Ip::Address * const addr, const char * const token)
+{
     if (!strcmp(token,"any_addr"))
         addr->setAnyAddr();
     else if ( (!strcmp(token,"no_addr")) || (!strcmp(token,"full_mask")) )
@@ -1580,13 +1588,9 @@ free_address(Ip::Address *addr)
 static void
 dump_acl_address(StoreEntry * entry, const char *name, Acl::Address * head)
 {
-    char buf[MAX_IPSTRLEN];
-
     for (Acl::Address *l = head; l; l = l->next) {
-        if (!l->addr.isAnyAddr())
-            storeAppendPrintf(entry, "%s %s", name, l->addr.toStr(buf,MAX_IPSTRLEN));
-        else
-            storeAppendPrintf(entry, "%s autoselect", name);
+        PackableStream os(*entry);
+        os << name << ' ' << l->addressSource;
 
         dump_acl_list(entry, l->aclList);
 
@@ -1598,8 +1602,17 @@ static void
 parse_acl_address(Acl::Address ** head)
 {
     Acl::Address *l = new Acl::Address;
-    parse_address(&l->addr);
-    aclParseAclList(LegacyParser, &l->aclList, l->addr);
+
+    const auto token = ConfigParser::NextToken();
+    if (token && strcmp(token, "match_client_tcp_dst") == 0) {
+        l->addressSource = Acl::Address::MatchClientTcpDst{};
+    } else {
+        Ip::Address addr;
+        parseAddressToken(&addr, token);
+        l->addressSource = addr;
+    }
+
+    aclParseAclList(LegacyParser, &l->aclList, token);
 
     Acl::Address **tail = head;
     while (*tail)

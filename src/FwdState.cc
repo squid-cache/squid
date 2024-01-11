@@ -1512,13 +1512,19 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
     // needs a bit of rework in ACLFilledChecklist to use Comm::Connection instead of ConnStateData
 
     for (Acl::Address *l = Config.accessList.outgoing_address; l; l = l->next) {
+        const auto candidate = l->findAddressCandidate(request);
+        if (!candidate)
+            continue;
+
+        const auto outgoingAddress = *candidate;
 
         /* check if the outgoing address is usable to the destination */
-        if (conn->remote.isIPv4() != l->addr.isIPv4()) continue;
+        if (conn->remote.isIPv4() != outgoingAddress.isIPv4())
+            continue;
 
         /* check ACLs for this outgoing address */
         if (!l->aclList || ch.fastCheck(l->aclList).allowed()) {
-            conn->local = l->addr;
+            conn->local = outgoingAddress;
             return;
         }
     }
