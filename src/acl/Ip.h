@@ -9,8 +9,8 @@
 #ifndef SQUID_ACLIP_H
 #define SQUID_ACLIP_H
 
-#include "acl/Acl.h"
 #include "acl/Data.h"
+#include "acl/Node.h"
 #include "ip/Address.h"
 #include "splay.h"
 
@@ -46,7 +46,7 @@ private:
     static bool DecodeMask(const char *asc, Ip::Address &mask, int string_format_type);
 };
 
-class ACLIP : public ACL
+class ACLIP : public Acl::Node
 {
 public:
     void *operator new(size_t);
