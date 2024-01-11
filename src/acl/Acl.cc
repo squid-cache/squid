@@ -271,7 +271,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 
     /*
      * Here we set AclMatchedName in case we need to use it in a
-     * warning message in aclDomainCompare().
+     * warning message in Acl::SplayInserter::Merge().
      */
     AclMatchedName = A->name;   /* ugly */
 

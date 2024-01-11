@@ -24,6 +24,7 @@ libapi_la_SOURCES = \
 	InnerNode.h \
 	Options.cc \
 	Options.h \
+	SplayInserter.h \
 	Tree.cc \
 	Tree.h \
 	forward.h
