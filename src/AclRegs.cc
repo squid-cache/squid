@@ -197,75 +197,75 @@ Acl::Init()
     // of the return expression inside lambda is not Acl::Node* but AclFoo* while
     // Acl::Maker is defined to return Acl::Node*.
 
-    RegisterMaker("all-of", [](TypeName)->Node* { return new Acl::AllOf; }); // XXX: Add name parameter to ctor
-    RegisterMaker("any-of", [](TypeName)->Node* { return new Acl::AnyOf; }); // XXX: Add name parameter to ctor
+    RegisterMaker("all-of", [](TypeName)->Node* { return new AllOf; }); // XXX: Add name parameter to ctor
+    RegisterMaker("any-of", [](TypeName)->Node* { return new AnyOf; }); // XXX: Add name parameter to ctor
     RegisterMaker("random", [](TypeName name)->Node* { return new ACLRandom(name); });
-    RegisterMaker("time", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::CurrentTimeCheck>(name, new ACLTimeData); });
-    RegisterMaker("src_as", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::SourceAsnCheck>(name, new ACLASN); });
-    RegisterMaker("dst_as", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::DestinationAsnCheck>(name, new ACLASN); });
-    RegisterMaker("browser", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::RequestHeaderCheck<Http::HdrType::USER_AGENT> >(name, new ACLRegexData); });
+    RegisterMaker("time", [](TypeName name)->Node* { return new FinalizedParameterizedNode<CurrentTimeCheck>(name, new ACLTimeData); });
+    RegisterMaker("src_as", [](TypeName name)->Node* { return new FinalizedParameterizedNode<SourceAsnCheck>(name, new ACLASN); });
+    RegisterMaker("dst_as", [](TypeName name)->Node* { return new FinalizedParameterizedNode<DestinationAsnCheck>(name, new ACLASN); });
+    RegisterMaker("browser", [](TypeName name)->Node* { return new FinalizedParameterizedNode<RequestHeaderCheck<Http::HdrType::USER_AGENT> >(name, new ACLRegexData); });
 
-    RegisterMaker("dstdomain", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::DestinationDomainCheck>(name, new ACLDomainData); });
-    RegisterMaker("dstdom_regex", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::DestinationDomainCheck>(name, new ACLRegexData); });
-    Acl::FinalizedParameterizedNode<Acl::DestinationDomainCheck>::PreferAllocatorLabelPrefix("dstdomain+");
+    RegisterMaker("dstdomain", [](TypeName name)->Node* { return new FinalizedParameterizedNode<DestinationDomainCheck>(name, new ACLDomainData); });
+    RegisterMaker("dstdom_regex", [](TypeName name)->Node* { return new FinalizedParameterizedNode<DestinationDomainCheck>(name, new ACLRegexData); });
+    FinalizedParameterizedNode<DestinationDomainCheck>::PreferAllocatorLabelPrefix("dstdomain+");
 
     RegisterMaker("dst", [](TypeName)->Node* { return new ACLDestinationIP; }); // XXX: Add name parameter to ctor
-    RegisterMaker("hier_code", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::HierCodeCheck>(name, new ACLHierCodeData); });
-    RegisterMaker("rep_header", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::HttpRepHeaderCheck>(name, new ACLHTTPHeaderData); });
-    RegisterMaker("req_header", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::HttpReqHeaderCheck>(name, new ACLHTTPHeaderData); });
+    RegisterMaker("hier_code", [](TypeName name)->Node* { return new FinalizedParameterizedNode<HierCodeCheck>(name, new ACLHierCodeData); });
+    RegisterMaker("rep_header", [](TypeName name)->Node* { return new FinalizedParameterizedNode<HttpRepHeaderCheck>(name, new ACLHTTPHeaderData); });
+    RegisterMaker("req_header", [](TypeName name)->Node* { return new FinalizedParameterizedNode<HttpReqHeaderCheck>(name, new ACLHTTPHeaderData); });
     RegisterMaker("http_status", [](TypeName name)->Node* { return new ACLHTTPStatus(name); });
     RegisterMaker("maxconn", [](TypeName name)->Node* { return new ACLMaxConnection(name); });
-    RegisterMaker("method", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::MethodCheck>(name, new ACLMethodData); });
+    RegisterMaker("method", [](TypeName name)->Node* { return new FinalizedParameterizedNode<MethodCheck>(name, new ACLMethodData); });
     RegisterMaker("localip", [](TypeName)->Node* { return new ACLLocalIP; }); // XXX: Add name parameter to ctor
-    RegisterMaker("localport", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::LocalPortCheck>(name, new ACLIntRange); });
-    RegisterMaker("myportname", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::MyPortNameCheck>(name, new ACLStringData); });
+    RegisterMaker("localport", [](TypeName name)->Node* { return new FinalizedParameterizedNode<LocalPortCheck>(name, new ACLIntRange); });
+    RegisterMaker("myportname", [](TypeName name)->Node* { return new FinalizedParameterizedNode<MyPortNameCheck>(name, new ACLStringData); });
 
-    RegisterMaker("peername", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::PeerNameCheck>(name, new ACLStringData); });
-    RegisterMaker("peername_regex", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::PeerNameCheck>(name, new ACLRegexData); });
-    Acl::FinalizedParameterizedNode<Acl::PeerNameCheck>::PreferAllocatorLabelPrefix("peername+");
+    RegisterMaker("peername", [](TypeName name)->Node* { return new FinalizedParameterizedNode<PeerNameCheck>(name, new ACLStringData); });
+    RegisterMaker("peername_regex", [](TypeName name)->Node* { return new FinalizedParameterizedNode<PeerNameCheck>(name, new ACLRegexData); });
+    FinalizedParameterizedNode<PeerNameCheck>::PreferAllocatorLabelPrefix("peername+");
 
-    RegisterMaker("proto", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::ProtocolCheck>(name, new ACLProtocolData); });
-    RegisterMaker("referer_regex", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::RequestHeaderCheck<Http::HdrType::REFERER> >(name, new ACLRegexData); });
-    RegisterMaker("rep_mime_type", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::ReplyHeaderCheck<Http::HdrType::CONTENT_TYPE> >(name, new ACLRegexData); });
-    RegisterMaker("req_mime_type", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::RequestHeaderCheck<Http::HdrType::CONTENT_TYPE> >(name, new ACLRegexData); });
+    RegisterMaker("proto", [](TypeName name)->Node* { return new FinalizedParameterizedNode<ProtocolCheck>(name, new ACLProtocolData); });
+    RegisterMaker("referer_regex", [](TypeName name)->Node* { return new FinalizedParameterizedNode<RequestHeaderCheck<Http::HdrType::REFERER> >(name, new ACLRegexData); });
+    RegisterMaker("rep_mime_type", [](TypeName name)->Node* { return new FinalizedParameterizedNode<ReplyHeaderCheck<Http::HdrType::CONTENT_TYPE> >(name, new ACLRegexData); });
+    RegisterMaker("req_mime_type", [](TypeName name)->Node* { return new FinalizedParameterizedNode<RequestHeaderCheck<Http::HdrType::CONTENT_TYPE> >(name, new ACLRegexData); });
 
-    RegisterMaker("srcdomain", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::SourceDomainCheck>(name, new ACLDomainData); });
-    RegisterMaker("srcdom_regex", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::SourceDomainCheck>(name, new ACLRegexData); });
-    Acl::FinalizedParameterizedNode<Acl::SourceDomainCheck>::PreferAllocatorLabelPrefix("srcdomain+");
+    RegisterMaker("srcdomain", [](TypeName name)->Node* { return new FinalizedParameterizedNode<SourceDomainCheck>(name, new ACLDomainData); });
+    RegisterMaker("srcdom_regex", [](TypeName name)->Node* { return new FinalizedParameterizedNode<SourceDomainCheck>(name, new ACLRegexData); });
+    FinalizedParameterizedNode<SourceDomainCheck>::PreferAllocatorLabelPrefix("srcdomain+");
 
     RegisterMaker("src", [](TypeName)->Node* { return new ACLSourceIP; }); // XXX: Add name parameter to ctor
-    RegisterMaker("url_regex", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::UrlCheck>(name, new ACLRegexData); });
-    RegisterMaker("urllogin", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::UrlLoginCheck>(name, new ACLRegexData); });
-    RegisterMaker("urlpath_regex", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::UrlPathCheck>(name, new ACLRegexData); });
-    RegisterMaker("port", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::UrlPortCheck>(name, new ACLIntRange); });
+    RegisterMaker("url_regex", [](TypeName name)->Node* { return new FinalizedParameterizedNode<UrlCheck>(name, new ACLRegexData); });
+    RegisterMaker("urllogin", [](TypeName name)->Node* { return new FinalizedParameterizedNode<UrlLoginCheck>(name, new ACLRegexData); });
+    RegisterMaker("urlpath_regex", [](TypeName name)->Node* { return new FinalizedParameterizedNode<UrlPathCheck>(name, new ACLRegexData); });
+    RegisterMaker("port", [](TypeName name)->Node* { return new FinalizedParameterizedNode<UrlPortCheck>(name, new ACLIntRange); });
     RegisterMaker("external", [](TypeName name)->Node* { return new ACLExternal(name); });
-    RegisterMaker("squid_error", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::SquidErrorCheck>(name, new ACLSquidErrorData); });
-    RegisterMaker("connections_encrypted", [](TypeName name)->Node* { return new Acl::ConnectionsEncrypted(name); });
-    RegisterMaker("tag", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::TagCheck>(name, new ACLStringData); });
-    RegisterMaker("note", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::NoteCheck>(name, new ACLNoteData); });
-    RegisterMaker("annotate_client", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::AnnotateClientCheck>(name, new ACLAnnotationData); });
-    RegisterMaker("annotate_transaction", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::AnnotateTransactionCheck>(name, new ACLAnnotationData); });
-    RegisterMaker("has", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::HasComponentCheck>(name, new ACLHasComponentData); });
+    RegisterMaker("squid_error", [](TypeName name)->Node* { return new FinalizedParameterizedNode<SquidErrorCheck>(name, new ACLSquidErrorData); });
+    RegisterMaker("connections_encrypted", [](TypeName name)->Node* { return new ConnectionsEncrypted(name); });
+    RegisterMaker("tag", [](TypeName name)->Node* { return new FinalizedParameterizedNode<TagCheck>(name, new ACLStringData); });
+    RegisterMaker("note", [](TypeName name)->Node* { return new FinalizedParameterizedNode<NoteCheck>(name, new ACLNoteData); });
+    RegisterMaker("annotate_client", [](TypeName name)->Node* { return new FinalizedParameterizedNode<AnnotateClientCheck>(name, new ACLAnnotationData); });
+    RegisterMaker("annotate_transaction", [](TypeName name)->Node* { return new FinalizedParameterizedNode<AnnotateTransactionCheck>(name, new ACLAnnotationData); });
+    RegisterMaker("has", [](TypeName name)->Node* { return new FinalizedParameterizedNode<HasComponentCheck>(name, new ACLHasComponentData); });
     RegisterMaker("transaction_initiator", [](TypeName name)->Node* {return new TransactionInitiator(name);});
 
 #if USE_LIBNETFILTERCONNTRACK
-    RegisterMaker("clientside_mark", [](TypeName)->Node* { return new Acl::ConnMark; }); // XXX: Add name parameter to ctor
-    RegisterMaker("client_connection_mark", [](TypeName)->Node* { return new Acl::ConnMark; }); // XXX: Add name parameter to ctor
+    RegisterMaker("clientside_mark", [](TypeName)->Node* { return new ConnMark; }); // XXX: Add name parameter to ctor
+    RegisterMaker("client_connection_mark", [](TypeName)->Node* { return new ConnMark; }); // XXX: Add name parameter to ctor
 #endif
 
 #if USE_OPENSSL
-    RegisterMaker("ssl_error", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::CertificateErrorCheck>(name, new ACLSslErrorData); });
+    RegisterMaker("ssl_error", [](TypeName name)->Node* { return new FinalizedParameterizedNode<CertificateErrorCheck>(name, new ACLSslErrorData); });
 
-    RegisterMaker("user_cert", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::ClientCertificateCheck>(name, new ACLCertificateData(Ssl::GetX509UserAttribute, "*")); });
-    RegisterMaker("ca_cert", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::ClientCertificateCheck>(name, new ACLCertificateData(Ssl::GetX509CAAttribute, "*")); });
-    Acl::FinalizedParameterizedNode<Acl::ClientCertificateCheck>::PreferAllocatorLabelPrefix("user_cert+");
+    RegisterMaker("user_cert", [](TypeName name)->Node* { return new FinalizedParameterizedNode<ClientCertificateCheck>(name, new ACLCertificateData(Ssl::GetX509UserAttribute, "*")); });
+    RegisterMaker("ca_cert", [](TypeName name)->Node* { return new FinalizedParameterizedNode<ClientCertificateCheck>(name, new ACLCertificateData(Ssl::GetX509CAAttribute, "*")); });
+    FinalizedParameterizedNode<ClientCertificateCheck>::PreferAllocatorLabelPrefix("user_cert+");
 
-    RegisterMaker("server_cert_fingerprint", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::ServerCertificateCheck>(name, new ACLCertificateData(Ssl::GetX509Fingerprint, nullptr, true)); });
-    RegisterMaker("at_step", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::AtStepCheck>(name, new ACLAtStepData); });
+    RegisterMaker("server_cert_fingerprint", [](TypeName name)->Node* { return new FinalizedParameterizedNode<ServerCertificateCheck>(name, new ACLCertificateData(Ssl::GetX509Fingerprint, nullptr, true)); });
+    RegisterMaker("at_step", [](TypeName name)->Node* { return new FinalizedParameterizedNode<AtStepCheck>(name, new ACLAtStepData); });
 
-    RegisterMaker("ssl::server_name", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::ServerNameCheck>(name, new ACLServerNameData); });
-    RegisterMaker("ssl::server_name_regex", [](TypeName name)->Node* { return new Acl::FinalizedParameterizedNode<Acl::ServerNameCheck>(name, new ACLRegexData); });
-    Acl::FinalizedParameterizedNode<Acl::ServerNameCheck>::PreferAllocatorLabelPrefix("ssl::server_name+");
+    RegisterMaker("ssl::server_name", [](TypeName name)->Node* { return new FinalizedParameterizedNode<ServerNameCheck>(name, new ACLServerNameData); });
+    RegisterMaker("ssl::server_name_regex", [](TypeName name)->Node* { return new FinalizedParameterizedNode<ServerNameCheck>(name, new ACLRegexData); });
+    FinalizedParameterizedNode<Acl::ServerNameCheck>::PreferAllocatorLabelPrefix("ssl::server_name+");
 #endif
 
 #if USE_SQUID_EUI
