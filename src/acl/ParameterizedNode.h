@@ -38,8 +38,8 @@ protected:
     bool empty() const override { return data->empty(); }
     const Acl::Options &lineOptions() override { return data->lineOptions(); }
 
-    /// Points to items this Acl::Node is configured to match. A derived class ensures
-    /// that this pointer is never nil after the Acl::Node object construction ends.
+    /// Points to items this ACL is configured to match. A derived class ensures
+    /// that this pointer is never nil after object construction ends.
     std::unique_ptr<Parameters> data;
 };
 

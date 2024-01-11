@@ -13,7 +13,7 @@
 
 #include "acl/Acl.h"
 
-// Acl::Node-related code used by authentication-related code. This code is not in
+// ACL-related code used by authentication-related code. This code is not in
 // auth/Gadgets to avoid making auth/libauth dependent on acl/libstate because
 // acl/libstate already depends on auth/libauth.
 
