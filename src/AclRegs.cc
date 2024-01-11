@@ -194,8 +194,8 @@ Acl::Init()
     /* the registration order does not matter */
 
     // The explicit return type (Acl::Node*) for lambdas is needed because the type
-    // of the return expression inside lambda is not Acl::Node* but AclFoo* while
-    // Acl::Maker is defined to return Acl::Node*.
+    // of the return expression inside lambda is not Node* but AclFoo* while
+    // Maker is defined to return Node*.
 
     RegisterMaker("all-of", [](TypeName)->Node* { return new AllOf; }); // XXX: Add name parameter to ctor
     RegisterMaker("any-of", [](TypeName)->Node* { return new AnyOf; }); // XXX: Add name parameter to ctor

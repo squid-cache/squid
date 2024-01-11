@@ -21,7 +21,7 @@ namespace Acl {
 
 /// the ACL type name known to admins
 using TypeName = const char *;
-/// a "factory" function for making Acl::Node objects (of some Acl::Node child type)
+/// a "factory" function for making Acl::Node objects (of some Node child type)
 using Maker = Node *(*)(TypeName typeName);
 /// use the given Acl::Node Maker for all ACLs of the named type
 void RegisterMaker(TypeName typeName, Maker maker);
@@ -36,7 +36,7 @@ void SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey);
 
 /// \ingroup ACLAPI
 typedef enum {
-    // Authorization Acl::Node result states
+    // Authorization ACL result states
     ACCESS_DENIED,
     ACCESS_ALLOWED,
     ACCESS_DUNNO,
