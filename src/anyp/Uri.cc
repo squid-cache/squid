@@ -120,29 +120,31 @@ AnyP::Uri::Decode(const SBuf &buf)
 
     Parser::Tokenizer tok(buf);
     SBuf token;
-    static const auto unencodedOctets = CharacterSet("unencoded", "%").complement();
 
-    tok.prefix(token, unencodedOctets);
-    output.append(token);
 
     while (!tok.atEnd())
     {
-        const auto foundPercent = tok.skip('%');
-        Assure2(foundPercent, "Error decoding Uri: '%' expected but not found");
-
-        if (!tok.prefix(token, HexDigits, 2) || token.length() != 2)
-            throw TextException("incomplete or invalid %-encoded triplet", Here());
-
-        const auto hex1 = HextDigitToInt(token[0]);
-        const auto hex2 = HextDigitToInt(token[1]);
-        if (hex1 == -1 || hex2 == -1)
-            throw TextException("invalid %-encoded triplet", Here());
-
-        const char decoded = hex1 << 4 | hex2;
-        output.append(decoded);
-
+        static const auto unencodedOctets = CharacterSet("unencoded", "%").complement();
+        // try to extract until '%'
         if (tok.prefix(token, unencodedOctets))
             output.append(token);
+
+        // we're either at end of input or just before a '%'
+        if (tok.skip('%')) {
+
+            // extract exactly two hex digits
+            if (!tok.prefix(token, HexDigits, 2) || token.length() != 2)
+                throw TextException("incomplete or invalid %-encoded triplet", Here());
+
+            const auto hex1 = HextDigitToInt(token[0]);
+            const auto hex2 = HextDigitToInt(token[1]);
+            if (hex1 == -1 || hex2 == -1)
+                throw TextException("invalid %-encoded triplet", Here());
+
+            const char decoded = hex1 << 4 | hex2;
+            output.append(decoded);
+        }
+
     }
     return output;
 }
