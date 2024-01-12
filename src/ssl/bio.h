@@ -62,7 +62,7 @@ public:
 protected:
     const int fd_; ///< the SSL socket we are reading and writing
     SBuf rbuf;  ///< Used to buffer input data.
-#if OPENSSL_KTLS_SUPPORT
+#if defined(SSL_OP_ENABLE_KTLS)
     SBuf rbuf_toPeek;  ///< Used to peek input data.
 #endif
 };
@@ -176,7 +176,7 @@ private:
     int readAndGive(char *buf, const int size, BIO *table);
     int readAndParse(char *buf, const int size, BIO *table);
     int readAndBuffer(BIO *table, const int size);
-#if OPENSSL_KTLS_SUPPORT
+#if defined(SSL_OP_ENABLE_KTLS)
     int readAndParseKtls(char *buf, const int size, BIO *table);
     int peekAndBuffer(BIO *table);
 #endif

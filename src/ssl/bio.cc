@@ -81,10 +81,8 @@ Ssl::Bio::Create(const int fd, Security::Io::Type type, const bool enable_ktls)
     if (BIO *bio = BIO_new(useMethod)) {
         BIO_int_ctrl(bio, BIO_C_SET_FD, type, fd);
         if (enable_ktls) {
-#if OPENSSL_KTLS_SUPPORT
             if (auto *bio_sock = BIO_new_socket(fd, BIO_NOCLOSE))
                 bio = BIO_push(bio, bio_sock);
-#endif
         }
         return bio;
     }
@@ -112,7 +110,7 @@ int Ssl::Bio::write(const char *buf, int size, BIO *table)
 {
     errno = 0;
     int result;
-#if OPENSSL_KTLS_SUPPORT
+#if defined(SSL_OP_ENABLE_KTLS)
     if (BIO_next(table))
         result = BIO_write(BIO_next(table), buf, size);
     else
@@ -141,11 +139,9 @@ Ssl::Bio::read(char *buf, int size, BIO *table)
 {
     errno = 0;
     int result;
-#if OPENSSL_KTLS_SUPPORT
     if (BIO_next(table))
         result = BIO_read(BIO_next(table), buf, size);
     else
-#endif
 #if _SQUID_WINDOWS_
         result = socket_read_method(fd_, buf, size);
 #else
@@ -290,7 +286,7 @@ Ssl::ServerBio::read(char *buf, int size, BIO *table)
 {
     if (parsedHandshake) // done parsing TLS Hello
         return readAndGive(buf, size, table);
-#if OPENSSL_KTLS_SUPPORT
+#if defined(SSL_OP_ENABLE_KTLS)
     else if (BIO_next(table))
         return readAndParseKtls(buf, size, table);
 #endif
@@ -309,7 +305,7 @@ Ssl::ServerBio::readAndGive(char *buf, const int size, BIO *table)
 
     if (record_) {
         int read_size = SQUID_TCP_SO_RCVBUF;
-#if OPENSSL_KTLS_SUPPORT
+#if defined(SSL_OP_ENABLE_KTLS)
         if (BIO_next(table))
             read_size = size;
 #endif
@@ -362,7 +358,7 @@ Ssl::ServerBio::readAndBuffer(BIO *table, const int size)
     return result;
 }
 
-#if OPENSSL_KTLS_SUPPORT
+#if defined(SSL_OP_ENABLE_KTLS)
 /// Read and give everything to our parser. (KTLS support ver.)
 /// When/if parsing is finished (successfully or not), start giving to OpenSSL.
 ///
@@ -428,7 +424,7 @@ Ssl::ServerBio::peekAndBuffer(BIO *table)
     rbuf_toPeek.rawAppendFinish(space, result);
     return result;
 }
-#endif /* OPENSSL_KTLS_SUPPORT */
+#endif /* defined(SSL_OP_ENABLE_KTLS) */
 
 /// give previously buffered bytes to OpenSSL
 /// returns the number of bytes given
@@ -644,10 +640,8 @@ squid_bio_ctrl(BIO *table, int cmd, long arg1, void *arg2)
         case BIO_CTRL_WPENDING:
     */
     default:
-#if OPENSSL_KTLS_SUPPORT
         if (BIO_next(table))
             return BIO_ctrl(BIO_next(table), cmd, arg1, arg2);
-#endif
         return 0;
 
     }

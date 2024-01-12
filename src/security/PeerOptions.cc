@@ -806,7 +806,7 @@ Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
 #endif
 }
 
-#if OPENSSL_KTLS_SUPPORT
+#if USE_OPENSSL && defined(SSL_OP_ENABLE_KTLS)
 void
 Security::PeerOptions::updateSessionOptionsOnlyKtls(Security::SessionPointer &s)
 {

@@ -68,7 +68,7 @@ public:
     /// setup any library-specific options that can be set for the given session
     void updateSessionOptions(Security::SessionPointer &);
 
-#if OPENSSL_KTLS_SUPPORT
+#if USE_OPENSSL && defined(SSL_OP_ENABLE_KTLS)
     /// setup ktls options that can be set for the given session
     void updateSessionOptionsOnlyKtls(Security::SessionPointer &);
 #endif
