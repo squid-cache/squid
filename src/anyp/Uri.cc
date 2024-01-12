@@ -33,25 +33,6 @@ static const char valid_hostname_chars[] =
     "0123456789-."
     "[:]"
     ;
-static const CharacterSet HexDigits("hexdigits", "0123456789ABCDEFabcdef");
-
-// lookup cache for
-class HexDigitToIntMap {
-public:
-    HexDigitToIntMap() {
-        map_.fill(-1);
-        for (int i = '0'; i <= '9'; ++i)
-            map_[i] = i - '0';
-        for (int i = 'A'; i <= 'F'; ++i)
-            map_[i] = i - 'A' + 10;
-        for (int i = 'a'; i <= 'f'; ++i)
-            map_[i] = i - 'a' + 10;
-    }
-    int operator() (const char ch) const { assert(ch >= 0); return map_[ch]; }
-    private:
-    std::array<int,CHAR_MAX+1> map_;
-};
-static const HexDigitToIntMap HextDigitToInt;
 
 /// Characters which are valid within a URI userinfo section
 static const CharacterSet &
@@ -121,7 +102,6 @@ AnyP::Uri::Decode(const SBuf &buf)
     Parser::Tokenizer tok(buf);
     SBuf token;
 
-
     while (!tok.atEnd())
     {
         static const auto unencodedOctets = CharacterSet("unencoded", "%").complement();
@@ -132,19 +112,13 @@ AnyP::Uri::Decode(const SBuf &buf)
         // we're either at end of input or just before a '%'
         if (tok.skip('%')) {
 
-            // extract exactly two hex digits
-            if (!tok.prefix(token, HexDigits, 2) || token.length() != 2)
-                throw TextException("incomplete or invalid %-encoded triplet", Here());
-
-            const auto hex1 = HextDigitToInt(token[0]);
-            const auto hex2 = HextDigitToInt(token[1]);
-            if (hex1 == -1 || hex2 == -1)
-                throw TextException("invalid %-encoded triplet", Here());
-
-            const char decoded = hex1 << 4 | hex2;
-            output.append(decoded);
+            int64_t hex1 = 0, hex2 = 0;
+            if (tok.int64(hex1, 16, false, 1) && tok.int64(hex2, 16, false, 1)) {
+                output.append(static_cast<char>((hex1 << 4) | hex2));
+            } else {
+                throw TextException(SBuf("invalid %-encoded triplet"), Here());
+            }
         }
-
     }
     return output;
 }
