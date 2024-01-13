@@ -618,6 +618,8 @@ squid_bio_ctrl(BIO *table, int cmd, long arg1, void *arg2)
     case BIO_CTRL_DUP:
         // Should implemented if the SSL_dup openSSL API function
         // used anywhere in squid.
+        if (BIO_next(table))
+            return BIO_ctrl(BIO_next(table), cmd, arg1, arg2);
         return 0;
 
     case BIO_CTRL_FLUSH:
@@ -625,6 +627,8 @@ squid_bio_ctrl(BIO *table, int cmd, long arg1, void *arg2)
             Ssl::Bio *bio = static_cast<Ssl::Bio*>(BIO_get_data(table));
             assert(bio);
             bio->flush(table);
+            if (BIO_next(table))
+                return BIO_ctrl(BIO_next(table), cmd, arg1, arg2);
             return 1;
         }
         return 0;
