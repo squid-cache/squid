@@ -12,7 +12,7 @@
 #define SQUID_IPC_SHARED_LISTEN_H
 
 #include "async/AsyncCall.h"
-#include "base/Subscription.h"
+#include "async/Subscription.h"
 #include "ip/Address.h"
 #include "ipc/QuestionerId.h"
 #include "ipc/RequestId.h"

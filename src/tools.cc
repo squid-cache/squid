@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
-#include "base/Subscription.h"
+#include "async/Subscription.h"
 #include "client_side.h"
 #include "fatal.h"
 #include "fde.h"

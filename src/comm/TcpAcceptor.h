@@ -12,7 +12,7 @@
 #include "anyp/forward.h"
 #include "async/AsyncJob.h"
 #include "base/CbcPointer.h"
-#include "base/Subscription.h"
+#include "async/Subscription.h"
 #include "comm/Flag.h"
 #include "comm/forward.h"
 

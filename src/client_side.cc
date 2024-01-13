@@ -61,7 +61,7 @@
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "async/AsyncCallbacks.h"
-#include "base/Subscription.h"
+#include "async/Subscription.h"
 #include "base/TextException.h"
 #include "CachePeer.h"
 #include "client_db.h"

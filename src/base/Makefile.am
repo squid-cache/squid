@@ -48,7 +48,6 @@ libbase_la_SOURCES = \
 	RunnersRegistry.h \
 	Stopwatch.cc \
 	Stopwatch.h \
-	Subscription.h \
 	SupportOrVeto.h \
 	TextException.cc \
 	TextException.h \

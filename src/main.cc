@@ -18,7 +18,7 @@
 #include "auth/Gadgets.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
-#include "base/Subscription.h"
+#include "async/Subscription.h"
 #include "base/TextException.h"
 #include "cache_cf.h"
 #include "CachePeer.h"

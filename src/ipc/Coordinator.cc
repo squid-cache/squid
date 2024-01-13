@@ -9,7 +9,7 @@
 /* DEBUG: section 54    Interprocess Communication */
 
 #include "squid.h"
-#include "base/Subscription.h"
+#include "async/Subscription.h"
 #include "base/TextException.h"
 #include "CacheManager.h"
 #include "comm.h"
