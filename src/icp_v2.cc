@@ -159,7 +159,7 @@ ICPState::isHit() const
     const auto hit = e && confirmAndPrepHit(*e);
 
     if (e)
-        e->abandon(__FUNCTION__);
+        e->abandon(__func__);
 
     return hit;
 }

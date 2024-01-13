@@ -1455,21 +1455,11 @@ TunnelStateData::usePinned()
 {
     Must(request);
     const auto connManager = request->pinnedConnection();
+    Comm::ConnectionPointer serverConn = nullptr;
+
     try {
-        const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
+        serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
         debugs(26, 7, "pinned peer connection: " << serverConn);
-
-        updateAttempts(n_tries + 1);
-
-        // Set HttpRequest pinned related flags for consistency even if
-        // they are not really used by tunnel.cc code.
-        request->flags.pinned = true;
-        if (connManager->pinnedAuth())
-            request->flags.auth = true;
-
-        // the server may close the pinned connection before this request
-        const auto reused = true;
-        connectDone(serverConn, connManager->pinning.host, reused);
     } catch (ErrorState * const error) {
         syncHierNote(nullptr, connManager ? connManager->pinning.host : request->url.host());
         // XXX: Honor clientExpectsConnectResponse() before replying.
@@ -1478,6 +1468,19 @@ TunnelStateData::usePinned()
         return;
     }
 
+    updateAttempts(n_tries + 1);
+
+    // Set HttpRequest pinned related flags for consistency even if
+    // they are not really used by tunnel.cc code.
+    request->flags.pinned = true;
+
+    Assure(connManager);
+    if (connManager->pinnedAuth())
+        request->flags.auth = true;
+
+    // the server may close the pinned connection before this request
+    const auto reused = true;
+    connectDone(serverConn, connManager->pinning.host, reused);
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);

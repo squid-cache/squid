@@ -15,6 +15,7 @@
 #include "hier_code.h"
 #include "ip/forward.h"
 #include "ip/NfMarkConfig.h"
+#include "store/forward.h"
 
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
@@ -22,11 +23,12 @@
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_TCP_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack_tcp.h>
 #endif
+#include <iosfwd>
 #include <limits>
 
 class fde;
 
-// TODO: move to new ACL framework
+// TODO: move to new Acl::Node framework
 class acl_tos
 {
     CBDATA_CLASS(acl_tos);
@@ -40,7 +42,7 @@ public:
     tos_t tos;
 };
 
-// TODO: move to new ACL framework
+// TODO: move to new Acl::Node framework
 class acl_nfmark
 {
     CBDATA_CLASS(acl_nfmark);
@@ -187,7 +189,7 @@ public:
      * objects are part of the dump function must be self-contained.
      * which means no StoreEntry references. Just a basic char* buffer.
      */
-    void dumpConfigLine(char *entry, const char *name) const;
+    void dumpConfigLine(std::ostream &, const char *) const;
 
     /// Whether we should modify TOS flags based on cache hits and misses.
     bool isHitTosActive() const {
@@ -240,18 +242,14 @@ public:
 /// Globally available instance of Qos::Config
 extern Config TheConfig;
 
-/* legacy parser access wrappers */
-#define parse_QosConfig(X)  (X)->parseConfigLine()
-#define free_QosConfig(X)
-#define dump_QosConfig(e,n,X) do { \
-        char temp[256]; /* random number. change as needed. max config line length. */ \
-        (X).dumpConfigLine(temp,n); \
-            storeAppendPrintf(e, "%s", temp); \
-    } while(0);
-
 } // namespace Qos
 
 } // namespace Ip
+
+/* legacy parser access wrappers */
+inline void parse_QosConfig(Ip::Qos::Config * c) { c->parseConfigLine(); }
+inline void free_QosConfig(Ip::Qos::Config *) {}
+void dump_QosConfig(StoreEntry *, const char * directiveName, const Ip::Qos::Config &);
 
 #endif /* SQUID_QOSCONFIG_H */
 

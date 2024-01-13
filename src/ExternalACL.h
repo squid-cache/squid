@@ -17,7 +17,7 @@ class external_acl;
 class external_acl_data;
 class StoreEntry;
 
-class ACLExternal : public ACL
+class ACLExternal : public Acl::Node
 {
     MEMPROXY_CLASS(ACLExternal);
 
@@ -40,7 +40,7 @@ public:
     bool empty () const override;
 
 private:
-    static void StartLookup(ACLFilledChecklist &, const ACL &);
+    static void StartLookup(ACLFilledChecklist &, const Acl::Node &);
     static void LookupDone(void *data, const ExternalACLEntryPointer &);
     void startLookup(ACLFilledChecklist *, external_acl_data *, bool inBackground) const;
     Acl::Answer aclMatchExternal(external_acl_data *, ACLFilledChecklist *) const;
