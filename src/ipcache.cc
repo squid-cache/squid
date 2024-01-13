@@ -16,7 +16,7 @@
 #include "dlink.h"
 #include "dns/LookupDetails.h"
 #include "dns/rfc3596.h"
-#include "event.h"
+#include "async/Event.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "ipcache.h"

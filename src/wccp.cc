@@ -14,7 +14,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
-#include "event.h"
+#include "async/Event.h"
 #include "fatal.h"
 #include "SquidConfig.h"
 #include "wccp.h"

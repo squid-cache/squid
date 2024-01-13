@@ -19,7 +19,7 @@
 #include "client_side.h"
 #include "dns/LookupDetails.h"
 #include "errorpage.h"
-#include "event.h"
+#include "async/Event.h"
 #include "FwdState.h"
 #include "globals.h"
 #include "hier_code.h"

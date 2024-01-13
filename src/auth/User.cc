@@ -16,7 +16,7 @@
 #include "auth/Gadgets.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
-#include "event.h"
+#include "async/Event.h"
 #include "globals.h"
 #include "Store.h"
 

@@ -14,7 +14,7 @@
 #include "auth/CredentialsCache.h"
 #include "base/RunnersRegistry.h"
 #include "debug/Stream.h"
-#include "event.h"
+#include "async/Event.h"
 
 namespace Auth {
 

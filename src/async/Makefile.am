@@ -26,6 +26,8 @@ libasync_la_SOURCES = \
 	AsyncJobCalls.h \
 	DelayedAsyncCalls.cc \
 	DelayedAsyncCalls.h \
+	Event.cc \
+	Event.h \
 	forward.h \
 	JobWait.cc \
 	JobWait.h \

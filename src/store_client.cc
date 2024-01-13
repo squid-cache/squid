@@ -12,7 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "async/AsyncCbdataCalls.h"
 #include "base/CodeContext.h"
-#include "event.h"
+#include "async/Event.h"
 #include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

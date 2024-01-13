@@ -24,7 +24,7 @@
 #include "dlink.h"
 #include "dns/forward.h"
 #include "dns/rfc3596.h"
-#include "event.h"
+#include "async/Event.h"
 #include "fd.h"
 #include "fde.h"
 #include "ip/tools.h"

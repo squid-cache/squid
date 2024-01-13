@@ -20,7 +20,7 @@
 #include "CachePeer.h"
 #include "CachePeers.h"
 #include "cbdata.h"
-#include "event.h"
+#include "async/Event.h"
 #include "fde.h"
 #include "fs_io.h"
 #include "FwdState.h"

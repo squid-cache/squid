@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "event.h"
+#include "async/Event.h"
 #include "EventLoop.h"
 #include "testStoreSupport.h"
 

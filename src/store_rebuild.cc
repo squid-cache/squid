@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "debug/Messages.h"
-#include "event.h"
+#include "async/Event.h"
 #include "fde.h"
 #include "globals.h"
 #include "md5.h"

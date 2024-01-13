@@ -352,8 +352,6 @@ squid_SOURCES = \
 	enums.h \
 	errorpage.cc \
 	errorpage.h \
-	event.cc \
-	event.h \
 	external_acl.cc \
 	fatal.cc \
 	fatal.h \
@@ -1071,7 +1069,6 @@ tests_testRock_SOURCES = \
 	tests/stub_client_side_request.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
-	event.cc \
 	fatal.cc \
 	fatal.h \
 	fd.cc \
@@ -1240,7 +1237,6 @@ tests_testUfs_SOURCES = \
 	tests/stub_client_side_request.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
-	event.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
 	fd.cc \
@@ -1415,7 +1411,6 @@ tests_testStore_SOURCES = \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
-	event.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
 	tests/stub_fd.cc \
@@ -1579,7 +1574,6 @@ tests_testDiskIO_SOURCES = \
 	client_side_request.h \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
-	event.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
 	fd.cc \
@@ -1851,7 +1845,6 @@ tests_test_http_range_SOURCES = \
 	dlink.cc \
 	dlink.h \
 	errorpage.cc \
-	event.cc \
 	tests/stub_external_acl.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
@@ -2237,7 +2230,6 @@ tests_testHttpRequest_SOURCES = \
 	dlink.cc \
 	dlink.h \
 	errorpage.cc \
-	event.cc \
 	external_acl.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
@@ -2533,7 +2525,6 @@ tests_testCacheManager_SOURCES = \
 	dlink.cc \
 	dlink.h \
 	errorpage.cc \
-	event.cc \
 	external_acl.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
@@ -2740,7 +2731,6 @@ nodist_tests_testEvent_SOURCES = \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
-	event.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libtime.cc \
 	tests/stub_tools.cc

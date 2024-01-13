@@ -12,7 +12,7 @@
 #include "base/RunnersRegistry.h"
 #include "client_db.h"
 #include "ClientInfo.h"
-#include "event.h"
+#include "async/Event.h"
 #include "format/Token.h"
 #include "fqdncache.h"
 #include "ip/Address.h"

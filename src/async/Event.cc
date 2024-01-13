@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "base/Random.h"
-#include "event.h"
+#include "async/Event.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "tools.h"

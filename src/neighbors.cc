@@ -20,7 +20,7 @@
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "debug/Messages.h"
-#include "event.h"
+#include "async/Event.h"
 #include "FwdState.h"
 #include "globals.h"
 #include "htcp.h"

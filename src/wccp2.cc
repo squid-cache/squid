@@ -17,7 +17,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "ConfigParser.h"
-#include "event.h"
+#include "async/Event.h"
 #include "ip/Address.h"
 #include "md5.h"
 #include "Parsing.h"

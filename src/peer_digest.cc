@@ -13,7 +13,7 @@
 #include "base/IoManip.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
-#include "event.h"
+#include "async/Event.h"
 #include "FwdState.h"
 #include "globals.h"
 #include "HttpReply.h"

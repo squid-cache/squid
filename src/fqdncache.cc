@@ -13,7 +13,7 @@
 #include "dns/forward.h"
 #include "dns/LookupDetails.h"
 #include "dns/rfc1035.h"
-#include "event.h"
+#include "async/Event.h"
 #include "fqdncache.h"
 #include "helper.h"
 #include "mgr/Registration.h"
