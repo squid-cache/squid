@@ -20,7 +20,7 @@ namespace Acl
 class DestinationAsnCheck: public ParameterizedNode< ACLData<Ip::Address> >
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
 };

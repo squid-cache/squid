@@ -18,7 +18,7 @@ namespace Acl
 class AnnotateClientCheck: public Acl::AnnotationCheck
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
     bool requiresRequest() const override { return true; }
 };
