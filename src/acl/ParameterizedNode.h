@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_ACL_PARAMETERIZEDNODE_H
 #define SQUID_SRC_ACL_PARAMETERIZEDNODE_H
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 #include "base/Assure.h"
 
 #include <memory>
@@ -20,7 +20,7 @@ namespace Acl
 /// An ACL that manages squid.conf-configured ACL parameters using a given class
 /// P. That P class must support the ACLData<> or equivalent API.
 template <class P>
-class ParameterizedNode: public ACL
+class ParameterizedNode: public Acl::Node
 {
 public:
     using Parameters = P;
@@ -31,7 +31,7 @@ public:
     ~ParameterizedNode() override = default;
 
 protected:
-    /* ACL API */
+    /* Acl::Node API */
     void parse() override { Assure(data); data->parse(); }
     void prepareForUse() override { data->prepareForUse(); }
     SBufList dump() const override { return data->dump(); }
@@ -39,7 +39,7 @@ protected:
     const Acl::Options &lineOptions() override { return data->lineOptions(); }
 
     /// Points to items this ACL is configured to match. A derived class ensures
-    /// that this pointer is never nil after the ACL object construction ends.
+    /// that this pointer is never nil after object construction ends.
     std::unique_ptr<Parameters> data;
 };
 

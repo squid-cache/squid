@@ -87,11 +87,3 @@ libcompatsquid_la_SOURCES = \
 	xstrto.h
 
 libcompatsquid_la_LIBADD= $(LTLIBOBJS)
-
-check_PROGRAMS += testPreCompiler
-TESTS += testPreCompiler
-
-testPreCompiler_SOURCES = \
-	testPreCompiler.cc
-testPreCompiler_LDADD= $(LIBCPPUNIT_LIBS)
-testPreCompiler_LDFLAGS=
