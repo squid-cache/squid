@@ -10,7 +10,7 @@
 #define SQUID_ASYNCCALL_H
 
 #include "base/CodeContext.h"
-#include "base/forward.h"
+#include "async/forward.h"
 #include "base/InstanceId.h"
 #include "event.h"
 #include "base/RefCount.h"

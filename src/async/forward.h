@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_ASYNC_FORWARD_H
 #define SQUID_SRC_ASYNC_FORWARD_H
 
-template<class RefCountableKid> class RefCount; //XXX: duplicate from base/forward.h
+#include "base/forward.h"
 
 class AsyncCall;
 class AsyncCallQueue;
@@ -20,5 +20,8 @@ class DelayedAsyncCalls;
 template <class Answer> class AsyncCallback;
 using AsyncCallPointer = RefCount<AsyncCall>;
 template<class Job> class JobWait;
+
+template<class Cbc> class CbcPointer;
+typedef CbcPointer<AsyncJob> AsyncJobPointer;
 
 #endif /* SQUID_SRC_ASYNC_FORWARD_H */
