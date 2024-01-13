@@ -62,9 +62,6 @@ public:
 protected:
     const int fd_; ///< the SSL socket we are reading and writing
     SBuf rbuf;  ///< Used to buffer input data.
-#if defined(SSL_OP_ENABLE_KTLS)
-    SBuf rbuf_toPeek;  ///< Used to peek input data.
-#endif
 };
 
 /// BIO node to handle socket IO for squid client side
@@ -200,6 +197,10 @@ private:
     /// The size of data stored in rbuf which passed to the openSSL
     size_t rbufConsumePos;
     Security::HandshakeParser parser_; ///< The TLS/SSL messages parser.
+    
+#if defined(SSL_OP_ENABLE_KTLS)
+    SBuf rbuf_toPeek;  ///< Used to peek input data.
+#endif
 };
 
 } // namespace Ssl
