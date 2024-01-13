@@ -1142,6 +1142,7 @@ tests_testRock_LDADD = \
 	eui/libeui.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
+	async/libasync.la \
 	base/libbase.la \
 	mem/libmem.la \
 	store/libstore.la \
@@ -1318,6 +1319,7 @@ tests_testUfs_LDADD = \
 	ipc/libipc.la \
 	comm/libcomm.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	mem/libmem.la \
 	store/libstore.la \
@@ -1476,6 +1478,7 @@ tests_testStore_LDADD= \
 	acl/libstate.la \
 	acl/libapi.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -1659,6 +1662,7 @@ tests_testDiskIO_LDADD = \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	mem/libmem.la \
 	sbuf/libsbuf.la \
@@ -1714,6 +1718,7 @@ tests_testACLMaxUserIP_LDADD = \
 	ip/libip.la \
 	parser/libparser.la \
 	sbuf/libsbuf.la \
+	async/libasync.la \
 	base/libbase.la \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
@@ -1958,6 +1963,7 @@ tests_test_http_range_LDADD = \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	mgr/libmgr.la \
 	html/libhtml.la \
@@ -2015,6 +2021,7 @@ tests_testHttp1Parser_LDADD= \
 	parser/libparser.la \
 	anyp/libanyp.la \
 	SquidConfig.o \
+	async/libasync.la \
 	base/libbase.la \
 	ip/libip.la \
 	sbuf/libsbuf.la \
@@ -2115,6 +2122,7 @@ tests_testHttpReply_LDADD=\
 	acl/libstate.la \
 	anyp/libanyp.la \
 	ip/libip.la \
+	async/libasync.la \
 	base/libbase.la \
 	ipc/libipc.la \
 	sbuf/libsbuf.la \
@@ -2333,6 +2341,7 @@ tests_testHttpRequest_LDADD = \
 	proxyp/libproxyp.la \
 	parser/libparser.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	mgr/libmgr.la \
 	html/libhtml.la \
@@ -2622,6 +2631,7 @@ tests_testCacheManager_LDADD = \
 	acl/libstate.la \
 	acl/libapi.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -2735,6 +2745,7 @@ nodist_tests_testEvent_SOURCES = \
 	tests/stub_libtime.cc \
 	tests/stub_tools.cc
 tests_testEvent_LDADD = \
+	async/libasync.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
@@ -2751,6 +2762,7 @@ nodist_tests_testEventLoop_SOURCES = \
 	tests/stub_fatal.cc \
 	tests/stub_libtime.cc
 tests_testEventLoop_LDADD = \
+	async/libasync.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
