@@ -16,7 +16,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = mem time debug base anyp helper dns html ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+SUBDIRS = async mem time debug base anyp helper dns html ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -24,7 +24,7 @@ AUTH_LIBS= auth/libauth.la
 AUTH_ACL_LIBS= auth/libacls.la
 endif
 
-SUBDIRS	+= http ip icmp ident log ipc mgr
+SUBDIRS	+=  http ip icmp ident log ipc mgr
 
 SSL_LIBS=
 if ENABLE_SSL
@@ -195,8 +195,6 @@ squid_SOURCES = \
 	$(WINSVC_SOURCE) \
 	AccessLogEntry.cc \
 	AccessLogEntry.h \
-	AsyncEngine.cc \
-	AsyncEngine.h \
 	AuthReg.h \
 	BodyPipe.cc \
 	BodyPipe.h \
@@ -490,6 +488,7 @@ squid_LDADD = \
 	helper/libhelper.la \
 	http/libhttp.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \

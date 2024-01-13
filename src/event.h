@@ -9,7 +9,7 @@
 #ifndef SQUID_EVENT_H
 #define SQUID_EVENT_H
 
-#include "AsyncEngine.h"
+#include "async/AsyncEngine.h"
 #include "base/Packable.h"
 #include "mem/forward.h"
 
