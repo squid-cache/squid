@@ -15,7 +15,7 @@
 #include "adaptation/Initiator.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "ConfigParser.h"
 #include "globals.h"

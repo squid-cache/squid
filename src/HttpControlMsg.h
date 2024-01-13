@@ -9,7 +9,7 @@
 #ifndef SQUID_HTTP_CONTROL_MSG_H
 #define SQUID_HTTP_CONTROL_MSG_H
 
-#include "base/AsyncCall.h"
+#include "async/AsyncCall.h"
 #include "HttpReply.h"
 
 class CommIoCbParams;

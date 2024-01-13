@@ -12,7 +12,7 @@
 #include "acl/forward.h"
 #include "adaptation/Config.h"
 #include "adaptation/icap/ServiceRep.h"
-#include "base/AsyncCall.h"
+#include "async/AsyncCall.h"
 #include "event.h"
 
 namespace Adaptation

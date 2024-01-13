@@ -13,7 +13,7 @@
 #include "adaptation/icap/Elements.h"
 #include "adaptation/Initiator.h"
 #include "adaptation/Service.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJobCalls.h"
 #include "cbdata.h"
 #include "comm.h"
 #include "FadingCounter.h"

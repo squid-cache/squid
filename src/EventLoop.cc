@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "async/AsyncEngine.h"
-#include "base/AsyncCallQueue.h"
+#include "async/AsyncCallQueue.h"
 #include "debug/Stream.h"
 #include "EventLoop.h"
 #include "fatal.h"

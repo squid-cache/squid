@@ -9,7 +9,7 @@
 #ifndef SQUID_BASE_ASYNCFUNCALLS_H
 #define SQUID_BASE_ASYNCFUNCALLS_H
 
-#include "base/AsyncCall.h"
+#include "async/AsyncCall.h"
 
 #include <iostream>
 

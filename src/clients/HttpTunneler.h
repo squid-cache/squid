@@ -9,8 +9,8 @@
 #ifndef SQUID_SRC_CLIENTS_HTTP_TUNNELER_H
 #define SQUID_SRC_CLIENTS_HTTP_TUNNELER_H
 
-#include "base/AsyncCallbacks.h"
-#include "base/AsyncJob.h"
+#include "async/AsyncCallbacks.h"
+#include "async/AsyncJob.h"
 #include "clients/forward.h"
 #include "clients/HttpTunnelerAnswer.h"
 #include "CommCalls.h"

@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "BodyPipe.h"
 

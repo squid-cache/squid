@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "base/AsyncJob.h"
+#include "async/AsyncJob.h"
 
 #define STUB_API "comm/libcomm.la"
 #include "tests/STUB.h"

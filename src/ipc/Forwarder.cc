@@ -9,7 +9,7 @@
 /* DEBUG: section 54    Interprocess Communication */
 
 #include "squid.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "errorpage.h"
 #include "HttpReply.h"

@@ -12,7 +12,7 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
-#include "base/AsyncCallbacks.h"
+#include "async/AsyncCallbacks.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
 #include "comm.h"

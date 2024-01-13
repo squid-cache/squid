@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJobCalls.h"
 #include "base/Range.h"
 #include "client_side.h"
 #include "clients/FtpClient.h"

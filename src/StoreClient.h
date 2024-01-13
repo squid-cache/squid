@@ -10,7 +10,7 @@
 #define SQUID_STORECLIENT_H
 
 #include "acl/ChecklistFiller.h"
-#include "base/AsyncCall.h"
+#include "async/AsyncCall.h"
 #include "base/forward.h"
 #include "dlink.h"
 #include "store/ParsingBuffer.h"

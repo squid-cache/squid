@@ -9,8 +9,8 @@
 /* DEBUG: section 41    Event Processing */
 
 #include "squid.h"
-#include "base/AsyncCall.h"
-#include "base/AsyncCallQueue.h"
+#include "async/AsyncCall.h"
+#include "async/AsyncCallQueue.h"
 #include "debug/Stream.h"
 
 AsyncCallQueue *AsyncCallQueue::TheInstance = nullptr;

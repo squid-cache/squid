@@ -11,8 +11,8 @@
 #ifndef SQUID_IPC_INQUIRER_H
 #define SQUID_IPC_INQUIRER_H
 
-#include "base/AsyncJob.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJob.h"
+#include "async/AsyncJobCalls.h"
 #include "base/forward.h"
 #include "ipc/forward.h"
 #include "ipc/Request.h"

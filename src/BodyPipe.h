@@ -9,7 +9,7 @@
 #ifndef SQUID_BODY_PIPE_H
 #define SQUID_BODY_PIPE_H
 
-#include "base/AsyncJob.h"
+#include "async/AsyncJob.h"
 #include "base/CbcPointer.h"
 #include "MemBuf.h"
 

@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
-#include "base/AsyncCbdataCalls.h"
+#include "async/AsyncCbdataCalls.h"
 #include "client_side.h"
 #include "clients/forward.h"
 #include "clients/FtpClient.h"

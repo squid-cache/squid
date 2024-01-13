@@ -10,7 +10,7 @@
 #define SQUID_COMM_TCPACCEPTOR_H
 
 #include "anyp/forward.h"
-#include "base/AsyncJob.h"
+#include "async/AsyncJob.h"
 #include "base/CbcPointer.h"
 #include "base/Subscription.h"
 #include "comm/Flag.h"

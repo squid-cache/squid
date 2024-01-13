@@ -9,7 +9,7 @@
 #ifndef SQUID_ASYNCJOBCALLS_H
 #define SQUID_ASYNCJOBCALLS_H
 
-#include "base/AsyncJob.h"
+#include "async/AsyncJob.h"
 #include "base/CbcPointer.h"
 #include "debug/Stream.h"
 

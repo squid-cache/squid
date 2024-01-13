@@ -9,7 +9,7 @@
 /* DEBUG: section 79    Disk IO Routines */
 
 #include "squid.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJobCalls.h"
 #include "debug/Messages.h"
 #include "fs/rock/RockDbCell.h"
 #include "fs/rock/RockRebuild.h"

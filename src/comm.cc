@@ -9,7 +9,7 @@
 /* DEBUG: section 05    Socket Functions */
 
 #include "squid.h"
-#include "base/AsyncFunCalls.h"
+#include "async/AsyncFunCalls.h"
 #include "ClientInfo.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"

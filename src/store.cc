@@ -9,7 +9,7 @@
 /* DEBUG: section 20    Storage Manager */
 
 #include "squid.h"
-#include "base/AsyncCbdataCalls.h"
+#include "async/AsyncCbdataCalls.h"
 #include "base/IoManip.h"
 #include "base/PackableStream.h"
 #include "base/TextException.h"

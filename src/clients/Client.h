@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_CLIENTS_CLIENT_H
 #define SQUID_SRC_CLIENTS_CLIENT_H
 
-#include "base/AsyncJob.h"
+#include "async/AsyncJob.h"
 #include "BodyPipe.h"
 #include "CommCalls.h"
 #include "FwdState.h"

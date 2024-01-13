@@ -9,9 +9,9 @@
 /* DEBUG: section 93    ICAP (RFC 3507) Client */
 
 #include "squid.h"
-#include "base/AsyncCall.h"
-#include "base/AsyncJob.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncCall.h"
+#include "async/AsyncJob.h"
+#include "async/AsyncJobCalls.h"
 #include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "cbdata.h"

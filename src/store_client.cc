@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "base/AsyncCbdataCalls.h"
+#include "async/AsyncCbdataCalls.h"
 #include "base/CodeContext.h"
 #include "event.h"
 #include "globals.h"

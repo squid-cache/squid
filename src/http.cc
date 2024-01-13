@@ -15,7 +15,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJobCalls.h"
 #include "base/DelayedAsyncCalls.h"
 #include "base/Raw.h"
 #include "base/TextException.h"

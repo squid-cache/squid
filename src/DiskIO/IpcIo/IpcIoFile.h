@@ -9,7 +9,7 @@
 #ifndef SQUID_IPC_IOFILE_H
 #define SQUID_IPC_IOFILE_H
 
-#include "base/AsyncCall.h"
+#include "async/AsyncCall.h"
 #include "cbdata.h"
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"

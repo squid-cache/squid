@@ -9,7 +9,7 @@
 #ifndef _SQUID_BASE_SUBSCRIPTION_H
 #define _SQUID_BASE_SUBSCRIPTION_H
 
-#include "base/AsyncCall.h"
+#include "async/AsyncCall.h"
 
 /** API for creating a series of AsyncCalls.
  * This is necessary because the same AsyncCall callback must not be

@@ -12,18 +12,6 @@ noinst_LTLIBRARIES = libbase.la
 libbase_la_SOURCES = \
 	Assure.cc \
 	Assure.h \
-	AsyncCall.cc \
-	AsyncCall.h \
-	AsyncCallList.cc \
-	AsyncCallList.h \
-	AsyncCallQueue.cc \
-	AsyncCallQueue.h \
-	AsyncCallbacks.h \
-	AsyncCbdataCalls.h \
-	AsyncFunCalls.h \
-	AsyncJob.cc \
-	AsyncJob.h \
-	AsyncJobCalls.h \
 	ByteCounter.h \
 	CbDataList.h \
 	CbcPointer.h \

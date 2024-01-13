@@ -7,8 +7,8 @@
  */
 
 #include "squid.h"
-#include "base/AsyncCall.h"
-#include "base/AsyncCallQueue.h"
+#include "async/AsyncCall.h"
+#include "async/AsyncCallQueue.h"
 #include "base/CodeContext.h"
 #include "cbdata.h"
 #include "debug/Stream.h"

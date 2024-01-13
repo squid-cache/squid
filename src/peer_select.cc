@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "base/AsyncCbdataCalls.h"
+#include "async/AsyncCbdataCalls.h"
 #include "base/InstanceId.h"
 #include "base/TypeTraits.h"
 #include "CachePeer.h"

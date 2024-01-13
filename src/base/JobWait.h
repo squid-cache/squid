@@ -9,7 +9,7 @@
 #ifndef SQUID_BASE_JOBWAIT_H
 #define SQUID_BASE_JOBWAIT_H
 
-#include "base/AsyncJob.h"
+#include "async/AsyncJob.h"
 #include "base/CbcPointer.h"
 
 #include <iosfwd>

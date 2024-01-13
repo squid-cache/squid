@@ -10,5 +10,17 @@ include $(top_srcdir)/src/Common.am
 noinst_LTLIBRARIES = libasync.la
 
 libasync_la_SOURCES = \
+	AsyncCall.cc \
+	AsyncCall.h \
+	AsyncCallbacks.h \
+	AsyncCallList.cc \
+	AsyncCallList.h \
+	AsyncCallQueue.cc \
+	AsyncCallQueue.h \
+	AsyncCbdataCalls.h \
 	AsyncEngine.cc \
-	AsyncEngine.h
+	AsyncEngine.h \
+	AsyncFunCalls.h \
+	AsyncJob.cc \
+	AsyncJob.h \
+	AsyncJobCalls.h

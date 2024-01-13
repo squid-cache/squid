@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "base/AsyncCallQueue.h"
+#include "async/AsyncCallQueue.h"
 #include "compat/cppunit.h"
 #include "event.h"
 #include "MemBuf.h"

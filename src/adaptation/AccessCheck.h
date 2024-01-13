@@ -14,7 +14,7 @@
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
 #include "adaptation/ServiceFilter.h"
-#include "base/AsyncJob.h"
+#include "async/AsyncJob.h"
 #include "log/forward.h"
 
 class HttpRequest;

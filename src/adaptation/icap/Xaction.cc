@@ -13,7 +13,7 @@
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Xaction.h"
-#include "base/AsyncCallbacks.h"
+#include "async/AsyncCallbacks.h"
 #include "base/IoManip.h"
 #include "base/JobWait.h"
 #include "base/TextException.h"

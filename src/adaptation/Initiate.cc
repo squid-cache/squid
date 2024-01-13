@@ -12,7 +12,7 @@
 #include "adaptation/Answer.h"
 #include "adaptation/Initiate.h"
 #include "adaptation/Initiator.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJobCalls.h"
 #include "http/Message.h"
 
 namespace Adaptation

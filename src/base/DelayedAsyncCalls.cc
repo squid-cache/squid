@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "base/AsyncCall.h"
+#include "async/AsyncCall.h"
 #include "base/DelayedAsyncCalls.h"
 #include "debug/Stream.h"
 

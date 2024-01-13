@@ -9,8 +9,8 @@
 #ifndef SQUID_COMMCALLS_H
 #define SQUID_COMMCALLS_H
 
-#include "base/AsyncCall.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncCall.h"
+#include "async/AsyncJobCalls.h"
 #include "comm/Flag.h"
 #include "comm/forward.h"
 #include "MasterXaction.h"
