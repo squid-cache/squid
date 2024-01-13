@@ -12,7 +12,7 @@
 #include "async/AsyncEngine.h"
 #include "async/AsyncCallQueue.h"
 #include "debug/Stream.h"
-#include "EventLoop.h"
+#include "async/EventLoop.h"
 #include "fatal.h"
 #include "time/Engine.h"
 

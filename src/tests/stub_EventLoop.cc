@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "EventLoop.h"
+#include "async/EventLoop.h"
 
 #define STUB_API "EventLoop.cc"
 #include "tests/STUB.h"

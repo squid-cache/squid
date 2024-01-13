@@ -34,7 +34,7 @@
 #include "dns/forward.h"
 #include "errorpage.h"
 #include "async/Event.h"
-#include "EventLoop.h"
+#include "async/EventLoop.h"
 #include "ExternalACL.h"
 #include "fd.h"
 #include "format/Token.h"

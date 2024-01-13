@@ -225,8 +225,6 @@ squid_SOURCES = \
 	Downloader.h \
 	ETag.cc \
 	ETag.h \
-	EventLoop.cc \
-	EventLoop.h \
 	ExternalACL.h \
 	ExternalACLEntry.cc \
 	ExternalACLEntry.h \
@@ -1011,7 +1009,6 @@ tests_testRock_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	ETag.cc \
-	EventLoop.cc \
 	FadingCounter.cc \
 	FileMap.h \
 	tests/stub_HelperChildConfig.cc \
@@ -1179,7 +1176,6 @@ tests_testUfs_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	ETag.cc \
-	EventLoop.cc \
 	FadingCounter.cc \
 	FileMap.h \
 	tests/stub_HelperChildConfig.cc \
@@ -1352,7 +1348,6 @@ tests_testStore_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	ETag.cc \
-	EventLoop.cc \
 	FileMap.h \
 	tests/stub_HelperChildConfig.cc \
 	HttpBody.cc \
@@ -1514,7 +1509,6 @@ tests_testDiskIO_SOURCES = \
 	ConfigParser.cc \
 	tests/testDiskIO.cc \
 	tests/stub_ETag.cc \
-	EventLoop.cc \
 	FadingCounter.cc \
 	FileMap.h \
 	tests/stub_HelperChildConfig.cc \
@@ -2746,7 +2740,6 @@ check_PROGRAMS += tests/testEventLoop
 tests_testEventLoop_SOURCES = \
 	tests/testEventLoop.cc
 nodist_tests_testEventLoop_SOURCES = \
-	EventLoop.cc \
 	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \

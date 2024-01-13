@@ -16,7 +16,7 @@
 #include "async/AsyncEngine.h"
 #include "base/TextException.h"
 #include "debug/Stream.h"
-#include "EventLoop.h"
+#include "async/EventLoop.h"
 
 #include <libecap/adapter/service.h>
 #include <libecap/common/options.h>
