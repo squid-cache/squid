@@ -22,7 +22,7 @@
 // void comm_read(const Comm::ConnectionPointer &, char*, int, AsyncCall::Pointer &) STUB
 
 /* should be in stub_libbase */
-#include "base/DelayedAsyncCalls.h"
+#include "async/DelayedAsyncCalls.h"
 void DelayedAsyncCalls::delay(const AsyncCall::Pointer &) STUB
 void DelayedAsyncCalls::schedule() STUB
 

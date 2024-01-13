@@ -13,7 +13,6 @@
 
 class CallDialer;
 class CodeContext;
-class DelayedAsyncCalls;
 class Raw;
 class RegexPattern;
 class ScopedId;

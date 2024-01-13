@@ -20,8 +20,6 @@ libbase_la_SOURCES = \
 	ClpMap.h \
 	CodeContext.cc \
 	CodeContext.h \
-	DelayedAsyncCalls.cc \
-	DelayedAsyncCalls.h \
 	EnumIterator.h \
 	File.cc \
 	File.h \

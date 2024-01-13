@@ -14,6 +14,7 @@ template<class RefCountableKid> class RefCount; //XXX: duplicate from base/forwa
 class AsyncCall;
 class AsyncCallQueue;
 class AsyncJob;
+class DelayedAsyncCalls;
 
 template <class Answer> class AsyncCallback;
 using AsyncCallPointer = RefCount<AsyncCall>;
