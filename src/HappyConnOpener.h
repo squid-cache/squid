@@ -9,7 +9,7 @@
 #ifndef SQUID_HAPPYCONNOPENER_H
 #define SQUID_HAPPYCONNOPENER_H
 #include "async/AsyncCallbacks.h"
-#include "base/JobWait.h"
+#include "async/JobWait.h"
 #include "base/RefCount.h"
 #include "comm.h"
 #include "comm/Connection.h"

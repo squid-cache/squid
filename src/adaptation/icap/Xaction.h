@@ -12,7 +12,7 @@
 #include "AccessLogEntry.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiate.h"
-#include "base/JobWait.h"
+#include "async/JobWait.h"
 #include "comm/ConnOpener.h"
 #include "error/forward.h"
 #include "HttpReply.h"

@@ -15,7 +15,7 @@
 #include "adaptation/icap/Xaction.h"
 #include "async/AsyncCallbacks.h"
 #include "base/IoManip.h"
-#include "base/JobWait.h"
+#include "async/JobWait.h"
 #include "base/TextException.h"
 #include "comm.h"
 #include "comm/Connection.h"

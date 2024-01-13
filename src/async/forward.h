@@ -14,9 +14,11 @@ template<class RefCountableKid> class RefCount; //XXX: duplicate from base/forwa
 class AsyncCall;
 class AsyncCallQueue;
 class AsyncJob;
+class CallDialer;
 class DelayedAsyncCalls;
 
 template <class Answer> class AsyncCallback;
 using AsyncCallPointer = RefCount<AsyncCall>;
+template<class Job> class JobWait;
 
 #endif /* SQUID_SRC_ASYNC_FORWARD_H */

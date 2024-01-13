@@ -13,7 +13,7 @@
 #include "acl/ChecklistFiller.h"
 #include "async/AsyncCallbacks.h"
 #include "async/AsyncJob.h"
-#include "base/JobWait.h"
+#include "async/JobWait.h"
 #include "CommCalls.h"
 #include "http/forward.h"
 #include "security/EncryptorAnswer.h"

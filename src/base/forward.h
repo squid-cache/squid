@@ -11,7 +11,6 @@
 
 #include "async/forward.h" // XXX: remove before shipping
 
-class CallDialer;
 class CodeContext;
 class Raw;
 class RegexPattern;
@@ -20,7 +19,6 @@ class Stopwatch;
 
 template<class Cbc> class CbcPointer;
 template<class RefCountableKid> class RefCount;
-template<class Job> class JobWait;
 
 typedef CbcPointer<AsyncJob> AsyncJobPointer;
 typedef RefCount<CodeContext> CodeContextPointer;

@@ -30,8 +30,6 @@ libbase_la_SOURCES = \
 	InstanceId.h \
 	IoManip.cc \
 	IoManip.h \
-	JobWait.cc \
-	JobWait.h \
 	Lock.h \
 	LookupTable.h \
 	Packable.h \

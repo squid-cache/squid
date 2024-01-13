@@ -12,7 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "async/AsyncCallbacks.h"
 #include "base/CbcPointer.h"
-#include "base/JobWait.h"
+#include "async/JobWait.h"
 #include "base/Raw.h"
 #include "CachePeer.h"
 #include "cbdata.h"
