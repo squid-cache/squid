@@ -10,11 +10,11 @@
 
 #include "squid.h"
 #include "acl/Gadgets.h"
+#include "async/Event.h"
 #include "auth/Config.h"
 #include "auth/CredentialsCache.h"
 #include "base/RunnersRegistry.h"
 #include "debug/Stream.h"
-#include "async/Event.h"
 
 namespace Auth {
 

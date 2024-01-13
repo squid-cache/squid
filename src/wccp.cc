@@ -11,10 +11,10 @@
 #include "squid.h"
 
 #if USE_WCCP
+#include "async/Event.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
-#include "async/Event.h"
 #include "fatal.h"
 #include "SquidConfig.h"
 #include "wccp.h"

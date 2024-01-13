@@ -12,12 +12,12 @@
 
 #if USE_WCCPv2
 
+#include "async/Event.h"
 #include "cache_cf.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "ConfigParser.h"
-#include "async/Event.h"
 #include "ip/Address.h"
 #include "md5.h"
 #include "Parsing.h"

@@ -11,8 +11,8 @@
 
 #include "anyp/forward.h"
 #include "async/AsyncJob.h"
-#include "base/CbcPointer.h"
 #include "async/Subscription.h"
+#include "base/CbcPointer.h"
 #include "comm/Flag.h"
 #include "comm/forward.h"
 

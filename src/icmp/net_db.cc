@@ -17,10 +17,10 @@
  */
 
 #include "squid.h"
+#include "async/Event.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
 #include "cbdata.h"
-#include "async/Event.h"
 #include "fde.h"
 #include "fs_io.h"
 #include "FwdState.h"

@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "async/Event.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
@@ -17,7 +18,6 @@
 #include "client_side_request.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
-#include "async/Event.h"
 #include "fde.h"
 #include "format/Token.h"
 #include "globals.h"

@@ -22,8 +22,8 @@
 #if HAVE_DISKIO_MODULE_IPCIO
 #include "DiskIO/IpcIo/IpcIoFile.h"
 #endif
-#include "ETag.h"
 #include "async/Event.h"
+#include "ETag.h"
 #include "fde.h"
 #include "globals.h"
 #include "http.h"

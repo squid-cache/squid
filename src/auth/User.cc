@@ -11,12 +11,12 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/Gadgets.h"
+#include "async/Event.h"
 #include "auth/Config.h"
 #include "auth/CredentialsCache.h"
 #include "auth/Gadgets.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
-#include "async/Event.h"
 #include "globals.h"
 #include "Store.h"
 

@@ -10,10 +10,10 @@
 
 #if USE_DELAY_POOLS
 #include "acl/Gadgets.h"
+#include "async/Event.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "DelaySpec.h"
-#include "async/Event.h"
 #include "MessageBucket.h"
 #include "MessageDelayPools.h"
 #include "Parsing.h"

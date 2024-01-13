@@ -9,8 +9,8 @@
 #ifndef SQUID_FORWARD_H
 #define SQUID_FORWARD_H
 
-#include "base/forward.h"
 #include "async/JobWait.h"
+#include "base/forward.h"
 #include "base/RefCount.h"
 #include "clients/forward.h"
 #include "comm.h"

@@ -9,6 +9,7 @@
 /* DEBUG: section 78    DNS lookups; interacts with dns/rfc1035.cc */
 
 #include "squid.h"
+#include "async/Event.h"
 #include "base/CodeContext.h"
 #include "base/InstanceId.h"
 #include "base/IoManip.h"
@@ -24,7 +25,6 @@
 #include "dlink.h"
 #include "dns/forward.h"
 #include "dns/rfc3596.h"
-#include "async/Event.h"
 #include "fd.h"
 #include "fde.h"
 #include "ip/tools.h"

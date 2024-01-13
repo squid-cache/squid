@@ -8,8 +8,8 @@
 
 #include "squid.h"
 #include "async/AsyncEngine.h"
-#include "compat/cppunit.h"
 #include "async/EventLoop.h"
+#include "compat/cppunit.h"
 #include "time/Engine.h"
 #include "unitTestMain.h"
 

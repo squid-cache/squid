@@ -12,8 +12,8 @@
 #define SQUID_IPC_START_LISTENING_H
 
 #include "async/AsyncCall.h"
-#include "base/forward.h"
 #include "async/Subscription.h"
+#include "base/forward.h"
 #include "comm/forward.h"
 #include "ip/forward.h"
 #include "ipc/FdNotes.h"

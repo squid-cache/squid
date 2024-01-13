@@ -9,10 +9,10 @@
 /* DEBUG: section 13    High Level Memory Pool Management */
 
 #include "squid.h"
+#include "async/Event.h"
 #include "base/PackableStream.h"
 #include "ClientInfo.h"
 #include "dlink.h"
-#include "async/Event.h"
 #include "fs_io.h"
 #include "icmp/net_db.h"
 #include "md5.h"

@@ -12,11 +12,11 @@ noinst_LTLIBRARIES = libasync.la
 libasync_la_SOURCES = \
 	AsyncCall.cc \
 	AsyncCall.h \
-	AsyncCallbacks.h \
 	AsyncCallList.cc \
 	AsyncCallList.h \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
+	AsyncCallbacks.h \
 	AsyncCbdataCalls.h \
 	AsyncEngine.cc \
 	AsyncEngine.h \
@@ -30,7 +30,7 @@ libasync_la_SOURCES = \
 	Event.h \
 	EventLoop.cc \
 	EventLoop.h \
-	forward.h \
 	JobWait.cc \
 	JobWait.h \
-	Subscription.h
+	Subscription.h \
+	forward.h

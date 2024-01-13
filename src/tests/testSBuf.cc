@@ -7,10 +7,10 @@
  */
 
 #include "squid.h"
+#include "async/Event.h"
 #include "base/CharacterSet.h"
 #include "base/TextException.h"
 #include "compat/cppunit.h"
-#include "async/Event.h"
 #include "HttpReply.h"
 #include "MemObject.h"
 #include "sbuf/Algorithms.h"

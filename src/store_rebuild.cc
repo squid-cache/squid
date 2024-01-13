@@ -9,8 +9,8 @@
 /* DEBUG: section 20    Store Rebuild Routines */
 
 #include "squid.h"
-#include "debug/Messages.h"
 #include "async/Event.h"
+#include "debug/Messages.h"
 #include "fde.h"
 #include "globals.h"
 #include "md5.h"

@@ -8,8 +8,8 @@
 
 #include "squid.h"
 #include "async/AsyncCallQueue.h"
-#include "compat/cppunit.h"
 #include "async/Event.h"
+#include "compat/cppunit.h"
 #include "MemBuf.h"
 #include "unitTestMain.h"
 

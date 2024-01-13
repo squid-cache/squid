@@ -7,9 +7,9 @@
  */
 
 #include "squid.h"
-#include "base/Assure.h"
 #include "async/AsyncCall.h"
 #include "async/AsyncCallList.h"
+#include "base/Assure.h"
 
 void
 AsyncCallList::add(const AsyncCall::Pointer &call)

@@ -16,6 +16,7 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
+#include "async/Event.h"
 #include "client_side_request.h"
 #include "comm/Connection.h"
 #include "CommonPool.h"
@@ -29,7 +30,6 @@
 #include "DelayTagged.h"
 #include "DelayUser.h"
 #include "DelayVector.h"
-#include "async/Event.h"
 #include "http/Stream.h"
 #include "ip/Address.h"
 #include "MemObject.h"

@@ -9,10 +9,10 @@
 /* DEBUG: section 01    Main Loop */
 
 #include "squid.h"
-#include "async/AsyncEngine.h"
 #include "async/AsyncCallQueue.h"
-#include "debug/Stream.h"
+#include "async/AsyncEngine.h"
 #include "async/EventLoop.h"
+#include "debug/Stream.h"
 #include "fatal.h"
 #include "time/Engine.h"
 

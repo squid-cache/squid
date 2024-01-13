@@ -9,10 +9,10 @@
 #ifndef SQUID_ASYNCCALL_H
 #define SQUID_ASYNCCALL_H
 
-#include "base/CodeContext.h"
-#include "async/forward.h"
-#include "base/InstanceId.h"
 #include "async/Event.h"
+#include "async/forward.h"
+#include "base/CodeContext.h"
+#include "base/InstanceId.h"
 #include "base/RefCount.h"
 
 /**

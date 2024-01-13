@@ -9,6 +9,7 @@
 /* DEBUG: section 14    IP Cache */
 
 #include "squid.h"
+#include "async/Event.h"
 #include "base/IoManip.h"
 #include "CacheManager.h"
 #include "cbdata.h"
@@ -16,7 +17,6 @@
 #include "dlink.h"
 #include "dns/LookupDetails.h"
 #include "dns/rfc3596.h"
-#include "async/Event.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "ipcache.h"

@@ -9,8 +9,8 @@
 /* DEBUG: section 41    Event Processing */
 
 #include "squid.h"
-#include "base/Random.h"
 #include "async/Event.h"
+#include "base/Random.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "tools.h"

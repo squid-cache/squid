@@ -9,10 +9,10 @@
 /* DEBUG: section 00    Client Database */
 
 #include "squid.h"
+#include "async/Event.h"
 #include "base/RunnersRegistry.h"
 #include "client_db.h"
 #include "ClientInfo.h"
-#include "async/Event.h"
 #include "format/Token.h"
 #include "fqdncache.h"
 #include "ip/Address.h"

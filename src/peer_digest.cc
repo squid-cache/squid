@@ -10,10 +10,10 @@
 
 #include "squid.h"
 #if USE_CACHE_DIGESTS
+#include "async/Event.h"
 #include "base/IoManip.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
-#include "async/Event.h"
 #include "FwdState.h"
 #include "globals.h"
 #include "HttpReply.h"

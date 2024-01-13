@@ -12,8 +12,8 @@
 #define COMPOSITEPOOLNODE_H
 
 #if USE_DELAY_POOLS
-#include "auth/UserRequest.h"
 #include "async/DelayedAsyncCalls.h"
+#include "auth/UserRequest.h"
 #include "DelayIdComposite.h"
 #include "DelayPools.h"
 #include "ip/Address.h"
