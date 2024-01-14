@@ -18,8 +18,6 @@ libasync_la_SOURCES = \
 	AsyncCallQueue.h \
 	AsyncCallbacks.h \
 	AsyncCbdataCalls.h \
-	AsyncEngine.cc \
-	AsyncEngine.h \
 	AsyncFunCalls.h \
 	AsyncJob.cc \
 	AsyncJob.h \
