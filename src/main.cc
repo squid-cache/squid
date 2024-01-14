@@ -34,7 +34,6 @@
 #include "DiskIO/DiskIOModule.h"
 #include "dns/forward.h"
 #include "errorpage.h"
-#include "async/Event.h"
 #include "EventLoop.h"
 #include "ExternalACL.h"
 #include "fd.h"
