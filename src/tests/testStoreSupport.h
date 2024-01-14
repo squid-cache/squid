@@ -9,7 +9,7 @@
 #ifndef SQUID_TESTSTORESUPPORT_H
 #define SQUID_TESTSTORESUPPORT_H
 
-#include "async/EventLoop.h"
+#include "EventLoop.h"
 #include "time/Engine.h"
 
 /* construct a stock loop with event dispatching, a time service that advances

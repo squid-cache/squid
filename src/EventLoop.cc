@@ -11,8 +11,9 @@
 #include "squid.h"
 #include "async/AsyncCallQueue.h"
 #include "async/AsyncEngine.h"
-#include "async/EventLoop.h"
 #include "debug/Stream.h"
+#include "debug/Stream.h"
+#include "EventLoop.h"
 #include "fatal.h"
 #include "time/Engine.h"
 
