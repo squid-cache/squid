@@ -26,7 +26,6 @@ msgstr ""
 #: src/acl/external/file_userip/ext_file_userip_acl.8:3
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:3
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:3
-#: src/acl/external/LM_group/ext_lm_group_acl.8:3
 #: src/acl/external/session/ext_session_acl.8:3
 #: src/acl/external/time_quota/ext_time_quota_acl.8:3
 #: src/acl/external/unix_group/ext_unix_group_acl.8:3
@@ -70,7 +69,6 @@ msgstr "النسخة 1.0"
 #: src/acl/external/file_userip/ext_file_userip_acl.8:8
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:8
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:8
-#: src/acl/external/LM_group/ext_lm_group_acl.8:8
 #: src/acl/external/session/ext_session_acl.8:8
 #: src/acl/external/time_quota/ext_time_quota_acl.8:8
 #: src/acl/external/unix_group/ext_unix_group_acl.8:6
@@ -94,7 +92,6 @@ msgstr ""
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:12
-#: src/acl/external/LM_group/ext_lm_group_acl.8:12
 msgid "domain"
 msgstr ""
 
@@ -104,7 +101,6 @@ msgstr ""
 #: src/acl/external/file_userip/ext_file_userip_acl.8:14
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:12
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:24
-#: src/acl/external/LM_group/ext_lm_group_acl.8:14
 #: src/acl/external/session/ext_session_acl.8:16
 #: src/acl/external/time_quota/ext_time_quota_acl.8:12
 #: src/acl/external/unix_group/ext_unix_group_acl.8:13

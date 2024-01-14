@@ -13,7 +13,6 @@ DIST_SUBDIRS= \
 	kerberos_ldap_group \
 	kerberos_sid_group \
 	LDAP_group \
-	LM_group \
 	session \
 	SQL_session \
 	time_quota \
