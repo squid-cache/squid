@@ -127,7 +127,7 @@ WIN32_ALL_SOURCE = \
 	windows_service.cc
 if ENABLE_WIN32SPECIFIC
 WIN32_SOURCE = win32.cc
-WINSVC_SOURCE =  windows_service.cc
+WINSVC_SOURCE = windows_service.cc
 else
 WIN32_SOURCE =
 WINSVC_SOURCE =
