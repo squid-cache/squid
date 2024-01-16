@@ -10,7 +10,7 @@
 #define SQUID_ADAPTATION__INITIATOR_H
 
 #include "adaptation/forward.h"
-#include "base/AsyncJob.h"
+#include "async/AsyncJob.h"
 #include "base/CbcPointer.h"
 
 /*

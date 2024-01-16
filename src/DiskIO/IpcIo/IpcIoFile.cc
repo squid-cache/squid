@@ -9,7 +9,7 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
-#include "base/AsyncFunCalls.h"
+#include "async/AsyncFunCalls.h"
 #include "base/CodeContext.h"
 #include "base/RunnersRegistry.h"
 #include "base/TextException.h"

@@ -9,7 +9,7 @@
 /* DEBUG: section 17    Request Forwarding */
 
 #include "squid.h"
-#include "base/AsyncFunCalls.h"
+#include "async/AsyncFunCalls.h"
 #include "CollapsedForwarding.h"
 #include "globals.h"
 #include "ipc/mem/Segment.h"

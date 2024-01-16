@@ -11,7 +11,7 @@
 #include "squid.h"
 
 #if USE_IDENT
-#include "base/JobWait.h"
+#include "async/JobWait.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"

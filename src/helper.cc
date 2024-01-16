@@ -9,7 +9,7 @@
 /* DEBUG: section 84    Helper process maintenance */
 
 #include "squid.h"
-#include "base/AsyncCbdataCalls.h"
+#include "async/AsyncCbdataCalls.h"
 #include "base/Packable.h"
 #include "base/Raw.h"
 #include "comm.h"

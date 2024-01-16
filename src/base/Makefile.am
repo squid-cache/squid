@@ -12,18 +12,6 @@ noinst_LTLIBRARIES = libbase.la
 libbase_la_SOURCES = \
 	Assure.cc \
 	Assure.h \
-	AsyncCall.cc \
-	AsyncCall.h \
-	AsyncCallList.cc \
-	AsyncCallList.h \
-	AsyncCallQueue.cc \
-	AsyncCallQueue.h \
-	AsyncCallbacks.h \
-	AsyncCbdataCalls.h \
-	AsyncFunCalls.h \
-	AsyncJob.cc \
-	AsyncJob.h \
-	AsyncJobCalls.h \
 	ByteCounter.h \
 	CbDataList.h \
 	CbcPointer.h \
@@ -32,8 +20,6 @@ libbase_la_SOURCES = \
 	ClpMap.h \
 	CodeContext.cc \
 	CodeContext.h \
-	DelayedAsyncCalls.cc \
-	DelayedAsyncCalls.h \
 	EnumIterator.h \
 	File.cc \
 	File.h \
@@ -44,8 +30,6 @@ libbase_la_SOURCES = \
 	InstanceId.h \
 	IoManip.cc \
 	IoManip.h \
-	JobWait.cc \
-	JobWait.h \
 	Lock.h \
 	LookupTable.h \
 	Packable.h \
@@ -64,7 +48,6 @@ libbase_la_SOURCES = \
 	RunnersRegistry.h \
 	Stopwatch.cc \
 	Stopwatch.h \
-	Subscription.h \
 	SupportOrVeto.h \
 	TextException.cc \
 	TextException.h \

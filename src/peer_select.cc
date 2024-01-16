@@ -10,7 +10,8 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "base/AsyncCbdataCalls.h"
+#include "async/AsyncCbdataCalls.h"
+#include "async/Event.h"
 #include "base/InstanceId.h"
 #include "base/TypeTraits.h"
 #include "CachePeer.h"
@@ -19,7 +20,6 @@
 #include "client_side.h"
 #include "dns/LookupDetails.h"
 #include "errorpage.h"
-#include "event.h"
 #include "FwdState.h"
 #include "globals.h"
 #include "hier_code.h"

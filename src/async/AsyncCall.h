@@ -9,11 +9,11 @@
 #ifndef SQUID_ASYNCCALL_H
 #define SQUID_ASYNCCALL_H
 
+#include "async/Event.h"
+#include "async/forward.h"
 #include "base/CodeContext.h"
-#include "base/forward.h"
 #include "base/InstanceId.h"
-#include "event.h"
-#include "RefCount.h"
+#include "base/RefCount.h"
 
 /**
  \defgroup AsynCallsAPI Async-Calls API

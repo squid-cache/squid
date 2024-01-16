@@ -9,7 +9,7 @@
 #ifndef SQUID_FS_ROCK_HEADER_UPDATER_H
 #define SQUID_FS_ROCK_HEADER_UPDATER_H
 
-#include "base/AsyncJob.h"
+#include "async/AsyncJob.h"
 #include "cbdata.h"
 #include "fs/rock/forward.h"
 #include "fs/rock/RockSwapDir.h"

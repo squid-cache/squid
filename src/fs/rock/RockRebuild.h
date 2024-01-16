@@ -9,7 +9,7 @@
 #ifndef SQUID_FS_ROCK_REBUILD_H
 #define SQUID_FS_ROCK_REBUILD_H
 
-#include "base/AsyncJob.h"
+#include "async/AsyncJob.h"
 #include "base/RunnersRegistry.h"
 #include "cbdata.h"
 #include "fs/rock/forward.h"

@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "comm.h"
 #include "comm/Connection.h"

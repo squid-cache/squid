@@ -11,7 +11,7 @@
 #ifndef SQUID_MGR_STORE_TO_COMM_WRITER_H
 #define SQUID_MGR_STORE_TO_COMM_WRITER_H
 
-#include "base/AsyncJob.h"
+#include "async/AsyncJob.h"
 #include "comm/forward.h"
 #include "http/forward.h"
 #include "mgr/Action.h"

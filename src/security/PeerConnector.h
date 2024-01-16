@@ -11,9 +11,9 @@
 
 #include "acl/Acl.h"
 #include "acl/ChecklistFiller.h"
-#include "base/AsyncCallbacks.h"
-#include "base/AsyncJob.h"
-#include "base/JobWait.h"
+#include "async/AsyncCallbacks.h"
+#include "async/AsyncJob.h"
+#include "async/JobWait.h"
 #include "CommCalls.h"
 #include "http/forward.h"
 #include "security/EncryptorAnswer.h"

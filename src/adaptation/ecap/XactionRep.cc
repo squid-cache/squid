@@ -18,7 +18,7 @@
 #include "adaptation/ecap/Config.h"
 #include "adaptation/ecap/XactionRep.h"
 #include "adaptation/Initiator.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "format/Format.h"
 #include "HttpReply.h"

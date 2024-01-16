@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "adaptation/Answer.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJobCalls.h"
 #include "http/Message.h"
 
 Adaptation::Answer

@@ -9,7 +9,7 @@
 #ifndef SQUID_ASYNC_JOB_H
 #define SQUID_ASYNC_JOB_H
 
-#include "base/AsyncCall.h"
+#include "async/AsyncCall.h"
 #include "base/InstanceId.h"
 #include "cbdata.h"
 

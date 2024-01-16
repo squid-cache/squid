@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJobCalls.h"
 #include "debug/Stream.h"
 #include "fs/rock/RockHeaderUpdater.h"
 #include "fs/rock/RockIoState.h"

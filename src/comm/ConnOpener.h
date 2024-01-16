@@ -9,8 +9,8 @@
 #ifndef _SQUID_SRC_COMM_OPENERSTATEDATA_H
 #define _SQUID_SRC_COMM_OPENERSTATEDATA_H
 
-#include "base/AsyncCall.h"
-#include "base/AsyncJob.h"
+#include "async/AsyncCall.h"
+#include "async/AsyncJob.h"
 #include "cbdata.h"
 #include "comm/Flag.h"
 #include "comm/forward.h"

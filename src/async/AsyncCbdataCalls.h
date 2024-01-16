@@ -9,7 +9,7 @@
 #ifndef SQUID_BASE_ASYNCCBDATACALLS_H
 #define SQUID_BASE_ASYNCCBDATACALLS_H
 
-#include "base/AsyncCall.h"
+#include "async/AsyncCall.h"
 #include "base/CbcPointer.h"
 
 // dialer to run cbdata callback functions as Async Calls

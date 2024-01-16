@@ -9,8 +9,8 @@
 #ifndef SQUID_SRC_BASE_ASYNCCALLBACKS_H
 #define SQUID_SRC_BASE_ASYNCCALLBACKS_H
 
-#include "base/AsyncCall.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncCall.h"
+#include "async/AsyncJobCalls.h"
 #include "base/TypeTraits.h"
 
 /// access to a callback result carried by an asynchronous CallDialer

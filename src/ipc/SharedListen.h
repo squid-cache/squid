@@ -11,8 +11,8 @@
 #ifndef SQUID_IPC_SHARED_LISTEN_H
 #define SQUID_IPC_SHARED_LISTEN_H
 
-#include "base/AsyncCall.h"
-#include "base/Subscription.h"
+#include "async/AsyncCall.h"
+#include "async/Subscription.h"
 #include "ip/Address.h"
 #include "ipc/QuestionerId.h"
 #include "ipc/RequestId.h"

@@ -15,8 +15,8 @@
  */
 
 #include "squid.h"
+#include "async/Event.h"
 #include "debug/Stream.h"
-#include "event.h"
 #include "globals.h"
 #include "mgr/Registration.h"
 #include "store_digest.h"

@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "adaptation/Initiate.h"
 #include "adaptation/Initiator.h"
-#include "base/AsyncJobCalls.h"
+#include "async/AsyncJobCalls.h"
 
 void
 Adaptation::Initiator::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer)

@@ -12,7 +12,7 @@
 #define DELAYIDCOMPOSITE_H
 
 #if USE_DELAY_POOLS
-#include "base/forward.h"
+#include "async/forward.h"
 #include "base/RefCount.h"
 #include "fatal.h"
 

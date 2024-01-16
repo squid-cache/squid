@@ -12,8 +12,8 @@
 #include "acl/forward.h"
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
-#include "base/AsyncCall.h"
-#include "event.h"
+#include "async/AsyncCall.h"
+#include "async/Event.h"
 #include "Notes.h"
 #include "SquidString.h"
 

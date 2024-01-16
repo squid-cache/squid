@@ -2993,6 +2993,7 @@ AC_CONFIG_FILES([
 	src/adaptation/icap/Makefile
 	src/adaptation/ecap/Makefile
 	src/anyp/Makefile
+	src/async/Makefile
 	src/auth/Makefile
 	src/auth/basic/Makefile
 	src/auth/basic/DB/Makefile

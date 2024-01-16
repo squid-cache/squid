@@ -7,9 +7,9 @@
  */
 
 #include "squid.h"
-#include "base/AsyncCallQueue.h"
+#include "async/AsyncCallQueue.h"
+#include "async/Event.h"
 #include "compat/cppunit.h"
-#include "event.h"
 #include "MemBuf.h"
 #include "unitTestMain.h"
 

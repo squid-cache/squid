@@ -9,7 +9,7 @@
 #ifndef SQUID_ASYNCCALLQUEUE_H
 #define SQUID_ASYNCCALLQUEUE_H
 
-#include "base/AsyncCallList.h"
+#include "async/AsyncCallList.h"
 #include "base/forward.h"
 
 // The queue of asynchronous calls. All calls are fired during a single main

@@ -7,8 +7,8 @@
  */
 
 #include "squid.h"
-#include "base/AsyncJobCalls.h"
-#include "base/JobWait.h"
+#include "async/AsyncJobCalls.h"
+#include "async/JobWait.h"
 
 #include <cassert>
 #include <iostream>

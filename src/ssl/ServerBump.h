@@ -9,7 +9,7 @@
 #ifndef _SQUID_SSL_PEEKER_H
 #define _SQUID_SSL_PEEKER_H
 
-#include "base/AsyncJob.h"
+#include "async/AsyncJob.h"
 #include "base/CbcPointer.h"
 #include "comm/forward.h"
 #include "HttpRequest.h"

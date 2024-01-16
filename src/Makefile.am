@@ -16,7 +16,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = mem time debug base anyp helper dns html ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+SUBDIRS = async mem time debug base anyp helper dns html ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -24,7 +24,7 @@ AUTH_LIBS= auth/libauth.la
 AUTH_ACL_LIBS= auth/libacls.la
 endif
 
-SUBDIRS	+= http ip icmp ident log ipc mgr
+SUBDIRS	+=  http ip icmp ident log ipc mgr
 
 SSL_LIBS=
 if ENABLE_SSL
@@ -354,8 +354,6 @@ squid_SOURCES = \
 	enums.h \
 	errorpage.cc \
 	errorpage.h \
-	event.cc \
-	event.h \
 	external_acl.cc \
 	fatal.cc \
 	fatal.h \
@@ -490,6 +488,7 @@ squid_LDADD = \
 	helper/libhelper.la \
 	http/libhttp.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
@@ -1072,7 +1071,6 @@ tests_testRock_SOURCES = \
 	tests/stub_client_side_request.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
-	event.cc \
 	fatal.cc \
 	fatal.h \
 	fd.cc \
@@ -1143,6 +1141,7 @@ tests_testRock_LDADD = \
 	eui/libeui.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
+	async/libasync.la \
 	base/libbase.la \
 	mem/libmem.la \
 	store/libstore.la \
@@ -1240,7 +1239,6 @@ tests_testUfs_SOURCES = \
 	tests/stub_client_side_request.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
-	event.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
 	fd.cc \
@@ -1319,6 +1317,7 @@ tests_testUfs_LDADD = \
 	ipc/libipc.la \
 	comm/libcomm.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	mem/libmem.la \
 	store/libstore.la \
@@ -1414,7 +1413,6 @@ tests_testStore_SOURCES = \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
-	event.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
 	tests/stub_fd.cc \
@@ -1477,6 +1475,7 @@ tests_testStore_LDADD= \
 	acl/libstate.la \
 	acl/libapi.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -1577,7 +1576,6 @@ tests_testDiskIO_SOURCES = \
 	client_side_request.h \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
-	event.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
 	fd.cc \
@@ -1660,6 +1658,7 @@ tests_testDiskIO_LDADD = \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	mem/libmem.la \
 	sbuf/libsbuf.la \
@@ -1715,6 +1714,7 @@ tests_testACLMaxUserIP_LDADD = \
 	ip/libip.la \
 	parser/libparser.la \
 	sbuf/libsbuf.la \
+	async/libasync.la \
 	base/libbase.la \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
@@ -1847,7 +1847,6 @@ tests_test_http_range_SOURCES = \
 	dlink.cc \
 	dlink.h \
 	errorpage.cc \
-	event.cc \
 	tests/stub_external_acl.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
@@ -1959,6 +1958,7 @@ tests_test_http_range_LDADD = \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	mgr/libmgr.la \
 	html/libhtml.la \
@@ -2016,6 +2016,7 @@ tests_testHttp1Parser_LDADD= \
 	parser/libparser.la \
 	anyp/libanyp.la \
 	SquidConfig.o \
+	async/libasync.la \
 	base/libbase.la \
 	ip/libip.la \
 	sbuf/libsbuf.la \
@@ -2116,6 +2117,7 @@ tests_testHttpReply_LDADD=\
 	acl/libstate.la \
 	anyp/libanyp.la \
 	ip/libip.la \
+	async/libasync.la \
 	base/libbase.la \
 	ipc/libipc.la \
 	sbuf/libsbuf.la \
@@ -2230,7 +2232,6 @@ tests_testHttpRequest_SOURCES = \
 	dlink.cc \
 	dlink.h \
 	errorpage.cc \
-	event.cc \
 	external_acl.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
@@ -2334,6 +2335,7 @@ tests_testHttpRequest_LDADD = \
 	proxyp/libproxyp.la \
 	parser/libparser.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	mgr/libmgr.la \
 	html/libhtml.la \
@@ -2525,7 +2527,6 @@ tests_testCacheManager_SOURCES = \
 	dlink.cc \
 	dlink.h \
 	errorpage.cc \
-	event.cc \
 	external_acl.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
@@ -2623,6 +2624,7 @@ tests_testCacheManager_LDADD = \
 	acl/libstate.la \
 	acl/libapi.la \
 	dns/libdns.la \
+	async/libasync.la \
 	base/libbase.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -2731,11 +2733,11 @@ nodist_tests_testEvent_SOURCES = \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
-	event.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libtime.cc \
 	tests/stub_tools.cc
 tests_testEvent_LDADD = \
+	async/libasync.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
@@ -2752,6 +2754,7 @@ nodist_tests_testEventLoop_SOURCES = \
 	tests/stub_fatal.cc \
 	tests/stub_libtime.cc
 tests_testEventLoop_LDADD = \
+	async/libasync.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \

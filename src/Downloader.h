@@ -9,8 +9,8 @@
 #ifndef SQUID_DOWNLOADER_H
 #define SQUID_DOWNLOADER_H
 
-#include "base/AsyncCallbacks.h"
-#include "base/AsyncJob.h"
+#include "async/AsyncCallbacks.h"
+#include "async/AsyncJob.h"
 #include "defines.h"
 #include "http/forward.h"
 #include "http/StatusCode.h"

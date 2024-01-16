@@ -29,7 +29,7 @@
 #include "adaptation/AccessCheck.h"
 #include "adaptation/Answer.h"
 #include "adaptation/Iterator.h"
-#include "base/AsyncCall.h"
+#include "async/AsyncCall.h"
 #endif
 
 // implemented in client_side_reply.cc until sides have a common parent

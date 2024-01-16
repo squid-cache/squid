@@ -9,7 +9,8 @@
 /* DEBUG: section 05    Socket Functions */
 
 #include "squid.h"
-#include "base/AsyncFunCalls.h"
+#include "async/AsyncFunCalls.h"
+#include "async/Event.h"
 #include "ClientInfo.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
@@ -21,7 +22,6 @@
 #include "comm/Write.h"
 #include "compat/cmsg.h"
 #include "DescriptorSet.h"
-#include "event.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"

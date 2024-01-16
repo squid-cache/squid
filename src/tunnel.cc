@@ -10,9 +10,9 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "base/AsyncCallbacks.h"
+#include "async/AsyncCallbacks.h"
+#include "async/JobWait.h"
 #include "base/CbcPointer.h"
-#include "base/JobWait.h"
 #include "base/Raw.h"
 #include "CachePeer.h"
 #include "cbdata.h"

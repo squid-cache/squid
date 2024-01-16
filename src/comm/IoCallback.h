@@ -9,7 +9,7 @@
 #ifndef _SQUID_COMM_IOCALLBACK_H
 #define _SQUID_COMM_IOCALLBACK_H
 
-#include "base/AsyncCall.h"
+#include "async/AsyncCall.h"
 #include "comm/Flag.h"
 #include "comm/forward.h"
 #include "mem/forward.h"

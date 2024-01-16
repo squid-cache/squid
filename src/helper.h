@@ -11,7 +11,7 @@
 #ifndef SQUID_HELPER_H
 #define SQUID_HELPER_H
 
-#include "base/AsyncCall.h"
+#include "async/AsyncCall.h"
 #include "base/InstanceId.h"
 #include "base/RefCount.h"
 #include "cbdata.h"

@@ -11,7 +11,7 @@
 #ifndef SQUID_IPC_ASYNCUDSOP_H
 #define SQUID_IPC_ASYNCUDSOP_H
 
-#include "base/AsyncJob.h"
+#include "async/AsyncJob.h"
 #include "base/forward.h"
 #include "cbdata.h"
 #include "comm/forward.h"

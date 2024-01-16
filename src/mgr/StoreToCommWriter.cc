@@ -9,7 +9,7 @@
 /* DEBUG: section 16    Cache Manager API */
 
 #include "squid.h"
-#include "base/AsyncCbdataCalls.h"
+#include "async/AsyncCbdataCalls.h"
 #include "base/TextException.h"
 #include "comm.h"
 #include "comm/Connection.h"

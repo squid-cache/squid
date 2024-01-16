@@ -9,7 +9,7 @@
 #ifndef SQUID_MEMOBJECT_H
 #define SQUID_MEMOBJECT_H
 
-#include "base/DelayedAsyncCalls.h"
+#include "async/DelayedAsyncCalls.h"
 #include "dlink.h"
 #include "http/RequestMethod.h"
 #include "HttpReply.h"
