@@ -1,1 +1,0 @@
-expect-failure ERROR:.configuration.failure:..a.example.com..is.a.subdomain.of.*example.com

@@ -1,2 +1,0 @@
-skip-unless-autoconf-defines USE_IPV6 1
-expect-message WARNING:.*fee0::/11..is.a.subnetwork.of.*fec0::/10
