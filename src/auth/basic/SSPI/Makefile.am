@@ -23,6 +23,7 @@ basic_sspi_auth_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	-lnetapi32 -ladvapi32 \
+	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 
 man_MANS = basic_sspi_auth.8
