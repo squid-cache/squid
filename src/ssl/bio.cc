@@ -111,8 +111,19 @@ int Ssl::Bio::write(const char *buf, int size, BIO *table)
     errno = 0;
     int result;
 #if defined(SSL_OP_ENABLE_KTLS)
-    if (BIO_next(table))
+    if (BIO_next(table)){
         result = BIO_write(BIO_next(table), buf, size);
+
+        debugs(83, 5, "FD " << fd_ << " wrote " << result << " <= " << size);
+        
+        BIO_clear_retry_flags(table);
+        if (result < 0){
+            if ( BIO_should_retry(BIO_next(table)) && BIO_should_write(BIO_next(table)) ){
+                BIO_set_retry_write(table);
+            }
+        }
+        return result;
+    }
     else
 #endif
 #if _SQUID_WINDOWS_
@@ -139,8 +150,19 @@ Ssl::Bio::read(char *buf, int size, BIO *table)
 {
     errno = 0;
     int result;
-    if (BIO_next(table))
+    if (BIO_next(table)){
         result = BIO_read(BIO_next(table), buf, size);
+
+        debugs(83, 5, "FD " << fd_ << " read " << result << " <= " << size);
+
+        BIO_clear_retry_flags(table);
+        if (result < 0){
+            if ( BIO_should_retry(BIO_next(table)) && BIO_should_read(BIO_next(table)) ){
+                BIO_set_retry_read(table);
+            }
+        }
+        return result;
+    }
     else
 #if _SQUID_WINDOWS_
         result = socket_read_method(fd_, buf, size);
