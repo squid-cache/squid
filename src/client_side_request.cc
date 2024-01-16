@@ -28,6 +28,7 @@
 #include "clientStream.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
+#include "debug/Messages.h"
 #include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"
@@ -2074,7 +2075,7 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
         // XXX: Setting receivedWholeAdaptedReply here is a workaround for a
         // regression, as described in https://bugs.squid-cache.org/show_bug.cgi?id=5187#c6
         receivedWholeAdaptedReply = true;
-        debugs(85, DBG_IMPORTANT, "WARNING: Squid bug 5187 workaround triggered");
+        debugs(85, Important(72), "WARNING: Squid bug 5187 workaround triggered");
         endRequestSatisfaction();
     }
     // else wait for more body data
