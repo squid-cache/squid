@@ -11,12 +11,15 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/Ip.h"
+#include "acl/SplayInserter.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "wordlist.h"
+
+#include <algorithm>
 
 void *
 ACLIP::operator new (size_t)
@@ -77,6 +80,62 @@ acl_ip_data::toSBuf() const
     return SBuf(tmpbuf);
 }
 
+Ip::Address
+acl_ip_data::firstAddress() const
+{
+    auto ip = addr1;
+    if (!mask.isNoAddr())
+        ip.applyMask(mask);
+    return ip;
+}
+
+Ip::Address
+acl_ip_data::lastAddress() const
+{
+    auto ip = addr2.isAnyAddr() ? addr1 : addr2;
+    if (!mask.isNoAddr())
+        ip.turnMaskedBitsOn(mask);
+    return ip;
+}
+
+template <>
+int
+Acl::SplayInserter<acl_ip_data*>::Compare(const Value &a, const Value &b)
+{
+    if (a->lastAddress() < b->firstAddress())
+        return -1; // the entire range a is to the left of range b
+
+    if (a->firstAddress() > b->lastAddress())
+        return +1; // the entire range a is to the right of range b
+
+    return 0; // equal or partially overlapping ranges
+}
+
+template <>
+bool
+Acl::SplayInserter<acl_ip_data*>::IsSubset(const Value &a, const Value &b)
+{
+    return b->firstAddress() <= a->firstAddress() && a->lastAddress() <= b->lastAddress();
+}
+
+template <>
+Acl::SplayInserter<acl_ip_data*>::Value
+Acl::SplayInserter<acl_ip_data*>::MakeCombinedValue(const Value &a, const Value &b)
+{
+    const auto minLeft = std::min(a->firstAddress(), b->firstAddress());
+    const auto maxRight = std::max(a->lastAddress(), b->lastAddress());
+    return new acl_ip_data(minLeft, maxRight, Ip::Address::NoAddr(), nullptr);
+}
+
+/// reports acl_ip_data using squid.conf ACL value format
+static std::ostream &
+operator <<(std::ostream &os, acl_ip_data *value)
+{
+    if (value)
+        os << value->toSBuf();
+    return os;
+}
+
 /*
  * aclIpAddrNetworkCompare - The guts of the comparison for IP ACLs
  * matching checks.  The first argument (p) is a "host" address,
@@ -106,45 +165,6 @@ aclIpAddrNetworkCompare(acl_ip_data * const &p, acl_ip_data * const &q)
         else
             return A.matchIPAddr( q->addr1 ); /* outside of range, 'less than' */
     }
-}
-
-/*
- * acl_ip_data::NetworkCompare - Compare two acl_ip_data entries.  Strictly
- * used by the splay insertion routine.  It emits a warning if it
- * detects a "collision" or overlap that would confuse the splay
- * sorting algorithm.  Much like aclDomainCompare.
- * The first argument (p) is a "host" address, i.e. the IP address of a cache client.
- * The second argument (b) is a "network" address that might have a subnet and/or range.
- * We mask the host address bits with the network subnet mask.
- */
-int
-acl_ip_data::NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b)
-{
-    int ret;
-    bool bina = true;
-    ret = aclIpAddrNetworkCompare(b, a);
-
-    if (ret != 0) {
-        bina = false;
-        ret = aclIpAddrNetworkCompare(a, b);
-    }
-
-    if (ret == 0) {
-        char buf_n1[3*(MAX_IPSTRLEN+1)];
-        char buf_n2[3*(MAX_IPSTRLEN+1)];
-        if (bina) {
-            b->toStr(buf_n1, 3*(MAX_IPSTRLEN+1));
-            a->toStr(buf_n2, 3*(MAX_IPSTRLEN+1));
-        } else {
-            a->toStr(buf_n1, 3*(MAX_IPSTRLEN+1));
-            b->toStr(buf_n2, 3*(MAX_IPSTRLEN+1));
-        }
-        debugs(28, DBG_CRITICAL, "WARNING: (" << (bina?'B':'A') << ") '" << buf_n1 << "' is a subnetwork of (" << (bina?'A':'B') << ") '" << buf_n2 << "'" <<
-                Debug::Extra << "Because of this '" << (bina?buf_n2:buf_n1) << "' is ignored to keep splay tree searching predictable" <<
-                Debug::Extra << "You should probably remove '" << buf_n1 << "' from the ACL");
-    }
-
-    return ret;
 }
 
 /**
@@ -367,6 +387,20 @@ acl_ip_data::FactoryParse(const char *t)
     if (changed)
         debugs(28, DBG_CRITICAL, "WARNING: aclIpParseIpData: Netmask masks away part of the specified IP in '" << t << "'");
 
+    // TODO: Either switch match() to Acl::SplayInserter<acl_ip_data*>::Compare()
+    // range logic (that does not have these problems) OR warn that some (or
+    // even all) addresses will never match this configured ACL value when
+    // `q->addr1.applyMask()` above is positive:
+    //
+    // * A single configured IP value will never match:
+    //   A.matchIPAddr(q->addr1) in aclIpAddrNetworkCompare() will not return 0.
+    //   For example, `acl x src 127.0.0.1/24` does not match any address.
+    //
+    // * A configured IP range will not match any q->addr1/mask IPs:
+    //   (A >= q->addr1) in aclIpAddrNetworkCompare() is false and
+    //   A.matchIPAddr(q->addr1) will not return 0.
+    //   For example, `acl y src 10.0.0.1-10.0.0.255/24` does not match 10.0.0.1.
+
     debugs(28,9, "Parsed: " << q->addr1 << "-" << q->addr2 << "/" << q->mask << "(/" << q->mask.cidr() <<")");
 
     /* 1.2.3.4/255.255.255.0  --> 1.2.3.0 */
@@ -438,8 +472,7 @@ ACLIP::parse()
             /* pop each result off the list and add it to the data tree individually */
             acl_ip_data *next_node = q->next;
             q->next = nullptr;
-            if (!data->find(q,acl_ip_data::NetworkCompare))
-                data->insert(q, acl_ip_data::NetworkCompare);
+            Acl::SplayInserter<acl_ip_data*>::Merge(*data, std::move(q));
             q = next_node;
         }
     }
