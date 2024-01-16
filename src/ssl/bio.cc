@@ -118,7 +118,7 @@ int Ssl::Bio::write(const char *buf, int size, BIO *table)
         
         BIO_clear_retry_flags(table);
         if (result < 0) {
-            if ( BIO_should_retry(BIO_next(table)) && BIO_should_write(BIO_next(table)) ) {
+            if (BIO_should_retry(BIO_next(table))) {
                 BIO_set_retry_write(table);
             }
         }
@@ -157,7 +157,7 @@ Ssl::Bio::read(char *buf, int size, BIO *table)
 
         BIO_clear_retry_flags(table);
         if (result < 0) {
-            if ( BIO_should_retry(BIO_next(table)) && BIO_should_read(BIO_next(table)) ) {
+            if (BIO_should_retry(BIO_next(table))) {
                 BIO_set_retry_read(table);
             }
         }
