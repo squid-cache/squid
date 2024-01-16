@@ -1,25 +1,25 @@
 expect-messages <<END
 WARNING: Ignoring example.com because it is already covered by .example.com
-    advice: Remove value example.com from the ACL named test11
+    advice: Remove value example.com from the ACL
 
 WARNING: Ignoring earlier example.com because it is covered by .example.com
-    advice: Remove value example.com from the ACL named test12
+    advice: Remove value example.com from the ACL
 
 WARNING: Ignoring a.example.com because it is already covered by .example.com
-    advice: Remove value a.example.com from the ACL named test21
+    advice: Remove value a.example.com from the ACL
 
 WARNING: Ignoring earlier b.example.com because it is covered by .example.com
-    advice: Remove value b.example.com from the ACL named test22
+    advice: Remove value b.example.com from the ACL
 
 WARNING: Ignoring .example.com because it is already covered by .example.com
-    advice: Remove value .example.com from the ACL named test31
+    advice: Remove value .example.com from the ACL
 
 WARNING: Ignoring c.example.com because it is already covered by .example.com
-    advice: Remove value c.example.com from the ACL named test31
+    advice: Remove value c.example.com from the ACL
 
 WARNING: Ignoring earlier .d.example.com because it is covered by .example.com
-    advice: Remove value .d.example.com from the ACL named test41
+    advice: Remove value .d.example.com from the ACL
 
 WARNING: Ignoring .e.example.com because it is already covered by .example.com
-    advice: Remove value .e.example.com from the ACL named test42
+    advice: Remove value .e.example.com from the ACL
 END
