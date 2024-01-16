@@ -186,7 +186,7 @@ JobDialer<Job>::dial(AsyncCall &call)
     }
 
     if (!job) {
-        debugs(call.debugSection, Critical(70), "ERROR: Squid BUG: Job invalidated during " << call.name);
+        debugs(call.debugSection, Critical(71), "ERROR: Squid BUG: Job invalidated during " << call.name);
         return;
     }
     job->callEnd(); // may delete job
