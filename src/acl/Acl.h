@@ -39,7 +39,7 @@ class ParsingContext : public CodeContext
 public:
     using Pointer = RefCount<ParsingContext>;
 
-    ParsingContext(const char *name) : name_(name) {}
+    explicit ParsingContext(const char * const name): name_(name) {}
 
     /* CodeContext API */
     ScopedId codeContextGist() const override;
