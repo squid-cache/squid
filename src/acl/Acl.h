@@ -13,7 +13,7 @@
 #include "base/CodeContext.h"
 #include "defines.h"
 #include "dlink.h"
-#include "sbuf/forward.h"
+#include "sbuf/SBuf.h"
 
 #include <algorithm>
 #include <ostream>
@@ -46,7 +46,7 @@ public:
     std::ostream &detailCodeContext(std::ostream &os) const override;
 
 private:
-    const char *name_; ///< the parsed ACL name
+    SBuf name_; ///< the aclname parameter of the being-parsed acl directive
 };
 
 } // namespace Acl
