@@ -240,7 +240,7 @@ Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
 
     xstrncpy(aclname, t, ACL_NAME_SZ);
 
-    CallContextParser(ParsingContext::Pointer::Make(aclname), [&] {
+    CallParser(ParsingContext::Pointer::Make(aclname), [&] {
         ParseNamed(parser, head, aclname);
     });
 }

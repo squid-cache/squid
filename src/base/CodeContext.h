@@ -132,10 +132,12 @@ CallBack(const CodeContext::Pointer &callbackContext, Fun &&callback)
 
 /// \copydoc CallAndRestore_(const CodeContext::Pointer &funContext, Fun &&fun)
 ///
-/// Specific parser code initiated by parse_line() should use this function.
+/// To supply error-reporting code with parsing context X (where the error
+/// occurred), parsing code should use this function when initiating parsing
+/// inside that context X.
 template <typename Fun>
 inline void
-CallContextParser(const CodeContext::Pointer &parserContext, Fun &&parse)
+CallParser(const CodeContext::Pointer &parserContext, Fun &&parse)
 {
     CallAndRestore_(parserContext, parse);
 }
