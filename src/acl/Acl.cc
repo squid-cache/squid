@@ -66,6 +66,22 @@ Make(TypeName typeName)
     return result;
 }
 
+/// CodeContext of the ACL being parsed
+class ParsingContext: public CodeContext
+{
+public:
+    using Pointer = RefCount<ParsingContext>;
+
+    explicit ParsingContext(const char * const name): name_(name) {}
+
+    /* CodeContext API */
+    ScopedId codeContextGist() const override;
+    std::ostream &detailCodeContext(std::ostream &os) const override;
+
+private:
+    SBuf name_; ///< the aclname parameter of the being-parsed acl directive
+};
+
 } // namespace Acl
 
 void
@@ -99,6 +115,8 @@ Acl::SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey)
                         Here());
 }
 
+/* Acl::ParsingContext */
+
 ScopedId
 Acl::ParsingContext::codeContextGist() const {
     return ScopedId("acl");
@@ -110,6 +128,8 @@ Acl::ParsingContext::detailCodeContext(std::ostream &os) const
     return os << Debug::Extra << "acl name: " << name_ <<
         Debug::Extra << "configuration context: " << ConfigParser::CurrentLocation();
 }
+
+/* Acl::Node */
 
 void *
 Acl::Node::operator new (size_t)

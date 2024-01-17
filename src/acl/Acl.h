@@ -10,10 +10,9 @@
 #define SQUID_ACL_H
 
 #include "acl/forward.h"
-#include "base/CodeContext.h"
 #include "defines.h"
 #include "dlink.h"
-#include "sbuf/SBuf.h"
+#include "sbuf/forward.h"
 
 #include <algorithm>
 #include <ostream>
@@ -33,23 +32,7 @@ void RegisterMaker(TypeName typeName, Maker maker);
 /// Key comparison is case-insensitive.
 void SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey);
 
-/// CodeContext of the ACL being parsed
-class ParsingContext : public CodeContext
-{
-public:
-    using Pointer = RefCount<ParsingContext>;
-
-    explicit ParsingContext(const char * const name): name_(name) {}
-
-    /* CodeContext API */
-    ScopedId codeContextGist() const override;
-    std::ostream &detailCodeContext(std::ostream &os) const override;
-
-private:
-    SBuf name_; ///< the aclname parameter of the being-parsed acl directive
-};
-
-} // namespace Acl
+}  // namespace Acl
 
 /// \ingroup ACLAPI
 typedef enum {
