@@ -5,8 +5,8 @@ WARNING: Ignoring earlier 127.0.0.1 because it is covered by 127.0.0.0-127.0.0.2
 WARNING: Ignoring earlier 192.168.1.0/24 because it is covered by 192.168.0.0/16
     advice: Remove value 192.168.1.0/24 from the ACL
 
-WARNING: Ignoring 127.0.0.1 because it is already covered by 127.0.0.0-127.0.0.255
-    advice: Remove value 127.0.0.1 from the ACL
+WARNING: Ignoring 127.0.0.2 because it is already covered by 127.0.0.0-127.0.0.255
+    advice: Remove value 127.0.0.2 from the ACL
 
 WARNING: Merging overlapping 127.0.0.128-127.0.0.255 and 127.0.0.0-127.0.0.128 into 127.0.0.0-127.0.0.255
     advice: Replace values 127.0.0.128-127.0.0.255 and 127.0.0.0-127.0.0.128 with 127.0.0.0-127.0.0.255 in the ACL
@@ -22,8 +22,8 @@ WARNING: Merging overlapping 127.0.0.128-127.1.0.255 and 127.0.0.0-127.0.0.128 i
 WARNING: Ignoring earlier 127.0.0.1-127.0.0.128 because it is covered by 127.0.0.0-127.1.0.0/16
     advice: Remove value 127.0.0.1-127.0.0.128 from the ACL
 
-WARNING: Ignoring 127.0.0.1-127.0.0.128 because it is already covered by 127.0.0.0-127.1.0.0/16
-    advice: Remove value 127.0.0.1-127.0.0.128 from the ACL
+WARNING: Ignoring 127.1.0.1-127.1.0.128 because it is already covered by 127.1.0.0-127.2.0.0/16
+    advice: Remove value 127.1.0.1-127.1.0.128 from the ACL
 END
 
 # TODO: skip-unless-autoconf-defines USE_IPV6 1

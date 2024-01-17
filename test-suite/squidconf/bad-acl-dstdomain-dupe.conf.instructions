@@ -2,8 +2,8 @@ expect-messages <<END
 WARNING: Ignoring example.com because it is already covered by .example.com
     advice: Remove value example.com from the ACL
 
-WARNING: Ignoring earlier example.com because it is covered by .example.com
-    advice: Remove value example.com from the ACL
+WARNING: Ignoring earlier example.org because it is covered by .example.org
+    advice: Remove value example.org from the ACL
 
 WARNING: Ignoring a.example.com because it is already covered by .example.com
     advice: Remove value a.example.com from the ACL

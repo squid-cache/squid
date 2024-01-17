@@ -21,8 +21,8 @@ WARNING: Merging overlapping 100-300 and 200-400 into 100-400
 WARNING: Ignoring earlier 150 because it is covered by 100-400
     advice: Remove value 150 from the ACL
 
-WARNING: Ignoring earlier 400 because it is covered by 300-400
-    advice: Remove value 400 from the ACL
-WARNING: Ignoring earlier 300 because it is covered by 300-400
+WARNING: Ignoring earlier 399 because it is covered by 300-399
+    advice: Remove value 399 from the ACL
+WARNING: Ignoring earlier 300 because it is covered by 300-399
     advice: Remove value 300 from the ACL
 END
