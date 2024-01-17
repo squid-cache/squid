@@ -91,8 +91,7 @@ private:
     /// \see Acl::Node::options()
     virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
 
-    /// parses the rest of ACL line following ACL name
-    static void ParseNamed(ConfigParser &, Node ** head, const char *name);
+    static void ParseNamed(ConfigParser &, Node **head, const char *name);
 };
 
 } // namespace Acl

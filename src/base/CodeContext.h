@@ -106,22 +106,21 @@ public:
     CodeContext::Pointer savedCodeContext;
 };
 
-/// Executes 'fun' in `funContext`. If an exception occurs,
-/// the funContext is preserved, so that the exception is associated with
-/// the call that triggered it.
+/// A helper that calls the given function in the given call context. If the
+/// function throws, the call context is preserved, so that the exception is
+/// associated with the context that triggered it.
 template <typename Fun>
 inline void
-CallAndRestore_(const CodeContext::Pointer &funContext, Fun &&fun)
+CallAndRestore_(const CodeContext::Pointer &context, Fun &&fun)
 {
     const auto savedCodeContext(CodeContext::Current());
-    CodeContext::Reset(funContext);
+    CodeContext::Reset(context);
     fun();
     CodeContext::Reset(savedCodeContext);
 }
 
-/// \copydoc CallAndRestore_(const CodeContext::Pointer &funContext, Fun &&fun)
-///
 /// Service code running in its own service context should use this function.
+/// \sa CallAndRestore_()
 template <typename Fun>
 inline void
 CallBack(const CodeContext::Pointer &callbackContext, Fun &&callback)
@@ -130,16 +129,15 @@ CallBack(const CodeContext::Pointer &callbackContext, Fun &&callback)
     CallAndRestore_(callbackContext, callback);
 }
 
-/// \copydoc CallAndRestore_(const CodeContext::Pointer &funContext, Fun &&fun)
-///
 /// To supply error-reporting code with parsing context X (where the error
 /// occurred), parsing code should use this function when initiating parsing
 /// inside that context X.
+/// \sa CallAndRestore_()
 template <typename Fun>
 inline void
-CallParser(const CodeContext::Pointer &parserContext, Fun &&parse)
+CallParser(const CodeContext::Pointer &parsingContext, Fun &&parse)
 {
-    CallAndRestore_(parserContext, parse);
+    CallAndRestore_(parsingContext, parse);
 }
 
 /// Executes `service` in `serviceContext` but due to automatic caller context

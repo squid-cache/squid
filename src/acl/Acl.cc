@@ -66,7 +66,7 @@ Make(TypeName typeName)
     return result;
 }
 
-/// CodeContext of the ACL being parsed
+/// CodeContext of the being-parsed acl directive
 class ParsingContext: public CodeContext
 {
 public:
@@ -245,8 +245,9 @@ Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
     });
 }
 
+/// parses acl directive parts that follow aclname
 void
-Acl::Node::ParseNamed(ConfigParser &parser, Node ** head, const char *aclname)
+Acl::Node::ParseNamed(ConfigParser &parser, Node ** const head, const char * const aclname)
 {
     /* snarf the ACL type */
     const char *theType;
