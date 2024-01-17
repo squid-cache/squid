@@ -72,7 +72,7 @@ class ParsingContext: public CodeContext
 public:
     using Pointer = RefCount<ParsingContext>;
 
-    explicit ParsingContext(const char * const name): name_(name) {}
+    explicit ParsingContext(const SBuf &name): name_(name) {}
 
     /* CodeContext API */
     ScopedId codeContextGist() const override;
@@ -221,7 +221,6 @@ Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
 {
     /* we're already using strtok() to grok the line */
     char *t = nullptr;
-    LOCAL_ARRAY(char, aclname, ACL_NAME_SZ);
 
     /* snarf the ACL name */
 
@@ -238,10 +237,9 @@ Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
         return;
     }
 
-    xstrncpy(aclname, t, ACL_NAME_SZ);
-
+    SBuf aclname(t);
     CallParser(ParsingContext::Pointer::Make(aclname), [&] {
-        ParseNamed(parser, head, aclname);
+        ParseNamed(parser, head, aclname.c_str()); // TODO: Convert Node::name to SBuf
     });
 }
 
