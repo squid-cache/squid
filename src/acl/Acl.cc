@@ -126,7 +126,7 @@ std::ostream &
 Acl::ParsingContext::detailCodeContext(std::ostream &os) const
 {
     return os << Debug::Extra << "acl name: " << name_ <<
-        Debug::Extra << "configuration context: " << ConfigParser::CurrentLocation();
+           Debug::Extra << "configuration context: " << ConfigParser::CurrentLocation();
 }
 
 /* Acl::Node */
