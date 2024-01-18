@@ -2442,7 +2442,7 @@ DOC_START
 				      to ambiguous specification in RFC4507.
 
 			    ENABLE_KTLS
-				      Enable OpenSSL Kernel TLS offload on 
+				      Enable OpenSSL Kernel TLS offload on
 				      supported platforms.
 
 			    ALL       Enable various bug workarounds

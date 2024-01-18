@@ -197,7 +197,7 @@ private:
     /// The size of data stored in rbuf which passed to the openSSL
     size_t rbufConsumePos;
     Security::HandshakeParser parser_; ///< The TLS/SSL messages parser.
-    
+
 #if defined(SSL_OP_ENABLE_KTLS)
     SBuf rbuf_toPeek;  ///< Used to peek input data.
 #endif

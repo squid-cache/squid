@@ -115,7 +115,7 @@ int Ssl::Bio::write(const char *buf, int size, BIO *table)
         result = BIO_write(BIO_next(table), buf, size);
 
         debugs(83, 5, "FD " << fd_ << " wrote " << result << " <= " << size);
-        
+
         BIO_clear_retry_flags(table);
         if (result < 0) {
             if (BIO_should_retry(BIO_next(table))) {
@@ -384,8 +384,8 @@ Ssl::ServerBio::readAndBuffer(BIO *table, const int size)
 /// Read and give everything to our parser. (KTLS support ver.)
 /// When/if parsing is finished (successfully or not), start giving to OpenSSL.
 ///
-/// \note If using KTLS, we should not in general consume more data from OS socket buffer 
-/// than the caller (OpenSSL) expects. Otherwise, the session establishment potentially 
+/// \note If using KTLS, we should not in general consume more data from OS socket buffer
+/// than the caller (OpenSSL) expects. Otherwise, the session establishment potentially
 /// fails depending on (for example) the timing of packet arrival by reading past the handshake boundary.
 /// However, the current Squid needs to catch the TLS Hello message before passing it to OpenSSL.
 /// Therefore, we peek the socket here and ensure we do not consume the socket buffer more than allowed.
