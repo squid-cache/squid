@@ -333,9 +333,6 @@ Ip::Qos::Config::parseConfigLine()
                        << "Linux Netfilter marking not available on this platform.");
                 self_destruct();
 #endif // SO_MARK && USE_LIBCAP
-            } else if (strncmp(token, "tos",3) == 0) {
-                preserveMissTos = true;
-                tos = true;
             } else {
                 preserveMissTos = true;
                 tos = true;
