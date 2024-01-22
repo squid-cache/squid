@@ -20,7 +20,7 @@ namespace Acl
 class AtStepCheck: public ParameterizedNode< ACLData<XactionStep> >
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
 };
 

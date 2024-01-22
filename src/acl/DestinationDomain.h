@@ -21,7 +21,7 @@ namespace Acl
 class DestinationDomainCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
     const Acl::Options &options() override;

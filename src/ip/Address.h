@@ -194,6 +194,11 @@ public:
     /// IPv6 clients use 'privacy addressing' instead.
     void applyClientMask(const Address &mask);
 
+    /// Set bits of the stored IP address on if they are on in the given mask.
+    /// For example, supplying a /24 mask turns 127.0.0.1 into 127.0.0.255.
+    /// \sa applyMask(const Address &)
+    void turnMaskedBitsOn(const Address &mask);
+
     /** Return the ASCII equivalent of the address
      *  Semantically equivalent to the IPv4 inet_ntoa()
      *  eg. 127.0.0.1 (IPv4) or ::1 (IPv6)

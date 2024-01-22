@@ -218,8 +218,8 @@ main(int argc, char *argv[])
         } else if (strncmp(buf, "KK ", 3) == 0) {
             if (!packet) {
                 SEND("BH received KK with no data! user=");
-            } else if (ntlm_validate_packet(packet, NTLM_AUTHENTICATE) == NTLM_ERR_NONE) {
-                if (ntlm_unpack_auth((ntlm_authenticate *)packet, user, domain, decodedLen) == NTLM_ERR_NONE) {
+            } else if (ntlm_validate_packet(packet, NTLM_AUTHENTICATE) == NtlmError::None) {
+                if (ntlm_unpack_auth((ntlm_authenticate *)packet, user, domain, decodedLen) == NtlmError::None) {
                     lc(user);
                     if (strip_domain_enabled) {
                         SEND2("AF %s", user);

@@ -10,6 +10,7 @@
 #define _SQUID_SRC_ACL_ADDRESS_H
 
 #include "acl/Acl.h"
+#include "cbdata.h"
 #include "ip/Address.h"
 
 namespace Acl

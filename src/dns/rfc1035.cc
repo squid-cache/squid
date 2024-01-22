@@ -100,10 +100,11 @@ rfc1035HeaderPack(char *buf, size_t sz, rfc1035_message * hdr)
 static int
 rfc1035LabelPack(char *buf, size_t sz, const char *label)
 {
+    assert(label);
+    assert(!strchr(label, '.'));
+
     int off = 0;
-    size_t len = label ? strlen(label) : 0;
-    if (label)
-        assert(!strchr(label, '.'));
+    auto len = strlen(label);
     if (len > RFC1035_MAXLABELSZ)
         len = RFC1035_MAXLABELSZ;
     assert(sz >= len + 1);
@@ -134,8 +135,12 @@ rfc1035NamePack(char *buf, size_t sz, const char *name)
     for (t = strtok(copy, "."); t; t = strtok(nullptr, "."))
         off += rfc1035LabelPack(buf + off, sz - off, t);
     xfree(copy);
-    off += rfc1035LabelPack(buf + off, sz - off, nullptr);
-    assert(off <= sz);
+
+    // add a terminating root (i.e. zero length) label
+    assert(off < sz);
+    buf[off] = 0;
+    ++off;
+
     return off;
 }
 

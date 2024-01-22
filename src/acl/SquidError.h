@@ -20,7 +20,7 @@ namespace Acl
 class SquidErrorCheck: public ParameterizedNode< ACLData<err_type> >
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
 };
 

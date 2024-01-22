@@ -10,6 +10,7 @@
 #define SQUID_ACLFILLED_CHECKLIST_H
 
 #include "AccessLogEntry.h"
+#include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "acl/forward.h"
 #include "base/CbcPointer.h"

@@ -11,10 +11,10 @@
 
 #if USE_AUTH
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 #include "auth/UserRequest.h"
 
-class ACLMaxUserIP : public ACL
+class ACLMaxUserIP : public Acl::Node
 {
     MEMPROXY_CLASS(ACLMaxUserIP);
 

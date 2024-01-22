@@ -22,7 +22,16 @@ bool comm_iocallbackpending(void); /* inline candidate */
 
 int commSetNonBlocking(int fd);
 int commUnsetNonBlocking(int fd);
+
+/// On platforms where FD_CLOEXEC is defined, close the given descriptor during
+/// a function call from the exec(3) family. Otherwise, do nothing; the platform
+/// itself may close-on-exec by default (e.g., MS Win32 is said to do that at
+/// https://devblogs.microsoft.com/oldnewthing/20111216-00/?p=8873); other
+/// platforms are unsupported. Callers that want close-on-exec behavior must
+/// call this function on all platforms and are not responsible for the outcome
+/// on platforms without FD_CLOEXEC.
 void commSetCloseOnExec(int fd);
+
 void _comm_close(int fd, char const *file, int line);
 #define comm_close(x) (_comm_close((x), __FILE__, __LINE__))
 void old_comm_reset_close(int fd);

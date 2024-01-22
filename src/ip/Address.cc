@@ -102,6 +102,16 @@ Ip::Address::applyMask(Ip::Address const &mask_addr)
 }
 
 void
+Ip::Address::turnMaskedBitsOn(const Address &mask)
+{
+    const auto addressWords = reinterpret_cast<uint32_t*>(&mSocketAddr_.sin6_addr);
+    const auto maskWords = reinterpret_cast<const uint32_t*>(&mask.mSocketAddr_.sin6_addr);
+    const auto len = sizeof(mSocketAddr_.sin6_addr)/sizeof(uint32_t);
+    for (size_t i = 0; i < len; ++i)
+        addressWords[i] |= ~maskWords[i];
+}
+
+void
 Ip::Address::applyClientMask(const Address &mask)
 {
     if (!isLocalhost() && isIPv4())

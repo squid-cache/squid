@@ -81,7 +81,7 @@
 #include "unlinkd.h"
 #include "wccp.h"
 #include "wccp2.h"
-#include "WinSvc.h"
+#include "windows_service.h"
 
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
@@ -806,7 +806,7 @@ serverConnectionsOpen(void)
         icmpEngine.Open();
         netdbInit();
         asnInit();
-        ACL::Initialize();
+        Acl::Node::Initialize();
         peerSelectInit();
 
         carpInit();
