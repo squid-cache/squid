@@ -10,6 +10,7 @@
 #include "acl/Gadgets.h"
 #include "base/IoManip.h"
 #include "base/PackableStream.h"
+#include "base/TextException.h"
 #include "cache_cf.h"
 #include "comm/Connection.h"
 #include "compat/cmsg.h"
@@ -19,6 +20,7 @@
 #include "hier_code.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
+#include "sbuf/Stream.h"
 #include "Parsing.h"
 #include "Store.h"
 
@@ -305,8 +307,7 @@ Ip::Qos::Config::parseConfigLine()
     /* Assume preserve is true. We don't set at initialisation as this affects isHitTosActive().
        We have to do this now, as we may never match the 'tos' parameter below */
 #if !USE_QOS_TOS
-    debugs(3, DBG_CRITICAL, "ERROR: Invalid option 'qos_flows'. QOS features not enabled in this build");
-    self_destruct();
+    throw TextException(ToSBuf("ERROR: Invalid option 'qos_flows'. QOS features not enabled in this build"), Here());
 #endif
 
     while ( (token = ConfigParser::NextToken()) ) {
@@ -325,17 +326,17 @@ Ip::Qos::Config::parseConfigLine()
                        << "Netfilter mark preservation not available.");
 #endif // USE_LIBNETFILTERCONNTRACK
 #elif SO_MARK // SO_MARK && USE_LIBCAP
-                debugs(3, DBG_CRITICAL, "ERROR: Invalid parameter 'mark' in qos_flows option. "
-                       << "Linux Netfilter marking not available without LIBCAP support.");
-                self_destruct();
+                throw TextException(ToSBuf("ERROR: Invalid parameter 'mark' in qos_flows option. ", 
+                                           "Linux Netfilter marking not available on this platform."), Here());
 #else // SO_MARK && USE_LIBCAP
-                debugs(3, DBG_CRITICAL, "ERROR: Invalid parameter 'mark' in qos_flows option. "
-                       << "Linux Netfilter marking not available on this platform.");
-                self_destruct();
+                throw TextException(ToSBuf("ERROR: Invalid parameter 'mark' in qos_flows option. ", 
+                                           "Linux Netfilter marking not available on this platform."), Here());
 #endif // SO_MARK && USE_LIBCAP
-            } else {
+            } else if (strncmp(token, "tos",3) == 0) {
                 preserveMissTos = true;
                 tos = true;
+            } else {
+                throw TextException(ToSBuf("Unsupported use case"), Here());
             }
         }
 
@@ -343,14 +344,12 @@ Ip::Qos::Config::parseConfigLine()
 
             if (mark) {
                 if (!xstrtoui(&token[10], nullptr, &markLocalHit, 0, std::numeric_limits<nfmark_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark local-hit value " << &token[10]);
-                    self_destruct();
+                    throw TextException(ToSBuf("ERROR: Bad mark local-hit value ", &token[10]), Here());
                 }
             } else {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[10], nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS local-hit value " << &token[10]);
-                    self_destruct();
+                    throw TextException(ToSBuf("ERROR: Bad TOS local-hit value ", &token[10]), Here());
                 }
                 tosLocalHit = (tos_t)v;
             }
@@ -359,14 +358,12 @@ Ip::Qos::Config::parseConfigLine()
 
             if (mark) {
                 if (!xstrtoui(&token[12], nullptr, &markSiblingHit, 0, std::numeric_limits<nfmark_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark sibling-hit value " << &token[12]);
-                    self_destruct();
+                    throw TextException(ToSBuf("ERROR: Bad mark sibling-hit value ", &token[12]), Here());
                 }
             } else {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[12], nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS sibling-hit value " << &token[12]);
-                    self_destruct();
+                    throw TextException(ToSBuf("ERROR: Bad TOS sibling-hit value ", &token[12]), Here());
                 }
                 tosSiblingHit = (tos_t)v;
             }
@@ -375,14 +372,12 @@ Ip::Qos::Config::parseConfigLine()
 
             if (mark) {
                 if (!xstrtoui(&token[11], nullptr, &markParentHit, 0, std::numeric_limits<nfmark_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark parent-hit value " << &token[11]);
-                    self_destruct();
+                    throw TextException(ToSBuf("ERROR: Bad mark parent-hit value ", &token[11]), Here());
                 }
             } else {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[11], nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS parent-hit value " << &token[11]);
-                    self_destruct();
+                    throw TextException(ToSBuf("ERROR: Bad TOS parent-hit value ", &token[11]), Here());
                 }
                 tosParentHit = (tos_t)v;
             }
@@ -392,8 +387,7 @@ Ip::Qos::Config::parseConfigLine()
             char *end;
             if (mark) {
                 if (!xstrtoui(&token[5], &end, &markMiss, 0, std::numeric_limits<nfmark_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark miss value " << &token[5]);
-                    self_destruct();
+                    throw TextException(ToSBuf("ERROR: Bad mark miss value ", &token[5]), Here());
                 }
                 if (*end == '/') {
                     if (!xstrtoui(end + 1, nullptr, &markMissMask, 0, std::numeric_limits<nfmark_t>::max())) {
@@ -406,8 +400,7 @@ Ip::Qos::Config::parseConfigLine()
             } else {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[5], &end, &v, 0, std::numeric_limits<tos_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS miss value " << &token[5]);
-                    self_destruct();
+                    throw TextException(ToSBuf("ERROR: Bad TOS miss value ", &token[5]), Here());
                 }
                 tosMiss = (tos_t)v;
                 if (*end == '/') {
@@ -424,8 +417,7 @@ Ip::Qos::Config::parseConfigLine()
         } else if (strcmp(token, "disable-preserve-miss") == 0) {
 
             if (preserveMissTosMask!=0xFFU || preserveMissMarkMask!=0xFFFFFFFFU) {
-                debugs(3, DBG_CRITICAL, "ERROR: miss-mask feature cannot be set with disable-preserve-miss");
-                self_destruct();
+                throw TextException(ToSBuf("ERROR: miss-mask feature cannot be set with disable-preserve-miss"), Here());
             }
             if (mark) {
                 preserveMissMark = false;
@@ -439,19 +431,16 @@ Ip::Qos::Config::parseConfigLine()
 
             if (mark && preserveMissMark) {
                 if (!xstrtoui(&token[10], nullptr, &preserveMissMarkMask, 0, std::numeric_limits<nfmark_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark miss-mark value " << &token[10]);
-                    self_destruct();
+                    throw TextException(ToSBuf("ERROR: Bad mark miss-mark value ", &token[10]), Here());
                 }
             } else if (preserveMissTos) {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[10], nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS miss-mark value " << &token[10]);
-                    self_destruct();
+                    throw TextException(ToSBuf("ERROR: Bad TOS miss-mark value ", &token[10]), Here());
                 }
                 preserveMissTosMask = (tos_t)v;
             } else {
-                debugs(3, DBG_CRITICAL, "ERROR: miss-mask feature cannot be set without miss-preservation enabled");
-                self_destruct();
+                throw TextException(ToSBuf("ERROR: miss-mask feature cannot be set without miss-preservation enabled"), Here());
             }
 
         }
