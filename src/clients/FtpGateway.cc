@@ -1000,7 +1000,7 @@ Ftp::Gateway::processReplyBody()
         parseListing();
         maybeReadVirginBody();
         return;
-    } else if (const int csize = data.readBuf->contentSize()) {
+    } else if (const auto csize = data.readBuf->contentSize()) {
         writeReplyBody(data.readBuf->content(), csize);
         debugs(9, 5, "consuming " << csize << " bytes of readBuf");
         data.readBuf->consume(csize);
