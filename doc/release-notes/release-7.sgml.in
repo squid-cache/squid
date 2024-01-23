@@ -97,10 +97,10 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
    or to convert to the ISO-639 equivalents. Existing symlinks are not
    affected.
 
-<p>See <http://www.squid-cache.org/Versions/langpack/> for the latest
+<p>See <url url="http://www.squid-cache.org/Versions/langpack/"> for the latest
    list of official Squid translations.
 
-<p>See <https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes> for
+<p>See <url url="https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes"> for
    the full ISO-639 list. HTTP uses the 2-letter (set 1) codes.
 
 
