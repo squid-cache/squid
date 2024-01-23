@@ -32,6 +32,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 <itemize>
 	<item>Cache Manager changes
 	<item>Removed purge tool
+	<item>Remove deprecated languages
 </itemize>
 
 <p>Most user-facing changes are reflected in squid.conf (see further below).
@@ -81,6 +82,26 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
     curl -XPURGE --proxy http://127.0.0.1:3128 http://url.to/evict/
 </verb>
    Alternatively the HTCP <em>CLR</em> mechanism can be used.
+
+<sect1>Removed deprecated languages
+<p>Old Squid used full language name to refer to error page translations.
+   These have been deprecated since addition of ISO-639 language codes
+   and support for HTTP Accept-Language negotiation in Squid-3.x.
+
+<p>As of this release Squid will no longer provide the symlinks
+   needed for seamless upgrade for squid.conf containing settings such as
+<verb>
+    error_directory English
+</verb>
+   All Squid installations are expected to already have them,
+   or to convert to the ISO-639 equivalents. Existing symlinks are not
+   affected.
+
+<p>See <http://www.squid-cache.org/Versions/langpack/> for the latest
+   list of official Squid translations.
+
+<p>See <https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes> for
+   the full ISO-639 list. HTTP uses the 2-letter (set 1) codes.
 
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
