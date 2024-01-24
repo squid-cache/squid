@@ -191,6 +191,7 @@ AS_CASE(["$squid_host_os"],
     CXXFLAGS="$CXXFLAGS -mthreads -static-libgcc -static-libstdc++"
     dnl Check for Winsock only on MinGW
     SQUID_CHECK_WINSOCK_LIB
+    AC_CHECK_FUNCS([fsync])
     AC_CHECK_HEADERS([ws2tcpip.h winsock2.h windows.h],,,[
 #if HAVE_WS2TCPIP_H
 #include <ws2tcpip.h>
@@ -2211,6 +2212,7 @@ AC_CHECK_HEADERS( \
   glob.h \
   gnumalloc.h \
   grp.h \
+  io.h \
   ipl.h \
   libc.h \
   limits.h \

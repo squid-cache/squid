@@ -32,5 +32,17 @@
 #include <windows.h>
 #endif
 
+#if HAVE_IO_H
+#include <io.h>
+#endif
+
+#if !HAVE_FSYNC
+inline int
+fsync(int fd)
+{
+    return _commit(fd);
+}
+#endif
+
 #endif /* _SQUID_MINGW_*/
 #endif /* SQUID_OS_MINGW_H */
