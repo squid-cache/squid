@@ -32,6 +32,7 @@
 #include <windows.h>
 #endif
 
+// needed for _commmit and _get_osfhandle
 #if HAVE_IO_H
 #include <io.h>
 #endif
