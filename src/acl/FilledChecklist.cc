@@ -226,11 +226,12 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
     my_addr.setEmpty();
     src_addr.setEmpty();
     dst_addr.setEmpty();
+
     rfc931[0] = '\0';
+    setIdent(ident);
 
     changeAcl(A);
     setRequest(http_request);
-    setIdent(ident);
 }
 
 void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
