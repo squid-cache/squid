@@ -1536,6 +1536,9 @@ SquidMain(int argc, char **argv)
 
 #endif
 
+    Mem::Init();
+    AnyP::UriScheme::Init(); // needs to be before args parsing
+
     cmdLine.forEachOption(mainHandleCommandLineOption);
 
     Debug::SettleStderr();
@@ -1573,10 +1576,6 @@ SquidMain(int argc, char **argv)
             ConfigFile = xstrdup(DEFAULT_CONFIG_FILE);
 
         assert(!configured_once);
-
-        Mem::Init();
-
-        AnyP::UriScheme::Init();
 
         storeFsInit();      /* required for config parsing */
 
