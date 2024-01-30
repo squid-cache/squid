@@ -97,7 +97,6 @@ AnyP::Uri::Decode(const SBuf &buf)
         return buf;
 
     SBuf output;
-    output.reserveSpace(buf.length()); // worst case: buf is not encoded
 
     Parser::Tokenizer tok(buf);
     SBuf token;
