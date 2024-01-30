@@ -73,14 +73,14 @@ Acl::SplayInserter<DataValue>::Merge(Splay<Value> &storage, Value &&newItem)
 
         if (IsSubset(newItem, oldItem)) {
             debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Ignoring " << newItem << " because it is already covered by " << oldItem <<
-                   Debug::Extra << "advice: Remove value " << newItem << " from the ACL named " << AclMatchedName);
+                   Debug::Extra << "advice: Remove value " << newItem << " from the ACL");
             DestroyValue(newItem);
             return;
         }
 
         if (IsSubset(oldItem, newItem)) {
             debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Ignoring earlier " << oldItem << " because it is covered by " << newItem <<
-                   Debug::Extra << "advice: Remove value " << oldItem << " from the ACL named " << AclMatchedName);
+                   Debug::Extra << "advice: Remove value " << oldItem << " from the ACL");
             storage.remove(oldItem, comparator);
             DestroyValue(oldItem);
             continue; // still need to insert newItem (and it may conflict with other old items)
@@ -88,7 +88,7 @@ Acl::SplayInserter<DataValue>::Merge(Splay<Value> &storage, Value &&newItem)
 
         const auto combinedItem = MakeCombinedValue(oldItem, newItem);
         debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Merging overlapping " << newItem << " and " << oldItem << " into " << combinedItem <<
-               Debug::Extra << "advice: Replace values " << newItem << " and " << oldItem << " with " << combinedItem << " in the ACL named " << AclMatchedName);
+               Debug::Extra << "advice: Replace values " << newItem << " and " << oldItem << " with " << combinedItem << " in the ACL");
         DestroyValue(newItem);
         newItem = combinedItem;
         storage.remove(oldItem, comparator);

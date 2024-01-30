@@ -35,6 +35,9 @@
  * -----------------------------------------------------------------------------
  */
 
+#ifndef SQUID_SRC_AUTH_NEGOTIATE_KERBEROS_NEGOTIATE_KERBEROS_H
+#define SQUID_SRC_AUTH_NEGOTIATE_KERBEROS_NEGOTIATE_KERBEROS_H
+
 #include <cstring>
 #include <ctime>
 #if HAVE_NETDB_H
@@ -147,4 +150,6 @@ char *get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac);
 #define HAVE_PAC_SUPPORT 0
 #endif
 int check_k5_err(krb5_context context, const char *msg, krb5_error_code code);
+
+#endif /* SQUID_SRC_AUTH_NEGOTIATE_KERBEROS_NEGOTIATE_KERBEROS_H */
 

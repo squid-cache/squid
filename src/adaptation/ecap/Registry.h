@@ -6,5 +6,10 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
+#ifndef SQUID_SRC_ADAPTATION_ECAP_REGISTRY_H
+#define SQUID_SRC_ADAPTATION_ECAP_REGISTRY_H
+
 // TBD
+
+#endif /* SQUID_SRC_ADAPTATION_ECAP_REGISTRY_H */
 

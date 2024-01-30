@@ -34,6 +34,9 @@
  * int manipulation
  */
 
+#ifndef SQUID_LIB_RFCNB_BYTEORDER_H
+#define SQUID_LIB_RFCNB_BYTEORDER_H
+
 #undef CAREFUL_ALIGNMENT
 
 /* we know that the 386 can handle misalignment and has the "right"
@@ -86,4 +89,6 @@
 #define RIVAL(buf,pos) IREV(IVAL(buf,pos))
 #define RSSVAL(buf,pos,val) SSVAL(buf,pos,SREV(val))
 #define RSIVAL(buf,pos,val) SIVAL(buf,pos,IREV(val))
+
+#endif /* SQUID_LIB_RFCNB_BYTEORDER_H */
 

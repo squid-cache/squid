@@ -6,7 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef STUB
+#ifndef SQUID_SRC_TESTS_STUB_H
+#define SQUID_SRC_TESTS_STUB_H
 
 /** \group STUB
  *
@@ -53,5 +54,5 @@
 /** Same as STUB_RETREF(). TODO: Remove */
 #define STUB_RETSTATREF(x) STUB_RETREF(x)
 
-#endif /* STUB */
+#endif /* SQUID_SRC_TESTS_STUB_H */
 

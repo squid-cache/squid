@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLANNOTATECLIENT
-#define SQUID_ACLANNOTATECLIENT
+#ifndef SQUID_SRC_ACL_ANNOTATECLIENT_H
+#define SQUID_SRC_ACL_ANNOTATECLIENT_H
 
 #include "acl/Note.h"
 
@@ -25,5 +25,5 @@ public:
 
 } // namespace Acl
 
-#endif /* SQUID_ACLANNOTATECLIENT */
+#endif /* SQUID_SRC_ACL_ANNOTATECLIENT_H */
 
