@@ -1535,9 +1535,7 @@ SquidMain(int argc, char **argv)
     WIN32_svcstatusupdate(SERVICE_START_PENDING, 10000);
 
 #endif
-
-    Mem::Init();
-    AnyP::UriScheme::Init(); // needs to be before args parsing
+    AnyP::UriScheme::Init(); // needs to be before arg parsing, bug 5337
 
     cmdLine.forEachOption(mainHandleCommandLineOption);
 
@@ -1576,6 +1574,9 @@ SquidMain(int argc, char **argv)
             ConfigFile = xstrdup(DEFAULT_CONFIG_FILE);
 
         assert(!configured_once);
+
+        Mem::Init();
+
 
         storeFsInit();      /* required for config parsing */
 
