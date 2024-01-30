@@ -1577,7 +1577,6 @@ SquidMain(int argc, char **argv)
 
         Mem::Init();
 
-
         storeFsInit();      /* required for config parsing */
 
         Fs::Init();
