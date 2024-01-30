@@ -8,8 +8,8 @@
 
 /* DEBUG: section 20    Store Rebuild Routines */
 
-#ifndef SQUID_STORE_REBUILD_H_
-#define SQUID_STORE_REBUILD_H_
+#ifndef SQUID_SRC_STORE_REBUILD_H
+#define SQUID_SRC_STORE_REBUILD_H
 
 #include "store_key_md5.h"
 
@@ -84,5 +84,5 @@ bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData 
  */
 bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, StoreRebuildData &counts, uint64_t expectedSize);
 
-#endif /* SQUID_STORE_REBUILD_H_ */
+#endif /* SQUID_SRC_STORE_REBUILD_H */
 

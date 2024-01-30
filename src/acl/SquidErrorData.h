@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSQUIDERRORDATA_H
-#define SQUID_ACLSQUIDERRORDATA_H
+#ifndef SQUID_SRC_ACL_SQUIDERRORDATA_H
+#define SQUID_SRC_ACL_SQUIDERRORDATA_H
 
 #include "acl/Data.h"
 #include "base/CbDataList.h"
@@ -30,5 +30,5 @@ private:
     CbDataListContainer <err_type> errors;
 };
 
-#endif //SQUID_ACLSQUIDERRORDATA_H
+#endif /* SQUID_SRC_ACL_SQUIDERRORDATA_H */
 

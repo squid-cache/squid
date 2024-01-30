@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PEERPOOLMGR_H
-#define SQUID_PEERPOOLMGR_H
+#ifndef SQUID_SRC_PEERPOOLMGR_H
+#define SQUID_SRC_PEERPOOLMGR_H
 
 #include "base/AsyncJob.h"
 #include "base/JobWait.h"
@@ -71,5 +71,5 @@ private:
     unsigned int addrUsed; ///< counter for cycling through peer addresses
 };
 
-#endif /* SQUID_PEERPOOLMGR_H */
+#endif /* SQUID_SRC_PEERPOOLMGR_H */
 

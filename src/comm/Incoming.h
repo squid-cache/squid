@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__SRC_COMM_INCOMING_H
-#define SQUID__SRC_COMM_INCOMING_H
+#ifndef SQUID_SRC_COMM_INCOMING_H
+#define SQUID_SRC_COMM_INCOMING_H
 
 #if USE_POLL || USE_SELECT
 
@@ -121,4 +121,4 @@ private:
 } // namespace Comm
 
 #endif /* USE_POLL || USE_SELECT */
-#endif /* SQUID__SRC_COMM_INCOMING_H */
+#endif /* SQUID_SRC_COMM_INCOMING_H */

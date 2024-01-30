@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_CONNECTIONS_ENCRYPTED_H
-#define SQUID_ACL_CONNECTIONS_ENCRYPTED_H
+#ifndef SQUID_SRC_ACL_CONNECTIONSENCRYPTED_H
+#define SQUID_SRC_ACL_CONNECTIONSENCRYPTED_H
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
@@ -35,5 +35,5 @@ protected:
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_CONNECTIONS_ENCRYPTED_H */
+#endif /* SQUID_SRC_ACL_CONNECTIONSENCRYPTED_H */
 

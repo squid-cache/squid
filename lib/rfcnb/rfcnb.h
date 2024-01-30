@@ -30,8 +30,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef _RFCNB_RFCNB_H
-#define _RFCNB_RFCNB_H
+#ifndef SQUID_LIB_RFCNB_RFCNB_H
+#define SQUID_LIB_RFCNB_RFCNB_H
 
 /* Error responses */
 
@@ -75,5 +75,5 @@ struct RFCNB_Pkt *RFCNB_Alloc_Pkt(int n);
 }
 
 #endif
-#endif                          /* _RFCNB_RFCNB_H */
+#endif /* SQUID_LIB_RFCNB_RFCNB_H */
 

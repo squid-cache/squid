@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSERVERNAME_H
-#define SQUID_ACLSERVERNAME_H
+#ifndef SQUID_SRC_ACL_SERVERNAME_H
+#define SQUID_SRC_ACL_SERVERNAME_H
 
 #include "acl/DomainData.h"
 #include "acl/ParameterizedNode.h"
@@ -40,5 +40,5 @@ private:
 
 } // namespace Acl
 
-#endif /* SQUID_ACLSERVERNAME_H */
+#endif /* SQUID_SRC_ACL_SERVERNAME_H */
 

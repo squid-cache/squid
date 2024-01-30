@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICAPCONFIG_H
-#define SQUID_ICAPCONFIG_H
+#ifndef SQUID_SRC_ADAPTATION_ICAP_CONFIG_H
+#define SQUID_SRC_ADAPTATION_ICAP_CONFIG_H
 
 #include "acl/forward.h"
 #include "adaptation/Config.h"
@@ -56,5 +56,5 @@ extern Config TheConfig;
 } // namespace Icap
 } // namespace Adaptation
 
-#endif /* SQUID_ICAPCONFIG_H */
+#endif /* SQUID_SRC_ADAPTATION_ICAP_CONFIG_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLHIERCODE_H
-#define SQUID_ACLHIERCODE_H
+#ifndef SQUID_SRC_ACL_HIERCODE_H
+#define SQUID_SRC_ACL_HIERCODE_H
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
@@ -27,5 +27,5 @@ public:
 
 } // namespace Acl
 
-#endif /* SQUID_ACLHIERCODE_H */
+#endif /* SQUID_SRC_ACL_HIERCODE_H */
 

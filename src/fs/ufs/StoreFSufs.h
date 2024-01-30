@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STOREFSUFS_H
-#define SQUID_STOREFSUFS_H
+#ifndef SQUID_SRC_FS_UFS_STOREFSUFS_H
+#define SQUID_SRC_FS_UFS_STOREFSUFS_H
 
 /**
  \defgroup UFS  UFS Storage Filesystem
@@ -72,5 +72,5 @@ StoreFSufs<C>::createSwapDir()
 } /* namespace Ufs */
 } /* namespace Fs */
 
-#endif /* SQUID_STOREFSUFS_H */
+#endif /* SQUID_SRC_FS_UFS_STOREFSUFS_H */
 

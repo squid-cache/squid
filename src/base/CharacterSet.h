@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_PARSER_CHARACTERSET_H
-#define _SQUID_SRC_PARSER_CHARACTERSET_H
+#ifndef SQUID_SRC_BASE_CHARACTERSET_H
+#define SQUID_SRC_BASE_CHARACTERSET_H
 
 #include <initializer_list>
 #include <iosfwd>
@@ -146,5 +146,5 @@ operator- (CharacterSet lhs, const CharacterSet &rhs);
 std::ostream&
 operator <<(std::ostream &, const CharacterSet &);
 
-#endif /* _SQUID_SRC_PARSER_CHARACTERSET_H */
+#endif /* SQUID_SRC_BASE_CHARACTERSET_H */
 

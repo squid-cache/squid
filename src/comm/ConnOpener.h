@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_COMM_OPENERSTATEDATA_H
-#define _SQUID_SRC_COMM_OPENERSTATEDATA_H
+#ifndef SQUID_SRC_COMM_CONNOPENER_H
+#define SQUID_SRC_COMM_CONNOPENER_H
 
 #include "base/AsyncCall.h"
 #include "base/AsyncJob.h"
@@ -88,5 +88,5 @@ private:
 
 }; // namespace Comm
 
-#endif /* _SQUID_SRC_COMM_CONNOPENER_H */
+#endif /* SQUID_SRC_COMM_CONNOPENER_H */
 

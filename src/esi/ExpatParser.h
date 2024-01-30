@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ESIEXPATPARSER_H
-#define SQUID_ESIEXPATPARSER_H
+#ifndef SQUID_SRC_ESI_EXPATPARSER_H
+#define SQUID_SRC_ESI_EXPATPARSER_H
 
 #if USE_SQUID_ESI && HAVE_LIBEXPAT
 
@@ -46,5 +46,5 @@ private:
 
 #endif /* USE_SQUID_ESI */
 
-#endif /* SQUID_ESIEXPATPARSER_H */
+#endif /* SQUID_SRC_ESI_EXPATPARSER_H */
 

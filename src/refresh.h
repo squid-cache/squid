@@ -8,8 +8,8 @@
 
 /* DEBUG: section 22    Refresh Calculation */
 
-#ifndef SQUID_REFRESH_H_
-#define SQUID_REFRESH_H_
+#ifndef SQUID_SRC_REFRESH_H
+#define SQUID_SRC_REFRESH_H
 
 #include "http/forward.h"
 #include "store/forward.h"
@@ -26,5 +26,5 @@ void refreshInit(void);
 class RefreshPattern;
 const RefreshPattern *refreshLimits(const char *url);
 
-#endif /* SQUID_REFRESH_H_ */
+#endif /* SQUID_SRC_REFRESH_H */
 

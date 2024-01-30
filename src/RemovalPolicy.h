@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef   SQUID_REMOVALPOLICY_H
-#define   SQUID_REMOVALPOLICY_H
+#ifndef SQUID_SRC_REMOVALPOLICY_H
+#define SQUID_SRC_REMOVALPOLICY_H
 
 #include "cbdata.h"
 
@@ -79,5 +79,5 @@ RemovalPolicy *createRemovalPolicy(RemovalPolicySettings * settings);
 
 typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
 
-#endif /* SQUID_REMOVALPOLICY_H */
+#endif /* SQUID_SRC_REMOVALPOLICY_H */
 

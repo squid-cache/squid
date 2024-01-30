@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef   SQUID_PEERDIGEST_H
-#define   SQUID_PEERDIGEST_H
+#ifndef SQUID_SRC_PEERDIGEST_H
+#define SQUID_SRC_PEERDIGEST_H
 
 #if USE_CACHE_DIGESTS
 
@@ -121,5 +121,5 @@ void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
 #endif /* USE_CACHE_DIGESTS */
 
-#endif /* SQUID_PEERDIGEST_H */
+#endif /* SQUID_SRC_PEERDIGEST_H */
 

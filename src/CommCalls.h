@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_COMMCALLS_H
-#define SQUID_COMMCALLS_H
+#ifndef SQUID_SRC_COMMCALLS_H
+#define SQUID_SRC_COMMCALLS_H
 
 #include "base/AsyncCall.h"
 #include "base/AsyncJobCalls.h"
@@ -354,5 +354,5 @@ CommCbFunPtrCallT<Dialer>::fire()
     dialer.dial();
 }
 
-#endif /* SQUID_COMMCALLS_H */
+#endif /* SQUID_SRC_COMMCALLS_H */
 

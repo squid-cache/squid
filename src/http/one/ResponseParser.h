@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H
-#define _SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H
+#ifndef SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H
+#define SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H
 
 #include "http/one/Parser.h"
 #include "http/StatusCode.h"
@@ -71,5 +71,5 @@ private:
 } // namespace One
 } // namespace Http
 
-#endif /* _SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H */
+#endif /* SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H */
 

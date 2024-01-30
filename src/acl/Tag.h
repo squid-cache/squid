@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLTAG_H
-#define SQUID_ACLTAG_H
+#ifndef SQUID_SRC_ACL_TAG_H
+#define SQUID_SRC_ACL_TAG_H
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
@@ -25,5 +25,5 @@ public:
 
 } // namespace Acl
 
-#endif /* SQUID_ACLMYPORTNAME_H */
+#endif /* SQUID_SRC_ACL_TAG_H */
 

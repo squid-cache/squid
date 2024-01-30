@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HELPER_REPLY_H
-#define _SQUID_SRC_HELPER_REPLY_H
+#ifndef SQUID_SRC_HELPER_REPLY_H
+#define SQUID_SRC_HELPER_REPLY_H
 
 #include "base/CbcPointer.h"
 #include "helper/forward.h"
@@ -79,5 +79,5 @@ std::ostream &operator <<(std::ostream &, const Reply &);
 
 } // namespace Helper
 
-#endif /* _SQUID_SRC_HELPER_REPLY_H */
+#endif /* SQUID_SRC_HELPER_REPLY_H */
 

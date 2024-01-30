@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSERVERCERTIFICATE_H
-#define SQUID_ACLSERVERCERTIFICATE_H
+#ifndef SQUID_SRC_ACL_SERVERCERTIFICATE_H
+#define SQUID_SRC_ACL_SERVERCERTIFICATE_H
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
@@ -27,5 +27,5 @@ public:
 
 } // namespace Acl
 
-#endif /* SQUID_ACLSERVERCERTIFICATE_H */
+#endif /* SQUID_SRC_ACL_SERVERCERTIFICATE_H */
 

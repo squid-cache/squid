@@ -11,8 +11,8 @@
  * Based on previous work of Francesco Chemolli, Robert Collins and Andrew Doran
  */
 
-#ifndef _LIBSSPWIN32_H_
-#define _LIBSSPWIN32_H_
+#ifndef SQUID_LIB_SSPI_SSPWIN32_H
+#define SQUID_LIB_SSPI_SSPWIN32_H
 
 #define SECURITY_WIN32
 #define NTLM_PACKAGE_NAME "NTLM"
@@ -67,5 +67,5 @@ const char * WINAPI SSP_MakeNegotiateBlob(PVOID, int, PBOOL, int *, char *);
 const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID, int, PBOOL, int *, char *);
 #endif
 
-#endif /* LIBSSPWIN32_H_ */
+#endif /* SQUID_LIB_SSPI_SSPWIN32_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSL_HELPER_H
-#define SQUID_SSL_HELPER_H
+#ifndef SQUID_SRC_SSL_HELPER_H
+#define SQUID_SRC_SSL_HELPER_H
 
 #if USE_OPENSSL
 
@@ -62,5 +62,5 @@ public:
 } //namespace Ssl
 
 #endif /* USE_OPENSSL */
-#endif // SQUID_SSL_HELPER_H
+#endif /* SQUID_SRC_SSL_HELPER_H */
 

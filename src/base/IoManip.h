@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_BASE_IO_MANIP_H
-#define SQUID_SRC_BASE_IO_MANIP_H
+#ifndef SQUID_SRC_BASE_IOMANIP_H
+#define SQUID_SRC_BASE_IOMANIP_H
 
 #include "debug/Stream.h"
 
@@ -220,5 +220,5 @@ operator <<(std::ostream &os, const AsList<Container> &manipulator)
 template <typename Container>
 inline auto asList(const Container &c) { return AsList<Container>(c); }
 
-#endif /* SQUID_SRC_BASE_IO_MANIP_H */
+#endif /* SQUID_SRC_BASE_IOMANIP_H */
 

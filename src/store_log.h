@@ -8,8 +8,8 @@
 
 /* DEBUG: section 20    Storage Manager Logging Functions */
 
-#ifndef SQUID_STORE_LOG_H_
-#define SQUID_STORE_LOG_H_
+#ifndef SQUID_SRC_STORE_LOG_H
+#define SQUID_SRC_STORE_LOG_H
 
 class StoreEntry;
 
@@ -18,5 +18,5 @@ void storeLogRotate(void);
 void storeLogClose(void);
 void storeLogOpen(void);
 
-#endif /* SQUID_STORE_LOG_H_ */
+#endif /* SQUID_SRC_STORE_LOG_H */
 

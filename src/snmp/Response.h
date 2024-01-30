@@ -8,8 +8,8 @@
 
 /* DEBUG: section 49    SNMP Interface */
 
-#ifndef SQUID_SNMPX_RESPONSE_H
-#define SQUID_SNMPX_RESPONSE_H
+#ifndef SQUID_SRC_SNMP_RESPONSE_H
+#define SQUID_SRC_SNMP_RESPONSE_H
 
 #include "ipc/forward.h"
 #include "ipc/Response.h"
@@ -35,5 +35,5 @@ public:
 
 } // namespace Snmp
 
-#endif /* SQUID_SNMPX_RESPONSE_H */
+#endif /* SQUID_SRC_SNMP_RESPONSE_H */
 

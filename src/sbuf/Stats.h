@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SBUF_STATS_H
-#define SQUID_SBUF_STATS_H
+#ifndef SQUID_SRC_SBUF_STATS_H
+#define SQUID_SRC_SBUF_STATS_H
 
 #include <iosfwd>
 
@@ -66,5 +66,5 @@ public:
     static SizeRecorder MemBlobSizeAtDestructRecorder;
 };
 
-#endif /* SQUID_SBUF_STATS_H */
+#endif /* SQUID_SRC_SBUF_STATS_H */
 

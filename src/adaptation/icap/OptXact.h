@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICAPOPTXACT_H
-#define SQUID_ICAPOPTXACT_H
+#ifndef SQUID_SRC_ADAPTATION_ICAP_OPTXACT_H
+#define SQUID_SRC_ADAPTATION_ICAP_OPTXACT_H
 
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Xaction.h"
@@ -66,5 +66,5 @@ protected:
 } // namespace Icap
 } // namespace Adaptation
 
-#endif /* SQUID_ICAPOPTXACT_H */
+#endif /* SQUID_SRC_ADAPTATION_ICAP_OPTXACT_H */
 

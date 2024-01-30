@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPHDRCONTRANGE_H
-#define SQUID_HTTPHDRCONTRANGE_H
+#ifndef SQUID_SRC_HTTPHDRCONTRANGE_H
+#define SQUID_SRC_HTTPHDRCONTRANGE_H
 
 #include "HttpHeaderRange.h"
 
@@ -37,5 +37,5 @@ void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packable * p);
 void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, int64_t);
 void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, int64_t);
 
-#endif /* SQUID_HTTPHDRCONTRANGE_H */
+#endif /* SQUID_SRC_HTTPHDRCONTRANGE_H */
 

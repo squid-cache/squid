@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSLPROXYCERTS_H_
-#define SQUID_SSLPROXYCERTS_H_
+#ifndef SQUID_SRC_SSL_PROXYCERTS_H
+#define SQUID_SRC_SSL_PROXYCERTS_H
 
 #if USE_OPENSSL
 #include "acl/forward.h"
@@ -59,5 +59,5 @@ public:
 };
 #endif
 
-#endif /* SQUID_SSLPROXYCERTS_H_ */
+#endif /* SQUID_SRC_SSL_PROXYCERTS_H */
 

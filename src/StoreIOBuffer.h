@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STOREIOBUFFER_H
-#define SQUID_STOREIOBUFFER_H
+#ifndef SQUID_SRC_STOREIOBUFFER_H
+#define SQUID_SRC_STOREIOBUFFER_H
 
 #include "base/Range.h"
 #include "MemBuf.h"
@@ -67,5 +67,5 @@ operator <<(std::ostream &os, const StoreIOBuffer &b)
            (void*)b.data << (b.flags.error ? ", ERR" : "") << ')';
 }
 
-#endif /* SQUID_STOREIOBUFFER_H */
+#endif /* SQUID_SRC_STOREIOBUFFER_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSL_CONTEXT_STORAGE_H
-#define SQUID_SSL_CONTEXT_STORAGE_H
+#ifndef SQUID_SRC_SSL_CONTEXT_STORAGE_H
+#define SQUID_SRC_SSL_CONTEXT_STORAGE_H
 
 #if USE_OPENSSL
 
@@ -78,5 +78,5 @@ extern GlobalContextStorage TheGlobalContextStorage;
 } //namespace Ssl
 #endif // USE_OPENSSL
 
-#endif // SQUID_SSL_CONTEXT_STORAGE_H
+#endif /* SQUID_SRC_SSL_CONTEXT_STORAGE_H */
 

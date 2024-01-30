@@ -8,8 +8,8 @@
 
 /* DEBUG: section 47    Store Directory Routines */
 
-#ifndef SQUID_BLOCKINGFILE_H
-#define SQUID_BLOCKINGFILE_H
+#ifndef SQUID_SRC_DISKIO_BLOCKING_BLOCKINGFILE_H
+#define SQUID_SRC_DISKIO_BLOCKING_BLOCKINGFILE_H
 
 #include "cbdata.h"
 #include "DiskIO/DiskFile.h"
@@ -50,5 +50,5 @@ private:
     void writeDone(int fd, int errflag, size_t len);
 };
 
-#endif /* SQUID_BLOCKINGFILE_H */
+#endif /* SQUID_SRC_DISKIO_BLOCKING_BLOCKINGFILE_H */
 

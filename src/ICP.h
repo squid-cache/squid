@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICP_H
-#define SQUID_ICP_H
+#ifndef SQUID_SRC_ICP_H
+#define SQUID_SRC_ICP_H
 
 /**
  \defgroup ServerProtocolICPAPI ICP
@@ -125,5 +125,5 @@ int icpSetCacheKey(const cache_key * key);
 /// \ingroup ServerProtocolICPAPI
 const cache_key *icpGetCacheKey(const char *url, int reqnum);
 
-#endif /* SQUID_ICP_H */
+#endif /* SQUID_SRC_ICP_H */
 

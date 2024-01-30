@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_KID_H
-#define SQUID_IPC_KID_H
+#ifndef SQUID_SRC_IPC_KID_H
+#define SQUID_SRC_IPC_KID_H
 
 #include "SquidString.h"
 #include "tools.h"
@@ -110,5 +110,5 @@ typedef enum {
 /// ProcessKind for the current process
 extern int TheProcessKind;
 
-#endif /* SQUID_IPC_KID_H */
+#endif /* SQUID_SRC_IPC_KID_H */
 

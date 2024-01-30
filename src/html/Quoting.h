@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__SRC_HTML_QUOTING_H
-#define SQUID__SRC_HTML_QUOTING_H
+#ifndef SQUID_SRC_HTML_QUOTING_H
+#define SQUID_SRC_HTML_QUOTING_H
 
 /** Obtain a static buffer containing an HTML-encoded version of the given c-string.
  *
@@ -16,5 +16,5 @@
  */
 char *html_quote(const char *);
 
-#endif /* SQUID__SRC_HTML_QUOTING_H */
+#endif /* SQUID_SRC_HTML_QUOTING_H */
 

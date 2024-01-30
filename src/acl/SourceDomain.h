@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSOURCEDOMAIN_H
-#define SQUID_ACLSOURCEDOMAIN_H
+#ifndef SQUID_SRC_ACL_SOURCEDOMAIN_H
+#define SQUID_SRC_ACL_SOURCEDOMAIN_H
 
 #include "acl/Checklist.h"
 #include "acl/Data.h"
@@ -27,5 +27,5 @@ public:
 
 } // namespace Acl
 
-#endif /* SQUID_ACLSOURCEDOMAIN_H */
+#endif /* SQUID_SRC_ACL_SOURCEDOMAIN_H */
 

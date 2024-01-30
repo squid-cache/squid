@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTP_STATUSLINE_H
-#define SQUID_HTTP_STATUSLINE_H
+#ifndef SQUID_SRC_HTTP_STATUSLINE_H
+#define SQUID_SRC_HTTP_STATUSLINE_H
 
 #include "http/ProtocolVersion.h"
 #include "http/StatusCode.h"
@@ -74,5 +74,5 @@ private:
 
 } // namespace Http
 
-#endif /* SQUID_HTTP_STATUSLINE_H */
+#endif /* SQUID_SRC_HTTP_STATUSLINE_H */
 

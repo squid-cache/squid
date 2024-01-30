@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_UTIL_H
-#define SQUID_UTIL_H
+#ifndef SQUID_INCLUDE_UTIL_H
+#define SQUID_INCLUDE_UTIL_H
 
 #if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
@@ -40,5 +40,5 @@ extern void gb_flush(gb_t *);  /* internal, do not use this */
 
 SQUIDCEXTERN unsigned int RoundTo(const unsigned int num, const unsigned int what);
 
-#endif /* SQUID_UTIL_H */
+#endif /* SQUID_INCLUDE_UTIL_H */
 

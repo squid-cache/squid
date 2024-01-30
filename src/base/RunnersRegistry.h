@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_RUNNERSREGISTRY_H
-#define SQUID_BASE_RUNNERSREGISTRY_H
+#ifndef SQUID_SRC_BASE_RUNNERSREGISTRY_H
+#define SQUID_SRC_BASE_RUNNERSREGISTRY_H
 
 /**
  * This API allows virtually any module to register its interest in receiving
@@ -159,5 +159,5 @@ protected:
 #define CallRunnerRegistrator(ClassName) \
     CallRunnerRegistratorIn(Global, ClassName)
 
-#endif /* SQUID_BASE_RUNNERSREGISTRY_H */
+#endif /* SQUID_SRC_BASE_RUNNERSREGISTRY_H */
 

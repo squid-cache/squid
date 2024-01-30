@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ESIELEMENT_H
-#define SQUID_ESIELEMENT_H
+#ifndef SQUID_SRC_ESI_ELEMENT_H
+#define SQUID_SRC_ESI_ELEMENT_H
 
 #include "base/RefCount.h"
 #include "debug/Stream.h"
@@ -101,5 +101,5 @@ extern void FinishAnElement(ESIElement::Pointer &, int pos = -1);
 // for all elements call finish() and set Pointer to nil
 extern void FinishAllElements(Esi::Elements &);
 
-#endif /* SQUID_ESIELEMENT_H */
+#endif /* SQUID_SRC_ESI_ELEMENT_H */
 

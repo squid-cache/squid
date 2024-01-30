@@ -81,5 +81,5 @@ extern FmtConfig TheConfig;
 #define free_format(X)   do{ delete (*(X)).formats; (*(X)).formats=NULL; }while(false)
 #define dump_format(E,N,D) (D).dumpFormats((E),(N))
 
-#endif
+#endif /* SQUID_SRC_FORMAT_CONFIG_H */
 

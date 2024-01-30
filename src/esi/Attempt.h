@@ -8,8 +8,8 @@
 
 /* DEBUG: section 86    ESI processing */
 
-#ifndef SQUID_ESIATTEMPT_H
-#define SQUID_ESIATTEMPT_H
+#ifndef SQUID_SRC_ESI_ATTEMPT_H
+#define SQUID_SRC_ESI_ATTEMPT_H
 
 #include "esi/Element.h"
 #include "esi/Sequence.h"
@@ -18,5 +18,5 @@ struct esiAttempt : public esiSequence {
     esiAttempt(esiTreeParentPtr aParent) : esiSequence (aParent) {}
 };
 
-#endif /* SQUID_ESIATTEMPT_H */
+#endif /* SQUID_SRC_ESI_ATTEMPT_H */
 

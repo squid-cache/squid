@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__SRC_TIME_FORWARD_H
-#define SQUID__SRC_TIME_FORWARD_H
+#ifndef SQUID_SRC_TIME_FORWARD_H
+#define SQUID_SRC_TIME_FORWARD_H
 
 /// Time and Date handling tools
 namespace Time
@@ -17,5 +17,5 @@ class Engine;
 
 } // namespace Time
 
-#endif /* SQUID__SRC_TIME_FORWARD_H */
+#endif /* SQUID_SRC_TIME_FORWARD_H */
 

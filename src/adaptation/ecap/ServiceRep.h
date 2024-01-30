@@ -8,8 +8,8 @@
 
 /* DEBUG: section 93    eCAP Interface */
 
-#ifndef SQUID_ECAP_SERVICE_REP_H
-#define SQUID_ECAP_SERVICE_REP_H
+#ifndef SQUID_SRC_ADAPTATION_ECAP_SERVICEREP_H
+#define SQUID_SRC_ADAPTATION_ECAP_SERVICEREP_H
 
 #include "adaptation/forward.h"
 #include "adaptation/Service.h"
@@ -66,5 +66,5 @@ void CheckUnusedAdapterServices(const Services& services);
 } // namespace Ecap
 } // namespace Adaptation
 
-#endif /* SQUID_ECAP_SERVICE_REP_H */
+#endif /* SQUID_SRC_ADAPTATION_ECAP_SERVICEREP_H */
 

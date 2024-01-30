@@ -11,8 +11,8 @@
  * AUTHOR: Duane, Alex, Henrik
  */
 
-#ifndef SQUID_INTERNAL_H_
-#define SQUID_INTERNAL_H_
+#ifndef SQUID_SRC_INTERNAL_H
+#define SQUID_SRC_INTERNAL_H
 
 #include "comm/forward.h"
 #include "log/forward.h"
@@ -33,5 +33,5 @@ int internalHostnameIs(const char *);
 /// necessarily running on this Squid instance)
 bool ForSomeCacheManager(const SBuf &);
 
-#endif /* SQUID_INTERNAL_H_ */
+#endif /* SQUID_SRC_INTERNAL_H */
 

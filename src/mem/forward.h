@@ -8,8 +8,8 @@
 
 /* DEBUG: section 13    High Level Memory Pool Management */
 
-#ifndef _SQUID_SRC_MEM_FORWARD_H
-#define _SQUID_SRC_MEM_FORWARD_H
+#ifndef SQUID_SRC_MEM_FORWARD_H
+#define SQUID_SRC_MEM_FORWARD_H
 
 #include "mem/AllocatorProxy.h"
 
@@ -72,5 +72,5 @@ void memFreeBuf(size_t size, void *);
 FREE *memFreeBufFunc(size_t size);
 int memInUse(mem_type);
 
-#endif /* _SQUID_SRC_MEM_FORWARD_H */
+#endif /* SQUID_SRC_MEM_FORWARD_H */
 

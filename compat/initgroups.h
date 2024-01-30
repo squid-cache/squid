@@ -6,13 +6,13 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_INITGROUPS_H
-#define SQUID_INITGROUPS_H
+#ifndef SQUID_COMPAT_INITGROUPS_H
+#define SQUID_COMPAT_INITGROUPS_H
 
 #if !HAVE_INITGROUPS
 
 SQUIDCEXTERN int initgroups(const char *user, gid_t group);
 
 #endif
-#endif /* SQUID_INITGROPS_H */
+#endif /* SQUID_COMPAT_INITGROUPS_H */
 
