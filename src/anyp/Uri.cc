@@ -93,9 +93,6 @@ AnyP::Uri::Rfc3986Encode(const SBuf &buf)
 SBuf
 AnyP::Uri::Decode(const SBuf &buf)
 {
-    if (buf.isEmpty())
-        return buf;
-
     SBuf output;
 
     Parser::Tokenizer tok(buf);
