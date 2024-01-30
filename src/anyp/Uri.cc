@@ -18,9 +18,6 @@
 #include "SquidConfig.h"
 #include "SquidMath.h"
 
-#include <array>
-#include <climits>
-
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
