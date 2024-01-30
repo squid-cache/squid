@@ -97,8 +97,8 @@ AnyP::Uri::Decode(const SBuf &buf)
     Parser::Tokenizer tok(buf);
     while (!tok.atEnd()) {
         SBuf token;
-        static const auto unencodedOctets = CharacterSet("percent", "%").complement("unencoded");
-        if (tok.prefix(token, unencodedOctets))
+        static const auto unencodedChars = CharacterSet("percent", "%").complement("unencoded");
+        if (tok.prefix(token, unencodedChars))
             output.append(token);
 
         // we are either at '%' or at end of input
