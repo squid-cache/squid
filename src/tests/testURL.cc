@@ -110,6 +110,7 @@ TestUri::testEncoding()
     const auto invalidEncodings = {
         SBuf("%"),
         SBuf("%%"),
+        SBuf("%%%"),
         SBuf("%1"),
         SBuf("%1Z"),
         SBuf("%1\000", 2),
