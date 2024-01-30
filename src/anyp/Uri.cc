@@ -96,10 +96,10 @@ AnyP::Uri::Decode(const SBuf &buf)
     SBuf output;
 
     Parser::Tokenizer tok(buf);
-    SBuf token;
 
     while (!tok.atEnd())
     {
+        SBuf token;
         static const auto unencodedOctets = CharacterSet("unencoded", "%").complement();
         // try to extract until '%'
         if (tok.prefix(token, unencodedOctets))
