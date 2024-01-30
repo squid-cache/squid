@@ -9,6 +9,7 @@
 #include "squid.h"
 
 #include "anyp/Uri.h"
+#include "base/CharacterSet.h"
 #include "base/TextException.h"
 #include "compat/cppunit.h"
 #include "debug/Stream.h"
@@ -104,7 +105,7 @@ TestUri::testEncoding()
 
     for (const auto &testCase: basicTestCases) {
         CPPUNIT_ASSERT_EQUAL(testCase.first, AnyP::Uri::Decode(testCase.second));
-        CPPUNIT_ASSERT_EQUAL(testCase.second, AnyP::Uri::Rfc3986Encode(testCase.first));
+        CPPUNIT_ASSERT_EQUAL(testCase.second, AnyP::Uri::Encode(testCase.first, CharacterSet::RFC3986_UNRESERVED()));
     };
 
     const auto invalidEncodings = {

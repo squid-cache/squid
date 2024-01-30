@@ -113,9 +113,6 @@ public:
     /// the provided set of expected characters.
     static SBuf Encode(const SBuf &, const CharacterSet &expected);
 
-    /// %-encode all characters except "unreserved" ones, as defined by RFC 3986
-    static SBuf Rfc3986Encode(const SBuf &);
-
     /// %-decode the given buffer
     static SBuf Decode(const SBuf &);
 
