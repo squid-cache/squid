@@ -111,6 +111,7 @@ public:
     static const CharacterSet OBSTEXT;
 
     // HTTP character sets, RFC 7232
+    // etagc
     static const CharacterSet ETAGC;
 
     // HTTP character sets, RFC 7235
