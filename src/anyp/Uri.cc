@@ -104,7 +104,7 @@ AnyP::Uri::Decode(const SBuf &buf)
             if (tok.int64(hex1, 16, false, 1) && tok.int64(hex2, 16, false, 1))
                 output.append(static_cast<char>((hex1 << 4) | hex2));
             else
-                throw TextException(SBuf("invalid pct-encoded triplet"), Here());
+                throw TextException("invalid pct-encoded triplet", Here());
         }
     }
     return output;
