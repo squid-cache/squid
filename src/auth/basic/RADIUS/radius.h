@@ -37,6 +37,9 @@
  *  @(#)radius.h    2.0  03-Aug-1996
  */
 
+#ifndef SQUID_SRC_AUTH_BASIC_RADIUS_RADIUS_H
+#define SQUID_SRC_AUTH_BASIC_RADIUS_RADIUS_H
+
 #define AUTH_VECTOR_LEN     16
 #define AUTH_PASS_LEN       16
 #define AUTH_STRING_LEN     128 /* maximum of 254 */
@@ -199,4 +202,6 @@ typedef struct pw_auth_hdr {
 #define PW_STATUS_ALIVE         3
 #define PW_STATUS_ACCOUNTING_ON     7
 #define PW_STATUS_ACCOUNTING_OFF    8
+
+#endif /* SQUID_SRC_AUTH_BASIC_RADIUS_RADIUS_H */
 
