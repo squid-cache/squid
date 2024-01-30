@@ -30,6 +30,9 @@
  * -----------------------------------------------------------------------------
  */
 
+#ifndef SQUID_SRC_ACL_EXTERNAL_KERBEROS_LDAP_GROUP_SUPPORT_H
+#define SQUID_SRC_ACL_EXTERNAL_KERBEROS_LDAP_GROUP_SUPPORT_H
+
 #define KERBEROS_LDAP_GROUP_VERSION "1.4.0sq"
 
 #include "compat/krb5.h"
@@ -164,4 +167,6 @@ void krb5_cleanup(void);
 #endif
 
 #define PROGRAM "kerberos_ldap_group"
+
+#endif /* SQUID_SRC_ACL_EXTERNAL_KERBEROS_LDAP_GROUP_SUPPORT_H */
 

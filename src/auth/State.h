@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef __AUTH_AUTHENTICATE_STATE_T__
-#define __AUTH_AUTHENTICATE_STATE_T__
+#ifndef SQUID_SRC_AUTH_STATE_H
+#define SQUID_SRC_AUTH_STATE_H
 
 #if USE_AUTH
 
@@ -43,5 +43,5 @@ public:
 } // namespace Auth
 
 #endif /* USE_AUTH */
-#endif /* __AUTH_AUTHENTICATE_STATE_T__ */
+#endif /* SQUID_SRC_AUTH_STATE_H */
 
