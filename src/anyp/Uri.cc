@@ -87,7 +87,7 @@ AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &ignore)
 SBuf
 AnyP::Uri::Rfc3986Encode(const SBuf &buf)
 {
-    return Encode(buf, CharacterSet::RFC3986_UNRESERVED);
+    return Encode(buf, CharacterSet::RFC3986_UNRESERVED());
 }
 
 SBuf

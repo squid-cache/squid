@@ -157,8 +157,14 @@ CharacterSet::OBSTEXT("OBSTEXT",0x80,0xff),
 // RFC 7232
 CharacterSet::ETAGC("ETAGC", {{0x21,0x21},{0x23,0x7e},{0x80,0xff}}),
 // RFC 7235
-CharacterSet::TOKEN68C("TOKEN68C","-._~+/0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-// RFC 3986: unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
-CharacterSet::RFC3986_UNRESERVED("RFC3986_UNRESERVED", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~")
+CharacterSet::TOKEN68C("TOKEN68C","-._~+/0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 ;
+
+const CharacterSet &
+CharacterSet::RFC3986_UNRESERVED()
+{
+    // RFC 3986: unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
+    static const auto chars = new CharacterSet("RFC3986_UNRESERVED", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~");
+    return *chars;
+}
 
