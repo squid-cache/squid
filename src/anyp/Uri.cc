@@ -94,25 +94,20 @@ SBuf
 AnyP::Uri::Decode(const SBuf &buf)
 {
     SBuf output;
-
     Parser::Tokenizer tok(buf);
-
-    while (!tok.atEnd())
-    {
+    while (!tok.atEnd()) {
         SBuf token;
         static const auto unencodedOctets = CharacterSet("unencoded", "%").complement();
         if (tok.prefix(token, unencodedOctets))
             output.append(token);
 
-        // we're either at end of input or just before a '%'
+        // we are either at '%' or at end of input
         if (tok.skip('%')) {
-
             int64_t hex1 = 0, hex2 = 0;
-            if (tok.int64(hex1, 16, false, 1) && tok.int64(hex2, 16, false, 1)) {
+            if (tok.int64(hex1, 16, false, 1) && tok.int64(hex2, 16, false, 1))
                 output.append(static_cast<char>((hex1 << 4) | hex2));
-            } else {
+            else
                 throw TextException(SBuf("invalid %-encoded triplet"), Here());
-            }
         }
     }
     return output;
