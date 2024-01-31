@@ -8,9 +8,14 @@
 
 // 2008-05-14: rename to radius-util.* to avoid name clashes with squid util.*
 
+#ifndef SQUID_SRC_AUTH_BASIC_RADIUS_RADIUS_UTIL_H
+#define SQUID_SRC_AUTH_BASIC_RADIUS_RADIUS_UTIL_H
+
 // uses the squid utilities
 #include "util.h"
 
 /* util.c */
 uint32_t        get_ipaddr (char *);
+
+#endif /* SQUID_SRC_AUTH_BASIC_RADIUS_RADIUS_UTIL_H */
 

@@ -28,7 +28,7 @@ EXTRA_DIST = \
 	templates/error-details.txt \
 	language.am \
 	template.am \
-	aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS COPYRIGHT
+	aliases alias-link.sh errorpage.css TRANSLATORS COPYRIGHT
 
 if ENABLE_TRANSLATION
 ALIAS_LINKER=$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)"
@@ -125,10 +125,6 @@ uninstall-local:
 	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
 	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/TRANSLATORS
 	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT
-
-## Upgrade requires the new files to be pre-installed
-upgrade: install
-	$(ALIAS_LINKER) "$(srcdir)/alias-upgrade" || exit 1 ;
 
 dist-hook: translate
 	for lang in $(TRANSLATE_LANGUAGES); do \
