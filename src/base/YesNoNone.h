@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_YESNONONE_H_
-#define SQUID_YESNONONE_H_
+#ifndef SQUID_SRC_BASE_YESNONONE_H
+#define SQUID_SRC_BASE_YESNONONE_H
 
 #include "base/TextException.h"
 #include "debug/Stream.h"
@@ -71,5 +71,5 @@ private:
     bool option; ///< specified yes/no value; meaningless if optUnspecified
 };
 
-#endif /* SQUID_YESNONONE_H_ */
+#endif /* SQUID_SRC_BASE_YESNONONE_H */
 

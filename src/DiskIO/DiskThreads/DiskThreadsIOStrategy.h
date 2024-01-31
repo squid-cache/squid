@@ -8,8 +8,8 @@
 
 /* DEBUG: section 79    Squid-side Disk I/O functions. */
 
-#ifndef __STORE_DISKTHREADEDIOSTRATEGY_H__
-#define __STORE_DISKTHREADEDIOSTRATEGY_H__
+#ifndef SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADSIOSTRATEGY_H
+#define SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADSIOSTRATEGY_H
 
 #define _AIO_OPEN   0
 #define _AIO_READ   1
@@ -43,5 +43,5 @@ private:
     void registerWithCacheManager(void);
 };
 
-#endif
+#endif /* SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADSIOSTRATEGY_H */
 

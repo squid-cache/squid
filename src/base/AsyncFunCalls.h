@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_ASYNCFUNCALLS_H
-#define SQUID_BASE_ASYNCFUNCALLS_H
+#ifndef SQUID_SRC_BASE_ASYNCFUNCALLS_H
+#define SQUID_SRC_BASE_ASYNCFUNCALLS_H
 
 #include "base/AsyncCall.h"
 
@@ -62,5 +62,5 @@ callDialer(void (*handler)(Argument1), Argument1 arg1)
     return UnaryFunDialer<Argument1>(handler, arg1);
 }
 
-#endif /* SQUID_BASE_ASYNCFUNCALLS_H */
+#endif /* SQUID_SRC_BASE_ASYNCFUNCALLS_H */
 

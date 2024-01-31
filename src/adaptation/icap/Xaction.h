@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICAPXACTION_H
-#define SQUID_ICAPXACTION_H
+#ifndef SQUID_SRC_ADAPTATION_ICAP_XACTION_H
+#define SQUID_SRC_ADAPTATION_ICAP_XACTION_H
 
 #include "AccessLogEntry.h"
 #include "adaptation/icap/ServiceRep.h"
@@ -171,5 +171,5 @@ private:
 } // namespace Icap
 } // namespace Adaptation
 
-#endif /* SQUID_ICAPXACTION_H */
+#endif /* SQUID_SRC_ADAPTATION_ICAP_XACTION_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 78    DNS lookups */
 
-#ifndef SQUID_DNS_LOOKUPDETAILS_H
-#define SQUID_DNS_LOOKUPDETAILS_H
+#ifndef SQUID_SRC_DNS_LOOKUPDETAILS_H
+#define SQUID_SRC_DNS_LOOKUPDETAILS_H
 
 #include "sbuf/SBuf.h"
 
@@ -48,5 +48,5 @@ operator <<(std::ostream &os, const LookupDetails &dns)
 
 } // namespace Dns
 
-#endif /* SQUID_DNS_LOOKUPDETAILS_H */
+#endif /* SQUID_SRC_DNS_LOOKUPDETAILS_H */
 

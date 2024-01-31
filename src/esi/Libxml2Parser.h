@@ -12,8 +12,8 @@
  * mail@joachim-bauch.de
  */
 
-#ifndef SQUID_ESILIBXML2PARSER_H
-#define SQUID_ESILIBXML2PARSER_H
+#ifndef SQUID_SRC_ESI_LIBXML2PARSER_H
+#define SQUID_SRC_ESI_LIBXML2PARSER_H
 
 #if USE_SQUID_ESI && HAVE_LIBXML2
 
@@ -70,5 +70,5 @@ private:
 
 #endif /* USE_SQUID_ESI */
 
-#endif /* SQUID_ESILIBXML2PARSER_H */
+#endif /* SQUID_SRC_ESI_LIBXML2PARSER_H */
 

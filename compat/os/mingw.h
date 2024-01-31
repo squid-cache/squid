@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_OS_MINGW_H
-#define SQUID_OS_MINGW_H
+#ifndef SQUID_COMPAT_OS_MINGW_H
+#define SQUID_COMPAT_OS_MINGW_H
 
 #if _SQUID_MINGW_
 
@@ -47,4 +47,4 @@ fsync(int fd)
 #endif
 
 #endif /* _SQUID_MINGW_*/
-#endif /* SQUID_OS_MINGW_H */
+#endif /* SQUID_COMPAT_OS_MINGW_H */

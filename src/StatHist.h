@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef STATHIST_H_
-#define STATHIST_H_
+#ifndef SQUID_SRC_STATHIST_H
+#define SQUID_SRC_STATHIST_H
 
 /* for StoreEntry */
 #include "Store.h"
@@ -138,5 +138,5 @@ StatHist::operator =(const StatHist & src)
     return *this;
 }
 
-#endif /* STATHIST_H_ */
+#endif /* SQUID_SRC_STATHIST_H */
 

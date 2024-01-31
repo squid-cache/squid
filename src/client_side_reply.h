@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTSIDEREPLY_H
-#define SQUID_CLIENTSIDEREPLY_H
+#ifndef SQUID_SRC_CLIENT_SIDE_REPLY_H
+#define SQUID_SRC_CLIENT_SIDE_REPLY_H
 
 #include "acl/forward.h"
 #include "client_side_request.h"
@@ -167,5 +167,5 @@ private:
 // TODO: move to SideAgent parent, when we have one
 void purgeEntriesByUrl(HttpRequest *, const char *);
 
-#endif /* SQUID_CLIENTSIDEREPLY_H */
+#endif /* SQUID_SRC_CLIENT_SIDE_REPLY_H */
 

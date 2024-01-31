@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLREGEXDATA_H
-#define SQUID_ACLREGEXDATA_H
+#ifndef SQUID_SRC_ACL_REGEXDATA_H
+#define SQUID_SRC_ACL_REGEXDATA_H
 
 #include "acl/Data.h"
 
@@ -36,5 +36,5 @@ private:
     std::list<RegexPattern> data;
 };
 
-#endif /* SQUID_ACLREGEXDATA_H */
+#endif /* SQUID_SRC_ACL_REGEXDATA_H */
 

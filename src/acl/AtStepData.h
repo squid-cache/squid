@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLATSTEPDATA_H
-#define SQUID_ACLATSTEPDATA_H
+#ifndef SQUID_SRC_ACL_ATSTEPDATA_H
+#define SQUID_SRC_ACL_ATSTEPDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -29,5 +29,5 @@ public:
     std::list<XactionStep> values;
 };
 
-#endif /* SQUID_ACLSSL_ERRORDATA_H */
+#endif /* SQUID_SRC_ACL_ATSTEPDATA_H */
 

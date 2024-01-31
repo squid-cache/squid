@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_RFC3596_H
-#define SQUID_RFC3596_H
+#ifndef SQUID_SRC_DNS_RFC3596_H
+#define SQUID_SRC_DNS_RFC3596_H
 
 /* RFC 3596 extends RFC 1035 */
 #include "dns/rfc1035.h"
@@ -52,5 +52,5 @@ SQUIDCEXTERN ssize_t rfc3596BuildHostQuery(const char *hostname,
 /* RFC3596 section 2.1 defines new RR type AAAA as 28 */
 #define RFC1035_TYPE_AAAA 28
 
-#endif /* SQUID_RFC3596_H */
+#endif /* SQUID_SRC_DNS_RFC3596_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_ANY_OF_H
-#define SQUID_ACL_ANY_OF_H
+#ifndef SQUID_SRC_ACL_ANYOF_H
+#define SQUID_SRC_ACL_ANYOF_H
 
 #include "acl/BoolOps.h"
 
@@ -27,5 +27,5 @@ public:
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_ANY_OF_H */
+#endif /* SQUID_SRC_ACL_ANYOF_H */
 

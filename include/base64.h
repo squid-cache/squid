@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_BASE64_H
-#define _SQUID_BASE64_H
+#ifndef SQUID_INCLUDE_BASE64_H
+#define SQUID_INCLUDE_BASE64_H
 
 #if HAVE_NETTLE_BASE64_H && HAVE_NETTLE34_BASE64
 #include <nettle/base64.h>
@@ -168,5 +168,5 @@ base64_decode_final(struct base64_decode_ctx *ctx);
 /// a string of length 'decodedLen' including all terminator bytes.
 #   define base64_encode_len(length) (BASE64_ENCODE_LENGTH(length)+BASE64_ENCODE_FINAL_LENGTH+1)
 
-#endif /* _SQUID_BASE64_H */
+#endif /* SQUID_INCLUDE_BASE64_H */
 

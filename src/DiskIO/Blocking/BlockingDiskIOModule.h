@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BLOCKINGDISKIOMODULE_H
-#define SQUID_BLOCKINGDISKIOMODULE_H
+#ifndef SQUID_SRC_DISKIO_BLOCKING_BLOCKINGDISKIOMODULE_H
+#define SQUID_SRC_DISKIO_BLOCKING_BLOCKINGDISKIOMODULE_H
 
 #include "DiskIO/DiskIOModule.h"
 
@@ -26,5 +26,5 @@ private:
     static BlockingDiskIOModule Instance;
 };
 
-#endif /* SQUID_BLOCKINGDISKIOMODULE_H */
+#endif /* SQUID_SRC_DISKIO_BLOCKING_BLOCKINGDISKIOMODULE_H */
 

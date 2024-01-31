@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IDENT_CONFIG_H
-#define SQUID_IDENT_CONFIG_H
+#ifndef SQUID_SRC_IDENT_CONFIG_H
+#define SQUID_SRC_IDENT_CONFIG_H
 
 #if USE_IDENT
 
@@ -28,5 +28,5 @@ extern IdentConfig TheConfig;
 } // namespace Ident
 
 #endif /* USE_IDENT */
-#endif /* SQUID_IDENT_CONFIG_H */
+#endif /* SQUID_SRC_IDENT_CONFIG_H */
 

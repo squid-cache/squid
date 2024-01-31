@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ASYNCENGINE_H
-#define SQUID_ASYNCENGINE_H
+#ifndef SQUID_SRC_ASYNCENGINE_H
+#define SQUID_SRC_ASYNCENGINE_H
 
 /* Abstract interface for async engines which an event loop can utilise.
  *
@@ -55,5 +55,5 @@ public:
     virtual int checkEvents(int timeout) = 0;
 };
 
-#endif /* SQUID_ASYNCENGINE_H */
+#endif /* SQUID_SRC_ASYNCENGINE_H */
 

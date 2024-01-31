@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_STRAND_H
-#define SQUID_IPC_STRAND_H
+#ifndef SQUID_SRC_IPC_STRAND_H
+#define SQUID_SRC_IPC_STRAND_H
 
 #include "ipc/forward.h"
 #include "ipc/Port.h"
@@ -57,5 +57,5 @@ private:
 
 }
 
-#endif /* SQUID_IPC_STRAND_H */
+#endif /* SQUID_SRC_IPC_STRAND_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICAPINOUT_H
-#define SQUID_ICAPINOUT_H
+#ifndef SQUID_SRC_ADAPTATION_ICAP_INOUT_H
+#define SQUID_SRC_ADAPTATION_ICAP_INOUT_H
 
 #include "HttpReply.h"
 
@@ -66,5 +66,5 @@ public:
 } // namespace Icap
 } // namespace Adaptation
 
-#endif /* SQUID_ICAPINOUT_H */
+#endif /* SQUID_SRC_ADAPTATION_ICAP_INOUT_H */
 

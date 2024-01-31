@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_LOGIC_H
-#define SQUID_ACL_LOGIC_H
+#ifndef SQUID_SRC_ACL_BOOLOPS_H
+#define SQUID_SRC_ACL_BOOLOPS_H
 
 #include "acl/InnerNode.h"
 
@@ -77,5 +77,5 @@ private:
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_LOGIC_H */
+#endif /* SQUID_SRC_ACL_BOOLOPS_H */
 

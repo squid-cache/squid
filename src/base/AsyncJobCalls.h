@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ASYNCJOBCALLS_H
-#define SQUID_ASYNCJOBCALLS_H
+#ifndef SQUID_SRC_BASE_ASYNCJOBCALLS_H
+#define SQUID_SRC_BASE_ASYNCJOBCALLS_H
 
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
@@ -192,5 +192,5 @@ JobDialer<Job>::dial(AsyncCall &call)
     job->callEnd(); // may delete job
 }
 
-#endif /* SQUID_ASYNCJOBCALLS_H */
+#endif /* SQUID_SRC_BASE_ASYNCJOBCALLS_H */
 

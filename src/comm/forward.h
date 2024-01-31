@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMM_FORWARD_H
-#define _SQUID_COMM_FORWARD_H
+#ifndef SQUID_SRC_COMM_FORWARD_H
+#define SQUID_SRC_COMM_FORWARD_H
 
 #include "base/RefCount.h"
 
@@ -37,5 +37,5 @@ void SetSelect(int, unsigned int, PF *, void *, time_t);
 
 }; // namespace Comm
 
-#endif /* _SQUID_COMM_FORWARD_H */
+#endif /* SQUID_SRC_COMM_FORWARD_H */
 

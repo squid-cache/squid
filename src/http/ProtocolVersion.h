@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTP_PROTOCOLVERSION_H
-#define SQUID_HTTP_PROTOCOLVERSION_H
+#ifndef SQUID_SRC_HTTP_PROTOCOLVERSION_H
+#define SQUID_SRC_HTTP_PROTOCOLVERSION_H
 
 #include "anyp/ProtocolVersion.h"
 
@@ -36,5 +36,5 @@ ProtocolVersion()
 
 }; // namespace Http
 
-#endif /* SQUID_HTTP_PROTOCOLVERSION_H */
+#endif /* SQUID_SRC_HTTP_PROTOCOLVERSION_H */
 

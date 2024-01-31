@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__DYNAMIC_GROUP_CFG_H
-#define SQUID_ADAPTATION__DYNAMIC_GROUP_CFG_H
+#ifndef SQUID_SRC_ADAPTATION_DYNAMICGROUPCFG_H
+#define SQUID_SRC_ADAPTATION_DYNAMICGROUPCFG_H
 
 #include "SquidString.h"
 
@@ -43,5 +43,5 @@ std::ostream &operator <<(std::ostream &os, const DynamicGroupCfg &cfg)
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__DYNAMIC_GROUP_CFG_H */
+#endif /* SQUID_SRC_ADAPTATION_DYNAMICGROUPCFG_H */
 

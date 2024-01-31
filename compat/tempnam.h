@@ -25,10 +25,10 @@
  * Cambridge, MA 02139, USA.
  */
 
-#ifndef SQUID_TEMPNAM_H
-#define SQUID_TEMPNAM_H
+#ifndef SQUID_COMPAT_TEMPNAM_H
+#define SQUID_COMPAT_TEMPNAM_H
 
 extern char *tempnam(const char *, const char *);
 
-#endif /* SQUID_TEMPNAM_H */
+#endif /* SQUID_COMPAT_TEMPNAM_H */
 

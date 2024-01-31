@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_AUTH_GADGETS_H
-#define SQUID_AUTH_GADGETS_H
+#ifndef SQUID_SRC_AUTH_GADGETS_H
+#define SQUID_SRC_AUTH_GADGETS_H
 
 #if USE_AUTH
 
@@ -50,5 +50,5 @@ void authenticateOnCloseConnection(ConnStateData * conn);
 std::vector<Auth::User::Pointer> authenticateCachedUsersList();
 
 #endif /* USE_AUTH */
-#endif /* SQUID_AUTH_GADGETS_H */
+#endif /* SQUID_SRC_AUTH_GADGETS_H */
 

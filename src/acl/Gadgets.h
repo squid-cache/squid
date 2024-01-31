@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_GADGETS_H
-#define SQUID_ACL_GADGETS_H
+#ifndef SQUID_SRC_ACL_GADGETS_H
+#define SQUID_SRC_ACL_GADGETS_H
 
 #include "acl/forward.h"
 #include "error/forward.h"
@@ -62,5 +62,5 @@ void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
 /// \ingroup ACLAPI
 void dump_acl_list(StoreEntry * entry, ACLList * head);
 
-#endif /* SQUID_ACL_GADGETS_H */
+#endif /* SQUID_SRC_ACL_GADGETS_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 77    Delay Pools */
 
-#ifndef DELAYPOOL_H
-#define DELAYPOOL_H
+#ifndef SQUID_SRC_DELAYPOOL_H
+#define SQUID_SRC_DELAYPOOL_H
 
 #if USE_DELAY_POOLS
 #include "acl/forward.h"
@@ -42,5 +42,5 @@ private:
 };
 
 #endif /* USE_DELAY_POOLS */
-#endif /* DELAYPOOL_H */
+#endif /* SQUID_SRC_DELAYPOOL_H */
 

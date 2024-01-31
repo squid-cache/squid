@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_ROCK_IO_STATE_H
-#define SQUID_FS_ROCK_IO_STATE_H
+#ifndef SQUID_SRC_FS_ROCK_ROCKIOSTATE_H
+#define SQUID_SRC_FS_ROCK_ROCKIOSTATE_H
 
 #include "fs/rock/forward.h"
 #include "fs/rock/RockSwapDir.h"
@@ -106,5 +106,5 @@ private:
 
 } // namespace Rock
 
-#endif /* SQUID_FS_ROCK_IO_STATE_H */
+#endif /* SQUID_SRC_FS_ROCK_ROCKIOSTATE_H */
 

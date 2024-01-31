@@ -8,8 +8,8 @@
 
 /* DEBUG: section 80    WCCP Support */
 
-#ifndef SQUID_WCCP2_H_
-#define SQUID_WCCP2_H_
+#ifndef SQUID_SRC_WCCP2_H
+#define SQUID_SRC_WCCP2_H
 
 #if USE_WCCPv2
 
@@ -38,5 +38,5 @@ void free_wccp2_service_info(void *v);
 void dump_wccp2_service_info(StoreEntry * e, const char *label, void *v);
 #endif /* USE_WCCPv2 */
 
-#endif /* WCCP2_H_ */
+#endif /* SQUID_SRC_WCCP2_H */
 
