@@ -9,6 +9,8 @@
 #ifndef SQUID_ADAPTATION__FORWARD_H
 #define SQUID_ADAPTATION__FORWARD_H
 
+#include "adaptation/icap/forward.h"
+
 // forward-declarations for commonly used adaptation classes
 
 template <class C>
