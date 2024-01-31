@@ -169,6 +169,11 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--enable-urn-thttp</tag>
+	<p>URN Trivial HTTP resolution (RFC 2169) protocol has been
+	   officially halted and specification moved to Historic
+	   by the IETF. This feature is now disabled by default.
+
 	<tag>--without-psapi</tag>
 	<p>Disable auto-detection of Windows PSAPI library.
 
