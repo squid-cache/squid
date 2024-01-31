@@ -336,7 +336,8 @@ Ip::Qos::Config::parseConfigLine()
                 preserveMissTos = true;
                 tos = true;
             } else {
-                throw TextException(ToSBuf("Bad qos_flaws token value ", &token[0]), Here());
+                preserveMissTos = true;
+                tos = true;
             }
         }
 
