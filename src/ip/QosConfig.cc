@@ -20,8 +20,8 @@
 #include "hier_code.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
-#include "sbuf/Stream.h"
 #include "Parsing.h"
+#include "sbuf/Stream.h"
 #include "Store.h"
 
 #include <cerrno>
