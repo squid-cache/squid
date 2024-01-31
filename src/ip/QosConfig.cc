@@ -326,10 +326,10 @@ Ip::Qos::Config::parseConfigLine()
                        << "Netfilter mark preservation not available.");
 #endif // USE_LIBNETFILTERCONNTRACK
 #elif SO_MARK // SO_MARK && USE_LIBCAP
-                throw TextException(ToSBuf("Invalid parameter 'mark' in qos_flows option. ", 
+                throw TextException(ToSBuf("Invalid parameter 'mark' in qos_flows option. ",
                                            "Linux Netfilter marking not available on this platform."), Here());
 #else // SO_MARK && USE_LIBCAP
-                throw TextException(ToSBuf("Invalid parameter 'mark' in qos_flows option. ", 
+                throw TextException(ToSBuf("Invalid parameter 'mark' in qos_flows option. ",
                                            "Linux Netfilter marking not available on this platform."), Here());
 #endif // SO_MARK && USE_LIBCAP
             } else if (strncmp(token, "tos",3) == 0) {
