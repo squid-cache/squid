@@ -2,6 +2,7 @@ Changes in squid-6.7 (4 Feb 2024)
 
 	- Bug 5274: Successful tunnels logged as TCP_TUNNEL/500
 	- Fix crash when NTLM and Negotiate helpers are queried with no HTTP request
+	- Fix memory leak on SslBump certificates with Authority Key Identifier extension
 	- Extend cache_log_message to Bug 5187 and job invalidation BUGs
 	- Remove incorrect beta version warning
 	- MS Windows portability improvements
