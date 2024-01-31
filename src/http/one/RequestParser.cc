@@ -98,9 +98,7 @@ UriValidCharacters()
         CharacterSet("gen-delims", ":/?#[]@") +
         CharacterSet("sub-delims", "!$&'()*+,;=") +
         // RFC 3986 section 2.3 - unreserved characters
-        CharacterSet::ALPHA +
-        CharacterSet::DIGIT +
-        CharacterSet("unreserved", "-._~") +
+        CharacterSet::RFC3986_UNRESERVED() +
         // RFC 3986 section 2.1 - percent encoding "%" HEXDIG
         CharacterSet("pct-encoded", "%") +
         CharacterSet::HEXDIG;

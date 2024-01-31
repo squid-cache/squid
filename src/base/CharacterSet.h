@@ -118,6 +118,9 @@ public:
     // token68 (internal characters only, excludes '=' terminator)
     static const CharacterSet TOKEN68C;
 
+    /// allowed URI characters that do not have a reserved purpose, RFC 3986
+    static const CharacterSet &RFC3986_UNRESERVED();
+
 private:
     /** index of characters in this set
      *
