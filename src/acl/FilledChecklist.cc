@@ -42,7 +42,6 @@ ACLFilledChecklist::ACLFilledChecklist() :
     my_addr.setEmpty();
     src_addr.setEmpty();
     dst_addr.setEmpty();
-    rfc931[0] = '\0';
 }
 
 ACLFilledChecklist::~ACLFilledChecklist()
@@ -110,9 +109,9 @@ ACLFilledChecklist::verifyAle() const
     }
 
 #if USE_IDENT
-    if (*rfc931 && !al->cache.rfc931) {
+    if (rfc931() && !al->cache.rfc931) {
         showDebugWarning("IDENT");
-        al->cache.rfc931 = xstrdup(rfc931);
+        al->cache.rfc931 = xstrdup(rfc931());
     }
 #endif
 }
@@ -208,7 +207,7 @@ ACLFilledChecklist::markSourceDomainChecked()
  *    *not* delete the list.  After the callback function returns,
  *    checkCallback() will delete the list (i.e., self).
  */
-ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request, const char *ident):
+ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request):
     dst_rdns(nullptr),
     reply(nullptr),
 #if USE_AUTH
@@ -226,9 +225,6 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
     my_addr.setEmpty();
     src_addr.setEmpty();
     dst_addr.setEmpty();
-
-    rfc931[0] = '\0';
-    setIdent(ident);
 
     changeAcl(A);
     setRequest(http_request);
@@ -252,15 +248,34 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
     }
 }
 
-void
-ACLFilledChecklist::setIdent(const char *ident)
+const char *
+ACLFilledChecklist::rfc931() const
 {
 #if USE_IDENT
-    assert(!rfc931[0]);
-    if (ident)
-        xstrncpy(rfc931, ident, USER_IDENT_SZ);
+    if (!conn() || !conn()->clientConnection)
+        return nullptr;
+    if (!conn()->clientConnection->rfc931[0])
+        return nullptr;
+    return conn()->clientConnection->rfc931;
 #else
-    (void)ident;
+    return nullptr;
 #endif
 }
 
+void
+ACLFilledChecklist::rfc931(const char *ident)
+{
+    if (rfc931()) {
+       debugs(28, 3, "ignore rewriting " << rfc931() << " with " << (ident ? ident : "nil"));
+       return;
+    }
+
+    if (!ident)
+        return;
+
+    if (!strcmp(ident, dash_str))
+        return;
+
+    if (conn() && conn()->clientConnection)
+        xstrncpy(conn()->clientConnection->rfc931, ident, USER_IDENT_SZ);
+}

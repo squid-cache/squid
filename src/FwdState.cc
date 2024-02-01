@@ -352,7 +352,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
          * Intentionally replace the src_addr automatically selected by the checklist code
          * we do NOT want the indirect client address to be tested here.
          */
-        ACLFilledChecklist ch(Config.accessList.miss, request, nullptr);
+        ACLFilledChecklist ch(Config.accessList.miss, request);
         ch.al = al;
         ch.src_addr = request->client_addr;
         ch.syncAle(request, nullptr);
@@ -1136,7 +1136,7 @@ FwdState::connectStart()
     cs->setHost(request->url.host());
     bool retriable = checkRetriable();
     if (!retriable && Config.accessList.serverPconnForNonretriable) {
-        ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request, nullptr);
+        ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request);
         ch.al = al;
         ch.syncAle(request, nullptr);
         retriable = ch.fastCheck().allowed();
@@ -1504,7 +1504,7 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
         return; // anything will do.
     }
 
-    ACLFilledChecklist ch(nullptr, request, nullptr);
+    ACLFilledChecklist ch(nullptr, request);
     ch.dst_peer_name = conn->getPeer() ? conn->getPeer()->name : nullptr;
     ch.dst_addr = conn->remote;
 
@@ -1531,7 +1531,7 @@ GetTosToServer(HttpRequest * request, Comm::Connection &conn)
     if (!Ip::Qos::TheConfig.tosToServer)
         return 0;
 
-    ACLFilledChecklist ch(nullptr, request, nullptr);
+    ACLFilledChecklist ch(nullptr, request);
     ch.dst_peer_name = conn.getPeer() ? conn.getPeer()->name : nullptr;
     ch.dst_addr = conn.remote;
     return aclMapTOS(Ip::Qos::TheConfig.tosToServer, &ch);
@@ -1544,7 +1544,7 @@ GetNfmarkToServer(HttpRequest * request, Comm::Connection &conn)
     if (!Ip::Qos::TheConfig.nfmarkToServer)
         return 0;
 
-    ACLFilledChecklist ch(nullptr, request, nullptr);
+    ACLFilledChecklist ch(nullptr, request);
     ch.dst_peer_name = conn.getPeer() ? conn.getPeer()->name : nullptr;
     ch.dst_addr = conn.remote;
     const auto mc = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToServer, &ch);

@@ -203,7 +203,8 @@ static void
 clientIdentDone(const char *ident, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
-    xstrncpy(conn->clientConnection->rfc931, ident ? ident : dash_str, USER_IDENT_SZ);
+    if (ident && strcmp(ident, dash_str))
+        xstrncpy(conn->clientConnection->rfc931, ident, USER_IDENT_SZ);
 }
 #endif
 
@@ -448,7 +449,7 @@ ClientHttpRequest::logRequest()
         al->syncNotes(request);
     }
 
-    ACLFilledChecklist checklist(nullptr, request, nullptr);
+    ACLFilledChecklist checklist(nullptr, request);
     if (al->reply) {
         checklist.reply = al->reply.getRaw();
         HTTPMSGLOCK(checklist.reply);
@@ -465,7 +466,7 @@ ClientHttpRequest::logRequest()
 
     bool updatePerformanceCounters = true;
     if (Config.accessList.stats_collection) {
-        ACLFilledChecklist statsCheck(Config.accessList.stats_collection, request, nullptr);
+        ACLFilledChecklist statsCheck(Config.accessList.stats_collection, request);
         statsCheck.al = al;
         if (al->reply) {
             statsCheck.reply = al->reply.getRaw();
@@ -2192,7 +2193,7 @@ ConnStateData::whenClientIpKnown()
 
 #if USE_IDENT
     if (Ident::TheConfig.identLookup) {
-        ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, nullptr, nullptr);
+        ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, nullptr);
         fillChecklist(identChecklist);
         if (identChecklist.fastCheck().allowed())
             Ident::Start(clientConnection, clientIdentDone, this);
@@ -2209,7 +2210,7 @@ ConnStateData::whenClientIpKnown()
 
     const auto &pools = ClientDelayPools::Instance()->pools;
     if (pools.size()) {
-        ACLFilledChecklist ch(nullptr, nullptr, nullptr);
+        ACLFilledChecklist ch(nullptr, nullptr);
         fillChecklist(ch);
         // TODO: we check early to limit error response bandwidth but we
         // should recheck when we can honor delay_pool_uses_indirect
@@ -2518,7 +2519,7 @@ ConnStateData::postHttpsAccept()
         CodeContext::Reset(connectAle);
         // TODO: Use these request/ALE when waiting for new bumped transactions.
 
-        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, nullptr);
+        const auto acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request);
         fillChecklist(*acl_checklist);
         // Build a local AccessLogEntry to allow requiresAle() acls work
         acl_checklist->al = connectAle;
@@ -3001,7 +3002,7 @@ ConnStateData::startPeekAndSplice()
         sslServerBump->step = XactionStep::tlsBump2;
         // Run a accessList check to check if want to splice or continue bumping
 
-        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw(), nullptr);
+        const auto acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw());
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpNone));
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpClientFirst));
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpServerFirst));
@@ -3485,7 +3486,7 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 ACLFilledChecklist *
 clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 {
-    const auto checklist = new ACLFilledChecklist(acl, nullptr, nullptr);
+    const auto checklist = new ACLFilledChecklist(acl, nullptr);
     clientAclChecklistFill(*checklist, http);
     return checklist;
 }
@@ -3543,10 +3544,6 @@ ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &checklist) const
     if (!checklist.sslErrors && sslServerBump)
         checklist.sslErrors = sslServerBump->sslErrors();
 #endif
-
-    if (!checklist.rfc931[0]) // checklist creator may have supplied it already
-        checklist.setIdent(clientConnection->rfc931);
-
 }
 
 bool

@@ -86,7 +86,7 @@ DelayId::DelayClient(ClientHttpRequest * http, HttpReply *reply)
             continue;
         }
 
-        ACLFilledChecklist ch(DelayPools::delay_data[pool].access, r, nullptr);
+        ACLFilledChecklist ch(DelayPools::delay_data[pool].access, r);
         clientAclChecklistFill(ch, http);
         if (!ch.reply && reply) {
             ch.reply = reply;

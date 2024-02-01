@@ -130,7 +130,7 @@ Adaptation::AccessCheck::checkCandidates()
         if (AccessRule *r = FindRule(topCandidate())) {
             /* BUG 2526: what to do when r->acl is empty?? */
             // XXX: we do not have access to conn->rfc931 here.
-            acl_checklist = new ACLFilledChecklist(r->acl, filter.request, dash_str);
+            acl_checklist = new ACLFilledChecklist(r->acl, filter.request);
             if ((acl_checklist->reply = filter.reply))
                 HTTPMSGLOCK(acl_checklist->reply);
             acl_checklist->al = filter.al;

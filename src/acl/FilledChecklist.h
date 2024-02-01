@@ -35,13 +35,11 @@ class ACLFilledChecklist: public ACLChecklist
 
 public:
     ACLFilledChecklist();
-    ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident = nullptr);
+    ACLFilledChecklist(const acl_access *, HttpRequest *);
     ~ACLFilledChecklist() override;
 
     /// configure client request-related fields for the first time
     void setRequest(HttpRequest *);
-    /// configure rfc931 user identity for the first time
-    void setIdent(const char *userIdentity);
 
 public:
     /// The client connection manager
@@ -69,6 +67,13 @@ public:
     void syncAle(HttpRequest *adaptedRequest, const char *logUri) const override;
     void verifyAle() const override;
 
+    /// \returns rfc931 user identity or nil
+    const char *rfc931() const;
+
+    /// Initializes rfc931 user identity with a non-empty ident.
+    /// Does nothing if the user identity exists or ident is empty.
+    void rfc931(const char *ident);
+
 public:
     Ip::Address src_addr;
     Ip::Address dst_addr;
@@ -79,7 +84,6 @@ public:
     HttpRequest::Pointer request;
     HttpReply *reply;
 
-    char rfc931[USER_IDENT_SZ];
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
 #endif

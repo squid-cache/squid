@@ -69,7 +69,7 @@ Note::addValue(const char *value, const bool quoted, const char *descr, const Va
 bool
 Note::match(HttpRequest *request, HttpReply *reply, const AccessLogEntry::Pointer &al, SBuf &matched)
 {
-    ACLFilledChecklist ch(nullptr, request, nullptr);
+    ACLFilledChecklist ch(nullptr, request);
     ch.al = al;
     ch.reply = reply;
     ch.syncAle(request, nullptr);

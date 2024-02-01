@@ -796,7 +796,7 @@ ACLExternal::makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl
 
 #if USE_IDENT
         if (t->type == Format::LFT_USER_IDENT) {
-            if (!*ch->rfc931) {
+            if (!ch->rfc931()) {
                 // if we fail to go async, we still return NULL and the caller
                 // will detect the failure in ACLExternal::match().
                 (void)ch->goAsync(ACLIdent::StartLookup, *this);

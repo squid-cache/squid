@@ -297,7 +297,7 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms, c
         return 1;
     }
 
-    ACLFilledChecklist checklist(hm->access_list, request, nullptr);
+    ACLFilledChecklist checklist(hm->access_list, request);
 
     checklist.al = al;
     if (al && al->reply) {
@@ -497,7 +497,7 @@ HeaderManglers::find(const HttpHeaderEntry &e) const
 void
 httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headersAdd)
 {
-    ACLFilledChecklist checklist(nullptr, request, nullptr);
+    ACLFilledChecklist checklist(nullptr, request);
 
     checklist.al = al;
     if (al && al->reply) {

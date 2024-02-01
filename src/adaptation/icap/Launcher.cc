@@ -141,7 +141,7 @@ bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info
         return true;
 
     ACLFilledChecklist *cl =
-        new ACLFilledChecklist(TheConfig.repeat, info.icapRequest, dash_str);
+        new ACLFilledChecklist(TheConfig.repeat, info.icapRequest);
     cl->reply = info.icapReply;
     HTTPMSGLOCK(cl->reply);
 
