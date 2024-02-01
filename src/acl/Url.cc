@@ -19,9 +19,9 @@ Acl::UrlCheck::match(ACLChecklist * const ch)
 {
     const auto checklist = Filled(ch);
 
-    char *esc_buf = SBufToCstring(AnyP::Uri::Decode(checklist->request->effectiveRequestUri()));
-    int result = data->match(esc_buf);
-    xfree(esc_buf);
+    // TODO: Consider refactoring so that effectiveRequestUri() returns decoded URI.
+    auto decodedUri = AnyP::Uri::Decode(checklist->request->effectiveRequestUri());
+    const auto result = data->match(decodedUri.c_str());
     return result;
 }
 
