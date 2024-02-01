@@ -11,16 +11,15 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Url.h"
+#include "anyp/Uri.h"
 #include "HttpRequest.h"
-#include "rfc1738.h"
 
 int
 Acl::UrlCheck::match(ACLChecklist * const ch)
 {
     const auto checklist = Filled(ch);
 
-    char *esc_buf = SBufToCstring(checklist->request->effectiveRequestUri());
-    rfc1738_unescape(esc_buf);
+    char *esc_buf = SBufToCstring(AnyP::Uri::Decode(checklist->request->effectiveRequestUri()));
     int result = data->match(esc_buf);
     xfree(esc_buf);
     return result;
