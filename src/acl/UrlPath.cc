@@ -23,7 +23,7 @@ Acl::UrlPathCheck::match(ACLChecklist * const ch)
     if (checklist->request->url.path().isEmpty())
         return -1;
 
-    auto unescapedPath = AnyP::Uri::Decode(checklist->request->url.path());
-    return data->match(unescapedPath.c_str());
+    auto decodedPath = AnyP::Uri::Decode(checklist->request->url.path());
+    return data->match(decodedPath.c_str());
 }
 
