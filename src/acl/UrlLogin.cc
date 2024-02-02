@@ -24,7 +24,7 @@ Acl::UrlLoginCheck::match(ACLChecklist * const ch)
         return 0; // nothing can match
     }
 
-    auto decoded_userinfo = AnyP::Uri::Decode(checklist->request->url.userInfo());
-    return data->match(decoded_userinfo.c_str());
+    auto decodedUserInfo = AnyP::Uri::Decode(checklist->request->url.userInfo());
+    return data->match(decodedUserInfo.c_str());
 }
 
