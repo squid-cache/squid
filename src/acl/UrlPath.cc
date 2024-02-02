@@ -13,7 +13,6 @@
 #include "acl/UrlPath.h"
 #include "anyp/Uri.h"
 #include "HttpRequest.h"
-#include "rfc1738.h"
 
 int
 Acl::UrlPathCheck::match(ACLChecklist * const ch)
