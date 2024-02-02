@@ -11,8 +11,8 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/UrlLogin.h"
+#include "anyp/Uri.h"
 #include "HttpRequest.h"
-#include "rfc1738.h"
 
 int
 Acl::UrlLoginCheck::match(ACLChecklist * const ch)
@@ -24,11 +24,7 @@ Acl::UrlLoginCheck::match(ACLChecklist * const ch)
         return 0; // nothing can match
     }
 
-    static char str[MAX_URL]; // should be big enough for a single URI segment
-
-    const SBuf::size_type len = checklist->request->url.userInfo().copy(str, sizeof(str)-1);
-    str[len] = '\0';
-    rfc1738_unescape(str);
-    return data->match(str);
+    auto decoded_userinfo = AnyP::Uri::Decode(checklist->request->url.userInfo());
+    return data->match(decoded_userinfo.c_str());
 }
 
