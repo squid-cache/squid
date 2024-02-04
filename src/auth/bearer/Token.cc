@@ -17,5 +17,5 @@ Auth::Bearer::TokenCache Auth::Bearer::Token::Cache(60*60, 256*1024);
 uint64_t
 Auth::Bearer::MemoryUsedByToken(const TokenPointer &t)
 {
-    return t->b68encoded.length() + sizeof(Token);
+    return (t ? t->b68encoded.length() : 0 ) + sizeof(Token);
 }
