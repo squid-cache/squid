@@ -135,8 +135,8 @@ VirtualDeleteOperator_SOURCES = \
 installcheck-local: squid-conf-tests
 
 squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
-	@instructionFIles="$(srcdir)/squidconf/*.conf.instructions"; \
-	for instructionFile in $$instructionFIles; do \
+	@instructionFiles="$(srcdir)/squidconf/*.conf.instructions"; \
+	for instructionFile in $$instructionFiles; do \
 		cfgBasename=`basename $$instructionFile .instructions`; \
 		cfg=$(srcdir)/squidconf/$$cfgBasename; \
 		if ! test -f $$cfg; then \
@@ -144,7 +144,9 @@ squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.de
 			exit 1; \
 		fi; \
 	done; \
-	failed=0; cfglist="$(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf"; rm -f $@ || $(TRUE); \
+	failed=0; \
+	cfglist="$(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf"; \
+	rm -f $@ || $(TRUE); \
 	for cfg in $$cfglist ; do \
 		$(srcdir)/test-squid-conf.sh $(top_builddir) $(sbindir) $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
