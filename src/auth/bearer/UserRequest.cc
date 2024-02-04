@@ -124,8 +124,6 @@ Auth::Bearer::UserRequest::startHelperLookup(HttpRequest *req, AccessLogEntry::P
 void
 Auth::Bearer::UserRequest::authenticate(HttpRequest *, ConnStateData *, Http::HdrType)
 {
-    assert(user());
-
     // if the password is not ok, do an identity
     if (!user() || user()->credentials() != Auth::Ok)
         return;
@@ -226,16 +224,16 @@ Auth::Bearer::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     cbdataReferenceDone(r->data);
 
-    auto *local_usr = dynamic_cast<Bearer::User *>(auth_user_request->user().getRaw());
-    while (local_usr->queue) {
-        if (cbdataReferenceValidDone(local_usr->queue->data, &cbdata))
-            local_usr->queue->handler(cbdata);
+    auto *usr = dynamic_cast<Bearer::User *>(auth_user_request->user().getRaw());
+    while (usr->queue) {
+        if (cbdataReferenceValidDone(usr->queue->data, &cbdata))
+            usr->queue->handler(cbdata);
 
-        auto *tmpnode = local_usr->queue->next;
-        local_usr->queue->next = nullptr;
-        delete local_usr->queue;
+        auto *tmpnode = usr->queue->next;
+        usr->queue->next = nullptr;
+        delete usr->queue;
 
-        local_usr->queue = tmpnode;
+        usr->queue = tmpnode;
     }
 
     delete r;
