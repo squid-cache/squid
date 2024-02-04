@@ -140,7 +140,7 @@ squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.de
 		cfgBasename=`basename $$instructionFile .instructions`; \
 		cfg=$(srcdir)/squidconf/$$cfgBasename; \
 		if ! test -f $$cfg; then \
-			echo "FAIL: $$cfg is missing"; \
+			echo "FAIL: $$instructionFile has no matching $$cfg"; \
 			exit 1; \
 		fi; \
 	done; \
