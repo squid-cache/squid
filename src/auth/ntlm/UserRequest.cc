@@ -332,9 +332,8 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
             local_auth_user = cached_user;
             auth_user_request->user(local_auth_user);
         }
-        /* set these to now because this is either a new login from an
-         * existing user or a new user */
-        local_auth_user->expiretime = current_time.tv_sec;
+        // update expiry on fresh login from an existing or new user
+        local_auth_user->expiretime = (reply.expires != 0 ? reply.expires : current_time.tv_sec);
         auth_user_request->user()->credentials(Auth::Ok);
         debugs(29, 4, "Successfully validated user via NTLM. Username '" << auth_user_request->user()->username() << "'");
     }

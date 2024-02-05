@@ -234,9 +234,13 @@ Helper::Reply::parseResponseKeys()
         // TODO: Convert the above code to use Tokenizer and SBuf
         const SBuf parsedKey(key);
         const SBuf parsedValue(v); // allow empty values (!v or !*v)
-        CheckReceivedKey(parsedKey, parsedValue);
-        notes.add(parsedKey, parsedValue);
-
+        if (parsedKey.cmp("ttl") && v != nullptr) {
+            char *end = v + parsedValue.length();
+            expires = squid_curtime + strtoll(v, &end, 10);
+        } else {
+            CheckReceivedKey(parsedKey, parsedValue);
+            notes.add(parsedKey, parsedValue);
+        }
         other_.consume(p - other_.content());
         other_.consumeWhitespacePrefix();
     }
@@ -275,6 +279,9 @@ Helper::operator <<(std::ostream &os, const Reply &r)
         os << "Unknown";
         break;
     }
+
+    if (r.expires != 0)
+        os << ", ttl=" << (r.expires - squid_curtime);
 
     // dump the helper key=pair "notes" list
     if (!r.notes.empty()) {
