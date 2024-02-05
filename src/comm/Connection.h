@@ -141,6 +141,10 @@ public:
     ScopedId codeContextGist() const override;
     std::ostream &detailCodeContext(std::ostream &os) const override;
 
+    /// Initializes rfc931 user identity with ident.
+    /// Does nothing if the user identity exists or ident is nil.
+    void setIdent(const char *ident);
+
 public:
     /** Address/Port for the Squid end of a TCP link. */
     Ip::Address local;
@@ -173,7 +177,7 @@ public:
     /** COMM flags set on this connection */
     int flags;
 
-    char rfc931[USER_IDENT_SZ];
+    char rfc931[USER_IDENT_SZ]; ///< ident user name
 
 #if USE_SQUID_EUI
     Eui::Eui48 remoteEui48;

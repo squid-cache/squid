@@ -1341,8 +1341,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     // XXX: This reply (and other ALE members!) may have been needed earlier.
     al.reply = adapted_reply_;
 
-    if (h->rfc931.size())
-        al.cache.rfc931 = h->rfc931.termedBuf();
+    al.tcpClient = h->clientConnection;
 
 #if USE_OPENSSL
     if (h->ssluser.size())

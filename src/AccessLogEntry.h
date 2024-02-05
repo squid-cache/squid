@@ -157,7 +157,6 @@ public:
         LogTags code;
         struct timeval start_time; ///< The time the master transaction started
         struct timeval trTime; ///< The response time
-        const char *rfc931 = nullptr;
         const char *extuser = nullptr;
 #if USE_OPENSSL
         const char *ssluser = nullptr;

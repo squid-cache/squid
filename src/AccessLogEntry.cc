@@ -99,13 +99,7 @@ AccessLogEntry::syncNotes(HttpRequest *req)
 const char *
 AccessLogEntry::getClientIdent() const
 {
-    if (tcpClient)
-        return tcpClient->rfc931;
-
-    if (cache.rfc931 && *cache.rfc931)
-        return cache.rfc931;
-
-    return nullptr;
+    return tcpClient ? tcpClient->rfc931 : nullptr;
 }
 
 const char *

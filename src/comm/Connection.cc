@@ -180,6 +180,20 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
     return min(ctimeout, ftimeout);
 }
 
+void
+Comm::Connection::setIdent(const char *ident)
+{
+    if (rfc931[0]) {
+       debugs(5, 3, "ignore rewriting " << rfc931 << " with " << (ident ? ident : "nil"));
+       return;
+    }
+
+    if (!ident)
+        return;
+
+    xstrncpy(rfc931, ident, USER_IDENT_SZ);
+}
+
 ScopedId
 Comm::Connection::codeContextGist() const {
     return id.detach();

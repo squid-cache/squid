@@ -10,6 +10,7 @@
 #define SQUID_ICAPHISTORY_H
 
 #include "base/RefCount.h"
+#include "comm/forward.h"
 #include "enums.h"
 #include "LogTags.h"
 #include "SquidString.h"
@@ -36,7 +37,6 @@ public:
     /// \param[out] total time taken for all ICAP processing
     void processingTime(struct timeval &total) const;
 
-    String rfc931; ///< the username from ident
 #if USE_OPENSSL
     String ssluser; ///< the username from SSL
 #endif
@@ -44,6 +44,7 @@ public:
 
     String log_uri; ///< the request uri
     size_t req_sz; ///< the request size
+    Comm::ConnectionPointer clientConnection; ///< client TCP connection details
 
 private:
     void currentTime(struct timeval &) const; ///< time since current start or zero

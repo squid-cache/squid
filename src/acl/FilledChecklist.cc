@@ -107,13 +107,6 @@ ACLFilledChecklist::verifyAle() const
         showDebugWarning("HttpReply object");
         al->reply = reply;
     }
-
-#if USE_IDENT
-    if (rfc931() && !al->cache.rfc931) {
-        showDebugWarning("IDENT");
-        al->cache.rfc931 = xstrdup(rfc931());
-    }
-#endif
 }
 
 void
@@ -252,30 +245,8 @@ const char *
 ACLFilledChecklist::rfc931() const
 {
 #if USE_IDENT
-    if (!conn() || !conn()->clientConnection)
-        return nullptr;
-    if (!conn()->clientConnection->rfc931[0])
-        return nullptr;
-    return conn()->clientConnection->rfc931;
+    return al->tcpClient->rfc931[0] ? al->tcpClient->rfc931 : nullptr;
 #else
     return nullptr;
 #endif
-}
-
-void
-ACLFilledChecklist::rfc931(const char *ident)
-{
-    if (rfc931()) {
-       debugs(28, 3, "ignore rewriting " << rfc931() << " with " << (ident ? ident : "nil"));
-       return;
-    }
-
-    if (!ident)
-        return;
-
-    if (!strcmp(ident, dash_str))
-        return;
-
-    if (conn() && conn()->clientConnection)
-        xstrncpy(conn()->clientConnection->rfc931, ident, USER_IDENT_SZ);
 }

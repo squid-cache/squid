@@ -70,10 +70,6 @@ public:
     /// \returns rfc931 user identity or nil
     const char *rfc931() const;
 
-    /// Initializes rfc931 user identity with a non-empty ident.
-    /// Does nothing if the user identity exists or ident is empty.
-    void rfc931(const char *ident);
-
 public:
     Ip::Address src_addr;
     Ip::Address dst_addr;

@@ -802,7 +802,7 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
     Adaptation::Icap::History::Pointer ih = request->icapHistory();
     if (ih != nullptr) {
         if (getConn() != nullptr && getConn()->clientConnection != nullptr) {
-            ih->rfc931 = getConn()->clientConnection->rfc931;
+            ih->clientConnection = getConn()->clientConnection;
 #if USE_OPENSSL
             if (getConn()->clientConnection->isOpen()) {
                 ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl.get());

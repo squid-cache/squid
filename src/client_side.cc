@@ -203,8 +203,7 @@ static void
 clientIdentDone(const char *ident, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
-    if (ident && strcmp(ident, dash_str))
-        xstrncpy(conn->clientConnection->rfc931, ident, USER_IDENT_SZ);
+    conn->clientConnection->setIdent(ident);
 }
 #endif
 
