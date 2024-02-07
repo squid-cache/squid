@@ -65,7 +65,7 @@ public:
     /// The stateful replies should include the reservation ID
     Helper::ReservationId reservationId;
 
-    /// Time after which this response should no longer be used
+    /// Absolute time when this response becomes stale.
     std::optional<time_t> expires;
 
 private:
