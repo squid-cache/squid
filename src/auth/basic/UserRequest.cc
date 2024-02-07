@@ -56,7 +56,7 @@ Auth::Basic::UserRequest::authenticate(HttpRequest *, ConnStateData *, Http::Hdr
         return;
 
     /* are we about to recheck the credentials externally? */
-    if (user()->expiretime <= squid_curtime) {
+    if (user()->expires <= current_time.tv_sec) {
         debugs(29, 4, "credentials expired - rechecking");
         return;
     }
@@ -79,7 +79,7 @@ Auth::Basic::UserRequest::module_direction()
         return Auth::CRED_LOOKUP;
 
     case Auth::Ok:
-        if (user()->expiretime <= squid_curtime)
+        if (user()->expires <= current_time.tv_sec)
             return Auth::CRED_LOOKUP;
         return Auth::CRED_VALID;
 
@@ -175,10 +175,7 @@ Auth::Basic::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
             r->auth_user_request->setDenyMessage(reply.other().content());
     }
 
-    if (reply.expires != 0)
-        basic_auth->expiretime = reply.expires;
-    else
-        basic_auth->expiretime = squid_curtime + static_cast<Auth::Basic::Config*>(Auth::SchemeConfig::Find("basic"))->credentialsTTL;
+    basic_auth->expires = reply.expires.value_or(current_time.tv_sec + static_cast<Auth::Basic::Config*>(Auth::SchemeConfig::Find("basic"))->credentialsTTL);
 
     if (cbdataReferenceValidDone(r->data, &cbdata))
         r->handler(cbdata);

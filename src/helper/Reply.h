@@ -16,6 +16,7 @@
 #include "MemBuf.h"
 #include "Notes.h"
 
+#include <optional>
 #include <ostream>
 
 namespace Helper
@@ -65,7 +66,7 @@ public:
     Helper::ReservationId reservationId;
 
     /// Time after which this response should no longer be used
-    time_t expires = 0;
+    std::optional<time_t> expires;
 
 private:
     static void CheckReceivedKey(const SBuf &, const SBuf &);
