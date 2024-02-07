@@ -234,7 +234,7 @@ Helper::Reply::parseResponseKeys()
         // TODO: Convert the above code to use Tokenizer and SBuf
         const SBuf parsedKey(key);
         const SBuf parsedValue(v); // allow empty values (!v or !*v)
-        if (parsedKey.cmp("ttl") && v != nullptr) {
+        if (v && parsedKey.cmp("ttl") == 0) {
             char *end = v + parsedValue.length();
             expires = squid_curtime + strtoll(v, &end, 10);
         } else {
