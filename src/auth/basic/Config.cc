@@ -273,7 +273,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, 
         /* set the auth_user type */
         lb->auth_type = Auth::AUTH_BASIC;
         /* current time for timeouts */
-        lb->expiretime = current_time.tv_sec;
+        lb->expires = current_time.tv_sec;
 
         /* this basic_user struct is the 'lucky one' to get added to the username cache */
         /* the requests after this link to the basic_user */

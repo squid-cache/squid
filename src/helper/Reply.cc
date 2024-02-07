@@ -280,8 +280,8 @@ Helper::operator <<(std::ostream &os, const Reply &r)
         break;
     }
 
-    if (r.expires != 0)
-        os << ", ttl=" << (r.expires - squid_curtime);
+    if (r.expires.has_value())
+        os << ", expires in " << (r.expires.value() - squid_curtime) << " seconds";
 
     // dump the helper key=pair "notes" list
     if (!r.notes.empty()) {

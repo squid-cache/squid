@@ -24,7 +24,6 @@ Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     auth_type(Auth::AUTH_UNKNOWN),
     config(aConfig),
     ipcount(0),
-    expiretime(0),
     credentials_state(Auth::Unchecked),
     username_(nullptr),
     requestRealm_(aRequestRealm)
@@ -256,7 +255,7 @@ Auth::User::CredentialsCacheStats(StoreEntry *output)
                           Auth::Type_str[auth_user->auth_type],
                           CredentialState_str[auth_user->credentials()],
                           auth_user->ttl(),
-                          static_cast<int32_t>(auth_user->expiretime - squid_curtime + Auth::TheConfig.credentialsTtl),
+                          static_cast<int32_t>(auth_user->expires - current_time.tv_sec),
                           auth_user->username(),
                           SQUIDSBUFPRINT(auth_user->userKey())
                          );

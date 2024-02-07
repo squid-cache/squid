@@ -39,7 +39,7 @@ Auth::Digest::User::~User()
 int32_t
 Auth::Digest::User::ttl() const
 {
-    int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime + Auth::TheConfig.credentialsTtl);
+    int32_t global_ttl = static_cast<int32_t>(expires - squid_curtime + Auth::TheConfig.credentialsTtl);
 
     /* find the longest lasting nonce. */
     int32_t latest_nonce = -1;
@@ -54,6 +54,7 @@ Auth::Digest::User::ttl() const
     if (latest_nonce == -1)
         return min(-1, global_ttl);
 
+    // TODO: accept ttl=N from helper to modify configured TTL/duration
     int32_t nonce_ttl = latest_nonce - current_time.tv_sec + static_cast<Config*>(Auth::SchemeConfig::Find("digest"))->noncemaxduration;
 
     return min(nonce_ttl, global_ttl);
