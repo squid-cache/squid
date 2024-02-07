@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_ACTION_CREATOR_H
-#define SQUID_MGR_ACTION_CREATOR_H
+#ifndef SQUID_SRC_MGR_ACTIONCREATOR_H
+#define SQUID_SRC_MGR_ACTIONCREATOR_H
 
 #include "mgr/forward.h"
 
@@ -33,5 +33,5 @@ public:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_ACTION_CREATOR_H */
+#endif /* SQUID_SRC_MGR_ACTIONCREATOR_H */
 

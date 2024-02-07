@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_SESSION_H
-#define SQUID_SNMP_SESSION_H
+#ifndef SQUID_INCLUDE_SNMP_SESSION_H
+#define SQUID_INCLUDE_SNMP_SESSION_H
 
 /**********************************************************************
  *
@@ -48,5 +48,5 @@ struct snmp_session {
 #define RECEIVED_MESSAGE   1
 #define TIMED_OUT      2
 
-#endif /* SQUID_SNMP_SESSION_H */
+#endif /* SQUID_INCLUDE_SNMP_SESSION_H */
 

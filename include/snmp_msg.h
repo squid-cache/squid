@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_MSG_H
-#define SQUID_SNMP_MSG_H
+#ifndef SQUID_INCLUDE_SNMP_MSG_H
+#define SQUID_INCLUDE_SNMP_MSG_H
 
 /**********************************************************************
  *
@@ -52,5 +52,5 @@ u_char *snmp_msg_Decode(u_char *, int *, u_char *, int *, int *, struct snmp_pdu
 
 #endif
 
-#endif  /* SQUID_SNMP_MSG_H */
+#endif /* SQUID_INCLUDE_SNMP_MSG_H */
 

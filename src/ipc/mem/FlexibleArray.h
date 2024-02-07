@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_MEM_FLEXIBLE_ARRAY_H
-#define SQUID_IPC_MEM_FLEXIBLE_ARRAY_H
+#ifndef SQUID_SRC_IPC_MEM_FLEXIBLEARRAY_H
+#define SQUID_SRC_IPC_MEM_FLEXIBLEARRAY_H
 
 #include <cstddef>
 #include <new>
@@ -42,5 +42,5 @@ private:
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_MEM_FLEXIBLE_ARRAY_H */
+#endif /* SQUID_SRC_IPC_MEM_FLEXIBLEARRAY_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef TEST_TESTSWAPDIR
-#define TEST_TESTSWAPDIR
+#ifndef SQUID_SRC_TESTS_TESTSWAPDIR_H
+#define SQUID_SRC_TESTS_TESTSWAPDIR_H
 
 #include "store/Disk.h"
 
@@ -41,5 +41,5 @@ public:
 
 typedef RefCount<TestSwapDir> TestSwapDirPointer;
 
-#endif  /* TEST_TESTSWAPDIR */
+#endif /* SQUID_SRC_TESTS_TESTSWAPDIR_H */
 

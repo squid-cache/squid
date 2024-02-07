@@ -8,8 +8,8 @@
 
 /* DEBUG: section 03    Configuration Settings */
 
-#ifndef SQUID_DELAYCONFIG_H
-#define SQUID_DELAYCONFIG_H
+#ifndef SQUID_SRC_DELAYCONFIG_H
+#define SQUID_SRC_DELAYCONFIG_H
 
 class StoreEntry;
 class ConfigParser;
@@ -29,5 +29,5 @@ public:
 
 };
 
-#endif /* SQUID_DELAYCONFIG_H */
+#endif /* SQUID_SRC_DELAYCONFIG_H */
 

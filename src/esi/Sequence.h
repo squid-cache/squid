@@ -8,8 +8,8 @@
 
 /* DEBUG: section 86    ESI processing */
 
-#ifndef SQUID_ESISEQUENCE_H
-#define SQUID_ESISEQUENCE_H
+#ifndef SQUID_SRC_ESI_SEQUENCE_H
+#define SQUID_SRC_ESI_SEQUENCE_H
 
 #include "esi/Element.h"
 #include "mem/forward.h"
@@ -63,5 +63,5 @@ private:
     void processStep(int dovars);
 };
 
-#endif /* SQUID_ESISEQUENCE_H */
+#endif /* SQUID_SRC_ESI_SEQUENCE_H */
 

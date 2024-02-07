@@ -103,5 +103,5 @@ inline LogTags_ot &operator++ (LogTags_ot &aLogType)
     return aLogType;
 }
 
-#endif
+#endif /* SQUID_SRC_LOGTAGS_H */
 

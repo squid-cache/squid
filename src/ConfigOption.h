@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CONFIGOPTION_H
-#define SQUID_CONFIGOPTION_H
+#ifndef SQUID_SRC_CONFIGOPTION_H
+#define SQUID_SRC_CONFIGOPTION_H
 
 #include <iosfwd>
 #include <vector>
@@ -99,5 +99,5 @@ private:
     void (C::*dumper)(StoreEntry * e) const;
 };
 
-#endif /* SQUID_CONFIGOPTION_H */
+#endif /* SQUID_SRC_CONFIGOPTION_H */
 

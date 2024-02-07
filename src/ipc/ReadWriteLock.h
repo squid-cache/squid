@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_READ_WRITE_LOCK_H
-#define SQUID_IPC_READ_WRITE_LOCK_H
+#ifndef SQUID_SRC_IPC_READWRITELOCK_H
+#define SQUID_SRC_IPC_READWRITELOCK_H
 
 #include <atomic>
 #include <iosfwd>
@@ -90,5 +90,5 @@ void AssertFlagIsSet(std::atomic_flag &flag);
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_READ_WRITE_LOCK_H */
+#endif /* SQUID_SRC_IPC_READWRITELOCK_H */
 

@@ -202,5 +202,5 @@ AsyncCallback_(const RefCount<Call> &call)
     AsyncCallback_(asyncCall((dbgSection), (dbgLevel), #function, \
         callbackDialer(&function)))
 
-#endif // SQUID_SRC_BASE_ASYNCCALLBACKS_H
+#endif /* SQUID_SRC_BASE_ASYNCCALLBACKS_H */
 

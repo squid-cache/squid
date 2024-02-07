@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_MODULE_H
-#define SQUID_FS_MODULE_H
+#ifndef SQUID_SRC_FS_MODULE_H
+#define SQUID_SRC_FS_MODULE_H
 
 namespace Fs
 {
@@ -16,5 +16,5 @@ void Init();
 
 } // namespace Fs
 
-#endif /* SQUID_FS_MODULE_H */
+#endif /* SQUID_SRC_FS_MODULE_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_JOBWAIT_H
-#define SQUID_BASE_JOBWAIT_H
+#ifndef SQUID_SRC_BASE_JOBWAIT_H
+#define SQUID_SRC_BASE_JOBWAIT_H
 
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
@@ -87,5 +87,5 @@ std::ostream &operator <<(std::ostream &os, const JobWaitBase &wait)
     return os;
 }
 
-#endif /* SQUID_BASE_JOBWAIT_H */
+#endif /* SQUID_SRC_BASE_JOBWAIT_H */
 

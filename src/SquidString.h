@@ -8,8 +8,8 @@
 
 /* DEBUG: section 67    String */
 
-#ifndef SQUID_STRING_H
-#define SQUID_STRING_H
+#ifndef SQUID_SRC_SQUIDSTRING_H
+#define SQUID_SRC_SQUIDSTRING_H
 
 #include "base/TextException.h"
 #include "debug/Stream.h"
@@ -185,5 +185,5 @@ int stringHasWhitespace(const char *);
 int stringHasCntl(const char *);
 char *strwordtok(char *buf, char **t);
 
-#endif /* SQUID_STRING_H */
+#endif /* SQUID_SRC_SQUIDSTRING_H */
 

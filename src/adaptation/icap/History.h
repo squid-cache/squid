@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICAPHISTORY_H
-#define SQUID_ICAPHISTORY_H
+#ifndef SQUID_SRC_ADAPTATION_ICAP_HISTORY_H
+#define SQUID_SRC_ADAPTATION_ICAP_HISTORY_H
 
 #include "base/RefCount.h"
 #include "enums.h"
@@ -56,5 +56,5 @@ private:
 } // namespace Icap
 } // namespace Adaptation
 
-#endif /*SQUID_HISTORY_H*/
+#endif /* SQUID_SRC_ADAPTATION_ICAP_HISTORY_H */
 

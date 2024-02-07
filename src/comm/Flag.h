@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_COMM_FLAG_H
-#define _SQUID_SRC_COMM_FLAG_H
+#ifndef SQUID_SRC_COMM_FLAG_H
+#define SQUID_SRC_COMM_FLAG_H
 
 namespace Comm
 {
@@ -29,5 +29,5 @@ typedef enum {
 
 } // namespace Comm
 
-#endif /* _SQUID_SRC_COMM_FLAG_H */
+#endif /* SQUID_SRC_COMM_FLAG_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SPLAY_H
-#define SQUID_SPLAY_H
+#ifndef SQUID_INCLUDE_SPLAY_H
+#define SQUID_INCLUDE_SPLAY_H
 
 #include "fatal.h"
 #include <cstddef>
@@ -513,5 +513,5 @@ SplayConstIterator<V>::operator * () const
     return toVisit.top()->data;
 }
 
-#endif /* SQUID_SPLAY_H */
+#endif /* SQUID_INCLUDE_SPLAY_H */
 

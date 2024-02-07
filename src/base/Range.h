@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_RANGE_H
-#define SQUID_RANGE_H
+#ifndef SQUID_SRC_BASE_RANGE_H
+#define SQUID_SRC_BASE_RANGE_H
 
 #include <iosfwd>
 #include <ostream>
@@ -63,5 +63,5 @@ Range<C, S>::size() const
     return (S) (end > start ? end - start : 0);
 }
 
-#endif /* SQUID_RANGE_H */
+#endif /* SQUID_SRC_BASE_RANGE_H */
 

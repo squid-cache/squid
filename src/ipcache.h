@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_IPCACHE_H
-#define _SQUID_IPCACHE_H
+#ifndef SQUID_SRC_IPCACHE_H
+#define SQUID_SRC_IPCACHE_H
 
 #include "base/CbcPointer.h"
 #include "dns/forward.h"
@@ -251,5 +251,5 @@ Dns::CachedIps::goodAndBad() const
     return IpsSelector<IpsIterator>(*this);
 }
 
-#endif /* _SQUID_IPCACHE_H */
+#endif /* SQUID_SRC_IPCACHE_H */
 

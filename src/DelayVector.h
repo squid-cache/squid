@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_DELAYVECTOR_H
-#define SQUID_DELAYVECTOR_H
+#ifndef SQUID_SRC_DELAYVECTOR_H
+#define SQUID_SRC_DELAYVECTOR_H
 
 #if USE_DELAY_POOLS
 
@@ -60,5 +60,5 @@ private:
 };
 
 #endif /* USE_DELAY_POOLS */
-#endif /* SQUID_DELAYVECTOR_H */
+#endif /* SQUID_SRC_DELAYVECTOR_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SBUFLIST_H
-#define SQUID_SBUFLIST_H
+#ifndef SQUID_SRC_SBUF_LIST_H
+#define SQUID_SRC_SBUF_LIST_H
 
 #include "sbuf/SBuf.h"
 
@@ -22,5 +22,5 @@ typedef std::list<SBuf> SBufList;
  */
 bool IsMember(const SBufList &, const SBuf &, const SBufCaseSensitive isCaseSensitive = caseSensitive);
 
-#endif /* SQUID_SBUFLIST_H */
+#endif /* SQUID_SRC_SBUF_LIST_H */
 

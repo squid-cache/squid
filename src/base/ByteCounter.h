@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_BYTECOUNTER_H
-#define SQUID_SRC_BYTECOUNTER_H
+#ifndef SQUID_SRC_BASE_BYTECOUNTER_H
+#define SQUID_SRC_BASE_BYTECOUNTER_H
 
 /// counter for accumulating byte values
 class ByteCounter
@@ -25,5 +25,5 @@ public:
     size_t kb = 0;
 };
 
-#endif /* SQUID_SRC_BYTECOUNTER_H */
+#endif /* SQUID_SRC_BASE_BYTECOUNTER_H */
 

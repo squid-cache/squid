@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_EXTUSER_H
-#define SQUID_EXTUSER_H
+#ifndef SQUID_SRC_ACL_EXTUSER_H
+#define SQUID_SRC_ACL_EXTUSER_H
 
 #if USE_AUTH
 
@@ -39,5 +39,5 @@ private:
 };
 
 #endif /* USE_AUTH */
-#endif /* SQUID_EXTUSER_H */
+#endif /* SQUID_SRC_ACL_EXTUSER_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_QUEUE_H
-#define SQUID_IPC_QUEUE_H
+#ifndef SQUID_SRC_IPC_QUEUE_H
+#define SQUID_SRC_IPC_QUEUE_H
 
 #include "base/InstanceId.h"
 #include "debug/Stream.h"
@@ -630,5 +630,5 @@ FewToFewBiQueue::findOldest(const int remoteProcessId, Value &value) const
 
 } // namespace Ipc
 
-#endif // SQUID_IPC_QUEUE_H
+#endif /* SQUID_SRC_IPC_QUEUE_H */
 

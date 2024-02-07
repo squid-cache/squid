@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SBUFALGOS_H_
-#define SQUID_SBUFALGOS_H_
+#ifndef SQUID_SRC_SBUF_ALGORITHMS_H
+#define SQUID_SRC_SBUF_ALGORITHMS_H
 
 #include "sbuf/SBuf.h"
 
@@ -132,5 +132,5 @@ public:
     }
 };
 
-#endif /* SQUID_SBUFALGOS_H_ */
+#endif /* SQUID_SRC_SBUF_ALGORITHMS_H */
 

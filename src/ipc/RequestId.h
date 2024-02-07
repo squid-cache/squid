@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_REQUESTID_H
-#define SQUID_IPC_REQUESTID_H
+#ifndef SQUID_SRC_IPC_REQUESTID_H
+#define SQUID_SRC_IPC_REQUESTID_H
 
 #include "ipc/forward.h"
 #include "ipc/QuestionerId.h"
@@ -60,5 +60,5 @@ std::ostream &operator <<(std::ostream &, const RequestId &);
 
 } // namespace Ipc;
 
-#endif /* SQUID_IPC_REQUESTID_H */
+#endif /* SQUID_SRC_IPC_REQUESTID_H */
 

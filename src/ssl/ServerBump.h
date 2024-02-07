@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SSL_PEEKER_H
-#define _SQUID_SSL_PEEKER_H
+#ifndef SQUID_SRC_SSL_SERVERBUMP_H
+#define SQUID_SRC_SSL_SERVERBUMP_H
 
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
@@ -69,5 +69,5 @@ private:
 
 } // namespace Ssl
 
-#endif
+#endif /* SQUID_SRC_SSL_SERVERBUMP_H */
 

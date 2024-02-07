@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PEER_PROXY_NEGOTIATE_AUTH_H_
-#define SQUID_PEER_PROXY_NEGOTIATE_AUTH_H_
+#ifndef SQUID_SRC_PEER_PROXY_NEGOTIATE_AUTH_H
+#define SQUID_SRC_PEER_PROXY_NEGOTIATE_AUTH_H
 
 #define PEER_PROXY_NEGOTIATE_NOKEYTAB   1
 
@@ -17,5 +17,5 @@
 SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags);
 #endif
 
-#endif /* SQUID_PEER_PROXY_NEGOTIATE_AUTH_H_ */
+#endif /* SQUID_SRC_PEER_PROXY_NEGOTIATE_AUTH_H */
 

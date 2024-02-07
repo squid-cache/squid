@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef WINSVC_H_
-#define WINSVC_H_
+#ifndef SQUID_SRC_WINDOWS_SERVICE_H
+#define SQUID_SRC_WINDOWS_SERVICE_H
 
 #if _SQUID_WINDOWS_
 int WIN32_StartService(int, char **);
@@ -24,5 +24,5 @@ inline void WIN32_InstallService(void) {} /* NOP */
 inline  void WIN32_RemoveService(void) {} /* NOP */
 #endif /* _SQUID_WINDOWS_ */
 
-#endif /* WINSVC_H_ */
+#endif /* SQUID_SRC_WINDOWS_SERVICE_H */
 

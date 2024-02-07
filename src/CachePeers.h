@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CACHEPEERS_H
-#define SQUID_CACHEPEERS_H
+#ifndef SQUID_SRC_CACHEPEERS_H
+#define SQUID_SRC_CACHEPEERS_H
 
 #include "base/forward.h"
 #include "CachePeer.h"
@@ -65,5 +65,5 @@ using SelectedCachePeers = std::vector< CbcPointer<CachePeer>, PoolingAllocator<
 /// Temporary, local storage of raw pointers to zero or more Config.peers.
 using RawCachePeers = std::vector<CachePeer *, PoolingAllocator<CachePeer*> >;
 
-#endif /* SQUID_CACHEPEERS_H */
+#endif /* SQUID_SRC_CACHEPEERS_H */
 

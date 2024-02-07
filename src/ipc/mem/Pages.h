@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_MEM_PAGES_H
-#define SQUID_IPC_MEM_PAGES_H
+#ifndef SQUID_SRC_IPC_MEM_PAGES_H
+#define SQUID_SRC_IPC_MEM_PAGES_H
 
 #include "ipc/mem/Page.h"
 
@@ -60,5 +60,5 @@ void NotePageNeed(const int purpose, const int count);
 
 } // namespace Ipc
 
-#endif // SQUID_IPC_MEM_PAGES_H
+#endif /* SQUID_SRC_IPC_MEM_PAGES_H */
 

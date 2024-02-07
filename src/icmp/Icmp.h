@@ -8,8 +8,8 @@
 
 /* DEBUG: section 37    ICMP Routines */
 
-#ifndef _INCLUDE_ICMP_H
-#define _INCLUDE_ICMP_H
+#ifndef SQUID_SRC_ICMP_ICMP_H
+#define SQUID_SRC_ICMP_ICMP_H
 
 #include "ip/Address.h"
 
@@ -123,5 +123,5 @@ protected:
 #endif /* USE_ICMP */
 };
 
-#endif
+#endif /* SQUID_SRC_ICMP_ICMP_H */
 

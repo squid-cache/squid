@@ -10,8 +10,8 @@
  * Digest helper API details.
  */
 
-#ifndef SQUID_DIGEST_COMMON_H_
-#define SQUID_DIGEST_COMMON_H_
+#ifndef SQUID_SRC_AUTH_DIGEST_LDAP_DIGEST_COMMON_H
+#define SQUID_SRC_AUTH_DIGEST_LDAP_DIGEST_COMMON_H
 
 #include "hash.h"
 #include "rfc2617.h"
@@ -51,5 +51,5 @@ typedef struct _request_data {
 typedef void HandleArguments(int, char **);
 typedef void HHA1Creator(RequestData *);
 
-#endif /* SQUID_DIGEST_COMMON_H_ */
+#endif /* SQUID_SRC_AUTH_DIGEST_LDAP_DIGEST_COMMON_H */
 

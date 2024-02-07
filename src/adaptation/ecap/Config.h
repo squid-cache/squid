@@ -8,8 +8,8 @@
 
 /* DEBUG: section 93    eCAP Interface */
 
-#ifndef SQUID_ECAP_CONFIG_H
-#define SQUID_ECAP_CONFIG_H
+#ifndef SQUID_SRC_ADAPTATION_ECAP_CONFIG_H
+#define SQUID_SRC_ADAPTATION_ECAP_CONFIG_H
 
 #include "adaptation/Config.h"
 #include "adaptation/ServiceConfig.h"
@@ -59,5 +59,5 @@ extern Config TheConfig;
 } // namespace Ecap
 } // namespace Adaptation
 
-#endif /* SQUID_ECAP_CONFIG_H */
+#endif /* SQUID_SRC_ADAPTATION_ECAP_CONFIG_H */
 

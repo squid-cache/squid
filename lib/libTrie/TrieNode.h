@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef   LIBTRIE_TRIENODE_H
-#define   LIBTRIE_TRIENODE_H
+#ifndef SQUID_LIB_LIBTRIE_TRIENODE_H
+#define SQUID_LIB_LIBTRIE_TRIENODE_H
 
 #include "TrieCharTransform.h"
 
@@ -81,5 +81,5 @@ TrieNode::find (char const *aString, size_t theLength, TrieCharTransform *transf
         return _privateData;
     }
 }
-#endif /* LIBTRIE_TRIENODE_H */
+#endif /* SQUID_LIB_LIBTRIE_TRIENODE_H */
 
