@@ -240,13 +240,3 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
             setConn(cmgr);
     }
 }
-
-const char *
-ACLFilledChecklist::rfc931() const
-{
-#if USE_IDENT
-    return al->tcpClient->rfc931[0] ? al->tcpClient->rfc931 : nullptr;
-#else
-    return nullptr;
-#endif
-}

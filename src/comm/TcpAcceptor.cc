@@ -250,7 +250,7 @@ Comm::TcpAcceptor::logAcceptError(const ConnectionPointer &tcpClient) const
 {
     AccessLogEntry::Pointer al = new AccessLogEntry;
     CallBack(al, [&] {
-        al->tcpClient = tcpClient;
+        al->initAcceptedConnection(tcpClient);
         al->url = "error:accept-client-connection";
         al->setVirginUrlForMissingRequest(al->url);
         ACLFilledChecklist ch(nullptr, nullptr);

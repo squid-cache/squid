@@ -23,9 +23,11 @@
 #include "ip/Address.h"
 #include "ip/forward.h"
 #include "mem/forward.h"
+#include "sbuf/SBuf.h"
 #include "time/gadgets.h"
 
 #include <iosfwd>
+#include <optional>
 #include <ostream>
 
 class CachePeer;
@@ -74,6 +76,8 @@ class Connection: public CodeContext
     MEMPROXY_CLASS(Comm::Connection);
 
 public:
+    using Ident = std::optional<SBuf>;
+
     Connection();
 
     /** Clear the connection properties and close any open socket. */
@@ -177,7 +181,7 @@ public:
     /** COMM flags set on this connection */
     int flags;
 
-    char rfc931[USER_IDENT_SZ]; ///< ident user name
+    Ident ident;
 
 #if USE_SQUID_EUI
     Eui::Eui48 remoteEui48;

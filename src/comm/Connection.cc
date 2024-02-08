@@ -38,9 +38,7 @@ Comm::Connection::Connection() :
     peer_(nullptr),
     startTime_(squid_curtime),
     tlsHistory(nullptr)
-{
-    *rfc931 = 0; // quick init the head. the rest does not matter.
-}
+{}
 
 Comm::Connection::~Connection()
 {
@@ -181,17 +179,12 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
 }
 
 void
-Comm::Connection::setIdent(const char *ident)
+Comm::Connection::setIdent(const char *anIdent)
 {
-    if (rfc931[0]) {
-       debugs(5, 3, "ignore rewriting " << rfc931 << " with " << (ident ? ident : "nil"));
-       return;
-    }
-
-    if (!ident)
-        return;
-
-    xstrncpy(rfc931, ident, USER_IDENT_SZ);
+    if (ident)
+       debugs(5, 3, "ignore rewriting " << ident.value() << " with " << (anIdent ? anIdent : "nil"));
+    else
+       ident = std::make_optional(SBuf(anIdent));
 }
 
 ScopedId
@@ -220,8 +213,8 @@ Comm::operator << (std::ostream &os, const Connection &conn)
     if (conn.flags != COMM_UNSET)
         os << " flags=" << conn.flags;
 #if USE_IDENT
-    if (*conn.rfc931)
-        os << " IDENT::" << conn.rfc931;
+    if (conn.ident)
+        os << " IDENT::" << conn.ident.value();
 #endif
     return os;
 }

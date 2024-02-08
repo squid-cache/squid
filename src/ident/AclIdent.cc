@@ -56,8 +56,8 @@ int
 ACLIdent::match(ACLChecklist *cl)
 {
     const auto checklist = Filled(cl);
-    if (checklist->rfc931()) {
-        return data->match(checklist->rfc931());
+    if (checklist->ident()) {
+        return data->match(checklist->ident()->c_str());
     } else if (checklist->conn() != nullptr && Comm::IsConnOpen(checklist->conn()->clientConnection)) {
         if (checklist->goAsync(StartLookup, *this)) {
             debugs(28, 3, "switching to ident lookup state");
@@ -99,7 +99,7 @@ void
 ACLIdent::LookupDone(const char *ident, void *data)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
-    checklist->al->tcpClient->setIdent(ident);
+    checklist->al->acceptedClientConnection->setIdent(ident);
     checklist->resumeNonBlockingCheck();
 }
 

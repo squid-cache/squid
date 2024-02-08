@@ -77,6 +77,8 @@ public:
     /// dump all reply headers (for sending or risky logging)
     void packReplyHeaders(MemBuf &mb) const;
 
+    void initAcceptedConnection(Comm::ConnectionPointer p) { acceptedClientConnection = p; tcpClient = p; }
+
     SBuf url;
 
     // TODO: remove and use tcpClient after separating into class(es) representing ALEs

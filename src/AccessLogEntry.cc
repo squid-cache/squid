@@ -99,7 +99,7 @@ AccessLogEntry::syncNotes(HttpRequest *req)
 const char *
 AccessLogEntry::getClientIdent() const
 {
-    return acceptedClientConnection ? acceptedClientConnection->rfc931 : nullptr;
+    return acceptedClientConnection ? const_cast<SBuf &>(acceptedClientConnection->ident.value()).c_str() : nullptr;
 }
 
 const char *
