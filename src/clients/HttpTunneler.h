@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_CLIENTS_HTTP_TUNNELER_H
-#define SQUID_SRC_CLIENTS_HTTP_TUNNELER_H
+#ifndef SQUID_SRC_CLIENTS_HTTPTUNNELER_H
+#define SQUID_SRC_CLIENTS_HTTPTUNNELER_H
 
 #include "base/AsyncCallbacks.h"
 #include "base/AsyncJob.h"
@@ -108,5 +108,5 @@ private:
 
 } // namespace Http
 
-#endif /* SQUID_SRC_CLIENTS_HTTP_TUNNELER_H */
+#endif /* SQUID_SRC_CLIENTS_HTTPTUNNELER_H */
 

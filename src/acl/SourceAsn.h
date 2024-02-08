@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_SOURCEASN_H
-#define SQUID_ACL_SOURCEASN_H
+#ifndef SQUID_SRC_ACL_SOURCEASN_H
+#define SQUID_SRC_ACL_SOURCEASN_H
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
@@ -20,11 +20,11 @@ namespace Acl
 class SourceAsnCheck: public ParameterizedNode< ACLData<Ip::Address> >
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
 };
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_SOURCEASN_H */
+#endif /* SQUID_SRC_ACL_SOURCEASN_H */
 

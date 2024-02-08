@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_TYPED_MSG_HDR_H
-#define SQUID_IPC_TYPED_MSG_HDR_H
+#ifndef SQUID_SRC_IPC_TYPEDMSGHDR_H
+#define SQUID_SRC_IPC_TYPEDMSGHDR_H
 
 #include "compat/cmsg.h"
 #include "ipc/Messages.h"
@@ -129,5 +129,5 @@ Ipc::TypedMsgHdr::putPod(const Pod &pod)
     putFixed(&pod, sizeof(pod));
 }
 
-#endif /* SQUID_IPC_TYPED_MSG_HDR_H */
+#endif /* SQUID_SRC_IPC_TYPEDMSGHDR_H */
 

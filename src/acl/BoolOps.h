@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_LOGIC_H
-#define SQUID_ACL_LOGIC_H
+#ifndef SQUID_SRC_ACL_BOOLOPS_H
+#define SQUID_SRC_ACL_BOOLOPS_H
 
 #include "acl/InnerNode.h"
 
@@ -24,10 +24,10 @@ class NotNode: public InnerNode
     MEMPROXY_CLASS(NotNode);
 
 public:
-    explicit NotNode(ACL *acl);
+    explicit NotNode(Acl::Node *acl);
 
 private:
-    /* ACL API */
+    /* Acl::Node API */
     char const *typeString() const override;
     void parse() override;
     SBufList dump() const override;
@@ -64,7 +64,7 @@ public:
     /// on its action
     virtual bool bannedAction(ACLChecklist *, Nodes::const_iterator) const;
 
-    /* ACL API */
+    /* Acl::Node API */
     char const *typeString() const override;
     void parse() override;
 
@@ -77,5 +77,5 @@ private:
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_LOGIC_H */
+#endif /* SQUID_SRC_ACL_BOOLOPS_H */
 

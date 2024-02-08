@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_UFS_UFSSWAPDIR_H
-#define SQUID_FS_UFS_UFSSWAPDIR_H
+#ifndef SQUID_SRC_FS_UFS_UFSSWAPDIR_H
+#define SQUID_SRC_FS_UFS_UFSSWAPDIR_H
 
 #include "SquidString.h"
 #include "Store.h"
@@ -153,5 +153,5 @@ private:
 
 } //namespace Ufs
 } //namespace Fs
-#endif /* SQUID_FS_UFS_UFSSWAPDIR_H */
+#endif /* SQUID_SRC_FS_UFS_UFSSWAPDIR_H */
 

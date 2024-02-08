@@ -8,8 +8,8 @@
 
 /* DEBUG: section 71    Store Digest Manager */
 
-#ifndef SQUID_STORE_DIGEST_H_
-#define SQUID_STORE_DIGEST_H_
+#ifndef SQUID_SRC_STORE_DIGEST_H
+#define SQUID_SRC_STORE_DIGEST_H
 
 class StoreEntry;
 
@@ -18,5 +18,5 @@ void storeDigestNoteStoreReady(void);
 void storeDigestDel(const StoreEntry * entry);
 void storeDigestReport(StoreEntry *);
 
-#endif /* SQUID_STORE_DIGEST_H_ */
+#endif /* SQUID_SRC_STORE_DIGEST_H */
 

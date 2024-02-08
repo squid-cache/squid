@@ -8,51 +8,44 @@
 
 #include "squid.h"
 #include "html/Quoting.h"
+#include "sbuf/SBuf.h"
 
-/*
- *  HTML defines these characters as special entities that should be quoted.
- */
-static struct {
-    unsigned char code;
-    const char *quote;
-} htmlstandardentities[] =
+#include <array>
+#include <cstring>
 
+static const auto &
+EscapeSequences()
 {
-    /* NOTE: The quoted form MUST not be larger than 6 character.
-     * see close to the MemPool commend below
-     */
-    {
-        '<', "&lt;"
-    },
-    {
-        '>', "&gt;"
-    },
-    {
-        '"', "&quot;"
-    },
-    {
-        '&', "&amp;"
-    },
-    {
-        '\'', "&#39;"
-    },
-    {
-        0, NULL
-    }
-};
+    static auto escapeMap = new std::array<SBuf, 256> {};
+    auto &em = *escapeMap;
+    if (!em['<'].isEmpty())
+        return em;
 
-/*
- *  html_do_quote - Returns a static buffer containing the quoted
- *  string.
- */
+    // Encode control chars just to be on the safe side and make sure all 8-bit
+    // characters are encoded to protect from buggy clients.
+    for (int ch = 0; ch < 256; ++ch) {
+        if ((ch <= 0x1F || ch >= 0x7f) && ch != '\n' && ch != '\r' && ch != '\t') {
+            em[ch] = SBuf().Printf("&#%d;", ch);
+        }
+    }
+
+    em['<'] = "&lt;";
+    em['>'] = "&gt;";
+    em['"'] = "&quot;";
+    em['&'] = "&amp;";
+    em['\''] = "&apos;";
+
+    return em;
+}
+
 char *
 html_quote(const char *string)
 {
+    static const auto &escapeSequences = EscapeSequences();
     static char *buf = nullptr;
     static size_t bufsize = 0;
     const char *src;
     char *dst;
-    int i;
 
     /* XXX This really should be implemented using a MemPool, but
      * MemPools are not yet available in lib...
@@ -63,31 +56,13 @@ html_quote(const char *string)
         buf = static_cast<char *>(xcalloc(bufsize, 1));
     }
     for (src = string, dst = buf; *src; src++) {
-        const char *escape = NULL;
         const unsigned char ch = *src;
 
-        /* Walk thru the list of HTML Entities that must be quoted to
-         * display safely
-         */
-        for (i = 0; htmlstandardentities[i].code; i++) {
-            if (ch == htmlstandardentities[i].code) {
-                escape = htmlstandardentities[i].quote;
-                break;
-            }
-        }
-        /* Encode control chars just to be on the safe side, and make
-         * sure all 8-bit characters are encoded to protect from buggy
-         * clients
-         */
-        if (!escape && (ch <= 0x1F || ch >= 0x7f) && ch != '\n' && ch != '\r' && ch != '\t') {
-            static char dec_encoded[7];
-            snprintf(dec_encoded, sizeof dec_encoded, "&#%3d;", (int) ch);
-            escape = dec_encoded;
-        }
-        if (escape) {
+        const auto &escape = escapeSequences[ch];
+        if (!escape.isEmpty()) {
             /* Ok, An escaped form was found above. Use it */
-            strncpy(dst, escape, 7);
-            dst += strlen(escape);
+            escape.copy(dst, 7);
+            dst += escape.length();
         } else {
             /* Apparently there is no need to escape this character */
             *dst++ = ch;

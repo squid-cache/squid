@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_IODISKIOMODULE_H
-#define SQUID_IPC_IODISKIOMODULE_H
+#ifndef SQUID_SRC_DISKIO_IPCIO_IPCIODISKIOMODULE_H
+#define SQUID_SRC_DISKIO_IPCIO_IPCIODISKIOMODULE_H
 
 #include "DiskIO/DiskIOModule.h"
 
@@ -26,5 +26,5 @@ private:
     static IpcIoDiskIOModule Instance;
 };
 
-#endif /* SQUID_IPC_IODISKIOMODULE_H */
+#endif /* SQUID_SRC_DISKIO_IPCIO_IPCIODISKIOMODULE_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_H
-#define SQUID_STORE_H
+#ifndef SQUID_SRC_STORE_H
+#define SQUID_SRC_STORE_H
 
 #include "base/DelayedAsyncCalls.h"
 #include "base/Packable.h"
@@ -463,5 +463,5 @@ extern FREE destroyStoreEntry;
 /// \ingroup StoreAPI
 void storeGetMemSpace(int size);
 
-#endif /* SQUID_STORE_H */
+#endif /* SQUID_SRC_STORE_H */
 

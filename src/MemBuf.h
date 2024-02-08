@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEMBUF_H
-#define SQUID_MEMBUF_H
+#ifndef SQUID_SRC_MEMBUF_H
+#define SQUID_SRC_MEMBUF_H
 
 #include "base/Packable.h"
 #include "cbdata.h"
@@ -159,5 +159,5 @@ public:
 /** returns free() function to be used, _freezes_ the object! */
 void memBufReport(MemBuf * mb);
 
-#endif /* SQUID_MEMBUF_H */
+#endif /* SQUID_SRC_MEMBUF_H */
 

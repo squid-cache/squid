@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_COEXISTANCE_H
-#define SQUID_SNMP_COEXISTANCE_H
+#ifndef SQUID_INCLUDE_SNMP_COEXIST_H
+#define SQUID_INCLUDE_SNMP_COEXIST_H
 
 /**********************************************************************
  *
@@ -46,5 +46,5 @@ int snmp_coexist_V1toV2(struct snmp_pdu *);
 }
 #endif
 
-#endif /* SQUID_SNMP_COEXISTANCE_H */
+#endif /* SQUID_INCLUDE_SNMP_COEXIST_H */
 

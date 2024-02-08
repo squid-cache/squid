@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_STORE_MAP_H
-#define SQUID_IPC_STORE_MAP_H
+#ifndef SQUID_SRC_IPC_MEMMAP_H
+#define SQUID_SRC_IPC_MEMMAP_H
 
 #include "debug/Stream.h"
 #include "ipc/mem/FlexibleArray.h"
@@ -150,5 +150,5 @@ public:
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_STORE_MAP_H */
+#endif /* SQUID_SRC_IPC_MEMMAP_H */
 

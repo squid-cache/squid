@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_AUTH_ACL_H
-#define SQUID_AUTH_ACL_H
+#ifndef SQUID_SRC_AUTH_ACL_H
+#define SQUID_SRC_AUTH_ACL_H
 
 #if USE_AUTH
 
@@ -19,8 +19,8 @@
 
 class ACLChecklist;
 /// \ingroup AuthAPI
-Acl::Answer AuthenticateAcl(ACLChecklist *, const ACL &);
+Acl::Answer AuthenticateAcl(ACLChecklist *, const Acl::Node &);
 
 #endif /* USE_AUTH */
-#endif /* SQUID_AUTH_ACL_H */
+#endif /* SQUID_SRC_AUTH_ACL_H */
 

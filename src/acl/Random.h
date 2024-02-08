@@ -6,12 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_RANDOM_H
-#define SQUID_ACL_RANDOM_H
+#ifndef SQUID_SRC_ACL_RANDOM_H
+#define SQUID_SRC_ACL_RANDOM_H
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 
-class ACLRandom : public ACL
+class ACLRandom : public Acl::Node
 {
     MEMPROXY_CLASS(ACLRandom);
 
@@ -32,5 +32,5 @@ protected:
     char const *class_;
 };
 
-#endif /* SQUID_ACL_RANDOM_H */
+#endif /* SQUID_SRC_ACL_RANDOM_H */
 

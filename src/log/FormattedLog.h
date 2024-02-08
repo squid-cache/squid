@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_LOG_FORMATTEDLOG_H_
-#define SQUID_LOG_FORMATTEDLOG_H_
+#ifndef SQUID_SRC_LOG_FORMATTEDLOG_H
+#define SQUID_SRC_LOG_FORMATTEDLOG_H
 
 #include "acl/forward.h"
 #include "log/Formats.h"
@@ -76,5 +76,5 @@ public:
     bool fatal = true;
 };
 
-#endif /* SQUID_LOG_FORMATTEDLOG_H_ */
+#endif /* SQUID_SRC_LOG_FORMATTEDLOG_H */
 

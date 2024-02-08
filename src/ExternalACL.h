@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_EXTERNALACL_H
-#define SQUID_EXTERNALACL_H
+#ifndef SQUID_SRC_EXTERNALACL_H
+#define SQUID_SRC_EXTERNALACL_H
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
@@ -17,7 +17,7 @@ class external_acl;
 class external_acl_data;
 class StoreEntry;
 
-class ACLExternal : public ACL
+class ACLExternal : public Acl::Node
 {
     MEMPROXY_CLASS(ACLExternal);
 
@@ -40,7 +40,7 @@ public:
     bool empty () const override;
 
 private:
-    static void StartLookup(ACLFilledChecklist &, const ACL &);
+    static void StartLookup(ACLFilledChecklist &, const Acl::Node &);
     static void LookupDone(void *data, const ExternalACLEntryPointer &);
     void startLookup(ACLFilledChecklist *, external_acl_data *, bool inBackground) const;
     Acl::Answer aclMatchExternal(external_acl_data *, ACLFilledChecklist *) const;
@@ -58,5 +58,5 @@ void externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * handler, void *d
 void externalAclInit(void);
 void externalAclShutdown(void);
 
-#endif /* SQUID_EXTERNALACL_H */
+#endif /* SQUID_SRC_EXTERNALACL_H */
 

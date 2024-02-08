@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HELPER_RESULTCODE_H
-#define _SQUID_SRC_HELPER_RESULTCODE_H
+#ifndef SQUID_SRC_HELPER_RESULTCODE_H
+#define SQUID_SRC_HELPER_RESULTCODE_H
 
 namespace Helper
 {
@@ -27,5 +27,5 @@ enum ResultCode {
 
 } // namespace Helper
 
-#endif /* _SQUID_SRC_HELPER_RESULTCODE_H */
+#endif /* SQUID_SRC_HELPER_RESULTCODE_H */
 

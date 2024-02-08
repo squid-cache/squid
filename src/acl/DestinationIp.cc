@@ -53,7 +53,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
 
     if (lookupBanned) {
         if (!checklist->request->url.hostIsNumeric()) {
-            debugs(28, 3, "No-lookup DNS ACL '" << AclMatchedName << "' for " << checklist->request->url.host());
+            debugs(28, 3, "No-lookup DNS ACL '" << name << "' for " << checklist->request->url.host());
             return 0;
         }
 
@@ -85,7 +85,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
 }
 
 void
-ACLDestinationIP::StartLookup(ACLFilledChecklist &cl, const ACL &)
+ACLDestinationIP::StartLookup(ACLFilledChecklist &cl, const Acl::Node &)
 {
     ipcache_nbgethostbyname(cl.request->url.host(), LookupDone, &cl);
 }

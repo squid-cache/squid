@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SPLAY_H
-#define SQUID_SPLAY_H
+#ifndef SQUID_INCLUDE_SPLAY_H
+#define SQUID_INCLUDE_SPLAY_H
 
 #include "fatal.h"
 #include <cstddef>
@@ -61,7 +61,9 @@ public:
 
     template <class FindValue> Value const *find (FindValue const &, int( * compare)(FindValue const &a, Value const &b)) const;
 
-    void insert(Value const &, SPLAYCMP *compare);
+    /// If the given value matches a stored one, returns that matching value.
+    /// Otherwise, stores the given unique value and returns nil.
+    const Value *insert(const Value &, SPLAYCMP *);
 
     void remove(Value const &, SPLAYCMP *compare);
 
@@ -314,17 +316,19 @@ Splay<V>::find (FindValue const &value, int( * compare)(FindValue const &a, Valu
 }
 
 template <class V>
-void
+typename Splay<V>::Value const *
 Splay<V>::insert(Value const &value, SPLAYCMP *compare)
 {
-    if (find(value, compare) != nullptr) // ignore duplicates
-        return;
+    if (const auto similarValue = find(value, compare))
+        return similarValue; // do not insert duplicates
 
     if (head == nullptr)
         head = new SplayNode<V>(value);
     else
         head = head->insert(value, compare);
     ++elements;
+
+    return nullptr; // no duplicates found
 }
 
 template <class V>
@@ -509,5 +513,5 @@ SplayConstIterator<V>::operator * () const
     return toVisit.top()->data;
 }
 
-#endif /* SQUID_SPLAY_H */
+#endif /* SQUID_INCLUDE_SPLAY_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_ERROR_SYSERRORDETAIL_H
-#define _SQUID_SRC_ERROR_SYSERRORDETAIL_H
+#ifndef SQUID_SRC_ERROR_SYSERRORDETAIL_H
+#define SQUID_SRC_ERROR_SYSERRORDETAIL_H
 
 #include "error/Detail.h"
 #include "sbuf/forward.h"
@@ -50,5 +50,5 @@ public:
 /// reports a system call error (if any) on a dedicated Debug::Extra line
 std::ostream &operator <<(std::ostream &, ReportSysError);
 
-#endif /* _SQUID_SRC_ERROR_SYSERRORDETAIL_H */
+#endif /* SQUID_SRC_ERROR_SYSERRORDETAIL_H */
 

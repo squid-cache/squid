@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_TYPEDEFS_H
-#define SQUID_TYPEDEFS_H
+#ifndef SQUID_SRC_TYPEDEFS_H
+#define SQUID_SRC_TYPEDEFS_H
 
 #include "anyp/ProtocolType.h"
 #include "enums.h"
@@ -21,5 +21,5 @@ typedef void DWCB(int, int, size_t, void *);    /* disk write CB */
 class CachePeer;
 typedef void IRCB(CachePeer *, peer_t, AnyP::ProtocolType, void *, void *data);
 
-#endif /* SQUID_TYPEDEFS_H */
+#endif /* SQUID_SRC_TYPEDEFS_H */
 

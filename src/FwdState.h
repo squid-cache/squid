@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FORWARD_H
-#define SQUID_FORWARD_H
+#ifndef SQUID_SRC_FWDSTATE_H
+#define SQUID_SRC_FWDSTATE_H
 
 #include "base/forward.h"
 #include "base/JobWait.h"
@@ -223,5 +223,5 @@ void getOutgoingAddress(HttpRequest *, const Comm::ConnectionPointer &);
 /// a collection of previously used persistent Squid-to-peer HTTP(S) connections
 extern PconnPool *fwdPconnPool;
 
-#endif /* SQUID_FORWARD_H */
+#endif /* SQUID_SRC_FWDSTATE_H */
 

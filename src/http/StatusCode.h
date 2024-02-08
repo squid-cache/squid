@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HTTP_STATUSCODE_H
-#define _SQUID_SRC_HTTP_STATUSCODE_H
+#ifndef SQUID_SRC_HTTP_STATUSCODE_H
+#define SQUID_SRC_HTTP_STATUSCODE_H
 
 namespace Http
 {
@@ -99,5 +99,5 @@ bool IsReforwardableStatus(StatusCode);
 
 } // namespace Http
 
-#endif /* _SQUID_SRC_HTTP_STATUSCODE_H */
+#endif /* SQUID_SRC_HTTP_STATUSCODE_H */
 

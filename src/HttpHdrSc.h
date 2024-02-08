@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPHDRSURROGATECONTROL_H
-#define SQUID_HTTPHDRSURROGATECONTROL_H
+#ifndef SQUID_SRC_HTTPHDRSC_H
+#define SQUID_SRC_HTTPHDRSC_H
 
 #include "http/forward.h"
 #include "HttpHdrScTarget.h"
@@ -45,5 +45,5 @@ HttpHdrSc *httpHdrScParseCreate(String const &);
 void httpHdrScSetMaxAge(HttpHdrSc *, char const *, int);
 
 http_hdr_sc_type &operator++(http_hdr_sc_type &);
-#endif /* SQUID_HTTPHDRSURROGATECONTROL_H */
+#endif /* SQUID_SRC_HTTPHDRSC_H */
 

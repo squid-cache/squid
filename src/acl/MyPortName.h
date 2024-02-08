@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLMYPORTNAME_H
-#define SQUID_ACLMYPORTNAME_H
+#ifndef SQUID_SRC_ACL_MYPORTNAME_H
+#define SQUID_SRC_ACL_MYPORTNAME_H
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
@@ -19,11 +19,11 @@ namespace Acl
 class MyPortNameCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
 };
 
 } // namespace Acl
 
-#endif /* SQUID_ACLMYPORTNAME_H */
+#endif /* SQUID_SRC_ACL_MYPORTNAME_H */
 

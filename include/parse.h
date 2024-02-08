@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PARSE_H
-#define SQUID_PARSE_H
+#ifndef SQUID_INCLUDE_PARSE_H
+#define SQUID_INCLUDE_PARSE_H
 
 /***********************************************************
     Copyright 1989 by Carnegie Mellon University
@@ -96,5 +96,5 @@ struct snmp_mib_tree *read_mib(char *);
 
 #endif
 
-#endif              /* SQUID_PARSE_H */
+#endif /* SQUID_INCLUDE_PARSE_H */
 

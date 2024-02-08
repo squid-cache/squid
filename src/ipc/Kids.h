@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_KIDS_H
-#define SQUID_IPC_KIDS_H
+#ifndef SQUID_SRC_IPC_KIDS_H
+#define SQUID_SRC_IPC_KIDS_H
 
 #include "ipc/Kid.h"
 
@@ -66,5 +66,5 @@ extern Kids TheKids; ///< All kids being maintained
 
 extern SBuf TheKidName; ///< current Squid process name (e.g., "squid-coord")
 
-#endif /* SQUID_IPC_KIDS_H */
+#endif /* SQUID_SRC_IPC_KIDS_H */
 

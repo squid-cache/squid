@@ -8,8 +8,8 @@
 
 /* DEBUG: section 86    ESI processing */
 
-#ifndef SQUID_ESIASSIGN_H
-#define SQUID_ESIASSIGN_H
+#ifndef SQUID_SRC_ESI_ASSIGN_H
+#define SQUID_SRC_ESI_ASSIGN_H
 
 #include "esi/Element.h"
 #include "esi/VarState.h"
@@ -56,5 +56,5 @@ private:
     String unevaluatedVariable;
 };
 
-#endif /* SQUID_ESIASSIGN_H */
+#endif /* SQUID_SRC_ESI_ASSIGN_H */
 

@@ -30,8 +30,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef _SQUID__LIB_RFCNB_RFCNB_IO_H
-#define _SQUID__LIB_RFCNB_RFCNB_IO_H
+#ifndef SQUID_LIB_RFCNB_RFCNB_IO_H
+#define SQUID_LIB_RFCNB_RFCNB_IO_H
 
 #include "rfcnb/rfcnb.h"
 
@@ -39,5 +39,5 @@ int RFCNB_Put_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len);
 
 int RFCNB_Get_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len);
 
-#endif
+#endif /* SQUID_LIB_RFCNB_RFCNB_IO_H */
 

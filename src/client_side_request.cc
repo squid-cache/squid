@@ -28,6 +28,7 @@
 #include "clientStream.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
+#include "debug/Messages.h"
 #include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"
@@ -75,6 +76,11 @@
 #endif
 
 #if FOLLOW_X_FORWARDED_FOR
+
+#if !defined(SQUID_X_FORWARDED_FOR_HOP_MAX)
+#define SQUID_X_FORWARDED_FOR_HOP_MAX 64
+#endif
+
 static void clientFollowXForwardedForCheck(Acl::Answer answer, void *data);
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
@@ -437,8 +443,16 @@ clientFollowXForwardedForCheck(Acl::Answer answer, void *data)
                 /* override the default src_addr tested if we have to go deeper than one level into XFF */
                 Filled(calloutContext->acl_checklist)->src_addr = request->indirect_client_addr;
             }
-            calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
-            return;
+            if (++calloutContext->currentXffHopNumber < SQUID_X_FORWARDED_FOR_HOP_MAX) {
+                calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
+                return;
+            }
+            const auto headerName = Http::HeaderLookupTable.lookup(Http::HdrType::X_FORWARDED_FOR).name;
+            debugs(28, DBG_CRITICAL, "ERROR: Ignoring trailing " << headerName << " addresses" <<
+                   Debug::Extra << "addresses allowed by follow_x_forwarded_for: " << calloutContext->currentXffHopNumber <<
+                   Debug::Extra << "last/accepted address: " << request->indirect_client_addr <<
+                   Debug::Extra << "ignored trailing addresses: " << request->x_forwarded_for_iterator);
+            // fall through to resume clientAccessCheck() processing
         }
     }
 
@@ -2087,7 +2101,7 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
         // XXX: Setting receivedWholeAdaptedReply here is a workaround for a
         // regression, as described in https://bugs.squid-cache.org/show_bug.cgi?id=5187#c6
         receivedWholeAdaptedReply = true;
-        debugs(85, DBG_IMPORTANT, "WARNING: Squid bug 5187 workaround triggered");
+        debugs(85, Important(72), "WARNING: Squid bug 5187 workaround triggered");
         endRequestSatisfaction();
     }
     // else wait for more body data

@@ -35,7 +35,7 @@ Ssl::ReportAndForgetErrors(std::ostream &os)
 {
     unsigned int reported = 0; // efficiently marks ForgetErrors() call boundary
     while (const auto errorToForget = ERR_get_error())
-        os << Debug::Extra << "OpenSSL-saved error #" << (++reported) << ": " << asHex(errorToForget);
+        os << Debug::Extra << "OpenSSL-saved error #" << (++reported) << ": 0x" << asHex(errorToForget);
     return os;
 }
 
@@ -376,7 +376,6 @@ mimicAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mi
     if (!extAuthKeyId.get())
         return false;
 
-    extOct.release();
     if (!X509_add_ext(cert.get(), extAuthKeyId.get(), -1))
         return false;
 

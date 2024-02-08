@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_MEM_PAGE_STACK_H
-#define SQUID_IPC_MEM_PAGE_STACK_H
+#ifndef SQUID_SRC_IPC_MEM_PAGESTACK_H
+#define SQUID_SRC_IPC_MEM_PAGESTACK_H
 
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/forward.h"
@@ -183,5 +183,5 @@ private:
 
 } // namespace Ipc
 
-#endif // SQUID_IPC_MEM_PAGE_STACK_H
+#endif /* SQUID_SRC_IPC_MEM_PAGESTACK_H */
 

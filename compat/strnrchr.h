@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef COMPAT_STRNRCHR_H_
-#define COMPAT_STRNRCHR_H_
+#ifndef SQUID_COMPAT_STRNRCHR_H
+#define SQUID_COMPAT_STRNRCHR_H
 
 #if HAVE_STDDEF_H
 #include <stddef.h>
@@ -21,5 +21,5 @@
  */
 SQUIDCEXTERN const char *strnrchr(const char *s, size_t count, int c);
 
-#endif /* COMPAT_STRNRCHR_H_ */
+#endif /* SQUID_COMPAT_STRNRCHR_H */
 

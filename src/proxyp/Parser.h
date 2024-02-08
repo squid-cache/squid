@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PROXYP_PARSER_H
-#define SQUID_PROXYP_PARSER_H
+#ifndef SQUID_SRC_PROXYP_PARSER_H
+#define SQUID_SRC_PROXYP_PARSER_H
 
 #include "proxyp/forward.h"
 #include "sbuf/forward.h"
@@ -32,5 +32,5 @@ Parsed Parse(const SBuf &);
 
 } // namespace ProxyProtocol
 
-#endif
+#endif /* SQUID_SRC_PROXYP_PARSER_H */
 

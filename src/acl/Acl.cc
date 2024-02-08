@@ -31,16 +31,16 @@ const char *AclMatchedName = nullptr;
 
 namespace Acl {
 
-/// ACL type name comparison functor
+/// Acl::Node type name comparison functor
 class TypeNameCmp {
 public:
     bool operator()(TypeName a, TypeName b) const { return strcmp(a, b) < 0; }
 };
 
-/// ACL makers indexed by ACL type name
+/// Acl::Node makers indexed by Node type name
 typedef std::map<TypeName, Maker, TypeNameCmp> Makers;
 
-/// registered ACL Makers
+/// registered Acl::Node Makers
 static Makers &
 TheMakers()
 {
@@ -48,9 +48,9 @@ TheMakers()
     return Registry;
 }
 
-/// creates an ACL object of the named (and already registered) ACL child type
+/// creates an Acl::Node object of the named (and already registered) Node child type
 static
-ACL *
+Acl::Node *
 Make(TypeName typeName)
 {
     const auto pos = TheMakers().find(typeName);
@@ -60,11 +60,27 @@ Make(TypeName typeName)
         assert(false); // not reached
     }
 
-    ACL *result = (pos->second)(pos->first);
+    auto *result = (pos->second)(pos->first);
     debugs(28, 4, typeName << '=' << result);
     assert(result);
     return result;
 }
+
+/// CodeContext of the being-parsed acl directive
+class ParsingContext: public CodeContext
+{
+public:
+    using Pointer = RefCount<ParsingContext>;
+
+    explicit ParsingContext(const SBuf &name): name_(name) {}
+
+    /* CodeContext API */
+    ScopedId codeContextGist() const override;
+    std::ostream &detailCodeContext(std::ostream &os) const override;
+
+private:
+    SBuf name_; ///< the aclname parameter of the being-parsed acl directive
+};
 
 } // namespace Acl
 
@@ -80,9 +96,7 @@ void
 Acl::SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey)
 {
     if (!newKey) {
-        throw TextException(ToSBuf("An acl declaration is missing a ", keyParameterName,
-                                   Debug::Extra, "ACL name: ", AclMatchedName),
-                            Here());
+        throw TextException(ToSBuf("An acl declaration is missing a ", keyParameterName), Here());
     }
 
     if (keyStorage.isEmpty()) {
@@ -96,41 +110,54 @@ Acl::SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey)
     throw TextException(ToSBuf("Attempt to change the value of the ", keyParameterName, " argument in a subsequent acl declaration:",
                                Debug::Extra, "previously seen value: ", keyStorage,
                                Debug::Extra, "new/conflicting value: ", newKey,
-                               Debug::Extra, "ACL name: ", AclMatchedName,
                                Debug::Extra, "advice: Use a dedicated ACL name for each distinct ", keyParameterName,
                                " (and group those ACLs together using an 'any-of' ACL)."),
                         Here());
 }
 
-void *
-ACL::operator new (size_t)
+/* Acl::ParsingContext */
+
+ScopedId
+Acl::ParsingContext::codeContextGist() const {
+    return ScopedId("acl");
+}
+
+std::ostream &
+Acl::ParsingContext::detailCodeContext(std::ostream &os) const
 {
-    fatal ("unusable ACL::new");
+    return os << Debug::Extra << "acl name: " << name_ <<
+           Debug::Extra << "configuration context: " << ConfigParser::CurrentLocation();
+}
+
+/* Acl::Node */
+
+void *
+Acl::Node::operator new (size_t)
+{
+    fatal ("unusable Acl::Node::new");
     return (void *)1;
 }
 
-void
-ACL::operator delete (void *)
+void Acl::Node::operator delete(void *)
 {
-    fatal ("unusable ACL::delete");
+    fatal ("unusable Acl::Node::delete");
 }
 
-ACL *
-ACL::FindByName(const char *name)
+Acl::Node *
+Acl::Node::FindByName(const char *name)
 {
-    ACL *a;
-    debugs(28, 9, "ACL::FindByName '" << name << "'");
+    debugs(28, 9, "name=" << name);
 
-    for (a = Config.aclList; a; a = a->next)
+    for (auto *a = Config.aclList; a; a = a->next)
         if (!strcasecmp(a->name, name))
             return a;
 
-    debugs(28, 9, "ACL::FindByName found no match");
+    debugs(28, 9, "found no match");
 
     return nullptr;
 }
 
-ACL::ACL() :
+Acl::Node::Node() :
     cfgline(nullptr),
     next(nullptr),
     registered(false)
@@ -138,13 +165,14 @@ ACL::ACL() :
     *name = 0;
 }
 
-bool ACL::valid () const
+bool
+Acl::Node::valid() const
 {
     return true;
 }
 
 bool
-ACL::matches(ACLChecklist *checklist) const
+Acl::Node::matches(ACLChecklist *checklist) const
 {
     debugs(28, 5, "checking " << name);
 
@@ -169,7 +197,7 @@ ACL::matches(ACLChecklist *checklist) const
             checklist->verifyAle();
 
         // have to cast because old match() API is missing const
-        result = const_cast<ACL*>(this)->match(checklist);
+        result = const_cast<Node*>(this)->match(checklist);
     }
 
     const char *extra = checklist->asyncInProgress() ? " async" : "";
@@ -178,7 +206,7 @@ ACL::matches(ACLChecklist *checklist) const
 }
 
 void
-ACL::context(const char *aName, const char *aCfgLine)
+Acl::Node::context(const char *aName, const char *aCfgLine)
 {
     name[0] = '\0';
     if (aName)
@@ -189,13 +217,10 @@ ACL::context(const char *aName, const char *aCfgLine)
 }
 
 void
-ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
+Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
 {
     /* we're already using strtok() to grok the line */
     char *t = nullptr;
-    ACL *A = nullptr;
-    LOCAL_ARRAY(char, aclname, ACL_NAME_SZ);
-    int new_acl = 0;
 
     /* snarf the ACL name */
 
@@ -212,7 +237,16 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         return;
     }
 
-    xstrncpy(aclname, t, ACL_NAME_SZ);
+    SBuf aclname(t);
+    CallParser(ParsingContext::Pointer::Make(aclname), [&] {
+        ParseNamed(parser, head, aclname.c_str()); // TODO: Convert Node::name to SBuf
+    });
+}
+
+/// parses acl directive parts that follow aclname
+void
+Acl::Node::ParseNamed(ConfigParser &parser, Node ** const head, const char * const aclname)
+{
     /* snarf the ACL type */
     const char *theType;
 
@@ -253,6 +287,8 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         theType = "client_connection_mark";
     }
 
+    Node *A = nullptr;
+    int new_acl = 0;
     if ((A = FindByName(aclname)) == nullptr) {
         debugs(28, 3, "aclParseAclLine: Creating ACL '" << aclname << "'");
         A = Acl::Make(theType);
@@ -269,21 +305,10 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         new_acl = 0;
     }
 
-    /*
-     * Here we set AclMatchedName in case we need to use it in a
-     * warning message in aclDomainCompare().
-     */
-    AclMatchedName = A->name;   /* ugly */
-
     A->parseFlags();
 
     /*split the function here */
     A->parse();
-
-    /*
-     * Clear AclMatchedName from our temporary hack
-     */
-    AclMatchedName = nullptr;  /* ugly */
 
     if (!new_acl)
         return;
@@ -307,13 +332,13 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 }
 
 bool
-ACL::isProxyAuth() const
+Acl::Node::isProxyAuth() const
 {
     return false;
 }
 
 void
-ACL::parseFlags()
+Acl::Node::parseFlags()
 {
     Acl::Options allOptions = options();
     for (const auto lineOption: lineOptions()) {
@@ -324,19 +349,19 @@ ACL::parseFlags()
 }
 
 void
-ACL::dumpWhole(const char * const directiveName, std::ostream &os)
+Acl::Node::dumpWhole(const char * const directiveName, std::ostream &os)
 {
     // XXX: No lineOptions() call here because we do not remember ACL "line"
     // boundaries and associated "line" options; we cannot report them.
     os << directiveName << ' ' << name << ' ' << typeString() << options() <<
-        asList(dump()).prefixedBy(" ").delimitedBy(" ") <<
-        '\n';
+       asList(dump()).prefixedBy(" ").delimitedBy(" ") <<
+       '\n';
 }
 
 /* ACL result caching routines */
 
 int
-ACL::matchForCache(ACLChecklist *)
+Acl::Node::matchForCache(ACLChecklist *)
 {
     /* This is a fatal to ensure that cacheMatchAcl calls are _only_
      * made for supported acl types */
@@ -354,7 +379,7 @@ ACL::matchForCache(ACLChecklist *)
  * TODO: does a dlink_list perform well enough? Kinkie
  */
 int
-ACL::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
+Acl::Node::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
 {
     acl_proxy_auth_match_cache *auth_match;
     dlink_node *link;
@@ -364,7 +389,7 @@ ACL::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
         auth_match = (acl_proxy_auth_match_cache *)link->data;
 
         if (auth_match->acl_data == this) {
-            debugs(28, 4, "ACL::cacheMatchAcl: cache hit on acl '" << name << "' (" << this << ")");
+            debugs(28, 4, "cache hit on acl '" << name << "' (" << this << ")");
             return auth_match->matchrv;
         }
 
@@ -373,7 +398,7 @@ ACL::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
 
     auth_match = new acl_proxy_auth_match_cache(matchForCache(checklist), this);
     dlinkAddTail(auth_match, &auth_match->link, cache);
-    debugs(28, 4, "ACL::cacheMatchAcl: miss for '" << name << "'. Adding result " << auth_match->matchrv);
+    debugs(28, 4, "miss for acl '" << name << "'. Adding result " << auth_match->matchrv);
     return auth_match->matchrv;
 }
 
@@ -396,19 +421,19 @@ aclCacheMatchFlush(dlink_list * cache)
 }
 
 bool
-ACL::requiresAle() const
+Acl::Node::requiresAle() const
 {
     return false;
 }
 
 bool
-ACL::requiresReply() const
+Acl::Node::requiresReply() const
 {
     return false;
 }
 
 bool
-ACL::requiresRequest() const
+Acl::Node::requiresRequest() const
 {
     return false;
 }
@@ -417,7 +442,7 @@ ACL::requiresRequest() const
 /* Destroy functions */
 /*********************/
 
-ACL::~ACL()
+Acl::Node::~Node()
 {
     debugs(28, 3, "freeing ACL " << name);
     safe_free(cfgline);
@@ -425,10 +450,10 @@ ACL::~ACL()
 }
 
 void
-ACL::Initialize()
+Acl::Node::Initialize()
 {
-    ACL *a = Config.aclList;
-    debugs(53, 3, "ACL::Initialize");
+    auto *a = Config.aclList;
+    debugs(53, 3, "Acl::Node::Initialize");
 
     while (a) {
         a->prepareForUse();

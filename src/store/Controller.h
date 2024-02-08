@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_CONTROLLER_H
-#define SQUID_STORE_CONTROLLER_H
+#ifndef SQUID_SRC_STORE_CONTROLLER_H
+#define SQUID_SRC_STORE_CONTROLLER_H
 
 #include "store/Storage.h"
 
@@ -149,7 +149,7 @@ private:
     void checkTransients(const StoreEntry &) const;
     void checkFoundCandidate(const StoreEntry &) const;
 
-    Disks *swapDir; ///< summary view of all disk caches
+    Disks *disks; ///< summary view of all disk caches (including none); never nil
     Memory *sharedMemStore; ///< memory cache that multiple workers can use
     bool localMemStore; ///< whether local (non-shared) memory cache is enabled
 
@@ -173,5 +173,5 @@ extern void FreeMemory();
 
 } // namespace Store
 
-#endif /* SQUID_STORE_CONTROLLER_H */
+#endif /* SQUID_SRC_STORE_CONTROLLER_H */
 

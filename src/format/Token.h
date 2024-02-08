@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_FORMAT_TOKEN_H
-#define _SQUID_FORMAT_TOKEN_H
+#ifndef SQUID_SRC_FORMAT_TOKEN_H
+#define SQUID_SRC_FORMAT_TOKEN_H
 
 #include "format/ByteCode.h"
 #include "proxyp/Elements.h"
@@ -60,6 +60,8 @@ public:
             char *element;
             char separator;
         } header;
+
+        uint8_t byteValue; // %byte{} parameter or zero
     } data;
     int widthMin; ///< minimum field width
     int widthMax; ///< maximum field width
@@ -76,5 +78,5 @@ private:
 
 } // namespace Format
 
-#endif /* _SQUID_FORMAT_TOKEN_H */
+#endif /* SQUID_SRC_FORMAT_TOKEN_H */
 

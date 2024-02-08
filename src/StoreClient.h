@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORECLIENT_H
-#define SQUID_STORECLIENT_H
+#ifndef SQUID_SRC_STORECLIENT_H
+#define SQUID_SRC_STORECLIENT_H
 
 #include "acl/ChecklistFiller.h"
 #include "base/AsyncCall.h"
@@ -229,5 +229,5 @@ int storeUnregister(store_client * sc, StoreEntry * e, void *data);
 int storePendingNClients(const StoreEntry * e);
 int storeClientIsThisAClient(store_client * sc, void *someClient);
 
-#endif /* SQUID_STORECLIENT_H */
+#endif /* SQUID_SRC_STORECLIENT_H */
 

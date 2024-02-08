@@ -63,5 +63,5 @@ extern LogConfig TheConfig;
 #define free_logformat(X)   do{ delete (*X).logformats; (*X).logformats=NULL; }while(false)
 #define dump_logformat(E,N,D) (D).dumpFormats((E),(N))
 
-#endif
+#endif /* SQUID_SRC_LOG_CONFIG_H */
 

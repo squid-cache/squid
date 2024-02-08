@@ -18,7 +18,7 @@ void
 String::allocBuffer(String::size_type sz)
 {
     assert (undefined());
-    char *newBuffer = (char*)memAllocString(sz, &sz);
+    auto *newBuffer = static_cast<char*>(memAllocBuf(sz, &sz));
     setBuffer(newBuffer, sz);
 }
 
@@ -104,7 +104,7 @@ String::clean()
 {
     /* TODO if mempools has already closed this will FAIL!! */
     if (defined())
-        memFreeString(size_, buf_);
+        memFreeBuf(size_, buf_);
 
     len_ = 0;
 

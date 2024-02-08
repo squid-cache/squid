@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMPREQUEST_H_
-#define SQUID_SNMPREQUEST_H_
+#ifndef SQUID_SRC_SNMPREQUEST_H
+#define SQUID_SRC_SNMPREQUEST_H
 
 #if SQUID_SNMP
 #include "acl/forward.h"
@@ -36,5 +36,5 @@ public:
 
 #endif /* SQUID_SNMP */
 
-#endif /* SQUID_SNMPREQUEST_H_ */
+#endif /* SQUID_SRC_SNMPREQUEST_H */
 

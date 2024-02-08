@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_STORE_TO_COMM_WRITER_H
-#define SQUID_MGR_STORE_TO_COMM_WRITER_H
+#ifndef SQUID_SRC_MGR_STORETOCOMMWRITER_H
+#define SQUID_SRC_MGR_STORETOCOMMWRITER_H
 
 #include "base/AsyncJob.h"
 #include "comm/forward.h"
@@ -71,5 +71,5 @@ protected:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_STORE_TO_COMM_WRITER_H */
+#endif /* SQUID_SRC_MGR_STORETOCOMMWRITER_H */
 

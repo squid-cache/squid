@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_UFS_REBUILDSTATE_H
-#define SQUID_FS_UFS_REBUILDSTATE_H
+#ifndef SQUID_SRC_FS_UFS_REBUILDSTATE_H
+#define SQUID_SRC_FS_UFS_REBUILDSTATE_H
 
 #include "base/RefCount.h"
 #include "store_rebuild.h"
@@ -83,5 +83,5 @@ private:
 } /* namespace Ufs */
 } /* namespace Fs */
 
-#endif /* SQUID_FS_UFS_REBUILDSTATE_H */
+#endif /* SQUID_SRC_FS_UFS_REBUILDSTATE_H */
 

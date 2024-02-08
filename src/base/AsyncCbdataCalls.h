@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_ASYNCCBDATACALLS_H
-#define SQUID_BASE_ASYNCCBDATACALLS_H
+#ifndef SQUID_SRC_BASE_ASYNCCBDATACALLS_H
+#define SQUID_SRC_BASE_ASYNCCBDATACALLS_H
 
 #include "base/AsyncCall.h"
 #include "base/CbcPointer.h"
@@ -42,5 +42,5 @@ cbdataDialer(typename UnaryCbdataDialer<Argument1>::Handler *handler, Argument1 
     return UnaryCbdataDialer<Argument1>(handler, arg1);
 }
 
-#endif
+#endif /* SQUID_SRC_BASE_ASYNCCBDATACALLS_H */
 

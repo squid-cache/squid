@@ -28,8 +28,8 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#ifndef _SMBLIB_STD_DEFINES_H
-#define _SMBLIB_STD_DEFINES_H
+#ifndef SQUID_LIB_SMBLIB_STD_DEFINES_H
+#define SQUID_LIB_SMBLIB_STD_DEFINES_H
 
 /* RFCNB Standard includes ... */
 /* One day we will conditionalize these on OS types ... */
@@ -48,5 +48,5 @@
 #define TRUE 1
 #define FALSE 0
 
-#endif /* _SMBLIB_STD_DEFINES_H */
+#endif /* SQUID_LIB_SMBLIB_STD_DEFINES_H */
 
