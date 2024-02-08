@@ -35,7 +35,7 @@ public:
     explicit RefreshPattern(RegexPointer aRegex):
         min(0), pct(0.20), max(REFRESH_DEFAULT_MAX),
         next(nullptr),
-        max_stale(0),
+        max_stale(-1),
         regex_(std::move(aRegex))
     {
         memset(&flags, 0, sizeof(flags));
