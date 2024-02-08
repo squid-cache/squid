@@ -79,6 +79,12 @@ public:
 
     SBuf url;
 
+    // TODO: remove and use tcpClient after separating into class(es) representing ALEs
+    // for transactions initiated by Squid (e.g., Adaptation::Icap::ALE).
+    /// the same as tcpClient for transactions accepted by Squid
+    /// nil for transactions open by Squid (e.g., ICAP transactions)
+    Comm::ConnectionPointer acceptedClientConnection;
+
     /// TCP/IP level details about the client connection
     Comm::ConnectionPointer tcpClient;
     // TCP/IP level details about the server or peer connection

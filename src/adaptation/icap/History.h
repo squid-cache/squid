@@ -9,6 +9,7 @@
 #ifndef SQUID_ICAPHISTORY_H
 #define SQUID_ICAPHISTORY_H
 
+#include "AccessLogEntry.h"
 #include "base/RefCount.h"
 #include "comm/forward.h"
 #include "enums.h"
@@ -44,7 +45,7 @@ public:
 
     String log_uri; ///< the request uri
     size_t req_sz; ///< the request size
-    Comm::ConnectionPointer clientConnection; ///< client TCP connection details
+    AccessLogEntry::Pointer acceptedClientAle;
 
 private:
     void currentTime(struct timeval &) const; ///< time since current start or zero

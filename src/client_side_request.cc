@@ -801,8 +801,8 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
 #if ICAP_CLIENT
     Adaptation::Icap::History::Pointer ih = request->icapHistory();
     if (ih != nullptr) {
+        ih->acceptedClientAle = al;
         if (getConn() != nullptr && getConn()->clientConnection != nullptr) {
-            ih->clientConnection = getConn()->clientConnection;
 #if USE_OPENSSL
             if (getConn()->clientConnection->isOpen()) {
                 ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl.get());
