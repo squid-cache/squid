@@ -740,12 +740,8 @@ urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method
     // check for unescaped control characters
     // RFC 1738, 5234 and 7230 require the UTF-8 range (0x80-0xFF)
     // and the ASCII control characters (0x00-0x1F, 0x7f) be encoded.
-    // XXX: Add the 0xA0-0xFF characters. The below emulates old stringHasCtl()
-    // which produced false for that UTF-8 range.
-    static const auto partialUtf8 = CharacterSet("utf8-partial", 0x80, 0x9f);
-    static const auto ctls = (partialUtf8 + CharacterSet::CTL).add('\0').rename("controls");
-    static const auto ignoreChars = ctls.complement("ignored");
-    return Encode(out, ignoreChars);
+    static const auto asciiValid = (CharacterSet::OBSTEXT + CharacterSet::CTL).complement("ascii").remove('\0');
+    return Encode(out, asciiValid);
 }
 
 /**
