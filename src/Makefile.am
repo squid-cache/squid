@@ -1931,9 +1931,9 @@ tests_test_http_range_SOURCES = \
 	wordlist.h
 nodist_tests_test_http_range_SOURCES = \
 	$(BUILT_SOURCES) \
-	tests/stub_libtime.cc \
 	tests/stub_libsslsquid.cc \
-	tests/stub_libsslutil.cc
+	tests/stub_libsslutil.cc \
+	tests/stub_libtime.cc
 tests_test_http_range_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
@@ -2316,9 +2316,9 @@ tests_testHttpRequest_SOURCES = \
 	wordlist.h
 nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES) \
-	tests/stub_libtime.cc \
 	tests/stub_libsslsquid.cc \
-	tests/stub_libsslutil.cc
+	tests/stub_libsslutil.cc \
+	tests/stub_libtime.cc
 tests_testHttpRequest_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
@@ -2738,10 +2738,10 @@ nodist_tests_testEvent_SOURCES = \
 	tests/stub_debug.cc \
 	event.cc \
 	tests/stub_libmem.cc \
-	tests/stub_libtime.cc \
-	tests/stub_tools.cc \
 	tests/stub_libsslsquid.cc \
-	tests/stub_libsslutil.cc
+	tests/stub_libsslutil.cc \
+	tests/stub_libtime.cc \
+	tests/stub_tools.cc
 tests_testEvent_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
@@ -2757,9 +2757,9 @@ nodist_tests_testEventLoop_SOURCES = \
 	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
-	tests/stub_libtime.cc \
 	tests/stub_libsslsquid.cc \
-	tests/stub_libsslutil.cc
+	tests/stub_libsslutil.cc \
+	tests/stub_libtime.cc
 tests_testEventLoop_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \

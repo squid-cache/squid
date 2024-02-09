@@ -7,10 +7,10 @@
  */
 
 #include "squid.h"
-#include "security/CertificateProperties.h"
 #include "base/IoManip.h"
 #include "error/SysErrorDetail.h"
 #include "sbuf/Stream.h"
+#include "security/CertificateProperties.h"
 #include "security/Io.h"
 #include "ssl/gadgets.h"
 

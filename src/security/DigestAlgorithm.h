@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__SRC_SECURITY_DIGESTALGORITHM_H
-#define SQUID__SRC_SECURITY_DIGESTALGORITHM_H
+#ifndef SQUID_SRC_SECURITY_DIGESTALGORITHM_H
+#define SQUID_SRC_SECURITY_DIGESTALGORITHM_H
 
 #if USE_OPENSSL
 #if HAVE_OPENSSL_EVP_H
@@ -41,4 +41,4 @@ DigestAlgorithm digestByName(const char *name);
 
 } // namespace Security
 
-#endif /* SQUID__SRC_SECURITY_DIGESTALGORITHM_H */
+#endif /* SQUID_SRC_SECURITY_DIGESTALGORITHM_H */

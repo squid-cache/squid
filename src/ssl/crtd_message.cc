@@ -7,10 +7,10 @@
  */
 
 #include "squid.h"
-#include "security/CertAdaptAlgorithm.h"
-#include "security/CertificateProperties.h"
 #include "base/TextException.h"
 #include "sbuf/Stream.h"
+#include "security/CertAdaptAlgorithm.h"
+#include "security/CertificateProperties.h"
 #include "ssl/crtd_message.h"
 #include "ssl/gadgets.h"
 

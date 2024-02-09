@@ -12,13 +12,13 @@ SUBDIRS= . cert_generators cert_validators
 noinst_LTLIBRARIES = libsecurity.la libsecuritybase.la
 
 # Pieces linked to both Squid and security helpers
-libsecuritybase_la_SOURCES= \
+libsecuritybase_la_SOURCES = \
 	Algorithms.cc \
 	CertAdaptAlgorithm.cc \
 	CertAdaptAlgorithm.h \
-	CertificateProperties.h \
 	CertSignAlgorithm.cc \
 	CertSignAlgorithm.h \
+	CertificateProperties.h \
 	DigestAlgorithm.h
 
 # Pieces only linked to squid binary

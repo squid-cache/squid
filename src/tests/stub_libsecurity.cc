@@ -24,7 +24,7 @@ Security::CertSignAlgorithm Security::certSignAlgorithmId(const char *) STUB_RET
 
 #include "security/DigestAlgorithm.h"
 const char *Security::digestName(const DigestAlgorithm) STUB_RETVAL("invalid")
- Security::DigestAlgorithm Security::digestByName(const char *) STUB_RETVAL(UnknownDigestAlgorithm)
+Security::DigestAlgorithm Security::digestByName(const char *) STUB_RETVAL(UnknownDigestAlgorithm)
 
 #include "security/BlindPeerConnector.h"
 CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
