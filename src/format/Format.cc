@@ -948,8 +948,12 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (!out)
                 out = strOrNull(al->cache.ssluser);
 #endif
-            if (!out)
-                out = strOrNull(al->getClientIdent());
+            if (!out) {
+                if (const auto ident = al->getClientIdent()) {
+                    sb = ident.value();
+                    out = sb.c_str();
+                }
+            }
             break;
 
         case LFT_USER_LOGIN:
@@ -959,9 +963,13 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 #endif
             break;
 
-        case LFT_USER_IDENT:
-            out = strOrNull(al->getClientIdent());
-            break;
+        case LFT_USER_IDENT: {
+            if (const auto ident = al->getClientIdent()) {
+                sb = ident.value();
+                out = sb.c_str();
+            }
+        }
+        break;
 
         case LFT_USER_EXTERNAL:
             out = strOrNull(al->getExtUser());

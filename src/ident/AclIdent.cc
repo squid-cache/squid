@@ -99,7 +99,8 @@ void
 ACLIdent::LookupDone(const char *ident, void *data)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
-    checklist->al->acceptedClientConnection->setIdent(ident);
+    if (checklist->al)
+        checklist->al->setClientIdent(ident);
     checklist->resumeNonBlockingCheck();
 }
 

@@ -20,6 +20,7 @@
 #include "eui/Eui64.h"
 #endif
 #include "hier_code.h"
+#include "ident/Ident.h"
 #include "ip/Address.h"
 #include "ip/forward.h"
 #include "mem/forward.h"
@@ -27,7 +28,6 @@
 #include "time/gadgets.h"
 
 #include <iosfwd>
-#include <optional>
 #include <ostream>
 
 class CachePeer;
@@ -76,8 +76,6 @@ class Connection: public CodeContext
     MEMPROXY_CLASS(Comm::Connection);
 
 public:
-    using Ident = std::optional<SBuf>;
-
     Connection();
 
     /** Clear the connection properties and close any open socket. */
@@ -145,8 +143,8 @@ public:
     ScopedId codeContextGist() const override;
     std::ostream &detailCodeContext(std::ostream &os) const override;
 
-    /// Initializes rfc931 user identity with ident.
-    /// Does nothing if the user identity exists or ident is nil.
+    /// Initializes rfc931 with the received user identity (or nil string).
+    /// Subsequent calls have no effect.
     void setIdent(const char *ident);
 
 public:
@@ -181,7 +179,8 @@ public:
     /** COMM flags set on this connection */
     int flags;
 
-    Ident ident;
+    /// rfc931 user identity
+    Ident::User ident;
 
 #if USE_SQUID_EUI
     Eui::Eui48 remoteEui48;

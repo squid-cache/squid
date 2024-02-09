@@ -60,8 +60,11 @@ public:
     /// Side effect: Enables reverse DNS lookups of future client addresses.
     const char *getLogClientFqdn(char *buf, size_t bufSize) const;
 
-    /// Fetch the client IDENT string, or nil if none is available.
-    const char *getClientIdent() const;
+    /// \returns rfc931 user identity (including empty strings), if any
+    Ident::User getClientIdent() const;
+
+    /// sets rfc931 user identity to name (may be nil)
+    void setClientIdent(const char *name);
 
     /// Fetch the external ACL provided 'user=' string, or nil if none is available.
     const char *getExtUser() const;
@@ -77,15 +80,14 @@ public:
     /// dump all reply headers (for sending or risky logging)
     void packReplyHeaders(MemBuf &mb) const;
 
-    void initAcceptedConnection(Comm::ConnectionPointer p) { acceptedClientConnection = p; tcpClient = p; }
-
     SBuf url;
 
-    // TODO: remove and use tcpClient after separating into class(es) representing ALEs
-    // for transactions initiated by Squid (e.g., Adaptation::Icap::ALE).
-    /// the same as tcpClient for transactions accepted by Squid
-    /// nil for transactions open by Squid (e.g., ICAP transactions)
-    Comm::ConnectionPointer acceptedClientConnection;
+    // TODO: Adaptation::Icap::ALE (and other Squid-initiated transactions) do not have
+    // accepted connections. A future Adaptation::Icap::ALE must have these removed.
+    /// initializes client connection with a connection accepted by Squid
+    void initAcceptedConnection(Comm::ConnectionPointer p) { acceptedClientConnection = p; tcpClient = p; }
+    /// \returns a connection accepted by Squid
+    Comm::ConnectionPointer getAcceptedConnection() const { return acceptedClientConnection; }
 
     /// TCP/IP level details about the client connection
     Comm::ConnectionPointer tcpClient;
@@ -288,6 +290,10 @@ private:
     /// Client URI (or equivalent) for effectiveVirginUrl() when HttpRequest is
     /// missing. This member is ignored unless the request member is nil.
     SBuf virginUrlForMissingRequest_;
+
+    /// The same as tcpClient for transactions accepted by Squid.
+    /// Nil for transactions open by Squid (e.g., ICAP transactions).
+    Comm::ConnectionPointer acceptedClientConnection;
 };
 
 class ACLChecklist;

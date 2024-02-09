@@ -96,10 +96,19 @@ AccessLogEntry::syncNotes(HttpRequest *req)
         assert(notes == req->notes());
 }
 
-const char *
+Ident::User
 AccessLogEntry::getClientIdent() const
 {
-    return acceptedClientConnection ? const_cast<SBuf &>(acceptedClientConnection->ident.value()).c_str() : nullptr;
+    return acceptedClientConnection ? acceptedClientConnection->ident : std::nullopt;
+}
+
+void
+AccessLogEntry::setClientIdent(const char *name)
+{
+    if (acceptedClientConnection)
+        acceptedClientConnection->setIdent(name);
+    else
+        debugs(30, DBG_IMPORTANT, "ERROR: cannot set ident: client connection is missing");
 }
 
 const char *

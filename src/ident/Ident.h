@@ -13,12 +13,21 @@
 
 #include "cbdata.h"
 #include "comm/forward.h"
+#include "sbuf/forward.h"
+
+#include <optional>
 
 typedef void IDCB(const char *ident, void *data);
 
 /// Ident Lookup API
 namespace Ident
 {
+
+/// rfc931 user identity
+/// An existing value indicates a successfully received response
+/// from Ident server: empty string means that USERID response part
+/// was missing.
+using User = std::optional<SBuf>;
 
 /**
  * Open a connection and request IDENT information from a peer machine.

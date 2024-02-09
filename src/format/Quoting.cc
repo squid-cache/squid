@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "format/Quoting.h"
+#include "sbuf/SBuf.h"
 
 static const char c2x[] =
     "000102030405060708090a0b0c0d0e0f"
@@ -37,6 +38,12 @@ Format::QuoteUrlEncodeUsername(const char *name)
         return nullptr;
 
     return QuoteMimeBlob(name);
+}
+
+char *
+Format::QuoteUrlEncodeUsername(const Ident::User &ident)
+{
+    return ident ? QuoteUrlEncodeUsername(SBuf(ident.value()).c_str()) : nullptr;
 }
 
 char *
