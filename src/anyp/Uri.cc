@@ -742,17 +742,10 @@ urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method
     // and the ASCII control characters (0x00-0x1F, 0x7f) be encoded.
     // XXX: Add the 0xA0-0xFF characters. The below emulates old stringHasCtl()
     // which produced false for that UTF-8 range.
-    static const CharacterSet partialUtf8 = CharacterSet("utf8-partial", 0x80, 0x9f);
-    static const CharacterSet ctls = (partialUtf8 + CharacterSet::CTL)
-                                     .add('\0')
-                                     .rename("controls");
-    if (out.findFirstOf(ctls) != SBuf::npos) {
-        SBuf tmp = out;
-        // XXX: the rfc1738 encoder truncates strings containing 0x00
-        return SBuf(rfc1738_escape_unescaped(out.c_str()));
-    }
-
-    return out;
+    static const auto partialUtf8 = CharacterSet("utf8-partial", 0x80, 0x9f);
+    static const auto ctls = (partialUtf8 + CharacterSet::CTL).add('\0').rename("controls");
+    static const auto ignoreChars = ctls.complement("ignored");
+    return Encode(out, ignoreChars);
 }
 
 /**
