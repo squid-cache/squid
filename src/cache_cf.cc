@@ -4342,22 +4342,12 @@ static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 
 static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
 {
-<<<<<<< HEAD
     char *al;
     if ((al = ConfigParser::NextToken()) == NULL) {
-=======
-    const auto al = ConfigParser::NextToken();
-    if (!al) {
->>>>>>> upstream/master
         self_destruct();
         return;
     }
 
-<<<<<<< HEAD
-    const auto algName = Security::certSignAlgorithmId(al); // throws on errors
-    auto cs = static_cast<sslproxy_cert_sign *>(xcalloc(1, sizeof(sslproxy_cert_sign)));
-    cs->alg = algName;
-=======
     std::unique_ptr<sslproxy_cert_sign> cs(new sslproxy_cert_sign);
     if (strcmp(al, Ssl::CertSignAlgorithmStr[Ssl::algSignTrusted]) == 0)
         cs->alg = Ssl::algSignTrusted;
@@ -4370,7 +4360,6 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
         self_destruct();
         return;
     }
->>>>>>> upstream/master
 
     aclParseAclList(LegacyParser, &cs->aclList, al);
 
