@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_ACTION_CREATOR_H
-#define SQUID_MGR_ACTION_CREATOR_H
+#ifndef SQUID_SRC_MGR_ACTIONCREATOR_H
+#define SQUID_SRC_MGR_ACTIONCREATOR_H
 
 #include "mgr/forward.h"
 
@@ -25,7 +25,7 @@ class ActionCreator: public RefCountable
 public:
     typedef RefCount<ActionCreator> Pointer;
 
-    virtual ~ActionCreator() {}
+    ~ActionCreator() override {}
 
     /// returns a pointer to the new Action object for cmd; never nil
     virtual ActionPointer create(const CommandPointer &cmd) const = 0;
@@ -33,5 +33,5 @@ public:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_ACTION_CREATOR_H */
+#endif /* SQUID_SRC_MGR_ACTIONCREATOR_H */
 

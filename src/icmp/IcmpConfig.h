@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 03    Configuration Settings */
 
-#ifndef ICMPCONFIG_H
-#define ICMPCONFIG_H
+#ifndef SQUID_SRC_ICMP_ICMPCONFIG_H
+#define SQUID_SRC_ICMP_ICMPCONFIG_H
 
 #if USE_ICMP
 
@@ -49,5 +49,5 @@ extern IcmpConfig IcmpCfg;
 #define free_icmp(x) (x)->clear()
 
 #endif /* USE_ICMP */
-#endif /* ICMPCONFIG_H */
+#endif /* SQUID_SRC_ICMP_ICMPCONFIG_H */
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_ERROR_H
-#define SQUID_SNMP_ERROR_H
+#ifndef SQUID_INCLUDE_SNMP_ERROR_H
+#define SQUID_INCLUDE_SNMP_ERROR_H
 
 /**********************************************************************
  *
@@ -71,5 +71,5 @@ const char *snmp_errstring(int);
 }
 #endif
 
-#endif              /* SQUID_SNMP_ERROR_H */
+#endif /* SQUID_INCLUDE_SNMP_ERROR_H */
 

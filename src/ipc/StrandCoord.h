@@ -1,15 +1,17 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_STRAND_COORD_H
-#define SQUID_IPC_STRAND_COORD_H
+#ifndef SQUID_SRC_IPC_STRANDCOORD_H
+#define SQUID_SRC_IPC_STRANDCOORD_H
 
 #include "ipc/forward.h"
+#include "ipc/Messages.h"
+#include "ipc/QuestionerId.h"
 #include "SquidString.h"
 
 namespace Ipc
@@ -32,19 +34,29 @@ public:
     String tag; ///< optional unique well-known key (e.g., cache_dir path)
 };
 
-/// strand registration with Coordinator (also used as an ACK)
-class HereIamMessage
+/// an IPC message carrying StrandCoord
+class StrandMessage
 {
 public:
-    explicit HereIamMessage(const StrandCoord &strand); ///< from registrant
-    explicit HereIamMessage(const TypedMsgHdr &hdrMsg); ///< from recvmsg()
-    void pack(TypedMsgHdr &hdrMsg) const; ///< prepare for sendmsg()
+    explicit StrandMessage(const StrandCoord &, QuestionerId);
+    explicit StrandMessage(const TypedMsgHdr &);
+    void pack(MessageType, TypedMsgHdr &) const;
+
+    /// creates and sends StrandMessage to Coordinator
+    static void NotifyCoordinator(MessageType, const char *tag);
+
+    /// for Mine() tests
+    QuestionerId intendedRecepient() const { return qid; }
 
 public:
-    StrandCoord strand; ///< registrant coordinates and related details
+    StrandCoord strand; ///< messageType-specific coordinates (e.g., sender)
+
+    /// For IPC requests/questions: The sender of this request.
+    /// For IPC responses/answers: The sender of the corresponding request.
+    QuestionerId qid;
 };
 
 } // namespace Ipc;
 
-#endif /* SQUID_IPC_STRAND_COORD_H */
+#endif /* SQUID_SRC_IPC_STRANDCOORD_H */
 

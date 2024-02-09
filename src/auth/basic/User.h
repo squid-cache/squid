@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_AUTH_BASIC_USER_H
-#define _SQUID_AUTH_BASIC_USER_H
+#ifndef SQUID_SRC_AUTH_BASIC_USER_H
+#define SQUID_SRC_AUTH_BASIC_USER_H
 
 #if HAVE_AUTH_MODULE_BASIC
 
@@ -30,17 +30,17 @@ class User : public Auth::User
 
 public:
     User(Auth::SchemeConfig *, const char *requestRealm);
-    virtual ~User();
+    ~User() override;
     bool authenticated() const;
     bool valid() const;
 
     /** Update the cached password for a username. */
     void updateCached(User *from);
-    virtual int32_t ttl() const override;
+    int32_t ttl() const override;
 
     /* Auth::User API */
     static CbcPointer<Auth::CredentialsCache> Cache();
-    virtual void addToNameCache() override;
+    void addToNameCache() override;
 
     char *passwd;
 
@@ -54,5 +54,5 @@ private:
 } // namespace Auth
 
 #endif /* HAVE_AUTH_MODULE_BASIC */
-#endif /* _SQUID_AUTH_BASIC_USER_H */
+#endif /* SQUID_SRC_AUTH_BASIC_USER_H */
 

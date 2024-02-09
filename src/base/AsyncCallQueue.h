@@ -1,17 +1,16 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ASYNCCALLQUEUE_H
-#define SQUID_ASYNCCALLQUEUE_H
+#ifndef SQUID_SRC_BASE_ASYNCCALLQUEUE_H
+#define SQUID_SRC_BASE_ASYNCCALLQUEUE_H
 
-#include "base/AsyncCall.h"
-
-//class AsyncCall;
+#include "base/AsyncCallList.h"
+#include "base/forward.h"
 
 // The queue of asynchronous calls. All calls are fired during a single main
 // loop iteration until the queue is exhausted
@@ -22,21 +21,18 @@ public:
     static AsyncCallQueue &Instance();
 
     // make this async call when we get a chance
-    void schedule(AsyncCall::Pointer &call);
+    void schedule(const AsyncCallPointer &call) { scheduled.add(call); }
 
     // fire all scheduled calls; returns true if at least one was fired
     bool fire();
 
 private:
-    AsyncCallQueue();
+    AsyncCallQueue() = default;
 
-    void fireNext();
-
-    AsyncCall::Pointer theHead;
-    AsyncCall::Pointer theTail;
+    AsyncCallList scheduled; ///< calls waiting to be fire()d, in FIFO order
 
     static AsyncCallQueue *TheInstance;
 };
 
-#endif /* SQUID_ASYNCCALLQUEUE_H */
+#endif /* SQUID_SRC_BASE_ASYNCCALLQUEUE_H */
 

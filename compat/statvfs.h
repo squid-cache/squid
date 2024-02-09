@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMPAT_XSTATVFS_H
-#define _SQUID_COMPAT_XSTATVFS_H
+#ifndef SQUID_COMPAT_STATVFS_H
+#define SQUID_COMPAT_STATVFS_H
 
 #if HAVE_SYS_STATVFS_H && HAVE_STATVFS
 #include <sys/statvfs.h>
@@ -61,5 +61,5 @@ int xstatvfs(const char *path, struct statvfs *buf);
 
 #endif
 
-#endif /* _SQUID_COMPAT_XSTATVFS_H */
+#endif /* SQUID_COMPAT_STATVFS_H */
 

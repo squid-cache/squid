@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_ACTION_PARAMS_H
-#define SQUID_MGR_ACTION_PARAMS_H
+#ifndef SQUID_SRC_MGR_ACTIONPARAMS_H
+#define SQUID_SRC_MGR_ACTIONPARAMS_H
 
 #include "http/RequestMethod.h"
 #include "ipc/forward.h"
@@ -44,7 +44,5 @@ public:
 
 } // namespace Mgr
 
-std::ostream &operator <<(std::ostream &os, const Mgr::ActionParams &params);
-
-#endif /* SQUID_MGR_ACTION_PARAMS_H */
+#endif /* SQUID_SRC_MGR_ACTIONPARAMS_H */
 

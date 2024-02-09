@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HELPER_RESERVATIONID_H
-#define _SQUID_SRC_HELPER_RESERVATIONID_H
+#ifndef SQUID_SRC_HELPER_RESERVATIONID_H
+#define SQUID_SRC_HELPER_RESERVATIONID_H
 
 #include <ostream>
 
@@ -36,13 +36,13 @@ private:
     uint64_t id = 0; ///< uniquely identifies this reservation
 };
 
-}; // namespace Helper
-
 inline std::ostream &
-operator <<(std::ostream &os, const Helper::ReservationId &id)
+operator <<(std::ostream &os, const ReservationId &id)
 {
     return id.print(os);
 }
+
+}; // namespace Helper
 
 namespace std {
 /// default hash functor to support std::unordered_map<HelperReservationId, *>
@@ -59,5 +59,5 @@ struct hash<Helper::ReservationId>
 };
 }
 
-#endif
+#endif /* SQUID_SRC_HELPER_RESERVATIONID_H */
 

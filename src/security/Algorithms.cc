@@ -13,7 +13,8 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
+#include "base/IoManip.h"
+#include "debug/Stream.h"
 #include "security/CertAdaptAlgorithm.h"
 #include "security/CertSignAlgorithm.h"
 #include "security/DigestAlgorithm.h"
@@ -84,7 +85,7 @@ Security::digestName(const DigestAlgorithm alg)
     return name;
 }
 
-const Security::DigestAlgorithm
+Security::DigestAlgorithm
 Security::digestByName(const char *name)
 {
 #if USE_OPENSSL

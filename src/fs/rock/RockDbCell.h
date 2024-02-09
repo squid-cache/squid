@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_ROCK_DB_CELL_H
-#define SQUID_FS_ROCK_DB_CELL_H
+#ifndef SQUID_SRC_FS_ROCK_ROCKDBCELL_H
+#define SQUID_SRC_FS_ROCK_ROCKDBCELL_H
 
 #include "store/forward.h"
 
@@ -48,5 +48,5 @@ public:
 
 } // namespace Rock
 
-#endif /* SQUID_FS_ROCK_DB_CELL_H */
+#endif /* SQUID_SRC_FS_ROCK_ROCKDBCELL_H */
 

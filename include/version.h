@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_VERSION_H
-#define SQUID_VERSION_H
+#ifndef SQUID_INCLUDE_VERSION_H
+#define SQUID_INCLUDE_VERSION_H
 
 #ifndef SQUID_RELEASE_TIME
 #define SQUID_RELEASE_TIME squid_curtime
@@ -25,4 +25,5 @@
 #define APP_FULLNAME  PACKAGE "/" VERSION
 #endif
 
-#endif /* SQUID_VERSION_H */
+#endif /* SQUID_INCLUDE_VERSION_H */
+

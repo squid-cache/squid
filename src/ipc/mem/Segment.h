@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_MEM_SEGMENT_H
-#define SQUID_IPC_MEM_SEGMENT_H
+#ifndef SQUID_SRC_IPC_MEM_SEGMENT_H
+#define SQUID_SRC_IPC_MEM_SEGMENT_H
 
 #include "base/RunnersRegistry.h"
 #include "sbuf/forward.h"
@@ -32,7 +32,9 @@ public:
 
     /// Create a new shared memory segment. Unlinks the segment on destruction.
     void create(const off_t aSize);
-    void open(); ///< Open an existing shared memory segment.
+    /// opens an existing shared memory segment
+    /// \param unlinkWhenDone whether to delete the segment on destruction
+    void open(const bool unlinkWhenDone);
 
     const String &name() { return theName; } ///< shared memory segment name
     off_t size() { return theSize; } ///< shared memory segment size
@@ -83,7 +85,7 @@ class RegisteredRunner: public ::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void useConfig();
+    void useConfig() override;
 
 protected:
     /// called when the runner should create a new memory segment
@@ -97,5 +99,5 @@ protected:
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_MEM_SEGMENT_H */
+#endif /* SQUID_SRC_IPC_MEM_SEGMENT_H */
 

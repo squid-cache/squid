@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_FMT_BYTECODE_H
-#define _SQUID_FMT_BYTECODE_H
+#ifndef SQUID_SRC_FORMAT_BYTECODE_H
+#define SQUID_SRC_FORMAT_BYTECODE_H
 
 /*
  * Squid configuration allows users to define custom formats in
@@ -32,6 +32,8 @@ typedef enum {
 
     /* arbitrary string between tokens */
     LFT_STRING,
+
+    LFT_BYTE,
 
     /* client TCP connection remote end details */
     LFT_CLIENT_IP_ADDRESS,
@@ -166,12 +168,14 @@ typedef enum {
     LFT_PEER_RESPONSE_TIME,
     LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME,
     LFT_DNS_WAIT_TIME,
+    LFT_BUSY_TIME,
 
     /* Squid internal processing details */
     LFT_SQUID_STATUS,
     LFT_SQUID_ERROR,
     LFT_SQUID_ERROR_DETAIL,
     LFT_SQUID_HIERARCHY,
+    LFT_SQUID_REQUEST_ATTEMPTS,
 
     LFT_MIME_TYPE,
     LFT_TAG,
@@ -267,5 +271,5 @@ enum Quoting {
 
 } // namespace Format
 
-#endif /* _SQUID_FMT_BYTECODE_H */
+#endif /* SQUID_SRC_FORMAT_BYTECODE_H */
 

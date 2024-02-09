@@ -1,18 +1,21 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_QOSCONFIG_H
-#define SQUID_QOSCONFIG_H
+#ifndef SQUID_SRC_IP_QOSCONFIG_H
+#define SQUID_SRC_IP_QOSCONFIG_H
 
 #include "acl/forward.h"
+#include "cbdata.h"
+#include "comm/forward.h"
 #include "hier_code.h"
 #include "ip/forward.h"
 #include "ip/NfMarkConfig.h"
+#include "store/forward.h"
 
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
@@ -20,17 +23,18 @@
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_TCP_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack_tcp.h>
 #endif
+#include <iosfwd>
 #include <limits>
 
 class fde;
 
-// TODO: move to new ACL framework
+// TODO: move to new Acl::Node framework
 class acl_tos
 {
     CBDATA_CLASS(acl_tos);
 
 public:
-    acl_tos() : next(NULL), aclList(NULL), tos(0) {}
+    acl_tos() : next(nullptr), aclList(nullptr), tos(0) {}
     ~acl_tos();
 
     acl_tos *next;
@@ -38,13 +42,13 @@ public:
     tos_t tos;
 };
 
-// TODO: move to new ACL framework
+// TODO: move to new Acl::Node framework
 class acl_nfmark
 {
     CBDATA_CLASS(acl_nfmark);
 
 public:
-    acl_nfmark() : next(NULL), aclList(NULL) {}
+    acl_nfmark() : next(nullptr), aclList(nullptr) {}
     ~acl_nfmark();
 
     acl_nfmark *next;
@@ -185,7 +189,7 @@ public:
      * objects are part of the dump function must be self-contained.
      * which means no StoreEntry references. Just a basic char* buffer.
      */
-    void dumpConfigLine(char *entry, const char *name) const;
+    void dumpConfigLine(std::ostream &, const char *) const;
 
     /// Whether we should modify TOS flags based on cache hits and misses.
     bool isHitTosActive() const {
@@ -238,18 +242,14 @@ public:
 /// Globally available instance of Qos::Config
 extern Config TheConfig;
 
-/* legacy parser access wrappers */
-#define parse_QosConfig(X)  (X)->parseConfigLine()
-#define free_QosConfig(X)
-#define dump_QosConfig(e,n,X) do { \
-        char temp[256]; /* random number. change as needed. max config line length. */ \
-        (X).dumpConfigLine(temp,n); \
-            storeAppendPrintf(e, "%s", temp); \
-    } while(0);
-
 } // namespace Qos
 
 } // namespace Ip
 
-#endif /* SQUID_QOSCONFIG_H */
+/* legacy parser access wrappers */
+inline void parse_QosConfig(Ip::Qos::Config * c) { c->parseConfigLine(); }
+inline void free_QosConfig(Ip::Qos::Config *) {}
+void dump_QosConfig(StoreEntry *, const char * directiveName, const Ip::Qos::Config &);
+
+#endif /* SQUID_SRC_IP_QOSCONFIG_H */
 

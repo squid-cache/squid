@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_FILE_H
-#define SQUID_BASE_FILE_H
+#ifndef SQUID_SRC_BASE_FILE_H
+#define SQUID_SRC_BASE_FILE_H
 
 #include "sbuf/SBuf.h"
 
@@ -57,7 +57,7 @@ private:
 #else
     int flockMode = LOCK_UN; ///< 2nd flock(2) parameter
 #endif
-    static const unsigned int RetryGapUsec = 500000; /// pause before each lock retry
+    const unsigned int retryGapUsec = 500000; ///< pause before each lock retry
     unsigned int lockAttempts = 0; ///< how many times to try locking
     bool openByRoot = false;
 };
@@ -123,5 +123,5 @@ private:
     Handle fd_ = InvalidHandle; ///< OS-specific file handle
 };
 
-#endif
+#endif /* SQUID_SRC_BASE_FILE_H */
 

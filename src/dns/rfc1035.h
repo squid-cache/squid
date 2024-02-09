@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_RFC1035_H
-#define SQUID_RFC1035_H
+#ifndef SQUID_SRC_DNS_RFC1035_H
+#define SQUID_SRC_DNS_RFC1035_H
 
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -110,5 +110,5 @@ SQUIDCEXTERN int rfc1035QuestionPack(char *buf,
                                      const unsigned short _class);
 SQUIDCEXTERN int rfc1035RRPack(char *buf, size_t sz, const rfc1035_rr * RR);
 
-#endif /* SQUID_RFC1035_H */
+#endif /* SQUID_SRC_DNS_RFC1035_H */
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef COMPAT_DEBUG_H
-#define COMPAT_DEBUG_H
+#ifndef SQUID_COMPAT_DEBUG_H
+#define SQUID_COMPAT_DEBUG_H
 
 /*
  * A debug method for use of external helpers and tools.
@@ -43,5 +43,5 @@ SQUIDCEXTERN int debug_enabled;
 void debug(const char *format,...);
 #endif
 
-#endif /* COMPAT_DEBUG_H */
+#endif /* SQUID_COMPAT_DEBUG_H */
 

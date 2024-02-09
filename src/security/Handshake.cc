@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 83    SSL-Bump Server/Peer negotiation */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "sbuf/Stream.h"
 #include "security/Handshake.h"
 #if USE_OPENSSL
@@ -126,9 +127,9 @@ ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, 
     /* handle unsupported versions */
 
     const uint16_t vRaw = (vMajor << 8) | vMinor;
-    debugs(83, 7, "unsupported: " << asHex(vRaw));
+    debugs(83, 7, "unsupported: 0x" << asHex(vRaw));
     if (beStrict)
-        throw TextException(ToSBuf("unsupported TLS version: ", asHex(vRaw)), Here());
+        throw TextException(ToSBuf("unsupported TLS version: 0x", asHex(vRaw)), Here());
     // else hide unsupported version details from the caller behind PROTO_NONE
     return AnyP::ProtocolVersion();
 }
@@ -365,11 +366,6 @@ Security::HandshakeParser::parseHandshakeMessage()
         // for TLSv1.3 and later, anything after the server Hello is encrypted
         if (Tls1p3orLater(details->tlsSupportedVersion))
             done = "ServerHello in v1.3+";
-        return;
-    case HandshakeType::hskCertificate:
-        Must(state < atCertificatesReceived);
-        parseServerCertificates(message.msg_body);
-        state = atCertificatesReceived;
         return;
     case HandshakeType::hskServerHelloDone:
         Must(state < atHelloDoneReceived);
@@ -662,47 +658,6 @@ Security::HandshakeParser::parseHello(const SBuf &data)
         return false;
     }
     return false; // unreached
-}
-
-/// Creates and returns a certificate by parsing a DER-encoded X509 structure.
-/// Throws on failures.
-Security::CertPointer
-Security::HandshakeParser::ParseCertificate(const SBuf &raw)
-{
-    Security::CertPointer pCert;
-#if USE_OPENSSL
-    auto x509Start = reinterpret_cast<const unsigned char *>(raw.rawContent());
-    auto x509Pos = x509Start;
-    X509 *x509 = d2i_X509(nullptr, &x509Pos, raw.length());
-    pCert.resetWithoutLocking(x509);
-    Must(x509); // successfully parsed
-    Must(x509Pos == x509Start + raw.length()); // no leftovers
-#else
-    assert(false);  // this code should never be reached
-    pCert = Security::CertPointer(nullptr); // avoid warnings about uninitialized pCert; XXX: Fix CertPoint declaration.
-    (void)raw; // avoid warnings about unused method parameter; TODO: Add a SimulateUse() macro.
-#endif
-    assert(pCert);
-    return pCert;
-}
-
-void
-Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
-{
-#if USE_OPENSSL
-    Parser::BinaryTokenizer tkList(raw);
-    const SBuf clist = tkList.pstring24("CertificateList");
-    Must(tkList.atEnd()); // no leftovers after all certificates
-
-    Parser::BinaryTokenizer tkItems(clist);
-    while (!tkItems.atEnd()) {
-        if (Security::CertPointer cert = ParseCertificate(tkItems.pstring24("Certificate")))
-            serverCertificates.push_back(cert);
-        debugs(83, 7, "parsed " << serverCertificates.size() << " certificates so far");
-    }
-#else
-    debugs(83, 7, "no support for CertificateList parsing; ignoring " << raw.length() << " bytes");
-#endif
 }
 
 /// A helper function to create a set of all supported TLS extensions

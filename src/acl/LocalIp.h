@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLLOCALIP_H
-#define SQUID_ACLLOCALIP_H
+#ifndef SQUID_SRC_ACL_LOCALIP_H
+#define SQUID_SRC_ACL_LOCALIP_H
 
 #include "acl/Ip.h"
 
@@ -17,10 +17,9 @@ class ACLLocalIP : public ACLIP
     MEMPROXY_CLASS(ACLLocalIP);
 
 public:
-    virtual char const *typeString() const;
-    virtual int match(ACLChecklist *checklist);
-    virtual ACL *clone()const;
+    char const *typeString() const override;
+    int match(ACLChecklist *checklist) override;
 };
 
-#endif /* SQUID_ACLLOCALIP_H */
+#endif /* SQUID_SRC_ACL_LOCALIP_H */
 

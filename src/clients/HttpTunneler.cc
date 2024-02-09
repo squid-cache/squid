@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/Raw.h"
 #include "CachePeer.h"
 #include "clients/HttpTunneler.h"
 #include "comm/Read.h"
@@ -25,7 +26,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Http, Tunneler);
 
-Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, AsyncCall::Pointer &aCallback, time_t timeout, const AccessLogEntryPointer &alp):
+Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, const AsyncCallback<Answer> &aCallback, const time_t timeout, const AccessLogEntryPointer &alp):
     AsyncJob("Http::Tunneler"),
     noteFwdPconnUse(false),
     connection(conn),
@@ -38,12 +39,9 @@ Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest:
     tunnelEstablished(false)
 {
     debugs(83, 5, "Http::Tunneler constructed, this=" << (void*)this);
-    // detect callers supplying cb dialers that are not our CbDialer
     assert(request);
     assert(connection);
-    assert(callback);
-    assert(dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer()));
-    url = request->url.authority();
+    url = request->url.authority(true);
     watchForClosures();
 }
 
@@ -56,16 +54,6 @@ bool
 Http::Tunneler::doneAll() const
 {
     return !callback || (requestWritten && tunnelEstablished);
-}
-
-/// convenience method to get to the answer fields
-Http::TunnelerAnswer &
-Http::Tunneler::answer()
-{
-    Must(callback);
-    const auto tunnelerAnswer = dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer());
-    Must(tunnelerAnswer);
-    return *tunnelerAnswer;
 }
 
 void
@@ -98,9 +86,14 @@ Http::Tunneler::start()
 }
 
 void
-Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &params)
+Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &)
 {
     closer = nullptr;
+    if (connection) {
+        countFailingConnection(nullptr);
+        connection->noteClosure();
+        connection = nullptr;
+    }
     bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
 }
 
@@ -316,7 +309,7 @@ Http::Tunneler::handleResponse(const bool eof)
     }
 
     // CONNECT response was successfully parsed
-    auto &futureAnswer = answer();
+    auto &futureAnswer = callback.answer();
     futureAnswer.peerResponseStatus = rep->sline.status();
     request->hier.peer_reply_status = rep->sline.status();
 
@@ -346,7 +339,7 @@ Http::Tunneler::bailOnResponseError(const char *error, HttpReply *errorReply)
 
     ErrorState *err;
     if (errorReply) {
-        err = new ErrorState(request.getRaw(), errorReply);
+        err = new ErrorState(request.getRaw(), errorReply, al);
     } else {
         // with no reply suitable for relaying, answer with 502 (Bad Gateway)
         err = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al);
@@ -358,55 +351,66 @@ void
 Http::Tunneler::bailWith(ErrorState *error)
 {
     Must(error);
-    answer().squidError = error;
+    callback.answer().squidError = error;
 
-    if (const auto p = connection->getPeer())
-        peerConnectFailed(p);
+    if (const auto failingConnection = connection) {
+        // TODO: Reuse to-peer connections after a CONNECT error response.
+        countFailingConnection(error);
+        disconnect();
+        failingConnection->close();
+    }
 
     callBack();
-    disconnect();
-
-    if (noteFwdPconnUse)
-        fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
-    // TODO: Reuse to-peer connections after a CONNECT error response.
-    connection->close();
-    connection = nullptr;
 }
 
 void
 Http::Tunneler::sendSuccess()
 {
-    assert(answer().positive());
-    callBack();
+    assert(callback.answer().positive());
+    assert(Comm::IsConnOpen(connection));
+    callback.answer().conn = connection;
     disconnect();
+    callBack();
+}
+
+void
+Http::Tunneler::countFailingConnection(const ErrorState * const error)
+{
+    assert(connection);
+    NoteOutgoingConnectionFailure(connection->getPeer(), error ? error->httpStatus : Http::scNone);
+    if (noteFwdPconnUse && connection->isOpen())
+        fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
 }
 
 void
 Http::Tunneler::disconnect()
 {
+    const auto stillOpen = Comm::IsConnOpen(connection);
+
     if (closer) {
-        comm_remove_close_handler(connection->fd, closer);
+        if (stillOpen)
+            comm_remove_close_handler(connection->fd, closer);
         closer = nullptr;
     }
 
     if (reader) {
-        Comm::ReadCancel(connection->fd, reader);
+        if (stillOpen)
+            Comm::ReadCancel(connection->fd, reader);
         reader = nullptr;
     }
 
-    // remove connection timeout handler
-    commUnsetConnTimeout(connection);
+    if (stillOpen)
+        commUnsetConnTimeout(connection);
+
+    connection = nullptr; // may still be open
 }
 
 void
 Http::Tunneler::callBack()
 {
-    debugs(83, 5, connection << status());
-    if (answer().positive())
-        answer().conn = connection;
-    auto cb = callback;
-    callback = nullptr;
-    ScheduleCallHere(cb);
+    debugs(83, 5, callback.answer().conn << status());
+    assert(!connection); // returned inside callback.answer() or gone
+    ScheduleCallHere(callback.release());
 }
 
 void
@@ -415,11 +419,10 @@ Http::Tunneler::swanSong()
     AsyncJob::swanSong();
 
     if (callback) {
-        if (requestWritten && tunnelEstablished) {
+        if (requestWritten && tunnelEstablished && Comm::IsConnOpen(connection)) {
             sendSuccess();
         } else {
-            // we should have bailed when we discovered the job-killing problem
-            debugs(83, DBG_IMPORTANT, "BUG: Unexpected state while establishing a CONNECT tunnel " << connection << status());
+            // job-ending emergencies like handleStopRequest() or callException()
             bailWith(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
         }
         assert(!callback);

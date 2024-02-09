@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_PARSER_CHARACTERSET_H
-#define _SQUID_SRC_PARSER_CHARACTERSET_H
+#ifndef SQUID_SRC_BASE_CHARACTERSET_H
+#define SQUID_SRC_BASE_CHARACTERSET_H
 
 #include <initializer_list>
 #include <iosfwd>
@@ -118,6 +118,9 @@ public:
     // token68 (internal characters only, excludes '=' terminator)
     static const CharacterSet TOKEN68C;
 
+    /// allowed URI characters that do not have a reserved purpose, RFC 3986
+    static const CharacterSet &RFC3986_UNRESERVED();
+
 private:
     /** index of characters in this set
      *
@@ -146,5 +149,5 @@ operator- (CharacterSet lhs, const CharacterSet &rhs);
 std::ostream&
 operator <<(std::ostream &, const CharacterSet &);
 
-#endif /* _SQUID_SRC_PARSER_CHARACTERSET_H */
+#endif /* SQUID_SRC_BASE_CHARACTERSET_H */
 

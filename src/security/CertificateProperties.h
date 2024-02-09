@@ -13,6 +13,8 @@
 #include "security/DigestAlgorithm.h"
 #include "security/forward.h"
 
+#include <string>
+
 namespace Security
 {
 

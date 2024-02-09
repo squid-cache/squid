@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 79    Storage Manager UFS Interface */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/DiskIOStrategy.h"
 #include "DiskIO/ReadRequest.h"
@@ -27,10 +28,9 @@ Fs::Ufs::UFSStoreState::ioCompletedNotification()
 {
     if (opening) {
         opening = false;
-        debugs(79, 3, "UFSStoreState::ioCompletedNotification: dirno " <<
-               swap_dirn  << ", fileno "<< std::setfill('0') << std::hex <<
-               std::setw(8) << swap_filen  << " status "<< std::setfill(' ') <<
-               std::dec << theFile->error());
+        debugs(79, 3, "opening: dirno " << swap_dirn <<
+               ", fileno " << asHex(swap_filen).minDigits(8) <<
+               " status " << theFile->error());
 
         assert (FILE_MODE(mode) == O_RDONLY);
         openDone();
@@ -40,10 +40,9 @@ Fs::Ufs::UFSStoreState::ioCompletedNotification()
 
     if (creating) {
         creating = false;
-        debugs(79, 3, "UFSStoreState::ioCompletedNotification: dirno " <<
-               swap_dirn  << ", fileno "<< std::setfill('0') << std::hex <<
-               std::setw(8) << swap_filen  << " status "<< std::setfill(' ') <<
-               std::dec << theFile->error());
+        debugs(79, 3, "creating: dirno " << swap_dirn <<
+               ", fileno " << asHex(swap_filen).minDigits(8) <<
+               " status " << theFile->error());
 
         openDone();
 
@@ -51,9 +50,9 @@ Fs::Ufs::UFSStoreState::ioCompletedNotification()
     }
 
     assert (!(closing ||opening));
-    debugs(79, 3, "diskd::ioCompleted: dirno " << swap_dirn  << ", fileno "<<
-           std::setfill('0') << std::hex << std::setw(8) << swap_filen  <<
-           " status "<< std::setfill(' ') << std::dec << theFile->error());
+    debugs(79, 3, "error: dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).minDigits(8) <<
+           " status " << theFile->error());
 
     /* Ok, notification past open means an error has occurred */
     assert (theFile->error());
@@ -64,7 +63,7 @@ void
 Fs::Ufs::UFSStoreState::openDone()
 {
     if (closing)
-        debugs(0, DBG_CRITICAL, HERE << "already closing in openDone()!?");
+        debugs(0, DBG_CRITICAL, "already closing in openDone()!?");
 
     if (theFile->error()) {
         tryClosing();
@@ -89,13 +88,12 @@ void
 Fs::Ufs::UFSStoreState::closeCompleted()
 {
     assert (closing);
-    debugs(79, 3, "UFSStoreState::closeCompleted: dirno " << swap_dirn  <<
-           ", fileno "<< std::setfill('0') << std::hex << std::setw(8) <<
-           swap_filen  << " status "<< std::setfill(' ') << std::dec <<
-           theFile->error());
+    debugs(79, 3, "dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).minDigits(8) <<
+           " status " << theFile->error());
 
     if (theFile->error()) {
-        debugs(79,3,HERE<< "theFile->error() ret " << theFile->error());
+        debugs(79,3, "theFile->error() ret " << theFile->error());
         doCloseCallback(DISK_ERROR);
     } else {
         doCloseCallback(DISK_OK);
@@ -116,16 +114,17 @@ Fs::Ufs::UFSStoreState::closeCompleted()
 void
 Fs::Ufs::UFSStoreState::close(int)
 {
-    debugs(79, 3, "UFSStoreState::close: dirno " << swap_dirn  << ", fileno "<<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
+    // TODO: De-duplicate position printing Fs::Ufs code and fix upperCase() inconsistency.
+    debugs(79, 3, "dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).upperCase().minDigits(8));
     tryClosing(); // UFS does not distinguish different closure types
 }
 
 void
 Fs::Ufs::UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCallback, void *aCallbackData)
 {
-    assert(read.callback == NULL);
-    assert(read.callback_data == NULL);
+    assert(read.callback == nullptr);
+    assert(read.callback_data == nullptr);
     assert(!reading);
     assert(!closing);
     assert (aCallback);
@@ -139,8 +138,8 @@ Fs::Ufs::UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCa
 
     read.callback = aCallback;
     read.callback_data = cbdataReference(aCallbackData);
-    debugs(79, 3, "UFSStoreState::read_: dirno " << swap_dirn  << ", fileno "<<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
+    debugs(79, 3, "dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).minDigits(8));
     offset_ = aOffset;
     read_buf = buf;
     reading = true;
@@ -158,12 +157,12 @@ Fs::Ufs::UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCa
 bool
 Fs::Ufs::UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE * free_func)
 {
-    debugs(79, 3, "UFSStoreState::write: dirn " << swap_dirn  << ", fileno "<<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
+    debugs(79, 3, "dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).minDigits(8));
 
     if (theFile->error()) {
-        debugs(79, DBG_IMPORTANT,HERE << "avoid write on theFile with error");
-        debugs(79, DBG_IMPORTANT,HERE << "calling free_func for " << (void*) buf);
+        debugs(79, DBG_IMPORTANT, "ERROR: avoid write on theFile with error");
+        debugs(79, DBG_IMPORTANT, "calling free_func for " << (void*) buf);
         free_func((void*)buf);
         return false;
     }
@@ -204,7 +203,7 @@ Fs::Ufs::UFSStoreState::doWrite()
     auto &q = pending_writes.front();
 
     if (theFile->error()) {
-        debugs(79, DBG_IMPORTANT, MYNAME << " avoid write on theFile with error");
+        debugs(79, DBG_IMPORTANT, "ERROR: " << MYNAME << "avoid write on theFile with error");
         pending_writes.pop();
         return;
     }
@@ -231,9 +230,9 @@ Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int, RefCount<Re
 {
     assert (result.getRaw());
     reading = false;
-    debugs(79, 3, "UFSStoreState::readCompleted: dirno " << swap_dirn  <<
-           ", fileno "<< std::setfill('0') << std::hex << std::setw(8) <<
-           swap_filen  << " len "<< std::setfill(' ') << std::dec << len);
+    debugs(79, 3, "dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).minDigits(8) <<
+           " len " << len);
 
     if (len > 0)
         offset_ += len;
@@ -242,7 +241,7 @@ Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int, RefCount<Re
 
     assert(callback_);
 
-    read.callback = NULL;
+    read.callback = nullptr;
 
     void *cbdata;
 
@@ -265,15 +264,15 @@ Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int, RefCount<Re
         callback_(cbdata, read_buf, len, this);
     }
 
-    if (flags.try_closing || (theFile != NULL && theFile->error()) )
+    if (flags.try_closing || (theFile != nullptr && theFile->error()) )
         tryClosing();
 }
 
 void
 Fs::Ufs::UFSStoreState::writeCompleted(int, size_t len, RefCount<WriteRequest>)
 {
-    debugs(79, 3, HERE << "dirno " << swap_dirn << ", fileno " <<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen <<
+    debugs(79, 3, "dirno " << swap_dirn <<
+           ", fileno " << asHex(swap_filen).upperCase().minDigits(8) <<
            ", len " << len);
     /*
      * DPW 2006-05-24
@@ -284,7 +283,7 @@ Fs::Ufs::UFSStoreState::writeCompleted(int, size_t len, RefCount<WriteRequest>)
     offset_ += len;
 
     if (theFile->error()) {
-        debugs(79,2,HERE << " detected an error, will try to close");
+        debugs(79,2, " detected an error, will try to close");
         tryClosing();
     }
 
@@ -308,7 +307,7 @@ Fs::Ufs::UFSStoreState::doCloseCallback(int errflag)
      */
     freePending();
     STIOCB *theCallback = callback;
-    callback = NULL;
+    callback = nullptr;
 
     void *cbdata;
 
@@ -320,19 +319,19 @@ Fs::Ufs::UFSStoreState::doCloseCallback(int errflag)
      * us that the file has been closed.  This must be the last line,
      * as theFile may be the only object holding us in memory.
      */
-    theFile = NULL; // refcounted
+    theFile = nullptr; // refcounted
 }
 
 /* ============= THE REAL UFS CODE ================ */
 
 Fs::Ufs::UFSStoreState::UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * cbIo, void *data) :
-    StoreIOState(NULL, cbIo, data),
+    StoreIOState(cbIo, data),
     opening(false),
     creating(false),
     closing(false),
     reading(false),
     writing(false),
-    read_buf(NULL)
+    read_buf(nullptr)
 {
     // StoreIOState inherited members
     swap_filen = anEntry->swap_filen;
@@ -429,13 +428,13 @@ Fs::Ufs::UFSStoreState::drainWriteQueue()
 void
 Fs::Ufs::UFSStoreState::tryClosing()
 {
-    debugs(79,3,HERE << this << " tryClosing()" <<
+    debugs(79,3, this << " tryClosing()" <<
            " closing = " << closing <<
            " flags.try_closing = " << flags.try_closing <<
            " ioInProgress = " << theFile->ioInProgress());
 
     if (theFile->ioInProgress()) {
-        debugs(79, 3, HERE << this <<
+        debugs(79, 3, this <<
                " won't close since ioInProgress is true, bailing");
         flags.try_closing = true;
         return;

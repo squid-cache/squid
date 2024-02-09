@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,15 +9,13 @@
 /* DEBUG: section 24    SBuf */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "parser/forward.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
+#include <cctype>
 #include <cerrno>
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
 
 /// convenience method: consumes up to n bytes, counts, and returns them
 SBuf
@@ -145,6 +143,18 @@ Parser::Tokenizer::skipAll(const CharacterSet &tokenChars)
     }
     debugs(24, 8, "skipping all in " << tokenChars.name << " len " << prefixLen);
     return success(prefixLen);
+}
+
+void
+Parser::Tokenizer::skipRequired(const char *description, const SBuf &tokenToSkip)
+{
+    if (skip(tokenToSkip) || tokenToSkip.isEmpty())
+        return;
+
+    if (tokenToSkip.startsWith(buf_))
+        throw InsufficientInput();
+
+    throw TextException(ToSBuf("cannot skip ", description), Here());
 }
 
 bool

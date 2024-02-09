@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -6,13 +6,20 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
-noinst_LTLIBRARIES = libmem.la
+noinst_LTLIBRARIES = \
+	libmem.la \
+	libminimal.la
 
-libmem_la_SOURCES = \
-	AllocatorProxy.cc \
+noinst_HEADERS = \
 	AllocatorProxy.h \
+	Sensitive.h \
+	forward.h
+
+# a full-featured memory management library for sbin/squid use
+libmem_la_SOURCES = \
+	Allocator.h \
+	AllocatorProxy.cc \
 	Meter.h \
 	Pool.cc \
 	Pool.h \
@@ -21,5 +28,10 @@ libmem_la_SOURCES = \
 	PoolMalloc.cc \
 	PoolMalloc.h \
 	PoolingAllocator.h \
-	forward.h \
+	Stats.cc \
+	Stats.h \
 	old_api.cc
+
+# a bare-bones implementation of few libmem.la APIs sufficient for helpers use
+libminimal_la_SOURCES = \
+	minimal.cc

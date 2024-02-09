@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_TRANSACTION_INITIATOR_H
-#define SQUID_ACL_TRANSACTION_INITIATOR_H
+#ifndef SQUID_SRC_ACL_TRANSACTIONINITIATOR_H
+#define SQUID_SRC_ACL_TRANSACTIONINITIATOR_H
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
@@ -17,20 +17,19 @@ namespace Acl
 {
 
 /// transaction_initiator ACL
-class TransactionInitiator : public ACL
+class TransactionInitiator : public Acl::Node
 {
     MEMPROXY_CLASS(TransactionInitiator);
 
 public:
     TransactionInitiator(char const *);
 
-    virtual ACL *clone()const;
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual int match(ACLChecklist *checklist);
-    virtual bool requiresRequest() const { return true; }
-    virtual SBufList dump() const;
-    virtual bool empty () const;
+    char const *typeString() const override;
+    void parse() override;
+    int match(ACLChecklist *checklist) override;
+    bool requiresRequest() const override { return true; }
+    SBufList dump() const override;
+    bool empty () const override;
 
 protected:
     char const *class_;
@@ -40,5 +39,5 @@ protected:
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_TRANSACTION_INITIATOR_H */
+#endif /* SQUID_SRC_ACL_TRANSACTIONINITIATOR_H */
 

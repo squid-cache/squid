@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IDENT_H
-#define SQUID_IDENT_H
+#ifndef SQUID_SRC_IDENT_IDENT_H
+#define SQUID_SRC_IDENT_IDENT_H
 
 #if USE_IDENT
 
@@ -22,20 +22,12 @@ namespace Ident
 
 /**
  * Open a connection and request IDENT information from a peer machine.
- * Callback will be called whan the lookup is completed.
- * Self-registers with a global ident lookup manager,
- * will call Ident::Init() itself if the manager has not been initialized already.
+ * Callback will be called when the lookup is completed.
  */
 void Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *cbdata);
-
-/**
- * Initialize IDENT lookup manager.
- * Currently a hash list of open ident requests.
- */
-void Init(void);
 
 } // namespace Ident
 
 #endif /* USE_IDENT */
-#endif /* SQUID_IDENT_H */
+#endif /* SQUID_SRC_IDENT_IDENT_H */
 

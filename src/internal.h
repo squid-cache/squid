@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,8 +11,8 @@
  * AUTHOR: Duane, Alex, Henrik
  */
 
-#ifndef SQUID_INTERNAL_H_
-#define SQUID_INTERNAL_H_
+#ifndef SQUID_SRC_INTERNAL_H
+#define SQUID_SRC_INTERNAL_H
 
 #include "comm/forward.h"
 #include "log/forward.h"
@@ -29,5 +29,9 @@ char *internalRemoteUri(bool, const char *, unsigned short, const char *, const 
 const char *internalHostname(void);
 int internalHostnameIs(const char *);
 
-#endif /* SQUID_INTERNAL_H_ */
+/// whether the given request URL path points to a cache manager (not
+/// necessarily running on this Squid instance)
+bool ForSomeCacheManager(const SBuf &);
+
+#endif /* SQUID_SRC_INTERNAL_H */
 

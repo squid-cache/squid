@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PROXYP_ELEMENTS_H
-#define SQUID_PROXYP_ELEMENTS_H
+#ifndef SQUID_SRC_PROXYP_ELEMENTS_H
+#define SQUID_SRC_PROXYP_ELEMENTS_H
 
 #include "sbuf/SBuf.h"
 
@@ -88,5 +88,5 @@ Two::FieldType FieldNameToFieldType(const SBuf &nameOrId);
 
 } // namespace ProxyProtocol
 
-#endif
+#endif /* SQUID_SRC_PROXYP_ELEMENTS_H */
 

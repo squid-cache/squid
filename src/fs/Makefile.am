@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -23,8 +23,6 @@ libufs_la_SOURCES = \
 	ufs/RebuildState.h \
 	ufs/StoreFSufs.cc \
 	ufs/StoreFSufs.h \
-	ufs/StoreSearchUFS.cc \
-	ufs/StoreSearchUFS.h \
 	ufs/UFSStoreState.cc \
 	ufs/UFSStoreState.h \
 	ufs/UFSStrategy.cc \
@@ -67,17 +65,3 @@ ufs/clean: clean
 rock/all: librock.la
 rock/clean: clean
 
-
-TESTS += testHeaders
-
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(srcdir)/ufs/*.h $(srcdir)/rock/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
-## diskd/ has no .h files
-## aufs/ has no .h files
-## ./ has no .h files
-
-CLEANFILES += testHeaders
-
-.PHONY: testHeaders

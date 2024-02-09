@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 86    ESI processing */
 
-#ifndef SQUID_ESISEQUENCE_H
-#define SQUID_ESISEQUENCE_H
+#ifndef SQUID_SRC_ESI_SEQUENCE_H
+#define SQUID_SRC_ESI_SEQUENCE_H
 
 #include "esi/Element.h"
 #include "mem/forward.h"
@@ -22,27 +22,27 @@ class esiSequence : public ESIElement
 
 public:
     esiSequence(esiTreeParentPtr, bool = false);
-    ~esiSequence();
+    ~esiSequence() override;
 
-    void render(ESISegment::Pointer);
-    bool addElement (ESIElement::Pointer);
-    esiProcessResult_t process (int dovars);
-    void provideData (ESISegment::Pointer, ESIElement*);
-    bool mayFail () const;
+    void render(ESISegment::Pointer) override;
+    bool addElement (ESIElement::Pointer) override;
+    esiProcessResult_t process (int dovars) override;
+    void provideData (ESISegment::Pointer, ESIElement*) override;
+    bool mayFail () const override;
     void wontFail();
-    void fail(ESIElement *, char const *anError = NULL);
+    void fail(ESIElement *, char const *anError = nullptr) override;
     void makeCachableElements(esiSequence const &old);
-    Pointer makeCacheable() const;
+    Pointer makeCacheable() const override;
     void makeUsableElements(esiSequence const &old, ESIVarState &);
-    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
+    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const override;
 
     Esi::Elements elements; /* unprocessed or rendered nodes */
     size_t processedcount;
 
     struct {
-        int dovars:1; /* for esiVar */
+        unsigned int dovars:1; /* for esiVar */
     } flags;
-    void finish();
+    void finish() override;
 
 protected:
     esiSequence(esiSequence const &);
@@ -63,5 +63,5 @@ private:
     void processStep(int dovars);
 };
 
-#endif /* SQUID_ESISEQUENCE_H */
+#endif /* SQUID_SRC_ESI_SEQUENCE_H */
 

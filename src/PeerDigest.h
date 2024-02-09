@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef   SQUID_PEERDIGEST_H
-#define   SQUID_PEERDIGEST_H
+#ifndef SQUID_SRC_PEERDIGEST_H
+#define SQUID_SRC_PEERDIGEST_H
 
 #if USE_CACHE_DIGESTS
 
@@ -79,9 +79,9 @@ public:
     PeerDigest(CachePeer *);
     ~PeerDigest();
 
-    CachePeer *peer = nullptr;          /**< pointer back to peer structure, argh */
+    CbcPointer<CachePeer> peer; ///< pointer back to peer structure, argh
     CacheDigest *cd = nullptr;            /**< actual digest structure */
-    SBuf host;                        ///< copy of peer->host
+    const SBuf host; ///< copy of peer->host
     const char *req_result = nullptr;     /**< text status of the last request */
 
     struct {
@@ -115,12 +115,11 @@ public:
 
 extern const Version CacheDigestVer;
 
-void peerDigestCreate(CachePeer * p);
 void peerDigestNeeded(PeerDigest * pd);
 void peerDigestNotePeerGone(PeerDigest * pd);
 void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
 #endif /* USE_CACHE_DIGESTS */
 
-#endif /* SQUID_PEERDIGEST_H */
+#endif /* SQUID_SRC_PEERDIGEST_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,20 +11,21 @@
 #include "squid.h"
 #include "cache_snmp.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "globals.h"
+#include "mem/Meter.h"
+#include "mem/Stats.h"
 #include "mem_node.h"
 #include "neighbors.h"
 #include "snmp_agent.h"
 #include "snmp_core.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "stat.h"
 #include "StatCounters.h"
 #include "StatHist.h"
 #include "Store.h"
 #include "tools.h"
-// for tvSubDsec() which should be in SquidTime.h
 #include "util.h"
 
 /************************************************************************
@@ -40,7 +41,7 @@
 variable_list *
 snmp_sysFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = NULL;
+    variable_list *Answer = nullptr;
     MemBuf tmp;
     debugs(49, 5, "snmp_sysFn: Processing request:" << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;
@@ -79,8 +80,8 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
 variable_list *
 snmp_confFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = NULL;
-    const char *cp = NULL;
+    variable_list *Answer = nullptr;
+    const char *cp = nullptr;
     debugs(49, 5, "snmp_confFn: Processing request with magic " << Var->name[8] << "!");
     *ErrP = SNMP_ERR_NOERROR;
 
@@ -185,26 +186,26 @@ snmp_confFn(variable_list * Var, snint * ErrP)
 variable_list *
 snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = NULL;
+    variable_list *Answer = nullptr;
 
     Ip::Address laddr;
-    char *cp = NULL;
-    CachePeer *p = NULL;
-    int cnt = 0;
+    char *cp = nullptr;
+    CachePeer *p = nullptr;
     debugs(49, 5, "snmp_meshPtblFn: peer " << Var->name[LEN_SQ_MESH + 3] << " requested!");
     *ErrP = SNMP_ERR_NOERROR;
 
     u_int index = Var->name[LEN_SQ_MESH + 3] ;
-    for (p = Config.peers; p != NULL; p = p->next, ++cnt) {
-        if (p->index == index) {
-            laddr = p->in_addr ;
+    for (const auto &peer: CurrentCachePeers()) {
+        if (peer->index == index) {
+            laddr = peer->in_addr ;
+            p = peer.get();
             break;
         }
     }
 
-    if (p == NULL) {
+    if (p == nullptr) {
         *ErrP = SNMP_ERR_NOSUCHNAME;
-        return NULL;
+        return nullptr;
     }
 
     switch (Var->name[LEN_SQ_MESH + 2]) {
@@ -320,7 +321,7 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 variable_list *
 snmp_prfSysFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = NULL;
+    variable_list *Answer = nullptr;
 
     static struct rusage rusage;
     debugs(49, 5, "snmp_prfSysFn: Processing request with magic " << Var->name[LEN_SQ_PRF + 1] << "!");
@@ -341,11 +342,14 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
                                       SMI_COUNTER32);
         break;
 
-    case PERF_SYS_MEMUSAGE:
+    case PERF_SYS_MEMUSAGE: {
+        Mem::PoolStats stats;
+        Mem::GlobalStats(stats);
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) statMemoryAccounted() >> 10,
+                                      (snint) stats.meter->alloc.currentLevel() >> 10,
                                       ASN_INTEGER);
-        break;
+    }
+    break;
 
     case PERF_SYS_CPUTIME:
         squid_getrusage(&rusage);
@@ -422,9 +426,9 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
 variable_list *
 snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = NULL;
-    static StatCounters *f = NULL;
-    static StatCounters *l = NULL;
+    variable_list *Answer = nullptr;
+    static StatCounters *f = nullptr;
+    static StatCounters *l = nullptr;
     double x;
     int minutes;
     debugs(49, 5, "snmp_prfProtoFn: Processing request with magic " << Var->name[LEN_SQ_PRF] << "!");
@@ -603,7 +607,7 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 
         default:
             *ErrP = SNMP_ERR_NOSUCHNAME;
-            return NULL;
+            return nullptr;
         }
 
         return snmp_var_new_integer(Var->name, Var->name_length,
@@ -612,6 +616,6 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
     }
 
     *ErrP = SNMP_ERR_NOSUCHNAME;
-    return NULL;
+    return nullptr;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 29    Authenticator */
 
-#ifndef SQUID_AUTHREG_H_
-#define SQUID_AUTHREG_H_
+#ifndef SQUID_SRC_AUTHREG_H
+#define SQUID_SRC_AUTHREG_H
 
 namespace Auth
 {
@@ -22,5 +22,5 @@ inline void Init(void) {} /* NOP if not USE_AUTH */
 #endif /* USE_AUTH */
 
 } // namespace Auth
-#endif /* SQUID_AUTHREG_H_ */
+#endif /* SQUID_SRC_AUTHREG_H */
 

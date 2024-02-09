@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_DELAYSPEC_H
-#define SQUID_DELAYSPEC_H
+#ifndef SQUID_SRC_DELAYSPEC_H
+#define SQUID_SRC_DELAYSPEC_H
 
 class StoreEntry;
 
@@ -24,5 +24,5 @@ public:
     int64_t max_bytes;
 };
 
-#endif /* SQUID_DELAYSPEC_H */
+#endif /* SQUID_SRC_DELAYSPEC_H */
 

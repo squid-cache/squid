@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #if USE_OPENSSL
 
 #include "fatal.h"
+#include "sbuf/Algorithms.h"
 #include "sbuf/SBuf.h"
 
 /* Stub File for the ssl/libsslsquid.la convenience library */
@@ -21,9 +22,9 @@
 #include "ssl/Config.h"
 Ssl::Config::Config():
 #if USE_SSL_CRTD
-    ssl_crtd(NULL),
+    ssl_crtd(nullptr),
 #endif
-    ssl_crt_validator(NULL)
+    ssl_crt_validator(nullptr)
 {
     ssl_crt_validator_Children.concurrency = 1;
     STUB_NOP
@@ -118,6 +119,7 @@ const Security::CertErrors *ServerBump::sslErrors() const STUB_RETVAL(nullptr)
 #include "ssl/support.h"
 namespace Ssl
 {
+bool ParseErrorString(const char *, Security::Errors &) STUB_RETVAL(false)
 int AskPasswordCb(char *, int, int, void *) STUB_RETVAL(0)
 void Initialize() STUB
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
@@ -125,11 +127,11 @@ bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long
 void SetupVerifyCallback(Security::ContextPointer &) STUB
 void MaybeSetupRsaCallback(Security::ContextPointer &) STUB
 } // namespace Ssl
-const char *sslGetUserEmail(SSL *ssl) STUB_RETVAL(NULL)
-const char *sslGetUserAttribute(SSL *ssl, const char *attribute_name) STUB_RETVAL(NULL)
-const char *sslGetCAAttribute(SSL *ssl, const char *attribute_name) STUB_RETVAL(NULL)
-SBuf sslGetUserCertificatePEM(SSL *ssl) STUB_RETVAL(SBuf())
-SBuf sslGetUserCertificateChainPEM(SSL *ssl) STUB_RETVAL(SBuf())
+const char *sslGetUserEmail(SSL *) STUB_RETVAL(nullptr)
+const char *sslGetUserAttribute(SSL *, const char *) STUB_RETVAL(nullptr)
+const char *sslGetCAAttribute(SSL *, const char *) STUB_RETVAL(nullptr)
+SBuf sslGetUserCertificatePEM(SSL *) STUB_RETVAL(SBuf())
+SBuf sslGetUserCertificateChainPEM(SSL *) STUB_RETVAL(SBuf())
 namespace Ssl
 {
 const char *GetX509UserAttribute(X509 *, const char *) STUB_RETVAL(nullptr)

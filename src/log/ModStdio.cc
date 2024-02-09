@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,7 +38,7 @@ logfileWriteWrapper(Logfile * lf, const void *buf, size_t len)
     size_t s;
     s = FD_WRITE_METHOD(ll->fd, (char const *) buf, len);
     int xerrno = errno;
-    fd_bytes(ll->fd, s, FD_WRITE);
+    fd_bytes(ll->fd, s, IoDirection::Write);
 
     if (s == len)
         return;
@@ -167,7 +167,7 @@ logfile_mod_stdio_close(Logfile * lf)
         xfree(ll->buf);
 
     xfree(lf->data);
-    lf->data = NULL;
+    lf->data = nullptr;
 }
 
 /*

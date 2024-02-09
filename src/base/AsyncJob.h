@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ASYNC_JOB_H
-#define SQUID_ASYNC_JOB_H
+#ifndef SQUID_SRC_BASE_ASYNCJOB_H
+#define SQUID_SRC_BASE_ASYNCJOB_H
 
 #include "base/AsyncCall.h"
 #include "base/InstanceId.h"
@@ -36,8 +36,15 @@ public:
 public:
     AsyncJob(const char *aTypeName);
 
-    /// starts a freshly created job (i.e., makes the job asynchronous)
-    static Pointer Start(AsyncJob *job);
+    /// Promises to start the configured job (eventually). The job is deemed to
+    /// be running asynchronously beyond this point, so the caller should only
+    /// access the job object via AsyncCalls rather than directly.
+    ///
+    /// swanSong() is only called for jobs for which this method has returned
+    /// successfully (i.e. without throwing).
+    static void Start(const Pointer &job);
+
+    static void RegisterWithCacheManager();
 
 protected:
     // XXX: temporary method to replace "delete this" in jobs-in-transition.
@@ -62,15 +69,25 @@ public:
     /// called when the job throws during an async call
     virtual void callException(const std::exception &e);
 
+    /// process external request to terminate now (i.e. during this async call)
+    void handleStopRequest() { mustStop("externally aborted"); }
+
+    const InstanceId<AsyncJob> id; ///< job identifier
+
 protected:
     // external destruction prohibited to ensure swanSong() is called
-    virtual ~AsyncJob();
+    ~AsyncJob() override;
+
+    /// writes a cache manager report about all jobs existing in this worker
+    static void ReportAllJobs(StoreEntry *);
 
     const char *stopReason; ///< reason for forcing done() to be true
     const char *typeName; ///< kid (leaf) class name, for debugging
     AsyncCall::Pointer inCall; ///< the asynchronous call being handled, if any
-    const InstanceId<AsyncJob> id; ///< job identifier
+
+    bool started_ = false; ///< Start() has finished successfully
+    bool swanSang_ = false; ///< swanSong() was called
 };
 
-#endif /* SQUID_ASYNC_JOB_H */
+#endif /* SQUID_SRC_BASE_ASYNCJOB_H */
 

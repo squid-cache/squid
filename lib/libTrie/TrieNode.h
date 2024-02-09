@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef   LIBTRIE_TRIENODE_H
-#define   LIBTRIE_TRIENODE_H
+#ifndef SQUID_LIB_LIBTRIE_TRIENODE_H
+#define SQUID_LIB_LIBTRIE_TRIENODE_H
 
 #include "TrieCharTransform.h"
 
@@ -75,11 +75,11 @@ TrieNode::find (char const *aString, size_t theLength, TrieCharTransform *transf
         if (prefix)
             return _privateData;
 
-        return NULL;
+        return nullptr;
     } else {
         /* terminal node */
         return _privateData;
     }
 }
-#endif /* LIBTRIE_TRIENODE_H */
+#endif /* SQUID_LIB_LIBTRIE_TRIENODE_H */
 

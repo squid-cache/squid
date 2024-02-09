@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,13 +20,13 @@
  *    to64(salt+4, rand(), 4);
  *    salt[0] = '\0';
  */
-#ifndef _CRYPT_MD5_H
-#define _CRYPT_MD5_H
+#ifndef SQUID_SRC_AUTH_BASIC_NCSA_CRYPT_MD5_H
+#define SQUID_SRC_AUTH_BASIC_NCSA_CRYPT_MD5_H
 
 char *crypt_md5(const char *pw, const char *salt);
 
 /* MD5 hash without salt */
 char *md5sum(const char *s);
 
-#endif /* _CRYPT_MD5_H */
+#endif /* SQUID_SRC_AUTH_BASIC_NCSA_CRYPT_MD5_H */
 

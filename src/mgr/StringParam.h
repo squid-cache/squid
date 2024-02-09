@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_STRING_PARAM_H
-#define SQUID_MGR_STRING_PARAM_H
+#ifndef SQUID_SRC_MGR_STRINGPARAM_H
+#define SQUID_SRC_MGR_STRINGPARAM_H
 
 #include "ipc/forward.h"
 #include "mgr/forward.h"
@@ -24,8 +24,8 @@ class StringParam: public QueryParam
 public:
     StringParam();
     StringParam(const String& aString);
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual void unpackValue(const Ipc::TypedMsgHdr& msg);
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    void unpackValue(const Ipc::TypedMsgHdr& msg) override;
     const String& value() const;
 
 private:
@@ -34,5 +34,5 @@ private:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_STRING_PARAM_H */
+#endif /* SQUID_SRC_MGR_STRINGPARAM_H */
 

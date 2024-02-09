@@ -1,16 +1,15 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_WORDLIST_H
-#define SQUID_WORDLIST_H
+#ifndef SQUID_SRC_WORDLIST_H
+#define SQUID_SRC_WORDLIST_H
 
 #include "globals.h"
-#include "profiler/Profiler.h"
 #include "sbuf/List.h"
 
 /** A list of C-strings
@@ -66,5 +65,5 @@ char *wordlistChopHead(wordlist **);
 /// convert a wordlist to a SBufList
 SBufList ToSBufList(wordlist *);
 
-#endif /* SQUID_WORDLIST_H */
+#endif /* SQUID_SRC_WORDLIST_H */
 

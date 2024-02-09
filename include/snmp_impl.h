@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_IMPL_H
-#define SQUID_SNMP_IMPL_H
+#ifndef SQUID_INCLUDE_SNMP_IMPL_H
+#define SQUID_INCLUDE_SNMP_IMPL_H
 
 #include "asn1.h"
 
@@ -38,22 +38,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
 
-#if 0
-#if (defined vax) || (defined (mips))
-/*
- * This is a fairly bogus thing to do, but there seems to be no better way for
- * compilers that don't understand void pointers.
- */
-#ifndef void
-#define void char
-#endif
-#endif
-#endif
-
 #define SID_MAX_LEN 64
-
-#define READ        1
-#define WRITE       0
 
 #define SNMP_RESERVE1    0
 #define SNMP_RESERVE2    1
@@ -73,5 +58,5 @@ struct trapVar {
     struct trapVar *next;
 };
 
-#endif /* SQUID_SNMP_IMPL_H */
+#endif /* SQUID_INCLUDE_SNMP_IMPL_H */
 

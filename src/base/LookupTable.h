@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_LOOKUPTABLE_H_
-#define SQUID_LOOKUPTABLE_H_
+#ifndef SQUID_SRC_BASE_LOOKUPTABLE_H
+#define SQUID_SRC_BASE_LOOKUPTABLE_H
 
 #include "sbuf/Algorithms.h"
 #include "sbuf/SBuf.h"
@@ -70,10 +70,10 @@ public:
     }
 
 private:
-    typedef std::unordered_map<const SBuf, EnumType, Hasher> lookupTable_t;
+    using lookupTable_t = std::unordered_map<const SBuf, EnumType, Hasher, CaseInsensitiveSBufEqual>;
     lookupTable_t lookupTable;
     EnumType invalidValue;
 };
 
-#endif /* SQUID_LOOKUPTABLE_H_ */
+#endif /* SQUID_SRC_BASE_LOOKUPTABLE_H */
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SERVERS_FORWARD_H
-#define SQUID_SERVERS_FORWARD_H
+#ifndef SQUID_SRC_SERVERS_FORWARD_H
+#define SQUID_SRC_SERVERS_FORWARD_H
 
 class MasterXaction;
 template <class C> class RefCount;
@@ -24,7 +24,7 @@ class Server;
 } // namespace One
 
 /// create a new HTTP connection handler; never returns NULL
-ConnStateData *NewServer(MasterXactionPointer &xact);
+ConnStateData *NewServer(const MasterXactionPointer &xact);
 
 } // namespace Http
 
@@ -32,7 +32,7 @@ namespace Https
 {
 
 /// create a new HTTPS connection handler; never returns NULL
-ConnStateData *NewServer(MasterXactionPointer &xact);
+ConnStateData *NewServer(const MasterXactionPointer &xact);
 
 } // namespace Https
 
@@ -46,5 +46,5 @@ void StopListening();
 
 } // namespace Ftp
 
-#endif /* SQUID_SERVERS_FORWARD_H */
+#endif /* SQUID_SRC_SERVERS_FORWARD_H */
 

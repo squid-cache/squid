@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,6 @@
 #include "squid.h"
 
 #include "acl/AtStep.h"
-#include "acl/AtStepData.h"
 #include "acl/FilledChecklist.h"
 #include "client_side.h"
 #include "http/Stream.h"
@@ -18,8 +17,10 @@
 #endif
 
 int
-ACLAtStepStrategy::match(ACLData<XactionStep> * &data, ACLFilledChecklist *checklist)
+Acl::AtStepCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
 #if USE_OPENSSL
     // We use step1 for all these very different cases:
     // - The transaction is not subject to ssl_bump rules (if any).
@@ -43,7 +44,7 @@ ACLAtStepStrategy::match(ACLData<XactionStep> * &data, ACLFilledChecklist *check
             return 0; // we have warned about the missing request earlier
 
         if (!checklist->request->masterXaction) {
-            debugs(28, DBG_IMPORTANT, "BUG: at_step GeneratingCONNECT ACL is missing master transaction info. Assuming mismatch.");
+            debugs(28, DBG_IMPORTANT, "ERROR: Squid BUG: at_step GeneratingCONNECT ACL is missing master transaction info. Assuming mismatch.");
             return 0;
         }
 

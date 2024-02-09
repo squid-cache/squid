@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_DISKIOSTRATEGY_H
-#define SQUID_DISKIOSTRATEGY_H
+#ifndef SQUID_SRC_DISKIO_DISKIOSTRATEGY_H
+#define SQUID_SRC_DISKIO_DISKIOSTRATEGY_H
 
 #include "base/RefCount.h"
 #include "Store.h"
@@ -50,7 +50,7 @@ public:
     virtual void statfs(StoreEntry &) const {}
 
     /** module specific options */
-    virtual ConfigOption *getOptionTree() const {return NULL;}
+    virtual ConfigOption *getOptionTree() const {return nullptr;}
 };
 
 /* Because we need the DiskFile definition for newFile. */
@@ -62,29 +62,29 @@ class SingletonIOStrategy : public DiskIOStrategy
 public:
     SingletonIOStrategy(DiskIOStrategy *anIO) : io(anIO) {}
 
-    virtual bool shedLoad() { return io->shedLoad(); }
+    bool shedLoad() override { return io->shedLoad(); }
 
-    virtual int load() { return io->load(); }
+    int load() override { return io->load(); }
 
-    virtual RefCount<DiskFile> newFile (char const *path) {return io->newFile(path); }
+    RefCount<DiskFile> newFile (char const *path) override {return io->newFile(path); }
 
-    virtual void sync() { io->sync(); }
+    void sync() override { io->sync(); }
 
-    virtual bool unlinkdUseful() const { return io->unlinkdUseful(); }
+    bool unlinkdUseful() const override { return io->unlinkdUseful(); }
 
-    virtual void unlinkFile(char const *path) { io->unlinkFile(path); }
+    void unlinkFile(char const *path) override { io->unlinkFile(path); }
 
-    virtual int callback() { return io->callback(); }
+    int callback() override { return io->callback(); }
 
-    virtual void init() { io->init(); }
+    void init() override { io->init(); }
 
-    virtual void statfs(StoreEntry & sentry) const { io->statfs(sentry); }
+    void statfs(StoreEntry & sentry) const override { io->statfs(sentry); }
 
-    virtual ConfigOption *getOptionTree() const { return io->getOptionTree(); }
+    ConfigOption *getOptionTree() const override { return io->getOptionTree(); }
 
 private:
     DiskIOStrategy *io;
 };
 
-#endif /* SQUID_DISKIOSTRATEGY_H */
+#endif /* SQUID_SRC_DISKIO_DISKIOSTRATEGY_H */
 

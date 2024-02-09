@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,8 +19,8 @@
  * the top of the heap (as in the smallest object key value).  Child nodes
  * are larger than their parent.
  ****************************************************************************/
-#ifndef SQUID_HEAP_H
-#define SQUID_HEAP_H
+#ifndef SQUID_INCLUDE_HEAP_H
+#define SQUID_INCLUDE_HEAP_H
 
 /*
  * Function for generating heap keys.  The first argument will typically be
@@ -150,5 +150,5 @@ SQUIDCEXTERN void heap_printnode(char *msg, heap_node * elm);
 
 SQUIDCEXTERN int verify_heap_property(heap *);
 
-#endif /* SQUID_HEAP_H */
+#endif /* SQUID_INCLUDE_HEAP_H */
 

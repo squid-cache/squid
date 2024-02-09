@@ -37,7 +37,7 @@ typedef void * DigestAlgorithm;
 const char *digestName(const DigestAlgorithm);
 
 /// retrieve a Digest algorithm handle from its name
-const DigestAlgorithm digestByName(const char *name);
+DigestAlgorithm digestByName(const char *name);
 
 } // namespace Security
 

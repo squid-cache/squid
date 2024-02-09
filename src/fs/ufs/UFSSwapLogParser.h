@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_UFS_UFSSWAPLOGPARSER_H
-#define SQUID_FS_UFS_UFSSWAPLOGPARSER_H
+#ifndef SQUID_SRC_FS_UFS_UFSSWAPLOGPARSER_H
+#define SQUID_SRC_FS_UFS_UFSSWAPLOGPARSER_H
 
 class StoreSwapLogData;
 
@@ -34,12 +34,12 @@ public:
     void Close() {
         if (log) {
             fclose(log);
-            log = NULL;
+            log = nullptr;
         }
     }
 };
 
 } //namespace Ufs
 } //namespace Fs
-#endif /* SQUID_FS_UFS_UFSSWAPLOGPARSER_H */
+#endif /* SQUID_SRC_FS_UFS_UFSSWAPLOGPARSER_H */
 

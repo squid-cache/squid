@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_AIODISKFILE_H
-#define SQUID_AIODISKFILE_H
+#ifndef SQUID_SRC_DISKIO_AIO_AIODISKFILE_H
+#define SQUID_SRC_DISKIO_AIO_AIODISKFILE_H
 
 #if HAVE_DISKIO_MODULE_AIO
 
@@ -26,25 +26,25 @@ public:
 
     friend class AIODiskIOStrategy;
     AIODiskFile (char const *path, AIODiskIOStrategy *);
-    ~AIODiskFile();
+    ~AIODiskFile() override;
 
-    /// \bug the code has this as "IORequestor::Pointer callback"
-    virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
+    // XXX: the code has this as "IORequestor::Pointer callback"
+    void open(int flags, mode_t mode, RefCount<IORequestor> callback) override;
 
-    virtual void create (int, mode_t, RefCount<IORequestor>);
-    virtual void read(ReadRequest *);
-    virtual void write(WriteRequest *);
-    virtual void close ();
-    virtual bool canRead() const;
-    virtual bool canWrite() const;
+    void create (int, mode_t, RefCount<IORequestor>) override;
+    void read(ReadRequest *) override;
+    void write(WriteRequest *) override;
+    void close () override;
+    bool canRead() const override;
+    bool canWrite() const override;
 
     /* During migration only */
-    virtual int getFD() const;
+    int getFD() const override;
 
-    virtual bool error() const;
+    bool error() const override;
 
     /* Inform callers if there is IO in progress */
-    virtual bool ioInProgress() const;
+    bool ioInProgress() const override;
 
 private:
     void error(bool const &);
@@ -57,5 +57,5 @@ private:
 };
 
 #endif /* HAVE_DISKIO_MODULE_AIO */
-#endif /* SQUID_AIODISKFILE_H */
+#endif /* SQUID_SRC_DISKIO_AIO_AIODISKFILE_H */
 

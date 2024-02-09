@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,9 +25,7 @@
 
 #else /* HAVE_SHM */
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 extern "C" {
 
@@ -50,5 +48,5 @@ extern "C" {
 /// Determines whether segment names are iterpreted as full file paths.
 bool shm_portable_segment_name_is_path();
 
-#endif /* SQUID_COMPAT_CPU_H */
+#endif /* SQUID_COMPAT_SHM_H */
 

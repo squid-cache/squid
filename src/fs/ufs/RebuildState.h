@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_UFS_REBUILDSTATE_H
-#define SQUID_FS_UFS_REBUILDSTATE_H
+#ifndef SQUID_SRC_FS_UFS_REBUILDSTATE_H
+#define SQUID_SRC_FS_UFS_REBUILDSTATE_H
 
 #include "base/RefCount.h"
 #include "store_rebuild.h"
@@ -53,8 +53,8 @@ public:
 
     dirent_t *entry;
     DIR *td;
-    char fullpath[MAXPATHLEN];
-    char fullfilename[MAXPATHLEN*2];
+    SBuf fullpath;
+    SBuf fullfilename;
 
     StoreRebuildData counts;
 
@@ -75,7 +75,7 @@ private:
     int getNextFile(sfileno *, int *size);
     bool fromLog;
     bool _done;
-    /// \bug (callback) should be hidden behind a proper human readable name
+    // TODO: (callback) should be hidden behind a proper human readable name
     void (callback)(void *cbdata);
     void *cbdata;
 };
@@ -83,5 +83,5 @@ private:
 } /* namespace Ufs */
 } /* namespace Fs */
 
-#endif /* SQUID_FS_UFS_REBUILDSTATE_H */
+#endif /* SQUID_SRC_FS_UFS_REBUILDSTATE_H */
 

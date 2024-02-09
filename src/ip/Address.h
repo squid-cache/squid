@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 14    IP Storage and Handling */
 
-#ifndef _SQUID_SRC_IP_ADDRESS_H
-#define _SQUID_SRC_IP_ADDRESS_H
+#ifndef SQUID_SRC_IP_ADDRESS_H
+#define SQUID_SRC_IP_ADDRESS_H
 
 #include "ip/forward.h"
 
@@ -41,7 +41,7 @@ class Address
 {
 
 public:
-    /** @name Constructors and Destructor */
+    /** @name Constructors */
     /*@{*/
     Address() { setEmpty(); }
     Address(const struct in_addr &);
@@ -51,7 +51,6 @@ public:
     Address(const struct hostent &);
     Address(const struct addrinfo &);
     Address(const char*);
-    ~Address() {}
     /*@}*/
 
     /** @name Assignment Operators */
@@ -195,6 +194,11 @@ public:
     /// IPv6 clients use 'privacy addressing' instead.
     void applyClientMask(const Address &mask);
 
+    /// Set bits of the stored IP address on if they are on in the given mask.
+    /// For example, supplying a /24 mask turns 127.0.0.1 into 127.0.0.255.
+    /// \sa applyMask(const Address &)
+    void turnMaskedBitsOn(const Address &mask);
+
     /** Return the ASCII equivalent of the address
      *  Semantically equivalent to the IPv4 inet_ntoa()
      *  eg. 127.0.0.1 (IPv4) or ::1 (IPv6)
@@ -298,6 +302,10 @@ public:
      */
     bool GetHostByName(const char *s);
 
+    /// \returns an Address with true isNoAddr()
+    /// \see isNoAddr() for more details
+    static const Address &NoAddr() { static const Address noAddr(v6_noaddr); return noAddr; }
+
 public:
     /* XXX: When C => C++ conversion is done will be fully private.
      * Legacy Transition Methods.
@@ -360,8 +368,8 @@ operator << (std::ostream &os, const Address &ipa)
 class Address_list
 {
 public:
-    Address_list() { next = NULL; };
-    ~Address_list() { if (next) delete next; next = NULL; };
+    Address_list() { next = nullptr; };
+    ~Address_list() { if (next) delete next; next = nullptr; };
 
     Address s;
     Address_list *next;
@@ -371,5 +379,5 @@ public:
 
 void parse_IpAddress_list_token(Ip::Address_list **, char *);
 
-#endif /* _SQUID_SRC_IP_ADDRESS_H */
+#endif /* SQUID_SRC_IP_ADDRESS_H */
 

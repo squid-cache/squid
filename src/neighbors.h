@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 15    Neighbor Routines */
 
-#ifndef SQUID_NEIGHBORS_H_
-#define SQUID_NEIGHBORS_H_
+#ifndef SQUID_SRC_NEIGHBORS_H
+#define SQUID_SRC_NEIGHBORS_H
 
 #include "anyp/forward.h"
 #include "enums.h"
@@ -23,9 +23,7 @@ class CachePeer;
 class StoreEntry;
 class PeerSelector;
 
-CachePeer *getFirstPeer(void);
 CachePeer *getFirstUpParent(PeerSelector *);
-CachePeer *getNextPeer(CachePeer *);
 CachePeer *getSingleParent(PeerSelector *);
 int neighborsCount(PeerSelector *);
 int neighborsUdpPing(HttpRequest *,
@@ -42,22 +40,27 @@ void neighbors_init(void);
 #if USE_HTCP
 void neighborsHtcpClear(StoreEntry *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
 #endif
-CachePeer *peerFindByName(const char *);
-CachePeer *peerFindByNameAndPort(const char *, unsigned short);
+
+/// cache_peer with a given name (or nil)
+CachePeer *findCachePeerByName(const char *);
+
 CachePeer *getDefaultParent(PeerSelector*);
 CachePeer *getRoundRobinParent(PeerSelector*);
 CachePeer *getWeightedRoundRobinParent(PeerSelector*);
 void peerClearRRStart(void);
 void peerClearRR(void);
+
+// TODO: Move, together with its many dependencies and callers, into CachePeer.
+/// Updates protocol-agnostic CachePeer state after an indication of a
+/// successful contact with the given cache_peer.
+void peerAlive(CachePeer *);
+
 lookup_t peerDigestLookup(CachePeer * p, PeerSelector *);
 CachePeer *neighborsDigestSelect(PeerSelector *);
 void peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup);
-void peerNoteDigestGone(CachePeer * p);
 int neighborUp(const CachePeer * e);
 const char *neighborTypeStr(const CachePeer * e);
 peer_t neighborType(const CachePeer *, const AnyP::Uri &);
-void peerConnectFailed(CachePeer *);
-void peerConnectSucceded(CachePeer *);
 void dump_peer_options(StoreEntry *, CachePeer *);
 int peerHTTPOkay(const CachePeer *, PeerSelector *);
 
@@ -73,5 +76,5 @@ void peerConnClosed(CachePeer *p);
 
 CachePeer *whichPeer(const Ip::Address &from);
 
-#endif /* SQUID_NEIGHBORS_H_ */
+#endif /* SQUID_SRC_NEIGHBORS_H */
 

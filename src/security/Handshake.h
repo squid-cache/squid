@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SECURITY_HANDSHAKE_H
-#define SQUID_SECURITY_HANDSHAKE_H
+#ifndef SQUID_SRC_SECURITY_HANDSHAKE_H
+#define SQUID_SRC_SECURITY_HANDSHAKE_H
 
 #include "anyp/ProtocolVersion.h"
 #include "base/YesNoNone.h"
@@ -50,8 +50,8 @@ public:
     Ciphers ciphers;
 };
 
-inline
-std::ostream &operator <<(std::ostream &os, Security::TlsDetails const &details)
+inline std::ostream &
+operator <<(std::ostream &os, const TlsDetails &details)
 {
     return details.print(os);
 }
@@ -61,7 +61,7 @@ class HandshakeParser
 {
 public:
     /// The parsing states
-    typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived, atCertificatesReceived, atHelloDoneReceived, atNstReceived, atCcsReceived, atFinishReceived} ParserState;
+    typedef enum { atHelloNone = 0, atHelloStarted, atHelloReceived, atHelloDoneReceived, atNstReceived, atCcsReceived, atFinishReceived } ParserState;
 
     /// the originator of the TLS handshake being parsed
     typedef enum { fromClient = 0, fromServer } MessageSource;
@@ -75,8 +75,6 @@ public:
     bool parseHello(const SBuf &data);
 
     TlsDetails::Pointer details; ///< TLS handshake meta info. Never nil.
-
-    Security::CertList serverCertificates; ///< parsed certificates chain
 
     ParserState state; ///< current parsing state.
 
@@ -112,7 +110,6 @@ private:
     void parseV23Ciphers(const SBuf &raw);
 
     void parseServerCertificates(const SBuf &raw);
-    static CertPointer ParseCertificate(const SBuf &raw);
 
     unsigned int currentContentType; ///< The current TLS/SSL record content type
 
@@ -167,5 +164,5 @@ Tls1p3orLater(const AnyP::ProtocolVersion &p)
 
 }
 
-#endif // SQUID_SECURITY_HANDSHAKE_H
+#endif /* SQUID_SRC_SECURITY_HANDSHAKE_H */
 

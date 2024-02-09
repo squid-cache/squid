@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,26 +11,24 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/Asn.h"
-#include "acl/Checklist.h"
 #include "acl/DestinationAsn.h"
 #include "acl/DestinationIp.h"
+#include "acl/FilledChecklist.h"
 #include "acl/SourceAsn.h"
-#include "acl/Strategised.h"
+#include "base/CharacterSet.h"
 #include "FwdState.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ipcache.h"
 #include "MasterXaction.h"
 #include "mgr/Registration.h"
+#include "parser/Tokenizer.h"
 #include "radix.h"
 #include "RequestFlags.h"
+#include "sbuf/SBuf.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StoreClient.h"
-
-#ifndef AS_REQBUF_SZ
-#define AS_REQBUF_SZ    4096
-#endif
 
 /* BEGIN of definitions for radix tree entries */
 
@@ -71,9 +69,8 @@ class ASState
     CBDATA_CLASS(ASState);
 
 public:
-    ASState() {
-        memset(reqbuf, 0, sizeof(reqbuf));
-    }
+    ASState() = default;
+
     ~ASState() {
         if (entry) {
             debugs(53, 3, entry->url());
@@ -87,10 +84,9 @@ public:
     store_client *sc = nullptr;
     HttpRequest::Pointer request;
     int as_number = 0;
-    int64_t offset = 0;
-    int reqofs = 0;
-    char reqbuf[AS_REQBUF_SZ];
-    bool dataRead = false;
+
+    /// for receiving a WHOIS reply body from Store and interpreting it
+    Store::ParsingBuffer parsingBuffer;
 };
 
 CBDATA_CLASS_INIT(ASState);
@@ -103,7 +99,7 @@ struct rtentry_t {
     m_ADDR e_mask;
 };
 
-static int asnAddNet(char *, int);
+static int asnAddNet(const SBuf &, int);
 
 static void asnCacheStart(int as);
 
@@ -120,8 +116,6 @@ static int printRadixNode(struct squid_radix_node *rn, void *sentry);
 }
 #endif
 
-void asnAclInitialize(ACL * acls);
-
 static void destroyRadixNodeInfo(as_info *);
 
 static OBJH asnStats;
@@ -134,12 +128,12 @@ asnMatchIp(CbDataList<int> *data, Ip::Address &addr)
     struct squid_radix_node *rn;
     as_info *e;
     m_ADDR m_addr;
-    CbDataList<int> *a = NULL;
-    CbDataList<int> *b = NULL;
+    CbDataList<int> *a = nullptr;
+    CbDataList<int> *b = nullptr;
 
     debugs(53, 3, "asnMatchIp: Called for " << addr );
 
-    if (AS_tree_head == NULL)
+    if (AS_tree_head == nullptr)
         return 0;
 
     if (addr.isNoAddr())
@@ -152,7 +146,7 @@ asnMatchIp(CbDataList<int> *data, Ip::Address &addr)
 
     rn = squid_rn_match(&m_addr, AS_tree_head);
 
-    if (rn == NULL) {
+    if (rn == nullptr) {
         debugs(53, 3, "asnMatchIp: Address not in as db.");
         return 0;
     }
@@ -211,7 +205,7 @@ asnFreeMemory(void)
 {
     squid_rn_walktree(AS_tree_head, destroyRadixNode, AS_tree_head);
 
-    destroyRadixNode((struct squid_radix_node *) 0, (void *) AS_tree_head);
+    destroyRadixNode((struct squid_radix_node *) nullptr, (void *) AS_tree_head);
 }
 
 static void
@@ -237,7 +231,7 @@ asnCacheStart(int as)
     debugs(53, 3, "AS " << as);
     ASState *asState = new ASState;
     asState->as_number = as;
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAsn);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initAsn>();
     asState->request = new HttpRequest(mx);
     asState->request->url = whoisUrl;
     asState->request->method = Http::METHOD_GET;
@@ -258,8 +252,7 @@ asnCacheStart(int as)
     xfree(asres);
 
     asState->entry = e;
-    StoreIOBuffer readBuffer (AS_REQBUF_SZ, asState->offset, asState->reqbuf);
-    storeClientCopy(asState->sc, e, readBuffer, asHandleReply, asState);
+    storeClientCopy(asState->sc, e, asState->parsingBuffer.makeInitialSpace(), asHandleReply, asState);
 }
 
 static void
@@ -267,13 +260,8 @@ asHandleReply(void *data, StoreIOBuffer result)
 {
     ASState *asState = (ASState *)data;
     StoreEntry *e = asState->entry;
-    char *s;
-    char *t;
-    char *buf = asState->reqbuf;
-    int leftoversz = -1;
 
-    debugs(53, 3, "asHandleReply: Called with size=" << (unsigned int)result.length);
-    debugs(53, 3, "asHandleReply: buffer='" << buf << "'");
+    debugs(53, 3, result << " for " << asState->as_number << " with " << *e);
 
     /* First figure out whether we should abort the request */
 
@@ -282,12 +270,8 @@ asHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    if (result.length == 0 && asState->dataRead) {
-        debugs(53, 3, "asHandleReply: Done: " << e->url());
-        delete asState;
-        return;
-    } else if (result.flags.error) {
-        debugs(53, DBG_IMPORTANT, "asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
+    if (result.flags.error) {
+        debugs(53, DBG_IMPORTANT, "ERROR: asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
         delete asState;
         return;
     } else if (e->mem().baseReply().sline.status() != Http::scOkay) {
@@ -296,117 +280,77 @@ asHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    /*
-     * Next, attempt to parse our request
-     * Remembering that the actual buffer size is retsize + reqofs!
-     */
-    s = buf;
+    asState->parsingBuffer.appended(result.data, result.length);
+    Parser::Tokenizer tok(SBuf(asState->parsingBuffer.content().data, asState->parsingBuffer.contentSize()));
+    SBuf address;
+    // Word delimiters in WHOIS ASN replies. RFC 3912 mentions SP, CR, and LF.
+    // Others are added to mimic an earlier isspace()-based implementation.
+    static const auto WhoisSpaces = CharacterSet("ASCII_spaces", " \f\r\n\t\v");
+    while (tok.token(address, WhoisSpaces)) {
+        (void)asnAddNet(address, asState->as_number);
+    }
+    asState->parsingBuffer.consume(tok.parsedSize());
+    const auto leftoverBytes = asState->parsingBuffer.contentSize();
 
-    while ((size_t)(s - buf) < result.length + asState->reqofs && *s != '\0') {
-        while (*s && xisspace(*s))
-            ++s;
-
-        for (t = s; *t; ++t) {
-            if (xisspace(*t))
-                break;
-        }
-
-        if (*t == '\0') {
-            /* oof, word should continue on next block */
-            break;
-        }
-
-        *t = '\0';
-        debugs(53, 3, "asHandleReply: AS# " << s << " (" << asState->as_number << ")");
-        asnAddNet(s, asState->as_number);
-        s = t + 1;
-        asState->dataRead = true;
+    if (asState->sc->atEof()) {
+        if (leftoverBytes)
+            debugs(53, 2, "WHOIS: Discarding the last " << leftoverBytes << " received bytes of a truncated AS response");
+        delete asState;
+        return;
     }
 
-    /*
-     * Next, grab the end of the 'valid data' in the buffer, and figure
-     * out how much data is left in our buffer, which we need to keep
-     * around for the next request
-     */
-    leftoversz = (asState->reqofs + result.length) - (s - buf);
+    const auto remainingSpace = asState->parsingBuffer.space().positionAt(result.offset + result.length);
 
-    assert(leftoversz >= 0);
-
-    /*
-     * Next, copy the left over data, from s to s + leftoversz to the
-     * beginning of the buffer
-     */
-    memmove(buf, s, leftoversz);
-
-    /*
-     * Next, update our offset and reqofs, and kick off a copy if required
-     */
-    asState->offset += result.length;
-
-    asState->reqofs = leftoversz;
-
-    debugs(53, 3, "asState->offset = " << asState->offset);
-
-    if (e->store_status == STORE_PENDING) {
-        debugs(53, 3, "asHandleReply: store_status == STORE_PENDING: " << e->url()  );
-        StoreIOBuffer tempBuffer (AS_REQBUF_SZ - asState->reqofs,
-                                  asState->offset,
-                                  asState->reqbuf + asState->reqofs);
-        storeClientCopy(asState->sc,
-                        e,
-                        tempBuffer,
-                        asHandleReply,
-                        asState);
-    } else {
-        StoreIOBuffer tempBuffer;
-        debugs(53, 3, "asHandleReply: store complete, but data received " << e->url()  );
-        tempBuffer.offset = asState->offset;
-        tempBuffer.length = AS_REQBUF_SZ - asState->reqofs;
-        tempBuffer.data = asState->reqbuf + asState->reqofs;
-        storeClientCopy(asState->sc,
-                        e,
-                        tempBuffer,
-                        asHandleReply,
-                        asState);
+    if (!remainingSpace.length) {
+        Assure(leftoverBytes);
+        debugs(53, DBG_IMPORTANT, "WARNING: Ignoring the tail of a WHOIS AS response" <<
+               " with an unparsable section of " << leftoverBytes <<
+               " bytes ending at offset " << remainingSpace.offset);
+        delete asState;
+        return;
     }
+
+    const decltype(StoreIOBuffer::offset) stillReasonableOffset = 100000; // an arbitrary limit in bytes
+    if (remainingSpace.offset > stillReasonableOffset) {
+        // stop suspicious accumulation of parsed addresses and/or work
+        debugs(53, DBG_IMPORTANT, "WARNING: Ignoring the tail of a suspiciously large WHOIS AS response" <<
+               " exceeding " << stillReasonableOffset << " bytes");
+        delete asState;
+        return;
+    }
+
+    storeClientCopy(asState->sc, e, remainingSpace, asHandleReply, asState);
 }
 
 /**
  * add a network (addr, mask) to the radix tree, with matching AS number
  */
 static int
-asnAddNet(char *as_string, int as_number)
+asnAddNet(const SBuf &addressAndMask, const int as_number)
 {
     struct squid_radix_node *rn;
-    CbDataList<int> **Tail = NULL;
-    CbDataList<int> *q = NULL;
-    as_info *asinfo = NULL;
+    CbDataList<int> **Tail = nullptr;
+    CbDataList<int> *q = nullptr;
+    as_info *asinfo = nullptr;
 
-    Ip::Address mask;
-    Ip::Address addr;
-    char *t;
-    int bitl;
-
-    t = strchr(as_string, '/');
-
-    if (t == NULL) {
+    static const CharacterSet NonSlashSet = CharacterSet("slash", "/").complement("non-slash");
+    Parser::Tokenizer tok(addressAndMask);
+    SBuf addressToken;
+    if (!(tok.prefix(addressToken, NonSlashSet) && tok.skip('/'))) {
         debugs(53, 3, "asnAddNet: failed, invalid response from whois server.");
         return 0;
     }
-
-    *t = '\0';
-    addr = as_string;
-    bitl = atoi(t + 1);
-
-    if (bitl < 0)
-        bitl = 0;
+    const Ip::Address addr = addressToken.c_str();
 
     // INET6 TODO : find a better way of identifying the base IPA family for mask than this.
-    t = strchr(as_string, '.');
+    const auto addrFamily = (addressToken.find('.') != SBuf::npos) ? AF_INET : AF_INET6;
 
     // generate Netbits Format Mask
+    Ip::Address mask;
     mask.setNoAddr();
-    mask.applyMask(bitl, (t!=NULL?AF_INET:AF_INET6) );
+    int64_t bitl = 0;
+    if (tok.int64(bitl, 10, false))
+        mask.applyMask(bitl, addrFamily);
 
     debugs(53, 3, "asnAddNet: called for " << addr << "/" << mask );
 
@@ -418,7 +362,7 @@ asnAddNet(char *as_string, int as_number)
 
     rn = squid_rn_lookup(&e->e_addr, &e->e_mask, AS_tree_head);
 
-    if (rn != NULL) {
+    if (rn != nullptr) {
         asinfo = ((rtentry_t *) rn)->e_info;
 
         if (asinfo->as_number->find(as_number)) {
@@ -439,11 +383,11 @@ asnAddNet(char *as_string, int as_number)
         asinfo->as_number = q;
         squid_rn_addroute(&e->e_addr, &e->e_mask, AS_tree_head, e->e_nodes);
         rn = squid_rn_match(&e->e_addr, AS_tree_head);
-        assert(rn != NULL);
+        assert(rn != nullptr);
         e->e_info = asinfo;
     }
 
-    if (rn == 0) {      /* assert might expand to nothing */
+    if (rn == nullptr) {      /* assert might expand to nothing */
         xfree(asinfo);
         delete q;
         xfree(e);
@@ -465,7 +409,7 @@ destroyRadixNode(struct squid_radix_node *rn, void *w)
         rtentry_t *e = (rtentry_t *) rn;
         rn = squid_rn_delete(rn->rn_key, rn->rn_mask, rnh);
 
-        if (rn == 0)
+        if (rn == nullptr)
             debugs(53, 3, "destroyRadixNode: internal screwup");
 
         destroyRadixNodeInfo(e->e_info);
@@ -479,7 +423,7 @@ destroyRadixNode(struct squid_radix_node *rn, void *w)
 static void
 destroyRadixNodeInfo(as_info * e_info)
 {
-    CbDataList<int> *prev = NULL;
+    CbDataList<int> *prev = nullptr;
     CbDataList<int> *data = e_info->as_number;
 
     while (data) {
@@ -538,7 +482,7 @@ ACLASN::dump() const
 
     CbDataList<int> *ldata = data;
 
-    while (ldata != NULL) {
+    while (ldata != nullptr) {
         SBuf s;
         s.Printf("%d", ldata->element);
         sl.push_back(s);
@@ -551,7 +495,7 @@ ACLASN::dump() const
 bool
 ACLASN::empty () const
 {
-    return data == NULL;
+    return data == nullptr;
 }
 
 void
@@ -559,8 +503,8 @@ ACLASN::parse()
 {
     CbDataList<int> **curlist = &data;
     CbDataList<int> **Tail;
-    CbDataList<int> *q = NULL;
-    char *t = NULL;
+    CbDataList<int> *q = nullptr;
+    char *t = nullptr;
 
     for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = ConfigParser::strtokFile())) {
@@ -570,32 +514,23 @@ ACLASN::parse()
     }
 }
 
-ACLData<Ip::Address> *
-ACLASN::clone() const
-{
-    if (data)
-        fatal ("cloning of ACLASN not implemented");
-
-    return new ACLASN(*this);
-}
-
-/* explicit template instantiation required for some systems */
-
-template class ACLStrategised<Ip::Address>;
-
 int
-ACLSourceASNStrategy::match (ACLData<Ip::Address> * &data, ACLFilledChecklist *checklist)
+Acl::SourceAsnCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     return data->match(checklist->src_addr);
 }
 
 int
-ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::DestinationAsnCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->url.host(), IP_LOOKUP_IF_MISS);
 
     if (ia) {
-        for (const auto ip: ia->goodAndBad()) {
+        for (const auto &ip: ia->goodAndBad()) {
             if (data->match(ip))
                 return 1;
         }
@@ -604,8 +539,8 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
 
     } else if (!checklist->request->flags.destinationIpLookedUp) {
         /* No entry in cache, lookup not attempted */
-        debugs(28, 3, "can't yet compare '" << AclMatchedName << "' ACL for " << checklist->request->url.host());
-        if (checklist->goAsync(DestinationIPLookup::Instance()))
+        debugs(28, 3, "can't yet compare '" << name << "' ACL for " << checklist->request->url.host());
+        if (checklist->goAsync(ACLDestinationIP::StartLookup, *this))
             return -1;
         // else fall through to noaddr match, hiding the lookup failure (XXX)
     }

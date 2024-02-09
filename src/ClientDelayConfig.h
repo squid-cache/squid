@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTDELAYCONFIG_H
-#define SQUID_CLIENTDELAYCONFIG_H
+#ifndef SQUID_SRC_CLIENTDELAYCONFIG_H
+#define SQUID_SRC_CLIENTDELAYCONFIG_H
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
@@ -27,7 +27,7 @@ public:
 
     ClientDelayPool()
         :   access(nullptr), rate(0), highwatermark(0) {}
-    ~ClientDelayPool();
+    ~ClientDelayPool() override;
     ClientDelayPool(const ClientDelayPool &) = delete;
     ClientDelayPool &operator=(const ClientDelayPool &) = delete;
 
@@ -79,5 +79,5 @@ private:
     ClientDelayPool &pool(const int i) { return *(ClientDelayPools::Instance()->pools.at(i)); }
 };
 
-#endif // SQUID_CLIENTDELAYCONFIG_H
+#endif /* SQUID_SRC_CLIENTDELAYCONFIG_H */
 

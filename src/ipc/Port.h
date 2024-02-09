@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_PORT_H
-#define SQUID_IPC_PORT_H
+#ifndef SQUID_SRC_IPC_PORT_H
+#define SQUID_SRC_IPC_PORT_H
 
 #include "ipc/UdsOp.h"
 #include "SquidString.h"
@@ -29,17 +29,19 @@ public:
     static String CoordinatorAddr();
 
 protected:
-    virtual void start() = 0; // UdsOp (AsyncJob) API; has body
-    virtual bool doneAll() const; // UdsOp (AsyncJob) API
+    void start() override = 0; // UdsOp (AsyncJob) API; has body
+    bool doneAll() const override; // UdsOp (AsyncJob) API
 
     /// read the next incoming message
     void doListen();
 
     /// handle IPC message just read
-    virtual void receive(const TypedMsgHdr& message) = 0;
+    /// kids must call parent method when they do not recognize the message type
+    virtual void receive(const TypedMsgHdr &) = 0;
 
 private:
     void noteRead(const CommIoCbParams &params); // Comm callback API
+    void receiveOrIgnore(const TypedMsgHdr& );
 
 private:
     TypedMsgHdr buf; ///< msghdr struct filled by Comm
@@ -49,5 +51,5 @@ extern const char strandAddrLabel[]; ///< strand's listening address unique labe
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_PORT_H */
+#endif /* SQUID_SRC_IPC_PORT_H */
 

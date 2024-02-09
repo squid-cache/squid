@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _VALID_H_
-#define _VALID_H_
+#ifndef SQUID_SRC_AUTH_BASIC_SMB_LM_VALID_H
+#define SQUID_SRC_AUTH_BASIC_SMB_LM_VALID_H
 /* SMB User verification function */
 
 #define NTV_NO_ERROR 0
@@ -17,5 +17,5 @@
 
 int Valid_User(char *USERNAME, char *PASSWORD, const char *SERVER, char *BACKUP, const char *DOMAIN);
 
-#endif
+#endif /* SQUID_SRC_AUTH_BASIC_SMB_LM_VALID_H */
 

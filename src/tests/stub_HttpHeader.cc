@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #include "TimeOrTag.h"
 
 #define STUB_API "HttpHeader.cc"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 #include "HttpHeader.h"
 HttpHeaderEntry::HttpHeaderEntry(Http::HdrType, const SBuf &, const char *) {STUB}
@@ -21,11 +21,10 @@ HttpHeaderEntry *HttpHeaderEntry::clone() const STUB_RETVAL(nullptr)
 void HttpHeaderEntry::packInto(Packable *) const STUB
 int HttpHeaderEntry::getInt() const STUB_RETVAL(0)
 int64_t HttpHeaderEntry::getInt64() const STUB_RETVAL(0)
-HttpHeader::HttpHeader() {STUB}
 HttpHeader::HttpHeader(const http_hdr_owner_type) {STUB}
 HttpHeader::HttpHeader(const HttpHeader &) {STUB}
 HttpHeader::~HttpHeader() {STUB}
-HttpHeader &HttpHeader::operator =(const HttpHeader &other) STUB_RETVAL(*this)
+HttpHeader &HttpHeader::operator =(const HttpHeader &) STUB_RETVAL(*this)
 void HttpHeader::clean() STUB
 void HttpHeader::append(const HttpHeader *) STUB
 void HttpHeader::update(const HttpHeader *) STUB
@@ -40,7 +39,6 @@ int HttpHeader::delById(Http::HdrType) STUB_RETVAL(0)
 void HttpHeader::delAt(HttpHeaderPos, int &) STUB
 void HttpHeader::refreshMask() STUB
 void HttpHeader::addEntry(HttpHeaderEntry *) STUB
-void HttpHeader::insertEntry(HttpHeaderEntry *) STUB
 String HttpHeader::getList(Http::HdrType) const STUB_RETVAL(String())
 bool HttpHeader::getList(Http::HdrType, String *) const STUB_RETVAL(false)
 String HttpHeader::getStrOrList(Http::HdrType) const STUB_RETVAL(String())
@@ -59,12 +57,12 @@ void HttpHeader::putInt64(Http::HdrType, int64_t ) STUB
 void HttpHeader::putTime(Http::HdrType, time_t) STUB
 void HttpHeader::putStr(Http::HdrType, const char *) STUB
 void HttpHeader::putAuth(const char *, const char *) STUB
-void HttpHeader::putCc(const HttpHdrCc *) STUB
+void HttpHeader::putCc(const HttpHdrCc &) STUB
 void HttpHeader::putContRange(const HttpHdrContRange *) STUB
 void HttpHeader::putRange(const HttpHdrRange *) STUB
 void HttpHeader::putSc(HttpHdrSc *) STUB
-void HttpHeader::putWarning(const int, const char *const) STUB
 void HttpHeader::putExt(const char *, const char *) STUB
+void HttpHeader::updateOrAddStr(Http::HdrType, const SBuf &) STUB
 int HttpHeader::getInt(Http::HdrType) const STUB_RETVAL(0)
 int64_t HttpHeader::getInt64(Http::HdrType) const STUB_RETVAL(0)
 time_t HttpHeader::getTime(Http::HdrType) const STUB_RETVAL(0)
@@ -82,10 +80,10 @@ int HttpHeader::hasByNameListMember(const char *, const char *, const char) cons
 void HttpHeader::removeHopByHopEntries() STUB
 void HttpHeader::removeConnectionHeaderEntries() STUB
 bool HttpHeader::Isolate(const char **, size_t, const char **, const char **) STUB_RETVAL(false)
-bool HttpHeader::needUpdate(const HttpHeader *fresh) const STUB_RETVAL(false)
+bool HttpHeader::needUpdate(const HttpHeader *) const STUB_RETVAL(false)
 bool HttpHeader::skipUpdateHeader(const Http::HdrType) const STUB_RETVAL(false)
-void HttpHeader::updateWarnings() STUB
 int httpHeaderParseQuotedString(const char *, const int, String *) STUB_RETVAL(-1)
+SBuf Http::SlowlyParseQuotedString(const char *, const char *, size_t) STUB_RETVAL(SBuf())
 SBuf httpHeaderQuoteString(const char *) STUB_RETVAL(SBuf())
 void httpHeaderCalcMask(HttpHeaderMask *, Http::HdrType [], size_t) STUB
 void httpHeaderInitModule() STUB

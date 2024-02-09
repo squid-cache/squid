@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 79    Squid-side DISKD I/O functions. */
 
-#ifndef SQUID_DISKD_ACTION_H
-#define SQUID_DISKD_ACTION_H
+#ifndef SQUID_SRC_DISKIO_DISKDAEMON_DISKDACTION_H
+#define SQUID_SRC_DISKIO_DISKDAEMON_DISKDACTION_H
 
 #include "ipc/forward.h"
 #include "mgr/Action.h"
@@ -58,18 +58,18 @@ protected:
 public:
     static Pointer Create(const Mgr::CommandPointer &aCmd);
     /* Action API */
-    virtual void add(const Mgr::Action& action);
-    virtual void pack(Ipc::TypedMsgHdr& hdrMsg) const;
-    virtual void unpack(const Ipc::TypedMsgHdr& hdrMsg);
+    void add(const Mgr::Action& action) override;
+    void pack(Ipc::TypedMsgHdr& hdrMsg) const override;
+    void unpack(const Ipc::TypedMsgHdr& hdrMsg) override;
 
 protected:
     /* Action API */
-    virtual void collect();
-    virtual void dump(StoreEntry* entry);
+    void collect() override;
+    void dump(StoreEntry* entry) override;
 
 private:
     DiskdActionData data;
 };
 
-#endif /* SQUID_DISKD_ACTION_H */
+#endif /* SQUID_SRC_DISKIO_DISKDAEMON_DISKDACTION_H */
 

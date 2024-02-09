@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_STORE_H
-#define SQUID_SRC_TEST_STORE_H
+#ifndef SQUID_SRC_TESTS_TESTSTORE_H
+#define SQUID_SRC_TESTS_TESTSTORE_H
 
 #include "Store.h"
 #include "store/Controlled.h"
@@ -18,13 +18,14 @@
  * test the store framework
  */
 
-class testStore : public CPPUNIT_NS::TestFixture
+class TestStore: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testStore );
+    CPPUNIT_TEST_SUITE( TestStore );
     CPPUNIT_TEST( testSetRoot );
     CPPUNIT_TEST( testUnsetRoot );
     CPPUNIT_TEST( testStats );
     CPPUNIT_TEST( testMaxSize );
+    CPPUNIT_TEST( testSwapMetaTypeClassification );
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -34,40 +35,41 @@ protected:
     void testUnsetRoot();
     void testStats();
     void testMaxSize();
+    void testSwapMetaTypeClassification();
 };
 
 /// allows testing of methods without having all the other components live
-class TestStore : public Store::Controller
+class StoreControllerStub : public Store::Controller
 {
 
 public:
-    TestStore() : statsCalled (false) {}
+    StoreControllerStub() : statsCalled (false) {}
 
     bool statsCalled;
 
-    virtual int callback();
+    int callback() override;
 
     virtual StoreEntry* get(const cache_key*);
 
     virtual void get(String, void (*)(StoreEntry*, void*), void*);
 
-    virtual void init();
+    void init() override;
 
-    virtual void maintain() {};
+    void maintain() override {};
 
-    virtual uint64_t maxSize() const;
+    uint64_t maxSize() const override;
 
-    virtual uint64_t minSize() const;
+    uint64_t minSize() const override;
 
-    virtual uint64_t currentSize() const;
+    uint64_t currentSize() const override;
 
-    virtual uint64_t currentCount() const;
+    uint64_t currentCount() const override;
 
-    virtual int64_t maxObjectSize() const;
+    int64_t maxObjectSize() const override;
 
-    virtual void getStats(StoreInfoStats &) const;
+    void getStats(StoreInfoStats &) const override;
 
-    virtual void stat(StoreEntry &) const; /* output stats to the provided store entry */
+    void stat(StoreEntry &) const override; /* output stats to the provided store entry */
 
     virtual void reference(StoreEntry &) {} /* Reference this object */
 
@@ -76,7 +78,7 @@ public:
     virtual StoreSearch *search();
 };
 
-typedef RefCount<TestStore> TestStorePointer;
+typedef RefCount<StoreControllerStub> StoreControllerStubPointer;
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTSTORE_H */
 

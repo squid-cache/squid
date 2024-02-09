@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 86    ESI processing */
 
-#ifndef SQUID_ESIASSIGN_H
-#define SQUID_ESIASSIGN_H
+#ifndef SQUID_SRC_ESI_ASSIGN_H
+#define SQUID_SRC_ESI_ASSIGN_H
 
 #include "esi/Element.h"
 #include "esi/VarState.h"
@@ -19,9 +19,9 @@
 class ESIVariableExpression : public ESIVarState::Variable
 {
 public:
-    ~ESIVariableExpression();
+    ~ESIVariableExpression() override;
     ESIVariableExpression (String const &value);
-    virtual void eval (ESIVarState &state, char const *, char const *) const;
+    void eval (ESIVarState &state, char const *, char const *) const override;
 
 private:
     String expression;
@@ -37,14 +37,14 @@ public:
     ESIAssign (esiTreeParentPtr, int, const char **, ESIContext *);
     ESIAssign (ESIAssign const &);
     ESIAssign &operator=(ESIAssign const &);
-    ~ESIAssign();
-    esiProcessResult_t process (int dovars);
-    void render(ESISegment::Pointer);
-    bool addElement(ESIElement::Pointer);
-    void provideData (ESISegment::Pointer data, ESIElement * source);
-    Pointer makeCacheable() const;
-    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
-    void finish();
+    ~ESIAssign() override;
+    esiProcessResult_t process (int dovars) override;
+    void render(ESISegment::Pointer) override;
+    bool addElement(ESIElement::Pointer) override;
+    void provideData (ESISegment::Pointer data, ESIElement * source) override;
+    Pointer makeCacheable() const override;
+    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const override;
+    void finish() override;
 
 private:
     void evaluateVariable();
@@ -56,5 +56,5 @@ private:
     String unevaluatedVariable;
 };
 
-#endif /* SQUID_ESIASSIGN_H */
+#endif /* SQUID_SRC_ESI_ASSIGN_H */
 

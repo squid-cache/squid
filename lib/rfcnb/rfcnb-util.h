@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,8 +30,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef _RFCNB_RFCNB_UTIL_H
-#define _RFCNB_RFCNB_UTIL_H
+#ifndef SQUID_LIB_RFCNB_RFCNB_UTIL_H
+#define SQUID_LIB_RFCNB_RFCNB_UTIL_H
 
 #include "rfcnb/std-includes.h"
 
@@ -61,5 +61,5 @@ int RFCNB_Session_Req(struct RFCNB_Con *con,
 typedef void RFCNB_Prot_Print_Routine(FILE * fd, int dir, struct RFCNB_Pkt *pkt, int header, int payload);
 extern RFCNB_Prot_Print_Routine *Prot_Print_Routine;
 
-#endif /* _RFCNB_RFCNB_UTIL_H */
+#endif /* SQUID_LIB_RFCNB_RFCNB_UTIL_H */
 

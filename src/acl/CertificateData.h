@@ -1,17 +1,18 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLCERTIFICATEDATA_H
-#define SQUID_ACLCERTIFICATEDATA_H
+#ifndef SQUID_SRC_ACL_CERTIFICATEDATA_H
+#define SQUID_SRC_ACL_CERTIFICATEDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "acl/StringData.h"
+#include "security/forward.h"
 #include "ssl/support.h"
 #include <string>
 #include <list>
@@ -23,14 +24,10 @@ class ACLCertificateData : public ACLData<X509 *>
 
 public:
     ACLCertificateData(Ssl::GETX509ATTRIBUTE *, const char *attributes, bool optionalAttr = false);
-    ACLCertificateData(ACLCertificateData const &);
-    ACLCertificateData &operator= (ACLCertificateData const &);
-    virtual ~ACLCertificateData();
-    bool match(X509 *);
-    virtual SBufList dump() const;
-    void parse();
-    bool empty() const;
-    virtual ACLData<X509 *> *clone() const;
+    bool match(X509 *) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override;
 
     /// A '|'-delimited list of valid ACL attributes.
     /// A "*" item means that any attribute is acceptable.
@@ -41,7 +38,7 @@ public:
     std::list<std::string> validAttributes;
     /// True if the attribute is optional (-xxx options)
     bool attributeIsOptional;
-    char *attribute;
+    SBuf attribute;
     ACLStringData values;
 
 private:
@@ -49,5 +46,5 @@ private:
     Ssl::GETX509ATTRIBUTE *sslAttributeCall;
 };
 
-#endif /* SQUID_ACLCERTIFICATEDATA_H */
+#endif /* SQUID_SRC_ACL_CERTIFICATEDATA_H */
 

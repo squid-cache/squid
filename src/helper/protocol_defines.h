@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,8 +35,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SQUID_HELPERS_DEFINES_H
-#define __SQUID_HELPERS_DEFINES_H
+#ifndef SQUID_SRC_HELPER_PROTOCOL_DEFINES_H
+#define SQUID_SRC_HELPER_PROTOCOL_DEFINES_H
 
 /*
  * This file contains several macro definitions which are
@@ -62,5 +62,5 @@
 /* send TT result to Squid with a string parameter. */
 #define SEND_TT(x)  std::cout << "TT " << x << std::endl
 
-#endif /* __SQUID_HELPERS_DEFINES_H */
+#endif /* SQUID_SRC_HELPER_PROTOCOL_DEFINES_H */
 

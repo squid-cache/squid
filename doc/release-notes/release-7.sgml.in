@@ -1,0 +1,234 @@
+<!doctype linuxdoc system>
+<article>
+<title>Squid @SQUID_VERSION@ release notes</title>
+<author>Squid Developers</author>
+
+<toc>
+
+<sect>Notice
+<p>The Squid Team are pleased to announce the release of Squid-@PACKAGE_VERSION@ for testing.
+
+This new release is available for download from <url url="http://www.squid-cache.org/Versions/v@SQUID_RELEASE@/"> or the
+ <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
+
+<p>While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
+
+<p>We welcome feedback and bug reports. If you find a bug, please see <url url="https://wiki.squid-cache.org/SquidFaq/BugReporting">
+   for how to submit a report with a stack trace.
+
+<sect1>Known issues
+<p>Although this release is deemed good enough for use in many setups, please note the existence of
+<url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=@SQUID_RELEASE@" name="open bugs against Squid-@SQUID_RELEASE@">.
+
+<sect1>Changes since earlier releases of Squid-@SQUID_RELEASE@
+<p>
+The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squid-cache/squid/commits/v@SQUID_RELEASE@" name="viewed here">.
+
+
+<sect>Major new features since Squid-@SQUID_RELEASE_OLD@
+<p>Squid-@SQUID_RELEASE@ represents a new feature release above Squid-@SQUID_RELEASE_OLD@.
+
+<p>The most important of these new features are:
+<itemize>
+	<item>Cache Manager changes
+	<item>Removed purge tool
+	<item>Remove deprecated languages
+</itemize>
+
+<p>Most user-facing changes are reflected in squid.conf (see further below).
+
+<sect1>Cache Manager changes<label id="mgr">
+<p>For more information about the Cache Manager feature, see <url url="https://wiki.squid-cache.org/Features/CacheManager/Index" name="wiki">.
+
+<p>In order to reduce workload on the Squid development team we have chosen to stop
+   providing several tools related to Cache Manager which have previously been
+   bundled with Squid.
+
+<sect2>Removal of the <em>squidclient</em> tool.
+<p>Popular command-line tools such as <em>curl</em> or <em>wget</em>
+   provide equivalent features.
+
+<sect2>Removal of the <em>cachemgr.cgi</em> tool.
+<p>Access to the Cache Manager API is available by sending HTTP(S) requests
+   directly to Squid with the URL-path prefix <em>/squid-internal-mgr/</em>.
+   A plethora of tools, such as curl, wget, or any web browser, can be used
+   instead of cachemgr.cgi.
+
+<sect2>Removal of the <em>cache_object:</em> URI scheme.
+<p>This custom scheme does not conform to RFC 3986 URI sytax. It has been replaced
+   with Cache Manager access through HTTP and HTTPS URLs.
+
+<sect2>Removal of <em>non_peers</em> Report
+<p>Squid still ignores unexpected ICP responses but no longer remembers the
+   details that comprised the removed report. The senders of these ICP messages
+   are still reported to cache.log at debugging level 1 (with an exponential backoff).
+
+<sect1>Removed purge tool
+<p>The <em>purge</em> tool (also known as <em>squidpurge</em>, and <em>squid-purge</em>)
+   was limited to managing UFS/AUFS/DiskD caches and had problems parsing non-trivial squid.conf files.
+
+<p>The cache contents display and search it provided can be obtained with a script
+   searching the cache manager <em>objects</em> report.
+
+<p>This tool used the custom <em>PURGE</em> HTTP method to remove cache
+   objects. This can be performed directly on any Squid configured to allow
+   the method. Like so:
+<verb>
+    acl PURGE method PURGE
+    http_access allow localhost PURGE
+</verb>
+    Any HTTP client (such as curl) can then be used to evict objects from the cache, for example:
+<verb>
+    curl -XPURGE --proxy http://127.0.0.1:3128 http://url.to/evict/
+</verb>
+   Alternatively the HTCP <em>CLR</em> mechanism can be used.
+
+<sect1>Removed deprecated languages
+<p>Old Squid used full language name to refer to error page translations.
+   These have been deprecated since addition of ISO-639 language codes
+   and support for HTTP Accept-Language negotiation in Squid-3.x.
+
+<p>As of this release Squid will no longer provide the symlinks
+   needed for seamless upgrade for squid.conf containing settings such as
+<verb>
+    error_directory English
+</verb>
+   All Squid installations are expected to already have them,
+   or to convert to the ISO-639 equivalents. Existing symlinks are not
+   affected.
+
+<p>See <url url="http://www.squid-cache.org/Versions/langpack/"> for the latest
+   list of official Squid translations.
+
+<p>See <url url="https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes"> for
+   the full ISO-639 list. HTTP uses the 2-letter (set 1) codes.
+
+
+<sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
+<p>
+This section gives an account of those changes in three categories:
+
+<itemize>
+	<item><ref id="newdirectives" name="New directives">
+	<item><ref id="modifieddirectives" name="Changes to existing directives">
+	<item><ref id="removeddirectives" name="Removed directives">
+</itemize>
+<p>
+
+<sect1>New directives<label id="newdirectives">
+<p>
+<descrip>
+	<p>No new directives in this version.
+
+</descrip>
+
+<sect1>Changes to existing directives<label id="modifieddirectives">
+<p>
+<descrip>
+	<tag>acl</tag>
+	<p>Changed <em>src</em> to detect and handle overlapping IP and
+	   IP-range values. Merging where necessary.
+	<p>Changed <em>dst</em> to detect and handle overlapping IP and
+	   IP-range values. Merging where necessary.
+	<p>Changed <em>localip</em> to detect and handle overlapping IP and
+	   IP-range values. Merging where necessary.
+	<p>Changed <em>ssl::server_name</em> to detect and handle overlapping
+	   sub-domain and wildcard domains. Merging or ignoring where
+	   necessary.
+	<p>Changed <em>srcdomain</em> to detect and handle overlapping
+	   sub-domain and wildcard domains. Merging or ignoring where
+	   necessary.
+	<p>Changed <em>dstdomain</em> to detect and handle overlapping
+	   sub-domain and wildcard domains. Merging or ignoring where
+	   necessary.
+	<p>Changed <em>http_status</em> to detect and handle overlapping
+	   status and status-range values. Merging where necessary.
+
+	<tag>buffered_logs</tag>
+	<p>Honor the <em>off</em> setting in 'udp' access_log module.
+
+	<tag>cachemgr_passwd</tag>
+	<p>Removed the <em>non_peers</em> action. See the Cache Manager
+	<ref id="mgr" name="section"> for details.
+
+</descrip>
+
+<sect1>Removed directives<label id="removeddirectives">
+<p>
+<descrip>
+	<tag>mcast_miss_addr</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_ttl</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_port</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_encode_key</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+</descrip>
+
+
+<sect>Changes to ./configure options since Squid-@SQUID_RELEASE_OLD@
+<p>
+This section gives an account of those changes in three categories:
+
+<itemize>
+	<item><ref id="newoptions" name="New options">
+	<item><ref id="modifiedoptions" name="Changes to existing options">
+	<item><ref id="removedoptions" name="Removed options">
+</itemize>
+
+<sect1>New options<label id="newoptions">
+<p>
+<descrip>
+	<tag>--without-psapi</tag>
+	<p>Disable auto-detection of Windows PSAPI library.
+
+	<tag>CPPFLAGS=-DINCOMING_FACTOR=</tag>
+	<p>Control the listening sockets responsiveness with poll(2) and select(2).
+	   The higher the INCOMING_FACTOR, the slower the algorithm will
+	   respond to load spikes/increases/decreases in demand. A value
+	   between 3 and 8 is recommended. Default is 5.
+
+</descrip>
+
+<sect1>Changes to existing options<label id="modifiedoptions">
+<p>
+<descrip>
+	<p>No changed options in this version.
+
+</descrip>
+</p>
+
+<sect1>Removed options<label id="removedoptions">
+<p>
+<descrip>
+	<tag>--enable-cachemgr-hostname=</tag>
+	<p>The <em>cachemgr.cgi</em> tool this option relates to has been removed.
+
+	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
+	<p>The code enabled by this preprocessor macro has not built for many
+	   years, indicating that the feature is unused.
+
+	<tag>CPPFLAGS=-DMULTICAST_MISS_STREAM</tag>
+	<p>The code enabled by this preprocessor macro has not built for many
+	   years, indicating that the feature is unused.
+
+</descrip>
+
+<sect>Copyright
+<p>
+Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+<p>
+Squid software is distributed under GPLv2+ license and includes
+contributions from numerous individuals and organizations.
+Please see the COPYING and CONTRIBUTORS files for details.
+
+</article>

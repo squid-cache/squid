@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,10 @@
 
 #include "base/YesNoNone.h"
 #include "ConfigParser.h"
+#include "security/Context.h"
+#include "security/forward.h"
 #include "security/KeyData.h"
+#include "security/Session.h"
 
 class Packable;
 
@@ -70,10 +73,10 @@ public:
     void updateSessionOptions(Security::SessionPointer &);
 
     /// output squid.conf syntax with 'pfx' prefix on parameters for the stored settings
-    virtual void dumpCfg(Packable *, const char *pfx) const;
+    virtual void dumpCfg(std::ostream &, const char *pfx) const;
 
 private:
-    long parseFlags();
+    ParsedPortFlags parseFlags();
     void loadCrlFile();
     void loadKeysFile();
 
@@ -101,7 +104,7 @@ private:
     bool optsReparse = true;
 
 public:
-    long parsedFlags = 0;   ///< parsed value of sslFlags
+    ParsedPortFlags parsedFlags = 0; ///< parsed value of sslFlags
 
     std::list<Security::KeyData> certs; ///< details from the cert= and file= config parameters
     std::list<SBuf> caFiles;  ///< paths of files containing trusted Certificate Authority
@@ -156,7 +159,7 @@ extern PeerOptions ProxyOutgoingConfig;
 // parse the tls_outgoing_options directive
 void parse_securePeerOptions(Security::PeerOptions *);
 #define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
-#define dump_securePeerOptions(e,n,x) do { (e)->appendf(n); (x).dumpCfg((e),""); (e)->append("\n",1); } while(false)
+#define dump_securePeerOptions(e,n,x) do { PackableStream os_(*(e)); os_ << n; (x).dumpCfg(os_,""); os_ << '\n'; } while (false)
 
 #endif /* SQUID_SRC_SECURITY_PEEROPTIONS_H */
 

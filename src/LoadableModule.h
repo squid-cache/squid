@@ -1,22 +1,19 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_LOADABLE_MODULE_H
-#define SQUID_LOADABLE_MODULE_H
+#ifndef SQUID_SRC_LOADABLEMODULE_H
+#define SQUID_SRC_LOADABLEMODULE_H
 
 #include "SquidString.h"
 
 // wrapper for dlopen(3), libltdl, and friends
 class LoadableModule
 {
-public:
-    enum LoadMode { lmNow, lmLazy };
-
 public:
     LoadableModule(const String &aName);
     ~LoadableModule();           // unloads if loaded
@@ -25,7 +22,7 @@ public:
     const String &name() const { return theName; }
     const String &error() const { return theError; }
 
-    void load(int mode = lmNow); // throws Texc
+    void load(); // throws Texc
     void unload(); // throws Texc
 
 protected:
@@ -34,10 +31,10 @@ protected:
     void *theHandle;
 
 private:
-    void *openModule(int mode);
+    void *openModule();
     bool closeModule();
     const char *errorMsg();
 };
 
-#endif
+#endif /* SQUID_SRC_LOADABLEMODULE_H */
 

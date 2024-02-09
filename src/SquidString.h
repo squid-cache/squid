@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,11 +8,11 @@
 
 /* DEBUG: section 67    String */
 
-#ifndef SQUID_STRING_H
-#define SQUID_STRING_H
+#ifndef SQUID_SRC_SQUIDSTRING_H
+#define SQUID_SRC_SQUIDSTRING_H
 
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 #include <ostream>
 
@@ -26,7 +26,7 @@ class String
 {
 
 public:
-    String();
+    String() = default;
     String(char const *);
     String(String const &);
     String(String && S) : size_(S.size_), len_(S.len_), buf_(S.buf_) {
@@ -42,6 +42,7 @@ public:
     String &operator =(String const &);
     String &operator =(String && S) {
         if (this != &S) {
+            clean();
             size_ = S.size_;
             len_ = S.len_;
             buf_ = S.buf_;
@@ -131,7 +132,7 @@ private:
     void allocBuffer(size_type sz);
     void setBuffer(char *buf, size_type sz);
 
-    bool defined() const {return buf_!=NULL;}
+    bool defined() const {return buf_!=nullptr;}
     bool undefined() const {return !defined();}
 
     /* never reference these directly! */
@@ -139,7 +140,16 @@ private:
 
     size_type len_ = 0;  /* current length  */
 
-    static const size_type SizeMax_ = 65535; ///< 64K limit protects some fixed-size buffers
+    /// An earlier 64KB limit was meant to protect some fixed-size buffers, but
+    /// (a) we do not know where those buffers are (or whether they still exist)
+    /// (b) too many String users unknowingly exceeded that limit and asserted.
+    /// We are now using a larger limit to reduce the number of (b) cases,
+    /// especially cases where "compact" lists of items grow 50% in size when we
+    /// convert them to canonical form. The new limit is selected to withstand
+    /// concatenation and ~50% expansion of two HTTP headers limited by default
+    /// request_header_max_size and reply_header_max_size settings.
+    static const size_type SizeMax_ = 3*64*1024 - 1;
+
     /// returns true after increasing the first argument by extra if the sum does not exceed SizeMax_
     static bool SafeAdd(size_type &base, size_type extra) { if (extra <= SizeMax_ && base <= SizeMax_ - extra) { base += extra; return true; } return false; }
 
@@ -175,5 +185,5 @@ int stringHasWhitespace(const char *);
 int stringHasCntl(const char *);
 char *strwordtok(char *buf, char **t);
 
-#endif /* SQUID_STRING_H */
+#endif /* SQUID_SRC_SQUIDSTRING_H */
 

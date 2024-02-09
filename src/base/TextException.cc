@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,21 +59,47 @@ TextException::what() const throw()
 }
 
 std::ostream &
+operator <<(std::ostream &os, const TextException &ex)
+{
+    ex.print(os);
+    return os;
+}
+
+/// prints the current exception (which presence has been verified by the caller)
+static std::ostream &
+CurrentException_(std::ostream &os)
+{
+    try {
+        throw; // re-throw to recognize the exception type
+    }
+    catch (const TextException &ex) {
+        os << ex; // optimization: this is a lot cheaper than what() below
+    }
+    catch (const std::exception &ex) {
+        os << ex.what();
+    }
+    catch (...) {
+        os << "[unknown exception type]";
+    }
+    return os;
+}
+
+std::ostream &
 CurrentException(std::ostream &os)
 {
     if (std::current_exception()) {
-        try {
-            throw; // re-throw to recognize the exception type
-        }
-        catch (const std::exception &ex) {
-            os << ex.what();
-        }
-        catch (...) {
-            os << "[unknown exception type]";
-        }
+        os << CurrentException_;
     } else {
         os << "[no active exception]";
     }
+    return os;
+}
+
+std::ostream &
+CurrentExceptionExtra(std::ostream &os)
+{
+    if (std::current_exception())
+        os << Debug::Extra << "exception: " << CurrentException_;
     return os;
 }
 

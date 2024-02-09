@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_REGISTRATION_H
-#define SQUID_MGR_REGISTRATION_H
+#ifndef SQUID_SRC_MGR_REGISTRATION_H
+#define SQUID_SRC_MGR_REGISTRATION_H
 
 #include "mgr/forward.h"
 
@@ -26,5 +26,5 @@ void RegisterAction(char const * action, char const * desc,
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_REGISTRATION_H */
+#endif /* SQUID_SRC_MGR_REGISTRATION_H */
 

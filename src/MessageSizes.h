@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,5 +27,5 @@ public:
     uint64_t messageTotal() const {return header + payloadData;}
 };
 
-#endif  /* SQUID_SRC_MESSAGESIZES_H */
+#endif /* SQUID_SRC_MESSAGESIZES_H */
 

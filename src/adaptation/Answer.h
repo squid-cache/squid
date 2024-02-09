@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__ANSWER_H
-#define SQUID_ADAPTATION__ANSWER_H
+#ifndef SQUID_SRC_ADAPTATION_ANSWER_H
+#define SQUID_SRC_ADAPTATION_ANSWER_H
 
 #include "adaptation/forward.h"
 #include "http/forward.h"
@@ -53,5 +53,5 @@ std::ostream &operator <<(std::ostream &os, const Answer &answer)
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__ANSWER_H */
+#endif /* SQUID_SRC_ADAPTATION_ANSWER_H */
 

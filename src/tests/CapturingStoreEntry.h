@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_TESTS_CAPTURINGSTORE_ENTRY_H
-#define SQUID_TESTS_CAPTURINGSTORE_ENTRY_H
+#ifndef SQUID_SRC_TESTS_CAPTURINGSTOREENTRY_H
+#define SQUID_SRC_TESTS_CAPTURINGSTOREENTRY_H
 
 #include "Store.h"
 
@@ -24,20 +24,20 @@ public:
     int _buffer_calls;
     int _flush_calls;
 
-    virtual void buffer() {
+    void buffer() override {
         _buffer_calls += 1;
     }
 
-    virtual void flush() {
+    void flush() override {
         _flush_calls += 1;
     }
 
-    virtual void append(char const * buf, int len) {
+    void append(char const * buf, int len) override {
         if (!buf || len < 0) // old 'String' can't handle these cases
             return;
         _appended_text.append(buf, len);
     }
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_CAPTURINGSTOREENTRY_H */
 

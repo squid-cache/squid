@@ -1,14 +1,15 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSL_CERTIFICATE_DB_H
-#define SQUID_SSL_CERTIFICATE_DB_H
+#ifndef SQUID_SRC_SECURITY_CERT_GENERATORS_FILE_CERTIFICATE_DB_H
+#define SQUID_SRC_SECURITY_CERT_GENERATORS_FILE_CERTIFICATE_DB_H
 
+#include "base/Here.h"
 #include "ssl/gadgets.h"
 
 #include <string>
@@ -39,14 +40,15 @@ class Locker
 {
 public:
     /// locks the lock if the lock was unlocked
-    Locker(Lock &lock, const char  *aFileName, int lineNo);
+    Locker(Lock &, const SourceLocation &);
     /// unlocks the lock if it was locked by us
     ~Locker();
 private:
     bool weLocked; ///<  whether we locked the lock
     Lock &lock; ///<  the lock we are operating on
-    const std::string fileName; ///<  where the lock was needed
-    const int lineNo; ///<  where the lock was needed
+
+    /// where the lock was needed (currently not reported anywhere)
+    const SourceLocation caller;
 };
 
 /**
@@ -185,5 +187,5 @@ private:
 };
 
 } // namespace Ssl
-#endif // SQUID_SSL_CERTIFICATE_DB_H
+#endif /* SQUID_SRC_SECURITY_CERT_GENERATORS_FILE_CERTIFICATE_DB_H */
 

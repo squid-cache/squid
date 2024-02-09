@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -83,14 +83,6 @@ struct DelayTaggedUpdater {
     int incr;
 };
 
-void
-DelayTaggedUpdateWalkee(DelayTaggedBucket::Pointer const &current, void *state)
-{
-    DelayTaggedUpdater *t = (DelayTaggedUpdater *)state;
-    /* This doesn't change the value of the DelayTaggedBucket, so is safe */
-    const_cast<DelayTaggedBucket *>(current.getRaw())->theBucket.update(t->spec, t->incr);
-}
-
 struct DelayTaggedUpdateVisitor {
     DelayTaggedUpdater *updater;
     explicit DelayTaggedUpdateVisitor(DelayTaggedUpdater *u) : updater(u) {}
@@ -118,13 +110,13 @@ DelayIdComposite::Pointer
 
 DelayTagged::id(CompositePoolNode::CompositeSelectionDetails &details)
 {
-    if (!details.tag.size())
+    if (!details.tag.length())
         return new NullDelayId;
 
     return new Id(this, details.tag);
 }
 
-DelayTaggedBucket::DelayTaggedBucket(String &aTag) : tag (aTag)
+DelayTaggedBucket::DelayTaggedBucket(const SBuf &aTag): tag(aTag)
 {
     debugs(77, 3, "DelayTaggedBucket::DelayTaggedBucket");
 }
@@ -137,11 +129,11 @@ DelayTaggedBucket::~DelayTaggedBucket()
 void
 DelayTaggedBucket::stats(StoreEntry *entry) const
 {
-    storeAppendPrintf(entry, " " SQUIDSTRINGPH ":", SQUIDSTRINGPRINT(tag));
+    storeAppendPrintf(entry, " " SQUIDSBUFPH ":", SQUIDSBUFPRINT(tag));
     theBucket.stats(entry);
 }
 
-DelayTagged::Id::Id(DelayTagged::Pointer aDelayTagged, String &aTag) : theTagged(aDelayTagged)
+DelayTagged::Id::Id(const DelayTagged::Pointer &aDelayTagged, const SBuf &aTag): theTagged(aDelayTagged)
 {
     theBucket = new DelayTaggedBucket(aTag);
     DelayTaggedBucket::Pointer const *existing = theTagged->buckets.find(theBucket, DelayTaggedCmp);
@@ -173,7 +165,7 @@ DelayTagged::Id::bytesIn(int qty)
 }
 
 void
-DelayTagged::Id::delayRead(DeferredRead const &aRead)
+DelayTagged::Id::delayRead(const AsyncCall::Pointer &aRead)
 {
     theTagged->delayRead(aRead);
 }

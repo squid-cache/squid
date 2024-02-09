@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_FD_NOTES_H
-#define SQUID_IPC_FD_NOTES_H
+#ifndef SQUID_SRC_IPC_FDNOTES_H
+#define SQUID_SRC_IPC_FDNOTES_H
 
 namespace Ipc
 {
@@ -28,5 +28,5 @@ const char *FdNote(int fdNodeId); ///< converts FdNoteId into a string
 
 } // namespace Ipc;
 
-#endif /* SQUID_IPC_FD_NOTES_H */
+#endif /* SQUID_SRC_IPC_FDNOTES_H */
 

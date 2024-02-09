@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 08    Swap File Bitmap */
 
-#ifndef FILEMAP_H_
-#define FILEMAP_H_
+#ifndef SQUID_SRC_FILEMAP_H
+#define SQUID_SRC_FILEMAP_H
 
 #include "store/forward.h"
 
@@ -76,5 +76,5 @@ private:
     unsigned long *bitmap;
 };
 
-#endif /* FILEMAP_H_ */
+#endif /* SQUID_SRC_FILEMAP_H */
 

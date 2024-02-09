@@ -1,16 +1,15 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SBUFEXTRAS_H
-#define SQUID_SBUFEXTRAS_H
+#ifndef SQUID_SRC_SBUFSTATSACTION_H
+#define SQUID_SRC_SBUFSTATSACTION_H
 
 #include "mgr/Action.h"
-#include "sbuf/SBuf.h"
 #include "StatHist.h"
 
 class StoreEntry;
@@ -26,14 +25,14 @@ public:
 protected:
     explicit SBufStatsAction(const Mgr::CommandPointer &cmd);
     /* Mgr::Action API */
-    virtual void collect();
-    virtual void dump(StoreEntry* entry);
+    void collect() override;
+    void dump(StoreEntry* entry) override;
 
 private:
     /* Mgr::Action API */
-    virtual void add(const Mgr::Action& action);
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual void unpack(const Ipc::TypedMsgHdr& msg);
+    void add(const Mgr::Action& action) override;
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    void unpack(const Ipc::TypedMsgHdr& msg) override;
 
     SBufStats sbdata;
     MemBlobStats mbdata;
@@ -41,5 +40,5 @@ private:
     StatHist mbsizesatdestruct;
 };
 
-#endif /* SQUID_SBUFSTATSACTION_H */
+#endif /* SQUID_SRC_SBUFSTATSACTION_H */
 

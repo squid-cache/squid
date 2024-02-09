@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BODY_PIPE_H
-#define SQUID_BODY_PIPE_H
+#ifndef SQUID_SRC_BODYPIPE_H
+#define SQUID_SRC_BODYPIPE_H
 
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
@@ -25,7 +25,7 @@ public:
     typedef CbcPointer<BodyProducer> Pointer;
 
     BodyProducer():AsyncJob("BodyProducer") {}
-    virtual ~BodyProducer() {}
+    ~BodyProducer() override {}
 
     virtual void noteMoreBodySpaceAvailable(RefCount<BodyPipe> bp) = 0;
     virtual void noteBodyConsumerAborted(RefCount<BodyPipe> bp) = 0;
@@ -45,7 +45,7 @@ public:
     typedef CbcPointer<BodyConsumer> Pointer;
 
     BodyConsumer():AsyncJob("BodyConsumer") {}
-    virtual ~BodyConsumer() {}
+    ~BodyConsumer() override {}
 
     virtual void noteMoreBodyDataAvailable(RefCount<BodyPipe> bp) = 0;
     virtual void noteBodyProductionEnded(RefCount<BodyPipe> bp) = 0;
@@ -103,7 +103,7 @@ public:
 
 public:
     BodyPipe(Producer *aProducer);
-    ~BodyPipe(); // asserts that producer and consumer are cleared
+    ~BodyPipe() override; // asserts that producer and consumer are cleared
 
     void setBodySize(uint64_t aSize); // set body size
     bool bodySizeKnown() const { return theBodySize >= 0; }
@@ -168,5 +168,5 @@ private:
     bool isCheckedOut; // to keep track of checkout violations
 };
 
-#endif /* SQUID_BODY_PIPE_H */
+#endif /* SQUID_SRC_BODYPIPE_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 79    Squid-side DISKD I/O functions. */
 
-#ifndef __STORE_DISKDIOSTRATEGY_H__
-#define __STORE_DISKDIOSTRATEGY_H__
+#ifndef SQUID_SRC_DISKIO_DISKDAEMON_DISKDIOSTRATEGY_H
+#define SQUID_SRC_DISKIO_DISKDAEMON_DISKDIOSTRATEGY_H
 
 struct diomsg;
 
@@ -44,16 +44,16 @@ class DiskdIOStrategy : public DiskIOStrategy
 
 public:
     DiskdIOStrategy();
-    virtual bool shedLoad();
-    virtual int load();
-    virtual RefCount<DiskFile> newFile(char const *path);
-    virtual bool unlinkdUseful() const;
-    virtual void unlinkFile (char const *);
-    virtual ConfigOption *getOptionTree() const;
-    virtual void init();
-    virtual void sync();
-    virtual int callback();
-    virtual void statfs(StoreEntry & sentry) const;
+    bool shedLoad() override;
+    int load() override;
+    RefCount<DiskFile> newFile(char const *path) override;
+    bool unlinkdUseful() const override;
+    void unlinkFile (char const *) override;
+    ConfigOption *getOptionTree() const override;
+    void init() override;
+    void sync() override;
+    int callback() override;
+    void statfs(StoreEntry & sentry) const override;
     int send(int mtype, int id, DiskdFile *theFile, size_t size, off_t offset, ssize_t shm_offset, Lock *requestor);
 
     /** public for accessing return address's */
@@ -119,5 +119,5 @@ struct diskd_stats_t {
 /// \ingroup diskd
 extern diskd_stats_t diskd_stats;
 
-#endif
+#endif /* SQUID_SRC_DISKIO_DISKDAEMON_DISKDIOSTRATEGY_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 70    Cache Digest */
 
-#ifndef SQUID_CACHEDIGEST_H_
-#define SQUID_CACHEDIGEST_H_
+#ifndef SQUID_SRC_CACHEDIGEST_H
+#define SQUID_SRC_CACHEDIGEST_H
 
 #include "mem/forward.h"
 #include "store_key_md5.h"
@@ -64,5 +64,5 @@ void cacheDigestGuessStatsUpdate(CacheDigestGuessStats * stats, int real_hit, in
 void cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const SBuf &label);
 void cacheDigestReport(CacheDigest * cd, const SBuf &label, StoreEntry * e);
 
-#endif /* SQUID_CACHEDIGEST_H_ */
+#endif /* SQUID_SRC_CACHEDIGEST_H */
 

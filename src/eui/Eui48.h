@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_EUI_EUI48_H
-#define _SQUID_EUI_EUI48_H
+#ifndef SQUID_SRC_EUI_EUI48_H
+#define SQUID_SRC_EUI_EUI48_H
 
 #if USE_SQUID_EUI
 
@@ -29,10 +29,8 @@ class Eui48
 
 public:
     Eui48() { clear(); }
-    Eui48(const Eui48 &t) { memcpy(this, &t, sizeof(Eui48)); }
     bool operator== (const Eui48 &t) const { return memcmp(eui, t.eui, SZ_EUI48_BUF) == 0; }
     bool operator< (const Eui48 &t) const { return memcmp(eui, t.eui, SZ_EUI48_BUF) < 0; }
-    ~Eui48() {}
 
     const unsigned char *get(void);
 
@@ -76,5 +74,5 @@ private:
 } // namespace Eui
 
 #endif /* USE_SQUID_EUI */
-#endif /* _SQUID_EUI_EUI48_H */
+#endif /* SQUID_SRC_EUI_EUI48_H */
 

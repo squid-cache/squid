@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICAPINOUT_H
-#define SQUID_ICAPINOUT_H
+#ifndef SQUID_SRC_ADAPTATION_ICAP_INOUT_H
+#define SQUID_SRC_ADAPTATION_ICAP_INOUT_H
 
 #include "HttpReply.h"
 
@@ -28,7 +28,7 @@ public:
     // TODO: s/Header/Message/i ?
     typedef Http::Message Header;
 
-    InOut(): header(0), cause(0) {}
+    InOut(): header(nullptr), cause(nullptr) {}
 
     ~InOut() {
         HTTPMSGUNLOCK(cause);
@@ -66,5 +66,5 @@ public:
 } // namespace Icap
 } // namespace Adaptation
 
-#endif /* SQUID_ICAPINOUT_H */
+#endif /* SQUID_SRC_ADAPTATION_ICAP_INOUT_H */
 

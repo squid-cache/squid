@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLANNOTATIONDATA_H
-#define SQUID_ACLANNOTATIONDATA_H
+#ifndef SQUID_SRC_ACL_ANNOTATIONDATA_H
+#define SQUID_SRC_ACL_ANNOTATIONDATA_H
 
 #include "AccessLogEntry.h"
 #include "acl/Data.h"
@@ -22,11 +22,10 @@ public:
     ACLAnnotationData();
 
     /* ACLData<M> API */
-    virtual bool match(NotePairs::Entry *) { return true; }
-    virtual SBufList dump() const;
-    virtual void parse();
-    virtual bool empty() const { return notes->empty(); }
-    virtual ACLData<NotePairs::Entry *> *clone() const;
+    bool match(NotePairs::Entry *) override { return true; }
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override { return notes->empty(); }
 
     /// Stores annotations into pairs.
     void annotate(NotePairs::Pointer pairs, const CharacterSet *delimiters, const AccessLogEntry::Pointer &al);
@@ -35,5 +34,5 @@ private:
     Notes::Pointer notes;
 };
 
-#endif /* SQUID_ACLANNOTATIONDATA_H */
+#endif /* SQUID_SRC_ACL_ANNOTATIONDATA_H */
 

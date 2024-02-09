@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,13 +8,13 @@
 
 /* DEBUG: section 04    Error Generation */
 
-#ifndef   SQUID_ERRORPAGE_H
-#define   SQUID_ERRORPAGE_H
+#ifndef SQUID_SRC_ERRORPAGE_H
+#define SQUID_SRC_ERRORPAGE_H
 
 #include "cbdata.h"
 #include "comm/forward.h"
-#include "err_detail_type.h"
-#include "err_type.h"
+#include "error/Detail.h"
+#include "error/forward.h"
 #include "http/forward.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
@@ -23,9 +23,8 @@
 #include "SquidString.h"
 /* auth/UserRequest.h is empty unless USE_AUTH is defined */
 #include "auth/UserRequest.h"
-#if USE_OPENSSL
-#include "ssl/ErrorDetail.h"
-#endif
+
+#include <optional>
 
 /// error page callback
 typedef void ERCB(int fd, void *, size_t);
@@ -96,7 +95,7 @@ public:
     ErrorState() = delete; // not implemented.
 
     /// creates an ERR_RELAY_REMOTE error
-    ErrorState(HttpRequest * request, HttpReply *);
+    ErrorState(HttpRequest * request, HttpReply *, const AccessLogEntryPointer &);
 
     ~ErrorState();
 
@@ -109,7 +108,7 @@ public:
     HttpReply *BuildHttpReply(void);
 
     /// set error type-specific detail code
-    void detailError(int dCode) {detailCode = dCode;}
+    void detailError(const ErrorDetail::Pointer &dCode) { detail = dCode; }
 
     /// ensures that a future BuildHttpReply() is likely to succeed
     void validate();
@@ -121,7 +120,7 @@ private:
     typedef ErrorPage::Build Build;
 
     /// initializations shared by public constructors
-    explicit ErrorState(err_type type);
+    ErrorState(err_type, const AccessLogEntryPointer &);
 
     /// locates the right error page template for this error and compiles it
     SBuf buildBody();
@@ -146,18 +145,18 @@ private:
 
     /// React to a compile() error, throwing if buildContext allows.
     /// \param msg description of what went wrong
-    /// \param near approximate start of the problematic input
-    void noteBuildError(const char *msg, const char *near) {
-        noteBuildError_(msg, near, false);
+    /// \param errorLocation approximate start of the problematic input
+    void noteBuildError(const char *const msg, const char * const errorLocation) {
+        noteBuildError_(msg, errorLocation, false);
     }
 
     /// Note a compile() error but do not throw for backwards
     /// compatibility with older configurations that may have such errors.
     /// Should eventually be replaced with noteBuildError().
     /// \param msg description of what went wrong
-    /// \param near approximate start of the problematic input
-    void bypassBuildErrorXXX(const char *msg, const char *near) {
-        noteBuildError_(msg, near, true);
+    /// \param errorLocation approximate start of the problematic input
+    void bypassBuildErrorXXX(const char *const msg, const char * const errorLocation) {
+        noteBuildError_(msg, errorLocation, true);
     }
 
     /**
@@ -178,8 +177,7 @@ public:
     HttpRequestPointer request;
     char *url = nullptr;
     int xerrno = 0;
-    unsigned short port = 0;
-    String dnsError; ///< DNS lookup error message
+    std::optional<SBuf> dnsError; ///< DNS lookup error message
     time_t ttl = 0;
 
     Ip::Address src_addr;
@@ -200,17 +198,16 @@ public:
 
     AccessLogEntryPointer ale; ///< transaction details (or nil)
 
-#if USE_OPENSSL
-    Ssl::ErrorDetail *detail = nullptr;
-#endif
+    // TODO: Replace type, xerrno and detail with Error while adding a virtual
+    // Error::Detail::sysError() method to extract errno in detailError().
     /// type-specific detail about the transaction error;
-    /// overwrites xerrno; overwritten by detail, if any.
-    int detailCode = ERR_DETAIL_NONE;
+    /// overwrites xerrno;
+    ErrorDetail::Pointer detail;
 
     HttpReplyPointer response_;
 
 private:
-    void noteBuildError_(const char *msg, const char *near, const bool forceBypass);
+    void noteBuildError_(const char *msg, const char *errorLocation, bool forceBypass);
 
     static const SBuf LogformatMagic; ///< marks each embedded logformat entry
 };
@@ -355,5 +352,7 @@ protected:
  */
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos);
 
-#endif /* SQUID_ERRORPAGE_H */
+std::ostream &operator <<(std::ostream &, const ErrorState *);
+
+#endif /* SQUID_SRC_ERRORPAGE_H */
 

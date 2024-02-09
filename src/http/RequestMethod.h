@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPREQUESTMETHOD_H
-#define SQUID_HTTPREQUESTMETHOD_H
+#ifndef SQUID_SRC_HTTP_REQUESTMETHOD_H
+#define SQUID_SRC_HTTP_REQUESTMETHOD_H
 
 #include "http/forward.h"
 #include "http/MethodType.h"
@@ -23,7 +23,7 @@ class SquidConfig;
  * It has a runtime extension facility to allow it to
  * efficiently support new methods
  */
-class HttpRequestMethod : public RefCountable
+class HttpRequestMethod
 {
 public:
     HttpRequestMethod() : theMethod(Http::METHOD_NONE), theImage() {}
@@ -31,12 +31,6 @@ public:
     explicit HttpRequestMethod(const SBuf &);
 
     void HttpRequestMethodXXX(char const *); // deprecated old c-string to SBuf converter.
-
-    HttpRequestMethod & operator = (const HttpRequestMethod& aMethod) {
-        theMethod = aMethod.theMethod;
-        theImage = aMethod.theImage;
-        return *this;
-    }
 
     HttpRequestMethod & operator = (Http::MethodType const aMethod) {
         theMethod = aMethod;
@@ -125,5 +119,5 @@ operator << (std::ostream &os, HttpRequestMethod const &method)
     return os;
 }
 
-#endif /* SQUID_HTTPREQUESTMETHOD_H */
+#endif /* SQUID_SRC_HTTP_REQUESTMETHOD_H */
 

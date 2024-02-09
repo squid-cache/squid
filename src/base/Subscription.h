@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_BASE_SUBSCRIPTION_H
-#define _SQUID_BASE_SUBSCRIPTION_H
+#ifndef SQUID_SRC_BASE_SUBSCRIPTION_H
+#define SQUID_SRC_BASE_SUBSCRIPTION_H
 
 #include "base/AsyncCall.h"
 
@@ -49,8 +49,8 @@ class CallSubscription: public Subscription
 {
 public:
     /// Must be passed an object. nil pointers are not permitted.
-    explicit CallSubscription(const RefCount<Call_> &aCall) : call(aCall) { assert(aCall != NULL); }
-    virtual AsyncCall::Pointer callback() const
+    explicit CallSubscription(const RefCount<Call_> &aCall) : call(aCall) { assert(aCall != nullptr); }
+    AsyncCall::Pointer callback() const override
     {
         const AsyncCall::Pointer cb = new Call_(*call);
         if (!cb->codeContext || CodeContext::Current())
@@ -62,5 +62,5 @@ private:
     const RefCount<Call_> call; ///< gets copied to create callback calls
 };
 
-#endif /* _SQUID_BASE_SUBSCRIPTION_H */
+#endif /* SQUID_SRC_BASE_SUBSCRIPTION_H */
 

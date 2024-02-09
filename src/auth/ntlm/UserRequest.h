@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_AUTH_NTLM_USERREQUEST_H
-#define _SQUID_SRC_AUTH_NTLM_USERREQUEST_H
+#ifndef SQUID_SRC_AUTH_NTLM_USERREQUEST_H
+#define SQUID_SRC_AUTH_NTLM_USERREQUEST_H
 
 #if HAVE_AUTH_MODULE_NTLM
 
@@ -30,16 +30,16 @@ class UserRequest : public Auth::UserRequest
 
 public:
     UserRequest();
-    virtual ~UserRequest();
-    virtual int authenticated() const;
-    virtual void authenticate(HttpRequest * request, ConnStateData * conn, Http::HdrType type);
-    virtual Auth::Direction module_direction();
-    virtual void startHelperLookup(HttpRequest *req, AccessLogEntry::Pointer &al, AUTHCB *, void *);
-    virtual const char *credentialsStr();
+    ~UserRequest() override;
+    int authenticated() const override;
+    void authenticate(HttpRequest * request, ConnStateData * conn, Http::HdrType type) override;
+    Auth::Direction module_direction() override;
+    void startHelperLookup(HttpRequest *req, AccessLogEntry::Pointer &al, AUTHCB *, void *) override;
+    const char *credentialsStr() override;
 
-    virtual const char * connLastHeader();
+    const char * connLastHeader() override;
 
-    virtual void releaseAuthServer(); ///< Release authserver NTLM helpers properly when finished or abandoning.
+    void releaseAuthServer() override; ///< Release authserver NTLM helpers properly when finished or abandoning.
 
     /* our current blob to pass to the client */
     char *server_blob;
@@ -64,5 +64,5 @@ private:
 } // namespace Auth
 
 #endif /* HAVE_AUTH_MODULE_NTLM */
-#endif /* _SQUID_SRC_AUTH_NTLM_USERREQUEST_H */
+#endif /* SQUID_SRC_AUTH_NTLM_USERREQUEST_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_ACTION_H
-#define SQUID_MGR_ACTION_H
+#ifndef SQUID_SRC_MGR_ACTION_H
+#define SQUID_SRC_MGR_ACTION_H
 
 #include "ipc/forward.h"
 #include "mgr/forward.h"
@@ -28,7 +28,7 @@ public:
 
 public:
     Action(const CommandPointer &aCmd);
-    virtual ~Action();
+    ~Action() override;
 
     /* for local Cache Manager use */
 
@@ -55,7 +55,7 @@ public:
     virtual void unpack(const Ipc::TypedMsgHdr &) {}
 
     /// notify Coordinator that this action is done with local processing
-    void sendResponse(unsigned int requestId);
+    void sendResponse(Ipc::RequestId);
 
     /* Action properties */
 
@@ -92,5 +92,5 @@ private:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_ACTION_H */
+#endif /* SQUID_SRC_MGR_ACTION_H */
 

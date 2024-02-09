@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,7 +22,3 @@ To run a Cache, you will need to:
 	      
 	3. start the cache:
 	      % /usr/local/squid/sbin/squid
-
-If you want to use the WWW interface to the Cache Manager, copy
-the tools/cachemgr.cgi program into your httpd server's cgi-bin
-directory.

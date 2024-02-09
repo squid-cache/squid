@@ -1,20 +1,22 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_NOTES_H
-#define SQUID_NOTES_H
+#ifndef SQUID_SRC_NOTES_H
+#define SQUID_SRC_NOTES_H
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
 #include "format/Format.h"
 #include "mem/forward.h"
+#include "sbuf/forward.h"
 #include "SquidString.h"
 
+#include <iosfwd>
 #include <string>
 #include <vector>
 
@@ -47,7 +49,7 @@ public:
         enum Method { mhReplace, mhAppend };
 
         Value(const char *aVal, const bool quoted, const char *descr, const Method method = mhReplace);
-        ~Value();
+        ~Value() override;
         Value(const Value&) = delete;
         Value &operator=(const Value&) = delete;
 
@@ -89,11 +91,13 @@ public:
     bool match(HttpRequest *request, HttpReply *reply, const AccessLogEntryPointer &al, SBuf &matched);
     const SBuf &key() const { return theKey; }
     void updateNotePairs(NotePairsPointer pairs, const CharacterSet *delimiters, const AccessLogEntryPointer &al);
-    /// Dump the single Note to the given StoreEntry object.
-    void dump(StoreEntry *entry, const char *key);
-    /// For the key and all its Values compile a string of
-    /// "Key: Value" pairs separated by sep string.
-    SBuf toString(const char *sep) const;
+
+    /// Prints key and value(s) using a "note" directive format (including directive name).
+    void printAsNoteDirective(StoreEntry *, const char *directiveName) const;
+
+    /// Prints using "annotate_transaction acl parameter" format, one key=value
+    /// or key+=value parameter per stored value.
+    void printAsAnnotationAclParameters(std::ostream &) const;
 
 private:
     SBuf theKey; ///< The note key
@@ -114,9 +118,9 @@ public:
     typedef NotesList::iterator iterator; ///< iterates over the notes list
     typedef NotesList::const_iterator const_iterator; ///< iterates over the notes list
 
-    explicit Notes(const char *aDescr, const Keys *extraBlacklist = nullptr, bool allowFormatted = true);
+    explicit Notes(const char *aDescr, const Keys *extraReservedKeys = nullptr, bool allowFormatted = true);
     Notes() = default;
-    ~Notes() { notes.clear(); }
+    ~Notes() override { notes.clear(); }
     Notes(const Notes&) = delete;
     Notes &operator=(const Notes&) = delete;
 
@@ -126,8 +130,9 @@ public:
     /// Parses an annotate line with "key=value" or "key+=value" formats.
     void parseKvPair();
 
-    /// Dump the notes list to the given StoreEntry object.
-    void dump(StoreEntry *entry, const char *name);
+    /// Prints notes using "note" squid.conf directive format, one directive per stored note.
+    void printAsNoteDirectives(StoreEntry *, const char *directiveName) const;
+
     /// clean the notes list
     void clean() { notes.clear(); }
 
@@ -137,16 +142,18 @@ public:
     iterator end() { return notes.end(); }
     /// \returns true if the notes list is empty
     bool empty() const { return notes.empty(); }
-    /// Convert Notes list to a string consist of "Key: Value"
-    /// entries separated by sep string.
-    const char *toString(const char *sep = "\r\n") const;
+
+    /// print notes using "annotate_transaction acl parameters" format, one
+    /// key=value parameter per note
+    void printAsAnnotationAclParameters(std::ostream &) const;
+
     void updateNotePairs(NotePairsPointer pairs, const CharacterSet *delimiters,
                          const AccessLogEntryPointer &al);
 private:
     /// Makes sure the given key is not on the given list of banned names.
     void banReservedKey(const SBuf &key, const Keys &banned) const;
 
-    /// Verifies that the key is not blacklisted (fatal error) and
+    /// Verifies that the key is not reserved (fatal error) and
     /// does not contain special characters (non-fatal error).
     void validateKey(const SBuf &key) const;
 
@@ -160,10 +167,10 @@ private:
     NotesList notes; ///< The Note::Pointer objects array list
     const char *descr = nullptr; ///< identifies note source in error messages
 
-    Keys blacklist; ///< a list of additional prohibited key names
+    Keys reservedKeys; ///< a list of additional prohibited key names
     bool formattedValues = false; ///< whether to expand quoted logformat %codes
 
-    static const Notes::Keys &BlackList(); ///< always prohibited key names
+    static const Notes::Keys &ReservedKeys(); ///< always prohibited key names
 };
 
 /**
@@ -245,9 +252,9 @@ public:
     /// \returns true if the key/value pair is already stored
     bool hasPair(const SBuf &key, const SBuf &value) const;
 
-    /// Convert NotePairs list to a string consist of "Key: Value"
-    /// entries separated by sep string.
-    const char *toString(const char *sep = "\r\n") const;
+    /// Reports all entries (if any), printing exactly four items for each:
+    /// entry name, nameValueSeparator, entry value, and entry terminator.
+    void print(std::ostream &os, const char *nameValueSeparator, const char *entryTerminator) const;
 
     /// \returns true if there are not entries in the list
     bool empty() const {return entries.empty();}
@@ -262,5 +269,5 @@ private:
     Entries entries; ///< The key/value pair entries
 };
 
-#endif
+#endif /* SQUID_SRC_NOTES_H */
 

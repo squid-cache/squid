@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_EUI_EUI64_H
-#define _SQUID_EUI_EUI64_H
+#ifndef SQUID_SRC_EUI_EUI64_H
+#define SQUID_SRC_EUI_EUI64_H
 
 #if USE_SQUID_EUI
 
@@ -88,5 +88,5 @@ private:
 } // namespace Eui
 
 #endif /* USE_SQUID_EUI */
-#endif /* _SQUID_EUI_EUI64_H */
+#endif /* SQUID_SRC_EUI_EUI64_H */
 

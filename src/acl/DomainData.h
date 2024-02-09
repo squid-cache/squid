@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLDOMAINDATA_H
-#define SQUID_ACLDOMAINDATA_H
+#ifndef SQUID_SRC_ACL_DOMAINDATA_H
+#define SQUID_SRC_ACL_DOMAINDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -19,15 +19,14 @@ class ACLDomainData : public ACLData<char const *>
 
 public:
     ACLDomainData() : domains(nullptr) {}
-    virtual ~ACLDomainData();
-    virtual bool match(char const *);
-    virtual SBufList dump() const;
-    void parse();
-    bool empty() const;
-    virtual ACLData<char const *> *clone() const;
+    ~ACLDomainData() override;
+    bool match(char const *) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override;
 
     Splay<char *> *domains;
 };
 
-#endif /* SQUID_ACLDOMAINDATA_H */
+#endif /* SQUID_SRC_ACL_DOMAINDATA_H */
 

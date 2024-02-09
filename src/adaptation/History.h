@@ -1,15 +1,16 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPT_HISTORY_H
-#define SQUID_ADAPT_HISTORY_H
+#ifndef SQUID_SRC_ADAPTATION_HISTORY_H
+#define SQUID_SRC_ADAPTATION_HISTORY_H
 
 #include "adaptation/DynamicGroupCfg.h"
+#include "adaptation/forward.h"
 #include "base/RefCount.h"
 #include "HttpHeader.h"
 #include "Notes.h"
@@ -70,8 +71,8 @@ public:
     /// sets future services for the Adaptation::AccessCheck to notice
     void setFutureServices(const DynamicGroupCfg &services);
 
-    /// returns true, fills the value, and resets iff future services were set
-    bool extractFutureServices(DynamicGroupCfg &services);
+    /// returns and forgets planned/future services matching the given filter
+    DynamicGroupCfg extractCurrentServices(const ServiceFilter &);
 
 private:
     /// single Xaction stats (i.e., a historical record entry)
@@ -107,5 +108,5 @@ private:
 
 } // namespace Adaptation
 
-#endif
+#endif /* SQUID_SRC_ADAPTATION_HISTORY_H */
 

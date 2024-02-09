@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 93    eCAP Interface */
 
-#ifndef SQUID_ECAP_HOST_H
-#define SQUID_ECAP_HOST_H
+#ifndef SQUID_SRC_ADAPTATION_ECAP_HOST_H
+#define SQUID_SRC_ADAPTATION_ECAP_HOST_H
 
 #include <libecap/host/host.h>
 
@@ -23,14 +23,14 @@ class Host : public libecap::host::Host
 {
 public:
     /* libecap::host::Host API */
-    virtual std::string uri() const; // unique across all vendors
-    virtual void describe(std::ostream &os) const; // free-format info
-    virtual void noteVersionedService(const char *libEcapVersion, const libecap::weak_ptr<libecap::adapter::Service> &s);
-    virtual std::ostream *openDebug(libecap::LogVerbosity lv);
-    virtual void closeDebug(std::ostream *debug);
+    std::string uri() const override; // unique across all vendors
+    void describe(std::ostream &os) const override; // free-format info
+    void noteVersionedService(const char *libEcapVersion, const libecap::weak_ptr<libecap::adapter::Service> &s) override;
+    std::ostream *openDebug(libecap::LogVerbosity lv) override;
+    void closeDebug(std::ostream *debug) override;
     typedef libecap::shared_ptr<libecap::Message> MessagePtr;
-    virtual MessagePtr newRequest() const;
-    virtual MessagePtr newResponse() const;
+    MessagePtr newRequest() const override;
+    MessagePtr newResponse() const override;
 
     static void Register(); ///< register adaptation host
 
@@ -53,5 +53,5 @@ extern const libecap::Name metaBypassable; ///< an ecap_service parameter
 } // namespace Ecap
 } // namespace Adaptation
 
-#endif /* SQUID_ECAP_HOST_H */
+#endif /* SQUID_SRC_ADAPTATION_ECAP_HOST_H */
 

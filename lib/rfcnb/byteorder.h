@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,6 +33,9 @@
  * This file implements macros for machine independent short and
  * int manipulation
  */
+
+#ifndef SQUID_LIB_RFCNB_BYTEORDER_H
+#define SQUID_LIB_RFCNB_BYTEORDER_H
 
 #undef CAREFUL_ALIGNMENT
 
@@ -86,4 +89,6 @@
 #define RIVAL(buf,pos) IREV(IVAL(buf,pos))
 #define RSSVAL(buf,pos,val) SSVAL(buf,pos,SREV(val))
 #define RSIVAL(buf,pos,val) SIVAL(buf,pos,IREV(val))
+
+#endif /* SQUID_LIB_RFCNB_BYTEORDER_H */
 

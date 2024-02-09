@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_ANY_OF_H
-#define SQUID_ACL_ANY_OF_H
+#ifndef SQUID_SRC_ACL_ANYOF_H
+#define SQUID_SRC_ACL_ANYOF_H
 
 #include "acl/BoolOps.h"
 
@@ -20,13 +20,12 @@ class AnyOf: public Acl::OrNode
     MEMPROXY_CLASS(AnyOf);
 
 public:
-    /* ACL API */
-    virtual char const *typeString() const;
-    virtual ACL *clone() const;
-    virtual void parse();
+    /* Acl::Node API */
+    char const *typeString() const override;
+    void parse() override;
 };
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_ANY_OF_H */
+#endif /* SQUID_SRC_ACL_ANYOF_H */
 

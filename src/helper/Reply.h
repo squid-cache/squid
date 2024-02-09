@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HELPER_REPLY_H
-#define _SQUID_SRC_HELPER_REPLY_H
+#ifndef SQUID_SRC_HELPER_REPLY_H
+#define SQUID_SRC_HELPER_REPLY_H
 
 #include "base/CbcPointer.h"
 #include "helper/forward.h"
@@ -64,6 +64,8 @@ public:
     /// The stateful replies should include the reservation ID
     Helper::ReservationId reservationId;
 private:
+    static void CheckReceivedKey(const SBuf &, const SBuf &);
+
     void parseResponseKeys();
 
     /// Return an empty MemBuf.
@@ -73,9 +75,9 @@ private:
     MemBuf other_;
 };
 
+std::ostream &operator <<(std::ostream &, const Reply &);
+
 } // namespace Helper
 
-std::ostream &operator <<(std::ostream &os, const Helper::Reply &r);
-
-#endif /* _SQUID_SRC_HELPER_REPLY_H */
+#endif /* SQUID_SRC_HELPER_REPLY_H */
 

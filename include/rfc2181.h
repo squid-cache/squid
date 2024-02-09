@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_INCLUDE_RFC1123_H
-#define _SQUID_INCLUDE_RFC1123_H
+#ifndef SQUID_INCLUDE_RFC2181_H
+#define SQUID_INCLUDE_RFC2181_H
 
 /**
  \par RFC 2181 section 11:
@@ -29,5 +29,5 @@
 /** Back-port macro for old squid code still using SQUIDHOSTNAMELEN without RFC reference. */
 #define SQUIDHOSTNAMELEN    RFC2181_MAXHOSTNAMELEN
 
-#endif /* _SQUID_INCLUDE_RFC1123_H */
+#endif /* SQUID_INCLUDE_RFC2181_H */
 

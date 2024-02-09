@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,9 @@
 #include "mem/Pool.h"
 #include "mem_node.h"
 
+#include <cstddef>
+#include <type_traits>
+
 static ptrdiff_t makeMemNodeDataOffset();
 
 static ptrdiff_t _mem_node_data_offset = makeMemNodeDataOffset();
@@ -23,8 +26,8 @@ static ptrdiff_t _mem_node_data_offset = makeMemNodeDataOffset();
 static ptrdiff_t
 makeMemNodeDataOffset()
 {
-    mem_node *p = 0L;
-    return ptrdiff_t(&p->data);
+    static_assert(std::is_standard_layout<mem_node>::value, "offsetof(mem_node) is unconditionally supported");
+    return ptrdiff_t(offsetof(mem_node, data));
 }
 
 /*

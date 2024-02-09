@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_INTERVAL_ACTION_H
-#define SQUID_MGR_INTERVAL_ACTION_H
+#ifndef SQUID_SRC_MGR_INTERVALACTION_H
+#define SQUID_SRC_MGR_INTERVALACTION_H
 
 #include "mgr/Action.h"
 
@@ -116,14 +116,14 @@ public:
     static Pointer Create5min(const CommandPointer &cmd);
     static Pointer Create60min(const CommandPointer &cmd);
     /* Action API */
-    virtual void add(const Action& action);
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual void unpack(const Ipc::TypedMsgHdr& msg);
+    void add(const Action& action) override;
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    void unpack(const Ipc::TypedMsgHdr& msg) override;
 
 protected:
     /* Action API */
-    virtual void collect();
-    virtual void dump(StoreEntry* entry);
+    void collect() override;
+    void dump(StoreEntry* entry) override;
 
 private:
     int minutes;
@@ -133,5 +133,5 @@ private:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_INTERVAL_ACTION_H */
+#endif /* SQUID_SRC_MGR_INTERVALACTION_H */
 

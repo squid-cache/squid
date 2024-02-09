@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,11 +8,10 @@
 
 /* DEBUG: section 18    Cache Manager Statistics */
 
-#ifndef SQUID_STAT_H_
-#define SQUID_STAT_H_
+#ifndef SQUID_SRC_STAT_H
+#define SQUID_SRC_STAT_H
 
 void statInit(void);
-void statFreeMemory(void);
 double median_svc_get(int, int);
 void pconnHistCount(int, int);
 int stat5minClientRequests(void);
@@ -25,5 +24,5 @@ double statByteHitRatio(int minutes);
 class StatCounters;
 StatCounters *snmpStatGet(int);
 
-#endif /* SQUID_STAT_H_ */
+#endif /* SQUID_SRC_STAT_H */
 
