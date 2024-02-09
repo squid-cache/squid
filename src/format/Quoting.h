@@ -17,7 +17,9 @@ namespace Format
 /// Safely URL-encode a username.
 /// Accepts NULL or empty strings.
 char * QuoteUrlEncodeUsername(const char *name);
+#if USE_IDENT
 char * QuoteUrlEncodeUsername(const Ident::User &name);
+#endif
 
 /** URL-style encoding on a MIME headers blob.
  * May accept NULL or empty strings.

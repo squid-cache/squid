@@ -40,8 +40,10 @@ Log::Format::SquidIcap(const AccessLogEntry::Pointer &al, Logfile * logfile)
         user = ::Format::QuoteUrlEncodeUsername(al->cache.ssluser);
 #endif
 
+#if USE_IDENT
     if (!user)
         user = ::Format::QuoteUrlEncodeUsername(al->getClientIdent());
+#endif
 
     if (user && !*user)
         safe_free(user);

@@ -178,6 +178,7 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
     return min(ctimeout, ftimeout);
 }
 
+#if USE_IDENT
 void
 Comm::Connection::setIdent(const char *anIdent)
 {
@@ -186,6 +187,7 @@ Comm::Connection::setIdent(const char *anIdent)
     else
        ident = std::make_optional(SBuf(anIdent));
 }
+#endif
 
 ScopedId
 Comm::Connection::codeContextGist() const {

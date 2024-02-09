@@ -96,6 +96,7 @@ AccessLogEntry::syncNotes(HttpRequest *req)
         assert(notes == req->notes());
 }
 
+#if USE_IDENT
 Ident::User
 AccessLogEntry::getClientIdent() const
 {
@@ -110,6 +111,7 @@ AccessLogEntry::setClientIdent(const char *name)
     else
         debugs(30, DBG_IMPORTANT, "ERROR: cannot set ident: client connection is missing");
 }
+#endif
 
 const char *
 AccessLogEntry::getExtUser() const
