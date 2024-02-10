@@ -228,6 +228,19 @@ StoreEntry::bytesWanted (Range<size_t> const aRange, bool ignoreDelayPools) cons
 }
 
 bool
+StoreEntry::hasParsedReplyHeader() const
+{
+    if (mem_obj) {
+        const auto &reply = mem_obj->baseReply();
+        if (reply.pstate == Http::Message::psParsed) {
+            debugs(20, 7, reply.hdr_sz);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool
 StoreEntry::checkDeferRead(int) const
 {
     return (bytesWanted(Range<size_t>(0,INT_MAX)) == 0);

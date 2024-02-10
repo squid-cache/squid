@@ -1062,7 +1062,7 @@ clientReplyContext::storeNotOKTransferDone() const
     assert(mem != nullptr);
     assert(http->request != nullptr);
 
-    if (mem->baseReply().pstate != Http::Message::psParsed)
+    if (!http->storeEntry()->hasParsedReplyHeader())
         /* haven't found end of headers yet */
         return 0;
 
