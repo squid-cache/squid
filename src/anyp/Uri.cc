@@ -741,7 +741,7 @@ urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method
     // RFC 1738, 5234 and 7230 require the UTF-8 range (0x80-0xFF)
     // and the ASCII control characters (0x00-0x1F, 0x7f) be encoded.
     static const auto asciiValid = (CharacterSet::OBSTEXT + CharacterSet::CTL).complement("ascii").remove('\0');
-    return Encode(out, asciiValid);
+    return AnyP::Uri::Encode(out, asciiValid);
 }
 
 /**
