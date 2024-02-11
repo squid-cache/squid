@@ -873,6 +873,15 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 
     if (error) {
         fail(error);
+        if (request->clientConnectionManager->port->flags.tunnelSslBumping
+            && request->clientConnectionManager->port->secure.terminateOnSecureConnectFail
+            && error->type == ERR_CONNECT_FAIL) {
+            
+            flags.dont_retry = true;
+            entry->abort();
+            complete();
+            return;
+        }
         retryOrBail();
         return;
     }
@@ -1039,6 +1048,15 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
 
     if (error) {
         fail(error);
+        if (request->clientConnectionManager->port->flags.tunnelSslBumping
+            && request->clientConnectionManager->port->secure.terminateOnSecureConnectFail
+            && error->type == ERR_SECURE_CONNECT_FAIL) {
+            
+            flags.dont_retry = true;
+            entry->abort();
+            complete();
+            return;
+        }
         retryOrBail();
         return;
     }

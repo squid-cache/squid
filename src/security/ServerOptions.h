@@ -73,6 +73,7 @@ public:
 
 #if USE_OPENSSL
     bool generateHostCertificates = true; ///< dynamically make host cert
+    bool terminateOnSecureConnectFail = false; ///< terminate a client when connection fail
 #elif USE_GNUTLS
     // TODO: GnuTLS does implement TLS server connections so the cert
     // generate vs static choice can be reached in the code now.
