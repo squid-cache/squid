@@ -697,7 +697,7 @@ Ip::Address::FreeAddr(struct addrinfo *&ai)
 {
     if (ai == nullptr) return;
 
-    if (ai->ai_addr) delete ai->ai_addr;
+    if (ai->ai_addr) delete (struct sockaddr_in6*)ai->ai_addr;
 
     ai->ai_addr = nullptr;
 
