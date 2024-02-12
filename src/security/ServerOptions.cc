@@ -157,7 +157,7 @@ Security::ServerOptions::dumpCfg(std::ostream &os, const char *pfx) const
         os << ' ' << pfx << "generate-host-certificates=off";
 
     if (terminateOnSecureConnectFail)
-        p->appendf(" %sterminate-on-secure-connect-error", pfx);
+        os << ' ' << pfx << "sterminate-on-secure-connect-error";
 
     if (dynamicCertMemCacheSize != 4*1024*1024) // 4MB default, no 'tls-' prefix
         os << ' ' << "dynamic_cert_mem_cache_size=" << dynamicCertMemCacheSize << "bytes";
