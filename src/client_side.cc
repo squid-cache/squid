@@ -184,9 +184,7 @@ private:
 static void clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
 
 static IOACB httpAccept;
-#if USE_IDENT
 static IDCB clientIdentDone;
-#endif
 static int clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength);
 
 static void clientUpdateStatHistCounters(const LogTags &logType, int svc_time);
@@ -198,14 +196,12 @@ static void ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferred
 
 char *skipLeadingSpace(char *aString);
 
-#if USE_IDENT
 static void
 clientIdentDone(const char *ident, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
     conn->clientConnection->setIdent(ident);
 }
-#endif
 
 void
 clientUpdateStatCounters(const LogTags &logType)
@@ -2190,14 +2186,12 @@ ConnStateData::whenClientIpKnown()
     if (Dns::ResolveClientAddressesAsap)
         fqdncache_gethostbyaddr(clientConnection->remote, FQDN_LOOKUP_IF_MISS);
 
-#if USE_IDENT
     if (Ident::TheConfig.identLookup) {
         ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, nullptr);
         fillChecklist(identChecklist);
         if (identChecklist.fastCheck().allowed())
             Ident::Start(clientConnection, clientIdentDone, this);
     }
-#endif
 
     clientdbEstablished(clientConnection->remote, 1);
 

@@ -9,8 +9,6 @@
 #ifndef SQUID_IDENT_H
 #define SQUID_IDENT_H
 
-#if USE_IDENT
-
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "sbuf/forward.h"
@@ -37,6 +35,5 @@ void Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *cbdata);
 
 } // namespace Ident
 
-#endif /* USE_IDENT */
 #endif /* SQUID_IDENT_H */
 

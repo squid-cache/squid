@@ -9,7 +9,7 @@
 #ifndef _SQUID_FORMAT_QUOTING_H
 #define _SQUID_FORMAT_QUOTING_H
 
-#include "ident/Ident.h"
+#include "sbuf/forward.h"
 
 namespace Format
 {
@@ -17,9 +17,7 @@ namespace Format
 /// Safely URL-encode a username.
 /// Accepts NULL or empty strings.
 char * QuoteUrlEncodeUsername(const char *name);
-#if USE_IDENT
-char * QuoteUrlEncodeUsername(const Ident::User &name);
-#endif
+char * QuoteUrlEncodeUsername(const SBuf &name);
 
 /** URL-style encoding on a MIME headers blob.
  * May accept NULL or empty strings.

@@ -10,7 +10,6 @@
 
 #include "squid.h"
 
-#if USE_IDENT
 #include "base/JobWait.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -304,6 +303,4 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     const auto connOpener = new Comm::ConnOpener(identConn, call, Ident::TheConfig.timeout);
     state->connWait.start(connOpener, call);
 }
-
-#endif /* USE_IDENT */
 

@@ -40,13 +40,11 @@ Format::QuoteUrlEncodeUsername(const char *name)
     return QuoteMimeBlob(name);
 }
 
-#if USE_IDENT
 char *
-Format::QuoteUrlEncodeUsername(const Ident::User &ident)
+Format::QuoteUrlEncodeUsername(const SBuf &name)
 {
-    return ident ? QuoteUrlEncodeUsername(SBuf(ident.value()).c_str()) : nullptr;
+    return QuoteUrlEncodeUsername(SBuf(name).c_str());
 }
-#endif
 
 char *
 Format::QuoteMimeBlob(const char *header)

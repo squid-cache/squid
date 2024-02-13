@@ -9,8 +9,6 @@
 #ifndef SQUID_IDENT_ACLIDENT_H
 #define SQUID_IDENT_ACLIDENT_H
 
-#if USE_IDENT
-
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "acl/Data.h"
@@ -44,6 +42,5 @@ private:
     char const *type_;
 };
 
-#endif /* USE_IDENT */
 #endif /* SQUID_IDENT_ACLIDENT_H */
 

@@ -10,8 +10,6 @@
 
 #include "squid.h"
 
-#if USE_IDENT
-
 #include "acl/FilledChecklist.h"
 #include "acl/RegexData.h"
 #include "acl/UserData.h"
@@ -103,6 +101,4 @@ ACLIdent::LookupDone(const char *ident, void *data)
         checklist->al->setClientIdent(ident);
     checklist->resumeNonBlockingCheck();
 }
-
-#endif /* USE_IDENT */
 

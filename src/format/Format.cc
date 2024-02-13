@@ -949,14 +949,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 out = strOrNull(al->cache.ssluser);
 #endif
             if (!out) {
-#if USE_IDENT
                 if (const auto ident = al->getClientIdent()) {
                     sb = ident.value();
                     out = sb.c_str();
                 }
-#else
-                out = nullptr;
-#endif
             }
             break;
 
@@ -967,17 +963,12 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 #endif
             break;
 
-        case LFT_USER_IDENT: {
-#if USE_IDENT
+        case LFT_USER_IDENT:
             if (const auto ident = al->getClientIdent()) {
                 sb = ident.value();
                 out = sb.c_str();
             }
-#else
-            out = nullptr;
-#endif
-        }
-        break;
+            break;
 
         case LFT_USER_EXTERNAL:
             out = strOrNull(al->getExtUser());

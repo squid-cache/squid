@@ -34,8 +34,6 @@
 #define FQDN_LOOKUP_IF_MISS 0x01
 #define FQDN_MAX_NAMES 5
 
-#define USER_IDENT_SZ 64
-
 #define IP_LOOKUP_IF_MISS   0x01
 
 #define ICP_FLAG_SRC_RTT     0x40000000ul

@@ -44,9 +44,7 @@
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
 #endif
-#if USE_IDENT
 #include "ident/AclIdent.h"
-#endif
 
 #ifndef DEFAULT_EXTERNAL_ACL_TTL
 #define DEFAULT_EXTERNAL_ACL_TTL 1 * 60 * 60
@@ -794,7 +792,6 @@ ACLExternal::makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl
             ch->al->lastAclData = sb;
         }
 
-#if USE_IDENT
         if (t->type == Format::LFT_USER_IDENT) {
             if (!ch->ident()) {
                 // if we fail to go async, we still return NULL and the caller
@@ -803,7 +800,6 @@ ACLExternal::makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl
                 return nullptr;
             }
         }
-#endif
     }
 
     // assemble the full helper lookup string

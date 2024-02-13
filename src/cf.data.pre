@@ -2093,7 +2093,6 @@ DOC_END
 
 NAME: ident_lookup_access
 TYPE: acl_access
-IFDEF: USE_IDENT
 DEFAULT: none
 DEFAULT_DOC: Unless rules exist in squid.conf, IDENT is not fetched.
 LOC: Ident::TheConfig.identLookup
@@ -7469,7 +7468,6 @@ DOC_END
 
 NAME: ident_timeout
 TYPE: time_t
-IFDEF: USE_IDENT
 LOC: Ident::TheConfig.timeout
 DEFAULT: 10 seconds
 DOC_START
