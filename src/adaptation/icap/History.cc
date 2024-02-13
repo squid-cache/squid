@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "adaptation/icap/History.h"
-#include "comm/Connection.h"
 #include "debug/Stream.h"
 #include "globals.h"
 #include "time/gadgets.h"

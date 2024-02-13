@@ -11,7 +11,6 @@
 
 #include "AccessLogEntry.h"
 #include "base/RefCount.h"
-#include "comm/forward.h"
 #include "enums.h"
 #include "LogTags.h"
 #include "SquidString.h"

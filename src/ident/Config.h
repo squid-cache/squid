@@ -9,7 +9,6 @@
 #ifndef SQUID_IDENT_CONFIG_H
 #define SQUID_IDENT_CONFIG_H
 
-
 #include "acl/Acl.h"
 
 namespace Ident
