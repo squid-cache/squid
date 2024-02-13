@@ -16,6 +16,8 @@
 #include "sbuf/Stream.h"
 #include "wordlist.h"
 
+#include <algorithm>
+
 static inline const char *
 StepName(const XactionStep xstep)
 {
