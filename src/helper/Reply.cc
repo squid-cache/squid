@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "ConfigParser.h"
+#include "debug/Messages.h"
 #include "debug/Stream.h"
 #include "helper.h"
 #include "helper/Reply.h"
@@ -197,7 +198,7 @@ Helper::Reply::CheckReceivedKey(const SBuf &key, const SBuf &value)
     if (std::find(recognized.begin(), recognized.end(), key) != recognized.end())
         return; // a Squid-recognized key
 
-    debugs(84, DBG_IMPORTANT, "WARNING: Unsupported or unexpected from-helper annotation with a name reserved for Squid use: " <<
+    debugs(84, Important(69), "WARNING: Unsupported or unexpected from-helper annotation with a name reserved for Squid use: " <<
            key << '=' << value <<
            Debug::Extra << "advice: If this is a custom annotation, rename it to add a trailing underscore: " <<
            key << '_');
@@ -276,7 +277,11 @@ Helper::operator <<(std::ostream &os, const Reply &r)
     // dump the helper key=pair "notes" list
     if (!r.notes.empty()) {
         os << ", notes={";
-        os << r.notes.toString("; ");
+        // This simple format matches what most helpers use and is sufficient
+        // for debugging nearly any helper response, but the result differs from
+        // raw helper responses when the helper quotes values or escapes special
+        // characters. See also: Helper::Reply::parseResponseKeys().
+        r.notes.print(os, "=", " ");
         os << "}";
     }
 

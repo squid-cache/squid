@@ -16,6 +16,7 @@
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "globals.h"
+#include "sbuf/SBuf.h"
 #include <algorithm>
 
 void
@@ -32,7 +33,7 @@ Acl::InnerNode::empty() const
 }
 
 void
-Acl::InnerNode::add(ACL *node)
+Acl::InnerNode::add(Acl::Node *node)
 {
     assert(node != nullptr);
     nodes.push_back(node);
@@ -56,7 +57,7 @@ Acl::InnerNode::lineParse()
             ++t;
 
         debugs(28, 3, "looking for ACL " << t);
-        ACL *a = ACL::FindByName(t);
+        auto *a = Acl::Node::FindByName(t);
 
         if (a == nullptr) {
             debugs(28, DBG_CRITICAL, "ERROR: ACL not found: " << t);

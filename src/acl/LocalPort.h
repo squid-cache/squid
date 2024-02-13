@@ -6,18 +6,24 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLLOCALPORT_H
-#define SQUID_ACLLOCALPORT_H
+#ifndef SQUID_SRC_ACL_LOCALPORT_H
+#define SQUID_SRC_ACL_LOCALPORT_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 
-/// \ingroup ACLAPI
-class ACLLocalPortStrategy : public ACLStrategy<int>
+namespace Acl
 {
 
+/// a "localport" ACL
+class LocalPortCheck: public ParameterizedNode< ACLData<int> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
 };
 
-#endif /* SQUID_ACLLOCALPORT_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_LOCALPORT_H */
 

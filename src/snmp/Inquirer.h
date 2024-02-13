@@ -8,8 +8,8 @@
 
 /* DEBUG: section 49    SNMP Interface */
 
-#ifndef SQUID_SNMPX_INQUIRER_H
-#define SQUID_SNMPX_INQUIRER_H
+#ifndef SQUID_SRC_SNMP_INQUIRER_H
+#define SQUID_SRC_SNMP_INQUIRER_H
 
 #include "comm/forward.h"
 #include "ipc/Inquirer.h"
@@ -54,5 +54,5 @@ private:
 
 } // namespace Snmp
 
-#endif /* SQUID_SNMPX_INQUIRER_H */
+#endif /* SQUID_SRC_SNMP_INQUIRER_H */
 

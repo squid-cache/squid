@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLDOMAINDATA_H
-#define SQUID_ACLDOMAINDATA_H
+#ifndef SQUID_SRC_ACL_DOMAINDATA_H
+#define SQUID_SRC_ACL_DOMAINDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -28,5 +28,5 @@ public:
     Splay<char *> *domains;
 };
 
-#endif /* SQUID_ACLDOMAINDATA_H */
+#endif /* SQUID_SRC_ACL_DOMAINDATA_H */
 

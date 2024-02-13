@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_STATS_H
-#define SQUID_STORE_STATS_H
+#ifndef SQUID_SRC_STORESTATS_H
+#define SQUID_SRC_STORESTATS_H
 
 /// High-level store statistics used by mgr:info action. Used inside PODs!
 class StoreInfoStats
@@ -67,5 +67,5 @@ public:
     } create; ///< cache_dir selection and disk entry creation stats
 };
 
-#endif /* SQUID_STORE_STATS_H */
+#endif /* SQUID_SRC_STORESTATS_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_CHARACTER_SET_OPTION_H
-#define SQUID_ACL_CHARACTER_SET_OPTION_H
+#ifndef SQUID_SRC_ACL_CHARACTERSETOPTION_H
+#define SQUID_SRC_ACL_CHARACTERSETOPTION_H
 
 #include "acl/Options.h"
 #include "base/CharacterSet.h"
@@ -29,9 +29,8 @@ TypedOption<CharacterSetOptionValue>::import(const SBuf &rawValue) const
 }
 
 template <>
-inline
-void
-TypedOption<CharacterSetOptionValue>::print(std::ostream &os) const
+inline void
+TypedOption<CharacterSetOptionValue>::printValue(std::ostream &os) const
 {
     recipient_->value.printChars(os); // TODO: Quote if needed.
 }
@@ -46,5 +45,5 @@ public:
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_CHARACTER_SET_OPTION_H */
+#endif /* SQUID_SRC_ACL_CHARACTERSETOPTION_H */
 

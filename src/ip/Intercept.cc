@@ -15,6 +15,7 @@
 #include "comm/Connection.h"
 #include "fde.h"
 #include "ip/Intercept.h"
+#include "ip/tools.h"
 #include "src/tools.h"
 
 #include <cerrno>
@@ -415,6 +416,13 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
 #if defined(soLevel) && defined(soFlag)
 
     debugs(3, 3, "Detect TPROXY support on port " << test);
+
+    if (!Ip::EnableIpv6 && test.isIPv6() && !test.setIPv4()) {
+        debugs(3, DBG_CRITICAL, "Cannot use TPROXY for " << test << " because IPv6 support is disabled");
+        if (doneSuid)
+            leave_suid();
+        return false;
+    }
 
     int tos = 1;
     int tmp_sock = -1;

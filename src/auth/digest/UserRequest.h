@@ -6,11 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H
-#define _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H
+#ifndef SQUID_SRC_AUTH_DIGEST_USERREQUEST_H
+#define SQUID_SRC_AUTH_DIGEST_USERREQUEST_H
 
 #if HAVE_AUTH_MODULE_DIGEST
 
+#include "auth/digest/Config.h"
 #include "auth/UserRequest.h"
 
 class ConnStateData;
@@ -70,5 +71,5 @@ private:
 } // namespace Auth
 
 #endif /* HAVE_AUTH_MODULE_DIGEST */
-#endif /* _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H */
+#endif /* SQUID_SRC_AUTH_DIGEST_USERREQUEST_H */
 

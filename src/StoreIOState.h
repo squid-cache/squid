@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STOREIOSTATE_H
-#define SQUID_STOREIOSTATE_H
+#ifndef SQUID_SRC_STOREIOSTATE_H
+#define SQUID_SRC_STOREIOSTATE_H
 
 #include "base/RefCount.h"
 #include "cbdata.h"
@@ -92,5 +92,5 @@ void storeClose(StoreIOState::Pointer, int how);
 void storeRead(StoreIOState::Pointer, char *, size_t, off_t, StoreIOState::STRCB *, void *);
 void storeIOWrite(StoreIOState::Pointer, char const *, size_t, off_t, FREE *);
 
-#endif /* SQUID_STOREIOSTATE_H */
+#endif /* SQUID_SRC_STOREIOSTATE_H */
 

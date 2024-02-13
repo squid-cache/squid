@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_UTIL_H
-#define SQUID_SNMP_UTIL_H
+#ifndef SQUID_INCLUDE_SNMP_UTIL_H
+#define SQUID_INCLUDE_SNMP_UTIL_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,5 +55,5 @@ int Util_file_write(char *file, int offset, char *data, int dataSz);
 #ifdef __cplusplus
 }
 #endif
-#endif /* SQUID_SNMP_UTIL_H */
+#endif /* SQUID_INCLUDE_SNMP_UTIL_H */
 

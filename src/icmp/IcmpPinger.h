@@ -8,8 +8,8 @@
 
 /* DEBUG: section 37    ICMP Routines */
 
-#ifndef _INCLUDE_ICMPPINGER_H
-#define _INCLUDE_ICMPPINGER_H
+#ifndef SQUID_SRC_ICMP_ICMPPINGER_H
+#define SQUID_SRC_ICMP_ICMPPINGER_H
 #include "Icmp.h"
 
 /**
@@ -55,5 +55,5 @@ extern IcmpPinger control;
 
 #endif
 
-#endif
+#endif /* SQUID_SRC_ICMP_ICMPPINGER_H */
 

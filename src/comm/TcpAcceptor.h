@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_COMM_TCPACCEPTOR_H
-#define SQUID_COMM_TCPACCEPTOR_H
+#ifndef SQUID_SRC_COMM_TCPACCEPTOR_H
+#define SQUID_SRC_COMM_TCPACCEPTOR_H
 
 #include "anyp/forward.h"
 #include "base/AsyncJob.h"
@@ -110,5 +110,5 @@ private:
 
 } // namespace Comm
 
-#endif /* SQUID_COMM_TCPACCEPTOR_H */
+#endif /* SQUID_SRC_COMM_TCPACCEPTOR_H */
 

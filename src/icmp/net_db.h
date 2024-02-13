@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef ICMP_NET_DB_H
-#define ICMP_NET_DB_H
+#ifndef SQUID_SRC_ICMP_NET_DB_H
+#define SQUID_SRC_ICMP_NET_DB_H
 
 #include "anyp/forward.h"
 #include "hash.h"
@@ -85,5 +85,5 @@ void netdbExchangeUpdatePeer(Ip::Address &, CachePeer *, double, double);
 CachePeer *netdbClosestParent(PeerSelector *);
 void netdbHostData(const char *host, int *samp, int *rtt, int *hops);
 
-#endif /* ICMP_NET_DB_H */
+#endif /* SQUID_SRC_ICMP_NET_DB_H */
 

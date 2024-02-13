@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_ENUMITERATOR_H
-#define SQUID_BASE_ENUMITERATOR_H
+#ifndef SQUID_SRC_BASE_ENUMITERATOR_H
+#define SQUID_SRC_BASE_ENUMITERATOR_H
 
 #include <iterator>
 #include <type_traits>
@@ -224,5 +224,5 @@ public:
     WholeEnum() : EnumRangeT<EnumType>(EnumType::enumBegin_, EnumType::enumEnd_) {}
 };
 
-#endif /* SQUID_BASE_ENUMITERATOR_H */
+#endif /* SQUID_SRC_BASE_ENUMITERATOR_H */
 

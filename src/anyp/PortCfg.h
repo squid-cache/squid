@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ANYP_PORTCFG_H
-#define SQUID_ANYP_PORTCFG_H
+#ifndef SQUID_SRC_ANYP_PORTCFG_H
+#define SQUID_SRC_ANYP_PORTCFG_H
 
 #include "anyp/forward.h"
 #include "anyp/ProtocolVersion.h"
@@ -15,7 +15,6 @@
 #include "base/CodeContext.h"
 #include "comm/Connection.h"
 #include "comm/Tcp.h"
-#include "sbuf/SBuf.h"
 #include "security/ServerOptions.h"
 
 namespace AnyP
@@ -91,5 +90,5 @@ extern AnyP::PortCfgPointer FtpPortList;
 extern int NHttpSockets;
 extern int HttpSockets[MAXTCPLISTENPORTS];
 
-#endif /* SQUID_ANYP_PORTCFG_H */
+#endif /* SQUID_SRC_ANYP_PORTCFG_H */
 

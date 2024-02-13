@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_COMM_LOOPS_H
-#define _SQUID_SRC_COMM_LOOPS_H
+#ifndef SQUID_SRC_COMM_LOOPS_H
+#define SQUID_SRC_COMM_LOOPS_H
 
 #include "comm/Flag.h"
 #include "comm/forward.h"
@@ -72,5 +72,5 @@ void QuickPollRequired(void);
 
 } // namespace Comm
 
-#endif /* _SQUID_SRC_COMM_LOOPS_H */
+#endif /* SQUID_SRC_COMM_LOOPS_H */
 

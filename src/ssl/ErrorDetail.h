@@ -6,10 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SSL_ERROR_DETAIL_H
-#define _SQUID_SSL_ERROR_DETAIL_H
+#ifndef SQUID_SRC_SSL_ERRORDETAIL_H
+#define SQUID_SRC_SSL_ERRORDETAIL_H
 
 #include "security/ErrorDetail.h"
+
+#include <optional>
 
 // TODO: Remove Security::X wrappers and move the remaining configurable error
 // details (i.e. templates/error-details.txt) code to src/security/ErrorDetail.
@@ -38,12 +40,13 @@ GetErrorName(const Security::ErrorCode code, const bool prefixRawCode = false)
     return Security::ErrorNameFromCode(code, prefixRawCode);
 }
 
-/// A short description of the TLS error "value"
-const char *GetErrorDescr(Security::ErrorCode value);
+/// a short description of the given TLS error known to Squid (or, if the error
+/// is unknown, nothing)
+std::optional<SBuf> GetErrorDescr(Security::ErrorCode);
 
 /// \return true if the TLS error is optional and may not be supported by current squid version
 bool ErrorIsOptional(const char *name);
 
 }//namespace Ssl
-#endif
+#endif /* SQUID_SRC_SSL_ERRORDETAIL_H */
 

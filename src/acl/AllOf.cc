@@ -10,6 +10,7 @@
 #include "acl/AllOf.h"
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
+#include "acl/Gadgets.h"
 #include "cache_cf.h"
 #include "MemBuf.h"
 #include "sbuf/SBuf.h"
@@ -46,7 +47,7 @@ void
 Acl::AllOf::parse()
 {
     Acl::InnerNode *whole = nullptr;
-    ACL *oldNode = empty() ? nullptr : nodes.front();
+    Acl::Node *oldNode = empty() ? nullptr : nodes.front();
 
     // optimization: this logic reduces subtree hight (number of tree levels)
     if (Acl::OrNode *oldWhole = dynamic_cast<Acl::OrNode*>(oldNode)) {
@@ -64,6 +65,7 @@ Acl::AllOf::parse()
         newWhole->context(wholeCtx.content(), oldNode->cfgline);
         newWhole->add(oldNode); // old (i.e. first) line
         nodes.front() = whole = newWhole;
+        aclRegister(newWhole);
     } else {
         // this is the first line for this acl; just use it as is
         whole = this;

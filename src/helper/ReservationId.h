@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HELPER_RESERVATIONID_H
-#define _SQUID_SRC_HELPER_RESERVATIONID_H
+#ifndef SQUID_SRC_HELPER_RESERVATIONID_H
+#define SQUID_SRC_HELPER_RESERVATIONID_H
 
 #include <ostream>
 
@@ -59,5 +59,5 @@ struct hash<Helper::ReservationId>
 };
 }
 
-#endif
+#endif /* SQUID_SRC_HELPER_RESERVATIONID_H */
 

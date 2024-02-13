@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FORMAT_FORWARD_H
-#define SQUID_FORMAT_FORWARD_H
+#ifndef SQUID_SRC_LOG_FORWARD_H
+#define SQUID_SRC_LOG_FORWARD_H
 
 #include "base/RefCount.h"
 
@@ -18,5 +18,5 @@ class Logfile;
 class LogTags;
 class LogTagsErrors;
 
-#endif /* SQUID_FORMAT_FORWARD_H */
+#endif /* SQUID_SRC_LOG_FORWARD_H */
 

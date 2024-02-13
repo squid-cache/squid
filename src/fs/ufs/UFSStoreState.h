@@ -6,9 +6,10 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_UFS_UFSSTORESTATE_H
-#define SQUID_FS_UFS_UFSSTORESTATE_H
+#ifndef SQUID_SRC_FS_UFS_UFSSTORESTATE_H
+#define SQUID_SRC_FS_UFS_UFSSTORESTATE_H
 
+#include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
 #include "StoreIOState.h"
 
@@ -133,5 +134,5 @@ private:
 } //namespace Ufs
 } //namespace Fs
 
-#endif /* SQUID_FS_UFS_UFSSTORESTATE_H */
+#endif /* SQUID_SRC_FS_UFS_UFSSTORESTATE_H */
 

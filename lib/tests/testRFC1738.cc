@@ -173,3 +173,9 @@ void TestRfc1738::PercentZeroNullDecoding()
     xfree(unescaped_str);
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

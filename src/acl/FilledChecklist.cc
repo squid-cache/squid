@@ -26,7 +26,6 @@ CBDATA_CLASS_INIT(ACLFilledChecklist);
 
 ACLFilledChecklist::ACLFilledChecklist() :
     dst_rdns(nullptr),
-    request (nullptr),
     reply (nullptr),
 #if USE_AUTH
     auth_user_request (nullptr),
@@ -51,8 +50,6 @@ ACLFilledChecklist::~ACLFilledChecklist()
     assert (!asyncInProgress());
 
     safe_free(dst_rdns); // created by xstrdup().
-
-    HTTPMSGUNLOCK(request);
 
     HTTPMSGUNLOCK(reply);
 
@@ -89,13 +86,13 @@ ACLFilledChecklist::verifyAle() const
             showDebugWarning("HttpRequest object");
             // XXX: al->request should be original,
             // but the request may be already adapted
-            al->request = request;
+            al->request = request.getRaw();
             HTTPMSGLOCK(al->request);
         }
 
         if (!al->adapted_request) {
             showDebugWarning("adapted HttpRequest object");
-            al->adapted_request = request;
+            al->adapted_request = request.getRaw();
             HTTPMSGLOCK(al->adapted_request);
         }
 
@@ -213,7 +210,6 @@ ACLFilledChecklist::markSourceDomainChecked()
  */
 ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request, const char *ident):
     dst_rdns(nullptr),
-    request(nullptr),
     reply(nullptr),
 #if USE_AUTH
     auth_user_request(nullptr),
@@ -242,7 +238,6 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
     assert(!request);
     if (httpRequest) {
         request = httpRequest;
-        HTTPMSGLOCK(request);
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.acl_uses_indirect_client)
             src_addr = request->indirect_client_addr;

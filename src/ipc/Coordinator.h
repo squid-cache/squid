@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_COORDINATOR_H
-#define SQUID_IPC_COORDINATOR_H
+#ifndef SQUID_SRC_IPC_COORDINATOR_H
+#define SQUID_SRC_IPC_COORDINATOR_H
 
 #include "ipc/Messages.h"
 #include "ipc/Port.h"
@@ -83,5 +83,5 @@ private:
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_COORDINATOR_H */
+#endif /* SQUID_SRC_IPC_COORDINATOR_H */
 

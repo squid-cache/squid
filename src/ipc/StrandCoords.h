@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_STRAND_COORDS_H
-#define SQUID_IPC_STRAND_COORDS_H
+#ifndef SQUID_SRC_IPC_STRANDCOORDS_H
+#define SQUID_SRC_IPC_STRANDCOORDS_H
 
 #include "ipc/StrandCoord.h"
 #include <vector>
@@ -20,5 +20,5 @@ typedef std::vector<StrandCoord> StrandCoords;
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_STRAND_COORDS_H */
+#endif /* SQUID_SRC_IPC_STRANDCOORDS_H */
 

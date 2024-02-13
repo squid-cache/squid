@@ -6,14 +6,16 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLFILLED_CHECKLIST_H
-#define SQUID_ACLFILLED_CHECKLIST_H
+#ifndef SQUID_SRC_ACL_FILLEDCHECKLIST_H
+#define SQUID_SRC_ACL_FILLEDCHECKLIST_H
 
 #include "AccessLogEntry.h"
+#include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "error/forward.h"
+#include "HttpRequest.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -22,8 +24,6 @@
 
 class CachePeer;
 class ConnStateData;
-class HttpRequest;
-class HttpReply;
 
 /** \ingroup ACLAPI
     ACLChecklist filled with specific data, representing Squid and transaction
@@ -76,7 +76,7 @@ public:
     SBuf dst_peer_name;
     char *dst_rdns;
 
-    HttpRequest *request;
+    HttpRequest::Pointer request;
     HttpReply *reply;
 
     char rfc931[USER_IDENT_SZ];
@@ -125,5 +125,5 @@ ACLFilledChecklist *Filled(ACLChecklist *checklist)
     return dynamic_cast<ACLFilledChecklist*>(checklist);
 }
 
-#endif /* SQUID_ACLFILLED_CHECKLIST_H */
+#endif /* SQUID_SRC_ACL_FILLEDCHECKLIST_H */
 

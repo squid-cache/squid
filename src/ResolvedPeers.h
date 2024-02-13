@@ -6,11 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_RESOLVEDPEERS_H
-#define SQUID_RESOLVEDPEERS_H
+#ifndef SQUID_SRC_RESOLVEDPEERS_H
+#define SQUID_SRC_RESOLVEDPEERS_H
 
 #include "base/RefCount.h"
-#include "comm/forward.h"
+#include "comm/Connection.h"
+#include "mem/AllocatorProxy.h"
 
 #include <iosfwd>
 #include <limits>
@@ -162,5 +163,5 @@ operator <<(std::ostream &os, const PeerConnectionPointer &dest)
     return os;
 }
 
-#endif /* SQUID_RESOLVEDPEERS_H */
+#endif /* SQUID_SRC_RESOLVEDPEERS_H */
 

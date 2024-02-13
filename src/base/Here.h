@@ -6,13 +6,13 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_HERE_H
-#define SQUID_BASE_HERE_H
+#ifndef SQUID_SRC_BASE_HERE_H
+#define SQUID_SRC_BASE_HERE_H
 
 #include <iosfwd>
 
 /// source code location of the caller
-#define Here() SourceLocation(__FUNCTION__, __FILE__, __LINE__)
+#define Here() SourceLocation(__func__, __FILE__, __LINE__)
 
 /// semi-uniquely identifies a source code location; stable across Squid runs
 typedef uint32_t SourceLocationId;
@@ -73,5 +73,5 @@ UnitFileNameHashCacher(const char *fileName, FileNameHasher hasher)
     return cachedHash;
 }
 
-#endif
+#endif /* SQUID_SRC_BASE_HERE_H */
 

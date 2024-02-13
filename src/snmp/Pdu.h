@@ -8,8 +8,8 @@
 
 /* DEBUG: section 49    SNMP Interface */
 
-#ifndef SQUID_SNMPX_PDU_H
-#define SQUID_SNMPX_PDU_H
+#ifndef SQUID_SRC_SNMP_PDU_H
+#define SQUID_SRC_SNMP_PDU_H
 
 #include "base/Range.h"
 #include "ipc/forward.h"
@@ -48,5 +48,5 @@ private:
 
 } // namespace Snmp
 
-#endif /* SQUID_SNMPX_PDU_H */
+#endif /* SQUID_SRC_SNMP_PDU_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLMETHODDATA_H
-#define SQUID_ACLMETHODDATA_H
+#ifndef SQUID_SRC_ACL_METHODDATA_H
+#define SQUID_SRC_ACL_METHODDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -32,5 +32,5 @@ public:
     static int ThePurgeCount; ///< PURGE methods seen by parse()
 };
 
-#endif /* SQUID_ACLMETHODDATA_H */
+#endif /* SQUID_SRC_ACL_METHODDATA_H */
 

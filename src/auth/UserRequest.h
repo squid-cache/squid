@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_AUTH_USERREQUEST_H
-#define SQUID_AUTH_USERREQUEST_H
+#ifndef SQUID_SRC_AUTH_USERREQUEST_H
+#define SQUID_SRC_AUTH_USERREQUEST_H
 
 #if USE_AUTH
 
@@ -250,5 +250,5 @@ int authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer);
 int authenticateUserAuthenticated(Auth::UserRequest::Pointer);
 
 #endif /* USE_AUTH */
-#endif /* SQUID_AUTHUSERREQUEST_H */
+#endif /* SQUID_SRC_AUTH_USERREQUEST_H */
 

@@ -6,40 +6,40 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLNOTE_H
-#define SQUID_ACLNOTE_H
+#ifndef SQUID_SRC_ACL_NOTE_H
+#define SQUID_SRC_ACL_NOTE_H
 
 #include "acl/CharacterSetOption.h"
 #include "acl/Data.h"
-#include "acl/Strategy.h"
+#include "acl/ParameterizedNode.h"
 #include "Notes.h"
 
 namespace Acl {
 
 /// common parent of several ACLs dealing with transaction annotations
-class AnnotationStrategy: public ACLStrategy<NotePairs::Entry *>
+class AnnotationCheck: public ParameterizedNode< ACLData<NotePairs::Entry *> >
 {
 public:
-    AnnotationStrategy(): delimiters(CharacterSet(__FILE__, ",")) {}
+    AnnotationCheck(): delimiters(CharacterSet(__FILE__, ",")) {}
 
     const Acl::Options &options() override;
 
     Acl::CharacterSetOptionValue delimiters; ///< annotation separators
 };
 
-} // namespace Acl
-
-/// \ingroup ACLAPI
-class ACLNoteStrategy: public Acl::AnnotationStrategy
+/// a "note" ACL
+class NoteCheck: public Acl::AnnotationCheck
 {
-
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
     bool requiresRequest() const override { return true; }
 
 private:
-    bool matchNotes(ACLData<MatchType> *, const NotePairs *) const;
+    bool matchNotes(const NotePairs *) const;
 };
 
-#endif /* SQUID_ACLNOTE_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_NOTE_H */
 

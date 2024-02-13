@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_QUERY_PARAM_H
-#define SQUID_MGR_QUERY_PARAM_H
+#ifndef SQUID_SRC_MGR_QUERYPARAM_H
+#define SQUID_SRC_MGR_QUERYPARAM_H
 
 #include "base/RefCount.h"
 #include "ipc/forward.h"
@@ -39,5 +39,5 @@ public:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_QUERY_PARAM_H */
+#endif /* SQUID_SRC_MGR_QUERYPARAM_H */
 

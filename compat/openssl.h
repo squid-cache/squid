@@ -16,8 +16,8 @@
  * can be dropped.
  */
 
-#ifndef OPENSSL_COMPAT_H
-#define OPENSSL_COMPAT_H
+#ifndef SQUID_COMPAT_OPENSSL_H
+#define SQUID_COMPAT_OPENSSL_H
 
 #if !USE_OPENSSL
 #error compat/openssl.h depends on USE_OPENSSL
@@ -317,5 +317,5 @@ SQUID_OPENSSL_init_ssl(void)
 #endif
 }
 
-#endif /* OPENSSL_COMPAT_H */
+#endif /* SQUID_COMPAT_OPENSSL_H */
 

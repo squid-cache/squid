@@ -8,8 +8,8 @@
 
 /* DEBUG: section 86    ESI processing */
 
-#ifndef SQUID_ESIEXPRESSION_H
-#define SQUID_ESIEXPRESSION_H
+#ifndef SQUID_SRC_ESI_EXPRESSION_H
+#define SQUID_SRC_ESI_EXPRESSION_H
 
 class ESIExpression
 {
@@ -18,5 +18,5 @@ public:
     static int Evaluate (char const *);
 };
 
-#endif /* SQUID_ESIEXPRESSION_H */
+#endif /* SQUID_SRC_ESI_EXPRESSION_H */
 

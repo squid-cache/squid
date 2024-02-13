@@ -301,8 +301,11 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
     case Helper::TT:
         /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
-        lm_request->request->flags.mustKeepalive = true;
-        if (lm_request->request->flags.proxyKeepalive) {
+
+        if (lm_request->request)
+            lm_request->request->flags.mustKeepalive = true;
+
+        if (lm_request->request && lm_request->request->flags.proxyKeepalive) {
             const char *tokenNote = reply.notes.findFirst("token");
             lm_request->server_blob = xstrdup(tokenNote);
             auth_user_request->user()->credentials(Auth::Handshake);

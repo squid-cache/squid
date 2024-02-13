@@ -8,8 +8,8 @@
 
 /* DEBUG: section 09    File Transfer Protocol (FTP) */
 
-#ifndef SQUID_FTP_CLIENT_H
-#define SQUID_FTP_CLIENT_H
+#ifndef SQUID_SRC_CLIENTS_FTPCLIENT_H
+#define SQUID_SRC_CLIENTS_FTPCLIENT_H
 
 #include "clients/Client.h"
 #include "error/Detail.h"
@@ -109,6 +109,8 @@ public:
 /// FTP client functionality shared among FTP Gateway and Relay clients.
 class Client: public ::Client
 {
+    CBDATA_INTERMEDIATE();
+
 public:
     explicit Client(FwdState *fwdState);
     ~Client() override;
@@ -217,5 +219,5 @@ private:
 
 } // namespace Ftp
 
-#endif /* SQUID_FTP_CLIENT_H */
+#endif /* SQUID_SRC_CLIENTS_FTPCLIENT_H */
 

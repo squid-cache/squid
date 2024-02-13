@@ -106,7 +106,7 @@ FileOpeningConfig::createdIfMissing()
 // XXX: fcntl() locks are incompatible with complex applications that may lock
 // multiple open descriptors corresponding to the same underlying file. There is
 // nothing better on Solaris, but do not be tempted to use this elsewhere. For
-// more info, see http://bugs.squid-cache.org/show_bug.cgi?id=4212#c14
+// more info, see https://bugs.squid-cache.org/show_bug.cgi?id=4212#c14
 /// fcntl(... struct flock) convenience wrapper
 static int
 fcntlLock(const int fd, const short lockType)

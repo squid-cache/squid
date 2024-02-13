@@ -20,7 +20,7 @@
 #include "fde.h"
 #include "format/Format.h"
 #include "fs_io.h"
-#include "html_quote.h"
+#include "html/Quoting.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -114,7 +114,12 @@ public:
 class BuildErrorPrinter
 {
 public:
-    BuildErrorPrinter(const SBuf &anInputLocation, int aPage, const char *aMsg, const char *aNear): inputLocation(anInputLocation), page_id(aPage), msg(aMsg), near(aNear) {}
+    BuildErrorPrinter(const SBuf &anInputLocation, int aPage, const char *aMsg, const char *anErrorLocation):
+        inputLocation(anInputLocation),
+        page_id(aPage),
+        msg(aMsg),
+        errorLocation(anErrorLocation)
+    {}
 
     /// reports error details (for admin-visible exceptions and debugging)
     std::ostream &print(std::ostream &) const;
@@ -126,7 +131,7 @@ public:
     const SBuf &inputLocation;
     const int page_id;
     const char *msg;
-    const char *near;
+    const char *errorLocation;
 };
 
 static inline std::ostream &
@@ -678,15 +683,16 @@ ErrorState::NewForwarding(err_type type, HttpRequestPointer &request, const Acce
     return new ErrorState(type, status, request.getRaw(), ale);
 }
 
-ErrorState::ErrorState(err_type t) :
+ErrorState::ErrorState(const err_type t, const AccessLogEntry::Pointer &anAle):
     type(t),
     page_id(t),
-    callback(nullptr)
+    callback(nullptr),
+    ale(anAle)
 {
 }
 
 ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, const AccessLogEntry::Pointer &anAle) :
-    ErrorState(t)
+    ErrorState(t, anAle)
 {
     if (page_id >= ERR_MAX && ErrorDynamicPages[page_id - ERR_MAX]->page_redirect != Http::scNone)
         httpStatus = ErrorDynamicPages[page_id - ERR_MAX]->page_redirect;
@@ -697,12 +703,10 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, c
         request = req;
         src_addr = req->client_addr;
     }
-
-    ale = anAle;
 }
 
-ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply) :
-    ErrorState(ERR_RELAY_REMOTE)
+ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply, const AccessLogEntry::Pointer &anAle):
+    ErrorState(ERR_RELAY_REMOTE, anAle)
 {
     Must(errorReply);
     response_ = errorReply;
@@ -1277,6 +1281,17 @@ ErrorState::validate()
 HttpReply *
 ErrorState::BuildHttpReply()
 {
+    // Make sure error codes get back to the client side for logging and
+    // error tracking.
+    if (request) {
+        request->error.update(type, detail);
+        request->error.update(SysErrorDetail::NewIfAny(xerrno));
+    } else if (ale) {
+        Error err(type, detail);
+        err.update(SysErrorDetail::NewIfAny(xerrno));
+        ale->updateError(err);
+    }
+
     if (response_)
         return response_.getRaw();
 
@@ -1322,7 +1337,7 @@ ErrorState::BuildHttpReply()
          * If error page auto-negotiate is enabled in any way, send the Vary.
          * RFC 2616 section 13.6 and 14.44 says MAY and SHOULD do this.
          * We have even better reasons though:
-         * see http://wiki.squid-cache.org/KnowledgeBase/VaryNotCaching
+         * see https://wiki.squid-cache.org/KnowledgeBase/VaryNotCaching
          */
         if (!Config.errorDirectory) {
             /* We 'negotiated' this ONLY from the Accept-Language. */
@@ -1343,20 +1358,6 @@ ErrorState::BuildHttpReply()
         }
 
         rep->body.set(body);
-    }
-
-    // Make sure error codes get back to the client side for logging and
-    // error tracking.
-    if (request) {
-        if (detail)
-            request->detailError(type, detail);
-        else
-            request->detailError(type, SysErrorDetail::NewIfAny(xerrno));
-    } else if (ale) {
-        if (detail)
-            ale->updateError(Error(type, detail));
-        else
-            ale->updateError(Error(type, SysErrorDetail::NewIfAny(xerrno)));
     }
 
     return rep;
@@ -1435,13 +1436,13 @@ ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRe
 
 /// react to a compile() error
 /// \param msg  description of what went wrong
-/// \param near  approximate start of the problematic input
+/// \param errorLocation approximate start of the problematic input
 /// \param  forceBypass whether detection of this error was introduced late,
 /// after old configurations containing this error could have been
 /// successfully validated and deployed (i.e. the admin may not be
 /// able to fix this newly detected but old problem quickly)
 void
-ErrorState::noteBuildError_(const char *msg, const char *near, const bool forceBypass)
+ErrorState::noteBuildError_(const char *const msg, const char * const errorLocation, const bool forceBypass)
 {
     using ErrorPage::BuildErrorPrinter;
     const auto runtime = !starting_up;
@@ -1462,9 +1463,9 @@ ErrorState::noteBuildError_(const char *msg, const char *near, const bool forceB
         if (starting_up && seenErrors <= 10)
             debugs(4, debugLevel, "WARNING: The following configuration error will be fatal in future Squid versions");
 
-        debugs(4, debugLevel, "ERROR: " << BuildErrorPrinter(inputLocation, page_id, msg, near));
+        debugs(4, debugLevel, "ERROR: " << BuildErrorPrinter(inputLocation, page_id, msg, errorLocation));
     } else {
-        throw TexcHere(ToSBuf(BuildErrorPrinter(inputLocation, page_id, msg, near)));
+        throw TexcHere(ToSBuf(BuildErrorPrinter(inputLocation, page_id, msg, errorLocation)));
     }
 }
 
@@ -1490,11 +1491,11 @@ ErrorPage::BuildErrorPrinter::print(std::ostream &os) const {
 
     // TODO: Add support for prefix printing to Raw
     const size_t maxContextLength = 15; // plus "..."
-    if (strlen(near) > maxContextLength) {
-        os.write(near, maxContextLength);
+    if (strlen(errorLocation) > maxContextLength) {
+        os.write(errorLocation, maxContextLength);
         os << "...";
     } else {
-        os << near;
+        os << errorLocation;
     }
 
     // XXX: We should not be converting (inner) exception to text if we are

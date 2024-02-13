@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_STORAGE_H
-#define SQUID_STORE_STORAGE_H
+#ifndef SQUID_SRC_STORE_STORAGE_H
+#define SQUID_SRC_STORE_STORAGE_H
 
 #include "base/RefCount.h"
 #include "http/RequestMethod.h"
@@ -80,5 +80,5 @@ public:
 
 } // namespace Store
 
-#endif /* SQUID_STORE_STORAGE_H */
+#endif /* SQUID_SRC_STORE_STORAGE_H */
 

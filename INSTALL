@@ -22,7 +22,3 @@ To run a Cache, you will need to:
 	      
 	3. start the cache:
 	      % /usr/local/squid/sbin/squid
-
-If you want to use the WWW interface to the Cache Manager, copy
-the tools/cachemgr.cgi program into your httpd server's cgi-bin
-directory.

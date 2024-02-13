@@ -8,8 +8,8 @@
 
 /* DEBUG: section 77    Delay Pools */
 
-#ifndef DELAYTAGGED_H
-#define DELAYTAGGED_H
+#ifndef SQUID_SRC_DELAYTAGGED_H
+#define SQUID_SRC_DELAYTAGGED_H
 
 #if USE_DELAY_POOLS
 
@@ -19,6 +19,7 @@
 #include "DelayBucket.h"
 #include "DelayIdComposite.h"
 #include "DelaySpec.h"
+#include "sbuf/SBuf.h"
 #include "splay.h"
 
 /// \ingroup DelayPoolsAPI
@@ -30,10 +31,10 @@ public:
     typedef RefCount<DelayTaggedBucket> Pointer;
 
     void stats(StoreEntry *)const;
-    DelayTaggedBucket(String &aTag);
+    explicit DelayTaggedBucket(const SBuf &aTag);
     ~DelayTaggedBucket() override;
     DelayBucket theBucket;
-    String tag;
+    const SBuf tag;
 };
 
 /// \ingroup DelayPoolsAPI
@@ -61,7 +62,7 @@ private:
         MEMPROXY_CLASS(DelayTagged::Id);
 
     public:
-        Id (RefCount<DelayTagged>, String &);
+        Id(const RefCount<DelayTagged> &, const SBuf &);
         ~Id() override;
         int bytesWanted (int min, int max) const override;
         void bytesIn(int qty) override;
@@ -79,5 +80,5 @@ private:
 };
 
 #endif /* USE_DELAY_POOLS */
-#endif /* DELAYTAGGED_H */
+#endif /* SQUID_SRC_DELAYTAGGED_H */
 

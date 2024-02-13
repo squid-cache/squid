@@ -17,12 +17,12 @@ for Applied Network Research and members of the Web Caching community.
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
 
-<p>We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting">
+<p>We welcome feedback and bug reports. If you find a bug, please see <url url="https://wiki.squid-cache.org/SquidFaq/BugReporting">
    for how to submit a report with a stack trace.
 
 <sect1>Known issues
 <p>Although this release is deemed good enough for use in production, please note the existence of
-   <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=4" name="open bugs against Squid-4">.
+   <url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=4" name="open bugs against Squid-4">.
 
 <p>This release adds a dependency on C++11 support in any compiler used to build Squid.
   As a result older C++03 -only and most C++0x compilers will no longer build successfully.

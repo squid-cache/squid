@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_FILE_H
-#define SQUID_BASE_FILE_H
+#ifndef SQUID_SRC_BASE_FILE_H
+#define SQUID_SRC_BASE_FILE_H
 
 #include "sbuf/SBuf.h"
 
@@ -123,5 +123,5 @@ private:
     Handle fd_ = InvalidHandle; ///< OS-specific file handle
 };
 
-#endif
+#endif /* SQUID_SRC_BASE_FILE_H */
 

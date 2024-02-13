@@ -14,6 +14,7 @@
 #include "base/InstanceId.h"
 #include "base/TypeTraits.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "carp.h"
 #include "client_side.h"
 #include "dns/LookupDetails.h"
@@ -865,10 +866,10 @@ PeerSelector::selectSomeParent()
 void
 PeerSelector::selectAllParents()
 {
-    CachePeer *p;
     /* Add all alive parents */
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &peer: CurrentCachePeers()) {
+        const auto p = peer.get();
         /* XXX: neighbors.c lacks a public interface for enumerating
          * parents to a request so we have to dig some here..
          */
@@ -887,7 +888,7 @@ PeerSelector::selectAllParents()
      * simply are not configured to handle the request.
      */
     /* Add default parent as a last resort */
-    if ((p = getDefaultParent(this))) {
+    if (const auto p = getDefaultParent(this)) {
         addSelection(p, DEFAULT_PARENT);
     }
 }

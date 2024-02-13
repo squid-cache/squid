@@ -6,20 +6,16 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLARP_H
-#define SQUID_ACLARP_H
+#ifndef SQUID_SRC_ACL_ARP_H
+#define SQUID_SRC_ACL_ARP_H
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
+#include "eui/Eui48.h"
 
 #include <set>
 
-namespace Eui
-{
-class Eui48;
-};
-
 /// \ingroup ACLAPI
-class ACLARP : public ACL
+class ACLARP : public Acl::Node
 {
     MEMPROXY_CLASS(ACLARP);
 
@@ -39,5 +35,5 @@ protected:
     AclArpData_t aclArpData;
 };
 
-#endif /* SQUID_ACLARP_H */
+#endif /* SQUID_SRC_ACL_ARP_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSL_CONFIG_H
-#define SQUID_SSL_CONFIG_H
+#ifndef SQUID_SRC_SSL_CONFIG_H
+#define SQUID_SRC_SSL_CONFIG_H
 
 #include "helper/ChildConfig.h"
 
@@ -34,5 +34,5 @@ private:
 extern Config TheConfig;
 
 } // namespace Ssl
-#endif
+#endif /* SQUID_SRC_SSL_CONFIG_H */
 

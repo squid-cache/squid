@@ -6,12 +6,15 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HAPPYCONNOPENER_H
-#define SQUID_HAPPYCONNOPENER_H
+#ifndef SQUID_SRC_HAPPYCONNOPENER_H
+#define SQUID_SRC_HAPPYCONNOPENER_H
+#include "base/AsyncCallbacks.h"
+#include "base/JobWait.h"
 #include "base/RefCount.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
+#include "errorpage.h"
 #include "http/forward.h"
 #include "log/forward.h"
 #include "ResolvedPeers.h"
@@ -245,5 +248,5 @@ private:
     mutable const char *ranOutOfTimeOrAttemptsEarlier_ = nullptr;
 };
 
-#endif
+#endif /* SQUID_SRC_HAPPYCONNOPENER_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLREPLYMIMETYPE_H
-#define SQUID_ACLREPLYMIMETYPE_H
+#ifndef SQUID_SRC_ACL_REPLYMIMETYPE_H
+#define SQUID_SRC_ACL_REPLYMIMETYPE_H
 
 #include "acl/Data.h"
 #include "acl/FilledChecklist.h"
@@ -17,8 +17,10 @@
 
 template <>
 inline int
-ACLReplyHeaderStrategy<Http::HdrType::CONTENT_TYPE>::match(ACLData<char const *> * &data, ACLFilledChecklist *checklist)
+Acl::ReplyHeaderCheck<Http::HdrType::CONTENT_TYPE>::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     char const *theHeader = checklist->reply->header.getStr(Http::HdrType::CONTENT_TYPE);
 
     if (nullptr == theHeader)
@@ -27,5 +29,5 @@ ACLReplyHeaderStrategy<Http::HdrType::CONTENT_TYPE>::match(ACLData<char const *>
     return data->match(theHeader);
 }
 
-#endif /* SQUID_ACLREPLYMIMETYPE_H */
+#endif /* SQUID_SRC_ACL_REPLYMIMETYPE_H */
 

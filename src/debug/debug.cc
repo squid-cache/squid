@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
+#include "comm.h"
 #include "debug/Stream.h"
 #include "fatal.h"
 #include "fd.h"
@@ -762,8 +763,10 @@ DebugFile::reset(FILE *newFile, const char *newName)
     }
     file_ = newFile; // may be nil
 
-    if (file_)
+    if (file_) {
+        commSetCloseOnExec(fileno(file_));
         fd_open(fileno(file_), FD_LOG, Debug::cache_log);
+    }
 
     xfree(name);
     name = newName ? xstrdup(newName) : nullptr;
@@ -782,7 +785,7 @@ Debug::LogMessage(const Context &context)
 
     if (!dbg_mutex) {
         HMODULE krnl_lib = GetModuleHandle("Kernel32");
-        PFInitializeCriticalSectionAndSpinCount InitializeCriticalSectionAndSpinCount = NULL;
+        PFInitializeCriticalSectionAndSpinCount InitializeCriticalSectionAndSpinCount = nullptr;
 
         if (krnl_lib)
             InitializeCriticalSectionAndSpinCount =
@@ -796,11 +799,11 @@ Debug::LogMessage(const Context &context)
 
             if (!InitializeCriticalSectionAndSpinCount(dbg_mutex, 4000)) {
                 if (const auto logFile = TheLog.file()) {
-                    fprintf(logFile, "FATAL: %s: can't initialize critical section\n", __FUNCTION__);
+                    fprintf(logFile, "FATAL: %s: can't initialize critical section\n", __func__);
                     fflush(logFile);
                 }
 
-                fprintf(stderr, "FATAL: %s: can't initialize critical section\n", __FUNCTION__);
+                fprintf(stderr, "FATAL: %s: can't initialize critical section\n", __func__);
                 abort();
             } else
                 InitializeCriticalSection(dbg_mutex);

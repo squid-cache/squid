@@ -362,7 +362,7 @@ MimeIcon::load()
 
     if (const auto e = storeGetPublic(url_, Http::METHOD_GET)) {
         // do not overwrite an already stored icon
-        e->abandon(__FUNCTION__);
+        e->abandon(__func__);
         return;
     }
 
@@ -421,7 +421,7 @@ MimeIcon::load()
         reply->setHeaders(status, nullptr, mimeGetContentType(icon_.c_str()), sb.st_size, sb.st_mtime, -1);
     reply->cache_control = new HttpHdrCc();
     reply->cache_control->maxAge(86400);
-    reply->header.putCc(reply->cache_control);
+    reply->header.putCc(*reply->cache_control);
     e->replaceHttpReply(reply.getRaw());
 
     if (status == Http::scOkay) {

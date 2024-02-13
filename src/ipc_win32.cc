@@ -103,8 +103,8 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     pid_t pid;
 
     Ip::Address tmp_addr;
-    struct addrinfo *aiCS = NULL;
-    struct addrinfo *aiPS = NULL;
+    struct addrinfo *aiCS = nullptr;
+    struct addrinfo *aiPS = nullptr;
 
     int crfd = -1;
     int prfd = -1;
@@ -121,7 +121,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         *wfd = -1;
 
     if (hIpc)
-        *hIpc = NULL;
+        *hIpc = nullptr;
 
     if (WIN32_OS_version != _WIN_OS_WINNT) {
         getsockopt(INVALID_SOCKET, SOL_SOCKET, SO_OPENTYPE, (char *) &opt, &optlen);
@@ -239,7 +239,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     params.args = (char **) args;
 
-    thread = _beginthreadex(NULL, 0, ipc_thread_1, &params, 0, NULL);
+    thread = _beginthreadex(nullptr, 0, ipc_thread_1, &params, 0, nullptr);
 
     if (thread == 0) {
         int xerrno = errno;
@@ -350,7 +350,7 @@ ipc_thread_1(void *in_params)
     int t1, t2, t3, retval = -1;
     int p2c[2] = {-1, -1};
     int c2p[2] = {-1, -1};
-    HANDLE hProcess = NULL, thread = NULL;
+    HANDLE hProcess = nullptr, thread = nullptr;
     pid_t pid = -1;
 
     struct thread_params thread_params;
@@ -361,12 +361,12 @@ ipc_thread_1(void *in_params)
     PROCESS_INFORMATION pi;
     long F;
     int prfd_ipc = -1, pwfd_ipc = -1, crfd_ipc = -1, cwfd_ipc = -1;
-    char *prog = NULL, *buf1 = NULL;
+    char *prog = nullptr, *buf1 = nullptr;
 
     Ip::Address PS_ipc;
     Ip::Address CS_ipc;
-    struct addrinfo *aiPS_ipc = NULL;
-    struct addrinfo *aiCS_ipc = NULL;
+    struct addrinfo *aiPS_ipc = nullptr;
+    struct addrinfo *aiCS_ipc = nullptr;
 
     struct ipc_params *params = (struct ipc_params *) in_params;
     int type = params->type;
@@ -393,7 +393,7 @@ ipc_thread_1(void *in_params)
     if (type == IPC_TCP_SOCKET) {
         debugs(54, 3, "ipcCreate: calling accept on FD " << crfd);
 
-        if ((fd = accept(crfd, NULL, NULL)) < 0) {
+        if ((fd = accept(crfd, nullptr, nullptr)) < 0) {
             int xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: FD " << crfd << " accept: " << xstrerr(xerrno));
             goto cleanup;
@@ -557,7 +557,7 @@ ipc_thread_1(void *in_params)
     do {
         strcat(buf1, str);
         strcat(buf1, " ");
-    } while ((str = strtok(NULL, w_space)));
+    } while ((str = strtok(nullptr, w_space)));
 
     x = 1;
 
@@ -567,8 +567,8 @@ ipc_thread_1(void *in_params)
         strcat(buf1, " ");
     }
 
-    if (CreateProcess(buf1 + 4096, buf1, NULL, NULL, TRUE, CREATE_NO_WINDOW,
-                      NULL, NULL, &si, &pi)) {
+    if (CreateProcess(buf1 + 4096, buf1, nullptr, nullptr, TRUE, CREATE_NO_WINDOW,
+                      nullptr, nullptr, &si, &pi)) {
         pid = pi.dwProcessId;
         hProcess = pi.hProcess;
     } else {
@@ -687,7 +687,7 @@ ipc_thread_1(void *in_params)
     else
         thread_params.rfd = prfd_ipc;
 
-    thread = (HANDLE)_beginthreadex(NULL, 0, ipc_thread_2, &thread_params, 0, NULL);
+    thread = (HANDLE)_beginthreadex(nullptr, 0, ipc_thread_2, &thread_params, 0, nullptr);
 
     if (!thread) {
         int xerrno = errno;

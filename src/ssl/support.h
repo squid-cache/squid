@@ -8,8 +8,8 @@
 
 /* DEBUG: section 83    SSL accelerator support */
 
-#ifndef SQUID_SSL_SUPPORT_H
-#define SQUID_SSL_SUPPORT_H
+#ifndef SQUID_SRC_SSL_SUPPORT_H
+#define SQUID_SRC_SSL_SUPPORT_H
 
 #if USE_OPENSSL
 
@@ -17,7 +17,7 @@
 #include "comm/forward.h"
 #include "compat/openssl.h"
 #include "sbuf/SBuf.h"
-#include "security/forward.h"
+#include "security/Session.h"
 #include "ssl/gadgets.h"
 
 #if HAVE_OPENSSL_X509V3_H
@@ -397,5 +397,5 @@ int SSL_set_fd(SSL *ssl, int fd)
 #endif /* _SQUID_WINDOWS_ */
 
 #endif /* USE_OPENSSL */
-#endif /* SQUID_SSL_SUPPORT_H */
+#endif /* SQUID_SRC_SSL_SUPPORT_H */
 

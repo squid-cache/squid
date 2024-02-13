@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/Checklist.h"
+#include "acl/FilledChecklist.h"
 #include "acl/Tree.h"
 #include "debug/Stream.h"
 
@@ -78,7 +79,7 @@ ACLChecklist::preCheck(const char *what)
 }
 
 bool
-ACLChecklist::matchChild(const Acl::InnerNode *current, Acl::Nodes::const_iterator pos, const ACL *child)
+ACLChecklist::matchChild(const Acl::InnerNode *current, Acl::Nodes::const_iterator pos, const Acl::Node *child)
 {
     assert(current && child);
 
@@ -111,9 +112,8 @@ ACLChecklist::matchChild(const Acl::InnerNode *current, Acl::Nodes::const_iterat
 }
 
 bool
-ACLChecklist::goAsync(AsyncState *state)
+ACLChecklist::goAsync(AsyncStarter starter, const Acl::Node &acl)
 {
-    assert(state);
     assert(!asyncInProgress());
     assert(matchLoc_.parent);
 
@@ -137,10 +137,9 @@ ACLChecklist::goAsync(AsyncState *state)
     ++asyncLoopDepth_;
 
     asyncStage_ = asyncStarting;
-    changeState(state);
-    state->checkForAsync(this); // this is supposed to go async
+    starter(*Filled(this), acl); // this is supposed to go async
 
-    // Did AsyncState object actually go async? If not, tell the caller.
+    // Did starter() actually go async? If not, tell the caller.
     if (asyncStage_ != asyncStarting) {
         assert(asyncStage_ == asyncFailed);
         asyncStage_ = asyncNone; // sanity restored
@@ -182,7 +181,6 @@ ACLChecklist::ACLChecklist() :
     finished_(false),
     answer_(ACCESS_DENIED),
     asyncStage_(asyncNone),
-    state_(NullState::Instance()),
     asyncLoopDepth_(0)
 {
 }
@@ -194,38 +192,6 @@ ACLChecklist::~ACLChecklist()
     changeAcl(nullptr);
 
     debugs(28, 4, "ACLChecklist::~ACLChecklist: destroyed " << this);
-}
-
-ACLChecklist::NullState *
-ACLChecklist::NullState::Instance()
-{
-    return &_instance;
-}
-
-void
-ACLChecklist::NullState::checkForAsync(ACLChecklist *) const
-{
-    assert(false); // or the Checklist will never get out of the async state
-}
-
-ACLChecklist::NullState ACLChecklist::NullState::_instance;
-
-void
-ACLChecklist::changeState (AsyncState *newState)
-{
-    /* only change from null to active and back again,
-     * not active to active.
-     * relax this once conversion to states is complete
-     * RBC 02 2003
-     */
-    assert (state_ == NullState::Instance() || newState == NullState::Instance());
-    state_ = newState;
-}
-
-ACLChecklist::AsyncState *
-ACLChecklist::asyncState() const
-{
-    return state_;
 }
 
 /**
@@ -241,7 +207,7 @@ ACLChecklist::nonBlockingCheck(ACLCB * callback_, void *callback_data_)
     callback_data = cbdataReference(callback_data_);
     asyncCaller_ = true;
 
-    /** The ACL List should NEVER be NULL when calling this method.
+    /** The ACL list should NEVER be NULL when calling this method.
      * Always caller should check for NULL and handle appropriate to its needs first.
      * We cannot select a sensible default for all callers here. */
     if (accessList == nullptr) {
@@ -258,11 +224,8 @@ ACLChecklist::nonBlockingCheck(ACLCB * callback_, void *callback_data_)
 }
 
 void
-ACLChecklist::resumeNonBlockingCheck(AsyncState *state)
+ACLChecklist::resumeNonBlockingCheck()
 {
-    assert(asyncState() == state);
-    changeState(NullState::Instance());
-
     if (asyncStage_ == asyncStarting) { // oops, we did not really go async
         asyncStage_ = asyncFailed; // goAsync() checks for that
         // Do not fall through to resume checks from the async callback. Let

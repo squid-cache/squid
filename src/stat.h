@@ -8,8 +8,8 @@
 
 /* DEBUG: section 18    Cache Manager Statistics */
 
-#ifndef SQUID_STAT_H_
-#define SQUID_STAT_H_
+#ifndef SQUID_SRC_STAT_H
+#define SQUID_SRC_STAT_H
 
 void statInit(void);
 double median_svc_get(int, int);
@@ -24,5 +24,5 @@ double statByteHitRatio(int minutes);
 class StatCounters;
 StatCounters *snmpStatGet(int);
 
-#endif /* SQUID_STAT_H_ */
+#endif /* SQUID_SRC_STAT_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_CONTROLLED_H
-#define SQUID_STORE_CONTROLLED_H
+#ifndef SQUID_SRC_STORE_CONTROLLED_H
+#define SQUID_SRC_STORE_CONTROLLED_H
 
 #include "store/Storage.h"
 
@@ -46,5 +46,5 @@ public:
 
 } // namespace Store
 
-#endif /* SQUID_STORE_CONTROLLED_H */
+#endif /* SQUID_SRC_STORE_CONTROLLED_H */
 

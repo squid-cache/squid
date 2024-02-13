@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_ERROR_FORWARD_H
-#define _SQUID_SRC_ERROR_FORWARD_H
+#ifndef SQUID_SRC_ERROR_FORWARD_H
+#define SQUID_SRC_ERROR_FORWARD_H
 
 #include "base/forward.h"
 
@@ -94,5 +94,5 @@ class ErrorState;
 
 typedef RefCount<ErrorDetail> ErrorDetailPointer;
 
-#endif /* _SQUID_SRC_ERROR_FORWARD_H */
+#endif /* SQUID_SRC_ERROR_FORWARD_H */
 

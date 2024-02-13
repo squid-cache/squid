@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CACHEPEER_H_
-#define SQUID_CACHEPEER_H_
+#ifndef SQUID_SRC_CACHEPEER_H
+#define SQUID_SRC_CACHEPEER_H
 
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
@@ -48,6 +48,7 @@ public:
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
+    /// n-th cache_peer directive, starting with 1
     u_int index = 0;
 
     /// cache_peer name (if explicitly configured) or hostname (otherwise).
@@ -179,7 +180,6 @@ public:
     Ip::Address addresses[10];
     int n_addresses = 0;
     int rr_count = 0;
-    CachePeer *next = nullptr;
     int testing_now = 0;
 
     struct {
@@ -249,5 +249,5 @@ NoteOutgoingConnectionFailure(CachePeer * const peer, const Http::StatusCode cod
 /// identify the given cache peer in cache.log messages and such
 std::ostream &operator <<(std::ostream &, const CachePeer &);
 
-#endif /* SQUID_CACHEPEER_H_ */
+#endif /* SQUID_SRC_CACHEPEER_H */
 

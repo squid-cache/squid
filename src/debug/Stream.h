@@ -233,7 +233,7 @@ HERE(std::ostream& s)
 #ifdef __PRETTY_FUNCTION__
 #define MYNAME __PRETTY_FUNCTION__ << " "
 #else
-#define MYNAME __FUNCTION__ << " "
+#define MYNAME __func__ << " "
 #endif
 
 /* some uint8_t do not like streaming control-chars (values 0-31, 127+) */

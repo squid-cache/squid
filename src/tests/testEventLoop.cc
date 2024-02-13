@@ -206,3 +206,9 @@ TestEventLoop::testSetPrimaryEngine()
     CPPUNIT_ASSERT_EQUAL(0, second_engine.lasttimeout);
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

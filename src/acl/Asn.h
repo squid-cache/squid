@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLASN_H
-#define SQUID_ACLASN_H
+#ifndef SQUID_SRC_ACL_ASN_H
+#define SQUID_SRC_ACL_ASN_H
 
 #include "acl/Data.h"
 #include "base/CbDataList.h"
@@ -40,5 +40,5 @@ private:
     CbDataList<int> *data;
 };
 
-#endif /* SQUID_ACLASN_H */
+#endif /* SQUID_SRC_ACL_ASN_H */
 

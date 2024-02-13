@@ -160,3 +160,11 @@ CharacterSet::ETAGC("ETAGC", {{0x21,0x21},{0x23,0x7e},{0x80,0xff}}),
 CharacterSet::TOKEN68C("TOKEN68C","-._~+/0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 ;
 
+const CharacterSet &
+CharacterSet::RFC3986_UNRESERVED()
+{
+    // RFC 3986: unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
+    static const auto chars = new CharacterSet("RFC3986_UNRESERVED", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~");
+    return *chars;
+}
+

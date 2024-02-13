@@ -9,6 +9,7 @@
 
 use strict;
 use warnings;
+use Getopt::Long;
 
 # Reads (presumed to be previously vetted) CONTRIBUTORS file.
 # Reads untrusted CONTIBUTORS-like new input (without the preamble).
@@ -25,6 +26,16 @@ my $SkippedAlreadyVetted = 0;
 my $SkippedNewDuplicates = 0;
 my $SkippedEmptyLines = 0;
 my $SkippedBadLines = 0;
+
+# Brief display by default.
+# Use --quiet for no output
+# Use -v or --verbose for more details, repeating them for even more details.
+my $VerboseOutput = 1;
+
+GetOptions(
+    'quiet' => sub { $VerboseOutput = 0 },
+    'verbose+' => \$VerboseOutput, 'v+' => \$VerboseOutput,
+    ) or die("$0: Bad command line arguments\n");
 
 my @VettedContributors = ();
 my @NewContributors = ();
@@ -269,14 +280,16 @@ sub loadCandidates
         die(ref($c)) unless ref($c) eq 'HASH';
 
         if (&isManuallyExcluded($c)) {
-            &noteProblem("Skipping banned entry: %s\n", $c->{raw});
+            &noteProblem("Skipping banned entry: %s\n", $c->{raw}) if ($VerboseOutput > 0);
             ++$SkippedBanned;
             next;
         }
 
         if (my ($vettedC) = grep { &similarToVetted($c, $_) } @VettedContributors) {
-            &noteProblem("Skipping already vetted:\n    %s\n    %s\n", $vettedC->{raw}, $c->{raw})
-                unless &contributorToString($vettedC) eq &contributorToString($c);
+            if ($VerboseOutput > 1) {
+                &noteProblem("Skipping already vetted:\n    %s\n    %s\n", $vettedC->{raw}, $c->{raw})
+                    unless &contributorToString($vettedC) eq &contributorToString($c);
+            }
             ++$SkippedAlreadyVetted;
             next;
         }
@@ -292,8 +305,10 @@ sub pruneCandidates
     while (@NewContributors) {
         my $c = pop @NewContributors;
         if (my ($otherC) = grep { &worseThan($c, $_) } (@VettedContributors, @NewContributors, @ngContributors)) {
-            &noteProblem("Skipping very similar:\n    %s\n    %s\n", $otherC->{raw}, $c->{raw})
-                unless &contributorToString($otherC) eq &contributorToString($c);
+            if ($VerboseOutput > 0) {
+                &noteProblem("Skipping very similar:\n    %s\n    %s\n", $otherC->{raw}, $c->{raw})
+                    unless &contributorToString($otherC) eq &contributorToString($c);
+            }
             ++$SkippedNewDuplicates;
             next;
         }
@@ -341,20 +356,27 @@ sub main
 
     &printContributors();
 
-    # TODO: Disable this debugging-like dump (by default). Or just remove?
-    printf(STDERR "Vetted lines in:     %4d\n", $VettedLinesIn);
-    printf(STDERR "Updated lines out:   %4d\n", $LinesOut);
-    printf(STDERR "\n");
-    printf(STDERR "New lines in:        %4d\n", $NewLinesIn);
-    printf(STDERR "Skipped empty lines: %4d\n", $SkippedEmptyLines);
-    printf(STDERR "Skipped banned:      %4d\n", $SkippedBanned);
-    printf(STDERR "Skipped similar:     %4d\n", $SkippedAlreadyVetted);
-    printf(STDERR "Skipped duplicates:  %4d\n", $SkippedNewDuplicates);
-    printf(STDERR "Skipped bad lines:   %4d\n", $SkippedBadLines);
-    printf(STDERR "\n");
-    printf(STDERR "Vetted contributors: %3d\n", scalar @VettedContributors);
-    printf(STDERR "New contributors:    %3d\n", scalar @NewContributors);
-    printf(STDERR "Contributors out:    %3d\n", @VettedContributors + @NewContributors);
+    if ($VerboseOutput > 1) {
+        printf(STDERR "Vetted lines in:     %4d\n", $VettedLinesIn);
+        printf(STDERR "Updated lines out:   %4d\n", $LinesOut);
+        printf(STDERR "\n");
+    }
+    if ($VerboseOutput > 2) {
+        printf(STDERR "New lines in:        %4d\n", $NewLinesIn);
+        printf(STDERR "Skipped empty lines: %4d\n", $SkippedEmptyLines) unless ($SkippedEmptyLines == 0);
+        printf(STDERR "Skipped duplicates:  %4d\n", $SkippedNewDuplicates) unless ($SkippedNewDuplicates == 0);
+    }
+    if ($VerboseOutput > 1) {
+        printf(STDERR "Skipped banned:      %4d\n", $SkippedBanned) unless ($SkippedBanned == 0);
+        printf(STDERR "Skipped similar:     %4d\n", $SkippedAlreadyVetted) unless ($SkippedAlreadyVetted == 0);
+    }
+    if ($VerboseOutput > 0) {
+        printf(STDERR "Skipped bad lines:   %4d\n", $SkippedBadLines) unless ($SkippedBadLines == 0);
+        printf(STDERR "\n");
+        printf(STDERR "Vetted contributors: %3d\n", scalar @VettedContributors) if ($VerboseOutput > 1);
+        printf(STDERR "New contributors:    %3d\n", scalar @NewContributors) unless (scalar @NewContributors == 0);
+        printf(STDERR "Contributors out:    %3d\n", @VettedContributors + @NewContributors) if ($VerboseOutput > 1);
+    }
 
     return 0;
 }
