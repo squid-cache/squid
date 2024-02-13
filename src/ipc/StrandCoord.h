@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_STRAND_COORD_H
-#define SQUID_IPC_STRAND_COORD_H
+#ifndef SQUID_SRC_IPC_STRANDCOORD_H
+#define SQUID_SRC_IPC_STRANDCOORD_H
 
 #include "ipc/forward.h"
 #include "ipc/Messages.h"
@@ -58,5 +58,5 @@ public:
 
 } // namespace Ipc;
 
-#endif /* SQUID_IPC_STRAND_COORD_H */
+#endif /* SQUID_SRC_IPC_STRANDCOORD_H */
 

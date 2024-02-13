@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS code_contexts for details.
  */
 
-#ifndef SQUID_BASE_CODE_CONTEXT_H
-#define SQUID_BASE_CODE_CONTEXT_H
+#ifndef SQUID_SRC_BASE_CODECONTEXT_H
+#define SQUID_SRC_BASE_CODECONTEXT_H
 
 #include "base/InstanceId.h"
 #include "base/RefCount.h"
@@ -106,20 +106,38 @@ public:
     CodeContext::Pointer savedCodeContext;
 };
 
-/// Executes service `callback` in `callbackContext`. If an exception occurs,
-/// the callback context is preserved, so that the exception is associated with
-/// the callback that triggered them (rather than with the service).
-///
+/// A helper that calls the given function in the given call context. If the
+/// function throws, the call context is preserved, so that the exception is
+/// associated with the context that triggered it.
+template <typename Fun>
+inline void
+CallAndRestore_(const CodeContext::Pointer &context, Fun &&fun)
+{
+    const auto savedCodeContext(CodeContext::Current());
+    CodeContext::Reset(context);
+    fun();
+    CodeContext::Reset(savedCodeContext);
+}
+
 /// Service code running in its own service context should use this function.
+/// \sa CallAndRestore_()
 template <typename Fun>
 inline void
 CallBack(const CodeContext::Pointer &callbackContext, Fun &&callback)
 {
     // TODO: Consider catching exceptions and letting CodeContext handle them.
-    const auto savedCodeContext(CodeContext::Current());
-    CodeContext::Reset(callbackContext);
-    callback();
-    CodeContext::Reset(savedCodeContext);
+    CallAndRestore_(callbackContext, callback);
+}
+
+/// To supply error-reporting code with parsing context X (where the error
+/// occurred), parsing code should use this function when initiating parsing
+/// inside that context X.
+/// \sa CallAndRestore_()
+template <typename Fun>
+inline void
+CallParser(const CodeContext::Pointer &parsingContext, Fun &&parse)
+{
+    CallAndRestore_(parsingContext, parse);
 }
 
 /// Executes `service` in `serviceContext` but due to automatic caller context
@@ -154,5 +172,5 @@ CallContextCreator(Fun &&creator)
 
 /// @}
 
-#endif
+#endif /* SQUID_SRC_BASE_CODECONTEXT_H */
 

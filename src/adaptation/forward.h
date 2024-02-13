@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__FORWARD_H
-#define SQUID_ADAPTATION__FORWARD_H
+#ifndef SQUID_SRC_ADAPTATION_FORWARD_H
+#define SQUID_SRC_ADAPTATION_FORWARD_H
 
 // forward-declarations for commonly used adaptation classes
 
@@ -37,5 +37,5 @@ typedef RefCount<ServiceGroup> ServiceGroupPointer;
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__FORWARD_H */
+#endif /* SQUID_SRC_ADAPTATION_FORWARD_H */
 

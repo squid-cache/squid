@@ -526,7 +526,7 @@ ACLExternal::parse()
 
     // def->name is the name of the external_acl_type.
     // this is the name of the 'acl' directive being tested
-    data->name = xstrdup(AclMatchedName);
+    data->name = xstrdup(name);
 
     while ((token = ConfigParser::strtokFile())) {
         wordlistAdd(&data->arguments, token);

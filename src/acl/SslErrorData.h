@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSSL_ERRORDATA_H
-#define SQUID_ACLSSL_ERRORDATA_H
+#ifndef SQUID_SRC_ACL_SSLERRORDATA_H
+#define SQUID_SRC_ACL_SSLERRORDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -28,5 +28,5 @@ public:
     Security::Errors values;
 };
 
-#endif /* SQUID_ACLSSL_ERRORDATA_H */
+#endif /* SQUID_SRC_ACL_SSLERRORDATA_H */
 

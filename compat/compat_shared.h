@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMPAT_SHARED_H
-#define _SQUID_COMPAT_SHARED_H
+#ifndef SQUID_COMPAT_COMPAT_SHARED_H
+#define SQUID_COMPAT_COMPAT_SHARED_H
 
 /*
  * This file contains all the compatibility and portability hacks
@@ -254,5 +254,5 @@ const char * squid_strnstr(const char *s, const char *find, size_t slen);
 #define PRINTF_FORMAT_ARG3
 #endif
 
-#endif /* _SQUID_COMPAT_SHARED_H */
+#endif /* SQUID_COMPAT_COMPAT_SHARED_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLPROTOCOL_H
-#define SQUID_ACLPROTOCOL_H
+#ifndef SQUID_SRC_ACL_PROTOCOL_H
+#define SQUID_SRC_ACL_PROTOCOL_H
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
@@ -27,5 +27,5 @@ public:
 
 } // namespace Acl
 
-#endif /* SQUID_ACLPROTOCOL_H */
+#endif /* SQUID_SRC_ACL_PROTOCOL_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 73    HTTP Request */
 
-#ifndef SQUID_REQUESTFLAGS_H_
-#define SQUID_REQUESTFLAGS_H_
+#ifndef SQUID_SRC_REQUESTFLAGS_H
+#define SQUID_SRC_REQUESTFLAGS_H
 
 #include "base/SupportOrVeto.h"
 
@@ -140,5 +140,5 @@ public:
     void disableCacheUse(const char *reason);
 };
 
-#endif /* SQUID_REQUESTFLAGS_H_ */
+#endif /* SQUID_SRC_REQUESTFLAGS_H */
 

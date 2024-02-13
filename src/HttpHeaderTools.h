@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPHEADERTOOLS_H
-#define SQUID_HTTPHEADERTOOLS_H
+#ifndef SQUID_SRC_HTTPHEADERTOOLS_H
+#define SQUID_SRC_HTTPHEADERTOOLS_H
 
 #include "acl/forward.h"
 #include "format/Format.h"
@@ -133,5 +133,5 @@ const char *getStringPrefix(const char *str, size_t len);
 
 void httpHdrMangleList(HttpHeader *, HttpRequest *, const AccessLogEntryPointer &al, req_or_rep_t req_or_rep);
 
-#endif
+#endif /* SQUID_SRC_HTTPHEADERTOOLS_H */
 

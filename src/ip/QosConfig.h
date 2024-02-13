@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_QOSCONFIG_H
-#define SQUID_QOSCONFIG_H
+#ifndef SQUID_SRC_IP_QOSCONFIG_H
+#define SQUID_SRC_IP_QOSCONFIG_H
 
 #include "acl/forward.h"
 #include "cbdata.h"
@@ -251,5 +251,5 @@ inline void parse_QosConfig(Ip::Qos::Config * c) { c->parseConfigLine(); }
 inline void free_QosConfig(Ip::Qos::Config *) {}
 void dump_QosConfig(StoreEntry *, const char * directiveName, const Ip::Qos::Config &);
 
-#endif /* SQUID_QOSCONFIG_H */
+#endif /* SQUID_SRC_IP_QOSCONFIG_H */
 

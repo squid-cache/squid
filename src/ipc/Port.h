@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_PORT_H
-#define SQUID_IPC_PORT_H
+#ifndef SQUID_SRC_IPC_PORT_H
+#define SQUID_SRC_IPC_PORT_H
 
 #include "ipc/UdsOp.h"
 #include "SquidString.h"
@@ -51,5 +51,5 @@ extern const char strandAddrLabel[]; ///< strand's listening address unique labe
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_PORT_H */
+#endif /* SQUID_SRC_IPC_PORT_H */
 

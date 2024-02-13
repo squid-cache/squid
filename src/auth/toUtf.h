@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_CHARSET_H
-#define _SQUID_CHARSET_H
+#ifndef SQUID_SRC_AUTH_TOUTF_H
+#define SQUID_SRC_AUTH_TOUTF_H
 
 #include "sbuf/forward.h"
 
@@ -20,5 +20,5 @@ SBuf Cp1251ToUtf8(const char *in);
 /// returns whether the given input is a valid (or empty) sequence of UTF-8 code points
 bool isValidUtf8String(const char *source, const char *sourceEnd);
 
-#endif /* _SQUID_CHARSET_H */
+#endif /* SQUID_SRC_AUTH_TOUTF_H */
 

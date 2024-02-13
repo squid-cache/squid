@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FADING_COUNTER_H
-#define SQUID_FADING_COUNTER_H
+#ifndef SQUID_SRC_FADINGCOUNTER_H
+#define SQUID_SRC_FADINGCOUNTER_H
 
 #include <vector>
 
@@ -37,5 +37,5 @@ private:
     int total; ///< number of remembered events (possibly stale)
 };
 
-#endif /* SQUID_FADING_COUNTER_H */
+#endif /* SQUID_SRC_FADINGCOUNTER_H */
 

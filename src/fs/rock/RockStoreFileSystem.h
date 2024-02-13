@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_ROCK_FS_H
-#define SQUID_FS_ROCK_FS_H
+#ifndef SQUID_SRC_FS_ROCK_ROCKSTOREFILESYSTEM_H
+#define SQUID_SRC_FS_ROCK_ROCKSTOREFILESYSTEM_H
 
 #include "StoreFileSystem.h"
 
@@ -38,5 +38,5 @@ private:
 
 } // namespace Rock
 
-#endif /* SQUID_FS_ROCK_FS_H */
+#endif /* SQUID_SRC_FS_ROCK_ROCKSTOREFILESYSTEM_H */
 

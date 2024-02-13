@@ -90,6 +90,8 @@ private:
     /// \returns (linked) "line" Options supported by this Acl::Node
     /// \see Acl::Node::options()
     virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
+
+    static void ParseNamed(ConfigParser &, Node **head, const char *name);
 };
 
 } // namespace Acl

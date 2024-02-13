@@ -6,10 +6,10 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_GETFULLHOSTNAME_H
-#define _SQUID_GETFULLHOSTNAME_H
+#ifndef SQUID_INCLUDE_GETFULLHOSTNAME_H
+#define SQUID_INCLUDE_GETFULLHOSTNAME_H
 
 SQUIDCEXTERN const char *getfullhostname(void);
 
-#endif /* _SQUID_GETFULLHOSTNAME_H */
+#endif /* SQUID_INCLUDE_GETFULLHOSTNAME_H */
 

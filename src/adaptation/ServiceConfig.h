@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__SERVICE_CONFIG_H
-#define SQUID_ADAPTATION__SERVICE_CONFIG_H
+#ifndef SQUID_SRC_ADAPTATION_SERVICECONFIG_H
+#define SQUID_SRC_ADAPTATION_SERVICECONFIG_H
 
 #include "adaptation/Elements.h"
 #include "base/RefCount.h"
@@ -69,5 +69,5 @@ protected:
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__SERVICE_CONFIG_H */
+#endif /* SQUID_SRC_ADAPTATION_SERVICECONFIG_H */
 

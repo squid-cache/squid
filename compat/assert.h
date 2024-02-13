@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ASSERT_H
-#define SQUID_ASSERT_H
+#ifndef SQUID_COMPAT_ASSERT_H
+#define SQUID_COMPAT_ASSERT_H
 
 #if PURIFY
 #define assert(EX) ((void)0)
@@ -24,5 +24,5 @@ extern void
 #endif
 xassert(const char *, const char *, int);
 
-#endif /* SQUID_ASSERT_H */
+#endif /* SQUID_COMPAT_ASSERT_H */
 

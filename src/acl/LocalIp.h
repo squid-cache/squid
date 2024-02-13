@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLLOCALIP_H
-#define SQUID_ACLLOCALIP_H
+#ifndef SQUID_SRC_ACL_LOCALIP_H
+#define SQUID_SRC_ACL_LOCALIP_H
 
 #include "acl/Ip.h"
 
@@ -21,5 +21,5 @@ public:
     int match(ACLChecklist *checklist) override;
 };
 
-#endif /* SQUID_ACLLOCALIP_H */
+#endif /* SQUID_SRC_ACL_LOCALIP_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 08    Swap File Bitmap */
 
-#ifndef FILEMAP_H_
-#define FILEMAP_H_
+#ifndef SQUID_SRC_FILEMAP_H
+#define SQUID_SRC_FILEMAP_H
 
 #include "store/forward.h"
 
@@ -76,5 +76,5 @@ private:
     unsigned long *bitmap;
 };
 
-#endif /* FILEMAP_H_ */
+#endif /* SQUID_SRC_FILEMAP_H */
 

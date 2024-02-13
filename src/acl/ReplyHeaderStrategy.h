@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLREPLYHEADERSTRATEGY_H
-#define SQUID_ACLREPLYHEADERSTRATEGY_H
+#ifndef SQUID_SRC_ACL_REPLYHEADERSTRATEGY_H
+#define SQUID_SRC_ACL_REPLYHEADERSTRATEGY_H
 
 #include "acl/Data.h"
 #include "acl/FilledChecklist.h"
@@ -44,5 +44,5 @@ Acl::ReplyHeaderCheck<header>::match(ACLChecklist * const ch)
     return data->match(theHeader);
 }
 
-#endif /* SQUID_REPLYHEADERSTRATEGY_H */
+#endif /* SQUID_SRC_ACL_REPLYHEADERSTRATEGY_H */
 

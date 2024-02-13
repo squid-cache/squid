@@ -125,6 +125,25 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
+	<tag>acl</tag>
+	<p>Changed <em>src</em> to detect and handle overlapping IP and
+	   IP-range values. Merging where necessary.
+	<p>Changed <em>dst</em> to detect and handle overlapping IP and
+	   IP-range values. Merging where necessary.
+	<p>Changed <em>localip</em> to detect and handle overlapping IP and
+	   IP-range values. Merging where necessary.
+	<p>Changed <em>ssl::server_name</em> to detect and handle overlapping
+	   sub-domain and wildcard domains. Merging or ignoring where
+	   necessary.
+	<p>Changed <em>srcdomain</em> to detect and handle overlapping
+	   sub-domain and wildcard domains. Merging or ignoring where
+	   necessary.
+	<p>Changed <em>dstdomain</em> to detect and handle overlapping
+	   sub-domain and wildcard domains. Merging or ignoring where
+	   necessary.
+	<p>Changed <em>http_status</em> to detect and handle overlapping
+	   status and status-range values. Merging where necessary.
+
 	<tag>buffered_logs</tag>
 	<p>Honor the <em>off</em> setting in 'udp' access_log module.
 

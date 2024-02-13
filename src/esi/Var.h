@@ -8,8 +8,8 @@
 
 /* DEBUG: section 86    ESI processing */
 
-#ifndef SQUID_ESIVAR_H
-#define SQUID_ESIVAR_H
+#ifndef SQUID_SRC_ESI_VAR_H
+#define SQUID_SRC_ESI_VAR_H
 
 #include "esi/Element.h"
 #include "esi/Sequence.h"
@@ -25,5 +25,5 @@ public:
     }
 };
 
-#endif /* SQUID_ESIVAR_H */
+#endif /* SQUID_SRC_ESI_VAR_H */
 

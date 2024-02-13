@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IDENT_CONFIG_H
-#define SQUID_IDENT_CONFIG_H
+#ifndef SQUID_SRC_IDENT_CONFIG_H
+#define SQUID_SRC_IDENT_CONFIG_H
 
 #include "acl/Acl.h"
 
@@ -25,5 +25,5 @@ extern IdentConfig TheConfig;
 
 } // namespace Ident
 
-#endif /* SQUID_IDENT_CONFIG_H */
+#endif /* SQUID_SRC_IDENT_CONFIG_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CBDATALIST_H
-#define SQUID_CBDATALIST_H
+#ifndef SQUID_SRC_BASE_CBDATALIST_H
+#define SQUID_SRC_BASE_CBDATALIST_H
 
 #include "cbdata.h"
 
@@ -195,5 +195,5 @@ CbDataListContainer<C>::empty() const
     return head == nullptr;
 }
 
-#endif /* SQUID_CBDATALIST_H */
+#endif /* SQUID_SRC_BASE_CBDATALIST_H */
 

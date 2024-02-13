@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _MEM_POOL_MALLOC_H_
-#define _MEM_POOL_MALLOC_H_
+#ifndef SQUID_SRC_MEM_POOLMALLOC_H
+#define SQUID_SRC_MEM_POOLMALLOC_H
 
 /**
  \defgroup MemPoolsAPI  Memory Management (Memory Pool Allocator)
@@ -53,5 +53,5 @@ private:
     std::stack<void *> freelist;
 };
 
-#endif /* _MEM_POOL_MALLOC_H_ */
+#endif /* SQUID_SRC_MEM_POOLMALLOC_H */
 

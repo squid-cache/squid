@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMM_IOCALLBACK_H
-#define _SQUID_COMM_IOCALLBACK_H
+#ifndef SQUID_SRC_COMM_IOCALLBACK_H
+#define SQUID_SRC_COMM_IOCALLBACK_H
 
 #include "base/AsyncCall.h"
 #include "comm/Flag.h"
@@ -80,5 +80,5 @@ void CallbackTableDestruct();
 
 } // namespace Comm
 
-#endif /* _SQUID_COMM_IOCALLBACK_H */
+#endif /* SQUID_SRC_COMM_IOCALLBACK_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICAPMODXACT_H
-#define SQUID_ICAPMODXACT_H
+#ifndef SQUID_SRC_ADAPTATION_ICAP_MODXACT_H
+#define SQUID_SRC_ADAPTATION_ICAP_MODXACT_H
 
 #include "AccessLogEntry.h"
 #include "adaptation/icap/InOut.h"
@@ -398,5 +398,5 @@ protected:
 } // namespace Icap
 } // namespace Adaptation
 
-#endif /* SQUID_ICAPMOD_XACT_H */
+#endif /* SQUID_SRC_ADAPTATION_ICAP_MODXACT_H */
 

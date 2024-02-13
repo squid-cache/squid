@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_MIB_H
-#define SQUID_SNMP_MIB_H
+#ifndef SQUID_INCLUDE_SNMP_MIB_H
+#define SQUID_INCLUDE_SNMP_MIB_H
 
 /***************************************************************************
  *
@@ -38,5 +38,5 @@
 #include <asn1.h>       /* Need OID Definition */
 #include <snmp_vars.h>      /* Need variable_list */
 
-#endif /* SQUID_SNMP_MIB_H */
+#endif /* SQUID_INCLUDE_SNMP_MIB_H */
 

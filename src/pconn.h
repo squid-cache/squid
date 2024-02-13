@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PCONN_H
-#define SQUID_PCONN_H
+#ifndef SQUID_SRC_PCONN_H
+#define SQUID_SRC_PCONN_H
 
 #include "base/CbcPointer.h"
 #include "base/RunnersRegistry.h"
@@ -191,5 +191,5 @@ private:
     static PconnModule * instance;
 };
 
-#endif /* SQUID_PCONN_H */
+#endif /* SQUID_SRC_PCONN_H */
 

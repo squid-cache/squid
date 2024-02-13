@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_LOADABLE_MODULE_H
-#define SQUID_LOADABLE_MODULE_H
+#ifndef SQUID_SRC_LOADABLEMODULE_H
+#define SQUID_SRC_LOADABLEMODULE_H
 
 #include "SquidString.h"
 
@@ -36,5 +36,5 @@ private:
     const char *errorMsg();
 };
 
-#endif
+#endif /* SQUID_SRC_LOADABLEMODULE_H */
 

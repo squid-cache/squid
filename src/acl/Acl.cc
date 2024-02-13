@@ -66,6 +66,22 @@ Make(TypeName typeName)
     return result;
 }
 
+/// CodeContext of the being-parsed acl directive
+class ParsingContext: public CodeContext
+{
+public:
+    using Pointer = RefCount<ParsingContext>;
+
+    explicit ParsingContext(const SBuf &name): name_(name) {}
+
+    /* CodeContext API */
+    ScopedId codeContextGist() const override;
+    std::ostream &detailCodeContext(std::ostream &os) const override;
+
+private:
+    SBuf name_; ///< the aclname parameter of the being-parsed acl directive
+};
+
 } // namespace Acl
 
 void
@@ -80,9 +96,7 @@ void
 Acl::SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey)
 {
     if (!newKey) {
-        throw TextException(ToSBuf("An acl declaration is missing a ", keyParameterName,
-                                   Debug::Extra, "ACL name: ", AclMatchedName),
-                            Here());
+        throw TextException(ToSBuf("An acl declaration is missing a ", keyParameterName), Here());
     }
 
     if (keyStorage.isEmpty()) {
@@ -96,11 +110,26 @@ Acl::SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey)
     throw TextException(ToSBuf("Attempt to change the value of the ", keyParameterName, " argument in a subsequent acl declaration:",
                                Debug::Extra, "previously seen value: ", keyStorage,
                                Debug::Extra, "new/conflicting value: ", newKey,
-                               Debug::Extra, "ACL name: ", AclMatchedName,
                                Debug::Extra, "advice: Use a dedicated ACL name for each distinct ", keyParameterName,
                                " (and group those ACLs together using an 'any-of' ACL)."),
                         Here());
 }
+
+/* Acl::ParsingContext */
+
+ScopedId
+Acl::ParsingContext::codeContextGist() const {
+    return ScopedId("acl");
+}
+
+std::ostream &
+Acl::ParsingContext::detailCodeContext(std::ostream &os) const
+{
+    return os << Debug::Extra << "acl name: " << name_ <<
+           Debug::Extra << "configuration context: " << ConfigParser::CurrentLocation();
+}
+
+/* Acl::Node */
 
 void *
 Acl::Node::operator new (size_t)
@@ -192,9 +221,6 @@ Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
 {
     /* we're already using strtok() to grok the line */
     char *t = nullptr;
-    Node *A = nullptr;
-    LOCAL_ARRAY(char, aclname, ACL_NAME_SZ);
-    int new_acl = 0;
 
     /* snarf the ACL name */
 
@@ -211,7 +237,16 @@ Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
         return;
     }
 
-    xstrncpy(aclname, t, ACL_NAME_SZ);
+    SBuf aclname(t);
+    CallParser(ParsingContext::Pointer::Make(aclname), [&] {
+        ParseNamed(parser, head, aclname.c_str()); // TODO: Convert Node::name to SBuf
+    });
+}
+
+/// parses acl directive parts that follow aclname
+void
+Acl::Node::ParseNamed(ConfigParser &parser, Node ** const head, const char * const aclname)
+{
     /* snarf the ACL type */
     const char *theType;
 
@@ -252,6 +287,8 @@ Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
         theType = "client_connection_mark";
     }
 
+    Node *A = nullptr;
+    int new_acl = 0;
     if ((A = FindByName(aclname)) == nullptr) {
         debugs(28, 3, "aclParseAclLine: Creating ACL '" << aclname << "'");
         A = Acl::Make(theType);
@@ -268,21 +305,10 @@ Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
         new_acl = 0;
     }
 
-    /*
-     * Here we set AclMatchedName in case we need to use it in a
-     * warning message in Acl::SplayInserter::Merge().
-     */
-    AclMatchedName = A->name;   /* ugly */
-
     A->parseFlags();
 
     /*split the function here */
     A->parse();
-
-    /*
-     * Clear AclMatchedName from our temporary hack
-     */
-    AclMatchedName = nullptr;  /* ugly */
 
     if (!new_acl)
         return;

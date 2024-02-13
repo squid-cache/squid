@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_OS_MACOSX_H
-#define SQUID_OS_MACOSX_H
+#ifndef SQUID_COMPAT_OS_MACOSX_H
+#define SQUID_COMPAT_OS_MACOSX_H
 
 #if _SQUID_APPLE_
 
@@ -29,5 +29,5 @@
 #include "compat/cmsg.h"
 
 #endif /* _SQUID_APPLE_ */
-#endif /* SQUID_OS_MACOSX_H */
+#endif /* SQUID_COMPAT_OS_MACOSX_H */
 

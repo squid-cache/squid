@@ -27,5 +27,5 @@ public:
     uint64_t messageTotal() const {return header + payloadData;}
 };
 
-#endif  /* SQUID_SRC_MESSAGESIZES_H */
+#endif /* SQUID_SRC_MESSAGESIZES_H */
 

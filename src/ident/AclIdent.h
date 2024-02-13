@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IDENT_ACLIDENT_H
-#define SQUID_IDENT_ACLIDENT_H
+#ifndef SQUID_SRC_IDENT_ACLIDENT_H
+#define SQUID_SRC_IDENT_ACLIDENT_H
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
@@ -42,5 +42,5 @@ private:
     char const *type_;
 };
 
-#endif /* SQUID_IDENT_ACLIDENT_H */
+#endif /* SQUID_SRC_IDENT_ACLIDENT_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__INITIATOR_H
-#define SQUID_ADAPTATION__INITIATOR_H
+#ifndef SQUID_SRC_ADAPTATION_INITIATOR_H
+#define SQUID_SRC_ADAPTATION_INITIATOR_H
 
 #include "adaptation/forward.h"
 #include "base/AsyncJob.h"
@@ -54,5 +54,5 @@ protected:
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__INITIATOR_H */
+#endif /* SQUID_SRC_ADAPTATION_INITIATOR_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTP_H
-#define SQUID_HTTP_H
+#ifndef SQUID_SRC_HTTP_H
+#define SQUID_SRC_HTTP_H
 
 #include "clients/Client.h"
 #include "comm.h"
@@ -163,5 +163,5 @@ int httpCachable(const HttpRequestMethod&);
 void httpStart(FwdState *);
 SBuf httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
-#endif /* SQUID_HTTP_H */
+#endif /* SQUID_SRC_HTTP_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_DOWNLOADER_H
-#define SQUID_DOWNLOADER_H
+#ifndef SQUID_SRC_DOWNLOADER_H
+#define SQUID_SRC_DOWNLOADER_H
 
 #include "base/AsyncCallbacks.h"
 #include "base/AsyncJob.h"
@@ -87,5 +87,5 @@ private:
     DownloaderContextPointer context_;
 };
 
-#endif
+#endif /* SQUID_SRC_DOWNLOADER_H */
 

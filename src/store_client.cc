@@ -633,7 +633,7 @@ store_client::handleBodyFromDisk()
     if (!answeredOnce()) {
         // All on-disk responses have HTTP headers. First disk body read(s)
         // include HTTP headers that we must parse (if needed) and skip.
-        const auto haveHttpHeaders = entry->mem_obj->baseReply().pstate == Http::Message::psParsed;
+        const auto haveHttpHeaders = entry->hasParsedReplyHeader();
         if (!haveHttpHeaders && !parseHttpHeadersFromDisk())
             return;
         skipHttpHeadersFromDisk();

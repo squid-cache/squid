@@ -1205,7 +1205,7 @@ TestSBuf::testStdAlgorithm()
     {
         SBuf src(fox), dst;
         std::copy_if(src.begin(), src.end(), std::back_inserter(dst),
-            [](char c) { return c != 'o'; });
+        [](char c) { return c != 'o'; });
         CPPUNIT_ASSERT_EQUAL(SBuf("The quick brwn fx jumped ver the lazy dg"), dst);
     }
 }

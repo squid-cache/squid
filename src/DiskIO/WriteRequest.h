@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_WRITEREQUEST_H
-#define SQUID_WRITEREQUEST_H
+#ifndef SQUID_SRC_DISKIO_WRITEREQUEST_H
+#define SQUID_SRC_DISKIO_WRITEREQUEST_H
 
 #include "base/RefCount.h"
 #include "cbdata.h"
@@ -28,5 +28,5 @@ public:
     FREE *free_func;
 };
 
-#endif /* SQUID_WRITEREQUEST_H */
+#endif /* SQUID_SRC_DISKIO_WRITEREQUEST_H */
 

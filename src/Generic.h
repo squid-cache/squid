@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_GENERIC_H
-#define SQUID_GENERIC_H
+#ifndef SQUID_SRC_GENERIC_H
+#define SQUID_SRC_GENERIC_H
 
 #include "dlink.h"
 
@@ -93,5 +93,5 @@ struct PointerPrinter {
     std::string delimiter;
 };
 
-#endif /* SQUID_GENERIC_H */
+#endif /* SQUID_SRC_GENERIC_H */
 

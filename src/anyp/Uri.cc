@@ -81,6 +81,29 @@ AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &ignore)
     return output;
 }
 
+SBuf
+AnyP::Uri::Decode(const SBuf &buf)
+{
+    SBuf output;
+    Parser::Tokenizer tok(buf);
+    while (!tok.atEnd()) {
+        SBuf token;
+        static const auto unencodedChars = CharacterSet("percent", "%").complement("unencoded");
+        if (tok.prefix(token, unencodedChars))
+            output.append(token);
+
+        // we are either at '%' or at end of input
+        if (tok.skip('%')) {
+            int64_t hex1 = 0, hex2 = 0;
+            if (tok.int64(hex1, 16, false, 1) && tok.int64(hex2, 16, false, 1))
+                output.append(static_cast<char>((hex1 << 4) | hex2));
+            else
+                throw TextException("invalid pct-encoded triplet", Here());
+        }
+    }
+    return output;
+}
+
 const SBuf &
 AnyP::Uri::Asterisk()
 {

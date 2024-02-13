@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTREQUESTCONTEXT_H
-#define SQUID_CLIENTREQUESTCONTEXT_H
+#ifndef SQUID_SRC_CLIENTREQUESTCONTEXT_H
+#define SQUID_SRC_CLIENTREQUESTCONTEXT_H
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
@@ -89,5 +89,5 @@ public:
 #endif
 };
 
-#endif /* SQUID_CLIENTREQUESTCONTEXT_H */
+#endif /* SQUID_SRC_CLIENTREQUESTCONTEXT_H */
 
