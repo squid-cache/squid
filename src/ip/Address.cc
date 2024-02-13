@@ -683,9 +683,10 @@ Ip::Address::InitAddr(struct addrinfo *&ai)
     }
 
     // remove any existing data.
-    if (ai->ai_addr) delete ai->ai_addr;
+    if (ai->ai_addr)
+        delete ai->ai_addr;
 
-    ai->ai_addr = (struct sockaddr*)new sockaddr_in6;
+    ai->ai_addr = static_cast<struct sockaddr*>(new sockaddr_in6);
     memset(ai->ai_addr, 0, sizeof(struct sockaddr_in6));
 
     ai->ai_addrlen = sizeof(struct sockaddr_in6);
@@ -695,9 +696,11 @@ Ip::Address::InitAddr(struct addrinfo *&ai)
 void
 Ip::Address::FreeAddr(struct addrinfo *&ai)
 {
-    if (ai == nullptr) return;
+    if (!ai)
+        return;
 
-    if (ai->ai_addr) delete (struct sockaddr_in6*)ai->ai_addr;
+    if (ai->ai_addr)
+        delete static_cast<struct sockaddr*>(struct sockaddr_in6*>(ai->ai_addr);
 
     ai->ai_addr = nullptr;
 
