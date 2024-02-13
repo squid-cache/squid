@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLANNOTATETRANSACTION
-#define SQUID_ACLANNOTATETRANSACTION
+#ifndef SQUID_SRC_ACL_ANNOTATETRANSACTION_H
+#define SQUID_SRC_ACL_ANNOTATETRANSACTION_H
 
 #include "acl/Note.h"
 #include "Notes.h"
@@ -20,5 +20,5 @@ public:
     bool requiresRequest() const override { return true; }
 };
 
-#endif /* SQUID_ACLANNOTATETRANSACTION */
+#endif /* SQUID_SRC_ACL_ANNOTATETRANSACTION_H */
 

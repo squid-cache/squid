@@ -27,7 +27,7 @@
 #include <strings.h>
 #endif
 
-#ifndef SQUID_RFC1035_H
+#if !defined(RFC1035_MAXHOSTNAMESZ)
 #error RFC3596 Library depends on RFC1035
 #endif
 
