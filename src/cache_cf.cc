@@ -92,6 +92,7 @@
 #include "snmp.h"
 #endif
 
+#include <algorithm>
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
