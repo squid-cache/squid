@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_ROCK_HEADER_UPDATER_H
-#define SQUID_FS_ROCK_HEADER_UPDATER_H
+#ifndef SQUID_SRC_FS_ROCK_ROCKHEADERUPDATER_H
+#define SQUID_SRC_FS_ROCK_ROCKHEADERUPDATER_H
 
 #include "base/AsyncJob.h"
 #include "cbdata.h"
@@ -82,5 +82,5 @@ std::ostream &operator <<(std::ostream &os, const HeaderUpdater::IoCbParams &par
 
 } // namespace Rock
 
-#endif /* SQUID_FS_ROCK_HEADER_UPDATER_H */
+#endif /* SQUID_SRC_FS_ROCK_ROCKHEADERUPDATER_H */
 

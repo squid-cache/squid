@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_IOIOSTRATEGY_H
-#define SQUID_IPC_IOIOSTRATEGY_H
+#ifndef SQUID_SRC_DISKIO_IPCIO_IPCIOIOSTRATEGY_H
+#define SQUID_SRC_DISKIO_IPCIO_IPCIOIOSTRATEGY_H
 #include "DiskIO/DiskIOStrategy.h"
 
 class IpcIoIOStrategy : public DiskIOStrategy
@@ -21,5 +21,5 @@ public:
     void unlinkFile (char const *) override;
 };
 
-#endif /* SQUID_IPC_IOIOSTRATEGY_H */
+#endif /* SQUID_SRC_DISKIO_IPCIO_IPCIOIOSTRATEGY_H */
 

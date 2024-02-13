@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PARSER_TOKENIZER_H_
-#define SQUID_PARSER_TOKENIZER_H_
+#ifndef SQUID_SRC_PARSER_TOKENIZER_H
+#define SQUID_SRC_PARSER_TOKENIZER_H
 
 #include "base/CharacterSet.h"
 #include "sbuf/SBuf.h"
@@ -179,5 +179,5 @@ private:
 
 } /* namespace Parser */
 
-#endif /* SQUID_PARSER_TOKENIZER_H_ */
+#endif /* SQUID_SRC_PARSER_TOKENIZER_H */
 

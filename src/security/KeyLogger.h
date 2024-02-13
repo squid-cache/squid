@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_SECURITY_KEY_LOGGER_H
-#define SQUID_SRC_SECURITY_KEY_LOGGER_H
+#ifndef SQUID_SRC_SECURITY_KEYLOGGER_H
+#define SQUID_SRC_SECURITY_KEYLOGGER_H
 
 #include "acl/forward.h"
 #include "security/CommunicationSecrets.h"
@@ -53,5 +53,5 @@ Security::KeyLogger::checkpoint(const Connection &sconn, const Acl::ChecklistFil
         maybeLog(sconn, caller);
 }
 
-#endif /* SQUID_SRC_SECURITY_KEY_LOGGER_H */
+#endif /* SQUID_SRC_SECURITY_KEYLOGGER_H */
 

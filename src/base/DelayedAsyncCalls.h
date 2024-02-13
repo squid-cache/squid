@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_DELAYEDASYNCCALLS_H
-#define SQUID_BASE_DELAYEDASYNCCALLS_H
+#ifndef SQUID_SRC_BASE_DELAYEDASYNCCALLS_H
+#define SQUID_SRC_BASE_DELAYEDASYNCCALLS_H
 
 #include "base/AsyncCallList.h"
 
@@ -29,5 +29,5 @@ private:
     AsyncCallList deferredReads;
 };
 
-#endif /* SQUID_BASE_DELAYEDASYNCCALLS_H */
+#endif /* SQUID_SRC_BASE_DELAYEDASYNCCALLS_H */
 

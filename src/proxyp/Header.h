@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PROXYP_HEADER_H
-#define SQUID_PROXYP_HEADER_H
+#ifndef SQUID_SRC_PROXYP_HEADER_H
+#define SQUID_SRC_PROXYP_HEADER_H
 
 #include "base/RefCount.h"
 #include "ip/Address.h"
@@ -83,5 +83,5 @@ private:
 
 } // namespace ProxyProtocol
 
-#endif
+#endif /* SQUID_SRC_PROXYP_HEADER_H */
 

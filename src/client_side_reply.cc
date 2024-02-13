@@ -298,7 +298,7 @@ clientReplyContext::processExpired()
                 entry = e;
                 entry->lock("clientReplyContext::processExpired#alreadyRevalidating");
             } else {
-                e->abandon(__FUNCTION__);
+                e->abandon(__func__);
                 // assume mayInitiateCollapsing() would fail too
                 collapsingAllowed = false;
             }
@@ -924,7 +924,7 @@ clientReplyContext::purgeDoPurge()
             const auto err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr,
                                               http->getConn(), http->request, http->al);
             startError(err);
-            entry->abandon(__FUNCTION__);
+            entry->abandon(__func__);
             return;
         }
         firstFound = true;
@@ -1062,7 +1062,7 @@ clientReplyContext::storeNotOKTransferDone() const
     assert(mem != nullptr);
     assert(http->request != nullptr);
 
-    if (mem->baseReply().pstate != Http::Message::psParsed)
+    if (!http->storeEntry()->hasParsedReplyHeader())
         /* haven't found end of headers yet */
         return 0;
 

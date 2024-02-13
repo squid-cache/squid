@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_OS_MINGW_H
-#define SQUID_OS_MINGW_H
+#ifndef SQUID_COMPAT_OS_MINGW_H
+#define SQUID_COMPAT_OS_MINGW_H
 
 #if _SQUID_MINGW_
 
@@ -32,5 +32,19 @@
 #include <windows.h>
 #endif
 
+// needed for _commmit and _get_osfhandle
+#if HAVE_IO_H
+#include <io.h>
+#endif
+
+#if !HAVE_FSYNC
+// _commit(fd) is API-compatible with fsync(fd) and has equivalent behaviour
+inline int
+fsync(int fd)
+{
+    return _commit(fd);
+}
+#endif
+
 #endif /* _SQUID_MINGW_*/
-#endif /* SQUID_OS_MINGW_H */
+#endif /* SQUID_COMPAT_OS_MINGW_H */

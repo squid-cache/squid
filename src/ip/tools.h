@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_IP_TOOLS_H
-#define _SQUID_SRC_IP_TOOLS_H
+#ifndef SQUID_SRC_IP_TOOLS_H
+#define SQUID_SRC_IP_TOOLS_H
 
 namespace Ip
 {
@@ -26,5 +26,5 @@ extern int EnableIpv6;
 
 } // namespace Ip
 
-#endif /* _SQUID_SRC_IP_TOOLS_H */
+#endif /* SQUID_SRC_IP_TOOLS_H */
 

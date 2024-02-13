@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _MEM_POOL_H_
-#define _MEM_POOL_H_
+#ifndef SQUID_SRC_MEM_POOL_H
+#define SQUID_SRC_MEM_POOL_H
 
 /**
  \defgroup MemPoolsAPI  Memory Management (Memory Pool Allocator)
@@ -122,5 +122,5 @@ private:
 /// Creates a named MemPool of elements with the given size
 #define memPoolCreate MemPools::GetInstance().create
 
-#endif /* _MEM_POOL_H_ */
+#endif /* SQUID_SRC_MEM_POOL_H */
 

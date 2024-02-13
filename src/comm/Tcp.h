@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__SRC_COMM_TCP_H
-#define SQUID__SRC_COMM_TCP_H
+#ifndef SQUID_SRC_COMM_TCP_H
+#define SQUID_SRC_COMM_TCP_H
 
 namespace Comm
 {
@@ -27,4 +27,4 @@ void ApplyTcpKeepAlive(int fd, const TcpKeepAlive &);
 
 } // namespace Comm
 
-#endif /* SQUID__SRC_COMM_TCP_H */
+#endif /* SQUID_SRC_COMM_TCP_H */

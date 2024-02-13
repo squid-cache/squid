@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSOURCEIP_H
-#define SQUID_ACLSOURCEIP_H
+#ifndef SQUID_SRC_ACL_SOURCEIP_H
+#define SQUID_SRC_ACL_SOURCEIP_H
 
 #include "acl/Ip.h"
 
@@ -20,5 +20,5 @@ public:
     int match(ACLChecklist *checklist) override;
 };
 
-#endif /* SQUID_ACLSOURCEIP_H */
+#endif /* SQUID_SRC_ACL_SOURCEIP_H */
 

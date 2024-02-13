@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_TESTS_CAPTURINGSTORE_ENTRY_H
-#define SQUID_TESTS_CAPTURINGSTORE_ENTRY_H
+#ifndef SQUID_SRC_TESTS_CAPTURINGSTOREENTRY_H
+#define SQUID_SRC_TESTS_CAPTURINGSTOREENTRY_H
 
 #include "Store.h"
 
@@ -39,5 +39,5 @@ public:
     }
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_CAPTURINGSTOREENTRY_H */
 

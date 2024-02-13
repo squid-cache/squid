@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IOSTATS_H_
-#define SQUID_IOSTATS_H_
+#ifndef SQUID_SRC_IOSTATS_H
+#define SQUID_SRC_IOSTATS_H
 
 /// IO statistics. Currently a POD.
 class IoStats
@@ -25,5 +25,5 @@ public:
     Http, Ftp;
 };
 
-#endif /* SQUID_IOSTATS_H_ */
+#endif /* SQUID_SRC_IOSTATS_H */
 

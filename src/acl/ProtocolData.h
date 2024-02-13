@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLPROTOCOLDATA_H
-#define SQUID_ACLPROTOCOLDATA_H
+#ifndef SQUID_SRC_ACL_PROTOCOLDATA_H
+#define SQUID_SRC_ACL_PROTOCOLDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -30,5 +30,5 @@ public:
     std::list<AnyP::ProtocolType> values;
 };
 
-#endif /* SQUID_ACLPROTOCOLDATA_H */
+#endif /* SQUID_SRC_ACL_PROTOCOLDATA_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_ICP_OPCODE_H
-#define _SQUID_ICP_OPCODE_H
+#ifndef SQUID_SRC_ICP_OPCODE_H
+#define SQUID_SRC_ICP_OPCODE_H
 
 /// \ingroup ServerProtocolICPAPI
 enum icp_opcode {
@@ -42,5 +42,5 @@ enum icp_opcode {
 
 extern const char *icp_opcode_str[];
 
-#endif /* _SQUID_ICP_OPCODE_H */
+#endif /* SQUID_SRC_ICP_OPCODE_H */
 

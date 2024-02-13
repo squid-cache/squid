@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLHTTPSTATUS_H
-#define SQUID_ACLHTTPSTATUS_H
+#ifndef SQUID_SRC_ACL_HTTPSTATUS_H
+#define SQUID_SRC_ACL_HTTPSTATUS_H
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
@@ -19,12 +19,10 @@ struct acl_httpstatus_data {
     acl_httpstatus_data(int);
     acl_httpstatus_data(int, int);
     SBuf toStr() const; // was toStr
-
-    static int compare(acl_httpstatus_data* const& a, acl_httpstatus_data* const& b);
 };
 
 /// \ingroup ACLAPI
-class ACLHTTPStatus : public ACL
+class ACLHTTPStatus : public Acl::Node
 {
     MEMPROXY_CLASS(ACLHTTPStatus);
 
@@ -44,5 +42,5 @@ protected:
     char const *class_;
 };
 
-#endif /* SQUID_ACLHTTPSTATUS_H */
+#endif /* SQUID_SRC_ACL_HTTPSTATUS_H */
 

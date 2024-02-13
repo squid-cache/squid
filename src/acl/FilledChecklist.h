@@ -6,10 +6,11 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLFILLED_CHECKLIST_H
-#define SQUID_ACLFILLED_CHECKLIST_H
+#ifndef SQUID_SRC_ACL_FILLEDCHECKLIST_H
+#define SQUID_SRC_ACL_FILLEDCHECKLIST_H
 
 #include "AccessLogEntry.h"
+#include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
@@ -124,5 +125,5 @@ ACLFilledChecklist *Filled(ACLChecklist *checklist)
     return dynamic_cast<ACLFilledChecklist*>(checklist);
 }
 
-#endif /* SQUID_ACLFILLED_CHECKLIST_H */
+#endif /* SQUID_SRC_ACL_FILLEDCHECKLIST_H */
 

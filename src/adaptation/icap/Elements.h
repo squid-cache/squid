@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICAPELEMENTS_H
-#define SQUID_ICAPELEMENTS_H
+#ifndef SQUID_SRC_ADAPTATION_ICAP_ELEMENTS_H
+#define SQUID_SRC_ADAPTATION_ICAP_ELEMENTS_H
 
 #include "adaptation/Elements.h"
 
@@ -50,5 +50,5 @@ extern const XactOutcome xoSatisfied; ///< request satisfaction
 } // namespace Icap
 } // namespace Adaptation
 
-#endif /* SQUID_ICAPCLIENT_H */
+#endif /* SQUID_SRC_ADAPTATION_ICAP_ELEMENTS_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 77    Delay Pools */
 
-#ifndef NULLDELAYID_H
-#define NULLDELAYID_H
+#ifndef SQUID_SRC_NULLDELAYID_H
+#define SQUID_SRC_NULLDELAYID_H
 
 #if USE_DELAY_POOLS
 #include "DelayIdComposite.h"
@@ -25,5 +25,5 @@ public:
     void bytesIn(int) override {}
 };
 #endif
-#endif /* NULLDELAYID_H */
+#endif /* SQUID_SRC_NULLDELAYID_H */
 

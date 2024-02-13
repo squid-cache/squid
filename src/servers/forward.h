@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SERVERS_FORWARD_H
-#define SQUID_SERVERS_FORWARD_H
+#ifndef SQUID_SRC_SERVERS_FORWARD_H
+#define SQUID_SRC_SERVERS_FORWARD_H
 
 class MasterXaction;
 template <class C> class RefCount;
@@ -46,5 +46,5 @@ void StopListening();
 
 } // namespace Ftp
 
-#endif /* SQUID_SERVERS_FORWARD_H */
+#endif /* SQUID_SRC_SERVERS_FORWARD_H */
 

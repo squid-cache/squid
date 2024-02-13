@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLANNOTATIONDATA_H
-#define SQUID_ACLANNOTATIONDATA_H
+#ifndef SQUID_SRC_ACL_ANNOTATIONDATA_H
+#define SQUID_SRC_ACL_ANNOTATIONDATA_H
 
 #include "AccessLogEntry.h"
 #include "acl/Data.h"
@@ -34,5 +34,5 @@ private:
     Notes::Pointer notes;
 };
 
-#endif /* SQUID_ACLANNOTATIONDATA_H */
+#endif /* SQUID_SRC_ACL_ANNOTATIONDATA_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 00    Debug Routines */
 
-#ifndef SQUID_DEBUG_MESSAGES_H
-#define SQUID_DEBUG_MESSAGES_H
+#ifndef SQUID_SRC_DEBUG_MESSAGES_H
+#define SQUID_SRC_DEBUG_MESSAGES_H
 
 #include "debug/Stream.h"
 
@@ -61,7 +61,7 @@ private:
 };
 
 /// The maximum used DebugMessage::id plus 1. Increase as you add new IDs.
-constexpr DebugMessageId DebugMessageIdUpperBound = 70;
+constexpr DebugMessageId DebugMessageIdUpperBound = 73;
 
 /// a collection of DebugMessage objects (with fast access by message IDs)
 class DebugMessages
@@ -93,5 +93,5 @@ DebugMessageLevel(const int defaultLevel)
 #define Important(id) DebugMessageLevel<id>(DBG_IMPORTANT)
 #define Dbg(id, defaultLevel) DebugMessageLevel<id>(defaultLevel)
 
-#endif /* SQUID_DEBUG_MESSAGES_H */
+#endif /* SQUID_SRC_DEBUG_MESSAGES_H */
 

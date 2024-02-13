@@ -47,7 +47,7 @@ void
 Acl::AllOf::parse()
 {
     Acl::InnerNode *whole = nullptr;
-    ACL *oldNode = empty() ? nullptr : nodes.front();
+    Acl::Node *oldNode = empty() ? nullptr : nodes.front();
 
     // optimization: this logic reduces subtree hight (number of tree levels)
     if (Acl::OrNode *oldWhole = dynamic_cast<Acl::OrNode*>(oldNode)) {

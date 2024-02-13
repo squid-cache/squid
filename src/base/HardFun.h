@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_BASE_HARDFUN_H
-#define _SQUID_SRC_BASE_HARDFUN_H
+#ifndef SQUID_SRC_BASE_HARDFUN_H
+#define SQUID_SRC_BASE_HARDFUN_H
 
 /**
  * A functor that calls a hard-coded unary function.
@@ -17,5 +17,5 @@ struct HardFun {
     ReturnType operator()(ArgType arg) { return fun(arg); }
 };
 
-#endif /* _SQUID_SRC_BASE_HARDFUN_H */
+#endif /* SQUID_SRC_BASE_HARDFUN_H */
 

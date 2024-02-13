@@ -528,7 +528,7 @@ ACLExternal::parse()
 
     // def->name is the name of the external_acl_type.
     // this is the name of the 'acl' directive being tested
-    data->name = xstrdup(AclMatchedName);
+    data->name = xstrdup(name);
 
     while ((token = ConfigParser::strtokFile())) {
         wordlistAdd(&data->arguments, token);
@@ -1014,7 +1014,7 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
 /// Asks the helper (if needed) or returns the [cached] result (otherwise).
 /// Does not support "background" lookups. See also: ACLExternal::Start().
 void
-ACLExternal::StartLookup(ACLFilledChecklist &checklist, const ACL &acl)
+ACLExternal::StartLookup(ACLFilledChecklist &checklist, const Acl::Node &acl)
 {
     const auto &me = dynamic_cast<const ACLExternal&>(acl);
     me.startLookup(&checklist, me.data, false);

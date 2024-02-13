@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPT_HISTORY_H
-#define SQUID_ADAPT_HISTORY_H
+#ifndef SQUID_SRC_ADAPTATION_HISTORY_H
+#define SQUID_SRC_ADAPTATION_HISTORY_H
 
 #include "adaptation/DynamicGroupCfg.h"
 #include "adaptation/forward.h"
@@ -108,5 +108,5 @@ private:
 
 } // namespace Adaptation
 
-#endif
+#endif /* SQUID_SRC_ADAPTATION_HISTORY_H */
 

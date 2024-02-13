@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_CONTROLLER_H
-#define SQUID_STORE_CONTROLLER_H
+#ifndef SQUID_SRC_STORE_CONTROLLER_H
+#define SQUID_SRC_STORE_CONTROLLER_H
 
 #include "store/Storage.h"
 
@@ -173,5 +173,5 @@ extern void FreeMemory();
 
 } // namespace Store
 
-#endif /* SQUID_STORE_CONTROLLER_H */
+#endif /* SQUID_SRC_STORE_CONTROLLER_H */
 

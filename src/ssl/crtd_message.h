@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSL_CRTD_MESSAGE_H
-#define SQUID_SSL_CRTD_MESSAGE_H
+#ifndef SQUID_SRC_SSL_CRTD_MESSAGE_H
+#define SQUID_SRC_SSL_CRTD_MESSAGE_H
 
 #include <map>
 #include <string>
@@ -105,5 +105,5 @@ protected:
 
 } //namespace Ssl
 
-#endif // SQUID_SSL_CRTD_MESSAGE_H
+#endif /* SQUID_SRC_SSL_CRTD_MESSAGE_H */
 

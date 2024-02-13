@@ -8,8 +8,8 @@
 
 /* DEBUG: section 77    Delay Pools */
 
-#ifndef DELAYUSER_H
-#define DELAYUSER_H
+#ifndef SQUID_SRC_DELAYUSER_H
+#define SQUID_SRC_DELAYUSER_H
 
 #if USE_DELAY_POOLS && USE_AUTH
 
@@ -77,5 +77,5 @@ private:
 };
 
 #endif /* USE_DELAY_POOLS && USE_AUTH */
-#endif /* DELAYUSER_H */
+#endif /* SQUID_SRC_DELAYUSER_H */
 

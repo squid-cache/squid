@@ -6,10 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLCHECKLIST_H
-#define SQUID_ACLCHECKLIST_H
+#ifndef SQUID_SRC_ACL_CHECKLIST_H
+#define SQUID_SRC_ACL_CHECKLIST_H
 
+#include "acl/Acl.h"
 #include "acl/InnerNode.h"
+#include "cbdata.h"
 #include <stack>
 #include <vector>
 
@@ -29,7 +31,7 @@ class ACLChecklist
 public:
 
     /// a function that initiates asynchronous ACL checks; see goAsync()
-    using AsyncStarter = void (ACLFilledChecklist &, const ACL &);
+    using AsyncStarter = void (ACLFilledChecklist &, const Acl::Node &);
 
 public:
     ACLChecklist();
@@ -104,11 +106,11 @@ public:
 
     /// If slow lookups are allowed, switches into "async in progress" state.
     /// Otherwise, returns false; the caller is expected to handle the failure.
-    bool goAsync(AsyncStarter, const ACL &);
+    bool goAsync(AsyncStarter, const Acl::Node &);
 
     /// Matches (or resumes matching of) a child node while maintaning
     /// resumption breadcrumbs if a [grand]child node goes async.
-    bool matchChild(const Acl::InnerNode *parent, Acl::Nodes::const_iterator pos, const ACL *child);
+    bool matchChild(const Acl::InnerNode *parent, Acl::Nodes::const_iterator pos, const Acl::Node *child);
 
     /// Whether we should continue to match tree nodes or stop/pause.
     bool keepMatching() const { return !finished() && !asyncInProgress(); }
@@ -167,7 +169,7 @@ public:
     void resumeNonBlockingCheck();
 
 private: /* internal methods */
-    /// Position of a child node within an ACL tree.
+    /// Position of a child node within an Acl::Node tree.
     class Breadcrumb
     {
     public:
@@ -209,5 +211,5 @@ private: /* internal methods */
     std::vector<Acl::Answer> bannedActions_;
 };
 
-#endif /* SQUID_ACLCHECKLIST_H */
+#endif /* SQUID_SRC_ACL_CHECKLIST_H */
 

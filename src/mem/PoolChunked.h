@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _MEM_POOL_CHUNKED_H_
-#define _MEM_POOL_CHUNKED_H_
+#ifndef SQUID_SRC_MEM_POOLCHUNKED_H
+#define SQUID_SRC_MEM_POOLCHUNKED_H
 
 #include "mem/Allocator.h"
 #include "splay.h"
@@ -65,5 +65,5 @@ public:
     MemPoolChunked *pool;
 };
 
-#endif /* _MEM_POOL_CHUNKED_H_ */
+#endif /* SQUID_SRC_MEM_POOLCHUNKED_H */
 

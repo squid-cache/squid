@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_XACTION_INITIATOR_H
-#define SQUID_SRC_XACTION_INITIATOR_H
+#ifndef SQUID_SRC_XACTIONINITIATOR_H
+#define SQUID_SRC_XACTIONINITIATOR_H
 
 /// identifies a protocol agent or Squid feature initiating transactions
 class XactionInitiator {
@@ -64,5 +64,5 @@ private:
     Initiator initiator;
 };
 
-#endif // SQUID_SRC_XACTION_INITIATOR_H
+#endif /* SQUID_SRC_XACTIONINITIATOR_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_BASE_SUBSCRIPTION_H
-#define _SQUID_BASE_SUBSCRIPTION_H
+#ifndef SQUID_SRC_BASE_SUBSCRIPTION_H
+#define SQUID_SRC_BASE_SUBSCRIPTION_H
 
 #include "base/AsyncCall.h"
 
@@ -62,5 +62,5 @@ private:
     const RefCount<Call_> call; ///< gets copied to create callback calls
 };
 
-#endif /* _SQUID_BASE_SUBSCRIPTION_H */
+#endif /* SQUID_SRC_BASE_SUBSCRIPTION_H */
 

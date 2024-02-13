@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_VALGRIND_H
-#define SQUID_VALGRIND_H
+#ifndef SQUID_COMPAT_VALGRIND_H
+#define SQUID_COMPAT_VALGRIND_H
 
 /****************************************************************************
  *--------------------------------------------------------------------------*
@@ -42,5 +42,5 @@
 # define RUNNING_ON_VALGRIND 0
 #endif /* WITH_VALGRIND */
 
-#endif /* SQUID_CONFIG_H */
+#endif /* SQUID_COMPAT_VALGRIND_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_DNS_FORWARD_H
-#define _SQUID_SRC_DNS_FORWARD_H
+#ifndef SQUID_SRC_DNS_FORWARD_H
+#define SQUID_SRC_DNS_FORWARD_H
 
 #include "ip/forward.h"
 
@@ -29,5 +29,5 @@ void Init(void);
 void idnsALookup(const char *, IDNSCB *, void *);
 void idnsPTRLookup(const Ip::Address &, IDNSCB *, void *);
 
-#endif /* _SQUID_SRC_DNS_FORWARD_H */
+#endif /* SQUID_SRC_DNS_FORWARD_H */
 

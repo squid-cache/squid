@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_MEM_SEGMENT_H
-#define SQUID_IPC_MEM_SEGMENT_H
+#ifndef SQUID_SRC_IPC_MEM_SEGMENT_H
+#define SQUID_SRC_IPC_MEM_SEGMENT_H
 
 #include "base/RunnersRegistry.h"
 #include "sbuf/forward.h"
@@ -99,5 +99,5 @@ protected:
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_MEM_SEGMENT_H */
+#endif /* SQUID_SRC_IPC_MEM_SEGMENT_H */
 

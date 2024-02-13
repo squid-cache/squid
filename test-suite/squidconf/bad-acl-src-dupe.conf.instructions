@@ -1,0 +1,52 @@
+expect-messages <<END
+WARNING: Ignoring earlier 127.0.0.1 because it is covered by 127.0.0.0-127.0.0.255
+    advice: Remove value 127.0.0.1 from the ACL
+    acl name: test11
+
+WARNING: Ignoring earlier 192.168.1.0/24 because it is covered by 192.168.0.0/16
+    advice: Remove value 192.168.1.0/24 from the ACL
+    acl name: test12
+
+WARNING: Ignoring 127.0.0.2 because it is already covered by 127.0.0.0-127.0.0.255
+    advice: Remove value 127.0.0.2 from the ACL
+    acl name: test13
+
+WARNING: Merging overlapping 127.0.0.128-127.0.0.255 and 127.0.0.0-127.0.0.128 into 127.0.0.0-127.0.0.255
+    advice: Replace values 127.0.0.128-127.0.0.255 and 127.0.0.0-127.0.0.128 with 127.0.0.0-127.0.0.255 in the ACL
+    acl name: test14
+
+WARNING: Merging overlapping 10.0.0.0-10.0.0.1 and 10.0.0.1-10.0.0.128 into 10.0.0.0-10.0.0.128
+    advice: Replace values 10.0.0.0-10.0.0.1 and 10.0.0.1-10.0.0.128 with 10.0.0.0-10.0.0.128 in the ACL
+WARNING: Merging overlapping 10.0.0.128-10.0.0.255 and 10.0.0.0-10.0.0.128 into 10.0.0.0-10.0.0.255
+    advice: Replace values 10.0.0.128-10.0.0.255 and 10.0.0.0-10.0.0.128 with 10.0.0.0-10.0.0.255 in the ACL
+    acl name: test15
+
+WARNING: Merging overlapping 127.0.0.128-127.1.0.255 and 127.0.0.0-127.0.0.128 into 127.0.0.0-127.1.0.255
+    advice: Replace values 127.0.0.128-127.1.0.255 and 127.0.0.0-127.0.0.128 with 127.0.0.0-127.1.0.255 in the ACL
+    acl name: test25
+
+WARNING: Ignoring earlier 127.0.0.1-127.0.0.128 because it is covered by 127.0.0.0-127.1.0.0/16
+    advice: Remove value 127.0.0.1-127.0.0.128 from the ACL
+    acl name: test36
+
+WARNING: Ignoring 127.1.0.1-127.1.0.128 because it is already covered by 127.1.0.0-127.2.0.0/16
+    advice: Remove value 127.1.0.1-127.1.0.128 from the ACL
+    acl name: test37
+END
+
+# TODO: skip-unless-autoconf-defines USE_IPV6 1
+# WARNING: Ignoring earlier bad::1 because it is covered by bad::-bad::f
+#     advice: Remove value bad::1 from the ACL
+#     acl name: test41
+#
+# WARNING: Ignoring dead:: because it is already covered by dead::-dead::
+#     advice: Remove value dead:: from the ACL
+#     acl name: test42
+#
+# WARNING: Ignoring bad:: because it is already covered by bad::/64
+#     advice: Remove value bad:: from the ACL
+#     acl name: test43
+#
+# WARNING: Ignoring beef:bad::/64 because it is already covered by beef::/16
+#     advice: Remove value beef:bad::/64 from the ACL
+#     acl name: test44

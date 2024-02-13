@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SQUIDCONFIG_H_
-#define SQUID_SQUIDCONFIG_H_
+#ifndef SQUID_SRC_SQUIDCONFIG_H
+#define SQUID_SRC_SQUIDCONFIG_H
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
@@ -353,7 +353,7 @@ public:
 
     std::chrono::nanoseconds paranoid_hit_validation;
 
-    class ACL *aclList;
+    class Acl::Node *aclList;
 
     struct {
         acl_access *http;
@@ -564,5 +564,5 @@ public:
 
 extern SquidConfig2 Config2;
 
-#endif /* SQUID_SQUIDCONFIG_H_ */
+#endif /* SQUID_SRC_SQUIDCONFIG_H */
 

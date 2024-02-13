@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLURLPORT_H
-#define SQUID_ACLURLPORT_H
+#ifndef SQUID_SRC_ACL_URLPORT_H
+#define SQUID_SRC_ACL_URLPORT_H
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
@@ -19,12 +19,12 @@ namespace Acl
 class UrlPortCheck: public ParameterizedNode< ACLData<int> >
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
 };
 
 } // namespace Acl
 
-#endif /* SQUID_ACLURLPORT_H */
+#endif /* SQUID_SRC_ACL_URLPORT_H */
 

@@ -376,7 +376,6 @@ mimicAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mi
     if (!extAuthKeyId.get())
         return false;
 
-    extOct.release();
     if (!X509_add_ext(cert.get(), extAuthKeyId.get(), -1))
         return false;
 
