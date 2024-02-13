@@ -17,6 +17,8 @@
 #include "rfc1738.h"
 #include "SquidString.h"
 
+#include <algorithm>
+
 Helper::Reply::Reply() :
     result(Helper::Unknown)
 {
