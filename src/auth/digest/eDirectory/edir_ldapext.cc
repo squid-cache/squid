@@ -69,7 +69,7 @@
 
 #define NMAS_LDAP_EXT_VERSION               1
 
-#define SMB_MALLOC_ARRAY(type, nelem)       calloc(sizeof(type), nelem)
+#define SMB_MALLOC_ARRAY(type, nelem)       calloc(nelem, sizeof(type))
 #define DEBUG(level, args)
 
 /**********************************************************************
