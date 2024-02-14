@@ -795,7 +795,7 @@ readSecret(const char *filename)
     if ((e = strrchr(buf, '\r')))
         *e = 0;
 
-    passwd = (char *) calloc(sizeof(char), strlen(buf) + 1);
+    passwd = static_cast<char *>(calloc(strlen(buf) + 1, sizeof(char)));
     if (!passwd) {
         fprintf(stderr, PROGRAM_NAME " ERROR: can not allocate memory\n");
         exit(EXIT_FAILURE);
