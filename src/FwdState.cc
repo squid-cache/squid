@@ -283,6 +283,7 @@ FwdState::completed()
             case ERR_CONNECT_FAIL:
             case ERR_SECURE_CONNECT_FAIL:
                 debugs(17, 3, "aborting entry (terminateOnSecureConnectFail)");
+                comm_reset_set(clientConn); // may not be necessary
                 entry->abort();
                 return;
 
