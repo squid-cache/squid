@@ -11,8 +11,8 @@
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  */
 
-#ifndef SQUID_OS_MSWINDOWS_H
-#define SQUID_OS_MSWINDOWS_H
+#ifndef SQUID_COMPAT_OS_MSWINDOWS_H
+#define SQUID_COMPAT_OS_MSWINDOWS_H
 
 #if _SQUID_WINDOWS_
 
@@ -1016,5 +1016,5 @@ void syslog(int priority, const char *fmt, ...);
 void WIN32_maperror(unsigned long WIN32_oserrno);
 
 #endif /* _SQUID_WINDOWS_ */
-#endif /* SQUID_OS_MSWINDOWS_H */
+#endif /* SQUID_COMPAT_OS_MSWINDOWS_H */
 

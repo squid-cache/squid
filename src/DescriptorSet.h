@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_DESCRIPTOR_SET_H
-#define SQUID_DESCRIPTOR_SET_H
+#ifndef SQUID_SRC_DESCRIPTORSET_H
+#define SQUID_SRC_DESCRIPTORSET_H
 
 #include <iosfwd>
 
@@ -63,5 +63,5 @@ operator <<(std::ostream &os, const DescriptorSet &ds)
     return os;
 }
 
-#endif /* SQUID_DESCRIPTOR_SET_H */
+#endif /* SQUID_SRC_DESCRIPTORSET_H */
 

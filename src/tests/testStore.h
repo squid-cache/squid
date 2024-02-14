@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_STORE_H
-#define SQUID_SRC_TEST_STORE_H
+#ifndef SQUID_SRC_TESTS_TESTSTORE_H
+#define SQUID_SRC_TESTS_TESTSTORE_H
 
 #include "Store.h"
 #include "store/Controlled.h"
@@ -80,5 +80,5 @@ public:
 
 typedef RefCount<TestStore> TestStorePointer;
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTSTORE_H */
 

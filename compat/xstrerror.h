@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMPAT_XSTRERROR_H
-#define _SQUID_COMPAT_XSTRERROR_H
+#ifndef SQUID_COMPAT_XSTRERROR_H
+#define SQUID_COMPAT_XSTRERROR_H
 
 #if HAVE_ERRNO_H
 #include <errno.h>
@@ -20,5 +20,5 @@
  */
 extern const char * xstrerr(int error);
 
-#endif /* _SQUID_COMPAT_XSTRERROR_H */
+#endif /* SQUID_COMPAT_XSTRERROR_H */
 

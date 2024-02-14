@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTSIDEREQUEST_H
-#define SQUID_CLIENTSIDEREQUEST_H
+#ifndef SQUID_SRC_CLIENT_SIDE_REQUEST_H
+#define SQUID_SRC_CLIENT_SIDE_REQUEST_H
 
 #include "AccessLogEntry.h"
 #include "client_side.h"
@@ -257,4 +257,4 @@ void clientAccessCheck(ClientHttpRequest *);
 /* ones that should be elsewhere */
 void tunnelStart(ClientHttpRequest *);
 
-#endif /* SQUID_CLIENTSIDEREQUEST_H */
+#endif /* SQUID_SRC_CLIENT_SIDE_REQUEST_H */

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_TESTENUMITERATOR_H_
-#define SQUID_TESTENUMITERATOR_H_
+#ifndef SQUID_SRC_TESTS_TESTENUMITERATOR_H
+#define SQUID_SRC_TESTS_TESTENUMITERATOR_H
 
 #include "base/EnumIterator.h"
 
@@ -33,5 +33,5 @@ protected:
     void testUnsignedEnum();
 };
 
-#endif /* SQUID_TESTENUMITERATOR_H_ */
+#endif /* SQUID_SRC_TESTS_TESTENUMITERATOR_H */
 

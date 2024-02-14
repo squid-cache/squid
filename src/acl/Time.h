@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLTIME_H
-#define SQUID_ACLTIME_H
+#ifndef SQUID_SRC_ACL_TIME_H
+#define SQUID_SRC_ACL_TIME_H
 #include "acl/Data.h"
 #include "acl/Strategised.h"
 
@@ -18,5 +18,5 @@ public:
     int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
-#endif /* SQUID_ACLTIME_H */
+#endif /* SQUID_SRC_ACL_TIME_H */
 

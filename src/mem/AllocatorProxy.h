@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_MEM_ALLOCATORPROXY_H
-#define _SQUID_SRC_MEM_ALLOCATORPROXY_H
+#ifndef SQUID_SRC_MEM_ALLOCATORPROXY_H
+#define SQUID_SRC_MEM_ALLOCATORPROXY_H
 
 // XXX: remove AllocatorProxy.h include from mem/forward.h
 namespace Mem {
@@ -93,5 +93,5 @@ private:
 
 } // namespace Mem
 
-#endif /* _SQUID_SRC_MEM_ALLOCATORPROXY_H */
+#endif /* SQUID_SRC_MEM_ALLOCATORPROXY_H */
 

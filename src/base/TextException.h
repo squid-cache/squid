@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__TEXTEXCEPTION_H
-#define SQUID__TEXTEXCEPTION_H
+#ifndef SQUID_SRC_BASE_TEXTEXCEPTION_H
+#define SQUID_SRC_BASE_TEXTEXCEPTION_H
 
 #include "base/Assure.h"
 #include "base/Here.h"
@@ -81,5 +81,5 @@ std::ostream &operator <<(std::ostream &, const TextException &);
                Debug::Extra << "ignored exception: " << CurrentException); \
     }
 
-#endif /* SQUID__TEXTEXCEPTION_H */
+#endif /* SQUID_SRC_BASE_TEXTEXCEPTION_H */
 

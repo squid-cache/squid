@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_NFMARKCONFIG_H
-#define SQUID_NFMARKCONFIG_H
+#ifndef SQUID_SRC_IP_NFMARKCONFIG_H
+#define SQUID_SRC_IP_NFMARKCONFIG_H
 
 #include "ip/forward.h"
 
@@ -46,5 +46,5 @@ std::ostream &operator <<(std::ostream &, NfMarkConfig);
 
 } // namespace Ip
 
-#endif // SQUID_NFMARKCONFIG_H
+#endif /* SQUID_SRC_IP_NFMARKCONFIG_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_DISK_H
-#define SQUID_STORE_DISK_H
+#ifndef SQUID_SRC_STORE_DISK_H
+#define SQUID_SRC_STORE_DISK_H
 
 #include "store/Controlled.h"
 #include "StoreIOState.h"
@@ -149,5 +149,5 @@ public:
 
 } // namespace Store
 
-#endif /* SQUID_STORE_DISK_H */
+#endif /* SQUID_SRC_STORE_DISK_H */
 

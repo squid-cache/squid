@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMPAT_STRTOLL_H
-#define _SQUID_COMPAT_STRTOLL_H
+#ifndef SQUID_COMPAT_STRTOLL_H
+#define SQUID_COMPAT_STRTOLL_H
 
 #if !HAVE_STRTOLL
 
@@ -22,5 +22,5 @@
 SQUIDCEXTERN int64_t strtoll(const char *nptr, char **endptr, int base);
 
 #endif /* !HAVE_STRTOLL */
-#endif /* _SQUID_COMPAT_STRTOLL_H */
+#endif /* SQUID_COMPAT_STRTOLL_H */
 

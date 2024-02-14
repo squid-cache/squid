@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_CACHEMANAGER_H
-#define SQUID_SRC_TEST_CACHEMANAGER_H
+#ifndef SQUID_SRC_TESTS_TESTCACHEMANAGER_H
+#define SQUID_SRC_TESTS_TESTCACHEMANAGER_H
 
 #include "compat/cppunit.h"
 
@@ -32,5 +32,5 @@ protected:
     void testParseUrl();
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTCACHEMANAGER_H */
 

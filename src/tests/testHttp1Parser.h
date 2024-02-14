@@ -39,5 +39,5 @@ protected:
     void testDripFeed(); // test incremental parse works
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTHTTP1PARSER_H */
 

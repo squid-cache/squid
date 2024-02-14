@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__SRC_BASE_CLPMAP_H
-#define SQUID__SRC_BASE_CLPMAP_H
+#ifndef SQUID_SRC_BASE_CLPMAP_H
+#define SQUID_SRC_BASE_CLPMAP_H
 
 #include "mem/PoolingAllocator.h"
 #include "SquidMath.h"
@@ -282,5 +282,5 @@ ClpMap<Key, Value, MemoryUsedBy>::Entry::Entry(const Key &aKey, const Value &v, 
     SetToNaturalSumOrMax(expires, squid_curtime, ttl);
 }
 
-#endif /* SQUID__SRC_BASE_CLPMAP_H */
+#endif /* SQUID_SRC_BASE_CLPMAP_H */
 

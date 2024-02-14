@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEMSTORE_H
-#define SQUID_MEMSTORE_H
+#ifndef SQUID_SRC_MEMSTORE_H
+#define SQUID_SRC_MEMSTORE_H
 
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
@@ -123,5 +123,5 @@ private:
 // to check/update memory cache separately from the disk cache. And same API
 // would hurt because we can support synchronous get/put, unlike the disks.
 
-#endif /* SQUID_MEMSTORE_H */
+#endif /* SQUID_SRC_MEMSTORE_H */
 

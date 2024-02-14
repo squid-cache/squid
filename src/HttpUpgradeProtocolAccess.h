@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTP_UPGRADE_H
-#define SQUID_HTTP_UPGRADE_H
+#ifndef SQUID_SRC_HTTPUPGRADEPROTOCOLACCESS_H
+#define SQUID_SRC_HTTPUPGRADEPROTOCOLACCESS_H
 
 #include "acl/forward.h"
 #include "sbuf/SBuf.h"
@@ -114,5 +114,5 @@ HttpUpgradeProtocolAccess::forApplicable(const ProtocolView &offer, const Visito
         (void)visitor(ProtoOther, other);
 }
 
-#endif /* SQUID_HTTP_UPGRADE_H */
+#endif /* SQUID_SRC_HTTPUPGRADEPROTOCOLACCESS_H */
 

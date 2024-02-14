@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SBUFEXTRAS_H
-#define SQUID_SBUFEXTRAS_H
+#ifndef SQUID_SRC_SBUFSTATSACTION_H
+#define SQUID_SRC_SBUFSTATSACTION_H
 
 #include "mgr/Action.h"
 #include "sbuf/SBuf.h"
@@ -41,5 +41,5 @@ private:
     StatHist mbsizesatdestruct;
 };
 
-#endif /* SQUID_SBUFSTATSACTION_H */
+#endif /* SQUID_SRC_SBUFSTATSACTION_H */
 

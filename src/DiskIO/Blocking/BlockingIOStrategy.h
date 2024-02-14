@@ -8,8 +8,8 @@
 
 /* DEBUG: section 47    Store Directory Routines */
 
-#ifndef SQUID_BLOCKINGIOSTRATEGY_H
-#define SQUID_BLOCKINGIOSTRATEGY_H
+#ifndef SQUID_SRC_DISKIO_BLOCKING_BLOCKINGIOSTRATEGY_H
+#define SQUID_SRC_DISKIO_BLOCKING_BLOCKINGIOSTRATEGY_H
 #include "DiskIO/DiskIOStrategy.h"
 
 class BlockingIOStrategy : public DiskIOStrategy
@@ -23,5 +23,5 @@ public:
     void unlinkFile (char const *) override;
 };
 
-#endif /* SQUID_BLOCKINGIOSTRATEGY_H */
+#endif /* SQUID_SRC_DISKIO_BLOCKING_BLOCKINGIOSTRATEGY_H */
 

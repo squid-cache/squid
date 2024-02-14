@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_TESTCHARACTERSET_H
-#define SQUID_BASE_TESTCHARACTERSET_H
+#ifndef SQUID_SRC_TESTS_TESTCHARACTERSET_H
+#define SQUID_SRC_TESTS_TESTCHARACTERSET_H
 
 #include "compat/cppunit.h"
 
@@ -33,5 +33,5 @@ protected:
     void CharacterSetSubtract();
 };
 
-#endif /* SQUID_BASE_TESTCHARACTERSET_H */
+#endif /* SQUID_SRC_TESTS_TESTCHARACTERSET_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSL_CERT_VALIDATE_MESSAGE_H
-#define SQUID_SSL_CERT_VALIDATE_MESSAGE_H
+#ifndef SQUID_SRC_SSL_CERT_VALIDATE_MESSAGE_H
+#define SQUID_SRC_SSL_CERT_VALIDATE_MESSAGE_H
 
 #include "base/RefCount.h"
 #include "helper/ResultCode.h"
@@ -130,5 +130,5 @@ private:
 
 }//namespace Ssl
 
-#endif // SQUID_SSL_CERT_VALIDATE_MESSAGE_H
+#endif /* SQUID_SRC_SSL_CERT_VALIDATE_MESSAGE_H */
 

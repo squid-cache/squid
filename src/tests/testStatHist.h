@@ -10,8 +10,8 @@
  * StatHist unit test
  */
 
-#ifndef TESTSTATHIST_H_
-#define TESTSTATHIST_H_
+#ifndef SQUID_SRC_TESTS_TESTSTATHIST_H
+#define SQUID_SRC_TESTS_TESTSTATHIST_H
 
 #include "compat/cppunit.h"
 
@@ -33,5 +33,5 @@ protected:
     void testStatHistSum();
 };
 
-#endif /* TESTSTATHIST_H_ */
+#endif /* SQUID_SRC_TESTS_TESTSTATHIST_H */
 

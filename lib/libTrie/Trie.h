@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef   LIBTRIE_SQUID_H
-#define   LIBTRIE_SQUID_H
+#ifndef SQUID_LIB_LIBTRIE_TRIE_H
+#define SQUID_LIB_LIBTRIE_TRIE_H
 
 #include "TrieNode.h"
 #if HAVE_SYS_TYPES_H
@@ -71,5 +71,5 @@ Trie::findPrefix (char const *aString, size_t theLength)
     return nullptr;
 }
 
-#endif /* LIBTRIE_SQUID_H */
+#endif /* SQUID_LIB_LIBTRIE_TRIE_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 77    Delay Pools */
 
-#ifndef COMPOSITEPOOLNODE_H
-#define COMPOSITEPOOLNODE_H
+#ifndef SQUID_SRC_COMPOSITEPOOLNODE_H
+#define SQUID_SRC_COMPOSITEPOOLNODE_H
 
 #if USE_DELAY_POOLS
 #include "auth/UserRequest.h"
@@ -59,5 +59,5 @@ protected:
 };
 
 #endif /* USE_DELAY_POOLS */
-#endif /* COMPOSITEPOOLNODE_H */
+#endif /* SQUID_SRC_COMPOSITEPOOLNODE_H */
 

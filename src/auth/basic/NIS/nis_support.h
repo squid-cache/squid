@@ -5,6 +5,8 @@
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
+#ifndef SQUID_SRC_AUTH_BASIC_NIS_NIS_SUPPORT_H
+#define SQUID_SRC_AUTH_BASIC_NIS_NIS_SUPPORT_H
 
 #ifndef SQUID_SRC_AUTH_BASIC_NIS_NIS_SUPPORT_H
 #define SQUID_SRC_AUTH_BASIC_NIS_NIS_SUPPORT_H

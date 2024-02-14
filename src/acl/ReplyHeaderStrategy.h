@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLREPLYHEADERSTRATEGY_H
-#define SQUID_ACLREPLYHEADERSTRATEGY_H
+#ifndef SQUID_SRC_ACL_REPLYHEADERSTRATEGY_H
+#define SQUID_SRC_ACL_REPLYHEADERSTRATEGY_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -36,5 +36,5 @@ ACLReplyHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLFilledC
     return data->match(theHeader);
 }
 
-#endif /* SQUID_REPLYHEADERSTRATEGY_H */
+#endif /* SQUID_SRC_ACL_REPLYHEADERSTRATEGY_H */
 

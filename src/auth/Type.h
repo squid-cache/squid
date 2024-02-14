@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID__SRC_AUTH_AUTHTYPE_H
-#define _SQUID__SRC_AUTH_AUTHTYPE_H
+#ifndef SQUID_SRC_AUTH_TYPE_H
+#define SQUID_SRC_AUTH_TYPE_H
 
 #if USE_AUTH
 
@@ -28,5 +28,5 @@ extern const char *Type_str[];
 }; // namespace Auth
 
 #endif /* USE_AUTH */
-#endif
+#endif /* SQUID_SRC_AUTH_TYPE_H */
 

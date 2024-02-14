@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef __COMM_H__
-#define __COMM_H__
+#ifndef SQUID_SRC_COMM_H
+#define SQUID_SRC_COMM_H
 
 #include "comm/IoCallback.h"
 #include "CommCalls.h"
@@ -103,5 +103,5 @@ public:
     int checkEvents(int timeout) override;
 };
 
-#endif
+#endif /* SQUID_SRC_COMM_H */
 

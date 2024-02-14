@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_TESTROCK_H
-#define SQUID_SRC_TEST_TESTROCK_H
+#ifndef SQUID_SRC_TESTS_TESTROCK_H
+#define SQUID_SRC_TESTS_TESTROCK_H
 
 #include "compat/cppunit.h"
 
@@ -43,5 +43,5 @@ private:
     Rock::SwapDirRr *rr;
 };
 
-#endif /* SQUID_SRC_TEST_TESTROCK_H */
+#endif /* SQUID_SRC_TESTS_TESTROCK_H */
 

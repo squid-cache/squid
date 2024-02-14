@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H
-#define _SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H
+#ifndef SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H
+#define SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H
 
 #include "base/IoManip.h"
 #include "error/Detail.h"
@@ -39,5 +39,5 @@ private:
     SourceLocationId exceptionId; ///< identifies the thrower or catcher
 };
 
-#endif /* _SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H */
+#endif /* SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H */
 

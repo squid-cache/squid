@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ENUMS_H
-#define SQUID_ENUMS_H
+#ifndef SQUID_SRC_ENUMS_H
+#define SQUID_SRC_ENUMS_H
 
 enum fd_type {
     FD_NONE_TYPE,
@@ -243,5 +243,5 @@ typedef enum {
 } htcp_clr_reason;
 #endif /* USE_HTCP */
 
-#endif /* SQUID_ENUMS_H */
+#endif /* SQUID_SRC_ENUMS_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_IPADDRESS_H
-#define SQUID_SRC_TEST_IPADDRESS_H
+#ifndef SQUID_SRC_TESTS_TESTIPADDRESS_H
+#define SQUID_SRC_TESTS_TESTIPADDRESS_H
 
 #include "compat/cppunit.h"
 
@@ -67,5 +67,5 @@ protected:
 
 };
 
-#endif /* SQUID_SRC_TEST_IPADDRESS_H */
+#endif /* SQUID_SRC_TESTS_TESTIPADDRESS_H */
 

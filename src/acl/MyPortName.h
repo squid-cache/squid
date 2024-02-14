@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLMYPORTNAME_H
-#define SQUID_ACLMYPORTNAME_H
+#ifndef SQUID_SRC_ACL_MYPORTNAME_H
+#define SQUID_SRC_ACL_MYPORTNAME_H
 #include "acl/Strategy.h"
 
 class ACLMyPortNameStrategy : public ACLStrategy<const char *>
@@ -17,5 +17,5 @@ public:
     int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
-#endif /* SQUID_ACLMYPORTNAME_H */
+#endif /* SQUID_SRC_ACL_MYPORTNAME_H */
 

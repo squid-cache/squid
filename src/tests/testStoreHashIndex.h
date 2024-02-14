@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_STOREHASHINDEX_H
-#define SQUID_SRC_TEST_STOREHASHINDEX_H
+#ifndef SQUID_SRC_TESTS_TESTSTOREHASHINDEX_H
+#define SQUID_SRC_TESTS_TESTSTOREHASHINDEX_H
 
 #include "compat/cppunit.h"
 
@@ -31,5 +31,5 @@ protected:
     void testSearch();
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTSTOREHASHINDEX_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_VARS_H
-#define SQUID_SNMP_VARS_H
+#ifndef SQUID_INCLUDE_SNMP_VARS_H
+#define SQUID_INCLUDE_SNMP_VARS_H
 
 /**********************************************************************
  *
@@ -125,5 +125,5 @@ typedef struct variable_list variable_list;
 }
 #endif
 
-#endif /* SQUID_SNMP_VARS_H */
+#endif /* SQUID_INCLUDE_SNMP_VARS_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_DELAYBUCKET_H
-#define SQUID_DELAYBUCKET_H
+#ifndef SQUID_SRC_DELAYBUCKET_H
+#define SQUID_SRC_DELAYBUCKET_H
 
 class DelaySpec;
 class StoreEntry;
@@ -35,5 +35,5 @@ private:
     int level_;
 };
 
-#endif /* SQUID_DELAYBUCKET_H */
+#endif /* SQUID_SRC_DELAYBUCKET_H */
 

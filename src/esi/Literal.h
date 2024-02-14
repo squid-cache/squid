@@ -8,8 +8,8 @@
 
 /* DEBUG: section 86    ESI processing */
 
-#ifndef SQUID_ESILITERAL_H
-#define SQUID_ESILITERAL_H
+#ifndef SQUID_SRC_ESI_LITERAL_H
+#define SQUID_SRC_ESI_LITERAL_H
 
 #include "esi/Element.h"
 
@@ -42,5 +42,5 @@ private:
     esiLiteral(esiLiteral const &);
 };
 
-#endif /* SQUID_ESILITERAL_H */
+#endif /* SQUID_SRC_ESI_LITERAL_H */
 

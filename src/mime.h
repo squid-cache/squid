@@ -8,8 +8,8 @@
 
 /* DEBUG: section 25    MIME Parsing and Internal Icons */
 
-#ifndef SQUID_MIME_H_
-#define SQUID_MIME_H_
+#ifndef SQUID_SRC_MIME_H
+#define SQUID_SRC_MIME_H
 
 void mimeInit(char *filename);
 const char *mimeGetContentEncoding(const char *fn);
@@ -19,5 +19,5 @@ char mimeGetTransferMode(const char *fn);
 bool mimeGetDownloadOption(const char *fn);
 bool mimeGetViewOption(const char *fn);
 
-#endif /* SQUID_MIME_H_ */
+#endif /* SQUID_SRC_MIME_H */
 

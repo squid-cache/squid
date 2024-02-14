@@ -6,12 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PROTOS_H
-#define SQUID_PROTOS_H
+#ifndef SQUID_SRC_PROTOS_H
+#define SQUID_SRC_PROTOS_H
 
 void shut_down(int);
 void rotate_logs(int);
 void reconfigure(int);
 
-#endif /* SQUID_PROTOS_H */
+#endif /* SQUID_SRC_PROTOS_H */
 

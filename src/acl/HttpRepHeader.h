@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLHTTPREPHEADER_H
-#define SQUID_ACLHTTPREPHEADER_H
+#ifndef SQUID_SRC_ACL_HTTPREPHEADER_H
+#define SQUID_SRC_ACL_HTTPREPHEADER_H
 
 #include "acl/Strategised.h"
 #include "acl/Strategy.h"
@@ -22,5 +22,5 @@ public:
     bool requiresReply() const override { return true; }
 };
 
-#endif /* SQUID_ACLHTTPREPHEADER_H */
+#endif /* SQUID_SRC_ACL_HTTPREPHEADER_H */
 

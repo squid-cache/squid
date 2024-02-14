@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_EUI_CONFIG_H
-#define SQUID_EUI_CONFIG_H
+#ifndef SQUID_SRC_EUI_CONFIG_H
+#define SQUID_SRC_EUI_CONFIG_H
 
 namespace Eui
 {
@@ -22,5 +22,5 @@ extern EuiConfig TheConfig;
 
 } // namespace Eui
 
-#endif /* SQUID_EUI_CONFIG_H */
+#endif /* SQUID_SRC_EUI_CONFIG_H */
 

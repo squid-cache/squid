@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _getaddrinfo_h
-#define _getaddrinfo_h
+#ifndef SQUID_COMPAT_GETADDRINFO_H
+#define SQUID_COMPAT_GETADDRINFO_H
 
 /*
  *  Shamelessly duplicated from the fetchmail public sources
@@ -81,5 +81,5 @@ SQUIDCEXTERN const char *xgai_strerror (int code);
 #endif
 
 #endif /* HAVE_DECL_GETADDRINFO */
-#endif /* _getaddrinfo_h */
+#endif /* SQUID_COMPAT_GETADDRINFO_H */
 

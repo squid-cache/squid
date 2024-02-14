@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_QOSCONFIG_H
-#define SQUID_QOSCONFIG_H
+#ifndef SQUID_SRC_IP_QOSCONFIG_H
+#define SQUID_SRC_IP_QOSCONFIG_H
 
 #include "acl/forward.h"
 #include "hier_code.h"
@@ -251,5 +251,5 @@ extern Config TheConfig;
 
 } // namespace Ip
 
-#endif /* SQUID_QOSCONFIG_H */
+#endif /* SQUID_SRC_IP_QOSCONFIG_H */
 

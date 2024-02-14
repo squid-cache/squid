@@ -8,8 +8,8 @@
 
 /* DEBUG: section 86    ESI processing */
 
-#ifndef SQUID_ESIINCLUDE_H
-#define SQUID_ESIINCLUDE_H
+#ifndef SQUID_SRC_ESI_INCLUDE_H
+#define SQUID_SRC_ESI_INCLUDE_H
 
 #include "esi/Context.h"
 #include "esi/Element.h"
@@ -71,5 +71,5 @@ private:
     void prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars);
 };
 
-#endif /* SQUID_ESIINCLUDE_H */
+#endif /* SQUID_SRC_ESI_INCLUDE_H */
 

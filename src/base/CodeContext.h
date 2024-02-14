@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS code_contexts for details.
  */
 
-#ifndef SQUID_BASE_CODE_CONTEXT_H
-#define SQUID_BASE_CODE_CONTEXT_H
+#ifndef SQUID_SRC_BASE_CODECONTEXT_H
+#define SQUID_SRC_BASE_CODECONTEXT_H
 
 #include "base/InstanceId.h"
 #include "base/RefCount.h"
@@ -154,5 +154,5 @@ CallContextCreator(Fun &&creator)
 
 /// @}
 
-#endif
+#endif /* SQUID_SRC_BASE_CODECONTEXT_H */
 

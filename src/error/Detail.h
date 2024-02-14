@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_ERROR_DETAIL_H
-#define _SQUID_SRC_ERROR_DETAIL_H
+#ifndef SQUID_SRC_ERROR_DETAIL_H
+#define SQUID_SRC_ERROR_DETAIL_H
 
 #include "base/Here.h"
 #include "base/RefCount.h"
@@ -46,5 +46,5 @@ std::ostream &operator <<(std::ostream &os, const ErrorDetail &);
 /// dump the given ErrorDetail via a possibly nil pointer (for debugging)
 std::ostream &operator <<(std::ostream &os, const ErrorDetail::Pointer &);
 
-#endif /* _SQUID_SRC_ERROR_DETAIL_H */
+#endif /* SQUID_SRC_ERROR_DETAIL_H */
 

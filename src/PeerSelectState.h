@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef   SQUID_PEERSELECTSTATE_H
-#define   SQUID_PEERSELECTSTATE_H
+#ifndef SQUID_SRC_PEERSELECTSTATE_H
+#define SQUID_SRC_PEERSELECTSTATE_H
 
 #include "AccessLogEntry.h"
 #include "acl/Checklist.h"
@@ -166,5 +166,5 @@ private:
     const InstanceId<PeerSelector> id; ///< unique identification in worker log
 };
 
-#endif /* SQUID_PEERSELECTSTATE_H */
+#endif /* SQUID_SRC_PEERSELECTSTATE_H */
 

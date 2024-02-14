@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HTTP_ONE_REQUESTPARSER_H
-#define _SQUID_SRC_HTTP_ONE_REQUESTPARSER_H
+#ifndef SQUID_SRC_HTTP_ONE_REQUESTPARSER_H
+#define SQUID_SRC_HTTP_ONE_REQUESTPARSER_H
 
 #include "http/one/Parser.h"
 #include "http/RequestMethod.h"
@@ -83,5 +83,5 @@ private:
 } // namespace One
 } // namespace Http
 
-#endif /*  _SQUID_SRC_HTTP_ONE_REQUESTPARSER_H */
+#endif /* SQUID_SRC_HTTP_ONE_REQUESTPARSER_H */
 

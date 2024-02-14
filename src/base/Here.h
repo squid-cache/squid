@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_HERE_H
-#define SQUID_BASE_HERE_H
+#ifndef SQUID_SRC_BASE_HERE_H
+#define SQUID_SRC_BASE_HERE_H
 
 #include <iosfwd>
 
@@ -73,5 +73,5 @@ UnitFileNameHashCacher(const char *fileName, FileNameHasher hasher)
     return cachedHash;
 }
 
-#endif
+#endif /* SQUID_SRC_BASE_HERE_H */
 

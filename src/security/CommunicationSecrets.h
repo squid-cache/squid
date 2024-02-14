@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_SECURITY_COMMUNICATION_SECRETS_H
-#define SQUID_SRC_SECURITY_COMMUNICATION_SECRETS_H
+#ifndef SQUID_SRC_SECURITY_COMMUNICATIONSECRETS_H
+#define SQUID_SRC_SECURITY_COMMUNICATIONSECRETS_H
 
 #include "sbuf/SBuf.h"
 #include "security/forward.h"
@@ -52,5 +52,5 @@ private:
 
 } // namespace Security
 
-#endif /* SQUID_SRC_SECURITY_COMMUNICATION_SECRETS_H */
+#endif /* SQUID_SRC_SECURITY_COMMUNICATIONSECRETS_H */
 

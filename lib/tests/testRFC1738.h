@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_LIB_TEST_RFC1738_H
-#define SQUID_LIB_TEST_RFC1738_H
+#ifndef SQUID_LIB_TESTS_TESTRFC1738_H
+#define SQUID_LIB_TESTS_TESTRFC1738_H
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -33,5 +33,5 @@ protected:
     void PercentZeroNullDecoding();
 };
 
-#endif /* SQUID_LIB_TEST_RFC1738_H */
+#endif /* SQUID_LIB_TESTS_TESTRFC1738_H */
 

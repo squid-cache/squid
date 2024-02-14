@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_EVENT_H
-#define SQUID_SRC_TEST_EVENT_H
+#ifndef SQUID_SRC_TESTS_TESTEVENT_H
+#define SQUID_SRC_TESTS_TESTEVENT_H
 
 #include "compat/cppunit.h"
 
@@ -38,5 +38,5 @@ protected:
     void testCancel();
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTEVENT_H */
 

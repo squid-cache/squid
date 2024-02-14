@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_EVENTLOOP_H
-#define SQUID_SRC_TEST_EVENTLOOP_H
+#ifndef SQUID_SRC_TESTS_TESTEVENTLOOP_H
+#define SQUID_SRC_TESTS_TESTEVENTLOOP_H
 
 #include "compat/cppunit.h"
 
@@ -39,5 +39,5 @@ protected:
      */
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTEVENTLOOP_H */
 

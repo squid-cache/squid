@@ -8,8 +8,8 @@
 
 /* DEBUG: section 03    Configuration File Parsing */
 
-#ifndef SQUID_CACHE_CF_H_
-#define SQUID_CACHE_CF_H_
+#ifndef SQUID_SRC_CACHE_CF_H
+#define SQUID_SRC_CACHE_CF_H
 
 class wordlist;
 
@@ -33,5 +33,5 @@ extern const char *cfg_filename;
 extern int config_lineno;
 extern char config_input_line[BUFSIZ];
 
-#endif /* SQUID_CACHE_CF_H_ */
+#endif /* SQUID_SRC_CACHE_CF_H */
 

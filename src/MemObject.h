@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEMOBJECT_H
-#define SQUID_MEMOBJECT_H
+#ifndef SQUID_SRC_MEMOBJECT_H
+#define SQUID_SRC_MEMOBJECT_H
 
 #include "base/DelayedAsyncCalls.h"
 #include "dlink.h"
@@ -228,5 +228,5 @@ private:
 /** global current memory removal policy */
 extern RemovalPolicy *mem_policy;
 
-#endif /* SQUID_MEMOBJECT_H */
+#endif /* SQUID_SRC_MEMOBJECT_H */
 

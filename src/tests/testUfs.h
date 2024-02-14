@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_STORECONTROLLER_H
-#define SQUID_SRC_TEST_STORECONTROLLER_H
+#ifndef SQUID_SRC_TESTS_TESTUFS_H
+#define SQUID_SRC_TESTS_TESTUFS_H
 
 #include "compat/cppunit.h"
 
@@ -30,5 +30,5 @@ protected:
     void testUfsDefaultEngine();
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTUFS_H */
 

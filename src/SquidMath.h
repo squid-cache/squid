@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_SQUIDMATH_H
-#define _SQUID_SRC_SQUIDMATH_H
+#ifndef SQUID_SRC_SQUIDMATH_H
+#define SQUID_SRC_SQUIDMATH_H
 
 #include "base/forward.h"
 #include "base/TypeTraits.h"
@@ -188,5 +188,5 @@ NaturalCast(const Source s)
     return NaturalSum<Result>(s).value();
 }
 
-#endif /* _SQUID_SRC_SQUIDMATH_H */
+#endif /* SQUID_SRC_SQUIDMATH_H */
 

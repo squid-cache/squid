@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_LOCAL_SEARCH_H
-#define SQUID_STORE_LOCAL_SEARCH_H
+#ifndef SQUID_SRC_STORE_LOCALSEARCH_H
+#define SQUID_SRC_STORE_LOCALSEARCH_H
 
 #include "store/forward.h"
 
@@ -15,5 +15,5 @@ namespace Store {
 StoreSearch *NewLocalSearch();
 } // namespace Store
 
-#endif /* SQUID_STORE_LOCAL_SEARCH_H */
+#endif /* SQUID_SRC_STORE_LOCALSEARCH_H */
 

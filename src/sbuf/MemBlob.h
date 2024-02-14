@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEMBLOB_H_
-#define SQUID_MEMBLOB_H_
+#ifndef SQUID_SRC_SBUF_MEMBLOB_H
+#define SQUID_SRC_SBUF_MEMBLOB_H
 
 #define MEMBLOB_DEBUGSECTION 24
 
@@ -130,5 +130,5 @@ private:
     MemBlob& operator =(const MemBlob &);
 };
 
-#endif /* SQUID_MEMBLOB_H_ */
+#endif /* SQUID_SRC_SBUF_MEMBLOB_H */
 

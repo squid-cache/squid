@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_OPTIONS_H
-#define SQUID_ACL_OPTIONS_H
+#ifndef SQUID_SRC_ACL_OPTIONS_H
+#define SQUID_SRC_ACL_OPTIONS_H
 
 #include "acl/forward.h"
 #include "sbuf/forward.h"
@@ -230,5 +230,5 @@ std::ostream &operator <<(std::ostream &, const Options &);
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_OPTIONS_H */
+#endif /* SQUID_SRC_ACL_OPTIONS_H */
 

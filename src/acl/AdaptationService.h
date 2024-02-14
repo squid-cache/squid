@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLADAPTATIONSERVICE_H
-#define SQUID_ACLADAPTATIONSERVICE_H
+#ifndef SQUID_SRC_ACL_ADAPTATIONSERVICE_H
+#define SQUID_SRC_ACL_ADAPTATIONSERVICE_H
 
 #include "acl/Strategy.h"
 
@@ -19,5 +19,5 @@ public:
     int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
-#endif /* SQUID_ACLADAPTATIONSERVICE_H */
+#endif /* SQUID_SRC_ACL_ADAPTATIONSERVICE_H */
 

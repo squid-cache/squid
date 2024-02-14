@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IDENT_ACLIDENT_H
-#define SQUID_IDENT_ACLIDENT_H
+#ifndef SQUID_SRC_IDENT_ACLIDENT_H
+#define SQUID_SRC_IDENT_ACLIDENT_H
 
 #if USE_IDENT
 
@@ -55,5 +55,5 @@ private:
 };
 
 #endif /* USE_IDENT */
-#endif /* SQUID_IDENT_ACLIDENT_H */
+#endif /* SQUID_SRC_IDENT_ACLIDENT_H */
 

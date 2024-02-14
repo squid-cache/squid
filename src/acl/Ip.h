@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLIP_H
-#define SQUID_ACLIP_H
+#ifndef SQUID_SRC_ACL_IP_H
+#define SQUID_SRC_ACL_IP_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -66,5 +66,5 @@ protected:
 
 };
 
-#endif /* SQUID_ACLIP_H */
+#endif /* SQUID_SRC_ACL_IP_H */
 

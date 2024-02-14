@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_TESTLOOKUPTABLE_H_
-#define SQUID_TESTLOOKUPTABLE_H_
+#ifndef SQUID_SRC_TESTS_TESTLOOKUPTABLE_H
+#define SQUID_SRC_TESTS_TESTLOOKUPTABLE_H
 
 #include "compat/cppunit.h"
 
@@ -20,5 +20,5 @@ public:
     void testLookupTableLookup();
 };
 
-#endif /* SQUID_TESTLOOKUPTABLE_H_ */
+#endif /* SQUID_SRC_TESTS_TESTLOOKUPTABLE_H */
 

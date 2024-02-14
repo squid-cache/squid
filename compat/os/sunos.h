@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_OS_SUNOS_H
-#define SQUID_OS_SUNOS_H
+#ifndef SQUID_COMPAT_OS_SUNOS_H
+#define SQUID_COMPAT_OS_SUNOS_H
 
 #if _SQUID_SUNOS_
 
@@ -28,5 +28,5 @@
 #define SQUID_NONBLOCK O_NDELAY
 
 #endif /* _SQUID_SUNOS_ */
-#endif /* SQUID_OS_SUNOS_H */
+#endif /* SQUID_COMPAT_OS_SUNOS_H */
 

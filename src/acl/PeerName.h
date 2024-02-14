@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLPEERNAME_H
-#define SQUID_ACLPEERNAME_H
+#ifndef SQUID_SRC_ACL_PEERNAME_H
+#define SQUID_SRC_ACL_PEERNAME_H
 
 #include "acl/Strategy.h"
 
@@ -18,5 +18,5 @@ public:
     int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
-#endif /* SQUID_ACLPEERNAME_H */
+#endif /* SQUID_SRC_ACL_PEERNAME_H */
 

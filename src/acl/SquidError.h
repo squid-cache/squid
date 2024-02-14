@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSQUIDERROR_H
-#define SQUID_ACLSQUIDERROR_H
+#ifndef SQUID_SRC_ACL_SQUIDERROR_H
+#define SQUID_SRC_ACL_SQUIDERROR_H
 
 #include "acl/Strategy.h"
 #include "error/forward.h"
@@ -19,5 +19,5 @@ public:
     int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
-#endif /* SQUID_ACLSQUIDERROR_H */
+#endif /* SQUID_SRC_ACL_SQUIDERROR_H */
 

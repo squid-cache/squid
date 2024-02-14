@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_NOTES_H
-#define SQUID_NOTES_H
+#ifndef SQUID_SRC_NOTES_H
+#define SQUID_SRC_NOTES_H
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
@@ -262,5 +262,5 @@ private:
     Entries entries; ///< The key/value pair entries
 };
 
-#endif
+#endif /* SQUID_SRC_NOTES_H */
 

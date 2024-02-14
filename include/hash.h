@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HASH_H
-#define SQUID_HASH_H
+#ifndef SQUID_INCLUDE_HASH_H
+#define SQUID_INCLUDE_HASH_H
 
 typedef void HASHFREE(void *);
 typedef int HASHCMP(const void *, const void *);
@@ -65,5 +65,5 @@ SQUIDCEXTERN const char *hashKeyStr(const hash_link *);
  */
 #define  DEFAULT_HASH_SIZE 7951 /* prime number < 8192 */
 
-#endif /* SQUID_HASH_H */
+#endif /* SQUID_INCLUDE_HASH_H */
 

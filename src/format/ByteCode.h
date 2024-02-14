@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_FMT_BYTECODE_H
-#define _SQUID_FMT_BYTECODE_H
+#ifndef SQUID_SRC_FORMAT_BYTECODE_H
+#define SQUID_SRC_FORMAT_BYTECODE_H
 
 /*
  * Squid configuration allows users to define custom formats in
@@ -269,5 +269,5 @@ enum Quoting {
 
 } // namespace Format
 
-#endif /* _SQUID_FMT_BYTECODE_H */
+#endif /* SQUID_SRC_FORMAT_BYTECODE_H */
 

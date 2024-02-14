@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_TYPES_H
-#define SQUID_TYPES_H
+#ifndef SQUID_COMPAT_TYPES_H
+#define SQUID_COMPAT_TYPES_H
 
 /*
  * Here are defined several known-width types, obtained via autoconf
@@ -160,5 +160,5 @@ typedef long mtyp_t;
 #define NULL 0
 #endif
 
-#endif /* SQUID_TYPES_H */
+#endif /* SQUID_COMPAT_TYPES_H */
 

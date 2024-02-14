@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_DISKIOSTRATEGY_H
-#define SQUID_DISKIOSTRATEGY_H
+#ifndef SQUID_SRC_DISKIO_DISKIOSTRATEGY_H
+#define SQUID_SRC_DISKIO_DISKIOSTRATEGY_H
 
 #include "base/RefCount.h"
 #include "Store.h"
@@ -86,5 +86,5 @@ private:
     DiskIOStrategy *io;
 };
 
-#endif /* SQUID_DISKIOSTRATEGY_H */
+#endif /* SQUID_SRC_DISKIO_DISKIOSTRATEGY_H */
 

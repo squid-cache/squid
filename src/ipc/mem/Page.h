@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_MEM_PAGE_H
-#define SQUID_IPC_MEM_PAGE_H
+#ifndef SQUID_SRC_IPC_MEM_PAGE_H
+#define SQUID_SRC_IPC_MEM_PAGE_H
 
 #include "ipc/mem/forward.h"
 
@@ -52,5 +52,5 @@ std::ostream &operator <<(std::ostream &os, const PageId &page);
 
 } // namespace Ipc
 
-#endif // SQUID_IPC_MEM_PAGE_H
+#endif /* SQUID_SRC_IPC_MEM_PAGE_H */
 

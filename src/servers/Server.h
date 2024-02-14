@@ -8,8 +8,8 @@
 
 /* DEBUG: section 33    Client-side Routines */
 
-#ifndef SQUID_SERVERS_SERVER_H
-#define SQUID_SERVERS_SERVER_H
+#ifndef SQUID_SRC_SERVERS_SERVER_H
+#define SQUID_SRC_SERVERS_SERVER_H
 
 #include "anyp/forward.h"
 #include "anyp/ProtocolVersion.h"
@@ -126,5 +126,5 @@ protected:
     AsyncCall::Pointer writer; ///< set when we are writing
 };
 
-#endif /* SQUID_SERVERS_SERVER_H */
+#endif /* SQUID_SRC_SERVERS_SERVER_H */
 

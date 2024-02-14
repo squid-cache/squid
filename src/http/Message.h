@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTP_MESSAGE_H
-#define SQUID_HTTP_MESSAGE_H
+#ifndef SQUID_SRC_HTTP_MESSAGE_H
+#define SQUID_SRC_HTTP_MESSAGE_H
 
 #include "base/Lock.h"
 #include "BodyPipe.h"
@@ -163,5 +163,5 @@ HTTPMSGLOCK(Http::Message *a)
         a->lock();
 }
 
-#endif /* SQUID_HTTPMSG_H */
+#endif /* SQUID_SRC_HTTP_MESSAGE_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SCHEMES_CONFIG_H
-#define SQUID_SCHEMES_CONFIG_H
+#ifndef SQUID_SRC_AUTH_SCHEMESCONFIG_H
+#define SQUID_SRC_AUTH_SCHEMESCONFIG_H
 
 #if USE_AUTH
 
@@ -45,5 +45,5 @@ public:
 } // namespace Auth
 
 #endif /* USE_AUTH */
-#endif /* SQUID_SCHEMES_CONFIG_H */
+#endif /* SQUID_SRC_AUTH_SCHEMESCONFIG_H */
 

@@ -8,10 +8,10 @@
 
 /* DEBUG: section 21    Integer functions */
 
-#ifndef SQUID_INT_H_
-#define SQUID_INT_H_
+#ifndef SQUID_SRC_INT_H
+#define SQUID_SRC_INT_H
 
 int isPowTen(int); //int.cc
 
-#endif /* SQUID_INT_H_ */
+#endif /* SQUID_SRC_INT_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CACHE_SNMP_H
-#define SQUID_CACHE_SNMP_H
+#ifndef SQUID_INCLUDE_CACHE_SNMP_H
+#define SQUID_INCLUDE_CACHE_SNMP_H
 
 #if SQUID_SNMP
 
@@ -269,5 +269,5 @@ enum {
 
 #endif /* SQUID_SNMP */
 
-#endif /* SQUID_CACHE_SNMP_H */
+#endif /* SQUID_INCLUDE_CACHE_SNMP_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ESICONTEXT_H
-#define SQUID_ESICONTEXT_H
+#ifndef SQUID_SRC_ESI_CONTEXT_H
+#define SQUID_SRC_ESI_CONTEXT_H
 
 #include "clientStream.h"
 #include "error/forward.h"
@@ -160,5 +160,5 @@ private:
     bool processing;
 };
 
-#endif /* SQUID_ESICONTEXT_H */
+#endif /* SQUID_SRC_ESI_CONTEXT_H */
 

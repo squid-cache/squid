@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CACHEPEER_H_
-#define SQUID_CACHEPEER_H_
+#ifndef SQUID_SRC_CACHEPEER_H
+#define SQUID_SRC_CACHEPEER_H
 
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
@@ -251,5 +251,5 @@ NoteOutgoingConnectionFailure(CachePeer * const peer, const Http::StatusCode cod
 /// identify the given cache peer in cache.log messages and such
 std::ostream &operator <<(std::ostream &, const CachePeer &);
 
-#endif /* SQUID_CACHEPEER_H_ */
+#endif /* SQUID_SRC_CACHEPEER_H */
 

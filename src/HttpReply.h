@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPREPLY_H
-#define SQUID_HTTPREPLY_H
+#ifndef SQUID_SRC_HTTPREPLY_H
+#define SQUID_SRC_HTTPREPLY_H
 
 #include "http/StatusLine.h"
 #include "HttpBody.h"
@@ -168,5 +168,5 @@ protected:
     bool parseFirstLine(const char *start, const char *end) override;
 };
 
-#endif /* SQUID_HTTPREPLY_H */
+#endif /* SQUID_SRC_HTTPREPLY_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 14    IP Storage and Handling */
 
-#ifndef _SQUID_SRC_IP_ADDRESS_H
-#define _SQUID_SRC_IP_ADDRESS_H
+#ifndef SQUID_SRC_IP_ADDRESS_H
+#define SQUID_SRC_IP_ADDRESS_H
 
 #include "ip/forward.h"
 
@@ -374,5 +374,5 @@ public:
 
 void parse_IpAddress_list_token(Ip::Address_list **, char *);
 
-#endif /* _SQUID_SRC_IP_ADDRESS_H */
+#endif /* SQUID_SRC_IP_ADDRESS_H */
 

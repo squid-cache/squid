@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLNOTE_H
-#define SQUID_ACLNOTE_H
+#ifndef SQUID_SRC_ACL_NOTE_H
+#define SQUID_SRC_ACL_NOTE_H
 
 #include "acl/CharacterSetOption.h"
 #include "acl/Data.h"
@@ -41,5 +41,5 @@ private:
     bool matchNotes(ACLData<MatchType> *, const NotePairs *) const;
 };
 
-#endif /* SQUID_ACLNOTE_H */
+#endif /* SQUID_SRC_ACL_NOTE_H */
 

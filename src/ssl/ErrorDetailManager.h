@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SSL_ERRORDETAILMANAGER_H
-#define _SQUID_SSL_ERRORDETAILMANAGER_H
+#ifndef SQUID_SRC_SSL_ERRORDETAILMANAGER_H
+#define SQUID_SRC_SSL_ERRORDETAILMANAGER_H
 
 #include "base/RefCount.h"
 #include "HttpRequest.h"
@@ -94,5 +94,5 @@ private:
 void errorDetailInitialize();
 void errorDetailClean();
 } //namespace Ssl
-#endif
+#endif /* SQUID_SRC_SSL_ERRORDETAILMANAGER_H */
 

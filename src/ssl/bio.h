@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSL_BIO_H
-#define SQUID_SSL_BIO_H
+#ifndef SQUID_SRC_SSL_BIO_H
+#define SQUID_SRC_SSL_BIO_H
 
 #if USE_OPENSSL
 
@@ -201,5 +201,5 @@ void
 applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl::BumpMode bumpMode);
 
 #endif /* USE_OPENSSL */
-#endif /* SQUID_SSL_BIO_H */
+#endif /* SQUID_SRC_SSL_BIO_H */
 

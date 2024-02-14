@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_INNER_NODE_H
-#define SQUID_ACL_INNER_NODE_H
+#ifndef SQUID_SRC_ACL_INNERNODE_H
+#define SQUID_SRC_ACL_INNERNODE_H
 
 #include "acl/Acl.h"
 #include <vector>
@@ -55,5 +55,5 @@ protected:
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_INNER_NODE_H */
+#endif /* SQUID_SRC_ACL_INNERNODE_H */
 

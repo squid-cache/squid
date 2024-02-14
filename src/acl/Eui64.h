@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLEUI64_H
-#define SQUID_ACLEUI64_H
+#ifndef SQUID_SRC_ACL_EUI64_H
+#define SQUID_SRC_ACL_EUI64_H
 
 #include "acl/Acl.h"
 
@@ -38,5 +38,5 @@ protected:
     char const *class_;
 };
 
-#endif /* SQUID_ACLEUI64_H */
+#endif /* SQUID_SRC_ACL_EUI64_H */
 

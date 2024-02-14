@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTP_REGISTEREDHEADERS_H
-#define SQUID_HTTP_REGISTEREDHEADERS_H
+#ifndef SQUID_SRC_HTTP_REGISTEREDHEADERS_H
+#define SQUID_SRC_HTTP_REGISTEREDHEADERS_H
 
 #include "base/LookupTable.h"
 
@@ -226,5 +226,5 @@ std::ostream &operator <<(std::ostream &, HdrType);
 
 }; /* namespace Http */
 
-#endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
+#endif /* SQUID_SRC_HTTP_REGISTEREDHEADERS_H */
 

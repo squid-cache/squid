@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_UFS_STORESEARCHUFS_H
-#define SQUID_FS_UFS_STORESEARCHUFS_H
+#ifndef SQUID_SRC_FS_UFS_STORESEARCHUFS_H
+#define SQUID_SRC_FS_UFS_STORESEARCHUFS_H
 
 #include "StoreSearch.h"
 #include "UFSSwapDir.h"
@@ -59,5 +59,5 @@ private:
 
 } //namespace Ufs
 } //namespace Fs
-#endif /* SQUID_FS_UFS_STORESEARCHUFS_H */
+#endif /* SQUID_SRC_FS_UFS_STORESEARCHUFS_H */
 
