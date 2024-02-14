@@ -9,6 +9,7 @@
 /* DEBUG: section 84    Helper process maintenance */
 
 #include "squid.h"
+#include "base/CharacterSet.h"
 #include "ConfigParser.h"
 #include "debug/Messages.h"
 #include "debug/Stream.h"
@@ -235,6 +236,10 @@ Helper::Reply::parseResponseKeys()
         const SBuf parsedKey(key);
         const SBuf parsedValue(v); // allow empty values (!v or !*v)
         if (v && parsedKey.cmp("ttl") == 0) {
+            if (parsedValue.findFirstNotOf(CharacterSet::DIGIT) != SBuf::npos) {
+                debugs(84, DBG_IMPORTANT, "WARNING: Unexpected from-helper value: ttl=" << parsedValue);
+                continue;
+            }
             char *end = v + parsedValue.length();
             expires = squid_curtime + strtoll(v, &end, 10);
         } else {
