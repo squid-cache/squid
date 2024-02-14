@@ -246,6 +246,8 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
     debugs(29, 5, reply.reservationId << " got reply=" << reply);
+    if (reply.expires.has_value())
+        debugs(29, 5, "ignoring unexpected ttl=" << (reply.expires.value() - current_time.tv_sec));
 
     if (!cbdataReferenceValid(r->data)) {
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication invalid callback data(" << reply.reservationId <<")");
@@ -332,7 +334,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
             auth_user_request->user(local_auth_user);
         }
         // update expiry on fresh login from an existing or new user
-        local_auth_user->expires = reply.expires.value_or(current_time.tv_sec);
+        local_auth_user->expires = current_time.tv_sec;
         auth_user_request->user()->credentials(Auth::Ok);
         debugs(29, 4, "Successfully validated user via NTLM. Username '" << auth_user_request->user()->username() << "'");
     }
