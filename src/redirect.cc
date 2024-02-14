@@ -81,6 +81,8 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
 {
     RedirectStateData *r = static_cast<RedirectStateData *>(data);
     debugs(61, 5, "reply=" << reply);
+    if (reply.expires.has_value())
+        debugs(61, 5, "ignoring unexpected ttl=" << (reply.expires.value() - current_time.tv_sec));
 
     // XXX: This function is now kept only to check for and display the garbage use-case
     // and to map the old helper response format(s) into new format result code and key=value pairs
@@ -180,7 +182,9 @@ static void
 storeIdHandleReply(void *data, const Helper::Reply &reply)
 {
     RedirectStateData *r = static_cast<RedirectStateData *>(data);
-    debugs(61, 5,"StoreId helper: reply=" << reply);
+    debugs(61, 5, "reply=" << reply);
+    if (reply.expires.has_value())
+        debugs(61, 5, "ignoring unexpected ttl=" << (reply.expires.value() - current_time.tv_sec));
 
     // XXX: This function is now kept only to check for and display the garbage use-case
     // and to map the old helper response format(s) into new format result code and key=value pairs

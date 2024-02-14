@@ -2527,6 +2527,10 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
         return;
     }
 
+    debugs(33, 5,"reply=" << reply);
+    if (reply.expires.has_value())
+        debugs(33, 5, "ignoring unexpected ttl=" << (reply.expires.value() - current_time.tv_sec));
+
     if (reply.result == Helper::BrokenHelper) {
         debugs(33, 5, "Certificate for " << tlsConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply);
     } else if (!reply.other().hasContent()) {

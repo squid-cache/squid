@@ -938,7 +938,9 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
     externalAclState *next;
     ExternalACLEntryData entryData;
 
-    debugs(82, 2, "reply=" << reply);
+    debugs(82, 5, "reply=" << reply);
+    if (reply.expires.has_value())
+        debugs(82, 5, "ignoring unexpected ttl=" << (reply.expires.value() - current_time.tv_sec));
 
     if (reply.result == Helper::Okay)
         entryData.result = ACCESS_ALLOWED;

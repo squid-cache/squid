@@ -245,8 +245,7 @@ void
 Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
-
-    debugs(29, 8, reply.reservationId << " got reply=" << reply);
+    debugs(29, 5, reply.reservationId << " got reply=" << reply);
 
     if (!cbdataReferenceValid(r->data)) {
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication invalid callback data(" << reply.reservationId <<")");

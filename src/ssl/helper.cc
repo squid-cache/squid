@@ -264,6 +264,10 @@ CBDATA_CLASS_INIT(submitData);
 static void
 sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
 {
+    debugs(83, 5,"reply=" << reply);
+    if (reply.expires.has_value())
+        debugs(83, 5, "ignoring unexpected ttl=" << (reply.expires.value() - current_time.tv_sec));
+
     Ssl::CertValidationMsg replyMsg(Ssl::CrtdMessage::REPLY);
 
     submitData *crtdvdData = static_cast<submitData *>(data);
