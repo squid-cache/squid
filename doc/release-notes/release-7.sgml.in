@@ -144,6 +144,10 @@ This section gives an account of those changes in three categories:
 	<p>Changed <em>http_status</em> to detect and handle overlapping
 	   status and status-range values. Merging where necessary.
 
+	<tag>auth_param</tag>
+	<p>Changed <em>basic</em> scheme <em>credentialsttl</em> option
+	   to prefer helper provided <em>ttl=N</em> value (if any).
+
 	<tag>buffered_logs</tag>
 	<p>Honor the <em>off</em> setting in 'udp' access_log module.
 
