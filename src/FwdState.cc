@@ -276,6 +276,7 @@ FwdState::completed()
 #endif
 
     if (entry->store_status == STORE_PENDING) {
+        // TODO: switch by on_ssl_bump_error & ACLs
         if (err && request->clientConnectionManager->port->flags.tunnelSslBumping
                 && request->clientConnectionManager->port->secure.terminateOnSecureConnectFail) {
 
