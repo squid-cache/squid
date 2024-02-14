@@ -2527,7 +2527,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
         return;
     }
 
-    debugs(33, 5,"reply=" << reply);
+    debugs(33, 5, "reply=" << reply);
     if (reply.expires.has_value())
         debugs(33, 5, "ignoring unexpected ttl=" << (reply.expires.value() - current_time.tv_sec));
 
