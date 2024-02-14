@@ -11,6 +11,7 @@
 #ifndef SQUID_SRC_BASE_RAW_H
 #define SQUID_SRC_BASE_RAW_H
 
+#include <algorithm>
 #include <iosfwd>
 
 /// Prints raw and/or non-terminated data safely, efficiently, and beautifully.
@@ -20,11 +21,17 @@
 class Raw
 {
 public:
-    Raw(const char *label, const char *data, const size_t size):
-        level(-1), label_(label), data_(data), size_(size), useHex_(false), useGap_(true) {}
+    Raw(const char *label, const char *data, const size_t size) :
+        label_(label), data_(data), size_(size) { atMost(size); }
 
     /// limit data printing to at least the given debugging level
     Raw &minLevel(const int aLevel) { level = aLevel; return *this; }
+
+    /// print no more than n bytes of data
+    Raw &atMost(const size_t n) { printableSize_ = std::min(n, printableSize_); return *this; }
+
+    /// do not limit output size; caller responsible for huge dumps
+    Raw &whole() { printableSize_ = size_; return *this; }
 
     /// print data using two hex digits per byte (decoder: xxd -r -p)
     Raw &hex() { useHex_ = true; return *this; }
@@ -42,16 +49,17 @@ public:
     /// Minimum section debugging level necessary for printing. By default,
     /// small strings are always printed while large strings are only printed
     /// if DBG_DATA debugging level is enabled.
-    int level;
+    int level = -1;
 
 private:
     void printHex(std::ostream &os) const;
 
-    const char *label_; ///< optional data name or ID; triggers size printing
-    const char *data_; ///< raw data to be printed
-    size_t size_; ///< data length
-    bool useHex_; ///< whether hex() has been called
-    bool useGap_; ///< whether to print leading space if label is missing
+    const char *label_ = nullptr; ///< optional data name or ID; triggers size printing
+    const char *data_ = nullptr; ///< raw data to be printed
+    size_t size_ = 0; ///< data length
+    size_t printableSize_ = 256; ///< do not print more data
+    bool useHex_ = false; ///< whether hex() has been called
+    bool useGap_ = true; ///< whether to print leading space if label is missing
 };
 
 inline std::ostream &
