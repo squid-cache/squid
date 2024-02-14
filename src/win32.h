@@ -8,8 +8,8 @@
 
 /* Inspired by previous work by Romeo Anghelache & Eric Stern. */
 
-#ifndef SQUID_WIN32_H_
-#define SQUID_WIN32_H_
+#ifndef SQUID_SRC_WIN32_H
+#define SQUID_SRC_WIN32_H
 
 #if _SQUID_WINDOWS_
 
@@ -20,5 +20,5 @@ DWORD WIN32_IpAddrChangeMonitorInit();
 
 #endif
 
-#endif /* SQUID_WIN32_H_ */
+#endif /* SQUID_SRC_WIN32_H */
 

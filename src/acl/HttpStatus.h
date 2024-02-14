@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLHTTPSTATUS_H
-#define SQUID_ACLHTTPSTATUS_H
+#ifndef SQUID_SRC_ACL_HTTPSTATUS_H
+#define SQUID_SRC_ACL_HTTPSTATUS_H
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
@@ -44,5 +44,5 @@ protected:
     char const *class_;
 };
 
-#endif /* SQUID_ACLHTTPSTATUS_H */
+#endif /* SQUID_SRC_ACL_HTTPSTATUS_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_H
-#define SQUID_ACL_H
+#ifndef SQUID_SRC_ACL_ACL_H
+#define SQUID_SRC_ACL_ACL_H
 
 #include "acl/forward.h"
 #include "acl/Options.h"
@@ -215,5 +215,5 @@ public:
 /// XXX: find a way to remove or at least use a refcounted ACL pointer
 extern const char *AclMatchedName;  /* NULL */
 
-#endif /* SQUID_ACL_H */
+#endif /* SQUID_SRC_ACL_ACL_H */
 

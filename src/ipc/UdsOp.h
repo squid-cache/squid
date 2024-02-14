@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_ASYNCUDSOP_H
-#define SQUID_IPC_ASYNCUDSOP_H
+#ifndef SQUID_SRC_IPC_UDSOP_H
+#define SQUID_SRC_IPC_UDSOP_H
 
 #include "base/AsyncJob.h"
 #include "base/forward.h"
@@ -107,5 +107,5 @@ const Comm::ConnectionPointer & ImportFdIntoComm(const Comm::ConnectionPointer &
 
 }
 
-#endif /* SQUID_IPC_ASYNCUDSOP_H */
+#endif /* SQUID_SRC_IPC_UDSOP_H */
 

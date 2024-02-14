@@ -8,8 +8,8 @@
 
 /* DEBUG: section 05    Socket Functions */
 
-#ifndef _SQUIDCONNECTIONDETAIL_H_
-#define _SQUIDCONNECTIONDETAIL_H_
+#ifndef SQUID_SRC_COMM_CONNECTION_H
+#define SQUID_SRC_COMM_CONNECTION_H
 
 #include "base/CodeContext.h"
 #include "base/InstanceId.h"
@@ -205,5 +205,5 @@ operator <<(std::ostream &os, const ConnectionPointer &conn)
 
 } // namespace Comm
 
-#endif
+#endif /* SQUID_SRC_COMM_CONNECTION_H */
 

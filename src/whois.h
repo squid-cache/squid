@@ -8,8 +8,8 @@
 
 /* DEBUG: section 75    WHOIS protocol */
 
-#ifndef SQUID_WHOIS_H_
-#define SQUID_WHOIS_H_
+#ifndef SQUID_SRC_WHOIS_H
+#define SQUID_SRC_WHOIS_H
 
 /**
  * \defgroup ServerProtocolWhoisAPI Server-Side WHOIS API
@@ -19,5 +19,5 @@
 /// \ingroup ServerProtocolWhoisAPI
 void whoisStart(FwdState *);
 
-#endif /* SQUID_WHOIS_H_ */
+#endif /* SQUID_SRC_WHOIS_H */
 

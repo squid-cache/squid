@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_OS_SOLARIS_H
-#define SQUID_OS_SOLARIS_H
+#ifndef SQUID_COMPAT_OS_SOLARIS_H
+#define SQUID_COMPAT_OS_SOLARIS_H
 
 #if _SQUID_SOLARIS_
 
@@ -104,5 +104,5 @@ SQUIDCEXTERN int gethostname(char *, int);
 #endif
 
 #endif /* _SQUID_SOLARIS_ */
-#endif /* SQUID_OS_SOALRIS_H */
+#endif /* SQUID_COMPAT_OS_SOLARIS_H */
 

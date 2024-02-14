@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_FORMAT_QUOTING_H
-#define _SQUID_FORMAT_QUOTING_H
+#ifndef SQUID_SRC_FORMAT_QUOTING_H
+#define SQUID_SRC_FORMAT_QUOTING_H
 
 namespace Format
 {
@@ -24,5 +24,5 @@ char *QuoteMimeBlob(const char *header);
 
 }; // namespace Format
 
-#endif /* _SQUID_FORMAT_QUOTING_H */
+#endif /* SQUID_SRC_FORMAT_QUOTING_H */
 

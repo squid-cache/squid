@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_TESTTOKENIZER_H_
-#define SQUID_TESTTOKENIZER_H_
+#ifndef SQUID_SRC_TESTS_TESTTOKENIZER_H
+#define SQUID_SRC_TESTS_TESTTOKENIZER_H
 
 #include "compat/cppunit.h"
 
@@ -31,5 +31,5 @@ protected:
     void testTokenizerInt64();
 };
 
-#endif /* SQUID_TESTTOKENIZER_H_ */
+#endif /* SQUID_SRC_TESTS_TESTTOKENIZER_H */
 

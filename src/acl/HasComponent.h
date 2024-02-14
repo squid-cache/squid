@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLHASCOMPONENT_H
-#define SQUID_ACLHASCOMPONENT_H
+#ifndef SQUID_SRC_ACL_HASCOMPONENT_H
+#define SQUID_SRC_ACL_HASCOMPONENT_H
 
 #include "acl/Strategised.h"
 #include "acl/Strategy.h"
@@ -19,5 +19,5 @@ public:
     int match(ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
-#endif
+#endif /* SQUID_SRC_ACL_HASCOMPONENT_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_MEM_PAGE_POOL_H
-#define SQUID_IPC_MEM_PAGE_POOL_H
+#ifndef SQUID_SRC_IPC_MEM_PAGEPOOL_H
+#define SQUID_SRC_IPC_MEM_PAGEPOOL_H
 
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
@@ -60,5 +60,5 @@ private:
 
 } // namespace Ipc
 
-#endif // SQUID_IPC_MEM_PAGE_POOL_H
+#endif /* SQUID_SRC_IPC_MEM_PAGEPOOL_H */
 

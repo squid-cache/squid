@@ -80,8 +80,8 @@
  * returned in network order (suitable for use in system calls).
  */
 
-#ifndef _NETDB_H
-#define _NETDB_H
+#ifndef SQUID_COMPAT_OS_OPENSOLARIS_10_NETDB_H
+#define SQUID_COMPAT_OS_OPENSOLARIS_10_NETDB_H
 
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -484,5 +484,5 @@ extern int  *__h_errno();
 }
 #endif
 
-#endif  /* _NETDB_H */
+#endif /* SQUID_COMPAT_OS_OPENSOLARIS_10_NETDB_H */
 

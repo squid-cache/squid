@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_ERROR_ERROR_H
-#define _SQUID_SRC_ERROR_ERROR_H
+#ifndef SQUID_SRC_ERROR_ERROR_H
+#define SQUID_SRC_ERROR_ERROR_H
 
 #include "error/Detail.h"
 #include "error/forward.h"
@@ -59,5 +59,5 @@ errorTypeName(err_type err)
 
 std::ostream &operator <<(std::ostream &os, const Error &error);
 
-#endif /* _SQUID_SRC_ERROR_ERROR_H */
+#endif /* SQUID_SRC_ERROR_ERROR_H */
 

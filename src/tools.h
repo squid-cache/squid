@@ -8,8 +8,8 @@
 
 /* DEBUG: section 21    Misc Functions */
 
-#ifndef SQUID_TOOLS_H_
-#define SQUID_TOOLS_H_
+#ifndef SQUID_SRC_TOOLS_H
+#define SQUID_SRC_TOOLS_H
 
 #include "sbuf/SBuf.h"
 #include "typedefs.h"
@@ -114,5 +114,5 @@ inline pid_t WaitForAnyPid(PidStatus &status, int flags)
 SBuf WindowsErrorMessage(DWORD errorId);
 #endif // _SQUID_WINDOWS_
 
-#endif /* SQUID_TOOLS_H_ */
+#endif /* SQUID_SRC_TOOLS_H */
 

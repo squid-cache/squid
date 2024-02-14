@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_HTTP_ONE_TeChunkedParser_H
-#define SQUID_SRC_HTTP_ONE_TeChunkedParser_H
+#ifndef SQUID_SRC_HTTP_ONE_TECHUNKEDPARSER_H
+#define SQUID_SRC_HTTP_ONE_TECHUNKEDPARSER_H
 
 #include "http/one/Parser.h"
 
@@ -88,5 +88,5 @@ private:
 } // namespace One
 } // namespace Http
 
-#endif /* SQUID_SRC_HTTP_ONE_TeChunkedParser_H */
+#endif /* SQUID_SRC_HTTP_ONE_TECHUNKEDPARSER_H */
 

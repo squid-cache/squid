@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HTTP_ONE_PARSER_H
-#define _SQUID_SRC_HTTP_ONE_PARSER_H
+#ifndef SQUID_SRC_HTTP_ONE_PARSER_H
+#define SQUID_SRC_HTTP_ONE_PARSER_H
 
 #include "anyp/ProtocolVersion.h"
 #include "http/one/forward.h"
@@ -172,5 +172,5 @@ int ErrorLevel();
 } // namespace One
 } // namespace Http
 
-#endif /*  _SQUID_SRC_HTTP_ONE_PARSER_H */
+#endif /* SQUID_SRC_HTTP_ONE_PARSER_H */
 

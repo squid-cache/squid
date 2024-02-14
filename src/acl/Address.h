@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_ACL_ADDRESS_H
-#define _SQUID_SRC_ACL_ADDRESS_H
+#ifndef SQUID_SRC_ACL_ADDRESS_H
+#define SQUID_SRC_ACL_ADDRESS_H
 
 #include "acl/Acl.h"
 #include "ip/Address.h"
@@ -32,5 +32,5 @@ public:
 
 } // namespace Acl
 
-#endif /* _SQUID_SRC_ACL_ADDRESS_H */
+#endif /* SQUID_SRC_ACL_ADDRESS_H */
 

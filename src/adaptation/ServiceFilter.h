@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__SERVICE_FILTER_H
-#define SQUID_ADAPTATION__SERVICE_FILTER_H
+#ifndef SQUID_SRC_ADAPTATION_SERVICEFILTER_H
+#define SQUID_SRC_ADAPTATION_SERVICEFILTER_H
 
 #include "AccessLogEntry.h"
 #include "adaptation/Elements.h"
@@ -40,5 +40,5 @@ std::ostream &operator <<(std::ostream &, const ServiceFilter &);
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__SERVICE_FILTER_H */
+#endif /* SQUID_SRC_ADAPTATION_SERVICEFILTER_H */
 

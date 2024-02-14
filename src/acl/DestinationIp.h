@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLDESTINATIONIP_H
-#define SQUID_ACLDESTINATIONIP_H
+#ifndef SQUID_SRC_ACL_DESTINATIONIP_H
+#define SQUID_SRC_ACL_DESTINATIONIP_H
 
 #include "acl/Checklist.h"
 #include "acl/Ip.h"
@@ -38,5 +38,5 @@ private:
     Acl::BooleanOptionValue lookupBanned; ///< are DNS lookups allowed?
 };
 
-#endif /* SQUID_ACLDESTINATIONIP_H */
+#endif /* SQUID_SRC_ACL_DESTINATIONIP_H */
 

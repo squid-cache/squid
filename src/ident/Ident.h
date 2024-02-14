@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IDENT_H
-#define SQUID_IDENT_H
+#ifndef SQUID_SRC_IDENT_IDENT_H
+#define SQUID_SRC_IDENT_IDENT_H
 
 #if USE_IDENT
 
@@ -29,5 +29,5 @@ void Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *cbdata);
 } // namespace Ident
 
 #endif /* USE_IDENT */
-#endif /* SQUID_IDENT_H */
+#endif /* SQUID_SRC_IDENT_IDENT_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLCERTIFICATE_H
-#define SQUID_ACLCERTIFICATE_H
+#ifndef SQUID_SRC_ACL_CERTIFICATE_H
+#define SQUID_SRC_ACL_CERTIFICATE_H
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
@@ -23,5 +23,5 @@ public:
     int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
-#endif /* SQUID_ACLCERTIFICATE_H */
+#endif /* SQUID_SRC_ACL_CERTIFICATE_H */
 

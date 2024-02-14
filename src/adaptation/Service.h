@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__SERVICE_H
-#define SQUID_ADAPTATION__SERVICE_H
+#ifndef SQUID_SRC_ADAPTATION_SERVICE_H
+#define SQUID_SRC_ADAPTATION_SERVICE_H
 
 #include "AccessLogEntry.h"
 #include "adaptation/Elements.h"
@@ -76,5 +76,5 @@ void DetachServices();
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__SERVICE_H */
+#endif /* SQUID_SRC_ADAPTATION_SERVICE_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_REQUEST_H
-#define SQUID_MGR_REQUEST_H
+#ifndef SQUID_SRC_MGR_REQUEST_H
+#define SQUID_SRC_MGR_REQUEST_H
 
 #include "ipc/forward.h"
 #include "ipc/Request.h"
@@ -38,5 +38,5 @@ public:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_REQUEST_H */
+#endif /* SQUID_SRC_MGR_REQUEST_H */
 

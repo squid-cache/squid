@@ -5,6 +5,8 @@
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
+#ifndef SQUID_SRC_AUTH_DIGEST_EDIRECTORY_EDIR_LDAPEXT_H
+#define SQUID_SRC_AUTH_DIGEST_EDIRECTORY_EDIR_LDAPEXT_H
 
 #ifndef SQUID_SRC_AUTH_DIGEST_EDIRECTORY_EDIR_LDAPEXT_H
 #define SQUID_SRC_AUTH_DIGEST_EDIRECTORY_EDIR_LDAPEXT_H

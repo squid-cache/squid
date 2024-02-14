@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_ACLMAXUSERIP_H
-#define SQUID_SRC_TEST_ACLMAXUSERIP_H
+#ifndef SQUID_SRC_TESTS_TESTACLMAXUSERIP_H
+#define SQUID_SRC_TESTS_TESTACLMAXUSERIP_H
 
 #if USE_AUTH
 
@@ -35,5 +35,5 @@ protected:
 };
 
 #endif /* USE_AUTH */
-#endif /* SQUID_SRC_TEST_ACLMAXUSERIP_H */
+#endif /* SQUID_SRC_TESTS_TESTACLMAXUSERIP_H */
 

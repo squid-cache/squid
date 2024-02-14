@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORESEARCH_H
-#define SQUID_STORESEARCH_H
+#ifndef SQUID_SRC_STORESEARCH_H
+#define SQUID_SRC_STORESEARCH_H
 
 #include "base/RefCount.h"
 #include "Store.h"
@@ -42,5 +42,5 @@ public:
 
 typedef RefCount<StoreSearch> StoreSearchPointer;
 
-#endif /* SQUID_STORESEARCH_H */
+#endif /* SQUID_SRC_STORESEARCH_H */
 

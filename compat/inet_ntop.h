@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _INC_INET_NTOP_H
-#define _INC_INET_NTOP_H
+#ifndef SQUID_COMPAT_INET_NTOP_H
+#define SQUID_COMPAT_INET_NTOP_H
 
 /* Use the system provided version where possible */
 #if !HAVE_DECL_INET_NTOP
@@ -26,5 +26,5 @@ SQUIDCEXTERN const char * xinet_ntop(int af, const void *src, char *dst, size_t 
 #endif
 
 #endif /* HAVE_DECL_INET_NTOP */
-#endif /* _INC_INET_NTOP_H */
+#endif /* SQUID_COMPAT_INET_NTOP_H */
 

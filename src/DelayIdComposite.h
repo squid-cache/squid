@@ -8,8 +8,8 @@
 
 /* DEBUG: section 77    Delay Pools */
 
-#ifndef DELAYIDCOMPOSITE_H
-#define DELAYIDCOMPOSITE_H
+#ifndef SQUID_SRC_DELAYIDCOMPOSITE_H
+#define SQUID_SRC_DELAYIDCOMPOSITE_H
 
 #if USE_DELAY_POOLS
 #include "base/forward.h"
@@ -30,5 +30,5 @@ public:
 };
 
 #endif /* USE_DELAY_POOLS */
-#endif /* DELAYIDCOMPOSITE_H */
+#endif /* SQUID_SRC_DELAYIDCOMPOSITE_H */
 

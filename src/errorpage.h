@@ -8,8 +8,8 @@
 
 /* DEBUG: section 04    Error Generation */
 
-#ifndef   SQUID_ERRORPAGE_H
-#define   SQUID_ERRORPAGE_H
+#ifndef SQUID_SRC_ERRORPAGE_H
+#define SQUID_SRC_ERRORPAGE_H
 
 #include "cbdata.h"
 #include "comm/forward.h"
@@ -355,5 +355,5 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
 
 std::ostream &operator <<(std::ostream &, const ErrorState *);
 
-#endif /* SQUID_ERRORPAGE_H */
+#endif /* SQUID_SRC_ERRORPAGE_H */
 

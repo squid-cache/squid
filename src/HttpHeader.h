@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPHEADER_H
-#define SQUID_HTTPHEADER_H
+#ifndef SQUID_SRC_HTTPHEADER_H
+#define SQUID_SRC_HTTPHEADER_H
 
 #include "anyp/ProtocolVersion.h"
 #include "base/LookupTable.h"
@@ -205,5 +205,5 @@ void httpHeaderCalcMask(HttpHeaderMask * mask, Http::HdrType http_hdr_type_enums
 
 void httpHeaderInitModule(void);
 
-#endif /* SQUID_HTTPHEADER_H */
+#endif /* SQUID_SRC_HTTPHEADER_H */
 

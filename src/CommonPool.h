@@ -8,8 +8,8 @@
 
 /* DEBUG: section 77    Delay Pools */
 
-#ifndef COMMONPOOL_H
-#define COMMONPOOL_H
+#ifndef SQUID_SRC_COMMONPOOL_H
+#define SQUID_SRC_COMMONPOOL_H
 
 #if USE_DELAY_POOLS
 #include "CompositePoolNode.h"
@@ -36,5 +36,5 @@ protected:
 };
 
 #endif /* USE_DELAY_POOLS */
-#endif /* COMMONPOOL_H */
+#endif /* SQUID_SRC_COMMONPOOL_H */
 

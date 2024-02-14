@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_TRANSIENTS_H
-#define SQUID_TRANSIENTS_H
+#ifndef SQUID_SRC_TRANSIENTS_H
+#define SQUID_SRC_TRANSIENTS_H
 
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
@@ -111,5 +111,5 @@ private:
 
 // TODO: Why use Store as a base? We are not really a cache.
 
-#endif /* SQUID_TRANSIENTS_H */
+#endif /* SQUID_SRC_TRANSIENTS_H */
 

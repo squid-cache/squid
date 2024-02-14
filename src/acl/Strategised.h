@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSTRATEGISED_H
-#define SQUID_ACLSTRATEGISED_H
+#ifndef SQUID_SRC_ACL_STRATEGISED_H
+#define SQUID_SRC_ACL_STRATEGISED_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -123,5 +123,5 @@ ACLStrategised<MatchType>::valid () const
     return matcher->valid();
 }
 
-#endif /* SQUID_ACLSTRATEGISED_H */
+#endif /* SQUID_SRC_ACL_STRATEGISED_H */
 

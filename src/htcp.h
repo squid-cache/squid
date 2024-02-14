@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTCP_H
-#define SQUID_HTCP_H
+#ifndef SQUID_SRC_HTCP_H
+#define SQUID_SRC_HTCP_H
 
 #if USE_HTCP
 
@@ -71,5 +71,5 @@ void htcpClosePorts(void);
 
 #endif /* USE_HTCP */
 
-#endif /* SQUID_HTCP_H */
+#endif /* SQUID_SRC_HTCP_H */
 

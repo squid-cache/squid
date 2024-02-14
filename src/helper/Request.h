@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HELPER_REQUEST_H
-#define _SQUID_SRC_HELPER_REQUEST_H
+#ifndef SQUID_SRC_HELPER_REQUEST_H
+#define SQUID_SRC_HELPER_REQUEST_H
 
 #include "helper/forward.h"
 #include "time/gadgets.h"
@@ -55,5 +55,5 @@ public:
 
 } // namespace Helper
 
-#endif /* _SQUID_SRC_HELPER_REQUEST_H */
+#endif /* SQUID_SRC_HELPER_REQUEST_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 33    Client-side Routines */
 
-#ifndef SQUID_CLIENTSIDE_H
-#define SQUID_CLIENTSIDE_H
+#ifndef SQUID_SRC_CLIENT_SIDE_H
+#define SQUID_SRC_CLIENT_SIDE_H
 
 #include "acl/ChecklistFiller.h"
 #include "base/RunnersRegistry.h"
@@ -538,5 +538,5 @@ void clientPostHttpsAccept(ConnStateData *);
 std::ostream &operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic);
 std::ostream &operator <<(std::ostream &, const ConnStateData::ServerConnectionContext &);
 
-#endif /* SQUID_CLIENTSIDE_H */
+#endif /* SQUID_SRC_CLIENT_SIDE_H */
 

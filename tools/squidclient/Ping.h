@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_TOOLS_CLIENT_PING_H
-#define _SQUID_TOOLS_CLIENT_PING_H
+#ifndef SQUID_TOOLS_SQUIDCLIENT_PING_H
+#define SQUID_TOOLS_SQUIDCLIENT_PING_H
 
 /**
  * API for looping the squidclient request message
@@ -59,5 +59,5 @@ void DisplayStats();
 
 } // namespace Ping
 
-#endif /* _SQUID_TOOLS_CLIENT_PING_H */
+#endif /* SQUID_TOOLS_SQUIDCLIENT_PING_H */
 

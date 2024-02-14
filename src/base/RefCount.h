@@ -8,8 +8,8 @@
 
 /* DEBUG: section --    Refcount allocator */
 
-#ifndef SQUID_REFCOUNT_H_
-#define SQUID_REFCOUNT_H_
+#ifndef SQUID_SRC_BASE_REFCOUNT_H
+#define SQUID_SRC_BASE_REFCOUNT_H
 
 // reference counting requires the Lock API on base classes
 #include "base/Lock.h"
@@ -130,5 +130,5 @@ inline std::ostream &operator <<(std::ostream &os, const RefCount<C> &p)
         return os << "NULL";
 }
 
-#endif /* SQUID_REFCOUNT_H_ */
+#endif /* SQUID_SRC_BASE_REFCOUNT_H */
 

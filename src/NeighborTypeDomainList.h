@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_NEIGHBORTYPEDOMAINLIST_H_
-#define SQUID_NEIGHBORTYPEDOMAINLIST_H_
+#ifndef SQUID_SRC_NEIGHBORTYPEDOMAINLIST_H
+#define SQUID_SRC_NEIGHBORTYPEDOMAINLIST_H
 
 /// representation of a neighbor_type_domain configuration directive. A POD
 class NeighborTypeDomainList
@@ -18,5 +18,5 @@ public:
     NeighborTypeDomainList *next;
 };
 
-#endif /* SQUID_NEIGHBORTYPEDOMAINLIST_H_ */
+#endif /* SQUID_SRC_NEIGHBORTYPEDOMAINLIST_H */
 

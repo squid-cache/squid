@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSTRATEGY_H
-#define SQUID_ACLSTRATEGY_H
+#ifndef SQUID_SRC_ACL_STRATEGY_H
+#define SQUID_SRC_ACL_STRATEGY_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -36,5 +36,5 @@ public:
     virtual ~ACLStrategy() {}
 };
 
-#endif /* SQUID_ACLSTRATEGY_H */
+#endif /* SQUID_SRC_ACL_STRATEGY_H */
 

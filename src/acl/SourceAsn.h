@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_SOURCEASN_H
-#define SQUID_ACL_SOURCEASN_H
+#ifndef SQUID_SRC_ACL_SOURCEASN_H
+#define SQUID_SRC_ACL_SOURCEASN_H
 
 #include "acl/Strategy.h"
 #include "ip/Address.h"
@@ -21,5 +21,5 @@ public:
     int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
-#endif /* SQUID_ACL_SOURCEASN_H */
+#endif /* SQUID_SRC_ACL_SOURCEASN_H */
 

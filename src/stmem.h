@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STMEM_H
-#define SQUID_STMEM_H
+#ifndef SQUID_SRC_STMEM_H
+#define SQUID_SRC_STMEM_H
 
 #include "base/Range.h"
 #include "splay.h"
@@ -60,5 +60,5 @@ private:
     Splay<mem_node *> nodes;
 };
 
-#endif /* SQUID_STMEM_H */
+#endif /* SQUID_SRC_STMEM_H */
 

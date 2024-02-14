@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef   LIBTRIE_TRIECHARTRANSFORM_H
-#define   LIBTRIE_TRIECHARTRANSFORM_H
+#ifndef SQUID_LIB_LIBTRIE_TRIECHARTRANSFORM_H
+#define SQUID_LIB_LIBTRIE_TRIECHARTRANSFORM_H
 
 /* This is an internal header for libTrie.
  * libTrie provides both limited C and full C++
@@ -45,5 +45,5 @@ class TrieCaseless : public TrieCharTransform
 
 #endif /* __cplusplus */
 
-#endif /* LIBTRIE_TRIECHARTRANSFORM_H */
+#endif /* SQUID_LIB_LIBTRIE_TRIECHARTRANSFORM_H */
 

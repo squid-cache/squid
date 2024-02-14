@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLPROTOCOL_H
-#define SQUID_ACLPROTOCOL_H
+#ifndef SQUID_SRC_ACL_PROTOCOL_H
+#define SQUID_SRC_ACL_PROTOCOL_H
 
 #include "acl/Strategy.h"
 #include "anyp/ProtocolType.h"
@@ -20,5 +20,5 @@ public:
     bool requiresRequest() const override {return true;}
 };
 
-#endif /* SQUID_ACLPROTOCOL_H */
+#endif /* SQUID_SRC_ACL_PROTOCOL_H */
 

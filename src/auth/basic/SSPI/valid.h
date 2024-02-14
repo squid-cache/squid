@@ -33,8 +33,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 */
 
-#ifndef _VALID_H_
-#define _VALID_H_
+#ifndef SQUID_SRC_AUTH_BASIC_SSPI_VALID_H
+#define SQUID_SRC_AUTH_BASIC_SSPI_VALID_H
 
 #include "sspwin32.h"
 
@@ -101,5 +101,5 @@ debug(char *format,...)
 }
 #endif /* __GNUC__ */
 
-#endif
+#endif /* SQUID_SRC_AUTH_BASIC_SSPI_VALID_H */
 

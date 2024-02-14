@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEM_POOLINGALLOCATOR_H
-#define SQUID_MEM_POOLINGALLOCATOR_H
+#ifndef SQUID_SRC_MEM_POOLINGALLOCATOR_H
+#define SQUID_SRC_MEM_POOLINGALLOCATOR_H
 
 #include "mem/forward.h"
 
@@ -46,5 +46,5 @@ operator !=(const PoolingAllocator<L> &l, const PoolingAllocator<R> &r) noexcept
     return !(l == r);
 }
 
-#endif /* SQUID_MEM_POOLINGALLOCATOR_H */
+#endif /* SQUID_SRC_MEM_POOLINGALLOCATOR_H */
 

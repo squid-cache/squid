@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_NTLMAUTH_H
-#define SQUID_NTLMAUTH_H
+#ifndef SQUID_LIB_NTLMAUTH_NTLMAUTH_H
+#define SQUID_LIB_NTLMAUTH_NTLMAUTH_H
 
 /* NP: All of this cruft is little endian */
 /* Endian functions are usually handled by the OS but not always. */
@@ -192,5 +192,5 @@ int ntlm_unpack_auth(const ntlm_authenticate *auth,
 }
 #endif
 
-#endif /* SQUID_NTLMAUTH_H */
+#endif /* SQUID_LIB_NTLMAUTH_NTLMAUTH_H */
 

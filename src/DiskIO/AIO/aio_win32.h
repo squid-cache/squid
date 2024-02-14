@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef __WIN32_AIO_H__
-#define __WIN32_AIO_H__
+#ifndef SQUID_SRC_DISKIO_AIO_AIO_WIN32_H
+#define SQUID_SRC_DISKIO_AIO_AIO_WIN32_H
 
 #if HAVE_DISKIO_MODULE_AIO
 
@@ -79,5 +79,5 @@ void aio_close(int);
 
 #endif /* _SQUID_WINDOWS_ */
 #endif /* HAVE_DISKIO_MODULE_AIO */
-#endif /* __WIN32_AIO_H__ */
+#endif /* SQUID_SRC_DISKIO_AIO_AIO_WIN32_H */
 

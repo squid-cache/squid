@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef __AUTH_NEGOTIATE_H__
-#define __AUTH_NEGOTIATE_H__
+#ifndef SQUID_SRC_AUTH_NEGOTIATE_CONFIG_H
+#define SQUID_SRC_AUTH_NEGOTIATE_CONFIG_H
 
 #if HAVE_AUTH_MODULE_NEGOTIATE
 
@@ -42,5 +42,5 @@ public:
 extern statefulhelper *negotiateauthenticators;
 
 #endif /* HAVE_AUTH_MODULE_NEGOTIATE */
-#endif
+#endif /* SQUID_SRC_AUTH_NEGOTIATE_CONFIG_H */
 

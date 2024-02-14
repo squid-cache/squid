@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SSL_ERROR_DETAIL_H
-#define _SQUID_SSL_ERROR_DETAIL_H
+#ifndef SQUID_SRC_SSL_ERRORDETAIL_H
+#define SQUID_SRC_SSL_ERRORDETAIL_H
 
 #include "security/ErrorDetail.h"
 
@@ -45,5 +45,5 @@ const char *GetErrorDescr(Security::ErrorCode value);
 bool ErrorIsOptional(const char *name);
 
 }//namespace Ssl
-#endif
+#endif /* SQUID_SRC_SSL_ERRORDETAIL_H */
 

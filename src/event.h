@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_EVENT_H
-#define SQUID_EVENT_H
+#ifndef SQUID_SRC_EVENT_H
+#define SQUID_SRC_EVENT_H
 
 #include "AsyncEngine.h"
 #include "base/Packable.h"
@@ -68,5 +68,5 @@ private:
     ev_entry * tasks;
 };
 
-#endif /* SQUID_EVENT_H */
+#endif /* SQUID_SRC_EVENT_H */
 

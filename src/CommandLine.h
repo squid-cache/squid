@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_COMMANDLINE_H
-#define SQUID_COMMANDLINE_H
+#ifndef SQUID_SRC_COMMANDLINE_H
+#define SQUID_SRC_COMMANDLINE_H
 
 #if HAVE_GETOPT_H
 #include <getopt.h>
@@ -81,5 +81,5 @@ private:
     std::vector<LongOption> longOptions_; ///< long --option rules
 };
 
-#endif /* SQUID_COMMANDLINE_H */
+#endif /* SQUID_SRC_COMMANDLINE_H */
 

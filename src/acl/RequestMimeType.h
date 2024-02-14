@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLREQUESTMIMETYPE_H
-#define SQUID_ACLREQUESTMIMETYPE_H
+#ifndef SQUID_SRC_ACL_REQUESTMIMETYPE_H
+#define SQUID_SRC_ACL_REQUESTMIMETYPE_H
 
 #include "acl/Data.h"
 #include "acl/FilledChecklist.h"
@@ -27,5 +27,5 @@ ACLRequestHeaderStrategy<Http::HdrType::CONTENT_TYPE>::match (ACLData<char const
     return data->match(theHeader);
 }
 
-#endif /* SQUID_ACLREQUESTMIMETYPE_H */
+#endif /* SQUID_SRC_ACL_REQUESTMIMETYPE_H */
 

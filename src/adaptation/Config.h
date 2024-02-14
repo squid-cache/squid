@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__CONFIG_H
-#define SQUID_ADAPTATION__CONFIG_H
+#ifndef SQUID_SRC_ADAPTATION_CONFIG_H
+#define SQUID_SRC_ADAPTATION_CONFIG_H
 
 #include "acl/forward.h"
 #include "adaptation/Elements.h"
@@ -104,5 +104,5 @@ private:
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__CONFIG_H */
+#endif /* SQUID_SRC_ADAPTATION_CONFIG_H */
 

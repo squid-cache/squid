@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_COMPAT_TESTS_TESTPRECOMPILER_H
-#define SQUID_COMPAT_TESTS_TESTPRECOMPILER_H
+#ifndef SQUID_COMPAT_TESTPRECOMPILER_H
+#define SQUID_COMPAT_TESTPRECOMPILER_H
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -29,5 +29,5 @@ protected:
     void testIfDefOr();
 };
 
-#endif /* SQUID_COMPAT_TESTS_TESTPRECOMPILER_H */
+#endif /* SQUID_COMPAT_TESTPRECOMPILER_H */
 

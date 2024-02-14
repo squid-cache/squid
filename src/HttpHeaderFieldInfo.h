@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPHEADERFIELDINFO_H_
-#define SQUID_HTTPHEADERFIELDINFO_H_
+#ifndef SQUID_SRC_HTTPHEADERFIELDINFO_H
+#define SQUID_SRC_HTTPHEADERFIELDINFO_H
 
 #include "http/RegisteredHeaders.h"
 #include "HttpHeaderFieldStat.h"
@@ -25,5 +25,5 @@ public:
     HttpHeaderFieldStat stat;
 };
 
-#endif /* SQUID_HTTPHEADERFIELDINFO_H_ */
+#endif /* SQUID_SRC_HTTPHEADERFIELDINFO_H */
 

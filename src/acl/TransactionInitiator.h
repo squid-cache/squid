@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_TRANSACTION_INITIATOR_H
-#define SQUID_ACL_TRANSACTION_INITIATOR_H
+#ifndef SQUID_SRC_ACL_TRANSACTIONINITIATOR_H
+#define SQUID_SRC_ACL_TRANSACTIONINITIATOR_H
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
@@ -39,5 +39,5 @@ protected:
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_TRANSACTION_INITIATOR_H */
+#endif /* SQUID_SRC_ACL_TRANSACTIONINITIATOR_H */
 

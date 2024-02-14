@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_EXTERNALACL_H
-#define SQUID_EXTERNALACL_H
+#ifndef SQUID_SRC_EXTERNALACL_H
+#define SQUID_SRC_EXTERNALACL_H
 
 #include "acl/Checklist.h"
 #include "base/RefCount.h"
@@ -71,5 +71,5 @@ void externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * handler, void *d
 void externalAclInit(void);
 void externalAclShutdown(void);
 
-#endif /* SQUID_EXTERNALACL_H */
+#endif /* SQUID_SRC_EXTERNALACL_H */
 

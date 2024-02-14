@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSTRINGDATA_H
-#define SQUID_ACLSTRINGDATA_H
+#ifndef SQUID_SRC_ACL_STRINGDATA_H
+#define SQUID_SRC_ACL_STRINGDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -37,5 +37,5 @@ private:
     StringValues_t stringValues;
 };
 
-#endif /* SQUID_ACLSTRINGDATA_H */
+#endif /* SQUID_SRC_ACL_STRINGDATA_H */
 

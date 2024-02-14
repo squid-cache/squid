@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_TOOLS_SQUIDCLIENT_PARAMETERS_H
-#define _SQUID_TOOLS_SQUIDCLIENT_PARAMETERS_H
+#ifndef SQUID_TOOLS_SQUIDCLIENT_PARAMETERS_H
+#define SQUID_TOOLS_SQUIDCLIENT_PARAMETERS_H
 
 /**
  * squidclient command line parameters.
@@ -34,5 +34,5 @@ public:
 /// global squidcleint parameters
 extern Parameters scParams;
 
-#endif /* _SQUID_TOOLS_SQUIDCLIENT_PARAMETERS_H */
+#endif /* SQUID_TOOLS_SQUIDCLIENT_PARAMETERS_H */
 

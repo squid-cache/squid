@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_TOOLS_SQUIDCLIENT_GSSAPI_H
-#define _SQUID_TOOLS_SQUIDCLIENT_GSSAPI_H
+#ifndef SQUID_TOOLS_SQUIDCLIENT_GSSAPI_SUPPORT_H
+#define SQUID_TOOLS_SQUIDCLIENT_GSSAPI_SUPPORT_H
 
 #if HAVE_GSSAPI
 #if USE_APPLE_KRB5
@@ -49,5 +49,5 @@ bool check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char *f
 char *GSSAPI_token(const char *server);
 
 #endif /* HAVE_GSSAPI */
-#endif /* _SQUID_TOOLS_SQUIDCLIENT_GSSAPI_H */
+#endif /* SQUID_TOOLS_SQUIDCLIENT_GSSAPI_SUPPORT_H */
 

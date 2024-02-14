@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLURLPATH_H
-#define SQUID_ACLURLPATH_H
+#ifndef SQUID_SRC_ACL_URLPATH_H
+#define SQUID_SRC_ACL_URLPATH_H
 
 #include "acl/Strategy.h"
 
@@ -19,5 +19,5 @@ public:
     bool requiresRequest() const override {return true;}
 };
 
-#endif /* SQUID_ACLURLPATH_H */
+#endif /* SQUID_SRC_ACL_URLPATH_H */
 

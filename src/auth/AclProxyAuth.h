@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLPROXYAUTH_H
-#define SQUID_ACLPROXYAUTH_H
+#ifndef SQUID_SRC_AUTH_ACLPROXYAUTH_H
+#define SQUID_SRC_AUTH_ACLPROXYAUTH_H
 
 #if USE_AUTH
 
@@ -56,5 +56,5 @@ private:
 };
 
 #endif /* USE_AUTH */
-#endif /* SQUID_ACLPROXYAUTH_H */
+#endif /* SQUID_SRC_AUTH_ACLPROXYAUTH_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef STATCOUNTERS_H_
-#define STATCOUNTERS_H_
+#ifndef SQUID_SRC_STATCOUNTERS_H
+#define SQUID_SRC_STATCOUNTERS_H
 
 #include "base/ByteCounter.h"
 #include "StatHist.h"
@@ -169,5 +169,5 @@ public:
 
 extern StatCounters statCounter;
 
-#endif /* STATCOUNTERS_H_ */
+#endif /* SQUID_SRC_STATCOUNTERS_H */
 

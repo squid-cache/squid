@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_REFRESHPATTERN_H_
-#define SQUID_REFRESHPATTERN_H_
+#ifndef SQUID_SRC_REFRESHPATTERN_H
+#define SQUID_SRC_REFRESHPATTERN_H
 
 #include "base/RegexPattern.h"
 
@@ -99,5 +99,5 @@ operator <<(std::ostream &os, const RefreshPattern &r)
     return os;
 }
 
-#endif /* SQUID_REFRESHPATTERN_H_ */
+#endif /* SQUID_SRC_REFRESHPATTERN_H */
 

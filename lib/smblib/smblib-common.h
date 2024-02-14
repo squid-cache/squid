@@ -30,8 +30,8 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#ifndef _SMBLIB_SMBLIB_COMMON_H
-#define _SMBLIB_SMBLIB_COMMON_H
+#ifndef SQUID_LIB_SMBLIB_SMBLIB_COMMON_H
+#define SQUID_LIB_SMBLIB_SMBLIB_COMMON_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -257,5 +257,5 @@ struct SMB_Connect_Def {
 #ifdef __cplusplus
 }
 #endif
-#endif /* _SMBLIB_SMBLIB_COMMON_H */
+#endif /* SQUID_LIB_SMBLIB_SMBLIB_COMMON_H */
 

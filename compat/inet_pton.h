@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _INC_INET_PTON_H
-#define _INC_INET_PTON_H
+#ifndef SQUID_COMPAT_INET_PTON_H
+#define SQUID_COMPAT_INET_PTON_H
 
 /* Use the system provided version where possible */
 #if !HAVE_DECL_INET_PTON
@@ -29,5 +29,5 @@ SQUIDCEXTERN int xinet_pton(int af, const char *src, void *dst);
 #endif
 
 #endif /* HAVE_DECL_INET_PTON */
-#endif /* _INC_INET_NTOP_H */
+#endif /* SQUID_COMPAT_INET_PTON_H */
 

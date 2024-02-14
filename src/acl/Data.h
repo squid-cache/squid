@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLDATA_H
-#define SQUID_ACLDATA_H
+#ifndef SQUID_SRC_ACL_DATA_H
+#define SQUID_SRC_ACL_DATA_H
 
 #include "acl/Options.h"
 #include "sbuf/List.h"
@@ -33,5 +33,5 @@ public:
     virtual bool empty() const =0;
 };
 
-#endif /* SQUID_ACLDATA_H */
+#endif /* SQUID_SRC_ACL_DATA_H */
 

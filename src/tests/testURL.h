@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_URL_H
-#define SQUID_SRC_TEST_URL_H
+#ifndef SQUID_SRC_TESTS_TESTURL_H
+#define SQUID_SRC_TESTS_TESTURL_H
 
 #include "compat/cppunit.h"
 
@@ -31,5 +31,5 @@ protected:
     void testDefaultConstructor();
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTURL_H */
 

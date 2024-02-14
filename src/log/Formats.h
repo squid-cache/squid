@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_LOG_FORMATS_H
-#define _SQUID_LOG_FORMATS_H
+#ifndef SQUID_SRC_LOG_FORMATS_H
+#define SQUID_SRC_LOG_FORMATS_H
 
 #include "AccessLogEntry.h"
 #include "base/RefCount.h"
@@ -61,5 +61,5 @@ void HttpdCombined(const AccessLogEntryPointer &al, Logfile * logfile);
 }; // namespace Format
 }; // namespace Log
 
-#endif /* _SQUID_LOG_FORMATS_H */
+#endif /* SQUID_SRC_LOG_FORMATS_H */
 

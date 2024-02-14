@@ -8,8 +8,8 @@
 
 /* DEBUG: section 49    SNMP Interface */
 
-#ifndef SQUID_SNMP_CORE_H
-#define SQUID_SNMP_CORE_H
+#ifndef SQUID_SRC_SNMP_CORE_H
+#define SQUID_SRC_SNMP_CORE_H
 
 #include "acl/Strategy.h"
 #include "cache_snmp.h"
@@ -58,5 +58,5 @@ public:
     int match (ACLData<MatchType> *&data, ACLFilledChecklist *checklist) override;
 };
 
-#endif /* SQUID_SNMP_CORE_H */
+#endif /* SQUID_SRC_SNMP_CORE_H */
 

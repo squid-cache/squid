@@ -8,8 +8,8 @@
 
 /* DEBUG: section 77    Delay Pools */
 
-#ifndef DELAYTAGGED_H
-#define DELAYTAGGED_H
+#ifndef SQUID_SRC_DELAYTAGGED_H
+#define SQUID_SRC_DELAYTAGGED_H
 
 #if USE_DELAY_POOLS
 
@@ -79,5 +79,5 @@ private:
 };
 
 #endif /* USE_DELAY_POOLS */
-#endif /* DELAYTAGGED_H */
+#endif /* SQUID_SRC_DELAYTAGGED_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ANYP_URISCHEME_H
-#define SQUID_ANYP_URISCHEME_H
+#ifndef SQUID_SRC_ANYP_URISCHEME_H
+#define SQUID_SRC_ANYP_URISCHEME_H
 
 #include "anyp/ProtocolType.h"
 #include "sbuf/SBuf.h"
@@ -78,5 +78,5 @@ operator <<(std::ostream &os, const UriScheme &scheme)
 
 } // namespace AnyP
 
-#endif /* SQUID_ANYP_URISCHEME_H */
+#endif /* SQUID_SRC_ANYP_URISCHEME_H */
 

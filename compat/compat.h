@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMPAT_H
-#define _SQUID_COMPAT_H
+#ifndef SQUID_COMPAT_COMPAT_H
+#define SQUID_COMPAT_COMPAT_H
 
 /*
  * From discussions it was chosen to push compat code as far down as possible.
@@ -106,5 +106,5 @@
 /* Valgrind API macros changed between two versions squid supports */
 #include "compat/valgrind.h"
 
-#endif /* _SQUID_COMPAT_H */
+#endif /* SQUID_COMPAT_COMPAT_H */
 

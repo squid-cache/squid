@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_CONFIG_PARSER_H
-#define SQUID_SRC_TEST_CONFIG_PARSER_H
+#ifndef SQUID_SRC_TESTS_TESTCONFIGPARSER_H
+#define SQUID_SRC_TESTS_TESTCONFIGPARSER_H
 
 #include "compat/cppunit.h"
 
@@ -29,5 +29,5 @@ protected:
     void testParseQuoted();
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTCONFIGPARSER_H */
 

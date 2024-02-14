@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_GLOBALS_H
-#define SQUID_GLOBALS_H
+#ifndef SQUID_SRC_GLOBALS_H
+#define SQUID_SRC_GLOBALS_H
 
 #include "CacheDigest.h"
 #include "defines.h"
@@ -109,5 +109,5 @@ extern int opt_parse_cfg_only; /* 0 */
 /// Zero for SMP-unaware code and in no-SMP mode.
 extern int KidIdentifier; /* 0 */
 
-#endif /* SQUID_GLOBALS_H */
+#endif /* SQUID_SRC_GLOBALS_H */
 

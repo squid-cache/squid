@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_BASE_IO_MANIP_H
-#define SQUID_SRC_BASE_IO_MANIP_H
+#ifndef SQUID_SRC_BASE_IOMANIP_H
+#define SQUID_SRC_BASE_IOMANIP_H
 
 #include "debug/Stream.h"
 
@@ -171,5 +171,5 @@ inline AsHex<Integer> asHex(const Integer n) { return AsHex<Integer>(n); }
 /// Prints the first n data bytes using hex notation. Does nothing if n is 0.
 void PrintHex(std::ostream &, const char *data, size_t n);
 
-#endif /* SQUID_SRC_BASE_IO_MANIP_H */
+#endif /* SQUID_SRC_BASE_IOMANIP_H */
 

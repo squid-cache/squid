@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_HTML_QUOTE_H
-#define _SQUID_HTML_QUOTE_H
+#ifndef SQUID_INCLUDE_HTML_QUOTE_H
+#define SQUID_INCLUDE_HTML_QUOTE_H
 
 #ifdef __cplusplus
 extern "C"
@@ -17,5 +17,5 @@ extern
 
 char *html_quote(const char *);
 
-#endif /* _SQUID_HTML_QUOTE_H */
+#endif /* SQUID_INCLUDE_HTML_QUOTE_H */
 

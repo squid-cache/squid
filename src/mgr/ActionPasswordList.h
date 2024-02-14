@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MGR_CACHEMGRPASSWD_H_
-#define SQUID_MGR_CACHEMGRPASSWD_H_
+#ifndef SQUID_SRC_MGR_ACTIONPASSWORDLIST_H
+#define SQUID_SRC_MGR_ACTIONPASSWORDLIST_H
 
 #include "sbuf/forward.h"
 
@@ -27,5 +27,5 @@ public:
 
 } //namespace Mgr
 
-#endif /* SQUID_MGR_CACHEMGRPASSWD_H_ */
+#endif /* SQUID_SRC_MGR_ACTIONPASSWORDLIST_H */
 

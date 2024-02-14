@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef __AUTH_BASIC_H__
-#define __AUTH_BASIC_H__
+#ifndef SQUID_SRC_AUTH_BASIC_CONFIG_H
+#define SQUID_SRC_AUTH_BASIC_CONFIG_H
 
 #if HAVE_AUTH_MODULE_BASIC
 
@@ -53,5 +53,5 @@ private:
 extern helper *basicauthenticators;
 
 #endif /* HAVE_AUTH_MODULE_BASIC */
-#endif /* __AUTH_BASIC_H__ */
+#endif /* SQUID_SRC_AUTH_BASIC_CONFIG_H */
 

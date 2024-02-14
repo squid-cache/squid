@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_DISKIO_H
-#define SQUID_SRC_TEST_DISKIO_H
+#ifndef SQUID_SRC_TESTS_TESTDISKIO_H
+#define SQUID_SRC_TESTS_TESTDISKIO_H
 
 #include "compat/cppunit.h"
 
@@ -28,5 +28,5 @@ protected:
     void testFindDefault();
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTDISKIO_H */
 

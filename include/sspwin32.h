@@ -11,8 +11,8 @@
  * Based on previous work of Francesco Chemolli, Robert Collins and Andrew Doran
  */
 
-#ifndef _LIBSSPWIN32_H_
-#define _LIBSSPWIN32_H_
+#ifndef SQUID_INCLUDE_SSPWIN32_H
+#define SQUID_INCLUDE_SSPWIN32_H
 
 #if _SQUID_WINDOWS_
 
@@ -66,5 +66,5 @@ extern BOOL NTLM_LocalCall;
 #endif
 
 #endif /* _SQUID_WINDOWS_ */
-#endif /* LIBSSPWIN32_H_ */
+#endif /* SQUID_INCLUDE_SSPWIN32_H */
 

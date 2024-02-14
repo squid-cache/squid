@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SBUFSTREAM_H
-#define SQUID_SBUFSTREAM_H
+#ifndef SQUID_SRC_SBUF_STREAM_H
+#define SQUID_SRC_SBUF_STREAM_H
 
 #include "base/PackableStream.h"
 #include "sbuf/SBuf.h"
@@ -67,5 +67,5 @@ SBuf ToSBuf(Args&&... args)
     return out.buf();
 }
 
-#endif /* SQUID_SBUFSTREAM_H */
+#endif /* SQUID_SRC_SBUF_STREAM_H */
 

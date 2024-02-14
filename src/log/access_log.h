@@ -8,8 +8,8 @@
 
 /* DEBUG: section 46    Access Log */
 
-#ifndef SQUID_LOG_ACCESS_LOG_H_
-#define SQUID_LOG_ACCESS_LOG_H_
+#ifndef SQUID_SRC_LOG_ACCESS_LOG_H
+#define SQUID_SRC_LOG_ACCESS_LOG_H
 
 #include "LogTags.h"
 #include "sbuf/forward.h"
@@ -25,5 +25,5 @@ class HttpRequestMethod;
 void headersLog(int cs, int pq, const HttpRequestMethod& m, void *data);
 #endif
 
-#endif /* SQUID_LOG_ACCESS_LOG_H_ */
+#endif /* SQUID_SRC_LOG_ACCESS_LOG_H */
 

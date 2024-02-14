@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTS_FORWARD_H
-#define SQUID_CLIENTS_FORWARD_H
+#ifndef SQUID_SRC_CLIENTS_FORWARD_H
+#define SQUID_SRC_CLIENTS_FORWARD_H
 
 #include "sbuf/forward.h"
 
@@ -47,5 +47,5 @@ const SBuf &UrlWith2f(HttpRequest *);
 
 } // namespace Ftp
 
-#endif /* SQUID_CLIENTS_FORWARD_H */
+#endif /* SQUID_SRC_CLIENTS_FORWARD_H */
 

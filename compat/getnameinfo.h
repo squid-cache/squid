@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _getnameinfo_h
-#define _getnameinfo_h
+#ifndef SQUID_COMPAT_GETNAMEINFO_H
+#define SQUID_COMPAT_GETNAMEINFO_H
 
 #if !HAVE_DECL_GETNAMEINFO
 
@@ -23,5 +23,5 @@ SQUIDCEXTERN int xgetnameinfo(const struct sockaddr *sa,
 #define getnameinfo xgetnameinfo
 
 #endif /* HAVE_DECL_GETNAMEINFO */
-#endif /* _getnameinfo_h */
+#endif /* SQUID_COMPAT_GETNAMEINFO_H */
 

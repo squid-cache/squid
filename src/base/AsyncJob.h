@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ASYNC_JOB_H
-#define SQUID_ASYNC_JOB_H
+#ifndef SQUID_SRC_BASE_ASYNCJOB_H
+#define SQUID_SRC_BASE_ASYNCJOB_H
 
 #include "base/AsyncCall.h"
 #include "base/InstanceId.h"
@@ -84,5 +84,5 @@ protected:
     bool swanSang_ = false; ///< swanSong() was called
 };
 
-#endif /* SQUID_ASYNC_JOB_H */
+#endif /* SQUID_SRC_BASE_ASYNCJOB_H */
 

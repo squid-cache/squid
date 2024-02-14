@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_AUTH_DIGEST_SCHEME_H
-#define SQUID_AUTH_DIGEST_SCHEME_H
+#ifndef SQUID_SRC_AUTH_DIGEST_SCHEME_H
+#define SQUID_SRC_AUTH_DIGEST_SCHEME_H
 
 #if HAVE_AUTH_MODULE_DIGEST
 
@@ -45,5 +45,5 @@ private:
 } // namespace Auth
 
 #endif /* HAVE_AUTH_MODULE_DIGEST */
-#endif /* SQUID_AUTH_DIGEST_SCHEME_H */
+#endif /* SQUID_SRC_AUTH_DIGEST_SCHEME_H */
 

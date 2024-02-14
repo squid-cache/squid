@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_IMPL_H
-#define SQUID_SNMP_IMPL_H
+#ifndef SQUID_INCLUDE_SNMP_IMPL_H
+#define SQUID_INCLUDE_SNMP_IMPL_H
 
 #include "asn1.h"
 
@@ -61,5 +61,5 @@ struct trapVar {
     struct trapVar *next;
 };
 
-#endif /* SQUID_SNMP_IMPL_H */
+#endif /* SQUID_INCLUDE_SNMP_IMPL_H */
 

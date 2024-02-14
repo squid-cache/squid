@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_HTTP_REPLY_H
-#define SQUID_SRC_TEST_HTTP_REPLY_H
+#ifndef SQUID_SRC_TESTS_TESTHTTPREPLY_H
+#define SQUID_SRC_TESTS_TESTHTTPREPLY_H
 
 #include "compat/cppunit.h"
 
@@ -28,5 +28,5 @@ protected:
     void testSanityCheckFirstLine();
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTHTTPREPLY_H */
 

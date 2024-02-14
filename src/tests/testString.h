@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_STRING_H
-#define SQUID_SRC_TEST_STRING_H
+#ifndef SQUID_SRC_TESTS_TESTSTRING_H
+#define SQUID_SRC_TESTS_TESTSTRING_H
 
 #include "compat/cppunit.h"
 
@@ -35,5 +35,5 @@ protected:
     void testSubstr();
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTSTRING_H */
 

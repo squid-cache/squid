@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_COMM_POLL_H
-#define SQUID_COMM_POLL_H
+#ifndef SQUID_SRC_COMM_POLL_H
+#define SQUID_SRC_COMM_POLL_H
 
-#endif /* SQUID_COMM_POLL_H */
+#endif /* SQUID_SRC_COMM_POLL_H */
 

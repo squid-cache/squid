@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_RFC1035_H
-#define SQUID_SRC_TEST_RFC1035_H
+#ifndef SQUID_SRC_TESTS_TESTRFC1035_H
+#define SQUID_SRC_TESTS_TESTRFC1035_H
 
 #include "compat/cppunit.h"
 
@@ -36,5 +36,5 @@ protected:
     void testBugPacketHeadersOnly();
 };
 
-#endif /* SQUID_SRC_TEST_IPADDRESS_H */
+#endif /* SQUID_SRC_TESTS_TESTRFC1035_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_AUTH_H
-#define SQUID_SRC_TEST_AUTH_H
+#ifndef SQUID_SRC_TESTS_TESTAUTH_H
+#define SQUID_SRC_TESTS_TESTAUTH_H
 
 #if USE_AUTH
 
@@ -123,5 +123,5 @@ protected:
 #endif
 
 #endif /* USE_AUTH */
-#endif /* SQUID_SRC_TEST_AUTH_H */
+#endif /* SQUID_SRC_TESTS_TESTAUTH_H */
 

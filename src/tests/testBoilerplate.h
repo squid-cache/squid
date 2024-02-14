@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_BOILDERPLATE_H
-#define SQUID_SRC_TEST_BOILDERPLATE_H
+#ifndef SQUID_SRC_TESTS_TESTBOILERPLATE_H
+#define SQUID_SRC_TESTS_TESTBOILERPLATE_H
 
 #include "compat/cppunit.h"
 
@@ -29,5 +29,5 @@ protected:
     void testDemonstration();
 };
 
-#endif /* SQUID_SRC_TEST_BOILDERPLATE_H */
+#endif /* SQUID_SRC_TESTS_TESTBOILERPLATE_H */
 

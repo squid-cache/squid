@@ -8,8 +8,8 @@
 
 /* DEBUG: section 37    ICMP Routines */
 
-#ifndef _INCLUDE_ICMPV4_H
-#define _INCLUDE_ICMPV4_H
+#ifndef SQUID_SRC_ICMP_ICMP4_H
+#define SQUID_SRC_ICMP_ICMP4_H
 
 #include "Icmp.h"
 
@@ -151,5 +151,5 @@ extern Icmp4 icmp4;
 
 #endif /* USE_ICMP && SQUID_HELPER */
 
-#endif
+#endif /* SQUID_SRC_ICMP_ICMP4_H */
 

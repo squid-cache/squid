@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_SHARED_LISTEN_H
-#define SQUID_IPC_SHARED_LISTEN_H
+#ifndef SQUID_SRC_IPC_SHAREDLISTEN_H
+#define SQUID_SRC_IPC_SHAREDLISTEN_H
 
 #include "base/AsyncCall.h"
 #include "base/Subscription.h"
@@ -82,5 +82,5 @@ void SharedListenJoined(const SharedListenResponse &response);
 
 } // namespace Ipc;
 
-#endif /* SQUID_IPC_SHARED_LISTEN_H */
+#endif /* SQUID_SRC_IPC_SHAREDLISTEN_H */
 

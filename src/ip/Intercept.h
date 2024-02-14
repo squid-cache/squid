@@ -8,8 +8,8 @@
 
 /* DEBUG: section 89    NAT / IP Interception */
 
-#ifndef SQUID_IP_IPINTERCEPT_H
-#define SQUID_IP_IPINTERCEPT_H
+#ifndef SQUID_SRC_IP_INTERCEPT_H
+#define SQUID_SRC_IP_INTERCEPT_H
 
 namespace Ip
 {
@@ -129,5 +129,5 @@ extern Intercept Interceptor;
 
 } // namespace Ip
 
-#endif /* SQUID_IP_IPINTERCEPT_H */
+#endif /* SQUID_SRC_IP_INTERCEPT_H */
 

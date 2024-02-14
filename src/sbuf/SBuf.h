@@ -8,8 +8,8 @@
 
 /* DEBUG: section 24    SBuf */
 
-#ifndef SQUID_SBUF_H
-#define SQUID_SBUF_H
+#ifndef SQUID_SRC_SBUF_SBUF_H
+#define SQUID_SRC_SBUF_SBUF_H
 
 #include "base/InstanceId.h"
 #include "base/TextException.h"
@@ -791,5 +791,5 @@ SBufIterator::operator!=(const SBufIterator &s) const
     return iter != s.iter;
 }
 
-#endif /* SQUID_SBUF_H */
+#endif /* SQUID_SRC_SBUF_SBUF_H */
 

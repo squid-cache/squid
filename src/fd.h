@@ -8,8 +8,8 @@
 
 /* DEBUG: section 51    Filedescriptor Functions */
 
-#ifndef SQUID_FD_H_
-#define SQUID_FD_H_
+#ifndef SQUID_SRC_FD_H
+#define SQUID_SRC_FD_H
 
 void fd_close(int fd);
 void fd_open(int fd, unsigned int type, const char *);
@@ -21,5 +21,5 @@ void fdAdjustReserved(void);
 int default_read_method(int, char *, int);
 int default_write_method(int, const char *, int);
 
-#endif /* SQUID_FD_H_ */
+#endif /* SQUID_SRC_FD_H */
 

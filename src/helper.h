@@ -8,8 +8,8 @@
 
 /* DEBUG: section 84    Helper process maintenance */
 
-#ifndef SQUID_HELPER_H
-#define SQUID_HELPER_H
+#ifndef SQUID_SRC_HELPER_H
+#define SQUID_SRC_HELPER_H
 
 #include "base/AsyncCall.h"
 #include "base/InstanceId.h"
@@ -325,5 +325,5 @@ void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callbac
 void helperShutdown(helper * hlp);
 void helperStatefulShutdown(statefulhelper * hlp);
 
-#endif /* SQUID_HELPER_H */
+#endif /* SQUID_SRC_HELPER_H */
 

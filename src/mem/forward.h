@@ -8,8 +8,8 @@
 
 /* DEBUG: section 13    High Level Memory Pool Management */
 
-#ifndef _SQUID_SRC_MEM_FORWARD_H
-#define _SQUID_SRC_MEM_FORWARD_H
+#ifndef SQUID_SRC_MEM_FORWARD_H
+#define SQUID_SRC_MEM_FORWARD_H
 
 #include "mem/AllocatorProxy.h"
 
@@ -73,5 +73,5 @@ void memDataInit(mem_type, const char *, size_t, int, bool doZero = true);
 void memCheckInit(void);
 size_t memStringCount();
 
-#endif /* _SQUID_SRC_MEM_FORWARD_H */
+#endif /* SQUID_SRC_MEM_FORWARD_H */
 

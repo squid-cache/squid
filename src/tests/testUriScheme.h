@@ -42,5 +42,5 @@ protected:
     void testStream();
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTURISCHEME_H */
 

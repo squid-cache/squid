@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLCONNMARK_H
-#define SQUID_ACLCONNMARK_H
+#ifndef SQUID_SRC_ACL_CONNMARK_H
+#define SQUID_SRC_ACL_CONNMARK_H
 
 #include "acl/Acl.h"
 #include "ip/forward.h"
@@ -36,5 +36,5 @@ private:
 
 } // namespace Acl
 
-#endif /* SQUID_ACLCONNMARK_H */
+#endif /* SQUID_SRC_ACL_CONNMARK_H */
 

@@ -30,8 +30,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef _RFCNB_RFCNB_COMMON_H
-#define _RFCNB_RFCNB_COMMON_H
+#ifndef SQUID_LIB_RFCNB_RFCNB_COMMON_H
+#define SQUID_LIB_RFCNB_RFCNB_COMMON_H
 
 #if defined(__cplusplus)
 extern "C" {
@@ -50,5 +50,5 @@ typedef struct RFCNB_Pkt {
 #if defined(__cplusplus)
 }
 #endif
-#endif /* _RFCNB_RFCNB_COMMON_H */
+#endif /* SQUID_LIB_RFCNB_RFCNB_COMMON_H */
 
