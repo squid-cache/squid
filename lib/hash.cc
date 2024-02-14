@@ -46,57 +46,76 @@ hash_string(const void *data, unsigned int size)
  *    usr/src/lib/libc/db/hash_func.c, 4.4 BSD lite */
 
 /* Hash function from Chris Torek. */
-unsigned int
-hash4(const void *data, unsigned int size)
+
+/// hashes a given c-string with configurable case sensitivity
+/// \param data input c-string
+/// \param size all returned hash values will be smaller; must not be zero
+/// \param filter applied to every character before hashing it
+template <typename Filter>
+inline unsigned int
+hash4filtered(const void * const data, const unsigned int size, const Filter filter)
 {
-    const char *key = static_cast<const char *>(data);
-    size_t loop;
-    unsigned int h;
-    size_t len;
+    auto key = static_cast<const char *>(data);
+    const auto len = strlen(key);
+    auto loop = len >> 3;
+    unsigned int h = 0;
 
-#define HASH4a   h = (h << 5) - h + *key++;
-#define HASH4b   h = (h << 5) + h + *key++;
-#define HASH4 HASH4b
+    const auto step = [&h,&key,filter]() { h = (h << 5) + h + filter(*key++); };
 
-    h = 0;
-    len = strlen(key);
-    loop = len >> 3;
     switch (len & (8 - 1)) {
     case 0:
         break;
     case 7:
-        HASH4;
+        step();
         [[fallthrough]];
     case 6:
-        HASH4;
+        step();
         [[fallthrough]];
     case 5:
-        HASH4;
+        step();
         [[fallthrough]];
     case 4:
-        HASH4;
+        step();
         [[fallthrough]];
     case 3:
-        HASH4;
+        step();
         [[fallthrough]];
     case 2:
-        HASH4;
+        step();
         [[fallthrough]];
     case 1:
-        HASH4;
+        step();
     }
     while (loop) {
         --loop;
-        HASH4;
-        HASH4;
-        HASH4;
-        HASH4;
-        HASH4;
-        HASH4;
-        HASH4;
-        HASH4;
+        step();
+        step();
+        step();
+        step();
+        step();
+        step();
+        step();
+        step();
     }
     return h % size;
+}
+
+/// hashes a given case-sensitive c-string
+/// \param data input c-string
+/// \param size all returned hash values will be smaller; must not be zero
+unsigned int
+hash4(const void * data, unsigned int size)
+{
+    return hash4filtered(data, size, [](const char c) { return c; });
+}
+
+/// hashes a given case-insensitive c-string
+/// \param data input c-string
+/// \param size all returned hash values will be smaller; must not be zero
+unsigned int
+casehash4(const void * data, unsigned int size)
+{
+    return hash4filtered(data, size, [](const char c) { return tolower(c); });
 }
 
 /**
