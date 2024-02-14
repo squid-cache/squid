@@ -276,6 +276,20 @@ FwdState::completed()
 #endif
 
     if (entry->store_status == STORE_PENDING) {
+        if (err && request->clientConnectionManager->port->flags.tunnelSslBumping
+                && request->clientConnectionManager->port->secure.terminateOnSecureConnectFail) {
+
+            switch (err->type) {
+            case ERR_CONNECT_FAIL:
+            case ERR_SECURE_CONNECT_FAIL:
+                debugs(17, 3, "aborting entry (terminateOnSecureConnectFail)");
+                entry->abort();
+                return;
+
+            default:
+                break;
+            }
+        }
         if (entry->isEmpty()) {
             assert(!storedWholeReply_);
             if (!err) // we quit (e.g., fd closed) before an error or content
@@ -873,15 +887,6 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 
     if (error) {
         fail(error);
-        if (request->clientConnectionManager->port->flags.tunnelSslBumping
-            && request->clientConnectionManager->port->secure.terminateOnSecureConnectFail
-            && error->type == ERR_CONNECT_FAIL) {
-            
-            flags.dont_retry = true;
-            entry->abort();
-            complete();
-            return;
-        }
         retryOrBail();
         return;
     }
@@ -1048,15 +1053,6 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
 
     if (error) {
         fail(error);
-        if (request->clientConnectionManager->port->flags.tunnelSslBumping
-            && request->clientConnectionManager->port->secure.terminateOnSecureConnectFail
-            && error->type == ERR_SECURE_CONNECT_FAIL) {
-            
-            flags.dont_retry = true;
-            entry->abort();
-            complete();
-            return;
-        }
         retryOrBail();
         return;
     }
