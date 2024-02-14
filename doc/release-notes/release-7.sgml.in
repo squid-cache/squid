@@ -165,6 +165,10 @@ This section gives an account of those changes in three categories:
 	<p>Removed <em>ident</em> with Ident protocol support.
 	<p>Removed <em>ident_regex</em> with Ident protocol support.
 
+	<tag>auth_param</tag>
+	<p>Changed <em>basic</em> scheme <em>credentialsttl</em> option
+	   to prefer helper provided <em>ttl=N</em> value (if any).
+
 	<tag>buffered_logs</tag>
 	<p>Honor the <em>off</em> setting in 'udp' access_log module.
 
