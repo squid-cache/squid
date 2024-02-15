@@ -99,9 +99,9 @@ static void clientInterpretRequestHeaders(ClientHttpRequest * http);
 static HLPCB clientRedirectDoneWrapper;
 static HLPCB clientStoreIdDoneWrapper;
 static void checkNoCacheDoneWrapper(Acl::Answer, void *);
-SQUIDCEXTERN CSR clientGetMoreData;
-SQUIDCEXTERN CSS clientReplyStatus;
-SQUIDCEXTERN CSD clientReplyDetach;
+CSR clientGetMoreData;
+CSS clientReplyStatus;
+CSD clientReplyDetach;
 static void checkFailureRatio(err_type, hier_code);
 
 ClientRequestContext::~ClientRequestContext()

@@ -93,7 +93,7 @@ struct main_args {
     char *principal;
 };
 
-SQUIDCEXTERN int log_enabled;
+extern int log_enabled;
 
 /* the macro overload style is really a gcc-ism */
 #ifdef __GNUC__
