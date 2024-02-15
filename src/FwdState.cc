@@ -254,7 +254,7 @@ FwdState::updateAleWithFinalError()
 }
 
 int
-FwdState::bumpOnError(const ErrorState *err)
+FwdState::bumpOnError()
 {
     if (!err) {
         return 0;
@@ -301,7 +301,7 @@ FwdState::completed()
     }
 
     // on_ssl_bump_error
-    switch (bumpOnError(err)) {
+    switch (bumpOnError()) {
     case 1:
         debugs(17, 3, "terminating the session (terminateOnSecureConnectFail)");
         if (IsConnOpen(clientConn))

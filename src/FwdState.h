@@ -164,7 +164,7 @@ private:
 
     void updateAleWithFinalError();
 
-    int bumpOnError(const ErrorState *err);
+    int bumpOnError();
 
 public:
     StoreEntry *entry;
