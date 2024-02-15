@@ -51,7 +51,7 @@ Auth::Ntlm::UserRequest::connLastHeader()
     return nullptr;
 }
 
-int
+bool
 Auth::Ntlm::UserRequest::authenticated() const
 {
     if (user() != nullptr && user()->credentials() == Auth::Ok) {

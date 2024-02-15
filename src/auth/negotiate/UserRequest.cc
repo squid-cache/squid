@@ -53,7 +53,7 @@ Auth::Negotiate::UserRequest::connLastHeader()
     return nullptr;
 }
 
-int
+bool
 Auth::Negotiate::UserRequest::authenticated() const
 {
     if (user() != nullptr && user()->credentials() == Auth::Ok) {

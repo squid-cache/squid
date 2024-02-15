@@ -58,7 +58,7 @@ Auth::Digest::UserRequest::~UserRequest()
         authDigestNonceUnlink(nonce);
 }
 
-int
+bool
 Auth::Digest::UserRequest::authenticated() const
 {
     if (user() != nullptr && user()->credentials() == Auth::Ok)
