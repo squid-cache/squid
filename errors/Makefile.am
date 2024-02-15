@@ -59,7 +59,7 @@ NOTIDY=`$(PO2HTML) --help | grep -o "[-]-notidy"`
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	    lang=`basename $@ .lang`; \
 	    mkdir -p $(top_builddir)/errors/$$lang; \
-	    echo -n "Translate '$$lang' ..."; \
+	    printf "Translate '$$lang' ..."; \
 	    for f in $(ERROR_TEMPLATES); do \
 		page=`basename $$f`; \
 		$(PO2HTML) $(NOTIDY) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/$$f >$(top_builddir)/errors/$$lang/$$page || exit 1; \
