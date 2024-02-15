@@ -56,7 +56,6 @@ libmisccontainers_la_SOURCES = \
 libmiscutil_la_SOURCES = \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
-	getfullhostname.c \
 	heap.c \
 	radix.c \
 	util.c
