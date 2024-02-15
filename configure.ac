@@ -829,19 +829,17 @@ AC_ARG_ENABLE(delay-pools,
 dnl disable generic/common adaptation support by default
 squid_opt_use_adaptation=no
 
-squid_opt_use_esi=auto
-AH_TEMPLATE([USE_SQUID_ESI],[Define to enable the ESI processor])
 AC_ARG_ENABLE(esi,
   AS_HELP_STRING([--disable-esi],
                  [Disable ESI for accelerators. ESI requires expat or xml2 library.
                   Enabling ESI will cause squid reverse proxies to be capable
                   of the Edge Acceleration Specification (www.esi.org).]),
-                 [squid_opt_use_esi=$enableval],[])
+[],[])
 
 # ESI support libraries: expat
 SQUID_AUTO_LIB(expat,[ESI expat library],[LIBEXPAT])
 SQUID_CHECK_LIB_WORKS(expat,[
-  AS_IF([test "x$squid_opt_use_esi" != "xno"],[
+  AS_IF([test "x$enable_esi" != "xno"],[
     SQUID_STATE_SAVE(squid_expat_state)
     PKG_CHECK_MODULES([LIBEXPAT],[expat],[],[])
     CPPFLAGS="$LIBEXPAT_CFLAGS $CPPFLAGS"
@@ -849,48 +847,25 @@ SQUID_CHECK_LIB_WORKS(expat,[
     SQUID_STATE_ROLLBACK(squid_expat_state)
   ])
 ])
-AS_IF([test "x$with_expat" = "xyes"],[squid_opt_use_esi=yes])
 
 # ESI support libraries: xml2
-AH_TEMPLATE(HAVE_LIBXML2,[Define to 1 if you have the xml2 library])
 SQUID_AUTO_LIB(xml2,[ESI xml2 library],[LIBXML2])
-AS_IF([test "x$squid_opt_use_esi" != "xno" -a "x$with_xml2" != "xno"],[
-  SQUID_STATE_SAVE([squid_libxml2_save])
-  PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[
-    AC_CHECK_LIB([xml2],[main],[LIBXML2_LIBS="$LIBXML2_PATH -lxml2"])
-  ])
-  CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
-  AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
-  SQUID_STATE_ROLLBACK([squid_libxml2_save])
-
-  AS_IF([test "x$LIBXML2_LIBS" != "x"],[
-    squid_opt_use_esi=yes
+SQUID_CHECK_LIB_WORKS(xml2,[
+  AS_IF([test "x$enable_esi" != "xno"],[
+    SQUID_STATE_SAVE([squid_libxml2_save])
+    PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[])
     CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
-    LIBXML2_LIBS="$LIBXML2_PATH $LIBXML2_LIBS"
-    AC_DEFINE(HAVE_LIBXML2,1,[Define to 1 if you have the xml2 library])
-  ],[test "x$with_xml2" = "xyes"],[
-    AC_MSG_ERROR([Required library xml2 not found])
-  ],[
-    AC_MSG_NOTICE([Library xml2 not found.])
+    AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
+    SQUID_STATE_ROLLBACK([squid_libxml2_save])
   ])
 ])
-AM_CONDITIONAL(ENABLE_LIBXML2,[test "x$LIBXML2_LIBS" != "x"])
-AC_SUBST(LIBXML2_LIBS)
 
-AS_IF([test "x$squid_opt_use_esi" = "xyes"],[
-  AS_IF([test "x$LIBXML2_LIBS" = "x" -a "x$LIBEXPAT_LIBS" = "x"],[
-    AC_MSG_ERROR([ESI processor requires libxml2 or libexpat])
-  ])
-  AC_MSG_NOTICE([Enabling ESI processor: $LIBEXPAT_LIBS $LIBXML2_LIBS])
-  AC_DEFINE(USE_SQUID_ESI,1,[Compile the ESI processor])
-],[
-  AS_IF(test "x$squid_opt_use_esi" = "xno",[
-    AC_MSG_NOTICE([Disabling ESI processor.])
-  ],[
-    AC_MSG_NOTICE([Disabling ESI processor. libxml2 and libexpat not found.])
-  ])
-])
-AM_CONDITIONAL(ENABLE_ESI, test "x$squid_opt_use_esi" = "xyes")
+AS_IF([test "x$enable_esi" = "xno"],[AC_MSG_NOTICE([Disabling ESI processor.])],
+  [test "x$with_xml2" = "xno" -a "x$with_expat" = "xno"],[AC_MSG_ERROR([ESI processor requires libxml2 or libexpat])],
+  [AC_MSG_NOTICE([Enabling ESI processor: $LIBEXPAT_LIBS $LIBXML2_LIBS])]
+)
+AC_DEFINE(USE_SQUID_ESI,[HAVE_EXPAT||HAVE_XML2],[Compile the ESI processor])
+AM_CONDITIONAL(ENABLE_ESI,[test "x$with_expat" = "xyes" -o "x$with_xml2" = "xyes"])
 
 AC_ARG_ENABLE(icap-client,
   AS_HELP_STRING([--disable-icap-client],[Disable the ICAP client.]),[
