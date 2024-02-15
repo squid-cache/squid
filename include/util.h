@@ -24,7 +24,5 @@ SQUIDCEXTERN const char *xint64toa(int64_t num);
 
 SQUIDCEXTERN const char *double_to_str(char *buf, int buf_size, double value);
 
-SQUIDCEXTERN unsigned int RoundTo(const unsigned int num, const unsigned int what);
-
 #endif /* SQUID_INCLUDE_UTIL_H */
 
