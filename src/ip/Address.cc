@@ -671,7 +671,17 @@ Ip::Address::InitAddr(struct addrinfo *&ai)
     }
 
     // remove any existing data.
+<<<<<<< HEAD
     releaseSockAddr(ai);
+=======
+    if (ai->ai_addr)
+        delete ai->ai_addr;
+
+    ai->ai_addr = static_cast<struct sockaddr*>(new sockaddr_in6);
+    memset(ai->ai_addr, 0, sizeof(struct sockaddr_in6));
+
+    ai->ai_addrlen = sizeof(struct sockaddr_in6);
+>>>>>>> 6ffe15818c6f5e144017b7bb1f6f5e68b6921c75
 
     initSockAddr(ai, SockAddrType::SockAddrIn6);
 }
@@ -679,9 +689,19 @@ Ip::Address::InitAddr(struct addrinfo *&ai)
 void
 Ip::Address::FreeAddr(struct addrinfo *&ai)
 {
-    if (ai == nullptr) return;
+    if (!ai)
+        return;
 
+<<<<<<< HEAD
     releaseSockAddr(ai);
+=======
+    if (ai->ai_addr)
+        delete static_cast<struct sockaddr*>(struct sockaddr_in6*>(ai->ai_addr);
+
+    ai->ai_addr = nullptr;
+
+    ai->ai_addrlen = 0;
+>>>>>>> 6ffe15818c6f5e144017b7bb1f6f5e68b6921c75
 
     // NP: name fields are NOT allocated at present.
     delete ai;
