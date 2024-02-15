@@ -13,16 +13,16 @@
 #include <arpa/inet.h>
 #endif
 
-SQUIDCEXTERN void Tolower(char *);
+void Tolower(char *);
 
-SQUIDCEXTERN double xpercent(double part, double whole);
-SQUIDCEXTERN int xpercentInt(double part, double whole);
-SQUIDCEXTERN double xdiv(double nom, double denom);
+double xpercent(double part, double whole);
+int xpercentInt(double part, double whole);
+double xdiv(double nom, double denom);
 
-SQUIDCEXTERN const char *xitoa(int num);
-SQUIDCEXTERN const char *xint64toa(int64_t num);
+const char *xitoa(int num);
+const char *xint64toa(int64_t num);
 
-SQUIDCEXTERN const char *double_to_str(char *buf, int buf_size, double value);
+const char *double_to_str(char *buf, int buf_size, double value);
 
 #endif /* SQUID_INCLUDE_UTIL_H */
 

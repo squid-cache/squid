@@ -58,7 +58,7 @@ libmiscutil_la_SOURCES = \
 	Splay.cc \
 	heap.c \
 	radix.c \
-	util.c
+	util.cc
 
 TESTS += tests/testRFC1738
 
