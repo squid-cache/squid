@@ -63,9 +63,6 @@ public:
     /// \returns rfc931 user identity (including empty strings), if any
     Ident::User getClientIdent() const;
 
-    /// sets rfc931 user identity to name (may be nil)
-    void setClientIdent(const char *name);
-
     /// Fetch the external ACL provided 'user=' string, or nil if none is available.
     const char *getExtUser() const;
 

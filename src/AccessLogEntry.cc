@@ -102,15 +102,6 @@ AccessLogEntry::getClientIdent() const
     return acceptedClientConnection ? acceptedClientConnection->ident : std::nullopt;
 }
 
-void
-AccessLogEntry::setClientIdent(const char *name)
-{
-    if (acceptedClientConnection)
-        acceptedClientConnection->setIdent(name);
-    else
-        debugs(30, DBG_IMPORTANT, "ERROR: cannot set ident: client connection is missing");
-}
-
 const char *
 AccessLogEntry::getExtUser() const
 {
