@@ -164,6 +164,8 @@ private:
 
     void updateAleWithFinalError();
 
+    int bumpOnError(const ErrorState *err);
+
 public:
     StoreEntry *entry;
     HttpRequest *request;

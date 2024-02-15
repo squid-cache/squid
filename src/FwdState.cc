@@ -253,6 +253,36 @@ FwdState::updateAleWithFinalError()
     al->updateError(Error(err->type, err->detail));
 }
 
+int
+FwdState::bumpOnError(const ErrorState *err)
+{
+    if (!err) {
+        return 0;
+    }
+
+    const err_type requestError = err->type;
+
+    if (!Config.accessList.on_ssl_bump_error) {
+        debugs(33, 5, "disabled; send bump error: " << requestError);
+        return 0;
+    }
+
+    if (!request->clientConnectionManager->port->flags.tunnelSslBumping) {
+        debugs(33, 5, "not send bump error: " << requestError);
+        return 0;
+    }
+
+    ACLFilledChecklist checklist(Config.accessList.on_ssl_bump_error, nullptr);
+    checklist.requestErrorType = requestError;
+    request->clientConnectionManager->fillChecklist(checklist);
+    auto answer = checklist.fastCheck();
+    if (answer.allowed()) {
+        return answer.kind;
+    }
+    debugs(33, 5, "denied; send bump error: " << requestError);
+    return 0;
+}
+
 void
 FwdState::completed()
 {
@@ -270,21 +300,22 @@ FwdState::completed()
         return ;
     }
 
-    // TODO: switch by on_ssl_bump_error & ACLs
-    if (err && request->clientConnectionManager->port->flags.tunnelSslBumping
-            && request->clientConnectionManager->port->secure.terminateOnSecureConnectFail) {
+    // on_ssl_bump_error
+    switch (bumpOnError(err)) {
+    case 1:
+        debugs(17, 3, "terminating the session (terminateOnSecureConnectFail)");
+        if (IsConnOpen(clientConn))
+            clientConn->close();
+        break;
 
-        switch (err->type) {
-        case ERR_CONNECT_FAIL:
-        case ERR_SECURE_CONNECT_FAIL:
-            debugs(17, 3, "terminating the session (terminateOnSecureConnectFail)");
-            if (IsConnOpen(clientConn))
-                comm_reset_close(clientConn);
-            break;
+    case 2:
+        debugs(17, 3, "reseting the session (terminateOnSecureConnectFail)");
+        if (IsConnOpen(clientConn))
+            comm_reset_close(clientConn);
+        break;
 
-        default:
-            break;
-        }
+    default:
+        break;
     }
 
 #if URL_CHECKSUM_DEBUG

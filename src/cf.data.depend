@@ -65,6 +65,7 @@ note			acl
 obsolete
 onoff
 on_unsupported_protocol	acl
+on_ssl_bump_error	acl
 peer
 peer_access		cache_peer acl
 pipelinePrefetch

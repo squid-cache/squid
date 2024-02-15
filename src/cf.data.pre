@@ -2216,6 +2216,48 @@ DOC_START
 	See also: squid_error ACL
 DOC_END
 
+NAME: on_ssl_bump_error
+TYPE: on_ssl_bump_error
+LOC: Config.accessList.on_ssl_bump_error
+DEFAULT: none
+DEFAULT_DOC: Respond with an error message to error traffic
+DOC_START
+	Determines Squid behavior when encountering an error at a bumped
+	tunnel. Controlling Squid reaction to unexpected traffic is
+	especially useful in interception environments where Squid is likely
+	to see connections for unsupported protocols that Squid should either
+	terminate or tunnel at TCP level.
+
+		on_ssl_bump_error <action> [!]acl ...
+
+	The first matching action wins. Only fast ACLs are supported.
+
+	Supported actions are:
+
+	terminate: Terminate(FIN) the TCP session with the client.
+
+	terminate: Reset(RST) the TCP session with the client.
+
+	respond: Respond with an error message, using the transfer protocol
+		for the Squid port that received the request (e.g., HTTP
+		for connections intercepted at the http_port). This is the
+		default.
+
+	For example:
+	  # define what Squid errors indicate connect fail:
+	  acl connect_fail squid_error ERR_CONNECT_FAIL
+	  # define what Squid errors indicate secure connect fail:
+	  acl secure_connect_fail squid_error ERR_SECURE_CONNECT_FAIL
+	  # terminate everything that failed to establish a TCP session:
+          on_ssl_bump_error terminate connect_fail
+	  # reset everything that failed to negotiate TLS with the origin server:
+          on_ssl_bump_error reset secure_connect_fail
+	  # in all other error cases, just send an HTTP "error page" response:
+	  on_ssl_bump_error respond all
+
+	See also: squid_error ACL
+DOC_END
+
 NAME: auth_schemes
 TYPE: AuthSchemes
 IFDEF: USE_AUTH
