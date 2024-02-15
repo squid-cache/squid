@@ -12,7 +12,7 @@
 /* RFC2671 section 7 defines new RR type OPT as 41 */
 #define RFC1035_TYPE_OPT 41
 
-SQUIDCEXTERN int rfc2671RROptPack(char *buf, size_t sz, ssize_t edns_sz);
+int rfc2671RROptPack(char *buf, size_t sz, ssize_t edns_sz);
 
 #endif /* SQUID_SRC_DNS_RFC2671_H */
 
