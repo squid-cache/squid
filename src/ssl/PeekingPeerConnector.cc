@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/IoManip.h"
 #include "client_side.h"
 #include "errorpage.h"
 #include "fde.h"
@@ -196,6 +197,23 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             srvBio->setClientFeatures(details, cltBio->rBufData());
             srvBio->recordInput(true);
             srvBio->mode(csd->sslBumpMode);
+
+#if defined(SSL_OP_LEGACY_SERVER_CONNECT)
+            // While peeking, Squid is not generating any TLS bytes, but we are
+            // still being driven by OpenSSL negotiation logic. We enable as
+            // many features and workarounds as possible to reduce cases where
+            // OpenSSL refuses to accept a valid TLS server response. This code
+            // assumes that an admin should not expect a peeking Squid to
+            // automatically enforce a particular set of TLS conditions (e.g.,
+            // "no legacy TLS servers"). When that assumption is invalidated, we
+            // will need to add a configuration directive to set peeking TLS
+            // options. TODO: Add more options that enable workarounds;
+            // consider adding SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION.
+            if (csd->sslBumpMode == Ssl::bumpPeek) {
+                const auto adjustedOptions = SSL_set_options(serverSession.get(), SSL_OP_LEGACY_SERVER_CONNECT);
+                debugs(83, 5, "post-SSL_OP_LEGACY_SERVER_CONNECT options for session=" << serverSession << ": " << asHex(adjustedOptions));
+            }
+#endif
         } else {
             // Set client SSL options
             ::Security::ProxyOutgoingConfig.updateSessionOptions(serverSession);
