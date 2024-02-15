@@ -49,7 +49,6 @@ Security::ServerOptions::operator =(const Security::ServerOptions &old) {
 
         staticContextSessionId = old.staticContextSessionId;
         generateHostCertificates = old.generateHostCertificates;
-        terminateOnSecureConnectFail = old.terminateOnSecureConnectFail;
         signingCa = old.signingCa;
         untrustedSigningCa = old.untrustedSigningCa;
         dynamicCertMemCacheSize = old.dynamicCertMemCacheSize;
@@ -119,9 +118,6 @@ Security::ServerOptions::parse(const char *token)
     } else if (strcmp(token, "generate-host-certificates=off") == 0) {
         generateHostCertificates = false;
 
-    } else if (strcmp(token, "terminate-on-secure-connect-fail") == 0) {
-        terminateOnSecureConnectFail = true;
-
     } else if (strncmp(token, "context=", 8) == 0) {
 #if USE_OPENSSL
         staticContextSessionId = SBuf(token+8);
@@ -155,9 +151,6 @@ Security::ServerOptions::dumpCfg(std::ostream &os, const char *pfx) const
 
     if (!generateHostCertificates)
         os << ' ' << pfx << "generate-host-certificates=off";
-
-    if (terminateOnSecureConnectFail)
-        os << ' ' << pfx << "sterminate-on-secure-connect-error";
 
     if (dynamicCertMemCacheSize != 4*1024*1024) // 4MB default, no 'tls-' prefix
         os << ' ' << "dynamic_cert_mem_cache_size=" << dynamicCertMemCacheSize << "bytes";

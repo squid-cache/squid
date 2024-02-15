@@ -84,8 +84,6 @@ public:
     bool generateHostCertificates = true; ///< dynamically make host cert
 #endif
 
-    bool terminateOnSecureConnectFail = false; ///< terminate a client when connection fail
-
     Security::KeyData signingCa; ///< x509 certificate and key for signing generated certificates
     Security::KeyData untrustedSigningCa; ///< x509 certificate and key for signing untrusted generated certificates
 

@@ -3706,8 +3706,6 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         s->secure.parse(token+3);
     } else if (strncmp(token, "generate-host-certificates", 26) == 0) {
         s->secure.parse(token);
-    } else if (strncmp(token, "terminate-on-secure-connect-fail", 32) == 0) {
-        s->secure.parse(token);
 #endif
     } else if (strncmp(token, "dynamic_cert_mem_cache_size=", 28) == 0) {
         s->secure.parse(token);
