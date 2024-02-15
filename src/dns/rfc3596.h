@@ -12,28 +12,28 @@
 /* RFC 3596 extends RFC 1035 */
 #include "dns/rfc1035.h"
 
-SQUIDCEXTERN ssize_t rfc3596BuildAQuery(const char *hostname,
+ssize_t rfc3596BuildAQuery(const char *hostname,
                                         char *buf,
                                         size_t sz,
                                         unsigned short qid,
                                         rfc1035_query * query,
                                         ssize_t edns_sz);
 
-SQUIDCEXTERN ssize_t rfc3596BuildAAAAQuery(const char *hostname,
+ssize_t rfc3596BuildAAAAQuery(const char *hostname,
         char *buf,
         size_t sz,
         unsigned short qid,
         rfc1035_query * query,
         ssize_t edns_sz);
 
-SQUIDCEXTERN ssize_t rfc3596BuildPTRQuery4(const struct in_addr,
+ssize_t rfc3596BuildPTRQuery4(const struct in_addr,
         char *buf,
         size_t sz,
         unsigned short qid,
         rfc1035_query * query,
         ssize_t edns_sz);
 
-SQUIDCEXTERN ssize_t rfc3596BuildPTRQuery6(const struct in6_addr,
+ssize_t rfc3596BuildPTRQuery6(const struct in6_addr,
         char *buf,
         size_t sz,
         unsigned short qid,
@@ -41,7 +41,7 @@ SQUIDCEXTERN ssize_t rfc3596BuildPTRQuery6(const struct in6_addr,
         ssize_t edns_sz);
 
 /* RFC3596 library implements RFC1035 generic host interface */
-SQUIDCEXTERN ssize_t rfc3596BuildHostQuery(const char *hostname,
+ssize_t rfc3596BuildHostQuery(const char *hostname,
         char *buf,
         size_t sz,
         unsigned short qid,
