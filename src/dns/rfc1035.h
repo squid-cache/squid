@@ -69,26 +69,26 @@ struct _rfc1035_message {
     rfc1035_rr *answer;
 };
 
-SQUIDCEXTERN ssize_t rfc1035BuildAQuery(const char *hostname,
+ssize_t rfc1035BuildAQuery(const char *hostname,
                                         char *buf,
                                         size_t sz,
                                         unsigned short qid,
                                         rfc1035_query * query,
                                         ssize_t edns_sz);
-SQUIDCEXTERN ssize_t rfc1035BuildPTRQuery(const struct in_addr,
+ssize_t rfc1035BuildPTRQuery(const struct in_addr,
         char *buf,
         size_t sz,
         unsigned short qid,
         rfc1035_query * query,
         ssize_t edns_sz);
-SQUIDCEXTERN void rfc1035SetQueryID(char *, unsigned short qid);
-SQUIDCEXTERN int rfc1035MessageUnpack(const char *buf,
+void rfc1035SetQueryID(char *, unsigned short qid);
+int rfc1035MessageUnpack(const char *buf,
                                       size_t sz,
                                       rfc1035_message ** answer);
-SQUIDCEXTERN int rfc1035QueryCompare(const rfc1035_query *, const rfc1035_query *);
-SQUIDCEXTERN void rfc1035RRDestroy(rfc1035_rr ** rr, int n);
-SQUIDCEXTERN void rfc1035MessageDestroy(rfc1035_message ** message);
-SQUIDCEXTERN const char * rfc1035ErrorMessage(int n);
+int rfc1035QueryCompare(const rfc1035_query *, const rfc1035_query *);
+void rfc1035RRDestroy(rfc1035_rr ** rr, int n);
+void rfc1035MessageDestroy(rfc1035_message ** message);
+const char * rfc1035ErrorMessage(int n);
 
 #define RFC1035_TYPE_A 1
 #define RFC1035_TYPE_CNAME 5
@@ -96,19 +96,19 @@ SQUIDCEXTERN const char * rfc1035ErrorMessage(int n);
 #define RFC1035_CLASS_IN 1
 
 /* Child Library RFC3596 Depends on some otherwise internal functions */
-SQUIDCEXTERN int rfc1035HeaderPack(char *buf,
+int rfc1035HeaderPack(char *buf,
                                    size_t sz,
                                    rfc1035_message * hdr);
-SQUIDCEXTERN int rfc1035HeaderUnpack(const char *buf,
+int rfc1035HeaderUnpack(const char *buf,
                                      size_t sz,
                                      unsigned int *off,
                                      rfc1035_message * h);
-SQUIDCEXTERN int rfc1035QuestionPack(char *buf,
+int rfc1035QuestionPack(char *buf,
                                      size_t sz,
                                      const char *name,
                                      const unsigned short type,
                                      const unsigned short _class);
-SQUIDCEXTERN int rfc1035RRPack(char *buf, size_t sz, const rfc1035_rr * RR);
+int rfc1035RRPack(char *buf, size_t sz, const rfc1035_rr * RR);
 
 #endif /* SQUID_SRC_DNS_RFC1035_H */
 
