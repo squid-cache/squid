@@ -36,7 +36,6 @@ void _comm_close(int fd, char const *file, int line);
 #define comm_close(x) (_comm_close((x), __FILE__, __LINE__))
 void old_comm_reset_close(int fd);
 void comm_reset_close(const Comm::ConnectionPointer &conn);
-void comm_reset_set(const Comm::ConnectionPointer &conn);
 
 int comm_connect_addr(int sock, const Ip::Address &addr);
 void comm_init(void);

@@ -284,8 +284,8 @@ FwdState::completed()
             case ERR_CONNECT_FAIL:
             case ERR_SECURE_CONNECT_FAIL:
                 debugs(17, 3, "aborting entry (terminateOnSecureConnectFail)");
-                comm_reset_set(clientConn); // may not be necessary
                 entry->abort();
+                comm_reset_close(clientConn); // need for stare configuration
                 return;
 
             default:

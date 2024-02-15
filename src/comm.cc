@@ -790,17 +790,6 @@ commCallCloseHandlers(int fd)
 void
 comm_reset_close(const Comm::ConnectionPointer &conn)
 {
-    comm_reset_set(conn);
-    conn->close();
-}
-
-/**
- * enable linger with time of 0 so that when the socket is
- * closed, TCP generates a RESET
- */
-void
-comm_reset_set(const Comm::ConnectionPointer &conn)
-{
     struct linger L;
     L.l_onoff = 1;
     L.l_linger = 0;
@@ -809,6 +798,7 @@ comm_reset_set(const Comm::ConnectionPointer &conn)
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "ERROR: Closing " << conn << " with TCP RST: " << xstrerr(xerrno));
     }
+    conn->close();
 }
 
 // Legacy close function.
