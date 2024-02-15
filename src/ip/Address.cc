@@ -9,6 +9,8 @@
 /* DEBUG: section 14    IP Storage and Handling */
 
 #include "squid.h"
+
+#include "base/TextException.h"
 #include "debug/Stream.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
@@ -634,16 +636,9 @@ Ip::Address::getAddrInfo(struct addrinfo *&dst, int force) const
         dst->ai_protocol = IPPROTO_UDP;
 
     if (force == AF_INET6 || (force == AF_UNSPEC && isIPv6()) ) {
-        dst->ai_addr = (struct sockaddr*)new sockaddr_in6;
-
-        memset(dst->ai_addr,0,sizeof(struct sockaddr_in6));
-
-        getSockAddr(*((struct sockaddr_in6*)dst->ai_addr));
-
-        dst->ai_addrlen = sizeof(struct sockaddr_in6);
-
-        dst->ai_family = ((struct sockaddr_in6*)dst->ai_addr)->sin6_family;
-
+        initSockAddr(dst, SockAddrType::SockAddrIn6);
+        getSockAddr(*(reinterpret_cast<struct sockaddr_in6*>(dst->ai_addr)));
+        dst->ai_family = (reinterpret_cast<struct sockaddr_in6*>(dst->ai_addr))->sin6_family;
 #if 0
         /**
          * Enable only if you must and please report to squid-dev if you find a need for this.
@@ -659,16 +654,9 @@ Ip::Address::getAddrInfo(struct addrinfo *&dst, int force) const
 #endif
 
     } else if ( force == AF_INET || (force == AF_UNSPEC && isIPv4()) ) {
-
-        dst->ai_addr = (struct sockaddr*)new sockaddr_in;
-
-        memset(dst->ai_addr,0,sizeof(struct sockaddr_in));
-
-        getSockAddr(*((struct sockaddr_in*)dst->ai_addr));
-
-        dst->ai_addrlen = sizeof(struct sockaddr_in);
-
-        dst->ai_family = ((struct sockaddr_in*)dst->ai_addr)->sin_family;
+        initSockAddr(dst, SockAddrType::SockAddrIn);
+        getSockAddr(*(reinterpret_cast<struct sockaddr_in*>(dst->ai_addr)));
+        dst->ai_family = (reinterpret_cast<struct sockaddr_in*>(dst->ai_addr))->sin_family;
     } else {
         IASSERT("false",false);
     }
@@ -683,13 +671,9 @@ Ip::Address::InitAddr(struct addrinfo *&ai)
     }
 
     // remove any existing data.
-    if (ai->ai_addr) delete ai->ai_addr;
+    releaseSockAddr(ai);
 
-    ai->ai_addr = (struct sockaddr*)new sockaddr_in6;
-    memset(ai->ai_addr, 0, sizeof(struct sockaddr_in6));
-
-    ai->ai_addrlen = sizeof(struct sockaddr_in6);
-
+    initSockAddr(ai, SockAddrType::SockAddrIn6);
 }
 
 void
@@ -697,16 +681,53 @@ Ip::Address::FreeAddr(struct addrinfo *&ai)
 {
     if (ai == nullptr) return;
 
-    if (ai->ai_addr) delete (struct sockaddr_in6*)ai->ai_addr;
-
-    ai->ai_addr = nullptr;
-
-    ai->ai_addrlen = 0;
+    releaseSockAddr(ai);
 
     // NP: name fields are NOT allocated at present.
     delete ai;
 
     ai = nullptr;
+}
+
+void
+Ip::Address::initSockAddr(struct addrinfo* ai, SockAddrType sockaddrType) {
+    switch (sockaddrType) {
+        case Ip::SockAddrType::SockAddrIn: {
+            ai->ai_addr = reinterpret_cast<struct sockaddr*>(new struct sockaddr_in);
+            memset(ai->ai_addr, 0, sizeof(struct sockaddr_in));
+            ai->ai_addrlen = sizeof(struct sockaddr_in);
+        }
+        break;
+        case Ip::SockAddrType::SockAddrIn6: {
+            ai->ai_addr = reinterpret_cast<struct sockaddr*>(new struct sockaddr_in6);
+            memset(ai->ai_addr, 0, sizeof(struct sockaddr_in6));
+            ai->ai_addrlen = sizeof(struct sockaddr_in6);
+        }
+        break;
+    }
+}
+
+void
+Ip::Address::releaseSockAddr(struct addrinfo* ai) 
+{
+    if (!ai) {
+        return;
+    }
+
+    if (!ai->ai_addr) {
+        return;
+    }
+
+    if (ai->ai_addrlen == sizeof(struct sockaddr_in)) {
+        delete reinterpret_cast<struct sockaddr_in*>(ai->ai_addr);
+    } else if (ai->ai_addrlen == sizeof(struct sockaddr_in6)) {
+        delete reinterpret_cast<struct sockaddr_in6*>(ai->ai_addr);
+    } else {
+        throw TextException("Bad sockaddr structure", Here());
+    }
+
+    ai->ai_addr = nullptr;
+    ai->ai_addrlen = 0;
 }
 
 int
