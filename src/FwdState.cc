@@ -270,29 +270,29 @@ FwdState::completed()
         return ;
     }
 
+    // TODO: switch by on_ssl_bump_error & ACLs
+    if (err && request->clientConnectionManager->port->flags.tunnelSslBumping
+            && request->clientConnectionManager->port->secure.terminateOnSecureConnectFail) {
+
+        switch (err->type) {
+        case ERR_CONNECT_FAIL:
+        case ERR_SECURE_CONNECT_FAIL:
+            debugs(17, 3, "terminating the session (terminateOnSecureConnectFail)");
+            if (IsConnOpen(clientConn))
+                comm_reset_close(clientConn);
+            break;
+
+        default:
+            break;
+        }
+    }
+
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
 #endif
 
     if (entry->store_status == STORE_PENDING) {
-        // TODO: switch by on_ssl_bump_error & ACLs
-        if (err && request->clientConnectionManager->port->flags.tunnelSslBumping
-                && request->clientConnectionManager->port->secure.terminateOnSecureConnectFail) {
-
-            switch (err->type) {
-            case ERR_CONNECT_FAIL:
-            case ERR_SECURE_CONNECT_FAIL:
-                debugs(17, 3, "aborting entry (terminateOnSecureConnectFail)");
-                entry->abort();
-                if (IsConnOpen(clientConn))
-                    comm_reset_close(clientConn); // need to close here for stare configuration
-                return;
-
-            default:
-                break;
-            }
-        }
         if (entry->isEmpty()) {
             assert(!storedWholeReply_);
             if (!err) // we quit (e.g., fd closed) before an error or content
