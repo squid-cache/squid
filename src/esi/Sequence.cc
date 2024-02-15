@@ -15,7 +15,7 @@
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the ESI code from compile process when not needed.
  */
-#if (USE_SQUID_ESI == 1)
+#if USE_SQUID_ESI
 
 #include "esi/Attempt.h"
 #include "esi/Except.h"
@@ -392,5 +392,5 @@ esiSequence::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) co
     return result;
 }
 
-#endif /* USE_SQUID_ESI == 1 */
+#endif /* USE_SQUID_ESI */
 

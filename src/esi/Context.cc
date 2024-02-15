@@ -13,7 +13,7 @@
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the ESI code from compile process when not needed.
  */
-#if (USE_SQUID_ESI == 1)
+#if USE_SQUID_ESI
 
 #include "client_side_request.h"
 #include "esi/Context.h"
@@ -89,5 +89,5 @@ ESIContext::setErrorMessage(char const *anError)
         errormessage = xstrdup(anError);
 }
 
-#endif /* USE_SQUID_ESI == 1 */
+#endif /* USE_SQUID_ESI */
 

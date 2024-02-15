@@ -14,7 +14,7 @@
 
 #include "squid.h"
 
-#if USE_SQUID_ESI && HAVE_LIBXML2
+#if HAVE_LIBXML2
 
 #include "base/RunnersRegistry.h"
 #include "esi/Libxml2Parser.h"
@@ -152,5 +152,5 @@ ESILibxml2Parser::errorString() const
     return error->message;
 }
 
-#endif /* USE_SQUID_ESI */
+#endif /* HAVE_LIBXML2 */
 

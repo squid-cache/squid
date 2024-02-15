@@ -15,7 +15,7 @@
 #ifndef SQUID_SRC_ESI_LIBXML2PARSER_H
 #define SQUID_SRC_ESI_LIBXML2PARSER_H
 
-#if USE_SQUID_ESI && HAVE_LIBXML2
+#if HAVE_LIBXML2
 
 #include "esi/Parser.h"
 // workaround for definition of "free" that prevents include of
@@ -68,7 +68,6 @@ private:
     ESIParserClient *theClient;
 };
 
-#endif /* USE_SQUID_ESI */
-
+#endif /* HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_LIBXML2PARSER_H */
 

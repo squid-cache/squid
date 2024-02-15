@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_ESI_EXPATPARSER_H
 #define SQUID_SRC_ESI_EXPATPARSER_H
 
-#if USE_SQUID_ESI && HAVE_LIBEXPAT
+#if HAVE_LIBEXPAT
 
 #include "esi/Parser.h"
 
@@ -44,7 +44,6 @@ private:
     ESIParserClient *theClient;
 };
 
-#endif /* USE_SQUID_ESI */
-
+#endif /* HAVE_LIBEXPAT */
 #endif /* SQUID_SRC_ESI_EXPATPARSER_H */
 

@@ -10,7 +10,7 @@
 
 #include "squid.h"
 
-#if USE_SQUID_ESI && HAVE_LIBEXPAT
+#if HAVE_LIBEXPAT
 
 #include "base/RunnersRegistry.h"
 #include "esi/ExpatParser.h"
@@ -105,5 +105,5 @@ ESIExpatParser::errorString() const
     return XML_ErrorString(XML_GetErrorCode(myParser()));
 }
 
-#endif /* USE_SQUID_ESI */
+#endif /* HAVE_LIBEXPAT */
 

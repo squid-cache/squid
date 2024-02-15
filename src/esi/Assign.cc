@@ -13,7 +13,7 @@
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the ESI code from compile process when not needed.
  */
-#if (USE_SQUID_ESI == 1)
+#if USE_SQUID_ESI
 
 #include "esi/Assign.h"
 #include "esi/Context.h"
@@ -172,5 +172,5 @@ ESIVariableExpression::eval (ESIVarState &state, char const *, char const *) con
     ESISegment::ListAppend (state.getOutput(), expression.rawBuf(), expression.size());
 }
 
-#endif /* USE_SQUID_ESI == 1 */
+#endif /* USE_SQUID_ESI */
 
