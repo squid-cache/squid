@@ -34,11 +34,6 @@
 namespace Ip
 {
 
-enum class SockAddrType {
-    SockAddrIn,
-    SockAddrIn6
-};
-
 /**
  * Holds and manipulates IPv4, IPv6, and Socket Addresses.
  */
@@ -341,9 +336,6 @@ private:
 
     // Worker behind GetHostName and char* converters
     bool lookupHostIP(const char *s, bool nodns);
-
-    static void initSockAddr(struct addrinfo* ai, SockAddrType sockaddrType);
-    static void releaseSockAddr(struct addrinfo* ai);
 
     /* variables */
     struct sockaddr_in6 mSocketAddr_;

@@ -42,6 +42,18 @@
         } printf("\n"); assert(b); \
     }
 
+namespace Ip {
+
+enum class SockAddrType {
+    SockAddrIn,
+    SockAddrIn6
+};
+
+static void initSockAddr(struct addrinfo *, SockAddrType);
+static void releaseSockAddr(struct addrinfo *);
+
+} // namespace Ip
+
 int
 Ip::Address::cidr() const
 {
@@ -691,7 +703,7 @@ Ip::Address::FreeAddr(struct addrinfo *&ai)
 }
 
 void
-Ip::Address::initSockAddr(struct addrinfo* ai, SockAddrType sockaddrType) {
+Ip::initSockAddr(struct addrinfo* ai, SockAddrType sockaddrType) {
     switch (sockaddrType) {
         case Ip::SockAddrType::SockAddrIn: {
             ai->ai_addr = reinterpret_cast<struct sockaddr*>(new struct sockaddr_in);
@@ -709,7 +721,7 @@ Ip::Address::initSockAddr(struct addrinfo* ai, SockAddrType sockaddrType) {
 }
 
 void
-Ip::Address::releaseSockAddr(struct addrinfo* ai) 
+Ip::releaseSockAddr(struct addrinfo* ai)
 {
     if (!ai) {
         return;
