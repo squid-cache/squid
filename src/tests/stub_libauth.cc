@@ -65,7 +65,7 @@ char const * Auth::UserRequest::denyMessage(char const * const) const STUB_RETVA
 void authenticateAuthUserRequestRemoveIp(Auth::UserRequest::Pointer, Ip::Address const &) STUB
 void authenticateAuthUserRequestClearIp(Auth::UserRequest::Pointer) STUB
 int authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer) STUB_RETVAL(0)
-int authenticateUserAuthenticated(Auth::UserRequest::Pointer) STUB_RETVAL(0)
+bool authenticateUserAuthenticated(const Auth::UserRequest::Pointer) STUB_RETVAL(false)
 Auth::Direction Auth::UserRequest::direction() STUB_RETVAL(Auth::CRED_ERROR)
 void Auth::UserRequest::addAuthenticationInfoHeader(HttpReply *, int) STUB
 void Auth::UserRequest::addAuthenticationInfoTrailer(HttpReply *, int) STUB
