@@ -710,6 +710,7 @@ Ip::AllocateAddrMember(struct addrinfo &ai)
     const auto ai_addr = new SockAddrType;
     // We do not use `new SockAddrType{}` above instead of memset() below
     // because, since C++14, doing so may not initialize SockAddrType padding.
+    static_assert(std::is_trivial<SockAddrType>::value, "can memset() this addrinfo::ai_addr type");
     memset(ai_addr, 0, sizeof(*ai_addr));
 
     ai.ai_addr = reinterpret_cast<struct sockaddr*>(ai_addr);
