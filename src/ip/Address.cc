@@ -685,8 +685,7 @@ Ip::Address::InitAddr(struct addrinfo *&ai)
 void
 Ip::Address::FreeAddr(struct addrinfo *&ai)
 {
-    if (!ai)
-        return;
+    if (ai == nullptr) return;
 
     FreeAddrMember(*ai);
 
