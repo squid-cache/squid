@@ -707,6 +707,8 @@ Ip::AllocateAddrMember(struct addrinfo * const ai)
         std::is_same<SockAddrType, struct sockaddr_in6>::value,
         "FreeAddrMember() supports this addrinfo::ai_addr type");
     ai->ai_addr = reinterpret_cast<struct sockaddr*>(new SockAddrType);
+    // We do not use `new SockAddrType{}` above instead of memset() below
+    // because, since C++14, doing so may not initialize SockAddrType padding.
     memset(ai->ai_addr, 0, sizeof(SockAddrType));
     ai->ai_addrlen = sizeof(SockAddrType);
 }
