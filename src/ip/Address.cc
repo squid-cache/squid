@@ -719,6 +719,9 @@ Ip::AllocateAddrMember(struct addrinfo &ai)
     return *ai_addr;
 }
 
+/// Deallocates addrinfo::ai_addr member of the given structure and adjusts that
+/// structure accordingly. Safe for structures with a nil ai_addr member.
+/// \sa Ip::AllocateAddrMember()
 void
 Ip::FreeAddrMember(struct addrinfo &ai)
 {
