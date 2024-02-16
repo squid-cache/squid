@@ -18,7 +18,6 @@
 #include "globals.h"
 #include "http/Stream.h"
 #include "ident/AclIdent.h"
-#include "ident/Ident.h"
 
 ACLIdent::~ACLIdent()
 {

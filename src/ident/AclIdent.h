@@ -12,6 +12,7 @@
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "acl/Data.h"
+#include "ident/Ident.h"
 
 /// \ingroup ACLAPI
 class ACLIdent : public Acl::Node
