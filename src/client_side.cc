@@ -184,7 +184,7 @@ private:
 static void clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
 
 static IOACB httpAccept;
-static IDCB clientIdentDone;
+static Ident::IDCB clientIdentDone;
 static int clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength);
 
 static void clientUpdateStatHistCounters(const LogTags &logType, int svc_time);
@@ -197,7 +197,7 @@ static void ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferred
 char *skipLeadingSpace(char *aString);
 
 static void
-clientIdentDone(const char *ident, void *data)
+clientIdentDone(const Ident::User &ident, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
     conn->clientConnection->setIdent(ident);

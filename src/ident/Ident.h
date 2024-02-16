@@ -15,8 +15,6 @@
 
 #include <optional>
 
-typedef void IDCB(const char *ident, void *data);
-
 /// Ident Lookup API
 namespace Ident
 {
@@ -25,6 +23,8 @@ namespace Ident
 /// Value existence implies that there was an attempt to obtain a valid user-id.
 /// A non-empty value implies that the above attempt was successful.
 using User = std::optional<SBuf>;
+
+typedef void IDCB(const User &ident, void *data);
 
 /**
  * Open a connection and request IDENT information from a peer machine.

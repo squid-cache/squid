@@ -94,7 +94,7 @@ ACLIdent::StartLookup(ACLFilledChecklist &cl, const Acl::Node &)
 }
 
 void
-ACLIdent::LookupDone(const char *ident, void *data)
+ACLIdent::LookupDone(const Ident::User &ident, void *data)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
     const auto conn = checklist->conn();

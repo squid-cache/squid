@@ -33,7 +33,7 @@ public:
     bool empty () const override;
 
 private:
-    static void LookupDone(const char *ident, void *data);
+    static void LookupDone(const Ident::User &ident, void *data);
 
     /* Acl::Node API */
     const Acl::Options &lineOptions() override;

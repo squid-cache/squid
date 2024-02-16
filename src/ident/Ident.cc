@@ -114,7 +114,7 @@ Ident::IdentStateData::notify(const char *result)
         clients = client->next;
 
         if (cbdataReferenceValidDone(client->callback_data, &cbdata))
-            client->callback(result, cbdata);
+            client->callback(std::make_optional(SBuf(result)), cbdata);
 
         xfree(client);
     }

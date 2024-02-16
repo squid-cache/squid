@@ -179,12 +179,15 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
 }
 
 void
-Comm::Connection::setIdent(const char *anIdent)
+Comm::Connection::setIdent(const Ident::User &anIdent)
 {
-    if (ident)
-       debugs(5, 3, "ignore rewriting " << ident.value() << " with " << (anIdent ? anIdent : "nil"));
-    else
-       ident = std::make_optional(SBuf(anIdent));
+    static const SBuf nil("nil");
+    if (ident) {
+       debugs(5, 3, "ignore rewriting " << ident.value() << " with " << (anIdent ? anIdent.value() : nil));
+       return;
+    }
+    debugs(5, 3, "got ident: " << (anIdent ? anIdent.value() : nil));
+    ident = anIdent;
 }
 
 ScopedId
