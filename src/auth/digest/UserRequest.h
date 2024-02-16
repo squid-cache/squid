@@ -34,7 +34,6 @@ public:
     UserRequest();
     ~UserRequest() override;
 
-    bool authenticated() const override;
     void authenticate(HttpRequest * request, ConnStateData * conn, Http::HdrType type) override;
     Direction module_direction() override;
     void addAuthenticationInfoHeader(HttpReply * rep, int accel) override;

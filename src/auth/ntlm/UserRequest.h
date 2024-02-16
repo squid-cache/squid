@@ -31,7 +31,6 @@ class UserRequest : public Auth::UserRequest
 public:
     UserRequest();
     ~UserRequest() override;
-    bool authenticated() const override;
     void authenticate(HttpRequest * request, ConnStateData * conn, Http::HdrType type) override;
     Auth::Direction module_direction() override;
     void startHelperLookup(HttpRequest *req, AccessLogEntry::Pointer &al, AUTHCB *, void *) override;

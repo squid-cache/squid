@@ -112,7 +112,7 @@ public:
      \retval true   User has successfully been authenticated.
      \retval false  Timeouts on cached credentials have occurred or for any reason the credentials are not valid.
      */
-    virtual bool authenticated() const = 0;
+    virtual bool authenticated() const;
 
     /**
      * Check a auth_user pointer for validity.

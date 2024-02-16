@@ -132,6 +132,18 @@ Auth::UserRequest::denyMessage(char const * const default_message) const
     return getDenyMessage();
 }
 
+bool Auth::UserRequest::authenticated() const
+{
+    if (user() != nullptr && user()->credentials() == Auth::Ok)
+    {
+        debugs(29, DBG_DATA, "user authenticated.");
+        return true;
+    }
+
+    debugs(29, DBG_DATA, "user not fully authenticated.");
+    return false;
+}
+
 static void
 authenticateAuthUserRequestSetIp(Auth::UserRequest::Pointer auth_user_request, Ip::Address &ipaddr)
 {
