@@ -253,6 +253,10 @@ FwdState::updateAleWithFinalError()
     al->updateError(Error(err->type, err->detail));
 }
 
+/// return
+//   1: should terminate the error session
+//   2: should reset the error session
+//   other: do not terminate or reset
 int
 FwdState::bumpOnError()
 {
@@ -263,12 +267,12 @@ FwdState::bumpOnError()
     const err_type requestError = err->type;
 
     if (!Config.accessList.on_ssl_bump_error) {
-        debugs(33, 5, "disabled; send bump error: " << requestError);
+        debugs(17, 5, "disabled; send bump error: " << requestError);
         return 0;
     }
 
     if (!request->clientConnectionManager->port->flags.tunnelSslBumping) {
-        debugs(33, 5, "not send bump error: " << requestError);
+        debugs(17, 5, "not send bump error: " << requestError);
         return 0;
     }
 
@@ -279,7 +283,7 @@ FwdState::bumpOnError()
     if (answer.allowed()) {
         return answer.kind;
     }
-    debugs(33, 5, "denied; send bump error: " << requestError);
+    debugs(17, 5, "denied; send bump error: " << requestError);
     return 0;
 }
 
@@ -303,13 +307,13 @@ FwdState::completed()
     // on_ssl_bump_error
     switch (bumpOnError()) {
     case 1:
-        debugs(17, 3, "terminating the session (terminateOnSecureConnectFail)");
+        debugs(17, 3, "terminating the session (on_ssl_bump_error)");
         if (IsConnOpen(clientConn))
             clientConn->close();
         break;
 
     case 2:
-        debugs(17, 3, "reseting the session (terminateOnSecureConnectFail)");
+        debugs(17, 3, "reseting the session (on_ssl_bump_error)");
         if (IsConnOpen(clientConn))
             comm_reset_close(clientConn);
         break;

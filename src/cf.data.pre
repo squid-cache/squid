@@ -2243,7 +2243,7 @@ DOC_START
 
 	terminate: Terminate (FIN) the TCP session with the client.
 
-	terminate: Reset (RST) the TCP session with the client.
+	reset: Reset (RST) the TCP session with the client.
 
 	respond: Respond with an error message. This is the default.
 
@@ -2254,9 +2254,9 @@ DOC_START
 	  acl secure_connect_fail squid_error ERR_SECURE_CONNECT_FAIL
 	  # terminate the session that failed to establish a TCP session
 	    to the origin server:
-          on_ssl_bump_error terminate connect_fail
+	      on_ssl_bump_error terminate connect_fail
 	  # reset the session that failed to negotiate TLS with the origin server:
-          on_ssl_bump_error reset secure_connect_fail
+	      on_ssl_bump_error reset secure_connect_fail
 	  # in all other error cases, just send an HTTP "error page" response:
 	      on_ssl_bump_error respond all
 
