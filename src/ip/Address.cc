@@ -9,8 +9,6 @@
 /* DEBUG: section 14    IP Storage and Handling */
 
 #include "squid.h"
-
-#include "base/TextException.h"
 #include "debug/Stream.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
@@ -725,7 +723,10 @@ Ip::FreeAddrMember(struct addrinfo &ai)
     } else if (ai.ai_addrlen == sizeof(struct sockaddr_in6)) {
         delete reinterpret_cast<struct sockaddr_in6*>(ai.ai_addr);
     } else {
-        throw TextException("Bad sockaddr structure", Here());
+        debugs(14, DBG_CRITICAL, "ERROR: Squid Bug: Unexpected addrinfo::ai_addr size: " << ai.ai_addrlen <<
+               Debug::Extra << "sockaddr_in size: " << sizeof(struct sockaddr_in) <<
+               Debug::Extra << "sockaddr_in6 size: " << sizeof(struct sockaddr_in6));
+        // leak memory
     }
 
     ai.ai_addr = nullptr;
