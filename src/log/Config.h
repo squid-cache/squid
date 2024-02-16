@@ -36,7 +36,8 @@ public:
 
     void parseFormats();
     void dumpFormats(StoreEntry *e, const char *name) {
-        logformats->dump(e, name);
+        if (logformats)
+            logformats->dump(e, name);
     }
 
     /// File path to logging daemon executable
