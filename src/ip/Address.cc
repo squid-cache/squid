@@ -44,13 +44,9 @@
 
 namespace Ip {
 
-enum class SockAddrType {
-    SockAddrIn,
-    SockAddrIn6
-};
-
-static void initSockAddr(struct addrinfo *, SockAddrType);
-static void releaseSockAddr(struct addrinfo *);
+template <class SockAddrType>
+static void AllocateAddrMember(struct addrinfo *);
+static void FreeAddrMember(struct addrinfo *);
 
 } // namespace Ip
 
@@ -648,7 +644,7 @@ Ip::Address::getAddrInfo(struct addrinfo *&dst, int force) const
         dst->ai_protocol = IPPROTO_UDP;
 
     if (force == AF_INET6 || (force == AF_UNSPEC && isIPv6()) ) {
-        initSockAddr(dst, SockAddrType::SockAddrIn6);
+        AllocateAddrMember<struct sockaddr_in6>(dst);
         getSockAddr(*(reinterpret_cast<struct sockaddr_in6*>(dst->ai_addr)));
         dst->ai_family = (reinterpret_cast<struct sockaddr_in6*>(dst->ai_addr))->sin6_family;
 #if 0
@@ -666,7 +662,7 @@ Ip::Address::getAddrInfo(struct addrinfo *&dst, int force) const
 #endif
 
     } else if ( force == AF_INET || (force == AF_UNSPEC && isIPv4()) ) {
-        initSockAddr(dst, SockAddrType::SockAddrIn);
+        AllocateAddrMember<struct sockaddr_in>(dst);
         getSockAddr(*(reinterpret_cast<struct sockaddr_in*>(dst->ai_addr)));
         dst->ai_family = (reinterpret_cast<struct sockaddr_in*>(dst->ai_addr))->sin_family;
     } else {
@@ -683,9 +679,9 @@ Ip::Address::InitAddr(struct addrinfo *&ai)
     }
 
     // remove any existing data.
-    releaseSockAddr(ai);
+    FreeAddrMember(ai);
 
-    initSockAddr(ai, SockAddrType::SockAddrIn6);
+    AllocateAddrMember<struct sockaddr_in6>(ai);
 }
 
 void
@@ -694,7 +690,7 @@ Ip::Address::FreeAddr(struct addrinfo *&ai)
     if (!ai)
         return;
 
-    releaseSockAddr(ai);
+    FreeAddrMember(ai);
 
     // NP: name fields are NOT allocated at present.
     delete ai;
@@ -702,26 +698,21 @@ Ip::Address::FreeAddr(struct addrinfo *&ai)
     ai = nullptr;
 }
 
+template <class SockAddrType>
 void
-Ip::initSockAddr(struct addrinfo* ai, SockAddrType sockaddrType) {
-    switch (sockaddrType) {
-        case Ip::SockAddrType::SockAddrIn: {
-            ai->ai_addr = reinterpret_cast<struct sockaddr*>(new struct sockaddr_in);
-            memset(ai->ai_addr, 0, sizeof(struct sockaddr_in));
-            ai->ai_addrlen = sizeof(struct sockaddr_in);
-        }
-        break;
-        case Ip::SockAddrType::SockAddrIn6: {
-            ai->ai_addr = reinterpret_cast<struct sockaddr*>(new struct sockaddr_in6);
-            memset(ai->ai_addr, 0, sizeof(struct sockaddr_in6));
-            ai->ai_addrlen = sizeof(struct sockaddr_in6);
-        }
-        break;
-    }
+Ip::AllocateAddrMember(struct addrinfo * const ai)
+{
+    static_assert(
+        std::is_same<SockAddrType, struct sockaddr_in>::value ||
+        std::is_same<SockAddrType, struct sockaddr_in6>::value,
+        "FreeAddrMember() supports this addrinfo::ai_addr type");
+    ai->ai_addr = reinterpret_cast<struct sockaddr*>(new SockAddrType);
+    memset(ai->ai_addr, 0, sizeof(SockAddrType));
+    ai->ai_addrlen = sizeof(SockAddrType);
 }
 
 void
-Ip::releaseSockAddr(struct addrinfo* ai)
+Ip::FreeAddrMember(struct addrinfo * const ai)
 {
     if (!ai) {
         return;
