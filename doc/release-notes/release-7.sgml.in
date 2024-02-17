@@ -210,6 +210,9 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
+	<tag>--disable-esi</tag>
+	<p>Removed. Use options <em>--without-expat --without-xml2</em> instead.
+
 	<tag>--enable-cachemgr-hostname=</tag>
 	<p>The <em>cachemgr.cgi</em> tool this option relates to has been removed.
 

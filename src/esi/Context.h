@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_ESI_CONTEXT_H
 #define SQUID_SRC_ESI_CONTEXT_H
 
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
 #include "clientStream.h"
 #include "error/forward.h"
 #include "esi/Element.h"
@@ -161,5 +162,6 @@ private:
     bool processing;
 };
 
+#endif /* HAVE_LIBEXPAT || HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_CONTEXT_H */
 

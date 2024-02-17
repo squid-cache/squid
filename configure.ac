@@ -829,42 +829,25 @@ AC_ARG_ENABLE(delay-pools,
 dnl disable generic/common adaptation support by default
 squid_opt_use_adaptation=no
 
-AC_ARG_ENABLE(esi,
-  AS_HELP_STRING([--disable-esi],
-                 [Disable ESI for accelerators. ESI requires expat or xml2 library.
-                  Enabling ESI will cause squid reverse proxies to be capable
-                  of the Edge Acceleration Specification (www.esi.org).]),
-[],[])
-
 # ESI support libraries: expat
 SQUID_AUTO_LIB(expat,[ESI expat library],[LIBEXPAT])
 SQUID_CHECK_LIB_WORKS(expat,[
-  AS_IF([test "x$enable_esi" != "xno"],[
-    SQUID_STATE_SAVE(squid_expat_state)
-    PKG_CHECK_MODULES([LIBEXPAT],[expat],[],[])
-    CPPFLAGS="$LIBEXPAT_CFLAGS $CPPFLAGS"
-    AC_CHECK_HEADERS(expat.h)
-    SQUID_STATE_ROLLBACK(squid_expat_state)
-  ])
+  SQUID_STATE_SAVE(squid_expat_state)
+  PKG_CHECK_MODULES([LIBEXPAT],[expat],[],[])
+  CPPFLAGS="$LIBEXPAT_CFLAGS $CPPFLAGS"
+  AC_CHECK_HEADERS(expat.h)
+  SQUID_STATE_ROLLBACK(squid_expat_state)
 ])
 
 # ESI support libraries: xml2
 SQUID_AUTO_LIB(xml2,[ESI xml2 library],[LIBXML2])
 SQUID_CHECK_LIB_WORKS(xml2,[
-  AS_IF([test "x$enable_esi" != "xno"],[
-    SQUID_STATE_SAVE([squid_libxml2_save])
-    PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[])
-    CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
-    AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
-    SQUID_STATE_ROLLBACK([squid_libxml2_save])
-  ])
+  SQUID_STATE_SAVE([squid_libxml2_save])
+  PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[])
+  CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
+  AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
+  SQUID_STATE_ROLLBACK([squid_libxml2_save])
 ])
-
-AS_IF([test "x$enable_esi" = "xno"],[AC_MSG_NOTICE([Disabling ESI processor.])],
-  [test "x$with_xml2" = "xno" -a "x$with_expat" = "xno"],[AC_MSG_ERROR([ESI processor requires libxml2 or libexpat])],
-  [AC_MSG_NOTICE([Enabling ESI processor: $LIBEXPAT_LIBS $LIBXML2_LIBS])]
-)
-AC_DEFINE(USE_SQUID_ESI,[HAVE_EXPAT||HAVE_XML2],[Compile the ESI processor])
 AM_CONDITIONAL(ENABLE_ESI,[test "x$with_expat" = "xyes" -o "x$with_xml2" = "xyes"])
 
 AC_ARG_ENABLE(icap-client,

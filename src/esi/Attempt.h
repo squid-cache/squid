@@ -11,6 +11,8 @@
 #ifndef SQUID_SRC_ESI_ATTEMPT_H
 #define SQUID_SRC_ESI_ATTEMPT_H
 
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
+
 #include "esi/Element.h"
 #include "esi/Sequence.h"
 
@@ -18,5 +20,6 @@ struct esiAttempt : public esiSequence {
     esiAttempt(esiTreeParentPtr aParent) : esiSequence (aParent) {}
 };
 
+#endif /* HAVE_LIBEXPAT || HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_ATTEMPT_H */
 

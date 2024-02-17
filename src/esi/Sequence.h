@@ -11,6 +11,7 @@
 #ifndef SQUID_SRC_ESI_SEQUENCE_H
 #define SQUID_SRC_ESI_SEQUENCE_H
 
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
 #include "esi/Element.h"
 #include "mem/forward.h"
 
@@ -63,5 +64,6 @@ private:
     void processStep(int dovars);
 };
 
+#endif /* HAVE_LIBEXPAT || HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_SEQUENCE_H */
 

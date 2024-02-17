@@ -76,7 +76,7 @@ void *StoreEntry::operator new(size_t)
     return new StoreEntry();
 }
 void StoreEntry::operator delete(void *) STUB
-//#if USE_SQUID_ESI
+//#if HAVE_LIBEXPAT || HAVE_LIBXML2
 //ESIElement::Pointer StoreEntry::cachedESITree STUB_RETVAL(nullptr)
 //#endif
 void StoreEntry::buffer() STUB

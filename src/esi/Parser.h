@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_ESI_PARSER_H
 #define SQUID_SRC_ESI_PARSER_H
 
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
 #include "base/RefCount.h"
 
 #include <list>
@@ -70,5 +71,6 @@ public:
 #define EsiParserDeclaration \
     static ESIParser::Pointer NewParser(ESIParserClient *aClient)
 
+#endif /* HAVE_LIBEXPAT || HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_PARSER_H */
 

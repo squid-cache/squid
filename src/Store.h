@@ -14,6 +14,7 @@
 #include "base/Range.h"
 #include "base/RefCount.h"
 #include "comm/forward.h"
+#include "esi/Element.h"
 #include "hash.h"
 #include "http/forward.h"
 #include "http/RequestMethod.h"
@@ -25,10 +26,6 @@
 #include "store_key_md5.h"
 #include "StoreIOBuffer.h"
 #include "StoreStats.h"
-
-#if USE_SQUID_ESI
-#include "esi/Element.h"
-#endif
 
 #include <ostream>
 
@@ -253,8 +250,7 @@ public:
 
     void *operator new(size_t byteCount);
     void operator delete(void *address);
-#if USE_SQUID_ESI
-
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
     ESIElement::Pointer cachedESITree;
 #endif
     int64_t objectLen() const { return mem().object_sz; }

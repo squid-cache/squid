@@ -9,12 +9,6 @@
 /* DEBUG: section 86    ESI processing */
 
 #include "squid.h"
-
-/* MS Visual Studio Projects are monolithic, so we need the following
- * #if to exclude the ESI code from compile process when not needed.
- */
-#if USE_SQUID_ESI
-
 #include "client_side.h"
 #include "client_side_request.h"
 #include "clientStream.h"
@@ -2255,6 +2249,4 @@ esiEnableProcessing (HttpReply *rep)
 
     return rv;
 }
-
-#endif /* USE_SQUID_ESI */
 

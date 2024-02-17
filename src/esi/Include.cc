@@ -9,9 +9,6 @@
 /* DEBUG: section 86    ESI processing */
 
 #include "squid.h"
-
-#if USE_SQUID_ESI
-
 #include "client_side.h"
 #include "client_side_request.h"
 #include "esi/Include.h"
@@ -540,6 +537,4 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
             parent->fail(this, "esi:include could not be completed.");
     }
 }
-
-#endif /* USE_SQUID_ESI */
 

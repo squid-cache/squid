@@ -9,12 +9,6 @@
 /* DEBUG: section 86    ESI processing */
 
 #include "squid.h"
-
-/* MS Visual Studio Projects are monolithic, so we need the following
- * #if to exclude the ESI code from compile process when not needed.
- */
-#if USE_SQUID_ESI
-
 #include "esi/Assign.h"
 #include "esi/Context.h"
 #include "esi/Sequence.h"
@@ -171,6 +165,4 @@ ESIVariableExpression::eval (ESIVarState &state, char const *, char const *) con
     /* XXX: Implement evaluation of the expression */
     ESISegment::ListAppend (state.getOutput(), expression.rawBuf(), expression.size());
 }
-
-#endif /* USE_SQUID_ESI */
 

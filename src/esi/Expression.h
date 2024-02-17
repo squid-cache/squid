@@ -11,6 +11,8 @@
 #ifndef SQUID_SRC_ESI_EXPRESSION_H
 #define SQUID_SRC_ESI_EXPRESSION_H
 
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
+
 class ESIExpression
 {
 
@@ -18,5 +20,6 @@ public:
     static int Evaluate (char const *);
 };
 
+#endif /* HAVE_LIBEXPAT || HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_EXPRESSION_H */
 

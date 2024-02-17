@@ -14,6 +14,7 @@
 #include "anyp/PortCfg.h"
 #include "client_side_reply.h"
 #include "errorpage.h"
+#include "esi/Esi.h"
 #include "ETag.h"
 #include "fd.h"
 #include "fde.h"
@@ -42,9 +43,6 @@
 #endif
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
-#endif
-#if USE_SQUID_ESI
-#include "esi/Esi.h"
 #endif
 
 #include <memory>
@@ -1890,8 +1888,7 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
            (int) body_size << " bytes after " << reply->hdr_sz <<
            " bytes of headers");
 
-#if USE_SQUID_ESI
-
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
     if (http->flags.accel && reply->sline.status() != Http::scForbidden &&
             !alwaysAllowResponse(reply->sline.status()) &&
             esiEnableProcessing(reply)) {
@@ -1899,7 +1896,6 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
         clientStreamInsertHead(&http->client_stream, esiStreamRead,
                                esiProcessStream, esiStreamDetach, esiStreamStatus, nullptr);
     }
-
 #endif
 
     if (http->request->method == Http::METHOD_HEAD) {

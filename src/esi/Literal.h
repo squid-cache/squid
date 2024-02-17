@@ -11,6 +11,7 @@
 #ifndef SQUID_SRC_ESI_LITERAL_H
 #define SQUID_SRC_ESI_LITERAL_H
 
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
 #include "esi/Element.h"
 
 class ESIContext;
@@ -42,5 +43,6 @@ private:
     esiLiteral(esiLiteral const &);
 };
 
+#endif /* HAVE_LIBEXPAT || HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_LITERAL_H */
 

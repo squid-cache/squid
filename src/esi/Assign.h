@@ -11,6 +11,8 @@
 #ifndef SQUID_SRC_ESI_ASSIGN_H
 #define SQUID_SRC_ESI_ASSIGN_H
 
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
+
 #include "esi/Element.h"
 #include "esi/VarState.h"
 #include "SquidString.h"
@@ -56,5 +58,6 @@ private:
     String unevaluatedVariable;
 };
 
+#endif /* HAVE_LIBEXPAT || HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_ASSIGN_H */
 

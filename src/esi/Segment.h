@@ -13,6 +13,7 @@
  * or perhaps use membuffers here?
  */
 
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
 #include "base/RefCount.h"
 #include "cbdata.h"
 #include "http/forward.h"
@@ -53,5 +54,6 @@ private:
 
 void ESISegmentFreeList (ESISegment::Pointer &head);
 
+#endif /* HAVE_LIBEXPAT || HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_SEGMENT_H */
 

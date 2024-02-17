@@ -11,6 +11,7 @@
 #ifndef SQUID_SRC_ESI_VAR_H
 #define SQUID_SRC_ESI_VAR_H
 
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
 #include "esi/Element.h"
 #include "esi/Sequence.h"
 
@@ -25,5 +26,6 @@ public:
     }
 };
 
+#endif /* HAVE_LIBEXPAT || HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_VAR_H */
 

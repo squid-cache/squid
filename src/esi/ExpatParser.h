@@ -10,7 +10,6 @@
 #define SQUID_SRC_ESI_EXPATPARSER_H
 
 #if HAVE_LIBEXPAT
-
 #include "esi/Parser.h"
 
 #if HAVE_EXPAT_H

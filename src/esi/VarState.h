@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_ESI_VARSTATE_H
 #define SQUID_SRC_ESI_VARSTATE_H
 
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
 #include "esi/Segment.h"
 #include "HttpHeader.h"
 #include "libTrie/Trie.h"
@@ -168,5 +169,6 @@ private:
     char *browserversion;
 };
 
+#endif /* HAVE_LIBEXPAT || HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_VARSTATE_H */
 

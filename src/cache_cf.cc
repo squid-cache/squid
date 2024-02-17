@@ -32,6 +32,7 @@
 #include "CpuAffinityMap.h"
 #include "debug/Messages.h"
 #include "DiskIO/DiskIOModule.h"
+#include "esi/Parser.h"
 #include "eui/Config.h"
 #include "ExternalACL.h"
 #include "format/Format.h"
@@ -86,9 +87,6 @@
 #if USE_OPENSSL
 #include "ssl/Config.h"
 #include "ssl/support.h"
-#endif
-#if USE_SQUID_ESI
-#include "esi/Parser.h"
 #endif
 #if SQUID_SNMP
 #include "snmp.h"

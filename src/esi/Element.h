@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_ESI_ELEMENT_H
 #define SQUID_SRC_ESI_ELEMENT_H
 
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
 #include "base/RefCount.h"
 #include "debug/Stream.h"
 #include "esi/Segment.h"
@@ -101,5 +102,6 @@ extern void FinishAnElement(ESIElement::Pointer &, int pos = -1);
 // for all elements call finish() and set Pointer to nil
 extern void FinishAllElements(Esi::Elements &);
 
+#endif /* HAVE_LIBEXPAT || HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_ELEMENT_H */
 

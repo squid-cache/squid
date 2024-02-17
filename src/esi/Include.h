@@ -11,6 +11,7 @@
 #ifndef SQUID_SRC_ESI_INCLUDE_H
 #define SQUID_SRC_ESI_INCLUDE_H
 
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
 #include "esi/Context.h"
 #include "esi/Element.h"
 #include "esi/Segment.h"
@@ -72,5 +73,6 @@ private:
     void prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars);
 };
 
+#endif /* HAVE_LIBEXPAT || HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_INCLUDE_H */
 

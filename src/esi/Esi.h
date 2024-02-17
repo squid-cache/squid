@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_ESI_ESI_H
 #define SQUID_SRC_ESI_ESI_H
 
+#if HAVE_LIBEXPAT || HAVE_LIBXML2
 #include "clientStream.h"
 #include "sbuf/SBuf.h"
 
@@ -32,5 +33,6 @@ inline Esi::ErrorDetail Error(const char *msg) { return ErrorDetail(msg); }
 
 } // namespace Esi
 
+#endif /* HAVE_LIBEXPAT || HAVE_LIBXML2 */
 #endif /* SQUID_SRC_ESI_ESI_H */
 

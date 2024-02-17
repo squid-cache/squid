@@ -10,19 +10,11 @@
 
 #include "squid.h"
 #include "debug/Stream.h"
-#include "fatal.h"
-
-/* MS Visual Studio Projects are monolithic, so we need the following
- * #if to exclude the ESI code from compile process when not needed.
- */
-#if USE_SQUID_ESI
-
 #include "esi/Attempt.h"
 #include "esi/Except.h"
 #include "esi/Literal.h"
 #include "esi/Sequence.h"
-
-class esiExcept;
+#include "fatal.h"
 
 esiSequence::~esiSequence ()
 {
@@ -391,6 +383,4 @@ esiSequence::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) co
     resultS->makeUsableElements(*this, newVarState);
     return result;
 }
-
-#endif /* USE_SQUID_ESI */
 

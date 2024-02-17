@@ -16,8 +16,8 @@
 #define SQUID_SRC_ESI_LIBXML2PARSER_H
 
 #if HAVE_LIBXML2
-
 #include "esi/Parser.h"
+
 // workaround for definition of "free" that prevents include of
 // parser.h from libxml2 without errors
 #ifdef free
