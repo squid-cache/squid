@@ -230,7 +230,7 @@ AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
     m4_toupper(m4_translit([LIB$1_LIBS="$LIB$1_PATH $LIB$1_LIBS"], [-+.], [___]))
     AC_MSG_NOTICE([Library '$1' support: m4_translit([${with_$1:=yes (auto)} m4_toupper($LIB$1_LIBS)], [-+.], [___])])
     m4_translit([with_$1], [-+.], [___])=yes
-    AC_DEFINE(m4_toupper(m4_translit([HAVE_LIB$1], [-+.], [___])),1,[Define as 1 enable '$1' library support.])
+    AC_DEFINE(m4_toupper(m4_translit([HAVE_LIB$1], [-+.], [___])),1,[Define as 1 to enable '$1' library support.])
   ],[m4_translit([test "x$with_$1" = "xyes"], [-+.], [___])],[
     AC_MSG_ERROR([Required library '$1' not found])
   ],[
