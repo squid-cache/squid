@@ -531,6 +531,7 @@ squid_LDADD = \
 	$(KRB5LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -1976,6 +1977,7 @@ tests_test_http_range_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -2359,6 +2361,7 @@ tests_testHttpRequest_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -2655,6 +2658,7 @@ tests_testCacheManager_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)

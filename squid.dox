@@ -2080,7 +2080,6 @@ PREDEFINED             = __cplusplus \
                          USE_ECAP \
                          USE_ERR_LOCALES \
                          USE_EPOLL \
-                         USE_GNUGSS \
                          USE_GNUTLS \
                          USE_HEIMDAL_KRB5 \
                          USE_HEXDUMP \
