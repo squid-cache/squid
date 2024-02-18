@@ -132,15 +132,17 @@ Auth::UserRequest::denyMessage(char const * const default_message) const
     return getDenyMessage();
 }
 
-bool Auth::UserRequest::authenticated() const
+bool
+Auth::UserRequest::authenticated() const
 {
-    if (user() != nullptr && user()->credentials() == Auth::Ok)
+    const auto u=user();
+    if (u && u->credentials() == Auth::Ok)
     {
-        debugs(29, DBG_DATA, "user authenticated.");
+        debugs(29, 7, "user authenticated.");
         return true;
     }
 
-    debugs(29, DBG_DATA, "user not fully authenticated.");
+    debugs(29, 7, "user not fully authenticated.");
     return false;
 }
 
