@@ -222,6 +222,7 @@ dnl 2) necessary library checks (to be executed by this macro unless the use of 
 dnl   These checks should set LIBFOO_LIBS automake variable (on success)
 dnl   and ensure that it is empty or unset (on failures).
 AC_DEFUN([SQUID_CHECK_LIB_WORKS],[
+AH_TEMPLATE(m4_toupper(m4_translit([HAVE_LIB$1], [-+.], [___])),[Define as 1 to enable '$1' library support.])
 AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
   $2
   AS_IF([! test -z m4_toupper(m4_translit(["$LIB$1_LIBS"], [-+.], [___]))],[
@@ -229,6 +230,7 @@ AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
     m4_toupper(m4_translit([LIB$1_LIBS="$LIB$1_PATH $LIB$1_LIBS"], [-+.], [___]))
     AC_MSG_NOTICE([Library '$1' support: m4_translit([${with_$1:=yes (auto)} m4_toupper($LIB$1_LIBS)], [-+.], [___])])
     m4_translit([with_$1], [-+.], [___])=yes
+    AC_DEFINE(m4_toupper(m4_translit([HAVE_LIB$1], [-+.], [___])),1,[Define as 1 to enable '$1' library support.])
   ],[m4_translit([test "x$with_$1" = "xyes"], [-+.], [___])],[
     AC_MSG_ERROR([Required library '$1' not found])
   ],[
@@ -236,6 +238,7 @@ AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
     AC_MSG_NOTICE([Library '$1' support: no (auto)])
   ])
 ])
+AM_CONDITIONAL(m4_toupper(m4_translit([ENABLE_LIB$1],[-+.],[___])),m4_translit([test "x$with_$1" != "xno"],[-+.],[___]))
 AC_SUBST(m4_toupper(m4_translit([LIB$1_LIBS], [-+.], [___])))
 ])
 
