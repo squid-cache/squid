@@ -1397,157 +1397,28 @@ AS_IF([test "x$with_solaris_krb5" = "xyes" -a "x$KRB5LIBS" = "x"],[
   SQUID_STATE_ROLLBACK([squid_krb5_save])
 ])
 
-dnl User may specify Heimdal Kerberos is needed from a non-standard location
-SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[LIB_KRB5])
-AH_TEMPLATE(USE_HEIMDAL_KRB5,[Heimdal Kerberos support is available])
-AS_IF([test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"],[
-  CXXFLAGS="$LIB_KRB5_CFLAGS $CXXFLAGS"
-  krb5confpath="$with_heimdal_krb5/bin"
-  # find installed libs via pkg-config or krb5-config
-  PKG_CHECK_EXISTS(heimdal-krb5, [squid_pc_krb5_name="heimdal-krb5"])
-  AS_IF([test "x$squid_pc_krb5_name" = "x"],[
-    PKG_CHECK_EXISTS(heimdal-gssapi, [squid_pc_krb5_name="heimdal-gssapi"])
-  ])
-  AS_IF([test "x$squid_pc_krb5_name" = "x" -a "$cross_compiling" = "no"],[
-    # Look for krb5-config (unless cross-compiling)
-    AC_PATH_PROG(krb5_config,krb5-config,no,$krb5confpath)
-    AS_IF([test "x$ac_cv_path_krb5_config" != "xno"],[
-      krb5confpath="`dirname $ac_cv_path_krb5_config`"
-      ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
-      AS_IF([test "x$with_heimdal_krb5" = "xyes" -a $ac_heimdal = 0],[
-        AC_MSG_ERROR([Could not find pkg-config or krb5-config for Heimdal Kerberos])
-      ])
-    ],[
-      AS_IF([test "x$with_heimdal_krb5" = "xyes"],[
-        AC_MSG_ERROR([Could not find krb5-config in path])
-      ],[
-        AC_MSG_WARN([Could not find krb5-config in path])
-        with_heimdal_krb5=no
-      ])
-    ])
-  ])
-])
-AS_IF([test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"],[
-  SQUID_STATE_SAVE([squid_krb5_save])
-  LIBS="$LIBS $LIB_KRB5_PATH"
-
-  # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIB_KRB5], $squid_pc_krb5_name,,[
-    # look for krb5-config (unless cross-compiling)
-    AS_IF([test "$cross_compiling" = "no"],[
-      AS_IF([test "x$krb5confpath" = "x"],[
-        AC_PATH_PROG(krb5_config,krb5-config,no)
-        AS_IF([test "x$ac_cv_path_krb5_config" != "xno"],[ac_krb5_config="$ac_cv_path_krb5_config"])
-      ],[
-        ac_krb5_config="$krb5confpath/krb5-config"
-      ])
-    ])
-    AS_IF([test "x$ac_krb5_config" != "x" -a -x "$ac_krb5_config"],[
-      # Get libs, etc
-      AC_MSG_NOTICE([Use krb5-config to get CXXFLAGS and LIBS])
-      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags krb5 2>/dev/null`"
-      LIB_KRB5_LIBS="`$ac_krb5_config --libs krb5 2>/dev/null`"
-      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags gssapi 2>/dev/null` $LIB_KRB5_CFLAGS"
-      LIB_KRB5_LIBS="`$ac_krb5_config --libs gssapi 2>/dev/null` $LIB_KRB5_LIBS"
-    ],[
-      ## For some OS pkg-config is broken or unavailable.
-      ## Detect libraries the hard way.
-      SQUID_STATE_SAVE([squid_heimdal_save])
-      missing_required=
-      AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
-      AC_CHECK_LIB(resolv, [main], [LIB_KRB5_LIBS="-lresolv $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'resolv' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(crypt, [main], [LIB_KRB5_LIBS="-lcrypt $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'crypt' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(roken, [main], [LIB_KRB5_LIBS="-lroken $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'roken' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(heimbase, [main], [LIB_KRB5_LIBS="-lheimbase $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'heimbase' may be required for Heimdal Kerberos])
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(wind, [main], [LIB_KRB5_LIBS="-lwind $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'wind' may be required for Heimdal Kerberos])
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(crypto, [main], [LIB_KRB5_LIBS="-lcrypto $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'crypto' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'com_err' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(hx509, [main], [LIB_KRB5_LIBS="-lhx509 $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'hx509' may be required for Heimdal Kerberos])
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(asn1, [main], [LIB_KRB5_LIBS="-lasn1 $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'asn1' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'krb5' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(heimntlm, [main], [LIB_KRB5_LIBS="-lheimntlm $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'heimntlm' may be required for Heimdal Kerberos])
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(gssapi, [main], [LIB_KRB5_LIBS="-lgssapi $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'gssapi' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      SQUID_STATE_ROLLBACK([squid_heimdal_save])
-      AS_IF([test "x$missing_required" = "xyes"],[LIB_KRB5_LIBS=""])
-    ])
-  ])
-  AS_IF([test "x$LIB_KRB5_LIBS" != "x"],[
-    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
-    KRB5INCS="$LIB_KRB5_CFLAGS"
-    AC_DEFINE(USE_HEIMDAL_KRB5,1,[Heimdal Kerberos support is available])
-    KRB5_FLAVOUR="Heimdal"
-
-    # check for other specific broken implementations
-    CXXFLAGS="$CXXFLAGS $KRB5INCS"
-    LIBS="$LIBS $KRB5LIBS"
-
-    AC_MSG_NOTICE([Try to find Kerberos headers in given path])
-    AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
-
-    SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
-    AS_IF([test "x$squid_cv_broken_heimdal_krb5_h" = "xyes"],[
-      AC_DEFINE(HAVE_BROKEN_HEIMDAL_KRB5_H, 1, [Define to 1 if Heimdal krb5.h is broken for C++])
-    ])
-    SQUID_CHECK_KRB5_FUNCS
-  ])
+# Kerberos support libraries: Heimdal
+SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[LIBHEIMDAL_KRB5])
+SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
   AS_IF([test "x$KRB5LIBS" = "x"],[
-    AS_IF([test "x$with_heimdal_krb5" = "xyes"],[
-      AC_MSG_ERROR([Required Heimdal Kerberos library not found])
-    ],[
-      AC_MSG_WARN([Heimdal Kerberos library not found])
-    ])
+    SQUID_STATE_SAVE(squid_heimdal_krb5_save)
+    PKG_CHECK_MODULES([LIBHEIMDAL_KRB5],[heimdal-krb5 heimdal-gssapi],[
+      CPPFLAGS="$LIBHEIMDAL_KRB5_CFLAGS $CPPFLAGS"
+      AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
+      AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
+
+      LIBS="$LIBHEIMDAL_KRB5_PATH $LIBHEIMDAL_KRB5_LIBS $LIBS"
+      SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
+      SQUID_CHECK_KRB5_FUNCS
+    ],[:])
+    SQUID_STATE_ROLLBACK(squid_heimdal_krb5_save)
   ])
-  SQUID_STATE_ROLLBACK([squid_krb5_save])
 ])
 
 # Kerberos support libraries: GNU GSS
 SQUID_AUTO_LIB(gss,[GNU gss],[LIBGSS])
 SQUID_CHECK_LIB_WORKS(gss,[
-  AS_IF([test "x$KRB5LIBS" = "x"],[
+  AS_IF([test "x$KRB5LIBS" = "x" -a "x$LIBHEIMDAL_KRB5_LIBS" = "x"],[
     SQUID_STATE_SAVE(squid_gss_save)
     PKG_CHECK_MODULES([LIBGSS],[gss],[
       CPPFLAGS="$LIBGSS_CFLAGS $CPPFLAGS"

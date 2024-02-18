@@ -39,9 +39,7 @@ int
 main(void)
 {
         krb5_context context;
-
         krb5_init_context(&context);
-
         return 0;
 }
 ]])], [ squid_cv_broken_heimdal_krb5_h=no ], [
@@ -52,15 +50,14 @@ int
 main(void)
 {
         krb5_context context;
-
         krb5_init_context(&context);
-
         return 0;
 }
 ]])], [ squid_cv_broken_heimdal_krb5_h=yes ], [ squid_cv_broken_heimdal_krb5_h=no ])
     ])
     SQUID_STATE_ROLLBACK(squid_krb5_heimdal_test)
   ])
+  SQUID_DEFINE_BOOL(HAVE_BROKEN_HEIMDAL_KRB5_H,$squid_cv_broken_heimdal_krb5_h,[Heimdal krb5.h is broken for C++])
 ]) dnl SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
 
 dnl check the max skew in the krb5 context, and sets squid_cv_max_skew_context
