@@ -187,7 +187,7 @@ authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer auth_user_request)
  * authenticateUserAuthenticated: is this auth_user structure logged in ?
  */
 bool
-authenticateUserAuthenticated(const Auth::UserRequest::Pointer auth_user_request)
+authenticateUserAuthenticated(Auth::UserRequest::Pointer auth_user_request)
 {
     if (!auth_user_request || !auth_user_request->valid())
         return false;
