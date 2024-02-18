@@ -135,14 +135,13 @@ Auth::UserRequest::denyMessage(char const * const default_message) const
 bool
 Auth::UserRequest::authenticated() const
 {
-    const auto u=user();
-    if (u && u->credentials() == Auth::Ok)
-    {
-        debugs(29, 7, "user authenticated.");
+    const auto u = user();
+    if (u && u->credentials() == Auth::Ok) {
+        debugs(29, 7, "yes");
         return true;
     }
 
-    debugs(29, 7, "user not fully authenticated.");
+    debugs(29, 7, "no");
     return false;
 }
 
