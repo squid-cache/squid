@@ -329,6 +329,7 @@ statObjects(void *data)
     if (state->theSearch->isDone()) {
         if (UsingSmp())
             storeAppendPrintf(state->sentry, "} by kid%d\n\n", KidIdentifier);
+        state->sentry->flush();
         state->sentry->complete();
         state->sentry->unlock("statObjects+isDone");
         delete state;
