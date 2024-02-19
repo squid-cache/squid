@@ -1275,9 +1275,14 @@ ENDIF
 	  # Referer is highly unreliable, so use with care
 
 	acl aclname ident [-i] username ...
+	  # string match on the ident user identifier [slow]
+	  # use REQUIRED to accept any non-null user identifier.
 	acl aclname ident_regex [-i] pattern ...
-	  # string match on ident output [slow]
-	  # use REQUIRED to accept any non-null ident.
+	  # regex match against the ident user identifier [slow]
+	  # use a dash ('-') to match an invalid ident reply, including cases
+	  # when the user identifier is missing.
+	  # NOTE: a side effect: a dash ('-') will also match the user identifier
+	  # consisting of a single dash.
 
 	acl aclname proxy_auth [-i] username ...
 	acl aclname proxy_auth_regex [-i] pattern ...
