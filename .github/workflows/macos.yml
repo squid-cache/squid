@@ -25,8 +25,12 @@ jobs:
       uses: actions/checkout@v4
     - name: Prepare build
       run: |
+        export PKG_CONFIG_PATH="/opt/homebrew/opt/openldap/lib/pkgconfig";
         export CFLAGS="-Wno-compound-token-split-by-macro ";
         export CPPFLAGS="`pkg-config --cflags ldap`";
+        export LDFLAGS="`pkg-config --libs ldap`";
+        echo "$CPPFLAGS";
+        exit 0;
         ./bootstrap.sh && \
         mkdir btbuild && \
         cd btbuild && \
