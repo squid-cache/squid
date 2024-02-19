@@ -26,11 +26,11 @@ jobs:
         export CFLAGS="-Wno-compound-token-split-by-macro ";
         export CPPFLAGS="`pkg-config --cflags ldap`";
         export LDFLAGS="`pkg-config --libs ldap`";
-        echo "$CPPFLAGS";
-        exit 0;
         ./bootstrap.sh && \
         mkdir btbuild && \
         cd btbuild && \
         ../configure
-    - name: BuildIt!
+    - name: Build It!
       run: gmake -C btbuild -j $(nproc) all && gmake -C btbuild -j $(nproc) check
+    - name: Run it!
+      run: ./btbuild/src/squid -k parse -f btbuild/src/squid.conf.default
