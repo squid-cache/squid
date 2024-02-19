@@ -15,12 +15,18 @@ jobs:
     - name: Install prerequisite packagesx
       run: |
         brew install \
-          autoconf automake coreutils cppunit gawk \
-          gcc gdbm gnu-getopt gnu-sed gnupg gnutls grep \
-          libtool make nettle openldap openssl@3 pkg-config \
-          xz zstd
+          automake coreutils cppunit gawk \
+          gnu-getopt gnu-sed grep \
+          make
     - name: Checkout sources
       uses: actions/checkout@v4
-    - run: ./bootstrap.sh
-    - run: ./configure
-    - run: gmake -j $(nproc) all check
+    - name: Prepare build
+      run: |
+        ./bootstrap.sh &&
+        mkdir btbuild &&
+        cd btbuild &&
+        PKG_CONFIG_PATH="/opt/homebrew/opt/openldap/lib/pkgconfig" \
+        CFLAGS="-Wno-compound-token-split-by-macro" \
+        ../configure
+    - name: BuildIt!
+      run: gmake -C btbuild -j $(nproc) all check
