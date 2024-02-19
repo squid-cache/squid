@@ -92,7 +92,7 @@ private:
     size_t elements;
 };
 
-SQUIDCEXTERN int splayLastResult;
+extern int splayLastResult;
 
 template<class V>
 SplayNode<V>::SplayNode(const Value &someData): data(someData), left(nullptr), right(nullptr), visitThreadUp(nullptr) {}

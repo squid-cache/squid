@@ -56,6 +56,9 @@ public:
     /// \see MemObject::freshestReply()
     const HttpReply *hasFreshestReply() const { return mem_obj ? &mem_obj->freshestReply() : nullptr; }
 
+    /// whether this entry has access to [deserialized] [HTTP] response headers
+    bool hasParsedReplyHeader() const;
+
     void write(StoreIOBuffer);
 
     /** Check if the Store entry is empty

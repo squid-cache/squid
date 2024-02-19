@@ -507,9 +507,9 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
                    " from " << extra.page << '+' << prefixSize);
 
             // parse headers if needed; they might span multiple slices!
-            auto &reply = e.mem().adjustableBaseReply();
-            if (reply.pstate != Http::Message::psParsed) {
+            if (!e.hasParsedReplyHeader()) {
                 httpHeaderParsingBuffer.append(sliceBuf.data, sliceBuf.length);
+                auto &reply = e.mem().adjustableBaseReply();
                 if (reply.parseTerminatedPrefix(httpHeaderParsingBuffer.c_str(), httpHeaderParsingBuffer.length()))
                     httpHeaderParsingBuffer = SBuf(); // we do not need these bytes anymore
             }
@@ -544,7 +544,7 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     debugs(20, 5, "mem-loaded all " << e.mem_obj->endOffset() << '/' <<
            anchor.basics.swap_file_sz << " bytes of " << e);
 
-    if (e.mem().adjustableBaseReply().pstate != Http::Message::psParsed)
+    if (!e.hasParsedReplyHeader())
         throw TextException(ToSBuf("truncated mem-cached headers; accumulated: ", httpHeaderParsingBuffer.length()), Here());
 
     // from StoreEntry::complete()

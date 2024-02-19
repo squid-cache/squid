@@ -22,7 +22,6 @@ negotiate_kerberos_auth_SOURCES = \
 	negotiate_kerberos.h \
 	negotiate_kerberos_auth.cc \
 	negotiate_kerberos_pac.cc
-negotiate_kerberos_auth_LDFLAGS=
 negotiate_kerberos_auth_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
@@ -32,7 +31,6 @@ negotiate_kerberos_auth_LDADD= \
 
 negotiate_kerberos_auth_test_SOURCES = \
 	negotiate_kerberos_auth_test.cc
-negotiate_kerberos_auth_test_LDFLAGS=
 negotiate_kerberos_auth_test_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \

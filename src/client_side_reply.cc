@@ -52,7 +52,7 @@
 CBDATA_CLASS_INIT(clientReplyContext);
 
 /* Local functions */
-extern "C" CSS clientReplyStatus;
+CSS clientReplyStatus;
 ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const AccessLogEntry::Pointer &);
 
 /* privates */
@@ -500,8 +500,8 @@ clientReplyContext::handleIMSReply(const StoreIOBuffer result)
     sendClientOldEntry();
 }
 
-SQUIDCEXTERN CSR clientGetMoreData;
-SQUIDCEXTERN CSD clientReplyDetach;
+CSR clientGetMoreData;
+CSD clientReplyDetach;
 
 /// \copydoc clientReplyContext::cacheHit()
 void
@@ -1062,7 +1062,7 @@ clientReplyContext::storeNotOKTransferDone() const
     assert(mem != nullptr);
     assert(http->request != nullptr);
 
-    if (mem->baseReply().pstate != Http::Message::psParsed)
+    if (!http->storeEntry()->hasParsedReplyHeader())
         /* haven't found end of headers yet */
         return 0;
 
