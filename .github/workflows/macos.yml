@@ -6,7 +6,10 @@ on:
   pull_request:
     branches: [ "master" ]
 
-jobs:    
+env:
+  PKG_CONFIG_PATH: /opt/homebrew/opt/openldap/lib/pkgconfig
+
+jobs:
   build:
 
     runs-on: macos-latest
@@ -25,7 +28,6 @@ jobs:
         ./bootstrap.sh &&
         mkdir btbuild &&
         cd btbuild &&
-        export PKG_CONFIG_PATH="/opt/homebrew/opt/openldap/lib/pkgconfig" &&
         CFLAGS="-Wno-compound-token-split-by-macro " \
         CPPFLAGS="`pkg-config --cflags ldap`" \
         LDFLAGS="`pkg-config --libs ldap`" \
