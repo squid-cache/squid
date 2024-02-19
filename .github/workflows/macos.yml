@@ -24,7 +24,7 @@ jobs:
       run: |
         export PKG_CONFIG_PATH=PKG_CONFIG_PATH="`brew list openldap | grep ldap.pc | head -1 | xargs dirname`:`brew list cyrus-sasl | grep libsasl2.pc | head -1 | xargs dirname`";
         export CFLAGS="-Wno-compound-token-split-by-macro ";
-        export CPPFLAGS="`pkg-config --cflags ldap libsasl2";
+        export CPPFLAGS="`pkg-config --cflags ldap libsasl2`";
         export LDFLAGS="`pkg-config --libs ldap libsasl2`";
         ./bootstrap.sh && \
         mkdir btbuild && \
