@@ -26,6 +26,7 @@ jobs:
     - name: Prepare build
       run: |
         export PKG_CONFIG_PATH="/opt/homebrew/opt/openldap/lib/pkgconfig";
+        ls -l /opt/homebrew/opt/openldap/lib/pkgconfig;
         export CFLAGS="-Wno-compound-token-split-by-macro ";
         export CPPFLAGS="`pkg-config --cflags ldap`";
         export LDFLAGS="`pkg-config --libs ldap`";
