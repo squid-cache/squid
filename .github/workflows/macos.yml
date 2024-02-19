@@ -26,7 +26,9 @@ jobs:
         mkdir btbuild &&
         cd btbuild &&
         PKG_CONFIG_PATH="/opt/homebrew/opt/openldap/lib/pkgconfig" \
-        CFLAGS="-Wno-compound-token-split-by-macro" \
+        CFLAGS="-Wno-compound-token-split-by-macro " \
+        CPPFLAGS="$(pkg-config --cflags ldap)" \
+        LDFLAGS=$(pkg-config --ldflags ldap)" \
         ../configure
     - name: BuildIt!
-      run: gmake -C btbuild -j $(nproc) all check
+      run: gmake -C btbuild -j $(nproc) all && gmake -C btbuild -j $(nproc) check
