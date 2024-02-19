@@ -15,7 +15,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: Install prerequisite packagesx
+    - name: Install prerequisite packages
       run: |
         brew install \
           automake coreutils cppunit gawk \
@@ -25,8 +25,9 @@ jobs:
       uses: actions/checkout@v4
     - name: Prepare build
       run: |
-        print "pkg-config --cflags ldap: %s" "`pkg-config --cflags ldap`" &&
-        print "pkg-config --libs ldap: %s" "`pkg-config --libs ldap`" &&
+        export PKG_CONFIG_PATH="/opt/homebrew/opt/openldap/lib/pkgconfig" ;
+        printf "pkg-config --cflags ldap: %s" "`pkg-config --cflags ldap`" &&
+        printf "pkg-config --libs ldap: %s" "`pkg-config --libs ldap`" &&
         export \
           CFLAGS="-Wno-compound-token-split-by-macro " \
           CPPFLAGS="`pkg-config --cflags ldap`" \
