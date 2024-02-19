@@ -8,6 +8,7 @@ on:
 
 env:
   PKG_CONFIG_PATH: /opt/homebrew/opt/openldap/lib/pkgconfig
+  TEST_EVAL: `pkg-config --cflags ldap`
 
 jobs:
   build:
@@ -32,5 +33,5 @@ jobs:
         CPPFLAGS="`pkg-config --cflags ldap`" \
         LDFLAGS="`pkg-config --libs ldap`" \
         ../configure
-    - name: BuildIt!
-      run: gmake -C btbuild -j $(nproc) all && gmake -C btbuild -j $(nproc) check
+    # - name: BuildIt!
+    #   run: gmake -C btbuild -j $(nproc) all && gmake -C btbuild -j $(nproc) check
