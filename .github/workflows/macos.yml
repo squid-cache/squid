@@ -1,0 +1,28 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  env:
+    
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - name: Install prerequisite packagesx
+      run: |
+        brew install \
+          autoconf automake coreutils cppunit gawk \
+          gcc gdbm gnu-getopt gnu-sed gnupg gnutls grep \
+          libtool make nettle openldap openssl@3 pkg-config \
+          xz zstd
+    - name: Checkout sources
+      uses: actions/checkout@v4
+    - run: ./bootstrap.sh
+    - run: ./configure
+    - run: gmake -j $(nproc) all check
