@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ "master" ]
 
-env:
-  PKG_CONFIG_PATH: /opt/homebrew/opt/openldap/lib/pkgconfig
-
 jobs:
   build:
 
@@ -25,9 +22,8 @@ jobs:
       uses: actions/checkout@v4
     - name: Prepare build
       run: |
-        brew list openldap;
-        export PKG_CONFIG_PATH="/opt/homebrew/opt/openldap/lib/pkgconfig";
-        ls -l /opt/homebrew/opt/openldap/lib/pkgconfig;
+        brew list openldap ;
+        export PKG_CONFIG_PATH="`brew list openldap|grep ldap.pc | xargs dirname";
         export CFLAGS="-Wno-compound-token-split-by-macro ";
         export CPPFLAGS="`pkg-config --cflags ldap`";
         export LDFLAGS="`pkg-config --libs ldap`";
