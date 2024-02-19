@@ -25,16 +25,16 @@ jobs:
       uses: actions/checkout@v4
     - name: Prepare build
       run: |
-        export PKG_CONFIG_PATH="/opt/homebrew/opt/openldap/lib/pkgconfig" ;
-        printf "pkg-config --cflags ldap: %s" "`pkg-config --cflags ldap`" &&
-        printf "pkg-config --libs ldap: %s" "`pkg-config --libs ldap`" &&
+        export PKG_CONFIG_PATH="/opt/homebrew/opt/openldap/lib/pkgconfig" ; \
+        printf "pkg-config --cflags ldap: %s" "`pkg-config --cflags ldap`" && \
+        printf "pkg-config --libs ldap: %s" "`pkg-config --libs ldap`" && \
         export \
           CFLAGS="-Wno-compound-token-split-by-macro " \
           CPPFLAGS="`pkg-config --cflags ldap`" \
           LDFLAGS="`pkg-config --libs ldap`" ;\
-        ./bootstrap.sh &&
-        mkdir btbuild &&
-        cd btbuild &&
+        ./bootstrap.sh && \
+        mkdir btbuild && \
+        cd btbuild && \
         ../configure
     # - name: BuildIt!
     #   run: gmake -C btbuild -j $(nproc) all && gmake -C btbuild -j $(nproc) check
