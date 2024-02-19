@@ -34,6 +34,7 @@ public:
     HttpRequestMethod httpMethod; ///< HTTP request method
     RequestFlags httpFlags; ///< HTTP request flags
     String httpOrigin;       ///< HTTP Origin: header (if any)
+    String httpAccept; ///< HTTP Accept: header (if any)
 
     /* action parameters extracted from the client HTTP request */
     String actionName; ///< action name (and credentials realm)
