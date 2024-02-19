@@ -49,7 +49,7 @@ msgcat ./pot/*.pot -s -o errpages.pot.new &&
 
 ## Update all existing dictionaries with the new content ...
 for f in `ls -1 ./*.po` ; do
-	printf "Update: ${f} ... "
+	printf "Update: %s ... " "${f}"
 	msgmerge --verbose -s -o ${f}.new ${f} errpages.pot
 	chown --reference=${f} ${f}.new
 	mv ${f}.new ${f}

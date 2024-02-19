@@ -40,7 +40,7 @@ if test -e ${config} ; then
 	echo "BUILD: ${config}"
 	. ${config}
 else
-	printf "BUILD ERROR: Unable to locate test configuration '${config}' from " && pwd
+	printf "BUILD ERROR: Unable to locate test configuration '%s' from " "${config}" && pwd
 	exit 1;
 fi
 

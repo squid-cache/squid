@@ -616,12 +616,12 @@ printRawAmFile ()
     echo "## $GeneratedByMe"
     echo
 
-    printf "$1 ="
+    printf "%s =" "$1"
     # Only some files are formed from *.po filenames, but all such files
     # should list *.lang filenames instead.
     git ls-files $2$3 | sed -e s%$2%%g -e 's%\.po%\.lang%g' | while read f; do
         echo " \\"
-        printf "    ${f}"
+        printf "    %s" "${f}"
     done
     echo ""
 }
