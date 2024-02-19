@@ -8,7 +8,6 @@ on:
 
 env:
   PKG_CONFIG_PATH: /opt/homebrew/opt/openldap/lib/pkgconfig
-  TEST_EVAL: `pkg-config --cflags ldap`
 
 jobs:
   build:
@@ -26,12 +25,15 @@ jobs:
       uses: actions/checkout@v4
     - name: Prepare build
       run: |
+        print "pkg-config --cflags ldap: %s" "`pkg-config --cflags ldap`" &&
+        print "pkg-config --libs ldap: %s" "`pkg-config --libs ldap`" &&
+        export \
+          CFLAGS="-Wno-compound-token-split-by-macro " \
+          CPPFLAGS="`pkg-config --cflags ldap`" \
+          LDFLAGS="`pkg-config --libs ldap`" ;\
         ./bootstrap.sh &&
         mkdir btbuild &&
         cd btbuild &&
-        CFLAGS="-Wno-compound-token-split-by-macro " \
-        CPPFLAGS="`pkg-config --cflags ldap`" \
-        LDFLAGS="`pkg-config --libs ldap`" \
         ../configure
     # - name: BuildIt!
     #   run: gmake -C btbuild -j $(nproc) all && gmake -C btbuild -j $(nproc) check
