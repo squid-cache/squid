@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Test build on MacOS
 
 on:
   push:
@@ -6,9 +6,7 @@ on:
   pull_request:
     branches: [ "master" ]
 
-jobs:
-  env:
-    
+jobs:    
   build:
 
     runs-on: macos-latest
