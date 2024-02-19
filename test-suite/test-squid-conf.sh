@@ -204,12 +204,7 @@ then
         then
             # Skip test unless the given macro is #defined in autoconf.h
             defineName=$p1
-
-            if test -n "$p2"
-            then
-                echo "$here: ERROR: Bad $instructionName instruction: Unexpected second parameter: $p2";
-                exit 1;
-            fi
+            defineValue=$p2
 
             autoconfHeader="$top_builddir/include/autoconf.h"
             if ! grep -q -w "$defineName" $autoconfHeader
@@ -229,6 +224,16 @@ then
                 echo "$here: ERROR: Cannot determine status of $defineName macro";
                 exit 1;
             fi
+
+            if test -n "$defineValue"
+            then
+                if ! grep -q "# *define *\b$defineName *$defineValue\b" $autoconfHeader
+                then
+                    echo "$here: WARNING: Skipping $configFile test because $defineName is not $defineValue in $autoconfHeader";
+                    exit 0;
+                fi
+            fi
+
         else
             echo "$here: ERROR: Unknown test-squid-conf.sh instruction name: $instructionName";
             exit 1;
