@@ -20,15 +20,16 @@ jobs:
         brew install \
           automake coreutils cppunit gawk \
           gnu-getopt gnu-sed grep \
-          make
+          make openldap
     - name: Checkout sources
       uses: actions/checkout@v4
     - name: Prepare build
       run: |
         export CFLAGS="-Wno-compound-token-split-by-macro ";
+        export CPPFLAGS="`pkg-config --cflags ldap`";
         ./bootstrap.sh && \
         mkdir btbuild && \
         cd btbuild && \
-        ../configure --without-ldap
+        ../configure
     - name: BuildIt!
       run: gmake -C btbuild -j $(nproc) all && gmake -C btbuild -j $(nproc) check
