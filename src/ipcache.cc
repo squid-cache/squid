@@ -975,10 +975,9 @@ Dns::CachedIps::restoreGoodness(const char *name)
             cachedIp.forgetMarking();
         badCount_ = 0;
         debugs(14, 3, "cleared all " << size() << " bad IPs for " << name);
-        // fall through to reset goodPosition
+        // fall through to reset goodPosition and report the current state
     }
     Must(seekNewGood(name));
-    debugs(14, 5, name << " is now at " << *this);
 }
 
 bool
