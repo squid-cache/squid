@@ -2,7 +2,7 @@ name: Test build on MacOS
 
 on:
   push:
-    branches: [ "master", "github-macos" ]
+    branches: [ "master", "auto" ]
   pull_request:
     branches: [ "master" ]
 
