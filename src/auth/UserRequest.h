@@ -247,7 +247,7 @@ int authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer);
 
 /// \ingroup AuthAPI
 /// See Auth::UserRequest::authenticated()
-bool authenticateUserAuthenticated( Auth::UserRequest::Pointer);
+bool authenticateUserAuthenticated(Auth::UserRequest::Pointer);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_SRC_AUTH_USERREQUEST_H */
