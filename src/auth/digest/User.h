@@ -28,7 +28,6 @@ class User : public Auth::User
 public:
     User(Auth::SchemeConfig *, const char *requestRealm);
     ~User() override;
-    bool authenticated() const;
     int32_t ttl() const override;
 
     /* Auth::User API */
