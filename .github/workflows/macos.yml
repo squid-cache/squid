@@ -20,6 +20,8 @@ jobs:
           make openldap cyrus-sasl
     - name: Checkout sources
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 5
     - name: Prepare build
       run: |
         export PKG_CONFIG_PATH="`brew list openldap | grep ldap.pc | head -1 | xargs dirname`:`brew list cyrus-sasl | grep libsasl2.pc | head -1 | xargs dirname`";
