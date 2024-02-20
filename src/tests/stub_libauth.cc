@@ -59,7 +59,7 @@ void Auth::UserRequest::operator delete (void *) STUB
 Auth::UserRequest::UserRequest() STUB
 Auth::UserRequest::~UserRequest() STUB
 void Auth::UserRequest::setDenyMessage(char const *) STUB
-bool Auth::UserRequest::authenticated() const STUB
+bool Auth::UserRequest::authenticated() const STUB_RETVAL(false)
 char const * Auth::UserRequest::getDenyMessage() const STUB_RETVAL("stub")
 char const * Auth::UserRequest::denyMessage(char const * const) const STUB_RETVAL("stub")
 void authenticateAuthUserRequestRemoveIp(Auth::UserRequest::Pointer, Ip::Address const &) STUB
