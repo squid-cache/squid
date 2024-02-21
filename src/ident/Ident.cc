@@ -109,12 +109,13 @@ Ident::IdentStateData::~IdentStateData() {
 void
 Ident::IdentStateData::notify(const char *result)
 {
+    const auto user = std::make_optional(SBuf(result));
     while (IdentClient *client = clients) {
         void *cbdata;
         clients = client->next;
 
         if (cbdataReferenceValidDone(client->callback_data, &cbdata))
-            client->callback(std::make_optional(SBuf(result)), cbdata);
+            client->callback(user, cbdata);
 
         xfree(client);
     }
