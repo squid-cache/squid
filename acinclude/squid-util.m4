@@ -314,7 +314,7 @@ AC_DEFUN([SQUID_CHECK_SASL],[
       squid_cv_check_sasl="no"
     ])
   ])
-  AS_IF([test "$squid_host_os" = "Darwin"],[
+  AS_IF([test "$squid_host_os" = "darwin"],[
     AS_IF([test "$ac_cv_lib_sasl2_sasl_errstring" = "yes"],[
       AC_DEFINE(HAVE_SASL_DARWIN,1,[Define to 1 if Mac Darwin without sasl.h])
       echo "checking for MAC Darwin without sasl.h ... yes"
