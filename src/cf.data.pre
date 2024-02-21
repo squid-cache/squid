@@ -1279,10 +1279,20 @@ ENDIF
 	  # use REQUIRED to accept any non-null user identifier.
 	acl aclname ident_regex [-i] pattern ...
 	  # regex match against the ident user identifier [slow]
-	  # use a dash ('-') to match an invalid ident reply, including cases
-	  # when the user identifier is missing.
-	  # NOTE: a side effect: a dash ('-') will also match the user identifier
-	  # consisting of a single dash.
+	  #
+	  # If necessary, evaluation of this ACL triggers a transaction with an
+	  # Authentication Server (a.k.a. Ident server; see RFC 1413) to identify
+	  # the user behind client-to-Squid TCP connection. The results of that
+	  # transaction (successful or otherwise) are cached for the lifetime the
+	  # client-to-Squid TCP connection at most one attempt to identify connection.
+	  # user is made.
+	  #
+	  # A configured dash ('-') value (or any equivalent regex) matches:
+	  #    - A connection for which Squid has failed to obtain user identity,
+	  #      including cases where Authentication Server returned an invalidd
+	  #      (e.g., empty) user-id.
+	  #    - A connection for which Authentication Server returned a dash character
+	  #      as a user-id.
 
 	acl aclname proxy_auth [-i] username ...
 	acl aclname proxy_auth_regex [-i] pattern ...
