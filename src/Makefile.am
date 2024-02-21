@@ -708,7 +708,7 @@ uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE) squid.conf.default
 
 distclean-local:
-	test -d "cf_gen.dSYM" && rm -rf "cf_gen.dSYM" || true
+	test -d "cf_gen.dSYM" && rm -rf "cf_gen.dSYM" || $(TRUE)
 
 CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 	test_tools.cc *.a
