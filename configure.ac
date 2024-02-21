@@ -1158,12 +1158,6 @@ AS_IF([test "x$with_openssl" = "xyes"],[
     ],$LIBOPENSSL_LIBS)
   ])
 
-  # This is a workaround for RedHat 9 brain damage..
-  AS_IF([test -d /usr/kerberos/include -a -f /usr/include/openssl/kssl.h],[
-    AC_MSG_NOTICE([OpenSSL depends on Kerberos])
-    LIBOPENSSL_LIBS="-L/usr/kerberos/lib $LIBOPENSSL_LIBS"
-    CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
-  ])
   SQUID_STATE_ROLLBACK(squid_openssl_state) #de-pollute LIBS
 
   AS_IF([test "x$LIBOPENSSL_LIBS" != "x"],[
@@ -2628,6 +2622,7 @@ AC_CHECK_FUNCS(\
 	setpflags \
 	setpgrp \
 	setsid \
+	setresuid \
 	sigaction \
 	snprintf \
 	socketpair \
@@ -2686,11 +2681,6 @@ AS_CASE([$squid_opt_io_loop_engine],
 
 AS_IF([test "x$ac_cv_func_sched_getaffinity" = "xyes" -a "x$ac_cv_func_sched_setaffinity" = "xyes"],[
   AC_DEFINE(HAVE_CPU_AFFINITY,1,[Support setting CPU affinity for workers])
-])
-
-SQUID_CHECK_SETRESUID_WORKS
-AS_IF([test "x$squid_cv_resuid_works" = "xyes"],[
-  AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness. Knowing that setresuid() exists is not enough, because RedHat 5.0 declares setresuid() but does not implement it.])
 ])
 
 AC_CHECK_HEADERS(mswsock.h)

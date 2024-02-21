@@ -732,31 +732,6 @@ void squid_getprotobynumber(void) {
   SQUID_STATE_ROLLBACK(winsock)
 ])
 
-dnl check that setresuid is properly implemented.
-dnl sets squid_cv_resuid_works to "yes" or "no"
-AC_DEFUN([SQUID_CHECK_SETRESUID_WORKS],[
-  AC_CACHE_CHECK(if setresuid is actually implemented, squid_cv_resuid_works,
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-  int main(int argc, char **argv) {
-    if(setresuid(-1,-1,-1)) {
-      perror("setresuid:");
-      return 1;
-    }
-    return 0;
-  }
-    ]])],[squid_cv_resuid_works="yes"],[squid_cv_resuid_works="no"],[:])
-  )
-])
-
 dnl check whether Solaris has broken IPFilter headers (Solaris 10 at least does)
 AC_DEFUN([SQUID_CHECK_BROKEN_SOLARIS_IPFILTER],[
   AS_IF([test "x$squid_cv_broken_ipfilter_minor_t" = "x"],[
