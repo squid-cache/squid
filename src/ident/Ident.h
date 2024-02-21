@@ -19,7 +19,7 @@
 namespace Ident
 {
 
-/// A user-id field of an RFC 931 auth-reply response.
+/// A user-id field of an RFC 1413 auth-reply response.
 /// Value existence implies that there was an attempt to obtain a valid user-id.
 /// A non-empty value implies that the above attempt was successful.
 using User = std::optional<SBuf>;

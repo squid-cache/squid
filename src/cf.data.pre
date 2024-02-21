@@ -2113,7 +2113,7 @@ DEFAULT_DOC: Unless rules exist in squid.conf, IDENT is not fetched.
 LOC: Ident::TheConfig.identLookup
 DOC_START
 	A list of ACL elements which, if matched, cause an ident
-	(RFC 931) lookup to be performed for this request.  For
+	(RFC 1413) lookup to be performed for this request.  For
 	example, you might choose to always perform ident lookups
 	for your main multi-user Unix boxes, but not for your Macs
 	and PCs.  By default, ident lookups are not performed for

@@ -143,7 +143,7 @@ public:
     ScopedId codeContextGist() const override;
     std::ostream &detailCodeContext(std::ostream &os) const override;
 
-    /// Initializes rfc931 with the received user identity (may be nil).
+    /// Initializes RFC 1413 user identity (may be nil).
     /// Subsequent calls have no effect.
     void setIdent(const Ident::User &);
 
@@ -179,7 +179,7 @@ public:
     /** COMM flags set on this connection */
     int flags;
 
-    /// rfc931 user identity
+    /// RFC 1413 user identity
     Ident::User ident;
 
 #if USE_SQUID_EUI

@@ -60,7 +60,7 @@ public:
     /// Side effect: Enables reverse DNS lookups of future client addresses.
     const char *getLogClientFqdn(char *buf, size_t bufSize) const;
 
-    /// \returns rfc931 user identity (including empty strings), if any
+    /// \returns RFC 1413 user identity (including empty strings), if any
     Ident::User getClientIdent() const;
 
     /// Fetch the external ACL provided 'user=' string, or nil if none is available.

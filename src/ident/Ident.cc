@@ -6,7 +6,7 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 30    Ident (RFC 931) */
+/* DEBUG: section 30    Ident (RFC 1413) */
 
 #include "squid.h"
 
