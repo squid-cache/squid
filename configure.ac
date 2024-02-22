@@ -1553,7 +1553,7 @@ AS_IF([test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"],[
 # Kerberos support libraries: GNU GSS
 SQUID_AUTO_LIB(gss,[GNU gss],[LIBGSS])
 SQUID_CHECK_LIB_WORKS(gss,[
-  AS_IF([test "x$KRB5LIBS" = "x" -a "x$LIBHEIMDAL_KRB5_LIBS" = "x"],[
+  AS_IF([test "x$KRB5LIBS" = "x"],[
     SQUID_STATE_SAVE(squid_gss_save)
     PKG_CHECK_MODULES([LIBGSS],[gss],[
       CPPFLAGS="$LIBGSS_CFLAGS $CPPFLAGS"
