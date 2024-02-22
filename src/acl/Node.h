@@ -38,7 +38,7 @@ public:
     virtual ~Node();
 
     /// sets user-specified ACL name and squid.conf context
-    void context(const char *name, const char *configuration);
+    void context(const SBuf &name, const char *configuration);
 
     /// Orchestrates matching checklist against the Acl::Node using match(),
     /// after checking preconditions and while providing debugging.

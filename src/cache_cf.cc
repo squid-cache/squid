@@ -2029,15 +2029,12 @@ static void
 ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, Acl::Node *acl)
 {
     assert(access);
-    SBuf name;
     if (!*access) {
         *access = new Acl::Tree;
-        name.Printf("(%s rules)", desc);
-        (*access)->context(name.c_str(), config_input_line);
+        (*access)->context(ToSBuf('(', desc, " rules"), config_input_line);
     }
     Acl::AndNode *rule = new Acl::AndNode;
-    name.Printf("(%s rule)", desc);
-    rule->context(name.c_str(), config_input_line);
+    rule->context(ToSBuf(desc, " rule"), config_input_line);
     if (acl)
         rule->add(acl);
     else

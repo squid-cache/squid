@@ -204,11 +204,9 @@ Acl::Node::matches(ACLChecklist *checklist) const
 }
 
 void
-Acl::Node::context(const char *aName, const char *aCfgLine)
+Acl::Node::context(const SBuf &aName, const char *aCfgLine)
 {
-    name.clear();
-    if (aName)
-        name = SBuf(aName);
+    name = aName;
     safe_free(cfgline);
     if (aCfgLine)
         cfgline = xstrdup(aCfgLine);
@@ -290,7 +288,7 @@ Acl::Node::ParseNamed(ConfigParser &parser, Node ** const head, const SBuf &acln
     if ((A = FindByName(aclname)) == nullptr) {
         debugs(28, 3, "aclParseAclLine: Creating ACL '" << aclname << "'");
         A = Acl::Make(theType);
-        A->context(SBuf(aclname).c_str(), config_input_line);
+        A->context(aclname, config_input_line);
         new_acl = 1;
     } else {
         if (strcmp (A->typeString(),theType) ) {

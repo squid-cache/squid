@@ -14,6 +14,7 @@
 #include "cache_cf.h"
 #include "MemBuf.h"
 #include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 
 char const *
 Acl::AllOf::typeString() const
@@ -56,13 +57,8 @@ Acl::AllOf::parse()
     } else if (oldNode) {
         // this acl saw a single line before; create a new OR inner node
 
-        MemBuf wholeCtx;
-        wholeCtx.init();
-        wholeCtx.appendf("(%s lines)", name.c_str());
-        wholeCtx.terminate();
-
         Acl::OrNode *newWhole = new Acl::OrNode;
-        newWhole->context(wholeCtx.content(), oldNode->cfgline);
+        newWhole->context(ToSBuf('(', name, " lines)"), oldNode->cfgline);
         newWhole->add(oldNode); // old (i.e. first) line
         nodes.front() = whole = newWhole;
         aclRegister(newWhole);
@@ -74,13 +70,8 @@ Acl::AllOf::parse()
     assert(whole);
     const int lineId = whole->childrenCount() + 1;
 
-    MemBuf lineCtx;
-    lineCtx.init();
-    lineCtx.appendf("(%s line #%d)", name.c_str(), lineId);
-    lineCtx.terminate();
-
     Acl::AndNode *line = new AndNode;
-    line->context(lineCtx.content(), config_input_line);
+    line->context(ToSBuf('(', name, " line #", lineId), config_input_line);
     line->lineParse();
 
     whole->add(line);
