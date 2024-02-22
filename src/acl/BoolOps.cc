@@ -17,10 +17,8 @@
 Acl::NotNode::NotNode(Acl::Node *acl)
 {
     assert(acl);
-    Must(strlen(acl->name) <= sizeof(name)-2);
-    name[0] = '!';
-    name[1] = '\0';
-    xstrncpy(&name[1], acl->name, sizeof(name)-1); // -1 for '!'
+    name.append('!');
+    name.append(acl->name);
     add(acl);
 }
 
@@ -56,7 +54,7 @@ SBufList
 Acl::NotNode::dump() const
 {
     SBufList text;
-    text.push_back(SBuf(name));
+    text.push_back(name);
     return text;
 }
 

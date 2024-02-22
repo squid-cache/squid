@@ -27,7 +27,7 @@
 #include <algorithm>
 #include <map>
 
-const char *AclMatchedName = nullptr;
+std::optional<SBuf> AclMatchedName;
 
 namespace Acl {
 
@@ -144,12 +144,12 @@ void Acl::Node::operator delete(void *)
 }
 
 Acl::Node *
-Acl::Node::FindByName(const char *name)
+Acl::Node::FindByName(const SBuf &name)
 {
     debugs(28, 9, "name=" << name);
 
     for (auto *a = Config.aclList; a; a = a->next)
-        if (!strcasecmp(a->name, name))
+        if (!a->name.caseCmp(name))
             return a;
 
     debugs(28, 9, "found no match");
@@ -161,9 +161,7 @@ Acl::Node::Node() :
     cfgline(nullptr),
     next(nullptr),
     registered(false)
-{
-    *name = 0;
-}
+{}
 
 bool
 Acl::Node::valid() const
@@ -179,7 +177,7 @@ Acl::Node::matches(ACLChecklist *checklist) const
     // XXX: AclMatchedName does not contain a matched ACL name when the acl
     // does not match. It contains the last (usually leaf) ACL name checked
     // (or is NULL if no ACLs were checked).
-    AclMatchedName = name;
+    AclMatchedName = std::make_optional(name);
 
     int result = 0;
     if (!checklist->hasAle() && requiresAle()) {
@@ -208,9 +206,9 @@ Acl::Node::matches(ACLChecklist *checklist) const
 void
 Acl::Node::context(const char *aName, const char *aCfgLine)
 {
-    name[0] = '\0';
+    name.clear();
     if (aName)
-        xstrncpy(name, aName, ACL_NAME_SZ-1);
+        name = SBuf(aName);
     safe_free(cfgline);
     if (aCfgLine)
         cfgline = xstrdup(aCfgLine);
@@ -239,13 +237,13 @@ Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
 
     SBuf aclname(t);
     CallParser(ParsingContext::Pointer::Make(aclname), [&] {
-        ParseNamed(parser, head, aclname.c_str()); // TODO: Convert Node::name to SBuf
+        ParseNamed(parser, head, aclname);
     });
 }
 
 /// parses acl directive parts that follow aclname
 void
-Acl::Node::ParseNamed(ConfigParser &parser, Node ** const head, const char * const aclname)
+Acl::Node::ParseNamed(ConfigParser &parser, Node ** const head, const SBuf &aclname)
 {
     /* snarf the ACL type */
     const char *theType;
@@ -278,7 +276,7 @@ Acl::Node::ParseNamed(ConfigParser &parser, Node ** const head, const char * con
         }
         theType = "localport";
         debugs(28, DBG_IMPORTANT, "WARNING: UPGRADE: ACL 'myport' type has been renamed to 'localport' and matches the port the client connected to.");
-    } else if (strcmp(theType, "proto") == 0 && strcmp(aclname, "manager") == 0) {
+    } else if (strcmp(theType, "proto") == 0 && aclname.cmp("manager") == 0) {
         // ACL manager is now a built-in and has a different type.
         debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: UPGRADE: ACL 'manager' is now a built-in ACL. Remove it from your config file.");
         return; // ignore the line
@@ -292,7 +290,7 @@ Acl::Node::ParseNamed(ConfigParser &parser, Node ** const head, const char * con
     if ((A = FindByName(aclname)) == nullptr) {
         debugs(28, 3, "aclParseAclLine: Creating ACL '" << aclname << "'");
         A = Acl::Make(theType);
-        A->context(aclname, config_input_line);
+        A->context(SBuf(aclname).c_str(), config_input_line);
         new_acl = 1;
     } else {
         if (strcmp (A->typeString(),theType) ) {
@@ -446,7 +444,7 @@ Acl::Node::~Node()
 {
     debugs(28, 3, "freeing ACL " << name);
     safe_free(cfgline);
-    AclMatchedName = nullptr; // in case it was pointing to our name
+    AclMatchedName.reset(); // in case it was pointing to our name
 }
 
 void

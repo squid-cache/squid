@@ -11,7 +11,9 @@
 
 #include "acl/forward.h"
 #include "error/forward.h"
+#include "sbuf/forward.h"
 
+#include <optional>
 #include <sstream>
 
 class ConfigParser;
@@ -46,7 +48,7 @@ aclParseAclList(ConfigParser &parser, Acl::Tree **tree, const Any any)
 }
 
 /// \ingroup ACLAPI
-int aclIsProxyAuth(const char *name);
+int aclIsProxyAuth(const std::optional<SBuf> &name);
 /// \ingroup ACLAPI
 err_type aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allowed);
 /// \ingroup ACLAPI

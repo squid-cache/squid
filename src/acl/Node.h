@@ -12,6 +12,7 @@
 #include "acl/forward.h"
 #include "acl/Options.h"
 #include "dlink.h"
+#include "sbuf/SBuf.h"
 
 class ConfigParser;
 
@@ -30,7 +31,7 @@ public:
 
     static void ParseAclLine(ConfigParser &parser, Acl::Node **head);
     static void Initialize();
-    static Acl::Node *FindByName(const char *name);
+    static Acl::Node *FindByName(const SBuf &name);
 
     Node();
     Node(Node &&) = delete;  // no copying of any kind
@@ -67,7 +68,7 @@ public:
     /// printed parameters are collected from all same-name "acl" directives.
     void dumpWhole(const char *directiveName, std::ostream &);
 
-    char name[ACL_NAME_SZ];
+    SBuf name;
     char *cfgline;
     Acl::Node *next;  // XXX: remove or at least use refcounting
     bool registered;  ///< added to the global list of ACLs via aclRegister()
@@ -91,7 +92,7 @@ private:
     /// \see Acl::Node::options()
     virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
 
-    static void ParseNamed(ConfigParser &, Node **head, const char *name);
+    static void ParseNamed(ConfigParser &, Node **head, const SBuf &name);
 };
 
 } // namespace Acl

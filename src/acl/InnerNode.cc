@@ -57,7 +57,7 @@ Acl::InnerNode::lineParse()
             ++t;
 
         debugs(28, 3, "looking for ACL " << t);
-        auto *a = Acl::Node::FindByName(t);
+        auto *a = Acl::Node::FindByName(SBuf(t));
 
         if (a == nullptr) {
             debugs(28, DBG_CRITICAL, "ERROR: ACL not found: " << t);
@@ -82,7 +82,7 @@ Acl::InnerNode::dump() const
 {
     SBufList rv;
     for (Nodes::const_iterator i = nodes.begin(); i != nodes.end(); ++i)
-        rv.push_back(SBuf((*i)->name));
+        rv.push_back((*i)->name);
     return rv;
 }
 

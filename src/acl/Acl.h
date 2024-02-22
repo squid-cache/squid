@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <ostream>
+#include <optional>
 
 namespace Acl {
 
@@ -138,7 +139,7 @@ public:
 
 /// \ingroup ACLAPI
 /// XXX: find a way to remove or at least use a refcounted Acl::Node pointer
-extern const char *AclMatchedName;  /* NULL */
+extern std::optional<SBuf> AclMatchedName;
 
 #endif /* SQUID_SRC_ACL_ACL_H */
 

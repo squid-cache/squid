@@ -58,7 +58,7 @@ Acl::AllOf::parse()
 
         MemBuf wholeCtx;
         wholeCtx.init();
-        wholeCtx.appendf("(%s lines)", name);
+        wholeCtx.appendf("(%s lines)", name.c_str());
         wholeCtx.terminate();
 
         Acl::OrNode *newWhole = new Acl::OrNode;
@@ -76,7 +76,7 @@ Acl::AllOf::parse()
 
     MemBuf lineCtx;
     lineCtx.init();
-    lineCtx.appendf("(%s line #%d)", name, lineId);
+    lineCtx.appendf("(%s line #%d)", name.c_str(), lineId);
     lineCtx.terminate();
 
     Acl::AndNode *line = new AndNode;

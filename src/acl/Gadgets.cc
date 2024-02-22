@@ -67,16 +67,16 @@ aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allow
 
 /* does name lookup, returns if it is a proxy_auth acl */
 int
-aclIsProxyAuth(const char *name)
+aclIsProxyAuth(const std::optional<SBuf> &name)
 {
     if (!name) {
         debugs(28, 3, "false due to a NULL name");
         return false;
     }
 
-    debugs(28, 5, "aclIsProxyAuth: called for " << name);
+    debugs(28, 5, "aclIsProxyAuth: called for " << name.value());
 
-    if (const auto *a = Acl::Node::FindByName(name)) {
+    if (const auto *a = Acl::Node::FindByName(name.value())) {
         debugs(28, 5, "aclIsProxyAuth: returning " << a->isProxyAuth());
         return a->isProxyAuth();
     }

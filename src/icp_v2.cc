@@ -427,7 +427,7 @@ icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int 
 void
 icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 {
-    debugs(12, 2, "icpDenyAccess: Access Denied for " << from << " by " << AclMatchedName << ".");
+    debugs(12, 2, "icpDenyAccess: Access Denied for " << from << " by " << (AclMatchedName ? AclMatchedName.value().c_str() : "none") << ".");
 
     if (clientdbCutoffDenied(from)) {
         /*
