@@ -15,8 +15,8 @@
 #include "sbuf/forward.h"
 
 #include <algorithm>
-#include <ostream>
 #include <optional>
+#include <ostream>
 
 namespace Acl {
 
