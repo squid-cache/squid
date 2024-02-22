@@ -14,7 +14,9 @@
 #include "tests/STUB.h"
 
 #include "acl/Acl.h"
-const char *AclMatchedName = nullptr;
+#include "sbuf/SBuf.h"
+
+std::optional<SBuf> AclMatchedName;
 
 #include "acl/Gadgets.h"
 size_t aclParseAclList(ConfigParser &, Acl::Tree **, const char *) STUB_RETVAL(0)
