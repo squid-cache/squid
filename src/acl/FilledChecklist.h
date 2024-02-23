@@ -55,8 +55,6 @@ public:
     /// set the client side FD
     void fd(int aDescriptor);
 
-    //int authenticated();
-
     bool destinationDomainChecked() const;
     void markDestinationDomainChecked();
     bool sourceDomainChecked() const;
