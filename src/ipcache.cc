@@ -992,6 +992,7 @@ Dns::CachedIps::have(const Ip::Address &ip, size_t *positionOrNil) const
             debugs(14, 7, ip << " at " << pos << " in " << *this);
             return true;
         }
+        ++pos; // TODO: Replace with std::views::enumerate() after upgrading to C++23
     }
     // no such address; leave *position as is
     debugs(14, 7, " no " << ip << " in " << *this);
