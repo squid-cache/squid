@@ -156,9 +156,11 @@ bin_PROGRAMS =
 libexec_PROGRAMS = \
 	$(UNLINKD)
 
-cf_gen_SOURCES = cf_gen.cc cf_gen_defines.cci
+cf_gen_SOURCES = cf_gen.cc
+nodist_cf_gen_HEADER = cf_gen_defines.cci
 ## cf_gen must be stand-alone executable. It is a purely build-time executable.
 cf_gen_LDADD=
+cf_gen.$(OBJEXT): cf_gen_defines.cci
 
 ## cf_gen.cc needs src/cf_gen_defines.cci
 AM_CPPFLAGS += -I$(top_builddir)/src
@@ -622,6 +624,10 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 ## If autodependency works well this is not needed anymore
 cache_cf.o: cf_parser.cci
 
+# cf_gen builds the configuration files.
+cf_gen$(EXEEXT): $(cf_gen_SOURCES) $(cf_gen_DEPENDENCIES) cf_gen_defines.cci
+	$(BUILDCXX) $(BUILDCXXFLAGS) -o $@ $(srcdir)/cf_gen.cc -I$(srcdir) -I$(top_builddir)/include/ -I$(top_builddir)/src
+
 # squid.conf.default is built by cf_gen when making cf_parser.cci
 squid.conf.default squid.conf.documented: cf_parser.cci
 	true
@@ -700,6 +706,9 @@ install-data-local: install-sysconfDATA install-dataDATA
 uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE) $(srcdir)/mime.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE) squid.conf.default
+
+distclean-local:
+	test -d "cf_gen.dSYM" && rm -rf "cf_gen.dSYM" || $(TRUE)
 
 CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 	test_tools.cc *.a
