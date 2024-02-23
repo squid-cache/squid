@@ -207,7 +207,6 @@ void
 Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
-    char *ident = nullptr;
     char *t = nullptr;
 
     assert(buf == state->buf);
@@ -233,15 +232,25 @@ Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Com
 
     debugs(30, 5, conn << ": Read '" << buf << "'");
 
-    if (strstr(buf, "USERID")) {
-        if ((ident = strrchr(buf, ':'))) {
-            while (xisspace(*++ident));
-            if (ident && *ident == '\0')
-                ident = nullptr;
-            state->notify(ident);
-        }
+    if (!strstr(buf, "USERID")) {
+        state->deleteThis("no USERID");
+        return;
     }
 
+    auto ident = strrchr(buf, ':');
+    if (!ident) {
+        state->deleteThis("no colon separator");
+        return;
+    }
+
+    while (xisspace(*++ident));
+
+    if (*ident == '\0') {
+        state->deleteThis("empty user-id");
+        return;
+    }
+
+    state->notify(ident);
     state->deleteThis("completed");
 }
 
