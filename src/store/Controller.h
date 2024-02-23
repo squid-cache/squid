@@ -165,12 +165,6 @@ private:
 /// safely access controller singleton
 extern Controller &Root();
 
-/// initialize the storage module; a custom root is used by unit tests only
-extern void Init(Controller *root = nullptr);
-
-/// undo Init()
-extern void FreeMemory();
-
 } // namespace Store
 
 #endif /* SQUID_SRC_STORE_CONTROLLER_H */

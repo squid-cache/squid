@@ -57,8 +57,6 @@ bool Controller::SmpAware() STUB_RETVAL(false)
 int Controller::store_dirs_rebuilding = 0;
 Controller nil;
 Controller &Root() STUB_RETVAL(Store::nil)
-void Init(Controller *) STUB
-void FreeMemory() STUB
 }
 
 #include "store/Disk.h"
