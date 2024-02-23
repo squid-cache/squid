@@ -354,7 +354,7 @@ main(int argc, char *const argv[])
         exit(EXIT_FAILURE);
     }
 
-    if  (( fpid = vfork()) < 0 ) {
+    if  (( fpid = fork()) < 0 ) {
         fprintf(stderr, "%s| %s: Failed first fork\n", LogTime(), PROGRAM);
         exit(EXIT_FAILURE);
     }
@@ -390,7 +390,7 @@ main(int argc, char *const argv[])
         exit(EXIT_FAILURE);
     }
 
-    if  (( fpid = vfork()) < 0 ) {
+    if  (( fpid = fork()) < 0 ) {
         fprintf(stderr, "%s| %s: Failed second fork\n", LogTime(), PROGRAM);
         exit(EXIT_FAILURE);
     }
