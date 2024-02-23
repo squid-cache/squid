@@ -1544,56 +1544,24 @@ AS_IF([test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"],[
   SQUID_STATE_ROLLBACK([squid_krb5_save])
 ])
 
-dnl User may specify GNU gss is needed from a non-standard location
-SQUID_AUTO_LIB(gnugss,[GNU gss],[LIB_KRB5])
-AH_TEMPLATE(USE_GNUGSS,[GNU gss support is available])
-AS_IF([test "x$with_gnugss" != "xno" -a "x$KRB5LIBS" = "x"],[
-  CXXFLAGS="$LIB_KRB5_CFLAGS $CXXFLAGS"
-  krb5confpath=
-  SQUID_STATE_SAVE([squid_krb5_save])
-  LIBS="$LIBS $LIB_KRB5_PATH"
-
-  # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIB_KRB5],[gss],,[
-    ## For some OS pkg-config is broken or unavailable.
-    ## Detect libraries the hard way.
-
-    AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
-    AC_CHECK_LIB(gss, [main], [LIB_KRB5_LIBS="-lgss $LIB_KRB5_LIBS"],[
-      AC_MSG_WARN([library 'com_err' is required for GNU Kerberos])
-    ])
-  ])
-
-  AS_IF([test "x$LIB_KRB5_LIBS" != "x"],[
-    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
-    KRB5INCS="$LIB_KRB5_CFLAGS"
-    AC_DEFINE(USE_GNUGSS,1,[GNU Kerberos support is available])
-    KRB5_FLAVOUR="GNU GSS"
-
-    # check for other specific broken implementations
-    CXXFLAGS="$CXXFLAGS $KRB5INCS"
-    LIBS="$LIBS $KRB5LIBS"
-
-    AC_MSG_NOTICE([Try to find Kerbeors headers in given path])
-    AC_CHECK_HEADERS(gss.h)
-
-    SQUID_CHECK_WORKING_GSSAPI
-    SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
-
-    SQUID_CHECK_SPNEGO_SUPPORT
-    SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
-
-    SQUID_CHECK_WORKING_KRB5
-    SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
-  ])
+# Kerberos support libraries: GNU GSS
+SQUID_AUTO_LIB(gss,[GNU gss],[LIBGSS])
+SQUID_CHECK_LIB_WORKS(gss,[
   AS_IF([test "x$KRB5LIBS" = "x"],[
-    AS_IF([test "x$with_gnugss" = "xyes"],[
-      AC_MSG_ERROR([Required GNU GSS Kerberos library not found])
-    ],[
-      AC_MSG_WARN([GNU GSS Kerberos library not found])
-    ])
+    SQUID_STATE_SAVE(squid_gss_save)
+    PKG_CHECK_MODULES([LIBGSS],[gss],[
+      CPPFLAGS="$LIBGSS_CFLAGS $CPPFLAGS"
+      AC_CHECK_HEADERS(gss.h)
+      LIBS="$LIBGSS_PATH $LIBS"
+      SQUID_CHECK_WORKING_GSSAPI
+      SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
+      SQUID_CHECK_SPNEGO_SUPPORT
+      SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
+      SQUID_CHECK_WORKING_KRB5
+      SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
+    ],[:])
+    SQUID_STATE_ROLLBACK(squid_gss_save)
   ])
-  SQUID_STATE_ROLLBACK([squid_krb5_save])
 ])
 
 AS_IF([test "x$KRB5LIBS" != "x"],[with_krb5=yes])
