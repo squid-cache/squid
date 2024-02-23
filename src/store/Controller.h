@@ -23,7 +23,6 @@ class Controller: public Storage
 {
 public:
     Controller();
-    ~Controller() override;
 
     /* Storage API */
     void create() override;
@@ -134,6 +133,8 @@ public:
     static int store_dirs_rebuilding;
 
 private:
+    ~Controller() override;
+
     bool memoryCacheHasSpaceFor(const int pagesRequired) const;
 
     void referenceBusy(StoreEntry &e);

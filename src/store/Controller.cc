@@ -41,17 +41,11 @@ Store::Controller::Controller() :
     assert(!store_table);
 }
 
+/// this destructor is never called because Controller singleton is immortal
 Store::Controller::~Controller()
 {
-    delete sharedMemStore;
-    delete transients;
-    delete disks;
-
-    if (store_table) {
-        hashFreeItems(store_table, destroyStoreEntry);
-        hashFreeMemory(store_table);
-        store_table = nullptr;
-    }
+    // assert at runtime because we cannot `= delete` an overriden destructor
+    assert(!"Controller is never destroyed");
 }
 
 void
