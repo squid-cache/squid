@@ -332,8 +332,8 @@ dnl CentOS (and RHEL) still define ntohs() using deprecated C++ features
 SQUID_CC_REQUIRE_ARGUMENT([ac_cv_require_wno_deprecated_register],[-Werror -Wno-deprecated-register],[[#include <arpa/inet.h>]],[[int fox=ntohs(1);]])
 
 AS_IF([test "x$enable_strict_error_checking" != "xno"],[
-  SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_option_werror"
-  SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cxx_option_werror"
+  CFLAGS="$CFLAGS $squid_cv_cc_option_werror"
+  CXXFLAGS="$CXXFLAGS $squid_cv_cxx_option_werror"
 ])
 
 AS_IF([test "x$ac_cv_require_wno_deprecated_register" = "xyes"],[
