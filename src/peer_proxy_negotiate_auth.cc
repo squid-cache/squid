@@ -13,10 +13,6 @@
 #include "squid.h"
 
 #if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
-#if USE_APPLE_KRB5
-#define GSSKRB_APPLE_DEPRECATED(x)
-#endif
-
 #include "base64.h"
 #include "compat/krb5.h"
 #include "debug/Stream.h"
@@ -31,15 +27,17 @@
 #if HAVE_COM_ERR_H
 #include <com_err.h>
 #endif              /* HAVE_COM_ERR_H */
-
+#if HAVE_GSS_H
+#include <gss.h>
+#endif
+#if USE_APPLE_KRB5
+#define GSSKRB_APPLE_DEPRECATED(x)
+#endif
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
 #endif              /* HAVE_GSSAPI_H */
-#if HAVE_GSS_H
-#include <gss.h>
-#endif
 #if HAVE_GSSAPI_GSSAPI_EXT_H
 #include <gssapi/gssapi_ext.h>
 #endif              /* HAVE_GSSAPI_GSSAPI_EXT_H */
