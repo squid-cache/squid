@@ -529,10 +529,10 @@ squid_LDADD = \
 	$(SSLLIB) \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
-	$(KRB5LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBGSS_LIBS) \
+	$(LIBMIT_KRB5_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -547,10 +547,6 @@ squid_LDFLAGS = -export-dynamic -dlopen force
 ## LTDL headers require their local include path...
 AM_CPPFLAGS += $(INCLTDL)
 endif
-
-## Kerberos libraries require their include path...
-AM_CPPFLAGS += $(KRB5INCS)
-
 
 unlinkd_SOURCES = unlinkd_daemon.cc
 unlinkd_LDADD = \
@@ -1978,11 +1974,11 @@ tests_test_http_range_LDADD = \
 	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
-	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBGSS_LIBS) \
+	$(LIBMIT_KRB5_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -2363,11 +2359,11 @@ tests_testHttpRequest_LDADD = \
 	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
-	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBGSS_LIBS) \
+	$(LIBMIT_KRB5_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -2661,11 +2657,11 @@ tests_testCacheManager_LDADD = \
 	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
-	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBGSS_LIBS) \
+	$(LIBMIT_KRB5_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
