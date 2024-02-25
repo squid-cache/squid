@@ -5,4 +5,4 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_CHECK_FUNCS(vfork,[BUILD_HELPER="wrapper"])
+BUILD_HELPER="wrapper"
