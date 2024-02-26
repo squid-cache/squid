@@ -44,7 +44,7 @@ Store::Controller::Controller() :
 /// this destructor is never called because Controller singleton is immortal
 Store::Controller::~Controller()
 {
-    // assert at runtime because we cannot `= delete` an overriden destructor
+    // assert at runtime because we cannot `= delete` an overridden destructor
     assert(!"Controller is never destroyed");
 }
 
