@@ -37,6 +37,7 @@ ext_kerberos_ldap_group_acl_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(LIBGSS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(LIBLDAP_LIBS) \
 	$(LIBSASL) \
 	$(KRB5LIBS) \
