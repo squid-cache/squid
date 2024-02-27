@@ -1081,7 +1081,7 @@ SQUID_AUTO_LIB(gnutls,[GnuTLS crypto],[LIBGNUTLS])
 SQUID_CHECK_LIB_WORKS(gnutls,[
   SQUID_STATE_SAVE(squid_gnutls_state)
   PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.4.0],[
-    CPPFLAGS="$LIBGNUTLS_PATH $CPPFLAGS"
+    CPPFLAGS="$LIBGNUTLS_CFLAGS $CPPFLAGS"
     AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h)
   ],[:])
   SQUID_STATE_ROLLBACK(squid_gnutls_state)
