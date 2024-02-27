@@ -36,9 +36,9 @@ static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
 
 /* does name lookup, returns page_id */
 err_type
-aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allowed)
+aclGetDenyInfoPage(AclDenyInfoList ** head, const SBuf &name, const int redirect_allowed)
 {
-    if (!name) {
+    if (name.isEmpty()) {
         debugs(28, 3, "ERR_NONE due to a NULL name");
         return ERR_NONE;
     }

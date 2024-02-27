@@ -1853,15 +1853,15 @@ clientReplyContext::ProcessReplyAccessResult(Acl::Answer rv, void *voidMe)
 void
 clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
 {
-    const auto aclMatchedName = AclMatchedName ? AclMatchedName.value().c_str() : nullptr;
+    static const SBuf noAcl("NO ACL's");
     debugs(88, 2, "The reply for " << http->request->method
            << ' ' << http->uri << " is " << accessAllowed << ", because it matched "
-           << (aclMatchedName ? aclMatchedName : "NO ACL's"));
+           << AclMatchedName.value_or(noAcl));
 
     if (!accessAllowed.allowed()) {
         ErrorState *err;
         err_type page_id;
-        page_id = aclGetDenyInfoPage(&Config.denyInfoList, aclMatchedName, 1);
+        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName.value_or(SBuf()), 1);
 
         http->updateLoggingTags(LOG_TCP_DENIED_REPLY);
 

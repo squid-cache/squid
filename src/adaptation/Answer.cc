@@ -32,7 +32,7 @@ Adaptation::Answer::Forward(Http::Message *aMsg)
 }
 
 Adaptation::Answer
-Adaptation::Answer::Block(const String &aRule)
+Adaptation::Answer::Block(const SBuf &aRule)
 {
     Answer answer(akBlock);
     answer.ruleId = aRule;

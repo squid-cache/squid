@@ -24,6 +24,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MasterXaction.h"
+#include "sbuf/StringConvert.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
 
@@ -449,7 +450,7 @@ Adaptation::Ecap::XactionRep::blockVirgin()
     sinkVb("blockVirgin");
 
     updateHistory(nullptr);
-    sendAnswer(Answer::Block(service().cfg().key));
+    sendAnswer(Answer::Block(StringToSBuf(service().cfg().key)));
     Must(done());
 }
 

@@ -358,7 +358,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
         ch.syncAle(request, nullptr);
         if (ch.fastCheck().denied()) {
             err_type page_id;
-            page_id = aclGetDenyInfoPage(&Config.denyInfoList, (AclMatchedName ? AclMatchedName.value().c_str() : nullptr), 1);
+            page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName.value_or(SBuf()), 1);
 
             if (page_id == ERR_NONE)
                 page_id = ERR_FORWARDING_DENIED;
