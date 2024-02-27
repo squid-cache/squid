@@ -82,7 +82,8 @@ size_t get_bin_attributes(LDAP * ld, LDAPMessage * res,
 int search_group_tree(struct main_args *margs, LDAP * ld, char *bindp,
                       char *ldap_group, char *group, int depth);
 
-#if HAVE_SUN_LDAP_SDK || HAVE_MOZILLA_LDAP_SDK
+#if HAVE_SUN_LDAP_SDK
+
 #if HAVE_LDAP_REBINDPROC_CALLBACK
 
 #if HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN

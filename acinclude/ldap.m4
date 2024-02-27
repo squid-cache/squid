@@ -12,11 +12,9 @@ AC_DEFUN([SQUID_LDAP_TEST],[
     LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS $LIBPTHREADS"
     CPPFLAGS="-DLDAP_DEPRECATED=1 -DLDAP_REFERRALS $CPPFLAGS"
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#       if HAVE_LDAP_H
-#       include <ldap.h>
-#       elif HAVE_MOZLDAP_LDAP_H
-#       include <mozldap/ldap.h>
-#       endif
+#if HAVE_LDAP_H
+#include <ldap.h>
+#endif
       ]],[[$2]])
     ],[
       squid_cv_$1=1
@@ -37,12 +35,12 @@ AC_DEFUN([SQUID_LDAP_TEST_RUN],[
     LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS $LIBPTHREADS"
     CPPFLAGS="-DLDAP_DEPRECATED=1 -DLDAP_REFERRALS $CPPFLAGS"
     AC_RUN_IFELSE([AC_LANG_PROGRAM([[
-#       if HAVE_LDAP_H
-#       include <ldap.h>
-#       elif HAVE_MOZLDAP_LDAP_H
-#       include <mozldap/ldap.h>
-#       endif
-#       include <string.h>
+#if HAVE_LDAP_H
+#include <ldap.h>
+#endif
+#if HAVE_STRING_H
+#include <string.h>
+#endif
       ]],[[$2]])
     ],[
       m4_translit([squid_cv_$1],[-+. ],[____])=1
@@ -61,7 +59,6 @@ dnl find the LDAP library vendor and define relevant HAVE_(vendor name) macro
 AC_DEFUN([SQUID_LDAP_CHECK_VENDOR],[
   SQUID_LDAP_TEST_RUN([OpenLDAP],[return strcmp(LDAP_VENDOR_NAME,"OpenLDAP")])
   SQUID_LDAP_TEST_RUN([Sun LDAP SDK],[return strcmp(LDAP_VENDOR_NAME,"Sun Microsystems Inc.")])
-  SQUID_LDAP_TEST_RUN([Mozilla LDAP SDK],[return strcmp(LDAP_VENDOR_NAME,"mozilla.org")])
 ])
 
 dnl check whether the LDAP library(s) provide the needed API and types
@@ -99,5 +96,4 @@ AC_DEFUN([SQUID_CHECK_LDAP_API],[
   AC_SEARCH_LIBS([ldap_start_tls_s],[$LIBLDAP_NAMES],[
     AC_DEFINE(HAVE_LDAP_START_TLS_S,1,[Define to 1 if you have ldap_start_tls_s])
   ])
-  SQUID_STATE_ROLLBACK(squid_ldap_state)
 ])

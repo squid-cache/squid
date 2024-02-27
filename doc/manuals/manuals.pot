@@ -772,7 +772,7 @@ msgstr ""
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:80
 msgid ""
 "The SSL certificate database can be set via the environment variable "
-"SSL_CERTDBPATH (default /etc/certs) (Sun and Mozilla LDAP SDK)."
+"SSL_CERTDBPATH (default /etc/certs) (Sun LDAP SDK)."
 msgstr ""
 
 #. type: Plain text

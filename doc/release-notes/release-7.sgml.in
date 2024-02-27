@@ -209,6 +209,9 @@ This section gives an account of those changes in three categories:
 	<p>The ESI feature is now disabled by default.
 	   Use <em>--enable-esi</em> if needed.
 
+	<tag>--with-ldap</tag>
+	<p>No longer builds with Mozilla LDAP SDK.
+
 </descrip>
 </p>
 

@@ -51,9 +51,6 @@
 #if HAVE_LDAP_H
 #include <ldap.h>
 #endif
-#if HAVE_MOZLDAP_LDAP_H
-#include <mozldap/ldap.h>
-#endif
 
 struct gdstruct {
     char *group;
