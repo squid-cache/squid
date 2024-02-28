@@ -725,15 +725,14 @@ Ip::AllocateAddrMember(struct addrinfo &ai)
 void
 Ip::FreeAddrMember(struct addrinfo &ai)
 {
-    if (!ai.ai_addr) {
+    if (!ai.ai_addr)
         return;
-    }
 
-    if (ai.ai_addrlen == sizeof(struct sockaddr_in)) {
+    if (ai.ai_addrlen == sizeof(struct sockaddr_in))
         delete reinterpret_cast<struct sockaddr_in*>(ai.ai_addr);
-    } else if (ai.ai_addrlen == sizeof(struct sockaddr_in6)) {
+    else if (ai.ai_addrlen == sizeof(struct sockaddr_in6))
         delete reinterpret_cast<struct sockaddr_in6*>(ai.ai_addr);
-    } else {
+    else {
         debugs(14, DBG_CRITICAL, "ERROR: Squid Bug: Unexpected addrinfo::ai_addr size: " << ai.ai_addrlen <<
                Debug::Extra << "sockaddr_in size: " << sizeof(struct sockaddr_in) <<
                Debug::Extra << "sockaddr_in6 size: " << sizeof(struct sockaddr_in6));
