@@ -381,7 +381,10 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     if (getsockname(sock, gai->ai_addr, &gai->ai_addrlen) != 0) {
         int xerrno = errno;
         Ip::Address::FreeAddr(gai);
-        throw TextException(ToSBuf("getsockname() failed to locate local-IP on ", details, ": ", xstrerr(xerrno)), Here());
+        debugs(50, DBG_IMPORTANT, "ERROR: Closing accepted TCP connection after failing to obtain its local IP address" <<
+               Debug::Extra << "accepted connection: " << details <<
+               Debug::Extra << "getsockname(2) error: " << xstrerr(xerrno));
+        return false;
     }
     details->local = *gai;
     Ip::Address::FreeAddr(gai);
