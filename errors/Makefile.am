@@ -56,16 +56,19 @@ $(TRANSLATE_LANGUAGES): $(ERROR_TEMPLATES)
 NOTIDY=`$(PO2HTML) --help | grep -o "[-]-notidy"`
 
 .po.lang:
-	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
-	    lang=`basename $@ .lang`; \
+	@if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
+	    lang=$(@:.lang=); \
 	    mkdir -p $(top_builddir)/errors/$$lang; \
-	    echo -n "Translate '$$lang' ..."; \
+	    echo "Translating $$lang ..."; \
 	    for f in $(ERROR_TEMPLATES); do \
 		page=`basename $$f`; \
 		$(PO2HTML) $(NOTIDY) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/$$f >$(top_builddir)/errors/$$lang/$$page || exit 1; \
 	    done; \
 	    cp $(top_srcdir)/errors/templates/error-details.txt $(top_builddir)/errors/$$lang/error-details.txt || exit 1; \
-	    echo "done."; \
+	    echo "Done translating $$lang"; \
+	else \
+	    lang=$(@:.lang=); \
+		echo "Translation of $$lang disabled\n"; \
 	fi; \
 	touch $@
 
