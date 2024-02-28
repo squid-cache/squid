@@ -525,6 +525,7 @@ squid_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(SSLLIB) \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
@@ -707,6 +708,9 @@ install-data-local: install-sysconfDATA install-dataDATA
 uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE) $(srcdir)/mime.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE) squid.conf.default
+
+clean-local:
+	-rm -rf cf_gen.dSYM
 
 CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 	test_tools.cc *.a
@@ -1971,6 +1975,7 @@ tests_test_http_range_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
@@ -2355,6 +2360,7 @@ tests_testHttpRequest_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
@@ -2652,6 +2658,7 @@ tests_testCacheManager_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
