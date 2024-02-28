@@ -981,7 +981,7 @@ urlCheckRequest(const HttpRequest * r)
         return false;
 
     case AnyP::PROTO_HTTPS:
-#if USE_OPENSSL || USE_GNUTLS
+#if USE_OPENSSL || HAVE_LIBGNUTLS
         return true;
 #else
         /*

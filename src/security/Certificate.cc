@@ -39,7 +39,7 @@ Security::IssuerName(Certificate &cert)
     }
     out.append(name.get());
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     gnutls_x509_dn_t issuer;
     auto x = gnutls_x509_crt_get_issuer(&cert, &issuer);
     if (x != GNUTLS_E_SUCCESS) {
@@ -79,7 +79,7 @@ Security::SubjectName(Certificate &cert)
     }
     out.append(name.get());
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     gnutls_x509_dn_t subject;
     auto x = gnutls_x509_crt_get_subject(&cert, &subject);
     if (x != GNUTLS_E_SUCCESS) {
@@ -115,7 +115,7 @@ Security::IssuedBy(Certificate &cert, Certificate &issuer)
     debugs(83, DBG_PARSE_NOTE(3), issuer << " did not sign " << cert << ":" <<
            Debug::Extra << "X509_check_issued() result: " << X509_verify_cert_error_string(result) << " (" << result << ")" <<
            Ssl::ReportAndForgetErrors);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     const auto result = gnutls_x509_crt_check_issuer(&cert, &issuer);
     if (result == 1)
         return true;

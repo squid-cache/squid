@@ -1077,37 +1077,17 @@ dnl Solaris10 provides MD5 natively through libmd5
 AC_CHECK_LIB(md5, MD5Init, [CRYPTLIB="$CRYPTLIB -lmd5"])
 AC_SUBST(CRYPTLIB)
 
-SSLLIB=""
-
 SQUID_AUTO_LIB(gnutls,[GnuTLS crypto],[LIBGNUTLS])
-AH_TEMPLATE(USE_GNUTLS,[GnuTLS support is available])
 SQUID_CHECK_LIB_WORKS(gnutls,[
   SQUID_STATE_SAVE(squid_gnutls_state)
-
-  # User may have provided a custom location for GnuTLS. Otherwise...
-  CPPFLAGS="$LIBGNUTLS_CFLAGS $CPPFLAGS"
-  LIBS="$LIBS $LIBGNUTLS_PATH"
-
-  # auto-detect using pkg-config
   PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.4.0],[
-    CPPFLAGS="$CPPFLAGS $LIBGNUTLS_CFLAGS"
-    ],[
-    ## find the package without pkg-config
-    ## check that the library is actually new enough.
-    ## by testing for a 3.4.0+ function which we use
-    AC_CHECK_LIB(gnutls,gnutls_pcert_export_x509,[LIBGNUTLS_LIBS="-lgnutls"])
-  ])
-  # if any of the required headers is not found, signal we can't support gnutls
-  AC_CHECK_HEADERS([gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h], [], [LIBGNUTLS_LIBS=""])
-
-  SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
-
-  AS_IF([test "x$LIBGNUTLS_LIBS" != "x"],[
-    SSLLIB="$LIBGNUTLS_PATH $LIBGNUTLS_LIBS $SSLLIB"
-    AC_DEFINE(USE_GNUTLS,1,[GnuTLS support is available])
-  ])
+    CPPFLAGS="$LIBGNUTLS_CFLAGS $CPPFLAGS"
+    AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h)
+  ],[:])
+  SQUID_STATE_ROLLBACK(squid_gnutls_state)
 ])
 
+SSLLIB=""
 dnl User may specify OpenSSL is needed from a non-standard location
 SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[LIBOPENSSL])
 AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
