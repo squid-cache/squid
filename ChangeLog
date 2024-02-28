@@ -1,3 +1,15 @@
+Changes in squid-6.8 (4 Mar 2024)
+
+	- Bug 5344: mgr:config segfaults without logformat
+	- Fix infinite recursion when parsing malformed HTTP chunks
+	- Fix max-stale in default refresh_pattern
+	- Fix build on GCC 14
+	- Fix debugging for responses that Expire at check time
+	- Fix misleading Dns::CachedIps::restoreGoodness() debugging
+	- Fix marking of problematic cached IP addresses
+	- Improved portability to MacOS
+	- ... and some documentation improvements
+
 Changes in squid-6.7 (4 Feb 2024)
 
 	- Bug 5337: workaround for crash on startup if -a option is used
