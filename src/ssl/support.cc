@@ -15,6 +15,7 @@
  */
 #if USE_OPENSSL
 
+#include <openssl/asn1.h>
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "anyp/Uri.h"
@@ -192,6 +193,36 @@ int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len)
     return write;
 }
 
+// Compare 2 IP addresses
+int compare_ip_addresses(void *check_data, ASN1_OCTET_STRING *altname_ip) {
+    // Cast check_data to const char
+    const unsigned char* check_ip = reinterpret_cast<const unsigned char*>(check_data);
+    sockaddr_storage socket_info;
+    if (!Ssl::is_ip_address(check_ip, &socket_info)) {
+        // We couldn't convert check_ip into either IPv4 or IPv6
+        debugs(83, 4, "Check data was not an IP address, not comparing..");
+        return -1;
+    }
+    if (socket_info.ss_family == AF_INET) {
+        // IPv4 conversion was successful, use it for comparison
+        debugs(83, 4, "IPV4 address found, checking..");
+        sockaddr_in* addr4 = reinterpret_cast<sockaddr_in*>(&socket_info);
+        if (altname_ip->length == sizeof(addr4->sin_addr) &&
+            std::memcmp(altname_ip->data, &(addr4->sin_addr), sizeof(addr4->sin_addr)) == 0) {
+            debugs(83, 4, "IPV4 comparison successful!");
+            return 0;
+        }
+    } else if (socket_info.ss_family == AF_INET6) {
+        debugs(83, 4, "IPV6 address found, checking..");
+        sockaddr_in6* addr6 = reinterpret_cast<sockaddr_in6*>(&socket_info);
+        if (altname_ip->length == sizeof(addr6->sin6_addr) &&
+            std::memcmp(altname_ip->data, &(addr6->sin6_addr), sizeof(addr6->sin6_addr)) == 0) {
+            return 0;
+        }
+    }
+    return -1;
+}
+
 int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data))
 {
     assert(peer_cert);
@@ -213,14 +244,24 @@ int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_fun
         int numalts = sk_GENERAL_NAME_num(altnames);
         for (int i = 0; i < numalts; ++i) {
             const GENERAL_NAME *check = sk_GENERAL_NAME_value(altnames, i);
-            if (check->type != GEN_DNS) {
-                continue;
-            }
-            ASN1_STRING *cn_data = check->d.dNSName;
-
-            if ( (*check_func)(check_data, cn_data) == 0) {
-                sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
-                return 1;
+            switch(check->type) {
+                case GEN_DNS:
+                    // If the type is GEN_DNS, call check_func with the dNSName data
+                    if ( (*check_func)(check_data, check->d.dNSName) == 0) {
+                        sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
+                        return 1;
+                    }
+                    break;
+                case GEN_IPADD:
+                    debugs(83, 4, "Check type is GEN_IPADD, verifying...");
+                    // If it's an IP address, attempt to compare it with the check_data
+                    if (compare_ip_addresses(check_data, check->d.iPAddress) == 0) {
+                        sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
+                        return 1;
+                    }
+                    break;
+                default:
+                    continue;
             }
         }
         sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
