@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "base/Packable.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "http/one/ResponseParser.h"
 #include "http/StatusLine.h"
 #include "parser/forward.h"
@@ -21,13 +21,13 @@
 void
 Http::StatusLine::init()
 {
-    set(Http::ProtocolVersion(), Http::scNone, NULL);
+    set(Http::ProtocolVersion(), Http::scNone, nullptr);
 }
 
 void
 Http::StatusLine::clean()
 {
-    set(Http::ProtocolVersion(), Http::scInternalServerError, NULL);
+    set(Http::ProtocolVersion(), Http::scInternalServerError, nullptr);
 }
 
 /* set values */
@@ -46,9 +46,47 @@ Http::StatusLine::reason() const
     return reason_ ? reason_ : Http::StatusCodeString(status());
 }
 
+size_t
+Http::StatusLine::packedLength() const
+{
+    // Keep in sync with packInto(). TODO: Refactor to avoid code duplication.
+
+    auto packedStatus = status();
+    auto packedReason = reason();
+
+    if (packedStatus == scNone) {
+        packedStatus = scInternalServerError;
+        packedReason = StatusCodeString(packedStatus);
+    }
+
+    // "ICY %3d %s\r\n"
+    if (version.protocol == AnyP::PROTO_ICY) {
+        return
+            + 3 // ICY
+            + 1 // SP
+            + 3 // %3d (packedStatus)
+            + 1 // SP
+            + strlen(packedReason) // %s
+            + 2; // CRLF
+    }
+
+    // "HTTP/%d.%d %3d %s\r\n"
+    return
+        + 4 // HTTP
+        + 1 // "/"
+        + 3 // %d.%d (version.major and version.minor)
+        + 1 // SP
+        + 3 // %3d (packedStatus)
+        + 1 // SP
+        + strlen(packedReason) // %s
+        + 2; // CRLF
+}
+
 void
 Http::StatusLine::packInto(Packable * p) const
 {
+    // Keep in sync with packedLength().
+
     assert(p);
 
     auto packedStatus = status();
@@ -57,7 +95,7 @@ Http::StatusLine::packInto(Packable * p) const
     if (packedStatus == Http::scNone) {
         static unsigned int reports = 0;
         if (++reports <= 100)
-            debugs(57, DBG_IMPORTANT, "BUG: the internalized response lacks status-code");
+            debugs(57, DBG_IMPORTANT, "ERROR: Squid BUG: the internalized response lacks status-code");
         packedStatus = Http::scInternalServerError;
         packedReason = Http::StatusCodeString(packedStatus); // ignore custom reason_ (if any)
     }

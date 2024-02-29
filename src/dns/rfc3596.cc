@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,9 +17,7 @@
 #if HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
+#include <cassert>
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
@@ -27,7 +25,7 @@
 #include <strings.h>
 #endif
 
-#ifndef SQUID_RFC1035_H
+#if !defined(RFC1035_MAXHOSTNAMESZ)
 #error RFC3596 Library depends on RFC1035
 #endif
 

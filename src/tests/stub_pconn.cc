@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,7 +32,7 @@ void PconnPool::noteUses(int) STUB
 void PconnPool::dumpHist(StoreEntry *) const STUB
 void PconnPool::dumpHash(StoreEntry *) const STUB
 void PconnPool::unlinkList(IdleConnList *) STUB
-PconnModule * PconnModule::GetInstance() STUB_RETVAL(NULL)
+PconnModule * PconnModule::GetInstance() STUB_RETVAL(nullptr)
 void PconnModule::DumpWrapper(StoreEntry *) STUB
 PconnModule::PconnModule() STUB
 void PconnModule::registerWithCacheManager(void) STUB

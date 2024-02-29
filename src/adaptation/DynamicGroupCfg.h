@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__DYNAMIC_GROUP_CFG_H
-#define SQUID_ADAPTATION__DYNAMIC_GROUP_CFG_H
+#ifndef SQUID_SRC_ADAPTATION_DYNAMICGROUPCFG_H
+#define SQUID_SRC_ADAPTATION_DYNAMICGROUPCFG_H
 
 #include "SquidString.h"
 
@@ -27,6 +27,10 @@ public:
     Store services; ///< services in the group
 
     bool empty() const { return services.empty(); } ///< no services added
+
+    /// configured service IDs in X-Next-Services value (comma-separated) format
+    const String &serviceIds() const { return id; }
+
     void add(const String &item); ///< updates group id and services
     void clear(); ///< makes the config empty
 };
@@ -39,5 +43,5 @@ std::ostream &operator <<(std::ostream &os, const DynamicGroupCfg &cfg)
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__DYNAMIC_GROUP_CFG_H */
+#endif /* SQUID_SRC_ADAPTATION_DYNAMICGROUPCFG_H */
 

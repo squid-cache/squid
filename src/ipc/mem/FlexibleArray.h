@@ -1,15 +1,15 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_MEM_FLEXIBLE_ARRAY_H
-#define SQUID_IPC_MEM_FLEXIBLE_ARRAY_H
+#ifndef SQUID_SRC_IPC_MEM_FLEXIBLEARRAY_H
+#define SQUID_SRC_IPC_MEM_FLEXIBLEARRAY_H
 
-// sometimes required for placement-new operator to be declared
+#include <cstddef>
 #include <new>
 
 namespace Ipc
@@ -27,25 +27,20 @@ class FlexibleArray
 {
 public:
     explicit FlexibleArray(const int capacity) {
-        if (capacity > 1) // the first item is initialized automatically
-            new (raw()+1) Item[capacity-1];
+        new (raw()) Item[capacity];
     }
 
-    Item &operator [](const int idx) { return items[idx]; }
-    const Item &operator [](const int idx) const { return items[idx]; }
+    Item &operator [](const int idx) { return *(raw() + idx); }
 
-    //const Item *operator ()() const { return items; }
-    //Item *operator ()() { return items; }
-
-    Item *raw() { return items; }
+    Item *raw() { return reinterpret_cast<Item*>(&start_); }
 
 private:
-    Item items[1]; // ensures proper alignment of array elements
+    alignas(Item) std::byte start_; ///< the first byte of the first array item
 };
 
 } // namespace Mem
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_MEM_FLEXIBLE_ARRAY_H */
+#endif /* SQUID_SRC_IPC_MEM_FLEXIBLEARRAY_H */
 

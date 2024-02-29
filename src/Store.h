@@ -1,19 +1,19 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_H
-#define SQUID_STORE_H
+#ifndef SQUID_SRC_STORE_H
+#define SQUID_SRC_STORE_H
 
+#include "base/DelayedAsyncCalls.h"
 #include "base/Packable.h"
 #include "base/Range.h"
 #include "base/RefCount.h"
 #include "comm/forward.h"
-#include "CommRead.h"
 #include "hash.h"
 #include "http/forward.h"
 #include "http/RequestMethod.h"
@@ -42,12 +42,11 @@ class StoreEntry : public hash_link, public Packable
 {
 
 public:
-    static DeferredRead::DeferrableRead DeferReader;
     bool checkDeferRead(int fd) const;
 
     const char *getMD5Text() const;
     StoreEntry();
-    virtual ~StoreEntry();
+    ~StoreEntry() override;
 
     MemObject &mem() { assert(mem_obj); return *mem_obj; }
     const MemObject &mem() const { assert(mem_obj); return *mem_obj; }
@@ -56,6 +55,9 @@ public:
     /// \retval nullptr when mem_obj does not exist
     /// \see MemObject::freshestReply()
     const HttpReply *hasFreshestReply() const { return mem_obj ? &mem_obj->freshestReply() : nullptr; }
+
+    /// whether this entry has access to [deserialized] [HTTP] response headers
+    bool hasParsedReplyHeader() const;
 
     void write(StoreIOBuffer);
 
@@ -94,6 +96,8 @@ public:
     void memOutDecision(const bool willCacheInRam);
     // called when a decision to cache on disk has been made
     void swapOutDecision(const MemObject::SwapOut::Decision &decision);
+    /// called when a store writer ends its work (successfully or not)
+    void storeWriterDone();
 
     void abort();
     bool makePublic(const KeyScope keyScope = ksDefault);
@@ -170,8 +174,6 @@ public:
     void unregisterAbortCallback(const char *reason);
     void destroyMemObject();
     int checkTooSmall();
-
-    void delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer callback);
 
     void setNoDelay (bool const);
     void lastModified(const time_t when) { lastModified_ = when; }
@@ -298,15 +300,15 @@ public:
 #endif
 
     /* Packable API */
-    virtual void append(char const *, int);
-    virtual void vappendf(const char *, va_list);
-    virtual void buffer();
-    virtual void flush();
+    void append(char const *, int) override;
+    void vappendf(const char *, va_list) override;
+    void buffer() override;
+    void flush() override;
 
 protected:
     typedef Store::EntryGuard EntryGuard;
 
-    void transientsAbandonmentCheck();
+    void storeWritingCheckpoint();
     /// does nothing except throwing if disk-associated data members are inconsistent
     void checkDisk() const;
 
@@ -320,7 +322,7 @@ private:
     /// flags [truncated or too big] entry with ENTRY_BAD_LENGTH and releases it
     void lengthWentBad(const char *reason);
 
-    static MemAllocator *pool;
+    static Mem::Allocator *pool;
 
     unsigned short lock_count;      /* Assume < 65536! */
 
@@ -429,9 +431,6 @@ void storeInit(void);
 void storeConfigure(void);
 
 /// \ingroup StoreAPI
-void storeFreeMemory(void);
-
-/// \ingroup StoreAPI
 int expiresMoreThan(time_t, time_t);
 
 /// \ingroup StoreAPI
@@ -467,5 +466,5 @@ extern FREE destroyStoreEntry;
 /// \ingroup StoreAPI
 void storeGetMemSpace(int size);
 
-#endif /* SQUID_STORE_H */
+#endif /* SQUID_SRC_STORE_H */
 

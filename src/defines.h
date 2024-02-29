@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_DEFINES_H
-#define SQUID_DEFINES_H
+#ifndef SQUID_SRC_DEFINES_H
+#define SQUID_SRC_DEFINES_H
 
 #ifndef TRUE
 #define TRUE 1
@@ -87,8 +87,6 @@
 
 #define CLIENT_REQ_BUF_SZ 4096
 
-#define STORE_META_OK     0x03
-
 #define IPC_NONE 0
 #define IPC_TCP_SOCKET 1
 #define IPC_UDP_SOCKET 2
@@ -108,11 +106,6 @@
 #define IPC_STREAM IPC_TCP_SOCKET
 #define IPC_DGRAM IPC_UDP_SOCKET
 #endif
-
-#define STORE_META_KEY STORE_META_KEY_MD5
-
-#define STORE_HDR_METASIZE (4*sizeof(time_t)+2*sizeof(uint16_t)+sizeof(uint64_t))
-#define STORE_HDR_METASIZE_OLD (4*sizeof(time_t)+2*sizeof(uint16_t)+sizeof(size_t))
 
 #define COUNT_INTERVAL 60
 /*
@@ -166,5 +159,5 @@
 #define _WIN_SQUID_RUN_MODE_SERVICE     1
 #endif
 
-#endif /* SQUID_DEFINES_H */
+#endif /* SQUID_SRC_DEFINES_H */
 

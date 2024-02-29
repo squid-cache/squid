@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__SRC_CLIENTINFO_H
-#define SQUID__SRC_CLIENTINFO_H
+#ifndef SQUID_SRC_CLIENTINFO_H
+#define SQUID_SRC_CLIENTINFO_H
 
 #if USE_DELAY_POOLS
 #include "BandwidthBucket.h"
@@ -36,7 +36,11 @@ class ClientInfo : public hash_link
 
 public:
     explicit ClientInfo(const Ip::Address &);
+#if USE_DELAY_POOLS
+    ~ClientInfo() override;
+#else
     ~ClientInfo();
+#endif
 
     Ip::Address addr;
 
@@ -82,11 +86,11 @@ public:
     void writeOrDequeue();
 
     /* BandwidthBucket API */
-    virtual int quota() override; ///< allocate quota for a just dequeued client
-    virtual bool applyQuota(int &nleft, Comm::IoCallback *state) override;
-    virtual void scheduleWrite(Comm::IoCallback *state) override;
-    virtual void onFdClosed() override;
-    virtual void reduceBucket(int len) override;
+    int quota() override; ///< allocate quota for a just dequeued client
+    bool applyQuota(int &nleft, Comm::IoCallback *state) override;
+    void scheduleWrite(Comm::IoCallback *state) override;
+    void onFdClosed() override;
+    void reduceBucket(int len) override;
 
     void quotaDumpQueue(); ///< dumps quota queue for debugging
 
@@ -133,5 +137,5 @@ private:
 };
 #endif /* USE_DELAY_POOLS */
 
-#endif
+#endif /* SQUID_SRC_CLIENTINFO_H */
 

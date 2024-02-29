@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEM_NODE_H
-#define SQUID_MEM_NODE_H
+#ifndef SQUID_SRC_MEM_NODE_H
+#define SQUID_SRC_MEM_NODE_H
 
 #include "base/Range.h"
 #include "defines.h"
@@ -47,5 +47,5 @@ operator << (std::ostream &os, mem_node &aNode)
 
 void memNodeWriteComplete(void *);
 
-#endif /* SQUID_MEM_NODE_H */
+#endif /* SQUID_SRC_MEM_NODE_H */
 

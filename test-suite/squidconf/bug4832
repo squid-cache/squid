@@ -1,2 +1,0 @@
-auth_param basic /dev/null
-auth_schemes basic all

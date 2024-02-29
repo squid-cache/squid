@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_DLINK_H
-#define SQUID_DLINK_H
+#ifndef SQUID_SRC_DLINK_H
+#define SQUID_SRC_DLINK_H
 
 #include "mem/forward.h"
 
@@ -34,5 +34,5 @@ void dlinkAddAfter(void *, dlink_node *, dlink_node *, dlink_list *);
 void dlinkAddTail(void *data, dlink_node *, dlink_list *);
 void dlinkDelete(dlink_node * m, dlink_list * list);
 
-#endif /* SQUID_DLINK_H */
+#endif /* SQUID_SRC_DLINK_H */
 

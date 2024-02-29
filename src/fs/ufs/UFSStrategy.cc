@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 
+#include "base/IoManip.h"
 #include "DiskIO/DiskIOStrategy.h"
 #include "UFSStoreState.h"
 #include "UFSStrategy.h"
@@ -54,12 +55,11 @@ Fs::Ufs::UFSStrategy::unlinkFile(char const *path)
 }
 
 StoreIOState::Pointer
-Fs::Ufs::UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB *,
+Fs::Ufs::UFSStrategy::open(SwapDir * const SD, StoreEntry * const e,
                            StoreIOState::STIOCB * aCallback, void *callback_data)
 {
     assert (((UFSSwapDir *)SD)->IO == this);
-    debugs(79, 3, HERE << "fileno "<< std::setfill('0') << std::hex
-           << std::uppercase << std::setw(8) << e->swap_filen);
+    debugs(79, 3, "fileno " << asHex(e->swap_filen).upperCase().minDigits(8));
 
     /* to consider: make createstate a private UFSStrategy call */
     StoreIOState::Pointer sio = createState (SD, e, aCallback, callback_data);
@@ -70,12 +70,12 @@ Fs::Ufs::UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB *,
 
     assert (state);
 
-    char *path = ((UFSSwapDir *)SD)->fullPath(e->swap_filen, NULL);
+    char *path = ((UFSSwapDir *)SD)->fullPath(e->swap_filen, nullptr);
 
     DiskFile::Pointer myFile = newFile (path);
 
-    if (myFile.getRaw() == NULL)
-        return NULL;
+    if (myFile.getRaw() == nullptr)
+        return nullptr;
 
     state->theFile = myFile;
 
@@ -84,20 +84,19 @@ Fs::Ufs::UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB *,
     myFile->open (sio->mode, 0644, state);
 
     if (myFile->error())
-        return NULL;
+        return nullptr;
 
     return sio;
 }
 
 StoreIOState::Pointer
-Fs::Ufs::UFSStrategy::create(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB *,
+Fs::Ufs::UFSStrategy::create(SwapDir * const SD, StoreEntry * const e,
                              StoreIOState::STIOCB * aCallback, void *callback_data)
 {
     assert (((UFSSwapDir *)SD)->IO == this);
     /* Allocate a number */
     sfileno filn = ((UFSSwapDir *)SD)->mapBitAllocate();
-    debugs(79, 3, HERE << "fileno "<< std::setfill('0') <<
-           std::hex << std::uppercase << std::setw(8) << filn);
+    debugs(79, 3, "fileno " << asHex(filn).upperCase().minDigits(8));
 
     /* Shouldn't we handle a 'bitmap full' error here? */
 
@@ -111,13 +110,13 @@ Fs::Ufs::UFSStrategy::create(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB 
 
     assert (state);
 
-    char *path = ((UFSSwapDir *)SD)->fullPath(filn, NULL);
+    char *path = ((UFSSwapDir *)SD)->fullPath(filn, nullptr);
 
     DiskFile::Pointer myFile = newFile (path);
 
-    if (myFile.getRaw() == NULL) {
+    if (myFile.getRaw() == nullptr) {
         ((UFSSwapDir *)SD)->mapBitReset (filn);
-        return NULL;
+        return nullptr;
     }
 
     state->theFile = myFile;
@@ -128,7 +127,7 @@ Fs::Ufs::UFSStrategy::create(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB 
 
     if (myFile->error()) {
         ((UFSSwapDir *)SD)->mapBitReset (filn);
-        return NULL;
+        return nullptr;
     }
 
     /* now insert into the replacement policy */

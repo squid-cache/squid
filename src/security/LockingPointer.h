@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,10 @@
 #ifndef SQUID_SRC_SECURITY_LOCKINGPOINTER_H
 #define SQUID_SRC_SECURITY_LOCKINGPOINTER_H
 
+#include "base/Assure.h"
 #include "base/HardFun.h"
+
+#include <cstddef>
 
 #if USE_OPENSSL
 #include "compat/openssl.h"
@@ -26,13 +29,6 @@
         }
 
 #endif /* USE_OPENSSL */
-
-// Macro to be used to define the C++ equivalent function of an extern "C"
-// function. The C++ function suffixed with the _cpp extension
-#define CtoCpp1(function, argument) \
-        extern "C++" inline void function ## _cpp(argument a) { \
-            function(a); \
-        }
 
 namespace Security
 {
@@ -100,6 +96,7 @@ public:
     bool operator ==(const SelfType &o) const { return (o.get() == raw); }
     bool operator !=(const SelfType &o) const { return (o.get() != raw); }
 
+    T &operator *() const { Assure(raw); return *raw; }
     T *operator ->() const { return raw; }
 
     /// Returns raw and possibly nullptr pointer

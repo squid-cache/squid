@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PROXYP_PARSER_H
-#define SQUID_PROXYP_PARSER_H
+#ifndef SQUID_SRC_PROXYP_PARSER_H
+#define SQUID_SRC_PROXYP_PARSER_H
 
 #include "proxyp/forward.h"
 #include "sbuf/forward.h"
@@ -32,5 +32,5 @@ Parsed Parse(const SBuf &);
 
 } // namespace ProxyProtocol
 
-#endif
+#endif /* SQUID_SRC_PROXYP_PARSER_H */
 

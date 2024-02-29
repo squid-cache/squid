@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_BASIC_ACTIONS_H
-#define SQUID_MGR_BASIC_ACTIONS_H
+#ifndef SQUID_SRC_MGR_BASICACTIONS_H
+#define SQUID_SRC_MGR_BASICACTIONS_H
 
 #include "mgr/Action.h"
 
@@ -27,7 +27,7 @@ class IndexAction: public Action
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    virtual void dump(StoreEntry *entry);
+    void dump(StoreEntry *entry) override;
 
 protected:
     IndexAction(const CommandPointer &cmd);
@@ -39,7 +39,7 @@ class MenuAction: public Action
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    virtual void dump(StoreEntry *entry);
+    void dump(StoreEntry *entry) override;
 
 protected:
     MenuAction(const CommandPointer &cmd);
@@ -51,7 +51,7 @@ class ShutdownAction: public Action
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    virtual void dump(StoreEntry *entry);
+    void dump(StoreEntry *entry) override;
 
 protected:
     ShutdownAction(const CommandPointer &cmd);
@@ -63,7 +63,7 @@ class ReconfigureAction: public Action
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    virtual void dump(StoreEntry *entry);
+    void dump(StoreEntry *entry) override;
 
 protected:
     ReconfigureAction(const CommandPointer &cmd);
@@ -75,7 +75,7 @@ class RotateAction: public Action
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    virtual void dump(StoreEntry *entry);
+    void dump(StoreEntry *entry) override;
 
 protected:
     RotateAction(const CommandPointer &cmd);
@@ -87,7 +87,7 @@ class OfflineToggleAction: public Action
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    virtual void dump(StoreEntry *entry);
+    void dump(StoreEntry *entry) override;
 
 protected:
     OfflineToggleAction(const CommandPointer &cmd);
@@ -98,5 +98,5 @@ void RegisterBasics();
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_BASIC_ACTIONS_H */
+#endif /* SQUID_SRC_MGR_BASICACTIONS_H */
 

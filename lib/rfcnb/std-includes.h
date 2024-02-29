@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,8 +29,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef _RFCNB_STD_INCLUDES_H
-#define _RFCNB_STD_INCLUDES_H
+#ifndef SQUID_LIB_RFCNB_STD_INCLUDES_H
+#define SQUID_LIB_RFCNB_STD_INCLUDES_H
 
 /* RFCNB Standard includes ... */
 /* One day we will conditionalize these on OS types ... */
@@ -61,5 +61,5 @@ typedef short int16;
 #define INADDR_NONE -1
 #endif
 
-#endif /* _RFCNB_STD_INCLUDES_H */
+#endif /* SQUID_LIB_RFCNB_STD_INCLUDES_H */
 

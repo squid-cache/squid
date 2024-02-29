@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,16 +7,33 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "MemObject.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "store/Disks.h"
 #include "StoreSearch.h"
-#include "testStoreHashIndex.h"
 #include "TestSwapDir.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testStoreHashIndex );
+/*
+ * test the store framework
+ */
+
+class TestStoreHashIndex : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestStoreHashIndex);
+    CPPUNIT_TEST(testStats);
+    CPPUNIT_TEST(testMaxSize);
+    CPPUNIT_TEST(testSearch);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+protected:
+    void testStats();
+    void testMaxSize();
+    void testSearch();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestStoreHashIndex);
 
 static void
 addSwapDir(TestSwapDirPointer aStore)
@@ -27,12 +44,11 @@ addSwapDir(TestSwapDirPointer aStore)
 }
 
 void
-testStoreHashIndex::testStats()
+TestStoreHashIndex::testStats()
 {
     StoreEntry *logEntry = new StoreEntry;
-    logEntry->createMemObject("dummy_storeId", NULL, HttpRequestMethod());
+    logEntry->createMemObject("dummy_storeId", nullptr, HttpRequestMethod());
     logEntry->store_status = STORE_PENDING;
-    Store::Init();
     TestSwapDirPointer aStore (new TestSwapDir);
     TestSwapDirPointer aStore2 (new TestSwapDir);
     addSwapDir(aStore);
@@ -43,23 +59,20 @@ testStoreHashIndex::testStats()
     free_cachedir(&Config.cacheSwap);
     CPPUNIT_ASSERT_EQUAL(true, aStore->statsCalled);
     CPPUNIT_ASSERT_EQUAL(true, aStore2->statsCalled);
-    Store::FreeMemory();
 }
 
 void
-testStoreHashIndex::testMaxSize()
+TestStoreHashIndex::testMaxSize()
 {
     StoreEntry *logEntry = new StoreEntry;
-    logEntry->createMemObject("dummy_storeId", NULL, HttpRequestMethod());
+    logEntry->createMemObject("dummy_storeId", nullptr, HttpRequestMethod());
     logEntry->store_status = STORE_PENDING;
-    Store::Init();
     TestSwapDirPointer aStore (new TestSwapDir);
     TestSwapDirPointer aStore2 (new TestSwapDir);
     addSwapDir(aStore);
     addSwapDir(aStore2);
     CPPUNIT_ASSERT_EQUAL(static_cast<uint64_t>(6), Store::Root().maxSize());
     free_cachedir(&Config.cacheSwap);
-    Store::FreeMemory();
 }
 
 static StoreEntry *
@@ -101,6 +114,8 @@ static void commonInit()
     if (inited)
         return;
 
+    inited = true;
+
     Mem::Init();
 
     Config.Store.avgObjectSize = 1024;
@@ -108,6 +123,10 @@ static void commonInit()
     Config.Store.objectsPerBucket = 20;
 
     Config.Store.maxObjectSize = 2048;
+
+    Config.memShared.defaultTo(false);
+
+    Config.store_dir_select_algorithm = xstrdup("round-robin");
 }
 
 /* TODO make this a cbdata class */
@@ -121,27 +140,26 @@ searchCallback(void *)
 }
 
 void
-testStoreHashIndex::testSearch()
+TestStoreHashIndex::testSearch()
 {
     commonInit();
-    Store::Init();
     TestSwapDirPointer aStore (new TestSwapDir);
     TestSwapDirPointer aStore2 (new TestSwapDir);
     addSwapDir(aStore);
     addSwapDir(aStore2);
     Store::Root().init();
-    StoreEntry * entry1 = addedEntry(aStore.getRaw(), "name", NULL, NULL);
-    StoreEntry * entry2 = addedEntry(aStore2.getRaw(), "name2", NULL, NULL);
+    StoreEntry * entry1 = addedEntry(aStore.getRaw(), "name", nullptr, nullptr);
+    StoreEntry * entry2 = addedEntry(aStore2.getRaw(), "name2", nullptr, nullptr);
     StoreSearchPointer search = Store::Root().search(); /* search for everything in the store */
 
     /* nothing should be immediately available */
     CPPUNIT_ASSERT_EQUAL(false, search->error());
     CPPUNIT_ASSERT_EQUAL(false, search->isDone());
-    CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), search->currentItem());
+    CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(nullptr), search->currentItem());
 
     /* trigger a callback */
     cbcalled = false;
-    search->next(searchCallback, NULL);
+    search->next(searchCallback, nullptr);
     CPPUNIT_ASSERT_EQUAL(true, cbcalled);
 
     /* we should have access to a entry now, that matches the entry we had before */
@@ -153,7 +171,7 @@ testStoreHashIndex::testSearch()
 
     /* trigger another callback */
     cbcalled = false;
-    search->next(searchCallback, NULL);
+    search->next(searchCallback, nullptr);
     CPPUNIT_ASSERT_EQUAL(true, cbcalled);
 
     /* we should have access to a entry now, that matches the entry we had before */
@@ -164,15 +182,15 @@ testStoreHashIndex::testSearch()
 
     /* trigger another callback */
     cbcalled = false;
-    search->next(searchCallback, NULL);
+    search->next(searchCallback, nullptr);
     CPPUNIT_ASSERT_EQUAL(true, cbcalled);
 
     /* now we should have no error, we should have finished and have no current item */
     CPPUNIT_ASSERT_EQUAL(false, search->error());
     CPPUNIT_ASSERT_EQUAL(true, search->isDone());
-    CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), search->currentItem());
+    CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(nullptr), search->currentItem());
     //CPPUNIT_ASSERT_EQUAL(false, search->next());
-
-    Store::FreeMemory();
 }
+
+// This test uses main() from ./testStore.cc.
 

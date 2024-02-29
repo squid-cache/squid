@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_STORE_TO_COMM_WRITER_H
-#define SQUID_MGR_STORE_TO_COMM_WRITER_H
+#ifndef SQUID_SRC_MGR_STORETOCOMMWRITER_H
+#define SQUID_SRC_MGR_STORETOCOMMWRITER_H
 
 #include "base/AsyncJob.h"
 #include "comm/forward.h"
@@ -28,17 +28,17 @@ namespace Mgr
 /// for the given StoreEntry and client FD
 class StoreToCommWriter: public AsyncJob
 {
-    CBDATA_CLASS(StoreToCommWriter);
+    CBDATA_INTERMEDIATE();
 
 public:
     StoreToCommWriter(const Comm::ConnectionPointer &conn, StoreEntry *anEntry);
-    virtual ~StoreToCommWriter();
+    ~StoreToCommWriter() override;
 
 protected:
     /* AsyncJob API */
-    virtual void start();
-    virtual void swanSong();
-    virtual bool doneAll() const;
+    void start() override;
+    void swanSong() override;
+    bool doneAll() const override;
 
     /// request more action results from the store
     void scheduleStoreCopy();
@@ -71,5 +71,5 @@ protected:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_STORE_TO_COMM_WRITER_H */
+#endif /* SQUID_SRC_MGR_STORETOCOMMWRITER_H */
 

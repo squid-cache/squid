@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,13 +8,15 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_SHARED_LISTEN_H
-#define SQUID_IPC_SHARED_LISTEN_H
+#ifndef SQUID_SRC_IPC_SHAREDLISTEN_H
+#define SQUID_SRC_IPC_SHAREDLISTEN_H
 
 #include "base/AsyncCall.h"
 #include "base/Subscription.h"
+#include "ip/Address.h"
 #include "ipc/QuestionerId.h"
 #include "ipc/RequestId.h"
+#include "ipc/StartListening.h"
 
 namespace Ipc
 {
@@ -36,9 +38,6 @@ public:
     // bits to re-create the listener Comm::Connection descriptor
     Ip::Address addr; ///< will be memset and memcopied
     int flags = 0;
-
-    /// handler to subscribe to Comm::ConnAcceptor when we get the response
-    Subscription::Pointer handlerSubscription;
 };
 
 class TypedMsgHdr;
@@ -77,12 +76,12 @@ public:
 };
 
 /// prepare and send SharedListenRequest to Coordinator
-void JoinSharedListen(const OpenListenerParams &, AsyncCall::Pointer &);
+void JoinSharedListen(const OpenListenerParams &, StartListeningCallback &);
 
 /// process Coordinator response to SharedListenRequest
 void SharedListenJoined(const SharedListenResponse &response);
 
 } // namespace Ipc;
 
-#endif /* SQUID_IPC_SHARED_LISTEN_H */
+#endif /* SQUID_SRC_IPC_SHAREDLISTEN_H */
 

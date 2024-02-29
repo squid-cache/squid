@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_UFS_UFSSTRATEGY_H
-#define SQUID_FS_UFS_UFSSTRATEGY_H
+#ifndef SQUID_SRC_FS_UFS_UFSSTRATEGY_H
+#define SQUID_SRC_FS_UFS_UFSSTRATEGY_H
 
 #include "DiskIO/DiskFile.h"
 #include "StoreIOState.h"
@@ -33,10 +33,8 @@ public:
     StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, StoreIOState::STIOCB * callback, void *callback_data) const;
     /* UFS specific */
     virtual RefCount<DiskFile> newFile (char const *path);
-    StoreIOState::Pointer open(SwapDir *, StoreEntry *, StoreIOState::STFNCB *,
-                               StoreIOState::STIOCB *, void *);
-    StoreIOState::Pointer create(SwapDir *, StoreEntry *, StoreIOState::STFNCB *,
-                                 StoreIOState::STIOCB *, void *);
+    StoreIOState::Pointer open(SwapDir *, StoreEntry *, StoreIOState::STIOCB *, void *);
+    StoreIOState::Pointer create(SwapDir *, StoreEntry *, StoreIOState::STIOCB *, void *);
 
     virtual void unlinkFile (char const *);
     virtual void sync();
@@ -66,5 +64,5 @@ private:
 } //namespace Ufs
 } //namespace Fs
 
-#endif /* SQUID_FS_UFS_UFSSTRATEGY_H */
+#endif /* SQUID_SRC_FS_UFS_UFSSTRATEGY_H */
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_MEM_POINTER_H
-#define SQUID_IPC_MEM_POINTER_H
+#ifndef SQUID_SRC_IPC_MEM_POINTER_H
+#define SQUID_SRC_IPC_MEM_POINTER_H
 
 #include "base/RefCount.h"
 #include "base/TextException.h"
@@ -85,7 +85,7 @@ private:
     typedef RefCount< Object<Class> > Base;
 
 public:
-    explicit Pointer(Object<Class> *const anObject = NULL): Base(anObject) {}
+    explicit Pointer(Object<Class> *const anObject = nullptr): Base(anObject) {}
 
     Class *operator ->() const { return Base::operator ->()->theObject; }
     Class &operator *() const { return *Base::operator *().theObject; }
@@ -97,7 +97,7 @@ public:
 
 template <class Class>
 Owner<Class>::Owner(const char *const id, const off_t sharedSize):
-    theSegment(id), theObject(NULL)
+    theSegment(id), theObject(nullptr)
 {
     theSegment.create(sharedSize);
     Must(theSegment.mem());
@@ -204,5 +204,5 @@ Object<Class>::Old(const char *const id)
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_MEM_POINTER_H */
+#endif /* SQUID_SRC_IPC_MEM_POINTER_H */
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef   SQUID_PEERSELECTSTATE_H
-#define   SQUID_PEERSELECTSTATE_H
+#ifndef SQUID_SRC_PEERSELECTSTATE_H
+#define SQUID_SRC_PEERSELECTSTATE_H
 
 #include "AccessLogEntry.h"
 #include "acl/Checklist.h"
@@ -32,7 +32,7 @@ void peerSelectInit(void);
 class PeerSelectionInitiator: public CbdataParent
 {
 public:
-    virtual ~PeerSelectionInitiator() = default;
+    ~PeerSelectionInitiator() override = default;
 
     /// called when a new unique destination has been found
     virtual void noteDestination(Comm::ConnectionPointer path) = 0;
@@ -62,12 +62,12 @@ class PeerSelector: public Dns::IpReceiver
 
 public:
     explicit PeerSelector(PeerSelectionInitiator*);
-    virtual ~PeerSelector() override;
+    ~PeerSelector() override;
 
     /* Dns::IpReceiver API */
-    virtual void noteIp(const Ip::Address &ip) override;
-    virtual void noteIps(const Dns::CachedIps *ips, const Dns::LookupDetails &details) override;
-    virtual void noteLookup(const Dns::LookupDetails &details) override;
+    void noteIp(const Ip::Address &ip) override;
+    void noteIps(const Dns::CachedIps *ips, const Dns::LookupDetails &details) override;
+    void noteLookup(const Dns::LookupDetails &details) override;
 
     // Produce a URL for display identifying the transaction we are
     // trying to locate a peer for.
@@ -166,5 +166,5 @@ private:
     const InstanceId<PeerSelector> id; ///< unique identification in worker log
 };
 
-#endif /* SQUID_PEERSELECTSTATE_H */
+#endif /* SQUID_SRC_PEERSELECTSTATE_H */
 

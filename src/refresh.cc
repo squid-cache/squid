@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 #endif
 
 #include "squid.h"
+#include "base/PackableStream.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -21,7 +22,6 @@
 #include "refresh.h"
 #include "RefreshPattern.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "util.h"
 
@@ -79,11 +79,10 @@ static struct RefreshCounts {
     int status[STALE_DEFAULT + 1];
 } refreshCounts[rcCount];
 
-static const RefreshPattern *refreshUncompiledPattern(const char *);
 static OBJH refreshStats;
 static int refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const RefreshPattern * R, stale_flags * sf);
 
-static RefreshPattern DefaultRefresh("<none>", 0);
+static RefreshPattern DefaultRefresh(nullptr);
 
 /** Locate the first refresh_pattern rule that matches the given URL by regex.
  *
@@ -94,7 +93,7 @@ refreshLimits(const char *url)
 {
     for (auto R = Config.Refresh; R; R = R->next) {
         ++(R->stats.matchTests);
-        if (R->pattern.match(url)) {
+        if (R->regex().match(url)) {
             ++(R->stats.matchCount);
             return R;
         }
@@ -103,19 +102,12 @@ refreshLimits(const char *url)
     return nullptr;
 }
 
-/** Locate the first refresh_pattern rule that has the given uncompiled regex.
- *
- * \note There is only one reference to this function, below. It always passes "." as the pattern.
- * This function is only ever called if there is no URI. Because a regex match is impossible, Squid
- * forces the "." rule to apply (if it exists)
- *
- * \return A pointer to the refresh_pattern parameters to use, or nullptr if there is no match.
- */
+/// the first explicit refresh_pattern rule that uses a "." regex (or nil)
 static const RefreshPattern *
-refreshUncompiledPattern(const char *pat)
+refreshFirstDotRule()
 {
     for (auto R = Config.Refresh; R; R = R->next) {
-        if (0 == strcmp(R->pattern.c_str(), pat))
+        if (R->regex().isDot())
             return R;
     }
 
@@ -152,14 +144,10 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, 
         sf->expires = true;
 
         if (entry->expires > check_time) {
-            debugs(22, 3, "FRESH: expires " << entry->expires <<
-                   " >= check_time " << check_time << " ");
-
+            debugs(22, 3, "FRESH: expires " << entry->expires << " > check_time " << check_time);
             return -1;
         } else {
-            debugs(22, 3, "STALE: expires " << entry->expires <<
-                   " < check_time " << check_time << " ");
-
+            debugs(22, 3, "STALE: expires " << entry->expires << " <= check_time " << check_time);
             return (check_time - entry->expires);
         }
     }
@@ -168,7 +156,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, 
 
     // 2. If the entry is older than the maximum age in the refresh_pattern, it is STALE.
     if (age > R->max) {
-        debugs(22, 3, "STALE: age " << age << " > max " << R->max << " ");
+        debugs(22, 3, "STALE: age " << age << " > max " << R->max);
         sf->max = true;
         return (age - R->max);
     }
@@ -293,19 +281,17 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
      *   3. the default "." rule
      */
     // XXX: performance regression. c_str() reallocates
-    const RefreshPattern *R = (uri != nilUri) ? refreshLimits(uri.c_str()) : refreshUncompiledPattern(".");
-    if (NULL == R)
+    const RefreshPattern *R = (uri != nilUri) ? refreshLimits(uri.c_str()) : refreshFirstDotRule();
+    if (nullptr == R)
         R = &DefaultRefresh;
 
-    debugs(22, 3, "Matched '" << R->pattern.c_str() << " " <<
-           (int) R->min << " " << (int) (100.0 * R->pct) << "%% " <<
-           (int) R->max << "'");
+    debugs(22, 3, "Matched '" << *R << '\'');
 
     debugs(22, 3, "\tage:\t" << age);
 
-    debugs(22, 3, "\tcheck_time:\t" << mkrfc1123(check_time));
+    debugs(22, 3, "\tcheck_time:\t" << Time::FormatRfc1123(check_time));
 
-    debugs(22, 3, "\tentry->timestamp:\t" << mkrfc1123(entry->timestamp));
+    debugs(22, 3, "\tentry->timestamp:\t" << Time::FormatRfc1123(entry->timestamp));
 
     if (request && !request->flags.ignoreCc) {
         const HttpHdrCc *const cc = request->cache_control;
@@ -315,7 +301,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
                    minFresh << " = " << age + minFresh);
             debugs(22, 3, "\tcheck_time + min-fresh:\t" << check_time << " + "
                    << minFresh << " = " <<
-                   mkrfc1123(check_time + minFresh));
+                   Time::FormatRfc1123(check_time + minFresh));
             age += minFresh;
             check_time += minFresh;
         }
@@ -414,7 +400,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 #endif
 
         // Check the Cache-Control client request header
-        if (NULL != cc) {
+        if (nullptr != cc) {
 
             // max-age directive
             int maxAge = -1;
@@ -535,7 +521,7 @@ refreshIsCachable(const StoreEntry * entry)
      * avoid objects which expire almost immediately, and which can't
      * be refreshed.
      */
-    int reason = refreshCheck(entry, NULL, Config.minimum_expiry_time);
+    int reason = refreshCheck(entry, nullptr, Config.minimum_expiry_time);
     ++ refreshCounts[rcStore].total;
     ++ refreshCounts[rcStore].status[reason];
 
@@ -547,7 +533,7 @@ refreshIsCachable(const StoreEntry * entry)
         /* We should know entry's modification time to do a refresh */
         return false;
 
-    if (entry->mem_obj == NULL)
+    if (entry->mem_obj == nullptr)
         /* no mem_obj? */
         return true;
 
@@ -667,22 +653,21 @@ refreshCountsStats(StoreEntry * sentry, struct RefreshCounts &rc)
     storeAppendPrintf(sentry, "\n\n%s histogram:\n", rc.proto);
     storeAppendPrintf(sentry, "Count\t%%Total\tCategory\n");
 
-    int sum = 0;
-    sum += refreshCountsStatsEntry(sentry, rc, FRESH_REQUEST_MAX_STALE_ALL, "Fresh: request max-stale wildcard");
-    sum += refreshCountsStatsEntry(sentry, rc, FRESH_REQUEST_MAX_STALE_VALUE, "Fresh: request max-stale value");
-    sum += refreshCountsStatsEntry(sentry, rc, FRESH_EXPIRES, "Fresh: expires time not reached");
-    sum += refreshCountsStatsEntry(sentry, rc, FRESH_LMFACTOR_RULE, "Fresh: refresh_pattern last-mod factor percentage");
-    sum += refreshCountsStatsEntry(sentry, rc, FRESH_MIN_RULE, "Fresh: refresh_pattern min value");
-    sum += refreshCountsStatsEntry(sentry, rc, FRESH_OVERRIDE_EXPIRES, "Fresh: refresh_pattern override-expires");
-    sum += refreshCountsStatsEntry(sentry, rc, FRESH_OVERRIDE_LASTMOD, "Fresh: refresh_pattern override-lastmod");
-    sum += refreshCountsStatsEntry(sentry, rc, STALE_MUST_REVALIDATE, "Stale: response has must-revalidate");
-    sum += refreshCountsStatsEntry(sentry, rc, STALE_RELOAD_INTO_IMS, "Stale: changed reload into IMS");
-    sum += refreshCountsStatsEntry(sentry, rc, STALE_FORCED_RELOAD, "Stale: request has no-cache directive");
-    sum += refreshCountsStatsEntry(sentry, rc, STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE, "Stale: age exceeds request max-age value");
-    sum += refreshCountsStatsEntry(sentry, rc, STALE_EXPIRES, "Stale: expires time reached");
-    sum += refreshCountsStatsEntry(sentry, rc, STALE_MAX_RULE, "Stale: refresh_pattern max age rule");
-    sum += refreshCountsStatsEntry(sentry, rc, STALE_LMFACTOR_RULE, "Stale: refresh_pattern last-mod factor percentage");
-    sum += refreshCountsStatsEntry(sentry, rc, STALE_DEFAULT, "Stale: by default");
+    refreshCountsStatsEntry(sentry, rc, FRESH_REQUEST_MAX_STALE_ALL, "Fresh: request max-stale wildcard");
+    refreshCountsStatsEntry(sentry, rc, FRESH_REQUEST_MAX_STALE_VALUE, "Fresh: request max-stale value");
+    refreshCountsStatsEntry(sentry, rc, FRESH_EXPIRES, "Fresh: expires time not reached");
+    refreshCountsStatsEntry(sentry, rc, FRESH_LMFACTOR_RULE, "Fresh: refresh_pattern last-mod factor percentage");
+    refreshCountsStatsEntry(sentry, rc, FRESH_MIN_RULE, "Fresh: refresh_pattern min value");
+    refreshCountsStatsEntry(sentry, rc, FRESH_OVERRIDE_EXPIRES, "Fresh: refresh_pattern override-expires");
+    refreshCountsStatsEntry(sentry, rc, FRESH_OVERRIDE_LASTMOD, "Fresh: refresh_pattern override-lastmod");
+    refreshCountsStatsEntry(sentry, rc, STALE_MUST_REVALIDATE, "Stale: response has must-revalidate");
+    refreshCountsStatsEntry(sentry, rc, STALE_RELOAD_INTO_IMS, "Stale: changed reload into IMS");
+    refreshCountsStatsEntry(sentry, rc, STALE_FORCED_RELOAD, "Stale: request has no-cache directive");
+    refreshCountsStatsEntry(sentry, rc, STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE, "Stale: age exceeds request max-age value");
+    refreshCountsStatsEntry(sentry, rc, STALE_EXPIRES, "Stale: expires time reached");
+    refreshCountsStatsEntry(sentry, rc, STALE_MAX_RULE, "Stale: refresh_pattern max age rule");
+    refreshCountsStatsEntry(sentry, rc, STALE_LMFACTOR_RULE, "Stale: refresh_pattern last-mod factor percentage");
+    refreshCountsStatsEntry(sentry, rc, STALE_DEFAULT, "Stale: by default");
     storeAppendPrintf(sentry, "\n");
 }
 
@@ -693,12 +678,13 @@ refreshStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\nRefresh pattern usage:\n\n");
     storeAppendPrintf(sentry, "  Used      \tChecks    \t%% Matches\tPattern\n");
     for (const RefreshPattern *R = Config.Refresh; R; R = R->next) {
-        storeAppendPrintf(sentry, "  %10" PRIu64 "\t%10" PRIu64 "\t%6.2f\t%s%s\n",
+        storeAppendPrintf(sentry, "  %10" PRIu64 "\t%10" PRIu64 "\t%6.2f\t",
                           R->stats.matchCount,
                           R->stats.matchTests,
-                          xpercent(R->stats.matchCount, R->stats.matchTests),
-                          (R->pattern.flags&REG_ICASE ? "-i " : ""),
-                          R->pattern.c_str());
+                          xpercent(R->stats.matchCount, R->stats.matchTests));
+        PackableStream os(*sentry);
+        R->printPattern(os);
+        os << "\n";
     }
 
     int i;
@@ -725,6 +711,33 @@ refreshStats(StoreEntry * sentry)
 
     for (i = 0; i < rcCount; ++i)
         refreshCountsStats(sentry, refreshCounts[i]);
+}
+
+const RegexPattern &
+RefreshPattern::regex() const
+{
+    assert(regex_);
+    return *regex_;
+}
+
+void
+RefreshPattern::printPattern(std::ostream &os) const
+{
+    if (regex_)
+        regex_->print(os, nullptr); // refresh lines do not inherit line flags
+    else
+        os << "<none>";
+}
+
+void
+RefreshPattern::printHead(std::ostream &os) const
+{
+    printPattern(os);
+    os <<
+       // these adjustments are safe: raw values were configured using integers
+       ' ' << intmax_t(min/60) << // to minutes
+       ' ' << intmax_t(100.0 * pct + 0.5) << '%' << // to percentage points
+       ' ' << intmax_t(max/60); // to minutes
 }
 
 static void

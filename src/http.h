@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTP_H
-#define SQUID_HTTP_H
+#ifndef SQUID_SRC_HTTP_H
+#define SQUID_SRC_HTTP_H
 
 #include "clients/Client.h"
 #include "comm.h"
@@ -15,13 +15,15 @@
 #include "http/StateFlags.h"
 #include "sbuf/SBuf.h"
 
+#include <optional>
+
 class FwdState;
 class HttpHeader;
 class String;
 
 class HttpStateData : public Client
 {
-    CBDATA_CLASS(HttpStateData);
+    CBDATA_CHILD(HttpStateData);
 
 public:
 
@@ -42,7 +44,7 @@ public:
     };
 
     HttpStateData(FwdState *);
-    ~HttpStateData();
+    ~HttpStateData() override;
 
     static void httpBuildRequestHeader(HttpRequest * request,
                                        StoreEntry * entry,
@@ -50,25 +52,24 @@ public:
                                        HttpHeader * hdr_out,
                                        const Http::StateFlags &flags);
 
-    virtual const Comm::ConnectionPointer & dataConnection() const;
+    const Comm::ConnectionPointer & dataConnection() const override;
     /* should be private */
     bool sendRequest();
     void processReplyHeader();
-    void processReplyBody();
+    void processReplyBody() override;
     void readReply(const CommIoCbParams &io);
-    virtual void maybeReadVirginBody(); // read response data from the network
+    void maybeReadVirginBody() override; // read response data from the network
 
     // Checks whether the response is cacheable/shareable.
     ReuseDecision::Answers reusableReply(ReuseDecision &decision);
 
-    CachePeer *_peer;       /* CachePeer request made to */
-    int eof;            /* reached end-of-object? */
-    int lastChunk;      /* reached last chunk of a chunk-encoded reply */
+    CachePeer *_peer = nullptr;       /* CachePeer request made to */
+    int eof = 0;            /* reached end-of-object? */
+    int lastChunk = 0;      /* reached last chunk of a chunk-encoded reply */
     Http::StateFlags flags;
-    size_t read_sz;
     SBuf inBuf;                ///< I/O buffer for receiving server responses
-    bool ignoreCacheControl;
-    bool surrogateNoStore;
+    bool ignoreCacheControl = false;
+    bool surrogateNoStore = false;
 
     /// Upgrade header value sent to the origin server or cache peer.
     String *upgradeHeaderOut = nullptr;
@@ -76,6 +77,9 @@ public:
     void processSurrogateControl(HttpReply *);
 
 protected:
+    /* Client API */
+    void noteDelayAwareReadChance() override;
+
     void processReply();
     void proceedAfter1xx();
     void handle1xx(HttpReply *msg);
@@ -102,42 +106,36 @@ private:
     bool continueAfterParsingHeader();
     void truncateVirginBody();
 
-    virtual void start();
-    virtual void haveParsedReplyHeaders();
-    virtual bool getMoreRequestBody(MemBuf &buf);
-    virtual void closeServer(); // end communication with the server
-    virtual bool doneWithServer() const; // did we end communication?
-    virtual void abortAll(const char *reason); // abnormal termination
-    virtual bool mayReadVirginReplyBody() const;
+    void start() override;
+    void haveParsedReplyHeaders() override;
+    bool getMoreRequestBody(MemBuf &buf) override;
+    void closeServer() override; // end communication with the server
+    bool doneWithServer() const override; // did we end communication?
+    void abortAll(const char *reason) override; // abnormal termination
+    bool mayReadVirginReplyBody() const override;
 
     void abortTransaction(const char *reason) { abortAll(reason); } // abnormal termination
 
-    /**
-     * determine if read buffer can have space made available
-     * for a read.
-     *
-     * \param grow  whether to actually expand the buffer
-     *
-     * \return whether the buffer can be grown to provide space
-     *         regardless of whether the grow actually happened.
-     */
-    bool maybeMakeSpaceAvailable(bool grow);
+    size_t calcReadBufferCapacityLimit() const;
+    std::optional<size_t> canBufferMoreReplyBytes() const;
+    size_t maybeMakeSpaceAvailable(size_t maxReadSize);
 
     // consuming request body
     virtual void handleMoreRequestBodyAvailable();
-    virtual void handleRequestBodyProducerAborted();
+    void handleRequestBodyProducerAborted() override;
 
     void writeReplyBody();
     bool decodeAndWriteReplyBody();
     bool finishingBrokenPost();
     bool finishingChunkedRequest();
-    void doneSendingRequestBody();
+    void doneSendingRequestBody() override;
     void requestBodyHandler(MemBuf &);
-    virtual void sentRequestBody(const CommIoCbParams &io);
+    void sentRequestBody(const CommIoCbParams &io) override;
     void wroteLast(const CommIoCbParams &io);
     void sendComplete();
     void httpStateConnClosed(const CommCloseCbParams &params);
     void httpTimeout(const CommTimeoutCbParams &params);
+    void markPrematureReplyBodyEofFailure();
 
     mb_size_t buildRequestPrefix(MemBuf * mb);
     void forwardUpgrade(HttpHeader&);
@@ -147,16 +145,16 @@ private:
 
     /// Parser being used at present to parse the HTTP/ICY server response.
     Http1::ResponseParserPointer hp;
-    Http1::TeChunkedParser *httpChunkDecoder;
+    Http1::TeChunkedParser *httpChunkDecoder = nullptr;
 
     /// amount of message payload/body received so far.
-    int64_t payloadSeen;
+    int64_t payloadSeen = 0;
     /// positive when we read more than we wanted
-    int64_t payloadTruncated;
+    int64_t payloadTruncated = 0;
 
     /// Whether we received a Date header older than that of a matching
     /// cached response.
-    bool sawDateGoBack;
+    bool sawDateGoBack = false;
 };
 
 std::ostream &operator <<(std::ostream &os, const HttpStateData::ReuseDecision &d);
@@ -165,5 +163,5 @@ int httpCachable(const HttpRequestMethod&);
 void httpStart(FwdState *);
 SBuf httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
-#endif /* SQUID_HTTP_H */
+#endif /* SQUID_SRC_HTTP_H */
 

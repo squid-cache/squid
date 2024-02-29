@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -70,13 +70,13 @@ Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
 
     if (error) {
         debugs(83, 5, "error=" << (void*)error);
-        // XXX: forward.cc calls peerConnectSucceeded() after an OK TCP connect but
-        // we call peerConnectFailed() if SSL failed afterwards. Is that OK?
-        // It is not clear whether we should call peerConnectSucceeded/Failed()
+        // XXX: FwdState calls NoteOutgoingConnectionSuccess() after an OK TCP connect, but
+        // we call noteFailure() if SSL failed afterwards. Is that OK?
+        // It is not clear whether we should call noteSuccess()/noteFailure()/etc.
         // based on TCP results, SSL results, or both. And the code is probably not
         // consistent in this aspect across tunnelling and forwarding modules.
         if (peer && peer->secure.encryptTransport)
-            peerConnectFailed(peer);
+            peer->noteFailure(error->httpStatus);
         return;
     }
 
@@ -86,3 +86,13 @@ Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
     }
 }
 
+Security::BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &aRequest,
+        const Comm::ConnectionPointer &aServerConn,
+        const AsyncCallback<EncryptorAnswer> &aCallback,
+        const AccessLogEntryPointer &alp,
+        time_t timeout) :
+    AsyncJob("Security::BlindPeerConnector"),
+    Security::PeerConnector(aServerConn, aCallback, alp, timeout)
+{
+    request = aRequest;
+}

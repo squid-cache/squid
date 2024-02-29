@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEMBLOB_H_
-#define SQUID_MEMBLOB_H_
+#ifndef SQUID_SRC_SBUF_MEMBLOB_H
+#define SQUID_SRC_SBUF_MEMBLOB_H
 
 #define MEMBLOB_DEBUGSECTION 24
 
@@ -59,7 +59,7 @@ public:
     /// create a MemBlob containing a copy of the buffer of a given size
     MemBlob(const char *buffer, const size_type bufferSize);
 
-    virtual ~MemBlob();
+    ~MemBlob() override;
 
     /// the number unused bytes at the end of the allocated blob
     size_type spaceSize() const { return capacity - size; }
@@ -130,5 +130,5 @@ private:
     MemBlob& operator =(const MemBlob &);
 };
 
-#endif /* SQUID_MEMBLOB_H_ */
+#endif /* SQUID_SRC_SBUF_MEMBLOB_H */
 

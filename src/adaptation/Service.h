@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__SERVICE_H
-#define SQUID_ADAPTATION__SERVICE_H
+#ifndef SQUID_SRC_ADAPTATION_SERVICE_H
+#define SQUID_SRC_ADAPTATION_SERVICE_H
 
 #include "AccessLogEntry.h"
 #include "adaptation/Elements.h"
@@ -32,7 +32,7 @@ public:
 
 public:
     explicit Service(const ServiceConfigPointer &aConfig);
-    virtual ~Service();
+    ~Service() override;
 
     virtual bool probed() const = 0; // see comments above
     virtual bool broken() const;
@@ -76,5 +76,5 @@ void DetachServices();
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__SERVICE_H */
+#endif /* SQUID_SRC_ADAPTATION_SERVICE_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,8 +10,7 @@
 
 #if USE_OPENSSL
 
-#include "acl/CertificateData.h"
-#include "acl/Checklist.h"
+#include "acl/FilledChecklist.h"
 #include "acl/ServerCertificate.h"
 #include "client_side.h"
 #include "fde.h"
@@ -19,8 +18,10 @@
 #include "ssl/ServerBump.h"
 
 int
-ACLServerCertificateStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::ServerCertificateCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     Security::CertPointer cert;
     if (checklist->serverCert)
         cert = checklist->serverCert;

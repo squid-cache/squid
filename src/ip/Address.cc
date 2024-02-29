@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /* DEBUG: section 14    IP Storage and Handling */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "util.h"
@@ -102,6 +102,16 @@ Ip::Address::applyMask(Ip::Address const &mask_addr)
 }
 
 void
+Ip::Address::turnMaskedBitsOn(const Address &mask)
+{
+    const auto addressWords = reinterpret_cast<uint32_t*>(&mSocketAddr_.sin6_addr);
+    const auto maskWords = reinterpret_cast<const uint32_t*>(&mask.mSocketAddr_.sin6_addr);
+    const auto len = sizeof(mSocketAddr_.sin6_addr)/sizeof(uint32_t);
+    for (size_t i = 0; i < len; ++i)
+        addressWords[i] |= ~maskWords[i];
+}
+
+void
 Ip::Address::applyClientMask(const Address &mask)
 {
     if (!isLocalhost() && isIPv4())
@@ -112,7 +122,7 @@ bool
 Ip::Address::applyMask(const unsigned int cidrMask, int mtype)
 {
     uint8_t clearbits = 0;
-    uint8_t* p = NULL;
+    uint8_t* p = nullptr;
 
     // validation and short-cuts.
     if (cidrMask > 128)
@@ -349,7 +359,7 @@ Ip::Address::getReverseString(char buf[MAX_IPSTRLEN], int show_type) const
         return getReverseString6(buf, mSocketAddr_.sin6_addr);
     }
 
-    debugs(14, DBG_CRITICAL, "Unable to convert '" << toStr(buf,MAX_IPSTRLEN) << "' to the rDNS type requested.");
+    debugs(14, DBG_CRITICAL, "ERROR: Unable to convert '" << toStr(buf,MAX_IPSTRLEN) << "' to the rDNS type requested.");
 
     buf[0] = '\0';
 
@@ -384,9 +394,9 @@ Ip::Address::lookupHostIP(const char *s, bool nodns)
     }
 
     int err = 0;
-    struct addrinfo *res = NULL;
-    if ( (err = getaddrinfo(s, NULL, &want, &res)) != 0) {
-        debugs(14,3, HERE << "Given Non-IP '" << s << "': " << gai_strerror(err) );
+    struct addrinfo *res = nullptr;
+    if ( (err = getaddrinfo(s, nullptr, &want, &res)) != 0) {
+        debugs(14,3, "Given Non-IP '" << s << "': " << gai_strerror(err) );
         /* free the memory getaddrinfo() dynamically allocated. */
         if (res)
             freeaddrinfo(res);
@@ -402,7 +412,7 @@ Ip::Address::lookupHostIP(const char *s, bool nodns)
                 break;
             maybeIpv4 = maybeIpv4->ai_next;
         }
-        if (maybeIpv4 != NULL)
+        if (maybeIpv4 != nullptr)
             res = maybeIpv4;
         // else IPv6-only host, let the caller deal with first-IP anyway.
     }
@@ -501,9 +511,9 @@ bool
 Ip::Address::operator =(const struct hostent &s)
 {
 
-    struct in_addr* ipv4 = NULL;
+    struct in_addr* ipv4 = nullptr;
 
-    struct in6_addr* ipv6 = NULL;
+    struct in6_addr* ipv6 = nullptr;
 
     //struct hostent {
     //        char    *h_name;        /* official name of host */
@@ -545,9 +555,9 @@ bool
 Ip::Address::operator =(const struct addrinfo &s)
 {
 
-    struct sockaddr_in* ipv4 = NULL;
+    struct sockaddr_in* ipv4 = nullptr;
 
-    struct sockaddr_in6* ipv6 = NULL;
+    struct sockaddr_in6* ipv6 = nullptr;
 
     //struct addrinfo {
     //             int ai_flags;           /* input flags */
@@ -580,7 +590,7 @@ Ip::Address::operator =(const struct addrinfo &s)
     default:
         // attempt to handle partially initialised addrinfo.
         // such as those where data only comes from getsockopt()
-        if (s.ai_addr != NULL) {
+        if (s.ai_addr != nullptr) {
             if (s.ai_addrlen == sizeof(struct sockaddr_in6)) {
                 operator=(*((struct sockaddr_in6*)s.ai_addr));
                 return true;
@@ -598,7 +608,7 @@ Ip::Address::operator =(const struct addrinfo &s)
 void
 Ip::Address::getAddrInfo(struct addrinfo *&dst, int force) const
 {
-    if (dst == NULL) {
+    if (dst == nullptr) {
         dst = new addrinfo;
     }
 
@@ -623,7 +633,7 @@ Ip::Address::getAddrInfo(struct addrinfo *&dst, int force) const
             && dst->ai_protocol == 0)
         dst->ai_protocol = IPPROTO_UDP;
 
-    if (force == AF_INET6 || (force == AF_UNSPEC && Ip::EnableIpv6 && isIPv6()) ) {
+    if (force == AF_INET6 || (force == AF_UNSPEC && isIPv6()) ) {
         dst->ai_addr = (struct sockaddr*)new sockaddr_in6;
 
         memset(dst->ai_addr,0,sizeof(struct sockaddr_in6));
@@ -667,7 +677,7 @@ Ip::Address::getAddrInfo(struct addrinfo *&dst, int force) const
 void
 Ip::Address::InitAddr(struct addrinfo *&ai)
 {
-    if (ai == NULL) {
+    if (ai == nullptr) {
         ai = new addrinfo;
         memset(ai,0,sizeof(struct addrinfo));
     }
@@ -685,18 +695,18 @@ Ip::Address::InitAddr(struct addrinfo *&ai)
 void
 Ip::Address::FreeAddr(struct addrinfo *&ai)
 {
-    if (ai == NULL) return;
+    if (ai == nullptr) return;
 
     if (ai->ai_addr) delete ai->ai_addr;
 
-    ai->ai_addr = NULL;
+    ai->ai_addr = nullptr;
 
     ai->ai_addrlen = 0;
 
     // NP: name fields are NOT allocated at present.
     delete ai;
 
-    ai = NULL;
+    ai = nullptr;
 }
 
 int
@@ -788,22 +798,12 @@ Ip::Address::port(unsigned short prt)
     return prt;
 }
 
-/**
- * toStr Given a buffer writes a readable ascii version of the IPA and/or port stored
- *
- * Buffer must be of a size large enough to hold the converted address.
- * This size is provided in the form of a global defined variable MAX_IPSTRLEN
- * Should a buffer shorter be provided the string result will be truncated
- * at the length of the available buffer.
- *
- * A copy of the buffer is also returned for simple immediate display.
- */
 char *
 Ip::Address::toStr(char* buf, const unsigned int blen, int force) const
 {
     // Ensure we have a buffer.
-    if (buf == NULL) {
-        return NULL;
+    if (buf == nullptr) {
+        return nullptr;
     }
 
     /* some external code may have blindly memset a parent. */
@@ -887,8 +887,8 @@ Ip::Address::toUrl(char* buf, unsigned int blen) const
 
     // Ensure we have a buffer.
 
-    if (buf == NULL) {
-        return NULL;
+    if (buf == nullptr) {
+        return nullptr;
     }
 
     p += toHostStr(p, blen);
@@ -933,11 +933,11 @@ Ip::Address::fromHost(const char *host)
 void
 Ip::Address::getSockAddr(struct sockaddr_storage &addr, const int family) const
 {
-    struct sockaddr_in *sin = NULL;
+    struct sockaddr_in *sin = nullptr;
 
     if ( family == AF_INET && !isIPv4()) {
         // TODO INET6: caller using the wrong socket type!
-        debugs(14, DBG_CRITICAL, HERE << "Ip::Address::getSockAddr : Cannot convert non-IPv4 to IPv4. from " << *this);
+        debugs(14, DBG_CRITICAL, "ERROR: Ip::Address::getSockAddr : Cannot convert non-IPv4 to IPv4. from " << *this);
         assert(false);
     }
 
@@ -960,7 +960,7 @@ Ip::Address::getSockAddr(struct sockaddr_in &buf) const
         buf.sin_port = mSocketAddr_.sin6_port;
         map6to4( mSocketAddr_.sin6_addr, buf.sin_addr);
     } else {
-        debugs(14, DBG_CRITICAL, HERE << "Ip::Address::getSockAddr : Cannot convert non-IPv4 to IPv4. from " << *this );
+        debugs(14, DBG_CRITICAL, "ERROR: Ip::Address::getSockAddr : Cannot convert non-IPv4 to IPv4. from " << *this );
 
         memset(&buf,0xFFFFFFFF,sizeof(struct sockaddr_in));
         assert(false);
@@ -1037,7 +1037,7 @@ Ip::Address::getInAddr(struct in_addr &buf) const
     // default:
     // non-compatible IPv6 Pure Address
 
-    debugs(14, DBG_IMPORTANT, HERE << "Ip::Address::getInAddr : Cannot convert non-IPv4 to IPv4. IPA=" << *this);
+    debugs(14, DBG_IMPORTANT, "ERROR: Ip::Address::getInAddr : Cannot convert non-IPv4 to IPv4. IPA=" << *this);
     memset(&buf,0xFFFFFFFF,sizeof(struct in_addr));
     assert(false);
     return false;

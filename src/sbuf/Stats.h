@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SBUF_STATS_H
-#define SQUID_SBUF_STATS_H
+#ifndef SQUID_SRC_SBUF_STATS_H
+#define SQUID_SRC_SBUF_STATS_H
 
 #include <iosfwd>
 
@@ -25,6 +25,12 @@ public:
     std::ostream& dump(std::ostream &os) const;
 
     SBufStats& operator +=(const SBufStats&);
+
+    /// Record the size a SBuf had when it was destructed
+    static void RecordSBufSizeAtDestruct(size_t);
+
+    /// Record the size a MemBlob had when it was destructed
+    static void RecordMemBlobSizeAtDestruct(size_t);
 
 public:
     uint64_t alloc = 0; ///<number of calls to SBuf constructors
@@ -51,7 +57,14 @@ public:
     uint64_t cowJustAlloc = 0; ///< number of cow() calls requiring just a new empty buffer
     uint64_t cowAllocCopy = 0; ///< number of cow() calls requiring copying into a new buffer
     uint64_t live = 0;  ///<number of currently-allocated SBuf
+
+    /// function for collecting detailed size-related statistics
+    using SizeRecorder = void (*)(size_t);
+    /// collects statistics about SBuf sizes at SBuf destruction time
+    static SizeRecorder SBufSizeAtDestructRecorder;
+    /// collects statistics about MemBlob capacity at MemBlob destruction time
+    static SizeRecorder MemBlobSizeAtDestructRecorder;
 };
 
-#endif /* SQUID_SBUF_STATS_H */
+#endif /* SQUID_SRC_SBUF_STATS_H */
 

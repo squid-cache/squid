@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__SERVICE_FILTER_H
-#define SQUID_ADAPTATION__SERVICE_FILTER_H
+#ifndef SQUID_SRC_ADAPTATION_SERVICEFILTER_H
+#define SQUID_SRC_ADAPTATION_SERVICEFILTER_H
 
 #include "AccessLogEntry.h"
 #include "adaptation/Elements.h"
@@ -36,7 +36,9 @@ public:
     AccessLogEntry::Pointer al; ///< info for the future access.log entry
 };
 
+std::ostream &operator <<(std::ostream &, const ServiceFilter &);
+
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__SERVICE_FILTER_H */
+#endif /* SQUID_SRC_ADAPTATION_SERVICEFILTER_H */
 

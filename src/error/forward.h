@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_ERROR_FORWARD_H
-#define _SQUID_SRC_ERROR_FORWARD_H
+#ifndef SQUID_SRC_ERROR_FORWARD_H
+#define SQUID_SRC_ERROR_FORWARD_H
 
 #include "base/forward.h"
 
@@ -67,7 +67,7 @@ typedef enum {
     ERR_GATEWAY_FAILURE,
 
     /* Special Cases */
-    ERR_DIR_LISTING,            /* Display of remote directory (FTP, Gopher) */
+    ERR_DIR_LISTING,            /* Display of remote directory (FTP) */
     ERR_SQUID_SIGNATURE,        /* not really an error */
     ERR_SHUTTING_DOWN,
     ERR_PROTOCOL_UNKNOWN,
@@ -90,8 +90,9 @@ typedef enum {
 
 class Error;
 class ErrorDetail;
+class ErrorState;
 
 typedef RefCount<ErrorDetail> ErrorDetailPointer;
 
-#endif /* _SQUID_SRC_ERROR_FORWARD_H */
+#endif /* SQUID_SRC_ERROR_FORWARD_H */
 

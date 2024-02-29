@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,9 +8,10 @@
 
 /* DEBUG: section 49    SNMP Interface */
 
-#ifndef SQUID_SNMPX_FORWARDER_H
-#define SQUID_SNMPX_FORWARDER_H
+#ifndef SQUID_SRC_SNMP_FORWARDER_H
+#define SQUID_SRC_SNMP_FORWARDER_H
 
+#include "ip/forward.h"
 #include "ipc/Forwarder.h"
 #include "snmp/Pdu.h"
 #include "snmp/Session.h"
@@ -26,7 +27,7 @@ namespace Snmp
  */
 class Forwarder: public Ipc::Forwarder
 {
-    CBDATA_CLASS(Forwarder);
+    CBDATA_CHILD(Forwarder);
 
 public:
     Forwarder(const Pdu& aPdu, const Session& aSession, int aFd,
@@ -34,9 +35,9 @@ public:
 
 protected:
     /* Ipc::Forwarder API */
-    virtual void swanSong();
-    virtual void handleTimeout();
-    virtual void handleException(const std::exception& e);
+    void swanSong() override;
+    void handleTimeout() override;
+    void handleException(const std::exception& e) override;
 
 private:
     void noteCommClosed(const CommCloseCbParams& params);
@@ -51,5 +52,5 @@ void SendResponse(Ipc::RequestId, const Pdu &);
 
 } // namespace Snmp
 
-#endif /* SQUID_SNMPX_FORWARDER_H */
+#endif /* SQUID_SRC_SNMP_FORWARDER_H */
 

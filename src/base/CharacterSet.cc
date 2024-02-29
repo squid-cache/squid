@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -159,4 +159,12 @@ CharacterSet::ETAGC("ETAGC", {{0x21,0x21},{0x23,0x7e},{0x80,0xff}}),
 // RFC 7235
 CharacterSet::TOKEN68C("TOKEN68C","-._~+/0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 ;
+
+const CharacterSet &
+CharacterSet::RFC3986_UNRESERVED()
+{
+    // RFC 3986: unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
+    static const auto chars = new CharacterSet("RFC3986_UNRESERVED", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~");
+    return *chars;
+}
 

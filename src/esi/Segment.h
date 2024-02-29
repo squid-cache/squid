@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ESISEGMENT_H
-#define SQUID_ESISEGMENT_H
+#ifndef SQUID_SRC_ESI_SEGMENT_H
+#define SQUID_SRC_ESI_SEGMENT_H
 
 /* TODO: Factor the store memory segment management into a reusable code block
  * or perhaps use membuffers here?
@@ -27,9 +27,9 @@ public:
     static void ListAppend (Pointer &, char const *, size_t);
     static void ListTransfer (Pointer &from, Pointer &to);
 
-    ESISegment() : len(0), next(NULL) {*buf = 0;}
+    ESISegment() : len(0), next(nullptr) {*buf = 0;}
     ESISegment(ESISegment const &);
-    ~ESISegment() {}
+    ~ESISegment() override {}
 
     ESISegment::Pointer cloneList() const;
     char *listToChar() const;
@@ -53,5 +53,5 @@ private:
 
 void ESISegmentFreeList (ESISegment::Pointer &head);
 
-#endif /* SQUID_ESISEGMENT_H */
+#endif /* SQUID_SRC_ESI_SEGMENT_H */
 

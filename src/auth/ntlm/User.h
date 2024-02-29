@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_AUTH_NTLM_USER_H
-#define _SQUID_AUTH_NTLM_USER_H
+#ifndef SQUID_SRC_AUTH_NTLM_USER_H
+#define SQUID_SRC_AUTH_NTLM_USER_H
 
 #if HAVE_AUTH_MODULE_NTLM
 
@@ -26,12 +26,12 @@ class User : public Auth::User
 
 public:
     User(Auth::SchemeConfig *, const char *requestRealm);
-    virtual ~User();
-    virtual int32_t ttl() const override;
+    ~User() override;
+    int32_t ttl() const override;
 
     /* Auth::User API */
     static CbcPointer<Auth::CredentialsCache> Cache();
-    virtual void addToNameCache() override;
+    void addToNameCache() override;
 
     dlink_list proxy_auth_list;
 };
@@ -40,5 +40,5 @@ public:
 } // namespace Auth
 
 #endif /* HAVE_AUTH_MODULE_NTLM */
-#endif /* _SQUID_AUTH_NTLM_USER_H */
+#endif /* SQUID_SRC_AUTH_NTLM_USER_H */
 

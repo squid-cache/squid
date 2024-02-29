@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,7 +41,7 @@ Acl::Tree::actionAt(const Nodes::size_type pos) const
 }
 
 void
-Acl::Tree::add(ACL *rule, const Acl::Answer &action)
+Acl::Tree::add(Acl::Node *rule, const Acl::Answer &action)
 {
     // either all rules have actions or none
     assert(nodes.size() == actions.size());
@@ -50,7 +50,7 @@ Acl::Tree::add(ACL *rule, const Acl::Answer &action)
 }
 
 void
-Acl::Tree::add(ACL *rule)
+Acl::Tree::add(Acl::Node *rule)
 {
     // either all rules have actions or none
     assert(actions.empty());

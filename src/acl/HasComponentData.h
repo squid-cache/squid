@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLHASCOMPONENTDATA_H
-#define SQUID_ACLHASCOMPONENTDATA_H
+#ifndef SQUID_SRC_ACL_HASCOMPONENTDATA_H
+#define SQUID_SRC_ACL_HASCOMPONENTDATA_H
 
 #include "acl/Checklist.h"
 #include "acl/Data.h"
@@ -21,11 +21,10 @@ public:
     ACLHasComponentData();
 
     /* ACLData<M> API */
-    virtual bool match(ACLChecklist *) override;
-    virtual SBufList dump() const override;
-    virtual void parse() override;
-    virtual bool empty() const override { return false; }
-    virtual ACLData<ACLChecklist *> *clone() const override;
+    bool match(ACLChecklist *) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override { return false; }
 
 private:
     enum ComponentKind { coRequest = 0, coResponse, coAle, coEnd };
@@ -40,5 +39,5 @@ private:
     std::vector<ComponentCheck> componentMethods;
 };
 
-#endif
+#endif /* SQUID_SRC_ACL_HASCOMPONENTDATA_H */
 

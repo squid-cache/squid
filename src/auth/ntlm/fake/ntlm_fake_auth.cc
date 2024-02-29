@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -77,7 +77,7 @@ unsigned int response_delay = 0;
  * -v enable verbose NTLM packet debugging.
  * -l if specified, changes behavior on failures to last-ditch.
  */
-char *my_program_name = NULL;
+char *my_program_name = nullptr;
 
 static void
 usage(void)
@@ -122,7 +122,7 @@ process_options(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
-        /* [[fallthrough]] */
+            [[fallthrough]];
         default:
             fprintf(stderr, "unknown option: -%c. Exiting\n", opt);
             usage();
@@ -145,8 +145,8 @@ main(int argc, char *argv[])
     char helper_command[3];
     int len;
 
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stderr, nullptr);
 
     my_program_name = argv[0];
 
@@ -154,11 +154,11 @@ main(int argc, char *argv[])
 
     debug("%s " VERSION " " SQUID_BUILD_INFO " starting up...\n", my_program_name);
 
-    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != nullptr) {
         user[0] = '\0';     /*no user code */
         domain[0] = '\0';       /*no domain code */
 
-        if ((p = strchr(buf, '\n')) != NULL)
+        if ((p = strchr(buf, '\n')) != nullptr)
             *p = '\0';      /* strip \n */
         buflen = strlen(buf);   /* keep this so we only scan the buffer for \0 once per loop */
         ntlmhdr *packet;
@@ -171,7 +171,7 @@ main(int argc, char *argv[])
             decodedLen = dstLen;
             packet = (ntlmhdr*)decodedBuf;
         } else {
-            packet = NULL;
+            packet = nullptr;
             decodedLen = 0;
         }
 
@@ -193,9 +193,9 @@ main(int argc, char *argv[])
             ntlm_make_nonce(nonce);
             if (buflen > 3 && packet) {
                 ntlm_negotiate *nego = (ntlm_negotiate *)packet;
-                ntlm_make_challenge(&chal, authenticate_ntlm_domain, NULL, nonce, NTLM_NONCE_LEN, nego->flags);
+                ntlm_make_challenge(&chal, authenticate_ntlm_domain, nullptr, nonce, NTLM_NONCE_LEN, nego->flags);
             } else {
-                ntlm_make_challenge(&chal, authenticate_ntlm_domain, NULL, nonce, NTLM_NONCE_LEN, NTLM_NEGOTIATE_ASCII);
+                ntlm_make_challenge(&chal, authenticate_ntlm_domain, nullptr, nonce, NTLM_NONCE_LEN, NTLM_NEGOTIATE_ASCII);
             }
             // TODO: find out what this context means, and why only the fake auth helper contains it.
             chal.context_high = htole32(0x003a<<16);
@@ -218,8 +218,8 @@ main(int argc, char *argv[])
         } else if (strncmp(buf, "KK ", 3) == 0) {
             if (!packet) {
                 SEND("BH received KK with no data! user=");
-            } else if (ntlm_validate_packet(packet, NTLM_AUTHENTICATE) == NTLM_ERR_NONE) {
-                if (ntlm_unpack_auth((ntlm_authenticate *)packet, user, domain, decodedLen) == NTLM_ERR_NONE) {
+            } else if (ntlm_validate_packet(packet, NTLM_AUTHENTICATE) == NtlmError::None) {
+                if (ntlm_unpack_auth((ntlm_authenticate *)packet, user, domain, decodedLen) == NtlmError::None) {
                     lc(user);
                     if (strip_domain_enabled) {
                         SEND2("AF %s", user);

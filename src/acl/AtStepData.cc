@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,9 +12,11 @@
 #include "base/EnumIterator.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "sbuf/Stream.h"
 #include "wordlist.h"
+
+#include <algorithm>
 
 static inline const char *
 StepName(const XactionStep xstep)
@@ -49,11 +51,6 @@ StepValue(const char *name)
 
 ACLAtStepData::ACLAtStepData()
 {}
-
-ACLAtStepData::ACLAtStepData(ACLAtStepData const &old)
-{
-    values.assign(old.values.begin(), old.values.end());
-}
 
 ACLAtStepData::~ACLAtStepData()
 {
@@ -90,11 +87,5 @@ bool
 ACLAtStepData::empty() const
 {
     return values.empty();
-}
-
-ACLAtStepData *
-ACLAtStepData::clone() const
-{
-    return new ACLAtStepData(*this);
 }
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLTIMEDATA_H
-#define SQUID_ACLTIMEDATA_H
+#ifndef SQUID_SRC_ACL_TIMEDATA_H
+#define SQUID_SRC_ACL_TIMEDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -18,14 +18,11 @@ class ACLTimeData : public ACLData<time_t>
 
 public:
     ACLTimeData();
-    ACLTimeData(ACLTimeData const &);
-    ACLTimeData&operator=(ACLTimeData const &);
-    virtual ~ACLTimeData();
-    bool match(time_t);
-    virtual SBufList dump() const;
-    void parse();
-    bool empty() const;
-    virtual ACLData<time_t> *clone() const;
+    ~ACLTimeData() override;
+    bool match(time_t) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override;
 
 private:
     int weekbits;
@@ -34,5 +31,5 @@ private:
     ACLTimeData *next;
 };
 
-#endif /* SQUID_ACLTIMEDATA_H */
+#endif /* SQUID_SRC_ACL_TIMEDATA_H */
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HTTP_STATUSCODE_H
-#define _SQUID_SRC_HTTP_STATUSCODE_H
+#ifndef SQUID_SRC_HTTP_STATUSCODE_H
+#define SQUID_SRC_HTTP_STATUSCODE_H
 
 namespace Http
 {
@@ -54,7 +54,7 @@ typedef enum {
     scGone = 410,
     scLengthRequired = 411,
     scPreconditionFailed = 412,
-    scPayloadTooLarge = 413,
+    scContentTooLarge = 413,
     scUriTooLong = 414,
     scUnsupportedMediaType = 415,
     scRequestedRangeNotSatisfied = 416,
@@ -90,10 +90,14 @@ typedef enum {
 const char *StatusCodeString(const Http::StatusCode status);
 /// whether this is an informational 1xx response status code
 inline bool Is1xx(const int sc) { return scContinue <= sc && sc < scOkay; }
+/// whether this is a client error 4xx response status code
+inline bool Is4xx(const int sc) { return scBadRequest <= sc && sc < scInternalServerError; }
 /// whether this response status code prohibits sending Content-Length
 inline bool ProhibitsContentLength(const StatusCode sc) { return sc == scNoContent || Is1xx(sc); }
+/// whether to send the request to another peer based on the current response status code
+bool IsReforwardableStatus(StatusCode);
 
 } // namespace Http
 
-#endif /* _SQUID_SRC_HTTP_STATUSCODE_H */
+#endif /* SQUID_SRC_HTTP_STATUSCODE_H */
 

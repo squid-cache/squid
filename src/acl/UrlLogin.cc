@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,24 +10,21 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "acl/RegexData.h"
 #include "acl/UrlLogin.h"
+#include "anyp/Uri.h"
 #include "HttpRequest.h"
-#include "rfc1738.h"
 
 int
-ACLUrlLoginStrategy::match(ACLData<char const *> * &data, ACLFilledChecklist *checklist)
+Acl::UrlLoginCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     if (checklist->request->url.userInfo().isEmpty()) {
         debugs(28, 5, "URL has no user-info details. cannot match");
         return 0; // nothing can match
     }
 
-    static char str[MAX_URL]; // should be big enough for a single URI segment
-
-    const SBuf::size_type len = checklist->request->url.userInfo().copy(str, sizeof(str)-1);
-    str[len] = '\0';
-    rfc1738_unescape(str);
-    return data->match(str);
+    auto decodedUserInfo = AnyP::Uri::Decode(checklist->request->url.userInfo());
+    return data->match(decodedUserInfo.c_str());
 }
 

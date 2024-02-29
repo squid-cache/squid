@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef   SQUID_REMOVALPOLICY_H
-#define   SQUID_REMOVALPOLICY_H
+#ifndef SQUID_SRC_REMOVALPOLICY_H
+#define SQUID_SRC_REMOVALPOLICY_H
 
 #include "cbdata.h"
 
@@ -20,7 +20,7 @@ class RemovalPolicySettings
 {
 
 public:
-    RemovalPolicySettings() : type(NULL), args(NULL) {};
+    RemovalPolicySettings() : type(nullptr), args(nullptr) {};
 
     char *type;
     wordlist *args;
@@ -30,7 +30,7 @@ class RemovalPolicyNode
 {
 
 public:
-    RemovalPolicyNode() : data(NULL) {}
+    RemovalPolicyNode() : data(nullptr) {}
 
     void *data;
 };
@@ -79,5 +79,5 @@ RemovalPolicy *createRemovalPolicy(RemovalPolicySettings * settings);
 
 typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
 
-#endif /* SQUID_REMOVALPOLICY_H */
+#endif /* SQUID_SRC_REMOVALPOLICY_H */
 

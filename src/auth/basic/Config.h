@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef __AUTH_BASIC_H__
-#define __AUTH_BASIC_H__
+#ifndef SQUID_SRC_AUTH_BASIC_CONFIG_H
+#define SQUID_SRC_AUTH_BASIC_CONFIG_H
 
 #if HAVE_AUTH_MODULE_BASIC
 
@@ -26,18 +26,18 @@ class Config : public Auth::SchemeConfig
 {
 public:
     Config();
-    virtual bool active() const;
-    virtual bool configured() const;
-    virtual Auth::UserRequest::Pointer decode(char const *proxy_auth, const HttpRequest *request, const char *requestRealm);
-    virtual void done();
-    virtual void rotateHelpers();
-    virtual bool dump(StoreEntry *, const char *, Auth::SchemeConfig *) const;
-    virtual void fixHeader(Auth::UserRequest::Pointer, HttpReply *, Http::HdrType, HttpRequest *);
-    virtual void init(Auth::SchemeConfig *);
-    virtual void parse(Auth::SchemeConfig *, int, char *);
+    bool active() const override;
+    bool configured() const override;
+    Auth::UserRequest::Pointer decode(char const *proxy_auth, const HttpRequest *request, const char *requestRealm) override;
+    void done() override;
+    void rotateHelpers() override;
+    bool dump(StoreEntry *, const char *, Auth::SchemeConfig *) const override;
+    void fixHeader(Auth::UserRequest::Pointer, HttpReply *, Http::HdrType, HttpRequest *) override;
+    void init(Auth::SchemeConfig *) override;
+    void parse(Auth::SchemeConfig *, int, char *) override;
     void decode(char const *httpAuthHeader, Auth::UserRequest::Pointer);
-    virtual void registerWithCacheManager(void);
-    virtual const char * type() const;
+    void registerWithCacheManager(void) override;
+    const char * type() const override;
 
 public:
     time_t credentialsTTL;
@@ -50,8 +50,8 @@ private:
 } // namespace Basic
 } // namespace Auth
 
-extern helper *basicauthenticators;
+extern Helper::ClientPointer basicauthenticators;
 
 #endif /* HAVE_AUTH_MODULE_BASIC */
-#endif /* __AUTH_BASIC_H__ */
+#endif /* SQUID_SRC_AUTH_BASIC_CONFIG_H */
 

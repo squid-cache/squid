@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_OS_LINUX_H
-#define SQUID_OS_LINUX_H
+#ifndef SQUID_COMPAT_OS_LINUX_H
+#define SQUID_COMPAT_OS_LINUX_H
 
 #if _SQUID_LINUX_
 
@@ -45,23 +45,6 @@
 #endif
 
 /*
- * sys/capability.h is only needed in Linux apparently.
- *
- * HACK: LIBCAP_BROKEN Ugly glue to get around linux header madness colliding with glibc
- */
-#if HAVE_SYS_CAPABILITY_H
-
-#if LIBCAP_BROKEN
-#undef _POSIX_SOURCE
-#define _LINUX_TYPES_H
-#define _LINUX_FS_H
-typedef uint32_t __u32;
-#endif
-
-#include <sys/capability.h>
-#endif /* HAVE_SYS_CAPABILITY_H */
-
-/*
  * glob.h is provided by GNU on Linux and contains some unavoidable preprocessor
  * logic errors in its 64-bit definitions which are hit by non-GCC compilers.
  *
@@ -86,5 +69,5 @@ typedef uint32_t __u32;
 #endif
 
 #endif /* _SQUID_LINUX_ */
-#endif /* SQUID_OS_LINUX_H */
+#endif /* SQUID_COMPAT_OS_LINUX_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "AccessLogEntry.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "client_side.h"
 #include "client_side_request.h"
 #include "comm/Connection.h"
@@ -24,6 +25,7 @@
 #include "HttpRequest.h"
 #include "IoStats.h"
 #include "mem/Pool.h"
+#include "mem/Stats.h"
 #include "mem_node.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -38,15 +40,12 @@
 #include "PeerDigest.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "stat.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store_digest.h"
 #include "StoreClient.h"
 #include "tools.h"
-// for tvSubDsec() which should be in SquidTime.h
-#include "util.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
@@ -203,12 +202,6 @@ GetIoStats(Mgr::IoActionData& stats)
     for (i = 0; i < IoStats::histSize; ++i) {
         stats.ftp_read_hist[i] = IOStats.Ftp.read_hist[i];
     }
-
-    stats.gopher_reads = IOStats.Gopher.reads;
-
-    for (i = 0; i < IoStats::histSize; ++i) {
-        stats.gopher_read_hist[i] = IOStats.Gopher.read_hist[i];
-    }
 }
 
 void
@@ -239,19 +232,6 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
                           1 << i,
                           stats.ftp_read_hist[i],
                           Math::doublePercent(stats.ftp_read_hist[i], stats.ftp_reads));
-    }
-
-    storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "Gopher I/O\n");
-    storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.gopher_reads);
-    storeAppendPrintf(sentry, "Read Histogram:\n");
-
-    for (i = 0; i < IoStats::histSize; ++i) {
-        storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
-                          i ? (1 << (i - 1)) + 1 : 1,
-                          1 << i,
-                          stats.gopher_read_hist[i],
-                          Math::doublePercent(stats.gopher_read_hist[i], stats.gopher_reads));
     }
 
     storeAppendPrintf(sentry, "\n");
@@ -333,7 +313,7 @@ statStoreEntry(MemBuf * mb, StoreEntry * e)
     mb->appendf("\t%d locks, %d clients, %d refs\n", (int) e->locks(), storePendingNClients(e), (int) e->refcount);
     mb->appendf("\tSwap Dir %d, File %#08X\n", e->swap_dirn, e->swap_filen);
 
-    if (mem != NULL)
+    if (mem != nullptr)
         mem->stat (mb);
 
     mb->append("\n", 1);
@@ -401,7 +381,7 @@ statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
 static void
 stat_objects_get(StoreEntry * sentry)
 {
-    statObjectsStart(sentry, NULL);
+    statObjectsStart(sentry, nullptr);
 }
 
 static int
@@ -419,10 +399,10 @@ stat_vmobjects_get(StoreEntry * sentry)
 static int
 statObjectsOpenfdFilter(const StoreEntry * e)
 {
-    if (e->mem_obj == NULL)
+    if (e->mem_obj == nullptr)
         return 0;
 
-    if (e->mem_obj->swapout.sio == NULL)
+    if (e->mem_obj->swapout.sio == nullptr)
         return 0;
 
     return 1;
@@ -554,13 +534,12 @@ GetInfo(Mgr::InfoActionData& stats)
 
 #endif
 
-    stats.total_accounted = statMemoryAccounted();
-
     {
-        MemPoolGlobalStats mp_stats;
-        memPoolGetGlobalStats(&mp_stats);
-        stats.gb_saved_count = mp_stats.TheMeter->gb_saved.count;
-        stats.gb_freed_count = mp_stats.TheMeter->gb_freed.count;
+        Mem::PoolStats mp_stats;
+        Mem::GlobalStats(mp_stats);
+        stats.gb_saved_count = mp_stats.meter->gb_saved.count;
+        stats.gb_freed_count = mp_stats.meter->gb_freed.count;
+        stats.total_accounted = mp_stats.meter->alloc.currentLevel();
     }
 
     stats.max_fd = Squid_MaxFD;
@@ -591,10 +570,10 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
 #endif
 
     storeAppendPrintf(sentry, "Start Time:\t%s\n",
-                      mkrfc1123(stats.squid_start.tv_sec));
+                      Time::FormatRfc1123(stats.squid_start.tv_sec));
 
     storeAppendPrintf(sentry, "Current Time:\t%s\n",
-                      mkrfc1123(stats.current_time.tv_sec));
+                      Time::FormatRfc1123(stats.current_time.tv_sec));
 
     storeAppendPrintf(sentry, "Connection information for %s:\n",APP_SHORTNAME);
 
@@ -746,8 +725,8 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "\tTotal accounted:       %6.0f KB\n",
                       stats.total_accounted / 1024);
     {
-        MemPoolGlobalStats mp_stats;
-        memPoolGetGlobalStats(&mp_stats);
+        Mem::PoolStats mp_stats;
+        Mem::GlobalStats(mp_stats); // XXX: called just for its side effects
         storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
                           stats.gb_saved_count);
         storeAppendPrintf(sentry, "\tmemPoolFree calls:  %9.0f\n",
@@ -909,7 +888,7 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
 
         l = &CountHourHist[hours];
     } else {
-        debugs(18, DBG_IMPORTANT, "statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
+        debugs(18, DBG_IMPORTANT, "ERROR: statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
         return;
     }
 
@@ -1024,11 +1003,11 @@ DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "sample_start_time = %d.%d (%s)\n",
                       (int)stats.sample_start_time.tv_sec,
                       (int)stats.sample_start_time.tv_usec,
-                      mkrfc1123(stats.sample_start_time.tv_sec));
+                      Time::FormatRfc1123(stats.sample_start_time.tv_sec));
     storeAppendPrintf(sentry, "sample_end_time = %d.%d (%s)\n",
                       (int)stats.sample_end_time.tv_sec,
                       (int)stats.sample_end_time.tv_usec,
-                      mkrfc1123(stats.sample_end_time.tv_sec));
+                      Time::FormatRfc1123(stats.sample_end_time.tv_sec));
 
     storeAppendPrintf(sentry, "client_http.requests = %f/sec\n",
                       stats.client_http_requests);
@@ -1157,7 +1136,7 @@ DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry)
 
 #if USE_POLL
     storeAppendPrintf(sentry, "syscalls.polls = %f/sec\n", stats.syscalls_selects);
-#elif defined(USE_SELECT) || defined(USE_SELECT_WIN32)
+#elif USE_SELECT
     storeAppendPrintf(sentry, "syscalls.selects = %f/sec\n", stats.syscalls_selects);
 #endif
 
@@ -1251,9 +1230,11 @@ statCountersInitSpecial(StatCounters * C)
      * Cache Digest Stuff
      */
     C->cd.on_xition_count.enumInit(CacheDigestHashFuncCount);
-    C->comm_udp_incoming.enumInit(INCOMING_UDP_MAX);
-    C->comm_dns_incoming.enumInit(INCOMING_DNS_MAX);
-    C->comm_tcp_incoming.enumInit(INCOMING_TCP_MAX);
+#if USE_POLL || USE_SELECT
+    C->comm_udp.init(INCOMING_UDP_MAX);
+    C->comm_dns.init(INCOMING_DNS_MAX);
+    C->comm_tcp.init(INCOMING_TCP_MAX);
+#endif
     C->select_fds_hist.enumInit(256);   /* was SQUID_MAXFD, but it is way too much. It is OK to crop this statistics */
 }
 
@@ -1279,11 +1260,11 @@ statInit(void)
 
     statCountersInit(&statCounter);
 
-    eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
+    eventAdd("statAvgTick", statAvgTick, nullptr, (double) COUNT_INTERVAL, 1);
 
-    ClientActiveRequests.head = NULL;
+    ClientActiveRequests.head = nullptr;
 
-    ClientActiveRequests.tail = NULL;
+    ClientActiveRequests.tail = nullptr;
 
     statRegisterWithCacheManager();
 }
@@ -1292,7 +1273,7 @@ static void
 statAvgTick(void *)
 {
     struct rusage rusage;
-    eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
+    eventAdd("statAvgTick", statAvgTick, nullptr, (double) COUNT_INTERVAL, 1);
     squid_getrusage(&rusage);
     statCounter.page_faults = rusage_pagefaults(&rusage);
     statCounter.cputime = rusage_cputime(&rusage);
@@ -1346,23 +1327,23 @@ static void
 statCountersHistograms(StoreEntry * sentry)
 {
     storeAppendPrintf(sentry, "client_http.allSvcTime histogram:\n");
-    statCounter.client_http.allSvcTime.dump(sentry, NULL);
+    statCounter.client_http.allSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "client_http.missSvcTime histogram:\n");
-    statCounter.client_http.missSvcTime.dump(sentry, NULL);
+    statCounter.client_http.missSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "client_http.nearMissSvcTime histogram:\n");
-    statCounter.client_http.nearMissSvcTime.dump(sentry, NULL);
+    statCounter.client_http.nearMissSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "client_http.nearHitSvcTime histogram:\n");
-    statCounter.client_http.nearHitSvcTime.dump(sentry, NULL);
+    statCounter.client_http.nearHitSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "client_http.hitSvcTime histogram:\n");
-    statCounter.client_http.hitSvcTime.dump(sentry, NULL);
+    statCounter.client_http.hitSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "icp.querySvcTime histogram:\n");
-    statCounter.icp.querySvcTime.dump(sentry, NULL);
+    statCounter.icp.querySvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "icp.replySvcTime histogram:\n");
-    statCounter.icp.replySvcTime.dump(sentry, NULL);
+    statCounter.icp.replySvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "dns.svc_time histogram:\n");
-    statCounter.dns.svcTime.dump(sentry, NULL);
+    statCounter.dns.svcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "select_fds_hist histogram:\n");
-    statCounter.select_fds_hist.dump(sentry, NULL);
+    statCounter.select_fds_hist.dump(sentry, nullptr);
 }
 
 static void
@@ -1461,7 +1442,7 @@ DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "sample_time = %d.%d (%s)\n",
                       (int) stats.sample_time.tv_sec,
                       (int) stats.sample_time.tv_usec,
-                      mkrfc1123(stats.sample_time.tv_sec));
+                      Time::FormatRfc1123(stats.sample_time.tv_sec));
     storeAppendPrintf(sentry, "client_http.requests = %.0f\n",
                       stats.client_http_requests);
     storeAppendPrintf(sentry, "client_http.hits = %.0f\n",
@@ -1591,23 +1572,11 @@ DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry)
                       stats.hitValidationFailures);
 }
 
-void
-statFreeMemory(void)
-{
-    // TODO: replace with delete[]
-    for (int i = 0; i < N_COUNT_HIST; ++i)
-        CountHist[i] = StatCounters();
-
-    for (int i = 0; i < N_COUNT_HOUR_HIST; ++i)
-        CountHourHist[i] = StatCounters();
-}
-
 static void
 statPeerSelect(StoreEntry * sentry)
 {
 #if USE_CACHE_DIGESTS
     StatCounters *f = &statCounter;
-    CachePeer *peer;
     const int tot_used = f->cd.times_used + f->icp.times_used;
 
     /* totals */
@@ -1616,7 +1585,7 @@ statPeerSelect(StoreEntry * sentry)
     /* per-peer */
     storeAppendPrintf(sentry, "\nPer-peer statistics:\n");
 
-    for (peer = getFirstPeer(); peer; peer = getNextPeer(peer)) {
+    for (const auto &peer: CurrentCachePeers()) {
         if (peer->digest)
             peerDigestStatsReport(peer->digest, sentry);
         else
@@ -1806,13 +1775,13 @@ statClientRequests(StoreEntry * s)
     char buf[MAX_IPSTRLEN];
 
     for (i = ClientActiveRequests.head; i; i = i->next) {
-        const char *p = NULL;
+        const char *p = nullptr;
         http = static_cast<ClientHttpRequest *>(i->data);
         assert(http);
         ConnStateData * conn = http->getConn();
         storeAppendPrintf(s, "Connection: %p\n", conn);
 
-        if (conn != NULL) {
+        if (conn != nullptr) {
             const int fd = conn->clientConnection->fd;
             storeAppendPrintf(s, "\tFD %d, read %" PRId64 ", wrote %" PRId64 "\n", fd,
                               fd_table[fd].bytes_read, fd_table[fd].bytes_written);
@@ -1838,7 +1807,7 @@ statClientRequests(StoreEntry * s)
                           (int) http->al->cache.start_time.tv_usec,
                           tvSubDsec(http->al->cache.start_time, current_time));
 #if USE_AUTH
-        if (http->request->auth_user_request != NULL)
+        if (http->request->auth_user_request != nullptr)
             p = http->request->auth_user_request->username();
         else
 #endif
@@ -1846,11 +1815,11 @@ statClientRequests(StoreEntry * s)
                 p = http->request->extacl_user.termedBuf();
             }
 
-        if (!p && conn != NULL && conn->clientConnection->rfc931[0])
+        if (!p && conn != nullptr && conn->clientConnection->rfc931[0])
             p = conn->clientConnection->rfc931;
 
 #if USE_OPENSSL
-        if (!p && conn != NULL && Comm::IsConnOpen(conn->clientConnection))
+        if (!p && conn != nullptr && Comm::IsConnOpen(conn->clientConnection))
             p = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl.get());
 #endif
 
@@ -1950,10 +1919,4 @@ statGraphDump(StoreEntry * e)
 }
 
 #endif /* STAT_GRAPHS */
-
-int
-statMemoryAccounted(void)
-{
-    return memPoolsTotalAllocated();
-}
 

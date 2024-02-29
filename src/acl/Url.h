@@ -1,24 +1,30 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLURL_H
-#define SQUID_ACLURL_H
+#ifndef SQUID_SRC_ACL_URL_H
+#define SQUID_SRC_ACL_URL_H
 
 #include "acl/Data.h"
-#include "acl/Strategised.h"
+#include "acl/ParameterizedNode.h"
 
-class ACLUrlStrategy : public ACLStrategy<char const *>
+namespace Acl
 {
 
+/// a "url_regex" ACL
+class UrlCheck: public ParameterizedNode< ACLData<const char *> >
+{
 public:
-    virtual int match (ACLData<char const *> * &, ACLFilledChecklist *);
-    virtual bool requiresRequest() const {return true;}
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
+    bool requiresRequest() const override {return true;}
 };
 
-#endif /* SQUID_ACLURL_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_URL_H */
 

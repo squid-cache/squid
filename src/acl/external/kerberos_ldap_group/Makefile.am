@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -36,8 +36,9 @@ ext_kerberos_ldap_group_acl_LDFLAGS =
 ext_kerberos_ldap_group_acl_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
-	$(LDAPLIB) \
-	$(LBERLIB) \
+	$(LIBGSS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
+	$(LIBLDAP_LIBS) \
 	$(LIBSASL) \
 	$(KRB5LIBS) \
 	$(XTRA_LIBS)

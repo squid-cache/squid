@@ -24,7 +24,7 @@
 # for the list of possible encodings.
 # The default value is: UTF-8.
 
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -349,7 +349,7 @@ SIP_SUPPORT            = NO
 # should set this option to NO.
 # The default value is: YES.
 
-IDL_PROPERTY_SUPPORT   = YES
+IDL_PROPERTY_SUPPORT   = NO
 
 # If member grouping is used in the documentation and the DISTRIBUTE_GROUP_DOC
 # tag is set to YES then doxygen will reuse the documentation of the first
@@ -632,7 +632,7 @@ GENERATE_TESTLIST      = YES
 # list. This list is created by putting \bug commands in the documentation.
 # The default value is: YES.
 
-GENERATE_BUGLIST       = YES
+GENERATE_BUGLIST       = NO
 
 # The GENERATE_DEPRECATEDLIST tag can be used to enable (YES) or disable (NO)
 # the deprecated list. This list is created by putting \deprecated commands in
@@ -2066,26 +2066,22 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = __cplusplus \
                          FOLLOW_X_FORWARDED_FOR \
                          FORW_VIA_DB \
+                         HAVE_LIBGNUTLS \
                          ICAP_CLIENT \
+                         HAVE_LIBHEIMDAL_KRB5 \
                          LINUX_NETFILTER \
-                         MULTICAST_MISS_STREAM \
                          SQUID_SNMP \
                          USE_ADAPTATION \
                          USE_APPLE_KRB5 \
                          USE_ASYNC_IO \
                          USE_AUTH \
                          USE_CACHE_DIGESTS \
-                         USE_CLASSFUL \
                          USE_DELAY_POOLS \
                          USE_DEVPOLL \
                          USE_DLMALLOC \
                          USE_ECAP \
                          USE_ERR_LOCALES \
                          USE_EPOLL \
-                         USE_GNUGSS \
-                         USE_GNUREGEX \
-                         USE_GNUTLS \
-                         USE_HEIMDAL_KRB5 \
                          USE_HEXDUMP \
                          USE_HTCP \
                          USE_HTTP_VIOLATIONS \
@@ -2100,7 +2096,6 @@ PREDEFINED             = __cplusplus \
                          USE_POLL \
                          USE_QOS_TOS \
                          USE_SELECT \
-                         USE_SELECT_WIN32 \
                          USE_SOLARIS_KRB5 \
                          USE_SQUID_ESI \
                          USE_SQUID_EUI \
@@ -2110,7 +2105,6 @@ PREDEFINED             = __cplusplus \
                          USE_WCCP \
                          USE_WCCPv2 \
                          USE_WIN32_SERVICE \
-                         USE_XPROF_STATS \
                          WITH_VALGRIND \
                          X_ACCELERATOR_VARY
 

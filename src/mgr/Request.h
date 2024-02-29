@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,9 +8,10 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_REQUEST_H
-#define SQUID_MGR_REQUEST_H
+#ifndef SQUID_SRC_MGR_REQUEST_H
+#define SQUID_SRC_MGR_REQUEST_H
 
+#include "comm/forward.h"
 #include "ipc/forward.h"
 #include "ipc/Request.h"
 #include "mgr/ActionParams.h"
@@ -27,8 +28,8 @@ public:
 
     explicit Request(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
     /* Ipc::Request API */
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual Pointer clone() const;
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    Pointer clone() const override;
 
 public:
     Comm::ConnectionPointer conn; ///< HTTP client connection descriptor
@@ -38,5 +39,5 @@ public:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_REQUEST_H */
+#endif /* SQUID_SRC_MGR_REQUEST_H */
 

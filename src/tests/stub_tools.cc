@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-// XXX: need src/ to avoid clashes with ip/tools.h in testIpAddress
+// XXX: need src/ to avoid clashes with ip/tools.h in TestIpAddress
 #include "src/tools.h"
 
 #define STUB_API "tools.cc"
@@ -27,8 +27,8 @@ void BroadcastSignalIfAny(int &) STUB
 void sigusr2_handle(int) STUB
 void debug_trap(const char *) STUB
 void sig_child(int) STUB
-const char * getMyHostname(void) STUB_RETVAL(NULL)
-const char * uniqueHostname(void) STUB_RETVAL(NULL)
+const char * getMyHostname(void) STUB_RETVAL(nullptr)
+const char * uniqueHostname(void) STUB_RETVAL(nullptr)
 void leave_suid(void) STUB_NOP
 void enter_suid(void) STUB
 void no_suid(void) STUB

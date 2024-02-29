@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -22,21 +22,23 @@ negotiate_kerberos_auth_SOURCES = \
 	negotiate_kerberos.h \
 	negotiate_kerberos_auth.cc \
 	negotiate_kerberos_pac.cc
-negotiate_kerberos_auth_LDFLAGS=
 negotiate_kerberos_auth_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
-	$(NETTLELIB) \
+	$(LIBGSS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
+	$(LIBNETTLE_LIBS) \
 	$(KRB5LIBS) \
 	$(XTRA_LIBS)
 
 negotiate_kerberos_auth_test_SOURCES = \
 	negotiate_kerberos_auth_test.cc
-negotiate_kerberos_auth_test_LDFLAGS=
 negotiate_kerberos_auth_test_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
-	$(NETTLELIB) \
+	$(LIBGSS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
+	$(LIBNETTLE_LIBS) \
 	$(KRB5LIBS) \
 	$(XTRA_LIBS)
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ANYP_PORTCFG_H
-#define SQUID_ANYP_PORTCFG_H
+#ifndef SQUID_SRC_ANYP_PORTCFG_H
+#define SQUID_SRC_ANYP_PORTCFG_H
 
 #include "anyp/forward.h"
 #include "anyp/ProtocolVersion.h"
@@ -15,7 +15,6 @@
 #include "base/CodeContext.h"
 #include "comm/Connection.h"
 #include "comm/Tcp.h"
-#include "sbuf/SBuf.h"
 #include "security/ServerOptions.h"
 
 namespace AnyP
@@ -25,12 +24,16 @@ class PortCfg : public CodeContext
 {
 public:
     PortCfg();
-    ~PortCfg();
-    AnyP::PortCfgPointer clone() const;
+    // no public copying/moving but see ipV4clone()
+    PortCfg(PortCfg &&) = delete;
+    ~PortCfg() override;
+
+    /// creates the same port configuration but listening on any IPv4 address
+    PortCfg *ipV4clone() const;
 
     /* CodeContext API */
-    virtual ScopedId codeContextGist() const override;
-    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
+    ScopedId codeContextGist() const override;
+    std::ostream &detailCodeContext(std::ostream &os) const override;
 
     PortCfgPointer next;
 
@@ -65,6 +68,9 @@ public:
 
     /// TLS configuration options for this listening port
     Security::ServerOptions secure;
+
+private:
+    explicit PortCfg(const PortCfg &other); // for ipV4clone() needs only!
 };
 
 } // namespace AnyP
@@ -84,5 +90,5 @@ extern AnyP::PortCfgPointer FtpPortList;
 extern int NHttpSockets;
 extern int HttpSockets[MAXTCPLISTENPORTS];
 
-#endif /* SQUID_ANYP_PORTCFG_H */
+#endif /* SQUID_SRC_ANYP_PORTCFG_H */
 

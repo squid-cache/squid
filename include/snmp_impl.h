@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_IMPL_H
-#define SQUID_SNMP_IMPL_H
+#ifndef SQUID_INCLUDE_SNMP_IMPL_H
+#define SQUID_INCLUDE_SNMP_IMPL_H
 
 #include "asn1.h"
 
@@ -40,9 +40,6 @@ SOFTWARE.
 
 #define SID_MAX_LEN 64
 
-#define READ        1
-#define WRITE       0
-
 #define SNMP_RESERVE1    0
 #define SNMP_RESERVE2    1
 #define SNMP_COMMIT      2
@@ -61,5 +58,5 @@ struct trapVar {
     struct trapVar *next;
 };
 
-#endif /* SQUID_SNMP_IMPL_H */
+#endif /* SQUID_INCLUDE_SNMP_IMPL_H */
 

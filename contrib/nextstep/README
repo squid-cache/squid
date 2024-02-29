@@ -1,7 +1,0 @@
-First run 'make install' from directory ../.. Make sure you compile fat.
-
-
-Then run './makepkg' from this directory. This uses the just installed fat
-binaries in a package. And creates a help file.
-
-Or better: after running make install in ../.. run make tar in this directory.

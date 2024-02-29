@@ -1,33 +1,30 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_RANDOM_H
-#define SQUID_ACL_RANDOM_H
+#ifndef SQUID_SRC_ACL_RANDOM_H
+#define SQUID_SRC_ACL_RANDOM_H
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 
-class ACLRandom : public ACL
+class ACLRandom : public Acl::Node
 {
     MEMPROXY_CLASS(ACLRandom);
 
 public:
     ACLRandom(char const *);
-    ACLRandom(ACLRandom const &);
-    ~ACLRandom();
-    ACLRandom&operator=(ACLRandom const &);
+    ~ACLRandom() override;
 
-    virtual ACL *clone()const;
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual int match(ACLChecklist *checklist);
-    virtual SBufList dump() const;
-    virtual bool empty () const;
-    virtual bool valid() const;
+    char const *typeString() const override;
+    void parse() override;
+    int match(ACLChecklist *checklist) override;
+    SBufList dump() const override;
+    bool empty () const override;
+    bool valid() const override;
 
 protected:
     double data;        // value to be exceeded before this ACL will match
@@ -35,5 +32,5 @@ protected:
     char const *class_;
 };
 
-#endif /* SQUID_ACL_RANDOM_H */
+#endif /* SQUID_SRC_ACL_RANDOM_H */
 

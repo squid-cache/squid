@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -72,9 +72,9 @@
  *
  \code
    mycontext = thisObject->data;
-   thisObject->data = NULL;
+   thisObject->data = nullptr;
    delete thisObject->head;
-   mycontext = NULL;
+   mycontext = nullptr;
    return;
  \endcode
  *
@@ -84,7 +84,7 @@
 CBDATA_CLASS_INIT(clientStreamNode);
 
 clientStreamNode::clientStreamNode(CSR * aReadfunc, CSCB * aCallback, CSD * aDetach, CSS * aStatus, ClientStreamData aData) :
-    head(NULL),
+    head(nullptr),
     readfunc(aReadfunc),
     callback(aCallback),
     detach(aDetach),
@@ -97,7 +97,7 @@ clientStreamNode::~clientStreamNode()
     debugs(87, 3, "Freeing clientStreamNode " << this);
 
     removeFromStream();
-    data = NULL;
+    data = nullptr;
 }
 
 /**
@@ -113,10 +113,10 @@ clientStreamInit(dlink_list * list, CSR * func, CSD * rdetach, CSS * readstatus,
                  ClientStreamData readdata, CSCB * callback, CSD * cdetach, ClientStreamData callbackdata,
                  StoreIOBuffer tailBuffer)
 {
-    clientStreamNode *temp = new clientStreamNode(func, NULL, rdetach, readstatus, readdata);
+    clientStreamNode *temp = new clientStreamNode(func, nullptr, rdetach, readstatus, readdata);
     dlinkAdd(cbdataReference(temp), &temp->node, list);
     temp->head = list;
-    clientStreamInsertHead(list, NULL, callback, cdetach, NULL, callbackdata);
+    clientStreamInsertHead(list, nullptr, callback, cdetach, nullptr, callbackdata);
     temp = (clientStreamNode *)list->tail->data;
     temp->readBuffer = tailBuffer;
 }
@@ -132,7 +132,7 @@ clientStreamInsertHead(dlink_list * list, CSR * func, CSCB * callback,
                        CSD * detach, CSS * status, ClientStreamData data)
 {
     /* test preconditions */
-    assert(list != NULL);
+    assert(list != nullptr);
     assert(list->head);
     clientStreamNode *temp = new clientStreamNode(func, callback, detach, status, data);
     temp->head = list;
@@ -154,8 +154,7 @@ clientStreamCallback(clientStreamNode * thisObject, ClientHttpRequest * http,
     assert(thisObject && http && thisObject->node.next);
     next = thisObject->next();
 
-    debugs(87, 3, "clientStreamCallback: Calling " << next->callback << " with cbdata " <<
-           next->data.getRaw() << " from node " << thisObject);
+    debugs(87, 3, thisObject << " gives " << next->data << ' ' << replyBuffer);
     next->callback(next, http, rep, replyBuffer);
 }
 
@@ -194,11 +193,11 @@ clientStreamDetach(clientStreamNode * thisObject, ClientHttpRequest * http)
 {
     clientStreamNode *temp = thisObject;
 
-    assert(thisObject->node.next == NULL);
+    assert(thisObject->node.next == nullptr);
     debugs(87, 3, "clientStreamDetach: Detaching node " << thisObject);
     /* And clean up thisObject node */
     /* ESI TODO: push refcount class through to head */
-    clientStreamNode *prev = NULL;
+    clientStreamNode *prev = nullptr;
 
     if (thisObject->prev())
         prev = cbdataReference(thisObject->prev());
@@ -237,8 +236,8 @@ clientStreamAbort(clientStreamNode * thisObject, ClientHttpRequest * http)
 {
     dlink_list *list;
 
-    assert(thisObject != NULL);
-    assert(http != NULL);
+    assert(thisObject != nullptr);
+    assert(http != nullptr);
     list = thisObject->head;
     debugs(87, 3, "clientStreamAbort: Aborting stream with tail " << list->tail);
 
@@ -269,7 +268,7 @@ clientStreamNode::removeFromStream()
     if (head)
         dlinkDelete(&node, head);
 
-    head = NULL;
+    head = nullptr;
 }
 
 clientStreamNode *
@@ -278,7 +277,7 @@ clientStreamNode::prev() const
     if (node.prev)
         return (clientStreamNode *)node.prev->data;
     else
-        return NULL;
+        return nullptr;
 }
 
 clientStreamNode *
@@ -287,6 +286,6 @@ clientStreamNode::next() const
     if (node.next)
         return (clientStreamNode *)node.next->data;
     else
-        return NULL;
+        return nullptr;
 }
 

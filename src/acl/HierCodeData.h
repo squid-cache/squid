@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLHIERCODEDATA_H
-#define SQUID_ACLHIERCODEDATA_H
+#ifndef SQUID_SRC_ACL_HIERCODEDATA_H
+#define SQUID_SRC_ACL_HIERCODEDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -19,18 +19,15 @@ class ACLHierCodeData : public ACLData<hier_code>
 
 public:
     ACLHierCodeData();
-    ACLHierCodeData(ACLHierCodeData const &);
-    ACLHierCodeData &operator= (ACLHierCodeData const &);
-    virtual ~ACLHierCodeData();
-    bool match(hier_code);
-    virtual SBufList dump() const;
-    void parse();
-    bool empty() const;
-    virtual ACLData<hier_code> *clone() const;
+    ~ACLHierCodeData() override;
+    bool match(hier_code) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override;
 
     /// mask of codes this ACL might match.
     bool values[HIER_MAX];
 };
 
-#endif /* SQUID_ACLHIERCODEDATA_H */
+#endif /* SQUID_SRC_ACL_HIERCODEDATA_H */
 

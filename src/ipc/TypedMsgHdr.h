@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_TYPED_MSG_HDR_H
-#define SQUID_IPC_TYPED_MSG_HDR_H
+#ifndef SQUID_SRC_IPC_TYPEDMSGHDR_H
+#define SQUID_SRC_IPC_TYPEDMSGHDR_H
 
 #include "compat/cmsg.h"
 #include "ipc/Messages.h"
@@ -22,6 +22,8 @@
 #if HAVE_SYS_UN_H
 #include <sys/un.h>
 #endif
+
+#include <type_traits>
 
 class String;
 
@@ -115,10 +117,7 @@ template <class Pod>
 void
 Ipc::TypedMsgHdr::getPod(Pod &pod) const
 {
-#if HAVE_STD_IS_TRIVIALLY_COPYABLE
-    // TODO: Enable after fixing Ipc::SharedListenRequest::SharedListenRequest()
-    //static_assert(std::is_trivially_copyable<Pod>::value, "getPod() used for a POD");
-#endif
+    static_assert(std::is_trivially_copyable<Pod>::value, "getPod() used for a POD");
     getFixed(&pod, sizeof(pod));
 }
 
@@ -126,12 +125,9 @@ template <class Pod>
 void
 Ipc::TypedMsgHdr::putPod(const Pod &pod)
 {
-#if HAVE_STD_IS_TRIVIALLY_COPYABLE
-    // TODO: Enable after fixing Ipc::SharedListenRequest::pack()
-    //static_assert(std::is_trivially_copyable<Pod>::value, "putPod() used for a POD");
-#endif
+    static_assert(std::is_trivially_copyable<Pod>::value, "putPod() used for a POD");
     putFixed(&pod, sizeof(pod));
 }
 
-#endif /* SQUID_IPC_TYPED_MSG_HDR_H */
+#endif /* SQUID_SRC_IPC_TYPEDMSGHDR_H */
 

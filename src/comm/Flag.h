@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_COMM_FLAG_H
-#define _SQUID_SRC_COMM_FLAG_H
+#ifndef SQUID_SRC_COMM_FLAG_H
+#define SQUID_SRC_COMM_FLAG_H
 
 namespace Comm
 {
@@ -15,7 +15,6 @@ namespace Comm
 typedef enum {
     OK = 0,
     COMM_ERROR = -1,
-    NOMESSAGE = -3,
     TIMEOUT = -4,
     SHUTDOWN = -5,
     IDLE = -6, /* there are no active fds and no pending callbacks. */
@@ -30,5 +29,5 @@ typedef enum {
 
 } // namespace Comm
 
-#endif /* _SQUID_SRC_COMM_FLAG_H */
+#endif /* SQUID_SRC_COMM_FLAG_H */
 

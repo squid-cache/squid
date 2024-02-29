@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,12 +9,12 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
+#include "debug/Stream.h"
 #include "globals.h"
-#include "profiler/Profiler.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -24,7 +24,6 @@
 #include "StoreFileSystem.h"
 #include "swap_log_op.h"
 #include "tools.h"
-#include "util.h" // for tvSubDsec() which should be in SquidTime.h
 
 typedef SwapDir *STDIRSELECT(const StoreEntry *e);
 
@@ -611,8 +610,11 @@ Store::Disks::evictIfFound(const cache_key *key)
 }
 
 bool
-Store::Disks::anchorToCache(StoreEntry &entry, bool &inSync)
+Store::Disks::anchorToCache(StoreEntry &entry)
 {
+    if (entry.hasDisk())
+        return true; // already anchored
+
     if (const int cacheDirs = Config.cacheSwap.n_configured) {
         // ask each cache_dir until the entry is found; use static starting
         // point to avoid asking the same subset of disks more often
@@ -624,7 +626,7 @@ Store::Disks::anchorToCache(StoreEntry &entry, bool &inSync)
             if (!sd.active())
                 continue;
 
-            if (sd.anchorToCache(entry, inSync)) {
+            if (sd.anchorToCache(entry)) {
                 debugs(20, 3, "cache_dir " << idx << " anchors " << entry);
                 return true;
             }
@@ -697,7 +699,7 @@ storeDirCloseSwapLogs()
 int
 storeDirWriteCleanLogs(int reopen)
 {
-    const StoreEntry *e = NULL;
+    const StoreEntry *e = nullptr;
     int n = 0;
 
     struct timeval start;
@@ -722,7 +724,7 @@ storeDirWriteCleanLogs(int reopen)
         auto &sd = SwapDirByIndex(dirn);
 
         if (sd.writeCleanStart() < 0) {
-            debugs(20, DBG_IMPORTANT, "log.clean.start() failed for dir #" << sd.index);
+            debugs(20, DBG_IMPORTANT, "ERROR: log.clean.start() failed for dir #" << sd.index);
             continue;
         }
     }
@@ -852,7 +854,7 @@ storeDirSwapLog(const StoreEntry * e, int op)
            swap_log_op_str[op] << " " <<
            e->getMD5Text() << " " <<
            e->swap_dirn << " " <<
-           std::hex << std::uppercase << std::setfill('0') << std::setw(8) << e->swap_filen);
+           asHex(e->swap_filen).upperCase().minDigits(8));
 
     e->disk().logEntry(*e, op);
 }

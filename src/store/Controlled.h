@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_CONTROLLED_H
-#define SQUID_STORE_CONTROLLED_H
+#ifndef SQUID_SRC_STORE_CONTROLLED_H
+#define SQUID_SRC_STORE_CONTROLLED_H
 
 #include "store/Storage.h"
 
@@ -34,10 +34,9 @@ public:
     /// make stored metadata and HTTP headers the same as in the given entry
     virtual void updateHeaders(StoreEntry *) {}
 
-    /// If Transients entry cannot be attached to this storage, return false.
-    /// If the entry is not found, return false. Otherwise, return true after
-    /// tying the entry to this cache and setting inSync to updateAnchored().
-    virtual bool anchorToCache(StoreEntry &, bool &/*inSync*/) { return false; }
+    /// tie StoreEntry to this storage if this storage has a matching entry
+    /// \retval true if this storage has a matching entry
+    virtual bool anchorToCache(StoreEntry &) { return false; }
 
     /// Update a local Transients entry with fresh info from this cache (if any).
     /// Return true iff the cache supports Transients entries and
@@ -47,5 +46,5 @@ public:
 
 } // namespace Store
 
-#endif /* SQUID_STORE_CONTROLLED_H */
+#endif /* SQUID_SRC_STORE_CONTROLLED_H */
 

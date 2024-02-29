@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HASH_H
-#define SQUID_HASH_H
+#ifndef SQUID_INCLUDE_HASH_H
+#define SQUID_INCLUDE_HASH_H
 
 typedef void HASHFREE(void *);
 typedef int HASHCMP(const void *, const void *);
@@ -31,20 +31,20 @@ public:
     int count;
 };
 
-SQUIDCEXTERN hash_table *hash_create(HASHCMP *, int, HASHHASH *);
-SQUIDCEXTERN void hash_join(hash_table *, hash_link *);
-SQUIDCEXTERN void hash_remove_link(hash_table *, hash_link *);
-SQUIDCEXTERN int hashPrime(int n);
-SQUIDCEXTERN hash_link *hash_lookup(hash_table *, const void *);
-SQUIDCEXTERN void hash_first(hash_table *);
-SQUIDCEXTERN hash_link *hash_next(hash_table *);
-SQUIDCEXTERN void hash_last(hash_table *);
-SQUIDCEXTERN hash_link *hash_get_bucket(hash_table *, unsigned int);
-SQUIDCEXTERN void hashFreeMemory(hash_table *);
-SQUIDCEXTERN void hashFreeItems(hash_table *, HASHFREE *);
-SQUIDCEXTERN HASHHASH hash_string;
-SQUIDCEXTERN HASHHASH hash4;
-SQUIDCEXTERN const char *hashKeyStr(const hash_link *);
+hash_table *hash_create(HASHCMP *, int, HASHHASH *);
+void hash_join(hash_table *, hash_link *);
+void hash_remove_link(hash_table *, hash_link *);
+int hashPrime(int n);
+hash_link *hash_lookup(hash_table *, const void *);
+void hash_first(hash_table *);
+hash_link *hash_next(hash_table *);
+void hash_last(hash_table *);
+hash_link *hash_get_bucket(hash_table *, unsigned int);
+void hashFreeMemory(hash_table *);
+void hashFreeItems(hash_table *, HASHFREE *);
+HASHHASH hash_string;
+HASHHASH hash4;
+const char *hashKeyStr(const hash_link *);
 
 /*
  *  Here are some good prime number choices.  It's important not to
@@ -65,5 +65,5 @@ SQUIDCEXTERN const char *hashKeyStr(const hash_link *);
  */
 #define  DEFAULT_HASH_SIZE 7951 /* prime number < 8192 */
 
-#endif /* SQUID_HASH_H */
+#endif /* SQUID_INCLUDE_HASH_H */
 

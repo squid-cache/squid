@@ -1,22 +1,18 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTS_FORWARD_H
-#define SQUID_CLIENTS_FORWARD_H
+#ifndef SQUID_SRC_CLIENTS_FORWARD_H
+#define SQUID_SRC_CLIENTS_FORWARD_H
 
 #include "sbuf/forward.h"
 
 class FwdState;
 class HttpRequest;
-
-class AsyncJob;
-template <class Cbc> class CbcPointer;
-typedef CbcPointer<AsyncJob> AsyncJobPointer;
 
 namespace Http
 {
@@ -47,5 +43,5 @@ const SBuf &UrlWith2f(HttpRequest *);
 
 } // namespace Ftp
 
-#endif /* SQUID_CLIENTS_FORWARD_H */
+#endif /* SQUID_SRC_CLIENTS_FORWARD_H */
 

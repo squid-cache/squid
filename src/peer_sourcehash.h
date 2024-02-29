@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 39    Peer source hash based selection */
 
-#ifndef SQUID_PEER_SOURCEHASH_H_
-#define SQUID_PEER_SOURCEHASH_H_
+#ifndef SQUID_SRC_PEER_SOURCEHASH_H
+#define SQUID_SRC_PEER_SOURCEHASH_H
 
 class CachePeer;
 class PeerSelector;
@@ -17,5 +17,5 @@ class PeerSelector;
 void peerSourceHashInit(void);
 CachePeer * peerSourceHashSelectParent(PeerSelector*);
 
-#endif /* SQUID_PEER_SOURCEHASH_H_ */
+#endif /* SQUID_SRC_PEER_SOURCEHASH_H */
 

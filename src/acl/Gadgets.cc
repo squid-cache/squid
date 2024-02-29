@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,18 +10,15 @@
  * DEBUG: section 28    Access Control
  *
  * This file contains ACL routines that are not part of the
- * ACL class, nor any other class yet, and that need to be
+ * Acl::Node class, nor any other class yet, and that need to be
  * factored into appropriate places. They are here to reduce
- * unneeded dependencies between the ACL class and the rest
+ * unneeded dependencies between the Acl::Node class and the rest
  * of squid.
  */
 
 #include "squid.h"
-#include "acl/Acl.h"
 #include "acl/AclDenyInfoList.h"
-#include "acl/Checklist.h"
 #include "acl/Gadgets.h"
-#include "acl/Strategised.h"
 #include "acl/Tree.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
@@ -33,7 +30,7 @@
 #include <set>
 #include <algorithm>
 
-typedef std::set<ACL*> AclSet;
+using AclSet = std::set<Acl::Node *>;
 /// Accumulates all ACLs to facilitate their clean deletion despite reuse.
 static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
 
@@ -46,13 +43,13 @@ aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allow
         return ERR_NONE;
     }
 
-    AclDenyInfoList *A = NULL;
+    AclDenyInfoList *A = nullptr;
 
-    debugs(28, 8, HERE << "got called for " << name);
+    debugs(28, 8, "got called for " << name);
 
     for (A = *head; A; A = A->next) {
         if (!redirect_allowed && strchr(A->err_page_name, ':') ) {
-            debugs(28, 8, HERE << "Skip '" << A->err_page_name << "' 30x redirects not allowed as response here.");
+            debugs(28, 8, "Skip '" << A->err_page_name << "' 30x redirects not allowed as response here.");
             continue;
         }
 
@@ -79,9 +76,7 @@ aclIsProxyAuth(const char *name)
 
     debugs(28, 5, "aclIsProxyAuth: called for " << name);
 
-    ACL *a;
-
-    if ((a = ACL::FindByName(name))) {
+    if (const auto *a = Acl::Node::FindByName(name)) {
         debugs(28, 5, "aclIsProxyAuth: returning " << a->isProxyAuth());
         return a->isProxyAuth();
     }
@@ -102,15 +97,15 @@ aclIsProxyAuth(const char *name)
 void
 aclParseDenyInfoLine(AclDenyInfoList ** head)
 {
-    char *t = NULL;
+    char *t = nullptr;
     AclDenyInfoList *B;
     AclDenyInfoList **T;
 
     /* first expect a page name */
 
-    if ((t = ConfigParser::NextToken()) == NULL) {
+    if ((t = ConfigParser::NextToken()) == nullptr) {
         debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: missing 'error page' parameter.");
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseDenyInfoLine: missing 'error page' parameter.");
         return;
     }
 
@@ -142,7 +137,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
 
     if (!t) {
         debugs(28, DBG_CRITICAL, "aclParseAccessLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, DBG_CRITICAL, "aclParseAccessLine: missing 'allow' or 'deny'.");
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseAccessLine: missing 'allow' or 'deny'.");
         return;
     }
 
@@ -221,7 +216,7 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
 }
 
 void
-aclRegister(ACL *acl)
+aclRegister(Acl::Node *acl)
 {
     if (!acl->registered) {
         if (!RegisteredAcls)
@@ -234,7 +229,7 @@ aclRegister(ACL *acl)
 /// remove registered acl from the centralized deletion set
 static
 void
-aclDeregister(ACL *acl)
+aclDeregister(Acl::Node *acl)
 {
     if (acl->registered) {
         if (RegisteredAcls)
@@ -249,16 +244,16 @@ aclDeregister(ACL *acl)
 
 /// called to delete ALL Acls.
 void
-aclDestroyAcls(ACL ** head)
+aclDestroyAcls(Acl::Node ** head)
 {
-    *head = NULL; // Config.aclList
+    *head = nullptr; // Config.aclList
     if (AclSet *acls = RegisteredAcls) {
         debugs(28, 8, "deleting all " << acls->size() << " ACLs");
         while (!acls->empty()) {
-            ACL *acl = *acls->begin();
-            // We use centralized deletion (this function) so ~ACL should not
+            auto *acl = *acls->begin();
+            // We use centralized deletion (this function) so ~Acl::Node should not
             // delete other ACLs, but we still deregister first to prevent any
-            // accesses to the being-deleted ACL via RegisteredAcls.
+            // accesses to the being-deleted Acl::Node via RegisteredAcls.
             assert(acl->registered); // make sure we are making progress
             aclDeregister(acl);
             delete acl;
@@ -272,7 +267,7 @@ aclDestroyAclList(ACLList **list)
     debugs(28, 8, "aclDestroyAclList: invoked");
     assert(list);
     delete *list;
-    *list = NULL;
+    *list = nullptr;
 }
 
 void
@@ -282,7 +277,7 @@ aclDestroyAccessList(acl_access ** list)
     if (*list)
         debugs(28, 3, "destroying: " << *list << ' ' << (*list)->name);
     delete *list;
-    *list = NULL;
+    *list = nullptr;
 }
 
 /* maex@space.net (06.09.1996)
@@ -291,8 +286,8 @@ aclDestroyAccessList(acl_access ** list)
 void
 aclDestroyDenyInfoList(AclDenyInfoList ** list)
 {
-    AclDenyInfoList *a = NULL;
-    AclDenyInfoList *a_next = NULL;
+    AclDenyInfoList *a = nullptr;
+    AclDenyInfoList *a_next = nullptr;
 
     debugs(28, 8, "aclDestroyDenyInfoList: invoked");
 
@@ -301,6 +296,6 @@ aclDestroyDenyInfoList(AclDenyInfoList ** list)
         delete a;
     }
 
-    *list = NULL;
+    *list = nullptr;
 }
 

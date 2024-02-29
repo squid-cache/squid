@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__INITIATE_H
-#define SQUID_ADAPTATION__INITIATE_H
+#ifndef SQUID_SRC_ADAPTATION_INITIATE_H
+#define SQUID_SRC_ADAPTATION_INITIATE_H
 
 #include "adaptation/forward.h"
 #include "base/AsyncJob.h"
@@ -32,7 +32,7 @@ class Initiate: virtual public AsyncJob
 
 public:
     Initiate(const char *aTypeName);
-    virtual ~Initiate();
+    ~Initiate() override;
 
     void initiator(const CbcPointer<Initiator> &i); ///< sets initiator
 
@@ -44,9 +44,9 @@ protected:
     void tellQueryAborted(bool final); // tell initiator
     void clearInitiator(); // used by noteInitiatorAborted; TODO: make private
 
-    virtual void swanSong(); // internal cleanup
+    void swanSong() override; // internal cleanup
 
-    virtual const char *status() const; // for debugging
+    const char *status() const override; // for debugging
 
     CbcPointer<Initiator> theInitiator;
 
@@ -57,5 +57,5 @@ private:
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__INITIATE_H */
+#endif /* SQUID_SRC_ADAPTATION_INITIATE_H */
 

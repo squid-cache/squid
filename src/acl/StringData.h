@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSTRINGDATA_H
-#define SQUID_ACLSTRINGDATA_H
+#ifndef SQUID_SRC_ACL_STRINGDATA_H
+#define SQUID_SRC_ACL_STRINGDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -21,16 +21,14 @@ class ACLStringData : public ACLData<char const *>
 
 public:
     ACLStringData() {}
-    ACLStringData(ACLStringData const &);
-    ACLStringData &operator= (ACLStringData const &);
-    virtual ~ACLStringData() {}
+    ~ACLStringData() override {}
     /// \deprecated use match(SBuf&) instead.
-    bool match(char const *);
+    bool match(char const *) override;
     bool match(const SBuf &);
-    virtual SBufList dump() const;
-    virtual void parse();
-    bool empty() const;
-    virtual ACLData<char const *> *clone() const;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override;
+
     /// Insert a string data value
     void insert(const char *);
 
@@ -39,5 +37,5 @@ private:
     StringValues_t stringValues;
 };
 
-#endif /* SQUID_ACLSTRINGDATA_H */
+#endif /* SQUID_SRC_ACL_STRINGDATA_H */
 

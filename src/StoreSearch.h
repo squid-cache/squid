@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORESEARCH_H
-#define SQUID_STORESEARCH_H
+#ifndef SQUID_SRC_STORESEARCH_H
+#define SQUID_SRC_STORESEARCH_H
 
 #include "base/RefCount.h"
 #include "Store.h"
@@ -19,7 +19,7 @@ public:
     StoreSearch() {}
 
     StoreSearch(StoreSearch const &); /* no implementation - trigger link failures */
-    virtual ~StoreSearch() {}
+    ~StoreSearch() override {}
 
     /* not ready yet
     void asList(void (*) (CbDataList<StoreEntryPointer), void *cbdata);
@@ -42,5 +42,5 @@ public:
 
 typedef RefCount<StoreSearch> StoreSearchPointer;
 
-#endif /* SQUID_STORESEARCH_H */
+#endif /* SQUID_SRC_STORESEARCH_H */
 

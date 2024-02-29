@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HTTP_ONE_PARSER_H
-#define _SQUID_SRC_HTTP_ONE_PARSER_H
+#ifndef SQUID_SRC_HTTP_ONE_PARSER_H
+#define SQUID_SRC_HTTP_ONE_PARSER_H
 
 #include "anyp/ProtocolVersion.h"
 #include "http/one/forward.h"
@@ -48,7 +48,7 @@ public:
     Parser &operator =(const Parser &) = default;
     Parser(Parser &&) = default;
     Parser &operator =(Parser &&) = default;
-    virtual ~Parser() {}
+    ~Parser() override {}
 
     /// Set this parser back to a default state.
     /// Will DROP any reference to a buffer (does not free).
@@ -124,9 +124,7 @@ protected:
      * detect and skip the CRLF or (if tolerant) LF line terminator
      * consume from the tokenizer.
      *
-     * \throws exception on bad or InsuffientInput.
-     * \retval true only if line terminator found.
-     * \retval false incomplete or missing line terminator, need more data.
+     * \throws exception on bad or InsufficientInput
      */
     void skipLineTerminator(Tokenizer &) const;
 
@@ -174,5 +172,5 @@ int ErrorLevel();
 } // namespace One
 } // namespace Http
 
-#endif /*  _SQUID_SRC_HTTP_ONE_PARSER_H */
+#endif /* SQUID_SRC_HTTP_ONE_PARSER_H */
 

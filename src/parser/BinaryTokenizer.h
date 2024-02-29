@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -157,5 +157,5 @@ BinaryTokenizerContext::success() {
 
 } /* namespace Parser */
 
-#endif // SQUID_SRC_PARSER_BINARYTOKENIZER_H
+#endif /* SQUID_SRC_PARSER_BINARYTOKENIZER_H */
 

@@ -1,15 +1,17 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_TREE_H
-#define SQUID_ACL_TREE_H
+#ifndef SQUID_SRC_ACL_TREE_H
+#define SQUID_SRC_ACL_TREE_H
 
+#include "acl/Acl.h"
 #include "acl/BoolOps.h"
+#include "cbdata.h"
 #include "sbuf/List.h"
 
 namespace Acl
@@ -36,12 +38,12 @@ public:
     Answer lastAction() const;
 
     /// appends and takes control over the rule with a given action
-    void add(ACL *rule, const Answer &action);
-    void add(ACL *rule); ///< same as InnerNode::add()
+    void add(Acl::Node *rule, const Answer &action);
+    void add(Acl::Node *rule); ///< same as InnerNode::add()
 
 protected:
     /// Acl::OrNode API
-    virtual bool bannedAction(ACLChecklist *, Nodes::const_iterator) const override;
+    bool bannedAction(ACLChecklist *, Nodes::const_iterator) const override;
     Answer actionAt(const Nodes::size_type pos) const;
 
     /// if not empty, contains actions corresponding to InnerNode::nodes
@@ -81,5 +83,5 @@ Tree::treeDump(const char *prefix, ActionToStringConverter converter) const
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_TREE_H */
+#endif /* SQUID_SRC_ACL_TREE_H */
 

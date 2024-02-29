@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTSTREAM_H
-#define SQUID_CLIENTSTREAM_H
+#ifndef SQUID_SRC_CLIENTSTREAM_H
+#define SQUID_SRC_CLIENTSTREAM_H
 
 #include "base/RefCount.h"
 #include "clientStreamForward.h"
@@ -165,5 +165,5 @@ void clientStreamAbort(clientStreamNode *thisObject, ClientHttpRequest *http);
  */
 clientStream_status_t clientStreamStatus(clientStreamNode *thisObject, ClientHttpRequest *http);
 
-#endif /* SQUID_CLIENTSTREAM_H */
+#endif /* SQUID_SRC_CLIENTSTREAM_H */
 

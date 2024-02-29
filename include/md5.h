@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MD5_H
-#define SQUID_MD5_H
+#ifndef SQUID_INCLUDE_MD5_H
+#define SQUID_INCLUDE_MD5_H
 
 #if HAVE_NETTLE_MD5_H
 #include <nettle/md5.h>
@@ -67,5 +67,5 @@ SQUIDCEXTERN void SquidMD5Transform(uint32_t buf[4], uint32_t const in[16]);
 
 #endif /* HAVE_NETTLE_MD5_H */
 
-#endif /* SQUID_MD5_H */
+#endif /* SQUID_INCLUDE_MD5_H */
 

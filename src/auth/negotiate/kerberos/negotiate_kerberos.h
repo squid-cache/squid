@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,6 +35,9 @@
  * -----------------------------------------------------------------------------
  */
 
+#ifndef SQUID_SRC_AUTH_NEGOTIATE_KERBEROS_NEGOTIATE_KERBEROS_H
+#define SQUID_SRC_AUTH_NEGOTIATE_KERBEROS_NEGOTIATE_KERBEROS_H
+
 #include <cstring>
 #include <ctime>
 #if HAVE_NETDB_H
@@ -45,46 +48,16 @@
 #endif
 
 #include "base64.h"
+#include "compat/krb5.h"
 #include "util.h"
 
-#if USE_APPLE_KRB5
-#define KERBEROS_APPLE_DEPRECATED(x)
-#define GSSKRB_APPLE_DEPRECATED(x)
-#endif
-
-#if HAVE_KRB5_H
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#warn "Warning! You have a broken Solaris <krb5.h> system header"
-#warn "http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512"
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#endif /* HAVE_BROKEN_SOLARIS_KRB5_H */
-#if HAVE_BROKEN_HEIMDAL_KRB5_H
-extern "C" {
-#include <krb5.h>
-}
-#else
-#include <krb5.h>
-#endif
-#endif /* HAVE_KRB5_H */
-
-#if USE_HEIMDAL_KRB5
-#if HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif HAVE_GSSAPI_H
-#include <gssapi.h>
-#endif
-#if HAVE_GSSAPI_GSSAPI_KRB5_H
-#include <gssapi/gssapi_krb5.h>
-#endif
-#elif USE_GNUGSS
 #if HAVE_GSS_H
 #include <gss.h>
 #endif
-#else
+
+#if USE_APPLE_KRB5
+#define GSSKRB_APPLE_DEPRECATED(x)
+#endif
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
@@ -98,7 +71,6 @@ extern "C" {
 #endif
 #if HAVE_GSSAPI_GSSAPI_EXT_H
 #include <gssapi/gssapi_ext.h>
-#endif
 #endif
 
 #ifndef gss_nt_service_name
@@ -125,7 +97,7 @@ LogTime()
     static time_t last_t = 0;
     static char buf[128];
 
-    gettimeofday(&now, NULL);
+    gettimeofday(&now, nullptr);
     if (now.tv_sec != last_t) {
         struct tm *tm;
         tm = localtime((time_t *) & now.tv_sec);
@@ -166,4 +138,6 @@ char *get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac);
 #define HAVE_PAC_SUPPORT 0
 #endif
 int check_k5_err(krb5_context context, const char *msg, krb5_error_code code);
+
+#endif /* SQUID_SRC_AUTH_NEGOTIATE_KERBEROS_NEGOTIATE_KERBEROS_H */
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CBDATALIST_H
-#define SQUID_CBDATALIST_H
+#ifndef SQUID_SRC_BASE_CBDATALIST_H
+#define SQUID_SRC_BASE_CBDATALIST_H
 
 #include "cbdata.h"
 
@@ -59,7 +59,7 @@ public:
         return entry->element;
     }
     bool end() {
-        return next_entry == NULL;
+        return next_entry == nullptr;
     }
 
 private:
@@ -72,7 +72,7 @@ cbdata_type CbDataList<C>::CBDATA_CbDataList = CBDATA_UNKNOWN;
 /** \endcond */
 
 template <class C>
-CbDataList<C>::CbDataList(C const &value) : next(NULL), element (value)
+CbDataList<C>::CbDataList(C const &value) : next(nullptr), element (value)
 {}
 
 template <class C>
@@ -109,7 +109,7 @@ template <class C>
 bool
 CbDataList<C>::find (C const &toFind) const
 {
-    CbDataList<C> const *node = NULL;
+    CbDataList<C> const *node = nullptr;
 
     for (node = this; node; node = node->next)
         if (node->element == toFind)
@@ -145,7 +145,7 @@ CbDataList<C>::findAndTune(C const & toFind)
 }
 
 template <class C>
-CbDataListContainer<C>::CbDataListContainer() : head (NULL)
+CbDataListContainer<C>::CbDataListContainer() : head (nullptr)
 {}
 
 template <class C>
@@ -162,7 +162,7 @@ CbDataListContainer<C>::push_back (C const &element)
     CbDataList<C> *node = new CbDataList<C> (element);
 
     if (head) {
-        CbDataList<C> *tempNode = NULL;
+        CbDataList<C> *tempNode = nullptr;
 
         for (tempNode = head; tempNode->next; tempNode = tempNode->next);
         tempNode->next = node;
@@ -192,8 +192,8 @@ template <class C>
 bool
 CbDataListContainer<C>::empty() const
 {
-    return head == NULL;
+    return head == nullptr;
 }
 
-#endif /* SQUID_CBDATALIST_H */
+#endif /* SQUID_SRC_BASE_CBDATALIST_H */
 

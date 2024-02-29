@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 14    IP Storage and Handling */
 
-#ifndef _SQUID_IP_FORWARD_H
-#define _SQUID_IP_FORWARD_H
+#ifndef SQUID_SRC_IP_FORWARD_H
+#define SQUID_SRC_IP_FORWARD_H
 
 // Forward-declare Ip classes needed by reference in other parts of the code
 // for passing objects around without actually touching them
@@ -26,5 +26,5 @@ class acl_nfmark;
 typedef uint32_t nfmark_t;
 typedef unsigned char tos_t;
 
-#endif /* _SQUID_IP_FORWARD_H */
+#endif /* SQUID_SRC_IP_FORWARD_H */
 

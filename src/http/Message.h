@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTP_MESSAGE_H
-#define SQUID_HTTP_MESSAGE_H
+#ifndef SQUID_SRC_HTTP_MESSAGE_H
+#define SQUID_SRC_HTTP_MESSAGE_H
 
 #include "base/Lock.h"
 #include "BodyPipe.h"
@@ -40,14 +40,13 @@ public:
         srcFtp = 1 << (16 + 1), ///< ftp_port or FTP server
         srcIcap = 1 << (16 + 2), ///< traditional ICAP service without encryption
         srcEcap = 1 << (16 + 3), ///< eCAP service that uses insecure libraries/daemons
-        srcGopher = 1 << (16 + 14), ///< Gopher server
         srcWhois = 1 << (16 + 15), ///< Whois server
         srcUnsafe = 0xFFFF0000,  ///< Unsafe sources mask
         srcSafe = 0x0000FFFF ///< Safe sources mask
     };
 
     Message(http_hdr_owner_type);
-    virtual ~Message();
+    ~Message() override;
 
     virtual void reset() = 0; // will have body when http*Clean()s are gone
 
@@ -99,8 +98,9 @@ public:
 
     uint32_t sources = 0; ///< The message sources
 
-    /// copies Cache-Control header to this message
-    void putCc(const HttpHdrCc *otherCc);
+    /// copies Cache-Control header to this message,
+    /// overwriting existing Cache-Control header(s), if any
+    void putCc(const HttpHdrCc &);
 
     // returns true and sets hdr_sz on success
     // returns false and sets *error to zero when needs more data
@@ -164,5 +164,5 @@ HTTPMSGLOCK(Http::Message *a)
         a->lock();
 }
 
-#endif /* SQUID_HTTPMSG_H */
+#endif /* SQUID_SRC_HTTP_MESSAGE_H */
 

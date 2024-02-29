@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 37    ICMP Routines */
 
-#ifndef _INCLUDE_ICMPPINGER_H
-#define _INCLUDE_ICMPPINGER_H
+#ifndef SQUID_SRC_ICMP_ICMPPINGER_H
+#define SQUID_SRC_ICMP_ICMPPINGER_H
 #include "Icmp.h"
 
 /**
@@ -19,13 +19,13 @@ class IcmpPinger : public Icmp
 {
 public:
     IcmpPinger();
-    virtual ~IcmpPinger();
+    ~IcmpPinger() override;
 
     /// Start and initiate control channel to squid
-    virtual int Open();
+    int Open() override;
 
     /// Shutdown pinger helper and control channel
-    virtual void Close();
+    void Close() override;
 
 #if USE_ICMP
 
@@ -33,11 +33,11 @@ public:
     void SendResult(pingerReplyData &preply, int len);
 
     /// Handle ICMP requests from squid, passing to helpers.
-    virtual void Recv(void);
+    void Recv(void) override;
 
 private:
     // unused in IcmpPinger
-    virtual void SendEcho(Ip::Address &, int, const char *, int) {}
+    void SendEcho(Ip::Address &, int, const char *, int) override {}
 
     /**
      * Control channel(s) to squid.
@@ -55,5 +55,5 @@ extern IcmpPinger control;
 
 #endif
 
-#endif
+#endif /* SQUID_SRC_ICMP_ICMPPINGER_H */
 

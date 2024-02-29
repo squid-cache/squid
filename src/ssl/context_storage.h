@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSL_CONTEXT_STORAGE_H
-#define SQUID_SSL_CONTEXT_STORAGE_H
+#ifndef SQUID_SRC_SSL_CONTEXT_STORAGE_H
+#define SQUID_SRC_SSL_CONTEXT_STORAGE_H
 
 #if USE_OPENSSL
 
@@ -17,8 +17,7 @@
 #include "ip/Address.h"
 #include "mgr/Action.h"
 #include "mgr/Command.h"
-#include "security/forward.h"
-#include "SquidTime.h"
+#include "security/Context.h"
 #include "ssl/gadgets.h"
 
 #include <list>
@@ -38,12 +37,12 @@ class CertificateStorageAction : public Mgr::Action
 public:
     CertificateStorageAction(const Mgr::Command::Pointer &cmd);
     static Pointer Create(const Mgr::Command::Pointer &cmd);
-    virtual void dump (StoreEntry *sentry);
+    void dump (StoreEntry *sentry) override;
     /**
      * We do not support aggregation of information across workers
      * TODO: aggregate these stats
      */
-    virtual bool aggregatable() const { return false; }
+    bool aggregatable() const override { return false; }
 };
 
 inline uint64_t MemoryUsedByContext(const Security::ContextPointer &) {
@@ -79,5 +78,5 @@ extern GlobalContextStorage TheGlobalContextStorage;
 } //namespace Ssl
 #endif // USE_OPENSSL
 
-#endif // SQUID_SSL_CONTEXT_STORAGE_H
+#endif /* SQUID_SRC_SSL_CONTEXT_STORAGE_H */
 

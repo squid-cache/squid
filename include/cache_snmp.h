@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CACHE_SNMP_H
-#define SQUID_CACHE_SNMP_H
+#ifndef SQUID_INCLUDE_CACHE_SNMP_H
+#define SQUID_INCLUDE_CACHE_SNMP_H
 
 #if SQUID_SNMP
 
@@ -230,7 +230,7 @@ enum {
     MESH_END
 };
 
-/* CachePeerTableEntry (version 3) */
+/* CachePeerEntry (version 3) */
 enum {
     MESH_PTBL_START     = 0,
     MESH_PTBL_INDEX     = 1,  /* cachePeerIndex  */
@@ -269,5 +269,5 @@ enum {
 
 #endif /* SQUID_SNMP */
 
-#endif /* SQUID_CACHE_SNMP_H */
+#endif /* SQUID_INCLUDE_CACHE_SNMP_H */
 

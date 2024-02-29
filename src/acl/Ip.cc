@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,12 +11,15 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/Ip.h"
+#include "acl/SplayInserter.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "wordlist.h"
+
+#include <algorithm>
 
 void *
 ACLIP::operator new (size_t)
@@ -41,8 +44,8 @@ void
 acl_ip_data::toStr(char *buf, int len) const
 {
     char *b1 = buf;
-    char *b2 = NULL;
-    char *b3 = NULL;
+    char *b2 = nullptr;
+    char *b3 = nullptr;
     int rlen = 0;
 
     addr1.toStr(b1, len - rlen );
@@ -77,6 +80,62 @@ acl_ip_data::toSBuf() const
     return SBuf(tmpbuf);
 }
 
+Ip::Address
+acl_ip_data::firstAddress() const
+{
+    auto ip = addr1;
+    if (!mask.isNoAddr())
+        ip.applyMask(mask);
+    return ip;
+}
+
+Ip::Address
+acl_ip_data::lastAddress() const
+{
+    auto ip = addr2.isAnyAddr() ? addr1 : addr2;
+    if (!mask.isNoAddr())
+        ip.turnMaskedBitsOn(mask);
+    return ip;
+}
+
+template <>
+int
+Acl::SplayInserter<acl_ip_data*>::Compare(const Value &a, const Value &b)
+{
+    if (a->lastAddress() < b->firstAddress())
+        return -1; // the entire range a is to the left of range b
+
+    if (a->firstAddress() > b->lastAddress())
+        return +1; // the entire range a is to the right of range b
+
+    return 0; // equal or partially overlapping ranges
+}
+
+template <>
+bool
+Acl::SplayInserter<acl_ip_data*>::IsSubset(const Value &a, const Value &b)
+{
+    return b->firstAddress() <= a->firstAddress() && a->lastAddress() <= b->lastAddress();
+}
+
+template <>
+Acl::SplayInserter<acl_ip_data*>::Value
+Acl::SplayInserter<acl_ip_data*>::MakeCombinedValue(const Value &a, const Value &b)
+{
+    const auto minLeft = std::min(a->firstAddress(), b->firstAddress());
+    const auto maxRight = std::max(a->lastAddress(), b->lastAddress());
+    return new acl_ip_data(minLeft, maxRight, Ip::Address::NoAddr(), nullptr);
+}
+
+/// reports acl_ip_data using squid.conf ACL value format
+static std::ostream &
+operator <<(std::ostream &os, acl_ip_data *value)
+{
+    if (value)
+        os << value->toSBuf();
+    return os;
+}
+
 /*
  * aclIpAddrNetworkCompare - The guts of the comparison for IP ACLs
  * matching checks.  The first argument (p) is a "host" address,
@@ -106,45 +165,6 @@ aclIpAddrNetworkCompare(acl_ip_data * const &p, acl_ip_data * const &q)
         else
             return A.matchIPAddr( q->addr1 ); /* outside of range, 'less than' */
     }
-}
-
-/*
- * acl_ip_data::NetworkCompare - Compare two acl_ip_data entries.  Strictly
- * used by the splay insertion routine.  It emits a warning if it
- * detects a "collision" or overlap that would confuse the splay
- * sorting algorithm.  Much like aclDomainCompare.
- * The first argument (p) is a "host" address, i.e. the IP address of a cache client.
- * The second argument (b) is a "network" address that might have a subnet and/or range.
- * We mask the host address bits with the network subnet mask.
- */
-int
-acl_ip_data::NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b)
-{
-    int ret;
-    bool bina = true;
-    ret = aclIpAddrNetworkCompare(b, a);
-
-    if (ret != 0) {
-        bina = false;
-        ret = aclIpAddrNetworkCompare(a, b);
-    }
-
-    if (ret == 0) {
-        char buf_n1[3*(MAX_IPSTRLEN+1)];
-        char buf_n2[3*(MAX_IPSTRLEN+1)];
-        if (bina) {
-            b->toStr(buf_n1, 3*(MAX_IPSTRLEN+1));
-            a->toStr(buf_n2, 3*(MAX_IPSTRLEN+1));
-        } else {
-            a->toStr(buf_n1, 3*(MAX_IPSTRLEN+1));
-            b->toStr(buf_n2, 3*(MAX_IPSTRLEN+1));
-        }
-        debugs(28, DBG_CRITICAL, "WARNING: (" << (bina?'B':'A') << ") '" << buf_n1 << "' is a subnetwork of (" << (bina?'A':'B') << ") '" << buf_n2 << "'");
-        debugs(28, DBG_CRITICAL, "WARNING: because of this '" << (bina?buf_n2:buf_n1) << "' is ignored to keep splay tree searching predictable");
-        debugs(28, DBG_CRITICAL, "WARNING: You should probably remove '" << buf_n1 << "' from the ACL named '" << AclMatchedName << "'");
-    }
-
-    return ret;
 }
 
 /**
@@ -211,8 +231,8 @@ acl_ip_data::FactoryParse(const char *t)
     LOCAL_ARRAY(char, addr1, 256);
     LOCAL_ARRAY(char, addr2, 256);
     LOCAL_ARRAY(char, mask, 256);
-    acl_ip_data *r = NULL;
-    acl_ip_data **Q = NULL;
+    acl_ip_data *r = nullptr;
+    acl_ip_data **Q = nullptr;
     Ip::Address temp;
     char c;
     unsigned int changed;
@@ -220,103 +240,6 @@ acl_ip_data::FactoryParse(const char *t)
     int iptype = AF_UNSPEC;
 
     debugs(28, 5, "aclIpParseIpData: " << t);
-
-    /* Special ACL RHS "all" matches entire Internet */
-    if (strcmp(t, "all") == 0) {
-        debugs(28, 9, "aclIpParseIpData: magic 'all' found.");
-        q->addr1.setAnyAddr();
-        q->addr2.setEmpty();
-        q->mask.setAnyAddr();
-        return q;
-    }
-
-    /* Detect some old broken strings equivalent to 'all'.
-     * treat them nicely. But be loud until its fixed.  */
-    if (strcmp(t, "0/0") == 0 || strcmp(t, "0.0.0.0/0") == 0 || strcmp(t, "0.0.0.0/0.0.0.0") == 0 ||
-            strcmp(t, "0.0.0.0-255.255.255.255") == 0 || strcmp(t, "0.0.0.0-0.0.0.0/0") == 0) {
-
-        debugs(28,DBG_CRITICAL, "ERROR: '" << t << "' needs to be replaced by the term 'all'.");
-        debugs(28,DBG_CRITICAL, "SECURITY NOTICE: Overriding config setting. Using 'all' instead.");
-        q->addr1.setAnyAddr();
-        q->addr2.setEmpty();
-        q->mask.setAnyAddr();
-        return q;
-    }
-
-    /* Special ACL RHS "ipv4" matches IPv4 Internet
-     * A nod to IANA; we include the entire class space in case
-     * they manage to find a way to recover and use it */
-    if (strcmp(t, "ipv4") == 0) {
-        q->mask.setNoAddr();
-        q->mask.applyMask(0, AF_INET);
-        return q;
-    }
-
-    /* Special ACL RHS "ipv6" matches IPv6-Unicast Internet */
-    if (strcmp(t, "ipv6") == 0) {
-        debugs(28, 9, "aclIpParseIpData: magic 'ipv6' found.");
-        r = q; // save head of the list for result.
-
-        /* 0000::/4 is a mix of localhost and obsolete IPv4-mapping space. Not valid outside this host. */
-
-        /* Future global unicast space: 1000::/4 */
-        q->addr1 = "1000::";
-        q->mask.setNoAddr();
-        q->mask.applyMask(4, AF_INET6);
-
-        /* Current global unicast space: 2000::/4 = (2000::/4 - 3000::/4) */
-        q->next = new acl_ip_data;
-        q = q->next;
-        q->addr1 = "2000::";
-        q->mask.setNoAddr();
-        q->mask.applyMask(3, AF_INET6);
-
-        /* Future global unicast space: 4000::/2 = (4000::/4 - 7000::/4) */
-        q->next = new acl_ip_data;
-        q = q->next;
-        q->addr1 = "4000::";
-        q->mask.setNoAddr();
-        q->mask.applyMask(2, AF_INET6);
-
-        /* Future global unicast space: 8000::/2 = (8000::/4 - B000::/4) */
-        q->next = new acl_ip_data;
-        q = q->next;
-        q->addr1 = "8000::";
-        q->mask.setNoAddr();
-        q->mask.applyMask(2, AF_INET6);
-
-        /* Future global unicast space: C000::/3 = (C000::/4 - D000::/4) */
-        q->next = new acl_ip_data;
-        q = q->next;
-        q->addr1 = "C000::";
-        q->mask.setNoAddr();
-        q->mask.applyMask(3, AF_INET6);
-
-        /* Future global unicast space: E000::/4 */
-        q->next = new acl_ip_data;
-        q = q->next;
-        q->addr1 = "E000::";
-        q->mask.setNoAddr();
-        q->mask.applyMask(4, AF_INET6);
-
-        /* F000::/4 is mostly reserved non-unicast. With some exceptions ... */
-
-        /* RFC 4193 Unique-Local unicast space: FC00::/7 */
-        q->next = new acl_ip_data;
-        q = q->next;
-        q->addr1 = "FC00::";
-        q->mask.setNoAddr();
-        q->mask.applyMask(7, AF_INET6);
-
-        /* Link-Local unicast space: FE80::/10 */
-        q->next = new acl_ip_data;
-        q = q->next;
-        q->addr1 = "FE80::";
-        q->mask.setNoAddr();
-        q->mask.applyMask(10, AF_INET6);
-
-        return r;
-    }
 
 // IPv4
     if (sscanf(t, SCAN_ACL1_4, addr1, addr2, mask) == 3) {
@@ -365,30 +288,30 @@ acl_ip_data::FactoryParse(const char *t)
          */
 
         debugs(28, 5, "aclIpParseIpData: Lookup Host/IP " << addr1);
-        struct addrinfo *hp = NULL, *x = NULL;
+        struct addrinfo *hp = nullptr, *x = nullptr;
         struct addrinfo hints;
-        Ip::Address *prev_addr = NULL;
+        Ip::Address *prev_addr = nullptr;
 
         memset(&hints, 0, sizeof(struct addrinfo));
 
-        int errcode = getaddrinfo(addr1,NULL,&hints,&hp);
-        if (hp == NULL) {
+        int errcode = getaddrinfo(addr1,nullptr,&hints,&hp);
+        if (hp == nullptr) {
             delete q;
             if (strcmp(addr1, "::1") == 0) {
                 debugs(28, DBG_IMPORTANT, "aclIpParseIpData: IPv6 has not been enabled in host DNS resolver.");
             } else {
-                debugs(28, DBG_CRITICAL, "aclIpParseIpData: Bad host/IP: '" << addr1 <<
+                debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: Bad host/IP: '" << addr1 <<
                        "' in '" << t << "', flags=" << hints.ai_flags <<
                        " : (" << errcode << ") " << gai_strerror(errcode) );
                 self_destruct();
             }
-            return NULL;
+            return nullptr;
         }
 
         Q = &q;
 
-        for (x = hp; x != NULL;) {
-            if ((r = *Q) == NULL)
+        for (x = hp; x != nullptr;) {
+            if ((r = *Q) == nullptr)
                 r = *Q = new acl_ip_data;
 
             /* getaddrinfo given a host has a nasty tendency to return duplicate addr's */
@@ -398,7 +321,7 @@ acl_ip_data::FactoryParse(const char *t)
             if ( prev_addr && r->addr1 == *prev_addr) {
                 debugs(28, 3, "aclIpParseIpData: Duplicate host/IP: '" << r->addr1 << "' dropped.");
                 delete r;
-                *Q = NULL;
+                *Q = nullptr;
                 continue;
             } else
                 prev_addr = &r->addr1;
@@ -415,10 +338,10 @@ acl_ip_data::FactoryParse(const char *t)
 
         freeaddrinfo(hp);
 
-        if (*Q != NULL) {
-            debugs(28, DBG_CRITICAL, "aclIpParseIpData: Bad host/IP: '" << t << "'");
+        if (*Q != nullptr) {
+            debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: Bad host/IP: '" << t << "'");
             self_destruct();
-            return NULL;
+            return nullptr;
         }
 
         return q;
@@ -428,33 +351,33 @@ acl_ip_data::FactoryParse(const char *t)
     if ( iptype == AF_INET6 && !Ip::EnableIpv6) {
         debugs(28, DBG_IMPORTANT, "aclIpParseIpData: IPv6 has not been enabled.");
         delete q;
-        return NULL;
+        return nullptr;
     }
 
     /* Decode addr1 */
     if (!*addr1 || !(q->addr1 = addr1)) {
-        debugs(28, DBG_CRITICAL, "aclIpParseIpData: unknown first address in '" << t << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: unknown first address in '" << t << "'");
         delete q;
         self_destruct();
-        return NULL;
+        return nullptr;
     }
 
     /* Decode addr2 */
     if (!*addr2)
         q->addr2.setAnyAddr();
     else if (!(q->addr2=addr2) ) {
-        debugs(28, DBG_CRITICAL, "aclIpParseIpData: unknown second address in '" << t << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: unknown second address in '" << t << "'");
         delete q;
         self_destruct();
-        return NULL;
+        return nullptr;
     }
 
     /* Decode mask (NULL or empty means a exact host mask) */
     if (!DecodeMask(mask, q->mask, iptype)) {
-        debugs(28, DBG_CRITICAL, "aclParseIpData: unknown netmask '" << mask << "' in '" << t << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseIpData: unknown netmask '" << mask << "' in '" << t << "'");
         delete q;
         self_destruct();
-        return NULL;
+        return nullptr;
     }
 
     changed = 0;
@@ -462,30 +385,94 @@ acl_ip_data::FactoryParse(const char *t)
     changed += q->addr2.applyMask(q->mask);
 
     if (changed)
-        debugs(28, DBG_CRITICAL, "aclIpParseIpData: WARNING: Netmask masks away part of the specified IP in '" << t << "'");
+        debugs(28, DBG_CRITICAL, "WARNING: aclIpParseIpData: Netmask masks away part of the specified IP in '" << t << "'");
 
-    debugs(28,9, HERE << "Parsed: " << q->addr1 << "-" << q->addr2 << "/" << q->mask << "(/" << q->mask.cidr() <<")");
+    // TODO: Either switch match() to Acl::SplayInserter<acl_ip_data*>::Compare()
+    // range logic (that does not have these problems) OR warn that some (or
+    // even all) addresses will never match this configured ACL value when
+    // `q->addr1.applyMask()` above is positive:
+    //
+    // * A single configured IP value will never match:
+    //   A.matchIPAddr(q->addr1) in aclIpAddrNetworkCompare() will not return 0.
+    //   For example, `acl x src 127.0.0.1/24` does not match any address.
+    //
+    // * A configured IP range will not match any q->addr1/mask IPs:
+    //   (A >= q->addr1) in aclIpAddrNetworkCompare() is false and
+    //   A.matchIPAddr(q->addr1) will not return 0.
+    //   For example, `acl y src 10.0.0.1-10.0.0.255/24` does not match 10.0.0.1.
+
+    debugs(28,9, "Parsed: " << q->addr1 << "-" << q->addr2 << "/" << q->mask << "(/" << q->mask.cidr() <<")");
 
     /* 1.2.3.4/255.255.255.0  --> 1.2.3.0 */
     /* Same as IPv6 (not so trivial to depict) */
     return q;
 }
 
+/// handles special ACL data parameters that apply to the whole ACLIP object
+/// \returns true if input token is such a special parameter
+bool
+ACLIP::parseGlobal(const char * const token)
+{
+    // "all" matches entire Internet
+    if (strcmp(token, "all") == 0) {
+        debugs(28, 8, "found " << token);
+        matchAnyIpv4 = true;
+        matchAnyIpv6 = true;
+        // TODO: Ignore all other ACL data parameters, with a once/ACL warning.
+        return true;
+    }
+
+    // "ipv4" matches IPv4 Internet
+    if (strcmp(token, "ipv4") == 0) {
+        debugs(28, 8, "found " << token);
+        matchAnyIpv4 = true;
+        // TODO: Ignore all IPv4 data parameters, with a once/ACL warning.
+        return true;
+    }
+
+    // "ipv4" matches IPv6 Internet
+    if (strcmp(token, "ipv6") == 0) {
+        debugs(28, 8, "found " << token);
+        matchAnyIpv6 = true;
+        // TODO: Ignore all IPv6 data parameters, with a once/ACL warning.
+        return true;
+    }
+
+    /* Detect some old broken strings equivalent to 'all'.
+     * treat them nicely. But be loud until its fixed.  */
+    if (strcmp(token, "0/0") == 0 ||
+            strcmp(token, "0.0.0.0/0") == 0 ||
+            strcmp(token, "0.0.0.0/0.0.0.0") == 0 ||
+            strcmp(token, "0.0.0.0-255.255.255.255") == 0 ||
+            strcmp(token, "0.0.0.0-0.0.0.0/0") == 0) {
+
+        debugs(28,DBG_CRITICAL, "ERROR: '" << token << "' needs to be replaced by the term 'all'.");
+        debugs(28,DBG_CRITICAL, "SECURITY NOTICE: Overriding config setting. Using 'all' instead.");
+        matchAnyIpv4 = true;
+        matchAnyIpv6 = true;
+        return true;
+    }
+
+    return false;
+}
+
 void
 ACLIP::parse()
 {
-    if (data == NULL)
+    if (data == nullptr)
         data = new IPSplay();
 
     while (char *t = ConfigParser::strtokFile()) {
+        if (parseGlobal(t))
+            continue;
+
         acl_ip_data *q = acl_ip_data::FactoryParse(t);
 
-        while (q != NULL) {
+        while (q != nullptr) {
             /* pop each result off the list and add it to the data tree individually */
             acl_ip_data *next_node = q->next;
-            q->next = NULL;
-            if (!data->find(q,acl_ip_data::NetworkCompare))
-                data->insert(q, acl_ip_data::NetworkCompare);
+            q->next = nullptr;
+            Acl::SplayInserter<acl_ip_data*>::Merge(*data, std::move(q));
             q = next_node;
         }
     }
@@ -510,6 +497,14 @@ SBufList
 ACLIP::dump() const
 {
     IpAclDumpVisitor visitor;
+
+    if (matchAnyIpv4 && matchAnyIpv6)
+        visitor.contents.push_back(SBuf("all"));
+    else if (matchAnyIpv4)
+        visitor.contents.push_back(SBuf("ipv4"));
+    else if (matchAnyIpv6)
+        visitor.contents.push_back(SBuf("ipv6"));
+
     data->visit(visitor);
     return visitor.contents;
 }
@@ -517,12 +512,30 @@ ACLIP::dump() const
 bool
 ACLIP::empty() const
 {
-    return data->empty();
+    return data->empty() && !matchAnyIpv4 && !matchAnyIpv6;
 }
 
 int
 ACLIP::match(const Ip::Address &clientip)
 {
+    if (matchAnyIpv4) {
+        if (matchAnyIpv6) {
+            debugs(28, 3, clientip << " found, matched 'all'");
+            return true;
+        }
+        if (clientip.isIPv4()) {
+            debugs(28, 3, clientip << " found, matched 'ipv4'");
+            return true;
+        }
+        // fall through to look for an IPv6 match among IP parameters
+    } else if (matchAnyIpv6) {
+        if (clientip.isIPv6()) {
+            debugs(28, 3, clientip << " found, matched 'ipv6'");
+            return true;
+        }
+        // fall through to look for an IPv4 match among IP parameters
+    }
+
     static acl_ip_data ClientAddress;
     /*
      * aclIpAddrNetworkCompare() takes two acl_ip_data pointers as
@@ -536,10 +549,10 @@ ACLIP::match(const Ip::Address &clientip)
 
     const acl_ip_data * const * result =  data->find(&ClientAddress, aclIpAddrNetworkCompare);
     debugs(28, 3, "aclIpMatchIp: '" << clientip << "' " << (result ? "found" : "NOT found"));
-    return (result != NULL);
+    return (result != nullptr);
 }
 
-acl_ip_data::acl_ip_data() :addr1(), addr2(), mask(), next (NULL) {}
+acl_ip_data::acl_ip_data() :addr1(), addr2(), mask(), next (nullptr) {}
 
 acl_ip_data::acl_ip_data(Ip::Address const &anAddress1, Ip::Address const &anAddress2, Ip::Address const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,8 +30,8 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#ifndef _SMBLIB_SMBLIB_H
-#define _SMBLIB_SMBLIB_H
+#ifndef SQUID_LIB_SMBLIB_SMBLIB_H
+#define SQUID_LIB_SMBLIB_SMBLIB_H
 
 #include "smblib-common.h"
 #include "smblib/smbencrypt.h"
@@ -128,5 +128,5 @@ void *SMB_Logon_And_TCon(void *con, void *tree, char *user, char *pass,
 #ifdef __cplusplus
 }
 #endif
-#endif /* _SMBLIB_SMBLIB_H */
+#endif /* SQUID_LIB_SMBLIB_SMBLIB_H */
 

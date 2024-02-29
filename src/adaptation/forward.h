@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__FORWARD_H
-#define SQUID_ADAPTATION__FORWARD_H
+#ifndef SQUID_SRC_ADAPTATION_FORWARD_H
+#define SQUID_SRC_ADAPTATION_FORWARD_H
 
 // forward-declarations for commonly used adaptation classes
 
@@ -37,5 +37,5 @@ typedef RefCount<ServiceGroup> ServiceGroupPointer;
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__FORWARD_H */
+#endif /* SQUID_SRC_ADAPTATION_FORWARD_H */
 

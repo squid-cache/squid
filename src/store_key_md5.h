@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 20    Storage Manager MD5 Cache Keys */
 
-#ifndef SQUID_STORE_KEY_MD5_H_
-#define SQUID_STORE_KEY_MD5_H_
+#ifndef SQUID_SRC_STORE_KEY_MD5_H
+#define SQUID_SRC_STORE_KEY_MD5_H
 
 #include "hash.h"
 #include "http/forward.h"
@@ -30,11 +30,9 @@ const cache_key *storeKeyPublicByRequest(HttpRequest *, const KeyScope keyScope 
 const cache_key *storeKeyPublicByRequestMethod(HttpRequest *, const HttpRequestMethod&, const KeyScope keyScope = ksDefault);
 const cache_key *storeKeyPrivate();
 int storeKeyHashBuckets(int);
-int storeKeyNull(const cache_key *);
-void storeKeyInit(void);
 
 extern HASHHASH storeKeyHashHash;
 extern HASHCMP storeKeyHashCmp;
 
-#endif /* SQUID_STORE_KEY_MD5_H_ */
+#endif /* SQUID_SRC_STORE_KEY_MD5_H */
 

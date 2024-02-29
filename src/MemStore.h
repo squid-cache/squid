@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEMSTORE_H
-#define SQUID_MEMSTORE_H
+#ifndef SQUID_SRC_MEMSTORE_H
+#define SQUID_SRC_MEMSTORE_H
 
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
@@ -30,7 +30,7 @@ class MemStore: public Store::Controlled, public Ipc::StoreMapCleaner
 {
 public:
     MemStore();
-    virtual ~MemStore();
+    ~MemStore() override;
 
     /// whether e should be kept in local RAM for possible future caching
     bool keepInLocalMemory(const StoreEntry &e) const;
@@ -45,24 +45,24 @@ public:
     void disconnect(StoreEntry &e);
 
     /* Storage API */
-    virtual void create() override {}
-    virtual void init() override;
-    virtual StoreEntry *get(const cache_key *) override;
-    virtual uint64_t maxSize() const override;
-    virtual uint64_t minSize() const override;
-    virtual uint64_t currentSize() const override;
-    virtual uint64_t currentCount() const override;
-    virtual int64_t maxObjectSize() const override;
-    virtual void getStats(StoreInfoStats &stats) const override;
-    virtual void stat(StoreEntry &e) const override;
-    virtual void reference(StoreEntry &e) override;
-    virtual bool dereference(StoreEntry &e) override;
-    virtual void updateHeaders(StoreEntry *e) override;
-    virtual void maintain() override;
-    virtual bool anchorToCache(StoreEntry &e, bool &inSync) override;
-    virtual bool updateAnchored(StoreEntry &) override;
-    virtual void evictCached(StoreEntry &) override;
-    virtual void evictIfFound(const cache_key *) override;
+    void create() override {}
+    void init() override;
+    StoreEntry *get(const cache_key *) override;
+    uint64_t maxSize() const override;
+    uint64_t minSize() const override;
+    uint64_t currentSize() const override;
+    uint64_t currentCount() const override;
+    int64_t maxObjectSize() const override;
+    void getStats(StoreInfoStats &stats) const override;
+    void stat(StoreEntry &e) const override;
+    void reference(StoreEntry &e) override;
+    bool dereference(StoreEntry &e) override;
+    void updateHeaders(StoreEntry *e) override;
+    void maintain() override;
+    bool anchorToCache(StoreEntry &) override;
+    bool updateAnchored(StoreEntry &) override;
+    void evictCached(StoreEntry &) override;
+    void evictIfFound(const cache_key *) override;
 
     /// whether Squid is correctly configured to use a shared memory cache
     static bool Enabled() { return EntryLimit() > 0; }
@@ -80,7 +80,7 @@ protected:
     void copyToShm(StoreEntry &e);
     void copyToShmSlice(StoreEntry &e, Ipc::StoreMapAnchor &anchor, Ipc::StoreMap::Slice &slice);
     bool copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor);
-    bool copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof);
+    void copyFromShmSlice(StoreEntry &, const StoreIOBuffer &);
 
     void updateHeadersOrThrow(Ipc::StoreMapUpdate &update);
 
@@ -92,7 +92,7 @@ protected:
     sfileno reserveSapForWriting(Ipc::Mem::PageId &page);
 
     // Ipc::StoreMapCleaner API
-    virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
+    void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
 
 private:
     // TODO: move freeSlots into map
@@ -109,7 +109,7 @@ private:
     class SlotAndPage
     {
     public:
-        SlotAndPage(): slot(NULL), page(NULL) {}
+        SlotAndPage(): slot(nullptr), page(nullptr) {}
         bool operator !() const { return !slot && !page; }
         Ipc::Mem::PageId *slot; ///< local slot variable, waiting to be filled
         Ipc::Mem::PageId *page; ///< local page variable, waiting to be filled
@@ -123,5 +123,5 @@ private:
 // to check/update memory cache separately from the disk cache. And same API
 // would hurt because we can support synchronous get/put, unlike the disks.
 
-#endif /* SQUID_MEMSTORE_H */
+#endif /* SQUID_SRC_MEMSTORE_H */
 

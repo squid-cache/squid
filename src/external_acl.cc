@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,7 +32,6 @@
 #include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #include "wordlist.h"
@@ -56,7 +55,6 @@
 #define DEFAULT_EXTERNAL_ACL_CHILDREN 5
 #endif
 
-static char *makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data);
 static void external_acl_cache_delete(external_acl * def, const ExternalACLEntryPointer &entry);
 static int external_acl_entry_expired(external_acl * def, const ExternalACLEntryPointer &entry);
 static int external_acl_grace_expired(external_acl * def, const ExternalACLEntryPointer &entry);
@@ -101,7 +99,7 @@ public:
 
     Helper::ChildConfig children;
 
-    helper *theHelper;
+    Helper::Client::Pointer theHelper;
 
     hash_table *cache;
 
@@ -131,16 +129,16 @@ public:
 CBDATA_CLASS_INIT(external_acl);
 
 external_acl::external_acl() :
-    next(NULL),
+    next(nullptr),
     ttl(DEFAULT_EXTERNAL_ACL_TTL),
     negative_ttl(-1),
     grace(1),
-    name(NULL),
+    name(nullptr),
     format("external_acl_type"),
-    cmdline(NULL),
+    cmdline(nullptr),
     children(DEFAULT_EXTERNAL_ACL_CHILDREN),
-    theHelper(NULL),
-    cache(NULL),
+    theHelper(nullptr),
+    cache(nullptr),
     cache_size(256*1024),
     cache_entries(0),
 #if USE_AUTH
@@ -158,8 +156,7 @@ external_acl::~external_acl()
 
     if (theHelper) {
         helperShutdown(theHelper);
-        delete theHelper;
-        theHelper = NULL;
+        theHelper = nullptr;
     }
 
     while (lru_list.tail) {
@@ -172,7 +169,7 @@ external_acl::~external_acl()
     while (next) {
         external_acl *node = next;
         next = node->next;
-        node->next = NULL; // prevent recursion
+        node->next = nullptr; // prevent recursion
         delete node;
     }
 }
@@ -413,7 +410,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         if (node->quote == Format::LOG_QUOTE_SHELL)
             storeAppendPrintf(sentry, " protocol=2.5");
 
-        node->format.dump(sentry, NULL, false);
+        node->format.dump(sentry, nullptr, false);
 
         for (word = node->cmdline; word; word = word->next)
             storeAppendPrintf(sentry, " %s", word->key);
@@ -426,7 +423,7 @@ void
 free_externalAclHelper(external_acl ** list)
 {
     delete *list;
-    *list = NULL;
+    *list = nullptr;
 }
 
 static external_acl *
@@ -439,15 +436,15 @@ find_externalAclHelper(const char *name)
             return node;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void
 external_acl::add(const ExternalACLEntryPointer &anEntry)
 {
     trimCache();
-    assert(anEntry != NULL);
-    assert (anEntry->def == NULL);
+    assert(anEntry != nullptr);
+    assert (anEntry->def == nullptr);
     anEntry->def = this;
     ExternalACLEntry *e = const_cast<ExternalACLEntry *>(anEntry.getRaw()); // XXX: make hash a std::map of Pointer.
     hash_join(cache, e);
@@ -489,7 +486,7 @@ class external_acl_data
     CBDATA_CLASS(external_acl_data);
 
 public:
-    explicit external_acl_data(external_acl *aDef) : def(cbdataReference(aDef)), name(NULL), arguments(NULL) {}
+    explicit external_acl_data(external_acl *aDef) : def(cbdataReference(aDef)), name(nullptr), arguments(nullptr) {}
     ~external_acl_data();
 
     external_acl *def;
@@ -531,7 +528,7 @@ ACLExternal::parse()
 
     // def->name is the name of the external_acl_type.
     // this is the name of the 'acl' directive being tested
-    data->name = xstrdup(AclMatchedName);
+    data->name = xstrdup(name);
 
     while ((token = ConfigParser::strtokFile())) {
         wordlistAdd(&data->arguments, token);
@@ -544,12 +541,12 @@ ACLExternal::valid () const
 #if USE_AUTH
     if (data->def->require_auth) {
         if (authenticateSchemeCount() == 0) {
-            debugs(28, DBG_CRITICAL, "Can't use proxy auth because no authentication schemes were compiled.");
+            debugs(28, DBG_CRITICAL, "ERROR: Cannot use proxy auth because no authentication schemes were compiled.");
             return false;
         }
 
         if (authenticateActiveSchemeCount() == 0) {
-            debugs(28, DBG_CRITICAL, "Can't use proxy auth because no authentication schemes are fully configured.");
+            debugs(28, DBG_CRITICAL, "ERROR: Cannot use proxy auth because no authentication schemes are fully configured.");
             return false;
         }
     }
@@ -571,7 +568,7 @@ ACLExternal::~ACLExternal()
 }
 
 static void
-copyResultsFromEntry(HttpRequest *req, const ExternalACLEntryPointer &entry)
+copyResultsFromEntry(const HttpRequest::Pointer &req, const ExternalACLEntryPointer &entry)
 {
     if (req) {
 #if USE_AUTH
@@ -595,15 +592,16 @@ copyResultsFromEntry(HttpRequest *req, const ExternalACLEntryPointer &entry)
     }
 }
 
-static Acl::Answer
-aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
+// TODO: Diff reduction. Rename this helper method to match_() or similar.
+Acl::Answer
+ACLExternal::aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch) const
 {
-    debugs(82, 9, HERE << "acl=\"" << acl->def->name << "\"");
+    debugs(82, 9, "acl=\"" << acl->def->name << "\"");
     ExternalACLEntryPointer entry = ch->extacl_entry;
 
     external_acl_message = "MISSING REQUIRED INFORMATION";
 
-    if (entry != NULL) {
+    if (entry != nullptr) {
         if (entry->def == acl->def) {
             /* Ours, use it.. if the key matches */
             const char *key = makeExternalAclKey(ch, acl);
@@ -612,32 +610,32 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             if (strcmp(key, (char*)entry->key) != 0) {
                 debugs(82, 9, "entry key='" << (char *)entry->key << "', our key='" << key << "' do not match. Discarded.");
                 // too bad. need a new lookup.
-                entry = ch->extacl_entry = NULL;
+                entry = ch->extacl_entry = nullptr;
             }
         } else {
             /* Not ours.. get rid of it */
             debugs(82, 9, "entry " << entry << " not valid or not ours. Discarded.");
-            if (entry != NULL) {
+            if (entry != nullptr) {
                 debugs(82, 9, "entry def=" << entry->def << ", our def=" << acl->def);
                 const char *key = makeExternalAclKey(ch, acl); // may be nil
                 debugs(82, 9, "entry key='" << (char *)entry->key << "', our key='" << key << "'");
             }
-            entry = ch->extacl_entry = NULL;
+            entry = ch->extacl_entry = nullptr;
         }
     }
 
     if (!entry) {
-        debugs(82, 9, HERE << "No helper entry available");
+        debugs(82, 9, "No helper entry available");
 #if USE_AUTH
         if (acl->def->require_auth) {
             /* Make sure the user is authenticated */
-            debugs(82, 3, HERE << acl->def->name << " check user authenticated.");
-            const auto ti = AuthenticateAcl(ch);
+            debugs(82, 3, acl->def->name << " check user authenticated.");
+            const auto ti = AuthenticateAcl(ch, *this);
             if (!ti.allowed()) {
-                debugs(82, 2, HERE << acl->def->name << " user not authenticated (" << ti << ")");
+                debugs(82, 2, acl->def->name << " user not authenticated (" << ti << ")");
                 return ti;
             }
-            debugs(82, 3, HERE << acl->def->name << " user is authenticated.");
+            debugs(82, 3, acl->def->name << " user is authenticated.");
         }
 #endif
         const char *key = makeExternalAclKey(ch, acl);
@@ -650,25 +648,25 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
         entry = static_cast<ExternalACLEntry *>(hash_lookup(acl->def->cache, key));
 
         const ExternalACLEntryPointer staleEntry = entry;
-        if (entry != NULL && external_acl_entry_expired(acl->def, entry))
-            entry = NULL;
+        if (entry != nullptr && external_acl_entry_expired(acl->def, entry))
+            entry = nullptr;
 
-        if (entry != NULL && external_acl_grace_expired(acl->def, entry)) {
+        if (entry != nullptr && external_acl_grace_expired(acl->def, entry)) {
             // refresh in the background
-            ExternalACLLookup::Start(ch, acl, true);
-            debugs(82, 4, HERE << "no need to wait for the refresh of '" <<
+            startLookup(ch, acl, true);
+            debugs(82, 4, "no need to wait for the refresh of '" <<
                    key << "' in '" << acl->def->name << "' (ch=" << ch << ").");
         }
 
         if (!entry) {
-            debugs(82, 2, HERE << acl->def->name << "(\"" << key << "\") = lookup needed");
+            debugs(82, 2, acl->def->name << "(\"" << key << "\") = lookup needed");
 
             // TODO: All other helpers allow temporary overload. Should not we?
             if (!acl->def->theHelper->willOverload()) {
-                debugs(82, 2, HERE << "\"" << key << "\": queueing a call.");
-                if (!ch->goAsync(ExternalACLLookup::Instance()))
+                debugs(82, 2, "\"" << key << "\": queueing a call.");
+                if (!ch->goAsync(StartLookup, *this))
                     debugs(82, 2, "\"" << key << "\": no async support!");
-                debugs(82, 2, HERE << "\"" << key << "\": return -1.");
+                debugs(82, 2, "\"" << key << "\": return -1.");
                 return ACCESS_DUNNO; // expired cached or simply absent entry
             } else {
                 if (!staleEntry) {
@@ -686,19 +684,19 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
         }
     }
 
-    debugs(82, 4, HERE << "entry = { date=" <<
+    debugs(82, 4, "entry = { date=" <<
            (long unsigned int) entry->date <<
            ", result=" << entry->result <<
            " tag=" << entry->tag <<
            " log=" << entry->log << " }");
 #if USE_AUTH
-    debugs(82, 4, HERE << "entry user=" << entry->user);
+    debugs(82, 4, "entry user=" << entry->user);
 #endif
 
     external_acl_cache_touch(acl->def, entry);
     external_acl_message = entry->message.termedBuf();
 
-    debugs(82, 2, HERE << acl->def->name << " = " << entry->result);
+    debugs(82, 2, acl->def->name << " = " << entry->result);
     copyResultsFromEntry(ch->request, entry);
     return entry->result;
 }
@@ -759,8 +757,8 @@ external_acl_cache_touch(external_acl * def, const ExternalACLEntryPointer &entr
     dlinkAdd(e, &entry->lru, &def->lru_list);
 }
 
-static char *
-makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
+char *
+ACLExternal::makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data) const
 {
     static MemBuf mb;
     mb.reset();
@@ -801,8 +799,8 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             if (!*ch->rfc931) {
                 // if we fail to go async, we still return NULL and the caller
                 // will detect the failure in ACLExternal::match().
-                (void)ch->goAsync(IdentLookup::Instance());
-                return NULL;
+                (void)ch->goAsync(ACLIdent::StartLookup, *this);
+                return nullptr;
             }
         }
 #endif
@@ -848,7 +846,7 @@ external_acl_cache_add(external_acl * def, const char *key, ExternalACLEntryData
     ExternalACLEntryPointer entry;
 
     if (!def->maybeCacheable(data.result)) {
-        debugs(82,6, HERE);
+        debugs(82,6, MYNAME);
 
         if (data.result == ACCESS_DUNNO) {
             if (const ExternalACLEntryPointer oldentry = static_cast<ExternalACLEntry *>(hash_lookup(def->cache, key)))
@@ -864,7 +862,7 @@ external_acl_cache_add(external_acl * def, const char *key, ExternalACLEntryData
     entry = static_cast<ExternalACLEntry *>(hash_lookup(def->cache, key));
     debugs(82, 2, "external_acl_cache_add: Adding '" << key << "' = " << data.result);
 
-    if (entry != NULL) {
+    if (entry != nullptr) {
         debugs(82, 3, "updating existing entry");
         entry->update(data);
         external_acl_cache_touch(def, entry);
@@ -883,7 +881,7 @@ external_acl_cache_add(external_acl * def, const char *key, ExternalACLEntryData
 static void
 external_acl_cache_delete(external_acl * def, const ExternalACLEntryPointer &entry)
 {
-    assert(entry != NULL);
+    assert(entry != nullptr);
     assert(def->cache_size > 0 && entry->def == def);
     ExternalACLEntry *e = const_cast<ExternalACLEntry *>(entry.getRaw()); // XXX: make hash a std::map of Pointer.
     hash_remove_link(def->cache, e);
@@ -902,11 +900,11 @@ class externalAclState
 
 public:
     externalAclState(external_acl* aDef, const char *aKey) :
-        callback(NULL),
-        callback_data(NULL),
+        callback(nullptr),
+        callback_data(nullptr),
         key(xstrdup(aKey)),
         def(cbdataReference(aDef)),
-        queue(NULL)
+        queue(nullptr)
     {}
     ~externalAclState();
 
@@ -956,7 +954,7 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
     externalAclState *next;
     ExternalACLEntryData entryData;
 
-    debugs(82, 2, HERE << "reply=" << reply);
+    debugs(82, 2, "reply=" << reply);
 
     if (reply.result == Helper::Okay)
         entryData.result = ACCESS_ALLOWED;
@@ -970,24 +968,24 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
     entryData.notes.append(&reply.notes);
 
     const char *label = reply.notes.findFirst("tag");
-    if (label != NULL && *label != '\0')
+    if (label != nullptr && *label != '\0')
         entryData.tag = label;
 
     label = reply.notes.findFirst("message");
-    if (label != NULL && *label != '\0')
+    if (label != nullptr && *label != '\0')
         entryData.message = label;
 
     label = reply.notes.findFirst("log");
-    if (label != NULL && *label != '\0')
+    if (label != nullptr && *label != '\0')
         entryData.log = label;
 
 #if USE_AUTH
     label = reply.notes.findFirst("user");
-    if (label != NULL && *label != '\0')
+    if (label != nullptr && *label != '\0')
         entryData.user = label;
 
     label = reply.notes.findFirst("password");
-    if (label != NULL && *label != '\0')
+    if (label != nullptr && *label != '\0')
         entryData.password = label;
 #endif
 
@@ -1005,7 +1003,7 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
             state->callback(cbdata, entry);
 
         next = state->queue;
-        state->queue = NULL;
+        state->queue = nullptr;
 
         delete state;
 
@@ -1013,27 +1011,31 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
     } while (state);
 }
 
+/// Asks the helper (if needed) or returns the [cached] result (otherwise).
+/// Does not support "background" lookups. See also: ACLExternal::Start().
 void
-ACLExternal::ExternalAclLookup(ACLChecklist *checklist, ACLExternal * me)
+ACLExternal::StartLookup(ACLFilledChecklist &checklist, const Acl::Node &acl)
 {
-    ExternalACLLookup::Start(checklist, me->data, false);
+    const auto &me = dynamic_cast<const ACLExternal&>(acl);
+    me.startLookup(&checklist, me.data, false);
 }
 
+// If possible, starts an asynchronous lookup of an external ACL.
+// Otherwise, asserts (or bails if background refresh is requested).
 void
-ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool inBackground)
+ACLExternal::startLookup(ACLFilledChecklist *ch, external_acl_data *acl, bool inBackground) const
 {
     external_acl *def = acl->def;
 
-    ACLFilledChecklist *ch = Filled(checklist);
     const char *key = makeExternalAclKey(ch, acl);
     assert(key); // XXX: will fail if EXT_ACL_IDENT case needs an async lookup
 
-    debugs(82, 2, HERE << (inBackground ? "bg" : "fg") << " lookup in '" <<
+    debugs(82, 2, (inBackground ? "bg" : "fg") << " lookup in '" <<
            def->name << "' for '" << key << "'");
 
     /* Check for a pending lookup to hook into */
     // only possible if we are caching results.
-    externalAclState *oldstate = NULL;
+    externalAclState *oldstate = nullptr;
     if (def->cache_size > 0) {
         for (dlink_node *node = def->queue.head; node; node = node->next) {
             externalAclState *oldstatetmp = static_cast<externalAclState *>(node->data);
@@ -1048,15 +1050,15 @@ ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool i
     // A background refresh has no need to piggiback on a pending request:
     // When the pending request completes, the cache will be refreshed anyway.
     if (oldstate && inBackground) {
-        debugs(82, 7, HERE << "'" << def->name << "' queue is already being refreshed (ch=" << ch << ")");
+        debugs(82, 7, "'" << def->name << "' queue is already being refreshed (ch=" << ch << ")");
         return;
     }
 
     externalAclState *state = new externalAclState(def, key);
 
     if (!inBackground) {
-        state->callback = &ExternalACLLookup::LookupDone;
-        state->callback_data = cbdataReference(checklist);
+        state->callback = &LookupDone;
+        state->callback_data = cbdataReference(ch);
     }
 
     if (oldstate) {
@@ -1072,7 +1074,7 @@ ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool i
         debugs(82, 4, "externalAclLookup: looking up for '" << key << "' in '" << def->name << "'.");
 
         if (!def->theHelper->trySubmit(buf.buf, externalAclHandleReply, state)) {
-            debugs(82, 7, HERE << "'" << def->name << "' submit to helper failed");
+            debugs(82, 7, "'" << def->name << "' submit to helper failed");
             assert(inBackground); // or the caller should have checked
             delete state;
             return;
@@ -1115,7 +1117,7 @@ externalAclInit(void)
             p->cache = hash_create((HASHCMP *) strcmp, hashPrime(1024), hash4);
 
         if (!p->theHelper)
-            p->theHelper = new helper("external_acl_type");
+            p->theHelper = Helper::Client::Make("external_acl_type");
 
         p->theHelper->cmdline = p->cmdline;
 
@@ -1125,7 +1127,7 @@ externalAclInit(void)
 
         p->theHelper->addr = p->local_addr;
 
-        helperOpenServers(p->theHelper);
+        p->theHelper->openSessions();
     }
 
     externalAclRegisterWithCacheManager();
@@ -1141,48 +1143,17 @@ externalAclShutdown(void)
     }
 }
 
-ExternalACLLookup ExternalACLLookup::instance_;
-ExternalACLLookup *
-ExternalACLLookup::Instance()
-{
-    return &instance_;
-}
-
-void
-ExternalACLLookup::checkForAsync(ACLChecklist *checklist)const
-{
-    /* TODO: optimise this - we probably have a pointer to this
-     * around somewhere */
-    ACL *acl = ACL::FindByName(AclMatchedName);
-    assert(acl);
-    ACLExternal *me = dynamic_cast<ACLExternal *> (acl);
-    assert (me);
-    ACLExternal::ExternalAclLookup(checklist, me);
-}
-
 /// Called when an async lookup returns
 void
-ExternalACLLookup::LookupDone(void *data, const ExternalACLEntryPointer &result)
+ACLExternal::LookupDone(void *data, const ExternalACLEntryPointer &result)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
     checklist->extacl_entry = result;
-    checklist->resumeNonBlockingCheck(ExternalACLLookup::Instance());
+    checklist->resumeNonBlockingCheck();
 }
 
-ACL *
-ACLExternal::clone() const
-{
-    return new ACLExternal(*this);
-}
-
-ACLExternal::ACLExternal(char const *theClass) : data(NULL), class_(xstrdup(theClass))
+ACLExternal::ACLExternal(char const *theClass) : data(nullptr), class_(xstrdup(theClass))
 {}
-
-ACLExternal::ACLExternal(ACLExternal const & old) : data(NULL), class_(old.class_ ? xstrdup(old.class_) : NULL)
-{
-    /* we don't have copy constructors for the data yet */
-    assert(!old.data);
-}
 
 char const *
 ACLExternal::typeString() const

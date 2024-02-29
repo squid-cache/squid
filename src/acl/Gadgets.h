@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_GADGETS_H
-#define SQUID_ACL_GADGETS_H
+#ifndef SQUID_SRC_ACL_GADGETS_H
+#define SQUID_SRC_ACL_GADGETS_H
 
 #include "acl/forward.h"
 #include "error/forward.h"
@@ -19,13 +19,13 @@ class dlink_list;
 class StoreEntry;
 class wordlist;
 
-/// Register an ACL object for future deletion. Repeated registrations are OK.
+/// Register an Acl::Node object for future deletion. Repeated registrations are OK.
 /// \ingroup ACLAPI
-void aclRegister(ACL *acl);
+void aclRegister(Acl::Node *acl);
 /// \ingroup ACLAPI
 void aclDestroyAccessList(acl_access **list);
 /// \ingroup ACLAPI
-void aclDestroyAcls(ACL **);
+void aclDestroyAcls(Acl::Node **);
 /// \ingroup ACLAPI
 void aclDestroyAclList(ACLList **);
 /// Parses a single line of a "action followed by acls" directive (e.g., http_access).
@@ -54,7 +54,7 @@ void aclParseDenyInfoLine(AclDenyInfoList **);
 /// \ingroup ACLAPI
 void aclDestroyDenyInfoList(AclDenyInfoList **);
 /// \ingroup ACLAPI
-wordlist *aclDumpGeneric(const ACL *);
+wordlist *aclDumpGeneric(const Acl::Node *);
 /// \ingroup ACLAPI
 void aclCacheMatchFlush(dlink_list * cache);
 /// \ingroup ACLAPI
@@ -62,5 +62,5 @@ void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
 /// \ingroup ACLAPI
 void dump_acl_list(StoreEntry * entry, ACLList * head);
 
-#endif /* SQUID_ACL_GADGETS_H */
+#endif /* SQUID_SRC_ACL_GADGETS_H */
 

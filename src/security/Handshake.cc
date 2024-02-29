@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 83    SSL-Bump Server/Peer negotiation */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "sbuf/Stream.h"
 #include "security/Handshake.h"
 #if USE_OPENSSL
@@ -126,9 +127,9 @@ ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, 
     /* handle unsupported versions */
 
     const uint16_t vRaw = (vMajor << 8) | vMinor;
-    debugs(83, 7, "unsupported: " << asHex(vRaw));
+    debugs(83, 7, "unsupported: 0x" << asHex(vRaw));
     if (beStrict)
-        throw TextException(ToSBuf("unsupported TLS version: ", asHex(vRaw)), Here());
+        throw TextException(ToSBuf("unsupported TLS version: 0x", asHex(vRaw)), Here());
     // else hide unsupported version details from the caller behind PROTO_NONE
     return AnyP::ProtocolVersion();
 }

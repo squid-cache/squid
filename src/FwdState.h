@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FORWARD_H
-#define SQUID_FORWARD_H
+#ifndef SQUID_SRC_FWDSTATE_H
+#define SQUID_SRC_FWDSTATE_H
 
 #include "base/forward.h"
 #include "base/JobWait.h"
@@ -31,7 +31,6 @@
 
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
-class ErrorState;
 class HttpRequest;
 class PconnPool;
 class ResolvedPeers;
@@ -56,7 +55,7 @@ class FwdState: public RefCountable, public PeerSelectionInitiator
 
 public:
     typedef RefCount<FwdState> Pointer;
-    virtual ~FwdState();
+    ~FwdState() override;
     static void initModule();
 
     /// Initiates request forwarding to a peer or origin server.
@@ -85,7 +84,6 @@ public:
 
     void handleUnregisteredServerEnd();
     int reforward();
-    bool reforwardableStatus(const Http::StatusCode s) const;
     void serverClosed();
     void connectStart();
     void connectDone(const Comm::ConnectionPointer & conn, Comm::Flag status, int xerrno);
@@ -112,11 +110,10 @@ private:
     void stopAndDestroy(const char *reason);
 
     /* PeerSelectionInitiator API */
-    virtual void noteDestination(Comm::ConnectionPointer conn) override;
-    virtual void noteDestinationsEnd(ErrorState *selectionError) override;
-    /// whether the successfully selected path destination or the established
-    /// server connection is still in use
-    bool usingDestination() const;
+    void noteDestination(Comm::ConnectionPointer conn) override;
+    void noteDestinationsEnd(ErrorState *selectionError) override;
+
+    bool transporting() const;
 
     void noteConnection(HappyConnOpenerAnswer &);
 
@@ -155,6 +152,7 @@ private:
 
     /// whether we have used up all permitted forwarding attempts
     bool exhaustedTries() const;
+    void updateAttempts(int);
 
     /// \returns the time left for this connection to become connected or 1 second if it is less than one second left
     time_t connectingTimeout(const Comm::ConnectionPointer &conn) const;
@@ -198,6 +196,9 @@ private:
     /// over the (encrypted, if needed) transport connection to that cache_peer
     JobWait<Http::Tunneler> peerWait;
 
+    /// whether we are waiting for the last dispatch()ed activity to end
+    bool waitingForDispatched;
+
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
     PeerConnectionPointer destinationReceipt; ///< peer selection result (or nil)
@@ -222,5 +223,5 @@ void getOutgoingAddress(HttpRequest *, const Comm::ConnectionPointer &);
 /// a collection of previously used persistent Squid-to-peer HTTP(S) connections
 extern PconnPool *fwdPconnPool;
 
-#endif /* SQUID_FORWARD_H */
+#endif /* SQUID_SRC_FWDSTATE_H */
 

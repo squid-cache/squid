@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SECURITY_HANDSHAKE_H
-#define SQUID_SECURITY_HANDSHAKE_H
+#ifndef SQUID_SRC_SECURITY_HANDSHAKE_H
+#define SQUID_SRC_SECURITY_HANDSHAKE_H
 
 #include "anyp/ProtocolVersion.h"
 #include "base/YesNoNone.h"
@@ -50,8 +50,8 @@ public:
     Ciphers ciphers;
 };
 
-inline
-std::ostream &operator <<(std::ostream &os, Security::TlsDetails const &details)
+inline std::ostream &
+operator <<(std::ostream &os, const TlsDetails &details)
 {
     return details.print(os);
 }
@@ -164,5 +164,5 @@ Tls1p3orLater(const AnyP::ProtocolVersion &p)
 
 }
 
-#endif // SQUID_SECURITY_HANDSHAKE_H
+#endif /* SQUID_SRC_SECURITY_HANDSHAKE_H */
 

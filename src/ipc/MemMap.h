@@ -1,15 +1,15 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_STORE_MAP_H
-#define SQUID_IPC_STORE_MAP_H
+#ifndef SQUID_SRC_IPC_MEMMAP_H
+#define SQUID_SRC_IPC_MEMMAP_H
 
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
 #include "ipc/ReadWriteLock.h"
@@ -150,5 +150,5 @@ public:
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_STORE_MAP_H */
+#endif /* SQUID_SRC_IPC_MEMMAP_H */
 

@@ -1,19 +1,17 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMPAT_XIS_H
-#define _SQUID_COMPAT_XIS_H
-
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#ifndef SQUID_COMPAT_XIS_H
+#define SQUID_COMPAT_XIS_H
 
 #if __cplusplus
+#include <cctype>
+
 #define xisspace(x) isspace(static_cast<unsigned char>(x))
 #define xtoupper(x) toupper(static_cast<unsigned char>(x))
 #define xtolower(x) tolower(static_cast<unsigned char>(x))
@@ -30,6 +28,11 @@
 #define xisgraph(x) isgraph(static_cast<unsigned char>(x))
 
 #else /* ! __cplusplus */
+
+#if HAVE_CTYPE_H
+#include <ctype.h>
+#endif
+
 #define xisspace(x) isspace((unsigned char)x)
 #define xtoupper(x) toupper((unsigned char)x)
 #define xtolower(x) tolower((unsigned char)x)
@@ -46,5 +49,5 @@
 #define xisgraph(x) isgraph((unsigned char)x)
 #endif
 
-#endif /* _SQUID_COMPAT_XIS_H */
+#endif /* SQUID_COMPAT_XIS_H */
 

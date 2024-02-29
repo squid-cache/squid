@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,7 @@
 #include "fde.h"
 #include "format/Format.h"
 #include "fs_io.h"
-#include "html_quote.h"
+#include "html/Quoting.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -29,7 +29,6 @@
 #include "rfc1738.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #include "wordlist.h"
@@ -39,6 +38,8 @@
 #if USE_OPENSSL
 #include "ssl/ErrorDetailManager.h"
 #endif
+
+#include <array>
 
 /**
  \defgroup ErrorPageInternal Error Page Internals
@@ -113,7 +114,12 @@ public:
 class BuildErrorPrinter
 {
 public:
-    BuildErrorPrinter(const SBuf &anInputLocation, int aPage, const char *aMsg, const char *aNear): inputLocation(anInputLocation), page_id(aPage), msg(aMsg), near(aNear) {}
+    BuildErrorPrinter(const SBuf &anInputLocation, int aPage, const char *aMsg, const char *anErrorLocation):
+        inputLocation(anInputLocation),
+        page_id(aPage),
+        msg(aMsg),
+        errorLocation(anErrorLocation)
+    {}
 
     /// reports error details (for admin-visible exceptions and debugging)
     std::ostream &print(std::ostream &) const;
@@ -125,7 +131,7 @@ public:
     const SBuf &inputLocation;
     const int page_id;
     const char *msg;
-    const char *near;
+    const char *errorLocation;
 };
 
 static inline std::ostream &
@@ -143,47 +149,49 @@ static void ValidateStaticError(const int page_id, const SBuf &inputLocation);
 
 /* local constant and vars */
 
-/**
- \ingroup ErrorPageInternal
- *
- \note  hard coded error messages are not appended with %S
- *      automagically to give you more control on the format
- */
-static const struct {
-    int type;           /* and page_id */
-    const char *text;
-}
+/// an error page (or a part of an error page) with hard-coded template text
+class HardCodedError {
+public:
+    err_type type; ///< identifies the error (or a special error template part)
+    const char *text; ///< a string literal containing the error template
+};
 
-error_hard_text[] = {
-
+/// error messages that cannot be configured/customized externally
+static const std::array<HardCodedError, 7> HardCodedErrors = {
     {
-        ERR_SQUID_SIGNATURE,
-        "\n<br>\n"
-        "<hr>\n"
-        "<div id=\"footer\">\n"
-        "Generated %T by %h (%s)\n"
-        "</div>\n"
-        "</body></html>\n"
-    },
-    {
-        TCP_RESET,
-        "reset"
-    },
-    {
-        ERR_CLIENT_GONE,
-        "unexpected client disconnect"
-    },
-    {
-        ERR_SECURE_ACCEPT_FAIL,
-        "secure accept fail"
-    },
-    {
-        ERR_REQUEST_START_TIMEOUT,
-        "request start timedout"
-    },
-    {
-        MGR_INDEX,
-        "mgr_index"
+        {
+            ERR_SQUID_SIGNATURE,
+            "\n<br>\n"
+            "<hr>\n"
+            "<div id=\"footer\">\n"
+            "Generated %T by %h (%s)\n"
+            "</div>\n"
+            "</body></html>\n"
+        },
+        {
+            TCP_RESET,
+            "reset"
+        },
+        {
+            ERR_CLIENT_GONE,
+            "unexpected client disconnect"
+        },
+        {
+            ERR_SECURE_ACCEPT_FAIL,
+            "secure accept fail"
+        },
+        {
+            ERR_REQUEST_START_TIMEOUT,
+            "request start timedout"
+        },
+        {
+            ERR_REQUEST_PARSE_TIMEOUT,
+            "request parse timedout"
+        },
+        {
+            ERR_RELAY_REMOTE,
+            "relay server response"
+        }
     }
 };
 
@@ -193,10 +201,7 @@ static std::vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
 /* local prototypes */
 
 /// \ingroup ErrorPageInternal
-static const int error_hard_text_count = sizeof(error_hard_text) / sizeof(*error_hard_text);
-
-/// \ingroup ErrorPageInternal
-static char **error_text = NULL;
+static char **error_text = nullptr;
 
 /// \ingroup ErrorPageInternal
 static int error_page_count = 0;
@@ -218,7 +223,7 @@ public:
     const char *text() { return template_.c_str(); }
 
 protected:
-    virtual void setDefault() override {
+    void setDefault() override {
         template_ = "Internal Error: Missing Template ";
         template_.append(templateName.termedBuf());
     }
@@ -340,13 +345,11 @@ errorClean(void)
 static const char *
 errorFindHardText(err_type type)
 {
-    int i;
-
-    for (i = 0; i < error_hard_text_count; ++i)
-        if (error_hard_text[i].type == type)
-            return error_hard_text[i].text;
-
-    return NULL;
+    for (const auto &m: HardCodedErrors) {
+        if (m.type == type)
+            return m.text;
+    }
+    return nullptr;
 }
 
 TemplateFile::TemplateFile(const char *name, const err_type code): silent(false), wasLoaded(false), templateName(name), templateCode(code)
@@ -371,7 +374,7 @@ TemplateFile::loadDefault()
     /** test error_default_language location */
     if (!loaded() && Config.errorDefaultLanguage) {
         if (!tryLoadTemplate(Config.errorDefaultLanguage)) {
-            debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "Unable to load default error language files. Reset to backups.");
+            debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "ERROR: Unable to load default error language files. Reset to backups.");
         }
     }
 #endif
@@ -408,7 +411,7 @@ TemplateFile::tryLoadTemplate(const char *lang)
     if ( strlen(lang) == 2) {
         /* TODO glob the error directory for sub-dirs matching: <tag> '-*'   */
         /* use first result. */
-        debugs(4,2, HERE << "wildcard fallback errors not coded yet.");
+        debugs(4,2, "wildcard fallback errors not coded yet.");
     }
 #endif
 
@@ -532,17 +535,17 @@ TemplateFile::loadFor(const HttpRequest *request)
     char lang[256];
     size_t pos = 0; // current parsing position in header string
 
-    debugs(4, 6, HERE << "Testing Header: '" << hdr << "'");
+    debugs(4, 6, "Testing Header: '" << hdr << "'");
 
     while ( strHdrAcptLangGetItem(hdr, lang, 256, pos) ) {
 
         /* wildcard uses the configured default language */
         if (lang[0] == '*' && lang[1] == '\0') {
-            debugs(4, 6, HERE << "Found language '" << lang << "'. Using configured default.");
+            debugs(4, 6, "Found language '" << lang << "'. Using configured default.");
             return false;
         }
 
-        debugs(4, 6, HERE << "Found language '" << lang << "', testing for available template");
+        debugs(4, 6, "Found language '" << lang << "', testing for available template");
 
         if (tryLoadTemplate(lang)) {
             /* store the language we found for the Content-Language reply header */
@@ -680,15 +683,16 @@ ErrorState::NewForwarding(err_type type, HttpRequestPointer &request, const Acce
     return new ErrorState(type, status, request.getRaw(), ale);
 }
 
-ErrorState::ErrorState(err_type t) :
+ErrorState::ErrorState(const err_type t, const AccessLogEntry::Pointer &anAle):
     type(t),
     page_id(t),
-    callback(nullptr)
+    callback(nullptr),
+    ale(anAle)
 {
 }
 
 ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, const AccessLogEntry::Pointer &anAle) :
-    ErrorState(t)
+    ErrorState(t, anAle)
 {
     if (page_id >= ERR_MAX && ErrorDynamicPages[page_id - ERR_MAX]->page_redirect != Http::scNone)
         httpStatus = ErrorDynamicPages[page_id - ERR_MAX]->page_redirect;
@@ -699,12 +703,10 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, c
         request = req;
         src_addr = req->client_addr;
     }
-
-    ale = anAle;
 }
 
-ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply) :
-    ErrorState(ERR_RELAY_REMOTE)
+ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply, const AccessLogEntry::Pointer &anAle):
+    ErrorState(ERR_RELAY_REMOTE, anAle)
 {
     Must(errorReply);
     response_ = errorReply;
@@ -719,7 +721,7 @@ ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply) :
 void
 errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
-    assert(entry->mem_obj != NULL);
+    assert(entry->mem_obj != nullptr);
     assert (entry->isEmpty());
     debugs(4, 4, "storing " << err << " in " << *entry);
 
@@ -775,7 +777,7 @@ static void
 errorSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag errflag, int, void *data)
 {
     ErrorState *err = static_cast<ErrorState *>(data);
-    debugs(4, 3, HERE << conn << ", size=" << size);
+    debugs(4, 3, conn << ", size=" << size);
 
     if (errflag != Comm::ERR_CLOSING) {
         if (err->callback) {
@@ -830,11 +832,11 @@ ErrorState::Dump(MemBuf * mb)
     if (auth_user_request.getRaw() && auth_user_request->denyMessage())
         str.appendf("Auth ErrMsg: %s\r\n", auth_user_request->denyMessage());
 #endif
-    if (dnsError.size() > 0)
-        str.appendf("DNS ErrMsg: %s\r\n", dnsError.termedBuf());
+    if (dnsError)
+        str.appendf("DNS ErrMsg: " SQUIDSBUFPH "\r\n", SQUIDSBUFPRINT(*dnsError));
 
     /* - TimeStamp */
-    str.appendf("TimeStamp: %s\r\n\r\n", mkrfc1123(squid_curtime));
+    str.appendf("TimeStamp: %s\r\n\r\n", Time::FormatRfc1123(squid_curtime));
 
     /* - IP stuff */
     str.appendf("ClientIP: %s\r\n", src_addr.toStr(ntoabuf,MAX_IPSTRLEN));
@@ -915,7 +917,7 @@ void
 ErrorState::compileLegacyCode(Build &build)
 {
     static MemBuf mb;
-    const char *p = NULL;   /* takes priority over mb if set */
+    const char *p = nullptr;   /* takes priority over mb if set */
     int do_quote = 1;
     int no_urlescape = 0;       /* if true then item is NOT to be further URL-encoded */
     char ntoabuf[MAX_IPSTRLEN];
@@ -1080,7 +1082,7 @@ ErrorState::compileLegacyCode(Build &build)
     case 'O':
         if (!building_deny_info_url)
             do_quote = 0;
-    /* [[fallthrough]] */
+        [[fallthrough]];
     case 'o':
         p = request ? request->extacl_message.termedBuf() : external_acl_message;
         if (!p && !building_deny_info_url)
@@ -1088,8 +1090,8 @@ ErrorState::compileLegacyCode(Build &build)
         break;
 
     case 'p':
-        if (request) {
-            mb.appendf("%u", request->url.port());
+        if (request && request->url.port()) {
+            mb.appendf("%hu", *request->url.port());
         } else if (!building_deny_info_url) {
             p = "[unknown port]";
         }
@@ -1106,7 +1108,7 @@ ErrorState::compileLegacyCode(Build &build)
 
     case 'R':
         if (building_deny_info_url) {
-            if (request != NULL) {
+            if (request != nullptr) {
                 const SBuf &tmp = request->url.path();
                 mb.append(tmp.rawContent(), tmp.length());
                 no_urlescape = 1;
@@ -1165,7 +1167,7 @@ ErrorState::compileLegacyCode(Build &build)
         break;
 
     case 'T':
-        mb.appendf("%s", mkrfc1123(squid_curtime));
+        mb.appendf("%s", Time::FormatRfc1123(squid_curtime));
         break;
 
     case 'U':
@@ -1214,8 +1216,8 @@ ErrorState::compileLegacyCode(Build &build)
 
     case 'z':
         if (building_deny_info_url) break;
-        if (dnsError.size() > 0)
-            p = dnsError.termedBuf();
+        if (dnsError)
+            p = dnsError->c_str();
         else if (ftp.cwd_msg)
             p = ftp.cwd_msg;
         else
@@ -1279,6 +1281,17 @@ ErrorState::validate()
 HttpReply *
 ErrorState::BuildHttpReply()
 {
+    // Make sure error codes get back to the client side for logging and
+    // error tracking.
+    if (request) {
+        request->error.update(type, detail);
+        request->error.update(SysErrorDetail::NewIfAny(xerrno));
+    } else if (ale) {
+        Error err(type, detail);
+        err.update(SysErrorDetail::NewIfAny(xerrno));
+        ale->updateError(err);
+    }
+
     if (response_)
         return response_.getRaw();
 
@@ -1298,7 +1311,7 @@ ErrorState::BuildHttpReply()
                 status = Http::scTemporaryRedirect;
         }
 
-        rep->setHeaders(status, NULL, "text/html;charset=utf-8", 0, 0, -1);
+        rep->setHeaders(status, nullptr, "text/html;charset=utf-8", 0, 0, -1);
 
         if (request) {
             auto location = compile(urlTemplate, true, true);
@@ -1308,7 +1321,7 @@ ErrorState::BuildHttpReply()
         httpHeaderPutStrf(&rep->header, Http::HdrType::X_SQUID_ERROR, "%d %s", httpStatus, "Access Denied");
     } else {
         const auto body = buildBody();
-        rep->setHeaders(httpStatus, NULL, "text/html;charset=utf-8", body.length(), 0, -1);
+        rep->setHeaders(httpStatus, nullptr, "text/html;charset=utf-8", body.length(), 0, -1);
         /*
          * include some information for downstream caches. Implicit
          * replaceable content. This isn't quite sufficient. xerrno is not
@@ -1324,12 +1337,12 @@ ErrorState::BuildHttpReply()
          * If error page auto-negotiate is enabled in any way, send the Vary.
          * RFC 2616 section 13.6 and 14.44 says MAY and SHOULD do this.
          * We have even better reasons though:
-         * see http://wiki.squid-cache.org/KnowledgeBase/VaryNotCaching
+         * see https://wiki.squid-cache.org/KnowledgeBase/VaryNotCaching
          */
         if (!Config.errorDirectory) {
             /* We 'negotiated' this ONLY from the Accept-Language. */
-            rep->header.delById(Http::HdrType::VARY);
-            rep->header.putStr(Http::HdrType::VARY, "Accept-Language");
+            static const SBuf acceptLanguage("Accept-Language");
+            rep->header.updateOrAddStr(Http::HdrType::VARY, acceptLanguage);
         }
 
         /* add the Content-Language header according to RFC section 14.12 */
@@ -1345,15 +1358,6 @@ ErrorState::BuildHttpReply()
         }
 
         rep->body.set(body);
-    }
-
-    // Make sure error codes get back to the client side for logging and
-    // error tracking.
-    if (request) {
-        if (detail)
-            request->detailError(type, detail);
-        else
-            request->detailError(type, SysErrorDetail::NewIfAny(xerrno));
     }
 
     return rep;
@@ -1432,13 +1436,13 @@ ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRe
 
 /// react to a compile() error
 /// \param msg  description of what went wrong
-/// \param near  approximate start of the problematic input
+/// \param errorLocation approximate start of the problematic input
 /// \param  forceBypass whether detection of this error was introduced late,
 /// after old configurations containing this error could have been
 /// successfully validated and deployed (i.e. the admin may not be
 /// able to fix this newly detected but old problem quickly)
 void
-ErrorState::noteBuildError_(const char *msg, const char *near, const bool forceBypass)
+ErrorState::noteBuildError_(const char *const msg, const char * const errorLocation, const bool forceBypass)
 {
     using ErrorPage::BuildErrorPrinter;
     const auto runtime = !starting_up;
@@ -1459,9 +1463,9 @@ ErrorState::noteBuildError_(const char *msg, const char *near, const bool forceB
         if (starting_up && seenErrors <= 10)
             debugs(4, debugLevel, "WARNING: The following configuration error will be fatal in future Squid versions");
 
-        debugs(4, debugLevel, "ERROR: " << BuildErrorPrinter(inputLocation, page_id, msg, near));
+        debugs(4, debugLevel, "ERROR: " << BuildErrorPrinter(inputLocation, page_id, msg, errorLocation));
     } else {
-        throw TexcHere(ToSBuf(BuildErrorPrinter(inputLocation, page_id, msg, near)));
+        throw TexcHere(ToSBuf(BuildErrorPrinter(inputLocation, page_id, msg, errorLocation)));
     }
 }
 
@@ -1487,11 +1491,11 @@ ErrorPage::BuildErrorPrinter::print(std::ostream &os) const {
 
     // TODO: Add support for prefix printing to Raw
     const size_t maxContextLength = 15; // plus "..."
-    if (strlen(near) > maxContextLength) {
-        os.write(near, maxContextLength);
+    if (strlen(errorLocation) > maxContextLength) {
+        os.write(errorLocation, maxContextLength);
         os << "...";
     } else {
-        os << near;
+        os << errorLocation;
     }
 
     // XXX: We should not be converting (inner) exception to text if we are

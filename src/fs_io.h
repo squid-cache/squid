@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 06    Disk I/O Routines */
 
-#ifndef SQUID_FS_IO_H_
-#define SQUID_FS_IO_H_
+#ifndef SQUID_SRC_FS_IO_H
+#define SQUID_SRC_FS_IO_H
 
 #include "mem/forward.h"
 #include "sbuf/forward.h"
@@ -62,5 +62,5 @@ bool FileRename(const SBuf &from, const SBuf &to);
 int fsBlockSize(const char *path, int *blksize);
 int fsStats(const char *, int *, int *, int *, int *);
 
-#endif /* SQUID_FS_IO_H_ */
+#endif /* SQUID_SRC_FS_IO_H */
 

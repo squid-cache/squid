@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "ExternalACLEntry.h"
 #include "http/Stream.h"
 #include "HttpReply.h"
@@ -25,20 +25,16 @@
 CBDATA_CLASS_INIT(ACLFilledChecklist);
 
 ACLFilledChecklist::ACLFilledChecklist() :
-    dst_rdns(NULL),
-    request (NULL),
-    reply (NULL),
+    dst_rdns(nullptr),
+    reply (nullptr),
 #if USE_AUTH
-    auth_user_request (NULL),
+    auth_user_request (nullptr),
 #endif
 #if SQUID_SNMP
-    snmp_community(NULL),
-#endif
-#if USE_OPENSSL
-    sslErrors(NULL),
+    snmp_community(nullptr),
 #endif
     requestErrorType(ERR_MAX),
-    conn_(NULL),
+    conn_(nullptr),
     fd_(-1),
     destinationDomainChecked_(false),
     sourceDomainChecked_(false)
@@ -55,17 +51,11 @@ ACLFilledChecklist::~ACLFilledChecklist()
 
     safe_free(dst_rdns); // created by xstrdup().
 
-    HTTPMSGUNLOCK(request);
-
     HTTPMSGUNLOCK(reply);
 
     cbdataReferenceDone(conn_);
 
-#if USE_OPENSSL
-    cbdataReferenceDone(sslErrors);
-#endif
-
-    debugs(28, 4, HERE << "ACLFilledChecklist destroyed " << this);
+    debugs(28, 4, "ACLFilledChecklist destroyed " << this);
 }
 
 static void
@@ -76,7 +66,7 @@ showDebugWarning(const char *msg)
         return;
 
     ++count;
-    debugs(28, Important(58), "ALE missing " << msg);
+    debugs(28, Important(58), "ERROR: ALE missing " << msg);
 }
 
 void
@@ -96,13 +86,13 @@ ACLFilledChecklist::verifyAle() const
             showDebugWarning("HttpRequest object");
             // XXX: al->request should be original,
             // but the request may be already adapted
-            al->request = request;
+            al->request = request.getRaw();
             HTTPMSGLOCK(al->request);
         }
 
         if (!al->adapted_request) {
             showDebugWarning("adapted HttpRequest object");
-            al->adapted_request = request;
+            al->adapted_request = request.getRaw();
             HTTPMSGLOCK(al->adapted_request);
         }
 
@@ -219,20 +209,16 @@ ACLFilledChecklist::markSourceDomainChecked()
  *    checkCallback() will delete the list (i.e., self).
  */
 ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request, const char *ident):
-    dst_rdns(NULL),
-    request(NULL),
-    reply(NULL),
+    dst_rdns(nullptr),
+    reply(nullptr),
 #if USE_AUTH
-    auth_user_request(NULL),
+    auth_user_request(nullptr),
 #endif
 #if SQUID_SNMP
-    snmp_community(NULL),
-#endif
-#if USE_OPENSSL
-    sslErrors(NULL),
+    snmp_community(nullptr),
 #endif
     requestErrorType(ERR_MAX),
-    conn_(NULL),
+    conn_(nullptr),
     fd_(-1),
     destinationDomainChecked_(false),
     sourceDomainChecked_(false)
@@ -252,7 +238,6 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
     assert(!request);
     if (httpRequest) {
         request = httpRequest;
-        HTTPMSGLOCK(request);
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.acl_uses_indirect_client)
             src_addr = request->indirect_client_addr;

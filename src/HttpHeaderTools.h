@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPHEADERTOOLS_H
-#define SQUID_HTTPHEADERTOOLS_H
+#ifndef SQUID_SRC_HTTPHEADERTOOLS_H
+#define SQUID_SRC_HTTPHEADERTOOLS_H
 
 #include "acl/forward.h"
 #include "format/Format.h"
@@ -67,7 +67,7 @@ public:
 private:
     /// Case-insensitive std::string "less than" comparison functor.
     /// Fast version recommended by Meyers' "Effective STL" for ASCII c-strings.
-    class NoCaseLessThan: public std::binary_function<std::string, std::string, bool>
+    class NoCaseLessThan
     {
     public:
         bool operator()(const std::string &lhs, const std::string &rhs) const {
@@ -96,7 +96,7 @@ private:
 class HeaderWithAcl
 {
 public:
-    HeaderWithAcl() : aclList(NULL), valueFormat(NULL), fieldId(Http::HdrType::BAD_HDR), quoted(false) {}
+    HeaderWithAcl() : aclList(nullptr), valueFormat(nullptr), fieldId(Http::HdrType::BAD_HDR), quoted(false) {}
 
     /// HTTP header field name
     std::string fieldName;
@@ -133,5 +133,5 @@ const char *getStringPrefix(const char *str, size_t len);
 
 void httpHdrMangleList(HttpHeader *, HttpRequest *, const AccessLogEntryPointer &al, req_or_rep_t req_or_rep);
 
-#endif
+#endif /* SQUID_SRC_HTTPHEADERTOOLS_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "AccessLogEntry.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
+#include "comm.h"
 #include "comm/Connection.h"
 #include "CommCalls.h"
 #include "errorpage.h"
@@ -21,7 +22,6 @@
 #include "ipc/Port.h"
 #include "mgr/Forwarder.h"
 #include "mgr/Request.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, Forwarder);
@@ -34,10 +34,10 @@ Mgr::Forwarder::Forwarder(const Comm::ConnectionPointer &aConn, const ActionPara
     Ipc::Forwarder(new Request(KidIdentifier, Ipc::RequestId(/*XXX*/), aConn, aParams), 10),
     httpRequest(aRequest), entry(anEntry), conn(aConn), ale(anAle)
 {
-    debugs(16, 5, HERE << conn);
+    debugs(16, 5, conn);
     Must(Comm::IsConnOpen(conn));
-    Must(httpRequest != NULL);
-    Must(entry != NULL);
+    Must(httpRequest != nullptr);
+    Must(entry != nullptr);
 
     HTTPMSGLOCK(httpRequest);
     entry->lock("Mgr::Forwarder");
@@ -62,13 +62,13 @@ void
 Mgr::Forwarder::swanSong()
 {
     if (Comm::IsConnOpen(conn)) {
-        if (closer != NULL) {
+        if (closer != nullptr) {
             comm_remove_close_handler(conn->fd, closer);
-            closer = NULL;
+            closer = nullptr;
         }
         conn->close();
     }
-    conn = NULL;
+    conn = nullptr;
     Ipc::Forwarder::swanSong();
 }
 
@@ -90,7 +90,7 @@ Mgr::Forwarder::handleTimeout()
 void
 Mgr::Forwarder::handleException(const std::exception &e)
 {
-    if (entry != NULL && httpRequest != NULL && Comm::IsConnOpen(conn))
+    if (entry != nullptr && httpRequest != nullptr && Comm::IsConnOpen(conn))
         sendError(new ErrorState(ERR_INVALID_RESP, Http::scInternalServerError, httpRequest, ale));
     Ipc::Forwarder::handleException(e);
 }
@@ -99,7 +99,7 @@ Mgr::Forwarder::handleException(const std::exception &e)
 void
 Mgr::Forwarder::noteCommClosed(const CommCloseCbParams &)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     closer = nullptr;
     if (conn) {
         conn->noteClosure();
@@ -112,10 +112,10 @@ Mgr::Forwarder::noteCommClosed(const CommCloseCbParams &)
 void
 Mgr::Forwarder::sendError(ErrorState *error)
 {
-    debugs(16, 3, HERE);
-    Must(error != NULL);
-    Must(entry != NULL);
-    Must(httpRequest != NULL);
+    debugs(16, 3, MYNAME);
+    Must(error != nullptr);
+    Must(entry != nullptr);
+    Must(httpRequest != nullptr);
 
     entry->buffer();
     entry->replaceHttpReply(error->BuildHttpReply());

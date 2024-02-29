@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,5 +15,5 @@
 #include "tests/STUB.h"
 
 class StoreEntry;
-const char *storeEntryFlags(const StoreEntry *) STUB_RETVAL(NULL)
+const char *storeEntryFlags(const StoreEntry *) STUB_RETVAL(nullptr)
 

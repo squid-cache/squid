@@ -1,19 +1,21 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLFILLED_CHECKLIST_H
-#define SQUID_ACLFILLED_CHECKLIST_H
+#ifndef SQUID_SRC_ACL_FILLEDCHECKLIST_H
+#define SQUID_SRC_ACL_FILLEDCHECKLIST_H
 
 #include "AccessLogEntry.h"
+#include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "error/forward.h"
+#include "HttpRequest.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -22,8 +24,6 @@
 
 class CachePeer;
 class ConnStateData;
-class HttpRequest;
-class HttpReply;
 
 /** \ingroup ACLAPI
     ACLChecklist filled with specific data, representing Squid and transaction
@@ -36,7 +36,7 @@ class ACLFilledChecklist: public ACLChecklist
 public:
     ACLFilledChecklist();
     ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident = nullptr);
-    ~ACLFilledChecklist();
+    ~ACLFilledChecklist() override;
 
     /// configure client request-related fields for the first time
     void setRequest(HttpRequest *);
@@ -55,19 +55,17 @@ public:
     /// set the client side FD
     void fd(int aDescriptor);
 
-    //int authenticated();
-
     bool destinationDomainChecked() const;
     void markDestinationDomainChecked();
     bool sourceDomainChecked() const;
     void markSourceDomainChecked();
 
     // ACLChecklist API
-    virtual bool hasRequest() const { return request != NULL; }
-    virtual bool hasReply() const { return reply != NULL; }
-    virtual bool hasAle() const { return al != NULL; }
-    virtual void syncAle(HttpRequest *adaptedRequest, const char *logUri) const;
-    virtual void verifyAle() const;
+    bool hasRequest() const override { return request != nullptr; }
+    bool hasReply() const override { return reply != nullptr; }
+    bool hasAle() const override { return al != nullptr; }
+    void syncAle(HttpRequest *adaptedRequest, const char *logUri) const override;
+    void verifyAle() const override;
 
 public:
     Ip::Address src_addr;
@@ -76,7 +74,7 @@ public:
     SBuf dst_peer_name;
     char *dst_rdns;
 
-    HttpRequest *request;
+    HttpRequest::Pointer request;
     HttpReply *reply;
 
     char rfc931[USER_IDENT_SZ];
@@ -87,8 +85,12 @@ public:
     char *snmp_community;
 #endif
 
-    /// SSL [certificate validation] errors, in undefined order
-    const Security::CertErrors *sslErrors;
+    // TODO: RefCount errors; do not ignore them because their "owner" is gone!
+    /// TLS server [certificate validation] errors, in undefined order.
+    /// The errors are accumulated as Squid goes through validation steps
+    /// and server certificates. They are cleared on connection retries.
+    /// For sslproxy_cert_error checks, contains just the current/last error.
+    CbcPointer<Security::CertErrors> sslErrors;
 
     /// Peer certificate being checked by ssl_verify_cb() and by
     /// Security::PeerConnector class. In other contexts, the peer
@@ -121,5 +123,5 @@ ACLFilledChecklist *Filled(ACLChecklist *checklist)
     return dynamic_cast<ACLFilledChecklist*>(checklist);
 }
 
-#endif /* SQUID_ACLFILLED_CHECKLIST_H */
+#endif /* SQUID_SRC_ACL_FILLEDCHECKLIST_H */
 

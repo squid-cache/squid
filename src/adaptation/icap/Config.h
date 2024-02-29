@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICAPCONFIG_H
-#define SQUID_ICAPCONFIG_H
+#ifndef SQUID_SRC_ADAPTATION_ICAP_CONFIG_H
+#define SQUID_SRC_ADAPTATION_ICAP_CONFIG_H
 
 #include "acl/forward.h"
 #include "adaptation/Config.h"
@@ -39,7 +39,7 @@ public:
     int repeat_limit; ///< icap_retry_limit in squid.conf
 
     Config();
-    ~Config();
+    ~Config() override;
 
     time_t connect_timeout(bool bypassable) const;
     time_t io_timeout(bool bypassable) const;
@@ -48,7 +48,7 @@ private:
     Config(const Config &); // not implemented
     Config &operator =(const Config &); // not implemented
 
-    virtual Adaptation::ServicePointer createService(const ServiceConfigPointer &cfg);
+    Adaptation::ServicePointer createService(const ServiceConfigPointer &cfg) override;
 };
 
 extern Config TheConfig;
@@ -56,5 +56,5 @@ extern Config TheConfig;
 } // namespace Icap
 } // namespace Adaptation
 
-#endif /* SQUID_ICAPCONFIG_H */
+#endif /* SQUID_SRC_ADAPTATION_ICAP_CONFIG_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,8 @@
 #include "auth/Config.h"
 #include "fatal.h"
 #include "parser/Tokenizer.h"
+
+#include <algorithm>
 
 static void
 addUnique(const SBuf &scheme, std::vector<SBuf> &vec)

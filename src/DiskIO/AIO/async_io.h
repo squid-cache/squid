@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef __ASYNC_IO_H__
-#define __ASYNC_IO_H__
+#ifndef SQUID_SRC_DISKIO_AIO_ASYNC_IO_H
+#define SQUID_SRC_DISKIO_AIO_ASYNC_IO_H
 
 #if HAVE_DISKIO_MODULE_AIO
 
@@ -73,5 +73,5 @@ struct _async_queue {
 };
 
 #endif /* HAVE_DISKIO_MODULE_AIO */
-#endif /* __ASYNC_IO_H_ */
+#endif /* SQUID_SRC_DISKIO_AIO_ASYNC_IO_H */
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FORMAT_FORWARD_H
-#define SQUID_FORMAT_FORWARD_H
+#ifndef SQUID_SRC_LOG_FORWARD_H
+#define SQUID_SRC_LOG_FORWARD_H
 
 #include "base/RefCount.h"
 
@@ -18,5 +18,5 @@ class Logfile;
 class LogTags;
 class LogTagsErrors;
 
-#endif /* SQUID_FORMAT_FORWARD_H */
+#endif /* SQUID_SRC_LOG_FORWARD_H */
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_ASN1_H
-#define SQUID_SNMP_ASN1_H
+#ifndef SQUID_INCLUDE_ASN1_H
+#define SQUID_INCLUDE_ASN1_H
 
 /*
  * Definitions for Abstract Syntax Notation One, ASN.1
@@ -100,5 +100,5 @@ u_char *asn_build_exception(u_char *, int *, u_char);
 
 #endif
 
-#endif  /* SQUID_SNMP_ASN1_H */
+#endif /* SQUID_INCLUDE_ASN1_H */
 

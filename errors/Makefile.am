@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -16,13 +16,25 @@ DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 include $(srcdir)/template.am
 include $(srcdir)/language.am
 
+if ENABLE_TRANSLATION
+TRANSLATE_LANGUAGES = $(LANGUAGE_FILES)
+else !ENABLE_TRANSLATION
+TRANSLATE_LANGUAGES =
+endif
+
 CLEANFILES = $(TRANSLATE_LANGUAGES) translate-warn
 EXTRA_DIST = \
 	$(ERROR_TEMPLATES) \
 	templates/error-details.txt \
 	language.am \
 	template.am \
-	aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS COPYRIGHT
+	aliases alias-link.sh errorpage.css TRANSLATORS COPYRIGHT
+
+if ENABLE_TRANSLATION
+ALIAS_LINKER=$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)"
+else !ENABLE_TRANSLATION
+ALIAS_LINKER=$(TRUE)
+endif
 
 all: all-am
 
@@ -41,19 +53,22 @@ translate-warn:
 
 $(TRANSLATE_LANGUAGES): $(ERROR_TEMPLATES)
 
-NOTIDY=`$(PO2HTML) --help | grep -o "\-\-notidy"`
+NOTIDY=`$(PO2HTML) --help | grep -o "[-]-notidy"`
 
 .po.lang:
-	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
-	    lang=`basename $@ .lang`; \
+	@if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
+	    lang=$(@:.lang=); \
 	    mkdir -p $(top_builddir)/errors/$$lang; \
-	    echo -n "Translate '$$lang' ..."; \
+	    echo "Translating $$lang ..."; \
 	    for f in $(ERROR_TEMPLATES); do \
 		page=`basename $$f`; \
 		$(PO2HTML) $(NOTIDY) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/$$f >$(top_builddir)/errors/$$lang/$$page || exit 1; \
 	    done; \
 	    cp $(top_srcdir)/errors/templates/error-details.txt $(top_builddir)/errors/$$lang/error-details.txt || exit 1; \
-	    echo "done."; \
+	    echo "Done translating $$lang"; \
+	else \
+	    lang=$(@:.lang=); \
+		echo "Translation of $$lang disabled\n"; \
 	fi; \
 	touch $@
 
@@ -88,7 +103,7 @@ install-data-local: translate
 	$(INSTALL_DATA) $(srcdir)/TRANSLATORS $(DESTDIR)$(DEFAULT_ERROR_DIR)/TRANSLATORS; \
 	$(INSTALL_DATA) $(srcdir)/COPYRIGHT $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT; \
 	$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET).default; \
-	$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)" "$(srcdir)/aliases" || exit 1 ;
+	$(ALIAS_LINKER) "$(srcdir)/aliases" || exit 1 ;
 
 uninstall-local:
 	for l in $(TRANSLATE_LANGUAGES) templates; do \
@@ -113,10 +128,6 @@ uninstall-local:
 	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
 	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/TRANSLATORS
 	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT
-
-## Upgrade requires the new files to be pre-installed
-upgrade: install
-	$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)" "$(srcdir)/alias-upgrade" || exit 1 ;
 
 dist-hook: translate
 	for lang in $(TRANSLATE_LANGUAGES); do \

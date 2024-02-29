@@ -1,17 +1,15 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_H
-#define SQUID_ACL_H
+#ifndef SQUID_SRC_ACL_ACL_H
+#define SQUID_SRC_ACL_ACL_H
 
 #include "acl/forward.h"
-#include "acl/Options.h"
-#include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
 #include "sbuf/forward.h"
@@ -19,83 +17,22 @@
 #include <algorithm>
 #include <ostream>
 
-class ConfigParser;
-
 namespace Acl {
 
 /// the ACL type name known to admins
-typedef const char *TypeName;
-/// a "factory" function for making ACL objects (of some ACL child type)
-typedef ACL *(*Maker)(TypeName typeName);
-/// use the given ACL Maker for all ACLs of the named type
+using TypeName = const char *;
+/// a "factory" function for making Acl::Node objects (of some Node child type)
+using Maker = Node *(*)(TypeName typeName);
+/// use the given Acl::Node Maker for all ACLs of the named type
 void RegisterMaker(TypeName typeName, Maker maker);
 
-} // namespace Acl
+/// Validate and store the ACL key parameter for ACL types
+/// declared using "acl aclname type key argument..." declaration that
+/// require unique key values (if any) for each aclname+type combination.
+/// Key comparison is case-insensitive.
+void SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey);
 
-/// A configurable condition. A node in the ACL expression tree.
-/// Can evaluate itself in FilledChecklist context.
-/// Does not change during evaluation.
-/// \ingroup ACLAPI
-class ACL
-{
-
-public:
-    void *operator new(size_t);
-    void operator delete(void *);
-
-    static void ParseAclLine(ConfigParser &parser, ACL ** head);
-    static void Initialize();
-    static ACL *FindByName(const char *name);
-
-    ACL();
-    virtual ~ACL();
-
-    /// sets user-specified ACL name and squid.conf context
-    void context(const char *name, const char *configuration);
-
-    /// Orchestrates matching checklist against the ACL using match(),
-    /// after checking preconditions and while providing debugging.
-    /// \return true if and only if there was a successful match.
-    /// Updates the checklist state on match, async, and failure.
-    bool matches(ACLChecklist *checklist) const;
-
-    /// \returns (linked) Options supported by this ACL
-    virtual const Acl::Options &options() { return Acl::NoOptions(); }
-
-    /// configures ACL options, throwing on configuration errors
-    virtual void parseFlags();
-
-    /// parses node representation in squid.conf; dies on failures
-    virtual void parse() = 0;
-    virtual char const *typeString() const = 0;
-    virtual bool isProxyAuth() const;
-    virtual SBufList dump() const = 0;
-    virtual bool empty() const = 0;
-    virtual bool valid() const;
-
-    int cacheMatchAcl(dlink_list * cache, ACLChecklist *);
-    virtual int matchForCache(ACLChecklist *checklist);
-
-    virtual void prepareForUse() {}
-
-    SBufList dumpOptions(); ///< \returns approximate options configuration
-
-    char name[ACL_NAME_SZ];
-    char *cfgline;
-    ACL *next; // XXX: remove or at least use refcounting
-    bool registered; ///< added to the global list of ACLs via aclRegister()
-
-private:
-    /// Matches the actual data in checklist against this ACL.
-    virtual int match(ACLChecklist *checklist) = 0; // XXX: missing const
-
-    /// whether our (i.e. shallow) match() requires checklist to have a AccessLogEntry
-    virtual bool requiresAle() const;
-    /// whether our (i.e. shallow) match() requires checklist to have a request
-    virtual bool requiresRequest() const;
-    /// whether our (i.e. shallow) match() requires checklist to have a reply
-    virtual bool requiresReply() const;
-};
+}  // namespace Acl
 
 /// \ingroup ACLAPI
 typedef enum {
@@ -104,18 +41,19 @@ typedef enum {
     ACCESS_ALLOWED,
     ACCESS_DUNNO,
 
-    // Authentication ACL result states
+    // Authentication Acl::Node result states
     ACCESS_AUTH_REQUIRED,    // Missing Credentials
 } aclMatchCode;
 
 /// \ingroup ACLAPI
-/// ACL check answer
+/// Acl::Node check answer
 namespace Acl {
 
 class Answer
 {
 public:
-    // not explicit: allow "aclMatchCode to Acl::Answer" conversions (for now)
+    // TODO: Find a good way to avoid implicit conversion (without explicitly
+    // casting every ACCESS_ argument in implicit constructor calls).
     Answer(const aclMatchCode aCode, int aKind = 0): code(aCode), kind(aKind) {}
 
     Answer() = default;
@@ -160,10 +98,8 @@ public:
     bool implicit = false;
 };
 
-} // namespace Acl
-
 inline std::ostream &
-operator <<(std::ostream &o, const Acl::Answer a)
+operator <<(std::ostream &o, const Answer a)
 {
     switch (a) {
     case ACCESS_DENIED:
@@ -182,6 +118,8 @@ operator <<(std::ostream &o, const Acl::Answer a)
     return o;
 }
 
+} // namespace Acl
+
 /// \ingroup ACLAPI
 class acl_proxy_auth_match_cache
 {
@@ -199,8 +137,8 @@ public:
 };
 
 /// \ingroup ACLAPI
-/// XXX: find a way to remove or at least use a refcounted ACL pointer
+/// XXX: find a way to remove or at least use a refcounted Acl::Node pointer
 extern const char *AclMatchedName;  /* NULL */
 
-#endif /* SQUID_ACL_H */
+#endif /* SQUID_SRC_ACL_ACL_H */
 
