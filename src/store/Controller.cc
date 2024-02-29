@@ -41,17 +41,11 @@ Store::Controller::Controller() :
     assert(!store_table);
 }
 
+/// this destructor is never called because Controller singleton is immortal
 Store::Controller::~Controller()
 {
-    delete sharedMemStore;
-    delete transients;
-    delete disks;
-
-    if (store_table) {
-        hashFreeItems(store_table, destroyStoreEntry);
-        hashFreeMemory(store_table);
-        store_table = nullptr;
-    }
+    // assert at runtime because we cannot `= delete` an overridden destructor
+    assert(!"Controller is never destroyed");
 }
 
 void
@@ -927,26 +921,10 @@ Store::Controller::checkTransients(const StoreEntry &e) const
     assert(!transients || e.hasTransients());
 }
 
-namespace Store {
-static RefCount<Controller> TheRoot;
-}
-
 Store::Controller&
 Store::Root()
 {
-    assert(TheRoot);
-    return *TheRoot;
-}
-
-void
-Store::Init(Controller *root)
-{
-    TheRoot = root ? root : new Controller;
-}
-
-void
-Store::FreeMemory()
-{
-    TheRoot = nullptr;
+    static const auto root = new Controller();
+    return *root;
 }
 

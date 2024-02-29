@@ -85,8 +85,6 @@ TestRock::setUp()
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 
-    Store::Init();
-
     store = new Rock::SwapDir();
 
     addSwapDir(store);
@@ -115,8 +113,6 @@ void
 TestRock::tearDown()
 {
     CPPUNIT_NS::TestFixture::tearDown();
-
-    Store::FreeMemory();
 
     store = nullptr;
 

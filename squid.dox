@@ -2066,6 +2066,7 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = __cplusplus \
                          FOLLOW_X_FORWARDED_FOR \
                          FORW_VIA_DB \
+                         HAVE_LIBGNUTLS \
                          ICAP_CLIENT \
                          HAVE_LIBHEIMDAL_KRB5 \
                          HAVE_LIBMIT_KRB5 \
@@ -2082,7 +2083,6 @@ PREDEFINED             = __cplusplus \
                          USE_ECAP \
                          USE_ERR_LOCALES \
                          USE_EPOLL \
-                         USE_GNUTLS \
                          USE_HEXDUMP \
                          USE_HTCP \
                          USE_HTTP_VIOLATIONS \

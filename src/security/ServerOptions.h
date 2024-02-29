@@ -73,7 +73,7 @@ public:
 
 #if USE_OPENSSL
     bool generateHostCertificates = true; ///< dynamically make host cert
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     // TODO: GnuTLS does implement TLS server connections so the cert
     // generate vs static choice can be reached in the code now.
     // But this feature is not fully working implemented so must not
