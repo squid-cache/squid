@@ -22,7 +22,6 @@ m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
 m4_include([acinclude/ldap.m4])
-m4_include([acinclude/nettle.m4])
 m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/tdb.m4])
@@ -1059,12 +1058,10 @@ AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
 SQUID_CHECK_LIB_WORKS(nettle,[
   SQUID_STATE_SAVE(squid_nettle_state)
-  PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[],[
+  PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[
     CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
-    AC_CHECK_LIB(nettle,[nettle_md5_init],[LIBNETTLE_LIBS="-lnettle"])
-  ])
-  AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
-  SQUID_CHECK_NETTLE_BASE64
+    AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
+  ],[:])
   SQUID_STATE_ROLLBACK(squid_nettle_state)
 ])
 
