@@ -238,7 +238,7 @@ AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
     AC_MSG_NOTICE([Library '$1' support: no (auto)])
   ])
 ])
-AM_CONDITIONAL(m4_toupper(m4_translit([ENABLE_LIB$1], [-+.], [___])),[test "x$with_$1" != "xno"])
+AM_CONDITIONAL(m4_toupper(m4_translit([ENABLE_LIB$1],[-+.],[___])),m4_translit([test "x$with_$1" != "xno"],[-+.],[___]))
 AC_SUBST(m4_toupper(m4_translit([LIB$1_LIBS], [-+.], [___])))
 ])
 
@@ -342,7 +342,7 @@ AC_DEFUN([SQUID_CHECK_SASL],[
       squid_cv_check_sasl="no"
     ])
   ])
-  AS_IF([test "$squid_host_os" = "Darwin"],[
+  AS_IF([test "$squid_host_os" = "darwin"],[
     AS_IF([test "$ac_cv_lib_sasl2_sasl_errstring" = "yes"],[
       AC_DEFINE(HAVE_SASL_DARWIN,1,[Define to 1 if Mac Darwin without sasl.h])
       echo "checking for MAC Darwin without sasl.h ... yes"

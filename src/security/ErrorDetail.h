@@ -52,7 +52,7 @@ public:
     /// \param anIoErrorNo TLS I/O function outcome; \see ErrorDetail::ioErrorNo
     /// \param aSysErrorNo saved errno(3); \see ErrorDetail::sysErrorNo
     ErrorDetail(ErrorCode anErrorCode, int anIoErrorNo, int aSysErrorNo);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     /// Details (or starts detailing) a non-validation failure.
     /// \param anLibErrorNo TLS function outcome; \see ErrorDetail::lib_error_no
     /// \param aSysErrorNo saved errno(3); \see ErrorDetail::sysErrorNo

@@ -15,7 +15,7 @@
 namespace Store
 {
 Controller::Controller() {STUB_NOP}
-Controller::~Controller() {STUB_NOP}
+Controller::~Controller() STUB
 void Controller::create() STUB
 void Controller::init() STUB
 uint64_t Controller::maxSize() const STUB_RETVAL(0)
@@ -55,10 +55,7 @@ void Controller::memoryDisconnect(StoreEntry &) STUB
 StoreSearch *Controller::search() STUB_RETVAL(nullptr)
 bool Controller::SmpAware() STUB_RETVAL(false)
 int Controller::store_dirs_rebuilding = 0;
-Controller nil;
-Controller &Root() STUB_RETVAL(Store::nil)
-void Init(Controller *) STUB
-void FreeMemory() STUB
+Controller &Root() STUB_RETREF(Controller)
 }
 
 #include "store/Disk.h"

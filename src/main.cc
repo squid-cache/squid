@@ -1585,7 +1585,6 @@ SquidMain(int argc, char **argv)
         DiskIOModule::SetupAllModules();
 
         /* we may want the parsing process to set this up in the future */
-        Store::Init();
         Acl::Init();
         Auth::Init();      /* required for config parsing. NOP if !USE_AUTH */
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.

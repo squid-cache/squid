@@ -63,7 +63,7 @@ void Security::KeyLogger::maybeLog(const Connection &, const Acl::ChecklistFille
 Security::ErrorDetail::ErrorDetail(ErrorCode, const CertPointer &, const CertPointer &, const char *) STUB
 #if USE_OPENSSL
 Security::ErrorDetail::ErrorDetail(ErrorCode, int, int) STUB
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 Security::ErrorDetail::ErrorDetail(ErrorCode, LibErrorCode, int) STUB
 #endif
 void Security::ErrorDetail::setPeerCertificate(const CertPointer &) STUB

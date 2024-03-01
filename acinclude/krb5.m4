@@ -39,9 +39,7 @@ int
 main(void)
 {
         krb5_context context;
-
         krb5_init_context(&context);
-
         return 0;
 }
 ]])], [ squid_cv_broken_heimdal_krb5_h=no ], [
@@ -52,15 +50,14 @@ int
 main(void)
 {
         krb5_context context;
-
         krb5_init_context(&context);
-
         return 0;
 }
 ]])], [ squid_cv_broken_heimdal_krb5_h=yes ], [ squid_cv_broken_heimdal_krb5_h=no ])
     ])
     SQUID_STATE_ROLLBACK(squid_krb5_heimdal_test)
   ])
+  SQUID_DEFINE_BOOL(HAVE_BROKEN_HEIMDAL_KRB5_H,$squid_cv_broken_heimdal_krb5_h,[Heimdal krb5.h is broken for C++])
 ]) dnl SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
 
 dnl check the max skew in the krb5 context, and sets squid_cv_max_skew_context
@@ -131,17 +128,9 @@ dnl checks that gssapi is ok, and sets squid_cv_working_gssapi accordingly
 AC_DEFUN([SQUID_CHECK_WORKING_GSSAPI], [
   AC_CACHE_CHECK([for working gssapi], squid_cv_working_gssapi, [
     AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#if USE_HEIMDAL_KRB5
-#if HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif HAVE_GSSAPI_H
-#include <gssapi.h>
-#endif
-#elif USE_GNUGSS
 #if HAVE_GSS_H
 #include <gss.h>
 #endif
-#else
 #if USE_APPLE_KRB5
 #define GSSKRB_APPLE_DEPRECATED(x)
 #endif
@@ -155,7 +144,6 @@ AC_DEFUN([SQUID_CHECK_WORKING_GSSAPI], [
 #endif
 #if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
-#endif
 #endif
 int
 main(void)
@@ -177,17 +165,9 @@ dnl check for a working spnego, and set squid_cv_have_spnego
 AC_DEFUN([SQUID_CHECK_SPNEGO_SUPPORT], [
   AC_CACHE_CHECK([for spnego support], squid_cv_have_spnego, [
     AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#if USE_HEIMDAL_KRB5
-#if HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif HAVE_GSSAPI_H
-#include <gssapi.h>
-#endif
-#elif USE_GNUGSS
 #if HAVE_GSS_H
 #include <gss.h>
 #endif
-#else
 #if USE_APPLE_KRB5
 #define GSSKRB_APPLE_DEPRECATED(x)
 #endif
@@ -201,7 +181,6 @@ AC_DEFUN([SQUID_CHECK_SPNEGO_SUPPORT], [
 #endif
 #if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
-#endif
 #endif
 #include <string.h>
 int main(int argc, char *argv[]) {

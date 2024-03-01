@@ -167,7 +167,7 @@ Security::PeerOptions::updateTlsVersionLimits()
                 add.append(":NO_TLSv1_1");
             if (v > 2)
                 add.append(":NO_TLSv1_2");
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
             if (v > 0)
                 add.append(":-VERS-TLS1.0");
             if (v > 1)
@@ -198,28 +198,28 @@ Security::PeerOptions::updateTlsVersionLimits()
         case 3:
 #if USE_OPENSSL
             add = ":NO_TLSv1:NO_TLSv1_1:NO_TLSv1_2:NO_TLSv1_3";
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
             add = ":-VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2:-VERS-TLS1.3";
 #endif
             break;
         case 4:
 #if USE_OPENSSL
             add = ":NO_SSLv3:NO_TLSv1_1:NO_TLSv1_2:NO_TLSv1_3";
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
             add = ":+VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2:-VERS-TLS1.3";
 #endif
             break;
         case 5:
 #if USE_OPENSSL
             add = ":NO_SSLv3:NO_TLSv1:NO_TLSv1_2:NO_TLSv1_3";
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
             add = ":-VERS-TLS1.0:+VERS-TLS1.1:-VERS-TLS1.2:-VERS-TLS1.3";
 #endif
             break;
         case 6:
 #if USE_OPENSSL
             add = ":NO_SSLv3:NO_TLSv1:NO_TLSv1_1:NO_TLSv1_3";
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
             add = ":-VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.3";
 #endif
             break;
@@ -251,7 +251,7 @@ Security::PeerOptions::createBlankContext() const
     }
     ctx = convertContextFromRawPtr(t);
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     // Initialize for X.509 certificate exchange
     gnutls_certificate_credentials_t t;
     if (const auto x = gnutls_certificate_allocate_credentials(&t)) {
@@ -522,7 +522,7 @@ Security::PeerOptions::parseOptions()
 #endif
     parsedOptions = op;
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     if (str.isEmpty()) {
         parsedOptions.reset();
         return;
@@ -636,7 +636,7 @@ Security::PeerOptions::updateContextOptions(Security::ContextPointer &ctx)
     parseOptions();
 #if USE_OPENSSL
     SSL_CTX_set_options(ctx.get(), parsedOptions);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     // NP: GnuTLS uses 'priorities' which are set only per-session instead.
     (void)ctx;
 #else
@@ -678,7 +678,7 @@ loadSystemTrustedCa(Security::ContextPointer &ctx)
     if (SSL_CTX_set_default_verify_paths(ctx.get()) == 0)
         return Security::ErrorString(ERR_get_error());
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     auto x = gnutls_certificate_set_x509_system_trust(ctx.get());
     if (x < 0)
         return Security::ErrorString(x);
@@ -706,7 +706,7 @@ Security::PeerOptions::updateContextCa(Security::ContextPointer &ctx)
             debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate location " <<
                    i << ": " << Security::ErrorString(x));
         }
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         const auto x = gnutls_certificate_set_x509_trust_file(ctx.get(), i.c_str(), GNUTLS_X509_FMT_PEM);
         if (x < 0) {
             debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate location " <<
@@ -762,7 +762,7 @@ Security::PeerOptions::updateContextTrust(Security::ContextPointer &ctx)
                Security::ErrorString(ERR_get_error()));
     }
 #endif
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     // Modern GnuTLS versions trust intermediate CA certificates by default.
     (void)ctx;
 #else
@@ -779,7 +779,7 @@ Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
     // XXX: Options already set before (via the context) are not cleared!
     SSL_set_options(s.get(), parsedOptions);
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     LibErrorCode x;
     SBuf errMsg;
     if (!parsedOptions) {

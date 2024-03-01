@@ -188,6 +188,9 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--without-gss</tag>
+	<p>Renamed from <em>--without-gnugss</em>.
+
 	<tag>--without-psapi</tag>
 	<p>Disable auto-detection of Windows PSAPI library.
 
@@ -215,6 +218,9 @@ This section gives an account of those changes in three categories:
 
 	<tag>--enable-cachemgr-hostname=</tag>
 	<p>The <em>cachemgr.cgi</em> tool this option relates to has been removed.
+
+	<tag>--without-gnugss</tag>
+	<p>Renamed to <em>--without-gss</em>.
 
 	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
 	<p>The code enabled by this preprocessor macro has not built for many

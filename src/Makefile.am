@@ -525,12 +525,15 @@ squid_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBGNUTLS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(SSLLIB) \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
 	$(KRB5LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -706,6 +709,9 @@ install-data-local: install-sysconfDATA install-dataDATA
 uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE) $(srcdir)/mime.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE) squid.conf.default
+
+clean-local:
+	-rm -rf cf_gen.dSYM
 
 CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 	test_tools.cc *.a
@@ -1155,6 +1161,7 @@ tests_testRock_LDADD = \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -1331,6 +1338,7 @@ tests_testUfs_LDADD = \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -1494,6 +1502,7 @@ tests_testStore_LDADD= \
 	$(SSLLIB) \
 	CommCalls.o \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -1669,6 +1678,7 @@ tests_testDiskIO_LDADD = \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -1718,6 +1728,7 @@ tests_testACLMaxUserIP_LDADD = \
 	base/libbase.la \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
@@ -1970,12 +1981,15 @@ tests_test_http_range_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBGNUTLS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -2022,6 +2036,7 @@ tests_testHttp1Parser_LDADD= \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
@@ -2124,6 +2139,7 @@ tests_testHttpReply_LDADD=\
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -2353,12 +2369,15 @@ tests_testHttpRequest_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBGNUTLS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -2649,12 +2668,15 @@ tests_testCacheManager_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBGNUTLS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)

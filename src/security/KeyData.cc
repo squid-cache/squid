@@ -87,7 +87,7 @@ Security::KeyData::loadCertificates()
                Debug::Extra << "problem: " << CurrentException);
     }
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     const char *certFilename = certFile.c_str();
     gnutls_datum_t data;
     Security::LibErrorCode x = gnutls_load_file(certFilename, &data);
@@ -152,7 +152,7 @@ Security::KeyData::loadX509PrivateKeyFromFile()
         pkey.reset();
     }
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     const char *keyFilename = privateKeyFile.c_str();
     gnutls_datum_t data;
     if (gnutls_load_file(keyFilename, &data) == GNUTLS_E_SUCCESS) {

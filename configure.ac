@@ -22,7 +22,6 @@ m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
 m4_include([acinclude/ldap.m4])
-m4_include([acinclude/nettle.m4])
 m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/tdb.m4])
@@ -1007,12 +1006,10 @@ AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
 SQUID_CHECK_LIB_WORKS(nettle,[
   SQUID_STATE_SAVE(squid_nettle_state)
-  PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[],[
+  PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[
     CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
-    AC_CHECK_LIB(nettle,[nettle_md5_init],[LIBNETTLE_LIBS="-lnettle"])
-  ])
-  AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
-  SQUID_CHECK_NETTLE_BASE64
+    AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
+  ],[:])
   SQUID_STATE_ROLLBACK(squid_nettle_state)
 ])
 
@@ -1025,37 +1022,17 @@ dnl Solaris10 provides MD5 natively through libmd5
 AC_CHECK_LIB(md5, MD5Init, [CRYPTLIB="$CRYPTLIB -lmd5"])
 AC_SUBST(CRYPTLIB)
 
-SSLLIB=""
-
 SQUID_AUTO_LIB(gnutls,[GnuTLS crypto],[LIBGNUTLS])
-AH_TEMPLATE(USE_GNUTLS,[GnuTLS support is available])
 SQUID_CHECK_LIB_WORKS(gnutls,[
   SQUID_STATE_SAVE(squid_gnutls_state)
-
-  # User may have provided a custom location for GnuTLS. Otherwise...
-  CPPFLAGS="$LIBGNUTLS_CFLAGS $CPPFLAGS"
-  LIBS="$LIBS $LIBGNUTLS_PATH"
-
-  # auto-detect using pkg-config
   PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.4.0],[
-    CPPFLAGS="$CPPFLAGS $LIBGNUTLS_CFLAGS"
-    ],[
-    ## find the package without pkg-config
-    ## check that the library is actually new enough.
-    ## by testing for a 3.4.0+ function which we use
-    AC_CHECK_LIB(gnutls,gnutls_pcert_export_x509,[LIBGNUTLS_LIBS="-lgnutls"])
-  ])
-  # if any of the required headers is not found, signal we can't support gnutls
-  AC_CHECK_HEADERS([gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h], [], [LIBGNUTLS_LIBS=""])
-
-  SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
-
-  AS_IF([test "x$LIBGNUTLS_LIBS" != "x"],[
-    SSLLIB="$LIBGNUTLS_PATH $LIBGNUTLS_LIBS $SSLLIB"
-    AC_DEFINE(USE_GNUTLS,1,[GnuTLS support is available])
-  ])
+    CPPFLAGS="$LIBGNUTLS_CFLAGS $CPPFLAGS"
+    AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h)
+  ],[:])
+  SQUID_STATE_ROLLBACK(squid_gnutls_state)
 ])
 
+SSLLIB=""
 dnl User may specify OpenSSL is needed from a non-standard location
 SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[LIBOPENSSL])
 AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
@@ -1106,12 +1083,6 @@ AS_IF([test "x$with_openssl" = "xyes"],[
     ],$LIBOPENSSL_LIBS)
   ])
 
-  # This is a workaround for RedHat 9 brain damage..
-  AS_IF([test -d /usr/kerberos/include -a -f /usr/include/openssl/kssl.h],[
-    AC_MSG_NOTICE([OpenSSL depends on Kerberos])
-    LIBOPENSSL_LIBS="-L/usr/kerberos/lib $LIBOPENSSL_LIBS"
-    CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
-  ])
   SQUID_STATE_ROLLBACK(squid_openssl_state) #de-pollute LIBS
 
   AS_IF([test "x$LIBOPENSSL_LIBS" != "x"],[
@@ -1351,203 +1322,42 @@ AS_IF([test "x$with_solaris_krb5" = "xyes" -a "x$KRB5LIBS" = "x"],[
   SQUID_STATE_ROLLBACK([squid_krb5_save])
 ])
 
-dnl User may specify Heimdal Kerberos is needed from a non-standard location
-SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[LIB_KRB5])
-AH_TEMPLATE(USE_HEIMDAL_KRB5,[Heimdal Kerberos support is available])
-AS_IF([test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"],[
-  CXXFLAGS="$LIB_KRB5_CFLAGS $CXXFLAGS"
-  krb5confpath="$with_heimdal_krb5/bin"
-  # find installed libs via pkg-config or krb5-config
-  PKG_CHECK_EXISTS(heimdal-krb5, [squid_pc_krb5_name="heimdal-krb5"])
-  AS_IF([test "x$squid_pc_krb5_name" = "x"],[
-    PKG_CHECK_EXISTS(heimdal-gssapi, [squid_pc_krb5_name="heimdal-gssapi"])
-  ])
-  AS_IF([test "x$squid_pc_krb5_name" = "x" -a "$cross_compiling" = "no"],[
-    # Look for krb5-config (unless cross-compiling)
-    AC_PATH_PROG(krb5_config,krb5-config,no,$krb5confpath)
-    AS_IF([test "x$ac_cv_path_krb5_config" != "xno"],[
-      krb5confpath="`dirname $ac_cv_path_krb5_config`"
-      ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
-      AS_IF([test "x$with_heimdal_krb5" = "xyes" -a $ac_heimdal = 0],[
-        AC_MSG_ERROR([Could not find pkg-config or krb5-config for Heimdal Kerberos])
-      ])
-    ],[
-      AS_IF([test "x$with_heimdal_krb5" = "xyes"],[
-        AC_MSG_ERROR([Could not find krb5-config in path])
-      ],[
-        AC_MSG_WARN([Could not find krb5-config in path])
-        with_heimdal_krb5=no
-      ])
-    ])
+# Kerberos support libraries: Heimdal
+SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[LIBHEIMDAL_KRB5])
+SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
+  AS_IF([test "x$KRB5LIBS" = "x"],[
+    SQUID_STATE_SAVE(squid_heimdal_krb5_save)
+    PKG_CHECK_MODULES([LIBHEIMDAL_KRB5],[heimdal-krb5 heimdal-gssapi],[
+      CPPFLAGS="$LIBHEIMDAL_KRB5_CFLAGS $CPPFLAGS"
+      AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
+      AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
+
+      LIBS="$LIBHEIMDAL_KRB5_PATH $LIBHEIMDAL_KRB5_LIBS $LIBS"
+      SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
+      SQUID_CHECK_KRB5_FUNCS
+    ],[:])
+    SQUID_STATE_ROLLBACK(squid_heimdal_krb5_save)
   ])
 ])
-AS_IF([test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"],[
-  SQUID_STATE_SAVE([squid_krb5_save])
-  LIBS="$LIBS $LIB_KRB5_PATH"
 
-  # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIB_KRB5], $squid_pc_krb5_name,,[
-    # look for krb5-config (unless cross-compiling)
-    AS_IF([test "$cross_compiling" = "no"],[
-      AS_IF([test "x$krb5confpath" = "x"],[
-        AC_PATH_PROG(krb5_config,krb5-config,no)
-        AS_IF([test "x$ac_cv_path_krb5_config" != "xno"],[ac_krb5_config="$ac_cv_path_krb5_config"])
-      ],[
-        ac_krb5_config="$krb5confpath/krb5-config"
-      ])
-    ])
-    AS_IF([test "x$ac_krb5_config" != "x" -a -x "$ac_krb5_config"],[
-      # Get libs, etc
-      AC_MSG_NOTICE([Use krb5-config to get CXXFLAGS and LIBS])
-      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags krb5 2>/dev/null`"
-      LIB_KRB5_LIBS="`$ac_krb5_config --libs krb5 2>/dev/null`"
-      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags gssapi 2>/dev/null` $LIB_KRB5_CFLAGS"
-      LIB_KRB5_LIBS="`$ac_krb5_config --libs gssapi 2>/dev/null` $LIB_KRB5_LIBS"
-    ],[
-      ## For some OS pkg-config is broken or unavailable.
-      ## Detect libraries the hard way.
-      SQUID_STATE_SAVE([squid_heimdal_save])
-      missing_required=
-      AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
-      AC_CHECK_LIB(resolv, [main], [LIB_KRB5_LIBS="-lresolv $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'resolv' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(crypt, [main], [LIB_KRB5_LIBS="-lcrypt $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'crypt' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(roken, [main], [LIB_KRB5_LIBS="-lroken $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'roken' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(heimbase, [main], [LIB_KRB5_LIBS="-lheimbase $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'heimbase' may be required for Heimdal Kerberos])
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(wind, [main], [LIB_KRB5_LIBS="-lwind $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'wind' may be required for Heimdal Kerberos])
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(crypto, [main], [LIB_KRB5_LIBS="-lcrypto $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'crypto' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'com_err' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(hx509, [main], [LIB_KRB5_LIBS="-lhx509 $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'hx509' may be required for Heimdal Kerberos])
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(asn1, [main], [LIB_KRB5_LIBS="-lasn1 $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'asn1' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'krb5' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(heimntlm, [main], [LIB_KRB5_LIBS="-lheimntlm $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'heimntlm' may be required for Heimdal Kerberos])
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(gssapi, [main], [LIB_KRB5_LIBS="-lgssapi $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'gssapi' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      SQUID_STATE_ROLLBACK([squid_heimdal_save])
-      AS_IF([test "x$missing_required" = "xyes"],[LIB_KRB5_LIBS=""])
-    ])
+# Kerberos support libraries: GNU GSS
+SQUID_AUTO_LIB(gss,[GNU gss],[LIBGSS])
+SQUID_CHECK_LIB_WORKS(gss,[
+  AS_IF([test "x$KRB5LIBS" = "x" -a "x$LIBHEIMDAL_KRB5_LIBS" = "x"],[
+    SQUID_STATE_SAVE(squid_gss_save)
+    PKG_CHECK_MODULES([LIBGSS],[gss],[
+      CPPFLAGS="$LIBGSS_CFLAGS $CPPFLAGS"
+      AC_CHECK_HEADERS(gss.h)
+      LIBS="$LIBGSS_PATH $LIBS"
+      SQUID_CHECK_WORKING_GSSAPI
+      SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
+      SQUID_CHECK_SPNEGO_SUPPORT
+      SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
+      SQUID_CHECK_WORKING_KRB5
+      SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
+    ],[:])
+    SQUID_STATE_ROLLBACK(squid_gss_save)
   ])
-  AS_IF([test "x$LIB_KRB5_LIBS" != "x"],[
-    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
-    KRB5INCS="$LIB_KRB5_CFLAGS"
-    AC_DEFINE(USE_HEIMDAL_KRB5,1,[Heimdal Kerberos support is available])
-    KRB5_FLAVOUR="Heimdal"
-
-    # check for other specific broken implementations
-    CXXFLAGS="$CXXFLAGS $KRB5INCS"
-    LIBS="$LIBS $KRB5LIBS"
-
-    AC_MSG_NOTICE([Try to find Kerberos headers in given path])
-    AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
-
-    SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
-    AS_IF([test "x$squid_cv_broken_heimdal_krb5_h" = "xyes"],[
-      AC_DEFINE(HAVE_BROKEN_HEIMDAL_KRB5_H, 1, [Define to 1 if Heimdal krb5.h is broken for C++])
-    ])
-    SQUID_CHECK_KRB5_FUNCS
-  ])
-  AS_IF([test "x$KRB5LIBS" = "x"],[
-    AS_IF([test "x$with_heimdal_krb5" = "xyes"],[
-      AC_MSG_ERROR([Required Heimdal Kerberos library not found])
-    ],[
-      AC_MSG_WARN([Heimdal Kerberos library not found])
-    ])
-  ])
-  SQUID_STATE_ROLLBACK([squid_krb5_save])
-])
-
-dnl User may specify GNU gss is needed from a non-standard location
-SQUID_AUTO_LIB(gnugss,[GNU gss],[LIB_KRB5])
-AH_TEMPLATE(USE_GNUGSS,[GNU gss support is available])
-AS_IF([test "x$with_gnugss" != "xno" -a "x$KRB5LIBS" = "x"],[
-  CXXFLAGS="$LIB_KRB5_CFLAGS $CXXFLAGS"
-  krb5confpath=
-  SQUID_STATE_SAVE([squid_krb5_save])
-  LIBS="$LIBS $LIB_KRB5_PATH"
-
-  # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIB_KRB5],[gss],,[
-    ## For some OS pkg-config is broken or unavailable.
-    ## Detect libraries the hard way.
-
-    AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
-    AC_CHECK_LIB(gss, [main], [LIB_KRB5_LIBS="-lgss $LIB_KRB5_LIBS"],[
-      AC_MSG_WARN([library 'com_err' is required for GNU Kerberos])
-    ])
-  ])
-
-  AS_IF([test "x$LIB_KRB5_LIBS" != "x"],[
-    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
-    KRB5INCS="$LIB_KRB5_CFLAGS"
-    AC_DEFINE(USE_GNUGSS,1,[GNU Kerberos support is available])
-    KRB5_FLAVOUR="GNU GSS"
-
-    # check for other specific broken implementations
-    CXXFLAGS="$CXXFLAGS $KRB5INCS"
-    LIBS="$LIBS $KRB5LIBS"
-
-    AC_MSG_NOTICE([Try to find Kerbeors headers in given path])
-    AC_CHECK_HEADERS(gss.h)
-
-    SQUID_CHECK_WORKING_GSSAPI
-    SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
-
-    SQUID_CHECK_SPNEGO_SUPPORT
-    SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
-
-    SQUID_CHECK_WORKING_KRB5
-    SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
-  ])
-  AS_IF([test "x$KRB5LIBS" = "x"],[
-    AS_IF([test "x$with_gnugss" = "xyes"],[
-      AC_MSG_ERROR([Required GNU GSS Kerberos library not found])
-    ],[
-      AC_MSG_WARN([GNU GSS Kerberos library not found])
-    ])
-  ])
-  SQUID_STATE_ROLLBACK([squid_krb5_save])
 ])
 
 AS_IF([test "x$KRB5LIBS" != "x"],[with_krb5=yes])
@@ -2126,7 +1936,6 @@ AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
 SQUID_AUTO_LIB(cppunit,[cppunit test framework],[LIBCPPUNIT])
 SQUID_CHECK_LIB_WORKS(cppunit,[
-  LIBCPPUNIT_LIBS="$LIBCPPUNIT_PATH -lcppunit"
   PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[
     squid_cv_cppunit_version="`pkg-config --modversion cppunit`"
     AC_MSG_NOTICE([using system installed cppunit version $squid_cv_cppunit_version])
@@ -2576,6 +2385,7 @@ AC_CHECK_FUNCS(\
 	setpflags \
 	setpgrp \
 	setsid \
+	setresuid \
 	sigaction \
 	snprintf \
 	socketpair \
@@ -2634,11 +2444,6 @@ AS_CASE([$squid_opt_io_loop_engine],
 
 AS_IF([test "x$ac_cv_func_sched_getaffinity" = "xyes" -a "x$ac_cv_func_sched_setaffinity" = "xyes"],[
   AC_DEFINE(HAVE_CPU_AFFINITY,1,[Support setting CPU affinity for workers])
-])
-
-SQUID_CHECK_SETRESUID_WORKS
-AS_IF([test "x$squid_cv_resuid_works" = "xyes"],[
-  AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness. Knowing that setresuid() exists is not enough, because RedHat 5.0 declares setresuid() but does not implement it.])
 ])
 
 AC_CHECK_HEADERS(mswsock.h)

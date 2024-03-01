@@ -526,9 +526,9 @@ void clientPackRangeHdr(const HttpReplyPointer &, const HttpHdrRangeSpec *, Stri
 void clientPackTermBound(String boundary, MemBuf *);
 
 /* misplaced declaratrions of Stream callbacks provided/used by client side */
-SQUIDCEXTERN CSR clientGetMoreData;
-SQUIDCEXTERN CSS clientReplyStatus;
-SQUIDCEXTERN CSD clientReplyDetach;
+CSR clientGetMoreData;
+CSS clientReplyStatus;
+CSD clientReplyDetach;
 CSCB clientSocketRecipient;
 CSD clientSocketDetach;
 
