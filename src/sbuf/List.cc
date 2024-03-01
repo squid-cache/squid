@@ -10,6 +10,8 @@
 #include "sbuf/Algorithms.h"
 #include "sbuf/List.h"
 
+#include <algorithm>
+
 bool
 IsMember(const SBufList & sl, const SBuf &S, const SBufCaseSensitive case_sensitive)
 {

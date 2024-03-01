@@ -15,6 +15,8 @@
 #include "ssl/bio.h"
 #include "ssl/gadgets.h"
 
+#include <algorithm>
+
 /// load the signing certificate and its chain, if any, from certFile
 /// \return true if the signing certificate was obtained
 bool
