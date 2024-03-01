@@ -37,7 +37,7 @@ public:
 
 public:
     Http::MessagePointer message; ///< HTTP request or response to forward
-    SBuf ruleId; ///< ACL (or similar rule) name that blocked forwarding
+    std::optional<SBuf> ruleId; ///< ACL (or similar rule) name that blocked forwarding
     bool final; ///< whether the error, if any, cannot be bypassed
     Kind kind; ///< the type of the answer
 

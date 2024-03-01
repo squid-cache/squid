@@ -923,7 +923,7 @@ Client::handledEarlyAdaptationAbort()
 void
 Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
 {
-    debugs(11,5, answer.ruleId);
+    debugs(11,5, answer.ruleId.value_or(SBuf()));
 
     if (abortOnBadEntry("entry went bad while ICAP aborted"))
         return;
