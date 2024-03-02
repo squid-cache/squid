@@ -14,6 +14,7 @@
 #include "sbuf/SBuf.h"
 
 #include <iosfwd>
+#include <optional>
 
 namespace Adaptation
 {
