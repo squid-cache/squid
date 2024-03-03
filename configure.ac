@@ -431,28 +431,20 @@ SQUID_STATE_ROLLBACK(LIBATOMIC)
 AC_SUBST(ATOMICLIB)
 
 SQUID_AUTO_LIB(psapi,[Windows PSAPI.dll],[LIBPSAPI])
-AS_IF([test "x$with_psapi" != "xno"],[
+SQUID_CHECK_LIB_WORKS(psapi,[
   SQUID_STATE_SAVE(squid_psapi_state)
   CPPFLAGS="$LIBPSAPI_CFLAGS $CPPFLAGS"
   LIBS="$LIBPSAPI_PATH $LIBS"
-  AC_CHECK_LIB([psapi],[K32GetProcessMemoryInfo],[LIBPSAPI_LIBS="-lpsapi"])
-  AC_CHECK_HEADER([psapi.h],,,[
+  AC_CHECK_LIB([psapi],[K32GetProcessMemoryInfo],[
+    LIBPSAPI_LIBS="-lpsapi"
+    AC_CHECK_HEADERS([psapi.h],,,[
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
+    ])
   ])
   SQUID_STATE_ROLLBACK(squid_psapi_state)
-  AS_IF([test "x$LIBPSAPI_LIBS" != "x"],[
-    CXXFLAGS="$LIBPSAPI_CFLAGS $CXXFLAGS"
-    LIBPSAPI_LIBS="$LIBPSAPI_PATH $LIBPSAPI_LIBS"
-  ],[test "x$with_psapi" = "xyes"],[
-    AC_MSG_ERROR([Required library PSAPI.dll not found])
-  ],[
-    AC_MSG_NOTICE([Library PSAPI.dll not found.])
-  ])
 ])
-AC_MSG_NOTICE([Using Windows PSAPI.dll library: ${with_psapi:=auto}])
-AC_SUBST(LIBPSAPI_LIBS)
 
 AC_SEARCH_LIBS([shm_open], [rt])
 AS_IF([test "x$ac_cv_search_shm_open" != "xno"],[
