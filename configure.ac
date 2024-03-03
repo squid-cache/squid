@@ -1161,215 +1161,39 @@ AC_MSG_NOTICE([OpenSSL library support: ${with_openssl:=no} ${LIBOPENSSL_PATH} $
 AM_CONDITIONAL(ENABLE_SSL,[ test "x$with_openssl" = "xyes" ])
 AC_SUBST(SSLLIB)
 
-dnl User may specify MIT Kerberos is needed from a non-standard location
+# Kerberos support libraries: MIT
 SQUID_AUTO_LIB(mit-krb5,[MIT Kerberos],[LIB_KRB5])
 AH_TEMPLATE(USE_APPLE_KRB5,[Apple Kerberos support is available])
-AH_TEMPLATE(USE_MIT_KRB5,[MIT Kerberos support is available])
 AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
-
-## find out if pkg-config or krb5-config will work
-AS_IF([test "x$with_mit_krb5" != "xno"],[
-  CXXFLAGS="$LIB_KRB5_CFLAGS $CXXFLAGS"
-  krb5confpath="$with_mit_krb5/bin"
-  # find installed libs via pkg-config or krb5-config
-  squid_pc_krb5_name=
-  PKG_CHECK_EXISTS(mit-krb5-gssapi mit-krb5, [squid_pc_krb5_name="mit-krb5-gssapi mit-krb5"],[
-    PKG_CHECK_EXISTS(gssapi-krb5 krb5, [squid_pc_krb5_name="gssapi-krb5 krb5"])
-  ])
-  AS_IF([test "x$squid_pc_krb5_name" = "x" -a "$cross_compiling" = "no"],[
-    # Look for krb5-config (unless cross-compiling)
-    AC_PATH_PROG(krb5_config,krb5-config,no,$krb5confpath)
-    AS_IF([test "x$ac_cv_path_krb5_config" != "xno"],[
-      krb5confpath="`dirname $ac_cv_path_krb5_config`"
-      ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
-      ac_solaris="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i solaris`"
-      ac_apple="`$ac_cv_path_krb5_config --vendor 2>/dev/null | grep -c -i apple`"
-      AS_IF([test $ac_solaris -gt 0],[with_solaris_krb5=yes],
-        [test $ac_apple -gt 0],[with_apple_krb5=yes],
-        [test $ac_heimdal -gt 0],[with_mit_krb5=no]
-      )
-    ],[
-      AS_IF([test "x$with_mit_krb5" = "xyes"],[
-        AC_MSG_ERROR([Could not find krb5-config in path])
-      ],[
-        with_mit_krb5=no
-      ])
-    ])
-  ])
-])
-
-# detect MIT Kerberos dependencies (except on Solaris)
-AS_IF([test "x$with_mit_krb5" != "xno" -a "x$with_solaris_krb5" != "xyes"],[
-  SQUID_STATE_SAVE([squid_krb5_save])
-  LIBS="$LIBS $LIB_KRB5_PATH"
-
-  # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIB_KRB5], $squid_pc_krb5_name,,[
-    # look for krb5-config (unless cross-compiling)
-    AS_IF([test "$cross_compiling" = "no"],[
-      AS_IF([test "x$krb5confpath" = "x"],[
-        AC_PATH_PROG(krb5_config,krb5-config,no)
-        AS_IF([test "x$ac_cv_path_krb5_config" != "xno"],[ac_krb5_config="$ac_cv_path_krb5_config"])
-      ],[
-        ac_krb5_config="$krb5confpath/krb5-config"
-      ])
-    ])
-    AS_IF([test "x$ac_krb5_config" != "x" -a -x "$ac_krb5_config"],[
-      # Get libs, etc
-      AC_MSG_NOTICE([Use krb5-config to get CXXFLAGS and LIBS])
-      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags krb5 2>/dev/null`"
-      LIB_KRB5_LIBS="`$ac_krb5_config --libs krb5 2>/dev/null`"
-      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags gssapi 2>/dev/null` $LIB_KRB5_CFLAGS"
-      LIB_KRB5_LIBS="`$ac_krb5_config --libs gssapi 2>/dev/null` $LIB_KRB5_LIBS"
-    ],[
-      ## For some OS pkg-config is broken or unavailable.
-      ## Detect libraries the hard way.
-
-      SQUID_STATE_SAVE([squid_mit_save])
-      missing_required=
-      AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
-      AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'com_err' is required for MIT Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(k5crypto, [main], [LIB_KRB5_LIBS="-lk5crypto $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'k5crypto' is required for MIT Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'krb5' is required for MIT Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(gssapi_krb5, [main], [LIB_KRB5_LIBS="-lgssapi_krb5 $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'gssapi_krb5' is required for MIT Kerberos])
-        missing_required=yes
-      ])
-      SQUID_STATE_ROLLBACK([squid_mit_save])
-      AS_IF([test "x$missing_required" = "xyes"],[LIB_KRB5_LIBS=""])
-    ])
-  ])
-
-  AS_IF([test "x$LIB_KRB5_LIBS" != "x"],[
-    AS_IF([test "x$with_apple_krb5" = "xyes"],[
-      AC_DEFINE(USE_APPLE_KRB5,1,[Apple Kerberos support is available])
-      KRB5_FLAVOUR="Apple"
-    ],[
-      AC_DEFINE(USE_MIT_KRB5,1,[MIT Kerberos support is available])
-      KRB5_FLAVOUR="MIT"
-    ])
-    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
-    KRB5INCS="$LIB_KRB5_CFLAGS"
-
-    # check for other specific broken implementations
-    CXXFLAGS="$CXXFLAGS $KRB5INCS"
-    LIBS="$LIBS $KRB5LIBS"
-
-    AC_MSG_NOTICE([Try to find Kerberos headers in given path])
-    AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-    AC_CHECK_HEADERS(gssapi/gssapi_generic.h)
-    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
-    AC_CHECK_HEADERS(profile.h)
-
-    SQUID_CHECK_KRB5_FUNCS
-  ])
-  AS_IF([test "x$with_mit_krb5" = "xyes" -a "x$KRB5LIBS" = "x"],[
-    AC_MSG_ERROR([Required Kerberos library not found])
-  ],[test "x$KRB5LIBS" = "x"],[
-    with_mit_krb5=no
-    with_apple_krb5=no
-  ])
-  SQUID_STATE_ROLLBACK([squid_krb5_save])
-])
-
-# detect Solaris Kerberos dependencies
-AS_IF([test "x$with_solaris_krb5" = "xyes" -a "x$KRB5LIBS" = "x"],[
-  SQUID_STATE_SAVE([squid_krb5_save])
-  LIBS="$LIBS $LIB_KRB5_PATH"
-
-  # no pkg-config for solaris native Kerberos
-  # look for krb5-config (unless cross-compiling)
-  AS_IF([test "$cross_compiling" = "no"],[
-    AS_IF([test "x$krb5confpath" = "x"],[
-      AC_PATH_PROG(krb5_config,krb5-config,no)
-      AS_IF([test "x$ac_cv_path_krb5_config" != "xno"],[ac_krb5_config="$ac_cv_path_krb5_config"])
-    ],[
-      ac_krb5_config="$krb5confpath/krb5-config"
-    ])
-  ])
-  AS_IF([test "x$ac_krb5_config" != "x" -a -x "$ac_krb5_config"],[
-    # Get libs, etc
-    AC_MSG_NOTICE([Use krb5-config to get CXXFLAGS and LIBS])
-    LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags krb5 2>/dev/null`"
-    LIB_KRB5_LIBS="`$ac_krb5_config --libs krb5 2>/dev/null`"
-    # Solaris 10 Update 11 patches the krb5-config tool to produce stderr messages on stdout.
-    SOLARIS_BROKEN_KRB5CONFIG_GSSAPI="`$ac_krb5_config --libs gssapi 2>/dev/null | grep "krb5-config"`"
-    AS_IF([test "x$SOLARIS_BROKEN_KRB5CONFIG_GSSAPI" = "x"],[
-      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags gssapi 2>/dev/null` $LIB_KRB5_CFLAGS"
-      LIB_KRB5_LIBS="`$ac_krb5_config --libs gssapi 2>/dev/null` $LIB_KRB5_LIBS"
-    ])
+SQUID_CHECK_LIB_WORKS(mit-krb5,[
+  SQUID_STATE_SAVE(squid_mit_krb5_save)
+  AS_IF([test "x$squid_host_os" = "xsolaris"],[
+    # pkg-config not available for Solaris krb5 implementation
+    SQUID_CHECK_SOLARIS_KRB5
   ],[
-    ## For some OS pkg-config is broken or unavailable.
-    ## Detect libraries the hard way.
-
-    CXXFLAGS="-I/usr/include/kerberosv5 $CXXFLAGS"
-
-    SQUID_STATE_SAVE([squid_solaris_save])
-    missing_required=
-    AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
-    AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
-      AC_MSG_WARN([library 'krb5' is required for Solaris Kerberos])
-        missing_required=yes
-    ])
-    LIBS=$LIB_KRB5_LIBS
-    AC_CHECK_LIB(gss, [main], [LIB_KRB5_LIBS="-lgss $LIB_KRB5_LIBS"],[
-      AC_MSG_WARN([library 'gss' is required for Solaris Kerberos])
-        missing_required=yes
-    ])
-    SQUID_STATE_ROLLBACK([squid_solaris_save])
-    AS_IF([test "x$missing_required" = "xyes"],[LIB_KRB5_LIBS=""])
+    PKG_CHECK_MODULES([LIBMIT_KRB5],[mit-krb5 mit-krb5-gssapi],[
+      AS_IF([test "x$squid_host_os" = "xdarwin"],[
+        AC_DEFINE(USE_APPLE_KRB5,1,[Apple Kerberos support is available])
+        AC_CHECK_LIB(resolv,[main],[LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS -lresolv"],[
+          AC_MSG_ERROR([library 'resolv' is required for Apple Kerberos])
+        ])
+      ])
+      CPPFLAGS="$LIBMIT_KRB5_CFLAGS $CPPFLAGS"
+      LIBS="$LIBMIT_KRB5_PATH $LIBMIT_KRB5_LIBS $LIBS"
+      AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
+      AC_CHECK_HEADERS(gssapi/gssapi_ext.h gssapi/gssapi_generic.h)
+      AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
+      AC_CHECK_HEADERS(profile.h)
+      SQUID_CHECK_KRB5_FUNCS
+    ],[:])
   ])
-
-  AS_IF([test "x$LIB_KRB5_LIBS" != "x"],[
-    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
-    KRB5INCS="$LIB_KRB5_CFLAGS"
-    AC_DEFINE(USE_SOLARIS_KRB5,1,[Solaris Kerberos support is available])
-    KRB5_FLAVOUR="Solaris"
-
-    # check for other specific broken implementations
-    CXXFLAGS="$CXXFLAGS $KRB5INCS"
-    LIBS="$LIBS $KRB5LIBS"
-
-    AC_MSG_NOTICE([Try to find Kerberos headers in given path])
-    AC_CHECK_HEADERS(gssapi/gssapi.h gssapi/gssapi_ext.h)
-    AC_CHECK_HEADERS(krb5.h com_err.h)
-
-    SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
-    AS_IF([test "x$squid_cv_broken_krb5_h" = "xyes"],[
-      AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if Solaris krb5.h is broken for C++])
-      AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
-      AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
-      AC_MSG_WARN([If you need Kerberos support you will have to patch])
-      AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
-    ])
-    SQUID_CHECK_KRB5_FUNCS
-  ])
-  AS_IF([test "x$with_mit_krb5" = "xyes" -a "x$KRB5LIBS" = "x"],[
-    # Error only if Solaris flavour was detected while looking for required MIT Kerberos
-    AC_MSG_ERROR([Required Kerberos library not found])
-  ],[test "x$KRB5LIBS" = "x"],[
-    with_solaris_krb5=no
-    with_mit_krb5=no
-  ])
-  SQUID_STATE_ROLLBACK([squid_krb5_save])
+  SQUID_STATE_ROLLBACK(squid_mit_krb5_save)
 ])
 
 # Kerberos support libraries: Heimdal
 SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[LIBHEIMDAL_KRB5])
 SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
-  AS_IF([test "x$KRB5LIBS" = "x"],[
+  AS_IF([test "x$LIBMIT_KRB5_LIBS" = "x"],[
     SQUID_STATE_SAVE(squid_heimdal_krb5_save)
     PKG_CHECK_MODULES([LIBHEIMDAL_KRB5],[heimdal-krb5 heimdal-gssapi],[
       CPPFLAGS="$LIBHEIMDAL_KRB5_CFLAGS $CPPFLAGS"
@@ -1387,7 +1211,7 @@ SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
 # Kerberos support libraries: GNU GSS
 SQUID_AUTO_LIB(gss,[GNU gss],[LIBGSS])
 SQUID_CHECK_LIB_WORKS(gss,[
-  AS_IF([test "x$KRB5LIBS" = "x" -a "x$LIBHEIMDAL_KRB5_LIBS" = "x"],[
+  AS_IF([test "x$LIBMIT_KRB5_LIBS" = "x" -a "x$LIBHEIMDAL_KRB5_LIBS" = "x"],[
     SQUID_STATE_SAVE(squid_gss_save)
     PKG_CHECK_MODULES([LIBGSS],[gss],[
       CPPFLAGS="$LIBGSS_CFLAGS $CPPFLAGS"
@@ -1403,11 +1227,6 @@ SQUID_CHECK_LIB_WORKS(gss,[
     SQUID_STATE_ROLLBACK(squid_gss_save)
   ])
 ])
-
-AS_IF([test "x$KRB5LIBS" != "x"],[with_krb5=yes])
-AC_MSG_NOTICE([$KRB5_FLAVOUR Kerberos library support: ${with_krb5:=no} ${LIB_KRB5_PATH} ${LIB_KRB5_LIBS}])
-AC_SUBST(KRB5INCS)
-AC_SUBST(KRB5LIBS)
 
 SQUID_AUTO_LIB(ldap,[LDAP],[LIBLDAP])
 SQUID_CHECK_LIB_WORKS(ldap,[
