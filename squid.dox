@@ -2066,6 +2066,7 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = __cplusplus \
                          FOLLOW_X_FORWARDED_FOR \
                          FORW_VIA_DB \
+                         HAVE_LIBCAP \
                          HAVE_LIBGNUTLS \
                          ICAP_CLIENT \
                          HAVE_LIBHEIMDAL_KRB5 \
@@ -2090,7 +2091,6 @@ PREDEFINED             = __cplusplus \
                          USE_IDENT \
                          USE_IPV6 \
                          USE_KQUEUE \
-                         USE_LIBCAP \
                          USE_LOADABLE_MODULES \
                          USE_OPENSSL \
                          USE_POLL \

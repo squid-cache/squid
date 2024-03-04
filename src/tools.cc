@@ -1121,8 +1121,7 @@ strwordquote(MemBuf * mb, const char *str)
 void
 keepCapabilities(void)
 {
-#if USE_LIBCAP && HAVE_PRCTL && defined(PR_SET_KEEPCAPS)
-
+#if HAVE_LIBCAP && HAVE_PRCTL && defined(PR_SET_KEEPCAPS)
     if (prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0)) {
         Ip::Interceptor.StopTransparency("capability setting has failed.");
     }
@@ -1132,8 +1131,8 @@ keepCapabilities(void)
 static void
 restoreCapabilities(bool keep)
 {
-    /* NP: keep these two if-endif separate. Non-Linux work perfectly well without Linux syscap support. */
-#if USE_LIBCAP
+    /* keep these two if-endif separate. Non-Linux work perfectly well without Linux syscap support. */
+#if HAVE_LIBCAP
     cap_t caps;
     if (keep)
         caps = cap_get_proc();
