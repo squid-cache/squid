@@ -1259,20 +1259,13 @@ SQUID_CHECK_LIB_WORKS(ldap,[
 ])
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
-AH_TEMPLATE(USE_SYSTEMD,[systemd support is available])
 SQUID_CHECK_LIB_WORKS(systemd,[
   SQUID_STATE_SAVE(squid_systemd_state)
   LIBS="$LIBS $LIBSYSTEMD_PATH"
-  PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd],,[
-    # systemd < 209
-    PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd-daemon],,[:])
-  ])
-  AC_CHECK_HEADERS(systemd/sd-daemon.h)
+  PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd >= 209],[
+    AC_CHECK_HEADERS(systemd/sd-daemon.h)
+  ],[:])
   SQUID_STATE_ROLLBACK(squid_systemd_state)
-
-  AS_IF([test "x$LIBSYSTEMD_LIBS" != "x"],[
-    AC_DEFINE(USE_SYSTEMD,1,[systemd support is available])
-  ])
 ])
 
 AC_ARG_ENABLE(forw-via-db,
