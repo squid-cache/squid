@@ -17,6 +17,9 @@
 class LogTagsErrors
 {
 public:
+    /// constructs an object from an errno produced by Comm::ReadNow()
+    static LogTagsErrors FromErrno(int errNo);
+
     /// Update each of this object flags to "set" if the corresponding
     /// flag of the given object is set
     void update(const LogTagsErrors &other);

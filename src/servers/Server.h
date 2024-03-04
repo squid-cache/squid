@@ -121,8 +121,6 @@ protected:
     /// abort any pending transactions and prevent new ones (by closing)
     virtual void terminateAll(const Error &, const LogTagsErrors &) = 0;
 
-    /// terminateAll() after detecting read or write failure
-    void terminateWithError(err_type errType, int errNo);
     void doClientRead(const CommIoCbParams &io);
     void clientWriteDone(const CommIoCbParams &io);
 
