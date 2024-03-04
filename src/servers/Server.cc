@@ -173,10 +173,7 @@ Server::doClientRead(const CommIoCbParams &io)
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
-        LogTagsErrors lte;
-        lte.timedout = rd.xerrno == ETIMEDOUT;
-        lte.aborted = !lte.timedout; // intentionally true for zero rd.xerrno
-        terminateAll(Error(ERR_CLIENT_GONE, SysErrorDetail::NewIfAny(rd.xerrno)), lte);
+        terminateWithError(ERR_READ_ERROR, rd.xerrno);
         return;
     }
 
@@ -206,14 +203,20 @@ Server::clientWriteDone(const CommIoCbParams &io)
 
     if (io.flag) {
         debugs(33, 2, "bailing after a write failure: " << xstrerr(io.xerrno));
-        LogTagsErrors lte;
-        lte.timedout = io.xerrno == ETIMEDOUT;
-        lte.aborted = !lte.timedout; // intentionally true for zero io.xerrno
-        terminateAll(Error(ERR_WRITE_ERROR, SysErrorDetail::NewIfAny(io.xerrno)), lte);
+        terminateWithError(ERR_WRITE_ERROR, io.xerrno);
         return;
     }
 
     afterClientWrite(io.size); // update state
     writeSomeData(); // maybe schedules another write
+}
+
+void
+Server::terminateWithError(const err_type errType, const int errNo)
+{
+    LogTagsErrors lte;
+    lte.timedout = errNo == ETIMEDOUT;
+    lte.aborted = !lte.timedout; // intentionally true for zero errNo
+    terminateAll(Error(errType, SysErrorDetail::NewIfAny(errNo)), lte);
 }
 
