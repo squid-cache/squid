@@ -2069,6 +2069,7 @@ PREDEFINED             = __cplusplus \
                          HAVE_LIBGNUTLS \
                          ICAP_CLIENT \
                          HAVE_LIBHEIMDAL_KRB5 \
+                         HAVE_LIBMIT_KRB5 \
                          LINUX_NETFILTER \
                          SQUID_SNMP \
                          USE_ADAPTATION \
@@ -2091,7 +2092,6 @@ PREDEFINED             = __cplusplus \
                          USE_KQUEUE \
                          USE_LIBCAP \
                          USE_LOADABLE_MODULES \
-                         USE_MIT_KRB5 \
                          USE_OPENSSL \
                          USE_POLL \
                          USE_QOS_TOS \
