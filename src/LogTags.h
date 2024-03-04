@@ -17,7 +17,7 @@
 class LogTagsErrors
 {
 public:
-    /// constructs an object from an errno produced by Comm::ReadNow()
+    /// constructs an object matching errno(3) of a failed I/O call
     static LogTagsErrors FromErrno(int errNo);
 
     /// Update each of this object flags to "set" if the corresponding
