@@ -224,7 +224,9 @@ dnl   and ensure that it is empty or unset (on failures).
 AC_DEFUN([SQUID_CHECK_LIB_WORKS],[
 AH_TEMPLATE(m4_toupper(m4_translit([HAVE_LIB$1], [-+.], [___])),[Define as 1 to enable '$1' library support.])
 AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
+  SQUID_STATE_SAVE(check_lib_works_state)
   $2
+  SQUID_STATE_ROLLBACK(check_lib_works_state)
   AS_IF([! test -z m4_toupper(m4_translit(["$LIB$1_LIBS"], [-+.], [___]))],[
     m4_toupper(m4_translit([CPPFLAGS="$LIB$1_CFLAGS $CPPFLAGS"], [-+.], [___]))
     m4_toupper(m4_translit([LIB$1_LIBS="$LIB$1_PATH $LIB$1_LIBS"], [-+.], [___]))
