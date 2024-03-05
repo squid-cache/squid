@@ -1131,7 +1131,11 @@ keepCapabilities(void)
 static void
 restoreCapabilities(bool keep)
 {
-    /* keep these two if-endif separate. Non-Linux work perfectly well without Linux syscap support. */
+#if _SQUID_LINUX_ && !HAVE_LIBCAP
+    /* Linux requires syscap support from libcap. */
+    Ip::Interceptor.StopTransparency("Missing needed capability support.");
+#endif
+
 #if HAVE_LIBCAP
     cap_t caps;
     if (keep)
@@ -1167,12 +1171,10 @@ restoreCapabilities(bool keep)
         }
         cap_free(caps);
     }
-#elif _SQUID_LINUX_
-    (void)keep;
-    Ip::Interceptor.StopTransparency("Missing needed capability support.");
 #else
+    /* Non-Linux transparent proxy works with or without libcap support. */
     (void)keep;
-#endif /* HAVE_SYS_CAPABILITY_H */
+#endif
 }
 
 pid_t
