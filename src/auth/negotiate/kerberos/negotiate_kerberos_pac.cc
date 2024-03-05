@@ -368,7 +368,6 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
 static char *
 get_resource_group_domain_sid(const uint32_t ResourceGroupDomainSid, size_t &length)
 {
-
     if (ResourceGroupDomainSid != 0) {
         uint8_t rev;
         uint64_t idauth;
@@ -438,16 +437,13 @@ get_resource_groups(char *ad_groups, uint32_t ResourceGroupDomainSid,  uint32_t 
     }
 
     size_t group_domain_sid_len = 0;
-
     const auto resource_group_domain_sid = get_resource_group_domain_sid(ResourceGroupDomainSid, group_domain_sid_len);
-    if (!resource_group_domain_sid) return false;
-
+    if (!resource_group_domain_sid)
+        return false;
 
     if (ResourceGroupIds != 0) {
-        uint32_t ngroup;
-
         align(4);
-        ngroup = get4byt();
+        uint32_t ngroup = get4byt();
         if (ngroup != ResourceGroupCount) {
             debug((char *) "%s| %s: ERROR: Group encoding error => ResourceGroupCount: %d != Array size: %d\n",
                   LogTime(), PROGRAM, ResourceGroupCount, ngroup);
