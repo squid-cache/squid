@@ -173,7 +173,7 @@ Server::doClientRead(const CommIoCbParams &io)
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
-        terminateAll(Error(ERR_CLIENT_GONE, SysErrorDetail::NewIfAny(rd.xerrno)), LogTagsErrors::FromErrno(rd.xerrno));
+        terminateAll(Error(ERR_READ_ERROR, SysErrorDetail::NewIfAny(rd.xerrno)), LogTagsErrors::FromErrno(rd.xerrno));
         return;
     }
 

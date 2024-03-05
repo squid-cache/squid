@@ -39,6 +39,6 @@ ext_kerberos_ldap_group_acl_LDADD = \
 	$(LIBGSS_LIBS) \
 	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(LIBLDAP_LIBS) \
+	$(LIBMIT_KRB5_LIBS) \
 	$(LIBSASL) \
-	$(KRB5LIBS) \
 	$(XTRA_LIBS)
