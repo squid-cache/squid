@@ -611,16 +611,15 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     ad_groups = getdomaingids(ad_groups,LogonDomainId,Rids,GroupCount);
 
     // https://learn.microsoft.com/en-us/previous-versions/aa302203(v=msdn.10)?redirectedfrom=MSDN#top-level-pac-structure
-    if (UserFlags & LOGON_EXTRA_SIDS) // EXTRA_SIDS structures are present and valid
-    {
+    if ((UserFlags&LOGON_EXTRA_SIDS) != 0) {
+        // EXTRA_SIDS structures are present and valid
         debug((char *) "%s| %s: Info: EXTRA_SIDS are present\n", LogTime(), PROGRAM);
         if ((ad_groups = getextrasids(ad_groups,ExtraSids,SidCount)) == nullptr)
             goto k5clean;
     }
 
-    if (UserFlags & LOGON_RESOURCE_GROUPS // RESOURCE_GROUPS structures are present and valid
-     && ResourceGroupDomainSid && ResourceGroupIds && ResourceGroupCount) 
-    { 
+    if ((UserFlags&LOGON_RESOURCE_GROUPS) != 0 && ResourceGroupDomainSid && ResourceGroupIds && ResourceGroupCount) {
+        // RESOURCE_GROUPS structures are present and valid
         debug((char *) "%s| %s: Info: RESOURCE_GROUPS are present\n", LogTime(), PROGRAM);
         if (!get_resource_groups(ad_groups, ResourceGroupDomainSid, ResourceGroupIds, ResourceGroupCount))
             goto k5clean;
