@@ -8,8 +8,8 @@
 
 /* DEBUG: section 79    Squid-side DISKD I/O functions. */
 
-#ifndef __STORE_DISKDIOSTRATEGY_H__
-#define __STORE_DISKDIOSTRATEGY_H__
+#ifndef SQUID_SRC_DISKIO_DISKDAEMON_DISKDIOSTRATEGY_H
+#define SQUID_SRC_DISKIO_DISKDAEMON_DISKDIOSTRATEGY_H
 
 struct diomsg;
 
@@ -119,5 +119,5 @@ struct diskd_stats_t {
 /// \ingroup diskd
 extern diskd_stats_t diskd_stats;
 
-#endif
+#endif /* SQUID_SRC_DISKIO_DISKDAEMON_DISKDIOSTRATEGY_H */
 

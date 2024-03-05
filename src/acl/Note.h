@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLNOTE_H
-#define SQUID_ACLNOTE_H
+#ifndef SQUID_SRC_ACL_NOTE_H
+#define SQUID_SRC_ACL_NOTE_H
 
 #include "acl/CharacterSetOption.h"
 #include "acl/Data.h"
@@ -31,7 +31,7 @@ public:
 class NoteCheck: public Acl::AnnotationCheck
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
     bool requiresRequest() const override { return true; }
 
@@ -41,5 +41,5 @@ private:
 
 } // namespace Acl
 
-#endif /* SQUID_ACLNOTE_H */
+#endif /* SQUID_SRC_ACL_NOTE_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CBC_POINTER_H
-#define SQUID_CBC_POINTER_H
+#ifndef SQUID_SRC_BASE_CBCPOINTER_H
+#define SQUID_SRC_BASE_CBCPOINTER_H
 
 #include "base/TextException.h"
 #include "cbdata.h"
@@ -185,5 +185,5 @@ std::ostream &CbcPointer<Cbc>::print(std::ostream &os) const
     return os << cbc << '/' << lock;
 }
 
-#endif /* SQUID_CBC_POINTER_H */
+#endif /* SQUID_SRC_BASE_CBCPOINTER_H */
 

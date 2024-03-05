@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_FORWARD_H
-#define SQUID_MGR_FORWARD_H
+#ifndef SQUID_SRC_MGR_FORWARD_H
+#define SQUID_SRC_MGR_FORWARD_H
 
 #include "base/RefCount.h"
 
@@ -43,5 +43,5 @@ class StoreEntry;
  */
 typedef void OBJH(StoreEntry *);
 
-#endif /* SQUID_MGR_FORWARD_H */
+#endif /* SQUID_SRC_MGR_FORWARD_H */
 

@@ -349,7 +349,7 @@ SIP_SUPPORT            = NO
 # should set this option to NO.
 # The default value is: YES.
 
-IDL_PROPERTY_SUPPORT   = YES
+IDL_PROPERTY_SUPPORT   = NO
 
 # If member grouping is used in the documentation and the DISTRIBUTE_GROUP_DOC
 # tag is set to YES then doxygen will reuse the documentation of the first
@@ -2066,7 +2066,10 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = __cplusplus \
                          FOLLOW_X_FORWARDED_FOR \
                          FORW_VIA_DB \
+                         HAVE_LIBGNUTLS \
                          ICAP_CLIENT \
+                         HAVE_LIBHEIMDAL_KRB5 \
+                         HAVE_LIBMIT_KRB5 \
                          LINUX_NETFILTER \
                          SQUID_SNMP \
                          USE_ADAPTATION \
@@ -2080,9 +2083,6 @@ PREDEFINED             = __cplusplus \
                          USE_ECAP \
                          USE_ERR_LOCALES \
                          USE_EPOLL \
-                         USE_GNUGSS \
-                         USE_GNUTLS \
-                         USE_HEIMDAL_KRB5 \
                          USE_HEXDUMP \
                          USE_HTCP \
                          USE_HTTP_VIOLATIONS \
@@ -2092,7 +2092,6 @@ PREDEFINED             = __cplusplus \
                          USE_KQUEUE \
                          USE_LIBCAP \
                          USE_LOADABLE_MODULES \
-                         USE_MIT_KRB5 \
                          USE_OPENSSL \
                          USE_POLL \
                          USE_QOS_TOS \

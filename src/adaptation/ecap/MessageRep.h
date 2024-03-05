@@ -8,8 +8,8 @@
 
 /* DEBUG: section 93    eCAP Interface */
 
-#ifndef SQUID__ECAP__MESSAGE_REP_H
-#define SQUID__ECAP__MESSAGE_REP_H
+#ifndef SQUID_SRC_ADAPTATION_ECAP_MESSAGEREP_H
+#define SQUID_SRC_ADAPTATION_ECAP_MESSAGEREP_H
 
 #include "adaptation/forward.h"
 #include "adaptation/Message.h"
@@ -175,5 +175,5 @@ private:
 } // namespace Ecap
 } // namespace Adaptation
 
-#endif /* SQUID__E_CAP__MESSAGE_REP_H */
+#endif /* SQUID_SRC_ADAPTATION_ECAP_MESSAGEREP_H */
 

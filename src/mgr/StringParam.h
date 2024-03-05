@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_STRING_PARAM_H
-#define SQUID_MGR_STRING_PARAM_H
+#ifndef SQUID_SRC_MGR_STRINGPARAM_H
+#define SQUID_SRC_MGR_STRINGPARAM_H
 
 #include "ipc/forward.h"
 #include "mgr/forward.h"
@@ -34,5 +34,5 @@ private:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_STRING_PARAM_H */
+#endif /* SQUID_SRC_MGR_STRINGPARAM_H */
 

@@ -69,8 +69,6 @@ libcompatsquid_la_SOURCES = \
 	statvfs.h \
 	stdio.h \
 	stdvarargs.h \
-	strnrchr.c \
-	strnrchr.h \
 	strnstr.cc \
 	strtoll.h \
 	tempnam.h \
@@ -87,11 +85,3 @@ libcompatsquid_la_SOURCES = \
 	xstrto.h
 
 libcompatsquid_la_LIBADD= $(LTLIBOBJS)
-
-check_PROGRAMS += testPreCompiler
-TESTS += testPreCompiler
-
-testPreCompiler_SOURCES = \
-	testPreCompiler.cc
-testPreCompiler_LDADD= $(LIBCPPUNIT_LIBS)
-testPreCompiler_LDFLAGS=

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CONFIGPARSER_H
-#define SQUID_CONFIGPARSER_H
+#ifndef SQUID_SRC_CONFIGPARSER_H
+#define SQUID_SRC_CONFIGPARSER_H
 
 #include "acl/forward.h"
 #include "base/forward.h"
@@ -234,5 +234,5 @@ protected:
 
 int parseConfigFile(const char *file_name);
 
-#endif /* SQUID_CONFIGPARSER_H */
+#endif /* SQUID_SRC_CONFIGPARSER_H */
 

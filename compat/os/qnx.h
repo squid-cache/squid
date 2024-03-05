@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_OS_QNX_H
-#define SQUID_OS_QNX_H
+#ifndef SQUID_COMPAT_OS_QNX_H
+#define SQUID_COMPAT_OS_QNX_H
 
 #if _SQUID_QNX_
 
@@ -23,5 +23,5 @@
 #include <unix.h>
 
 #endif /* _SQUID_QNX_ */
-#endif /* SQUID_OS_QNX_H */
+#endif /* SQUID_COMPAT_OS_QNX_H */
 

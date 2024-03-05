@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MMAPPEDDISKIOMODULE_H
-#define SQUID_MMAPPEDDISKIOMODULE_H
+#ifndef SQUID_SRC_DISKIO_MMAPPED_MMAPPEDDISKIOMODULE_H
+#define SQUID_SRC_DISKIO_MMAPPED_MMAPPEDDISKIOMODULE_H
 
 #include "DiskIO/DiskIOModule.h"
 
@@ -26,5 +26,5 @@ private:
     static MmappedDiskIOModule Instance;
 };
 
-#endif /* SQUID_MMAPPEDDISKIOMODULE_H */
+#endif /* SQUID_SRC_DISKIO_MMAPPED_MMAPPEDDISKIOMODULE_H */
 

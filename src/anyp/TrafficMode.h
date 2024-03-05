@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ANYP_TRAFFIC_MODE_H
-#define SQUID_ANYP_TRAFFIC_MODE_H
+#ifndef SQUID_SRC_ANYP_TRAFFICMODE_H
+#define SQUID_SRC_ANYP_TRAFFICMODE_H
 
 namespace AnyP
 {
@@ -81,5 +81,5 @@ public:
 
 } // namespace AnyP
 
-#endif
+#endif /* SQUID_SRC_ANYP_TRAFFICMODE_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLPEERNAME_H
-#define SQUID_ACLPEERNAME_H
+#ifndef SQUID_SRC_ACL_PEERNAME_H
+#define SQUID_SRC_ACL_PEERNAME_H
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
@@ -19,11 +19,11 @@ namespace Acl
 class PeerNameCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
 };
 
 } // namespace Acl
 
-#endif /* SQUID_ACLPEERNAME_H */
+#endif /* SQUID_SRC_ACL_PEERNAME_H */
 

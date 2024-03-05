@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_OS_SGI_H
-#define SQUID_OS_SGI_H
+#ifndef SQUID_COMPAT_OS_SGI_H
+#define SQUID_COMPAT_OS_SGI_H
 
 #if _SQUID_SGI_
 
@@ -26,5 +26,5 @@
 #endif /* USE_ASYNC_IO */
 
 #endif /* _SQUID_SGI_ */
-#endif /* SQUID_OS_SGI_H */
+#endif /* SQUID_COMPAT_OS_SGI_H */
 

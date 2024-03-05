@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_CONTROLLER_H
-#define SQUID_STORE_CONTROLLER_H
+#ifndef SQUID_SRC_STORE_CONTROLLER_H
+#define SQUID_SRC_STORE_CONTROLLER_H
 
 #include "store/Storage.h"
 
@@ -23,7 +23,6 @@ class Controller: public Storage
 {
 public:
     Controller();
-    ~Controller() override;
 
     /* Storage API */
     void create() override;
@@ -134,6 +133,8 @@ public:
     static int store_dirs_rebuilding;
 
 private:
+    ~Controller() override;
+
     bool memoryCacheHasSpaceFor(const int pagesRequired) const;
 
     void referenceBusy(StoreEntry &e);
@@ -149,7 +150,7 @@ private:
     void checkTransients(const StoreEntry &) const;
     void checkFoundCandidate(const StoreEntry &) const;
 
-    Disks *swapDir; ///< summary view of all disk caches
+    Disks *disks; ///< summary view of all disk caches (including none); never nil
     Memory *sharedMemStore; ///< memory cache that multiple workers can use
     bool localMemStore; ///< whether local (non-shared) memory cache is enabled
 
@@ -165,13 +166,7 @@ private:
 /// safely access controller singleton
 extern Controller &Root();
 
-/// initialize the storage module; a custom root is used by unit tests only
-extern void Init(Controller *root = nullptr);
-
-/// undo Init()
-extern void FreeMemory();
-
 } // namespace Store
 
-#endif /* SQUID_STORE_CONTROLLER_H */
+#endif /* SQUID_SRC_STORE_CONTROLLER_H */
 

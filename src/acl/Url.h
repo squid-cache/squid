@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLURL_H
-#define SQUID_ACLURL_H
+#ifndef SQUID_SRC_ACL_URL_H
+#define SQUID_SRC_ACL_URL_H
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
@@ -19,12 +19,12 @@ namespace Acl
 class UrlCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
 };
 
 } // namespace Acl
 
-#endif /* SQUID_ACLURL_H */
+#endif /* SQUID_SRC_ACL_URL_H */
 

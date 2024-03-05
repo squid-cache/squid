@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_AUTH_BASIC_SCHEME_H
-#define SQUID_AUTH_BASIC_SCHEME_H
+#ifndef SQUID_SRC_AUTH_BASIC_SCHEME_H
+#define SQUID_SRC_AUTH_BASIC_SCHEME_H
 
 #if HAVE_AUTH_MODULE_BASIC
 
@@ -43,5 +43,5 @@ private:
 } // namespace Auth
 
 #endif /* HAVE_AUTH_MODULE_BASIC */
-#endif /* SQUID_AUTH_BASIC_SCHEME_H */
+#endif /* SQUID_SRC_AUTH_BASIC_SCHEME_H */
 

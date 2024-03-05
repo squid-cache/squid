@@ -8,8 +8,8 @@
 
 /* DEBUG: section 20    Storage Manager MD5 Cache Keys */
 
-#ifndef SQUID_STORE_KEY_MD5_H_
-#define SQUID_STORE_KEY_MD5_H_
+#ifndef SQUID_SRC_STORE_KEY_MD5_H
+#define SQUID_SRC_STORE_KEY_MD5_H
 
 #include "hash.h"
 #include "http/forward.h"
@@ -34,5 +34,5 @@ int storeKeyHashBuckets(int);
 extern HASHHASH storeKeyHashHash;
 extern HASHCMP storeKeyHashCmp;
 
-#endif /* SQUID_STORE_KEY_MD5_H_ */
+#endif /* SQUID_SRC_STORE_KEY_MD5_H */
 

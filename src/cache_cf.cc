@@ -15,6 +15,7 @@
 #include "acl/Address.h"
 #include "acl/Gadgets.h"
 #include "acl/MethodData.h"
+#include "acl/Node.h"
 #include "acl/Tree.h"
 #include "anyp/PortCfg.h"
 #include "anyp/UriScheme.h"
@@ -93,6 +94,7 @@
 #include "snmp.h"
 #endif
 
+#include <algorithm>
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
@@ -255,7 +257,7 @@ static void free_configuration_includes_quoted_values(bool *recognizeQuotedValue
 static void parse_on_unsupported_protocol(acl_access **access);
 static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
 static void free_on_unsupported_protocol(acl_access **access);
-static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, ACL *acl = nullptr);
+static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, Acl::Node *acl = nullptr);
 static void parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuards);
 static void dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocolAccess *protoGuards);
 static void free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuards);
@@ -1119,6 +1121,9 @@ parse_obsolete(const char *name)
 
         // add the value as unquoted-string because the old values did not support whitespace
         const char *token = ConfigParser::NextQuotedOrToEol();
+        if (!token)
+            throw TextException(ToSBuf("missing required parameter for obsolete directive: ", name), Here());
+
         tmp.append(token, strlen(token));
         Security::ProxyOutgoingConfig.parse(tmp.c_str());
     }
@@ -1488,7 +1493,7 @@ free_SBufList(SBufList *list)
 }
 
 static void
-dump_acl(StoreEntry * entry, const char *name, ACL * ae)
+dump_acl(StoreEntry * entry, const char *name, Acl::Node * ae)
 {
     PackableStream os(*entry);
     while (ae != nullptr) {
@@ -1499,13 +1504,13 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
 }
 
 static void
-parse_acl(ACL ** ae)
+parse_acl(Acl::Node ** ae)
 {
-    ACL::ParseAclLine(LegacyParser, ae);
+    Acl::Node::ParseAclLine(LegacyParser, ae);
 }
 
 static void
-free_acl(ACL ** ae)
+free_acl(Acl::Node ** ae)
 {
     aclDestroyAcls(ae);
 }
@@ -2021,7 +2026,7 @@ dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 #endif /* USE_AUTH */
 
 static void
-ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, ACL *acl)
+ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, Acl::Node *acl)
 {
     assert(access);
     SBuf name;
@@ -2399,8 +2404,10 @@ parse_peer(CachePeers **peers)
         p->connect_fail_limit = 10;
 
 #if USE_CACHE_DIGESTS
-    if (!p->options.no_digest)
-        p->digest = new PeerDigest(p);
+    if (!p->options.no_digest) {
+        const auto pd = new PeerDigest(p);
+        p->digest = cbdataReference(pd); // CachePeer destructor unlocks
+    }
 #endif
 
     if (p->secure.encryptTransport)
@@ -4577,7 +4584,7 @@ static void parse_note(Notes *notes)
 
 static void dump_note(StoreEntry *entry, const char *name, Notes &notes)
 {
-    notes.dump(entry, name);
+    notes.printAsNoteDirectives(entry, name);
 }
 
 static void free_note(Notes *notes)
@@ -4719,7 +4726,7 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
         *ftp_epsv = nullptr;
 
         if (ftpEpsvDeprecatedAction == Acl::Answer(ACCESS_DENIED)) {
-            if (ACL *a = ACL::FindByName("all"))
+            if (auto *a = Acl::Node::FindByName("all"))
                 ParseAclWithAction(ftp_epsv, ftpEpsvDeprecatedAction, "ftp_epsv", a);
             else {
                 self_destruct();

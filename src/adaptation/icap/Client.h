@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICAPCLIENT_H
-#define SQUID_ICAPCLIENT_H
+#ifndef SQUID_SRC_ADAPTATION_ICAP_CLIENT_H
+#define SQUID_SRC_ADAPTATION_ICAP_CLIENT_H
 
 // ICAP-related things needed by code unaware of ICAP internals.
 
@@ -22,5 +22,5 @@ void CleanModule();
 } // namespace Icap
 } // namespace Adaptation
 
-#endif /* SQUID_ICAPCLIENT_H */
+#endif /* SQUID_SRC_ADAPTATION_ICAP_CLIENT_H */
 

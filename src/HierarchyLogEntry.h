@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPHIERARCHYLOGENTRY_H
-#define SQUID_HTTPHIERARCHYLOGENTRY_H
+#ifndef SQUID_SRC_HIERARCHYLOGENTRY_H
+#define SQUID_SRC_HIERARCHYLOGENTRY_H
 
 #include "comm/Connection.h"
 #include "enums.h"
@@ -79,5 +79,5 @@ private:
     struct timeval totalResponseTime_; ///< cumulative for all peers
 };
 
-#endif /* SQUID_HTTPHIERARCHYLOGENTRY_H */
+#endif /* SQUID_SRC_HIERARCHYLOGENTRY_H */
 

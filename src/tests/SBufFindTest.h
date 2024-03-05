@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_SBUFFINDTEST_H
-#define SQUID_SRC_TEST_SBUFFINDTEST_H
+#ifndef SQUID_SRC_TESTS_SBUFFINDTEST_H
+#define SQUID_SRC_TESTS_SBUFFINDTEST_H
 
 #include "sbuf/SBuf.h"
 
@@ -88,5 +88,5 @@ private:
 
 typedef SBufFindTest::Placement Placement;
 
-#endif
+#endif /* SQUID_SRC_TESTS_SBUFFINDTEST_H */
 

@@ -1,0 +1,35 @@
+expect-messages <<END
+WARNING: Ignoring 400 because it is already covered by 400
+    advice: Remove value 400 from the ACL
+    acl name: test11
+
+WARNING: Ignoring 407 because it is already covered by 407
+    advice: Remove value 407 from the ACL
+    acl name: test12
+
+WARNING: Ignoring earlier 200 because it is covered by 200-300
+    advice: Remove value 200 from the ACL
+    acl name: test13
+
+WARNING: Ignoring 304 because it is already covered by 300-399
+    advice: Remove value 304 from the ACL
+    acl name: test14
+
+WARNING: Ignoring earlier 350 because it is covered by 200-400
+    advice: Remove value 350 from the ACL
+WARNING: Merging overlapping 200-400 and 100-300 into 100-400
+    advice: Replace values 200-400 and 100-300 with 100-400 in the ACL
+    acl name: test21
+
+WARNING: Merging overlapping 100-300 and 200-400 into 100-400
+    advice: Replace values 100-300 and 200-400 with 100-400 in the ACL
+WARNING: Ignoring earlier 150 because it is covered by 100-400
+    advice: Remove value 150 from the ACL
+    acl name: test22
+
+WARNING: Ignoring earlier 399 because it is covered by 300-399
+    advice: Remove value 399 from the ACL
+WARNING: Ignoring earlier 300 because it is covered by 300-399
+    advice: Remove value 300 from the ACL
+    acl name: test30
+END

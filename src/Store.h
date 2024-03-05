@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_H
-#define SQUID_STORE_H
+#ifndef SQUID_SRC_STORE_H
+#define SQUID_SRC_STORE_H
 
 #include "base/DelayedAsyncCalls.h"
 #include "base/Packable.h"
@@ -55,6 +55,9 @@ public:
     /// \retval nullptr when mem_obj does not exist
     /// \see MemObject::freshestReply()
     const HttpReply *hasFreshestReply() const { return mem_obj ? &mem_obj->freshestReply() : nullptr; }
+
+    /// whether this entry has access to [deserialized] [HTTP] response headers
+    bool hasParsedReplyHeader() const;
 
     void write(StoreIOBuffer);
 
@@ -463,5 +466,5 @@ extern FREE destroyStoreEntry;
 /// \ingroup StoreAPI
 void storeGetMemSpace(int size);
 
-#endif /* SQUID_STORE_H */
+#endif /* SQUID_SRC_STORE_H */
 

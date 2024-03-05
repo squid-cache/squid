@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__ADAPTATION__MESSAGE_H
-#define SQUID__ADAPTATION__MESSAGE_H
+#ifndef SQUID_SRC_ADAPTATION_MESSAGE_H
+#define SQUID_SRC_ADAPTATION_MESSAGE_H
 
 #include "base/RefCount.h"
 #include "http/forward.h"
@@ -54,5 +54,5 @@ private:
 
 // TODO: replace ICAPInOut with Adaptation::Message (adding one for "cause")
 
-#endif /* SQUID__ADAPTATION__MESSAGE_H */
+#endif /* SQUID_SRC_ADAPTATION_MESSAGE_H */
 

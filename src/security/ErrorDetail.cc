@@ -20,7 +20,7 @@
 
 #if USE_OPENSSL
 #include "ssl/ErrorDetailManager.h"
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 #if HAVE_GNUTLS_GNUTLS_H
 #include <gnutls/gnutls.h>
 #endif
@@ -453,7 +453,7 @@ Security::ErrorDetail::ErrorDetail(const ErrorCode err, const int aSysErrorNo):
 #if USE_OPENSSL
     /// Extract and remember errors stored internally by the TLS library.
     if ((lib_error_no = ERR_get_error())) {
-        debugs(83, 7, "got " << asHex(lib_error_no));
+        debugs(83, 7, "got 0x" << asHex(lib_error_no));
         // more errors may be stacked
         // TODO: Save/detail all stacked errors by always flushing stale ones.
         ForgetErrors();
@@ -478,7 +478,7 @@ Security::ErrorDetail::ErrorDetail(const ErrorCode anErrorCode, const int anIoEr
     ioErrorNo = anIoErrorNo;
 }
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 Security::ErrorDetail::ErrorDetail(const ErrorCode anErrorCode, const LibErrorCode aLibErrorNo, const int aSysErrorNo):
     ErrorDetail(anErrorCode, aSysErrorNo)
 {
@@ -507,8 +507,8 @@ Security::ErrorDetail::brief() const
 #if USE_OPENSSL
         // TODO: Log ERR_error_string_n() instead, despite length, whitespace?
         // Example: `error:1408F09C:SSL routines:ssl3_get_record:http request`.
-        os << "+TLS_LIB_ERR=" << std::hex << std::uppercase << lib_error_no << std::nouppercase << std::dec;
-#elif USE_GNUTLS
+        os << "+TLS_LIB_ERR=" << asHex(lib_error_no).upperCase();
+#elif HAVE_LIBGNUTLS
         os << '+' << gnutls_strerror_name(lib_error_no);
 #endif
     }

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_START_LISTENING_H
-#define SQUID_IPC_START_LISTENING_H
+#ifndef SQUID_SRC_IPC_STARTLISTENING_H
+#define SQUID_SRC_IPC_STARTLISTENING_H
 
 #include "base/AsyncCall.h"
 #include "base/forward.h"
@@ -42,5 +42,5 @@ std::ostream &operator <<(std::ostream &, const StartListeningAnswer &);
 
 } // namespace Ipc;
 
-#endif /* SQUID_IPC_START_LISTENING_H */
+#endif /* SQUID_SRC_IPC_STARTLISTENING_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEM_POOLINGALLOCATOR_H
-#define SQUID_MEM_POOLINGALLOCATOR_H
+#ifndef SQUID_SRC_MEM_POOLINGALLOCATOR_H
+#define SQUID_SRC_MEM_POOLINGALLOCATOR_H
 
 #include "mem/forward.h"
 
@@ -22,8 +22,8 @@ public:
     using value_type = Value;
     PoolingAllocator() noexcept {}
     template <class Other> PoolingAllocator(const PoolingAllocator<Other> &) noexcept {}
-    value_type *allocate(std::size_t n) { return static_cast<value_type*>(memAllocRigid(n*sizeof(value_type))); }
-    void deallocate(value_type *vp, std::size_t n) noexcept { memFreeRigid(vp, n*sizeof(value_type)); }
+    value_type *allocate(std::size_t n) { return static_cast<value_type*>(memAllocBuf(n*sizeof(value_type), nullptr)); }
+    void deallocate(value_type *vp, std::size_t n) noexcept { memFreeBuf(n*sizeof(value_type), vp); }
 
     template <class OtherValue>
     struct rebind {
@@ -48,5 +48,5 @@ operator !=(const PoolingAllocator<L> &l, const PoolingAllocator<R> &r) noexcept
     return !(l == r);
 }
 
-#endif /* SQUID_MEM_POOLINGALLOCATOR_H */
+#endif /* SQUID_SRC_MEM_POOLINGALLOCATOR_H */
 

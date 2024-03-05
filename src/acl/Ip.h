@@ -6,11 +6,11 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLIP_H
-#define SQUID_ACLIP_H
+#ifndef SQUID_SRC_ACL_IP_H
+#define SQUID_SRC_ACL_IP_H
 
-#include "acl/Acl.h"
 #include "acl/Data.h"
+#include "acl/Node.h"
 #include "ip/Address.h"
 #include "splay.h"
 
@@ -20,13 +20,18 @@ class acl_ip_data
 
 public:
     static acl_ip_data *FactoryParse(char const *);
-    static int NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b);
 
     acl_ip_data ();
 
     acl_ip_data (Ip::Address const &, Ip::Address const &, Ip::Address const &, acl_ip_data *);
     void toStr(char *buf, int len) const;
     SBuf toSBuf() const;
+
+    /// minimum (masked) address that matches this configured ACL value
+    Ip::Address firstAddress() const;
+
+    /// maximum (masked) address that matches this configured ACL value
+    Ip::Address lastAddress() const;
 
     Ip::Address addr1;
 
@@ -41,7 +46,7 @@ private:
     static bool DecodeMask(const char *asc, Ip::Address &mask, int string_format_type);
 };
 
-class ACLIP : public ACL
+class ACLIP : public Acl::Node
 {
 public:
     void *operator new(size_t);
@@ -74,5 +79,5 @@ private:
     bool matchAnyIpv6 = false;
 };
 
-#endif /* SQUID_ACLIP_H */
+#endif /* SQUID_SRC_ACL_IP_H */
 

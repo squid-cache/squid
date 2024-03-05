@@ -22,8 +22,10 @@ libapi_la_SOURCES = \
 	ChecklistFiller.h \
 	InnerNode.cc \
 	InnerNode.h \
+	Node.h \
 	Options.cc \
 	Options.h \
+	SplayInserter.h \
 	Tree.cc \
 	Tree.h \
 	forward.h

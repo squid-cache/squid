@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTSTREAM_H
-#define SQUID_CLIENTSTREAM_H
+#ifndef SQUID_SRC_CLIENTSTREAM_H
+#define SQUID_SRC_CLIENTSTREAM_H
 
 #include "base/RefCount.h"
 #include "clientStreamForward.h"
@@ -165,5 +165,5 @@ void clientStreamAbort(clientStreamNode *thisObject, ClientHttpRequest *http);
  */
 clientStream_status_t clientStreamStatus(clientStreamNode *thisObject, ClientHttpRequest *http);
 
-#endif /* SQUID_CLIENTSTREAM_H */
+#endif /* SQUID_SRC_CLIENTSTREAM_H */
 

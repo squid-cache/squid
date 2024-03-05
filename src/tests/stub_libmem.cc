@@ -39,18 +39,12 @@ void *memAllocate(mem_type)
     return xmalloc(64*1024);
 }
 
-void *memAllocString(size_t net_size, size_t * gross_size) {return memAllocBuf(net_size, gross_size);}
-
-void *memAllocRigid(size_t net_size)
-{
-    return xmalloc(net_size);
-}
-
 void *
 memAllocBuf(size_t net_size, size_t * gross_size)
 {
-    *gross_size=net_size;
-    return xcalloc(1, net_size);
+    if (gross_size)
+        *gross_size = net_size;
+    return xmalloc(net_size);
 }
 
 /* net_size is the new size, *gross size is the old gross size, to be changed to
@@ -67,13 +61,10 @@ memReallocBuf(void *oldbuf, size_t net_size, size_t * gross_size)
 }
 
 void memFree(void *p, int) {xfree(p);}
-void memFreeString(size_t, void *buf) {xfree(buf);}
-void memFreeRigid(void *buf, size_t) {xfree(buf);}
 void memFreeBuf(size_t, void *buf) {xfree(buf);}
 static void cxx_xfree(void * ptr) {xfree(ptr);}
 FREE *memFreeBufFunc(size_t) {return cxx_xfree;}
 int memInUse(mem_type) STUB_RETVAL(0)
-void memDataInit(mem_type, const char *, size_t, int, bool) STUB_NOP
 
 #include "mem/Pool.h"
 static MemPools tmpMemPools;

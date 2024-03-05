@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/AsyncCbdataCalls.h"
+#include "base/IoManip.h"
 #include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "CacheDigest.h"
@@ -224,6 +225,19 @@ StoreEntry::bytesWanted (Range<size_t> const aRange, bool ignoreDelayPools) cons
         return 0;
 
     return mem_obj->mostBytesWanted(aRange.end, ignoreDelayPools);
+}
+
+bool
+StoreEntry::hasParsedReplyHeader() const
+{
+    if (mem_obj) {
+        const auto &reply = mem_obj->baseReply();
+        if (reply.pstate == Http::Message::psParsed) {
+            debugs(20, 7, reply.hdr_sz);
+            return true;
+        }
+    }
+    return false;
 }
 
 bool
@@ -1927,8 +1941,7 @@ StoreEntry::attachToDisk(const sdirno dirn, const sfileno fno, const swap_status
 {
     debugs(88, 3, "attaching entry with key " << getMD5Text() << " : " <<
            swapStatusStr[status] << " " << dirn << " " <<
-           std::hex << std::setw(8) << std::setfill('0') <<
-           std::uppercase << fno);
+           asHex(fno).upperCase().minDigits(8));
     checkDisk();
     swap_dirn = dirn;
     swap_filen = fno;

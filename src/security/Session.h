@@ -23,7 +23,7 @@
 #endif
 #endif
 
-#if USE_GNUTLS
+#if HAVE_LIBGNUTLS
 #if HAVE_GNUTLS_GNUTLS_H
 #include <gnutls/gnutls.h>
 #endif
@@ -50,7 +50,7 @@ typedef std::shared_ptr<SSL> SessionPointer;
 
 typedef std::unique_ptr<SSL_SESSION, HardFun<void, SSL_SESSION*, &SSL_SESSION_free>> SessionStatePointer;
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 // to be finalized when it is actually needed/used
 struct Connection {};
 

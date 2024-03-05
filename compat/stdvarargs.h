@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_STDVARARGS_H
-#define _SQUID_STDVARARGS_H
+#ifndef SQUID_COMPAT_STDVARARGS_H
+#define SQUID_COMPAT_STDVARARGS_H
 
 /*
  * va_* variables come from various places on different platforms.
@@ -46,5 +46,5 @@
 #include <syslog.h>
 #endif
 
-#endif /* _SQUID_STDVARARGS_H */
+#endif /* SQUID_COMPAT_STDVARARGS_H */
 

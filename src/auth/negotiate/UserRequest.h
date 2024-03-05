@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H
-#define _SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H
+#ifndef SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H
+#define SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H
 
 #if HAVE_AUTH_MODULE_NEGOTIATE
 
@@ -31,7 +31,6 @@ class UserRequest : public Auth::UserRequest
 public:
     UserRequest();
     ~UserRequest() override;
-    int authenticated() const override;
     void authenticate(HttpRequest * request, ConnStateData * conn, Http::HdrType type) override;
     Direction module_direction() override;
     void startHelperLookup(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *, void *) override;
@@ -66,5 +65,5 @@ private:
 } // namespace Auth
 
 #endif /* HAVE_AUTH_MODULE_NEGOTIATE */
-#endif /* _SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H */
+#endif /* SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H */
 

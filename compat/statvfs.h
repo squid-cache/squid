@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMPAT_XSTATVFS_H
-#define _SQUID_COMPAT_XSTATVFS_H
+#ifndef SQUID_COMPAT_STATVFS_H
+#define SQUID_COMPAT_STATVFS_H
 
 #if HAVE_SYS_STATVFS_H && HAVE_STATVFS
 #include <sys/statvfs.h>
@@ -61,5 +61,5 @@ int xstatvfs(const char *path, struct statvfs *buf);
 
 #endif
 
-#endif /* _SQUID_COMPAT_XSTATVFS_H */
+#endif /* SQUID_COMPAT_STATVFS_H */
 

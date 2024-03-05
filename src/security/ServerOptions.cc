@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
+#include "base/IoManip.h"
 #include "base/Packable.h"
 #include "cache_cf.h"
 #include "error/SysErrorDetail.h"
@@ -172,7 +173,7 @@ Security::ServerOptions::createBlankContext() const
     }
     ctx = convertContextFromRawPtr(t);
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     // Initialize for X.509 certificate exchange
     gnutls_certificate_credentials_t t;
     if (const auto x = gnutls_certificate_allocate_credentials(&t)) {
@@ -248,7 +249,7 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &)
             }
         }
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         for (auto &keys : certs) {
             gnutls_x509_crt_t crt = keys.cert.get();
             gnutls_x509_privkey_t xkey = keys.pkey.get();
@@ -301,7 +302,7 @@ Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
 
 #if USE_OPENSSL
     Ssl::generateUntrustedCert(untrustedSigningCa.cert, untrustedSigningCa.pkey, signingCa.cert, signingCa.pkey);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     // TODO: implement for GnuTLS. Just a warning for now since generate is implicitly on for all crypto builds.
     signingCa.cert.reset();
     signingCa.pkey.reset();
@@ -380,7 +381,7 @@ Security::ServerOptions::loadDhParams()
     int codes;
     if (DH_check(dhp, &codes) == 0) {
         if (codes) {
-            debugs(83, DBG_IMPORTANT, "WARNING: Failed to verify DH parameters '" << dhParamsFile << "' (" << std::hex << codes << ")");
+            debugs(83, DBG_IMPORTANT, "WARNING: Failed to verify DH parameters '" << dhParamsFile << "' (" << asHex(codes) << ")");
             DH_free(dhp);
             dhp = nullptr;
         }

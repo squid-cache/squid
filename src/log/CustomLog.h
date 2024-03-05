@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CUSTOMLOG_H_
-#define SQUID_CUSTOMLOG_H_
+#ifndef SQUID_SRC_LOG_CUSTOMLOG_H
+#define SQUID_SRC_LOG_CUSTOMLOG_H
 
 #include "log/FormattedLog.h"
 
@@ -21,5 +21,5 @@ public:
     CustomLog *next = nullptr;
 };
 
-#endif /* SQUID_CUSTOMLOG_H_ */
+#endif /* SQUID_SRC_LOG_CUSTOMLOG_H */
 

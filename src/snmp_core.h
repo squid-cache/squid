@@ -8,8 +8,8 @@
 
 /* DEBUG: section 49    SNMP Interface */
 
-#ifndef SQUID_SNMP_CORE_H
-#define SQUID_SNMP_CORE_H
+#ifndef SQUID_SRC_SNMP_CORE_H
+#define SQUID_SRC_SNMP_CORE_H
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
@@ -61,11 +61,11 @@ namespace Acl
 class SnmpCommunityCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
 };
 
 } // namespace Acl
 
-#endif /* SQUID_SNMP_CORE_H */
+#endif /* SQUID_SRC_SNMP_CORE_H */
 

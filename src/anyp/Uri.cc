@@ -81,6 +81,29 @@ AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &ignore)
     return output;
 }
 
+SBuf
+AnyP::Uri::Decode(const SBuf &buf)
+{
+    SBuf output;
+    Parser::Tokenizer tok(buf);
+    while (!tok.atEnd()) {
+        SBuf token;
+        static const auto unencodedChars = CharacterSet("percent", "%").complement("unencoded");
+        if (tok.prefix(token, unencodedChars))
+            output.append(token);
+
+        // we are either at '%' or at end of input
+        if (tok.skip('%')) {
+            int64_t hex1 = 0, hex2 = 0;
+            if (tok.int64(hex1, 16, false, 1) && tok.int64(hex2, 16, false, 1))
+                output.append(static_cast<char>((hex1 << 4) | hex2));
+            else
+                throw TextException("invalid pct-encoded triplet", Here());
+        }
+    }
+    return output;
+}
+
 const SBuf &
 AnyP::Uri::Asterisk()
 {
@@ -775,12 +798,9 @@ urlIsRelative(const char *url)
         return true; // path-empty
 
     if (*url == '/') {
-        // RFC 3986 section 5.2.3
-        // path-absolute   ; begins with "/" but not "//"
-        if (url[1] == '/')
-            return true; // network-path reference, aka. 'scheme-relative URI'
-        else
-            return true; // path-absolute, aka 'absolute-path reference'
+        // network-path reference (a.k.a. 'scheme-relative URI') or
+        // path-absolute (a.k.a. 'absolute-path reference')
+        return true;
     }
 
     for (const auto *p = url; *p != '\0' && *p != '/' && *p != '?' && *p != '#'; ++p) {
@@ -961,7 +981,7 @@ urlCheckRequest(const HttpRequest * r)
         return false;
 
     case AnyP::PROTO_HTTPS:
-#if USE_OPENSSL || USE_GNUTLS
+#if USE_OPENSSL || HAVE_LIBGNUTLS
         return true;
 #else
         /*

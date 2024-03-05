@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__ACCESS_RULE_H
-#define SQUID_ADAPTATION__ACCESS_RULE_H
+#ifndef SQUID_SRC_ADAPTATION_ACCESSRULE_H
+#define SQUID_SRC_ADAPTATION_ACCESSRULE_H
 
 #include "acl/forward.h"
 #include "adaptation/forward.h"
@@ -51,5 +51,5 @@ AccessRule *FindRuleByGroupId(const String &groupId);
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__ACCESS_RULE_H */
+#endif /* SQUID_SRC_ADAPTATION_ACCESSRULE_H */
 

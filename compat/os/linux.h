@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_OS_LINUX_H
-#define SQUID_OS_LINUX_H
+#ifndef SQUID_COMPAT_OS_LINUX_H
+#define SQUID_COMPAT_OS_LINUX_H
 
 #if _SQUID_LINUX_
 
@@ -69,5 +69,5 @@
 #endif
 
 #endif /* _SQUID_LINUX_ */
-#endif /* SQUID_OS_LINUX_H */
+#endif /* SQUID_COMPAT_OS_LINUX_H */
 

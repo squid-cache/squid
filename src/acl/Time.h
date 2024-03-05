@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLTIME_H
-#define SQUID_ACLTIME_H
+#ifndef SQUID_SRC_ACL_TIME_H
+#define SQUID_SRC_ACL_TIME_H
 
 #include "acl/ParameterizedNode.h"
 #include "acl/TimeData.h"
@@ -20,11 +20,11 @@ namespace Acl
 class CurrentTimeCheck: public ParameterizedNode<ACLTimeData>
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
 };
 
 } // namespace Acl
 
-#endif /* SQUID_ACLTIME_H */
+#endif /* SQUID_SRC_ACL_TIME_H */
 

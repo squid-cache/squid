@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMM_IOWRITE_H
-#define _SQUID_COMM_IOWRITE_H
+#ifndef SQUID_SRC_COMM_WRITE_H
+#define SQUID_SRC_COMM_WRITE_H
 
 #include "base/AsyncCall.h"
 #include "comm/forward.h"
@@ -36,5 +36,5 @@ void WriteCancel(const Comm::ConnectionPointer &conn, const char *reason);
 
 } // namespace Comm
 
-#endif /* _SQUID_COMM_IOWRITE_H */
+#endif /* SQUID_SRC_COMM_WRITE_H */
 
