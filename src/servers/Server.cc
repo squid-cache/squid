@@ -176,7 +176,7 @@ Server::doClientRead(const CommIoCbParams &io)
         LogTagsErrors lte;
         lte.timedout = rd.xerrno == ETIMEDOUT;
         lte.aborted = !lte.timedout; // intentionally true for zero rd.xerrno
-        terminateAll(Error(ERR_CLIENT_GONE, SysErrorDetail::NewIfAny(rd.xerrno)), lte);
+        terminateAll(Error(ERR_READ_ERROR, SysErrorDetail::NewIfAny(rd.xerrno)), lte);
         return;
     }
 

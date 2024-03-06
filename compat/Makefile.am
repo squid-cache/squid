@@ -69,7 +69,6 @@ libcompatsquid_la_SOURCES = \
 	statvfs.h \
 	stdio.h \
 	stdvarargs.h \
-	strnstr.cc \
 	strtoll.h \
 	tempnam.h \
 	types.h \

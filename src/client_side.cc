@@ -3369,7 +3369,7 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
 
     Must(AddOpenedHttpSocket(s->listenConn)); // otherwise, we have received a fd we did not ask for
 
-#if USE_SYSTEMD
+#if HAVE_LIBSYSTEMD
     // When the very first port opens, tell systemd we are able to serve connections.
     // Subsequent sd_notify() calls, including calls during reconfiguration,
     // do nothing because the first call parameter is 1.
