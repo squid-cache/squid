@@ -31,6 +31,18 @@ if test "$rev" != "$checkrev" ; then
 	exit 1;
 fi
 
+po2html=`which po2html`
+if test -z "$po2html" ; then
+    echo "cannot find po2html"
+    exit 1
+fi
+po2txt=`which po2txt`
+if test -z "$po2txt" ; then
+    echo "cannot find po2txt"
+    exit 1
+fi
+
+
 tmpdir=${TMPDIR:-${PWD}}/${name}-mkrelease
 
 rm -rf $name.tar.gz $tmpdir
