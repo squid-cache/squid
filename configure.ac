@@ -2024,13 +2024,12 @@ AC_FUNC_ALLOCA
 SQUID_AUTO_LIB(cap,[Linux capabilities],[LIBCAP])
 SQUID_CHECK_LIB_WORKS(cap,[
   SQUID_STATE_SAVE(squid_libcap_state)
-  CXXFLAGS="$LIBCAP_CFLAGS $CXXFLAGS"
-  LDFLAGS="$LIBCAP_PATH $LDFLAGS"
-  PKG_CHECK_MODULES([LIBCAP],[libcap >= 2.09],[
-    SQUID_CHECK_FUNCTIONAL_LIBCAP2
-    AC_MSG_NOTICE([libcap headers are ok: $squid_cv_sys_capability_works])
-    AS_IF([test "x$squid_cv_sys_capability_works" = "xno"],[LIBCAP_LIBS=""])
-  ],[:])
+  PKG_CHECK_MODULES([LIBCAP],[libcap >= 2.09],[:],[:])
+  CPPFLAGS="$LIBCAP_CFLAGS $CPPFLAGS"
+  LIBS="$LIBCAP_PATH $LIBCAP_LIBS $LIBS"
+  SQUID_CHECK_FUNCTIONAL_LIBCAP2
+  AC_MSG_NOTICE([libcap headers are ok: $squid_cv_sys_capability_works])
+  AS_IF([test "x$squid_cv_sys_capability_works" = "xno"],[LIBCAP_LIBS=""])
   SQUID_STATE_ROLLBACK(squid_libcap_state)
 ])
 
