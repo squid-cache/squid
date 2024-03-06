@@ -22,7 +22,7 @@ LogTagsErrors
 LogTagsErrors::FromErrno(const int errNo)
 {
     LogTagsErrors lte;
-    lte.timedout = errNo == ETIMEDOUT;
+    lte.timedout = (errNo == ETIMEDOUT);
     lte.aborted = !lte.timedout; // intentionally true for zero errNo
     return lte;
 }
