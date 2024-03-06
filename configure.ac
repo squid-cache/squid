@@ -1455,13 +1455,15 @@ AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto
 dnl Look for libnetfilter_conntrack options (needed for QOS netfilter marking)
 SQUID_AUTO_LIB(netfilter-conntrack,[Netfilter conntrack],[LIBNETFILTER_CONNTRACK])
 SQUID_CHECK_LIB_WORKS(netfilter-conntrack,[
-  LDFLAGS="$LIBNETFILTER_CONNTRACK_PATH $LDFLAGS"
+  SQUID_STATE_SAVE(squid_netfilter_conntrack_state)
+  PKG_CHECK_MODULES([LIBNETFILTER_CONNTRACK],[libnetfilter_conntrack],[:],[:])
   CPPFLAGS="$LIBNETFILTER_CONNTRACK_CFLAGS $CPPFLAGS"
-  AC_SEARCH_LIBS([nfct_query],[netfilter_conntrack],[LIBNETFILTER_CONNTRACK_LIBS="-lnetfilter_conntrack"])
+  LIBS="$LIBNETFILTER_CONNTRACK_PATH $LIBNETFILTER_CONNTRACK_LIBS $LIBS"
   AC_CHECK_HEADERS([ \
     libnetfilter_conntrack/libnetfilter_conntrack.h \
-    libnetfilter_conntrack/libnetfilter_conntrack_tcp.h
-  ],,[LIBNETFILTER_CONNTRACK_LIBS=""])
+    libnetfilter_conntrack/libnetfilter_conntrack_tcp.h \
+  ])
+  SQUID_STATE_ROLLBACK(squid_netfilter_conntrack_state)
 ])
 
 dnl Enable Large file support
