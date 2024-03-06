@@ -265,6 +265,11 @@ rfc1035NameUnpack(const char *buf, size_t sz, unsigned int *off, unsigned short 
                 RFC1035_UNPACK_DEBUG;
                 return 1;
             }
+            /* before copying sizeof(unnsigned short), ensure we respect bounds */
+            if ((*off) + sizeof(s) > sz) {
+                RFC1035_UNPACK_DEBUG;
+                return 1;
+            }
             memcpy(&s, buf + (*off), sizeof(s));
             s = ntohs(s);
             (*off) += sizeof(s);
