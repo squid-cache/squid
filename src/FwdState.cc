@@ -240,11 +240,7 @@ FwdState::updateAleWithFinalError()
     if (!err || !al)
         return;
 
-    LogTagsErrors lte;
-    if (err->xerrno == ETIMEDOUT || err->type == ERR_READ_TIMEOUT)
-        lte.timedout = true;
-    else if (err->type != ERR_NONE)
-        lte.aborted = true;
+    const auto lte = LogTagsErrors::FromErrno(err->type == ERR_READ_TIMEOUT ? ETIMEDOUT : err->xerrno);
     al->cache.code.err.update(lte);
     if (!err->detail) {
         static const auto d = MakeNamedErrorDetail("WITH_SERVER");
