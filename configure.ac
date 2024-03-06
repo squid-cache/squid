@@ -1463,14 +1463,13 @@ dnl Look for libnetfilter_conntrack options (needed for QOS netfilter marking)
 SQUID_AUTO_LIB(netfilter-conntrack,[Netfilter conntrack],[LIBNETFILTER_CONNTRACK])
 SQUID_CHECK_LIB_WORKS(netfilter-conntrack,[
   SQUID_STATE_SAVE(squid_netfilter_conntrack_state)
-  PKG_CHECK_MODULES([LIBNETFILTER_CONNTRACK],[libnetfilter_conntrack],[
-    CPPFLAGS="$LIBNETFILTER_CONNTRACK_CFLAGS $CPPFLAGS"
-    LIBS="$LIBNETFILTER_CONNTRACK_PATH $LIBS"
-    AC_CHECK_HEADERS([ \
-      libnetfilter_conntrack/libnetfilter_conntrack.h \
-      libnetfilter_conntrack/libnetfilter_conntrack_tcp.h \
-    ])
-  ],[:])
+  PKG_CHECK_MODULES([LIBNETFILTER_CONNTRACK],[libnetfilter_conntrack],[:],[:])
+  CPPFLAGS="$LIBNETFILTER_CONNTRACK_CFLAGS $CPPFLAGS"
+  LIBS="$LIBNETFILTER_CONNTRACK_PATH $LIBNETFILTER_CONNTRACK_LIBS $LIBS"
+  AC_CHECK_HEADERS([ \
+    libnetfilter_conntrack/libnetfilter_conntrack.h \
+    libnetfilter_conntrack/libnetfilter_conntrack_tcp.h \
+  ])
   SQUID_STATE_ROLLBACK(squid_netfilter_conntrack_state)
 ])
 
