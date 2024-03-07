@@ -265,7 +265,7 @@ rfc1035NameUnpack(const char *buf, size_t sz, unsigned int *off, unsigned short 
                 RFC1035_UNPACK_DEBUG;
                 return 1;
             }
-            /* before copying sizeof(unnsigned short), ensure we respect bounds */
+            /* before copying compression offset value, ensure it is inside the buffer */
             if ((*off) + sizeof(s) > sz) {
                 RFC1035_UNPACK_DEBUG;
                 return 1;
