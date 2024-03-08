@@ -108,6 +108,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-psapi \
 	--without-systemd \
 	--without-tdb \
+	--without-xml2 \
 	"
 
 # Fix the distclean testing.
