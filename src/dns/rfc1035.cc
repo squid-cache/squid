@@ -273,11 +273,6 @@ rfc1035NameUnpack(const char *buf, size_t sz, unsigned int *off, unsigned short 
             memcpy(&s, buf + (*off), sizeof(s));
             s = ntohs(s);
             (*off) += sizeof(s);
-            /* Sanity check */
-            if ((*off) > sz) {
-                RFC1035_UNPACK_DEBUG;
-                return 1;
-            }
             ptr = s & 0x3FFF;
             /* Make sure the pointer is inside this message */
             if (ptr >= sz) {
