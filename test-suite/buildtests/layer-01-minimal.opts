@@ -93,6 +93,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-aio \
 	--without-cap \
 	--without-dl \
+	--without-expat \
 	--without-gnugss \
 	--without-heimdal-krb5 \
 	--without-large-files \
