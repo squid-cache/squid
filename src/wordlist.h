@@ -12,6 +12,8 @@
 #include "globals.h"
 #include "sbuf/List.h"
 
+#include <iosfwd>
+
 /** A list of C-strings
  *
  * \deprecated use SBufList instead
@@ -64,6 +66,8 @@ char *wordlistChopHead(wordlist **);
 
 /// convert a wordlist to a SBufList
 SBufList ToSBufList(wordlist *);
+
+std::ostream& operator<<(std::ostream &os, const wordlist wl);
 
 #endif /* SQUID_SRC_WORDLIST_H */
 

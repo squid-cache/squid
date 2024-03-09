@@ -12,6 +12,8 @@
 #include "MemBuf.h"
 #include "wordlist.h"
 
+#include <ostream>
+
 void
 wordlistDestroy(wordlist ** list)
 {
@@ -64,3 +66,17 @@ wordlistChopHead(wordlist **wl)
     return rv;
 }
 
+std::ostream&
+operator<<(std::ostream &os, const wordlist wl)
+{
+    const wordlist *w = &wl;
+    bool separator = false;
+    while (w) {
+        if (separator)
+            os << os.fill();
+        os << w->key;
+        w = w->next;
+        separator = true;
+    }
+    return os;
+}
