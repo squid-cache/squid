@@ -315,7 +315,7 @@ Ip::Qos::Config::parseConfigLine()
         // Work out TOS or mark. Default to TOS for backwards compatibility
         if (!(mark || tos)) {
             if (strncmp(token, "mark",4) == 0) {
-#if SO_MARK && USE_LIBCAP
+#if HAVE_LIBCAP && SO_MARK
                 mark = true;
                 // Assume preserve is true. We don't set at initialisation as this affects isHitNfmarkActive()
 #if USE_LIBNETFILTERCONNTRACK
@@ -325,13 +325,11 @@ Ip::Qos::Config::parseConfigLine()
                 debugs(3, DBG_IMPORTANT, "WARNING: Squid not compiled with Netfilter conntrack library. "
                        << "Netfilter mark preservation not available.");
 #endif // USE_LIBNETFILTERCONNTRACK
-#elif SO_MARK // SO_MARK && USE_LIBCAP
+
+#else // HAVE_LIBCAP && SO_MARK
                 throw TextException(ToSBuf("Invalid parameter 'mark' in qos_flows option. ",
                                            "Linux Netfilter marking not available on this platform."), Here());
-#else // SO_MARK && USE_LIBCAP
-                throw TextException(ToSBuf("Invalid parameter 'mark' in qos_flows option. ",
-                                           "Linux Netfilter marking not available on this platform."), Here());
-#endif // SO_MARK && USE_LIBCAP
+#endif
             } else if (strncmp(token, "tos",3) == 0) {
                 preserveMissTos = true;
                 tos = true;
@@ -563,7 +561,7 @@ Ip::Qos::setSockTos(const Comm::ConnectionPointer &conn, tos_t tos)
 int
 Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
 {
-#if SO_MARK && USE_LIBCAP
+#if HAVE_LIBCAP && SO_MARK
     debugs(50, 3, "for FD " << fd << " to " << mark);
     const int x = setsockopt(fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
     if (x < 0) {
@@ -571,7 +569,7 @@ Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
         debugs(50, 2, "setsockopt(SO_MARK) on " << fd << ": " << xstrerr(xerrno));
     }
     return x;
-#elif USE_LIBCAP
+#elif HAVE_LIBCAP
     (void)mark;
     (void)fd;
     debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(SO_MARK) not supported on this platform");
@@ -579,7 +577,7 @@ Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
 #else
     (void)mark;
     (void)fd;
-    debugs(50, DBG_IMPORTANT, "WARNING: Netfilter marking disabled (netfilter marking requires build with LIBCAP)");
+    debugs(50, DBG_IMPORTANT, "WARNING: Netfilter marking disabled (requires build --with-cap)");
     return -1;
 #endif
 }

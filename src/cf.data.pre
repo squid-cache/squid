@@ -2714,7 +2714,7 @@ DOC_END
 
 NAME: tcp_outgoing_mark
 TYPE: acl_nfmark
-IFDEF: SO_MARK&&USE_LIBCAP
+IFDEF: HAVE_LIBCAP&&SO_MARK
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfmarkToServer
 DOC_START
@@ -2736,7 +2736,7 @@ DOC_END
 
 NAME: mark_client_packet clientside_mark
 TYPE: acl_nfmark
-IFDEF: SO_MARK&&USE_LIBCAP
+IFDEF: HAVE_LIBCAP&&SO_MARK
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfmarkToClient
 DOC_START
@@ -2762,7 +2762,7 @@ DOC_END
 
 NAME: mark_client_connection
 TYPE: acl_nfmark
-IFDEF: SO_MARK&&USE_LIBCAP
+IFDEF: HAVE_LIBCAP&&SO_MARK
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfConnmarkToClient
 DOC_START

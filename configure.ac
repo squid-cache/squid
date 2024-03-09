@@ -1259,20 +1259,13 @@ SQUID_CHECK_LIB_WORKS(ldap,[
 ])
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
-AH_TEMPLATE(USE_SYSTEMD,[systemd support is available])
 SQUID_CHECK_LIB_WORKS(systemd,[
   SQUID_STATE_SAVE(squid_systemd_state)
   LIBS="$LIBS $LIBSYSTEMD_PATH"
-  PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd],,[
-    # systemd < 209
-    PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd-daemon],,[:])
-  ])
-  AC_CHECK_HEADERS(systemd/sd-daemon.h)
+  PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd >= 209],[
+    AC_CHECK_HEADERS(systemd/sd-daemon.h)
+  ],[:])
   SQUID_STATE_ROLLBACK(squid_systemd_state)
-
-  AS_IF([test "x$LIBSYSTEMD_LIBS" != "x"],[
-    AC_DEFINE(USE_SYSTEMD,1,[systemd support is available])
-  ])
 ])
 
 AC_ARG_ENABLE(forw-via-db,
@@ -1462,13 +1455,15 @@ AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto
 dnl Look for libnetfilter_conntrack options (needed for QOS netfilter marking)
 SQUID_AUTO_LIB(netfilter-conntrack,[Netfilter conntrack],[LIBNETFILTER_CONNTRACK])
 SQUID_CHECK_LIB_WORKS(netfilter-conntrack,[
-  LDFLAGS="$LIBNETFILTER_CONNTRACK_PATH $LDFLAGS"
+  SQUID_STATE_SAVE(squid_netfilter_conntrack_state)
+  PKG_CHECK_MODULES([LIBNETFILTER_CONNTRACK],[libnetfilter_conntrack],[:],[:])
   CPPFLAGS="$LIBNETFILTER_CONNTRACK_CFLAGS $CPPFLAGS"
-  AC_SEARCH_LIBS([nfct_query],[netfilter_conntrack],[LIBNETFILTER_CONNTRACK_LIBS="-lnetfilter_conntrack"])
+  LIBS="$LIBNETFILTER_CONNTRACK_PATH $LIBNETFILTER_CONNTRACK_LIBS $LIBS"
   AC_CHECK_HEADERS([ \
     libnetfilter_conntrack/libnetfilter_conntrack.h \
-    libnetfilter_conntrack/libnetfilter_conntrack_tcp.h
-  ],,[LIBNETFILTER_CONNTRACK_LIBS=""])
+    libnetfilter_conntrack/libnetfilter_conntrack_tcp.h \
+  ])
+  SQUID_STATE_ROLLBACK(squid_netfilter_conntrack_state)
 ])
 
 dnl Enable Large file support
@@ -2024,20 +2019,13 @@ AC_FUNC_ALLOCA
 SQUID_AUTO_LIB(cap,[Linux capabilities],[LIBCAP])
 SQUID_CHECK_LIB_WORKS(cap,[
   SQUID_STATE_SAVE(squid_libcap_state)
-  CXXFLAGS="$LIBCAP_CFLAGS $CXXFLAGS"
-  LDFLAGS="$LIBCAP_PATH $LDFLAGS"
-  PKG_CHECK_MODULES([LIBCAP],[libcap >= 2.09],[],[
-    # cap_clear_flag is the most recent libcap function we require
-    AC_CHECK_LIB([cap],[cap_clear_flag],[LIBCAP_LIBS="$LIBCAP_LIBS -lcap"])
-  ])
+  PKG_CHECK_MODULES([LIBCAP],[libcap >= 2.09],[:],[:])
+  CPPFLAGS="$LIBCAP_CFLAGS $CPPFLAGS"
+  LIBS="$LIBCAP_PATH $LIBCAP_LIBS $LIBS"
   SQUID_CHECK_FUNCTIONAL_LIBCAP2
   AC_MSG_NOTICE([libcap headers are ok: $squid_cv_sys_capability_works])
   AS_IF([test "x$squid_cv_sys_capability_works" = "xno"],[LIBCAP_LIBS=""])
   SQUID_STATE_ROLLBACK(squid_libcap_state)
-
-  AS_IF([test "x$LIBCAP_LIBS" != "x"],[
-    AC_DEFINE(USE_LIBCAP,1,[Linux capabilities library support])
-  ])
 ])
 
 dnl Check for needed libraries
