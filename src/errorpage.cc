@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "base/CharacterSet.h"
 #include "cache_cf.h"
 #include "clients/forward.h"
 #include "comm/Connection.h"
@@ -810,67 +811,62 @@ ErrorState::~ErrorState()
 int
 ErrorState::Dump(MemBuf * mb)
 {
-    MemBuf str;
-    char ntoabuf[MAX_IPSTRLEN];
+    PackableStream out(*mb);
+    SBufStream body;
+    auto &encoding = CharacterSet::RFC3986_UNRESERVED();
 
-    str.reset();
-    /* email subject line */
-    str.appendf("CacheErrorInfo - %s", errorPageName(type));
-    mb->appendf("?subject=%s", rfc1738_escape_part(str.buf));
-    str.reset();
-    /* email body */
-    str.appendf("CacheHost: %s\r\n", getMyHostname());
-    /* - Err Msgs */
-    str.appendf("ErrPage: %s\r\n", errorPageName(type));
+    body << "CacheHost: " << getMyHostname() << "\r\n" <<
+        "ErrPage: " << errorPageName(type) << "\r\n";
+    if (xerrno)
+        body << "Err: (" << xerrno << ") " << strerror(xerrno) << "\r\n";
+    else
+        body << "Err: [none]\r\n";
 
-    if (xerrno) {
-        str.appendf("Err: (%d) %s\r\n", xerrno, strerror(xerrno));
-    } else {
-        str.append("Err: [none]\r\n", 13);
-    }
 #if USE_AUTH
     if (auth_user_request.getRaw() && auth_user_request->denyMessage())
-        str.appendf("Auth ErrMsg: %s\r\n", auth_user_request->denyMessage());
+        body << "Auth ErrMsg: " << auth_user_request->denyMessage() << "\r\n";
 #endif
+
     if (dnsError)
-        str.appendf("DNS ErrMsg: " SQUIDSBUFPH "\r\n", SQUIDSBUFPRINT(*dnsError));
+        body << "DNS ErrMsg: " << *dnsError << "\r\n";
 
-    /* - TimeStamp */
-    str.appendf("TimeStamp: %s\r\n\r\n", Time::FormatRfc1123(squid_curtime));
+    body << "TimeStamp: " << Time::FormatRfc1123(squid_curtime) << "\r\n\r\n"
+         "ClientIP: " << src_addr << "\r\n";
 
-    /* - IP stuff */
-    str.appendf("ClientIP: %s\r\n", src_addr.toStr(ntoabuf,MAX_IPSTRLEN));
+    if (request && request->hier.host[0] != '\0')
+        body << "ServerIP: " << request->hier.host << "\r\n";
+    body << "\r\n";
 
-    if (request && request->hier.host[0] != '\0') {
-        str.appendf("ServerIP: %s\r\n", request->hier.host);
-    }
+    body << "HTTP Request:\r\n";
 
-    str.append("\r\n", 2);
-    /* - HTTP stuff */
-    str.append("HTTP Request:\r\n", 15);
     if (request) {
-        str.appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\n",
-                    SQUIDSBUFPRINT(request->method.image()),
-                    SQUIDSBUFPRINT(request->url.path()),
-                    AnyP::ProtocolType_str[request->http_ver.protocol],
-                    request->http_ver.major, request->http_ver.minor);
-        request->header.packInto(&str);
+        body << request->method.image() << " " << request->url.path() << " " <<
+            AnyP::ProtocolType_str[request->http_ver.protocol] << "/" <<
+            request->http_ver.major << "." << request->http_ver.minor << "\r\n";
+            MemBuf headers;
+            headers.init();
+            request->header.packInto(&headers);
+            body << headers.content();
     }
 
-    str.append("\r\n", 2);
+    body << "\r\n";
+
     /* - FTP stuff */
 
     if (ftp.request) {
-        str.appendf("FTP Request: %s\r\n", ftp.request);
-        str.appendf("FTP Reply: %s\r\n", (ftp.reply? ftp.reply:"[none]"));
-        str.append("FTP Msg: ", 9);
-        wordlistCat(ftp.server_msg, &str);
-        str.append("\r\n", 2);
+        body << "FTP Request: " << ftp.request << "\r\n"
+             << "FTP Reply: " << (ftp.reply ? ftp.reply : "[none]") << "\r\n"
+             << "FTP Msg: " << ftp.server_msg << "\r\n";
     }
 
-    str.append("\r\n", 2);
-    mb->appendf("&body=%s", rfc1738_escape_part(str.buf));
-    str.clean();
+    body << "\r\n";
+
+    out << "?subject=" <<
+        AnyP::Uri::Encode(SBuf("CacheErrorInfo - "),encoding) <<
+        AnyP::Uri::Encode(SBuf(errorPageName(type)), encoding) <<
+        "&body=" << AnyP::Uri::Encode(body.buf(), encoding);
+
+
     return 0;
 }
 
