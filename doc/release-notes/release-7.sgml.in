@@ -205,7 +205,9 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p>No changed options in this version.
+	<tag>--without-esi</tag>
+	<p>The ESI feature is now disabled by default.
+	   Use <em>--enable-esi</em> if needed.
 
 </descrip>
 </p>
