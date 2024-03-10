@@ -823,7 +823,7 @@ squid_opt_use_adaptation=no
 AH_TEMPLATE([USE_SQUID_ESI],[Requirements for the ESI processor])
 AC_ARG_ENABLE(esi,[
   AS_HELP_STRING([--enable-esi],
-                 [Disable ESI for accelerators. ESI requires expat or xml2 library.
+                 [Enable ESI for accelerators. ESI requires expat or xml2 library.
                   Enabling ESI will cause squid reverse proxies to be capable
                   of the Edge Acceleration Specification (www.esi.org).])
 ],[
