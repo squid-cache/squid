@@ -23,7 +23,7 @@ public:
     typedef void SPLAYWALKEE(Value const & nodedata, void *state);
     static void DefaultFree (Value &aValue) {delete aValue;}
 
-    SplayNode<V> (Value const &);
+    SplayNode(const Value &);
     Value data;
     mutable SplayNode<V> *left;
     mutable SplayNode<V> *right;
