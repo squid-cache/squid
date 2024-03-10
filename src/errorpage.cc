@@ -813,7 +813,7 @@ ErrorState::Dump(MemBuf * mb)
 {
     PackableStream out(*mb);
     SBufStream body;
-    auto &encoding = CharacterSet::RFC3986_UNRESERVED();
+    const auto &encoding = CharacterSet::RFC3986_UNRESERVED();
 
     body << "CacheHost: " << getMyHostname() << "\r\n" <<
         "ErrPage: " << errorPageName(type) << "\r\n";
@@ -840,13 +840,10 @@ ErrorState::Dump(MemBuf * mb)
     body << "HTTP Request:\r\n";
 
     if (request) {
-        body << request->method.image() << " " << request->url.path() << " " <<
-            AnyP::ProtocolType_str[request->http_ver.protocol] << "/" <<
-            request->http_ver.major << "." << request->http_ver.minor << "\r\n";
-            MemBuf headers;
-            headers.init();
-            request->header.packInto(&headers);
-            body << headers.content();
+            MemBuf r;
+            r.init();
+            request->pack(&r);
+            body << r.content();
     }
 
     body << "\r\n";
