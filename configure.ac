@@ -822,7 +822,7 @@ squid_opt_use_adaptation=no
 
 AH_TEMPLATE([USE_SQUID_ESI],[Requirements for the ESI processor])
 AC_ARG_ENABLE(esi,[
-  AS_HELP_STRING([--disable-esi],
+  AS_HELP_STRING([--enable-esi],
                  [Disable ESI for accelerators. ESI requires expat or xml2 library.
                   Enabling ESI will cause squid reverse proxies to be capable
                   of the Edge Acceleration Specification (www.esi.org).])
@@ -879,7 +879,6 @@ AS_IF([test "x$enable_esi" = "xyes" -a "x$with_xml2" != "xno"],[
 AM_CONDITIONAL(ENABLE_LIBXML2,[test "x$LIBXML2_LIBS" != "x"])
 AC_SUBST(LIBXML2_LIBS)
 
-dnl ... resume the incomplete --enable-esi checking
 AS_IF([test "x$enable_esi" = "xyes" -a "x$LIBXML2_LIBS" = "x" -a "x$LIBEXPAT_LIBS" = "x"],[
   AC_MSG_ERROR([ESI processor requires libxml2 or libexpat])
 ])
