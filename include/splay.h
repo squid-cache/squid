@@ -21,7 +21,7 @@ public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
 
-    SplayNode<V> (Value const &);
+    SplayNode(const Value &);
     Value data;
     mutable SplayNode<V> *left;
     mutable SplayNode<V> *right;
