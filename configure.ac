@@ -820,7 +820,7 @@ AC_ARG_ENABLE(delay-pools,
 dnl disable generic/common adaptation support by default
 squid_opt_use_adaptation=no
 
-AH_TEMPLATE([USE_SQUID_ESI],[Requirements for the ESI processor])
+AH_TEMPLATE([USE_SQUID_ESI],[whether to enable ESI processing])
 AC_ARG_ENABLE(esi,[
   AS_HELP_STRING([--enable-esi],
                  [Enable ESI for accelerators. ESI requires expat or xml2 library.
