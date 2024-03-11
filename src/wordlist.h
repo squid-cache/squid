@@ -16,6 +16,7 @@
 
 class wordlist;
 
+/// minimal iterator for read-only traversal of wordlist objects
 class WordlistIterator
 {
 public:
@@ -23,14 +24,13 @@ public:
     using value_type = const char *;
     using reference = const value_type &;
 
-    explicit WordlistIterator(const wordlist *wl) : w(wl) {}
+    explicit WordlistIterator(const wordlist * const wl): w(wl) {}
 
-    WordlistIterator& operator++();
-
-    bool operator==(const WordlistIterator &rhs) const { return this->w == rhs.w; }
-    bool operator!=(const WordlistIterator &rhs) const { return this->w != rhs.w; }
+    auto operator ==(const WordlistIterator &rhs) const { return this->w == rhs.w; }
+    auto operator !=(const WordlistIterator &rhs) const { return this->w != rhs.w; }
 
     inline reference operator *() const;
+    inline WordlistIterator &operator++();
 
 private:
     const wordlist *w;
