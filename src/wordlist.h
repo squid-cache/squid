@@ -20,7 +20,8 @@ class WordlistIterator
 {
 public:
     using iterator_category = std::input_iterator_tag;
-    using value_type = char*;
+    using value_type = const char *;
+    using reference = const value_type &;
 
     explicit WordlistIterator(const wordlist *wl) : w(wl) {}
 
@@ -29,7 +30,7 @@ public:
     bool operator==(const WordlistIterator &rhs) const { return this->w == rhs.w; }
     bool operator!=(const WordlistIterator &rhs) const { return this->w != rhs.w; }
 
-    const auto operator*() const;
+    inline reference operator *() const;
 
 private:
     const wordlist *w;
@@ -99,7 +100,7 @@ WordlistIterator::operator++()
     return *this;
 }
 
-inline const auto
+inline WordlistIterator::reference
 WordlistIterator::operator*() const
 {
     return w->key;
