@@ -46,7 +46,7 @@ class wordlist
     friend char *wordlistChopHead(wordlist **);
 
 public:
-    using iterator = WordlistIterator;
+    using const_iterator = WordlistIterator;
 
     wordlist() : key(nullptr), next(nullptr) {}
     // create a new wordlist node, with a copy of k as key
@@ -55,8 +55,8 @@ public:
     wordlist(const wordlist &) = delete;
     wordlist &operator=(const wordlist &) = delete;
 
-    iterator begin() const { return iterator(this); }
-    iterator end() const { return iterator(nullptr); }
+    auto begin() const { return const_iterator(this); }
+    auto end() const { return const_iterator(nullptr); }
 
     char *key;
     wordlist *next;
