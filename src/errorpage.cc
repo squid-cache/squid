@@ -812,11 +812,16 @@ int
 ErrorState::Dump(MemBuf * mb)
 {
     PackableStream out(*mb);
-    SBufStream body;
     const auto &encoding = CharacterSet::RFC3986_UNRESERVED();
 
+    out << "?subject=" <<
+        AnyP::Uri::Encode(SBuf("CacheErrorInfo - "),encoding) <<
+        AnyP::Uri::Encode(SBuf(errorPageName(type)), encoding);
+
+    SBufStream body;
     body << "CacheHost: " << getMyHostname() << "\r\n" <<
-        "ErrPage: " << errorPageName(type) << "\r\n";
+         "ErrPage: " << errorPageName(type) << "\r\n";
+
     if (xerrno)
         body << "Err: (" << xerrno << ") " << strerror(xerrno) << "\r\n";
     else
@@ -830,8 +835,8 @@ ErrorState::Dump(MemBuf * mb)
     if (dnsError)
         body << "DNS ErrMsg: " << *dnsError << "\r\n";
 
-    body << "TimeStamp: " << Time::FormatRfc1123(squid_curtime) << "\r\n\r\n"
-         "ClientIP: " << src_addr << "\r\n";
+    body << "TimeStamp: " << Time::FormatRfc1123(squid_curtime) <<
+        "\r\n\r\n" "ClientIP: " << src_addr << "\r\n";
 
     if (request && request->hier.host[0] != '\0')
         body << "ServerIP: " << request->hier.host << "\r\n";
@@ -843,25 +848,18 @@ ErrorState::Dump(MemBuf * mb)
             MemBuf r;
             r.init();
             request->pack(&r);
-            body << r.content();
+            body << r.content() << "\r\n";
     }
-
-    body << "\r\n";
 
     /* - FTP stuff */
 
     if (ftp.request) {
-        body << "FTP Request: " << ftp.request << "\r\n"
-             << "FTP Reply: " << (ftp.reply ? ftp.reply : "[none]") << "\r\n"
-             << "FTP Msg: " << ftp.server_msg << "\r\n";
+        body << "FTP Request: " << ftp.request << "\r\n" <<
+             "FTP Reply: " << (ftp.reply ? ftp.reply : "[none]") << "\r\n" <<
+             "FTP Msg: " << ftp.server_msg << "\r\n\r\n";
     }
 
-    body << "\r\n";
-
-    out << "?subject=" <<
-        AnyP::Uri::Encode(SBuf("CacheErrorInfo - "),encoding) <<
-        AnyP::Uri::Encode(SBuf(errorPageName(type)), encoding) <<
-        "&body=" << AnyP::Uri::Encode(body.buf(), encoding);
+    out << "&body=" << AnyP::Uri::Encode(body.buf(), encoding);
 
 
     return 0;
