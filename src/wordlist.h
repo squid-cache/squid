@@ -12,7 +12,26 @@
 #include "globals.h"
 #include "sbuf/List.h"
 
-#include <iosfwd>
+#include <iterator>
+
+class wordlist;
+
+class WordlistIterator
+{
+    wordlist *w;
+
+public:
+    using iterator_category = std::input_iterator_tag;
+    using value_type = char*;
+
+    explicit WordlistIterator(wordlist *wl) : w(wl) {}
+
+    WordlistIterator& operator++();
+
+    bool operator==(const WordlistIterator &) const;
+
+    const auto operator*() const;
+};
 
 /** A list of C-strings
  *
@@ -22,6 +41,7 @@ class wordlist
 {
     MEMPROXY_CLASS(wordlist);
     friend char *wordlistChopHead(wordlist **);
+    using iterator = WordlistIterator;
 
 public:
     wordlist() : key(nullptr), next(nullptr) {}
@@ -30,6 +50,9 @@ public:
 
     wordlist(const wordlist &) = delete;
     wordlist &operator=(const wordlist &) = delete;
+
+    WordlistIterator begin() { return WordlistIterator(this); }
+    WordlistIterator end() { return WordlistIterator(nullptr); }
 
     char *key;
     wordlist *next;
@@ -67,7 +90,24 @@ char *wordlistChopHead(wordlist **);
 /// convert a wordlist to a SBufList
 SBufList ToSBufList(wordlist *);
 
-std::ostream& operator<<(std::ostream &os, const wordlist wl);
+inline WordlistIterator &
+WordlistIterator::operator++()
+{
+    w = w->next;
+    return *this;
+}
+
+inline bool
+WordlistIterator::operator==(const WordlistIterator &rhs) const
+{
+    return w == rhs.w;
+}
+
+inline const auto
+WordlistIterator::operator*() const
+{
+    return w->key;
+}
 
 #endif /* SQUID_SRC_WORDLIST_H */
 
