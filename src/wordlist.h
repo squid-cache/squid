@@ -18,10 +18,10 @@ class wordlist;
 
 class WordlistIterator
 {
-    private:
+private:
     const wordlist *w;
 
-    public:
+public:
     using iterator_category = std::input_iterator_tag;
     using value_type = char*;
 
