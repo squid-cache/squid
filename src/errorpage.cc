@@ -848,7 +848,7 @@ ErrorState::Dump(MemBuf * mb)
             MemBuf r;
             r.init();
             request->pack(&r);
-            body << r.content() << "\r\n";
+            body << r.content();
     }
 
     /* - FTP stuff */
