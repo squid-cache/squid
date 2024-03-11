@@ -44,9 +44,10 @@ class wordlist
 {
     MEMPROXY_CLASS(wordlist);
     friend char *wordlistChopHead(wordlist **);
-    using iterator = WordlistIterator;
 
 public:
+    using iterator = WordlistIterator;
+
     wordlist() : key(nullptr), next(nullptr) {}
     // create a new wordlist node, with a copy of k as key
     explicit wordlist(const char *k) : key(xstrdup(k)), next(nullptr) {}
