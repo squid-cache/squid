@@ -38,15 +38,6 @@ wordlistCat(const wordlist * w, MemBuf * mb)
         mb->appendf("%s\n", word);
 }
 
-SBufList
-ToSBufList(wordlist *wl)
-{
-    SBufList rv;
-    for (const auto &word: *wl)
-        rv.push_back(SBuf(word));
-    return rv;
-}
-
 char *
 wordlistChopHead(wordlist **wl)
 {

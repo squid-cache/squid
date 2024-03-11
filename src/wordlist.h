@@ -91,9 +91,6 @@ void wordlistDestroy(wordlist **);
  */
 char *wordlistChopHead(wordlist **);
 
-/// convert a wordlist to a SBufList
-SBufList ToSBufList(wordlist *);
-
 inline WordlistIterator &
 WordlistIterator::operator++()
 {
