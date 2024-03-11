@@ -861,7 +861,6 @@ ErrorState::Dump(MemBuf * mb)
 
     out << "&body=" << AnyP::Uri::Encode(body.buf(), encoding);
 
-
     return 0;
 }
 
