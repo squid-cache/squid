@@ -18,9 +18,10 @@ class wordlist;
 
 class WordlistIterator
 {
+    private:
     const wordlist *w;
 
-public:
+    public:
     using iterator_category = std::input_iterator_tag;
     using value_type = char*;
 
@@ -52,8 +53,8 @@ public:
     wordlist(const wordlist &) = delete;
     wordlist &operator=(const wordlist &) = delete;
 
-    WordlistIterator begin() const { return WordlistIterator(this); }
-    WordlistIterator end() const { return WordlistIterator(nullptr); }
+    iterator begin() const { return iterator(this); }
+    iterator end() const { return iterator(nullptr); }
 
     char *key;
     wordlist *next;
