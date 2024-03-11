@@ -855,8 +855,8 @@ ErrorState::Dump(MemBuf * mb)
 
     if (ftp.request) {
         body << "FTP Request: " << ftp.request << "\r\n" <<
-             "FTP Reply: " << (ftp.reply ? ftp.reply : "[none]") << "\r\n" <<
-             "FTP Msg: " << ftp.server_msg << "\r\n\r\n";
+            "FTP Reply: " << (ftp.reply ? ftp.reply : "[none]") << "\r\n" <<
+            "FTP Msg: " << ftp.server_msg << "\r\n\r\n"; // XXX this needs to be AsList(ftp.server_msg)
     }
 
     out << "&body=" << AnyP::Uri::Encode(body.buf(), encoding);
