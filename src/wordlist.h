@@ -26,7 +26,7 @@ public:
 
     WordlistIterator& operator++();
 
-    bool operator==(const WordlistIterator &rhs) const { return this->w == rhs.w; };
+    bool operator==(const WordlistIterator &rhs) const { return this->w == rhs.w; }
     bool operator!=(const WordlistIterator &rhs) const { return this->w != rhs.w; }
 
     const auto operator*() const;
