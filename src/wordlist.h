@@ -18,9 +18,6 @@ class wordlist;
 
 class WordlistIterator
 {
-private:
-    const wordlist *w;
-
 public:
     using iterator_category = std::input_iterator_tag;
     using value_type = char*;
@@ -33,6 +30,9 @@ public:
     bool operator!=(const WordlistIterator &rhs) const { return this->w != rhs.w; }
 
     const auto operator*() const;
+
+private:
+    const wordlist *w;
 };
 
 /** A list of C-strings
