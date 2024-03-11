@@ -18,17 +18,18 @@ class wordlist;
 
 class WordlistIterator
 {
-    wordlist *w;
+    const wordlist *w;
 
 public:
     using iterator_category = std::input_iterator_tag;
     using value_type = char*;
 
-    explicit WordlistIterator(wordlist *wl) : w(wl) {}
+    explicit WordlistIterator(const wordlist *wl) : w(wl) {}
 
     WordlistIterator& operator++();
 
-    bool operator==(const WordlistIterator &) const;
+    bool operator==(const WordlistIterator &rhs) const { return this->w == rhs.w; };
+    bool operator!=(const WordlistIterator &rhs) const { return this->w != rhs.w; }
 
     const auto operator*() const;
 };
@@ -51,8 +52,8 @@ public:
     wordlist(const wordlist &) = delete;
     wordlist &operator=(const wordlist &) = delete;
 
-    WordlistIterator begin() { return WordlistIterator(this); }
-    WordlistIterator end() { return WordlistIterator(nullptr); }
+    WordlistIterator begin() const { return WordlistIterator(this); }
+    WordlistIterator end() const { return WordlistIterator(nullptr); }
 
     char *key;
     wordlist *next;
@@ -95,12 +96,6 @@ WordlistIterator::operator++()
 {
     w = w->next;
     return *this;
-}
-
-inline bool
-WordlistIterator::operator==(const WordlistIterator &rhs) const
-{
-    return w == rhs.w;
 }
 
 inline const auto
