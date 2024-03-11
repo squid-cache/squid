@@ -836,7 +836,10 @@ ErrorState::Dump(MemBuf * mb)
         body << "DNS ErrMsg: " << *dnsError << "\r\n";
 
     body << "TimeStamp: " << Time::FormatRfc1123(squid_curtime) <<
-        "\r\n\r\n" "ClientIP: " << src_addr << "\r\n";
+        "\r\n\r\n";
+
+    char ntoabuf[MAX_IPSTRLEN];
+    body << "ClientIP: " << src_addr.toStr(ntoabuf, MAX_IPSTRLEN) << "\r\n";
 
     if (request && request->hier.host[0] != '\0')
         body << "ServerIP: " << request->hier.host << "\r\n";
