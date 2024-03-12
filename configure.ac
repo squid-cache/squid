@@ -2363,8 +2363,6 @@ AC_CHECK_TYPE(struct sockaddr_un,AC_DEFINE(HAVE_SOCKADDR_UN,1,[The system provid
   #endif
 ])
 
-SQUID_CHECK_FUNC_STRNSTR
-
 dnl IP-Filter support requires ipf header files. These aren't
 dnl installed by default, so we need to check for them
 AS_IF([test "x$enable_ipf_transparent" != "xno"],[
