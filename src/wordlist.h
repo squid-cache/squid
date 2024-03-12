@@ -12,6 +12,28 @@
 #include "globals.h"
 #include "sbuf/List.h"
 
+#include <iterator>
+
+class wordlist;
+
+/// minimal iterator for read-only traversal of wordlist objects
+class WordlistIterator
+{
+public:
+    using value_type = const char *;
+
+    explicit WordlistIterator(const wordlist * const wl): w(wl) {}
+
+    auto operator ==(const WordlistIterator &rhs) const { return this->w == rhs.w; }
+    auto operator !=(const WordlistIterator &rhs) const { return this->w != rhs.w; }
+
+    inline value_type operator *() const;
+    inline WordlistIterator &operator++();
+
+private:
+    const wordlist *w;
+};
+
 /** A list of C-strings
  *
  * \deprecated use SBufList instead
@@ -22,12 +44,17 @@ class wordlist
     friend char *wordlistChopHead(wordlist **);
 
 public:
+    using const_iterator = WordlistIterator;
+
     wordlist() : key(nullptr), next(nullptr) {}
     // create a new wordlist node, with a copy of k as key
     explicit wordlist(const char *k) : key(xstrdup(k)), next(nullptr) {}
 
     wordlist(const wordlist &) = delete;
     wordlist &operator=(const wordlist &) = delete;
+
+    auto begin() const { return const_iterator(this); }
+    auto end() const { return const_iterator(nullptr); }
 
     char *key;
     wordlist *next;
@@ -62,8 +89,18 @@ void wordlistDestroy(wordlist **);
  */
 char *wordlistChopHead(wordlist **);
 
-/// convert a wordlist to a SBufList
-SBufList ToSBufList(wordlist *);
+inline WordlistIterator &
+WordlistIterator::operator++()
+{
+    w = w->next;
+    return *this;
+}
+
+inline WordlistIterator::value_type
+WordlistIterator::operator*() const
+{
+    return w->key;
+}
 
 #endif /* SQUID_SRC_WORDLIST_H */
 
