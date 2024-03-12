@@ -21,7 +21,6 @@ class WordlistIterator
 {
 public:
     using value_type = const char *;
-    using reference = const value_type &;
 
     explicit WordlistIterator(const wordlist * const wl): w(wl) {}
 
