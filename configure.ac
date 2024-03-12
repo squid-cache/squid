@@ -827,10 +827,9 @@ AC_ARG_ENABLE(esi,[
                   Enabling ESI will cause squid reverse proxies to be capable
                   of the Edge Acceleration Specification (www.esi.org).])
 ],[
-  SQUID_YESNO($enableval,[--enable-esi])
+  SQUID_DEFINE_BOOL(USE_SQUID_ESI,$enable_esi)
 ])
 AC_MSG_NOTICE([Enable ESI processor: ${enable_esi:=no (auto)}])
-AC_DEFINE_UNQUOTED(USE_SQUID_ESI,(HAVE_LIBEXPAT||HAVE_LIBXML2))
 
 # ESI support libraries: expat
 AH_TEMPLATE(HAVE_LIBEXPAT,[Define to 1 if you have the expat library])
