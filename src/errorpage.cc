@@ -1197,6 +1197,7 @@ ErrorState::compileLegacyCode(Build &build)
         if (Config.adminEmail && Config.onoff.emailErrData)
             Dump(&mb);
         no_urlescape = 1;
+        do_quote = 0;
         break;
 
     case 'x':
