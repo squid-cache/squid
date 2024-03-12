@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "base/CharacterSet.h"
+#include "base/IoManip.h"
 #include "cache_cf.h"
 #include "clients/forward.h"
 #include "comm/Connection.h"
@@ -859,7 +860,7 @@ ErrorState::Dump(MemBuf * mb)
     if (ftp.request) {
         body << "FTP Request: " << ftp.request << "\r\n" <<
             "FTP Reply: " << (ftp.reply ? ftp.reply : "[none]") << "\r\n" <<
-            "FTP Msg: " << ftp.server_msg << "\r\n\r\n"; // XXX this needs to be AsList(ftp.server_msg)
+            "FTP Msg: " << AsList(*(ftp.server_msg)) << "\r\n\r\n";
     }
 
     out << "&body=" << AnyP::Uri::Encode(body.buf(), encoding);
