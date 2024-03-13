@@ -1545,11 +1545,13 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
 
             os << "PINGS SENT : " << std::setw(8) << std::right << e->stats.pings_sent << "\n" <<
                 "PINGS ACKED: " << std::setw(8) << std::right << e->stats.pings_acked << " " <<
-                Math::intPercent(e->stats.pings_acked, e->stats.pings_sent) << "\n";
+                std::setw(3) << std::right <<
+                Math::intPercent(e->stats.pings_acked, e->stats.pings_sent) << "%\n";
         }
 
         os << "IGNORED    : " << std::setw(8) << std::right << e->stats.ignored_replies << " " <<
-            Math::intPercent(e->stats.ignored_replies, e->stats.pings_acked) << "\n";
+            std::setw(3) << std::right <<
+            Math::intPercent(e->stats.ignored_replies, e->stats.pings_acked) << "%\n";
 
         if (!e->options.no_query) {
             os << "Histogram of PINGS ACKED:\n";
@@ -1558,10 +1560,10 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
             if (e->options.htcp) {
                 os << "\tMisses\t" << std::setw(8) << std::right << e->htcp.counts[0] << " " <<
                     std::setw(3) << std::right <<
-                    Math::intPercent(e->htcp.counts[0], e->stats.pings_acked) << "\n" <<
+                    Math::intPercent(e->htcp.counts[0], e->stats.pings_acked) << "%\n" <<
                     "\tHits\t" << std::setw(8) << std::right << e->htcp.counts[1] << " " <<
                     std::setw(3) << std::right <<
-                    Math::intPercent(e->htcp.counts[1], e->stats.pings_acked) << "\n";
+                    Math::intPercent(e->htcp.counts[1], e->stats.pings_acked) << "%\n";
             } else {
 #endif
 
@@ -1572,7 +1574,7 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
                     os << "    " << std::setw(12) << std::setprecision(12) <<
                         std::right << icp_opcode_str[op] << " : " << std::setw(8) << std::right <<
                         e->icp.counts[op] << " " << std::setw(3) << std::right <<
-                        Math::intPercent(e->icp.counts[op], e->stats.pings_acked) << "\n";
+                        Math::intPercent(e->icp.counts[op], e->stats.pings_acked) << "%\n";
                 }
 
 #if USE_HTCP
@@ -1588,7 +1590,7 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
                 Time::FormatHttpd(e->stats.last_connect_failure) << "\n";
         }
 
-        os << "keep-alive ratio: " << Math::intPercent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent) << "\n";
+        os << "keep-alive ratio: " << Math::intPercent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent) << "%\n";
     }
 }
 
