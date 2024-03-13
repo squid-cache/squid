@@ -1503,67 +1503,65 @@ static void
 dump_peers(StoreEntry *sentry, CachePeers *peers)
 {
     char ntoabuf[MAX_IPSTRLEN];
+    PackableStream os(*sentry);
     int i;
 
     if (!peers) {
-        storeAppendPrintf(sentry, "There are no neighbors installed.\n");
+        os << "There are no neighbors installed.\n";
         return;
     }
 
     for (const auto &peer: *peers) {
         const auto e = peer.get();
         assert(e->host != nullptr);
-        storeAppendPrintf(sentry, "\n%-11.11s: %s\n",
-                          neighborTypeStr(e),
-                          e->name);
-        storeAppendPrintf(sentry, "Host       : %s/%d/%d\n",
-                          e->host,
-                          e->http_port,
-                          e->icp.port);
-        storeAppendPrintf(sentry, "Flags      :");
+        os << "\n" << std::setw(11) << std::left <<
+            neighborTypeStr(e) << ": " << e->name << "\n";
+        os << "Host       : " << e->host << '/' << e->http_port << '/' <<
+            e->icp.port << "\n";
+        os << "Flags      :";
+        os.flush();
         dump_peer_options(sentry, e);
 
-        for (i = 0; i < e->n_addresses; ++i) {
-            storeAppendPrintf(sentry, "Address[%d] : %s\n", i,
-                              e->addresses[i].toStr(ntoabuf,MAX_IPSTRLEN) );
-        }
+        for (i = 0; i < e->n_addresses; ++i)
+            os << "Address[" << i << "] : " << e->addresses[i].toStr(ntoabuf, MAX_IPSTRLEN) << "\n";
 
-        storeAppendPrintf(sentry, "Status     : %s\n",
-                          neighborUp(e) ? "Up" : "Down");
-        storeAppendPrintf(sentry, "FETCHES    : %d\n", e->stats.fetches);
-        storeAppendPrintf(sentry, "OPEN CONNS : %d\n", e->stats.conn_open);
-        storeAppendPrintf(sentry, "AVG RTT    : %d msec\n", e->stats.rtt);
+        os << "Status     : " << (neighborUp(e) ? "Up" : "Down") << "\n" <<
+            "FETCHES    : " << std::setw(8) << std::right << e->stats.fetches << "\n" <<
+            "OPEN CONNS : " << std::setw(8) << std::right << e->stats.conn_open << "\n" <<
+            "AVG RTT    : " << std::setw(8) << std::right << e->stats.rtt << " msec\n";
 
         if (!e->options.no_query) {
-            storeAppendPrintf(sentry, "LAST QUERY : %8d seconds ago\n",
-                              (int) (squid_curtime - e->stats.last_query));
+            if (e->stats.last_query > 0)
+                os << "LAST QUERY : " << std::setw(8) << std::right <<
+                    (squid_curtime - e->stats.last_query) << " seconds ago\n";
+            else
+                os << "LAST QUERY : none sent\n";
 
             if (e->stats.last_reply > 0)
-                storeAppendPrintf(sentry, "LAST REPLY : %8d seconds ago\n",
-                                  (int) (squid_curtime - e->stats.last_reply));
+                os << "LAST REPLY : " << std::setw(8) << std::right <<
+                    (squid_curtime - e->stats.last_reply) << " seconds ago\n";
             else
-                storeAppendPrintf(sentry, "LAST REPLY : none received\n");
+                os << "LAST REPLY : none received\n";
 
-            storeAppendPrintf(sentry, "PINGS SENT : %8d\n", e->stats.pings_sent);
-
-            storeAppendPrintf(sentry, "PINGS ACKED: %8d %3d%%\n",
-                              e->stats.pings_acked,
-                              Math::intPercent(e->stats.pings_acked, e->stats.pings_sent));
+            os << "PINGS SENT : " << std::setw(8) << std::right << e->stats.pings_sent << "\n" <<
+                "PINGS ACKED: " << std::setw(8) << std::right << e->stats.pings_acked << " " <<
+                Math::intPercent(e->stats.pings_acked, e->stats.pings_sent) << "\n";
         }
 
-        storeAppendPrintf(sentry, "IGNORED    : %8d %3d%%\n", e->stats.ignored_replies, Math::intPercent(e->stats.ignored_replies, e->stats.pings_acked));
+        os << "IGNORED    : " << std::setw(8) << std::right << e->stats.ignored_replies << " " <<
+            Math::intPercent(e->stats.ignored_replies, e->stats.pings_acked) << "\n";
 
         if (!e->options.no_query) {
-            storeAppendPrintf(sentry, "Histogram of PINGS ACKED:\n");
+            os << "Histogram of PINGS ACKED:\n";
 #if USE_HTCP
 
             if (e->options.htcp) {
-                storeAppendPrintf(sentry, "\tMisses\t%8d %3d%%\n",
-                                  e->htcp.counts[0],
-                                  Math::intPercent(e->htcp.counts[0], e->stats.pings_acked));
-                storeAppendPrintf(sentry, "\tHits\t%8d %3d%%\n",
-                                  e->htcp.counts[1],
-                                  Math::intPercent(e->htcp.counts[1], e->stats.pings_acked));
+                os << "\tMisses\t" << std::setw(8) << std::right << e->htcp.counts[0] << " " <<
+                    std::setw(3) << std::right <<
+                    Math::intPercent(e->htcp.counts[0], e->stats.pings_acked) << "\n" <<
+                    "\tHits\t" << std::setw(8) << std::right << e->htcp.counts[1] << " " <<
+                    std::setw(3) << std::right <<
+                    Math::intPercent(e->htcp.counts[1], e->stats.pings_acked) << "\n";
             } else {
 #endif
 
@@ -1571,10 +1569,10 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
                     if (e->icp.counts[op] == 0)
                         continue;
 
-                    storeAppendPrintf(sentry, "    %12.12s : %8d %3d%%\n",
-                                      icp_opcode_str[op],
-                                      e->icp.counts[op],
-                                      Math::intPercent(e->icp.counts[op], e->stats.pings_acked));
+                    os << "    " << std::setw(12) << std::setprecision(12) <<
+                        std::right << icp_opcode_str[op] << " : " << std::setw(8) << std::right <<
+                        e->icp.counts[op] << " " << std::setw(3) << std::right <<
+                        Math::intPercent(e->icp.counts[op], e->stats.pings_acked) << "\n";
                 }
 
 #if USE_HTCP
@@ -1586,11 +1584,11 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
         }
 
         if (e->stats.last_connect_failure) {
-            storeAppendPrintf(sentry, "Last failed connect() at: %s\n",
-                              Time::FormatHttpd(e->stats.last_connect_failure));
+            os << "Last failed connect() at: " <<
+                Time::FormatHttpd(e->stats.last_connect_failure) << "\n";
         }
 
-        storeAppendPrintf(sentry, "keep-alive ratio: %d%%\n", Math::intPercent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
+        os << "keep-alive ratio: " << Math::intPercent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent) << "\n";
     }
 }
 
