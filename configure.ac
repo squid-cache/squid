@@ -830,21 +830,12 @@ AC_MSG_NOTICE([Enable ESI processor: ${enable_esi:=no (auto)}])
 
 # ESI support libraries: expat
 SQUID_AUTO_LIB(expat,[ESI expat library],[LIBEXPAT])
-AS_IF([test "x$enable_esi" = "xyes" -a "x$with_expat" != "xno"],[
+SQUID_CHECK_LIB_WORKS(expat,[
   SQUID_STATE_SAVE(squid_expat_state)
-  PKG_CHECK_MODULES([LIBEXPAT],[expat],[],[
-    AC_CHECK_LIB([expat],[main],[LIBEXPAT_LIBS="-lexpat"])
-  ])
+  PKG_CHECK_MODULES([LIBEXPAT],[expat],[:],[:])
   CPPFLAGS="$LIBEXPAT_CFLAGS $CPPFLAGS"
   AC_CHECK_HEADERS(expat.h)
   SQUID_STATE_ROLLBACK(squid_expat_state)
-  AS_IF([test "x$LIBEXPAT_LIBS" != "x"],[
-      LIBEXPAT_LIBS="$LIBEXPAT_PATH $LIBEXPAT_LIBS"
-      AC_DEFINE(HAVE_LIBEXPAT,1,[Define to 1 if you have the expat library])
-    ],
-    [test "x$with_expat" = "xyes"],[AC_MSG_ERROR([Required library expat not found.])],
-    [AC_MSG_NOTICE([Library expat not found.])]
-  )
 ])
 
 # ESI support libraries: xml2
