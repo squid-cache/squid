@@ -10,6 +10,7 @@
 #include "compat/cppunit.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "sbuf/SBuf.h"
 #include "unitTestMain.h"
 
 #include <cstring>
@@ -471,18 +472,20 @@ TestIpAddress::testtoStr()
     anIPA.setAnyAddr();
 
     /* test AnyAddr display values */
-    CPPUNIT_ASSERT( memcmp("::", anIPA.toStr(buf,MAX_IPSTRLEN), 2) == 0 );
+    CPPUNIT_ASSERT_EQUAL(SBuf("::"), anIPA.toStrAsSBuf());
 
     inval.s_addr = htonl(0xC0A8640C);
     anIPA = inval;
 
     /* test IP display */
     CPPUNIT_ASSERT( memcmp("192.168.100.12",anIPA.toStr(buf,MAX_IPSTRLEN), 14) == 0 );
+    CPPUNIT_ASSERT_EQUAL(SBuf("192.168.100.12"), anIPA.toStrAsSBuf());
 
     anIPA.setNoAddr();
 
     /* test NoAddr display values */
     CPPUNIT_ASSERT( memcmp("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",anIPA.toStr(buf,MAX_IPSTRLEN), 39) == 0 );
+    CPPUNIT_ASSERT_EQUAL(SBuf("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"), anIPA.toStrAsSBuf());
 }
 
 void
@@ -619,6 +622,7 @@ TestIpAddress::testMasking()
     /* BUG Check: test values by display. */
     CPPUNIT_ASSERT( anIPA.toStr(buf,MAX_IPSTRLEN) != nullptr );
     CPPUNIT_ASSERT( memcmp("ffff:ffff:ffff:ffff:ffff::", buf, 26) == 0 );
+    CPPUNIT_ASSERT_EQUAL(SBuf("ffff:ffff:ffff:ffff:ffff::"), anIPA.toStrAsSBuf() );
 
     /* Test Network Bitmask from Ip::Address */
     anIPA.setNoAddr();
@@ -636,6 +640,7 @@ TestIpAddress::testMasking()
 
     /* BUG Check failing test. Masked values for display. */
     CPPUNIT_ASSERT( memcmp("255.255.240.0",anIPA.toStr(buf,MAX_IPSTRLEN), 13) == 0 );
+    CPPUNIT_ASSERT_EQUAL(SBuf("255.255.240.0"), anIPA.toStrAsSBuf());
 
     anIPA.setNoAddr();
     maskIPA.setNoAddr();
