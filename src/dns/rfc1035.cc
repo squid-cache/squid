@@ -265,14 +265,14 @@ rfc1035NameUnpack(const char *buf, size_t sz, unsigned int *off, unsigned short 
                 RFC1035_UNPACK_DEBUG;
                 return 1;
             }
-            memcpy(&s, buf + (*off), sizeof(s));
-            s = ntohs(s);
-            (*off) += sizeof(s);
-            /* Sanity check */
-            if ((*off) > sz) {
+            /* before copying compression offset value, ensure it is inside the buffer */
+            if ((*off) + sizeof(s) > sz) {
                 RFC1035_UNPACK_DEBUG;
                 return 1;
             }
+            memcpy(&s, buf + (*off), sizeof(s));
+            s = ntohs(s);
+            (*off) += sizeof(s);
             ptr = s & 0x3FFF;
             /* Make sure the pointer is inside this message */
             if (ptr >= sz) {
