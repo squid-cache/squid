@@ -825,7 +825,6 @@ ErrorState::Dump(MemBuf * mb)
          "TimeStamp: " << Time::FormatRfc1123(squid_curtime) << "\r\n" <<
          "\r\n";
 
-    char ntoabuf[MAX_IPSTRLEN];
     body << "ClientIP: " << src_addr << "\r\n";
 
     if (request && request->hier.host[0] != '\0')
