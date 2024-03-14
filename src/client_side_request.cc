@@ -1662,7 +1662,7 @@ ClientHttpRequest::checkForInternalAccess()
     if (!internalCheck(request->url.path()))
         return;
 
-    if (internalHostnameIs(SBuf(request->url.host())) && request->url.port() == getMyPort()) {
+    if (request->url.port() == getMyPort() && internalHostnameIs(SBuf(request->url.host()))) {
         debugs(33, 3, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true));
         request->flags.internal = true;
     } else if (Config.onoff.global_internal_static && internalStaticCheck(request->url.path())) {
