@@ -77,21 +77,6 @@ static unsigned short echo_port;
 
 static int NLateReplies = 0;
 
-const char *
-neighborTypeStr(const CachePeer * p)
-{
-    if (p->type == PEER_NONE)
-        return "Non-Peer";
-
-    if (p->type == PEER_SIBLING)
-        return "Sibling";
-
-    if (p->type == PEER_MULTICAST)
-        return "Multicast Group";
-
-    return "Parent";
-}
-
 CachePeer *
 whichPeer(const Ip::Address &from)
 {
@@ -455,7 +440,7 @@ void
 peerAlive(CachePeer *p)
 {
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
-        debugs(15, DBG_IMPORTANT, "Detected REVIVED " << neighborTypeStr(p) << ": " << *p);
+        debugs(15, DBG_IMPORTANT, "Detected REVIVED " << p->typeString() << ": " << *p);
         p->stats.logged_state = PEER_ALIVE;
         peerClearRR();
         if (p->standby.mgr.valid())
@@ -652,7 +637,7 @@ neighborsUdpPing(HttpRequest * request,
             /* log it once at the threshold */
 
             if (p->stats.logged_state == PEER_ALIVE) {
-                debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << *p);
+                debugs(15, DBG_IMPORTANT, "Detected DEAD " << p->typeString() << ": " << *p);
                 p->stats.logged_state = PEER_DEAD;
             }
         }
@@ -1106,7 +1091,7 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
     CachePeer *p = (CachePeer *)data;
 
     if (p->n_addresses == 0) {
-        debugs(15, Important(29), "Configuring " << neighborTypeStr(p) << " " << *p);
+        debugs(15, Important(29), "Configuring " << p->typeString() << " " << *p);
 
         if (p->type == PEER_MULTICAST)
             debugs(15, DBG_IMPORTANT, "    Multicast TTL = " << p->mcast.ttl);

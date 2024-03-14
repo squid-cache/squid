@@ -94,7 +94,7 @@ CachePeer::countFailure()
 
     if (consideredAliveByAdmin) {
         if (!tcp_up) {
-            debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(this) << ": " << name);
+            debugs(15, DBG_IMPORTANT, "Detected DEAD " << typeString() << ": " << name);
             stats.logged_state = PEER_DEAD;
         } else {
             debugs(15, 2, "additional failures needed to mark this cache_peer DEAD: " << tcp_up);
@@ -257,6 +257,18 @@ CachePeer::dumpOptions(std::ostream &os)
 
     secure.dumpCfg(os, "tls-");
     os << '\n';
+}
+
+const char *
+CachePeer::typeString() const
+{
+    static const char *typeNames[] {
+        "Non-Peer",
+        "Sibling",
+        "Parent",
+        "Multicast Group"
+    };
+    return typeNames[type];
 }
 
 std::ostream &

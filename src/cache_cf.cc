@@ -2093,7 +2093,7 @@ dump_peer(StoreEntry * entry, const char *name, const CachePeers *peers)
         storeAppendPrintf(entry, "%s %s %s %d %d name=%s",
                           name,
                           p->host,
-                          neighborTypeStr(p),
+                          p->typeString(),
                           p->http_port,
                           p->icp.port,
                           p->name);
