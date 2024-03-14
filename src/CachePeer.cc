@@ -149,7 +149,7 @@ CachePeer::dumpOptions(std::ostream &os)
     if (options.carp)
         os << " carp";
 
-#if USE_AUTHu
+#if USE_AUTH
     if (options.userhash)
         os << " userhash";
 #endif
