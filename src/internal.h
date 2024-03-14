@@ -27,7 +27,7 @@ bool internalStaticCheck(const SBuf &urlPath);
 char *internalLocalUri(const char *dir, const SBuf &name);
 char *internalRemoteUri(bool, const char *, unsigned short, const char *, const SBuf &);
 const char *internalHostname(void);
-int internalHostnameIs(const char *);
+bool internalHostnameIs(const SBuf &);
 
 /// whether the given request URL path points to a cache manager (not
 /// necessarily running on this Squid instance)

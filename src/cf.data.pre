@@ -7602,7 +7602,7 @@ DOC_START
 DOC_END
 
 NAME: hostname_aliases
-TYPE: wordlist
+TYPE: SBufList
 LOC: Config.hostnameAliases
 DEFAULT: none
 DOC_START
