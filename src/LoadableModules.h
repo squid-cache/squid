@@ -9,11 +9,13 @@
 #ifndef SQUID_SRC_LOADABLEMODULES_H
 #define SQUID_SRC_LOADABLEMODULES_H
 
+#include "sbuf/forward.h"
+
 // TODO: add reporting for cachemgr
 // TODO: add reconfiguration support
 
-class wordlist;
-void LoadableModulesConfigure(const wordlist *names);
+/// list of library filenames to load dynamically
+void LoadableModulesConfigure(const SBufList &);
 
 #endif /* SQUID_SRC_LOADABLEMODULES_H */
 
