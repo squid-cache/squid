@@ -826,7 +826,7 @@ ErrorState::Dump(MemBuf * mb)
         "\r\n";
 
     char ntoabuf[MAX_IPSTRLEN];
-    body << "ClientIP: " << src_addr.toStr(ntoabuf, MAX_IPSTRLEN) << "\r\n";
+    body << "ClientIP: " << src_addr << "\r\n";
 
     if (request && request->hier.host[0] != '\0')
         body << "ServerIP: " << request->hier.host << "\r\n";
