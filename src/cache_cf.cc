@@ -2099,6 +2099,7 @@ dump_peer(StoreEntry * entry, const char *name, const CachePeers *peers)
                           p->name);
         PackableStream s(*entry);
         p->dumpOptions(s);
+        s << "\n";
 
         if (p->access) {
             snprintf(xname, 128, "cache_peer_access %s", p->name);

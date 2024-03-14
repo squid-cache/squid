@@ -258,7 +258,6 @@ CachePeer::dumpOptions(std::ostream &os)
         os << " connection-auth=auto";
 
     secure.dumpCfg(os, "tls-");
-    os << '\n';
 }
 
 void
@@ -270,6 +269,7 @@ CachePeer::reportStatistics (std::ostream& os)
        icp.port << "\n";
     os << "Flags      :";
     dumpOptions(os);
+    os << "\n";
 
     char ntoabuf[MAX_IPSTRLEN];
     for (int i = 0; i < n_addresses; ++i)
