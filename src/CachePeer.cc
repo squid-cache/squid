@@ -265,42 +265,42 @@ void
 CachePeer::reportStatistics (std::ostream& os)
 {
     os << "\n" << std::setw(11) << std::left << typeString() <<
-        ": " << n_addresses << "\n" <<
+       ": " << n_addresses << "\n" <<
        "Host       : " << host << '/' << http_port << '/' <<
-           icp.port << "\n";
+       icp.port << "\n";
     os << "Flags      :";
     dumpOptions(os);
 
     char ntoabuf[MAX_IPSTRLEN];
     for (int i = 0; i < n_addresses; ++i)
         os << "Address[" << i << "] : " <<
-            addresses[i].toStr(ntoabuf, MAX_IPSTRLEN) << "\n";
+           addresses[i].toStr(ntoabuf, MAX_IPSTRLEN) << "\n";
 
     os << "Status     : " << (neighborUp(this) ? "Up" : "Down") << "\n" <<
-        "FETCHES    : " << stats.fetches << "\n" <<
-        "OPEN CONNS : " << stats.conn_open << "\n" <<
-        "AVG RTT    : " << stats.rtt << " msec\n";
+       "FETCHES    : " << stats.fetches << "\n" <<
+       "OPEN CONNS : " << stats.conn_open << "\n" <<
+       "AVG RTT    : " << stats.rtt << " msec\n";
 
     if (!options.no_query) {
         if (stats.last_query > 0)
             os << "LAST QUERY : " <<
-                (squid_curtime - stats.last_query) << " seconds ago\n";
+               (squid_curtime - stats.last_query) << " seconds ago\n";
         else
             os << "LAST QUERY : none sent\n";
 
         if (stats.last_reply > 0)
             os << "LAST REPLY : " <<
-                (squid_curtime - stats.last_reply) << " seconds ago\n";
+               (squid_curtime - stats.last_reply) << " seconds ago\n";
         else
             os << "LAST REPLY : none received\n";
 
         os << "PINGS SENT : "  << stats.pings_sent << "\n" <<
-            "PINGS ACKED: " << stats.pings_acked << " " <<
-            Math::intPercent(stats.pings_acked, stats.pings_sent) << "%\n";
+           "PINGS ACKED: " << stats.pings_acked << " " <<
+           Math::intPercent(stats.pings_acked, stats.pings_sent) << "%\n";
     }
 
     os << "IGNORED    : " << stats.ignored_replies << " " <<
-        Math::intPercent(stats.ignored_replies, stats.pings_acked) << "%\n";
+       Math::intPercent(stats.ignored_replies, stats.pings_acked) << "%\n";
 
     if (!options.no_query) {
         os << "Histogram of PINGS ACKED:\n";
@@ -308,19 +308,19 @@ CachePeer::reportStatistics (std::ostream& os)
 #if USE_HTCP
         if (options.htcp) {
             os << "\tMisses\t" << htcp.counts[0] << " " <<
-                Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n" <<
-                "\tHits\t" << htcp.counts[1] << " " <<
-                Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
+               Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n" <<
+               "\tHits\t" << htcp.counts[1] << " " <<
+               Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
         } else {
-    #endif
+#endif
             for (auto op : WholeEnum<icp_opcode>()) {
                 if (icp.counts[op] == 0)
                     continue;
 
                 os << "    " << std::setw(12) << std::setprecision(12) <<
-                    std::right << icp_opcode_str[op] << " : " <<
-                    icp.counts[op] << " " <<
-                    Math::intPercent(icp.counts[op], stats.pings_acked) << "%\n";
+                   std::right << icp_opcode_str[op] << " : " <<
+                   icp.counts[op] << " " <<
+                   Math::intPercent(icp.counts[op], stats.pings_acked) << "%\n";
             }
 #if USE_HTCP
         }
@@ -329,11 +329,11 @@ CachePeer::reportStatistics (std::ostream& os)
 
     if (stats.last_connect_failure) {
         os << "Last failed connect() at: " <<
-            Time::FormatHttpd(stats.last_connect_failure) << "\n";
+           Time::FormatHttpd(stats.last_connect_failure) << "\n";
     }
 
     os << "keep-alive ratio: " <<
-        Math::intPercent(stats.n_keepalives_recv, stats.n_keepalives_sent) << "%\n";
+       Math::intPercent(stats.n_keepalives_recv, stats.n_keepalives_sent) << "%\n";
 
 }
 
