@@ -821,12 +821,18 @@ ErrorState::Dump(MemBuf * mb)
 
     SBufStream body;
     body << "CacheHost: " << getMyHostname() << "\r\n" <<
-         "ErrPage: " << errorPageName(type) << "\r\n";
+        "ErrPage: " << errorPageName(type) << "\r\n" <<
+        "TimeStamp: " << Time::FormatRfc1123(squid_curtime) << "\r\n" <<
+        "\r\n";
+
+    char ntoabuf[MAX_IPSTRLEN];
+    body << "ClientIP: " << src_addr.toStr(ntoabuf, MAX_IPSTRLEN) << "\r\n";
+
+    if (request && request->hier.host[0] != '\0')
+        body << "ServerIP: " << request->hier.host << "\r\n";
 
     if (xerrno)
         body << "Err: (" << xerrno << ") " << strerror(xerrno) << "\r\n";
-    else
-        body << "Err: [none]\r\n";
 
 #if USE_AUTH
     if (auth_user_request.getRaw() && auth_user_request->denyMessage())
@@ -836,23 +842,15 @@ ErrorState::Dump(MemBuf * mb)
     if (dnsError)
         body << "DNS ErrMsg: " << *dnsError << "\r\n";
 
-    body << "TimeStamp: " << Time::FormatRfc1123(squid_curtime) <<
-        "\r\n\r\n";
-
-    char ntoabuf[MAX_IPSTRLEN];
-    body << "ClientIP: " << src_addr.toStr(ntoabuf, MAX_IPSTRLEN) << "\r\n";
-
-    if (request && request->hier.host[0] != '\0')
-        body << "ServerIP: " << request->hier.host << "\r\n";
     body << "\r\n";
 
-    body << "HTTP Request:\r\n";
 
     if (request) {
-            MemBuf r;
-            r.init();
-            request->pack(&r);
-            body << r.content();
+        body << "HTTP Request:\r\n";
+        MemBuf r;
+        r.init();
+        request->pack(&r);
+        body << r.content();
     }
 
     /* - FTP stuff */
