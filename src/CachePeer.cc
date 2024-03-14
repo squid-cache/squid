@@ -123,6 +123,142 @@ CachePeer::connectTimeout() const
     return Config.Timeout.peer_connect;
 }
 
+void
+CachePeer::dumpOptions(std::ostream &os)
+{
+    if (options.proxy_only)
+        os << " proxy-only";
+
+    if (options.no_query)
+        os << " no-query";
+
+    if (options.background_ping)
+        os << " background-ping";
+
+    if (options.no_digest)
+        os << " no-digest";
+
+    if (options.default_parent)
+        os << " default";
+
+    if (options.roundrobin)
+        os << " round-robin";
+
+    if (options.carp)
+        os << " carp";
+
+#if USE_AUTHu
+    if (options.userhash)
+        os << " userhash";
+#endif
+
+    if (options.sourcehash)
+        os << " sourcehash";
+
+    if (options.weighted_roundrobin)
+        os << " weighted-round-robin";
+
+    if (options.mcast_responder)
+        os << " multicast-responder";
+
+#if PEER_MULTICAST_SIBLINGS
+    if (options.mcast_siblings)
+        os << " multicast-siblings";
+#endif
+
+    if (weight != 1)
+        os << " weight=" << weight;
+
+    if (options.closest_only)
+        os << " closest-only";
+
+#if USE_HTCP
+    if (options.htcp)
+    {
+        os << " htcp";
+        if (options.htcp_oldsquid || options.htcp_no_clr || options.htcp_no_purge_clr || options.htcp_only_clr)
+        {
+            bool doneopts = false;
+            if (options.htcp_oldsquid)
+            {
+                os << (doneopts ? ',' : '=') << "oldsquid";
+                doneopts = true;
+            }
+            if (options.htcp_no_clr)
+            {
+                os << (doneopts ? ',' : '=') << "no-clr";
+                doneopts = true;
+            }
+            if (options.htcp_no_purge_clr)
+            {
+                os << (doneopts ? ',' : '=') << "no-purge-clr";
+                doneopts = true;
+            }
+            if (options.htcp_only_clr)
+            {
+                os << (doneopts ? ',' : '=') << "only-clr";
+                // doneopts = true; // uncomment if more opts are added
+            }
+        }
+    }
+#endif
+
+    if (options.no_netdb_exchange)
+        os << " no-netdb-exchange";
+
+#if USE_DELAY_POOLS
+    if (options.no_delay)
+        os << " no-delay";
+#endif
+
+    if (login)
+        os << " login=" << login;
+
+    if (mcast.ttl > 0)
+        os << " ttl=" << mcast.ttl;
+
+    if (connect_timeout_raw > 0)
+        os << " connect-timeout=" << connect_timeout_raw;
+
+    if (connect_fail_limit != PEER_TCP_MAGIC_COUNT)
+        os << " connect-fail-limit=" << connect_fail_limit;
+
+#if USE_CACHE_DIGESTS
+
+    if (digest_url)
+        os << " digest-url=" << digest_url;
+
+#endif
+
+    if (options.allow_miss)
+        os << " allow-miss";
+
+    if (options.no_tproxy)
+        os << " no-tproxy";
+
+    if (max_conn > 0)
+        os << " max-conn=" << max_conn;
+
+    if (standby.limit > 0)
+        os << " standby=" << standby.limit;
+
+    if (options.originserver)
+        os << " originserver";
+
+    if (domain)
+        os << " forceddomain=" << domain;
+
+    if (connection_auth == 0)
+        os << " connection-auth=off";
+    else if (connection_auth == 1)
+        os << " connection-auth=on";
+    else if (connection_auth == 2)
+        os << " connection-auth=auto";
+
+    secure.dumpCfg(os, "tls-");
+    os << '\n';
+}
+
 std::ostream &
 operator <<(std::ostream &os, const CachePeer &p)
 {

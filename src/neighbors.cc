@@ -1367,138 +1367,6 @@ neighborDumpPeers(StoreEntry * sentry)
     dump_peers(sentry, Config.peers);
 }
 
-void
-dump_peer_options(StoreEntry * sentry, CachePeer * p)
-{
-    PackableStream os(*sentry);
-
-    if (p->options.proxy_only)
-        os << " proxy-only";
-
-    if (p->options.no_query)
-        os << " no-query";
-
-    if (p->options.background_ping)
-        os << " background-ping";
-
-    if (p->options.no_digest)
-        os << " no-digest";
-
-    if (p->options.default_parent)
-        os << " default";
-
-    if (p->options.roundrobin)
-        os << " round-robin";
-
-    if (p->options.carp)
-        os << " carp";
-
-#if USE_AUTH
-    if (p->options.userhash)
-        os << " userhash";
-#endif
-
-    if (p->options.sourcehash)
-        os << " sourcehash";
-
-    if (p->options.weighted_roundrobin)
-        os << " weighted-round-robin";
-
-    if (p->options.mcast_responder)
-        os << " multicast-responder";
-
-#if PEER_MULTICAST_SIBLINGS
-    if (p->options.mcast_siblings)
-        os << " multicast-siblings";
-#endif
-
-    if (p->weight != 1)
-        os << " weight=" << p->weight;
-
-    if (p->options.closest_only)
-        os << " closest-only";
-
-#if USE_HTCP
-    if (p->options.htcp) {
-        os << " htcp";
-        if (p->options.htcp_oldsquid || p->options.htcp_no_clr || p->options.htcp_no_purge_clr || p->options.htcp_only_clr) {
-            bool doneopts = false;
-            if (p->options.htcp_oldsquid) {
-                os << (doneopts ? ',' : '=') << "oldsquid";
-                doneopts = true;
-            }
-            if (p->options.htcp_no_clr) {
-                os << (doneopts ? ',' : '=') << "no-clr";
-                doneopts = true;
-            }
-            if (p->options.htcp_no_purge_clr) {
-                os << (doneopts ? ',' : '=') << "no-purge-clr";
-                doneopts = true;
-            }
-            if (p->options.htcp_only_clr) {
-                os << (doneopts ? ',' : '=') << "only-clr";
-                //doneopts = true; // uncomment if more opts are added
-            }
-        }
-    }
-#endif
-
-    if (p->options.no_netdb_exchange)
-        os << " no-netdb-exchange";
-
-#if USE_DELAY_POOLS
-    if (p->options.no_delay)
-        os << " no-delay";
-#endif
-
-    if (p->login)
-        os << " login=" << p->login;
-
-    if (p->mcast.ttl > 0)
-        os << " ttl=" << p->mcast.ttl;
-
-    if (p->connect_timeout_raw > 0)
-        os << " connect-timeout=" << p->connect_timeout_raw;
-
-    if (p->connect_fail_limit != PEER_TCP_MAGIC_COUNT)
-        os << " connect-fail-limit=" << p->connect_fail_limit;
-
-#if USE_CACHE_DIGESTS
-
-    if (p->digest_url)
-        os << " digest-url=" << p->digest_url;
-
-#endif
-
-    if (p->options.allow_miss)
-        os << " allow-miss";
-
-    if (p->options.no_tproxy)
-        os << " no-tproxy";
-
-    if (p->max_conn > 0)
-        os << " max-conn=" << p->max_conn;
-
-    if (p->standby.limit > 0)
-        os << " standby=" << p->standby.limit;
-
-    if (p->options.originserver)
-        os << " originserver";
-
-    if (p->domain)
-        os << " forceddomain=" << p->domain;
-
-    if (p->connection_auth == 0)
-        os << " connection-auth=off";
-    else if (p->connection_auth == 1)
-        os << " connection-auth=on";
-    else if (p->connection_auth == 2)
-        os << " connection-auth=auto";
-
-    p->secure.dumpCfg(os, "tls-");
-    os << '\n';
-}
-
 static void
 dump_peers(StoreEntry *sentry, CachePeers *peers)
 {
@@ -1519,8 +1387,7 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
         os << "Host       : " << e->host << '/' << e->http_port << '/' <<
            e->icp.port << "\n";
         os << "Flags      :";
-        os.flush();
-        dump_peer_options(sentry, e);
+        e->dumpOptions(os); //dumpOptions adds a leading space
 
         for (i = 0; i < e->n_addresses; ++i)
             os << "Address[" << i << "] : " << e->addresses[i].toStr(ntoabuf, MAX_IPSTRLEN) << "\n";

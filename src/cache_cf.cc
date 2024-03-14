@@ -2097,7 +2097,8 @@ dump_peer(StoreEntry * entry, const char *name, const CachePeers *peers)
                           p->http_port,
                           p->icp.port,
                           p->name);
-        dump_peer_options(entry, p);
+        PackableStream s(*entry);
+        p->dumpOptions(s);
 
         if (p->access) {
             snprintf(xname, 128, "cache_peer_access %s", p->name);

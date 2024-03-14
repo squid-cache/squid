@@ -48,6 +48,8 @@ public:
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
+    void dumpOptions(std::ostream&);
+
     /// n-th cache_peer directive, starting with 1
     u_int index = 0;
 
