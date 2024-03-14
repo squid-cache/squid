@@ -821,9 +821,9 @@ ErrorState::Dump(MemBuf * mb)
 
     SBufStream body;
     body << "CacheHost: " << getMyHostname() << "\r\n" <<
-        "ErrPage: " << errorPageName(type) << "\r\n" <<
-        "TimeStamp: " << Time::FormatRfc1123(squid_curtime) << "\r\n" <<
-        "\r\n";
+         "ErrPage: " << errorPageName(type) << "\r\n" <<
+         "TimeStamp: " << Time::FormatRfc1123(squid_curtime) << "\r\n" <<
+         "\r\n";
 
     char ntoabuf[MAX_IPSTRLEN];
     body << "ClientIP: " << src_addr << "\r\n";
@@ -843,7 +843,6 @@ ErrorState::Dump(MemBuf * mb)
         body << "DNS ErrMsg: " << *dnsError << "\r\n";
 
     body << "\r\n";
-
 
     if (request) {
         body << "HTTP Request:\r\n";
