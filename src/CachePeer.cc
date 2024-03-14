@@ -263,7 +263,7 @@ CachePeer::dumpOptions(std::ostream &os)
 void
 CachePeer::reportStatistics (std::ostream& os)
 {
-    os << "\n" << std::setw(11) << std::left << typeString() <<
+    os << std::setw(11) << std::left << typeString() <<
        ": " << n_addresses << "\n" <<
        "Host       : " << host << '/' << http_port << '/' <<
        icp.port << "\n";

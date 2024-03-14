@@ -1365,6 +1365,7 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
         const auto e = peer.get();
         assert(e->host != nullptr);
 
+        os << "\n";
         e->reportStatistics(os);
 
     }
