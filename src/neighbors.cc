@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
-#include "base/EnumIterator.h"
 #include "base/IoManip.h"
 #include "base/PackableStream.h"
 #include "CacheDigest.h"
@@ -1355,9 +1354,7 @@ neighborDumpPeers(StoreEntry * sentry)
 static void
 dump_peers(StoreEntry *sentry, CachePeers *peers)
 {
-    char ntoabuf[MAX_IPSTRLEN];
     PackableStream os(*sentry);
-    int i;
 
     if (!peers) {
         os << "There are no neighbors installed.\n";
@@ -1367,82 +1364,9 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
     for (const auto &peer: *peers) {
         const auto e = peer.get();
         assert(e->host != nullptr);
-        os << "\n" << std::setw(11) << std::left <<
-           neighborTypeStr(e) << ": " << e->name << "\n";
-        os << "Host       : " << e->host << '/' << e->http_port << '/' <<
-           e->icp.port << "\n";
-        os << "Flags      :";
-        e->dumpOptions(os); //dumpOptions adds a leading space
 
-        for (i = 0; i < e->n_addresses; ++i)
-            os << "Address[" << i << "] : " << e->addresses[i].toStr(ntoabuf, MAX_IPSTRLEN) << "\n";
+        e->reportStatistics(os);
 
-        os << "Status     : " << (neighborUp(e) ? "Up" : "Down") << "\n" <<
-           "FETCHES    : " << std::setw(8) << std::right << e->stats.fetches << "\n" <<
-           "OPEN CONNS : " << std::setw(8) << std::right << e->stats.conn_open << "\n" <<
-           "AVG RTT    : " << std::setw(8) << std::right << e->stats.rtt << " msec\n";
-
-        if (!e->options.no_query) {
-            if (e->stats.last_query > 0)
-                os << "LAST QUERY : " << std::setw(8) << std::right <<
-                   (squid_curtime - e->stats.last_query) << " seconds ago\n";
-            else
-                os << "LAST QUERY : none sent\n";
-
-            if (e->stats.last_reply > 0)
-                os << "LAST REPLY : " << std::setw(8) << std::right <<
-                   (squid_curtime - e->stats.last_reply) << " seconds ago\n";
-            else
-                os << "LAST REPLY : none received\n";
-
-            os << "PINGS SENT : " << std::setw(8) << std::right << e->stats.pings_sent << "\n" <<
-               "PINGS ACKED: " << std::setw(8) << std::right << e->stats.pings_acked << " " <<
-               std::setw(3) << std::right <<
-               Math::intPercent(e->stats.pings_acked, e->stats.pings_sent) << "%\n";
-        }
-
-        os << "IGNORED    : " << std::setw(8) << std::right << e->stats.ignored_replies << " " <<
-           std::setw(3) << std::right <<
-           Math::intPercent(e->stats.ignored_replies, e->stats.pings_acked) << "%\n";
-
-        if (!e->options.no_query) {
-            os << "Histogram of PINGS ACKED:\n";
-#if USE_HTCP
-
-            if (e->options.htcp) {
-                os << "\tMisses\t" << std::setw(8) << std::right << e->htcp.counts[0] << " " <<
-                   std::setw(3) << std::right <<
-                   Math::intPercent(e->htcp.counts[0], e->stats.pings_acked) << "%\n" <<
-                   "\tHits\t" << std::setw(8) << std::right << e->htcp.counts[1] << " " <<
-                   std::setw(3) << std::right <<
-                   Math::intPercent(e->htcp.counts[1], e->stats.pings_acked) << "%\n";
-            } else {
-#endif
-
-                for (auto op : WholeEnum<icp_opcode>()) {
-                    if (e->icp.counts[op] == 0)
-                        continue;
-
-                    os << "    " << std::setw(12) << std::setprecision(12) <<
-                       std::right << icp_opcode_str[op] << " : " << std::setw(8) << std::right <<
-                       e->icp.counts[op] << " " << std::setw(3) << std::right <<
-                       Math::intPercent(e->icp.counts[op], e->stats.pings_acked) << "%\n";
-                }
-
-#if USE_HTCP
-
-            }
-
-#endif
-
-        }
-
-        if (e->stats.last_connect_failure) {
-            os << "Last failed connect() at: " <<
-               Time::FormatHttpd(e->stats.last_connect_failure) << "\n";
-        }
-
-        os << "keep-alive ratio: " << Math::intPercent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent) << "%\n";
     }
 }
 
