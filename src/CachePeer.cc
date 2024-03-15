@@ -279,47 +279,43 @@ CachePeer::reportStatistics (std::ostream& os)
        "OPEN CONNS : " << stats.conn_open << "\n" <<
        "AVG RTT    : " << stats.rtt << " msec\n";
 
-    if (!options.no_query) {
-        if (stats.last_query > 0)
-            os << "LAST QUERY : " <<
-               (squid_curtime - stats.last_query) << " seconds ago\n";
+    if (stats.last_query > 0)
+        os << "LAST QUERY : " <<
+           (squid_curtime - stats.last_query) << " seconds ago\n";
 
-        if (stats.last_reply > 0)
-            os << "LAST REPLY : " <<
-               (squid_curtime - stats.last_reply) << " seconds ago\n";
+    if (stats.last_reply > 0)
+        os << "LAST REPLY : " <<
+           (squid_curtime - stats.last_reply) << " seconds ago\n";
 
-        os << "PINGS SENT : "  << stats.pings_sent << "\n" <<
-           "PINGS ACKED: " << stats.pings_acked << " " <<
-           Math::intPercent(stats.pings_acked, stats.pings_sent) << "%\n";
-    }
+    os << "PINGS SENT : "  << stats.pings_sent << "\n" <<
+       "PINGS ACKED: " << stats.pings_acked << " " <<
+       Math::intPercent(stats.pings_acked, stats.pings_sent) << "%\n";
 
     os << "IGNORED    : " << stats.ignored_replies << " " <<
        Math::intPercent(stats.ignored_replies, stats.pings_acked) << "%\n";
 
-    if (!options.no_query) {
-        os << "Histogram of PINGS ACKED:\n";
+    os << "Histogram of PINGS ACKED:\n";
 
 #if USE_HTCP
-        if (options.htcp) {
-            os << "\tMisses\t" << htcp.counts[0] << " " <<
-               Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n" <<
-               "\tHits\t" << htcp.counts[1] << " " <<
-               Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
-        } else {
+    if (options.htcp) {
+        os << "\tMisses\t" << htcp.counts[0] << " " <<
+           Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n" <<
+           "\tHits\t" << htcp.counts[1] << " " <<
+           Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
+    } else {
 #endif
-            for (auto op : WholeEnum<icp_opcode>()) {
-                if (icp.counts[op] == 0)
-                    continue;
+        for (auto op : WholeEnum<icp_opcode>()) {
+            if (icp.counts[op] == 0)
+                continue;
 
-                os << "    " << std::setw(12) << std::setprecision(12) <<
-                   std::right << icp_opcode_str[op] << " : " <<
-                   icp.counts[op] << " " <<
-                   Math::intPercent(icp.counts[op], stats.pings_acked) << "%\n";
-            }
-#if USE_HTCP
+            os << "    " << std::setw(12) << std::setprecision(12) <<
+               std::right << icp_opcode_str[op] << " : " <<
+               icp.counts[op] << " " <<
+               Math::intPercent(icp.counts[op], stats.pings_acked) << "%\n";
         }
-#endif
+#if USE_HTCP
     }
+#endif
 
     if (stats.last_connect_failure) {
         os << "Last failed connect() at: " <<
