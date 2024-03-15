@@ -261,22 +261,24 @@ CachePeer::dumpOptions(std::ostream &os) const
 void
 CachePeer::reportStatistics (std::ostream& os)
 {
-    os << std::setw(11) << std::left << typeString() <<
-       ": " << n_addresses << "\n" <<
+    os <<
+       "Name       : " << name << '\n' <<
+       "Type       : " << typeString() << '\n' <<
+       "Addresses  : " << n_addresses << '\n' <<
        "Host       : " << host << '/' << http_port << '/' <<
-       icp.port << "\n";
+       icp.port << '\n';
     os << "Flags      :";
     dumpOptions(os);
-    os << "\n";
+    os << '\n';
 
     char ntoabuf[MAX_IPSTRLEN];
     for (int i = 0; i < n_addresses; ++i)
         os << "Address[" << i << "] : " <<
-           addresses[i].toStr(ntoabuf, MAX_IPSTRLEN) << "\n";
+           addresses[i].toStr(ntoabuf, MAX_IPSTRLEN) << '\n';
 
-    os << "Status     : " << (neighborUp(this) ? "Up" : "Down") << "\n" <<
-       "FETCHES    : " << stats.fetches << "\n" <<
-       "OPEN CONNS : " << stats.conn_open << "\n" <<
+    os << "Status     : " << (neighborUp(this) ? "Up" : "Down") << '\n' <<
+       "FETCHES    : " << stats.fetches << '\n' <<
+       "OPEN CONNS : " << stats.conn_open << '\n' <<
        "AVG RTT    : " << stats.rtt << " msec\n";
 
     if (stats.last_query > 0)
@@ -287,7 +289,7 @@ CachePeer::reportStatistics (std::ostream& os)
         os << "LAST REPLY : " <<
            (squid_curtime - stats.last_reply) << " seconds ago\n";
 
-    os << "PINGS SENT : "  << stats.pings_sent << "\n" <<
+    os << "PINGS SENT : "  << stats.pings_sent << '\n' <<
        "PINGS ACKED: " << stats.pings_acked << " " <<
        Math::intPercent(stats.pings_acked, stats.pings_sent) << "%\n";
 
@@ -319,7 +321,7 @@ CachePeer::reportStatistics (std::ostream& os)
 
     if (stats.last_connect_failure) {
         os << "Last failed connect() at: " <<
-           Time::FormatHttpd(stats.last_connect_failure) << "\n";
+           Time::FormatHttpd(stats.last_connect_failure) << '\n';
     }
 
     os << "keep-alive ratio: " <<
