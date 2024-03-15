@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "acl/Gadgets.h"
 #include "base/EnumIterator.h"
+#include "base/IoManip.h"
 #include "CachePeer.h"
 #include "defines.h"
 #include "neighbors.h"
@@ -177,31 +178,16 @@ CachePeer::dumpOptions(std::ostream &os) const
 #if USE_HTCP
     if (options.htcp)
     {
-        os << " htcp";
-        if (options.htcp_oldsquid || options.htcp_no_clr || options.htcp_no_purge_clr || options.htcp_only_clr)
-        {
-            bool doneopts = false;
-            if (options.htcp_oldsquid)
-            {
-                os << (doneopts ? ',' : '=') << "oldsquid";
-                doneopts = true;
-            }
-            if (options.htcp_no_clr)
-            {
-                os << (doneopts ? ',' : '=') << "no-clr";
-                doneopts = true;
-            }
-            if (options.htcp_no_purge_clr)
-            {
-                os << (doneopts ? ',' : '=') << "no-purge-clr";
-                doneopts = true;
-            }
-            if (options.htcp_only_clr)
-            {
-                os << (doneopts ? ',' : '=') << "only-clr";
-                // doneopts = true; // uncomment if more opts are added
-            }
-        }
+        std::vector<const char *> opts {};
+        if (options.htcp_oldsquid)
+            opts.push_back("oldsquid");
+        if (options.htcp_no_clr)
+            opts.push_back("no-clr");
+        if (options.htcp_no_purge_clr)
+            opts.push_back("no-purge-clr");
+        if (options.htcp_only_clr)
+            opts.push_back("only-clr");
+        os << AsList(opts).prefixedBy(" htcp=").delimitedBy(",");
     }
 #endif
 
