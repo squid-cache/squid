@@ -15,7 +15,7 @@
 class LoadableModule
 {
 public:
-    LoadableModule(const SBuf &aName);
+    explicit LoadableModule(const SBuf &aName);
     ~LoadableModule();           // unloads if loaded
 
     bool loaded() const;

@@ -17,7 +17,7 @@ LoadModule(const SBuf &fname)
 {
     debugs(1, DBG_IMPORTANT, "Loading Squid module from '" << fname << "'");
 
-    auto *m = new LoadableModule(fname);
+    const auto m = new LoadableModule(fname);
     m->load();
     debugs(1, 2, "Loaded Squid module from '" << fname << "'");
 
@@ -27,11 +27,9 @@ LoadModule(const SBuf &fname)
 void
 LoadableModulesConfigure(const SBufList &names)
 {
-    unsigned int count = 0;
-    for (const auto &which : names) {
-        LoadModule(which);
-        ++count;
+    for (const auto &name : names) {
+        LoadModule(name);
     }
-    debugs(1, Important(25), "Squid plugin modules loaded: " << count);
+    debugs(1, Important(25), "Squid plugin modules loaded: " << names.size());
 }
 

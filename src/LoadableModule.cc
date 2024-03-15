@@ -15,7 +15,7 @@
 // is seen by the static linker, the linker will complain.
 
 LoadableModule::LoadableModule(const SBuf &aName):
-        theName(aName)
+    theName(aName)
 {
     // Initialise preloaded symbol lookup table.
     LTDL_SET_PRELOADED_SYMBOLS();
