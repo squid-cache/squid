@@ -126,7 +126,7 @@ CachePeer::connectTimeout() const
 }
 
 void
-CachePeer::dumpOptions(std::ostream &os)
+CachePeer::dumpOptions(std::ostream &os) const
 {
     if (options.proxy_only)
         os << " proxy-only";
