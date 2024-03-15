@@ -227,7 +227,7 @@ public:
     char *etcHostsPath;
     char *visibleHostname;
     char *uniqueHostname;
-    wordlist *hostnameAliases;
+    SBufList hostnameAliases;
     char *errHtmlText;
 
     struct {
