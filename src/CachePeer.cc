@@ -277,26 +277,26 @@ CachePeer::reportStatistics (std::ostream& os)
            addresses[i].toStr(ntoabuf, MAX_IPSTRLEN) << '\n';
 
     os << "Status     : " << (neighborUp(this) ? "Up" : "Down") << '\n' <<
-       "FETCHES    : " << stats.fetches << '\n' <<
-       "OPEN CONNS : " << stats.conn_open << '\n' <<
-       "AVG RTT    : " << stats.rtt << " msec\n";
+       "Fetches    : " << stats.fetches << '\n' <<
+       "Open conns : " << stats.conn_open << '\n' <<
+       "Average RTT: " << stats.rtt << " msec\n";
 
     if (stats.last_query > 0)
-        os << "LAST QUERY : " <<
+        os << "Last query : " <<
            (squid_curtime - stats.last_query) << " seconds ago\n";
 
     if (stats.last_reply > 0)
-        os << "LAST REPLY : " <<
+        os << "Last reply : " <<
            (squid_curtime - stats.last_reply) << " seconds ago\n";
 
-    os << "PINGS SENT : "  << stats.pings_sent << '\n' <<
-       "PINGS ACKED: " << stats.pings_acked << " " <<
+    os << "Pings sent : "  << stats.pings_sent << '\n' <<
+       "Pings acked: " << stats.pings_acked << " " <<
        Math::intPercent(stats.pings_acked, stats.pings_sent) << "%\n";
 
-    os << "IGNORED    : " << stats.ignored_replies << " " <<
+    os << "Ignored    : " << stats.ignored_replies << " " <<
        Math::intPercent(stats.ignored_replies, stats.pings_acked) << "%\n";
 
-    os << "Histogram of PINGS ACKED:\n";
+    os << "Histogram of pings acked:\n";
 
 #if USE_HTCP
     if (options.htcp) {
