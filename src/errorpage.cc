@@ -858,7 +858,7 @@ ErrorState::Dump(MemBuf * mb)
         if (ftp.reply)
             body << "FTP Reply: " << ftp.reply << "\r\n";
         if (ftp.server_msg)
-            body << "FTP Msg: " << AsList(*ftp.server_msg) << "\r\n";
+            body << "FTP Msg: " << AsList(*ftp.server_msg).delimitedBy("\n") << "\r\n";
         body << "\r\n";
     }
 
