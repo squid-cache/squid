@@ -9766,7 +9766,7 @@ ecap_service s2 respmod_precache ecap://filters.R.us/virusFilter config=/etc/vf.
 DOC_END
 
 NAME: loadable_modules
-TYPE: wordlist
+TYPE: SBufList
 IFDEF: USE_LOADABLE_MODULES
 LOC: Config.loadable_module_names
 DEFAULT: none
