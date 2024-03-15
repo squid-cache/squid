@@ -14,7 +14,7 @@
 // TODO: add reporting for cachemgr
 // TODO: add reconfiguration support
 
-/// list of library filenames to load dynamically
+/// dynamically load named libraries, in the listed order
 void LoadableModulesConfigure(const SBufList &);
 
 #endif /* SQUID_SRC_LOADABLEMODULES_H */
