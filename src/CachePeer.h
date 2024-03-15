@@ -52,7 +52,7 @@ public:
     void reportStatistics (std::ostream& s);
 
     /// output to stream a representation of the peer's configuration options
-    void dumpOptions(std::ostream& );
+    void dumpOptions(std::ostream &) const;
 
     /// n-th cache_peer directive, starting with 1
     u_int index = 0;

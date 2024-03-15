@@ -226,10 +226,8 @@ CachePeer::dumpOptions(std::ostream &os)
         os << " connect-fail-limit=" << connect_fail_limit;
 
 #if USE_CACHE_DIGESTS
-
     if (digest_url)
         os << " digest-url=" << digest_url;
-
 #endif
 
     if (options.allow_miss)
@@ -285,14 +283,10 @@ CachePeer::reportStatistics (std::ostream& os)
         if (stats.last_query > 0)
             os << "LAST QUERY : " <<
                (squid_curtime - stats.last_query) << " seconds ago\n";
-        else
-            os << "LAST QUERY : none sent\n";
 
         if (stats.last_reply > 0)
             os << "LAST REPLY : " <<
                (squid_curtime - stats.last_reply) << " seconds ago\n";
-        else
-            os << "LAST REPLY : none received\n";
 
         os << "PINGS SENT : "  << stats.pings_sent << "\n" <<
            "PINGS ACKED: " << stats.pings_acked << " " <<
