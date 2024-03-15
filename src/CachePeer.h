@@ -54,6 +54,9 @@ public:
     /// output to stream a representation of the peer's configuration options
     void dumpOptions(std::ostream &) const;
 
+    /// return a c-string representation of the peer's type
+    const char *typeString() const;
+
     /// n-th cache_peer directive, starting with 1
     u_int index = 0;
 
@@ -71,7 +74,6 @@ public:
     char *host = nullptr;
 
     peer_t type = PEER_NONE;
-    const char * typeString() const;
 
     Ip::Address in_addr;
 
