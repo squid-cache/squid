@@ -840,24 +840,12 @@ SQUID_CHECK_LIB_WORKS(expat,[
 
 # ESI support libraries: xml2
 SQUID_AUTO_LIB(xml2,[ESI xml2 library],[LIBXML2])
-AS_IF([test "x$enable_esi" = "xyes" -a "x$with_xml2" != "xno"],[
+SQUID_CHECK_LIB_WORKS(xml2,[
   SQUID_STATE_SAVE([squid_libxml2_save])
-  PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[
-    AC_CHECK_LIB([xml2],[main],[LIBXML2_LIBS="$LIBXML2_PATH -lxml2"])
-  ])
+  PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[:],[:])
   CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
   AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
   SQUID_STATE_ROLLBACK([squid_libxml2_save])
-
-  AS_IF([test "x$LIBXML2_LIBS" != "x"],[
-    CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
-    LIBXML2_LIBS="$LIBXML2_PATH $LIBXML2_LIBS"
-    AC_DEFINE(HAVE_LIBXML2,1,[Define to 1 if you have the xml2 library])
-  ],[test "x$with_xml2" = "xyes"],[
-    AC_MSG_ERROR([Required library xml2 not found])
-  ],[
-    AC_MSG_NOTICE([Library xml2 not found.])
-  ])
 ])
 
 AS_IF([test "x$enable_esi" = "xyes" -a "x$LIBXML2_LIBS" = "x" -a "x$LIBEXPAT_LIBS" = "x"],[
