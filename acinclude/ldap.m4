@@ -99,5 +99,4 @@ AC_DEFUN([SQUID_CHECK_LDAP_API],[
   AC_SEARCH_LIBS([ldap_start_tls_s],[$LIBLDAP_NAMES],[
     AC_DEFINE(HAVE_LDAP_START_TLS_S,1,[Define to 1 if you have ldap_start_tls_s])
   ])
-  SQUID_STATE_ROLLBACK(squid_ldap_state)
 ])
