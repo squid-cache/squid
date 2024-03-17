@@ -6,7 +6,6 @@
 ##
 
 AS_IF([test "x$LIBMIT_KRB5_LIBS" != "x" -o "x$LIBHEIMDAL_KRB5_LIBS" != "x" -o "x$LIBGSS_LIBS" != "x"],[
-  AS_IF([test "x$LIBLDAP_LIBS" != "x" -a "x$LIBSASL_LIBS" != "x"],[
-    BUILD_HELPER="kerberos_ldap_group"
-  ])
+  SQUID_CHECK_SASL
+  AS_IF([test "x$LIBLDAP_LIBS" != "x"],[BUILD_HELPER="kerberos_ldap_group"])
 ])

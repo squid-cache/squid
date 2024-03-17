@@ -1209,6 +1209,7 @@ SQUID_CHECK_LIB_WORKS(gss,[
 
 SQUID_AUTO_LIB(ldap,[LDAP],[LIBLDAP])
 SQUID_CHECK_LIB_WORKS(ldap,[
+  SQUID_STATE_SAVE(squid_ldap_state)
   PKG_CHECK_MODULES([LIBLDAP],[ldap],[:],[:])
   AS_IF([test "$squid_host_os" = "mingw" -a "x$LIBLDAP_LIBS" = "x"],[
     dnl On MinGW OpenLDAP is not available, try Windows LDAP libraries
@@ -1219,14 +1220,7 @@ SQUID_CHECK_LIB_WORKS(ldap,[
   AC_CHECK_HEADERS(ldap.h lber.h)
   AC_CHECK_HEADERS(mozldap/ldap.h)
   SQUID_CHECK_LDAP_API
-])
-
-SQUID_AUTO_LIB(sasl,[Cyrus SASL],[LIBSASL])
-SQUID_CHECK_LIB_WORKS([sasl],[
-  PKG_CHECK_MODULES([LIBSASL],[libsasl2],[:],[:])
-  CPPFLAGS="$LIBSASL_CFLAGS $CPPFLAGS"
-  LIBS="$LIBSASL_LIBS $LIBS"
-  AC_CHECK_HEADERS([sasl/sasl.h sasl.h])
+  SQUID_STATE_ROLLBACK(squid_ldap_state)
 ])
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
