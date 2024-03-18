@@ -1200,7 +1200,6 @@ SQUID_CHECK_LIB_WORKS(ldap,[
     dnl TODO: use AC_CHECK_LIB
     LIBLDAP_LIBS="-lwldap32"
     AC_CHECK_HEADERS(winldap.h)
-    CXXFLAGS="${squid_arg_wno_deprecated_declarations} $CXXFLAGS"
   ])
   AC_CHECK_HEADERS(ldap.h lber.h)
   AC_CHECK_HEADERS(mozldap/ldap.h)
