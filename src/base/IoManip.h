@@ -224,7 +224,7 @@ inline auto asList(const Container &c) { return AsList<Container>(c); }
 /** output the constructed argument at most once per lifetime of the
  * AtMostOnce object. The parameter must provide operator<<(std::ostream&)
  * A const reference to the printed object is stored; it's up to the
- * caller to manage object lifetime.
+ * caller to manage that object lifetime.
  */
 template <class T>
 class AtMostOnce
@@ -244,10 +244,6 @@ class AtMostOnce
     const T& toPrint;
     bool printed = false;
 };
-
-/// a helper to ease AtMostOnce object creation
-template <class T>
-inline auto atMostOnce(const T &t) { return AtMostOnce<T>(t); }
 
 template <class T>
 inline std::ostream& operator<<(std::ostream& os, AtMostOnce<T>& a) {

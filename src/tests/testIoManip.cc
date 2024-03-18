@@ -160,7 +160,7 @@ TestIoManip::testAtMostOnce()
 {
     {
         std::ostringstream ss;
-        auto c = atMostOnce("text");
+        auto c = AtMostOnce("text");
         ss << c;
         CPPUNIT_ASSERT_EQUAL(std::string("text"), ss.str());
         ss << c;
@@ -174,7 +174,7 @@ TestIoManip::testAtMostOnce()
         // need to ensure object lifetime
         std::string s("string");
         // need a new scope as AtMostOnce intentionally can't be assigned
-        auto c = atMostOnce(s);
+        auto c = AtMostOnce(s);
         ss << c;
         CPPUNIT_ASSERT_EQUAL(std::string("string"), ss.str());
         ss << c;
