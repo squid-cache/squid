@@ -52,15 +52,13 @@ ProxyProtocol::Header::getValues(const uint32_t headerType, const char sep) cons
             return SBuf();
         auto logAddr = sourceAddress;
         logAddr.applyClientMask(Config.Addrs.client_netmask);
-        char ipBuf[MAX_IPSTRLEN];
-        return SBuf(logAddr.toStr(ipBuf, sizeof(ipBuf)));
+        return logAddr.toStrAsSBuf();
     }
 
     case Two::htPseudoDstAddr: {
         if (!hasAddresses())
             return SBuf();
-        char ipBuf[MAX_IPSTRLEN];
-        return SBuf(destinationAddress.toStr(ipBuf, sizeof(ipBuf)));
+        return destinationAddress.toStrAsSBuf();
     }
 
     case Two::htPseudoSrcPort: {

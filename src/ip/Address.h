@@ -12,6 +12,7 @@
 #define SQUID_SRC_IP_ADDRESS_H
 
 #include "ip/forward.h"
+#include "sbuf/SBuf.h"
 
 #include <iosfwd>
 #include <ostream>
@@ -211,6 +212,7 @@ public:
      \return pointer to buffer received.
      */
     char* toStr(char *buf, const unsigned int blen, int force = AF_UNSPEC) const;
+    SBuf toStrAsSBuf(int force = AF_UNSPEC) const;
 
     /** Return the ASCII equivalent of the address:port combination
      *  Provides a URL formatted version of the content.
@@ -220,7 +222,7 @@ public:
      \param len byte length of buffer available for writing.
      \return pointer to buffer received.
      */
-    char* toUrl(char *buf, unsigned int len) const;
+    char *toUrl(char *buf, unsigned int len) const;
 
     /** Return a properly hostname formatted copy of the address
      *  Provides a URL formatted version of the content.

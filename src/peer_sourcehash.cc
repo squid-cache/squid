@@ -137,14 +137,11 @@ peerSourceHashRegisterWithCacheManager(void)
 CachePeer *
 peerSourceHashSelectParent(PeerSelector *ps)
 {
-    const char *c;
     CachePeer *p = nullptr;
     unsigned int user_hash = 0;
     unsigned int combined_hash;
     double score;
     double high_score = 0;
-    const char *key = nullptr;
-    char ntoabuf[MAX_IPSTRLEN];
 
     if (SourceHashPeers().empty())
         return nullptr;
@@ -152,13 +149,13 @@ peerSourceHashSelectParent(PeerSelector *ps)
     assert(ps);
     HttpRequest *request = ps->request;
 
-    key = request->client_addr.toStr(ntoabuf, sizeof(ntoabuf));
+    const auto key = request->client_addr.toStrAsSBuf();
 
     /* calculate hash key */
     debugs(39, 2, "peerSourceHashSelectParent: Calculating hash for " << key);
 
-    for (c = key; *c != 0; ++c)
-        user_hash += ROTATE_LEFT(user_hash, 19) + *c;
+    for (auto c : key)
+        user_hash += ROTATE_LEFT(user_hash, 19) + c;
 
     /* select CachePeer */
     for (const auto &tp: SourceHashPeers()) {
