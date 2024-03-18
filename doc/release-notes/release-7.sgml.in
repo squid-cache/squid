@@ -33,6 +33,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<item>Cache Manager changes
 	<item>Removed purge tool
 	<item>Remove deprecated languages
+	<item>Forwarded HTTP Extension support
 </itemize>
 
 <p>Most user-facing changes are reflected in squid.conf (see further below).
@@ -103,6 +104,36 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 <p>See <url url="https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes"> for
    the full ISO-639 list. HTTP uses the 2-letter (set 1) codes.
 
+<sect1>Forwarded HTTP Extension support
+<p>Details in <url url="https://tools.ietf.org/html/rfc7239" name="RFC 7239: Forwarded HTTP Extension">
+
+<p>The <em>Forwarded</em> extension has been standardized to replace
+   <em>X-Forwarded-For</em> and similar custom headers. This release contains
+   initial support for managing this HTTP extension in Squid with the
+   <em>http_header_forwarded</em> directive.
+
+<p>The default behaviour is <em>transparent</em> - to relay any <em>Forwarded</em>
+   or <em>X-Forwarded-For</em> headers from the client unchanged to the server.
+   Unlike <em>X-Forwarded-For</em> the default is not to expose client IP in the
+   <em>Forwarded</em>.
+
+<p>To send client IP and other details in the <em>Forwarded</em> header, the
+   <em>header_add</em> directive and ACLs can be used to control what gets
+   sent and on which traffic:
+<verb>
+   acl internal dstdomain .example.com
+   acl ipv6 src ipv6
+
+   request_header_add Forwarded "for=%>a;by=%>la:%>lp" !ipv6 internal
+   request_header_add Forwarded "for=[%>a];by=[%>la]:%>lp" ipv6 internal
+
+   request_header_add Forwarded "for=%>a" !ipv6 !internal
+   request_header_add Forwarded "for=[%>a]" ipv6 !internal
+</verb>
+
+<p>The <em>delete</em> option can be selected to remove all <em>X-Forwarded-For</em>
+   and <em>Forwarded</em> headers from sent requests.
+
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
@@ -118,7 +149,21 @@ This section gives an account of those changes in three categories:
 <sect1>New directives<label id="newdirectives">
 <p>
 <descrip>
-	<p>No new directives in this version.
+	<tag>http_header_forwarded</tag>
+	<p>New directive to customize handling of Forwarded headers.
+	   See <url url="https://tools.ietf.org/html/rfc7239" name="RFC 7239">
+           for details of this HTTP extension.
+	<p>Option <em>delete</em> removes both Forwarded and
+	   X-Forwarded-For headers from traffic.
+	<p>Option <em>transparent</em> relays any Forwarded and
+	   X-Forwarded-For headers without changes.
+	<p>Option <em>truncate</em> removes any existing
+	   Forwarded and X-Forwarded-For headers, then adds
+	   a new X-Forwarded-For header with Client IP.
+	<p>Deprecated Option <em>off</em> removes Forwarded headers and
+	   appends 'unknown' to X-Forwarded-For.
+	<p>Deprecated Option <em>on</em> (the default) removes Forwarded
+	   headers and appends Client IP to X-Forwarded-For.
 
 </descrip>
 
@@ -150,6 +195,9 @@ This section gives an account of those changes in three categories:
 	<tag>cachemgr_passwd</tag>
 	<p>Removed the <em>non_peers</em> action. See the Cache Manager
 	<ref id="mgr" name="section"> for details.
+
+	<tag>forwarded_for</tag>
+	<p>Replaced by <em>http_header_forwarded</em> directive.
 
 </descrip>
 
