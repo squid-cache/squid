@@ -83,8 +83,8 @@ DigestAttrs[] = {
 static const auto&
 DigestFieldsLookupTable()
 {
-    static const auto table = new LookupTable<http_digest_attr_type>(DIGEST_INVALID_ATTR, DigestAttrs);
-    return *table;
+    static const auto *t = new LookupTable<http_digest_attr_type>(DIGEST_INVALID_ATTR, DigestAttrs);
+    return *t;
 }
 
 /*
