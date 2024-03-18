@@ -80,8 +80,6 @@ DigestAttrs[] = {
     {nullptr, DIGEST_INVALID_ATTR}
 };
 
-LookupTable<http_digest_attr_type>
-DigestFieldsLookupTable(DIGEST_INVALID_ATTR, DigestAttrs);
 
 /*
  *
@@ -774,6 +772,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
         }
 
         /* find type */
+        static const LookupTable<http_digest_attr_type> DigestFieldsLookupTable(DIGEST_INVALID_ATTR, DigestAttrs);
         const http_digest_attr_type t = DigestFieldsLookupTable.lookup(keyName);
 
         switch (t) {
