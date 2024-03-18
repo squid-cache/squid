@@ -158,12 +158,30 @@ TestIoManip::testAsHex()
 void
 TestIoManip::testAtMostOnce()
 {
-    std::ostringstream ss;
-    auto c = atMostOnce("text");
-    ss << c;
-    CPPUNIT_ASSERT_EQUAL(std::string("text"), ss.str());
-    ss << c;
-    CPPUNIT_ASSERT_EQUAL(std::string("text"), ss.str());}
+    {
+        std::ostringstream ss;
+        auto c = atMostOnce("text");
+        ss << c;
+        CPPUNIT_ASSERT_EQUAL(std::string("text"), ss.str());
+        ss << c;
+        ss << c;
+        CPPUNIT_ASSERT_EQUAL(std::string("text"), ss.str());
+    }
+
+    {
+        std::ostringstream ss;
+
+        // need to ensure object lifetime
+        std::string s("string");
+        // need a new scope as AtMostOnce intentionally can't be assigned
+        auto c = atMostOnce(s);
+        ss << c;
+        CPPUNIT_ASSERT_EQUAL(std::string("string"), ss.str());
+        ss << c;
+        ss << c;
+        CPPUNIT_ASSERT_EQUAL(std::string("string"), ss.str());
+    }
+}
 
 int
 main(int argc, char *argv[])
