@@ -36,14 +36,14 @@ static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
 
 /* does name lookup, returns page_id */
 err_type
-aclGetDenyInfoPage(AclDenyInfoList ** head, const std::optional<SBuf> &optionalName, const int redirect_allowed)
+aclGetDenyInfoPage(AclDenyInfoList ** head, const Acl::Answer &answer, const int redirect_allowed)
 {
-    if (!optionalName) {
+    if (!answer.lastCheckedName) {
         debugs(28, 3, "ERR_NONE due to a NULL name");
         return ERR_NONE;
     }
 
-    const auto &name = optionalName.value();
+    const auto &name = answer.lastCheckDescription();
 
     AclDenyInfoList *A = nullptr;
 

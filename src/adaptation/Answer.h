@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_ADAPTATION_ANSWER_H
 #define SQUID_SRC_ADAPTATION_ANSWER_H
 
+#include "acl/Acl.h"
 #include "adaptation/forward.h"
 #include "http/forward.h"
 #include "sbuf/SBuf.h"
@@ -33,6 +34,9 @@ public:
     static Answer Error(bool final); ///< create an akError answer
     static Answer Forward(Http::Message *aMsg); ///< create an akForward answer
     static Answer Block(const SBuf &aRule); ///< create an akBlock answer
+
+    /// creates an Acl::Answer from akBlock answer
+    Acl::Answer blockedToChecklistAnswer() const;
 
     std::ostream &print(std::ostream &os) const;
 

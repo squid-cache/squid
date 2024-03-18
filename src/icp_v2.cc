@@ -427,9 +427,6 @@ icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int 
 void
 icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 {
-    static const SBuf none("none");
-    debugs(12, 2, "icpDenyAccess: Access Denied for " << from << " by " << AclMatchedName.value_or(none) << ".");
-
     if (clientdbCutoffDenied(from)) {
         /*
          * count this DENIED query in the clientdb, even though
@@ -444,14 +441,17 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 bool
 icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
 {
-    /* absent any explicit rules, we deny all */
-    if (!Config.accessList.icp)
-        return false;
-
-    ACLFilledChecklist checklist(Config.accessList.icp, icp_request, nullptr);
-    checklist.src_addr = from;
-    checklist.my_addr.setNoAddr();
-    return checklist.fastCheck().allowed();
+    auto deniedAnswer = Acl::Answer(ACCESS_DENIED);
+    if (Config.accessList.icp) {
+        ACLFilledChecklist checklist(Config.accessList.icp, icp_request, nullptr);
+        checklist.src_addr = from;
+        checklist.my_addr.setNoAddr();
+        if (checklist.fastCheck().allowed())
+            return true;
+        deniedAnswer = checklist.currentAnswer();
+    } // else deny all if absent any explicit rules
+    debugs(12, 2, "Access Denied for " << from << " by " << deniedAnswer.lastCheckDescription() << ".");
+    return false;
 }
 
 HttpRequest *

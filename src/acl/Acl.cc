@@ -27,8 +27,6 @@
 #include <algorithm>
 #include <map>
 
-std::optional<SBuf> AclMatchedName;
-
 namespace Acl {
 
 /// Acl::Node type name comparison functor
@@ -115,6 +113,13 @@ Acl::SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey)
                         Here());
 }
 
+SBuf
+Acl::Answer::lastCheckDescription() const
+{
+    static const SBuf none("[no-ACL]");
+    return lastCheckedName.value_or(none);
+}
+
 /* Acl::ParsingContext */
 
 ScopedId
@@ -174,10 +179,7 @@ Acl::Node::matches(ACLChecklist *checklist) const
 {
     debugs(28, 5, "checking " << name);
 
-    // XXX: AclMatchedName does not contain a matched ACL name when the acl
-    // does not match. It contains the last (usually leaf) ACL name checked
-    // (or is NULL if no ACLs were checked).
-    AclMatchedName = std::make_optional(name);
+    checklist->setLastCheckedName(name);
 
     int result = 0;
     if (!checklist->hasAle() && requiresAle()) {
@@ -442,7 +444,6 @@ Acl::Node::~Node()
 {
     debugs(28, 3, "freeing ACL " << name);
     safe_free(cfgline);
-    AclMatchedName.reset(); // in case it was pointing to our name
 }
 
 void

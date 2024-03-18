@@ -57,7 +57,7 @@ Acl::InnerNode::lineParse()
             ++t;
 
         debugs(28, 3, "looking for ACL " << t);
-        auto *a = Acl::Node::FindByName(SBuf(t));
+        auto a = Acl::Node::FindByName(SBuf(t));
 
         if (a == nullptr) {
             debugs(28, DBG_CRITICAL, "ERROR: ACL not found: " << t);

@@ -40,6 +40,15 @@ Adaptation::Answer::Block(const SBuf &aRule)
     return answer;
 }
 
+Acl::Answer
+Adaptation::Answer::blockedToChecklistAnswer() const
+{
+    assert(kind == akBlock);
+    Acl::Answer answer(ACCESS_DENIED);
+    answer.lastCheckedName = ruleId;
+    return answer;
+}
+
 std::ostream &
 Adaptation::Answer::print(std::ostream &os) const
 {
