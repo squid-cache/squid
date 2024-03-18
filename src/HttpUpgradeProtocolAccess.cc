@@ -17,7 +17,6 @@
 
 #include <algorithm>
 
-
 ProtocolView::ProtocolView(const char * const start, const size_t len):
     ProtocolView(SBuf(start, len))
 {
