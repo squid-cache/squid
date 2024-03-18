@@ -82,7 +82,7 @@ private:
     typedef std::deque<NamedGuard> NamedGuards;
 
     /// pseudonym to specify rules for "all other protocols"
-    static const SBuf ProtoOther;
+    static const inline SBuf& ProtoOther();
 
     /// rules governing upgrades to explicitly named protocols
     NamedGuards namedGuards;
@@ -98,7 +98,7 @@ HttpUpgradeProtocolAccess::forEach(const Visitor &visitor) const
     for (const auto &namedGuard: namedGuards)
         visitor(namedGuard.protocol, namedGuard.guard);
     if (other)
-        visitor(ProtoOther, other);
+        visitor(ProtoOther(), other);
 }
 
 template <typename Visitor>
@@ -114,7 +114,14 @@ HttpUpgradeProtocolAccess::forApplicable(const ProtocolView &offer, const Visito
         seenApplicable = true; // may already be true
     }
     if (!seenApplicable && other) // OTHER is applicable if named rules were not
-        (void)visitor(ProtoOther, other);
+        (void)visitor(ProtoOther(), other);
+}
+
+const inline SBuf &
+HttpUpgradeProtocolAccess::ProtoOther()
+{
+    const static auto *b = new SBuf("OTHER");
+    return *b;
 }
 
 #endif /* SQUID_SRC_HTTPUPGRADEPROTOCOLACCESS_H */

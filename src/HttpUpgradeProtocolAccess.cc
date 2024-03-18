@@ -17,7 +17,6 @@
 
 #include <algorithm>
 
-const SBuf HttpUpgradeProtocolAccess::ProtoOther("OTHER");
 
 ProtocolView::ProtocolView(const char * const start, const size_t len):
     ProtocolView(SBuf(start, len))
@@ -53,7 +52,7 @@ HttpUpgradeProtocolAccess::configureGuard(ConfigParser &parser)
     if (!rawProto)
         throw TextException(ToSBuf("expected a protocol name or ", ProtoOther), Here());
 
-    if (ProtoOther.cmp(rawProto) == 0) {
+    if (ProtoOther().cmp(rawProto) == 0) {
         aclParseAccessLine(cfg_directive, parser, &other);
         return;
     }
