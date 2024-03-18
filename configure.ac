@@ -1200,11 +1200,22 @@ SQUID_CHECK_LIB_WORKS(ldap,[
     dnl TODO: use AC_CHECK_LIB
     LIBLDAP_LIBS="-lwldap32"
     AC_CHECK_HEADERS(winldap.h)
+    CXXFLAGS="${squid_arg_wno_deprecated_declarations} $CXXFLAGS"
   ])
   AC_CHECK_HEADERS(ldap.h lber.h)
   AC_CHECK_HEADERS(mozldap/ldap.h)
   SQUID_CHECK_LDAP_API
   SQUID_STATE_ROLLBACK(squid_ldap_state)
+])
+
+SQUID_AUTO_LIB(sasl,[LIBSASL],[libsasl2])
+SQUID_CHECK_LIB_WORKS([sasl],[
+  SQUID_STATE_SAVE(sasl_state)
+  PKG_CHECK_MODULES([LIBSASL],[libsasl2],[:],[:])
+  CPPFLAGS="$LIBSASL_CFLAGS $CPPFLAGS"
+  LIBS="$LIBSASL_LIBS $LIBS"
+  AC_CHECK_HEADERS([sasl/sasl.h sasl.h])
+  SQUID_STATE_ROLLBACK(sasl_state)
 ])
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
