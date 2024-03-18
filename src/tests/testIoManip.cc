@@ -19,10 +19,12 @@ class TestIoManip: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestIoManip);
     CPPUNIT_TEST(testAsHex);
+    CPPUNIT_TEST(testAtMostOnce);
     CPPUNIT_TEST_SUITE_END();
 
 protected:
     void testAsHex();
+    void testAtMostOnce();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestIoManip );
@@ -152,6 +154,16 @@ TestIoManip::testAsHex()
     CPPUNIT_ASSERT_EQUAL(std::string("03...4"), ss.str());
     resetStream(ss);
 }
+
+void
+TestIoManip::testAtMostOnce()
+{
+    std::ostringstream ss;
+    auto c = atMostOnce("text");
+    ss << c;
+    CPPUNIT_ASSERT_EQUAL(std::string("text"), ss.str());
+    ss << c;
+    CPPUNIT_ASSERT_EQUAL(std::string("text"), ss.str());}
 
 int
 main(int argc, char *argv[])

@@ -220,5 +220,39 @@ operator <<(std::ostream &os, const AsList<Container> &manipulator)
 template <typename Container>
 inline auto asList(const Container &c) { return AsList<Container>(c); }
 
+
+/** output the constructed argument at most once per lifetime of the
+ * AtMostOnce object. The parameter must provide operator<<(std::ostream&)
+ * A const reference to the printed object is stored; it's up to the
+ * caller to manage object lifetime.
+ */
+template <class T>
+class AtMostOnce
+{
+    public:
+    explicit AtMostOnce(const T& t) : toPrint(t), printed(false) {}
+
+    std::ostream& print(std::ostream& os) {
+        if (!printed) {
+            os << toPrint;
+            printed = true;
+        }
+        return os;
+    }
+
+    private:
+    const T& toPrint;
+    bool printed = false;
+};
+
+/// a helper to ease AtMostOnce object creation
+template <class T>
+inline auto atMostOnce(const T &t) { return AtMostOnce<T>(t); }
+
+template <class T>
+inline std::ostream& operator<<(std::ostream& os, AtMostOnce<T>& a) {
+    return a.print(os);
+}
+
 #endif /* SQUID_SRC_BASE_IOMANIP_H */
 
