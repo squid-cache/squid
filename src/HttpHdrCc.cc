@@ -62,6 +62,13 @@ ccTypeByName(const SBuf &name) {
     return table->lookup(name);
 }
 
+static auto
+ccNameByType(HttpHdrCcType type) {
+    if (type < HttpHdrCcType::CC_ENUM_END)
+        return CcAttrs()[static_cast<int>(type)].name;
+    return "*invalid hdrcc*";
+}
+
 std::vector<HttpHeaderFieldStat> ccHeaderStats(HttpHdrCcType::CC_ENUM_END);
 
 /// used to walk a table of http_header_cc_type structs
@@ -350,11 +357,7 @@ httpHdrCcStatDumper(StoreEntry * sentry, int, double val, double, int count)
 std::ostream &
 operator<< (std::ostream &s, HttpHdrCcType c)
 {
-    const unsigned char ic = static_cast<int>(c);
-    if (c < HttpHdrCcType::CC_ENUM_END)
-        s << CcAttrs()[ic].name << '[' << ic << ']' ;
-    else
-        s << "*invalid hdrcc* [" << ic << ']';
+    s << ccNameByType(c) << '[' << static_cast<int>(c) << ']';
     return s;
 }
 
