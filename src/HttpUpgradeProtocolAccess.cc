@@ -49,7 +49,7 @@ HttpUpgradeProtocolAccess::configureGuard(ConfigParser &parser)
 {
     const auto rawProto = parser.NextToken();
     if (!rawProto)
-        throw TextException(ToSBuf("expected a protocol name or ", ProtoOther), Here());
+        throw TextException(ToSBuf("expected a protocol name or ", ProtoOther()), Here());
 
     if (ProtoOther().cmp(rawProto) == 0) {
         aclParseAccessLine(cfg_directive, parser, &other);
