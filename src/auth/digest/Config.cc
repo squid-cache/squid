@@ -66,11 +66,10 @@ enum http_digest_attr_type {
     DIGEST_INVALID_ATTR
 };
 
-inline static const auto&
+static const auto &
 digestFieldsLookupTable()
 {
-    static const LookupTable<http_digest_attr_type>::Record
-    DigestAttrs[] = {
+    static const LookupTable<http_digest_attr_type>::Record DigestAttrs[] = {
         {"username", DIGEST_USERNAME},
         {"realm", DIGEST_REALM},
         {"qop", DIGEST_QOP},
