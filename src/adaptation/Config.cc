@@ -30,24 +30,30 @@ int Adaptation::Config::service_iteration_limit = 16;
 int Adaptation::Config::send_client_ip = false;
 int Adaptation::Config::send_username = false;
 int Adaptation::Config::use_indirect_client = true;
-static const char *protectedFieldNamesRaw[] = {
-    "Allow",
-    "Date",
-    "Encapsulated",
-    "ISTag",
-    "Max-Connections",
-    "Methods",
-    "Opt-body-type",
-    "Options-TTL",
-    "Preview",
-    "Service",
-    "Service-ID",
-    "Transfer-Complete",
-    "Transfer-Ignore",
-    "Transfer-Preview"
-};
-static const Notes::Keys protectedFieldNames(std::begin(protectedFieldNamesRaw), std::end(protectedFieldNamesRaw));
-Notes Adaptation::Config::metaHeaders("ICAP header", &protectedFieldNames);
+
+Notes&
+Adaptation::Config::metaHeaders()
+{
+    static const char *protectedFieldNamesRaw[] = {
+        "Allow",
+        "Date",
+        "Encapsulated",
+        "ISTag",
+        "Max-Connections",
+        "Methods",
+        "Opt-body-type",
+        "Options-TTL",
+        "Preview",
+        "Service",
+        "Service-ID",
+        "Transfer-Complete",
+        "Transfer-Ignore",
+        "Transfer-Preview"
+    };
+    static const Notes::Keys protectedFieldNames(std::begin(protectedFieldNamesRaw), std::end(protectedFieldNamesRaw));
+    static auto metaHeaders = new Notes("ICAP header", &protectedFieldNames);
+    return *metaHeaders;
+}
 bool Adaptation::Config::needHistory = false;
 
 Adaptation::ServiceConfig*
