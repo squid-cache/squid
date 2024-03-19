@@ -46,6 +46,13 @@ CcAttrs() {
         {"Other,", HttpHdrCcType::CC_OTHER}, /* ',' will protect from matches */
         {nullptr, HttpHdrCcType::CC_ENUM_END}
     };
+    static auto invariantChecked = false;
+    if (!invariantChecked) {
+        for (unsigned int j = 0; attrsList[j].name != nullptr; ++j) {
+            assert(static_cast<decltype(j)>(attrsList[j].id) == j);
+        }
+        invariantChecked = true;
+    }
     return attrsList;
 }
 
@@ -69,11 +76,6 @@ operator++ (HttpHdrCcType &aHeader)
 void
 httpHdrCcInitModule(void)
 {
-    const auto attrs = CcAttrs();
-    // check invariant on initialization table
-    for (unsigned int j = 0; attrs[j].name != nullptr; ++j) {
-        assert(static_cast<decltype(j)>(attrs[j].id) == j);
-    }
 }
 
 void
