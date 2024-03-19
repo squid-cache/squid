@@ -82,8 +82,8 @@ digestFieldsLookupTable()
         {"response", DIGEST_RESPONSE},
         {nullptr, DIGEST_INVALID_ATTR}
     };
-    static const auto proto = new LookupTable<http_digest_attr_type>(DIGEST_INVALID_ATTR, DigestAttrs);
-    return *proto;
+    static const auto table = new LookupTable<http_digest_attr_type>(DIGEST_INVALID_ATTR, DigestAttrs);
+    return *table;
 }
 
 /*
