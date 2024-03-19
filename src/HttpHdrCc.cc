@@ -25,26 +25,31 @@
 #include <vector>
 #include <ostream>
 
-// invariant: row[j].id == j
-static LookupTable<HttpHdrCcType>::Record CcAttrs[] = {
-    {"public", HttpHdrCcType::CC_PUBLIC},
-    {"private", HttpHdrCcType::CC_PRIVATE},
-    {"no-cache", HttpHdrCcType::CC_NO_CACHE},
-    {"no-store", HttpHdrCcType::CC_NO_STORE},
-    {"no-transform", HttpHdrCcType::CC_NO_TRANSFORM},
-    {"must-revalidate", HttpHdrCcType::CC_MUST_REVALIDATE},
-    {"proxy-revalidate", HttpHdrCcType::CC_PROXY_REVALIDATE},
-    {"max-age", HttpHdrCcType::CC_MAX_AGE},
-    {"s-maxage", HttpHdrCcType::CC_S_MAXAGE},
-    {"max-stale", HttpHdrCcType::CC_MAX_STALE},
-    {"min-fresh", HttpHdrCcType::CC_MIN_FRESH},
-    {"only-if-cached", HttpHdrCcType::CC_ONLY_IF_CACHED},
-    {"stale-if-error", HttpHdrCcType::CC_STALE_IF_ERROR},
-    {"immutable", HttpHdrCcType::CC_IMMUTABLE},
-    {"Other,", HttpHdrCcType::CC_OTHER}, /* ',' will protect from matches */
-    {nullptr, HttpHdrCcType::CC_ENUM_END}
-};
-LookupTable<HttpHdrCcType> ccLookupTable(HttpHdrCcType::CC_OTHER,CcAttrs);
+static const auto&
+CcAttrs() {
+    // invariant: row[j].id == j
+    static LookupTable<HttpHdrCcType>::Record attrsList[] = {
+        {"public", HttpHdrCcType::CC_PUBLIC},
+        {"private", HttpHdrCcType::CC_PRIVATE},
+        {"no-cache", HttpHdrCcType::CC_NO_CACHE},
+        {"no-store", HttpHdrCcType::CC_NO_STORE},
+        {"no-transform", HttpHdrCcType::CC_NO_TRANSFORM},
+        {"must-revalidate", HttpHdrCcType::CC_MUST_REVALIDATE},
+        {"proxy-revalidate", HttpHdrCcType::CC_PROXY_REVALIDATE},
+        {"max-age", HttpHdrCcType::CC_MAX_AGE},
+        {"s-maxage", HttpHdrCcType::CC_S_MAXAGE},
+        {"max-stale", HttpHdrCcType::CC_MAX_STALE},
+        {"min-fresh", HttpHdrCcType::CC_MIN_FRESH},
+        {"only-if-cached", HttpHdrCcType::CC_ONLY_IF_CACHED},
+        {"stale-if-error", HttpHdrCcType::CC_STALE_IF_ERROR},
+        {"immutable", HttpHdrCcType::CC_IMMUTABLE},
+        {"Other,", HttpHdrCcType::CC_OTHER}, /* ',' will protect from matches */
+        {nullptr, HttpHdrCcType::CC_ENUM_END}
+    };
+    return attrsList;
+}
+
+LookupTable<HttpHdrCcType> ccLookupTable(HttpHdrCcType::CC_OTHER,CcAttrs());
 std::vector<HttpHeaderFieldStat> ccHeaderStats(HttpHdrCcType::CC_ENUM_END);
 
 /// used to walk a table of http_header_cc_type structs
@@ -60,9 +65,10 @@ operator++ (HttpHdrCcType &aHeader)
 void
 httpHdrCcInitModule(void)
 {
+    const auto attrs = CcAttrs();
     // check invariant on initialization table
-    for (unsigned int j = 0; CcAttrs[j].name != nullptr; ++j) {
-        assert(static_cast<decltype(j)>(CcAttrs[j].id) == j);
+    for (unsigned int j = 0; attrs[j].name != nullptr; ++j) {
+        assert(static_cast<decltype(j)>(attrs[j].id) == j);
     }
 }
 
@@ -258,7 +264,7 @@ HttpHdrCc::packInto(Packable * p) const
         if (isSet(flag) && flag != HttpHdrCcType::CC_OTHER) {
 
             /* print option name for all options */
-            p->appendf((pcount ? ", %s": "%s"), CcAttrs[flag].name);
+            p->appendf((pcount ? ", %s": "%s"), CcAttrs()[flag].name);
 
             /* for all options having values, "=value" after the name */
             switch (flag) {
@@ -333,7 +339,7 @@ httpHdrCcStatDumper(StoreEntry * sentry, int, double val, double, int count)
     extern const HttpHeaderStat *dump_stat; /* argh! */
     const int id = static_cast<int>(val);
     const bool valid_id = id >= 0 && id < static_cast<int>(HttpHdrCcType::CC_ENUM_END);
-    const char *name = valid_id ? CcAttrs[id].name : "INVALID";
+    const char *name = valid_id ? CcAttrs()[id].name : "INVALID";
 
     if (count || valid_id)
         storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
@@ -345,7 +351,7 @@ operator<< (std::ostream &s, HttpHdrCcType c)
 {
     const unsigned char ic = static_cast<int>(c);
     if (c < HttpHdrCcType::CC_ENUM_END)
-        s << CcAttrs[ic].name << '[' << ic << ']' ;
+        s << CcAttrs()[ic].name << '[' << ic << ']' ;
     else
         s << "*invalid hdrcc* [" << ic << ']';
     return s;
