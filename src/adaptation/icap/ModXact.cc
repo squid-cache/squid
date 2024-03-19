@@ -42,6 +42,8 @@
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ModXact);
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ModXactLauncher);
 
+static constexpr size_t TheBackupLimit = BodyPipe::MaxCapacity;
+
 const SBuf Adaptation::Icap::ChunkExtensionValueParser::UseOriginalBodyName("use-original-body");
 
 Adaptation::Icap::ModXact::State::State()
@@ -1649,7 +1651,7 @@ void Adaptation::Icap::ModXact::decideOnPreview()
     // we decided to do preview, now compute its size
 
     // cannot preview more than we can backup
-    size_t ad = min(wantedSize, BodyPipe::MaxCapacity);
+    size_t ad = min(wantedSize, TheBackupLimit);
 
     if (!virginBody.expected())
         ad = 0;
@@ -1704,7 +1706,7 @@ bool Adaptation::Icap::ModXact::canBackupEverything() const
 
     // or should we have a different backup limit?
     // note that '<' allows for 0-termination of the "full" backup buffer
-    return virginBody.size() < BodyPipe::MaxCapacity;
+    return virginBody.size() < TheBackupLimit;
 }
 
 // Decide whether this transaction can be retried if pconn fails
@@ -1848,8 +1850,8 @@ void Adaptation::Icap::ModXact::estimateVirginBody()
         Must(msg->body_pipe == virgin.body_pipe);
         Must(virgin.body_pipe->setConsumerIfNotLate(this));
 
-        // make sure BodyPipe::MaxCapacity is in-sync with the buffer size
-        Must(BodyPipe::MaxCapacity <= static_cast<size_t>(msg->body_pipe->buf().max_capacity));
+        // make sure TheBackupLimit is in-sync with the buffer size
+        Must(TheBackupLimit <= static_cast<size_t>(msg->body_pipe->buf().max_capacity));
     } else {
         debugs(93, 6, "does not expect virgin body");
         Must(msg->body_pipe == nullptr);
