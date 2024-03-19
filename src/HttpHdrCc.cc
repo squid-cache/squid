@@ -272,7 +272,7 @@ HttpHdrCc::packInto(Packable * p) const
         if (isSet(flag) && flag != HttpHdrCcType::CC_OTHER) {
 
             /* print option name for all options */
-            p->appendf((pcount ? ", %s": "%s"), CcAttrs()[flag].name);
+            p->appendf((pcount ? ", %s": "%s"), ccNameByType(flag));
 
             /* for all options having values, "=value" after the name */
             switch (flag) {
@@ -345,9 +345,9 @@ void
 httpHdrCcStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     extern const HttpHeaderStat *dump_stat; /* argh! */
-    const int id = static_cast<int>(val);
-    const bool valid_id = id >= 0 && id < static_cast<int>(HttpHdrCcType::CC_ENUM_END);
-    const char *name = valid_id ? CcAttrs()[id].name : "INVALID";
+    const auto id = static_cast<HttpHdrCcType>(val);
+    const bool valid_id = id >= HttpHdrCcType::CC_PUBLIC && id < HttpHdrCcType::CC_ENUM_END;
+    auto name = valid_id ? ccNameByType(id) : "INVALID";
 
     if (count || valid_id)
         storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
