@@ -25,11 +25,11 @@
 #include <limits>
 
 /// shared memory segment path to use for Transients map
-static const auto&
+inline static const auto&
 MapLabel()
 {
-    static const auto* ml = new SBuf("transients_map");
-    return *ml;
+    static const auto proto = new SBuf("transients_map");
+    return *proto;
 }
 
 Transients::Transients(): map(nullptr), locals(nullptr)
