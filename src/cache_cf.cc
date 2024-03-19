@@ -4723,8 +4723,8 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
         *ftp_epsv = nullptr;
 
         if (ftpEpsvDeprecatedAction == Acl::Answer(ACCESS_DENIED)) {
-            static const SBuf all("all");
-            if (auto a = Acl::Node::FindByName(all))
+            static const auto all = new SBuf("all");
+            if (auto a = Acl::Node::FindByName(*all))
                 ParseAclWithAction(ftp_epsv, ftpEpsvDeprecatedAction, "ftp_epsv", a);
             else {
                 self_destruct();

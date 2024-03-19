@@ -441,16 +441,18 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 bool
 icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
 {
-    auto deniedAnswer = Acl::Answer(ACCESS_DENIED);
-    if (Config.accessList.icp) {
-        ACLFilledChecklist checklist(Config.accessList.icp, icp_request, nullptr);
-        checklist.src_addr = from;
-        checklist.my_addr.setNoAddr();
-        if (checklist.fastCheck().allowed())
-            return true;
-        deniedAnswer = checklist.currentAnswer();
-    } // else deny all if absent any explicit rules
-    debugs(12, 2, "Access Denied for " << from << " by " << deniedAnswer.lastCheckDescription() << ".");
+    if (!Config.accessList.icp) {
+        debugs(12, 2, "Access Denied due to lack of ICP access rules.");
+        return false;
+    }
+
+    ACLFilledChecklist checklist(Config.accessList.icp, icp_request, nullptr);
+    checklist.src_addr = from;
+    checklist.my_addr.setNoAddr();
+    if (checklist.fastCheck().allowed())
+        return true;
+
+    debugs(12, 2, "Access Denied for " << from << " by " << checklist.currentAnswer().lastCheckDescription() << ".");
     return false;
 }
 

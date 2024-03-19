@@ -116,8 +116,8 @@ Acl::SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey)
 SBuf
 Acl::Answer::lastCheckDescription() const
 {
-    static const SBuf none("[no-ACL]");
-    return lastCheckedName.value_or(none);
+    static const auto none = new SBuf("[no-ACL]");
+    return lastCheckedName.value_or(*none);
 }
 
 /* Acl::ParsingContext */

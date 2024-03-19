@@ -74,6 +74,8 @@ ACLChecklist::preCheck(const char *what)
     assert(!occupied_);
     occupied_ = true;
     asyncLoopDepth_ = 0;
+
+    lastCheckedName.reset();
     finished_ = false;
 }
 
