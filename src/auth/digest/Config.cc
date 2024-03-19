@@ -66,19 +66,25 @@ enum http_digest_attr_type {
     DIGEST_INVALID_ATTR
 };
 
-static const LookupTable<http_digest_attr_type>::Record
-DigestAttrs[] = {
-    {"username", DIGEST_USERNAME},
-    {"realm", DIGEST_REALM},
-    {"qop", DIGEST_QOP},
-    {"algorithm", DIGEST_ALGORITHM},
-    {"uri", DIGEST_URI},
-    {"nonce", DIGEST_NONCE},
-    {"nc", DIGEST_NC},
-    {"cnonce", DIGEST_CNONCE},
-    {"response", DIGEST_RESPONSE},
-    {nullptr, DIGEST_INVALID_ATTR}
-};
+inline static const auto&
+digestFieldsLookupTable()
+{
+    static const LookupTable<http_digest_attr_type>::Record
+    DigestAttrs[] = {
+        {"username", DIGEST_USERNAME},
+        {"realm", DIGEST_REALM},
+        {"qop", DIGEST_QOP},
+        {"algorithm", DIGEST_ALGORITHM},
+        {"uri", DIGEST_URI},
+        {"nonce", DIGEST_NONCE},
+        {"nc", DIGEST_NC},
+        {"cnonce", DIGEST_CNONCE},
+        {"response", DIGEST_RESPONSE},
+        {nullptr, DIGEST_INVALID_ATTR}
+    };
+    static const auto proto = new LookupTable<http_digest_attr_type>(DIGEST_INVALID_ATTR, DigestAttrs);
+    return *proto;
+}
 
 /*
  *
@@ -771,8 +777,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
         }
 
         /* find type */
-        static const auto digestFieldsLookupTable = new LookupTable<http_digest_attr_type>(DIGEST_INVALID_ATTR, DigestAttrs);
-        const auto t = digestFieldsLookupTable->lookup(keyName);
+        const auto t = digestFieldsLookupTable().lookup(keyName);
 
         switch (t) {
         case DIGEST_USERNAME:
