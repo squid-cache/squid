@@ -25,7 +25,7 @@
 #include <limits>
 
 /// shared memory segment path to use for Transients map
-inline static const auto &
+static const auto &
 MapLabel()
 {
     static const auto label = new SBuf("transients_map");
