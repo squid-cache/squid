@@ -56,11 +56,12 @@ CcAttrs() {
     return attrsList;
 }
 
-static const auto&
-ccLookupTable() {
+static auto
+ccTypeByName(const SBuf &name) {
     const static auto table = new LookupTable<HttpHdrCcType>(HttpHdrCcType::CC_OTHER, CcAttrs());
-    return *table;
+    return table->lookup(name);
 }
+
 std::vector<HttpHeaderFieldStat> ccHeaderStats(HttpHdrCcType::CC_ENUM_END);
 
 /// used to walk a table of http_header_cc_type structs
@@ -119,7 +120,7 @@ HttpHdrCc::parse(const String & str)
         }
 
         /* find type */
-        const HttpHdrCcType type = ccLookupTable().lookup(SBuf(item,nlen));
+        const HttpHdrCcType type = ccTypeByName(SBuf(item, nlen));
 
         // ignore known duplicate directives
         if (isSet(type)) {
