@@ -14,9 +14,13 @@
 
 #include <iostream>
 
+MemBlobStats MemBlob::Stats;
 InstanceIdDefinitions(MemBlob, "blob");
 
 /* MemBlobStats */
+
+MemBlobStats::MemBlobStats(): alloc(0), live(0), append(0), liveBytes(0)
+{}
 
 MemBlobStats&
 MemBlobStats::operator += (const MemBlobStats& s)
@@ -68,8 +72,8 @@ MemBlob::~MemBlob()
 {
     if (mem || capacity)
         memFreeBuf(capacity, mem);
-    Stats().liveBytes -= capacity;
-    --Stats().live;
+    Stats.liveBytes -= capacity;
+    --Stats.live;
     SBufStats::RecordMemBlobSizeAtDestruct(capacity);
 
     debugs(MEMBLOB_DEBUGSECTION,9, "destructed, this="
@@ -95,9 +99,9 @@ MemBlob::memAlloc(const size_type minSize)
     debugs(MEMBLOB_DEBUGSECTION, 8,
            id << " memAlloc: requested=" << minSize <<
            ", received=" << capacity);
-    ++Stats().live;
-    ++Stats().alloc;
-    Stats().liveBytes += capacity;
+    ++Stats.live;
+    ++Stats.alloc;
+    Stats.liveBytes += capacity;
 }
 
 void
@@ -105,7 +109,7 @@ MemBlob::appended(const size_type n)
 {
     Must(willFit(n));
     size += n;
-    ++Stats().append;
+    ++Stats.append;
 }
 
 void
@@ -117,7 +121,7 @@ MemBlob::append(const char *source, const size_type n)
         memmove(mem + size, source, n);
         size += n;
     }
-    ++Stats().append;
+    ++Stats.append;
 }
 
 void
@@ -144,7 +148,7 @@ MemBlob::consume(const size_type rawN)
 const MemBlobStats&
 MemBlob::GetStats()
 {
-    return Stats();
+    return Stats;
 }
 
 std::ostream&

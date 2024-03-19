@@ -19,16 +19,18 @@
 class MemBlobStats
 {
 public:
+    MemBlobStats();
+
     /// dumps class-wide statistics
     std::ostream& dump(std::ostream& os) const;
 
     MemBlobStats& operator += (const MemBlobStats&);
 
 public:
-    uint64_t alloc = 0;     ///< number of MemBlob instances created so far
-    uint64_t live = 0;      ///< number of MemBlob instances currently alive
-    uint64_t append = 0;    ///< number of MemBlob::append() calls
-    uint64_t liveBytes = 0; ///< the total size of currently allocated storage
+    uint64_t alloc;     ///< number of MemBlob instances created so far
+    uint64_t live;      ///< number of MemBlob instances currently alive
+    uint64_t append;    ///< number of MemBlob::append() calls
+    uint64_t liveBytes; ///< the total size of currently allocated storage
 };
 
 /** Refcountable, fixed-size, content-agnostic memory buffer.
@@ -113,7 +115,7 @@ public:
     const InstanceId<MemBlob> id; ///< blob identifier
 
 private:
-    static inline MemBlobStats& Stats(); ///< class-wide statistics
+    static MemBlobStats Stats; ///< class-wide statistics
 
     void memAlloc(const size_type memSize);
 
@@ -127,13 +129,6 @@ private:
     MemBlob(const MemBlob &);
     MemBlob& operator =(const MemBlob &);
 };
-
-inline MemBlobStats&
-MemBlob::Stats()
-{
-    static auto stats = new MemBlobStats();
-    return *stats;
-}
 
 #endif /* SQUID_SRC_SBUF_MEMBLOB_H */
 
