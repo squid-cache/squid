@@ -127,7 +127,7 @@ HttpHdrCc::parse(const String & str)
         }
 
         /* find type */
-        const HttpHdrCcType type = ccTypeByName(SBuf(item, nlen));
+        const auto type = ccTypeByName(SBuf(item, nlen));
 
         // ignore known duplicate directives
         if (isSet(type)) {
