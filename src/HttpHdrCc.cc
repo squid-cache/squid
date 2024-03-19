@@ -72,12 +72,6 @@ operator++ (HttpHdrCcType &aHeader)
     return aHeader;
 }
 
-/// Module initialization hook
-void
-httpHdrCcInitModule(void)
-{
-}
-
 void
 HttpHdrCc::clear()
 {
