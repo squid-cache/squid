@@ -194,6 +194,9 @@ This section gives an account of those changes in three categories:
 	<tag>--without-psapi</tag>
 	<p>Disable auto-detection of Windows PSAPI library.
 
+	<tag>--without-sasl</tag>
+	<p>Disable auto-detection of Cyrus SASL (or compatible) library.
+
 	<tag>CPPFLAGS=-DINCOMING_FACTOR=</tag>
 	<p>Control the listening sockets responsiveness with poll(2) and select(2).
 	   The higher the INCOMING_FACTOR, the slower the algorithm will
