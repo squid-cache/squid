@@ -30,7 +30,12 @@
 namespace ProxyProtocol {
 namespace One {
 /// magic octet prefix for PROXY protocol version 1
-static const SBuf Magic("PROXY", 5);
+static const auto&
+Magic()
+{
+    static const auto magic = new SBuf("PROXY", 5);
+    return *magic;
+}
 /// extracts PROXY protocol v1 header from the given buffer
 static Parsed Parse(const SBuf &buf);
 
@@ -41,7 +46,12 @@ static void ParseAddresses(Parser::Tokenizer &tok, Header::Pointer &header);
 
 namespace Two {
 /// magic octet prefix for PROXY protocol version 2
-static const SBuf Magic("\x0D\x0A\x0D\x0A\x00\x0D\x0A\x51\x55\x49\x54\x0A", 12);
+static const auto &
+Magic()
+{
+    static const auto magic = new SBuf("\x0D\x0A\x0D\x0A\x00\x0D\x0A\x51\x55\x49\x54\x0A", 12);
+    return *magic;
+}
 /// extracts PROXY protocol v2 header from the given buffer
 static Parsed Parse(const SBuf &buf);
 
@@ -115,7 +125,7 @@ ProxyProtocol::One::Parse(const SBuf &buf)
     Parser::Tokenizer tok(buf);
 
     static const SBuf::size_type maxHeaderLength = 107; // including CRLF
-    static const auto maxInteriorLength = maxHeaderLength - Magic.length() - 2;
+    static const auto maxInteriorLength = maxHeaderLength - Magic().length() - 2;
     static const auto interiorChars = CharacterSet::CR.complement().rename("non-CR");
     SBuf interior;
 
@@ -244,8 +254,8 @@ ProxyProtocol::Parse(const SBuf &buf)
     Parser::Tokenizer magicTok(buf);
 
     const auto parser =
-        magicTok.skip(Two::Magic) ? &Two::Parse :
-        magicTok.skip(One::Magic) ? &One::Parse :
+        magicTok.skip(Two::Magic()) ? &Two::Parse :
+        magicTok.skip(One::Magic()) ? &One::Parse :
         nullptr;
 
     if (parser) {
@@ -254,7 +264,7 @@ ProxyProtocol::Parse(const SBuf &buf)
     }
 
     // detect and terminate other protocols
-    if (buf.length() >= Two::Magic.length()) {
+    if (buf.length() >= Two::Magic().length()) {
         // PROXY/1.0 magic is shorter, so we know that
         // the input does not start with any PROXY magic
         throw TexcHere("PROXY protocol error: invalid magic");
