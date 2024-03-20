@@ -250,6 +250,13 @@ private:
     bool printed = false;
 };
 
+/// Prints AtMostOnce argument if needed. The argument is not constant to
+/// prevent wrong usage:
+///
+/// \code
+/// /* Compiler error: cannot bind non-const lvalue reference to an rvalue */
+/// os << AtMostOnce(x);
+/// \endcode
 template <class T>
 inline std::ostream& operator<<(std::ostream& os, AtMostOnce<T>& a) {
     return a.print(os);
