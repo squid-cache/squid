@@ -160,23 +160,23 @@ TestIoManip::testAtMostOnce()
 {
     {
         std::ostringstream ss;
-        auto c = AtMostOnce("text");
-        ss << c;
-        CPPUNIT_ASSERT_EQUAL(std::string("text"), ss.str());
-        ss << c;
-        ss << c;
-        CPPUNIT_ASSERT_EQUAL(std::string("text"), ss.str());
+        auto textOnce = AtMostOnce("text1");
+        ss << textOnce;
+        CPPUNIT_ASSERT_EQUAL(std::string("text1"), ss.str());
+        ss << textOnce;
+        ss << textOnce;
+        CPPUNIT_ASSERT_EQUAL(std::string("text1"), ss.str());
     }
 
     {
         std::ostringstream ss;
-        const std::string s("string");
-        auto c = AtMostOnce(s);
-        ss << c;
-        CPPUNIT_ASSERT_EQUAL(std::string("string"), ss.str());
-        ss << c;
-        ss << c;
-        CPPUNIT_ASSERT_EQUAL(std::string("string"), ss.str());
+        const std::string s("text2");
+        auto textOnce = AtMostOnce(s);
+        ss << textOnce;
+        CPPUNIT_ASSERT_EQUAL(std::string("text2"), ss.str());
+        ss << textOnce;
+        ss << textOnce;
+        CPPUNIT_ASSERT_EQUAL(std::string("text2"), ss.str());
     }
 }
 
