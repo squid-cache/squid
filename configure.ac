@@ -1207,7 +1207,7 @@ SQUID_CHECK_LIB_WORKS(ldap,[
   SQUID_STATE_ROLLBACK(squid_ldap_state)
 ])
 
-SQUID_AUTO_LIB(sasl,[LIBSASL],[libsasl2])
+SQUID_AUTO_LIB(sasl,[Cyrus SASL],[LIBSASL])
 SQUID_CHECK_LIB_WORKS([sasl],[
   SQUID_STATE_SAVE(sasl_state)
   PKG_CHECK_MODULES([LIBSASL],[libsasl2],[:],[:])

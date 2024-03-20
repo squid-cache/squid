@@ -5,6 +5,4 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AS_IF([test "x$LIBSASL_LIBS" != "x"],[
-    BUILD_HELPER="SASL"
-])
+AS_IF([test "x$LIBSASL_LIBS" != "x"],[BUILD_HELPER="SASL"])
