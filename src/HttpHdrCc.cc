@@ -9,6 +9,7 @@
 /* DEBUG: section 65    HTTP Cache Control Header */
 
 #include "squid.h"
+#include "base/EnumIterator.h"
 #include "base/LookupTable.h"
 #include "HttpHdrCc.h"
 #include "HttpHeader.h"
@@ -25,34 +26,35 @@
 #include <vector>
 #include <ostream>
 
-static const auto&
+constexpr LookupTable<HttpHdrCcType>::Record attrsList[] = {
+    {"public", HttpHdrCcType::CC_PUBLIC},
+    {"private", HttpHdrCcType::CC_PRIVATE},
+    {"no-cache", HttpHdrCcType::CC_NO_CACHE},
+    {"no-store", HttpHdrCcType::CC_NO_STORE},
+    {"no-transform", HttpHdrCcType::CC_NO_TRANSFORM},
+    {"must-revalidate", HttpHdrCcType::CC_MUST_REVALIDATE},
+    {"proxy-revalidate", HttpHdrCcType::CC_PROXY_REVALIDATE},
+    {"max-age", HttpHdrCcType::CC_MAX_AGE},
+    {"s-maxage", HttpHdrCcType::CC_S_MAXAGE},
+    {"max-stale", HttpHdrCcType::CC_MAX_STALE},
+    {"min-fresh", HttpHdrCcType::CC_MIN_FRESH},
+    {"only-if-cached", HttpHdrCcType::CC_ONLY_IF_CACHED},
+    {"stale-if-error", HttpHdrCcType::CC_STALE_IF_ERROR},
+    {"immutable", HttpHdrCcType::CC_IMMUTABLE},
+    {"Other,", HttpHdrCcType::CC_OTHER}, /* ',' will protect from matches */
+    {nullptr, HttpHdrCcType::CC_ENUM_END}
+};
+
+constexpr const auto &
 CcAttrs() {
-    // invariant: row[j].id == j
-    static LookupTable<HttpHdrCcType>::Record attrsList[] = {
-        {"public", HttpHdrCcType::CC_PUBLIC},
-        {"private", HttpHdrCcType::CC_PRIVATE},
-        {"no-cache", HttpHdrCcType::CC_NO_CACHE},
-        {"no-store", HttpHdrCcType::CC_NO_STORE},
-        {"no-transform", HttpHdrCcType::CC_NO_TRANSFORM},
-        {"must-revalidate", HttpHdrCcType::CC_MUST_REVALIDATE},
-        {"proxy-revalidate", HttpHdrCcType::CC_PROXY_REVALIDATE},
-        {"max-age", HttpHdrCcType::CC_MAX_AGE},
-        {"s-maxage", HttpHdrCcType::CC_S_MAXAGE},
-        {"max-stale", HttpHdrCcType::CC_MAX_STALE},
-        {"min-fresh", HttpHdrCcType::CC_MIN_FRESH},
-        {"only-if-cached", HttpHdrCcType::CC_ONLY_IF_CACHED},
-        {"stale-if-error", HttpHdrCcType::CC_STALE_IF_ERROR},
-        {"immutable", HttpHdrCcType::CC_IMMUTABLE},
-        {"Other,", HttpHdrCcType::CC_OTHER}, /* ',' will protect from matches */
-        {nullptr, HttpHdrCcType::CC_ENUM_END}
-    };
-    static auto invariantChecked = false;
-    if (!invariantChecked) {
-        for (unsigned int j = 0; attrsList[j].name != nullptr; ++j) {
-            assert(static_cast<decltype(j)>(attrsList[j].id) == j);
-        }
-        invariantChecked = true;
-    }
+    // TODO: Move these compile-time checks into LookupTable
+    ConstexprForEnum<HttpHdrCcType::CC_PUBLIC, HttpHdrCcType::CC_ENUM_END>([](const auto ev) {
+        const auto idx = static_cast<std::underlying_type<HttpHdrCcType>::type>(ev);
+        // invariant: each row has a name except the last one
+        static_assert(!attrsList[idx].name == (ev == HttpHdrCcType::CC_ENUM_END));
+        // invariant: row[ev].id == ev
+        static_assert(attrsList[idx].id == ev);
+    });
     return attrsList;
 }
 
