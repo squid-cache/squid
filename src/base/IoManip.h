@@ -220,7 +220,6 @@ operator <<(std::ostream &os, const AsList<Container> &manipulator)
 template <typename Container>
 inline auto asList(const Container &c) { return AsList<Container>(c); }
 
-
 /** output the constructed argument at most once per lifetime of the
  * AtMostOnce object. The parameter must provide operator<<(std::ostream&)
  * A const reference to the printed object is stored; it's up to the
@@ -229,7 +228,7 @@ inline auto asList(const Container &c) { return AsList<Container>(c); }
 template <class T>
 class AtMostOnce
 {
-    public:
+public:
     explicit AtMostOnce(const T& t) : toPrint(t), printed(false) {}
 
     std::ostream& print(std::ostream& os) {
@@ -240,7 +239,7 @@ class AtMostOnce
         return os;
     }
 
-    private:
+private:
     const T& toPrint;
     bool printed = false;
 };
