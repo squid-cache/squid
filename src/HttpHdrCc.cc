@@ -17,6 +17,7 @@
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
 #include "sbuf/SBuf.h"
+#include "SquidMath.h"
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"
@@ -64,13 +65,18 @@ ccTypeByName(const SBuf &name) {
     return table->lookup(name);
 }
 
-static auto
-ccNameByType(HttpHdrCcType type) {
+/// Safely converts an integer into a Cache-Control directive name.
+/// \returns std::nullopt if the given integer is not a valid index of a named attrsList entry
+template <typename RawId>
+static std::optional<const char *>
+ccNameByType(const RawId rawId)
+{
     // TODO: Store a by-ID index in (and move this functionality into) LookupTable.
-    const auto idx = static_cast<std::underlying_type<HttpHdrCcType>::type>(type);
-    if (type < HttpHdrCcType::CC_ENUM_END)
+    if (!Less(rawId, 0) && Less(rawId, int(HttpHdrCcType::CC_ENUM_END))) {
+        const auto idx = static_cast<std::underlying_type<HttpHdrCcType>::type>(rawId);
         return CcAttrs()[idx].name;
-    return "*invalid hdrcc*";
+    }
+    return std::nullopt;
 }
 
 std::vector<HttpHeaderFieldStat> ccHeaderStats(HttpHdrCcType::CC_ENUM_END);
@@ -276,7 +282,7 @@ HttpHdrCc::packInto(Packable * p) const
         if (isSet(flag) && flag != HttpHdrCcType::CC_OTHER) {
 
             /* print option name for all options */
-            p->appendf((pcount ? ", %s": "%s"), ccNameByType(flag));
+            p->appendf((pcount ? ", %s": "%s"), *ccNameByType(flag));
 
             /* for all options having values, "=value" after the name */
             switch (flag) {
@@ -349,19 +355,17 @@ void
 httpHdrCcStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     extern const HttpHeaderStat *dump_stat; /* argh! */
-    const auto id = static_cast<HttpHdrCcType>(val);
-    const bool valid_id = id >= HttpHdrCcType::CC_PUBLIC && id < HttpHdrCcType::CC_ENUM_END;
-    auto name = valid_id ? ccNameByType(id) : "INVALID";
-
-    if (count || valid_id)
+    const int id = static_cast<int>(val);
+    const auto name = ccNameByType(id);
+    if (count || name)
         storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
-                          id, name, count, xdiv(count, dump_stat->ccParsedCount));
+                          id, name.value_or("INVALID"), count, xdiv(count, dump_stat->ccParsedCount));
 }
 
 std::ostream &
 operator<< (std::ostream &s, HttpHdrCcType c)
 {
-    s << ccNameByType(c) << '[' << static_cast<int>(c) << ']';
+    s << ccNameByType(c).value_or("*invalid hdrcc*") << '[' << static_cast<int>(c) << ']';
     return s;
 }
 
