@@ -245,7 +245,7 @@ public:
     }
 
 private:
-    const T& toPrint;
+    const T &toPrint;
     bool printed = false;
 };
 
