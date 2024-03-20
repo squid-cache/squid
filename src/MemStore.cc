@@ -25,7 +25,7 @@
 #include "tools.h"
 
 /// shared memory segment path to use for MemStore maps
-static const SBuf MapLabel("cache_mem_map");
+static const char* MapLabel = "cache_mem_map";
 /// shared memory segment path to use for the free slices index
 static const char *SpaceLabel = "cache_mem_space";
 /// shared memory segment path to use for IDs of shared pages with slice data
@@ -196,7 +196,7 @@ MemStore::init()
     extras = shm_old(Extras)(ExtrasLabel);
 
     Must(!map);
-    map = new MemStoreMap(MapLabel);
+    map = new MemStoreMap(SBuf(MapLabel));
     map->cleaner = this;
 }
 
@@ -1040,7 +1040,7 @@ MemStoreRr::create()
     Must(!spaceOwner);
     spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel, spaceConfig);
     Must(!mapOwner);
-    mapOwner = MemStoreMap::Init(MapLabel, entryLimit);
+    mapOwner = MemStoreMap::Init(SBuf(MapLabel), entryLimit);
     Must(!extrasOwner);
     extrasOwner = shm_new(MemStoreMapExtras)(ExtrasLabel, entryLimit);
 }
