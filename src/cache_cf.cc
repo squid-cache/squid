@@ -606,6 +606,8 @@ parseConfigFileOrThrow(const char *file_name)
 
     configFreeMemory();
 
+    Config.lifecycleStart();
+
     ACLMethodData::ThePurgeCount = 0;
     default_all();
 

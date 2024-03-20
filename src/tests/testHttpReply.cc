@@ -28,8 +28,6 @@ protected:
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpReply );
 
-class SquidConfig Config;
-
 /* stub functions to link successfully */
 
 #include "MemObject.h"
