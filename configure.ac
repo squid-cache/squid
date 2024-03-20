@@ -1223,6 +1223,16 @@ SQUID_CHECK_LIB_WORKS(ldap,[
   SQUID_STATE_ROLLBACK(squid_ldap_state)
 ])
 
+SQUID_AUTO_LIB(sasl,[Cyrus SASL],[LIBSASL])
+SQUID_CHECK_LIB_WORKS([sasl],[
+  SQUID_STATE_SAVE(sasl_state)
+  PKG_CHECK_MODULES([LIBSASL],[libsasl2],[:],[:])
+  CPPFLAGS="$LIBSASL_CFLAGS $CPPFLAGS"
+  LIBS="$LIBSASL_LIBS $LIBS"
+  AC_CHECK_HEADERS([sasl/sasl.h sasl.h])
+  SQUID_STATE_ROLLBACK(sasl_state)
+])
+
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
 SQUID_CHECK_LIB_WORKS(systemd,[
   LIBS="$LIBS $LIBSYSTEMD_PATH"
