@@ -220,15 +220,21 @@ operator <<(std::ostream &os, const AsList<Container> &manipulator)
 template <typename Container>
 inline auto asList(const Container &c) { return AsList<Container>(c); }
 
-/** output the constructed argument at most once per lifetime of the
- * AtMostOnce object. The parameter must provide operator<<(std::ostream&)
- * A const reference to the printed object is stored; it's up to the
- * caller to manage that object lifetime.
- */
+/// Helps print T object at most once per AtMostOnce<T> object lifetime.
+/// T objects are printed to std::ostream using operator "<<".
+///
+/// \code
+/// auto headerOnce = AtMostOnce("Transaction Details:\n");
+/// if (detailOne)
+///     os << headerOnce << *detailOne;
+/// if (const auto detailTwo = findAnotherDetail())
+///     os << headerOnce << *detailTwo;
+/// \endcode
 template <class T>
 class AtMostOnce
 {
 public:
+    /// caller must ensure `t` lifetime extends to the last use of this AtMostOnce instance
     explicit AtMostOnce(const T& t) : toPrint(t), printed(false) {}
 
     std::ostream& print(std::ostream& os) {
