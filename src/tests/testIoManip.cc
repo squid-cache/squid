@@ -170,6 +170,9 @@ TestIoManip::testAtMostOnce()
 
     {
         std::ostringstream ss;
+        // Cannot create std::string when creating textOnce because the string may be
+        // destroyed before we are done with textOnce:
+        // auto textOnce = AtMostOnce(std::string("do not do this"));
         const std::string s("text2");
         auto textOnce = AtMostOnce(s);
         ss << textOnce;
