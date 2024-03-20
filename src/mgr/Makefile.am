@@ -47,6 +47,7 @@ libmgr_la_SOURCES = \
 	QueryParams.h \
 	Registration.cc \
 	Registration.h \
+	ReportStream.h \
 	Request.cc \
 	Request.h \
 	Response.cc \

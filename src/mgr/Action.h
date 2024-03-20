@@ -14,6 +14,8 @@
 #include "ipc/forward.h"
 #include "mgr/forward.h"
 
+#include <iosfwd>
+
 class StoreEntry;
 
 namespace Mgr
@@ -76,11 +78,16 @@ protected:
     /// calculate and keep local action-specific information
     virtual void collect() {}
 
+    /// write manager report output to a stream.
+    virtual void report(ReportStream &) {}
+
     /** start writing action-specific info to Store entry;
      * may collect info during dump, especially if collect() did nothing
      * non-atomic() actions may continue writing asynchronously after returning
+     *
+     * \deprecated implement report() instead
      */
-    virtual void dump(StoreEntry *) {}
+    virtual void dump(StoreEntry *);
 
 private:
     const CommandPointer cmd; ///< the command that caused this action

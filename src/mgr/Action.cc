@@ -9,6 +9,7 @@
 /* DEBUG: section 16    Cache Manager API */
 
 #include "squid.h"
+#include "base/PackableStream.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "HttpReply.h"
@@ -18,6 +19,7 @@
 #include "mgr/ActionParams.h"
 #include "mgr/ActionProfile.h"
 #include "mgr/Command.h"
+#include "mgr/ReportStream.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
 #include "Store.h"
@@ -112,11 +114,18 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
         entry->replaceHttpReply(rep);
     }
 
-    dump(entry);
+    dump(entry); // TODO: replace with report() when all children are converted
 
     entry->flush();
 
     if (atomic())
         entry->complete();
+}
+
+void
+Mgr::Action::dump(StoreEntry *entry)
+{
+    ReportPlain os(*entry); // default: text/plain;charset=utf-8
+    report(os);
 }
 
