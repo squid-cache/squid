@@ -702,8 +702,6 @@ Adaptation::Ecap::XactionRep::status() const
     static MemBuf buf;
     buf.reset();
 
-    buf.append(" [", 2);
-
     if (makingVb)
         buf.appendf("M%d", static_cast<int>(makingVb));
 
@@ -731,8 +729,6 @@ Adaptation::Ecap::XactionRep::status() const
         else
             buf.append(" A?", 3);
     }
-
-    buf.appendf(" %s%u]", id.prefix(), id.value);
 
     buf.terminate();
 

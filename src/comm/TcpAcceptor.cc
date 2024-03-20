@@ -124,7 +124,7 @@ const char *
 Comm::TcpAcceptor::status() const
 {
     if (conn == nullptr)
-        return "[nil connection]";
+        return "nil connection";
 
     static char ipbuf[MAX_IPSTRLEN] = {'\0'};
     if (ipbuf[0] == '\0')

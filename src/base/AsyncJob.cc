@@ -16,7 +16,6 @@
 #include "base/TextException.h"
 #include "cbdata.h"
 #include "mem/PoolingAllocator.h"
-#include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 
@@ -179,16 +178,15 @@ void AsyncJob::callEnd()
 }
 
 // returns a temporary string depicting transaction status, for debugging
-const char *AsyncJob::status() const
+const char *
+AsyncJob::status() const
 {
     static MemBuf buf;
     buf.reset();
 
-    buf.append(" [", 2);
     if (stopReason != nullptr) {
-        buf.appendf("Stopped, reason:%s", stopReason);
+        buf.appendf("Stopped, reason: %s", stopReason);
     }
-    buf.appendf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
 
     return buf.content();
@@ -199,15 +197,14 @@ AsyncJob::ReportAllJobs(StoreEntry *e)
 {
     PackableStream os(*e);
     // this loop uses YAML syntax, but AsyncJob::status() still needs to be adjusted to use YAML
-    const char *indent = "    ";
+    const std::string indent("  ");
     for (const auto job: AllJobs()) {
-        os << indent << job->id << ":\n";
-        os << indent << indent << "type: '" << job->typeName << "'\n";
-        os << indent << indent << "status:" << job->status() << '\n';
-        if (!job->started_)
-            os << indent << indent << "started: false\n";
-        if (job->stopReason)
-            os << indent << indent << "stopped: '" << job->stopReason << "'\n";
+        os << job->id << ":\n";
+        os << indent << "type: " << job->typeName << '\n';
+        const char *status = job->status();
+        if (status && strlen(status))
+            os << indent << "status: " << job->status() << "\n";
+        os << indent << "started: " << (job->started_ ? "yes": "no" ) << '\n';
     }
 }
 

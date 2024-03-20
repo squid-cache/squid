@@ -437,17 +437,15 @@ HappyConnOpener::status() const
 
     SBufStream os(buf);
 
-    os.write(" [", 2);
     if (stopReason)
         os << "Stopped:" << stopReason;
     if (prime)
-        os << "prime:" << prime;
+        os << " prime:" << prime;
     if (spare)
-        os << "spare:" << spare;
+        os << " spare:" << spare;
     if (n_tries)
         os << " tries:" << n_tries;
     os << " dst:" << *destinations;
-    os << ' ' << id << ']';
 
     buf = os.buf();
     return buf.c_str();

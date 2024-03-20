@@ -221,7 +221,7 @@ Ipc::Inquirer::status() const
 {
     static MemBuf buf;
     buf.reset();
-    buf.appendf(" [requestId %u]", request->requestId.index());
+    buf.appendf("requestId %u", request->requestId.index());
     buf.terminate();
     return buf.content();
 }

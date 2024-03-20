@@ -439,7 +439,7 @@ Http::Tunneler::status() const
 
     // TODO: redesign AsyncJob::status() API to avoid
     // id and stop reason reporting duplication.
-    buf.append(" [state:", 8);
+    buf.append("state:", 8);
     if (requestWritten) buf.append("w", 1); // request sent
     if (tunnelEstablished) buf.append("t", 1); // tunnel established
     if (!callback) buf.append("x", 1); // caller informed
@@ -449,7 +449,6 @@ Http::Tunneler::status() const
     }
     if (connection != nullptr)
         buf.appendf(" FD %d", connection->fd);
-    buf.appendf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
 
     return buf.content();

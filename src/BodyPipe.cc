@@ -448,8 +448,6 @@ const char *BodyPipe::status() const
     static MemBuf outputBuffer;
     outputBuffer.reset();
 
-    outputBuffer.append(" [", 2);
-
     outputBuffer.appendf("%" PRIu64 "<=%" PRIu64, theGetSize, thePutSize);
     if (theBodySize >= 0)
         outputBuffer.appendf("<=%" PRId64, theBodySize);
@@ -470,8 +468,6 @@ const char *BodyPipe::status() const
         outputBuffer.append(" !C", 3);
     if (isCheckedOut)
         outputBuffer.append(" L", 2); // Locked
-
-    outputBuffer.append("]", 1);
 
     outputBuffer.terminate();
 
