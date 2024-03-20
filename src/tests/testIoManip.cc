@@ -170,7 +170,7 @@ TestIoManip::testAtMostOnce()
 
     {
         std::ostringstream ss;
-        std::string s("string");
+        const std::string s("string");
         auto c = AtMostOnce(s);
         ss << c;
         CPPUNIT_ASSERT_EQUAL(std::string("string"), ss.str());
