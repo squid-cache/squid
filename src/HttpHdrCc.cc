@@ -66,8 +66,10 @@ ccTypeByName(const SBuf &name) {
 
 static auto
 ccNameByType(HttpHdrCcType type) {
+    // TODO: Store a by-ID index in (and move this functionality into) LookupTable.
+    const auto idx = static_cast<std::underlying_type<HttpHdrCcType>::type>(type);
     if (type < HttpHdrCcType::CC_ENUM_END)
-        return CcAttrs()[static_cast<int>(type)].name;
+        return CcAttrs()[idx].name;
     return "*invalid hdrcc*";
 }
 
