@@ -25,6 +25,7 @@
 
 #include <map>
 #include <vector>
+#include <optional>
 #include <ostream>
 
 constexpr LookupTable<HttpHdrCcType>::Record attrsList[] = {
@@ -53,7 +54,7 @@ CcAttrs() {
         const auto idx = static_cast<std::underlying_type<HttpHdrCcType>::type>(ev);
         // invariant: each row has a name except the last one
         static_assert(!attrsList[idx].name == (ev == HttpHdrCcType::CC_ENUM_END));
-        // invariant: row[ev].id == ev
+        // invariant: row[idx].id == idx
         static_assert(attrsList[idx].id == ev);
     });
     return attrsList;
