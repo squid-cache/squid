@@ -235,14 +235,13 @@ class AtMostOnce
 {
 public:
     /// caller must ensure `t` lifetime extends to the last use of this AtMostOnce instance
-    explicit AtMostOnce(const T& t) : toPrint(t), printed(false) {}
+    explicit AtMostOnce(const T &t): toPrint(t) {}
 
-    std::ostream& print(std::ostream& os) {
+    void print(std::ostream &os) {
         if (!printed) {
             os << toPrint;
             printed = true;
         }
-        return os;
     }
 
 private:
@@ -258,8 +257,10 @@ private:
 /// os << AtMostOnce(x);
 /// \endcode
 template <class T>
-inline std::ostream& operator<<(std::ostream& os, AtMostOnce<T>& a) {
-    return a.print(os);
+inline auto &
+operator <<(std::ostream &os, AtMostOnce<T> &a) {
+    a.print(os);
+    return os;
 }
 
 #endif /* SQUID_SRC_BASE_IOMANIP_H */
