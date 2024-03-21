@@ -97,7 +97,7 @@ public:
     typedef BodyConsumer Consumer;
     typedef BodyPipeCheckout Checkout;
 
-    enum { MaxCapacity = 64*1024 };
+    static constexpr size_t MaxCapacity = 64*1024;
 
     friend class BodyPipeCheckout;
 
