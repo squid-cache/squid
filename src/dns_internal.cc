@@ -221,7 +221,6 @@ public:
     }
 
     char domain[NS_MAXDNAME];
-    int queries = 0;
 };
 
 /// list of Top-Level Domains (TLDs) to use when looking up an
@@ -229,8 +228,8 @@ public:
 static auto &
 SearchPath()
 {
-    static std::vector<Dns::SearchTld> searchPath;
-    return searchPath;
+    static const auto searchPath = new std::vector<SearchTld>();
+    return *searchPath;
 }
 
 } // namespace Dns
