@@ -99,6 +99,9 @@ public:
     /// Save certificate to disk.
     bool addCertAndPrivateKey(std::string const & useKey, const Security::CertPointer & cert, const Security::PrivateKeyPointer & pkey, const Security::CertPointer &orig);
 
+    /// \return the key this database would use for storing certificate with the given properties
+    std::string &dbKey(const Security::CertificateProperties &) const;
+
     /// Create and initialize a database  under the  db_path
     static void Create(std::string const & db_path);
     /// Check the database stored under the db_path.

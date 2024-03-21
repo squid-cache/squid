@@ -11,6 +11,7 @@
 #include "base/TextException.h"
 #include "sbuf/Stream.h"
 #include "security/cert_generators/file/certificate_db.h"
+#include "security/CertificateProperties.h"
 
 #include <cerrno>
 #include <fstream>
@@ -362,6 +363,58 @@ Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Securi
     return true;
 }
 
+static void
+printX509Signature(const Security::CertPointer &cert, std::string &out)
+{
+    const ASN1_BIT_STRING *sig = Ssl::X509_get_signature(cert);
+    if (sig && sig->data) {
+        const unsigned char *s = sig->data;
+        for (int i = 0; i < sig->length; ++i) {
+            char hex[3];
+            snprintf(hex, sizeof(hex), "%02x", s[i]);
+            out.append(hex);
+        }
+    }
+}
+
+std::string &
+Ssl::CertificateDb::dbKey(const Security::CertificateProperties &properties) const
+{
+    static std::string certKey;
+    certKey.clear();
+    certKey.reserve(4096);
+    if (properties.mimicCert.get())
+        printX509Signature(properties.mimicCert, certKey);
+
+    if (certKey.empty()) {
+        certKey.append("/CN=", 4);
+        certKey.append(properties.commonName);
+    }
+
+    if (properties.setValidAfter)
+        certKey.append("+SetValidAfter=on", 17);
+
+    if (properties.setValidBefore)
+        certKey.append("+SetValidBefore=on", 18);
+
+    if (properties.setCommonName) {
+        certKey.append("+SetCommonName=", 15);
+        certKey.append(properties.commonName);
+    }
+
+    if (properties.signAlgorithm != Security::algSignEnd) {
+        certKey.append("+Sign=", 6);
+        certKey.append(certSignAlgorithmName(properties.signAlgorithm));
+    }
+
+    if (properties.signHash != UnknownDigestAlgorithm) {
+        certKey.append("+SignHash=", 10);
+        certKey.append(Security::digestName(properties.signHash));
+    }
+
+    return certKey;
+}
+
 void
 Ssl::CertificateDb::Create(std::string const & db_path) {
     if (db_path == "")
@@ -656,4 +709,3 @@ Ssl::CertificateDb::ReadEntry(std::string filename, Security::CertPointer &cert,
 
     return true;
 }
-

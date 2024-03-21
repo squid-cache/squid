@@ -9,6 +9,8 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "sbuf/Stream.h"
+#include "security/CertAdaptAlgorithm.h"
+#include "security/CertificateProperties.h"
 #include "ssl/crtd_message.h"
 #include "ssl/gadgets.h"
 
@@ -177,8 +179,7 @@ void Ssl::CrtdMessage::composeBody(CrtdMessage::BodyParams const & map, std::str
         body += '\n' + other_part;
 }
 
-void
-Ssl::CrtdMessage::parseRequest(CertificateProperties &certProperties)
+bool Ssl::CrtdMessage::parseRequest(Security::CertificateProperties &certProperties, std::string &error)
 {
     Ssl::CrtdMessage::BodyParams map;
     std::string certs_part;
@@ -207,15 +208,16 @@ Ssl::CrtdMessage::parseRequest(CertificateProperties &certProperties)
 
     i = map.find(Ssl::CrtdMessage::param_Sign);
     if (i != map.end()) {
-        if ((certProperties.signAlgorithm = Ssl::certSignAlgorithmId(i->second.c_str())) == Ssl::algSignEnd) {
+        if ((certProperties.signAlgorithm = Security::certSignAlgorithmId(i->second.c_str())) == Security::algSignEnd) {
             throw TextException(ToSBuf("Wrong signing algorithm: ", i->second), Here());
         }
     } else
-        certProperties.signAlgorithm = Ssl::algSignTrusted;
+        certProperties.signAlgorithm = Security::algSignTrusted;
 
     i = map.find(Ssl::CrtdMessage::param_SignHash);
     const char *signHashName = i != map.end() ? i->second.c_str() : SQUID_SSL_SIGN_HASH_IF_NONE;
-    if (!(certProperties.signHash = EVP_get_digestbyname(signHashName))) {
+    certProperties.signHash = Security::digestByName(signHashName);
+    if (certProperties.signHash == UnknownDigestAlgorithm) {
         throw TextException(ToSBuf("Wrong signing hash: ", signHashName), Here());
     }
 
@@ -232,7 +234,7 @@ Ssl::CrtdMessage::parseRequest(CertificateProperties &certProperties)
     }
 }
 
-void Ssl::CrtdMessage::composeRequest(Ssl::CertificateProperties const &certProperties)
+void Ssl::CrtdMessage::composeRequest(Security::CertificateProperties const &certProperties)
 {
     body.clear();
     body = Ssl::CrtdMessage::param_host + "=" + certProperties.commonName;
@@ -242,10 +244,10 @@ void Ssl::CrtdMessage::composeRequest(Ssl::CertificateProperties const &certProp
         body +=  "\n" + Ssl::CrtdMessage::param_SetValidAfter + "=on";
     if (certProperties.setValidBefore)
         body +=  "\n" + Ssl::CrtdMessage::param_SetValidBefore + "=on";
-    if (certProperties.signAlgorithm != Ssl::algSignEnd)
-        body +=  "\n" +  Ssl::CrtdMessage::param_Sign + "=" +  certSignAlgorithm(certProperties.signAlgorithm);
-    if (certProperties.signHash)
-        body +=  "\n" + Ssl::CrtdMessage::param_SignHash + "=" + EVP_MD_name(certProperties.signHash);
+    if (certProperties.signAlgorithm != Security::algSignEnd)
+        body +=  "\n" +  Ssl::CrtdMessage::param_Sign + "=" +  certSignAlgorithmName(certProperties.signAlgorithm);
+    if (certProperties.signHash != UnknownDigestAlgorithm)
+        body +=  "\n" + Ssl::CrtdMessage::param_SignHash + "=" + Security::digestName(certProperties.signHash);
 
     std::string certsPart;
     if (!Ssl::writeCertAndPrivateKeyToMemory(certProperties.signWithX509, certProperties.signWithPkey, certsPart))
@@ -259,9 +261,9 @@ void Ssl::CrtdMessage::composeRequest(Ssl::CertificateProperties const &certProp
 
 const std::string Ssl::CrtdMessage::code_new_certificate("new_certificate");
 const std::string Ssl::CrtdMessage::param_host("host");
-const std::string Ssl::CrtdMessage::param_SetValidAfter(Ssl::CertAdaptAlgorithmStr[algSetValidAfter]);
-const std::string Ssl::CrtdMessage::param_SetValidBefore(Ssl::CertAdaptAlgorithmStr[algSetValidBefore]);
-const std::string Ssl::CrtdMessage::param_SetCommonName(Ssl::CertAdaptAlgorithmStr[algSetCommonName]);
+const std::string Ssl::CrtdMessage::param_SetValidAfter(Security::certAdaptAlgorithmName(Security::algSetValidAfter));
+const std::string Ssl::CrtdMessage::param_SetValidBefore(Security::certAdaptAlgorithmName(Security::algSetValidBefore));
+const std::string Ssl::CrtdMessage::param_SetCommonName(Security::certAdaptAlgorithmName(Security::algSetCommonName));
 const std::string Ssl::CrtdMessage::param_Sign("Sign");
 const std::string Ssl::CrtdMessage::param_SignHash("SignHash");
 

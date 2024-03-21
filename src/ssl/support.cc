@@ -25,6 +25,7 @@
 #include "ipc/MemMap.h"
 #include "security/CertError.h"
 #include "security/Certificate.h"
+#include "security/CertificateProperties.h"
 #include "security/ErrorDetail.h"
 #include "security/Session.h"
 #include "SquidConfig.h"
@@ -41,7 +42,7 @@ static int ssl_ex_index_verify_callback_parameters = -1;
 
 static Ssl::CertsIndexedList SquidUntrustedCerts;
 
-const EVP_MD *Ssl::DefaultSignHash = nullptr;
+Security::DigestAlgorithm Ssl::DefaultSignHash = UnknownDigestAlgorithm;
 
 std::vector<const char *> Ssl::BumpModeStr = {
     "none",
@@ -682,7 +683,7 @@ Ssl::Initialize(void)
     }
 
     const char *defName = ::Config.SSL.certSignHash ? ::Config.SSL.certSignHash : SQUID_SSL_SIGN_HASH_IF_NONE;
-    Ssl::DefaultSignHash = EVP_get_digestbyname(defName);
+    Ssl::DefaultSignHash = Security::digestByName(defName);
     if (!Ssl::DefaultSignHash)
         fatalf("Sign hash '%s' is not supported\n", defName);
 
@@ -711,17 +712,6 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
 {
     if (!ctx)
         return false;
-
-    if (!peer.sslCipher.isEmpty()) {
-        debugs(83, 5, "Using chiper suite " << peer.sslCipher << ".");
-
-        const char *cipher = peer.sslCipher.c_str();
-        if (!SSL_CTX_set_cipher_list(ctx.get(), cipher)) {
-            const auto ssl_error = ERR_get_error();
-            fatalf("Failed to set SSL cipher suite '%s': %s\n",
-                   cipher, Security::ErrorString(ssl_error));
-        }
-    }
 
     if (!peer.certs.empty()) {
         // TODO: support loading multiple cert/key pairs
@@ -953,7 +943,7 @@ Ssl::GenerateSslContextUsingPkeyAndCertFromMemory(const char * data, Security::S
 }
 
 Security::ContextPointer
-Ssl::GenerateSslContext(CertificateProperties const &properties, Security::ServerOptions &options, bool trusted)
+Ssl::GenerateSslContext(Security::CertificateProperties const &properties, Security::ServerOptions &options, bool trusted)
 {
     Security::CertPointer cert;
     Security::PrivateKeyPointer pkey;
@@ -992,14 +982,14 @@ Ssl::chainCertificatesToSSLContext(Security::ContextPointer &ctx, Security::Serv
 }
 
 void
-Ssl::configureUnconfiguredSslContext(Security::ContextPointer &ctx, Ssl::CertSignAlgorithm signAlgorithm,AnyP::PortCfg &port)
+Ssl::configureUnconfiguredSslContext(Security::ContextPointer &ctx, Security::CertSignAlgorithm signAlgorithm, AnyP::PortCfg &port)
 {
-    if (ctx && signAlgorithm == Ssl::algSignTrusted)
+    if (ctx && signAlgorithm == Security::algSignTrusted)
         Ssl::chainCertificatesToSSLContext(ctx, port.secure);
 }
 
 bool
-Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &)
+Ssl::configureSSL(SSL *ssl, Security::CertificateProperties const &properties, AnyP::PortCfg &port)
 {
     Security::CertPointer cert;
     Security::PrivateKeyPointer pkey;
@@ -1042,7 +1032,7 @@ Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
 }
 
 bool
-Ssl::verifySslCertificate(const Security::ContextPointer &ctx, CertificateProperties const &)
+Ssl::verifySslCertificate(const Security::ContextPointer &ctx, Security::CertificateProperties const &)
 {
 #if HAVE_SSL_CTX_GET0_CERTIFICATE
     X509 * cert = SSL_CTX_get0_certificate(ctx.get());
@@ -1367,7 +1357,7 @@ Ssl::unloadSquidUntrusted()
 bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, Security::PrivateKeyPointer &untrustedPkey, Security::CertPointer const  &cert, Security::PrivateKeyPointer const & pkey)
 {
     // Generate the self-signed certificate, using a hard-coded subject prefix
-    Ssl::CertificateProperties certProperties;
+    Security::CertificateProperties certProperties;
     if (const char *cn = CommonHostName(cert.get())) {
         certProperties.commonName = "Not trusted by \"";
         certProperties.commonName += cn;
@@ -1381,13 +1371,14 @@ bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, Security::
     certProperties.setCommonName = true;
     // O, OU, and other CA subject fields will be mimicked
     // Expiration date and other common properties will be mimicked
-    certProperties.signAlgorithm = Ssl::algSignSelf;
+    certProperties.signAlgorithm = Security::algSignSelf;
     certProperties.signWithPkey.resetAndLock(pkey.get());
     certProperties.mimicCert.resetAndLock(cert.get());
     return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
 }
 
-void Ssl::InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties, SBuf &key)
+void
+Ssl::InRamCertificateDbKey(const Security::CertificateProperties &certProperties, SBuf &key)
 {
     bool origSignatureAsKey = false;
     if (certProperties.mimicCert) {
@@ -1404,8 +1395,8 @@ void Ssl::InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties
     key.append(certProperties.setCommonName ? '1' : '0');
     key.append(certProperties.setValidAfter ? '1' : '0');
     key.append(certProperties.setValidBefore ? '1' : '0');
-    key.append(certProperties.signAlgorithm != Ssl:: algSignEnd ? certSignAlgorithm(certProperties.signAlgorithm) : "-");
-    key.append(certProperties.signHash ? EVP_MD_name(certProperties.signHash) : "-");
+    key.append(certProperties.signAlgorithm != Security::algSignEnd ? certSignAlgorithmName(certProperties.signAlgorithm) : "-");
+    key.append(certProperties.signHash != UnknownDigestAlgorithm ? Security::digestName(certProperties.signHash) : "-");
 
     if (certProperties.mimicCert) {
         Ssl::BIO_Pointer bio(BIO_new_SBuf(&key));

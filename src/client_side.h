@@ -23,6 +23,7 @@
 #include "log/forward.h"
 #include "proxyp/forward.h"
 #include "sbuf/SBuf.h"
+#include "security/CertSignAlgorithm.h"
 #include "servers/Server.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -294,7 +295,7 @@ public:
     const SBuf &tlsClientSni() const { return tlsClientSni_; }
     /// Fill the certAdaptParams with the required data for certificate adaptation
     /// and create the key for storing/retrieve the certificate to/from the cache
-    void buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties);
+    void buildSslCertGenerationParams(Security::CertificateProperties &);
     /// Called when the client sends the first request on a bumped connection.
     /// Returns false if no [delayed] error should be written to the client.
     /// Otherwise, writes the error to the client and returns true. Also checks
@@ -455,7 +456,7 @@ private:
 
 #if USE_OPENSSL
     /// \returns a pointer to the matching cached TLS context or nil
-    Security::ContextPointer getTlsContextFromCache(const SBuf &cacheKey, const Ssl::CertificateProperties &certProperties);
+    Security::ContextPointer getTlsContextFromCache(const SBuf &cacheKey, const Security::CertificateProperties &);
 
     /// Attempts to add a given TLS context to the cache, replacing the old
     /// same-key context, if any
@@ -494,6 +495,7 @@ private:
     Ssl::ServerBump *sslServerBump = nullptr;
     Ssl::CertSignAlgorithm signAlgorithm = Ssl::algSignTrusted; ///< The signing algorithm to use
 #endif
+    Security::CertSignAlgorithm signAlgorithm = Security::algSignTrusted; ///< The signing algorithm to use
 
     /// the reason why we no longer write the response or nil
     const char *stoppedSending_ = nullptr;

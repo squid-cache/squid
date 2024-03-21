@@ -53,6 +53,10 @@ public:
     /// Setup the library specific 'options=' parameters for the given context.
     void updateContextOptions(Security::ContextPointer &);
 
+    /// Setup the library specific 'cipher=' parameters for the given context (if applicable).
+    /// \returns false on failures
+    bool updateContextCiphers(Security::ContextPointer &) const;
+
     /// setup the NPN extension details for the given context
     void updateContextNpn(Security::ContextPointer &);
 

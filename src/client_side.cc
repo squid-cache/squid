@@ -107,11 +107,9 @@
 #include "parser/Tokenizer.h"
 #include "proxyp/Header.h"
 #include "proxyp/Parser.h"
-#include "sbuf/Stream.h"
-#include "security/Certificate.h"
-#include "security/CommunicationSecrets.h"
+#include "security/CertAdaptAlgorithm.h"
+#include "security/CertificateProperties.h"
 #include "security/Io.h"
-#include "security/KeyLog.h"
 #include "security/NegotiationHistory.h"
 #include "servers/forward.h"
 #include "SquidConfig.h"
@@ -2130,10 +2128,20 @@ ConnStateData::lifetimeTimeout(const CommTimeoutCbParams &io)
 
 ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     AsyncJob("ConnStateData"), // kids overwrite
-    Server(xact)
+    Server(xact),
 #if USE_OPENSSL
-    , tlsParser(Security::HandshakeParser::fromClient)
+    tlsParser(Security::HandshakeParser::fromClient),
 #endif
+    needProxyProtocolHeader_(false),
+#if USE_OPENSSL
+    switchedToHttps_(false),
+    parsingTlsHandshake(false),
+    parsedBumpedRequestCount(0),
+    tlsConnectPort(0),
+    sslServerBump(NULL),
+#endif
+    stoppedSending_(NULL),
+    stoppedReceiving_(NULL)
 {
     // store the details required for creating more MasterXaction objects as new requests come in
     log_addr = xact->tcpClient->remote;
@@ -2584,7 +2592,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
                     Security::ContextPointer ctx(Security::GetFrom(fd_table[clientConnection->fd].ssl));
                     Ssl::configureUnconfiguredSslContext(ctx, signAlgorithm, *port);
                 } else {
-                    Security::ContextPointer ctx(Ssl::GenerateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), port->secure, (signAlgorithm == Ssl::algSignTrusted)));
+                    Security::ContextPointer ctx(Ssl::GenerateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), port->secure, (signAlgorithm == Security::algSignTrusted)));
                     if (ctx && !sslBumpCertKey.isEmpty())
                         storeTlsContextToCache(sslBumpCertKey, ctx);
                     getSslContextDone(ctx);
@@ -2597,7 +2605,8 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
     getSslContextDone(nil);
 }
 
-void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties)
+void
+ConnStateData::buildSslCertGenerationParams(Security::CertificateProperties &certProperties)
 {
     certProperties.commonName = sslCommonName_.isEmpty() ? tlsConnectHostOrIp.c_str() : sslCommonName_.c_str();
 
@@ -2611,25 +2620,25 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
 
         for (sslproxy_cert_adapt *ca = Config.ssl_client.cert_adapt; ca != nullptr; ca = ca->next) {
             // If the algorithm already set, then ignore it.
-            if ((ca->alg == Ssl::algSetCommonName && certProperties.setCommonName) ||
-                    (ca->alg == Ssl::algSetValidAfter && certProperties.setValidAfter) ||
-                    (ca->alg == Ssl::algSetValidBefore && certProperties.setValidBefore) )
+            if ((ca->alg == Security::algSetCommonName && certProperties.setCommonName) ||
+                    (ca->alg == Security::algSetValidAfter && certProperties.setValidAfter) ||
+                    (ca->alg == Security::algSetValidBefore && certProperties.setValidBefore) )
                 continue;
 
             if (ca->aclList && checklist.fastCheck(ca->aclList).allowed()) {
-                const char *alg = Ssl::CertAdaptAlgorithmStr[ca->alg];
+                const auto alg = Security::certAdaptAlgorithmName(ca->alg);
                 const char *param = ca->param;
 
                 // For parameterless CN adaptation, use hostname from the
                 // CONNECT request.
-                if (ca->alg == Ssl::algSetCommonName) {
+                if (ca->alg == Security::algSetCommonName) {
                     if (!param)
                         param = tlsConnectHostOrIp.c_str();
                     certProperties.commonName = param;
                     certProperties.setCommonName = true;
-                } else if (ca->alg == Ssl::algSetValidAfter)
+                } else if (ca->alg == Security::algSetValidAfter)
                     certProperties.setValidAfter = true;
-                else if (ca->alg == Ssl::algSetValidBefore)
+                else if (ca->alg == Security::algSetValidBefore)
                     certProperties.setValidBefore = true;
 
                 debugs(33, 5, "Matches certificate adaptation aglorithm: " <<
@@ -2637,10 +2646,10 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
             }
         }
 
-        certProperties.signAlgorithm = Ssl::algSignEnd;
-        for (sslproxy_cert_sign *sg = Config.ssl_client.cert_sign; sg != nullptr; sg = sg->next) {
+        certProperties.signAlgorithm = Security::algSignEnd;
+        for (sslproxy_cert_sign *sg = Config.ssl_client.cert_sign; sg != NULL; sg = sg->next) {
             if (sg->aclList && checklist.fastCheck(sg->aclList).allowed()) {
-                certProperties.signAlgorithm = (Ssl::CertSignAlgorithm)sg->alg;
+                certProperties.signAlgorithm = static_cast<Security::CertSignAlgorithm>(sg->alg);
                 break;
             }
         }
@@ -2651,12 +2660,12 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
         // number of warnings the user will have to see to get to the error page.
         // We will close the connection, so that the trust is not extended to
         // non-Squid content.
-        certProperties.signAlgorithm = Ssl::algSignTrusted;
+        certProperties.signAlgorithm = Security::algSignTrusted;
     }
 
-    assert(certProperties.signAlgorithm != Ssl::algSignEnd);
+    assert(certProperties.signAlgorithm != Security::algSignEnd);
 
-    if (certProperties.signAlgorithm == Ssl::algSignUntrusted) {
+    if (certProperties.signAlgorithm == Security::algSignUntrusted) {
         assert(port->secure.untrustedSigningCa.cert);
         certProperties.signWithX509.resetAndLock(port->secure.untrustedSigningCa.cert.get());
         certProperties.signWithPkey.resetAndLock(port->secure.untrustedSigningCa.pkey.get());
@@ -2673,7 +2682,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
 }
 
 Security::ContextPointer
-ConnStateData::getTlsContextFromCache(const SBuf &cacheKey, const Ssl::CertificateProperties &certProperties)
+ConnStateData::getTlsContextFromCache(const SBuf &cacheKey, const Security::CertificateProperties &certProperties)
 {
     debugs(33, 5, "Finding SSL certificate for " << cacheKey << " in cache");
     Ssl::LocalContextStorage * ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
@@ -2704,7 +2713,7 @@ void
 ConnStateData::getSslContextStart()
 {
     if (port->secure.generateHostCertificates) {
-        Ssl::CertificateProperties certProperties;
+        Security::CertificateProperties certProperties;
         buildSslCertGenerationParams(certProperties);
 
         // Disable caching for bumpPeekAndSplice mode
@@ -2748,7 +2757,7 @@ ConnStateData::getSslContextStart()
             Security::ContextPointer ctx(Security::GetFrom(fd_table[clientConnection->fd].ssl));
             Ssl::configureUnconfiguredSslContext(ctx, certProperties.signAlgorithm, *port);
         } else {
-            Security::ContextPointer dynCtx(Ssl::GenerateSslContext(certProperties, port->secure, (signAlgorithm == Ssl::algSignTrusted)));
+            Security::ContextPointer dynCtx(Ssl::GenerateSslContext(certProperties, port->secure, (signAlgorithm == Security::algSignTrusted)));
             if (dynCtx && !sslBumpCertKey.isEmpty())
                 storeTlsContextToCache(sslBumpCertKey, dynCtx);
             getSslContextDone(dynCtx);

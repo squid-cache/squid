@@ -10,6 +10,7 @@
 #include "base/IoManip.h"
 #include "error/SysErrorDetail.h"
 #include "sbuf/Stream.h"
+#include "security/CertificateProperties.h"
 #include "security/Io.h"
 #include "ssl/gadgets.h"
 
@@ -240,28 +241,6 @@ const char *Ssl::CertAdaptAlgorithmStr[] = {
     "setCommonName",
     nullptr
 };
-
-Ssl::CertificateProperties::CertificateProperties():
-    setValidAfter(false),
-    setValidBefore(false),
-    setCommonName(false),
-    signAlgorithm(Ssl::algSignEnd),
-    signHash(nullptr)
-{}
-
-static void
-printX509Signature(const Security::CertPointer &cert, std::string &out)
-{
-    const ASN1_BIT_STRING *sig = Ssl::X509_get_signature(cert);
-    if (sig && sig->data) {
-        const unsigned char *s = sig->data;
-        for (int i = 0; i < sig->length; ++i) {
-            char hex[3];
-            snprintf(hex, sizeof(hex), "%02x", s[i]);
-            out.append(hex);
-        }
-    }
-}
 
 std::string &
 Ssl::OnDiskCertificateDbKey(const Ssl::CertificateProperties &properties)
@@ -499,7 +478,8 @@ addAltNameWithSubjectCn(Security::CertPointer &cert)
     return result;
 }
 
-static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificateProperties const &properties)
+static bool
+buildCertificate(Security::CertPointer & cert, Security::CertificateProperties const &properties)
 {
     // not an Ssl::X509_NAME_Pointer because X509_REQ_get_subject_name()
     // returns a pointer to the existing subject name. Nothing to clean here.
@@ -584,7 +564,8 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     return true;
 }
 
-static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Security::PrivateKeyPointer & pkeyToStore, Ssl::CertificateProperties const &properties,  Ssl::BIGNUM_Pointer const &serial)
+static bool
+generateFakeSslCertificate(Security::CertPointer &certToStore, Security::PrivateKeyPointer &pkeyToStore, Security::CertificateProperties const &properties, Ssl::BIGNUM_Pointer const &serial)
 {
     // Use signing certificates private key as generated certificate private key
     const auto pkey = properties.signWithPkey ? properties.signWithPkey : CreateRsaPrivateKey();
@@ -607,17 +588,17 @@ static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Secu
 
     int ret = 0;
     // Set issuer name, from CA or our subject name for self signed cert
-    if (properties.signAlgorithm != Ssl::algSignSelf && properties.signWithX509.get())
+    if (properties.signAlgorithm != Security::algSignSelf && properties.signWithX509)
         ret = X509_set_issuer_name(cert.get(), X509_get_subject_name(properties.signWithX509.get()));
     else // Self signed certificate, set issuer to self
         ret = X509_set_issuer_name(cert.get(), X509_get_subject_name(cert.get()));
     if (!ret)
         return false;
 
-    const  EVP_MD *hash = properties.signHash ? properties.signHash : EVP_get_digestbyname(SQUID_SSL_SIGN_HASH_IF_NONE);
+    const auto hash = (properties.signHash != UnknownDigestAlgorithm ? properties.signHash : Security::digestByName(SQUID_SSL_SIGN_HASH_IF_NONE));
     assert(hash);
     /*Now sign the request */
-    if (properties.signAlgorithm != Ssl::algSignSelf && properties.signWithPkey.get())
+    if (properties.signAlgorithm != Security::algSignSelf && properties.signWithPkey)
         ret = X509_sign(cert.get(), properties.signWithPkey.get(), hash);
     else //else sign with self key (self signed request)
         ret = X509_sign(cert.get(), pkey.get(), hash);
@@ -681,9 +662,10 @@ static BIGNUM *x509Pubkeydigest(Security::CertPointer const & cert)
     return createCertSerial(md, n);
 }
 
-/// Generate a unique serial number based on a Ssl::CertificateProperties object
+/// Generate a unique serial number based on a Security::CertificateProperties object
 /// for a new generated certificate
-static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties const &properties)
+static bool
+createSerial(Ssl::BIGNUM_Pointer &serial, Security::CertificateProperties const &properties)
 {
     Security::PrivateKeyPointer fakePkey;
     Security::CertPointer fakeCert;
@@ -707,7 +689,8 @@ static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties
     return true;
 }
 
-bool Ssl::generateSslCertificate(Security::CertPointer & certToStore, Security::PrivateKeyPointer & pkeyToStore, Ssl::CertificateProperties const &properties)
+bool
+Ssl::generateSslCertificate(Security::CertPointer & certToStore, Security::PrivateKeyPointer & pkeyToStore, Security::CertificateProperties const &properties)
 {
     Ssl::BIGNUM_Pointer serial;
 
@@ -874,12 +857,13 @@ static int asn1time_cmp(ASN1_TIME *asnTime1, ASN1_TIME *asnTime2)
     return strcmp(strTime1, strTime2);
 }
 
-bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &properties)
+bool
+Ssl::certificateMatchesProperties(X509 *cert, Security::CertificateProperties const &properties)
 {
     assert(cert);
 
     // For non self-signed certificates we have to check if the signing certificate changed
-    if (properties.signAlgorithm != Ssl::algSignSelf) {
+    if (properties.signAlgorithm != Security::algSignSelf) {
         assert(properties.signWithX509.get());
         if (X509_check_issued(properties.signWithX509.get(), cert) != X509_V_OK)
             return false;

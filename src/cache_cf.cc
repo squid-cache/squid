@@ -64,6 +64,8 @@
 #include "rfc1738.h"
 #include "sbuf/List.h"
 #include "sbuf/Stream.h"
+#include "security/CertAdaptAlgorithm.h"
+#include "security/CertSignAlgorithm.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"
@@ -4268,11 +4270,13 @@ static void free_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
 #if USE_OPENSSL
 static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 {
-    auto *al = ConfigParser::NextToken();
-    if (!al) {
+    char *al;
+    if ((al = ConfigParser::NextToken()) == NULL) {
         self_destruct();
         return;
     }
+
+    const auto algId = Security::certAdaptAlgorithmId(al); // throws on error
 
     const char *param;
     if ( char *s = strchr(al, '{')) {
@@ -4305,6 +4309,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
             }
             ca->param = xstrdup(param);
         }
+
     } else {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: unknown cert adaptation algorithm: " << al);
         self_destruct();
@@ -4323,7 +4328,7 @@ static void dump_sslproxy_cert_adapt(StoreEntry *entry, const char *name, sslpro
 {
     for (const auto *ca = cert_adapt; ca; ca = ca->next) {
         storeAppendPrintf(entry, "%s ", name);
-        storeAppendPrintf(entry, "%s{%s} ", Ssl::sslCertAdaptAlgoritm(ca->alg), ca->param);
+        storeAppendPrintf(entry, "%s{%s} ", Security::certAdaptAlgorithmName(ca->alg), ca->param);
         if (ca->aclList)
             dump_acl_list(entry, ca->aclList);
         storeAppendPrintf(entry, "\n");
@@ -4338,8 +4343,8 @@ static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 
 static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
 {
-    const auto al = ConfigParser::NextToken();
-    if (!al) {
+    char *al;
+    if ((al = ConfigParser::NextToken()) == NULL) {
         self_destruct();
         return;
     }
@@ -4369,7 +4374,7 @@ static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslprox
 {
     for (const auto *cs = cert_sign; cs; cs = cs->next) {
         storeAppendPrintf(entry, "%s ", name);
-        storeAppendPrintf(entry, "%s ", Ssl::certSignAlgorithm(cs->alg));
+        storeAppendPrintf(entry, "%s ", Security::certSignAlgorithmName(cs->alg));
         if (cs->aclList)
             dump_acl_list(entry, cs->aclList);
         storeAppendPrintf(entry, "\n");

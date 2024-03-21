@@ -1939,6 +1939,8 @@ tests_test_http_range_SOURCES = \
 	wordlist.h
 nodist_tests_test_http_range_SOURCES = \
 	$(BUILT_SOURCES) \
+	tests/stub_libsslsquid.cc \
+	tests/stub_libsslutil.cc \
 	tests/stub_libtime.cc
 tests_test_http_range_LDADD = \
 	libsquid.la \
@@ -2328,6 +2330,8 @@ tests_testHttpRequest_SOURCES = \
 	wordlist.h
 nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES) \
+	tests/stub_libsslsquid.cc \
+	tests/stub_libsslutil.cc \
 	tests/stub_libtime.cc
 tests_testHttpRequest_LDADD = \
 	libsquid.la \
@@ -2343,7 +2347,6 @@ tests_testHttpRequest_LDADD = \
 	parser/libparser.la \
 	ip/libip.la \
 	fs/libfs.la \
-	$(SSL_LIBS) \
 	ipc/libipc.la \
 	proxyp/libproxyp.la \
 	parser/libparser.la \
@@ -2625,7 +2628,9 @@ tests_testCacheManager_SOURCES = \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testCacheManager_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	tests/stub_libsslsquid.cc \
+	tests/stub_libsslutil.cc
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	libsquid.la \
@@ -2755,6 +2760,8 @@ nodist_tests_testEvent_SOURCES = \
 	tests/stub_debug.cc \
 	event.cc \
 	tests/stub_libmem.cc \
+	tests/stub_libsslsquid.cc \
+	tests/stub_libsslutil.cc \
 	tests/stub_libtime.cc \
 	tests/stub_tools.cc
 tests_testEvent_LDADD = \
@@ -2772,6 +2779,8 @@ nodist_tests_testEventLoop_SOURCES = \
 	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
+	tests/stub_libsslsquid.cc \
+	tests/stub_libsslutil.cc \
 	tests/stub_libtime.cc
 tests_testEventLoop_LDADD = \
 	base/libbase.la \

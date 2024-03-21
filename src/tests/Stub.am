@@ -71,6 +71,7 @@ STUB_SOURCE = \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
+	tests/stub_libsslutil.cc \
 	tests/stub_libstore.cc \
 	tests/stub_libtime.cc \
 	tests/stub_main_cc.cc \

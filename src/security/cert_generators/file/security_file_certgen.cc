@@ -12,6 +12,7 @@
 #include "helper/protocol_defines.h"
 #include "sbuf/Stream.h"
 #include "security/cert_generators/file/certificate_db.h"
+#include "security/CertificateProperties.h"
 #include "ssl/crtd_message.h"
 #include "time/gadgets.h"
 
@@ -171,8 +172,10 @@ static void usage()
 /// Process new request message.
 static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string const & db_path, size_t max_db_size, size_t fs_block_size)
 {
-    Ssl::CertificateProperties certProperties;
-    request_message.parseRequest(certProperties);
+    Security::CertificateProperties certProperties;
+    std::string error;
+    if (!request_message.parseRequest(certProperties, error))
+        throw std::runtime_error("Error while parsing the crtd request: " + error);
 
     // TODO: create a DB object only once, instead re-allocating here on every call.
     std::unique_ptr<Ssl::CertificateDb> db;
@@ -182,12 +185,14 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
     Security::CertPointer cert;
     Security::PrivateKeyPointer pkey;
     Security::CertPointer orig;
-    std::string &certKey = Ssl::OnDiskCertificateDbKey(certProperties);
+    std::string certKey;
 
     bool dbFailed = false;
     try {
-        if (db)
+        if (db) {
+            certKey = db->dbKey(certProperties);
             db->find(certKey, certProperties.mimicCert, cert, pkey);
+        }
 
     } catch (...) {
         dbFailed = true;

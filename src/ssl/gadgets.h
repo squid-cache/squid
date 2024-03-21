@@ -160,101 +160,13 @@ bool WritePrivateKey(BIO_Pointer &bio, const Security::PrivateKeyPointer &pkey);
 UniqueCString OneLineSummary(X509_NAME &);
 
 /**
-  \ingroup SslCrtdSslAPI
- * Supported certificate signing algorithms
- */
-enum CertSignAlgorithm {algSignTrusted = 0, algSignUntrusted, algSignSelf, algSignEnd};
-
-/**
- \ingroup SslCrtdSslAPI
- * Short names for certificate signing algorithms
- */
-
-extern const char *CertSignAlgorithmStr[];
-
-/**
- \ingroup SslCrtdSslAPI
- * Return the short name of the signing algorithm "sg"
- */
-inline const char *certSignAlgorithm(int sg)
-{
-    if (sg >=0 && sg < Ssl::algSignEnd)
-        return Ssl::CertSignAlgorithmStr[sg];
-
-    return nullptr;
-}
-
-/**
- \ingroup SslCrtdSslAPI
- * Return the id of the signing algorithm "sg"
- */
-inline CertSignAlgorithm certSignAlgorithmId(const char *sg)
-{
-    for (int i = 0; i < algSignEnd && Ssl::CertSignAlgorithmStr[i] != nullptr; i++)
-        if (strcmp(Ssl::CertSignAlgorithmStr[i], sg) == 0)
-            return (CertSignAlgorithm)i;
-
-    return algSignEnd;
-}
-
-/**
- \ingroup SslCrtdSslAPI
- * Supported certificate adaptation algorithms
- */
-enum CertAdaptAlgorithm {algSetValidAfter = 0, algSetValidBefore, algSetCommonName, algSetEnd};
-
-/**
- \ingroup SslCrtdSslAPI
- * Short names for certificate adaptation algorithms
- */
-extern const char *CertAdaptAlgorithmStr[];
-
-/**
- \ingroup SslCrtdSslAPI
- * Return the short name of the adaptation algorithm "alg"
- */
-inline const char *sslCertAdaptAlgoritm(int alg)
-{
-    if (alg >=0 && alg < Ssl::algSetEnd)
-        return Ssl::CertAdaptAlgorithmStr[alg];
-
-    return nullptr;
-}
-
-/**
- \ingroup SslCrtdSslAPI
- * Simple struct to pass certificate generation parameters to generateSslCertificate function.
- */
-class CertificateProperties
-{
-public:
-    CertificateProperties();
-    Security::CertPointer mimicCert; ///< Certificate to mimic
-    Security::CertPointer signWithX509; ///< Certificate to sign the generated request
-    Security::PrivateKeyPointer signWithPkey; ///< The key of the signing certificate
-    bool setValidAfter; ///< Do not mimic "Not Valid After" field
-    bool setValidBefore; ///< Do not mimic "Not Valid Before" field
-    bool setCommonName; ///< Replace the CN field of the mimicking subject with the given
-    std::string commonName; ///< A CN to use for the generated certificate
-    CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
-    const EVP_MD *signHash; ///< The signing hash to use
-private:
-    CertificateProperties(CertificateProperties &);
-    CertificateProperties &operator =(CertificateProperties const &);
-};
-
-/// \ingroup SslCrtdSslAPI
-/// \returns certificate database key
-std::string & OnDiskCertificateDbKey(const CertificateProperties &);
-
-/**
  \ingroup SslCrtdSslAPI
  * Decide on the kind of certificate and generate a CA- or self-signed one.
  * The  generated certificate will inherite properties from certToMimic
  * Return generated certificate and private key in resultX509 and resultPkey
  * variables.
  */
-bool generateSslCertificate(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, CertificateProperties const &properties);
+bool generateSslCertificate(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, Security::CertificateProperties const &properties);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -269,7 +181,7 @@ bool sslDateIsInTheFuture(char const * date);
  * a CertficateProperties object
  \return true if the certificates matches false otherwise.
 */
-bool certificateMatchesProperties(X509 *peer_cert, CertificateProperties const &properties);
+bool certificateMatchesProperties(X509 *peer_cert, Security::CertificateProperties const &properties);
 
 /**
    \ingroup ServerProtocolSSLAPI
@@ -297,4 +209,3 @@ const ASN1_BIT_STRING *X509_get_signature(const Security::CertPointer &);
 
 #endif // USE_OPENSSL
 #endif /* SQUID_SRC_SSL_GADGETS_H */
-

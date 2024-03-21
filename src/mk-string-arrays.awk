@@ -46,7 +46,7 @@ BEGIN {
 }
 codeSkip == 1		{ next }
 
-/^[ \t]*[A-Z]/ {
+/^[ \t]*[A-Za-z]/ {
 	split($1, t, ",")			# remove ,
 	if (sbuf) Element[++e] = "SBuf(\"" t[1] "\")"
 	else Element[++e] = "\"" t[1] "\""

@@ -465,14 +465,8 @@ Security::ServerOptions::updateContextConfig(Security::ContextPointer &ctx)
         SSL_CTX_set_quiet_shutdown(ctx.get(), 1);
     }
 
-    if (!sslCipher.isEmpty()) {
-        debugs(83, 5, "Using cipher suite " << sslCipher << ".");
-        if (!SSL_CTX_set_cipher_list(ctx.get(), sslCipher.c_str())) {
-            auto ssl_error = ERR_get_error();
-            debugs(83, DBG_CRITICAL, "ERROR: Failed to set SSL cipher suite '" << sslCipher << "': " <<  Security::ErrorString(ssl_error));
-            return false;
-        }
-    }
+    if (!updateContextCiphers(ctx))
+        return false;
 
     Ssl::MaybeSetupRsaCallback(ctx);
 #endif

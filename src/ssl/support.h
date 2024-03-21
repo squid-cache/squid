@@ -17,6 +17,8 @@
 #include "comm/forward.h"
 #include "compat/openssl.h"
 #include "sbuf/SBuf.h"
+#include "security/DigestAlgorithm.h"
+#include "security/forward.h"
 #include "security/Session.h"
 #include "ssl/gadgets.h"
 
@@ -117,7 +119,7 @@ GETX509PEM GetX509PEM;
 /// \ingroup ServerProtocolSSLAPI
 GETX509ATTRIBUTE GetX509Fingerprint;
 
-extern const EVP_MD *DefaultSignHash;
+extern Security::DigestAlgorithm DefaultSignHash;
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -216,7 +218,7 @@ void unloadSquidUntrusted();
   \ingroup ServerProtocolSSLAPI
   * Decide on the kind of certificate and generate a CA- or self-signed one
 */
-Security::ContextPointer GenerateSslContext(CertificateProperties const &, Security::ServerOptions &, bool trusted);
+Security::ContextPointer GenerateSslContext(Security::CertificateProperties const &, Security::ServerOptions &, bool trusted);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -225,7 +227,7 @@ Security::ContextPointer GenerateSslContext(CertificateProperties const &, Secur
   \param properties Check if the context certificate matches the given properties
   \return true if the contexts certificate is valid, false otherwise
  */
-bool verifySslCertificate(const Security::ContextPointer &, CertificateProperties const &);
+bool verifySslCertificate(const Security::ContextPointer &, Security::CertificateProperties const &);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -250,14 +252,14 @@ void chainCertificatesToSSLContext(Security::ContextPointer &, Security::ServerO
  \ingroup ServerProtocolSSLAPI
  * Configure a previously unconfigured SSL context object.
  */
-void configureUnconfiguredSslContext(Security::ContextPointer &, Ssl::CertSignAlgorithm signAlgorithm, AnyP::PortCfg &);
+void configureUnconfiguredSslContext(Security::ContextPointer &, Security::CertSignAlgorithm, AnyP::PortCfg &);
 
 /**
   \ingroup ServerProtocolSSLAPI
   * Generates a certificate and a private key using provided properties and set it
   * to SSL object.
  */
-bool configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &port);
+bool configureSSL(SSL *, Security::CertificateProperties const &, AnyP::PortCfg &);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -312,9 +314,9 @@ void setClientSNI(SSL *ssl, const char *fqdn);
 
 /**
   \ingroup ServerProtocolSSLAPI
-  * Generates a unique key based on CertificateProperties object and store it to key
+  * Generate a unique key based on Security::CertificateProperties object and store it to key
  */
-void InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties, SBuf &key);
+void InRamCertificateDbKey(const Security::CertificateProperties &, SBuf &key);
 
 /**
   \ingroup ServerProtocolSSLAPI

@@ -71,9 +71,13 @@ struct notls_x509 {};
 namespace Security
 {
 
+enum CertAdaptAlgorithm : short;
+
 class CertError;
 /// Holds a list of X.509 certificate errors
 typedef CbDataList<Security::CertError> CertErrors;
+
+class CertificateProperties;
 
 #if USE_OPENSSL
 typedef X509 Certificate;
@@ -91,6 +95,8 @@ typedef std::shared_ptr<struct gnutls_x509_crt_int> CertPointer;
 #else
 typedef std::shared_ptr<Certificate> CertPointer;
 #endif
+
+enum CertSignAlgorithm : short;
 
 #if USE_OPENSSL
 CtoCpp1(X509_CRL_free, X509_CRL *);
