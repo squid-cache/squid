@@ -366,7 +366,7 @@ httpHdrCcStatDumper(StoreEntry * sentry, int, double val, double, int count)
 std::ostream &
 operator<< (std::ostream &s, HttpHdrCcType c)
 {
-    s << ccNameByType(c).value_or("*invalid hdrcc*") << '[' << static_cast<int>(c) << ']';
+    s << ccNameByType(c).value_or("INVALID") << '[' << static_cast<int>(c) << ']';
     return s;
 }
 
