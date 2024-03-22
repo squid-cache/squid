@@ -702,7 +702,7 @@ HttpStateData::processReplyHeader()
     // reset payload tracking to begin after message headers
     payloadSeen = inBuf.length();
 
-    HttpReply *newrep = new HttpReply;
+    const auto newrep = HttpReplyPointer::Make();
     // XXX: RFC 7230 indicates we MAY ignore the reason phrase,
     //      and use an empty string on unknown status.
     //      We do that now to avoid performance regression from using SBuf::c_str()
@@ -720,7 +720,7 @@ HttpStateData::processReplyHeader()
     newrep->sources |= request->url.getScheme() == AnyP::PROTO_HTTPS ? Http::Message::srcHttps : Http::Message::srcHttp;
 
     if (newrep->sline.version.protocol == AnyP::PROTO_HTTP && Http::Is1xx(newrep->sline.status())) {
-        handle1xx(newrep);
+        handle1xx(newrep.getRaw());
         return;
     }
 
@@ -733,7 +733,7 @@ HttpStateData::processReplyHeader()
     if (!peerSupportsConnectionPinning())
         request->flags.connectionAuthDisabled = true;
 
-    HttpReply *vrep = setVirginReply(newrep);
+    auto vrep = setVirginReply(newrep.getRaw());
     flags.headers_parsed = true;
 
     keepaliveAccounting(vrep);
