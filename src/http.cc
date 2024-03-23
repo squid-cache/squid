@@ -702,7 +702,7 @@ HttpStateData::processReplyHeader()
     // reset payload tracking to begin after message headers
     payloadSeen = inBuf.length();
 
-    HttpReply *newrep = new HttpReply;
+    const auto newrep = HttpReply::Pointer::Make();
     // XXX: RFC 7230 indicates we MAY ignore the reason phrase,
     //      and use an empty string on unknown status.
     //      We do that now to avoid performance regression from using SBuf::c_str()
@@ -720,7 +720,7 @@ HttpStateData::processReplyHeader()
     newrep->sources |= request->url.getScheme() == AnyP::PROTO_HTTPS ? Http::Message::srcHttps : Http::Message::srcHttp;
 
     if (newrep->sline.version.protocol == AnyP::PROTO_HTTP && Http::Is1xx(newrep->sline.status())) {
-        handle1xx(newrep);
+        handle1xx(newrep.getRaw());
         return;
     }
 
@@ -733,7 +733,7 @@ HttpStateData::processReplyHeader()
     if (!peerSupportsConnectionPinning())
         request->flags.connectionAuthDisabled = true;
 
-    HttpReply *vrep = setVirginReply(newrep);
+    const auto vrep = setVirginReply(newrep.getRaw());
     flags.headers_parsed = true;
 
     keepaliveAccounting(vrep);
@@ -745,12 +745,10 @@ HttpStateData::processReplyHeader()
 
 /// ignore or start forwarding the 1xx response (a.k.a., control message)
 void
-HttpStateData::handle1xx(HttpReply *reply)
+HttpStateData::handle1xx(const HttpReply::Pointer &reply)
 {
     if (fwd->al)
         fwd->al->reply = reply;
-
-    HttpReply::Pointer msg(reply); // will destroy reply if unused
 
     // one 1xx at a time: we must not be called while waiting for previous 1xx
     Must(!flags.handling1xx);
@@ -774,7 +772,7 @@ HttpStateData::handle1xx(HttpReply *reply)
     if (Config.accessList.reply) {
         ACLFilledChecklist ch(Config.accessList.reply, originalRequest().getRaw());
         ch.al = fwd->al;
-        ch.reply = reply;
+        ch.reply = reply.getRaw();
         ch.syncAle(originalRequest().getRaw(), nullptr);
         HTTPMSGLOCK(ch.reply);
         if (!ch.fastCheck().allowed()) // TODO: support slow lookups?
@@ -794,7 +792,7 @@ HttpStateData::handle1xx(HttpReply *reply)
     const AsyncCall::Pointer cb = JobCallback(11, 3, CbDialer, this,
                                   HttpStateData::proceedAfter1xx);
     CallJobHere1(11, 4, request->clientConnectionManager, ConnStateData,
-                 ConnStateData::sendControlMsg, HttpControlMsg(msg, cb));
+                 ConnStateData::sendControlMsg, HttpControlMsg(reply, cb));
     // If the call is not fired, then the Sink is gone, and HttpStateData
     // will terminate due to an aborted store entry or another similar error.
     // If we get stuck, it is not handle1xx fault if we could get stuck
