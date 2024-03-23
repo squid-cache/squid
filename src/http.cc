@@ -745,12 +745,10 @@ HttpStateData::processReplyHeader()
 
 /// ignore or start forwarding the 1xx response (a.k.a., control message)
 void
-HttpStateData::handle1xx(HttpReply *reply)
+HttpStateData::handle1xx(const HttpReply::Pointer &reply)
 {
     if (fwd->al)
         fwd->al->reply = reply;
-
-    HttpReply::Pointer msg(reply); // will destroy reply if unused
 
     // one 1xx at a time: we must not be called while waiting for previous 1xx
     Must(!flags.handling1xx);
@@ -774,7 +772,7 @@ HttpStateData::handle1xx(HttpReply *reply)
     if (Config.accessList.reply) {
         ACLFilledChecklist ch(Config.accessList.reply, originalRequest().getRaw());
         ch.al = fwd->al;
-        ch.reply = reply;
+        ch.reply = reply.getRaw();
         ch.syncAle(originalRequest().getRaw(), nullptr);
         HTTPMSGLOCK(ch.reply);
         if (!ch.fastCheck().allowed()) // TODO: support slow lookups?
@@ -794,7 +792,7 @@ HttpStateData::handle1xx(HttpReply *reply)
     const AsyncCall::Pointer cb = JobCallback(11, 3, CbDialer, this,
                                   HttpStateData::proceedAfter1xx);
     CallJobHere1(11, 4, request->clientConnectionManager, ConnStateData,
-                 ConnStateData::sendControlMsg, HttpControlMsg(msg, cb));
+                 ConnStateData::sendControlMsg, HttpControlMsg(reply, cb));
     // If the call is not fired, then the Sink is gone, and HttpStateData
     // will terminate due to an aborted store entry or another similar error.
     // If we get stuck, it is not handle1xx fault if we could get stuck
