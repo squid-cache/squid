@@ -82,7 +82,7 @@ protected:
 
     void processReply();
     void proceedAfter1xx();
-    void handle1xx(HttpReply *msg);
+    void handle1xx(const HttpReplyPointer &);
     void drop1xx(const char *reason);
 
 private:
