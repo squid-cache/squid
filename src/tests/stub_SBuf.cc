@@ -15,9 +15,10 @@
 
 InstanceIdDefinitions(SBuf, "SBuf");
 
-SBufStats SBuf::stats;
 const SBuf::size_type SBuf::npos;
 const SBuf::size_type SBuf::maxSize;
+
+SBufStats& SBuf::Stats() STUB_RETREF(SBufStats)
 
 SBufStats::SizeRecorder SBufStats::SBufSizeAtDestructRecorder = nullptr;
 SBufStats::SizeRecorder SBufStats::MemBlobSizeAtDestructRecorder = nullptr;
@@ -48,7 +49,6 @@ bool SBuf::startsWith(const SBuf &, const SBufCaseSensitive) const STUB_RETVAL(f
 bool SBuf::operator ==(const SBuf &) const STUB_RETVAL(false)
 bool SBuf::operator !=(const SBuf &) const STUB_RETVAL(false)
 SBuf SBuf::consume(size_type) STUB_RETVAL(*this)
-const SBufStats& SBuf::GetStats() STUB_RETVAL(SBuf::stats)
 SBuf::size_type SBuf::copy(char *, size_type) const STUB_RETVAL(0)
 const char* SBuf::rawContent() const STUB_RETVAL(nullptr)
 char *SBuf::rawAppendStart(size_type) STUB_RETVAL(nullptr)
