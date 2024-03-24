@@ -4980,8 +4980,7 @@ DOC_START
 				when the last request byte is sent to the next hop
 				and stops when the last response byte is received.
 		[http::]<tt	Total time in milliseconds. The timer
-				starts with the first connect request (or write I/O)
-				sent to the first selected peer. The timer stops
+				starts when peer selection begins. The timer stops
 				with the last I/O with the last peer.
 
 	Squid handling related format codes:

@@ -137,6 +137,7 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     flags.dont_retry = false;
     flags.forward_completed = false;
     flags.destinationsFound = false;
+    flags.tunneled = false;
     debugs(17, 3, "FwdState constructed, this=" << this);
 }
 
@@ -161,6 +162,8 @@ void FwdState::start(Pointer aSelf)
 
     // just in case; should already be initialized to false
     request->flags.pinned = false;
+
+    request->hier.startPeerClock();
 
 #if STRICT_ORIGINAL_DST
     // Bug 3243: CVE 2009-0801
@@ -259,7 +262,8 @@ FwdState::completed()
 
     flags.forward_completed = true;
 
-    request->hier.stopPeerClock(false);
+    if (!flags.tunneled)
+        request->hier.stopPeerClock(false);
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         debugs(17, 3, "entry aborted");
@@ -1018,6 +1022,7 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
         answer.error.clear(); // preserve error for errorSendComplete()
     } else if (answer.tunneled) {
         assert(!answer.conn);
+        flags.tunneled = true;
         // TODO: When ConnStateData establishes tunnels, its state changes
         // [in ways that may affect logging?]. Consider informing
         // ConnStateData about our tunnel or otherwise unifying tunnel
@@ -1123,8 +1128,6 @@ FwdState::connectStart()
     delete err;
     err = nullptr;
     request->clearError();
-
-    request->hier.startPeerClock();
 
     const auto callback = asyncCallback(17, 5, FwdState::noteConnection, this);
     HttpRequest::Pointer cause = request;

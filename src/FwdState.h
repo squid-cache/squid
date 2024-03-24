@@ -184,6 +184,7 @@ private:
         bool dont_retry;
         bool forward_completed;
         bool destinationsFound; ///< at least one candidate path found
+        bool tunneled; ///< \copydoc Security::EncryptorAnswer::tunneled
     } flags;
 
     /// waits for a transport connection to the peer to be established/opened

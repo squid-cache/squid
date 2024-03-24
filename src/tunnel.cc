@@ -1211,6 +1211,9 @@ tunnelStart(ClientHttpRequest * http)
 #if USE_DELAY_POOLS
     tunnelState->server.setDelayId(DelayId::DelayClient(http));
 #endif
+
+    request->hier.startPeerClock();
+
     tunnelState->startSelectingDestinations(request, http->al, nullptr);
 }
 
@@ -1430,9 +1433,6 @@ TunnelStateData::cancelStep(const char *reason)
 void
 TunnelStateData::startConnecting()
 {
-    if (request)
-        request->hier.startPeerClock();
-
     assert(!destinations->empty());
     assert(!transporting());
 
