@@ -34,7 +34,7 @@ int Adaptation::Config::use_indirect_client = true;
 Notes&
 Adaptation::Config::metaHeaders()
 {
-    static const char *protectedFieldNamesRaw[] = {
+    static const auto protectedFieldNamesRaw = {
         "Allow",
         "Date",
         "Encapsulated",
@@ -51,7 +51,7 @@ Adaptation::Config::metaHeaders()
         "Transfer-Preview"
     };
     static const Notes::Keys protectedFieldNames(std::begin(protectedFieldNamesRaw), std::end(protectedFieldNamesRaw));
-    static auto metaHeaders = new Notes("ICAP header", &protectedFieldNames);
+    static const auto metaHeaders = new Notes("ICAP header", &protectedFieldNames);
     return *metaHeaders;
 }
 bool Adaptation::Config::needHistory = false;
