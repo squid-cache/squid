@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "time/gadgets.h"
 
+#include <chrono>
 #include <iomanip>
 #include <ostream>
 
@@ -21,12 +22,12 @@ time_t squid_curtime = 0;
 time_t
 getCurrentTime()
 {
-#if GETTIMEOFDAY_NO_TZP
-    gettimeofday(&current_time);
-#else
+    using namespace std::chrono;
+    const auto now = system_clock::now();
 
-    gettimeofday(&current_time, nullptr);
-#endif
+    const auto ms = duration_cast<milliseconds>(now.time_since_epoch());
+    current_time.tv_sec = ms.count()/1000;
+    current_time.tv_usec = (ms.count()%1000)*1000;
 
     current_dtime = (double) current_time.tv_sec +
                     (double) current_time.tv_usec / 1000000.0;
