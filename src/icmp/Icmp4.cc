@@ -17,7 +17,8 @@
 #include "debug/Stream.h"
 #include "Icmp4.h"
 #include "IcmpPinger.h"
-#include "time/gadgets.h"
+
+#include <chrono>
 
 static const char *
 IcmpPacketType(uint8_t v)
@@ -115,9 +116,10 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     // Construct ICMP packet data content
     echo = reinterpret_cast<icmpEchoData *>(reinterpret_cast<char *>(pkt) + sizeof(*icmp));
     echo->opcode = (unsigned char) opcode;
-    memcpy(&echo->tv, &current_time, sizeof(struct timeval));
+    const auto now = std::chrono::system_clock::now();
+    memcpy(&echo->tv, &now, sizeof(now));
 
-    icmp_pktsize += sizeof(struct timeval) + sizeof(char);
+    icmp_pktsize += sizeof(now) + sizeof(char);
 
     if (payload) {
         if (len > MAX_PAYLOAD)
@@ -161,7 +163,6 @@ Icmp4::Recv(void)
     struct iphdr *ip = nullptr;
     struct icmphdr *icmp = nullptr;
     static char *pkt = nullptr;
-    struct timeval now;
     icmpEchoData *echo;
     static pingerReplyData preply;
 
@@ -187,17 +188,10 @@ Icmp4::Recv(void)
         return;
     }
 
+    // grab 'now' early to maximize RTT calculation accuracy
+    const auto now = std::chrono::system_clock::now();
+
     preply.from = *from;
-
-#if GETTIMEOFDAY_NO_TZP
-
-    gettimeofday(&now);
-
-#else
-
-    gettimeofday(&now, nullptr);
-
-#endif
 
     debugs(42, 8, n << " bytes from " << preply.from);
 
@@ -237,9 +231,9 @@ Icmp4::Recv(void)
 
     preply.hops = ipHops(ip->ip_ttl);
 
-    struct timeval tv;
-    memcpy(&tv, &echo->tv, sizeof(struct timeval));
-    preply.rtt = tvSubMsec(tv, now);
+    const decltype(now) when;
+    memcpy(&when, &echo->tv, sizeof(when));
+    preply.rtt = std::chrono::duration<std::chrono::milliseconds>(when - now);
 
     preply.psize = n - iphdrlen - (sizeof(icmpEchoData) - MAX_PKT4_SZ);
 

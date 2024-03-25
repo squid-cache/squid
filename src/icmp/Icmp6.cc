@@ -17,10 +17,8 @@
 #include "debug/Stream.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
-#include "time/gadgets.h"
 
-// Some system headers are only neeed internally here.
-// They should not be included via the header.
+#include <chrono>
 
 #if HAVE_NETINET_IP6_H
 #include <netinet/ip6.h>
@@ -150,9 +148,10 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     // Fill Icmp6 ECHO data content
     echo = reinterpret_cast<icmpEchoData *>(reinterpret_cast<char *>(pkt) + sizeof(*icmp));
     echo->opcode = (unsigned char) opcode;
-    memcpy(&echo->tv, &current_time, sizeof(struct timeval));
+    const auto now = std::chrono::system_clock::now();
+    memcpy(&echo->tv, &now, sizeof(now));
 
-    icmp6_pktsize += sizeof(struct timeval) + sizeof(char);
+    icmp6_pktsize += sizeof(now) + sizeof(char);
 
     if (payload) {
         if (len > MAX_PAYLOAD)
@@ -201,7 +200,6 @@ Icmp6::Recv(void)
     static char *pkt = nullptr;
     struct icmp6_hdr *icmp6header = nullptr;
     icmpEchoData *echo = nullptr;
-    struct timeval now;
     static pingerReplyData preply;
 
     if (icmp_sock < 0) {
@@ -228,17 +226,10 @@ Icmp6::Recv(void)
         return;
     }
 
+    // grab 'now' early to maximize RTT calculation accuracy
+    const auto now = std::chrono::system_clock::now();
+
     preply.from = *from;
-
-#if GETTIMEOFDAY_NO_TZP
-
-    gettimeofday(&now);
-
-#else
-
-    gettimeofday(&now, nullptr);
-
-#endif
 
     debugs(42, 8, n << " bytes from " << preply.from);
 
@@ -298,9 +289,9 @@ Icmp6::Recv(void)
 
     preply.opcode = echo->opcode;
 
-    struct timeval tv;
-    memcpy(&tv, &echo->tv, sizeof(struct timeval));
-    preply.rtt = tvSubMsec(tv, now);
+    const decltype(now) when;
+    memcpy(&when, &echo->tv, sizeof(when));
+    preply.rtt = std::chrono::duration<std::chrono::milliseconds>(when - now);
 
     /*
      * Without access to the IPv6-Hops header we must rely on the total RTT
