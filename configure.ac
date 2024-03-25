@@ -2062,7 +2062,6 @@ SQUID_CHECK_SS_LEN_IN_SOCKADDR_STORAGE
 SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
 
 dnl System-specific library modifications
-AH_TEMPLATE(GETTIMEOFDAY_NO_TZP,[Whether gettimeofday takes only one argument])
 AS_CASE(["$host"],
   [*-pc-sco3.2*],[
     # -lintl is needed on SCO version 3.2v4.2 for strftime()
@@ -2114,11 +2113,7 @@ assert(myBar != NULL);
     AS_IF([test "$ac_cv_require_qcpluscmt" = "yes"],[
       SQUID_CFLAGS="-qcpluscmt $SQUID_CFLAGS"
     ])
-  ],
-
-  [*-*-solaris2.[[0-4]]],[AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)],
-
-  [*-sony-newsos[[56]]*],[AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)]
+  ]
 )
 
 dnl This has to be before AC_CHECK_FUNCS
