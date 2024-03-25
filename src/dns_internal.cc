@@ -1626,6 +1626,7 @@ idnsShutdownAndFreeState(const char *reason)
 
     // XXX: vcs are not closed/freed yet and may try to access nameservers[]
     nameservers.clear();
+    Dns::SearchPath().clear();
 }
 
 void
@@ -1638,7 +1639,6 @@ void
 Dns::ConfigRr::startReconfigure()
 {
     idnsShutdownAndFreeState("Reconfigure");
-    Dns::SearchPath().clear();
 }
 
 static int
