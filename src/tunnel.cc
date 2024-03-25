@@ -417,6 +417,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
     commSetConnTimeout(client.conn, Config.Timeout.lifetime, timeoutCall);
 
+    // could have been started already
     request->hier.startPeerClock();
 }
 
@@ -479,9 +480,6 @@ TunnelStateData::retryOrBail(const char *context)
 
     /* bail */
 
-    if (request)
-        request->hier.stopPeerClock(false);
-
     // TODO: Add sendSavedErrorOr(err_type type, Http::StatusCode, context).
     // Then, the remaining method code (below) should become the common part of
     // sendNewError() and sendSavedErrorOr(), used in "error detected" cases.
@@ -492,6 +490,9 @@ TunnelStateData::retryOrBail(const char *context)
     if (canSendError)
         return sendError(savedError, bailDescription ? bailDescription : context);
     *status_ptr = savedError->httpStatus;
+
+    if (request)
+        request->hier.stopPeerClock(false);
 
     finishWritingAndDelete(client);
 }
@@ -1213,7 +1214,6 @@ tunnelStart(ClientHttpRequest * http)
 #if USE_DELAY_POOLS
     tunnelState->server.setDelayId(DelayId::DelayClient(http));
 #endif
-
     tunnelState->startSelectingDestinations(request, http->al, nullptr);
 }
 

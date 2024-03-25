@@ -163,6 +163,7 @@ void FwdState::start(Pointer aSelf)
     // just in case; should already be initialized to false
     request->flags.pinned = false;
 
+    // start the clock just before any peer communication
     request->hier.startPeerClock();
 
 #if STRICT_ORIGINAL_DST
@@ -779,8 +780,6 @@ FwdState::retryOrBail()
 
     // TODO: should we call completed() here and move doneWithRetries there?
     doneWithRetries();
-
-    request->hier.stopPeerClock(false);
 
     if (self != nullptr && !err && shutting_down && entry->isEmpty()) {
         const auto anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request, al);
