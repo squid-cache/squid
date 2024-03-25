@@ -189,6 +189,9 @@ FwdState::stopAndDestroy(const char *reason)
 
     cancelStep(reason);
 
+    if (!flags.tunneled)
+        request->hier.stopPeerClock(false);
+
     PeerSelectionInitiator::subscribed = false; // may already be false
     self = nullptr; // we hope refcounting destroys us soon; may already be nil
     /* do not place any code here as this object may be gone by now */
@@ -261,9 +264,6 @@ FwdState::completed()
     }
 
     flags.forward_completed = true;
-
-    if (!flags.tunneled)
-        request->hier.stopPeerClock(false);
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         debugs(17, 3, "entry aborted");

@@ -416,6 +416,8 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
     commSetConnTimeout(client.conn, Config.Timeout.lifetime, timeoutCall);
+
+    request->hier.startPeerClock();
 }
 
 TunnelStateData::~TunnelStateData()
@@ -1211,8 +1213,6 @@ tunnelStart(ClientHttpRequest * http)
 #if USE_DELAY_POOLS
     tunnelState->server.setDelayId(DelayId::DelayClient(http));
 #endif
-
-    request->hier.startPeerClock();
 
     tunnelState->startSelectingDestinations(request, http->al, nullptr);
 }
