@@ -85,7 +85,7 @@ int search_group_tree(struct main_args *margs, LDAP * ld, char *bindp,
 #if HAVE_SUN_LDAP_SDK || HAVE_MOZILLA_LDAP_SDK
 #if HAVE_LDAP_REBINDPROC_CALLBACK
 
-#if HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN
+#if HAVE_SASL_H || HAVE_SASL_SASL_H
 static LDAP_REBINDPROC_CALLBACK ldap_sasl_rebind;
 
 static int LDAP_CALL LDAP_CALLBACK
@@ -121,7 +121,7 @@ ldap_simple_rebind(LDAP * ld,
                             nullptr);
 }
 #elif HAVE_LDAP_REBIND_PROC
-#if HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN
+#if HAVE_SASL_H || HAVE_SASL_SASL_H
 static LDAP_REBIND_PROC ldap_sasl_rebind;
 
 static int
@@ -131,7 +131,7 @@ ldap_sasl_rebind(LDAP * ld,
     struct ldap_creds *cp = (struct ldap_creds *) params;
     return tool_sasl_bind(ld, cp->dn, cp->pw);
 }
-#endif /* HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN */
+#endif /* HAVE_SASL_H || HAVE_SASL_SASL_H */
 
 static LDAP_REBIND_PROC ldap_simple_rebind;
 
@@ -153,7 +153,7 @@ ldap_simple_rebind(LDAP * ld,
 #ifndef LDAP_REFERRALS
 #define LDAP_REFERRALS
 #endif /* LDAP_REFERRALS */
-#if HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN
+#if HAVE_SASL_H || HAVE_SASL_SASL_H
 static LDAP_REBIND_FUNCTION ldap_sasl_rebind;
 
 static int
@@ -192,7 +192,7 @@ ldap_simple_rebind(LDAP * ld,
 #error "No rebind functione defined"
 #endif
 #else /* HAVE_SUN_LDAP_SDK */
-#if HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN
+#if HAVE_SASL_H || HAVE_SASL_SASL_H
 static LDAP_REBIND_PROC ldap_sasl_rebind;
 
 static int
@@ -1070,7 +1070,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
              * ldap bind with SASL/GSSAPI authentication (only possible if a domain was part of the username)
              */
 
-#if HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN
+#if HAVE_SASL_H || HAVE_SASL_SASL_H
             debug((char *)
                   "%s| %s: DEBUG: Bind to ldap server with SASL/GSSAPI\n",
                   LogTime(), PROGRAM);
