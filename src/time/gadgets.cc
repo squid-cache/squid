@@ -26,7 +26,7 @@ getCurrentTime()
     const auto now = system_clock::now().time_since_epoch();
 
     current_time.tv_sec = duration_cast<seconds>(now).count();
-    current_time.tv_usec = duration_cast<microseconds>(now).count()%1000;
+    current_time.tv_usec = duration_cast<microseconds>(now).count() % 1000000;
 
     current_dtime = (double) current_time.tv_sec +
                     (double) current_time.tv_usec / 1000000.0;
