@@ -23,11 +23,10 @@ time_t
 getCurrentTime()
 {
     using namespace std::chrono;
-    const auto now = system_clock::now();
+    const auto now = system_clock::now().time_since_epoch();
 
-    const auto ms = duration_cast<milliseconds>(now.time_since_epoch());
-    current_time.tv_sec = ms.count()/1000;
-    current_time.tv_usec = (ms.count()%1000)*1000;
+    current_time.tv_sec = duration_cast<seconds>(now).count();
+    current_time.tv_usec = duration_cast<microseconds>(now).count()%1000;
 
     current_dtime = (double) current_time.tv_sec +
                     (double) current_time.tv_usec / 1000000.0;
