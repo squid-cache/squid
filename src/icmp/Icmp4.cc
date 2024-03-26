@@ -18,8 +18,6 @@
 #include "Icmp4.h"
 #include "IcmpPinger.h"
 
-#include <chrono>
-
 static const char *
 IcmpPacketType(uint8_t v)
 {
@@ -116,10 +114,9 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     // Construct ICMP packet data content
     echo = reinterpret_cast<icmpEchoData *>(reinterpret_cast<char *>(pkt) + sizeof(*icmp));
     echo->opcode = (unsigned char) opcode;
-    const auto now = std::chrono::system_clock::now();
-    memcpy(&echo->tv, &now, sizeof(now));
+    echo->tv = std::chrono::system_clock::now();
 
-    icmp_pktsize += sizeof(now) + sizeof(char);
+    icmp_pktsize += sizeof(echo->tv) + sizeof(echo->opcode);
 
     if (payload) {
         if (len > MAX_PAYLOAD)
@@ -231,9 +228,7 @@ Icmp4::Recv(void)
 
     preply.hops = ipHops(ip->ip_ttl);
 
-    const decltype(now) when;
-    memcpy(&when, &echo->tv, sizeof(when));
-    preply.rtt = std::chrono::duration<std::chrono::milliseconds>(when - now);
+    preply.rtt = std::chrono::duration_cast<std::chrono::milliseconds>(echo->tv - now).count();
 
     preply.psize = n - iphdrlen - (sizeof(icmpEchoData) - MAX_PKT4_SZ);
 

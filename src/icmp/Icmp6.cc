@@ -18,8 +18,6 @@
 #include "Icmp6.h"
 #include "IcmpPinger.h"
 
-#include <chrono>
-
 #if HAVE_NETINET_IP6_H
 #include <netinet/ip6.h>
 #endif
@@ -148,10 +146,9 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     // Fill Icmp6 ECHO data content
     echo = reinterpret_cast<icmpEchoData *>(reinterpret_cast<char *>(pkt) + sizeof(*icmp));
     echo->opcode = (unsigned char) opcode;
-    const auto now = std::chrono::system_clock::now();
-    memcpy(&echo->tv, &now, sizeof(now));
+    echo->tv = std::chrono::system_clock::now();
 
-    icmp6_pktsize += sizeof(now) + sizeof(char);
+    icmp6_pktsize += sizeof(echo->tv) + sizeof(echo->opcode);
 
     if (payload) {
         if (len > MAX_PAYLOAD)
@@ -289,9 +286,7 @@ Icmp6::Recv(void)
 
     preply.opcode = echo->opcode;
 
-    const decltype(now) when;
-    memcpy(&when, &echo->tv, sizeof(when));
-    preply.rtt = std::chrono::duration<std::chrono::milliseconds>(when - now);
+    preply.rtt = std::chrono::duration_cast<std::chrono::milliseconds>(echo->tv - now).count();
 
     /*
      * Without access to the IPv6-Hops header we must rely on the total RTT

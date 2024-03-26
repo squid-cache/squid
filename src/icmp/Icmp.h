@@ -13,6 +13,8 @@
 
 #include "ip/Address.h"
 
+#include <chrono>
+
 #define PINGER_PAYLOAD_SZ   8192
 
 #define MAX_PAYLOAD 256 // WAS: SQUIDHOSTNAMELEN
@@ -36,14 +38,14 @@ struct pingerReplyData {
     pingerReplyData() { memset(&payload, 0, sizeof(payload)); }
     Ip::Address from;
     unsigned char opcode = '\0';
-    int rtt = 0;
+    int rtt = 0; // in milliseconds
     int hops = 0;
     int psize = 0;
     char payload[PINGER_PAYLOAD_SZ];
 };
 
 struct icmpEchoData {
-    struct timeval tv;
+    std::chrono::time_point<std::chrono::system_clock> tv;
     unsigned char opcode;
     char payload[MAX_PAYLOAD];
 };
