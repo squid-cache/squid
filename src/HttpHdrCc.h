@@ -210,7 +210,6 @@ public:
 class StatHist;
 class StoreEntry;
 
-void httpHdrCcInitModule(void);
 void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
 void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 

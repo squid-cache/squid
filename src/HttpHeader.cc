@@ -135,7 +135,6 @@ httpHeaderInitModule(void)
     assert(HttpHeaderStats[hoEnd-1].label && "HttpHeaderStats created with all elements");
 
     /* init dependent modules */
-    httpHdrCcInitModule();
     httpHdrScInitModule();
 
     httpHeaderRegisterWithCacheManager();
