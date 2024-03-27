@@ -46,6 +46,7 @@ struct pingerReplyData {
 
 struct icmpEchoData {
     std::chrono::time_point<std::chrono::system_clock> tv;
+    static_assert(std::is_trivially_copyable_v<std::chrono::time_point<std::chrono::system_clock>>);
     unsigned char opcode;
     char payload[MAX_PAYLOAD];
 };
