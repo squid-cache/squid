@@ -220,5 +220,48 @@ operator <<(std::ostream &os, const AsList<Container> &manipulator)
 template <typename Container>
 inline auto asList(const Container &c) { return AsList<Container>(c); }
 
+/// Helps print T object at most once per AtMostOnce<T> object lifetime.
+/// T objects are printed to std::ostream using operator "<<".
+///
+/// \code
+/// auto headerOnce = AtMostOnce("Transaction Details:\n");
+/// if (detailOne)
+///     os << headerOnce << *detailOne;
+/// if (const auto detailTwo = findAnotherDetail())
+///     os << headerOnce << *detailTwo;
+/// \endcode
+template <class T>
+class AtMostOnce
+{
+public:
+    /// caller must ensure `t` lifetime extends to the last use of this AtMostOnce instance
+    explicit AtMostOnce(const T &t): toPrint(t) {}
+
+    void print(std::ostream &os) {
+        if (!printed) {
+            os << toPrint;
+            printed = true;
+        }
+    }
+
+private:
+    const T &toPrint;
+    bool printed = false;
+};
+
+/// Prints AtMostOnce argument if needed. The argument is not constant to
+/// prevent wrong usage:
+///
+/// \code
+/// /* Compiler error: cannot bind non-const lvalue reference to an rvalue */
+/// os << AtMostOnce(x);
+/// \endcode
+template <class T>
+inline auto &
+operator <<(std::ostream &os, AtMostOnce<T> &a) {
+    a.print(os);
+    return os;
+}
+
 #endif /* SQUID_SRC_BASE_IOMANIP_H */
 
