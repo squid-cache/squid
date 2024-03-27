@@ -13,8 +13,13 @@
 
 #include "adaptation/forward.h"
 #include "adaptation/Service.h"
+
+#if HAVE_LIBECAP_COMMON_FORWARD_H
 #include <libecap/common/forward.h>
+#endif
+#if HAVE_LIBECAP_COMMON_MEMORY_H
 #include <libecap/common/memory.h>
+#endif
 
 namespace Adaptation
 {

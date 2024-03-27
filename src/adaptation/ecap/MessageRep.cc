@@ -9,19 +9,24 @@
 /* DEBUG: section 93    eCAP Interface */
 
 #include "squid.h"
-#include "BodyPipe.h"
-#include "HttpReply.h"
-#include "HttpRequest.h"
-#include <libecap/common/names.h>
-#include <libecap/common/area.h>
-#include <libecap/common/version.h>
-#include <libecap/common/named_values.h>
-#include "adaptation/ecap/Host.h" /* for protocol constants */
+#include "adaptation/ecap/Host.h"
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/XactionRep.h"
 #include "base/TextException.h"
+#include "HttpReply.h"
 
-/* HeaderRep */
+#if HAVE_LIBECAP_COMMON_AREA_H
+#include <libecap/common/area.h>
+#endif
+#if HAVE_LIBECAP_COMMON_NAMED_VALUES_H
+#include <libecap/common/named_values.h>
+#endif
+#if HAVE_LIBECAP_COMMON_NAMES_H
+#include <libecap/common/names.h>
+#endif
+#if HAVE_LIBECAP_COMMON_VERSION_H
+#include <libecap/common/version.h>
+#endif
 
 Adaptation::Ecap::HeaderRep::HeaderRep(Http::Message &aMessage): theHeader(aMessage.header),
     theMessage(aMessage)

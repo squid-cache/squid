@@ -11,7 +11,9 @@
 #ifndef SQUID_SRC_ADAPTATION_ECAP_HOST_H
 #define SQUID_SRC_ADAPTATION_ECAP_HOST_H
 
+#if HAVE_LIBECAP_HOST_HOST_H
 #include <libecap/host/host.h>
+#endif
 
 namespace Adaptation
 {

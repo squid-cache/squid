@@ -16,10 +16,13 @@
 #include "adaptation/Initiate.h"
 #include "adaptation/Message.h"
 #include "BodyPipe.h"
-#include <libecap/common/forward.h>
-#include <libecap/common/memory.h>
-#include <libecap/host/xaction.h>
+
+#if HAVE_LIBECAP_ADAPTER_XACTION_H
 #include <libecap/adapter/xaction.h>
+#endif
+#if HAVE_LIBECAP_HOST_XACTION_H
+#include <libecap/host/xaction.h>
+#endif
 
 namespace Adaptation
 {

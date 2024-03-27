@@ -18,10 +18,19 @@
 #include "debug/Stream.h"
 #include "EventLoop.h"
 
+#if HAVE_LIBECAP_ADAPTER_SERVICE_H
 #include <libecap/adapter/service.h>
+#endif
+#if HAVE_LIBECAP_COMMON_OPTIONS_H
 #include <libecap/common/options.h>
+#endif
+#if HAVE_LIBECAP_COMMON_NAME_H
 #include <libecap/common/name.h>
+#endif
+#if HAVE_LIBECAP_COMMON_NAMED_VALUES_H
 #include <libecap/common/named_values.h>
+#endif
+
 #include <limits>
 #include <map>
 
