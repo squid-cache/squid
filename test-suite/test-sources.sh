@@ -131,20 +131,14 @@ check_source_maintenance() {
         return 0;
     fi
 
-    # The OS may not provide the right version of the astyle package, but
-    # source formatting (by developers) is not yet enforced, so we run with
-    # whatever astyle is provided, abusing the fact that $checker skips
-    # formatting iff it can execute a binary called astyle but does not like
-    # astyle's version.
-
     # Avoid distracting $checker warnings; TODO: Fix $checker instead.
     touch boilerplate_fix.sed
 
     if ! run $checker $copyrightOption no
     then
-        echo_error "Running $checker modified sources"
-        CHECK_OUTCOME_PHRASE="Ignored $checker failure" # maybe overwritten below
-        # TODO: Require source-maintenance.sh application instead of ignoring this error.
+        echo_error "Failure while running $checker"
+        CHECK_OUTCOME_PHRASE="$checker failure"
+        return 1
     fi
 
     if run git diff --exit-code
@@ -153,11 +147,11 @@ check_source_maintenance() {
     fi
 
     echo_error "Running $checker modified sources"
-    echo "The diff above details these modifications. Consider running $checker."
+    echo "The diff above details these modifications."
+    echo "advice: Run $checker. Review and commit correct modifications."
+    CHECK_OUTCOME_PHRASE="$checker modified sources"
     # TODO: Provide a downloadable patch that developers can apply.
-    CHECK_OUTCOME_PHRASE="Ignored the need to run $checker"
-    # TODO: Require source-maintenance.sh application instead of ignoring these changes.
-    return 0
+    return 1
 }
 
 run_one_check() {
