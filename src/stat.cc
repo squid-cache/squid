@@ -63,6 +63,8 @@
 #include "comm.h"
 #include "StoreSearch.h"
 
+#include <chrono>
+
 typedef int STOBJFLT(const StoreEntry *);
 
 class StatObjectsState
@@ -109,8 +111,8 @@ void DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry);
 
 #if XMALLOC_STATISTICS
 static void info_get_mallstat(int, int, int, void *);
-static double xm_time;
-static double xm_deltat;
+static std::chrono::microseconds xm_time;
+static std::chrono::microseconds xm_deltat;
 #endif
 
 StatCounters CountHist[N_COUNT_HIST];
@@ -421,8 +423,11 @@ info_get_mallstat(int size, int number, int oldnum, void *data)
     StoreEntry *sentry = (StoreEntry *)data;
 
 // format: "%12s %15s %6s %12s\n","Alloc Size","Count","Delta","Alloc/sec"
-    if (number > 0)
-        storeAppendPrintf(sentry, "%12d %15d %6d %.1f\n", size, number, number - oldnum, xdiv((number - oldnum), xm_deltat));
+    if (number > 0) {
+        const auto delta = number - oldnum;
+        const auto avg = xdiv(delta, (xm_deltat.count()/1000000.0))
+        storeAppendPrintf(sentry, "%12d %15d %6d %.1f\n", size, number, delta, avg);
+    }
 }
 
 #endif
@@ -764,8 +769,9 @@ void
 DumpMallocStatistics(StoreEntry* sentry)
 {
 #if XMALLOC_STATISTICS
-    xm_deltat = current_dtime - xm_time;
-    xm_time = current_dtime;
+    using namespace std::chrono;
+    xm_deltat = system_clock::now() - xm_time;
+    xm_time = system_clock::now();
     storeAppendPrintf(sentry, "\nMemory allocation statistics\n");
     storeAppendPrintf(sentry, "%12s %15s %6s %12s\n","Alloc Size","Count","Delta","Alloc/sec");
     malloc_statistics(info_get_mallstat, sentry);
