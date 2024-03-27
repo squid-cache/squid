@@ -55,7 +55,7 @@ public:
     time_t oldest_service_failure;
     int service_revival_delay;
 
-    static Notes metaHeaders; ///< The list of configured meta headers
+    static Notes& metaHeaders(); ///< The list of configured meta headers
 
     static bool needHistory; ///< HttpRequest adaptation history should recorded
 
