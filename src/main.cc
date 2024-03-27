@@ -223,7 +223,7 @@ private:
 
 int
 SignalEngine::checkEvents(int)
-    { // injected extra whitespace at the beginning of this line
+{
     if (do_reconfigure)
         mainReconfigureStart();
     else if (do_rotate)
