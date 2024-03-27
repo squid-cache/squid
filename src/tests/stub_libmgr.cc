@@ -30,7 +30,7 @@ void Mgr::Action::add(const Action &) STUB
 void Mgr::Action::respond(const Request &) STUB
 void Mgr::Action::sendResponse(const Ipc::RequestId) STUB
 bool Mgr::Action::atomic() const STUB_RETVAL(false)
-const char * Mgr::Action::name() const STUB_RETVAL(nullptr)
+const SBuf &Mgr::Action::name() const STUB_RETREF(SBuf)
 static Mgr::Command static_Command;
 const Mgr::Command & Mgr::Action::command() const STUB_RETVAL(static_Command)
 StoreEntry * Mgr::Action::createStoreEntry() const STUB_RETVAL(nullptr)

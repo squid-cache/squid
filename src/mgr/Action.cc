@@ -45,7 +45,7 @@ Mgr::Action::atomic() const
     return command().profile->isAtomic;
 }
 
-const char*
+const SBuf &
 Mgr::Action::name() const
 {
     return command().profile->name;
@@ -55,7 +55,9 @@ StoreEntry*
 Mgr::Action::createStoreEntry() const
 {
     const ActionParams &params = command().params;
-    const char *uri = params.httpUri.termedBuf();
+    // XXX: performance regression. c_str() reallocates.
+    SBuf url = params.httpUri.absolute();
+    const char *uri = url.c_str();
     return storeCreateEntry(uri, uri, params.httpFlags, params.httpMethod);
 }
 

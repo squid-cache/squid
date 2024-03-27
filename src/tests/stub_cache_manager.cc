@@ -14,7 +14,7 @@
 #define STUB_API "cache_manager.cc"
 #include "tests/STUB.h"
 
-Mgr::Action::Pointer CacheManager::createNamedAction(char const*) STUB_RETVAL(nullptr)
+Mgr::Action::Pointer CacheManager::createNamedAction(const SBuf &) STUB_RETVAL(nullptr)
 void CacheManager::start(const Comm::ConnectionPointer &, HttpRequest *, StoreEntry *, const AccessLogEntryPointer &)
 {
     std::cerr << HERE << "\n";

@@ -13,6 +13,7 @@
 
 #include "ipc/forward.h"
 #include "mgr/forward.h"
+#include "sbuf/forward.h"
 
 class StoreEntry;
 
@@ -64,7 +65,7 @@ public:
     virtual bool aggregatable() const { return true; } // most kid classes are
 
     bool atomic() const; ///< dump() call writes everything before returning
-    const char *name() const; ///< label as seen in the cache manager menu
+    const SBuf &name() const; ///< label as seen in the cache manager menu
     const Command &command() const; ///< the cause of this action
 
     StoreEntry *createStoreEntry() const; ///< creates store entry from params

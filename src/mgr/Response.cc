@@ -21,7 +21,6 @@
 Mgr::Response::Response(const Ipc::RequestId aRequestId, const Action::Pointer anAction):
     Ipc::Response(aRequestId), action(anAction)
 {
-    Must(!action || action->name()); // if there is an action, it must be named
 }
 
 Mgr::Response::Response(const Ipc::TypedMsgHdr &msg)
@@ -31,9 +30,9 @@ Mgr::Response::Response(const Ipc::TypedMsgHdr &msg)
     Must(requestId != 0);
 
     if (msg.hasMoreData()) {
-        String actionName;
+        SBuf actionName;
         msg.getString(actionName);
-        action = CacheManager::GetInstance()->createNamedAction(actionName.termedBuf());
+        action = CacheManager::GetInstance()->createNamedAction(actionName);
         Must(hasAction());
         action->unpack(msg);
     }
