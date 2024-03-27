@@ -49,13 +49,15 @@ public:
         AccessLogEntry::Pointer const &alp,
         const time_t timeout = 0):
         AsyncJob("Ssl::IcapPeerConnector"),
-        Security::PeerConnector(aServerConn, aCallback, alp, timeout), icapService(service) {}
+        Security::PeerConnector(aServerConn, nullptr, aCallback, alp, timeout), icapService(service) {}
 
     /* Security::PeerConnector API */
     bool initialize(Security::SessionPointer &) override;
     void noteNegotiationDone(ErrorState *error) override;
-    Security::ContextPointer getTlsContext() override {
-        return icapService->sslContext;
+    Security::FuturePeerContextPointer peerContext() const override {
+        // XXX: We should be able to keep the options part constant.
+        auto &cfg = const_cast<Adaptation::ServiceConfig&>(icapService->cfg());
+        return MakeLikeFuture(cfg.secure, icapService->sslContext);
     }
 
 private:

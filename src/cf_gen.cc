@@ -97,6 +97,9 @@ public:
     LineList cfgLines; ///< between CONFIG_START and CONFIG_END
     int array_flag = 0; ///< TYPE is a raw array[] declaration
 
+    /// whether this is a "REPETITIONS: update" entry
+    bool mayBeSeenMultipleTimes = false;
+
     void genParse(std::ostream &fout) const;
 
 private:
@@ -346,6 +349,21 @@ main(int argc, char *argv[])
 
                     checkDepend(curr.name, ptr, types, entries);
                     curr.type = ptr;
+                } else if (!strncmp(buff, "REPETITIONS:", 12)) {
+                    if ((ptr = strtok(buff + 12, WS)) == nullptr) {
+                        errorMsg(input_filename, linenum, buff);
+                        exit(EXIT_FAILURE);
+                    }
+
+                    // TODO: Support "REPETITIONS: overwrite"?
+                    if (strcmp(ptr, "update") == 0)
+                        curr.mayBeSeenMultipleTimes = true;
+                    else if (strcmp(ptr, "banned") == 0)
+                        curr.mayBeSeenMultipleTimes = false;
+                    else {
+                        errorMsg(input_filename, linenum, "expected 'update' or 'banned' attribute value");
+                        exit(EXIT_FAILURE);
+                    }
                 } else if (!strncmp(buff, "IFDEF:", 6)) {
                     if ((ptr = strtok(buff + 6, WS)) == nullptr) {
                         errorMsg(input_filename, linenum, buff);
@@ -610,7 +628,8 @@ Entry::genParseAlias(const std::string &aName, std::ostream &fout) const
     } else if (!loc.size() || loc.compare("none") == 0) {
         fout << "parse_" << type << "();";
     } else if (type.find("::") != std::string::npos) {
-        fout << "ParseDirective<" << type << ">(" << loc << ", LegacyParser);";
+        const auto method = mayBeSeenMultipleTimes ? "ParseUpdatingDirective" : "ParseUniqueDirective";
+        fout << method << "<" << type << ">(" << loc << ", LegacyParser);";
     } else {
         fout << "parse_" << type << "(&" << loc << (array_flag ? "[0]" : "") << ");";
     }
@@ -681,9 +700,10 @@ gen_dump(const EntryList &head, std::ostream &fout)
         if (e.ifdef.size())
             fout << "#if " << e.ifdef << std::endl;
 
-        if (e.type.find("::") != std::string::npos)
-            fout << "    DumpDirective<" << e.type << ">(" << e.loc << ", entry, \"" << e.name << "\");\n";
-        else
+        if (e.type.find("::") != std::string::npos) {
+            const auto method = e.mayBeSeenMultipleTimes ? "DumpUpdatingDirective" : "DumpUniqueDirective";
+            fout << "    " << method << "<" << e.type << ">(" << e.loc << ", entry, \"" << e.name << "\");\n";
+        } else
             fout << "    dump_" << e.type << "(entry, \"" << e.name << "\", " << e.loc << ");" << std::endl;
 
         if (e.ifdef.size())

@@ -22,6 +22,7 @@ class PeekingPeerConnector: public Security::PeerConnector {
 public:
     PeekingPeerConnector(HttpRequestPointer &aRequest,
                          const Comm::ConnectionPointer &aServerConn,
+                         const Security::FuturePeerContextPointer &,
                          const Comm::ConnectionPointer &aClientConn,
                          const AsyncCallback<Security::EncryptorAnswer> &aCallback,
                          const AccessLogEntryPointer &alp,
@@ -29,7 +30,7 @@ public:
 
     /* Security::PeerConnector API */
     bool initialize(Security::SessionPointer &) override;
-    Security::ContextPointer getTlsContext() override;
+    Security::FuturePeerContextPointer peerContext() const override;
     void noteWantWrite() override;
     void noteNegotiationError(const Security::ErrorDetailPointer &) override;
     void noteNegotiationDone(ErrorState *error) override;

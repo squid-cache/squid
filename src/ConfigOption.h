@@ -24,21 +24,32 @@ namespace Configuration {
 /// (i.e. the Config objects and similar/related global state). To facilitate
 /// reuse, implementations/specializations should also be independent from any
 /// specific configuration directive name and its squid.conf location.
-///
-/// TODO: Support multi-directive components of various kinds.
 template <class T>
 class Component
 {
 public:
-    /* the code adding "TYPE: T" to cf.data.pre must specialize these */
+    /* code adding "REPETITIONS: banned" to cf.data.pre must specialize these */
 
     /// creates a new T instance using the given parser; never returns nil
     static T Parse(ConfigParser &);
 
-    /// reports the current T instance configuration in squid.conf format
+    /// reports configuration parameters of the given T instance in squid.conf format
     static void Print(std::ostream &, const T &);
 
-    /// destroys Parse() result
+    /* code adding "REPETITIONS: update" to cf.data.pre must specialize these */
+
+    /// creates a new T instance for one or more ParseAndUpdate() calls
+    static T Create();
+
+    /// parses the first and any subsequent directive occurrence, updating T
+    static void ParseAndUpdate(T &, ConfigParser &);
+
+    /// reports the given T instance configuration in squid.conf format
+    static void PrintDirectives(std::ostream &, const T &, const char *directiveName);
+
+    /* code adding "TYPE: T" to cf.data.pre must specialize this */
+
+    /// destroys Parse() or Create() result
     static void Free(T);
 };
 

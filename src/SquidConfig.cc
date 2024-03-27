@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "security/PeerOptions.h" /* XXX: Will be gone with FuturePeerContextPointer */
 #include "SquidConfig.h"
 
 class SquidConfig Config;
