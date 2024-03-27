@@ -9959,7 +9959,7 @@ DOC_END
 NAME: adaptation_meta
 TYPE: note
 IFDEF: USE_ADAPTATION
-LOC: Adaptation::Config::metaHeaders
+LOC: Adaptation::Config::metaHeaders()
 DEFAULT: none
 DOC_START
 	This option allows Squid administrator to add custom ICAP request
