@@ -1040,7 +1040,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
 
         /* auth_user is now linked, we reset these values
          * after external auth occurs anyway */
-        auth_user->expiretime = current_time.tv_sec;
+        auth_user->expires = current_time.tv_sec;
     } else {
         debugs(29, 9, "Found user '" << username << "' in the user cache as '" << auth_user << "'");
         digest_user = static_cast<Auth::Digest::User *>(auth_user.getRaw());

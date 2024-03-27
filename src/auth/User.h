@@ -50,7 +50,7 @@ public:
     Auth::SchemeConfig *config;
     dlink_list proxy_match_cache;
     size_t ipcount;
-    long expiretime;
+    time_t expires = 0;
 
     /// list of key=value pairs the helper produced
     NotePairs notes;
