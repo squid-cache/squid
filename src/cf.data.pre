@@ -4981,7 +4981,8 @@ DOC_START
 				and stops when the last response byte is received.
 		[http::]<tt	Total time in milliseconds. The timer
 				starts when peer selection begins. The timer stops
-				with the last I/O with the last peer.
+				when relevant forwarding (including re-forwarding)
+				activities end.
 
 	Squid handling related format codes:
 
