@@ -484,13 +484,13 @@ CacheManager::PutCommonResponseHeaders(HttpReply &response, const char *httpOrig
         response.header.putExt("Access-Control-Expose-Headers", "Server");
     }
 
-    std::unique_ptr<HttpHdrCc> cc(new HttpHdrCc());
+    HttpHdrCc cc;
     // this is honored by more caches but allows pointless revalidation;
     // revalidation will always fail because we do not support it (yet?)
-    cc->noCache(String());
+    cc.noCache(String());
     // this is honored by fewer caches but prohibits pointless revalidation
-    cc->noStore(true);
-    response.putCc(cc.release());
+    cc.noStore(true);
+    response.putCc(cc);
 }
 
 CacheManager*

@@ -1040,15 +1040,14 @@ HttpHeader::putAuth(const char *auth_scheme, const char *realm)
 }
 
 void
-HttpHeader::putCc(const HttpHdrCc * cc)
+HttpHeader::putCc(const HttpHdrCc &cc)
 {
-    assert(cc);
     /* remove old directives if any */
     delById(Http::HdrType::CACHE_CONTROL);
     /* pack into mb */
     MemBuf mb;
     mb.init();
-    cc->packInto(&mb);
+    cc.packInto(&mb);
     /* put */
     addEntry(new HttpHeaderEntry(Http::HdrType::CACHE_CONTROL, SBuf(), mb.buf));
     /* cleanup */

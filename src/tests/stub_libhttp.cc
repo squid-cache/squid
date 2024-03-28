@@ -42,7 +42,7 @@ Message::~Message() {STUB}
 void Message::packInto(Packable *, bool) const STUB
 void Message::setContentLength(int64_t) STUB
 bool Message::persistent() const STUB_RETVAL(false)
-void Message::putCc(const HttpHdrCc *) STUB
+void Message::putCc(const HttpHdrCc &) STUB
 bool Message::parse(const char *, const size_t, bool, Http::StatusCode *) STUB_RETVAL(false)
 bool Message::parseCharBuf(const char *, ssize_t) STUB_RETVAL(false)
 int Message::httpMsgParseStep(const char *, int, int) STUB_RETVAL(-1)

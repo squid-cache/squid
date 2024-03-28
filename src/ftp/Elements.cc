@@ -40,7 +40,7 @@ Ftp::HttpReplyWrapper(const int ftpStatus, const char *ftpReason, const Http::St
     {
         HttpHdrCc cc;
         cc.Private(String());
-        header.putCc(&cc);
+        header.putCc(cc);
     }
     if (ftpStatus > 0)
         header.putInt(Http::HdrType::FTP_STATUS, ftpStatus);
