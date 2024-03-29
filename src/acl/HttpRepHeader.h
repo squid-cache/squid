@@ -17,7 +17,7 @@ namespace Acl
 {
 
 /// a "rep_header" ACL
-class HttpRepHeaderCheck: public ParameterizedNode< ACLData<HttpHeader*> >
+class HttpRepHeaderCheck: public ParameterizedNode< ACLData<const HttpHeader &> >
 {
 public:
     /* Acl::Node API */

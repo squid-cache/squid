@@ -17,6 +17,6 @@ Acl::HttpReqHeaderCheck::match(ACLChecklist * const ch)
 {
     const auto checklist = Filled(ch);
 
-    return data->match (&checklist->request->header);
+    return data->match(checklist->request->header);
 }
 
