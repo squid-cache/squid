@@ -56,7 +56,7 @@ Acl::ConnectionsEncrypted::match(ACLChecklist *checklist)
     const bool safeRequest =
         !(filled->request->sources & Http::Message::srcUnsafe);
     const bool safeReply = !filled->hasReply() ||
-                           !(filled->getReplyXXX()->sources & Http::Message::srcUnsafe);
+                           !(filled->reply().sources & Http::Message::srcUnsafe);
 
     return (safeRequest && safeReply) ? 1 : 0;
 }

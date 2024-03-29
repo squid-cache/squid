@@ -61,7 +61,12 @@ public:
     /// set the client side FD
     void fd(int aDescriptor);
 
-    /// remembers the response (if it is still unknown) or does nothing (otherwise)
+    /// response added by updateReply()
+    /// \prec hasReply()
+    const HttpReply &reply() const { return *reply_; }
+
+    /// Remembers the response (if it is still unknown) or does nothing
+    /// (otherwise). Does nothing if the supplied response pointer is nil.
     void updateReply(const HttpReply::Pointer &);
 
     bool destinationDomainChecked() const;
@@ -84,10 +89,6 @@ public:
     char *dst_rdns;
 
     HttpRequest::Pointer request;
-
-    /// Use updateReply() to set this data member. TODO: Hide?
-    HttpReply::Pointer reply_;
-    const HttpReply::Pointer &getReplyXXX() const { return reply_; } // XXX: Drop or refactor.
 
     char rfc931[USER_IDENT_SZ];
 #if USE_AUTH
@@ -118,6 +119,9 @@ public:
 private:
     ConnStateData * conn_;          /**< hack for ident and NTLM */
     int fd_;                        /**< may be available when conn_ is not */
+
+    HttpReply::Pointer reply_; ///< response added by updateReply() or nil
+
     bool destinationDomainChecked_;
     bool sourceDomainChecked_;
     /// not implemented; will cause link failures if used
