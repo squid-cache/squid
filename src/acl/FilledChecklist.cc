@@ -262,18 +262,19 @@ ACLFilledChecklist::setIdent(const char *ident)
 void
 ACLFilledChecklist::updateAle(const AccessLogEntry::Pointer &a)
 {
-    if (!al && a) {
-        al = a;
-        if (!request)
-            setRequest(a->request);
-        updateReply(a->reply);
-    }
+    if (!a)
+        return;
+
+    al = a; // could have been set already (to a different value)
+    if (!request)
+        setRequest(a->request);
+    updateReply(a->reply);
 }
 
 void
 ACLFilledChecklist::updateReply(const HttpReply::Pointer &r)
 {
     if (r)
-        reply_ = r; // may already be set to r
+        reply_ = r; // may already be set, including to r
 }
 

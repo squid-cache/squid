@@ -71,7 +71,7 @@ Note::match(HttpRequest *request, HttpReply *reply, const AccessLogEntry::Pointe
 {
     ACLFilledChecklist ch(nullptr, request, nullptr);
     ch.updateAle(al);
-    ch.updateReply(reply); // TODO: Check whether caller should use ALE to supply reply
+    ch.updateReply(reply);
     ch.syncAle(request, nullptr);
 
     for (const auto &v: values) {

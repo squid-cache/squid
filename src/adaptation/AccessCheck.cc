@@ -131,8 +131,8 @@ Adaptation::AccessCheck::checkCandidates()
             /* BUG 2526: what to do when r->acl is empty?? */
             // XXX: we do not have access to conn->rfc931 here.
             acl_checklist = new ACLFilledChecklist(r->acl, filter.request, dash_str);
-            acl_checklist->updateReply(filter.reply);
             acl_checklist->updateAle(filter.al);
+            acl_checklist->updateReply(filter.reply);
             acl_checklist->syncAle(filter.request, nullptr);
             acl_checklist->nonBlockingCheck(AccessCheckCallbackWrapper, this);
             return;

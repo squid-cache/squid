@@ -44,9 +44,9 @@ public:
     /// configure rfc931 user identity for the first time
     void setIdent(const char *userIdentity);
 
-    /// Remembers ALE (if it is still unknown) or does nothing (otherwise). When
-    /// (and only when) remembering ALE, populates other still-unset fields with
-    /// ALE-derived information, so that the caller does not have to.
+    /// Remembers the given ALE (if it is not nil) or does nothing (otherwise).
+    /// When (and only when) remembering ALE, populates other still-unset fields
+    /// with ALE-derived information, so that the caller does not have to.
     void updateAle(const AccessLogEntry::Pointer &);
 
 public:
@@ -65,8 +65,8 @@ public:
     /// \prec hasReply()
     const HttpReply &reply() const { return *reply_; }
 
-    /// Remembers the response (if it is still unknown) or does nothing
-    /// (otherwise). Does nothing if the supplied response pointer is nil.
+    /// Remembers the given response (if it is not nil) or does nothing
+    /// (otherwise).
     void updateReply(const HttpReply::Pointer &);
 
     bool destinationDomainChecked() const;
