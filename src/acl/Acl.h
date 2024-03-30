@@ -90,8 +90,8 @@ public:
     /// whether Squid is uncertain about the allowed() or denied() answer
     bool conflicted() const { return !allowed() && !denied(); }
 
-    /// the description of an ACL that was evaluated last
-    SBuf lastCheckDescription() const;
+    /// describes the ACL that was evaluated last while obtaining this answer (for debugging)
+    const SBuf &lastCheckDescription() const;
 
     aclMatchCode code = ACCESS_DUNNO; ///< ACCESS_* code
 
