@@ -71,7 +71,7 @@ Acl::AllOf::parse()
     const int lineId = whole->childrenCount() + 1;
 
     Acl::AndNode *line = new AndNode;
-    line->context(ToSBuf('(', name, " line #", lineId), config_input_line);
+    line->context(ToSBuf('(', name, " line #", lineId, ')'), config_input_line);
     line->lineParse();
 
     whole->add(line);

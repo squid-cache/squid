@@ -2031,10 +2031,10 @@ ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *d
     assert(access);
     if (!*access) {
         *access = new Acl::Tree;
-        (*access)->context(ToSBuf('(', desc, " rules"), config_input_line);
+        (*access)->context(ToSBuf('(', desc, " rules)"), config_input_line);
     }
     Acl::AndNode *rule = new Acl::AndNode;
-    rule->context(ToSBuf(desc, " rule"), config_input_line);
+    rule->context(ToSBuf('(', desc, " rule)"), config_input_line);
     if (acl)
         rule->add(acl);
     else
