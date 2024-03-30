@@ -15,8 +15,8 @@
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "error/forward.h"
-#include "HttpRequest.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
