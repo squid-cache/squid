@@ -36,7 +36,7 @@ static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
 
 /* does name lookup, returns page_id */
 err_type
-aclGetDenyInfoPage(AclDenyInfoList ** head, const Acl::Answer &answer, const int redirect_allowed)
+aclGetDenyInfoPage(const AclDenyInfoList * const head, const Acl::Answer &answer, const bool redirect_allowed)
 {
     if (!answer.lastCheckedName) {
         debugs(28, 3, "ERR_NONE because access was denied without evaluating ACLs");
@@ -45,11 +45,9 @@ aclGetDenyInfoPage(AclDenyInfoList ** head, const Acl::Answer &answer, const int
 
     const auto &name = *answer.lastCheckedName;
 
-    AclDenyInfoList *A = nullptr;
-
     debugs(28, 8, "got called for " << name);
 
-    for (A = *head; A; A = A->next) {
+    for (auto A = head; A; A = A->next) {
         if (!redirect_allowed && strchr(A->err_page_name, ':') ) {
             debugs(28, 8, "Skip '" << A->err_page_name << "' 30x redirects not allowed as response here.");
             continue;

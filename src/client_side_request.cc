@@ -738,7 +738,7 @@ ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
             debugs(33, 5, "Proxy Auth Message = " << (proxy_auth_msg ? proxy_auth_msg : "<null>"));
 #endif
 
-        auto page_id = aclGetDenyInfoPage(&Config.denyInfoList, answer, answer != ACCESS_AUTH_REQUIRED);
+        auto page_id = aclGetDenyInfoPage(Config.denyInfoList, answer, answer != ACCESS_AUTH_REQUIRED);
 
         http->updateLoggingTags(LOG_TCP_DENIED);
 

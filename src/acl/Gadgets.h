@@ -50,7 +50,7 @@ aclParseAclList(ConfigParser &parser, Acl::Tree **tree, const Any any)
 /// \ingroup ACLAPI
 bool aclIsProxyAuth(const std::optional<SBuf> &name);
 /// \ingroup ACLAPI
-err_type aclGetDenyInfoPage(AclDenyInfoList ** head, const Acl::Answer &, int redirect_allowed);
+err_type aclGetDenyInfoPage(const AclDenyInfoList *, const Acl::Answer &, bool redirect_allowed);
 /// \ingroup ACLAPI
 void aclParseDenyInfoLine(AclDenyInfoList **);
 /// \ingroup ACLAPI

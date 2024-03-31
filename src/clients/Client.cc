@@ -941,8 +941,7 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
 
     debugs(11,7, "creating adaptation block response");
 
-    err_type page_id =
-        aclGetDenyInfoPage(&Config.denyInfoList, blockedAnswer, 1);
+    auto page_id = aclGetDenyInfoPage(Config.denyInfoList, blockedAnswer, true);
     if (page_id == ERR_NONE)
         page_id = ERR_ACCESS_DENIED;
 
