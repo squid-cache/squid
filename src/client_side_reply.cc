@@ -1859,8 +1859,7 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
 
     if (!accessAllowed.allowed()) {
         ErrorState *err;
-        err_type page_id;
-        page_id = aclGetDenyInfoPage(Config.denyInfoList, accessAllowed, true);
+        auto page_id = FindDenyInfoPage(accessAllowed, true);
 
         http->updateLoggingTags(LOG_TCP_DENIED_REPLY);
 

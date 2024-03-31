@@ -25,6 +25,7 @@
 #include "errorpage.h"
 #include "globals.h"
 #include "HttpRequest.h"
+#include "SquidConfig.h"
 #include "src/sbuf/Stream.h"
 
 #include <set>
@@ -34,9 +35,8 @@ using AclSet = std::set<Acl::Node *>;
 /// Accumulates all ACLs to facilitate their clean deletion despite reuse.
 static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
 
-/* does name lookup, returns page_id */
 err_type
-aclGetDenyInfoPage(const AclDenyInfoList * const head, const Acl::Answer &answer, const bool redirect_allowed)
+FindDenyInfoPage(const Acl::Answer &answer, const bool redirect_allowed)
 {
     if (!answer.lastCheckedName) {
         debugs(28, 3, "ERR_NONE because access was denied without evaluating ACLs");
@@ -45,9 +45,7 @@ aclGetDenyInfoPage(const AclDenyInfoList * const head, const Acl::Answer &answer
 
     const auto &name = *answer.lastCheckedName;
 
-    debugs(28, 8, "got called for " << name);
-
-    for (auto A = head; A; A = A->next) {
+    for (auto A = Config.denyInfoList; A; A = A->next) {
         if (!redirect_allowed && strchr(A->err_page_name, ':') ) {
             debugs(28, 8, "Skip '" << A->err_page_name << "' 30x redirects not allowed as response here.");
             continue;
@@ -55,13 +53,13 @@ aclGetDenyInfoPage(const AclDenyInfoList * const head, const Acl::Answer &answer
 
         for (const auto &aclName: A->acl_list) {
             if (aclName.cmp(name) == 0) {
-                debugs(28, 8, "match on " << name);
+                debugs(28, 8, "matched " << name << "; returning " << A->err_page_id << ' ' << A->err_page_name);
                 return A->err_page_id;
             }
         }
     }
 
-    debugs(28, 8, "aclGetDenyInfoPage: no match");
+    debugs(28, 8, "no match for " << name << (Config.denyInfoList ? "" : "; no deny_info rules"));
     return ERR_NONE;
 }
 

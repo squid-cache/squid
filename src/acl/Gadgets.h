@@ -49,8 +49,11 @@ aclParseAclList(ConfigParser &parser, Acl::Tree **tree, const Any any)
 
 /// \ingroup ACLAPI
 bool aclIsProxyAuth(const std::optional<SBuf> &name);
-/// \ingroup ACLAPI
-err_type aclGetDenyInfoPage(const AclDenyInfoList *, const Acl::Answer &, bool redirect_allowed);
+
+/// The first configured deny_info error page ID matching the given access check outcome (or ERR_NONE).
+/// \param allowCustomStatus whether to consider deny_info rules containing custom HTTP response status code
+err_type FindDenyInfoPage(const Acl::Answer &, bool allowCustomStatus);
+
 /// \ingroup ACLAPI
 void aclParseDenyInfoLine(AclDenyInfoList **);
 /// \ingroup ACLAPI
