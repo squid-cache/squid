@@ -76,9 +76,9 @@ aclIsProxyAuth(const std::optional<SBuf> &name)
         return false;
     }
 
-    debugs(28, 5, "aclIsProxyAuth: called for " << name.value());
+    debugs(28, 5, "aclIsProxyAuth: called for " << *name);
 
-    if (const auto a = Acl::Node::FindByName(name.value())) {
+    if (const auto a = Acl::Node::FindByName(*name)) {
         debugs(28, 5, "aclIsProxyAuth: returning " << a->isProxyAuth());
         return a->isProxyAuth();
     }

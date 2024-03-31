@@ -17,6 +17,7 @@
 Acl::NotNode::NotNode(Acl::Node *acl)
 {
     assert(acl);
+    name.reserveCapacity(1 + acl->name.length());
     name.append('!');
     name.append(acl->name);
     add(acl);
