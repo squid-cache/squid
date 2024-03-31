@@ -155,7 +155,7 @@ public:
     }
 
     /// remember the name of the last ACL being evaluated
-    void setLastCheckedName(const SBuf &name) { lastCheckedName = std::make_optional(name); }
+    void setLastCheckedName(const SBuf &name) { lastCheckedName = name; }
 
 private:
     /// Calls non-blocking check callback with the answer and destroys self.
