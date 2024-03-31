@@ -149,18 +149,32 @@ void Acl::Node::operator delete(void *)
     fatal ("unusable Acl::Node::delete");
 }
 
+/// implements both Acl::Node::FindByName() variations
+template <typename SBufOrCString>
+static Acl::Node *
+FindByNameT(const SBufOrCString name)
+{
+    for (auto a = Config.aclList; a; a = a->next) {
+        if (a->name.caseCmp(name) == 0) {
+            debugs(28, 8, "found " << a->name);
+            return a;
+        }
+    }
+
+    debugs(28, 8, "cannot find " << name);
+    return nullptr;
+}
+
 Acl::Node *
 Acl::Node::FindByName(const SBuf &name)
 {
-    debugs(28, 9, "name=" << name);
+    return FindByNameT<const SBuf &>(name);
+}
 
-    for (auto *a = Config.aclList; a; a = a->next)
-        if (!a->name.caseCmp(name))
-            return a;
-
-    debugs(28, 9, "found no match");
-
-    return nullptr;
+Acl::Node *
+Acl::Node::FindByName(const char *name)
+{
+    return FindByNameT<const char *>(name);
 }
 
 Acl::Node::Node() :
