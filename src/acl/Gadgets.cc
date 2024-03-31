@@ -43,7 +43,7 @@ aclGetDenyInfoPage(AclDenyInfoList ** head, const Acl::Answer &answer, const int
         return ERR_NONE;
     }
 
-    const auto &name = answer.lastCheckDescription();
+    const auto &name = *answer.lastCheckedName;
 
     AclDenyInfoList *A = nullptr;
 
