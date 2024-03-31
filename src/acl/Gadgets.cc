@@ -157,7 +157,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
     const int ruleId = ((treep && *treep) ? (*treep)->childrenCount() : 0) + 1;
 
     Acl::AndNode *rule = new Acl::AndNode;
-    rule->context(ToSBuf(directive ,'#', ruleId), config_input_line);
+    rule->context(ToSBuf(directive, '#', ruleId), config_input_line);
     rule->lineParse();
     if (rule->empty()) {
         debugs(28, DBG_CRITICAL, "aclParseAccessLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
