@@ -731,7 +731,7 @@ ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
 
         /* Send an auth challenge or error */
         // XXX: do we still need aclIsProxyAuth() ?
-        bool auth_challenge = (answer == ACCESS_AUTH_REQUIRED || aclIsProxyAuth(answer.lastCheckedName));
+        const auto auth_challenge = (answer == ACCESS_AUTH_REQUIRED || aclIsProxyAuth(answer.lastCheckedName));
         debugs(85, 5, "Access Denied: " << http->uri);
 #if USE_AUTH
         if (auth_challenge)

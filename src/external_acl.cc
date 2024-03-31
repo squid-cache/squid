@@ -486,7 +486,7 @@ class external_acl_data
     CBDATA_CLASS(external_acl_data);
 
 public:
-    explicit external_acl_data(external_acl *aDef) : def(cbdataReference(aDef)), arguments(nullptr) {}
+    explicit external_acl_data(external_acl * const aDef): def(cbdataReference(aDef)), arguments(nullptr) {}
     ~external_acl_data();
 
     external_acl *def;
