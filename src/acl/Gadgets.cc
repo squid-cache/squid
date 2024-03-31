@@ -68,7 +68,7 @@ aclGetDenyInfoPage(AclDenyInfoList ** head, const Acl::Answer &answer, const int
 }
 
 /* does name lookup, returns if it is a proxy_auth acl */
-int
+bool
 aclIsProxyAuth(const std::optional<SBuf> &name)
 {
     if (!name) {
