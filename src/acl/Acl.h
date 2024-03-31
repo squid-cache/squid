@@ -101,7 +101,7 @@ public:
     /// whether we were computed by the "negate the last explicit action" rule
     bool implicit = false;
 
-    /// the name of the ACL that was evaluated last (if any)
+    /// the name of the ACL (if any) that was evaluated last while obtaining this answer
     std::optional<SBuf> lastCheckedName;
 };
 

@@ -213,7 +213,8 @@ private: /* internal methods */
     std::stack<Breadcrumb> matchPath;
     /// the list of actions which must ignored during acl checks
     std::vector<Acl::Answer> bannedActions_;
-    /// the name of the ACL that was evaluated last (if any)
+
+    /// the name of the last evaluated ACL (if any ACLs were evaluated)
     std::optional<SBuf> lastCheckedName;
 };
 
