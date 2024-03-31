@@ -63,7 +63,6 @@ FindDenyInfoPage(const Acl::Answer &answer, const bool redirect_allowed)
     return ERR_NONE;
 }
 
-/* does name lookup, returns if it is a proxy_auth acl */
 bool
 aclIsProxyAuth(const std::optional<SBuf> &name)
 {

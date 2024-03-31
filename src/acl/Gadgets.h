@@ -47,7 +47,8 @@ aclParseAclList(ConfigParser &parser, Acl::Tree **tree, const Any any)
     return aclParseAclList(parser, tree, buf.str().c_str());
 }
 
-/// \ingroup ACLAPI
+/// Whether the given name names an Acl::Node object with true isProxyAuth() result.
+/// This is a safe variation of Acl::Node::FindByName(*name)->isProxyAuth().
 bool aclIsProxyAuth(const std::optional<SBuf> &name);
 
 /// The first configured deny_info error page ID matching the given access check outcome (or ERR_NONE).
