@@ -154,6 +154,7 @@ public:
         return old;
     }
 
+    /// remember the name of the last ACL being evaluated
     void setLastCheckedName(const SBuf &name) { lastCheckedName = std::make_optional(name); }
 
 private:
