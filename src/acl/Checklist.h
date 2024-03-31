@@ -155,7 +155,7 @@ public:
     }
 
     /// remember the name of the last ACL being evaluated
-    void setLastCheckedName(const SBuf &name) { lastCheckedName = name; }
+    void setLastCheckedName(const SBuf &name) { lastCheckedName_ = name; }
 
 private:
     /// Calls non-blocking check callback with the answer and destroys self.
@@ -216,7 +216,7 @@ private: /* internal methods */
     std::vector<Acl::Answer> bannedActions_;
 
     /// the name of the last evaluated ACL (if any ACLs were evaluated)
-    std::optional<SBuf> lastCheckedName;
+    std::optional<SBuf> lastCheckedName_;
 };
 
 #endif /* SQUID_SRC_ACL_CHECKLIST_H */

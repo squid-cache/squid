@@ -60,7 +60,7 @@ ACLChecklist::markFinished(const Acl::Answer &finalAnswer, const char *reason)
     assert (!finished() && !asyncInProgress());
     finished_ = true;
     answer_ = finalAnswer;
-    answer_.lastCheckedName = lastCheckedName;
+    answer_.lastCheckedName = lastCheckedName_;
     debugs(28, 3, this << " answer " << answer_ << " for " << reason);
 }
 
@@ -75,7 +75,7 @@ ACLChecklist::preCheck(const char *what)
     occupied_ = true;
     asyncLoopDepth_ = 0;
 
-    lastCheckedName.reset();
+    lastCheckedName_.reset();
     finished_ = false;
 }
 
