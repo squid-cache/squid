@@ -159,7 +159,7 @@ public:
 
 private:
     /// Calls non-blocking check callback with the answer and destroys self.
-    void checkCallback(Acl::Answer answer);
+    void checkCallback(const Acl::Answer &answer);
 
     void matchAndFinish();
 

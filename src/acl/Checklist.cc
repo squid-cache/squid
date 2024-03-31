@@ -155,7 +155,7 @@ ACLChecklist::goAsync(AsyncStarter starter, const Acl::Node &acl)
 // ACLFilledChecklist overwrites this to unclock something before we
 // "delete this"
 void
-ACLChecklist::checkCallback(Acl::Answer answer)
+ACLChecklist::checkCallback(const Acl::Answer &answer)
 {
     ACLCB *callback_;
     void *cbdata_;

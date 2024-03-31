@@ -67,7 +67,7 @@ public:
         return !(*this == aCode);
     }
 
-    bool operator ==(const Answer allow) const {
+    bool operator ==(const Answer &allow) const {
         return code == allow.code && kind == allow.kind;
     }
 
@@ -106,7 +106,7 @@ public:
 };
 
 inline std::ostream &
-operator <<(std::ostream &o, const Answer a)
+operator <<(std::ostream &o, const Answer &a)
 {
     switch (a) {
     case ACCESS_DENIED:
