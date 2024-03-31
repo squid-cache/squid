@@ -449,10 +449,11 @@ icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
     ACLFilledChecklist checklist(Config.accessList.icp, icp_request, nullptr);
     checklist.src_addr = from;
     checklist.my_addr.setNoAddr();
-    if (checklist.fastCheck().allowed())
+    const auto &answer = checklist.fastCheck();
+    if (answer.allowed())
         return true;
 
-    debugs(12, 2, "Access Denied for " << from << " by " << checklist.currentAnswer().lastCheckDescription() << ".");
+    debugs(12, 2, "Access Denied for " << from << " by " << answer.lastCheckDescription() << ".");
     return false;
 }
 
