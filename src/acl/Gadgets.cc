@@ -39,7 +39,7 @@ err_type
 aclGetDenyInfoPage(AclDenyInfoList ** head, const Acl::Answer &answer, const int redirect_allowed)
 {
     if (!answer.lastCheckedName) {
-        debugs(28, 3, "ERR_NONE due to a NULL name");
+        debugs(28, 3, "ERR_NONE because access was denied without evaluating ACLs");
         return ERR_NONE;
     }
 
@@ -72,18 +72,16 @@ bool
 aclIsProxyAuth(const std::optional<SBuf> &name)
 {
     if (!name) {
-        debugs(28, 3, "false due to a NULL name");
+        debugs(28, 3, "no; caller did not supply an ACL name");
         return false;
     }
 
-    debugs(28, 5, "aclIsProxyAuth: called for " << *name);
-
     if (const auto a = Acl::Node::FindByName(*name)) {
-        debugs(28, 5, "aclIsProxyAuth: returning " << a->isProxyAuth());
+        debugs(28, 5, "returning " << a->isProxyAuth() << " for ACL " << *name);
         return a->isProxyAuth();
     }
 
-    debugs(28, 3, "aclIsProxyAuth: WARNING, called for nonexistent ACL");
+    debugs(28, 3, "WARNING: Called for nonexistent ACL " << *name);
     return false;
 }
 
