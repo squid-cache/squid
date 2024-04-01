@@ -4,7 +4,7 @@ Changes in squid-6.9 (7 Apr 2024)
 	- Plug memory leak in handling cache manager requests
 	- Fix NIS helper header-guard
 	- Fix error: template-id not allowed for constructor in C++20
-	- Improvements release packaging automations
+	- Improve release packaging automation
 
 Changes in squid-6.8 (4 Mar 2024)
 
