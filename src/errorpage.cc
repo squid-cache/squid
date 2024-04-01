@@ -675,6 +675,16 @@ errorPageName(int pageId)
     return "ERR_UNKNOWN";   /* should not happen */
 }
 
+/// compactly prints top-level ErrorState information (for debugging)
+static std::ostream &
+operator <<(std::ostream &os, const ErrorState &err)
+{
+    os << errorPageName(err.type);
+    if (err.httpStatus != Http::scNone)
+        os << "/http_status=" << err.httpStatus;
+    return os;
+}
+
 ErrorState *
 ErrorState::NewForwarding(err_type type, HttpRequestPointer &request, const AccessLogEntry::Pointer &ale)
 {
@@ -698,6 +708,7 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, c
         httpStatus = ErrorDynamicPages[page_id - ERR_MAX]->page_redirect;
     else
         httpStatus = status;
+    debugs(4, 3, *this);
 
     if (req) {
         request = req;
@@ -711,6 +722,7 @@ ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply, const AccessLog
     Must(errorReply);
     response_ = errorReply;
     httpStatus = errorReply->sline.status();
+    debugs(4, 3, "relaying " << *this);
 
     if (req) {
         request = req;
@@ -1534,7 +1546,7 @@ std::ostream &
 operator <<(std::ostream &os, const ErrorState *err)
 {
     if (err)
-        os << errorPageName(err->page_id);
+        os << *err;
     else
         os << "[none]";
     return os;
