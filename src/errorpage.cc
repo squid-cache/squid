@@ -709,12 +709,13 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, c
         httpStatus = ErrorDynamicPages[page_id - ERR_MAX]->page_redirect;
     else
         httpStatus = status;
-    debugs(4, 3, *this);
 
     if (req) {
         request = req;
         src_addr = req->client_addr;
     }
+
+    debugs(4, 3, "constructed, this=" << static_cast<void*>(this) << ' ' << *this);
 }
 
 ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply, const AccessLogEntry::Pointer &anAle):
@@ -723,12 +724,13 @@ ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply, const AccessLog
     Must(errorReply);
     response_ = errorReply;
     httpStatus = errorReply->sline.status();
-    debugs(4, 3, "relaying " << *this);
 
     if (req) {
         request = req;
         src_addr = req->client_addr;
     }
+
+    debugs(4, 3, "constructed, this=" << static_cast<void*>(this) << " relaying " << *this);
 }
 
 void
@@ -807,6 +809,8 @@ errorSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Comm
 
 ErrorState::~ErrorState()
 {
+    debugs(4, 7, "destructing, this=" << static_cast<void*>(this));
+
     safe_free(redirect_url);
     safe_free(url);
     safe_free(request_hdrs);
