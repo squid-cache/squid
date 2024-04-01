@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "base/IoManip.h"
 #include "cache_cf.h"
 #include "clients/forward.h"
 #include "comm/Connection.h"
@@ -1545,10 +1546,7 @@ ErrorPage::ValidateStaticError(const int page_id, const SBuf &inputLocation)
 std::ostream &
 operator <<(std::ostream &os, const ErrorState *err)
 {
-    if (err)
-        os << *err;
-    else
-        os << "[none]";
+    os << RawPointer(err).orNil();
     return os;
 }
 
