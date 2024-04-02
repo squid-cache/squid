@@ -2,7 +2,7 @@ Changes in squid-6.9 (7 Apr 2024)
 	- Bug 5069: Keep listening after getsockname() error
 	- Reduce stale errno usage
 	- Plug memory leak in handling cache manager requests
-	- Fix NIS helper header-guard
+	- Regression Bug 5349: basic_nis_auth build error: unterminated #ifndef
 	- Fix error: template-id not allowed for constructor in C++20
 	- Improve release packaging automation
 
