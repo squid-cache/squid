@@ -243,13 +243,6 @@ Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
         return;
     }
 
-    if (strlen(t) >= ACL_NAME_SZ) {
-        debugs(28, DBG_CRITICAL, "aclParseAclLine: aclParseAclLine: ACL name '" << t <<
-               "' too long, max " << ACL_NAME_SZ - 1 << " characters supported");
-        parser.destruct();
-        return;
-    }
-
     SBuf aclname(t);
     CallParser(ParsingContext::Pointer::Make(aclname), [&] {
         ParseNamed(parser, head, aclname);
