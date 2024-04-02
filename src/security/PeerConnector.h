@@ -150,7 +150,7 @@ protected:
     void disconnect();
 
     /// updates connection usage history before the connection is closed
-    void countFailingConnection(const ErrorState *);
+    void countFailingConnection();
 
     /// If called the certificates validator will not used
     void bypassCertValidator() {useCertValidator_ = false;}
