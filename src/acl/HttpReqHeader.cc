@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "acl/HttpHeaderData.h"
 #include "acl/HttpReqHeader.h"
 #include "HttpRequest.h"
 

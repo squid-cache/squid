@@ -11,7 +11,7 @@
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
-#include "HttpHeader.h"
+#include "http/forward.h"
 
 namespace Acl
 {
