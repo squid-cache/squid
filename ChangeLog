@@ -1,6 +1,7 @@
 Changes in squid-6.9 (7 Apr 2024)
 	- Regression Bug 5349: basic_nis_auth build error: unterminated #ifndef
 	- Bug 5069: Keep listening after getsockname() error
+	- Bug 5360: FwdState::noteDestinationsEnd() assertion "err"
 	- Reduce stale errno usage
 	- Plug memory leak in handling cache manager requests
 	- Fix error: template-id not allowed for constructor in C++20
