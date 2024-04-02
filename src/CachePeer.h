@@ -38,9 +38,8 @@ public:
     /// reacts to a successful establishment of a connection to this cache_peer
     void noteSuccess();
 
-    /// reacts to a failure on a connection to this cache_peer
-    /// \param code a received response status code, if any
-    void noteFailure(Http::StatusCode code);
+    /// reacts to a failed attempt to establish a connection to this cache_peer
+    void noteFailure();
 
     /// (re)configure cache_peer name=value
     void rename(const char *);
@@ -236,14 +235,13 @@ NoteOutgoingConnectionSuccess(CachePeer * const peer)
         peer->noteSuccess();
 }
 
-/// reacts to a failure on a connection to an origin server or cache_peer
+/// reacts to a failed attempt to establish a connection to an origin server or cache_peer
 /// \param peer nil if the connection is to an origin server
-/// \param code a received response status code, if any
 inline void
-NoteOutgoingConnectionFailure(CachePeer * const peer, const Http::StatusCode code)
+NoteOutgoingConnectionFailure(CachePeer * const peer)
 {
     if (peer)
-        peer->noteFailure(code);
+        peer->noteFailure();
 }
 
 /// identify the given cache peer in cache.log messages and such
