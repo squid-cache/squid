@@ -1211,7 +1211,7 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int
     if (status == Comm::OK)
         p->noteSuccess();
     else
-        p->noteFailure(Http::scNone);
+        p->noteFailure();
 
     -- p->testing_now;
     conn->close();
