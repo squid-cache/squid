@@ -7602,7 +7602,7 @@ DOC_START
 DOC_END
 
 NAME: hostname_aliases
-TYPE: wordlist
+TYPE: SBufList
 LOC: Config.hostnameAliases
 DEFAULT: none
 DOC_START
@@ -9766,7 +9766,7 @@ ecap_service s2 respmod_precache ecap://filters.R.us/virusFilter config=/etc/vf.
 DOC_END
 
 NAME: loadable_modules
-TYPE: wordlist
+TYPE: SBufList
 IFDEF: USE_LOADABLE_MODULES
 LOC: Config.loadable_module_names
 DEFAULT: none
@@ -9959,7 +9959,7 @@ DOC_END
 NAME: adaptation_meta
 TYPE: note
 IFDEF: USE_ADAPTATION
-LOC: Adaptation::Config::metaHeaders
+LOC: Adaptation::Config::metaHeaders()
 DEFAULT: none
 DOC_START
 	This option allows Squid administrator to add custom ICAP request

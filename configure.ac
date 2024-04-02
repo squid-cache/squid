@@ -832,51 +832,24 @@ AC_ARG_ENABLE(esi,[
 AC_MSG_NOTICE([Enable ESI processor: ${enable_esi:=no (auto)}])
 
 # ESI support libraries: expat
-AH_TEMPLATE(HAVE_LIBEXPAT,[Define to 1 if you have the expat library])
 SQUID_AUTO_LIB(expat,[ESI expat library],[LIBEXPAT])
-AS_IF([test "x$enable_esi" = "xyes" -a "x$with_expat" != "xno"],[
+SQUID_CHECK_LIB_WORKS(expat,[
   SQUID_STATE_SAVE(squid_expat_state)
-  PKG_CHECK_MODULES([LIBEXPAT],[expat],[],[
-    AC_CHECK_LIB([expat],[main],[LIBEXPAT_LIBS="-lexpat"])
-  ])
+  PKG_CHECK_MODULES([LIBEXPAT],[expat],[:],[:])
   CPPFLAGS="$LIBEXPAT_CFLAGS $CPPFLAGS"
   AC_CHECK_HEADERS(expat.h)
   SQUID_STATE_ROLLBACK(squid_expat_state)
-  AS_IF([test "x$LIBEXPAT_LIBS" != "x"],[
-      LIBEXPAT_LIBS="$LIBEXPAT_PATH $LIBEXPAT_LIBS"
-      AC_DEFINE(HAVE_LIBEXPAT,1,[Define to 1 if you have the expat library])
-    ],
-    [test "x$with_expat" = "xyes"],[AC_MSG_ERROR([Required library expat not found.])],
-    [AC_MSG_NOTICE([Library expat not found.])]
-  )
 ])
-AM_CONDITIONAL(ENABLE_LIBEXPAT,[test "x$LIBEXPAT_LIBS" != "x"])
-AC_SUBST(LIBEXPAT_LIBS)
 
 # ESI support libraries: xml2
-AH_TEMPLATE(HAVE_LIBXML2,[Define to 1 if you have the xml2 library])
 SQUID_AUTO_LIB(xml2,[ESI xml2 library],[LIBXML2])
-AS_IF([test "x$enable_esi" = "xyes" -a "x$with_xml2" != "xno"],[
+SQUID_CHECK_LIB_WORKS(xml2,[
   SQUID_STATE_SAVE([squid_libxml2_save])
-  PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[
-    AC_CHECK_LIB([xml2],[main],[LIBXML2_LIBS="$LIBXML2_PATH -lxml2"])
-  ])
+  PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[:],[:])
   CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
   AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
   SQUID_STATE_ROLLBACK([squid_libxml2_save])
-
-  AS_IF([test "x$LIBXML2_LIBS" != "x"],[
-    CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
-    LIBXML2_LIBS="$LIBXML2_PATH $LIBXML2_LIBS"
-    AC_DEFINE(HAVE_LIBXML2,1,[Define to 1 if you have the xml2 library])
-  ],[test "x$with_xml2" = "xyes"],[
-    AC_MSG_ERROR([Required library xml2 not found])
-  ],[
-    AC_MSG_NOTICE([Library xml2 not found.])
-  ])
 ])
-AM_CONDITIONAL(ENABLE_LIBXML2,[test "x$LIBXML2_LIBS" != "x"])
-AC_SUBST(LIBXML2_LIBS)
 
 AS_IF([test "x$enable_esi" = "xyes" -a "x$LIBXML2_LIBS" = "x" -a "x$LIBEXPAT_LIBS" = "x"],[
   AC_MSG_ERROR([ESI processor requires libxml2 or libexpat])
@@ -1220,32 +1193,28 @@ SQUID_CHECK_LIB_WORKS(gss,[
 
 SQUID_AUTO_LIB(ldap,[LDAP],[LIBLDAP])
 SQUID_CHECK_LIB_WORKS(ldap,[
-  dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked
-  dnl only with Windows LDAP libraries using -lwldap32
-  AS_IF([test "$squid_host_os" = "mingw"],[
+  SQUID_STATE_SAVE(squid_ldap_state)
+  PKG_CHECK_MODULES([LIBLDAP],[ldap],[:],[:])
+  AS_IF([test "$squid_host_os" = "mingw" -a "x$LIBLDAP_LIBS" = "x"],[
+    dnl On MinGW OpenLDAP is not available, try Windows LDAP libraries
+    dnl TODO: use AC_CHECK_LIB
     LIBLDAP_LIBS="-lwldap32"
-  ],[
-    SQUID_STATE_SAVE(squid_ldap_state)
-    LIBS="$LIBLDAP_PATH $LIBPTHREADS $LIBS"
-    PKG_CHECK_MODULES([LIBLDAP],[ldap],[],[
-      AC_CHECK_LIB(lber, ber_init, [LIBLBER="-llber"])
-      AC_CHECK_LIB(ldap, ldap_init, [LIBLDAP_LIBS="-lldap $LIBLBER"])
-      dnl if no ldap lib found check for mozilla version
-      AS_IF([test "x$ac_cv_lib_ldap_ldap_init" != "xyes"],[
-        SQUID_STATE_SAVE(squid_ldap_mozilla)
-        LIBS="$LIBLDAP_PATH $LIBPTHREADS"
-        AC_CHECK_LIB(ldap60, ldap_init, [LIBLDAP_LIBS="-lldap60 $LIBLBER"])
-        LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS $LIBPTHREADS"
-        AC_CHECK_LIB(prldap60, prldap_init, [LIBLDAP_LIBS="-lprldap60 $LIBLDAP_LIBS"])
-        LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS $LIBPTHREADS"
-        AC_CHECK_LIB(ssldap60, ldapssl_init, [LIBLDAP_LIBS="-lssldap60 $LIBLDAP_LIBS"])
-        SQUID_STATE_ROLLBACK(squid_ldap_mozilla)
-      ])
-    ])
-    AC_CHECK_HEADERS(ldap.h lber.h)
-    AC_CHECK_HEADERS(mozldap/ldap.h)
-    SQUID_CHECK_LDAP_API
+    AC_CHECK_HEADERS(winldap.h)
   ])
+  AC_CHECK_HEADERS(ldap.h lber.h)
+  AC_CHECK_HEADERS(mozldap/ldap.h)
+  SQUID_CHECK_LDAP_API
+  SQUID_STATE_ROLLBACK(squid_ldap_state)
+])
+
+SQUID_AUTO_LIB(sasl,[Cyrus SASL],[LIBSASL])
+SQUID_CHECK_LIB_WORKS([sasl],[
+  SQUID_STATE_SAVE(sasl_state)
+  PKG_CHECK_MODULES([LIBSASL],[libsasl2],[:],[:])
+  CPPFLAGS="$LIBSASL_CFLAGS $CPPFLAGS"
+  LIBS="$LIBSASL_LIBS $LIBS"
+  AC_CHECK_HEADERS([sasl/sasl.h sasl.h])
+  SQUID_STATE_ROLLBACK(sasl_state)
 ])
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
