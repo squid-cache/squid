@@ -168,13 +168,13 @@ FindByNameT(const SBufOrCString name)
 Acl::Node *
 Acl::Node::FindByName(const SBuf &name)
 {
-    return FindByNameT<const SBuf &>(name);
+    return FindByNameT(name);
 }
 
 Acl::Node *
 Acl::Node::FindByName(const char *name)
 {
-    return FindByNameT<const char *>(name);
+    return FindByNameT(name);
 }
 
 Acl::Node::Node() :
