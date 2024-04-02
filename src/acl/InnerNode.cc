@@ -81,8 +81,8 @@ SBufList
 Acl::InnerNode::dump() const
 {
     SBufList rv;
-    for (Nodes::const_iterator i = nodes.begin(); i != nodes.end(); ++i)
-        rv.push_back((*i)->name);
+    for (const auto &node: nodes)
+        rv.push_back(node->name);
     return rv;
 }
 
