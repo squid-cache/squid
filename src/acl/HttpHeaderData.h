@@ -14,14 +14,14 @@
 #include "sbuf/SBuf.h"
 #include "SquidString.h"
 
-class ACLHTTPHeaderData : public ACLData<HttpHeader*>
+class ACLHTTPHeaderData: public ACLData<const HttpHeader &>
 {
     MEMPROXY_CLASS(ACLHTTPHeaderData);
 
 public:
     ACLHTTPHeaderData();
     ~ACLHTTPHeaderData() override;
-    bool match(HttpHeader* hdr) override;
+    bool match(const HttpHeader &) override;
     SBufList dump() const override;
     void parse() override;
     bool empty() const override;
