@@ -8,15 +8,12 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "acl/HttpHeaderData.h"
 #include "acl/HttpRepHeader.h"
 #include "HttpReply.h"
 
 int
 Acl::HttpRepHeaderCheck::match(ACLChecklist * const ch)
 {
-    const auto checklist = Filled(ch);
-
-    return data->match (&checklist->reply->header);
+    return data->match(Filled(ch)->reply->header);
 }
 

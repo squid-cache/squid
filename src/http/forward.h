@@ -39,6 +39,8 @@ typedef enum {
 
 class HttpHdrSc;
 
+class HttpHeader;
+
 class HttpRequestMethod;
 
 class HttpRequest;

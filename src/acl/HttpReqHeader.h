@@ -11,13 +11,13 @@
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
-#include "HttpHeader.h"
+#include "http/forward.h"
 
 namespace Acl
 {
 
 /// a "req_header" ACL
-class HttpReqHeaderCheck: public ParameterizedNode< ACLData<HttpHeader*> >
+class HttpReqHeaderCheck: public ParameterizedNode< ACLData<const HttpHeader &> >
 {
 public:
     /* Acl::Node API */
