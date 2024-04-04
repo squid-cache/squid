@@ -635,9 +635,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME: {
-            struct timeval totalResponseTime;
-            if (al->hier.totalResponseTime(totalResponseTime)) {
-                outtv = totalResponseTime;
+            const auto &timer = al->hier.totalResponseTime();
+            if (timer.ran()) {
+                const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(timer.total());
+                outtv.tv_sec = ms.count() / 1000;
+                outtv.tv_usec = (ms.count() % 1000) * 1000;
                 doMsec = 1;
             }
         }

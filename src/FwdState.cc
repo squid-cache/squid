@@ -191,7 +191,7 @@ FwdState::stopAndDestroy(const char *reason)
     cancelStep(reason);
 
     if (!flags.tunneled)
-        request->hier.stopPeerClock(false);
+        request->hier.stopPeerClock();
 
     PeerSelectionInitiator::subscribed = false; // may already be false
     self = nullptr; // we hope refcounting destroys us soon; may already be nil

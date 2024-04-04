@@ -310,7 +310,7 @@ TunnelStateData::serverClosed()
 {
     server.noteClosure();
 
-    request->hier.stopPeerClock(false);
+    request->hier.stopPeerClock();
 
     finishWritingAndDelete(client);
 }
@@ -480,7 +480,7 @@ TunnelStateData::retryOrBail(const char *context)
     /* bail */
 
     if (request)
-        request->hier.stopPeerClock(false);
+        request->hier.stopPeerClock();
 
     // TODO: Add sendSavedErrorOr(err_type type, Http::StatusCode, context).
     // Then, the remaining method code (below) should become the common part of
@@ -1397,7 +1397,7 @@ TunnelStateData::sendError(ErrorState *finalError, const char *reason)
 {
     debugs(26, 3, "aborting transaction for " << reason);
 
-    request->hier.stopPeerClock(false);
+    request->hier.stopPeerClock();
 
     cancelStep(reason);
 

@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_HIERARCHYLOGENTRY_H
 #define SQUID_SRC_HIERARCHYLOGENTRY_H
 
+#include "base/Stopwatch.h"
 #include "comm/Connection.h"
 #include "enums.h"
 #include "hier_code.h"
@@ -43,15 +44,14 @@ public:
      * Record total time spent communicating with peers
      * \param force whether to overwrite old recorded value if any
      */
-    void stopPeerClock(const bool force);
+    void stopPeerClock();
 
     /// Estimates response generation and sending delay at the last peer.
     /// \returns whether the estimate (stored in `responseTime`) is available.
     bool peerResponseTime(struct timeval &responseTime);
 
     /// Estimates the total time spent communicating with peers.
-    /// \returns whether the estimate (stored in `responseTime`) is available.
-    bool totalResponseTime(struct timeval &responseTime);
+    const Stopwatch &totalResponseTime() const { return peerTimer; }
 
 public:
     hier_code code;
@@ -73,10 +73,9 @@ public:
 private:
     void clearPeerNotes();
 
-    timeval firstConnStart_; ///< first connection use among all peers
     struct timeval peer_last_read_; ///< time of the last read from the last peer
     struct timeval peer_last_write_; ///< time of the last write to the last peer
-    struct timeval totalResponseTime_; ///< cumulative for all peers
+    Stopwatch peerTimer; ///< cumulative for all peers
 };
 
 #endif /* SQUID_SRC_HIERARCHYLOGENTRY_H */
