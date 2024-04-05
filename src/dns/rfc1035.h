@@ -70,21 +70,21 @@ struct _rfc1035_message {
 };
 
 ssize_t rfc1035BuildAQuery(const char *hostname,
-                                        char *buf,
-                                        size_t sz,
-                                        unsigned short qid,
-                                        rfc1035_query * query,
-                                        ssize_t edns_sz);
+                           char *buf,
+                           size_t sz,
+                           unsigned short qid,
+                           rfc1035_query * query,
+                           ssize_t edns_sz);
 ssize_t rfc1035BuildPTRQuery(const struct in_addr,
-        char *buf,
-        size_t sz,
-        unsigned short qid,
-        rfc1035_query * query,
-        ssize_t edns_sz);
+                             char *buf,
+                             size_t sz,
+                             unsigned short qid,
+                             rfc1035_query * query,
+                             ssize_t edns_sz);
 void rfc1035SetQueryID(char *, unsigned short qid);
 int rfc1035MessageUnpack(const char *buf,
-                                      size_t sz,
-                                      rfc1035_message ** answer);
+                         size_t sz,
+                         rfc1035_message ** answer);
 int rfc1035QueryCompare(const rfc1035_query *, const rfc1035_query *);
 void rfc1035RRDestroy(rfc1035_rr ** rr, int n);
 void rfc1035MessageDestroy(rfc1035_message ** message);
@@ -97,17 +97,17 @@ const char * rfc1035ErrorMessage(int n);
 
 /* Child Library RFC3596 Depends on some otherwise internal functions */
 int rfc1035HeaderPack(char *buf,
-                                   size_t sz,
-                                   rfc1035_message * hdr);
+                      size_t sz,
+                      rfc1035_message * hdr);
 int rfc1035HeaderUnpack(const char *buf,
-                                     size_t sz,
-                                     unsigned int *off,
-                                     rfc1035_message * h);
+                        size_t sz,
+                        unsigned int *off,
+                        rfc1035_message * h);
 int rfc1035QuestionPack(char *buf,
-                                     size_t sz,
-                                     const char *name,
-                                     const unsigned short type,
-                                     const unsigned short _class);
+                        size_t sz,
+                        const char *name,
+                        const unsigned short type,
+                        const unsigned short _class);
 int rfc1035RRPack(char *buf, size_t sz, const rfc1035_rr * RR);
 
 #endif /* SQUID_SRC_DNS_RFC1035_H */

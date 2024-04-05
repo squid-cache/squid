@@ -338,7 +338,7 @@ accessLogInit(void)
                     curr_token->type == Format::LFT_ADAPTATION_LAST_HEADER ||
                     curr_token->type == Format::LFT_ADAPTATION_LAST_HEADER_ELEM ||
                     curr_token->type == Format::LFT_ADAPTATION_LAST_ALL_HEADERS||
-                    (curr_token->type == Format::LFT_NOTE && !Adaptation::Config::metaHeaders.empty())) {
+                    (curr_token->type == Format::LFT_NOTE && !Adaptation::Config::metaHeaders().empty())) {
                 Log::TheConfig.hasAdaptToken = true;
             }
 #if ICAP_CLIENT

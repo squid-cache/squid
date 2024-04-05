@@ -1364,7 +1364,15 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
     }
 
     // destinationsFound, but none of them worked, and we were waiting for more
-    assert(savedError);
+    debugs(17, 7, "no more destinations to try after " << n_tries << " failed attempts");
+    if (!savedError) {
+        // retryOrBail() must be preceded by saveError(), but in case we forgot:
+        const auto finalError = new ErrorState(ERR_CANNOT_FORWARD, Http::scBadGateway, request.getRaw(), al);
+        static const auto d = MakeNamedErrorDetail("RETRY_TO_NONE");
+        finalError->detailError(d);
+        saveError(finalError);
+    } // else use actual error from last forwarding attempt
+
     // XXX: Honor clientExpectsConnectResponse() before replying.
     sendError(savedError, "all found paths have failed");
 }
