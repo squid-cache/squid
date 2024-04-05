@@ -886,12 +886,41 @@ AS_IF([test "x$enable_ecap" != "xno"],[
   ])
 
   SQUID_STATE_SAVE(squid_ecap_state)
+  CPPFLAGS="$EXT_LIBECAP_CFLAGS $CPPFLAGS"
+  LIBS="$EXT_LIBECAP_LIBS $LIBS"
+  AC_CHECK_HEADERS([ \
+    libecap/adapter/service.h \
+    libecap/adapter/xaction.h \
+    libecap/common/area.h \
+    libecap/common/body.h \
+    libecap/common/delay.h \
+    libecap/common/forward.h \
+    libecap/common/header.h \
+    libecap/common/memory.h \
+    libecap/common/message.h \
+    libecap/common/name.h \
+    libecap/common/named_values.h \
+    libecap/common/names.h \
+    libecap/common/options.h \
+    libecap/common/registry.h \
+    libecap/common/version.h \
+    libecap/host/host.h \
+    libecap/host/xaction.h \
+  ],,,[
+/* libecap-1.0.1 headers do not build without autoconf.h magic */
+#define HAVE_CONFIG_H
+/* libecap/common/delay.h fails to include <string> */
+#include <string>
+  ])
   AC_MSG_CHECKING([whether -lecap will link])
-  CXXFLAGS="$CXXFLAGS $EXT_LIBECAP_CFLAGS"
-  LIBS="$LIBS $EXT_LIBECAP_LIBS"
-  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <libecap/common/names.h>]],[[
-    const libecap::Name test("test", libecap::Name::NextId());
-  ]])],[
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#if HAVE_LIBECAP_COMMON_NAMES_H
+#include <libecap/common/names.h>
+#endif
+    ]],[[
+      const libecap::Name test("test", libecap::Name::NextId());
+    ]])
+  ],[
     AC_MSG_RESULT(yes)
     squid_opt_use_adaptation=yes
   ],[
