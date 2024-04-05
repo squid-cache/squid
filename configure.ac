@@ -1631,6 +1631,9 @@ AC_ARG_ENABLE(log-daemon-helpers,
 ])
 m4_include([src/log/helpers.m4])
 
+dnl Check for libraries required by ACL external helpers
+SQUID_CHECK_LIBTDB
+
 AC_ARG_ENABLE(external-acl-helpers,
   AS_HELP_STRING([--enable-external-acl-helpers="list of helpers"],
                  [Enable external_acl helpers support and the helpers themselves.
