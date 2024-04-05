@@ -868,15 +868,7 @@ AS_IF([test "x$enable_ecap" != "xno"],[
     AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-shared with --enable-ecap.])
   ])
 
-  AS_IF([test -n "$PKG_CONFIG"],[
-    dnl eCAP support requires libecap.
-    dnl This Squid supports libecap v1.0.x.
-    dnl Use EXT_ prefix to distinguish external libecap (that we check for
-    dnl here) from our own convenience ecap library in Makefiles.
-    PKG_CHECK_MODULES([EXT_LIBECAP],[libecap >= 1.0 libecap < 1.1])
-  ],[
-    AC_MSG_NOTICE([eCAP support requires pkg-config to verify the correct library version. Trouble may follow.])
-  ])
+  PKG_CHECK_MODULES([EXT_LIBECAP],[libecap >= 1.0 libecap < 1.1],[:],[:])
 
   SQUID_STATE_SAVE(squid_ecap_state)
   CPPFLAGS="$EXT_LIBECAP_CFLAGS $CPPFLAGS"
@@ -1034,10 +1026,11 @@ AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 # Cryptograhic libraries
 SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
 SQUID_CHECK_LIB_WORKS(nettle,[
-  PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[
-    CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
-    AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
-  ],[:])
+  SQUID_STATE_SAVE(squid_nettle_state)
+  PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[:],[:])
+  CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
+  AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
+  SQUID_STATE_ROLLBACK(squid_nettle_state)
 ])
 
 dnl Check for libcrypt
@@ -1051,10 +1044,11 @@ AC_SUBST(CRYPTLIB)
 
 SQUID_AUTO_LIB(gnutls,[GnuTLS crypto],[LIBGNUTLS])
 SQUID_CHECK_LIB_WORKS(gnutls,[
-  PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.4.0],[
-    CPPFLAGS="$LIBGNUTLS_CFLAGS $CPPFLAGS"
-    AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h)
-  ],[:])
+  SQUID_STATE_SAVE(squid_gnutls_state)
+  PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.4.0],[:],[:])
+  CPPFLAGS="$LIBGNUTLS_CFLAGS $CPPFLAGS"
+  AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h)
+  SQUID_STATE_ROLLBACK(squid_gnutls_state)
 ])
 
 SSLLIB=""
@@ -1087,27 +1081,10 @@ AS_IF([test "x$with_openssl" = "xyes"],[
 
   # User may have provided a custom location for OpenSSL. Otherwise...
   SQUID_STATE_SAVE(squid_openssl_state)
-  LIBS="$LIBS $LIBOPENSSL_PATH"
-
-  # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIBOPENSSL],[openssl],,[
-    ## For some OS pkg-config is broken or unavailable.
-    ## Detect libraries the hard way.
-
-    # Windows MinGW has some special libraries ...
-    AS_IF([test "x$squid_host_os" = "xmingw"],[
-      LIBOPENSSL_LIBS='-lssleay32 -leay32 -lgdi32 $LIBOPENSSL_LIBS'
-      AC_MSG_NOTICE([Windows OpenSSL library support: yes -lssleay32 -leay32 -lgdi32])
-    ])
-
-    AC_CHECK_LIB(crypto,[CRYPTO_new_ex_data],[LIBOPENSSL_LIBS="-lcrypto $LIBOPENSSL_LIBS"],[
-      AC_MSG_ERROR([library 'crypto' is required for OpenSSL])
-    ],$LIBOPENSSL_LIBS)
-    AC_CHECK_LIB(ssl,[SSL_CTX_new],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
-      AC_MSG_ERROR([library 'ssl' is required for OpenSSL])
-    ],$LIBOPENSSL_LIBS)
+  PKG_CHECK_MODULES([LIBOPENSSL],[openssl],[:],[:])
+  AS_IF([test "x$squid_host_os" = "xmingw"],[
+    LIBOPENSSL_LIBS='-lssleay32 -leay32 -lgdi32 $LIBOPENSSL_LIBS'
   ])
-
   SQUID_STATE_ROLLBACK(squid_openssl_state) #de-pollute LIBS
 
   AS_IF([test "x$LIBOPENSSL_LIBS" != "x"],[
@@ -1151,21 +1128,20 @@ SQUID_CHECK_LIB_WORKS(mit-krb5,[
     # pkg-config not available for Solaris krb5 implementation
     SQUID_CHECK_SOLARIS_KRB5
   ],[
-    PKG_CHECK_MODULES([LIBMIT_KRB5],[mit-krb5 mit-krb5-gssapi],[
-      AS_IF([test "x$squid_host_os" = "xdarwin"],[
-        AC_DEFINE(USE_APPLE_KRB5,1,[Apple Kerberos support is available])
-        AC_CHECK_LIB(resolv,[main],[LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS -lresolv"],[
-          AC_MSG_ERROR([library 'resolv' is required for Apple Kerberos])
-        ])
+    PKG_CHECK_MODULES([LIBMIT_KRB5],[mit-krb5 mit-krb5-gssapi],[:],[:])
+    AS_IF([test "x$squid_host_os" = "xdarwin"],[
+      AC_DEFINE(USE_APPLE_KRB5,1,[Apple Kerberos support is available])
+      AC_CHECK_LIB(resolv,[main],[LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS -lresolv"],[
+        AC_MSG_ERROR([library 'resolv' is required for Apple Kerberos])
       ])
-      CPPFLAGS="$LIBMIT_KRB5_CFLAGS $CPPFLAGS"
-      LIBS="$LIBMIT_KRB5_PATH $LIBMIT_KRB5_LIBS $LIBS"
-      AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-      AC_CHECK_HEADERS(gssapi/gssapi_ext.h gssapi/gssapi_generic.h)
-      AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
-      AC_CHECK_HEADERS(profile.h)
-      SQUID_CHECK_KRB5_FUNCS
-    ],[:])
+    ])
+    CPPFLAGS="$LIBMIT_KRB5_CFLAGS $CPPFLAGS"
+    LIBS="$LIBMIT_KRB5_PATH $LIBMIT_KRB5_LIBS $LIBS"
+    AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
+    AC_CHECK_HEADERS(gssapi/gssapi_ext.h gssapi/gssapi_generic.h)
+    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
+    AC_CHECK_HEADERS(profile.h)
+    SQUID_CHECK_KRB5_FUNCS
   ])
 ])
 
@@ -1173,15 +1149,15 @@ SQUID_CHECK_LIB_WORKS(mit-krb5,[
 SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[LIBHEIMDAL_KRB5])
 SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
   AS_IF([test "x$LIBMIT_KRB5_LIBS" = "x"],[
-    PKG_CHECK_MODULES([LIBHEIMDAL_KRB5],[heimdal-krb5 heimdal-gssapi],[
-      CPPFLAGS="$LIBHEIMDAL_KRB5_CFLAGS $CPPFLAGS"
-      AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-      AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
-
-      LIBS="$LIBHEIMDAL_KRB5_PATH $LIBHEIMDAL_KRB5_LIBS $LIBS"
-      SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
-      SQUID_CHECK_KRB5_FUNCS
-    ],[:])
+    SQUID_STATE_SAVE(squid_heimdal_krb5_save)
+    PKG_CHECK_MODULES([LIBHEIMDAL_KRB5],[heimdal-krb5 heimdal-gssapi],[:],[:])
+    CPPFLAGS="$LIBHEIMDAL_KRB5_CFLAGS $CPPFLAGS"
+    AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
+    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
+    LIBS="$LIBHEIMDAL_KRB5_PATH $LIBHEIMDAL_KRB5_LIBS $LIBS"
+    SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
+    SQUID_CHECK_KRB5_FUNCS
+    SQUID_STATE_ROLLBACK(squid_heimdal_krb5_save)
   ])
 ])
 
@@ -1189,17 +1165,18 @@ SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
 SQUID_AUTO_LIB(gss,[GNU gss],[LIBGSS])
 SQUID_CHECK_LIB_WORKS(gss,[
   AS_IF([test "x$LIBMIT_KRB5_LIBS" = "x" -a "x$LIBHEIMDAL_KRB5_LIBS" = "x"],[
-    PKG_CHECK_MODULES([LIBGSS],[gss],[
-      CPPFLAGS="$LIBGSS_CFLAGS $CPPFLAGS"
-      AC_CHECK_HEADERS(gss.h)
-      LIBS="$LIBGSS_PATH $LIBS"
-      SQUID_CHECK_WORKING_GSSAPI
-      SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
-      SQUID_CHECK_SPNEGO_SUPPORT
-      SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
-      SQUID_CHECK_WORKING_KRB5
-      SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
-    ],[:])
+    SQUID_STATE_SAVE(squid_gss_save)
+    PKG_CHECK_MODULES([LIBGSS],[gss],[:],[:])
+    CPPFLAGS="$LIBGSS_CFLAGS $CPPFLAGS"
+    AC_CHECK_HEADERS(gss.h)
+    LIBS="$LIBGSS_PATH $LIBS"
+    SQUID_CHECK_WORKING_GSSAPI
+    SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
+    SQUID_CHECK_SPNEGO_SUPPORT
+    SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
+    SQUID_CHECK_WORKING_KRB5
+    SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
+    SQUID_STATE_ROLLBACK(squid_gss_save)
   ])
 ])
 
@@ -1227,10 +1204,10 @@ SQUID_CHECK_LIB_WORKS([sasl],[
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
 SQUID_CHECK_LIB_WORKS(systemd,[
+  PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd >= 209],[:],[:])
   LIBS="$LIBS $LIBSYSTEMD_PATH"
-  PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd >= 209],[
-    AC_CHECK_HEADERS(systemd/sd-daemon.h)
-  ],[:])
+  AC_CHECK_HEADERS(systemd/sd-daemon.h)
+  SQUID_STATE_ROLLBACK(squid_systemd_state)
 ])
 
 AC_ARG_ENABLE(forw-via-db,
@@ -1749,11 +1726,9 @@ AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
 SQUID_AUTO_LIB(cppunit,[cppunit test framework],[LIBCPPUNIT])
 SQUID_CHECK_LIB_WORKS(cppunit,[
-  PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[
-    squid_cv_cppunit_version="`pkg-config --modversion cppunit`"
-    AC_MSG_NOTICE([using system installed cppunit version $squid_cv_cppunit_version])
-    AS_UNSET(squid_cv_cppunit_version)
-
+  PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[:],[:])
+  AS_IF([test "x$LIBCPPUNIT_LIBS" != "x"],[
+    SQUID_STATE_SAVE(squid_cppunit_state)
     CXXFLAGS="${CXXFLAGS} ${LIBCPPUNIT_CFLAGS}"
     LIBS="${LIBS} ${LIBCPPUNIT_LIBS}"
     AC_CHECK_HEADERS(cppunit/extensions/HelperMacros.h)
