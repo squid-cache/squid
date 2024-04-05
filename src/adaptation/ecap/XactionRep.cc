@@ -9,11 +9,6 @@
 /* DEBUG: section 93    eCAP Interface */
 
 #include "squid.h"
-#include <libecap/common/area.h>
-#include <libecap/common/delay.h>
-#include <libecap/common/named_values.h>
-#include <libecap/common/names.h>
-#include <libecap/adapter/xaction.h>
 #include "adaptation/Answer.h"
 #include "adaptation/ecap/Config.h"
 #include "adaptation/ecap/XactionRep.h"
@@ -22,8 +17,20 @@
 #include "base/TextException.h"
 #include "format/Format.h"
 #include "HttpReply.h"
-#include "HttpRequest.h"
 #include "MasterXaction.h"
+
+#if HAVE_LIBECAP_COMMON_AREA_H
+#include <libecap/common/area.h>
+#endif
+#if HAVE_LIBECAP_COMMON_DELAY_H
+#include <libecap/common/delay.h>
+#endif
+#if HAVE_LIBECAP_COMMON_NAMED_VALUES_H
+#include <libecap/common/named_values.h>
+#endif
+#if HAVE_LIBECAP_COMMON_NAMES_H
+#include <libecap/common/names.h>
+#endif
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
 
