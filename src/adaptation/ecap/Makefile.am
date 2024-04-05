@@ -16,7 +16,6 @@ libecapsquid_la_SOURCES = \
 	Host.h \
 	MessageRep.cc \
 	MessageRep.h \
-	Registry.h \
 	ServiceRep.cc \
 	ServiceRep.h \
 	XactionRep.cc \
