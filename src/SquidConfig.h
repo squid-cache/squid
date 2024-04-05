@@ -398,7 +398,7 @@ public:
         /// nil unless configured
         acl_access* spoof_client_ip;
         acl_access *on_unsupported_protocol;
-        acl_access *on_ssl_bump_error;
+        acl_access *on_error;
 
         acl_access *ftp_epsv;
 
