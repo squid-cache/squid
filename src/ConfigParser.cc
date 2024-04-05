@@ -181,7 +181,7 @@ ConfigParser::UnQuote(const char *token, const char **next)
     *d = '\0';
 
     // We are expecting a separator after quoted string, space or one of "()#"
-    if (*(s + 1) != '\0' && !strchr(w_space "()#", *(s + 1)) && !errorStr) {
+    if (!errorStr && *(s + 1) != '\0' && !strchr(w_space "()#", *(s + 1))) {
         errorStr = "Expecting space after the end of quoted token";
         errorPos = token;
     }
