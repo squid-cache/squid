@@ -6,7 +6,7 @@
 ##
 
 dnl check for --with-tdb option
-AC_DEFUN([SQUID_CHECK_LIBTDB],[
+AC_DEFUN_ONCE([SQUID_CHECK_LIBTDB],[
 SQUID_AUTO_LIB(tdb,[Samba TrivialDB],[LIBTDB])
 SQUID_CHECK_LIB_WORKS(tdb,[
   SQUID_STATE_SAVE(squid_libtdb_state)
