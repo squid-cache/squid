@@ -219,7 +219,7 @@ dnl and where its pieces are (eg headers and hack macros)
 dnl Parameters for this macro are:
 dnl 1) library name without 'lib' prefix
 dnl 2) necessary library checks to be executed by this macro
-dnl  - These checks are not run when use of the library is disabled.
+dnl  - These checks are not run when library use is explicitly disabled.
 dnl  - These checks should set LIBFOO_LIBS automake variable on success
 dnl    and ensure that it is empty or unset on failures.
 dnl  - These checks may set or change LIBS and xxFLAGS variables as needed.
