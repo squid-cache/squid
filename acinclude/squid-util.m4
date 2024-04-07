@@ -222,8 +222,8 @@ dnl 2) necessary library checks to be executed by this macro
 dnl  - These checks are not run when use of the library is disabled.
 dnl  - These checks should set LIBFOO_LIBS automake variable on success
 dnl    and ensure that it is empty or unset on failures.
-dnl  - These checks may set LIBS and xxFLAGS variables as-needed,
-dnl    and will reset them afterward (see SQUID_STATE_SAVE for detail).
+dnl  - These checks may set or change LIBS and xxFLAGS variables as needed.
+dnl    This macro restores those variables afterward (see SQUID_STATE_SAVE for details).
 AC_DEFUN([SQUID_CHECK_LIB_WORKS],[
 AH_TEMPLATE(m4_toupper(m4_translit([HAVE_LIB$1], [-+.], [___])),[Define as 1 to enable '$1' library support.])
 AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
