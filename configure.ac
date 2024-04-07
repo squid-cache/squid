@@ -831,21 +831,17 @@ AC_MSG_NOTICE([Enable ESI processor: ${enable_esi:=no (auto)}])
 # ESI support libraries: expat
 SQUID_AUTO_LIB(expat,[ESI expat library],[LIBEXPAT])
 SQUID_CHECK_LIB_WORKS(expat,[
-  SQUID_STATE_SAVE(squid_expat_state)
   PKG_CHECK_MODULES([LIBEXPAT],[expat],[:],[:])
   CPPFLAGS="$LIBEXPAT_CFLAGS $CPPFLAGS"
   AC_CHECK_HEADERS(expat.h)
-  SQUID_STATE_ROLLBACK(squid_expat_state)
 ])
 
 # ESI support libraries: xml2
 SQUID_AUTO_LIB(xml2,[ESI xml2 library],[LIBXML2])
 SQUID_CHECK_LIB_WORKS(xml2,[
-  SQUID_STATE_SAVE([squid_libxml2_save])
   PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[:],[:])
   CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
   AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
-  SQUID_STATE_ROLLBACK([squid_libxml2_save])
 ])
 
 AS_IF([test "x$enable_esi" = "xyes" -a "x$LIBXML2_LIBS" = "x" -a "x$LIBEXPAT_LIBS" = "x"],[
@@ -1209,7 +1205,6 @@ SQUID_CHECK_LIB_WORKS(gss,[
 
 SQUID_AUTO_LIB(ldap,[LDAP],[LIBLDAP])
 SQUID_CHECK_LIB_WORKS(ldap,[
-  SQUID_STATE_SAVE(squid_ldap_state)
   PKG_CHECK_MODULES([LIBLDAP],[ldap],[:],[:])
   AS_IF([test "$squid_host_os" = "mingw" -a "x$LIBLDAP_LIBS" = "x"],[
     dnl On MinGW OpenLDAP is not available, try Windows LDAP libraries
@@ -1220,17 +1215,14 @@ SQUID_CHECK_LIB_WORKS(ldap,[
   AC_CHECK_HEADERS(ldap.h lber.h)
   AC_CHECK_HEADERS(mozldap/ldap.h)
   SQUID_CHECK_LDAP_API
-  SQUID_STATE_ROLLBACK(squid_ldap_state)
 ])
 
 SQUID_AUTO_LIB(sasl,[Cyrus SASL],[LIBSASL])
 SQUID_CHECK_LIB_WORKS([sasl],[
-  SQUID_STATE_SAVE(sasl_state)
   PKG_CHECK_MODULES([LIBSASL],[libsasl2],[:],[:])
   CPPFLAGS="$LIBSASL_CFLAGS $CPPFLAGS"
   LIBS="$LIBSASL_LIBS $LIBS"
   AC_CHECK_HEADERS([sasl/sasl.h sasl.h])
-  SQUID_STATE_ROLLBACK(sasl_state)
 ])
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
