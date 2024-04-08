@@ -1855,12 +1855,11 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
 {
     debugs(88, 2, "The reply for " << http->request->method
            << ' ' << http->uri << " is " << accessAllowed << ", because it matched "
-           << (AclMatchedName ? AclMatchedName : "NO ACL's"));
+           << accessAllowed.lastCheckDescription());
 
     if (!accessAllowed.allowed()) {
         ErrorState *err;
-        err_type page_id;
-        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);
+        auto page_id = FindDenyInfoPage(accessAllowed, true);
 
         http->updateLoggingTags(LOG_TCP_DENIED_REPLY);
 

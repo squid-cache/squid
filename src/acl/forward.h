@@ -38,8 +38,6 @@ void Init(void);
 
 typedef void ACLCB(Acl::Answer, void *);
 
-#define ACL_NAME_SZ 64
-
 // TODO: Consider renaming all users and removing. Cons: hides the difference
 // between ACLList tree without actions and acl_access Tree with actions.
 #define acl_access Acl::Tree
