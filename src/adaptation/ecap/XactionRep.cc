@@ -18,6 +18,7 @@
 #include "format/Format.h"
 #include "HttpReply.h"
 #include "MasterXaction.h"
+#include "sbuf/StringConvert.h"
 
 #if HAVE_LIBECAP_COMMON_AREA_H
 #include <libecap/common/area.h>
@@ -456,7 +457,7 @@ Adaptation::Ecap::XactionRep::blockVirgin()
     sinkVb("blockVirgin");
 
     updateHistory(nullptr);
-    sendAnswer(Answer::Block(service().cfg().key));
+    sendAnswer(Answer::Block(StringToSBuf(service().cfg().key)));
     Must(done());
 }
 
