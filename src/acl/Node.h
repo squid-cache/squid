@@ -12,6 +12,7 @@
 #include "acl/forward.h"
 #include "acl/Options.h"
 #include "dlink.h"
+#include "sbuf/SBuf.h"
 
 class ConfigParser;
 
@@ -30,6 +31,11 @@ public:
 
     static void ParseAclLine(ConfigParser &parser, Acl::Node **head);
     static void Initialize();
+
+    /// A configured ACL with a given name or nil.
+    static Acl::Node *FindByName(const SBuf &);
+    /// \copydoc FindByName()
+    /// \deprecated Use to avoid performance regressions; remove with the last caller.
     static Acl::Node *FindByName(const char *name);
 
     Node();
@@ -37,7 +43,7 @@ public:
     virtual ~Node();
 
     /// sets user-specified ACL name and squid.conf context
-    void context(const char *name, const char *configuration);
+    void context(const SBuf &aName, const char *configuration);
 
     /// Orchestrates matching checklist against the Acl::Node using match(),
     /// after checking preconditions and while providing debugging.
@@ -67,7 +73,12 @@ public:
     /// printed parameters are collected from all same-name "acl" directives.
     void dumpWhole(const char *directiveName, std::ostream &);
 
-    char name[ACL_NAME_SZ];
+    /// Either aclname parameter from the explicitly configured acl directive or
+    /// a label generated for an internal ACL tree node. All Node objects
+    /// corresponding to one Squid configuration have unique names.
+    /// See also: context() and FindByName().
+    SBuf name;
+
     char *cfgline;
     Acl::Node *next;  // XXX: remove or at least use refcounting
     bool registered;  ///< added to the global list of ACLs via aclRegister()
@@ -91,7 +102,7 @@ private:
     /// \see Acl::Node::options()
     virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
 
-    static void ParseNamed(ConfigParser &, Node **head, const char *name);
+    static void ParseNamed(ConfigParser &, Node **head, const SBuf &name);
 };
 
 } // namespace Acl

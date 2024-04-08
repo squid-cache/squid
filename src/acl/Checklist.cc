@@ -60,6 +60,7 @@ ACLChecklist::markFinished(const Acl::Answer &finalAnswer, const char *reason)
     assert (!finished() && !asyncInProgress());
     finished_ = true;
     answer_ = finalAnswer;
+    answer_.lastCheckedName = lastCheckedName_;
     debugs(28, 3, this << " answer " << answer_ << " for " << reason);
 }
 
@@ -74,7 +75,7 @@ ACLChecklist::preCheck(const char *what)
     occupied_ = true;
     asyncLoopDepth_ = 0;
 
-    AclMatchedName = nullptr;
+    lastCheckedName_.reset();
     finished_ = false;
 }
 
@@ -154,7 +155,7 @@ ACLChecklist::goAsync(AsyncStarter starter, const Acl::Node &acl)
 // ACLFilledChecklist overwrites this to unclock something before we
 // "delete this"
 void
-ACLChecklist::checkCallback(Acl::Answer answer)
+ACLChecklist::checkCallback(const Acl::Answer &answer)
 {
     ACLCB *callback_;
     void *cbdata_;

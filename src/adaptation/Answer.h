@@ -9,11 +9,13 @@
 #ifndef SQUID_SRC_ADAPTATION_ANSWER_H
 #define SQUID_SRC_ADAPTATION_ANSWER_H
 
+#include "acl/Acl.h"
 #include "adaptation/forward.h"
 #include "http/forward.h"
-#include "SquidString.h"
+#include "sbuf/SBuf.h"
 
 #include <iosfwd>
+#include <optional>
 
 namespace Adaptation
 {
@@ -31,13 +33,16 @@ public:
 
     static Answer Error(bool final); ///< create an akError answer
     static Answer Forward(Http::Message *aMsg); ///< create an akForward answer
-    static Answer Block(const String &aRule); ///< create an akBlock answer
+    static Answer Block(const SBuf &aRule); ///< create an akBlock answer
+
+    /// creates an Acl::Answer from akBlock answer
+    Acl::Answer blockedToChecklistAnswer() const;
 
     std::ostream &print(std::ostream &os) const;
 
 public:
     Http::MessagePointer message; ///< HTTP request or response to forward
-    String ruleId; ///< ACL (or similar rule) name that blocked forwarding
+    std::optional<SBuf> ruleId; ///< ACL (or similar rule) name that blocked forwarding
     bool final; ///< whether the error, if any, cannot be bypassed
     Kind kind; ///< the type of the answer
 

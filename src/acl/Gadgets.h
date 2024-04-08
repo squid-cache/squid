@@ -11,7 +11,9 @@
 
 #include "acl/forward.h"
 #include "error/forward.h"
+#include "sbuf/forward.h"
 
+#include <optional>
 #include <sstream>
 
 class ConfigParser;
@@ -45,10 +47,14 @@ aclParseAclList(ConfigParser &parser, Acl::Tree **tree, const Any any)
     return aclParseAclList(parser, tree, buf.str().c_str());
 }
 
-/// \ingroup ACLAPI
-int aclIsProxyAuth(const char *name);
-/// \ingroup ACLAPI
-err_type aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allowed);
+/// Whether the given name names an Acl::Node object with true isProxyAuth() result.
+/// This is a safe variation of Acl::Node::FindByName(*name)->isProxyAuth().
+bool aclIsProxyAuth(const std::optional<SBuf> &name);
+
+/// The first configured deny_info error page ID matching the given access check outcome (or ERR_NONE).
+/// \param allowCustomStatus whether to consider deny_info rules containing custom HTTP response status code
+err_type FindDenyInfoPage(const Acl::Answer &, bool allowCustomStatus);
+
 /// \ingroup ACLAPI
 void aclParseDenyInfoLine(AclDenyInfoList **);
 /// \ingroup ACLAPI
