@@ -246,13 +246,9 @@ CachePeer::reportStatistics (std::ostream& os)
     dumpOptions(os);
     os << '\n';
 
-    // char ntoabuf[MAX_IPSTRLEN];
-    // for (int i = 0; i < n_addresses; ++i)
-    //     os << "Address[" << i << "] : " <<
-    //        addresses[i].toStr(ntoabuf, MAX_IPSTRLEN) << '\n';
     std::vector<Ip::Address> addr;
     std::copy(addresses, addresses+n_addresses, std::back_inserter(addr));
-    os << "  addresses:" << AsList(addr).prefixedBy(" [ \"").delimitedBy("\", \"").suffixedBy("\" ]") << '\n';
+    os << "  addresses: [ " << AsList(addr).prefixedBy("\"").delimitedBy("\", \"").suffixedBy("\"") << " ]\n";
 
     os << "  status: " << (neighborUp(this) ? "Up" : "Down") << '\n' <<
        "  fetches: " << stats.fetches << '\n' <<
