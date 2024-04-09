@@ -292,8 +292,8 @@ CachePeer::reportStatistics (std::ostream& os)
                 continue;
 
             os << sectionHeader;
-            os << "    " << std::setw(12) << std::setprecision(12) <<
-               std::right << icp_opcode_str[op] << " : " <<
+            os << "    " <<
+               std::right << icp_opcode_str[op] << ": " <<
                icp.counts[op] << " " <<
                Math::intPercent(icp.counts[op], stats.pings_acked) << "%\n";
         }
