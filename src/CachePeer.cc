@@ -239,9 +239,9 @@ void
 CachePeer::reportStatistics (std::ostream& os)
 {
     os <<
-        "- " << name << ":\n" <<
-        "  type: " << typeString() << '\n' <<
-        "  host: " << host << '/' << http_port << '/' << icp.port << '\n';
+       "- " << name << ":\n" <<
+       "  type: " << typeString() << '\n' <<
+       "  host: " << host << '/' << http_port << '/' << icp.port << '\n';
     os << "  flags:";
     dumpOptions(os);
     os << '\n';
@@ -259,13 +259,15 @@ CachePeer::reportStatistics (std::ostream& os)
        "  open connections: " << stats.conn_open << '\n' <<
        "  average RTT: " << stats.rtt << " msec\n";
 
-    if (stats.last_query > 0)
+    if (stats.last_query > 0) {
         os << "  last query:" <<
            (squid_curtime - stats.last_query) << " seconds ago\n";
+    }
 
-    if (stats.last_reply > 0)
+    if (stats.last_reply > 0) {
         os << " last reply: " <<
            (squid_curtime - stats.last_reply) << " seconds ago\n";
+    }
 
     os << "  pings sent: "  << stats.pings_sent << '\n' <<
        "  pings acked: " << stats.pings_acked << " " <<
@@ -280,9 +282,9 @@ CachePeer::reportStatistics (std::ostream& os)
     if (options.htcp) {
         os << sectionHeader;
         os << "    htcp misses: " << htcp.counts[0] << " " <<
-            Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n" <<
-            "    htcp hits: " << htcp.counts[1] << " " <<
-            Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
+           Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n" <<
+           "    htcp hits: " << htcp.counts[1] << " " <<
+           Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
     } else {
 #endif
         for (auto op : WholeEnum<icp_opcode>()) {
