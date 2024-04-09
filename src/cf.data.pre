@@ -5002,9 +5002,10 @@ DOC_START
 
 				When Squid re-forwards the request (e.g., due to an HTTP 304
 				response indicating that the cached response is stale), the
-				timer may restart. When a stopped timer restarts, the time
-				passed since the timer was stopped is added to the
-				measurement, as if the timer has not stopped.
+				timer may restart. In this case, the new measurement is added
+				to the value accumulated from previous forwarding attempts.
+				The time interval between forwarding attempts is not added
+				to the final result.
 
 	Squid handling related format codes:
 
