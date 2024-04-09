@@ -1058,58 +1058,48 @@ Ip::AddressText::AddressText(const Address &ip, bool printPort, bool printBracke
     ip_(ip), printPort_(printPort), printBrackets_(printBrackets)
 {}
 
-SBuf
-Ip::AddressText::str(int force) const
+std::ostream&
+Ip::AddressText::print(std::ostream& os) const
 {
-    SBufStream ss;
-
     if (printBrackets_ && ip_.isIPv6())
-        ss << '[';
+        os << '[';
 
     /* some external code may have blindly memset a parent. */
     /* that's okay, our default is known */
     if (ip_.isAnyAddr()) {
         if (ip_.isIPv6())
-            ss << "::";
+            os << "::";
         if (ip_.isIPv4())
-            ss << "0.0.0.0";
+            os << "0.0.0.0";
     } else {
 
-        /* Pure-IPv6 CANNOT be displayed in IPv4 format. */
-        /* However IPv4 CAN. */
-        if (force == AF_INET && !ip_.isIPv4()) {
-            if (ip_.isIPv6()) {
-                ss << "{!IPv4}";
-            }
-        }
-
         char buf[INET6_ADDRSTRLEN];
-        if (force == AF_INET6 || (force == AF_UNSPEC && ip_.isIPv6())) {
+        if (ip_.isIPv6()) {
             inet_ntop(AF_INET6, &ip_.mSocketAddr_.sin6_addr, buf, INET6_ADDRSTRLEN);
-        } else if (force == AF_INET || (force == AF_UNSPEC && ip_.isIPv4())) {
+        } else if (ip_.isIPv4()) {
             struct in_addr tmp;
             ip_.getInAddr(tmp);
             inet_ntop(AF_INET, &tmp, buf, INET6_ADDRSTRLEN);
         } else {
-            debugs(14, DBG_CRITICAL, "WARNING: Corrupt IP Address details OR required to display in unknown format (" <<
-                force << "). accepted={" << AF_UNSPEC << "," << AF_INET << "," << AF_INET6 << "}");
+            debugs(14, DBG_CRITICAL, "corrupted IP address details");
             assert(false);
         }
-        ss << buf;
+        os << buf;
     }
 
     if (printBrackets_ && ip_.isIPv6())
-        ss << ']';
+        os << ']';
 
     if (printPort_)
-        ss << ':' << ip_.port();
+        os << ':' << ip_.port();
 
-    return ss.buf();
+    return os;
 }
 
-std::ostream &
-operator << (std::ostream &os, const Ip::AddressText &a)
+SBuf
+Ip::AddressText::str() const
 {
-    os << a.str();
-    return os;
+    SBufStream ss;
+    print(ss);
+    return ss.buf();
 }

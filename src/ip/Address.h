@@ -366,7 +366,8 @@ public:
     explicit AddressText(const Address &ip, bool printPort = false, bool printBrackets = false);
     const AddressText& withPort (bool = false);
     const AddressText& bracketed (bool = false);
-    SBuf str(int force=0) const;  // force: 0=auto, AF_INET=IPv4, AF_INET6=IPv6
+    SBuf str() const;  // convenience function
+    std::ostream& print(std::ostream&) const;
 
 private:
     const Address &ip_;
@@ -374,8 +375,10 @@ private:
     bool printBrackets_= false;
 };
 
-std::ostream&
-operator<< (std::ostream &os, const AddressText &);
+inline std::ostream&
+operator<< (std::ostream &os, const AddressText &at) {
+    return at.print(os);
+}
 
 inline std::ostream &
 operator << (std::ostream &os, const Address &ipa)
