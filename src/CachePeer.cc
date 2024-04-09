@@ -315,10 +315,10 @@ const char *
 CachePeer::typeString() const
 {
     static const char *typeNames[] {
-        "Non-Peer",
-        "Sibling",
-        "Parent",
-        "Multicast Group"
+        "non-peer",
+        "sibling",
+        "parent",
+        "multicast group"
     };
     return typeNames[type];
 }
