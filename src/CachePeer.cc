@@ -239,47 +239,48 @@ void
 CachePeer::reportStatistics (std::ostream& os)
 {
     os <<
-       "Name       : " << name << '\n' <<
-       "Type       : " << typeString() << '\n' <<
-       "Addresses  : " << n_addresses << '\n' <<
-       "Host       : " << host << '/' << http_port << '/' <<
-       icp.port << '\n';
-    os << "Flags      :";
+        "- " << name << ":\n" <<
+        "  type: " << typeString() << '\n' <<
+        "  host: " << host << '/' << http_port << '/' << icp.port << '\n';
+    os << "  flags:";
     dumpOptions(os);
     os << '\n';
 
-    char ntoabuf[MAX_IPSTRLEN];
-    for (int i = 0; i < n_addresses; ++i)
-        os << "Address[" << i << "] : " <<
-           addresses[i].toStr(ntoabuf, MAX_IPSTRLEN) << '\n';
+    // char ntoabuf[MAX_IPSTRLEN];
+    // for (int i = 0; i < n_addresses; ++i)
+    //     os << "Address[" << i << "] : " <<
+    //        addresses[i].toStr(ntoabuf, MAX_IPSTRLEN) << '\n';
+    std::vector<Ip::Address> addr;
+    std::copy(addresses, addresses+n_addresses, std::back_inserter(addr));
+    os << "  addresses:" << AsList(addr).prefixedBy(" [ \"").delimitedBy("\", \"").suffixedBy("\" ]") << '\n';
 
-    os << "Status     : " << (neighborUp(this) ? "Up" : "Down") << '\n' <<
-       "Fetches    : " << stats.fetches << '\n' <<
-       "Open conns : " << stats.conn_open << '\n' <<
-       "Average RTT: " << stats.rtt << " msec\n";
+    os << "  status: " << (neighborUp(this) ? "Up" : "Down") << '\n' <<
+       "  fetches: " << stats.fetches << '\n' <<
+       "  open connections: " << stats.conn_open << '\n' <<
+       "  average RTT: " << stats.rtt << " msec\n";
 
     if (stats.last_query > 0)
-        os << "Last query : " <<
+        os << "  last query:" <<
            (squid_curtime - stats.last_query) << " seconds ago\n";
 
     if (stats.last_reply > 0)
-        os << "Last reply : " <<
+        os << " last reply: " <<
            (squid_curtime - stats.last_reply) << " seconds ago\n";
 
-    os << "Pings sent : "  << stats.pings_sent << '\n' <<
-       "Pings acked: " << stats.pings_acked << " " <<
+    os << "  pings sent: "  << stats.pings_sent << '\n' <<
+       "  pings acked: " << stats.pings_acked << " " <<
        Math::intPercent(stats.pings_acked, stats.pings_sent) << "%\n";
 
-    os << "Ignored    : " << stats.ignored_replies << " " <<
+    os << "  replies ignored: " << stats.ignored_replies << " " <<
        Math::intPercent(stats.ignored_replies, stats.pings_acked) << "%\n";
 
-    os << "Histogram of pings acked:\n";
+    os << "  histogram of pings acked:\n";
 
 #if USE_HTCP
     if (options.htcp) {
-        os << "\tMisses\t" << htcp.counts[0] << " " <<
+        os << "    misses: " << htcp.counts[0] << " " <<
            Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n" <<
-           "\tHits\t" << htcp.counts[1] << " " <<
+           "    hits: " << htcp.counts[1] << " " <<
            Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
     } else {
 #endif
