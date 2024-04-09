@@ -35,12 +35,13 @@
 namespace Ip
 {
 
+
+class AddressText;
 /**
  * Holds and manipulates IPv4, IPv6, and Socket Addresses.
  */
 class Address
 {
-
 public:
     /** @name Constructors */
     /*@{*/
@@ -356,7 +357,25 @@ private:
     static const struct in6_addr v4_anyaddr;
     static const struct in6_addr v4_noaddr;
     static const struct in6_addr v6_noaddr;
+
+    friend class AddressText;
 };
+
+class AddressText {
+public:
+    explicit AddressText(const Address &ip, bool printPort = false, bool printBrackets = false);
+    const AddressText& withPort (bool = false);
+    const AddressText& bracketed (bool = false);
+    SBuf str(int force=0) const;  // force: 0=auto, AF_INET=IPv4, AF_INET6=IPv6
+
+private:
+    const Address &ip_;
+    bool printPort_=false;
+    bool printBrackets_= false;
+};
+
+std::ostream&
+operator<< (std::ostream &os, const AddressText &);
 
 inline std::ostream &
 operator << (std::ostream &os, const Address &ipa)

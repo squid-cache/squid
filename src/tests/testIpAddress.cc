@@ -11,6 +11,7 @@
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "unitTestMain.h"
 
 #include <cstring>
@@ -49,6 +50,7 @@ class TestIpAddress : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testtoUrl_fromSockAddr);
     CPPUNIT_TEST(testgetReverseString);
     CPPUNIT_TEST(testMasking);
+    CPPUNIT_TEST(testAddressText);
 
     CPPUNIT_TEST(testBugNullingDisplay);
     CPPUNIT_TEST_SUITE_END();
@@ -75,6 +77,8 @@ protected:
     void testtoUrl_fromSockAddr();
     void testgetReverseString();
     void testMasking();
+
+    void testAddressText();
 
     // bugs.
     void testBugNullingDisplay();
@@ -802,6 +806,41 @@ TestIpAddress::testBugNullingDisplay()
     anIPA.getInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
 
+}
+
+void
+TestIpAddress::testAddressText()
+{
+    std::vector<Ip::Address> testAddresses = {
+        Ip::Address("192.168.100.12"),
+        Ip::Address("2000:800::45"),
+        Ip::Address("::"),
+        Ip::Address("0.0.0.0"),
+        Ip::Address("::1"),
+        Ip::Address("::ffff:192.168.100.12"),
+        Ip::Address("192.168.100.12:80"),
+        Ip::Address("[2000:800::45]:80"),
+    };
+
+    for (const auto& addr : testAddresses) {
+        static char buf[MAX_IPSTRLEN];
+        SBufStream ss;
+
+        addr.toStr(buf, MAX_IPSTRLEN);
+        ss << Ip::AddressText(addr);
+        CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
+        ss.clearBuf();
+
+        addr.toUrl(buf, MAX_IPSTRLEN);
+        ss << Ip::AddressText(addr);
+        CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
+        ss.clearBuf();
+
+        addr.toHostStr(buf, MAX_IPSTRLEN);
+        ss << Ip::AddressText(buf);
+        CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
+        ss.clearBuf();
+    }
 }
 
 int

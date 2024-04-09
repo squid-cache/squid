@@ -12,6 +12,7 @@
 #include "debug/Stream.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "sbuf/Stream.h"
 #include "util.h"
 
 #include <cassert>
@@ -1053,3 +1054,62 @@ Ip::Address::getInAddr(struct in_addr &buf) const
     return false;
 }
 
+Ip::AddressText::AddressText(const Address &ip, bool printPort, bool printBrackets) :
+    ip_(ip), printPort_(printPort), printBrackets_(printBrackets)
+{}
+
+SBuf
+Ip::AddressText::str(int force) const
+{
+    SBufStream ss;
+
+    if (printBrackets_ && ip_.isIPv6())
+        ss << '[';
+
+    /* some external code may have blindly memset a parent. */
+    /* that's okay, our default is known */
+    if (ip_.isAnyAddr()) {
+        if (ip_.isIPv6())
+            ss << "::";
+        if (ip_.isIPv4())
+            ss << "0.0.0.0";
+    } else {
+
+        /* Pure-IPv6 CANNOT be displayed in IPv4 format. */
+        /* However IPv4 CAN. */
+        if (force == AF_INET && !ip_.isIPv4()) {
+            if (ip_.isIPv6()) {
+                ss << "{!IPv4}";
+            }
+        }
+
+        char buf[INET6_ADDRSTRLEN];
+        if (force == AF_INET6 || (force == AF_UNSPEC && ip_.isIPv6())) {
+            inet_ntop(AF_INET6, &ip_.mSocketAddr_.sin6_addr, buf, INET6_ADDRSTRLEN);
+        } else if (force == AF_INET || (force == AF_UNSPEC && ip_.isIPv4())) {
+            struct in_addr tmp;
+            ip_.getInAddr(tmp);
+            inet_ntop(AF_INET, &tmp, buf, INET6_ADDRSTRLEN);
+        } else {
+            debugs(14, DBG_CRITICAL, "WARNING: Corrupt IP Address details OR required to display in unknown format (" <<
+                force << "). accepted={" << AF_UNSPEC << "," << AF_INET << "," << AF_INET6 << "}");
+            assert(false);
+        }
+        ss << buf;
+    }
+
+    if (printBrackets_ && ip_.isIPv6())
+        ss << ']';
+
+    if (printPort_)
+        ss << ':' << ip_.port();
+
+    return ss.buf();
+}
+
+std::ostream &
+operator << (std::ostream &os, const Ip::AddressText &a)
+{
+    os << a.str();
+    return os;
+}
