@@ -274,20 +274,22 @@ CachePeer::reportStatistics (std::ostream& os)
     os << "  replies ignored: " << stats.ignored_replies << " " <<
        Math::intPercent(stats.ignored_replies, stats.pings_acked) << "%\n";
 
-    os << "  histogram of pings acked:\n";
+    auto sectionHeader = AtMostOnce("  histogram of pings acked:\n");
 
 #if USE_HTCP
     if (options.htcp) {
-        os << "    misses: " << htcp.counts[0] << " " <<
-           Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n" <<
-           "    hits: " << htcp.counts[1] << " " <<
-           Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
+        os << sectionHeader;
+        os << "    htcp misses: " << htcp.counts[0] << " " <<
+            Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n" <<
+            "    htcp hits: " << htcp.counts[1] << " " <<
+            Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
     } else {
 #endif
         for (auto op : WholeEnum<icp_opcode>()) {
             if (icp.counts[op] == 0)
                 continue;
 
+            os << sectionHeader;
             os << "    " << std::setw(12) << std::setprecision(12) <<
                std::right << icp_opcode_str[op] << " : " <<
                icp.counts[op] << " " <<
@@ -298,11 +300,11 @@ CachePeer::reportStatistics (std::ostream& os)
 #endif
 
     if (stats.last_connect_failure) {
-        os << "Last failed connect() at: " <<
+        os << "  last failed connection at: " <<
            Time::FormatHttpd(stats.last_connect_failure) << '\n';
     }
 
-    os << "keep-alive ratio: " <<
+    os << "  keep-alive ratio: " <<
        Math::intPercent(stats.n_keepalives_recv, stats.n_keepalives_sent) << "%\n";
 
 }
