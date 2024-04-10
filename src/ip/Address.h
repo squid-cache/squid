@@ -35,7 +35,36 @@
 namespace Ip
 {
 
-class AddressText;
+class Address;
+
+class AddressText
+{
+public:
+    explicit AddressText(const Address &ip, bool printPort = false, bool printBrackets = true);
+    AddressText &withPort(bool b = false)
+    {
+        printPort_ = b;
+        return *this;
+    };
+    AddressText &bracketed(bool b = true)
+    {
+        printBrackets_ = b;
+        return *this;
+    };
+    std::ostream &print(std::ostream &) const;
+
+private:
+    const Address &ip_;
+    bool printPort_ = false;
+    bool printBrackets_ = true;
+};
+
+inline std::ostream &
+operator<<(std::ostream &os, const AddressText &at)
+{
+    return at.print(os);
+}
+
 /**
  * Holds and manipulates IPv4, IPv6, and Socket Addresses.
  */
@@ -214,6 +243,9 @@ public:
     char* toStr(char *buf, const unsigned int blen, int force = AF_UNSPEC) const;
     SBuf toStrAsSBuf(int force = AF_UNSPEC) const;
 
+    /// Return object textually representing an Address for stream output
+    AddressText asText() const { return AddressText(*this); }
+
     /** Return the ASCII equivalent of the address:port combination
      *  Provides a URL formatted version of the content.
      *  If buffer is not large enough the data is truncated silently.
@@ -359,30 +391,6 @@ private:
 
     friend class AddressText;
 };
-
-class AddressText {
-public:
-    explicit AddressText(const Address &ip, bool printPort = false, bool printBrackets = true);
-    AddressText& withPort (bool b = false) {
-        printPort_ = b;
-        return *this;
-    };
-    AddressText& bracketed (bool b = true) {
-        printBrackets_ = b;
-        return *this;
-    };
-    std::ostream& print(std::ostream&) const;
-
-// private:
-    const Address &ip_;
-    bool printPort_=false;
-    bool printBrackets_=true;
-};
-
-inline std::ostream&
-operator<< (std::ostream &os, const AddressText &at) {
-    return at.print(os);
-}
 
 inline std::ostream &
 operator << (std::ostream &os, const Address &ipa)
