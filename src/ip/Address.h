@@ -35,7 +35,6 @@
 namespace Ip
 {
 
-
 class AddressText;
 /**
  * Holds and manipulates IPv4, IPv6, and Socket Addresses.
