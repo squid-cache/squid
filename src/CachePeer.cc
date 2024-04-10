@@ -118,53 +118,53 @@ CachePeer::connectTimeout() const
 }
 
 void
-CachePeer::dumpOptions(std::ostream &os) const
+CachePeer::dumpOptions(std::ostream &yaml) const
 {
     if (options.proxy_only)
-        os << " proxy-only";
+        yaml << " proxy-only";
 
     if (options.no_query)
-        os << " no-query";
+        yaml << " no-query";
 
     if (options.background_ping)
-        os << " background-ping";
+        yaml << " background-ping";
 
     if (options.no_digest)
-        os << " no-digest";
+        yaml << " no-digest";
 
     if (options.default_parent)
-        os << " default";
+        yaml << " default";
 
     if (options.roundrobin)
-        os << " round-robin";
+        yaml << " round-robin";
 
     if (options.carp)
-        os << " carp";
+        yaml << " carp";
 
 #if USE_AUTH
     if (options.userhash)
-        os << " userhash";
+        yaml << " userhash";
 #endif
 
     if (options.sourcehash)
-        os << " sourcehash";
+        yaml << " sourcehash";
 
     if (options.weighted_roundrobin)
-        os << " weighted-round-robin";
+        yaml << " weighted-round-robin";
 
     if (options.mcast_responder)
-        os << " multicast-responder";
+        yaml << " multicast-responder";
 
 #if PEER_MULTICAST_SIBLINGS
     if (options.mcast_siblings)
-        os << " multicast-siblings";
+        yaml << " multicast-siblings";
 #endif
 
     if (weight != 1)
-        os << " weight=" << weight;
+        yaml << " weight=" << weight;
 
     if (options.closest_only)
-        os << " closest-only";
+        yaml << " closest-only";
 
 #if USE_HTCP
     if (options.htcp)
@@ -178,117 +178,115 @@ CachePeer::dumpOptions(std::ostream &os) const
             opts.push_back("no-purge-clr");
         if (options.htcp_only_clr)
             opts.push_back("only-clr");
-        os << AsList(opts).prefixedBy(" htcp=").delimitedBy(",");
+        yaml << AsList(opts).prefixedBy(" htcp=").delimitedBy(",");
     }
 #endif
 
     if (options.no_netdb_exchange)
-        os << " no-netdb-exchange";
+        yaml << " no-netdb-exchange";
 
 #if USE_DELAY_POOLS
     if (options.no_delay)
-        os << " no-delay";
+        yaml << " no-delay";
 #endif
 
     if (login)
-        os << " login=" << login;
+        yaml << " login=" << login;
 
     if (mcast.ttl > 0)
-        os << " ttl=" << mcast.ttl;
+        yaml << " ttl=" << mcast.ttl;
 
     if (connect_timeout_raw > 0)
-        os << " connect-timeout=" << connect_timeout_raw;
+        yaml << " connect-timeout=" << connect_timeout_raw;
 
     if (connect_fail_limit != PEER_TCP_MAGIC_COUNT)
-        os << " connect-fail-limit=" << connect_fail_limit;
+        yaml << " connect-fail-limit=" << connect_fail_limit;
 
 #if USE_CACHE_DIGESTS
     if (digest_url)
-        os << " digest-url=" << digest_url;
+        yaml << " digest-url=" << digest_url;
 #endif
 
     if (options.allow_miss)
-        os << " allow-miss";
+        yaml << " allow-miss";
 
     if (options.no_tproxy)
-        os << " no-tproxy";
+        yaml << " no-tproxy";
 
     if (max_conn > 0)
-        os << " max-conn=" << max_conn;
+        yaml << " max-conn=" << max_conn;
 
     if (standby.limit > 0)
-        os << " standby=" << standby.limit;
+        yaml << " standby=" << standby.limit;
 
     if (options.originserver)
-        os << " originserver";
+        yaml << " originserver";
 
     if (domain)
-        os << " forceddomain=" << domain;
+        yaml << " forceddomain=" << domain;
 
     if (connection_auth == 0)
-        os << " connection-auth=off";
+        yaml << " connection-auth=off";
     else if (connection_auth == 1)
-        os << " connection-auth=on";
+        yaml << " connection-auth=on";
     else if (connection_auth == 2)
-        os << " connection-auth=auto";
+        yaml << " connection-auth=auto";
 
-    secure.dumpCfg(os, "tls-");
+    secure.dumpCfg(yaml, "tls-");
 }
 
 void
-CachePeer::reportStatistics (std::ostream& os)
+CachePeer::reportStatistics (std::ostream& yaml)
 {
-    os <<
-       "- " << name << ":\n" <<
+    yaml <<
+       name << ":\n" <<
        "  type: " << typeString() << '\n' <<
        "  host: " << host << '/' << http_port << '/' << icp.port << '\n';
-    os << "  flags:";
-    dumpOptions(os);
-    os << '\n';
+    yaml << "  flags:";
+    dumpOptions(yaml);
+    yaml << '\n';
 
     std::vector<Ip::Address> addr;
     std::copy(addresses, addresses+n_addresses, std::back_inserter(addr));
-    os << "  addresses: [ " << AsList(addr).prefixedBy("\"").delimitedBy("\", \"").suffixedBy("\"") << " ]\n";
+    yaml << "  addresses: [ " << AsList(addr).prefixedBy("\"").delimitedBy("\", \"").suffixedBy("\"") << " ]\n";
 
-    os << "  status: " << (neighborUp(this) ? "Up" : "Down") << '\n' <<
+    yaml << "  status: " << (neighborUp(this) ? "Up" : "Down") << '\n' <<
        "  fetches: " << stats.fetches << '\n' <<
        "  open connections: " << stats.conn_open << '\n' <<
        "  average RTT: " << stats.rtt << " msec\n";
 
     if (stats.last_query > 0) {
-        os << "  last query:" <<
+        yaml << "  last query:" <<
            (squid_curtime - stats.last_query) << " seconds ago\n";
     }
 
     if (stats.last_reply > 0) {
-        os << " last reply: " <<
+        yaml << " last reply: " <<
            (squid_curtime - stats.last_reply) << " seconds ago\n";
     }
 
-    os << "  pings sent: "  << stats.pings_sent << '\n' <<
+    yaml << "  pings sent: "  << stats.pings_sent << '\n' <<
        "  pings acked: " << stats.pings_acked << " " <<
        Math::intPercent(stats.pings_acked, stats.pings_sent) << "%\n";
 
-    os << "  replies ignored: " << stats.ignored_replies << " " <<
+    yaml << "  replies ignored: " << stats.ignored_replies << " " <<
        Math::intPercent(stats.ignored_replies, stats.pings_acked) << "%\n";
 
     auto sectionHeader = AtMostOnce("  histogram of pings acked:\n");
 
 #if USE_HTCP
     if (options.htcp) {
-        os << sectionHeader;
-        os << "    htcp misses: " << htcp.counts[0] << " " <<
-           Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n" <<
-           "    htcp hits: " << htcp.counts[1] << " " <<
-           Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
+        yaml << sectionHeader;
+        yaml << "    htcp misses: " << htcp.counts[0] << " " << Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n"
+             << "    htcp hits: " << htcp.counts[1] << " " << Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
     } else {
 #endif
         for (auto op : WholeEnum<icp_opcode>()) {
             if (icp.counts[op] == 0)
                 continue;
 
-            os << sectionHeader;
-            os << "    " <<
+            yaml << sectionHeader;
+            yaml << "    " <<
                std::right << icp_opcode_str[op] << ": " <<
                icp.counts[op] << " " <<
                Math::intPercent(icp.counts[op], stats.pings_acked) << "%\n";
@@ -298,11 +296,11 @@ CachePeer::reportStatistics (std::ostream& os)
 #endif
 
     if (stats.last_connect_failure) {
-        os << "  last failed connection at: " <<
+        yaml << "  last failed connection at: " <<
            Time::FormatHttpd(stats.last_connect_failure) << '\n';
     }
 
-    os << "  keep-alive ratio: " <<
+    yaml << "  keep-alive ratio: " <<
        Math::intPercent(stats.n_keepalives_recv, stats.n_keepalives_sent) << "%\n";
 
 }
