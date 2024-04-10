@@ -363,16 +363,20 @@ private:
 
 class AddressText {
 public:
-    explicit AddressText(const Address &ip, bool printPort = false, bool printBrackets = false);
-    const AddressText& withPort (bool = false);
-    const AddressText& bracketed (bool = false);
+    explicit AddressText(const Address &ip, bool printPort = false, bool printBrackets = true);
+    const AddressText& withPort (bool b = false) {
+        printPort_ = b; return *this;
+    };
+    const AddressText& bracketed (bool b = true) {
+        printBrackets_ = b; return *this;
+    };
     SBuf str() const;  // convenience function
     std::ostream& print(std::ostream&) const;
 
 private:
     const Address &ip_;
     bool printPort_=false;
-    bool printBrackets_= false;
+    bool printBrackets_=true;
 };
 
 inline std::ostream&
