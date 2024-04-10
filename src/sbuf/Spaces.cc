@@ -12,9 +12,9 @@
 const SBuf
 spaces(size_t count)
 {
-    const size_t maxLength = 32;
-    static_assert(count < maxLength, "Count exceeds max length");
-    const static SBuf s("                                ", 32);
+    const size_t maxLength = 33;
+    assert(count < maxLength);
+    const static SBuf s("                                 ", maxLength);
     return s.substr(0, count);
 }
 
