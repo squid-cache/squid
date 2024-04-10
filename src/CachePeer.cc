@@ -239,9 +239,9 @@ void
 CachePeer::reportStatistics (std::ostream& yaml)
 {
     yaml <<
-       name << ":\n" <<
-       "  type: " << typeString() << '\n' <<
-       "  host: " << host << '/' << http_port << '/' << icp.port << '\n';
+         name << ":\n" <<
+         "  type: " << typeString() << '\n' <<
+         "  host: " << host << '/' << http_port << '/' << icp.port << '\n';
     yaml << "  flags:";
     dumpOptions(yaml);
     yaml << '\n';
@@ -251,26 +251,26 @@ CachePeer::reportStatistics (std::ostream& yaml)
     yaml << "  addresses: [ " << AsList(addr).prefixedBy("\"").delimitedBy("\", \"").suffixedBy("\"") << " ]\n";
 
     yaml << "  status: " << (neighborUp(this) ? "Up" : "Down") << '\n' <<
-       "  fetches: " << stats.fetches << '\n' <<
-       "  open connections: " << stats.conn_open << '\n' <<
-       "  average RTT: " << stats.rtt << " msec\n";
+         "  fetches: " << stats.fetches << '\n' <<
+         "  open connections: " << stats.conn_open << '\n' <<
+         "  average RTT: " << stats.rtt << " msec\n";
 
     if (stats.last_query > 0) {
         yaml << "  last query:" <<
-           (squid_curtime - stats.last_query) << " seconds ago\n";
+             (squid_curtime - stats.last_query) << " seconds ago\n";
     }
 
     if (stats.last_reply > 0) {
         yaml << " last reply: " <<
-           (squid_curtime - stats.last_reply) << " seconds ago\n";
+             (squid_curtime - stats.last_reply) << " seconds ago\n";
     }
 
     yaml << "  pings sent: "  << stats.pings_sent << '\n' <<
-       "  pings acked: " << stats.pings_acked << " " <<
-       Math::intPercent(stats.pings_acked, stats.pings_sent) << "%\n";
+         "  pings acked: " << stats.pings_acked << " " <<
+         Math::intPercent(stats.pings_acked, stats.pings_sent) << "%\n";
 
     yaml << "  replies ignored: " << stats.ignored_replies << " " <<
-       Math::intPercent(stats.ignored_replies, stats.pings_acked) << "%\n";
+         Math::intPercent(stats.ignored_replies, stats.pings_acked) << "%\n";
 
     auto sectionHeader = AtMostOnce("  histogram of pings acked:\n");
 
@@ -287,9 +287,9 @@ CachePeer::reportStatistics (std::ostream& yaml)
 
             yaml << sectionHeader;
             yaml << "    " <<
-               std::right << icp_opcode_str[op] << ": " <<
-               icp.counts[op] << " " <<
-               Math::intPercent(icp.counts[op], stats.pings_acked) << "%\n";
+                 std::right << icp_opcode_str[op] << ": " <<
+                 icp.counts[op] << " " <<
+                 Math::intPercent(icp.counts[op], stats.pings_acked) << "%\n";
         }
 #if USE_HTCP
     }
@@ -297,11 +297,11 @@ CachePeer::reportStatistics (std::ostream& yaml)
 
     if (stats.last_connect_failure) {
         yaml << "  last failed connection at: " <<
-           Time::FormatHttpd(stats.last_connect_failure) << '\n';
+             Time::FormatHttpd(stats.last_connect_failure) << '\n';
     }
 
     yaml << "  keep-alive ratio: " <<
-       Math::intPercent(stats.n_keepalives_recv, stats.n_keepalives_sent) << "%\n";
+         Math::intPercent(stats.n_keepalives_recv, stats.n_keepalives_sent) << "%\n";
 
 }
 
