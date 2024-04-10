@@ -811,35 +811,55 @@ TestIpAddress::testBugNullingDisplay()
 void
 TestIpAddress::testAddressText()
 {
-    std::vector<Ip::Address> testAddresses = {
-        Ip::Address("192.168.100.12"),
-        Ip::Address("2000:800::45"),
-        Ip::Address("::"),
-        Ip::Address("0.0.0.0"),
-        Ip::Address("::1"),
-        Ip::Address("::ffff:192.168.100.12"),
-        Ip::Address("192.168.100.12:80"),
-        Ip::Address("[2000:800::45]:80"),
+    std::vector<const char *> testAddresses = {
+        "192.168.100.12",
+        "2000:800::45",
+        "::",
+        "0.0.0.0",
+        "::1",
+        "::ffff:192.168.100.12",
     };
 
-    for (const auto& addr : testAddresses) {
-        static char buf[MAX_IPSTRLEN];
-        SBufStream ss;
+    std::vector<unsigned short int> testPorts = {
+        0,
+        1,
+        1024,
+        65535,
+    };
 
-        addr.toStr(buf, MAX_IPSTRLEN);
-        ss << Ip::AddressText(addr);
-        CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
-        ss.clearBuf();
+    for (const auto p : testPorts) {
+        for (const auto& a : testAddresses) {
+            Ip::Address addr(a);
+            addr.port(p);
 
-        addr.toUrl(buf, MAX_IPSTRLEN);
-        ss << Ip::AddressText(addr);
-        CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
-        ss.clearBuf();
+            static char buf[MAX_IPSTRLEN];
+            SBufStream ss;
 
-        addr.toHostStr(buf, MAX_IPSTRLEN);
-        ss << Ip::AddressText(buf);
-        CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
-        ss.clearBuf();
+            ss << Ip::AddressText(addr, false, false);
+            addr.toStr(buf, MAX_IPSTRLEN);
+            CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
+            ss.clearBuf();
+
+            ss << Ip::AddressText(addr).bracketed(false).withPort(false);
+            addr.toStr(buf, MAX_IPSTRLEN);
+            CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
+            ss.clearBuf();
+
+            ss << Ip::AddressText(addr,true);
+            addr.toUrl(buf, MAX_IPSTRLEN);
+            CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
+            ss.clearBuf();
+
+            ss << Ip::AddressText(addr).withPort(true);
+            addr.toUrl(buf, MAX_IPSTRLEN);
+            CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
+            ss.clearBuf();
+
+            ss << Ip::AddressText(addr);
+            addr.toHostStr(buf, MAX_IPSTRLEN);
+            CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
+            ss.clearBuf();
+        }
     }
 }
 

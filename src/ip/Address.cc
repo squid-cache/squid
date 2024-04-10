@@ -1066,7 +1066,7 @@ Ip::AddressText::print(std::ostream& os) const
 
     /* some external code may have blindly memset a parent. */
     /* that's okay, our default is known */
-    if (ip_.isAnyAddr()) {
+    if ( ip_.isAnyAddr() ) {
         if (ip_.isIPv6())
             os << "::";
         if (ip_.isIPv4())
@@ -1090,8 +1090,8 @@ Ip::AddressText::print(std::ostream& os) const
     if (printBrackets_ && ip_.isIPv6())
         os << ']';
 
-    if (printPort_)
-        os << ':' << ip_.port();
+    if (printPort_ && ip_.port() != 0)
+        os << ":" << ip_.port();
 
     return os;
 }
