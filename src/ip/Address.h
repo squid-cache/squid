@@ -371,7 +371,6 @@ public:
         printBrackets_ = b;
         return *this;
     };
-    SBuf str() const;  // convenience function
     std::ostream& print(std::ostream&) const;
 
 // private:

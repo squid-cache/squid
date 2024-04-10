@@ -1095,11 +1095,3 @@ Ip::AddressText::print(std::ostream& os) const
 
     return os;
 }
-
-SBuf
-Ip::AddressText::str() const
-{
-    SBufStream ss;
-    print(ss);
-    return ss.buf();
-}
