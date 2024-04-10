@@ -470,26 +470,23 @@ void
 TestIpAddress::testtoStr()
 {
     struct in_addr inval;
-    char buf[MAX_IPSTRLEN];
     Ip::Address anIPA;
 
     anIPA.setAnyAddr();
 
     /* test AnyAddr display values */
-    CPPUNIT_ASSERT_EQUAL(SBuf("::"), anIPA.toStrAsSBuf());
+    CPPUNIT_ASSERT_EQUAL(SBuf("::"), ToSBuf(anIPA.asText().bracketed(false)));
 
     inval.s_addr = htonl(0xC0A8640C);
     anIPA = inval;
 
     /* test IP display */
-    CPPUNIT_ASSERT( memcmp("192.168.100.12",anIPA.toStr(buf,MAX_IPSTRLEN), 14) == 0 );
-    CPPUNIT_ASSERT_EQUAL(SBuf("192.168.100.12"), anIPA.toStrAsSBuf());
+    CPPUNIT_ASSERT_EQUAL(SBuf("192.168.100.12"), ToSBuf(anIPA.asText()));
 
     anIPA.setNoAddr();
 
     /* test NoAddr display values */
-    CPPUNIT_ASSERT( memcmp("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",anIPA.toStr(buf,MAX_IPSTRLEN), 39) == 0 );
-    CPPUNIT_ASSERT_EQUAL(SBuf("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"), anIPA.toStrAsSBuf());
+    CPPUNIT_ASSERT_EQUAL(SBuf("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"), ToSBuf(anIPA.asText().bracketed(false)));
 }
 
 void
@@ -595,7 +592,6 @@ TestIpAddress::testgetReverseString()
 void
 TestIpAddress::testMasking()
 {
-    char buf[MAX_IPSTRLEN];
     Ip::Address anIPA;
     Ip::Address maskIPA;
 
@@ -624,9 +620,7 @@ TestIpAddress::testMasking()
     CPPUNIT_ASSERT_EQUAL( 80, anIPA.cidr() );
 
     /* BUG Check: test values by display. */
-    CPPUNIT_ASSERT( anIPA.toStr(buf,MAX_IPSTRLEN) != nullptr );
-    CPPUNIT_ASSERT( memcmp("ffff:ffff:ffff:ffff:ffff::", buf, 26) == 0 );
-    CPPUNIT_ASSERT_EQUAL(SBuf("ffff:ffff:ffff:ffff:ffff::"), anIPA.toStrAsSBuf() );
+    CPPUNIT_ASSERT_EQUAL(SBuf("ffff:ffff:ffff:ffff:ffff::"), ToSBuf(anIPA.asText().bracketed(false)) );
 
     /* Test Network Bitmask from Ip::Address */
     anIPA.setNoAddr();
@@ -643,8 +637,7 @@ TestIpAddress::testMasking()
     CPPUNIT_ASSERT_EQUAL( (uint32_t)htonl(0xFFFFF000), btest.s_addr );
 
     /* BUG Check failing test. Masked values for display. */
-    CPPUNIT_ASSERT( memcmp("255.255.240.0",anIPA.toStr(buf,MAX_IPSTRLEN), 13) == 0 );
-    CPPUNIT_ASSERT_EQUAL(SBuf("255.255.240.0"), anIPA.toStrAsSBuf());
+    CPPUNIT_ASSERT_EQUAL(SBuf("255.255.240.0"), ToSBuf(anIPA.asText()));
 
     anIPA.setNoAddr();
     maskIPA.setNoAddr();

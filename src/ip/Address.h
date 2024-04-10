@@ -241,7 +241,6 @@ public:
      \return pointer to buffer received.
      */
     char* toStr(char *buf, const unsigned int blen, int force = AF_UNSPEC) const;
-    SBuf toStrAsSBuf(int force = AF_UNSPEC) const;
 
     /// Return object textually representing an Address for stream output
     AddressText asText() const { return AddressText(*this); }

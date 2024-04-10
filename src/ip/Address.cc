@@ -849,16 +849,6 @@ Ip::Address::toStr(char* buf, const unsigned int blen, int force) const
     return buf;
 }
 
-SBuf
-Ip::Address::toStrAsSBuf(int force) const
-{
-    SBuf rv;
-    auto p = rv.rawAppendStart(MAX_IPSTRLEN);
-    toStr(p, MAX_IPSTRLEN, force);
-    rv.rawAppendFinish(p,strlen(p));
-    return rv;
-}
-
 unsigned int
 Ip::Address::toHostStr(char *buf, const unsigned int blen) const
 {

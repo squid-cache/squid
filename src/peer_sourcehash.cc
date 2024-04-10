@@ -149,7 +149,7 @@ peerSourceHashSelectParent(PeerSelector *ps)
     assert(ps);
     HttpRequest *request = ps->request;
 
-    const auto key = request->client_addr.toStrAsSBuf();
+    const auto key = ToSBuf(request->client_addr.asText());
 
     /* calculate hash key */
     debugs(39, 2, "peerSourceHashSelectParent: Calculating hash for " << key);
