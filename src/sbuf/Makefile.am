@@ -18,6 +18,8 @@ libsbuf_la_SOURCES = \
 	MemBlob.h \
 	SBuf.cc \
 	SBuf.h \
+	Spaces.cc \
+	Spaces.h \
 	Stats.cc \
 	Stats.h \
 	Stream.h \
