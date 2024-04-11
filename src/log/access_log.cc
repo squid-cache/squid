@@ -235,28 +235,6 @@ HierarchyLogEntry::notePeerWrite()
     peer_last_write_ = current_time;
 }
 
-void
-HierarchyLogEntry::startPeerClock()
-{
-    if (peerTimer.running()) {
-        debugs(46, 5, "already running");
-        return;
-    }
-    peerTimer.resume();
-}
-
-void
-HierarchyLogEntry::stopPeerClock()
-{
-    if (!peerTimer.running()) {
-        debugs(46, 5, "already stopped");
-        return;
-    }
-    peerTimer.pause();
-    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(peerTimer.total());
-    debugs(46, 5, "elapsed " << elapsed.count() << "ms");
-}
-
 bool
 HierarchyLogEntry::peerResponseTime(struct timeval &responseTime)
 {

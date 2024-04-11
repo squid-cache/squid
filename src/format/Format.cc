@@ -635,11 +635,16 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME: {
-            const auto &timer = al->hier.totalResponseTime();
+            // al->hier.totalResponseTime() is unassigned before prepareLogWithRequestDetails()
+            // TODO: keep the total response time in one place.
+            const auto &timer = al->hier.totalResponseTime().ran() ? al->hier.totalResponseTime() : al->request->hier.totalResponseTime();
             if (timer.ran()) {
-                const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(timer.total());
-                outtv.tv_sec = ms.count() / 1000;
-                outtv.tv_usec = (ms.count() % 1000) * 1000;
+                auto duration = timer.total();
+                const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(timer.total());
+                duration -= seconds;
+                const auto ms = std::chrono::duration_cast<std::chrono::microseconds>(duration);
+                outtv.tv_sec = seconds.count();
+                outtv.tv_usec = ms.count();
                 doMsec = 1;
             }
         }

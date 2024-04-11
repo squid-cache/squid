@@ -39,19 +39,19 @@ public:
     void notePeerWrite();
 
     /// Start recording total time spent communicating with peers
-    void startPeerClock();
+    void startPeerClock() { peeringTime_.resume(); }
     /**
      * Record total time spent communicating with peers
      * \param force whether to overwrite old recorded value if any
      */
-    void stopPeerClock();
+    void stopPeerClock() { peeringTime_.pause(); }
 
     /// Estimates response generation and sending delay at the last peer.
     /// \returns whether the estimate (stored in `responseTime`) is available.
     bool peerResponseTime(struct timeval &responseTime);
 
     /// Estimates the total time spent communicating with peers.
-    const Stopwatch &totalResponseTime() const { return peerTimer; }
+    const Stopwatch &totalResponseTime() const { return peeringTime_; }
 
 public:
     hier_code code;
@@ -75,7 +75,7 @@ private:
 
     struct timeval peer_last_read_; ///< time of the last read from the last peer
     struct timeval peer_last_write_; ///< time of the last write to the last peer
-    Stopwatch peerTimer; ///< cumulative for all peers
+    Stopwatch peeringTime_; ///< cumulative for all peers and any revalidations (see %<tt)
 };
 
 #endif /* SQUID_SRC_HIERARCHYLOGENTRY_H */
