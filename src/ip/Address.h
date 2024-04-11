@@ -35,20 +35,35 @@
 namespace Ip
 {
 
+/**
+ * Formats an Address for stream output
+ *
+ * Normally instantiated via factory method Ip::Address::asText().
+ * Methods manipulate flags to determine output format
+ */
 class AddressText
 {
 public:
     explicit AddressText(const Address &ip);
-    AddressText &withPort(bool b = false)
+
+    /// if the Address has a port, output it (default: no)
+    /// if set to true, also print brackets for IPv6 addresses
+    AddressText &withPort(bool b = true)
     {
         printPort_ = b;
+        if (b)
+            printBrackets_ = true;
         return *this;
     };
+
+    /// whether to print brackets surrounding the IP portion of IPv6 addresses (default: yes)
+    /// IPv4 addresses never have brackets
     AddressText &bracketed(bool b = true)
     {
         printBrackets_ = b;
         return *this;
     };
+    /// output to ostream. Normally used through operator <<
     std::ostream &print(std::ostream &) const;
 
 private:
