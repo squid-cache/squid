@@ -58,7 +58,7 @@ ProxyProtocol::Header::getValues(const uint32_t headerType, const char sep) cons
     case Two::htPseudoDstAddr: {
         if (!hasAddresses())
             return SBuf();
-        return AsSBuf(destinationAddress.asText());
+        return ToSBuf(destinationAddress.asText());
     }
 
     case Two::htPseudoSrcPort: {
