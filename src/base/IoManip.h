@@ -202,8 +202,8 @@ public:
     const char *prefix = nullptr; ///< \copydoc prefixedBy()
     const char *suffix = nullptr; ///< \copydoc suffixedBy()
     const char *delimiter = nullptr; ///< \copydoc delimitedBy()
-    const char *preQuote = nullptr; ///< \copydoc quotedBy()
-    const char *postQuote = nullptr; ///< \copydoc quotedBy()
+    const char *preQuote = nullptr; ///< optional c-string to print before each item; \sa quote()
+    const char *postQuote = nullptr; ///< optional c-string to print after each item; \sa quote()
 };
 
 template <typename Container>
