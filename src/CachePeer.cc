@@ -230,8 +230,7 @@ CachePeer::dumpOptions(std::ostream &yaml) const
         yaml << " connection-auth=off";
     else if (connection_auth == 1)
         yaml << " connection-auth=on";
-    else if (connection_auth == 2)
-        yaml << " connection-auth=auto";
+    // else default connection-auth=auto
 
     secure.dumpCfg(yaml, "tls-");
 }
