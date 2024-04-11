@@ -16,6 +16,7 @@
 #include "neighbors.h"
 #include "peer_sourcehash.h"
 #include "PeerSelectState.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "Store.h"
 
