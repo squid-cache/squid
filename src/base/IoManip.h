@@ -188,8 +188,8 @@ public:
     auto &delimitedBy(const char * const d) { delimiter = d; return *this; }
 
     /// a c-string to print before and after each item. Caller must ensure lifetime.
-    /// If post is null, use the same as pre, use "" to not have a post-quote
-    auto &quotedBy(const char *const pre, const char *const post = nullptr)
+    /// If post is nullptr, use the same as pre, use "" to not have a post-quote
+    auto &quoted(const char *const pre = "\"", const char *const post = nullptr)
     {
         preQuote = pre;
         postQuote = post ? post : pre;
