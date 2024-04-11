@@ -119,53 +119,53 @@ CachePeer::connectTimeout() const
 }
 
 void
-CachePeer::dumpOptions(std::ostream &yaml) const
+CachePeer::dumpOptions(std::ostream &os) const
 {
     if (options.proxy_only)
-        yaml << " proxy-only";
+        os << " proxy-only";
 
     if (options.no_query)
-        yaml << " no-query";
+        os << " no-query";
 
     if (options.background_ping)
-        yaml << " background-ping";
+        os << " background-ping";
 
     if (options.no_digest)
-        yaml << " no-digest";
+        os << " no-digest";
 
     if (options.default_parent)
-        yaml << " default";
+        os << " default";
 
     if (options.roundrobin)
-        yaml << " round-robin";
+        os << " round-robin";
 
     if (options.carp)
-        yaml << " carp";
+        os << " carp";
 
 #if USE_AUTH
     if (options.userhash)
-        yaml << " userhash";
+        os << " userhash";
 #endif
 
     if (options.sourcehash)
-        yaml << " sourcehash";
+        os << " sourcehash";
 
     if (options.weighted_roundrobin)
-        yaml << " weighted-round-robin";
+        os << " weighted-round-robin";
 
     if (options.mcast_responder)
-        yaml << " multicast-responder";
+        os << " multicast-responder";
 
 #if PEER_MULTICAST_SIBLINGS
     if (options.mcast_siblings)
-        yaml << " multicast-siblings";
+        os << " multicast-siblings";
 #endif
 
     if (weight != 1)
-        yaml << " weight=" << weight;
+        os << " weight=" << weight;
 
     if (options.closest_only)
-        yaml << " closest-only";
+        os << " closest-only";
 
 #if USE_HTCP
     if (options.htcp)
@@ -179,60 +179,60 @@ CachePeer::dumpOptions(std::ostream &yaml) const
             opts.push_back("no-purge-clr");
         if (options.htcp_only_clr)
             opts.push_back("only-clr");
-        yaml << AsList(opts).prefixedBy(" htcp=").delimitedBy(",");
+        os << AsList(opts).prefixedBy(" htcp=").delimitedBy(",");
     }
 #endif
 
     if (options.no_netdb_exchange)
-        yaml << " no-netdb-exchange";
+        os << " no-netdb-exchange";
 
 #if USE_DELAY_POOLS
     if (options.no_delay)
-        yaml << " no-delay";
+        os << " no-delay";
 #endif
 
     if (login)
-        yaml << " login=" << login;
+        os << " login=" << login;
 
     if (mcast.ttl > 0)
-        yaml << " ttl=" << mcast.ttl;
+        os << " ttl=" << mcast.ttl;
 
     if (connect_timeout_raw > 0)
-        yaml << " connect-timeout=" << connect_timeout_raw;
+        os << " connect-timeout=" << connect_timeout_raw;
 
     if (connect_fail_limit != PEER_TCP_MAGIC_COUNT)
-        yaml << " connect-fail-limit=" << connect_fail_limit;
+        os << " connect-fail-limit=" << connect_fail_limit;
 
 #if USE_CACHE_DIGESTS
     if (digest_url)
-        yaml << " digest-url=" << digest_url;
+        os << " digest-url=" << digest_url;
 #endif
 
     if (options.allow_miss)
-        yaml << " allow-miss";
+        os << " allow-miss";
 
     if (options.no_tproxy)
-        yaml << " no-tproxy";
+        os << " no-tproxy";
 
     if (max_conn > 0)
-        yaml << " max-conn=" << max_conn;
+        os << " max-conn=" << max_conn;
 
     if (standby.limit > 0)
-        yaml << " standby=" << standby.limit;
+        os << " standby=" << standby.limit;
 
     if (options.originserver)
-        yaml << " originserver";
+        os << " originserver";
 
     if (domain)
-        yaml << " forceddomain=" << domain;
+        os << " forceddomain=" << domain;
 
     if (connection_auth == 0)
-        yaml << " connection-auth=off";
+        os << " connection-auth=off";
     else if (connection_auth == 1)
         yaml << " connection-auth=on";
     // else default connection-auth=auto
 
-    secure.dumpCfg(yaml, "tls-");
+    secure.dumpCfg(os, "tls-");
 }
 
 void
