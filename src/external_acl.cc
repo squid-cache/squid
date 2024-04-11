@@ -486,11 +486,11 @@ class external_acl_data
     CBDATA_CLASS(external_acl_data);
 
 public:
-    explicit external_acl_data(external_acl *aDef) : def(cbdataReference(aDef)), name(nullptr), arguments(nullptr) {}
+    explicit external_acl_data(external_acl * const aDef): def(cbdataReference(aDef)), arguments(nullptr) {}
     ~external_acl_data();
 
     external_acl *def;
-    const char *name;
+    SBuf name;
     wordlist *arguments;
 };
 
@@ -498,7 +498,6 @@ CBDATA_CLASS_INIT(external_acl_data);
 
 external_acl_data::~external_acl_data()
 {
-    xfree(name);
     wordlistDestroy(&arguments);
     cbdataReferenceDone(def);
 }
@@ -528,7 +527,7 @@ ACLExternal::parse()
 
     // def->name is the name of the external_acl_type.
     // this is the name of the 'acl' directive being tested
-    data->name = xstrdup(name);
+    data->name = name;
 
     while ((token = ConfigParser::strtokFile())) {
         wordlistAdd(&data->arguments, token);
@@ -768,8 +767,7 @@ ACLExternal::makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl
 
         if (t->type == Format::LFT_EXT_ACL_NAME) {
             // setup for %ACL
-            safe_free(ch->al->lastAclName);
-            ch->al->lastAclName = xstrdup(acl_data->name);
+            ch->al->lastAclName = acl_data->name;
         }
 
         if (t->type == Format::LFT_EXT_ACL_DATA) {

@@ -923,7 +923,9 @@ Client::handledEarlyAdaptationAbort()
 void
 Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
 {
-    debugs(11,5, answer.ruleId);
+    const auto blockedAnswer = answer.blockedToChecklistAnswer();
+
+    debugs(11,5, blockedAnswer.lastCheckDescription());
 
     if (abortOnBadEntry("entry went bad while ICAP aborted"))
         return;
@@ -939,8 +941,7 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
 
     debugs(11,7, "creating adaptation block response");
 
-    err_type page_id =
-        aclGetDenyInfoPage(&Config.denyInfoList, answer.ruleId.termedBuf(), 1);
+    auto page_id = FindDenyInfoPage(blockedAnswer, true);
     if (page_id == ERR_NONE)
         page_id = ERR_ACCESS_DENIED;
 

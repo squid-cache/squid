@@ -5,10 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-SQUID_CHECK_LIBTDB
-if test "$with_tdb" != "no"; then
-    BUILD_HELPER="session"
-fi
+AS_IF([test "x$LIBTDB_LIBS" != "x"],[BUILD_HELPER="session"])
 
 LIBBDB_LIBS=
 AH_TEMPLATE(USE_BERKLEYDB,[BerkleyDB support is available])
