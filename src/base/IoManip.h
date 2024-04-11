@@ -187,12 +187,23 @@ public:
     /// a c-string to print between consecutive items (if any). Caller must ensure lifetime.
     auto &delimitedBy(const char * const d) { delimiter = d; return *this; }
 
+    /// a c-string to print before and after each item. Caller must ensure lifetime.
+    /// If post is null, use the same as pre, use "" to not have a post-quote
+    auto &quotedBy(const char *const pre, const char *const post = nullptr)
+    {
+        preQuote = pre;
+        postQuote = post ? post : pre;
+        return *this;
+    }
+
 public:
     const Container &container; ///< zero or more items to print
 
     const char *prefix = nullptr; ///< \copydoc prefixedBy()
     const char *suffix = nullptr; ///< \copydoc suffixedBy()
     const char *delimiter = nullptr; ///< \copydoc delimitedBy()
+    const char *preQuote = nullptr; ///< \copydoc quotedBy()
+    const char *postQuote = nullptr; ///< \copydoc quotedBy()
 };
 
 template <class Container>
@@ -209,7 +220,11 @@ operator <<(std::ostream &os, const AsList<Container> &manipulator)
             if (manipulator.delimiter)
                 os << manipulator.delimiter;
         }
+        if (manipulator.preQuote)
+            os << manipulator.preQuote;
         os << item;
+        if (manipulator.postQuote)
+            os << manipulator.postQuote;
     }
     if (opened && manipulator.suffix)
         os << manipulator.suffix;
