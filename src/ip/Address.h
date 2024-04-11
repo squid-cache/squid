@@ -35,8 +35,6 @@
 namespace Ip
 {
 
-class Address;
-
 class AddressText
 {
 public:
@@ -253,7 +251,7 @@ public:
      \param len byte length of buffer available for writing.
      \return pointer to buffer received.
      */
-    char *toUrl(char *buf, unsigned int len) const;
+    char* toUrl(char *buf, unsigned int len) const;
 
     /** Return a properly hostname formatted copy of the address
      *  Provides a URL formatted version of the content.
