@@ -187,15 +187,11 @@ public:
     /// a c-string to print between consecutive items (if any). Caller must ensure lifetime.
     auto &delimitedBy(const char * const d) { delimiter = d; return *this; }
 
+    /// c-string to print before and after each item. Caller must ensure lifetime.
+    auto &quoted(const char * const q = "\"") { preQuote = postQuote = q; return *this; }
+
     /// c-strings to print before and after each item. Caller must ensure lifetime.
-    /// If post is nullptr (default), pre parameter will be printed after each item.
-    /// If pre (or post) is "", nothing will be printed before (or after) each item.
-    auto &quoted(const char *const pre = "\"", const char *const post = nullptr)
-    {
-        preQuote = pre;
-        postQuote = post ? post : pre;
-        return *this;
-    }
+    auto &quoted(const char * const preQ, const char * const postQ) { preQuote = preQ; postQuote = postQ; return *this; }
 
     /// writes the container to the given stream
     void print(std::ostream &) const;
