@@ -196,7 +196,7 @@ public:
     /// writes the container to the given stream
     void print(std::ostream &) const;
 
-private:
+public:
     const Container &container; ///< zero or more items to print
 
     const char *prefix = nullptr; ///< \copydoc prefixedBy()
