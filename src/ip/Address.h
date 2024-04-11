@@ -68,6 +68,7 @@ operator<<(std::ostream &os, const AddressText &at)
  */
 class Address
 {
+
 public:
     /** @name Constructors */
     /*@{*/
