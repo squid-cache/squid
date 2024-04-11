@@ -234,7 +234,7 @@ AsList<Container>::print(std::ostream &os) const
         os << suffix;
 }
 
-template <class Container>
+template <typename Container>
 inline std::ostream &
 operator <<(std::ostream &os, const AsList<Container> &manipulator)
 {
