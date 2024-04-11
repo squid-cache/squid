@@ -48,7 +48,7 @@ public:
     time_t connectTimeout() const;
 
     /// output to stream a representation of the peer's statistics
-    void reportStatistics (std::ostream& s);
+    void reportStatistics(std::ostream &);
 
     /// output to stream a representation of the peer's configuration options
     void dumpOptions(std::ostream &) const;
