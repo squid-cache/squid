@@ -38,7 +38,7 @@ namespace Ip
 class AddressText
 {
 public:
-    explicit AddressText(const Address &ip, bool printPort = false, bool printBrackets = true);
+    explicit AddressText(const Address &ip);
     AddressText &withPort(bool b = false)
     {
         printPort_ = b;

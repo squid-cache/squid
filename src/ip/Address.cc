@@ -1044,8 +1044,8 @@ Ip::Address::getInAddr(struct in_addr &buf) const
     return false;
 }
 
-Ip::AddressText::AddressText(const Address &ip, bool printPort, bool printBrackets) :
-    ip_(ip), printPort_(printPort), printBrackets_(printBrackets)
+Ip::AddressText::AddressText(const Address &ip) :
+    ip_(ip)
 {}
 
 std::ostream&

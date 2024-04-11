@@ -828,17 +828,12 @@ TestIpAddress::testAddressText()
             static char buf[MAX_IPSTRLEN];
             SBufStream ss;
 
-            ss << Ip::AddressText(addr, false, false);
-            addr.toStr(buf, MAX_IPSTRLEN);
-            CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
-            ss.clearBuf();
-
             ss << Ip::AddressText(addr).bracketed(false).withPort(false);
             addr.toStr(buf, MAX_IPSTRLEN);
             CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
             ss.clearBuf();
 
-            ss << Ip::AddressText(addr,true);
+            ss << Ip::AddressText(addr).bracketed(true).withPort(true);
             addr.toUrl(buf, MAX_IPSTRLEN);
             CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
             ss.clearBuf();
