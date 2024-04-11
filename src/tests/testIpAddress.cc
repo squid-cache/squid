@@ -75,10 +75,9 @@ protected:
     void testtoStr();
     void testtoUrl_fromInAddr();
     void testtoUrl_fromSockAddr();
+    void testAddressText();
     void testgetReverseString();
     void testMasking();
-
-    void testAddressText();
 
     // bugs.
     void testBugNullingDisplay();
