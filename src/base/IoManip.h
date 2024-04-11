@@ -187,8 +187,9 @@ public:
     /// a c-string to print between consecutive items (if any). Caller must ensure lifetime.
     auto &delimitedBy(const char * const d) { delimiter = d; return *this; }
 
-    /// a c-string to print before and after each item. Caller must ensure lifetime.
-    /// If post is nullptr, use the same as pre, use "" to not have a post-quote
+    /// c-strings to print before and after each item. Caller must ensure lifetime.
+    /// If post is nullptr (default), pre parameter will be printed after each item.
+    /// If pre (or post) is "", nothing will be printed before (or after) each item.
     auto &quoted(const char *const pre = "\"", const char *const post = nullptr)
     {
         preQuote = pre;
