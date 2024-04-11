@@ -211,6 +211,7 @@ void
 AsList<Container>::print(std::ostream &os) const
 {
     bool opened = false;
+
     for (const auto &item: container) {
         if (!opened) {
             if (prefix)
@@ -220,12 +221,14 @@ AsList<Container>::print(std::ostream &os) const
             if (delimiter)
                 os << delimiter;
         }
+
         if (preQuote)
             os << preQuote;
         os << item;
         if (postQuote)
             os << postQuote;
     }
+
     if (opened && suffix)
         os << suffix;
 }
