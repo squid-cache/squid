@@ -197,7 +197,8 @@ public:
         return *this;
     }
 
-    std::ostream& print(std::ostream &) const;
+    /// writes the container to the given stream
+    void print(std::ostream &) const;
 
 private:
     const Container &container; ///< zero or more items to print
@@ -210,7 +211,7 @@ private:
 };
 
 template <typename Container>
-inline std::ostream &
+void
 AsList<Container>::print(std::ostream &os) const
 {
     bool opened = false;
@@ -231,14 +232,14 @@ AsList<Container>::print(std::ostream &os) const
     }
     if (opened && suffix)
         os << suffix;
-    return os;
 }
 
 template <class Container>
 inline std::ostream &
 operator <<(std::ostream &os, const AsList<Container> &manipulator)
 {
-    return manipulator.print(os);
+    manipulator.print(os);
+    return os;
 }
 
 /// a helper to ease AsList object creation
