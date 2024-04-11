@@ -196,7 +196,9 @@ public:
         return *this;
     }
 
-public:
+    std::ostream& print(std::ostream &) const;
+
+private:
     const Container &container; ///< zero or more items to print
 
     const char *prefix = nullptr; ///< \copydoc prefixedBy()
@@ -206,29 +208,36 @@ public:
     const char *postQuote = nullptr; ///< \copydoc quotedBy()
 };
 
+template <typename Container>
+inline std::ostream &
+AsList<Container>::print(std::ostream &os) const
+{
+    bool opened = false;
+    for (const auto &item: container) {
+        if (!opened) {
+            if (prefix)
+                os << prefix;
+            opened = true;
+        } else {
+            if (delimiter)
+                os << delimiter;
+        }
+        if (preQuote)
+            os << preQuote;
+        os << item;
+        if (postQuote)
+            os << postQuote;
+    }
+    if (opened && suffix)
+        os << suffix;
+    return os;
+}
+
 template <class Container>
 inline std::ostream &
 operator <<(std::ostream &os, const AsList<Container> &manipulator)
 {
-    bool opened = false;
-    for (const auto &item: manipulator.container) {
-        if (!opened) {
-            if (manipulator.prefix)
-                os << manipulator.prefix;
-            opened = true;
-        } else {
-            if (manipulator.delimiter)
-                os << manipulator.delimiter;
-        }
-        if (manipulator.preQuote)
-            os << manipulator.preQuote;
-        os << item;
-        if (manipulator.postQuote)
-            os << manipulator.postQuote;
-    }
-    if (opened && manipulator.suffix)
-        os << manipulator.suffix;
-    return os;
+    return manipulator.print(os);
 }
 
 /// a helper to ease AsList object creation
