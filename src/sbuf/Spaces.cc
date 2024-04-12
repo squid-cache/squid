@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "sbuf/SBuf.h"
+#include "sbuf/Spaces.h"
 
 const SBuf
 spaces(size_t count)
