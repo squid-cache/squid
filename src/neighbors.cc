@@ -1356,17 +1356,16 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
 {
     PackableStream yaml(*sentry);
 
-    if (peers) {
-        yaml << "cache_peers number: " << peers->size() << "\n";
-        yaml << "cache_peers:\n";
-    } else {
+    if (!peers) {
         yaml << "cache_peers number: 0\n";
+        return;
     }
 
-    for (const auto &peer: *peers) {
+    yaml << "cache_peers number: " << peers->size() << "\n";
+    yaml << "cache_peers:\n";
+    for (const auto &peer : *peers) {
         const auto e = peer.get();
         assert(e->host != nullptr);
-
         e->reportStatistics(yaml);
     }
 }
