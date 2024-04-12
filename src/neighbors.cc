@@ -1354,10 +1354,10 @@ neighborDumpPeers(StoreEntry * sentry)
 static void
 dump_peers(StoreEntry *sentry, CachePeers *peers)
 {
-    PackableStream os(*sentry);
+    PackableStream yaml(*sentry);
 
     if (!peers) {
-        os << "There are no neighbors installed.\n";
+        yaml << "There are no neighbors installed.\n";
         return;
     }
 
@@ -1365,8 +1365,8 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
         const auto e = peer.get();
         assert(e->host != nullptr);
 
-        e->reportStatistics(os);
-        os << "\n";
+        e->reportStatistics(yaml);
+        yaml << "\n";
     }
 }
 
