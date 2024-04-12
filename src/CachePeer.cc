@@ -288,7 +288,7 @@ CachePeer::reportStatistics (std::ostream& yaml)
 
             yaml << spaces(2) << sectionHeader;
             yaml << spaces(4) <<
-                 icp_opcode_str[op] << ": " <<
+                 "icp " << icp_opcode_str[op] << ": " <<
                  icp.counts[op] << " " <<
                  Math::intPercent(icp.counts[op], stats.pings_acked) << "%\n";
         }
