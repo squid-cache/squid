@@ -248,7 +248,7 @@ CachePeer::reportStatistics (std::ostream& yaml)
 
     std::vector<Ip::Address> addr;
     std::copy(addresses, addresses+n_addresses, std::back_inserter(addr));
-    yaml << spaces(2) << "addresses: [ " << AsList(addr).prefixedBy("\"").delimitedBy("\", \"").suffixedBy("\"") << " ]\n";
+    yaml << spaces(2) << "addresses: [ " << AsList(addr).quoted().delimitedBy(", ") << " ]\n";
 
     yaml <<
          spaces(2) << "status: " << (neighborUp(this) ? "Up" : "Down") << '\n' <<
