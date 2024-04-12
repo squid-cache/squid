@@ -242,7 +242,7 @@ CachePeer::reportStatistics (std::ostream& yaml)
          spaces(2) << "- name: " << name << "\n" <<
          spaces(4) << "type: " << typeString() << '\n' <<
          spaces(4) << "http address: " << host << ':' << http_port << '\n';
-    if (icp.port > 0)
+    if (icp.port)
         yaml << spaces(4) << "icp address:" << host << ':' << icp.port << '\n';
     yaml << spaces(4) << "options:";
     dumpOptions(yaml);
