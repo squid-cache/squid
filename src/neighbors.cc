@@ -1356,9 +1356,11 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
 {
     PackableStream yaml(*sentry);
 
-    if (!peers) {
-        yaml << "There are no neighbors installed.\n";
-        return;
+    if (peers) {
+        yaml << "cache_peers number: " << peers->size() << "\n";
+        yaml << "cache_peers:\n";
+    } else {
+        yaml << "cache_peers number: 0\n";
     }
 
     for (const auto &peer: *peers) {
@@ -1366,7 +1368,6 @@ dump_peers(StoreEntry *sentry, CachePeers *peers)
         assert(e->host != nullptr);
 
         e->reportStatistics(yaml);
-        yaml << "\n";
     }
 }
 

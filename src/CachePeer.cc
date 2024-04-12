@@ -239,55 +239,55 @@ void
 CachePeer::reportStatistics (std::ostream& yaml)
 {
     yaml <<
-         name << ":\n" <<
-         spaces(2) << "type: " << typeString() << '\n' <<
-         spaces(2) << "host: " << host << '/' << http_port << '/' << icp.port << '\n';
-    yaml << spaces(2) << "flags:";
+         spaces(2) << "- name: " << name << "\n" <<
+         spaces(4) << "type: " << typeString() << '\n' <<
+         spaces(4) << "host: " << host << '/' << http_port << '/' << icp.port << '\n';
+    yaml << spaces(4) << "flags:";
     dumpOptions(yaml);
     yaml << '\n';
 
     std::vector<Ip::Address> addr;
     std::copy(addresses, addresses+n_addresses, std::back_inserter(addr));
-    yaml << spaces(2) << "addresses: [ " << AsList(addr).quoted().delimitedBy(", ") << " ]\n";
+    yaml << spaces(4) << "addresses: [ " << AsList(addr).quoted().delimitedBy(", ") << " ]\n";
 
     yaml <<
-         spaces(2) << "status: " << (neighborUp(this) ? "Up" : "Down") << '\n' <<
-         spaces(2) << "fetches: " << stats.fetches << '\n' <<
-         spaces(2) << "open connections: " << stats.conn_open << '\n' <<
-         spaces(2) << "average RTT: " << stats.rtt << " msec\n";
+         spaces(4) << "status: " << (neighborUp(this) ? "Up" : "Down") << '\n' <<
+         spaces(4) << "fetches: " << stats.fetches << '\n' <<
+         spaces(4) << "open connections: " << stats.conn_open << '\n' <<
+         spaces(4) << "average RTT: " << stats.rtt << " msec\n";
 
     if (stats.last_query > 0) {
-        yaml << spaces(2) << "last query:" <<
+        yaml << spaces(4) << "last query:" <<
              (squid_curtime - stats.last_query) << " seconds ago\n";
     }
 
     if (stats.last_reply > 0) {
-        yaml << spaces(2) << "last reply: " <<
+        yaml << spaces(4) << "last reply: " <<
              (squid_curtime - stats.last_reply) << " seconds ago\n";
     }
 
-    yaml << spaces(2) << "pings sent: " << stats.pings_sent << '\n' <<
-         spaces(2) << "pings acked: " << stats.pings_acked << " " <<
+    yaml << spaces(4) << "pings sent: " << stats.pings_sent << '\n' <<
+         spaces(4) << "pings acked: " << stats.pings_acked << " " <<
          Math::intPercent(stats.pings_acked, stats.pings_sent) << "%\n";
 
-    yaml << spaces(2) << "replies ignored: " << stats.ignored_replies << " " <<
+    yaml << spaces(4) << "replies ignored: " << stats.ignored_replies << " " <<
          Math::intPercent(stats.ignored_replies, stats.pings_acked) << "%\n";
 
     auto sectionHeader = AtMostOnce("histogram of pings acked:\n");
 
 #if USE_HTCP
     if (options.htcp) {
-        yaml << spaces(2) << sectionHeader;
-        yaml << spaces(4) << "htcp misses: " << htcp.counts[0] << " " << Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n"
-             << spaces(4) << "htcp hits: " << htcp.counts[1] << " " << Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
+        yaml << spaces(4) << sectionHeader;
+        yaml << spaces(6) << "htcp misses: " << htcp.counts[0] << " " << Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n"
+             << spaces(6) << "htcp hits: " << htcp.counts[1] << " " << Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
     } else {
 #endif
         for (auto op : WholeEnum<icp_opcode>()) {
             if (icp.counts[op] == 0)
                 continue;
 
-            yaml << spaces(2) << sectionHeader;
-            yaml << spaces(4) <<
+            yaml << spaces(4) << sectionHeader;
+            yaml << spaces(6) <<
                  "icp " << icp_opcode_str[op] << ": " <<
                  icp.counts[op] << " " <<
                  Math::intPercent(icp.counts[op], stats.pings_acked) << "%\n";
@@ -297,13 +297,12 @@ CachePeer::reportStatistics (std::ostream& yaml)
 #endif
 
     if (stats.last_connect_failure) {
-        yaml << spaces(2) << "last failed connection at: " <<
+        yaml << spaces(4) << "last failed connection at: " <<
              Time::FormatHttpd(stats.last_connect_failure) << '\n';
     }
 
-    yaml << spaces(2) << "keep-alive ratio: " <<
+    yaml << spaces(4) << "keep-alive ratio: " <<
          Math::intPercent(stats.n_keepalives_recv, stats.n_keepalives_sent) << "%\n";
-
 }
 
 const char *
