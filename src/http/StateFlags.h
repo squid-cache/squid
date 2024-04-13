@@ -58,7 +58,6 @@ public:
     bool keepalive_broken = false;
     bool abuse_detected = false;
     bool request_sent = false;
-    bool do_next_read = false;
     bool chunked = false;           ///< reading a chunked response; TODO: rename
     bool chunked_request = false;   ///< writing a chunked request
     bool sentLastChunk = false;     ///< do not try to write last-chunk again
