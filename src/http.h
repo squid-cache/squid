@@ -152,6 +152,9 @@ private:
     /// positive when we read more than we wanted
     int64_t payloadTruncated = 0;
 
+    /// whether we are waiting for our Comm::Read() handler to be called
+    bool waitingForCommRead = false;
+
     /// Whether we received a Date header older than that of a matching
     /// cached response.
     bool sawDateGoBack = false;
