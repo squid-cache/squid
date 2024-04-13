@@ -280,8 +280,10 @@ CachePeer::reportStatistics (std::ostream& yaml)
 #if USE_HTCP
     if (options.htcp) {
         yaml << spaces(4) << sectionHeader;
-        yaml << spaces(6) << "htcp misses: " << htcp.counts[0] << " " << Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n"
-             << spaces(6) << "htcp hits: " << htcp.counts[1] << " " << Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
+        yaml << spaces(6) << "htcp misses: " << htcp.counts[0] << " " <<
+             Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n" <<
+             spaces(6) << "htcp hits: " << htcp.counts[1] << " " <<
+             Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
     } else {
 #endif
         for (auto op : WholeEnum<icp_opcode>()) {
