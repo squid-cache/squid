@@ -14,6 +14,7 @@
 #include "mgr/forward.h"
 
 #include <set>
+#include <iosfwd>
 
 /**
  \defgroup PConnAPI Persistent Connection API
@@ -133,8 +134,8 @@ public:
      */
     Comm::ConnectionPointer pop(const Comm::ConnectionPointer &dest, const char *domain, bool keepOpen);
     void count(int uses);
-    void dumpHist(StoreEntry *e) const;
-    void dumpHash(StoreEntry *e) const;
+    void dumpHist(std::ostream &) const;
+    void dumpHash(std::ostream &) const;
     void unlinkList(IdleConnList *list);
     void noteUses(int uses);
     /// closes any n connections, regardless of their destination

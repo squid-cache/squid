@@ -29,8 +29,8 @@ void PconnPool::push(const Comm::ConnectionPointer &, const char *) STUB
 Comm::ConnectionPointer PconnPool::pop(const Comm::ConnectionPointer &, const char *, bool) STUB_RETVAL(Comm::ConnectionPointer())
 void PconnPool::count(int) STUB
 void PconnPool::noteUses(int) STUB
-void PconnPool::dumpHist(StoreEntry *) const STUB
-void PconnPool::dumpHash(StoreEntry *) const STUB
+void PconnPool::dumpHist(std::ostream&) const STUB
+void PconnPool::dumpHash(std::ostream&) const STUB
 void PconnPool::unlinkList(IdleConnList *) STUB
 PconnModule * PconnModule::GetInstance() STUB_RETVAL(nullptr)
 void PconnModule::DumpWrapper(StoreEntry *) STUB

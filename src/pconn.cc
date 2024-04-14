@@ -9,6 +9,8 @@
 /* DEBUG: section 48    Persistent Connections */
 
 #include "squid.h"
+#include "base/IoManip.h"
+#include "base/PackableStream.h"
 #include "CachePeer.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -348,33 +350,30 @@ PconnPool::key(const Comm::ConnectionPointer &destLink, const char *domain)
 }
 
 void
-PconnPool::dumpHist(StoreEntry * e) const
+PconnPool::dumpHist(std::ostream &yaml) const
 {
-    storeAppendPrintf(e,
-                      "%s persistent connection counts:\n"
-                      "\n"
-                      "\t Requests\t Connection Count\n"
-                      "\t --------\t ----------------\n",
-                      descr);
+    AtMostOnce title("  persistent connection counts:\n");
+    IfNoOutput defaultText("  {}\n", yaml);
 
     for (int i = 0; i < PCONN_HIST_SZ; ++i) {
         if (hist[i] == 0)
             continue;
 
-        storeAppendPrintf(e, "\t%d\t%d\n", i, hist[i]);
+        yaml << title << defaultText <<
+            "    " << i << ": " << hist[i] << "\n";
     }
 }
 
 void
-PconnPool::dumpHash(StoreEntry *e) const
+PconnPool::dumpHash(std::ostream &yaml) const
 {
     hash_table *hid = table;
     hash_first(hid);
+    AtMostOnce title("  pool hash table:\n");
 
-    int i = 0;
     for (hash_link *walker = hash_next(hid); walker; walker = hash_next(hid)) {
-        storeAppendPrintf(e, "\t item %d:\t%s\n", i, (char *)(walker->key));
-        ++i;
+        yaml << title <<
+            "    - \"" << (char *)walker->key << "\"\n";
     }
 }
 
@@ -584,14 +583,14 @@ PconnModule::remove(PconnPool *aPool)
 void
 PconnModule::dump(StoreEntry *e)
 {
-    int i = 0; // TODO: Why number pools if they all have names?
+    PackableStream yaml(*e);
+    IfNoOutput defaultText("{}\n", yaml); // print if no pools are defined
+
     for (const auto &p: pools) {
         // TODO: Let each pool dump itself the way it wants to.
-        storeAppendPrintf(e, "\n Pool %s Stats\n", p->description());
-        p->dumpHist(e);
-        storeAppendPrintf(e, "\n Pool %d Hash Table\n",i);
-        p->dumpHash(e);
-        ++i;
+        yaml << defaultText  << "pool " << p->description() << ":\n";
+        p->dumpHist(yaml);
+        p->dumpHash(yaml);
     }
 }
 
