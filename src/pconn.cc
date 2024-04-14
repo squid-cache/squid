@@ -360,7 +360,7 @@ PconnPool::dumpHist(std::ostream &yaml) const
             continue;
 
         yaml << title << defaultText <<
-            "    " << i << ": " << hist[i] << "\n";
+             "    " << i << ": " << hist[i] << "\n";
     }
 }
 
@@ -373,7 +373,7 @@ PconnPool::dumpHash(std::ostream &yaml) const
 
     for (hash_link *walker = hash_next(hid); walker; walker = hash_next(hid)) {
         yaml << title <<
-            "    - \"" << (char *)walker->key << "\"\n";
+             "    - \"" << (char *)walker->key << "\"\n";
     }
 }
 
