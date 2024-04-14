@@ -263,5 +263,49 @@ operator <<(std::ostream &os, AtMostOnce<T> &a) {
     return os;
 }
 
+/// Output an object of class T via operator << at IfNoOutput destruction
+/// time, unless an explicit call to output happens during the object lifetime.
+/// The explicit call produces no output. This can be helpful e.g. to provide
+/// a default value if no output happens
+///
+/// \code
+/// // os is a std::ostream&
+/// auto defaultText = IfNoOutput(" none", os);
+/// for (const auto &item: items) {
+///    os << defaultText << item;
+/// }
+/// // if items is empty, " none" is printed here
+/// \endcode
+
+template <class T>
+class IfNoOutput
+{
+public:
+    /// caller must ensure `t` lifetime extends to the last use of this AtMostOnce instance
+    explicit IfNoOutput(const T &t, std::ostream &os) :
+        toPrint(t), outStream(os) {}
+
+    ~IfNoOutput() {
+        if (!printed) {
+            outStream << toPrint;
+        }
+    }
+
+    void print() { printed = true; }
+
+private:
+    const T &toPrint;
+    bool printed = false;
+    std::ostream &outStream;
+};
+
+/// marks a IfNoOutput object as not to be printed. No output is produced
+template <class T>
+inline auto &
+operator<<(std::ostream &os, IfNoOutput<T> &a)
+{
+    a.print();
+    return os;
+}
 #endif /* SQUID_SRC_BASE_IOMANIP_H */
 
