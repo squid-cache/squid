@@ -236,7 +236,7 @@ CachePeer::dumpOptions(std::ostream &os) const
 }
 
 void
-CachePeer::reportStatistics (std::ostream& yaml)
+CachePeer::reportStatistics (std::ostream& yaml) const
 {
     yaml <<
          spaces(2) << "- name: " << name << "\n" <<
