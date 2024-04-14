@@ -352,14 +352,17 @@ PconnPool::key(const Comm::ConnectionPointer &destLink, const char *domain)
 void
 PconnPool::dumpHist(std::ostream &yaml) const
 {
-    AtMostOnce title("  persistent connection counts:\n");
-    IfNoOutput defaultText("  {}\n", yaml);
+    yaml <<
+        "  open connection counts: " << theCount << '\n';
+        AtMostOnce explanation(
+            "    # requests carried per connection: connections that carried that many requests\n"
+        );
 
     for (int i = 0; i < PCONN_HIST_SZ; ++i) {
         if (hist[i] == 0)
             continue;
 
-        yaml << title << defaultText <<
+        yaml << explanation <<
              "    " << i << ": " << hist[i] << "\n";
     }
 }
@@ -588,7 +591,7 @@ PconnModule::dump(StoreEntry *e)
 
     for (const auto &p: pools) {
         // TODO: Let each pool dump itself the way it wants to.
-        yaml << defaultText  << "pool " << p->description() << ":\n";
+        yaml << "pool " << p->description() << ":\n";
         p->dumpHist(yaml);
         p->dumpHash(yaml);
     }
