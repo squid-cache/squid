@@ -367,13 +367,13 @@ PconnPool::dumpHist(std::ostream &yaml) const
 void
 PconnPool::dumpHash(std::ostream &yaml) const
 {
-    hash_table *hid = table;
+    auto *hid = table;
     hash_first(hid);
     AtMostOnce title("  pool hash table:\n");
 
-    for (hash_link *walker = hash_next(hid); walker; walker = hash_next(hid)) {
+    for (auto *walker = hash_next(hid); walker; walker = hash_next(hid)) {
         yaml << title <<
-             "    - \"" << (char *)walker->key << "\"\n";
+             "    - \"" << static_cast<char *>(walker->key) << "\"\n";
     }
 }
 
