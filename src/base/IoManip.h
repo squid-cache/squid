@@ -281,7 +281,7 @@ template <class T>
 class IfNoOutput
 {
 public:
-    /// caller must ensure `t` lifetime extends to the last use of this AtMostOnce instance
+    /// caller must ensure `t` lifetime extends to the last use of this IfNoOutput instance
     explicit IfNoOutput(const T &t, std::ostream &os) :
         toPrint(t), outStream(os) {}
 
