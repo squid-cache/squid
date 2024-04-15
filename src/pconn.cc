@@ -353,10 +353,10 @@ void
 PconnPool::dumpHist(std::ostream &yaml) const
 {
     yaml <<
-        "  connection use histogram: " << theCount << '\n';
-        AtMostOnce explanation(
-            "    # requests carried per connection: number of connections that carried that many requests\n"
-        );
+         "  connection use histogram: " << theCount << '\n';
+    AtMostOnce explanation(
+        "    # requests carried per connection: number of connections that carried that many requests\n"
+    );
 
     for (int i = 0; i < PCONN_HIST_SZ; ++i) {
         if (hist[i] == 0)
