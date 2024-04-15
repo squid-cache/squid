@@ -353,9 +353,9 @@ void
 PconnPool::dumpHist(std::ostream &yaml) const
 {
     yaml <<
-        "  open connection counts: " << theCount << '\n';
+        "  connection use histogram: " << theCount << '\n';
         AtMostOnce explanation(
-            "    # requests carried per connection: connections that carried that many requests\n"
+            "    # requests carried per connection: number of connections that carried that many requests\n"
         );
 
     for (int i = 0; i < PCONN_HIST_SZ; ++i) {
@@ -370,7 +370,7 @@ PconnPool::dumpHist(std::ostream &yaml) const
 void
 PconnPool::dumpHash(std::ostream &yaml) const
 {
-    auto *hid = table;
+    const auto hid = table;
     hash_first(hid);
     AtMostOnce title("  pool hash table:\n");
 
