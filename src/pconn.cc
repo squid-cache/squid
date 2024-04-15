@@ -352,11 +352,9 @@ PconnPool::key(const Comm::ConnectionPointer &destLink, const char *domain)
 void
 PconnPool::dumpHist(std::ostream &yaml) const
 {
-    yaml <<
-         "  connection use histogram: " << theCount << '\n';
     AtMostOnce explanation(
-        "    # requests carried per connection: number of connections that carried that many requests\n"
-    );
+        "  connection use histogram: \n"
+        "    # requests carried per connection: number of connections that carried that many requests\n");
 
     for (int i = 0; i < PCONN_HIST_SZ; ++i) {
         if (hist[i] == 0)
@@ -590,7 +588,8 @@ PconnModule::dump(std::ostream &yaml)
 {
     for (const auto &p: pools) {
         // TODO: Let each pool dump itself the way it wants to.
-        yaml << "pool " << p->description() << ":\n";
+        yaml << "pool " << p->description() << "\n" <<
+             "  open connections: " << p->count() << "\n";
         p->dumpHist(yaml);
         p->dumpHash(yaml);
     }
