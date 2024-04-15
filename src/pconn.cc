@@ -586,10 +586,8 @@ PconnModule::remove(PconnPool *aPool)
 }
 
 void
-PconnModule::dump(StoreEntry *e)
+PconnModule::dump(std::ostream &yaml)
 {
-    PackableStream yaml(*e);
-
     for (const auto &p: pools) {
         // TODO: Let each pool dump itself the way it wants to.
         yaml << "pool " << p->description() << ":\n";
@@ -601,6 +599,7 @@ PconnModule::dump(StoreEntry *e)
 void
 PconnModule::DumpWrapper(StoreEntry *e)
 {
-    PconnModule::GetInstance()->dump(e);
+    PackableStream yaml(*e);
+    PconnModule::GetInstance()->dump(yaml);
 }
 

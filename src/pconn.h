@@ -184,7 +184,7 @@ public:
     void add(PconnPool *);
     void remove(PconnPool *); ///< unregister and forget about this pool object
 
-    OBJH dump;
+    void dump(std::ostream &yaml);
 
 private:
     typedef std::set<PconnPool*> Pools; ///< unordered PconnPool collection

@@ -37,5 +37,5 @@ void PconnModule::DumpWrapper(StoreEntry *) STUB
 PconnModule::PconnModule() STUB
 void PconnModule::registerWithCacheManager(void) STUB
 void PconnModule::add(PconnPool *) STUB
-void PconnModule::dump(StoreEntry *) STUB
+void PconnModule::dump(std::ostream &) STUB
 
