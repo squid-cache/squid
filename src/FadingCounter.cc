@@ -14,17 +14,17 @@
 
 #include <cmath>
 
-FadingCounter::FadingCounter(): horizon(-1), precision(10), delta(-1),
+FadingCounter::FadingCounter(): horizon(-1), delta(-1),
     lastTime(0), total(0)
 {
-    counters.reserve(precision);
-    while (counters.size() < static_cast<unsigned int>(precision))
+    counters.reserve(Precision);
+    while (counters.size() < Precision)
         counters.push_back(0);
 }
 
 void FadingCounter::clear()
 {
-    for (int i = 0; i < precision; ++i)
+    for (size_t i = 0; i < Precision; ++i)
         counters[i] = 0;
     lastTime = current_dtime;
     total = 0;
@@ -35,7 +35,7 @@ void FadingCounter::configure(double newHorizon)
     if (fabs(newHorizon - horizon) >= 1e-3) { // diff exceeds one millisecond
         clear(); // for simplicity
         horizon = newHorizon;
-        delta = horizon / precision; // may become negative or zero
+        delta = horizon / Precision; // may become negative or zero
     }
 }
 
@@ -50,7 +50,7 @@ int FadingCounter::count(int howMany)
         return howMany; // remember nothing
 
     const double deltas = (current_dtime - lastTime) / delta;
-    if (deltas >= precision || current_dtime < lastTime) {
+    if (deltas >= Precision || current_dtime < lastTime) {
         clear(); // forget all values
     } else {
         // forget stale values, if any
@@ -58,7 +58,7 @@ int FadingCounter::count(int howMany)
         const int lastSlot = static_cast<int>(fmod(lastTime, horizon) / delta);
         const int staleSlots = static_cast<int>(deltas);
         for (int i = 0, s = lastSlot + 1; i < staleSlots; ++i, ++s) {
-            const int idx = s % precision;
+            const int idx = s % Precision;
             total -= counters[idx];
             counters[idx] = 0;
             Must(total >= 0);
@@ -68,7 +68,7 @@ int FadingCounter::count(int howMany)
     // apply new information
     lastTime = current_dtime;
     const int curSlot = static_cast<int>(fmod(lastTime, horizon) / delta);
-    counters[curSlot % precision] += howMany;
+    counters[curSlot % Precision] += howMany;
     total += howMany;
     Must(total >= 0);
 
