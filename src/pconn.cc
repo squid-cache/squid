@@ -372,11 +372,13 @@ PconnPool::dumpHash(std::ostream &yaml) const
 {
     const auto hid = table;
     hash_first(hid);
-    AtMostOnce title("  pool hash table:\n");
+    AtMostOnce title("  open connections:\n");
 
     for (auto *walker = hash_next(hid); walker; walker = hash_next(hid)) {
         yaml << title <<
-             "    - \"" << static_cast<char *>(walker->key) << "\"\n";
+             "    \"" << static_cast<char *>(walker->key) << "\": " <<
+             static_cast<IdleConnList *>(walker)->count() <<
+             "\n";
     }
 }
 
@@ -587,7 +589,6 @@ void
 PconnModule::dump(StoreEntry *e)
 {
     PackableStream yaml(*e);
-    IfNoOutput defaultText("{}\n", yaml); // print if no pools are defined
 
     for (const auto &p: pools) {
         // TODO: Let each pool dump itself the way it wants to.
