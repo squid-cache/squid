@@ -14,15 +14,15 @@
 
 #include <cmath>
 
-FadingCounter::FadingCounter(): delta(-1),
-    lastTime(0), total(0)
+FadingCounter::FadingCounter()
 {
     counters.reserve(Precision);
     while (counters.size() < Precision)
         counters.push_back(0);
 }
 
-void FadingCounter::clear()
+void
+FadingCounter::clear()
 {
     for (size_t i = 0; i < Precision; ++i)
         counters[i] = 0;
@@ -40,7 +40,8 @@ FadingCounter::configure(const time_t newHorizon)
     }
 }
 
-int FadingCounter::count(int howMany)
+int
+FadingCounter::count(int howMany)
 {
     Must(howMany >= 0);
 

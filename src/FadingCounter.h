@@ -25,18 +25,18 @@ public:
     void clear(); ///< forgets all events
 
     int count(int howMany); ///< count fresh, return #events remembered
-    int remembered() const { return total; } ///< possibly stale #events
+    auto remembered() const { return total; } ///< possibly stale #events
 
     /// read-only memory horizon in seconds; older events are forgotten
     time_t horizon() const { return horizon_; }
 
 private:
     time_t horizon_ = -1;
-    double delta; ///< sub-interval duration = horizon/precision
+    double delta = -1; ///< sub-interval duration = horizon/precision
 
-    double lastTime; ///< time of the last update
+    double lastTime = 0.0; ///< time of the last update
     std::vector<int> counters; ///< events per delta (possibly stale)
-    int total; ///< number of remembered events (possibly stale)
+    int total = 0; ///< number of remembered events (possibly stale)
 };
 
 #endif /* SQUID_SRC_FADINGCOUNTER_H */
