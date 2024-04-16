@@ -248,8 +248,7 @@ CachePeer::reportStatistics (std::ostream& yaml) const
     dumpOptions(yaml);
     yaml << '\n';
 
-    std::vector<Ip::Address> addr;
-    std::copy(addresses, addresses+n_addresses, std::back_inserter(addr));
+    std::vector<const Ip::Address> addr(addresses, addresses+n_addresses);
     yaml << spaces(4) << "addresses: [ " << AsList(addr).quoted().delimitedBy(", ") << " ]\n";
 
     yaml <<
