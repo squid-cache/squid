@@ -14,7 +14,7 @@
 
 #include <cmath>
 
-FadingCounter::FadingCounter(): horizon(-1), delta(-1),
+FadingCounter::FadingCounter(): delta(-1),
     lastTime(0), total(0)
 {
     counters.reserve(Precision);
@@ -30,12 +30,13 @@ void FadingCounter::clear()
     total = 0;
 }
 
-void FadingCounter::configure(double newHorizon)
+void
+FadingCounter::configure(const time_t newHorizon)
 {
-    if (fabs(newHorizon - horizon) >= 1e-3) { // diff exceeds one millisecond
+    if (newHorizon != horizon_) {
         clear(); // for simplicity
-        horizon = newHorizon;
-        delta = horizon / Precision; // may become negative or zero
+        horizon_ = newHorizon;
+        delta = horizon_ / Precision; // may become zero
     }
 }
 
@@ -43,10 +44,10 @@ int FadingCounter::count(int howMany)
 {
     Must(howMany >= 0);
 
-    if (delta < 0)
+    if (horizon() < 0)
         return total += howMany; // forget nothing
 
-    if (horizon < 1e-3) // (e.g., zero)
+    if (horizon() == 0)
         return howMany; // remember nothing
 
     const double deltas = (current_dtime - lastTime) / delta;
@@ -55,7 +56,7 @@ int FadingCounter::count(int howMany)
     } else {
         // forget stale values, if any
         // fmod() or "current_dtime/delta" will overflow int for small deltas
-        const int lastSlot = static_cast<int>(fmod(lastTime, horizon) / delta);
+        const int lastSlot = static_cast<int>(fmod(lastTime, horizon()) / delta);
         const int staleSlots = static_cast<int>(deltas);
         for (int i = 0, s = lastSlot + 1; i < staleSlots; ++i, ++s) {
             const int idx = s % Precision;
@@ -67,7 +68,7 @@ int FadingCounter::count(int howMany)
 
     // apply new information
     lastTime = current_dtime;
-    const int curSlot = static_cast<int>(fmod(lastTime, horizon) / delta);
+    const int curSlot = static_cast<int>(fmod(lastTime, horizon()) / delta);
     counters[curSlot % Precision] += howMany;
     total += howMany;
     Must(total >= 0);

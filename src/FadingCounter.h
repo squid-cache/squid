@@ -20,7 +20,7 @@ public:
     FadingCounter();
 
     /// 0=remember nothing; -1=forget nothing; new value triggers clear()
-    void configure(double horizonSeconds);
+    void configure(const time_t horizonSeconds);
 
     void clear(); ///< forgets all events
 
@@ -28,9 +28,10 @@ public:
     int remembered() const { return total; } ///< possibly stale #events
 
     /// read-only memory horizon in seconds; older events are forgotten
-    double horizon;
+    time_t horizon() const { return horizon_; }
 
 private:
+    time_t horizon_ = -1;
     double delta; ///< sub-interval duration = horizon/precision
 
     double lastTime; ///< time of the last update
