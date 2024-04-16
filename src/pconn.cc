@@ -370,7 +370,7 @@ PconnPool::dumpHash(std::ostream &yaml) const
 {
     const auto hid = table;
     hash_first(hid);
-    AtMostOnce title("  open connections:\n");
+    AtMostOnce title("  open connections list:\n");
 
     for (auto *walker = hash_next(hid); walker; walker = hash_next(hid)) {
         yaml << title <<
@@ -590,8 +590,8 @@ PconnModule::dump(std::ostream &yaml)
         // TODO: Let each pool dump itself the way it wants to.
         yaml << "pool " << p->description() << "\n" <<
              "  open connections: " << p->count() << "\n";
-        p->dumpHist(yaml);
         p->dumpHash(yaml);
+        p->dumpHist(yaml);
     }
 }
 
