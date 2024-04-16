@@ -412,7 +412,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     al->cache.code.update(LOG_TCP_TUNNEL);
 
     client.initConnection(clientRequest->getConn()->clientConnection, tunnelClientClosed, "tunnelClientClosed", this);
-
+re
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
     commSetConnTimeout(client.conn, Config.Timeout.lifetime, timeoutCall);
@@ -479,8 +479,7 @@ TunnelStateData::retryOrBail(const char *context)
 
     /* bail */
 
-    if (request)
-        request->hier.stopPeering();
+    request->hier.stopPeering();
 
     // TODO: Add sendSavedErrorOr(err_type type, Http::StatusCode, context).
     // Then, the remaining method code (below) should become the common part of
