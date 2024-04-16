@@ -241,9 +241,9 @@ CachePeer::reportStatistics (std::ostream& yaml) const
     yaml <<
          spaces(2) << "- name: " << name << "\n" <<
          spaces(4) << "type: " << typeString() << '\n' <<
-         spaces(4) << "http address: " << host << ':' << http_port << '\n';
+         spaces(4) << "HTTP address: " << host << ':' << http_port << '\n';
     if (icp.port)
-        yaml << spaces(4) << "icp address:" << host << ':' << icp.port << '\n';
+        yaml << spaces(4) << "ICP address:" << host << ':' << icp.port << '\n';
     yaml << spaces(4) << "options:";
     dumpOptions(yaml);
     yaml << '\n';
@@ -280,9 +280,9 @@ CachePeer::reportStatistics (std::ostream& yaml) const
 #if USE_HTCP
     if (options.htcp) {
         yaml << spaces(4) << sectionHeader;
-        yaml << spaces(6) << "htcp misses: " << htcp.counts[0] << " " <<
+        yaml << spaces(6) << "HTCP misses: " << htcp.counts[0] << " " <<
              Math::intPercent(htcp.counts[0], stats.pings_acked) << "%\n" <<
-             spaces(6) << "htcp hits: " << htcp.counts[1] << " " <<
+             spaces(6) << "HTCP hits: " << htcp.counts[1] << " " <<
              Math::intPercent(htcp.counts[1], stats.pings_acked) << "%\n";
     } else {
 #endif
