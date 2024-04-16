@@ -137,7 +137,6 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     flags.dont_retry = false;
     flags.forward_completed = false;
     flags.destinationsFound = false;
-    flags.tunneled = false;
     debugs(17, 3, "FwdState constructed, this=" << this);
 }
 
@@ -190,8 +189,7 @@ FwdState::stopAndDestroy(const char *reason)
 
     cancelStep(reason);
 
-    if (!flags.tunneled)
-        request->hier.stopPeering();
+    request->hier.stopPeering();
 
     PeerSelectionInitiator::subscribed = false; // may already be false
     self = nullptr; // we hope refcounting destroys us soon; may already be nil
@@ -1021,7 +1019,6 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
         answer.error.clear(); // preserve error for errorSendComplete()
     } else if (answer.tunneled) {
         assert(!answer.conn);
-        flags.tunneled = true;
         // TODO: When ConnStateData establishes tunnels, its state changes
         // [in ways that may affect logging?]. Consider informing
         // ConnStateData about our tunnel or otherwise unifying tunnel
