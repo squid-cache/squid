@@ -640,10 +640,12 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             const auto &timer = (!al->hier.totalResponseTime().ran() && al->request) ?
                                 al->request->hier.totalResponseTime() : al->hier.totalResponseTime();
             if (timer.ran()) {
+                using namespace std::chrono_literals;
                 const auto duration = timer.total();
-                outtv.tv_sec = std::chrono::duration_cast<std::chrono::seconds>(timer.total()).count();
-                const auto totalMs = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
-                outtv.tv_usec = outtv.tv_sec ? totalMs % outtv.tv_sec : totalMs;
+                outtv.tv_sec = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+                const auto totalUsec = std::chrono::duration_cast<std::chrono::microseconds>(duration);
+                static const std::chrono::microseconds secondUsec = 1s;
+                outtv.tv_usec = totalUsec.count() % secondUsec.count();
                 doMsec = 1;
             }
         }
