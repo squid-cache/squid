@@ -38,13 +38,11 @@ public:
     /// Call this after each peer socket write(2), including failed ones.
     void notePeerWrite();
 
-    /// Start recording total time spent communicating with peers
-    void startPeerClock() { peeringTime_.resume(); }
-    /**
-     * Record total time spent communicating with peers
-     * \param force whether to overwrite old recorded value if any
-     */
-    void stopPeerClock() { peeringTime_.pause(); }
+    /// Start or resume recording time spent on selecting and communicating with peers.
+    void startPeering() { peeringTime_.resume(); }
+
+    /// Pause recording after a startPeering() call.
+    void stopPeering() { if (peeringTime_.running()) { peeringTime_.pause(); } }
 
     /// Estimates response generation and sending delay at the last peer.
     /// \returns whether the estimate (stored in `responseTime`) is available.

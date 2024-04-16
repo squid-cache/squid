@@ -310,7 +310,7 @@ TunnelStateData::serverClosed()
 {
     server.noteClosure();
 
-    request->hier.stopPeerClock();
+    request->hier.stopPeering();
 
     finishWritingAndDelete(client);
 }
@@ -417,7 +417,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
     commSetConnTimeout(client.conn, Config.Timeout.lifetime, timeoutCall);
 
-    request->hier.startPeerClock(); // could have been started already
+    request->hier.startPeering(); // could have been started already
 }
 
 TunnelStateData::~TunnelStateData()
@@ -480,7 +480,7 @@ TunnelStateData::retryOrBail(const char *context)
     /* bail */
 
     if (request)
-        request->hier.stopPeerClock();
+        request->hier.stopPeering();
 
     // TODO: Add sendSavedErrorOr(err_type type, Http::StatusCode, context).
     // Then, the remaining method code (below) should become the common part of
@@ -1397,7 +1397,7 @@ TunnelStateData::sendError(ErrorState *finalError, const char *reason)
 {
     debugs(26, 3, "aborting transaction for " << reason);
 
-    request->hier.stopPeerClock();
+    request->hier.stopPeering();
 
     cancelStep(reason);
 
@@ -1436,7 +1436,7 @@ TunnelStateData::startConnecting()
 
     delete savedError; // may still be nil
     savedError = nullptr;
-    request->hier.peer_reply_status = Http::scNone; // TODO: Move to startPeerClock()?
+    request->hier.peer_reply_status = Http::scNone; // TODO: Move to startPeering()?
 
     const auto callback = asyncCallback(17, 5, TunnelStateData::noteConnection, this);
     const auto cs = new HappyConnOpener(destinations, callback, request, startTime, n_tries, al);

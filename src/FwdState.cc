@@ -164,7 +164,7 @@ void FwdState::start(Pointer aSelf)
     request->flags.pinned = false;
 
     // start the clock just before any peer communication
-    request->hier.startPeerClock();
+    request->hier.startPeering();
 
 #if STRICT_ORIGINAL_DST
     // Bug 3243: CVE 2009-0801
@@ -191,7 +191,7 @@ FwdState::stopAndDestroy(const char *reason)
     cancelStep(reason);
 
     if (!flags.tunneled)
-        request->hier.stopPeerClock();
+        request->hier.stopPeering();
 
     PeerSelectionInitiator::subscribed = false; // may already be false
     self = nullptr; // we hope refcounting destroys us soon; may already be nil
