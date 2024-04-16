@@ -14,18 +14,14 @@
 
 #include <cmath>
 
-FadingCounter::FadingCounter()
+FadingCounter::FadingCounter() : counters(Precision,0)
 {
-    counters.reserve(Precision);
-    while (counters.size() < Precision)
-        counters.push_back(0);
 }
 
 void
 FadingCounter::clear()
 {
-    for (size_t i = 0; i < Precision; ++i)
-        counters[i] = 0;
+    std::fill(counters.begin(), counters.end(), 0);
     lastTime = current_dtime;
     total = 0;
 }
@@ -57,10 +53,10 @@ FadingCounter::count(int howMany)
     } else {
         // forget stale values, if any
         // fmod() or "current_dtime/delta" will overflow int for small deltas
-        const int lastSlot = static_cast<int>(fmod(lastTime, horizon()) / delta);
+        const auto lastSlot = static_cast<int>(fmod(lastTime, horizon()) / delta);
         const int staleSlots = static_cast<int>(deltas);
         for (int i = 0, s = lastSlot + 1; i < staleSlots; ++i, ++s) {
-            const int idx = s % Precision;
+            const auto idx = s % Precision;
             total -= counters[idx];
             counters[idx] = 0;
             Must(total >= 0);
@@ -69,7 +65,7 @@ FadingCounter::count(int howMany)
 
     // apply new information
     lastTime = current_dtime;
-    const int curSlot = static_cast<int>(fmod(lastTime, horizon()) / delta);
+    const auto curSlot = static_cast<int>(fmod(lastTime, horizon()) / delta);
     counters[curSlot % Precision] += howMany;
     total += howMany;
     Must(total >= 0);
