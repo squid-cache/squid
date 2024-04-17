@@ -1029,6 +1029,9 @@ Client::adjustBodyBytesRead(const int64_t delta)
 void
 Client::delayRead()
 {
+    Assure(!waitingForDelayAwareReadChance);
+    waitingForDelayAwareReadChance = true;
+
     using DeferredReadDialer = NullaryMemFunT<Client>;
     AsyncCall::Pointer call = asyncCall(11, 5, "Client::noteDelayAwareReadChance",
                                         DeferredReadDialer(this, &Client::noteDelayAwareReadChance));

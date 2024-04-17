@@ -187,32 +187,57 @@ public:
     /// a c-string to print between consecutive items (if any). Caller must ensure lifetime.
     auto &delimitedBy(const char * const d) { delimiter = d; return *this; }
 
+    /// c-string to print before and after each item. Caller must ensure lifetime.
+    auto &quoted(const char * const q = "\"") { preQuote = postQuote = q; return *this; }
+
+    /// c-strings to print before and after each item. Caller must ensure lifetime.
+    auto &quoted(const char * const preQ, const char * const postQ) { preQuote = preQ; postQuote = postQ; return *this; }
+
+    /// writes the container to the given stream
+    void print(std::ostream &) const;
+
 public:
     const Container &container; ///< zero or more items to print
 
     const char *prefix = nullptr; ///< \copydoc prefixedBy()
     const char *suffix = nullptr; ///< \copydoc suffixedBy()
     const char *delimiter = nullptr; ///< \copydoc delimitedBy()
+    const char *preQuote = nullptr; ///< optional c-string to print before each item; \sa quoted()
+    const char *postQuote = nullptr; ///< optional c-string to print after each item; \sa quoted()
 };
 
-template <class Container>
+template <typename Container>
+void
+AsList<Container>::print(std::ostream &os) const
+{
+    bool opened = false;
+
+    for (const auto &item: container) {
+        if (!opened) {
+            if (prefix)
+                os << prefix;
+            opened = true;
+        } else {
+            if (delimiter)
+                os << delimiter;
+        }
+
+        if (preQuote)
+            os << preQuote;
+        os << item;
+        if (postQuote)
+            os << postQuote;
+    }
+
+    if (opened && suffix)
+        os << suffix;
+}
+
+template <typename Container>
 inline std::ostream &
 operator <<(std::ostream &os, const AsList<Container> &manipulator)
 {
-    bool opened = false;
-    for (const auto &item: manipulator.container) {
-        if (!opened) {
-            if (manipulator.prefix)
-                os << manipulator.prefix;
-            opened = true;
-        } else {
-            if (manipulator.delimiter)
-                os << manipulator.delimiter;
-        }
-        os << item;
-    }
-    if (opened && manipulator.suffix)
-        os << manipulator.suffix;
+    manipulator.print(os);
     return os;
 }
 
