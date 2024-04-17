@@ -25,7 +25,7 @@
 #include "tools.h"
 
 /// shared memory segment path to use for MemStore maps
-static const SBuf MapLabel("cache_mem_map");
+static const SBuf MapLabel("cache_mem");
 /// shared memory segment path to use for the free slices index
 static const char *SpaceLabel = "cache_mem_space";
 /// shared memory segment path to use for IDs of shared pages with slice data
