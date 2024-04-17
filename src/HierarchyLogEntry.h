@@ -42,7 +42,7 @@ public:
     void startPeering() { peeringTime_.resume(); }
 
     /// Pause recording after a startPeering() call.
-    void stopPeering() { if (peeringTime_.running()) { peeringTime_.pause(); } }
+    void stopPeering() { peeringTime_.pause(); }
 
     /// Estimates response generation and sending delay at the last peer.
     /// \returns whether the estimate (stored in `responseTime`) is available.

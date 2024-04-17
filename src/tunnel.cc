@@ -127,6 +127,12 @@ public:
     /// called when negotiations with the peer have been successfully completed
     void notePeerReadyToShovel(const Comm::ConnectionPointer &);
 
+    /// \copydoc HierarchyLogEntry::stopPeering()
+    void stopPeering() {
+        Assure(request->hier.totalResponseTime().running());
+        request->hier.stopPeering();
+    }
+
     class Connection
     {
 
@@ -310,7 +316,7 @@ TunnelStateData::serverClosed()
 {
     server.noteClosure();
 
-    request->hier.stopPeering();
+    stopPeering();
 
     finishWritingAndDelete(client);
 }
@@ -424,6 +430,10 @@ TunnelStateData::~TunnelStateData()
 {
     debugs(26, 3, "TunnelStateData destructed this=" << this);
     assert(noConnections());
+    if (request->hier.totalResponseTime().running()) {
+        debugs(26, DBG_IMPORTANT, "WARNING: peer timer must have been stopped by now");
+        stopPeering();
+    }
     xfree(url);
     cancelStep("~TunnelStateData");
     delete savedError;
@@ -479,8 +489,6 @@ TunnelStateData::retryOrBail(const char *context)
 
     /* bail */
 
-    request->hier.stopPeering();
-
     // TODO: Add sendSavedErrorOr(err_type type, Http::StatusCode, context).
     // Then, the remaining method code (below) should become the common part of
     // sendNewError() and sendSavedErrorOr(), used in "error detected" cases.
@@ -490,6 +498,9 @@ TunnelStateData::retryOrBail(const char *context)
                               clientExpectsConnectResponse();
     if (canSendError)
         return sendError(savedError, bailDescription ? bailDescription : context);
+
+    stopPeering();
+
     *status_ptr = savedError->httpStatus;
 
     finishWritingAndDelete(client);
@@ -1396,7 +1407,7 @@ TunnelStateData::sendError(ErrorState *finalError, const char *reason)
 {
     debugs(26, 3, "aborting transaction for " << reason);
 
-    request->hier.stopPeering();
+    stopPeering();
 
     cancelStep(reason);
 
