@@ -142,7 +142,7 @@ public:
     int count() const { return theCount; }
     void noteConnectionAdded() { ++theCount; }
     void noteConnectionRemoved() { assert(theCount > 0); --theCount; }
-    const char * description() const { return descr; }
+    auto description() const { return descr; }
 
     // sends an async message to the pool manager, if any
     void notifyManager(const char *reason);
