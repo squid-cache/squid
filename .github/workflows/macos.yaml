@@ -14,7 +14,7 @@ jobs:
     steps:
     - name: Install prerequisite packages
       run: |
-        brew update
+        # brew update
         brew install \
           automake coreutils cppunit gawk \
           gnu-getopt gnu-sed grep \
@@ -27,9 +27,9 @@ jobs:
       uses: hendrikmuhs/ccache-action@v1.2
       with:
         create-symlink: true
-        max-size: "5G"
-        key: ccache
-        # key: ${{ matrix.os }}-${{ matrix.type }}
+        max-size: "2G"
+        key: "ccache-${{ runner.os }}-${{ runner.arch }}"
+        append-timestamp: false
         # variant: sccache
     - name: Build
       run: |
