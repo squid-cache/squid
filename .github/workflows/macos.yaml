@@ -29,7 +29,7 @@ jobs:
         create-symlink: true
         max-size: "2G"
         key: "ccache-${{ runner.os }}-${{ runner.arch }}"
-        append-timestamp: false
+        append-timestamp: true
         # variant: sccache
     - name: Build
       run: |
