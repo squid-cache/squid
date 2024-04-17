@@ -25,7 +25,7 @@ jobs:
     - name: Build
       run: |
         eval `brew shellenv`
-        export PKG_CONFIG="$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
+        export PKG_CONFIG_PATH="$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
         export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
         export MAKE="$HOMEBREW_PREFIX/bin/gmake"
         export pjobs="-j`nproc`"
