@@ -430,10 +430,6 @@ TunnelStateData::~TunnelStateData()
 {
     debugs(26, 3, "TunnelStateData destructed this=" << this);
     assert(noConnections());
-    if (request->hier.totalResponseTime().running()) {
-        debugs(26, DBG_IMPORTANT, "WARNING: peer timer must have been stopped by now");
-        stopPeering();
-    }
     xfree(url);
     cancelStep("~TunnelStateData");
     delete savedError;
