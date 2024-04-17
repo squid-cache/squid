@@ -50,9 +50,7 @@ Mgr::FunAction::dump(StoreEntry* entry)
     debugs(16, 5, MYNAME);
     Must(entry != nullptr);
     if (UsingSmp())
-        storeAppendPrintf(entry, "by kid%d {\n", KidIdentifier);
+        storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
     handler(entry);
-    if (atomic() && UsingSmp())
-        storeAppendPrintf(entry, "} by kid%d\n\n", KidIdentifier);
 }
 

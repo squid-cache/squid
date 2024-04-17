@@ -144,10 +144,8 @@ Mgr::InfoAction::dump(StoreEntry* entry)
 
 #if XMALLOC_STATISTICS
     if (UsingSmp())
-        storeAppendPrintf(entry, "by kid%d {\n", KidIdentifier);
+        storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
     DumpMallocStatistics(entry);
-    if (UsingSmp())
-        storeAppendPrintf(entry, "} by kid%d\n\n", KidIdentifier);
 #endif
     if (IamPrimaryProcess())
         DumpInfo(data, entry);
