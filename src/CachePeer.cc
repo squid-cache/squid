@@ -239,12 +239,12 @@ void
 CachePeer::reportStatistics (std::ostream& yaml) const
 {
     yaml <<
-         spaces(2) << "- name: " << name << "\n" <<
+         spaces(2) << "- name: \"" << name << "\"\n" <<
          spaces(4) << "type: " << typeString() << '\n' <<
          spaces(4) << "HTTP address: " << host << ':' << http_port << '\n';
     if (icp.port)
-        yaml << spaces(4) << "ICP address:" << host << ':' << icp.port << '\n';
-    yaml << spaces(4) << "options:";
+        yaml << spaces(4) << "ICP address: " << host << ':' << icp.port << '\n';
+    yaml << spaces(4) << "options: ";
     dumpOptions(yaml);
     yaml << '\n';
 
@@ -258,7 +258,7 @@ CachePeer::reportStatistics (std::ostream& yaml) const
          spaces(4) << "average RTT: " << stats.rtt << " msec\n";
 
     if (stats.last_query > 0) {
-        yaml << spaces(4) << "last query:" <<
+        yaml << spaces(4) << "last query: " <<
              (squid_curtime - stats.last_query) << " seconds ago\n";
     }
 
