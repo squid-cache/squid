@@ -598,7 +598,6 @@ PconnModule::dump(std::ostream &yaml)
         p->dump(yaml);
 }
 
-
 void
 PconnModule::DumpWrapper(StoreEntry *e)
 {
