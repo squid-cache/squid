@@ -380,6 +380,14 @@ PconnPool::dumpHash(std::ostream &yaml) const
     }
 }
 
+void
+PconnPool::dump(std::ostream &yaml) const
+{
+    yaml << "pool " << description() << "\n";
+    dumpHist(yaml);
+    dumpHash(yaml);
+}
+
 /* ========== PconnPool PUBLIC FUNCTIONS ============================================ */
 
 PconnPool::PconnPool(const char *aDescr, const CbcPointer<PeerPoolMgr> &aMgr):
@@ -586,14 +594,10 @@ PconnModule::remove(PconnPool *aPool)
 void
 PconnModule::dump(std::ostream &yaml)
 {
-    for (const auto &p: pools) {
-        // TODO: Let each pool dump itself the way it wants to.
-        yaml << "pool " << p->description() << "\n" <<
-             "  open connections: " << p->count() << "\n";
-        p->dumpHash(yaml);
-        p->dumpHist(yaml);
-    }
+    for (const auto &p: pools)
+        p->dump(yaml);
 }
+
 
 void
 PconnModule::DumpWrapper(StoreEntry *e)
