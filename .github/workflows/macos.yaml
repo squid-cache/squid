@@ -38,5 +38,5 @@ jobs:
         export MAKE="$HOMEBREW_PREFIX/bin/gmake"
         export pjobs="-j`nproc`"
         env
-        ./test-builds.sh --aggressively-use-config-cache --cleanup
+        ./test-builds.sh --aggressively-use-config-cache --cleanup --verbose layer-02-maximus
         # ./test-builds.sh --verbose --aggressively-use-config-cache
