@@ -1,0 +1,35 @@
+name: Test build on MacOS
+
+on:
+  push:
+    branches: [ "master", "auto", "github-macos" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - name: Install prerequisite packages
+      run: |
+        brew install \
+          automake coreutils cppunit gawk \
+          gnu-getopt gnu-sed grep \
+          make openldap cyrus-sasl
+    - name: Checkout sources
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 5
+    - name: Prepare build
+      run: |
+        eval `brew shellenv`
+        export PKG_CONFIG="$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
+        export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
+        export MAKE="$HOMEBREW_PREFIX/bin/gmake"
+        export pjobs="-j`nproc`"
+    - name: Build
+      run: |
+        env
+        ./test-builds.sh
