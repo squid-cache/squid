@@ -28,6 +28,7 @@ jobs:
       with:
         create-symlink: true
         max-size: "5G"
+        key: ccache
         # key: ${{ matrix.os }}-${{ matrix.type }}
         # variant: sccache
     - name: Build
