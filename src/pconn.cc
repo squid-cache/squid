@@ -352,7 +352,7 @@ PconnPool::key(const Comm::ConnectionPointer &destLink, const char *domain)
 void
 PconnPool::dumpHist(std::ostream &yaml) const
 {
-    AtMostOnce explanation(
+    AtMostOnce heading(
         "  connection use histogram: \n"
         "    # requests per connection: closed connections that carried that many requests\n");
 
@@ -360,7 +360,7 @@ PconnPool::dumpHist(std::ostream &yaml) const
         if (hist[i] == 0)
             continue;
 
-        yaml << explanation <<
+        yaml << heading <<
              "    " << i << ": " << hist[i] << "\n";
     }
 }
@@ -371,7 +371,6 @@ PconnPool::dumpHash(std::ostream &yaml) const
     const auto hid = table;
     hash_first(hid);
     AtMostOnce title("  open connections list:\n");
-
     for (auto *walker = hash_next(hid); walker; walker = hash_next(hid)) {
         yaml << title <<
              "    \"" << static_cast<char *>(walker->key) << "\": " <<
@@ -383,7 +382,7 @@ PconnPool::dumpHash(std::ostream &yaml) const
 void
 PconnPool::dump(std::ostream &yaml) const
 {
-    yaml << "pool " << description() << "\n";
+    yaml << "pool " << descr << ":\n";
     dumpHist(yaml);
     dumpHash(yaml);
 }
