@@ -291,6 +291,7 @@ Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
     for (const auto &pool: MessageDelayPools::Instance()->pools) {
         if (pool->access) {
             std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(pool->access, http));
+            HTTPMSGUNLOCK(chl->reply);
             chl->reply = rep;
             HTTPMSGLOCK(chl->reply);
             const auto answer = chl->fastCheck();
