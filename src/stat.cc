@@ -327,8 +327,6 @@ statObjects(void *data)
     StoreEntry *e;
 
     if (state->theSearch->isDone()) {
-        if (UsingSmp())
-            storeAppendPrintf(state->sentry, "---kid: %d\n", KidIdentifier);
         state->sentry->complete();
         state->sentry->unlock("statObjects+isDone");
         delete state;
