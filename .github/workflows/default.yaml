@@ -3,7 +3,7 @@ name: GitHub CI
 on:
   push:
     # test this branch and staged PRs based on this branch code
-    branches: [ "master", "auto" ]
+    branches: [ "master", "auto", "github-macos" ]
 
   pull_request:
     # test PRs targeting this branch code
@@ -94,7 +94,12 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-22.04 ]
+        os: [ ubuntu-22.04, macos-latest ]
+        layer:
+          - layer-00-default
+          - layer-01-minimal
+          - layer-02-maximus
+          - layer-04-noauth-everything
 
     runs-on: ${{ matrix.os }}
 
@@ -109,10 +114,30 @@ jobs:
           sudo apt-get --quiet=2 build-dep squid
           sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin
 
-      - name: Checkout sources
-        uses: actions/checkout@v3
+      - name: Install prerequisite MacOS packages
+        if: runner.os == 'macOS'
+        run: |
+          brew install \
+            automake coreutils cppunit gawk \
+            gnu-getopt gnu-sed grep \
+            make openldap cyrus-sasl
 
-      - run: ./test-builds.sh
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Run build on Linux
+        if: runner.os == 'Linux'
+        run: ./test-builds.sh --aggressively-use-config-cache ${{ matrix.layer }}
+
+      - name: Run build on MacOS
+        if: runner.os == 'macOS'
+        run: |
+          eval `brew shellenv`
+          export PKG_CONFIG_PATH="$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
+          export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
+          export pjobs="-j`nproc`"
+          export MAKE="$HOMEBREW_PREFIX/bin/gmake ${pjobs}"
+          ./test-builds.sh --aggressively-use-config-cache ${{ matrix.layer }}
 
       - name: Publish build logs
         if: success() || failure()
