@@ -27,7 +27,7 @@ jobs:
       uses: hendrikmuhs/ccache-action@v1.2
       with:
         create-symlink: true
-        max-size: "2G"
+        max-size: "200M"
         key: "ccache-${{ runner.os }}-${{ runner.arch }}"
         append-timestamp: true
         # variant: sccache
