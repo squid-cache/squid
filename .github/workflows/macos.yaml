@@ -24,10 +24,10 @@ jobs:
       with:
         fetch-depth: 5
     - name: Setup ccache
-      uses: hendrikmuhs/ccache-action@v1.2
+      uses: hendrikmuhs/ccache-action
       with:
         create-symlink: true
-        max-size: "200M"
+        max-size: "333M"
         key: "ccache-${{ runner.os }}-${{ runner.arch }}"
         append-timestamp: true
         # variant: sccache
