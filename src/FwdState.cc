@@ -128,7 +128,8 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     waitingForDispatched(false),
     destinations(new ResolvedPeers()),
     pconnRace(raceImpossible),
-    storedWholeReply_(nullptr)
+    storedWholeReply_(nullptr),
+    peeringTimer(((assert(r)), r->hier.totalResponseTime()))
 {
     debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
     HTTPMSGLOCK(request);
@@ -163,7 +164,7 @@ void FwdState::start(Pointer aSelf)
     request->flags.pinned = false;
 
     // start the clock just before any peer communication
-    request->hier.startPeering();
+    peeringTimer.start();
 
 #if STRICT_ORIGINAL_DST
     // Bug 3243: CVE 2009-0801
@@ -189,7 +190,7 @@ FwdState::stopAndDestroy(const char *reason)
 
     cancelStep(reason);
 
-    request->hier.stopPeering();
+    peeringTimer.stop();
 
     PeerSelectionInitiator::subscribed = false; // may already be false
     self = nullptr; // we hope refcounting destroys us soon; may already be nil

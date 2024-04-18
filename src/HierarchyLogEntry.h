@@ -38,18 +38,12 @@ public:
     /// Call this after each peer socket write(2), including failed ones.
     void notePeerWrite();
 
-    /// Start or resume recording time spent on selecting and communicating with peers.
-    void startPeering() { peeringTime_.resume(); }
-
-    /// Pause recording after a startPeering() call.
-    void stopPeering() { peeringTime_.pause(); }
-
     /// Estimates response generation and sending delay at the last peer.
     /// \returns whether the estimate (stored in `responseTime`) is available.
     bool peerResponseTime(struct timeval &responseTime);
 
     /// Estimates the total time spent communicating with peers.
-    const Stopwatch &totalResponseTime() const { return peeringTime_; }
+    Stopwatch &totalResponseTime() { return peeringTime_; }
 
 public:
     hier_code code;

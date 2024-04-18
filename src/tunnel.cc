@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/ActivityTimer.h"
 #include "base/AsyncCallbacks.h"
 #include "base/CbcPointer.h"
 #include "base/JobWait.h"
@@ -127,12 +128,6 @@ public:
     /// called when negotiations with the peer have been successfully completed
     void notePeerReadyToShovel(const Comm::ConnectionPointer &);
 
-    /// \copydoc HierarchyLogEntry::stopPeering()
-    void stopPeering() {
-        Assure(request->hier.totalResponseTime().running());
-        request->hier.stopPeering();
-    }
-
     class Connection
     {
 
@@ -216,6 +211,9 @@ public:
     /// waits for an HTTP CONNECT tunnel through a cache_peer to be negotiated
     /// over the (encrypted, if needed) transport connection to that cache_peer
     JobWait<Http::Tunneler> peerWait;
+
+    /// Measures time spent on selecting and communicating with peers.
+    ActivityTimer peeringTimer;
 
     void copyRead(Connection &from, IOCB *completion);
 
@@ -316,7 +314,7 @@ TunnelStateData::serverClosed()
 {
     server.noteClosure();
 
-    stopPeering();
+    peeringTimer.stop();
 
     finishWritingAndDelete(client);
 }
@@ -399,16 +397,16 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     committedToServer(false),
     n_tries(0),
     banRetries(nullptr),
-    codeContext(CodeContext::Current())
+    codeContext(CodeContext::Current()),
+    peeringTimer(((assert(clientRequest && clientRequest->request)), clientRequest->request->hier.totalResponseTime()))
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
     client.readPendingFunc = &tunnelDelayedClientRead;
     server.readPendingFunc = &tunnelDelayedServerRead;
 
-    assert(clientRequest);
     url = xstrdup(clientRequest->uri);
     request = clientRequest->request;
-    Must(request);
+
     server.size_ptr = &clientRequest->out.size;
     client.size_ptr = &clientRequest->al->http.clientRequestSz.payloadData;
     status_ptr = &clientRequest->al->http.code;
@@ -423,7 +421,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
     commSetConnTimeout(client.conn, Config.Timeout.lifetime, timeoutCall);
 
-    request->hier.startPeering(); // could have been started already
+    peeringTimer.start();
 }
 
 TunnelStateData::~TunnelStateData()
@@ -485,6 +483,8 @@ TunnelStateData::retryOrBail(const char *context)
 
     /* bail */
 
+    peeringTimer.stop();
+
     // TODO: Add sendSavedErrorOr(err_type type, Http::StatusCode, context).
     // Then, the remaining method code (below) should become the common part of
     // sendNewError() and sendSavedErrorOr(), used in "error detected" cases.
@@ -494,8 +494,6 @@ TunnelStateData::retryOrBail(const char *context)
                               clientExpectsConnectResponse();
     if (canSendError)
         return sendError(savedError, bailDescription ? bailDescription : context);
-
-    stopPeering();
 
     *status_ptr = savedError->httpStatus;
 
@@ -1403,7 +1401,7 @@ TunnelStateData::sendError(ErrorState *finalError, const char *reason)
 {
     debugs(26, 3, "aborting transaction for " << reason);
 
-    stopPeering();
+    peeringTimer.stop();
 
     cancelStep(reason);
 

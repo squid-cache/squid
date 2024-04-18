@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_FWDSTATE_H
 #define SQUID_SRC_FWDSTATE_H
 
+#include "base/ActivityTimer.h"
 #include "base/forward.h"
 #include "base/JobWait.h"
 #include "base/RefCount.h"
@@ -212,6 +213,9 @@ private:
     /// Whether the entire reply (including any body) was written to Store.
     /// The string literal value is only used for debugging.
     const char *storedWholeReply_;
+
+    /// Measures time spent on selecting and communicating with peers.
+    ActivityTimer peeringTimer;
 };
 
 class acl_tos;
