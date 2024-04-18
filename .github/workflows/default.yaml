@@ -95,6 +95,11 @@ jobs:
       fail-fast: true
       matrix:
         os: [ ubuntu-22.04 ]
+        layer:
+          - layer-00-default
+          - layer-01-minimal
+          - layer-02-maximus
+          - layer-04-noauth-everything
 
     runs-on: ${{ matrix.os }}
 
@@ -112,7 +117,7 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v3
 
-      - run: ./test-builds.sh
+      - run: ./test-builds.sh ${{ matrix.layer }}
 
       - name: Publish build logs
         if: success() || failure()
