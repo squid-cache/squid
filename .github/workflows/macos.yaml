@@ -16,7 +16,7 @@ jobs:
       matrix:
         layer:
           - layer-00-default
-          - layer-01-minimum
+          - layer-01-minimal
           - layer-02-maximus
           - layer-04-noauth-everything
 
