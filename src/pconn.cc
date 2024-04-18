@@ -353,7 +353,7 @@ void
 PconnPool::dumpHist(std::ostream &yaml) const
 {
     AtMostOnce heading(
-        "  connection use histogram: \n"
+        "  connection use histogram:\n"
         "    # requests per connection: closed connections that carried that many requests\n");
 
     for (int i = 0; i < PCONN_HIST_SZ; ++i) {
