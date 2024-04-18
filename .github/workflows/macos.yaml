@@ -46,5 +46,5 @@ jobs:
         export PKG_CONFIG_PATH="$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
         export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
         export pjobs="-j`nproc`"
-        export MAKE="$HOMEBREW_PREFIX/bin/gmake ${pjobs}"
+        export MAKE="$HOMEBREW_PREFIX/bin/gmake"
         ./test-builds.sh --verbose --aggressively-use-config-cache --cleanup ${{ matrix.layer}}
