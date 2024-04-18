@@ -15,8 +15,6 @@
 class FadingCounter
 {
 public:
-    static const size_t Precision = 10; ///< #counting slots, controls measur. accuracy
-
     FadingCounter();
 
     /// 0=remember nothing; -1=forget nothing; new value triggers clear()
@@ -31,6 +29,8 @@ public:
     time_t horizon() const { return horizon_; }
 
 private:
+    static const size_t Precision = 10; ///< #counting slots, controls measur. accuracy
+
     time_t horizon_ = -1;
     double delta = -1; ///< sub-interval duration = horizon/precision
 
