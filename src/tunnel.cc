@@ -406,7 +406,6 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
 
     url = xstrdup(clientRequest->uri);
     request = clientRequest->request;
-
     server.size_ptr = &clientRequest->out.size;
     client.size_ptr = &clientRequest->al->http.clientRequestSz.payloadData;
     status_ptr = &clientRequest->al->http.code;
@@ -494,7 +493,6 @@ TunnelStateData::retryOrBail(const char *context)
                               clientExpectsConnectResponse();
     if (canSendError)
         return sendError(savedError, bailDescription ? bailDescription : context);
-
     *status_ptr = savedError->httpStatus;
 
     finishWritingAndDelete(client);
@@ -1440,7 +1438,7 @@ TunnelStateData::startConnecting()
 
     delete savedError; // may still be nil
     savedError = nullptr;
-    request->hier.peer_reply_status = Http::scNone; // TODO: Move to startPeering()?
+    request->hier.peer_reply_status = Http::scNone;
 
     const auto callback = asyncCallback(17, 5, TunnelStateData::noteConnection, this);
     const auto cs = new HappyConnOpener(destinations, callback, request, startTime, n_tries, al);
