@@ -156,7 +156,7 @@ void
 Icmp4::Recv(void)
 {
     int n;
-    struct addrinfo *from = nullptr;
+    Ip::Address from;
     int iphdrlen = sizeof(iphdr);
     struct iphdr *ip = nullptr;
     struct icmphdr *icmp = nullptr;
@@ -173,21 +173,19 @@ Icmp4::Recv(void)
     if (pkt == nullptr)
         pkt = (char *)xmalloc(MAX_PKT4_SZ);
 
-    Ip::Address::InitAddr(from);
     n = recvfrom(icmp_sock,
                  (void *)pkt,
                  MAX_PKT4_SZ,
                  0,
-                 from->ai_addr,
-                 &from->ai_addrlen);
+                 reinterpret_cast<sockaddr*>(&from),
+                 0);
 
     if (n <= 0) {
         debugs(42, DBG_CRITICAL, "ERROR: when calling recvfrom() on ICMP socket.");
-        Ip::Address::FreeAddr(from);
         return;
     }
 
-    preply.from = *from;
+    preply.from = std::move(from);
 
 #if GETTIMEOFDAY_NO_TZP
 
@@ -222,12 +220,10 @@ Icmp4::Recv(void)
     icmp = (struct icmphdr *) (void *) (pkt + iphdrlen);
 
     if (icmp->icmp_type != ICMP_ECHOREPLY) {
-        Ip::Address::FreeAddr(from);
         return;
     }
 
     if (icmp->icmp_id != icmp_ident) {
-        Ip::Address::FreeAddr(from);
         return;
     }
 
@@ -245,14 +241,12 @@ Icmp4::Recv(void)
 
     if (preply.psize < 0) {
         debugs(42, DBG_CRITICAL, "ERROR: Malformed ICMP packet.");
-        Ip::Address::FreeAddr(from);
         return;
     }
 
     control.SendResult(preply, (sizeof(pingerReplyData) - MAX_PKT4_SZ + preply.psize) );
 
     Log(preply.from, icmp->icmp_type, IcmpPacketType(icmp->icmp_type), preply.rtt, preply.hops);
-    Ip::Address::FreeAddr(from);
 }
 
 #endif /* USE_ICMP */
