@@ -36,8 +36,6 @@ jobs:
         eval `brew shellenv`
         export PKG_CONFIG_PATH="$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
         export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
-        export MAKE="$HOMEBREW_PREFIX/bin/gmake"
         export pjobs="-j`nproc`"
-        env
-        ./test-builds.sh --aggressively-use-config-cache --cleanup --verbose layer-02-maximus
-        # ./test-builds.sh --verbose --aggressively-use-config-cache
+        export MAKE="$HOMEBREW_PREFIX/bin/gmake ${pjobs}"
+        ./test-builds.sh --verbose --aggressively-use-config-cache --cleanup
