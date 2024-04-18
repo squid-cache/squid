@@ -11,6 +11,15 @@ jobs:
 
     runs-on: macos-latest
 
+    strategy:
+      fail-fast: true
+      matrix:
+        layer:
+          - layer-00-default
+          - layer-01-minimum
+          - layer-02-maximus
+          - layer-04-noauth-everything
+
     steps:
     - name: Install prerequisite packages
       run: |
@@ -31,11 +40,11 @@ jobs:
     #     key: "ccache-${{ runner.os }}-${{ runner.arch }}"
     #     append-timestamp: true
     #     # variant: sccache
-    - name: Build
+    - name: Build layer
       run: |
         eval `brew shellenv`
         export PKG_CONFIG_PATH="$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
         export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
         export pjobs="-j`nproc`"
         export MAKE="$HOMEBREW_PREFIX/bin/gmake ${pjobs}"
-        ./test-builds.sh --verbose --aggressively-use-config-cache --cleanup
+        ./test-builds.sh --verbose --aggressively-use-config-cache --cleanup ${{ matrix.layer}}
