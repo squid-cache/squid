@@ -11,26 +11,16 @@
 
 #include "base/Stopwatch.h"
 
-/// Eliminates excessive Stopwatch resume() and pause() calls in a task with
-/// multiple code locations that resume (or pause) a stopwatch. Ideally, there
-/// would be just one such location per action (e.g., constructor resumes while
-/// destructor pauses), but current code idiosyncrasies necessitate this state.
+/// Eliminates excessive Stopwatch pause() calls in a task with
+/// multiple code locations that pause a stopwatch. Ideally, there
+/// would be just one such location (e.g., a destructor),
+/// but current code idiosyncrasies necessitate this state.
 class ActivityTimer
 {
 public:
-    // TODO: Call timer.resume() here if possible, eliminating `resumed` and
-    // adjusting class description to be exclusively about pause().
-    ActivityTimer(Stopwatch &w): timer(w) {}
+    ActivityTimer(Stopwatch &w): timer(w) { timer.resume(); }
 
     ~ActivityTimer() { stop(); }
-
-    void start()
-    {
-        if (!resumed) {
-            timer.resume();
-            resumed = true;
-        }
-    }
 
     void stop()
     {
@@ -46,7 +36,6 @@ private:
     // Do not be tempted to rely on timer.ran(): We are eliminating excessive
     // calls within a single task (e.g., an AsyncJob) while the timer (and its
     // ran() state) may be shared/affected by multiple concurrent tasks.
-    bool resumed = false;
     bool paused = false;
 };
 

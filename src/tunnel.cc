@@ -419,8 +419,6 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
     commSetConnTimeout(client.conn, Config.Timeout.lifetime, timeoutCall);
-
-    peeringTimer.start();
 }
 
 TunnelStateData::~TunnelStateData()

@@ -129,7 +129,7 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     destinations(new ResolvedPeers()),
     pconnRace(raceImpossible),
     storedWholeReply_(nullptr),
-    peeringTimer(((assert(r)), r->hier.totalResponseTime()))
+    peeringTimer((r->hier.totalResponseTime()))
 {
     debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
     HTTPMSGLOCK(request);
@@ -162,9 +162,6 @@ void FwdState::start(Pointer aSelf)
 
     // just in case; should already be initialized to false
     request->flags.pinned = false;
-
-    // start the clock just before any peer communication
-    peeringTimer.start();
 
 #if STRICT_ORIGINAL_DST
     // Bug 3243: CVE 2009-0801
