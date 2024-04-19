@@ -644,7 +644,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 const auto duration = timer.total();
                 outtv.tv_sec = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
                 const auto totalUsec = std::chrono::duration_cast<std::chrono::microseconds>(duration);
-                outtv.tv_usec = totalUsec.count() % std::chrono::microseconds(1s).count();
+                outtv.tv_usec = (totalUsec % std::chrono::microseconds(1s)).count();
                 doMsec = 1;
             }
         }
