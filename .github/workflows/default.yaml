@@ -95,11 +95,6 @@ jobs:
       fail-fast: true
       matrix:
         os: [ ubuntu-22.04, macos-14 ]
-        layer:
-          - layer-00-default
-          - layer-01-minimal
-          - layer-02-maximus
-          - layer-04-noauth-everything
 
     runs-on: ${{ matrix.os }}
 
@@ -127,7 +122,7 @@ jobs:
 
       - name: Run build on Linux
         if: runner.os == 'Linux'
-        run: ./test-builds.sh --aggressively-use-config-cache ${{ matrix.layer }}
+        run: ./test-builds.sh --aggressively-use-config-cache
 
       - name: Run build on MacOS
         if: runner.os == 'macOS'
@@ -136,7 +131,7 @@ jobs:
           export PKG_CONFIG_PATH="$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
           export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
           export MAKE="$HOMEBREW_PREFIX/bin/gmake"
-          ./test-builds.sh --aggressively-use-config-cache ${{ matrix.layer }}
+          ./test-builds.sh --aggressively-use-config-cache
 
       - name: Publish build logs
         if: success() || failure()
