@@ -385,17 +385,17 @@ Ftp::Relay::forwardReply()
     reply->sources |= Http::Message::srcFtp;
 
     setVirginReply(reply);
-
     adaptOrFinalizeReply();
-    serverComplete();
+
 #if USE_ADAPTATION
     if (adaptationAccessCheckPending) {
+        serverComplete();
         debugs(9, 3, "returning due to adaptationAccessCheckPending");
         return;
     }
 #endif
-    markParsedVirginReplyAsWhole("Ftp::Relay::handleControlReply() does not forward partial replies");
-
+    markParsedVirginReplyAsWhole("custom/complete reply");
+    serverComplete();
 }
 
 void
