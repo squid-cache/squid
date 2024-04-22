@@ -331,6 +331,10 @@ Ftp::Relay::processReplyBody()
 
 #endif
 
+    int64_t size = 0;
+    if (!virginReply()->expectingBody(request->method, size))
+        markParsedVirginReplyAsWhole("no reply body is expected");
+
     if (data.readBuf != nullptr && data.readBuf->hasContent()) {
         const mb_size_t csize = data.readBuf->contentSize();
         debugs(9, 5, "writing " << csize << " bytes to the reply");
@@ -386,15 +390,7 @@ Ftp::Relay::forwardReply()
 
     setVirginReply(reply);
     adaptOrFinalizeReply();
-
-#if USE_ADAPTATION
-    if (adaptationAccessCheckPending) {
-        serverComplete();
-        debugs(9, 3, "returning due to adaptationAccessCheckPending");
-        return;
-    }
-#endif
-    markParsedVirginReplyAsWhole("custom/complete reply");
+    markParsedVirginReplyAsWhole("got a complete reply");
     serverComplete();
 }
 

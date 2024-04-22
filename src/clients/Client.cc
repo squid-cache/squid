@@ -163,7 +163,7 @@ Client::markParsedVirginReplyAsWhole(const char *reasonWeAreSure)
     // The code storing adapted reply takes care of markStoredReplyAsWhole().
     // We need to take care of the remaining regular network-to-store case.
 #if USE_ADAPTATION
-    if (startedAdaptation) {
+    if (adaptationAccessCheckPending || startedAdaptation) {
         debugs(11, 5, "adaptation handles markStoredReplyAsWhole()");
         return;
     }
