@@ -14,10 +14,6 @@
 
 #include <cmath>
 
-FadingCounter::FadingCounter() : counters(Precision,0)
-{
-}
-
 void
 FadingCounter::clear()
 {
@@ -32,7 +28,7 @@ FadingCounter::configure(const time_t newHorizon)
     if (newHorizon != horizon_) {
         clear(); // for simplicity
         horizon_ = newHorizon;
-        delta = horizon_ / Precision; // may become zero
+        delta = horizon_ / counters.size(); // may become zero
     }
 }
 
@@ -46,7 +42,7 @@ FadingCounter::count(uint64_t howMany)
         return howMany; // remember nothing
 
     const double deltas = (current_dtime - lastTime) / delta;
-    if (deltas >= Precision || current_dtime < lastTime) {
+    if (deltas >= counters.size() || current_dtime < lastTime) {
         clear(); // forget all values
     } else {
         // forget stale values, if any
@@ -54,7 +50,7 @@ FadingCounter::count(uint64_t howMany)
         const auto lastSlot = static_cast<int>(fmod(lastTime, horizon()) / delta);
         const int staleSlots = static_cast<int>(deltas);
         for (int i = 0, s = lastSlot + 1; i < staleSlots; ++i, ++s) {
-            const auto idx = s % Precision;
+            const auto idx = s % counters.size();
             total -= counters[idx];
             counters[idx] = 0;
         }
@@ -63,7 +59,7 @@ FadingCounter::count(uint64_t howMany)
     // apply new information
     lastTime = current_dtime;
     const auto curSlot = static_cast<int>(fmod(lastTime, horizon()) / delta);
-    counters[curSlot % Precision] += howMany;
+    counters[curSlot % counters.size()] += howMany;
     total += howMany;
 
     return total;
