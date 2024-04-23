@@ -650,7 +650,9 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
         printf("For legal restrictions on distribution see https://www.openssl.org/source/license.html\n\n");
 #endif
 #endif
-        printf( "configure options: %s\n", SQUID_CONFIGURE_OPTIONS);
+
+        printf("Running Configuration in: %s\n", ConfigFile);
+        printf("Build configure options: %s\n", SQUID_CONFIGURE_OPTIONS);
 
 #if USE_WIN32_SERVICE
 
@@ -1484,6 +1486,8 @@ RegisterModules()
 int
 SquidMain(int argc, char **argv)
 {
+    ConfigFile = xstrdup(DEFAULT_CONFIG_FILE);
+
     // We must register all modules before the first RunRegisteredHere() call.
     // We do it ASAP/here so that we do not need to move this code when we add
     // earlier hooks to the RegisteredRunner API.
@@ -1569,9 +1573,6 @@ SquidMain(int argc, char **argv)
      * note: in "normal" case this used to be called from mainInitialize() */
     {
         int parse_err;
-
-        if (!ConfigFile)
-            ConfigFile = xstrdup(DEFAULT_CONFIG_FILE);
 
         assert(!configured_once);
 

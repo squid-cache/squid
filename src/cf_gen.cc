@@ -668,7 +668,8 @@ gen_dump(const EntryList &head, std::ostream &fout)
          "static void" << std::endl <<
          "dump_config(StoreEntry *entry)" << std::endl <<
          "{" << std::endl <<
-         "    debugs(5, 4, MYNAME);" << std::endl;
+         "    debugs(5, 4, MYNAME);" << std::endl <<
+         "    storeAppendPrintf(entry, \"# File: %s\\n\", ConfigFile);" << std::endl;
 
     for (const auto &e : head) {
 
