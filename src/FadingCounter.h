@@ -22,7 +22,7 @@ public:
 
     void clear(); ///< forgets all events
 
-    int count(int howMany); ///< count fresh, return #events remembered
+    uint64_t count(uint64_t howMany); ///< count fresh, return #events remembered
     auto remembered() const { return total; } ///< possibly stale #events
 
     /// read-only memory horizon in seconds; older events are forgotten
@@ -36,7 +36,7 @@ private:
 
     double lastTime = 0.0; ///< time of the last update
     std::vector<int> counters; ///< events per delta (possibly stale)
-    int total = 0; ///< number of remembered events (possibly stale)
+    uint64_t total = 0; ///< number of remembered events (possibly stale)
 };
 
 #endif /* SQUID_SRC_FADINGCOUNTER_H */

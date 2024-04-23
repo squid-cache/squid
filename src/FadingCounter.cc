@@ -36,11 +36,9 @@ FadingCounter::configure(const time_t newHorizon)
     }
 }
 
-int
-FadingCounter::count(int howMany)
+uint64_t
+FadingCounter::count(uint64_t howMany)
 {
-    Must(howMany >= 0);
-
     if (horizon() < 0)
         return total += howMany; // forget nothing
 
@@ -59,7 +57,6 @@ FadingCounter::count(int howMany)
             const auto idx = s % Precision;
             total -= counters[idx];
             counters[idx] = 0;
-            Must(total >= 0);
         }
     }
 
@@ -68,7 +65,6 @@ FadingCounter::count(int howMany)
     const auto curSlot = static_cast<int>(fmod(lastTime, horizon()) / delta);
     counters[curSlot % Precision] += howMany;
     total += howMany;
-    Must(total >= 0);
 
     return total;
 }
