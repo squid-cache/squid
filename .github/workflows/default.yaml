@@ -115,7 +115,7 @@ jobs:
           brew install \
             automake coreutils cppunit gawk \
             gnu-getopt gnu-sed grep libtool \
-            make openldap cyrus-sasl
+            make openldap openssl cyrus-sasl
 
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -130,6 +130,7 @@ jobs:
           eval `brew shellenv`
           export PKG_CONFIG_PATH="$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
           export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
+          export CFLAGS="$CFLAGS -Wno-compound-token-split-by-macro" # needed fir ltdl
           export pjobs="-j`nproc`"
           export MAKE="$HOMEBREW_PREFIX/bin/gmake"
           ./test-builds.sh ${{ matrix.layer }}
