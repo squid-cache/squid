@@ -52,5 +52,7 @@ Mgr::FunAction::dump(StoreEntry* entry)
     if (UsingSmp())
         storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
     handler(entry);
+    if (atomic() && UsingSmp())
+        storeAppendPrintf(entry, "...\n");
 }
 
