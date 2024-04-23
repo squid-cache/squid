@@ -122,7 +122,7 @@ jobs:
 
       - name: Run build on Linux
         if: runner.os == 'Linux'
-        run: ./test-builds.sh ${{ matrix.layer }}
+        run: ./test-builds.sh
 
       - name: Run build on MacOS
         if: runner.os == 'macOS'
@@ -130,10 +130,13 @@ jobs:
           eval `brew shellenv`
           export PKG_CONFIG_PATH="$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
           export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
-          export CFLAGS="$CFLAGS -Wno-compound-token-split-by-macro" # needed fir ltdl
+          if gcc --version | grep -q clang ; then
+            export CFLAGS="$CFLAGS -Wno-compound-token-split-by-macro" # needed fir ltdl
+          fi
           export pjobs="-j`nproc`"
           export MAKE="$HOMEBREW_PREFIX/bin/gmake"
-          ./test-builds.sh ${{ matrix.layer }}
+          export CPPFLAGS=-I/opt/homebrew/include # openssl fails without this
+          ./test-builds.sh
 
       - name: Publish build logs
         if: success() || failure()
