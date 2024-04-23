@@ -160,19 +160,8 @@ Client::markParsedVirginReplyAsWhole(const char *reasonWeAreSure)
     assert(reasonWeAreSure);
     debugs(11, 3, reasonWeAreSure);
 
-    // The code storing adapted reply takes care of markStoredReplyAsWhole().
-    // We need to take care of the remaining regular network-to-store case.
-#if USE_ADAPTATION
-    if (adaptationAccessCheckPending || startedAdaptation) {
-        debugs(11, 5, "adaptation handles markStoredReplyAsWhole()");
-        return;
-    }
-#endif
-
-    // Convert the "parsed whole virgin reply" event into the "stored..." event
-    // because, without adaptation, we store everything we parse: There is no
-    // buffer for parsed content; addVirginReplyBody() stores every parsed byte.
-    fwd->markStoredReplyAsWhole(reasonWeAreSure);
+    assert(!receivedWholeVirginReply);
+    receivedWholeVirginReply = true;
 }
 
 // called when no more server communication is expected; may quit
@@ -971,7 +960,8 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
     // TODO: Should we check receivedBodyTooLarge as well?
 
     if (!group) {
-        debugs(11,3, "no adapation needed");
+        if (receivedWholeVirginReply)
+            fwd->markStoredReplyAsWhole("no adapation needed");
         setFinalReply(virginReply());
         processReplyBody();
         return;
@@ -1006,7 +996,8 @@ Client::adaptOrFinalizeReply()
     if (adaptationAccessCheckPending)
         return;
 #endif
-
+    if (receivedWholeVirginReply)
+        fwd->markStoredReplyAsWhole("no adapation needed");
     setFinalReply(virginReply());
 }
 

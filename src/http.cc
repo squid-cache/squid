@@ -1441,9 +1441,13 @@ HttpStateData::writeReplyBody()
     else if (clen < 0 && eof)
         parsedWhole = "http parsed body ending with expected/required EOF";
 
-    if (parsedWhole)
+    if (parsedWhole) {
         markParsedVirginReplyAsWhole(parsedWhole);
-    else if (eof)
+#if USE_ADAPTATION
+        if (doneWithAdaptation())
+#endif
+            fwd->markStoredReplyAsWhole(parsedWhole);
+    } else if (eof)
         markPrematureReplyBodyEofFailure();
 }
 
@@ -1461,7 +1465,12 @@ HttpStateData::decodeAndWriteReplyBody()
         addVirginReplyBody(decodedData.content(), decodedData.contentSize());
         if (doneParsing) {
             lastChunk = 1;
-            markParsedVirginReplyAsWhole("http parsed last-chunk");
+            const auto parsedWhole = "http parsed last-chunk";
+            markParsedVirginReplyAsWhole(parsedWhole);
+#if USE_ADAPTATION
+            if (doneWithAdaptation())
+#endif
+                fwd->markStoredReplyAsWhole(parsedWhole);
         } else if (eof) {
             markPrematureReplyBodyEofFailure();
         }
