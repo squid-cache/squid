@@ -961,7 +961,7 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
 
     if (!group) {
         if (receivedWholeVirginReply)
-            fwd->markStoredReplyAsWhole("no adapation needed");
+            fwd->markStoredReplyAsWhole("adaptation is not allowed");
         setFinalReply(virginReply());
         processReplyBody();
         return;
@@ -997,7 +997,7 @@ Client::adaptOrFinalizeReply()
         return;
 #endif
     if (receivedWholeVirginReply)
-        fwd->markStoredReplyAsWhole("no adapation needed");
+        fwd->markStoredReplyAsWhole("no adaptation needed");
     setFinalReply(virginReply());
 }
 
