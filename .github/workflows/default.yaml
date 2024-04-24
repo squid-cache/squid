@@ -137,7 +137,7 @@ jobs:
           export MAKE="$HOMEBREW_PREFIX/bin/gmake"
           export CPPFLAGS="-I$HOMEBREW_PREFIX/include${CPPFLAGS+ $CPPFLAGS}" # openssl fails without this
           export LDFLAGS="-L$HOMEBREW_PREFIX/lib${LDFLAGS+ $LDFLAGS}"
-          ./test-builds.sh layer-02-maximus # remove this once openssl builds on macos
+          ./test-builds.sh
 
       - name: Publish build logs
         if: success() || failure()
