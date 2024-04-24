@@ -20,8 +20,6 @@
 #include "adaptation/Initiator.h"
 #endif
 
-#include <optional>
-
 /**
  * Client is a common base for classes such as HttpStateData and FtpStateData.
  * All such classes must be able to consume request bodies from a BodyPipe
@@ -191,11 +189,11 @@ protected:
     bool adaptationAccessCheckPending = false;
     bool startedAdaptation = false;
 
-    bool receivedWholeVirginReply; ///< markParsedVirginReplyAsWhole() called
-
     /// handleAdaptedBodyProductionEnded() was called
     bool receivedWholeAdaptedReply = false;
 #endif
+    bool receivedWholeVirginReply = false; ///< markParsedVirginReplyAsWhole() called
+
     bool receivedWholeRequestBody = false; ///< handleRequestBodyProductionEnded called
 
     /// whether we are waiting for MemObject::delayRead() to call us back
