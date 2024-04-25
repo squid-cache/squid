@@ -22,19 +22,25 @@ if [ -n "$cache_file" ]; then
     configcache="--cache-file=$cache_file"
 fi
 
-#if we are on Linux, let's try parallelizing
+# let's try parallelizing
+if [ -z "$pjobs" ] && which nproc >/dev/null 2>&1 ; then
+    ncpus=`nproc`
+    pjobs="-j${ncpus}"
+fi
+# no nproc, Linux-specific detection  
 if [ -z "$pjobs" -a -e /proc/cpuinfo ]; then
     ncpus=`grep '^processor' /proc/cpuinfo | tail -1|awk '{print $3}'`
     ncpus=`expr ${ncpus} + 1`
     pjobs="-j${ncpus}"
 fi
-#if we are on FreeBSD, let's try parallelizing
+# no nproc, FreeBSD-specific detection
 if [ -z "$pjobs" -a -x /sbin/sysctl ]; then
     ncpus=`sysctl kern.smp.cpus | cut -f2 -d" "`
     if [ $? -eq 0 -a -n "$ncpus" -a "$ncpus" -gt 1 ]; then
         pjobs="-j${ncpus}"
     fi
 fi
+echo -- "***pjobs: $pjobs"
 
 if test -e ${config} ; then
 	echo "BUILD: ${config}"
