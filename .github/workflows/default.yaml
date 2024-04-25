@@ -115,7 +115,7 @@ jobs:
           brew install \
             automake coreutils cppunit gawk \
             gnu-getopt gnu-sed grep libtool \
-            make openldap openssl@3 cyrus-sasl
+            make openldap openssl cyrus-sasl
 
       - name: Checkout sources
         uses: actions/checkout@v4
