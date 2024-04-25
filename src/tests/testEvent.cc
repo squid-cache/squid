@@ -100,11 +100,11 @@ TestEvent::testDump()
     const std::string expected("last event to run: last event\n"
                                "scheduled events:\n"
                                "  - operation: test event\n"
-                               "    secs to next execution: 0\n"
+                               "    secs to next execution: 0.000\n"
                                "    weight: 0\n"
                                "    callback valid: N/A\n"
                                "  - operation: test event2\n"
-                               "    secs to next execution: 0\n"
+                               "    secs to next execution: 0.000\n"
                                "    weight: 0\n"
                                "    callback valid: N/A\n");
 

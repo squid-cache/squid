@@ -264,12 +264,12 @@ void
 EventScheduler::dump(std::ostream &yaml)
 {
     if (last_event_ran)
-        yaml << "last event to run: " << last_event_ran << "\n"
-             << "scheduled events:\n";
+        yaml << "last event to run: " << last_event_ran << "\n";
 
-    AtMostOnce header("Events Queue:\n");
+    AtMostOnce header("scheduled events:\n");
     for (auto *e = tasks; e; e = e->next) {
-        yaml << "  - operation: " << e->name << '\n' <<
+        yaml << header <<
+             "  - operation: " << e->name << '\n' <<
              "    secs to next execution: " << std::setprecision(3) << std::fixed << (e->when? e->when - current_dtime : 0) << '\n' <<
              "    weight: " << e->weight << '\n' <<
              "    callback valid: ";
