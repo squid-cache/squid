@@ -34,13 +34,13 @@ MemBlobStats::dump(std::ostream &yaml) const
 {
     std::string indent("  ");
     yaml <<
-        "MemBlob stats: " << '\n' <<
-            indent << "allocations: " << alloc << '\n' <<
-            indent << "live instances: " << live << '\n' <<
-            indent << "append calls: " << append << '\n' <<
-            indent << "cumulative size bytes: " << liveBytes << '\n' <<
-            indent << "mean size: " << std::fixed << std::setprecision(1) <<
-                (static_cast<double>(liveBytes)/(live?live:1)) << '\n';
+         "MemBlob stats: " << '\n' <<
+         indent << "allocations: " << alloc << '\n' <<
+         indent << "live instances: " << live << '\n' <<
+         indent << "append calls: " << append << '\n' <<
+         indent << "cumulative size bytes: " << liveBytes << '\n' <<
+         indent << "mean size: " << std::fixed << std::setprecision(1) <<
+         (static_cast<double>(liveBytes)/(live?live:1)) << '\n';
 }
 
 static auto &
