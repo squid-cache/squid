@@ -136,12 +136,12 @@ jobs:
           $HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
           export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
           if gcc --version | grep -q clang ; then
-            export CFLAGS="-Wno-compound-token-split-by-macro${CFLAGS+ $CFLAGS}" # needed fir ltdl
+            export CFLAGS="-Wno-compound-token-split-by-macro${CFLAGS:+ $CFLAGS}" # needed fir ltdl
           fi
           export pjobs="-j`nproc`"
           export MAKE="$HOMEBREW_PREFIX/bin/gmake"
-          export CPPFLAGS="-I$HOMEBREW_PREFIX/include${CPPFLAGS+ $CPPFLAGS}" # openssl fails without this
-          export LDFLAGS="-L$HOMEBREW_PREFIX/lib${LDFLAGS+ $LDFLAGS}"
+          export CPPFLAGS="-I$HOMEBREW_PREFIX/include${CPPFLAGS:+ $CPPFLAGS}" # openssl fails without this
+          export LDFLAGS="-L$HOMEBREW_PREFIX/lib${LDFLAGS:+ $LDFLAGS}"
           ./test-builds.sh
 
       - name: Publish build logs
