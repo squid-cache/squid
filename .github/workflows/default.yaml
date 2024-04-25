@@ -132,8 +132,6 @@ jobs:
           PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig"
           PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
           export PKG_CONFIG_PATH
-
-          $HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
           export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
           if gcc --version | grep -q clang ; then
             export CFLAGS="-Wno-compound-token-split-by-macro${CFLAGS:+ $CFLAGS}" # needed fir ltdl
