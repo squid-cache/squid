@@ -265,7 +265,7 @@ EventScheduler::dump(std::ostream &yaml)
 {
     if (last_event_ran)
         yaml << "last event to run: " << last_event_ran << "\n"
-            << "scheduled events:\n";
+             << "scheduled events:\n";
 
     AtMostOnce header("Events Queue:\n");
     for (auto *e = tasks; e; e = e->next) {
