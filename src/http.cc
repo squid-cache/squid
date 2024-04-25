@@ -1444,7 +1444,7 @@ HttpStateData::writeReplyBody()
     if (parsedWhole) {
         markParsedVirginReplyAsWhole(parsedWhole);
 #if USE_ADAPTATION
-        if (doneWithAdaptation())
+        if (!startedAdaptation)
 #endif
             fwd->markStoredReplyAsWhole(parsedWhole);
     } else if (eof)
@@ -1468,7 +1468,7 @@ HttpStateData::decodeAndWriteReplyBody()
             const auto parsedWhole = "http parsed last-chunk";
             markParsedVirginReplyAsWhole(parsedWhole);
 #if USE_ADAPTATION
-            if (doneWithAdaptation())
+            if (!startedAdaptation)
 #endif
                 fwd->markStoredReplyAsWhole(parsedWhole);
         } else if (eof) {
