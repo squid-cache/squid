@@ -29,17 +29,18 @@ MemBlobStats::operator += (const MemBlobStats& s)
     return *this;
 }
 
-std::ostream&
-MemBlobStats::dump(std::ostream &os) const
+void
+MemBlobStats::dump(std::ostream &yaml) const
 {
-    os <<
-       "MemBlob created: " << alloc <<
-       "\nMemBlob alive: " << live <<
-       "\nMemBlob append calls: " << append <<
-       "\nMemBlob currently allocated size: " << liveBytes <<
-       "\nlive MemBlob mean current allocation size: " <<
-       (static_cast<double>(liveBytes)/(live?live:1)) << std::endl;
-    return os;
+    std::string indent("  ");
+    yaml <<
+        "MemBlob stats: " << '\n' <<
+            indent << "allocations: " << alloc << '\n' <<
+            indent << "live instances: " << live << '\n' <<
+            indent << "append calls: " << append << '\n' <<
+            indent << "cumulative size bytes: " << liveBytes << '\n' <<
+            indent << "mean size: " << std::fixed << std::setprecision(1) <<
+                (static_cast<double>(liveBytes)/(live?live:1)) << '\n';
 }
 
 static auto &

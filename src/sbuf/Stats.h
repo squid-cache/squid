@@ -22,7 +22,7 @@ class SBufStats
 {
 public:
     ///Dump statistics to an ostream.
-    std::ostream& dump(std::ostream &os) const;
+    void dump(std::ostream &) const;
 
     SBufStats& operator +=(const SBufStats&);
 
