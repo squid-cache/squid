@@ -13,6 +13,8 @@
 #include "MemBuf.h"
 #include "unitTestMain.h"
 
+#include <sstream>
+
 /*
  * test the event module.
  */
@@ -83,14 +85,6 @@ TestEvent::testDump()
     EventScheduler scheduler;
     CalledEvent event;
     CalledEvent event2;
-    const char *expected = "Last event to run: last event\n"
-                           "\n"
-                           "Operation                \tNext Execution \tWeight\tCallback Valid?\n"
-                           "test event               \t0.000 sec\t    0\t N/A\n"
-                           "test event2              \t0.000 sec\t    0\t N/A\n";
-    MemBuf expect;
-    expect.init();
-    expect.append(expected, strlen(expected));
 
     scheduler.schedule("last event", CalledEvent::Handler, &event, 0, 0, false);
 
@@ -100,31 +94,21 @@ TestEvent::testDump()
     scheduler.schedule("test event", CalledEvent::Handler, &event, 0, 0, false);
     scheduler.schedule("test event2", CalledEvent::Handler, &event2, 0, 0, false);
 
-    MemBuf result;
-    result.init();
-    scheduler.dump(&result);
+    std::ostringstream os;
+    scheduler.dump(os);
 
-    /* loop over the strings, showing exactly where they differ (if at all) */
-    printf("Actual Text:\n");
-    /* TODO: these should really be just [] lookups, but String doesn't have those here yet. */
-    for (size_t i = 0; i < size_t(result.contentSize()); ++i) {
-        CPPUNIT_ASSERT(expect.content()[i]);
-        CPPUNIT_ASSERT(result.content()[i]);
+    const std::string expected("last event to run: last event\n"
+                               "scheduled events:\n"
+                               "  - operation: test event\n"
+                               "    secs to next execution: 0\n"
+                               "    weight: 0\n"
+                               "    callback valid: N/A\n"
+                               "  - operation: test event2\n"
+                               "    secs to next execution: 0\n"
+                               "    weight: 0\n"
+                               "    callback valid: N/A\n");
 
-        /* slight hack to make special chars visible */
-        switch (result.content()[i]) {
-        case '\t':
-            printf("\\t");
-            break;
-        default:
-            printf("%c", result.content()[i]);
-        }
-        /* make this an int comparison, so that we can see the ASCII code at failure */
-        CPPUNIT_ASSERT_EQUAL(int(expect.content()[i]), int(result.content()[i]));
-    }
-    printf("\n");
-    CPPUNIT_ASSERT_EQUAL(expect.contentSize(), result.contentSize());
-    CPPUNIT_ASSERT(strcmp(expect.content(), result.content()) == 0);
+    CPPUNIT_ASSERT_EQUAL(expected, os.str());
 }
 
 /* submit two callbacks, and find the right one.

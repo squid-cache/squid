@@ -9,6 +9,8 @@
 /* DEBUG: section 41    Event Processing */
 
 #include "squid.h"
+#include "base/IoManip.h"
+#include "base/PackableStream.h"
 #include "base/Random.h"
 #include "event.h"
 #include "mgr/Registration.h"
@@ -138,7 +140,8 @@ eventInit(void)
 static void
 eventDump(StoreEntry * sentry)
 {
-    EventScheduler::GetInstance()->dump(sentry);
+    PackableStream yaml(*sentry);
+    EventScheduler::GetInstance()->dump(yaml);
 }
 
 int
@@ -258,21 +261,26 @@ EventScheduler::clean()
 }
 
 void
-EventScheduler::dump(Packable *out)
+EventScheduler::dump(std::ostream &yaml)
 {
     if (last_event_ran)
-        out->appendf("Last event to run: %s\n\n", last_event_ran);
+        yaml << "last event to run: " << last_event_ran << "\n"
+            << "scheduled events:\n";
 
-    out->appendf("%-25s\t%-15s\t%s\t%s\n",
-                 "Operation",
-                 "Next Execution",
-                 "Weight",
-                 "Callback Valid?");
-
+    AtMostOnce header("Events Queue:\n");
     for (auto *e = tasks; e; e = e->next) {
-        out->appendf("%-25s\t%0.3f sec\t%5d\t %s\n",
-                     e->name, (e->when ? e->when - current_dtime : 0), e->weight,
-                     (e->arg && e->cbdata) ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
+        yaml << "  - operation: " << e->name << '\n' <<
+             "    secs to next execution: " << std::setprecision(3) << std::fixed << (e->when? e->when - current_dtime : 0) << '\n' <<
+             "    weight: " << e->weight << '\n' <<
+             "    callback valid: ";
+        if (e->arg && e->cbdata) {
+            if (cbdataReferenceValid(e->arg))
+                yaml << "yes\n";
+            else
+                yaml << "no\n";
+        } else {
+            yaml << "N/A\n";
+        }
     }
 }
 
