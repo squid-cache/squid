@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "base/PackableStream.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
@@ -45,6 +46,7 @@
 #include "Store.h"
 #include "store_digest.h"
 #include "StoreClient.h"
+#include "time/YamlDateTime.h"
 #include "tools.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -62,6 +64,8 @@
  */
 #include "comm.h"
 #include "StoreSearch.h"
+
+#include <ostream>
 
 typedef int STOBJFLT(const StoreEntry *);
 
@@ -96,7 +100,7 @@ static OBJH statUtilization;
 static OBJH statCountersHistograms;
 static OBJH statClientRequests;
 void GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours);
-void DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry);
+void DumpAvgStat(Mgr::IntervalActionData& stats, std::ostream &);
 void GetInfo(Mgr::InfoActionData& stats);
 void DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry);
 void DumpMallocStatistics(StoreEntry* sentry);
@@ -857,7 +861,8 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
 {
     Mgr::IntervalActionData stats;
     GetAvgStat(stats, minutes, hours);
-    DumpAvgStat(stats, sentry);
+    PackableStream yaml(*sentry);
+    DumpAvgStat(stats, yaml);
 }
 
 #define XAVG(X) (dt ? (double) (f->X - l->X) / dt : 0.0)
@@ -998,167 +1003,109 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
 }
 
 void
-DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry)
+DumpAvgStat(Mgr::IntervalActionData& stats, std::ostream &yaml)
 {
-    storeAppendPrintf(sentry, "sample_start_time = %d.%d (%s)\n",
-                      (int)stats.sample_start_time.tv_sec,
-                      (int)stats.sample_start_time.tv_usec,
-                      Time::FormatRfc1123(stats.sample_start_time.tv_sec));
-    storeAppendPrintf(sentry, "sample_end_time = %d.%d (%s)\n",
-                      (int)stats.sample_end_time.tv_sec,
-                      (int)stats.sample_end_time.tv_usec,
-                      Time::FormatRfc1123(stats.sample_end_time.tv_sec));
-
-    storeAppendPrintf(sentry, "client_http.requests = %f/sec\n",
-                      stats.client_http_requests);
-    storeAppendPrintf(sentry, "client_http.hits = %f/sec\n",
-                      stats.client_http_hits);
-    storeAppendPrintf(sentry, "client_http.errors = %f/sec\n",
-                      stats.client_http_errors);
-    storeAppendPrintf(sentry, "client_http.kbytes_in = %f/sec\n",
-                      stats.client_http_kbytes_in);
-    storeAppendPrintf(sentry, "client_http.kbytes_out = %f/sec\n",
-                      stats.client_http_kbytes_out);
-
+    const std::string indent("  ");
     double fct = stats.count > 1 ? stats.count : 1.0;
-    storeAppendPrintf(sentry, "client_http.all_median_svc_time = %f seconds\n",
-                      stats.client_http_all_median_svc_time / fct);
-    storeAppendPrintf(sentry, "client_http.miss_median_svc_time = %f seconds\n",
-                      stats.client_http_miss_median_svc_time / fct);
-    storeAppendPrintf(sentry, "client_http.nm_median_svc_time = %f seconds\n",
-                      stats.client_http_nm_median_svc_time / fct);
-    storeAppendPrintf(sentry, "client_http.nh_median_svc_time = %f seconds\n",
-                      stats.client_http_nh_median_svc_time / fct);
-    storeAppendPrintf(sentry, "client_http.hit_median_svc_time = %f seconds\n",
-                      stats.client_http_hit_median_svc_time / fct);
+    const auto default_precision=yaml.precision();
+    yaml <<
+         std::setprecision(2) << std::fixed <<
+         "sample start time: " << Time::YamlDateTime(stats.sample_start_time) << '\n' <<
+         "sample end time: " << Time::YamlDateTime(stats.sample_end_time) << '\n' <<
+         "HTTP clientside statistics:\n" <<
+         indent << "requests per second: " << stats.client_http_requests << '\n' <<
+         indent << "hits per second: " << stats.client_http_hits << '\n' <<
+         indent << "errors per second: " << stats.client_http_errors << '\n' <<
+         indent << "kbytes in per second: " << stats.client_http_kbytes_in << '\n' <<
+         indent << "kbytes out per second: " << stats.client_http_kbytes_out << '\n' <<
+         indent << "median service time secs: " << stats.client_http_all_median_svc_time / fct << '\n' <<
+         indent << "miss median service time secs: " << stats.client_http_miss_median_svc_time / fct << '\n' <<
+         indent << "near miss median service time secs: " << (stats.client_http_nm_median_svc_time / fct) << '\n' <<
+         indent << "near hit median service time secs: " << (stats.client_http_nh_median_svc_time / fct) << '\n' <<
+         indent << "hit median service time secs: " << (stats.client_http_hit_median_svc_time / fct) << '\n' <<
+         "HTTP serverside statistics:\n" <<
+         indent << "requests per second: " << stats.server_http_requests << '\n' <<
+         indent << "errors per second: " << stats.server_all_errors << '\n' <<
+         indent << "kbytes in per second: " << stats.server_all_kbytes_in << '\n' <<
+         indent << "kbytes out per second: " << stats.server_all_kbytes_out << '\n' <<
+         indent << "request per second: " << stats.server_http_requests << '\n' <<
+         indent << "HTTP errors per second: " << stats.server_http_errors << '\n' <<
+         indent << "HTTP kbytes in per second: " << stats.server_http_kbytes_in << '\n' <<
+         indent << "HTTP kbytes out per second: " << stats.server_http_kbytes_out << '\n' <<
+         "FTP serverside statistics:\n" <<
+         indent << "requests per second: " << stats.server_ftp_requests << '\n' <<
+         indent << "errors per second: " << stats.server_ftp_errors << '\n' <<
+         indent << "kbytes in per second: " << stats.server_ftp_kbytes_in << '\n' <<
+         indent << "kbytes out per second: " << stats.server_ftp_kbytes_out << '\n' <<
+         "other protocols serverside statistics:\n" <<
+         indent << "requests per second: " << stats.server_other_requests << '\n' <<
+         indent << "errors per second: " << stats.server_other_errors << '\n' <<
+         indent << "kbytes in per second: " << stats.server_other_kbytes_in << '\n' <<
+         indent << "kbytes out per second: " << stats.server_other_kbytes_out << '\n' <<
+         "ICP statistics:\n" <<
+         indent << "packets sent per second: " << stats.icp_pkts_sent << '\n' <<
+         indent << "packets received per second: " << stats.icp_pkts_recv << '\n' <<
+         indent << "queries sent per second: " << stats.icp_queries_sent << '\n' <<
+         indent << "replies sent per second: " << stats.icp_replies_sent << '\n' <<
+         indent << "queries received per second: " << stats.icp_queries_recv << '\n' <<
+         indent << "replies received per second: " << stats.icp_replies_recv << '\n' <<
+         indent << "replies queued per second: " << stats.icp_replies_queued << '\n' <<
+         indent << "queries timed out per second: " << stats.icp_query_timeouts << '\n' <<
+         indent << "kbytes sent per second: " << stats.icp_kbytes_sent << '\n' <<
+         indent << "kbytes received per second: " << stats.icp_kbytes_recv << '\n' <<
+         indent << "query kbytes sent per second: " << stats.icp_q_kbytes_sent << '\n' <<
+         indent << "reply kbytes sent per second: " << stats.icp_r_kbytes_sent << '\n' <<
+         indent << "query kbytes received per second: " << stats.icp_q_kbytes_recv << '\n' <<
+         indent << "reply kbytes received per second: " << stats.icp_r_kbytes_recv << '\n' <<
+         indent << "query median service time secs: " << (stats.icp_query_median_svc_time / fct) << '\n' <<
+         indent << "reply median service time secs: " << (stats.icp_reply_median_svc_time / fct) << '\n' <<
+         "DNS statistics:\n" <<
+         indent << "median service time seconds: " << (stats.dns_median_svc_time / fct) << '\n' <<
+         "OS statistics:\n" <<
+         indent << "unlink requests per second: " << stats.unlink_requests << '\n' <<
+         indent << "page faults per second: " << stats.page_faults << '\n' <<
+         indent << "select loops per second: " << stats.select_loops << '\n' <<
+         indent << "select FDs per second: " << stats.select_fds << '\n' <<
+         indent << "average select FD period: " << (stats.average_select_fd_period / fct) << '\n' <<
+         indent << "median select FDs: " << (stats.median_select_fds / fct) << '\n' <<
+         indent << "swapouts per second: " << stats.swap_outs << '\n' <<
+         indent << "swapins per second: " << stats.swap_ins << '\n' <<
+         indent << "swap files cleaned per second: " << stats.swap_files_cleaned << '\n' <<
+         indent << "aborted requests per second: " << stats.aborted_requests << '\n' <<
+         "Cacheability statistics:\n" <<
+         indent << "hit validation attempts per second: " << stats.hitValidationAttempts << '\n' <<
+         indent << "hit validation refusals due to locking per second: " << stats.hitValidationRefusalsDueToLocking << '\n' <<
+         indent << "hit validation refusals due to zero size per second: " << stats.hitValidationRefusalsDueToZeroSize << '\n' <<
+         indent << "hit validation refusals due to time limit per second: " << stats.hitValidationRefusalsDueToTimeLimit << '\n';
 
-    storeAppendPrintf(sentry, "server.all.requests = %f/sec\n",
-                      stats.server_all_requests);
-    storeAppendPrintf(sentry, "server.all.errors = %f/sec\n",
-                      stats.server_all_errors);
-    storeAppendPrintf(sentry, "server.all.kbytes_in = %f/sec\n",
-                      stats.server_all_kbytes_in);
-    storeAppendPrintf(sentry, "server.all.kbytes_out = %f/sec\n",
-                      stats.server_all_kbytes_out);
-
-    storeAppendPrintf(sentry, "server.http.requests = %f/sec\n",
-                      stats.server_http_requests);
-    storeAppendPrintf(sentry, "server.http.errors = %f/sec\n",
-                      stats.server_http_errors);
-    storeAppendPrintf(sentry, "server.http.kbytes_in = %f/sec\n",
-                      stats.server_http_kbytes_in);
-    storeAppendPrintf(sentry, "server.http.kbytes_out = %f/sec\n",
-                      stats.server_http_kbytes_out);
-
-    storeAppendPrintf(sentry, "server.ftp.requests = %f/sec\n",
-                      stats.server_ftp_requests);
-    storeAppendPrintf(sentry, "server.ftp.errors = %f/sec\n",
-                      stats.server_ftp_errors);
-    storeAppendPrintf(sentry, "server.ftp.kbytes_in = %f/sec\n",
-                      stats.server_ftp_kbytes_in);
-    storeAppendPrintf(sentry, "server.ftp.kbytes_out = %f/sec\n",
-                      stats.server_ftp_kbytes_out);
-
-    storeAppendPrintf(sentry, "server.other.requests = %f/sec\n",
-                      stats.server_other_requests);
-    storeAppendPrintf(sentry, "server.other.errors = %f/sec\n",
-                      stats.server_other_errors);
-    storeAppendPrintf(sentry, "server.other.kbytes_in = %f/sec\n",
-                      stats.server_other_kbytes_in);
-    storeAppendPrintf(sentry, "server.other.kbytes_out = %f/sec\n",
-                      stats.server_other_kbytes_out);
-
-    storeAppendPrintf(sentry, "icp.pkts_sent = %f/sec\n",
-                      stats.icp_pkts_sent);
-    storeAppendPrintf(sentry, "icp.pkts_recv = %f/sec\n",
-                      stats.icp_pkts_recv);
-    storeAppendPrintf(sentry, "icp.queries_sent = %f/sec\n",
-                      stats.icp_queries_sent);
-    storeAppendPrintf(sentry, "icp.replies_sent = %f/sec\n",
-                      stats.icp_replies_sent);
-    storeAppendPrintf(sentry, "icp.queries_recv = %f/sec\n",
-                      stats.icp_queries_recv);
-    storeAppendPrintf(sentry, "icp.replies_recv = %f/sec\n",
-                      stats.icp_replies_recv);
-    storeAppendPrintf(sentry, "icp.replies_queued = %f/sec\n",
-                      stats.icp_replies_queued);
-    storeAppendPrintf(sentry, "icp.query_timeouts = %f/sec\n",
-                      stats.icp_query_timeouts);
-    storeAppendPrintf(sentry, "icp.kbytes_sent = %f/sec\n",
-                      stats.icp_kbytes_sent);
-    storeAppendPrintf(sentry, "icp.kbytes_recv = %f/sec\n",
-                      stats.icp_kbytes_recv);
-    storeAppendPrintf(sentry, "icp.q_kbytes_sent = %f/sec\n",
-                      stats.icp_q_kbytes_sent);
-    storeAppendPrintf(sentry, "icp.r_kbytes_sent = %f/sec\n",
-                      stats.icp_r_kbytes_sent);
-    storeAppendPrintf(sentry, "icp.q_kbytes_recv = %f/sec\n",
-                      stats.icp_q_kbytes_recv);
-    storeAppendPrintf(sentry, "icp.r_kbytes_recv = %f/sec\n",
-                      stats.icp_r_kbytes_recv);
-    storeAppendPrintf(sentry, "icp.query_median_svc_time = %f seconds\n",
-                      stats.icp_query_median_svc_time / fct);
-    storeAppendPrintf(sentry, "icp.reply_median_svc_time = %f seconds\n",
-                      stats.icp_reply_median_svc_time / fct);
-    storeAppendPrintf(sentry, "dns.median_svc_time = %f seconds\n",
-                      stats.dns_median_svc_time / fct);
-    storeAppendPrintf(sentry, "unlink.requests = %f/sec\n",
-                      stats.unlink_requests);
-    storeAppendPrintf(sentry, "page_faults = %f/sec\n",
-                      stats.page_faults);
-    storeAppendPrintf(sentry, "select_loops = %f/sec\n",
-                      stats.select_loops);
-    storeAppendPrintf(sentry, "select_fds = %f/sec\n",
-                      stats.select_fds);
-    storeAppendPrintf(sentry, "average_select_fd_period = %f/fd\n",
-                      stats.average_select_fd_period / fct);
-    storeAppendPrintf(sentry, "median_select_fds = %f\n",
-                      stats.median_select_fds / fct);
-    storeAppendPrintf(sentry, "swap.outs = %f/sec\n",
-                      stats.swap_outs);
-    storeAppendPrintf(sentry, "swap.ins = %f/sec\n",
-                      stats.swap_ins);
-    storeAppendPrintf(sentry, "swap.files_cleaned = %f/sec\n",
-                      stats.swap_files_cleaned);
-    storeAppendPrintf(sentry, "aborted_requests = %f/sec\n",
-                      stats.aborted_requests);
-
-    storeAppendPrintf(sentry, "hit_validation.attempts = %f/sec\n",
-                      stats.hitValidationAttempts);
-    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_locking = %f/sec\n",
-                      stats.hitValidationRefusalsDueToLocking);
-    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_zeroSize = %f/sec\n",
-                      stats.hitValidationRefusalsDueToZeroSize);
-    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_timeLimit = %f/sec\n",
-                      stats.hitValidationRefusalsDueToTimeLimit);
-    storeAppendPrintf(sentry, "hit_validation.failures = %f/sec\n",
-                      stats.hitValidationFailures);
-
+    yaml << "Syscall statistics:\n";
 #if USE_POLL
-    storeAppendPrintf(sentry, "syscalls.polls = %f/sec\n", stats.syscalls_selects);
+    yaml << indent << "polls per second: " << stats.syscalls_polls << '\n';
 #elif USE_SELECT
-    storeAppendPrintf(sentry, "syscalls.selects = %f/sec\n", stats.syscalls_selects);
+    yaml << indent << "selects per second: " << stats.syscalls_selects << '\n';
 #endif
+    yaml <<
+         indent << "disk open per second: " << stats.syscalls_disk_opens << '\n' <<
+         indent << "disk close per second: " << stats.syscalls_disk_closes << '\n' <<
+         indent << "disk reads per second: " << stats.syscalls_disk_reads << '\n' <<
+         indent << "disk writes per second: " << stats.syscalls_disk_writes << '\n' <<
+         indent << "disk seeks per second: " << stats.syscalls_disk_seeks << '\n' <<
+         indent << "disk unlinks per second: " << stats.syscalls_disk_unlinks << '\n' <<
+         indent << "socket create per second: " << stats.syscalls_sock_sockets << '\n' <<
+         indent << "socket accepts per second: " << stats.syscalls_sock_accepts << '\n' <<
+         indent << "socket connects per second: " << stats.syscalls_sock_connects << '\n' <<
+         indent << "socket binds per second: " << stats.syscalls_sock_binds << '\n' <<
+         indent << "socket closes per second: " << stats.syscalls_sock_closes << '\n' <<
+         indent << "socket reads per second: " << stats.syscalls_sock_reads << '\n' <<
+         indent << "socket writes per second: " << stats.syscalls_sock_writes << '\n' <<
+         indent << "socket recvfroms per second: " << stats.syscalls_sock_recvfroms << '\n' <<
+         indent << "socket sendtos per second: " << stats.syscalls_sock_sendtos << '\n';
 
-    storeAppendPrintf(sentry, "syscalls.disk.opens = %f/sec\n", stats.syscalls_disk_opens);
-    storeAppendPrintf(sentry, "syscalls.disk.closes = %f/sec\n", stats.syscalls_disk_closes);
-    storeAppendPrintf(sentry, "syscalls.disk.reads = %f/sec\n", stats.syscalls_disk_reads);
-    storeAppendPrintf(sentry, "syscalls.disk.writes = %f/sec\n", stats.syscalls_disk_writes);
-    storeAppendPrintf(sentry, "syscalls.disk.seeks = %f/sec\n", stats.syscalls_disk_seeks);
-    storeAppendPrintf(sentry, "syscalls.disk.unlinks = %f/sec\n", stats.syscalls_disk_unlinks);
-    storeAppendPrintf(sentry, "syscalls.sock.accepts = %f/sec\n", stats.syscalls_sock_accepts);
-    storeAppendPrintf(sentry, "syscalls.sock.sockets = %f/sec\n", stats.syscalls_sock_sockets);
-    storeAppendPrintf(sentry, "syscalls.sock.connects = %f/sec\n", stats.syscalls_sock_connects);
-    storeAppendPrintf(sentry, "syscalls.sock.binds = %f/sec\n", stats.syscalls_sock_binds);
-    storeAppendPrintf(sentry, "syscalls.sock.closes = %f/sec\n", stats.syscalls_sock_closes);
-    storeAppendPrintf(sentry, "syscalls.sock.reads = %f/sec\n", stats.syscalls_sock_reads);
-    storeAppendPrintf(sentry, "syscalls.sock.writes = %f/sec\n", stats.syscalls_sock_writes);
-    storeAppendPrintf(sentry, "syscalls.sock.recvfroms = %f/sec\n", stats.syscalls_sock_recvfroms);
-    storeAppendPrintf(sentry, "syscalls.sock.sendtos = %f/sec\n", stats.syscalls_sock_sendtos);
-
-    storeAppendPrintf(sentry, "cpu_time = %f seconds\n", stats.cpu_time);
-    storeAppendPrintf(sentry, "wall_time = %f seconds\n", stats.wall_time);
-    storeAppendPrintf(sentry, "cpu_usage = %f%%\n", Math::doublePercent(stats.cpu_time, stats.wall_time));
+    yaml <<
+         "CPU time seconds: " << stats.cpu_time << '\n' <<
+         "Wall time seconds: " << stats.wall_time << '\n' <<
+         "CPU usage percent: " << Math::doublePercent(stats.cpu_time, stats.wall_time) <<
+         std::setprecision(default_precision) << std::defaultfloat << '\n';
 }
 
 static void
