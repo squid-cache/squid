@@ -204,7 +204,7 @@ AsyncJob::ReportAllJobs(StoreEntry *e)
         const char *status = job->status();
         if (status && strlen(status))
             os << indent << "status: " << job->status() << "\n";
-        os << indent << "started: " << (job->started_ ? "yes": "no" ) << '\n';
+        os << indent << "started: " << (job->started_ ? "Yes": "No" ) << '\n';
     }
 }
 
