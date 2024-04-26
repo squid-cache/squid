@@ -27,7 +27,6 @@ if [ -z "$pjobs" ] && which nproc >/dev/null 2>&1 ; then
     ncpus=`nproc`
     pjobs="-j${ncpus}"
 fi
-# no nproc, Linux-specific detection
 if [ -z "$pjobs" -a -e /proc/cpuinfo ]; then
     ncpus=`grep '^processor' /proc/cpuinfo | tail -1|awk '{print $3}'`
     ncpus=`expr ${ncpus} + 1`
