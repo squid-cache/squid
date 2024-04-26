@@ -279,7 +279,7 @@ DiskThreadsDiskFile::readDone(int rvfd, const char *buf, int len, int errflag, R
 
     --inProgressIOs;
 
-    ioRequestor->readCompleted(buf, rlen, errflag, request);
+    ioRequestor->readCompleted(buf, rlen, errflag, std::move(request));
 }
 
 void
