@@ -30,7 +30,7 @@
 namespace ProxyProtocol {
 namespace One {
 /// magic octet prefix for PROXY protocol version 1
-static const auto&
+static const auto &
 Magic()
 {
     static const auto magic = new SBuf("PROXY", 5);
