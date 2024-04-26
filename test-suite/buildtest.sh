@@ -38,7 +38,7 @@ if [ -z "$pjobs" -a -x /sbin/sysctl ]; then
         pjobs="-j${ncpus}"
     fi
 fi
-echo -- "***pjobs: $pjobs"
+echo "pjobs: $pjobs"
 
 if test -e ${config} ; then
 	echo "BUILD: ${config}"
