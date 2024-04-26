@@ -1892,7 +1892,7 @@ esiChoose::~esiChoose()
 esiChoose::esiChoose(esiTreeParentPtr aParent) :
     elements(),
     chosenelement(-1),
-    parent(aParent)
+    parent(std::move(aParent))
 {}
 
 void
