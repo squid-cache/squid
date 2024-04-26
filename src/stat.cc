@@ -1078,13 +1078,8 @@ DumpAvgStat(Mgr::IntervalActionData& stats, std::ostream &yaml)
          indent << "hit validation refusals due to zero size per second: " << stats.hitValidationRefusalsDueToZeroSize << '\n' <<
          indent << "hit validation refusals due to time limit per second: " << stats.hitValidationRefusalsDueToTimeLimit << '\n';
 
-    yaml << "Syscall statistics:\n";
-#if USE_POLL
-    yaml << indent << "polls per second: " << stats.syscalls_polls << '\n';
-#elif USE_SELECT
-    yaml << indent << "selects per second: " << stats.syscalls_selects << '\n';
-#endif
-    yaml <<
+    yaml << "Syscall statistics:\n" <<
+         indent << "select per second: " << stats.syscalls_selects << '\n' <<
          indent << "disk open per second: " << stats.syscalls_disk_opens << '\n' <<
          indent << "disk close per second: " << stats.syscalls_disk_closes << '\n' <<
          indent << "disk reads per second: " << stats.syscalls_disk_reads << '\n' <<
