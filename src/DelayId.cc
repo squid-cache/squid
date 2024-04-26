@@ -40,7 +40,7 @@ DelayId::~DelayId ()
 void
 DelayId::compositePosition(DelayIdComposite::Pointer newPosition)
 {
-    compositeId = newPosition;
+    compositeId = std::move(newPosition);
 }
 
 unsigned short
