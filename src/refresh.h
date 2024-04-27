@@ -17,7 +17,7 @@
 void refreshAddToList(const char *, int, time_t, int, time_t);
 bool refreshIsCachable(const StoreEntry *);
 int refreshCheckHTTP(const StoreEntry *, HttpRequest *);
-int refreshCheckICP(const StoreEntry *, HttpRequest *);
+bool refreshCheckICP(const StoreEntry *, const HttpRequestPointer &);
 int refreshCheckHTCP(const StoreEntry *, HttpRequest *);
 int refreshCheckDigest(const StoreEntry *, time_t delta);
 time_t getMaxAge(const char *url);

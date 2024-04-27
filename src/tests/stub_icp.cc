@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "comm/Connection.h"
+#include "HttpRequest.h"
 #include "ICP.h"
 
 #define STUB_API "icp_*.cc"

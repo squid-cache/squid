@@ -16,6 +16,7 @@
 
 #include "base/RefCount.h"
 #include "comm/forward.h"
+#include "http/forward.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
 #include "LogTags.h"
@@ -23,7 +24,6 @@
 #include "StoreClient.h"
 
 class AccessLogEntry;
-class HttpRequest;
 
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
@@ -69,7 +69,7 @@ public:
     bool isHit() const;
 
     icp_common_t header;
-    HttpRequest *request;
+    HttpRequestPointer request;
     int fd;
 
     Ip::Address from;

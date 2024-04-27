@@ -141,14 +141,11 @@ ICPState::ICPState(icp_common_t &aHeader, HttpRequest *aRequest):
     request(aRequest),
     fd(-1),
     url(nullptr)
-{
-    HTTPMSGLOCK(request);
-}
+{}
 
 ICPState::~ICPState()
 {
     safe_free(url);
-    HTTPMSGUNLOCK(request);
 }
 
 bool
@@ -191,7 +188,7 @@ ICPState::loggingTags() const
 void
 ICPState::fillChecklist(ACLFilledChecklist &checklist) const
 {
-    checklist.setRequest(request);
+    checklist.setRequest(request.getRaw());
     icpSyncAle(al, from, url, 0, 0);
     checklist.al = al;
 }

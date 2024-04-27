@@ -579,13 +579,13 @@ refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
 }
 
 /// \see int refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
-int
-refreshCheckICP(const StoreEntry * entry, HttpRequest * request)
+bool
+refreshCheckICP(const StoreEntry *entry, const HttpRequestPointer &request)
 {
-    int reason = refreshCheck(entry, request, 30);
+    int reason = refreshCheck(entry, request.getRaw(), 30);
     ++ refreshCounts[rcICP].total;
     ++ refreshCounts[rcICP].status[reason];
-    return (reason < 200) ? 0 : 1;
+    return !(reason < 200);
 }
 
 #if USE_HTCP
