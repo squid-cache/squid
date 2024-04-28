@@ -194,7 +194,7 @@ int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len)
 }
 
 // Compare 2 IP addresses
-int compare_ip_addresses(void *check_data, ASN1_OCTET_STRING *altname_ip) {
+static int compare_ip_addresses(void *check_data, ASN1_OCTET_STRING *altname_ip) {
     // Cast check_data to const char
     const unsigned char* check_ip = reinterpret_cast<const unsigned char*>(check_data);
     sockaddr_storage socket_info;
