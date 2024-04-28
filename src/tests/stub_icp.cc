@@ -20,7 +20,7 @@ icp_common_t::icp_common_t(char *, unsigned int) STUB
 void icp_common_t::handleReply(char *, Ip::Address &) STUB
 icp_common_t *icp_common_t::CreateMessage(icp_opcode, int, const char *, int, int) STUB_RETVAL(nullptr)
 icp_opcode icp_common_t::getOpCode() const STUB_RETVAL(ICP_INVALID)
-ICPState::ICPState(icp_common_t &, HttpRequest *) STUB
+ICPState::ICPState(icp_common_t &, const HttpRequestPointer &) STUB
 ICPState::~ICPState() STUB
 bool ICPState::confirmAndPrepHit(const StoreEntry &) const STUB_RETVAL(false)
 LogTags *ICPState::loggingTags() const STUB_RETVAL(nullptr)
@@ -30,8 +30,8 @@ Comm::ConnectionPointer icpIncomingConn;
 Comm::ConnectionPointer icpOutgoingConn;
 Ip::Address theIcpPublicHostID;
 
-HttpRequest* icpGetRequest(char *, int, int, Ip::Address &) STUB_RETVAL(nullptr)
-bool icpAccessAllowed(Ip::Address &, HttpRequest *) STUB_RETVAL(false)
+HttpRequestPointer icpGetRequest(char *, int, int, Ip::Address &) STUB_RETVAL(nullptr)
+bool icpAccessAllowed(Ip::Address &, const HttpRequestPointer &) STUB_RETVAL(false)
 void icpCreateAndSend(icp_opcode, int, char const *, int, int, int, const Ip::Address &, AccessLogEntryPointer) STUB
 icp_opcode icpGetCommonOpcode() STUB_RETVAL(ICP_INVALID)
 void icpDenyAccess(Ip::Address &, char *, int, int) STUB

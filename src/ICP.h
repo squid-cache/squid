@@ -62,7 +62,7 @@ class ICPState: public StoreClient
 {
 
 public:
-    ICPState(icp_common_t &aHeader, HttpRequest *aRequest);
+    ICPState(icp_common_t &, const HttpRequestPointer &);
     ~ICPState() override;
 
     /// whether the cache contains the requested entry
@@ -90,10 +90,10 @@ extern Comm::ConnectionPointer icpOutgoingConn;
 extern Ip::Address theIcpPublicHostID;
 
 /// \ingroup ServerProtocolICPAPI
-HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
+HttpRequestPointer icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
 
 /// \ingroup ServerProtocolICPAPI
-bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request);
+bool icpAccessAllowed(Ip::Address &, const HttpRequestPointer &);
 
 /// \ingroup ServerProtocolICPAPI
 void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntryPointer);
