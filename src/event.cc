@@ -271,10 +271,10 @@ EventScheduler::dump(std::ostream &yaml)
     const auto savedFlags = yaml.flags();
 
     AtMostOnce header("scheduled events:\n");
+    AtMostOnce seconds_comment("# seconds");
     for (auto *e = tasks; e; e = e->next) {
-        yaml << header <<
-             indent << "- operation: " << e->name << '\n' <<
-             indent << indent << "secs to next execution: " << std::setprecision(3) << std::fixed << (e->when? e->when - current_dtime : 0) << '\n';
+        yaml << header << indent << "- operation: " << e->name << '\n' <<
+             indent << indent << "next execution in: " << std::setprecision(3) << std::fixed << (e->when ? e->when - current_dtime : 0) << seconds_comment << '\n';
 
         yaml.flags(savedFlags);
         yaml << indent << indent << "weight: " << e->weight << '\n';
