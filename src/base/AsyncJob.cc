@@ -151,7 +151,7 @@ AsyncJob::callException(const std::exception &ex)
 void AsyncJob::callEnd()
 {
     if (done()) {
-        debugs(93, 5, *inCall << " ends job" << status());
+        debugs(93, 5, *inCall << " ends job " << status());
 
         AsyncCall::Pointer inCallSaved = inCall;
         void *thisSaved = this;

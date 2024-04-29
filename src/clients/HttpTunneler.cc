@@ -122,7 +122,7 @@ Http::Tunneler::handleTimeout(const CommTimeoutCbParams &)
 void
 Http::Tunneler::startReadingResponse()
 {
-    debugs(83, 5, connection << status());
+    debugs(83, 5, connection << ' ' << status());
 
     readBuf.reserveCapacity(SQUID_TCP_SO_RCVBUF);
     readMore();
@@ -410,7 +410,7 @@ Http::Tunneler::disconnect()
 void
 Http::Tunneler::callBack()
 {
-    debugs(83, 5, callback.answer().conn << status());
+    debugs(83, 5, callback.answer().conn << ' ' << status());
     assert(!connection); // returned inside callback.answer() or gone
     ScheduleCallHere(callback.release());
 }

@@ -101,7 +101,7 @@ void Adaptation::Icap::OptXact::handleCommRead(size_t)
 
 bool Adaptation::Icap::OptXact::parseResponse()
 {
-    debugs(93, 5, "have " << readBuf.length() << " bytes to parse" << status());
+    debugs(93, 5, "have " << readBuf.length() << " bytes to parse " << status());
     debugs(93, DBG_DATA, "\n" << readBuf);
 
     HttpReply::Pointer r(new HttpReply);

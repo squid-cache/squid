@@ -232,7 +232,7 @@ void Adaptation::Icap::Xaction::closeConnection()
 
         if (reuseConnection && !doneWithIo()) {
             //status() adds leading spaces.
-            debugs(93,5, "not reusing pconn due to pending I/O" << status());
+            debugs(93,5, "not reusing pconn due to pending I/O " << status());
             reuseConnection = false;
         }
 
@@ -349,8 +349,8 @@ void Adaptation::Icap::Xaction::noteCommWrote(const CommIoCbParams &io)
 void Adaptation::Icap::Xaction::noteCommTimedout(const CommTimeoutCbParams &)
 {
     debugs(93, 2, typeName << " failed: timeout with " <<
-           theService->cfg().methodStr() << " " <<
-           theService->cfg().uri << status());
+           theService->cfg().methodStr() << ' ' <<
+           theService->cfg().uri << ' ' << status());
     reuseConnection = false;
     assert(haveConnection());
     closeConnection();
@@ -381,7 +381,7 @@ void Adaptation::Icap::Xaction::callException(const std::exception  &e)
 void Adaptation::Icap::Xaction::callEnd()
 {
     if (doneWithIo()) {
-        debugs(93, 5, typeName << " done with I/O" << status());
+        debugs(93, 5, typeName << " done with I/O " << status());
         closeConnection();
     }
     Adaptation::Initiate::callEnd(); // may destroy us

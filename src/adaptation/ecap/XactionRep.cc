@@ -442,7 +442,7 @@ Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Mess
         updateHistory(msg);
         sendAnswer(Answer::Forward(msg));
 
-        debugs(93,4, "adapter will produce body" << status());
+        debugs(93,4, "adapter will produce body " << status());
         theMaster->abMake(); // libecap will produce
     }
 }

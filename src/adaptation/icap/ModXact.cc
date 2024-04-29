@@ -81,7 +81,7 @@ Adaptation::Icap::ModXact::ModXact(Http::Message *virginHeader,
     icapReply = new HttpReply;
     icapReply->protoPrefix = "ICAP/"; // TODO: make an IcapReply class?
 
-    debugs(93,7, "initialized." << status());
+    debugs(93,7, "initialized. " << status());
 }
 
 // initiator wants us to start
@@ -131,7 +131,7 @@ void Adaptation::Icap::ModXact::waitForService()
             disableRetries();
             disableRepeats("ICAP service is not available");
 
-            debugs(93, 7, "will not wait for the service to be available" <<
+            debugs(93, 7, "will not wait for the service to be available " <<
                    status());
 
             throw TexcHere("ICAP service is not available");
@@ -196,7 +196,7 @@ void Adaptation::Icap::ModXact::startShoveling()
     requestBuf.init();
 
     makeRequestHeaders(requestBuf);
-    debugs(93, 9, "will write" << status() << ":\n" <<
+    debugs(93, 9, "will write " << status() << ":\n" <<
            (requestBuf.terminate(), requestBuf.content()));
 
     // write headers
@@ -237,7 +237,7 @@ void Adaptation::Icap::ModXact::handleCommWroteHeaders()
 
 void Adaptation::Icap::ModXact::writeMore()
 {
-    debugs(93, 5, "checking whether to write more" << status());
+    debugs(93, 5, "checking whether to write more " << status());
 
     if (writer != nullptr) // already writing something
         return;
@@ -274,7 +274,7 @@ void Adaptation::Icap::ModXact::writeMore()
 void Adaptation::Icap::ModXact::writePreviewBody()
 {
     debugs(93, 8, "will write Preview body from " <<
-           virgin.body_pipe << status());
+           virgin.body_pipe << ' ' << status());
     Must(state.writing == State::writingPreview);
     Must(virgin.body_pipe != nullptr);
 
@@ -298,7 +298,7 @@ void Adaptation::Icap::ModXact::decideWritingAfterPreview(const char *kind)
     else
         stopWriting(true); // ICAP server reply implies no post-preview writing
 
-    debugs(93, 6, "decided on writing after " << kind << " preview" <<
+    debugs(93, 6, "decided on writing after " << kind << " preview " <<
            status());
 }
 
@@ -490,12 +490,12 @@ void Adaptation::Icap::ModXact::stopWriting(bool nicely)
 
     if (writer != nullptr) {
         if (nicely) {
-            debugs(93, 7, "will wait for the last write" << status());
+            debugs(93, 7, "will wait for the last write " << status());
             state.writing = State::writingAlmostDone; // may already be set
             checkConsuming();
             return;
         }
-        debugs(93, 3, "will NOT wait for the last write" << status());
+        debugs(93, 3, "will NOT wait for the last write " << status());
 
         // Comm does not have an interface to clear the writer callback nicely,
         // but without clearing the writer we cannot recycle the connection.
@@ -506,7 +506,7 @@ void Adaptation::Icap::ModXact::stopWriting(bool nicely)
         ignoreLastWrite = true;
     }
 
-    debugs(93, 7, "will no longer write" << status());
+    debugs(93, 7, "will no longer write " << status());
     if (virginBodyWriting.active()) {
         virginBodyWriting.disable();
         virginConsume();
@@ -520,7 +520,7 @@ void Adaptation::Icap::ModXact::stopBackup()
     if (!virginBodySending.active())
         return;
 
-    debugs(93, 7, "will no longer backup" << status());
+    debugs(93, 7, "will no longer backup " << status());
     virginBodySending.disable();
     virginConsume();
 }
@@ -581,7 +581,7 @@ void Adaptation::Icap::ModXact::echoMore()
     const size_t sizeMax = virginContentSize(virginBodySending);
     debugs(93,5, "will echo up to " << sizeMax << " bytes from " <<
            virgin.body_pipe->status());
-    debugs(93,5, "will echo up to " << sizeMax << " bytes to   " <<
+    debugs(93,5, "will echo up to " << sizeMax << " bytes to " <<
            adapted.body_pipe->status());
 
     if (sizeMax > 0) {
@@ -595,12 +595,12 @@ void Adaptation::Icap::ModXact::echoMore()
     }
 
     if (virginBodyEndReached(virginBodySending)) {
-        debugs(93, 5, "echoed all" << status());
+        debugs(93, 5, "echoed all " << status());
         stopSending(true);
     } else {
         debugs(93, 5, "has " <<
                virgin.body_pipe->buf().contentSize() << " bytes " <<
-               "and expects more to echo" << status());
+               "and expects more to echo " << status());
         // TODO: timeout if virgin or adapted pipes are broken
     }
 }
@@ -619,7 +619,7 @@ void Adaptation::Icap::ModXact::stopSending(bool nicely)
     debugs(93, 7, "Proceed with stop sending ");
 
     if (state.sending != State::sendingUndecided) {
-        debugs(93, 7, "will no longer send" << status());
+        debugs(93, 7, "will no longer send " << status());
         if (adapted.body_pipe != nullptr) {
             virginBodySending.disable();
             // we may leave debts if we were echoing and the virgin
@@ -628,7 +628,7 @@ void Adaptation::Icap::ModXact::stopSending(bool nicely)
             stopProducingFor(adapted.body_pipe, nicely && !leftDebts);
         }
     } else {
-        debugs(93, 7, "will not start sending" << status());
+        debugs(93, 7, "will not start sending " << status());
         Must(!adapted.body_pipe);
     }
 
@@ -643,13 +643,13 @@ void Adaptation::Icap::ModXact::checkConsuming()
     if (!virgin.body_pipe || !state.doneConsumingVirgin())
         return;
 
-    debugs(93, 7, "will stop consuming" << status());
+    debugs(93, 7, "will stop consuming " << status());
     stopConsumingFrom(virgin.body_pipe);
 }
 
 void Adaptation::Icap::ModXact::parseMore()
 {
-    debugs(93, 5, "have " << readBuf.length() << " bytes to parse" << status());
+    debugs(93, 5, "have " << readBuf.length() << " bytes to parse " << status());
     debugs(93, 5, "\n" << readBuf);
 
     if (state.parsingHeaders())
@@ -708,7 +708,7 @@ void Adaptation::Icap::ModXact::bypassFailure()
         reuseConnection = false; // be conservative
         cancelRead(); // may not work; and we cannot stop connecting either
         if (!doneWithIo())
-            debugs(93, 7, "Warning: bypass failed to stop I/O" << status());
+            debugs(93, 7, "Warning: bypass failed to stop I/O " << status());
     }
 
     service().noteFailure(); // we are bypassing, but this is still a failure
@@ -1218,7 +1218,7 @@ void Adaptation::Icap::ModXact::stopParsing(const bool checkUnparsedData)
     if (checkUnparsedData)
         Must(readBuf.isEmpty());
 
-    debugs(93, 7, "will no longer parse" << status());
+    debugs(93, 7, "will no longer parse " << status());
 
     delete bodyParser;
     bodyParser = nullptr;
@@ -1292,7 +1292,7 @@ Adaptation::Icap::ModXact::~ModXact()
 // internal cleanup
 void Adaptation::Icap::ModXact::swanSong()
 {
-    debugs(93, 5, "swan sings" << status());
+    debugs(93, 5, "swan sings " << status());
 
     stopWriting(false);
     stopSending(false);
