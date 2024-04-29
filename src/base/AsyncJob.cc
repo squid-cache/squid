@@ -135,7 +135,7 @@ void AsyncJob::callStart(AsyncCall &call)
 
     inCall = &call; // XXX: ugly, but safe if callStart/callEnd,Ex are paired
     debugs(inCall->debugSection, inCall->debugLevel,
-           typeName << " status in:" << status());
+           typeName << " status in: " << status());
 }
 
 void
@@ -173,7 +173,7 @@ void AsyncJob::callEnd()
     }
 
     debugs(inCall->debugSection, inCall->debugLevel,
-           typeName << " status out:" << status());
+           typeName << " status out: " << status());
     inCall = nullptr;
 }
 

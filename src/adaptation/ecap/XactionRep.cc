@@ -357,7 +357,7 @@ Adaptation::Ecap::XactionRep::doneAll() const
 void
 Adaptation::Ecap::XactionRep::sinkVb(const char *reason)
 {
-    debugs(93,4, "sink for " << reason << "; status:" << status());
+    debugs(93,4, "sink for " << reason << "; status: " << status());
 
     // we reset raw().body_pipe when we are done, so use this one for checking
     const BodyPipePointer &permPipe = theVirginRep.raw().header->body_pipe;
@@ -371,7 +371,7 @@ Adaptation::Ecap::XactionRep::sinkVb(const char *reason)
 void
 Adaptation::Ecap::XactionRep::preserveVb(const char *reason)
 {
-    debugs(93,4, "preserve for " << reason << "; status:" << status());
+    debugs(93,4, "preserve for " << reason << "; status: " << status());
 
     // we reset raw().body_pipe when we are done, so use this one for checking
     const BodyPipePointer &permPipe = theVirginRep.raw().header->body_pipe;
@@ -387,7 +387,7 @@ Adaptation::Ecap::XactionRep::preserveVb(const char *reason)
 void
 Adaptation::Ecap::XactionRep::forgetVb(const char *reason)
 {
-    debugs(93,9, "forget vb " << reason << "; status:" << status());
+    debugs(93,9, "forget vb " << reason << "; status: " << status());
 
     BodyPipePointer &p = theVirginRep.raw().body_pipe;
     if (p != nullptr && p->stillConsuming(this))
