@@ -102,11 +102,9 @@ TestEvent::testDump()
                                "  - operation: test event\n"
                                "    secs to next execution: 0.000\n"
                                "    weight: 0\n"
-                               "    callback valid: N/A\n"
                                "  - operation: test event2\n"
                                "    secs to next execution: 0.000\n"
-                               "    weight: 0\n"
-                               "    callback valid: N/A\n");
+                               "    weight: 0\n");
 
     CPPUNIT_ASSERT_EQUAL(expected, os.str());
 }

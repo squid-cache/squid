@@ -2749,7 +2749,6 @@ tests_testEvent_SOURCES = \
 	tests/testEvent.cc
 nodist_tests_testEvent_SOURCES = \
 	MemBuf.cc \
-	tests/stub_SBuf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
@@ -2758,6 +2757,7 @@ nodist_tests_testEvent_SOURCES = \
 	tests/stub_libtime.cc \
 	tests/stub_tools.cc
 tests_testEvent_LDADD = \
+	sbuf/libsbuf.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
