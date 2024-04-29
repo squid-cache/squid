@@ -268,15 +268,20 @@ EventScheduler::dump(std::ostream &yaml)
     if (last_event_ran)
         yaml << "last event to run: " << last_event_ran << "\n";
 
+    const auto savedFlags = yaml.flags();
+
     AtMostOnce header("scheduled events:\n");
     for (auto *e = tasks; e; e = e->next) {
         yaml << header <<
              indent << "- operation: " << e->name << '\n' <<
-             indent << indent << "secs to next execution: " << std::setprecision(3) << std::fixed << (e->when? e->when - current_dtime : 0) << '\n' <<
-             indent << indent << "weight: " << e->weight << '\n';
+             indent << indent << "secs to next execution: " << std::setprecision(3) << std::fixed << (e->when? e->when - current_dtime : 0) << '\n';
+
+        yaml.flags(savedFlags);
+        yaml << indent << indent << "weight: " << e->weight << '\n';
+
         if (e->arg && e->cbdata) {
             yaml << indent << indent << "callback valid: " <<
-                (cbdataReferenceValid(e->arg) ? "Yes" : "No") << '\n';
+                 (cbdataReferenceValid(e->arg) ? "Yes" : "No") << '\n';
         }
     }
 }
