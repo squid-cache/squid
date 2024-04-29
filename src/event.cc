@@ -263,10 +263,10 @@ EventScheduler::clean()
 void
 EventScheduler::dump(std::ostream &yaml)
 {
-    static const SBuf indent("  ",2);
+    static const SBuf indent("  ", 2);
 
     if (last_event_ran)
-        yaml << "last event to run: " << last_event_ran << "\n";
+        yaml << "last event: " << last_event_ran << "\n";
 
     const auto savedFlags = yaml.flags();
 
