@@ -23,7 +23,7 @@ if [ -n "$cache_file" ]; then
 fi
 
 # let's try parallelizing
-if [ -z "$pjobs" ] && which nproc >/dev/null 2>&1 ; then
+if [ -z "$pjobs" ] && nproc > /dev/null 2>&1 ; then
     ncpus=`nproc`
     pjobs="-j${ncpus}"
 fi
