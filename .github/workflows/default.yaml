@@ -44,8 +44,9 @@ jobs:
 
       - run: ./bootstrap.sh
       - run: ./configure --with-openssl
+      - run: make -j`nproc`
       - run: |
-          sudo make -j`nproc` install
+          sudo make install
           sudo chown -R nobody:nogroup /usr/local/squid
 
       - run: ./test-suite/test-functionality.sh
