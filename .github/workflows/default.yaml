@@ -94,7 +94,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-22.04 ]
+        os: [ ubuntu-22.04, macos-14 ]
 
     runs-on: ${{ matrix.os }}
 
@@ -109,10 +109,38 @@ jobs:
           sudo apt-get --quiet=2 build-dep squid
           sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin
 
+      - name: Install prerequisite MacOS packages
+        if: runner.os == 'macOS'
+        run: |
+          brew install \
+            automake coreutils cppunit gawk \
+            gnu-getopt gnu-sed grep libtool \
+            make openldap openssl cyrus-sasl
+
       - name: Checkout sources
         uses: actions/checkout@v4
 
-      - run: ./test-builds.sh
+      - name: Run build on Linux
+        if: runner.os == 'Linux'
+        run: ./test-builds.sh
+
+      - name: Run build on MacOS
+        if: runner.os == 'macOS'
+        run: |
+          eval `brew shellenv`
+          PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
+          PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig"
+          PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
+          export PKG_CONFIG_PATH
+          export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
+          export MAKE="$HOMEBREW_PREFIX/bin/gmake"
+          # ensure we use Homebrew headers and libraries
+          # this is needed because pkg-config --libs openssl points to the wrong directory
+          #   in version openssl@3: stable 3.3.0
+          export CPPFLAGS="-I$HOMEBREW_PREFIX/include${CPPFLAGS:+ $CPPFLAGS}"
+          export LDFLAGS="-L$HOMEBREW_PREFIX/lib${LDFLAGS:+ $LDFLAGS}"
+          export CFLAGS="-Wno-compound-token-split-by-macro${CFLAGS:+ $CFLAGS}" # needed fir ltdl with Xcode
+          ./test-builds.sh
 
       - name: Publish build logs
         if: success() || failure()
