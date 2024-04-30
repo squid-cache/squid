@@ -1351,17 +1351,17 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
     ClientHttpRequest *http = new ClientHttpRequest(this);
 
     http->req_sz = hp->messageHeaderSize();
-    Http::Stream *result = new Http::Stream(clientConnection, http);
+    auto result = new Http::Stream(clientConnection, http);
 
     StoreIOBuffer tempBuffer;
     tempBuffer.data = result->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
 
-    ClientStreamData newServer = new clientReplyContext(http);
+    auto newServer = new clientReplyContext(http);
     ClientStreamData newClient = result;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, clientSocketRecipient,
-                     clientSocketDetach, std::move(newClient), tempBuffer);
+                     clientSocketDetach, newClient, tempBuffer);
 
     /* set url */
     debugs(33,5, "Prepare absolute URL from " <<
