@@ -203,8 +203,10 @@ AsyncJob::ReportAllJobs(StoreEntry *e)
         os << indent << "type: '" << job->typeName << "'\n";
         const char *status = job->status();
         if (status && strlen(status))
-            os << indent << "status: " << job->status() << "\n";
+            os << indent << "status: '" << job->status() << "'\n";
         os << indent << "started: " << (job->started_ ? "Yes": "No" ) << '\n';
+        if (job->stopReason)
+            os << indent << "stopped: \'" << job->stopReason << "'\n";
     }
 }
 
