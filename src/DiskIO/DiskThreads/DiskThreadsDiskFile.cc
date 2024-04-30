@@ -247,7 +247,7 @@ DiskThreadsDiskFile::ReadDone(int fd, const char *buf, int len, int errflag, voi
 }
 
 void
-DiskThreadsDiskFile::readDone(int rvfd, const char *buf, int len, int errflag, RefCount<ReadRequest> request)
+DiskThreadsDiskFile::readDone(int rvfd, const char *buf, int len, int errflag, const RefCount<ReadRequest> &request)
 {
     debugs(79, 3, "DiskThreadsDiskFile::readDone: FD " << rvfd);
     assert (fd == rvfd);
@@ -279,7 +279,7 @@ DiskThreadsDiskFile::readDone(int rvfd, const char *buf, int len, int errflag, R
 
     --inProgressIOs;
 
-    ioRequestor->readCompleted(buf, rlen, errflag, std::move(request));
+    ioRequestor->readCompleted(buf, rlen, errflag, request);
 }
 
 void
