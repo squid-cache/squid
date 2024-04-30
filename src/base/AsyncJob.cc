@@ -197,7 +197,7 @@ AsyncJob::ReportAllJobs(StoreEntry *e)
 {
     PackableStream os(*e);
     // this loop uses YAML syntax, but AsyncJob::status() still needs to be adjusted to use YAML
-    const std::string indent("  ");
+    const SBuf indent("  ");
     for (const auto job: AllJobs()) {
         os << job->id << ":\n";
         os << indent << "type: " << job->typeName << '\n';
