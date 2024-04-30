@@ -163,7 +163,7 @@ class esiChoose : public ESIElement
     MEMPROXY_CLASS(esiChoose);
 
 public:
-    esiChoose(esiTreeParentPtr);
+    esiChoose(const esiTreeParentPtr &);
     ~esiChoose() override;
 
     void render(ESISegment::Pointer) override;
@@ -1889,10 +1889,10 @@ esiChoose::~esiChoose()
     FinishAllElements(elements); // finish if not already done
 }
 
-esiChoose::esiChoose(esiTreeParentPtr aParent) :
+esiChoose::esiChoose(const esiTreeParentPtr & aParent) :
     elements(),
     chosenelement(-1),
-    parent(std::move(aParent))
+    parent(aParent)
 {}
 
 void
