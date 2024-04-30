@@ -279,7 +279,7 @@ ClientHttpRequest::~ClientHttpRequest()
  */
 int
 clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * streamcallback,
-                   CSD * streamdetach, ClientStreamData streamdata, HttpHeader const *header,
+                   CSD * streamdetach, const ClientStreamData &streamdata, HttpHeader const *header,
                    char *tailbuf, size_t taillen, const MasterXaction::Pointer &mx)
 {
     size_t url_sz;
@@ -295,7 +295,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     /* client stream setup */
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, new clientReplyContext(http), streamcallback,
-                     streamdetach, std::move(streamdata), tempBuffer);
+                     streamdetach, streamdata, tempBuffer);
     /* make it visible in the 'current acctive requests list' */
     /* Set flags */
     /* internal requests only makes sense in an
