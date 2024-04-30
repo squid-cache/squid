@@ -200,7 +200,7 @@ AsyncJob::ReportAllJobs(StoreEntry *e)
     const SBuf indent("  ");
     for (const auto job: AllJobs()) {
         os << job->id << ":\n";
-        os << indent << "type: " << job->typeName << '\n';
+        os << indent << "type: '" << job->typeName << "'\n";
         const char *status = job->status();
         if (status && strlen(status))
             os << indent << "status: " << job->status() << "\n";
