@@ -284,6 +284,7 @@ const char *Adaptation::Ecap::ServiceRep::status() const
     static MemBuf buf;
 
     buf.reset();
+    buf.append("[", 1);
 
     if (up())
         buf.append("up", 2);
@@ -293,6 +294,7 @@ const char *Adaptation::Ecap::ServiceRep::status() const
     if (detached())
         buf.append(",detached", 9);
 
+    buf.append("]", 1);
     buf.terminate();
 
     return buf.content();
