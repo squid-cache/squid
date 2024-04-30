@@ -1351,13 +1351,13 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
     ClientHttpRequest *http = new ClientHttpRequest(this);
 
     http->req_sz = hp->messageHeaderSize();
-    auto result = new Http::Stream(clientConnection, http);
+    Http::Stream *result = new Http::Stream(clientConnection, http);
 
     StoreIOBuffer tempBuffer;
     tempBuffer.data = result->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
 
-    auto newServer = new clientReplyContext(http);
+    ClientStreamData newServer = new clientReplyContext(http);
     ClientStreamData newClient = result;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, clientSocketRecipient,
