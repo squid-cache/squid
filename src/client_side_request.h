@@ -28,7 +28,7 @@ class ConnStateData;
 class MemObject;
 
 /* client_side_request.c - client side request related routines (pure logic) */
-int clientBeginRequest(const HttpRequestMethod&, char const *, CSCB *, CSD *, const ClientStreamData&, HttpHeader const *, char *, size_t, const MasterXactionPointer &);
+int clientBeginRequest(const HttpRequestMethod &, char const *, CSCB *, CSD *, const ClientStreamData &, HttpHeader const *, char *, size_t, const MasterXactionPointer &);
 
 class ClientHttpRequest
 #if USE_ADAPTATION
