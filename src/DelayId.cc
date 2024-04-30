@@ -38,9 +38,9 @@ DelayId::~DelayId ()
 {}
 
 void
-DelayId::compositePosition(DelayIdComposite::Pointer newPosition)
+DelayId::compositePosition(const DelayIdComposite::Pointer &newPosition)
 {
-    compositeId = std::move(newPosition);
+    compositeId = newPosition;
 }
 
 unsigned short
