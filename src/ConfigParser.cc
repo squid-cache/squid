@@ -345,11 +345,7 @@ ConfigParser::NextToken()
                 return nullptr;
             }
 
-            if (!path) {
-                debugs(3, DBG_CRITICAL, "FATAL: filename missing: " << token);
-                self_destruct();
-                return nullptr;
-            }
+            assert(path); // a QuotedToken cannot be nil
 
             // The next token in current cfg file line must be a ")"
             char *end = NextToken();
