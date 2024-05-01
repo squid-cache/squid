@@ -19,7 +19,6 @@
 #include "mgr/FunAction.h"
 #include "mgr/Request.h"
 #include "Store.h"
-#include "tools.h"
 
 Mgr::FunAction::Pointer
 Mgr::FunAction::Create(const Command::Pointer &aCmd, OBJH* aHandler)
@@ -49,10 +48,7 @@ Mgr::FunAction::dump(StoreEntry* entry)
 {
     debugs(16, 5, MYNAME);
     Must(entry != nullptr);
-    if (UsingSmp())
-        storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
+
     handler(entry);
-    if (atomic() && UsingSmp())
-        storeAppendPrintf(entry, "...\n");
 }
 
