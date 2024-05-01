@@ -44,7 +44,7 @@ jobs:
 
       - run: ./bootstrap.sh
       - run: ./configure --with-openssl
-      - run: make -j2
+      - run: make -j`nproc`
       - run: |
           sudo make install
           sudo chown -R nobody:nogroup /usr/local/squid
