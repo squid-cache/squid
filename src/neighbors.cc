@@ -31,6 +31,7 @@
 #include "ip/tools.h"
 #include "ipcache.h"
 #include "MemObject.h"
+#include "mgr/Action.h"
 #include "mgr/Registration.h"
 #include "multicast.h"
 #include "neighbors.h"
@@ -69,7 +70,6 @@ static void peerCountMcastPeersCreateAndSend(CachePeer *p);
 static IRCB peerCountHandleIcpReply;
 
 static void neighborIgnoreNonPeer(const Ip::Address &, icp_opcode);
-static OBJH neighborDumpPeers;
 static void dump_peers(StoreEntry *, CachePeers *);
 
 static unsigned short echo_port;
@@ -482,12 +482,23 @@ getDefaultParent(PeerSelector *ps)
     return nullptr;
 }
 
+class CachePeersAction : public Mgr::Action
+{
+    protected:
+    CachePeersAction(const Mgr::CommandPointer &aCmd): Action(aCmd) {}
+    public:
+    static Pointer Create(const Mgr::CommandPointer &aCmd) { return new CachePeersAction(aCmd); };
+    virtual void dump(StoreEntry *entry) override { dump_peers(entry, Config.peers); }
+    virtual const char *contentType() const override { return "application/yaml"; }
+};
+
+
 static void
 neighborsRegisterWithCacheManager()
 {
     Mgr::RegisterAction("server_list",
                         "Peer Cache Statistics",
-                        neighborDumpPeers, 0, 1);
+                        &CachePeersAction::Create, 0, 1);
 }
 
 void
@@ -1343,12 +1354,6 @@ peerCountHandleIcpReply(CachePeer * p, peer_t, AnyP::ProtocolType proto, void *,
         rtt_av_factor = RTT_BACKGROUND_AV_FACTOR;
 
     p->stats.rtt = Math::intAverage(p->stats.rtt, rtt, psstate->ping.n_recv, rtt_av_factor);
-}
-
-static void
-neighborDumpPeers(StoreEntry * sentry)
-{
-    dump_peers(sentry, Config.peers);
 }
 
 static void
