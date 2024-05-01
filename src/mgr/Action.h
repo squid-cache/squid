@@ -63,14 +63,15 @@ public:
     /// combined data should be written at the end of the coordinated response
     virtual bool aggregatable() const { return true; } // most kid classes are
 
+    /// whether the action has been converted to yaml format. Determines content-type
+    virtual bool is_yaml() const { return false; }
+
     bool atomic() const; ///< dump() call writes everything before returning
     const char *name() const; ///< label as seen in the cache manager menu
     const Command &command() const; ///< the cause of this action
 
     StoreEntry *createStoreEntry() const; ///< creates store entry from params
 
-    ///< Content-Type: header value for this report
-    virtual const char *contentType() const {return "text/plain;charset=utf-8";}
 
 protected:
     /// calculate and keep local action-specific information
@@ -88,6 +89,9 @@ private:
 private:
     Action(const Action &); // not implemented
     Action &operator= (const Action &); // not implemented
+
+    ///< Content-Type: header value for this report
+    const char *contentType() const { return is_yaml() ? "application/yaml" : "text/plain;charset=utf-8"; }
 };
 
 } // namespace Mgr
