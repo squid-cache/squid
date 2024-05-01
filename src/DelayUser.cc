@@ -139,7 +139,7 @@ DelayUserBucket::stats (StoreEntry *entry) const
     theBucket.stats(entry);
 }
 
-DelayUser::Id::Id(DelayUser::Pointer aDelayUser, Auth::User::Pointer aUser) : theUser(aDelayUser)
+DelayUser::Id::Id(const DelayUser::Pointer &aDelayUser, const Auth::User::Pointer &aUser) : theUser(aDelayUser)
 {
     theBucket = new DelayUserBucket(aUser);
     DelayUserBucket::Pointer const *existing = theUser->buckets.find(theBucket, DelayUserCmp);
