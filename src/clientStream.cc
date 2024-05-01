@@ -110,7 +110,7 @@ clientStreamNode::~clientStreamNode()
  */
 void
 clientStreamInit(dlink_list * list, CSR * func, CSD * rdetach, CSS * readstatus,
-                 ClientStreamData readdata, CSCB * callback, CSD * cdetach, const ClientStreamData &callbackdata,
+                 const ClientStreamData &readdata, CSCB * callback, CSD * cdetach, const ClientStreamData &callbackdata,
                  StoreIOBuffer tailBuffer)
 {
     clientStreamNode *temp = new clientStreamNode(func, nullptr, rdetach, readstatus, readdata);
