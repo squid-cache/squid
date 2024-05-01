@@ -278,8 +278,8 @@ ClientHttpRequest::~ClientHttpRequest()
  * determined by the user
  */
 int
-clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * streamcallback,
-                   CSD * streamdetach, ClientStreamData streamdata, HttpHeader const *header,
+clientBeginRequest(const HttpRequestMethod &method, char const *url, CSCB *streamcallback,
+                   CSD *streamdetach, const ClientStreamData &streamdata, const HttpHeader *header,
                    char *tailbuf, size_t taillen, const MasterXaction::Pointer &mx)
 {
     size_t url_sz;
