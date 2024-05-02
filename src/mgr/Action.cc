@@ -111,11 +111,19 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 
         entry->replaceHttpReply(rep);
     }
-    if (!aggregatable() && is_yaml() && UsingSmp())
-        storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
+    if (!aggregatable() &&  UsingSmp()) {
+        if (is_yaml())
+            storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
+        else
+            storeAppendPrintf(entry, "by kid %d{\n", KidIdentifier);
+    }
     dump(entry);
-    if (!aggregatable() && is_yaml() && UsingSmp() && atomic())
-        storeAppendPrintf(entry, "...\n");
+    if (!aggregatable() && UsingSmp() && atomic()) {
+        if (is_yaml())
+            storeAppendPrintf(entry, "...\n");
+        else
+            storeAppendPrintf(entry, "} by kid %d\n", KidIdentifier);
+    }
 
     entry->flush();
 
