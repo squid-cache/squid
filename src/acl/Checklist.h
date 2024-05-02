@@ -158,8 +158,9 @@ public:
     void setLastCheckedName(const SBuf &name) { lastCheckedName_ = name; }
 
 private:
+    /// Sets the final answer (if not set already) and prints the reason for that answer.
     /// Calls non-blocking check callback with the answer and destroys self.
-    void checkCallback(const Acl::Answer &answer);
+    void checkCallback(const Acl::Answer &answer, const char *reason);
 
     void matchAndFinish();
 
