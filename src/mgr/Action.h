@@ -73,7 +73,6 @@ public:
 
     StoreEntry *createStoreEntry() const; ///< creates store entry from params
 
-
 protected:
     /// calculate and keep local action-specific information
     virtual void collect() {}
