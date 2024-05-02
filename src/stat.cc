@@ -24,17 +24,19 @@
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "IoStats.h"
+#include "ipc/UdsOp.h"
 #include "mem/Pool.h"
 #include "mem/Stats.h"
 #include "mem_node.h"
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "mgr/CountersAction.h"
-#include "mgr/FunAction.h"
+#include "mgr/Filler.h"
 #include "mgr/InfoAction.h"
 #include "mgr/IntervalAction.h"
 #include "mgr/IoAction.h"
 #include "mgr/Registration.h"
+#include "mgr/Request.h"
 #include "mgr/ServiceTimesAction.h"
 #include "neighbors.h"
 #include "PeerDigest.h"
@@ -64,23 +66,108 @@
 #include "StoreSearch.h"
 
 typedef int STOBJFLT(const StoreEntry *);
+static void statStoreEntry(MemBuf *, StoreEntry *);
 
-class StatObjectsState
+struct StatObjectsActionState
 {
-    CBDATA_CLASS(StatObjectsState);
-
-public:
-    StoreEntry *sentry;
-    STOBJFLT *filter;
-    StoreSearchPointer theSearch;
-    OBJH *onCompleteHandler;
+    StoreEntry *sentry = nullptr;
+    STOBJFLT *filter = nullptr;
+    StoreSearchPointer theSearch = nullptr;
 };
 
-static void statObjectsStart(StoreEntry *, STOBJFLT * = nullptr, OBJH * = nullptr);
-static void onObjectsDumpComplete(StoreEntry * e)
+class StatObjectsAction : public Mgr::Action, public StatObjectsActionState
 {
-    storeAppendPrintf(e, "} by kid %d\n", KidIdentifier);
+    CBDATA_CLASS(StatObjectsAction);
+
+    public:
+    StatObjectsAction(const Mgr::CommandPointer &);
+    virtual bool aggregatable() const override { return false; }
+
+    public:
+    static Pointer Create(const Mgr::CommandPointer &cmd);
+    void respond(const Mgr::Request& request) override;
+    void dump(StoreEntry *entry) override;
+    void onComplete() { closeKidSection(sentry); }
+    static void performStatObjects(void *data); // data is this
+
+
+};
+
+StatObjectsAction::StatObjectsAction(const Mgr::CommandPointer &cmd_) :
+    Action(cmd_)
+{}
+
+StatObjectsAction::Pointer
+StatObjectsAction::Create(const Mgr::CommandPointer &cmd)
+{
+    return new StatObjectsAction(cmd);
 }
+
+void
+StatObjectsAction::respond(const Mgr::Request& request)
+{
+    debugs(16, 5, MYNAME);
+    Ipc::ImportFdIntoComm(request.conn, SOCK_STREAM, IPPROTO_TCP, Ipc::fdnHttpSocket);
+    Must(Comm::IsConnOpen(request.conn));
+    Must(request.requestId != 0);
+    AsyncJob::Start(new Mgr::Filler(this, request.conn, request.requestId));
+}
+
+void
+StatObjectsAction::dump(StoreEntry *entry)
+{
+    sentry = entry;
+    sentry->lock("statObjects");
+    theSearch = Store::Root().search();
+    eventAdd("statObjects", &performStatObjects, this, 0.0, 1);
+}
+
+void
+StatObjectsAction::performStatObjects(void *data)
+{
+    auto state = static_cast<StatObjectsAction *>(data);
+    StoreEntry *e;
+
+    if (state->theSearch->isDone()) {
+        state->onComplete();
+        state->sentry->complete();
+        state->sentry->unlock("statObjects2+isDone");
+        delete state;
+        return;
+    } else if (EBIT_TEST(state->sentry->flags, ENTRY_ABORTED)) {
+        state->sentry->unlock("statObjects2+aborted");
+        delete state;
+        return;
+    } else if (state->sentry->checkDeferRead(-1)) {
+        state->sentry->flush();
+        eventAdd("statObjects2", &performStatObjects, state, 0.1, 1);
+        return;
+    }
+
+    state->sentry->buffer();
+    size_t statCount = 0;
+    MemBuf mb;
+    mb.init();
+
+    while (statCount++ < static_cast<size_t>(Config.Store.objectsPerBucket) && state->
+            theSearch->next()) {
+        e = state->theSearch->currentItem();
+
+        if (state->filter && 0 == state->filter(e))
+            continue;
+
+        statStoreEntry(&mb, e);
+    }
+
+    if (mb.size)
+        state->sentry->append(mb.buf, mb.size);
+    mb.clean();
+
+    eventAdd("statObjects2", performStatObjects, state, 0.0, 1);
+}
+
+static void
+statObjectsStart(StoreEntry *, STOBJFLT * = nullptr);
 
 /* LOCALS */
 static const char *describeStatuses(const StoreEntry *);
@@ -90,7 +177,6 @@ static void statAvgDump(StoreEntry *, int minutes, int hours);
 static void statGraphDump(StoreEntry *);
 #endif
 static double statPctileSvc(double, int, int);
-static void statStoreEntry(MemBuf * mb, StoreEntry * e);
 static double statCPUUsage(int minutes);
 static OBJH stat_vmobjects_get;
 static OBJH statOpenfdObj;
@@ -123,7 +209,7 @@ StatCounters CountHist[N_COUNT_HIST];
 static int NCountHist = 0;
 static StatCounters CountHourHist[N_COUNT_HOUR_HIST];
 static int NCountHourHist = 0;
-CBDATA_CLASS_INIT(StatObjectsState);
+CBDATA_CLASS_INIT(StatObjectsAction);
 
 extern unsigned int mem_pool_alloc_calls;
 extern unsigned int mem_pool_free_calls;
@@ -329,12 +415,10 @@ statStoreEntry(MemBuf * mb, StoreEntry * e)
 static void
 statObjects(void *data)
 {
-    StatObjectsState *state = static_cast<StatObjectsState *>(data);
+    auto state = static_cast<StatObjectsActionState *>(data);
     StoreEntry *e;
 
     if (state->theSearch->isDone()) {
-        if (state->onCompleteHandler)
-            state->onCompleteHandler(state->sentry);
         state->sentry->complete();
         state->sentry->unlock("statObjects+isDone");
         delete state;
@@ -372,25 +456,23 @@ statObjects(void *data)
 }
 
 static void
-statObjectsStart(StoreEntry *sentry, STOBJFLT *filter, OBJH *onComplete)
+statObjectsStart(StoreEntry *sentry, STOBJFLT *filter)
 {
-    StatObjectsState *state = new StatObjectsState;
+    auto state = new StatObjectsActionState;
     state->sentry = sentry;
     state->filter = filter;
 
     sentry->lock("statObjects");
     state->theSearch = Store::Root().search();
 
-    state->onCompleteHandler = onComplete;
-
     eventAdd("statObjects", statObjects, state, 0.0, 1);
 }
 
-static void
-stat_objects_get(StoreEntry * sentry)
-{
-    statObjectsStart(sentry, nullptr, onObjectsDumpComplete);
-}
+// static void
+// stat_objects_get(StoreEntry * sentry)
+// {
+//     statObjectsStart(sentry, nullptr);
+// }
 
 static int
 statObjectsVmFilter(const StoreEntry * e)
@@ -401,7 +483,7 @@ statObjectsVmFilter(const StoreEntry * e)
 static void
 stat_vmobjects_get(StoreEntry * sentry)
 {
-    statObjectsStart(sentry, statObjectsVmFilter, onObjectsDumpComplete);
+    statObjectsStart(sentry, statObjectsVmFilter);
 }
 
 static int
@@ -419,7 +501,7 @@ statObjectsOpenfdFilter(const StoreEntry * e)
 static void
 statOpenfdObj(StoreEntry * sentry)
 {
-    statObjectsStart(sentry, statObjectsOpenfdFilter, onObjectsDumpComplete);
+    statObjectsStart(sentry, statObjectsOpenfdFilter);
 }
 
 #if XMALLOC_STATISTICS
@@ -1178,7 +1260,8 @@ statRegisterWithCacheManager(void)
                         &Mgr::ServiceTimesAction::Create, 0, 1);
     Mgr::RegisterAction("filedescriptors", "Process Filedescriptor Allocation",
                         fde::DumpStats, 0, 1);
-    Mgr::RegisterAction("objects", "All Cache Objects", stat_objects_get, 0, 0);
+    // Mgr::RegisterAction("objects", "All Cache Objects", stat_objects_get, 0, 0);
+    Mgr::RegisterAction("objects", "All Cache Objects", &StatObjectsAction::Create, 0, 0);
     Mgr::RegisterAction("vm_objects", "In-Memory and In-Transit Objects",
                         stat_vmobjects_get, 0, 0);
     Mgr::RegisterAction("io", "Server-side network read() size histograms",
