@@ -1444,9 +1444,13 @@ HttpStateData::writeReplyBody()
     if (parsedWhole) {
         markParsedVirginReplyAsWhole(parsedWhole);
 #if USE_ADAPTATION
+        // TODO: Add state to assert that adaptOrFinalizeReply() has been called, making
+        // false adaptationAccessCheckPending value meaningful and removing "probably".
+        Assure(!adaptationAccessCheckPending); // startedAdaptation value is probably meaningful
         if (!startedAdaptation)
 #endif
             fwd->markStoredReplyAsWhole(parsedWhole);
+        // else endAdaptedBodyConsumption() is responsible for calling fwd->markStoredReplyAsWhole()
     } else if (eof)
         markPrematureReplyBodyEofFailure();
 }
