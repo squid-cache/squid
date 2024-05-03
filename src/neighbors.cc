@@ -1430,6 +1430,8 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
             opts.push_back("no-purge-clr");
         if (p->options.htcp_only_clr)
             opts.push_back("only-clr");
+        if (p->options.htcp_forward_clr)
+            opts.push_back("forward-clr");
         os << AsList(opts).prefixedBy("=").delimitedBy(",");
     }
 #endif
