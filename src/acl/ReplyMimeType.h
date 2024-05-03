@@ -21,7 +21,7 @@ Acl::ReplyHeaderCheck<Http::HdrType::CONTENT_TYPE>::match(ACLChecklist * const c
 {
     const auto checklist = Filled(ch);
 
-    char const *theHeader = checklist->reply->header.getStr(Http::HdrType::CONTENT_TYPE);
+    auto theHeader = checklist->reply().header.getStr(Http::HdrType::CONTENT_TYPE);
 
     if (nullptr == theHeader)
         theHeader = "";
