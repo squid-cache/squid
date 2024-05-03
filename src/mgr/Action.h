@@ -83,12 +83,6 @@ protected:
      */
     virtual void dump(StoreEntry *) {}
 
-    /// for non-aggregatable actions in SMP mode, open each kid's section
-    void openKidSection(StoreEntry *);
-    /// for non-aggregatable actions in SMP mode, close each kid's section
-    /// For non-atomic actions, the responsibility to close falls on the action itself
-    void closeKidSection(StoreEntry *);
-
 private:
     const CommandPointer cmd; ///< the command that caused this action
 
@@ -99,6 +93,12 @@ private:
     ///< Content-Type: header value for this report
     const char *contentType() const { return is_yaml() ? "application/yaml" : "text/plain;charset=utf-8"; }
 };
+
+/// for non-aggregatable actions in SMP mode, open each kid's section
+void openKidSection(StoreEntry *, bool is_yaml);
+/// for non-aggregatable actions in SMP mode, close each kid's section
+/// For non-atomic actions, the responsibility to close falls on the action itself
+void closeKidSection(StoreEntry *, bool is_yaml);
 
 } // namespace Mgr
 

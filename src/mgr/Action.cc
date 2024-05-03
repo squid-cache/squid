@@ -112,10 +112,10 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
         entry->replaceHttpReply(rep);
     }
     if (!aggregatable() &&  UsingSmp())
-        openKidSection(entry);
+        openKidSection(entry, is_yaml());
     dump(entry);
     if (!aggregatable() && UsingSmp() && atomic())
-        closeKidSection(entry);
+        closeKidSection(entry, is_yaml());
 
     entry->flush();
 
@@ -124,17 +124,17 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 }
 
 void
-Mgr::Action::openKidSection(StoreEntry *entry)
+Mgr::openKidSection(StoreEntry *entry, const bool is_yaml)
 {
-    if (is_yaml())
+    if (is_yaml)
         storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
     else
         storeAppendPrintf(entry, "by kid %d {\n", KidIdentifier);
 }
 
-void Mgr::Action::closeKidSection(StoreEntry *entry)
+void Mgr::closeKidSection(StoreEntry *entry, const bool is_yaml)
 {
-    if (is_yaml())
+    if (is_yaml)
         storeAppendPrintf(entry, "...\n");
     else
         storeAppendPrintf(entry, "} by kid %d\n", KidIdentifier);
