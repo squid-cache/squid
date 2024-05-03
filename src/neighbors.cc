@@ -1421,7 +1421,7 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
 #if USE_HTCP
     if (p->options.htcp) {
         os << " htcp";
-        std::vector<const char *> opts{};
+        std::vector<const char *, PoolingAllocator<const char *> > opts;
         if (p->options.htcp_oldsquid)
             opts.push_back("oldsquid");
         if (p->options.htcp_no_clr)
