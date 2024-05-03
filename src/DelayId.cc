@@ -38,7 +38,7 @@ DelayId::~DelayId ()
 {}
 
 void
-DelayId::compositePosition(DelayIdComposite::Pointer newPosition)
+DelayId::compositePosition(const DelayIdComposite::Pointer &newPosition)
 {
     compositeId = newPosition;
 }
