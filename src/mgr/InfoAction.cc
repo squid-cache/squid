@@ -144,11 +144,9 @@ Mgr::InfoAction::dump(StoreEntry* entry)
 
 #if XMALLOC_STATISTICS
     // TODO: these should be moved to their own report
-    if (UsingSmp())
-        storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
+    Mgr::openKidSection(entry, false);
     DumpMallocStatistics(entry);
-    if (UsingSmp())
-        storeAppendPrintf(entry, "...\n");
+    Mgr::closeKidSection(entry, false);
 #endif
     if (IamPrimaryProcess()) {
         storeAppendPrintf(entry, "---\n");
