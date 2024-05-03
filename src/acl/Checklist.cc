@@ -23,7 +23,7 @@ ACLChecklist::prepNonBlocking()
     assert(accessList);
 
     if (callerGone()) {
-        checkCallback(ACCESS_DUNNO, "caller is gone"); // the answer does not really matter
+        checkCallback("caller is gone"); // the answer does not really matter
         return false;
     }
 
@@ -34,7 +34,7 @@ ACLChecklist::prepNonBlocking()
 
     if (!cbdataReferenceValid(accessList)) {
         cbdataReferenceDone(accessList);
-        checkCallback(ACCESS_DUNNO, "accessList is invalid");
+        checkCallback("accessList is invalid");
         return false;
     }
 
@@ -50,7 +50,7 @@ ACLChecklist::completeNonBlocking()
         calcImplicitAnswer();
 
     cbdataReferenceDone(accessList);
-    checkCallback(currentAnswer(), nullptr);
+    checkCallback(nullptr);
 }
 
 void
@@ -154,19 +154,19 @@ ACLChecklist::goAsync(AsyncStarter starter, const Acl::Node &acl)
 // ACLFilledChecklist overwrites this to unclock something before we
 // "delete this"
 void
-ACLChecklist::checkCallback(const Acl::Answer &answer, const char *reason)
+ACLChecklist::checkCallback(const char *abortReason)
 {
-    debugs(28, 3, this << " answer=" << answer);
+    ACLCB *callback_;
+    void *cbdata_;
 
-    if (!finished()) {
-        Assure(reason);
-        markFinished(answer, reason);
-    }
+    if (abortReason)
+        markFinished(ACCESS_DUNNO, abortReason);
 
-    const auto callback_ = callback;
+    Assure(finished());
+
+    callback_ = callback;
     callback = nullptr;
 
-    void *cbdata_ = nullptr;
     if (cbdataReferenceValidDone(callback_data, &cbdata_))
         callback_(currentAnswer(), cbdata_);
 
@@ -216,7 +216,7 @@ ACLChecklist::nonBlockingCheck(ACLCB * callback_, void *callback_data_)
      * We cannot select a sensible default for all callers here. */
     if (accessList == nullptr) {
         debugs(28, DBG_CRITICAL, "SECURITY ERROR: ACL " << this << " checked with nothing to match against!!");
-        checkCallback(ACCESS_DUNNO, "accessList is nil");
+        checkCallback("accessList is nil");
         return;
     }
 
