@@ -79,7 +79,7 @@ public:
 static void statObjectsStart(StoreEntry *, STOBJFLT * = nullptr, OBJH * = nullptr);
 static void onObjectsDumpComplete(StoreEntry * e)
 {
-    storeAppendPrintf(e, "} by kid %d\n", KidIdentifier);
+    Mgr::closeKidSection(e, false);
 }
 
 /* LOCALS */
