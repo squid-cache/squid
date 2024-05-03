@@ -111,10 +111,10 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 
         entry->replaceHttpReply(rep);
     }
-    if (!aggregatable() &&  UsingSmp())
+    if (!aggregatable())
         openKidSection(entry, is_yaml());
     dump(entry);
-    if (!aggregatable() && UsingSmp() && atomic())
+    if (!aggregatable() && atomic())
         closeKidSection(entry, is_yaml());
 
     entry->flush();
@@ -126,6 +126,8 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 void
 Mgr::openKidSection(StoreEntry *entry, const bool is_yaml)
 {
+    if (!UsingSmp())
+        return;
     if (is_yaml)
         storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
     else
@@ -134,6 +136,8 @@ Mgr::openKidSection(StoreEntry *entry, const bool is_yaml)
 
 void Mgr::closeKidSection(StoreEntry *entry, const bool is_yaml)
 {
+    if (!UsingSmp())
+        return;
     if (is_yaml)
         storeAppendPrintf(entry, "...\n");
     else
