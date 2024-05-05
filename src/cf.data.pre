@@ -1276,32 +1276,79 @@ ENDIF
 
 	acl aclname ident [-i] username ...
 	  # string match on the ident user identifier [slow]
-	  # use REQUIRED to accept any non-null user identifier.
+	  #
+	  # A special REQUIRED username matches transactions associated with a
+	  # client-to-Squid connection for which Squid has successfully obtained
+	  # user identification, regardless of the actual user identifier value.
+	  # The only exception to this rule is a user identifier value consisting
+	  # of a single dash character; REQUIRED does not match it (see below).
+	  #
+	  # Unlike ident_regex, this ACL never matches transactions associated
+	  # with a failed user identification attempt, regardless of the
+	  # configured ACL username.
+	  #
+	  # Unlike ident_regex, this ACL never matches transactions associated
+	  # with a successful user identification attempt where the user
+	  # identifier is a single dash character ("-"), regardless of the
+	  # configured username.
+	  #
+	  # See ident_regex documentation for other important details about user
+	  # identification matching, triggers, and caching (common to both ACLs).
+
 	acl aclname ident_regex [-i] pattern ...
 	  # regex match against the ident user identifier [slow]
 	  #
-	  # If necessary, evaluation of this ACL triggers a transaction with an
-	  # Authentication Server (a.k.a. Ident server; see RFC 1413) to identify
-	  # the user behind client-to-Squid TCP connection. The results of that
-	  # transaction (successful or otherwise) are cached for the lifetime the
-	  # client-to-Squid TCP connection at most one attempt to identify connection.
-	  # user is made.
+	  # A configured '^-$' pattern (or any equivalent regex) matches:
+	  #   - Transactions associated with a failed user identification attempt.
+	  #   - A successfully identified client-to-Squid connection user with a
+	  #     a user-id equal to a single dash character.
 	  #
-	  # A configured dash ('-') value (or any equivalent regex) matches:
-	  #    - A connection for which Squid has failed to obtain user identity,
-	  #      including cases where Authentication Server returned an invalidd
-	  #      (e.g., empty) user-id.
-	  #    - A connection for which Authentication Server returned a dash character
-	  #      as a user-id.
+	  # Unlike ident ACL, ident_regex ACL does not treat the REQUIRED pattern
+	  # value specially.
 	  #
-	  # NOTE: there are imporant cases when dash (or any equivalent regex) does not match:
-	  #    - A transaction that lacks access to a client-to-Squid connection (in the ACL evaluation context).
-	  #      This happens if this ACL is used for transactions that failed to accept a TCP connection
-	  #      and for transactions that were not triggered by an accepted TCP connection.
-	  #    - A connection for which Squid has not obtained user identity yet.
-	  #      This may happen if this ACL is used with a directive that does not support slow ACLs.
-	  #      Such use cases do not trigger a transaction with an Authentication Server and do not
-	  #      update the user-id cache.
+	  # The following paragraphs apply to both ident_regex and ident ACLs.
+	  #
+	  # Under normal conditions, the first of the following events triggers an
+	  # Ident transaction with an Authentication Server (a.k.a. Ident server;
+	  # see RFC 1413) to identify the user behind the client-to-Squid TCP
+	  # connection:
+	  #   - an ident ACL is evaluated
+	  #   - an ident_regex ACL is evaluated
+	  #   - an external ACL with %ui or deprecated %IDENT parameter is evaluated
+	  #   - ident_lookup_access allow rule matches
+	  #
+	  # The results of that Ident transaction (successful or otherwise) are
+	  # stored in Ident cache for the client-to-Squid TCP connection lifetime.
+	  # Concurrent ACL evaluations (associated with the same connection)
+	  # wait for and then reuse cached results. Subsequent ACL evaluations
+	  # reuse cached results immediately, without revalidation.
+	  #
+	  # Successful Authentication Server transactions cache the received
+	  # user-id component of the ident-reply response (see RFC 1413).
+	  #
+	  # Failed Authentication Server transactions cache failure indication.
+	  # Failures include (but are not limited to) cases where Authentication
+	  # Server responds with an invalid (e.g., empty) user-id component.
+	  #
+	  # The following problematic ACL evaluation contexts do not result in an
+	  # ACL match or mismatch. Instead, Squid aborts evaluating rules for the
+	  # configured directive and follows hard-coded directive-specific logic
+	  # (e.g., http_reply_access is denied but miss_access is allowed).
+	  #
+	  #   - ACL evaluation context lacks client-to-Squid connection info. This
+	  #     happens when the ACL is evaluated for transactions that failed to
+	  #     accept a TCP connection or that are not associated with an
+	  #     accepted TCP connection. Squid logs a level-1 ERROR about its
+	  #     inability to "start ident lookup" in this case.
+	  #
+	  #   - Squid has not started (or started but has not finished) obtaining
+	  #     user identity yet and the corresponding configuration directive
+	  #     does not support "slow" ACLs.
+	  #
+	  # In the above problematic cases, Squid does not start a transaction
+	  # with an Authentication Server and does not update Ident cache.
+	  #
+	  # Ident cache is not shared among SMP workers.
 
 	acl aclname proxy_auth [-i] username ...
 	acl aclname proxy_auth_regex [-i] pattern ...
