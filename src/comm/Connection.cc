@@ -183,10 +183,10 @@ Comm::Connection::setIdent(const Ident::User &anIdent)
 {
     static const SBuf nil("nil");
     if (ident) {
-       debugs(5, 3, "ignore rewriting " << ident.value() << " with " << (anIdent ? anIdent.value() : nil));
+       debugs(5, 3, "ignore rewriting " << ident.value() << " with " << anIdent.value_or(nil));
        return;
     }
-    debugs(5, 3, "got ident: " << (anIdent ? anIdent.value() : nil));
+    debugs(5, 3, "got ident: " << anIdent.value_or(nil));
     ident = anIdent;
 }
 
