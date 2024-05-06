@@ -154,7 +154,7 @@ ACLChecklist::goAsync(AsyncStarter starter, const Acl::Node &acl)
 // ACLFilledChecklist overwrites this to unclock something before we
 // "delete this"
 void
-ACLChecklist::checkCallback(const char *abortReason)
+ACLChecklist::checkCallback(const char * const abortReason)
 {
     if (abortReason)
         markFinished(ACCESS_DUNNO, abortReason);
