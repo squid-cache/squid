@@ -215,7 +215,7 @@ ACLChecklist::nonBlockingCheck(ACLCB * callback_, void *callback_data_)
      * We cannot select a sensible default for all callers here. */
     if (accessList == nullptr) {
         debugs(28, DBG_CRITICAL, "SECURITY ERROR: ACL " << this << " checked with nothing to match against!!");
-        checkCallback("accessList is nil");
+        checkCallback("nonBlockingCheck() without accessList");
         return;
     }
 
