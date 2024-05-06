@@ -156,13 +156,12 @@ ACLChecklist::goAsync(AsyncStarter starter, const Acl::Node &acl)
 void
 ACLChecklist::checkCallback(const char *abortReason)
 {
-    ACLCB *callback_;
-    void *cbdata_;
-
     if (abortReason)
         markFinished(ACCESS_DUNNO, abortReason);
-
     Assure(finished());
+
+    ACLCB *callback_;
+    void *cbdata_;
 
     callback_ = callback;
     callback = nullptr;
