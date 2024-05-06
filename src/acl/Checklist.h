@@ -158,8 +158,8 @@ public:
     void setLastCheckedName(const SBuf &name) { lastCheckedName_ = name; }
 
 private:
-    /// If abortReason is provided, set the final answer to ACCESS_DUNNO.
     /// Calls non-blocking check callback with the answer and destroys self.
+    /// If abortReason is provided, sets the final answer to ACCESS_DUNNO.
     void checkCallback(const char *abortReason);
 
     void matchAndFinish();
