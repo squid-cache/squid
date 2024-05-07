@@ -148,8 +148,6 @@ Mgr::InfoAction::dump(StoreEntry* entry)
     DumpMallocStatistics(entry);
     Mgr::closeKidSection(entry, false);
 #endif
-    if (IamPrimaryProcess()) {
-        storeAppendPrintf(entry, "---\n");
         DumpInfo(data, entry);
     }
 }
