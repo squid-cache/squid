@@ -29,7 +29,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,RebuildState);
 
-Fs::Ufs::RebuildState::RebuildState(RefCount<UFSSwapDir> aSwapDir) :
+Fs::Ufs::RebuildState::RebuildState(const RefCount<UFSSwapDir> &aSwapDir) :
     sd(aSwapDir),
     n_read(0),
     LogParser(nullptr),

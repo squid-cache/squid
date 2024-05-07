@@ -15,6 +15,7 @@
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "error/forward.h"
+#include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/Address.h"
 #if USE_AUTH
@@ -43,6 +44,11 @@ public:
     /// configure rfc931 user identity for the first time
     void setIdent(const char *userIdentity);
 
+    /// Remembers the given ALE (if it is not nil) or does nothing (otherwise).
+    /// When (and only when) remembering ALE, populates other still-unset fields
+    /// with ALE-derived information, so that the caller does not have to.
+    void updateAle(const AccessLogEntry::Pointer &);
+
 public:
     /// The client connection manager
     ConnStateData * conn() const;
@@ -55,6 +61,14 @@ public:
     /// set the client side FD
     void fd(int aDescriptor);
 
+    /// response added by updateReply()
+    /// \prec hasReply()
+    const HttpReply &reply() const { return *reply_; }
+
+    /// Remembers the given response (if it is not nil) or does nothing
+    /// (otherwise).
+    void updateReply(const HttpReply::Pointer &);
+
     bool destinationDomainChecked() const;
     void markDestinationDomainChecked();
     bool sourceDomainChecked() const;
@@ -62,7 +76,7 @@ public:
 
     // ACLChecklist API
     bool hasRequest() const override { return request != nullptr; }
-    bool hasReply() const override { return reply != nullptr; }
+    bool hasReply() const override { return reply_ != nullptr; }
     bool hasAle() const override { return al != nullptr; }
     void syncAle(HttpRequest *adaptedRequest, const char *logUri) const override;
     void verifyAle() const override;
@@ -75,7 +89,6 @@ public:
     char *dst_rdns;
 
     HttpRequest::Pointer request;
-    HttpReply *reply;
 
     char rfc931[USER_IDENT_SZ];
 #if USE_AUTH
@@ -106,6 +119,9 @@ public:
 private:
     ConnStateData * conn_;          /**< hack for ident and NTLM */
     int fd_;                        /**< may be available when conn_ is not */
+
+    HttpReply::Pointer reply_; ///< response added by updateReply() or nil
+
     bool destinationDomainChecked_;
     bool sourceDomainChecked_;
     /// not implemented; will cause link failures if used
