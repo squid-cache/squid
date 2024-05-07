@@ -132,7 +132,8 @@ Mgr::openKidSection(StoreEntry *entry, const bool is_yaml)
         storeAppendPrintf(entry, "by kid %d {\n", KidIdentifier);
 }
 
-void Mgr::closeKidSection(StoreEntry *entry, const bool is_yaml)
+void
+Mgr::closeKidSection(StoreEntry *entry, const bool is_yaml)
 {
     if (is_yaml)
         storeAppendPrintf(entry, "...\n");
