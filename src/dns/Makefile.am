@@ -10,6 +10,8 @@ include $(top_srcdir)/src/Common.am
 noinst_LTLIBRARIES = libdns.la
 
 libdns_la_SOURCES = \
+	EtcHosts.cc \
+	EtcHosts.h \
 	LookupDetails.cc \
 	LookupDetails.h \
 	forward.h \

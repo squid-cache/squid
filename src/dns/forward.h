@@ -19,6 +19,7 @@ typedef void IDNSCB(void *cbdata, const rfc1035_rr *answer, const int recordsInA
 namespace Dns
 {
 
+class EtcHosts;
 class LookupDetails;
 
 void Init(void);

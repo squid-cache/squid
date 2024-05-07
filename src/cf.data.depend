@@ -78,7 +78,7 @@ Security::KeyLog* acl
 size_t
 IpAddress_list
 string
-string
+SBuf
 time_msec
 time_t
 time_nanoseconds

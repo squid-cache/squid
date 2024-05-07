@@ -32,6 +32,7 @@
 #include "CpuAffinityMap.h"
 #include "debug/Messages.h"
 #include "DiskIO/DiskIOModule.h"
+#include "dns/EtcHosts.h"
 #include "eui/Config.h"
 #include "ExternalACL.h"
 #include "format/Format.h"
@@ -1359,6 +1360,28 @@ parseBytesUnits(const char *unit)
     debugs(3, DBG_CRITICAL, "WARNING: Unknown bytes unit '" << unit << "'");
 
     return 0;
+}
+
+static void
+parse_SBuf(SBuf *s)
+{
+    *s = ConfigParser::NextQuotedToken();
+}
+
+static void
+dump_SBuf(StoreEntry * entry, const char *name, SBuf &s)
+{
+    if (!s.isEmpty()) {
+        entry->append(name, strlen(name));
+        entry->append(" ", 1);
+        entry->append(s.rawContent(), s.length());
+    }
+}
+
+static void
+free_SBuf(SBuf *s)
+{
+    s->clear();
 }
 
 static void

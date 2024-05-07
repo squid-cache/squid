@@ -235,7 +235,7 @@ void ipcache_init(void);
 void ipcacheMarkBadAddr(const char *name, const Ip::Address &);
 void ipcacheMarkGoodAddr(const char *name, const Ip::Address &);
 void ipcache_restart(void);
-int ipcacheAddEntryFromHosts(const char *name, const char *ipaddr);
+bool ipcacheAddEntryFromHosts(SBuf &name, SBuf &ipaddr);
 
 /* inlined implementations */
 

@@ -31,7 +31,7 @@
 #include "CpuAffinity.h"
 #include "debug/Messages.h"
 #include "DiskIO/DiskIOModule.h"
-#include "dns/forward.h"
+#include "dns/EtcHosts.h"
 #include "errorpage.h"
 #include "event.h"
 #include "EventLoop.h"
@@ -928,7 +928,6 @@ mainReconfigureFinish(void *)
     Debug::UseCacheLog();
     ipcache_restart();      /* clear stuck entries */
     fqdncache_restart();    /* sigh, fqdncache too */
-    parseEtcHosts();
     errorInitialize();      /* reload error pages */
     accessLogInit();
 
@@ -1145,8 +1144,6 @@ mainInitialize(void)
     ipcache_init();
 
     fqdncache_init();
-
-    parseEtcHosts();
 
     Dns::Init();
 
@@ -1455,6 +1452,7 @@ RegisterModules()
     CallRunnerRegistrator(SharedSessionCacheRr);
     CallRunnerRegistrator(TransientsRr);
     CallRunnerRegistratorIn(Dns, ConfigRr);
+    CallRunnerRegistratorIn(Dns, EtcHosts);
 
 #if HAVE_DISKIO_MODULE_IPCIO
     CallRunnerRegistrator(IpcIoRr);

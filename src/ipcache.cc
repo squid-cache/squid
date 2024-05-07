@@ -1119,48 +1119,44 @@ ipcache_restart(void)
  \param name    Hostname to be linked with IP
  \param ipaddr  IP Address to be cached.
  *
- \retval 0  Success.
- \retval 1  IP address is invalid or other error.
+ \retval true  Success.
+ \retval false  IP address is invalid or other error.
  */
-int
-ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
+bool
+ipcacheAddEntryFromHosts(SBuf &name, SBuf &ipaddr)
 {
-    ipcache_entry *i;
-
     Ip::Address ip;
 
-    if (!(ip = ipaddr)) {
-        if (strchr(ipaddr, ':') && strspn(ipaddr, "0123456789abcdefABCDEF:") == strlen(ipaddr)) {
-            debugs(14, 3, "ipcacheAddEntryFromHosts: Skipping IPv6 address '" << ipaddr << "'");
-        } else {
-            debugs(14, DBG_IMPORTANT, "ERROR: ipcacheAddEntryFromHosts: Bad IP address '" << ipaddr << "'");
-        }
+    if (!(ip = ipaddr.c_str())) {
+        if (ipaddr.find(':') != SBuf::npos)
+            debugs(14, 3, "skipping IPv6 address: " << ipaddr);
+        else
+            debugs(14, DBG_IMPORTANT, "ERROR: Bad IP address '" << ipaddr << "'");
 
-        return 1;
+        return false;
     }
 
     if (!Ip::EnableIpv6 && ip.isIPv6()) {
         debugs(14, 2, "skips IPv6 address in /etc/hosts because IPv6 support was disabled: " << ip);
-        return 1;
+        return false;
     }
 
-    if ((i = ipcache_get(name))) {
-        if (1 == i->flags.fromhosts) {
+    if (auto *i = ipcache_get(name.c_str())) {
+        if (1 == i->flags.fromhosts)
             ipcacheUnlockEntry(i);
-        } else if (i->locks > 0) {
-            debugs(14, DBG_IMPORTANT, "ERROR: ipcacheAddEntryFromHosts: cannot add static entry for locked name '" << name << "'");
-            return 1;
-        } else {
+        else if (i->locks > 0) {
+            debugs(14, DBG_IMPORTANT, "ERROR: cannot add static entry for locked name '" << name << "'");
+            return false;
+        } else
             ipcacheRelease(i);
-        }
     }
 
-    i = new ipcache_entry(name);
+    auto *i = new ipcache_entry(name.c_str());
     i->addrs.pushUnique(ip);
     i->flags.fromhosts = true;
     ipcacheAddEntry(i);
     ipcacheLockEntry(i);
-    return 0;
+    return true;
 }
 
 #if SQUID_SNMP
