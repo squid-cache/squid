@@ -152,7 +152,7 @@ public:
 
 protected:
     /**
-     * Presents configuration syntax as a series of token/element rather than lines.
+     * Interprets file content as a series of configuration tokens/elements instead of lines.
      */
     class CfgFile
     {
