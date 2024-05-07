@@ -150,7 +150,6 @@ Mgr::InfoAction::dump(StoreEntry* entry)
 #endif
     DumpInfo(data, entry);
 }
-}
 
 void
 Mgr::InfoAction::pack(Ipc::TypedMsgHdr& msg) const
