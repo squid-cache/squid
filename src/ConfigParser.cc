@@ -100,7 +100,8 @@ ConfigParser::strtokFile()
         }
 
         /* fromFile */
-        auto line = wordFile->nextLine();
+        static SBuf line;
+        line = wordFile->nextLine();
         if (line.isEmpty()) {
             /* stop reading from file */
             wordFile = nullptr;
@@ -108,8 +109,7 @@ ConfigParser::strtokFile()
             return nullptr;
         } else {
             assert(line.length() < CONFIG_LINE_LIMIT);
-            SBufToCstring(buf, line);
-            t = buf;
+            t = const_cast<char *>(line.c_str());
         }
 
         /* skip comments */
