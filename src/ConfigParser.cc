@@ -72,7 +72,6 @@ ConfigParser::strtokFile()
     static std::unique_ptr<Configuration::File> wordFile;
 
     char *t;
-    static char buf[CONFIG_LINE_LIMIT];
 
     do {
 
@@ -107,10 +106,10 @@ ConfigParser::strtokFile()
             wordFile = nullptr;
             fromFile = 0;
             return nullptr;
-        } else {
-            assert(line.length() < CONFIG_LINE_LIMIT);
-            t = const_cast<char *>(line.c_str());
         }
+
+        Assure(line.length() < CONFIG_LINE_LIMIT);
+        t = const_cast<char *>(line.c_str());
 
         /* skip comments */
         /* skip blank lines */
