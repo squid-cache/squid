@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ESISEGMENT_H
-#define SQUID_ESISEGMENT_H
+#ifndef SQUID_SRC_ESI_SEGMENT_H
+#define SQUID_SRC_ESI_SEGMENT_H
 
 /* TODO: Factor the store memory segment management into a reusable code block
  * or perhaps use membuffers here?
@@ -53,5 +53,5 @@ private:
 
 void ESISegmentFreeList (ESISegment::Pointer &head);
 
-#endif /* SQUID_ESISEGMENT_H */
+#endif /* SQUID_SRC_ESI_SEGMENT_H */
 

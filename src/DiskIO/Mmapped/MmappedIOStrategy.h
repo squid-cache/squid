@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MMAPPEDIOSTRATEGY_H
-#define SQUID_MMAPPEDIOSTRATEGY_H
+#ifndef SQUID_SRC_DISKIO_MMAPPED_MMAPPEDIOSTRATEGY_H
+#define SQUID_SRC_DISKIO_MMAPPED_MMAPPEDIOSTRATEGY_H
 #include "DiskIO/DiskIOStrategy.h"
 
 class MmappedIOStrategy : public DiskIOStrategy
@@ -21,5 +21,5 @@ public:
     void unlinkFile (char const *) override;
 };
 
-#endif /* SQUID_MMAPPEDIOSTRATEGY_H */
+#endif /* SQUID_SRC_DISKIO_MMAPPED_MMAPPEDIOSTRATEGY_H */
 

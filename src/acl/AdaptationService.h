@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLADAPTATIONSERVICE_H
-#define SQUID_ACLADAPTATIONSERVICE_H
+#ifndef SQUID_SRC_ACL_ADAPTATIONSERVICE_H
+#define SQUID_SRC_ACL_ADAPTATIONSERVICE_H
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
@@ -19,11 +19,11 @@ namespace Acl
 class AdaptationServiceCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
 };
 
 } // namespace Acl
 
-#endif /* SQUID_ACLADAPTATIONSERVICE_H */
+#endif /* SQUID_SRC_ACL_ADAPTATIONSERVICE_H */
 

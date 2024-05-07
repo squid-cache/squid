@@ -14,9 +14,11 @@
 #include "base/ToCpp.h"
 #include "security/LockingPointer.h"
 
-#if USE_GNUTLS && HAVE_GNUTLS_ABSTRACT_H
+#if HAVE_LIBGNUTLS
+#if HAVE_GNUTLS_ABSTRACT_H
 #include <gnutls/abstract.h>
 #endif
+#endif /* HAVE_LIBGNUTLS */
 #include <list>
 #include <limits>
 #include <memory>
@@ -57,7 +59,7 @@
 #define SSL_FLAG_VERIFY_CRL_ALL     (1<<6)
 #define SSL_FLAG_CONDITIONAL_AUTH   (1<<7)
 
-#if !USE_OPENSSL && !USE_GNUTLS
+#if !USE_OPENSSL && !HAVE_LIBGNUTLS
 /// A helper type to keep all three possible underlying types of the
 /// Security::Certificate typedef below inside global namespace, so that
 /// argument-dependent lookup for operator "<<" (Certificate) works inside
@@ -75,7 +77,7 @@ typedef CbDataList<Security::CertError> CertErrors;
 
 #if USE_OPENSSL
 typedef X509 Certificate;
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 typedef struct gnutls_x509_crt_int Certificate;
 #else
 typedef struct notls_x509 Certificate;
@@ -84,7 +86,7 @@ typedef struct notls_x509 Certificate;
 #if USE_OPENSSL
 CtoCpp1(X509_free, X509 *);
 typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref> > CertPointer;
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 typedef std::shared_ptr<struct gnutls_x509_crt_int> CertPointer;
 #else
 typedef std::shared_ptr<Certificate> CertPointer;
@@ -93,7 +95,7 @@ typedef std::shared_ptr<Certificate> CertPointer;
 #if USE_OPENSSL
 CtoCpp1(X509_CRL_free, X509_CRL *);
 typedef Security::LockingPointer<X509_CRL, X509_CRL_free_cpp, HardFun<int, X509_CRL *, X509_CRL_up_ref> > CrlPointer;
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 CtoCpp1(gnutls_x509_crl_deinit, gnutls_x509_crl_t);
 typedef Security::LockingPointer<struct gnutls_x509_crl_int, gnutls_x509_crl_deinit> CrlPointer;
 #else
@@ -107,7 +109,7 @@ typedef std::list<Security::CrlPointer> CertRevokeList;
 #if USE_OPENSSL
 CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
 using PrivateKeyPointer = Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, HardFun<int, EVP_PKEY *, EVP_PKEY_up_ref>>;
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 using PrivateKeyPointer = std::shared_ptr<struct gnutls_x509_privkey_int>;
 #else
 using PrivateKeyPointer = std::shared_ptr<void>;
@@ -120,7 +122,7 @@ typedef Security::LockingPointer<DH, DH_free_cpp, HardFun<int, DH *, DH_up_ref> 
 #else
 using DhePointer = PrivateKeyPointer;
 #endif
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 using DhePointer = void *;
 #else
 using DhePointer = void *;
@@ -137,7 +139,7 @@ typedef int ErrorCode;
 /// `openssl errstr` expands these numbers into human-friendlier strings like
 /// `error:1408F09C:SSL routines:ssl3_get_record:http request`
 typedef unsigned long LibErrorCode;
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 /// the result of an API function like gnutls_handshake() (e.g.,
 /// GNUTLS_E_WARNING_ALERT_RECEIVED)
 typedef int LibErrorCode;
@@ -150,7 +152,7 @@ typedef int LibErrorCode;
 inline const char *ErrorString(const LibErrorCode code) {
 #if USE_OPENSSL
     return ERR_error_string(code, nullptr);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     return gnutls_strerror(code);
 #else
     (void)code;
@@ -168,7 +170,7 @@ enum Type {
 #if USE_OPENSSL
     BIO_TO_CLIENT = 6000,
     BIO_TO_SERVER
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     // NP: this is odd looking but correct.
     // 'to-client' means we are a server, and vice versa.
     BIO_TO_CLIENT = GNUTLS_SERVER,
@@ -190,7 +192,7 @@ class KeyLog;
 
 #if USE_OPENSSL
 using ParsedOptions = uint64_t;
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 typedef std::shared_ptr<struct gnutls_priority_st> ParsedOptions;
 #else
 class ParsedOptions {}; // we never parse/use TLS options in this case

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef MESSAGEBUCKET_H
-#define MESSAGEBUCKET_H
+#ifndef SQUID_SRC_MESSAGEBUCKET_H
+#define SQUID_SRC_MESSAGEBUCKET_H
 
 #if USE_DELAY_POOLS
 
@@ -37,5 +37,5 @@ private:
 
 #endif /* USE_DELAY_POOLS */
 
-#endif
+#endif /* SQUID_SRC_MESSAGEBUCKET_H */
 

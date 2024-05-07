@@ -8,8 +8,8 @@
 
 /* DEBUG: section 49    SNMP Interface */
 
-#ifndef SQUID_SNMPX_SESSION_H
-#define SQUID_SNMPX_SESSION_H
+#ifndef SQUID_SRC_SNMP_SESSION_H
+#define SQUID_SRC_SNMP_SESSION_H
 
 #include "ipc/forward.h"
 #include "snmp.h"
@@ -36,5 +36,5 @@ private:
 
 } // namespace Snmp
 
-#endif /* SQUID_SNMPX_SESSION_H */
+#endif /* SQUID_SRC_SNMP_SESSION_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 49    SNMP Interface */
 
-#ifndef SQUID_SNMPX_REQUEST_H
-#define SQUID_SNMPX_REQUEST_H
+#ifndef SQUID_SRC_SNMP_REQUEST_H
+#define SQUID_SRC_SNMP_REQUEST_H
 
 #include "ip/Address.h"
 #include "ipc/forward.h"
@@ -41,5 +41,5 @@ public:
 
 } // namespace Snmp
 
-#endif /* SQUID_SNMPX_REQUEST_H */
+#endif /* SQUID_SRC_SNMP_REQUEST_H */
 

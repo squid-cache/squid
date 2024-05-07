@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STOREFILESYSTEM_H
-#define SQUID_STOREFILESYSTEM_H
+#ifndef SQUID_SRC_STOREFILESYSTEM_H
+#define SQUID_SRC_STOREFILESYSTEM_H
 
 #include "base/TypeTraits.h"
 #include "store/forward.h"
@@ -111,5 +111,5 @@ private:
 // TODO: Kill this typedef!
 typedef StoreFileSystem storefs_entry_t;
 
-#endif /* SQUID_STOREFILESYSTEM_H */
+#endif /* SQUID_SRC_STOREFILESYSTEM_H */
 

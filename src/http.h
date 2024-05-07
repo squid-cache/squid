@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTP_H
-#define SQUID_HTTP_H
+#ifndef SQUID_SRC_HTTP_H
+#define SQUID_SRC_HTTP_H
 
 #include "clients/Client.h"
 #include "comm.h"
@@ -82,7 +82,7 @@ protected:
 
     void processReply();
     void proceedAfter1xx();
-    void handle1xx(HttpReply *msg);
+    void handle1xx(const HttpReplyPointer &);
     void drop1xx(const char *reason);
 
 private:
@@ -152,6 +152,9 @@ private:
     /// positive when we read more than we wanted
     int64_t payloadTruncated = 0;
 
+    /// whether we are waiting for our Comm::Read() handler to be called
+    bool waitingForCommRead = false;
+
     /// Whether we received a Date header older than that of a matching
     /// cached response.
     bool sawDateGoBack = false;
@@ -163,5 +166,5 @@ int httpCachable(const HttpRequestMethod&);
 void httpStart(FwdState *);
 SBuf httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
-#endif /* SQUID_HTTP_H */
+#endif /* SQUID_SRC_HTTP_H */
 

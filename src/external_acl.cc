@@ -55,7 +55,6 @@
 #define DEFAULT_EXTERNAL_ACL_CHILDREN 5
 #endif
 
-static char *makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data);
 static void external_acl_cache_delete(external_acl * def, const ExternalACLEntryPointer &entry);
 static int external_acl_entry_expired(external_acl * def, const ExternalACLEntryPointer &entry);
 static int external_acl_grace_expired(external_acl * def, const ExternalACLEntryPointer &entry);
@@ -487,11 +486,11 @@ class external_acl_data
     CBDATA_CLASS(external_acl_data);
 
 public:
-    explicit external_acl_data(external_acl *aDef) : def(cbdataReference(aDef)), name(nullptr), arguments(nullptr) {}
+    explicit external_acl_data(external_acl * const aDef): def(cbdataReference(aDef)), arguments(nullptr) {}
     ~external_acl_data();
 
     external_acl *def;
-    const char *name;
+    SBuf name;
     wordlist *arguments;
 };
 
@@ -499,7 +498,6 @@ CBDATA_CLASS_INIT(external_acl_data);
 
 external_acl_data::~external_acl_data()
 {
-    xfree(name);
     wordlistDestroy(&arguments);
     cbdataReferenceDone(def);
 }
@@ -529,7 +527,7 @@ ACLExternal::parse()
 
     // def->name is the name of the external_acl_type.
     // this is the name of the 'acl' directive being tested
-    data->name = xstrdup(AclMatchedName);
+    data->name = name;
 
     while ((token = ConfigParser::strtokFile())) {
         wordlistAdd(&data->arguments, token);
@@ -593,8 +591,9 @@ copyResultsFromEntry(const HttpRequest::Pointer &req, const ExternalACLEntryPoin
     }
 }
 
-static Acl::Answer
-aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
+// TODO: Diff reduction. Rename this helper method to match_() or similar.
+Acl::Answer
+ACLExternal::aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch) const
 {
     debugs(82, 9, "acl=\"" << acl->def->name << "\"");
     ExternalACLEntryPointer entry = ch->extacl_entry;
@@ -630,7 +629,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
         if (acl->def->require_auth) {
             /* Make sure the user is authenticated */
             debugs(82, 3, acl->def->name << " check user authenticated.");
-            const auto ti = AuthenticateAcl(ch);
+            const auto ti = AuthenticateAcl(ch, *this);
             if (!ti.allowed()) {
                 debugs(82, 2, acl->def->name << " user not authenticated (" << ti << ")");
                 return ti;
@@ -653,7 +652,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 
         if (entry != nullptr && external_acl_grace_expired(acl->def, entry)) {
             // refresh in the background
-            ExternalACLLookup::Start(ch, acl, true);
+            startLookup(ch, acl, true);
             debugs(82, 4, "no need to wait for the refresh of '" <<
                    key << "' in '" << acl->def->name << "' (ch=" << ch << ").");
         }
@@ -664,7 +663,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             // TODO: All other helpers allow temporary overload. Should not we?
             if (!acl->def->theHelper->willOverload()) {
                 debugs(82, 2, "\"" << key << "\": queueing a call.");
-                if (!ch->goAsync(ExternalACLLookup::Instance()))
+                if (!ch->goAsync(StartLookup, *this))
                     debugs(82, 2, "\"" << key << "\": no async support!");
                 debugs(82, 2, "\"" << key << "\": return -1.");
                 return ACCESS_DUNNO; // expired cached or simply absent entry
@@ -757,8 +756,8 @@ external_acl_cache_touch(external_acl * def, const ExternalACLEntryPointer &entr
     dlinkAdd(e, &entry->lru, &def->lru_list);
 }
 
-static char *
-makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
+char *
+ACLExternal::makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data) const
 {
     static MemBuf mb;
     mb.reset();
@@ -768,8 +767,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
         if (t->type == Format::LFT_EXT_ACL_NAME) {
             // setup for %ACL
-            safe_free(ch->al->lastAclName);
-            ch->al->lastAclName = xstrdup(acl_data->name);
+            ch->al->lastAclName = acl_data->name;
         }
 
         if (t->type == Format::LFT_EXT_ACL_DATA) {
@@ -799,7 +797,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             if (!*ch->rfc931) {
                 // if we fail to go async, we still return NULL and the caller
                 // will detect the failure in ACLExternal::match().
-                (void)ch->goAsync(IdentLookup::Instance());
+                (void)ch->goAsync(ACLIdent::StartLookup, *this);
                 return nullptr;
             }
         }
@@ -1011,18 +1009,22 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
     } while (state);
 }
 
+/// Asks the helper (if needed) or returns the [cached] result (otherwise).
+/// Does not support "background" lookups. See also: ACLExternal::Start().
 void
-ACLExternal::ExternalAclLookup(ACLChecklist *checklist, ACLExternal * me)
+ACLExternal::StartLookup(ACLFilledChecklist &checklist, const Acl::Node &acl)
 {
-    ExternalACLLookup::Start(checklist, me->data, false);
+    const auto &me = dynamic_cast<const ACLExternal&>(acl);
+    me.startLookup(&checklist, me.data, false);
 }
 
+// If possible, starts an asynchronous lookup of an external ACL.
+// Otherwise, asserts (or bails if background refresh is requested).
 void
-ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool inBackground)
+ACLExternal::startLookup(ACLFilledChecklist *ch, external_acl_data *acl, bool inBackground) const
 {
     external_acl *def = acl->def;
 
-    ACLFilledChecklist *ch = Filled(checklist);
     const char *key = makeExternalAclKey(ch, acl);
     assert(key); // XXX: will fail if EXT_ACL_IDENT case needs an async lookup
 
@@ -1053,8 +1055,8 @@ ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool i
     externalAclState *state = new externalAclState(def, key);
 
     if (!inBackground) {
-        state->callback = &ExternalACLLookup::LookupDone;
-        state->callback_data = cbdataReference(checklist);
+        state->callback = &LookupDone;
+        state->callback_data = cbdataReference(ch);
     }
 
     if (oldstate) {
@@ -1139,32 +1141,13 @@ externalAclShutdown(void)
     }
 }
 
-ExternalACLLookup ExternalACLLookup::instance_;
-ExternalACLLookup *
-ExternalACLLookup::Instance()
-{
-    return &instance_;
-}
-
-void
-ExternalACLLookup::checkForAsync(ACLChecklist *checklist)const
-{
-    /* TODO: optimise this - we probably have a pointer to this
-     * around somewhere */
-    ACL *acl = ACL::FindByName(AclMatchedName);
-    assert(acl);
-    ACLExternal *me = dynamic_cast<ACLExternal *> (acl);
-    assert (me);
-    ACLExternal::ExternalAclLookup(checklist, me);
-}
-
 /// Called when an async lookup returns
 void
-ExternalACLLookup::LookupDone(void *data, const ExternalACLEntryPointer &result)
+ACLExternal::LookupDone(void *data, const ExternalACLEntryPointer &result)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
     checklist->extacl_entry = result;
-    checklist->resumeNonBlockingCheck(ExternalACLLookup::Instance());
+    checklist->resumeNonBlockingCheck();
 }
 
 ACLExternal::ACLExternal(char const *theClass) : data(nullptr), class_(xstrdup(theClass))

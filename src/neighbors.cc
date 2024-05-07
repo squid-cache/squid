@@ -168,11 +168,7 @@ peerAllowedToUse(const CachePeer * p, PeerSelector * ps)
         return true;
 
     ACLFilledChecklist checklist(p->access, request, nullptr);
-    checklist.al = ps->al;
-    if (ps->al && ps->al->reply) {
-        checklist.reply = ps->al->reply.getRaw();
-        HTTPMSGLOCK(checklist.reply);
-    }
+    checklist.updateAle(ps->al);
     checklist.syncAle(request, nullptr);
     return checklist.fastCheck().allowed();
 }
@@ -707,9 +703,9 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
 #if USE_CACHE_DIGESTS
     assert(ps);
     HttpRequest *request = ps->request;
-    const cache_key *key = request ? storeKeyPublicByRequest(request) : nullptr;
-    assert(p);
     assert(request);
+
+    assert(p);
     debugs(15, 5, "cache_peer " << *p);
     /* does the peeer have a valid digest? */
 
@@ -732,7 +728,7 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
     assert(p->digest->cd);
     /* does digest predict a hit? */
 
-    if (!p->digest->cd->contains(key))
+    if (!p->digest->cd->contains(storeKeyPublicByRequest(request)))
         return LOOKUP_MISS;
 
     debugs(15, 5, "HIT for cache_peer " << *p);
@@ -1227,7 +1223,7 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int
     if (status == Comm::OK)
         p->noteSuccess();
     else
-        p->noteFailure(Http::scNone);
+        p->noteFailure();
 
     -- p->testing_now;
     conn->close();
@@ -1421,25 +1417,18 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
 #if USE_HTCP
     if (p->options.htcp) {
         os << " htcp";
-        if (p->options.htcp_oldsquid || p->options.htcp_no_clr || p->options.htcp_no_purge_clr || p->options.htcp_only_clr) {
-            bool doneopts = false;
-            if (p->options.htcp_oldsquid) {
-                os << (doneopts ? ',' : '=') << "oldsquid";
-                doneopts = true;
-            }
-            if (p->options.htcp_no_clr) {
-                os << (doneopts ? ',' : '=') << "no-clr";
-                doneopts = true;
-            }
-            if (p->options.htcp_no_purge_clr) {
-                os << (doneopts ? ',' : '=') << "no-purge-clr";
-                doneopts = true;
-            }
-            if (p->options.htcp_only_clr) {
-                os << (doneopts ? ',' : '=') << "only-clr";
-                //doneopts = true; // uncomment if more opts are added
-            }
-        }
+        std::vector<const char *, PoolingAllocator<const char *> > opts;
+        if (p->options.htcp_oldsquid)
+            opts.push_back("oldsquid");
+        if (p->options.htcp_no_clr)
+            opts.push_back("no-clr");
+        if (p->options.htcp_no_purge_clr)
+            opts.push_back("no-purge-clr");
+        if (p->options.htcp_only_clr)
+            opts.push_back("only-clr");
+        if (p->options.htcp_forward_clr)
+            opts.push_back("forward-clr");
+        os << AsList(opts).prefixedBy("=").delimitedBy(",");
     }
 #endif
 

@@ -5,4 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AS_IF([test "x$with_krb5" = "xyes"],[BUILD_HELPER="kerberos"])
+AS_IF([test "x$LIBMIT_KRB5_LIBS" != "x" -o "x$LIBHEIMDAL_KRB5_LIBS" != "x" -o "x$LIBGSS_LIBS" != "x"],[
+  BUILD_HELPER="kerberos"
+])

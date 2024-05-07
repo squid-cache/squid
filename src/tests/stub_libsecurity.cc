@@ -18,6 +18,14 @@
 CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 namespace Security
 {
+BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &, const Comm::ConnectionPointer & aServerConn,
+                                       const AsyncCallback<EncryptorAnswer> & aCallback,
+                                       const AccessLogEntryPointer &alp,
+                                       time_t) :
+    AsyncJob("Security::BlindPeerConnector"),
+    Security::PeerConnector(aServerConn, aCallback, alp, 0)
+{STUB_NOP}
+
 bool BlindPeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
 Security::ContextPointer BlindPeerConnector::getTlsContext() STUB_RETVAL(Security::ContextPointer())
 void BlindPeerConnector::noteNegotiationDone(ErrorState *) STUB
@@ -55,7 +63,7 @@ void Security::KeyLogger::maybeLog(const Connection &, const Acl::ChecklistFille
 Security::ErrorDetail::ErrorDetail(ErrorCode, const CertPointer &, const CertPointer &, const char *) STUB
 #if USE_OPENSSL
 Security::ErrorDetail::ErrorDetail(ErrorCode, int, int) STUB
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 Security::ErrorDetail::ErrorDetail(ErrorCode, LibErrorCode, int) STUB
 #endif
 void Security::ErrorDetail::setPeerCertificate(const CertPointer &) STUB
@@ -97,7 +105,7 @@ void PeerConnector::bail(ErrorState *) STUB
 void PeerConnector::sendSuccess() STUB
 void PeerConnector::callBack() STUB
 void PeerConnector::disconnect() STUB
-void PeerConnector::countFailingConnection(const ErrorState *) STUB
+void PeerConnector::countFailingConnection() STUB
 void PeerConnector::recordNegotiationDetails() STUB
 EncryptorAnswer &PeerConnector::answer() STUB_RETREF(EncryptorAnswer)
 }

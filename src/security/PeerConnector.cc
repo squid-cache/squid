@@ -115,7 +115,7 @@ Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
     err->detailError(d);
 
     if (serverConn) {
-        countFailingConnection(err);
+        countFailingConnection();
         serverConn->noteClosure();
         serverConn = nullptr;
     }
@@ -507,7 +507,7 @@ Security::PeerConnector::bail(ErrorState *error)
     answer().error = error;
 
     if (const auto failingConnection = serverConn) {
-        countFailingConnection(error);
+        countFailingConnection();
         disconnect();
         failingConnection->close();
     }
@@ -525,10 +525,10 @@ Security::PeerConnector::sendSuccess()
 }
 
 void
-Security::PeerConnector::countFailingConnection(const ErrorState * const error)
+Security::PeerConnector::countFailingConnection()
 {
     assert(serverConn);
-    NoteOutgoingConnectionFailure(serverConn->getPeer(), error ? error->httpStatus : Http::scNone);
+    NoteOutgoingConnectionFailure(serverConn->getPeer());
     // TODO: Calling PconnPool::noteUses() should not be our responsibility.
     if (noteFwdPconnUse && serverConn->isOpen())
         fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);

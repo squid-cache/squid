@@ -8,8 +8,8 @@
 
 /* DEBUG: section 35    FQDN Cache */
 
-#ifndef SQUID_FQDNCACHE_H_
-#define SQUID_FQDNCACHE_H_
+#ifndef SQUID_SRC_FQDNCACHE_H
+#define SQUID_SRC_FQDNCACHE_H
 
 #include "ip/Address.h"
 #include "sbuf/forward.h"
@@ -34,5 +34,5 @@ void fqdncacheAddEntryFromHosts(char *addr, SBufList &hostnames);
 const char *fqdncache_gethostbyaddr(const Ip::Address &, int flags);
 void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *);
 
-#endif /* SQUID_FQDNCACHE_H_ */
+#endif /* SQUID_SRC_FQDNCACHE_H */
 

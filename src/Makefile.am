@@ -123,11 +123,11 @@ endif
 WIN32_ALL_SOURCE = \
 	win32.h \
 	win32.cc \
-	WinSvc.h \
-	WinSvc.cc
+	windows_service.h \
+	windows_service.cc
 if ENABLE_WIN32SPECIFIC
 WIN32_SOURCE = win32.cc
-WINSVC_SOURCE = WinSvc.cc
+WINSVC_SOURCE = windows_service.cc
 else
 WIN32_SOURCE =
 WINSVC_SOURCE =
@@ -525,12 +525,16 @@ squid_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBGNUTLS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(SSLLIB) \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
-	$(KRB5LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
+	$(LIBMIT_KRB5_LIBS) \
+	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -545,10 +549,6 @@ squid_LDFLAGS = -export-dynamic -dlopen force
 ## LTDL headers require their local include path...
 AM_CPPFLAGS += $(INCLTDL)
 endif
-
-## Kerberos libraries require their include path...
-AM_CPPFLAGS += $(KRB5INCS)
-
 
 unlinkd_SOURCES = unlinkd_daemon.cc
 unlinkd_LDADD = \
@@ -706,6 +706,9 @@ install-data-local: install-sysconfDATA install-dataDATA
 uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE) $(srcdir)/mime.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE) squid.conf.default
+
+clean-local:
+	-rm -rf cf_gen.dSYM
 
 CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 	test_tools.cc *.a
@@ -1155,6 +1158,7 @@ tests_testRock_LDADD = \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -1331,6 +1335,7 @@ tests_testUfs_LDADD = \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -1494,6 +1499,7 @@ tests_testStore_LDADD= \
 	$(SSLLIB) \
 	CommCalls.o \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -1669,6 +1675,7 @@ tests_testDiskIO_LDADD = \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -1718,6 +1725,7 @@ tests_testACLMaxUserIP_LDADD = \
 	base/libbase.la \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
@@ -1725,6 +1733,24 @@ else
 EXTRA_DIST += \
 	tests/testACLMaxUserIP.cc
 endif
+
+## Tests of html/*
+
+check_PROGRAMS += tests/testHtmlQuote
+tests_testHtmlQuote_SOURCES = \
+	tests/testHtmlQuote.cc
+nodist_tests_testHtmlQuote_SOURCES = \
+	$(TESTSOURCES) \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc
+tests_testHtmlQuote_LDADD= \
+	html/libhtml.la \
+	sbuf/libsbuf.la \
+	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testHtmlQuote_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of http/* and HTTP Protocol objects
 
@@ -1952,12 +1978,16 @@ tests_test_http_range_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBGNUTLS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
-	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
+	$(LIBMIT_KRB5_LIBS) \
+	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -2004,6 +2034,7 @@ tests_testHttp1Parser_LDADD= \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
@@ -2106,6 +2137,7 @@ tests_testHttpReply_LDADD=\
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -2335,12 +2367,16 @@ tests_testHttpRequest_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBGNUTLS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
-	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
+	$(LIBMIT_KRB5_LIBS) \
+	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -2631,12 +2667,16 @@ tests_testCacheManager_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBGNUTLS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
-	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
+	$(LIBMIT_KRB5_LIBS) \
+	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -2739,3 +2779,18 @@ tests_testEventLoop_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
+
+check_PROGRAMS += tests/testIoManip
+tests_testIoManip_SOURCES = \
+	tests/testIoManip.cc
+nodist_tests_testIoManip_SOURCES = \
+	tests/stub_SBuf.cc \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
+	tests/stub_libtime.cc
+tests_testIoManip_LDADD = \
+	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testIoManip_LDFLAGS = $(LIBADD_DL)

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_CLIENTS_HTTP_TUNNELER_H
-#define SQUID_SRC_CLIENTS_HTTP_TUNNELER_H
+#ifndef SQUID_SRC_CLIENTS_HTTPTUNNELER_H
+#define SQUID_SRC_CLIENTS_HTTPTUNNELER_H
 
 #include "base/AsyncCallbacks.h"
 #include "base/AsyncJob.h"
@@ -80,7 +80,7 @@ private:
     void disconnect();
 
     /// updates connection usage history before the connection is closed
-    void countFailingConnection(const ErrorState *);
+    void countFailingConnection();
 
     AsyncCall::Pointer writer; ///< called when the request has been written
     AsyncCall::Pointer reader; ///< called when the response should be read
@@ -108,5 +108,5 @@ private:
 
 } // namespace Http
 
-#endif /* SQUID_SRC_CLIENTS_HTTP_TUNNELER_H */
+#endif /* SQUID_SRC_CLIENTS_HTTPTUNNELER_H */
 

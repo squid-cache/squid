@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SECURITY_HANDSHAKE_H
-#define SQUID_SECURITY_HANDSHAKE_H
+#ifndef SQUID_SRC_SECURITY_HANDSHAKE_H
+#define SQUID_SRC_SECURITY_HANDSHAKE_H
 
 #include "anyp/ProtocolVersion.h"
 #include "base/YesNoNone.h"
@@ -164,5 +164,5 @@ Tls1p3orLater(const AnyP::ProtocolVersion &p)
 
 }
 
-#endif // SQUID_SECURITY_HANDSHAKE_H
+#endif /* SQUID_SRC_SECURITY_HANDSHAKE_H */
 

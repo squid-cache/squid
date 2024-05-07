@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PINGDATA_H
-#define SQUID_PINGDATA_H
+#ifndef SQUID_SRC_PINGDATA_H
+#define SQUID_SRC_PINGDATA_H
 
 #include "mem/PoolingAllocator.h"
 
@@ -49,5 +49,5 @@ private:
     WaitingPeerSelectorPosition monitorRegistration;
 };
 
-#endif /* SQUID_PINGDATA_H */
+#endif /* SQUID_SRC_PINGDATA_H */
 

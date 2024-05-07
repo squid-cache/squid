@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTSIDEREQUEST_H
-#define SQUID_CLIENTSIDEREQUEST_H
+#ifndef SQUID_SRC_CLIENT_SIDE_REQUEST_H
+#define SQUID_SRC_CLIENT_SIDE_REQUEST_H
 
 #include "AccessLogEntry.h"
 #include "client_side.h"
@@ -28,7 +28,7 @@ class ConnStateData;
 class MemObject;
 
 /* client_side_request.c - client side request related routines (pure logic) */
-int clientBeginRequest(const HttpRequestMethod&, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t, const MasterXactionPointer &);
+int clientBeginRequest(const HttpRequestMethod &, char const *, CSCB *, CSD *, const ClientStreamData &, const HttpHeader *, char *, size_t, const MasterXactionPointer &);
 
 class ClientHttpRequest
 #if USE_ADAPTATION
@@ -264,4 +264,4 @@ void clientAccessCheck(ClientHttpRequest *);
 /* ones that should be elsewhere */
 void tunnelStart(ClientHttpRequest *);
 
-#endif /* SQUID_CLIENTSIDEREQUEST_H */
+#endif /* SQUID_SRC_CLIENT_SIDE_REQUEST_H */

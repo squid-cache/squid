@@ -9,9 +9,6 @@
 /* DEBUG: section 93    eCAP Interface */
 
 #include "squid.h"
-#include <libecap/adapter/service.h>
-#include <libecap/common/names.h>
-#include <libecap/common/registry.h>
 #include "adaptation/ecap/Host.h"
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/ServiceRep.h"
@@ -19,6 +16,16 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MasterXaction.h"
+
+#if HAVE_LIBECAP_ADAPTER_SERVICE_H
+#include <libecap/adapter/service.h>
+#endif
+#if HAVE_LIBECAP_COMMON_NAMES_H
+#include <libecap/common/names.h>
+#endif
+#if HAVE_LIBECAP_COMMON_REGISTRY_H
+#include <libecap/common/registry.h>
+#endif
 
 const libecap::Name Adaptation::Ecap::protocolInternal("internal", libecap::Name::NextId());
 const libecap::Name Adaptation::Ecap::protocolIcp("ICP", libecap::Name::NextId());

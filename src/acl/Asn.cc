@@ -116,8 +116,6 @@ static int printRadixNode(struct squid_radix_node *rn, void *sentry);
 }
 #endif
 
-void asnAclInitialize(ACL * acls);
-
 static void destroyRadixNodeInfo(as_info *);
 
 static OBJH asnStats;
@@ -541,8 +539,8 @@ Acl::DestinationAsnCheck::match(ACLChecklist * const ch)
 
     } else if (!checklist->request->flags.destinationIpLookedUp) {
         /* No entry in cache, lookup not attempted */
-        debugs(28, 3, "can't yet compare '" << AclMatchedName << "' ACL for " << checklist->request->url.host());
-        if (checklist->goAsync(DestinationIPLookup::Instance()))
+        debugs(28, 3, "can't yet compare '" << name << "' ACL for " << checklist->request->url.host());
+        if (checklist->goAsync(ACLDestinationIP::StartLookup, *this))
             return -1;
         // else fall through to noaddr match, hiding the lookup failure (XXX)
     }

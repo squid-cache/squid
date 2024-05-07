@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPHDRSURROGATECONTROLTARGET_H
-#define SQUID_HTTPHDRSURROGATECONTROLTARGET_H
+#ifndef SQUID_SRC_HTTPHDRSCTARGET_H
+#define SQUID_SRC_HTTPHDRSCTARGET_H
 
 #include "defines.h" //for bit mask operations
 #include "http/forward.h"
@@ -98,5 +98,5 @@ private:
 
 void httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
-#endif /* SQUID_HTTPHDRSURROGATECONTROLTARGET_H */
+#endif /* SQUID_SRC_HTTPHDRSCTARGET_H */
 

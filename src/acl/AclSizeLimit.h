@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSIZELIMIT_H_
-#define SQUID_ACLSIZELIMIT_H_
+#ifndef SQUID_SRC_ACL_ACLSIZELIMIT_H
+#define SQUID_SRC_ACL_ACLSIZELIMIT_H
 
 #include "acl/forward.h"
 #include "cbdata.h"
@@ -26,5 +26,5 @@ public:
     int64_t size;
 };
 
-#endif /* SQUID_ACLSIZELIMIT_H_ */
+#endif /* SQUID_SRC_ACL_ACLSIZELIMIT_H */
 

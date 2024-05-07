@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_OS_SOLARIS_H
-#define SQUID_OS_SOLARIS_H
+#ifndef SQUID_COMPAT_OS_SOLARIS_H
+#define SQUID_COMPAT_OS_SOLARIS_H
 
 #if _SQUID_SOLARIS_
 
@@ -71,13 +71,6 @@ SQUIDCEXTERN int getpagesize(void);
 SQUIDCEXTERN int gethostname(char *, int);
 #endif
 
-/*
- * SunStudio CC does not define C++ portability API __FUNCTION__
- */
-#if defined(__SUNPRO_CC) && !defined(__FUNCTION__)
-#define __FUNCTION__ ""
-#endif
-
 /* Bug 2500: Solaris 10/11 require s6_addr* defines. */
 //#define s6_addr8   _S6_un._S6_u8
 //#define s6_addr16  _S6_un._S6_u16
@@ -102,5 +95,5 @@ SQUIDCEXTERN int gethostname(char *, int);
 #endif
 
 #endif /* _SQUID_SOLARIS_ */
-#endif /* SQUID_OS_SOALRIS_H */
+#endif /* SQUID_COMPAT_OS_SOLARIS_H */
 

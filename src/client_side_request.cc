@@ -28,6 +28,7 @@
 #include "clientStream.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
+#include "debug/Messages.h"
 #include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"
@@ -75,6 +76,11 @@
 #endif
 
 #if FOLLOW_X_FORWARDED_FOR
+
+#if !defined(SQUID_X_FORWARDED_FOR_HOP_MAX)
+#define SQUID_X_FORWARDED_FOR_HOP_MAX 64
+#endif
+
 static void clientFollowXForwardedForCheck(Acl::Answer answer, void *data);
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
@@ -93,9 +99,9 @@ static void clientInterpretRequestHeaders(ClientHttpRequest * http);
 static HLPCB clientRedirectDoneWrapper;
 static HLPCB clientStoreIdDoneWrapper;
 static void checkNoCacheDoneWrapper(Acl::Answer, void *);
-SQUIDCEXTERN CSR clientGetMoreData;
-SQUIDCEXTERN CSS clientReplyStatus;
-SQUIDCEXTERN CSD clientReplyDetach;
+CSR clientGetMoreData;
+CSS clientReplyStatus;
+CSD clientReplyDetach;
 static void checkFailureRatio(err_type, hier_code);
 
 ClientRequestContext::~ClientRequestContext()
@@ -272,8 +278,8 @@ ClientHttpRequest::~ClientHttpRequest()
  * determined by the user
  */
 int
-clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * streamcallback,
-                   CSD * streamdetach, ClientStreamData streamdata, HttpHeader const *header,
+clientBeginRequest(const HttpRequestMethod &method, char const *url, CSCB *streamcallback,
+                   CSD *streamdetach, const ClientStreamData &streamdata, const HttpHeader *header,
                    char *tailbuf, size_t taillen, const MasterXaction::Pointer &mx)
 {
     size_t url_sz;
@@ -437,8 +443,16 @@ clientFollowXForwardedForCheck(Acl::Answer answer, void *data)
                 /* override the default src_addr tested if we have to go deeper than one level into XFF */
                 Filled(calloutContext->acl_checklist)->src_addr = request->indirect_client_addr;
             }
-            calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
-            return;
+            if (++calloutContext->currentXffHopNumber < SQUID_X_FORWARDED_FOR_HOP_MAX) {
+                calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
+                return;
+            }
+            const auto headerName = Http::HeaderLookupTable.lookup(Http::HdrType::X_FORWARDED_FOR).name;
+            debugs(28, DBG_CRITICAL, "ERROR: Ignoring trailing " << headerName << " addresses" <<
+                   Debug::Extra << "addresses allowed by follow_x_forwarded_for: " << calloutContext->currentXffHopNumber <<
+                   Debug::Extra << "last/accepted address: " << request->indirect_client_addr <<
+                   Debug::Extra << "ignored trailing addresses: " << request->x_forwarded_for_iterator);
+            // fall through to resume clientAccessCheck() processing
         }
     }
 
@@ -699,11 +713,10 @@ void
 ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
 {
     acl_checklist = nullptr;
-    err_type page_id;
     Http::StatusCode status;
     debugs(85, 2, "The request " << http->request->method << ' ' <<
            http->uri << " is " << answer <<
-           "; last ACL checked: " << (AclMatchedName ? AclMatchedName : "[none]"));
+           "; last ACL checked: " << answer.lastCheckDescription());
 
 #if USE_AUTH
     char const *proxy_auth_msg = "<null>";
@@ -718,21 +731,14 @@ ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
 
         /* Send an auth challenge or error */
         // XXX: do we still need aclIsProxyAuth() ?
-        bool auth_challenge = (answer == ACCESS_AUTH_REQUIRED || aclIsProxyAuth(AclMatchedName));
+        const auto auth_challenge = (answer == ACCESS_AUTH_REQUIRED || aclIsProxyAuth(answer.lastCheckedName));
         debugs(85, 5, "Access Denied: " << http->uri);
-        debugs(85, 5, "AclMatchedName = " << (AclMatchedName ? AclMatchedName : "<null>"));
 #if USE_AUTH
         if (auth_challenge)
             debugs(33, 5, "Proxy Auth Message = " << (proxy_auth_msg ? proxy_auth_msg : "<null>"));
 #endif
 
-        /*
-         * NOTE: get page_id here, based on AclMatchedName because if
-         * USE_DELAY_POOLS is enabled, then AclMatchedName gets clobbered in
-         * the clientCreateStoreEntry() call just below.  Pedro Ribeiro
-         * <pribeiro@isel.pt>
-         */
-        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_AUTH_REQUIRED);
+        auto page_id = FindDenyInfoPage(answer, answer != ACCESS_AUTH_REQUIRED);
 
         http->updateLoggingTags(LOG_TCP_DENIED);
 
@@ -1648,7 +1654,7 @@ ClientHttpRequest::checkForInternalAccess()
     if (!internalCheck(request->url.path()))
         return;
 
-    if (internalHostnameIs(request->url.host()) && request->url.port() == getMyPort()) {
+    if (request->url.port() == getMyPort() && internalHostnameIs(SBuf(request->url.host()))) {
         debugs(33, 3, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true));
         request->flags.internal = true;
     } else if (Config.onoff.global_internal_static && internalStaticCheck(request->url.path())) {
@@ -2036,10 +2042,8 @@ ClientHttpRequest::handleAdaptationBlock(const Adaptation::Answer &answer)
 {
     static const auto d = MakeNamedErrorDetail("REQMOD_BLOCK");
     request->detailError(ERR_ACCESS_DENIED, d);
-    AclMatchedName = answer.ruleId.termedBuf();
     assert(calloutContext);
-    calloutContext->clientAccessCheckDone(ACCESS_DENIED);
-    AclMatchedName = nullptr;
+    calloutContext->clientAccessCheckDone(answer.blockedToChecklistAnswer());
 }
 
 void
@@ -2087,7 +2091,7 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
         // XXX: Setting receivedWholeAdaptedReply here is a workaround for a
         // regression, as described in https://bugs.squid-cache.org/show_bug.cgi?id=5187#c6
         receivedWholeAdaptedReply = true;
-        debugs(85, DBG_IMPORTANT, "WARNING: Squid bug 5187 workaround triggered");
+        debugs(85, Important(72), "WARNING: Squid bug 5187 workaround triggered");
         endRequestSatisfaction();
     }
     // else wait for more body data

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 39    Peer user hash based selection */
 
-#ifndef SQUID_PEER_USERHASH_H_
-#define SQUID_PEER_USERHASH_H_
+#ifndef SQUID_SRC_PEER_USERHASH_H
+#define SQUID_SRC_PEER_USERHASH_H
 
 class CachePeer;
 class HttpRequest;
@@ -18,5 +18,5 @@ class PeerSelector;
 void peerUserHashInit(void);
 CachePeer * peerUserHashSelectParent(PeerSelector *);
 
-#endif /* SQUID_PEER_USERHASH_H_ */
+#endif /* SQUID_SRC_PEER_USERHASH_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_AUTH_NTLM_USER_H
-#define _SQUID_AUTH_NTLM_USER_H
+#ifndef SQUID_SRC_AUTH_NTLM_USER_H
+#define SQUID_SRC_AUTH_NTLM_USER_H
 
 #if HAVE_AUTH_MODULE_NTLM
 
@@ -40,5 +40,5 @@ public:
 } // namespace Auth
 
 #endif /* HAVE_AUTH_MODULE_NTLM */
-#endif /* _SQUID_AUTH_NTLM_USER_H */
+#endif /* SQUID_SRC_AUTH_NTLM_USER_H */
 

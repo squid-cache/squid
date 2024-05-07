@@ -9,6 +9,7 @@
 /* DEBUG: section 14    IP Cache */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "CacheManager.h"
 #include "cbdata.h"
 #include "debug/Messages.h"
@@ -729,7 +730,7 @@ ipcache_gethostbyname(const char *name, int flags)
 {
     ipcache_entry *i = nullptr;
     assert(name);
-    debugs(14, 3, "ipcache_gethostbyname: '" << name  << "', flags=" << std::hex << flags);
+    debugs(14, 3, "'" << name  << "', flags=" << asHex(flags));
     ++IpcacheStats.requests;
     i = ipcache_get(name);
 
@@ -973,9 +974,10 @@ Dns::CachedIps::restoreGoodness(const char *name)
         for (auto &cachedIp: ips)
             cachedIp.forgetMarking();
         badCount_ = 0;
+        debugs(14, 3, "cleared all " << size() << " bad IPs for " << name);
+        // fall through to reset goodPosition and report the current state
     }
     Must(seekNewGood(name));
-    debugs(14, 3, "cleared all IPs for " << name << "; now back to " << *this);
 }
 
 bool
@@ -990,6 +992,7 @@ Dns::CachedIps::have(const Ip::Address &ip, size_t *positionOrNil) const
             debugs(14, 7, ip << " at " << pos << " in " << *this);
             return true;
         }
+        ++pos; // TODO: Replace with std::views::enumerate() after upgrading to C++23
     }
     // no such address; leave *position as is
     debugs(14, 7, " no " << ip << " in " << *this);

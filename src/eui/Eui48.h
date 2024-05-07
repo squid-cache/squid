@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_EUI_EUI48_H
-#define _SQUID_EUI_EUI48_H
+#ifndef SQUID_SRC_EUI_EUI48_H
+#define SQUID_SRC_EUI_EUI48_H
 
 #if USE_SQUID_EUI
 
@@ -74,5 +74,5 @@ private:
 } // namespace Eui
 
 #endif /* USE_SQUID_EUI */
-#endif /* _SQUID_EUI_EUI48_H */
+#endif /* SQUID_SRC_EUI_EUI48_H */
 

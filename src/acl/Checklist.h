@@ -6,10 +6,14 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLCHECKLIST_H
-#define SQUID_ACLCHECKLIST_H
+#ifndef SQUID_SRC_ACL_CHECKLIST_H
+#define SQUID_SRC_ACL_CHECKLIST_H
 
+#include "acl/Acl.h"
 #include "acl/InnerNode.h"
+#include "cbdata.h"
+
+#include <optional>
 #include <stack>
 #include <vector>
 
@@ -28,40 +32,8 @@ class ACLChecklist
 
 public:
 
-    /**
-     * State class.
-     * This abstract class defines the behaviour of
-     * async lookups - which can vary for different ACL types.
-     * Today, every state object must be a singleton.
-     * See NULLState for an example.
-     *
-     \note *no* state should be stored in the state object,
-     * they are used to change the behaviour of the checklist, not
-     * to hold information. If you need to store information in the
-     * state object, consider subclassing ACLChecklist, converting it
-     * to a composite, or changing the state objects from singletons to
-     * refcounted objects.
-     */
-
-    class AsyncState
-    {
-
-    public:
-        virtual void checkForAsync(ACLChecklist *) const = 0;
-        virtual ~AsyncState() {}
-    };
-
-    class NullState : public AsyncState
-    {
-
-    public:
-        static NullState *Instance();
-        void checkForAsync(ACLChecklist *) const override;
-        ~NullState() override {}
-
-    private:
-        static NullState _instance;
-    };
+    /// a function that initiates asynchronous ACL checks; see goAsync()
+    using AsyncStarter = void (ACLFilledChecklist &, const Acl::Node &);
 
 public:
     ACLChecklist();
@@ -136,11 +108,11 @@ public:
 
     /// If slow lookups are allowed, switches into "async in progress" state.
     /// Otherwise, returns false; the caller is expected to handle the failure.
-    bool goAsync(AsyncState *);
+    bool goAsync(AsyncStarter, const Acl::Node &);
 
     /// Matches (or resumes matching of) a child node while maintaning
     /// resumption breadcrumbs if a [grand]child node goes async.
-    bool matchChild(const Acl::InnerNode *parent, Acl::Nodes::const_iterator pos, const ACL *child);
+    bool matchChild(const Acl::InnerNode *parent, Acl::Nodes::const_iterator pos, const Acl::Node *child);
 
     /// Whether we should continue to match tree nodes or stop/pause.
     bool keepMatching() const { return !finished() && !asyncInProgress(); }
@@ -182,14 +154,14 @@ public:
         return old;
     }
 
+    /// remember the name of the last ACL being evaluated
+    void setLastCheckedName(const SBuf &name) { lastCheckedName_ = name; }
+
 private:
     /// Calls non-blocking check callback with the answer and destroys self.
-    void checkCallback(Acl::Answer answer);
+    void checkCallback(const Acl::Answer &answer);
 
     void matchAndFinish();
-
-    void changeState(AsyncState *);
-    AsyncState *asyncState() const;
 
     const Acl::Tree *accessList;
 public:
@@ -199,10 +171,10 @@ public:
 
     /// Resumes non-blocking check started by nonBlockingCheck() and
     /// suspended until some async operation updated Squid state.
-    void resumeNonBlockingCheck(AsyncState *state);
+    void resumeNonBlockingCheck();
 
 private: /* internal methods */
-    /// Position of a child node within an ACL tree.
+    /// Position of a child node within an Acl::Node tree.
     class Breadcrumb
     {
     public:
@@ -232,7 +204,6 @@ private: /* internal methods */
 
     enum AsyncStage { asyncNone, asyncStarting, asyncRunning, asyncFailed };
     AsyncStage asyncStage_;
-    AsyncState *state_;
     Breadcrumb matchLoc_; ///< location of the node running matches() now
     Breadcrumb asyncLoc_; ///< currentNode_ that called goAsync()
     unsigned asyncLoopDepth_; ///< how many times the current async state has resumed
@@ -243,7 +214,10 @@ private: /* internal methods */
     std::stack<Breadcrumb> matchPath;
     /// the list of actions which must ignored during acl checks
     std::vector<Acl::Answer> bannedActions_;
+
+    /// the name of the last evaluated ACL (if any ACLs were evaluated)
+    std::optional<SBuf> lastCheckedName_;
 };
 
-#endif /* SQUID_ACLCHECKLIST_H */
+#endif /* SQUID_SRC_ACL_CHECKLIST_H */
 

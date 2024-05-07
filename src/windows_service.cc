@@ -14,7 +14,7 @@
 #include "protos.h"
 #include "SquidConfig.h"
 #include "tools.h"
-#include "WinSvc.h"
+#include "windows_service.h"
 
 #if _SQUID_WINDOWS_
 #if !defined(_MSWSOCK_)

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTREQUESTCONTEXT_H
-#define SQUID_CLIENTREQUESTCONTEXT_H
+#ifndef SQUID_SRC_CLIENTREQUESTCONTEXT_H
+#define SQUID_SRC_CLIENTREQUESTCONTEXT_H
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
@@ -80,9 +80,14 @@ public:
 #if USE_OPENSSL
     bool sslBumpCheckDone = false;
 #endif
-    ErrorState *error = nullptr; ///< saved error page for centralized/delayed processing
+
     bool readNextRequest = false; ///< whether Squid should read after error handling
+    ErrorState *error = nullptr; ///< saved error page for centralized/delayed processing
+
+#if FOLLOW_X_FORWARDED_FOR
+    size_t currentXffHopNumber = 0; ///< number of X-Forwarded-For header values processed so far
+#endif
 };
 
-#endif /* SQUID_CLIENTREQUESTCONTEXT_H */
+#endif /* SQUID_SRC_CLIENTREQUESTCONTEXT_H */
 

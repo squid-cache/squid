@@ -291,8 +291,7 @@ Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
     for (const auto &pool: MessageDelayPools::Instance()->pools) {
         if (pool->access) {
             std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(pool->access, http));
-            chl->reply = rep;
-            HTTPMSGLOCK(chl->reply);
+            chl->updateReply(rep);
             const auto answer = chl->fastCheck();
             if (answer.allowed()) {
                 writeQuotaHandler = pool->createBucket();

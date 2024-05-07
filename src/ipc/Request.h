@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_REQUEST_H
-#define SQUID_IPC_REQUEST_H
+#ifndef SQUID_SRC_IPC_REQUEST_H
+#define SQUID_SRC_IPC_REQUEST_H
 
 #include "base/RefCount.h"
 #include "base/TypeTraits.h"
@@ -51,5 +51,5 @@ protected:
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_REQUEST_H */
+#endif /* SQUID_SRC_IPC_REQUEST_H */
 

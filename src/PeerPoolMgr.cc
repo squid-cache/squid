@@ -87,7 +87,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
     }
 
     if (params.flag != Comm::OK) {
-        NoteOutgoingConnectionFailure(peer, Http::scNone);
+        NoteOutgoingConnectionFailure(peer);
         checkpoint("conn opening failure"); // may retry
         return;
     }

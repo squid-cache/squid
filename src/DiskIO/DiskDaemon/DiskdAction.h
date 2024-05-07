@@ -8,8 +8,8 @@
 
 /* DEBUG: section 79    Squid-side DISKD I/O functions. */
 
-#ifndef SQUID_DISKD_ACTION_H
-#define SQUID_DISKD_ACTION_H
+#ifndef SQUID_SRC_DISKIO_DISKDAEMON_DISKDACTION_H
+#define SQUID_SRC_DISKIO_DISKDAEMON_DISKDACTION_H
 
 #include "ipc/forward.h"
 #include "mgr/Action.h"
@@ -71,5 +71,5 @@ private:
     DiskdActionData data;
 };
 
-#endif /* SQUID_DISKD_ACTION_H */
+#endif /* SQUID_SRC_DISKIO_DISKDAEMON_DISKDACTION_H */
 

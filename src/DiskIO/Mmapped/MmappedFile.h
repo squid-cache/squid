@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MMAPPEDFILE_H
-#define SQUID_MMAPPEDFILE_H
+#ifndef SQUID_SRC_DISKIO_MMAPPED_MMAPPEDFILE_H
+#define SQUID_SRC_DISKIO_MMAPPED_MMAPPEDFILE_H
 
 #include "cbdata.h"
 #include "DiskIO/DiskFile.h"
@@ -48,5 +48,5 @@ private:
     void doClose();
 };
 
-#endif /* SQUID_MMAPPEDFILE_H */
+#endif /* SQUID_SRC_DISKIO_MMAPPED_MMAPPEDFILE_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMPAT_SHARED_H
-#define _SQUID_COMPAT_SHARED_H
+#ifndef SQUID_COMPAT_COMPAT_SHARED_H
+#define SQUID_COMPAT_COMPAT_SHARED_H
 
 /*
  * This file contains all the compatibility and portability hacks
@@ -227,17 +227,6 @@ extern "C" {
 #define memmove(d,s,n) bcopy((s),(d),(n))
 #endif
 
-/*
- * strnstr() is needed. The OS may not provide a working copy.
- */
-#if HAVE_STRNSTR
-/* If strnstr exists and is usable we do so. */
-#define squid_strnstr(a,b,c)    strnstr(a,b,c)
-#else
-/* If not we have our own copy imported from FreeBSD */
-const char * squid_strnstr(const char *s, const char *find, size_t slen);
-#endif
-
 #if __GNUC__
 #if _SQUID_MINGW_
 #define PRINTF_FORMAT_ARG1 __attribute__ ((format (gnu_printf, 1, 2)))
@@ -254,5 +243,5 @@ const char * squid_strnstr(const char *s, const char *find, size_t slen);
 #define PRINTF_FORMAT_ARG3
 #endif
 
-#endif /* _SQUID_COMPAT_SHARED_H */
+#endif /* SQUID_COMPAT_COMPAT_SHARED_H */
 

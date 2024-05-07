@@ -8,8 +8,8 @@
 
 /* DEBUG: section 84    Helper process maintenance */
 
-#ifndef SQUID_HELPER_H
-#define SQUID_HELPER_H
+#ifndef SQUID_SRC_HELPER_H
+#define SQUID_SRC_HELPER_H
 
 #include "base/AsyncCall.h"
 #include "base/InstanceId.h"
@@ -92,13 +92,17 @@ public:
 
     /// Updates internal statistics and starts new helper processes after
     /// an unexpected server exit
-    /// \param needsNewServers true if new helper(s) must be started, false otherwise
-    void handleKilledServer(SessionBase *, bool &needsNewServers);
+    void handleKilledServer(SessionBase *);
 
     /// Reacts to unexpected helper process death(s), including a failure to start helper(s)
     /// and an unexpected exit of a previously started helper. \sa handleKilledServer()
     /// \param madeProgress whether the died helper(s) responded to any requests
     void handleFewerServers(bool madeProgress);
+
+    /// satisfies all queued requests with a Helper::Unknown answer
+    /// \prec no existing servers will be able to process queued requests
+    /// \sa SessionBase::dropQueued()
+    void dropQueued();
 
     /// sends transaction response to the transaction initiator
     void callBack(Xaction &);
@@ -106,9 +110,6 @@ public:
     /// Starts required helper process(es).
     /// The caller is responsible for checking that new processes are needed.
     virtual void openSessions();
-
-    /// handles exited helper process
-    void sessionClosed(SessionBase &);
 
 public:
     wordlist *cmdline = nullptr;
@@ -193,27 +194,29 @@ class SessionBase: public CbdataParent
 public:
     ~SessionBase() override;
 
+    /// close handler to handle exited server processes
+    static void HelperServerClosed(SessionBase *);
+
     /** Closes pipes to the helper safely.
      * Handles the case where the read and write pipes are the same FD.
-     *
-     * \param name displayed for the helper being shutdown if logging an error
      */
-    void closePipesSafely(const char *name);
+    void closePipesSafely();
 
     /** Closes the reading pipe.
      * If the read and write sockets are the same the write pipe will
      * also be closed. Otherwise its left open for later handling.
-     *
-     * \param name displayed for the helper being shutdown if logging an error
      */
-    void closeWritePipeSafely(const char *name);
+    void closeWritePipeSafely();
 
     // TODO: Teach each child to report its child-specific state instead.
     /// whether the server is locked for exclusive use by a client
     virtual bool reserved() = 0;
 
+    /// our creator (parent) object
+    virtual Client &helper() const = 0;
+
     /// dequeues and sends an Unknown answer to all queued requests
-    virtual void dropQueued(Client &);
+    virtual void dropQueued();
 
 public:
     /// Helper program identifier; does not change when contents do,
@@ -295,13 +298,11 @@ public:
 
     /* SessionBase API */
     bool reserved() override {return false;}
-    void dropQueued(Client &) override;
+    void dropQueued() override;
+    Client &helper() const override { return *parent; }
 
     /// Read timeout handler
     static void requestTimeout(const CommTimeoutCbParams &io);
-
-    /// close handler to handle exited server processes
-    static void HelperServerClosed(Session *);
 };
 
 } // namespace Helper
@@ -318,11 +319,9 @@ public:
     void reserve();
     void clearReservation();
 
-    /* HelperServerBase API */
+    /* Helper::SessionBase API */
     bool reserved() override {return reservationId.reserved();}
-
-    /// close handler to handle exited server processes
-    static void HelperServerClosed(helper_stateful_server *srv);
+    Helper::Client &helper() const override { return *parent; }
 
     statefulhelper::Pointer parent;
 
@@ -339,5 +338,5 @@ void helperStatefulSubmit(const statefulhelper::Pointer &, const char *buf, HLPC
 void helperShutdown(const Helper::Client::Pointer &);
 void helperStatefulShutdown(const statefulhelper::Pointer &);
 
-#endif /* SQUID_HELPER_H */
+#endif /* SQUID_SRC_HELPER_H */
 

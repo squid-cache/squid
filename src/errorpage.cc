@@ -10,6 +10,8 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "base/CharacterSet.h"
+#include "base/IoManip.h"
 #include "cache_cf.h"
 #include "clients/forward.h"
 #include "comm/Connection.h"
@@ -114,7 +116,12 @@ public:
 class BuildErrorPrinter
 {
 public:
-    BuildErrorPrinter(const SBuf &anInputLocation, int aPage, const char *aMsg, const char *aNear): inputLocation(anInputLocation), page_id(aPage), msg(aMsg), near(aNear) {}
+    BuildErrorPrinter(const SBuf &anInputLocation, int aPage, const char *aMsg, const char *anErrorLocation):
+        inputLocation(anInputLocation),
+        page_id(aPage),
+        msg(aMsg),
+        errorLocation(anErrorLocation)
+    {}
 
     /// reports error details (for admin-visible exceptions and debugging)
     std::ostream &print(std::ostream &) const;
@@ -126,7 +133,7 @@ public:
     const SBuf &inputLocation;
     const int page_id;
     const char *msg;
-    const char *near;
+    const char *errorLocation;
 };
 
 static inline std::ostream &
@@ -805,67 +812,58 @@ ErrorState::~ErrorState()
 int
 ErrorState::Dump(MemBuf * mb)
 {
-    MemBuf str;
-    char ntoabuf[MAX_IPSTRLEN];
+    PackableStream out(*mb);
+    const auto &encoding = CharacterSet::RFC3986_UNRESERVED();
 
-    str.reset();
-    /* email subject line */
-    str.appendf("CacheErrorInfo - %s", errorPageName(type));
-    mb->appendf("?subject=%s", rfc1738_escape_part(str.buf));
-    str.reset();
-    /* email body */
-    str.appendf("CacheHost: %s\r\n", getMyHostname());
-    /* - Err Msgs */
-    str.appendf("ErrPage: %s\r\n", errorPageName(type));
+    out << "?subject=" <<
+        AnyP::Uri::Encode(SBuf("CacheErrorInfo - "),encoding) <<
+        AnyP::Uri::Encode(SBuf(errorPageName(type)), encoding);
 
-    if (xerrno) {
-        str.appendf("Err: (%d) %s\r\n", xerrno, strerror(xerrno));
-    } else {
-        str.append("Err: [none]\r\n", 13);
-    }
+    SBufStream body;
+    body << "CacheHost: " << getMyHostname() << "\r\n" <<
+         "ErrPage: " << errorPageName(type) << "\r\n" <<
+         "TimeStamp: " << Time::FormatRfc1123(squid_curtime) << "\r\n" <<
+         "\r\n";
+
+    body << "ClientIP: " << src_addr << "\r\n";
+
+    if (request && request->hier.host[0] != '\0')
+        body << "ServerIP: " << request->hier.host << "\r\n";
+
+    if (xerrno)
+        body << "Err: (" << xerrno << ") " << strerror(xerrno) << "\r\n";
+
 #if USE_AUTH
     if (auth_user_request.getRaw() && auth_user_request->denyMessage())
-        str.appendf("Auth ErrMsg: %s\r\n", auth_user_request->denyMessage());
+        body << "Auth ErrMsg: " << auth_user_request->denyMessage() << "\r\n";
 #endif
+
     if (dnsError)
-        str.appendf("DNS ErrMsg: " SQUIDSBUFPH "\r\n", SQUIDSBUFPRINT(*dnsError));
+        body << "DNS ErrMsg: " << *dnsError << "\r\n";
 
-    /* - TimeStamp */
-    str.appendf("TimeStamp: %s\r\n\r\n", Time::FormatRfc1123(squid_curtime));
+    body << "\r\n";
 
-    /* - IP stuff */
-    str.appendf("ClientIP: %s\r\n", src_addr.toStr(ntoabuf,MAX_IPSTRLEN));
-
-    if (request && request->hier.host[0] != '\0') {
-        str.appendf("ServerIP: %s\r\n", request->hier.host);
-    }
-
-    str.append("\r\n", 2);
-    /* - HTTP stuff */
-    str.append("HTTP Request:\r\n", 15);
     if (request) {
-        str.appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\n",
-                    SQUIDSBUFPRINT(request->method.image()),
-                    SQUIDSBUFPRINT(request->url.path()),
-                    AnyP::ProtocolType_str[request->http_ver.protocol],
-                    request->http_ver.major, request->http_ver.minor);
-        request->header.packInto(&str);
+        body << "HTTP Request:\r\n";
+        MemBuf r;
+        r.init();
+        request->pack(&r);
+        body << r.content();
     }
 
-    str.append("\r\n", 2);
     /* - FTP stuff */
 
     if (ftp.request) {
-        str.appendf("FTP Request: %s\r\n", ftp.request);
-        str.appendf("FTP Reply: %s\r\n", (ftp.reply? ftp.reply:"[none]"));
-        str.append("FTP Msg: ", 9);
-        wordlistCat(ftp.server_msg, &str);
-        str.append("\r\n", 2);
+        body << "FTP Request: " << ftp.request << "\r\n";
+        if (ftp.reply)
+            body << "FTP Reply: " << ftp.reply << "\r\n";
+        if (ftp.server_msg)
+            body << "FTP Msg: " << AsList(*ftp.server_msg).delimitedBy("\n") << "\r\n";
+        body << "\r\n";
     }
 
-    str.append("\r\n", 2);
-    mb->appendf("&body=%s", rfc1738_escape_part(str.buf));
-    str.clean();
+    out << "&body=" << AnyP::Uri::Encode(body.buf(), encoding);
+
     return 0;
 }
 
@@ -1198,6 +1196,7 @@ ErrorState::compileLegacyCode(Build &build)
         if (Config.adminEmail && Config.onoff.emailErrData)
             Dump(&mb);
         no_urlescape = 1;
+        do_quote = 0;
         break;
 
     case 'x':
@@ -1431,13 +1430,13 @@ ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRe
 
 /// react to a compile() error
 /// \param msg  description of what went wrong
-/// \param near  approximate start of the problematic input
+/// \param errorLocation approximate start of the problematic input
 /// \param  forceBypass whether detection of this error was introduced late,
 /// after old configurations containing this error could have been
 /// successfully validated and deployed (i.e. the admin may not be
 /// able to fix this newly detected but old problem quickly)
 void
-ErrorState::noteBuildError_(const char *msg, const char *near, const bool forceBypass)
+ErrorState::noteBuildError_(const char *const msg, const char * const errorLocation, const bool forceBypass)
 {
     using ErrorPage::BuildErrorPrinter;
     const auto runtime = !starting_up;
@@ -1458,9 +1457,9 @@ ErrorState::noteBuildError_(const char *msg, const char *near, const bool forceB
         if (starting_up && seenErrors <= 10)
             debugs(4, debugLevel, "WARNING: The following configuration error will be fatal in future Squid versions");
 
-        debugs(4, debugLevel, "ERROR: " << BuildErrorPrinter(inputLocation, page_id, msg, near));
+        debugs(4, debugLevel, "ERROR: " << BuildErrorPrinter(inputLocation, page_id, msg, errorLocation));
     } else {
-        throw TexcHere(ToSBuf(BuildErrorPrinter(inputLocation, page_id, msg, near)));
+        throw TexcHere(ToSBuf(BuildErrorPrinter(inputLocation, page_id, msg, errorLocation)));
     }
 }
 
@@ -1486,11 +1485,11 @@ ErrorPage::BuildErrorPrinter::print(std::ostream &os) const {
 
     // TODO: Add support for prefix printing to Raw
     const size_t maxContextLength = 15; // plus "..."
-    if (strlen(near) > maxContextLength) {
-        os.write(near, maxContextLength);
+    if (strlen(errorLocation) > maxContextLength) {
+        os.write(errorLocation, maxContextLength);
         os << "...";
     } else {
-        os << near;
+        os << errorLocation;
     }
 
     // XXX: We should not be converting (inner) exception to text if we are

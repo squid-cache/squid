@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SQUIDCONFIG_H_
-#define SQUID_SQUIDCONFIG_H_
+#ifndef SQUID_SRC_SQUIDCONFIG_H
+#define SQUID_SRC_SQUIDCONFIG_H
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
@@ -227,7 +227,7 @@ public:
     char *etcHostsPath;
     char *visibleHostname;
     char *uniqueHostname;
-    wordlist *hostnameAliases;
+    SBufList hostnameAliases;
     char *errHtmlText;
 
     struct {
@@ -353,7 +353,7 @@ public:
 
     std::chrono::nanoseconds paranoid_hit_validation;
 
-    class ACL *aclList;
+    class Acl::Node *aclList;
 
     struct {
         acl_access *http;
@@ -447,8 +447,8 @@ public:
     MessageDelayConfig MessageDelay;
 #endif
 
-    struct {
-        struct {
+    struct CommIncoming {
+        struct Measure {
             int average;
             int min_poll;
         } dns, udp, tcp;
@@ -519,7 +519,7 @@ public:
     CpuAffinityMap *cpuAffinityMap;
 
 #if USE_LOADABLE_MODULES
-    wordlist *loadable_module_names;
+    SBufList loadable_module_names;
 #endif
 
     int client_ip_max_connections;
@@ -564,5 +564,5 @@ public:
 
 extern SquidConfig2 Config2;
 
-#endif /* SQUID_SQUIDCONFIG_H_ */
+#endif /* SQUID_SRC_SQUIDCONFIG_H */
 

@@ -6,12 +6,14 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_GADGETS_H
-#define SQUID_ACL_GADGETS_H
+#ifndef SQUID_SRC_ACL_GADGETS_H
+#define SQUID_SRC_ACL_GADGETS_H
 
 #include "acl/forward.h"
 #include "error/forward.h"
+#include "sbuf/forward.h"
 
+#include <optional>
 #include <sstream>
 
 class ConfigParser;
@@ -19,13 +21,13 @@ class dlink_list;
 class StoreEntry;
 class wordlist;
 
-/// Register an ACL object for future deletion. Repeated registrations are OK.
+/// Register an Acl::Node object for future deletion. Repeated registrations are OK.
 /// \ingroup ACLAPI
-void aclRegister(ACL *acl);
+void aclRegister(Acl::Node *acl);
 /// \ingroup ACLAPI
 void aclDestroyAccessList(acl_access **list);
 /// \ingroup ACLAPI
-void aclDestroyAcls(ACL **);
+void aclDestroyAcls(Acl::Node **);
 /// \ingroup ACLAPI
 void aclDestroyAclList(ACLList **);
 /// Parses a single line of a "action followed by acls" directive (e.g., http_access).
@@ -45,16 +47,20 @@ aclParseAclList(ConfigParser &parser, Acl::Tree **tree, const Any any)
     return aclParseAclList(parser, tree, buf.str().c_str());
 }
 
-/// \ingroup ACLAPI
-int aclIsProxyAuth(const char *name);
-/// \ingroup ACLAPI
-err_type aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allowed);
+/// Whether the given name names an Acl::Node object with true isProxyAuth() result.
+/// This is a safe variation of Acl::Node::FindByName(*name)->isProxyAuth().
+bool aclIsProxyAuth(const std::optional<SBuf> &name);
+
+/// The first configured deny_info error page ID matching the given access check outcome (or ERR_NONE).
+/// \param allowCustomStatus whether to consider deny_info rules containing custom HTTP response status code
+err_type FindDenyInfoPage(const Acl::Answer &, bool allowCustomStatus);
+
 /// \ingroup ACLAPI
 void aclParseDenyInfoLine(AclDenyInfoList **);
 /// \ingroup ACLAPI
 void aclDestroyDenyInfoList(AclDenyInfoList **);
 /// \ingroup ACLAPI
-wordlist *aclDumpGeneric(const ACL *);
+wordlist *aclDumpGeneric(const Acl::Node *);
 /// \ingroup ACLAPI
 void aclCacheMatchFlush(dlink_list * cache);
 /// \ingroup ACLAPI
@@ -62,5 +68,5 @@ void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
 /// \ingroup ACLAPI
 void dump_acl_list(StoreEntry * entry, ACLList * head);
 
-#endif /* SQUID_ACL_GADGETS_H */
+#endif /* SQUID_SRC_ACL_GADGETS_H */
 

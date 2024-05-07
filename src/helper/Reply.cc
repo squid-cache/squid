@@ -17,6 +17,8 @@
 #include "rfc1738.h"
 #include "SquidString.h"
 
+#include <algorithm>
+
 Helper::Reply::Reply() :
     result(Helper::Unknown)
 {
@@ -277,7 +279,11 @@ Helper::operator <<(std::ostream &os, const Reply &r)
     // dump the helper key=pair "notes" list
     if (!r.notes.empty()) {
         os << ", notes={";
-        os << r.notes.toString("; ");
+        // This simple format matches what most helpers use and is sufficient
+        // for debugging nearly any helper response, but the result differs from
+        // raw helper responses when the helper quotes values or escapes special
+        // characters. See also: Helper::Reply::parseResponseKeys().
+        r.notes.print(os, "=", " ");
         os << "}";
     }
 

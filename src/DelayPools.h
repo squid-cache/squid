@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_DELAYPOOLS_H
-#define SQUID_DELAYPOOLS_H
+#ifndef SQUID_SRC_DELAYPOOLS_H
+#define SQUID_SRC_DELAYPOOLS_H
 
 #include <vector>
 
@@ -55,5 +55,5 @@ private:
     static void RegisterWithCacheManager(void);
 };
 
-#endif /* SQUID_DELAYPOOLS_H */
+#endif /* SQUID_SRC_DELAYPOOLS_H */
 

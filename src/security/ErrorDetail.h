@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_SECURITY_DETAIL_H
-#define SQUID_SRC_SECURITY_DETAIL_H
+#ifndef SQUID_SRC_SECURITY_ERRORDETAIL_H
+#define SQUID_SRC_SECURITY_ERRORDETAIL_H
 
 #include "base/RefCount.h"
 #include "error/Detail.h"
@@ -52,7 +52,7 @@ public:
     /// \param anIoErrorNo TLS I/O function outcome; \see ErrorDetail::ioErrorNo
     /// \param aSysErrorNo saved errno(3); \see ErrorDetail::sysErrorNo
     ErrorDetail(ErrorCode anErrorCode, int anIoErrorNo, int aSysErrorNo);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     /// Details (or starts detailing) a non-validation failure.
     /// \param anLibErrorNo TLS function outcome; \see ErrorDetail::lib_error_no
     /// \param aSysErrorNo saved errno(3); \see ErrorDetail::sysErrorNo
@@ -142,5 +142,5 @@ operator <<(std::ostream &os, const ErrorDetail::Pointer &p)
 
 } // namespace Security
 
-#endif
+#endif /* SQUID_SRC_SECURITY_ERRORDETAIL_H */
 

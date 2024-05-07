@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSERVERCERTIFICATE_H
-#define SQUID_ACLSERVERCERTIFICATE_H
+#ifndef SQUID_SRC_ACL_SERVERCERTIFICATE_H
+#define SQUID_SRC_ACL_SERVERCERTIFICATE_H
 
 #include "acl/Data.h"
 #include "acl/ParameterizedNode.h"
@@ -21,11 +21,11 @@ namespace Acl
 class ServerCertificateCheck: public ParameterizedNode< ACLData<X509 *> >
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
 };
 
 } // namespace Acl
 
-#endif /* SQUID_ACLSERVERCERTIFICATE_H */
+#endif /* SQUID_SRC_ACL_SERVERCERTIFICATE_H */
 

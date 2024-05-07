@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPACCESSLOGENTRY_H
-#define SQUID_HTTPACCESSLOGENTRY_H
+#ifndef SQUID_SRC_ACCESSLOGENTRY_H
+#define SQUID_SRC_ACCESSLOGENTRY_H
 
 #include "anyp/PortCfg.h"
 #include "base/CodeContext.h"
@@ -188,7 +188,7 @@ public:
     } adapt;
 #endif
 
-    const char *lastAclName = nullptr; ///< string for external_acl_type %ACL format code
+    SBuf lastAclName; ///< string for external_acl_type %ACL format code
     SBuf lastAclData; ///< string for external_acl_type %DATA format code
 
     HierarchyLogEntry hier;
@@ -294,5 +294,5 @@ void accessLogClose(void);
 void accessLogInit(void);
 const char *accessLogTime(time_t);
 
-#endif /* SQUID_HTTPACCESSLOGENTRY_H */
+#endif /* SQUID_SRC_ACCESSLOGENTRY_H */
 

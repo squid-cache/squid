@@ -702,7 +702,7 @@ HttpStateData::processReplyHeader()
     // reset payload tracking to begin after message headers
     payloadSeen = inBuf.length();
 
-    HttpReply *newrep = new HttpReply;
+    const auto newrep = HttpReply::Pointer::Make();
     // XXX: RFC 7230 indicates we MAY ignore the reason phrase,
     //      and use an empty string on unknown status.
     //      We do that now to avoid performance regression from using SBuf::c_str()
@@ -720,7 +720,7 @@ HttpStateData::processReplyHeader()
     newrep->sources |= request->url.getScheme() == AnyP::PROTO_HTTPS ? Http::Message::srcHttps : Http::Message::srcHttp;
 
     if (newrep->sline.version.protocol == AnyP::PROTO_HTTP && Http::Is1xx(newrep->sline.status())) {
-        handle1xx(newrep);
+        handle1xx(newrep.getRaw());
         return;
     }
 
@@ -733,7 +733,7 @@ HttpStateData::processReplyHeader()
     if (!peerSupportsConnectionPinning())
         request->flags.connectionAuthDisabled = true;
 
-    HttpReply *vrep = setVirginReply(newrep);
+    const auto vrep = setVirginReply(newrep.getRaw());
     flags.headers_parsed = true;
 
     keepaliveAccounting(vrep);
@@ -745,12 +745,10 @@ HttpStateData::processReplyHeader()
 
 /// ignore or start forwarding the 1xx response (a.k.a., control message)
 void
-HttpStateData::handle1xx(HttpReply *reply)
+HttpStateData::handle1xx(const HttpReply::Pointer &reply)
 {
     if (fwd->al)
         fwd->al->reply = reply;
-
-    HttpReply::Pointer msg(reply); // will destroy reply if unused
 
     // one 1xx at a time: we must not be called while waiting for previous 1xx
     Must(!flags.handling1xx);
@@ -773,10 +771,9 @@ HttpStateData::handle1xx(HttpReply *reply)
     // check whether the 1xx response forwarding is allowed by squid.conf
     if (Config.accessList.reply) {
         ACLFilledChecklist ch(Config.accessList.reply, originalRequest().getRaw());
-        ch.al = fwd->al;
-        ch.reply = reply;
+        ch.updateAle(fwd->al);
+        ch.updateReply(reply);
         ch.syncAle(originalRequest().getRaw(), nullptr);
-        HTTPMSGLOCK(ch.reply);
         if (!ch.fastCheck().allowed()) // TODO: support slow lookups?
             return drop1xx("http_reply_access blocked it");
     }
@@ -794,7 +791,7 @@ HttpStateData::handle1xx(HttpReply *reply)
     const AsyncCall::Pointer cb = JobCallback(11, 3, CbDialer, this,
                                   HttpStateData::proceedAfter1xx);
     CallJobHere1(11, 4, request->clientConnectionManager, ConnStateData,
-                 ConnStateData::sendControlMsg, HttpControlMsg(msg, cb));
+                 ConnStateData::sendControlMsg, HttpControlMsg(reply, cb));
     // If the call is not fired, then the Sink is gone, and HttpStateData
     // will terminate due to an aborted store entry or another similar error.
     // If we get stuck, it is not handle1xx fault if we could get stuck
@@ -1163,17 +1160,15 @@ HttpStateData::persistentConnStatus() const
 void
 HttpStateData::noteDelayAwareReadChance()
 {
-    flags.do_next_read = true;
+    waitingForDelayAwareReadChance = false;
     maybeReadVirginBody();
 }
 
 void
 HttpStateData::readReply(const CommIoCbParams &io)
 {
-    Must(!flags.do_next_read); // XXX: should have been set false by mayReadVirginBody()
-    flags.do_next_read = false;
-
     debugs(11, 5, io.conn);
+    waitingForCommRead = false;
 
     // Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us
     if (io.flag == Comm::ERR_CLOSING) {
@@ -1207,7 +1202,27 @@ HttpStateData::readReply(const CommIoCbParams &io)
     const auto readSizeWanted = readSizeMax ? entry->bytesWanted(Range<size_t>(0, readSizeMax)) : 0;
 
     if (readSizeWanted <= 0) {
-        delayRead();
+        // XXX: If we avoid Comm::ReadNow(), we should not Comm::Read() again
+        // when the wait is over. We should go straight to readReply() instead.
+
+#if USE_ADAPTATION
+        // XXX: We are duplicating Client::calcBufferSpaceToReserve() logic.
+        // XXX: Some other delayRead() cases may lack kickReads() guarantees.
+        // TODO: Refactor maybeMakeSpaceAvailable() to properly treat each
+        // no-read case instead of calling delayRead() for the remaining cases.
+
+        if (responseBodyBuffer) {
+            debugs(11, 5, "avoid delayRead() to give adaptation a chance to drain overflow buffer: " << responseBodyBuffer->contentSize());
+            return; // wait for Client::noteMoreBodySpaceAvailable()
+        }
+
+        if (virginBodyDestination && virginBodyDestination->buf().hasContent()) {
+            debugs(11, 5, "avoid delayRead() to give adaptation a chance to drain body pipe buffer: " << virginBodyDestination->buf().contentSize());
+            return; // wait for Client::noteMoreBodySpaceAvailable()
+        }
+#endif
+
+        delayRead(); /// wait for Client::noteDelayAwareReadChance()
         return;
     }
 
@@ -1218,7 +1233,6 @@ HttpStateData::readReply(const CommIoCbParams &io)
     case Comm::INPROGRESS:
         if (inBuf.isEmpty())
             debugs(33, 2, io.conn << ": no data to process, " << xstrerr(rd.xerrno));
-        flags.do_next_read = true;
         maybeReadVirginBody();
         return;
 
@@ -1248,7 +1262,6 @@ HttpStateData::readReply(const CommIoCbParams &io)
 
     case Comm::ENDFILE: // close detected by 0-byte read
         eof = 1;
-        flags.do_next_read = false;
 
         /* Continue to process previously read data */
         break;
@@ -1259,7 +1272,6 @@ HttpStateData::readReply(const CommIoCbParams &io)
         const auto err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request, fwd->al);
         err->xerrno = rd.xerrno;
         fwd->fail(err);
-        flags.do_next_read = false;
         closeServer();
         mustStop("HttpStateData::readReply");
         return;
@@ -1313,7 +1325,6 @@ HttpStateData::continueAfterParsingHeader()
 
     if (!flags.headers_parsed && !eof) {
         debugs(11, 9, "needs more at " << inBuf.length());
-        flags.do_next_read = true;
         /** \retval false If we have not finished parsing the headers and may get more data.
          *                Schedules more reads to retrieve the missing data.
          */
@@ -1364,7 +1375,6 @@ HttpStateData::continueAfterParsingHeader()
     assert(error != ERR_NONE);
     entry->reset();
     fwd->fail(new ErrorState(error, Http::scBadGateway, fwd->request, fwd->al));
-    flags.do_next_read = false;
     closeServer();
     mustStop("HttpStateData::continueAfterParsingHeader");
     return false; // quit on error
@@ -1450,7 +1460,6 @@ HttpStateData::decodeAndWriteReplyBody()
         addVirginReplyBody(decodedData.content(), decodedData.contentSize());
         if (doneParsing) {
             lastChunk = 1;
-            flags.do_next_read = false;
             markParsedVirginReplyAsWhole("http parsed last-chunk");
         } else if (eof) {
             markPrematureReplyBodyEofFailure();
@@ -1474,7 +1483,6 @@ void
 HttpStateData::processReplyBody()
 {
     if (!flags.headers_parsed) {
-        flags.do_next_read = true;
         maybeReadVirginBody();
         return;
     }
@@ -1494,7 +1502,6 @@ HttpStateData::processReplyBody()
     if (entry->isAccepting()) {
         if (flags.chunked) {
             if (!decodeAndWriteReplyBody()) {
-                flags.do_next_read = false;
                 serverComplete();
                 return;
             }
@@ -1520,8 +1527,6 @@ HttpStateData::processReplyBody()
             } else {
                 commSetConnTimeout(serverConnection, Config.Timeout.read, nil);
             }
-
-            flags.do_next_read = true;
         }
         break;
 
@@ -1531,7 +1536,6 @@ HttpStateData::processReplyBody()
             // TODO: Remove serverConnectionSaved but preserve exception safety.
 
             commUnsetConnTimeout(serverConnection);
-            flags.do_next_read = false;
 
             comm_remove_close_handler(serverConnection->fd, closeHandler);
             closeHandler = nullptr;
@@ -1591,29 +1595,45 @@ HttpStateData::mayReadVirginReplyBody() const
 void
 HttpStateData::maybeReadVirginBody()
 {
-    // too late to read
-    if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing())
+    if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing()) {
+        debugs(11, 3, "no, peer connection gone");
         return;
+    }
+
+    if (eof) {
+        // tolerate hypothetical calls between Comm::ENDFILE and closeServer()
+        debugs(11, 3, "no, saw EOF");
+        return;
+    }
+
+    if (lastChunk) {
+        // tolerate hypothetical calls between setting lastChunk and clearing serverConnection
+        debugs(11, 3, "no, saw last-chunk");
+        return;
+    }
 
     if (!canBufferMoreReplyBytes()) {
         abortTransaction("more response bytes required, but the read buffer is full and cannot be drained");
         return;
     }
 
-    // XXX: get rid of the do_next_read flag
-    // check for the proper reasons preventing read(2)
-    if (!flags.do_next_read)
+    if (waitingForDelayAwareReadChance) {
+        debugs(11, 5, "no, still waiting for noteDelayAwareReadChance()");
         return;
+    }
 
-    flags.do_next_read = false;
+    if (waitingForCommRead) {
+        debugs(11, 3, "no, already waiting for readReply()");
+        return;
+    }
 
-    // must not already be waiting for read(2) ...
     assert(!Comm::MonitorsRead(serverConnection->fd));
 
     // wait for read(2) to be possible.
     typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(11, 5, Dialer, this, HttpStateData::readReply);
     Comm::Read(serverConnection, call);
+    waitingForCommRead = true;
 }
 
 /// Desired inBuf capacity based on various capacity preferences/limits:
@@ -1704,7 +1724,7 @@ HttpStateData::wroteLast(const CommIoCbParams &io)
     // TODO: Extract common parts.
 
     if (io.size > 0) {
-        fd_bytes(io.fd, io.size, FD_WRITE);
+        fd_bytes(io.fd, io.size, IoDirection::Write);
         statCounter.server.all.kbytes_out += io.size;
         statCounter.server.http.kbytes_out += io.size;
     }
@@ -2401,7 +2421,6 @@ HttpStateData::sendRequest()
     AsyncCall::Pointer timeoutCall =  JobCallback(11, 5,
                                       TimeoutDialer, this, HttpStateData::httpTimeout);
     commSetConnTimeout(serverConnection, Config.Timeout.lifetime, timeoutCall);
-    flags.do_next_read = true;
     maybeReadVirginBody();
 
     if (request->body_pipe != nullptr) {

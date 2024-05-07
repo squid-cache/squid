@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_INTERNAL_H
-#define SQUID_SNMP_INTERNAL_H
+#ifndef SQUID_INCLUDE_SNMP_INTERNAL_H
+#define SQUID_INCLUDE_SNMP_INTERNAL_H
 
 /**********************************************************************
  *
@@ -37,5 +37,5 @@
 #define SNMP_TRAP_PORT      162
 #define SNMP_MAX_LEN        484
 
-#endif /* SQUID_SNMP_INTERNAL_H */
+#endif /* SQUID_INCLUDE_SNMP_INTERNAL_H */
 

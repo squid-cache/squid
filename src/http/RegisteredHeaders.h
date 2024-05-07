@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTP_REGISTEREDHEADERS_H
-#define SQUID_HTTP_REGISTEREDHEADERS_H
+#ifndef SQUID_SRC_HTTP_REGISTEREDHEADERS_H
+#define SQUID_SRC_HTTP_REGISTEREDHEADERS_H
 
 #include "base/LookupTable.h"
 
@@ -106,7 +106,6 @@ enum HdrType {
     VIA,                            /**< RFC 7230 */
     WWW_AUTHENTICATE,               /**< RFC 7235, 4559 */
     X_FORWARDED_FOR,                /**< obsolete Squid custom header, RFC 7239 */
-    X_REQUEST_URI,                  /**< Squid custom header appended if ADD_X_REQUEST_URI is defined */
     X_SQUID_ERROR,                  /**< Squid custom header on generated error responses */
     HDR_X_ACCELERATOR_VARY,             /**< obsolete Squid custom header. */
     X_NEXT_SERVICES,                /**< Squid custom ICAP header */
@@ -226,5 +225,5 @@ std::ostream &operator <<(std::ostream &, HdrType);
 
 }; /* namespace Http */
 
-#endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
+#endif /* SQUID_SRC_HTTP_REGISTEREDHEADERS_H */
 

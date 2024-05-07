@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTDELAYCONFIG_H
-#define SQUID_CLIENTDELAYCONFIG_H
+#ifndef SQUID_SRC_CLIENTDELAYCONFIG_H
+#define SQUID_SRC_CLIENTDELAYCONFIG_H
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
@@ -79,5 +79,5 @@ private:
     ClientDelayPool &pool(const int i) { return *(ClientDelayPools::Instance()->pools.at(i)); }
 };
 
-#endif // SQUID_CLIENTDELAYCONFIG_H
+#endif /* SQUID_SRC_CLIENTDELAYCONFIG_H */
 

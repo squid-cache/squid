@@ -6,12 +6,11 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_FORWARD_H
-#define SQUID_ACL_FORWARD_H
+#ifndef SQUID_SRC_ACL_FORWARD_H
+#define SQUID_SRC_ACL_FORWARD_H
 
 #include "base/RefCount.h"
 
-class ACL;
 class ACLChecklist;
 class ACLFilledChecklist;
 class ACLList;
@@ -22,6 +21,7 @@ class AclSizeLimit;
 namespace Acl
 {
 
+class Node;
 class Address;
 class AndNode;
 class Answer;
@@ -38,8 +38,6 @@ void Init(void);
 
 typedef void ACLCB(Acl::Answer, void *);
 
-#define ACL_NAME_SZ 64
-
 // TODO: Consider renaming all users and removing. Cons: hides the difference
 // between ACLList tree without actions and acl_access Tree with actions.
 #define acl_access Acl::Tree
@@ -48,5 +46,5 @@ typedef void ACLCB(Acl::Answer, void *);
 class ExternalACLEntry;
 typedef RefCount<ExternalACLEntry> ExternalACLEntryPointer;
 
-#endif /* SQUID_ACL_FORWARD_H */
+#endif /* SQUID_SRC_ACL_FORWARD_H */
 

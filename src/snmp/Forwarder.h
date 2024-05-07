@@ -8,8 +8,8 @@
 
 /* DEBUG: section 49    SNMP Interface */
 
-#ifndef SQUID_SNMPX_FORWARDER_H
-#define SQUID_SNMPX_FORWARDER_H
+#ifndef SQUID_SRC_SNMP_FORWARDER_H
+#define SQUID_SRC_SNMP_FORWARDER_H
 
 #include "ip/forward.h"
 #include "ipc/Forwarder.h"
@@ -52,5 +52,5 @@ void SendResponse(Ipc::RequestId, const Pdu &);
 
 } // namespace Snmp
 
-#endif /* SQUID_SNMPX_FORWARDER_H */
+#endif /* SQUID_SRC_SNMP_FORWARDER_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_XSTRTO_H
-#define _SQUID_XSTRTO_H
+#ifndef SQUID_COMPAT_XSTRTO_H
+#define SQUID_COMPAT_XSTRTO_H
 
 // this function is not used by the remaining Squid C code
 #if defined(__cplusplus)
@@ -32,5 +32,5 @@ bool xstrtoui(const char *s, char **end, unsigned int *value,
               unsigned int min, unsigned int max);
 
 #endif /* __cplusplus */
-#endif /* _SQUID_XSTRTO_H */
+#endif /* SQUID_COMPAT_XSTRTO_H */
 

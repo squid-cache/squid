@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_BASIC_ACTIONS_H
-#define SQUID_MGR_BASIC_ACTIONS_H
+#ifndef SQUID_SRC_MGR_BASICACTIONS_H
+#define SQUID_SRC_MGR_BASICACTIONS_H
 
 #include "mgr/Action.h"
 
@@ -98,5 +98,5 @@ void RegisterBasics();
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_BASIC_ACTIONS_H */
+#endif /* SQUID_SRC_MGR_BASICACTIONS_H */
 

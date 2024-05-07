@@ -18,6 +18,15 @@ LogTagsErrors::update(const LogTagsErrors &other)
     aborted = aborted || other.aborted;
 }
 
+LogTagsErrors
+LogTagsErrors::FromErrno(const int errNo)
+{
+    LogTagsErrors lte;
+    lte.timedout = (errNo == ETIMEDOUT);
+    lte.aborted = !lte.timedout; // intentionally true for zero errNo
+    return lte;
+}
+
 /* LogTags */
 
 // old deprecated tag strings

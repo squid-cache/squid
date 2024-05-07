@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef HTTPBODY_H_
-#define HTTPBODY_H_
+#ifndef SQUID_SRC_HTTPBODY_H
+#define SQUID_SRC_HTTPBODY_H
 
 #include "sbuf/SBuf.h"
 
@@ -50,5 +50,5 @@ private:
     SBuf raw_; // body bytes
 };
 
-#endif /* HTTPBODY_H_ */
+#endif /* SQUID_SRC_HTTPBODY_H */
 

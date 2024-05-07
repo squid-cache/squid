@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SWAP_LOG_OP_H
-#define _SQUID_SWAP_LOG_OP_H
+#ifndef SQUID_SRC_SWAP_LOG_OP_H
+#define SQUID_SRC_SWAP_LOG_OP_H
 
 typedef enum {
     SWAP_LOG_NOP,
@@ -19,5 +19,5 @@ typedef enum {
 
 extern const char *swap_log_op_str[];
 
-#endif /* _SQUID_SWAP_LOG_OP_H */
+#endif /* SQUID_SRC_SWAP_LOG_OP_H */
 

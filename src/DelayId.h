@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_DELAYID_H
-#define SQUID_DELAYID_H
+#ifndef SQUID_SRC_DELAYID_H
+#define SQUID_SRC_DELAYID_H
 
 #if USE_DELAY_POOLS
 
@@ -29,7 +29,7 @@ public:
     unsigned short pool() const;
     DelayIdComposite::Pointer compositePosition();
     DelayIdComposite::Pointer const compositePosition() const;
-    void compositePosition(DelayIdComposite::Pointer );
+    void compositePosition(const DelayIdComposite::Pointer &);
     bool operator == (DelayId const &rhs) const;
     operator bool() const;
     int bytesWanted(int min, int max) const;
@@ -44,5 +44,5 @@ private:
 };
 
 #endif /* USE_DELAY_POOLS */
-#endif /* SQUID_DELAYID_H */
+#endif /* SQUID_SRC_DELAYID_H */
 

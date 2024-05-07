@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_ACTION_PROFILE_H
-#define SQUID_MGR_ACTION_PROFILE_H
+#ifndef SQUID_SRC_MGR_ACTIONPROFILE_H
+#define SQUID_SRC_MGR_ACTIONPROFILE_H
 
 #include "mgr/ActionCreator.h"
 #include "mgr/forward.h"
@@ -46,5 +46,5 @@ operator <<(std::ostream &os, const ActionProfile &profile)
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_ACTION_PROFILE_H */
+#endif /* SQUID_SRC_MGR_ACTIONPROFILE_H */
 

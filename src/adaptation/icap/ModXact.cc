@@ -42,7 +42,7 @@
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ModXact);
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ModXactLauncher);
 
-static const size_t TheBackupLimit = BodyPipe::MaxCapacity;
+static constexpr auto TheBackupLimit = BodyPipe::MaxCapacity;
 
 const SBuf Adaptation::Icap::ChunkExtensionValueParser::UseOriginalBodyName("use-original-body");
 
@@ -1482,7 +1482,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         makeUsernameHeader(request, buf);
 
     // Adaptation::Config::metaHeaders
-    for (auto h: Adaptation::Config::metaHeaders) {
+    for (const auto &h: Adaptation::Config::metaHeaders()) {
         HttpRequest *r = virgin.cause ?
                          virgin.cause : dynamic_cast<HttpRequest*>(virgin.header);
         Must(r);

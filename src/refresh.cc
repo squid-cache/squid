@@ -144,14 +144,10 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, 
         sf->expires = true;
 
         if (entry->expires > check_time) {
-            debugs(22, 3, "FRESH: expires " << entry->expires <<
-                   " >= check_time " << check_time << " ");
-
+            debugs(22, 3, "FRESH: expires " << entry->expires << " > check_time " << check_time);
             return -1;
         } else {
-            debugs(22, 3, "STALE: expires " << entry->expires <<
-                   " < check_time " << check_time << " ");
-
+            debugs(22, 3, "STALE: expires " << entry->expires << " <= check_time " << check_time);
             return (check_time - entry->expires);
         }
     }
@@ -160,7 +156,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, 
 
     // 2. If the entry is older than the maximum age in the refresh_pattern, it is STALE.
     if (age > R->max) {
-        debugs(22, 3, "STALE: age " << age << " > max " << R->max << " ");
+        debugs(22, 3, "STALE: age " << age << " > max " << R->max);
         sf->max = true;
         return (age - R->max);
     }

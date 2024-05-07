@@ -159,7 +159,7 @@ ICPState::isHit() const
     const auto hit = e && confirmAndPrepHit(*e);
 
     if (e)
-        e->abandon(__FUNCTION__);
+        e->abandon(__func__);
 
     return hit;
 }
@@ -427,8 +427,6 @@ icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int 
 void
 icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 {
-    debugs(12, 2, "icpDenyAccess: Access Denied for " << from << " by " << AclMatchedName << ".");
-
     if (clientdbCutoffDenied(from)) {
         /*
          * count this DENIED query in the clientdb, even though
@@ -443,14 +441,20 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 bool
 icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
 {
-    /* absent any explicit rules, we deny all */
-    if (!Config.accessList.icp)
+    if (!Config.accessList.icp) {
+        debugs(12, 2, "Access Denied due to lack of ICP access rules.");
         return false;
+    }
 
     ACLFilledChecklist checklist(Config.accessList.icp, icp_request, nullptr);
     checklist.src_addr = from;
     checklist.my_addr.setNoAddr();
-    return checklist.fastCheck().allowed();
+    const auto &answer = checklist.fastCheck();
+    if (answer.allowed())
+        return true;
+
+    debugs(12, 2, "Access Denied for " << from << " by " << answer.lastCheckDescription() << ".");
+    return false;
 }
 
 HttpRequest *
@@ -604,24 +608,6 @@ icpHandleIcpV2(int fd, Ip::Address &from, char *buf, int len)
     }
 }
 
-#ifdef ICP_PKT_DUMP
-static void
-icpPktDump(icp_common_t * pkt)
-{
-    Ip::Address a;
-
-    debugs(12, 9, "opcode:     " << std::setw(3) << pkt->opcode  << " " << icp_opcode_str[pkt->opcode]);
-    debugs(12, 9, "version: "<< std::left << std::setw(8) << pkt->version);
-    debugs(12, 9, "length:  "<< std::left << std::setw(8) << ntohs(pkt->length));
-    debugs(12, 9, "reqnum:  "<< std::left << std::setw(8) << ntohl(pkt->reqnum));
-    debugs(12, 9, "flags:   "<< std::left << std::hex << std::setw(8) << ntohl(pkt->flags));
-    a = (struct in_addr)pkt->shostid;
-    debugs(12, 9, "shostid: " << a );
-    debugs(12, 9, "payload: " << (char *) pkt + sizeof(icp_common_t));
-}
-
-#endif
-
 void
 icpHandleUdp(int sock, void *)
 {
@@ -667,11 +653,6 @@ icpHandleUdp(int sock, void *)
         buf[len] = '\0';
         debugs(12, 4, "icpHandleUdp: FD " << sock << ": received " <<
                (unsigned long int)len << " bytes from " << from);
-
-#ifdef ICP_PACKET_DUMP
-
-        icpPktDump(buf);
-#endif
 
         if ((size_t) len < sizeof(icp_common_t)) {
             debugs(12, 4, "icpHandleUdp: Ignoring too-small UDP packet");

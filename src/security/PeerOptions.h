@@ -115,7 +115,7 @@ protected:
             debugs(83, 5, "SSL_CTX destruct, this=" << (void*)p);
             SSL_CTX_free(p);
         });
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         debugs(83, 5, "gnutls_certificate_credentials construct, this=" << (void*)ctx);
         return Security::ContextPointer(ctx, [](gnutls_certificate_credentials_t p) {
             debugs(83, 5, "gnutls_certificate_credentials destruct, this=" << (void*)p);

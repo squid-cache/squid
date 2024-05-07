@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLDESTINATIONDOMAIN_H
-#define SQUID_ACLDESTINATIONDOMAIN_H
+#ifndef SQUID_SRC_ACL_DESTINATIONDOMAIN_H
+#define SQUID_SRC_ACL_DESTINATIONDOMAIN_H
 
 #include "acl/Checklist.h"
 #include "acl/Data.h"
@@ -21,7 +21,7 @@ namespace Acl
 class DestinationDomainCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
-    /* ACL API */
+    /* Acl::Node API */
     int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
     const Acl::Options &options() override;
@@ -32,18 +32,5 @@ private:
 
 } // namespace Acl
 
-/// \ingroup ACLAPI
-class DestinationDomainLookup : public ACLChecklist::AsyncState
-{
-
-public:
-    static DestinationDomainLookup *Instance();
-    void checkForAsync(ACLChecklist *)const override;
-
-private:
-    static DestinationDomainLookup instance_;
-    static void LookupDone(const char *, const Dns::LookupDetails &, void *);
-};
-
-#endif /* SQUID_ACLDESTINATIONDOMAIN_H */
+#endif /* SQUID_SRC_ACL_DESTINATIONDOMAIN_H */
 

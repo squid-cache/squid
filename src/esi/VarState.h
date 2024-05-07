@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ESIVARSTATE_H
-#define SQUID_ESIVARSTATE_H
+#ifndef SQUID_SRC_ESI_VARSTATE_H
+#define SQUID_SRC_ESI_VARSTATE_H
 
 #include "esi/Segment.h"
 #include "HttpHeader.h"
@@ -168,5 +168,5 @@ private:
     char *browserversion;
 };
 
-#endif /* SQUID_ESIVARSTATE_H */
+#endif /* SQUID_SRC_ESI_VARSTATE_H */
 

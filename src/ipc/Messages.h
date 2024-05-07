@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_MESSAGES_H
-#define SQUID_IPC_MESSAGES_H
+#ifndef SQUID_SRC_IPC_MESSAGES_H
+#define SQUID_SRC_IPC_MESSAGES_H
 
 /** Declarations used by various IPC messages */
 
@@ -45,5 +45,5 @@ typedef enum { mtNone = 0, ///< unspecified or unknown message kind; unused on t
 
 } // namespace Ipc;
 
-#endif /* SQUID_IPC_MESSAGES_H */
+#endif /* SQUID_SRC_IPC_MESSAGES_H */
 

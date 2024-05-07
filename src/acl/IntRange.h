@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLINTRANGE_H
-#define SQUID_ACLINTRANGE_H
+#ifndef SQUID_SRC_ACL_INTRANGE_H
+#define SQUID_SRC_ACL_INTRANGE_H
 
 #include "acl/Data.h"
 #include "base/Range.h"
@@ -31,5 +31,5 @@ private:
     std::list<RangeType> ranges;
 };
 
-#endif /* SQUID_ACLINTRANGE_H */
+#endif /* SQUID_SRC_ACL_INTRANGE_H */
 

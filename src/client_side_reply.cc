@@ -52,7 +52,7 @@
 CBDATA_CLASS_INIT(clientReplyContext);
 
 /* Local functions */
-extern "C" CSS clientReplyStatus;
+CSS clientReplyStatus;
 ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const AccessLogEntry::Pointer &);
 
 /* privates */
@@ -298,7 +298,7 @@ clientReplyContext::processExpired()
                 entry = e;
                 entry->lock("clientReplyContext::processExpired#alreadyRevalidating");
             } else {
-                e->abandon(__FUNCTION__);
+                e->abandon(__func__);
                 // assume mayInitiateCollapsing() would fail too
                 collapsingAllowed = false;
             }
@@ -500,8 +500,8 @@ clientReplyContext::handleIMSReply(const StoreIOBuffer result)
     sendClientOldEntry();
 }
 
-SQUIDCEXTERN CSR clientGetMoreData;
-SQUIDCEXTERN CSD clientReplyDetach;
+CSR clientGetMoreData;
+CSD clientReplyDetach;
 
 /// \copydoc clientReplyContext::cacheHit()
 void
@@ -843,11 +843,9 @@ clientReplyContext::blockedHit() const
     if (http->request->flags.internal)
         return false; // internal content "hits" cannot be blocked
 
-    const auto &rep = http->storeEntry()->mem().freshestReply();
     {
         std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
-        chl->reply = const_cast<HttpReply*>(&rep); // ACLChecklist API bug
-        HTTPMSGLOCK(chl->reply);
+        chl->updateReply(&http->storeEntry()->mem().freshestReply());
         return !chl->fastCheck().allowed(); // when in doubt, block
     }
 }
@@ -924,7 +922,7 @@ clientReplyContext::purgeDoPurge()
             const auto err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr,
                                               http->getConn(), http->request, http->al);
             startError(err);
-            entry->abandon(__FUNCTION__);
+            entry->abandon(__func__);
             return;
         }
         firstFound = true;
@@ -1062,7 +1060,7 @@ clientReplyContext::storeNotOKTransferDone() const
     assert(mem != nullptr);
     assert(http->request != nullptr);
 
-    if (mem->baseReply().pstate != Http::Message::psParsed)
+    if (!http->storeEntry()->hasParsedReplyHeader())
         /* haven't found end of headers yet */
         return 0;
 
@@ -1419,18 +1417,6 @@ clientReplyContext::buildReplyHeader()
 
     /* Signal keep-alive or close explicitly */
     hdr->putStr(Http::HdrType::CONNECTION, request->flags.proxyKeepalive ? "keep-alive" : "close");
-
-#if ADD_X_REQUEST_URI
-    /*
-     * Knowing the URI of the request is useful when debugging persistent
-     * connections in a client; we cannot guarantee the order of http headers,
-     * but X-Request-URI is likely to be the very last header to ease use from a
-     * debugger [hdr->entries.count-1].
-     */
-    hdr->putStr(Http::HdrType::X_REQUEST_URI,
-                http->memOjbect()->url ? http->memObject()->url : http->uri);
-
-#endif
 
     /* Surrogate-Control requires Surrogate-Capability from upstream to pass on */
     if ( hdr->has(Http::HdrType::SURROGATE_CONTROL) ) {
@@ -1850,8 +1836,7 @@ clientReplyContext::processReplyAccess ()
     /** Process http_reply_access lists */
     ACLFilledChecklist *replyChecklist =
         clientAclChecklistCreate(Config.accessList.reply, http);
-    replyChecklist->reply = reply;
-    HTTPMSGLOCK(replyChecklist->reply);
+    replyChecklist->updateReply(reply);
     replyChecklist->nonBlockingCheck(ProcessReplyAccessResult, this);
 }
 
@@ -1867,12 +1852,11 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
 {
     debugs(88, 2, "The reply for " << http->request->method
            << ' ' << http->uri << " is " << accessAllowed << ", because it matched "
-           << (AclMatchedName ? AclMatchedName : "NO ACL's"));
+           << accessAllowed.lastCheckDescription());
 
     if (!accessAllowed.allowed()) {
         ErrorState *err;
-        err_type page_id;
-        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);
+        auto page_id = FindDenyInfoPage(accessAllowed, true);
 
         http->updateLoggingTags(LOG_TCP_DENIED_REPLY);
 

@@ -25,7 +25,7 @@
 #include "tools.h"
 
 /// shared memory segment path to use for MemStore maps
-static const SBuf MapLabel("cache_mem_map");
+static const auto MapLabel = "cache_mem_map";
 /// shared memory segment path to use for the free slices index
 static const char *SpaceLabel = "cache_mem_space";
 /// shared memory segment path to use for IDs of shared pages with slice data
@@ -196,7 +196,7 @@ MemStore::init()
     extras = shm_old(Extras)(ExtrasLabel);
 
     Must(!map);
-    map = new MemStoreMap(MapLabel);
+    map = new MemStoreMap(SBuf(MapLabel));
     map->cleaner = this;
 }
 
@@ -507,9 +507,9 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
                    " from " << extra.page << '+' << prefixSize);
 
             // parse headers if needed; they might span multiple slices!
-            auto &reply = e.mem().adjustableBaseReply();
-            if (reply.pstate != Http::Message::psParsed) {
+            if (!e.hasParsedReplyHeader()) {
                 httpHeaderParsingBuffer.append(sliceBuf.data, sliceBuf.length);
+                auto &reply = e.mem().adjustableBaseReply();
                 if (reply.parseTerminatedPrefix(httpHeaderParsingBuffer.c_str(), httpHeaderParsingBuffer.length()))
                     httpHeaderParsingBuffer = SBuf(); // we do not need these bytes anymore
             }
@@ -544,7 +544,7 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     debugs(20, 5, "mem-loaded all " << e.mem_obj->endOffset() << '/' <<
            anchor.basics.swap_file_sz << " bytes of " << e);
 
-    if (e.mem().adjustableBaseReply().pstate != Http::Message::psParsed)
+    if (!e.hasParsedReplyHeader())
         throw TextException(ToSBuf("truncated mem-cached headers; accumulated: ", httpHeaderParsingBuffer.length()), Here());
 
     // from StoreEntry::complete()
@@ -1040,7 +1040,7 @@ MemStoreRr::create()
     Must(!spaceOwner);
     spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel, spaceConfig);
     Must(!mapOwner);
-    mapOwner = MemStoreMap::Init(MapLabel, entryLimit);
+    mapOwner = MemStoreMap::Init(SBuf(MapLabel), entryLimit);
     Must(!extrasOwner);
     extrasOwner = shm_new(MemStoreMapExtras)(ExtrasLabel, entryLimit);
 }

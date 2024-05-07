@@ -8,8 +8,8 @@
 
 /* DEBUG: section 37    ICMP Routines */
 
-#ifndef _INCLUDE_ICMPV6_H
-#define _INCLUDE_ICMPV6_H
+#ifndef SQUID_SRC_ICMP_ICMP6_H
+#define SQUID_SRC_ICMP_ICMP6_H
 
 #include "Icmp.h"
 
@@ -62,5 +62,5 @@ public:
 extern Icmp6 icmp6;
 
 #endif /* USE_ICMP && SQUID_HELPER */
-#endif /* _INCLUDE_ICMPV6_H */
+#endif /* SQUID_SRC_ICMP_ICMP6_H */
 

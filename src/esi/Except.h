@@ -8,8 +8,8 @@
 
 /* DEBUG: section 86    ESI processing */
 
-#ifndef SQUID_ESIEXCEPT_H
-#define SQUID_ESIEXCEPT_H
+#ifndef SQUID_SRC_ESI_EXCEPT_H
+#define SQUID_SRC_ESI_EXCEPT_H
 
 #include "esi/Element.h"
 #include "esi/Sequence.h"
@@ -23,5 +23,5 @@ public:
     esiExcept(esiTreeParentPtr aParent) : esiSequence (aParent) {}
 };
 
-#endif /* SQUID_ESIEXCEPT_H */
+#endif /* SQUID_SRC_ESI_EXCEPT_H */
 

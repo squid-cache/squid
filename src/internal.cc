@@ -23,7 +23,6 @@
 #include "Store.h"
 #include "tools.h"
 #include "util.h"
-#include "wordlist.h"
 
 /* called when we "miss" on an internal object;
  * generate known dynamic objects,
@@ -162,18 +161,17 @@ internalHostname(void)
     return host;
 }
 
-int
-internalHostnameIs(const char *arg)
+bool
+internalHostnameIs(const SBuf &arg)
 {
-    wordlist *w;
+    if (arg.caseCmp(internalHostname()) == 0)
+        return true;
 
-    if (0 == strcmp(arg, internalHostname()))
-        return 1;
+    for (const auto &w : Config.hostnameAliases) {
+        if (w.caseCmp(arg) == 0)
+            return true;
+    }
 
-    for (w = Config.hostnameAliases; w; w = w->next)
-        if (0 == strcmp(arg, w->key))
-            return 1;
-
-    return 0;
+    return false;
 }
 

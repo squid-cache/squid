@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTP_UPGRADE_H
-#define SQUID_HTTP_UPGRADE_H
+#ifndef SQUID_SRC_HTTPUPGRADEPROTOCOLACCESS_H
+#define SQUID_SRC_HTTPUPGRADEPROTOCOLACCESS_H
 
 #include "acl/forward.h"
 #include "sbuf/SBuf.h"
@@ -82,7 +82,7 @@ private:
     typedef std::deque<NamedGuard> NamedGuards;
 
     /// pseudonym to specify rules for "all other protocols"
-    static const SBuf ProtoOther;
+    inline static const SBuf &ProtoOther();
 
     /// rules governing upgrades to explicitly named protocols
     NamedGuards namedGuards;
@@ -98,7 +98,7 @@ HttpUpgradeProtocolAccess::forEach(const Visitor &visitor) const
     for (const auto &namedGuard: namedGuards)
         visitor(namedGuard.protocol, namedGuard.guard);
     if (other)
-        visitor(ProtoOther, other);
+        visitor(ProtoOther(), other);
 }
 
 template <typename Visitor>
@@ -114,8 +114,15 @@ HttpUpgradeProtocolAccess::forApplicable(const ProtocolView &offer, const Visito
         seenApplicable = true; // may already be true
     }
     if (!seenApplicable && other) // OTHER is applicable if named rules were not
-        (void)visitor(ProtoOther, other);
+        (void)visitor(ProtoOther(), other);
 }
 
-#endif /* SQUID_HTTP_UPGRADE_H */
+inline const SBuf &
+HttpUpgradeProtocolAccess::ProtoOther()
+{
+    static const auto proto = new SBuf("OTHER");
+    return *proto;
+}
+
+#endif /* SQUID_SRC_HTTPUPGRADEPROTOCOLACCESS_H */
 

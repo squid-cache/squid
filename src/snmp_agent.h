@@ -8,8 +8,8 @@
 
 /* DEBUG: section 49    SNMP Interface */
 
-#ifndef SQUID_SNMP_AGENT_H_
-#define SQUID_SNMP_AGENT_H_
+#ifndef SQUID_SRC_SNMP_AGENT_H
+#define SQUID_SRC_SNMP_AGENT_H
 
 #if SQUID_SNMP
 
@@ -26,5 +26,5 @@ variable_list *snmp_netDnsFn(variable_list *, snint *);
 variable_list *snmp_meshPtblFn(variable_list *, snint *);
 
 #endif /* SQUID_SNMP */
-#endif /* SQUID_SNMP_AGENT_H_ */
+#endif /* SQUID_SRC_SNMP_AGENT_H */
 

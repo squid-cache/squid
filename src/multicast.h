@@ -8,13 +8,13 @@
 
 /* DEBUG: section 07    Multicast */
 
-#ifndef SQUID_MULTICAST_H_
-#define SQUID_MULTICAST_H_
+#ifndef SQUID_SRC_MULTICAST_H
+#define SQUID_SRC_MULTICAST_H
 
 #include "ipcache.h"
 
 int mcastSetTtl(int, int);
 extern IPH mcastJoinGroups;
 
-#endif /* SQUID_MULTICAST_H_ */
+#endif /* SQUID_SRC_MULTICAST_H */
 

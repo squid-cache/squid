@@ -20,8 +20,8 @@
  * to prevent squid knowing the users password (idea suggested in RFC 2617).
  */
 
-#ifndef SQUID_RFC2617_H
-#define SQUID_RFC2617_H
+#ifndef SQUID_INCLUDE_RFC2617_H
+#define SQUID_INCLUDE_RFC2617_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,5 +64,5 @@ extern void CvtBin(const HASHHEX Hex, HASH Bin);
 #ifdef __cplusplus
 }
 #endif
-#endif /* SQUID_RFC2617_H */
+#endif /* SQUID_INCLUDE_RFC2617_H */
 

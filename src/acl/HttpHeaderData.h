@@ -6,22 +6,22 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLHTTPHEADERDATA_H
-#define SQUID_ACLHTTPHEADERDATA_H
+#ifndef SQUID_SRC_ACL_HTTPHEADERDATA_H
+#define SQUID_SRC_ACL_HTTPHEADERDATA_H
 
 #include "acl/Data.h"
 #include "HttpHeader.h"
 #include "sbuf/SBuf.h"
 #include "SquidString.h"
 
-class ACLHTTPHeaderData : public ACLData<HttpHeader*>
+class ACLHTTPHeaderData: public ACLData<const HttpHeader &>
 {
     MEMPROXY_CLASS(ACLHTTPHeaderData);
 
 public:
     ACLHTTPHeaderData();
     ~ACLHTTPHeaderData() override;
-    bool match(HttpHeader* hdr) override;
+    bool match(const HttpHeader &) override;
     SBufList dump() const override;
     void parse() override;
     bool empty() const override;
@@ -35,5 +35,5 @@ private:
     ACLData<char const *> * regex_rule;
 };
 
-#endif /* SQUID_ACLHTTPHEADERDATA_H */
+#endif /* SQUID_SRC_ACL_HTTPHEADERDATA_H */
 

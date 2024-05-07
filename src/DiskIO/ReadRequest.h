@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_READREQUEST_H
-#define SQUID_READREQUEST_H
+#ifndef SQUID_SRC_DISKIO_READREQUEST_H
+#define SQUID_SRC_DISKIO_READREQUEST_H
 
 #include "base/RefCount.h"
 #include "cbdata.h"
@@ -26,5 +26,5 @@ public:
     size_t len;
 };
 
-#endif /* SQUID_READREQUEST_H */
+#endif /* SQUID_SRC_DISKIO_READREQUEST_H */
 
