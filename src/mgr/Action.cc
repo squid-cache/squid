@@ -126,8 +126,6 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 void
 Mgr::openKidSection(StoreEntry *entry, const bool is_yaml)
 {
-    if (!UsingSmp())
-        return;
     if (is_yaml)
         storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
     else
@@ -136,8 +134,6 @@ Mgr::openKidSection(StoreEntry *entry, const bool is_yaml)
 
 void Mgr::closeKidSection(StoreEntry *entry, const bool is_yaml)
 {
-    if (!UsingSmp())
-        return;
     if (is_yaml)
         storeAppendPrintf(entry, "...\n");
     else
