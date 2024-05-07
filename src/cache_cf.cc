@@ -94,6 +94,7 @@
 #include "snmp.h"
 #endif
 
+#include <algorithm>
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
@@ -1675,7 +1676,7 @@ free_acl_tos(acl_tos ** head)
     *head = nullptr;
 }
 
-#if SO_MARK && USE_LIBCAP
+#if HAVE_LIBCAP && SO_MARK
 
 static void
 dump_acl_nfmark(StoreEntry * entry, const char *name, acl_nfmark * head)
@@ -1718,7 +1719,7 @@ free_acl_nfmark(acl_nfmark ** head)
     delete *head;
     *head = nullptr;
 }
-#endif /* SO_MARK */
+#endif /* HAVE_LIBCAP && SO_MARK */
 
 static void
 dump_acl_b_size_t(StoreEntry * entry, const char *name, AclSizeLimit * head)
@@ -2028,15 +2029,12 @@ static void
 ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, Acl::Node *acl)
 {
     assert(access);
-    SBuf name;
     if (!*access) {
         *access = new Acl::Tree;
-        name.Printf("(%s rules)", desc);
-        (*access)->context(name.c_str(), config_input_line);
+        (*access)->context(ToSBuf('(', desc, " rules)"), config_input_line);
     }
     Acl::AndNode *rule = new Acl::AndNode;
-    name.Printf("(%s rule)", desc);
-    rule->context(name.c_str(), config_input_line);
+    rule->context(ToSBuf('(', desc, " rule)"), config_input_line);
     if (acl)
         rule->add(acl);
     else
@@ -4725,7 +4723,8 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
         *ftp_epsv = nullptr;
 
         if (ftpEpsvDeprecatedAction == Acl::Answer(ACCESS_DENIED)) {
-            if (auto *a = Acl::Node::FindByName("all"))
+            static const auto all = new SBuf("all");
+            if (const auto a = Acl::Node::FindByName(*all))
                 ParseAclWithAction(ftp_epsv, ftpEpsvDeprecatedAction, "ftp_epsv", a);
             else {
                 self_destruct();

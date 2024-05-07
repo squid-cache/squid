@@ -82,7 +82,7 @@ protected:
 
     void processReply();
     void proceedAfter1xx();
-    void handle1xx(HttpReply *msg);
+    void handle1xx(const HttpReplyPointer &);
     void drop1xx(const char *reason);
 
 private:
@@ -151,6 +151,9 @@ private:
     int64_t payloadSeen = 0;
     /// positive when we read more than we wanted
     int64_t payloadTruncated = 0;
+
+    /// whether we are waiting for our Comm::Read() handler to be called
+    bool waitingForCommRead = false;
 
     /// Whether we received a Date header older than that of a matching
     /// cached response.

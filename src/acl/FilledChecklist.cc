@@ -26,7 +26,6 @@ CBDATA_CLASS_INIT(ACLFilledChecklist);
 
 ACLFilledChecklist::ACLFilledChecklist() :
     dst_rdns(nullptr),
-    reply (nullptr),
 #if USE_AUTH
     auth_user_request (nullptr),
 #endif
@@ -49,8 +48,6 @@ ACLFilledChecklist::~ACLFilledChecklist()
     assert (!asyncInProgress());
 
     safe_free(dst_rdns); // created by xstrdup().
-
-    HTTPMSGUNLOCK(reply);
 
     cbdataReferenceDone(conn_);
 
@@ -103,9 +100,9 @@ ACLFilledChecklist::verifyAle() const
         }
     }
 
-    if (reply && !al->reply) {
+    if (hasReply() && !al->reply) {
         showDebugWarning("HttpReply object");
-        al->reply = reply;
+        al->reply = reply_;
     }
 }
 
@@ -202,7 +199,6 @@ ACLFilledChecklist::markSourceDomainChecked()
  */
 ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request):
     dst_rdns(nullptr),
-    reply(nullptr),
 #if USE_AUTH
     auth_user_request(nullptr),
 #endif
@@ -240,3 +236,23 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
             setConn(cmgr);
     }
 }
+
+void
+ACLFilledChecklist::updateAle(const AccessLogEntry::Pointer &a)
+{
+    if (!a)
+        return;
+
+    al = a; // could have been set already (to a different value)
+    if (!request)
+        setRequest(a->request);
+    updateReply(a->reply);
+}
+
+void
+ACLFilledChecklist::updateReply(const HttpReply::Pointer &r)
+{
+    if (r)
+        reply_ = r; // may already be set, including to r
+}
+

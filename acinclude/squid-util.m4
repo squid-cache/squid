@@ -217,18 +217,25 @@ AC_DEFUN([SQUID_YESNO],[
 dnl Check that a library is actually available, useable,
 dnl and where its pieces are (eg headers and hack macros)
 dnl Parameters for this macro are:
-dnl 1) library name (without 'lib' prefix)
-dnl 2) necessary library checks (to be executed by this macro unless the use of the library is disabled)
-dnl   These checks should set LIBFOO_LIBS automake variable (on success)
-dnl   and ensure that it is empty or unset (on failures).
+dnl 1) library name without 'lib' prefix
+dnl 2) necessary library checks to be executed by this macro
+dnl  - These checks are not run when library use is explicitly disabled.
+dnl  - These checks should set LIBFOO_LIBS automake variable on success
+dnl    and ensure that it is empty or unset on failures.
+dnl  - These checks may set or change LIBS and xxFLAGS variables as needed.
+dnl    This macro restores those variables afterward (see SQUID_STATE_SAVE for details).
 AC_DEFUN([SQUID_CHECK_LIB_WORKS],[
+AH_TEMPLATE(m4_toupper(m4_translit([HAVE_LIB$1], [-+.], [___])),[Define as 1 to enable '$1' library support.])
 AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
+  SQUID_STATE_SAVE(check_lib_works_state)
   $2
+  SQUID_STATE_ROLLBACK(check_lib_works_state)
   AS_IF([! test -z m4_toupper(m4_translit(["$LIB$1_LIBS"], [-+.], [___]))],[
     m4_toupper(m4_translit([CPPFLAGS="$LIB$1_CFLAGS $CPPFLAGS"], [-+.], [___]))
     m4_toupper(m4_translit([LIB$1_LIBS="$LIB$1_PATH $LIB$1_LIBS"], [-+.], [___]))
     AC_MSG_NOTICE([Library '$1' support: m4_translit([${with_$1:=yes (auto)} m4_toupper($LIB$1_LIBS)], [-+.], [___])])
     m4_translit([with_$1], [-+.], [___])=yes
+    AC_DEFINE(m4_toupper(m4_translit([HAVE_LIB$1], [-+.], [___])),1,[Define as 1 to enable '$1' library support.])
   ],[m4_translit([test "x$with_$1" = "xyes"], [-+.], [___])],[
     AC_MSG_ERROR([Required library '$1' not found])
   ],[
@@ -236,6 +243,7 @@ AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
     AC_MSG_NOTICE([Library '$1' support: no (auto)])
   ])
 ])
+AM_CONDITIONAL(m4_toupper(m4_translit([ENABLE_LIB$1],[-+.],[___])),m4_translit([test "x$with_$1" != "xno"],[-+.],[___]))
 AC_SUBST(m4_toupper(m4_translit([LIB$1_LIBS], [-+.], [___])))
 ])
 
@@ -328,31 +336,4 @@ AS_IF([test "$ac_res" != no],[
   AS_IF([test "$ac_res" != "none required"],[LIBS="$ac_res $LIBS"])
   $3],[$4])
 AS_VAR_POPDEF([ac_Search])dnl
-])
-
-dnl Check for Cyrus SASL
-AC_DEFUN([SQUID_CHECK_SASL],[
-  squid_cv_check_sasl="auto"
-  AC_CHECK_HEADERS([sasl/sasl.h sasl.h])
-  AC_CHECK_LIB(sasl2,sasl_errstring,[LIBSASL="-lsasl2"],[
-    AC_CHECK_LIB(sasl,sasl_errstring,[LIBSASL="-lsasl"], [
-      squid_cv_check_sasl="no"
-    ])
-  ])
-  AS_IF([test "$squid_host_os" = "Darwin"],[
-    AS_IF([test "$ac_cv_lib_sasl2_sasl_errstring" = "yes"],[
-      AC_DEFINE(HAVE_SASL_DARWIN,1,[Define to 1 if Mac Darwin without sasl.h])
-      echo "checking for MAC Darwin without sasl.h ... yes"
-      squid_cv_check_sasl="yes"
-    ],[
-      echo "checking for MAC Darwin without sasl.h ... no"
-      squid_cv_check_sasl="no"
-    ])
-  ])
-  AS_IF([test "x$squid_cv_check_sasl" = "xno"],[
-    AC_MSG_WARN([Neither SASL nor SASL2 found])
-  ],[
-    squid_cv_check_sasl="yes"
-  ])
-  AC_SUBST(LIBSASL)
 ])

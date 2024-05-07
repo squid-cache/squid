@@ -427,8 +427,6 @@ icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int 
 void
 icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 {
-    debugs(12, 2, "icpDenyAccess: Access Denied for " << from << " by " << AclMatchedName << ".");
-
     if (clientdbCutoffDenied(from)) {
         /*
          * count this DENIED query in the clientdb, even though
@@ -443,14 +441,20 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 bool
 icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
 {
-    /* absent any explicit rules, we deny all */
-    if (!Config.accessList.icp)
+    if (!Config.accessList.icp) {
+        debugs(12, 2, "Access Denied due to lack of ICP access rules.");
         return false;
+    }
 
     ACLFilledChecklist checklist(Config.accessList.icp, icp_request);
     checklist.src_addr = from;
     checklist.my_addr.setNoAddr();
-    return checklist.fastCheck().allowed();
+    const auto &answer = checklist.fastCheck();
+    if (answer.allowed())
+        return true;
+
+    debugs(12, 2, "Access Denied for " << from << " by " << answer.lastCheckDescription() << ".");
+    return false;
 }
 
 HttpRequest *

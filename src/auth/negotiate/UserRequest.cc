@@ -53,18 +53,6 @@ Auth::Negotiate::UserRequest::connLastHeader()
     return nullptr;
 }
 
-int
-Auth::Negotiate::UserRequest::authenticated() const
-{
-    if (user() != nullptr && user()->credentials() == Auth::Ok) {
-        debugs(29, 9, "user authenticated.");
-        return 1;
-    }
-
-    debugs(29, 9, "user not fully authenticated.");
-    return 0;
-}
-
 const char *
 Auth::Negotiate::UserRequest::credentialsStr()
 {

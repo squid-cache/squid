@@ -12,6 +12,8 @@
 #include "acl/Acl.h"
 #include "acl/InnerNode.h"
 #include "cbdata.h"
+
+#include <optional>
 #include <stack>
 #include <vector>
 
@@ -152,9 +154,12 @@ public:
         return old;
     }
 
+    /// remember the name of the last ACL being evaluated
+    void setLastCheckedName(const SBuf &name) { lastCheckedName_ = name; }
+
 private:
     /// Calls non-blocking check callback with the answer and destroys self.
-    void checkCallback(Acl::Answer answer);
+    void checkCallback(const Acl::Answer &answer);
 
     void matchAndFinish();
 
@@ -209,6 +214,9 @@ private: /* internal methods */
     std::stack<Breadcrumb> matchPath;
     /// the list of actions which must ignored during acl checks
     std::vector<Acl::Answer> bannedActions_;
+
+    /// the name of the last evaluated ACL (if any ACLs were evaluated)
+    std::optional<SBuf> lastCheckedName_;
 };
 
 #endif /* SQUID_SRC_ACL_CHECKLIST_H */

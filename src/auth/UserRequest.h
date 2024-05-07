@@ -112,7 +112,7 @@ public:
      \retval true   User has successfully been authenticated.
      \retval false  Timeouts on cached credentials have occurred or for any reason the credentials are not valid.
      */
-    virtual int authenticated() const = 0;
+    virtual bool authenticated() const;
 
     /**
      * Check a auth_user pointer for validity.
@@ -247,7 +247,7 @@ int authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer);
 
 /// \ingroup AuthAPI
 /// See Auth::UserRequest::authenticated()
-int authenticateUserAuthenticated(Auth::UserRequest::Pointer);
+bool authenticateUserAuthenticated(const Auth::UserRequest::Pointer &);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_SRC_AUTH_USERREQUEST_H */

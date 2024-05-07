@@ -10,6 +10,8 @@
 #include "CachePeers.h"
 #include "SquidConfig.h"
 
+#include <algorithm>
+
 CachePeer &
 CachePeers::nextPeerToPing(const size_t pollIndex)
 {

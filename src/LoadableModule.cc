@@ -14,7 +14,8 @@
 // Note: We must use preprocessor instead of C ifs because if dlopen()
 // is seen by the static linker, the linker will complain.
 
-LoadableModule::LoadableModule(const String &aName): theName(aName), theHandle(nullptr)
+LoadableModule::LoadableModule(const SBuf &aName):
+    theName(aName)
 {
     // Initialise preloaded symbol lookup table.
     LTDL_SET_PRELOADED_SYMBOLS();
@@ -62,7 +63,7 @@ LoadableModule::unload()
 void *
 LoadableModule::openModule()
 {
-    return lt_dlopen(theName.termedBuf());
+    return lt_dlopen(theName.c_str());
 }
 
 bool

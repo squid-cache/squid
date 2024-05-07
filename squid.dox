@@ -2066,7 +2066,11 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = __cplusplus \
                          FOLLOW_X_FORWARDED_FOR \
                          FORW_VIA_DB \
+                         HAVE_LIBCAP \
+                         HAVE_LIBGNUTLS \
                          ICAP_CLIENT \
+                         HAVE_LIBHEIMDAL_KRB5 \
+                         HAVE_LIBMIT_KRB5 \
                          LINUX_NETFILTER \
                          SQUID_SNMP \
                          USE_ADAPTATION \
@@ -2080,9 +2084,6 @@ PREDEFINED             = __cplusplus \
                          USE_ECAP \
                          USE_ERR_LOCALES \
                          USE_EPOLL \
-                         USE_GNUGSS \
-                         USE_GNUTLS \
-                         USE_HEIMDAL_KRB5 \
                          USE_HEXDUMP \
                          USE_HTCP \
                          USE_HTTP_VIOLATIONS \
@@ -2090,9 +2091,7 @@ PREDEFINED             = __cplusplus \
                          USE_IDENT \
                          USE_IPV6 \
                          USE_KQUEUE \
-                         USE_LIBCAP \
                          USE_LOADABLE_MODULES \
-                         USE_MIT_KRB5 \
                          USE_OPENSSL \
                          USE_POLL \
                          USE_QOS_TOS \

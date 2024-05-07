@@ -5,34 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-dnl check that strnstr() works fine. On Macos X it can cause a buffer overrun
-dnl sets squid_cv_func_strnstr to "yes" or "no", and defines HAVE_STRNSTR
-AC_DEFUN([SQUID_CHECK_FUNC_STRNSTR],[
-
-  # Yay!  This one is  a MacOSX brokenness.  Its not good enough
-  # to know that strnstr() exists, because MacOSX 10.4 have a bad
-  # copy that crashes with a buffer over-run!
-  AH_TEMPLATE(HAVE_STRNSTR,[MacOS brokenness: strnstr() can overrun on that system])
-  AC_CACHE_CHECK([if strnstr is well implemented], squid_cv_func_strnstr,
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-    // we expect this to succeed, or crash on over-run.
-    // if it passes otherwise we may need a better check.
-int main(int argc, char **argv)
-{
-    int size = 20;
-    char *str = malloc(size);
-    memset(str, 'x', size);
-    strnstr(str, "fubar", size);
-    return 0;
-}
-    ]])],[squid_cv_func_strnstr="yes"],[squid_cv_func_strnstr="no"],[:])
-  )
-  AS_IF([test "x$squid_cv_func_strnstr" = "xyes"],[AC_DEFINE(HAVE_STRNSTR,1)])
-]) dnl SQUID_CHECK_FUNC_STRNSTR
-
 dnl check that epoll actually works
 dnl sets squid_cv_epoll_works to "yes" or "no"
 AC_DEFUN([SQUID_CHECK_EPOLL],[
@@ -730,31 +702,6 @@ void squid_getprotobynumber(void) {
     ]
   )
   SQUID_STATE_ROLLBACK(winsock)
-])
-
-dnl check that setresuid is properly implemented.
-dnl sets squid_cv_resuid_works to "yes" or "no"
-AC_DEFUN([SQUID_CHECK_SETRESUID_WORKS],[
-  AC_CACHE_CHECK(if setresuid is actually implemented, squid_cv_resuid_works,
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-  int main(int argc, char **argv) {
-    if(setresuid(-1,-1,-1)) {
-      perror("setresuid:");
-      return 1;
-    }
-    return 0;
-  }
-    ]])],[squid_cv_resuid_works="yes"],[squid_cv_resuid_works="no"],[:])
-  )
 ])
 
 dnl check whether Solaris has broken IPFilter headers (Solaris 10 at least does)

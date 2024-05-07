@@ -33,9 +33,6 @@ CPPUNIT_TEST_SUITE_REGISTRATION( TestPackableStream );
 void
 TestPackableStream::testGetStream()
 {
-    /* Setup a store root so we can create a StoreEntry */
-    Store::Init();
-
     CapturingStoreEntry * anEntry = new CapturingStoreEntry();
     {
         anEntry->lock("test");
@@ -59,7 +56,6 @@ TestPackableStream::testGetStream()
         CPPUNIT_ASSERT_EQUAL(String("12345677.7 some text   !."), anEntry->_appended_text);
     }
     delete anEntry; // does the unlock()
-    Store::FreeMemory();
 }
 
 // This test uses main() from ./testStore.cc.

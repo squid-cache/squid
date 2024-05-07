@@ -92,6 +92,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-aio \
 	--without-cap \
 	--without-dl \
+	--without-expat \
 	--without-gnugss \
 	--without-heimdal-krb5 \
 	--without-large-files \
@@ -107,6 +108,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-psapi \
 	--without-systemd \
 	--without-tdb \
+	--without-xml2 \
 	"
 
 # Fix the distclean testing.

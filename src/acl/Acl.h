@@ -12,9 +12,10 @@
 #include "acl/forward.h"
 #include "defines.h"
 #include "dlink.h"
-#include "sbuf/forward.h"
+#include "sbuf/SBuf.h"
 
 #include <algorithm>
+#include <optional>
 #include <ostream>
 
 namespace Acl {
@@ -66,7 +67,7 @@ public:
         return !(*this == aCode);
     }
 
-    bool operator ==(const Answer allow) const {
+    bool operator ==(const Answer &allow) const {
         return code == allow.code && kind == allow.kind;
     }
 
@@ -89,6 +90,9 @@ public:
     /// whether Squid is uncertain about the allowed() or denied() answer
     bool conflicted() const { return !allowed() && !denied(); }
 
+    /// describes the ACL that was evaluated last while obtaining this answer (for debugging)
+    const SBuf &lastCheckDescription() const;
+
     aclMatchCode code = ACCESS_DUNNO; ///< ACCESS_* code
 
     /// the matched custom access list verb (or zero)
@@ -96,10 +100,13 @@ public:
 
     /// whether we were computed by the "negate the last explicit action" rule
     bool implicit = false;
+
+    /// the name of the ACL (if any) that was evaluated last while obtaining this answer
+    std::optional<SBuf> lastCheckedName;
 };
 
 inline std::ostream &
-operator <<(std::ostream &o, const Answer a)
+operator <<(std::ostream &o, const Answer &a)
 {
     switch (a) {
     case ACCESS_DENIED:
@@ -135,10 +142,6 @@ public:
     int matchrv;
     void *acl_data;
 };
-
-/// \ingroup ACLAPI
-/// XXX: find a way to remove or at least use a refcounted Acl::Node pointer
-extern const char *AclMatchedName;  /* NULL */
 
 #endif /* SQUID_SRC_ACL_ACL_H */
 

@@ -2631,7 +2631,7 @@ CONFIG_END
 DOC_END
 
 NAME: https_port
-IFDEF: USE_GNUTLS||USE_OPENSSL
+IFDEF: HAVE_LIBGNUTLS||USE_OPENSSL
 TYPE: PortCfg
 DEFAULT: none
 LOC: HttpPortList
@@ -2784,7 +2784,7 @@ DOC_END
 
 NAME: tcp_outgoing_mark
 TYPE: acl_nfmark
-IFDEF: SO_MARK&&USE_LIBCAP
+IFDEF: HAVE_LIBCAP&&SO_MARK
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfmarkToServer
 DOC_START
@@ -2806,7 +2806,7 @@ DOC_END
 
 NAME: mark_client_packet clientside_mark
 TYPE: acl_nfmark
-IFDEF: SO_MARK&&USE_LIBCAP
+IFDEF: HAVE_LIBCAP&&SO_MARK
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfmarkToClient
 DOC_START
@@ -2832,7 +2832,7 @@ DOC_END
 
 NAME: mark_client_connection
 TYPE: acl_nfmark
-IFDEF: SO_MARK&&USE_LIBCAP
+IFDEF: HAVE_LIBCAP&&SO_MARK
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfConnmarkToClient
 DOC_START
@@ -3087,7 +3087,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: tls_outgoing_options
-IFDEF: USE_GNUTLS||USE_OPENSSL
+IFDEF: HAVE_LIBGNUTLS||USE_OPENSSL
 TYPE: securePeerOptions
 DEFAULT: min-version=1.0
 LOC: Security::ProxyOutgoingConfig
@@ -7671,7 +7671,7 @@ DOC_START
 DOC_END
 
 NAME: hostname_aliases
-TYPE: wordlist
+TYPE: SBufList
 LOC: Config.hostnameAliases
 DEFAULT: none
 DOC_START
@@ -9835,7 +9835,7 @@ ecap_service s2 respmod_precache ecap://filters.R.us/virusFilter config=/etc/vf.
 DOC_END
 
 NAME: loadable_modules
-TYPE: wordlist
+TYPE: SBufList
 IFDEF: USE_LOADABLE_MODULES
 LOC: Config.loadable_module_names
 DEFAULT: none
@@ -10028,7 +10028,7 @@ DOC_END
 NAME: adaptation_meta
 TYPE: note
 IFDEF: USE_ADAPTATION
-LOC: Adaptation::Config::metaHeaders
+LOC: Adaptation::Config::metaHeaders()
 DEFAULT: none
 DOC_START
 	This option allows Squid administrator to add custom ICAP request

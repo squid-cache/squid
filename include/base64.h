@@ -9,7 +9,7 @@
 #ifndef SQUID_INCLUDE_BASE64_H
 #define SQUID_INCLUDE_BASE64_H
 
-#if HAVE_NETTLE_BASE64_H && HAVE_NETTLE34_BASE64
+#if HAVE_NETTLE_BASE64_H
 #include <nettle/base64.h>
 
 #else /* Base64 functions copied from Nettle 3.4 under GPLv2, with adjustments */
@@ -162,11 +162,11 @@ base64_decode_final(struct base64_decode_ctx *ctx);
 }
 #endif
 
-#endif /* HAVE_NETTLE_BASE64_H && HAVE_NETTLE34_BASE64 */
+#endif /* HAVE_NETTLE_BASE64_H */
 
 /// Calculate the buffer size required to hold the encoded form of
 /// a string of length 'decodedLen' including all terminator bytes.
-#   define base64_encode_len(length) (BASE64_ENCODE_LENGTH(length)+BASE64_ENCODE_FINAL_LENGTH+1)
+#define base64_encode_len(length) (BASE64_ENCODE_LENGTH(length)+BASE64_ENCODE_FINAL_LENGTH+1)
 
 #endif /* SQUID_INCLUDE_BASE64_H */
 

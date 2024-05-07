@@ -52,7 +52,7 @@
 CBDATA_CLASS_INIT(clientReplyContext);
 
 /* Local functions */
-extern "C" CSS clientReplyStatus;
+CSS clientReplyStatus;
 ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const AccessLogEntry::Pointer &);
 
 /* privates */
@@ -500,8 +500,8 @@ clientReplyContext::handleIMSReply(const StoreIOBuffer result)
     sendClientOldEntry();
 }
 
-SQUIDCEXTERN CSR clientGetMoreData;
-SQUIDCEXTERN CSD clientReplyDetach;
+CSR clientGetMoreData;
+CSD clientReplyDetach;
 
 /// \copydoc clientReplyContext::cacheHit()
 void
@@ -843,11 +843,9 @@ clientReplyContext::blockedHit() const
     if (http->request->flags.internal)
         return false; // internal content "hits" cannot be blocked
 
-    const auto &rep = http->storeEntry()->mem().freshestReply();
     {
         std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
-        chl->reply = const_cast<HttpReply*>(&rep); // ACLChecklist API bug
-        HTTPMSGLOCK(chl->reply);
+        chl->updateReply(&http->storeEntry()->mem().freshestReply());
         return !chl->fastCheck().allowed(); // when in doubt, block
     }
 }
@@ -1838,8 +1836,7 @@ clientReplyContext::processReplyAccess ()
     /** Process http_reply_access lists */
     ACLFilledChecklist *replyChecklist =
         clientAclChecklistCreate(Config.accessList.reply, http);
-    replyChecklist->reply = reply;
-    HTTPMSGLOCK(replyChecklist->reply);
+    replyChecklist->updateReply(reply);
     replyChecklist->nonBlockingCheck(ProcessReplyAccessResult, this);
 }
 
@@ -1855,12 +1852,11 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
 {
     debugs(88, 2, "The reply for " << http->request->method
            << ' ' << http->uri << " is " << accessAllowed << ", because it matched "
-           << (AclMatchedName ? AclMatchedName : "NO ACL's"));
+           << accessAllowed.lastCheckDescription());
 
     if (!accessAllowed.allowed()) {
         ErrorState *err;
-        err_type page_id;
-        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);
+        auto page_id = FindDenyInfoPage(accessAllowed, true);
 
         http->updateLoggingTags(LOG_TCP_DENIED_REPLY);
 

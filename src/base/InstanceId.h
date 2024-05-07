@@ -49,6 +49,7 @@ public:
     typedef ValueType Value; ///< id storage type
 
     InstanceId() {change();}
+    InstanceId(InstanceId &&) = delete; // no copying/moving of any kind
 
     operator Value() const { return value; }
     bool operator ==(const InstanceId &o) const { return value == o.value; }
@@ -67,10 +68,6 @@ public:
 
 public:
     Value value = Value(); ///< instance identifier
-
-private:
-    InstanceId(const InstanceId &); ///< not implemented; IDs are unique
-    InstanceId& operator=(const InstanceId &); ///< not implemented
 };
 
 /// An InstanceIdDefinitions() helper. Avoid direct use.

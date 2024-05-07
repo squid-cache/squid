@@ -22,7 +22,6 @@ m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
 m4_include([acinclude/ldap.m4])
-m4_include([acinclude/nettle.m4])
 m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/tdb.m4])
@@ -395,7 +394,6 @@ SQUID_AUTO_LIB(dl,[dynamic linking],[LIBDL])
 SQUID_CHECK_LIB_WORKS(dl,[
   LDFLAGS="$LIBDL_PATH $LDFLAGS"
   AC_CHECK_LIB(dl, dlopen,[LIBDL_LIBS="-ldl"])
-  LIBS="$LIBDL_LIBS $LIBS"
 ])
 
 AC_DEFUN([LIBATOMIC_CHECKER],[
@@ -432,28 +430,18 @@ SQUID_STATE_ROLLBACK(LIBATOMIC)
 AC_SUBST(ATOMICLIB)
 
 SQUID_AUTO_LIB(psapi,[Windows PSAPI.dll],[LIBPSAPI])
-AS_IF([test "x$with_psapi" != "xno"],[
-  SQUID_STATE_SAVE(squid_psapi_state)
+SQUID_CHECK_LIB_WORKS(psapi,[
   CPPFLAGS="$LIBPSAPI_CFLAGS $CPPFLAGS"
   LIBS="$LIBPSAPI_PATH $LIBS"
-  AC_CHECK_LIB([psapi],[K32GetProcessMemoryInfo],[LIBPSAPI_LIBS="-lpsapi"])
-  AC_CHECK_HEADER([psapi.h],,,[
+  AC_CHECK_LIB([psapi],[K32GetProcessMemoryInfo],[
+    LIBPSAPI_LIBS="-lpsapi"
+    AC_CHECK_HEADERS([psapi.h],,,[
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
-  ])
-  SQUID_STATE_ROLLBACK(squid_psapi_state)
-  AS_IF([test "x$LIBPSAPI_LIBS" != "x"],[
-    CXXFLAGS="$LIBPSAPI_CFLAGS $CXXFLAGS"
-    LIBPSAPI_LIBS="$LIBPSAPI_PATH $LIBPSAPI_LIBS"
-  ],[test "x$with_psapi" = "xyes"],[
-    AC_MSG_ERROR([Required library PSAPI.dll not found])
-  ],[
-    AC_MSG_NOTICE([Library PSAPI.dll not found.])
+    ])
   ])
 ])
-AC_MSG_NOTICE([Using Windows PSAPI.dll library: ${with_psapi:=auto}])
-AC_SUBST(LIBPSAPI_LIBS)
 
 AC_SEARCH_LIBS([shm_open], [rt])
 AS_IF([test "x$ac_cv_search_shm_open" != "xno"],[
@@ -829,78 +817,37 @@ AC_ARG_ENABLE(delay-pools,
 dnl disable generic/common adaptation support by default
 squid_opt_use_adaptation=no
 
-squid_opt_use_esi=auto
-AH_TEMPLATE([USE_SQUID_ESI],[Define to enable the ESI processor])
-AC_ARG_ENABLE(esi,
-  AS_HELP_STRING([--disable-esi],
-                 [Disable ESI for accelerators. ESI requires expat or xml2 library.
+AH_TEMPLATE([USE_SQUID_ESI],[whether to enable ESI processing])
+AC_ARG_ENABLE(esi,[
+  AS_HELP_STRING([--enable-esi],
+                 [Enable ESI for accelerators. ESI requires expat or xml2 library.
                   Enabling ESI will cause squid reverse proxies to be capable
-                  of the Edge Acceleration Specification (www.esi.org).]),
-                 [squid_opt_use_esi=$enableval],[])
+                  of the Edge Acceleration Specification (www.esi.org).])
+],[
+  SQUID_DEFINE_BOOL(USE_SQUID_ESI,$enable_esi)
+])
+AC_MSG_NOTICE([Enable ESI processor: ${enable_esi:=no (auto)}])
 
 # ESI support libraries: expat
-AH_TEMPLATE(HAVE_LIBEXPAT,[Define to 1 if you have the expat library])
 SQUID_AUTO_LIB(expat,[ESI expat library],[LIBEXPAT])
-AS_IF([test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno"],[
-  SQUID_STATE_SAVE(squid_expat_state)
-  PKG_CHECK_MODULES([LIBEXPAT],[expat],[],[
-    AC_CHECK_LIB([expat],[main],[LIBEXPAT_LIBS="-lexpat"])
-  ])
+SQUID_CHECK_LIB_WORKS(expat,[
+  PKG_CHECK_MODULES([LIBEXPAT],[expat],[:],[:])
   CPPFLAGS="$LIBEXPAT_CFLAGS $CPPFLAGS"
   AC_CHECK_HEADERS(expat.h)
-  SQUID_STATE_ROLLBACK(squid_expat_state)
-  AS_IF([test "x$LIBEXPAT_LIBS" != "x"],[
-      squid_opt_use_esi=yes
-      LIBEXPAT_LIBS="$LIBEXPAT_PATH $LIBEXPAT_LIBS"
-      AC_DEFINE(HAVE_LIBEXPAT,1,[Define to 1 if you have the expat library])
-    ],
-    [test "x$with_expat" = "xyes"],[AC_MSG_ERROR([Required library expat not found.])],
-    [AC_MSG_NOTICE([Library expat not found.])]
-  )
 ])
-AM_CONDITIONAL(ENABLE_LIBEXPAT,[test "x$LIBEXPAT_LIBS" != "x"])
-AC_SUBST(LIBEXPAT_LIBS)
 
 # ESI support libraries: xml2
-AH_TEMPLATE(HAVE_LIBXML2,[Define to 1 if you have the xml2 library])
 SQUID_AUTO_LIB(xml2,[ESI xml2 library],[LIBXML2])
-AS_IF([test "x$squid_opt_use_esi" != "xno" -a "x$with_xml2" != "xno"],[
-  SQUID_STATE_SAVE([squid_libxml2_save])
-  PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[
-    AC_CHECK_LIB([xml2],[main],[LIBXML2_LIBS="$LIBXML2_PATH -lxml2"])
-  ])
+SQUID_CHECK_LIB_WORKS(xml2,[
+  PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[:],[:])
   CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
   AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
-  SQUID_STATE_ROLLBACK([squid_libxml2_save])
-
-  AS_IF([test "x$LIBXML2_LIBS" != "x"],[
-    squid_opt_use_esi=yes
-    CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
-    LIBXML2_LIBS="$LIBXML2_PATH $LIBXML2_LIBS"
-    AC_DEFINE(HAVE_LIBXML2,1,[Define to 1 if you have the xml2 library])
-  ],[test "x$with_xml2" = "xyes"],[
-    AC_MSG_ERROR([Required library xml2 not found])
-  ],[
-    AC_MSG_NOTICE([Library xml2 not found.])
-  ])
 ])
-AM_CONDITIONAL(ENABLE_LIBXML2,[test "x$LIBXML2_LIBS" != "x"])
-AC_SUBST(LIBXML2_LIBS)
 
-AS_IF([test "x$squid_opt_use_esi" = "xyes"],[
-  AS_IF([test "x$LIBXML2_LIBS" = "x" -a "x$LIBEXPAT_LIBS" = "x"],[
-    AC_MSG_ERROR([ESI processor requires libxml2 or libexpat])
-  ])
-  AC_MSG_NOTICE([Enabling ESI processor: $LIBEXPAT_LIBS $LIBXML2_LIBS])
-  AC_DEFINE(USE_SQUID_ESI,1,[Compile the ESI processor])
-],[
-  AS_IF(test "x$squid_opt_use_esi" = "xno",[
-    AC_MSG_NOTICE([Disabling ESI processor.])
-  ],[
-    AC_MSG_NOTICE([Disabling ESI processor. libxml2 and libexpat not found.])
-  ])
+AS_IF([test "x$enable_esi" = "xyes" -a "x$LIBXML2_LIBS" = "x" -a "x$LIBEXPAT_LIBS" = "x"],[
+  AC_MSG_ERROR([ESI processor requires libxml2 or libexpat])
 ])
-AM_CONDITIONAL(ENABLE_ESI, test "x$squid_opt_use_esi" = "xyes")
+AM_CONDITIONAL(ENABLE_ESI,[test "x$enable_esi" = "xyes"])
 
 AC_ARG_ENABLE(icap-client,
   AS_HELP_STRING([--disable-icap-client],[Disable the ICAP client.]),[
@@ -932,12 +879,41 @@ AS_IF([test "x$enable_ecap" != "xno"],[
   ])
 
   SQUID_STATE_SAVE(squid_ecap_state)
+  CPPFLAGS="$EXT_LIBECAP_CFLAGS $CPPFLAGS"
+  LIBS="$EXT_LIBECAP_LIBS $LIBS"
+  AC_CHECK_HEADERS([ \
+    libecap/adapter/service.h \
+    libecap/adapter/xaction.h \
+    libecap/common/area.h \
+    libecap/common/body.h \
+    libecap/common/delay.h \
+    libecap/common/forward.h \
+    libecap/common/header.h \
+    libecap/common/memory.h \
+    libecap/common/message.h \
+    libecap/common/name.h \
+    libecap/common/named_values.h \
+    libecap/common/names.h \
+    libecap/common/options.h \
+    libecap/common/registry.h \
+    libecap/common/version.h \
+    libecap/host/host.h \
+    libecap/host/xaction.h \
+  ],,,[
+/* libecap-1.0.1 headers do not build without autoconf.h magic */
+#define HAVE_CONFIG_H
+/* libecap/common/delay.h fails to include <string> */
+#include <string>
+  ])
   AC_MSG_CHECKING([whether -lecap will link])
-  CXXFLAGS="$CXXFLAGS $EXT_LIBECAP_CFLAGS"
-  LIBS="$LIBS $EXT_LIBECAP_LIBS"
-  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <libecap/common/names.h>]],[[
-    const libecap::Name test("test", libecap::Name::NextId());
-  ]])],[
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#if HAVE_LIBECAP_COMMON_NAMES_H
+#include <libecap/common/names.h>
+#endif
+    ]],[[
+      const libecap::Name test("test", libecap::Name::NextId());
+    ]])
+  ],[
     AC_MSG_RESULT(yes)
     squid_opt_use_adaptation=yes
   ],[
@@ -1058,14 +1034,10 @@ AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 # Cryptograhic libraries
 SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
 SQUID_CHECK_LIB_WORKS(nettle,[
-  SQUID_STATE_SAVE(squid_nettle_state)
-  PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[],[
+  PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[
     CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
-    AC_CHECK_LIB(nettle,[nettle_md5_init],[LIBNETTLE_LIBS="-lnettle"])
-  ])
-  AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
-  SQUID_CHECK_NETTLE_BASE64
-  SQUID_STATE_ROLLBACK(squid_nettle_state)
+    AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
+  ],[:])
 ])
 
 dnl Check for libcrypt
@@ -1077,37 +1049,15 @@ dnl Solaris10 provides MD5 natively through libmd5
 AC_CHECK_LIB(md5, MD5Init, [CRYPTLIB="$CRYPTLIB -lmd5"])
 AC_SUBST(CRYPTLIB)
 
-SSLLIB=""
-
 SQUID_AUTO_LIB(gnutls,[GnuTLS crypto],[LIBGNUTLS])
-AH_TEMPLATE(USE_GNUTLS,[GnuTLS support is available])
 SQUID_CHECK_LIB_WORKS(gnutls,[
-  SQUID_STATE_SAVE(squid_gnutls_state)
-
-  # User may have provided a custom location for GnuTLS. Otherwise...
-  CPPFLAGS="$LIBGNUTLS_CFLAGS $CPPFLAGS"
-  LIBS="$LIBS $LIBGNUTLS_PATH"
-
-  # auto-detect using pkg-config
   PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.4.0],[
-    CPPFLAGS="$CPPFLAGS $LIBGNUTLS_CFLAGS"
-    ],[
-    ## find the package without pkg-config
-    ## check that the library is actually new enough.
-    ## by testing for a 3.4.0+ function which we use
-    AC_CHECK_LIB(gnutls,gnutls_pcert_export_x509,[LIBGNUTLS_LIBS="-lgnutls"])
-  ])
-  # if any of the required headers is not found, signal we can't support gnutls
-  AC_CHECK_HEADERS([gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h], [], [LIBGNUTLS_LIBS=""])
-
-  SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
-
-  AS_IF([test "x$LIBGNUTLS_LIBS" != "x"],[
-    SSLLIB="$LIBGNUTLS_PATH $LIBGNUTLS_LIBS $SSLLIB"
-    AC_DEFINE(USE_GNUTLS,1,[GnuTLS support is available])
-  ])
+    CPPFLAGS="$LIBGNUTLS_CFLAGS $CPPFLAGS"
+    AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h)
+  ],[:])
 ])
 
+SSLLIB=""
 dnl User may specify OpenSSL is needed from a non-standard location
 SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[LIBOPENSSL])
 AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
@@ -1158,12 +1108,6 @@ AS_IF([test "x$with_openssl" = "xyes"],[
     ],$LIBOPENSSL_LIBS)
   ])
 
-  # This is a workaround for RedHat 9 brain damage..
-  AS_IF([test -d /usr/kerberos/include -a -f /usr/include/openssl/kssl.h],[
-    AC_MSG_NOTICE([OpenSSL depends on Kerberos])
-    LIBOPENSSL_LIBS="-L/usr/kerberos/lib $LIBOPENSSL_LIBS"
-    CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
-  ])
   SQUID_STATE_ROLLBACK(squid_openssl_state) #de-pollute LIBS
 
   AS_IF([test "x$LIBOPENSSL_LIBS" != "x"],[
@@ -1198,460 +1142,95 @@ AC_MSG_NOTICE([OpenSSL library support: ${with_openssl:=no} ${LIBOPENSSL_PATH} $
 AM_CONDITIONAL(ENABLE_SSL,[ test "x$with_openssl" = "xyes" ])
 AC_SUBST(SSLLIB)
 
-dnl User may specify MIT Kerberos is needed from a non-standard location
+# Kerberos support libraries: MIT
 SQUID_AUTO_LIB(mit-krb5,[MIT Kerberos],[LIB_KRB5])
 AH_TEMPLATE(USE_APPLE_KRB5,[Apple Kerberos support is available])
-AH_TEMPLATE(USE_MIT_KRB5,[MIT Kerberos support is available])
 AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
-
-## find out if pkg-config or krb5-config will work
-AS_IF([test "x$with_mit_krb5" != "xno"],[
-  CXXFLAGS="$LIB_KRB5_CFLAGS $CXXFLAGS"
-  krb5confpath="$with_mit_krb5/bin"
-  # find installed libs via pkg-config or krb5-config
-  squid_pc_krb5_name=
-  PKG_CHECK_EXISTS(mit-krb5-gssapi mit-krb5, [squid_pc_krb5_name="mit-krb5-gssapi mit-krb5"],[
-    PKG_CHECK_EXISTS(gssapi-krb5 krb5, [squid_pc_krb5_name="gssapi-krb5 krb5"])
-  ])
-  AS_IF([test "x$squid_pc_krb5_name" = "x" -a "$cross_compiling" = "no"],[
-    # Look for krb5-config (unless cross-compiling)
-    AC_PATH_PROG(krb5_config,krb5-config,no,$krb5confpath)
-    AS_IF([test "x$ac_cv_path_krb5_config" != "xno"],[
-      krb5confpath="`dirname $ac_cv_path_krb5_config`"
-      ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
-      ac_solaris="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i solaris`"
-      ac_apple="`$ac_cv_path_krb5_config --vendor 2>/dev/null | grep -c -i apple`"
-      AS_IF([test $ac_solaris -gt 0],[with_solaris_krb5=yes],
-        [test $ac_apple -gt 0],[with_apple_krb5=yes],
-        [test $ac_heimdal -gt 0],[with_mit_krb5=no]
-      )
-    ],[
-      AS_IF([test "x$with_mit_krb5" = "xyes"],[
-        AC_MSG_ERROR([Could not find krb5-config in path])
-      ],[
-        with_mit_krb5=no
-      ])
-    ])
-  ])
-])
-
-# detect MIT Kerberos dependencies (except on Solaris)
-AS_IF([test "x$with_mit_krb5" != "xno" -a "x$with_solaris_krb5" != "xyes"],[
-  SQUID_STATE_SAVE([squid_krb5_save])
-  LIBS="$LIBS $LIB_KRB5_PATH"
-
-  # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIB_KRB5], $squid_pc_krb5_name,,[
-    # look for krb5-config (unless cross-compiling)
-    AS_IF([test "$cross_compiling" = "no"],[
-      AS_IF([test "x$krb5confpath" = "x"],[
-        AC_PATH_PROG(krb5_config,krb5-config,no)
-        AS_IF([test "x$ac_cv_path_krb5_config" != "xno"],[ac_krb5_config="$ac_cv_path_krb5_config"])
-      ],[
-        ac_krb5_config="$krb5confpath/krb5-config"
-      ])
-    ])
-    AS_IF([test "x$ac_krb5_config" != "x" -a -x "$ac_krb5_config"],[
-      # Get libs, etc
-      AC_MSG_NOTICE([Use krb5-config to get CXXFLAGS and LIBS])
-      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags krb5 2>/dev/null`"
-      LIB_KRB5_LIBS="`$ac_krb5_config --libs krb5 2>/dev/null`"
-      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags gssapi 2>/dev/null` $LIB_KRB5_CFLAGS"
-      LIB_KRB5_LIBS="`$ac_krb5_config --libs gssapi 2>/dev/null` $LIB_KRB5_LIBS"
-    ],[
-      ## For some OS pkg-config is broken or unavailable.
-      ## Detect libraries the hard way.
-
-      SQUID_STATE_SAVE([squid_mit_save])
-      missing_required=
-      AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
-      AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'com_err' is required for MIT Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(k5crypto, [main], [LIB_KRB5_LIBS="-lk5crypto $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'k5crypto' is required for MIT Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'krb5' is required for MIT Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(gssapi_krb5, [main], [LIB_KRB5_LIBS="-lgssapi_krb5 $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'gssapi_krb5' is required for MIT Kerberos])
-        missing_required=yes
-      ])
-      SQUID_STATE_ROLLBACK([squid_mit_save])
-      AS_IF([test "x$missing_required" = "xyes"],[LIB_KRB5_LIBS=""])
-    ])
-  ])
-
-  AS_IF([test "x$LIB_KRB5_LIBS" != "x"],[
-    AS_IF([test "x$with_apple_krb5" = "xyes"],[
-      AC_DEFINE(USE_APPLE_KRB5,1,[Apple Kerberos support is available])
-      KRB5_FLAVOUR="Apple"
-    ],[
-      AC_DEFINE(USE_MIT_KRB5,1,[MIT Kerberos support is available])
-      KRB5_FLAVOUR="MIT"
-    ])
-    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
-    KRB5INCS="$LIB_KRB5_CFLAGS"
-
-    # check for other specific broken implementations
-    CXXFLAGS="$CXXFLAGS $KRB5INCS"
-    LIBS="$LIBS $KRB5LIBS"
-
-    AC_MSG_NOTICE([Try to find Kerberos headers in given path])
-    AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-    AC_CHECK_HEADERS(gssapi/gssapi_generic.h)
-    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
-    AC_CHECK_HEADERS(profile.h)
-
-    SQUID_CHECK_KRB5_FUNCS
-  ])
-  AS_IF([test "x$with_mit_krb5" = "xyes" -a "x$KRB5LIBS" = "x"],[
-    AC_MSG_ERROR([Required Kerberos library not found])
-  ],[test "x$KRB5LIBS" = "x"],[
-    with_mit_krb5=no
-    with_apple_krb5=no
-  ])
-  SQUID_STATE_ROLLBACK([squid_krb5_save])
-])
-
-# detect Solaris Kerberos dependencies
-AS_IF([test "x$with_solaris_krb5" = "xyes" -a "x$KRB5LIBS" = "x"],[
-  SQUID_STATE_SAVE([squid_krb5_save])
-  LIBS="$LIBS $LIB_KRB5_PATH"
-
-  # no pkg-config for solaris native Kerberos
-  # look for krb5-config (unless cross-compiling)
-  AS_IF([test "$cross_compiling" = "no"],[
-    AS_IF([test "x$krb5confpath" = "x"],[
-      AC_PATH_PROG(krb5_config,krb5-config,no)
-      AS_IF([test "x$ac_cv_path_krb5_config" != "xno"],[ac_krb5_config="$ac_cv_path_krb5_config"])
-    ],[
-      ac_krb5_config="$krb5confpath/krb5-config"
-    ])
-  ])
-  AS_IF([test "x$ac_krb5_config" != "x" -a -x "$ac_krb5_config"],[
-    # Get libs, etc
-    AC_MSG_NOTICE([Use krb5-config to get CXXFLAGS and LIBS])
-    LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags krb5 2>/dev/null`"
-    LIB_KRB5_LIBS="`$ac_krb5_config --libs krb5 2>/dev/null`"
-    # Solaris 10 Update 11 patches the krb5-config tool to produce stderr messages on stdout.
-    SOLARIS_BROKEN_KRB5CONFIG_GSSAPI="`$ac_krb5_config --libs gssapi 2>/dev/null | grep "krb5-config"`"
-    AS_IF([test "x$SOLARIS_BROKEN_KRB5CONFIG_GSSAPI" = "x"],[
-      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags gssapi 2>/dev/null` $LIB_KRB5_CFLAGS"
-      LIB_KRB5_LIBS="`$ac_krb5_config --libs gssapi 2>/dev/null` $LIB_KRB5_LIBS"
-    ])
+SQUID_CHECK_LIB_WORKS(mit-krb5,[
+  AS_IF([test "x$squid_host_os" = "xsolaris"],[
+    # pkg-config not available for Solaris krb5 implementation
+    SQUID_CHECK_SOLARIS_KRB5
   ],[
-    ## For some OS pkg-config is broken or unavailable.
-    ## Detect libraries the hard way.
-
-    CXXFLAGS="-I/usr/include/kerberosv5 $CXXFLAGS"
-
-    SQUID_STATE_SAVE([squid_solaris_save])
-    missing_required=
-    AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
-    AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
-      AC_MSG_WARN([library 'krb5' is required for Solaris Kerberos])
-        missing_required=yes
-    ])
-    LIBS=$LIB_KRB5_LIBS
-    AC_CHECK_LIB(gss, [main], [LIB_KRB5_LIBS="-lgss $LIB_KRB5_LIBS"],[
-      AC_MSG_WARN([library 'gss' is required for Solaris Kerberos])
-        missing_required=yes
-    ])
-    SQUID_STATE_ROLLBACK([squid_solaris_save])
-    AS_IF([test "x$missing_required" = "xyes"],[LIB_KRB5_LIBS=""])
-  ])
-
-  AS_IF([test "x$LIB_KRB5_LIBS" != "x"],[
-    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
-    KRB5INCS="$LIB_KRB5_CFLAGS"
-    AC_DEFINE(USE_SOLARIS_KRB5,1,[Solaris Kerberos support is available])
-    KRB5_FLAVOUR="Solaris"
-
-    # check for other specific broken implementations
-    CXXFLAGS="$CXXFLAGS $KRB5INCS"
-    LIBS="$LIBS $KRB5LIBS"
-
-    AC_MSG_NOTICE([Try to find Kerberos headers in given path])
-    AC_CHECK_HEADERS(gssapi/gssapi.h gssapi/gssapi_ext.h)
-    AC_CHECK_HEADERS(krb5.h com_err.h)
-
-    SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
-    AS_IF([test "x$squid_cv_broken_krb5_h" = "xyes"],[
-      AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if Solaris krb5.h is broken for C++])
-      AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
-      AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
-      AC_MSG_WARN([If you need Kerberos support you will have to patch])
-      AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
-    ])
-    SQUID_CHECK_KRB5_FUNCS
-  ])
-  AS_IF([test "x$with_mit_krb5" = "xyes" -a "x$KRB5LIBS" = "x"],[
-    # Error only if Solaris flavour was detected while looking for required MIT Kerberos
-    AC_MSG_ERROR([Required Kerberos library not found])
-  ],[test "x$KRB5LIBS" = "x"],[
-    with_solaris_krb5=no
-    with_mit_krb5=no
-  ])
-  SQUID_STATE_ROLLBACK([squid_krb5_save])
-])
-
-dnl User may specify Heimdal Kerberos is needed from a non-standard location
-SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[LIB_KRB5])
-AH_TEMPLATE(USE_HEIMDAL_KRB5,[Heimdal Kerberos support is available])
-AS_IF([test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"],[
-  CXXFLAGS="$LIB_KRB5_CFLAGS $CXXFLAGS"
-  krb5confpath="$with_heimdal_krb5/bin"
-  # find installed libs via pkg-config or krb5-config
-  PKG_CHECK_EXISTS(heimdal-krb5, [squid_pc_krb5_name="heimdal-krb5"])
-  AS_IF([test "x$squid_pc_krb5_name" = "x"],[
-    PKG_CHECK_EXISTS(heimdal-gssapi, [squid_pc_krb5_name="heimdal-gssapi"])
-  ])
-  AS_IF([test "x$squid_pc_krb5_name" = "x" -a "$cross_compiling" = "no"],[
-    # Look for krb5-config (unless cross-compiling)
-    AC_PATH_PROG(krb5_config,krb5-config,no,$krb5confpath)
-    AS_IF([test "x$ac_cv_path_krb5_config" != "xno"],[
-      krb5confpath="`dirname $ac_cv_path_krb5_config`"
-      ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
-      AS_IF([test "x$with_heimdal_krb5" = "xyes" -a $ac_heimdal = 0],[
-        AC_MSG_ERROR([Could not find pkg-config or krb5-config for Heimdal Kerberos])
+    PKG_CHECK_MODULES([LIBMIT_KRB5],[mit-krb5 mit-krb5-gssapi],[
+      AS_IF([test "x$squid_host_os" = "xdarwin"],[
+        AC_DEFINE(USE_APPLE_KRB5,1,[Apple Kerberos support is available])
+        AC_CHECK_LIB(resolv,[main],[LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS -lresolv"],[
+          AC_MSG_ERROR([library 'resolv' is required for Apple Kerberos])
+        ])
       ])
-    ],[
-      AS_IF([test "x$with_heimdal_krb5" = "xyes"],[
-        AC_MSG_ERROR([Could not find krb5-config in path])
-      ],[
-        AC_MSG_WARN([Could not find krb5-config in path])
-        with_heimdal_krb5=no
-      ])
-    ])
+      CPPFLAGS="$LIBMIT_KRB5_CFLAGS $CPPFLAGS"
+      LIBS="$LIBMIT_KRB5_PATH $LIBMIT_KRB5_LIBS $LIBS"
+      AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
+      AC_CHECK_HEADERS(gssapi/gssapi_ext.h gssapi/gssapi_generic.h)
+      AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
+      AC_CHECK_HEADERS(profile.h)
+      SQUID_CHECK_KRB5_FUNCS
+    ],[:])
   ])
 ])
-AS_IF([test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"],[
-  SQUID_STATE_SAVE([squid_krb5_save])
-  LIBS="$LIBS $LIB_KRB5_PATH"
 
-  # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIB_KRB5], $squid_pc_krb5_name,,[
-    # look for krb5-config (unless cross-compiling)
-    AS_IF([test "$cross_compiling" = "no"],[
-      AS_IF([test "x$krb5confpath" = "x"],[
-        AC_PATH_PROG(krb5_config,krb5-config,no)
-        AS_IF([test "x$ac_cv_path_krb5_config" != "xno"],[ac_krb5_config="$ac_cv_path_krb5_config"])
-      ],[
-        ac_krb5_config="$krb5confpath/krb5-config"
-      ])
-    ])
-    AS_IF([test "x$ac_krb5_config" != "x" -a -x "$ac_krb5_config"],[
-      # Get libs, etc
-      AC_MSG_NOTICE([Use krb5-config to get CXXFLAGS and LIBS])
-      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags krb5 2>/dev/null`"
-      LIB_KRB5_LIBS="`$ac_krb5_config --libs krb5 2>/dev/null`"
-      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags gssapi 2>/dev/null` $LIB_KRB5_CFLAGS"
-      LIB_KRB5_LIBS="`$ac_krb5_config --libs gssapi 2>/dev/null` $LIB_KRB5_LIBS"
-    ],[
-      ## For some OS pkg-config is broken or unavailable.
-      ## Detect libraries the hard way.
-      SQUID_STATE_SAVE([squid_heimdal_save])
-      missing_required=
-      AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
-      AC_CHECK_LIB(resolv, [main], [LIB_KRB5_LIBS="-lresolv $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'resolv' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(crypt, [main], [LIB_KRB5_LIBS="-lcrypt $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'crypt' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(roken, [main], [LIB_KRB5_LIBS="-lroken $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'roken' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(heimbase, [main], [LIB_KRB5_LIBS="-lheimbase $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'heimbase' may be required for Heimdal Kerberos])
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(wind, [main], [LIB_KRB5_LIBS="-lwind $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'wind' may be required for Heimdal Kerberos])
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(crypto, [main], [LIB_KRB5_LIBS="-lcrypto $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'crypto' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'com_err' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(hx509, [main], [LIB_KRB5_LIBS="-lhx509 $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'hx509' may be required for Heimdal Kerberos])
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(asn1, [main], [LIB_KRB5_LIBS="-lasn1 $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'asn1' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'krb5' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(heimntlm, [main], [LIB_KRB5_LIBS="-lheimntlm $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'heimntlm' may be required for Heimdal Kerberos])
-      ])
-      LIBS=$LIB_KRB5_LIBS
-      AC_CHECK_LIB(gssapi, [main], [LIB_KRB5_LIBS="-lgssapi $LIB_KRB5_LIBS"],[
-        AC_MSG_WARN([library 'gssapi' is required for Heimdal Kerberos])
-        missing_required=yes
-      ])
-      SQUID_STATE_ROLLBACK([squid_heimdal_save])
-      AS_IF([test "x$missing_required" = "xyes"],[LIB_KRB5_LIBS=""])
-    ])
+# Kerberos support libraries: Heimdal
+SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[LIBHEIMDAL_KRB5])
+SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
+  AS_IF([test "x$LIBMIT_KRB5_LIBS" = "x"],[
+    PKG_CHECK_MODULES([LIBHEIMDAL_KRB5],[heimdal-krb5 heimdal-gssapi],[
+      CPPFLAGS="$LIBHEIMDAL_KRB5_CFLAGS $CPPFLAGS"
+      AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
+      AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
+
+      LIBS="$LIBHEIMDAL_KRB5_PATH $LIBHEIMDAL_KRB5_LIBS $LIBS"
+      SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
+      SQUID_CHECK_KRB5_FUNCS
+    ],[:])
   ])
-  AS_IF([test "x$LIB_KRB5_LIBS" != "x"],[
-    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
-    KRB5INCS="$LIB_KRB5_CFLAGS"
-    AC_DEFINE(USE_HEIMDAL_KRB5,1,[Heimdal Kerberos support is available])
-    KRB5_FLAVOUR="Heimdal"
-
-    # check for other specific broken implementations
-    CXXFLAGS="$CXXFLAGS $KRB5INCS"
-    LIBS="$LIBS $KRB5LIBS"
-
-    AC_MSG_NOTICE([Try to find Kerberos headers in given path])
-    AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
-
-    SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
-    AS_IF([test "x$squid_cv_broken_heimdal_krb5_h" = "xyes"],[
-      AC_DEFINE(HAVE_BROKEN_HEIMDAL_KRB5_H, 1, [Define to 1 if Heimdal krb5.h is broken for C++])
-    ])
-    SQUID_CHECK_KRB5_FUNCS
-  ])
-  AS_IF([test "x$KRB5LIBS" = "x"],[
-    AS_IF([test "x$with_heimdal_krb5" = "xyes"],[
-      AC_MSG_ERROR([Required Heimdal Kerberos library not found])
-    ],[
-      AC_MSG_WARN([Heimdal Kerberos library not found])
-    ])
-  ])
-  SQUID_STATE_ROLLBACK([squid_krb5_save])
 ])
 
-dnl User may specify GNU gss is needed from a non-standard location
-SQUID_AUTO_LIB(gnugss,[GNU gss],[LIB_KRB5])
-AH_TEMPLATE(USE_GNUGSS,[GNU gss support is available])
-AS_IF([test "x$with_gnugss" != "xno" -a "x$KRB5LIBS" = "x"],[
-  CXXFLAGS="$LIB_KRB5_CFLAGS $CXXFLAGS"
-  krb5confpath=
-  SQUID_STATE_SAVE([squid_krb5_save])
-  LIBS="$LIBS $LIB_KRB5_PATH"
-
-  # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIB_KRB5],[gss],,[
-    ## For some OS pkg-config is broken or unavailable.
-    ## Detect libraries the hard way.
-
-    AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
-    AC_CHECK_LIB(gss, [main], [LIB_KRB5_LIBS="-lgss $LIB_KRB5_LIBS"],[
-      AC_MSG_WARN([library 'com_err' is required for GNU Kerberos])
-    ])
+# Kerberos support libraries: GNU GSS
+SQUID_AUTO_LIB(gss,[GNU gss],[LIBGSS])
+SQUID_CHECK_LIB_WORKS(gss,[
+  AS_IF([test "x$LIBMIT_KRB5_LIBS" = "x" -a "x$LIBHEIMDAL_KRB5_LIBS" = "x"],[
+    PKG_CHECK_MODULES([LIBGSS],[gss],[
+      CPPFLAGS="$LIBGSS_CFLAGS $CPPFLAGS"
+      AC_CHECK_HEADERS(gss.h)
+      LIBS="$LIBGSS_PATH $LIBS"
+      SQUID_CHECK_WORKING_GSSAPI
+      SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
+      SQUID_CHECK_SPNEGO_SUPPORT
+      SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
+      SQUID_CHECK_WORKING_KRB5
+      SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
+    ],[:])
   ])
-
-  AS_IF([test "x$LIB_KRB5_LIBS" != "x"],[
-    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
-    KRB5INCS="$LIB_KRB5_CFLAGS"
-    AC_DEFINE(USE_GNUGSS,1,[GNU Kerberos support is available])
-    KRB5_FLAVOUR="GNU GSS"
-
-    # check for other specific broken implementations
-    CXXFLAGS="$CXXFLAGS $KRB5INCS"
-    LIBS="$LIBS $KRB5LIBS"
-
-    AC_MSG_NOTICE([Try to find Kerbeors headers in given path])
-    AC_CHECK_HEADERS(gss.h)
-
-    SQUID_CHECK_WORKING_GSSAPI
-    SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
-
-    SQUID_CHECK_SPNEGO_SUPPORT
-    SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
-
-    SQUID_CHECK_WORKING_KRB5
-    SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
-  ])
-  AS_IF([test "x$KRB5LIBS" = "x"],[
-    AS_IF([test "x$with_gnugss" = "xyes"],[
-      AC_MSG_ERROR([Required GNU GSS Kerberos library not found])
-    ],[
-      AC_MSG_WARN([GNU GSS Kerberos library not found])
-    ])
-  ])
-  SQUID_STATE_ROLLBACK([squid_krb5_save])
 ])
-
-AS_IF([test "x$KRB5LIBS" != "x"],[with_krb5=yes])
-AC_MSG_NOTICE([$KRB5_FLAVOUR Kerberos library support: ${with_krb5:=no} ${LIB_KRB5_PATH} ${LIB_KRB5_LIBS}])
-AC_SUBST(KRB5INCS)
-AC_SUBST(KRB5LIBS)
 
 SQUID_AUTO_LIB(ldap,[LDAP],[LIBLDAP])
 SQUID_CHECK_LIB_WORKS(ldap,[
-  dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked
-  dnl only with Windows LDAP libraries using -lwldap32
-  AS_IF([test "$squid_host_os" = "mingw"],[
+  PKG_CHECK_MODULES([LIBLDAP],[ldap],[:],[:])
+  AS_IF([test "$squid_host_os" = "mingw" -a "x$LIBLDAP_LIBS" = "x"],[
+    dnl On MinGW OpenLDAP is not available, try Windows LDAP libraries
+    dnl TODO: use AC_CHECK_LIB
     LIBLDAP_LIBS="-lwldap32"
-  ],[
-    SQUID_STATE_SAVE(squid_ldap_state)
-    LIBS="$LIBLDAP_PATH $LIBPTHREADS $LIBS"
-    PKG_CHECK_MODULES([LIBLDAP],[ldap],[],[
-      AC_CHECK_LIB(lber, ber_init, [LIBLBER="-llber"])
-      AC_CHECK_LIB(ldap, ldap_init, [LIBLDAP_LIBS="-lldap $LIBLBER"])
-      dnl if no ldap lib found check for mozilla version
-      AS_IF([test "x$ac_cv_lib_ldap_ldap_init" != "xyes"],[
-        SQUID_STATE_SAVE(squid_ldap_mozilla)
-        LIBS="$LIBLDAP_PATH $LIBPTHREADS"
-        AC_CHECK_LIB(ldap60, ldap_init, [LIBLDAP_LIBS="-lldap60 $LIBLBER"])
-        LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS $LIBPTHREADS"
-        AC_CHECK_LIB(prldap60, prldap_init, [LIBLDAP_LIBS="-lprldap60 $LIBLDAP_LIBS"])
-        LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS $LIBPTHREADS"
-        AC_CHECK_LIB(ssldap60, ldapssl_init, [LIBLDAP_LIBS="-lssldap60 $LIBLDAP_LIBS"])
-        SQUID_STATE_ROLLBACK(squid_ldap_mozilla)
-      ])
-    ])
-    AC_CHECK_HEADERS(ldap.h lber.h)
-    AC_CHECK_HEADERS(mozldap/ldap.h)
-    SQUID_CHECK_LDAP_API
+    AC_CHECK_HEADERS(winldap.h)
   ])
+  AC_CHECK_HEADERS(ldap.h lber.h)
+  AC_CHECK_HEADERS(mozldap/ldap.h)
+  SQUID_CHECK_LDAP_API
+])
+
+SQUID_AUTO_LIB(sasl,[Cyrus SASL],[LIBSASL])
+SQUID_CHECK_LIB_WORKS([sasl],[
+  PKG_CHECK_MODULES([LIBSASL],[libsasl2],[:],[:])
+  CPPFLAGS="$LIBSASL_CFLAGS $CPPFLAGS"
+  LIBS="$LIBSASL_LIBS $LIBS"
+  AC_CHECK_HEADERS([sasl/sasl.h sasl.h])
 ])
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
-AH_TEMPLATE(USE_SYSTEMD,[systemd support is available])
 SQUID_CHECK_LIB_WORKS(systemd,[
-  SQUID_STATE_SAVE(squid_systemd_state)
   LIBS="$LIBS $LIBSYSTEMD_PATH"
-  PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd],,[
-    # systemd < 209
-    PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd-daemon],,[:])
-  ])
-  AC_CHECK_HEADERS(systemd/sd-daemon.h)
-  SQUID_STATE_ROLLBACK(squid_systemd_state)
-
-  AS_IF([test "x$LIBSYSTEMD_LIBS" != "x"],[
-    AC_DEFINE(USE_SYSTEMD,1,[systemd support is available])
-  ])
+  PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd >= 209],[
+    AC_CHECK_HEADERS(systemd/sd-daemon.h)
+  ],[:])
 ])
 
 AC_ARG_ENABLE(forw-via-db,
@@ -1841,13 +1420,13 @@ AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto
 dnl Look for libnetfilter_conntrack options (needed for QOS netfilter marking)
 SQUID_AUTO_LIB(netfilter-conntrack,[Netfilter conntrack],[LIBNETFILTER_CONNTRACK])
 SQUID_CHECK_LIB_WORKS(netfilter-conntrack,[
-  LDFLAGS="$LIBNETFILTER_CONNTRACK_PATH $LDFLAGS"
+  PKG_CHECK_MODULES([LIBNETFILTER_CONNTRACK],[libnetfilter_conntrack],[:],[:])
   CPPFLAGS="$LIBNETFILTER_CONNTRACK_CFLAGS $CPPFLAGS"
-  AC_SEARCH_LIBS([nfct_query],[netfilter_conntrack],[LIBNETFILTER_CONNTRACK_LIBS="-lnetfilter_conntrack"])
+  LIBS="$LIBNETFILTER_CONNTRACK_PATH $LIBNETFILTER_CONNTRACK_LIBS $LIBS"
   AC_CHECK_HEADERS([ \
     libnetfilter_conntrack/libnetfilter_conntrack.h \
-    libnetfilter_conntrack/libnetfilter_conntrack_tcp.h
-  ],,[LIBNETFILTER_CONNTRACK_LIBS=""])
+    libnetfilter_conntrack/libnetfilter_conntrack_tcp.h \
+  ])
 ])
 
 dnl Enable Large file support
@@ -2170,17 +1749,14 @@ AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
 SQUID_AUTO_LIB(cppunit,[cppunit test framework],[LIBCPPUNIT])
 SQUID_CHECK_LIB_WORKS(cppunit,[
-  LIBCPPUNIT_LIBS="$LIBCPPUNIT_PATH -lcppunit"
   PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[
     squid_cv_cppunit_version="`pkg-config --modversion cppunit`"
     AC_MSG_NOTICE([using system installed cppunit version $squid_cv_cppunit_version])
     AS_UNSET(squid_cv_cppunit_version)
 
-    SQUID_STATE_SAVE(squid_cppunit_state)
     CXXFLAGS="${CXXFLAGS} ${LIBCPPUNIT_CFLAGS}"
     LIBS="${LIBS} ${LIBCPPUNIT_LIBS}"
     AC_CHECK_HEADERS(cppunit/extensions/HelperMacros.h)
-    SQUID_STATE_ROLLBACK(squid_cppunit_state)
   ],[
     AC_MSG_WARN([cppunit does not appear to be installed. Squid does not require this, but code testing with 'make check' will fail.])
   ])
@@ -2395,21 +1971,12 @@ AC_FUNC_ALLOCA
 
 SQUID_AUTO_LIB(cap,[Linux capabilities],[LIBCAP])
 SQUID_CHECK_LIB_WORKS(cap,[
-  SQUID_STATE_SAVE(squid_libcap_state)
-  CXXFLAGS="$LIBCAP_CFLAGS $CXXFLAGS"
-  LDFLAGS="$LIBCAP_PATH $LDFLAGS"
-  PKG_CHECK_MODULES([LIBCAP],[libcap >= 2.09],[],[
-    # cap_clear_flag is the most recent libcap function we require
-    AC_CHECK_LIB([cap],[cap_clear_flag],[LIBCAP_LIBS="$LIBCAP_LIBS -lcap"])
-  ])
+  PKG_CHECK_MODULES([LIBCAP],[libcap >= 2.09],[:],[:])
+  CPPFLAGS="$LIBCAP_CFLAGS $CPPFLAGS"
+  LIBS="$LIBCAP_PATH $LIBCAP_LIBS $LIBS"
   SQUID_CHECK_FUNCTIONAL_LIBCAP2
   AC_MSG_NOTICE([libcap headers are ok: $squid_cv_sys_capability_works])
   AS_IF([test "x$squid_cv_sys_capability_works" = "xno"],[LIBCAP_LIBS=""])
-  SQUID_STATE_ROLLBACK(squid_libcap_state)
-
-  AS_IF([test "x$LIBCAP_LIBS" != "x"],[
-    AC_DEFINE(USE_LIBCAP,1,[Linux capabilities library support])
-  ])
 ])
 
 dnl Check for needed libraries
@@ -2620,6 +2187,7 @@ AC_CHECK_FUNCS(\
 	setpflags \
 	setpgrp \
 	setsid \
+	setresuid \
 	sigaction \
 	snprintf \
 	socketpair \
@@ -2678,11 +2246,6 @@ AS_CASE([$squid_opt_io_loop_engine],
 
 AS_IF([test "x$ac_cv_func_sched_getaffinity" = "xyes" -a "x$ac_cv_func_sched_setaffinity" = "xyes"],[
   AC_DEFINE(HAVE_CPU_AFFINITY,1,[Support setting CPU affinity for workers])
-])
-
-SQUID_CHECK_SETRESUID_WORKS
-AS_IF([test "x$squid_cv_resuid_works" = "xyes"],[
-  AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness. Knowing that setresuid() exists is not enough, because RedHat 5.0 declares setresuid() but does not implement it.])
 ])
 
 AC_CHECK_HEADERS(mswsock.h)
@@ -2750,8 +2313,6 @@ AC_CHECK_TYPE(struct sockaddr_un,AC_DEFINE(HAVE_SOCKADDR_UN,1,[The system provid
   #include <winsock2.h>
   #endif
 ])
-
-SQUID_CHECK_FUNC_STRNSTR
 
 dnl IP-Filter support requires ipf header files. These aren't
 dnl installed by default, so we need to check for them

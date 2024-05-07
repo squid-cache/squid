@@ -21,7 +21,7 @@ public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
 
-    SplayNode<V> (Value const &);
+    SplayNode(const Value &);
     Value data;
     mutable SplayNode<V> *left;
     mutable SplayNode<V> *right;
@@ -92,7 +92,7 @@ private:
     size_t elements;
 };
 
-SQUIDCEXTERN int splayLastResult;
+extern int splayLastResult;
 
 template<class V>
 SplayNode<V>::SplayNode(const Value &someData): data(someData), left(nullptr), right(nullptr), visitThreadUp(nullptr) {}

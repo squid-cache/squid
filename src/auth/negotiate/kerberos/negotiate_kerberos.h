@@ -51,24 +51,13 @@
 #include "compat/krb5.h"
 #include "util.h"
 
-#if USE_APPLE_KRB5
-#define GSSKRB_APPLE_DEPRECATED(x)
-#endif
-
-#if USE_HEIMDAL_KRB5
-#if HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif HAVE_GSSAPI_H
-#include <gssapi.h>
-#endif
-#if HAVE_GSSAPI_GSSAPI_KRB5_H
-#include <gssapi/gssapi_krb5.h>
-#endif
-#elif USE_GNUGSS
 #if HAVE_GSS_H
 #include <gss.h>
 #endif
-#else
+
+#if USE_APPLE_KRB5
+#define GSSKRB_APPLE_DEPRECATED(x)
+#endif
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
@@ -82,7 +71,6 @@
 #endif
 #if HAVE_GSSAPI_GSSAPI_EXT_H
 #include <gssapi/gssapi_ext.h>
-#endif
 #endif
 
 #ifndef gss_nt_service_name
