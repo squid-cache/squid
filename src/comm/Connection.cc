@@ -215,8 +215,12 @@ Comm::operator << (std::ostream &os, const Connection &conn)
         os << " FD " << conn.fd;
     if (conn.flags != COMM_UNSET)
         os << " flags=" << conn.flags;
-    if (conn.ident)
-        os << " IDENT::" << conn.ident.value();
+    if (conn.ident) {
+        if (conn.ident->isEmpty())
+            os << " ident-error";
+        else
+            os << " ident=" << *conn.ident;
+    }
     return os;
 }
 
