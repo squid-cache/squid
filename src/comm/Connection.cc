@@ -181,12 +181,12 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
 void
 Comm::Connection::setIdent(const Ident::User &anIdent)
 {
-    static const SBuf nil("nil");
+    static const SBuf none("[no-ident]");
     if (ident) {
-        debugs(5, 3, "ignore rewriting " << ident.value() << " with " << anIdent.value_or(nil));
+        debugs(5, 3, "ignored " << anIdent.value_or(none) << "; have: " << *ident);
         return;
     }
-    debugs(5, 3, "got ident: " << anIdent.value_or(nil));
+    debugs(5, 3, anIdent.value_or(none));
     ident = anIdent;
 }
 
