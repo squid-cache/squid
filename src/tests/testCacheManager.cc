@@ -110,7 +110,9 @@ TestCacheManager::testRegister()
     CPPUNIT_ASSERT_EQUAL(false, profile->isAtomic);
     CPPUNIT_ASSERT_EQUAL(String("sample"), String(action->name()));
 
-    StoreEntry *sentry=new StoreEntry();
+    StoreEntry *sentry = new StoreEntry();
+    sentry->createMemObject();
+    sentry->mem_obj->setUris("http://localhost/squid-internal-mgr/menu", "http://localhost/squid-internal-mgr/menu", HttpRequestMethod(Http::METHOD_GET));
     sentry->flags=0x25; //arbitrary test value
     action->run(sentry, false);
     CPPUNIT_ASSERT_EQUAL(1,(int)sentry->flags);
