@@ -23,7 +23,7 @@ Log::Format::HttpdCombined(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
     const char *user_ident = nullptr;
     if (const auto ident = al->getClientIdent())
-        user_ident = ::Format::QuoteUrlEncodeUsername(ident.value());
+        user_ident = ::Format::QuoteUrlEncodeUsername(*ident);
     const char *user_auth = nullptr;
     const char *referer = nullptr;
     const char *agent = nullptr;

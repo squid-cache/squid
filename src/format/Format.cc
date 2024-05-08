@@ -950,7 +950,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 #endif
             if (!out) {
                 if (const auto ident = al->getClientIdent()) {
-                    sb = ident.value();
+                    sb = *ident;
                     out = sb.c_str();
                 }
             }
@@ -965,7 +965,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_USER_IDENT:
             if (const auto ident = al->getClientIdent()) {
-                sb = ident.value();
+                sb = *ident;
                 out = sb.c_str();
             }
             break;

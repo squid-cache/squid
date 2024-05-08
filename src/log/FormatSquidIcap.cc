@@ -42,7 +42,7 @@ Log::Format::SquidIcap(const AccessLogEntry::Pointer &al, Logfile * logfile)
 
     if (!user) {
         if (const auto ident = al->getClientIdent())
-            user = ::Format::QuoteUrlEncodeUsername(ident.value());
+            user = ::Format::QuoteUrlEncodeUsername(*ident);
     }
 
     if (user && !*user)

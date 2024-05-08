@@ -54,7 +54,7 @@ ACLIdent::match(ACLChecklist *cl)
 {
     const auto checklist = Filled(cl);
     if (const auto ident = checklist->ident()) {
-        return data->match(ident.value().isEmpty() ? dash_str : SBuf(ident.value()).c_str());
+        return data->match(ident->isEmpty() ? dash_str : SBuf(*ident).c_str());
     } else if (checklist->conn() != nullptr && Comm::IsConnOpen(checklist->conn()->clientConnection)) {
         if (checklist->goAsync(StartLookup, *this)) {
             debugs(28, 3, "switching to ident lookup state");

@@ -28,7 +28,7 @@ Log::Format::HttpdCommon(const AccessLogEntry::Pointer &al, Logfile * logfile)
 #endif
     const char *user_ident = nullptr;
     if (const auto ident = al->getClientIdent())
-        user_ident = ::Format::QuoteUrlEncodeUsername(ident.value());
+        user_ident = ::Format::QuoteUrlEncodeUsername(*ident);
 
     char clientip[MAX_IPSTRLEN];
     al->getLogClientIp(clientip, MAX_IPSTRLEN);
