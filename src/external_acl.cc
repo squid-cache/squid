@@ -26,6 +26,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "ident/AclIdent.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
@@ -44,7 +45,6 @@
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
 #endif
-#include "ident/AclIdent.h"
 
 #ifndef DEFAULT_EXTERNAL_ACL_TTL
 #define DEFAULT_EXTERNAL_ACL_TTL 1 * 60 * 60
