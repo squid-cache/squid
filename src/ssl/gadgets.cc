@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/IoManip.h"
 #include "error/SysErrorDetail.h"
+#include "ip/Address.h"
 #include "sbuf/Stream.h"
 #include "security/Io.h"
 #include "ssl/gadgets.h"
@@ -469,25 +470,6 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
     return added;
 }
 
-/// Checks to see whether the address is an IP address and configure
-/// the passed sockaddr_storage appropriately
-int Ssl::is_ip_address(const unsigned char* ip, struct sockaddr_storage* ss) {
-    ss->ss_family = AF_UNSPEC;
-
-    // Try and convert as IPv4
-    if (inet_pton(AF_INET, (char*)ip, &((struct sockaddr_in *)ss)->sin_addr) == 1) {
-        ss->ss_family = AF_INET;
-        return 1;
-    }
-    // Try and convert as IPv6
-    if (inet_pton(AF_INET6, (char*)ip, &((struct sockaddr_in6 *)ss)->sin6_addr) == 1) {
-        ss->ss_family = AF_INET6;
-        return 1;
-    }
-    // Otherwise, it's not an IP
-    return 0;
-}
-
 /// Adds a new subjectAltName extension contining Subject CN or returns false
 /// expects the caller to check for the existing subjectAltName extension
 static bool
@@ -505,14 +487,11 @@ addAltNameWithSubjectCn(Security::CertPointer &cert)
     if (!cn_data)
         return false;
 
-    sockaddr_storage socket_info;
-    const char* altname_type;
-    const int is_ip = Ssl::is_ip_address(cn_data->data, &socket_info);
-    if (is_ip == 1) {
-        altname_type = "IP";
-    } else {
-        altname_type = "DNS";
-    }
+    Ip::Address ipAddress;
+    // Extract the CN string from cn_data and use it to determine its type
+    // using Ip::Address::operator "="
+    const char* cn_cstr = (const char*) ASN1_STRING_get0_data(cn_data);
+    const char* altname_type = (ipAddress = cn_cstr) ? "IP" : "DNS";
     char dnsName[1024]; // DNS names are limited to 256 characters
     const int res = snprintf(dnsName, sizeof(dnsName), "%s:%.*s", altname_type, cn_data->length, cn_data->data);
     if (res <= 0 || res >= static_cast<int>(sizeof(dnsName)))

@@ -292,10 +292,6 @@ bool CertificatesCmp(const Security::CertPointer &cert1, const Security::CertPoi
 /// wrapper for OpenSSL X509_get0_signature() which takes care of
 /// portability issues with older OpenSSL versions
 const ASN1_BIT_STRING *X509_get_signature(const Security::CertPointer &);
-
-/// Checks to see whether the address is an IP address and configure
-/// the passed sockaddr_storage appropriately
-int is_ip_address(const unsigned char* ip, struct sockaddr_storage* ss);
 } // namespace Ssl
 
 #endif // USE_OPENSSL
