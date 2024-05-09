@@ -1029,7 +1029,7 @@ SQUID_CHECK_LIB_WORKS(gnutls,[
   PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.4.0],[
     CPPFLAGS="$LIBGNUTLS_CFLAGS $CPPFLAGS"
     AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h)
-    AC_PATH_PROG(CERTTOOL_BIN, certtool, $FALSE)
+    AC_PATH_PROG(CERTTOOL_BIN, certtool)
   ],[:])
 ])
 
@@ -1111,7 +1111,7 @@ AS_IF([test "x$with_openssl" = "xyes"],[
     SQUID_CHECK_OPENSSL_CONST_SSL_SESSION_CB_ARG
     SQUID_CHECK_OPENSSL_CONST_X509_GET0_SIGNATURE_ARGS
     SQUID_CHECK_OPENSSL_TXTDB
-    AC_PATH_PROG(OPENSSL_BIN, openssl, $FALSE)
+    AC_PATH_PROG(OPENSSL_BIN, openssl)
   ])
   AS_IF([test "x$SSLLIB" = "x"],[AC_MSG_ERROR([Required OpenSSL library not found])])
 ])
