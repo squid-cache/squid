@@ -950,8 +950,15 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 #endif
             if (!out) {
                 if (const auto ident = al->getClientIdent()) {
-                    sb = *ident;
-                    out = sb.c_str();
+                    // This check emulates strOrNull() above. Both are currently
+                    // unnecessary because we later treat empty `out` as nil,
+                    // but that treatment is arguably wrong for fields with
+                    // valid empty values (that can still be logged if quoted).
+                    // The same concern applies to LFT_USER_IDENT code below.
+                    if (!ident->isEmpty()) {
+                        sb = *ident;
+                        out = sb.c_str();
+                    }
                 }
             }
             break;
@@ -965,8 +972,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_USER_IDENT:
             if (const auto ident = al->getClientIdent()) {
-                sb = *ident;
-                out = sb.c_str();
+                // See LFT_USER_NAME for notes about this duplicated logic.
+                if (!ident->isEmpty()) {
+                    sb = *ident;
+                    out = sb.c_str();
+                }
             }
             break;
 
