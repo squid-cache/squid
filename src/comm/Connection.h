@@ -143,9 +143,9 @@ public:
     ScopedId codeContextGist() const override;
     std::ostream &detailCodeContext(std::ostream &os) const override;
 
-    /// Initializes RFC 1413 user identity (may be nil).
+    /// Records the result of a user identity lookup.
     /// Subsequent calls have no effect.
-    void setIdent(const Ident::User &);
+    void setIdent(const Ident::Lookup &);
 
 public:
     /** Address/Port for the Squid end of a TCP link. */
@@ -179,8 +179,8 @@ public:
     /** COMM flags set on this connection */
     int flags;
 
-    /// RFC 1413 user identity
-    Ident::User ident;
+    /// user identity lookup using RFC 1413 Ident protocol
+    std::optional<Ident::Lookup> identLookup;
 
 #if USE_SQUID_EUI
     Eui::Eui48 remoteEui48;

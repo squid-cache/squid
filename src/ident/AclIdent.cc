@@ -53,8 +53,16 @@ int
 ACLIdent::match(ACLChecklist *cl)
 {
     const auto checklist = Filled(cl);
-    if (const auto ident = checklist->ident()) {
-        return data->match(ident->isEmpty() ? dash_str : SBuf(*ident).c_str());
+    // XXX: checklist->identLookup() uses ALE but our ACLIdent::requiresAle() is
+    // false. We may silently goAsync() again if a buggy caller forgot to set
+    // ALE but did set checklist->conn(). Or we may mislead about our inability
+    // to start lookup if a buggy caller set neither while forgotten ALE had
+    // Ident::Lookup information.
+    if (const auto lookup = checklist->identLookup()) {
+        if (const auto &ident = *lookup)
+            return data->match(SBuf(*ident).c_str());
+        else
+            return data->match(dash_str);
     } else if (checklist->conn() != nullptr && Comm::IsConnOpen(checklist->conn()->clientConnection)) {
         if (checklist->goAsync(StartLookup, *this)) {
             debugs(28, 3, "switching to ident lookup state");
@@ -93,7 +101,7 @@ ACLIdent::StartLookup(ACLFilledChecklist &cl, const Acl::Node &)
 }
 
 void
-ACLIdent::LookupDone(const Ident::User &ident, void *data)
+ACLIdent::LookupDone(const Ident::Lookup &ident, void *data)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
     const auto conn = checklist->conn();

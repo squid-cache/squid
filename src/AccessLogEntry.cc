@@ -96,10 +96,18 @@ AccessLogEntry::syncNotes(HttpRequest *req)
         assert(notes == req->notes());
 }
 
-Ident::User
+std::optional<Ident::User>
 AccessLogEntry::getClientIdent() const
 {
-    return acceptedClientConnection ? acceptedClientConnection->ident : std::nullopt;
+    if (const auto lookup = getClientIdentLookup())
+        return *lookup; // std::nullopt if lookup has failed
+    return std::nullopt;
+}
+
+std::optional<Ident::Lookup>
+AccessLogEntry::getClientIdentLookup() const
+{
+    return acceptedClientConnection ? acceptedClientConnection->identLookup : std::nullopt;
 }
 
 const char *

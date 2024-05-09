@@ -1815,8 +1815,10 @@ statClientRequests(StoreEntry * s)
                 p = http->request->extacl_user.termedBuf();
             }
 
-        if (!p && conn != nullptr && conn->clientConnection->ident)
-            p = conn->clientConnection->ident->c_str();
+        if (!p && conn && conn->clientConnection->identLookup) {
+            if (auto &ident = *conn->clientConnection->identLookup) // XXX: const
+                p = ident->c_str();
+        }
 
 #if USE_OPENSSL
         if (!p && conn != nullptr && Comm::IsConnOpen(conn->clientConnection))

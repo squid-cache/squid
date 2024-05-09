@@ -19,12 +19,15 @@
 namespace Ident
 {
 
-/// A user-id field of an RFC 1413 auth-reply response.
-/// Value existence implies that there was an attempt to obtain a valid user-id.
-/// A non-empty value implies that the above attempt was successful.
-using User = std::optional<SBuf>;
+/// A user-id field of RFC 1413 ident-reply response. The stored value is never
+/// empty because RFC 1413 prohibits empty user-id fields.
+using User = SBuf;
 
-typedef void IDCB(const User &ident, void *data);
+/// Ident transaction attempt. Nil state indicates a failed attempt (e.g.,
+/// Authentication Server returned RFC 1413 error-reply).
+using Lookup = std::optional<User>;
+
+typedef void IDCB(const Lookup &, void *data);
 
 /**
  * Open a connection and request IDENT information from a peer machine.

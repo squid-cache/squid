@@ -48,8 +48,8 @@ public:
     void deleteThis(const char *aReason);
     void swanSong();
 
-    /// notify all waiting IdentClient callbacks
-    void notify(const char *result);
+    /// share the given lookup outcome with all waiting IdentClient callbacks
+    void notify(const Lookup &);
 
     Comm::ConnectionPointer conn;
     MemBuf queryMsg;  ///< the lookup message sent to IDENT server
@@ -91,7 +91,7 @@ void
 Ident::IdentStateData::swanSong()
 {
     if (clients != nullptr)
-        notify(nullptr);
+        notify(std::nullopt);
 }
 
 Ident::IdentStateData::~IdentStateData() {
@@ -107,15 +107,14 @@ Ident::IdentStateData::~IdentStateData() {
 }
 
 void
-Ident::IdentStateData::notify(const char *result)
+Ident::IdentStateData::notify(const Lookup &lookup)
 {
-    const auto user = std::make_optional(SBuf(result));
     while (IdentClient *client = clients) {
         void *cbdata;
         clients = client->next;
 
         if (cbdataReferenceValidDone(client->callback_data, &cbdata))
-            client->callback(user, cbdata);
+            client->callback(lookup, cbdata);
 
         xfree(client);
     }
@@ -250,7 +249,7 @@ Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Com
         return;
     }
 
-    state->notify(ident);
+    state->notify(SBuf(ident));
     state->deleteThis("completed");
 }
 

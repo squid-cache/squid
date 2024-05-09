@@ -197,7 +197,7 @@ static void ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferred
 char *skipLeadingSpace(char *aString);
 
 static void
-clientIdentDone(const Ident::User &ident, void *data)
+clientIdentDone(const Ident::Lookup &ident, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
     conn->clientConnection->setIdent(ident);

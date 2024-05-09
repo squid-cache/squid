@@ -179,15 +179,15 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
 }
 
 void
-Comm::Connection::setIdent(const Ident::User &anIdent)
+Comm::Connection::setIdent(const Ident::Lookup &lookup)
 {
-    static const SBuf none("[no-ident]");
-    if (ident) {
-        debugs(5, 3, "ignored " << anIdent.value_or(none) << "; have: " << *ident);
+    static const Ident::User lookupError("[ident-error]");
+    if (identLookup) {
+        debugs(5, 3, "ignored " << lookup.value_or(lookupError) << "; have: " << identLookup->value_or(lookupError));
         return;
     }
-    debugs(5, 3, anIdent.value_or(none));
-    ident = anIdent;
+    debugs(5, 3, lookup.value_or(lookupError));
+    identLookup = lookup;
 }
 
 ScopedId
@@ -215,11 +215,11 @@ Comm::operator << (std::ostream &os, const Connection &conn)
         os << " FD " << conn.fd;
     if (conn.flags != COMM_UNSET)
         os << " flags=" << conn.flags;
-    if (conn.ident) {
-        if (conn.ident->isEmpty())
-            os << " ident-error";
+    if (conn.identLookup) {
+        if (const auto &user = *conn.identLookup)
+            os << " ident=" << *user;
         else
-            os << " ident=" << *conn.ident;
+            os << " ident-error";
     }
     return os;
 }
