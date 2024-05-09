@@ -19,10 +19,12 @@
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "anyp/Uri.h"
+#include <arpa/inet.h>
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
+#include "ip/Address.h"
 #include "ipc/MemMap.h"
 #include "security/CertError.h"
 #include "security/Certificate.h"
@@ -55,6 +57,79 @@ std::vector<const char *> Ssl::BumpModeStr = {
     "terminate"
     /*,"err"*/
 };
+
+// Methods for the VerifyAddress class
+//
+// The public match method can be called with an ASN1_STRING which
+// could either be an X509_NAME or GENERAL_NAME
+int VerifyAddress::match(ASN1_STRING *asn1_data) {
+    // declare an empty server var which will be updated later
+    const char *server = nullptr;
+    if (ASN1_STRING_type(asn1_data) == V_ASN1_OCTET_STRING) {
+        // We've been passed an IP address from a GENERAL_NAME struct
+        // Attempt to safely convert this to a string
+        const unsigned char *ip = ASN1_STRING_get0_data(asn1_data);
+        char buffer[INET6_ADDRSTRLEN];
+        if (ASN1_STRING_length(asn1_data) == 4) {
+            // IPv4
+            inet_ntop(AF_INET, ip, buffer, sizeof(buffer));
+        } else if (ASN1_STRING_length(asn1_data) == 16) {
+            // IPv6
+            inet_ntop(AF_INET6, ip, buffer, sizeof(buffer));
+        } else {
+            debugs(83, 4, "Tried to get an IP from ASN1_OCTET_STRING but failed");
+            return 1;
+        }
+        server = strdup(buffer);
+    } else {
+        // Otherwise, assume we have the cn_data from a typical ASN1_STRING
+        // This could be a domainname or IP address
+        server = (const char *)asn1_data->data;
+    }
+    // Attempt to convert server into an IP and use matchIP if it's valid
+    Ip::Address ipAddress;
+    if (ipAddress = server) {
+        debugs(83, 4, "Verifying server IP " << private_check_data << " to certificate name/subjectAltName " << server);
+        return matchIp(ipAddress);
+    }
+    // Otherwise, match the original address as a domain name
+    return matchDomainNameData(asn1_data);
+}
+
+int VerifyAddress::matchDomainNameData(ASN1_STRING *cn_data) {
+    char cn[1024];
+
+    if (cn_data->length == 0)
+        return 1; // zero length cn, ignore
+
+    if (cn_data->length > (int)sizeof(cn) - 1)
+        return 1; //if does not fit our buffer just ignore
+
+    char *s = reinterpret_cast<char*>(cn_data->data);
+    char *d = cn;
+    for (int i = 0; i < cn_data->length; ++i, ++d, ++s) {
+        if (*s == '\0')
+            return 1; // always a domain mismatch. contains 0x00
+        *d = *s;
+    }
+    cn[cn_data->length] = '\0';
+    debugs(83, 4, "Verifying server domain " << private_check_data << " to certificate name/subjectAltName " << cn);
+    return matchDomainName(private_check_data, (cn[0] == '*' ? cn + 1 : cn), mdnRejectSubsubDomains);
+}
+
+int VerifyAddress::matchIp(Ip::Address &iaddr) {
+    // Attempt to convert private_check_data to an IP address
+    // and compare it to iaddr
+    Ip::Address check_ip;
+    if ((check_ip = private_check_data) && (iaddr == check_ip)) {
+        return 0;
+    }
+    return 1;
+}
+
+const char* VerifyAddress::processCheckData(void *check_data) {
+    return reinterpret_cast<const char*>(check_data);
+}
 
 /**
  \defgroup ServerProtocolSSLInternal Server-Side SSL Internals
@@ -193,36 +268,6 @@ int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len)
     return write;
 }
 
-// Compare 2 IP addresses
-static int compare_ip_addresses(void *check_data, ASN1_OCTET_STRING *altname_ip) {
-    // Cast check_data to const char
-    const unsigned char* check_ip = reinterpret_cast<const unsigned char*>(check_data);
-    sockaddr_storage socket_info;
-    if (!Ssl::is_ip_address(check_ip, &socket_info)) {
-        // We couldn't convert check_ip into either IPv4 or IPv6
-        debugs(83, 4, "Check data was not an IP address, not comparing..");
-        return -1;
-    }
-    if (socket_info.ss_family == AF_INET) {
-        // IPv4 conversion was successful, use it for comparison
-        debugs(83, 4, "IPV4 address found, checking..");
-        sockaddr_in* addr4 = reinterpret_cast<sockaddr_in*>(&socket_info);
-        if (altname_ip->length == sizeof(addr4->sin_addr) &&
-            std::memcmp(altname_ip->data, &(addr4->sin_addr), sizeof(addr4->sin_addr)) == 0) {
-            debugs(83, 4, "IPV4 comparison successful!");
-            return 0;
-        }
-    } else if (socket_info.ss_family == AF_INET6) {
-        debugs(83, 4, "IPV6 address found, checking..");
-        sockaddr_in6* addr6 = reinterpret_cast<sockaddr_in6*>(&socket_info);
-        if (altname_ip->length == sizeof(addr6->sin6_addr) &&
-            std::memcmp(altname_ip->data, &(addr6->sin6_addr), sizeof(addr6->sin6_addr)) == 0) {
-            return 0;
-        }
-    }
-    return -1;
-}
-
 int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data))
 {
     assert(peer_cert);
@@ -254,8 +299,8 @@ int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_fun
                     break;
                 case GEN_IPADD:
                     debugs(83, 4, "Check type is GEN_IPADD, verifying...");
-                    // If it's an IP address, attempt to compare it with the check_data
-                    if (compare_ip_addresses(check_data, check->d.iPAddress) == 0) {
+                    // If it's an IP address, call check_func with the iPAddress data
+                    if ( (*check_func)(check_data, check->d.iPAddress) == 0) {
                         sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
                         return 1;
                     }
@@ -271,25 +316,8 @@ int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_fun
 
 static int check_domain( void *check_data, ASN1_STRING *cn_data)
 {
-    char cn[1024];
-    const char *server = (const char *)check_data;
-
-    if (cn_data->length == 0)
-        return 1; // zero length cn, ignore
-
-    if (cn_data->length > (int)sizeof(cn) - 1)
-        return 1; //if does not fit our buffer just ignore
-
-    char *s = reinterpret_cast<char*>(cn_data->data);
-    char *d = cn;
-    for (int i = 0; i < cn_data->length; ++i, ++d, ++s) {
-        if (*s == '\0')
-            return 1; // always a domain mismatch. contains 0x00
-        *d = *s;
-    }
-    cn[cn_data->length] = '\0';
-    debugs(83, 4, "Verifying server domain " << server << " to certificate name/subjectAltName " << cn);
-    return matchDomainName(server, (cn[0] == '*' ? cn + 1 : cn), mdnRejectSubsubDomains);
+    VerifyAddress verify(check_data);
+    return verify.match(cn_data);
 }
 
 bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)

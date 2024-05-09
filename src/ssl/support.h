@@ -16,6 +16,7 @@
 #include "base/CbDataList.h"
 #include "comm/forward.h"
 #include "compat/openssl.h"
+#include "ip/Address.h"
 #include "sbuf/SBuf.h"
 #include "security/Session.h"
 #include "ssl/gadgets.h"
@@ -365,6 +366,21 @@ public:
 };
 
 } //namespace Ssl
+
+class VerifyAddress {
+public:
+    // Constructor
+    VerifyAddress(void *check_data)
+    : private_check_data(processCheckData(check_data))
+    {}
+    int match(ASN1_STRING *cn_data);
+private:
+    int matchDomainNameData(ASN1_STRING *cn_data);
+    int matchIp(Ip::Address &iaddr);
+
+    const char* processCheckData(void *check_data);
+    const char* private_check_data;
+};
 
 #if _SQUID_WINDOWS_
 
