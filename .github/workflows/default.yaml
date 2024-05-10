@@ -134,8 +134,7 @@ jobs:
           CC: ${{ matrix.compiler.CC }}
           CXX: ${{ matrix.compiler.CXX }}
         run: |
-          env # TODO: remove to productionalise
-          # ./test-builds.sh --cleanup
+          ./test-builds.sh --cleanup
 
       - name: Run build on MacOS
         if: runner.os == 'macOS'
