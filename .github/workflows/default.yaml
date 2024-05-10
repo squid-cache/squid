@@ -20,8 +20,6 @@ env:
   # tries to balance the two concerns.
   CHECKOUT_FETCH_DEPTH: 1001
 
-  COMPILER: ${{ matrix.compiler }}
-
 jobs:
 
   functionality-tests:
@@ -131,8 +129,10 @@ jobs:
 
       - name: Run build on Linux
         if: runner.os == 'Linux'
+        env:
+          CC: ${{ matrix.compiler }}
         run: |
-          test "x$COMPILER" = "xclang" && export CC=clang CXX=clang++
+          test "x$CC" = "xclang" && export CXX=clang++
           ./test-builds.sh
 
       - name: Run build on MacOS
