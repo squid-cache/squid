@@ -20,6 +20,12 @@ class ACLIdent : public Acl::Node
     MEMPROXY_CLASS(ACLIdent);
 
 public:
+    /// whether StartLookup() preconditions are fulfilled
+    static bool ShouldStartLookup(const ACLFilledChecklist &);
+
+    /// Initiates asynchronous Ident lookup for an open client connection
+    /// (extracted from the given checklist).
+    /// \prec ShouldStartLookup()
     static void StartLookup(ACLFilledChecklist &, const Acl::Node &);
 
     ACLIdent(ACLData<char const *> *newData, char const *);

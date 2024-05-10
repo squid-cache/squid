@@ -63,7 +63,7 @@ ACLIdent::match(ACLChecklist *cl)
             return data->match(SBuf(*ident).c_str());
         else
             return data->match(dash_str);
-    } else if (checklist->conn() != nullptr && Comm::IsConnOpen(checklist->conn()->clientConnection)) {
+    } else if (ShouldStartLookup(*checklist)) {
         if (checklist->goAsync(StartLookup, *this)) {
             debugs(28, 3, "switching to ident lookup state");
             return -1;
@@ -88,6 +88,36 @@ bool
 ACLIdent::empty () const
 {
     return data->empty();
+}
+
+bool
+ACLIdent::ShouldStartLookup(const ACLFilledChecklist &ch)
+{
+    if (const auto mgr = ch.conn()) {
+        if (!mgr->clientConnection) {
+            debugs(82, 7, "no; lack client connection info");
+            return false;
+        }
+
+        const auto &clientConnection = *mgr->clientConnection;
+
+        // check this before checking isOpen() for more informative debugging
+        if (clientConnection.identLookup) {
+            debugs(82, 7, "no; already attempted");
+            return false;
+        }
+
+        if (!clientConnection.isOpen()) {
+            debugs(82, 5, "no; client connection closed: " << mgr->clientConnection->id);
+            return false;
+        }
+
+        debugs(82, 7, "yes for " << mgr->clientConnection->id);
+        return true;
+    }
+
+    debugs(82, 5, "no; not a client-associated transaction or client gone");
+    return false;
 }
 
 void
