@@ -79,8 +79,8 @@ public:
     void syncAle(HttpRequest *adaptedRequest, const char *logUri) const override;
     void verifyAle() const override;
 
-    /// \copydoc AccessLogEntry::getClientIdentLookup()
-    auto identLookup() const { return al ? al->getClientIdentLookup() : std::nullopt; }
+    /// RFC 1413 user identity lookup attempt (if known) or nil (otherwise)
+    std::optional<Ident::Lookup> identLookup() const;
 
 public:
     Ip::Address src_addr;

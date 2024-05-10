@@ -157,6 +157,21 @@ ACLFilledChecklist::fd(int aDescriptor)
     fd_ = aDescriptor;
 }
 
+// XXX: Rename to become client-specific
+std::optional<Ident::Lookup>
+ACLFilledChecklist::identLookup() const
+{
+    if (const auto mgr = conn()) {
+        if (const auto clientConnection = mgr->clientConnection)
+            return clientConnection->identLookup;
+    }
+    if (al) {
+        if (const auto clientConnection = al->getAcceptedConnection())
+            return clientConnection->identLookup;
+    }
+    return std::nullopt;
+}
+
 bool
 ACLFilledChecklist::destinationDomainChecked() const
 {
@@ -183,7 +198,7 @@ ACLFilledChecklist::markSourceDomainChecked()
     sourceDomainChecked_ = true;
 }
 
-/*
+ /*
  * There are two common ACLFilledChecklist lifecycles paths:
  *
  * A) Using aclCheckFast(): The caller creates an ACLFilledChecklist object
