@@ -157,7 +157,7 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: build-logs-${{ runner.os }}
+          name: build-logs-${{ matrix.os }}-${{ matrix.compiler }}
           path: btlayer-*.log
 
   CodeQL-tests:
