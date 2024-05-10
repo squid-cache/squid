@@ -157,18 +157,25 @@ ACLFilledChecklist::fd(int aDescriptor)
     fd_ = aDescriptor;
 }
 
-// XXX: Rename to become client-specific
-std::optional<Ident::Lookup>
-ACLFilledChecklist::identLookup() const
+Comm::ConnectionPointer
+ACLFilledChecklist::acceptedConnection() const
 {
     if (const auto mgr = conn()) {
-        if (const auto clientConnection = mgr->clientConnection)
-            return clientConnection->identLookup;
+        if (const auto c = mgr->clientConnection)
+            return c;
     }
     if (al) {
-        if (const auto clientConnection = al->getAcceptedConnection())
-            return clientConnection->identLookup;
+        if (const auto c = al->getAcceptedConnection())
+            return c;
     }
+    return nullptr;
+}
+
+std::optional<Ident::Lookup>
+ACLFilledChecklist::clientIdentLookup() const
+{
+    if (const auto c = acceptedConnection())
+        return c->identLookup; // may be nil
     return std::nullopt;
 }
 

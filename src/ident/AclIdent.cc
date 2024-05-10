@@ -53,7 +53,7 @@ int
 ACLIdent::match(ACLChecklist *cl)
 {
     const auto checklist = Filled(cl);
-    if (const auto lookup = checklist->identLookup()) {
+    if (const auto lookup = checklist->clientIdentLookup()) {
         if (const auto &ident = *lookup)
             return data->match(SBuf(*ident).c_str());
         else
@@ -88,13 +88,8 @@ ACLIdent::empty () const
 bool
 ACLIdent::ShouldStartLookup(const ACLFilledChecklist &ch)
 {
-    if (const auto mgr = ch.conn()) {
-        if (!mgr->clientConnection) {
-            debugs(82, 7, "no; lack client connection info");
-            return false;
-        }
-
-        const auto &clientConnection = *mgr->clientConnection;
+    if (const auto c = ch.acceptedConnection()) {
+        const auto &clientConnection = *c;
 
         // check this before checking isOpen() for more informative debugging
         if (clientConnection.identLookup) {
@@ -103,26 +98,27 @@ ACLIdent::ShouldStartLookup(const ACLFilledChecklist &ch)
         }
 
         if (!clientConnection.isOpen()) {
-            debugs(82, 5, "no; client connection closed: " << mgr->clientConnection->id);
+            debugs(82, 5, "no; client connection closed: " << clientConnection.id);
             return false;
         }
 
-        debugs(82, 7, "yes for " << mgr->clientConnection->id);
+        debugs(82, 7, "yes for " << clientConnection.id);
         return true;
     }
 
-    debugs(82, 5, "no; not a client-associated transaction or client gone");
+    debugs(82, 5, "no; not a client-associated transaction or insufficient client info");
     return false;
 }
 
 void
 ACLIdent::StartLookup(ACLFilledChecklist &cl, const Acl::Node &)
 {
-    const ConnStateData *conn = cl.conn();
-    // check that ACLIdent::match() tested this lookup precondition
-    assert(conn && Comm::IsConnOpen(conn->clientConnection));
+    const auto clientConnection = cl.acceptedConnection();
+    // caller should use ShouldStartLookup() to check these preconditions
+    assert(clientConnection);
+    assert(Comm::IsConnOpen(clientConnection)); // TODO: Remove as unnecessary
     debugs(28, 3, "Doing ident lookup" );
-    Ident::Start(cl.conn()->clientConnection, LookupDone, &cl);
+    Ident::Start(clientConnection, LookupDone, &cl);
 }
 
 void

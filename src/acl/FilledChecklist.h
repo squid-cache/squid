@@ -79,8 +79,12 @@ public:
     void syncAle(HttpRequest *adaptedRequest, const char *logUri) const override;
     void verifyAle() const override;
 
-    /// RFC 1413 user identity lookup attempt (if known) or nil (otherwise)
-    std::optional<Ident::Lookup> identLookup() const;
+    /// client-to-Squid connection (or nil)
+    Comm::ConnectionPointer acceptedConnection() const;
+
+    /// RFC 1413 identity lookup attempt information for acceptedConnection()
+    /// user (if available) or nil (otherwise)
+    std::optional<Ident::Lookup> clientIdentLookup() const;
 
 public:
     Ip::Address src_addr;
