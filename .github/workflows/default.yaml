@@ -3,7 +3,7 @@ name: GitHub CI
 on:
   push:
     # test this branch and staged PRs based on this branch code
-    branches: [ "master", "auto" ]
+    branches: [ "master", "auto", "github-actions-clang" ]
 
   pull_request:
     # test PRs targeting this branch code
@@ -19,6 +19,8 @@ env:
   # diffs against them (e.g., for `git diff --check`). This arbitrary limit
   # tries to balance the two concerns.
   CHECKOUT_FETCH_DEPTH: 1001
+
+  COMPILER: ${{ matrix.compiler }}
 
 jobs:
 
@@ -94,7 +96,14 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-22.04, macos-14 ]
+        os:
+          - ubuntu-22.04
+          - macos-14
+        compiler:
+          - gcc
+          - clang
+        exclude:
+            - { os: macos-14, compiler: gcc }
 
     runs-on: ${{ matrix.os }}
 
@@ -107,7 +116,7 @@ jobs:
           sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
-          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin
+          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin clang
 
       - name: Install prerequisite MacOS packages
         if: runner.os == 'macOS'
@@ -122,7 +131,9 @@ jobs:
 
       - name: Run build on Linux
         if: runner.os == 'Linux'
-        run: ./test-builds.sh
+        run: |
+          test "x$COMPILER" = "xclang" && export CC=clang CXX=clang++
+          ./test-builds.sh
 
       - name: Run build on MacOS
         if: runner.os == 'macOS'
