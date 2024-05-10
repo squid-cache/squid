@@ -55,7 +55,7 @@ ACLIdent::match(ACLChecklist *cl)
     const auto checklist = Filled(cl);
     if (const auto lookup = checklist->clientIdentLookup()) {
         if (const auto &ident = *lookup)
-            return data->match(SBuf(*ident).c_str());
+            return data->match(SBuf(*ident).c_str()); // XXX: performance regression, c_str() may reallocate
         else
             return data->match(dash_str);
     } else if (ShouldStartLookup(*checklist)) {
