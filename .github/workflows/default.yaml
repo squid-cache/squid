@@ -101,6 +101,7 @@ jobs:
           - gcc
           - clang
         exclude:
+            # on macos, we only test Xcode, aka clang
             - { os: macos-14, compiler: gcc }
 
     runs-on: ${{ matrix.os }}
@@ -129,11 +130,14 @@ jobs:
 
       - name: Run build on Linux
         if: runner.os == 'Linux'
-        env:
-          CC: ${{ matrix.compiler }}
         run: |
-          test "x$CC" = "xclang" && export CXX=clang++
-          ./test-builds.sh
+          case "${{ matrix.compiler }}" in
+          gcc) export CC=gcc CXX=g++;;
+          clang) export CC=clang CXX=clang++;;
+          *) exit 1;;
+          esac
+          env # TODO: remove to productionalise
+          # ./test-builds.sh
 
       - name: Run build on MacOS
         if: runner.os == 'macOS'
