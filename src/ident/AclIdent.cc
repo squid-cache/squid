@@ -58,6 +58,12 @@ ACLIdent::match(ACLChecklist *cl)
     // ALE but did set checklist->conn(). Or we may mislead about our inability
     // to start lookup if a buggy caller set neither while forgotten ALE had
     // Ident::Lookup information.
+    //
+    // Moreover, IdentStateData (i.e. lookup code) does not use ALE to store
+    // Ident lookup result; it uses ACLFilledChecklist::conn()->clientConnection
+    // instead. Thus, this match() code checks one data member but fill another.
+    // This "disconnect" was created by branch commit 6c2106d4 that removed
+    // conn() checking from ACLFilledChecklist::rfc931(). I do not know why.
     if (const auto lookup = checklist->identLookup()) {
         if (const auto &ident = *lookup)
             return data->match(SBuf(*ident).c_str());
