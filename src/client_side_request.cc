@@ -135,7 +135,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     CodeContext::Reset(al);
     al->cache.start_time = current_time;
     if (aConn) {
-        al->initAcceptedConnection(aConn->clientConnection);
+        al->tcpClient = aConn->clientConnection;
         al->cache.port = aConn->port;
         al->cache.caddr = aConn->log_addr;
         al->proxyProtocolHeader = aConn->proxyProtocolHeader();

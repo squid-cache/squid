@@ -107,7 +107,7 @@ AccessLogEntry::getClientIdent() const
 std::optional<Ident::Lookup>
 AccessLogEntry::getClientIdentLookup() const
 {
-    return acceptedClientConnection ? acceptedClientConnection->identLookup : std::nullopt;
+    return tcpClient ? tcpClient->identLookup : std::nullopt;
 }
 
 const char *

@@ -165,7 +165,7 @@ ACLFilledChecklist::acceptedConnection() const
             return c;
     }
     if (al) {
-        if (const auto c = al->getAcceptedConnection())
+        if (const auto c = al->tcpClient)
             return c;
     }
     return nullptr;

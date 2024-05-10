@@ -82,14 +82,8 @@ public:
 
     SBuf url;
 
-    // TODO: Adaptation::Icap::ALE (and other Squid-initiated transactions) do not have
-    // accepted connections. A future Adaptation::Icap::ALE must have these removed.
-    /// initializes client connection with a connection accepted by Squid
-    void initAcceptedConnection(Comm::ConnectionPointer p) { acceptedClientConnection = p; tcpClient = p; }
-    /// \returns a connection accepted by Squid
-    Comm::ConnectionPointer getAcceptedConnection() const { return acceptedClientConnection; }
-
-    /// TCP/IP level details about the client connection
+    /// TCP/IP level details about the client connection accepted by Squid at
+    /// one of proto_ports. Ought to be the same as MasterXaction::tcpClient.
     Comm::ConnectionPointer tcpClient;
     // TCP/IP level details about the server or peer connection
     // are stored in hier.tcpServer
@@ -290,10 +284,6 @@ private:
     /// Client URI (or equivalent) for effectiveVirginUrl() when HttpRequest is
     /// missing. This member is ignored unless the request member is nil.
     SBuf virginUrlForMissingRequest_;
-
-    /// The same as tcpClient for transactions accepted by Squid.
-    /// Nil for transactions open by Squid (e.g., ICAP transactions).
-    Comm::ConnectionPointer acceptedClientConnection;
 };
 
 class ACLChecklist;

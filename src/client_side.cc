@@ -2506,7 +2506,7 @@ ConnStateData::postHttpsAccept()
         // Build a local AccessLogEntry to allow requiresAle() acls work
         acl_checklist->al = connectAle;
         acl_checklist->al->cache.start_time = current_time;
-        acl_checklist->al->initAcceptedConnection(clientConnection);
+        acl_checklist->al->tcpClient = clientConnection;
         acl_checklist->al->cache.port = port;
         acl_checklist->al->cache.caddr = log_addr;
         acl_checklist->al->proxyProtocolHeader = proxyProtocolHeader_;

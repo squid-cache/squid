@@ -1342,7 +1342,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     al.reply = adapted_reply_;
 
     if (h->acceptedClientAle)
-        al.initAcceptedConnection(h->acceptedClientAle->getAcceptedConnection());
+        al.tcpClient = h->acceptedClientAle->tcpClient; // may be nil
 
 #if USE_OPENSSL
     if (h->ssluser.size())
