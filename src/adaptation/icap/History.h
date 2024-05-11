@@ -37,6 +37,9 @@ public:
     /// \param[out] total time taken for all ICAP processing
     void processingTime(struct timeval &total) const;
 
+    /// ALE of the client-Squid transaction that triggered this adaptation transaction
+    AccessLogEntry::Pointer acceptedTransactionAle;
+
 #if USE_OPENSSL
     String ssluser; ///< the username from SSL
 #endif
@@ -44,7 +47,6 @@ public:
 
     String log_uri; ///< the request uri
     size_t req_sz; ///< the request size
-    AccessLogEntry::Pointer acceptedClientAle;
 
 private:
     void currentTime(struct timeval &) const; ///< time since current start or zero

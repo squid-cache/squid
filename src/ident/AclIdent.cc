@@ -116,7 +116,7 @@ ACLIdent::StartLookup(ACLFilledChecklist &cl, const Acl::Node &)
     const auto clientConnection = cl.acceptedConnection();
     // caller should use ShouldStartLookup() to check these preconditions
     assert(clientConnection);
-    assert(Comm::IsConnOpen(clientConnection)); // TODO: Remove as unnecessary
+    assert(Comm::IsConnOpen(clientConnection)); // TODO: Remove as unused/unnecessary
     debugs(28, 3, "Doing ident lookup" );
     Ident::Start(clientConnection, LookupDone, &cl);
 }
@@ -125,9 +125,15 @@ void
 ACLIdent::LookupDone(const Ident::Lookup &ident, void *data)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
+
+    /*
+     * Cache the ident result in the connection, to avoid redoing ident lookup
+     * over and over on persistent connections
+     */
     const auto conn = checklist->conn();
     if (conn && conn->clientConnection)
         conn->clientConnection->setIdent(ident);
+
     checklist->resumeNonBlockingCheck();
 }
 

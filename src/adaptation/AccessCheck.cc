@@ -129,7 +129,6 @@ Adaptation::AccessCheck::checkCandidates()
     while (!candidates.empty()) {
         if (AccessRule *r = FindRule(topCandidate())) {
             /* BUG 2526: what to do when r->acl is empty?? */
-            // XXX: we do not have access to conn->rfc931 here.
             acl_checklist = new ACLFilledChecklist(r->acl, filter.request);
             acl_checklist->updateAle(filter.al);
             acl_checklist->updateReply(filter.reply);

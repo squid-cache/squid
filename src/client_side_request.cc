@@ -793,7 +793,7 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
 #if ICAP_CLIENT
     Adaptation::Icap::History::Pointer ih = request->icapHistory();
     if (ih != nullptr) {
-        ih->acceptedClientAle = al;
+        ih->acceptedTransactionAle = al;
         if (getConn() != nullptr && getConn()->clientConnection != nullptr) {
 #if USE_OPENSSL
             if (getConn()->clientConnection->isOpen()) {

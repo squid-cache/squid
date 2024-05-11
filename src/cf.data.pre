@@ -1315,7 +1315,7 @@ ENDIF
 	  #   - an ident ACL is evaluated
 	  #   - an ident_regex ACL is evaluated
 	  #   - an external ACL with %ui or deprecated %IDENT parameter is evaluated
-	  #   - ident_lookup_access allow rule matches
+	  #   - an ident_lookup_access allow rule matches
 	  #
 	  # The results of that Ident transaction (successful or otherwise) are
 	  # stored in Ident cache for the client-to-Squid TCP connection lifetime.
@@ -1326,7 +1326,7 @@ ENDIF
 	  # Successful Authentication Server transactions cache the received
 	  # user-id component of the ident-reply response (see RFC 1413).
 	  #
-	  # Failed Authentication Server transactions cache failure indication.
+	  # Failed Authentication Server transactions cache a failure indication.
 	  # Failures include (but are not limited to) cases where Authentication
 	  # Server responds with an invalid (e.g., empty) user-id component.
 	  #
@@ -1338,8 +1338,8 @@ ENDIF
 	  #   - ACL evaluation context lacks client-to-Squid connection info. This
 	  #     happens when the ACL is evaluated for transactions that failed to
 	  #     accept a TCP connection or that are not associated with an
-	  #     accepted TCP connection. Squid logs a level-1 ERROR about its
-	  #     inability to "start ident lookup" in this case.
+	  #     accepted TCP connection. Squid logs a level-1 cache.log ERROR
+	  #     about its inability to "start ident lookup" in this case.
 	  #
 	  #   - Squid has not started (or started but has not finished) obtaining
 	  #     user identity yet and the corresponding configuration directive
@@ -1348,7 +1348,8 @@ ENDIF
 	  # In the above problematic cases, Squid does not start a transaction
 	  # with an Authentication Server and does not update Ident cache.
 	  #
-	  # Ident cache is not shared among SMP workers.
+	  # Ident cache has no capacity limits. It is not shared among Squid SMP
+	  # workers.
 
 	acl aclname proxy_auth [-i] username ...
 	acl aclname proxy_auth_regex [-i] pattern ...

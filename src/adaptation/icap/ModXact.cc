@@ -1341,8 +1341,8 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     // XXX: This reply (and other ALE members!) may have been needed earlier.
     al.reply = adapted_reply_;
 
-    if (h->acceptedClientAle)
-        al.tcpClient = h->acceptedClientAle->tcpClient; // may be nil
+    if (h->acceptedTransactionAle)
+        al.tcpClient = h->acceptedTransactionAle->tcpClient; // may be nil
 
 #if USE_OPENSSL
     if (h->ssluser.size())

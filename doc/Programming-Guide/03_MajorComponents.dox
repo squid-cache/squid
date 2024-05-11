@@ -291,7 +291,7 @@ TODO: get RFCs linked from ietf
 
 \section IdentLookups Ident Lookups
 \par
-	These routines support RFC 931 (http://www.ietf.org/rfc/rfc931.txt)
+	These routines support RFC 1413 (https://www.ietf.org/rfc/rfc1413.txt)
         "Ident" lookups.   An ident
 	server running on a host will report the user name associated
 	with a connected TCP socket.  Some sites use this facility for

@@ -182,7 +182,7 @@ std::optional<Ident::Lookup>
 ACLFilledChecklist::clientIdentLookup() const
 {
     if (const auto c = acceptedConnection())
-        return c->identLookup; // may be nil
+        return c->identLookup; // may be std::nullopt
     return std::nullopt;
 }
 
@@ -212,7 +212,7 @@ ACLFilledChecklist::markSourceDomainChecked()
     sourceDomainChecked_ = true;
 }
 
- /*
+/*
  * There are two common ACLFilledChecklist lifecycles paths:
  *
  * A) Using aclCheckFast(): The caller creates an ACLFilledChecklist object

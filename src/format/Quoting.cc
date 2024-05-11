@@ -43,6 +43,7 @@ Format::QuoteUrlEncodeUsername(const char *name)
 char *
 Format::QuoteUrlEncodeUsername(const SBuf &name)
 {
+    // XXX: performance regression, c_str() may reallocate
     return QuoteUrlEncodeUsername(SBuf(name).c_str());
 }
 

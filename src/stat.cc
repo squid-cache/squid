@@ -1816,8 +1816,8 @@ statClientRequests(StoreEntry * s)
             }
 
         if (!p && conn && conn->clientConnection->identLookup) {
-            if (auto &ident = *conn->clientConnection->identLookup) // XXX: const
-                p = ident->c_str();
+            if (auto &ident = *conn->clientConnection->identLookup) // XXX: no const due to c_str() below
+                p = ident->c_str(); // XXX: performance regression, c_str() may reallocate
         }
 
 #if USE_OPENSSL
