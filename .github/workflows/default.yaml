@@ -104,7 +104,7 @@ jobs:
           - layer-00-default
           - layer-01-minimal
           - layer-02-maximus
-          - layer-04-noauth-everything>>>>>>> master
+          - layer-04-noauth-everything
         exclude:
             # on macos, we only test Xcode, aka clang
             - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
