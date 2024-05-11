@@ -104,6 +104,13 @@ ACLFilledChecklist::verifyAle() const
         showDebugWarning("HttpReply object");
         al->reply = reply_;
     }
+
+    if (!al->tcpClient) {
+        if (const auto c = acceptedConnection()) {
+            showDebugWarning("accepted client connection");
+            al->tcpClient = c;
+        }
+    }
 }
 
 void
