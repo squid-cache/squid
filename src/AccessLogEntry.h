@@ -63,9 +63,6 @@ public:
     /// RFC 1413 user identity (if known) or nil (otherwise)
     std::optional<Ident::User> getClientIdent() const;
 
-    /// RFC 1413 user identity lookup attempt (if known) or nil (otherwise)
-    std::optional<Ident::Lookup> getClientIdentLookup() const;
-
     /// Fetch the external ACL provided 'user=' string, or nil if none is available.
     const char *getExtUser() const;
 

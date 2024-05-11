@@ -99,15 +99,11 @@ AccessLogEntry::syncNotes(HttpRequest *req)
 std::optional<Ident::User>
 AccessLogEntry::getClientIdent() const
 {
-    if (const auto lookup = getClientIdentLookup())
-        return *lookup; // std::nullopt if lookup has failed
+    if (tcpClient) {
+        if (const auto &lookup = tcpClient->identLookup)
+            return *lookup; // std::nullopt if lookup has failed
+    }
     return std::nullopt;
-}
-
-std::optional<Ident::Lookup>
-AccessLogEntry::getClientIdentLookup() const
-{
-    return tcpClient ? tcpClient->identLookup : std::nullopt;
 }
 
 const char *
