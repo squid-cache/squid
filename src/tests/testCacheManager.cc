@@ -112,11 +112,11 @@ TestCacheManager::testRegister()
 
     StoreEntry *sentry = new StoreEntry();
     sentry->createMemObject();
-    sentry->mem_obj->setUris("http://localhost/squid-internal-mgr/menu", "http://localhost/squid-internal-mgr/menu", HttpRequestMethod(Http::METHOD_GET));
     sentry->flags=0x25; //arbitrary test value
     action->run(sentry, false);
     CPPUNIT_ASSERT_EQUAL(1,(int)sentry->flags);
 }
+
 
 void
 TestCacheManager::testParseUrl()
