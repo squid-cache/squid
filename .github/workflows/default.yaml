@@ -100,6 +100,11 @@ jobs:
         compiler:
           - { CC: gcc, CXX: g++ }
           - { CC: clang, CXX: clang++ }
+        layer:
+          - layer-00-default
+          - layer-01-minimal
+          - layer-02-maximus
+          - layer-04-noauth-everything>>>>>>> master
         exclude:
             # on macos, we only test Xcode, aka clang
             - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
@@ -134,10 +139,13 @@ jobs:
           CC: ${{ matrix.compiler.CC }}
           CXX: ${{ matrix.compiler.CXX }}
         run: |
-          ./test-builds.sh --cleanup
+          ./test-builds.sh --cleanup ${{ matrix.layer }}
 
       - name: Run build on MacOS
         if: runner.os == 'macOS'
+        env:
+          CC: ${{ matrix.compiler.CC }}
+          CXX: ${{ matrix.compiler.CXX }}
         run: |
           eval `brew shellenv`
           PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
@@ -152,7 +160,7 @@ jobs:
           export CPPFLAGS="-I$HOMEBREW_PREFIX/include${CPPFLAGS:+ $CPPFLAGS}"
           export LDFLAGS="-L$HOMEBREW_PREFIX/lib${LDFLAGS:+ $LDFLAGS}"
           export CFLAGS="-Wno-compound-token-split-by-macro${CFLAGS:+ $CFLAGS}" # needed fir ltdl with Xcode
-          ./test-builds.sh
+          ./test-builds.sh ${{ matrix.layer }}
 
       - name: Publish build logs
         if: success() || failure()
