@@ -111,6 +111,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     name: build-tests(${{ matrix.os }}/${{ matrix.compiler.CC }}/${{ matrix.layer.nick }})
+    env:
+      CC: ${{ matrix.compiler.CC }}
+      CXX: ${{ matrix.compiler.CXX }}
 
     steps:
 
@@ -136,17 +139,11 @@ jobs:
 
       - name: Run build on Linux
         if: runner.os == 'Linux'
-        env:
-          CC: ${{ matrix.compiler.CC }}
-          CXX: ${{ matrix.compiler.CXX }}
         run: |
           ./test-builds.sh --cleanup ${{ matrix.layer.layer }}
 
       - name: Run build on MacOS
         if: runner.os == 'macOS'
-        env:
-          CC: ${{ matrix.compiler.CC }}
-          CXX: ${{ matrix.compiler.CXX }}
         run: |
           eval `brew shellenv`
           PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
