@@ -110,7 +110,7 @@ jobs:
             - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
 
     runs-on: ${{ matrix.os }}
-    name: build-tests((${{ matrix.os }}/${{ matrix.compiler.CC }}/${{ matrix.layer.nick }})
+    name: build-tests(${{ matrix.os }}/${{ matrix.compiler.CC }}/${{ matrix.layer.nick }})
 
     steps:
 
