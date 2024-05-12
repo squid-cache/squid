@@ -106,7 +106,7 @@ jobs:
           - layer-02-maximus
           - layer-04-noauth-everything
         exclude:
-            # on macos, we only test Xcode, aka clang
+            # Non-clang testing on MacOS is too much work for very little gain.
             - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
 
     runs-on: ${{ matrix.os }}
