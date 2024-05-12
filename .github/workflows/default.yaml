@@ -101,15 +101,16 @@ jobs:
           - { CC: gcc, CXX: g++ }
           - { CC: clang, CXX: clang++ }
         layer:
-          - layer-00-default
-          - layer-01-minimal
-          - layer-02-maximus
-          - layer-04-noauth-everything
+          - { layer: layer-00-default, nick: default }
+          - { layer: layer-01-minimal, nick: minimal }
+          - { layer: layer-02-maximus, nick: maximus }
+          - { layer: layer-04-noauth-everything, nick: noauth }
         exclude:
-            # Non-clang testing on MacOS is too much work for very little gain.
+            # Non-clang testing on MacOS is too much work for very little gain
             - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
 
     runs-on: ${{ matrix.os }}
+    name: build-tests((${{ matrix.os }}/${{ matrix.compiler.CC }}/${{ matrix.layer.nick }})
 
     steps:
 
@@ -139,7 +140,7 @@ jobs:
           CC: ${{ matrix.compiler.CC }}
           CXX: ${{ matrix.compiler.CXX }}
         run: |
-          ./test-builds.sh --cleanup ${{ matrix.layer }}
+          ./test-builds.sh --cleanup ${{ matrix.layer.layer }}
 
       - name: Run build on MacOS
         if: runner.os == 'macOS'
@@ -160,7 +161,7 @@ jobs:
           export CPPFLAGS="-I$HOMEBREW_PREFIX/include${CPPFLAGS:+ $CPPFLAGS}"
           export LDFLAGS="-L$HOMEBREW_PREFIX/lib${LDFLAGS:+ $LDFLAGS}"
           export CFLAGS="-Wno-compound-token-split-by-macro${CFLAGS:+ $CFLAGS}" # needed fir ltdl with Xcode
-          ./test-builds.sh ${{ matrix.layer }}
+          ./test-builds.sh ${{ matrix.layer.layer }}
 
       - name: Publish build logs
         if: success() || failure()
@@ -198,3 +199,4 @@ jobs:
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
+
