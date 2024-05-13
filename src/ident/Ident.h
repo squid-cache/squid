@@ -11,8 +11,9 @@
 
 #include "cbdata.h"
 #include "comm/forward.h"
-#include "sbuf/forward.h"
+#include "sbuf/SBuf.h"
 
+#include <iosfwd>
 #include <optional>
 
 /// Ident Lookup API
@@ -36,7 +37,25 @@ using IDCB = void (const Lookup &, void *data);
  */
 void Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *cbdata);
 
+/// std::ostream manipulator to debug lookup outcomes
+class PrintableLookup
+{
+public:
+    explicit PrintableLookup(const std::optional<Lookup> &l): lookup(l) {}
+    std::optional<Lookup> lookup;
+};
+
+/// prints lookup outcome (for debugging)
+std::ostream &operator <<(std::ostream &, const PrintableLookup &);
+
 } // namespace Ident
+
+
+/// implements succinct and reusable AsText() API for debugging Ident::Lookup values
+inline Ident::PrintableLookup AsText(const Ident::Lookup &lookup) { return Ident::PrintableLookup(lookup); }
+
+/// implements succinct and reusable AsText() API for debugging optional Ident::Lookup values
+inline Ident::PrintableLookup AsText(const std::optional<Ident::Lookup> &lookup) { return Ident::PrintableLookup(lookup); }
 
 #endif /* SQUID_SRC_IDENT_IDENT_H */
 
