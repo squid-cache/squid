@@ -101,16 +101,18 @@ jobs:
           - { CC: gcc, CXX: g++ }
           - { CC: clang, CXX: clang++ }
         layer:
-          - { layer: layer-00-default, nick: default }
-          - { layer: layer-01-minimal, nick: minimal }
-          - { layer: layer-02-maximus, nick: maximus }
-          - { layer: layer-04-noauth-everything, nick: noauth }
+          - { name: layer-00-default, nick: default }
+          - { name: layer-01-minimal, nick: minimal }
+          - { name: layer-02-maximus, nick: maximus }
+          - { name: layer-04-noauth-everything, nick: noauth }
         exclude:
             # Non-clang testing on MacOS is too much work for very little gain
             - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
 
     runs-on: ${{ matrix.os }}
-    name: build-tests(${{ matrix.os }}/${{ matrix.compiler.CC }}/${{ matrix.layer.nick }})
+
+    name: build-tests(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+
     env:
       CC: ${{ matrix.compiler.CC }}
       CXX: ${{ matrix.compiler.CXX }}
@@ -139,8 +141,7 @@ jobs:
 
       - name: Run build on Linux
         if: runner.os == 'Linux'
-        run: |
-          ./test-builds.sh --cleanup ${{ matrix.layer.layer }}
+        run: ./test-builds.sh ${{ matrix.layer.name }}
 
       - name: Run build on MacOS
         if: runner.os == 'macOS'
@@ -196,4 +197,3 @@ jobs:
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
-
