@@ -9,7 +9,6 @@
 #ifndef SQUID_SRC_IDENT_IDENT_H
 #define SQUID_SRC_IDENT_IDENT_H
 
-#include "cbdata.h"
 #include "comm/forward.h"
 #include "sbuf/forward.h"
 
