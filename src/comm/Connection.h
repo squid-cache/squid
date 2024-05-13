@@ -143,9 +143,8 @@ public:
     ScopedId codeContextGist() const override;
     std::ostream &detailCodeContext(std::ostream &os) const override;
 
-    /// Records the result of a user identity lookup.
-    /// Subsequent calls have no effect.
-    void setIdent(const Ident::Lookup &);
+    /// makes sure identLookup reflects the result of a user identity lookup
+    void updateIdent(const Ident::Lookup &);
 
 public:
     /** Address/Port for the Squid end of a TCP link. */

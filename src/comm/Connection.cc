@@ -179,15 +179,18 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
 }
 
 void
-Comm::Connection::setIdent(const Ident::Lookup &lookup)
+Comm::Connection::updateIdent(const Ident::Lookup &newLookup)
 {
+    // Multiple updateIdent() calls happen when a configuration directive (that
+    // requires a lookup) is evaluated while a lookup attempt is still pending.
+    // Ident::IdentStateData::notify() makes calls with the same lookup value.
     static const Ident::User lookupError("[ident-error]");
-    if (identLookup) {
-        debugs(5, 3, "ignored " << lookup.value_or(lookupError) << "; have: " << identLookup->value_or(lookupError));
-        return;
-    }
-    debugs(5, 3, lookup.value_or(lookupError));
-    identLookup = lookup;
+    if (identLookup)
+        debugs(5, 3, newLookup.value_or(lookupError) << "; old: " << identLookup->value_or(lookupError));
+    else
+        debugs(5, 3, newLookup.value_or(lookupError));
+
+    identLookup = newLookup; // may already be the same
 }
 
 ScopedId

@@ -200,7 +200,7 @@ static void
 clientIdentDone(const Ident::Lookup &ident, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
-    conn->clientConnection->setIdent(ident);
+    conn->clientConnection->updateIdent(ident);
 }
 
 void

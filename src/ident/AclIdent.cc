@@ -130,9 +130,10 @@ ACLIdent::LookupDone(const Ident::Lookup &ident, void *data)
      * Cache the ident result in the connection, to avoid redoing ident lookup
      * over and over on persistent connections
      */
-    const auto conn = checklist->conn();
-    if (conn && conn->clientConnection)
-        conn->clientConnection->setIdent(ident);
+    if (const auto mgr = checklist->conn()) {
+        if (const auto &c = mgr->clientConnection)
+            c->updateIdent(ident);
+    }
 
     checklist->resumeNonBlockingCheck();
 }
