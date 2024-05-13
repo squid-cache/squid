@@ -79,21 +79,6 @@ static void ClientAdd(IdentStateData * state, IDCB * callback, void *callback_da
 
 Ident::IdentConfig Ident::TheConfig;
 
-// XXX: undefined reference to `Ident::operator <<()` in tests/testUfs and others
-std::ostream &
-Ident::operator <<(std::ostream &os, const PrintableLookup &p)
-{
-    if (p.lookup) {
-        if (const auto &user = *p.lookup)
-            os << *user;
-        else
-            os << "[lookup-error]";
-    } else {
-        os << "[no-lookup]";
-    }
-    return os;
-}
-
 void
 Ident::IdentStateData::deleteThis(const char *reason)
 {

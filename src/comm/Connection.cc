@@ -184,8 +184,13 @@ Comm::Connection::updateIdent(const Ident::Lookup &newLookup)
     // Multiple updateIdent() calls happen when a configuration directive (that
     // requires a lookup) is evaluated while a lookup attempt is still pending.
     // Ident::IdentStateData::notify() makes calls with the same lookup value.
-    debugs(5, 3, AsText(newLookup) << "; old: " << AsText(identLookup));
-    identLookup = newLookup; // may already have the same value
+    static const Ident::User lookupError("[ident-error]");
+    if (identLookup)
+        debugs(5, 3, newLookup.value_or(lookupError) << "; old: " << identLookup->value_or(lookupError));
+    else
+        debugs(5, 3, newLookup.value_or(lookupError));
+
+    identLookup = newLookup; // may already be the same
 }
 
 ScopedId
@@ -213,8 +218,12 @@ Comm::operator << (std::ostream &os, const Connection &conn)
         os << " FD " << conn.fd;
     if (conn.flags != COMM_UNSET)
         os << " flags=" << conn.flags;
-    if (conn.identLookup)
-        os << " ident=" << AsText(*conn.identLookup);
+    if (conn.identLookup) {
+        if (const auto &user = *conn.identLookup)
+            os << " ident=" << *user;
+        else
+            os << " ident-error";
+    }
     return os;
 }
 
