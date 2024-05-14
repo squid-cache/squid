@@ -159,7 +159,7 @@ jobs:
           export CPPFLAGS="-I$HOMEBREW_PREFIX/include${CPPFLAGS:+ $CPPFLAGS}"
           export LDFLAGS="-L$HOMEBREW_PREFIX/lib${LDFLAGS:+ $LDFLAGS}"
           export CFLAGS="-Wno-compound-token-split-by-macro${CFLAGS:+ $CFLAGS}" # needed fir ltdl with Xcode
-          ./test-builds.sh ${{ matrix.layer.layer }}
+          ./test-builds.sh ${{ matrix.layer.name }}
 
       - name: Publish build logs
         if: success() || failure()
