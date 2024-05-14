@@ -94,14 +94,27 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-22.04, macos-14 ]
+        os:
+          - ubuntu-22.04
+          - macos-14
+        compiler:
+          - { CC: gcc, CXX: g++ }
+          - { CC: clang, CXX: clang++ }
         layer:
-          - layer-00-default
-          - layer-01-minimal
-          - layer-02-maximus
-          - layer-04-noauth-everything
+          - { name: layer-00-default, nick: default }
+          - { name: layer-01-minimal, nick: minimal }
+          - { name: layer-02-maximus, nick: maximus }
+        exclude:
+            # Non-clang testing on MacOS is too much work for very little gain
+            - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
 
     runs-on: ${{ matrix.os }}
+
+    name: build-tests(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+
+    env:
+      CC: ${{ matrix.compiler.CC }}
+      CXX: ${{ matrix.compiler.CXX }}
 
     steps:
 
@@ -112,7 +125,7 @@ jobs:
           sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
-          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin
+          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin ${{ matrix.compiler.CC }}
 
       - name: Install prerequisite MacOS packages
         if: runner.os == 'macOS'
@@ -127,7 +140,7 @@ jobs:
 
       - name: Run build on Linux
         if: runner.os == 'Linux'
-        run: ./test-builds.sh ${{ matrix.layer }}
+        run: ./test-builds.sh ${{ matrix.layer.name }}
 
       - name: Run build on MacOS
         if: runner.os == 'macOS'
@@ -145,13 +158,13 @@ jobs:
           export CPPFLAGS="-I$HOMEBREW_PREFIX/include${CPPFLAGS:+ $CPPFLAGS}"
           export LDFLAGS="-L$HOMEBREW_PREFIX/lib${LDFLAGS:+ $LDFLAGS}"
           export CFLAGS="-Wno-compound-token-split-by-macro${CFLAGS:+ $CFLAGS}" # needed fir ltdl with Xcode
-          ./test-builds.sh ${{ matrix.layer }}
+          ./test-builds.sh ${{ matrix.layer.name }}
 
       - name: Publish build logs
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: build-logs-${{ runner.os }}
+          name: build-logs-${{ matrix.os }}-${{ matrix.compiler }}
           path: btlayer-*.log
 
   CodeQL-tests:
