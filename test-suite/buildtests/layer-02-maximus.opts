@@ -89,7 +89,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-url-rewrite-helpers \
 	--enable-mempools \
 	--enable-unlinkd \
-	--enable-urn-thttp \
 	--enable-stacktraces \
 	--enable-vary \
 	--enable-x-accelerator-vary \
