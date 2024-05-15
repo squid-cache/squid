@@ -114,7 +114,6 @@ void
 ACLIdent::StartLookup(ACLFilledChecklist &cl, const Acl::Node &)
 {
     const auto clientConnection = cl.acceptedConnection();
-    // caller should use ShouldStartLookup() to check these preconditions
     assert(clientConnection);
     assert(Comm::IsConnOpen(clientConnection)); // TODO: Remove as unused/unnecessary
     debugs(28, 3, "Doing ident lookup" );

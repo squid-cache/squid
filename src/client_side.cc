@@ -95,6 +95,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "ident/AclIdent.h"
 #include "ident/Config.h"
 #include "ident/Ident.h"
 #include "internal.h"
@@ -2178,7 +2179,7 @@ ConnStateData::whenClientIpKnown()
     if (Ident::TheConfig.identLookup) {
         ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, nullptr);
         fillChecklist(identChecklist);
-        if (identChecklist.fastCheck().allowed())
+        if (identChecklist.fastCheck().allowed() && ACLIdent::ShouldStartLookup(identChecklist))
             Ident::Start(clientConnection, clientIdentDone, this);
     }
 
