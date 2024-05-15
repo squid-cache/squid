@@ -581,7 +581,7 @@ public:
     explicit CommonNamesPrinter(std::ostream &os): os_(os) {}
 
     /// Ssl::matchX509CommonNames() visitor that reports the given name (if any)
-    static int PrintName(void *, ASN1_STRING *);
+    static int PrintName(void *, ASN1_STRING *, Ssl::AddressType addr_type);
 
     /// whether any names have been printed so far
     bool printed = false;
@@ -593,8 +593,11 @@ private:
 };
 
 int
-CommonNamesPrinter::PrintName(void * const printer, ASN1_STRING * const name)
+CommonNamesPrinter::PrintName(void * const printer, ASN1_STRING * const name, Ssl::AddressType addr_type)
 {
+    // addr_type is only declared here to ensure the signature type matches
+    // for matchX509CommonNames. Void it here to avoid compiler warnings.
+    (void)addr_type;
     assert(printer);
     static_cast<CommonNamesPrinter*>(printer)->printName(name);
     return 1;

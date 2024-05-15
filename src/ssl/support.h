@@ -144,6 +144,12 @@ inline const char *bumpMode(int bm)
 /// certificates indexed by issuer name
 typedef std::multimap<SBuf, X509 *> CertsIndexedList;
 
+/// enum for use when checking domain matches
+enum class AddressType {
+    IP,
+    DNS,
+};
+
 /**
  * Load PEM-encoded certificates from the given file.
  */
@@ -283,7 +289,7 @@ void useSquidUntrusted(SSL_CTX *sslContext);
    \param check_func The function used to match X509 CNs. The CN data passed as ASN1_STRING data
    \return   1 if any of the certificate CN matches, 0 if none matches.
  */
-int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data));
+int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data, AddressType addr_type));
 
 /**
    \ingroup ServerProtocolSSLAPI
@@ -365,15 +371,13 @@ public:
     bool hidMissingIssuer = false;
 };
 
-} //namespace Ssl
-
 class VerifyAddress {
 public:
     // Constructor
     VerifyAddress(void *check_data)
     : private_check_data(processCheckData(check_data))
     {}
-    int match(ASN1_STRING *cn_data);
+    int match(ASN1_STRING *cn_data, AddressType addr_type);
 private:
     int matchDomainNameData(ASN1_STRING *cn_data);
     int matchIp(Ip::Address &iaddr);
@@ -381,6 +385,8 @@ private:
     const char* processCheckData(void *check_data);
     const char* private_check_data;
 };
+} //namespace Ssl
+
 
 #if _SQUID_WINDOWS_
 

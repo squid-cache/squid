@@ -50,8 +50,11 @@ ACLServerNameData::match(const char *host)
 /// \retval 1 when the name does not match
 template<class MatchType>
 int
-check_cert_domain( void *check_data, ASN1_STRING *cn_data)
+check_cert_domain( void *check_data, ASN1_STRING *cn_data, Ssl::AddressType addr_type)
 {
+    // addr_type is only declared here to ensure the signature type matches
+    // for matchX509CommonNames. Void it here to avoid compiler warnings.
+    (void)addr_type;
     char cn[1024];
     ACLData<MatchType> * data = (ACLData<MatchType> *)check_data;
 

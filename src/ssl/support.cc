@@ -59,44 +59,46 @@ std::vector<const char *> Ssl::BumpModeStr = {
 };
 
 // Methods for the VerifyAddress class
-//
-// The public match method can be called with an ASN1_STRING which
-// could either be an X509_NAME or GENERAL_NAME
-int VerifyAddress::match(ASN1_STRING *asn1_data) {
-    // declare an empty server var which will be updated later
-    const char *server = nullptr;
-    if (ASN1_STRING_type(asn1_data) == V_ASN1_OCTET_STRING) {
-        // We've been passed an IP address from a GENERAL_NAME struct
-        // Attempt to safely convert this to a string
-        const unsigned char *ip = ASN1_STRING_get0_data(asn1_data);
-        char buffer[INET6_ADDRSTRLEN];
-        if (ASN1_STRING_length(asn1_data) == 4) {
-            // IPv4
-            inet_ntop(AF_INET, ip, buffer, sizeof(buffer));
-        } else if (ASN1_STRING_length(asn1_data) == 16) {
-            // IPv6
-            inet_ntop(AF_INET6, ip, buffer, sizeof(buffer));
-        } else {
-            debugs(83, 4, "Tried to get an IP from ASN1_OCTET_STRING but failed");
-            return 1;
-        }
-        server = strdup(buffer);
-    } else {
-        // Otherwise, assume we have the cn_data from a typical ASN1_STRING
-        // This could be a domainname or IP address
-        server = (const char *)asn1_data->data;
+int Ssl::VerifyAddress::match(ASN1_STRING *asn1_data, Ssl::AddressType addr_type) {
+    switch (addr_type) {
+        // For IP addresses, create an in[6]_addr struct from the ASN1 data,
+        // create an Ip::Address from it and then use that to attempt a match.
+        case Ssl::AddressType::IP:
+            {
+                const unsigned char *address = ASN1_STRING_get0_data(asn1_data);
+                Ip::Address iaddr;
+                // Declare a buffer that can store either an IPV4 or IPV6 address
+                char theip[40];
+                switch(ASN1_STRING_length(asn1_data)) {
+                    case 4:
+                        struct in_addr addr;
+                        memcpy(&addr.s_addr, address, 4);
+                        iaddr = addr;
+                        iaddr.toStr(theip, 40);
+                        debugs(83, 4, "Verifying server IP " << private_check_data << " IPV4: " << theip);
+                        return matchIp(iaddr);
+                    case 16:
+                        struct in6_addr addr6;
+                        memcpy(&addr6.s6_addr, address, 16);
+                        iaddr = addr6;
+                        iaddr.toStr(theip, 40);
+                        debugs(83, 4, "Verifying server IP " << private_check_data << " IPV6: " << theip);
+                        return matchIp(iaddr);
+                    default:
+                        // This doesn't look like an IP despite what the type is set to. Fail the match.
+                        debugs(83, 4, "Unexpected ASN1 string length for an IP address");
+                        return 1;
+                }
+            }
+        case Ssl::AddressType::DNS:
+            debugs(83, 4, "Performing DNS domain match");
+            return matchDomainNameData(asn1_data);
     }
-    // Attempt to convert server into an IP and use matchIP if it's valid
-    Ip::Address ipAddress;
-    if (ipAddress = server) {
-        debugs(83, 4, "Verifying server IP " << private_check_data << " to certificate name/subjectAltName " << server);
-        return matchIp(ipAddress);
-    }
-    // Otherwise, match the original address as a domain name
-    return matchDomainNameData(asn1_data);
+    // If we got here, fail
+    return 1;
 }
 
-int VerifyAddress::matchDomainNameData(ASN1_STRING *cn_data) {
+int Ssl::VerifyAddress::matchDomainNameData(ASN1_STRING *cn_data) {
     char cn[1024];
 
     if (cn_data->length == 0)
@@ -117,7 +119,7 @@ int VerifyAddress::matchDomainNameData(ASN1_STRING *cn_data) {
     return matchDomainName(private_check_data, (cn[0] == '*' ? cn + 1 : cn), mdnRejectSubsubDomains);
 }
 
-int VerifyAddress::matchIp(Ip::Address &iaddr) {
+int Ssl::VerifyAddress::matchIp(Ip::Address &iaddr) {
     // Attempt to convert private_check_data to an IP address
     // and compare it to iaddr
     Ip::Address check_ip;
@@ -127,7 +129,7 @@ int VerifyAddress::matchIp(Ip::Address &iaddr) {
     return 1;
 }
 
-const char* VerifyAddress::processCheckData(void *check_data) {
+const char* Ssl::VerifyAddress::processCheckData(void *check_data) {
     return reinterpret_cast<const char*>(check_data);
 }
 
@@ -268,7 +270,7 @@ int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len)
     return write;
 }
 
-int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data))
+int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data, Ssl::AddressType addr_type))
 {
     assert(peer_cert);
 
@@ -278,7 +280,7 @@ int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_fun
 
         ASN1_STRING *cn_data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, i));
 
-        if ( (*check_func)(check_data, cn_data) == 0)
+        if ( (*check_func)(check_data, cn_data, Ssl::AddressType::DNS) == 0)
             return 1;
     }
 
@@ -292,7 +294,7 @@ int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_fun
             switch(check->type) {
                 case GEN_DNS:
                     // If the type is GEN_DNS, call check_func with the dNSName data
-                    if ( (*check_func)(check_data, check->d.dNSName) == 0) {
+                    if ( (*check_func)(check_data, check->d.dNSName, Ssl::AddressType::DNS) == 0) {
                         sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
                         return 1;
                     }
@@ -300,7 +302,7 @@ int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_fun
                 case GEN_IPADD:
                     debugs(83, 4, "Check type is GEN_IPADD, verifying...");
                     // If it's an IP address, call check_func with the iPAddress data
-                    if ( (*check_func)(check_data, check->d.iPAddress) == 0) {
+                    if ( (*check_func)(check_data, check->d.iPAddress, Ssl::AddressType::IP) == 0) {
                         sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
                         return 1;
                     }
@@ -314,10 +316,10 @@ int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_fun
     return 0;
 }
 
-static int check_domain( void *check_data, ASN1_STRING *cn_data)
+static int check_domain( void *check_data, ASN1_STRING *cn_data, Ssl::AddressType addr_type)
 {
-    VerifyAddress verify(check_data);
-    return verify.match(cn_data);
+    Ssl::VerifyAddress verify(check_data);
+    return verify.match(cn_data, addr_type);
 }
 
 bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
