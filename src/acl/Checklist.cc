@@ -23,7 +23,7 @@ ACLChecklist::prepNonBlocking()
     assert(accessList);
 
     if (callerGone()) {
-        checkCallback(ACCESS_DUNNO); // the answer does not really matter
+        checkCallback("caller is gone"); // the answer does not really matter
         return false;
     }
 
@@ -34,8 +34,7 @@ ACLChecklist::prepNonBlocking()
 
     if (!cbdataReferenceValid(accessList)) {
         cbdataReferenceDone(accessList);
-        debugs(28, 4, "ACLChecklist::check: " << this << " accessList is invalid");
-        checkCallback(ACCESS_DUNNO);
+        checkCallback("accessList is invalid");
         return false;
     }
 
@@ -51,7 +50,7 @@ ACLChecklist::completeNonBlocking()
         calcImplicitAnswer();
 
     cbdataReferenceDone(accessList);
-    checkCallback(currentAnswer());
+    checkCallback(nullptr);
 }
 
 void
@@ -155,17 +154,20 @@ ACLChecklist::goAsync(AsyncStarter starter, const Acl::Node &acl)
 // ACLFilledChecklist overwrites this to unclock something before we
 // "delete this"
 void
-ACLChecklist::checkCallback(const Acl::Answer &answer)
+ACLChecklist::checkCallback(const char * const abortReason)
 {
+    if (abortReason)
+        markFinished(ACCESS_DUNNO, abortReason);
+    Assure(finished());
+
     ACLCB *callback_;
     void *cbdata_;
-    debugs(28, 3, "ACLChecklist::checkCallback: " << this << " answer=" << answer);
 
     callback_ = callback;
     callback = nullptr;
 
     if (cbdataReferenceValidDone(callback_data, &cbdata_))
-        callback_(answer, cbdata_);
+        callback_(currentAnswer(), cbdata_);
 
     // not really meaningful just before delete, but here for completeness sake
     occupied_ = false;
@@ -213,7 +215,7 @@ ACLChecklist::nonBlockingCheck(ACLCB * callback_, void *callback_data_)
      * We cannot select a sensible default for all callers here. */
     if (accessList == nullptr) {
         debugs(28, DBG_CRITICAL, "SECURITY ERROR: ACL " << this << " checked with nothing to match against!!");
-        checkCallback(ACCESS_DUNNO);
+        checkCallback("nonBlockingCheck() without accessList");
         return;
     }
 
