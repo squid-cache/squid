@@ -36,7 +36,7 @@ Acl::ReplyHeaderCheck<header>::match(ACLChecklist * const ch)
 {
     const auto checklist = Filled(ch);
 
-    char const *theHeader = checklist->reply->header.getStr(header);
+    const auto theHeader = checklist->reply().header.getStr(header);
 
     if (nullptr == theHeader)
         return 0;

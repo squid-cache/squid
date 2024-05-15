@@ -771,10 +771,9 @@ HttpStateData::handle1xx(const HttpReply::Pointer &reply)
     // check whether the 1xx response forwarding is allowed by squid.conf
     if (Config.accessList.reply) {
         ACLFilledChecklist ch(Config.accessList.reply, originalRequest().getRaw());
-        ch.al = fwd->al;
-        ch.reply = reply.getRaw();
+        ch.updateAle(fwd->al);
+        ch.updateReply(reply);
         ch.syncAle(originalRequest().getRaw(), nullptr);
-        HTTPMSGLOCK(ch.reply);
         if (!ch.fastCheck().allowed()) // TODO: support slow lookups?
             return drop1xx("http_reply_access blocked it");
     }
