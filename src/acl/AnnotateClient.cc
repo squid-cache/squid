@@ -26,6 +26,7 @@ Acl::AnnotateClientCheck::match(ACLChecklist * const ch)
             tdata->annotate(request->notes(), &delimiters.value, checklist->al);
         return 1;
     }
+    debugs(28, 7, "fails: client has gone");
     return 0;
 }
 
