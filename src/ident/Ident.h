@@ -22,8 +22,8 @@ namespace Ident
 /// empty because RFC 1413 prohibits empty user-id fields.
 using User = SBuf;
 
-/// An Ident transaction attempt. Nil state indicates a failed attempt (e.g.,
-/// a state after an Authentication Server returns RFC 1413 error-reply).
+/// An Ident transaction attempt. Nil state indicates a failed attempt (e.g., a
+/// state after an Ident server returned RFC 1413 error-reply).
 using Lookup = std::optional<User>;
 
 /// Start() callback function that receives Ident lookup outcome.

@@ -1308,10 +1308,9 @@ ENDIF
 	  #
 	  # The following paragraphs apply to both ident_regex and ident ACLs.
 	  #
-	  # Under normal conditions, the first of the following events triggers an
-	  # Ident transaction with an Authentication Server (a.k.a. Ident server;
-	  # see RFC 1413) to identify the user behind the client-to-Squid TCP
-	  # connection:
+	  # Under normal conditions, the first of the following events triggers a
+	  # transaction with an Ident server (see RFC 1413) to identify the user
+	  # behind the client-to-Squid TCP connection:
 	  #   - an ident ACL is evaluated
 	  #   - an ident_regex ACL is evaluated
 	  #   - an external ACL with %ui or deprecated %IDENT parameter is evaluated
@@ -1323,12 +1322,12 @@ ENDIF
 	  # wait for and then reuse cached results. Subsequent ACL evaluations
 	  # reuse cached results immediately, without revalidation.
 	  #
-	  # Successful Authentication Server transactions cache the received
-	  # user-id component of the ident-reply response (see RFC 1413).
+	  # Successful Ident transactions cache the received user-id component of
+	  # the ident-reply response (see RFC 1413).
 	  #
-	  # Failed Authentication Server transactions cache a failure indication.
-	  # Failures include (but are not limited to) cases where Authentication
-	  # Server responds with an invalid (e.g., empty) user-id component.
+	  # Failed Ident transactions cache a failure indication. Failures include
+	  # (but are not limited to) cases where an Ident server responds with an
+	  # invalid (e.g., empty) user-id component.
 	  #
 	  # The following problematic ACL evaluation contexts do not result in an
 	  # ACL match or mismatch. Instead, Squid aborts evaluating rules for the
@@ -1346,7 +1345,7 @@ ENDIF
 	  #     does not support "slow" ACLs.
 	  #
 	  # In the above problematic cases, Squid does not start a transaction
-	  # with an Authentication Server and does not update Ident cache.
+	  # with an Ident server and does not update Ident cache.
 	  #
 	  # Ident cache has no capacity limits. It is not shared among Squid SMP
 	  # workers.
