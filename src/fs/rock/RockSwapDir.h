@@ -148,7 +148,7 @@ private:
     /* configurable options */
     DiskFile::Config fileConfig; ///< file-level configuration options
 
-    static const int64_t HeaderSize  = 16*1024; ///< on-disk db header size
+    static const int64_t HeaderSize = 16*1024; ///< on-disk db header size
 };
 
 /// initializes shared memory segments used by Rock::SwapDir
