@@ -37,8 +37,6 @@
 #include <sys/stat.h>
 #endif
 
-const int64_t Rock::SwapDir::HeaderSize = 16*1024;
-
 Rock::SwapDir::SwapDir(): ::SwapDir("rock"),
     slotSize(HeaderSize), filePath(nullptr), map(nullptr), io(nullptr),
     waitingForPage(nullptr)
