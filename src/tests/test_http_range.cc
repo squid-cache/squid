@@ -7,15 +7,40 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "fatal.h"
 #include "HttpHeader.h"
 #include "HttpHeaderRange.h"
 #include "HttpHeaderTools.h"
+#include "unitTestMain.h"
 
-// TODO: refactor as cppunit test
+class TestHttpRange : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestHttpRange);
+    CPPUNIT_TEST(testRangeParser);
+    CPPUNIT_TEST(testRangeIter);
+    CPPUNIT_TEST(testRangeCanonization);
+    CPPUNIT_TEST_SUITE_END();
 
-static void
-testRangeParser(char const *rangestring)
+protected:
+    void testRangeParser();
+    void testRangeParser(char const *rangestring);
+    void testRangeIter();
+    void testRangeCanonization();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpRange );
+
+void
+TestHttpRange::testRangeParser()
+{
+    testRangeParser("bytes=0-3");
+    testRangeParser("bytes=-3");
+    testRangeParser("bytes=1-");
+    testRangeParser("bytes=0-3, 1-, -2");
+}
+
+void
+TestHttpRange::testRangeParser(char const *rangestring)
 {
     String aString (rangestring);
     HttpHdrRange *range = HttpHdrRange::ParseCreate (&aString);
@@ -46,8 +71,8 @@ rangeFromString(char const *rangestring)
     return range;
 }
 
-static void
-testRangeIter ()
+void
+TestHttpRange::testRangeIter()
 {
     HttpHdrRange *range=rangeFromString("bytes=0-3, 1-, -2");
     assert (range->specs.size() == 3);
@@ -67,8 +92,8 @@ testRangeIter ()
     assert (i - range->end() == -2);
 }
 
-static void
-testRangeCanonization()
+void
+TestHttpRange::testRangeCanonization()
 {
     HttpHdrRange *range=rangeFromString("bytes=0-3, 1-, -2");
     assert (range->specs.size() == 3);
@@ -126,26 +151,13 @@ testRangeCanonization()
 }
 
 int
-main(int, char **)
+main(int argc, char **argv)
 {
-    try {
-        Mem::Init();
-        /* enable for debugging to console */
-        // Debug::debugOptions = xstrdup("ALL,1 64,9");
-        // Debug::BanCacheLogUse();
-        testRangeParser("bytes=0-3");
-        testRangeParser("bytes=-3");
-        testRangeParser("bytes=1-");
-        testRangeParser("bytes=0-3, 1-, -2");
-        testRangeIter();
-        testRangeCanonization();
-    } catch (const std::exception &e) {
-        printf("Error: dying from an unhandled exception: %s\n", e.what());
-        return EXIT_FAILURE;
-    } catch (...) {
-        printf("Error: dying from an unhandled exception.\n");
-        return EXIT_FAILURE;
-    }
-    return EXIT_SUCCESS;
+    Mem::Init();
+    /* enable for debugging to console */
+    // Debug::debugOptions = xstrdup("ALL,1 64,9");
+    // Debug::BanCacheLogUse();
+
+    return TestProgram().run(argc, argv);
 }
 
