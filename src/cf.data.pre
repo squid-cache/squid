@@ -1209,17 +1209,28 @@ endif
 	  # Referer is highly unreliable, so use with care
 
 	acl aclname ident [-i] username ...
-	acl aclname ident_regex [-i] pattern ...
 	  # string match on ident output [slow]
 	  # use REQUIRED to accept any non-null ident.
+	  #
+	  # See also: ident_regex. The two ACLs differ only in their parameter
+	  # syntax and ident output matching algorithm.
+
+	acl aclname ident_regex [-i] username_pattern ...
+	  # regex match on ident output [slow]
 
 	acl aclname proxy_auth [-i] username ...
-	acl aclname proxy_auth_regex [-i] pattern ...
 	  # perform http authentication challenge to the client and match against
 	  # supplied credentials [slow]
 	  #
 	  # takes a list of allowed usernames.
 	  # use REQUIRED to accept any valid username.
+	  #
+	  # See proxy_auth_regex for more information. The two ACLs differ only in
+	  # their parameter syntax and username matching algorithm.
+
+	acl aclname proxy_auth_regex [-i] username_pattern ...
+	  # perform http authentication challenge to the client and regex match
+	  # supplied username [slow]
 	  #
 	  # Will use proxy authentication in forward-proxy scenarios, and plain
 	  # http authenticaiton in reverse-proxy scenarios
@@ -1304,9 +1315,14 @@ endif
 	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID  [fast]
 
 	acl aclname ext_user [-i] username ...
-	acl aclname ext_user_regex [-i] pattern ...
 	  # string match on username returned by external acl helper [slow]
 	  # use REQUIRED to accept any non-null user name.
+	  #
+	  # See also: ext_user_regex. The two ACLs differ only in their parameter
+	  # syntax and username matching algorithm.
+
+	acl aclname ext_user_regex [-i] username_pattern ...
+	  # regex match on username returned by external acl helper [slow]
 
 	acl aclname tag tagvalue ...
 	  # string match on tag returned by external acl helper [fast]
