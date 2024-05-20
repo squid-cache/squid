@@ -1802,6 +1802,7 @@ tests_testHttpRange_SOURCES = \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
+	tests/testHttpRange.cc \
 	HttpReply.cc \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
@@ -1839,7 +1840,6 @@ tests_testHttpRange_SOURCES = \
 	StrList.h \
 	String.cc \
 	Transients.cc \
-	tests/testHttpRange.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	cache_manager.cc \
