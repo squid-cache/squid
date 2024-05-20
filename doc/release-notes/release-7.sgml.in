@@ -221,6 +221,14 @@ This section gives an account of those changes in three categories:
 	<tag>--enable-cachemgr-hostname=</tag>
 	<p>The <em>cachemgr.cgi</em> tool this option relates to has been removed.
 
+	<tag>--disable-ident-lookups</tag>
+	<p>The primary purpose of keeping Ident lookup feature behind a ./configure
+	option was avoiding performance impact of the corresponding code when the
+	feature was unused. That goal is now achieved without that complication.
+	Ident lookups are still not performed by default: squid.conf customization
+	(e.g., using %ui logformat or adding an ident_lookup_access allow rule) is
+	still required to trigger Ident transactions.
+
 	<tag>--without-gnugss</tag>
 	<p>Renamed to <em>--without-gss</em>.
 
