@@ -50,11 +50,11 @@ TestHttpRange::testRangeParser(char const *rangestring)
 
     HttpHdrRange copy(*range);
 
-    assert (copy.specs.size() == range->specs.size());
+    CPPUNIT_ASSERT_EQUAL(range->specs.size(), copy.specs.size());
 
     HttpHdrRange::iterator pos = range->begin();
 
-    assert (*pos);
+    CPPUNIT_ASSERT(*pos);
 
     delete range;
 }
@@ -75,7 +75,7 @@ void
 TestHttpRange::testRangeIter()
 {
     HttpHdrRange *range=rangeFromString("bytes=0-3, 1-, -2");
-    assert (range->specs.size() == 3);
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(3), range->specs.size());
     size_t counter = 0;
     HttpHdrRange::iterator i = range->begin();
 
@@ -84,19 +84,19 @@ TestHttpRange::testRangeIter()
         ++i;
     }
 
-    assert (counter == 3);
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(3), counter);
     i = range->begin();
-    assert (i - range->begin() == 0);
+    CPPUNIT_ASSERT_EQUAL(static_cast<ptrdiff_t>(0), i - range->begin());
     ++i;
-    assert (i - range->begin() == 1);
-    assert (i - range->end() == -2);
+    CPPUNIT_ASSERT_EQUAL(static_cast<ptrdiff_t>(1), i - range->begin());
+    CPPUNIT_ASSERT_EQUAL(static_cast<ptrdiff_t>(-2), i - range->end());
 }
 
 void
 TestHttpRange::testRangeCanonization()
 {
     HttpHdrRange *range=rangeFromString("bytes=0-3, 1-, -2");
-    assert (range->specs.size() == 3);
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(3), range->specs.size());
 
     /* 0-3 needs a content length of 4 */
     /* This passes in the extant code - but should it? */
@@ -104,13 +104,13 @@ TestHttpRange::testRangeCanonization()
     if (!range->canonize(3))
         exit(EXIT_FAILURE);
 
-    assert (range->specs.size() == 3);
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(3), range->specs.size());
 
     delete range;
 
     range=rangeFromString("bytes=0-3, 1-, -2");
 
-    assert (range->specs.size() == 3);
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(3), range->specs.size());
 
     /* 0-3 needs a content length of 4 */
     if (!range->canonize(4))
@@ -120,7 +120,7 @@ TestHttpRange::testRangeCanonization()
 
     range=rangeFromString("bytes=3-6");
 
-    assert (range->specs.size() == 1);
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(1), range->specs.size());
 
     /* 3-6 needs a content length of 4 or more */
     if (range->canonize(3))
@@ -130,7 +130,7 @@ TestHttpRange::testRangeCanonization()
 
     range=rangeFromString("bytes=3-6");
 
-    assert (range->specs.size() == 1);
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(1), range->specs.size());
 
     /* 3-6 needs a content length of 4 or more */
     if (!range->canonize(4))
@@ -140,12 +140,12 @@ TestHttpRange::testRangeCanonization()
 
     range=rangeFromString("bytes=1-1,2-3");
 
-    assert (range->specs.size()== 2);
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(2), range->specs.size());
 
     if (!range->canonize(4))
         exit(EXIT_FAILURE);
 
-    assert (range->specs.size() == 2);
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(2), range->specs.size());
 
     delete range;
 }
