@@ -17,7 +17,7 @@
 class TestHttpRange : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestHttpRange);
-    CPPUNIT_TEST(testRangeParsing);
+    CPPUNIT_TEST(testRangeParser);
     CPPUNIT_TEST(testRangeIter);
     CPPUNIT_TEST(testRangeCanonization);
     CPPUNIT_TEST_SUITE_END();
