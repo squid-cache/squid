@@ -31,8 +31,8 @@ Acl::AnnotateClientCheck::match(ACLChecklist * const ch)
         tdata->annotate(request->notes(), &delimiters.value, checklist->al);
         annotated = true;
     } else if (conn && !conn->pipeline.empty()) {
-        debugs(28, DBG_IMPORTANT, "ERROR: Squid BUG: " << name << " ACL: " <<
-               "ACLChecklist lacks transaction information");
+        debugs(28, DBG_IMPORTANT, "ERROR: Squid BUG: " << name << " ACL is used in context with " <<
+               "an unexpectedly nil ACLFilledChecklist::request.");
     }
 
     if (!annotated) {
@@ -40,6 +40,6 @@ Acl::AnnotateClientCheck::match(ACLChecklist * const ch)
                "active client-to-Squid connection and current transaction information. Did not annotate.");
     }
 
-    return 1; // this is an 'always matching' ACL
+    return 1; // this is an "always matching" ACL
 }
 
