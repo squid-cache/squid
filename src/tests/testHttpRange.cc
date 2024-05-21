@@ -17,14 +17,14 @@
 class TestHttpRange : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestHttpRange);
-    CPPUNIT_TEST(testRangeParser);
+    CPPUNIT_TEST(testRangeParsing);
     CPPUNIT_TEST(testRangeIter);
     CPPUNIT_TEST(testRangeCanonization);
     CPPUNIT_TEST_SUITE_END();
 
 protected:
     void testRangeParser();
-    void testRangeParser(char const *rangestring);
+    void testRangeParsing(char const *rangestring);
     void testRangeIter();
     void testRangeCanonization();
 };
@@ -33,14 +33,14 @@ CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpRange );
 void
 TestHttpRange::testRangeParser()
 {
-    testRangeParser("bytes=0-3");
-    testRangeParser("bytes=-3");
-    testRangeParser("bytes=1-");
-    testRangeParser("bytes=0-3, 1-, -2");
+    testRangeParsing("bytes=0-3");
+    testRangeParsing("bytes=-3");
+    testRangeParsing("bytes=1-");
+    testRangeParsing("bytes=0-3, 1-, -2");
 }
 
 void
-TestHttpRange::testRangeParser(char const *rangestring)
+TestHttpRange::testRangeParsing(char const *rangestring)
 {
     String aString (rangestring);
     HttpHdrRange *range = HttpHdrRange::ParseCreate (&aString);
