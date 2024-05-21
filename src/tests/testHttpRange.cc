@@ -150,10 +150,6 @@ TestHttpRange::testRangeCanonization()
 int
 main(int argc, char *argv[])
 {
-    /* enable for debugging to console */
-    // Debug::debugOptions = xstrdup("ALL,1 64,9");
-    // Debug::BanCacheLogUse();
-
     return TestProgram().run(argc, argv);
 }
 
