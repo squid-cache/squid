@@ -181,9 +181,12 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
 void
 Comm::Connection::updateIdent(const Ident::Lookup &newLookup)
 {
-    // Multiple updateIdent() calls happen when a configuration directive (that
-    // requires a lookup) is evaluated while a lookup attempt is still pending.
-    // Ident::IdentStateData::notify() makes calls with the same lookup value.
+    // Multiple updateIdent() calls for the same Connection object happen when
+    // a configuration directive (that requires a lookup) is evaluated while a
+    // lookup attempt is still pending. Upon lookup completion,
+    // Ident::IdentStateData::notify() makes multiple updateIdent() calls with
+    // the same newLookup value.
+
     static const Ident::User lookupError("[ident-error]");
     if (identLookup)
         debugs(5, 3, newLookup.value_or(lookupError) << "; old: " << identLookup->value_or(lookupError));
