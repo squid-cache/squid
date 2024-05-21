@@ -17,22 +17,29 @@ int
 Acl::AnnotateClientCheck::match(ACLChecklist * const ch)
 {
     const auto checklist = Filled(ch);
-
-    if (!checklist->conn() && !checklist->request) {
-        debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL cannot be used for annotation " <<
-               "because both client connection and HTTP request are missing.");
-        return 1; // this is an 'always matching' ACL
-    }
-
+    auto annotated = false;
     const auto tdata = dynamic_cast<ACLAnnotationData*>(data.get());
     assert(tdata);
+    const auto conn = checklist->conn();
 
-    if (const auto conn = checklist->conn())
+    if (conn) {
         tdata->annotate(conn->notes(), &delimiters.value, checklist->al);
+        annotated = true;
+    }
 
-    if (const auto request = checklist->request)
+    if (const auto &request = checklist->request) {
         tdata->annotate(request->notes(), &delimiters.value, checklist->al);
+        annotated = true;
+    } else if (conn && !conn->pipeline.empty()) {
+        debugs(28, DBG_IMPORTANT, "ERROR: Squid BUG: " << name << " ACL: " <<
+               "ACLChecklist lacks transaction information");
+    }
 
-    return 1;
+    if (!annotated) {
+        debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL is used in context without " <<
+               "active client-to-Squid connection and current transaction information. Did not annotate.");
+    }
+
+    return 1; // this is an 'always matching' ACL
 }
 

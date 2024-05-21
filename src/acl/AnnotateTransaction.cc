@@ -22,10 +22,9 @@ Acl::AnnotateTransactionCheck::match(ACLChecklist * const ch)
         assert(tdata);
         tdata->annotate(request->notes(), &delimiters.value, checklist->al);
     } else {
-        debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL cannot be used for annotation " <<
-               "because the HTTP request is missing.");
-        // this is an 'always matching' ACL
+        debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL is used in context without " <<
+               "current transaction information. Did not annotate.");
     }
-    return 1;
+    return 1; // this is an "always matching" ACL
 }
 
