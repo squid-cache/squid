@@ -21,8 +21,11 @@ Acl::AnnotateTransactionCheck::match(ACLChecklist * const ch)
         const auto tdata = dynamic_cast<ACLAnnotationData*>(data.get());
         assert(tdata);
         tdata->annotate(request->notes(), &delimiters.value, checklist->al);
-        return 1;
+    } else {
+        debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL cannot be used for annotation " <<
+               "because the HTTP request is missing.");
+        // this is an 'always matching' ACL
     }
-    return 0;
+    return 1;
 }
 

@@ -18,15 +18,21 @@ Acl::AnnotateClientCheck::match(ACLChecklist * const ch)
 {
     const auto checklist = Filled(ch);
 
-    if (const auto conn = checklist->conn()) {
-        const auto tdata = dynamic_cast<ACLAnnotationData*>(data.get());
-        assert(tdata);
-        tdata->annotate(conn->notes(), &delimiters.value, checklist->al);
-        if (const auto request = checklist->request)
-            tdata->annotate(request->notes(), &delimiters.value, checklist->al);
-        return 1;
+    if (!checklist->conn() && !checklist->request) {
+        debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL cannot be used for annotation " <<
+               "because both client connection and HTTP request are missing.");
+        return 1; // this is an 'always matching' ACL
     }
-    debugs(28, 7, "fails: client has gone");
-    return 0;
+
+    const auto tdata = dynamic_cast<ACLAnnotationData*>(data.get());
+    assert(tdata);
+
+    if (const auto conn = checklist->conn())
+        tdata->annotate(conn->notes(), &delimiters.value, checklist->al);
+
+    if (const auto request = checklist->request)
+        tdata->annotate(request->notes(), &delimiters.value, checklist->al);
+
+    return 1;
 }
 

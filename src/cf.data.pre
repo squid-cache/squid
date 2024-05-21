@@ -1401,7 +1401,7 @@ ENDIF
 
 	acl aclname annotate_transaction [-m[=delimiters]] key=value ...
 	acl aclname annotate_transaction [-m[=delimiters]] key+=value ...
-	  # Matches transactions containing an HTTP request. [fast]
+	  # Always matches. [fast]
 	  # Used for its side effect: This ACL immediately adds a
 	  # key=value annotation to the current master transaction.
 	  # The added annotation can then be tested using note ACL and
