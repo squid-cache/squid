@@ -8,10 +8,7 @@
 
 #include "squid.h"
 #include "compat/cppunit.h"
-#include "fatal.h"
-#include "HttpHeader.h"
 #include "HttpHeaderRange.h"
-#include "HttpHeaderTools.h"
 #include "unitTestMain.h"
 
 class TestHttpRange : public CPPUNIT_NS::TestFixture
@@ -153,7 +150,6 @@ TestHttpRange::testRangeCanonization()
 int
 main(int argc, char **argv)
 {
-    Mem::Init();
     /* enable for debugging to console */
     // Debug::debugOptions = xstrdup("ALL,1 64,9");
     // Debug::BanCacheLogUse();
