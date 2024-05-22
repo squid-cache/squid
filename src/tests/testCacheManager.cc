@@ -33,26 +33,13 @@ public:
 void
 CacheManagerInternals::testValidUrl(const AnyP::Uri &url)
 {
-    try {
-        (void)ParseUrl(url);
-    } catch (...) {
-        std::cerr << "\nFAIL: " << url <<
-                  Debug::Extra << "error: " << CurrentException << "\n";
-        CPPUNIT_FAIL("rejected a valid URL");
-    }
+    CPPUNIT_ASSERT_NO_THROW(ParseUrl(url));
 }
 
 void
 CacheManagerInternals::testInvalidUrl(const AnyP::Uri &url, const char *const problem)
 {
-    try {
-        (void)ParseUrl(url);
-        std::cerr << "\nFAIL: " << url <<
-                  Debug::Extra << "error: should be rejected due to '" << problem << "'\n";
-    } catch (const TextException &) {
-        return; // success -- the parser signaled bad input
-    }
-    CPPUNIT_FAIL("failed to reject an invalid URL");
+    CPPUNIT_ASSERT_THROW_MESSAGE(problem, ParseUrl(url), TextException);
 }
 
 void testCacheManager::setUp()
