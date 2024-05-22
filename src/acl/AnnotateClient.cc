@@ -32,7 +32,7 @@ Acl::AnnotateClientCheck::match(ACLChecklist * const ch)
         annotated = true;
     } else if (conn && !conn->pipeline.empty()) {
         debugs(28, DBG_IMPORTANT, "ERROR: Squid BUG: " << name << " ACL is used in context with " <<
-               "an unexpectedly nil ACLFilledChecklist::request.");
+               "an unexpectedly nil ACLFilledChecklist::request. Did not annotate the current transaction.");
     }
 
     if (!annotated) {
