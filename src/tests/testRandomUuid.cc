@@ -78,15 +78,7 @@ void
 TestRandomUuid::testInvalidIds()
 {
     for (const auto &id: InvalidIds) {
-        try {
-            RandomUuid uuid(id.second);
-            std::cerr << std::endl
-                      << "FAIL: " << id.first
-                      << Debug::Extra << "error: should be rejected" << std::endl;
-        } catch (const TextException &e) {
-            continue; // success, caught a malformed UUID
-        }
-        CPPUNIT_FAIL("failed to reject an invalid UUID");
+        CPPUNIT_ASSERT_THROW(RandomUuid uuid(id.second), TextException);
     }
 }
 
