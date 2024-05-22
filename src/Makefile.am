@@ -2388,12 +2388,12 @@ check_PROGRAMS += tests/testIpAddress
 tests_testIpAddress_SOURCES = \
 	tests/testIpAddress.cc
 nodist_tests_testIpAddress_SOURCES = \
-	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
 	tests/stub_tools.cc
 tests_testIpAddress_LDADD = \
 	ip/libip.la \
+	sbuf/libsbuf.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
