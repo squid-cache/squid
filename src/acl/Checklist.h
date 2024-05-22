@@ -159,7 +159,8 @@ public:
 
 private:
     /// Calls non-blocking check callback with the answer and destroys self.
-    void checkCallback(const Acl::Answer &answer);
+    /// If abortReason is provided, sets the final answer to ACCESS_DUNNO.
+    void checkCallback(const char *abortReason);
 
     void matchAndFinish();
 
