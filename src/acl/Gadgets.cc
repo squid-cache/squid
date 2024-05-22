@@ -171,7 +171,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **config)
 
 // aclParseAclList does not expect or set actions (cf. aclParseAccessLine)
 size_t
-aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
+aclParseAclList(ConfigParser &, ACLList **configPtr, const char *label)
 {
     // accommodate callers unable to convert their ACL list context to string
     if (!label)
@@ -185,20 +185,6 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
     Acl::Tree *tree = new Acl::Tree;
     tree->add(rule);
     tree->context(ToSBuf(cfg_directive, ' ', label), config_input_line);
-
-    assert(treep);
-    assert(!*treep);
-    *treep = tree;
-
-    return aclCount;
-}
-
-// TODO: Who calls this new function? How did the code work before this?
-size_t
-aclParseAclList(ConfigParser &parser, ACLList **configPtr, const char *label)
-{
-    Acl::Tree *tree = nullptr; // the aclParseAclList() call below assumes this
-    const auto aclCount = aclParseAclList(parser, &tree, label);
 
     assert(configPtr);
     auto &config = *configPtr;
