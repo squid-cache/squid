@@ -111,11 +111,7 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 
         entry->replaceHttpReply(rep);
     }
-    if (!aggregatable())
-        openKidSection(entry, is_yaml());
     dump(entry);
-    if (!aggregatable() && atomic())
-        closeKidSection(entry, is_yaml());
 
     entry->flush();
 
