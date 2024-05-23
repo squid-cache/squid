@@ -49,9 +49,11 @@ Mgr::FunAction::dump(StoreEntry* entry)
     debugs(16, 5, MYNAME);
     Must(entry != nullptr);
 
-    if (!aggregatable())
-        openKidSection(entry, is_yaml());
+    // always non-aggregatable, no need to check
+    openKidSection(entry, is_yaml());
+
     handler(entry);
-    if (!aggregatable() && atomic())
-        closeKidSection(entry, is_yaml());
+
+    // always non-aggratable and atomic, no need to check
+    closeKidSection(entry, is_yaml());
 }

@@ -117,7 +117,6 @@ TestCacheManager::testRegister()
     CPPUNIT_ASSERT_EQUAL(1,(int)sentry->flags);
 }
 
-
 void
 TestCacheManager::testParseUrl()
 {
