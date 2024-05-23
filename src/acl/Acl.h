@@ -18,8 +18,6 @@
 #include <optional>
 #include <ostream>
 
-class ConfigParser;
-
 namespace Acl {
 
 /// the ACL type name known to admins

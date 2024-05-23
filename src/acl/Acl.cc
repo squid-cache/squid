@@ -166,8 +166,7 @@ Acl::Node::FindByName(const SBuf &name)
     return result->second.getRaw();
 }
 
-Acl::Node::Node() :
-    cfgline(nullptr)
+Acl::Node::Node(): cfgline(nullptr)
 {
     debugs(28, 8, "constructing, this=" << this);
 }
@@ -234,7 +233,7 @@ Acl::Node::ParseNamedRule(ConfigParser &parser, NamedRules *&namedRules)
 
     SBuf aclname(t);
     CallParser(ParsingContext::Pointer::Make(aclname), [&] {
-        Node::ParseNamed(parser, namedRules, aclname);
+        ParseNamed(parser, namedRules, aclname);
     });
 }
 
@@ -319,8 +318,8 @@ Acl::Node::ParseNamed(ConfigParser &parser, NamedRules *&namedRules, const SBuf 
 
     if (!namedRules)
         namedRules = new NamedRules();
-    const auto inserted = namedRules->emplace(SBuf(A->name), A);
-    assert(inserted.second); // FindByName() above checked that A is a new ACL
+    const auto insertion = namedRules->emplace(A->name, A);
+    Assure(insertion.second); // FindByName() above checked that A is a new ACL
 }
 
 void
@@ -328,7 +327,7 @@ Acl::DumpNamedRules(std::ostream &os, const char *directiveName, NamedRules *nam
 {
     if (namedRules) {
         for (const auto &nameAndAcl: *namedRules) {
-            debugs(3, 3, "dump_acl: " << directiveName << ' ' << nameAndAcl.first);
+            debugs(3, 3, directiveName << ' ' << nameAndAcl.first);
             nameAndAcl.second->dumpWhole(directiveName, os);
         }
     }
@@ -453,7 +452,7 @@ Acl::Node::requiresRequest() const
 
 Acl::Node::~Node()
 {
-    debugs(28, 3, "destructing this=" << this << ' ' << name);
+    debugs(28, 8, "destructing " <<  name << ", this=" << this);
     safe_free(cfgline);
 }
 

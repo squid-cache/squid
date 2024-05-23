@@ -26,7 +26,7 @@ class Node: public RefCountable
 {
 
 public:
-    using Pointer = NodePointer;
+    using Pointer = RefCount<Node>;
 
     // force pooling of specific ACL types (e.g., via MEMPROXY_CLASS)
     void *operator new(size_t) = delete;

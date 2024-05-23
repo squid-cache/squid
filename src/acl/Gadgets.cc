@@ -207,19 +207,18 @@ aclDestroyAclList(ACLList **list)
 {
     debugs(28, 8, "aclDestroyAclList: invoked");
     assert(list);
-    delete *list; // XXX
+    delete *list;
     *list = nullptr;
 }
 
 void
-aclDestroyAccessList(acl_access **config)
+aclDestroyAccessList(acl_access ** list)
 {
-    assert(config);
-    if (const auto list = *config) {
-        debugs(28, 3, "destroying: " << list->raw << ' ' << list->raw->name);
-        delete list; // XXX
-        *config = nullptr;
-    }
+    assert(list);
+    if (*list)
+        debugs(28, 3, "destroying: " << *list << ' ' << (*list)->raw->name);
+    delete *list;
+    *list = nullptr;
 }
 
 /* maex@space.net (06.09.1996)

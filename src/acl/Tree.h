@@ -17,7 +17,7 @@
 namespace Acl
 {
 
-/// An ORed set of rules at the top of the ACL expression tree, with support for
+/// An ORed set of rules at the top of the ACL expression tree with support for
 /// optional rule actions.
 class Tree: public OrNode
 {

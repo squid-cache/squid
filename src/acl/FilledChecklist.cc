@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "acl/Tree.h"
 #include "acl/FilledChecklist.h"
 #include "client_side.h"
 #include "comm/Connection.h"

@@ -24,7 +24,6 @@
 #include "AuthReg.h"
 #include "base/PackableStream.h"
 #include "base/RunnersRegistry.h"
-#include "base/PackableStream.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
@@ -2026,8 +2025,13 @@ dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 #endif /* USE_AUTH */
 
 static void
-ParseAclWithAction(Acl::TreePointer *access, const Acl::Answer &action, const char *desc, Acl::Node *acl)
+ParseAclWithAction(acl_access **accessPtr, const Acl::Answer &action, const char *desc, Acl::Node *acl)
 {
+    assert(accessPtr);
+    if (!*accessPtr)
+        *accessPtr = new acl_access();
+    const auto access = &(*accessPtr)->raw;
+
     assert(access);
     if (!*access) {
         *access = new Acl::Tree;
@@ -2040,15 +2044,6 @@ ParseAclWithAction(Acl::TreePointer *access, const Acl::Answer &action, const ch
     else
         rule->lineParse();
     (*access)->add(rule, action);
-}
-
-static void
-ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, Acl::Node *acl)
-{
-    assert(access);
-    if (!*access)
-        *access = new acl_access();
-    ParseAclWithAction(&(*access)->raw, action, desc, acl);
 }
 
 static void
@@ -4920,7 +4915,7 @@ dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *ac
         "respond"
     };
     if (access) {
-        SBufList lines = access->raw->treeDump(name, [](const Acl::Answer &action) {
+        const auto lines = access->raw->treeDump(name, [](const Acl::Answer &action) {
             return onErrorTunnelMode.at(action.kind);
         });
         dump_SBufList(entry, lines);

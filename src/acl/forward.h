@@ -26,30 +26,28 @@ class AndNode;
 class Answer;
 class ChecklistFiller;
 class InnerNode;
+class NamedRules;
 class NotNode;
 class OrNode;
 class Tree;
 
-using TreePointer = RefCount<Acl::Tree>;
-using NodePointer = RefCount<Acl::Node>;
-
-class NamedRules;
-
 /// prepares to parse ACLs configuration
 void Init(void);
+
+/// reconfiguration-safe storage of ACL rules
+class StoredTree {
+public:
+    RefCount<Acl::Tree> raw;
+};
 
 } // namespace Acl
 
 typedef void ACLCB(Acl::Answer, void *);
 
-/// deprecated; use Acl::TreePointer directly
-class acl_access {
-public:
-    RefCount<Acl::Tree> raw;
-};
-
-/// deprecated; use Acl::TreePointer directly
-using ACLList = acl_access;
+// TODO: Consider renaming all users and removing. Cons: hides the difference
+// between ACLList tree without actions and acl_access Tree with actions.
+using acl_access = Acl::StoredTree;
+using ACLList = Acl::StoredTree;
 
 class ExternalACLEntry;
 typedef RefCount<ExternalACLEntry> ExternalACLEntryPointer;
