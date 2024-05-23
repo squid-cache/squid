@@ -276,8 +276,8 @@ ACLChecklist::matchAndFinish()
         markFinished(accessList->winningAction(), "match");
 }
 
-Acl::Answer const &
-ACLChecklist::fastCheck(const Acl::Tree * list)
+const Acl::Answer &
+ACLChecklist::fastCheck(const ACLList * const list)
 {
     preCheck("fast ACLs");
     asyncCaller_ = false;
@@ -285,7 +285,7 @@ ACLChecklist::fastCheck(const Acl::Tree * list)
     // Concurrent checks are not supported, but sequential checks are, and they
     // may use a mixture of fastCheck(void) and fastCheck(list) calls.
     auto savedList = accessList;
-    changeAcl(list);
+    changeAcl(list ? list->raw.getRaw() : nullptr);
 
     // assume DENY/ALLOW on mis/matches due to action-free accessList
     // matchAndFinish() takes care of the ALLOW case
@@ -297,12 +297,6 @@ ACLChecklist::fastCheck(const Acl::Tree * list)
     changeAcl(savedList.getRaw());
     occupied_ = false;
     return currentAnswer();
-}
-
-Acl::Answer const &
-ACLChecklist::fastCheck(const ACLList *list)
-{
-    return fastCheck(list ? list->raw.getRaw() : nullptr);
 }
 
 /* Warning: do not cbdata lock this here - it

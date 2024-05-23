@@ -104,10 +104,7 @@ public:
      *
      * If there are no ACLs to check at all, the result becomes ACCESS_ALLOWED.
      */
-    Acl::Answer const & fastCheck(const Acl::Tree *list);
-
-    /// fastCheck(const Acl::Tree *) convenience wrapper
-    Acl::Answer const & fastCheck(const ACLList *list);
+    const Acl::Answer &fastCheck(const ACLList *);
 
     /// If slow lookups are allowed, switches into "async in progress" state.
     /// Otherwise, returns false; the caller is expected to handle the failure.
