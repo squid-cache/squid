@@ -180,28 +180,13 @@ ACLChecklist::ACLChecklist() :
 ACLChecklist::~ACLChecklist()
 {
     assert (!asyncInProgress());
-
-    changeAcl(nullptr);
-
     debugs(28, 4, "ACLChecklist::~ACLChecklist: destroyed " << this);
-}
-
-void
-ACLChecklist::changeAcl(const Acl::Tree *replacement)
-{
-    accessList = replacement;
 }
 
 void
 ACLChecklist::changeAcl(const acl_access *replacement)
 {
-    changeAcl(replacement ? replacement->raw.getRaw() : nullptr);
-}
-
-void
-ACLChecklist::changeAcl(nullptr_t)
-{
-    accessList = nullptr;
+    accessList = replacement ? replacement->raw : nullptr;
 }
 
 /**
@@ -284,8 +269,8 @@ ACLChecklist::fastCheck(const ACLList * const list)
 
     // Concurrent checks are not supported, but sequential checks are, and they
     // may use a mixture of fastCheck(void) and fastCheck(list) calls.
-    auto savedList = accessList;
-    changeAcl(list ? list->raw.getRaw() : nullptr);
+    const auto savedList = accessList;
+    changeAcl(list);
 
     // assume DENY/ALLOW on mis/matches due to action-free accessList
     // matchAndFinish() takes care of the ALLOW case
@@ -294,7 +279,7 @@ ACLChecklist::fastCheck(const ACLList * const list)
     if (!finished())
         markFinished(ACCESS_DENIED, "ACLs failed to match");
 
-    changeAcl(savedList.getRaw());
+    accessList = savedList;
     occupied_ = false;
     return currentAnswer();
 }

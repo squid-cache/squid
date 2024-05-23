@@ -144,10 +144,7 @@ public:
     virtual void verifyAle() const = 0;
 
     /// change the current ACL list
-    /// \return a pointer to the old list value (may be nullptr)
-    void changeAcl(const Acl::Tree *);
     void changeAcl(const acl_access *);
-    void changeAcl(nullptr_t);
 
     /// remember the name of the last ACL being evaluated
     void setLastCheckedName(const SBuf &name) { lastCheckedName_ = name; }
