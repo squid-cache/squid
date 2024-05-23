@@ -146,10 +146,8 @@ Acl::ParsingContext::detailCodeContext(std::ostream &os) const
 
 /* Acl::Node */
 
-/// implements both Acl::Node::FindByName() variations
-template <typename SBufOrCString>
-static Acl::Node *
-FindByNameT(const SBufOrCString name)
+Acl::Node *
+Acl::Node::FindByName(const SBuf &name)
 {
     // XXX: Do not assume the caller is using Config. We could be parsing a new one.
     if (!Config.namedAcls) {
@@ -157,8 +155,7 @@ FindByNameT(const SBufOrCString name)
         return nullptr;
     }
 
-    // XXX: Avoid conversion to SBuf.
-    const auto result = Config.namedAcls->find(SBuf(name));
+    const auto result = Config.namedAcls->find(name);
     if (result == Config.namedAcls->end()) {
         debugs(28, 8, "no ACL named " << name);
         return nullptr;
@@ -167,18 +164,6 @@ FindByNameT(const SBufOrCString name)
     debugs(28, 8, result->second << " is named " << name);
     assert(result->second);
     return result->second.getRaw();
-}
-
-Acl::Node *
-Acl::Node::FindByName(const SBuf &name)
-{
-    return FindByNameT(name);
-}
-
-Acl::Node *
-Acl::Node::FindByName(const char *name)
-{
-    return FindByNameT(name);
 }
 
 Acl::Node::Node() :

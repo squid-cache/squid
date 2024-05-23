@@ -38,9 +38,6 @@ public:
 
     /// A configured ACL with a given name or nil.
     static Acl::Node *FindByName(const SBuf &);
-    /// \copydoc FindByName()
-    /// \deprecated Use to avoid performance regressions; remove with the last caller.
-    static Acl::Node *FindByName(const char *name);
 
     Node();
     Node(Node &&) = delete;  // no copying of any kind
