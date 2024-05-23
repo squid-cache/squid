@@ -105,14 +105,9 @@ public:
      * If there are no ACLs to check at all, the result becomes ACCESS_ALLOWED.
      */
     Acl::Answer const & fastCheck(const Acl::Tree *list);
-    Acl::Answer const & fastCheck(const ACLList *list);
 
-    // TODO: When the last `Pointer != NULL` comparison is gone, add default
-    // conversion from RefCount<C> to a C pointer and remove this wrapper. With
-    // NULL (i.e. 0L), that cannot be done safely without triggering ambiguous
-    // overload for operator!= (operands are Pointer and `long int`) errors.
     /// fastCheck(const Acl::Tree *) convenience wrapper
-    Acl::Answer const & fastCheck(const Acl::TreePointer &list);
+    Acl::Answer const & fastCheck(const ACLList *list);
 
     /// If slow lookups are allowed, switches into "async in progress" state.
     /// Otherwise, returns false; the caller is expected to handle the failure.

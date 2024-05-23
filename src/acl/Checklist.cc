@@ -300,12 +300,6 @@ ACLChecklist::fastCheck(const Acl::Tree * list)
 }
 
 Acl::Answer const &
-ACLChecklist::fastCheck(const Acl::TreePointer &list)
-{
-    return fastCheck(list.getRaw()); // may be nil
-}
-
-Acl::Answer const &
 ACLChecklist::fastCheck(const ACLList *list)
 {
     return fastCheck(list ? list->raw.getRaw() : nullptr);
