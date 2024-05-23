@@ -181,7 +181,10 @@ aclParseAclList(ConfigParser &, ACLList **configPtr, const char *label)
     rule->context(ToSBuf('(', cfg_directive, ' ', label, " line)"), config_input_line);
     const auto aclCount = rule->lineParse();
 
-    // TODO: Remove this extra node after figuring what to do with its context!
+    // XXX: We have created only one node, and our callers do not support
+    // actions, but we now have to create an action-supporting Acl::Tree because
+    // Checklist needs actions support. TODO: Add actions methods to Acl::Node,
+    // so that Checklist can be satisfied with Acl::AndNode created above.
     Acl::Tree *tree = new Acl::Tree;
     tree->add(rule);
     tree->context(ToSBuf(cfg_directive, ' ', label), config_input_line);
