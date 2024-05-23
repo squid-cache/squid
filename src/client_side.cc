@@ -2484,7 +2484,7 @@ ConnStateData::postHttpsAccept()
         CodeContext::Reset(connectAle);
         // TODO: Use these request/ALE when waiting for new bumped transactions.
 
-        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request);
+        const auto acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request);
         fillChecklist(*acl_checklist);
         // Build a local AccessLogEntry to allow requiresAle() acls work
         acl_checklist->al = connectAle;
@@ -2967,7 +2967,7 @@ ConnStateData::startPeekAndSplice()
         sslServerBump->step = XactionStep::tlsBump2;
         // Run a accessList check to check if want to splice or continue bumping
 
-        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw());
+        const auto acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw());
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpNone));
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpClientFirst));
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpServerFirst));

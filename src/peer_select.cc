@@ -620,7 +620,7 @@ PeerSelector::selectMore()
         if (always_direct == ACCESS_DUNNO) {
             debugs(44, 3, "direct = " << DirectStr[direct] << " (always_direct to be checked)");
             /** check always_direct; */
-            ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request);
+            const auto ch = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request);
             ch->al = al;
             acl_checklist = ch;
             acl_checklist->syncAle(request, nullptr);
@@ -629,7 +629,7 @@ PeerSelector::selectMore()
         } else if (never_direct == ACCESS_DUNNO) {
             debugs(44, 3, "direct = " << DirectStr[direct] << " (never_direct to be checked)");
             /** check never_direct; */
-            ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.NeverDirect, request);
+            const auto ch = new ACLFilledChecklist(Config.accessList.NeverDirect, request);
             ch->al = al;
             acl_checklist = ch;
             acl_checklist->syncAle(request, nullptr);

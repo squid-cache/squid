@@ -69,7 +69,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
 {
     handleServerCertificate();
 
-    ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(
+    const auto acl_checklist = new ACLFilledChecklist(
         ::Config.accessList.ssl_bump,
         request.getRaw());
     acl_checklist->al = al;
