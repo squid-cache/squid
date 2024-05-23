@@ -105,9 +105,9 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
    the full ISO-639 list. HTTP uses the 2-letter (set 1) codes.
 
 <sect1>Removed Ident support
-<p> The Ident protocol (RFC 1413) is considered insecure and it is strongly recommended to use
-    different authorization methods. In Squid, the same authorization task may be completed by an
-    external_acl_type helper.
+<p>The Ident protocol (RFC 1413) is considered insecure and it is strongly recommended to use
+   different authorization methods. In Squid, the same authorization task may be completed by an
+   external_acl_type helper.
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
