@@ -1749,8 +1749,8 @@ tests_testHtmlQuote_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of http/* and HTTP Protocol objects
 
-check_PROGRAMS += tests/test_http_range
-tests_test_http_range_SOURCES = \
+check_PROGRAMS += tests/testHttpRange
+tests_testHttpRange_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	$(DNSSOURCE) \
 	$(HTCPSOURCE) \
@@ -1797,6 +1797,7 @@ tests_test_http_range_SOURCES = \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
+	tests/testHttpRange.cc \
 	HttpReply.cc \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
@@ -1834,7 +1835,6 @@ tests_test_http_range_SOURCES = \
 	StrList.h \
 	String.cc \
 	Transients.cc \
-	tests/test_http_range.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	cache_manager.cc \
@@ -1932,10 +1932,10 @@ tests_test_http_range_SOURCES = \
 	wccp2.h \
 	wordlist.cc \
 	wordlist.h
-nodist_tests_test_http_range_SOURCES = \
+nodist_tests_testHttpRange_SOURCES = \
 	$(BUILT_SOURCES) \
 	tests/stub_libtime.cc
-tests_test_http_range_LDADD = \
+tests_testHttpRange_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
@@ -1985,7 +1985,7 @@ tests_test_http_range_LDADD = \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
-tests_test_http_range_LDFLAGS = $(LIBADD_DL)
+tests_testHttpRange_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttp1Parser
 tests_testHttp1Parser_SOURCES = \
