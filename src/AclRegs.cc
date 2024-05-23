@@ -101,9 +101,6 @@
 #endif
 #include "base/RegexPattern.h"
 #include "ExternalACL.h"
-#if USE_IDENT
-#include "ident/AclIdent.h"
-#endif
 #if SQUID_SNMP
 #include "snmp_core.h"
 #endif
@@ -271,11 +268,6 @@ Acl::Init()
 #if USE_SQUID_EUI
     RegisterMaker("arp", [](TypeName name)->Node* { return new ACLARP(name); });
     RegisterMaker("eui64", [](TypeName name)->Node* { return new ACLEui64(name); });
-#endif
-
-#if USE_IDENT
-    RegisterMaker("ident", [](TypeName name)->Node* { return new ACLIdent(new ACLUserData, name); });
-    RegisterMaker("ident_regex", [](TypeName name)->Node* { return new ACLIdent(new ACLRegexData, name); });
 #endif
 
 #if USE_AUTH

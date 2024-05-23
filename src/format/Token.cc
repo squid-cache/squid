@@ -77,7 +77,6 @@ static TokenTableEntry TokenTable2C[] = {
     TokenTableEntry("ul", LFT_USER_LOGIN),
     /*TokenTableEntry( "ur", LFT_USER_REALM ), */
     /*TokenTableEntry( "us", LFT_USER_SCHEME ), */
-    TokenTableEntry("ui", LFT_USER_IDENT),
     TokenTableEntry("ue", LFT_USER_EXTERNAL),
 
     TokenTableEntry("Hs", LFT_HTTP_SENT_STATUS_CODE_OLD_30),
@@ -162,7 +161,6 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry("EXT_LOG", LFT_EXT_LOG),
     TokenTableEntry("EXT_TAG", LFT_TAG),
     TokenTableEntry("EXT_USER", LFT_USER_EXTERNAL),
-    TokenTableEntry("IDENT", LFT_USER_IDENT),
     TokenTableEntry("LOGIN", LFT_USER_LOGIN),
     TokenTableEntry("METHOD", LFT_CLIENT_REQ_METHOD),
     TokenTableEntry("MYADDR", LFT_LOCAL_LISTENING_IP),

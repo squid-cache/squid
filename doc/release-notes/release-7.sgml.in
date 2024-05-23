@@ -33,6 +33,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<item>Cache Manager changes
 	<item>Removed purge tool
 	<item>Remove deprecated languages
+	<item>Remove ident support
 </itemize>
 
 <p>Most user-facing changes are reflected in squid.conf (see further below).
@@ -103,6 +104,10 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 <p>See <url url="https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes"> for
    the full ISO-639 list. HTTP uses the 2-letter (set 1) codes.
 
+<sect1>Removed Ident support
+<p> The Ident protocol (RFC 1413) is considered insecure and it is strongly recommended to use
+    different authorization methods. In Squid, the same authorization task may be completed by an
+    external_acl_type helper.
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>

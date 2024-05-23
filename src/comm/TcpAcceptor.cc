@@ -253,7 +253,7 @@ Comm::TcpAcceptor::logAcceptError(const ConnectionPointer &tcpClient) const
         al->tcpClient = tcpClient;
         al->url = "error:accept-client-connection";
         al->setVirginUrlForMissingRequest(al->url);
-        ACLFilledChecklist ch(nullptr, nullptr, nullptr);
+        ACLFilledChecklist ch(nullptr, nullptr);
         ch.src_addr = tcpClient->remote;
         ch.my_addr = tcpClient->local;
         ch.al = al;

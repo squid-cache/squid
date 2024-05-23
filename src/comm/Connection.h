@@ -173,8 +173,6 @@ public:
     /** COMM flags set on this connection */
     int flags;
 
-    char rfc931[USER_IDENT_SZ];
-
 #if USE_SQUID_EUI
     Eui::Eui48 remoteEui48;
     Eui::Eui64 remoteEui64;

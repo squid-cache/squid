@@ -167,7 +167,7 @@ peerAllowedToUse(const CachePeer * p, PeerSelector * ps)
     if (p->access == nullptr)
         return true;
 
-    ACLFilledChecklist checklist(p->access, request, nullptr);
+    ACLFilledChecklist checklist(p->access, request);
     checklist.updateAle(ps->al);
     checklist.syncAle(request, nullptr);
     return checklist.fastCheck().allowed();

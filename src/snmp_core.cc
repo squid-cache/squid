@@ -402,7 +402,7 @@ snmpDecodePacket(SnmpRequest * rq)
     /* Check if we have explicit permission to access SNMP data.
      * default (set above) is to deny all */
     if (Community) {
-        ACLFilledChecklist checklist(Config.accessList.snmp, nullptr, nullptr);
+        ACLFilledChecklist checklist(Config.accessList.snmp, nullptr);
         checklist.src_addr = rq->from;
         checklist.snmp_community = (char *) Community;
 

@@ -44,9 +44,6 @@
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
 #endif
-#if USE_IDENT
-#include "ident/AclIdent.h"
-#endif
 
 #ifndef DEFAULT_EXTERNAL_ACL_TTL
 #define DEFAULT_EXTERNAL_ACL_TTL 1 * 60 * 60
@@ -791,17 +788,6 @@ ACLExternal::makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl
 
             ch->al->lastAclData = sb;
         }
-
-#if USE_IDENT
-        if (t->type == Format::LFT_USER_IDENT) {
-            if (!*ch->rfc931) {
-                // if we fail to go async, we still return NULL and the caller
-                // will detect the failure in ACLExternal::match().
-                (void)ch->goAsync(ACLIdent::StartLookup, *this);
-                return nullptr;
-            }
-        }
-#endif
     }
 
     // assemble the full helper lookup string
@@ -1026,7 +1012,7 @@ ACLExternal::startLookup(ACLFilledChecklist *ch, external_acl_data *acl, bool in
     external_acl *def = acl->def;
 
     const char *key = makeExternalAclKey(ch, acl);
-    assert(key); // XXX: will fail if EXT_ACL_IDENT case needs an async lookup
+    assert(key);
 
     debugs(82, 2, (inBackground ? "bg" : "fg") << " lookup in '" <<
            def->name << "' for '" << key << "'");

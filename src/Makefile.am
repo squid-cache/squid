@@ -24,7 +24,7 @@ AUTH_LIBS= auth/libauth.la
 AUTH_ACL_LIBS= auth/libacls.la
 endif
 
-SUBDIRS	+= http ip icmp ident log ipc mgr
+SUBDIRS	+= http ip icmp log ipc mgr
 
 SSL_LIBS=
 if ENABLE_SSL
@@ -479,7 +479,6 @@ nodist_squid_SOURCES = \
 
 squid_LDADD = \
 	$(AUTH_ACL_LIBS) \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
@@ -565,7 +564,6 @@ data_DATA = \
 
 LDADD = \
 	$(AUTH_ACL_LIBS) \
-	ident/libident.la \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
@@ -1307,7 +1305,6 @@ tests_testUfs_LDADD = \
 	http/libhttp.la \
 	parser/libparser.la \
 	CommCalls.o \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
@@ -1477,7 +1474,6 @@ tests_testStore_LDADD= \
 	libsquid.la \
 	http/libhttp.la \
 	parser/libparser.la \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
@@ -1651,7 +1647,6 @@ tests_testDiskIO_LDADD = \
 	parser/libparser.la \
 	SquidConfig.o \
 	CommCalls.o \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	comm/libcomm.la \
@@ -1948,7 +1943,6 @@ tests_test_http_range_LDADD = \
 	helper/libhelper.la \
 	http/libhttp.la \
 	parser/libparser.la \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
@@ -2336,7 +2330,6 @@ tests_testHttpRequest_LDADD = \
 	helper/libhelper.la \
 	ftp/libftp.la \
 	http/libhttp.la \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
@@ -2636,7 +2629,6 @@ tests_testCacheManager_LDADD = \
 	http/libhttp.la \
 	proxyp/libproxyp.la \
 	parser/libparser.la \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \

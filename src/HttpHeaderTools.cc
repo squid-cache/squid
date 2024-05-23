@@ -297,7 +297,7 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms, c
         return 1;
     }
 
-    ACLFilledChecklist checklist(hm->access_list, request, nullptr);
+    ACLFilledChecklist checklist(hm->access_list, request);
     checklist.updateAle(al);
 
     // XXX: The two "It was denied" clauses below mishandle cases with no
@@ -492,7 +492,7 @@ HeaderManglers::find(const HttpHeaderEntry &e) const
 void
 httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headersAdd)
 {
-    ACLFilledChecklist checklist(nullptr, request, nullptr);
+    ACLFilledChecklist checklist(nullptr, request);
     checklist.updateAle(al);
 
     for (HeaderWithAclList::const_iterator hwa = headersAdd.begin(); hwa != headersAdd.end(); ++hwa) {
