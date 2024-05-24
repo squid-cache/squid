@@ -35,6 +35,7 @@ public:
     /// the total time of all ICAP processing intervals
     /// \param[out] total time taken for all ICAP processing
     void processingTime(struct timeval &total) const;
+
 #if USE_OPENSSL
     String ssluser; ///< the username from SSL
 #endif

@@ -33,7 +33,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<item>Cache Manager changes
 	<item>Removed purge tool
 	<item>Remove deprecated languages
-	<item>Remove ident support
+	<item>Remove Ident support
 </itemize>
 
 <p>Most user-facing changes are reflected in squid.conf (see further below).
@@ -105,9 +105,9 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
    the full ISO-639 list. HTTP uses the 2-letter (set 1) codes.
 
 <sect1>Removed Ident support
-<p>The Ident protocol (RFC 1413) is considered insecure and it is strongly recommended to use
-   different authorization methods. In Squid, the same authorization task may be completed by an
-   external_acl_type helper.
+<p>The Ident protocol (RFC 931 obsoleted by RFC 1413) is considered insecure. It is
+   strongly recommended to use different authorization mechanisms. Authorization using Ident
+   can still be accomplished by external_acl_type helper.
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
@@ -156,11 +156,18 @@ This section gives an account of those changes in three categories:
 	<p>Removed the <em>non_peers</em> action. See the Cache Manager
 	<ref id="mgr" name="section"> for details.
 
+	<tag>logformat</tag>
+	<p><em>common</em> and <em>combined</em> default formats that had <em>%ui</em> will output dash ("-") instead.
+
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
 <p>
 <descrip>
+	<tag>acl</tag>
+	<p><em>ident</em>, caused by Ident protocol removal.
+	<p><em>ident_regex</em>, caused by Ident protocol removal.
+
 	<tag>mcast_miss_addr</tag>
 	<p>The corresponding code has not built for many years, indicating that the
 	feature is unused.
@@ -176,6 +183,15 @@ This section gives an account of those changes in three categories:
 	<tag>mcast_miss_encode_key</tag>
 	<p>The corresponding code has not built for many years, indicating that the
 	feature is unused.
+
+	<tag>ident_lookup_access</tag>
+	<p>Caused by Ident protocol removal.
+	<tag>ident_timeout</tag>
+	<p>Caused by Ident protocol removal.
+
+	<tag>logformat</tag>
+	<p><em>%ui</em> format code, caused by Ident protocol removal.
+	<p><em>%IDENT</em> external_acl_type format code, caused by Ident protocol removal.
 
 </descrip>
 
@@ -236,6 +252,9 @@ This section gives an account of those changes in three categories:
 	<tag>CPPFLAGS=-DMULTICAST_MISS_STREAM</tag>
 	<p>The code enabled by this preprocessor macro has not built for many
 	   years, indicating that the feature is unused.
+
+	<tag>--disable-ident-lookups</tag>
+	<p>Caused by Ident protocol removal.
 
 </descrip>
 

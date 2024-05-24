@@ -32,8 +32,9 @@ Log::Format::HttpdCommon(const AccessLogEntry::Pointer &al, Logfile * logfile)
 
     const SBuf method(al->getLogMethod());
 
-    logfilePrintf(logfile, "%s %s [%s] \"" SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\" %d %" PRId64 " %s:%s%s",
+    logfilePrintf(logfile, "%s %s %s [%s] \"" SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\" %d %" PRId64 " %s:%s%s",
                   clientip,
+                  dash_str,
                   user_auth ? user_auth : dash_str,
                   Time::FormatHttpd(squid_curtime),
                   SQUIDSBUFPRINT(method),

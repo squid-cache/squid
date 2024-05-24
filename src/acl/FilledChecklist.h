@@ -87,6 +87,7 @@ public:
     char *dst_rdns;
 
     HttpRequest::Pointer request;
+
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
 #endif
@@ -113,7 +114,7 @@ public:
     err_type requestErrorType;
 
 private:
-    ConnStateData * conn_;          /**< hack for NTLM */
+    ConnStateData * conn_; ///< client-to-Squid connection manager (if any)
     int fd_;                        /**< may be available when conn_ is not */
 
     HttpReply::Pointer reply_; ///< response added by updateReply() or nil

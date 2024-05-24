@@ -604,7 +604,7 @@ DOC_START
 
 	A client with credentials is requested to re-authenticate if http_access
 	or adapted_http_access denies its request _and_ the last evaluated ACL was
-	either proxy_auth, proxy_auth_regex, ident, ident_regex, or an external
+	either proxy_auth, proxy_auth_regex, or an external
 	ACL with %ul or %LOGIN parameter (regardless of whether that last
 	evaluated ACL matched the denied request). Note that a max_user_ip ACL
 	does not have this effect: Requests denied after evaluating max_user_ip
@@ -4842,7 +4842,6 @@ DOC_START
 		un	User name (any available)
 		ul	User name from authentication
 		ue	User name from external acl helper
-		ui	User name from ident
 		un	A user name. Expands to the first available name
 			from the following list of information sources:
 			- authenticated user name, like %ul
@@ -5171,8 +5170,8 @@ DOC_START
 	The default formats available (which do not need re-defining) are:
 
 logformat squid      %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %[un %Sh/%<a %mt
-logformat common     %>a %[ui %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
-logformat combined   %>a %[ui %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
+logformat common     %>a - %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
+logformat combined   %>a - %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
 logformat referrer   %ts.%03tu %>a %{Referer}>h %ru
 logformat useragent  %>a [%tl] "%{User-Agent}>h"
 
@@ -10417,7 +10416,7 @@ DOC_START
 	are governed by forward_max_tries instead.
 
 	See also: connect_timeout, forward_timeout, icap_connect_timeout,
-	ident_timeout, and forward_max_tries.
+	and forward_max_tries.
 DOC_END
 
 NAME: retry_on_error
