@@ -217,10 +217,6 @@ void *cbdataInternalAlloc(cbdata_type type);
  */
 void *cbdataInternalFree(void *p);
 
-// XXX: Remove this unwanted legacy deletion detection hack
-namespace Acl { class Node; }
-void *cbdataInternalFree(Acl::Node *, const char *) = delete;
-
 void cbdataInternalLock(const void *p);
 void cbdataInternalUnlock(const void *p);
 
@@ -249,8 +245,6 @@ int cbdataInternalReferenceDoneValid(void **p, void **tp);
  * \retval true The reference is valid and active.
  */
 int cbdataReferenceValid(const void *p);
-// XXX: Remove this unwanted legacy check detection hack
-int cbdataReferenceValid(const Acl::Node *) = delete;
 
 /**
  * Create a run-time registration for the class type with cbdata memory allocator.
