@@ -146,6 +146,18 @@ Acl::ParsingContext::detailCodeContext(std::ostream &os) const
 
 /* Acl::Node */
 
+void *
+Acl::Node::operator new (size_t)
+{
+    fatal ("unusable Acl::Node::new");
+    return (void *)1;
+}
+
+void Acl::Node::operator delete(void *)
+{
+    fatal ("unusable Acl::Node::delete");
+}
+
 Acl::Node *
 Acl::Node::FindByName(const SBuf &name)
 {

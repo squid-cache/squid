@@ -28,8 +28,8 @@ class Node: public RefCountable
 public:
     using Pointer = RefCount<Node>;
 
-    // force pooling of specific ACL types (e.g., via MEMPROXY_CLASS)
-    void *operator new(size_t) = delete;
+    void *operator new(size_t);
+    void operator delete(void *);
 
     /// parses acl directive parts that follow directive name (i.e. "acl")
     static void ParseNamedRule(ConfigParser &, NamedRules *&);
@@ -41,6 +41,7 @@ public:
 
     Node();
     Node(Node &&) = delete;  // no copying of any kind
+    virtual ~Node();
 
     /// sets user-specified ACL name and squid.conf context
     void context(const SBuf &aName, const char *configuration);
@@ -80,10 +81,6 @@ public:
     SBuf name;
 
     char *cfgline;
-
-protected:
-    friend class RefCount<Node>;
-    virtual ~Node();
 
 private:
     /// Matches the actual data in checklist against this Acl::Node.
