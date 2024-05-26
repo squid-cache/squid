@@ -14,6 +14,8 @@ noinst_LTLIBRARIES = libhttp.la
 libhttp_la_SOURCES = \
 	ContentLengthInterpreter.cc \
 	ContentLengthInterpreter.h \
+	FrameType.cc \
+	FrameType.h \
 	Message.cc \
 	Message.h \
 	MethodType.cc \
@@ -35,10 +37,14 @@ libhttp_la_SOURCES = \
 
 libhttp_la_LIBADD= one/libhttp1.la
 
+FrameType.cc: FrameType.h $(top_srcdir)/src/mk-string-arrays.awk
+	($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk sbuf=1 < $(srcdir)/FrameType.h | \
+		sed -e 's%FRAME_%%' >$@) || ($(RM) -f $@ && exit 1)
+
 MethodType.cc: MethodType.h $(top_srcdir)/src/mk-string-arrays.awk
 	($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk sbuf=1 < $(srcdir)/MethodType.h | \
 		sed -e 's%METHOD_%%' -e 's%_C%-C%' >$@) || ($(RM) -f $@ && exit 1)
 
-CLEANFILES += MethodType.cc
+CLEANFILES += FrameType.cc MethodType.cc
 
 EXTRA_DIST = RegisteredHeadersHash.gperf
