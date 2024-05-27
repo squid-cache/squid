@@ -229,14 +229,14 @@ static void free_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign);
 static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt);
 static void dump_sslproxy_cert_adapt(StoreEntry *entry, const char *name, sslproxy_cert_adapt *cert_adapt);
 static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt);
-static void parse_sslproxy_ssl_bump(acl_access **ssl_bump);
-static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump);
-static void free_sslproxy_ssl_bump(acl_access **ssl_bump);
+static void parse_sslproxy_ssl_bump(SquidConfig::AclPointer*);
+static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, const SquidConfig::AclPointer &);
+static void free_sslproxy_ssl_bump(SquidConfig::AclPointer*);
 #endif /* USE_OPENSSL */
 
-static void parse_ftp_epsv(acl_access **ftp_epsv);
-static void dump_ftp_epsv(StoreEntry *entry, const char *name, acl_access *ftp_epsv);
-static void free_ftp_epsv(acl_access **ftp_epsv);
+static void parse_ftp_epsv(SquidConfig::AclPointer*);
+static void dump_ftp_epsv(StoreEntry *entry, const char *name, const SquidConfig::AclPointer &);
+static void free_ftp_epsv(SquidConfig::AclPointer*);
 
 static void parse_b_size_t(size_t * var);
 static void parse_b_int64_t(int64_t * var);
@@ -254,10 +254,10 @@ static int parseOneConfigFile(const char *file_name, unsigned int depth);
 static void parse_configuration_includes_quoted_values(bool *recognizeQuotedValues);
 static void dump_configuration_includes_quoted_values(StoreEntry *const entry, const char *const name, bool recognizeQuotedValues);
 static void free_configuration_includes_quoted_values(bool *recognizeQuotedValues);
-static void parse_on_unsupported_protocol(acl_access **access);
-static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
-static void free_on_unsupported_protocol(acl_access **access);
-static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, Acl::Node *acl = nullptr);
+static void parse_on_unsupported_protocol(SquidConfig::AclPointer*);
+static void dump_on_unsupported_protocol(StoreEntry *, const char *directiveName, const SquidConfig::AclPointer &);
+static void free_on_unsupported_protocol(SquidConfig::AclPointer*);
+static void ParseAclWithAction(SquidConfig::AclPointer *, const Acl::Answer &action, const char *desc, Acl::Node *acl = nullptr);
 static void parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuards);
 static void dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocolAccess *protoGuards);
 static void free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuards);
@@ -1476,7 +1476,7 @@ dump_SBufList(StoreEntry * entry, const SBufList &words)
 
 // dump a SBufList type directive with name
 static void
-dump_SBufList(StoreEntry * entry, const char *name, SBufList &list)
+dump_SBufList(StoreEntry * entry, const char *name, const SBufList &list)
 {
     if (!list.empty()) {
         entry->append(name, strlen(name));
@@ -1514,31 +1514,31 @@ free_acl(Acl::NamedRules **config)
     *config = nullptr;
 }
 
-void
-dump_acl_list(StoreEntry * entry, ACLList * head)
+static void
+dump_acl_list(StoreEntry * entry, const ACLList &head)
 {
     // XXX: Should dump ACL names like "foo !bar" but dumps parsing context like
     // "(clientside_tos 0x11 line)".
-    dump_SBufList(entry, head->raw->dump());
+    dump_SBufList(entry, head->dump());
 }
 
 void
-dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
+dump_acl_access(StoreEntry * entry, const char *name, const acl_access &head)
 {
     if (head)
-        dump_SBufList(entry, head->raw->treeDump(name, &Acl::AllowOrDeny));
+        dump_SBufList(entry, head->treeDump(name, &Acl::AllowOrDeny));
 }
 
 static void
-parse_acl_access(acl_access ** head)
+parse_acl_access(SquidConfig::AclPointer * const head)
 {
-    aclParseAccessLine(cfg_directive, LegacyParser, head);
+    aclParseAccessLine(cfg_directive, LegacyParser, *head);
 }
 
 static void
-free_acl_access(acl_access ** head)
+free_acl_access(SquidConfig::AclPointer *head)
 {
-    aclDestroyAccessList(head);
+    *head = nullptr;
 }
 
 static void
@@ -1600,7 +1600,7 @@ parse_acl_address(Acl::Address ** head)
 {
     Acl::Address *l = new Acl::Address;
     parse_address(&l->addr);
-    aclParseAclList(LegacyParser, &l->aclList, l->addr);
+    aclParseAclList(LegacyParser, l->aclList, l->addr);
 
     Acl::Address **tail = head;
     while (*tail)
@@ -1659,7 +1659,7 @@ parse_acl_tos(acl_tos ** head)
 
     l->tos = (tos_t)tos;
 
-    aclParseAclList(LegacyParser, &l->aclList, token);
+    aclParseAclList(LegacyParser, l->aclList, token);
 
     acl_tos **tail = head;  /* sane name below */
     while (*tail)
@@ -1703,7 +1703,7 @@ parse_acl_nfmark(acl_nfmark ** head)
     acl_nfmark *l = new acl_nfmark;
     l->markConfig = mc;
 
-    aclParseAclList(LegacyParser, &l->aclList, token.c_str());
+    aclParseAclList(LegacyParser, l->aclList, token.c_str());
 
     acl_nfmark **tail = head;   /* sane name below */
     while (*tail)
@@ -1742,7 +1742,7 @@ parse_acl_b_size_t(AclSizeLimit ** head)
 
     parse_b_int64_t(&l->size);
 
-    aclParseAclList(LegacyParser, &l->aclList, l->size);
+    aclParseAclList(LegacyParser, l->aclList, l->size);
 
     AclSizeLimit **tail = head; /* sane name below */
     while (*tail)
@@ -1879,7 +1879,7 @@ parse_http_header_access(HeaderManglers **pm)
 
     std::string directive = "http_header_access ";
     directive += t;
-    aclParseAccessLine(directive.c_str(), LegacyParser, &mangler->access_list);
+    aclParseAccessLine(directive.c_str(), LegacyParser, mangler->access_list);
 }
 
 static void
@@ -1993,7 +1993,7 @@ dump_authparam(StoreEntry * entry, const char *name, Auth::ConfigVector cfg)
 }
 
 static void
-parse_AuthSchemes(acl_access **authSchemes)
+parse_AuthSchemes(SquidConfig::AclPointer * const authSchemes)
 {
     const char *tok = ConfigParser::NextQuotedToken();
     if (!tok) {
@@ -2007,17 +2007,17 @@ parse_AuthSchemes(acl_access **authSchemes)
 }
 
 static void
-free_AuthSchemes(acl_access **authSchemes)
+free_AuthSchemes(SquidConfig::AclPointer *authSchemes)
 {
     Auth::TheConfig.schemeLists.clear();
     free_acl_access(authSchemes);
 }
 
 static void
-dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
+dump_AuthSchemes(StoreEntry *entry, const char *name, const SquidConfig::AclPointer &authSchemes)
 {
     if (authSchemes)
-        dump_SBufList(entry, authSchemes->raw->treeDump(name, [](const Acl::Answer &action) {
+        dump_SBufList(entry, authSchemes->treeDump(name, [](const Acl::Answer &action) {
         return Auth::TheConfig.schemeLists.at(action.kind).rawSchemes;
     }));
 }
@@ -2025,13 +2025,8 @@ dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 #endif /* USE_AUTH */
 
 static void
-ParseAclWithAction(acl_access **accessPtr, const Acl::Answer &action, const char *desc, Acl::Node *acl)
+ParseAclWithAction(SquidConfig::AclPointer * const access, const Acl::Answer &action, const char *desc, Acl::Node *acl)
 {
-    assert(accessPtr);
-    if (!*accessPtr)
-        *accessPtr = new acl_access();
-    const auto access = &(*accessPtr)->raw;
-
     assert(access);
     if (!*access) {
         *access = new Acl::Tree;
@@ -2524,7 +2519,7 @@ parse_peer_access(void)
     auto &p = LegacyParser.cachePeer("cache_peer_access peer-name");
     std::string directive = "peer_access ";
     directive += p.name;
-    aclParseAccessLine(directive.c_str(), LegacyParser, &p.access);
+    aclParseAccessLine(directive.c_str(), LegacyParser, p.access);
 }
 
 static void
@@ -3159,7 +3154,7 @@ parse_wordlist(wordlist ** list)
 }
 
 static int
-check_null_acl_access(acl_access * a)
+check_null_acl_access(const SquidConfig::AclPointer & a)
 {
     return a == nullptr;
 }
@@ -4003,7 +3998,7 @@ parse_access_log(CustomLog ** logs)
 
     if (strcmp(filename, "none") == 0) {
         cl->type = Log::Format::CLF_NONE;
-        aclParseAclList(LegacyParser, &cl->aclList, filename);
+        aclParseAclList(LegacyParser, cl->aclList, filename);
         while (*logs)
             logs = &(*logs)->next;
         *logs = cl;
@@ -4027,7 +4022,7 @@ parse_access_log(CustomLog ** logs)
     }
     assert(cl->type); // setLogformat() was called
 
-    aclParseAclList(LegacyParser, &cl->aclList, cl->filename);
+    aclParseAclList(LegacyParser, cl->aclList, cl->filename);
 
     while (*logs)
         logs = &(*logs)->next;
@@ -4312,7 +4307,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         return;
     }
 
-    aclParseAclList(LegacyParser, &ca->aclList, al);
+    aclParseAclList(LegacyParser, ca->aclList, al);
 
     while (*cert_adapt)
         cert_adapt = &(*cert_adapt)->next;
@@ -4358,7 +4353,7 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
         return;
     }
 
-    aclParseAclList(LegacyParser, &cs->aclList, al);
+    aclParseAclList(LegacyParser, cs->aclList, al);
 
     while (*cert_sign)
         cert_sign = &(*cert_sign)->next;
@@ -4417,7 +4412,7 @@ sslBumpCfgRr::finalizeConfig()
     }
 }
 
-static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
+static void parse_sslproxy_ssl_bump(SquidConfig::AclPointer * const ssl_bump)
 {
     typedef const char *BumpCfgStyle;
     BumpCfgStyle bcsNone = nullptr;
@@ -4497,15 +4492,15 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
     ParseAclWithAction(ssl_bump, action, "ssl_bump");
 }
 
-static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump)
+static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, const SquidConfig::AclPointer &ssl_bump)
 {
     if (ssl_bump)
-        dump_SBufList(entry, ssl_bump->raw->treeDump(name, [](const Acl::Answer &action) {
+        dump_SBufList(entry, ssl_bump->treeDump(name, [](const Acl::Answer &action) {
         return Ssl::BumpModeStr.at(action.kind);
     }));
 }
 
-static void free_sslproxy_ssl_bump(acl_access **ssl_bump)
+static void free_sslproxy_ssl_bump(SquidConfig::AclPointer *ssl_bump)
 {
     free_acl_access(ssl_bump);
 }
@@ -4555,7 +4550,7 @@ static void parse_HeaderWithAclList(HeaderWithAclList **headers)
         hwa.valueFormat = nlf;
     } else
         delete nlf;
-    aclParseAclList(LegacyParser, &hwa.aclList, (hwa.fieldName + ':' + hwa.fieldValue).c_str());
+    aclParseAclList(LegacyParser, hwa.aclList, (hwa.fieldName + ':' + hwa.fieldValue).c_str());
     (*headers)->push_back(hwa);
 }
 
@@ -4565,9 +4560,6 @@ static void free_HeaderWithAclList(HeaderWithAclList **header)
         return;
 
     for (HeaderWithAclList::iterator hwa = (*header)->begin(); hwa != (*header)->end(); ++hwa) {
-        if (hwa->aclList)
-            aclDestroyAclList(&hwa->aclList);
-
         if (hwa->valueFormat) {
             delete hwa->valueFormat;
             hwa->valueFormat = nullptr;
@@ -4689,7 +4681,7 @@ static void free_cache_log_message(DebugMessages **debugMessages)
 }
 
 static bool FtpEspvDeprecated = false;
-static void parse_ftp_epsv(acl_access **ftp_epsv)
+static void parse_ftp_epsv(SquidConfig::AclPointer *ftp_epsv)
 {
     Acl::Answer ftpEpsvDeprecatedAction;
     bool ftpEpsvIsDeprecatedRule = false;
@@ -4723,7 +4715,6 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
 
     if (ftpEpsvIsDeprecatedRule) {
         // overwrite previous ftp_epsv lines
-        delete *ftp_epsv;
         *ftp_epsv = nullptr;
 
         if (ftpEpsvDeprecatedAction == Acl::Answer(ACCESS_DENIED)) {
@@ -4737,17 +4728,17 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
         }
         FtpEspvDeprecated = true;
     } else {
-        aclParseAccessLine(cfg_directive, LegacyParser, ftp_epsv);
+        aclParseAccessLine(cfg_directive, LegacyParser, *ftp_epsv);
     }
 }
 
-static void dump_ftp_epsv(StoreEntry *entry, const char *name, acl_access *ftp_epsv)
+static void dump_ftp_epsv(StoreEntry *entry, const char *name, const SquidConfig::AclPointer &ftp_epsv)
 {
     if (ftp_epsv)
-        dump_SBufList(entry, ftp_epsv->raw->treeDump(name, Acl::AllowOrDeny));
+        dump_SBufList(entry, ftp_epsv->treeDump(name, Acl::AllowOrDeny));
 }
 
-static void free_ftp_epsv(acl_access **ftp_epsv)
+static void free_ftp_epsv(SquidConfig::AclPointer *ftp_epsv)
 {
     free_acl_access(ftp_epsv);
     FtpEspvDeprecated = false;
@@ -4883,7 +4874,7 @@ free_configuration_includes_quoted_values(bool *)
 }
 
 static void
-parse_on_unsupported_protocol(acl_access **access)
+parse_on_unsupported_protocol(SquidConfig::AclPointer * const access)
 {
     char *tm;
     if ((tm = ConfigParser::NextToken()) == nullptr) {
@@ -4907,7 +4898,7 @@ parse_on_unsupported_protocol(acl_access **access)
 }
 
 static void
-dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access)
+dump_on_unsupported_protocol(StoreEntry *entry, const char *name, const SquidConfig::AclPointer &access)
 {
     static const std::vector<const char *> onErrorTunnelMode = {
         "none",
@@ -4915,7 +4906,7 @@ dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *ac
         "respond"
     };
     if (access) {
-        const auto lines = access->raw->treeDump(name, [](const Acl::Answer &action) {
+        const auto lines = access->treeDump(name, [](const Acl::Answer &action) {
             return onErrorTunnelMode.at(action.kind);
         });
         dump_SBufList(entry, lines);
@@ -4923,7 +4914,7 @@ dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *ac
 }
 
 static void
-free_on_unsupported_protocol(acl_access **access)
+free_on_unsupported_protocol(SquidConfig::AclPointer *access)
 {
     free_acl_access(access);
 }
@@ -4945,11 +4936,11 @@ dump_http_upgrade_request_protocols(StoreEntry *entry, const char *rawName, Http
         return;
 
     const SBuf name(rawName);
-    protoGuards->forEach([entry,&name](const SBuf &proto, const acl_access *acls) {
+    protoGuards->forEach([entry,&name](const SBuf &proto, const acl_access &acls) {
         SBufList line;
         line.push_back(name);
         line.push_back(proto);
-        const auto acld = acls->raw->treeDump("", &Acl::AllowOrDeny);
+        const auto acld = acls->treeDump("", &Acl::AllowOrDeny);
         line.insert(line.end(), acld.begin(), acld.end());
         dump_SBufList(entry, line);
     });

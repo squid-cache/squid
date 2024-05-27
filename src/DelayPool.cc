@@ -11,8 +11,8 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "acl/Acl.h"
 #include "acl/Gadgets.h"
+#include "acl/Tree.h"
 #include "CommonPool.h"
 #include "DelayPool.h"
 #include "Store.h"
@@ -26,9 +26,6 @@ DelayPool::~DelayPool()
 {
     if (pool)
         freeData();
-
-    if (access)
-        aclDestroyAccessList(&access);
 }
 
 void

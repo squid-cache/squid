@@ -551,7 +551,7 @@ Client::haveParsedReplyHeaders()
 bool
 Client::blockCaching()
 {
-    if (const auto acl = Config.accessList.storeMiss) {
+    if (const auto &acl = Config.accessList.storeMiss) {
         // This relatively expensive check is not in StoreEntry::checkCachable:
         // That method lacks HttpRequest and may be called too many times.
         ACLFilledChecklist ch(acl, originalRequest().getRaw());

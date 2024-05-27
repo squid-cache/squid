@@ -12,6 +12,7 @@
 #if USE_IDENT
 
 #include "acl/Acl.h"
+#include "base/Indestructable.h"
 
 namespace Ident
 {
@@ -19,7 +20,9 @@ namespace Ident
 class IdentConfig
 {
 public:
-    acl_access *identLookup;
+    using AclPointer = Indestructable < RefCount<Acl::Tree> >;
+
+    AclPointer identLookup;
     time_t timeout;
 };
 

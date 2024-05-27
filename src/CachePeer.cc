@@ -38,8 +38,6 @@ CachePeer::~CachePeer()
         xfree(l);
     }
 
-    aclDestroyAccessList(&access);
-
 #if USE_CACHE_DIGESTS
     void *digestTmp = nullptr;
     if (cbdataReferenceValidDone(digest, &digestTmp))

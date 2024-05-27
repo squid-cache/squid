@@ -40,6 +40,7 @@ libbase_la_SOURCES = \
 	HardFun.h \
 	Here.cc \
 	Here.h \
+	Indestructable.h \
 	InstanceId.cc \
 	InstanceId.h \
 	IoManip.cc \

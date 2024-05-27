@@ -367,7 +367,6 @@ httpHdrMangleList(HttpHeader *l, HttpRequest *request, const AccessLogEntryPoint
 static
 void header_mangler_clean(headerMangler &m)
 {
-    aclDestroyAccessList(&m.access_list);
     safe_free(m.replacement);
 }
 
@@ -389,11 +388,7 @@ void header_mangler_dump_replacement(StoreEntry * entry, const char *option,
         storeAppendPrintf(entry, "%s %s %s\n", option, name, m.replacement);
 }
 
-HeaderManglers::HeaderManglers()
-{
-    memset(known, 0, sizeof(known));
-    memset(&all, 0, sizeof(all));
-}
+HeaderManglers::HeaderManglers() = default;
 
 HeaderManglers::~HeaderManglers()
 {

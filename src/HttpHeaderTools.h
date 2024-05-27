@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_HTTPHEADERTOOLS_H
 #define SQUID_SRC_HTTPHEADERTOOLS_H
 
-#include "acl/forward.h"
+#include "acl/Tree.h"
 #include "format/Format.h"
 #include "HttpHeader.h"
 #include "sbuf/forward.h"
@@ -27,6 +27,8 @@ class HttpHeader;
 class HttpRequest;
 class StoreEntry;
 
+// XXX: Make this a class so that we can forward-declare it and remove this
+// highly specialized header file from used-by-everybody SquidConfig.h.
 typedef std::list<HeaderWithAcl> HeaderWithAclList;
 
 /* Distinguish between Request and Reply (for header mangling) */
@@ -35,12 +37,11 @@ typedef enum {
     ROR_REPLY
 } req_or_rep_t;
 
-// Currently a POD
 class headerMangler
 {
 public:
-    acl_access *access_list;
-    char *replacement;
+    acl_access access_list;
+    char *replacement = nullptr;
 };
 
 /// A collection of headerMangler objects for a given message kind.
@@ -105,7 +106,7 @@ public:
     std::string fieldValue;
 
     /// when the header field should be added (always if nil)
-    ACLList *aclList;
+    ACLList aclList;
 
     /// compiled HTTP header field value (no macros)
     Format::Format *valueFormat;

@@ -7,8 +7,8 @@
  */
 
 #include "squid.h"
-#include "acl/Acl.h"
 #include "acl/Gadgets.h"
+#include "acl/Tree.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "globals.h"
@@ -39,10 +39,7 @@ operator <<(std::ostream &os, const ProtocolView &view)
 
 /* HttpUpgradeProtocolAccess */
 
-HttpUpgradeProtocolAccess::~HttpUpgradeProtocolAccess()
-{
-    aclDestroyAccessList(&other);
-}
+HttpUpgradeProtocolAccess::~HttpUpgradeProtocolAccess() = default;
 
 void
 HttpUpgradeProtocolAccess::configureGuard(ConfigParser &parser)
@@ -52,28 +49,26 @@ HttpUpgradeProtocolAccess::configureGuard(ConfigParser &parser)
         throw TextException(ToSBuf("expected a protocol name or ", ProtoOther()), Here());
 
     if (ProtoOther().cmp(rawProto) == 0) {
-        aclParseAccessLine(cfg_directive, parser, &other);
+        aclParseAccessLine(cfg_directive, parser, other);
         return;
     }
 
     // To preserve ACL rules checking order, to exclude inapplicable (i.e. wrong
     // protocol version) rules, and to keep things simple, we merge no rules.
-    acl_access *access = nullptr;
-    aclParseAccessLine(cfg_directive, parser, &access);
+    acl_access access = nullptr;
+    aclParseAccessLine(cfg_directive, parser, access);
     if (access)
         namedGuards.emplace_back(rawProto, access);
 }
 
 /* HttpUpgradeProtocolAccess::NamedGuard */
 
-HttpUpgradeProtocolAccess::NamedGuard::NamedGuard(const char *rawProtocol, acl_access *acls):
+HttpUpgradeProtocolAccess::NamedGuard::NamedGuard(const char *rawProtocol, const acl_access &acls):
     protocol(rawProtocol),
     proto(protocol),
     guard(acls)
 {
 }
 
-HttpUpgradeProtocolAccess::NamedGuard::~NamedGuard() {
-    aclDestroyAccessList(&guard);
-}
+HttpUpgradeProtocolAccess::NamedGuard::~NamedGuard() = default;
 

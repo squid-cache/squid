@@ -8,13 +8,12 @@
 
 #include "squid.h"
 #include "acl/AclSizeLimit.h"
-#include "acl/Gadgets.h"
+#include "acl/Tree.h"
 
 CBDATA_CLASS_INIT(AclSizeLimit);
 
 AclSizeLimit::~AclSizeLimit()
 {
-    aclDestroyAclList(&aclList);
     delete next;
 }
 

@@ -184,9 +184,9 @@ ACLChecklist::~ACLChecklist()
 }
 
 void
-ACLChecklist::changeAcl(const acl_access *replacement)
+ACLChecklist::changeAcl(const RefCount<const Acl::Tree> &replacement)
 {
-    accessList = replacement ? replacement->raw : nullptr;
+    accessList = replacement;
 }
 
 /**
@@ -262,7 +262,7 @@ ACLChecklist::matchAndFinish()
 }
 
 const Acl::Answer &
-ACLChecklist::fastCheck(const ACLList * const list)
+ACLChecklist::fastCheck(const RefCount<Acl::Tree> &list)
 {
     preCheck("fast ACLs");
     asyncCaller_ = false;

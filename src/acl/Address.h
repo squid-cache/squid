@@ -26,7 +26,7 @@ public:
     ~Address();
 
     Acl::Address *next;
-    ACLList *aclList;
+    ACLList aclList;
 
     Ip::Address addr;
 };

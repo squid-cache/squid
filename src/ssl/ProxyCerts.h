@@ -25,13 +25,11 @@ public:
             first->next = nullptr;
             delete first;
         }
-        if (aclList)
-            aclDestroyAclList(&aclList);
     }
 
 public:
     Ssl::CertSignAlgorithm alg = Ssl::algSignEnd;
-    ACLList *aclList = nullptr;
+    ACLList aclList = nullptr;
     sslproxy_cert_sign *next = nullptr;
 };
 
@@ -47,14 +45,12 @@ public:
             delete first;
         }
         xfree(param);
-        if (aclList)
-            aclDestroyAclList(&aclList);
     }
 
 public:
     Ssl::CertAdaptAlgorithm alg = Ssl::algSetEnd;
     char *param = nullptr;
-    ACLList *aclList = nullptr;
+    ACLList aclList = nullptr;
     sslproxy_cert_adapt *next = nullptr;
 };
 #endif

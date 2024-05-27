@@ -10,6 +10,7 @@
 #define SQUID_SRC_SQUIDCONFIG_H
 
 #include "acl/forward.h"
+#include "base/Indestructable.h"
 #include "base/RefCount.h"
 #include "base/YesNoNone.h"
 #if USE_DELAY_POOLS
@@ -78,6 +79,8 @@ public:
 class SquidConfig
 {
 public:
+    using AclPointer = Indestructable < RefCount<Acl::Tree> >;
+
     struct {
         /* These should be for the Store::Root instance.
         * this needs pluggable parsing to be done smoothly.
@@ -356,54 +359,54 @@ public:
     Acl::NamedRules *namedAcls; ///< acl aclname acltype ...
 
     struct {
-        acl_access *http;
-        acl_access *adapted_http;
-        acl_access *icp;
-        acl_access *miss;
-        acl_access *NeverDirect;
-        acl_access *AlwaysDirect;
-        acl_access *ASlists;
-        acl_access *noCache;
-        acl_access *sendHit;
-        acl_access *storeMiss;
-        acl_access *stats_collection;
+        AclPointer http;
+        AclPointer adapted_http;
+        AclPointer icp;
+        AclPointer miss;
+        AclPointer NeverDirect;
+        AclPointer AlwaysDirect;
+        AclPointer ASlists;
+        AclPointer noCache;
+        AclPointer sendHit;
+        AclPointer storeMiss;
+        AclPointer stats_collection;
 #if SQUID_SNMP
 
-        acl_access *snmp;
+        AclPointer snmp;
 #endif
 #if USE_HTTP_VIOLATIONS
-        acl_access *brokenPosts;
+        AclPointer brokenPosts;
 #endif
-        acl_access *redirector;
-        acl_access *store_id;
-        acl_access *reply;
+        AclPointer redirector;
+        AclPointer store_id;
+        AclPointer reply;
         Acl::Address *outgoing_address;
 #if USE_HTCP
 
-        acl_access *htcp;
-        acl_access *htcp_clr;
+        AclPointer htcp;
+        AclPointer htcp_clr;
 #endif
 
 #if USE_OPENSSL
-        acl_access *ssl_bump;
+        AclPointer ssl_bump;
 #endif
 #if FOLLOW_X_FORWARDED_FOR
-        acl_access *followXFF;
+        AclPointer followXFF;
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
         /// acceptable PROXY protocol clients
-        acl_access *proxyProtocol;
+        AclPointer proxyProtocol;
 
         /// spoof_client_ip squid.conf acl.
         /// nil unless configured
-        acl_access* spoof_client_ip;
-        acl_access *on_unsupported_protocol;
+        AclPointer spoof_client_ip;
+        AclPointer on_unsupported_protocol;
 
-        acl_access *ftp_epsv;
+        AclPointer ftp_epsv;
 
-        acl_access *forceRequestBodyContinuation;
-        acl_access *serverPconnForNonretriable;
-        acl_access *collapsedForwardingAccess;
+        AclPointer forceRequestBodyContinuation;
+        AclPointer serverPconnForNonretriable;
+        AclPointer collapsedForwardingAccess;
     } accessList;
     AclDenyInfoList *denyInfoList;
 
@@ -506,7 +509,7 @@ public:
         Security::ContextPointer sslContext;
 #if USE_OPENSSL
         char *foreignIntermediateCertsPath;
-        acl_access *cert_error;
+        AclPointer cert_error;
         sslproxy_cert_sign *cert_sign;
         sslproxy_cert_adapt *cert_adapt;
 #endif

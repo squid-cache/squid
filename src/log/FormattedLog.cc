@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "acl/Tree.h"
 #include "acl/Gadgets.h"
 #include "base/TextException.h"
 #include "cache_cf.h"
@@ -21,7 +22,6 @@
 FormattedLog::~FormattedLog()
 {
     close(); // TODO: destructing a Logfile object should be enough
-    aclDestroyAclList(&aclList);
     safe_free(filename);
     // leave logFormat alone -- we do not own that object
 }

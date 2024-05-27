@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "acl/Gadgets.h"
+#include "acl/Tree.h"
 #include "base/IoManip.h"
 #include "base/PackableStream.h"
 #include "base/TextException.h"
@@ -29,17 +30,23 @@
 
 CBDATA_CLASS_INIT(acl_tos);
 
+// inlining this (defaulted) implementation would unnecessary expose some
+// QosConfig users to ACLList details
+acl_tos::acl_tos() = default;
+
 acl_tos::~acl_tos()
 {
-    aclDestroyAclList(&aclList);
     delete next;
 }
 
 CBDATA_CLASS_INIT(acl_nfmark);
 
+// inlining this (defaulted) implementation would unnecessary expose some
+// QosConfig users to ACLList details
+acl_nfmark::acl_nfmark() = default;
+
 acl_nfmark::~acl_nfmark()
 {
-    aclDestroyAclList(&aclList);
     delete next;
 }
 
