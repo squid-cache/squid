@@ -120,7 +120,7 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
 }
 
 void
-aclParseAccessLine(const char *directive, ConfigParser &, acl_access &config)
+aclParseAccessLine(const char *directive, ConfigParser &, acl_access **config)
 {
     /* first expect either 'allow' or 'deny' */
     const char *t = ConfigParser::NextToken();
@@ -142,7 +142,8 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access &config)
         return;
     }
 
-    const int ruleId = (config ? config->childrenCount() : 0) + 1;
+    assert(config);
+    const int ruleId = (*config ? (*config)->raw->childrenCount() : 0) + 1;
 
     Acl::AndNode *rule = new Acl::AndNode;
     rule->context(ToSBuf(directive, '#', ruleId), config_input_line);
@@ -156,19 +157,21 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access &config)
 
     /* Append to the end of this list */
 
-    const auto treep = &config; // diff reduction
-    assert(treep);
-    if (!*treep) {
-        *treep = new Acl::Tree;
-        (*treep)->context(SBuf(directive), config_input_line);
+    if (!*config)
+        *config = new acl_access();
+    auto &treep = (*config)->raw;
+
+    if (!treep) {
+        treep = new Acl::Tree();
+        treep->context(SBuf(directive), config_input_line);
     }
 
-    (*treep)->add(rule, action);
+    treep->add(rule, action);
 }
 
 // aclParseAclList does not expect or set actions (cf. aclParseAccessLine)
 size_t
-aclParseAclList(ConfigParser &, ACLList &treep, const char *label)
+aclParseAclList(ConfigParser &, ACLList **configPtr, const char *label)
 {
     // accommodate callers unable to convert their ACL list context to string
     if (!label)
@@ -186,7 +189,11 @@ aclParseAclList(ConfigParser &, ACLList &treep, const char *label)
     tree->add(rule);
     tree->context(ToSBuf(cfg_directive, ' ', label), config_input_line);
 
-    treep = tree;
+    assert(configPtr);
+    auto &config = *configPtr;
+    assert(!config);
+    config = new acl_access();
+    config->raw = tree;
 
     return aclCount;
 }
@@ -195,24 +202,24 @@ aclParseAclList(ConfigParser &, ACLList &treep, const char *label)
 /* Destroy functions */
 /*********************/
 
-// void
-// aclDestroyAclList(ACLList **list)
-// {
-//     debugs(28, 8, "aclDestroyAclList: invoked");
-//     assert(list);
-//     delete *list;
-//     *list = nullptr;
-// }
+void
+aclDestroyAclList(ACLList **list)
+{
+    debugs(28, 8, "aclDestroyAclList: invoked");
+    assert(list);
+    delete *list;
+    *list = nullptr;
+}
 
-// void
-// aclDestroyAccessList(acl_access ** list)
-// {
-//     assert(list);
-//     if (*list)
-//         debugs(28, 3, "destroying: " << *list << ' ' << (*list)->name);
-//     delete *list;
-//     *list = nullptr;
-// }
+void
+aclDestroyAccessList(acl_access ** list)
+{
+    assert(list);
+    if (*list)
+        debugs(28, 3, "destroying: " << *list << ' ' << (*list)->raw->name);
+    delete *list;
+    *list = nullptr;
+}
 
 /* maex@space.net (06.09.1996)
  *    destroy an AclDenyInfoList */

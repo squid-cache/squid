@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "acl/Tree.h"
 #include "Store.h"
 
 #define STUB_API "ip/libip.la"
@@ -76,7 +75,6 @@ void parse_IpAddress_list_token(Ip::Address_list **, char *) STUB
 
 #include "ip/QosConfig.h"
 CBDATA_CLASS_INIT(acl_tos);
-acl_tos::acl_tos() = default;
 acl_tos::~acl_tos() STUB
 CBDATA_CLASS_INIT(acl_nfmark);
 acl_nfmark::~acl_nfmark() STUB

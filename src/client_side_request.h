@@ -257,7 +257,7 @@ private:
 /* client http based routines */
 char *clientConstructTraceEcho(ClientHttpRequest *);
 
-ACLFilledChecklist *clientAclChecklistCreate(const acl_access &, ClientHttpRequest *);
+ACLFilledChecklist *clientAclChecklistCreate(const acl_access *, ClientHttpRequest *);
 void clientAclChecklistFill(ACLFilledChecklist &, ClientHttpRequest *);
 void clientAccessCheck(ClientHttpRequest *);
 

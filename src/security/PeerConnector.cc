@@ -166,7 +166,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
         // XXX: This info may change, especially if we fetch missing certs.
         // TODO: Remove ACLFilledChecklist::sslErrors and other pre-computed
         // state in favor of the ACLs accessing current/fresh info directly.
-        if (const auto &acl = ::Config.ssl_client.cert_error) {
+        if (acl_access *acl = ::Config.ssl_client.cert_error) {
             ACLFilledChecklist *check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
             fillChecklist(*check);
             SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check);
@@ -387,7 +387,7 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
     ACLFilledChecklist *check = nullptr;
     Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
 
-    if (const auto &acl = ::Config.ssl_client.cert_error) {
+    if (acl_access *acl = ::Config.ssl_client.cert_error) {
         check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
         fillChecklist(*check);
     }

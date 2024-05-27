@@ -10,7 +10,6 @@
 
 #if USE_DELAY_POOLS
 #include "acl/Gadgets.h"
-#include "acl/Tree.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "DelaySpec.h"
@@ -75,7 +74,11 @@ MessageDelayPool::MessageDelayPool(const SBuf &name, int64_t bucketSpeed, int64_
     theBucket.level() = aggregateMaximum;
 }
 
-MessageDelayPool::~MessageDelayPool() = default;
+MessageDelayPool::~MessageDelayPool()
+{
+    if (access)
+        aclDestroyAccessList(&access);
+}
 
 void
 MessageDelayPool::refillBucket()
@@ -181,7 +184,7 @@ MessageDelayConfig::parseResponseDelayPoolAccess() {
     MessageDelayPool::Pointer pool = MessageDelayPools::Instance()->pool(SBuf(token));
     static ConfigParser parser;
     if (pool)
-        aclParseAccessLine("response_delay_pool_access", parser, pool->access);
+        aclParseAccessLine("response_delay_pool_access", parser, &pool->access);
 }
 
 void

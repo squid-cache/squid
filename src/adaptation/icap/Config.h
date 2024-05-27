@@ -13,7 +13,6 @@
 #include "adaptation/Config.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "base/AsyncCall.h"
-#include "base/Indestructable.h"
 #include "event.h"
 
 namespace Adaptation
@@ -27,8 +26,6 @@ class Config: public Adaptation::Config
 {
 
 public:
-    using AclPointer = Indestructable < RefCount<Acl::Tree> >;
-
     int default_options_ttl;
     int preview_enable;
     int preview_size;
@@ -38,7 +35,7 @@ public:
     int reuse_connections;
     char* client_username_header;
     int client_username_encode;
-    AclPointer repeat; ///< icap_retry ACL in squid.conf
+    acl_access *repeat; ///< icap_retry ACL in squid.conf
     int repeat_limit; ///< icap_retry_limit in squid.conf
 
     Config();

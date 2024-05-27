@@ -30,6 +30,7 @@
 
 Note::Value::~Value()
 {
+    aclDestroyAclList(&aclList);
     delete valueFormat;
 }
 
@@ -109,7 +110,7 @@ Note::printAsNoteDirective(StoreEntry * const entry, const char * const directiv
         os << directiveName << ' ' << key() << ' ' << ConfigParser::QuoteString(SBufToString(v->value()));
         if (v->aclList) {
             // TODO: Use Acl::dump() after fixing the XXX in dump_acl_list().
-            for (const auto &item: v->aclList->treeDump("", &Acl::AllowOrDeny)) {
+            for (const auto &item: v->aclList->raw->treeDump("", &Acl::AllowOrDeny)) {
                 if (item.isEmpty()) // treeDump("") adds this prefix
                     continue;
                 if (item.cmp("\n") == 0) // treeDump() adds this suffix
@@ -222,7 +223,7 @@ Notes::parse(ConfigParser &parser)
     Note::Value::Pointer noteValue = note->addValue(val, formattedValues && ConfigParser::LastTokenWasQuoted(), descr);
     key.append('=');
     key.append(val);
-    aclParseAclList(parser, noteValue->aclList, key.c_str());
+    aclParseAclList(parser, &noteValue->aclList, key.c_str());
     return note;
 }
 

@@ -7,17 +7,18 @@
  */
 
 #include "squid.h"
+#include "acl/Acl.h"
 #include "acl/Gadgets.h"
-#include "acl/Tree.h"
 #include "ClientDelayConfig.h"
 #include "ConfigParser.h"
 #include "Parsing.h"
 #include "Store.h"
 
-ClientDelayPool::~ClientDelayPool() = default;
-
-ClientDelayPool::ClientDelayPool(): rate(0), highwatermark(0)
-{}
+ClientDelayPool::~ClientDelayPool()
+{
+    if (access)
+        aclDestroyAccessList(&access);
+}
 
 void ClientDelayPool::dump(StoreEntry * entry, unsigned int poolNumberMinusOne) const
 {
@@ -94,7 +95,7 @@ void ClientDelayConfig::parsePoolRates()
 void ClientDelayConfig::parsePoolAccess(ConfigParser &parser)
 {
     if (const unsigned short poolId = parsePoolId())
-        aclParseAccessLine("client_delay_access", parser, pool(poolId-1).access);
+        aclParseAccessLine("client_delay_access", parser, &(pool(poolId-1).access));
 }
 
 unsigned short

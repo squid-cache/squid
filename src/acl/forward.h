@@ -35,11 +35,10 @@ class Tree;
 void Init(void);
 
 /// reconfiguration-safe storage of ACL rules
-// class StoredTree {
-// public:
-//     RefCount<Acl::Tree> raw;
-// };
-using StoredTree = RefCount<Acl::Tree>;
+class StoredTree {
+public:
+    RefCount<Acl::Tree> raw;
+};
 
 } // namespace Acl
 

@@ -34,12 +34,12 @@ class acl_tos
     CBDATA_CLASS(acl_tos);
 
 public:
-    acl_tos();
+    acl_tos() : next(nullptr), aclList(nullptr), tos(0) {}
     ~acl_tos();
 
-    acl_tos *next = nullptr;
-    ACLList aclList;
-    tos_t tos = 0;
+    acl_tos *next;
+    ACLList *aclList;
+    tos_t tos;
 };
 
 // TODO: move to new Acl::Node framework
@@ -48,11 +48,11 @@ class acl_nfmark
     CBDATA_CLASS(acl_nfmark);
 
 public:
-    acl_nfmark();
+    acl_nfmark() : next(nullptr), aclList(nullptr) {}
     ~acl_nfmark();
 
-    acl_nfmark *next = nullptr;
-    ACLList aclList;
+    acl_nfmark *next;
+    ACLList *aclList;
     Ip::NfMarkConfig markConfig;
 };
 

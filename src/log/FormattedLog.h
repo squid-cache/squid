@@ -58,7 +58,7 @@ public:
     char *filename = nullptr;
 
     /// restrict logging to matching transactions
-    ACLList aclList;
+    ACLList *aclList = nullptr;
 
     /// custom log record template for type == Log::Format::CLF_CUSTOM
     Format::Format *logFormat = nullptr;

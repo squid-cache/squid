@@ -86,7 +86,7 @@ DelayConfig::parsePoolAccess(ConfigParser &parser)
     }
 
     --pool;
-    aclParseAccessLine("delay_access", parser, DelayPools::delay_data[pool].access);
+    aclParseAccessLine("delay_access", parser, &DelayPools::delay_data[pool].access);
 }
 
 void

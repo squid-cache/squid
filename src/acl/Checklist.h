@@ -104,8 +104,7 @@ public:
      *
      * If there are no ACLs to check at all, the result becomes ACCESS_ALLOWED.
      */
-    const Acl::Answer &fastCheck(const RefCount<Acl::Tree> &);
-    const Acl::Answer &fastCheck(const RefCount<Acl::Tree> *); // XXX: Document
+    const Acl::Answer &fastCheck(const ACLList *);
 
     /// If slow lookups are allowed, switches into "async in progress" state.
     /// Otherwise, returns false; the caller is expected to handle the failure.
@@ -145,7 +144,7 @@ public:
     virtual void verifyAle() const = 0;
 
     /// change the current ACL list
-    void changeAcl(const RefCount<const Acl::Tree> &);
+    void changeAcl(const acl_access *);
 
     /// remember the name of the last ACL being evaluated
     void setLastCheckedName(const SBuf &name) { lastCheckedName_ = name; }

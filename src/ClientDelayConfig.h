@@ -25,13 +25,14 @@ class ClientDelayPool : public RefCountable
 public:
     typedef RefCount<ClientDelayPool> Pointer;
 
-    ClientDelayPool();
+    ClientDelayPool()
+        :   access(nullptr), rate(0), highwatermark(0) {}
     ~ClientDelayPool() override;
     ClientDelayPool(const ClientDelayPool &) = delete;
     ClientDelayPool &operator=(const ClientDelayPool &) = delete;
 
     void dump (StoreEntry * entry, unsigned int poolNumberMinusOne) const;
-    acl_access access;
+    acl_access *access;
     int rate;
     int64_t highwatermark;
 };

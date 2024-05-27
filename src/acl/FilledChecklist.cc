@@ -205,7 +205,7 @@ ACLFilledChecklist::markSourceDomainChecked()
  *    *not* delete the list.  After the callback function returns,
  *    checkCallback() will delete the list (i.e., self).
  */
-ACLFilledChecklist::ACLFilledChecklist(const acl_access &A, HttpRequest *http_request, const char *ident):
+ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request, const char *ident):
     dst_rdns(nullptr),
 #if USE_AUTH
     auth_user_request(nullptr),

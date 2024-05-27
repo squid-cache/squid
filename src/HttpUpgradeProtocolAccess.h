@@ -51,6 +51,9 @@ public:
     ~HttpUpgradeProtocolAccess();
     HttpUpgradeProtocolAccess(HttpUpgradeProtocolAccess &&) = delete; // no copying of any kind
 
+    /// \returns the ACLs matching the given "name[/version]" protocol (or nil)
+    const acl_access *findGuard(const SBuf &proto) const;
+
     /// parses a single allow/deny rule
     void configureGuard(ConfigParser&);
 
@@ -66,13 +69,13 @@ private:
     class NamedGuard
     {
     public:
-        NamedGuard(const char *rawProtocol, const acl_access &);
+        NamedGuard(const char *rawProtocol, acl_access*);
         NamedGuard(const NamedGuard &&) = delete; // no copying of any kind
         ~NamedGuard();
 
         const SBuf protocol; ///< configured protocol name (and version)
         const ProtocolView proto; ///< optimization: compiled this->protocol
-        acl_access guard; ///< configured access rule; never nil
+        acl_access *guard = nullptr; ///< configured access rule; never nil
     };
 
     /// maps HTTP Upgrade protocol name/version to the ACLs guarding its usage
@@ -85,7 +88,7 @@ private:
     NamedGuards namedGuards;
 
     /// OTHER rules governing unnamed protocols
-    acl_access other;
+    acl_access *other = nullptr;
 };
 
 template <typename Visitor>

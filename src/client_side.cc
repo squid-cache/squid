@@ -3472,7 +3472,7 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 }
 
 ACLFilledChecklist *
-clientAclChecklistCreate(const acl_access &acl, ClientHttpRequest * http)
+clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 {
     const auto checklist = new ACLFilledChecklist(acl, nullptr, nullptr);
     clientAclChecklistFill(*checklist, http);

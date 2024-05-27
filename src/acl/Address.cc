@@ -8,12 +8,13 @@
 
 #include "squid.h"
 #include "acl/Address.h"
-#include "acl/Tree.h"
+#include "acl/Gadgets.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Acl, Address);
 
 Acl::Address::~Address()
 {
+    aclDestroyAclList(&aclList);
     delete next;
 }
 

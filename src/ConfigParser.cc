@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "acl/Gadgets.h"
-#include "acl/Tree.h"
 #include "base/Here.h"
 #include "base/RegexPattern.h"
 #include "cache_cf.h"
@@ -595,14 +594,14 @@ ConfigParser::skipOptional(const char *keyword)
     return false; // no more tokens (i.e. we are at the end of the line)
 }
 
-ACLList
+ACLList *
 ConfigParser::optionalAclList()
 {
     if (!skipOptional("if"))
         return nullptr; // OK: the directive has no ACLs
 
-    ACLList acls = nullptr;
-    const auto aclCount = aclParseAclList(*this, acls, cfg_directive);
+    ACLList *acls = nullptr;
+    const auto aclCount = aclParseAclList(*this, &acls, cfg_directive);
     assert(acls);
     if (aclCount <= 0)
         throw TextException("missing ACL name(s) after 'if' keyword", Here());

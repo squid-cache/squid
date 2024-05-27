@@ -26,7 +26,6 @@
 class CachePeer;
 class ConnStateData;
 
-
 /** \ingroup ACLAPI
     ACLChecklist filled with specific data, representing Squid and transaction
     state for access checks along with some data-specific checking methods
@@ -37,7 +36,7 @@ class ACLFilledChecklist: public ACLChecklist
 
 public:
     ACLFilledChecklist();
-    ACLFilledChecklist(const acl_access &, HttpRequest *, const char *ident = nullptr);
+    ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident = nullptr);
     ~ACLFilledChecklist() override;
 
     /// configure client request-related fields for the first time

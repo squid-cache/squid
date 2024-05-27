@@ -23,19 +23,21 @@ class wordlist;
 
 /// \ingroup ACLAPI
 void aclDestroyAccessList(acl_access **list);
+/// \ingroup ACLAPI
+void aclDestroyAclList(ACLList **);
 
 /// Parses a single line of a "action followed by acls" directive (e.g., http_access).
-void aclParseAccessLine(const char *directive, ConfigParser &, acl_access &);
+void aclParseAccessLine(const char *directive, ConfigParser &parser, acl_access **);
 
 /// Parses a single line of a "some context followed by acls" directive (e.g., note n v).
 /// The label parameter identifies the context (for debugging).
 /// \returns the number of parsed ACL names
-size_t aclParseAclList(ConfigParser &, ACLList &, const char *label);
+size_t aclParseAclList(ConfigParser &, ACLList **, const char *label);
 
 /// Template to convert various context labels to strings. \ingroup ACLAPI
 template <class Any>
 inline size_t
-aclParseAclList(ConfigParser &parser, ACLList &tree, const Any any)
+aclParseAclList(ConfigParser &parser, ACLList **tree, const Any any)
 {
     std::ostringstream buf;
     buf << any;
@@ -59,7 +61,7 @@ wordlist *aclDumpGeneric(const Acl::Node *);
 /// \ingroup ACLAPI
 void aclCacheMatchFlush(dlink_list * cache);
 /// \ingroup ACLAPI
-void dump_acl_access(StoreEntry *, const char *directiveName, const acl_access &);
+void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
 /// \ingroup ACLAPI
 void dump_acl_list(StoreEntry * entry, ACLList * head);
 

@@ -14,7 +14,6 @@
 #include "acl/forward.h"
 #include "auth/SchemeConfig.h"
 #include "auth/SchemesConfig.h"
-#include "base/Indestructable.h"
 
 namespace Auth
 {
@@ -22,8 +21,6 @@ namespace Auth
 class Config
 {
 public:
-    using AclPointer = Indestructable < RefCount<Acl::Tree> >;
-
     Config() = default;
     Config(Config &&) = delete; // no support for copying of any kind
     ~Config() = default;
@@ -35,7 +32,7 @@ public:
     std::vector<Auth::SchemesConfig> schemeLists;
 
     /// the ACL list for auth_schemes directives
-    AclPointer schemeAccess;
+    acl_access *schemeAccess = nullptr;
 
     /// the authenticate_cache_garbage_interval
     time_t garbageCollectInterval = 0;

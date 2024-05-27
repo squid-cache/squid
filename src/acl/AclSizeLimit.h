@@ -22,7 +22,7 @@ public:
     ~AclSizeLimit();
 
     AclSizeLimit *next;
-    ACLList aclList;
+    ACLList *aclList;
     int64_t size;
 };
 

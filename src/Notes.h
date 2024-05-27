@@ -56,7 +56,7 @@ public:
         Method method() const { return theMethod; }
         const SBuf &value() const { return theValue; }
 
-        ACLList aclList; ///< The access list used to determine if this value is valid for a request
+        ACLList *aclList; ///< The access list used to determine if this value is valid for a request
 
     private:
         /// \return the formatted value with expanded logformat %macros (quoted values).

@@ -796,7 +796,7 @@ htcpUnpackDetail(char *buf, int sz)
 }
 
 static bool
-htcpAccessAllowed(const acl_access &acl, const htcpSpecifier::Pointer &s, Ip::Address &from)
+htcpAccessAllowed(acl_access * acl, const htcpSpecifier::Pointer &s, Ip::Address &from)
 {
     /* default deny if no access list present */
     if (!acl)

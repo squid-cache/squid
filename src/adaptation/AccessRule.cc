@@ -21,12 +21,15 @@ Adaptation::AccessRule::AccessRule(const String &aGroupId): id(++LastId), groupI
 {
 }
 
-Adaptation::AccessRule::~AccessRule() = default;
+Adaptation::AccessRule::~AccessRule()
+{
+    delete acl;
+}
 
 void
 Adaptation::AccessRule::parse(ConfigParser &parser)
 {
-    aclParseAccessLine("adaptation_access", parser, acl);
+    aclParseAccessLine("adaptation_access", parser, &acl);
 }
 
 void

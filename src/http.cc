@@ -2106,7 +2106,7 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
     while (strListGetItem(&upgradeIn, ',', &offeredStr, &offeredStrLen, &pos)) {
         const ProtocolView offeredProto(offeredStr, offeredStrLen);
         debugs(11, 5, "checks all rules applicable to " << offeredProto);
-        Config.http_upgrade_request_protocols->forApplicable(offeredProto, [&ch, offeredStr, offeredStrLen, &upgradeOut] (const SBuf &cfgProto, const acl_access &guard) {
+        Config.http_upgrade_request_protocols->forApplicable(offeredProto, [&ch, offeredStr, offeredStrLen, &upgradeOut] (const SBuf &cfgProto, const acl_access *guard) {
             debugs(11, 5, "checks " << cfgProto << " rule(s)");
             ch.changeAcl(guard);
             const auto answer = ch.fastCheck();
