@@ -219,6 +219,15 @@ void
 Client::completeForwarding()
 {
     debugs(11,5, "completing forwarding for "  << fwd);
+
+    if (startedAdaptation ? receivedWholeAdaptedReply : receivedWholeVirginReply) {
+        const auto bodyBytesToWrite = startedAdaptation ? adaptedBodySource->producedSize() : virginReplyBodyBytesReceived_;
+        if (!bodyBytesToWrite || (bodyBytesWritten_ && bodyBytesWritten_ == bodyBytesToWrite)) {
+            const char *reason = startedAdaptation ? "complete adapted reply" : "complete virgin reply";
+            fwd->markStoredReplyAsWhole(reason);
+        }
+    }
+
     assert(fwd != nullptr);
     doneWithFwd = "completeForwarding()";
     fwd->complete();
@@ -731,7 +740,6 @@ Client::handleAdaptedHeader(Http::Message *msg)
         assert(result);
     } else {
         // no body
-        fwd->markStoredReplyAsWhole("setFinalReply() stored header-only adapted reply");
         if (doneWithAdaptation()) // we may still be sending virgin response
             handleAdaptationCompleted();
     }
@@ -795,6 +803,10 @@ Client::handleMoreAdaptedBodyAvailable()
     const StoreIOBuffer ioBuf(&bpc.buf, currentOffset, contentSize);
     currentOffset += ioBuf.length;
     entry->write(ioBuf);
+    if (!bodyBytesWritten_)
+        bodyBytesWritten_ = ioBuf.length;
+    else
+        *bodyBytesWritten_ += ioBuf.length;
     bpc.buf.consume(contentSize);
     bpc.checkIn();
 }
@@ -819,13 +831,6 @@ void
 Client::endAdaptedBodyConsumption()
 {
     stopConsumingFrom(adaptedBodySource);
-
-    if (receivedWholeAdaptedReply) {
-        // We received the entire adapted reply per receivedWholeAdaptedReply.
-        // We are called when we consumed everything received (per our callers).
-        // We consume only what we store per handleMoreAdaptedBodyAvailable().
-        fwd->markStoredReplyAsWhole("received,consumed=>stored the entire RESPMOD reply");
-    }
 
     handleAdaptationCompleted();
 }
@@ -960,8 +965,7 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
     // TODO: Should we check receivedBodyTooLarge as well?
 
     if (!group) {
-        if (receivedWholeVirginReply)
-            fwd->markStoredReplyAsWhole("adaptation is not allowed");
+        debugs(11,3, "no adapation needed");
         setFinalReply(virginReply());
         processReplyBody();
         return;
@@ -996,8 +1000,7 @@ Client::adaptOrFinalizeReply()
     if (adaptationAccessCheckPending)
         return;
 #endif
-    if (receivedWholeVirginReply)
-        fwd->markStoredReplyAsWhole("no adaptation needed");
+
     setFinalReply(virginReply());
 }
 
@@ -1033,6 +1036,7 @@ void
 Client::addVirginReplyBody(const char *data, ssize_t len)
 {
     adjustBodyBytesRead(len);
+    virginReplyBodyBytesReceived_ += len;
 
 #if USE_ADAPTATION
     assert(!adaptationAccessCheckPending); // or would need to buffer while waiting
@@ -1052,6 +1056,10 @@ Client::storeReplyBody(const char *data, ssize_t len)
     entry->write (StoreIOBuffer(len, currentOffset, (char*)data));
 
     currentOffset += len;
+    if (!bodyBytesWritten_)
+        bodyBytesWritten_ = len;
+    else
+        *bodyBytesWritten_ += len;
 }
 
 size_t

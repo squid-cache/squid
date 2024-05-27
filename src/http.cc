@@ -1441,17 +1441,9 @@ HttpStateData::writeReplyBody()
     else if (clen < 0 && eof)
         parsedWhole = "http parsed body ending with expected/required EOF";
 
-    if (parsedWhole) {
+    if (parsedWhole)
         markParsedVirginReplyAsWhole(parsedWhole);
-#if USE_ADAPTATION
-        // TODO: Add state to assert that adaptOrFinalizeReply() has been called, making
-        // false adaptationAccessCheckPending value meaningful and removing "probably".
-        Assure(!adaptationAccessCheckPending); // startedAdaptation value is probably meaningful
-        if (!startedAdaptation)
-#endif
-            fwd->markStoredReplyAsWhole(parsedWhole);
-        // else endAdaptedBodyConsumption() is responsible for calling fwd->markStoredReplyAsWhole()
-    } else if (eof)
+    else if (eof)
         markPrematureReplyBodyEofFailure();
 }
 
@@ -1469,12 +1461,7 @@ HttpStateData::decodeAndWriteReplyBody()
         addVirginReplyBody(decodedData.content(), decodedData.contentSize());
         if (doneParsing) {
             lastChunk = 1;
-            const auto parsedWhole = "http parsed last-chunk";
-            markParsedVirginReplyAsWhole(parsedWhole);
-#if USE_ADAPTATION
-            if (!startedAdaptation)
-#endif
-                fwd->markStoredReplyAsWhole(parsedWhole);
+            markParsedVirginReplyAsWhole("http parsed last-chunk");
         } else if (eof) {
             markPrematureReplyBodyEofFailure();
         }
