@@ -119,7 +119,6 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
     *T = A;
 }
 
-
 const Acl::Tree &
 Acl::ToTree(const StoredTree * const config)
 {
