@@ -202,8 +202,7 @@ aclParseAclList(ConfigParser &, ACLList **configPtr, const char *label)
     assert(configPtr);
     auto &config = *configPtr;
     assert(!config);
-    config = new acl_access();
-    *config = tree;
+    config = new acl_access(tree);
 
     return aclCount;
 }
