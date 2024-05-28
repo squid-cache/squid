@@ -110,7 +110,7 @@ Note::printAsNoteDirective(StoreEntry * const entry, const char * const directiv
         os << directiveName << ' ' << key() << ' ' << ConfigParser::QuoteString(SBufToString(v->value()));
         if (v->aclList) {
             // TODO: Use Acl::dump() after fixing the XXX in dump_acl_list().
-            for (const auto &item: v->aclList->raw->treeDump("", &Acl::AllowOrDeny)) {
+            for (const auto &item: ToTree(v->aclList).treeDump("", &Acl::AllowOrDeny)) {
                 if (item.isEmpty()) // treeDump("") adds this prefix
                     continue;
                 if (item.cmp("\n") == 0) // treeDump() adds this suffix

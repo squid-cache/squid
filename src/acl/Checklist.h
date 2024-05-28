@@ -156,7 +156,7 @@ private:
 
     void matchAndFinish();
 
-    RefCount<const Acl::Tree> accessList;
+    Acl::StoredTree accessList;
 
 public:
 

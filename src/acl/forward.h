@@ -34,11 +34,14 @@ class Tree;
 /// prepares to parse ACLs configuration
 void Init(void);
 
+// Today, most tree-storing configuration-related classes store a raw pointer to
+// dynamically allocated StoredTree, making explicit aclDestroyAccessList() and
+// aclDestroyAclList() calls for cleanup. TODO: Automate destruction of
+// dynamically-allocated StoredTree objects, eliminating the need for those
+// explicit calls but without exposing storing classes to Acl::Tree details like
+// storing a RefCount<Acl::Tree> pointer would.
 /// reconfiguration-safe storage of ACL rules
-class StoredTree {
-public:
-    RefCount<Acl::Tree> raw;
-};
+using StoredTree = RefCount<Acl::Tree>;
 
 } // namespace Acl
 

@@ -119,6 +119,16 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
     *T = A;
 }
 
+
+const Acl::Tree &
+Acl::ToTree(const StoredTree * const config)
+{
+    Assure(config);
+    const auto &treePtr = *config;
+    Assure(treePtr);
+    return *treePtr;
+}
+
 void
 aclParseAccessLine(const char *directive, ConfigParser &, acl_access **config)
 {
@@ -142,8 +152,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **config)
         return;
     }
 
-    assert(config);
-    const int ruleId = (*config ? (*config)->raw->childrenCount() : 0) + 1;
+    const int ruleId = ((config && *config) ? ToTree(*config).childrenCount() : 0) + 1;
 
     Acl::AndNode *rule = new Acl::AndNode;
     rule->context(ToSBuf(directive, '#', ruleId), config_input_line);
@@ -159,14 +168,15 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **config)
 
     if (!*config)
         *config = new acl_access();
-    auto &treep = (*config)->raw;
+    auto treep = *config;
 
-    if (!treep) {
-        treep = new Acl::Tree();
-        treep->context(SBuf(directive), config_input_line);
+    assert(treep);
+    if (!*treep) {
+        *treep = new Acl::Tree;
+        (*treep)->context(SBuf(directive), config_input_line);
     }
 
-    treep->add(rule, action);
+    (*treep)->add(rule, action);
 }
 
 // aclParseAclList does not expect or set actions (cf. aclParseAccessLine)
@@ -193,7 +203,7 @@ aclParseAclList(ConfigParser &, ACLList **configPtr, const char *label)
     auto &config = *configPtr;
     assert(!config);
     config = new acl_access();
-    config->raw = tree;
+    *config = tree;
 
     return aclCount;
 }
@@ -216,7 +226,7 @@ aclDestroyAccessList(acl_access ** list)
 {
     assert(list);
     if (*list)
-        debugs(28, 3, "destroying: " << *list << ' ' << (*list)->raw->name);
+        debugs(28, 3, "destroying: " << *list << ' ' << ToTree(*list).name);
     delete *list;
     *list = nullptr;
 }

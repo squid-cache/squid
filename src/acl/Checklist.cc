@@ -186,7 +186,7 @@ ACLChecklist::~ACLChecklist()
 void
 ACLChecklist::changeAcl(const acl_access *replacement)
 {
-    accessList = replacement ? replacement->raw : nullptr;
+    accessList = replacement ? *replacement : nullptr;
 }
 
 /**
