@@ -1148,6 +1148,12 @@ DOC_START
 	to access some external data source.
 	Those which do are marked with the tag [slow], those which
 	don't are marked as [fast].
+	If Squid is reconfigured while evaluation of configuration directive ACLs
+	was suspended by a slow ACL, then, when resuming evaluation of ACLs for
+	that directive, Squid will continue to use directive ACLs as they were
+	configured before reconfiguration. After reconfiguration, Squid forgets an
+	"old" ACL when it completes the last evaluation of directive ACLs that
+	were using it. Squid uses reconfigured ACLs when starting new evaluations.
 	See https://wiki.squid-cache.org/SquidFaq/SquidAcl
 	for further information
 
