@@ -27,7 +27,7 @@ void aclDestroyAccessList(acl_access **list);
 void aclDestroyAclList(ACLList **);
 
 /// Parses a single line of a "action followed by acls" directive (e.g., http_access).
-void aclParseAccessLine(const char *directive, ConfigParser &parser, acl_access **);
+void aclParseAccessLine(const char *directive, ConfigParser &, acl_access **);
 
 /// Parses a single line of a "some context followed by acls" directive (e.g., note n v).
 /// The label parameter identifies the context (for debugging).
@@ -37,7 +37,7 @@ size_t aclParseAclList(ConfigParser &, ACLList **, const char *label);
 /// Template to convert various context labels to strings. \ingroup ACLAPI
 template <class Any>
 inline size_t
-aclParseAclList(ConfigParser &parser, ACLList **tree, const Any any)
+aclParseAclList(ConfigParser &parser, ACLList ** const tree, const Any any)
 {
     std::ostringstream buf;
     buf << any;

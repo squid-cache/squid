@@ -67,7 +67,7 @@ ACLChecklist::preCheck(const char *what)
 }
 
 bool
-ACLChecklist::matchChild(const Acl::InnerNode *current, Acl::Nodes::const_iterator pos)
+ACLChecklist::matchChild(const Acl::InnerNode * const current, const Acl::Nodes::const_iterator pos)
 {
     const auto &child = *pos;
     assert(current && child);
@@ -184,7 +184,7 @@ ACLChecklist::~ACLChecklist()
 }
 
 void
-ACLChecklist::changeAcl(const acl_access *replacement)
+ACLChecklist::changeAcl(const acl_access * const replacement)
 {
     accessList = replacement ? *replacement : nullptr;
 }

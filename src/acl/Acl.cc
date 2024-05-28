@@ -335,7 +335,7 @@ Acl::Node::ParseNamed(ConfigParser &parser, NamedRules &namedRules, const SBuf &
 }
 
 void
-Acl::DumpNamedRules(std::ostream &os, const char *directiveName, NamedRules *namedRules)
+Acl::DumpNamedRules(std::ostream &os, const char * const directiveName, NamedRules * const namedRules)
 {
     if (namedRules) {
         for (const auto &nameAndAcl: *namedRules) {
@@ -346,7 +346,7 @@ Acl::DumpNamedRules(std::ostream &os, const char *directiveName, NamedRules *nam
 }
 
 void
-Acl::FreeNamedRules(NamedRules **namedRules)
+Acl::FreeNamedRules(NamedRules ** const namedRules)
 {
     assert(namedRules);
     delete *namedRules;
