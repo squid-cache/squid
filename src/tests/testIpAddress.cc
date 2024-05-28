@@ -36,7 +36,6 @@ class TestIpAddress : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testInAddrConstructor);
     CPPUNIT_TEST(testInAddr6Constructor);
     CPPUNIT_TEST(testSockAddrConstructor);
-    CPPUNIT_TEST(testSockAddr6Constructor);
     CPPUNIT_TEST(testHostentConstructor);
     CPPUNIT_TEST(testStringConstructor);
     CPPUNIT_TEST(testCopyConstructor);
@@ -59,7 +58,6 @@ protected:
     void testInAddrConstructor();
     void testInAddr6Constructor();
     void testSockAddrConstructor();
-    void testSockAddr6Constructor();
     void testHostentConstructor();
     void testStringConstructor();
     void testCopyConstructor();
@@ -144,62 +142,64 @@ TestIpAddress::testInAddr6Constructor()
 void
 TestIpAddress::testSockAddrConstructor()
 {
-    struct sockaddr_in insock;
-    struct sockaddr_in outsock;
+    // sockaddr_storage containing sockaddr_in
+    {
+        struct sockaddr_storage ss = {};
+        auto *insock = reinterpret_cast<struct sockaddr_in *>(&ss);
 
-    memset(&insock,  0, sizeof(struct sockaddr_in));
-    memset(&outsock, 0, sizeof(struct sockaddr_in));
+        struct sockaddr_in outsock;
+        memset(&outsock, 0, sizeof(struct sockaddr_in));
 
-    insock.sin_family = AF_INET;
-    insock.sin_port = htons(80);
-    insock.sin_addr.s_addr = htonl(0xC0A8640C);
+        insock->sin_family = AF_INET;
+        insock->sin_port = htons(80);
+        insock->sin_addr.s_addr = htonl(0xC0A8640C);
 #if HAVE_SIN_LEN_IN_SAI
-    insock.sin_len = sizeof(struct sockaddr_in);
+        insock->sin_len = sizeof(struct sockaddr_in);
 #endif
 
-    Ip::Address anIPA(insock);
+        Ip::Address anIPA(ss);
 
-    /* test stored values */
-    CPPUNIT_ASSERT( !anIPA.isAnyAddr() );
-    CPPUNIT_ASSERT( !anIPA.isNoAddr() );
-    CPPUNIT_ASSERT( anIPA.isIPv4() );
-    CPPUNIT_ASSERT( !anIPA.isIPv6() );
-    CPPUNIT_ASSERT( anIPA.isSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 80, anIPA.port() );
-    anIPA.getSockAddr(outsock);
-    CPPUNIT_ASSERT( memcmp( &insock, &outsock, sizeof(struct sockaddr_in)) == 0 );
-}
+        /* test stored values */
+        CPPUNIT_ASSERT(!anIPA.isAnyAddr());
+        CPPUNIT_ASSERT(!anIPA.isNoAddr());
+        CPPUNIT_ASSERT(anIPA.isIPv4());
+        CPPUNIT_ASSERT(!anIPA.isIPv6());
+        CPPUNIT_ASSERT(anIPA.isSockAddr());
+        CPPUNIT_ASSERT_EQUAL(static_cast<unsigned short>(80), anIPA.port());
+        anIPA.getSockAddr(outsock);
+        CPPUNIT_ASSERT(memcmp(insock, &outsock, sizeof(struct sockaddr_in)) == 0);
+    }
 
-void
-TestIpAddress::testSockAddr6Constructor()
-{
-    struct sockaddr_in6 insock;
-    struct sockaddr_in6 outsock;
+    // sockaddr_storage containing sockaddr_in6
+    {
+        struct sockaddr_storage ss = {};
+        auto *insock = reinterpret_cast<struct sockaddr_in6 *>(&ss);
 
-    memset(&insock, 0, sizeof(struct sockaddr_in6));
-    memset(&outsock, 0, sizeof(struct sockaddr_in6));
+        struct sockaddr_in6 outsock;
+        memset(&outsock, 0, sizeof(struct sockaddr_in6));
 
-    insock.sin6_family = AF_INET6;
-    insock.sin6_port = htons(80);
-    insock.sin6_addr.s6_addr32[0] = htonl(0xFFFFFFFF);
-    insock.sin6_addr.s6_addr32[1] = htonl(0x00000000);
-    insock.sin6_addr.s6_addr32[2] = htonl(0x0000FFFF);
-    insock.sin6_addr.s6_addr32[3] = htonl(0xC0A8640C);
+        insock->sin6_family = AF_INET6;
+        insock->sin6_port = htons(80);
+        insock->sin6_addr.s6_addr32[0] = htonl(0xFFFFFFFF);
+        insock->sin6_addr.s6_addr32[1] = htonl(0x00000000);
+        insock->sin6_addr.s6_addr32[2] = htonl(0x0000FFFF);
+        insock->sin6_addr.s6_addr32[3] = htonl(0xC0A8640C);
 #if HAVE_SIN6_LEN_IN_SAI
-    insock.sin6_len = sizeof(struct sockaddr_in6);
+        insock->sin6_len = sizeof(struct sockaddr_in6);
 #endif
 
-    Ip::Address anIPA((const struct sockaddr_in6)insock);
+        Ip::Address anIP(ss);
 
-    /* test stored values */
-    CPPUNIT_ASSERT( !anIPA.isAnyAddr() );
-    CPPUNIT_ASSERT( !anIPA.isNoAddr() );
-    CPPUNIT_ASSERT( !anIPA.isIPv4() );
-    CPPUNIT_ASSERT( anIPA.isIPv6() );
-    CPPUNIT_ASSERT( anIPA.isSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 80, anIPA.port() );
-    anIPA.getSockAddr(outsock);
-    CPPUNIT_ASSERT( memcmp( &insock, &outsock, sizeof(struct sockaddr_in6)) == 0 );
+        /* test stored values */
+        CPPUNIT_ASSERT(!anIP.isAnyAddr());
+        CPPUNIT_ASSERT(!anIP.isNoAddr());
+        CPPUNIT_ASSERT(!anIP.isIPv4());
+        CPPUNIT_ASSERT(anIP.isIPv6());
+        CPPUNIT_ASSERT(anIP.isSockAddr());
+        CPPUNIT_ASSERT_EQUAL(static_cast<unsigned short>(80), anIP.port());
+        anIP.getSockAddr(outsock);
+        CPPUNIT_ASSERT(memcmp(insock, &outsock, sizeof(struct sockaddr_in6)) == 0);
+    }
 }
 
 void
@@ -532,20 +532,21 @@ TestIpAddress::testtoUrl_fromSockAddr()
     anIPA.toUrl(buf,MAX_IPSTRLEN);
     CPPUNIT_ASSERT( memcmp("192.168.100.12:80", buf, 17) == 0 );
 
-    /* test output when constructed from in6_addr with IPv6 */
-    struct sockaddr_in6 ip6val;
+    /* test output when constructed from sockaddr_storage with IPv6 */
+    struct sockaddr_storage ss;
+    auto *ip6val = reinterpret_cast<struct sockaddr_in6*>(&ss);
 
-    ip6val.sin6_addr.s6_addr32[0] = htonl(0xC0A8640C);
-    ip6val.sin6_addr.s6_addr32[1] = htonl(0xFFFFFFFF);
-    ip6val.sin6_addr.s6_addr32[2] = htonl(0xFFFFFFFF);
-    ip6val.sin6_addr.s6_addr32[3] = htonl(0xFFFFFFFF);
-    ip6val.sin6_port = htons(80);
-    ip6val.sin6_family = AF_INET6;
+    ip6val->sin6_addr.s6_addr32[0] = htonl(0xC0A8640C);
+    ip6val->sin6_addr.s6_addr32[1] = htonl(0xFFFFFFFF);
+    ip6val->sin6_addr.s6_addr32[2] = htonl(0xFFFFFFFF);
+    ip6val->sin6_addr.s6_addr32[3] = htonl(0xFFFFFFFF);
+    ip6val->sin6_port = htons(80);
+    ip6val->sin6_family = AF_INET6;
 #if HAVE_SIN6_LEN_IN_SAI
-    ip6val.sin6_len = sizeof(struct sockaddr_in6);
+    ip6val->sin6_len = sizeof(struct sockaddr_in6);
 #endif
 
-    Ip::Address bnIPA(ip6val);
+    Ip::Address bnIPA(ss);
 
     bnIPA.toUrl(buf,MAX_IPSTRLEN);
     CPPUNIT_ASSERT( memcmp("[c0a8:640c:ffff:ffff:ffff:ffff:ffff:ffff]:80", buf, 44) == 0 );
