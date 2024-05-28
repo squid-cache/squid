@@ -161,7 +161,6 @@ void Acl::Node::operator delete(void *)
 Acl::Node *
 Acl::Node::FindByName(const SBuf &name)
 {
-    // XXX: Do not assume the caller is using Config. We could be parsing a new one.
     if (!Config.namedAcls) {
         debugs(28, 8, "no named ACLs to find " << name);
         return nullptr;
