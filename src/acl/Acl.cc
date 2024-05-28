@@ -242,15 +242,18 @@ Acl::Node::ParseNamedRule(ConfigParser &parser, NamedRules *&namedRules)
         return;
     }
 
+    if (!namedRules)
+        namedRules = new NamedRules();
+
     SBuf aclname(t);
     CallParser(ParsingContext::Pointer::Make(aclname), [&] {
-        ParseNamed(parser, namedRules, aclname);
+        ParseNamed(parser, *namedRules, aclname);
     });
 }
 
 /// parses acl directive parts that follow aclname
 void
-Acl::Node::ParseNamed(ConfigParser &parser, NamedRules *&namedRules, const SBuf &aclname)
+Acl::Node::ParseNamed(ConfigParser &parser, NamedRules &namedRules, const SBuf &aclname)
 {
     /* snarf the ACL type */
     const char *theType;
@@ -327,9 +330,7 @@ Acl::Node::ParseNamed(ConfigParser &parser, NamedRules *&namedRules, const SBuf 
                A->cfgline);
     }
 
-    if (!namedRules)
-        namedRules = new NamedRules();
-    const auto insertion = namedRules->emplace(A->name, A);
+    const auto insertion = namedRules.emplace(A->name, A);
     Assure(insertion.second); // FindByName() above checked that A is a new ACL
 }
 

@@ -101,7 +101,7 @@ private:
     /// \see Acl::Node::options()
     virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
 
-    static void ParseNamed(ConfigParser &, NamedRules *&, const SBuf &name);
+    static void ParseNamed(ConfigParser &, NamedRules &, const SBuf &name);
 };
 
 } // namespace Acl
