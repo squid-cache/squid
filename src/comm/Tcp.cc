@@ -10,7 +10,6 @@
 
 #include "squid.h"
 #include "comm/Tcp.h"
-#include "debug/Stream.h"
 
 #if HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
@@ -22,30 +21,6 @@
 #include <sys/socket.h>
 #endif
 #include <type_traits>
-
-/// setsockopt(2) wrapper
-template <typename Option>
-static bool
-SetSocketOption(const int fd, const int level, const int optName, const Option &optValue)
-{
-    static_assert(std::is_trivially_copyable<Option>::value, "setsockopt() expects POD-like options");
-    static_assert(!std::is_same<Option, bool>::value, "setsockopt() uses int to represent boolean options");
-    if (setsockopt(fd, level, optName, &optValue, sizeof(optValue)) < 0) {
-        const auto xerrno = errno;
-        debugs(5, DBG_IMPORTANT, "ERROR: setsockopt(2) failure: " << xstrerr(xerrno));
-        // TODO: Generalize to throw on errors when some callers need that.
-        return false;
-    }
-    return true;
-}
-
-/// setsockopt(2) wrapper for setting typical on/off options
-static bool
-SetBooleanSocketOption(const int fd, const int level, const int optName, const bool enable)
-{
-    const int optValue = enable ? 1 :0;
-    return SetSocketOption(fd, level, optName, optValue);
-}
 
 void
 Comm::ApplyTcpKeepAlive(int fd, const TcpKeepAlive &cfg)
