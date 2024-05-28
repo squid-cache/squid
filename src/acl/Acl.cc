@@ -32,7 +32,7 @@
 
 namespace Acl {
 
-// XXX: Why not "using ..."?
+/// parsed "acl aclname ..." directives indexed by aclname
 class NamedRules: public std::unordered_map<SBuf, Acl::Node::Pointer,
     CaseInsensitiveSBufHash, CaseInsensitiveSBufEqual,
     PoolingAllocator< std::pair<const SBuf, Acl::Node::Pointer> > > {
