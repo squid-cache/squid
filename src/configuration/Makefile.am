@@ -7,17 +7,9 @@
 
 include $(top_srcdir)/src/Common.am
 
-noinst_LTLIBRARIES = libdns.la
+noinst_LTLIBRARIES = libconfiguration.la
 
-libdns_la_SOURCES = \
-	EtcHosts.cc \
-	EtcHosts.h \
-	LookupDetails.cc \
-	LookupDetails.h \
-	forward.h \
-	rfc1035.cc \
-	rfc1035.h \
-	rfc2671.cc \
-	rfc2671.h \
-	rfc3596.cc \
-	rfc3596.h
+libconfiguration_la_SOURCES = \
+	File.cc \
+	File.h \
+	forward.h

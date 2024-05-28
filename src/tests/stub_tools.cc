@@ -64,7 +64,6 @@ void setSystemLimits(void) STUB
 void squid_signal(int, SIGHDLR *, int) STUB
 void logsFlush(void) STUB
 void debugObj(int, int, const char *, void *, ObjPackMethod) STUB
-void parseEtcHosts(void) STUB
 int getMyPort(void) STUB_RETVAL(0)
 void setUmask(mode_t) STUB
 void strwordquote(MemBuf *, const char *) STUB

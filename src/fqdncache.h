@@ -29,7 +29,7 @@ void fqdncache_init(void);
 void fqdnStats(StoreEntry *);
 void fqdncache_restart(void);
 void fqdncache_purgelru(void *);
-void fqdncacheAddEntryFromHosts(char *addr, SBufList &hostnames);
+void fqdncacheAddEntryFromHosts(SBuf &addr, SBufList &hostnames);
 
 const char *fqdncache_gethostbyaddr(const Ip::Address &, int flags);
 void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *);

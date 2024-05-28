@@ -21,5 +21,5 @@ void ipcache_init(void) STUB
 void ipcacheMarkBadAddr(const char *, const Ip::Address &) STUB
 void ipcacheMarkGoodAddr(const char *, const Ip::Address &) STUB
 void ipcache_restart(void) STUB
-int ipcacheAddEntryFromHosts(const char *, const char *) STUB_RETVAL(-1)
+bool ipcacheAddEntryFromHosts(SBuf &, SBuf &) STUB_RETVAL(-1)
 

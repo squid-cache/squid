@@ -633,9 +633,9 @@ fqdncache_restart(void)
  \param hostnames   list of hostnames for the addr
  */
 void
-fqdncacheAddEntryFromHosts(char *addr, SBufList &hostnames)
+fqdncacheAddEntryFromHosts(SBuf &addr, SBufList &hostnames)
 {
-    fqdncache_entry *fce= fqdncache_get(addr);
+    auto *fce = fqdncache_get(addr.c_str());
     if (fce) {
         if (1 == fce->flags.fromhosts) {
             fqdncacheUnlockEntry(fce);
@@ -647,11 +647,11 @@ fqdncacheAddEntryFromHosts(char *addr, SBufList &hostnames)
         }
     }
 
-    fce = new fqdncache_entry(addr);
+    fce = new fqdncache_entry(addr.c_str());
 
     int j = 0;
     for (auto &h : hostnames) {
-        fce->names[j] = xstrdup(h.c_str());
+        fce->names[j] = SBufToCstring(h);
         Tolower(fce->names[j]);
         ++j;
 

@@ -10167,9 +10167,9 @@ DOC_START
 DOC_END
 
 NAME: hosts_file
-TYPE: string
+TYPE: SBuf
 DEFAULT: @DEFAULT_HOSTS@
-LOC: Config.etcHostsPath
+LOC: Dns::EtcHosts::Path
 DOC_START
 	Location of the host-local IP name-address associations
 	database. Most Operating Systems have such a file on different

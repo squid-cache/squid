@@ -224,7 +224,6 @@ public:
     char *pidFilename;
     char *netdbFilename;
     char *mimeTablePathname;
-    char *etcHostsPath;
     char *visibleHostname;
     char *uniqueHostname;
     SBufList hostnameAliases;
