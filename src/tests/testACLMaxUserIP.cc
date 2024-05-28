@@ -89,8 +89,7 @@ TestACLMaxUserIP::testParseLine()
         /* the acl must be vaid */
         CPPUNIT_ASSERT_EQUAL(true, maxUserIpACL->valid());
     }
-    Acl::FreeNamedRules(Config.namedAcls);
-    Config.namedAcls = nullptr;
+    Acl::FreeNamedRules(&Config.namedAcls);
     xfree(line);
 }
 

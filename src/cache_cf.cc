@@ -1509,9 +1509,7 @@ parse_acl(Acl::NamedRules **config)
 static void
 free_acl(Acl::NamedRules **config)
 {
-    assert(config);
-    Acl::FreeNamedRules(*config);
-    *config = nullptr;
+    Acl::FreeNamedRules(config);
 }
 
 void

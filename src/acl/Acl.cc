@@ -346,9 +346,11 @@ Acl::DumpNamedRules(std::ostream &os, const char *directiveName, NamedRules *nam
 }
 
 void
-Acl::FreeNamedRules(NamedRules *namedRules)
+Acl::FreeNamedRules(NamedRules **namedRules)
 {
-    delete namedRules;
+    assert(namedRules);
+    delete *namedRules;
+    *namedRules = nullptr;
 }
 
 bool
