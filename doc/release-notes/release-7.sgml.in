@@ -33,7 +33,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<item>Cache Manager changes
 	<item>Removed purge tool
 	<item>Remove deprecated languages
-	<item>Remove Ident support
+	<item>Remove Ident protocol support
 </itemize>
 
 <p>Most user-facing changes are reflected in squid.conf (see further below).
@@ -104,10 +104,23 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 <p>See <url url="https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes"> for
    the full ISO-639 list. HTTP uses the 2-letter (set 1) codes.
 
-<sect1>Removed Ident support
-<p>The Ident protocol (RFC 931 obsoleted by RFC 1413) is considered insecure. It is
-   strongly recommended to use different authorization mechanisms. Authorization using Ident
-   can still be accomplished by external_acl_type helper.
+<sect1>Removed Ident protocol support
+
+<p>Ident protocol (RFC 931 obsoleted by RFC 1413) has been considered
+seriously insecure and broken since at least 2009 when SANS issued an update
+recommending its removal from all networks. Squid Ident implementation had its
+own set of problems (that could not be addressed without significant code
+refactoring).
+
+<p>Configurations using ident/ident_regex ACLs, %ui logformat codes, %IDENT
+external_acl_type format code, or ident_lookup_access/ident_timeout directives
+are now rejected, leading to fatal startup failures.
+
+<p>To avoid inconveniencing admins that do <em>not</em> use Ident features,
+access logs with "common" and "combined" logformats now always receive a dash
+in the position of what used to be a %ui record field.
+
+<p>An external ACL helper can be written to perform Ident transactions.
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
@@ -156,8 +169,10 @@ This section gives an account of those changes in three categories:
 	<p>Removed the <em>non_peers</em> action. See the Cache Manager
 	<ref id="mgr" name="section"> for details.
 
-	<tag>logformat</tag>
-	<p><em>common</em> and <em>combined</em> default formats that had <em>%ui</em> will output dash ("-") instead.
+	<tag>access_log</tag>
+	<p>Built-in <em>common</em> and <em>combined</em> logformats now always
+	receive a dash character ("-") in the position of what used to be a
+	<em>%ui</em> record field.
 
 </descrip>
 
@@ -165,8 +180,8 @@ This section gives an account of those changes in three categories:
 <p>
 <descrip>
 	<tag>acl</tag>
-	<p><em>ident</em>, caused by Ident protocol removal.
-	<p><em>ident_regex</em>, caused by Ident protocol removal.
+	<p><em>ident</em> ACL type dropped during Ident protocol support removal.
+	<p><em>ident_regex</em> ACL type dropped during Ident protocol support removal.
 
 	<tag>mcast_miss_addr</tag>
 	<p>The corresponding code has not built for many years, indicating that the
@@ -185,13 +200,16 @@ This section gives an account of those changes in three categories:
 	feature is unused.
 
 	<tag>ident_lookup_access</tag>
-	<p>Caused by Ident protocol removal.
+	<p>The directive was dropped during Ident protocol support removal.
+
 	<tag>ident_timeout</tag>
-	<p>Caused by Ident protocol removal.
+	<p>The directive was dropped during Ident protocol support removal.
 
 	<tag>logformat</tag>
-	<p><em>%ui</em> format code, caused by Ident protocol removal.
-	<p><em>%IDENT</em> external_acl_type format code, caused by Ident protocol removal.
+	<p><em>%ui</em> format code was dropped during Ident protocol support removal.
+
+	<tag>external_acl_type</tag>
+	<p><em>%IDENT</em> format code was dropped during Ident protocol support removal.
 
 </descrip>
 
@@ -254,7 +272,7 @@ This section gives an account of those changes in three categories:
 	   years, indicating that the feature is unused.
 
 	<tag>--disable-ident-lookups</tag>
-	<p>Caused by Ident protocol removal.
+	<p>The option was dropped during Ident protocol support removal.
 
 </descrip>
 
