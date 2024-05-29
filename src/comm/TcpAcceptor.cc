@@ -345,16 +345,13 @@ bool
 Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
 {
     ++statCounter.syscalls.sock.accepts;
-    struct addrinfo *gai = nullptr;
-    Ip::Address::InitAddr(gai);
 
     errcode = 0; // reset local errno copy.
-    const auto rawSock = accept(conn->fd, gai->ai_addr, &gai->ai_addrlen);
+    struct sockaddr_storage remoteAddr = {};
+    socklen_t remoteAddrSz = sizeof(remoteAddr);
+    const auto rawSock = accept(conn->fd, reinterpret_cast<struct sockaddr *>(&remoteAddr), &remoteAddrSz);
     if (rawSock < 0) {
         errcode = errno; // store last accept errno locally.
-
-        Ip::Address::FreeAddr(gai);
-
         if (ignoreErrno(errcode) || errcode == ECONNABORTED) {
             debugs(50, 5, status() << ": " << xstrerr(errcode));
             return false;
@@ -371,23 +368,21 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     const auto sock = rawSock;
     fd_open(sock, FD_SOCKET, "HTTP Request");
     details->fd = sock;
+    details->remote = remoteAddr;
     details->enterOrphanage();
 
-    details->remote = *gai;
-
     // lookup the local-end details of this new connection
-    Ip::Address::InitAddr(gai);
-    details->local.setEmpty();
-    if (getsockname(sock, gai->ai_addr, &gai->ai_addrlen) != 0) {
+    struct sockaddr_storage localAddr = {};
+    socklen_t localAddrSz = sizeof(localAddr);
+    if (getsockname(sock, reinterpret_cast<struct sockaddr *>(&localAddr), &localAddrSz) != 0) {
         int xerrno = errno;
-        Ip::Address::FreeAddr(gai);
+        details->local.setEmpty();
         debugs(50, DBG_IMPORTANT, "ERROR: Closing accepted TCP connection after failing to obtain its local IP address" <<
                Debug::Extra << "accepted connection: " << details <<
                Debug::Extra << "getsockname(2) error: " << xstrerr(xerrno));
         return false;
     }
-    details->local = *gai;
-    Ip::Address::FreeAddr(gai);
+    details->local = localAddr;
 
     if (conn->flags & COMM_TRANSPARENT) { // the real client/dest IP address must be already available via getsockname()
         details->flags |= COMM_TRANSPARENT;
