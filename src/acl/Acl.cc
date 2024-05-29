@@ -473,7 +473,7 @@ Acl::Node::~Node()
 void
 Acl::Node::Initialize()
 {
-    debugs(28, 3, Config.namedAcls ? Config.namedAcls->size() : 0);
+    debugs(28, 3, (Config.namedAcls ? Config.namedAcls->size() : 0));
     if (Config.namedAcls) {
         for (const auto &nameAndAcl: *Config.namedAcls)
             nameAndAcl.second->prepareForUse();
