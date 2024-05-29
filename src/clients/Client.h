@@ -20,8 +20,6 @@
 #include "adaptation/Initiator.h"
 #endif
 
-#include <optional>
-
 /**
  * Client is a common base for classes such as HttpStateData and FtpStateData.
  * All such classes must be able to consume request bodies from a BodyPipe
@@ -197,10 +195,6 @@ protected:
     bool receivedWholeVirginReply = false; ///< markParsedVirginReplyAsWhole() called
 
     bool receivedWholeRequestBody = false; ///< handleRequestBodyProductionEnded called
-
-    uint64_t virginReplyBodyBytesReceived_ = 0; ///< the number of body bytes received from the client
-
-    std::optional<uint64_t> bodyBytesWritten_; ///< the number of body bytes written to the store
 
     /// whether we are waiting for MemObject::delayRead() to call us back
     bool waitingForDelayAwareReadChance = false;

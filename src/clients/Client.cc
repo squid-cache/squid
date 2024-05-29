@@ -220,13 +220,14 @@ Client::completeForwarding()
 {
     debugs(11,5, "completing forwarding for "  << fwd);
 
-    if (startedAdaptation ? receivedWholeAdaptedReply : receivedWholeVirginReply) {
-        const auto bodyBytesToWrite = startedAdaptation ? adaptedBodySource->producedSize() : virginReplyBodyBytesReceived_;
-        if (!bodyBytesToWrite || (bodyBytesWritten_ && bodyBytesWritten_ == bodyBytesToWrite)) {
-            const char *reason = startedAdaptation ? "complete adapted reply" : "complete virgin reply";
-            fwd->markStoredReplyAsWhole(reason);
-        }
-    }
+    const char *receivedWholeReply = receivedWholeVirginReply ? "complete virgin reply" : nullptr;
+#if USE_ADAPTATION
+    if (startedAdaptation)
+        receivedWholeReply = receivedWholeAdaptedReply ? "complete adapted reply" : nullptr;
+#endif
+
+    if (receivedWholeReply)
+        fwd->markStoredReplyAsWhole(receivedWholeReply);
 
     assert(fwd != nullptr);
     doneWithFwd = "completeForwarding()";
@@ -803,10 +804,6 @@ Client::handleMoreAdaptedBodyAvailable()
     const StoreIOBuffer ioBuf(&bpc.buf, currentOffset, contentSize);
     currentOffset += ioBuf.length;
     entry->write(ioBuf);
-    if (!bodyBytesWritten_)
-        bodyBytesWritten_ = ioBuf.length;
-    else
-        *bodyBytesWritten_ += ioBuf.length;
     bpc.buf.consume(contentSize);
     bpc.checkIn();
 }
@@ -831,7 +828,6 @@ void
 Client::endAdaptedBodyConsumption()
 {
     stopConsumingFrom(adaptedBodySource);
-
     handleAdaptationCompleted();
 }
 
@@ -1036,7 +1032,6 @@ void
 Client::addVirginReplyBody(const char *data, ssize_t len)
 {
     adjustBodyBytesRead(len);
-    virginReplyBodyBytesReceived_ += len;
 
 #if USE_ADAPTATION
     assert(!adaptationAccessCheckPending); // or would need to buffer while waiting
@@ -1056,10 +1051,6 @@ Client::storeReplyBody(const char *data, ssize_t len)
     entry->write (StoreIOBuffer(len, currentOffset, (char*)data));
 
     currentOffset += len;
-    if (!bodyBytesWritten_)
-        bodyBytesWritten_ = len;
-    else
-        *bodyBytesWritten_ += len;
 }
 
 size_t
