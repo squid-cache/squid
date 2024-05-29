@@ -181,7 +181,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **config)
 
 // aclParseAclList does not expect or set actions (cf. aclParseAccessLine)
 size_t
-aclParseAclList(ConfigParser &, ACLList **configPtr, const char *label)
+aclParseAclList(ConfigParser &, ACLList **config, const char *label)
 {
     // accommodate callers unable to convert their ACL list context to string
     if (!label)
@@ -199,10 +199,9 @@ aclParseAclList(ConfigParser &, ACLList **configPtr, const char *label)
     tree->add(rule);
     tree->context(ToSBuf(cfg_directive, ' ', label), config_input_line);
 
-    assert(configPtr);
-    auto &config = *configPtr;
-    assert(!config);
-    config = new acl_access(tree);
+    assert(config);
+    assert(!*config);
+    *config = new acl_access(tree);
 
     return aclCount;
 }
