@@ -44,7 +44,7 @@ public:
     /** @name Constructors */
     /*@{*/
     Address() { setEmpty(); }
-    Address(const struct sockaddr_storage &);
+    explicit Address(const struct sockaddr_storage &);
     Address(const struct in_addr &);
     Address(const struct sockaddr_in &);
     Address(const struct in6_addr &);
