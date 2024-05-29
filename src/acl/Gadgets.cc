@@ -165,9 +165,10 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **config)
 
     /* Append to the end of this list */
 
+    assert(config);
     if (!*config)
         *config = new acl_access();
-    auto treep = *config;
+    const auto treep = *config;
 
     assert(treep);
     if (!*treep) {
