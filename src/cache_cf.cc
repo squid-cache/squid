@@ -2023,16 +2023,15 @@ dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 #endif /* USE_AUTH */
 
 static void
-ParseAclWithAction(acl_access **accessPtr, const Acl::Answer &action, const char *desc, Acl::Node *acl)
+ParseAclWithAction(acl_access **config, const Acl::Answer &action, const char *desc, Acl::Node *acl)
 {
-    assert(accessPtr);
-    auto &storedValue = *accessPtr;
-    if (!storedValue) {
+    assert(config);
+    auto &access = *config;
+    if (!access) {
         const auto tree = new Acl::Tree;
         tree->context(ToSBuf('(', desc, " rules)"), config_input_line);
-        storedValue = new acl_access(tree);
+        access = new acl_access(tree);
     }
-    auto &access = *accessPtr;
     assert(access);
 
     Acl::AndNode *rule = new Acl::AndNode;
