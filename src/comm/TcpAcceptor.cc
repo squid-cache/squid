@@ -368,9 +368,10 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     const auto sock = rawSock;
     fd_open(sock, FD_SOCKET, "HTTP Request");
     details->fd = sock;
-    details->remote = remoteAddr;
     details->enterOrphanage();
-
+    
+    details->remote = remoteAddr;
+    
     // lookup the local-end details of this new connection
     struct sockaddr_storage localAddr = {};
     socklen_t localAddrSz = sizeof(localAddr);
