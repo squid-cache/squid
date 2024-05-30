@@ -347,9 +347,9 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     ++statCounter.syscalls.sock.accepts;
 
     errcode = 0; // reset local errno copy.
-    struct sockaddr_storage remoteAddr = {};
-    socklen_t remoteAddrSz = sizeof(remoteAddr);
-    const auto rawSock = accept(conn->fd, reinterpret_cast<struct sockaddr *>(&remoteAddr), &remoteAddrSz);
+    struct sockaddr_storage remoteAddress = {};
+    socklen_t remoteAddressSize = sizeof(remoteAddress);
+    const auto rawSock = accept(conn->fd, reinterpret_cast<struct sockaddr *>(&remoteAddress), &remoteAddressSize);
     if (rawSock < 0) {
         errcode = errno; // store last accept errno locally.
         if (ignoreErrno(errcode) || errcode == ECONNABORTED) {
@@ -369,21 +369,22 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     fd_open(sock, FD_SOCKET, "HTTP Request");
     details->fd = sock;
     details->enterOrphanage();
-    
-    details->remote = remoteAddr;
-    
+
+    Assure(remoteAddressSize <= socklen_t(sizeof(remoteAddress)));
+    details->remote = remoteAddress;
+
     // lookup the local-end details of this new connection
-    struct sockaddr_storage localAddr = {};
-    socklen_t localAddrSz = sizeof(localAddr);
-    if (getsockname(sock, reinterpret_cast<struct sockaddr *>(&localAddr), &localAddrSz) != 0) {
+    struct sockaddr_storage localAddress = {};
+    socklen_t localAddressSize = sizeof(localAddress);
+    if (getsockname(sock, reinterpret_cast<struct sockaddr *>(&localAddress), &localAddressSize) != 0) {
         int xerrno = errno;
-        details->local.setEmpty();
         debugs(50, DBG_IMPORTANT, "ERROR: Closing accepted TCP connection after failing to obtain its local IP address" <<
                Debug::Extra << "accepted connection: " << details <<
                Debug::Extra << "getsockname(2) error: " << xstrerr(xerrno));
         return false;
     }
-    details->local = localAddr;
+    Assure(localAddressSize <= socklen_t(sizeof(localAddress)));
+    details->local = localAddress;
 
     if (conn->flags & COMM_TRANSPARENT) { // the real client/dest IP address must be already available via getsockname()
         details->flags |= COMM_TRANSPARENT;
