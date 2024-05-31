@@ -25,9 +25,9 @@ public:
 
     void stop()
     {
-        if (!paused) {
+        if (!stopped) {
             timer().pause();
-            paused = true;
+            stopped = true;
         }
     }
 
@@ -42,10 +42,11 @@ private:
     /// pointer to Owner data member.
     Location location;
 
-    // Do not be tempted to rely on timer.ran(): This class eliminates excessive
-    // calls within a single task (e.g., an AsyncJob) while the timer (and its
-    // ran() state) may be shared/affected by multiple concurrent tasks.
-    bool paused = false;
+    // We cannot rely on timer().ran(): This class eliminates excessive calls
+    // within a single task (e.g., an AsyncJob) while the timer (and its ran()
+    // state) may be shared/affected by multiple concurrent tasks.
+    /// Whether the task is done participating in the managed activity.
+    bool stopped = false;
 };
 
 #endif /* SQUID_SRC_BASE_ACTIVITYTIMER_H */
