@@ -11,10 +11,10 @@
 
 #include "base/Stopwatch.h"
 
-/// Eliminates excessive Stopwatch pause() calls in a task with
-/// multiple code locations that pause a stopwatch. Ideally, there
-/// would be just one such location (e.g., a destructor),
-/// but current code idiosyncrasies necessitate this state.
+/// Eliminates excessive Stopwatch pause() calls in a task with multiple code
+/// locations that pause a stopwatch. Ideally, there would be just one such
+/// location (e.g., a task class destructor), but current code idiosyncrasies
+/// necessitate this state.
 class ActivityTimer
 {
 public:
@@ -33,7 +33,7 @@ public:
 private:
     Stopwatch &timer;
 
-    // Do not be tempted to rely on timer.ran(): We are eliminating excessive
+    // Do not be tempted to rely on timer.ran(): This class eliminates excessive
     // calls within a single task (e.g., an AsyncJob) while the timer (and its
     // ran() state) may be shared/affected by multiple concurrent tasks.
     bool paused = false;
