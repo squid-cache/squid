@@ -120,7 +120,7 @@ are now rejected, leading to fatal startup failures.
 access logs with "common" and "combined" logformats now always receive a dash
 in the position of what used to be a %ui record field.
 
-<p>An external ACL helper can be written to perform Ident transactions.
+<p>If necessary, an external ACL helper can be written to perform Ident transactions and deliver the user identity to Squid through the **user=** annotation.
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
@@ -161,6 +161,8 @@ This section gives an account of those changes in three categories:
 	   necessary.
 	<p>Changed <em>http_status</em> to detect and handle overlapping
 	   status and status-range values. Merging where necessary.
+	<p>Removed <em>ident</em> with Ident protocol support.
+	<p>Removed <em>ident_regex</em> with Ident protocol support.
 
 	<tag>buffered_logs</tag>
 	<p>Honor the <em>off</em> setting in 'udp' access_log module.
@@ -174,15 +176,17 @@ This section gives an account of those changes in three categories:
 	receive a dash character ("-") in the position of what used to be a
 	<em>%ui</em> record field.
 
+	<tag>logformat</tag>
+	<p>Removed <em>%ui</em> format code with Ident protocol support.
+
+	<tag>external_acl_type</tag>
+	<p>Removed <em>%IDENT</em> format code with Ident protocol support.
+
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
 <p>
 <descrip>
-	<tag>acl</tag>
-	<p><em>ident</em> ACL type dropped during Ident protocol support removal.
-	<p><em>ident_regex</em> ACL type dropped during Ident protocol support removal.
-
 	<tag>mcast_miss_addr</tag>
 	<p>The corresponding code has not built for many years, indicating that the
 	feature is unused.
@@ -200,16 +204,10 @@ This section gives an account of those changes in three categories:
 	feature is unused.
 
 	<tag>ident_lookup_access</tag>
-	<p>The directive was dropped during Ident protocol support removal.
+	<p>Ident protocol is no longer supported natively.
 
 	<tag>ident_timeout</tag>
-	<p>The directive was dropped during Ident protocol support removal.
-
-	<tag>logformat</tag>
-	<p><em>%ui</em> format code was dropped during Ident protocol support removal.
-
-	<tag>external_acl_type</tag>
-	<p><em>%IDENT</em> format code was dropped during Ident protocol support removal.
+	<p>Ident protocol is no longer supported natively.
 
 </descrip>
 
