@@ -10,7 +10,6 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "base/ActivityTimer.h"
 #include "base/AsyncCallbacks.h"
 #include "base/CbcPointer.h"
 #include "base/JobWait.h"
@@ -213,7 +212,7 @@ public:
     JobWait<Http::Tunneler> peerWait;
 
     /// Measures time spent on selecting and communicating with peers.
-    ActivityTimer<HttpRequest::Pointer, Stopwatch HierarchyLogEntry::*> peeringTimer;
+    PeeringActivityTimer peeringTimer;
 
     void copyRead(Connection &from, IOCB *completion);
 
@@ -407,7 +406,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     n_tries(0),
     banRetries(nullptr),
     codeContext(CodeContext::Current()),
-    peeringTimer(&guaranteedRequest(clientRequest), &HierarchyLogEntry::totalPeeringTime)
+    peeringTimer(&guaranteedRequest(clientRequest))
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
     client.readPendingFunc = &tunnelDelayedClientRead;

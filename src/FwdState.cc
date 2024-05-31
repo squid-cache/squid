@@ -129,7 +129,7 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     destinations(new ResolvedPeers()),
     pconnRace(raceImpossible),
     storedWholeReply_(nullptr),
-    peeringTimer(r, &HierarchyLogEntry::totalPeeringTime)
+    peeringTimer(r)
 {
     debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
     HTTPMSGLOCK(request);
@@ -1565,10 +1565,25 @@ ResetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
         Ip::Qos::setSockNfmark(&conn, conn.nfmark);
 }
 
-template <>
+/* PeeringActivityTimer */
+
+// The simple methods below are not inlined to avoid exposing some of the
+// current FwdState.h users to a full HttpRequest definition they do not need.
+
+PeeringActivityTimer::PeeringActivityTimer(const HttpRequestPointer &r): request(r)
+{
+    Assure(request);
+    timer().resume();
+}
+
+PeeringActivityTimer::~PeeringActivityTimer()
+{
+    stop();
+}
+
 Stopwatch &
 PeeringActivityTimer::timer()
 {
-    return owner->hier.*location;
+    return request->hier.totalPeeringTime;
 }
 

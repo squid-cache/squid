@@ -9,7 +9,6 @@
 #ifndef SQUID_SRC_FWDSTATE_H
 #define SQUID_SRC_FWDSTATE_H
 
-#include "base/ActivityTimer.h"
 #include "base/forward.h"
 #include "base/JobWait.h"
 #include "base/RefCount.h"
@@ -50,11 +49,39 @@ void ResetMarkingsToServer(HttpRequest *, Comm::Connection &);
 
 class HelperReply;
 
-using PeeringActivityTimer = ActivityTimer<HttpRequestPointer, Stopwatch HierarchyLogEntry::*>;
+/// Eliminates excessive Stopwatch pause() calls in a task with multiple code
+/// locations that pause a stopwatch. Ideally, there would be just one such
+/// location (e.g., a task class destructor), but current code idiosyncrasies
+/// necessitate this state. For simplicity sake, this class currently manages a
+/// Stopwatch at a hard-coded location: HttpRequest::hier.totalPeeringTime.
+class PeeringActivityTimer
+{
+public:
+    PeeringActivityTimer(const HttpRequestPointer &); ///< resumes timer
+    ~PeeringActivityTimer(); ///< \copydoc stop()
 
-/// HttpRequest::hier is not referenced-counted. HttpRequest is. We specialize
-/// ActivityTimer to extract HierarchyLogEntry timers from HttpRequest.
-template <> Stopwatch &PeeringActivityTimer::timer();
+    /// pauses timer if stop() has not been called
+    void stop()
+    {
+        if (!stopped) {
+            timer().pause();
+            stopped = true;
+        }
+    }
+
+private:
+    /// managed Stopwatch object within HierarchyLogEntry
+    Stopwatch &timer();
+
+    /// the owner of managed HierarchyLogEntry
+    HttpRequestPointer request;
+
+    // We cannot rely on timer().ran(): This class eliminates excessive calls
+    // within a single task (e.g., an AsyncJob) while the timer (and its ran()
+    // state) may be shared/affected by multiple concurrent tasks.
+    /// Whether the task is done participating in the managed activity.
+    bool stopped = false;
+};
 
 class FwdState: public RefCountable, public PeerSelectionInitiator
 {

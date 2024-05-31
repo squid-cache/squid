@@ -24,7 +24,6 @@ template<class Cbc> class CbcPointer;
 template<class RefCountableKid> class RefCount;
 template<class Job> class JobWait;
 template<class Answer> class AsyncCallback;
-template<class Owner, class Location> class ActivityTimer;
 
 typedef CbcPointer<AsyncJob> AsyncJobPointer;
 typedef RefCount<CodeContext> CodeContextPointer;
