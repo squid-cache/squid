@@ -114,7 +114,7 @@ public:
     err_type requestErrorType;
 
 private:
-    ConnStateData * conn_; ///< client-to-Squid connection manager (if any)
+    ConnStateData *conn_; ///< hack: client-to-Squid connection manager (if any)
     int fd_;                        /**< may be available when conn_ is not */
 
     HttpReply::Pointer reply_; ///< response added by updateReply() or nil
