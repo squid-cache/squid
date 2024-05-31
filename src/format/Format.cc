@@ -635,10 +635,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME: {
-            // al->hier.totalResponseTime() is unassigned before prepareLogWithRequestDetails()
+            // al->hier.totalPeeringTime is unassigned before prepareLogWithRequestDetails()
             // TODO: keep the total response time in one place.
-            const auto &timer = (!al->hier.totalResponseTime().ran() && al->request) ?
-                                al->request->hier.totalResponseTime() : al->hier.totalResponseTime();
+            const auto &timer = (!al->hier.totalPeeringTime.ran() && al->request) ?
+                                al->request->hier.totalPeeringTime : al->hier.totalPeeringTime;
             if (timer.ran()) {
                 using namespace std::chrono_literals;
                 const auto duration = timer.total();

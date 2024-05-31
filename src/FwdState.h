@@ -50,6 +50,12 @@ void ResetMarkingsToServer(HttpRequest *, Comm::Connection &);
 
 class HelperReply;
 
+using PeeringActivityTimer = ActivityTimer<HttpRequestPointer, Stopwatch HierarchyLogEntry::*>;
+
+/// HttpRequest::hier is not referenced-counted. HttpRequest is. We specialize
+/// ActivityTimer to extract HierarchyLogEntry timers from HttpRequest.
+template <> Stopwatch &PeeringActivityTimer::timer();
+
 class FwdState: public RefCountable, public PeerSelectionInitiator
 {
     CBDATA_CHILD(FwdState);
@@ -215,7 +221,7 @@ private:
     const char *storedWholeReply_;
 
     /// Measures time spent on selecting and communicating with peers.
-    ActivityTimer peeringTimer;
+    PeeringActivityTimer peeringTimer;
 };
 
 class acl_tos;

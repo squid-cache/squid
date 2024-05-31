@@ -15,23 +15,32 @@
 /// locations that pause a stopwatch. Ideally, there would be just one such
 /// location (e.g., a task class destructor), but current code idiosyncrasies
 /// necessitate this state.
+template <class Owner, class Location>
 class ActivityTimer
 {
 public:
-    ActivityTimer(Stopwatch &w): timer(w) { timer.resume(); }
+    ActivityTimer(const Owner &o, const Location &l): owner(o), location(l) { timer().resume(); }
 
     ~ActivityTimer() { stop(); }
 
     void stop()
     {
         if (!paused) {
-            timer.pause();
+            timer().pause();
             paused = true;
         }
     }
 
 private:
-    Stopwatch &timer;
+    /// extracts Stopwatch from the configured location
+    Stopwatch &timer() { return owner->*location; }
+
+    /// Stopwatch owner; this is usually a strong pointer
+    Owner owner;
+
+    /// The address of a managed Stopwatch within its Owner. This is usually a
+    /// pointer to Owner data member.
+    Location location;
 
     // Do not be tempted to rely on timer.ran(): This class eliminates excessive
     // calls within a single task (e.g., an AsyncJob) while the timer (and its

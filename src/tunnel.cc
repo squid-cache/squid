@@ -213,7 +213,7 @@ public:
     JobWait<Http::Tunneler> peerWait;
 
     /// Measures time spent on selecting and communicating with peers.
-    ActivityTimer peeringTimer;
+    ActivityTimer<HttpRequest::Pointer, Stopwatch HierarchyLogEntry::*> peeringTimer;
 
     void copyRead(Connection &from, IOCB *completion);
 
@@ -407,12 +407,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     n_tries(0),
     banRetries(nullptr),
     codeContext(CodeContext::Current()),
-    // XXX: clientRequest existence is guaranteed here and now, but the object
-    // is destroyed before TunnelStateData in some cases. Storing a reference to
-    // something clientRequest points to is very dangerous. It "works" today
-    // because we also store a refcounted pointer to clientRequest->request, but
-    // nothing guarantees preservation of that hidden dependency!
-    peeringTimer(guaranteedRequest(clientRequest).hier.totalResponseTime())
+    peeringTimer(&guaranteedRequest(clientRequest), &HierarchyLogEntry::totalPeeringTime)
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
     client.readPendingFunc = &tunnelDelayedClientRead;

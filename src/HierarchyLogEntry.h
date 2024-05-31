@@ -42,9 +42,6 @@ public:
     /// \returns whether the estimate (stored in `responseTime`) is available.
     bool peerResponseTime(struct timeval &responseTime);
 
-    /// Estimates the total time spent communicating with peers.
-    Stopwatch &totalResponseTime() { return peeringTime_; }
-
 public:
     hier_code code;
     char host[SQUIDHOSTNAMELEN];
@@ -62,12 +59,14 @@ public:
     Comm::ConnectionPointer tcpServer; ///< TCP/IP level details of the last peer/server connection
     int64_t bodyBytesRead;  ///< number of body bytes received from the next hop or -1
 
+    /// cumulative time spent (so far) communicating with all peers (see %<tt)
+    Stopwatch totalPeeringTime;
+
 private:
     void clearPeerNotes();
 
     struct timeval peer_last_read_; ///< time of the last read from the last peer
     struct timeval peer_last_write_; ///< time of the last write to the last peer
-    Stopwatch peeringTime_; ///< cumulative for all peers and any revalidations (see %<tt)
 };
 
 #endif /* SQUID_SRC_HIERARCHYLOGENTRY_H */

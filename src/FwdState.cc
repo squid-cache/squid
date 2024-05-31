@@ -129,7 +129,7 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     destinations(new ResolvedPeers()),
     pconnRace(raceImpossible),
     storedWholeReply_(nullptr),
-    peeringTimer((r->hier.totalResponseTime()))
+    peeringTimer(r, &HierarchyLogEntry::totalPeeringTime)
 {
     debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
     HTTPMSGLOCK(request);
@@ -1563,5 +1563,12 @@ ResetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
         Ip::Qos::setSockTos(&conn, conn.tos);
     if (conn.nfmark)
         Ip::Qos::setSockNfmark(&conn, conn.nfmark);
+}
+
+template <>
+Stopwatch &
+PeeringActivityTimer::timer()
+{
+    return owner->hier.*location;
 }
 
