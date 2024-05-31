@@ -390,6 +390,15 @@ TunnelStateData::deleteThis()
     delete this;
 }
 
+/// safely extracts HttpRequest from a never-nil ClientHttpRequest pointer
+static auto &
+guaranteedRequest(const ClientHttpRequest * const cr)
+{
+    Assure(cr);
+    Assure(cr->request);
+    return *cr->request;
+}
+
 TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     startTime(squid_curtime),
     destinations(new ResolvedPeers()),
@@ -398,7 +407,12 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     n_tries(0),
     banRetries(nullptr),
     codeContext(CodeContext::Current()),
-    peeringTimer(((assert(clientRequest && clientRequest->request)), clientRequest->request->hier.totalResponseTime()))
+    // XXX: clientRequest existence is guaranteed here and now, but the object
+    // is destroyed before TunnelStateData in some cases. Storing a reference to
+    // something clientRequest points to is very dangerous. It "works" today
+    // because we also store a refcounted pointer to clientRequest->request, but
+    // nothing guarantees preservation of that hidden dependency!
+    peeringTimer(guaranteedRequest(clientRequest).hier.totalResponseTime())
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
     client.readPendingFunc = &tunnelDelayedClientRead;
