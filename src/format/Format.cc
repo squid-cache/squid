@@ -635,8 +635,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME: {
-            // al->hier.totalPeeringTime is unassigned before prepareLogWithRequestDetails()
-            // TODO: keep the total response time in one place.
+            // XXX: al->hier.totalPeeringTime is not updated until prepareLogWithRequestDetails().
+            // TODO: Avoid the need for updates by keeping totalPeeringTime (or even ALE::hier) in one place.
             const auto &timer = (!al->hier.totalPeeringTime.ran() && al->request) ?
                                 al->request->hier.totalPeeringTime : al->hier.totalPeeringTime;
             if (timer.ran()) {
