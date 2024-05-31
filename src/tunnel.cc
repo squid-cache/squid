@@ -389,6 +389,7 @@ TunnelStateData::deleteThis()
     delete this;
 }
 
+// TODO: Replace with a reusable API guaranteeing non-nil pointer forwarding.
 /// safely extracts HttpRequest from a never-nil ClientHttpRequest pointer
 static auto &
 guaranteedRequest(const ClientHttpRequest * const cr)
@@ -412,8 +413,10 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     client.readPendingFunc = &tunnelDelayedClientRead;
     server.readPendingFunc = &tunnelDelayedServerRead;
 
+    assert(clientRequest);
     url = xstrdup(clientRequest->uri);
     request = clientRequest->request;
+    Must(request);
     server.size_ptr = &clientRequest->out.size;
     client.size_ptr = &clientRequest->al->http.clientRequestSz.payloadData;
     status_ptr = &clientRequest->al->http.code;
