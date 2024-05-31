@@ -595,9 +595,7 @@ HttpReply::calcMaxBodySize(HttpRequest& request) const
         return;
 
     ACLFilledChecklist ch(nullptr, &request, nullptr);
-    // XXX: cont-cast becomes irrelevant when checklist is HttpReply::Pointer
-    ch.reply = const_cast<HttpReply *>(this);
-    HTTPMSGLOCK(ch.reply);
+    ch.updateReply(this);
     for (AclSizeLimit *l = Config.ReplyBodySize; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this size value */
         if (!l->aclList || ch.fastCheck(l->aclList).allowed()) {

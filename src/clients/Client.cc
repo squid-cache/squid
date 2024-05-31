@@ -554,9 +554,8 @@ Client::blockCaching()
         // This relatively expensive check is not in StoreEntry::checkCachable:
         // That method lacks HttpRequest and may be called too many times.
         ACLFilledChecklist ch(acl, originalRequest().getRaw());
-        ch.reply = const_cast<HttpReply*>(&entry->mem().freshestReply()); // ACLFilledChecklist API bug
-        HTTPMSGLOCK(ch.reply);
-        ch.al = fwd->al;
+        ch.updateAle(fwd->al);
+        ch.updateReply(&entry->mem().freshestReply());
         if (!ch.fastCheck().allowed()) { // when in doubt, block
             debugs(20, 3, "store_miss prohibits caching");
             return true;
@@ -922,7 +921,9 @@ Client::handledEarlyAdaptationAbort()
 void
 Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
 {
-    debugs(11,5, answer.ruleId);
+    const auto blockedAnswer = answer.blockedToChecklistAnswer();
+
+    debugs(11,5, blockedAnswer.lastCheckDescription());
 
     if (abortOnBadEntry("entry went bad while ICAP aborted"))
         return;
@@ -938,8 +939,7 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
 
     debugs(11,7, "creating adaptation block response");
 
-    err_type page_id =
-        aclGetDenyInfoPage(&Config.denyInfoList, answer.ruleId.termedBuf(), 1);
+    auto page_id = FindDenyInfoPage(blockedAnswer, true);
     if (page_id == ERR_NONE)
         page_id = ERR_ACCESS_DENIED;
 
@@ -1027,6 +1027,9 @@ Client::adjustBodyBytesRead(const int64_t delta)
 void
 Client::delayRead()
 {
+    Assure(!waitingForDelayAwareReadChance);
+    waitingForDelayAwareReadChance = true;
+
     using DeferredReadDialer = NullaryMemFunT<Client>;
     AsyncCall::Pointer call = asyncCall(11, 5, "Client::noteDelayAwareReadChance",
                                         DeferredReadDialer(this, &Client::noteDelayAwareReadChance));

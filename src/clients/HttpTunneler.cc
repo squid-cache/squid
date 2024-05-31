@@ -90,7 +90,7 @@ Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &)
 {
     closer = nullptr;
     if (connection) {
-        countFailingConnection(nullptr);
+        countFailingConnection();
         connection->noteClosure();
         connection = nullptr;
     }
@@ -355,7 +355,7 @@ Http::Tunneler::bailWith(ErrorState *error)
 
     if (const auto failingConnection = connection) {
         // TODO: Reuse to-peer connections after a CONNECT error response.
-        countFailingConnection(error);
+        countFailingConnection();
         disconnect();
         failingConnection->close();
     }
@@ -374,10 +374,12 @@ Http::Tunneler::sendSuccess()
 }
 
 void
-Http::Tunneler::countFailingConnection(const ErrorState * const error)
+Http::Tunneler::countFailingConnection()
 {
     assert(connection);
-    NoteOutgoingConnectionFailure(connection->getPeer(), error ? error->httpStatus : Http::scNone);
+    // No NoteOutgoingConnectionFailure(connection->getPeer()) call here because
+    // we do not blame cache_peer for CONNECT failures (on top of a successfully
+    // established connection to that cache_peer).
     if (noteFwdPconnUse && connection->isOpen())
         fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
 }

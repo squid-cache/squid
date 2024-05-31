@@ -60,7 +60,7 @@ private:
         MEMPROXY_CLASS(DelayUser::Id);
 
     public:
-        Id(RefCount<DelayUser>, Auth::User::Pointer);
+        Id(const DelayUser::Pointer &, const Auth::User::Pointer &);
         ~Id() override;
         int bytesWanted (int min, int max) const override;
         void bytesIn(int qty) override;

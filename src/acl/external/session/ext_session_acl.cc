@@ -68,7 +68,7 @@ DB *db = nullptr;
 DB_ENV *db_env = nullptr;
 typedef DBT DB_ENTRY;
 
-#elif USE_TRIVIALDB
+#elif HAVE_LIBTDB
 TDB_CONTEXT *db = nullptr;
 typedef TDB_DATA DB_ENTRY;
 
@@ -86,7 +86,7 @@ shutdown_db()
     if (db_env) {
         db_env->close(db_env, 0);
 
-#elif USE_TRIVIALDB
+#elif HAVE_LIBTDB
         if (tdb_close(db) != 0) {
             fprintf(stderr, "%s| WARNING: error closing session db '%s'\n", program_name, db_path);
             exit(EXIT_FAILURE);
@@ -113,7 +113,7 @@ static void init_db(void)
                     exit(EXIT_FAILURE);
                 }
                 db_create(&db, db_env, 0);
-#elif USE_TRIVIALDB
+#elif HAVE_LIBTDB
                 std::string newPath(db_path);
                 newPath.append("session", 7);
                 db_path = xstrdup(newPath.c_str());
@@ -136,7 +136,7 @@ static void init_db(void)
             db = nullptr;
         }
     }
-#elif USE_TRIVIALDB
+#elif HAVE_LIBTDB
 #if _SQUID_FREEBSD_ && !defined(O_DSYNC)
     // FreeBSD lacks O_DSYNC, O_SYNC is closest to correct behaviour
 #define O_DSYNC O_SYNC
@@ -157,7 +157,7 @@ dataSize(DB_ENTRY *data)
 {
 #if USE_BERKLEYDB
     return data->size;
-#elif USE_TRIVIALDB
+#elif HAVE_LIBTDB
     return data->dsize;
 #endif
 }
@@ -167,7 +167,7 @@ fetchKey(/*const*/ DB_ENTRY &key, DB_ENTRY *data)
 {
 #if USE_BERKLEYDB
     return (db->get(db, nullptr, &key, data, 0) == 0);
-#elif USE_TRIVIALDB
+#elif HAVE_LIBTDB
     // NP: API says returns NULL on errors, but return is a struct type WTF??
     *data = tdb_fetch(db, key);
     return (data->dptr != nullptr);
@@ -179,7 +179,7 @@ deleteEntry(/*const*/ DB_ENTRY &key)
 {
 #if USE_BERKLEYDB
     db->del(db, nullptr, &key, 0);
-#elif USE_TRIVIALDB
+#elif HAVE_LIBTDB
     tdb_delete(db, key);
 #endif
 }
@@ -189,7 +189,7 @@ copyValue(void *dst, const DB_ENTRY *src, size_t sz)
 {
 #if USE_BERKLEYDB
     memcpy(dst, src->data, sz);
-#elif USE_TRIVIALDB
+#elif HAVE_LIBTDB
     memcpy(dst, src->dptr, sz);
 #endif
 }
@@ -202,7 +202,7 @@ static int session_active(const char *details, size_t len)
     key.size = len;
 
     DBT data = {};
-#elif USE_TRIVIALDB
+#elif HAVE_LIBTDB
     TDB_DATA key = {};
     key.dptr = reinterpret_cast<decltype(key.dptr)>(const_cast<char*>(details));
     key.dsize = len;
@@ -237,7 +237,7 @@ session_login(/*const*/ char *details, size_t len)
     data.data = &now;
     data.size = sizeof(now);
     db->put(db, nullptr, &key, &data, 0);
-#elif USE_TRIVIALDB
+#elif HAVE_LIBTDB
     key.dptr = reinterpret_cast<decltype(key.dptr)>(details);
     key.dsize = len;
     data.dptr = reinterpret_cast<decltype(data.dptr)>(&now);
@@ -253,7 +253,7 @@ session_logout(/*const*/ char *details, size_t len)
 #if USE_BERKLEYDB
     key.data = static_cast<decltype(key.data)>(details);
     key.size = len;
-#elif USE_TRIVIALDB
+#elif HAVE_LIBTDB
     key.dptr = reinterpret_cast<decltype(key.dptr)>(details);
     key.dsize = len;
 #endif

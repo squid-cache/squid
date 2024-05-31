@@ -435,7 +435,6 @@ ClientHttpRequest::logRequest()
 
 #endif
 
-    /* Add notes (if we have a request to annotate) */
     if (request) {
         SBuf matched;
         for (auto h: Config.notes) {
@@ -446,31 +445,21 @@ ClientHttpRequest::logRequest()
         }
         // The al->notes and request->notes must point to the same object.
         al->syncNotes(request);
-    }
 
-    ACLFilledChecklist checklist(nullptr, request, nullptr);
-    if (al->reply) {
-        checklist.reply = al->reply.getRaw();
-        HTTPMSGLOCK(checklist.reply);
-    }
-
-    if (request) {
         HTTPMSGUNLOCK(al->adapted_request);
         al->adapted_request = request;
         HTTPMSGLOCK(al->adapted_request);
     }
+
+    ACLFilledChecklist checklist(nullptr, request, nullptr);
+    checklist.updateAle(al);
     // no need checklist.syncAle(): already synced
-    checklist.al = al;
     accessLogLog(al, &checklist);
 
     bool updatePerformanceCounters = true;
     if (Config.accessList.stats_collection) {
         ACLFilledChecklist statsCheck(Config.accessList.stats_collection, request, nullptr);
-        statsCheck.al = al;
-        if (al->reply) {
-            statsCheck.reply = al->reply.getRaw();
-            HTTPMSGLOCK(statsCheck.reply);
-        }
+        statsCheck.updateAle(al);
         updatePerformanceCounters = statsCheck.fastCheck().allowed();
     }
 
@@ -3499,12 +3488,8 @@ clientAclChecklistFill(ACLFilledChecklist &checklist, ClientHttpRequest *http)
         checklist.setRequest(http->request);
 
     if (!checklist.al && http->al) {
-        checklist.al = http->al;
+        checklist.updateAle(http->al);
         checklist.syncAle(http->request, http->log_uri);
-        if (!checklist.reply && http->al->reply) {
-            checklist.reply = http->al->reply.getRaw();
-            HTTPMSGLOCK(checklist.reply);
-        }
     }
 
     if (const auto conn = http->getConn())

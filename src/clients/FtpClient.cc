@@ -907,6 +907,8 @@ Ftp::Client::dataConnection() const
 void
 Ftp::Client::noteDelayAwareReadChance()
 {
+    // TODO: Merge with HttpStateData::noteDelayAwareReadChance()
+    waitingForDelayAwareReadChance = false;
     data.read_pending = false;
     maybeReadVirginBody();
 }
