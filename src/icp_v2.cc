@@ -136,19 +136,16 @@ icp_common_t::getOpCode() const
 
 /* ICPState */
 
-ICPState::ICPState(icp_common_t &aHeader, HttpRequest *aRequest):
+ICPState::ICPState(icp_common_t &aHeader, const HttpRequestPointer &aRequest):
     header(aHeader),
     request(aRequest),
     fd(-1),
     url(nullptr)
-{
-    HTTPMSGLOCK(request);
-}
+{}
 
 ICPState::~ICPState()
 {
     safe_free(url);
-    HTTPMSGUNLOCK(request);
 }
 
 bool
@@ -191,7 +188,7 @@ ICPState::loggingTags() const
 void
 ICPState::fillChecklist(ACLFilledChecklist &checklist) const
 {
-    checklist.setRequest(request);
+    checklist.setRequest(request.getRaw());
     icpSyncAle(al, from, url, 0, 0);
     checklist.al = al;
 }
@@ -205,7 +202,7 @@ class ICP2State: public ICPState
 {
 
 public:
-    ICP2State(icp_common_t & aHeader, HttpRequest *aRequest):
+    ICP2State(icp_common_t & aHeader, const HttpRequestPointer &aRequest):
         ICPState(aHeader, aRequest),rtt(0),src_rtt(0),flags(0) {}
 
     ~ICP2State() override;
@@ -439,14 +436,14 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 }
 
 bool
-icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
+icpAccessAllowed(Ip::Address &from, const HttpRequestPointer &icp_request)
 {
     if (!Config.accessList.icp) {
         debugs(12, 2, "Access Denied due to lack of ICP access rules.");
         return false;
     }
 
-    ACLFilledChecklist checklist(Config.accessList.icp, icp_request, nullptr);
+    ACLFilledChecklist checklist(Config.accessList.icp, icp_request.getRaw(), nullptr);
     checklist.src_addr = from;
     checklist.my_addr.setNoAddr();
     const auto &answer = checklist.fastCheck();
@@ -457,7 +454,7 @@ icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
     return false;
 }
 
-HttpRequest *
+HttpRequestPointer
 icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
 {
     if (strpbrk(url, w_space)) {
@@ -467,12 +464,11 @@ icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
     }
 
     const auto mx = MasterXaction::MakePortless<XactionInitiator::initIcp>();
-    auto *result = HttpRequest::FromUrlXXX(url, mx);
+    HttpRequestPointer result = HttpRequest::FromUrlXXX(url, mx);
     if (!result)
         icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from, nullptr);
 
     return result;
-
 }
 
 static void
@@ -483,16 +479,13 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
     uint32_t flags = 0;
     /* We have a valid packet */
     char *url = buf + sizeof(icp_common_t) + sizeof(uint32_t);
-    HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, from);
+    const auto icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
     if (!icp_request)
         return;
 
-    HTTPMSGLOCK(icp_request);
-
     if (!icpAccessAllowed(from, icp_request)) {
         icpDenyAccess(from, url, header.reqnum, fd);
-        HTTPMSGUNLOCK(icp_request);
         return;
     }
 #if USE_ICMP
@@ -536,8 +529,6 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
     }
 
     icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, state.al);
-
-    HTTPMSGUNLOCK(icp_request);
 }
 
 void

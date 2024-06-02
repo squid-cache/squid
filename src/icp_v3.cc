@@ -24,7 +24,7 @@ class ICP3State: public ICPState
 {
 
 public:
-    ICP3State(icp_common_t &aHeader, HttpRequest *aRequest) :
+    ICP3State(icp_common_t &aHeader, const HttpRequestPointer &aRequest) :
         ICPState(aHeader, aRequest) {}
 
     ~ICP3State() override = default;
@@ -36,14 +36,13 @@ doV3Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
 {
     /* We have a valid packet */
     char *url = buf + sizeof(icp_common_t) + sizeof(uint32_t);
-    HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, from);
+    const auto icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
     if (!icp_request)
         return;
 
     if (!icpAccessAllowed(from, icp_request)) {
         icpDenyAccess (from, url, header.reqnum, fd);
-        delete icp_request;
         return;
     }
 
