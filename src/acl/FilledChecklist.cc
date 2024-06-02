@@ -41,7 +41,6 @@ ACLFilledChecklist::ACLFilledChecklist() :
     my_addr.setEmpty();
     src_addr.setEmpty();
     dst_addr.setEmpty();
-    rfc931[0] = '\0';
 }
 
 ACLFilledChecklist::~ACLFilledChecklist()
@@ -105,13 +104,6 @@ ACLFilledChecklist::verifyAle() const
         showDebugWarning("HttpReply object");
         al->reply = reply_;
     }
-
-#if USE_IDENT
-    if (*rfc931 && !al->cache.rfc931) {
-        showDebugWarning("IDENT");
-        al->cache.rfc931 = xstrdup(rfc931);
-    }
-#endif
 }
 
 void
@@ -205,7 +197,7 @@ ACLFilledChecklist::markSourceDomainChecked()
  *    *not* delete the list.  After the callback function returns,
  *    checkCallback() will delete the list (i.e., self).
  */
-ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request, const char *ident):
+ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request):
     dst_rdns(nullptr),
 #if USE_AUTH
     auth_user_request(nullptr),
@@ -222,11 +214,9 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
     my_addr.setEmpty();
     src_addr.setEmpty();
     dst_addr.setEmpty();
-    rfc931[0] = '\0';
 
     changeAcl(A);
     setRequest(http_request);
-    setIdent(ident);
 }
 
 void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
@@ -245,18 +235,6 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
         if (const auto cmgr = request->clientConnectionManager.get())
             setConn(cmgr);
     }
-}
-
-void
-ACLFilledChecklist::setIdent(const char *ident)
-{
-#if USE_IDENT
-    assert(!rfc931[0]);
-    if (ident)
-        xstrncpy(rfc931, ident, USER_IDENT_SZ);
-#else
-    (void)ident;
-#endif
 }
 
 void

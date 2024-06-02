@@ -95,8 +95,6 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "ident/Config.h"
-#include "ident/Ident.h"
 #include "internal.h"
 #include "ipc/FdNotes.h"
 #include "ipc/StartListening.h"
@@ -184,9 +182,6 @@ private:
 static void clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
 
 static IOACB httpAccept;
-#if USE_IDENT
-static IDCB clientIdentDone;
-#endif
 static int clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength);
 
 static void clientUpdateStatHistCounters(const LogTags &logType, int svc_time);
@@ -197,15 +192,6 @@ void prepareLogWithRequestDetails(HttpRequest *, const AccessLogEntryPointer &);
 static void ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferredRequest, ConnStateData * conn);
 
 char *skipLeadingSpace(char *aString);
-
-#if USE_IDENT
-static void
-clientIdentDone(const char *ident, void *data)
-{
-    ConnStateData *conn = (ConnStateData *)data;
-    xstrncpy(conn->clientConnection->rfc931, ident ? ident : dash_str, USER_IDENT_SZ);
-}
-#endif
 
 void
 clientUpdateStatCounters(const LogTags &logType)
@@ -451,14 +437,14 @@ ClientHttpRequest::logRequest()
         HTTPMSGLOCK(al->adapted_request);
     }
 
-    ACLFilledChecklist checklist(nullptr, request, nullptr);
+    ACLFilledChecklist checklist(nullptr, request);
     checklist.updateAle(al);
     // no need checklist.syncAle(): already synced
     accessLogLog(al, &checklist);
 
     bool updatePerformanceCounters = true;
     if (Config.accessList.stats_collection) {
-        ACLFilledChecklist statsCheck(Config.accessList.stats_collection, request, nullptr);
+        ACLFilledChecklist statsCheck(Config.accessList.stats_collection, request);
         statsCheck.updateAle(al);
         updatePerformanceCounters = statsCheck.fastCheck().allowed();
     }
@@ -1867,7 +1853,7 @@ ConnStateData::parseRequests()
                 break;
 
             // we have been waiting for PROXY to provide client-IP
-            // for some lookups, ie rDNS and IDENT.
+            // for some lookups, ie rDNS
             whenClientIpKnown();
 
             // Done with PROXY protocol which has cleared preservingClientData_.
@@ -2179,15 +2165,6 @@ ConnStateData::whenClientIpKnown()
     if (Dns::ResolveClientAddressesAsap)
         fqdncache_gethostbyaddr(clientConnection->remote, FQDN_LOOKUP_IF_MISS);
 
-#if USE_IDENT
-    if (Ident::TheConfig.identLookup) {
-        ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, nullptr, nullptr);
-        fillChecklist(identChecklist);
-        if (identChecklist.fastCheck().allowed())
-            Ident::Start(clientConnection, clientIdentDone, this);
-    }
-#endif
-
     clientdbEstablished(clientConnection->remote, 1);
 
 #if USE_DELAY_POOLS
@@ -2198,7 +2175,7 @@ ConnStateData::whenClientIpKnown()
 
     const auto &pools = ClientDelayPools::Instance()->pools;
     if (pools.size()) {
-        ACLFilledChecklist ch(nullptr, nullptr, nullptr);
+        ACLFilledChecklist ch(nullptr, nullptr);
         fillChecklist(ch);
         // TODO: we check early to limit error response bandwidth but we
         // should recheck when we can honor delay_pool_uses_indirect
@@ -2507,7 +2484,7 @@ ConnStateData::postHttpsAccept()
         CodeContext::Reset(connectAle);
         // TODO: Use these request/ALE when waiting for new bumped transactions.
 
-        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, nullptr);
+        const auto acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request);
         fillChecklist(*acl_checklist);
         // Build a local AccessLogEntry to allow requiresAle() acls work
         acl_checklist->al = connectAle;
@@ -2990,7 +2967,7 @@ ConnStateData::startPeekAndSplice()
         sslServerBump->step = XactionStep::tlsBump2;
         // Run a accessList check to check if want to splice or continue bumping
 
-        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw(), nullptr);
+        const auto acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw());
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpNone));
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpClientFirst));
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpServerFirst));
@@ -3474,7 +3451,7 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 ACLFilledChecklist *
 clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 {
-    const auto checklist = new ACLFilledChecklist(acl, nullptr, nullptr);
+    const auto checklist = new ACLFilledChecklist(acl, nullptr);
     clientAclChecklistFill(*checklist, http);
     return checklist;
 }
@@ -3528,10 +3505,6 @@ ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &checklist) const
     if (!checklist.sslErrors && sslServerBump)
         checklist.sslErrors = sslServerBump->sslErrors();
 #endif
-
-    if (!checklist.rfc931[0]) // checklist creator may have supplied it already
-        checklist.setIdent(clientConnection->rfc931);
-
 }
 
 bool

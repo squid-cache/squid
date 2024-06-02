@@ -2088,7 +2088,6 @@ PREDEFINED             = __cplusplus \
                          USE_HTCP \
                          USE_HTTP_VIOLATIONS \
                          USE_ICMP \
-                         USE_IDENT \
                          USE_IPV6 \
                          USE_KQUEUE \
                          USE_LOADABLE_MODULES \

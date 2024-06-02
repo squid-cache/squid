@@ -36,13 +36,11 @@ class ACLFilledChecklist: public ACLChecklist
 
 public:
     ACLFilledChecklist();
-    ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident = nullptr);
+    ACLFilledChecklist(const acl_access *, HttpRequest *);
     ~ACLFilledChecklist() override;
 
     /// configure client request-related fields for the first time
     void setRequest(HttpRequest *);
-    /// configure rfc931 user identity for the first time
-    void setIdent(const char *userIdentity);
 
     /// Remembers the given ALE (if it is not nil) or does nothing (otherwise).
     /// When (and only when) remembering ALE, populates other still-unset fields
@@ -90,7 +88,6 @@ public:
 
     HttpRequest::Pointer request;
 
-    char rfc931[USER_IDENT_SZ];
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
 #endif
@@ -117,7 +114,7 @@ public:
     err_type requestErrorType;
 
 private:
-    ConnStateData * conn_;          /**< hack for ident and NTLM */
+    ConnStateData *conn_; ///< hack: client-to-Squid connection manager (if any)
     int fd_;                        /**< may be available when conn_ is not */
 
     HttpReply::Pointer reply_; ///< response added by updateReply() or nil
