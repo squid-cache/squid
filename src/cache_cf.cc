@@ -281,15 +281,6 @@ self_destruct(void)
     LegacyParser.destruct();
 }
 
-static void
-SetConfigFilename(char const *file_name, bool is_pipe)
-{
-    if (is_pipe)
-        cfg_filename = file_name + 1;
-    else
-        cfg_filename = file_name;
-}
-
 static const char*
 skip_ws(const char* s)
 {
@@ -330,7 +321,7 @@ parseManyConfigFiles(char* files, int depth)
 }
 
 static void
-ReplaceSubstr(char*& str, int& len, unsigned substrIdx, unsigned substrLen, const char* newSubstr)
+ReplaceSubstr(char* str, int& len, unsigned substrIdx, unsigned substrLen, const char* newSubstr)
 {
     assert(str != nullptr);
     assert(newSubstr != nullptr);
@@ -348,7 +339,7 @@ ReplaceSubstr(char*& str, int& len, unsigned substrIdx, unsigned substrLen, cons
 }
 
 static void
-SubstituteMacro(char*& line, int& len, const char* macroName, const char* substStr)
+SubstituteMacro(char* line, int& len, const char* macroName, const char* substStr)
 {
     assert(line != nullptr);
     assert(macroName != nullptr);
@@ -359,7 +350,7 @@ SubstituteMacro(char*& line, int& len, const char* macroName, const char* substS
 }
 
 static void
-ProcessMacros(char*& line, int& len)
+ProcessMacros(char* line, int& len)
 {
     SubstituteMacro(line, len, "${service_name}", service_name.c_str());
     SubstituteMacro(line, len, "${process_name}", TheKidName.c_str());
@@ -437,14 +428,9 @@ EvalBoolExpr(const char* expr)
 static int
 parseOneConfigFile(const char *file_name, unsigned int depth)
 {
-    FILE *fp = nullptr;
     const char *orig_cfg_filename = cfg_filename;
     const int orig_config_lineno = config_lineno;
-    char *token = nullptr;
-    char *tmp_line = nullptr;
-    int tmp_line_len = 0;
     int err_count = 0;
-    int is_pipe = 0;
 
     debugs(3, Important(68), "Processing Configuration File: " << file_name << " (depth " << depth << ")");
     if (depth > 16) {
@@ -452,117 +438,48 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
         return 1;
     }
 
-    if (file_name[0] == '!' || file_name[0] == '|') {
-        fp = popen(file_name + 1, "r");
-        is_pipe = 1;
-    } else {
-        fp = fopen(file_name, "r");
-    }
-
-    if (!fp) {
-        int xerrno = errno;
-        fatalf("Unable to open configuration file: %s: %s", file_name, xstrerr(xerrno));
-    }
-
-#if _SQUID_WINDOWS_
-    setmode(fileno(fp), O_TEXT);
-#endif
-
-    SetConfigFilename(file_name, bool(is_pipe));
+    Configuration::File cfg(file_name);
+    cfg.load(); // throws on error
 
     memset(config_input_line, '\0', BUFSIZ);
 
-    config_lineno = 0;
-
     std::vector<bool> if_states;
-    while (fgets(config_input_line, BUFSIZ, fp)) {
-        ++config_lineno;
+    while (true) {
+        auto line = cfg.nextLine();
+        cfg_filename = cfg.lineInfo().fileName;
+        config_lineno = cfg.lineInfo().lineNo;
 
-        if ((token = strchr(config_input_line, '\n')))
-            *token = '\0';
+        if (line.isEmpty())
+            break;
 
-        if ((token = strchr(config_input_line, '\r')))
-            *token = '\0';
+        assert(line.length() < BUFSIZ);
+        SBufToCstring(config_input_line, line);
+        int tmp_line_len = line.length();
 
-        // strip any prefix whitespace off the line.
-        const char *p = skip_ws(config_input_line);
-        if (config_input_line != p)
-            memmove(config_input_line, p, strlen(p)+1);
+        ProcessMacros(config_input_line, tmp_line_len);
 
-        if (strncmp(config_input_line, "#line ", 6) == 0) {
-            static char new_file_name[1024];
-            static char *file;
-            static char new_lineno;
-            token = config_input_line + 6;
-            new_lineno = strtol(token, &file, 0) - 1;
+        debugs(3, (opt_parse_cfg_only?1:5), "Processing: " << config_input_line);
 
-            if (file == token)
-                continue;   /* Not a valid #line directive, may be a comment */
-
-            while (*file && xisspace((unsigned char) *file))
-                ++file;
-
-            if (*file) {
-                if (*file != '"')
-                    continue;   /* Not a valid #line directive, may be a comment */
-
-                xstrncpy(new_file_name, file + 1, sizeof(new_file_name));
-
-                if ((token = strchr(new_file_name, '"')))
-                    *token = '\0';
-
-                SetConfigFilename(new_file_name, false);
-            }
-
-            config_lineno = new_lineno;
-        }
-
-        if (config_input_line[0] == '#')
-            continue;
-
-        if (config_input_line[0] == '\0')
-            continue;
-
-        const char* append = tmp_line_len ? skip_ws(config_input_line) : config_input_line;
-
-        size_t append_len = strlen(append);
-
-        tmp_line = (char*)xrealloc(tmp_line, tmp_line_len + append_len + 1);
-
-        strcpy(tmp_line + tmp_line_len, append);
-
-        tmp_line_len += append_len;
-
-        if (tmp_line[tmp_line_len-1] == '\\') {
-            debugs(3, 5, "parseConfigFile: tmp_line='" << tmp_line << "'");
-            tmp_line[--tmp_line_len] = '\0';
-            continue;
-        }
-
-        trim_trailing_ws(tmp_line);
-        ProcessMacros(tmp_line, tmp_line_len);
-        debugs(3, (opt_parse_cfg_only?1:5), "Processing: " << tmp_line);
-
-        if (const char* expr = FindStatement(tmp_line, "if")) {
+        if (const char* expr = FindStatement(config_input_line, "if")) {
             if_states.push_back(EvalBoolExpr(expr)); // store last if-statement meaning
-        } else if (FindStatement(tmp_line, "endif")) {
+        } else if (FindStatement(config_input_line, "endif")) {
             if (!if_states.empty())
                 if_states.pop_back(); // remove last if-statement meaning
             else
                 fatalf("'endif' without 'if'\n");
-        } else if (FindStatement(tmp_line, "else")) {
+        } else if (FindStatement(config_input_line, "else")) {
             if (!if_states.empty())
                 if_states.back() = !if_states.back();
             else
                 fatalf("'else' without 'if'\n");
         } else if (if_states.empty() || if_states.back()) { // test last if-statement meaning if present
             /* Handle includes here */
-            if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
-                err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
+            if (tmp_line_len >= 9 && strncmp(config_input_line, "include", 7) == 0 && xisspace(config_input_line[7])) {
+                err_count += parseManyConfigFiles(config_input_line + 8, depth + 1);
             } else {
                 try {
-                    if (!parse_line(tmp_line)) {
-                        debugs(3, DBG_CRITICAL, ConfigParser::CurrentLocation() << ": unrecognized: '" << tmp_line << "'");
+                    if (!parse_line(config_input_line)) {
+                        debugs(3, DBG_CRITICAL, ConfigParser::CurrentLocation() << ": unrecognized: '" << config_input_line << "'");
                         ++err_count;
                     }
                 } catch (...) {
@@ -573,26 +490,14 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             }
         }
 
-        safe_free(tmp_line);
-        tmp_line_len = 0;
-
     }
+
     if (!if_states.empty())
         fatalf("if-statement without 'endif'\n");
 
-    if (is_pipe) {
-        int ret = pclose(fp);
-
-        if (ret != 0)
-            fatalf("parseConfigFile: '%s' failed with exit code %d\n", file_name, ret);
-    } else {
-        fclose(fp);
-    }
-
-    SetConfigFilename(orig_cfg_filename, false);
+    cfg_filename = orig_cfg_filename;
     config_lineno = orig_config_lineno;
 
-    xfree(tmp_line);
     return err_count;
 }
 

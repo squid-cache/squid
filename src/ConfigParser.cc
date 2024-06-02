@@ -16,7 +16,10 @@
 #include "fatal.h"
 #include "globals.h"
 #include "neighbors.h"
+#include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
+
+#include <memory>
 
 bool ConfigParser::RecognizeQuotedValues = true;
 bool ConfigParser::StrictMode = true;
@@ -41,14 +44,12 @@ ConfigParser::destruct()
     if (!CfgFiles.empty()) {
         std::ostringstream message;
         CfgFile *f = CfgFiles.top();
-        message << "Bungled " << f->filePath << " line " << f->lineNo <<
-                ": " << f->currentLine << std::endl;
+        message << "Bungled " << f->lineInfo() << std::endl;
         CfgFiles.pop();
         delete f;
         while (!CfgFiles.empty()) {
             f = CfgFiles.top();
-            message << " included from " << f->filePath << " line " <<
-                    f->lineNo << ": " << f->currentLine << std::endl;
+            message << " included from " << f->lineInfo() << std::endl;
             CfgFiles.pop();
             delete f;
         }
@@ -68,10 +69,9 @@ ConfigParser::strtokFile()
         return ConfigParser::NextToken();
 
     static int fromFile = 0;
-    static FILE *wordFile = nullptr;
+    static std::unique_ptr<Configuration::File> wordFile;
 
     char *t;
-    static char buf[CONFIG_LINE_LIMIT];
 
     do {
 
@@ -90,15 +90,8 @@ ConfigParser::strtokFile()
 
                 *t = '\0';
 
-                if ((wordFile = fopen(fn, "r")) == nullptr) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Can not open file " << fn << " for reading");
-                    return nullptr;
-                }
-
-#if _SQUID_WINDOWS_
-                setmode(fileno(wordFile), O_TEXT);
-#endif
-
+                wordFile.reset(new Configuration::File(fn));
+                wordFile->load();
                 fromFile = 1;
             } else {
                 return t;
@@ -106,27 +99,17 @@ ConfigParser::strtokFile()
         }
 
         /* fromFile */
-        if (fgets(buf, sizeof(buf), wordFile) == nullptr) {
+        static SBuf line;
+        line = wordFile->nextLine();
+        if (line.isEmpty()) {
             /* stop reading from file */
-            fclose(wordFile);
             wordFile = nullptr;
             fromFile = 0;
             return nullptr;
-        } else {
-            char *t2, *t3;
-            t = buf;
-            /* skip leading and trailing white space */
-            t += strspn(buf, w_space);
-            t2 = t + strcspn(t, w_space);
-            t3 = t2 + strspn(t2, w_space);
-
-            while (*t3 && *t3 != '#') {
-                t2 = t3 + strcspn(t3, w_space);
-                t3 = t2 + strspn(t2, w_space);
-            }
-
-            *t2 = '\0';
         }
+
+        Assure(line.length() < CONFIG_LINE_LIMIT);
+        t = const_cast<char *>(line.c_str());
 
         /* skip comments */
         /* skip blank lines */
@@ -341,7 +324,7 @@ ConfigParser::NextToken()
             if (!token) {
                 assert(!wordfile->isOpen());
                 CfgFiles.pop();
-                debugs(3, 4, "CfgFiles.pop " << wordfile->filePath);
+                debugs(3, 4, "CfgFiles.pop " << wordfile->lineInfo());
                 delete wordfile;
             }
         }
@@ -361,6 +344,8 @@ ConfigParser::NextToken()
                 return nullptr;
             }
 
+            assert(path); // a QuotedToken cannot be nil
+
             // The next token in current cfg file line must be a ")"
             char *end = NextToken();
             ConfigParser::PreviewMode_ = savePreview;
@@ -376,14 +361,9 @@ ConfigParser::NextToken()
                 return nullptr;
             }
 
-            ConfigParser::CfgFile *wordfile = new ConfigParser::CfgFile();
-            if (!path || !wordfile->startParse(path)) {
-                debugs(3, DBG_CRITICAL, "FATAL: Error opening config file: " << token);
-                delete wordfile;
-                self_destruct();
-                return nullptr;
-            }
-            CfgFiles.push(wordfile);
+            std::unique_ptr<ConfigParser::CfgFile> wordfile(new ConfigParser::CfgFile(path));
+            wordfile->startParse(); // throws on error
+            CfgFiles.push(wordfile.release());
             token = nullptr;
         }
     } while (token == nullptr && !CfgFiles.empty());
@@ -608,54 +588,32 @@ ConfigParser::optionalAclList()
     return acls;
 }
 
-bool
-ConfigParser::CfgFile::startParse(char *path)
+void
+ConfigParser::CfgFile::startParse()
 {
-    assert(wordFile == nullptr);
-    debugs(3, 3, "Parsing from " << path);
-    if ((wordFile = fopen(path, "r")) == nullptr) {
-        debugs(3, DBG_CRITICAL, "WARNING: file :" << path << " not found");
-        return false;
-    }
-
-#if _SQUID_WINDOWS_
-    setmode(fileno(wordFile), O_TEXT);
-#endif
-
-    filePath = path;
-    return getFileLine();
-}
-
-bool
-ConfigParser::CfgFile::getFileLine()
-{
-    // Else get the next line
-    if (fgets(parseBuffer, CONFIG_LINE_LIMIT, wordFile) == nullptr) {
-        /* stop reading from file */
-        fclose(wordFile);
-        wordFile = nullptr;
-        parseBuffer[0] = '\0';
-        return false;
-    }
-    parsePos = parseBuffer;
-    currentLine = parseBuffer;
-    lineNo++;
-    return true;
+    assert(isOpen());
+    confFileData.load();
+    debugs(3, 3, "Parsing from " << confFileData.lineInfo());
 }
 
 char *
 ConfigParser::CfgFile::parse(ConfigParser::TokenType &type)
 {
-    if (!wordFile)
-        return nullptr;
-
     if (!*parseBuffer)
         return nullptr;
 
     char *token;
     while (!(token = nextElement(type))) {
-        if (!getFileLine())
+        auto line = confFileData.nextLine();
+        if (line.isEmpty()) {
+            *parseBuffer = 0;
             return nullptr;
+        }
+
+        assert(line.length() < CONFIG_LINE_LIMIT);
+
+        SBufToCstring(parseBuffer, line);
+        parsePos = parseBuffer;
     }
     return token;
 }
@@ -669,11 +627,5 @@ ConfigParser::CfgFile::nextElement(ConfigParser::TokenType &type)
         parsePos = pos;
     // else next call will read the same token;
     return token;
-}
-
-ConfigParser::CfgFile::~CfgFile()
-{
-    if (wordFile)
-        fclose(wordFile);
 }
 
