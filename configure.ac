@@ -1522,14 +1522,6 @@ AC_MSG_NOTICE([Support for X-Forwarded-For enabled: ${enable_follow_x_forwarded_
 SQUID_DEFINE_BOOL(FOLLOW_X_FORWARDED_FOR,$enable_follow_x_forwarded_for,
   [Enable following X-Forwarded-For headers])
 
-AC_ARG_ENABLE(ident-lookups,
-  AS_HELP_STRING([--disable-ident-lookups],
-                 [Remove code that supports performing Ident (RFC 931) lookups.]), [
-  SQUID_YESNO([$enableval],[--enable-ident-lookups])
-])
-AC_MSG_NOTICE([Support for Ident lookups enabled: ${enable_ident_lookups:=yes}])
-SQUID_DEFINE_BOOL(USE_IDENT,$enable_ident_lookups,[Support for Ident (RFC 931) lookups])
-
 dnl Select Default hosts file location
 AC_ARG_ENABLE(default-hostsfile,
   AS_HELP_STRING([--enable-default-hostsfile=path],
@@ -2608,7 +2600,6 @@ AC_CONFIG_FILES([
 	src/http/url_rewriters/fake/Makefile
 	src/http/url_rewriters/LFS/Makefile
 	src/icmp/Makefile
-	src/ident/Makefile
 	src/ip/Makefile
 	src/ipc/Makefile
 	src/log/Makefile

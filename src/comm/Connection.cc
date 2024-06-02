@@ -38,9 +38,7 @@ Comm::Connection::Connection() :
     peer_(nullptr),
     startTime_(squid_curtime),
     tlsHistory(nullptr)
-{
-    *rfc931 = 0; // quick init the head. the rest does not matter.
-}
+{}
 
 Comm::Connection::~Connection()
 {
@@ -81,7 +79,6 @@ Comm::Connection::cloneProfile() const
     c.nfConnmark = nfConnmark;
     // COMM_ORPHANED is not a part of connection opening instructions
     c.flags = flags & ~COMM_ORPHANED;
-    // rfc931 is excused
 
 #if USE_SQUID_EUI
     // These are currently only set when accepting connections and never used
@@ -205,10 +202,6 @@ Comm::operator << (std::ostream &os, const Connection &conn)
         os << " FD " << conn.fd;
     if (conn.flags != COMM_UNSET)
         os << " flags=" << conn.flags;
-#if USE_IDENT
-    if (*conn.rfc931)
-        os << " IDENT::" << conn.rfc931;
-#endif
     return os;
 }
 

@@ -140,8 +140,7 @@ bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info
     if (info.icapReply->sline.status() == Http::scNone) // failed to parse the reply; I/O err
         return true;
 
-    ACLFilledChecklist *cl =
-        new ACLFilledChecklist(TheConfig.repeat, info.icapRequest, dash_str);
+    const auto cl = new ACLFilledChecklist(TheConfig.repeat, info.icapRequest);
     cl->updateReply(info.icapReply);
 
     bool result = cl->fastCheck().allowed();

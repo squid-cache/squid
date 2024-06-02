@@ -67,7 +67,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-linux-netfilter \
 	--disable-linux-tproxy \
 	--disable-follow-x-forwarded-for \
-	--disable-ident-lookups \
 	--disable-default-hostsfile \
 	--disable-auth \
 	--disable-basic-auth-helpers \

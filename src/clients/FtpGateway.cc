@@ -1022,7 +1022,7 @@ Ftp::Gateway::processReplyBody()
  * Special Case: A username-only may be provided in the URL and password in the HTTP headers.
  *
  * TODO: we might be able to do something about locating username from other sources:
- *       ie, external ACL user=* tag or ident lookup
+ *       ie, external ACL user=* tag
  *
  \retval 1  if we have everything needed to complete this request.
  \retval 0  if something is missing.

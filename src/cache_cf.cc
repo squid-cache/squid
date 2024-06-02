@@ -41,7 +41,6 @@
 #include "HttpHeaderTools.h"
 #include "HttpUpgradeProtocolAccess.h"
 #include "icmp/IcmpConfig.h"
-#include "ident/Config.h"
 #include "ip/Intercept.h"
 #include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"

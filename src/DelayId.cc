@@ -86,7 +86,7 @@ DelayId::DelayClient(ClientHttpRequest * http, HttpReply *reply)
             continue;
         }
 
-        ACLFilledChecklist ch(DelayPools::delay_data[pool].access, r, nullptr);
+        ACLFilledChecklist ch(DelayPools::delay_data[pool].access, r);
         clientAclChecklistFill(ch, http);
         ch.updateReply(reply);
         // overwrite ACLFilledChecklist acl_uses_indirect_client-based decision
