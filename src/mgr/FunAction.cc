@@ -49,7 +49,6 @@ Mgr::FunAction::dump(StoreEntry* entry)
     debugs(16, 5, MYNAME);
     Must(entry != nullptr);
 
-    // always non-aggregatable, no need to check
     openKidSection(entry, is_yaml());
 
     handler(entry);
