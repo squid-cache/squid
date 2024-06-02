@@ -73,14 +73,7 @@ public:
     StoreEntry *sentry;
     STOBJFLT *filter;
     StoreSearchPointer theSearch;
-    OBJH *onCompleteHandler;
 };
-
-static void statObjectsStart(StoreEntry *, STOBJFLT * = nullptr, OBJH * = nullptr);
-static void onObjectsDumpComplete(StoreEntry * e)
-{
-    Mgr::closeKidSection(e, false);
-}
 
 /* LOCALS */
 static const char *describeStatuses(const StoreEntry *);
@@ -92,6 +85,7 @@ static void statGraphDump(StoreEntry *);
 static double statPctileSvc(double, int, int);
 static void statStoreEntry(MemBuf * mb, StoreEntry * e);
 static double statCPUUsage(int minutes);
+static OBJH stat_objects_get;
 static OBJH stat_vmobjects_get;
 static OBJH statOpenfdObj;
 static EVH statObjects;
@@ -333,8 +327,8 @@ statObjects(void *data)
     StoreEntry *e;
 
     if (state->theSearch->isDone()) {
-        if (state->onCompleteHandler)
-            state->onCompleteHandler(state->sentry);
+        if (UsingSmp())
+            Mgr::closeKidSection(state->sentry, false);
         state->sentry->complete();
         state->sentry->unlock("statObjects+isDone");
         delete state;
@@ -372,7 +366,7 @@ statObjects(void *data)
 }
 
 static void
-statObjectsStart(StoreEntry *sentry, STOBJFLT *filter, OBJH *onComplete)
+statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
 {
     StatObjectsState *state = new StatObjectsState;
     state->sentry = sentry;
@@ -381,15 +375,13 @@ statObjectsStart(StoreEntry *sentry, STOBJFLT *filter, OBJH *onComplete)
     sentry->lock("statObjects");
     state->theSearch = Store::Root().search();
 
-    state->onCompleteHandler = onComplete;
-
     eventAdd("statObjects", statObjects, state, 0.0, 1);
 }
 
 static void
 stat_objects_get(StoreEntry * sentry)
 {
-    statObjectsStart(sentry, nullptr, onObjectsDumpComplete);
+    statObjectsStart(sentry, nullptr);
 }
 
 static int
@@ -401,7 +393,7 @@ statObjectsVmFilter(const StoreEntry * e)
 static void
 stat_vmobjects_get(StoreEntry * sentry)
 {
-    statObjectsStart(sentry, statObjectsVmFilter, onObjectsDumpComplete);
+    statObjectsStart(sentry, statObjectsVmFilter);
 }
 
 static int
@@ -419,7 +411,7 @@ statObjectsOpenfdFilter(const StoreEntry * e)
 static void
 statOpenfdObj(StoreEntry * sentry)
 {
-    statObjectsStart(sentry, statObjectsOpenfdFilter, onObjectsDumpComplete);
+    statObjectsStart(sentry, statObjectsOpenfdFilter);
 }
 
 #if XMALLOC_STATISTICS
