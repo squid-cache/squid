@@ -26,7 +26,6 @@ Log::Format::HttpdCommon(const AccessLogEntry::Pointer &al, Logfile * logfile)
     if (al->request && al->request->auth_user_request != nullptr)
         user_auth = ::Format::QuoteUrlEncodeUsername(al->request->auth_user_request->username());
 #endif
-    const char *user_ident = ::Format::QuoteUrlEncodeUsername(al->getClientIdent());
 
     char clientip[MAX_IPSTRLEN];
     al->getLogClientIp(clientip, MAX_IPSTRLEN);
@@ -35,7 +34,7 @@ Log::Format::HttpdCommon(const AccessLogEntry::Pointer &al, Logfile * logfile)
 
     logfilePrintf(logfile, "%s %s %s [%s] \"" SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\" %d %" PRId64 " %s:%s%s",
                   clientip,
-                  user_ident ? user_ident : dash_str,
+                  dash_str,
                   user_auth ? user_auth : dash_str,
                   Time::FormatHttpd(squid_curtime),
                   SQUIDSBUFPRINT(method),
@@ -49,7 +48,6 @@ Log::Format::HttpdCommon(const AccessLogEntry::Pointer &al, Logfile * logfile)
                   (Config.onoff.log_mime_hdrs?"":"\n"));
 
     safe_free(user_auth);
-    safe_free(user_ident);
 
     if (Config.onoff.log_mime_hdrs) {
         char *ereq = ::Format::QuoteMimeBlob(al->headers.request);

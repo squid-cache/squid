@@ -604,7 +604,7 @@ DOC_START
 
 	A client with credentials is requested to re-authenticate if http_access
 	or adapted_http_access denies its request _and_ the last evaluated ACL was
-	either proxy_auth, proxy_auth_regex, ident, ident_regex, or an external
+	either proxy_auth, proxy_auth_regex, or an external
 	ACL with %ul or %LOGIN parameter (regardless of whether that last
 	evaluated ACL matched the denied request). Note that a max_user_ip ACL
 	does not have this effect: Requests denied after evaluating max_user_ip
@@ -1273,16 +1273,6 @@ ENDIF
 	acl aclname referer_regex [-i] regexp ...
 	  # pattern match on Referer header [fast]
 	  # Referer is highly unreliable, so use with care
-
-	acl aclname ident [-i] username ...
-	  # string match on ident output [slow]
-	  # use REQUIRED to accept any non-null ident.
-	  #
-	  # See also: ident_regex. The two ACLs differ only in their parameter
-	  # syntax and ident output matching algorithm.
-
-	acl aclname ident_regex [-i] username_pattern ...
-	  # regex match on ident output [slow]
 
 	acl aclname proxy_auth [-i] username ...
 	  # perform http authentication challenge to the client and match against
@@ -2102,35 +2092,6 @@ DOC_START
 
 	The default for this setting allows all clients who passed the
 	http_access rules to relay via this proxy.
-
-	This clause only supports fast acl types.
-	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
-DOC_END
-
-NAME: ident_lookup_access
-TYPE: acl_access
-IFDEF: USE_IDENT
-DEFAULT: none
-DEFAULT_DOC: Unless rules exist in squid.conf, IDENT is not fetched.
-LOC: Ident::TheConfig.identLookup
-DOC_START
-	A list of ACL elements which, if matched, cause an ident
-	(RFC 931) lookup to be performed for this request.  For
-	example, you might choose to always perform ident lookups
-	for your main multi-user Unix boxes, but not for your Macs
-	and PCs.  By default, ident lookups are not performed for
-	any requests.
-
-	To enable ident lookups for specific client addresses, you
-	can follow this example:
-
-	acl ident_aware_hosts src 198.168.1.0/24
-	ident_lookup_access allow ident_aware_hosts
-	ident_lookup_access deny all
-
-	Only src type ACL checks are fully supported.  A srcdomain
-	ACL might work at times, but it will not always provide
-	the correct result.
 
 	This clause only supports fast acl types.
 	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
@@ -3698,7 +3659,7 @@ DOC_START
 			The requests will be distributed among the parents based on the
 			CARP load balancing hash function based on their weight.
 
-	userhash	Load-balance parents based on the client proxy_auth or ident username.
+	userhash	Load-balance parents based on the client proxy_auth username.
 
 	sourcehash	Load-balance parents based on the client source IP.
 
@@ -4881,13 +4842,11 @@ DOC_START
 		un	User name (any available)
 		ul	User name from authentication
 		ue	User name from external acl helper
-		ui	User name from ident
 		un	A user name. Expands to the first available name
 			from the following list of information sources:
 			- authenticated user name, like %ul
 			- user name supplied by an external ACL, like %ue
 			- SSL client name, like %us
-			- ident user name, like %ui
 		credentials Client credentials. The exact meaning depends on
 			the authentication scheme: For Basic authentication,
 			it is the password; for Digest, the realm sent by the
@@ -5211,8 +5170,8 @@ DOC_START
 	The default formats available (which do not need re-defining) are:
 
 logformat squid      %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %[un %Sh/%<a %mt
-logformat common     %>a %[ui %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
-logformat combined   %>a %[ui %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
+logformat common     %>a - %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
+logformat combined   %>a - %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
 logformat referrer   %ts.%03tu %>a %{Referer}>h %ru
 logformat useragent  %>a [%tl] "%{User-Agent}>h"
 
@@ -7481,19 +7440,6 @@ DEFAULT: 1 minute
 DOC_START
 	Timeout for idle persistent connections to servers and other
 	proxies.
-DOC_END
-
-NAME: ident_timeout
-TYPE: time_t
-IFDEF: USE_IDENT
-LOC: Ident::TheConfig.timeout
-DEFAULT: 10 seconds
-DOC_START
-	Maximum time to wait for IDENT lookups to complete.
-
-	If this is too high, and you enabled IDENT lookups from untrusted
-	users, you might be susceptible to denial-of-service by having
-	many ident requests going at once.
 DOC_END
 
 NAME: shutdown_lifetime
@@ -10470,7 +10416,7 @@ DOC_START
 	are governed by forward_max_tries instead.
 
 	See also: connect_timeout, forward_timeout, icap_connect_timeout,
-	ident_timeout, and forward_max_tries.
+	and forward_max_tries.
 DOC_END
 
 NAME: retry_on_error

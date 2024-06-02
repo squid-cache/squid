@@ -60,7 +60,7 @@ icapLogRotate()
 void icapLogLog(AccessLogEntry::Pointer &al)
 {
     if (IcapLogfileStatus == LOG_ENABLE) {
-        ACLFilledChecklist checklist(nullptr, al->adapted_request, nullptr);
+        ACLFilledChecklist checklist(nullptr, al->adapted_request);
         checklist.updateAle(al);
         accessLogLogTo(Config.Log.icaplogs, al, &checklist);
     }

@@ -594,7 +594,7 @@ HttpReply::calcMaxBodySize(HttpRequest& request) const
     if (!Config.ReplyBodySize)
         return;
 
-    ACLFilledChecklist ch(nullptr, &request, nullptr);
+    ACLFilledChecklist ch(nullptr, &request);
     ch.updateReply(this);
     for (AclSizeLimit *l = Config.ReplyBodySize; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this size value */
