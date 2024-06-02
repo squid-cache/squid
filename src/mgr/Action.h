@@ -13,7 +13,6 @@
 
 #include "ipc/forward.h"
 #include "mgr/forward.h"
-#include "tools.h"
 
 class StoreEntry;
 
