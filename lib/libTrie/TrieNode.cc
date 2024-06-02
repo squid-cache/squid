@@ -32,7 +32,7 @@ TrieNode::add(char const *aString, size_t theLength, void *privatedata, TrieChar
     /* We trust that privatedata and existant keys have already been checked */
 
     if (theLength) {
-        int index = transform ? (*transform)(*aString): *aString;
+        const unsigned char index = transform ? (*transform)(*aString): *aString;
 
         if (!internal[index])
             internal[index] = new TrieNode;
