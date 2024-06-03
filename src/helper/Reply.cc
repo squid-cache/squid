@@ -241,7 +241,7 @@ Helper::Reply::parseResponseKeys()
                 continue;
             }
             char *end = v + parsedValue.length();
-            expires = squid_curtime + strtoll(v, &end, 10);
+            expires = current_time.tv_sec + strtoll(v, &end, 10);
         } else {
             CheckReceivedKey(parsedKey, parsedValue);
             notes.add(parsedKey, parsedValue);
@@ -286,7 +286,7 @@ Helper::operator <<(std::ostream &os, const Reply &r)
     }
 
     if (r.expires.has_value())
-        os << ", expires in " << (r.expires.value() - squid_curtime) << " seconds";
+        os << ", expires in " << (r.expires.value() - current_time.tv_sec) << " seconds";
 
     // dump the helper key=pair "notes" list
     if (!r.notes.empty()) {
