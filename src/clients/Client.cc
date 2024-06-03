@@ -757,8 +757,13 @@ Client::resumeBodyStorage()
 
     handleMoreAdaptedBodyAvailable();
 
-    if (adaptedBodySource != nullptr && adaptedBodySource->exhausted())
-        endAdaptedBodyConsumption();
+    if (adaptedBodySource != nullptr && adaptedBodySource->exhausted()) {
+        // noteBodyProductionEnded() or noteBodyProducerAborted() has been called
+        // but did not complete the cleanup due to some unconsumed data. Finish it off now.
+        if (receivedWholeAdaptedReply || adaptedReplyAborted)
+            endAdaptedBodyConsumption();
+        // else wait for noteBodyProductionEnded() or noteBodyProducerAborted()
+    }
 }
 
 // more adapted response body is available
@@ -837,6 +842,7 @@ void Client::handleAdaptedBodyProducerAborted()
     if (abortOnBadEntry("entry went bad while waiting for the now-aborted adapted body"))
         return;
 
+    adaptedReplyAborted = true;
     Must(adaptedBodySource != nullptr);
     if (!adaptedBodySource->exhausted()) {
         debugs(11,5, "waiting to consume the remainder of the aborted adapted body");

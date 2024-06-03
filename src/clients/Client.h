@@ -191,6 +191,9 @@ protected:
 
     /// handleAdaptedBodyProductionEnded() was called
     bool receivedWholeAdaptedReply = false;
+
+    /// handleAdaptedBodyProducerAborted() was called
+    bool adaptedReplyAborted = false;
 #endif
     bool receivedWholeVirginReply = false; ///< markParsedVirginReplyAsWhole() called
 
