@@ -53,8 +53,7 @@ Mgr::FunAction::dump(StoreEntry* entry)
 
     handler(entry);
 
-    if (!atomic())
+    if (atomic())
         closeKidSection(entry, is_yaml());
-    // non-aggregatable() non-atomic() actions must call closeKidSection()
-    // when they are done
+    // non-atomic() actions must call closeKidSection() when they are done
 }
