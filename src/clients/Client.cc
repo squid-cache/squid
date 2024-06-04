@@ -160,7 +160,6 @@ Client::markParsedVirginReplyAsWhole(const char *reasonWeAreSure)
     assert(reasonWeAreSure);
     debugs(11, 3, reasonWeAreSure);
 
-    assert(!receivedWholeVirginReply);
     receivedWholeVirginReply = true;
 }
 
@@ -741,6 +740,7 @@ Client::handleAdaptedHeader(Http::Message *msg)
         assert(result);
     } else {
         // no body
+        receivedWholeAdaptedReply = true;
         if (doneWithAdaptation()) // we may still be sending virgin response
             handleAdaptationCompleted();
     }
@@ -758,10 +758,11 @@ Client::resumeBodyStorage()
     handleMoreAdaptedBodyAvailable();
 
     if (adaptedBodySource != nullptr && adaptedBodySource->exhausted()) {
-        // noteBodyProductionEnded() or noteBodyProducerAborted() has been called
-        // but did not complete the cleanup due to some unconsumed data. Finish it off now.
-        if (receivedWholeAdaptedReply || adaptedReplyAborted)
+        if (receivedWholeAdaptedReply || adaptedReplyAborted) {
+            // noteBodyProductionEnded() or noteBodyProducerAborted() could not endAdaptedBodyConsumption()
+            // while waiting for resumeBodyStorage() to consume buffered adapted body data.
             endAdaptedBodyConsumption();
+        }
         // else wait for noteBodyProductionEnded() or noteBodyProducerAborted()
     }
 }

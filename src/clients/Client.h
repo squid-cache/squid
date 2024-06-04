@@ -189,7 +189,7 @@ protected:
     bool adaptationAccessCheckPending = false;
     bool startedAdaptation = false;
 
-    /// handleAdaptedBodyProductionEnded() was called
+    /// the entire adapted response (including bodyless responses) has been successfully produced
     bool receivedWholeAdaptedReply = false;
 
     /// handleAdaptedBodyProducerAborted() was called
