@@ -50,6 +50,14 @@ public:
     Auth::SchemeConfig *config;
     dlink_list proxy_match_cache;
     size_t ipcount;
+
+    /** The latest timestamp at which these credentials should be used.
+     * May be updated by an appropriate helper revalidation.
+     *
+     * Scheme specific criteria may cause credentials to become invalid
+     * before this timestamp. Use `ttl()` to access the scheme-specific
+     * checks of whether the credentials are actually valid.
+     */
     time_t expires = 0;
 
     /// list of key=value pairs the helper produced
