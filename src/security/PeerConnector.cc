@@ -384,13 +384,7 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
 {
     Must(Comm::IsConnOpen(serverConnection()));
 
-    ACLFilledChecklist *check = nullptr;
     Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
-
-    if (acl_access *acl = ::Config.ssl_client.cert_error) {
-        check = new ACLFilledChecklist(acl, request.getRaw());
-        fillChecklist(*check);
-    }
 
     Security::CertErrors *errs = nullptr;
     typedef Ssl::CertValidationResponse::RecvdErrors::const_iterator SVCRECI;
@@ -401,12 +395,12 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
 
         if (!errDetails) {
             bool allowed = false;
-            if (check) {
+            if (const auto acl = ::Config.ssl_client.cert_error) {
+                ACLFilledChecklist check(acl, request.getRaw());
+                fillChecklist(check);
                 const auto sslErrors = std::make_unique<Security::CertErrors>(Security::CertError(i->error_no, i->cert, i->error_depth));
-                check->sslErrors = sslErrors.get();
-                if (check->fastCheck().allowed())
-                    allowed = true;
-                check->sslErrors.clear();
+                check.sslErrors = sslErrors.get();
+                allowed = check.fastCheck().allowed();
             }
             // else the Config.ssl_client.cert_error access list is not defined
             // and the first error will cause the error page
@@ -427,8 +421,6 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
         else
             errs->push_back_unique(Security::CertError(i->error_no, i->cert, i->error_depth));
     }
-    if (check)
-        delete check;
 
     return errs;
 }
