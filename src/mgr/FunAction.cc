@@ -19,6 +19,7 @@
 #include "mgr/FunAction.h"
 #include "mgr/Request.h"
 #include "Store.h"
+#include "tools.h"
 
 Mgr::FunAction::Pointer
 Mgr::FunAction::Create(const Command::Pointer &aCmd, OBJH* aHandler)
@@ -49,11 +50,12 @@ Mgr::FunAction::dump(StoreEntry* entry)
     debugs(16, 5, MYNAME);
     Must(entry != nullptr);
 
-    openKidSection(entry, is_yaml());
+    if (UsingSmp())
+        openKidSection(entry, is_yaml());
 
     handler(entry);
 
-    if (atomic())
+    if (UsingSmp() && atomic())
         closeKidSection(entry, is_yaml());
     // non-atomic() actions must call closeKidSection() when they are done
 }
