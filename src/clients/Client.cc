@@ -757,14 +757,7 @@ Client::resumeBodyStorage()
 
     handleMoreAdaptedBodyAvailable();
 
-    if (adaptedBodySource != nullptr && adaptedBodySource->exhausted()) {
-        if (receivedWholeAdaptedReply || adaptedReplyAborted) {
-            // noteBodyProductionEnded() or noteBodyProducerAborted() could not endAdaptedBodyConsumption()
-            // while waiting for resumeBodyStorage() to consume buffered adapted body data.
-            endAdaptedBodyConsumption();
-        }
-        // else wait for noteBodyProductionEnded() or noteBodyProducerAborted()
-    }
+    checkAdaptationCompletion();
 }
 
 // more adapted response body is available
@@ -824,16 +817,29 @@ Client::handleAdaptedBodyProductionEnded()
     // distinguish this code path from handleAdaptedBodyProducerAborted()
     receivedWholeAdaptedReply = true;
 
-    // end consumption if we consumed everything
-    if (adaptedBodySource != nullptr && adaptedBodySource->exhausted())
-        endAdaptedBodyConsumption();
-    // else resumeBodyStorage() will eventually consume the rest
+    checkAdaptationCompletion();
 }
 
 void
-Client::endAdaptedBodyConsumption()
+Client::checkAdaptationCompletion()
 {
+    if (adaptedBodySource == nullptr)
+        return;
+
+    if (!adaptedBodySource->exhausted()) {
+        debugs(11,5, "waiting to consume the remainder of the adapted body");
+        return; // resumeBodyStorage() should eventually consume the rest
+    }
+
+    if (!receivedWholeAdaptedReply && !adaptedReplyAborted) {
+        // wait for noteBodyProductionEnded() or noteBodyProducerAborted()
+        // because we need to know whether we receivedWholeAdaptedReply
+        return;
+    }
+
     stopConsumingFrom(adaptedBodySource);
+
+    Assure(doneWithAdaptation());
     handleAdaptationCompleted();
 }
 
@@ -850,12 +856,10 @@ void Client::handleAdaptedBodyProducerAborted()
         return; // resumeBodyStorage() should eventually consume the rest
     }
 
-    stopConsumingFrom(adaptedBodySource);
-
     if (handledEarlyAdaptationAbort())
         return;
 
-    handleAdaptationCompleted(); // the user should get a truncated response
+    checkAdaptationCompletion(); // the user should get a truncated response
 }
 
 // common part of noteAdaptationAnswer and handleAdaptedBodyProductionEnded

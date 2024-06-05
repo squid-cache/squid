@@ -141,8 +141,8 @@ protected:
 
     /// called by StoreEntry when it has more buffer space available
     void resumeBodyStorage();
-    /// called when the entire adapted response body is consumed
-    void endAdaptedBodyConsumption();
+    /// completes adaptation if the entire adapted response body was consumed
+    void checkAdaptationCompletion();
 #endif
 
 protected:
