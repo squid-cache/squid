@@ -456,7 +456,7 @@ FwdState::useDestinations()
 void
 FwdState::fail(ErrorState * errorState)
 {
-    debugs(17, 3, err_type_str[errorState->type] << " \"" << Http::StatusCodeString(errorState->httpStatus) << "\"\n\t" << entry->url());
+    debugs(17, 3, errorState << "; was: " << err);
 
     delete err;
     err = errorState;

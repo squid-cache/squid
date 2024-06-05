@@ -677,6 +677,16 @@ errorPageName(int pageId)
     return "ERR_UNKNOWN";   /* should not happen */
 }
 
+/// compactly prints top-level ErrorState information (for debugging)
+static std::ostream &
+operator <<(std::ostream &os, const ErrorState &err)
+{
+    os << errorPageName(err.type);
+    if (err.httpStatus != Http::scNone)
+        os << "/http_status=" << err.httpStatus;
+    return os;
+}
+
 ErrorState *
 ErrorState::NewForwarding(err_type type, HttpRequestPointer &request, const AccessLogEntry::Pointer &ale)
 {
@@ -705,6 +715,8 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, c
         request = req;
         src_addr = req->client_addr;
     }
+
+    debugs(4, 3, "constructed, this=" << static_cast<void*>(this) << ' ' << *this);
 }
 
 ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply, const AccessLogEntry::Pointer &anAle):
@@ -718,6 +730,8 @@ ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply, const AccessLog
         request = req;
         src_addr = req->client_addr;
     }
+
+    debugs(4, 3, "constructed, this=" << static_cast<void*>(this) << " relaying " << *this);
 }
 
 void
@@ -796,6 +810,8 @@ errorSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Comm
 
 ErrorState::~ErrorState()
 {
+    debugs(4, 7, "destructing, this=" << static_cast<void*>(this));
+
     safe_free(redirect_url);
     safe_free(url);
     safe_free(request_hdrs);
@@ -1527,10 +1543,7 @@ ErrorPage::ValidateStaticError(const int page_id, const SBuf &inputLocation)
 std::ostream &
 operator <<(std::ostream &os, const ErrorState *err)
 {
-    if (err)
-        os << errorPageName(err->page_id);
-    else
-        os << "[none]";
+    os << RawPointer(err).orNil();
     return os;
 }
 
