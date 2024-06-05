@@ -33,7 +33,10 @@
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
+
+#include <optional>
 #endif
+
 
 Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, const AsyncCallback<EncryptorAnswer> &aCallback, const AccessLogEntryPointer &alp, const time_t timeout):
     AsyncJob("Security::PeerConnector"),
@@ -386,6 +389,12 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
 
     Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
 
+    std::optional<ACLFilledChecklist> check;
+    if (acl_access *acl = ::Config.ssl_client.cert_error) {
+        check.emplace(acl, request.getRaw());
+        fillChecklist(*check);
+    }
+
     Security::CertErrors *errs = nullptr;
     typedef Ssl::CertValidationResponse::RecvdErrors::const_iterator SVCRECI;
     for (SVCRECI i = resp.errors.begin(); i != resp.errors.end(); ++i) {
@@ -395,12 +404,12 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
 
         if (!errDetails) {
             bool allowed = false;
-            if (const auto acl = ::Config.ssl_client.cert_error) {
-                ACLFilledChecklist check(acl, request.getRaw());
-                fillChecklist(check);
+            if (check) {
                 const auto sslErrors = std::make_unique<Security::CertErrors>(Security::CertError(i->error_no, i->cert, i->error_depth));
-                check.sslErrors = sslErrors.get();
-                allowed = check.fastCheck().allowed();
+                check->sslErrors = sslErrors.get();
+                if (check->fastCheck().allowed())
+                    allowed = true;
+                check->sslErrors.clear();
             }
             // else the Config.ssl_client.cert_error access list is not defined
             // and the first error will cause the error page
