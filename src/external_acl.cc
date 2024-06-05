@@ -44,9 +44,6 @@
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
 #endif
-#if USE_IDENT
-#include "ident/AclIdent.h"
-#endif
 
 #ifndef DEFAULT_EXTERNAL_ACL_TTL
 #define DEFAULT_EXTERNAL_ACL_TTL 1 * 60 * 60
@@ -486,11 +483,11 @@ class external_acl_data
     CBDATA_CLASS(external_acl_data);
 
 public:
-    explicit external_acl_data(external_acl *aDef) : def(cbdataReference(aDef)), name(nullptr), arguments(nullptr) {}
+    explicit external_acl_data(external_acl * const aDef): def(cbdataReference(aDef)), arguments(nullptr) {}
     ~external_acl_data();
 
     external_acl *def;
-    const char *name;
+    SBuf name;
     wordlist *arguments;
 };
 
@@ -498,7 +495,6 @@ CBDATA_CLASS_INIT(external_acl_data);
 
 external_acl_data::~external_acl_data()
 {
-    xfree(name);
     wordlistDestroy(&arguments);
     cbdataReferenceDone(def);
 }
@@ -528,7 +524,7 @@ ACLExternal::parse()
 
     // def->name is the name of the external_acl_type.
     // this is the name of the 'acl' directive being tested
-    data->name = xstrdup(name);
+    data->name = name;
 
     while ((token = ConfigParser::strtokFile())) {
         wordlistAdd(&data->arguments, token);
@@ -768,8 +764,7 @@ ACLExternal::makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl
 
         if (t->type == Format::LFT_EXT_ACL_NAME) {
             // setup for %ACL
-            safe_free(ch->al->lastAclName);
-            ch->al->lastAclName = xstrdup(acl_data->name);
+            ch->al->lastAclName = acl_data->name;
         }
 
         if (t->type == Format::LFT_EXT_ACL_DATA) {
@@ -793,17 +788,6 @@ ACLExternal::makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl
 
             ch->al->lastAclData = sb;
         }
-
-#if USE_IDENT
-        if (t->type == Format::LFT_USER_IDENT) {
-            if (!*ch->rfc931) {
-                // if we fail to go async, we still return NULL and the caller
-                // will detect the failure in ACLExternal::match().
-                (void)ch->goAsync(ACLIdent::StartLookup, *this);
-                return nullptr;
-            }
-        }
-#endif
     }
 
     // assemble the full helper lookup string
@@ -1028,7 +1012,7 @@ ACLExternal::startLookup(ACLFilledChecklist *ch, external_acl_data *acl, bool in
     external_acl *def = acl->def;
 
     const char *key = makeExternalAclKey(ch, acl);
-    assert(key); // XXX: will fail if EXT_ACL_IDENT case needs an async lookup
+    assert(key);
 
     debugs(82, 2, (inBackground ? "bg" : "fg") << " lookup in '" <<
            def->name << "' for '" << key << "'");

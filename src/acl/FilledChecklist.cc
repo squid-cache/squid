@@ -26,7 +26,6 @@ CBDATA_CLASS_INIT(ACLFilledChecklist);
 
 ACLFilledChecklist::ACLFilledChecklist() :
     dst_rdns(nullptr),
-    reply (nullptr),
 #if USE_AUTH
     auth_user_request (nullptr),
 #endif
@@ -42,7 +41,6 @@ ACLFilledChecklist::ACLFilledChecklist() :
     my_addr.setEmpty();
     src_addr.setEmpty();
     dst_addr.setEmpty();
-    rfc931[0] = '\0';
 }
 
 ACLFilledChecklist::~ACLFilledChecklist()
@@ -50,8 +48,6 @@ ACLFilledChecklist::~ACLFilledChecklist()
     assert (!asyncInProgress());
 
     safe_free(dst_rdns); // created by xstrdup().
-
-    HTTPMSGUNLOCK(reply);
 
     cbdataReferenceDone(conn_);
 
@@ -104,17 +100,10 @@ ACLFilledChecklist::verifyAle() const
         }
     }
 
-    if (reply && !al->reply) {
+    if (hasReply() && !al->reply) {
         showDebugWarning("HttpReply object");
-        al->reply = reply;
+        al->reply = reply_;
     }
-
-#if USE_IDENT
-    if (*rfc931 && !al->cache.rfc931) {
-        showDebugWarning("IDENT");
-        al->cache.rfc931 = xstrdup(rfc931);
-    }
-#endif
 }
 
 void
@@ -208,9 +197,8 @@ ACLFilledChecklist::markSourceDomainChecked()
  *    *not* delete the list.  After the callback function returns,
  *    checkCallback() will delete the list (i.e., self).
  */
-ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request, const char *ident):
+ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request):
     dst_rdns(nullptr),
-    reply(nullptr),
 #if USE_AUTH
     auth_user_request(nullptr),
 #endif
@@ -226,11 +214,9 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
     my_addr.setEmpty();
     src_addr.setEmpty();
     dst_addr.setEmpty();
-    rfc931[0] = '\0';
 
     changeAcl(A);
     setRequest(http_request);
-    setIdent(ident);
 }
 
 void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
@@ -252,14 +238,21 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
 }
 
 void
-ACLFilledChecklist::setIdent(const char *ident)
+ACLFilledChecklist::updateAle(const AccessLogEntry::Pointer &a)
 {
-#if USE_IDENT
-    assert(!rfc931[0]);
-    if (ident)
-        xstrncpy(rfc931, ident, USER_IDENT_SZ);
-#else
-    (void)ident;
-#endif
+    if (!a)
+        return;
+
+    al = a; // could have been set already (to a different value)
+    if (!request)
+        setRequest(a->request);
+    updateReply(a->reply);
+}
+
+void
+ACLFilledChecklist::updateReply(const HttpReply::Pointer &r)
+{
+    if (r)
+        reply_ = r; // may already be set, including to r
 }
 

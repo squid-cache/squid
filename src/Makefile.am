@@ -24,7 +24,7 @@ AUTH_LIBS= auth/libauth.la
 AUTH_ACL_LIBS= auth/libacls.la
 endif
 
-SUBDIRS	+= http ip icmp ident log ipc mgr
+SUBDIRS	+= http ip icmp log ipc mgr
 
 SSL_LIBS=
 if ENABLE_SSL
@@ -479,7 +479,6 @@ nodist_squid_SOURCES = \
 
 squid_LDADD = \
 	$(AUTH_ACL_LIBS) \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
@@ -565,7 +564,6 @@ data_DATA = \
 
 LDADD = \
 	$(AUTH_ACL_LIBS) \
-	ident/libident.la \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
@@ -1307,7 +1305,6 @@ tests_testUfs_LDADD = \
 	http/libhttp.la \
 	parser/libparser.la \
 	CommCalls.o \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
@@ -1477,7 +1474,6 @@ tests_testStore_LDADD= \
 	libsquid.la \
 	http/libhttp.la \
 	parser/libparser.la \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
@@ -1651,7 +1647,6 @@ tests_testDiskIO_LDADD = \
 	parser/libparser.la \
 	SquidConfig.o \
 	CommCalls.o \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	comm/libcomm.la \
@@ -1754,8 +1749,8 @@ tests_testHtmlQuote_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of http/* and HTTP Protocol objects
 
-check_PROGRAMS += tests/test_http_range
-tests_test_http_range_SOURCES = \
+check_PROGRAMS += tests/testHttpRange
+tests_testHttpRange_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	$(DNSSOURCE) \
 	$(HTCPSOURCE) \
@@ -1802,6 +1797,7 @@ tests_test_http_range_SOURCES = \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
+	tests/testHttpRange.cc \
 	HttpReply.cc \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
@@ -1839,7 +1835,6 @@ tests_test_http_range_SOURCES = \
 	StrList.h \
 	String.cc \
 	Transients.cc \
-	tests/test_http_range.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	cache_manager.cc \
@@ -1937,10 +1932,10 @@ tests_test_http_range_SOURCES = \
 	wccp2.h \
 	wordlist.cc \
 	wordlist.h
-nodist_tests_test_http_range_SOURCES = \
+nodist_tests_testHttpRange_SOURCES = \
 	$(BUILT_SOURCES) \
 	tests/stub_libtime.cc
-tests_test_http_range_LDADD = \
+tests_testHttpRange_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
@@ -1948,7 +1943,6 @@ tests_test_http_range_LDADD = \
 	helper/libhelper.la \
 	http/libhttp.la \
 	parser/libparser.la \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
@@ -1991,7 +1985,7 @@ tests_test_http_range_LDADD = \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
-tests_test_http_range_LDFLAGS = $(LIBADD_DL)
+tests_testHttpRange_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttp1Parser
 tests_testHttp1Parser_SOURCES = \
@@ -2336,7 +2330,6 @@ tests_testHttpRequest_LDADD = \
 	helper/libhelper.la \
 	ftp/libftp.la \
 	http/libhttp.la \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
@@ -2636,7 +2629,6 @@ tests_testCacheManager_LDADD = \
 	http/libhttp.la \
 	proxyp/libproxyp.la \
 	parser/libparser.la \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \

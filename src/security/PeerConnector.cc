@@ -115,7 +115,7 @@ Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
     err->detailError(d);
 
     if (serverConn) {
-        countFailingConnection(err);
+        countFailingConnection();
         serverConn->noteClosure();
         serverConn = nullptr;
     }
@@ -167,7 +167,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
         // TODO: Remove ACLFilledChecklist::sslErrors and other pre-computed
         // state in favor of the ACLs accessing current/fresh info directly.
         if (acl_access *acl = ::Config.ssl_client.cert_error) {
-            ACLFilledChecklist *check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
+            const auto check = new ACLFilledChecklist(acl, request.getRaw());
             fillChecklist(*check);
             SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check);
         }
@@ -388,7 +388,7 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
     Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
 
     if (acl_access *acl = ::Config.ssl_client.cert_error) {
-        check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
+        check = new ACLFilledChecklist(acl, request.getRaw());
         fillChecklist(*check);
     }
 
@@ -507,7 +507,7 @@ Security::PeerConnector::bail(ErrorState *error)
     answer().error = error;
 
     if (const auto failingConnection = serverConn) {
-        countFailingConnection(error);
+        countFailingConnection();
         disconnect();
         failingConnection->close();
     }
@@ -525,10 +525,10 @@ Security::PeerConnector::sendSuccess()
 }
 
 void
-Security::PeerConnector::countFailingConnection(const ErrorState * const error)
+Security::PeerConnector::countFailingConnection()
 {
     assert(serverConn);
-    NoteOutgoingConnectionFailure(serverConn->getPeer(), error ? error->httpStatus : Http::scNone);
+    NoteOutgoingConnectionFailure(serverConn->getPeer());
     // TODO: Calling PconnPool::noteUses() should not be our responsibility.
     if (noteFwdPconnUse && serverConn->isOpen())
         fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);

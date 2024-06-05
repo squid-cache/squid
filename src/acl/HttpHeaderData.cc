@@ -36,20 +36,17 @@ ACLHTTPHeaderData::~ACLHTTPHeaderData()
 }
 
 bool
-ACLHTTPHeaderData::match(HttpHeader* hdr)
+ACLHTTPHeaderData::match(const HttpHeader &hdr)
 {
-    if (hdr == nullptr)
-        return false;
-
     debugs(28, 3, "aclHeaderData::match: checking '" << hdrName << "'");
 
     String value;
     if (hdrId != Http::HdrType::BAD_HDR) {
-        if (!hdr->has(hdrId))
+        if (!hdr.has(hdrId))
             return false;
-        value = hdr->getStrOrList(hdrId);
+        value = hdr.getStrOrList(hdrId);
     } else {
-        if (!hdr->hasNamed(hdrName, &value))
+        if (!hdr.hasNamed(hdrName, &value))
             return false;
     }
 

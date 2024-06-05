@@ -720,7 +720,7 @@ Ftp::Client::sendPassive()
     default: {
         bool doEpsv = true;
         if (Config.accessList.ftp_epsv) {
-            ACLFilledChecklist checklist(Config.accessList.ftp_epsv, fwd->request, nullptr);
+            ACLFilledChecklist checklist(Config.accessList.ftp_epsv, fwd->request);
             doEpsv = checklist.fastCheck().allowed();
         }
         if (!doEpsv) {
@@ -907,6 +907,8 @@ Ftp::Client::dataConnection() const
 void
 Ftp::Client::noteDelayAwareReadChance()
 {
+    // TODO: Merge with HttpStateData::noteDelayAwareReadChance()
+    waitingForDelayAwareReadChance = false;
     data.read_pending = false;
     maybeReadVirginBody();
 }

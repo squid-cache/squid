@@ -194,6 +194,9 @@ protected:
 #endif
     bool receivedWholeRequestBody = false; ///< handleRequestBodyProductionEnded called
 
+    /// whether we are waiting for MemObject::delayRead() to call us back
+    bool waitingForDelayAwareReadChance = false;
+
     /// whether we should not be talking to FwdState; XXX: clear fwd instead
     /// points to a string literal which is used only for debugging
     const char *doneWithFwd = nullptr;

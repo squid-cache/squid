@@ -1815,9 +1815,6 @@ statClientRequests(StoreEntry * s)
                 p = http->request->extacl_user.termedBuf();
             }
 
-        if (!p && conn != nullptr && conn->clientConnection->rfc931[0])
-            p = conn->clientConnection->rfc931;
-
 #if USE_OPENSSL
         if (!p && conn != nullptr && Comm::IsConnOpen(conn->clientConnection))
             p = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl.get());

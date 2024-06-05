@@ -69,12 +69,10 @@ Note::addValue(const char *value, const bool quoted, const char *descr, const Va
 bool
 Note::match(HttpRequest *request, HttpReply *reply, const AccessLogEntry::Pointer &al, SBuf &matched)
 {
-    ACLFilledChecklist ch(nullptr, request, nullptr);
-    ch.al = al;
-    ch.reply = reply;
+    ACLFilledChecklist ch(nullptr, request);
+    ch.updateAle(al);
+    ch.updateReply(reply);
     ch.syncAle(request, nullptr);
-    if (reply)
-        HTTPMSGLOCK(ch.reply);
 
     for (const auto &v: values) {
         assert(v->aclList);

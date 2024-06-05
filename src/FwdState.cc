@@ -348,14 +348,12 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
          * Intentionally replace the src_addr automatically selected by the checklist code
          * we do NOT want the indirect client address to be tested here.
          */
-        ACLFilledChecklist ch(Config.accessList.miss, request, nullptr);
+        ACLFilledChecklist ch(Config.accessList.miss, request);
         ch.al = al;
         ch.src_addr = request->client_addr;
         ch.syncAle(request, nullptr);
         if (ch.fastCheck().denied()) {
-            err_type page_id;
-            page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);
-
+            auto page_id = FindDenyInfoPage(ch.currentAnswer(), true);
             if (page_id == ERR_NONE)
                 page_id = ERR_FORWARDING_DENIED;
 
@@ -647,7 +645,13 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     }
 
     // destinationsFound, but none of them worked, and we were waiting for more
-    assert(err);
+    debugs(17, 7, "no more destinations to try after " << n_tries << " failed attempts");
+    if (!err) {
+        const auto finalError = new ErrorState(ERR_CANNOT_FORWARD, Http::scBadGateway, request, al);
+        static const auto d = MakeNamedErrorDetail("REFORWARD_TO_NONE");
+        finalError->detailError(d);
+        fail(finalError);
+    } // else use actual error from last forwarding attempt
     stopAndDestroy("all found paths have failed");
 }
 
@@ -1132,7 +1136,7 @@ FwdState::connectStart()
     cs->setHost(request->url.host());
     bool retriable = checkRetriable();
     if (!retriable && Config.accessList.serverPconnForNonretriable) {
-        ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request, nullptr);
+        ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request);
         ch.al = al;
         ch.syncAle(request, nullptr);
         retriable = ch.fastCheck().allowed();
@@ -1500,7 +1504,7 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
         return; // anything will do.
     }
 
-    ACLFilledChecklist ch(nullptr, request, nullptr);
+    ACLFilledChecklist ch(nullptr, request);
     ch.dst_peer_name = conn->getPeer() ? conn->getPeer()->name : nullptr;
     ch.dst_addr = conn->remote;
 
@@ -1527,7 +1531,7 @@ GetTosToServer(HttpRequest * request, Comm::Connection &conn)
     if (!Ip::Qos::TheConfig.tosToServer)
         return 0;
 
-    ACLFilledChecklist ch(nullptr, request, nullptr);
+    ACLFilledChecklist ch(nullptr, request);
     ch.dst_peer_name = conn.getPeer() ? conn.getPeer()->name : nullptr;
     ch.dst_addr = conn.remote;
     return aclMapTOS(Ip::Qos::TheConfig.tosToServer, &ch);
@@ -1540,7 +1544,7 @@ GetNfmarkToServer(HttpRequest * request, Comm::Connection &conn)
     if (!Ip::Qos::TheConfig.nfmarkToServer)
         return 0;
 
-    ACLFilledChecklist ch(nullptr, request, nullptr);
+    ACLFilledChecklist ch(nullptr, request);
     ch.dst_peer_name = conn.getPeer() ? conn.getPeer()->name : nullptr;
     ch.dst_addr = conn.remote;
     const auto mc = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToServer, &ch);

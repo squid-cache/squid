@@ -9,6 +9,8 @@
 /* DEBUG: section 48    Persistent Connections */
 
 #include "squid.h"
+#include "base/IoManip.h"
+#include "base/PackableStream.h"
 #include "CachePeer.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -348,34 +350,41 @@ PconnPool::key(const Comm::ConnectionPointer &destLink, const char *domain)
 }
 
 void
-PconnPool::dumpHist(StoreEntry * e) const
+PconnPool::dumpHist(std::ostream &yaml) const
 {
-    storeAppendPrintf(e,
-                      "%s persistent connection counts:\n"
-                      "\n"
-                      "\t Requests\t Connection Count\n"
-                      "\t --------\t ----------------\n",
-                      descr);
+    AtMostOnce heading(
+        "  connection use histogram:\n"
+        "    # requests per connection: closed connections that carried that many requests\n");
 
     for (int i = 0; i < PCONN_HIST_SZ; ++i) {
         if (hist[i] == 0)
             continue;
 
-        storeAppendPrintf(e, "\t%d\t%d\n", i, hist[i]);
+        yaml << heading <<
+             "    " << i << ": " << hist[i] << "\n";
     }
 }
 
 void
-PconnPool::dumpHash(StoreEntry *e) const
+PconnPool::dumpHash(std::ostream &yaml) const
 {
-    hash_table *hid = table;
+    const auto hid = table;
     hash_first(hid);
-
-    int i = 0;
-    for (hash_link *walker = hash_next(hid); walker; walker = hash_next(hid)) {
-        storeAppendPrintf(e, "\t item %d:\t%s\n", i, (char *)(walker->key));
-        ++i;
+    AtMostOnce title("  open connections list:\n");
+    for (auto *walker = hash_next(hid); walker; walker = hash_next(hid)) {
+        yaml << title <<
+             "    \"" << static_cast<char *>(walker->key) << "\": " <<
+             static_cast<IdleConnList *>(walker)->count() <<
+             "\n";
     }
+}
+
+void
+PconnPool::dump(std::ostream &yaml) const
+{
+    yaml << "pool " << descr << ":\n";
+    dumpHist(yaml);
+    dumpHash(yaml);
 }
 
 /* ========== PconnPool PUBLIC FUNCTIONS ============================================ */
@@ -582,22 +591,16 @@ PconnModule::remove(PconnPool *aPool)
 }
 
 void
-PconnModule::dump(StoreEntry *e)
+PconnModule::dump(std::ostream &yaml)
 {
-    typedef Pools::const_iterator PCI;
-    int i = 0; // TODO: Why number pools if they all have names?
-    for (PCI p = pools.begin(); p != pools.end(); ++p, ++i) {
-        // TODO: Let each pool dump itself the way it wants to.
-        storeAppendPrintf(e, "\n Pool %d Stats\n", i);
-        (*p)->dumpHist(e);
-        storeAppendPrintf(e, "\n Pool %d Hash Table\n",i);
-        (*p)->dumpHash(e);
-    }
+    for (const auto &p: pools)
+        p->dump(yaml);
 }
 
 void
 PconnModule::DumpWrapper(StoreEntry *e)
 {
-    PconnModule::GetInstance()->dump(e);
+    PackableStream yaml(*e);
+    PconnModule::GetInstance()->dump(yaml);
 }
 
