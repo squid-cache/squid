@@ -68,10 +68,10 @@ void dump_acl_list(StoreEntry * entry, ACLList * head);
 namespace Acl {
 /// convenient and safe access to a stored (and parsed/configured) Tree
 /// \returns **cfg or *cfg->getRaw()
-/// \prec cfg points to a non-nil StoredTree pointer; ACL parsing code is
+/// \prec cfg points to a non-nil TreePointer object; ACL parsing code is
 /// written so that ToTree() caller may just check that cfg itself is not nil
-/// (because parsing code never stores nil StoredTree pointers).
-const Tree &ToTree(const StoredTree *cfg);
+/// (because parsing code never stores nil TreePointer objects).
+const Tree &ToTree(const TreePointer *cfg);
 }
 
 #endif /* SQUID_SRC_ACL_GADGETS_H */

@@ -189,7 +189,7 @@ ACLChecklist::changeAcl(const acl_access * const replacement)
     accessList = replacement ? *replacement : nullptr;
 }
 
-Acl::StoredTree
+Acl::TreePointer
 ACLChecklist::swapAcl(const acl_access * const replacement)
 {
     const auto old = accessList;

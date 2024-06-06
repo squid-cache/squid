@@ -35,7 +35,7 @@ class Tree;
 void Init(void);
 
 /// reconfiguration-safe storage of ACL rules
-using StoredTree = RefCount<Acl::Tree>;
+using TreePointer = RefCount<Acl::Tree>;
 
 } // namespace Acl
 
@@ -43,8 +43,8 @@ typedef void ACLCB(Acl::Answer, void *);
 
 // TODO: Consider renaming all users and removing. Cons: hides the difference
 // between ACLList tree without actions and acl_access Tree with actions.
-using acl_access = Acl::StoredTree;
-using ACLList = Acl::StoredTree;
+using acl_access = Acl::TreePointer;
+using ACLList = Acl::TreePointer;
 
 class ExternalACLEntry;
 typedef RefCount<ExternalACLEntry> ExternalACLEntryPointer;
