@@ -80,7 +80,7 @@ public:
     /// See also: context() and FindByName().
     SBuf name;
 
-    char *cfgline;
+    char *cfgline = nullptr;
 
 private:
     /// Matches the actual data in checklist against this Acl::Node.

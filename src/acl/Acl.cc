@@ -177,7 +177,7 @@ Acl::Node::FindByName(const SBuf &name)
     return result->second.getRaw();
 }
 
-Acl::Node::Node(): cfgline(nullptr)
+Acl::Node::Node()
 {
     debugs(28, 8, "constructing, this=" << this);
 }
