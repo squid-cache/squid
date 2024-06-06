@@ -2308,10 +2308,10 @@ clientNegotiateSSL(int fd, void *data)
         if (Debug::Enabled(83, 4)) {
             /* Write out the SSL session details.. actually the call below, but
              * OpenSSL headers do strange typecasts confusing GCC.. */
-            /* PEM_write_SSL_SESSION(debug_log, SSL_get_session(ssl)); */
+            /* PEM_write_SSL_SESSION(DebugStream(), SSL_get_session(ssl)); */
 #if defined(OPENSSL_VERSION_NUMBER) && OPENSSL_VERSION_NUMBER >= 0x00908000L
             PEM_ASN1_write(reinterpret_cast<i2d_of_void *>(i2d_SSL_SESSION),
-                           PEM_STRING_SSL_SESSION, debug_log,
+                           PEM_STRING_SSL_SESSION, DebugStream(),
                            reinterpret_cast<char *>(SSL_get_session(session.get())),
                            nullptr, nullptr, 0, nullptr, nullptr);
 
@@ -2325,11 +2325,11 @@ clientNegotiateSSL(int fd, void *data)
             * commented line. */
 
             PEM_ASN1_write((int(*)())i2d_SSL_SESSION, PEM_STRING_SSL_SESSION,
-                           debug_log,
+                           DebugStream(),
                            reinterpret_cast<char *>(SSL_get_session(session.get())),
                            nullptr, nullptr, 0, nullptr, nullptr);
             /* PEM_ASN1_write((int(*)(...))i2d_SSL_SESSION, PEM_STRING_SSL_SESSION,
-                           debug_log,
+                           DebugStream(),
                            reinterpret_cast<char *>(SSL_get_session(session.get())),
                            nullptr, nullptr, 0, nullptr, nullptr);
              */

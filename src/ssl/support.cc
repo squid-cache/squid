@@ -158,7 +158,7 @@ ssl_temp_rsa_cb(SSL *, int, int keylen)
 
     if (newkey) {
         if (Debug::Enabled(83, 5))
-            PEM_write_RSAPrivateKey(debug_log, rsa, nullptr, nullptr, 0, nullptr, nullptr);
+            PEM_write_RSAPrivateKey(DebugStream(), rsa, nullptr, nullptr, 0, nullptr, nullptr);
 
         debugs(83, DBG_IMPORTANT, "Generated ephemeral RSA key of length " << keylen);
     }
