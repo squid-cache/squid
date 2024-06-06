@@ -1075,16 +1075,6 @@ parse_obsolete(const char *name)
         Config.redirectChildren.concurrency = cval;
     }
 
-    if (!strcmp(name, "log_access")) {
-        self_destruct();
-        return;
-    }
-
-    if (!strcmp(name, "log_icap")) {
-        self_destruct();
-        return;
-    }
-
     if (!strcmp(name, "ignore_ims_on_miss")) {
         // the replacement directive cache_revalidate_on_miss has opposite meanings for ON/OFF value
         // than the 2.7 directive. We need to parse and invert the configured value.
