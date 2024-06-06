@@ -1493,23 +1493,23 @@ free_SBufList(SBufList *list)
 }
 
 static void
-dump_acl(StoreEntry *entry, const char *directiveName, Acl::NamedRules *config)
+dump_acl(StoreEntry *entry, const char *directiveName, Acl::NamedAcls *config)
 {
     PackableStream os(*entry);
-    Acl::DumpNamedRules(os, directiveName, config);
+    Acl::DumpNamedAcls(os, directiveName, config);
 }
 
 static void
-parse_acl(Acl::NamedRules **config)
+parse_acl(Acl::NamedAcls **config)
 {
     assert(config);
-    Acl::Node::ParseNamedRule(LegacyParser, *config);
+    Acl::Node::ParseNamedAcl(LegacyParser, *config);
 }
 
 static void
-free_acl(Acl::NamedRules **config)
+free_acl(Acl::NamedAcls **config)
 {
-    Acl::FreeNamedRules(config);
+    Acl::FreeNamedAcls(config);
 }
 
 void

@@ -32,7 +32,7 @@ public:
     void operator delete(void *);
 
     /// parses acl directive parts that follow directive name (i.e. "acl")
-    static void ParseNamedRule(ConfigParser &, NamedRules *&);
+    static void ParseNamedAcl(ConfigParser &, NamedAcls *&);
 
     static void Initialize();
 
@@ -101,7 +101,7 @@ private:
     /// \see Acl::Node::options()
     virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
 
-    static void ParseNamed(ConfigParser &, NamedRules &, const SBuf &name);
+    static void ParseNamed(ConfigParser &, NamedAcls &, const SBuf &name);
 };
 
 } // namespace Acl

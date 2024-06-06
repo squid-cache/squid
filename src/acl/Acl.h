@@ -126,10 +126,10 @@ operator <<(std::ostream &o, const Answer &a)
 }
 
 /// report the given list of "acl" directives (using squid.conf syntax)
-void DumpNamedRules(std::ostream &, const char *directiveName, NamedRules *);
+void DumpNamedAcls(std::ostream &, const char *directiveName, NamedAcls *);
 
 /// delete the given list of "acl" directives
-void FreeNamedRules(NamedRules **);
+void FreeNamedAcls(NamedAcls **);
 
 } // namespace Acl
 

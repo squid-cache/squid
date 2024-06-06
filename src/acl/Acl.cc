@@ -33,7 +33,7 @@
 namespace Acl {
 
 /// parsed "acl aclname ..." directives indexed by aclname
-class NamedRules: public std::unordered_map<SBuf, Acl::Node::Pointer,
+class NamedAcls: public std::unordered_map<SBuf, Acl::Node::Pointer,
     CaseInsensitiveSBufHash, CaseInsensitiveSBufEqual,
     PoolingAllocator< std::pair<const SBuf, Acl::Node::Pointer> > > {
 };
@@ -229,7 +229,7 @@ Acl::Node::context(const SBuf &aName, const char *aCfgLine)
 }
 
 void
-Acl::Node::ParseNamedRule(ConfigParser &parser, NamedRules *&namedRules)
+Acl::Node::ParseNamedAcl(ConfigParser &parser, NamedAcls *&namedAcls)
 {
     /* we're already using strtok() to grok the line */
     char *t = nullptr;
@@ -242,18 +242,18 @@ Acl::Node::ParseNamedRule(ConfigParser &parser, NamedRules *&namedRules)
         return;
     }
 
-    if (!namedRules)
-        namedRules = new NamedRules();
+    if (!namedAcls)
+        namedAcls = new NamedAcls();
 
     SBuf aclname(t);
     CallParser(ParsingContext::Pointer::Make(aclname), [&] {
-        ParseNamed(parser, *namedRules, aclname);
+        ParseNamed(parser, *namedAcls, aclname);
     });
 }
 
 /// parses acl directive parts that follow aclname
 void
-Acl::Node::ParseNamed(ConfigParser &parser, NamedRules &namedRules, const SBuf &aclname)
+Acl::Node::ParseNamed(ConfigParser &parser, NamedAcls &namedAcls, const SBuf &aclname)
 {
     /* snarf the ACL type */
     const char *theType;
@@ -330,15 +330,15 @@ Acl::Node::ParseNamed(ConfigParser &parser, NamedRules &namedRules, const SBuf &
                A->cfgline);
     }
 
-    const auto insertion = namedRules.emplace(A->name, A);
+    const auto insertion = namedAcls.emplace(A->name, A);
     Assure(insertion.second); // FindByName() above checked that A is a new ACL
 }
 
 void
-Acl::DumpNamedRules(std::ostream &os, const char * const directiveName, NamedRules * const namedRules)
+Acl::DumpNamedAcls(std::ostream &os, const char * const directiveName, NamedAcls * const namedAcls)
 {
-    if (namedRules) {
-        for (const auto &nameAndAcl: *namedRules) {
+    if (namedAcls) {
+        for (const auto &nameAndAcl: *namedAcls) {
             debugs(3, 3, directiveName << ' ' << nameAndAcl.first);
             nameAndAcl.second->dumpWhole(directiveName, os);
         }
@@ -346,11 +346,11 @@ Acl::DumpNamedRules(std::ostream &os, const char * const directiveName, NamedRul
 }
 
 void
-Acl::FreeNamedRules(NamedRules ** const namedRules)
+Acl::FreeNamedAcls(NamedAcls ** const namedAcls)
 {
-    assert(namedRules);
-    delete *namedRules;
-    *namedRules = nullptr;
+    assert(namedAcls);
+    delete *namedAcls;
+    *namedAcls = nullptr;
 }
 
 bool

@@ -26,7 +26,7 @@ class AndNode;
 class Answer;
 class ChecklistFiller;
 class InnerNode;
-class NamedRules;
+class NamedAcls;
 class NotNode;
 class OrNode;
 class Tree;

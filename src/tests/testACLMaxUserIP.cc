@@ -76,7 +76,7 @@ TestACLMaxUserIP::testParseLine()
     /* seed the parser */
     ConfigParser::SetCfgLine(line);
     ConfigParser LegacyParser;
-    Acl::Node::ParseNamedRule(LegacyParser, Config.namedAcls);
+    Acl::Node::ParseNamedAcl(LegacyParser, Config.namedAcls);
     CPPUNIT_ASSERT(Config.namedAcls);
     const auto anACL = Acl::Node::FindByName(SBuf("test"));
     CPPUNIT_ASSERT(anACL);
@@ -89,7 +89,7 @@ TestACLMaxUserIP::testParseLine()
         /* the acl must be vaid */
         CPPUNIT_ASSERT_EQUAL(true, maxUserIpACL->valid());
     }
-    Acl::FreeNamedRules(&Config.namedAcls);
+    Acl::FreeNamedAcls(&Config.namedAcls);
     xfree(line);
 }
 
