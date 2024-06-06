@@ -189,6 +189,14 @@ ACLChecklist::changeAcl(const acl_access * const replacement)
     accessList = replacement ? *replacement : nullptr;
 }
 
+Acl::StoredTree
+ACLChecklist::swapAcl(const acl_access * const replacement)
+{
+    const auto old = accessList;
+    changeAcl(replacement);
+    return old;
+}
+
 /**
  * Kick off a non-blocking (slow) ACL access list test
  *
@@ -269,8 +277,7 @@ ACLChecklist::fastCheck(const ACLList * const list)
 
     // Concurrent checks are not supported, but sequential checks are, and they
     // may use a mixture of fastCheck(void) and fastCheck(list) calls.
-    const auto savedList = accessList;
-    changeAcl(list);
+    const auto savedList = swapAcl(list);
 
     // assume DENY/ALLOW on mis/matches due to action-free accessList
     // matchAndFinish() takes care of the ALLOW case
@@ -279,7 +286,7 @@ ACLChecklist::fastCheck(const ACLList * const list)
     if (!finished())
         markFinished(ACCESS_DENIED, "ACLs failed to match");
 
-    accessList = savedList;
+    changeAcl(&savedList);
     occupied_ = false;
     return currentAnswer();
 }

@@ -156,6 +156,10 @@ private:
 
     void matchAndFinish();
 
+    /// \copydoc changeAcl()
+    /// \returns old accessList pointer (that may be nil)
+    Acl::StoredTree swapAcl(const acl_access *);
+
     Acl::StoredTree accessList;
 
 public:
