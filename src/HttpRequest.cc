@@ -798,11 +798,10 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
         const bool proxyProtocolPort = port ? port->flags.proxySurrogate : false;
         if (flags.interceptTproxy && !proxyProtocolPort) {
             if (Config.accessList.spoof_client_ip) {
-                const auto checklist = new ACLFilledChecklist(Config.accessList.spoof_client_ip, this);
-                checklist->al = al;
-                checklist->syncAle(this, nullptr);
-                flags.spoofClientIp = checklist->fastCheck().allowed();
-                delete checklist;
+                ACLFilledChecklist checklist(Config.accessList.spoof_client_ip, this);
+                checklist.al = al;
+                checklist.syncAle(this, nullptr);
+                flags.spoofClientIp = checklist.fastCheck().allowed();
             } else
                 flags.spoofClientIp = true;
         } else
