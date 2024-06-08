@@ -50,12 +50,11 @@ Mgr::FunAction::dump(StoreEntry* entry)
     debugs(16, 5, MYNAME);
     Must(entry != nullptr);
 
-    if (UsingSmp())
-        openKidSection(entry, is_yaml());
+    openKidSection(entry, is_yaml());
 
     handler(entry);
 
-    if (UsingSmp() && atomic())
+    if (atomic())
         closeKidSection(entry, is_yaml());
     // non-atomic() actions must call closeKidSection() when they are done
 }
