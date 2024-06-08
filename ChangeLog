@@ -1,3 +1,10 @@
+Changes in squid-6.10 (10 Jun 2024)
+	- Bug 5378: type mismatch in libTrie
+	- Disable ESI in default build
+	- Fix build with clang v18 [-Wvla-cxx-extension]
+	- ... and some unit test improvements
+	- ... and some documentation improvements
+
 Changes in squid-6.9 (7 Apr 2024)
 	- Regression Bug 5349: basic_nis_auth build error: unterminated #ifndef
 	- Bug 5069: Keep listening after getsockname() error
