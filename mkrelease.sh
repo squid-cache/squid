@@ -25,7 +25,7 @@ RELEASE_TIME=`date +%s`
 #
 # check that $rev has the right syntax
 #
-checkrev=`expr $rev : '\([0-9]\.[0-9]\(\.[0-9\.]\)*\)'`
+checkrev=`expr $rev : '\([0-9]\.[0-9][0-9]*\(\.[0-9\.]\)*\)'`
 if test "$rev" != "$checkrev" ; then
 	echo "revision '$rev' has incorrect syntax.  Should be like '3.1.0.1'"
 	exit 1;
