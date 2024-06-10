@@ -5013,9 +5013,10 @@ DOC_START
 
 				If this logformat %code is used before its timer starts, the
 				corresponding measurement has no value (and the %code expands
-				to a single dash ("-") character). If this code is used while
-				its timer is running, the time spent so far is used as the
-				measurement value.
+				to a single dash ("-") character).
+
+				If this code is used while its timer is running, the time
+				spent so far is used as the measurement value.
 
 				When Squid re-forwards the request (e.g., due to an HTTP 304
 				response indicating that the cached response is stale), the
