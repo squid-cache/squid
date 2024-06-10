@@ -4995,7 +4995,8 @@ DOC_START
 		[http::]<pt	Peer response time in milliseconds. The timer starts
 				when the last request byte is sent to the next hop
 				and stops when the last response byte is received.
-		[http::]<tt	Total peering time in milliseconds.
+		[http::]<tt	Total time spent forwarding to origin servers or
+				cache_peers (milliseconds).
 
 				The timer starts when Squid decides to forward the request (to
 				an origin server or cache_peer) and peer selection begins. The
