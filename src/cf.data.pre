@@ -5018,12 +5018,11 @@ DOC_START
 				If this code is used while its timer is running, the time
 				spent so far is used as the measurement value.
 
-				When Squid re-forwards the request (e.g., due to an HTTP 304
-				response indicating that the cached response is stale), the
-				timer may restart. In this case, the new measurement is added
-				to the value accumulated from previous forwarding attempts.
-				The time interval between forwarding attempts is not added
-				to the final result.
+				When Squid re-forwards the request (e.g., after certain cache
+				revalidation failures), the timer may restart. In this case,
+				the new measurement is added to the value accumulated from
+				previous forwarding attempts. The time interval between
+				forwarding attempts is not added to the final result.
 
 	Squid handling related format codes:
 
