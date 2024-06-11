@@ -70,10 +70,8 @@ MyTestProgram::startup()
 void
 TestACLMaxUserIP::testParseLine()
 {
-    /* a config line to pass with a lead-in token to seed the parser. */
-    char * line = xstrdup("test max_user_ip -s 1");
     /* seed the parser */
-    ConfigParser::SetCfgLine(line);
+    ConfigParser::SetCfgLine(SBuf("test max_user_ip -s 1"));
     Acl::Node *anACL = nullptr;
     ConfigParser LegacyParser;
     Acl::Node::ParseAclLine(LegacyParser, &anACL);
@@ -87,7 +85,6 @@ TestACLMaxUserIP::testParseLine()
         CPPUNIT_ASSERT_EQUAL(true, maxUserIpACL->valid());
     }
     delete anACL;
-    xfree(line);
 }
 
 int

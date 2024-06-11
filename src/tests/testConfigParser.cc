@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "compat/cppunit.h"
 #include "ConfigParser.h"
+#include "sbuf/SBuf.h"
 #include "SquidString.h"
 #include "unitTestMain.h"
 
@@ -31,18 +32,11 @@ CPPUNIT_TEST_SUITE_REGISTRATION( TestConfigParser );
 
 int shutting_down = 0;
 
-bool TestConfigParser::doParseQuotedTest(const char *s, const char *expectInterp)
+bool
+TestConfigParser::doParseQuotedTest(const char * const cfgparam, const char * const expectInterp)
 {
-    char cfgline[2048];
-    char cfgparam[2048];
-    snprintf(cfgline, 2048, "%s", s);
-
-    // Keep the initial value on cfgparam. The ConfigParser  methods will write on cfgline
-    strncpy(cfgparam, cfgline, sizeof(cfgparam)-1);
-    cfgparam[sizeof(cfgparam)-1] = '\0';
-
     // Initialize parser to point to the start of quoted string
-    ConfigParser::SetCfgLine(cfgline);
+    ConfigParser::SetCfgLine(SBuf(cfgparam));
     String unEscaped = ConfigParser::NextToken();
 
     const bool interpOk = (unEscaped.cmp(expectInterp) == 0);

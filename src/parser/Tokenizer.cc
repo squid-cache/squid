@@ -333,3 +333,60 @@ Parser::Tokenizer::udec64(const char *description, const SBuf::size_type limit)
     return result;
 }
 
+/// NextWordWhileRemovingDoubleQuotesAndBackslashesInsideThem() helper that
+/// parses an optional "quoted string" sequence at the start of its input.
+static std::optional<SBuf>
+UnquoteSequence_(Parser::Tokenizer &tk)
+{
+    if (!tk.skipOne(CharacterSet::DQUOTE))
+        return std::nullopt;
+
+    SBuf decoded;
+    while (!tk.atEnd()) {
+        SBuf prefix;
+        static const auto backslashChar = CharacterSet("backslash", "\\");
+        static const auto ordinaryChars = (CharacterSet::DQUOTE + backslashChar).complement();
+        if (tk.prefix(prefix, ordinaryChars))
+            decoded.append(prefix);
+
+        if (tk.skipOne(CharacterSet::DQUOTE))
+            return decoded; // well-formed "quoted string"
+
+        if (tk.skipOne(backslashChar)) {
+            SBuf escaped;
+            static const auto allChars = CharacterSet().complement("any char");
+            if (tk.prefix(escaped, allChars, 1))
+                decoded.append(escaped);
+            else
+                Assure(tk.atEnd()); // input ends at backslash (which we skip)
+        }
+    }
+
+    return decoded; // truncated "quoted string" (no closing quote); may be empty
+}
+
+std::optional<SBuf>
+NextWordWhileRemovingDoubleQuotesAndBackslashesInsideThem(Parser::Tokenizer &tk)
+{
+    const auto &spaceChars = CharacterSet::libcSpace();
+
+    (void)tk.skipAll(spaceChars);
+    if (tk.atEnd())
+        return std::nullopt;
+
+    SBuf decoded;
+    do {
+        SBuf prefix;
+        static const auto ordinaryChars = (CharacterSet::DQUOTE + spaceChars).complement();
+        if (tk.prefix(prefix, ordinaryChars))
+            decoded.append(prefix);
+
+        if (const auto sequence = UnquoteSequence_(tk))
+            decoded.append(*sequence);
+
+        if (tk.skipOne(spaceChars))
+            break;
+    } while (!tk.atEnd());
+    return decoded; // may be empty (e.g., ` ""` or `"\`)
+}
+

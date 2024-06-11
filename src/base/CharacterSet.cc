@@ -168,3 +168,18 @@ CharacterSet::RFC3986_UNRESERVED()
     return *chars;
 }
 
+const CharacterSet &
+CharacterSet::libcSpace()
+{
+    const auto creator = []() -> auto {
+        const auto chars = new CharacterSet("libcSpace");
+        for (size_t idx = 0; idx < 256; ++idx) {
+            if (xisspace(idx))
+                chars->add(idx);
+        }
+        return chars;
+    };
+    static const auto chars = creator();
+    return *chars;
+}
+

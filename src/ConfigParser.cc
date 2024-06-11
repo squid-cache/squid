@@ -16,13 +16,14 @@
 #include "fatal.h"
 #include "globals.h"
 #include "neighbors.h"
+#include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
 bool ConfigParser::RecognizeQuotedValues = true;
 bool ConfigParser::StrictMode = true;
 std::stack<ConfigParser::CfgFile *> ConfigParser::CfgFiles;
 ConfigParser::TokenType ConfigParser::LastTokenType = ConfigParser::SimpleToken;
-const char *ConfigParser::CfgLine = nullptr;
+SBuf ConfigParser::CfgLine;
 const char *ConfigParser::CfgPos = nullptr;
 std::queue<char *> ConfigParser::CfgLineTokens_;
 bool ConfigParser::AllowMacros_ = false;
@@ -201,10 +202,10 @@ ConfigParser::UnQuote(const char *token, const char **next)
 }
 
 void
-ConfigParser::SetCfgLine(char *line)
+ConfigParser::SetCfgLine(const SBuf &line)
 {
     CfgLine = line;
-    CfgPos = line;
+    CfgPos = CfgLine.c_str();
     while (!CfgLineTokens_.empty()) {
         char *token = CfgLineTokens_.front();
         CfgLineTokens_.pop();
@@ -559,6 +560,20 @@ ConfigParser::rejectDuplicateDirective()
 {
     assert(cfg_directive);
     throw TextException("duplicate configuration directive", Here());
+}
+
+SBuf
+ConfigParser::openDirective(const SBuf &line)
+{
+    Parser::Tokenizer tk(line);
+    SBuf directiveName; // TODO: Upgrade cfg_directive to SBuf and set it here.
+    static const auto spaceChars = CharacterSet("w_space", w_space);
+    static const auto directiveChars = spaceChars.complement("squid.conf directive name");
+    const auto found = tk.prefix(directiveName, directiveChars);
+    Assure(found); // our callers are expected to fully handle non-directive lines
+    tk.skipAll(spaceChars);
+    SetCfgLine(tk.remaining()); // may be empty
+    return directiveName;
 }
 
 void

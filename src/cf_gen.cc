@@ -466,13 +466,11 @@ gen_default(const EntryList &head, std::ostream &fout)
     fout << "static void" << std::endl <<
          "default_line(const char *s)" << std::endl <<
          "{" << std::endl <<
-         "    char *tmp_line = xstrdup(s);" << std::endl <<
-         "    int len = strlen(tmp_line);" << std::endl <<
-         "    ProcessMacros(tmp_line, len);" << std::endl <<
-         "    xstrncpy(config_input_line, tmp_line, sizeof(config_input_line));" << std::endl <<
+         "    SBuf tmp_line(s);" << std::endl <<
+         "    ProcessMacros(tmp_line);" << std::endl <<
+         "    xstrncpy(config_input_line, tmp_line.c_str(), sizeof(config_input_line));" << std::endl <<
          "    config_lineno++;" << std::endl <<
          "    parse_line(tmp_line);" << std::endl <<
-         "    xfree(tmp_line);" << std::endl <<
          "}" << std::endl << std::endl;
     fout << "static void" << std::endl <<
          "default_all(void)" << std::endl <<
@@ -595,7 +593,7 @@ gen_default_postscriptum(const EntryList &head, std::ostream &fout)
 void
 Entry::genParseAlias(const std::string &aName, std::ostream &fout) const
 {
-    fout << "    if (!strcmp(token, \"" << aName << "\")) {" << std::endl;
+    fout << "    if (directiveName.cmp(\"" << aName << "\") == 0) {" << std::endl;
     if (ifdef.size())
         fout << "#if " << ifdef << std::endl;
     fout << "        cfg_directive = \"" << aName << "\";" << std::endl;
@@ -606,7 +604,7 @@ Entry::genParseAlias(const std::string &aName, std::ostream &fout) const
             // offset line to strip initial whitespace tab byte
             fout << "        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), \"" << aName << " : " << &l[1] << "\");" << std::endl;
         }
-        fout << "        parse_obsolete(token);";
+        fout << "        parse_obsolete(cfg_directive);";
     } else if (!loc.size() || loc.compare("none") == 0) {
         fout << "parse_" << type << "();";
     } else if (type.find("::") != std::string::npos) {
@@ -646,12 +644,9 @@ gen_parse(const EntryList &head, std::ostream &fout)
 {
     fout <<
          "static int\n"
-         "parse_line(char *buff)\n"
+         "parse_line(const SBuf &buf)\n"
          "{\n"
-         "\tchar\t*token;\n"
-         "\tif ((token = strtok(buff, w_space)) == NULL) \n"
-         "\t\treturn 1;\t/* ignore empty lines */\n"
-         "\tConfigParser::SetCfgLine(strtok(nullptr, \"\"));\n";
+         "\tconst auto directiveName = LegacyParser.openDirective(buf);\n";
 
     for (const auto &e : head)
         e.genParse(fout);

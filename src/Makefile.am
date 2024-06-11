@@ -2719,7 +2719,6 @@ tests_testConfigParser_SOURCES = \
 	tests/testConfigParser.cc
 nodist_tests_testConfigParser_SOURCES = \
 	ConfigParser.cc \
-	tests/stub_SBuf.cc \
 	String.cc \
 	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
@@ -2728,6 +2727,8 @@ nodist_tests_testConfigParser_SOURCES = \
 	tests/stub_libmem.cc \
 	tests/stub_neighbors.cc
 tests_testConfigParser_LDADD = \
+	parser/libparser.la \
+	sbuf/libsbuf.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
