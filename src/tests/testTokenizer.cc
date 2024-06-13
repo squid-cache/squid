@@ -248,6 +248,68 @@ TestTokenizer::testTokenizerInt64()
         CPPUNIT_ASSERT(t.buf().isEmpty());
     }
 
+    // autodetect octal base in minimal valid input
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("0"));
+        const int64_t benchmark = 0;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT(t.buf().isEmpty());
+    }
+
+    // autodetect decimal base in minimal valid input
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("1"));
+        const int64_t benchmark = 1;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT(t.buf().isEmpty());
+    }
+
+    // autodetect hex base in minimal valid input
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("0X1"));
+        const int64_t benchmark = 0X1;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT(t.buf().isEmpty());
+    }
+
+    // invalid (when autodetecting base) input matching hex base
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("0x"));
+        CPPUNIT_ASSERT(!t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(SBuf("0x"), t.buf());
+    }
+
+    // invalid (when forcing hex base) input matching hex base
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("0x"));
+        CPPUNIT_ASSERT(!t.int64(rv, 16));
+        CPPUNIT_ASSERT_EQUAL(SBuf("0x"), t.buf());
+    }
+
+    // invalid (when autodetecting base and limiting) input matching hex base
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("0x2"));
+        CPPUNIT_ASSERT(!t.int64(rv, 0, true, 2));
+        CPPUNIT_ASSERT_EQUAL(SBuf("0x2"), t.buf());
+    }
+
+    // invalid (when forcing hex base and limiting) input matching hex base
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("0x3"));
+        CPPUNIT_ASSERT(!t.int64(rv, 16, false, 2));
+        CPPUNIT_ASSERT_EQUAL(SBuf("0x3"), t.buf());
+    }
+
     // API mismatch: don't eat leading space
     {
         int64_t rv;
