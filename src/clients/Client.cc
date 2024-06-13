@@ -740,6 +740,7 @@ Client::handleAdaptedHeader(Http::Message *msg)
         assert(result);
     } else {
         // no body
+        Assure(!adaptedReplyAborted);
         receivedWholeAdaptedReply = true;
         if (doneWithAdaptation()) // we may still be sending virgin response
             handleAdaptationCompleted();
@@ -814,7 +815,7 @@ Client::handleAdaptedBodyProductionEnded()
     if (abortOnBadEntry("entry went bad while waiting for adapted body eof"))
         return;
 
-    // distinguish this code path from handleAdaptedBodyProducerAborted()
+    Assure(!adaptedReplyAborted);
     receivedWholeAdaptedReply = true;
 
     checkAdaptationCompletion();
@@ -823,8 +824,10 @@ Client::handleAdaptedBodyProductionEnded()
 void
 Client::checkAdaptationCompletion()
 {
-    if (adaptedBodySource == nullptr)
+    if (!adaptedBodySource) {
+        debugs(11, 7, "already completed");
         return;
+    }
 
     if (!adaptedBodySource->exhausted()) {
         debugs(11,5, "waiting to consume the remainder of the adapted body");
@@ -833,14 +836,14 @@ Client::checkAdaptationCompletion()
 
     if (!receivedWholeAdaptedReply && !adaptedReplyAborted) {
         // wait for noteBodyProductionEnded() or noteBodyProducerAborted()
-        // because we need to know whether we receivedWholeAdaptedReply
+        // because completeForwarding() needs to know whether we receivedWholeAdaptedReply
         return;
     }
 
     stopConsumingFrom(adaptedBodySource);
 
-    Assure(doneWithAdaptation());
-    handleAdaptationCompleted();
+    if (doneWithAdaptation()) // we may still be sending virgin response
+        handleAdaptationCompleted();
 }
 
 // premature end of the adapted response body
@@ -849,6 +852,7 @@ void Client::handleAdaptedBodyProducerAborted()
     if (abortOnBadEntry("entry went bad while waiting for the now-aborted adapted body"))
         return;
 
+    Assure(!receivedWholeAdaptedReply);
     adaptedReplyAborted = true;
     Must(adaptedBodySource != nullptr);
     if (!adaptedBodySource->exhausted()) {
