@@ -9,6 +9,7 @@
 /* DEBUG: section 37    ICMP Routines */
 
 #include "squid.h"
+#include "base/Raw.h"
 #include "comm.h"
 #include "comm/Loops.h"
 #include "defines.h"
@@ -85,7 +86,10 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     slen = sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ + pecho.psize;
 
-    debugs(37, 2, "to " << pecho.to << ", opcode " << opcode << ", len " << pecho.psize);
+    traceProtocol(37, "ICMP Server REQUEST", pecho.to,
+                  " opcode=" << opcode <<
+                  " len=" << pecho.psize <<
+                  Raw("payload", pecho.payload, pecho.psize).gap(false).hex().minLevel(DBG_DATA));
 
     x = comm_udp_send(icmp_sock, (char *)&pecho, slen, 0);
 
@@ -154,14 +158,17 @@ IcmpSquid::Recv()
 
     F.port(0);
 
+    traceProtocol(37, "ICMP Server RESPONSE", preply.from,
+                  " opcode=" << preply.opcode <<
+                  " hops=" << preply.hops <<
+                  " rtt=" << preply.rtt);
+
     switch (preply.opcode) {
 
     case S_ICMP_ECHO:
-        debugs(37,4, " ICMP_ECHO of " << preply.from << " gave: hops=" << preply.hops <<", rtt=" << preply.rtt);
         break;
 
     case S_ICMP_DOM:
-        debugs(37,4, " DomainPing of " << preply.from << " gave: hops=" << preply.hops <<", rtt=" << preply.rtt);
         netdbHandlePingReply(F, preply.hops, preply.rtt);
         break;
 
