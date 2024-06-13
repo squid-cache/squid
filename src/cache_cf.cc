@@ -366,7 +366,7 @@ ProcessMacros(SBuf &buf)
 /// extracts all leading space characters (if any)
 /// \returns whether at least one character was extracted
 static bool
-SkipOptionalSpace_(Parser::Tokenizer &tk)
+SkipOptionalSpace(Parser::Tokenizer &tk)
 {
     const auto &spaceChars = CharacterSet::libcSpace();
     return tk.skipAll(spaceChars);
@@ -378,11 +378,11 @@ ExtractToken(const char * const description, Parser::Tokenizer &tk, const Charac
 {
     const auto savedTk = tk;
 
-    (void)SkipOptionalSpace_(tk);
+    (void)SkipOptionalSpace(tk);
 
     SBuf token;
     if (tk.prefix(token, tokenChars)) {
-        (void)SkipOptionalSpace_(tk);
+        (void)SkipOptionalSpace(tk);
         return token;
     }
 
@@ -402,8 +402,19 @@ ExtractOperand(const char * const description, Parser::Tokenizer &tk)
 static SBuf
 ExtractOperator(const char * const description, Parser::Tokenizer &tk)
 {
-    static const auto operatorChars = CharacterSet("preprocessor condition operator", "<=>%/*!^!");
+    static const auto operatorChars = CharacterSet("preprocessor condition operator", "<=>%/*^!");
     return ExtractToken(description, tk, operatorChars);
+}
+
+/// throws on non-empty remaining input
+static void
+RejectTrailingGarbage(const char * const parsedInputDescription, const SBuf &parsedInput, const Parser::Tokenizer &tk)
+{
+    if (!tk.atEnd()) {
+        throw TextException(ToSBuf("found trailing garbage after parsing ",
+                                   parsedInputDescription, ' ', parsedInput, ": ",
+                                   tk.remaining()), Here());
+    }
 }
 
 /// interprets the given raw string as a signed integer (in decimal, hex, or
@@ -415,14 +426,13 @@ EvalNumber(const SBuf &raw)
     int64_t result = 0;
     if (!numberParser.int64(result, 0, true))
         throw TextException(ToSBuf("malformed integer near ", raw), Here());
-    if (!numberParser.remaining().isEmpty())
-        throw TextException(ToSBuf("found trailing garbage after parsing an integer near ", raw), Here());
+    RejectTrailingGarbage("integer", raw, numberParser);
     return result;
 }
 
-/// EvalBoolExpr() helper that interprets input prefix as a preprocessor condition
+/// IsIfStatementOpening() helper that interprets input prefix as a preprocessor condition
 static bool
-EvalBoolExpr_(Parser::Tokenizer &tk)
+EvalBoolExpr(Parser::Tokenizer &tk)
 {
     const auto operand = ExtractOperand("preprocessor condition", tk);
 
@@ -449,48 +459,41 @@ EvalBoolExpr_(Parser::Tokenizer &tk)
 /// \returns std::nullopt if input does not look like an `if` statement
 /// \returns `if` condition value if input is an `if` statement
 static std::optional<bool>
-FindIfStatementOpening(Parser::Tokenizer &tk)
+IsIfStatementOpening(Parser::Tokenizer tk)
 {
-    const auto savedTk = tk;
-
     // grammar: space* "if" space condition space* END
-    (void)SkipOptionalSpace_(tk);
+    (void)SkipOptionalSpace(tk);
     const auto keywordIf = SBuf("if");
-    if (tk.skip(keywordIf) && SkipOptionalSpace_(tk)) {
-        const auto result = EvalBoolExpr_(tk);
-        SkipOptionalSpace_(tk);
-        if (tk.atEnd())
-            return result;
-        throw TextException("found trailing garbage after parsing a preprocessor condition", Here());
+    if (tk.skip(keywordIf) && SkipOptionalSpace(tk)) {
+        const auto condition = tk.remaining();
+        const auto result = EvalBoolExpr(tk);
+        (void)SkipOptionalSpace(tk);
+        RejectTrailingGarbage("preprocessor condition", condition, tk);
+        return result;
     }
 
     // e.g., "iffy_error_responses on"
-    tk = savedTk;
     return std::nullopt;
 }
 
 /// interprets input as an `else` or `endif` line of a preprocessor `if` statement
 /// \returns false if input does not look like an `else` or `endif` line
 static bool
-FindIfStatementLine(const SBuf &keyword, Parser::Tokenizer &tk)
+IsIfStatementLine(const SBuf &keyword, Parser::Tokenizer tk)
 {
-    const auto savedTk = tk;
-
     // grammar: space* keyword space* END
-    (void)SkipOptionalSpace_(tk);
+    (void)SkipOptionalSpace(tk);
     if (tk.skip(keyword)) {
         if (tk.atEnd())
             return true;
 
-        if (SkipOptionalSpace_(tk)) {
-            if (tk.atEnd())
-                return true;
-            throw TextException(ToSBuf("found trailing garbage after preprocessor keyword: ", keyword), Here());
+        if (SkipOptionalSpace(tk)) {
+            RejectTrailingGarbage("preprocessor keyword", keyword, tk);
+            return true;
         }
         // e.g., "elseif"
     }
 
-    tk = savedTk;
     return false;
 }
 
@@ -498,20 +501,17 @@ FindIfStatementLine(const SBuf &keyword, Parser::Tokenizer &tk)
 /// \returns std::nullopt if input does not look like an `include` statement
 /// \returns `include` parameters if input is an `include` statement
 static std::optional<SBuf>
-FindIncludeLine(Parser::Tokenizer &tk)
+IsIncludeLine(Parser::Tokenizer tk)
 {
-    const auto savedTk = tk;
-
     // grammar: space* "include" space files space* END
-    (void)SkipOptionalSpace_(tk);
+    (void)SkipOptionalSpace(tk);
     const auto keywordInclude = SBuf("include");
-    if (tk.skip(keywordInclude) && SkipOptionalSpace_(tk)) {
+    if (tk.skip(keywordInclude) && SkipOptionalSpace(tk)) {
         // for simplicity sake, we leave trailing space, if any, in the result
         return tk.remaining();
     }
 
     // e.g., "include_version_info allow all"
-    tk = savedTk;
     return std::nullopt;
 }
 
@@ -624,21 +624,21 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
 
         static const auto keywordElse = SBuf("else");
         static const auto keywordEndif = SBuf("endif");
-        if (const auto condition = FindIfStatementOpening(tk)) {
+        if (const auto condition = IsIfStatementOpening(tk)) {
             if_states.push_back(*condition); // store last if-statement meaning
-        } else if (FindIfStatementLine(keywordEndif, tk)) {
+        } else if (IsIfStatementLine(keywordEndif, tk)) {
             if (!if_states.empty())
                 if_states.pop_back(); // remove last if-statement meaning
             else
                 fatalf("'endif' without 'if'\n");
-        } else if (FindIfStatementLine(keywordElse, tk)) {
+        } else if (IsIfStatementLine(keywordElse, tk)) {
             if (!if_states.empty())
                 if_states.back() = !if_states.back();
             else
                 fatalf("'else' without 'if'\n");
         } else if (if_states.empty() || if_states.back()) { // test last if-statement meaning if present
             /* Handle includes here */
-            if (const auto files = FindIncludeLine(tk)) {
+            if (const auto files = IsIncludeLine(tk)) {
                 err_count += parseIncludedConfigFiles(*files, depth + 1);
             } else {
                 try {
