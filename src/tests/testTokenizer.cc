@@ -455,6 +455,16 @@ TestTokenizer::testTokenizerInt64()
         CPPUNIT_ASSERT_EQUAL(SBuf("8"), t.buf());
     }
 
+    // check that octal base auto-detection is not confused by repeated zeros
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("00000000071"));
+        const int64_t benchmark = 00000000071;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf(""), t.buf());
+    }
+
     // check that forced octal base is not confused by hex prefix
     {
         int64_t rv;
@@ -531,6 +541,36 @@ TestTokenizer::testTokenizerInt64()
         Parser::Tokenizer t(SBuf("  1234"));
         CPPUNIT_ASSERT(!t.int64(rv));
         CPPUNIT_ASSERT_EQUAL(SBuf("  1234"), t.buf());
+    }
+
+    // zero corner case: repeated zeros
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("00"));
+        const int64_t benchmark = 00;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf(""), t.buf());
+    }
+
+    // zero corner case: "positive" zero
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("+0"));
+        const int64_t benchmark = +0;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf(""), t.buf());
+    }
+
+    // zero corner case: "negative" zero
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("-0"));
+        const int64_t benchmark = -0;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf(""), t.buf());
     }
 
     // trailing spaces
