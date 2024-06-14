@@ -889,8 +889,8 @@ static SBuf
 ConfigurationFailureMessage()
 {
     SBufStream out;
-    out << (reconfiguring ? "reconfiguration" : "configuration");
-    out << " failure: " << CurrentException;
+    out << (reconfiguring ? "re" : "");
+    out << "configuration failure: " << CurrentException;
     if (!opt_parse_cfg_only)
         out << Debug::Extra << "advice: Run 'squid -k parse' and check for ERRORs.";
     return out.buf();
