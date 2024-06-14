@@ -248,7 +248,7 @@ TestTokenizer::testTokenizerInt64()
         CPPUNIT_ASSERT(t.buf().isEmpty());
     }
 
-    // autodetect octal base in minimal valid input
+    // autodetect octal base in shortest valid input
     {
         int64_t rv;
         Parser::Tokenizer t(SBuf("0"));
@@ -258,7 +258,7 @@ TestTokenizer::testTokenizerInt64()
         CPPUNIT_ASSERT(t.buf().isEmpty());
     }
 
-    // autodetect decimal base in minimal valid input
+    // autodetect decimal base in shortest valid input
     {
         int64_t rv;
         Parser::Tokenizer t(SBuf("1"));
@@ -268,7 +268,7 @@ TestTokenizer::testTokenizerInt64()
         CPPUNIT_ASSERT(t.buf().isEmpty());
     }
 
-    // autodetect hex base in minimal valid input
+    // autodetect hex base in shortest valid input
     {
         int64_t rv;
         Parser::Tokenizer t(SBuf("0X1"));
