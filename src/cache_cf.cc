@@ -561,7 +561,8 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             } else {
                 try {
                     if (!parse_line(tmp_line)) {
-                        debugs(3, DBG_CRITICAL, ConfigParser::CurrentLocation() << ": unrecognized: '" << tmp_line << "'");
+                        debugs(3, DBG_CRITICAL, "ERROR: unrecognized directive near '" << tmp_line << "'" <<
+                               Debug::Extra << "directive location: " << ConfigParser::CurrentLocation());
                         ++err_count;
                     }
                 } catch (...) {
@@ -595,12 +596,9 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     return err_count;
 }
 
-static
-int
-parseConfigFileOrThrow(const char *file_name)
+void
+Configuration::Parse()
 {
-    int err_count = 0;
-
     debugs(5, 4, MYNAME);
 
     configFreeMemory();
@@ -608,7 +606,7 @@ parseConfigFileOrThrow(const char *file_name)
     ACLMethodData::ThePurgeCount = 0;
     default_all();
 
-    err_count = parseOneConfigFile(file_name, 0);
+    const auto unrecognizedDirectives = parseOneConfigFile(ConfigFile, 0);
 
     defaults_if_none();
 
@@ -621,27 +619,20 @@ parseConfigFileOrThrow(const char *file_name)
      */
     configDoConfigure();
 
+    // TODO: Throw before configDoConfigure(). Doing that would reduce the set
+    // of configuration errors Squid can detect in one execution, but we should
+    // not apply a clearly broken configuration, especially when we are going to
+    // quit anyway. While some legacy parse_foo() functions apply significant
+    // changes before configDoConfigure(), we cannot easily stop them. We can
+    // easily stop configDoConfigure().
+    if (unrecognizedDirectives)
+        throw TextException(ToSBuf("Found ", unrecognizedDirectives, " unrecognized directive(s)"), Here());
+
     if (opt_send_signal == -1) {
         Mgr::RegisterAction("config",
                             "Current Squid Configuration",
                             dump_config,
                             1, 1);
-    }
-
-    return err_count;
-}
-
-// TODO: Refactor main.cc to centrally handle (and report) all exceptions.
-int
-parseConfigFile(const char *file_name)
-{
-    try {
-        return parseConfigFileOrThrow(file_name);
-    }
-    catch (const std::exception &ex) {
-        debugs(3, DBG_CRITICAL, "FATAL: bad configuration: " << ex.what());
-        self_destruct();
-        return 1; // not reached
     }
 }
 
