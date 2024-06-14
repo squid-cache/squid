@@ -248,14 +248,221 @@ TestTokenizer::testTokenizerInt64()
         CPPUNIT_ASSERT(t.buf().isEmpty());
     }
 
-    // autodetect octal base in shortest valid input
+    // When interpreting octal numbers, standard strtol() and Tokenizer::int64()
+    // treat leading zero as a part of sequence of digits rather than a
+    // character used _exclusively_ as base indicator. Thus, it is not possible
+    // to create an invalid octal number with an explicit octal base -- the
+    // first invalid character after the base will be successfully ignored. This
+    // treatment also makes it difficult to define "shortest valid octal input".
+    // Here, we are just enumerating interesting "short input" octal cases in
+    // four dimensions:
+    // 1. int64(base) argument: forced or auto-detected;
+    // 2. base character ("0") in input: absent or present;
+    // 3. post-base digits in input: absent, valid, or invalid;
+    // 4. input length limits via int64(length) argument: unlimited or limited.
+
+    // forced base; input: no base, no post-base digits, unlimited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf(""));
+        CPPUNIT_ASSERT(!t.int64(rv, 8));
+        CPPUNIT_ASSERT_EQUAL(SBuf(""), t.buf());
+    }
+
+    // forced base; input: no base, no post-base digits, limited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("7"));
+        CPPUNIT_ASSERT(!t.int64(rv, 8, false, 0));
+        CPPUNIT_ASSERT_EQUAL(SBuf("7"), t.buf());
+    }
+
+    // forced base; input: no base, one valid post-base digit, unlimited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("4"));
+        const int64_t benchmark = 04;
+        CPPUNIT_ASSERT(t.int64(rv, 8));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf(""), t.buf());
+    }
+
+    // forced base; input: no base, one valid post-base digit, limited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("46"));
+        const int64_t benchmark = 04;
+        CPPUNIT_ASSERT(t.int64(rv, 8, false, 1));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("6"), t.buf());
+    }
+
+    // forced base; input: no base, one invalid post-base digit, unlimited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("8"));
+        CPPUNIT_ASSERT(!t.int64(rv, 8));
+        CPPUNIT_ASSERT_EQUAL(SBuf("8"), t.buf());
+    }
+
+    // forced base; input: no base, one invalid post-base digit, limited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("80"));
+        CPPUNIT_ASSERT(!t.int64(rv, 8, false, 1));
+        CPPUNIT_ASSERT_EQUAL(SBuf("80"), t.buf());
+    }
+
+    // repeat the above six octal cases, but now with base character in input
+
+    // forced base; input: base, no post-base digits, unlimited
     {
         int64_t rv;
         Parser::Tokenizer t(SBuf("0"));
         const int64_t benchmark = 0;
-        CPPUNIT_ASSERT(t.int64(rv));
-        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
-        CPPUNIT_ASSERT(t.buf().isEmpty());
+        CPPUNIT_ASSERT(t.int64(rv, 8));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf(""), t.buf());
+    }
+
+    // forced base; input: base, no post-base digits, limited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("07"));
+        const int64_t benchmark = 0;
+        CPPUNIT_ASSERT(t.int64(rv, 8, false, 1));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("7"), t.buf());
+    }
+
+    // forced base; input: base, one valid post-base digit, unlimited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("04"));
+        const int64_t benchmark = 04;
+        CPPUNIT_ASSERT(t.int64(rv, 8));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf(""), t.buf());
+    }
+
+    // forced base; input: base, one valid post-base digit, limited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("046"));
+        const int64_t benchmark = 04;
+        CPPUNIT_ASSERT(t.int64(rv, 8, false, 2));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("6"), t.buf());
+    }
+
+    // forced base; input: base, one invalid post-base digit, unlimited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("08"));
+        const int64_t benchmark = 00;
+        CPPUNIT_ASSERT(t.int64(rv, 8));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("8"), t.buf());
+    }
+
+    // forced base; input: base, one invalid post-base digit, limited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("08"));
+        const int64_t benchmark = 00;
+        CPPUNIT_ASSERT(t.int64(rv, 8, false, 2));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("8"), t.buf());
+    }
+
+    // And now repeat six "with base character in input" octal cases but with
+    // auto-detected base. When octal cases below say "auto-detected base", they
+    // describe int64() base=0 parameter value. Current int64() implementation
+    // does auto-detect base as octal in all of these cases, but that might
+    // change, and some of these cases (e.g., "0") can also be viewed as a
+    // non-octal input case as well. These cases do not attempt to test base
+    // detection. They focus on other potential problems.
+
+    // auto-detected base; input: base, no post-base digits, unlimited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("0"));
+        const int64_t benchmark = 00;
+        CPPUNIT_ASSERT(t.int64(rv, 8));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf(""), t.buf());
+    }
+
+    // auto-detected base; input: base, no post-base digits, limited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("07"));
+        const int64_t benchmark = 0;
+        CPPUNIT_ASSERT(t.int64(rv, 8, false, 1));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("7"), t.buf());
+    }
+
+    // auto-detected base; input: base, one valid post-base digit, unlimited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("04"));
+        const int64_t benchmark = 04;
+        CPPUNIT_ASSERT(t.int64(rv, 8));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf(""), t.buf());
+    }
+
+    // auto-detected base; input: base, one valid post-base digit, limited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("046"));
+        const int64_t benchmark = 04;
+        CPPUNIT_ASSERT(t.int64(rv, 8, false, 2));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("6"), t.buf());
+    }
+
+    // auto-detected base; input: base, one invalid post-base digit, unlimited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("08"));
+        const int64_t benchmark = 00;
+        CPPUNIT_ASSERT(t.int64(rv, 8));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("8"), t.buf());
+    }
+
+    // auto-detected base; input: base, one invalid post-base digit, limited
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("08"));
+        const int64_t benchmark = 00;
+        CPPUNIT_ASSERT(t.int64(rv, 8, false, 2));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("8"), t.buf());
+    }
+
+    // this ends four-dimensional enumeration of octal cases described earlier
+
+    // check octal base auto-detection
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("0128"));
+        const int64_t benchmark = 012;
+        CPPUNIT_ASSERT(t.int64(rv, 0));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("8"), t.buf());
+    }
+
+    // check that forced octal base is not confused by hex prefix
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("0x5"));
+        const int64_t benchmark = 0;
+        CPPUNIT_ASSERT(t.int64(rv, 8));
+        CPPUNIT_ASSERT_EQUAL(benchmark, rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("x5"), t.buf());
     }
 
     // autodetect decimal base in shortest valid input
