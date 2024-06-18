@@ -738,7 +738,7 @@ Client::handleAdaptedHeader(Http::Message *msg)
         // assume that ICAP does not auto-consume on failures
         const bool result = adaptedBodySource->setConsumerIfNotLate(this);
         assert(result);
-        checkAdaptationCompletion();
+        checkAdaptationWithBodyCompletion();
     } else {
         // no body
         Assure(!adaptedReplyAborted);
@@ -759,7 +759,7 @@ Client::resumeBodyStorage()
 
     handleMoreAdaptedBodyAvailable();
 
-    checkAdaptationCompletion();
+    checkAdaptationWithBodyCompletion();
 }
 
 // more adapted response body is available
@@ -819,11 +819,11 @@ Client::handleAdaptedBodyProductionEnded()
     Assure(!adaptedReplyAborted);
     receivedWholeAdaptedReply = true;
 
-    checkAdaptationCompletion();
+    checkAdaptationWithBodyCompletion();
 }
 
 void
-Client::checkAdaptationCompletion()
+Client::checkAdaptationWithBodyCompletion()
 {
     if (!adaptedBodySource) {
         debugs(11, 7, "already completed");
@@ -865,7 +865,7 @@ void Client::handleAdaptedBodyProducerAborted()
     if (handledEarlyAdaptationAbort())
         return;
 
-    checkAdaptationCompletion(); // the user should get a truncated response
+    checkAdaptationWithBodyCompletion(); // the user should get a truncated response
 }
 
 // common part of noteAdaptationAnswer and handleAdaptedBodyProductionEnded

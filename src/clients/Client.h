@@ -144,7 +144,7 @@ protected:
 
     /// ends adaptation if possible (after an adaptedBodySource change detected
     /// by the caller)
-    void checkAdaptationCompletion();
+    void checkAdaptationWithBodyCompletion();
 #endif
 
 protected:
