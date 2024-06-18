@@ -110,7 +110,7 @@ TestCacheManager::testRegister()
     CPPUNIT_ASSERT_EQUAL(false, profile->isAtomic);
     CPPUNIT_ASSERT_EQUAL(String("sample"), String(action->name()));
 
-    StoreEntry *sentry = new StoreEntry();
+    StoreEntry *sentry=new StoreEntry();
     sentry->createMemObject();
     sentry->flags=0x25; //arbitrary test value
     action->run(sentry, false);
