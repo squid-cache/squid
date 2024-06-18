@@ -2632,7 +2632,6 @@ tests_testCacheManager_LDADD = \
 	acl/libstate.la \
 	acl/libapi.la \
 	dns/libdns.la \
-	store/libstore.la \
 	base/libbase.la \
 	ip/libip.la \
 	fs/libfs.la \
