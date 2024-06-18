@@ -681,14 +681,6 @@ PeerDigest::noteFetchFinished(const DigestFetchState &finishedFetch, const char 
 
     pd->flags.requested = false;
     pd->req_result = reason;
-
-    if (err) {
-        pd->times.retry_delay = peerDigestIncDelay(pd);
-        peerDigestSetCheck(pd, pd->times.retry_delay);
-    } else {
-        pd->times.retry_delay = 0;
-        peerDigestSetCheck(pd, peerDigestNewDelay(fetch->entry));
-    }
     pd->times.received = squid_curtime;
     pd->times.req_delay = fetch->resp_time;
     pd->stats.sent.kbytes += fetch->sent.bytes;
@@ -699,6 +691,9 @@ PeerDigest::noteFetchFinished(const DigestFetchState &finishedFetch, const char 
     if (err) {
         debugs(72, DBG_IMPORTANT, "disabling (" << pd->req_result << ") digest from " << host);
 
+        pd->times.retry_delay = peerDigestIncDelay(pd);
+        peerDigestSetCheck(pd, pd->times.retry_delay);
+
         delete pd->cd;
         pd->cd = nullptr;
 
@@ -706,6 +701,9 @@ PeerDigest::noteFetchFinished(const DigestFetchState &finishedFetch, const char 
 
     } else {
         pd->flags.usable = true;
+
+        pd->times.retry_delay = 0;
+        peerDigestSetCheck(pd, peerDigestNewDelay(fetch->entry));
 
         /* XXX: ugly condition, but how? */
 
