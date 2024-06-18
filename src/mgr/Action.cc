@@ -111,6 +111,7 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 
         entry->replaceHttpReply(rep);
     }
+
     dump(entry);
 
     entry->flush();
