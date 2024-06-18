@@ -102,7 +102,8 @@ DigestFetchState::DigestFetchState(PeerDigest *aPd, HttpRequest *req) :
 
 DigestFetchState::~DigestFetchState()
 {
-    assert(entry && request);
+    assert(entry);
+    assert(request);
 
     if (old_entry) {
         debugs(72, 3, "deleting old entry");
@@ -146,6 +147,7 @@ peerDigestNeeded(PeerDigest * pd)
 static time_t
 peerDigestIncDelay(const PeerDigest * pd)
 {
+    assert(pd);
     return pd->times.retry_delay > 0 ?
            2 * pd->times.retry_delay :  /* exponential backoff */
            PeerDigestReqMinGap; /* minimal delay */
@@ -331,7 +333,7 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
     digest_read_state_t prevstate;
     int newsize;
 
-    if (!fetch->pd.valid() || !fetch->pd->peer.valid()) {
+    if (!fetch->pd.valid()) {
         peerDigestReqFinish(fetch, "peer digest disappeared", 0);
         return;
     }
@@ -439,13 +441,15 @@ static int
 peerDigestFetchReply(void *data, ssize_t size)
 {
     DigestFetchState *fetch = (DigestFetchState *)data;
-    const auto pd = fetch->pd.get();
     assert(!fetch->offset);
 
     assert(fetch->state == DIGEST_READ_REPLY);
 
     if (peerDigestFetchedEnough(fetch, size, "peerDigestFetchReply"))
         return -1;
+
+    const auto pd = fetch->pd.get();
+    assert(pd);
 
     {
         const auto &reply = fetch->entry->mem().freshestReply();
@@ -527,6 +531,7 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
     if (size >= (ssize_t)StoreDigestCBlockSize) {
         const auto pd = fetch->pd.get();
 
+        assert(pd);
         assert(fetch->entry->mem_obj);
 
         if (peerDigestSetCBlock(pd, buf)) {
@@ -556,6 +561,7 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
 {
     DigestFetchState *fetch = (DigestFetchState *)data;
     const auto pd = fetch->pd.get();
+    assert(pd);
     assert(pd->cd && pd->cd->mask);
 
     /*
