@@ -89,7 +89,7 @@ private:
     Action(const Action &); // not implemented
     Action &operator= (const Action &); // not implemented
 
-    ///< Content-Type: header value for this report
+    /// HTTP Content-Type header value for this Action report
     const char *contentType() const { return is_yaml() ? "application/yaml" : "text/plain;charset=utf-8"; }
 };
 
