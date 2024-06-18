@@ -148,7 +148,8 @@ Mgr::InfoAction::dump(StoreEntry* entry)
     DumpMallocStatistics(entry);
     Mgr::closeKidSection(entry, false);
 #endif
-    DumpInfo(data, entry);
+    if (IamPrimaryProcess())
+        DumpInfo(data, entry);
 }
 
 void
