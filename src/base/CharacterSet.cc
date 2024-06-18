@@ -10,8 +10,9 @@
 #include "base/CharacterSet.h"
 
 #include <algorithm>
-#include <iostream>
 #include <functional>
+#include <iostream>
+#include <limits>
 
 CharacterSet &
 CharacterSet::operator +=(const CharacterSet &src)
@@ -173,7 +174,8 @@ CharacterSet::libcSpace()
 {
     const auto creator = []() -> auto {
         const auto chars = new CharacterSet("libcSpace");
-        for (size_t idx = 0; idx < 256; ++idx) {
+        using charLimits = std::numeric_limits<CharacterSet::Storage::value_type>;
+        for (size_t idx = charLimits::min(); idx <= charLimits::max(); ++idx) {
             if (xisspace(idx))
                 chars->add(idx);
         }
