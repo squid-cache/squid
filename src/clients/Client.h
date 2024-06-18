@@ -194,8 +194,7 @@ protected:
     /// the entire adapted response (including bodyless responses) has been successfully produced
     bool receivedWholeAdaptedReply = false;
 
-    /// handleAdaptedBodyProducerAborted() was called
-    bool adaptedReplyAborted = false;
+    bool adaptedReplyAborted = false; ///< handleAdaptedBodyProducerAborted() was called
 #endif
     bool receivedWholeVirginReply = false; ///< markParsedVirginReplyAsWhole() called
 
