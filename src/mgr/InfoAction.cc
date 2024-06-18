@@ -143,7 +143,7 @@ Mgr::InfoAction::dump(StoreEntry* entry)
     Must(entry != nullptr);
 
 #if XMALLOC_STATISTICS
-    // TODO: these should be moved to their own report
+    // TODO: Move these stats into a new dedicated report.
     Mgr::openKidSection(entry, false);
     DumpMallocStatistics(entry);
     Mgr::closeKidSection(entry, false);
