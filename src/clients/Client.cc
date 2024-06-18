@@ -738,6 +738,7 @@ Client::handleAdaptedHeader(Http::Message *msg)
         // assume that ICAP does not auto-consume on failures
         const bool result = adaptedBodySource->setConsumerIfNotLate(this);
         assert(result);
+        checkAdaptationCompletion();
     } else {
         // no body
         Assure(!adaptedReplyAborted);
@@ -829,15 +830,16 @@ Client::checkAdaptationCompletion()
         return;
     }
 
-    if (!adaptedBodySource->exhausted()) {
-        debugs(11,5, "waiting to consume the remainder of the adapted body");
-        return; // resumeBodyStorage() should eventually consume the rest
-    }
-
     if (!receivedWholeAdaptedReply && !adaptedReplyAborted) {
         // wait for noteBodyProductionEnded() or noteBodyProducerAborted()
         // because completeForwarding() needs to know whether we receivedWholeAdaptedReply
+        debugs(11, 7, "waiting for adapted body production ending");
         return;
+    }
+
+    if (!adaptedBodySource->exhausted()) {
+        debugs(11,5, "waiting to consume the remainder of the adapted body");
+        return; // resumeBodyStorage() should eventually consume the rest
     }
 
     stopConsumingFrom(adaptedBodySource);
