@@ -135,5 +135,5 @@ Mgr::closeKidSection(StoreEntry *entry, const bool is_yaml)
     if (is_yaml)
         storeAppendPrintf(entry, "...\n");
     else
-        storeAppendPrintf(entry, "} by kid%d\n", KidIdentifier);
+        storeAppendPrintf(entry, "} by kid%d\n\n", KidIdentifier);
 }
