@@ -73,6 +73,9 @@ public:
 
     StoreEntry *createStoreEntry() const; ///< creates store entry from params
 
+    /// HTTP Content-Type header value for this Action report
+    const char *contentType() const;
+
 protected:
     /// calculate and keep local action-specific information
     virtual void collect() {}
@@ -89,9 +92,6 @@ private:
 private:
     Action(const Action &); // not implemented
     Action &operator= (const Action &); // not implemented
-
-    /// HTTP Content-Type header value for this Action report
-    const char *contentType() const;
 };
 
 /// starts writing a portion of the report specific to the current process
