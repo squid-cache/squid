@@ -14,7 +14,6 @@
 class CachePeer;
 class PeerSelector;
 
-void carpInit(void);
 CachePeer *carpSelectParent(PeerSelector *);
 
 #endif /* SQUID_SRC_CARP_H */

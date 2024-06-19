@@ -13,6 +13,7 @@
 #if USE_AUTH
 
 #include "auth/UserRequest.h"
+#include "base/RunnersRegistry.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
 #include "globals.h"
@@ -47,7 +48,7 @@ peerSortWeight(const void *a, const void *b)
     return (*p1)->weight - (*p2)->weight;
 }
 
-void
+static void
 peerUserHashInit(void)
 {
     int W = 0;
@@ -138,6 +139,17 @@ peerUserHashRegisterWithCacheManager(void)
     Mgr::RegisterAction("userhash", "peer userhash information", peerUserHashCachemgr,
                         0, 1);
 }
+
+/// reacts to RegisteredRunner events relevant to this module
+class PeerUserHashRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    void useConfig() override { peerUserHashInit(); }
+    void syncConfig() override { peerUserHashInit(); }
+};
+
+DefineRunnerRegistrator(PeerUserHashRr);
 
 CachePeer *
 peerUserHashSelectParent(PeerSelector *ps)
