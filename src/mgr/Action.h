@@ -64,7 +64,7 @@ public:
     virtual bool aggregatable() const { return true; } // most kid classes are
 
     /// whether action report is valid YAML
-    virtual bool is_yaml() const;
+    virtual bool isYaml() const;
 
     bool atomic() const; ///< dump() call writes everything before returning
     const char *name() const; ///< label as seen in the cache manager menu
@@ -90,16 +90,16 @@ private:
     Action &operator= (const Action &); // not implemented
 
     /// HTTP Content-Type header value for this Action report
-    const char *contentType() const { return is_yaml() ? "application/yaml" : "text/plain;charset=utf-8"; }
+    const char *contentType() const { return isYaml() ? "application/yaml" : "text/plain;charset=utf-8"; }
 };
 
 /// starts writing a portion of the report specific to the current process
 /// \sa closeKidSection()
-void openKidSection(StoreEntry *, bool is_yaml);
+void openKidSection(StoreEntry *, bool isYaml);
 
 /// finishes writing a portion of the report specific to the current process
 /// \sa openKidSection()
-void closeKidSection(StoreEntry *, bool is_yaml);
+void closeKidSection(StoreEntry *, bool isYaml);
 
 } // namespace Mgr
 

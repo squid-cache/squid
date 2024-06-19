@@ -40,7 +40,7 @@ Mgr::Action::command() const
 }
 
 bool
-Mgr::Action::is_yaml() const
+Mgr::Action::isYaml() const
 {
     return command().profile->isYaml;
 }
@@ -127,18 +127,18 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 }
 
 void
-Mgr::openKidSection(StoreEntry *entry, const bool is_yaml)
+Mgr::openKidSection(StoreEntry *entry, const bool isYaml)
 {
-    if (is_yaml)
+    if (isYaml)
         storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
     else
         storeAppendPrintf(entry, "by kid%d {\n", KidIdentifier);
 }
 
 void
-Mgr::closeKidSection(StoreEntry *entry, const bool is_yaml)
+Mgr::closeKidSection(StoreEntry *entry, const bool isYaml)
 {
-    if (is_yaml)
+    if (isYaml)
         storeAppendPrintf(entry, "...\n");
     else
         storeAppendPrintf(entry, "} by kid%d\n\n", KidIdentifier);
