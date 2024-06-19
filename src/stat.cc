@@ -327,7 +327,7 @@ statObjects(void *data)
     StoreEntry *e;
 
     if (state->theSearch->isDone()) {
-        Mgr::closeKidSection(state->sentry, Mgr::Format::informal);
+        Mgr::CloseKidSection(state->sentry, Mgr::Format::informal);
         state->sentry->complete();
         state->sentry->unlock("statObjects+isDone");
         delete state;

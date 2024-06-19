@@ -95,12 +95,12 @@ private:
 };
 
 /// starts writing a portion of the report specific to the current process
-/// \sa closeKidSection()
-void openKidSection(StoreEntry *, Format);
+/// \sa CloseKidSection()
+void OpenKidSection(StoreEntry *, Format);
 
 /// finishes writing a portion of the report specific to the current process
-/// \sa openKidSection()
-void closeKidSection(StoreEntry *, Format);
+/// \sa OpenKidSection()
+void CloseKidSection(StoreEntry *, Format);
 
 } // namespace Mgr
 
