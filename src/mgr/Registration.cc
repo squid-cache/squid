@@ -19,7 +19,7 @@ namespace Mgr {
 class FunActionCreator: public ActionCreator
 {
 public:
-    explicit FunActionCreator(OBJH *aHandler): handler(aHandler) {}
+    explicit FunActionCreator(OBJH * const aHandler): handler(aHandler) {}
 
     /* ActionCreator API */
     Action::Pointer create(const CommandPointer &cmd) const override {
@@ -37,7 +37,7 @@ public:
     using Handler = ClassActionCreationHandler;
 
 public:
-    ClassActionCreator(Handler *aHandler): handler(aHandler) {}
+    ClassActionCreator(Handler * const aHandler): handler(aHandler) {}
 
     /* ActionCreator API */
     Action::Pointer create(const Command::Pointer &cmd) const override {

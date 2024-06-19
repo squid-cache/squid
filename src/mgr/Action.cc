@@ -140,7 +140,7 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 }
 
 void
-Mgr::OpenKidSection(StoreEntry *entry, const Format format)
+Mgr::OpenKidSection(StoreEntry * const entry, const Format format)
 {
     switch (format) {
     case Format::yaml:
@@ -152,7 +152,7 @@ Mgr::OpenKidSection(StoreEntry *entry, const Format format)
 }
 
 void
-Mgr::CloseKidSection(StoreEntry *entry, const Format format)
+Mgr::CloseKidSection(StoreEntry * const entry, const Format format)
 {
     switch (format) {
     case Format::yaml:
