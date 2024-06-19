@@ -40,6 +40,12 @@ Mgr::Action::command() const
 }
 
 bool
+Mgr::Action::is_yaml() const
+{
+    return command().profile->isYaml;
+}
+
+bool
 Mgr::Action::atomic() const
 {
     return command().profile->isAtomic;

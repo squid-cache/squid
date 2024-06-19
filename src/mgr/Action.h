@@ -63,8 +63,8 @@ public:
     /// combined data should be written at the end of the coordinated response
     virtual bool aggregatable() const { return true; } // most kid classes are
 
-    /// whether the action has been converted to yaml format. Determines content-type
-    virtual bool is_yaml() const { return false; }
+    /// whether action report is valid YAML
+    virtual bool is_yaml() const;
 
     bool atomic() const; ///< dump() call writes everything before returning
     const char *name() const; ///< label as seen in the cache manager menu

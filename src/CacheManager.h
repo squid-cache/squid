@@ -37,12 +37,9 @@ public:
     /// initial URL path characters that identify cache manager requests
     static const SBuf &WellKnownUrlPathPrefix();
 
-    void registerProfile(char const * action, char const * desc,
-                         OBJH * handler,
-                         int pw_req_flag, int atomic);
-    void registerProfile(char const * action, char const * desc,
-                         Mgr::ClassActionCreationHandler *handler,
-                         int pw_req_flag, int atomic);
+    /// remembers the given profile while ignoring attempts to register a same-name duplicate
+    void registerProfile(const Mgr::ActionProfilePointer &profile);
+
     Mgr::ActionProfilePointer findAction(char const * action) const;
     Mgr::Action::Pointer createNamedAction(const char *actionName);
     Mgr::Action::Pointer createRequestedAction(const Mgr::ActionParams &);
@@ -65,8 +62,6 @@ protected:
     void ParseHeaders(const HttpRequest * request, Mgr::ActionParams &params);
     int CheckPassword(const Mgr::Command &cmd);
     char *PasswdGet(Mgr::ActionPasswordList *, const char *);
-
-    void registerProfile(const Mgr::ActionProfilePointer &profile);
 
     Menu menu_;
 };
