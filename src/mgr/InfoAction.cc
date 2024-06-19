@@ -144,9 +144,9 @@ Mgr::InfoAction::dump(StoreEntry* entry)
 
 #if XMALLOC_STATISTICS
     // TODO: Move these stats into a new dedicated report.
-    Mgr::openKidSection(entry, false);
+    Mgr::openKidSection(entry, Mgr::Format::informal);
     DumpMallocStatistics(entry);
-    Mgr::closeKidSection(entry, false);
+    Mgr::closeKidSection(entry, Mgr::Format::informal);
 #endif
     if (IamPrimaryProcess())
         DumpInfo(data, entry);

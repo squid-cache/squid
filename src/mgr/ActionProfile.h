@@ -12,8 +12,8 @@
 #define SQUID_SRC_MGR_ACTIONPROFILE_H
 
 #include "mgr/ActionCreator.h"
+#include "mgr/ActionFeatures.h"
 #include "mgr/forward.h"
-#include "mgr/Registration.h"
 
 namespace Mgr
 {
@@ -33,7 +33,7 @@ public:
         name(aName), desc(aDesc),
         isPwReq(aProtected == Protected::yes),
         isAtomic(anAtomic == Atomic::yes),
-        isYaml(aFormat == Format::yaml),
+        format(aFormat),
         creator(aCreator) {
     }
 
@@ -42,8 +42,7 @@ public:
     const char *desc; ///< action description to build an action menu list
     bool isPwReq; ///< whether password is required to perform the action
     bool isAtomic; ///< whether action dumps everything in one dump() call
-    bool isYaml; ///< whether action report is valid YAML (XXX: meeting certain criteria)
-
+    Format format; ///< action report syntax
     ActionCreatorPointer creator; ///< creates Action objects with this profile
 };
 

@@ -109,7 +109,8 @@ TestCacheManager::testRegister()
     CPPUNIT_ASSERT(profile->creator != nullptr);
     CPPUNIT_ASSERT_EQUAL(false, profile->isPwReq);
     CPPUNIT_ASSERT_EQUAL(false, profile->isAtomic);
-    CPPUNIT_ASSERT_EQUAL(false, profile->isYaml);
+    CPPUNIT_ASSERT_EQUAL(Mgr::Format::informal, profile->format);
+    CPPUNIT_ASSERT_EQUAL(Mgr::Format::informal, action->format());
     CPPUNIT_ASSERT_EQUAL(String("sample"), String(action->name()));
 
     StoreEntry *sentry=new StoreEntry();

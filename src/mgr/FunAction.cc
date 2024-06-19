@@ -50,11 +50,11 @@ Mgr::FunAction::dump(StoreEntry* entry)
     debugs(16, 5, MYNAME);
     Must(entry != nullptr);
 
-    openKidSection(entry, isYaml());
+    openKidSection(entry, format());
 
     handler(entry);
 
     if (atomic())
-        closeKidSection(entry, isYaml());
+        closeKidSection(entry, format());
     // non-atomic() actions must call closeKidSection() when they are done
 }

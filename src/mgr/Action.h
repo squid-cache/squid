@@ -12,6 +12,7 @@
 #define SQUID_SRC_MGR_ACTION_H
 
 #include "ipc/forward.h"
+#include "mgr/ActionFeatures.h"
 #include "mgr/forward.h"
 
 class StoreEntry;
@@ -63,8 +64,8 @@ public:
     /// combined data should be written at the end of the coordinated response
     virtual bool aggregatable() const { return true; } // most kid classes are
 
-    /// whether action report is valid YAML
-    virtual bool isYaml() const;
+    /// action report syntax
+    virtual Format format() const;
 
     bool atomic() const; ///< dump() call writes everything before returning
     const char *name() const; ///< label as seen in the cache manager menu
@@ -90,16 +91,16 @@ private:
     Action &operator= (const Action &); // not implemented
 
     /// HTTP Content-Type header value for this Action report
-    const char *contentType() const { return isYaml() ? "application/yaml" : "text/plain;charset=utf-8"; }
+    const char *contentType() const;
 };
 
 /// starts writing a portion of the report specific to the current process
 /// \sa closeKidSection()
-void openKidSection(StoreEntry *, bool isYaml);
+void openKidSection(StoreEntry *, Format);
 
 /// finishes writing a portion of the report specific to the current process
 /// \sa openKidSection()
-void closeKidSection(StoreEntry *, bool isYaml);
+void closeKidSection(StoreEntry *, Format);
 
 } // namespace Mgr
 

@@ -29,7 +29,7 @@ void Mgr::Action::fillEntry(StoreEntry *, bool) STUB
 void Mgr::Action::add(const Action &) STUB
 void Mgr::Action::respond(const Request &) STUB
 void Mgr::Action::sendResponse(const Ipc::RequestId) STUB
-bool Mgr::Action::isYaml() const STUB_RETVAL(false)
+Mgr::Format Mgr::Action::format() const STUB_RETVAL(Mgr::Format::informal)
 bool Mgr::Action::atomic() const STUB_RETVAL(false)
 const char * Mgr::Action::name() const STUB_RETVAL(nullptr)
 static Mgr::Command static_Command;

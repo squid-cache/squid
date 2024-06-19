@@ -40,21 +40,34 @@ Mgr::Action::command() const
 }
 
 bool
-Mgr::Action::isYaml() const
-{
-    return command().profile->isYaml;
-}
-
-bool
 Mgr::Action::atomic() const
 {
     return command().profile->isAtomic;
+}
+
+Mgr::Format
+Mgr::Action::format() const
+{
+    return command().profile->format;
 }
 
 const char*
 Mgr::Action::name() const
 {
     return command().profile->name;
+}
+
+const char *
+Mgr::Action::contentType() const
+{
+    switch (format()) {
+    case Format::yaml:
+        return "application/yaml";
+    case Format::informal:
+        return "text/plain;charset=utf-8";
+    }
+    assert(!"unreachable code");
+    return "";
 }
 
 StoreEntry*
@@ -127,19 +140,25 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 }
 
 void
-Mgr::openKidSection(StoreEntry *entry, const bool isYaml)
+Mgr::openKidSection(StoreEntry *entry, const Format format)
 {
-    if (isYaml)
-        storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
-    else
-        storeAppendPrintf(entry, "by kid%d {\n", KidIdentifier);
+    switch (format) {
+    case Format::yaml:
+        return storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
+    case Format::informal:
+        return storeAppendPrintf(entry, "by kid%d {\n", KidIdentifier);
+    }
+    // unreachable code
 }
 
 void
-Mgr::closeKidSection(StoreEntry *entry, const bool isYaml)
+Mgr::closeKidSection(StoreEntry *entry, const Format format)
 {
-    if (isYaml)
-        storeAppendPrintf(entry, "...\n");
-    else
-        storeAppendPrintf(entry, "} by kid%d\n\n", KidIdentifier);
+    switch (format) {
+    case Format::yaml:
+        return storeAppendPrintf(entry, "...\n");
+    case Format::informal:
+        return storeAppendPrintf(entry, "} by kid%d\n\n", KidIdentifier);
+    }
+    // unreachable code
 }
