@@ -34,6 +34,7 @@ const char * Mgr::Action::name() const STUB_RETVAL(nullptr)
 static Mgr::Command static_Command;
 const Mgr::Command & Mgr::Action::command() const STUB_RETVAL(static_Command)
 StoreEntry * Mgr::Action::createStoreEntry() const STUB_RETVAL(nullptr)
+void Mgr::Action::dump(StoreEntry *) STUB
 static Mgr::Action::Pointer dummyAction;
 
 #include "mgr/ActionParams.h"
@@ -48,27 +49,27 @@ void Mgr::ActionWriter::start() STUB
 
 #include "mgr/BasicActions.h"
 Mgr::Action::Pointer Mgr::MenuAction::Create(const Mgr::CommandPointer &) STUB_RETVAL(dummyAction)
-void Mgr::MenuAction::dump(StoreEntry *) STUB
+void Mgr::MenuAction::report(Mgr::ReportStream &) STUB
 //protected:
 //Mgr::MenuAction::MenuAction(const CommandPointer &cmd) STUB
 
 Mgr::Action::Pointer Mgr::ShutdownAction::Create(const Mgr::CommandPointer &) STUB_RETVAL(dummyAction)
-void Mgr::ShutdownAction::dump(StoreEntry *) STUB
+void Mgr::ShutdownAction::report(Mgr::ReportStream &) STUB
 // protected:
 //Mgr::ShutdownAction::ShutdownAction(const CommandPointer &) STUB
 
 Mgr::Action::Pointer Mgr::ReconfigureAction::Create(const Mgr::CommandPointer &) STUB_RETVAL(dummyAction)
-void Mgr::ReconfigureAction::dump(StoreEntry *) STUB
+void Mgr::ReconfigureAction::report(Mgr::ReportStream &) STUB
 //protected:
 //Mgr::ReconfigureAction::ReconfigureAction(const CommandPointer &) STUB
 
 Mgr::Action::Pointer Mgr::RotateAction::Create(const Mgr::CommandPointer &) STUB_RETVAL(dummyAction)
-void Mgr::RotateAction::dump(StoreEntry *) STUB
+void Mgr::RotateAction::report(Mgr::ReportStream &) STUB
 //protected:
 //Mgr::RotateAction::RotateAction(const CommandPointer &) STUB
 
 Mgr::Action::Pointer Mgr::OfflineToggleAction::Create(const CommandPointer &) STUB_RETVAL(dummyAction)
-void Mgr::OfflineToggleAction::dump(StoreEntry *) STUB
+void Mgr::OfflineToggleAction::report(Mgr::ReportStream &) STUB
 //protected:
 //Mgr::OfflineToggleAction::OfflineToggleAction(const CommandPointer &) STUB
 
