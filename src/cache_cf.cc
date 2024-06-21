@@ -315,7 +315,7 @@ parseIncludedConfigFiles(const SBuf &paths, const int depth)
     while (auto path = NextWordWhileRemovingDoubleQuotesAndBackslashesInsideThem(tk)) {
         if (glob(path->c_str(), globbuf.gl_pathc ? GLOB_APPEND : 0, nullptr, &globbuf) != 0) {
             const auto xerrno = errno;
-            throw TextException(ToSBuf("Cannot find included configuration file named ", *path, ": ", xstrerr(xerrno)), Here());
+            throw TextException(ToSBuf("Unable to find configuration file: ", *path, ": ", xstrerr(xerrno)), Here());
         }
     }
     for (i = 0; i < (int)globbuf.gl_pathc; ++i) {
