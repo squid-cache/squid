@@ -388,7 +388,7 @@ TestTokenizer::testTokenizerInt64()
         int64_t rv;
         Parser::Tokenizer t(SBuf("0"));
         const int64_t benchmark = 00;
-        CPPUNIT_ASSERT(t.int64(rv, 8));
+        CPPUNIT_ASSERT(t.int64(rv, 0));
         CPPUNIT_ASSERT_EQUAL(benchmark, rv);
         CPPUNIT_ASSERT_EQUAL(SBuf(""), t.buf());
     }
@@ -398,7 +398,7 @@ TestTokenizer::testTokenizerInt64()
         int64_t rv;
         Parser::Tokenizer t(SBuf("07"));
         const int64_t benchmark = 0;
-        CPPUNIT_ASSERT(t.int64(rv, 8, false, 1));
+        CPPUNIT_ASSERT(t.int64(rv, 0, false, 1));
         CPPUNIT_ASSERT_EQUAL(benchmark, rv);
         CPPUNIT_ASSERT_EQUAL(SBuf("7"), t.buf());
     }
@@ -408,7 +408,7 @@ TestTokenizer::testTokenizerInt64()
         int64_t rv;
         Parser::Tokenizer t(SBuf("04"));
         const int64_t benchmark = 04;
-        CPPUNIT_ASSERT(t.int64(rv, 8));
+        CPPUNIT_ASSERT(t.int64(rv, 0));
         CPPUNIT_ASSERT_EQUAL(benchmark, rv);
         CPPUNIT_ASSERT_EQUAL(SBuf(""), t.buf());
     }
@@ -418,7 +418,7 @@ TestTokenizer::testTokenizerInt64()
         int64_t rv;
         Parser::Tokenizer t(SBuf("046"));
         const int64_t benchmark = 04;
-        CPPUNIT_ASSERT(t.int64(rv, 8, false, 2));
+        CPPUNIT_ASSERT(t.int64(rv, 0, false, 2));
         CPPUNIT_ASSERT_EQUAL(benchmark, rv);
         CPPUNIT_ASSERT_EQUAL(SBuf("6"), t.buf());
     }
@@ -428,7 +428,7 @@ TestTokenizer::testTokenizerInt64()
         int64_t rv;
         Parser::Tokenizer t(SBuf("08"));
         const int64_t benchmark = 00;
-        CPPUNIT_ASSERT(t.int64(rv, 8));
+        CPPUNIT_ASSERT(t.int64(rv, 0));
         CPPUNIT_ASSERT_EQUAL(benchmark, rv);
         CPPUNIT_ASSERT_EQUAL(SBuf("8"), t.buf());
     }
@@ -438,7 +438,7 @@ TestTokenizer::testTokenizerInt64()
         int64_t rv;
         Parser::Tokenizer t(SBuf("08"));
         const int64_t benchmark = 00;
-        CPPUNIT_ASSERT(t.int64(rv, 8, false, 2));
+        CPPUNIT_ASSERT(t.int64(rv, 0, false, 2));
         CPPUNIT_ASSERT_EQUAL(benchmark, rv);
         CPPUNIT_ASSERT_EQUAL(SBuf("8"), t.buf());
     }
