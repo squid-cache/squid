@@ -45,6 +45,7 @@ static int peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t 
 static void peerDigestFetchStop(DigestFetchState * fetch, char *buf, const char *reason);
 static void peerDigestFetchAbort(DigestFetchState * fetch, char *buf, const char *reason);
 static void peerDigestReqFinish(DigestFetchState *, char *buf, const char *reason, int err);
+static void peerDigestFetchFinish(DigestFetchState * fetch, int err);
 static void peerDigestFetchSetStats(DigestFetchState * fetch);
 static int peerDigestSetCBlock(PeerDigest * pd, const char *buf);
 static int peerDigestUseful(const PeerDigest * pd);
@@ -441,15 +442,14 @@ static int
 peerDigestFetchReply(void *data, char *buf, ssize_t size)
 {
     DigestFetchState *fetch = (DigestFetchState *)data;
+    const auto pd = fetch->pd.get();
+    assert(pd && buf);
     assert(!fetch->offset);
 
     assert(fetch->state == DIGEST_READ_REPLY);
 
     if (peerDigestFetchedEnough(fetch, buf, size, "peerDigestFetchReply"))
         return -1;
-
-    const auto pd = fetch->pd.get();
-    assert(pd);
 
     {
         const auto &reply = fetch->entry->mem().freshestReply();
@@ -602,6 +602,10 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     /* test possible exiting conditions (the same for most steps!)
      * cases marked with '?!' should not happen */
 
+    if (!reason) {
+        host = pd->host;
+    }
+
     debugs(72, 6, step_name << ": peer " << host << ", offset: " <<
            fetch->offset << " size: " << size << ".");
 
@@ -632,7 +636,8 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     if (reason) {
         const int level = strstr(reason, "?!") ? 1 : 3;
         debugs(72, level, "" << step_name << ": peer " << host << ", exiting after '" << reason << "'");
-        peerDigestReqFinish(fetch, buf, reason, !no_bug);
+        peerDigestReqFinish(fetch, buf,
+                            reason, !no_bug);
     }
 
     return reason != nullptr;
@@ -665,22 +670,40 @@ peerDigestReqFinish(DigestFetchState * const fetch, char *, const char * const r
     assert(reason);
 
     /* must go before PeerDigest::noteFetchFinished() */
+
+    {
+        fetch->pd->flags.requested = false;
+        fetch->pd->req_result = reason;
+    }
+
+    /* schedule next check if peer is still out there */
+    {
+        auto pd = fetch->pd.get();
+
+        if (err) {
+            pd->times.retry_delay = peerDigestIncDelay(pd);
+            peerDigestSetCheck(pd, pd->times.retry_delay);
+        } else {
+            pd->times.retry_delay = 0;
+            peerDigestSetCheck(pd, peerDigestNewDelay(fetch->entry));
+        }
+    }
+
+    /* note: order is significant */
     peerDigestFetchSetStats(fetch);
 
     if (const auto pd = fetch->pd.get())
-        pd->noteFetchFinished(*fetch, reason, err);
+        pd->noteFetchFinished(*fetch, err);
 
-    delete fetch;
+    peerDigestFetchFinish(fetch, err);
 }
 
 void
-PeerDigest::noteFetchFinished(const DigestFetchState &finishedFetch, const char * const reason, const int err)
+PeerDigest::noteFetchFinished(const DigestFetchState &finishedFetch, const int err)
 {
     const auto pd = this; // TODO: remove this diff reducer
     const auto fetch = &finishedFetch; // TODO: remove this diff reducer
 
-    pd->flags.requested = false;
-    pd->req_result = reason;
     pd->times.received = squid_curtime;
     pd->times.req_delay = fetch->resp_time;
     pd->stats.sent.kbytes += fetch->sent.bytes;
@@ -691,9 +714,6 @@ PeerDigest::noteFetchFinished(const DigestFetchState &finishedFetch, const char 
     if (err) {
         debugs(72, DBG_IMPORTANT, "disabling (" << pd->req_result << ") digest from " << host);
 
-        pd->times.retry_delay = peerDigestIncDelay(pd);
-        peerDigestSetCheck(pd, pd->times.retry_delay);
-
         delete pd->cd;
         pd->cd = nullptr;
 
@@ -701,9 +721,6 @@ PeerDigest::noteFetchFinished(const DigestFetchState &finishedFetch, const char 
 
     } else {
         pd->flags.usable = true;
-
-        pd->times.retry_delay = 0;
-        peerDigestSetCheck(pd, peerDigestNewDelay(fetch->entry));
 
         /* XXX: ugly condition, but how? */
 
@@ -714,6 +731,17 @@ PeerDigest::noteFetchFinished(const DigestFetchState &finishedFetch, const char 
     }
 }
 
+static void
+peerDigestFetchFinish(DigestFetchState * fetch, int /* err */)
+{
+    /* update global stats */
+    statCounter.cd.kbytes_sent += fetch->sent.bytes;
+    statCounter.cd.kbytes_recv += fetch->recv.bytes;
+    statCounter.cd.msgs_sent += fetch->sent.msg;
+    statCounter.cd.msgs_recv += fetch->recv.msg;
+
+    delete fetch;
+}
 /* calculate fetch stats after completion */
 static void
 peerDigestFetchSetStats(DigestFetchState * fetch)
@@ -744,12 +772,6 @@ peerDigestFetchSetStats(DigestFetchState * fetch)
            std::noshowpos << (long int) fetch->entry->lastModified() << " (" <<
            std::showpos << (int) (fetch->entry->lastModified() - squid_curtime) <<
            ")");
-
-    /* update global stats */
-    statCounter.cd.kbytes_sent += fetch->sent.bytes;
-    statCounter.cd.kbytes_recv += fetch->recv.bytes;
-    statCounter.cd.msgs_sent += fetch->sent.msg;
-    statCounter.cd.msgs_recv += fetch->recv.msg;
 }
 
 static int

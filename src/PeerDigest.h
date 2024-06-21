@@ -80,7 +80,7 @@ public:
     ~PeerDigest();
 
     /// updates stats when digest transfer is complete
-    void noteFetchFinished(const DigestFetchState &, const char *reason, int err);
+    void noteFetchFinished(const DigestFetchState &, int err);
 
     CbcPointer<CachePeer> peer; ///< pointer back to peer structure, argh
     CacheDigest *cd = nullptr;            /**< actual digest structure */
