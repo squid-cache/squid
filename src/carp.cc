@@ -9,6 +9,7 @@
 /* DEBUG: section 39    Cache Array Routing Protocol */
 
 #include "squid.h"
+#include "base/RunnersRegistry.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
 #include "carp.h"
@@ -47,7 +48,7 @@ carpRegisterWithCacheManager(void)
     Mgr::RegisterAction("carp", "CARP information", carpCachemgr, 0, 1);
 }
 
-void
+static void
 carpInit(void)
 {
     int W = 0;
@@ -133,6 +134,17 @@ carpInit(void)
 
     CarpPeers().assign(rawCarpPeers.begin(), rawCarpPeers.end());
 }
+
+/// reacts to RegisteredRunner events relevant to this module
+class CarpRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    void useConfig() override { carpInit(); }
+    void syncConfig() override { carpInit(); }
+};
+
+DefineRunnerRegistrator(CarpRr);
 
 CachePeer *
 carpSelectParent(PeerSelector *ps)

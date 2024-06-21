@@ -22,7 +22,6 @@
 #include "base/TextException.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
-#include "carp.h"
 #include "client_db.h"
 #include "client_side.h"
 #include "comm.h"
@@ -61,8 +60,6 @@
 #include "parser/Tokenizer.h"
 #include "Parsing.h"
 #include "pconn.h"
-#include "peer_sourcehash.h"
-#include "peer_userhash.h"
 #include "PeerSelectState.h"
 #include "protos.h"
 #include "redirect.h"
@@ -808,12 +805,6 @@ serverConnectionsOpen(void)
         asnInit();
         Acl::Node::Initialize();
         peerSelectInit();
-
-        carpInit();
-#if USE_AUTH
-        peerUserHashInit();
-#endif
-        peerSourceHashInit();
     }
 }
 
@@ -1454,10 +1445,12 @@ RegisterModules()
     // RegisteredRunner event handlers should not depend on handler call order
     // and, hence, should not depend on the registration call order below.
 
+    CallRunnerRegistrator(CarpRr);
     CallRunnerRegistrator(ClientDbRr);
     CallRunnerRegistrator(CollapsedForwardingRr);
     CallRunnerRegistrator(MemStoreRr);
     CallRunnerRegistrator(PeerPoolMgrsRr);
+    CallRunnerRegistrator(PeerSourceHashRr);
     CallRunnerRegistrator(SharedMemPagesRr);
     CallRunnerRegistrator(SharedSessionCacheRr);
     CallRunnerRegistrator(TransientsRr);
@@ -1469,6 +1462,10 @@ RegisterModules()
 
 #if HAVE_AUTH_MODULE_NTLM
     CallRunnerRegistrator(NtlmAuthRr);
+#endif
+
+#if USE_AUTH
+    CallRunnerRegistrator(PeerUserHashRr);
 #endif
 
 #if USE_OPENSSL
