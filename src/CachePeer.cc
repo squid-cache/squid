@@ -168,9 +168,9 @@ CachePeer::dumpOptions(std::ostream &os) const
         os << " closest-only";
 
 #if USE_HTCP
-    if (options.htcp)
-    {
-        std::vector<const char *> opts {};
+    if (options.htcp) {
+        os << " htcp";
+        std::vector<const char *, PoolingAllocator<const char *>> opts;
         if (options.htcp_oldsquid)
             opts.push_back("oldsquid");
         if (options.htcp_no_clr)
@@ -179,7 +179,9 @@ CachePeer::dumpOptions(std::ostream &os) const
             opts.push_back("no-purge-clr");
         if (options.htcp_only_clr)
             opts.push_back("only-clr");
-        os << AsList(opts).prefixedBy(" htcp=").delimitedBy(",");
+        if (options.htcp_forward_clr)
+            opts.push_back("forward-clr");
+        os << AsList(opts).prefixedBy("=").delimitedBy(",");
     }
 #endif
 
