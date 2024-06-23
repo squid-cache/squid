@@ -20,7 +20,7 @@ enum fd_type {
 };
 
 typedef enum {
-    PEER_NONE,
+    PEER_NONE = 0,
     PEER_SIBLING,
     PEER_PARENT,
     PEER_MULTICAST

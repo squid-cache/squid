@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
-#include "base/EnumIterator.h"
 #include "base/IoManip.h"
 #include "base/PackableStream.h"
 #include "CacheDigest.h"
@@ -32,6 +31,7 @@
 #include "ip/tools.h"
 #include "ipcache.h"
 #include "MemObject.h"
+#include "mgr/Action.h"
 #include "mgr/Registration.h"
 #include "multicast.h"
 #include "neighbors.h"
@@ -70,27 +70,11 @@ static void peerCountMcastPeersCreateAndSend(CachePeer *p);
 static IRCB peerCountHandleIcpReply;
 
 static void neighborIgnoreNonPeer(const Ip::Address &, icp_opcode);
-static OBJH neighborDumpPeers;
 static void dump_peers(StoreEntry *, CachePeers *);
 
 static unsigned short echo_port;
 
 static int NLateReplies = 0;
-
-const char *
-neighborTypeStr(const CachePeer * p)
-{
-    if (p->type == PEER_NONE)
-        return "Non-Peer";
-
-    if (p->type == PEER_SIBLING)
-        return "Sibling";
-
-    if (p->type == PEER_MULTICAST)
-        return "Multicast Group";
-
-    return "Parent";
-}
 
 CachePeer *
 whichPeer(const Ip::Address &from)
@@ -451,7 +435,7 @@ void
 peerAlive(CachePeer *p)
 {
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
-        debugs(15, DBG_IMPORTANT, "Detected REVIVED " << neighborTypeStr(p) << ": " << *p);
+        debugs(15, DBG_IMPORTANT, "Detected REVIVED " << p->typeString() << ": " << *p);
         p->stats.logged_state = PEER_ALIVE;
         peerClearRR();
         if (p->standby.mgr.valid())
@@ -494,12 +478,23 @@ getDefaultParent(PeerSelector *ps)
     return nullptr;
 }
 
+class CachePeersAction : public Mgr::Action
+{
+    protected:
+    CachePeersAction(const Mgr::CommandPointer &aCmd): Action(aCmd) {}
+    public:
+    static Pointer Create(const Mgr::CommandPointer &aCmd) { return new CachePeersAction(aCmd); };
+    virtual void dump(StoreEntry *entry) override { dump_peers(entry, Config.peers); }
+    virtual const char *contentType() const override { return "application/yaml"; }
+};
+
+
 static void
 neighborsRegisterWithCacheManager()
 {
     Mgr::RegisterAction("server_list",
                         "Peer Cache Statistics",
-                        neighborDumpPeers, 0, 1);
+                        &CachePeersAction::Create, 0, 1);
 }
 
 void
@@ -648,7 +643,7 @@ neighborsUdpPing(HttpRequest * request,
             /* log it once at the threshold */
 
             if (p->stats.logged_state == PEER_ALIVE) {
-                debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << *p);
+                debugs(15, DBG_IMPORTANT, "Detected DEAD " << p->typeString() << ": " << *p);
                 p->stats.logged_state = PEER_DEAD;
             }
         }
@@ -1102,7 +1097,7 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
     CachePeer *p = (CachePeer *)data;
 
     if (p->n_addresses == 0) {
-        debugs(15, Important(29), "Configuring " << neighborTypeStr(p) << " " << *p);
+        debugs(15, Important(29), "Configuring " << p->typeString() << " " << *p);
 
         if (p->type == PEER_MULTICAST)
             debugs(15, DBG_IMPORTANT, "    Multicast TTL = " << p->mcast.ttl);
@@ -1358,228 +1353,21 @@ peerCountHandleIcpReply(CachePeer * p, peer_t, AnyP::ProtocolType proto, void *,
 }
 
 static void
-neighborDumpPeers(StoreEntry * sentry)
-{
-    dump_peers(sentry, Config.peers);
-}
-
-void
-dump_peer_options(StoreEntry * sentry, CachePeer * p)
-{
-    PackableStream os(*sentry);
-
-    if (p->options.proxy_only)
-        os << " proxy-only";
-
-    if (p->options.no_query)
-        os << " no-query";
-
-    if (p->options.background_ping)
-        os << " background-ping";
-
-    if (p->options.no_digest)
-        os << " no-digest";
-
-    if (p->options.default_parent)
-        os << " default";
-
-    if (p->options.roundrobin)
-        os << " round-robin";
-
-    if (p->options.carp)
-        os << " carp";
-
-#if USE_AUTH
-    if (p->options.userhash)
-        os << " userhash";
-#endif
-
-    if (p->options.sourcehash)
-        os << " sourcehash";
-
-    if (p->options.weighted_roundrobin)
-        os << " weighted-round-robin";
-
-    if (p->options.mcast_responder)
-        os << " multicast-responder";
-
-#if PEER_MULTICAST_SIBLINGS
-    if (p->options.mcast_siblings)
-        os << " multicast-siblings";
-#endif
-
-    if (p->weight != 1)
-        os << " weight=" << p->weight;
-
-    if (p->options.closest_only)
-        os << " closest-only";
-
-#if USE_HTCP
-    if (p->options.htcp) {
-        os << " htcp";
-        std::vector<const char *, PoolingAllocator<const char *> > opts;
-        if (p->options.htcp_oldsquid)
-            opts.push_back("oldsquid");
-        if (p->options.htcp_no_clr)
-            opts.push_back("no-clr");
-        if (p->options.htcp_no_purge_clr)
-            opts.push_back("no-purge-clr");
-        if (p->options.htcp_only_clr)
-            opts.push_back("only-clr");
-        if (p->options.htcp_forward_clr)
-            opts.push_back("forward-clr");
-        os << AsList(opts).prefixedBy("=").delimitedBy(",");
-    }
-#endif
-
-    if (p->options.no_netdb_exchange)
-        os << " no-netdb-exchange";
-
-#if USE_DELAY_POOLS
-    if (p->options.no_delay)
-        os << " no-delay";
-#endif
-
-    if (p->login)
-        os << " login=" << p->login;
-
-    if (p->mcast.ttl > 0)
-        os << " ttl=" << p->mcast.ttl;
-
-    if (p->connect_timeout_raw > 0)
-        os << " connect-timeout=" << p->connect_timeout_raw;
-
-    if (p->connect_fail_limit != PEER_TCP_MAGIC_COUNT)
-        os << " connect-fail-limit=" << p->connect_fail_limit;
-
-#if USE_CACHE_DIGESTS
-
-    if (p->digest_url)
-        os << " digest-url=" << p->digest_url;
-
-#endif
-
-    if (p->options.allow_miss)
-        os << " allow-miss";
-
-    if (p->options.no_tproxy)
-        os << " no-tproxy";
-
-    if (p->max_conn > 0)
-        os << " max-conn=" << p->max_conn;
-
-    if (p->standby.limit > 0)
-        os << " standby=" << p->standby.limit;
-
-    if (p->options.originserver)
-        os << " originserver";
-
-    if (p->domain)
-        os << " forceddomain=" << p->domain;
-
-    if (p->connection_auth == 0)
-        os << " connection-auth=off";
-    else if (p->connection_auth == 1)
-        os << " connection-auth=on";
-    else if (p->connection_auth == 2)
-        os << " connection-auth=auto";
-
-    p->secure.dumpCfg(os, "tls-");
-    os << '\n';
-}
-
-static void
 dump_peers(StoreEntry *sentry, CachePeers *peers)
 {
-    char ntoabuf[MAX_IPSTRLEN];
-    int i;
+    PackableStream yaml(*sentry);
 
     if (!peers) {
-        storeAppendPrintf(sentry, "There are no neighbors installed.\n");
+        yaml << "cache_peers number: 0\n";
         return;
     }
 
-    for (const auto &peer: *peers) {
+    yaml << "cache_peers number: " << peers->size() << "\n";
+    yaml << "cache_peers:\n";
+    for (const auto &peer : *peers) {
         const auto e = peer.get();
         assert(e->host != nullptr);
-        storeAppendPrintf(sentry, "\n%-11.11s: %s\n",
-                          neighborTypeStr(e),
-                          e->name);
-        storeAppendPrintf(sentry, "Host       : %s/%d/%d\n",
-                          e->host,
-                          e->http_port,
-                          e->icp.port);
-        storeAppendPrintf(sentry, "Flags      :");
-        dump_peer_options(sentry, e);
-
-        for (i = 0; i < e->n_addresses; ++i) {
-            storeAppendPrintf(sentry, "Address[%d] : %s\n", i,
-                              e->addresses[i].toStr(ntoabuf,MAX_IPSTRLEN) );
-        }
-
-        storeAppendPrintf(sentry, "Status     : %s\n",
-                          neighborUp(e) ? "Up" : "Down");
-        storeAppendPrintf(sentry, "FETCHES    : %d\n", e->stats.fetches);
-        storeAppendPrintf(sentry, "OPEN CONNS : %d\n", e->stats.conn_open);
-        storeAppendPrintf(sentry, "AVG RTT    : %d msec\n", e->stats.rtt);
-
-        if (!e->options.no_query) {
-            storeAppendPrintf(sentry, "LAST QUERY : %8d seconds ago\n",
-                              (int) (squid_curtime - e->stats.last_query));
-
-            if (e->stats.last_reply > 0)
-                storeAppendPrintf(sentry, "LAST REPLY : %8d seconds ago\n",
-                                  (int) (squid_curtime - e->stats.last_reply));
-            else
-                storeAppendPrintf(sentry, "LAST REPLY : none received\n");
-
-            storeAppendPrintf(sentry, "PINGS SENT : %8d\n", e->stats.pings_sent);
-
-            storeAppendPrintf(sentry, "PINGS ACKED: %8d %3d%%\n",
-                              e->stats.pings_acked,
-                              Math::intPercent(e->stats.pings_acked, e->stats.pings_sent));
-        }
-
-        storeAppendPrintf(sentry, "IGNORED    : %8d %3d%%\n", e->stats.ignored_replies, Math::intPercent(e->stats.ignored_replies, e->stats.pings_acked));
-
-        if (!e->options.no_query) {
-            storeAppendPrintf(sentry, "Histogram of PINGS ACKED:\n");
-#if USE_HTCP
-
-            if (e->options.htcp) {
-                storeAppendPrintf(sentry, "\tMisses\t%8d %3d%%\n",
-                                  e->htcp.counts[0],
-                                  Math::intPercent(e->htcp.counts[0], e->stats.pings_acked));
-                storeAppendPrintf(sentry, "\tHits\t%8d %3d%%\n",
-                                  e->htcp.counts[1],
-                                  Math::intPercent(e->htcp.counts[1], e->stats.pings_acked));
-            } else {
-#endif
-
-                for (auto op : WholeEnum<icp_opcode>()) {
-                    if (e->icp.counts[op] == 0)
-                        continue;
-
-                    storeAppendPrintf(sentry, "    %12.12s : %8d %3d%%\n",
-                                      icp_opcode_str[op],
-                                      e->icp.counts[op],
-                                      Math::intPercent(e->icp.counts[op], e->stats.pings_acked));
-                }
-
-#if USE_HTCP
-
-            }
-
-#endif
-
-        }
-
-        if (e->stats.last_connect_failure) {
-            storeAppendPrintf(sentry, "Last failed connect() at: %s\n",
-                              Time::FormatHttpd(e->stats.last_connect_failure));
-        }
-
-        storeAppendPrintf(sentry, "keep-alive ratio: %d%%\n", Math::intPercent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
+        e->reportStatistics(yaml);
     }
 }
 

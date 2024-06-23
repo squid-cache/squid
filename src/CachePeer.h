@@ -47,6 +47,15 @@ public:
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
+    /// output to stream a representation of the peer's statistics
+    void reportStatistics(std::ostream &) const;
+
+    /// output to stream a representation of the peer's configuration options
+    void dumpOptions(std::ostream &) const;
+
+    /// return a c-string representation of the peer's type
+    const char *typeString() const;
+
     /// n-th cache_peer directive, starting with 1
     u_int index = 0;
 
