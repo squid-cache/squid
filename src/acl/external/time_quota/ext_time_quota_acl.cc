@@ -33,6 +33,7 @@
 #include <ctime>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -114,65 +115,47 @@ static void shutdown_db(void)
     tdb_close(db);
 }
 
-static char *KeyString(int &len, const char *user_key, const char *sub_key)
+static std::string KeyString(const char *user_key, const char *sub_key)
 {
-    static char keybuffer[TQ_BUFFERSIZE];
-    *keybuffer = 0;
-
-    len = snprintf(keybuffer, sizeof(keybuffer), "%s-%s", user_key, sub_key);
-    if (len < 0) {
-        log_error("Cannot add entry: " << user_key << '-' << sub_key);
-        len = 0;
-
-    } else if (static_cast<size_t>(len) >= sizeof(keybuffer)) {
-        log_error("key too long (" << user_key << ',' << sub_key << ')');
-        len = 0;
-    }
-
-    return keybuffer;
+    std::ostringstream oss;
+    oss << user_key << '-' << sub_key;
+    return oss.str();
 }
 
 static void writeTime(const char *user_key, const char *sub_key, time_t t)
 {
-    int len = 0;
-    if (/* const */ char *keybuffer = KeyString(len, user_key, sub_key)) {
+    auto ks = KeyString(user_key, sub_key);
+    TDB_DATA key {
+        reinterpret_cast<unsigned char *>(const_cast<char *>(ks.c_str())),
+        ks.length()
+    }, data {
+        reinterpret_cast<unsigned char *>(&t),
+        sizeof(t)
+    };
 
-        TDB_DATA key, data;
-
-        key.dptr = reinterpret_cast<unsigned char *>(keybuffer);
-        key.dsize = len;
-
-        data.dptr = reinterpret_cast<unsigned char *>(&t);
-        data.dsize = sizeof(t);
-
-        tdb_store(db, key, data, TDB_REPLACE);
-        log_debug( "writeTime(\"" << keybuffer << "\", " << t << ')');
-    }
+    tdb_store(db, key, data, TDB_REPLACE);
+    log_debug("writeTime(\"" << ks << "\", " << t << ')');
 }
 
 static time_t readTime(const char *user_key, const char *sub_key)
 {
-    int len = 0;
-    if (/* const */ char *keybuffer = KeyString(len, user_key, sub_key)) {
+    auto ks = KeyString(user_key, sub_key);
+    TDB_DATA key {
+        reinterpret_cast<unsigned char *>(const_cast<char *>(ks.c_str())),
+        ks.length()
+    };
+    auto data = tdb_fetch(db, key);
 
-        TDB_DATA key;
-        key.dptr = reinterpret_cast<unsigned char *>(keybuffer);
-        key.dsize = len;
-
-        auto data = tdb_fetch(db, key);
-
-        time_t t = 0;
-        if (data.dsize != sizeof(t)) {
-            log_error("CORRUPTED DATABASE (" << keybuffer << ')');
-        } else {
-            memcpy(&t, data.dptr, sizeof(t));
-        }
-
-        log_debug("readTime(\"" << keybuffer << "\")=" << t);
-        return t;
+    time_t t = 0;
+    if (data.dsize != sizeof(t))
+    {
+        log_error("CORRUPTED DATABASE (" << ks << ')');
+    } else {
+        memcpy(&t, data.dptr, sizeof(t));
     }
 
-    return 0;
+    log_debug("readTime(\"" << ks << "\")=" << t);
+    return t;
 }
 
 static void parseTime(const char *s, time_t *secs, time_t *start)
