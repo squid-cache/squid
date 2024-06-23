@@ -71,6 +71,7 @@ TDB_CONTEXT *db = nullptr;
  * same activity and the quota will be reduced.
  */
 static int pauseLength = 300;
+static bool noClearDb = false;
 
 static std::ostream *logfile = &std::cerr;
 static int tq_debug_enabled = false;
@@ -103,7 +104,7 @@ static void open_log(const char *logfilename)
 static void init_db(void)
 {
     log_info("opening time quota database \"" << db_path << "\".");
-    db = tdb_open(db_path, 0, TDB_CLEAR_IF_FIRST, O_CREAT | O_RDWR, 0666);
+    db = tdb_open(db_path, 0, noClearDb ? 0 : TDB_CLEAR_IF_FIRST, O_CREAT | O_RDWR, 0666);
     if (!db) {
         log_fatal("Failed to open time_quota db '" << db_path << '\'');
         exit(EXIT_FAILURE);
@@ -146,10 +147,15 @@ static time_t readTime(const char *user_key, const char *sub_key)
     };
     auto data = tdb_fetch(db, key);
 
+    if (!data.dptr) {
+        log_debug("no data found for key \"" << ks << "\".");
+        return 0;
+    }
+
     time_t t = 0;
     if (data.dsize != sizeof(t))
     {
-        log_error("CORRUPTED DATABASE (" << ks << ')');
+        log_error("CORRUPTED DATABASE (" << ks << "): " << data.dsize << " != " << sizeof(t));
     } else {
         memcpy(&t, data.dptr, sizeof(t));
     }
@@ -381,6 +387,9 @@ int main(int argc, char **argv)
             break;
         case 'p':
             pauseLength = atoi(optarg);
+            break;
+        case 'n':
+            noClearDb = true;
             break;
         case 'h':
             usage();
