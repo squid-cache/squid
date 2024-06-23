@@ -406,7 +406,7 @@ int main(int argc, char **argv)
         }
     }
 
-    log_info("Starting " __FILE__);
+    log_info("Starting " << program_name);
     setbuf(stdout, nullptr);
 
     init_db();
@@ -428,7 +428,7 @@ int main(int argc, char **argv)
         }
         processActivity(user_key);
     }
-    log_info("Ending " __FILE__);
+    log_info("Ending " << program_name);
     shutdown_db();
     return EXIT_SUCCESS;
 }
