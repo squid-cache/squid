@@ -844,9 +844,10 @@ clientReplyContext::blockedHit() const
         return false; // internal content "hits" cannot be blocked
 
     {
-        std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
-        chl->updateReply(&http->storeEntry()->mem().freshestReply());
-        return !chl->fastCheck().allowed(); // when in doubt, block
+        ACLFilledChecklist chl(Config.accessList.sendHit, nullptr);
+        clientAclChecklistFill(chl, http);
+        chl.updateReply(&http->storeEntry()->mem().freshestReply());
+        return !chl.fastCheck().allowed(); // when in doubt, block
     }
 }
 
