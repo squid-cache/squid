@@ -34,9 +34,6 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
