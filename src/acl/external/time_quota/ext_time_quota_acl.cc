@@ -112,7 +112,7 @@ static void init_db(void)
         exit(EXIT_FAILURE);
     }
     if (tq_debug_enabled) {
-        // count the number of entries in the database
+        // count the number of entries in the database, only used for debugging
         auto count = tdb_traverse(db,nullptr, nullptr);
         log_debug("Database contains " << count << " entries.");
     }
