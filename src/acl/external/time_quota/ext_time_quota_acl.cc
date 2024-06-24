@@ -104,7 +104,12 @@ static void open_log(const char *logfilename)
 static void init_db(void)
 {
     log_info("opening time quota database \"" << db_path << "\".");
-    db = tdb_open(db_path, 0, noClearDb ? 0 : TDB_CLEAR_IF_FIRST, O_CREAT | O_RDWR, 0666);
+
+    int dbopts = 0;
+    if (noClearDb)
+        dbopts |= TDB_CLEAR_IF_FIRST;
+
+    db = tdb_open(db_path, 0, dbopts, O_CREAT | O_RDWR, 0666);
     if (!db) {
         log_fatal("Failed to open time_quota db '" << db_path << '\'');
         exit(EXIT_FAILURE);
@@ -153,11 +158,10 @@ static time_t readTime(const char *user_key, const char *sub_key)
     }
 
     time_t t = 0;
-    if (data.dsize != sizeof(t))
-    {
-        log_error("CORRUPTED DATABASE (" << ks << "): " << data.dsize << " != " << sizeof(t));
-    } else {
+    if (data.dsize == sizeof(t)) {
         memcpy(&t, data.dptr, sizeof(t));
+    } else {
+        log_error("CORRUPTED DATABASE key '" << ks << '\'');
     }
 
     log_debug("readTime(\"" << ks << "\")=" << t);
