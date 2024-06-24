@@ -60,7 +60,7 @@ const char* KEY_LAST_ACTIVITY = "last-activity",
     *KEY_TIME_BUDGET_CONFIGURED = "time-budget-configured";
 
 /** Maximum size of buffers used to read or display lines. */
-#define TQ_BUFFERSIZE                     1024
+const int TQ_BUFFERSIZE = 1024;
 
 /** If there is more than this given number of seconds between two
  * successive requests, than the second request will be treated as a
