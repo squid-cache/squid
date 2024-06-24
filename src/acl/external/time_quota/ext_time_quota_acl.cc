@@ -68,7 +68,7 @@ const int TQ_BUFFERSIZE = 1024;
  * same activity and the quota will be reduced.
  */
 static int pauseLength = 300;
-static bool noClearDb = false;
+static bool clearDb = true;
 
 static std::ostream *logfile = &std::cerr;
 static int tq_debug_enabled = false;
@@ -103,7 +103,7 @@ static void init_db(void)
     log_info("opening time quota database \"" << db_path << "\".");
 
     int dbopts = 0;
-    if (noClearDb)
+    if (clearDb)
         dbopts |= TDB_CLEAR_IF_FIRST;
 
     db = tdb_open(db_path, 0, dbopts, O_CREAT | O_RDWR, 0666);
@@ -382,7 +382,7 @@ int main(int argc, char **argv)
 
     program_name = argv[0];
 
-    while ((opt = getopt(argc, argv, "dp:l:b:h")) != -1) {
+    while ((opt = getopt(argc, argv, "dp:l:b:hn")) != -1) {
         switch (opt) {
         case 'd':
             tq_debug_enabled = true;
@@ -397,7 +397,7 @@ int main(int argc, char **argv)
             pauseLength = atoi(optarg);
             break;
         case 'n':
-            noClearDb = true;
+            clearDb = false;
             break;
         case 'h':
             usage();
