@@ -53,11 +53,11 @@ const char *program_name;
 
 TDB_CONTEXT *db = nullptr;
 
-#define KEY_LAST_ACTIVITY            "last-activity"
-#define KEY_PERIOD_START             "period-start"
-#define KEY_PERIOD_LENGTH_CONFIGURED "period-length-configured"
-#define KEY_TIME_BUDGET_LEFT         "time-budget-left"
-#define KEY_TIME_BUDGET_CONFIGURED   "time-budget-configured"
+const char* KEY_LAST_ACTIVITY = "last-activity",
+    *KEY_PERIOD_START = "period-start",
+    *KEY_PERIOD_LENGTH_CONFIGURED = "period-length-configured",
+    *KEY_TIME_BUDGET_LEFT = "time-budget-left",
+    *KEY_TIME_BUDGET_CONFIGURED = "time-budget-configured";
 
 /** Maximum size of buffers used to read or display lines. */
 #define TQ_BUFFERSIZE                     1024
