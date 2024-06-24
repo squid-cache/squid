@@ -53,11 +53,11 @@ const char *program_name;
 
 TDB_CONTEXT *db = nullptr;
 
-const char* KEY_LAST_ACTIVITY = "last-activity";
-const char* KEY_PERIOD_START = "period-start";
-const char* KEY_PERIOD_LENGTH_CONFIGURED = "period-length-configured";
-const char* KEY_TIME_BUDGET_LEFT = "time-budget-left";
-const char* KEY_TIME_BUDGET_CONFIGURED = "time-budget-configured";
+const char* KeyLastActivity = "last-activity";
+const char* KeyPeriodStart = "period-start";
+const char* KeyPeriodLengthConfigured = "period-length-configured";
+const char* KeyTimeBudgetLeft = "time-budget-left";
+const char* KeyTimeBudgetConfigured = "time-budget-configured";
 
 /** Maximum size of buffers used to read or display lines. */
 const int TQ_BUFFERSIZE = 1024;
@@ -113,6 +113,11 @@ static void init_db(void)
     if (!db) {
         log_fatal("Failed to open time_quota db '" << db_path << '\'');
         exit(EXIT_FAILURE);
+    }
+    if (tq_debug_enabled) {
+        // count the number of entries in the database
+        auto count = tdb_traverse(db,nullptr, nullptr);
+        log_debug("Database contains " << count << " entries.");
     }
 }
 
@@ -247,11 +252,11 @@ static void readConfig(const char *filename)
 
                 /* get the time budget */
                 if ((budget = strtok(nullptr, "/")) == NULL) {
-                    fprintf(stderr, "ERROR: missing 'budget' field on line %u of '%s'.\n", lineCount, filename);
+                    std::cerr << "ERROR: missing 'budget' field on line " << lineCount << " of '" << filename << "'.\n";
                     continue;
                 }
                 if ((period = strtok(nullptr, "/")) == NULL) {
-                    fprintf(stderr, "ERROR: missing 'period' field on line %u of '%s'.\n", lineCount, filename);
+                    std::cerr << "ERROR: missing 'period' field on line " << lineCount << " of '" << filename << "'.\n";
                     continue;
                 }
 
@@ -261,11 +266,11 @@ static void readConfig(const char *filename)
                 log_debug("read time quota for user \"" << username << "\": " <<
                           budgetSecs << "s / " << periodSecs << "s starting " << start);
 
-                writeTime(username, KEY_PERIOD_START, start);
-                writeTime(username, KEY_PERIOD_LENGTH_CONFIGURED, periodSecs);
-                writeTime(username, KEY_TIME_BUDGET_CONFIGURED, budgetSecs);
-                t = readTime(username, KEY_TIME_BUDGET_CONFIGURED);
-                writeTime(username, KEY_TIME_BUDGET_LEFT, t);
+                writeTime(username, KeyPeriodStart, start);
+                writeTime(username, KeyPeriodLengthConfigured, periodSecs);
+                writeTime(username, KeyTimeBudgetConfigured, budgetSecs);
+                t = readTime(username, KeyTimeBudgetConfigured);
+                writeTime(username, KeyTimeBudgetLeft, t);
             }
         }
         fclose(FH);
@@ -284,25 +289,24 @@ static void processActivity(const char *user_key)
     time_t userPeriodLength;
     time_t timeBudgetCurrent;
     time_t timeBudgetConfigured;
-    char message[TQ_BUFFERSIZE];
 
     log_debug("processActivity(\"" << user_key << "\")");
 
     // [1] Reset period if over
-    periodStart = readTime(user_key, KEY_PERIOD_START);
+    periodStart = readTime(user_key, KeyPeriodStart);
     if ( periodStart == 0 ) {
         // This is the first period ever.
         periodStart = now;
-        writeTime(user_key, KEY_PERIOD_START, periodStart);
+        writeTime(user_key, KeyPeriodStart, periodStart);
     }
 
     periodLength = now - periodStart;
-    userPeriodLength = readTime(user_key, KEY_PERIOD_LENGTH_CONFIGURED);
+    userPeriodLength = readTime(user_key, KeyPeriodLengthConfigured);
     if ( userPeriodLength == 0 ) {
         // This user is not configured. Allow anything.
         log_debug("No period length found for user \"" << user_key <<
                   "\". Quota for this user disabled.");
-        writeTime(user_key, KEY_TIME_BUDGET_LEFT, pauseLength);
+        writeTime(user_key, KeyTimeBudgetLeft, pauseLength);
     } else {
         if ( periodLength >= userPeriodLength ) {
             // a new period has started.
@@ -310,45 +314,48 @@ static void processActivity(const char *user_key)
             while ( periodStart < now ) {
                 periodStart += periodLength;
             }
-            writeTime(user_key, KEY_PERIOD_START, periodStart);
-            timeBudgetConfigured = readTime(user_key, KEY_TIME_BUDGET_CONFIGURED);
+            writeTime(user_key, KeyPeriodStart, periodStart);
+            timeBudgetConfigured = readTime(user_key, KeyTimeBudgetConfigured);
             if ( timeBudgetConfigured == 0 ) {
                 log_debug("No time budget configured for user \"" << user_key  <<
                           "\". Quota for this user disabled.");
-                writeTime(user_key, KEY_TIME_BUDGET_LEFT, pauseLength);
+                writeTime(user_key, KeyTimeBudgetLeft, pauseLength);
             } else {
-                writeTime(user_key, KEY_TIME_BUDGET_LEFT, timeBudgetConfigured);
+                writeTime(user_key, KeyTimeBudgetLeft, timeBudgetConfigured);
             }
         }
     }
 
     // [2] Decrease time budget iff activity
-    lastActivity = readTime(user_key, KEY_LAST_ACTIVITY);
+    lastActivity = readTime(user_key, KeyLastActivity);
     if ( lastActivity == 0 ) {
         // This is the first request ever
-        writeTime(user_key, KEY_LAST_ACTIVITY, now);
+        writeTime(user_key, KeyLastActivity, now);
     } else {
         activityLength = now - lastActivity;
         if ( activityLength >= pauseLength ) {
             // This is an activity pause.
             log_debug("Activity pause detected for user \"" << user_key << "\".");
-            writeTime(user_key, KEY_LAST_ACTIVITY, now);
+            writeTime(user_key, KeyLastActivity, now);
         } else {
             // This is real usage.
-            writeTime(user_key, KEY_LAST_ACTIVITY, now);
+            writeTime(user_key, KeyLastActivity, now);
 
             log_debug("Time budget reduced by " << activityLength <<
                       " for user \"" << user_key << "\".");
-            timeBudgetCurrent = readTime(user_key, KEY_TIME_BUDGET_LEFT);
+            timeBudgetCurrent = readTime(user_key, KeyTimeBudgetLeft);
             timeBudgetCurrent -= activityLength;
-            writeTime(user_key, KEY_TIME_BUDGET_LEFT, timeBudgetCurrent);
+            writeTime(user_key, KeyTimeBudgetLeft, timeBudgetCurrent);
         }
     }
 
-    timeBudgetCurrent = readTime(user_key, KEY_TIME_BUDGET_LEFT);
-    snprintf(message, TQ_BUFFERSIZE, "message=\"Remaining quota for '%s' is %d seconds.\"", user_key, (int)timeBudgetCurrent);
+    timeBudgetCurrent = readTime(user_key, KeyTimeBudgetLeft);
+
+    std::ostringstream oss;
+    oss << "message=\"Remaining quota for '" << user_key << "' is " << timeBudgetCurrent << " seconds.\"";
+    auto message = oss.str();
     if ( timeBudgetCurrent > 0 ) {
-        log_debug("OK " << message << '.');
+        log_debug("OK " << message);
         SEND_OK(message);
     } else {
         log_debug("ERR " << message);
