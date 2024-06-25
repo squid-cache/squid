@@ -45,7 +45,6 @@ static int peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t 
 static void peerDigestFetchStop(DigestFetchState * fetch, char *buf, const char *reason);
 static void peerDigestFetchAbort(DigestFetchState * fetch, char *buf, const char *reason);
 static void peerDigestReqFinish(DigestFetchState *, char *buf, const char *reason, int err);
-static void peerDigestFetchFinish(DigestFetchState * fetch, int err);
 static void peerDigestFetchSetStats(DigestFetchState * fetch);
 static int peerDigestSetCBlock(PeerDigest * pd, const char *buf);
 static int peerDigestUseful(const PeerDigest * pd);
@@ -103,9 +102,6 @@ DigestFetchState::DigestFetchState(PeerDigest *aPd, HttpRequest *req) :
 
 DigestFetchState::~DigestFetchState()
 {
-    assert(entry);
-    assert(request);
-
     if (old_entry) {
         debugs(72, 3, "deleting old entry");
         storeUnregister(old_sc, old_entry, this);
@@ -334,13 +330,13 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
     digest_read_state_t prevstate;
     int newsize;
 
-    if (!fetch->pd.valid()) {
-        peerDigestReqFinish(fetch, nullptr, "peer digest disappeared", 0);
+    if (receivedData.flags.error) {
+        peerDigestFetchAbort(fetch, fetch->buf, "failure loading digest reply from Store");
         return;
     }
 
-    if (receivedData.flags.error) {
-        peerDigestFetchAbort(fetch, fetch->buf, "failure loading digest reply from Store");
+    if (!fetch->pd) {
+        peerDigestFetchAbort(fetch, fetch->buf, "digest disappeared while loading digest reply from Store");
         return;
     }
 
@@ -653,32 +649,29 @@ peerDigestFetchStop(DigestFetchState * fetch, char *buf, const char *reason)
     peerDigestReqFinish(fetch, buf, reason, 0);
 }
 
-/* call this when all callback data is valid but something bad happened */
+/// diff reducer: handle a peer digest fetch failure
 static void
 peerDigestFetchAbort(DigestFetchState * fetch, char *buf, const char *reason)
 {
     assert(reason);
-    debugs(72, 2, "peerDigestFetchAbort: peer " << fetch->pd->host << ", reason: " << reason);
     peerDigestReqFinish(fetch, buf, reason, 1);
 }
 
 /* complete the digest transfer, update stats, unlock/release everything */
-
 static void
 peerDigestReqFinish(DigestFetchState * const fetch, char *, const char * const reason, const int err)
 {
     assert(reason);
 
+    debugs(72, 2, "peer: " << RawPointer(fetch->pd.valid() ? fetch->pd->peer : nullptr).orNil() << ", reason: " << reason << " err: " << err);
+
     /* must go before PeerDigest::noteFetchFinished() */
 
-    {
-        fetch->pd->flags.requested = false;
-        fetch->pd->req_result = reason;
-    }
+    if (const auto pd = fetch->pd.get()) {
+        pd->flags.requested = false;
+        pd->req_result = reason;
 
-    /* schedule next check if peer is still out there */
-    {
-        auto pd = fetch->pd.get();
+        /* schedule next check if peer is still out there */
 
         if (err) {
             pd->times.retry_delay = peerDigestIncDelay(pd);
@@ -695,7 +688,13 @@ peerDigestReqFinish(DigestFetchState * const fetch, char *, const char * const r
     if (const auto pd = fetch->pd.get())
         pd->noteFetchFinished(*fetch, err);
 
-    peerDigestFetchFinish(fetch, err);
+    /* update global stats after calling peerDigestFetchSetStats() */
+    statCounter.cd.kbytes_sent += fetch->sent.bytes;
+    statCounter.cd.kbytes_recv += fetch->recv.bytes;
+    statCounter.cd.msgs_sent += fetch->sent.msg;
+    statCounter.cd.msgs_recv += fetch->recv.msg;
+
+    delete fetch;
 }
 
 void
@@ -731,17 +730,6 @@ PeerDigest::noteFetchFinished(const DigestFetchState &finishedFetch, const int e
     }
 }
 
-static void
-peerDigestFetchFinish(DigestFetchState * fetch, int /* err */)
-{
-    /* update global stats */
-    statCounter.cd.kbytes_sent += fetch->sent.bytes;
-    statCounter.cd.kbytes_recv += fetch->recv.bytes;
-    statCounter.cd.msgs_sent += fetch->sent.msg;
-    statCounter.cd.msgs_recv += fetch->recv.msg;
-
-    delete fetch;
-}
 /* calculate fetch stats after completion */
 static void
 peerDigestFetchSetStats(DigestFetchState * fetch)
@@ -763,15 +751,16 @@ peerDigestFetchSetStats(DigestFetchState * fetch)
     fetch->expires = fetch->entry->expires;
     fetch->resp_time = squid_curtime - fetch->start_time;
 
-    debugs(72, 3, "recv " << fetch->recv.bytes <<
+    debugs(72, 3, "peerDigestFetchFinish: recv " << fetch->recv.bytes <<
            " bytes in " << (int) fetch->resp_time << " secs");
 
-    debugs(72, 3, "expires: " <<
+    debugs(72, 3, "peerDigestFetchFinish: expires: " <<
            (long int) fetch->expires << " (" << std::showpos <<
            (int) (fetch->expires - squid_curtime) << "), lmt: " <<
            std::noshowpos << (long int) fetch->entry->lastModified() << " (" <<
            std::showpos << (int) (fetch->entry->lastModified() - squid_curtime) <<
            ")");
+
 }
 
 static int
