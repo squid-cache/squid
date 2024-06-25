@@ -62,7 +62,7 @@ Mgr::Action::contentType() const
 {
     switch (format()) {
     case Format::yaml:
-        return "application/yaml";
+        return "application/yaml;charset=utf-8";
     case Format::informal:
         return "text/plain;charset=utf-8";
     }
