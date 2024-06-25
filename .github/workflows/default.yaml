@@ -133,7 +133,7 @@ jobs:
           brew install \
             automake coreutils cppunit gawk \
             gnu-getopt gnu-sed grep libtool \
-            make openldap openssl cyrus-sasl
+            make openldap openssl cyrus-sasl gnutls
 
       - name: Checkout sources
         uses: actions/checkout@v4
