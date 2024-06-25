@@ -122,7 +122,7 @@ Http::Tunneler::handleTimeout(const CommTimeoutCbParams &)
 void
 Http::Tunneler::startReadingResponse()
 {
-    debugs(83, 5, connection << status());
+    debugs(83, 5, connection << ' ' << status());
 
     readBuf.reserveCapacity(SQUID_TCP_SO_RCVBUF);
     readMore();
@@ -410,7 +410,7 @@ Http::Tunneler::disconnect()
 void
 Http::Tunneler::callBack()
 {
-    debugs(83, 5, callback.answer().conn << status());
+    debugs(83, 5, callback.answer().conn << ' ' << status());
     assert(!connection); // returned inside callback.answer() or gone
     ScheduleCallHere(callback.release());
 }
@@ -439,7 +439,7 @@ Http::Tunneler::status() const
 
     // TODO: redesign AsyncJob::status() API to avoid
     // id and stop reason reporting duplication.
-    buf.append(" [state:", 8);
+    buf.append("state:", 8);
     if (requestWritten) buf.append("w", 1); // request sent
     if (tunnelEstablished) buf.append("t", 1); // tunnel established
     if (!callback) buf.append("x", 1); // caller informed
@@ -449,7 +449,6 @@ Http::Tunneler::status() const
     }
     if (connection != nullptr)
         buf.appendf(" FD %d", connection->fd);
-    buf.appendf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
 
     return buf.content();

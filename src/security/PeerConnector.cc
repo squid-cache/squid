@@ -582,14 +582,12 @@ Security::PeerConnector::status() const
 
     // TODO: redesign AsyncJob::status() API to avoid this
     // id and stop reason reporting duplication.
-    buf.append(" [", 2);
     if (stopReason != nullptr) {
         buf.append("Stopped, reason:", 16);
         buf.appendf("%s",stopReason);
     }
     if (Comm::IsConnOpen(serverConn))
         buf.appendf(" FD %d", serverConn->fd);
-    buf.appendf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
 
     return buf.content();

@@ -124,7 +124,7 @@ const char *
 Comm::TcpAcceptor::status() const
 {
     if (conn == nullptr)
-        return "[nil connection]";
+        return "nil connection";
 
     static char ipbuf[MAX_IPSTRLEN] = {'\0'};
     if (ipbuf[0] == '\0')
@@ -132,7 +132,7 @@ Comm::TcpAcceptor::status() const
 
     static MemBuf buf;
     buf.reset();
-    buf.appendf(" FD %d, %s",conn->fd, ipbuf);
+    buf.appendf("FD %d, %s",conn->fd, ipbuf);
 
     const char *jobStatus = AsyncJob::status();
     buf.append(jobStatus, strlen(jobStatus));
