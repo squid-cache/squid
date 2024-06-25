@@ -663,7 +663,7 @@ peerDigestReqFinish(DigestFetchState * const fetch, char *, const char * const r
 {
     assert(reason);
 
-    debugs(72, 2, "peer: " << RawPointer(fetch->pd.valid() ? fetch->pd->peer : nullptr).orNil() << ", reason: " << reason << " err: " << err);
+    debugs(72, 2, "peer: " << RawPointer(fetch->pd.valid() ? fetch->pd->peer : nullptr).orNil() << ", reason: " << reason << ", err: " << err);
 
     /* must go before PeerDigest::noteFetchFinished() */
 
