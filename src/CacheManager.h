@@ -38,7 +38,7 @@ public:
     static const SBuf &WellKnownUrlPathPrefix();
 
     /// remembers the given profile while ignoring attempts to register a same-name duplicate
-    void registerProfile(const Mgr::ActionProfilePointer &profile);
+    void registerProfile(const Mgr::ActionProfilePointer &);
 
     Mgr::ActionProfilePointer findAction(char const * action) const;
     Mgr::Action::Pointer createNamedAction(const char *actionName);
