@@ -9,6 +9,7 @@
 /* DEBUG: section 16    Cache Manager API */
 
 #include "squid.h"
+#include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "CacheManager.h"
 #include "mgr/ActionCreator.h"
@@ -50,17 +51,24 @@ Mgr::MenuAction::MenuAction(const Command::Pointer &aCmd): Action(aCmd)
 void
 Mgr::MenuAction::dump(StoreEntry* entry)
 {
-    debugs(16, 5, MYNAME);
     Must(entry != nullptr);
+    PackableStream os(*entry);
 
-    typedef CacheManager::Menu::const_iterator Iterator;
-    const CacheManager::Menu& menu = CacheManager::GetInstance()->menu();
+    const auto &menu = CacheManager::GetInstance()->menu();
 
-    for (Iterator a = menu.begin(); a != menu.end(); ++a) {
-        storeAppendPrintf(entry, " %-22s\t%-32s\t%s\n",
-                          (*a)->name, (*a)->desc,
-                          CacheManager::GetInstance()->ActionProtection(*a));
+    const auto savedFlags = os.flags();
+    const auto savedFill = os.fill();
+
+    os << std::left;
+    for (const auto &a : menu) {
+        os << ' ' << std::setw(22) << a->name << std::setw(0)
+           << '\t' << std::setw(32) << a->desc << std::setw(0)
+           << '\t' << CacheManager::GetInstance()->ActionProtection(a)
+           << '\n';
     }
+
+    os.fill(savedFill);
+    os.flags(savedFlags);
 }
 
 Mgr::ShutdownAction::Pointer

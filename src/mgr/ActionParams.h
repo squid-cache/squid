@@ -11,6 +11,7 @@
 #ifndef SQUID_SRC_MGR_ACTIONPARAMS_H
 #define SQUID_SRC_MGR_ACTIONPARAMS_H
 
+#include "anyp/Uri.h"
 #include "http/RequestMethod.h"
 #include "ipc/forward.h"
 #include "mgr/QueryParams.h"
@@ -30,13 +31,13 @@ public:
 
 public:
     /* details of the client HTTP request that caused the action */
-    String httpUri; ///< HTTP request URI
     HttpRequestMethod httpMethod; ///< HTTP request method
+    AnyP::Uri httpUri; ///< HTTP request URI
     RequestFlags httpFlags; ///< HTTP request flags
     String httpOrigin;       ///< HTTP Origin: header (if any)
 
     /* action parameters extracted from the client HTTP request */
-    String actionName; ///< action name (and credentials realm)
+    SBuf actionName; ///< action name (and credentials realm)
     String userName; ///< user login name; currently only used for logging
     String password; ///< user password; used for acceptance check and cleared
     QueryParams queryParams;

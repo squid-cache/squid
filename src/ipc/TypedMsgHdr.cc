@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
+#include "sbuf/SBuf.h"
 #include "SquidString.h"
 #include "tools.h"
 
@@ -145,6 +146,24 @@ Ipc::TypedMsgHdr::putString(const String &s)
     Must(s.psize() <= maxSize);
     putInt(s.psize());
     putRaw(s.rawBuf(), s.psize());
+}
+
+void
+Ipc::TypedMsgHdr::getString(SBuf &s) const
+{
+    const auto length = getInt();
+    Assure(length <= maxSize);
+    auto *p = s.rawAppendStart(length);
+    getRaw(p, length);
+    s.rawAppendFinish(p, length);
+}
+
+void
+Ipc::TypedMsgHdr::putString(const SBuf &s)
+{
+    Assure(s.length() <= maxSize);
+    putInt(s.length());
+    putRaw(s.rawContent(), s.length());
 }
 
 void
