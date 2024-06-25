@@ -670,9 +670,6 @@ peerDigestReqFinish(DigestFetchState * const fetch, char *, const char * const r
     if (const auto pd = fetch->pd.get()) {
         pd->flags.requested = false;
         pd->req_result = reason;
-
-        /* schedule next check if peer is still out there */
-
         if (err) {
             pd->times.retry_delay = peerDigestIncDelay(pd);
             peerDigestSetCheck(pd, pd->times.retry_delay);
