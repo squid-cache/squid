@@ -105,8 +105,8 @@ jobs:
           - { name: layer-01-minimal, nick: minimal }
           - { name: layer-02-maximus, nick: maximus }
         exclude:
-            # Non-clang testing on MacOS is too much work for very little gain
-            - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
+          # Non-clang testing on MacOS is too much work for very little gain
+          - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
 
     runs-on: ${{ matrix.os }}
 
@@ -133,7 +133,8 @@ jobs:
           brew install \
             automake coreutils cppunit gawk \
             gnu-getopt gnu-sed grep libtool \
-            make openldap openssl cyrus-sasl
+            make cyrus-sasl
+            # openldap openssl # already provided by github workers base-image
 
       - name: Checkout sources
         uses: actions/checkout@v4
