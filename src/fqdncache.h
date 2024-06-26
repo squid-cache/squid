@@ -13,8 +13,8 @@
 
 #include "dns/forward.h"
 #include "sbuf/forward.h"
+#include "store/forward.h"
 
-class StoreEntry;
 namespace Dns
 {
 /// whether to do reverse DNS lookups for source IPs of accepted connections
