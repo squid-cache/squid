@@ -11,6 +11,7 @@
 #include "CacheManager.h"
 #include "compat/cppunit.h"
 #include "mgr/Action.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "unitTestMain.h"
 
@@ -99,7 +100,7 @@ TestCacheManager::testRegister()
     CacheManager *manager=CacheManager::GetInstance();
     CPPUNIT_ASSERT(manager != nullptr);
 
-    manager->registerProfile("sample", "my sample", &dummy_action, false, false);
+    Mgr::RegisterAction("sample", "my sample", &dummy_action, Mgr::Protected::no, Mgr::Atomic::no, Mgr::Format::informal);
     Mgr::Action::Pointer action = manager->createNamedAction("sample");
     CPPUNIT_ASSERT(action != nullptr);
 
@@ -108,9 +109,12 @@ TestCacheManager::testRegister()
     CPPUNIT_ASSERT(profile->creator != nullptr);
     CPPUNIT_ASSERT_EQUAL(false, profile->isPwReq);
     CPPUNIT_ASSERT_EQUAL(false, profile->isAtomic);
+    CPPUNIT_ASSERT_EQUAL(Mgr::Format::informal, profile->format);
+    CPPUNIT_ASSERT_EQUAL(Mgr::Format::informal, action->format());
     CPPUNIT_ASSERT_EQUAL(String("sample"), String(action->name()));
 
     StoreEntry *sentry=new StoreEntry();
+    sentry->createMemObject();
     sentry->flags=0x25; //arbitrary test value
     action->run(sentry, false);
     CPPUNIT_ASSERT_EQUAL(1,(int)sentry->flags);
