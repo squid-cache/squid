@@ -575,7 +575,8 @@ PconnModule::registerWithCacheManager(void)
 {
     Mgr::RegisterAction("pconn",
                         "Persistent Connection Utilization Histograms",
-                        DumpWrapper, 0, 1);
+                        DumpWrapper, Mgr::Protected::no, Mgr::Atomic::yes,
+                        Mgr::Format::yaml);
 }
 
 void

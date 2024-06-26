@@ -12,6 +12,7 @@
 #define SQUID_SRC_MGR_ACTIONPROFILE_H
 
 #include "mgr/ActionCreator.h"
+#include "mgr/ActionFeatures.h"
 #include "mgr/forward.h"
 
 namespace Mgr
@@ -24,9 +25,15 @@ public:
     typedef RefCount<ActionProfile> Pointer;
 
 public:
-    ActionProfile(const char* aName, const char* aDesc, bool aPwReq,
-                  bool anAtomic, const ActionCreatorPointer &aCreator):
-        name(aName), desc(aDesc), isPwReq(aPwReq), isAtomic(anAtomic),
+    ActionProfile(const char* aName, const char* aDesc,
+                  ActionCreatorPointer aCreator,
+                  const Protected aProtected,
+                  const Atomic anAtomic,
+                  const Format aFormat):
+        name(aName), desc(aDesc),
+        isPwReq(aProtected == Protected::yes),
+        isAtomic(anAtomic == Atomic::yes),
+        format(aFormat),
         creator(aCreator) {
     }
 
@@ -35,6 +42,7 @@ public:
     const char *desc; ///< action description to build an action menu list
     bool isPwReq; ///< whether password is required to perform the action
     bool isAtomic; ///< whether action dumps everything in one dump() call
+    Format format; ///< action report syntax
     ActionCreatorPointer creator; ///< creates Action objects with this profile
 };
 

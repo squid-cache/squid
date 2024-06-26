@@ -40,21 +40,6 @@ private:
     OBJH *handler; ///< legacy function that collects and dumps info
 };
 
-/// creates FunAction using ActionCreator API
-class FunActionCreator: public ActionCreator
-{
-public:
-    explicit FunActionCreator(OBJH *aHandler): handler(aHandler) {}
-
-    /* ActionCreator API */
-    Action::Pointer create(const CommandPointer &cmd) const override {
-        return FunAction::Create(cmd, handler);
-    }
-
-private:
-    OBJH *handler; ///< legacy function to pass to the FunAction wrapper
-};
-
 } // namespace Mgr
 
 #endif /* SQUID_SRC_MGR_FUNACTION_H */
