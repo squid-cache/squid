@@ -111,10 +111,10 @@ int64_t Stream::getNextRangeOffset() const STUB_RETVAL(-1)
 bool Stream::canPackMoreRanges() const STUB_RETVAL(false)
 size_t Stream::lengthToSend(Range<int64_t> const &) const STUB_RETVAL(0)
 clientStream_status_t Stream::socketState() STUB_RETVAL(STREAM_NONE)
-void Stream::sendStartOfMessage(HttpReply *, StoreIOBuffer) STUB
+void Stream::sendStartOfMessage(const HttpReplyPointer &, StoreIOBuffer) STUB
 void Stream::sendBody(StoreIOBuffer) STUB
 void Stream::noteSentBodyBytes(size_t) STUB
-void Stream::buildRangeHeader(HttpReply *) STUB
+void Stream::buildRangeHeader() STUB
 clientStreamNode *Stream::getTail() const STUB_RETVAL(nullptr)
 clientStreamNode *Stream::getClientReplyContext() const STUB_RETVAL(nullptr)
 ConnStateData *Stream::getConn() const STUB_RETVAL(nullptr)
