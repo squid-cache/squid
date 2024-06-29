@@ -24,7 +24,6 @@
 Http::Stream::Stream(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
     clientConnection(aConn),
     http(aReq),
-    reply(nullptr),
     writtenToSocket(0),
     mayUseConnection_(false),
     connRegistered_(false)
@@ -136,7 +135,7 @@ Http::Stream::getNextRangeOffset() const
             "; reply " << reply);
 
     // XXX: This method is called from many places, including pullData() which
-    // may be called before prepareReply() [on some Squid-generated errors].
+    // may be called before sendStartOfMessage() [on some Squid-generated errors].
     // Hence, we may not even know yet whether we should honor/do ranges.
 
     if (http->request->range) {
@@ -264,11 +263,15 @@ Http::Stream::socketState()
 }
 
 void
-Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
+Http::Stream::sendStartOfMessage(const HttpReplyPointer &rep, StoreIOBuffer bodyData)
 {
-    prepareReply(rep);
     assert(rep);
-    MemBuf *mb = rep->pack();
+    reply = rep;
+
+    if (http->request->range)
+        buildRangeHeader();
+
+    MemBuf *mb = reply->pack();
 
     // dump now, so we do not output any body.
     debugs(11, 2, "HTTP Client " << clientConnection);
@@ -377,7 +380,7 @@ Http::Stream::noteSentBodyBytes(size_t bytes)
 
 /// \return true when If-Range specs match reply, false otherwise
 static bool
-clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
+clientIfRangeMatch(ClientHttpRequest * http, const HttpReplyPointer &reply)
 {
     const TimeOrTag spec = http->request->header.getTimeOrTag(Http::HdrType::IF_RANGE);
 
@@ -387,7 +390,7 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
 
     /* got an ETag? */
     if (spec.tag.str) {
-        ETag rep_tag = rep->header.getETag(Http::HdrType::ETAG);
+        ETag rep_tag = reply->header.getETag(Http::HdrType::ETAG);
         debugs(33, 3, "ETags: " << spec.tag.str << " and " <<
                (rep_tag.str ? rep_tag.str : "<none>"));
 
@@ -414,31 +417,28 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
 // seems to be something better suited to Server logic
 /** adds appropriate Range headers if needed */
 void
-Http::Stream::buildRangeHeader(HttpReply *rep)
+Http::Stream::buildRangeHeader()
 {
-    HttpHeader *hdr = rep ? &rep->header : nullptr;
+    auto *hdr = &reply->header;
     const char *range_err = nullptr;
     HttpRequest *request = http->request;
     assert(request->range);
     /* check if we still want to do ranges */
     int64_t roffLimit = request->getRangeOffsetLimit();
-    auto contentRange = rep ? rep->contentRange() : nullptr;
 
-    if (!rep)
-        range_err = "no [parse-able] reply";
-    else if ((rep->sline.status() != Http::scOkay) && (rep->sline.status() != Http::scPartialContent))
+    if ((reply->sline.status() != Http::scOkay) && (reply->sline.status() != Http::scPartialContent))
         range_err = "wrong status code";
-    else if (rep->sline.status() == Http::scPartialContent)
+    else if (reply->sline.status() == Http::scPartialContent)
         range_err = "too complex response"; // probably contains what the client needs
-    else if (rep->sline.status() != Http::scOkay)
+    else if (reply->sline.status() != Http::scOkay)
         range_err = "wrong status code";
     else if (hdr->has(Http::HdrType::CONTENT_RANGE)) {
-        Must(!contentRange); // this is a 200, not 206 response
+        Must(!reply->contentRange()); // this is a 200, not 206 response
         range_err = "meaningless response"; // the status code or the header is wrong
     }
-    else if (rep->content_length < 0)
+    else if (reply->content_length < 0)
         range_err = "unknown length";
-    else if (rep->content_length != http->storeEntry()->mem().baseReply().content_length)
+    else if (reply->content_length != http->storeEntry()->mem().baseReply().content_length)
         range_err = "INCONSISTENT length";  /* a bug? */
 
     /* hits only - upstream CachePeer determines correct behaviour on misses,
@@ -446,10 +446,10 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
      */
     else if (http->loggingTags().isTcpHit() &&
              http->request->header.has(Http::HdrType::IF_RANGE) &&
-             !clientIfRangeMatch(http, rep))
+             !clientIfRangeMatch(http, reply))
         range_err = "If-Range match failed";
 
-    else if (!http->request->range->canonize(rep))
+    else if (!http->request->range->canonize(reply.getRaw()))
         range_err = "canonization failed";
     else if (http->request->range->isComplex())
         range_err = "too complex range header";
@@ -466,7 +466,7 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
         http->request->ignoreRange(range_err);
     } else {
         /* XXX: TODO: Review, this unconditional set may be wrong. */
-        rep->sline.set(rep->sline.version, Http::scPartialContent);
+        reply->sline.set(reply->sline.version, Http::scPartialContent);
 
         // before range_iter accesses
         const auto actual_clen = http->prepPartialResponseGeneration();
@@ -474,13 +474,13 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
         const int spec_count = http->request->range->specs.size();
 
         debugs(33, 3, "range spec count: " << spec_count <<
-               " virgin clen: " << rep->content_length);
+               " virgin clen: " << reply->content_length);
         assert(spec_count > 0);
         /* append appropriate header(s) */
         if (spec_count == 1) {
             const auto singleSpec = *http->request->range->begin();
             assert(singleSpec);
-            httpHeaderAddContRange(hdr, *singleSpec, rep->content_length);
+            httpHeaderAddContRange(hdr, *singleSpec, reply->content_length);
         } else {
             /* multipart! */
             /* delete old Content-Type, add ours */
@@ -561,14 +561,6 @@ Http::Stream::deferRecipientForLater(clientStreamNode *node, HttpReply *rep, Sto
     deferredparams.node = node;
     deferredparams.rep = rep;
     deferredparams.queuedBuffer = receivedData;
-}
-
-void
-Http::Stream::prepareReply(HttpReply *rep)
-{
-    reply = rep;
-    if (http->request->range)
-        buildRangeHeader(rep);
 }
 
 /**
