@@ -38,8 +38,8 @@ typedef enum : uint8_t {
     FRAME_CANCEL_PUSH   = FRAME_RST_STREAM,
     FRAME_MAX_PUSH_ID   = 0x0D
 
-    /* types 0x1f * N + 0x21 reserved for experimental use */
-    /* types 0xf0-0xff reserved for experimental use */
+                          /* types 0x1f * N + 0x21 reserved for experimental use */
+                          /* types 0xf0-0xff reserved for experimental use */
 } FrameType;
 
 extern const SBuf FrameType_sb[];
