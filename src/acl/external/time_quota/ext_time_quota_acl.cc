@@ -32,7 +32,6 @@
 #include <chrono>
 #include <ctime>
 #include <fstream>
-#include <iostream>
 #include <sstream>
 #if HAVE_GETOPT_H
 #include <getopt.h>
