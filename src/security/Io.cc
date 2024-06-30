@@ -27,7 +27,7 @@ typedef SessionPointer::element_type *ConnectionPointer;
 void
 Security::IoResult::print(std::ostream &os) const
 {
-    const char *strCat = "unknown";
+    const char *strCat = nullptr;
     switch (category) {
     case ioSuccess:
         strCat = "success";
@@ -39,16 +39,13 @@ Security::IoResult::print(std::ostream &os) const
         strCat = "want-write";
         break;
     case ioError:
-        strCat = "error";
+        strCat = errorDescription;
         break;
     }
-    os << strCat;
+    os << (strCat ? strCat : "unknown");
 
-    if (errorDescription)
-        os << ", " << errorDescription;
-
-    if (important)
-        os << ", important";
+    if (errorDetail)
+        os << Debug::Extra << "error detail: " << errorDetail;
 }
 
 // TODO: Replace high-level ERR_get_error() calls with ForgetErrors() calls or
