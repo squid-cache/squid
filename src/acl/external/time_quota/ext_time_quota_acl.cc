@@ -71,15 +71,12 @@ const size_t TQ_BUFFERSIZE = 1024;
  * same activity and the quota will be reduced.
  */
 static int pauseLength = 300;
-static bool clearDb = true;
 
 static void init_db(void)
 {
     debugs(DEBUG_SECTION, 2, "opening time quota database \"" << db_path << "\".");
 
-    int dbopts = 0;
-    if (clearDb)
-        dbopts |= TDB_CLEAR_IF_FIRST;
+    int dbopts = TDB_CLEAR_IF_FIRST;
 
     db = tdb_open(db_path, 0, dbopts, O_CREAT | O_RDWR, 0666);
     if (!db) {
@@ -352,7 +349,7 @@ int main(int argc, char **argv)
     program_name = argv[0];
     Debug::NameThisHelper("ext_time_quota_acl");
 
-    while ((opt = getopt(argc, argv, "dp:l:b:hn")) != -1) {
+    while ((opt = getopt(argc, argv, "dp:l:b:h")) != -1) {
         switch (opt) {
         case 'd':
             Debug::Levels[DEBUG_SECTION] = 9;
@@ -362,9 +359,6 @@ int main(int argc, char **argv)
             break;
         case 'p':
             pauseLength = atoi(optarg);
-            break;
-        case 'n':
-            clearDb = false;
             break;
         case 'h':
             usage();

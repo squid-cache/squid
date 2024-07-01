@@ -39,17 +39,6 @@ Default is 300 seconds (5 minutes).
 Enables debug logging to stderr.
 .
 .if !'po4a'hide' .TP
-.if !'po4a'hide' .B "\-n"
-Do not clear the database at startup.
-Normally, the database persisting quota use information is cleared
-when the first helper in a starts on a host, while helpers running
-at the same time share the database.
-If this option is specified, the database is not cleared, persisting it
-across squid restarts and reconfigures.
-The downside is that the database grows indefinitely, it is up to the
-administrator to clear it as appropriate
-.
-.if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-h"
 show a short command line help.
 .
