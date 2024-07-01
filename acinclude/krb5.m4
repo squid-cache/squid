@@ -33,7 +33,7 @@ AC_DEFUN([SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H], [
   AC_CACHE_CHECK([for broken Heimdal krb5.h],squid_cv_broken_heimdal_krb5_h, [
     SQUID_STATE_SAVE(squid_krb5_heimdal_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #include <krb5.h>
 int
 main(void)
@@ -45,7 +45,7 @@ main(void)
         return 0;
 }
 ]])], [ squid_cv_broken_heimdal_krb5_h=no ], [
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #define HAVE_BROKEN_HEIMDAL_KRB5_H  1
 #include "compat/krb5.h"
 int
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 dnl checks that gssapi is ok, and sets squid_cv_working_gssapi accordingly
 AC_DEFUN([SQUID_CHECK_WORKING_GSSAPI], [
   AC_CACHE_CHECK([for working gssapi], squid_cv_working_gssapi, [
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #if USE_HEIMDAL_KRB5
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
@@ -231,7 +231,7 @@ AC_DEFUN([SQUID_CHECK_WORKING_KRB5],[
   AC_CACHE_CHECK([for working krb5], squid_cv_working_krb5, [
     SQUID_STATE_SAVE(squid_krb5_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #include "compat/krb5.h"
 int
 main(void)
