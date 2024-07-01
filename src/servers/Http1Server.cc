@@ -292,7 +292,7 @@ Http::One::Server::noteBodyConsumerAborted(BodyPipe::Pointer ptr)
 }
 
 void
-Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
+Http::One::Server::handleReply(const HttpReplyPointer &reply, StoreIOBuffer receivedData)
 {
     // the caller guarantees that we are dealing with the current context only
     Http::StreamPointer context = pipeline.front();
@@ -306,7 +306,7 @@ Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
                                    !http->request->flags.streamError &&
                                    !EBIT_TEST(http->storeEntry()->flags, ENTRY_BAD_LENGTH) &&
                                    !context->startOfOutput();
-    const bool responseFinishedOrFailed = !rep &&
+    const bool responseFinishedOrFailed = !reply &&
                                           !receivedData.data &&
                                           !receivedData.length;
     if (responseFinishedOrFailed && !mustSendLastChunk) {
@@ -319,12 +319,12 @@ Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
         return;
     }
 
-    assert(rep);
-    context->sendStartOfMessage(rep, receivedData);
+    assert(reply);
+    context->sendStartOfMessage(reply, receivedData);
 }
 
 bool
-Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call)
+Http::One::Server::writeControlMsgAndCall(const HttpReplyPointer &reply, AsyncCall::Pointer &call)
 {
     Http::StreamPointer context = pipeline.front();
     Must(context != nullptr);
@@ -340,27 +340,27 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
 
     // remember Upgrade header; removeHopByHopEntries() will remove it
     String upgradeHeader;
-    const auto switching = (rep->sline.status() == Http::scSwitchingProtocols);
+    const auto switching = (reply->sline.status() == Http::scSwitchingProtocols);
     if (switching)
-        upgradeHeader = rep->header.getList(Http::HdrType::UPGRADE);
+        upgradeHeader = reply->header.getList(Http::HdrType::UPGRADE);
 
     // apply selected clientReplyContext::buildReplyHeader() mods
     // it is not clear what headers are required for control messages
-    rep->header.removeHopByHopEntries();
+    reply->header.removeHopByHopEntries();
     // paranoid: ContentLengthInterpreter has cleaned non-generated replies
-    rep->removeIrrelevantContentLength();
+    reply->removeIrrelevantContentLength();
 
     if (switching && /* paranoid: */ upgradeHeader.size()) {
-        rep->header.putStr(Http::HdrType::UPGRADE, upgradeHeader.termedBuf());
-        rep->header.putStr(Http::HdrType::CONNECTION, "upgrade");
+        reply->header.putStr(Http::HdrType::UPGRADE, upgradeHeader.termedBuf());
+        reply->header.putStr(Http::HdrType::CONNECTION, "upgrade");
         // keep-alive is redundant, breaks some 101 (Switching Protocols) recipients
     } else {
-        rep->header.putStr(Http::HdrType::CONNECTION, "keep-alive");
+        reply->header.putStr(Http::HdrType::CONNECTION, "keep-alive");
     }
 
-    httpHdrMangleList(&rep->header, http->request, http->al, ROR_REPLY);
+    httpHdrMangleList(&reply->header, http->request, http->al, ROR_REPLY);
 
-    MemBuf *mb = rep->pack();
+    auto mb = reply->pack();
 
     debugs(11, 2, "HTTP Client " << clientConnection);
     debugs(11, 2, "HTTP Client CONTROL MSG:\n---------\n" << mb->buf << "\n----------");

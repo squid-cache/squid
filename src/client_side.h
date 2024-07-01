@@ -315,11 +315,11 @@ public:
     void add(const Http::StreamPointer &context);
 
     /// handle a control message received by context from a peer and call back
-    virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) = 0;
+    virtual bool writeControlMsgAndCall(const HttpReplyPointer &, AsyncCall::Pointer &) = 0;
 
     /// ClientStream calls this to supply response header (once) and data
     /// for the current Http::Stream.
-    virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData) = 0;
+    virtual void handleReply(const HttpReplyPointer &, StoreIOBuffer receivedData) = 0;
 
     /// remove no longer needed leading bytes from the input buffer
     void consumeInput(const size_t byteCount);
