@@ -80,6 +80,7 @@ public:
     ~PeerDigest();
 
     /// reacts to digest transfer completion
+    /// \prec DigestFetchState stats were finalized (by calling peerDigestFetchSetStats())
     void noteFetchFinished(const DigestFetchState &, const char *outcomeDescription, bool sawError);
 
     CbcPointer<CachePeer> peer; ///< pointer back to peer structure, argh

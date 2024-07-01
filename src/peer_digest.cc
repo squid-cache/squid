@@ -667,14 +667,8 @@ peerDigestReqFinish(DigestFetchState * fetch, char * /* buf */,
 
     debugs(72, 2, "peer: " << RawPointer(fetch->pd.valid() ? fetch->pd->peer : nullptr).orNil() << ", reason: " << reason << ", err: " << err);
 
-    if (const auto pd = fetch->pd.get()) {
-        pd->flags.requested = false;
-        pd->req_result = reason;
-    }
-
     /* note: order is significant */
     peerDigestFetchSetStats(fetch);
-
     if (const auto pd = fetch->pd.get())
         pd->noteFetchFinished(*fetch, reason, err);
 
@@ -686,6 +680,9 @@ PeerDigest::noteFetchFinished(const DigestFetchState &finishedFetch, const char 
 {
     const auto pd = this; // TODO: remove this diff reducer
     const auto fetch = &finishedFetch; // TODO: remove this diff reducer
+
+    pd->flags.requested = false;
+    pd->req_result = outcomeDescription;
 
     pd->times.received = squid_curtime;
     pd->times.req_delay = fetch->resp_time;
@@ -703,7 +700,6 @@ PeerDigest::noteFetchFinished(const DigestFetchState &finishedFetch, const char 
         pd->cd = nullptr;
 
         pd->flags.usable = false;
-
     } else {
         pd->flags.usable = true;
         pd->times.retry_delay = 0;
