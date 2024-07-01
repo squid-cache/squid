@@ -349,7 +349,7 @@ static void processActivity(const char *user_key)
     timeBudgetCurrent = readTime(user_key, KeyTimeBudgetLeft);
 
     SBufStream oss;
-    oss << "message=\"Remaining quota for '" << user_key << "' is " << timeBudgetCurrent << " seconds.\"";
+    oss << HLP_MSG("Remaining quota for '" << user_key << "' is " << timeBudgetCurrent << " seconds.");
     auto message = oss.buf();
     if ( timeBudgetCurrent > 0 ) {
         log_debug("OK " << message);
