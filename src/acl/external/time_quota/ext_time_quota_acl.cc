@@ -229,8 +229,8 @@ static void readConfig(const char *filename)
                 parseTime(budget, &budgetSecs, &start);
                 parseTime(period, &periodSecs, &start);
 
-                 debugs(DEBUG_SECTION, 3, "read time quota for user \"" << username << "\": " <<
-                          budgetSecs << "s / " << periodSecs << "s starting " << start);
+                debugs(DEBUG_SECTION, 3, "read time quota for user \"" << username << "\": " <<
+                       budgetSecs << "s / " << periodSecs << "s starting " << start);
 
                 writeTime(username, KeyPeriodStart, start);
                 writeTime(username, KeyPeriodLengthConfigured, periodSecs);
@@ -270,21 +270,21 @@ static void processActivity(const char *user_key)
     userPeriodLength = readTime(user_key, KeyPeriodLengthConfigured);
     if ( userPeriodLength == 0 ) {
         // This user is not configured. Allow anything.
-         debugs(DEBUG_SECTION, 3, "No period length found for user \"" << user_key <<
-                  "\". Quota for this user disabled.");
+        debugs(DEBUG_SECTION, 3, "No period length found for user \"" << user_key <<
+               "\". Quota for this user disabled.");
         writeTime(user_key, KeyTimeBudgetLeft, pauseLength);
     } else {
         if ( periodLength >= userPeriodLength ) {
             // a new period has started.
-             debugs(DEBUG_SECTION, 3, "New time period started for user \"" << user_key << '\"');
+            debugs(DEBUG_SECTION, 3, "New time period started for user \"" << user_key << '\"');
             while ( periodStart < now ) {
                 periodStart += periodLength;
             }
             writeTime(user_key, KeyPeriodStart, periodStart);
             timeBudgetConfigured = readTime(user_key, KeyTimeBudgetConfigured);
             if ( timeBudgetConfigured == 0 ) {
-                 debugs(DEBUG_SECTION, 3, "No time budget configured for user \"" << user_key  <<
-                          "\". Quota for this user disabled.");
+                debugs(DEBUG_SECTION, 3, "No time budget configured for user \"" << user_key  <<
+                       "\". Quota for this user disabled.");
                 writeTime(user_key, KeyTimeBudgetLeft, pauseLength);
             } else {
                 writeTime(user_key, KeyTimeBudgetLeft, timeBudgetConfigured);
@@ -301,14 +301,14 @@ static void processActivity(const char *user_key)
         activityLength = now - lastActivity;
         if ( activityLength >= pauseLength ) {
             // This is an activity pause.
-             debugs(DEBUG_SECTION, 3, "Activity pause detected for user \"" << user_key << "\".");
+            debugs(DEBUG_SECTION, 3, "Activity pause detected for user \"" << user_key << "\".");
             writeTime(user_key, KeyLastActivity, now);
         } else {
             // This is real usage.
             writeTime(user_key, KeyLastActivity, now);
 
-             debugs(DEBUG_SECTION, 3, "Time budget reduced by " << activityLength <<
-                      " for user \"" << user_key << "\".");
+            debugs(DEBUG_SECTION, 3, "Time budget reduced by " << activityLength <<
+                   " for user \"" << user_key << "\".");
             timeBudgetCurrent = readTime(user_key, KeyTimeBudgetLeft);
             timeBudgetCurrent -= activityLength;
             writeTime(user_key, KeyTimeBudgetLeft, timeBudgetCurrent);
