@@ -27,12 +27,13 @@
  */
 
 #include "squid.h"
+#include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "helper/protocol_defines.h"
 
 #include <chrono>
 #include <ctime>
 #include <fstream>
-#include <sstream>
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
@@ -122,11 +123,11 @@ static void shutdown_db(void)
     tdb_close(db);
 }
 
-static std::string KeyString(const char *user_key, const char *sub_key)
+static SBuf KeyString(const char *user_key, const char *sub_key)
 {
-    std::ostringstream oss;
-    oss << user_key << '-' << sub_key;
-    return oss.str();
+    SBuf rv(user_key);
+    rv.append("-").append(sub_key);
+    return rv;
 }
 
 static void writeTime(const char *user_key, const char *sub_key, time_t t)
@@ -347,9 +348,9 @@ static void processActivity(const char *user_key)
 
     timeBudgetCurrent = readTime(user_key, KeyTimeBudgetLeft);
 
-    std::ostringstream oss;
+    SBufStream oss;
     oss << "message=\"Remaining quota for '" << user_key << "' is " << timeBudgetCurrent << " seconds.\"";
-    auto message = oss.str();
+    auto message = oss.buf();
     if ( timeBudgetCurrent > 0 ) {
         log_debug("OK " << message);
         SEND_OK(message);
