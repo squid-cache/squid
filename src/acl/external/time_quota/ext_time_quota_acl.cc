@@ -27,9 +27,9 @@
  */
 
 #include "squid.h"
+#include "helper/protocol_defines.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
-#include "helper/protocol_defines.h"
 
 #include <chrono>
 #include <ctime>
