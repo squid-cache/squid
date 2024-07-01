@@ -389,7 +389,7 @@ clientIfRangeMatch(ClientHttpRequest * http, const HttpReplyPointer &reply)
 
     /* got an ETag? */
     if (spec.tag.str) {
-        const auto &rep_tag = reply->header.getETag(Http::HdrType::ETAG);
+        ETag rep_tag = reply->header.getETag(Http::HdrType::ETAG);
         debugs(33, 3, "ETags: " << spec.tag.str << " and " <<
                (rep_tag.str ? rep_tag.str : "<none>"));
 
