@@ -270,7 +270,7 @@ Http::Stream::sendStartOfMessage(const HttpReplyPointer &rep, StoreIOBuffer body
     if (http->request->range)
         buildRangeHeader();
 
-    MemBuf *mb = reply->pack();
+    auto mb = reply->pack();
 
     // dump now, so we do not output any body.
     debugs(11, 2, "HTTP Client " << clientConnection);
@@ -381,7 +381,7 @@ Http::Stream::noteSentBodyBytes(size_t bytes)
 static bool
 clientIfRangeMatch(ClientHttpRequest * http, const HttpReplyPointer &reply)
 {
-    const auto &spec = http->request->header.getTimeOrTag(Http::HdrType::IF_RANGE);
+    const TimeOrTag spec = http->request->header.getTimeOrTag(Http::HdrType::IF_RANGE);
 
     /* check for parsing failure */
     if (!spec.valid)
@@ -418,7 +418,8 @@ clientIfRangeMatch(ClientHttpRequest * http, const HttpReplyPointer &reply)
 void
 Http::Stream::buildRangeHeader()
 {
-    auto *hdr = &reply->header;
+    Assure(reply);
+    const auto hdr = &reply->header;
     const char *range_err = nullptr;
     HttpRequest *request = http->request;
     assert(request->range);
