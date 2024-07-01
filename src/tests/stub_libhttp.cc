@@ -121,6 +121,6 @@ ConnStateData *Stream::getConn() const STUB_RETVAL(nullptr)
 void Stream::noteIoError(const Error &, const LogTagsErrors &) STUB
 void Stream::finished() STUB
 void Stream::initiateClose(const char *) STUB
-void Stream::deferRecipientForLater(clientStreamNode *, HttpReply *, StoreIOBuffer) STUB
+void Stream::deferRecipientForLater(clientStreamNode *, const HttpReplyPointer &, StoreIOBuffer) STUB
 }
 

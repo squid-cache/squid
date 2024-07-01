@@ -124,7 +124,7 @@ public:
     /// terminate due to a send/write error (may continue reading)
     void initiateClose(const char *reason);
 
-    void deferRecipientForLater(clientStreamNode *, HttpReply *, StoreIOBuffer receivedData);
+    void deferRecipientForLater(clientStreamNode *, const HttpReplyPointer &, StoreIOBuffer receivedData);
 
 public: // HTTP/1.x state data
 
@@ -149,7 +149,7 @@ public: // HTTP/1.x state data
 
     public:
         clientStreamNode *node;
-        HttpReply *rep;
+        HttpReplyPointer reply;
         StoreIOBuffer queuedBuffer;
     };
 

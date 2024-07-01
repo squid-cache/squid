@@ -33,7 +33,6 @@ Http::Stream::Stream(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aR
     flags.deferred = 0;
     flags.parsed_ok = 0;
     deferredparams.node = nullptr;
-    deferredparams.rep = nullptr;
 }
 
 Http::Stream::~Stream()
@@ -554,13 +553,13 @@ Http::Stream::initiateClose(const char *reason)
 }
 
 void
-Http::Stream::deferRecipientForLater(clientStreamNode *node, HttpReply *rep, StoreIOBuffer receivedData)
+Http::Stream::deferRecipientForLater(clientStreamNode *node, const HttpReplyPointer &rep, StoreIOBuffer receivedData)
 {
     debugs(33, 2, "Deferring request " << http->uri);
     assert(flags.deferred == 0);
     flags.deferred = 1;
     deferredparams.node = node;
-    deferredparams.rep = rep;
+    deferredparams.reply = rep;
     deferredparams.queuedBuffer = receivedData;
 }
 
