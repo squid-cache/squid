@@ -336,7 +336,7 @@ static void usage(void)
 
     std::cerr <<
               "Usage: " << program_name << " [-d] [-b dbpath] [-p pauselen] [-h] configfile\n" <<
-              "	-d level      enable debugging output at level\n" <<
+              "	-d            enable debugging output\n" <<
               "	-b dbpath     Path where persistent session database will be kept\n" <<
               "	              If option is not used, then " DEFAULT_QUOTA_DB " will be used.\n" <<
               "	-p pauselen   length in seconds to describe a pause between 2 requests.\n" <<
@@ -352,10 +352,10 @@ int main(int argc, char **argv)
     program_name = argv[0];
     Debug::NameThisHelper("ext_time_quota_acl");
 
-    while ((opt = getopt(argc, argv, "d:p:l:b:hn")) != -1) {
+    while ((opt = getopt(argc, argv, "dp:l:b:hn")) != -1) {
         switch (opt) {
         case 'd':
-            Debug::Levels[DEBUG_SECTION] = atoi(optarg);
+            Debug::Levels[DEBUG_SECTION] = 9;
             break;
         case 'b':
             db_path = optarg;
