@@ -19,9 +19,6 @@
 
 #include <iosfwd>
 
-//TODO: remove, it is unconditionally defined and always used.
-#define PEER_MULTICAST_SIBLINGS 1
-
 class NeighborTypeDomainList;
 class PconnPool;
 class PeerDigest;
@@ -141,9 +138,7 @@ public:
         bool sourcehash = false;
         bool originserver = false;
         bool no_tproxy = false;
-#if PEER_MULTICAST_SIBLINGS
         bool mcast_siblings = false;
-#endif
         bool auth_no_keytab = false;
     } options;
 
