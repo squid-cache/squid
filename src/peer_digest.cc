@@ -633,8 +633,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     if (reason) {
         const int level = strstr(reason, "?!") ? 1 : 3;
         debugs(72, level, "" << step_name << ": peer " << host << ", exiting after '" << reason << "'");
-        peerDigestReqFinish(fetch, buf,
-                            reason, !no_bug);
+        peerDigestReqFinish(fetch, buf, reason, !no_bug);
     }
 
     return reason != nullptr;
