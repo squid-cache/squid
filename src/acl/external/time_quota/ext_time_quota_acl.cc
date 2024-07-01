@@ -27,9 +27,12 @@
  */
 
 #include "squid.h"
+#include "debug/Stream.h"
 #include "helper/protocol_defines.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
+
+static const int DEBUG_SECTION=1;
 
 #include <chrono>
 #include <ctime>
@@ -70,37 +73,9 @@ const size_t TQ_BUFFERSIZE = 1024;
 static int pauseLength = 300;
 static bool clearDb = true;
 
-static std::ostream *logfile = &std::cerr;
-static int tq_debug_enabled = false;
-
-static void open_log(const char *logfilename)
-{
-    static auto log = new std::ofstream(logfilename, std::ios::app);
-    if (log && *log)
-        logfile = log;
-    else
-        perror(logfilename);
-}
-
-#define log_debug(CONTENT) \
-    if (tq_debug_enabled) { \
-         *logfile << \
-            std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) << \
-             " DEBUG| " << CONTENT << std::endl ;\
-    }
-
-#define low_log(LEVEL, CONTENT) \
-    do { *logfile << \
-        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) << \
-        ' ' << LEVEL << "| " << CONTENT << std::endl ; } while (0)
-
-#define log_info(CONTENT) low_log("INFO", CONTENT)
-#define log_error(CONTENT) low_log("ERROR", CONTENT)
-#define log_fatal(CONTENT) low_log("FATAL", CONTENT)
-
 static void init_db(void)
 {
-    log_info("opening time quota database \"" << db_path << "\".");
+    debugs(DEBUG_SECTION, 2, "opening time quota database \"" << db_path << "\".");
 
     int dbopts = 0;
     if (clearDb)
@@ -108,14 +83,11 @@ static void init_db(void)
 
     db = tdb_open(db_path, 0, dbopts, O_CREAT | O_RDWR, 0666);
     if (!db) {
-        log_fatal("Failed to open time_quota db '" << db_path << '\'');
+        debugs(DEBUG_SECTION, DBG_IMPORTANT, "Failed to open time_quota db '" << db_path << '\'');
         exit(EXIT_FAILURE);
     }
-    if (tq_debug_enabled) {
-        // count the number of entries in the database, only used for debugging
-        auto count = tdb_traverse(db,nullptr, nullptr);
-        log_debug("Database contains " << count << " entries.");
-    }
+    // count the number of entries in the database, only used for debugging
+    debugs(DEBUG_SECTION, 2, "Database contains " << tdb_traverse(db, nullptr, nullptr) << " entries");
 }
 
 static void shutdown_db(void)
@@ -142,7 +114,7 @@ static void writeTime(const char *user_key, const char *sub_key, time_t t)
     };
 
     tdb_store(db, key, data, TDB_REPLACE);
-    log_debug("writeTime(\"" << ks << "\", " << t << ')');
+    debugs(DEBUG_SECTION, 3, "writeTime(\"" << ks << "\", " << t << ')');
 }
 
 static time_t readTime(const char *user_key, const char *sub_key)
@@ -155,7 +127,7 @@ static time_t readTime(const char *user_key, const char *sub_key)
     auto data = tdb_fetch(db, key);
 
     if (!data.dptr) {
-        log_debug("no data found for key \"" << ks << "\".");
+        debugs(DEBUG_SECTION, 3, "no data found for key \"" << ks << "\".");
         return 0;
     }
 
@@ -163,10 +135,10 @@ static time_t readTime(const char *user_key, const char *sub_key)
     if (data.dsize == sizeof(t)) {
         memcpy(&t, data.dptr, sizeof(t));
     } else {
-        log_error("CORRUPTED DATABASE key '" << ks << '\'');
+        debugs(DEBUG_SECTION, DBG_IMPORTANT, "CORRUPTED DATABASE key '" << ks << '\'');
     }
 
-    log_debug("readTime(\"" << ks << "\")=" << t);
+    debugs(DEBUG_SECTION, 3, "readTime(\"" << ks << "\")=" << t);
     return t;
 }
 
@@ -205,7 +177,7 @@ static void parseTime(const char *s, time_t *secs, time_t *start)
         *start += 24 * 3600;         // in europe, the week starts monday
         break;
     default:
-        log_error("Wrong time unit \"" << unit << "\". Only \"m\", \"h\", \"d\", or \"w\" allowed");
+        debugs(DEBUG_SECTION, DBG_IMPORTANT, "Wrong time unit \"" << unit << "\". Only \"m\", \"h\", \"d\", or \"w\" allowed");
         break;
     }
 
@@ -229,7 +201,7 @@ static void readConfig(const char *filename)
     time_t budgetSecs, periodSecs;
     time_t start;
 
-    log_info("reading config file \"" << filename << "\".");
+    debugs(DEBUG_SECTION, 2, "reading config file \"" << filename << "\".");
 
     FH = fopen(filename, "r");
     if ( FH ) {
@@ -244,7 +216,7 @@ static void readConfig(const char *filename)
                 /* chop \n characters */
                 *cp = '\0';
             }
-            log_debug("read config line " << lineCount << ": \"" << line << '\"');
+            debugs(DEBUG_SECTION, 3, "read config line " << lineCount << ": \"" << line << '\"');
             if ((username = strtok(line, "\t ")) != NULL) {
 
                 /* get the time budget */
@@ -260,7 +232,7 @@ static void readConfig(const char *filename)
                 parseTime(budget, &budgetSecs, &start);
                 parseTime(period, &periodSecs, &start);
 
-                log_debug("read time quota for user \"" << username << "\": " <<
+                 debugs(DEBUG_SECTION, 3, "read time quota for user \"" << username << "\": " <<
                           budgetSecs << "s / " << periodSecs << "s starting " << start);
 
                 writeTime(username, KeyPeriodStart, start);
@@ -287,7 +259,7 @@ static void processActivity(const char *user_key)
     time_t timeBudgetCurrent;
     time_t timeBudgetConfigured;
 
-    log_debug("processActivity(\"" << user_key << "\")");
+    debugs(DEBUG_SECTION, 3, "processActivity(\"" << user_key << "\")");
 
     // [1] Reset period if over
     periodStart = readTime(user_key, KeyPeriodStart);
@@ -301,20 +273,20 @@ static void processActivity(const char *user_key)
     userPeriodLength = readTime(user_key, KeyPeriodLengthConfigured);
     if ( userPeriodLength == 0 ) {
         // This user is not configured. Allow anything.
-        log_debug("No period length found for user \"" << user_key <<
+         debugs(DEBUG_SECTION, 3, "No period length found for user \"" << user_key <<
                   "\". Quota for this user disabled.");
         writeTime(user_key, KeyTimeBudgetLeft, pauseLength);
     } else {
         if ( periodLength >= userPeriodLength ) {
             // a new period has started.
-            log_debug("New time period started for user \"" << user_key << "\".");
+             debugs(DEBUG_SECTION, 3, "New time period started for user \"" << user_key << '\"');
             while ( periodStart < now ) {
                 periodStart += periodLength;
             }
             writeTime(user_key, KeyPeriodStart, periodStart);
             timeBudgetConfigured = readTime(user_key, KeyTimeBudgetConfigured);
             if ( timeBudgetConfigured == 0 ) {
-                log_debug("No time budget configured for user \"" << user_key  <<
+                 debugs(DEBUG_SECTION, 3, "No time budget configured for user \"" << user_key  <<
                           "\". Quota for this user disabled.");
                 writeTime(user_key, KeyTimeBudgetLeft, pauseLength);
             } else {
@@ -332,13 +304,13 @@ static void processActivity(const char *user_key)
         activityLength = now - lastActivity;
         if ( activityLength >= pauseLength ) {
             // This is an activity pause.
-            log_debug("Activity pause detected for user \"" << user_key << "\".");
+             debugs(DEBUG_SECTION, 3, "Activity pause detected for user \"" << user_key << "\".");
             writeTime(user_key, KeyLastActivity, now);
         } else {
             // This is real usage.
             writeTime(user_key, KeyLastActivity, now);
 
-            log_debug("Time budget reduced by " << activityLength <<
+             debugs(DEBUG_SECTION, 3, "Time budget reduced by " << activityLength <<
                       " for user \"" << user_key << "\".");
             timeBudgetCurrent = readTime(user_key, KeyTimeBudgetLeft);
             timeBudgetCurrent -= activityLength;
@@ -360,12 +332,11 @@ static void processActivity(const char *user_key)
 
 static void usage(void)
 {
-    log_error("Wrong usage. Please reconfigure in squid.conf.");
+    debugs(DEBUG_SECTION, DBG_CRITICAL, "Wrong usage. Please reconfigure in squid.conf.");
 
     std::cerr <<
-              "Usage: " << program_name << " [-d] [-l logfile] [-b dbpath] [-p pauselen] [-h] configfile\n" <<
-              "	-d            enable debugging output to logfile\n" <<
-              "	-l logfile    log messages to logfile\n" <<
+              "Usage: " << program_name << " [-d] [-b dbpath] [-p pauselen] [-h] configfile\n" <<
+              "	-d level      enable debugging output at level\n" <<
               "	-b dbpath     Path where persistent session database will be kept\n" <<
               "	              If option is not used, then " DEFAULT_QUOTA_DB " will be used.\n" <<
               "	-p pauselen   length in seconds to describe a pause between 2 requests.\n" <<
@@ -379,14 +350,12 @@ int main(int argc, char **argv)
     int opt;
 
     program_name = argv[0];
+    Debug::NameThisHelper("ext_time_quota_acl");
 
-    while ((opt = getopt(argc, argv, "dp:l:b:hn")) != -1) {
+    while ((opt = getopt(argc, argv, "d:p:l:b:hn")) != -1) {
         switch (opt) {
         case 'd':
-            tq_debug_enabled = true;
-            break;
-        case 'l':
-            open_log(optarg);
+            Debug::Levels[DEBUG_SECTION] = atoi(optarg);
             break;
         case 'b':
             db_path = optarg;
@@ -404,7 +373,7 @@ int main(int argc, char **argv)
         }
     }
 
-    log_info("Starting " << program_name);
+    debugs(DEBUG_SECTION, DBG_IMPORTANT, "Starting " << program_name);
     setbuf(stdout, nullptr);
 
     init_db();
@@ -416,7 +385,7 @@ int main(int argc, char **argv)
         readConfig(argv[optind]);
     }
 
-    log_info("Waiting for requests...");
+    debugs(DEBUG_SECTION, 2,"Waiting for requests...");
     while (fgets(request, HELPER_INPUT_BUFFER, stdin)) {
         // we expect the following line syntax: %LOGIN
         const char *user_key = strtok(request, " \n");
@@ -426,7 +395,7 @@ int main(int argc, char **argv)
         }
         processActivity(user_key);
     }
-    log_info("Ending " << program_name);
+    debugs(DEBUG_SECTION, DBG_IMPORTANT, "Ending " << program_name);
     shutdown_db();
     return EXIT_SUCCESS;
 }
