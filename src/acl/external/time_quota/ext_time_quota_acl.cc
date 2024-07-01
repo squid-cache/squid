@@ -352,10 +352,8 @@ static void processActivity(const char *user_key)
     oss << HLP_MSG("Remaining quota for '" << user_key << "' is " << timeBudgetCurrent << " seconds.");
     auto message = oss.buf();
     if ( timeBudgetCurrent > 0 ) {
-        log_debug("OK " << message);
         SEND_OK(message);
     } else {
-        log_debug("ERR " << message);
         SEND_ERR("Time budget exceeded.");
     }
 }
