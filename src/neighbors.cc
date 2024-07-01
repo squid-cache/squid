@@ -121,11 +121,9 @@ neighborType(const CachePeer * p, const AnyP::Uri &url)
             if (d->type != PEER_NONE)
                 return d->type;
     }
-#if PEER_MULTICAST_SIBLINGS
-    if (p->type == PEER_MULTICAST)
-        if (p->options.mcast_siblings)
-            return PEER_SIBLING;
-#endif
+
+    if (p->type == PEER_MULTICAST && p->options.mcast_siblings)
+        return PEER_SIBLING;
 
     return p->type;
 }
@@ -141,11 +139,10 @@ peerAllowedToUse(const CachePeer * p, PeerSelector * ps)
     assert(request != nullptr);
 
     if (neighborType(p, request->url) == PEER_SIBLING) {
-#if PEER_MULTICAST_SIBLINGS
         if (p->type == PEER_MULTICAST && p->options.mcast_siblings &&
                 (request->flags.noCache || request->flags.refresh || request->flags.loopDetected || request->flags.needValidation))
             debugs(15, 2, "multicast-siblings optimization match for " << *p << ", " << request->url.authority());
-#endif
+
         if (request->flags.noCache)
             return false;
 
@@ -1403,10 +1400,8 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
     if (p->options.mcast_responder)
         os << " multicast-responder";
 
-#if PEER_MULTICAST_SIBLINGS
     if (p->options.mcast_siblings)
         os << " multicast-siblings";
-#endif
 
     if (p->weight != 1)
         os << " weight=" << p->weight;
