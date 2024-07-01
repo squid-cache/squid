@@ -7,7 +7,7 @@ Version 1.0
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B ext_time_quota_acl
-.if !'po4a'hide' .B "[\-b database] [\-d] [\-p pauselen] [-n] [\-h] configfile
+.if !'po4a'hide' .B "[\-b database] [\-d] [\-p pauselen] [\-h] configfile
 .
 .SH DESCRIPTION
 .B ext_time_quota_acl
@@ -36,7 +36,7 @@ Default is 300 seconds (5 minutes).
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-d"
-Enables debug logging to stderr.
+Enables debug logging in the logfile.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-h"
@@ -73,10 +73,10 @@ You can use "s" for seconds, "m" for minutes, "h" for hours, "d" for
 days and "w" for weeks. Numerical values can be given as integer
 values or with a fraction. E.g. "0.5h" means 30 minutes.
 .PP
-This helper is configured in
-.B squid.conf
+This helper is configured in 
+.B squid.conf 
 using the
-.B external_acl_type
+.B external_acl_type 
 directive then access controls which use it to allow or deny.
 .
 .PP
@@ -108,26 +108,28 @@ Here is an example.
 In this example, after restarting Squid it should allow access only for users as long as they have time budget left.
 If the budget is exceeded the user will be presented with an error page informing them.
 .PP
-In this example we use separate
-.B users
-access control and
-.B noquota
+In this example we use separate 
+.B users 
+access control and 
+.B noquota 
 ACL in order to keep the username and password prompt and the quota-exceeded messages separated.
 .
 .PP
-User is just a unique key value. The above example uses %LOGIN and the username but any of the
-.B external_acl_type
-format tags can be substituted in its place.
+User is just a unique key value. The above example uses %LOGIN and the username but any of the 
+.B external_acl_type 
+format tags can be substituted in its place. 
 .B %EXT_TAG
 ,
 .B %LOGIN
-,
+, 
+.B %IDENT
+, 
 .B %EXT_USER
-,
-.B %SRC
+, 
+.B %SRC 
 ,
 .B %SRCEUI48
-, and
+, and 
 .B %SRCEUI64
 are all likely candidates for client identification.
 The Squid wiki has more examples at https://wiki.squid-cache.org/ConfigExamples.
@@ -140,7 +142,7 @@ SSH.
 .
 .PP
 Desktop browsers are typically able to deal with authentication to HTTP proxies like
-.B squid .
+.B squid . 
 But more and more different programs and devices (smartphones,
 games on mobile devices, ...) are using the Internet over HTTP. These
 devices are often not able to work through an authenticating proxy.
@@ -148,23 +150,23 @@ Means other than %LOGIN authentication are required to authorize these devices a
 .
 .PP
 A more general control to Internet access could be a captive portal approach
-(such as pfSense or ChilliSpot) using %SRC, %SRCEUI48 and %SRCEUI64 as keys
+(such as pfSense or ChilliSpot) using %SRC, %SRCEUI48 and %SRCEUI64 as keys 
 or maybe a 802.11X solution. But the latter is often not supported by mobile devices.
 .
 .SH IMPLEMENTATION
 .PP
 When the helper is called it will be asked if the current user is allowed to
 access squid. The helper will reduce the remaining time budget of this user
-and return
-.B OK
-if there is budget left. Otherwise it will return
+and return 
+.B OK 
+if there is budget left. Otherwise it will return 
 .B ERR .
 .
 .PP
-The
-.B ttl=N
-parameter in
-.B squid.conf
+The 
+.B ttl=N 
+parameter in 
+.B squid.conf 
 determines how often the helper will be called, the example config uses a 1 minute TTL.
 The interaction is that Squid will only call the helper on new requests
 .B if
@@ -181,11 +183,11 @@ user to access squid with a fresh budget.
 .PP
 If the time between the current request and the previous request is greater than
 .B pauselen
-(default 5 minutes and adjustable with command line parameter
+(default 5 minutes and adjustable with command line parameter 
 .B "-p"
 ), the current request will be considered as a new request and the time budget will
-not be decreased. If the time is less than
-.B pauselen
+not be decreased. If the time is less than 
+.B pauselen 
 , then both requests will be considered as part of the same active time period and the time budget will
 be decreased by the time difference. This allows the user to take arbitrary
 breaks during Internet access without losing their time budget.
