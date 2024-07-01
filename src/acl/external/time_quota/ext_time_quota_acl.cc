@@ -50,11 +50,11 @@ const char *program_name;
 
 TDB_CONTEXT *db = nullptr;
 
-const char* KeyLastActivity = "last-activity";
-const char* KeyPeriodStart = "period-start";
-const char* KeyPeriodLengthConfigured = "period-length-configured";
-const char* KeyTimeBudgetLeft = "time-budget-left";
-const char* KeyTimeBudgetConfigured = "time-budget-configured";
+static const auto KeyLastActivity = "last-activity";
+static const auto KeyPeriodStart = "period-start";
+static const auto KeyPeriodLengthConfigured = "period-length-configured";
+static const auto KeyTimeBudgetLeft = "time-budget-left";
+static const auto KeyTimeBudgetConfigured = "time-budget-configured";
 
 /** Maximum size of buffers used to read or display lines. */
 const size_t TQ_BUFFERSIZE = 1024;
