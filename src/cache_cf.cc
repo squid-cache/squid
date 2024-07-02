@@ -22,6 +22,7 @@
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #include "AuthReg.h"
+#include "base/CharacterSet.h"
 #include "base/PackableStream.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
@@ -289,10 +290,22 @@ SetConfigFilename(char const *file_name, bool is_pipe)
         cfg_filename = file_name;
 }
 
+/// Determines whether the given squid.conf character is a token-delimiting
+/// space character according to squid.conf preprocessor grammar. That grammar
+/// only recognizes two space characters: ASCII SP and HT. Unlike isspace(3),
+/// this function is not sensitive to locale(1) and does not classify LF, VT,
+/// FF, and CR characters as token-delimiting space. However, some squid.conf
+/// directive-specific parsers still define space based on isspace(3).
+static bool
+IsSpace(const char ch)
+{
+    return CharacterSet::WSP[ch];
+}
+
 static const char*
 skip_ws(const char* s)
 {
-    while (xisspace(*s))
+    while (IsSpace(*s))
         ++s;
 
     return s;
@@ -370,7 +383,7 @@ trim_trailing_ws(char* str)
 {
     assert(str != nullptr);
     unsigned i = strlen(str);
-    while ((i > 0) && xisspace(str[i - 1]))
+    while ((i > 0) && IsSpace(str[i - 1]))
         --i;
     str[i] = '\0';
 }
@@ -387,7 +400,7 @@ FindStatement(const char* line, const char* statement)
         str += len;
         if (*str == '\0')
             return str;
-        else if (xisspace(*str))
+        else if (IsSpace(*str))
             return skip_ws(str);
     }
 
@@ -498,7 +511,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             if (file == token)
                 continue;   /* Not a valid #line directive, may be a comment */
 
-            while (*file && xisspace((unsigned char) *file))
+            while (*file && IsSpace(*file))
                 ++file;
 
             if (*file) {
@@ -556,7 +569,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                 fatalf("'else' without 'if'\n");
         } else if (if_states.empty() || if_states.back()) { // test last if-statement meaning if present
             /* Handle includes here */
-            if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
+            if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && IsSpace(tmp_line[7])) {
                 err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
             } else {
                 try {
