@@ -2917,7 +2917,7 @@ parse_eol(char *volatile *var)
         return;
     }
 
-    while (*token && IsSpace(*token))
+    while (*token && xisspace(*token))
         ++token;
 
     if (!*token) {
