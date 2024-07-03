@@ -681,12 +681,12 @@ statefulhelper::submit(const char *buf, HLPCB * callback, void *data, const Help
         helper_stateful_server *srv;
         if ((srv = StatefulGetFirstAvailable(this))) {
             reserveServer(srv);
-            helperStatefulDispatch(srv, r);
+            helperStatefulDispatch(srv, r); // may delete r
         } else
             StatefulEnqueue(this, r);
     }
 
-    debugs(84, DBG_DATA, "placeholder: '" << r->request.placeholder <<
+    debugs(84, DBG_DATA, "placeholder: '" << (r ? r->request.placeholder: -1) <<
            "', " << Raw("buf", buf, (!buf?0:strlen(buf))));
 
     syncQueueStats();
