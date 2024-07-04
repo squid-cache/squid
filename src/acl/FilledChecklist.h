@@ -35,9 +35,13 @@ class ACLFilledChecklist: public ACLChecklist
     CBDATA_CLASS(ACLFilledChecklist);
 
 public:
+    using Pointer = std::unique_ptr<ACLFilledChecklist>;
+
     ACLFilledChecklist();
     ACLFilledChecklist(const acl_access *, HttpRequest *);
     ~ACLFilledChecklist() override;
+
+    static Pointer Make(const acl_access *a, HttpRequest *r) { return std::make_unique<ACLFilledChecklist>(a, r); }
 
     /// configure client request-related fields for the first time
     void setRequest(HttpRequest *);

@@ -438,12 +438,13 @@ clientFollowXForwardedForCheck(Acl::Answer answer, void *data)
         if ((addr = asciiaddr)) {
             request->indirect_client_addr = addr;
             request->x_forwarded_for_iterator.cut(l);
-            calloutContext->acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
+            auto ch = clientAclChecklistCreate(Config.accessList.followXFF, http);
             if (!Config.onoff.acl_uses_indirect_client) {
                 /* override the default src_addr tested if we have to go deeper than one level into XFF */
-                Filled(calloutContext->acl_checklist)->src_addr = request->indirect_client_addr;
+                ch->src_addr = request->indirect_client_addr;
             }
             if (++calloutContext->currentXffHopNumber < SQUID_X_FORWARDED_FOR_HOP_MAX) {
+                calloutContext->acl_checklist = ch.release();
                 calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
                 return;
             }
@@ -666,14 +667,14 @@ ClientRequestContext::clientAccessCheck()
         http->request->x_forwarded_for_iterator = http->request->header.getList(Http::HdrType::X_FORWARDED_FOR);
 
         /* begin by checking to see if we trust direct client enough to walk XFF */
-        acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
+        acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http).release();
         acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, this);
         return;
     }
 #endif
 
     if (Config.accessList.http) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
+        acl_checklist = clientAclChecklistCreate(Config.accessList.http, http).release();
         acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
     } else {
         debugs(0, DBG_CRITICAL, "No http_access configuration found. This will block ALL traffic");
@@ -690,7 +691,7 @@ void
 ClientRequestContext::clientAccessCheck2()
 {
     if (Config.accessList.adapted_http) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.adapted_http, http);
+        acl_checklist = clientAclChecklistCreate(Config.accessList.adapted_http, http).release();
         acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
     } else {
         debugs(85, 2, "No adapted_http_access configuration. default: ALLOW");
@@ -837,7 +838,7 @@ ClientRequestContext::clientRedirectStart()
     debugs(33, 5, "'" << http->uri << "'");
     http->al->syncNotes(http->request);
     if (Config.accessList.redirector) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);
+        acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http).release();
         acl_checklist->nonBlockingCheck(clientRedirectAccessCheckDone, this);
     } else
         redirectStart(http, clientRedirectDoneWrapper, this);
@@ -874,7 +875,7 @@ ClientRequestContext::clientStoreIdStart()
     debugs(33, 5,"'" << http->uri << "'");
 
     if (Config.accessList.store_id) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.store_id, http);
+        acl_checklist = clientAclChecklistCreate(Config.accessList.store_id, http).release();
         acl_checklist->nonBlockingCheck(clientStoreIdAccessCheckDone, this);
     } else
         storeIdStart(http, clientStoreIdDoneWrapper, this);
@@ -1313,7 +1314,7 @@ void
 ClientRequestContext::checkNoCache()
 {
     if (Config.accessList.noCache) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http);
+        acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http).release();
         acl_checklist->nonBlockingCheck(checkNoCacheDoneWrapper, this);
     } else {
         /* unless otherwise specified, we try to cache. */
@@ -1409,8 +1410,8 @@ ClientRequestContext::sslBumpAccessCheck()
 
     debugs(85, 5, "SslBump possible, checking ACL");
 
-    ACLFilledChecklist *aclChecklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
-    aclChecklist->nonBlockingCheck(sslBumpAccessCheckDoneWrapper, this);
+    auto aclChecklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
+    aclChecklist.release()->nonBlockingCheck(sslBumpAccessCheckDoneWrapper, this);
     return true;
 }
 

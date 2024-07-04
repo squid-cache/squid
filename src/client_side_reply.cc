@@ -1835,10 +1835,10 @@ clientReplyContext::processReplyAccess ()
     }
 
     /** Process http_reply_access lists */
-    ACLFilledChecklist *replyChecklist =
+    auto replyChecklist =
         clientAclChecklistCreate(Config.accessList.reply, http);
     replyChecklist->updateReply(reply);
-    replyChecklist->nonBlockingCheck(ProcessReplyAccessResult, this);
+    replyChecklist.release()->nonBlockingCheck(ProcessReplyAccessResult, this);
 }
 
 void
