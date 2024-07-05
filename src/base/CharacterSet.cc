@@ -10,9 +10,8 @@
 #include "base/CharacterSet.h"
 
 #include <algorithm>
-#include <functional>
 #include <iostream>
-#include <limits>
+#include <functional>
 
 CharacterSet &
 CharacterSet::operator +=(const CharacterSet &src)
@@ -166,22 +165,6 @@ CharacterSet::RFC3986_UNRESERVED()
 {
     // RFC 3986: unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
     static const auto chars = new CharacterSet("RFC3986_UNRESERVED", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~");
-    return *chars;
-}
-
-const CharacterSet &
-CharacterSet::libcSpace()
-{
-    const auto creator = []() -> auto {
-        const auto chars = new CharacterSet("libcSpace");
-        using charLimits = std::numeric_limits<CharacterSet::Storage::value_type>;
-        for (size_t idx = charLimits::min(); idx <= charLimits::max(); ++idx) {
-            if (xisspace(idx))
-                chars->add(idx);
-        }
-        return chars;
-    };
-    static const auto chars = creator();
     return *chars;
 }
 

@@ -121,9 +121,6 @@ public:
     /// allowed URI characters that do not have a reserved purpose, RFC 3986
     static const CharacterSet &RFC3986_UNRESERVED();
 
-    /// characters that libc isspace(3) matches, including any locale-specific ones
-    static const CharacterSet &libcSpace();
-
 private:
     /** index of characters in this set
      *
