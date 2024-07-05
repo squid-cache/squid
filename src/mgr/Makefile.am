@@ -13,6 +13,7 @@ libmgr_la_SOURCES = \
 	Action.cc \
 	Action.h \
 	ActionCreator.h \
+	ActionFeatures.h \
 	ActionParams.cc \
 	ActionParams.h \
 	ActionPasswordList.cc \

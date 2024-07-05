@@ -567,7 +567,7 @@ ConfigParser::openDirective(const SBuf &line)
 {
     Parser::Tokenizer tk(line);
     SBuf directiveName; // TODO: Upgrade cfg_directive to a ConfigParser member (with SBuf type) and set it here.
-    static const auto spaceChars = CharacterSet("w_space", w_space);
+    static const auto &spaceChars = CharacterSet::WSP;
     static const auto directiveChars = spaceChars.complement("squid.conf directive name");
     const auto found = tk.prefix(directiveName, directiveChars);
     Assure(found); // our callers are expected to fully handle non-directive lines

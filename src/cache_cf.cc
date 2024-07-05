@@ -22,6 +22,7 @@
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #include "AuthReg.h"
+#include "base/CharacterSet.h"
 #include "base/PackableStream.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
@@ -290,10 +291,22 @@ SetConfigFilename(char const *file_name, bool is_pipe)
         cfg_filename = file_name;
 }
 
+/// Determines whether the given squid.conf character is a token-delimiting
+/// space character according to squid.conf preprocessor grammar. That grammar
+/// only recognizes two space characters: ASCII SP and HT. Unlike isspace(3),
+/// this function is not sensitive to locale(1) and does not classify LF, VT,
+/// FF, and CR characters as token-delimiting space. However, some squid.conf
+/// directive-specific parsers still define space based on isspace(3).
+static bool
+IsSpace(const char ch)
+{
+    return CharacterSet::WSP[ch];
+}
+
 static const char*
 skip_ws(const char* s)
 {
-    while (xisspace(*s))
+    while (IsSpace(*s))
         ++s;
 
     return s;
@@ -368,8 +381,7 @@ ProcessMacros(SBuf &buf)
 static bool
 SkipOptionalSpace(Parser::Tokenizer &tk)
 {
-    const auto &spaceChars = CharacterSet::libcSpace();
-    return tk.skipAll(spaceChars);
+    return tk.skipAll(CharacterSet::WSP);
 }
 
 /// extracts all (and at least one) characters matching tokenChars surrounded by optional space
@@ -581,7 +593,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             if (file == token)
                 continue;   /* Not a valid #line directive, may be a comment */
 
-            while (*file && xisspace((unsigned char) *file))
+            while (*file && IsSpace(*file))
                 ++file;
 
             if (*file) {
@@ -616,9 +628,8 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
         ProcessMacros(wholeLine);
         auto tk = Parser::Tokenizer(wholeLine);
 
-        const auto &spaces = CharacterSet::libcSpace();
-        // (void)tk.skipAll(spaces) is not necessary due to earlier skip_ws()
-        (void)tk.skipAllTrailing(spaces);
+        // (void)tk.skipAll(CharacterSet::WSP) is not necessary due to earlier skip_ws()
+        (void)tk.skipAllTrailing(CharacterSet::WSP);
 
         debugs(3, (opt_parse_cfg_only?1:5), "Processing: " << tk.remaining());
 
@@ -2276,10 +2287,8 @@ parse_peer(CachePeers **peers)
             p->options.no_tproxy = true;
         } else if (!strcmp(token, "multicast-responder")) {
             p->options.mcast_responder = true;
-#if PEER_MULTICAST_SIBLINGS
         } else if (!strcmp(token, "multicast-siblings")) {
             p->options.mcast_siblings = true;
-#endif
         } else if (!strncmp(token, "weight=", 7)) {
             p->weight = xatoi(token + 7);
         } else if (!strncmp(token, "basetime=", 9)) {
