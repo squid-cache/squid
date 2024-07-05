@@ -368,7 +368,7 @@ UnquoteSequence_(Parser::Tokenizer &tk)
 std::optional<SBuf>
 NextWordWhileRemovingDoubleQuotesAndBackslashesInsideThem(Parser::Tokenizer &tk)
 {
-    const auto &spaceChars = CharacterSet::libcSpace();
+    const auto &spaceChars = CharacterSet::WSP;
 
     (void)tk.skipAll(spaceChars);
     if (tk.atEnd())
