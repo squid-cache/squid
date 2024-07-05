@@ -158,7 +158,6 @@ private:
      */
     CachePeer *hit;
     peer_t hit_type;
-    ACLChecklist *acl_checklist;
 
     typedef CbcPointer<PeerSelectionInitiator> Initiator;
     Initiator initiator_; ///< recipient of the destinations we select; use interestedInitiator() to access
