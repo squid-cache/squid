@@ -254,13 +254,14 @@ int cbdataReferenceValid(const void *p);
 cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size);
 
 /// declaration-generator used internally by CBDATA_CLASS() and CBDATA_CHILD()
-#define CBDATA_DECL_(type, methodSpecifiers) \
-    public: \
+#define CBDATA_DECL_(type, newSpecifier, methodSpecifiers) \
+    newSpecifier: \
         void *operator new(size_t size) { \
           assert(size == sizeof(type)); \
           if (!CBDATA_##type) CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type)); \
           return (type *)cbdataInternalAlloc(CBDATA_##type); \
         } \
+    public: \
         void operator delete (void *address) { \
           if (address) cbdataInternalFree(address); \
         } \
@@ -286,12 +287,16 @@ private:
 /// cbdata-enables a stand-alone class that is not a CbdataParent child
 /// sets the class declaration section to "private"
 /// use this at the start of your class declaration for consistency sake
-#define CBDATA_CLASS(type) CBDATA_DECL_(type, noexcept)
+/// \param newSpecifier the access specifier for the 'new' operator
+#define CBDATA_CLASS_2(type, newSpecifier) CBDATA_DECL_(type, newSpecifier, noexcept)
+
+/// same as CBDATA_CLASS_2(type, public)
+#define CBDATA_CLASS(type) CBDATA_DECL_(type, public, noexcept)
 
 /// cbdata-enables a final CbdataParent-derived class in a hierarchy
 /// sets the class declaration section to "private"
 /// use this at the start of your class declaration for consistency sake
-#define CBDATA_CHILD(type) CBDATA_DECL_(type, final) \
+#define CBDATA_CHILD(type) CBDATA_DECL_(type, public, final) \
       void finalizedInCbdataChild() final {}
 
 /// cbdata-enables a non-final CbdataParent-derived class T in a hierarchy.

@@ -32,7 +32,7 @@ class ConnStateData;
  */
 class ACLFilledChecklist: public ACLChecklist
 {
-    CBDATA_CLASS(ACLFilledChecklist);
+    CBDATA_CLASS_2(ACLFilledChecklist, protected);
 
 public:
     using Pointer = std::unique_ptr<ACLFilledChecklist>;
@@ -41,7 +41,7 @@ public:
     ACLFilledChecklist(const acl_access *, HttpRequest *);
     ~ACLFilledChecklist() override;
 
-    static Pointer Make(const acl_access *a, HttpRequest *r) { return std::make_unique<ACLFilledChecklist>(a, r); }
+    static Pointer Make(const acl_access *a, HttpRequest *r) { return Pointer(new ACLFilledChecklist(a, r)); }
 
     /// configure client request-related fields for the first time
     void setRequest(HttpRequest *);
