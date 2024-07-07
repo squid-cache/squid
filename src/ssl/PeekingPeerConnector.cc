@@ -84,7 +84,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
     if (!srvBio->canBump())
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpBump));
     acl_checklist->syncAle(request.getRaw(), nullptr);
-    acl_checklist.release()->nonBlockingCheck(Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone, this);
+    ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone, this);
 }
 
 void

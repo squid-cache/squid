@@ -132,7 +132,7 @@ Adaptation::AccessCheck::checkCandidates()
             ch->updateAle(filter.al);
             ch->updateReply(filter.reply);
             ch->syncAle(filter.request, nullptr);
-            ch.release()->nonBlockingCheck(AccessCheckCallbackWrapper, this);
+            ACLFilledChecklist::NonBlockingCheck(std::move(ch), AccessCheckCallbackWrapper, this);
             return;
         }
 

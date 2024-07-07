@@ -1838,7 +1838,7 @@ clientReplyContext::processReplyAccess ()
     auto replyChecklist =
         clientAclChecklistCreate(Config.accessList.reply, http);
     replyChecklist->updateReply(reply);
-    replyChecklist.release()->nonBlockingCheck(ProcessReplyAccessResult, this);
+    ACLFilledChecklist::NonBlockingCheck(std::move(replyChecklist), ProcessReplyAccessResult, this);
 }
 
 void

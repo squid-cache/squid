@@ -2501,7 +2501,7 @@ ConnStateData::postHttpsAccept()
         ClientHttpRequest *http = context ? context->http : nullptr;
         const char *log_uri = http ? http->log_uri : nullptr;
         acl_checklist->syncAle(request, log_uri);
-        acl_checklist.release()->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), httpsSslBumpAccessCheckDone, this);
 #else
         fatal("FATAL: SSL-Bump requires --with-openssl");
 #endif
@@ -2972,7 +2972,7 @@ ConnStateData::startPeekAndSplice()
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpClientFirst));
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpServerFirst));
         fillChecklist(*acl_checklist);
-        acl_checklist.release()->nonBlockingCheck(httpsSslBumpStep2AccessCheckDone, this);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), httpsSslBumpStep2AccessCheckDone, this);
         return;
     }
 
@@ -3111,7 +3111,7 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, const 
         // TLS handshakes on non-bumping https_port. TODO: Discover these
         // problems earlier so that they can be classified/detailed better.
         debugs(33, 2, "Not able to compute URL, abort request tunneling for " << reason);
-        // TODO: throw when nonBlockingCheck() callbacks gain job protections
+        // TODO: throw when NonBlockingCheck() callbacks gain job protections
         static const auto d = MakeNamedErrorDetail("TUNNEL_TARGET");
         updateError(ERR_INVALID_REQ, d);
         return false;

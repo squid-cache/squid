@@ -43,6 +43,9 @@ public:
 
     static Pointer Make(const acl_access *a, HttpRequest *r) { return Pointer(new ACLFilledChecklist(a, r)); }
 
+    /// \copydoc ACLChecklist::nonBlockingCheck(ACLCB *callback, void *callback_data)
+    static void NonBlockingCheck(Pointer &&p, ACLCB *cb, void *data) { p.release()->nonBlockingCheck(cb, data); }
+
     /// configure client request-related fields for the first time
     void setRequest(HttpRequest *);
 
