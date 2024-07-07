@@ -22,6 +22,7 @@
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #include "AuthReg.h"
+#include "base/CharacterSet.h"
 #include "base/PackableStream.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
@@ -289,10 +290,22 @@ SetConfigFilename(char const *file_name, bool is_pipe)
         cfg_filename = file_name;
 }
 
+/// Determines whether the given squid.conf character is a token-delimiting
+/// space character according to squid.conf preprocessor grammar. That grammar
+/// only recognizes two space characters: ASCII SP and HT. Unlike isspace(3),
+/// this function is not sensitive to locale(1) and does not classify LF, VT,
+/// FF, and CR characters as token-delimiting space. However, some squid.conf
+/// directive-specific parsers still define space based on isspace(3).
+static bool
+IsSpace(const char ch)
+{
+    return CharacterSet::WSP[ch];
+}
+
 static const char*
 skip_ws(const char* s)
 {
-    while (xisspace(*s))
+    while (IsSpace(*s))
         ++s;
 
     return s;
@@ -370,7 +383,7 @@ trim_trailing_ws(char* str)
 {
     assert(str != nullptr);
     unsigned i = strlen(str);
-    while ((i > 0) && xisspace(str[i - 1]))
+    while ((i > 0) && IsSpace(str[i - 1]))
         --i;
     str[i] = '\0';
 }
@@ -387,7 +400,7 @@ FindStatement(const char* line, const char* statement)
         str += len;
         if (*str == '\0')
             return str;
-        else if (xisspace(*str))
+        else if (IsSpace(*str))
             return skip_ws(str);
     }
 
@@ -498,7 +511,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             if (file == token)
                 continue;   /* Not a valid #line directive, may be a comment */
 
-            while (*file && xisspace((unsigned char) *file))
+            while (*file && IsSpace(*file))
                 ++file;
 
             if (*file) {
@@ -556,12 +569,13 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                 fatalf("'else' without 'if'\n");
         } else if (if_states.empty() || if_states.back()) { // test last if-statement meaning if present
             /* Handle includes here */
-            if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
+            if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && IsSpace(tmp_line[7])) {
                 err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
             } else {
                 try {
                     if (!parse_line(tmp_line)) {
-                        debugs(3, DBG_CRITICAL, ConfigParser::CurrentLocation() << ": unrecognized: '" << tmp_line << "'");
+                        debugs(3, DBG_CRITICAL, "ERROR: unrecognized directive near '" << tmp_line << "'" <<
+                               Debug::Extra << "directive location: " << ConfigParser::CurrentLocation());
                         ++err_count;
                     }
                 } catch (...) {
@@ -595,12 +609,9 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     return err_count;
 }
 
-static
-int
-parseConfigFileOrThrow(const char *file_name)
+void
+Configuration::Parse()
 {
-    int err_count = 0;
-
     debugs(5, 4, MYNAME);
 
     configFreeMemory();
@@ -608,7 +619,7 @@ parseConfigFileOrThrow(const char *file_name)
     ACLMethodData::ThePurgeCount = 0;
     default_all();
 
-    err_count = parseOneConfigFile(file_name, 0);
+    const auto unrecognizedDirectives = parseOneConfigFile(ConfigFile, 0);
 
     defaults_if_none();
 
@@ -621,27 +632,20 @@ parseConfigFileOrThrow(const char *file_name)
      */
     configDoConfigure();
 
+    // TODO: Throw before configDoConfigure(). Doing that would reduce the set
+    // of configuration errors Squid can detect in one execution, but we should
+    // not apply a clearly broken configuration, especially when we are going to
+    // quit anyway. While some legacy parse_foo() functions apply significant
+    // changes before configDoConfigure(), we cannot easily stop them. We can
+    // easily stop configDoConfigure().
+    if (unrecognizedDirectives)
+        throw TextException(ToSBuf("Found ", unrecognizedDirectives, " unrecognized directive(s)"), Here());
+
     if (opt_send_signal == -1) {
         Mgr::RegisterAction("config",
                             "Current Squid Configuration",
                             dump_config,
                             1, 1);
-    }
-
-    return err_count;
-}
-
-// TODO: Refactor main.cc to centrally handle (and report) all exceptions.
-int
-parseConfigFile(const char *file_name)
-{
-    try {
-        return parseConfigFileOrThrow(file_name);
-    }
-    catch (const std::exception &ex) {
-        debugs(3, DBG_CRITICAL, "FATAL: bad configuration: " << ex.what());
-        self_destruct();
-        return 1; // not reached
     }
 }
 
@@ -2206,10 +2210,8 @@ parse_peer(CachePeers **peers)
             p->options.no_tproxy = true;
         } else if (!strcmp(token, "multicast-responder")) {
             p->options.mcast_responder = true;
-#if PEER_MULTICAST_SIBLINGS
         } else if (!strcmp(token, "multicast-siblings")) {
             p->options.mcast_siblings = true;
-#endif
         } else if (!strncmp(token, "weight=", 7)) {
             p->weight = xatoi(token + 7);
         } else if (!strncmp(token, "basetime=", 9)) {

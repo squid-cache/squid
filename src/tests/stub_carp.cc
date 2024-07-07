@@ -13,9 +13,5 @@
 
 #include "carp.h"
 
-class CachePeer;
-class PeerSelector;
-
-void carpInit(void) STUB
 CachePeer *carpSelectParent(PeerSelector *) STUB_RETVAL(nullptr)
 

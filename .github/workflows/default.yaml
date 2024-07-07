@@ -33,9 +33,9 @@ jobs:
           sudo apt-get --quiet=2 install libtool-bin
 
       - name: Setup a nodejs environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
 
       - name: Checkout Squid sources
         uses: actions/checkout@v4
@@ -58,7 +58,7 @@ jobs:
 
       - name: Publish test logs
         if: success() || failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-logs
           path: |
@@ -105,8 +105,8 @@ jobs:
           - { name: layer-01-minimal, nick: minimal }
           - { name: layer-02-maximus, nick: maximus }
         exclude:
-            # Non-clang testing on MacOS is too much work for very little gain
-            - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
+          # Non-clang testing on MacOS is too much work for very little gain
+          - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
 
     runs-on: ${{ matrix.os }}
 
@@ -133,7 +133,8 @@ jobs:
           brew install \
             automake coreutils cppunit gawk \
             gnu-getopt gnu-sed grep libtool \
-            make openldap openssl cyrus-sasl
+            make cyrus-sasl
+            # openldap openssl # already provided by github workers base-image
 
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -162,9 +163,9 @@ jobs:
 
       - name: Publish build logs
         if: success() || failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: build-logs-${{ matrix.os }}-${{ matrix.compiler }}
+          name: build-logs-${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
           path: btlayer-*.log
 
   CodeQL-tests:
@@ -189,10 +190,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
 
       - name: Build Squid
         run: ./test-builds.sh ./test-suite/buildtests/layer-02-maximus.opts
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
