@@ -444,8 +444,7 @@ clientFollowXForwardedForCheck(Acl::Answer answer, void *data)
                 ch->src_addr = request->indirect_client_addr;
             }
             if (++calloutContext->currentXffHopNumber < SQUID_X_FORWARDED_FOR_HOP_MAX) {
-                calloutContext->acl_checklist = ch.release();
-                calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
+                ch.release()->nonBlockingCheck(clientFollowXForwardedForCheck, data);
                 return;
             }
             const auto headerName = Http::HeaderLookupTable.lookup(Http::HdrType::X_FORWARDED_FOR).name;
@@ -667,14 +666,14 @@ ClientRequestContext::clientAccessCheck()
         http->request->x_forwarded_for_iterator = http->request->header.getList(Http::HdrType::X_FORWARDED_FOR);
 
         /* begin by checking to see if we trust direct client enough to walk XFF */
-        acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http).release();
+        const auto acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
         acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, this);
         return;
     }
 #endif
 
     if (Config.accessList.http) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.http, http).release();
+        const auto acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
         acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
     } else {
         debugs(0, DBG_CRITICAL, "No http_access configuration found. This will block ALL traffic");
@@ -691,7 +690,7 @@ void
 ClientRequestContext::clientAccessCheck2()
 {
     if (Config.accessList.adapted_http) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.adapted_http, http).release();
+        const auto acl_checklist = clientAclChecklistCreate(Config.accessList.adapted_http, http);
         acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
     } else {
         debugs(85, 2, "No adapted_http_access configuration. default: ALLOW");
@@ -713,7 +712,6 @@ clientAccessCheckDoneWrapper(Acl::Answer answer, void *data)
 void
 ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
 {
-    acl_checklist = nullptr;
     Http::StatusCode status;
     debugs(85, 2, "The request " << http->request->method << ' ' <<
            http->uri << " is " << answer <<
@@ -822,7 +820,6 @@ clientRedirectAccessCheckDone(Acl::Answer answer, void *data)
 {
     ClientRequestContext *context = (ClientRequestContext *)data;
     ClientHttpRequest *http = context->http;
-    context->acl_checklist = nullptr;
 
     if (answer.allowed())
         redirectStart(http, clientRedirectDoneWrapper, context);
@@ -838,7 +835,7 @@ ClientRequestContext::clientRedirectStart()
     debugs(33, 5, "'" << http->uri << "'");
     http->al->syncNotes(http->request);
     if (Config.accessList.redirector) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http).release();
+        const auto acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);
         acl_checklist->nonBlockingCheck(clientRedirectAccessCheckDone, this);
     } else
         redirectStart(http, clientRedirectDoneWrapper, this);
@@ -853,7 +850,6 @@ clientStoreIdAccessCheckDone(Acl::Answer answer, void *data)
 {
     ClientRequestContext *context = static_cast<ClientRequestContext *>(data);
     ClientHttpRequest *http = context->http;
-    context->acl_checklist = nullptr;
 
     if (answer.allowed())
         storeIdStart(http, clientStoreIdDoneWrapper, context);
@@ -875,7 +871,7 @@ ClientRequestContext::clientStoreIdStart()
     debugs(33, 5,"'" << http->uri << "'");
 
     if (Config.accessList.store_id) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.store_id, http).release();
+        const auto acl_checklist = clientAclChecklistCreate(Config.accessList.store_id, http);
         acl_checklist->nonBlockingCheck(clientStoreIdAccessCheckDone, this);
     } else
         storeIdStart(http, clientStoreIdDoneWrapper, this);
@@ -1314,7 +1310,7 @@ void
 ClientRequestContext::checkNoCache()
 {
     if (Config.accessList.noCache) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http).release();
+        const auto acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http);
         acl_checklist->nonBlockingCheck(checkNoCacheDoneWrapper, this);
     } else {
         /* unless otherwise specified, we try to cache. */
@@ -1336,7 +1332,6 @@ checkNoCacheDoneWrapper(Acl::Answer answer, void *data)
 void
 ClientRequestContext::checkNoCacheDone(const Acl::Answer &answer)
 {
-    acl_checklist = nullptr;
     if (answer.denied()) {
         http->request->flags.disableCacheUse("a cache deny rule matched");
     }

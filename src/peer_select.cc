@@ -243,11 +243,6 @@ PeerSelector::~PeerSelector()
         entry->ping_status = PING_DONE;
     }
 
-    if (acl_checklist) {
-        debugs(44, DBG_IMPORTANT, "ERROR: Squid BUG: peer selector gone while waiting for a slow ACL");
-        delete acl_checklist;
-    }
-
     HTTPMSGUNLOCK(request);
 
     if (entry) {
@@ -342,7 +337,6 @@ PeerSelectionInitiator::startSelectingDestinations(HttpRequest *request, const A
 void
 PeerSelector::checkNeverDirectDone(const Acl::Answer answer)
 {
-    acl_checklist = nullptr;
     debugs(44, 3, answer);
     never_direct = answer;
     switch (answer) {
@@ -370,7 +364,6 @@ PeerSelector::CheckNeverDirectDone(Acl::Answer answer, void *data)
 void
 PeerSelector::checkAlwaysDirectDone(const Acl::Answer answer)
 {
-    acl_checklist = nullptr;
     debugs(44, 3, answer);
     always_direct = answer;
     switch (answer) {
@@ -623,8 +616,8 @@ PeerSelector::selectMore()
             auto ch = ACLFilledChecklist::Make(Config.accessList.AlwaysDirect, request);
             ch->al = al;
             ch->syncAle(request, nullptr);
-            acl_checklist = ch.release();
-            acl_checklist->nonBlockingCheck(CheckAlwaysDirectDone, this);
+            ch->nonBlockingCheck(CheckAlwaysDirectDone, this);
+            ch.release()->nonBlockingCheck(CheckAlwaysDirectDone, this);
             return;
         } else if (never_direct == ACCESS_DUNNO) {
             debugs(44, 3, "direct = " << DirectStr[direct] << " (never_direct to be checked)");
@@ -632,8 +625,7 @@ PeerSelector::selectMore()
             auto ch = ACLFilledChecklist::Make(Config.accessList.NeverDirect, request);
             ch->al = al;
             ch->syncAle(request, nullptr);
-            acl_checklist = ch.release();
-            acl_checklist->nonBlockingCheck(CheckNeverDirectDone, this);
+            ch.release()->nonBlockingCheck(CheckNeverDirectDone, this);
             return;
         } else if (request->flags.noDirect) {
             /** if we are accelerating, direct is not an option. */
@@ -1119,7 +1111,6 @@ PeerSelector::PeerSelector(PeerSelectionInitiator *initiator):
     closest_parent_miss(),
     hit(nullptr),
     hit_type(PEER_NONE),
-    acl_checklist (nullptr),
     initiator_(initiator)
 {
     ; // no local defaults.
