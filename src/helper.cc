@@ -686,9 +686,7 @@ statefulhelper::submit(const char *buf, HLPCB * callback, void *data, const Help
             StatefulEnqueue(this, r);
     }
 
-    debugs(84, DBG_DATA, "placeholder: '" << (r ? r->request.placeholder: -1) <<
-           "', " << Raw("buf", buf, (!buf?0:strlen(buf))));
-
+    // r may be dangling here
     syncQueueStats();
 }
 
