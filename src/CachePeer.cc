@@ -41,9 +41,7 @@ CachePeer::~CachePeer()
     aclDestroyAccessList(&access);
 
 #if USE_CACHE_DIGESTS
-    void *digestTmp = nullptr;
-    if (cbdataReferenceValidDone(digest, &digestTmp))
-        peerDigestNotePeerGone(static_cast<PeerDigest *>(digestTmp));
+    delete digest;
     xfree(digest_url);
 #endif
 
