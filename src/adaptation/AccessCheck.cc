@@ -128,11 +128,11 @@ Adaptation::AccessCheck::checkCandidates()
     while (!candidates.empty()) {
         if (AccessRule *r = FindRule(topCandidate())) {
             /* BUG 2526: what to do when r->acl is empty?? */
-            auto ch = ACLFilledChecklist::Make(r->acl, filter.request);
-            ch->updateAle(filter.al);
-            ch->updateReply(filter.reply);
-            ch->syncAle(filter.request, nullptr);
-            ACLFilledChecklist::NonBlockingCheck(std::move(ch), AccessCheckCallbackWrapper, this);
+            auto acl_checklist = ACLFilledChecklist::Make(r->acl, filter.request);
+            acl_checklist->updateAle(filter.al);
+            acl_checklist->updateReply(filter.reply);
+            acl_checklist->syncAle(filter.request, nullptr);
+            ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), AccessCheckCallbackWrapper, this);
             return;
         }
 
