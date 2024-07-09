@@ -41,6 +41,8 @@ public:
     ACLFilledChecklist(const acl_access *, HttpRequest *);
     ~ACLFilledChecklist() override;
 
+    /// Creates an ACLFilledChecklist object with given constructor arguments.
+    /// \returns a unique_ptr to this object
     static Pointer Make(const acl_access *a, HttpRequest *r) { return Pointer(new ACLFilledChecklist(a, r)); }
 
     /// \copydoc ACLChecklist::nonBlockingCheck(ACLCB *callback, void *callback_data)
