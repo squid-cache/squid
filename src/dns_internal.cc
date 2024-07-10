@@ -857,6 +857,7 @@ idnsInitVCConnected(const Comm::ConnectionPointer &conn, Comm::Flag status, int,
         if (vc->ns < nameservers.size())
             nameservers[vc->ns].S.toStr(buf,MAX_IPSTRLEN);
         debugs(78, DBG_IMPORTANT, "ERROR: Failed to connect to nameserver " << buf << " using TCP.");
+        delete vc;
         return;
     }
 
