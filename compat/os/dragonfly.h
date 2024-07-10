@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_OS_DRAGONFLY_H
-#define SQUID_OS_DRAGONFLY_H
+#ifndef SQUID_COMPAT_OS_DRAGONFLY_H
+#define SQUID_COMPAT_OS_DRAGONFLY_H
 
 #if _SQUID_DRAGONFLY_
 
@@ -25,5 +25,5 @@
 #endif
 
 #endif /* _SQUID_DRAGONFLY_ */
-#endif /* SQUID_OS_DRAGONFLY_H */
+#endif /* SQUID_COMPAT_OS_DRAGONFLY_H */
 

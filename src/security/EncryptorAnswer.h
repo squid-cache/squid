@@ -6,11 +6,11 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SECURITY_ENCRYPTORANSWER_H
-#define SQUID_SECURITY_ENCRYPTORANSWER_H
+#ifndef SQUID_SRC_SECURITY_ENCRYPTORANSWER_H
+#define SQUID_SRC_SECURITY_ENCRYPTORANSWER_H
 
 #include "base/CbcPointer.h"
-#include "comm/forward.h"
+#include "comm/Connection.h"
 
 class ErrorState;
 
@@ -37,5 +37,5 @@ std::ostream &operator <<(std::ostream &, const EncryptorAnswer &);
 
 } // namespace Security
 
-#endif /* SQUID_SECURITY_ENCRYPTORANSWER_H */
+#endif /* SQUID_SRC_SECURITY_ENCRYPTORANSWER_H */
 

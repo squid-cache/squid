@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_AIODISKFILE_H
-#define SQUID_AIODISKFILE_H
+#ifndef SQUID_SRC_DISKIO_AIO_AIODISKFILE_H
+#define SQUID_SRC_DISKIO_AIO_AIODISKFILE_H
 
 #if HAVE_DISKIO_MODULE_AIO
 
@@ -28,7 +28,7 @@ public:
     AIODiskFile (char const *path, AIODiskIOStrategy *);
     ~AIODiskFile() override;
 
-    /// \bug the code has this as "IORequestor::Pointer callback"
+    // XXX: the code has this as "IORequestor::Pointer callback"
     void open(int flags, mode_t mode, RefCount<IORequestor> callback) override;
 
     void create (int, mode_t, RefCount<IORequestor>) override;
@@ -57,5 +57,5 @@ private:
 };
 
 #endif /* HAVE_DISKIO_MODULE_AIO */
-#endif /* SQUID_AIODISKFILE_H */
+#endif /* SQUID_SRC_DISKIO_AIO_AIODISKFILE_H */
 

@@ -21,7 +21,6 @@
 void
 Log::Format::HttpdCombined(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
-    const char *user_ident = ::Format::QuoteUrlEncodeUsername(al->getClientIdent());
     const char *user_auth = nullptr;
     const char *referer = nullptr;
     const char *agent = nullptr;
@@ -48,7 +47,7 @@ Log::Format::HttpdCombined(const AccessLogEntry::Pointer &al, Logfile * logfile)
 
     logfilePrintf(logfile, "%s %s %s [%s] \"" SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\" %d %" PRId64 " \"%s\" \"%s\" %s:%s%s",
                   clientip,
-                  user_ident ? user_ident : dash_str,
+                  dash_str,
                   user_auth ? user_auth : dash_str,
                   Time::FormatHttpd(squid_curtime),
                   SQUIDSBUFPRINT(method),
@@ -63,7 +62,6 @@ Log::Format::HttpdCombined(const AccessLogEntry::Pointer &al, Logfile * logfile)
                   hier_code_str[al->hier.code],
                   (Config.onoff.log_mime_hdrs?"":"\n"));
 
-    safe_free(user_ident);
     safe_free(user_auth);
 
     if (Config.onoff.log_mime_hdrs) {

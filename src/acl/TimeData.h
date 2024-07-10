@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLTIMEDATA_H
-#define SQUID_ACLTIMEDATA_H
+#ifndef SQUID_SRC_ACL_TIMEDATA_H
+#define SQUID_SRC_ACL_TIMEDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -31,5 +31,5 @@ private:
     ACLTimeData *next;
 };
 
-#endif /* SQUID_ACLTIMEDATA_H */
+#endif /* SQUID_SRC_ACL_TIMEDATA_H */
 

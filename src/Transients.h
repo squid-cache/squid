@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_TRANSIENTS_H
-#define SQUID_TRANSIENTS_H
+#ifndef SQUID_SRC_TRANSIENTS_H
+#define SQUID_SRC_TRANSIENTS_H
 
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
@@ -94,7 +94,6 @@ protected:
     void addEntry(StoreEntry*, const cache_key *, const Store::IoStatus);
     void addWriterEntry(StoreEntry &, const cache_key *);
     void addReaderEntry(StoreEntry &, const cache_key *);
-    void anchorEntry(StoreEntry &, const sfileno, const Ipc::StoreMapAnchor &);
 
     // Ipc::StoreMapCleaner API
     void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
@@ -111,5 +110,5 @@ private:
 
 // TODO: Why use Store as a base? We are not really a cache.
 
-#endif /* SQUID_TRANSIENTS_H */
+#endif /* SQUID_SRC_TRANSIENTS_H */
 

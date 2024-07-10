@@ -72,9 +72,9 @@
  *
  \code
    mycontext = thisObject->data;
-   thisObject->data = NULL;
+   thisObject->data = nullptr;
    delete thisObject->head;
-   mycontext = NULL;
+   mycontext = nullptr;
    return;
  \endcode
  *
@@ -110,7 +110,7 @@ clientStreamNode::~clientStreamNode()
  */
 void
 clientStreamInit(dlink_list * list, CSR * func, CSD * rdetach, CSS * readstatus,
-                 ClientStreamData readdata, CSCB * callback, CSD * cdetach, ClientStreamData callbackdata,
+                 const ClientStreamData &readdata, CSCB * callback, CSD * cdetach, const ClientStreamData &callbackdata,
                  StoreIOBuffer tailBuffer)
 {
     clientStreamNode *temp = new clientStreamNode(func, nullptr, rdetach, readstatus, readdata);
@@ -154,8 +154,7 @@ clientStreamCallback(clientStreamNode * thisObject, ClientHttpRequest * http,
     assert(thisObject && http && thisObject->node.next);
     next = thisObject->next();
 
-    debugs(87, 3, "clientStreamCallback: Calling " << next->callback << " with cbdata " <<
-           next->data.getRaw() << " from node " << thisObject);
+    debugs(87, 3, thisObject << " gives " << next->data << ' ' << replyBuffer);
     next->callback(next, http, rep, replyBuffer);
 }
 

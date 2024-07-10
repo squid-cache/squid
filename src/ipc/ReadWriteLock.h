@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_READ_WRITE_LOCK_H
-#define SQUID_IPC_READ_WRITE_LOCK_H
+#ifndef SQUID_SRC_IPC_READWRITELOCK_H
+#define SQUID_SRC_IPC_READWRITELOCK_H
 
 #include <atomic>
 #include <iosfwd>
@@ -41,6 +41,11 @@ public:
     bool unlockSharedAndSwitchToExclusive();
 
     void startAppending(); ///< writer keeps its lock but also allows reading
+
+    /// writer keeps its lock and disallows future readers
+    /// \returns whether access became exclusive (i.e. no readers)
+    /// \prec appending is true
+    bool stopAppendingAndRestoreExclusive();
 
     /// adds approximate current stats to the supplied ones
     void updateStats(ReadWriteLockStats &stats) const;
@@ -85,5 +90,5 @@ void AssertFlagIsSet(std::atomic_flag &flag);
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_READ_WRITE_LOCK_H */
+#endif /* SQUID_SRC_IPC_READWRITELOCK_H */
 

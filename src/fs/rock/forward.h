@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_ROCK_FORWARD_H
-#define SQUID_FS_ROCK_FORWARD_H
+#ifndef SQUID_SRC_FS_ROCK_FORWARD_H
+#define SQUID_SRC_FS_ROCK_FORWARD_H
 
 #include "store/forward.h"
 
@@ -49,5 +49,5 @@ class WriteRequest;
 
 }
 
-#endif /* SQUID_FS_ROCK_FORWARD_H */
+#endif /* SQUID_SRC_FS_ROCK_FORWARD_H */
 

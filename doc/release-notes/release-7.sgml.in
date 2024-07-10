@@ -30,11 +30,98 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>
+	<item>Cache Manager changes
+	<item>Removed purge tool
+	<item>Remove deprecated languages
+	<item>Remove Ident protocol support
 </itemize>
 
-Most user-facing changes are reflected in squid.conf (see below).
+<p>Most user-facing changes are reflected in squid.conf (see further below).
 
+<sect1>Cache Manager changes<label id="mgr">
+<p>For more information about the Cache Manager feature, see <url url="https://wiki.squid-cache.org/Features/CacheManager/Index" name="wiki">.
+
+<p>In order to reduce workload on the Squid development team we have chosen to stop
+   providing several tools related to Cache Manager which have previously been
+   bundled with Squid.
+
+<sect2>Removal of the <em>squidclient</em> tool.
+<p>Popular command-line tools such as <em>curl</em> or <em>wget</em>
+   provide equivalent features.
+
+<sect2>Removal of the <em>cachemgr.cgi</em> tool.
+<p>Access to the Cache Manager API is available by sending HTTP(S) requests
+   directly to Squid with the URL-path prefix <em>/squid-internal-mgr/</em>.
+   A plethora of tools, such as curl, wget, or any web browser, can be used
+   instead of cachemgr.cgi.
+
+<sect2>Removal of the <em>cache_object:</em> URI scheme.
+<p>This custom scheme does not conform to RFC 3986 URI sytax. It has been replaced
+   with Cache Manager access through HTTP and HTTPS URLs.
+
+<sect2>Removal of <em>non_peers</em> Report
+<p>Squid still ignores unexpected ICP responses but no longer remembers the
+   details that comprised the removed report. The senders of these ICP messages
+   are still reported to cache.log at debugging level 1 (with an exponential backoff).
+
+<sect1>Removed purge tool
+<p>The <em>purge</em> tool (also known as <em>squidpurge</em>, and <em>squid-purge</em>)
+   was limited to managing UFS/AUFS/DiskD caches and had problems parsing non-trivial squid.conf files.
+
+<p>The cache contents display and search it provided can be obtained with a script
+   searching the cache manager <em>objects</em> report.
+
+<p>This tool used the custom <em>PURGE</em> HTTP method to remove cache
+   objects. This can be performed directly on any Squid configured to allow
+   the method. Like so:
+<verb>
+    acl PURGE method PURGE
+    http_access allow localhost PURGE
+</verb>
+    Any HTTP client (such as curl) can then be used to evict objects from the cache, for example:
+<verb>
+    curl -XPURGE --proxy http://127.0.0.1:3128 http://url.to/evict/
+</verb>
+   Alternatively the HTCP <em>CLR</em> mechanism can be used.
+
+<sect1>Removed deprecated languages
+<p>Old Squid used full language name to refer to error page translations.
+   These have been deprecated since addition of ISO-639 language codes
+   and support for HTTP Accept-Language negotiation in Squid-3.x.
+
+<p>As of this release Squid will no longer provide the symlinks
+   needed for seamless upgrade for squid.conf containing settings such as
+<verb>
+    error_directory English
+</verb>
+   All Squid installations are expected to already have them,
+   or to convert to the ISO-639 equivalents. Existing symlinks are not
+   affected.
+
+<p>See <url url="http://www.squid-cache.org/Versions/langpack/"> for the latest
+   list of official Squid translations.
+
+<p>See <url url="https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes"> for
+   the full ISO-639 list. HTTP uses the 2-letter (set 1) codes.
+
+<sect1>Removed Ident protocol support
+
+<p>Ident protocol (RFC 931 obsoleted by RFC 1413) has been considered
+seriously insecure and broken since at least 2009 when SANS issued an update
+recommending its removal from all networks. Squid Ident implementation had its
+own set of problems (that could not be addressed without significant code
+refactoring).
+
+<p>Configurations using ident/ident_regex ACLs, %ui logformat codes, %IDENT
+external_acl_type format code, or ident_lookup_access/ident_timeout directives
+are now rejected, leading to fatal startup failures.
+
+<p>To avoid inconveniencing admins that do <em>not</em> use Ident features,
+access logs with "common" and "combined" logformats now always receive a dash
+in the position of what used to be a %ui record field.
+
+<p>If necessary, an external ACL helper can be written to perform Ident transactions
+and deliver the user identity to Squid through the **user=** annotation.
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
@@ -57,15 +144,71 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
+	<tag>acl</tag>
+	<p>Changed <em>src</em> to detect and handle overlapping IP and
+	   IP-range values. Merging where necessary.
+	<p>Changed <em>dst</em> to detect and handle overlapping IP and
+	   IP-range values. Merging where necessary.
+	<p>Changed <em>localip</em> to detect and handle overlapping IP and
+	   IP-range values. Merging where necessary.
+	<p>Changed <em>ssl::server_name</em> to detect and handle overlapping
+	   sub-domain and wildcard domains. Merging or ignoring where
+	   necessary.
+	<p>Changed <em>srcdomain</em> to detect and handle overlapping
+	   sub-domain and wildcard domains. Merging or ignoring where
+	   necessary.
+	<p>Changed <em>dstdomain</em> to detect and handle overlapping
+	   sub-domain and wildcard domains. Merging or ignoring where
+	   necessary.
+	<p>Changed <em>http_status</em> to detect and handle overlapping
+	   status and status-range values. Merging where necessary.
+	<p>Removed <em>ident</em> with Ident protocol support.
+	<p>Removed <em>ident_regex</em> with Ident protocol support.
+
 	<tag>buffered_logs</tag>
 	<p>Honor the <em>off</em> setting in 'udp' access_log module.
+
+	<tag>cachemgr_passwd</tag>
+	<p>Removed the <em>non_peers</em> action. See the Cache Manager
+	<ref id="mgr" name="section"> for details.
+
+	<tag>access_log</tag>
+	<p>Built-in <em>common</em> and <em>combined</em> logformats now always
+	receive a dash character ("-") in the position of what used to be a
+	<em>%ui</em> record field.
+
+	<tag>logformat</tag>
+	<p>Removed <em>%ui</em> format code with Ident protocol support.
+
+	<tag>external_acl_type</tag>
+	<p>Removed <em>%IDENT</em> format code with Ident protocol support.
 
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
 <p>
 <descrip>
-	<p>No removed directives in this version.
+	<tag>mcast_miss_addr</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_ttl</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_port</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_encode_key</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>ident_lookup_access</tag>
+	<p>Ident protocol is no longer supported natively.
+
+	<tag>ident_timeout</tag>
+	<p>Ident protocol is no longer supported natively.
 
 </descrip>
 
@@ -83,14 +226,29 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p>No new options in this version.
+	<tag>--without-gss</tag>
+	<p>Renamed from <em>--without-gnugss</em>.
+
+	<tag>--without-psapi</tag>
+	<p>Disable auto-detection of Windows PSAPI library.
+
+	<tag>--without-sasl</tag>
+	<p>Disable auto-detection of Cyrus SASL (or compatible) library.
+
+	<tag>CPPFLAGS=-DINCOMING_FACTOR=</tag>
+	<p>Control the listening sockets responsiveness with poll(2) and select(2).
+	   The higher the INCOMING_FACTOR, the slower the algorithm will
+	   respond to load spikes/increases/decreases in demand. A value
+	   between 3 and 8 is recommended. Default is 5.
 
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p>No changed options in this version.
+	<tag>--disable-esi</tag>
+	<p>The ESI feature is now disabled by default.
+	   Use <em>--enable-esi</em> if needed.
 
 </descrip>
 </p>
@@ -98,9 +256,22 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
+	<tag>--enable-cachemgr-hostname=</tag>
+	<p>The <em>cachemgr.cgi</em> tool this option relates to has been removed.
+
+	<tag>--without-gnugss</tag>
+	<p>Renamed to <em>--without-gss</em>.
+
 	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
 	<p>The code enabled by this preprocessor macro has not built for many
 	   years, indicating that the feature is unused.
+
+	<tag>CPPFLAGS=-DMULTICAST_MISS_STREAM</tag>
+	<p>The code enabled by this preprocessor macro has not built for many
+	   years, indicating that the feature is unused.
+
+	<tag>--disable-ident-lookups</tag>
+	<p>The option was dropped during Ident protocol support removal.
 
 </descrip>
 

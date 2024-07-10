@@ -8,8 +8,8 @@
 
 /* DEBUG: section 00    Client Database */
 
-#ifndef SQUID_CLIENT_DB_H_
-#define SQUID_CLIENT_DB_H_
+#ifndef SQUID_SRC_CLIENT_DB_H
+#define SQUID_SRC_CLIENT_DB_H
 
 #include "anyp/ProtocolType.h"
 #include "ip/Address.h"
@@ -42,5 +42,5 @@ Ip::Address *client_entry(Ip::Address *current);
 variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif
 
-#endif /* SQUID_CLIENT_DB_H_ */
+#endif /* SQUID_SRC_CLIENT_DB_H */
 

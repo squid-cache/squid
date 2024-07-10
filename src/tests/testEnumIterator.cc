@@ -162,3 +162,9 @@ TestEnumIterator::testUnsignedEnum()
     CPPUNIT_ASSERT_EQUAL(5,j);
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

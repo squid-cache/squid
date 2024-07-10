@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CPU_AFFINITY_SET_H
-#define SQUID_CPU_AFFINITY_SET_H
+#ifndef SQUID_SRC_CPUAFFINITYSET_H
+#define SQUID_SRC_CPUAFFINITYSET_H
 
 #include "compat/cpu.h"
 
@@ -34,5 +34,5 @@ private:
     cpu_set_t theOrigCpuSet; ///< CPU affinity for this process before apply()
 };
 
-#endif // SQUID_CPU_AFFINITY_SET_H
+#endif /* SQUID_SRC_CPUAFFINITYSET_H */
 

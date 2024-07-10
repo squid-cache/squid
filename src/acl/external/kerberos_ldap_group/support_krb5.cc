@@ -289,12 +289,12 @@ krb5_create_cache(char *domain, char *service_principal_name)
 
             principal_list = (krb5_principal *) xrealloc(principal_list, sizeof(krb5_principal) * (nprinc + 1));
             krb5_copy_principal(kparam.context, entry.principal, &principal_list[nprinc++]);
-#if USE_HEIMDAL_KRB5
+#if HAVE_LIBHEIMDAL_KRB5
             debug((char *) "%s| %s: DEBUG: Keytab entry has realm name: %s\n", LogTime(), PROGRAM, entry.principal->realm);
 #else
             debug((char *) "%s| %s: DEBUG: Keytab entry has realm name: %s\n", LogTime(), PROGRAM, krb5_princ_realm(kparam.context, entry.principal)->data);
 #endif
-#if USE_HEIMDAL_KRB5
+#if HAVE_LIBHEIMDAL_KRB5
             if (!strcasecmp(domain, entry.principal->realm))
 #else
             if (!strcasecmp(domain, krb5_princ_realm(kparam.context, entry.principal)->data))
@@ -313,7 +313,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                     }
                 }
             }
-#if USE_HEIMDAL_KRB5 || ( HAVE_KRB5_KT_FREE_ENTRY && HAVE_DECL_KRB5_KT_FREE_ENTRY )
+#if HAVE_LIBHEIMDAL_KRB5 || ( HAVE_KRB5_KT_FREE_ENTRY && HAVE_DECL_KRB5_KT_FREE_ENTRY )
             code = krb5_kt_free_entry(kparam.context, &entry);
 #else
             code = krb5_free_keytab_entry_contents(kparam.context, &entry);
@@ -350,7 +350,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                 creds->client = principal;
                 code = krb5_parse_name(kparam.context, service, &creds->server);
                 xfree(service);
-                code = krb5_get_in_tkt_with_keytab(kparam.context, 0, NULL, NULL, NULL, keytab, NULL, creds, 0);
+                code = krb5_get_in_tkt_with_keytab(kparam.context, 0, nullptr, nullptr, nullptr, keytab, nullptr, creds, 0);
 #endif
 
                 if (code) {
@@ -435,7 +435,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                 creds->client = principal_list[i];
                 code = krb5_parse_name(kparam.context, service, &creds->server);
                 xfree(service);
-                code = krb5_get_in_tkt_with_keytab(kparam.context, 0, NULL, NULL, NULL, keytab, NULL, creds, 0);
+                code = krb5_get_in_tkt_with_keytab(kparam.context, 0, nullptr, nullptr, nullptr, keytab, nullptr, creds, 0);
 #endif
                 if (code) {
                     k5_error("Error while initialising credentials from keytab", code);
@@ -453,7 +453,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                 }
                 if (creds->server)
                     krb5_free_principal(kparam.context, creds->server);
-#if USE_HEIMDAL_KRB5
+#if HAVE_LIBHEIMDAL_KRB5
                 service = (char *) xmalloc(strlen("krbtgt") + strlen(domain) + strlen(principal_list[i]->realm) + 3);
                 snprintf(service, strlen("krbtgt") + strlen(domain) + strlen(principal_list[i]->realm) + 3, "krbtgt/%s@%s", domain, principal_list[i]->realm);
 #else
@@ -468,7 +468,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                 }
 
                 // overwrite limitation of enctypes
-#if USE_HEIMDAL_KRB5
+#if HAVE_LIBHEIMDAL_KRB5
                 creds->session.keytype = 0;
                 if (creds->session.keyvalue.length > 0)
                     krb5_free_keyblock_contents(kparam.context, &creds->session);

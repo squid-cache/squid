@@ -110,8 +110,6 @@ TestUfs::testUfsSearch()
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 
-    Store::Init();
-
     MySwapDirPointer aStore (new Fs::Ufs::UFSSwapDir("ufs", "Blocking"));
 
     aStore->IO = new Fs::Ufs::UFSStrategy(DiskIOModule::Find("Blocking")->createStrategy());
@@ -213,8 +211,6 @@ TestUfs::testUfsSearch()
     CPPUNIT_ASSERT_EQUAL(true, search->isDone());
     CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(nullptr), search->currentItem());
 
-    Store::FreeMemory();
-
     free_cachedir(&Config.cacheSwap);
 
     // TODO: here we should test a dirty rebuild
@@ -236,12 +232,6 @@ TestUfs::testUfsDefaultEngine()
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 
-    // This assertion may fail if previous test cases fail.
-    // Apparently, CPPUNIT_ASSERT* failure may prevent destructors of local
-    // objects such as "StorePointer aRoot" from being called.
-    CPPUNIT_ASSERT(!store_table); // or StoreHashIndex ctor will abort below
-
-    Store::Init();
     MySwapDirPointer aStore (new Fs::Ufs::UFSSwapDir("ufs", "Blocking"));
     addSwapDir(aStore);
     commonInit();
@@ -257,12 +247,17 @@ TestUfs::testUfsDefaultEngine()
     safe_free(config_line);
     CPPUNIT_ASSERT(aStore->IO->io != nullptr);
 
-    Store::FreeMemory();
     free_cachedir(&Config.cacheSwap);
     safe_free(Config.replPolicy->type);
     delete Config.replPolicy;
 
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
+}
+
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
 }
 

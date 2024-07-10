@@ -173,10 +173,7 @@ Server::doClientRead(const CommIoCbParams &io)
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
-        LogTagsErrors lte;
-        lte.timedout = rd.xerrno == ETIMEDOUT;
-        lte.aborted = !lte.timedout; // intentionally true for zero rd.xerrno
-        terminateAll(Error(ERR_CLIENT_GONE, SysErrorDetail::NewIfAny(rd.xerrno)), lte);
+        terminateAll(Error(ERR_READ_ERROR, SysErrorDetail::NewIfAny(rd.xerrno)), LogTagsErrors::FromErrno(rd.xerrno));
         return;
     }
 
@@ -204,8 +201,11 @@ Server::clientWriteDone(const CommIoCbParams &io)
 
     Must(io.conn->fd == clientConnection->fd);
 
-    if (io.flag && pipeline.front())
-        pipeline.front()->initiateClose("write failure");
+    if (io.flag) {
+        debugs(33, 2, "bailing after a write failure: " << xstrerr(io.xerrno));
+        terminateAll(Error(ERR_WRITE_ERROR, SysErrorDetail::NewIfAny(io.xerrno)), LogTagsErrors::FromErrno(io.xerrno));
+        return;
+    }
 
     afterClientWrite(io.size); // update state
     writeSomeData(); // maybe schedules another write

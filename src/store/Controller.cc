@@ -33,7 +33,7 @@
 int Store::Controller::store_dirs_rebuilding = 1;
 
 Store::Controller::Controller() :
-    swapDir(new Disks),
+    disks(new Disks),
     sharedMemStore(nullptr),
     localMemStore(false),
     transients(nullptr)
@@ -41,17 +41,11 @@ Store::Controller::Controller() :
     assert(!store_table);
 }
 
+/// this destructor is never called because Controller singleton is immortal
 Store::Controller::~Controller()
 {
-    delete sharedMemStore;
-    delete transients;
-    delete swapDir;
-
-    if (store_table) {
-        hashFreeItems(store_table, destroyStoreEntry);
-        hashFreeMemory(store_table);
-        store_table = nullptr;
-    }
+    // assert at runtime because we cannot `= delete` an overridden destructor
+    assert(!"Controller is never destroyed");
 }
 
 void
@@ -66,7 +60,7 @@ Store::Controller::init()
         }
     }
 
-    swapDir->init();
+    disks->init();
 
     if (Transients::Enabled() && IamWorkerProcess()) {
         transients = new Transients;
@@ -77,7 +71,7 @@ Store::Controller::init()
 void
 Store::Controller::create()
 {
-    swapDir->create();
+    disks->create();
 
 #if !_SQUID_WINDOWS_
     pid_t pid;
@@ -93,7 +87,7 @@ Store::Controller::maintain()
 {
     static time_t last_warn_time = 0;
 
-    swapDir->maintain();
+    disks->maintain();
 
     /* this should be emitted by the oversize dir, not globally */
 
@@ -126,7 +120,7 @@ Store::Controller::getStats(StoreInfoStats &stats) const
         }
     }
 
-    swapDir->getStats(stats);
+    disks->getStats(stats);
 
     // low-level info not specific to memory or disk cache
     stats.store_entry_count = StoreEntry::inUseCount();
@@ -150,8 +144,7 @@ Store::Controller::stat(StoreEntry &output) const
     if (sharedMemStore)
         sharedMemStore->stat(output);
 
-    /* now the swapDir */
-    swapDir->stat(output);
+    disks->stat(output);
 }
 
 /* if needed, this could be taught to cache the result */
@@ -159,41 +152,41 @@ uint64_t
 Store::Controller::maxSize() const
 {
     /* TODO: include memory cache ? */
-    return swapDir->maxSize();
+    return disks->maxSize();
 }
 
 uint64_t
 Store::Controller::minSize() const
 {
     /* TODO: include memory cache ? */
-    return swapDir->minSize();
+    return disks->minSize();
 }
 
 uint64_t
 Store::Controller::currentSize() const
 {
     /* TODO: include memory cache ? */
-    return swapDir->currentSize();
+    return disks->currentSize();
 }
 
 uint64_t
 Store::Controller::currentCount() const
 {
     /* TODO: include memory cache ? */
-    return swapDir->currentCount();
+    return disks->currentCount();
 }
 
 int64_t
 Store::Controller::maxObjectSize() const
 {
     /* TODO: include memory cache ? */
-    return swapDir->maxObjectSize();
+    return disks->maxObjectSize();
 }
 
 void
 Store::Controller::configure()
 {
-    swapDir->configure();
+    disks->configure();
 
     store_swap_high = (long) (((float) maxSize() *
                                (float) Config.Swap.highWaterMark) / (float) 100);
@@ -203,7 +196,7 @@ Store::Controller::configure()
 
     // TODO: move this into a memory cache class when we have one
     const int64_t memMax = static_cast<int64_t>(min(Config.Store.maxInMemObjSize, Config.memMaxSize));
-    const int64_t disksMax = swapDir ? swapDir->maxObjectSize() : 0;
+    const int64_t disksMax = disks->maxObjectSize();
     store_maxobjsize = std::max(disksMax, memMax);
 }
 
@@ -219,7 +212,7 @@ Store::Controller::sync(void)
 {
     if (sharedMemStore)
         sharedMemStore->sync();
-    swapDir->sync();
+    disks->sync();
 }
 
 /*
@@ -229,7 +222,7 @@ int
 Store::Controller::callback()
 {
     /* mem cache callbacks ? */
-    return swapDir->callback();
+    return disks->callback();
 }
 
 /// update reference counters of the recently touched entry
@@ -243,7 +236,7 @@ Store::Controller::referenceBusy(StoreEntry &e)
     /* Notify the fs that we're referencing this object again */
 
     if (e.hasDisk())
-        swapDir->reference(e);
+        disks->reference(e);
 
     // Notify the memory cache that we're referencing this object again
     if (sharedMemStore && e.mem_status == IN_MEMORY)
@@ -275,7 +268,7 @@ Store::Controller::dereferenceIdle(StoreEntry &e, bool wantsLocalMemory)
     // should be done even if we overwrite keepInStoreTable afterwards.
 
     if (e.hasDisk())
-        keepInStoreTable = swapDir->dereference(e) || keepInStoreTable;
+        keepInStoreTable = disks->dereference(e) || keepInStoreTable;
 
     // Notify the memory cache that we're not referencing this object any more
     if (sharedMemStore && e.mem_status == IN_MEMORY)
@@ -320,7 +313,7 @@ Store::Controller::markedForDeletionAndAbandoned(const StoreEntry &e) const
 bool
 Store::Controller::hasReadableDiskEntry(const StoreEntry &e) const
 {
-    return swapDir->hasReadableEntry(e);
+    return disks->hasReadableEntry(e);
 }
 
 /// flags problematic entries before find() commits to finalizing/returning them
@@ -453,11 +446,9 @@ Store::Controller::peek(const cache_key *key)
         }
     }
 
-    if (swapDir) {
-        if (StoreEntry *e = swapDir->get(key)) {
-            debugs(20, 3, "got disk-cached entry: " << *e);
-            return e;
-        }
+    if (const auto e = disks->get(key)) {
+        debugs(20, 3, "got disk-cached entry: " << *e);
+        return e;
     }
 
     debugs(20, 4, "cannot locate " << storeKeyText(key));
@@ -479,7 +470,7 @@ Store::Controller::transientsWriter(const StoreEntry &e) const
 int64_t
 Store::Controller::accumulateMore(StoreEntry &entry) const
 {
-    return swapDir ? swapDir->accumulateMore(entry) : 0;
+    return disks->accumulateMore(entry);
     // The memory cache should not influence for-swapout accumulation decision.
 }
 
@@ -493,8 +484,7 @@ Store::Controller::evictCached(StoreEntry &e)
     if (transients)
         transients->evictCached(e);
     memoryEvictCached(e);
-    if (swapDir)
-        swapDir->evictCached(e);
+    disks->evictCached(e);
 }
 
 void
@@ -510,8 +500,9 @@ Store::Controller::evictIfFound(const cache_key *key)
 
     if (sharedMemStore)
         sharedMemStore->evictIfFound(key);
-    if (swapDir)
-        swapDir->evictIfFound(key);
+
+    disks->evictIfFound(key);
+
     if (transients)
         transients->evictIfFound(key);
 }
@@ -554,7 +545,7 @@ Store::Controller::freeMemorySpace(const int bytesRequired)
     int removed = 0;
     while (const auto entry = walker->Next(walker)) {
         // Abandoned memory cache entries are purged during memory shortage.
-        entry->abandon(__FUNCTION__); // may delete entry
+        entry->abandon(__func__); // may delete entry
         ++removed;
 
         if (memoryCacheHasSpaceFor(pagesRequired))
@@ -691,7 +682,7 @@ Store::Controller::handleIdleEntry(StoreEntry &e)
     // and keep the entry in store_table for its on-disk data
 }
 
-void
+bool
 Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
 {
     Must(old);
@@ -708,20 +699,27 @@ Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
     //         sake, it is best to detect and skip such repeated update calls.
     if (e304.mem_obj->appliedUpdates) {
         debugs(20, 5, "ignored repeated update of " << *old << " with " << e304);
-        return;
+        return true;
     }
     e304.mem_obj->appliedUpdates = true;
 
-    if (!old->updateOnNotModified(e304)) {
-        debugs(20, 5, "updated nothing in " << *old << " with " << e304);
-        return;
+    try {
+        if (!old->updateOnNotModified(e304)) {
+            debugs(20, 5, "updated nothing in " << *old << " with " << e304);
+            return true;
+        }
+    } catch (...) {
+        debugs(20, DBG_IMPORTANT, "ERROR: Failed to update a cached response: " << CurrentException);
+        return false;
     }
 
     if (sharedMemStore && old->mem_status == IN_MEMORY && !EBIT_TEST(old->flags, ENTRY_SPECIAL))
         sharedMemStore->updateHeaders(old);
 
     if (old->swap_dirn > -1)
-        swapDir->updateHeaders(old);
+        disks->updateHeaders(old);
+
+    return true;
 }
 
 bool
@@ -811,9 +809,9 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         found = true;
         inSync = sharedMemStore->updateAnchored(*collapsed);
         // TODO: handle entries attached to both memory and disk
-    } else if (swapDir && collapsed->hasDisk()) {
+    } else if (collapsed->hasDisk()) {
         found = true;
-        inSync = swapDir->updateAnchored(*collapsed);
+        inSync = disks->updateAnchored(*collapsed);
     } else {
         try {
             found = anchorToCache(*collapsed);
@@ -876,7 +874,7 @@ Store::Controller::anchorToCache(StoreEntry &entry)
     } else if (sharedMemStore && entry.hasMemStore()) {
         debugs(20, 5, "already anchored to memory store: " << entry);
         return true;
-    } else if (swapDir && entry.hasDisk()) {
+    } else if (entry.hasDisk()) {
         debugs(20, 5, "already anchored to disk: " << entry);
         return true;
     }
@@ -889,8 +887,8 @@ Store::Controller::anchorToCache(StoreEntry &entry)
     bool found = false;
     if (sharedMemStore)
         found = sharedMemStore->anchorToCache(entry);
-    if (!found && swapDir)
-        found = swapDir->anchorToCache(entry);
+    if (!found)
+        found = disks->anchorToCache(entry);
 
     if (found) {
         debugs(20, 7, "anchored " << entry);
@@ -923,26 +921,10 @@ Store::Controller::checkTransients(const StoreEntry &e) const
     assert(!transients || e.hasTransients());
 }
 
-namespace Store {
-static RefCount<Controller> TheRoot;
-}
-
 Store::Controller&
 Store::Root()
 {
-    assert(TheRoot);
-    return *TheRoot;
-}
-
-void
-Store::Init(Controller *root)
-{
-    TheRoot = root ? root : new Controller;
-}
-
-void
-Store::FreeMemory()
-{
-    TheRoot = nullptr;
+    static const auto root = new Controller();
+    return *root;
 }
 

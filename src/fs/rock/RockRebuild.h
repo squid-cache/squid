@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_ROCK_REBUILD_H
-#define SQUID_FS_ROCK_REBUILD_H
+#ifndef SQUID_SRC_FS_ROCK_ROCKREBUILD_H
+#define SQUID_SRC_FS_ROCK_ROCKREBUILD_H
 
 #include "base/AsyncJob.h"
 #include "base/RunnersRegistry.h"
@@ -51,6 +51,9 @@ public:
     /// starts indexing the given cache_dir if that indexing is necessary
     /// \returns whether the indexing was necessary (and, hence, started)
     static bool Start(SwapDir &dir);
+
+    /* AsyncJob API */
+    virtual void callException(const std::exception &) override;
 
 protected:
     /// whether the current kid is responsible for rebuilding the given cache_dir
@@ -130,5 +133,5 @@ private:
 
 } // namespace Rock
 
-#endif /* SQUID_FS_ROCK_REBUILD_H */
+#endif /* SQUID_SRC_FS_ROCK_ROCKREBUILD_H */
 

@@ -13,6 +13,7 @@
 #include "neighbors.h"
 #include "NeighborTypeDomainList.h"
 #include "pconn.h"
+#include "PeerDigest.h"
 #include "PeerPoolMgr.h"
 #include "SquidConfig.h"
 #include "util.h"
@@ -40,11 +41,11 @@ CachePeer::~CachePeer()
     aclDestroyAccessList(&access);
 
 #if USE_CACHE_DIGESTS
-    cbdataReferenceDone(digest);
+    void *digestTmp = nullptr;
+    if (cbdataReferenceValidDone(digest, &digestTmp))
+        peerDigestNotePeerGone(static_cast<PeerDigest *>(digestTmp));
     xfree(digest_url);
 #endif
-
-    delete next;
 
     xfree(login);
 
@@ -68,20 +69,11 @@ CachePeer::noteSuccess()
     }
 }
 
-void
-CachePeer::noteFailure(const Http::StatusCode code)
-{
-    if (Http::Is4xx(code))
-        return; // this failure is not our fault
-
-    countFailure();
-}
-
 // TODO: Require callers to detail failures instead of using one (and often
 // misleading!) "connection failed" phrase for all of them.
 /// noteFailure() helper for handling failures attributed to this peer
 void
-CachePeer::countFailure()
+CachePeer::noteFailure()
 {
     stats.last_connect_failure = squid_curtime;
     if (tcp_up > 0)

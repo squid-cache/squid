@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_API_UTIL_H
-#define SQUID_SNMP_API_UTIL_H
+#ifndef SQUID_INCLUDE_SNMP_API_UTIL_H
+#define SQUID_INCLUDE_SNMP_API_UTIL_H
 
 /* NP: required for typedef ipaddr */
 #include "snmp_pdu.h"
@@ -102,5 +102,5 @@ int snmp_timeout_session(struct snmp_session *sp_);
 
 #endif
 
-#endif              /* SQUID_SNMP_API_UTIL_H */
+#endif /* SQUID_INCLUDE_SNMP_API_UTIL_H */
 

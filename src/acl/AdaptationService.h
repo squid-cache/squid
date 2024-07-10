@@ -6,18 +6,24 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLADAPTATIONSERVICE_H
-#define SQUID_ACLADAPTATIONSERVICE_H
+#ifndef SQUID_SRC_ACL_ADAPTATIONSERVICE_H
+#define SQUID_SRC_ACL_ADAPTATIONSERVICE_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 
-/// \ingroup ACLAPI
-class ACLAdaptationServiceStrategy : public ACLStrategy<const char *>
+namespace Acl
 {
 
+/// an "adaptation_service" ACL
+class AdaptationServiceCheck: public ParameterizedNode< ACLData<const char *> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
 };
 
-#endif /* SQUID_ACLADAPTATIONSERVICE_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_ADAPTATIONSERVICE_H */
 

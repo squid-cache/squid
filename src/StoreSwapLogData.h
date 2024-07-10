@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORESWAPLOGDATA_H
-#define SQUID_STORESWAPLOGDATA_H
+#ifndef SQUID_SRC_STORESWAPLOGDATA_H
+#define SQUID_SRC_STORESWAPLOGDATA_H
 
 /**
  \defgroup FileFormatSwapStateAPI swap.state File Structure
@@ -191,5 +191,5 @@ public:
     int32_t record_size;
 };
 
-#endif /* SQUID_STORESWAPLOGDATA_H */
+#endif /* SQUID_SRC_STORESWAPLOGDATA_H */
 

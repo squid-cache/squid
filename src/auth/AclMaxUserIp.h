@@ -6,15 +6,15 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLMAXUSERIP_H
-#define SQUID_ACLMAXUSERIP_H
+#ifndef SQUID_SRC_AUTH_ACLMAXUSERIP_H
+#define SQUID_SRC_AUTH_ACLMAXUSERIP_H
 
 #if USE_AUTH
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 #include "auth/UserRequest.h"
 
-class ACLMaxUserIP : public ACL
+class ACLMaxUserIP : public Acl::Node
 {
     MEMPROXY_CLASS(ACLMaxUserIP);
 
@@ -44,5 +44,5 @@ private:
 };
 
 #endif /* USE_AUTH */
-#endif /* SQUID_ACLMAXUSERIP_H */
+#endif /* SQUID_SRC_AUTH_ACLMAXUSERIP_H */
 

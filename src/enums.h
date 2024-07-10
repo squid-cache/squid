@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ENUMS_H
-#define SQUID_ENUMS_H
+#ifndef SQUID_SRC_ENUMS_H
+#define SQUID_SRC_ENUMS_H
 
 enum fd_type {
     FD_NONE_TYPE,
@@ -17,11 +17,6 @@ enum fd_type {
     FD_PIPE,
     FD_MSGHDR,
     FD_UNKNOWN
-};
-
-enum {
-    FD_READ,
-    FD_WRITE
 };
 
 typedef enum {
@@ -202,7 +197,6 @@ enum {
 typedef enum {
     DIGEST_READ_NONE,
     DIGEST_READ_REPLY,
-    DIGEST_READ_HEADERS,
     DIGEST_READ_CBLOCK,
     DIGEST_READ_MASK,
     DIGEST_READ_DONE
@@ -244,5 +238,5 @@ typedef enum {
 } htcp_clr_reason;
 #endif /* USE_HTCP */
 
-#endif /* SQUID_ENUMS_H */
+#endif /* SQUID_SRC_ENUMS_H */
 

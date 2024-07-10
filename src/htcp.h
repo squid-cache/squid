@@ -6,11 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTCP_H
-#define SQUID_HTCP_H
+#ifndef SQUID_SRC_HTCP_H
+#define SQUID_SRC_HTCP_H
 
 #if USE_HTCP
 
+#include "enums.h"
 #include "http/forward.h"
 #include "HttpHeader.h"
 #include "ip/forward.h"
@@ -45,6 +46,8 @@ void neighborsHtcpReply(const cache_key *, HtcpReplyData *, const Ip::Address &)
 /// \ingroup ServerProtocolHTCP
 void htcpOpenPorts(void);
 
+class CachePeer;
+
 /**
  * \ingroup ServerProtocolHTCP
  *
@@ -71,5 +74,5 @@ void htcpClosePorts(void);
 
 #endif /* USE_HTCP */
 
-#endif /* SQUID_HTCP_H */
+#endif /* SQUID_SRC_HTCP_H */
 

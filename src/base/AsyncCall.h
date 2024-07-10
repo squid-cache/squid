@@ -6,10 +6,11 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ASYNCCALL_H
-#define SQUID_ASYNCCALL_H
+#ifndef SQUID_SRC_BASE_ASYNCCALL_H
+#define SQUID_SRC_BASE_ASYNCCALL_H
 
 #include "base/CodeContext.h"
+#include "base/forward.h"
 #include "base/InstanceId.h"
 #include "event.h"
 #include "RefCount.h"
@@ -39,7 +40,7 @@ class CallDialer;
 class AsyncCall: public RefCountable
 {
 public:
-    typedef RefCount <AsyncCall> Pointer;
+    using Pointer = AsyncCallPointer;
 
     AsyncCall(int aDebugSection, int aDebugLevel, const char *aName);
     ~AsyncCall() override;
@@ -164,5 +165,5 @@ bool ScheduleCall(const char *fileName, int fileLine, const AsyncCall::Pointer &
 /** Call scheduling helper. */
 #define ScheduleCallHere(call) ScheduleCall(__FILE__, __LINE__, (call))
 
-#endif /* SQUID_ASYNCCALL_H */
+#endif /* SQUID_SRC_BASE_ASYNCCALL_H */
 

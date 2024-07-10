@@ -69,10 +69,6 @@ private:
 };
 CPPUNIT_TEST_SUITE_REGISTRATION(TestRock);
 
-extern REMOVALPOLICYCREATE createRemovalPolicy_lru;
-
-static char cwd[MAXPATHLEN];
-
 static void
 addSwapDir(TestRock::SwapDirPointer aStore)
 {
@@ -89,21 +85,9 @@ TestRock::setUp()
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 
-    Config.memShared.defaultTo(false);
-    Config.shmLocking.defaultTo(false);
-
-    // use current directory for shared segments (on path-based OSes)
-    Ipc::Mem::Segment::BasePath = getcwd(cwd,MAXPATHLEN);
-    if (Ipc::Mem::Segment::BasePath == nullptr)
-        Ipc::Mem::Segment::BasePath = ".";
-
-    Store::Init();
-
     store = new Rock::SwapDir();
 
     addSwapDir(store);
-
-    commonInit();
 
     char *path=xstrdup(TESTDIR);
 
@@ -130,8 +114,6 @@ TestRock::tearDown()
 {
     CPPUNIT_NS::TestFixture::tearDown();
 
-    Store::FreeMemory();
-
     store = nullptr;
 
     free_cachedir(&Config.cacheSwap);
@@ -145,42 +127,6 @@ TestRock::tearDown()
 
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
-}
-
-void
-TestRock::commonInit()
-{
-    static bool inited = false;
-
-    if (inited)
-        return;
-
-    Config.Store.avgObjectSize = 1024;
-    Config.Store.objectsPerBucket = 20;
-    Config.Store.maxObjectSize = 2048;
-
-    Config.store_dir_select_algorithm = xstrdup("round-robin");
-
-    Config.replPolicy = new RemovalPolicySettings;
-    Config.replPolicy->type = xstrdup("lru");
-    Config.replPolicy->args = nullptr;
-
-    /* garh garh */
-    storeReplAdd("lru", createRemovalPolicy_lru);
-
-    visible_appname_string = xstrdup(APP_FULLNAME);
-
-    Mem::Init();
-
-    fde::Init();
-
-    comm_init();
-
-    httpHeaderInitModule(); /* must go before any header processing (e.g. the one in errorInitialize) */
-
-    mem_policy = createRemovalPolicy(Config.replPolicy);
-
-    inited = true;
 }
 
 void
@@ -361,5 +307,55 @@ TestRock::testRockSwapOut()
         StoreEntry *const pe2 = getEntry(i);
         CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(nullptr), pe2);
     }
+}
+
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
+
+void
+MyTestProgram::startup()
+{
+    Config.memShared.defaultTo(false);
+    Config.shmLocking.defaultTo(false);
+
+    // use current directory for shared segments (on path-based OSes)
+    static char cwd[MAXPATHLEN];
+    Ipc::Mem::Segment::BasePath = getcwd(cwd, MAXPATHLEN);
+    if (!Ipc::Mem::Segment::BasePath)
+        Ipc::Mem::Segment::BasePath = ".";
+
+    Config.Store.avgObjectSize = 1024;
+    Config.Store.objectsPerBucket = 20;
+    Config.Store.maxObjectSize = 2048;
+
+    Config.store_dir_select_algorithm = xstrdup("round-robin");
+
+    Config.replPolicy = new RemovalPolicySettings;
+    Config.replPolicy->type = xstrdup("lru");
+    Config.replPolicy->args = nullptr;
+
+    /* garh garh */
+    extern REMOVALPOLICYCREATE createRemovalPolicy_lru;
+    storeReplAdd("lru", createRemovalPolicy_lru);
+
+    visible_appname_string = xstrdup(APP_FULLNAME);
+
+    Mem::Init();
+    fde::Init();
+    comm_init();
+    httpHeaderInitModule(); /* must go before any header processing (e.g. the one in errorInitialize) */
+
+    mem_policy = createRemovalPolicy(Config.replPolicy);
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

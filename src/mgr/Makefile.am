@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 noinst_LTLIBRARIES = libmgr.la
 
@@ -14,6 +13,7 @@ libmgr_la_SOURCES = \
 	Action.cc \
 	Action.h \
 	ActionCreator.h \
+	ActionFeatures.h \
 	ActionParams.cc \
 	ActionParams.h \
 	ActionPasswordList.cc \

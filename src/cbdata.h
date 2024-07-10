@@ -394,5 +394,5 @@ private:
     void *data_; ///< raw callback data, maybe invalid
 };
 
-#endif /* SQUID_CBDATA_H */
+#endif /* SQUID_SRC_CBDATA_H */
 

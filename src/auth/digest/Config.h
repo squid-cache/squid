@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef __AUTH_DIGEST_H__
-#define __AUTH_DIGEST_H__
+#ifndef SQUID_SRC_AUTH_DIGEST_CONFIG_H
+#define SQUID_SRC_AUTH_DIGEST_CONFIG_H
 
 #if HAVE_AUTH_MODULE_DIGEST
 
@@ -100,8 +100,8 @@ public:
 /* strings */
 #define QOP_AUTH "auth"
 
-extern helper *digestauthenticators;
+extern Helper::ClientPointer digestauthenticators;
 
 #endif /* HAVE_AUTH_MODULE_DIGEST */
-#endif
+#endif /* SQUID_SRC_AUTH_DIGEST_CONFIG_H */
 

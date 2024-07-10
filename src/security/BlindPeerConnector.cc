@@ -76,7 +76,7 @@ Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
         // based on TCP results, SSL results, or both. And the code is probably not
         // consistent in this aspect across tunnelling and forwarding modules.
         if (peer && peer->secure.encryptTransport)
-            peer->noteFailure(error->httpStatus);
+            peer->noteFailure();
         return;
     }
 
@@ -86,3 +86,13 @@ Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
     }
 }
 
+Security::BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &aRequest,
+        const Comm::ConnectionPointer &aServerConn,
+        const AsyncCallback<EncryptorAnswer> &aCallback,
+        const AccessLogEntryPointer &alp,
+        time_t timeout) :
+    AsyncJob("Security::BlindPeerConnector"),
+    Security::PeerConnector(aServerConn, aCallback, alp, timeout)
+{
+    request = aRequest;
+}

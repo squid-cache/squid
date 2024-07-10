@@ -31,9 +31,6 @@ class TestUriScheme : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testStream);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testAssignFromprotocol_t();
     void testCastToprotocol_t();
@@ -98,7 +95,7 @@ TestUriScheme::testConstructprotocol_t()
     AnyP::UriScheme lhs_none(AnyP::PROTO_NONE), rhs_none(AnyP::PROTO_NONE);
     CPPUNIT_ASSERT_EQUAL(lhs_none, rhs_none);
 
-    AnyP::UriScheme lhs_cacheobj(AnyP::PROTO_CACHE_OBJECT), rhs_cacheobj(AnyP::PROTO_CACHE_OBJECT);
+    AnyP::UriScheme lhs_cacheobj(AnyP::PROTO_HTTP), rhs_cacheobj(AnyP::PROTO_HTTP);
     CPPUNIT_ASSERT_EQUAL(lhs_cacheobj, rhs_cacheobj);
     CPPUNIT_ASSERT(lhs_none != rhs_cacheobj);
 }
@@ -125,7 +122,7 @@ TestUriScheme::testEqualprotocol_t()
     CPPUNIT_ASSERT(AnyP::UriScheme() == AnyP::PROTO_NONE);
     CPPUNIT_ASSERT(not (AnyP::UriScheme(AnyP::PROTO_WAIS) == AnyP::PROTO_HTTP));
     CPPUNIT_ASSERT(AnyP::PROTO_HTTP == AnyP::UriScheme(AnyP::PROTO_HTTP));
-    CPPUNIT_ASSERT(not (AnyP::PROTO_CACHE_OBJECT == AnyP::UriScheme(AnyP::PROTO_HTTP)));
+    CPPUNIT_ASSERT(not (AnyP::PROTO_HTTPS == AnyP::UriScheme(AnyP::PROTO_HTTP)));
 }
 
 /*
@@ -153,10 +150,5 @@ TestUriScheme::testStream()
     CPPUNIT_ASSERT_EQUAL(http_str, from_buf);
 }
 
-void
-TestUriScheme::setUp()
-{
-    Mem::Init();
-    AnyP::UriScheme::Init();
-}
+// This test uses main() from ./testURL.cc.
 

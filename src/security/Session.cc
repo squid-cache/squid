@@ -28,7 +28,7 @@ static Ipc::MemMap *SessionCache = nullptr;
 static const char *SessionCacheName = "tls_session_cache";
 #endif
 
-#if USE_OPENSSL || USE_GNUTLS
+#if USE_OPENSSL || HAVE_LIBGNUTLS
 static int
 tls_read_method(int fd, char *buf, int len)
 {
@@ -37,7 +37,7 @@ tls_read_method(int fd, char *buf, int len)
 
 #if USE_OPENSSL
     int i = SSL_read(session, buf, len);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     int i = gnutls_record_recv(session, buf, len);
 #endif
 
@@ -48,7 +48,7 @@ tls_read_method(int fd, char *buf, int len)
 
 #if USE_OPENSSL
     if (i > 0 && SSL_pending(session) > 0) {
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     if (i > 0 && gnutls_record_check_pending(session) > 0) {
 #endif
         debugs(83, 2, "TLS FD " << fd << " is pending");
@@ -74,7 +74,7 @@ tls_write_method(int fd, const char *buf, int len)
 
 #if USE_OPENSSL
     int i = SSL_write(session, buf, len);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     int i = gnutls_record_send(session, buf, len);
 #endif
 
@@ -106,7 +106,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         return false;
     }
 
-#if USE_OPENSSL || USE_GNUTLS
+#if USE_OPENSSL || HAVE_LIBGNUTLS
 
     const char *errAction = "with no TLS/SSL library";
     Security::LibErrorCode errCode = 0;
@@ -117,7 +117,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         errAction = "failed to allocate handle";
         debugs(83, DBG_IMPORTANT, "ERROR: TLS failure: " << errAction << ": " << Security::ErrorString(errCode));
     }
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     gnutls_session_t tmp;
     errCode = gnutls_init(&tmp, static_cast<unsigned int>(type) | GNUTLS_NONBLOCK);
     Security::SessionPointer session(tmp, [](gnutls_session_t p) {
@@ -130,7 +130,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         errAction = "failed to initialize session";
         debugs(83, DBG_IMPORTANT, "ERROR: TLS failure: " << errAction << ": " << Security::ErrorString(errCode));
     }
-#endif /* USE_GNUTLS */
+#endif /* HAVE_LIBGNUTLS */
 
     if (session) {
         const int fd = conn->fd;
@@ -139,7 +139,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         // without BIO, we would call SSL_set_fd(ssl.get(), fd) instead
         if (BIO *bio = Ssl::Bio::Create(fd, type)) {
             Ssl::Bio::Link(session.get(), bio); // cannot fail
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         errCode = gnutls_credentials_set(session.get(), GNUTLS_CRD_CERTIFICATE, ctx.get());
         if (errCode == GNUTLS_E_SUCCESS) {
 
@@ -149,7 +149,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
             //     this does the equivalent of SSL_set_fd() for now.
             gnutls_transport_set_int(session.get(), fd);
             gnutls_handshake_set_timeout(session.get(), GNUTLS_DEFAULT_HANDSHAKE_TIMEOUT);
-#endif /* USE_GNUTLS */
+#endif /* HAVE_LIBGNUTLS */
 
             debugs(83, 5, "link FD " << fd << " to TLS session=" << (void*)session.get());
 
@@ -163,7 +163,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         errCode = ERR_get_error();
         errAction = "failed to initialize I/O";
         (void)opts;
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         errAction = "failed to assign credentials";
 #endif
     }
@@ -175,7 +175,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     (void)opts;
     (void)type;
     (void)squidCtx;
-#endif /* USE_OPENSSL || USE_GNUTLS */
+#endif /* USE_OPENSSL || HAVE_LIBGNUTLS */
     return false;
 }
 
@@ -202,7 +202,7 @@ Security::SessionSendGoodbye(const Security::SessionPointer &s)
     if (s) {
 #if USE_OPENSSL
         SSL_shutdown(s.get());
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         gnutls_bye(s.get(), GNUTLS_SHUT_RDWR);
 #endif
     }
@@ -214,7 +214,7 @@ Security::SessionIsResumed(const Security::SessionPointer &s)
     bool result = false;
 #if USE_OPENSSL
     result = SSL_session_reused(s.get()) == 1;
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     result = gnutls_session_is_resumed(s.get()) != 0;
 #endif
     debugs(83, 7, "session=" << (void*)s.get() << ", query? answer: " << (result ? 'T' : 'F') );
@@ -228,7 +228,7 @@ Security::MaybeGetSessionResumeData(const Security::SessionPointer &s, Security:
 #if USE_OPENSSL
         // nil is valid for SSL_get1_session(), it cannot fail.
         data.reset(SSL_get1_session(s.get()));
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         gnutls_datum_t *tmp = nullptr;
         const auto x = gnutls_session_get_data2(s.get(), tmp);
         if (x != GNUTLS_E_SUCCESS) {
@@ -252,7 +252,7 @@ Security::SetSessionResumeData(const Security::SessionPointer &s, const Security
             debugs(83, 3, "session=" << (void*)s.get() << " data=" << (void*)data.get() <<
                    " resume error: " << Security::ErrorString(ssl_error));
         }
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         const auto x = gnutls_session_set_data(s.get(), data->data, data->size);
         if (x != GNUTLS_E_SUCCESS) {
             debugs(83, 3, "session=" << (void*)s.get() << " data=" << (void*)data.get() <<
@@ -423,7 +423,7 @@ private:
     Ipc::MemMap::Owner *owner;
 };
 
-RunnerRegistrationEntry(SharedSessionCacheRr);
+DefineRunnerRegistrator(SharedSessionCacheRr);
 
 void
 SharedSessionCacheRr::useConfig()

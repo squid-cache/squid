@@ -22,8 +22,9 @@ void CacheManager::start(const Comm::ConnectionPointer &, HttpRequest *, StoreEn
 }
 static CacheManager* instance = nullptr;
 CacheManager* CacheManager::GetInstance() STUB_RETVAL(instance)
-void Mgr::RegisterAction(char const*, char const*, OBJH, int, int) {}
-void Mgr::RegisterAction(char const *, char const *, Mgr::ClassActionCreationHandler *, int, int) {}
+void Mgr::RegisterAction(char const *, char const *, OBJH *, Protected, Atomic, Format) {}
+void Mgr::RegisterAction(char const *, char const *, ClassActionCreationHandler *, Protected, Atomic, Format) {}
 
 Mgr::Action::Pointer CacheManager::createRequestedAction(const Mgr::ActionParams &) STUB_RETVAL(nullptr)
+void CacheManager::PutCommonResponseHeaders(HttpReply &, const char *) STUB
 

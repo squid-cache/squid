@@ -146,7 +146,7 @@ Security::Handshake(Comm::Connection &transport, const ErrorCode topError, Fun i
 
     return ioResult;
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     if (callResult == GNUTLS_E_SUCCESS) {
         // TODO: Avoid gnutls_*() calls if debugging is off.
         const auto desc = gnutls_session_get_desc(connection);
@@ -199,7 +199,7 @@ Security::Accept(Comm::Connection &transport)
     return Handshake(transport, SQUID_TLS_ERR_ACCEPT, [] (ConnectionPointer tlsConn) {
 #if USE_OPENSSL
         return SSL_accept(tlsConn);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         return gnutls_handshake(tlsConn);
 #else
         return sizeof(tlsConn); // the value is unused; should be unreachable
@@ -214,7 +214,7 @@ Security::Connect(Comm::Connection &transport)
     return Handshake(transport, SQUID_TLS_ERR_CONNECT, [] (ConnectionPointer tlsConn) {
 #if USE_OPENSSL
         return SSL_connect(tlsConn);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         return gnutls_handshake(tlsConn);
 #else
         return sizeof(tlsConn); // the value is unused; should be unreachable

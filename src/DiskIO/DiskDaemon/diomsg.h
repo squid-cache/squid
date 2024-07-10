@@ -12,8 +12,8 @@
  * Internal declarations for the diskd routines
  */
 
-#ifndef SQUID_DIOMSG_H__
-#define SQUID_DIOMSG_H__
+#ifndef SQUID_SRC_DISKIO_DISKDAEMON_DIOMSG_H
+#define SQUID_SRC_DISKIO_DISKDAEMON_DIOMSG_H
 
 enum {
     _MQD_NOP,
@@ -41,5 +41,5 @@ struct diomsg {
     static const int msg_snd_rcv_sz;
 };
 
-#endif /* SQUID_DIOMSG_H__ */
+#endif /* SQUID_SRC_DISKIO_DISKDAEMON_DIOMSG_H */
 

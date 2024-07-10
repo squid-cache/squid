@@ -25,7 +25,7 @@ EXTRA_DIST = \
 	test-functionality.sh \
 	test-sources.sh \
 	test-squid-conf.sh \
-	testheaders.sh
+	testHeader.cc.in
 
 ESI_ALL_TESTS = \
 	ESIExpressions
@@ -135,7 +135,18 @@ VirtualDeleteOperator_SOURCES = \
 installcheck-local: squid-conf-tests
 
 squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
-	@failed=0; cfglist="$(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf"; rm -f $@ || $(TRUE); \
+	@instructionFiles="$(srcdir)/squidconf/*.conf.instructions"; \
+	for instructionFile in $$instructionFiles; do \
+		cfgBasename=`basename $$instructionFile .instructions`; \
+		cfg=$(srcdir)/squidconf/$$cfgBasename; \
+		if ! test -f $$cfg; then \
+			echo "FAIL: $$instructionFile has no matching $$cfg"; \
+			exit 1; \
+		fi; \
+	done; \
+	failed=0; \
+	cfglist="$(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf"; \
+	rm -f $@ || $(TRUE); \
 	for cfg in $$cfglist ; do \
 		$(srcdir)/test-squid-conf.sh $(top_builddir) $(sbindir) $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
@@ -151,4 +162,9 @@ squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.de
 	done; \
 	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; else exit 1; fi
 
-CLEANFILES += squid-conf-tests squid-stderr.log
+CLEANFILES += \
+	squid-conf-tests \
+	squid-expected-messages \
+	squid-stderr.log \
+	squid-stderr.log.next \
+	squid-stderr.log.unmatched

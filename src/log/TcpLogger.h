@@ -6,16 +6,20 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_LOG_TCPLOGGER_H
-#define _SQUID_SRC_LOG_TCPLOGGER_H
+#ifndef SQUID_SRC_LOG_TCPLOGGER_H
+#define SQUID_SRC_LOG_TCPLOGGER_H
 
 #include "base/AsyncJob.h"
 #include "base/JobWait.h"
 #include "comm/forward.h"
 #include "ip/Address.h"
+#include "log/forward.h"
 
 #include <list>
 
+class CommCloseCbParams;
+class CommConnectCbParams;
+class CommIoCbParams;
 class MemBlob;
 typedef RefCount<MemBlob> MemBlobPointer;
 
@@ -114,5 +118,5 @@ private:
 
 } // namespace Log
 
-#endif /* _SQUID_SRC_LOG_TCPLOGGER_H */
+#endif /* SQUID_SRC_LOG_TCPLOGGER_H */
 

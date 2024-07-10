@@ -14,6 +14,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
@@ -801,7 +802,7 @@ htcpAccessAllowed(acl_access * acl, const htcpSpecifier::Pointer &s, Ip::Address
     if (!acl)
         return false;
 
-    ACLFilledChecklist checklist(acl, s->request.getRaw(), nullptr);
+    ACLFilledChecklist checklist(acl, s->request.getRaw());
     checklist.src_addr = from;
     checklist.my_addr.setNoAddr();
     return checklist.fastCheck().allowed();
@@ -1272,9 +1273,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 static void
 htcpForwardClr(char *buf, int sz)
 {
-    CachePeer *p;
-
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: CurrentCachePeers()) {
         if (!p->options.htcp) {
             continue;
         }

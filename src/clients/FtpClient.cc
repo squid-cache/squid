@@ -379,7 +379,7 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
     assert(ctrl.offset < ctrl.size);
 
     if (io.flag == Comm::OK && io.size > 0) {
-        fd_bytes(io.fd, io.size, FD_READ);
+        fd_bytes(io.fd, io.size, IoDirection::Read);
     }
 
     if (io.flag != Comm::OK) {
@@ -720,7 +720,7 @@ Ftp::Client::sendPassive()
     default: {
         bool doEpsv = true;
         if (Config.accessList.ftp_epsv) {
-            ACLFilledChecklist checklist(Config.accessList.ftp_epsv, fwd->request, nullptr);
+            ACLFilledChecklist checklist(Config.accessList.ftp_epsv, fwd->request);
             doEpsv = checklist.fastCheck().allowed();
         }
         if (!doEpsv) {
@@ -858,7 +858,7 @@ Ftp::Client::writeCommandCallback(const CommIoCbParams &io)
     debugs(9, 5, "wrote " << io.size << " bytes");
 
     if (io.size > 0) {
-        fd_bytes(io.fd, io.size, FD_WRITE);
+        fd_bytes(io.fd, io.size, IoDirection::Write);
         statCounter.server.all.kbytes_out += io.size;
         statCounter.server.ftp.kbytes_out += io.size;
     }
@@ -907,6 +907,8 @@ Ftp::Client::dataConnection() const
 void
 Ftp::Client::noteDelayAwareReadChance()
 {
+    // TODO: Merge with HttpStateData::noteDelayAwareReadChance()
+    waitingForDelayAwareReadChance = false;
     data.read_pending = false;
     maybeReadVirginBody();
 }

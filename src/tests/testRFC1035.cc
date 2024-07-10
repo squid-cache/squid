@@ -162,3 +162,9 @@ void TestRfc1035::testBugPacketHeadersOnly()
     CPPUNIT_ASSERT(msg == nullptr);
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

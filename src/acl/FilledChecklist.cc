@@ -26,16 +26,11 @@ CBDATA_CLASS_INIT(ACLFilledChecklist);
 
 ACLFilledChecklist::ACLFilledChecklist() :
     dst_rdns(nullptr),
-    request (nullptr),
-    reply (nullptr),
 #if USE_AUTH
     auth_user_request (nullptr),
 #endif
 #if SQUID_SNMP
     snmp_community(nullptr),
-#endif
-#if USE_OPENSSL
-    sslErrors(nullptr),
 #endif
     requestErrorType(ERR_MAX),
     conn_(nullptr),
@@ -46,7 +41,6 @@ ACLFilledChecklist::ACLFilledChecklist() :
     my_addr.setEmpty();
     src_addr.setEmpty();
     dst_addr.setEmpty();
-    rfc931[0] = '\0';
 }
 
 ACLFilledChecklist::~ACLFilledChecklist()
@@ -55,15 +49,7 @@ ACLFilledChecklist::~ACLFilledChecklist()
 
     safe_free(dst_rdns); // created by xstrdup().
 
-    HTTPMSGUNLOCK(request);
-
-    HTTPMSGUNLOCK(reply);
-
     cbdataReferenceDone(conn_);
-
-#if USE_OPENSSL
-    cbdataReferenceDone(sslErrors);
-#endif
 
     debugs(28, 4, "ACLFilledChecklist destroyed " << this);
 }
@@ -96,13 +82,13 @@ ACLFilledChecklist::verifyAle() const
             showDebugWarning("HttpRequest object");
             // XXX: al->request should be original,
             // but the request may be already adapted
-            al->request = request;
+            al->request = request.getRaw();
             HTTPMSGLOCK(al->request);
         }
 
         if (!al->adapted_request) {
             showDebugWarning("adapted HttpRequest object");
-            al->adapted_request = request;
+            al->adapted_request = request.getRaw();
             HTTPMSGLOCK(al->adapted_request);
         }
 
@@ -114,17 +100,10 @@ ACLFilledChecklist::verifyAle() const
         }
     }
 
-    if (reply && !al->reply) {
+    if (hasReply() && !al->reply) {
         showDebugWarning("HttpReply object");
-        al->reply = reply;
+        al->reply = reply_;
     }
-
-#if USE_IDENT
-    if (*rfc931 && !al->cache.rfc931) {
-        showDebugWarning("IDENT");
-        al->cache.rfc931 = xstrdup(rfc931);
-    }
-#endif
 }
 
 void
@@ -218,18 +197,13 @@ ACLFilledChecklist::markSourceDomainChecked()
  *    *not* delete the list.  After the callback function returns,
  *    checkCallback() will delete the list (i.e., self).
  */
-ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request, const char *ident):
+ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request):
     dst_rdns(nullptr),
-    request(nullptr),
-    reply(nullptr),
 #if USE_AUTH
     auth_user_request(nullptr),
 #endif
 #if SQUID_SNMP
     snmp_community(nullptr),
-#endif
-#if USE_OPENSSL
-    sslErrors(nullptr),
 #endif
     requestErrorType(ERR_MAX),
     conn_(nullptr),
@@ -240,11 +214,9 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
     my_addr.setEmpty();
     src_addr.setEmpty();
     dst_addr.setEmpty();
-    rfc931[0] = '\0';
 
     changeAcl(A);
     setRequest(http_request);
-    setIdent(ident);
 }
 
 void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
@@ -252,7 +224,6 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
     assert(!request);
     if (httpRequest) {
         request = httpRequest;
-        HTTPMSGLOCK(request);
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.acl_uses_indirect_client)
             src_addr = request->indirect_client_addr;
@@ -267,14 +238,21 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
 }
 
 void
-ACLFilledChecklist::setIdent(const char *ident)
+ACLFilledChecklist::updateAle(const AccessLogEntry::Pointer &a)
 {
-#if USE_IDENT
-    assert(!rfc931[0]);
-    if (ident)
-        xstrncpy(rfc931, ident, USER_IDENT_SZ);
-#else
-    (void)ident;
-#endif
+    if (!a)
+        return;
+
+    al = a; // could have been set already (to a different value)
+    if (!request)
+        setRequest(a->request);
+    updateReply(a->reply);
+}
+
+void
+ACLFilledChecklist::updateReply(const HttpReply::Pointer &r)
+{
+    if (r)
+        reply_ = r; // may already be set, including to r
 }
 

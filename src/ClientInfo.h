@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__SRC_CLIENTINFO_H
-#define SQUID__SRC_CLIENTINFO_H
+#ifndef SQUID_SRC_CLIENTINFO_H
+#define SQUID_SRC_CLIENTINFO_H
 
 #if USE_DELAY_POOLS
 #include "BandwidthBucket.h"
@@ -137,5 +137,5 @@ private:
 };
 #endif /* USE_DELAY_POOLS */
 
-#endif
+#endif /* SQUID_SRC_CLIENTINFO_H */
 

@@ -10,6 +10,7 @@
 #include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "acl/Tree.h"
 #include "client_side.h"
 #include "ConfigParser.h"
 #include "globals.h"
@@ -24,6 +25,7 @@
 #include "StrList.h"
 
 #include <algorithm>
+#include <ostream>
 #include <string>
 
 Note::Value::~Value()
@@ -39,9 +41,7 @@ Note::Value::Value(const char *aVal, const bool quoted, const char *descr, const
         valueFormat = new Format::Format(descr ? descr : "Notes");
         if (!valueFormat->parse(theValue.c_str())) {
             delete valueFormat;
-            SBuf exceptionMsg;
-            exceptionMsg.Printf("failed to parse annotation value %s", theValue.c_str());
-            throw TexcHere(exceptionMsg.c_str());
+            throw TextException(ToSBuf("failed to parse annotation value ", theValue), Here());
         }
     }
 }
@@ -69,12 +69,10 @@ Note::addValue(const char *value, const bool quoted, const char *descr, const Va
 bool
 Note::match(HttpRequest *request, HttpReply *reply, const AccessLogEntry::Pointer &al, SBuf &matched)
 {
-    ACLFilledChecklist ch(nullptr, request, nullptr);
-    ch.al = al;
-    ch.reply = reply;
+    ACLFilledChecklist ch(nullptr, request);
+    ch.updateAle(al);
+    ch.updateReply(reply);
     ch.syncAle(request, nullptr);
-    if (reply)
-        HTTPMSGLOCK(ch.reply);
 
     for (const auto &v: values) {
         assert(v->aclList);
@@ -105,24 +103,34 @@ Note::updateNotePairs(NotePairs::Pointer pairs, const CharacterSet *delimiters, 
 }
 
 void
-Note::dump(StoreEntry *entry, const char *k)
+Note::printAsNoteDirective(StoreEntry * const entry, const char * const directiveName) const
 {
+    PackableStream os(*entry);
     for (const auto &v: values) {
-        storeAppendPrintf(entry, "%s %.*s %s",
-                          k, key().length(), key().rawContent(), ConfigParser::QuoteString(SBufToString(v->value())));
-        dump_acl_list(entry, v->aclList);
-        storeAppendPrintf(entry, "\n");
+        os << directiveName << ' ' << key() << ' ' << ConfigParser::QuoteString(SBufToString(v->value()));
+        if (v->aclList) {
+            // TODO: Use Acl::dump() after fixing the XXX in dump_acl_list().
+            for (const auto &item: v->aclList->treeDump("", &Acl::AllowOrDeny)) {
+                if (item.isEmpty()) // treeDump("") adds this prefix
+                    continue;
+                if (item.cmp("\n") == 0) // treeDump() adds this suffix
+                    continue;
+                os << ' ' << item; // ACL name
+            }
+        }
+        os << '\n';
     }
 }
 
-SBuf
-Note::toString(const char *sep) const
+void
+Note::printAsAnnotationAclParameters(std::ostream &os) const
 {
-    SBuf result;
-    for (const auto &val: values)
-        result.appendf("%.*s: %.*s%s", key().length(), key().rawContent(),
-                       val->value().length(), val->value().rawContent(), sep);
-    return result;
+    auto separator = "";
+    for (const auto &v: values) {
+        os << separator;
+        os << key() << (v->method() == Value::mhReplace ? "=" : "+=") << v->value();
+        separator = " ";
+    }
 }
 
 const Notes::Keys &
@@ -252,20 +260,21 @@ Notes::updateNotePairs(NotePairs::Pointer pairs, const CharacterSet *delimiters,
 }
 
 void
-Notes::dump(StoreEntry *entry, const char *key)
+Notes::printAsNoteDirectives(StoreEntry *entry, const char * const directiveName) const
 {
     for (const auto &n: notes)
-        n->dump(entry, key);
+        n->printAsNoteDirective(entry, directiveName);
 }
 
-const char *
-Notes::toString(const char *sep) const
+void
+Notes::printAsAnnotationAclParameters(std::ostream &os) const
 {
-    static SBuf result;
-    result.clear();
-    for (const auto &note: notes)
-        result.append(note->toString(sep));
-    return result.isEmpty() ? nullptr : result.c_str();
+    const char *separator = "";
+    for (const auto &note: notes) {
+        os << separator;
+        note->printAsAnnotationAclParameters(os);
+        separator = " ";
+    }
 }
 
 bool
@@ -282,15 +291,11 @@ NotePairs::find(SBuf &resultNote, const char *noteKey, const char *sep) const
     return resultNote.length();
 }
 
-const char *
-NotePairs::toString(const char *sep) const
+void
+NotePairs::print(std::ostream &os, const char * const nameValueSeparator, const char * const entryTerminator) const
 {
-    static SBuf result;
-    result.clear();
     for (const auto &e: entries)
-        result.appendf("%.*s: %.*s%s", e->name().length(), e->name().rawContent(),
-                       e->value().length(), e->value().rawContent(), sep);
-    return result.isEmpty() ? nullptr : result.c_str();
+        os << e->name() << nameValueSeparator << e->value() << entryTerminator;
 }
 
 const char *

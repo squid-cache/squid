@@ -11,8 +11,10 @@
 
 #include "base/YesNoNone.h"
 #include "ConfigParser.h"
+#include "security/Context.h"
 #include "security/forward.h"
 #include "security/KeyData.h"
+#include "security/Session.h"
 
 class Packable;
 
@@ -67,7 +69,7 @@ public:
     void updateSessionOptions(Security::SessionPointer &);
 
     /// output squid.conf syntax with 'pfx' prefix on parameters for the stored settings
-    virtual void dumpCfg(Packable *, const char *pfx) const;
+    virtual void dumpCfg(std::ostream &, const char *pfx) const;
 
 private:
     ParsedPortFlags parseFlags();
@@ -113,7 +115,7 @@ protected:
             debugs(83, 5, "SSL_CTX destruct, this=" << (void*)p);
             SSL_CTX_free(p);
         });
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         debugs(83, 5, "gnutls_certificate_credentials construct, this=" << (void*)ctx);
         return Security::ContextPointer(ctx, [](gnutls_certificate_credentials_t p) {
             debugs(83, 5, "gnutls_certificate_credentials destruct, this=" << (void*)p);
@@ -153,7 +155,7 @@ extern PeerOptions ProxyOutgoingConfig;
 // parse the tls_outgoing_options directive
 void parse_securePeerOptions(Security::PeerOptions *);
 #define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
-#define dump_securePeerOptions(e,n,x) do { (e)->appendf(n); (x).dumpCfg((e),""); (e)->append("\n",1); } while(false)
+#define dump_securePeerOptions(e,n,x) do { PackableStream os_(*(e)); os_ << n; (x).dumpCfg(os_,""); os_ << '\n'; } while (false)
 
 #endif /* SQUID_SRC_SECURITY_PEEROPTIONS_H */
 

@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 noinst_LTLIBRARIES = libecapsquid.la
 
@@ -17,7 +16,6 @@ libecapsquid_la_SOURCES = \
 	Host.h \
 	MessageRep.cc \
 	MessageRep.h \
-	Registry.h \
 	ServiceRep.cc \
 	ServiceRep.h \
 	XactionRep.cc \

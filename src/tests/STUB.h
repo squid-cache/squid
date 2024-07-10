@@ -6,7 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef STUB
+#ifndef SQUID_SRC_TESTS_STUB_H
+#define SQUID_SRC_TESTS_STUB_H
 
 /** \group STUB
  *
@@ -27,14 +28,14 @@
 #include <iostream>
 
 // Internal Special: the STUB framework requires this function
-#define stub_fatal(m) { std::cerr<<"FATAL: "<<(m)<<" for use of "<<__FUNCTION__<<"\n"; exit(EXIT_FAILURE); }
+#define stub_fatal(m) { std::cerr<<"FATAL: "<<(m)<<" for use of "<<__func__<<"\n"; exit(EXIT_FAILURE); }
 
 /// macro to stub a void function.
 #define STUB { stub_fatal(STUB_API " required"); }
 
 /// macro to stub a void function without a fatal message
 /// Intended for registration pattern APIs where the function result does not matter to the test
-#define STUB_NOP { std::cerr<<"SKIP: "<<STUB_API<<" "<<__FUNCTION__<<" (not implemented).\n"; }
+#define STUB_NOP { std::cerr<<"SKIP: "<<STUB_API<<" "<<__func__<<" (not implemented).\n"; }
 
 /// macro to stub a function with return value.
 /// Aborts unit tests requiring its definition with a message about the missing linkage
@@ -42,7 +43,7 @@
 
 /// macro to stub a void function without a fatal message and with a return value
 /// Intended for registration pattern APIs where the function result does not matter to the test
-#define STUB_RETVAL_NOP(x) { std::cerr<<"SKIP: "<<STUB_API<<" "<<__FUNCTION__<<" (not implemented).\n"; return x; }
+#define STUB_RETVAL_NOP(x) { std::cerr<<"SKIP: "<<STUB_API<<" "<<__func__<<" (not implemented).\n"; return x; }
 
 /** macro to stub a function which returns a reference to dynamic
  *  Aborts unit tests requiring its definition with a message about the missing linkage
@@ -53,5 +54,5 @@
 /** Same as STUB_RETREF(). TODO: Remove */
 #define STUB_RETSTATREF(x) STUB_RETREF(x)
 
-#endif /* STUB */
+#endif /* SQUID_SRC_TESTS_STUB_H */
 

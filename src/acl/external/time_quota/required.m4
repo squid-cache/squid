@@ -5,7 +5,4 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-SQUID_CHECK_LIBTDB
-if test "$with_tdb" != "no"; then
-    BUILD_HELPER="time_quota"
-fi
+AS_IF([test "x$LIBTDB_LIBS" != "x"],[BUILD_HELPER="time_quota"])

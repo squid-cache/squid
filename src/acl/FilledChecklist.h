@@ -6,14 +6,17 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLFILLED_CHECKLIST_H
-#define SQUID_ACLFILLED_CHECKLIST_H
+#ifndef SQUID_SRC_ACL_FILLEDCHECKLIST_H
+#define SQUID_SRC_ACL_FILLEDCHECKLIST_H
 
 #include "AccessLogEntry.h"
+#include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "error/forward.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -22,8 +25,6 @@
 
 class CachePeer;
 class ConnStateData;
-class HttpRequest;
-class HttpReply;
 
 /** \ingroup ACLAPI
     ACLChecklist filled with specific data, representing Squid and transaction
@@ -35,13 +36,16 @@ class ACLFilledChecklist: public ACLChecklist
 
 public:
     ACLFilledChecklist();
-    ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident = nullptr);
+    ACLFilledChecklist(const acl_access *, HttpRequest *);
     ~ACLFilledChecklist() override;
 
     /// configure client request-related fields for the first time
     void setRequest(HttpRequest *);
-    /// configure rfc931 user identity for the first time
-    void setIdent(const char *userIdentity);
+
+    /// Remembers the given ALE (if it is not nil) or does nothing (otherwise).
+    /// When (and only when) remembering ALE, populates other still-unset fields
+    /// with ALE-derived information, so that the caller does not have to.
+    void updateAle(const AccessLogEntry::Pointer &);
 
 public:
     /// The client connection manager
@@ -55,7 +59,13 @@ public:
     /// set the client side FD
     void fd(int aDescriptor);
 
-    //int authenticated();
+    /// response added by updateReply()
+    /// \prec hasReply()
+    const HttpReply &reply() const { return *reply_; }
+
+    /// Remembers the given response (if it is not nil) or does nothing
+    /// (otherwise).
+    void updateReply(const HttpReply::Pointer &);
 
     bool destinationDomainChecked() const;
     void markDestinationDomainChecked();
@@ -64,7 +74,7 @@ public:
 
     // ACLChecklist API
     bool hasRequest() const override { return request != nullptr; }
-    bool hasReply() const override { return reply != nullptr; }
+    bool hasReply() const override { return reply_ != nullptr; }
     bool hasAle() const override { return al != nullptr; }
     void syncAle(HttpRequest *adaptedRequest, const char *logUri) const override;
     void verifyAle() const override;
@@ -76,10 +86,8 @@ public:
     SBuf dst_peer_name;
     char *dst_rdns;
 
-    HttpRequest *request;
-    HttpReply *reply;
+    HttpRequest::Pointer request;
 
-    char rfc931[USER_IDENT_SZ];
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
 #endif
@@ -87,11 +95,12 @@ public:
     char *snmp_community;
 #endif
 
+    // TODO: RefCount errors; do not ignore them because their "owner" is gone!
     /// TLS server [certificate validation] errors, in undefined order.
     /// The errors are accumulated as Squid goes through validation steps
     /// and server certificates. They are cleared on connection retries.
     /// For sslproxy_cert_error checks, contains just the current/last error.
-    const Security::CertErrors *sslErrors;
+    CbcPointer<Security::CertErrors> sslErrors;
 
     /// Peer certificate being checked by ssl_verify_cb() and by
     /// Security::PeerConnector class. In other contexts, the peer
@@ -105,8 +114,11 @@ public:
     err_type requestErrorType;
 
 private:
-    ConnStateData * conn_;          /**< hack for ident and NTLM */
+    ConnStateData *conn_; ///< hack: client-to-Squid connection manager (if any)
     int fd_;                        /**< may be available when conn_ is not */
+
+    HttpReply::Pointer reply_; ///< response added by updateReply() or nil
+
     bool destinationDomainChecked_;
     bool sourceDomainChecked_;
     /// not implemented; will cause link failures if used
@@ -124,5 +136,5 @@ ACLFilledChecklist *Filled(ACLChecklist *checklist)
     return dynamic_cast<ACLFilledChecklist*>(checklist);
 }
 
-#endif /* SQUID_ACLFILLED_CHECKLIST_H */
+#endif /* SQUID_SRC_ACL_FILLEDCHECKLIST_H */
 

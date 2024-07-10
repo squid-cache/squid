@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLHIERCODEDATA_H
-#define SQUID_ACLHIERCODEDATA_H
+#ifndef SQUID_SRC_ACL_HIERCODEDATA_H
+#define SQUID_SRC_ACL_HIERCODEDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -29,5 +29,5 @@ public:
     bool values[HIER_MAX];
 };
 
-#endif /* SQUID_ACLHIERCODEDATA_H */
+#endif /* SQUID_SRC_ACL_HIERCODEDATA_H */
 

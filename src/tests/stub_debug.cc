@@ -40,6 +40,16 @@ _db_rotate_log(void)
 {}
 
 void
+Debug::FormatStream(std::ostream &buf)
+{
+    const static std::ostringstream cleanStream;
+    buf.flags(cleanStream.flags() | std::ios::fixed);
+    buf.width(cleanStream.width());
+    buf.precision(2);
+    buf.fill(' ');
+}
+
+void
 Debug::LogMessage(const Context &context)
 {
     if (context.level > DBG_IMPORTANT)
@@ -51,6 +61,14 @@ Debug::LogMessage(const Context &context)
     fprintf(stderr, "%s| %s\n",
             "stub time", // debugLogTime(current_time),
             context.buf.str().c_str());
+}
+
+std::ostream &
+Debug::Extra(std::ostream &os)
+{
+    FormatStream(os);
+    os << "\n    ";
+    return os;
 }
 
 bool Debug::StderrEnabled() STUB_RETVAL(false)
@@ -69,8 +87,7 @@ Debug::Context::Context(const int aSection, const int aLevel):
     upper(Current),
     forceAlert(false)
 {
-    buf.setf(std::ios::fixed);
-    buf.precision(2);
+    FormatStream(buf);
 }
 
 std::ostringstream &

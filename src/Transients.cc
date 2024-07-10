@@ -25,7 +25,12 @@
 #include <limits>
 
 /// shared memory segment path to use for Transients map
-static const SBuf MapLabel("transients_map");
+static const auto &
+MapLabel()
+{
+    static const auto label = new SBuf("transients_map");
+    return *label;
+}
 
 Transients::Transients(): map(nullptr), locals(nullptr)
 {
@@ -45,7 +50,7 @@ Transients::init()
     assert(entryLimit > 0);
 
     Must(!map);
-    map = new TransientsMap(MapLabel);
+    map = new TransientsMap(MapLabel());
     map->cleaner = this;
     map->disableHitValidation(); // Transients lacks slices to validate
 
@@ -166,7 +171,7 @@ Transients::get(const cache_key *key)
 
     StoreEntry *e = new StoreEntry();
     e->createMemObject();
-    anchorEntry(*e, index, *anchor);
+    e->mem_obj->xitTable.open(index, Store::ioReading);
 
     // keep read lock to receive updates from others
     return e;
@@ -179,12 +184,12 @@ Transients::findCollapsed(const sfileno index)
         return nullptr;
 
     if (StoreEntry *oldE = locals->at(index)) {
-        debugs(20, 5, "found " << *oldE << " at " << index << " in " << MapLabel);
+        debugs(20, 5, "found " << *oldE << " at " << index << " in " << MapLabel());
         assert(oldE->mem_obj && oldE->mem_obj->xitTable.index == index);
         return oldE;
     }
 
-    debugs(20, 3, "no entry at " << index << " in " << MapLabel);
+    debugs(20, 3, "no entry at " << index << " in " << MapLabel());
     return nullptr;
 }
 
@@ -234,11 +239,9 @@ Transients::addWriterEntry(StoreEntry &e, const cache_key *key)
 
     // set ASAP in hope to unlock the slot if something throws
     // and to provide index to such methods as hasWriter()
-    auto &xitTable = e.mem_obj->xitTable;
-    xitTable.index = index;
-    xitTable.io = Store::ioWriting;
+    e.mem_obj->xitTable.open(index, Store::ioWriting);
 
-    anchor->set(e, key);
+    anchor->setKey(key);
     // allow reading and receive remote DELETE events, but do not switch to
     // the reading lock because transientReaders() callers want true readers
     map->startAppending(index);
@@ -250,25 +253,12 @@ void
 Transients::addReaderEntry(StoreEntry &e, const cache_key *key)
 {
     sfileno index = 0;
-    const auto anchor = map->openOrCreateForReading(key, index, e);
+    const auto anchor = map->openOrCreateForReading(key, index);
     if (!anchor)
         throw TextException("reader collision", Here());
 
-    anchorEntry(e, index, *anchor);
+    e.mem_obj->xitTable.open(index, Store::ioReading);
     // keep the entry locked (for reading) to receive remote DELETE events
-}
-
-/// fills (recently created) StoreEntry with information currently in Transients
-void
-Transients::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor)
-{
-    // set ASAP in hope to unlock the slot if something throws
-    // and to provide index to such methods as hasWriter()
-    auto &xitTable = e.mem_obj->xitTable;
-    xitTable.index = index;
-    xitTable.io = Store::ioReading;
-
-    anchor.exportInto(e);
 }
 
 bool
@@ -362,8 +352,7 @@ Transients::disconnect(StoreEntry &entry)
             map->closeForReadingAndFreeIdle(xitTable.index);
         }
         locals->at(xitTable.index) = nullptr;
-        xitTable.index = -1;
-        xitTable.io = Store::ioDone;
+        xitTable.close();
     }
 }
 
@@ -409,7 +398,7 @@ private:
     TransientsMap::Owner *mapOwner = nullptr;
 };
 
-RunnerRegistrationEntry(TransientsRr);
+DefineRunnerRegistrator(TransientsRr);
 
 void
 TransientsRr::useConfig()
@@ -426,7 +415,7 @@ TransientsRr::create()
         return; // no SMP configured or a misconfiguration
 
     Must(!mapOwner);
-    mapOwner = TransientsMap::Init(MapLabel, entryLimit);
+    mapOwner = TransientsMap::Init(MapLabel(), entryLimit);
 }
 
 TransientsRr::~TransientsRr()

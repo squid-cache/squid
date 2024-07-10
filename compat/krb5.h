@@ -46,4 +46,4 @@ extern "C" {
 #  endif
 #endif /* HAVE_KRB5_H */
 
-#endif /* _SQUID__COMPAT_KRB5_H */
+#endif /* SQUID_COMPAT_KRB5_H */

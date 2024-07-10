@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__SERVICE_GROUPS_H
-#define SQUID_ADAPTATION__SERVICE_GROUPS_H
+#ifndef SQUID_SRC_ADAPTATION_SERVICEGROUPS_H
+#define SQUID_SRC_ADAPTATION_SERVICEGROUPS_H
 
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
@@ -156,5 +156,5 @@ ServiceGroupPointer FindGroup(const ServiceGroup::Id &id);
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__SERVICE_GROUPS_H */
+#endif /* SQUID_SRC_ADAPTATION_SERVICEGROUPS_H */
 

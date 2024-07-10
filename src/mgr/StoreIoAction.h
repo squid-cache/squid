@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_STORE_IO_ACTION_H
-#define SQUID_MGR_STORE_IO_ACTION_H
+#ifndef SQUID_SRC_MGR_STOREIOACTION_H
+#define SQUID_SRC_MGR_STOREIOACTION_H
 
 #include "mgr/Action.h"
 
@@ -54,5 +54,5 @@ private:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_STORE_IO_ACTION_H */
+#endif /* SQUID_SRC_MGR_STOREIOACTION_H */
 

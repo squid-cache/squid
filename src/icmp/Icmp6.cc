@@ -197,7 +197,7 @@ Icmp6::Recv(void)
 {
     int n;
     struct addrinfo *from = nullptr;
-//    struct ip6_hdr *ip = NULL;
+//    struct ip6_hdr *ip = nullptr;
     static char *pkt = nullptr;
     struct icmp6_hdr *icmp6header = nullptr;
     icmpEchoData *echo = nullptr;

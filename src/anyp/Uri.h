@@ -34,20 +34,10 @@ class Uri
 public:
     Uri(): hostIsNumeric_(false) { *host_ = 0; }
     Uri(AnyP::UriScheme const &aScheme);
-    Uri(const Uri &other) {
-        this->operator =(other);
-    }
-    Uri &operator =(const Uri &o) {
-        scheme_ = o.scheme_;
-        userInfo_ = o.userInfo_;
-        memcpy(host_, o.host_, sizeof(host_));
-        hostIsNumeric_ = o.hostIsNumeric_;
-        hostAddr_ = o.hostAddr_;
-        port_ = o.port_;
-        path_ = o.path_;
-        touch();
-        return *this;
-    }
+    Uri(const Uri &) = default;
+    Uri(Uri &&) = default;
+    Uri &operator =(const Uri &) = default;
+    Uri &operator =(Uri &&) = default;
 
     void clear() {
         scheme_=AnyP::PROTO_NONE;
@@ -123,6 +113,9 @@ public:
     /// the provided set of expected characters.
     static SBuf Encode(const SBuf &, const CharacterSet &expected);
 
+    /// %-decode the given buffer
+    static SBuf Decode(const SBuf &);
+
     /**
      * The authority-form URI for currently stored values.
      *
@@ -146,6 +139,9 @@ public:
 
 private:
     void parseUrn(Parser::Tokenizer&);
+
+    SBuf parseHost(Parser::Tokenizer &) const;
+    int parsePort(Parser::Tokenizer &) const;
 
     /**
      \par

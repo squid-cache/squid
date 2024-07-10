@@ -9,6 +9,7 @@
 /* DEBUG: section 16    Cache Manager API */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "comm/Connection.h"
 #include "HttpReply.h"
 #include "ipc/Port.h"
@@ -44,10 +45,29 @@ Mgr::Action::atomic() const
     return command().profile->isAtomic;
 }
 
+Mgr::Format
+Mgr::Action::format() const
+{
+    return command().profile->format;
+}
+
 const char*
 Mgr::Action::name() const
 {
     return command().profile->name;
+}
+
+const char *
+Mgr::Action::contentType() const
+{
+    switch (format()) {
+    case Format::yaml:
+        return "application/yaml;charset=utf-8";
+    case Format::informal:
+        return "text/plain;charset=utf-8";
+    }
+    assert(!"unreachable code");
+    return "";
 }
 
 StoreEntry*
@@ -103,15 +123,11 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
     if (writeHttpHeader) {
         HttpReply *rep = new HttpReply;
         rep->setHeaders(Http::scOkay, nullptr, contentType(), -1, squid_curtime, squid_curtime);
-        // Allow cachemgr and other XHR scripts access to our version string
-        const ActionParams &params = command().params;
-        if (params.httpOrigin.size() > 0) {
-            rep->header.putExt("Access-Control-Allow-Origin", params.httpOrigin.termedBuf());
-#if HAVE_AUTH_MODULE_BASIC
-            rep->header.putExt("Access-Control-Allow-Credentials","true");
-#endif
-            rep->header.putExt("Access-Control-Expose-Headers","Server");
-        }
+
+        const auto &origin = command().params.httpOrigin;
+        const auto originOrNil = origin.size() ? origin.termedBuf() : nullptr;
+        CacheManager::PutCommonResponseHeaders(*rep, originOrNil);
+
         entry->replaceHttpReply(rep);
     }
 
@@ -123,3 +139,26 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
         entry->complete();
 }
 
+void
+Mgr::OpenKidSection(StoreEntry * const entry, const Format format)
+{
+    switch (format) {
+    case Format::yaml:
+        return storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
+    case Format::informal:
+        return storeAppendPrintf(entry, "by kid%d {\n", KidIdentifier);
+    }
+    // unreachable code
+}
+
+void
+Mgr::CloseKidSection(StoreEntry * const entry, const Format format)
+{
+    switch (format) {
+    case Format::yaml:
+        return storeAppendPrintf(entry, "...\n");
+    case Format::informal:
+        return storeAppendPrintf(entry, "} by kid%d\n\n", KidIdentifier);
+    }
+    // unreachable code
+}

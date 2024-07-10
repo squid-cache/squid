@@ -10,9 +10,11 @@
 #include "acl/AllOf.h"
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
+#include "acl/Gadgets.h"
 #include "cache_cf.h"
 #include "MemBuf.h"
 #include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 
 char const *
 Acl::AllOf::typeString() const
@@ -46,7 +48,7 @@ void
 Acl::AllOf::parse()
 {
     Acl::InnerNode *whole = nullptr;
-    ACL *oldNode = empty() ? nullptr : nodes.front();
+    Acl::Node *oldNode = empty() ? nullptr : nodes.front();
 
     // optimization: this logic reduces subtree hight (number of tree levels)
     if (Acl::OrNode *oldWhole = dynamic_cast<Acl::OrNode*>(oldNode)) {
@@ -55,15 +57,11 @@ Acl::AllOf::parse()
     } else if (oldNode) {
         // this acl saw a single line before; create a new OR inner node
 
-        MemBuf wholeCtx;
-        wholeCtx.init();
-        wholeCtx.appendf("(%s lines)", name);
-        wholeCtx.terminate();
-
         Acl::OrNode *newWhole = new Acl::OrNode;
-        newWhole->context(wholeCtx.content(), oldNode->cfgline);
+        newWhole->context(ToSBuf('(', name, " lines)"), oldNode->cfgline);
         newWhole->add(oldNode); // old (i.e. first) line
         nodes.front() = whole = newWhole;
+        aclRegister(newWhole);
     } else {
         // this is the first line for this acl; just use it as is
         whole = this;
@@ -72,13 +70,8 @@ Acl::AllOf::parse()
     assert(whole);
     const int lineId = whole->childrenCount() + 1;
 
-    MemBuf lineCtx;
-    lineCtx.init();
-    lineCtx.appendf("(%s line #%d)", name, lineId);
-    lineCtx.terminate();
-
     Acl::AndNode *line = new AndNode;
-    line->context(lineCtx.content(), config_input_line);
+    line->context(ToSBuf('(', name, " line #", lineId, ')'), config_input_line);
     line->lineParse();
 
     whole->add(line);

@@ -32,9 +32,6 @@ class TestACLMaxUserIP : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testParseLine);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testDefaults();
     void testParseLine();
@@ -56,11 +53,18 @@ TestACLMaxUserIP::testDefaults()
     CPPUNIT_ASSERT_EQUAL(false,anACL.valid());
 }
 
-void
-TestACLMaxUserIP::setUp()
+/// customizes our test setup
+class MyTestProgram: public TestProgram
 {
-    CPPUNIT_NS::TestFixture::setUp();
-    Acl::RegisterMaker("max_user_ip", [](Acl::TypeName name)->ACL* { return new ACLMaxUserIP(name); });
+public:
+    /* TestProgram API */
+    void startup() override;
+};
+
+void
+MyTestProgram::startup()
+{
+    Acl::RegisterMaker("max_user_ip", [](Acl::TypeName name)->Acl::Node* { return new ACLMaxUserIP(name); });
 }
 
 void
@@ -70,9 +74,9 @@ TestACLMaxUserIP::testParseLine()
     char * line = xstrdup("test max_user_ip -s 1");
     /* seed the parser */
     ConfigParser::SetCfgLine(line);
-    ACL *anACL = nullptr;
+    Acl::Node *anACL = nullptr;
     ConfigParser LegacyParser;
-    ACL::ParseAclLine(LegacyParser, &anACL);
+    Acl::Node::ParseAclLine(LegacyParser, &anACL);
     ACLMaxUserIP *maxUserIpACL = dynamic_cast<ACLMaxUserIP *>(anACL);
     CPPUNIT_ASSERT(maxUserIpACL);
     if (maxUserIpACL) {
@@ -84,6 +88,12 @@ TestACLMaxUserIP::testParseLine()
     }
     delete anACL;
     xfree(line);
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 
 #endif /* USE_AUTH */

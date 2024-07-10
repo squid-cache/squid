@@ -6,11 +6,13 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTREQUESTCONTEXT_H
-#define SQUID_CLIENTREQUESTCONTEXT_H
+#ifndef SQUID_SRC_CLIENTREQUESTCONTEXT_H
+#define SQUID_SRC_CLIENTREQUESTCONTEXT_H
 
+#include "acl/forward.h"
 #include "base/RefCount.h"
 #include "cbdata.h"
+#include "defines.h"
 #include "dns/forward.h"
 #include "helper/forward.h"
 #include "ipcache.h"
@@ -60,7 +62,6 @@ public:
 #endif
 
     ClientHttpRequest *http;
-    ACLChecklist *acl_checklist = nullptr; ///< need ptr back so we can unregister if needed
     int redirect_state = REDIRECT_NONE;
     int store_id_state = REDIRECT_NONE;
 
@@ -78,9 +79,14 @@ public:
 #if USE_OPENSSL
     bool sslBumpCheckDone = false;
 #endif
-    ErrorState *error = nullptr; ///< saved error page for centralized/delayed processing
+
     bool readNextRequest = false; ///< whether Squid should read after error handling
+    ErrorState *error = nullptr; ///< saved error page for centralized/delayed processing
+
+#if FOLLOW_X_FORWARDED_FOR
+    size_t currentXffHopNumber = 0; ///< number of X-Forwarded-For header values processed so far
+#endif
 };
 
-#endif /* SQUID_CLIENTREQUESTCONTEXT_H */
+#endif /* SQUID_SRC_CLIENTREQUESTCONTEXT_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CONFIGPARSER_H
-#define SQUID_CONFIGPARSER_H
+#ifndef SQUID_SRC_CONFIGPARSER_H
+#define SQUID_SRC_CONFIGPARSER_H
 
 #include "acl/forward.h"
 #include "base/forward.h"
@@ -232,7 +232,10 @@ protected:
     static enum ParsingStates {atParseKey, atParseValue} KvPairState_; ///< Parsing state while parsing kv-pair tokens
 };
 
-int parseConfigFile(const char *file_name);
+namespace Configuration {
+/// interprets (and partially applies) squid.conf or equivalent configuration
+void Parse();
+}
 
-#endif /* SQUID_CONFIGPARSER_H */
+#endif /* SQUID_SRC_CONFIGPARSER_H */
 

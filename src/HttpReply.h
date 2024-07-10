@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPREPLY_H
-#define SQUID_HTTPREPLY_H
+#ifndef SQUID_SRC_HTTPREPLY_H
+#define SQUID_SRC_HTTPREPLY_H
 
 #include "http/StatusLine.h"
 #include "HttpBody.h"
@@ -125,6 +125,17 @@ public:
     /// parses reply header using Parser
     bool parseHeader(Http1::Parser &hp);
 
+    /// Parses response status line and headers at the start of the given
+    /// NUL-terminated buffer of the given size. Respects reply_header_max_size.
+    /// Assures pstate becomes Http::Message::psParsed on (and only on) success.
+    /// \returns the number of bytes in a successfully parsed prefix (or zero)
+    /// \retval 0 implies that more data is needed to parse the response prefix
+    size_t parseTerminatedPrefix(const char *, size_t);
+
+    /// approximate size of a "status-line CRLF headers CRLF" sequence
+    /// \sa HttpRequest::prefixLen()
+    size_t prefixLen() const;
+
 private:
     /** initialize */
     void init();
@@ -157,5 +168,5 @@ protected:
     bool parseFirstLine(const char *start, const char *end) override;
 };
 
-#endif /* SQUID_HTTPREPLY_H */
+#endif /* SQUID_SRC_HTTPREPLY_H */
 

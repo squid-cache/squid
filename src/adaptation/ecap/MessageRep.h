@@ -8,8 +8,8 @@
 
 /* DEBUG: section 93    eCAP Interface */
 
-#ifndef SQUID__ECAP__MESSAGE_REP_H
-#define SQUID__ECAP__MESSAGE_REP_H
+#ifndef SQUID_SRC_ADAPTATION_ECAP_MESSAGEREP_H
+#define SQUID_SRC_ADAPTATION_ECAP_MESSAGEREP_H
 
 #include "adaptation/forward.h"
 #include "adaptation/Message.h"
@@ -18,9 +18,15 @@
 #include "http/forward.h"
 #include "HttpHeader.h"
 
-#include <libecap/common/message.h>
-#include <libecap/common/header.h>
+#if HAVE_LIBECAP_COMMON_BODY_H
 #include <libecap/common/body.h>
+#endif
+#if HAVE_LIBECAP_COMMON_HEADER_H
+#include <libecap/common/header.h>
+#endif
+#if HAVE_LIBECAP_COMMON_MESSAGE_H
+#include <libecap/common/message.h>
+#endif
 
 namespace Adaptation
 {
@@ -175,5 +181,5 @@ private:
 } // namespace Ecap
 } // namespace Adaptation
 
-#endif /* SQUID__E_CAP__MESSAGE_REP_H */
+#endif /* SQUID_SRC_ADAPTATION_ECAP_MESSAGEREP_H */
 

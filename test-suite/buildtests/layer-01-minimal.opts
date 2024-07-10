@@ -51,7 +51,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-wccp \
 	--disable-wccpv2 \
 	--disable-snmp \
-	--disable-cachemgr-hostname \
 	--disable-eui \
 	--disable-htcp \
 	--disable-ssl-crtd \
@@ -68,7 +67,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-linux-netfilter \
 	--disable-linux-tproxy \
 	--disable-follow-x-forwarded-for \
-	--disable-ident-lookups \
 	--disable-default-hostsfile \
 	--disable-auth \
 	--disable-basic-auth-helpers \
@@ -94,6 +92,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-aio \
 	--without-cap \
 	--without-dl \
+	--without-expat \
 	--without-gnugss \
 	--without-heimdal-krb5 \
 	--without-large-files \
@@ -106,8 +105,10 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-gnutls \
 	--without-openssl \
 	--without-po2html \
+	--without-psapi \
 	--without-systemd \
 	--without-tdb \
+	--without-xml2 \
 	"
 
 # Fix the distclean testing.

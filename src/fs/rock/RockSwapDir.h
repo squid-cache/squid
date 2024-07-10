@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_ROCK_SWAP_DIR_H
-#define SQUID_FS_ROCK_SWAP_DIR_H
+#ifndef SQUID_SRC_FS_ROCK_ROCKSWAPDIR_H
+#define SQUID_SRC_FS_ROCK_ROCKSWAPDIR_H
 
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
@@ -148,7 +148,7 @@ private:
     /* configurable options */
     DiskFile::Config fileConfig; ///< file-level configuration options
 
-    static const int64_t HeaderSize; ///< on-disk db header size
+    static const int64_t HeaderSize = 16*1024; ///< on-disk db header size
 };
 
 /// initializes shared memory segments used by Rock::SwapDir
@@ -170,5 +170,5 @@ private:
 
 } // namespace Rock
 
-#endif /* SQUID_FS_ROCK_SWAP_DIR_H */
+#endif /* SQUID_SRC_FS_ROCK_ROCKSWAPDIR_H */
 

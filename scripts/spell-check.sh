@@ -21,7 +21,7 @@
 
 set -e
 
-echo -n "Codespell version: "
+printf "Codespell version: "
 if ! codespell --version; then
     echo "This script requires codespell which was not found."
     exit 1

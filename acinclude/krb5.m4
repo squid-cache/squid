@@ -8,6 +8,51 @@
 dnl these checks must be performed in the same order as here defined,
 dnl and have mostly been lifted out of an inlined configure.ac.
 
+AC_DEFUN([SQUID_CHECK_SOLARIS_KRB5],[
+  # no pkg-config for solaris native Kerberos
+  AS_IF([test "$cross_compiling" = "no" -a "x$with_mit_krb5" != "xyes" -a "x$with_mit_krb5" != "xno"],[
+    AC_PATH_PROG(krb5_config,krb5-config,no,[$PATH:$with_mit_krb5/bin])
+  ])
+  AC_MSG_NOTICE([Use krb5-config to get CFLAGS and LIBS])
+  LIBMIT_KRB5_CFLAGS="-I/usr/include/kerberosv5 `$ac_krb5_config --cflags krb5 2>/dev/null`"
+  LIBMIT_KRB5_LIBS="`$ac_krb5_config --libs krb5 2>/dev/null`"
+  # Solaris 10 Update 11 patches the krb5-config tool to produce stderr messages on stdout.
+  SOLARIS_BROKEN_KRB5CONFIG_GSSAPI="`$ac_krb5_config --libs gssapi 2>/dev/null | grep "krb5-config"`"
+  AS_IF([test "x$SOLARIS_BROKEN_KRB5CONFIG_GSSAPI" = "x"],[
+    LIBMIT_KRB5_CFLAGS="$LIBMIT_KRB5_CFLAGS `$ac_krb5_config --cflags gssapi 2>/dev/null`"
+    LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS `$ac_krb5_config --libs gssapi 2>/dev/null`"
+  ])
+  CPPFLAGS="$LIBMIT_KRB5_CFLAGS $CPPFLAGS"
+  LIBS="$LIBMIT_KRB5_LIBS $LIBS"
+  missing_required=no
+  AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
+  AC_CHECK_LIB(krb5, [main], [LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS -lkrb5"],[
+    AC_MSG_WARN([library 'krb5' is required for Solaris Kerberos])
+    missing_required=yes
+  ])
+  AC_CHECK_LIB(gss, [main], [LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS -lgss"],[
+    AC_MSG_WARN([library 'gss' is required for Solaris Kerberos])
+    missing_required=yes
+  ])
+  AS_IF([test "x$missing_required" = "xyes"],[LIBMIT_KRB5_LIBS=""],[
+    LIBS="$LIBMIT_KRB5_LIBS $LIBS"
+    AC_DEFINE(USE_SOLARIS_KRB5,1,[Solaris Kerberos support is available])
+    SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
+    AS_IF([test "x$squid_cv_broken_krb5_h" = "xyes"],[
+      AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if Solaris krb5.h is broken for C++])
+      AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
+      AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
+      AC_MSG_WARN([If you need Kerberos support you will have to patch])
+      AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
+    ])
+    AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
+    AC_CHECK_HEADERS(gssapi/gssapi_ext.h gssapi/gssapi_generic.h)
+    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
+    AC_CHECK_HEADERS(profile.h)
+    SQUID_CHECK_KRB5_FUNCS
+  ])
+])
+
 dnl checks for a broken solaris header file, and sets squid_cv_broken_krb5_h
 dnl to yes if that's the case
 AC_DEFUN([SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H], [
@@ -33,34 +78,31 @@ AC_DEFUN([SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H], [
   AC_CACHE_CHECK([for broken Heimdal krb5.h],squid_cv_broken_heimdal_krb5_h, [
     SQUID_STATE_SAVE(squid_krb5_heimdal_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #include <krb5.h>
 int
 main(void)
 {
         krb5_context context;
-
         krb5_init_context(&context);
-
         return 0;
 }
 ]])], [ squid_cv_broken_heimdal_krb5_h=no ], [
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #define HAVE_BROKEN_HEIMDAL_KRB5_H  1
 #include "compat/krb5.h"
 int
 main(void)
 {
         krb5_context context;
-
         krb5_init_context(&context);
-
         return 0;
 }
 ]])], [ squid_cv_broken_heimdal_krb5_h=yes ], [ squid_cv_broken_heimdal_krb5_h=no ])
     ])
     SQUID_STATE_ROLLBACK(squid_krb5_heimdal_test)
   ])
+  SQUID_DEFINE_BOOL(HAVE_BROKEN_HEIMDAL_KRB5_H,$squid_cv_broken_heimdal_krb5_h,[Heimdal krb5.h is broken for C++])
 ]) dnl SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
 
 dnl check the max skew in the krb5 context, and sets squid_cv_max_skew_context
@@ -130,18 +172,10 @@ int main(int argc, char *argv[])
 dnl checks that gssapi is ok, and sets squid_cv_working_gssapi accordingly
 AC_DEFUN([SQUID_CHECK_WORKING_GSSAPI], [
   AC_CACHE_CHECK([for working gssapi], squid_cv_working_gssapi, [
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#if USE_HEIMDAL_KRB5
-#if HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif HAVE_GSSAPI_H
-#include <gssapi.h>
-#endif
-#elif USE_GNUGSS
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_GSS_H
 #include <gss.h>
 #endif
-#else
 #if USE_APPLE_KRB5
 #define GSSKRB_APPLE_DEPRECATED(x)
 #endif
@@ -155,7 +189,6 @@ AC_DEFUN([SQUID_CHECK_WORKING_GSSAPI], [
 #endif
 #if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
-#endif
 #endif
 int
 main(void)
@@ -177,17 +210,9 @@ dnl check for a working spnego, and set squid_cv_have_spnego
 AC_DEFUN([SQUID_CHECK_SPNEGO_SUPPORT], [
   AC_CACHE_CHECK([for spnego support], squid_cv_have_spnego, [
     AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#if USE_HEIMDAL_KRB5
-#if HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif HAVE_GSSAPI_H
-#include <gssapi.h>
-#endif
-#elif USE_GNUGSS
 #if HAVE_GSS_H
 #include <gss.h>
 #endif
-#else
 #if USE_APPLE_KRB5
 #define GSSKRB_APPLE_DEPRECATED(x)
 #endif
@@ -201,7 +226,6 @@ AC_DEFUN([SQUID_CHECK_SPNEGO_SUPPORT], [
 #endif
 #if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
-#endif
 #endif
 #include <string.h>
 int main(int argc, char *argv[]) {
@@ -231,7 +255,7 @@ AC_DEFUN([SQUID_CHECK_WORKING_KRB5],[
   AC_CACHE_CHECK([for working krb5], squid_cv_working_krb5, [
     SQUID_STATE_SAVE(squid_krb5_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #include "compat/krb5.h"
 int
 main(void)
@@ -260,7 +284,7 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
     AC_EGREP_HEADER(error_message,et/com_err.h,ac_com_error_message=yes)
   ])
 
-  AS_IF([test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes"],[
+  AS_IF([test `echo "$LIBMIT_KRB5_LIBS $LIBHEIMDAL_KRB5_LIBS" | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes"],[
     AC_CHECK_LIB(com_err,error_message,
       AC_DEFINE(HAVE_ERROR_MESSAGE,1,[Define to 1 if you have error_message]),)
   ],[test  "x$ac_com_error_message" = "xyes"],[

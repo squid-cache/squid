@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_ASN1_H
-#define SQUID_SNMP_ASN1_H
+#ifndef SQUID_INCLUDE_ASN1_H
+#define SQUID_INCLUDE_ASN1_H
 
 /*
  * Definitions for Abstract Syntax Notation One, ASN.1
@@ -100,5 +100,5 @@ u_char *asn_build_exception(u_char *, int *, u_char);
 
 #endif
 
-#endif  /* SQUID_SNMP_ASN1_H */
+#endif /* SQUID_INCLUDE_ASN1_H */
 

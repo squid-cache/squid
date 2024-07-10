@@ -8,8 +8,8 @@
 
 /* DEBUG: section 79    Disk IO Routines */
 
-#ifndef SQUID_DISKTHREADSDISKFILE_H
-#define SQUID_DISKTHREADSDISKFILE_H
+#ifndef SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADSDISKFILE_H
+#define SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADSDISKFILE_H
 
 #include "cbdata.h"
 #include "DiskIO/DiskFile.h"
@@ -60,7 +60,7 @@ private:
     RefCount<IORequestor> ioRequestor;
     void doClose();
 
-    void readDone(int fd, const char *buf, int len, int errflag, RefCount<ReadRequest> request);
+    void readDone(int fd, const char *buf, int len, int errflag, const RefCount<ReadRequest> &request);
     void writeDone(int fd, int errflag, size_t len, RefCount<WriteRequest> request);
 };
 
@@ -82,5 +82,5 @@ template <class RT>
 IoResult<RT>
 IOResult(RefCount<RT> aRequest, RefCount<DiskThreadsDiskFile> aFile) { return IoResult<RT>(aFile, aRequest);}
 
-#endif /* SQUID_DISKTHREADSDISKFILE_H */
+#endif /* SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADSDISKFILE_H */
 

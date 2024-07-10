@@ -72,7 +72,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-wccp \
 	--enable-wccpv2 \
 	--enable-snmp \
-	--enable-cachemgr-hostname \
 	--enable-eui \
 	--enable-htcp \
 	--enable-forw-via-db \
@@ -82,7 +81,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-http-violations \
 	--enable-ipfw-transparent \
 	--enable-follow-x-forwarded-for \
-	--enable-ident-lookups \
 	--enable-default-hostsfile=/etc/hosts \
 	--enable-auth \
 	--enable-basic-auth-helpers \

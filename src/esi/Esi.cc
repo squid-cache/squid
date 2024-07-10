@@ -141,10 +141,10 @@ public:
     ESIElement::Pointer except;
 
     struct {
-        int attemptok:1; /* the attempt branch process correctly */
-        int exceptok:1; /* likewise */
-        int attemptfailed:1; /* The attempt branch failed */
-        int exceptfailed:1; /* the except branch failed */
+        unsigned int attemptok:1; /* the attempt branch process correctly */
+        unsigned int exceptok:1; /* likewise */
+        unsigned int attemptfailed:1; /* The attempt branch failed */
+        unsigned int exceptfailed:1; /* the except branch failed */
     } flags;
     void finish() override;
 
@@ -163,7 +163,7 @@ class esiChoose : public ESIElement
     MEMPROXY_CLASS(esiChoose);
 
 public:
-    esiChoose(esiTreeParentPtr);
+    esiChoose(const esiTreeParentPtr &);
     ~esiChoose() override;
 
     void render(ESISegment::Pointer) override;
@@ -1889,7 +1889,7 @@ esiChoose::~esiChoose()
     FinishAllElements(elements); // finish if not already done
 }
 
-esiChoose::esiChoose(esiTreeParentPtr aParent) :
+esiChoose::esiChoose(const esiTreeParentPtr & aParent) :
     elements(),
     chosenelement(-1),
     parent(aParent)
@@ -2185,8 +2185,7 @@ esiWhen::~esiWhen()
 {
     safe_free (unevaluatedExpression);
 
-    if (varState)
-        cbdataReferenceDone (varState);
+    cbdataReferenceDone(varState);
 }
 
 void

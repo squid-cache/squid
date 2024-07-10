@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPHDRCC_H
-#define SQUID_HTTPHDRCC_H
+#ifndef SQUID_SRC_HTTPHDRCC_H
+#define SQUID_SRC_HTTPHDRCC_H
 
 #include "defines.h"
 #include "dlink.h"
@@ -210,11 +210,10 @@ public:
 class StatHist;
 class StoreEntry;
 
-void httpHdrCcInitModule(void);
 void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
 void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
 std::ostream & operator<< (std::ostream &, HttpHdrCcType);
 
-#endif /* SQUID_HTTPHDRCC_H */
+#endif /* SQUID_SRC_HTTPHDRCC_H */
 

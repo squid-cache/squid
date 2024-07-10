@@ -33,6 +33,8 @@
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
+
+#include <optional>
 #endif
 
 Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, const AsyncCallback<EncryptorAnswer> &aCallback, const AccessLogEntryPointer &alp, const time_t timeout):
@@ -115,7 +117,7 @@ Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
     err->detailError(d);
 
     if (serverConn) {
-        countFailingConnection(err);
+        countFailingConnection();
         serverConn->noteClosure();
         serverConn = nullptr;
     }
@@ -167,7 +169,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
         // TODO: Remove ACLFilledChecklist::sslErrors and other pre-computed
         // state in favor of the ACLs accessing current/fresh info directly.
         if (acl_access *acl = ::Config.ssl_client.cert_error) {
-            ACLFilledChecklist *check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
+            const auto check = new ACLFilledChecklist(acl, request.getRaw());
             fillChecklist(*check);
             SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check);
         }
@@ -384,11 +386,11 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
 {
     Must(Comm::IsConnOpen(serverConnection()));
 
-    ACLFilledChecklist *check = nullptr;
     Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
 
+    std::optional<ACLFilledChecklist> check;
     if (acl_access *acl = ::Config.ssl_client.cert_error) {
-        check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
+        check.emplace(acl, request.getRaw());
         fillChecklist(*check);
     }
 
@@ -402,9 +404,11 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
         if (!errDetails) {
             bool allowed = false;
             if (check) {
-                check->sslErrors = new Security::CertErrors(Security::CertError(i->error_no, i->cert, i->error_depth));
+                const auto sslErrors = std::make_unique<Security::CertErrors>(Security::CertError(i->error_no, i->cert, i->error_depth));
+                check->sslErrors = sslErrors.get();
                 if (check->fastCheck().allowed())
                     allowed = true;
+                check->sslErrors.clear();
             }
             // else the Config.ssl_client.cert_error access list is not defined
             // and the first error will cause the error page
@@ -418,10 +422,6 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
                 const char *aReason = i->error_reason.empty() ? nullptr : i->error_reason.c_str();
                 errDetails = new ErrorDetail(i->error_no, peerCert, brokenCert, aReason);
             }
-            if (check) {
-                delete check->sslErrors;
-                check->sslErrors = nullptr;
-            }
         }
 
         if (!errs)
@@ -429,8 +429,6 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
         else
             errs->push_back_unique(Security::CertError(i->error_no, i->cert, i->error_depth));
     }
-    if (check)
-        delete check;
 
     return errs;
 }
@@ -509,7 +507,7 @@ Security::PeerConnector::bail(ErrorState *error)
     answer().error = error;
 
     if (const auto failingConnection = serverConn) {
-        countFailingConnection(error);
+        countFailingConnection();
         disconnect();
         failingConnection->close();
     }
@@ -527,10 +525,10 @@ Security::PeerConnector::sendSuccess()
 }
 
 void
-Security::PeerConnector::countFailingConnection(const ErrorState * const error)
+Security::PeerConnector::countFailingConnection()
 {
     assert(serverConn);
-    NoteOutgoingConnectionFailure(serverConn->getPeer(), error ? error->httpStatus : Http::scNone);
+    NoteOutgoingConnectionFailure(serverConn->getPeer());
     // TODO: Calling PconnPool::noteUses() should not be our responsibility.
     if (noteFwdPconnUse && serverConn->isOpen())
         fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);

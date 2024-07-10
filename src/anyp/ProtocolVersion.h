@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ANYP_PROTOCOLVERSION_H
-#define SQUID_ANYP_PROTOCOLVERSION_H
+#ifndef SQUID_SRC_ANYP_PROTOCOLVERSION_H
+#define SQUID_SRC_ANYP_PROTOCOLVERSION_H
 
 #include "anyp/ProtocolType.h"
 
@@ -99,5 +99,5 @@ operator << (std::ostream &os, const ProtocolVersion &v)
 
 } // namespace AnyP
 
-#endif /* SQUID_ANYP_PROTOCOLVERSION_H */
+#endif /* SQUID_SRC_ANYP_PROTOCOLVERSION_H */
 

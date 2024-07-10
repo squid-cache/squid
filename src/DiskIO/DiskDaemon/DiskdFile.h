@@ -8,8 +8,8 @@
 
 /* DEBUG: section 79    Squid-side DISKD I/O functions. */
 
-#ifndef __STORE_DISKDFILE_H__
-#define __STORE_DISKDFILE_H__
+#ifndef SQUID_SRC_DISKIO_DISKDAEMON_DISKDFILE_H
+#define SQUID_SRC_DISKIO_DISKDAEMON_DISKDFILE_H
 
 #include "cbdata.h"
 #include "DiskIO/DiskFile.h"
@@ -61,5 +61,5 @@ private:
     size_t inProgressIOs;
 };
 
-#endif
+#endif /* SQUID_SRC_DISKIO_DISKDAEMON_DISKDFILE_H */
 

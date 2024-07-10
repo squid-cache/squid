@@ -11,15 +11,16 @@
 
 #include "clientStreamForward.h"
 #include "comm/forward.h"
+#include "debug/Stream.h"
+#include "error/Error.h"
 #include "http/forward.h"
-#include "LogTags.h"
+#include "log/forward.h"
 #include "mem/forward.h"
+#include "servers/forward.h"
 #include "StoreIOBuffer.h"
 #if USE_DELAY_POOLS
 #include "MessageBucket.h"
 #endif
-
-class ClientHttpRequest;
 
 namespace Http
 {

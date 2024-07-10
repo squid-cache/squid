@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_FORMAT_FORMAT_H
-#define _SQUID_FORMAT_FORMAT_H
+#ifndef SQUID_SRC_FORMAT_FORMAT_H
+#define SQUID_SRC_FORMAT_FORMAT_H
 
 #include "base/RefCount.h"
 #include "ConfigParser.h"
@@ -69,5 +69,5 @@ size_t AssembleOne(const char *start, MemBuf &buf, const AccessLogEntryPointer &
 
 } // namespace Format
 
-#endif /* _SQUID_FORMAT_FORMAT_H */
+#endif /* SQUID_SRC_FORMAT_FORMAT_H */
 

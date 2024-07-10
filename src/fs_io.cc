@@ -89,7 +89,7 @@ file_close(int fd)
          * open files, so we won't allow delayed close.
          */
         while (!diskWriteIsComplete(fd))
-            diskHandleWrite(fd, NULL);
+            diskHandleWrite(fd, nullptr);
 #else
         F->flags.close_request = true;
         debugs(6, 2, "file_close: FD " << fd << ", delaying close");
@@ -217,7 +217,7 @@ diskHandleWrite(int fd, void *)
 
     ++ statCounter.syscalls.disk.writes;
 
-    fd_bytes(fd, len, FD_WRITE);
+    fd_bytes(fd, len, IoDirection::Write);
 
     if (len < 0) {
         if (!ignoreErrno(xerrno)) {
@@ -422,7 +422,7 @@ diskHandleRead(int fd, void *data)
 
     ++ statCounter.syscalls.disk.reads;
 
-    fd_bytes(fd, len, FD_READ);
+    fd_bytes(fd, len, IoDirection::Read);
 
     if (len < 0) {
         if (ignoreErrno(xerrno)) {

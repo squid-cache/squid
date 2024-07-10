@@ -6,18 +6,25 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSSL_ERROR_H
-#define SQUID_ACLSSL_ERROR_H
+#ifndef SQUID_SRC_ACL_SSLERROR_H
+#define SQUID_SRC_ACL_SSLERROR_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 #include "security/forward.h"
 
-class ACLSslErrorStrategy : public ACLStrategy<const Security::CertErrors *>
+namespace Acl
 {
 
+/// an "ssl_error" ACL
+class CertificateErrorCheck: public ParameterizedNode< ACLData<const Security::CertErrors *> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
 };
 
-#endif /* SQUID_ACLSSL_ERROR_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_SSLERROR_H */
 

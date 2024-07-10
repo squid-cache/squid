@@ -143,17 +143,14 @@ TODO: decide what to do for comm_poll() since its either obsolete or uses other 
 \section CacheManager Cache Manager
 \par
 	This provides access to certain information needed by the
-	cache administrator.  A companion program, cachemgr.cgi
-	can be used to make this information available via a Web
-	browser.  Cache manager requests to Squid are made with a
-	special URL of the form
+	cache administrator. Cache manager requests to Squid are
+	made with a special URL of the form
 \code
-	cache_object://hostname/operation
+	http://hostname:3128/squid-internal-mgr/menu
 \endcode
 	The cache manager provides essentially "read-only" access
 	to information.  It does not provide a method for configuring
 	Squid while it is running.
-TODO: get cachemgr.cgi documenting
 
 \section NetworkMeasurementDB Network Measurement Database
 \par
@@ -291,14 +288,6 @@ TODO: get debugs() documenting as if it was a function.
 	a different version number and a slightly different message
 	format.
 TODO: get RFCs linked from ietf
-
-\section IdentLookups Ident Lookups
-\par
-	These routines support RFC 931 (http://www.ietf.org/rfc/rfc931.txt)
-        "Ident" lookups.   An ident
-	server running on a host will report the user name associated
-	with a connected TCP socket.  Some sites use this facility for
-	access control and logging purposes.
 
 \section MemoryManagement Memory Management
 \par

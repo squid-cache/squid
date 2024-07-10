@@ -260,6 +260,7 @@ private:
     /// resumes operations after the (possibly failed) HTTP CONNECT exchange
     void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
 
+    void finishWritingAndDelete(Connection &);
     void deleteThis();
 
     void cancelStep(const char *reason);
@@ -309,7 +310,9 @@ TunnelStateData::serverClosed()
 {
     server.noteClosure();
 
-    retryOrBail(__FUNCTION__);
+    request->hier.stopPeerClock(false);
+
+    finishWritingAndDelete(client);
 }
 
 /// TunnelStateData::clientClosed() wrapper
@@ -324,12 +327,48 @@ void
 TunnelStateData::clientClosed()
 {
     client.noteClosure();
+    finishWritingAndDelete(server);
+}
 
+/// Gracefully handles non-retriable connection closure. If necessary, either
+/// starts closing the given connection or waits for its pending write to
+/// finish. Otherwise, immediately destroys the tunnel object.
+/// \prec The other Connection is not open.
+void
+TunnelStateData::finishWritingAndDelete(Connection &remainingConnection)
+{
     if (noConnections())
         return deleteThis();
 
-    if (!server.writer)
-        server.conn->close();
+    // XXX: The code below should precede the noConnections() check above. When
+    // there is no writer, we should trigger an immediate noConnections()
+    // outcome instead of waiting for an asynchronous call to our own closure
+    // callback (that will call this method again). We should not move this code
+    // until a noConnections() outcome guarantees a nil writer because such a
+    // move will unnecessary delay deleteThis().
+
+    if (remainingConnection.writer) {
+        debugs(26, 5, "waiting to finish writing to " << remainingConnection.conn);
+        // the write completion callback must close its remainingConnection
+        // after noticing that the other connection is gone
+        return;
+    }
+
+    // XXX: Stop abusing connection closure callback for terminating tunneling
+    // in cases like this, where our code knows that tunneling must end. The
+    // closure callback should be dedicated to handling rare connection closures
+    // originated _outside_ of TunnelStateData (e.g., during shutdown). In all
+    // other cases, our own close()-calling code must detail the
+    // closure-triggering error (if any) _and_ clear all callbacks: Our code
+    // does not need to be (asynchronously) notified of the closure that it
+    // itself has initiated! Until that (significant) refactoring,
+    // serverClosed() and clientClosed() callbacks will continue to mishandle
+    // those rare closures as regular ones, and access.log records will continue
+    // to lack some tunneling error indicators/details.
+    //
+    // This asynchronous close() leads to another finishWritingAndDelete() call
+    // but with true noConnections() that finally triggers deleteThis().
+    remainingConnection.conn->close();
 }
 
 /// destroys the tunnel (after performing potentially-throwing cleanup)
@@ -369,6 +408,8 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     status_ptr = &clientRequest->al->http.code;
     al = clientRequest->al;
     http = clientRequest;
+
+    al->cache.code.update(LOG_TCP_TUNNEL);
 
     client.initConnection(clientRequest->getConn()->clientConnection, tunnelClientClosed, "tunnelClientClosed", this);
 
@@ -450,14 +491,7 @@ TunnelStateData::retryOrBail(const char *context)
         return sendError(savedError, bailDescription ? bailDescription : context);
     *status_ptr = savedError->httpStatus;
 
-    if (noConnections())
-        return deleteThis();
-
-    // This is a "Comm::IsConnOpen(client.conn) but !canSendError" case.
-    // Closing the connection (after finishing writing) is the best we can do.
-    if (!client.writer)
-        client.conn->close();
-    // else writeClientDone() must notice a closed server and close the client
+    finishWritingAndDelete(client);
 }
 
 int
@@ -927,7 +961,6 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
     commSetConnTimeout(tunnelState->server.conn, Config.Timeout.read, timeoutCall);
 
     *tunnelState->status_ptr = Http::scOkay;
-    tunnelState->al->cache.code.update(LOG_TCP_TUNNEL);
     if (cbdataReferenceValid(tunnelState)) {
 
         // Shovel any payload already pushed into reply buffer by the server response
@@ -979,8 +1012,6 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
     peerWait.finish();
     server.len = 0;
-
-    al->cache.code.update(LOG_TCP_TUNNEL);
 
     // XXX: al->http.code (i.e. *status_ptr) should not be (re)set
     // until we actually start responding to the client. Right here/now, we only
@@ -1157,13 +1188,14 @@ tunnelStart(ClientHttpRequest * http)
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          * default is to allow.
          */
-        ACLFilledChecklist ch(Config.accessList.miss, request, nullptr);
+        ACLFilledChecklist ch(Config.accessList.miss, request);
         ch.al = http->al;
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
         ch.syncAle(request, http->log_uri);
         if (ch.fastCheck().denied()) {
             debugs(26, 4, "MISS access forbidden.");
+            http->updateLoggingTags(LOG_TCP_TUNNEL);
             err = new ErrorState(ERR_FORWARDING_DENIED, Http::scForbidden, request, http->al);
             http->al->http.code = Http::scForbidden;
             errorSend(http->getConn()->clientConnection, err);
@@ -1332,7 +1364,15 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
     }
 
     // destinationsFound, but none of them worked, and we were waiting for more
-    assert(savedError);
+    debugs(17, 7, "no more destinations to try after " << n_tries << " failed attempts");
+    if (!savedError) {
+        // retryOrBail() must be preceded by saveError(), but in case we forgot:
+        const auto finalError = new ErrorState(ERR_CANNOT_FORWARD, Http::scBadGateway, request.getRaw(), al);
+        static const auto d = MakeNamedErrorDetail("RETRY_TO_NONE");
+        finalError->detailError(d);
+        saveError(finalError);
+    } // else use actual error from last forwarding attempt
+
     // XXX: Honor clientExpectsConnectResponse() before replying.
     sendError(savedError, "all found paths have failed");
 }
@@ -1423,21 +1463,11 @@ TunnelStateData::usePinned()
 {
     Must(request);
     const auto connManager = request->pinnedConnection();
+    Comm::ConnectionPointer serverConn = nullptr;
+
     try {
-        const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
+        serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
         debugs(26, 7, "pinned peer connection: " << serverConn);
-
-        updateAttempts(n_tries + 1);
-
-        // Set HttpRequest pinned related flags for consistency even if
-        // they are not really used by tunnel.cc code.
-        request->flags.pinned = true;
-        if (connManager->pinnedAuth())
-            request->flags.auth = true;
-
-        // the server may close the pinned connection before this request
-        const auto reused = true;
-        connectDone(serverConn, connManager->pinning.host, reused);
     } catch (ErrorState * const error) {
         syncHierNote(nullptr, connManager ? connManager->pinning.host : request->url.host());
         // XXX: Honor clientExpectsConnectResponse() before replying.
@@ -1446,6 +1476,19 @@ TunnelStateData::usePinned()
         return;
     }
 
+    updateAttempts(n_tries + 1);
+
+    // Set HttpRequest pinned related flags for consistency even if
+    // they are not really used by tunnel.cc code.
+    request->flags.pinned = true;
+
+    Assure(connManager);
+    if (connManager->pinnedAuth())
+        request->flags.auth = true;
+
+    // the server may close the pinned connection before this request
+    const auto reused = true;
+    connectDone(serverConn, connManager->pinning.host, reused);
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);

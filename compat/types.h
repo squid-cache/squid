@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_TYPES_H
-#define SQUID_TYPES_H
+#ifndef SQUID_COMPAT_TYPES_H
+#define SQUID_COMPAT_TYPES_H
 
 /*
  * Here are defined several known-width types, obtained via autoconf
@@ -125,21 +125,6 @@
 #endif
 #endif
 
-#ifndef PRIuSIZE
-// NP: configure checks for support of %zu and defines where possible
-#if SIZEOF_SIZE_T == 4 && _SQUID_MINGW_
-#define PRIuSIZE "I32u"
-#elif SIZEOF_SIZE_T == 4
-#define PRIuSIZE "u"
-#elif SIZEOF_SIZE_T == 8 && _SQUID_MINGW_
-#define PRIuSIZE "I64u"
-#elif SIZEOF_SIZE_T == 8
-#define PRIuSIZE "lu"
-#else
-#error size_t is not 32-bit or 64-bit
-#endif
-#endif /* PRIuSIZE */
-
 #ifndef HAVE_MODE_T
 typedef unsigned short mode_t;
 #endif
@@ -160,5 +145,5 @@ typedef long mtyp_t;
 #define NULL 0
 #endif
 
-#endif /* SQUID_TYPES_H */
+#endif /* SQUID_COMPAT_TYPES_H */
 

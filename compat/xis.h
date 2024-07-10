@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMPAT_XIS_H
-#define _SQUID_COMPAT_XIS_H
+#ifndef SQUID_COMPAT_XIS_H
+#define SQUID_COMPAT_XIS_H
 
 #if __cplusplus
 #include <cctype>
@@ -49,5 +49,5 @@
 #define xisgraph(x) isgraph((unsigned char)x)
 #endif
 
-#endif /* _SQUID_COMPAT_XIS_H */
+#endif /* SQUID_COMPAT_XIS_H */
 

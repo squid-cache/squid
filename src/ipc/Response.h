@@ -8,13 +8,13 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_RESPONSE_H
-#define SQUID_IPC_RESPONSE_H
+#ifndef SQUID_SRC_IPC_RESPONSE_H
+#define SQUID_SRC_IPC_RESPONSE_H
 
 #include "base/RefCount.h"
 #include "base/TypeTraits.h"
-#include "ipc/forward.h"
 #include "ipc/QuestionerId.h"
+#include "ipc/RequestId.h"
 
 namespace Ipc
 {
@@ -45,5 +45,5 @@ protected:
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_RESPONSE_H */
+#endif /* SQUID_SRC_IPC_RESPONSE_H */
 

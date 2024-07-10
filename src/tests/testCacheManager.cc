@@ -11,6 +11,7 @@
 #include "CacheManager.h"
 #include "compat/cppunit.h"
 #include "mgr/Action.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "unitTestMain.h"
 
@@ -27,9 +28,6 @@ class TestCacheManager : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testParseUrl);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testCreate();
     void testRegister();
@@ -42,12 +40,36 @@ CPPUNIT_TEST_SUITE_REGISTRATION( TestCacheManager );
 class CacheManagerInternals : public CacheManager
 {
 public:
-    void ParseUrl(const AnyP::Uri &u) { CacheManager::ParseUrl(u); }
+    /// checks CacheManager parsing of the given valid URL
+    void testValidUrl(const AnyP::Uri &);
+
+    /// checks CacheManager parsing of the given invalid URL
+    /// \param problem a bad part of the URL or its description
+    void testInvalidUrl(const AnyP::Uri &, const char *problem);
 };
 
-/* init memory pools */
+void
+CacheManagerInternals::testValidUrl(const AnyP::Uri &url)
+{
+    CPPUNIT_ASSERT_NO_THROW(ParseUrl(url));
+}
 
-void TestCacheManager::setUp()
+void
+CacheManagerInternals::testInvalidUrl(const AnyP::Uri &url, const char *const problem)
+{
+    CPPUNIT_ASSERT_THROW_MESSAGE(problem, ParseUrl(url), TextException);
+}
+
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
+
+void
+MyTestProgram::startup()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -78,7 +100,7 @@ TestCacheManager::testRegister()
     CacheManager *manager=CacheManager::GetInstance();
     CPPUNIT_ASSERT(manager != nullptr);
 
-    manager->registerProfile("sample", "my sample", &dummy_action, false, false);
+    Mgr::RegisterAction("sample", "my sample", &dummy_action, Mgr::Protected::no, Mgr::Atomic::no, Mgr::Format::informal);
     Mgr::Action::Pointer action = manager->createNamedAction("sample");
     CPPUNIT_ASSERT(action != nullptr);
 
@@ -87,9 +109,12 @@ TestCacheManager::testRegister()
     CPPUNIT_ASSERT(profile->creator != nullptr);
     CPPUNIT_ASSERT_EQUAL(false, profile->isPwReq);
     CPPUNIT_ASSERT_EQUAL(false, profile->isAtomic);
+    CPPUNIT_ASSERT_EQUAL(Mgr::Format::informal, profile->format);
+    CPPUNIT_ASSERT_EQUAL(Mgr::Format::informal, action->format());
     CPPUNIT_ASSERT_EQUAL(String("sample"), String(action->name()));
 
     StoreEntry *sentry=new StoreEntry();
+    sentry->createMemObject();
     sentry->flags=0x25; //arbitrary test value
     action->run(sentry, false);
     CPPUNIT_ASSERT_EQUAL(1,(int)sentry->flags);
@@ -102,7 +127,6 @@ TestCacheManager::testParseUrl()
     CPPUNIT_ASSERT(mgr != nullptr);
 
     std::vector<AnyP::ProtocolType> validSchemes = {
-        AnyP::PROTO_CACHE_OBJECT,
         AnyP::PROTO_HTTP,
         AnyP::PROTO_HTTPS,
         AnyP::PROTO_FTP
@@ -111,11 +135,6 @@ TestCacheManager::testParseUrl()
     AnyP::Uri mgrUrl;
     mgrUrl.host("localhost");
     mgrUrl.port(3128);
-
-    const std::vector<const char *> magicPrefixes = {
-        "/",
-        "/squid-internal-mgr/"
-    };
 
     const std::vector<const char *> validActions = {
         "",
@@ -177,65 +196,67 @@ TestCacheManager::testParseUrl()
         "#fragment"
     };
 
+    const auto &prefix = CacheManager::WellKnownUrlPathPrefix();
+
+    assert(prefix.length());
+    const auto insufficientPrefix = prefix.substr(0, prefix.length()-1);
+
     for (const auto &scheme : validSchemes) {
         mgrUrl.setScheme(scheme);
 
-        for (const auto *magic : magicPrefixes) {
-
-            // all schemes except cache_object require magic path prefix bytes
-            if (scheme != AnyP::PROTO_CACHE_OBJECT && strlen(magic) <= 2)
-                continue;
-
-            /* Check the parser accepts all the valid cases */
-
-            for (const auto *action : validActions) {
-                for (const auto *param : validParams) {
-                    for (const auto *frag : validFragments) {
-                        try {
-                            SBuf bits;
-                            bits.append(magic);
-                            bits.append(action);
-                            bits.append(param);
-                            bits.append(frag);
-                            mgrUrl.path(bits);
-
-                            (void)mgr->ParseUrl(mgrUrl);
-                        } catch (...) {
-                            std::cerr << std::endl
-                                      << "FAIL: " << mgrUrl
-                                      << Debug::Extra << "error: " << CurrentException << std::endl;
-                            CPPUNIT_FAIL("rejected a valid URL");
-                        }
-                    }
+        // Check that the parser rejects URLs that lack the full prefix prefix.
+        // These negative tests log "Squid BUG: assurance failed" ERRORs because
+        // they violate CacheManager::ParseUrl()'s ForSomeCacheManager()
+        // precondition.
+        for (const auto *action : validActions) {
+            for (const auto *param : validParams) {
+                for (const auto *frag : validFragments) {
+                    SBuf bits;
+                    bits.append(insufficientPrefix);
+                    bits.append(action);
+                    bits.append(param);
+                    bits.append(frag);
+                    mgrUrl.path(bits);
+                    mgr->testInvalidUrl(mgrUrl, "insufficient prefix");
                 }
             }
+        }
 
-            /* Check that invalid parameters are rejected */
+        // Check that the parser accepts valid URLs.
+        for (const auto action: validActions) {
+            for (const auto param: validParams) {
+                for (const auto frag: validFragments) {
+                    SBuf bits;
+                    bits.append(prefix);
+                    bits.append(action);
+                    bits.append(param);
+                    bits.append(frag);
+                    mgrUrl.path(bits);
+                    mgr->testValidUrl(mgrUrl);
+                }
+            }
+        }
 
-            for (const auto *action : validActions) {
-                for (const auto *param : invalidParams) {
-                    for (const auto *frag : validFragments) {
-                        try {
-                            SBuf bits;
-                            bits.append(magic);
-                            bits.append(action);
-                            bits.append(param);
-                            bits.append(frag);
-                            mgrUrl.path(bits);
-
-                            (void)mgr->ParseUrl(mgrUrl);
-
-                            std::cerr << std::endl
-                                      << "FAIL: " << mgrUrl
-                                      << Debug::Extra << "error: should be rejected due to '" << param << "'" << std::endl;
-                        } catch (const TextException &e) {
-                            continue; // success. caught bad input
-                        }
-                        CPPUNIT_FAIL("failed to reject an invalid URL");
-                    }
+        // Check that the parser rejects URLs with invalid parameters.
+        for (const auto action: validActions) {
+            for (const auto invalidParam: invalidParams) {
+                for (const auto frag: validFragments) {
+                    SBuf bits;
+                    bits.append(prefix);
+                    bits.append(action);
+                    bits.append(invalidParam);
+                    bits.append(frag);
+                    mgrUrl.path(bits);
+                    mgr->testInvalidUrl(mgrUrl, invalidParam);
                 }
             }
         }
     }
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

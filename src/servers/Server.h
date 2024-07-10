@@ -8,8 +8,8 @@
 
 /* DEBUG: section 33    Client-side Routines */
 
-#ifndef SQUID_SERVERS_SERVER_H
-#define SQUID_SERVERS_SERVER_H
+#ifndef SQUID_SRC_SERVERS_SERVER_H
+#define SQUID_SRC_SERVERS_SERVER_H
 
 #include "anyp/forward.h"
 #include "anyp/ProtocolVersion.h"
@@ -17,6 +17,8 @@
 #include "BodyPipe.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "error/forward.h"
+#include "http/Stream.h"
 #include "log/forward.h"
 #include "Pipeline.h"
 #include "sbuf/SBuf.h"
@@ -126,5 +128,5 @@ protected:
     AsyncCall::Pointer writer; ///< set when we are writing
 };
 
-#endif /* SQUID_SERVERS_SERVER_H */
+#endif /* SQUID_SRC_SERVERS_SERVER_H */
 

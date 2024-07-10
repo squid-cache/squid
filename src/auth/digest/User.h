@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_AUTH_DIGEST_USER_H
-#define _SQUID_AUTH_DIGEST_USER_H
+#ifndef SQUID_SRC_AUTH_DIGEST_USER_H
+#define SQUID_SRC_AUTH_DIGEST_USER_H
 
 #if HAVE_AUTH_MODULE_DIGEST
 
@@ -28,7 +28,6 @@ class User : public Auth::User
 public:
     User(Auth::SchemeConfig *, const char *requestRealm);
     ~User() override;
-    int authenticated() const;
     int32_t ttl() const override;
 
     /* Auth::User API */
@@ -48,5 +47,5 @@ public:
 } // namespace Auth
 
 #endif /* HAVE_AUTH_MODULE_DIGEST */
-#endif /* _SQUID_AUTH_DIGEST_USER_H */
+#endif /* SQUID_SRC_AUTH_DIGEST_USER_H */
 

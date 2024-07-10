@@ -9,9 +9,6 @@
 /* DEBUG: section 93    eCAP Interface */
 
 #include "squid.h"
-#include <libecap/adapter/service.h>
-#include <libecap/common/names.h>
-#include <libecap/common/registry.h>
 #include "adaptation/ecap/Host.h"
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/ServiceRep.h"
@@ -20,8 +17,17 @@
 #include "HttpRequest.h"
 #include "MasterXaction.h"
 
+#if HAVE_LIBECAP_ADAPTER_SERVICE_H
+#include <libecap/adapter/service.h>
+#endif
+#if HAVE_LIBECAP_COMMON_NAMES_H
+#include <libecap/common/names.h>
+#endif
+#if HAVE_LIBECAP_COMMON_REGISTRY_H
+#include <libecap/common/registry.h>
+#endif
+
 const libecap::Name Adaptation::Ecap::protocolInternal("internal", libecap::Name::NextId());
-const libecap::Name Adaptation::Ecap::protocolCacheObj("cache_object", libecap::Name::NextId());
 const libecap::Name Adaptation::Ecap::protocolIcp("ICP", libecap::Name::NextId());
 #if USE_HTCP
 const libecap::Name Adaptation::Ecap::protocolHtcp("Htcp", libecap::Name::NextId());
@@ -52,7 +58,6 @@ Adaptation::Ecap::Host::Host()
     libecap::protocolWais.assignHostId(AnyP::PROTO_WAIS);
     libecap::protocolUrn.assignHostId(AnyP::PROTO_URN);
     libecap::protocolWhois.assignHostId(AnyP::PROTO_WHOIS);
-    protocolCacheObj.assignHostId(AnyP::PROTO_CACHE_OBJECT);
     protocolIcp.assignHostId(AnyP::PROTO_ICP);
 #if USE_HTCP
     protocolHtcp.assignHostId(AnyP::PROTO_HTCP);

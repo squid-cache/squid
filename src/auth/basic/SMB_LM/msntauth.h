@@ -6,11 +6,11 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_HELPERS_BASIC_AUTH_MSNT_MSNTAUTH_H
-#define _SQUID_HELPERS_BASIC_AUTH_MSNT_MSNTAUTH_H
+#ifndef SQUID_SRC_AUTH_BASIC_SMB_LM_MSNTAUTH_H
+#define SQUID_SRC_AUTH_BASIC_SMB_LM_MSNTAUTH_H
 
 extern int QueryServers(char *, char *);
 extern void Check_forallowchange(void);
 
-#endif /* _SQUID_HELPERS_BASIC_AUTH_MSNT_MSNTAUTH_H */
+#endif /* SQUID_SRC_AUTH_BASIC_SMB_LM_MSNTAUTH_H */
 

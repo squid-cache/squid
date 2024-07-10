@@ -204,10 +204,10 @@ SBuf::append(const char * S, size_type Ssize)
     return lowAppend(S, Ssize);
 }
 
-SBuf &
-SBuf::append(const char c)
+void
+SBuf::push_back(const char c)
 {
-    return lowAppend(&c, 1);
+    lowAppend(&c, 1);
 }
 
 SBuf&

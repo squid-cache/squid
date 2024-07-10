@@ -8,8 +8,8 @@
 
 /* DEBUG: section 80    WCCP Support */
 
-#ifndef SQUID_WCCP_H_
-#define SQUID_WCCP_H_
+#ifndef SQUID_SRC_WCCP_H
+#define SQUID_SRC_WCCP_H
 
 #if USE_WCCP
 void wccpInit(void);
@@ -17,5 +17,5 @@ void wccpConnectionOpen(void);
 void wccpConnectionClose(void);
 #endif /* USE_WCCP */
 
-#endif /* SQUID_WCCP_H_ */
+#endif /* SQUID_SRC_WCCP_H */
 

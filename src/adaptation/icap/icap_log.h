@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef ICAP_LOG_H_
-#define ICAP_LOG_H_
+#ifndef SQUID_SRC_ADAPTATION_ICAP_ICAP_LOG_H
+#define SQUID_SRC_ADAPTATION_ICAP_ICAP_LOG_H
 
 #include "AccessLogEntry.h"
 #include "base/RefCount.h"
@@ -23,5 +23,5 @@ void icapLogLog(AccessLogEntryPointer &al);
 
 extern int IcapLogfileStatus;
 
-#endif /*ICAP_LOG_H_*/
+#endif /* SQUID_SRC_ADAPTATION_ICAP_ICAP_LOG_H */
 

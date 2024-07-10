@@ -8,8 +8,8 @@
 
 /* DEBUG: section 37    ICMP Routines */
 
-#ifndef _INCLUDE_ICMPV4_H
-#define _INCLUDE_ICMPV4_H
+#ifndef SQUID_SRC_ICMP_ICMP4_H
+#define SQUID_SRC_ICMP_ICMP4_H
 
 #include "Icmp.h"
 
@@ -63,14 +63,7 @@
 #include "fde.h"
 
 #if _SQUID_WINDOWS_
-
-#if HAVE_WINSOCK2_H
-#include <winsock2.h>
-#elif HAVE_WINSOCK_H
-#include <winsock.h>
-#endif
 #include <process.h>
-
 #endif
 
 /* IP Header */
@@ -151,5 +144,5 @@ extern Icmp4 icmp4;
 
 #endif /* USE_ICMP && SQUID_HELPER */
 
-#endif
+#endif /* SQUID_SRC_ICMP_ICMP4_H */
 

@@ -5,4 +5,4 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_CHECK_HEADERS([ldap.h winldap.h],[BUILD_HELPER="LDAP_group"])
+AS_IF([test "x$LIBLDAP_LIBS" != "x"],[BUILD_HELPER="LDAP_group"])

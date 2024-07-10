@@ -46,7 +46,7 @@
 
 static AUTHSSTATS authenticateDigestStats;
 
-helper *digestauthenticators = nullptr;
+Helper::ClientPointer digestauthenticators;
 
 static hash_table *digest_nonce_cache;
 
@@ -66,22 +66,24 @@ enum http_digest_attr_type {
     DIGEST_INVALID_ATTR
 };
 
-static const LookupTable<http_digest_attr_type>::Record
-DigestAttrs[] = {
-    {"username", DIGEST_USERNAME},
-    {"realm", DIGEST_REALM},
-    {"qop", DIGEST_QOP},
-    {"algorithm", DIGEST_ALGORITHM},
-    {"uri", DIGEST_URI},
-    {"nonce", DIGEST_NONCE},
-    {"nc", DIGEST_NC},
-    {"cnonce", DIGEST_CNONCE},
-    {"response", DIGEST_RESPONSE},
-    {nullptr, DIGEST_INVALID_ATTR}
-};
-
-LookupTable<http_digest_attr_type>
-DigestFieldsLookupTable(DIGEST_INVALID_ATTR, DigestAttrs);
+static const auto &
+digestFieldsLookupTable()
+{
+    static const LookupTable<http_digest_attr_type>::Record DigestAttrs[] = {
+        {"username", DIGEST_USERNAME},
+        {"realm", DIGEST_REALM},
+        {"qop", DIGEST_QOP},
+        {"algorithm", DIGEST_ALGORITHM},
+        {"uri", DIGEST_URI},
+        {"nonce", DIGEST_NONCE},
+        {"nc", DIGEST_NC},
+        {"cnonce", DIGEST_CNONCE},
+        {"response", DIGEST_RESPONSE},
+        {nullptr, DIGEST_INVALID_ATTR}
+    };
+    static const auto table = new LookupTable<http_digest_attr_type>(DIGEST_INVALID_ATTR, DigestAttrs);
+    return *table;
+}
 
 /*
  *
@@ -525,7 +527,7 @@ Auth::Digest::Config::init(Auth::SchemeConfig *)
         authdigest_initialised = 1;
 
         if (digestauthenticators == nullptr)
-            digestauthenticators = new helper("digestauthenticator");
+            digestauthenticators = Helper::Client::Make("digestauthenticator");
 
         digestauthenticators->cmdline = authenticateProgram;
 
@@ -533,7 +535,7 @@ Auth::Digest::Config::init(Auth::SchemeConfig *)
 
         digestauthenticators->ipc_type = IPC_STREAM;
 
-        helperOpenServers(digestauthenticators);
+        digestauthenticators->openSessions();
     }
 }
 
@@ -559,7 +561,6 @@ Auth::Digest::Config::done()
     if (!shutting_down)
         return;
 
-    delete digestauthenticators;
     digestauthenticators = nullptr;
 
     if (authenticateProgram)
@@ -775,7 +776,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
         }
 
         /* find type */
-        const http_digest_attr_type t = DigestFieldsLookupTable.lookup(keyName);
+        const auto t = digestFieldsLookupTable().lookup(keyName);
 
         switch (t) {
         case DIGEST_USERNAME:
@@ -827,11 +828,15 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
             break;
 
         case DIGEST_NC:
-            if (value.size() != 8) {
+            if (value.size() == 8) {
+                // for historical reasons, the nc value MUST be exactly 8 bytes
+                static_assert(sizeof(digest_request->nc) == 8 + 1);
+                xstrncpy(digest_request->nc, value.rawBuf(), value.size() + 1);
+                debugs(29, 9, "Found noncecount '" << digest_request->nc << "'");
+            } else {
                 debugs(29, 9, "Invalid nc '" << value << "' in '" << temp << "'");
+                digest_request->nc[0] = 0;
             }
-            xstrncpy(digest_request->nc, value.rawBuf(), value.size() + 1);
-            debugs(29, 9, "Found noncecount '" << digest_request->nc << "'");
             break;
 
         case DIGEST_CNONCE:

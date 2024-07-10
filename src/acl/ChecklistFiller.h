@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_CHECKLIST_FILLER_H
-#define SQUID_ACL_CHECKLIST_FILLER_H
+#ifndef SQUID_SRC_ACL_CHECKLISTFILLER_H
+#define SQUID_SRC_ACL_CHECKLISTFILLER_H
 
 #include "acl/forward.h"
 
@@ -26,5 +26,5 @@ public:
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_CHECKLIST_FILLER_H */
+#endif /* SQUID_SRC_ACL_CHECKLISTFILLER_H */
 

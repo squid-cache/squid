@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_SBUF_SBUFSTRING_H_
-#define SQUID_SRC_SBUF_SBUFSTRING_H_
+#ifndef SQUID_SRC_SBUF_STRINGCONVERT_H
+#define SQUID_SRC_SBUF_STRINGCONVERT_H
 
 #include "sbuf/SBuf.h"
 #include "SquidString.h"
@@ -30,5 +30,5 @@ SBufToString(const SBuf &s)
     return rv;
 }
 
-#endif /* SQUID_SRC_SBUF_SBUFSTRING_H_ */
+#endif /* SQUID_SRC_SBUF_STRINGCONVERT_H */
 

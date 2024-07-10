@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ESIVARSTATE_H
-#define SQUID_ESIVARSTATE_H
+#ifndef SQUID_SRC_ESI_VARSTATE_H
+#define SQUID_SRC_ESI_VARSTATE_H
 
 #include "esi/Segment.h"
 #include "HttpHeader.h"
@@ -63,11 +63,11 @@ private:
     HttpHeader hdr;
 
     struct {
-        int language:1;
-        int cookie:1;
-        int host:1;
-        int referer:1;
-        int useragent:1;
+        unsigned int language:1;
+        unsigned int cookie:1;
+        unsigned int host:1;
+        unsigned int referer:1;
+        unsigned int useragent:1;
     } flags;
 
 public:
@@ -168,5 +168,5 @@ private:
     char *browserversion;
 };
 
-#endif /* SQUID_ESIVARSTATE_H */
+#endif /* SQUID_SRC_ESI_VARSTATE_H */
 

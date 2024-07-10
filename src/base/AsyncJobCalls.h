@@ -6,11 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ASYNCJOBCALLS_H
-#define SQUID_ASYNCJOBCALLS_H
+#ifndef SQUID_SRC_BASE_ASYNCJOBCALLS_H
+#define SQUID_SRC_BASE_ASYNCJOBCALLS_H
 
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
+#include "debug/Messages.h"
 #include "debug/Stream.h"
 
 /**
@@ -176,11 +177,20 @@ JobDialer<Job>::dial(AsyncCall &call)
     } catch (const std::exception &e) {
         debugs(call.debugSection, 3,
                call.name << " threw exception: " << e.what());
+        if (!job) {
+            debugs(call.debugSection, Critical(70), "ERROR: Squid BUG: Job invalidated during " <<
+                   call.name << " that threw exception: " << e.what());
+            return; // see also: bug 4981, commit e3b6f15, and XXX in Http::Stream class description
+        }
         job->callException(e);
     }
 
+    if (!job) {
+        debugs(call.debugSection, Critical(71), "ERROR: Squid BUG: Job invalidated during " << call.name);
+        return;
+    }
     job->callEnd(); // may delete job
 }
 
-#endif /* SQUID_ASYNCJOBCALLS_H */
+#endif /* SQUID_SRC_BASE_ASYNCJOBCALLS_H */
 

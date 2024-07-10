@@ -11,8 +11,8 @@
  * AUTHOR: Duane, Alex, Henrik
  */
 
-#ifndef SQUID_INTERNAL_H_
-#define SQUID_INTERNAL_H_
+#ifndef SQUID_SRC_INTERNAL_H
+#define SQUID_SRC_INTERNAL_H
 
 #include "comm/forward.h"
 #include "log/forward.h"
@@ -27,7 +27,11 @@ bool internalStaticCheck(const SBuf &urlPath);
 char *internalLocalUri(const char *dir, const SBuf &name);
 char *internalRemoteUri(bool, const char *, unsigned short, const char *, const SBuf &);
 const char *internalHostname(void);
-int internalHostnameIs(const char *);
+bool internalHostnameIs(const SBuf &);
 
-#endif /* SQUID_INTERNAL_H_ */
+/// whether the given request URL path points to a cache manager (not
+/// necessarily running on this Squid instance)
+bool ForSomeCacheManager(const SBuf &);
+
+#endif /* SQUID_SRC_INTERNAL_H */
 

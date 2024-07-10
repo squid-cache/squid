@@ -227,7 +227,7 @@ Comm::ConnOpener::closeFd()
     // "Select" state. It will not clear ours. XXX: It should always clear
     // because a callback may have been active but was called before comm_close
     // Update: we now do this in cleanFd()
-    // Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, NULL, NULL, 0);
+    // Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, nullptr, nullptr, 0);
 
     comm_close(temporaryFd_);
     temporaryFd_ = -1;
@@ -429,18 +429,15 @@ Comm::ConnOpener::cancelSleep()
 void
 Comm::ConnOpener::lookupLocalAddress()
 {
-    struct addrinfo *addr = nullptr;
-    Ip::Address::InitAddr(addr);
-
-    if (getsockname(conn_->fd, addr->ai_addr, &(addr->ai_addrlen)) != 0) {
+    struct sockaddr_storage addr = {};
+    socklen_t len = sizeof(addr);
+    if (getsockname(conn_->fd, reinterpret_cast<struct sockaddr *>(&addr), &len) != 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: Failed to retrieve TCP/UDP details for socket: " << conn_ << ": " << xstrerr(xerrno));
-        Ip::Address::FreeAddr(addr);
         return;
     }
 
-    conn_->local = *addr;
-    Ip::Address::FreeAddr(addr);
+    conn_->local = addr;
     debugs(5, 6, conn_);
 }
 

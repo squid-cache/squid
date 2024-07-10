@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CACHEPEER_H_
-#define SQUID_CACHEPEER_H_
+#ifndef SQUID_SRC_CACHEPEER_H
+#define SQUID_SRC_CACHEPEER_H
 
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
@@ -18,9 +18,6 @@
 #include "security/PeerOptions.h"
 
 #include <iosfwd>
-
-//TODO: remove, it is unconditionally defined and always used.
-#define PEER_MULTICAST_SIBLINGS 1
 
 class NeighborTypeDomainList;
 class PconnPool;
@@ -38,9 +35,8 @@ public:
     /// reacts to a successful establishment of a connection to this cache_peer
     void noteSuccess();
 
-    /// reacts to a failure on a connection to this cache_peer
-    /// \param code a received response status code, if any
-    void noteFailure(Http::StatusCode code);
+    /// reacts to a failed attempt to establish a connection to this cache_peer
+    void noteFailure();
 
     /// (re)configure cache_peer name=value
     void rename(const char *);
@@ -48,20 +44,19 @@ public:
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
+    /// n-th cache_peer directive, starting with 1
     u_int index = 0;
 
     /// cache_peer name (if explicitly configured) or hostname (otherwise).
     /// Unique across already configured cache_peers in the current configuration.
-    /// Not necessarily unique across discovered non-peers (see mgr:non_peers).
     /// The value may change during CachePeer configuration.
     /// The value affects various peer selection hashes (e.g., carp.hash).
     /// Preserves configured spelling (i.e. does not lower letters case).
     /// Never nil.
     char *name = nullptr;
 
-    /// The lowercase version of the configured cache_peer hostname or
-    /// the IP address of a non-peer (see mgr:non_peers).
-    /// May not be unique among cache_peers and non-peers.
+    /// The lowercase version of the configured cache_peer hostname.
+    /// May not be unique among cache_peers.
     /// Never nil.
     char *host = nullptr;
 
@@ -143,9 +138,7 @@ public:
         bool sourcehash = false;
         bool originserver = false;
         bool no_tproxy = false;
-#if PEER_MULTICAST_SIBLINGS
         bool mcast_siblings = false;
-#endif
         bool auth_no_keytab = false;
     } options;
 
@@ -181,7 +174,6 @@ public:
     Ip::Address addresses[10];
     int n_addresses = 0;
     int rr_count = 0;
-    CachePeer *next = nullptr;
     int testing_now = 0;
 
     struct {
@@ -238,18 +230,17 @@ NoteOutgoingConnectionSuccess(CachePeer * const peer)
         peer->noteSuccess();
 }
 
-/// reacts to a failure on a connection to an origin server or cache_peer
+/// reacts to a failed attempt to establish a connection to an origin server or cache_peer
 /// \param peer nil if the connection is to an origin server
-/// \param code a received response status code, if any
 inline void
-NoteOutgoingConnectionFailure(CachePeer * const peer, const Http::StatusCode code)
+NoteOutgoingConnectionFailure(CachePeer * const peer)
 {
     if (peer)
-        peer->noteFailure(code);
+        peer->noteFailure();
 }
 
 /// identify the given cache peer in cache.log messages and such
 std::ostream &operator <<(std::ostream &, const CachePeer &);
 
-#endif /* SQUID_CACHEPEER_H_ */
+#endif /* SQUID_SRC_CACHEPEER_H */
 

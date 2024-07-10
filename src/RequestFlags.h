@@ -8,8 +8,8 @@
 
 /* DEBUG: section 73    HTTP Request */
 
-#ifndef SQUID_REQUESTFLAGS_H_
-#define SQUID_REQUESTFLAGS_H_
+#ifndef SQUID_SRC_REQUESTFLAGS_H
+#define SQUID_SRC_REQUESTFLAGS_H
 
 #include "base/SupportOrVeto.h"
 
@@ -72,8 +72,13 @@ public:
     /// This applies to TPROXY traffic that has not had spoofing disabled through
     /// the spoof_client_ip squid.conf ACL.
     bool spoofClientIp = false;
-    /** set if the request is internal (\see ClientHttpRequest::flags.internal)*/
+
+    /// whether the request targets a /squid-internal- resource (e.g., a MIME
+    /// icon or a cache manager page) served by this Squid instance
+    /// TODO: Rename to avoid a false implication that this flag is true for
+    /// requests for /squid-internal- resources served by other Squid instances.
     bool internal = false;
+
     /** if set, request to try very hard to keep the connection alive */
     bool mustKeepalive = false;
     /** set if the request wants connection oriented auth */
@@ -135,5 +140,5 @@ public:
     void disableCacheUse(const char *reason);
 };
 
-#endif /* SQUID_REQUESTFLAGS_H_ */
+#endif /* SQUID_SRC_REQUESTFLAGS_H */
 

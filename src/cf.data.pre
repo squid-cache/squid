@@ -16,8 +16,8 @@ COMMENT_START
 	You may wish to look at the Squid home page and wiki for the
 	FAQ and other documentation:
 		http://www.squid-cache.org/
-		http://wiki.squid-cache.org/SquidFaq
-		http://wiki.squid-cache.org/ConfigExamples
+		https://wiki.squid-cache.org/SquidFaq
+		https://wiki.squid-cache.org/ConfigExamples
 
 	This documentation shows what the defaults for various directives
 	happen to be.  If you don't need to change the default, you should
@@ -588,14 +588,31 @@ DOC_START
 	different helper, but not unconfigure the helper completely.
 
 	Please note that while this directive defines how Squid processes
-	authentication it does not automatically activate authentication.
-	To use authentication you must in addition make use of ACLs based
-	on login name in http_access (proxy_auth, proxy_auth_regex or
-	external with %LOGIN used in the format tag). The browser will be
-	challenged for authentication on the first such acl encountered
-	in http_access processing and will also be re-challenged for new
-	login credentials if the request is being denied by a proxy_auth
-	type acl.
+	authentication it does not automatically activate authentication. For a
+	given transaction, (re)authentication is requested in two primary cases
+	detailed below: initial authentication and re-authentication.
+
+	A client without credentials is requested to authenticate if one of the
+	following ACLs is evaluated by an http_access or adapted_http_access rule:
+
+		* proxy_auth ACL
+		* proxy_auth_regex ACL
+		* max_user_ip ACL
+		* external ACL with %ul logformat %code used in FORMAT parameters
+		* external ACL with %LOGIN macro used in FORMAT parameters;
+		  this legacy macro currently behaves the same as %ul logformat %code
+
+	A client with credentials is requested to re-authenticate if http_access
+	or adapted_http_access denies its request _and_ the last evaluated ACL was
+	either proxy_auth, proxy_auth_regex, or an external
+	ACL with %ul or %LOGIN parameter (regardless of whether that last
+	evaluated ACL matched the denied request). Note that a max_user_ip ACL
+	does not have this effect: Requests denied after evaluating max_user_ip
+	trigger an HTTP 403 (Forbidden) response rather than re-authentication.
+
+	In both initial authentication and re-authentication cases, client access
+	is denied, typically with an HTTP 407 (Proxy Authentication Required) or
+	an HTTP 401 (Unauthorized) response.
 
 	WARNING: authentication can't be used in a transparently intercepting
 	proxy as the client then thinks it is talking to an origin server and
@@ -612,7 +629,7 @@ DOC_START
 		By default, each authentication scheme is not used unless a
 		program is specified.
 
-		See http://wiki.squid-cache.org/Features/AddonHelpers for
+		See https://wiki.squid-cache.org/Features/AddonHelpers for
 		more details on helper operations and creating your own.
 
 	"key_extras" format
@@ -763,11 +780,24 @@ IF HAVE_AUTH_MODULE_BASIC
 		use the max_user_ip ACL in an http_access rule.
 
 	"casesensitive" on|off
-		Specifies if usernames are case sensitive. Most user databases
-		are case insensitive allowing the same username to be spelled
-		using both lower and upper case letters, but some are case
-		sensitive. This makes a big difference for user_max_ip ACL
-		processing and similar.
+		Specifies whether upper case letters in client-sent usernames are
+		preserved. By default and when explicitly set to "off", a username
+		extracted from Proxy-Authorization or Authorization request header is
+		forced to lower case before user credentials are checked or stored.
+
+		Most user databases are case insensitive, allowing the same username to be
+		spelled using both lower and upper case letters. For such databases, any
+		casesenstive setting should work, but forcing usernames to lower case may
+		still make a big difference for Squid internal caches like those used by
+		an external ACL with %un logformat code in FORMAT and a user_max_ip ACL.
+
+		When working with a case sensitive database, set casesensitive to "on".
+
+		Squid ACLs like proxy_auth are case-sensitive by default. An ACL using
+		upper case letters in user names (e.g., `acl badGuys proxy_auth Bob`)
+		will not match any user with Basic Authentication credentials unless
+		casesensitive is explicitly turned "on" (to preserve "Bob" username
+		instead of converting it to "bob" before the ACL is checked).
 
 ENDIF
 IF HAVE_AUTH_MODULE_DIGEST
@@ -1068,7 +1098,7 @@ DEFAULT: ssl::certUntrusted ssl_error X509_V_ERR_INVALID_CA X509_V_ERR_SELF_SIGN
 DEFAULT: ssl::certSelfSigned ssl_error X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT
 ENDIF
 DEFAULT: all src all
-DEFAULT: manager url_regex -i ^cache_object:// +i ^[^:]+://[^/]+/squid-internal-mgr/
+DEFAULT: manager url_regex +i ^[^:]+://[^/]+/squid-internal-mgr/
 DEFAULT: localhost src 127.0.0.1/32 ::1
 DEFAULT: to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1/128 ::/128
 DEFAULT: to_linklocal dst 169.254.0.0/16 fe80::/10
@@ -1118,7 +1148,7 @@ DOC_START
 	to access some external data source.
 	Those which do are marked with the tag [slow], those which
 	don't are marked as [fast].
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl
 	for further information
 
 	***** ACL TYPES AVAILABLE *****
@@ -1128,7 +1158,7 @@ DOC_START
 	acl aclname dst [-n] ip-address/mask ...	# URL host's IP address [slow]
 	acl aclname localip ip-address/mask ... # IP address the client connected to [fast]
 
-if USE_SQUID_EUI
+IF USE_SQUID_EUI
 	acl aclname arp      mac-address ...
 	acl aclname eui64    eui64-address ...
 	  # [fast]
@@ -1148,7 +1178,7 @@ if USE_SQUID_EUI
 	  #
 	  # IPv6 protocol does not contain ARP. MAC/EUI is either
 	  # encoded directly in the IPv6 address or not available.
-endif
+ENDIF
 	acl aclname clientside_mark mark[/mask] ...
 	  # matches CONNMARK of an accepted connection [fast]
 	  # DEPRECATED. Use the 'client_connection_mark' instead.
@@ -1244,18 +1274,19 @@ endif
 	  # pattern match on Referer header [fast]
 	  # Referer is highly unreliable, so use with care
 
-	acl aclname ident [-i] username ...
-	acl aclname ident_regex [-i] pattern ...
-	  # string match on ident output [slow]
-	  # use REQUIRED to accept any non-null ident.
-
 	acl aclname proxy_auth [-i] username ...
-	acl aclname proxy_auth_regex [-i] pattern ...
 	  # perform http authentication challenge to the client and match against
 	  # supplied credentials [slow]
 	  #
 	  # takes a list of allowed usernames.
 	  # use REQUIRED to accept any valid username.
+	  #
+	  # See proxy_auth_regex for more information. The two ACLs differ only in
+	  # their parameter syntax and username matching algorithm.
+
+	acl aclname proxy_auth_regex [-i] username_pattern ...
+	  # perform http authentication challenge to the client and regex match
+	  # supplied username [slow]
 	  #
 	  # Will use proxy authentication in forward-proxy scenarios, and plain
 	  # http authentication in reverse-proxy scenarios
@@ -1340,9 +1371,14 @@ endif
 	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID  [fast]
 
 	acl aclname ext_user [-i] username ...
-	acl aclname ext_user_regex [-i] pattern ...
 	  # string match on username returned by external acl helper [slow]
 	  # use REQUIRED to accept any non-null user name.
+	  #
+	  # See also: ext_user_regex. The two ACLs differ only in their parameter
+	  # syntax and username matching algorithm.
+
+	acl aclname ext_user_regex [-i] username_pattern ...
+	  # regex match on username returned by external acl helper [slow]
 
 	acl aclname tag tagvalue ...
 	  # string match on tag returned by external acl helper [fast]
@@ -1500,7 +1536,7 @@ endif
 	  #  acl hasWhatMyLoggingDaemonNeeds has request
 	  #  acl hasWhatMyLoggingDaemonNeeds has response
 
-acl aclname at_step step
+	acl aclname at_step step
 	  # match against the current request processing step [fast]
 	  # Valid steps are:
 	  #   GeneratingCONNECT: Generating HTTP CONNECT request headers
@@ -1713,7 +1749,7 @@ DOC_START
 		based on the client's source addresses.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: follow_x_forwarded_for
@@ -1757,7 +1793,7 @@ DOC_START
 	log_uses_indirect_client and tproxy_uses_indirect_client options.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 	SECURITY CONSIDERATIONS:
 
@@ -1852,7 +1888,7 @@ DOC_START
 	Note that the cache_peer "no-tproxy" option overrides this ACL.
 
 	This clause supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: http_access
@@ -1879,7 +1915,7 @@ DOC_START
 	lists to avoid potential confusion.
 
 	This clause supports both fast and slow acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 CONFIG_START
 
@@ -1959,7 +1995,7 @@ DOC_START
 	with an "allow all" or "deny all" entry.
 
 	This clause supports both fast and slow acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: icp_access
@@ -1978,7 +2014,7 @@ DOC_START
 	using ICP.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 # Allow ICP queries from local networks only
 #icp_access allow localnet
@@ -2005,7 +2041,7 @@ DOC_START
 	using the htcp option.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 # Allow HTCP queries from local networks only
 #htcp_access allow localnet
@@ -2026,7 +2062,7 @@ DOC_START
 	htcp_clr_access  allow|deny [!]aclname ...
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 # Allow HTCP CLR requests from trusted peers
 acl htcp_clr_peer src 192.0.2.2 2001:DB8::2
@@ -2058,36 +2094,7 @@ DOC_START
 	http_access rules to relay via this proxy.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
-DOC_END
-
-NAME: ident_lookup_access
-TYPE: acl_access
-IFDEF: USE_IDENT
-DEFAULT: none
-DEFAULT_DOC: Unless rules exist in squid.conf, IDENT is not fetched.
-LOC: Ident::TheConfig.identLookup
-DOC_START
-	A list of ACL elements which, if matched, cause an ident
-	(RFC 931) lookup to be performed for this request.  For
-	example, you might choose to always perform ident lookups
-	for your main multi-user Unix boxes, but not for your Macs
-	and PCs.  By default, ident lookups are not performed for
-	any requests.
-
-	To enable ident lookups for specific client addresses, you
-	can follow this example:
-
-	acl ident_aware_hosts src 198.168.1.0/24
-	ident_lookup_access allow ident_aware_hosts
-	ident_lookup_access deny all
-
-	Only src type ACL checks are fully supported.  A srcdomain
-	ACL might work at times, but it will not always provide
-	the correct result.
-
-	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: reply_body_max_size
@@ -2531,7 +2538,7 @@ CONFIG_END
 DOC_END
 
 NAME: https_port
-IFDEF: USE_GNUTLS||USE_OPENSSL
+IFDEF: HAVE_LIBGNUTLS||USE_OPENSSL
 TYPE: PortCfg
 DEFAULT: none
 LOC: HttpPortList
@@ -2679,12 +2686,12 @@ DOC_START
 	The squid parser will enforce this by masking away the ECN bits.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: tcp_outgoing_mark
 TYPE: acl_nfmark
-IFDEF: SO_MARK&&USE_LIBCAP
+IFDEF: HAVE_LIBCAP&&SO_MARK
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfmarkToServer
 DOC_START
@@ -2706,7 +2713,7 @@ DOC_END
 
 NAME: mark_client_packet clientside_mark
 TYPE: acl_nfmark
-IFDEF: SO_MARK&&USE_LIBCAP
+IFDEF: HAVE_LIBCAP&&SO_MARK
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfmarkToClient
 DOC_START
@@ -2727,12 +2734,12 @@ DOC_START
 	will be overwritten by mark values in qos_flows.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: mark_client_connection
 TYPE: acl_nfmark
-IFDEF: SO_MARK&&USE_LIBCAP
+IFDEF: HAVE_LIBCAP&&SO_MARK
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfConnmarkToClient
 DOC_START
@@ -2763,7 +2770,7 @@ DOC_START
 	mark_client_connection 0x200/0xff00 proto_ftp
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: qos_flows
@@ -2887,7 +2894,7 @@ DOC_START
 	client_dst_passthru directive re-enable normal forwarding such as this.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: host_verify_strict
@@ -2987,7 +2994,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: tls_outgoing_options
-IFDEF: USE_GNUTLS||USE_OPENSSL
+IFDEF: HAVE_LIBGNUTLS||USE_OPENSSL
 TYPE: securePeerOptions
 DEFAULT: min-version=1.0
 LOC: Security::ProxyOutgoingConfig
@@ -3233,7 +3240,7 @@ DOC_START
 	See the at_step ACL for a list of the supported SslBump steps.
 
 	This clause supports both fast and slow acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 	See also: http_port ssl-bump, https_port ssl-bump, and acl at_step.
 
@@ -3265,7 +3272,7 @@ DOC_START
 		sslproxy_cert_error deny all
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 	Using slow acl types may result in server crashes
 
 	Without this option, all server certificate validation errors
@@ -3652,7 +3659,7 @@ DOC_START
 			The requests will be distributed among the parents based on the
 			CARP load balancing hash function based on their weight.
 
-	userhash	Load-balance parents based on the client proxy_auth or ident username.
+	userhash	Load-balance parents based on the client proxy_auth username.
 
 	sourcehash	Load-balance parents based on the client source IP.
 
@@ -4023,7 +4030,7 @@ DOC_START
 	may be optimized away in future Squid versions.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 DOC_END
 
@@ -4304,9 +4311,11 @@ DOC_START
 	The directory must exist and be writable by the Squid
 	process.  Squid will NOT create this directory for you.
 
-	In SMP configurations, cache_dir must not precede the workers option
-	and should use configuration macros or conditionals to give each
-	worker interested in disk caching a dedicated cache directory.
+	Rock is currently the only SMP-aware cache_dir type. Using other
+	store types in configurations with multiple workers is not
+	supported and may lead to HTTP violations or undefined behavior,
+	even when each such cache_dir is given a dedicated worker using
+	configuration conditionals.
 
 
 	====  The ufs store type  ====
@@ -4683,10 +4692,23 @@ DOC_START
 	Format codes:
 
 		%	a literal % character
+
+		byte{value}	Adds a single byte with the given value (e.g., %byte{10}
+			adds an ASCII LF character a.k.a. "new line" or "\n"). The value
+			parameter is required and must be a positive decimal integer not
+			exceeding 255. Zero-valued bytes (i.e. ASCII NUL characters) are
+			not yet supported.
+
 		sn	Unique sequence number per log line entry
 		err_code    The ID of an error response served by Squid or
 				a similar internal error identifier.
-		err_detail  Additional err_code-dependent error information.
+
+		err_detail  Additional err_code-dependent error information. Multiple
+			details are separated by the plus sign ('+'). Admins should not
+			rely on a particular detail listing order, the uniqueness of the
+			entries, or individual detail text stability. All those properties
+			depend on many unstable factors, including external libraries.
+
 		note	The annotation specified by the argument. Also
 			logs the adaptation meta headers set by the
 			adaptation_meta configuration parameter.
@@ -4820,13 +4842,11 @@ DOC_START
 		un	User name (any available)
 		ul	User name from authentication
 		ue	User name from external acl helper
-		ui	User name from ident
 		un	A user name. Expands to the first available name
 			from the following list of information sources:
 			- authenticated user name, like %ul
 			- user name supplied by an external ACL, like %ue
 			- SSL client name, like %us
-			- ident user name, like %ui
 		credentials Client credentials. The exact meaning depends on
 			the authentication scheme: For Basic authentication,
 			it is the password; for Digest, the realm sent by the
@@ -5150,8 +5170,8 @@ DOC_START
 	The default formats available (which do not need re-defining) are:
 
 logformat squid      %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %[un %Sh/%<a %mt
-logformat common     %>a %[ui %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
-logformat combined   %>a %[ui %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
+logformat common     %>a - %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
+logformat combined   %>a - %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
 logformat referrer   %ts.%03tu %>a %{Referer}>h %ru
 logformat useragent  %>a [%tl] "%{User-Agent}>h"
 
@@ -5396,7 +5416,7 @@ DOC_START
 	in performance counters.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: cache_store_log
@@ -5615,7 +5635,7 @@ DOC_START
 	log does not support custom record formats.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 	See access_log's <module>:<place> parameter for a list of supported
 	logging destinations.
@@ -6102,7 +6122,7 @@ DOC_START
 	sent to the redirector processes.
 
 	This clause supports both fast and slow acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: url_rewrite_bypass redirector_bypass
@@ -6311,7 +6331,7 @@ DOC_START
 	are sent.
 
 	This clause supports both fast and slow acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: store_id_bypass storeurl_rewrite_bypass
@@ -6346,7 +6366,7 @@ DOC_START
 	has no effect on other transactions and on already cached responses.
 
 	This clause supports both fast and slow acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 	This and the two other similar caching directives listed below are
 	checked at different transaction processing stages, have different
@@ -6393,7 +6413,7 @@ DOC_START
 	store_miss, send_hit, and cache directives.
 
 	Unlike the "cache" directive, send_hit only supports fast acl
-	types.  See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	types.  See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 	For example:
 
@@ -6428,7 +6448,7 @@ DOC_START
 	send_hit directive for a usage example.
 
 	Unlike the "cache" directive, store_miss only supports fast acl
-	types.  See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	types.  See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: max_stale
@@ -6755,11 +6775,14 @@ TYPE: b_size_t
 DEFAULT: 64 KB
 LOC: Config.maxRequestHeaderSize
 DOC_START
-	This specifies the maximum size for HTTP headers in a request.
-	Request headers are usually relatively small (about 512 bytes).
-	Placing a limit on the request header size will catch certain
-	bugs (for example with persistent connections) and possibly
-	buffer-overflow or denial-of-service attacks.
+	This directives limits the header size of a received HTTP request
+	(including request-line). Increasing this limit beyond its 64 KB default
+	exposes certain old Squid code to various denial-of-service attacks. This
+	limit also applies to received FTP commands.
+
+	This limit has no direct affect on Squid memory consumption.
+
+	Squid does not check this limit when sending requests.
 DOC_END
 
 NAME: reply_header_max_size
@@ -6768,11 +6791,14 @@ TYPE: b_size_t
 DEFAULT: 64 KB
 LOC: Config.maxReplyHeaderSize
 DOC_START
-	This specifies the maximum size for HTTP headers in a reply.
-	Reply headers are usually relatively small (about 512 bytes).
-	Placing a limit on the reply header size will catch certain
-	bugs (for example with persistent connections) and possibly
-	buffer-overflow or denial-of-service attacks.
+	This directives limits the header size of a received HTTP response
+	(including status-line). Increasing this limit beyond its 64 KB default
+	exposes certain old Squid code to various denial-of-service attacks. This
+	limit also applies to FTP command responses.
+
+	Squid also checks this limit when loading hit responses from disk cache.
+
+	Squid does not check this limit when sending responses.
 DOC_END
 
 NAME: request_body_max_size
@@ -6825,7 +6851,7 @@ DOC_START
 	  a request with an extra CRLF.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 Example:
  acl buggy_server url_regex ^http://....
@@ -7116,7 +7142,7 @@ DOC_START
 	    logformat myFormat ... %{key}note ...
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: relaxed_header_parser
@@ -7416,19 +7442,6 @@ DOC_START
 	proxies.
 DOC_END
 
-NAME: ident_timeout
-TYPE: time_t
-IFDEF: USE_IDENT
-LOC: Ident::TheConfig.timeout
-DEFAULT: 10 seconds
-DOC_START
-	Maximum time to wait for IDENT lookups to complete.
-
-	If this is too high, and you enabled IDENT lookups from untrusted
-	users, you might be susceptible to denial-of-service by having
-	many ident requests going at once.
-DOC_END
-
 NAME: shutdown_lifetime
 COMMENT: time-units
 TYPE: time_t
@@ -7522,8 +7535,8 @@ LOC: Config.onoff.httpd_suppress_version_string
 DOC_START
 	Do not send Squid version string in HTTP metadata and generated content
 	such as HTML error pages. Squid version string is still present in certain
-	SNMP responses, cachemgr.cgi output, squidclient User-Agent request header
-	field, various console output, and cache.log.
+	SNMP responses, HTTP(S) Server response header field,
+        various console output, and cache.log.
 DOC_END
 
 NAME: visible_hostname
@@ -7551,7 +7564,7 @@ DOC_START
 DOC_END
 
 NAME: hostname_aliases
-TYPE: wordlist
+TYPE: SBufList
 LOC: Config.hostnameAliases
 DEFAULT: none
 DOC_START
@@ -7691,7 +7704,7 @@ DOC_START
 		IPv4 traffic. Class 1 and 5 pools may be used with IPv6 traffic.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 	See also delay_parameters and delay_access.
 DOC_END
@@ -7926,7 +7939,7 @@ DOC_START
 	based on their source IP addresses (one bucket per source IP).
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 	Additionally, only the client TCP connection details are available.
 	ACLs testing HTTP properties will not work.
 
@@ -8376,7 +8389,7 @@ DOC_START
 	snmp_access allow|deny [!]aclname ...
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 Example:
  snmp_access allow snmppublic localhost
@@ -8704,51 +8717,6 @@ DOC_START
 	By default, Squid doesn't listen on any multicast groups.
 DOC_END
 
-NAME: mcast_miss_addr
-IFDEF: MULTICAST_MISS_STREAM
-TYPE: address
-LOC: Config.mcast_miss.addr
-DEFAULT: no_addr
-DEFAULT_DOC: disabled.
-DOC_START
-	If you enable this option, every "cache miss" URL will
-	be sent out on the specified multicast address.
-
-	Do not enable this option unless you are are absolutely
-	certain you understand what you are doing.
-DOC_END
-
-NAME: mcast_miss_ttl
-IFDEF: MULTICAST_MISS_STREAM
-TYPE: u_short
-LOC: Config.mcast_miss.ttl
-DEFAULT: 16
-DOC_START
-	This is the time-to-live value for packets multicasted
-	when multicasting off cache miss URLs is enabled.  By
-	default this is set to 'site scope', i.e. 16.
-DOC_END
-
-NAME: mcast_miss_port
-IFDEF: MULTICAST_MISS_STREAM
-TYPE: u_short
-LOC: Config.mcast_miss.port
-DEFAULT: 3135
-DOC_START
-	This is the port number to be used in conjunction with
-	'mcast_miss_addr'.
-DOC_END
-
-NAME: mcast_miss_encode_key
-IFDEF: MULTICAST_MISS_STREAM
-TYPE: string
-LOC: Config.mcast_miss.encode_key
-DEFAULT: XXXXXXXXXXXXXXXX
-DOC_START
-	The URLs that are sent in the multicast miss stream are
-	encrypted.  This is the encryption key.
-DOC_END
-
 NAME: mcast_icp_query_timeout
 COMMENT: (msec)
 DEFAULT: 2000
@@ -8826,7 +8794,7 @@ DOC_START
 	a wide variety of languages. If you are making translations for a
 	language that Squid does not currently provide please consider
 	contributing your translation back to the project.
-	http://wiki.squid-cache.org/Translations
+	https://wiki.squid-cache.org/Translations
 
 	The squid developers working on translations are happy to supply drop-in
 	translated error files in exchange for any new language contributions.
@@ -8848,7 +8816,7 @@ DOC_START
 	The squid developers are interested in making squid available in
 	a wide variety of languages. If you are interested in making
 	translations for any language see the squid wiki for details.
-	http://wiki.squid-cache.org/Translations
+	https://wiki.squid-cache.org/Translations
 DOC_END
 
 NAME: error_log_languages
@@ -9080,7 +9048,7 @@ DOC_START
 	the replies see the 'cache' directive.
 
 	This clause supports both fast and slow acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: never_direct
@@ -9113,7 +9081,7 @@ DOC_START
 		never_direct allow all
 
 	This clause supports both fast and slow acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 COMMENT_START
@@ -9760,7 +9728,7 @@ ecap_service s2 respmod_precache ecap://filters.R.us/virusFilter config=/etc/vf.
 DOC_END
 
 NAME: loadable_modules
-TYPE: wordlist
+TYPE: SBufList
 IFDEF: USE_LOADABLE_MODULES
 LOC: Config.loadable_module_names
 DEFAULT: none
@@ -9953,7 +9921,7 @@ DOC_END
 NAME: adaptation_meta
 TYPE: note
 IFDEF: USE_ADAPTATION
-LOC: Adaptation::Config::metaHeaders
+LOC: Adaptation::Config::metaHeaders()
 DEFAULT: none
 DOC_START
 	This option allows Squid administrator to add custom ICAP request
@@ -10354,7 +10322,6 @@ DOC_START
 		mem
 		menu
 		netdb
-		non_peers
 		objects
 		offline_toggle *
 		pconn
@@ -10449,7 +10416,7 @@ DOC_START
 	are governed by forward_max_tries instead.
 
 	See also: connect_timeout, forward_timeout, icap_connect_timeout,
-	ident_timeout, and forward_max_tries.
+	and forward_max_tries.
 DOC_END
 
 NAME: retry_on_error
@@ -10756,7 +10723,7 @@ DOC_START
 	cache, using regular HTTP caching rules.
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 	Each of the following groups of configuration lines represents a
 	separate configuration example:
@@ -10807,7 +10774,7 @@ DOC_START
 	persistent connections (if any).
 
 	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 	Example:
 		acl SpeedIsWorthTheRisk method POST

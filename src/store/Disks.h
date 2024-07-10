@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_DISKS_H
-#define SQUID_STORE_DISKS_H
+#ifndef SQUID_SRC_STORE_DISKS_H
+#define SQUID_SRC_STORE_DISKS_H
 
 #include "store/Controlled.h"
 #include "store/forward.h"
@@ -82,5 +82,5 @@ void free_cachedir(Store::DiskConfig *swap);
 /* Globals that should be moved to some Store::UFS-specific logging module */
 void storeDirSwapLog(const StoreEntry *e, int op);
 
-#endif /* SQUID_STORE_DISKS_H */
+#endif /* SQUID_SRC_STORE_DISKS_H */
 

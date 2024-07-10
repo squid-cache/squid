@@ -8,8 +8,8 @@
 
 /* DEBUG: section 77    Delay Pools */
 
-#ifndef COMPOSITEPOOLNODE_H
-#define COMPOSITEPOOLNODE_H
+#ifndef SQUID_SRC_COMPOSITEPOOLNODE_H
+#define SQUID_SRC_COMPOSITEPOOLNODE_H
 
 #if USE_DELAY_POOLS
 #include "auth/UserRequest.h"
@@ -17,7 +17,7 @@
 #include "DelayIdComposite.h"
 #include "DelayPools.h"
 #include "ip/Address.h"
-#include "SquidString.h"
+#include "sbuf/SBuf.h"
 
 class StoreEntry;
 
@@ -44,13 +44,15 @@ public:
     {
 
     public:
-        CompositeSelectionDetails() {}
+        CompositeSelectionDetails(const Ip::Address& aSrcAddr, const SBuf &aTag) :
+            src_addr(aSrcAddr), tag(aTag)
+        {}
 
         Ip::Address src_addr;
 #if USE_AUTH
         Auth::UserRequest::Pointer user;
 #endif
-        String tag;
+        const SBuf tag;
     };
 
 protected:
@@ -59,5 +61,5 @@ protected:
 };
 
 #endif /* USE_DELAY_POOLS */
-#endif /* COMPOSITEPOOLNODE_H */
+#endif /* SQUID_SRC_COMPOSITEPOOLNODE_H */
 

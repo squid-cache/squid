@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_INQUIRER_H
-#define SQUID_IPC_INQUIRER_H
+#ifndef SQUID_SRC_IPC_INQUIRER_H
+#define SQUID_SRC_IPC_INQUIRER_H
 
 #include "base/AsyncJob.h"
 #include "base/AsyncJobCalls.h"
@@ -78,5 +78,5 @@ protected:
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_INQUIRER_H */
+#endif /* SQUID_SRC_IPC_INQUIRER_H */
 

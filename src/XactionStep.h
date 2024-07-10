@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_XACTIONSTEPS_H
-#define SQUID_XACTIONSTEPS_H
+#ifndef SQUID_SRC_XACTIONSTEP_H
+#define SQUID_SRC_XACTIONSTEP_H
 
 enum class XactionStep  {
     enumBegin_ = 0, // for WholeEnum iteration
@@ -21,5 +21,5 @@ enum class XactionStep  {
     enumEnd_ // for WholeEnum iteration
 };
 
-#endif /* SQUID_XACTIONSTEPS_H */
+#endif /* SQUID_SRC_XACTIONSTEP_H */
 

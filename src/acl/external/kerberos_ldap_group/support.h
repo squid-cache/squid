@@ -30,6 +30,9 @@
  * -----------------------------------------------------------------------------
  */
 
+#ifndef SQUID_SRC_ACL_EXTERNAL_KERBEROS_LDAP_GROUP_SUPPORT_H
+#define SQUID_SRC_ACL_EXTERNAL_KERBEROS_LDAP_GROUP_SUPPORT_H
+
 #define KERBEROS_LDAP_GROUP_VERSION "1.4.0sq"
 
 #include "compat/krb5.h"
@@ -90,7 +93,7 @@ struct main_args {
     char *principal;
 };
 
-SQUIDCEXTERN int log_enabled;
+extern int log_enabled;
 
 /* the macro overload style is really a gcc-ism */
 #ifdef __GNUC__
@@ -146,7 +149,7 @@ size_t get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, s
 size_t get_hostname_list(struct hstruct **hlist, size_t nhosts, char *name);
 size_t free_hostname_list(struct hstruct **hlist, size_t nhosts);
 
-#if HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN
+#if HAVE_SASL_H || HAVE_SASL_SASL_H
 int tool_sasl_bind(LDAP * ld, char *binddn, char *ssl);
 #endif
 
@@ -164,4 +167,6 @@ void krb5_cleanup(void);
 #endif
 
 #define PROGRAM "kerberos_ldap_group"
+
+#endif /* SQUID_SRC_ACL_EXTERNAL_KERBEROS_LDAP_GROUP_SUPPORT_H */
 

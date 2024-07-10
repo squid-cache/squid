@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_AUTH_BASIC_USERREQUEST_H
-#define _SQUID_SRC_AUTH_BASIC_USERREQUEST_H
+#ifndef SQUID_SRC_AUTH_BASIC_USERREQUEST_H
+#define SQUID_SRC_AUTH_BASIC_USERREQUEST_H
 
 #if HAVE_AUTH_MODULE_BASIC
 
@@ -32,7 +32,7 @@ public:
     UserRequest() {}
     ~UserRequest() override { assert(LockCount()==0); }
 
-    int authenticated() const override;
+    bool authenticated() const override;
     void authenticate(HttpRequest * request, ConnStateData *conn, Http::HdrType type) override;
     Auth::Direction module_direction() override;
     void startHelperLookup(HttpRequest * request, AccessLogEntry::Pointer &al, AUTHCB *, void *) override;
@@ -46,5 +46,5 @@ private:
 } // namespace Auth
 
 #endif /* HAVE_AUTH_MODULE_BASIC */
-#endif /* _SQUID_SRC_AUTH_BASIC_USERREQUEST_H */
+#endif /* SQUID_SRC_AUTH_BASIC_USERREQUEST_H */
 

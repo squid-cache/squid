@@ -560,9 +560,6 @@ HttpRequest::maybeCacheable()
             return false;
         break;
 
-    case AnyP::PROTO_CACHE_OBJECT:
-        return false;
-
     //case AnyP::PROTO_FTP:
     default:
         break;
@@ -604,7 +601,7 @@ HttpRequest::getRangeOffsetLimit()
 
     rangeOffsetLimit = 0; // default value for rangeOffsetLimit
 
-    ACLFilledChecklist ch(nullptr, this, nullptr);
+    ACLFilledChecklist ch(nullptr, this);
     ch.src_addr = client_addr;
     ch.my_addr =  my_addr;
 
@@ -801,11 +798,10 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
         const bool proxyProtocolPort = port ? port->flags.proxySurrogate : false;
         if (flags.interceptTproxy && !proxyProtocolPort) {
             if (Config.accessList.spoof_client_ip) {
-                ACLFilledChecklist *checklist = new ACLFilledChecklist(Config.accessList.spoof_client_ip, this, clientConnection->rfc931);
-                checklist->al = al;
-                checklist->syncAle(this, nullptr);
-                flags.spoofClientIp = checklist->fastCheck().allowed();
-                delete checklist;
+                ACLFilledChecklist checklist(Config.accessList.spoof_client_ip, this);
+                checklist.al = al;
+                checklist.syncAle(this, nullptr);
+                flags.spoofClientIp = checklist.fastCheck().allowed();
             } else
                 flags.spoofClientIp = true;
         } else

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_EVENTLOOP_H
-#define SQUID_EVENTLOOP_H
+#ifndef SQUID_SRC_EVENTLOOP_H
+#define SQUID_SRC_EVENTLOOP_H
 
 #include "time/forward.h"
 
@@ -92,5 +92,5 @@ private:
     bool runOnceResult; /**< the result from runOnce */
 };
 
-#endif /* SQUID_EVENTLOOP_H */
+#endif /* SQUID_SRC_EVENTLOOP_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 61    Redirector */
 
-#ifndef SQUID_REDIRECT_H_
-#define SQUID_REDIRECT_H_
+#ifndef SQUID_SRC_REDIRECT_H
+#define SQUID_SRC_REDIRECT_H
 
 #include "helper.h"
 
@@ -23,5 +23,5 @@ void redirectReconfigure();
 void redirectStart(ClientHttpRequest *, HLPCB *, void *);
 void storeIdStart(ClientHttpRequest *, HLPCB *, void *);
 
-#endif /* SQUID_REDIRECT_H_ */
+#endif /* SQUID_SRC_REDIRECT_H */
 
