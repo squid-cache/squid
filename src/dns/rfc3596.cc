@@ -7,9 +7,9 @@
  */
 
 #include "squid.h"
-#include "SquidConfig.h"
 #include "dns/rfc2671.h"
 #include "dns/rfc3596.h"
+#include "SquidConfig.h"
 #include "util.h"
 
 #if HAVE_UNISTD_H
