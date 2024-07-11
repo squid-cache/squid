@@ -885,7 +885,9 @@ nsvc::~nsvc()
 {
     delete queue;
     delete msg;
-    if (ns < nameservers.size()) // XXX: idnsShutdownAndFreeState may have freed nameservers[]
+    // we may outlive nameservers version that was pointing to us because
+    // reconfigurations repopulate nameservers
+    if (ns < nameservers.size() && nameservers[ns].vc == this)
         nameservers[ns].vc = nullptr;
 }
 
