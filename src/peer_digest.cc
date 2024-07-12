@@ -41,7 +41,7 @@ static STCB peerDigestHandleReply;
 static int peerDigestFetchReply(void *, char *, ssize_t);
 int peerDigestSwapInCBlock(void *, char *, ssize_t);
 int peerDigestSwapInMask(void *, char *, ssize_t);
-static int peerDigestFetchedEnough(DigestFetchState *, ssize_t size, const char *step_name);
+static int peerDigestFetchedEnough(DigestFetchState *fetch, char *buf, ssize_t size, const char *step_name);
 static void finishAndDeleteFetch(DigestFetchState *, const char *reason, bool sawError);
 static void peerDigestFetchSetStats(DigestFetchState * fetch);
 static int peerDigestSetCBlock(PeerDigest * pd, const char *buf);
@@ -350,7 +350,7 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
 
     /* If we've fetched enough, return */
 
-    if (peerDigestFetchedEnough(fetch, fetch->bufofs, "peerDigestHandleReply"))
+    if (peerDigestFetchedEnough(fetch, fetch->buf, fetch->bufofs, "peerDigestHandleReply"))
         return;
 
     /* Call the right function based on the state */
@@ -442,7 +442,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
     assert(fetch->state == DIGEST_READ_REPLY);
 
-    if (peerDigestFetchedEnough(fetch, size, "peerDigestFetchReply"))
+    if (peerDigestFetchedEnough(fetch, buf, size, "peerDigestFetchReply"))
         return -1;
 
     {
@@ -519,7 +519,7 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
 
     assert(fetch->state == DIGEST_READ_CBLOCK);
 
-    if (peerDigestFetchedEnough(fetch, size, "peerDigestSwapInCBlock"))
+    if (peerDigestFetchedEnough(fetch, buf, size, "peerDigestSwapInCBlock"))
         return -1;
 
     if (size >= (ssize_t)StoreDigestCBlockSize) {
@@ -566,7 +566,7 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
 
     /* NOTE! buf points to the middle of pd->cd->mask! */
 
-    if (peerDigestFetchedEnough(fetch, size, "peerDigestSwapInMask"))
+    if (peerDigestFetchedEnough(fetch, nullptr, size, "peerDigestSwapInMask"))
         return -1;
 
     fetch->mask_offset += size;
@@ -575,7 +575,7 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
         debugs(72, 2, "peerDigestSwapInMask: Done! Got " <<
                fetch->mask_offset << ", expected " << pd->cd->mask_size);
         assert(fetch->mask_offset == pd->cd->mask_size);
-        assert(peerDigestFetchedEnough(fetch, 0, "peerDigestSwapInMask"));
+        assert(peerDigestFetchedEnough(fetch, nullptr, 0, "peerDigestSwapInMask"));
         return -1;      /* XXX! */
     }
 
@@ -584,7 +584,7 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
 }
 
 static int
-peerDigestFetchedEnough(DigestFetchState * fetch, ssize_t size, const char *step_name)
+peerDigestFetchedEnough(DigestFetchState * fetch, char *, ssize_t size, const char *step_name)
 {
     static const SBuf hostUnknown("<unknown>"); // peer host (if any)
     SBuf host = hostUnknown;
