@@ -41,7 +41,7 @@ static STCB peerDigestHandleReply;
 static int peerDigestFetchReply(void *, char *, ssize_t);
 int peerDigestSwapInCBlock(void *, char *, ssize_t);
 int peerDigestSwapInMask(void *, char *, ssize_t);
-static int peerDigestFetchedEnough(DigestFetchState *fetch, char *buf, ssize_t size, const char *step_name);
+static int peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const char *step_name);
 static void finishAndDeleteFetch(DigestFetchState *, const char *reason, bool sawError);
 static void peerDigestFetchSetStats(DigestFetchState * fetch);
 static int peerDigestSetCBlock(PeerDigest * pd, const char *buf);
@@ -639,16 +639,16 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *, ssize_t size, const ch
 
 /* complete the digest transfer, update stats, unlock/release everything */
 static void
-finishAndDeleteFetch(DigestFetchState * fetch, const char *reason, const bool sawError)
+finishAndDeleteFetch(DigestFetchState * const fetch, const char * const reason, const bool err)
 {
     assert(reason);
 
-    debugs(72, 2, "peer: " << RawPointer(fetch->pd.valid() ? fetch->pd->peer : nullptr).orNil() << ", reason: " << reason << ", sawError: " << sawError);
+    debugs(72, 2, "peer: " << RawPointer(fetch->pd.valid() ? fetch->pd->peer : nullptr).orNil() << ", reason: " << reason << ", err: " << err);
 
     /* note: order is significant */
     peerDigestFetchSetStats(fetch);
     if (const auto pd = fetch->pd.get())
-        pd->noteFetchFinished(*fetch, reason, sawError);
+        pd->noteFetchFinished(*fetch, reason, err);
 
     delete fetch;
 }
