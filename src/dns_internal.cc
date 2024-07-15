@@ -933,7 +933,20 @@ idnsSendQueryVC(idns_query * q, size_t nsn)
         return;
     }
 
-    vc->queue->reset();
+    if (vc->queue->isNull())
+        vc->queue->init();
+
+    const auto serialiedQuerySize = 2 + q->sz + 1; // payload_length + payload + terminate()
+    if (vc->queue->potentialSpaceSize() < serialiedQuerySize) {
+        // header + payload + MemBuf terminator exceed maximum space size
+        debugs(78, DBG_IMPORTANT, "ERROR: Dropping DNS query due to insufficient buffer space for DNS over TCP query queue" <<
+               Debug::Extra << "query: " << q->name <<
+               Debug::Extra << "nameserver: " << nameservers[nsn].S <<
+               Debug::Extra << "used space: " << vc->queue->contentSize() <<
+               Debug::Extra << "remaining space: " << vc->queue->potentialSpaceSize() <<
+               Debug::Extra << "required space: " << serialiedQuerySize);
+        return; // the query will timeout and either fail or be retried
+    }
 
     short head = htons(q->sz);
 
