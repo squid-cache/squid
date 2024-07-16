@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "dns/rfc2671.h"
 #include "dns/rfc3596.h"
+#include "SquidConfig.h"
 #include "util.h"
 
 #if HAVE_UNISTD_H
@@ -54,7 +55,7 @@
  * Returns the size of the query
  */
 ssize_t
-rfc3596BuildHostQuery(const char *hostname, char *buf, size_t sz, unsigned short qid, rfc1035_query * query, int qtype, ssize_t edns_sz)
+rfc3596BuildHostQuery(const char *hostname, char *buf, size_t sz, unsigned short qid, rfc1035_query * query, int qtype)
 {
     static rfc1035_message h;
     size_t offset = 0;
@@ -64,7 +65,10 @@ rfc3596BuildHostQuery(const char *hostname, char *buf, size_t sz, unsigned short
     h.rd = 1;
     h.opcode = 0;               /* QUERY */
     h.qdcount = (unsigned int) 1;
+
+    const auto edns_sz = Config.dns.packet_max;
     h.arcount = (edns_sz > 0 ? 1 : 0);
+
     offset += rfc1035HeaderPack(buf + offset, sz - offset, &h);
     offset += rfc1035QuestionPack(buf + offset,
                                   sz - offset,
@@ -93,9 +97,9 @@ rfc3596BuildHostQuery(const char *hostname, char *buf, size_t sz, unsigned short
  * \return the size of the query
  */
 ssize_t
-rfc3596BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qid, rfc1035_query * query, ssize_t edns_sz)
+rfc3596BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qid, rfc1035_query * query)
 {
-    return rfc3596BuildHostQuery(hostname, buf, sz, qid, query, RFC1035_TYPE_A, edns_sz);
+    return rfc3596BuildHostQuery(hostname, buf, sz, qid, query, RFC1035_TYPE_A);
 }
 
 /**
@@ -107,9 +111,9 @@ rfc3596BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qi
  * \return the size of the query
  */
 ssize_t
-rfc3596BuildAAAAQuery(const char *hostname, char *buf, size_t sz, unsigned short qid, rfc1035_query * query, ssize_t edns_sz)
+rfc3596BuildAAAAQuery(const char *hostname, char *buf, size_t sz, unsigned short qid, rfc1035_query * query)
 {
-    return rfc3596BuildHostQuery(hostname, buf, sz, qid, query, RFC1035_TYPE_AAAA, edns_sz);
+    return rfc3596BuildHostQuery(hostname, buf, sz, qid, query, RFC1035_TYPE_AAAA);
 }
 
 /**
@@ -121,7 +125,7 @@ rfc3596BuildAAAAQuery(const char *hostname, char *buf, size_t sz, unsigned short
  * \return the size of the query
  */
 ssize_t
-rfc3596BuildPTRQuery4(const struct in_addr addr, char *buf, size_t sz, unsigned short qid, rfc1035_query * query, ssize_t edns_sz)
+rfc3596BuildPTRQuery4(const struct in_addr addr, char *buf, size_t sz, unsigned short qid, rfc1035_query * query)
 {
     static char rev[RFC1035_MAXHOSTNAMESZ];
     unsigned int i;
@@ -133,11 +137,11 @@ rfc3596BuildPTRQuery4(const struct in_addr addr, char *buf, size_t sz, unsigned 
              (i >> 16) & 255,
              (i >> 24) & 255);
 
-    return rfc3596BuildHostQuery(rev, buf, sz, qid, query, RFC1035_TYPE_PTR, edns_sz);
+    return rfc3596BuildHostQuery(rev, buf, sz, qid, query, RFC1035_TYPE_PTR);
 }
 
 ssize_t
-rfc3596BuildPTRQuery6(const struct in6_addr addr, char *buf, size_t sz, unsigned short qid, rfc1035_query * query, ssize_t edns_sz)
+rfc3596BuildPTRQuery6(const struct in6_addr addr, char *buf, size_t sz, unsigned short qid, rfc1035_query * query)
 {
     static char rev[RFC1035_MAXHOSTNAMESZ];
     const uint8_t* r = addr.s6_addr;
@@ -152,6 +156,6 @@ rfc3596BuildPTRQuery6(const struct in6_addr addr, char *buf, size_t sz, unsigned
 
     snprintf(p,10,"ip6.arpa.");
 
-    return rfc3596BuildHostQuery(rev, buf, sz, qid, query, RFC1035_TYPE_PTR, edns_sz);
+    return rfc3596BuildHostQuery(rev, buf, sz, qid, query, RFC1035_TYPE_PTR);
 }
 

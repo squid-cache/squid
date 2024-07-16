@@ -384,10 +384,6 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
         case DIGEST_READ_NONE:
             break;
 
-        case DIGEST_READ_DONE:
-            return;
-            break;
-
         default:
             fatal("Bad digest transfer mode!\n");
         }
