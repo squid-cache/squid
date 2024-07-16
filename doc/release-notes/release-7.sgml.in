@@ -172,6 +172,17 @@ This section gives an account of those changes in three categories:
 	<p>Removed the <em>non_peers</em> action. See the Cache Manager
 	<ref id="mgr" name="section"> for details.
 
+	<tag>dns_packet_max</tag>
+	<p>Honor positive <em>dns_packet_max</em> values when sending DNS A queries
+	and PTR queries containing IPv4 addresses. Prior to this change, Squid did
+	not add EDNS extension (RFC 6891) to those DNS queries because 2010 tests
+	revealed compatibility problems with some DNS resolvers. We hope that those
+	problems are now sufficiently rare to enable this useful optimization for
+	all DNS queries, as originally intended. Squid still sends EDNS extension
+	with DNS AAAA queries and PTR queries containing IPv6 addresses (when
+	dns_packet_max is set to a positive value). Rare deployments that must use
+	buggy DNS resolvers should not set <em>dns_packet_max</em>.
+
 	<tag>access_log</tag>
 	<p>Built-in <em>common</em> and <em>combined</em> logformats now always
 	receive a dash character ("-") in the position of what used to be a
