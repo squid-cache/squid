@@ -49,7 +49,9 @@ public:
     static MakingPointer Make(const acl_access *a, HttpRequest *r) { return MakingPointer(new ACLFilledChecklist(a, r)); }
 
     /// \copydoc ACLChecklist::nonBlockingCheck()
-    static void NonBlockingCheck(MakingPointer &&p, ACLCB *cb, void *data) { p.release()->nonBlockingCheck(cb, data); }
+    /// This public nonBlockingCheck() wrapper should be paired with Make(). The
+    /// pair prevents exception-caused Checklist memory leaks in caller code.
+    static void NonBlockingCheck(MakingPointer &&p, ACLCB *cb, void *data) { p->nonBlockingCheck(cb, data); (void)p.release(); }
 
     /// configure client request-related fields for the first time
     void setRequest(HttpRequest *);
