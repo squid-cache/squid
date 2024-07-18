@@ -35,7 +35,10 @@ class ACLFilledChecklist: public ACLChecklist
     CBDATA_CLASS_WITH_MAKE(ACLFilledChecklist);
 
 public:
-    using Pointer = std::unique_ptr<ACLFilledChecklist>;
+    /// Unlike regular Foo::Pointer types, this smart pointer is meant for use
+    /// during checklist configuration only, when it provides exception safety.
+    /// Any other/long-term checklist storage requires CbcPointer or equivalent.
+    using MakingPointer = std::unique_ptr<ACLFilledChecklist>;
 
     ACLFilledChecklist();
     ACLFilledChecklist(const acl_access *, HttpRequest *);
@@ -43,10 +46,10 @@ public:
 
     /// Creates an ACLFilledChecklist object with given constructor arguments.
     /// \returns a unique_ptr to this object
-    static Pointer Make(const acl_access *a, HttpRequest *r) { return Pointer(new ACLFilledChecklist(a, r)); }
+    static MakingPointer Make(const acl_access *a, HttpRequest *r) { return MakingPointer(new ACLFilledChecklist(a, r)); }
 
     /// \copydoc ACLChecklist::nonBlockingCheck(ACLCB *callback, void *callback_data)
-    static void NonBlockingCheck(Pointer &&p, ACLCB *cb, void *data) { p.release()->nonBlockingCheck(cb, data); }
+    static void NonBlockingCheck(MakingPointer &&p, ACLCB *cb, void *data) { p.release()->nonBlockingCheck(cb, data); }
 
     /// configure client request-related fields for the first time
     void setRequest(HttpRequest *);

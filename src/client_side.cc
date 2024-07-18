@@ -3448,7 +3448,7 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
     }
 }
 
-ACLFilledChecklist::Pointer
+ACLFilledChecklist::MakingPointer
 clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 {
     auto checklist = ACLFilledChecklist::Make(acl, nullptr);

@@ -258,7 +258,7 @@ private:
 /* client http based routines */
 char *clientConstructTraceEcho(ClientHttpRequest *);
 
-ACLFilledChecklist::Pointer clientAclChecklistCreate(const acl_access *, ClientHttpRequest *);
+ACLFilledChecklist::MakingPointer clientAclChecklistCreate(const acl_access *, ClientHttpRequest *);
 void clientAclChecklistFill(ACLFilledChecklist &, ClientHttpRequest *);
 void clientAccessCheck(ClientHttpRequest *);
 
