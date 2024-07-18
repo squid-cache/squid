@@ -16,8 +16,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-# order is important. If anything in a subdir requires a convenience library
-# from another subdir, then it must appear later in this list
+# subdir Y that requires a file built in subdir X must appear after X
 SUBDIRS = mem time debug base anyp helper dns html ftp parser comm error eui sbuf acl format clients servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
