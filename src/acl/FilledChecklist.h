@@ -45,10 +45,10 @@ public:
     ~ACLFilledChecklist() override;
 
     /// Creates an ACLFilledChecklist object with given constructor arguments.
-    /// \returns a unique_ptr to this object
+    /// Callers are expected to eventually proceed with NonBlockingCheck().
     static MakingPointer Make(const acl_access *a, HttpRequest *r) { return MakingPointer(new ACLFilledChecklist(a, r)); }
 
-    /// \copydoc ACLChecklist::nonBlockingCheck(ACLCB *callback, void *callback_data)
+    /// \copydoc ACLChecklist::nonBlockingCheck()
     static void NonBlockingCheck(MakingPointer &&p, ACLCB *cb, void *data) { p.release()->nonBlockingCheck(cb, data); }
 
     /// configure client request-related fields for the first time
