@@ -32,7 +32,7 @@ class ConnStateData;
  */
 class ACLFilledChecklist: public ACLChecklist
 {
-    CBDATA_CLASS_2(ACLFilledChecklist, protected);
+    CBDATA_CLASS_WITH_MAKE(ACLFilledChecklist);
 
 public:
     using Pointer = std::unique_ptr<ACLFilledChecklist>;

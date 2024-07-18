@@ -288,10 +288,12 @@ private:
 /// sets the class declaration section to "private"
 /// use this at the start of your class declaration for consistency sake
 /// \param newSpecifier the access specifier for the 'new' operator
-#define CBDATA_CLASS_2(type, newSpecifier) CBDATA_DECL_(type, newSpecifier, noexcept)
-
-/// same as CBDATA_CLASS_2(type, public)
 #define CBDATA_CLASS(type) CBDATA_DECL_(type, public, noexcept)
+
+/// A CBDATA_CLASS() variant for classes that want to prevent accidental
+/// operator new() calls by making that operator private and forcing external
+/// users to call a Make() function instead.
+#define CBDATA_CLASS_WITH_MAKE(type) CBDATA_DECL_(type, protected, noexcept)
 
 /// cbdata-enables a final CbdataParent-derived class in a hierarchy
 /// sets the class declaration section to "private"
