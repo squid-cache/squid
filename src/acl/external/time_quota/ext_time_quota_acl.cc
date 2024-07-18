@@ -60,7 +60,7 @@ static const auto KeyTimeBudgetLeft = "time-budget-left";
 static const auto KeyTimeBudgetConfigured = "time-budget-configured";
 
 /** Maximum size of buffers used to read or display lines. */
-const size_t TQ_BUFFERSIZE = 1024;
+static const size_t TQ_BUFFERSIZE = 1024;
 
 /** If there is more than this given number of seconds between two
  * successive requests, than the second request will be treated as a
