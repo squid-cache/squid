@@ -254,8 +254,7 @@ int cbdataReferenceValid(const void *p);
 cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size);
 
 /// declaration-generator used internally by CBDATA_CLASS() and CBDATA_CHILD()
-#define CBDATA_DECL_(type, newSpecifier, methodSpecifiers) \
-    newSpecifier: \
+#define CBDATA_DECL_(type, methodSpecifiers) \
         void *operator new(size_t size) { \
           assert(size == sizeof(type)); \
           if (!CBDATA_##type) CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type)); \
@@ -287,18 +286,17 @@ private:
 /// cbdata-enables a stand-alone class that is not a CbdataParent child
 /// sets the class declaration section to "private"
 /// use this at the start of your class declaration for consistency sake
-/// \param newSpecifier the access specifier for the 'new' operator
-#define CBDATA_CLASS(type) CBDATA_DECL_(type, public, noexcept)
+#define CBDATA_CLASS(type) public: CBDATA_DECL_(type, noexcept)
 
 /// A CBDATA_CLASS() variant for classes that want to prevent accidental
 /// operator new() calls by making that operator private and forcing external
 /// users to call a Make() function instead.
-#define CBDATA_CLASS_WITH_MAKE(type) CBDATA_DECL_(type, private, noexcept)
+#define CBDATA_CLASS_WITH_MAKE(type) private: CBDATA_DECL_(type, noexcept)
 
 /// cbdata-enables a final CbdataParent-derived class in a hierarchy
 /// sets the class declaration section to "private"
 /// use this at the start of your class declaration for consistency sake
-#define CBDATA_CHILD(type) CBDATA_DECL_(type, public, final) \
+#define CBDATA_CHILD(type) public: CBDATA_DECL_(type, final) \
       void finalizedInCbdataChild() final {}
 
 /// cbdata-enables a non-final CbdataParent-derived class T in a hierarchy.
