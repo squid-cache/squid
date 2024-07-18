@@ -293,7 +293,7 @@ private:
 /// A CBDATA_CLASS() variant for classes that want to prevent accidental
 /// operator new() calls by making that operator private and forcing external
 /// users to call a Make() function instead.
-#define CBDATA_CLASS_WITH_MAKE(type) CBDATA_DECL_(type, protected, noexcept)
+#define CBDATA_CLASS_WITH_MAKE(type) CBDATA_DECL_(type, private, noexcept)
 
 /// cbdata-enables a final CbdataParent-derived class in a hierarchy
 /// sets the class declaration section to "private"
