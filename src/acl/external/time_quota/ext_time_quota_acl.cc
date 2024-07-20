@@ -348,6 +348,7 @@ int main(int argc, char **argv)
 
     program_name = argv[0];
     Debug::NameThisHelper("ext_time_quota_acl");
+    char *cacheLog = nullptr;
 
     while ((opt = getopt(argc, argv, "dp:l:b:h")) != -1) {
         switch (opt) {
@@ -360,11 +361,19 @@ int main(int argc, char **argv)
         case 'p':
             pauseLength = atoi(optarg);
             break;
+        case 'l':
+            cacheLog = optarg;
+            break;
         case 'h':
             usage();
             exit(EXIT_SUCCESS);
             break;
         }
+    }
+
+    if (cacheLog) {
+        Debug::cache_log = cacheLog;
+        Debug::UseCacheLog();
     }
 
     debugs(DEBUG_SECTION, DBG_IMPORTANT, "Starting " << program_name);
