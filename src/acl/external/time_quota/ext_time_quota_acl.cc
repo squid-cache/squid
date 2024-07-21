@@ -34,7 +34,6 @@
 
 static const auto MY_DEBUG_SECTION = 1;
 
-#include <chrono>
 #include <ctime>
 #include <fstream>
 #if HAVE_GETOPT_H
