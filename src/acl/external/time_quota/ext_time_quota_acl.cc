@@ -32,7 +32,6 @@
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 
-static const auto MY_DEBUG_SECTION = 1;
 
 #include <ctime>
 #if HAVE_GETOPT_H
@@ -46,6 +45,7 @@ static const auto MY_DEBUG_SECTION = 1;
 #error "Please define DEFAULT_QUOTA_DB preprocessor constant."
 #endif
 
+static const auto MY_DEBUG_SECTION = 1;
 const char *db_path = DEFAULT_QUOTA_DB;
 const char *program_name;
 
