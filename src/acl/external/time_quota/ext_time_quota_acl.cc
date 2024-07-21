@@ -32,7 +32,7 @@
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 
-static const int DEBUG_SECTION=1;
+static const auto MY_DEBUG_SECTION = 1;
 
 #include <chrono>
 #include <ctime>
@@ -74,17 +74,17 @@ static int pauseLength = 300;
 
 static void init_db(void)
 {
-    debugs(DEBUG_SECTION, 2, "opening time quota database \"" << db_path << "\".");
+    debugs(MY_DEBUG_SECTION, 2, "opening time quota database \"" << db_path << "\".");
 
     int dbopts = TDB_CLEAR_IF_FIRST;
 
     db = tdb_open(db_path, 0, dbopts, O_CREAT | O_RDWR, 0666);
     if (!db) {
-        debugs(DEBUG_SECTION, DBG_IMPORTANT, "Failed to open time_quota db '" << db_path << '\'');
+        debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "Failed to open time_quota db '" << db_path << '\'');
         exit(EXIT_FAILURE);
     }
     // count the number of entries in the database, only used for debugging
-    debugs(DEBUG_SECTION, 2, "Database contains " << tdb_traverse(db, nullptr, nullptr) << " entries");
+    debugs(MY_DEBUG_SECTION, 2, "Database contains " << tdb_traverse(db, nullptr, nullptr) << " entries");
 }
 
 static void shutdown_db(void)
@@ -111,7 +111,7 @@ static void writeTime(const char *user_key, const char *sub_key, time_t t)
     };
 
     tdb_store(db, key, data, TDB_REPLACE);
-    debugs(DEBUG_SECTION, 3, "writeTime(\"" << ks << "\", " << t << ')');
+    debugs(MY_DEBUG_SECTION, 3, "writeTime(\"" << ks << "\", " << t << ')');
 }
 
 static time_t readTime(const char *user_key, const char *sub_key)
@@ -124,7 +124,7 @@ static time_t readTime(const char *user_key, const char *sub_key)
     auto data = tdb_fetch(db, key);
 
     if (!data.dptr) {
-        debugs(DEBUG_SECTION, 3, "no data found for key \"" << ks << "\".");
+        debugs(MY_DEBUG_SECTION, 3, "no data found for key \"" << ks << "\".");
         return 0;
     }
 
@@ -132,10 +132,10 @@ static time_t readTime(const char *user_key, const char *sub_key)
     if (data.dsize == sizeof(t)) {
         memcpy(&t, data.dptr, sizeof(t));
     } else {
-        debugs(DEBUG_SECTION, DBG_IMPORTANT, "CORRUPTED DATABASE key '" << ks << '\'');
+        debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "CORRUPTED DATABASE key '" << ks << '\'');
     }
 
-    debugs(DEBUG_SECTION, 3, "readTime(\"" << ks << "\")=" << t);
+    debugs(MY_DEBUG_SECTION, 3, "readTime(\"" << ks << "\")=" << t);
     return t;
 }
 
@@ -174,7 +174,7 @@ static void parseTime(const char *s, time_t *secs, time_t *start)
         *start += 24 * 3600;         // in europe, the week starts monday
         break;
     default:
-        debugs(DEBUG_SECTION, DBG_IMPORTANT, "Wrong time unit \"" << unit << "\". Only \"m\", \"h\", \"d\", or \"w\" allowed");
+        debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "Wrong time unit \"" << unit << "\". Only \"m\", \"h\", \"d\", or \"w\" allowed");
         break;
     }
 
@@ -198,7 +198,7 @@ static void readConfig(const char *filename)
     time_t budgetSecs, periodSecs;
     time_t start;
 
-    debugs(DEBUG_SECTION, 2, "reading config file \"" << filename << "\".");
+    debugs(MY_DEBUG_SECTION, 2, "reading config file \"" << filename << "\".");
 
     FH = fopen(filename, "r");
     if ( FH ) {
@@ -213,7 +213,7 @@ static void readConfig(const char *filename)
                 /* chop \n characters */
                 *cp = '\0';
             }
-            debugs(DEBUG_SECTION, 3, "read config line " << lineCount << ": \"" << line << '\"');
+            debugs(MY_DEBUG_SECTION, 3, "read config line " << lineCount << ": \"" << line << '\"');
             if ((username = strtok(line, "\t ")) != NULL) {
 
                 /* get the time budget */
@@ -229,7 +229,7 @@ static void readConfig(const char *filename)
                 parseTime(budget, &budgetSecs, &start);
                 parseTime(period, &periodSecs, &start);
 
-                debugs(DEBUG_SECTION, 3, "read time quota for user \"" << username << "\": " <<
+                debugs(MY_DEBUG_SECTION, 3, "read time quota for user \"" << username << "\": " <<
                        budgetSecs << "s / " << periodSecs << "s starting " << start);
 
                 writeTime(username, KeyPeriodStart, start);
@@ -256,7 +256,7 @@ static void processActivity(const char *user_key)
     time_t timeBudgetCurrent;
     time_t timeBudgetConfigured;
 
-    debugs(DEBUG_SECTION, 3, "processActivity(\"" << user_key << "\")");
+    debugs(MY_DEBUG_SECTION, 3, "processActivity(\"" << user_key << "\")");
 
     // [1] Reset period if over
     periodStart = readTime(user_key, KeyPeriodStart);
@@ -270,20 +270,20 @@ static void processActivity(const char *user_key)
     userPeriodLength = readTime(user_key, KeyPeriodLengthConfigured);
     if ( userPeriodLength == 0 ) {
         // This user is not configured. Allow anything.
-        debugs(DEBUG_SECTION, 3, "No period length found for user \"" << user_key <<
+        debugs(MY_DEBUG_SECTION, 3, "No period length found for user \"" << user_key <<
                "\". Quota for this user disabled.");
         writeTime(user_key, KeyTimeBudgetLeft, pauseLength);
     } else {
         if ( periodLength >= userPeriodLength ) {
             // a new period has started.
-            debugs(DEBUG_SECTION, 3, "New time period started for user \"" << user_key << '\"');
+            debugs(MY_DEBUG_SECTION, 3, "New time period started for user \"" << user_key << '\"');
             while ( periodStart < now ) {
                 periodStart += periodLength;
             }
             writeTime(user_key, KeyPeriodStart, periodStart);
             timeBudgetConfigured = readTime(user_key, KeyTimeBudgetConfigured);
             if ( timeBudgetConfigured == 0 ) {
-                debugs(DEBUG_SECTION, 3, "No time budget configured for user \"" << user_key  <<
+                debugs(MY_DEBUG_SECTION, 3, "No time budget configured for user \"" << user_key  <<
                        "\". Quota for this user disabled.");
                 writeTime(user_key, KeyTimeBudgetLeft, pauseLength);
             } else {
@@ -301,13 +301,13 @@ static void processActivity(const char *user_key)
         activityLength = now - lastActivity;
         if ( activityLength >= pauseLength ) {
             // This is an activity pause.
-            debugs(DEBUG_SECTION, 3, "Activity pause detected for user \"" << user_key << "\".");
+            debugs(MY_DEBUG_SECTION, 3, "Activity pause detected for user \"" << user_key << "\".");
             writeTime(user_key, KeyLastActivity, now);
         } else {
             // This is real usage.
             writeTime(user_key, KeyLastActivity, now);
 
-            debugs(DEBUG_SECTION, 3, "Time budget reduced by " << activityLength <<
+            debugs(MY_DEBUG_SECTION, 3, "Time budget reduced by " << activityLength <<
                    " for user \"" << user_key << "\".");
             timeBudgetCurrent = readTime(user_key, KeyTimeBudgetLeft);
             timeBudgetCurrent -= activityLength;
@@ -329,7 +329,7 @@ static void processActivity(const char *user_key)
 
 static void usage(void)
 {
-    debugs(DEBUG_SECTION, DBG_CRITICAL, "Wrong usage. Please reconfigure in squid.conf.");
+    debugs(MY_DEBUG_SECTION, DBG_CRITICAL, "Wrong usage. Please reconfigure in squid.conf.");
 
     std::cerr <<
               "Usage: " << program_name << " [-d] [-b dbpath] [-p pauselen] [-h] configfile\n" <<
@@ -353,7 +353,7 @@ int main(int argc, char **argv)
     while ((opt = getopt(argc, argv, "dp:l:b:h")) != -1) {
         switch (opt) {
         case 'd':
-            Debug::Levels[DEBUG_SECTION] = 9;
+            Debug::Levels[MY_DEBUG_SECTION] = 9;
             break;
         case 'b':
             db_path = optarg;
@@ -377,7 +377,7 @@ int main(int argc, char **argv)
         Debug::UseCacheLog();
     }
 
-    debugs(DEBUG_SECTION, DBG_IMPORTANT, "Starting " << program_name);
+    debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "Starting " << program_name);
     setbuf(stdout, nullptr);
 
     init_db();
@@ -389,7 +389,7 @@ int main(int argc, char **argv)
         readConfig(argv[optind]);
     }
 
-    debugs(DEBUG_SECTION, 2,"Waiting for requests...");
+    debugs(MY_DEBUG_SECTION, 2,"Waiting for requests...");
     while (fgets(request, HELPER_INPUT_BUFFER, stdin)) {
         // we expect the following line syntax: %LOGIN
         const char *user_key = strtok(request, " \n");
@@ -399,7 +399,7 @@ int main(int argc, char **argv)
         }
         processActivity(user_key);
     }
-    debugs(DEBUG_SECTION, DBG_IMPORTANT, "Ending " << program_name);
+    debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "Ending " << program_name);
     shutdown_db();
     return EXIT_SUCCESS;
 }
