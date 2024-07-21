@@ -35,7 +35,6 @@
 static const auto MY_DEBUG_SECTION = 1;
 
 #include <ctime>
-#include <fstream>
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
