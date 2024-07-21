@@ -311,9 +311,7 @@ static void processActivity(const char *user_key)
 
     timeBudgetCurrent = readTime(user_key, KeyTimeBudgetLeft);
 
-    SBufStream oss;
-    oss << HLP_MSG("Remaining quota for '" << user_key << "' is " << timeBudgetCurrent << " seconds.");
-    auto message = oss.buf();
+    const auto message = ToSBuf(HLP_MSG("Remaining quota for '" << user_key << "' is " << timeBudgetCurrent << " seconds."));
     if ( timeBudgetCurrent > 0 ) {
         SEND_OK(message);
     } else {
