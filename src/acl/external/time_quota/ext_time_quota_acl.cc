@@ -373,6 +373,7 @@ int main(int argc, char **argv)
 
     if (cacheLog) {
         Debug::cache_log = cacheLog;
+        Debug::doNotCloseOnExec = true;
         Debug::UseCacheLog();
     }
 
