@@ -212,11 +212,11 @@ static void readConfig(const char *filename)
 
                 /* get the time budget */
                 if ((budget = strtok(nullptr, "/")) == NULL) {
-                    std::cerr << "ERROR: missing 'budget' field on line " << lineCount << " of '" << filename << "'.\n";
+                    debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "ERROR: missing 'budget' field on line " << lineCount << " of '" << filename << '\'');
                     continue;
                 }
                 if ((period = strtok(nullptr, "/")) == NULL) {
-                    std::cerr << "ERROR: missing 'period' field on line " << lineCount << " of '" << filename << "'.\n";
+                    debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "ERROR: missing 'period' field on line " << lineCount << " of '" << filename << '\'');
                     continue;
                 }
 
