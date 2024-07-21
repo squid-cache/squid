@@ -97,7 +97,7 @@ static void writeTime(const char *user_key, const char *sub_key, time_t t)
 {
     auto ks = KeyString(user_key, sub_key);
     TDB_DATA key {
-        reinterpret_cast<unsigned char *>(const_cast<char *>(ks.c_str())),
+        reinterpret_cast<unsigned char *>(const_cast<char *>(ks.rawContent())),
         ks.length()
     }, data {
         reinterpret_cast<unsigned char *>(&t),
@@ -112,7 +112,7 @@ static time_t readTime(const char *user_key, const char *sub_key)
 {
     auto ks = KeyString(user_key, sub_key);
     TDB_DATA key {
-        reinterpret_cast<unsigned char *>(const_cast<char *>(ks.c_str())),
+        reinterpret_cast<unsigned char *>(const_cast<char *>(ks.rawContent())),
         ks.length()
     };
     auto data = tdb_fetch(db, key);
