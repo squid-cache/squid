@@ -32,7 +32,6 @@
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 
-
 #include <ctime>
 #if HAVE_GETOPT_H
 #include <getopt.h>
