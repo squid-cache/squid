@@ -326,12 +326,13 @@ static void usage(void)
     debugs(MY_DEBUG_SECTION, DBG_CRITICAL, "Wrong usage. Please reconfigure in squid.conf.");
 
     std::cerr <<
-              "Usage: " << program_name << " [-d] [-b dbpath] [-p pauselen] [-h] configfile\n" <<
-              "	-d            enable debugging output\n" <<
-              "	-b dbpath     Path where persistent session database will be kept\n" <<
-              "	              If option is not used, then " DEFAULT_QUOTA_DB " will be used.\n" <<
-              "	-p pauselen   length in seconds to describe a pause between 2 requests.\n" <<
-              "	-h            show show command line help.\n" <<
+              "Usage: " << program_name << " [-d] [-b dbpath] [-p pauselen] [-h] configfile\n"
+              "	-d            enable debugging output\n"
+              "	-l logfile    log messages to logfile\n"
+              "	-b dbpath     Path where persistent session database will be kept\n"
+              "	              If option is not used, then " DEFAULT_QUOTA_DB " will be used.\n"
+              "	-p pauselen   length in seconds to describe a pause between 2 requests.\n"
+              "	-h            show show command line help.\n"
               "configfile is a file containing time quota definitions.\n";
 }
 
@@ -339,6 +340,7 @@ int main(int argc, char **argv)
 {
     char request[HELPER_INPUT_BUFFER];
     int opt;
+    auto debug = false;
 
     program_name = argv[0];
     Debug::NameThisHelper("ext_time_quota_acl");
@@ -347,7 +349,7 @@ int main(int argc, char **argv)
     while ((opt = getopt(argc, argv, "dp:l:b:h")) != -1) {
         switch (opt) {
         case 'd':
-            Debug::Levels[MY_DEBUG_SECTION] = 9;
+            debug = true;
             break;
         case 'b':
             db_path = optarg;
@@ -369,6 +371,10 @@ int main(int argc, char **argv)
         Debug::cache_log = cacheLog;
         Debug::doNotCloseOnExec = true;
         Debug::UseCacheLog();
+        Debug::ResetStderrLevel(DBG_CRITICAL); // stop debugging to stderr
+        // debug levels are reset by UseCacheLog
+        if (debug)
+            Debug::Levels[MY_DEBUG_SECTION] = DBG_DATA;
     }
 
     debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "Starting " << program_name);
