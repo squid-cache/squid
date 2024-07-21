@@ -90,9 +90,7 @@ static void shutdown_db(void)
 
 static SBuf KeyString(const char *user_key, const char *sub_key)
 {
-    SBuf rv(user_key);
-    rv.append("-").append(sub_key);
-    return rv;
+    return ToSBuf(user_key, "-", sub_key);
 }
 
 static void writeTime(const char *user_key, const char *sub_key, time_t t)
