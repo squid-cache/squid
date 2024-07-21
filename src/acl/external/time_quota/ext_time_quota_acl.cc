@@ -74,9 +74,7 @@ static void init_db(void)
 {
     debugs(MY_DEBUG_SECTION, 2, "opening time quota database \"" << db_path << "\".");
 
-    int dbopts = TDB_CLEAR_IF_FIRST;
-
-    db = tdb_open(db_path, 0, dbopts, O_CREAT | O_RDWR, 0666);
+    db = tdb_open(db_path, 0, TDB_CLEAR_IF_FIRST, O_CREAT | O_RDWR, 0666);
     if (!db) {
         debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "Failed to open time_quota db '" << db_path << '\'');
         exit(EXIT_FAILURE);
