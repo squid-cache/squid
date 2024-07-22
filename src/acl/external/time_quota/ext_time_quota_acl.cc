@@ -264,8 +264,8 @@ static void processActivity(const char *user_key)
     userPeriodLength = readTime(user_key, KeyPeriodLengthConfigured);
     if ( userPeriodLength == 0 ) {
         // This user is not configured. Allow anything.
-        debugs(MY_DEBUG_SECTION, 3, "No period length found for user \"" << user_key <<
-               "\". Quota for this user disabled.");
+        debugs(DEBUG_SECTION, 3, "disabling user quota for user '" <<
+            user_key << "': no period length found");
         writeTime(user_key, KeyTimeBudgetLeft, pauseLength);
     } else {
         if ( periodLength >= userPeriodLength ) {
