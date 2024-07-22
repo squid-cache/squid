@@ -75,7 +75,7 @@ static void init_db(void)
 
     db = tdb_open(db_path, 0, TDB_CLEAR_IF_FIRST, O_CREAT | O_RDWR, 0666);
     if (!db) {
-        debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "Failed to open time_quota db '" << db_path << '\'');
+        debugs(MY_DEBUG_SECTION, DBG_CRITICAL, "FATAL: Failed to open time_quota db '" << db_path << '\'');
         exit(EXIT_FAILURE);
     }
     // count the number of entries in the database, only used for debugging
@@ -126,7 +126,7 @@ static time_t readTime(const char *user_key, const char *sub_key)
     if (data.dsize == sizeof(t)) {
         memcpy(&t, data.dptr, sizeof(t));
     } else {
-        debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "CORRUPTED DATABASE key '" << ks << '\'');
+        debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "ERROR: corrupted database key '" << ks << '\'');
     }
 
     debugs(MY_DEBUG_SECTION, 3, "readTime(\"" << ks << "\")=" << t);
@@ -168,7 +168,7 @@ static void parseTime(const char *s, time_t *secs, time_t *start)
         *start += 24 * 3600;         // in europe, the week starts monday
         break;
     default:
-        debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "Wrong time unit \"" << unit << "\". Only \"m\", \"h\", \"d\", or \"w\" allowed");
+        debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "ERROR: Wrong time unit \"" << unit << "\". Only \"m\", \"h\", \"d\", or \"w\" allowed");
         break;
     }
 
