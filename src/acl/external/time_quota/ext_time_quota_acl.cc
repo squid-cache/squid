@@ -349,14 +349,14 @@ int main(int argc, char **argv)
         case 'd':
             debug = true;
             break;
+        case 'l':
+            cacheLog = optarg;
+            break;
         case 'b':
             db_path = optarg;
             break;
         case 'p':
             pauseLength = atoi(optarg);
-            break;
-        case 'l':
-            cacheLog = optarg;
             break;
         case 'h':
             usage();
