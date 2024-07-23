@@ -138,21 +138,11 @@ diskCombineWrites(_fde_disk *fdd)
         for (dwrite_q *q = fdd->write_q; q != nullptr; q = q->next)
             len += q->len - q->buf_offset;
 
-        dwrite_q *wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
-
+        auto *wq = new dwrite_q;
         wq->buf = (char *)xmalloc(len);
+        wq->free_func = cxx_xfree; // dwrite_q buffer xfree()
 
-        wq->len = 0;
-
-        wq->buf_offset = 0;
-
-        wq->next = nullptr;
-
-        wq->free_func = cxx_xfree;
-
-        while (fdd->write_q != nullptr) {
-            dwrite_q *q = fdd->write_q;
-
+        while (auto *q = fdd->write_q) {
             len = q->len - q->buf_offset;
             memcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
             wq->len += len;
@@ -161,7 +151,7 @@ diskCombineWrites(_fde_disk *fdd)
             if (q->free_func)
                 q->free_func(q->buf);
 
-            memFree(q, MEM_DWRITE_Q);
+            delete q;
         };
 
         fdd->write_q_tail = wq;
@@ -178,11 +168,10 @@ diskHandleWrite(int fd, void *)
     fde *F = &fd_table[fd];
 
     _fde_disk *fdd = &F->disk;
-    dwrite_q *q = fdd->write_q;
     int status = DISK_OK;
     bool do_close;
 
-    if (nullptr == q)
+    if (!fdd->write_q)
         return;
 
     debugs(6, 3, "diskHandleWrite: FD " << fd);
@@ -246,23 +235,20 @@ diskHandleWrite(int fd, void *)
              * repeated write failures for the same FD because of
              * the queued data.
              */
-            do {
+            while (auto *q = fdd->write_q) {
                 fdd->write_q = q->next;
 
                 if (q->free_func)
                     q->free_func(q->buf);
 
-                if (q) {
-                    memFree(q, MEM_DWRITE_Q);
-                    q = nullptr;
-                }
-            } while ((q = fdd->write_q));
+                delete q;
+            }
         }
 
         len = 0;
     }
 
-    if (q != nullptr) {
+    if (auto *q = fdd->write_q) {
         /* q might become NULL from write failure above */
         q->buf_offset += len;
 
@@ -280,10 +266,7 @@ diskHandleWrite(int fd, void *)
             if (q->free_func)
                 q->free_func(q->buf);
 
-            if (q) {
-                memFree(q, MEM_DWRITE_Q);
-                q = nullptr;
-            }
+            delete q;
         }
     }
 
@@ -331,17 +314,14 @@ file_write(int fd,
            void *handle_data,
            FREE * free_func)
 {
-    dwrite_q *wq = nullptr;
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->flags.open);
     /* if we got here. Caller is eligible to write. */
-    wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
+    auto *wq = new dwrite_q;
     wq->file_offset = file_offset;
     wq->buf = (char *)ptr_to_buf;
     wq->len = len;
-    wq->buf_offset = 0;
-    wq->next = nullptr;
     wq->free_func = free_func;
 
     if (!F->disk.wrt_handle_data) {
