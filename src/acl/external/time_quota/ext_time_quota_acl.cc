@@ -76,15 +76,6 @@ static int pauseLength = 300;
 static FILE *logfile = stderr;
 static int tq_debug_enabled = false;
 
-static void open_log(const char *logfilename)
-{
-    logfile = fopen(logfilename, "a");
-    if ( logfile == NULL ) {
-        perror(logfilename);
-        logfile = stderr;
-    }
-}
-
 static void vlog(const char *level, const char *format, va_list args)
 {
     time_t now = time(NULL);
@@ -399,9 +390,8 @@ static void usage(void)
 {
     log_error("Wrong usage. Please reconfigure in squid.conf.\n");
 
-    fprintf(stderr, "Usage: %s [-d] [-l logfile] [-b dbpath] [-p pauselen] [-h] configfile\n", program_name);
-    fprintf(stderr, "	-d            enable debugging output to logfile\n");
-    fprintf(stderr, "	-l logfile    log messages to logfile\n");
+    fprintf(stderr, "Usage: %s [-d] [-b dbpath] [-p pauselen] [-h] configfile\n", program_name);
+    fprintf(stderr, "	-d            enable debugging output\n");
     fprintf(stderr, "	-b dbpath     Path where persistent session database will be kept\n");
     fprintf(stderr, "	              If option is not used, then " DEFAULT_QUOTA_DB " will be used.\n");
     fprintf(stderr, "	-p pauselen   length in seconds to describe a pause between 2 requests.\n");
@@ -416,13 +406,10 @@ int main(int argc, char **argv)
 
     program_name = argv[0];
 
-    while ((opt = getopt(argc, argv, "dp:l:b:h")) != -1) {
+    while ((opt = getopt(argc, argv, "dp:b:h")) != -1) {
         switch (opt) {
         case 'd':
             tq_debug_enabled = true;
-            break;
-        case 'l':
-            open_log(optarg);
             break;
         case 'b':
             db_path = optarg;
