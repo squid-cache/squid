@@ -45,34 +45,38 @@ ACLServerNameData::match(const char *host)
 
 }
 
-/// A helper function to be used with Ssl::matchX509CommonNames().
-/// \retval 0 when the name (cn or an alternate name) matches acl data
-/// \retval 1 when the name does not match
-template<class MatchType>
-int
-check_cert_domain( void *check_data, ASN1_STRING *cn_data, Ssl::AddressType addr_type)
+namespace Acl {
+
+class ServerNameMatcher: public Ssl::GeneralNameMatcher
 {
-    // addr_type is only declared here to ensure the signature type matches
-    // for matchX509CommonNames. Void it here to avoid compiler warnings.
-    (void)addr_type;
-    char cn[1024];
-    ACLData<MatchType> * data = (ACLData<MatchType> *)check_data;
+public:
+    explicit ServerNameMatcher(ServerNameCheck::Parameters &p): parameters(p) {}
 
-    if (cn_data->length > (int)sizeof(cn) - 1)
-        return 1; // ignore data that does not fit our buffer
+    bool match(const Ssl::GeneralName &) const override;
 
-    char *s = reinterpret_cast<char *>(cn_data->data);
-    char *d = cn;
-    for (int i = 0; i < cn_data->length; ++i, ++d, ++s) {
-        if (*s == '\0')
-            return 1; // always a domain mismatch. contains 0x00
-        *d = *s;
+private:
+    // TODO: Make ServerNameCheck::Parameters::match() and this reference constant.
+    ServerNameCheck::Parameters &parameters; ///< configured ACL parameters
+};
+
+} // namespace Acl
+
+bool
+Acl::ServerNameMatcher::match(const Ssl::GeneralName &name) const
+{
+    if (const auto domain = name.domainName())
+        return parameters.match(SBuf(*domain).c_str()); // TODO: Upgrade string-matching ACLs to SBuf
+
+    if (const auto ip = name.ip()) {
+        // This IP address conversion to c-string brackets IPv6 addresses.
+        // TODO: Document that fact in ssl::server_name.
+        char hostStr[MAX_IPSTRLEN] = "";
+        (void)ip->toHostStr(hostStr, sizeof(hostStr));
+        return parameters.match(hostStr);
     }
-    cn[cn_data->length] = '\0';
-    debugs(28, 4, "Verifying certificate name/subjectAltName " << cn);
-    if (data->match(cn))
-        return 0;
-    return 1;
+
+    debugs(83, 7, "assume an unsupported name variant " << name.index() << " does not match");
+    return false;
 }
 
 int
@@ -82,37 +86,35 @@ Acl::ServerNameCheck::match(ACLChecklist * const ch)
 
     assert(checklist != nullptr && checklist->request != nullptr);
 
-    const char *serverName = nullptr;
-    SBuf clientSniKeeper; // because c_str() is not constant
+    std::optional<SBuf> serverNameFromConn;
     if (ConnStateData *conn = checklist->conn()) {
-        const char *clientRequestedServerName = nullptr;
-        clientSniKeeper = conn->tlsClientSni();
-        if (clientSniKeeper.isEmpty()) {
+        std::optional<SBuf> clientRequestedServerName;
+        const auto &clientSni = conn->tlsClientSni();
+        if (clientSni.isEmpty()) {
             const char *host = checklist->request->url.host();
             if (host && *host) // paranoid first condition: host() is never nil
-                clientRequestedServerName = host;
+                clientRequestedServerName = host; // TODO: Use Uri::hostOrIp() instead
         } else
-            clientRequestedServerName = clientSniKeeper.c_str();
+            clientRequestedServerName = clientSni;
 
         if (useConsensus) {
             X509 *peer_cert = conn->serverBump() ? conn->serverBump()->serverCert.get() : nullptr;
             // use the client requested name if it matches the server
             // certificate or if the certificate is not available
-            if (!peer_cert || Ssl::checkX509ServerValidity(peer_cert, clientRequestedServerName))
-                serverName = clientRequestedServerName;
+            if (!peer_cert || !clientRequestedServerName ||
+                Ssl::findSubjectName(*peer_cert, *clientRequestedServerName))
+                serverNameFromConn = clientRequestedServerName;
         } else if (useClientRequested)
-            serverName = clientRequestedServerName;
+            serverNameFromConn = clientRequestedServerName;
         else { // either no options or useServerProvided
             if (X509 *peer_cert = (conn->serverBump() ? conn->serverBump()->serverCert.get() : nullptr))
-                return Ssl::matchX509CommonNames(peer_cert, data.get(), check_cert_domain<const char*>);
+                return Ssl::matchX509CommonNames(*peer_cert, ServerNameMatcher(*data));
             if (!useServerProvided)
-                serverName = clientRequestedServerName;
+                serverNameFromConn = clientRequestedServerName;
         }
     }
 
-    if (!serverName)
-        serverName = "none";
-
+    const auto serverName = serverNameFromConn ? serverNameFromConn->c_str() : "none";
     return data->match(serverName);
 }
 

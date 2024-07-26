@@ -14,6 +14,7 @@
 #if USE_OPENSSL
 
 #include "base/CbDataList.h"
+#include "base/TypeTraits.h"
 #include "comm/forward.h"
 #include "compat/openssl.h"
 #include "ip/Address.h"
@@ -32,6 +33,8 @@
 #endif
 #include <queue>
 #include <map>
+#include <optional>
+#include <variant>
 
 /**
  \defgroup ServerProtocolSSLAPI Server-Side SSL API
@@ -144,10 +147,60 @@ inline const char *bumpMode(int bm)
 /// certificates indexed by issuer name
 typedef std::multimap<SBuf, X509 *> CertsIndexedList;
 
-/// enum for use when checking domain matches
-enum class AddressType {
-    IP,
-    DNS,
+/// Indexes of RFC 5280 GeneralName variants (and the corresponding types). We
+/// do not yet support most of these variants, but we list all of them, so that
+/// our index values match those in X.509 certificates/RFC 5280.
+enum class GeneralNameKind: size_t {
+    otherName = 0, // OtherName
+    rfc822Name = 1, // IA5String
+    dNSName = 2, // IA5String
+    x400Address = 3, // ORAddress
+    directoryName = 4, // Name
+    ediPartyName = 5, // EDIPartyName
+    uniformResourceIdentifier = 6, // IA5String
+    iPAddress = 7, // OCTET STRING
+    registeredID = 8 // OBJECT IDENTIFIER
+};
+
+// TODO: Move/generalize if others need this.
+/// Marks GeneralName variant that we do not yet support. Including this empty
+/// class in GeneralName is necessary for GeneralNameKind values to match
+/// indexes in X.509 certificates.
+class UnsupportedVariant {};
+
+/// a helper class to store successfully extracted/parsed GeneralName (RFC 5280)
+using GeneralNameStorage = std::variant<
+    UnsupportedVariant, // OtherName (index is otherName)
+    UnsupportedVariant, // IA5String (index is rfc822Name)
+    SBuf, // IA5String (index is dNSName)
+    UnsupportedVariant, // ORAddress (index is x400Address)
+    UnsupportedVariant, // Name (index is directoryName)
+    UnsupportedVariant, // EDIPartyName (index is ediPartyName)
+    UnsupportedVariant, // IA5String (index is uniformResourceIdentifier)
+    Ip::Address, // OCTET STRING (index is iPAddress)
+    UnsupportedVariant // OBJECT IDENTIFIER (index is registeredID)
+>;
+
+/// successfully extracted/parsed GeneralName (RFC 5280)
+/// (a.k.a. OpenSSL GENERAL_NAME)
+class GeneralName
+{
+public:
+    static std::optional<GeneralName> FromCommonName(const ASN1_STRING &);
+    static std::optional<GeneralName> FromSubjectAltName( const GENERAL_NAME &);
+
+    // XXX: remove these C casts
+    auto ip() const { return std::get_if<(size_t)GeneralNameKind::iPAddress>(&raw_); }
+    auto domainName() const { return std::get_if<(size_t)GeneralNameKind::dNSName>(&raw_); }
+
+    /// XXX: Document all methods
+    auto index() const { return raw_.index(); }
+
+private:
+    // use a From*() function to create these objects
+    GeneralName(const GeneralNameStorage &raw): raw_(raw) {}
+
+    GeneralNameStorage raw_; /// information we are providing access to
 };
 
 /**
@@ -280,25 +333,19 @@ bool configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
  */
 void useSquidUntrusted(SSL_CTX *sslContext);
 
-/**
-   \ingroup ServerProtocolSSLAPI
-   * Iterates over the X509 common and alternate names and to see if  matches with given data
-   * using the check_func.
-   \param peer_cert  The X509 cert to check
-   \param check_data The data with which the X509 CNs compared
-   \param check_func The function used to match X509 CNs. The CN data passed as ASN1_STRING data
-   \return   1 if any of the certificate CN matches, 0 if none matches.
- */
-int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data, AddressType addr_type));
+/// an algorithm for checking/testing/comparing X.509 certificate names
+class GeneralNameMatcher: public Interface
+{
+public:
+    /// XXX: Document
+    virtual bool match(const Ssl::GeneralName &) const = 0;
+};
 
-/**
-   \ingroup ServerProtocolSSLAPI
-   * Check if the certificate is valid for a server
-   \param cert  The X509 cert to check.
-   \param server The server name.
-   \return   true if the certificate is valid for the server or false otherwise.
- */
-bool checkX509ServerValidity(X509 *cert, const char *server);
+/// determines whether at least one common or alternate certificate names matches
+bool matchX509CommonNames(X509 &, const GeneralNameMatcher &);
+
+/// whether at least one common or alternate subject name matches the given one
+bool findSubjectName(X509 &, const SBuf &name);
 
 /**
    \ingroup ServerProtocolSSLAPI
@@ -371,20 +418,6 @@ public:
     bool hidMissingIssuer = false;
 };
 
-class VerifyAddress {
-public:
-    // Constructor
-    VerifyAddress(void *check_data)
-    : private_check_data(processCheckData(check_data))
-    {}
-    int match(ASN1_STRING *cn_data, AddressType addr_type);
-private:
-    int matchDomainNameData(ASN1_STRING *cn_data);
-    int matchIp(Ip::Address &iaddr);
-
-    const char* processCheckData(void *check_data);
-    const char* private_check_data;
-};
 } //namespace Ssl
 
 

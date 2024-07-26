@@ -58,79 +58,56 @@ std::vector<const char *> Ssl::BumpModeStr = {
     /*,"err"*/
 };
 
-// Methods for the VerifyAddress class
-int Ssl::VerifyAddress::match(ASN1_STRING *asn1_data, Ssl::AddressType addr_type) {
-    switch (addr_type) {
-        // For IP addresses, create an in[6]_addr struct from the ASN1 data,
-        // create an Ip::Address from it and then use that to attempt a match.
-        case Ssl::AddressType::IP:
-            {
-                const unsigned char *address = ASN1_STRING_get0_data(asn1_data);
-                Ip::Address iaddr;
-                // Declare a buffer that can store either an IPV4 or IPV6 address
-                char theip[40];
-                switch(ASN1_STRING_length(asn1_data)) {
-                    case 4:
-                        struct in_addr addr;
-                        memcpy(&addr.s_addr, address, 4);
-                        iaddr = addr;
-                        iaddr.toStr(theip, 40);
-                        debugs(83, 4, "Verifying server IP " << private_check_data << " IPV4: " << theip);
-                        return matchIp(iaddr);
-                    case 16:
-                        struct in6_addr addr6;
-                        memcpy(&addr6.s6_addr, address, 16);
-                        iaddr = addr6;
-                        iaddr.toStr(theip, 40);
-                        debugs(83, 4, "Verifying server IP " << private_check_data << " IPV6: " << theip);
-                        return matchIp(iaddr);
-                    default:
-                        // This doesn't look like an IP despite what the type is set to. Fail the match.
-                        debugs(83, 4, "Unexpected ASN1 string length for an IP address");
-                        return 1;
-                }
-            }
-        case Ssl::AddressType::DNS:
-            debugs(83, 4, "Performing DNS domain match");
-            return matchDomainNameData(asn1_data);
-    }
-    // If we got here, fail
-    return 1;
+namespace Ssl {
+
+class OneNameMatcher: public GeneralNameMatcher
+{
+public:
+    explicit OneNameMatcher(const SBuf &needle): needleStorage_(needle), needle_(needleStorage_.c_str()) {}
+
+    bool match(const GeneralName &) const override;
+
+private:
+    bool matchDomainName(const SBuf &) const;
+    bool matchIp(const Ip::Address &) const;
+
+    SBuf needleStorage_; ///< a name we are looking for
+    const char * const needle_; ///< needleStorage_ using matchDomainName()-compatible type
+};
+
+} // namespace Ssl
+
+bool
+Ssl::OneNameMatcher::match(const GeneralName &name) const
+{
+    if (const auto domain = name.domainName())
+        return matchDomainName(*domain);
+    if (const auto ip = name.ip())
+        return matchIp(*ip);
+    debugs(83, 7, "assume an unsupported name variant " << name.index() << " does not match: " << needle_);
+    return false;
 }
 
-int Ssl::VerifyAddress::matchDomainNameData(ASN1_STRING *cn_data) {
-    char cn[1024];
-
-    if (cn_data->length == 0)
-        return 1; // zero length cn, ignore
-
-    if (cn_data->length > (int)sizeof(cn) - 1)
-        return 1; //if does not fit our buffer just ignore
-
-    char *s = reinterpret_cast<char*>(cn_data->data);
-    char *d = cn;
-    for (int i = 0; i < cn_data->length; ++i, ++d, ++s) {
-        if (*s == '\0')
-            return 1; // always a domain mismatch. contains 0x00
-        *d = *s;
-    }
-    cn[cn_data->length] = '\0';
-    debugs(83, 4, "Verifying server domain " << private_check_data << " to certificate name/subjectAltName " << cn);
-    return matchDomainName(private_check_data, (cn[0] == '*' ? cn + 1 : cn), mdnRejectSubsubDomains);
+bool
+Ssl::OneNameMatcher::matchDomainName(const SBuf &rawName) const {
+    debugs(83, 5, "needle=" << needle_ << " domain=" << rawName); // XXX: rawName may contain non-printable characters
+    auto name = rawName;
+    if (name.length() > 0 && name[0] == '*')
+        name.consume(1);
+    return ::matchDomainName(needle_, name.c_str(), mdnRejectSubsubDomains) == 0;
 }
 
-int Ssl::VerifyAddress::matchIp(Ip::Address &iaddr) {
-    // Attempt to convert private_check_data to an IP address
-    // and compare it to iaddr
-    Ip::Address check_ip;
-    if ((check_ip = private_check_data) && (iaddr == check_ip)) {
-        return 0;
+bool
+Ssl::OneNameMatcher::matchIp(const Ip::Address &ip) const {
+    debugs(83, 5, "needle=" << needle_ << " ip=" << ip);
+    // if we cannot convert our needle to an IP, then it does not match any IP
+    Ip::Address needleIp;
+    if (!(needleIp = needle_)) {
+        // TODO: Consider caching conversion result in anticipation of matchIp() calls
+        debugs(83, 7, "needle is not an IP, cannot match");
+        return false;
     }
-    return 1;
-}
-
-const char* Ssl::VerifyAddress::processCheckData(void *check_data) {
-    return reinterpret_cast<const char*>(check_data);
+    return (needleIp == ip);
 }
 
 /**
@@ -270,61 +247,116 @@ int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len)
     return write;
 }
 
-int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data, Ssl::AddressType addr_type))
+std::optional<Ssl::GeneralName>
+Ssl::GeneralName::FromCommonName(const ASN1_STRING &buffer)
 {
-    assert(peer_cert);
+    // Unlike OpenSSL GENERAL_NAME, ASN1_STRING cannot tell us what kind of
+    // information this CN buffer stores. The rest of Squid code treats CN as a
+    // domain name, so we parse/validate the given buffer as such.
 
-    X509_NAME *name = X509_get_subject_name(peer_cert);
+    const SBuf raw(reinterpret_cast<const char *>(buffer.data), buffer.length);
 
+    if (raw.isEmpty()) {
+        debugs(83, 5, "rejecting empty CN");
+        return std::nullopt;
+    }
+
+    if (raw.find('\0') != SBuf::npos) {
+        debugs(83, 5, "rejecting CN with an ASCII NUL character: " << raw); // XXX: Contains non-printable characters!
+        return std::nullopt;
+    }
+
+    debugs(83, 5, "parsed CN: " << raw); // XXX: May contain non-printable characters
+    const GeneralNameStorage storage(std::in_place_index<(size_t)GeneralNameKind::dNSName>, raw); // XXX: Remove C cast.
+    return GeneralName(storage);
+}
+
+std::optional<Ssl::GeneralName>
+Ssl::GeneralName::FromSubjectAltName(const GENERAL_NAME &san)
+{
+    switch(san.type) {
+    case GEN_DNS: {
+        // san.d.dNSName is ASN1_IA5STRING
+        Assure(san.d.dNSName);
+        const SBuf raw(reinterpret_cast<const char *>(san.d.dNSName->data), san.d.dNSName->length);
+        debugs(83, 5, "parsed DNS name: " << raw); // XXX: May contain non-printable characters
+        const GeneralNameStorage storage(std::in_place_index<(size_t)GeneralNameKind::dNSName>, raw); // XXX: Remove C cast.
+        return GeneralName(storage);
+    }
+
+    case GEN_IPADD: {
+        // san.d.iPAddress is ASN1_OCTET_STRING
+        Assure(san.d.iPAddress);
+        if (san.d.iPAddress->length == 4) {
+            struct in_addr addr;
+            static_assert(sizeof(addr.s_addr) == 4);
+            memcpy(&addr.s_addr, san.d.iPAddress->data, sizeof(addr.s_addr));
+            const Ip::Address ip(addr);
+            debugs(83, 5, "parsed IPv4: " << ip);
+            const GeneralNameStorage storage(std::in_place_index<(size_t)GeneralNameKind::iPAddress>, ip); // XXX: Remove C cast.
+            return GeneralName(storage);
+        }
+
+        if (san.d.iPAddress->length == 16) {
+            struct in6_addr addr;
+            static_assert(sizeof(addr.s6_addr) == 16);
+            memcpy(&addr.s6_addr, san.d.iPAddress->data, sizeof(addr.s6_addr));
+            const Ip::Address ip(addr);
+            debugs(83, 5, "parsed IPv6: " << ip);
+            const GeneralNameStorage storage(std::in_place_index<(size_t)GeneralNameKind::iPAddress>, ip); // XXX: Remove C cast.
+            return GeneralName(storage);
+        }
+
+        debugs(83, 4, "unexpected length of an IP address SAN: " << san.d.iPAddress->length);
+        return std::nullopt;
+    }
+
+    default:
+        debugs(83, 4, "unsupported SAN kind: " << san.type);
+        return std::nullopt;
+    }
+}
+
+bool
+Ssl::matchX509CommonNames(X509 &cert, const GeneralNameMatcher &matcher)
+{
+    const auto name = X509_get_subject_name(&cert);
     for (int i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
 
         ASN1_STRING *cn_data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, i));
+        if (!cn_data) {
+            debugs(83, 5, "failed to extract CN value: " << Ssl::ReportAndForgetErrors);
+            continue;
+        }
 
-        if ( (*check_func)(check_data, cn_data, Ssl::AddressType::DNS) == 0)
-            return 1;
+        if (const auto cn = GeneralName::FromCommonName(*cn_data)) {
+            if (matcher.match(*cn))
+                return true;
+        }
     }
 
-    STACK_OF(GENERAL_NAME) * altnames;
-    altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(peer_cert, NID_subject_alt_name, nullptr, nullptr);
-
-    if (altnames) {
-        int numalts = sk_GENERAL_NAME_num(altnames);
-        for (int i = 0; i < numalts; ++i) {
-            const GENERAL_NAME *check = sk_GENERAL_NAME_value(altnames, i);
-            switch(check->type) {
-                case GEN_DNS:
-                    // If the type is GEN_DNS, call check_func with the dNSName data
-                    if ( (*check_func)(check_data, check->d.dNSName, Ssl::AddressType::DNS) == 0) {
-                        sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
-                        return 1;
-                    }
-                    break;
-                case GEN_IPADD:
-                    debugs(83, 4, "Check type is GEN_IPADD, verifying...");
-                    // If it's an IP address, call check_func with the iPAddress data
-                    if ( (*check_func)(check_data, check->d.iPAddress, Ssl::AddressType::IP) == 0) {
-                        sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
-                        return 1;
-                    }
-                    break;
-                default:
-                    continue;
+    const Ssl::GENERAL_NAME_STACK_Pointer sans(static_cast<STACK_OF(GENERAL_NAME)*>(
+        X509_get_ext_d2i(&cert, NID_subject_alt_name, nullptr, nullptr)));
+    if (sans) {
+        const auto sanCount = sk_GENERAL_NAME_num(sans.get());
+        for (int i = 0; i < sanCount; ++i) {
+            const auto rawSan = sk_GENERAL_NAME_value(sans.get(), i);
+            Assure(rawSan);
+            if (const auto san = GeneralName::FromSubjectAltName(*rawSan)) {
+                if (matcher.match(*san))
+                    return true;
             }
         }
-        sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
     }
-    return 0;
+
+    debugs(83, 7, "no matches");
+    return false;
 }
 
-static int check_domain( void *check_data, ASN1_STRING *cn_data, Ssl::AddressType addr_type)
+bool
+Ssl::findSubjectName(X509 &cert, const SBuf &name)
 {
-    Ssl::VerifyAddress verify(check_data);
-    return verify.match(cn_data, addr_type);
-}
-
-bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
-{
-    return matchX509CommonNames(cert, (void *)server, check_domain);
+    return matchX509CommonNames(cert, OneNameMatcher(name));
 }
 
 /// adjusts OpenSSL validation results for each verified certificate in ctx
@@ -366,7 +398,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 
         // Check for domain mismatch only if the current certificate is the peer certificate.
         if (!dont_verify_domain && server && peer_cert.get() == X509_STORE_CTX_get_current_cert(ctx)) {
-            if (!Ssl::checkX509ServerValidity(peer_cert.get(), server->c_str())) {
+            if (!Ssl::findSubjectName(*peer_cert, *server)) {
                 debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << *peer_cert << " does not match domainname " << server);
                 ok = 0;
                 error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;

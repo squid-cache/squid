@@ -575,50 +575,56 @@ Security::ErrorDetail::printSubject(std::ostream &os) const
 
 #if USE_OPENSSL
 /// a helper class to print CNs extracted using Ssl::matchX509CommonNames()
-class CommonNamesPrinter
+class CommonNamesPrinter: public Ssl::GeneralNameMatcher
 {
 public:
     explicit CommonNamesPrinter(std::ostream &os): os_(os) {}
 
-    /// Ssl::matchX509CommonNames() visitor that reports the given name (if any)
-    static int PrintName(void *, ASN1_STRING *, Ssl::AddressType addr_type);
+    /* Ssl::GeneralNameMatcher API */
+    bool match(const Ssl::GeneralName &) const override;
 
-    /// whether any names have been printed so far
-    bool printed = false;
+    /// the number of names printed so far
+    mutable size_t printed = 0;
 
 private:
-    void printName(const ASN1_STRING *);
+    std::ostream &itemStream() const;
 
     std::ostream &os_; ///< destination for printed names
 };
 
-int
-CommonNamesPrinter::PrintName(void * const printer, ASN1_STRING * const name, Ssl::AddressType addr_type)
-{
-    // addr_type is only declared here to ensure the signature type matches
-    // for matchX509CommonNames. Void it here to avoid compiler warnings.
-    (void)addr_type;
-    assert(printer);
-    static_cast<CommonNamesPrinter*>(printer)->printName(name);
-    return 1;
-}
-
-/// prints an HTML-quoted version of the given common name (as a part of the
+/// prints an HTML-quoted version of the given name (as a part of the
 /// printed names list)
-void
-CommonNamesPrinter::printName(const ASN1_STRING * const name)
+bool
+CommonNamesPrinter::match(const Ssl::GeneralName &name) const
 {
-    if (name && name->length) {
-        if (printed)
-            os_ << ", ";
-
+    if (const auto domain = name.domainName()) {
         // TODO: Convert html_quote() into an std::ostream manipulator accepting (buf, n).
-        SBuf buf(reinterpret_cast<const char *>(name->data), name->length);
-        os_ << html_quote(buf.c_str());
-
-        printed = true;
+        itemStream() << html_quote(SBuf(*domain).c_str());
+        return false; // keep going
     }
+
+    if (const auto ip = name.ip()) {
+        char hostStr[MAX_IPSTRLEN] = "";
+        const auto length = ip->toHostStr(hostStr, sizeof(hostStr)); // no html_quote() is needed
+        itemStream().write(hostStr, length);
+        return false; // keep going
+    }
+
+    debugs(83, 7, "cannot print an unsupported name variant " << name.index());
+    return false; // keep going
 }
+
+/// prints commas in front of each item except for the very first one
+/// \returns a stream for printing the name
+std::ostream &
+CommonNamesPrinter::itemStream() const
+{
+    if (printed++)
+        os_ << ", ";
+    return os_;
+}
+
+
 #endif // USE_OPENSSL
 
 /// a list of the broken certificates CN and alternate names
@@ -628,7 +634,7 @@ Security::ErrorDetail::printCommonName(std::ostream &os) const
 #if USE_OPENSSL
     if (broken_cert.get()) {
         CommonNamesPrinter printer(os);
-        Ssl::matchX509CommonNames(broken_cert.get(), &printer, printer.PrintName);
+        (void)Ssl::matchX509CommonNames(*broken_cert, printer);
         if (printer.printed)
             return;
     }

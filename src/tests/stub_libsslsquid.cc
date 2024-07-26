@@ -69,8 +69,8 @@ bool generateUntrustedCert(Security::CertPointer &, Security::PrivateKeyPointer 
 Security::ContextPointer GenerateSslContext(CertificateProperties const &, Security::ServerOptions &, bool) STUB_RETVAL(Security::ContextPointer())
 bool verifySslCertificate(const Security::ContextPointer &, CertificateProperties const &) STUB_RETVAL(false)
 Security::ContextPointer GenerateSslContextUsingPkeyAndCertFromMemory(const char *, Security::ServerOptions &, bool) STUB_RETVAL(Security::ContextPointer())
-int matchX509CommonNames(X509 *, void *, int (*)(void *,  ASN1_STRING *, Ssl::AddressType *)) STUB_RETVAL(0)
-bool checkX509ServerValidity(X509 *, const char *) STUB_RETVAL(false)
+bool matchX509CommonNames(X509 &, const GeneralNameMatcher &) STUB_RETVAL(false)
+bool findSubjectName(X509 &, const SBuf &) STUB_RETVAL(false)
 int asn1timeToString(ASN1_TIME *, char *, int) STUB_RETVAL(0)
 void setClientSNI(SSL *, const char *) STUB
 SBuf GetX509PEM(X509 *) STUB_RETVAL(SBuf())
