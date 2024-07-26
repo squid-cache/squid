@@ -34,7 +34,6 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<item>Removed purge tool
 	<item>Remove deprecated languages
 	<item>Remove Ident protocol support
-	<item>Remove custom log location for ext_time_quota_acl helper
 </itemize>
 
 <p>Most user-facing changes are reflected in squid.conf (see further below).
@@ -123,13 +122,6 @@ in the position of what used to be a %ui record field.
 
 <p>If necessary, an external ACL helper can be written to perform Ident transactions
 and deliver the user identity to Squid through the **user=** annotation.
-
-<sect1>Remove custom log location for ext_time_quota_acl helper
-
-<p>The <em>-l</em> that enables ext_time_quota_acl to log debug messages
-to a custom logfile has been removed. The format of the helper's debug
-messages has been changed to be in line with Squid's cache.log format,
-where are now recorded.
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
