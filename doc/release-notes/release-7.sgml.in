@@ -126,7 +126,7 @@ and deliver the user identity to Squid through the **user=** annotation.
 
 <sect1>Remove custom log location for ext_time_quota_acl helper
 
-<p>The <em>-l</em> that enables ext_time_quota_acl to log debug messages
+<p>The <em>-l</em> option that enables ext_time_quota_acl to log debug messages
 to a custom logfile has been removed. The format of the helper's debug
 messages has been changed to be in line with Squid's cache.log format,
 where are now recorded.
