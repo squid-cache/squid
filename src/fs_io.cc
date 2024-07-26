@@ -364,7 +364,7 @@ diskHandleRead(int fd, void *data)
      */
 
     if (fd < 0) {
-        memFree(ctrl_dat, MEM_DREAD_CTRL);
+        delete ctrl_dat;
         return;
     }
 
@@ -414,7 +414,7 @@ diskHandleRead(int fd, void *data)
 
     cbdataReferenceDone(ctrl_dat->client_data);
 
-    memFree(ctrl_dat, MEM_DREAD_CTRL);
+    delete ctrl_dat;
 }
 
 /* start read operation */
@@ -424,14 +424,12 @@ diskHandleRead(int fd, void *data)
 void
 file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *client_data)
 {
-    dread_ctrl *ctrl_dat;
     assert(fd >= 0);
-    ctrl_dat = (dread_ctrl *)memAllocate(MEM_DREAD_CTRL);
+    auto *ctrl_dat = new dread_ctrl;
     ctrl_dat->fd = fd;
     ctrl_dat->offset = offset;
     ctrl_dat->req_len = req_len;
     ctrl_dat->buf = buf;
-    ctrl_dat->end_of_file = 0;
     ctrl_dat->handler = handler;
     ctrl_dat->client_data = cbdataReference(client_data);
     diskHandleRead(fd, ctrl_dat);

@@ -17,17 +17,18 @@
 
 class MemBuf;
 
-// POD
 class dread_ctrl
 {
+    MEMPROXY_CLASS(dread_ctrl);
+
 public:
-    int fd;
-    off_t offset;
-    int req_len;
-    char *buf;
-    int end_of_file;
-    DRCB *handler;
-    void *client_data;
+    int fd = -1;
+    off_t offset = 0;
+    int req_len = 0;
+    char *buf = nullptr;
+    int end_of_file = 0;
+    DRCB *handler = {};
+    void *client_data = {};
 };
 
 class dwrite_q
