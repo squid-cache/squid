@@ -421,6 +421,11 @@ int main(int argc, char **argv)
             usage();
             exit(EXIT_SUCCESS);
             break;
+        default:
+            fprintf(stderr, "Unknown option: %c\n", opt);
+            usage();
+            exit(EXIT_FAILURE);
+            break;
         }
     }
 
