@@ -388,8 +388,6 @@ static void processActivity(const char *user_key)
 
 static void usage(void)
 {
-    log_error("Wrong usage. Please reconfigure in squid.conf.\n");
-
     fprintf(stderr, "Usage: %s [-d] [-b dbpath] [-p pauselen] [-h] configfile\n", program_name);
     fprintf(stderr, "	-d            enable debugging output\n");
     fprintf(stderr, "	-b dbpath     Path where persistent session database will be kept\n");
