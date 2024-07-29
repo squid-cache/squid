@@ -337,7 +337,8 @@ protected:
     virtual bool matchIp(const Ip::Address &) const = 0;
 };
 
-/// determines whether at least one common or alternate certificate names matches
+/// Determines whether at least one common or alternate subject names matches.
+/// The first match (if any) terminates the search.
 bool matchX509CommonNames(X509 &, const GeneralNameMatcher &);
 
 /// whether at least one common or alternate subject name matches the given one
