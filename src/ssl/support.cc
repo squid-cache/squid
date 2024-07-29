@@ -246,27 +246,35 @@ int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len)
     return write;
 }
 
+/// Interprets the given raw buffer as a domain name, rejecting names that
+/// increase risks for legacy Squid code while being unlikely to be used in
+/// valid certificates that Squid admins want to identify by (rejected) names.
 std::optional<Ssl::GeneralName>
-Ssl::GeneralName::FromCommonName(const ASN1_STRING &buffer)
+Ssl::GeneralName::ParseAsDomainName(const char * const description, const ASN1_STRING &buffer)
 {
-    // Unlike OpenSSL GENERAL_NAME, ASN1_STRING cannot tell us what kind of
-    // information this CN buffer stores. The rest of Squid code treats CN as a
-    // domain name, so we parse/validate the given buffer as such.
-
     const SBuf raw(reinterpret_cast<const char *>(buffer.data), buffer.length);
 
     if (raw.isEmpty()) {
-        debugs(83, 3, "rejecting empty CN");
+        debugs(83, 3, "rejects empty " << description);
         return std::nullopt;
     }
 
     if (raw.find('\0') != SBuf::npos) {
-        debugs(83, 3, "rejecting CN with an ASCII NUL character: " << raw); // XXX: Contains non-printable characters!
+        debugs(83, 3, "rejects " << description << " with an ASCII NUL character: " << raw); // XXX: Contains non-printable characters!
         return std::nullopt;
     }
 
-    debugs(83, 5, "parsed CN: " << raw); // XXX: May contain non-printable characters
+    debugs(83, 5, "parsed " << description << ": " << raw); // XXX: May contain non-printable characters
     return GeneralName(raw);
+}
+
+std::optional<Ssl::GeneralName>
+Ssl::GeneralName::FromCommonName(const ASN1_STRING &buffer)
+{
+    // Unlike FromSubjectAltName() GENERAL_NAME, our ASN1_STRING cannot tell
+    // what kind of info this CN buffer stores. The rest of Squid code treats CN
+    // as a domain name, so we parse/validate the given buffer as such.
+    return ParseAsDomainName("CN", buffer);
 }
 
 std::optional<Ssl::GeneralName>
@@ -276,10 +284,7 @@ Ssl::GeneralName::FromSubjectAltName(const GENERAL_NAME &san)
     case GEN_DNS: {
         // san.d.dNSName is OpenSSL ASN1_IA5STRING
         Assure(san.d.dNSName);
-        const SBuf raw(reinterpret_cast<const char *>(san.d.dNSName->data), san.d.dNSName->length);
-        // XXX: Apply FromCommonName() checks!
-        debugs(83, 5, "parsed DNS name: " << raw); // XXX: May contain non-printable characters
-        return GeneralName(raw);
+        return ParseAsDomainName("DNS name", *san.d.dNSName);
     }
 
     case GEN_IPADD: {

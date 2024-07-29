@@ -185,6 +185,8 @@ private:
         /// Ip::Address::isAnyAddr() may be true for this address.
         Ip::Address>;
 
+    static std::optional<GeneralName> ParseAsDomainName(const char *, const ASN1_STRING &);
+
     // use a From*() function to create GeneralName objects
     GeneralName(const Storage &raw): raw_(raw) {}
 
