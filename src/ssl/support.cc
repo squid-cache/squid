@@ -84,7 +84,7 @@ Ssl::OneNameMatcher::match(const GeneralName &name) const
         return matchDomainName(*domain);
     if (const auto ip = name.ip())
         return matchIp(*ip);
-    debugs(83, 7, "assume an unsupported name variant " << name.index() << " does not match: " << needle_);
+    debugs(83, 7, "assume an unsupported name variant (XXX: name.index()) does not match: " << needle_);
     return false;
 }
 
@@ -257,18 +257,17 @@ Ssl::GeneralName::FromCommonName(const ASN1_STRING &buffer)
     const SBuf raw(reinterpret_cast<const char *>(buffer.data), buffer.length);
 
     if (raw.isEmpty()) {
-        debugs(83, 5, "rejecting empty CN");
+        debugs(83, 3, "rejecting empty CN");
         return std::nullopt;
     }
 
     if (raw.find('\0') != SBuf::npos) {
-        debugs(83, 5, "rejecting CN with an ASCII NUL character: " << raw); // XXX: Contains non-printable characters!
+        debugs(83, 3, "rejecting CN with an ASCII NUL character: " << raw); // XXX: Contains non-printable characters!
         return std::nullopt;
     }
 
     debugs(83, 5, "parsed CN: " << raw); // XXX: May contain non-printable characters
-    const GeneralNameStorage storage(std::in_place_index<(size_t)GeneralNameKind::dNSName>, raw); // XXX: Remove C cast.
-    return GeneralName(storage);
+    return GeneralName(raw);
 }
 
 std::optional<Ssl::GeneralName>
@@ -276,25 +275,27 @@ Ssl::GeneralName::FromSubjectAltName(const GENERAL_NAME &san)
 {
     switch(san.type) {
     case GEN_DNS: {
-        // san.d.dNSName is ASN1_IA5STRING
+        // san.d.dNSName is OpenSSL ASN1_IA5STRING
         Assure(san.d.dNSName);
         const SBuf raw(reinterpret_cast<const char *>(san.d.dNSName->data), san.d.dNSName->length);
+        // XXX: Apply FromCommonName() checks!
         debugs(83, 5, "parsed DNS name: " << raw); // XXX: May contain non-printable characters
-        const GeneralNameStorage storage(std::in_place_index<(size_t)GeneralNameKind::dNSName>, raw); // XXX: Remove C cast.
-        return GeneralName(storage);
+        return GeneralName(raw);
     }
 
     case GEN_IPADD: {
-        // san.d.iPAddress is ASN1_OCTET_STRING
+        // san.d.iPAddress is OpenSSL ASN1_OCTET_STRING
         Assure(san.d.iPAddress);
+
+        // RFC 5280 section 4.2.1.6 signals IPv4/IPv6 address family using data length
+
         if (san.d.iPAddress->length == 4) {
             struct in_addr addr;
             static_assert(sizeof(addr.s_addr) == 4);
             memcpy(&addr.s_addr, san.d.iPAddress->data, sizeof(addr.s_addr));
             const Ip::Address ip(addr);
             debugs(83, 5, "parsed IPv4: " << ip);
-            const GeneralNameStorage storage(std::in_place_index<(size_t)GeneralNameKind::iPAddress>, ip); // XXX: Remove C cast.
-            return GeneralName(storage);
+            return GeneralName(ip);
         }
 
         if (san.d.iPAddress->length == 16) {
@@ -303,16 +304,15 @@ Ssl::GeneralName::FromSubjectAltName(const GENERAL_NAME &san)
             memcpy(&addr.s6_addr, san.d.iPAddress->data, sizeof(addr.s6_addr));
             const Ip::Address ip(addr);
             debugs(83, 5, "parsed IPv6: " << ip);
-            const GeneralNameStorage storage(std::in_place_index<(size_t)GeneralNameKind::iPAddress>, ip); // XXX: Remove C cast.
-            return GeneralName(storage);
+            return GeneralName(ip);
         }
 
-        debugs(83, 4, "unexpected length of an IP address SAN: " << san.d.iPAddress->length);
+        debugs(83, 3, "unexpected length of an IP address SAN: " << san.d.iPAddress->length);
         return std::nullopt;
     }
 
     default:
-        debugs(83, 4, "unsupported SAN kind: " << san.type);
+        debugs(83, 3, "unsupported SAN kind: " << san.type);
         return std::nullopt;
     }
 }

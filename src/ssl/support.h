@@ -147,60 +147,47 @@ inline const char *bumpMode(int bm)
 /// certificates indexed by issuer name
 typedef std::multimap<SBuf, X509 *> CertsIndexedList;
 
-/// Indexes of RFC 5280 GeneralName variants (and the corresponding types). We
-/// do not yet support most of these variants, but we list all of them, so that
-/// our index values match those in X.509 certificates/RFC 5280.
-enum class GeneralNameKind: size_t {
-    otherName = 0, // OtherName
-    rfc822Name = 1, // IA5String
-    dNSName = 2, // IA5String
-    x400Address = 3, // ORAddress
-    directoryName = 4, // Name
-    ediPartyName = 5, // EDIPartyName
-    uniformResourceIdentifier = 6, // IA5String
-    iPAddress = 7, // OCTET STRING
-    registeredID = 8 // OBJECT IDENTIFIER
-};
-
-// TODO: Move/generalize if others need this.
-/// Marks GeneralName variant that we do not yet support. Including this empty
-/// class in GeneralName is necessary for GeneralNameKind values to match
-/// indexes in X.509 certificates.
-class UnsupportedVariant {};
-
-/// a helper class to store successfully extracted/parsed GeneralName (RFC 5280)
-using GeneralNameStorage = std::variant<
-    UnsupportedVariant, // OtherName (index is otherName)
-    UnsupportedVariant, // IA5String (index is rfc822Name)
-    SBuf, // IA5String (index is dNSName)
-    UnsupportedVariant, // ORAddress (index is x400Address)
-    UnsupportedVariant, // Name (index is directoryName)
-    UnsupportedVariant, // EDIPartyName (index is ediPartyName)
-    UnsupportedVariant, // IA5String (index is uniformResourceIdentifier)
-    Ip::Address, // OCTET STRING (index is iPAddress)
-    UnsupportedVariant // OBJECT IDENTIFIER (index is registeredID)
->;
-
-/// successfully extracted/parsed GeneralName (RFC 5280)
-/// (a.k.a. OpenSSL GENERAL_NAME)
+/// A successfully extracted/parsed certificate "name" field. See RFC 5280
+/// GeneralName and X520CommonName types for examples of information sources.
 class GeneralName
 {
 public:
     static std::optional<GeneralName> FromCommonName(const ASN1_STRING &);
     static std::optional<GeneralName> FromSubjectAltName( const GENERAL_NAME &);
 
-    // XXX: remove these C casts
-    auto ip() const { return std::get_if<(size_t)GeneralNameKind::iPAddress>(&raw_); }
-    auto domainName() const { return std::get_if<(size_t)GeneralNameKind::dNSName>(&raw_); }
+    // accessor methods below are mutually exclusive with domainName()
 
-    /// XXX: Document all methods
-    auto index() const { return raw_.index(); }
+    /// stored IP address (if any)
+    auto ip() const { return std::get_if<Ip::Address>(&raw_); }
+
+    /// stored domain name or domain name mask (if any)
+    auto domainName() const { return std::get_if<SBuf>(&raw_); }
 
 private:
-    // use a From*() function to create these objects
-    GeneralName(const GeneralNameStorage &raw): raw_(raw) {}
+    using Storage = std::variant<
+        /// A domain name or domain name mask (e.g., *.example.com). This info
+        /// comes (with very little validation) from a source like these two:
+        /// * RFC 5280 "dNSName" variant of a subjectAltName extension
+        ///   (GeneralName index is 2, underlying value type is IA5String);
+        /// * RFC 5280 X520CommonName component of a Subject distinguished name
+        ///   field (underlying value type is DirectoryName).
+        ///
+        /// This string is never empty and never contains NUL characters, but it
+        /// may contain any other character, including non-printable ones.
+        SBuf,
 
-    GeneralNameStorage raw_; /// information we are providing access to
+        /// An IPv4 or an IPv6 address. This info comes (with very little
+        /// validation) from RFC 5280 "iPAddress" variant of a subjectAltName
+        /// extension (GeneralName index=7, value type=OCTET STRING).
+        ///
+        /// Ip::Address::isNoAddr() may be true for this address.
+        /// Ip::Address::isAnyAddr() may be true for this address.
+        Ip::Address>;
+
+    // use a From*() function to create GeneralName objects
+    GeneralName(const Storage &raw): raw_(raw) {}
+
+    Storage raw_; /// information we are providing access to
 };
 
 /**

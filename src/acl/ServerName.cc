@@ -75,7 +75,7 @@ Acl::ServerNameMatcher::match(const Ssl::GeneralName &name) const
         return parameters.match(hostStr);
     }
 
-    debugs(83, 7, "assume an unsupported name variant " << name.index() << " does not match");
+    debugs(83, 7, "assume an unsupported name variant (XXX:name.index()) does not match");
     return false;
 }
 

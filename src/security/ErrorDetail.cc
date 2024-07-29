@@ -610,7 +610,7 @@ CommonNamesPrinter::match(const Ssl::GeneralName &name) const
         return false; // keep going
     }
 
-    debugs(83, 7, "cannot print an unsupported name variant " << name.index());
+    debugs(83, 7, "cannot print an unsupported name variant (XXX:name.index())");
     return false; // keep going
 }
 
