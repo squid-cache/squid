@@ -109,7 +109,7 @@ Acl::ServerNameCheck::match(ACLChecklist * const ch)
             serverNameFromConn = clientRequestedServerName;
         else { // either no options or useServerProvided
             if (X509 *peer_cert = (conn->serverBump() ? conn->serverBump()->serverCert.get() : nullptr))
-                return Ssl::matchX509CommonNames(*peer_cert, ServerNameMatcher(*data));
+                return Ssl::findMatchingSubjectName(*peer_cert, ServerNameMatcher(*data));
             if (!useServerProvided)
                 serverNameFromConn = clientRequestedServerName;
         }

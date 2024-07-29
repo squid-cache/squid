@@ -574,7 +574,7 @@ Security::ErrorDetail::printSubject(std::ostream &os) const
 }
 
 #if USE_OPENSSL
-/// a helper class to print CNs extracted using Ssl::matchX509CommonNames()
+/// a helper class to print CNs extracted using Ssl::findMatchingSubjectName()
 class CommonNamesPrinter: public Ssl::GeneralNameMatcher
 {
 public:
@@ -631,7 +631,7 @@ Security::ErrorDetail::printCommonName(std::ostream &os) const
 #if USE_OPENSSL
     if (broken_cert.get()) {
         CommonNamesPrinter printer(os);
-        (void)Ssl::matchX509CommonNames(*broken_cert, printer);
+        (void)Ssl::findMatchingSubjectName(*broken_cert, printer);
         if (printer.printed)
             return;
     }

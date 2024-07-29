@@ -339,7 +339,7 @@ protected:
 
 /// Determines whether at least one common or alternate subject names matches.
 /// The first match (if any) terminates the search.
-bool matchX509CommonNames(X509 &, const GeneralNameMatcher &);
+bool findMatchingSubjectName(X509 &, const GeneralNameMatcher &);
 
 /// whether at least one common or alternate subject name matches the given one
 bool findSubjectName(X509 &, const SBuf &name);

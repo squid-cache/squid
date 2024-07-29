@@ -317,7 +317,7 @@ Ssl::GeneralName::FromSubjectAltName(const GENERAL_NAME &san)
 }
 
 bool
-Ssl::matchX509CommonNames(X509 &cert, const GeneralNameMatcher &matcher)
+Ssl::findMatchingSubjectName(X509 &cert, const GeneralNameMatcher &matcher)
 {
     const auto name = X509_get_subject_name(&cert);
     for (int i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
@@ -355,7 +355,7 @@ Ssl::matchX509CommonNames(X509 &cert, const GeneralNameMatcher &matcher)
 bool
 Ssl::findSubjectName(X509 &cert, const SBuf &name)
 {
-    return matchX509CommonNames(cert, OneNameMatcher(name));
+    return findMatchingSubjectName(cert, OneNameMatcher(name));
 }
 
 /// adjusts OpenSSL validation results for each verified certificate in ctx
