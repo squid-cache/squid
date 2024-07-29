@@ -52,7 +52,10 @@ class ServerNameMatcher: public Ssl::GeneralNameMatcher
 public:
     explicit ServerNameMatcher(ServerNameCheck::Parameters &p): parameters(p) {}
 
-    bool match(const Ssl::GeneralName &) const override;
+protected:
+    /* GeneralNameMatcher API */
+    bool matchDomainName(const SBuf &) const override;
+    bool matchIp(const Ip::Address &) const override;
 
 private:
     // TODO: Make ServerNameCheck::Parameters::match() and this reference constant.
@@ -62,21 +65,19 @@ private:
 } // namespace Acl
 
 bool
-Acl::ServerNameMatcher::match(const Ssl::GeneralName &name) const
+Acl::ServerNameMatcher::matchDomainName(const SBuf &domain) const
 {
-    if (const auto domain = name.domainName())
-        return parameters.match(SBuf(*domain).c_str()); // TODO: Upgrade string-matching ACLs to SBuf
+    return parameters.match(SBuf(domain).c_str()); // TODO: Upgrade string-matching ACLs to SBuf
+}
 
-    if (const auto ip = name.ip()) {
-        // This IP address conversion to c-string brackets IPv6 addresses.
-        // TODO: Document that fact in ssl::server_name.
-        char hostStr[MAX_IPSTRLEN] = "";
-        (void)ip->toHostStr(hostStr, sizeof(hostStr));
-        return parameters.match(hostStr);
-    }
-
-    debugs(83, 7, "assume an unsupported name variant (XXX:name.index()) does not match");
-    return false;
+bool
+Acl::ServerNameMatcher::matchIp(const Ip::Address &ip) const
+{
+    // This IP address conversion to c-string brackets IPv6 addresses.
+    // TODO: Document that fact in ssl::server_name.
+    char hostStr[MAX_IPSTRLEN] = "";
+    (void)ip.toHostStr(hostStr, sizeof(hostStr));
+    return parameters.match(hostStr);
 }
 
 int

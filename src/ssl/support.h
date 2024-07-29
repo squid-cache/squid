@@ -155,7 +155,8 @@ public:
     static std::optional<GeneralName> FromCommonName(const ASN1_STRING &);
     static std::optional<GeneralName> FromSubjectAltName( const GENERAL_NAME &);
 
-    // accessor methods below are mutually exclusive with domainName()
+    // Accessor methods below are mutually exclusive: Exactly one method is
+    // guaranteed to return a result other than std::nullopt.
 
     /// stored IP address (if any)
     auto ip() const { return std::get_if<Ip::Address>(&raw_); }
@@ -324,8 +325,16 @@ void useSquidUntrusted(SSL_CTX *sslContext);
 class GeneralNameMatcher: public Interface
 {
 public:
-    /// XXX: Document
-    virtual bool match(const Ssl::GeneralName &) const = 0;
+    /// whether the given name satisfies algorithm conditions
+    bool match(const Ssl::GeneralName &) const;
+
+protected:
+    // The methods below implement public match() API for each of the
+    // GeneralName variants. For each public match() method call, exactly one of
+    // these methods is called.
+
+    virtual bool matchDomainName(const SBuf &) const = 0;
+    virtual bool matchIp(const Ip::Address &) const = 0;
 };
 
 /// determines whether at least one common or alternate certificate names matches

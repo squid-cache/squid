@@ -65,11 +65,10 @@ class OneNameMatcher: public GeneralNameMatcher
 public:
     explicit OneNameMatcher(const SBuf &needle): needleStorage_(needle), needle_(needleStorage_.c_str()) {}
 
-    bool match(const GeneralName &) const override;
-
-private:
-    bool matchDomainName(const SBuf &) const;
-    bool matchIp(const Ip::Address &) const;
+protected:
+    /* GeneralNameMatcher API */
+    bool matchDomainName(const SBuf &) const override;
+    bool matchIp(const Ip::Address &) const override;
 
     SBuf needleStorage_; ///< a name we are looking for
     const char * const needle_; ///< needleStorage_ using matchDomainName()-compatible type
@@ -78,13 +77,13 @@ private:
 } // namespace Ssl
 
 bool
-Ssl::OneNameMatcher::match(const GeneralName &name) const
+Ssl::GeneralNameMatcher::match(const GeneralName &name) const
 {
     if (const auto domain = name.domainName())
         return matchDomainName(*domain);
     if (const auto ip = name.ip())
         return matchIp(*ip);
-    debugs(83, 7, "assume an unsupported name variant (XXX: name.index()) does not match: " << needle_);
+    Assure(!"unreachable code: the above `if` statements must cover all name variants");
     return false;
 }
 

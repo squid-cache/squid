@@ -580,11 +580,13 @@ class CommonNamesPrinter: public Ssl::GeneralNameMatcher
 public:
     explicit CommonNamesPrinter(std::ostream &os): os_(os) {}
 
-    /* Ssl::GeneralNameMatcher API */
-    bool match(const Ssl::GeneralName &) const override;
-
     /// the number of names printed so far
     mutable size_t printed = 0;
+
+protected:
+    /* GeneralNameMatcher API */
+    bool matchDomainName(const SBuf &) const override;
+    bool matchIp(const Ip::Address &) const override;
 
 private:
     std::ostream &itemStream() const;
@@ -592,25 +594,20 @@ private:
     std::ostream &os_; ///< destination for printed names
 };
 
-/// prints an HTML-quoted version of the given name (as a part of the
-/// printed names list)
 bool
-CommonNamesPrinter::match(const Ssl::GeneralName &name) const
+CommonNamesPrinter::matchDomainName(const SBuf &domain) const
 {
-    if (const auto domain = name.domainName()) {
-        // TODO: Convert html_quote() into an std::ostream manipulator accepting (buf, n).
-        itemStream() << html_quote(SBuf(*domain).c_str());
-        return false; // keep going
-    }
+    // TODO: Convert html_quote() into an std::ostream manipulator accepting (buf, n).
+    itemStream() << html_quote(SBuf(domain).c_str());
+    return false; // keep going
+}
 
-    if (const auto ip = name.ip()) {
-        char hostStr[MAX_IPSTRLEN] = "";
-        const auto length = ip->toHostStr(hostStr, sizeof(hostStr)); // no html_quote() is needed
-        itemStream().write(hostStr, length);
-        return false; // keep going
-    }
-
-    debugs(83, 7, "cannot print an unsupported name variant (XXX:name.index())");
+bool
+CommonNamesPrinter::matchIp(const Ip::Address &ip) const
+{
+    char hostStr[MAX_IPSTRLEN] = "";
+    const auto length = ip.toHostStr(hostStr, sizeof(hostStr)); // no html_quote() is needed
+    itemStream().write(hostStr, length);
     return false; // keep going
 }
 
