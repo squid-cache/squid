@@ -574,7 +574,7 @@ Security::ErrorDetail::printSubject(std::ostream &os) const
 }
 
 #if USE_OPENSSL
-/// a helper class to print CNs extracted using Ssl::findMatchingSubjectName()
+/// prints X.509 names extracted using Ssl::findMatchingSubjectName()
 class CommonNamesPrinter: public Ssl::GeneralNameMatcher
 {
 public:
@@ -611,7 +611,7 @@ CommonNamesPrinter::matchIp(const Ip::Address &ip) const
     return false; // keep going
 }
 
-/// prints commas in front of each item except for the very first one
+/// prints a comma in front of each item except for the very first one
 /// \returns a stream for printing the name
 std::ostream &
 CommonNamesPrinter::itemStream() const

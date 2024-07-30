@@ -47,6 +47,7 @@ ACLServerNameData::match(const char *host)
 
 namespace Acl {
 
+/// GeneralNameMatcher for matching configured ACL parameters
 class ServerNameMatcher: public Ssl::GeneralNameMatcher
 {
 public:

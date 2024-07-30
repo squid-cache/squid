@@ -58,6 +58,7 @@ std::vector<const char *> Ssl::BumpModeStr = {
 
 namespace Ssl {
 
+/// GeneralNameMatcher for matching a single X.509 name given at construction time
 class OneNameMatcher: public GeneralNameMatcher
 {
 public:

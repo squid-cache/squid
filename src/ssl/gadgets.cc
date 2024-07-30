@@ -486,8 +486,6 @@ addAltNameWithSubjectCn(Security::CertPointer &cert)
         return false;
 
     Ip::Address ipAddress;
-    // Extract the CN string from cn_data and use it to determine its type
-    // using Ip::Address::operator "="
     const char* cn_cstr = (const char*) ASN1_STRING_get0_data(cn_data);
     const char* altname_type = (ipAddress = cn_cstr) ? "IP" : "DNS";
     char dnsName[1024]; // DNS names are limited to 256 characters

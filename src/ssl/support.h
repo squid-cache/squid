@@ -190,7 +190,7 @@ private:
     // use a From*() function to create GeneralName objects
     GeneralName(const Storage &raw): raw_(raw) {}
 
-    Storage raw_; /// information we are providing access to
+    Storage raw_; ///< the name we are providing access to
 };
 
 /**
