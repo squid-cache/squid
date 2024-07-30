@@ -78,10 +78,8 @@ Acl::ServerNameMatcher::matchIp(const Ip::Address &ip) const
     // an IPv6 address to a string, but only one format can correctly match
     // certain configured parameters. Our ssl::server_name docs request the
     // following ACL parameter formatting (that this to-string conversion code
-    // produces): IPv6 addresses are bracketed, use lowercase hex digits (in
-    // known modern environments; see inet_ntop link below), and use "::"
-    // notation (where applicable).
-    // \sa https://cygwin.com/pipermail/cygwin/2009-March/174197.html
+    // produces): IPv6 addresses are bracketed and use "::" notation (where
+    // applicable).
     //
     // Similar problems affect dstdomain ACLs. TODO: Instead of relying on users
     // reading docs and following their inet_ntop(3) implementation to match
