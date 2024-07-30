@@ -13,6 +13,7 @@
 #include "tests/STUB.h"
 
 #include "ip/Address.h"
+std::optional<Ip::Address> Ip::Address::Parse(const char *) STUB_RETVAL(std::nullopt)
 Ip::Address::Address(const struct in_addr &) STUB
 Ip::Address::Address(const struct sockaddr_in &) STUB
 Ip::Address::Address(const struct in6_addr &) STUB

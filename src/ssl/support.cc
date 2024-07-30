@@ -101,16 +101,13 @@ Ssl::OneNameMatcher::matchDomainName(const SBuf &rawName) const {
 bool
 Ssl::OneNameMatcher::matchIp(const Ip::Address &ip) const {
     debugs(83, 5, "needle=" << needle_ << " ip=" << ip);
-    // if we cannot convert our needle to an IP, then it does not match any IP
-    // XXX: Ip::Address::operator "=" cannot parse bracketed IPv6 addresses
-    // (that our callers get from Uri::host() and other sources)!
-    Ip::Address needleIp;
-    if (!(needleIp = needle_)) {
-        // TODO: Consider caching conversion result in anticipation of matchIp() calls
-        debugs(83, 7, "needle is not an IP, cannot match");
-        return false;
-    }
-    return (needleIp == ip);
+    // TODO: Consider caching conversion result, anticipating matchIp() calls.
+    // XXX: Ip::Address cannot parse bracketed IPv6 addresses (that
+    // Ssl::findSubjectName() callers get from Uri::host() and other sources)!
+    if (const auto needleIp = Ip::Address::Parse(needle_))
+        return (*needleIp == ip);
+    debugs(83, 7, "needle is not an IP, cannot match");
+    return false;
 }
 
 /**
