@@ -73,8 +73,20 @@ Acl::ServerNameMatcher::matchDomainName(const SBuf &domain) const
 bool
 Acl::ServerNameMatcher::matchIp(const Ip::Address &ip) const
 {
-    // This IP address conversion to c-string brackets IPv6 addresses.
-    // TODO: Document that fact in ssl::server_name.
+    // We are given an Ip::Address, but our ACL parameters use case-sensitive
+    // string equality or regex string matches. There are many ways to convert
+    // an IPv6 address to a string, but only one format can correctly match
+    // certain configured parameters. Our ssl::server_name docs request the
+    // following ACL parameter formatting (that this to-string conversion code
+    // produces): IPv6 addresses are bracketed, use lowercase hex digits (in
+    // known modern environments; see inet_ntop link below), and use "::"
+    // notation (where applicable).
+    // \sa https://cygwin.com/pipermail/cygwin/2009-March/174197.html
+    //
+    // Similar problems affect dstdomain ACLs. TODO: Instead of relying on users
+    // reading docs and following their inet_ntop(3) implementation to match
+    // IPv6 addresses handled by matchDomainName(), enhance matchDomainName()
+    // code and ACL parameter storage to support Ip::Address objects.
     char hostStr[MAX_IPSTRLEN] = "";
     (void)ip.toHostStr(hostStr, sizeof(hostStr));
     return parameters.match(hostStr);
