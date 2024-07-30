@@ -166,24 +166,24 @@ public:
 
 private:
     using Storage = std::variant<
-        /// A domain name or domain name mask (e.g., *.example.com). This info
-        /// comes (with very little validation) from a source like these two:
-        /// * RFC 5280 "dNSName" variant of a subjectAltName extension
-        ///   (GeneralName index is 2, underlying value type is IA5String);
-        /// * RFC 5280 X520CommonName component of a Subject distinguished name
-        ///   field (underlying value type is DirectoryName).
-        ///
-        /// This string is never empty and never contains NUL characters, but it
-        /// may contain any other character, including non-printable ones.
-        SBuf,
+                    /// A domain name or domain name mask (e.g., *.example.com). This info
+                    /// comes (with very little validation) from a source like these two:
+                    /// * RFC 5280 "dNSName" variant of a subjectAltName extension
+                    ///   (GeneralName index is 2, underlying value type is IA5String);
+                    /// * RFC 5280 X520CommonName component of a Subject distinguished name
+                    ///   field (underlying value type is DirectoryName).
+                    ///
+                    /// This string is never empty and never contains NUL characters, but it
+                    /// may contain any other character, including non-printable ones.
+                    SBuf,
 
-        /// An IPv4 or an IPv6 address. This info comes (with very little
-        /// validation) from RFC 5280 "iPAddress" variant of a subjectAltName
-        /// extension (GeneralName index=7, value type=OCTET STRING).
-        ///
-        /// Ip::Address::isNoAddr() may be true for this address.
-        /// Ip::Address::isAnyAddr() may be true for this address.
-        Ip::Address>;
+                    /// An IPv4 or an IPv6 address. This info comes (with very little
+                    /// validation) from RFC 5280 "iPAddress" variant of a subjectAltName
+                    /// extension (GeneralName index=7, value type=OCTET STRING).
+                    ///
+                    /// Ip::Address::isNoAddr() may be true for this address.
+                    /// Ip::Address::isAnyAddr() may be true for this address.
+                    Ip::Address>;
 
     static std::optional<GeneralName> ParseAsDomainName(const char *, const ASN1_STRING &);
 
@@ -418,7 +418,6 @@ public:
 };
 
 } //namespace Ssl
-
 
 #if _SQUID_WINDOWS_
 

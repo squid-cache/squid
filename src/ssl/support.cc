@@ -340,7 +340,7 @@ Ssl::findMatchingSubjectName(X509 &cert, const GeneralNameMatcher &matcher)
     }
 
     const Ssl::GENERAL_NAME_STACK_Pointer sans(static_cast<STACK_OF(GENERAL_NAME)*>(
-        X509_get_ext_d2i(&cert, NID_subject_alt_name, nullptr, nullptr)));
+                X509_get_ext_d2i(&cert, NID_subject_alt_name, nullptr, nullptr)));
     if (sans) {
         const auto sanCount = sk_GENERAL_NAME_num(sans.get());
         for (int i = 0; i < sanCount; ++i) {

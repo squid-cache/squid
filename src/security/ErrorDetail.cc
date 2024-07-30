@@ -621,7 +621,6 @@ CommonNamesPrinter::itemStream() const
     return os_;
 }
 
-
 #endif // USE_OPENSSL
 
 /// a list of the broken certificates CN and alternate names
