@@ -5,9 +5,7 @@
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
-#include <arpa/inet.h>
-#include <cstdio>
-#include <iostream>
+
 #include "squid.h"
 #include "base/IoManip.h"
 #include "error/SysErrorDetail.h"

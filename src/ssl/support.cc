@@ -15,11 +15,9 @@
  */
 #if USE_OPENSSL
 
-#include <openssl/asn1.h>
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "anyp/Uri.h"
-#include <arpa/inet.h>
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
