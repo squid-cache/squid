@@ -87,7 +87,10 @@ Ssl::GeneralNameMatcher::match(const GeneralName &name) const
 
 bool
 Ssl::OneNameMatcher::matchDomainName(const SBuf &rawName) const {
-    debugs(83, 5, "needle=" << needle_ << " domain=" << rawName); // XXX: rawName may contain non-printable characters
+    // TODO: Add debugs() stream manipulator to safely (i.e. without breaking
+    // cache.log message framing) dump raw input that may contain new lines. Use
+    // here and in similar contexts where we report such raw input.
+    debugs(83, 5, "needle=" << needle_ << " domain=" << rawName);
     auto name = rawName;
     if (name.length() > 0 && name[0] == '*')
         name.consume(1);
@@ -258,11 +261,11 @@ Ssl::GeneralName::ParseAsDomainName(const char * const description, const ASN1_S
     }
 
     if (raw.find('\0') != SBuf::npos) {
-        debugs(83, 3, "rejects " << description << " with an ASCII NUL character: " << raw); // XXX: Contains non-printable characters!
+        debugs(83, 3, "rejects " << description << " with an ASCII NUL character: " << raw);
         return std::nullopt;
     }
 
-    debugs(83, 5, "parsed " << description << ": " << raw); // XXX: May contain non-printable characters
+    debugs(83, 5, "parsed " << description << ": " << raw);
     return GeneralName(raw);
 }
 
