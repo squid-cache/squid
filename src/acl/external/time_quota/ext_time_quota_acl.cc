@@ -420,7 +420,7 @@ int main(int argc, char **argv)
             exit(EXIT_SUCCESS);
             break;
         default:
-            fprintf(stderr, "Unknown option: %c\n", opt);
+            // getopt() emits error message to stderr
             usage();
             exit(EXIT_FAILURE);
             break;
