@@ -101,6 +101,8 @@ bool
 Ssl::OneNameMatcher::matchIp(const Ip::Address &ip) const {
     debugs(83, 5, "needle=" << needle_ << " ip=" << ip);
     // if we cannot convert our needle to an IP, then it does not match any IP
+    // XXX: Ip::Address::operator "=" cannot parse bracketed IPv6 addresses
+    // (that our callers get from Uri::host() and other sources)!
     Ip::Address needleIp;
     if (!(needleIp = needle_)) {
         // TODO: Consider caching conversion result in anticipation of matchIp() calls
