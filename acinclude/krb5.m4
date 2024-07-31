@@ -105,23 +105,6 @@ main(void)
   SQUID_DEFINE_BOOL(HAVE_BROKEN_HEIMDAL_KRB5_H,$squid_cv_broken_heimdal_krb5_h,[Heimdal krb5.h is broken for C++])
 ]) dnl SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
 
-dnl check the max skew in the krb5 context, and sets squid_cv_max_skew_context
-AC_DEFUN([SQUID_CHECK_MAX_SKEW_IN_KRB5_CONTEXT],[
-  AC_CACHE_CHECK([for max_skew in struct krb5_context],
-                  squid_cv_max_skew_context, [
-    SQUID_STATE_SAVE(squid_krb5_test)
-    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_COMPILE_IFELSE([
-      AC_LANG_PROGRAM([[
-#include "compat/krb5.h"
-krb5_context kc; kc->max_skew = 1;
-      ]])
-    ],[ squid_cv_max_skew_context=yes ],
-    [ squid_cv_max_skew_context=no ])
-    SQUID_STATE_ROLLBACK(squid_krb5_test)
-  ])
-])
-
 dnl check whether the kerberos context has a memory cache. Sets
 dnl squid_cv_memory_cache if that's the case.
 AC_DEFUN([SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE],[
