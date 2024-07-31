@@ -181,6 +181,7 @@ int krb5_create_cache(char *kf, char *pn) {
 
 #define KT_PATH_MAX 256
 #define MAX_RENEW_TIME "365d"
+#define DEFAULT_SKEW (krb5_deltat) 600
 
     static char *keytab_filename = nullptr, *principal_name = nullptr;
     static krb5_keytab keytab = nullptr;
@@ -306,7 +307,11 @@ restart:
                    error_message(code));
             return (1);
         }
+#elif HAVE_LIBHEIMDAL_KRB5
         skew = krb5_get_max_time_skew(kparam.context);
+#else
+        skew = DEFAULT_SKEW;
+#endif
 
         if (!kf) {
             char buf[KT_PATH_MAX], *p;
