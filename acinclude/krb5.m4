@@ -315,9 +315,6 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
   AC_CHECK_LIB(krb5,krb5_get_init_creds_keytab,
     AC_DEFINE(HAVE_GET_INIT_CREDS_KEYTAB,1,
       [Define to 1 if you have krb5_get_init_creds_keytab]),)
-  AC_CHECK_LIB(krb5,krb5_get_max_time_skew,
-    AC_DEFINE(HAVE_KRB5_GET_MAX_TIME_SKEW,1,
-      [Define to 1 if you have krb5_get_max_time_skew]),)
   AC_CHECK_LIB(krb5,krb5_get_profile,
     AC_DEFINE(HAVE_KRB5_GET_PROFILE,1,
       [Define to 1 if you have krb5_get_profile]),)
