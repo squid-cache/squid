@@ -128,8 +128,8 @@ do
 	if [ -n "$dir" ] && [ -f bootstrap.sh ]; then
 	    ./bootstrap.sh
 	elif [ ! -f $dir/configure ]; then
-	    # Make sure cfgaux exists
 	    mkdir -p cfgaux
+	    mkdir -p m4
 
             if test -n "$ltpath"; then
               acincludeflag="-I $ltpath/../share/aclocal"
