@@ -114,7 +114,9 @@ AUTOCONF="autoconf${acver}" ; export AUTOCONF
 echo "automake ($amversion) : automake$amver"
 echo "autoconf ($acversion) : autoconf$acver"
 echo "libtool  ($ltversion) : ${LIBTOOL_BIN}${ltver}"
-echo "libtool path : $ltpath"
+echo "libtool path : $ltpath / ${LIBTOOL_BIN}${ltver}"
+
+brew info libtool
 
 for dir in \
 	""
