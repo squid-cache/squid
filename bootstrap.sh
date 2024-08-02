@@ -84,7 +84,7 @@ bootstrap_libtoolize() {
 
     ltdl="--ltdl"
 
-    bootstrap $tool $ltdl --force --copy --automake  --debug
+    bootstrap $tool $ltdl --force --copy --automake
 }
 
 # On MAC OS X, GNU libtool is named 'glibtool':
@@ -116,12 +116,38 @@ echo "autoconf ($acversion) : autoconf$acver"
 echo "libtool  ($ltversion) : ${LIBTOOL_BIN}${ltver}"
 echo "libtool path : $ltpath"
 
-mkdir -p cfgaux
+for dir in \
+	""
+do
+    if [ -z "$dir" ] || [ -d $dir ]; then
+	if (
+	echo "Bootstrapping $dir"
+	cd ./$dir
+	if [ -n "$dir" ] && [ -f bootstrap.sh ]; then
+	    ./bootstrap.sh
+	elif [ ! -f $dir/configure ]; then
+	    # Make sure cfgaux exists
+	    mkdir -p cfgaux
 
-autoreconf --force --install
-cd libltdl
-autoreconf --force --install
-cd ..
+            if test -n "$ltpath"; then
+              acincludeflag="-I $ltpath/../share/aclocal"
+            else
+              acincludeflag=""
+            fi
+
+	    # Bootstrap the autotool subsystems
+	    bootstrap aclocal$amver $acincludeflag
+	    bootstrap autoheader$acver
+	    bootstrap_libtoolize ${LIBTOOL_BIN}ize${ltver}
+	    bootstrap automake$amver --foreign --add-missing --copy -f
+	    bootstrap autoconf$acver --force
+	fi ); then
+	    : # OK
+	else
+	    exit 1
+	fi
+    fi
+done
 
 # Make a copy of SPONSORS we can package
 if test -f SPONSORS.list; then
