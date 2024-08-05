@@ -9,10 +9,6 @@ AC_INIT([Squid Web Proxy],[7.0.0-VCS],[https://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
-
-# TODO: Require Autoconf v2.70 and upgrade to AC_CONFIG_MACRO_DIRS
-AC_CONFIG_MACRO_DIR([m4])
-
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar nostdinc subdir-objects dist-xz])
 AC_REVISION($Revision$)dnl

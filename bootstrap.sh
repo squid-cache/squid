@@ -144,7 +144,6 @@ bootstrap_dir() {
 
 echo "Bootstrapping primary Squid sources"
 mkdir -p cfgaux || exit $?
-mkdir -p m4 || exit $?
 bootstrap_dir .
 
 # The above bootstrap_libtoolize step creates or updates libltdl. It copies
