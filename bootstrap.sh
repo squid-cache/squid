@@ -116,38 +116,47 @@ echo "autoconf ($acversion) : autoconf$acver"
 echo "libtool  ($ltversion) : ${LIBTOOL_BIN}${ltver}"
 echo "libtool path : $ltpath"
 
-for dir in \
-	""
-do
-    if [ -z "$dir" ] || [ -d $dir ]; then
-	if (
-	echo "Bootstrapping $dir"
-	cd ./$dir
-	if [ -n "$dir" ] && [ -f bootstrap.sh ]; then
-	    ./bootstrap.sh
-	elif [ ! -f $dir/configure ]; then
-	    # Make sure cfgaux exists
-	    mkdir -p cfgaux
+if test -n "$ltpath"; then
+    acincludeflag="-I $ltpath/../share/aclocal"
+else
+    acincludeflag=""
+fi
 
-            if test -n "$ltpath"; then
-              acincludeflag="-I $ltpath/../share/aclocal"
-            else
-              acincludeflag=""
-            fi
+# bootstrap primary or subproject sources
+bootstrap_dir() {
+    dir="$1"
+    cd $dir || exit $?
 
-	    # Bootstrap the autotool subsystems
-	    bootstrap aclocal$amver $acincludeflag
-	    bootstrap autoheader$acver
-	    bootstrap_libtoolize ${LIBTOOL_BIN}ize${ltver}
-	    bootstrap automake$amver --foreign --add-missing --copy -f
-	    bootstrap autoconf$acver --force
-	fi ); then
-	    : # OK
-	else
-	    exit 1
-	fi
+    bootstrap aclocal$amver $acincludeflag
+    bootstrap autoheader$acver
+
+    # Do not libtoolize ltdl
+    if grep -q '^LTDL_INIT' configure.ac
+    then
+        bootstrap_libtoolize ${LIBTOOL_BIN}ize${ltver}
     fi
-done
+
+    bootstrap automake$amver --foreign --add-missing --copy --force
+    bootstrap autoconf$acver --force
+
+    cd - > /dev/null
+}
+
+echo "Bootstrapping primary Squid sources"
+mkdir -p cfgaux || exit $?
+bootstrap_dir .
+
+# The above bootstrap_libtoolize step creates or updates libltdl. It copies
+# (with minor adjustments) configure.ac and configure, Makefile.am and
+# Makefile.in from libtool installation, but does not regenerate copied
+# configure from copied configure.ac and copied Makefile.in from Makefile.am.
+# We get libltdl/configure and libltdl/Makefile.in as they were bootstrapped
+# by libtool authors or package maintainers. Low-level idiosyncrasies in those
+# libtool files result in mismatches between copied code expectations and
+# Squid sub-project environment, leading to occasional build failures that
+# this bootstrapping addresses.
+echo "Bootstrapping libltdl sub-project"
+bootstrap_dir libltdl
 
 # Make a copy of SPONSORS we can package
 if test -f SPONSORS.list; then
