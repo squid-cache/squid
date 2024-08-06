@@ -49,6 +49,72 @@ UserInfoChars()
     return userInfoValid;
 }
 
+/* AnyP::Host */
+
+std::optional<AnyP::Host>
+AnyP::Host::FromIp(const Ip::Address &ip)
+{
+    // any IP value is acceptable
+    return Host(ip);
+}
+
+std::optional<AnyP::Host>
+AnyP::Host::FromDecodedDomain(const SBuf &rawName)
+{
+    if (rawName.isEmpty()) {
+        debugs(23, 3, "rejecting empty name");
+        return std::nullopt;
+    }
+    return Host(rawName);
+}
+
+std::optional<AnyP::Host>
+AnyP::Host::FromUriRegName(const SBuf &regName)
+{
+    if (regName.find('%') != SBuf::npos) {
+        debugs(23, 3, "rejecting percent-encoded reg-name: " << regName);
+        return std::nullopt; // TODO: Decode() instead
+    }
+    return FromDecodedDomain(regName);
+}
+
+std::ostream &
+AnyP::operator <<(std::ostream &os, const Host &host)
+{
+    if (const auto ip = host.ip()) {
+        char buf[MAX_IPSTRLEN];
+        (void)ip->toStr(buf, sizeof(buf)); // no brackets
+        os << buf;
+    } else {
+        // If Host object creators start applying Uri::Decode() to reg-names,
+        // then we must start applying Uri::Encode() here, but only to names
+        // that require it. See "The reg-name syntax allows percent-encoded
+        // octets" paragraph in RFC 3986.
+        const auto domainName = host.domainName();
+        Assure(domainName);
+        os << *domainName;
+    }
+    return os;
+}
+
+std::ostream &
+AnyP::operator <<(std::ostream &os, const Bracketed &hostWrapper)
+{
+    bool addBrackets = false;
+    if (const auto ip = hostWrapper.host.ip())
+        addBrackets = ip->isIPv6();
+
+    if (addBrackets)
+        os << '[';
+    os << hostWrapper.host;
+    if (addBrackets)
+        os << ']';
+
+    return os;
+}
+
+/* AnyP::Uri */
+
 /**
  * Governed by RFC 3986 section 2.1
  */
@@ -133,6 +199,7 @@ AnyP::Uri::host(const char *src)
     touch();
 }
 
+// TODO: Replace with ToSBuf(parsedHost()) or similar.
 SBuf
 AnyP::Uri::hostOrIp() const
 {
@@ -142,6 +209,12 @@ AnyP::Uri::hostOrIp() const
         return SBuf(ip, hostStrLen);
     } else
         return SBuf(host());
+}
+
+std::optional<AnyP::Host>
+AnyP::Uri::parsedHost() const
+{
+    return hostIsNumeric() ? Host::FromIp(hostIP()) : Host::FromUriRegName(SBuf(host()));
 }
 
 const SBuf &

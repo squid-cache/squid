@@ -70,7 +70,7 @@ Security::ContextPointer GenerateSslContext(CertificateProperties const &, Secur
 bool verifySslCertificate(const Security::ContextPointer &, CertificateProperties const &) STUB_RETVAL(false)
 Security::ContextPointer GenerateSslContextUsingPkeyAndCertFromMemory(const char *, Security::ServerOptions &, bool) STUB_RETVAL(Security::ContextPointer())
 bool findMatchingSubjectName(X509 &, const GeneralNameMatcher &) STUB_RETVAL(false)
-bool findSubjectName(X509 &, const SBuf &) STUB_RETVAL(false)
+bool findSubjectName(X509 &, const AnyP::Host &) STUB_RETVAL(false)
 int asn1timeToString(ASN1_TIME *, char *, int) STUB_RETVAL(0)
 void setClientSNI(SSL *, const char *) STUB
 SBuf GetX509PEM(X509 *) STUB_RETVAL(SBuf())

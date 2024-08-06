@@ -248,8 +248,7 @@ public:
     unsigned int toHostStr(char *buf, const unsigned int len) const;
 
     /// Empties the address and then slowly imports the IP from a possibly
-    /// [bracketed] portless host. For the semi-reverse operation, see
-    /// toHostStr() which does export the port.
+    /// [bracketed] portless host. For the reverse operation, see toHostStr().
     /// \returns whether the conversion was successful
     bool fromHost(const char *hostWithoutPort);
 

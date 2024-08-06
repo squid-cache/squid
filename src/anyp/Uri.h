@@ -15,11 +15,76 @@
 #include "sbuf/SBuf.h"
 
 #include <iosfwd>
+#include <optional>
+#include <variant>
 
 class HttpRequestMethod;
 
 namespace AnyP
 {
+
+/// A non-empty host subcomponent of URI authority (RFC 3986 Section 3.2.2).
+class Host
+{
+public:
+    /// converts an already parsed IP address to a Host object
+    static std::optional<Host> FromIp(const Ip::Address &);
+
+    /// parses host as a URI reg-name (which may be percent-encoded UTF-8)
+    static std::optional<Host> FromUriRegName(const SBuf &);
+
+    /// parses host as a literal ASCII domain name (A-labels OK; see RFC 5890)
+    static std::optional<Host> FromDecodedDomain(const SBuf &);
+
+    // Accessor methods below are mutually exclusive: Exactly one method is
+    // guaranteed to return a result other than std::nullopt.
+
+    /// stored IP address (if any)
+    auto ip() const { return std::get_if<Ip::Address>(&raw_); }
+
+    /// stored reg-name (if any)
+    auto domainName() const { return std::get_if<SBuf>(&raw_); }
+
+private:
+    using Storage = std::variant<
+                    /// A domain name (or some other "registered name") after
+                    /// percent-decoding. This string is never empty, but it may
+                    /// contain any character, including ASCII NUL. Currently,
+                    /// Host object creators reject percent-encoded host values
+                    /// instead of decoding them. Host object users should treat
+                    /// domain names as if they are UTF-8 percent-decoded values
+                    /// so that they continue to work correctly when creators
+                    /// start percent-decoding instead of rejecting.
+                    SBuf,
+
+                    /// An IPv4 or an IPv6 address.
+                    ///
+                    /// Ip::Address::isNoAddr() may be true for this address.
+                    /// Ip::Address::isAnyAddr() may be true for this address.
+                    Ip::Address>;
+
+    // use a From*() function to create Host objects
+    Host(const Storage &raw): raw_(raw) {}
+
+    Storage raw_; ///< the host we are providing access to
+};
+
+/// helps print Host value in RFC 3986 Section 3.2.2 format, with square
+/// brackets around an IPv6 address (if the Host value is an IPv6 address)
+class Bracketed
+{
+public:
+    explicit Bracketed(const Host &aHost): host(aHost) {}
+    const Host &host;
+};
+
+/// prints Host value _without_ square brackets around an IPv6 address (even
+/// when the Host value is an IPv6 address); \sa Bracketed
+std::ostream &operator <<(std::ostream &, const Host &);
+
+/// prints Host value _without_ square brackets around an IPv6 address (even
+/// when the Host value is an IPv6 address); \sa Bracketed
+std::ostream &operator <<(std::ostream &, const Bracketed &);
 
 /**
  * Represents a Uniform Resource Identifier.
@@ -75,6 +140,10 @@ public:
     const char *host(void) const {return host_;}
     int hostIsNumeric(void) const {return hostIsNumeric_;}
     Ip::Address const & hostIP(void) const {return hostAddr_;}
+
+    /// Successfully interpreted non-empty host subcomponent of the authority
+    /// component (if any). XXX: Remove hostOrIp() and print Host instead.
+    std::optional<Host> parsedHost() const;
 
     /// \returns the host subcomponent of the authority component
     /// If the host is an IPv6 address, returns that IP address with

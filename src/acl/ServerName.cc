@@ -14,6 +14,7 @@
 #include "client_side.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
+#include "sbuf/Stream.h"
 #include "ssl/bio.h"
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
@@ -98,16 +99,19 @@ Acl::ServerNameCheck::match(ACLChecklist * const ch)
 
     assert(checklist != nullptr && checklist->request != nullptr);
 
-    std::optional<SBuf> serverNameFromConn;
+    std::optional<AnyP::Host> serverNameFromConn;
     if (ConnStateData *conn = checklist->conn()) {
-        std::optional<SBuf> clientRequestedServerName;
+        std::optional<AnyP::Host> clientRequestedServerName;
         const auto &clientSni = conn->tlsClientSni();
         if (clientSni.isEmpty()) {
-            const char *host = checklist->request->url.host();
-            if (host && *host) // paranoid first condition: host() is never nil
-                clientRequestedServerName = host; // TODO: Use Uri::hostOrIp() instead
-        } else
-            clientRequestedServerName = clientSni;
+            clientRequestedServerName = checklist->request->url.parsedHost();
+        } else {
+            // RFC 6066: "The hostname is represented as a byte string using
+            // ASCII encoding"; "Literal IPv4 and IPv6 addresses are not
+            // permitted". TODO: Store TlsDetails::serverName and similar
+            // domains using a new domain-only type instead of SBuf.
+            clientRequestedServerName = AnyP::Host::FromDecodedDomain(clientSni);
+        }
 
         if (useConsensus) {
             X509 *peer_cert = conn->serverBump() ? conn->serverBump()->serverCert.get() : nullptr;
@@ -126,7 +130,10 @@ Acl::ServerNameCheck::match(ACLChecklist * const ch)
         }
     }
 
-    const auto serverName = serverNameFromConn ? serverNameFromConn->c_str() : "none";
+    std::optional<SBuf> printedServerName;
+    if (serverNameFromConn)
+        printedServerName = ToSBuf(*serverNameFromConn); // no brackets
+    const auto serverName = printedServerName ? printedServerName->c_str() : "none";
     return data->match(serverName);
 }
 

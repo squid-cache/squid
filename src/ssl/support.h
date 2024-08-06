@@ -13,6 +13,7 @@
 
 #if USE_OPENSSL
 
+#include "anyp/forward.h"
 #include "base/CbDataList.h"
 #include "base/TypeTraits.h"
 #include "comm/forward.h"
@@ -344,7 +345,7 @@ protected:
 bool findMatchingSubjectName(X509 &, const GeneralNameMatcher &);
 
 /// whether at least one common or alternate subject name matches the given one
-bool findSubjectName(X509 &, const SBuf &name);
+bool findSubjectName(X509 &, const AnyP::Host &);
 
 /**
    \ingroup ServerProtocolSSLAPI

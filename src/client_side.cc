@@ -1484,9 +1484,13 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
     // when we can extract the intended name from the bumped HTTP request.
     if (const Security::CertPointer &srvCert = sslServerBump->serverCert) {
         HttpRequest *request = http->request;
-        if (!Ssl::findSubjectName(*srvCert, SBuf(request->url.host()))) { // TODO: Use url.hostOrIp()
+        const auto host = request->url.parsedHost();
+        if (host && Ssl::findSubjectName(*srvCert, *host)) {
+            debugs(33, 5, "certificate matches requested host: " << *host);
+            return false;
+        } else {
             debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " <<
-                   "does not match domainname " << request->url.host());
+                   "does not match request target " << RawPointer(host));
 
             bool allowDomainMismatch = false;
             if (Config.ssl_client.cert_error) {

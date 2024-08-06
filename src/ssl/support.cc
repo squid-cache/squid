@@ -58,19 +58,18 @@ std::vector<const char *> Ssl::BumpModeStr = {
 
 namespace Ssl {
 
-/// GeneralNameMatcher for matching a single X.509 name given at construction time
+/// GeneralNameMatcher for matching a single AnyP::Host given at construction time
 class OneNameMatcher: public GeneralNameMatcher
 {
 public:
-    explicit OneNameMatcher(const SBuf &needle): needleStorage_(needle), needle_(needleStorage_.c_str()) {}
+    explicit OneNameMatcher(const AnyP::Host &needle): needle_(needle) {}
 
 protected:
     /* GeneralNameMatcher API */
     bool matchDomainName(const SBuf &) const override;
     bool matchIp(const Ip::Address &) const override;
 
-    SBuf needleStorage_; ///< a name we are looking for
-    const char * const needle_; ///< needleStorage_ using matchDomainName()-compatible type
+    AnyP::Host needle_; ///< a name we are looking for
 };
 
 } // namespace Ssl
@@ -92,21 +91,28 @@ Ssl::OneNameMatcher::matchDomainName(const SBuf &rawName) const {
     // cache.log message framing) dump raw input that may contain new lines. Use
     // here and in similar contexts where we report such raw input.
     debugs(83, 5, "needle=" << needle_ << " domain=" << rawName);
+    if (needle_.ip()) {
+        // for example, a 127.0.0.1 IP needle does not match DNS:127.0.0.1 SAN
+        debugs(83, 7, "needle is an IP; mismatch");
+        return false;
+    }
+
+    Assure(needle_.domainName());
+    auto domainNeedle = *needle_.domainName();
+
     auto name = rawName;
     if (name.length() > 0 && name[0] == '*')
         name.consume(1);
-    return ::matchDomainName(needle_, name.c_str(), mdnRejectSubsubDomains) == 0;
+
+    return ::matchDomainName(domainNeedle.c_str(), name.c_str(), mdnRejectSubsubDomains) == 0;
 }
 
 bool
 Ssl::OneNameMatcher::matchIp(const Ip::Address &ip) const {
     debugs(83, 5, "needle=" << needle_ << " ip=" << ip);
-    // TODO: Consider caching conversion result, anticipating matchIp() calls.
-    // XXX: Ip::Address cannot parse bracketed IPv6 addresses (that
-    // Ssl::findSubjectName() callers get from Uri::host() and other sources)!
-    if (const auto needleIp = Ip::Address::Parse(needle_))
+    if (const auto needleIp = needle_.ip())
         return (*needleIp == ip);
-    debugs(83, 7, "needle is not an IP, cannot match");
+    debugs(83, 7, "needle is not an IP; mismatch");
     return false;
 }
 
@@ -359,9 +365,9 @@ Ssl::findMatchingSubjectName(X509 &cert, const GeneralNameMatcher &matcher)
 }
 
 bool
-Ssl::findSubjectName(X509 &cert, const SBuf &name)
+Ssl::findSubjectName(X509 &cert, const AnyP::Host &host)
 {
-    return findMatchingSubjectName(cert, OneNameMatcher(name));
+    return findMatchingSubjectName(cert, OneNameMatcher(host));
 }
 
 /// adjusts OpenSSL validation results for each verified certificate in ctx
@@ -403,8 +409,18 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 
         // Check for domain mismatch only if the current certificate is the peer certificate.
         if (!dont_verify_domain && server && peer_cert.get() == X509_STORE_CTX_get_current_cert(ctx)) {
-            if (!Ssl::findSubjectName(*peer_cert, *server)) {
-                debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << *peer_cert << " does not match domainname " << server);
+            // XXX: This code does not know where the server name came from. The
+            // name may be valid but not compatible with requirements assumed
+            // and enforced by the AnyP::Host::FromDecodedDomain() call below.
+            // TODO: Store AnyP::Host (or equivalent) in ssl_ex_index_server.
+            if (const auto host = AnyP::Host::FromDecodedDomain(*server)) {
+                if (!Ssl::findSubjectName(*peer_cert, *host)) {
+                    debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << *peer_cert << " does not match domainname " << *host);
+                    ok = 0;
+                    error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
+                }
+            } else {
+                debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Cannot check whether certificate " << *peer_cert << " matches malformed domainname " << *server);
                 ok = 0;
                 error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
             }
