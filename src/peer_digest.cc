@@ -386,10 +386,6 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
         case DIGEST_READ_NONE:
             break;
 
-        case DIGEST_READ_DONE:
-            return;
-            break;
-
         default:
             fatal("Bad digest transfer mode!\n");
         }
@@ -491,7 +487,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
             // stay with the old in-memory digest
             peerDigestFetchStop(fetch, buf, "Not modified");
-            fetch->state = DIGEST_READ_DONE;
+            return -1;
         } else if (status == Http::scOkay) {
             /* get rid of old entry if any */
 
