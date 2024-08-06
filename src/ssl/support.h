@@ -150,49 +150,18 @@ typedef std::multimap<SBuf, X509 *> CertsIndexedList;
 
 /// A successfully extracted/parsed certificate "name" field. See RFC 5280
 /// GeneralName and X520CommonName types for examples of information sources.
-class GeneralName
-{
-public:
-    static std::optional<GeneralName> FromCommonName(const ASN1_STRING &);
-    static std::optional<GeneralName> FromSubjectAltName( const GENERAL_NAME &);
-
-    // Accessor methods below are mutually exclusive: Exactly one method is
-    // guaranteed to return a result other than std::nullopt.
-
-    /// stored IP address (if any)
-    auto ip() const { return std::get_if<Ip::Address>(&raw_); }
-
-    /// stored domain name or domain name mask (if any)
-    auto domainName() const { return std::get_if<SBuf>(&raw_); }
-
-private:
-    using Storage = std::variant<
-                    /// A domain name or domain name mask (e.g., *.example.com). This info
-                    /// comes (with very little validation) from a source like these two:
-                    /// * RFC 5280 "dNSName" variant of a subjectAltName extension
-                    ///   (GeneralName index is 2, underlying value type is IA5String);
-                    /// * RFC 5280 X520CommonName component of a Subject distinguished name
-                    ///   field (underlying value type is DirectoryName).
-                    ///
-                    /// This string is never empty and never contains NUL characters, but it
-                    /// may contain any other character, including non-printable ones.
-                    SBuf,
-
-                    /// An IPv4 or an IPv6 address. This info comes (with very little
-                    /// validation) from RFC 5280 "iPAddress" variant of a subjectAltName
-                    /// extension (GeneralName index=7, value type=OCTET STRING).
-                    ///
-                    /// Ip::Address::isNoAddr() may be true for this address.
-                    /// Ip::Address::isAnyAddr() may be true for this address.
-                    Ip::Address>;
-
-    static std::optional<GeneralName> ParseAsDomainName(const char *, const ASN1_STRING &);
-
-    // use a From*() function to create GeneralName objects
-    GeneralName(const Storage &raw): raw_(raw) {}
-
-    Storage raw_; ///< the name we are providing access to
-};
+/// For now, we only support the same two name variants as AnyP::Host:
+///
+/// * An IPv4 or an IPv6 address. This info comes (with very little validation)
+///   from RFC 5280 "iPAddress" variant of a subjectAltName
+///
+/// * A domain name or domain name wildcard (e.g., *.example.com). This info
+///   comes (with very little validation) from a source like these two:
+///   - RFC 5280 "dNSName" variant of a subjectAltName extension (GeneralName
+///     index is 2, underlying value type is IA5String);
+///   - RFC 5280 X520CommonName component of a Subject distinguished name field
+///     (underlying value type is DirectoryName).
+using GeneralName = AnyP::Host;
 
 /**
  * Load PEM-encoded certificates from the given file.
@@ -336,7 +305,7 @@ protected:
     // GeneralName variants. For each public match() method call, exactly one of
     // these methods is called.
 
-    virtual bool matchDomainName(const SBuf &) const = 0;
+    virtual bool matchDomainName(const AnyP::DomainName &) const = 0;
     virtual bool matchIp(const Ip::Address &) const = 0;
 };
 

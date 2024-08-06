@@ -10,6 +10,7 @@
 #define SQUID_SRC_ANYP_FORWARD_H
 
 #include "base/RefCount.h"
+#include "sbuf/forward.h"
 
 namespace AnyP
 {
@@ -21,6 +22,8 @@ class Bracketed;
 class Host;
 class Uri;
 class UriScheme;
+
+using DomainName = SBuf;
 
 } // namespace AnyP
 

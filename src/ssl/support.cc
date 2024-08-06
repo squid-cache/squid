@@ -67,7 +67,7 @@ public:
 
 protected:
     /* GeneralNameMatcher API */
-    bool matchDomainName(const SBuf &) const override;
+    bool matchDomainName(const AnyP::DomainName &) const override;
     bool matchIp(const Ip::Address &) const override;
 
     AnyP::Host needle_; ///< a name we are looking for
@@ -87,7 +87,7 @@ Ssl::GeneralNameMatcher::match(const GeneralName &name) const
 }
 
 bool
-Ssl::OneNameMatcher::matchDomainName(const SBuf &rawName) const {
+Ssl::OneNameMatcher::matchDomainName(const AnyP::DomainName &rawName) const {
     // TODO: Add debugs() stream manipulator to safely (i.e. without breaking
     // cache.log message framing) dump raw input that may contain new lines. Use
     // here and in similar contexts where we report such raw input.
@@ -254,11 +254,13 @@ int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len)
     return write;
 }
 
+/// Domain name logic shared by ParseCommonName() and ParseSubjectAltName():
 /// Interprets the given raw buffer as a domain name, rejecting names that
 /// increase risks for legacy Squid code while being unlikely to be used in
 /// valid certificates that Squid admins want to identify by (rejected) names.
-std::optional<Ssl::GeneralName>
-Ssl::GeneralName::ParseAsDomainName(const char * const description, const ASN1_STRING &buffer)
+/// Supports wildcard domains.
+static std::optional<AnyP::Host>
+ParseAsDomainName(const char * const description, const ASN1_STRING &buffer)
 {
     const SBuf raw(reinterpret_cast<const char *>(buffer.data), buffer.length);
 
@@ -273,20 +275,20 @@ Ssl::GeneralName::ParseAsDomainName(const char * const description, const ASN1_S
     }
 
     debugs(83, 5, "parsed " << description << ": " << raw);
-    return GeneralName(raw);
+    return AnyP::Host::FromWildDomainName(raw);
 }
 
-std::optional<Ssl::GeneralName>
-Ssl::GeneralName::FromCommonName(const ASN1_STRING &buffer)
+static std::optional<AnyP::Host>
+ParseCommonName(const ASN1_STRING &buffer)
 {
-    // Unlike FromSubjectAltName() GENERAL_NAME, our ASN1_STRING cannot tell
+    // Unlike ParseSubjectAltName() GENERAL_NAME, our ASN1_STRING cannot tell
     // what kind of info this CN buffer stores. The rest of Squid code treats CN
     // as a domain name, so we parse/validate the given buffer as such.
     return ParseAsDomainName("CN", buffer);
 }
 
-std::optional<Ssl::GeneralName>
-Ssl::GeneralName::FromSubjectAltName(const GENERAL_NAME &san)
+static std::optional<AnyP::Host>
+ParseSubjectAltName(const GENERAL_NAME &san)
 {
     switch(san.type) {
     case GEN_DNS: {
@@ -307,7 +309,7 @@ Ssl::GeneralName::FromSubjectAltName(const GENERAL_NAME &san)
             memcpy(&addr.s_addr, san.d.iPAddress->data, sizeof(addr.s_addr));
             const Ip::Address ip(addr);
             debugs(83, 5, "parsed IPv4: " << ip);
-            return GeneralName(ip);
+            return AnyP::Host::FromIp(ip);
         }
 
         if (san.d.iPAddress->length == 16) {
@@ -316,7 +318,7 @@ Ssl::GeneralName::FromSubjectAltName(const GENERAL_NAME &san)
             memcpy(&addr.s6_addr, san.d.iPAddress->data, sizeof(addr.s6_addr));
             const Ip::Address ip(addr);
             debugs(83, 5, "parsed IPv6: " << ip);
-            return GeneralName(ip);
+            return AnyP::Host::FromIp(ip);
         }
 
         debugs(83, 3, "unexpected length of an IP address SAN: " << san.d.iPAddress->length);
@@ -341,7 +343,7 @@ Ssl::findMatchingSubjectName(X509 &cert, const GeneralNameMatcher &matcher)
             continue;
         }
 
-        if (const auto cn = GeneralName::FromCommonName(*cn_data)) {
+        if (const auto cn = ParseCommonName(*cn_data)) {
             if (matcher.match(*cn))
                 return true;
         }
@@ -354,7 +356,7 @@ Ssl::findMatchingSubjectName(X509 &cert, const GeneralNameMatcher &matcher)
         for (int i = 0; i < sanCount; ++i) {
             const auto rawSan = sk_GENERAL_NAME_value(sans.get(), i);
             Assure(rawSan);
-            if (const auto san = GeneralName::FromSubjectAltName(*rawSan)) {
+            if (const auto san = ParseSubjectAltName(*rawSan)) {
                 if (matcher.match(*san))
                     return true;
             }

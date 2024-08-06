@@ -585,7 +585,7 @@ public:
 
 protected:
     /* GeneralNameMatcher API */
-    bool matchDomainName(const SBuf &) const override;
+    bool matchDomainName(const AnyP::DomainName &) const override;
     bool matchIp(const Ip::Address &) const override;
 
 private:
@@ -595,7 +595,7 @@ private:
 };
 
 bool
-CommonNamesPrinter::matchDomainName(const SBuf &domain) const
+CommonNamesPrinter::matchDomainName(const AnyP::DomainName &domain) const
 {
     // TODO: Convert html_quote() into an std::ostream manipulator accepting (buf, n).
     itemStream() << html_quote(SBuf(domain).c_str());
