@@ -59,6 +59,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "anyp/Host.h"
 #include "anyp/PortCfg.h"
 #include "base/AsyncCallbacks.h"
 #include "base/Subscription.h"

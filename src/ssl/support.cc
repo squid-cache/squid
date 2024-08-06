@@ -16,6 +16,7 @@
 #if USE_OPENSSL
 
 #include "acl/FilledChecklist.h"
+#include "anyp/Host.h"
 #include "anyp/PortCfg.h"
 #include "anyp/Uri.h"
 #include "fatal.h"
@@ -410,10 +411,10 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         // Check for domain mismatch only if the current certificate is the peer certificate.
         if (!dont_verify_domain && server && peer_cert.get() == X509_STORE_CTX_get_current_cert(ctx)) {
             // XXX: This code does not know where the server name came from. The
-            // name may be valid but not compatible with requirements assumed
-            // and enforced by the AnyP::Host::FromDecodedDomain() call below.
+            // name may be valid but not compatible with requirements assumed or
+            // enforced by the AnyP::Host::FromSimpleDomainName() call below.
             // TODO: Store AnyP::Host (or equivalent) in ssl_ex_index_server.
-            if (const auto host = AnyP::Host::FromDecodedDomain(*server)) {
+            if (const auto host = AnyP::Host::FromSimpleDomainName(*server)) {
                 if (!Ssl::findSubjectName(*peer_cert, *host)) {
                     debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << *peer_cert << " does not match domainname " << *host);
                     ok = 0;

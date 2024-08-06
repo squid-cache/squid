@@ -9,6 +9,7 @@
 /* DEBUG: section 23    URL Parsing */
 
 #include "squid.h"
+#include "anyp/Host.h"
 #include "anyp/Uri.h"
 #include "base/Raw.h"
 #include "globals.h"
@@ -48,72 +49,6 @@ UserInfoChars()
                                       CharacterSet::DIGIT;
     return userInfoValid;
 }
-
-/* AnyP::Host */
-
-std::optional<AnyP::Host>
-AnyP::Host::FromIp(const Ip::Address &ip)
-{
-    // any IP value is acceptable
-    return Host(ip);
-}
-
-std::optional<AnyP::Host>
-AnyP::Host::FromDecodedDomain(const SBuf &rawName)
-{
-    if (rawName.isEmpty()) {
-        debugs(23, 3, "rejecting empty name");
-        return std::nullopt;
-    }
-    return Host(rawName);
-}
-
-std::optional<AnyP::Host>
-AnyP::Host::FromUriRegName(const SBuf &regName)
-{
-    if (regName.find('%') != SBuf::npos) {
-        debugs(23, 3, "rejecting percent-encoded reg-name: " << regName);
-        return std::nullopt; // TODO: Decode() instead
-    }
-    return FromDecodedDomain(regName);
-}
-
-std::ostream &
-AnyP::operator <<(std::ostream &os, const Host &host)
-{
-    if (const auto ip = host.ip()) {
-        char buf[MAX_IPSTRLEN];
-        (void)ip->toStr(buf, sizeof(buf)); // no brackets
-        os << buf;
-    } else {
-        // If Host object creators start applying Uri::Decode() to reg-names,
-        // then we must start applying Uri::Encode() here, but only to names
-        // that require it. See "The reg-name syntax allows percent-encoded
-        // octets" paragraph in RFC 3986.
-        const auto domainName = host.domainName();
-        Assure(domainName);
-        os << *domainName;
-    }
-    return os;
-}
-
-std::ostream &
-AnyP::operator <<(std::ostream &os, const Bracketed &hostWrapper)
-{
-    bool addBrackets = false;
-    if (const auto ip = hostWrapper.host.ip())
-        addBrackets = ip->isIPv6();
-
-    if (addBrackets)
-        os << '[';
-    os << hostWrapper.host;
-    if (addBrackets)
-        os << ']';
-
-    return os;
-}
-
-/* AnyP::Uri */
 
 /**
  * Governed by RFC 3986 section 2.1
@@ -214,7 +149,20 @@ AnyP::Uri::hostOrIp() const
 std::optional<AnyP::Host>
 AnyP::Uri::parsedHost() const
 {
-    return hostIsNumeric() ? Host::FromIp(hostIP()) : Host::FromUriRegName(SBuf(host()));
+    if (hostIsNumeric())
+        return Host::FromIp(hostIP());
+
+    // XXX: Interpret host subcomponent as reg-name representing a DNS name. It
+    // may actually be, for example, a URN namespace ID (NID; see RFC 8141), but
+    // current Squid APIs do not support adequate representation of those cases.
+    const SBuf regName(host());
+
+    if (regName.find('%') != SBuf::npos) {
+        debugs(23, 3, "rejecting percent-encoded reg-name: " << regName);
+        return std::nullopt; // TODO: Decode() instead
+    }
+
+    return Host::FromSimpleDomainName(regName);
 }
 
 const SBuf &
