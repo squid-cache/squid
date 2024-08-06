@@ -9,12 +9,17 @@
 #ifndef SQUID_SRC_SECURITY_PEEROPTIONS_H
 #define SQUID_SRC_SECURITY_PEEROPTIONS_H
 
+#include "acl/Tree.h"
 #include "base/YesNoNone.h"
 #include "ConfigParser.h"
+#include "mem/PoolingAllocator.h"
 #include "security/Context.h"
 #include "security/forward.h"
 #include "security/KeyData.h"
 #include "security/Session.h"
+
+#include <memory>
+#include <vector>
 
 class Packable;
 
@@ -147,8 +152,61 @@ public:
     bool encryptTransport = false;
 };
 
+// TODO: Move this declaration.
+/// A combination of PeerOptions and the corresponding Context. Used by Squid
+/// TLS client code.
+class PeerContext: public RefCountable
+{
+public:
+    explicit PeerContext(ConfigParser &);
+
+    /// creates TLS context reflecting the configured options
+    void open();
+
+    PeerOptions options; ///< context configuration
+    ContextPointer raw; ///< context configured using options
+
+    /// restrict usage to matching transactions
+    std::unique_ptr<ACLList> preconditions;
+};
+
+// TODO: Move this declaration.
+/// Manages PeerContext objects representing all
+/// tls_outgoing_options_for_retries directives in squid.conf.
+class PeerContexts
+{
+public:
+    /// parses a single tls_outgoing_options_for_retries directive
+    void parseOneDirective(ConfigParser &);
+
+    /// opens all configured contexts; \sa PeerContext::open()
+    void open();
+
+    /// transaction-matching PeerContext (or nil)
+    PeerContextPointer findContext(ACLChecklist &) const;
+
+    /// configured contexts in squid.conf directives order
+    std::vector< PeerContextPointer, PoolingAllocator<PeerContextPointer> > contexts;
+};
+
+// XXX: Remove this shim after upgrading legacy code to store PeerContext
+// objects instead of disjoint PeerOptons and Context objects.
+/// A combination of PeerOptions and the corresponding Context. Used by Squid
+/// TLS client code.
+class FuturePeerContext: public RefCountable
+{
+public:
+    FuturePeerContext(PeerOptions &o, const ContextPointer &c): options(o), raw(c) {}
+
+    PeerOptions &options; ///< TLS context configuration
+    const ContextPointer &raw; ///< TLS context configured using options
+};
+
 /// configuration options for DIRECT server access
 extern PeerOptions ProxyOutgoingConfig;
+
+/// XXX: future Config.ssl_client.defaultContext
+extern FuturePeerContextPointer DefaultOutgoingContext;
 
 } // namespace Security
 
@@ -156,6 +214,24 @@ extern PeerOptions ProxyOutgoingConfig;
 void parse_securePeerOptions(Security::PeerOptions *);
 #define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
 #define dump_securePeerOptions(e,n,x) do { PackableStream os_(*(e)); os_ << n; (x).dumpCfg(os_,""); os_ << '\n'; } while (false)
+
+// For modern code forced to use this shim.
+// XXX: Replace calls with the call parameter.
+inline Security::FuturePeerContextPointer
+PassThroughFuture(const Security::PeerContextPointer &ctx)
+{
+    if (!ctx)
+        return nullptr;
+    return new Security::FuturePeerContext(ctx->options, ctx->raw);
+}
+
+// For legacy code that will be refactored/removed together with this shim.
+// XXX: Replace calls with the right Security::ContextPointer object.
+inline Security::FuturePeerContextPointer
+MakeLikeFuture(Security::PeerOptions &options, const Security::ContextPointer &rawContext)
+{
+    return new Security::FuturePeerContext(options, rawContext);
+}
 
 #endif /* SQUID_SRC_SECURITY_PEEROPTIONS_H */
 

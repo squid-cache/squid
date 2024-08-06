@@ -7,13 +7,18 @@
  */
 
 #include "squid.h"
+#include "acl/Checklist.h"
+#include "acl/Tree.h"
 #include "base/Packable.h"
+#include "base/PackableStream.h"
+#include "ConfigOption.h"
 #include "debug/Stream.h"
 #include "fatal.h"
 #include "globals.h"
 #include "parser/Tokenizer.h"
 #include "Parsing.h"
 #include "security/PeerOptions.h"
+#include "Store.h"
 
 #if USE_OPENSSL
 #include "ssl/support.h"
@@ -22,6 +27,7 @@
 #include <bitset>
 
 Security::PeerOptions Security::ProxyOutgoingConfig;
+Security::FuturePeerContextPointer Security::DefaultOutgoingContext;
 
 Security::PeerOptions::PeerOptions()
 {
@@ -808,4 +814,125 @@ parse_securePeerOptions(Security::PeerOptions *opt)
         opt->parse(token);
     opt->parseOptions();
 }
+
+/* Security::PeerContext */
+
+Security::PeerContext::PeerContext(ConfigParser &parser)
+{
+    // we keep trying to parse "if acl..." suffix because TLS options do not use
+    // key=value syntax which would have allowed us to use optionalKvPair()
+    const auto parsePreconditions = [&]() {
+        assert(!preconditions);
+        preconditions.reset(parser.optionalAclList());
+        return bool(preconditions);
+    };
+    while (!parsePreconditions()) {
+        if (const auto token = parser.NextToken())
+            options.parse(token);
+        else
+            break; // no more options and no ACLs
+    }
+    options.parseOptions();
+
+    if (!options.encryptTransport) {
+        // either no explicit options at all, or the last option was "disable"
+        // TODO: Auto-report failed directive name when reporting parsing exceptions
+        throw TextException("tls_outgoing_options_for_retries requires TLS options", Here());
+    }
+}
+
+void
+Security::PeerContext::open()
+{
+    assert(!raw);
+
+    if (!options.encryptTransport)
+        return; // disabled by the admin
+
+#if USE_OPENSSL
+    debugs(3, 2, "initializing TLS context");
+#else
+    throw TextException("proxying https:// currently still requires --with-openssl", Here());
+#endif
+
+    raw = options.createClientContext(false);
+    if (!raw) // TODO: createClientContext() should throw on failures instead
+        throw TextException("failed to initialize a TLS context for Squid-originated connections", Here());
+
+#if USE_OPENSSL
+    Ssl::useSquidUntrusted(raw.get());
+#endif
+}
+
+/* Security::PeerContexts */
+
+void
+Security::PeerContexts::parseOneDirective(ConfigParser &parser)
+{
+    const PeerContextPointer context = new PeerContext(parser);
+    contexts.emplace_back(context);
+}
+
+void
+Security::PeerContexts::open()
+{
+    for (const auto &context: contexts)
+        context->open();
+}
+
+Security::PeerContextPointer
+Security::PeerContexts::findContext(ACLChecklist &checklist) const
+{
+    for (const auto &context: contexts) {
+        if (!context->preconditions || checklist.fastCheck(context->preconditions.get()).allowed())
+            return context;
+    }
+    return nullptr;
+}
+
+// this namespace opening is a GCC v6 workaround documented in KeyLog.cc
+namespace Configuration {
+
+template <>
+Security::PeerContexts *
+Configuration::Component<Security::PeerContexts*>::Create()
+{
+    return new Security::PeerContexts();
+}
+
+template <>
+void
+Configuration::Component<Security::PeerContexts*>::ParseAndUpdate(Security::PeerContexts * &contexts, ConfigParser &parser)
+{
+    Assure(contexts);
+    contexts->parseOneDirective(parser);
+}
+
+template <>
+void
+Configuration::Component<Security::PeerContexts*>::PrintDirectives(std::ostream &os, Security::PeerContexts * const & contexts, const char * const directiveName)
+{
+    Assure(contexts);
+    for (const auto &context: contexts->contexts) {
+        os << directiveName;
+        context->options.dumpCfg(os, "");
+        if (context->preconditions) {
+            // TODO: Use Acl::dump() after fixing the XXX in dump_acl_list().
+            for (const auto &acl: context->preconditions->treeDump("if", &Acl::AllowOrDeny))
+                os << ' ' << acl;
+            // the treeDump() hack above adds a new line
+        } else {
+            os << '\n';
+        }
+    }
+}
+
+template <>
+void
+Configuration::Component<Security::PeerContexts*>::Free(Security::PeerContexts * const contexts)
+{
+    delete contexts;
+}
+
+} // namespace Configuration
 

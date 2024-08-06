@@ -37,11 +37,18 @@
 #include <optional>
 #endif
 
-Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, const AsyncCallback<EncryptorAnswer> &aCallback, const AccessLogEntryPointer &alp, const time_t timeout):
+Security::PeerConnector::PeerConnector(
+    const Comm::ConnectionPointer &aServerConn,
+    const Security::FuturePeerContextPointer &tlsContext,
+    const AsyncCallback<EncryptorAnswer> &aCallback,
+    const AccessLogEntryPointer &alp,
+    const time_t timeout):
+
     AsyncJob("Security::PeerConnector"),
     noteFwdPconnUse(false),
     serverConn(aServerConn),
     al(alp),
+    tlsContext_(tlsContext),
     callback(aCallback),
     negotiationTimeout(timeout),
     startTime(squid_curtime),
@@ -140,10 +147,10 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 {
     Must(Comm::IsConnOpen(serverConnection()));
 
-    Security::ContextPointer ctx(getTlsContext());
-    debugs(83, 5, serverConnection() << ", ctx=" << (void*)ctx.get());
+    const auto ctx = peerContext();
+    debugs(83, 5, serverConnection() << ", ctx=" << ctx);
 
-    if (!ctx || !Security::CreateClientSession(ctx, serverConnection(), "server https start")) {
+    if (!ctx || !Security::CreateClientSession(*ctx, serverConnection(), "server https start")) {
         const auto xerrno = errno;
         if (!ctx) {
             debugs(83, DBG_IMPORTANT, "ERROR: initializing TLS connection: No security context.");
@@ -647,7 +654,7 @@ Security::PeerConnector::certDownloadingDone(DownloaderAnswer &downloaderAnswer)
             downloadedCerts.reset(sk_X509_new_null());
         sk_X509_push(downloadedCerts.get(), cert);
 
-        ContextPointer ctx(getTlsContext());
+        const auto ctx = peerContext()->raw;
         const auto certsList = SSL_get_peer_cert_chain(&sconn);
         if (!Ssl::findIssuerCertificate(cert, certsList, ctx)) {
             if (const auto issuerUri = Ssl::findIssuerUri(cert)) {
@@ -712,7 +719,7 @@ Security::PeerConnector::computeMissingCertificateUrls(const Connection &sconn)
     }
     debugs(83, 5, "server certificates: " << sk_X509_num(certs));
 
-    const auto ctx = getTlsContext();
+    const auto ctx = peerContext()->raw;
     if (!Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, *certs, ctx))
         return false; // missingChainCertificatesUrls() reports the exact reason
 

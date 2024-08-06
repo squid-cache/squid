@@ -55,6 +55,14 @@ CachePeer::~CachePeer()
     xfree(domain);
 }
 
+Security::FuturePeerContextPointer
+CachePeer::peerContext()
+{
+    if (secure.encryptTransport)
+        return new Security::FuturePeerContext(secure, sslContext);
+    return nullptr;
+}
+
 void
 CachePeer::noteSuccess()
 {

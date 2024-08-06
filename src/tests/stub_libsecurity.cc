@@ -19,15 +19,16 @@ CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 namespace Security
 {
 BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &, const Comm::ConnectionPointer & aServerConn,
+                                       const FuturePeerContextPointer &aPeerContextPointer,
                                        const AsyncCallback<EncryptorAnswer> & aCallback,
                                        const AccessLogEntryPointer &alp,
                                        time_t) :
     AsyncJob("Security::BlindPeerConnector"),
-    Security::PeerConnector(aServerConn, aCallback, alp, 0)
+    Security::PeerConnector(aServerConn, aPeerContextPointer, aCallback, alp, 0)
 {STUB_NOP}
 
 bool BlindPeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
-Security::ContextPointer BlindPeerConnector::getTlsContext() STUB_RETVAL(Security::ContextPointer())
+FuturePeerContextPointer BlindPeerConnector::peerContext() const STUB_RETVAL(FuturePeerContextPointer())
 void BlindPeerConnector::noteNegotiationDone(ErrorState *) STUB
 }
 
@@ -83,7 +84,12 @@ const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion 
 class TlsNegotiationDetails: public RefCountable {};
 namespace Security
 {
-PeerConnector::PeerConnector(const Comm::ConnectionPointer &, const AsyncCallback<EncryptorAnswer> &, const AccessLogEntryPointer &, const time_t):
+PeerConnector::PeerConnector(
+    const Comm::ConnectionPointer &,
+    const Security::FuturePeerContextPointer &,
+    const AsyncCallback<EncryptorAnswer> &,
+    const AccessLogEntryPointer &,
+    time_t):
     AsyncJob("Security::PeerConnector") {STUB}
 PeerConnector::~PeerConnector() STUB
 void PeerConnector::start() STUB
@@ -100,7 +106,6 @@ void PeerConnector::handleNegotiationResult(const Security::IoResult &) STUB;
 void PeerConnector::noteWantRead() STUB
 void PeerConnector::noteWantWrite() STUB
 void PeerConnector::noteNegotiationError(const Security::ErrorDetailPointer &) STUB
-//    virtual Security::ContextPointer getTlsContext() = 0;
 void PeerConnector::bail(ErrorState *) STUB
 void PeerConnector::sendSuccess() STUB
 void PeerConnector::callBack() STUB
@@ -112,6 +117,8 @@ EncryptorAnswer &PeerConnector::answer() STUB_RETREF(EncryptorAnswer)
 
 #include "security/PeerOptions.h"
 Security::PeerOptions Security::ProxyOutgoingConfig;
+Security::FuturePeerContextPointer Security::DefaultOutgoingContext;
+
 Security::PeerOptions::PeerOptions() {
 #if USE_OPENSSL
     parsedOptions = 0;
@@ -129,6 +136,7 @@ void Security::PeerOptions::updateSessionOptions(Security::SessionPointer &) STU
 void Security::PeerOptions::dumpCfg(std::ostream &, char const*) const STUB
 void Security::PeerOptions::parseOptions() STUB
 void parse_securePeerOptions(Security::PeerOptions *) STUB
+Security::PeerContextPointer Security::PeerContexts::findContext(ACLChecklist &) const STUB_RETVAL(nullptr)
 
 #include "security/ServerOptions.h"
 //Security::ServerOptions::ServerOptions(const Security::ServerOptions &) STUB
@@ -147,7 +155,7 @@ void Security::ServerOptions::updateContextSessionId(Security::ContextPointer &)
 
 #include "security/Session.h"
 namespace Security {
-bool CreateClientSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *) STUB_RETVAL(false)
+bool CreateClientSession(FuturePeerContext &, const Comm::ConnectionPointer &, const char *) STUB_RETVAL(false)
 bool CreateServerSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, Security::PeerOptions &, const char *) STUB_RETVAL(false)
 void SessionSendGoodbye(const Security::SessionPointer &) STUB
 bool SessionIsResumed(const Security::SessionPointer &) STUB_RETVAL(false)
