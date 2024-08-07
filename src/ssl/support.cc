@@ -254,49 +254,16 @@ int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len)
     return write;
 }
 
-/// Domain name logic shared by ParseCommonName() and ParseSubjectAltName():
-/// Interprets the given raw buffer as a domain name, rejecting names that
-/// increase risks for legacy Squid code while being unlikely to be used in
-/// valid certificates that Squid admins want to identify by (rejected) names.
-/// Supports wildcard domains.
-static std::optional<AnyP::Host>
-ParseAsDomainName(const char * const description, const ASN1_STRING &buffer)
-{
-    const SBuf raw(reinterpret_cast<const char *>(buffer.data), buffer.length);
-
-    if (raw.isEmpty()) {
-        debugs(83, 3, "rejects empty " << description);
-        return std::nullopt;
-    }
-
-    if (raw.find('\0') != SBuf::npos) {
-        debugs(83, 3, "rejects " << description << " with an ASCII NUL character: " << raw);
-        return std::nullopt;
-    }
-
-    debugs(83, 5, "parsed " << description << ": " << raw);
-    return AnyP::Host::FromWildDomainName(raw);
-}
-
-static std::optional<AnyP::Host>
-ParseCommonName(const ASN1_STRING &buffer)
-{
-    // Unlike ParseSubjectAltName() GENERAL_NAME, our ASN1_STRING cannot tell
-    // what kind of info this CN buffer stores. The rest of Squid code treats CN
-    // as a domain name, so we parse/validate the given buffer as such.
-    // XXX: "Squid code treats CN as a domain name" assertion is false because
-    // addAltNameWithSubjectCn() does not do that. TODO: Unify these two functions.
-    return ParseAsDomainName("CN", buffer);
-}
-
 static std::optional<AnyP::Host>
 ParseSubjectAltName(const GENERAL_NAME &san)
 {
     switch(san.type) {
     case GEN_DNS: {
-        // san.d.dNSName is OpenSSL ASN1_IA5STRING
         Assure(san.d.dNSName);
-        return ParseAsDomainName("DNS name", *san.d.dNSName);
+        // GEN_DNS is an IA5STRING. IA5STRING is a subset of ASCII that does not
+        // need to be converted to UTF-8 (or some such) before we parse it.
+        const auto buffer = Ssl::AsnToSBuf(*san.d.dNSName);
+        return Ssl::ParseAsWildDomainName("SAN DNS name", buffer);
     }
 
     case GEN_IPADD: {
@@ -338,16 +305,12 @@ Ssl::findMatchingSubjectName(X509 &cert, const GeneralNameMatcher &matcher)
 {
     const auto name = X509_get_subject_name(&cert);
     for (int i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
-
-        ASN1_STRING *cn_data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, i));
-        if (!cn_data) {
-            debugs(83, 5, "failed to extract CN value: " << Ssl::ReportAndForgetErrors);
-            continue;
-        }
-
-        if (const auto cn = ParseCommonName(*cn_data)) {
+        if (const auto cn = ParseCommonNameAt(*name, i)) {
             if (matcher.match(*cn))
                 return true;
+        } else {
+            debugs(83, 7, "ignoring unparsable CN at " << i);
+            continue;
         }
     }
 

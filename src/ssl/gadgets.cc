@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "anyp/Host.h"
 #include "base/IoManip.h"
 #include "error/SysErrorDetail.h"
 #include "ip/Address.h"
@@ -468,6 +469,74 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
     return added;
 }
 
+SBuf
+Ssl::AsnToSBuf(const ASN1_STRING &buffer)
+{
+    return SBuf(reinterpret_cast<const char *>(buffer.data), buffer.length);
+}
+
+std::optional<AnyP::Host>
+Ssl::ParseAsWildDomainName(const char * const description, const SBuf &raw)
+{
+    if (raw.isEmpty()) {
+        debugs(83, 3, "rejects empty " << description);
+        return std::nullopt;
+    }
+
+    if (raw.find('\0') != SBuf::npos) {
+        debugs(83, 3, "rejects " << description << " with an ASCII NUL character: " << raw);
+        return std::nullopt;
+    }
+
+    debugs(83, 5, "parsed " << description << ": " << raw);
+    return AnyP::Host::FromWildDomainName(raw);
+}
+
+/// OpenSSL ASN1_STRING_to_UTF8() wrapper
+static std::optional<SBuf>
+ParseAsUtf8(const char * const description, const ASN1_STRING &asnBuffer)
+{
+    unsigned char *utfBuffer = nullptr;
+    const auto conversionResult = ASN1_STRING_to_UTF8(&utfBuffer, &asnBuffer);
+    if (conversionResult < 0) {
+        debugs(83, 3, description << " to UTF-8 conversion failure" << Ssl::ReportAndForgetErrors);
+        return std::nullopt;
+    }
+    Assure(utfBuffer);
+    const auto utfChars = reinterpret_cast<char *>(utfBuffer);
+    const auto utfLength = static_cast<size_t>(conversionResult);
+    Ssl::UniqueCString bufferDestroyer(utfChars);
+    return SBuf(utfChars, utfLength);
+}
+
+std::optional<AnyP::Host>
+Ssl::ParseCommonNameAt(X509_NAME &name, const int cnIndex)
+{
+    const auto cn = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(&name, cnIndex));
+    if (!cn) {
+        debugs(83, 7, "no CN at " << cnIndex);
+        return std::nullopt;
+    }
+
+    // CN buffer usually contains an ASCII domain name, but X.509 and TLS allow
+    // other name encodings (e.g., UTF-16), and some CNs are not domain names
+    // (e.g., organization name or perhaps even a dotted IP address). We do our
+    // best to identify IP addresses and treat anything else as a domain name.
+    // TODO: Do not treat CNs with spaces or without periods as domain names.
+
+    // OpenSSL does not offer ASN1_STRING_to_ASCII(), so we convert to UTF-8
+    // that usually "works" for further parsing/validation/comparison purposes.
+    // TODO: Confirm that OpenSSL preserves UTF-8 when we add a "DNS:..." SAN.
+
+    auto utf = ParseAsUtf8("CN", *cn);
+    if (!utf)
+        return std::nullopt;
+
+    if (const auto ip = Ip::Address::Parse(utf->c_str()))
+        return AnyP::Host::FromIp(*ip);
+    return ParseAsWildDomainName("CN", *utf);
+}
+
 /// Adds a new subjectAltName extension contining Subject CN or returns false
 /// expects the caller to check for the existing subjectAltName extension
 static bool
@@ -481,20 +550,15 @@ addAltNameWithSubjectCn(Security::CertPointer &cert)
     if (loc < 0)
         return false;
 
-    ASN1_STRING *cn_data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, loc));
-    if (!cn_data)
+    const auto cn = Ssl::ParseCommonNameAt(*name, loc);
+    if (!cn)
         return false;
 
     // XXX: This code creates an invalid "IP:<human-friendly IP address text>" SAN.
     // TODO: It must create a valid "IP:<raw inet or inet6 bytes>"" SAN instead.
-    const auto cn = reinterpret_cast<const char*>(ASN1_STRING_get0_data(cn_data));
-    const auto altNameKind = Ip::Address::Parse(cn) ? "IP" : "DNS";
-    char dnsName[1024]; // DNS names are limited to 256 characters
-    const auto res = snprintf(dnsName, sizeof(dnsName), "%s:%s", altNameKind, cn);
-    if (res <= 0 || res >= static_cast<int>(sizeof(dnsName)))
-        return false;
-
-    X509_EXTENSION *ext = X509V3_EXT_conf_nid(nullptr, nullptr, NID_subject_alt_name, dnsName);
+    const auto altNameKind = cn->ip() ? "IP:" : "DNS:";
+    auto altName = ToSBuf(altNameKind, *cn);
+    X509_EXTENSION *ext = X509V3_EXT_conf_nid(nullptr, nullptr, NID_subject_alt_name, altName.c_str());
     if (!ext)
         return false;
 
