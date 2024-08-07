@@ -576,11 +576,13 @@ addAltNameWithSubjectCn(Security::CertPointer &cert)
     if (!cn)
         return false;
 
-    // XXX: This code creates an invalid "IP:<human-friendly IP address text>" SAN.
-    // TODO: It must create a valid "IP:<raw inet or inet6 bytes>"" SAN instead.
-    const auto altNameKind = cn->ip() ? "IP:" : "DNS:";
-    auto altName = ToSBuf(altNameKind, *cn);
-    X509_EXTENSION *ext = X509V3_EXT_conf_nid(nullptr, nullptr, NID_subject_alt_name, altName.c_str());
+    // We create an "IP:address" or "DNS:name" text that X509V3_EXT_conf_nid()
+    // then parses and converts to OpenSSL GEN_IPADD or GEN_DNS GENERAL_NAME.
+    // TODO: Use X509_add1_ext_i2d() to add a GENERAL_NAME extension directly:
+    // https://github.com/openssl/openssl/issues/11706#issuecomment-633180151
+    const auto altNamePrefix = cn->ip() ? "IP:" : "DNS:";
+    auto altName = ToSBuf(altNamePrefix, *cn);
+    const auto ext = X509V3_EXT_conf_nid(nullptr, nullptr, NID_subject_alt_name, altName.c_str());
     if (!ext)
         return false;
 
