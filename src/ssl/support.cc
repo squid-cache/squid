@@ -284,6 +284,8 @@ ParseCommonName(const ASN1_STRING &buffer)
     // Unlike ParseSubjectAltName() GENERAL_NAME, our ASN1_STRING cannot tell
     // what kind of info this CN buffer stores. The rest of Squid code treats CN
     // as a domain name, so we parse/validate the given buffer as such.
+    // XXX: "Squid code treats CN as a domain name" assertion is false because
+    // addAltNameWithSubjectCn() does not do that. TODO: Unify these two functions.
     return ParseAsDomainName("CN", buffer);
 }
 

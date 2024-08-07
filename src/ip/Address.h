@@ -45,7 +45,7 @@ class Address
 public:
     /// Creates an IP address object by parsing a given c-string. Accepts all
     /// three forms of IPv6 addresses from RFC 4291 section 2.2. Examples of
-    /// valid input: 0, 1.0, 1.2.3.4, FF01::101, and ::FFFF:129.144.52.38.
+    /// valid input: 0, 1.0, 1.2.3.4, ff01::101, and ::FFFF:129.144.52.38.
     /// Fails if input contains characters before or after a valid IP address.
     /// For example, fails if given a bracketed IPv6 address (e.g., [::1]).
     /// \returns std::nullopt if parsing fails

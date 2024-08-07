@@ -485,10 +485,12 @@ addAltNameWithSubjectCn(Security::CertPointer &cert)
     if (!cn_data)
         return false;
 
-    const char* cn_cstr = (const char*) ASN1_STRING_get0_data(cn_data);
-    const auto altname_type = Ip::Address::Parse(cn_cstr) ? "IP" : "DNS";
+    // XXX: This code creates an invalid "IP:<human-friendly IP address text>" SAN.
+    // TODO: It must create a valid "IP:<raw inet or inet6 bytes>"" SAN instead.
+    const auto cn = reinterpret_cast<const char*>(ASN1_STRING_get0_data(cn_data));
+    const auto altNameKind = Ip::Address::Parse(cn) ? "IP" : "DNS";
     char dnsName[1024]; // DNS names are limited to 256 characters
-    const int res = snprintf(dnsName, sizeof(dnsName), "%s:%.*s", altname_type, cn_data->length, cn_data->data);
+    const auto res = snprintf(dnsName, sizeof(dnsName), "%s:%s", altNameKind, cn);
     if (res <= 0 || res >= static_cast<int>(sizeof(dnsName)))
         return false;
 
