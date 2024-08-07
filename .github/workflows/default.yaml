@@ -159,6 +159,21 @@ jobs:
           export CPPFLAGS="-I$HOMEBREW_PREFIX/include${CPPFLAGS:+ $CPPFLAGS}"
           export LDFLAGS="-L$HOMEBREW_PREFIX/lib${LDFLAGS:+ $LDFLAGS}"
           export CFLAGS="-Wno-compound-token-split-by-macro${CFLAGS:+ $CFLAGS}" # needed fir ltdl with Xcode
+
+          # libtool package referenced below fails to copy its configure*
+          # files, possibly due to a packaging/brewing bug. The following sed
+          # command restores installed libtoolize code to its earlier (and
+          # working) variation.
+          echo "brew libtool package details:"
+          brew info libtool --json | grep -E 'rebuild|tap_git_head'
+          # This hack was tested on libtoolize package with the following output:
+          # "rebuild": 2,
+          # "tap_git_head": "5cede8ea3b7b12c7f68215f75a951430b38d945f",
+          #
+          editable=$HOMEBREW_CELLAR/libtool/2.4.7/bin/glibtoolize
+          sed -i.bak 's@ltdl_ac_aux_dir=""@ltdl_ac_aux_dir="../build-aux"@' $editable || true
+          diff -u $editable.bak $editable || true
+
           ./test-builds.sh ${{ matrix.layer.name }}
 
       - name: Publish build logs

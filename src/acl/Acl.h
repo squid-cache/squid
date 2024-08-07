@@ -125,6 +125,12 @@ operator <<(std::ostream &o, const Answer &a)
     return o;
 }
 
+/// report the given list of "acl" directives (using squid.conf syntax)
+void DumpNamedAcls(std::ostream &, const char *directiveName, NamedAcls *);
+
+/// delete the given list of "acl" directives
+void FreeNamedAcls(NamedAcls **);
+
 } // namespace Acl
 
 /// \ingroup ACLAPI

@@ -10,7 +10,6 @@
 #include "acl/AllOf.h"
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
-#include "acl/Gadgets.h"
 #include "cache_cf.h"
 #include "MemBuf.h"
 #include "sbuf/SBuf.h"
@@ -37,7 +36,7 @@ Acl::AllOf::doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const
     if (empty())
         return 1; // not 0 because in math empty product equals identity
 
-    if (checklist->matchChild(this, start, *start))
+    if (checklist->matchChild(this, start))
         return 1; // match
 
     return checklist->keepMatching() ? 0 : -1;
@@ -48,7 +47,7 @@ void
 Acl::AllOf::parse()
 {
     Acl::InnerNode *whole = nullptr;
-    Acl::Node *oldNode = empty() ? nullptr : nodes.front();
+    const auto oldNode = empty() ? nullptr : nodes.front().getRaw();
 
     // optimization: this logic reduces subtree hight (number of tree levels)
     if (Acl::OrNode *oldWhole = dynamic_cast<Acl::OrNode*>(oldNode)) {
@@ -61,7 +60,6 @@ Acl::AllOf::parse()
         newWhole->context(ToSBuf('(', name, " lines)"), oldNode->cfgline);
         newWhole->add(oldNode); // old (i.e. first) line
         nodes.front() = whole = newWhole;
-        aclRegister(newWhole);
     } else {
         // this is the first line for this acl; just use it as is
         whole = this;
