@@ -492,6 +492,24 @@ Ssl::ParseAsWildDomainName(const char * const description, const SBuf &raw)
     return AnyP::Host::FromWildDomainName(raw);
 }
 
+// XXX: Duplicates most of ParseAsWildDomainName(). TODO: Move both to AnyP::Host.
+static std::optional<AnyP::Host>
+ParseAsSimpleDomainName(const char * const description, const SBuf &raw)
+{
+    if (raw.isEmpty()) {
+        debugs(83, 3, "rejects empty " << description);
+        return std::nullopt;
+    }
+
+    if (raw.find('\0') != SBuf::npos) {
+        debugs(83, 3, "rejects " << description << " with an ASCII NUL character: " << raw);
+        return std::nullopt;
+    }
+
+    debugs(83, 5, "parsed " << description << ": " << raw);
+    return AnyP::Host::FromSimpleDomainName(raw);
+}
+
 /// OpenSSL ASN1_STRING_to_UTF8() wrapper
 static std::optional<SBuf>
 ParseAsUtf8(const char * const description, const ASN1_STRING &asnBuffer)
@@ -507,6 +525,14 @@ ParseAsUtf8(const char * const description, const ASN1_STRING &asnBuffer)
     const auto utfLength = static_cast<size_t>(conversionResult);
     Ssl::UniqueCString bufferDestroyer(utfChars);
     return SBuf(utfChars, utfLength);
+}
+
+std::optional<AnyP::Host>
+Ssl::ParseAsSimpleDomainNameOrIp(const char * const description, const SBuf &text)
+{
+    if (const auto ip = Ip::Address::Parse(SBuf(text).c_str()))
+        return AnyP::Host::FromIp(*ip);
+    return ParseAsSimpleDomainName(description, text);
 }
 
 std::optional<AnyP::Host>
@@ -528,13 +554,9 @@ Ssl::ParseCommonNameAt(X509_NAME &name, const int cnIndex)
     // that usually "works" for further parsing/validation/comparison purposes.
     // TODO: Confirm that OpenSSL preserves UTF-8 when we add a "DNS:..." SAN.
 
-    auto utf = ParseAsUtf8("CN", *cn);
-    if (!utf)
-        return std::nullopt;
-
-    if (const auto ip = Ip::Address::Parse(utf->c_str()))
-        return AnyP::Host::FromIp(*ip);
-    return ParseAsWildDomainName("CN", *utf);
+    if (const auto utf = ParseAsUtf8("CN", *cn))
+        return ParseAsSimpleDomainNameOrIp("CN", *utf);
+    return std::nullopt;
 }
 
 /// Adds a new subjectAltName extension contining Subject CN or returns false

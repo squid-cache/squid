@@ -288,6 +288,10 @@ std::optional<AnyP::Host> ParseCommonNameAt(X509_NAME &, int);
 /// interprets the given X509-derived buffer as a DNS domain name (including wildcards)
 std::optional<AnyP::Host> ParseAsWildDomainName(const char *description, const SBuf &);
 
+/// interprets the given buffer as either a textual representation of an IP
+/// address (if possible) or a domain name without wildcard support (otherwise)
+std::optional<AnyP::Host> ParseAsSimpleDomainNameOrIp(const char *description, const SBuf &);
+
 /**
    \ingroup ServerProtocolSSLAPI
    * Returns Organization from the certificate.

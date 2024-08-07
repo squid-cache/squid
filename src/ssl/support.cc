@@ -381,7 +381,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             // name may be valid but not compatible with requirements assumed or
             // enforced by the AnyP::Host::FromSimpleDomainName() call below.
             // TODO: Store AnyP::Host (or equivalent) in ssl_ex_index_server.
-            if (const auto host = AnyP::Host::FromSimpleDomainName(*server)) {
+            if (const auto host = Ssl::ParseAsSimpleDomainNameOrIp("ssl_ex_index_server", *server)) {
                 if (!Ssl::findSubjectName(*peer_cert, *host)) {
                     debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << *peer_cert << " does not match domainname " << *host);
                     ok = 0;
