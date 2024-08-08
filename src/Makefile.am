@@ -230,7 +230,6 @@ squid_SOURCES = \
 	EventLoop.cc \
 	EventLoop.h \
 	ExternalACL.h \
-	ExternalACLEntry.cc \
 	ExternalACLEntry.h \
 	FadingCounter.cc \
 	FadingCounter.h \
@@ -2164,7 +2163,6 @@ tests_testHttpRequest_SOURCES = \
 	CpuAffinitySet.h \
 	tests/stub_ETag.cc \
 	tests/stub_EventLoop.cc \
-	ExternalACLEntry.cc \
 	FadingCounter.cc \
 	FwdState.cc \
 	FwdState.h \
@@ -2463,7 +2461,6 @@ tests_testCacheManager_SOURCES = \
 	CpuAffinitySet.h \
 	tests/stub_ETag.cc \
 	tests/stub_EventLoop.cc \
-	ExternalACLEntry.cc \
 	FadingCounter.cc \
 	FileMap.h \
 	FwdState.cc \

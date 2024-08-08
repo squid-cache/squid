@@ -109,8 +109,6 @@ public:
 
     AccessLogEntry::Pointer al; ///< info for the future access.log, and external ACL
 
-    ExternalACLEntryPointer extacl_entry;
-
     err_type requestErrorType;
 
 private:

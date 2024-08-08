@@ -13,56 +13,20 @@
 
 #include "acl/Acl.h"
 #include "acl/forward.h"
-#include "hash.h"
 #include "Notes.h"
 #include "SquidString.h"
 
 class external_acl;
-/******************************************************************
- * ExternalACLEntryData
- * Core data that ExternalACLEntry manages.
- * Not meant to be used as remote storage at any point:
- * stack or static or composition use only.
- */
 
-class ExternalACLEntryData
-{
-
-public:
-    ExternalACLEntryData() : result(ACCESS_DUNNO) {}
-
-    Acl::Answer result;
-
-    /// list of all kv-pairs returned by the helper
-    NotePairs notes;
-
-#if USE_AUTH
-    // TODO use an AuthUser to hold this info
-    String user;
-    String password;
-#endif
-    String message;
-    String tag;
-    String log;
-};
-
-/*******************************************************************
- * external_acl cache entry
- * Used opaque in the interface
- */
-
-class ExternalACLEntry: public hash_link, public RefCountable
+/// external_acl cache entry
+class ExternalACLEntry: public RefCountable
 {
     MEMPROXY_CLASS(ExternalACLEntry);
 
 public:
-    ExternalACLEntry();
-    ~ExternalACLEntry() override;
-
-    void update(ExternalACLEntryData const &);
     dlink_node lru;
     Acl::Answer result;
-    time_t date;
+    time_t date = 0;
 
     /// list of all kv-pairs returned by the helper
     NotePairs notes;
@@ -74,7 +38,7 @@ public:
     String message;
     String tag;
     String log;
-    external_acl *def;
+    external_acl *def = nullptr;
 };
 
 #endif /* SQUID_SRC_EXTERNALACLENTRY_H */
