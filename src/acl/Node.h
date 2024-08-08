@@ -22,21 +22,22 @@ namespace Acl {
 /// Can evaluate itself in FilledChecklist context.
 /// Does not change during evaluation.
 /// \ingroup ACLAPI
-class Node
+class Node: public RefCountable
 {
 
 public:
+    using Pointer = RefCount<Node>;
+
     void *operator new(size_t);
     void operator delete(void *);
 
-    static void ParseAclLine(ConfigParser &parser, Acl::Node **head);
+    /// parses acl directive parts that follow directive name (i.e. "acl")
+    static void ParseNamedAcl(ConfigParser &, NamedAcls *&);
+
     static void Initialize();
 
     /// A configured ACL with a given name or nil.
     static Acl::Node *FindByName(const SBuf &);
-    /// \copydoc FindByName()
-    /// \deprecated Use to avoid performance regressions; remove with the last caller.
-    static Acl::Node *FindByName(const char *name);
 
     Node();
     Node(Node &&) = delete;  // no copying of any kind
@@ -79,9 +80,7 @@ public:
     /// See also: context() and FindByName().
     SBuf name;
 
-    char *cfgline;
-    Acl::Node *next;  // XXX: remove or at least use refcounting
-    bool registered;  ///< added to the global list of ACLs via aclRegister()
+    char *cfgline = nullptr;
 
 private:
     /// Matches the actual data in checklist against this Acl::Node.
@@ -102,7 +101,7 @@ private:
     /// \see Acl::Node::options()
     virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
 
-    static void ParseNamed(ConfigParser &, Node **head, const SBuf &name);
+    static void ParseNamed(ConfigParser &, NamedAcls &, const SBuf &name);
 };
 
 } // namespace Acl

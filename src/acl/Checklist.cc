@@ -27,17 +27,6 @@ ACLChecklist::prepNonBlocking()
         return false;
     }
 
-    /** \par
-     * If the accessList is no longer valid (i.e. its been
-     * freed because of a reconfigure), then bail with ACCESS_DUNNO.
-     */
-
-    if (!cbdataReferenceValid(accessList)) {
-        cbdataReferenceDone(accessList);
-        checkCallback("accessList is invalid");
-        return false;
-    }
-
     return true;
 }
 
@@ -49,7 +38,6 @@ ACLChecklist::completeNonBlocking()
     if (!finished())
         calcImplicitAnswer();
 
-    cbdataReferenceDone(accessList);
     checkCallback(nullptr);
 }
 
@@ -79,8 +67,9 @@ ACLChecklist::preCheck(const char *what)
 }
 
 bool
-ACLChecklist::matchChild(const Acl::InnerNode *current, Acl::Nodes::const_iterator pos, const Acl::Node *child)
+ACLChecklist::matchChild(const Acl::InnerNode * const current, const Acl::Nodes::const_iterator pos)
 {
+    const auto &child = *pos;
     assert(current && child);
 
     // Remember the current tree location to prevent "async loop" cases where
@@ -191,10 +180,21 @@ ACLChecklist::ACLChecklist() :
 ACLChecklist::~ACLChecklist()
 {
     assert (!asyncInProgress());
-
-    changeAcl(nullptr);
-
     debugs(28, 4, "ACLChecklist::~ACLChecklist: destroyed " << this);
+}
+
+void
+ACLChecklist::changeAcl(const acl_access * const replacement)
+{
+    accessList = replacement ? *replacement : nullptr;
+}
+
+Acl::TreePointer
+ACLChecklist::swapAcl(const acl_access * const replacement)
+{
+    const auto old = accessList;
+    changeAcl(replacement);
+    return old;
 }
 
 /**
@@ -269,24 +269,24 @@ ACLChecklist::matchAndFinish()
         markFinished(accessList->winningAction(), "match");
 }
 
-Acl::Answer const &
-ACLChecklist::fastCheck(const Acl::Tree * list)
+const Acl::Answer &
+ACLChecklist::fastCheck(const ACLList * const list)
 {
     preCheck("fast ACLs");
     asyncCaller_ = false;
 
     // Concurrent checks are not supported, but sequential checks are, and they
     // may use a mixture of fastCheck(void) and fastCheck(list) calls.
-    const Acl::Tree * const savedList = changeAcl(list);
+    const auto savedList = swapAcl(list);
 
     // assume DENY/ALLOW on mis/matches due to action-free accessList
     // matchAndFinish() takes care of the ALLOW case
-    if (accessList && cbdataReferenceValid(accessList))
+    if (accessList)
         matchAndFinish(); // calls markFinished() on success
     if (!finished())
         markFinished(ACCESS_DENIED, "ACLs failed to match");
 
-    changeAcl(savedList);
+    changeAcl(&savedList);
     occupied_ = false;
     return currentAnswer();
 }
@@ -301,13 +301,11 @@ ACLChecklist::fastCheck()
     asyncCaller_ = false;
 
     debugs(28, 5, "aclCheckFast: list: " << accessList);
-    const Acl::Tree *acl = cbdataReference(accessList);
-    if (acl != nullptr && cbdataReferenceValid(acl)) {
+    if (accessList) {
         matchAndFinish(); // calls markFinished() on success
 
         // if finished (on a match or in exceptional cases), stop
         if (finished()) {
-            cbdataReferenceDone(acl);
             occupied_ = false;
             return currentAnswer();
         }
@@ -317,7 +315,6 @@ ACLChecklist::fastCheck()
 
     // There were no rules to match or no rules matched
     calcImplicitAnswer();
-    cbdataReferenceDone(acl);
     occupied_ = false;
 
     return currentAnswer();
@@ -328,7 +325,7 @@ ACLChecklist::fastCheck()
 void
 ACLChecklist::calcImplicitAnswer()
 {
-    const auto lastAction = (accessList && cbdataReferenceValid(accessList)) ?
+    const auto lastAction = accessList ?
                             accessList->lastAction() : Acl::Answer(ACCESS_DUNNO);
     auto implicitRuleAnswer = Acl::Answer(ACCESS_DUNNO);
     if (lastAction == ACCESS_DENIED) // reverse last seen "deny"
