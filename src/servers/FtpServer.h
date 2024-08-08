@@ -98,9 +98,9 @@ protected:
     void processParsedRequest(Http::StreamPointer &context) override;
     void notePeerConnection(Comm::ConnectionPointer conn) override;
     void clientPinnedConnectionClosed(const CommCloseCbParams &io) override;
-    void handleReply(HttpReply *header, StoreIOBuffer receivedData) override;
+    void handleReply(const HttpReplyPointer &, StoreIOBuffer) override;
     int pipelinePrefetchMax() const override;
-    bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) override;
+    bool writeControlMsgAndCall(const HttpReplyPointer &, AsyncCall::Pointer &) override;
     time_t idleTimeout() const override;
 
     /* BodyPipe API */
@@ -139,12 +139,12 @@ protected:
     void maybeReadUploadData();
 
     void setReply(const int code, const char *msg);
-    void writeCustomReply(const int code, const char *msg, const HttpReply *reply = nullptr);
+    void writeCustomReply(const int code, const char *msg, const HttpReplyPointer & = nullptr);
     void writeEarlyReply(const int code, const char *msg);
-    void writeErrorReply(const HttpReply *reply, const int status);
-    void writeForwardedForeign(const HttpReply *reply);
-    void writeForwardedReply(const HttpReply *reply);
-    void writeForwardedReplyAndCall(const HttpReply *reply, AsyncCall::Pointer &call);
+    void writeErrorReply(const HttpReplyPointer &, const int status);
+    void writeForwardedForeign(const HttpReplyPointer &);
+    void writeForwardedReply(const HttpReplyPointer &);
+    void writeForwardedReplyAndCall(const HttpReplyPointer &, AsyncCall::Pointer &);
     void writeReply(MemBuf &mb);
 
     Http::Stream *earlyError(const EarlyErrorKind eek);
@@ -166,15 +166,15 @@ protected:
     bool handleCdupRequest(String &cmd, String &params);
 
     /// a method handling an FTP response; selected by handleReply()
-    typedef void (Ftp::Server::*ReplyHandler)(const HttpReply *reply, StoreIOBuffer data);
-    void handleFeatReply(const HttpReply *header, StoreIOBuffer receivedData);
-    void handlePasvReply(const HttpReply *header, StoreIOBuffer receivedData);
-    void handlePortReply(const HttpReply *header, StoreIOBuffer receivedData);
-    void handleErrorReply(const HttpReply *header, StoreIOBuffer receivedData);
-    void handleDataReply(const HttpReply *header, StoreIOBuffer receivedData);
-    void handleUploadReply(const HttpReply *header, StoreIOBuffer receivedData);
-    void handleEprtReply(const HttpReply *header, StoreIOBuffer receivedData);
-    void handleEpsvReply(const HttpReply *header, StoreIOBuffer receivedData);
+    typedef void (Ftp::Server::*ReplyHandler)(const HttpReplyPointer &, StoreIOBuffer);
+    void handleFeatReply(const HttpReplyPointer &, StoreIOBuffer);
+    void handlePasvReply(const HttpReplyPointer &, StoreIOBuffer);
+    void handlePortReply(const HttpReplyPointer &, StoreIOBuffer);
+    void handleErrorReply(const HttpReplyPointer &, StoreIOBuffer);
+    void handleDataReply(const HttpReplyPointer &, StoreIOBuffer);
+    void handleUploadReply(const HttpReplyPointer &, StoreIOBuffer);
+    void handleEprtReply(const HttpReplyPointer &, StoreIOBuffer);
+    void handleEpsvReply(const HttpReplyPointer &, StoreIOBuffer);
 
 private:
     void doProcessRequest();

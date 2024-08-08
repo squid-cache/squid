@@ -34,8 +34,8 @@ protected:
     /* ConnStateData API */
     Http::Stream *parseOneRequest() override;
     void processParsedRequest(Http::StreamPointer &context) override;
-    void handleReply(HttpReply *rep, StoreIOBuffer receivedData) override;
-    bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) override;
+    void handleReply(const HttpReplyPointer &, StoreIOBuffer) override;
+    bool writeControlMsgAndCall(const HttpReplyPointer &, AsyncCall::Pointer &) override;
     int pipelinePrefetchMax() const override;
     time_t idleTimeout() const override;
     void noteTakeServerConnectionControl(ServerConnectionContext) override;
