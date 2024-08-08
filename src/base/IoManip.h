@@ -288,5 +288,23 @@ operator <<(std::ostream &os, AtMostOnce<T> &a) {
     return os;
 }
 
+/// Helps prints T object using object's T::printWithExtras() method.
+template <class T>
+class WithExtras
+{
+public:
+    /// caller must ensure `t` lifetime extends to the last use of this class instance
+    explicit WithExtras(const T &t): toPrint(t) {}
+    const T &toPrint;
+};
+
+/// writes T object to the given stream using object's T::printWithExtras() method
+template <class T>
+inline auto &
+operator <<(std::ostream &os, const WithExtras<T> &a) {
+    a.toPrint.printWithExtras(os);
+    return os;
+}
+
 #endif /* SQUID_SRC_BASE_IOMANIP_H */
 
