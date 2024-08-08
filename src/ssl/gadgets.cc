@@ -475,41 +475,6 @@ Ssl::AsnToSBuf(const ASN1_STRING &buffer)
     return SBuf(reinterpret_cast<const char *>(buffer.data), buffer.length);
 }
 
-std::optional<AnyP::Host>
-Ssl::ParseAsWildDomainName(const char * const description, const SBuf &raw)
-{
-    if (raw.isEmpty()) {
-        debugs(83, 3, "rejects empty " << description);
-        return std::nullopt;
-    }
-
-    if (raw.find('\0') != SBuf::npos) {
-        debugs(83, 3, "rejects " << description << " with an ASCII NUL character: " << raw);
-        return std::nullopt;
-    }
-
-    debugs(83, 5, "parsed " << description << ": " << raw);
-    return AnyP::Host::FromWildDomainName(raw);
-}
-
-// XXX: Duplicates most of ParseAsWildDomainName(). TODO: Move both to AnyP::Host.
-static std::optional<AnyP::Host>
-ParseAsSimpleDomainName(const char * const description, const SBuf &raw)
-{
-    if (raw.isEmpty()) {
-        debugs(83, 3, "rejects empty " << description);
-        return std::nullopt;
-    }
-
-    if (raw.find('\0') != SBuf::npos) {
-        debugs(83, 3, "rejects " << description << " with an ASCII NUL character: " << raw);
-        return std::nullopt;
-    }
-
-    debugs(83, 5, "parsed " << description << ": " << raw);
-    return AnyP::Host::FromSimpleDomainName(raw);
-}
-
 /// OpenSSL ASN1_STRING_to_UTF8() wrapper
 static std::optional<SBuf>
 ParseAsUtf8(const char * const description, const ASN1_STRING &asnBuffer)
@@ -532,7 +497,7 @@ Ssl::ParseAsSimpleDomainNameOrIp(const char * const description, const SBuf &tex
 {
     if (const auto ip = Ip::Address::Parse(SBuf(text).c_str()))
         return AnyP::Host::FromIp(*ip);
-    return ParseAsSimpleDomainName(description, text);
+    return AnyP::Host::FromSimpleDomainName(/* description, */ text);
 }
 
 std::optional<AnyP::Host>

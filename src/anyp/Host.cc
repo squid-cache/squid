@@ -15,6 +15,7 @@ std::optional<AnyP::Host>
 AnyP::Host::FromIp(const Ip::Address &ip)
 {
     // any IP value is acceptable
+    debugs(23, 7, ip);
     return Host(ip);
 }
 
@@ -26,6 +27,22 @@ AnyP::Host::FromDomainName(const SBuf &rawName)
         debugs(23, 3, "rejecting empty name");
         return std::nullopt;
     }
+
+    // Reject bytes incompatible with rfc1035NamePack() and ::matchDomainName()
+    // implementations (at least). Such bytes can come from percent-encoded HTTP
+    // URIs or length-based X.509 fields, for example. Higher-level parsers must
+    // reject or convert domain name encodings like UTF-16, but this low-level
+    // check works as an additional (albeit unreliable) layer of defense against
+    // those (unsupported by Squid DNS code) encodings.
+    if (rawName.find('\0') != SBuf::npos) {
+        const auto description = "XXX";
+        debugs(83, 3, "rejects " << description << " with an ASCII NUL character: " << rawName);
+        return std::nullopt;
+    }
+
+    // TODO: Consider rejecting names with isspace(3) bytes.
+
+    debugs(23, 7, rawName);
     return Host(rawName);
 }
 
