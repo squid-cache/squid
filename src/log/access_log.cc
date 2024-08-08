@@ -187,12 +187,6 @@ HierarchyLogEntry::HierarchyLogEntry() :
     store_complete_stop.tv_usec =0;
 
     clearPeerNotes();
-
-    totalResponseTime_.tv_sec = -1;
-    totalResponseTime_.tv_usec = 0;
-
-    firstConnStart_.tv_sec = 0;
-    firstConnStart_.tv_usec = 0;
 }
 
 void
@@ -241,26 +235,6 @@ HierarchyLogEntry::notePeerWrite()
     peer_last_write_ = current_time;
 }
 
-void
-HierarchyLogEntry::startPeerClock()
-{
-    if (!firstConnStart_.tv_sec)
-        firstConnStart_ = current_time;
-}
-
-void
-HierarchyLogEntry::stopPeerClock(const bool force)
-{
-    debugs(46, 5, "First connection started: " << firstConnStart_ <<
-           ", current total response time value: " << (totalResponseTime_.tv_sec * 1000 +  totalResponseTime_.tv_usec/1000) <<
-           (force ? ", force fixing" : ""));
-    if (!force && totalResponseTime_.tv_sec != -1)
-        return;
-
-    if (firstConnStart_.tv_sec)
-        tvSub(totalResponseTime_, firstConnStart_, current_time);
-}
-
 bool
 HierarchyLogEntry::peerResponseTime(struct timeval &responseTime)
 {
@@ -286,19 +260,6 @@ HierarchyLogEntry::peerResponseTime(struct timeval &responseTime)
     }
 
     return true;
-}
-
-bool
-HierarchyLogEntry::totalResponseTime(struct timeval &responseTime)
-{
-    // This should not really happen, but there may be rare code
-    // paths that lead to FwdState discarded (or transaction logged)
-    // without (or before) a stopPeerClock() call.
-    if (firstConnStart_.tv_sec && totalResponseTime_.tv_sec == -1)
-        stopPeerClock(false);
-
-    responseTime = totalResponseTime_;
-    return responseTime.tv_sec >= 0 && responseTime.tv_usec >= 0;
 }
 
 static void
