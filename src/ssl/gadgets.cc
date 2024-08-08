@@ -516,7 +516,8 @@ Ssl::ParseCommonNameAt(X509_NAME &name, const int cnIndex)
     // TODO: Do not treat CNs with spaces or without periods as domain names.
 
     // OpenSSL does not offer ASN1_STRING_to_ASCII(), so we convert to UTF-8
-    // that usually "works" for further parsing/validation/comparison purposes.
+    // that usually "works" for further parsing/validation/comparison purposes
+    // even though Squid code will treat multi-byte characters as char bytes.
     // TODO: Confirm that OpenSSL preserves UTF-8 when we add a "DNS:..." SAN.
 
     if (const auto utf = ParseAsUtf8("CN", *cn))
