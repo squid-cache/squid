@@ -49,7 +49,7 @@ public:
     DigestFetchState(PeerDigest *,HttpRequest *);
     ~DigestFetchState();
 
-    PeerDigest *pd;
+    CbcPointer<PeerDigest> pd;
     StoreEntry *entry;
     StoreEntry *old_entry;
     store_client *sc;
@@ -78,6 +78,10 @@ class PeerDigest
 public:
     PeerDigest(CachePeer *);
     ~PeerDigest();
+
+    /// reacts to digest transfer completion
+    /// \prec DigestFetchState stats were finalized (by calling peerDigestFetchSetStats())
+    void noteFetchFinished(const DigestFetchState &, const char *outcomeDescription, bool sawError);
 
     CbcPointer<CachePeer> peer; ///< pointer back to peer structure, argh
     CacheDigest *cd = nullptr;            /**< actual digest structure */

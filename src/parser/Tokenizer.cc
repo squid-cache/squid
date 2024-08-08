@@ -264,7 +264,6 @@ Parser::Tokenizer::int64(int64_t & result, int base, bool allowSign, const SBuf:
     if (base == 0) {
         if ( *s == '0') {
             base = 8;
-            ++s;
         } else {
             base = 10;
         }

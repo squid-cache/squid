@@ -17,13 +17,11 @@
 namespace Acl
 {
 
-/// An ORed set of rules at the top of the ACL expression tree, providing two
-/// unique properties: cbdata protection and optional rule actions.
+/// An ORed set of rules at the top of the ACL expression tree with support for
+/// optional rule actions.
 class Tree: public OrNode
 {
-    // XXX: We should use refcounting instead, but it requires making ACLs
-    // refcounted as well. Otherwise, async lookups will reach deleted ACLs.
-    CBDATA_CLASS(Tree);
+    MEMPROXY_CLASS(Tree);
 
 public:
     /// dumps <name, action, rule, new line> tuples

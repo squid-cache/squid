@@ -344,13 +344,10 @@ int main(int argc, char **argv)
     Debug::NameThisHelper("ext_time_quota_acl");
     char *cacheLog = nullptr;
 
-    while ((opt = getopt(argc, argv, "dp:l:b:h")) != -1) {
+    while ((opt = getopt(argc, argv, "dp:b:h")) != -1) {
         switch (opt) {
         case 'd':
             debug = true;
-            break;
-        case 'l':
-            cacheLog = optarg;
             break;
         case 'b':
             db_path = optarg;
@@ -361,6 +358,11 @@ int main(int argc, char **argv)
         case 'h':
             usage();
             exit(EXIT_SUCCESS);
+            break;
+        default:
+            // getopt() emits error message to stderr
+            usage();
+            exit(EXIT_FAILURE);
             break;
         }
     }
