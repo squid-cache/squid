@@ -773,6 +773,9 @@ IF HAVE_AUTH_MODULE_BASIC
 		often the helper program is called for that user. Set this
 		low to force revalidation with short lived passwords.
 
+		When a ttl= annotation is received from the helper it will
+		be used instead.
+
 		NOTE: setting this high does not impact your susceptibility
 		to replay attacks unless you are using an one-time password
 		system (such as SecureID). If you are using such a system,
