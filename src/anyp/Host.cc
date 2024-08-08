@@ -12,16 +12,16 @@
 #include <iostream>
 
 std::optional<AnyP::Host>
-AnyP::Host::FromIp(const Ip::Address &ip)
+AnyP::Host::ParseIp(const Ip::Address &ip)
 {
-    // any IP value is acceptable
+    // any preparsed IP value is acceptable
     debugs(23, 7, ip);
     return Host(ip);
 }
 
 /// common parts of FromSimpleDomain() and FromWildDomain()
 std::optional<AnyP::Host>
-AnyP::Host::FromDomainName(const SBuf &rawName)
+AnyP::Host::ParseDomainName(const SBuf &rawName)
 {
     if (rawName.isEmpty()) {
         debugs(23, 3, "rejecting empty name");
@@ -35,8 +35,7 @@ AnyP::Host::FromDomainName(const SBuf &rawName)
     // check works as an additional (albeit unreliable) layer of defense against
     // those (unsupported by Squid DNS code) encodings.
     if (rawName.find('\0') != SBuf::npos) {
-        const auto description = "XXX";
-        debugs(83, 3, "rejects " << description << " with an ASCII NUL character: " << rawName);
+        debugs(83, 3, "rejecting ASCII NUL character in " << rawName);
         return std::nullopt;
     }
 
@@ -47,34 +46,34 @@ AnyP::Host::FromDomainName(const SBuf &rawName)
 }
 
 std::optional<AnyP::Host>
-AnyP::Host::FromSimpleDomainName(const SBuf &rawName)
+AnyP::Host::ParseSimpleDomainName(const SBuf &rawName)
 {
     if (rawName.find('*') != SBuf::npos) {
-        debugs(23, 3, "rejecting wildcard: " << rawName);
+        debugs(23, 3, "rejecting wildcard in " << rawName);
         return std::nullopt;
     }
-    return FromDomainName(rawName);
+    return ParseDomainName(rawName);
 }
 
 std::optional<AnyP::Host>
-AnyP::Host::FromWildDomainName(const SBuf &rawName)
+AnyP::Host::ParseWildDomainName(const SBuf &rawName)
 {
     const static SBuf wildcardLabel("*.");
     if (rawName.startsWith(wildcardLabel)) {
         if (rawName.find('*', 2) != SBuf::npos) {
-            debugs(23, 3, "rejecting excessive wildcards: " << rawName);
+            debugs(23, 3, "rejecting excessive wildcards in " << rawName);
             return std::nullopt;
         }
         // else: fall through to final checks
     } else {
         if (rawName.find('*', 0) != SBuf::npos) {
             // this case includes "*" and "example.*" input
-            debugs(23, 3, "rejecting unsupported wildcard: " << rawName);
+            debugs(23, 3, "rejecting unsupported wildcard in " << rawName);
             return std::nullopt;
         }
         // else: fall through to final checks
     }
-    return FromDomainName(rawName);
+    return ParseDomainName(rawName);
 }
 
 std::ostream &

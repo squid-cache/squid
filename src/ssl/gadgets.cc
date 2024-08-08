@@ -477,12 +477,12 @@ Ssl::AsnToSBuf(const ASN1_STRING &buffer)
 
 /// OpenSSL ASN1_STRING_to_UTF8() wrapper
 static std::optional<SBuf>
-ParseAsUtf8(const char * const description, const ASN1_STRING &asnBuffer)
+ParseAsUtf8(const ASN1_STRING &asnBuffer)
 {
     unsigned char *utfBuffer = nullptr;
     const auto conversionResult = ASN1_STRING_to_UTF8(&utfBuffer, &asnBuffer);
     if (conversionResult < 0) {
-        debugs(83, 3, description << " to UTF-8 conversion failure" << Ssl::ReportAndForgetErrors);
+        debugs(83, 3, "failed" << Ssl::ReportAndForgetErrors);
         return std::nullopt;
     }
     Assure(utfBuffer);
@@ -493,11 +493,11 @@ ParseAsUtf8(const char * const description, const ASN1_STRING &asnBuffer)
 }
 
 std::optional<AnyP::Host>
-Ssl::ParseAsSimpleDomainNameOrIp(const char * const description, const SBuf &text)
+Ssl::ParseAsSimpleDomainNameOrIp(const SBuf &text)
 {
     if (const auto ip = Ip::Address::Parse(SBuf(text).c_str()))
-        return AnyP::Host::FromIp(*ip);
-    return AnyP::Host::FromSimpleDomainName(/* description, */ text);
+        return AnyP::Host::ParseIp(*ip);
+    return AnyP::Host::ParseSimpleDomainName(text);
 }
 
 std::optional<AnyP::Host>
@@ -520,8 +520,8 @@ Ssl::ParseCommonNameAt(X509_NAME &name, const int cnIndex)
     // even though Squid code will treat multi-byte characters as char bytes.
     // TODO: Confirm that OpenSSL preserves UTF-8 when we add a "DNS:..." SAN.
 
-    if (const auto utf = ParseAsUtf8("CN", *cn))
-        return ParseAsSimpleDomainNameOrIp("CN", *utf);
+    if (const auto utf = ParseAsUtf8(*cn))
+        return ParseAsSimpleDomainNameOrIp(*utf);
     return std::nullopt;
 }
 

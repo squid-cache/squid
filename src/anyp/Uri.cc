@@ -150,7 +150,7 @@ std::optional<AnyP::Host>
 AnyP::Uri::parsedHost() const
 {
     if (hostIsNumeric())
-        return Host::FromIp(hostIP());
+        return Host::ParseIp(hostIP());
 
     // XXX: Interpret host subcomponent as reg-name representing a DNS name. It
     // may actually be, for example, a URN namespace ID (NID; see RFC 8141), but
@@ -162,7 +162,7 @@ AnyP::Uri::parsedHost() const
         return std::nullopt; // TODO: Decode() instead
     }
 
-    return Host::FromSimpleDomainName(regName);
+    return Host::ParseSimpleDomainName(regName);
 }
 
 const SBuf &

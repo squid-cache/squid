@@ -287,7 +287,7 @@ std::optional<AnyP::Host> ParseCommonNameAt(X509_NAME &, int);
 
 /// interprets the given buffer as either a textual representation of an IP
 /// address (if possible) or a domain name without wildcard support (otherwise)
-std::optional<AnyP::Host> ParseAsSimpleDomainNameOrIp(const char *description, const SBuf &);
+std::optional<AnyP::Host> ParseAsSimpleDomainNameOrIp(const SBuf &);
 
 /**
    \ingroup ServerProtocolSSLAPI

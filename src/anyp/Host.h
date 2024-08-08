@@ -40,15 +40,15 @@ class Host
 {
 public:
     /// converts an already parsed IP address to a Host object
-    static std::optional<Host> FromIp(const Ip::Address &);
+    static std::optional<Host> ParseIp(const Ip::Address &);
 
     /// Parses input as a literal ASCII domain name (A-labels OK; see RFC 5890).
-    /// Does not allow wildcards; \sa FromWildDomainName().
-    static std::optional<Host> FromSimpleDomainName(const SBuf &);
+    /// Does not allow wildcards; \sa ParseWildDomainName().
+    static std::optional<Host> ParseSimpleDomainName(const SBuf &);
 
-    /// Same as FromSimpleDomainName() but allows the first label to be a
+    /// Same as ParseSimpleDomainName() but allows the first label to be a
     /// wildcard (RFC 9525 Section 6.3).
-    static std::optional<Host> FromWildDomainName(const SBuf &);
+    static std::optional<Host> ParseWildDomainName(const SBuf &);
 
     // Accessor methods below are mutually exclusive: Exactly one method is
     // guaranteed to return a result other than std::nullopt.
@@ -65,9 +65,9 @@ public:
 private:
     using Storage = std::variant<Ip::Address, DomainName>;
 
-    static std::optional<Host> FromDomainName(const SBuf &);
+    static std::optional<Host> ParseDomainName(const SBuf &);
 
-    // use a From*() function to create Host objects
+    // use a Parse*() function to create Host objects
     Host(const Storage &raw): raw_(raw) {}
 
     Storage raw_; ///< the host we are providing access to

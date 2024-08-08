@@ -263,7 +263,7 @@ ParseSubjectAltName(const GENERAL_NAME &san)
         // GEN_DNS is an IA5STRING. IA5STRING is a subset of ASCII that does not
         // need to be converted to UTF-8 (or some such) before we parse it.
         const auto buffer = Ssl::AsnToSBuf(*san.d.dNSName);
-        return AnyP::Host::FromWildDomainName(/* XXX "SAN DNS name", */ buffer);
+        return AnyP::Host::ParseWildDomainName(buffer);
     }
 
     case GEN_IPADD: {
@@ -277,8 +277,7 @@ ParseSubjectAltName(const GENERAL_NAME &san)
             static_assert(sizeof(addr.s_addr) == 4);
             memcpy(&addr.s_addr, san.d.iPAddress->data, sizeof(addr.s_addr));
             const Ip::Address ip(addr);
-            debugs(83, 5, "parsed IPv4: " << ip);
-            return AnyP::Host::FromIp(ip);
+            return AnyP::Host::ParseIp(ip);
         }
 
         if (san.d.iPAddress->length == 16) {
@@ -286,8 +285,7 @@ ParseSubjectAltName(const GENERAL_NAME &san)
             static_assert(sizeof(addr.s6_addr) == 16);
             memcpy(&addr.s6_addr, san.d.iPAddress->data, sizeof(addr.s6_addr));
             const Ip::Address ip(addr);
-            debugs(83, 5, "parsed IPv6: " << ip);
-            return AnyP::Host::FromIp(ip);
+            return AnyP::Host::ParseIp(ip);
         }
 
         debugs(83, 3, "unexpected length of an IP address SAN: " << san.d.iPAddress->length);
@@ -305,12 +303,10 @@ Ssl::findMatchingSubjectName(X509 &cert, const GeneralNameMatcher &matcher)
 {
     const auto name = X509_get_subject_name(&cert);
     for (int i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
+        debugs(83, 7, "checking CN at " << i);
         if (const auto cn = ParseCommonNameAt(*name, i)) {
             if (matcher.match(*cn))
                 return true;
-        } else {
-            debugs(83, 7, "ignoring unparsable CN at " << i);
-            continue;
         }
     }
 
@@ -319,6 +315,7 @@ Ssl::findMatchingSubjectName(X509 &cert, const GeneralNameMatcher &matcher)
     if (sans) {
         const auto sanCount = sk_GENERAL_NAME_num(sans.get());
         for (int i = 0; i < sanCount; ++i) {
+            debugs(83, 7, "checking SAN at " << i);
             const auto rawSan = sk_GENERAL_NAME_value(sans.get(), i);
             Assure(rawSan);
             if (const auto san = ParseSubjectAltName(*rawSan)) {
@@ -379,16 +376,18 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         if (!dont_verify_domain && server && peer_cert.get() == X509_STORE_CTX_get_current_cert(ctx)) {
             // XXX: This code does not know where the server name came from. The
             // name may be valid but not compatible with requirements assumed or
-            // enforced by the AnyP::Host::FromSimpleDomainName() call below.
+            // enforced by the AnyP::Host::ParseSimpleDomainName() call below.
             // TODO: Store AnyP::Host (or equivalent) in ssl_ex_index_server.
-            if (const auto host = Ssl::ParseAsSimpleDomainNameOrIp("ssl_ex_index_server", *server)) {
-                if (!Ssl::findSubjectName(*peer_cert, *host)) {
+            if (const auto host = Ssl::ParseAsSimpleDomainNameOrIp(*server)) {
+                if (Ssl::findSubjectName(*peer_cert, *host)) {
+                    debugs(83, 5, "certificate subject matches " << *host);
+                } else {
                     debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << *peer_cert << " does not match domainname " << *host);
                     ok = 0;
                     error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
                 }
             } else {
-                debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Cannot check whether certificate " << *peer_cert << " matches malformed domainname " << *server);
+                debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Cannot check whether certificate " << *peer_cert << " subject matches malformed domainname " << *server);
                 ok = 0;
                 error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
             }

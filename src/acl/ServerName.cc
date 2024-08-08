@@ -111,7 +111,7 @@ Acl::ServerNameCheck::match(ACLChecklist * const ch)
             // ASCII encoding"; "Literal IPv4 and IPv6 addresses are not
             // permitted". TODO: Store TlsDetails::serverName and similar
             // domains using a new domain-only type instead of SBuf.
-            clientRequestedServerName = AnyP::Host::FromSimpleDomainName(clientSni);
+            clientRequestedServerName = AnyP::Host::ParseSimpleDomainName(clientSni);
         }
 
         if (useConsensus) {
