@@ -164,6 +164,8 @@ private:
 
     void updateAleWithFinalError();
 
+    int OnError();
+
 public:
     StoreEntry *entry;
     HttpRequest *request;
