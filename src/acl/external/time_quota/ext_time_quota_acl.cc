@@ -388,7 +388,7 @@ int main(int argc, char **argv)
         readConfig(argv[optind]);
     }
 
-    debugs(MY_DEBUG_SECTION, 2,"Waiting for requests...");
+    debugs(MY_DEBUG_SECTION, 2, "Waiting for requests...");
     while (fgets(request, HELPER_INPUT_BUFFER, stdin)) {
         // we expect the following line syntax: %LOGIN
         const char *user_key = strtok(request, " \n");
