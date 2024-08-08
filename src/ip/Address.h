@@ -44,10 +44,10 @@ public:
     /** @name Constructors */
     /*@{*/
     Address() { setEmpty(); }
+    explicit Address(const struct sockaddr_storage &);
     Address(const struct in_addr &);
     Address(const struct sockaddr_in &);
     Address(const struct in6_addr &);
-    Address(const struct sockaddr_in6 &);
     Address(const struct hostent &);
     Address(const struct addrinfo &);
     Address(const char*);
@@ -59,7 +59,6 @@ public:
     Address& operator =(struct sockaddr_storage const &s);
     Address& operator =(struct in_addr const &s);
     Address& operator =(struct in6_addr const &s);
-    Address& operator =(struct sockaddr_in6 const &s);
     bool operator =(const struct hostent &s);
     bool operator =(const struct addrinfo &s);
     bool operator =(const char *s);
