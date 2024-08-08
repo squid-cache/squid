@@ -605,9 +605,9 @@ CommonNamesPrinter::matchDomainName(const AnyP::DomainName &domain) const
 bool
 CommonNamesPrinter::matchIp(const Ip::Address &ip) const
 {
-    char hostStr[MAX_IPSTRLEN] = "";
-    const auto length = ip.toHostStr(hostStr, sizeof(hostStr)); // no html_quote() is needed
-    itemStream().write(hostStr, length);
+    char hostStr[MAX_IPSTRLEN];
+    (void)ip.toStr(hostStr, sizeof(hostStr)); // no html_quote() is needed; no brackets
+    itemStream().write(hostStr, strlen(hostStr));
     return false; // keep going
 }
 

@@ -1596,12 +1596,11 @@ IF USE_OPENSSL
 	  #
 	  # Unlike dstdomain, this ACL does not perform DNS lookups.
 	  #
-	  # A server name may be an IP address. For example, some real server
-	  # certificate subject names (a.k.a. SANs) include IPv4 and IPv6 entries.
-	  # Internally, Squid adds brackets and uses inet_ntop(3) to prep IPv6
-	  # names for matching. To match an IPv6 name, surround it with square
-	  # brackets and use "::" notation (if applicable). For example:
-	  # [1080::8:800:200c:417a].
+	  # A server name may be an IP address. For example, subject alternative
+	  # names (a.k.a. SANs) in some real server certificates include IPv4 and
+	  # IPv6 entries. Internally, Squid uses inet_ntop(3) to prep IP names for
+	  # matching. When using IPv6 names, use "::" notation (if applicable).
+	  # Do not use brackets. For example: 1080::8:800:200c:417a.
 	  #
 	  # An ACL option below may be used to restrict what information
 	  # sources are used to extract the server names from:
