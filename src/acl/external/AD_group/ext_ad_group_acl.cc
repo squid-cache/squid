@@ -110,17 +110,17 @@ char *WIN32_ErrorMessage = nullptr;
 wchar_t **User_Groups;
 int User_Groups_Count = 0;
 
-wchar_t *My_NameTranslate(wchar_t *, int, int);
-char *Get_WIN32_ErrorMessage(HRESULT);
+static wchar_t *My_NameTranslate(wchar_t *, int, int);
+static char *Get_WIN32_ErrorMessage(HRESULT);
 
-void
+static void
 CloseCOM(void)
 {
     if (WIN32_COM_initialized == 1)
         CoUninitialize();
 }
 
-HRESULT
+static HRESULT
 GetLPBYTEtoOctetString(VARIANT * pVar, LPBYTE * ppByte)
 {
     HRESULT hr = E_FAIL;
@@ -150,7 +150,7 @@ GetLPBYTEtoOctetString(VARIANT * pVar, LPBYTE * ppByte)
     return hr;
 }
 
-wchar_t *
+static wchar_t *
 Get_primaryGroup(IADs * pUser)
 {
     HRESULT hr;
@@ -208,7 +208,7 @@ Get_primaryGroup(IADs * pUser)
     return result;
 }
 
-char *
+static char *
 Get_WIN32_ErrorMessage(HRESULT hr)
 {
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
@@ -222,7 +222,7 @@ Get_WIN32_ErrorMessage(HRESULT hr)
     return WIN32_ErrorMessage;
 }
 
-wchar_t *
+static wchar_t *
 My_NameTranslate(wchar_t * name, int in_format, int out_format)
 {
     IADsNameTranslate *pNto;
@@ -277,7 +277,7 @@ My_NameTranslate(wchar_t * name, int in_format, int out_format)
     return wc;
 }
 
-wchar_t *
+static wchar_t *
 GetLDAPPath(wchar_t * Base_DN, int query_mode)
 {
     wchar_t *wc;
@@ -293,7 +293,7 @@ GetLDAPPath(wchar_t * Base_DN, int query_mode)
     return wc;
 }
 
-char *
+static char *
 GetDomainName(void)
 {
     static char *DomainName = nullptr;
@@ -343,7 +343,7 @@ GetDomainName(void)
     return DomainName;
 }
 
-int
+static int
 add_User_Group(wchar_t * Group)
 {
     wchar_t **array;
@@ -398,7 +398,7 @@ wcstrcmparray(const wchar_t * str, const char **array)
     return -1;
 }
 
-HRESULT
+static HRESULT
 Recursive_Memberof(IADs * pObj)
 {
     VARIANT var;
@@ -520,7 +520,7 @@ build_groups_DN_array(const char **array, char *userdomain)
 }
 
 /* returns 1 on success, 0 on failure */
-int
+static int
 Valid_Local_Groups(char *UserName, const char **Groups)
 {
     int result = 0;
@@ -598,7 +598,7 @@ Valid_Local_Groups(char *UserName, const char **Groups)
 }
 
 /* returns 1 on success, 0 on failure */
-int
+static int
 Valid_Global_Groups(char *UserName, const char **Groups)
 {
     int result = 0;
@@ -730,7 +730,7 @@ usage(const char *program)
             program);
 }
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt;

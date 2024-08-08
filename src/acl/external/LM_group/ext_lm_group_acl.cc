@@ -105,7 +105,7 @@ int use_case_insensitive_compare = 0;
 char *DefaultDomain = nullptr;
 const char NTV_VALID_DOMAIN_SEPARATOR[] = "\\/";
 
-char *
+static char *
 AllocStrFromLSAStr(LSA_UNICODE_STRING LsaStr)
 {
     size_t len;
@@ -127,7 +127,7 @@ AllocStrFromLSAStr(LSA_UNICODE_STRING LsaStr)
     return target;
 }
 
-char *
+static char *
 GetDomainName(void)
 {
     LSA_HANDLE PolicyHandle;
@@ -233,7 +233,7 @@ wcstrcmparray(const wchar_t * str, const char **array)
 }
 
 /* returns 1 on success, 0 on failure */
-int
+static int
 Valid_Local_Groups(char *UserName, const char **Groups)
 {
     int result = 0;
@@ -308,7 +308,7 @@ Valid_Local_Groups(char *UserName, const char **Groups)
 }
 
 /* returns 1 on success, 0 on failure */
-int
+static int
 Valid_Global_Groups(char *UserName, const char **Groups)
 {
     int result = 0;
@@ -466,7 +466,7 @@ usage(const char *program)
             program);
 }
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt;

@@ -64,12 +64,6 @@
 #define SEND3 printf
 #endif
 
-const char *make_challenge(char *domain, char *controller);
-char *ntlm_check_auth(ntlm_authenticate * auth, int auth_length);
-void dc_disconnect(void);
-int connectedp(void);
-int is_dc_ok(char *domain, char *domain_controller);
-
 typedef struct _dc dc;
 struct _dc {
     char *domain;
@@ -79,10 +73,13 @@ struct _dc {
 };
 
 /* local functions */
-void usage(void);
-void process_options(int argc, char *argv[]);
-const char * obtain_challenge(void);
-void manage_request(void);
+static void usage(void);
+static void process_options(int argc, char *argv[]);
+static const char * obtain_challenge(void);
+static void manage_request(void);
+static const char *make_challenge(char *domain, char *controller);
+static char *ntlm_check_auth(ntlm_authenticate * auth, int auth_length);
+static void dc_disconnect(void);
 
 #define ENCODED_PASS_LEN 24
 #define MAX_USERNAME_LEN 255
@@ -108,29 +105,12 @@ char smb_error_buffer[1000];
 
 /* Disconnects from the DC. A reconnection will be done upon the next request
  */
-void
+static void
 dc_disconnect()
 {
     if (handle != NULL)
         SMB_Discon(handle, 0);
     handle = nullptr;
-}
-
-int
-connectedp()
-{
-    return (handle != NULL);
-}
-
-/* Tries to connect to a DC. Returns 0 on failure, 1 on OK */
-int
-is_dc_ok(char *domain, char *domain_controller)
-{
-    SMB_Handle_Type h = SMB_Connect_Server(nullptr, domain_controller, domain);
-    if (h == NULL)
-        return 0;
-    SMB_Discon(h, 0);
-    return 1;
 }
 
 /* returns 0 on success, > 0 on failure */
@@ -169,7 +149,7 @@ init_challenge(char *domain, char *domain_controller)
     return 0;
 }
 
-const char *
+static const char *
 make_challenge(char *domain, char *domain_controller)
 {
     /* trying to circumvent some strange problem with pointers in SMBLib */
@@ -215,7 +195,7 @@ make_challenge(char *domain, char *domain_controller)
  * In case of problem sets as side-effect ntlm_errno to one of the
  * codes defined in ntlm.h
  */
-char *
+static char *
 ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 {
     char pass[MAX_PASSWD_LEN+1];
@@ -383,7 +363,7 @@ timeout_during_auth(int)
  */
 char *my_program_name = nullptr;
 
-void
+static void
 usage()
 {
     fprintf(stderr,
@@ -399,7 +379,7 @@ usage()
 
 /* int debug_enabled=0; defined in libcompat */
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt, j, had_error = 0;
@@ -479,7 +459,7 @@ process_options(int argc, char *argv[])
  * tries connecting to the domain controllers in the "controllers" ring,
  * with failover if the adequate option is specified.
  */
-const char *
+static const char *
 obtain_challenge()
 {
     int j = 0;
@@ -516,7 +496,7 @@ obtain_challenge()
     return nullptr;
 }
 
-void
+static void
 manage_request()
 {
     ntlmhdr *fast_header;
