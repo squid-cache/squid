@@ -18,6 +18,7 @@
 #include "base/TypeTraits.h"
 #include "comm/forward.h"
 #include "compat/openssl.h"
+#include "dns/forward.h"
 #include "ip/Address.h"
 #include "sbuf/SBuf.h"
 #include "security/Session.h"
@@ -305,7 +306,7 @@ protected:
     // GeneralName variants. For each public match() method call, exactly one of
     // these methods is called.
 
-    virtual bool matchDomainName(const AnyP::DomainName &) const = 0;
+    virtual bool matchDomainName(const Dns::DomainName &) const = 0;
     virtual bool matchIp(const Ip::Address &) const = 0;
 };
 

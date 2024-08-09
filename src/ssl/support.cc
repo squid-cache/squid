@@ -67,7 +67,7 @@ public:
 
 protected:
     /* GeneralNameMatcher API */
-    bool matchDomainName(const AnyP::DomainName &) const override;
+    bool matchDomainName(const Dns::DomainName &) const override;
     bool matchIp(const Ip::Address &) const override;
 
     AnyP::Host needle_; ///< a name we are looking for
@@ -87,7 +87,7 @@ Ssl::GeneralNameMatcher::match(const GeneralName &name) const
 }
 
 bool
-Ssl::OneNameMatcher::matchDomainName(const AnyP::DomainName &rawName) const {
+Ssl::OneNameMatcher::matchDomainName(const Dns::DomainName &rawName) const {
     // TODO: Add debugs() stream manipulator to safely (i.e. without breaking
     // cache.log message framing) dump raw input that may contain new lines. Use
     // here and in similar contexts where we report such raw input.

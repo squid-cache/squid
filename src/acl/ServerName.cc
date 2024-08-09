@@ -57,7 +57,7 @@ public:
 
 protected:
     /* GeneralNameMatcher API */
-    bool matchDomainName(const AnyP::DomainName &) const override;
+    bool matchDomainName(const Dns::DomainName &) const override;
     bool matchIp(const Ip::Address &) const override;
 
 private:
@@ -68,7 +68,7 @@ private:
 } // namespace Acl
 
 bool
-Acl::ServerNameMatcher::matchDomainName(const AnyP::DomainName &domain) const
+Acl::ServerNameMatcher::matchDomainName(const Dns::DomainName &domain) const
 {
     return parameters.match(SBuf(domain).c_str()); // TODO: Upgrade string-matching ACLs to SBuf
 }
