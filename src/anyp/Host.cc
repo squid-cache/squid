@@ -111,4 +111,3 @@ AnyP::operator <<(std::ostream &os, const Bracketed &hostWrapper)
     return os;
 }
 
-
