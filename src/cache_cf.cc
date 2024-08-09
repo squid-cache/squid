@@ -1486,26 +1486,23 @@ free_SBufList(SBufList *list)
 }
 
 static void
-dump_acl(StoreEntry * entry, const char *name, Acl::Node * ae)
+dump_acl(StoreEntry *entry, const char *directiveName, Acl::NamedAcls *config)
 {
     PackableStream os(*entry);
-    while (ae != nullptr) {
-        debugs(3, 3, "dump_acl: " << name << " " << ae->name);
-        ae->dumpWhole(name, os);
-        ae = ae->next;
-    }
+    Acl::DumpNamedAcls(os, directiveName, config);
 }
 
 static void
-parse_acl(Acl::Node ** ae)
+parse_acl(Acl::NamedAcls **config)
 {
-    Acl::Node::ParseAclLine(LegacyParser, ae);
+    assert(config);
+    Acl::Node::ParseNamedAcl(LegacyParser, *config);
 }
 
 static void
-free_acl(Acl::Node ** ae)
+free_acl(Acl::NamedAcls **config)
 {
-    aclDestroyAcls(ae);
+    Acl::FreeNamedAcls(config);
 }
 
 void
@@ -1513,14 +1510,14 @@ dump_acl_list(StoreEntry * entry, ACLList * head)
 {
     // XXX: Should dump ACL names like "foo !bar" but dumps parsing context like
     // "(clientside_tos 0x11 line)".
-    dump_SBufList(entry, head->dump());
+    dump_SBufList(entry, ToTree(head).dump());
 }
 
 void
 dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {
     if (head)
-        dump_SBufList(entry, head->treeDump(name, &Acl::AllowOrDeny));
+        dump_SBufList(entry, ToTree(head).treeDump(name, &Acl::AllowOrDeny));
 }
 
 static void
@@ -2011,7 +2008,7 @@ static void
 dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 {
     if (authSchemes)
-        dump_SBufList(entry, authSchemes->treeDump(name, [](const Acl::Answer &action) {
+        dump_SBufList(entry, ToTree(authSchemes).treeDump(name, [](const Acl::Answer &action) {
         return Auth::TheConfig.schemeLists.at(action.kind).rawSchemes;
     }));
 }
@@ -2019,13 +2016,17 @@ dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 #endif /* USE_AUTH */
 
 static void
-ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, Acl::Node *acl)
+ParseAclWithAction(acl_access **config, const Acl::Answer &action, const char *desc, Acl::Node *acl)
 {
-    assert(access);
-    if (!*access) {
-        *access = new Acl::Tree;
-        (*access)->context(ToSBuf('(', desc, " rules)"), config_input_line);
+    assert(config);
+    auto &access = *config;
+    if (!access) {
+        const auto tree = new Acl::Tree;
+        tree->context(ToSBuf('(', desc, " rules)"), config_input_line);
+        access = new acl_access(tree);
     }
+    assert(access);
+
     Acl::AndNode *rule = new Acl::AndNode;
     rule->context(ToSBuf('(', desc, " rule)"), config_input_line);
     if (acl)
@@ -2392,10 +2393,8 @@ parse_peer(CachePeers **peers)
         p->connect_fail_limit = 10;
 
 #if USE_CACHE_DIGESTS
-    if (!p->options.no_digest) {
-        const auto pd = new PeerDigest(p);
-        p->digest = cbdataReference(pd); // CachePeer destructor unlocks
-    }
+    if (!p->options.no_digest)
+        p->digest = new PeerDigest(p);
 #endif
 
     if (p->secure.encryptTransport)
@@ -4487,7 +4486,7 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump)
 {
     if (ssl_bump)
-        dump_SBufList(entry, ssl_bump->treeDump(name, [](const Acl::Answer &action) {
+        dump_SBufList(entry, ToTree(ssl_bump).treeDump(name, [](const Acl::Answer &action) {
         return Ssl::BumpModeStr.at(action.kind);
     }));
 }
@@ -4731,7 +4730,7 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
 static void dump_ftp_epsv(StoreEntry *entry, const char *name, acl_access *ftp_epsv)
 {
     if (ftp_epsv)
-        dump_SBufList(entry, ftp_epsv->treeDump(name, Acl::AllowOrDeny));
+        dump_SBufList(entry, ToTree(ftp_epsv).treeDump(name, Acl::AllowOrDeny));
 }
 
 static void free_ftp_epsv(acl_access **ftp_epsv)
@@ -4902,7 +4901,7 @@ dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *ac
         "respond"
     };
     if (access) {
-        SBufList lines = access->treeDump(name, [](const Acl::Answer &action) {
+        const auto lines = ToTree(access).treeDump(name, [](const Acl::Answer &action) {
             return onErrorTunnelMode.at(action.kind);
         });
         dump_SBufList(entry, lines);
@@ -4936,7 +4935,7 @@ dump_http_upgrade_request_protocols(StoreEntry *entry, const char *rawName, Http
         SBufList line;
         line.push_back(name);
         line.push_back(proto);
-        const auto acld = acls->treeDump("", &Acl::AllowOrDeny);
+        const auto acld = ToTree(acls).treeDump("", &Acl::AllowOrDeny);
         line.insert(line.end(), acld.begin(), acld.end());
         dump_SBufList(entry, line);
     });

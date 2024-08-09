@@ -11,8 +11,6 @@
 #include "acl/Tree.h"
 #include "wordlist.h"
 
-CBDATA_NAMESPACED_CLASS_INIT(Acl, Tree);
-
 Acl::Answer
 Acl::Tree::winningAction() const
 {

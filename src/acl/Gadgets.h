@@ -21,26 +21,23 @@ class dlink_list;
 class StoreEntry;
 class wordlist;
 
-/// Register an Acl::Node object for future deletion. Repeated registrations are OK.
-/// \ingroup ACLAPI
-void aclRegister(Acl::Node *acl);
 /// \ingroup ACLAPI
 void aclDestroyAccessList(acl_access **list);
 /// \ingroup ACLAPI
-void aclDestroyAcls(Acl::Node **);
-/// \ingroup ACLAPI
 void aclDestroyAclList(ACLList **);
+
 /// Parses a single line of a "action followed by acls" directive (e.g., http_access).
-/// \ingroup ACLAPI
-void aclParseAccessLine(const char *directive, ConfigParser &parser, Acl::Tree **);
+void aclParseAccessLine(const char *directive, ConfigParser &, acl_access **);
+
 /// Parses a single line of a "some context followed by acls" directive (e.g., note n v).
 /// The label parameter identifies the context (for debugging).
 /// \returns the number of parsed ACL names
-size_t aclParseAclList(ConfigParser &parser, Acl::Tree **, const char *label);
+size_t aclParseAclList(ConfigParser &, ACLList **, const char *label);
+
 /// Template to convert various context labels to strings. \ingroup ACLAPI
 template <class Any>
 inline size_t
-aclParseAclList(ConfigParser &parser, Acl::Tree **tree, const Any any)
+aclParseAclList(ConfigParser &parser, ACLList ** const tree, const Any any)
 {
     std::ostringstream buf;
     buf << any;
@@ -67,6 +64,15 @@ void aclCacheMatchFlush(dlink_list * cache);
 void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
 /// \ingroup ACLAPI
 void dump_acl_list(StoreEntry * entry, ACLList * head);
+
+namespace Acl {
+/// convenient and safe access to a stored (and parsed/configured) Tree
+/// \returns **cfg or *cfg->getRaw()
+/// \prec cfg points to a non-nil TreePointer object; ACL parsing code is
+/// written so that ToTree() caller may just check that cfg itself is not nil
+/// (because parsing code never stores nil TreePointer objects).
+const Tree &ToTree(const TreePointer *cfg);
+}
 
 #endif /* SQUID_SRC_ACL_GADGETS_H */
 

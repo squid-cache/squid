@@ -54,7 +54,6 @@ libmisccontainers_la_SOURCES = \
 	hash.cc
 
 libmiscutil_la_SOURCES = \
-	$(SNPRINTFSOURCE) \
 	Splay.cc \
 	heap.c \
 	radix.c \

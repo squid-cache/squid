@@ -1089,7 +1089,7 @@ DOC_END
 
 NAME: acl
 TYPE: acl
-LOC: Config.aclList
+LOC: Config.namedAcls
 IF USE_OPENSSL
 DEFAULT: ssl::certHasExpired ssl_error X509_V_ERR_CERT_HAS_EXPIRED
 DEFAULT: ssl::certNotYetValid ssl_error X509_V_ERR_CERT_NOT_YET_VALID
