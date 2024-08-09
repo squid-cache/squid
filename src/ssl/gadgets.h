@@ -14,6 +14,7 @@
 #include "anyp/forward.h"
 #include "base/HardFun.h"
 #include "compat/openssl.h"
+#include "sbuf/forward.h"
 #include "security/forward.h"
 #include "ssl/crtd_message.h"
 
