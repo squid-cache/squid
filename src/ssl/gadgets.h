@@ -17,6 +17,7 @@
 #include "security/forward.h"
 #include "ssl/crtd_message.h"
 
+#include <optional>
 #include <string>
 
 #if HAVE_OPENSSL_ASN1_H
