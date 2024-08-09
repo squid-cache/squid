@@ -75,8 +75,6 @@ static int have_serverblob;
 #define SEND3(X,Y,Z) debug("sending '" X "' to squid\n",Y,Z); printf(X "\n",Y,Z);
 #endif
 
-char *negotiate_check_auth(SSP_blobP auth, int auth_length);
-
 /*
  * options:
  * -d enable debugging.
@@ -84,7 +82,7 @@ char *negotiate_check_auth(SSP_blobP auth, int auth_length);
  */
 char *my_program_name = nullptr;
 
-void
+static void
 usage()
 {
     fprintf(stderr,
@@ -95,7 +93,7 @@ usage()
             my_program_name);
 }
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt, had_error = 0;
@@ -140,7 +138,7 @@ token_decode(size_t *decodedLen, uint8_t decoded[], const char *buf)
     return true;
 }
 
-int
+static int
 manage_request()
 {
     char buf[HELPER_INPUT_BUFFER];
