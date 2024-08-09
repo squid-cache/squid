@@ -27,7 +27,6 @@
 char *Debug::debugOptions = nullptr;
 int Debug::override_X = 0;
 bool Debug::log_syslog = false;
-bool Debug::doNotCloseOnExec = false;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 char *Debug::cache_log = nullptr;
 int Debug::rotateNumber = -1;
@@ -765,8 +764,7 @@ DebugFile::reset(FILE *newFile, const char *newName)
     file_ = newFile; // may be nil
 
     if (file_) {
-        if (!Debug::doNotCloseOnExec)
-            commSetCloseOnExec(fileno(file_));
+        commSetCloseOnExec(fileno(file_));
         fd_open(fileno(file_), FD_LOG, Debug::cache_log);
     }
 

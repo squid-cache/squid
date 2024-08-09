@@ -341,7 +341,6 @@ int main(int argc, char **argv)
 
     program_name = argv[0];
     Debug::NameThisHelper("ext_time_quota_acl");
-    char *cacheLog = nullptr;
 
     while ((opt = getopt(argc, argv, "dp:b:h")) != -1) {
         switch (opt) {
@@ -366,15 +365,8 @@ int main(int argc, char **argv)
         }
     }
 
-    if (cacheLog) {
-        Debug::cache_log = cacheLog;
-        Debug::doNotCloseOnExec = true;
-        Debug::UseCacheLog();
-        Debug::ResetStderrLevel(DBG_CRITICAL); // stop debugging to stderr
-        // debug levels are reset by UseCacheLog
-        if (debug)
-            Debug::Levels[MY_DEBUG_SECTION] = DBG_DATA;
-    }
+    if (debug)
+        Debug::Levels[MY_DEBUG_SECTION] = DBG_DATA;
 
     debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "Starting " << program_name);
     setbuf(stdout, nullptr);
