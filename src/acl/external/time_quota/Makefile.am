@@ -17,12 +17,12 @@ ext_time_quota_acl_SOURCES = \
 
 ext_time_quota_acl_LDADD = \
 	$(top_builddir)/src/sbuf/libsbuf.la \
-	$(top_builddir)/src/debug/libdebug.la \
 	$(top_builddir)/src/error/liberror.la \
 	$(top_builddir)/src/comm/libminimal.la \
-	$(top_builddir)/src/mem/libminimal.la \
 	$(top_builddir)/src/base/libbase.la \
+	$(top_builddir)/src/debug/libdebug.la \
 	$(top_builddir)/src/time/libtime.la \
+	$(top_builddir)/src/mem/libminimal.la \
 	$(COMPAT_LIB) \
 	$(LIBTDB_LIBS)
 
