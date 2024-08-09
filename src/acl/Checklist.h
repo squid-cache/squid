@@ -40,28 +40,6 @@ public:
     virtual ~ACLChecklist();
 
     /**
-     * Start a non-blocking (async) check for a list of allow/deny rules.
-     * Each rule comes with a list of ACLs.
-     *
-     * The callback specified will be called with the result of the check.
-     *
-     * The first rule where all ACLs match wins. If there is such a rule,
-     * the result becomes that rule keyword (ACCESS_ALLOWED or ACCESS_DENIED).
-     *
-     * If there are rules but all ACL lists mismatch, an implicit rule is used.
-     * Its result is the negation of the keyword of the last seen rule.
-     *
-     * Some ACLs may stop the check prematurely by setting an exceptional
-     * check result (e.g., ACCESS_AUTH_REQUIRED) instead of declaring a
-     * match or mismatch.
-     *
-     * If there are no rules to check at all, the result becomes ACCESS_DUNNO.
-     * Calling this method with no rules to check wastes a lot of CPU cycles
-     * and will result in a DBG_CRITICAL debugging message.
-     */
-    void nonBlockingCheck(ACLCB * callback, void *callback_data);
-
-    /**
      * Perform a blocking (immediate) check for a list of allow/deny rules.
      * Each rule comes with a list of ACLs.
      *
@@ -148,6 +126,29 @@ public:
 
     /// remember the name of the last ACL being evaluated
     void setLastCheckedName(const SBuf &name) { lastCheckedName_ = name; }
+
+protected:
+    /**
+     * Start a non-blocking (async) check for a list of allow/deny rules.
+     * Each rule comes with a list of ACLs.
+     *
+     * The callback specified will be called with the result of the check.
+     *
+     * The first rule where all ACLs match wins. If there is such a rule,
+     * the result becomes that rule keyword (ACCESS_ALLOWED or ACCESS_DENIED).
+     *
+     * If there are rules but all ACL lists mismatch, an implicit rule is used.
+     * Its result is the negation of the keyword of the last seen rule.
+     *
+     * Some ACLs may stop the check prematurely by setting an exceptional
+     * check result (e.g., ACCESS_AUTH_REQUIRED) instead of declaring a
+     * match or mismatch.
+     *
+     * If there are no rules to check at all, the result becomes ACCESS_DUNNO.
+     * Calling this method with no rules to check wastes a lot of CPU cycles
+     * and will result in a DBG_CRITICAL debugging message.
+     */
+    void nonBlockingCheck(ACLCB * callback, void *callback_data);
 
 private:
     /// Calls non-blocking check callback with the answer and destroys self.

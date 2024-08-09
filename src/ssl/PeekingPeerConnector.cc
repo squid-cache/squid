@@ -69,7 +69,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
 {
     handleServerCertificate();
 
-    const auto acl_checklist = new ACLFilledChecklist(::Config.accessList.ssl_bump, request.getRaw());
+    auto acl_checklist = ACLFilledChecklist::Make(::Config.accessList.ssl_bump, request.getRaw());
     acl_checklist->al = al;
     acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpNone));
     acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpPeek));
@@ -84,7 +84,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
     if (!srvBio->canBump())
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpBump));
     acl_checklist->syncAle(request.getRaw(), nullptr);
-    acl_checklist->nonBlockingCheck(Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone, this);
+    ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone, this);
 }
 
 void
