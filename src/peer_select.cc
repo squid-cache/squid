@@ -613,18 +613,18 @@ PeerSelector::selectMore()
         if (always_direct == ACCESS_DUNNO) {
             debugs(44, 3, "direct = " << DirectStr[direct] << " (always_direct to be checked)");
             /** check always_direct; */
-            const auto ch = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request);
+            auto ch = ACLFilledChecklist::Make(Config.accessList.AlwaysDirect, request);
             ch->al = al;
             ch->syncAle(request, nullptr);
-            ch->nonBlockingCheck(CheckAlwaysDirectDone, this);
+            ACLFilledChecklist::NonBlockingCheck(std::move(ch), CheckAlwaysDirectDone, this);
             return;
         } else if (never_direct == ACCESS_DUNNO) {
             debugs(44, 3, "direct = " << DirectStr[direct] << " (never_direct to be checked)");
             /** check never_direct; */
-            const auto ch = new ACLFilledChecklist(Config.accessList.NeverDirect, request);
+            auto ch = ACLFilledChecklist::Make(Config.accessList.NeverDirect, request);
             ch->al = al;
             ch->syncAle(request, nullptr);
-            ch->nonBlockingCheck(CheckNeverDirectDone, this);
+            ACLFilledChecklist::NonBlockingCheck(std::move(ch), CheckNeverDirectDone, this);
             return;
         } else if (request->flags.noDirect) {
             /** if we are accelerating, direct is not an option. */

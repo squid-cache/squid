@@ -169,9 +169,9 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
         // TODO: Remove ACLFilledChecklist::sslErrors and other pre-computed
         // state in favor of the ACLs accessing current/fresh info directly.
         if (acl_access *acl = ::Config.ssl_client.cert_error) {
-            const auto check = new ACLFilledChecklist(acl, request.getRaw());
+            auto check = ACLFilledChecklist::Make(acl, request.getRaw());
             fillChecklist(*check);
-            SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check);
+            SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check.release());
         }
     }
 
