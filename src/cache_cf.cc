@@ -616,6 +616,8 @@ Configuration::Parse()
 
     configFreeMemory();
 
+    Config.lifecycleStart();
+
     ACLMethodData::ThePurgeCount = 0;
     default_all();
 

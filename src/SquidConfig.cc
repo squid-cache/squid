@@ -9,7 +9,15 @@
 #include "squid.h"
 #include "SquidConfig.h"
 
+InstanceIdDefinitions(SquidConfig, "cfg");
+
 class SquidConfig Config;
 
 class SquidConfig2 Config2;
+
+void
+SquidConfig::lifecycleStart()
+{
+    id_.change();
+}
 
