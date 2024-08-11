@@ -150,3 +150,4 @@ section 92    Storage File System
 section 93    Adaptation
 section 93    ICAP (RFC 3507) Client
 section 93    eCAP Interface
+section 94    Helpers

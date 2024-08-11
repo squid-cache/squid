@@ -26,6 +26,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
 
+/* DEBUG: section 94    Helpers */
+
 #include "squid.h"
 #include "debug/Stream.h"
 #include "helper/protocol_defines.h"
@@ -43,7 +45,7 @@
 #error "Please define DEFAULT_QUOTA_DB preprocessor constant."
 #endif
 
-static const auto MY_DEBUG_SECTION = 1;
+static const auto MY_DEBUG_SECTION = 94;
 const char *db_path = DEFAULT_QUOTA_DB;
 const char *program_name;
 
