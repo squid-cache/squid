@@ -339,7 +339,6 @@ int main(int argc, char **argv)
 {
     char request[HELPER_INPUT_BUFFER];
     int opt;
-    auto debug = false;
 
     program_name = argv[0];
     Debug::NameThisHelper("ext_time_quota_acl");
@@ -347,7 +346,7 @@ int main(int argc, char **argv)
     while ((opt = getopt(argc, argv, "dp:b:h")) != -1) {
         switch (opt) {
         case 'd':
-            debug = true;
+            Debug::Levels[MY_DEBUG_SECTION] = DBG_DATA;
             break;
         case 'b':
             db_path = optarg;
@@ -366,9 +365,6 @@ int main(int argc, char **argv)
             break;
         }
     }
-
-    if (debug)
-        Debug::Levels[MY_DEBUG_SECTION] = DBG_DATA;
 
     debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "Starting " << program_name);
     setbuf(stdout, nullptr);
