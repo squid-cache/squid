@@ -666,7 +666,7 @@ esiStreamDetach (clientStreamNode *thisNode, ClientHttpRequest *http)
  *   There is context data or a reply structure
  */
 void
-esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply *rep, StoreIOBuffer receivedData)
+esiProcessStream(clientStreamNode *thisNode, ClientHttpRequest *http, const HttpReplyPointer &reply, StoreIOBuffer receivedData)
 {
     /* test preconditions */
     assert (thisNode != nullptr);
@@ -684,7 +684,7 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
 
     if (!thisNode->data.getRaw())
         /* setup ESI context from reply headers */
-        thisNode->data = ESIContextNew(rep, thisNode, http);
+        thisNode->data = ESIContextNew(reply, thisNode, http);
 
     ESIContext::Pointer context = dynamic_cast<ESIContext *>(thisNode->data.getRaw());
 
@@ -697,7 +697,7 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
      * has been detected to prevent ESI processing the error body
      */
     if (context->flags.passthrough) {
-        clientStreamCallback (thisNode, http, rep, receivedData);
+        clientStreamCallback(thisNode, http, reply, receivedData);
         return;
     }
 
@@ -767,7 +767,7 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
     }
 
     /* EOF / Read error /  aborted entry */
-    if (rep == nullptr && receivedData.data == nullptr && receivedData.length == 0 && !context->flags.finishedtemplate) {
+    if (!reply && receivedData.data == nullptr && receivedData.length == 0 && !context->flags.finishedtemplate) {
         /* TODO: get stream status to test the entry for aborts */
         /* else flush the esi processor */
         debugs(86, 5, "esiProcess: " << context.getRaw() << " Finished reading upstream data");

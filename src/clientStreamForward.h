@@ -10,9 +10,7 @@
 #define SQUID_SRC_CLIENTSTREAMFORWARD_H
 
 #include "enums.h" /* for clientStream_status_t */
-
-class Lock;
-template <class C> class RefCount;
+#include "http/forward.h"
 
 typedef RefCount<Lock> ClientStreamData;
 
@@ -20,11 +18,10 @@ typedef RefCount<Lock> ClientStreamData;
 
 class clientStreamNode;
 class ClientHttpRequest;
-class HttpReply;
 class StoreIOBuffer;
 
 /// client stream read callback
-typedef void CSCB(clientStreamNode *, ClientHttpRequest *, HttpReply *, StoreIOBuffer);
+typedef void CSCB(clientStreamNode *, ClientHttpRequest *, const HttpReplyPointer &, StoreIOBuffer);
 
 /// client stream read
 typedef void CSR(clientStreamNode *, ClientHttpRequest *);

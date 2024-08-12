@@ -103,7 +103,7 @@ Downloader::doneAll() const
 
 static void
 downloaderRecipient(clientStreamNode * node, ClientHttpRequest * http,
-                    HttpReply * rep, StoreIOBuffer receivedData)
+                    const HttpReplyPointer &reply, StoreIOBuffer receivedData)
 {
     debugs(33, 6, MYNAME);
     /* Test preconditions */
@@ -120,7 +120,7 @@ downloaderRecipient(clientStreamNode * node, ClientHttpRequest * http,
     assert(context);
 
     if (context->downloader.valid())
-        context->downloader->handleReply(node, http, rep, receivedData);
+        context->downloader->handleReply(node, http, reply, receivedData);
 }
 
 static void
@@ -188,7 +188,7 @@ Downloader::start()
 }
 
 void
-Downloader::handleReply(clientStreamNode * node, ClientHttpRequest *http, HttpReply *reply, StoreIOBuffer receivedData)
+Downloader::handleReply(clientStreamNode * node, ClientHttpRequest *http, const HttpReplyPointer &reply, StoreIOBuffer receivedData)
 {
     DownloaderContext::Pointer callerContext = dynamic_cast<DownloaderContext *>(node->data.getRaw());
     // TODO: remove the following check:

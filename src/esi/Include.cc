@@ -60,7 +60,7 @@ esiBufferDetach (clientStreamNode *node, ClientHttpRequest *http)
  * not be reinstated or it will trigger bug #975 again - RBC 20060903
  */
 void
-esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *rep, StoreIOBuffer receivedData)
+esiBufferRecipient(clientStreamNode *node, ClientHttpRequest *http, const HttpReplyPointer &reply, StoreIOBuffer receivedData)
 {
     /* Test preconditions */
     assert (node != nullptr);
@@ -80,24 +80,24 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     assert (receivedData.length <= sizeof(esiStream->localbuffer->buf));
     assert (!esiStream->finished);
 
-    debugs (86,5, "rep " << rep << " body " << receivedData.data << " len " << receivedData.length);
+    debugs(86, 5, "reply " << reply << " body " << receivedData.data << " len " << receivedData.length);
     assert (node->readBuffer.offset == receivedData.offset || receivedData.length == 0);
 
     /* trivial case */
 
     if (http->out.offset != 0) {
-        assert(rep == nullptr);
+        assert(!reply);
     } else {
-        if (rep) {
-            if (rep->sline.status() != Http::scOkay) {
-                rep = nullptr;
+        if (reply) {
+            if (reply->sline.status() != Http::scOkay) {
+                reply = nullptr;
                 esiStream->include->includeFail (esiStream);
                 esiStream->finished = 1;
                 httpRequestFree (http);
                 return;
             }
 
-            rep = nullptr;
+            reply = nullptr;
         }
     }
 
@@ -121,7 +121,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     }
 
     /* EOF / Read error /  aborted entry */
-    if (rep == nullptr && receivedData.data == nullptr && receivedData.length == 0) {
+    if (!reply && receivedData.data == nullptr && receivedData.length == 0) {
         /* TODO: get stream status to test the entry for aborts */
         debugs(86, 5, "Finished reading upstream data in subrequest");
         esiStream->include->subRequestDone (esiStream, true);

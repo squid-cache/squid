@@ -58,7 +58,10 @@ public:
     /// The nested level of Downloader object (downloads inside downloads).
     unsigned int nestedLevel() const {return level_;}
 
-    void handleReply(clientStreamNode *, ClientHttpRequest *, HttpReply *, StoreIOBuffer);
+    /* clientStreams API */
+
+    /// \copydoc CSCB
+    void handleReply(clientStreamNode *, ClientHttpRequest *, const HttpReplyPointer &, StoreIOBuffer);
 
 protected:
 

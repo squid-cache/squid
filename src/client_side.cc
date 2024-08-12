@@ -797,7 +797,7 @@ ClientHttpRequest::rangeBoundaryStr() const
  */
 void
 clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
-                      HttpReply * rep, StoreIOBuffer receivedData)
+                      const HttpReplyPointer &reply, StoreIOBuffer receivedData)
 {
     // do not try to deliver if client already ABORTED
     if (!http->getConn() || !cbdataReferenceValid(http->getConn()) || !Comm::IsConnOpen(http->getConn()->clientConnection))
@@ -819,11 +819,11 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
 
     // TODO: enforces HTTP/1 MUST on pipeline order, but is irrelevant to HTTP/2
     if (context != http->getConn()->pipeline.front())
-        context->deferRecipientForLater(node, rep, receivedData);
+        context->deferRecipientForLater(node, reply, receivedData);
     else if (http->getConn()->cbControlMsgSent) // 1xx to the user is pending
-        context->deferRecipientForLater(node, rep, receivedData);
+        context->deferRecipientForLater(node, reply, receivedData);
     else
-        http->getConn()->handleReply(rep, receivedData);
+        http->getConn()->handleReply(reply, receivedData);
 }
 
 /**
@@ -880,7 +880,7 @@ ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferredRequest, Con
         /** defer now. */
         clientSocketRecipient(deferredRequest->deferredparams.node,
                               deferredRequest->http,
-                              deferredRequest->deferredparams.rep,
+                              deferredRequest->deferredparams.reply.getRaw(),
                               deferredRequest->deferredparams.queuedBuffer);
     }
 
@@ -3628,7 +3628,7 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
         typedef CommCbMemFunT<HttpControlMsgSink, CommIoCbParams> Dialer;
         AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, HttpControlMsgSink::wroteControlMsg);
 
-        if (!writeControlMsgAndCall(rep.getRaw(), call)) {
+        if (!writeControlMsgAndCall(rep, call)) {
             // but still inform the caller (so it may resume its operation)
             doneWithControlMsg();
         }

@@ -45,7 +45,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Ftp, Server);
 
 namespace Ftp
 {
-static void PrintReply(MemBuf &mb, const HttpReply *reply, const char *const prefix = "");
+static void PrintReply(MemBuf &, const HttpReplyPointer &, const char *const prefix = "");
 static bool SupportedCommand(const SBuf &name);
 static bool CommandHasPathParameter(const SBuf &cmd);
 };
@@ -504,13 +504,12 @@ Ftp::Server::writeReply(MemBuf &mb)
 }
 
 void
-Ftp::Server::writeCustomReply(const int code, const char *msg, const HttpReply *reply)
+Ftp::Server::writeCustomReply(const int code, const char *msg, const HttpReplyPointer &reply)
 {
     debugs(33, 7, code << ' ' << msg);
     assert(99 < code && code < 1000);
 
-    const bool sendDetails = reply != nullptr &&
-                             reply->header.has(Http::HdrType::FTP_STATUS) && reply->header.has(Http::HdrType::FTP_REASON);
+    const bool sendDetails = reply && reply->header.has(Http::HdrType::FTP_STATUS) && reply->header.has(Http::HdrType::FTP_REASON);
 
     MemBuf mb;
     mb.init();
@@ -775,7 +774,7 @@ Ftp::Server::parseOneRequest()
 }
 
 void
-Ftp::Server::handleReply(HttpReply *reply, StoreIOBuffer data)
+Ftp::Server::handleReply(const HttpReplyPointer &reply, StoreIOBuffer data)
 {
     // the caller guarantees that we are dealing with the current context only
     Http::StreamPointer context = pipeline.front();
@@ -809,7 +808,7 @@ Ftp::Server::handleReply(HttpReply *reply, StoreIOBuffer data)
 }
 
 void
-Ftp::Server::handleFeatReply(const HttpReply *reply, StoreIOBuffer)
+Ftp::Server::handleFeatReply(const HttpReplyPointer &reply, StoreIOBuffer)
 {
     if (pipeline.front()->http->request->error) {
         writeCustomReply(502, "Server does not support FEAT", reply);
@@ -878,7 +877,7 @@ Ftp::Server::handleFeatReply(const HttpReply *reply, StoreIOBuffer)
 }
 
 void
-Ftp::Server::handlePasvReply(const HttpReply *reply, StoreIOBuffer)
+Ftp::Server::handlePasvReply(const HttpReplyPointer &reply, StoreIOBuffer)
 {
     const Http::StreamPointer context(pipeline.front());
     assert(context != nullptr);
@@ -918,7 +917,7 @@ Ftp::Server::handlePasvReply(const HttpReply *reply, StoreIOBuffer)
 }
 
 void
-Ftp::Server::handlePortReply(const HttpReply *reply, StoreIOBuffer)
+Ftp::Server::handlePortReply(const HttpReplyPointer &reply, StoreIOBuffer)
 {
     if (pipeline.front()->http->request->error) {
         writeCustomReply(502, "Server does not support PASV (converted from PORT)", reply);
@@ -931,7 +930,7 @@ Ftp::Server::handlePortReply(const HttpReply *reply, StoreIOBuffer)
 }
 
 void
-Ftp::Server::handleErrorReply(const HttpReply *reply, StoreIOBuffer)
+Ftp::Server::handleErrorReply(const HttpReplyPointer &reply, StoreIOBuffer)
 {
     if (!pinning.pinned) // we failed to connect to server
         uri.clear();
@@ -940,9 +939,9 @@ Ftp::Server::handleErrorReply(const HttpReply *reply, StoreIOBuffer)
 }
 
 void
-Ftp::Server::handleDataReply(const HttpReply *reply, StoreIOBuffer data)
+Ftp::Server::handleDataReply(const HttpReplyPointer &reply, StoreIOBuffer data)
 {
-    if (reply != nullptr && reply->sline.status() != Http::scOkay) {
+    if (reply && reply->sline.status() != Http::scOkay) {
         writeForwardedReply(reply);
         if (Comm::IsConnOpen(dataConn)) {
             debugs(33, 3, "closing " << dataConn << " on KO reply");
@@ -1026,14 +1025,14 @@ Ftp::Server::replyDataWritingCheckpoint()
 }
 
 void
-Ftp::Server::handleUploadReply(const HttpReply *reply, StoreIOBuffer)
+Ftp::Server::handleUploadReply(const HttpReplyPointer &reply, StoreIOBuffer)
 {
     writeForwardedReply(reply);
     // note that the client data connection may already be closed by now
 }
 
 void
-Ftp::Server::writeForwardedReply(const HttpReply *reply)
+Ftp::Server::writeForwardedReply(const HttpReplyPointer &reply)
 {
     Must(reply);
 
@@ -1056,7 +1055,7 @@ Ftp::Server::writeForwardedReply(const HttpReply *reply)
 }
 
 void
-Ftp::Server::handleEprtReply(const HttpReply *reply, StoreIOBuffer)
+Ftp::Server::handleEprtReply(const HttpReplyPointer &reply, StoreIOBuffer)
 {
     if (pipeline.front()->http->request->error) {
         writeCustomReply(502, "Server does not support PASV (converted from EPRT)", reply);
@@ -1069,7 +1068,7 @@ Ftp::Server::handleEprtReply(const HttpReply *reply, StoreIOBuffer)
 }
 
 void
-Ftp::Server::handleEpsvReply(const HttpReply *reply, StoreIOBuffer)
+Ftp::Server::handleEpsvReply(const HttpReplyPointer &reply, StoreIOBuffer)
 {
     if (pipeline.front()->http->request->error) {
         writeCustomReply(502, "Cannot connect to server", reply);
@@ -1092,7 +1091,7 @@ Ftp::Server::handleEpsvReply(const HttpReply *reply, StoreIOBuffer)
 
 /// writes FTP error response with given status and reply-derived error details
 void
-Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
+Ftp::Server::writeErrorReply(const HttpReplyPointer &reply, const int scode)
 {
     const HttpRequest *request = pipeline.front()->http->request;
     assert(request);
@@ -1140,7 +1139,7 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
 /// writes FTP response based on HTTP reply that is not an FTP-response wrapper
 /// for example, internally-generated Squid "errorpages" end up here (for now)
 void
-Ftp::Server::writeForwardedForeign(const HttpReply *reply)
+Ftp::Server::writeForwardedForeign(const HttpReplyPointer &reply)
 {
     changeState(fssConnected, "foreign reply");
     closeDataConnection();
@@ -1149,7 +1148,7 @@ Ftp::Server::writeForwardedForeign(const HttpReply *reply)
 }
 
 bool
-Ftp::Server::writeControlMsgAndCall(HttpReply *reply, AsyncCall::Pointer &call)
+Ftp::Server::writeControlMsgAndCall(const HttpReplyPointer &reply, AsyncCall::Pointer &call)
 {
     // the caller guarantees that we are dealing with the current context only
     // the caller should also make sure reply->header.has(Http::HdrType::FTP_STATUS)
@@ -1158,7 +1157,7 @@ Ftp::Server::writeControlMsgAndCall(HttpReply *reply, AsyncCall::Pointer &call)
 }
 
 void
-Ftp::Server::writeForwardedReplyAndCall(const HttpReply *reply, AsyncCall::Pointer &call)
+Ftp::Server::writeForwardedReplyAndCall(const HttpReplyPointer &reply, AsyncCall::Pointer &call)
 {
     assert(reply != nullptr);
     const HttpHeader &header = reply->header;
@@ -1210,7 +1209,7 @@ Ftp::Server::writeForwardedReplyAndCall(const HttpReply *reply, AsyncCall::Point
 }
 
 static void
-Ftp::PrintReply(MemBuf &mb, const HttpReply *reply, const char *const)
+Ftp::PrintReply(MemBuf &mb, const HttpReplyPointer &reply, const char *const)
 {
     const HttpHeader &header = reply->header;
 
