@@ -34,9 +34,9 @@ AC_CHECK_HEADERS([dsrole.h],[
 #   if HAVE_WINDOWS_H
 #   include <windows.h>
 #   endif
-#if HAVE_IADS_H
-#include <iads.h>
-#endif
+#   if HAVE_IADS_H
+#   include <iads.h>
+#   endif
   ])
 ],,[
 #  if HAVE_WINDOWS_H
