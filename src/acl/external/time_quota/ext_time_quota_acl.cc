@@ -127,7 +127,7 @@ static time_t readTime(const char *user_key, const char *sub_key)
     if (data.dsize == sizeof(t)) {
         memcpy(&t, data.dptr, sizeof(t));
     } else {
-        debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "Incompatible or corrupted database. "
+        debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "ERROR: Incompatible or corrupted database. " <<
 	            "key: '" << ks <<
 	            "', expected time value size: " << sizeof(t) <<
 	            ", actual time value size: " << data.dsize);
