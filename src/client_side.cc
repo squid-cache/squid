@@ -1528,7 +1528,7 @@ ConnStateData::tunnelOnError(const err_type requestError)
     ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, nullptr);
     checklist.requestErrorType = requestError;
     fillChecklist(checklist);
-    auto answer = checklist.fastCheck();
+    const auto &answer = checklist.fastCheck();
     if (answer.allowed() && answer.kind == 1) {
         debugs(33, 3, "Request will be tunneled to server");
         const auto context = pipeline.front();
@@ -2184,7 +2184,7 @@ ConnStateData::whenClientIpKnown()
             /* pools require explicit 'allow' to assign a client into them */
             if (pools[pool]->access) {
                 ch.changeAcl(pools[pool]->access);
-                auto answer = ch.fastCheck();
+                const auto &answer = ch.fastCheck();
                 if (answer.allowed()) {
 
                     /*  request client information from db after we did all checks
