@@ -78,19 +78,37 @@ int _wcsicmp(const wchar_t *, const wchar_t *);
 #include <cassert>
 #include <cctype>
 #include <cstring>
+
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#include <windows.h>
+#if HAVE_OBJBASE_H
 #include <objbase.h>
+#endif
+#if HAVE_INITGUID_H
 #include <initguid.h>
+#endif
+#if HAVE_ADSIID_H
 #include <adsiid.h>
+#endif
+#if HAVE_IADS_H
 #include <iads.h>
+#endif
+#if HAVE_ADSHLP_H
 #include <adshlp.h>
+#endif
+#if HAVE_ADSERR_H
 #include <adserr.h>
+#endif
+#if HAVE_LM_H
 #include <lm.h>
+#endif
+#if HAVE_DSROLE_H
 #include <dsrole.h>
+#endif
+#if HAVE_SDDL_H
 #include <sddl.h>
+#endif
 
 enum ADSI_PATH {
     LDAP_MODE,
