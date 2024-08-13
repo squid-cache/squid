@@ -21,7 +21,7 @@ AC_CHECK_HEADERS([dsrole.h],[
     ]])
   ],[BUILD_HELPER="AD_group"],[:])
   # required headers
-  AC_CHECK_HEADERS([
+  AC_CHECK_HEADERS([ \
     objbase.h \
     initguid.h \
     adsiid.h \
