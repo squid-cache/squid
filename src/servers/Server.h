@@ -121,6 +121,9 @@ protected:
     /// abort any pending transactions and prevent new ones (by closing)
     virtual void terminateAll(const Error &, const LogTagsErrors &) = 0;
 
+    /// whether client_request_buffer_max_size allows inBuf.length() increase
+    bool mayBufferMoreRequestBytes() const;
+
     void doClientRead(const CommIoCbParams &io);
     void clientWriteDone(const CommIoCbParams &io);
 
