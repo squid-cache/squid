@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_HIERARCHYLOGENTRY_H
 #define SQUID_SRC_HIERARCHYLOGENTRY_H
 
+#include "base/Stopwatch.h"
 #include "comm/Connection.h"
 #include "enums.h"
 #include "hier_code.h"
@@ -37,21 +38,9 @@ public:
     /// Call this after each peer socket write(2), including failed ones.
     void notePeerWrite();
 
-    /// Start recording total time spent communicating with peers
-    void startPeerClock();
-    /**
-     * Record total time spent communicating with peers
-     * \param force whether to overwrite old recorded value if any
-     */
-    void stopPeerClock(const bool force);
-
     /// Estimates response generation and sending delay at the last peer.
     /// \returns whether the estimate (stored in `responseTime`) is available.
     bool peerResponseTime(struct timeval &responseTime);
-
-    /// Estimates the total time spent communicating with peers.
-    /// \returns whether the estimate (stored in `responseTime`) is available.
-    bool totalResponseTime(struct timeval &responseTime);
 
 public:
     hier_code code;
@@ -70,13 +59,14 @@ public:
     Comm::ConnectionPointer tcpServer; ///< TCP/IP level details of the last peer/server connection
     int64_t bodyBytesRead;  ///< number of body bytes received from the next hop or -1
 
+    /// cumulative time spent (so far) communicating with all peers (see %<tt)
+    Stopwatch totalPeeringTime;
+
 private:
     void clearPeerNotes();
 
-    timeval firstConnStart_; ///< first connection use among all peers
     struct timeval peer_last_read_; ///< time of the last read from the last peer
     struct timeval peer_last_write_; ///< time of the last write to the last peer
-    struct timeval totalResponseTime_; ///< cumulative for all peers
 };
 
 #endif /* SQUID_SRC_HIERARCHYLOGENTRY_H */

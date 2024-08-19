@@ -187,7 +187,6 @@ Client::serverComplete()
     }
 
     completed = true;
-    originalRequest()->hier.stopPeerClock(true);
 
     if (requestBodySource != nullptr)
         stopConsumingFrom(requestBodySource);
