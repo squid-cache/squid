@@ -48,7 +48,7 @@ AUTH_LIBS= auth/libauth.la
 AUTH_ACL_LIBS= auth/libacls.la
 endif
 
-SUBDIRS	+= \
+SUBDIRS += \
 	http \
 	ip \
 	icmp \
