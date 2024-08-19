@@ -1957,7 +1957,7 @@ ConnStateData::handleRequestBodyData()
         }
     } else { // identity encoding
         debugs(33,5, "handling plain request body for " << clientConnection);
-        const size_t putSize = bodyPipe->putMoreData(inBuf.c_str(), inBuf.length());
+        const auto putSize = bodyPipe->putMoreData(inBuf.rawContent(), inBuf.length());
         if (putSize > 0)
             consumeInput(putSize);
 
