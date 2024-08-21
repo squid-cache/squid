@@ -287,21 +287,16 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
     AS_CASE(["$enableval"],
       [no],[:],
       [yes],[
-        AS_IF([test -d "${srcdir}/.bzr"],[
-          AC_PATH_PROG(BZR,bzr,$FALSE)
-          squid_bzr_branch_nick=`cd ${srcdir} && ${BZR} nick 2>/dev/null`
-          AS_IF([test $? -eq 0 -a "x$squid_bzr_branch_nick" != "x"],[
-            squid_bzr_branch_revno=`cd ${srcdir} && ${BZR} revno 2>/dev/null | sed 's/\"//g'`
-          ])
-          AS_IF([test $? -eq 0 -a "x$squid_bzr_branch_revno" != "x"],[
-            sh -c "cd ${srcdir} && ${BZR} diff 2>&1 >/dev/null"
-            AS_IF([test $? -eq 1],[
-              squid_bzr_branch_revno="$squid_bzr_branch_revno+changes"
+        AC_PATH_PROG(GIT,git,$FALSE)
+        squid_git_branch_nick=`cd ${srcdir} && ${GIT} branch --show-current 2>/dev/null`
+        AS_IF([test $? -eq 0 -a "x$squid_git_branch_nick" != "x"],[
+          squid_git_branch_revno=`cd ${srcdir} && ${GIT} rev-parse --short HEAD 2>/dev/null`
+          AS_IF([test $? -eq 0 -a "x$squid_git_branch_revno" != "x"],[
+            AS_IF([cd ${srcdir} && ${GIT} diff --name-only HEAD | grep -q '.*'],[ # there are uncommitted changes
+              squid_git_branch_revno="$squid_git_branch_revno+changes"
             ])
           ])
-          AS_IF([test "x$squid_bzr_branch_revno" != "x"],[
-            squid_build_info="Built branch: ${squid_bzr_branch_nick}-r${squid_bzr_branch_revno}"
-          ])
+          squid_build_info="Built branch: ${squid_git_branch_nick} revision ${squid_git_branch_revno}"
         ])
       ],
       [squid_build_info=$enableval]
