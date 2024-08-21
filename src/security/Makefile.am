@@ -7,7 +7,9 @@
 
 include $(top_srcdir)/src/Common.am
 
-SUBDIRS= cert_generators cert_validators
+SUBDIRS = \
+	cert_generators \
+	cert_validators
 
 noinst_LTLIBRARIES = libsecurity.la
 
