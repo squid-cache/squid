@@ -292,7 +292,7 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
         AS_IF([test $? -eq 0 -a "x$squid_git_branch_nick" != "x"],[
           squid_git_branch_revno=`cd ${srcdir} && ${GIT} rev-parse --short HEAD 2>/dev/null`
           AS_IF([test $? -eq 0 -a "x$squid_git_branch_revno" != "x"],[
-            AS_IF([cd ${srcdir} && ${GIT} diff --name-only HEAD | grep -q '.*'],[ # there are uncommitted changes
+            AS_IF([cd ${srcdir} && ! ${GIT} diff --quiet HEAD],[ # there are uncommitted changes
               squid_git_branch_revno="$squid_git_branch_revno+changes"
             ])
           ])
