@@ -293,7 +293,7 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
         AS_IF([test "x$squid_git_branch" != "x"], [:], [squid_git_branch="unknown"])
         AS_IF([test "x$squid_git_revno" != "x"],[
           AS_IF([cd ${srcdir} && ! ${GIT} diff --quiet HEAD],[ # there are uncommitted changes
-            squid_git_revno="$squid_git_revno+changes"
+            squid_git_revno="$squid_git_revno plus changes"
           ])
         ])
         squid_build_info="Git branch: ${squid_git_branch} revision ${squid_git_revno}"
