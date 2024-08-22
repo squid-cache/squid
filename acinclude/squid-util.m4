@@ -288,15 +288,15 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
       [no],[:],
       [yes],[
         AC_PATH_PROG(GIT,git,$FALSE)
-        squid_git_branch_nick=`cd ${srcdir} && ${GIT} branch --show-current 2>/dev/null`
-        AS_IF([test $? -eq 0 -a "x$squid_git_branch_nick" != "x"],[
-          squid_git_branch_revno=`cd ${srcdir} && ${GIT} rev-parse --short HEAD 2>/dev/null`
-          AS_IF([test $? -eq 0 -a "x$squid_git_branch_revno" != "x"],[
+        squid_git_branch=`cd ${srcdir} && ${GIT} branch --show-current 2>/dev/null`
+        AS_IF([test $? -eq 0 -a "x$squid_git_branch" != "x"],[
+          squid_git_revno=`cd ${srcdir} && ${GIT} rev-parse --short HEAD 2>/dev/null`
+          AS_IF([test $? -eq 0 -a "x$squid_git_revno" != "x"],[
             AS_IF([cd ${srcdir} && ! ${GIT} diff --quiet HEAD],[ # there are uncommitted changes
-              squid_git_branch_revno="$squid_git_branch_revno+changes"
+              squid_git_revno="$squid_git_revno+changes"
             ])
           ])
-          squid_build_info="Built branch: ${squid_git_branch_nick} revision ${squid_git_branch_revno}"
+          squid_build_info="Built branch: ${squid_git_branch} revision ${squid_git_revno}"
         ])
       ],
       [squid_build_info=$enableval]
