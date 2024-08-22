@@ -161,7 +161,6 @@ private:
 
     void notifyConnOpener();
     void reactToZeroSizeObject();
-    void reactToSecureConnectFailure();
 
     void updateAleWithFinalError();
 

@@ -97,10 +97,7 @@ This section gives an account of those changes in three categories:
 <sect1>New directives<label id="newdirectives">
 <p>
 <descrip>
-	<tag>tls_outgoing_options_for_retries</tag>
-	<p>Enables same-destination retries (with new custom TLS options) after an
-	   attempt to establish a TLS connection with an origin server fails with
-	   ERR_SECURE_CONNECT_FAIL.
+	<p>No new directives in this version.
 
 </descrip>
 

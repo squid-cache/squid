@@ -74,7 +74,6 @@ TokenOrQuotedString
 refreshpattern
 removalpolicy
 securePeerOptions
-Security::PeerContexts* acl
 Security::KeyLog* acl
 size_t
 IpAddress_list

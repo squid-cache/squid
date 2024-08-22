@@ -136,7 +136,6 @@ void Security::PeerOptions::updateSessionOptions(Security::SessionPointer &) STU
 void Security::PeerOptions::dumpCfg(std::ostream &, char const*) const STUB
 void Security::PeerOptions::parseOptions() STUB
 void parse_securePeerOptions(Security::PeerOptions *) STUB
-Security::PeerContextPointer Security::PeerContexts::findContext(ACLChecklist &) const STUB_RETVAL(nullptr)
 
 #include "security/ServerOptions.h"
 //Security::ServerOptions::ServerOptions(const Security::ServerOptions &) STUB
