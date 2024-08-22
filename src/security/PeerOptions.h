@@ -170,25 +170,6 @@ public:
     std::unique_ptr<ACLList> preconditions;
 };
 
-// TODO: Move this declaration.
-/// Manages PeerContext objects representing all
-/// tls_outgoing_options_for_retries directives in squid.conf.
-class PeerContexts
-{
-public:
-    /// parses a single tls_outgoing_options_for_retries directive
-    void parseOneDirective(ConfigParser &);
-
-    /// opens all configured contexts; \sa PeerContext::open()
-    void open();
-
-    /// transaction-matching PeerContext (or nil)
-    PeerContextPointer findContext(ACLChecklist &) const;
-
-    /// configured contexts in squid.conf directives order
-    std::vector< PeerContextPointer, PoolingAllocator<PeerContextPointer> > contexts;
-};
-
 // XXX: Remove this shim after upgrading legacy code to store PeerContext
 // objects instead of disjoint PeerOptons and Context objects.
 /// A combination of PeerOptions and the corresponding Context. Used by Squid
