@@ -33,6 +33,9 @@ public:
     ~Intercept() {};
 
     /// perform NAT lookups for the local address of the given connection
+    /// \return true to indicate a successful lookup
+    /// \return false on errors that do not warrant listening socket closure
+    /// \throw exception on errors that warrant listening socket closure
     bool LookupNat(const Comm::Connection &);
 
     /**
