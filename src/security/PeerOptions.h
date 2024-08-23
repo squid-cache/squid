@@ -148,10 +148,9 @@ public:
 };
 
 // XXX: Remove this shim after upgrading legacy code to store PeerContext
-// objects instead of disjoint PeerOptons and Context objects, where PeerContext
-// is a class that creates and manages (PeerOptions, ContextPointer) pair.
-/// A combination of PeerOptions and the corresponding Context. Used by Squid
-/// TLS client code.
+// objects instead of disjoint PeerOptons and Context objects (where PeerContext
+// is a class that creates and manages {PeerOptions, ContextPointer} pair).
+/// A combination of PeerOptions and the corresponding Context.
 class FuturePeerContext: public RefCountable
 {
 public:
