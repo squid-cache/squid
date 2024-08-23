@@ -999,14 +999,13 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
     HttpRequest::Pointer requestPointer = request;
     const auto callback = asyncCallback(17, 4, FwdState::connectedToPeer, this);
     const auto sslNegotiationTimeout = connectingTimeout(conn);
-    const auto tlsContext = nullptr; // TODO: destinationReceipt.tlsContext()
     Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
     if (request->flags.sslPeek)
-        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, tlsContext, clientConn, callback, al, sslNegotiationTimeout);
+        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, callback, al, sslNegotiationTimeout);
     else
 #endif
-        connector = new Security::BlindPeerConnector(requestPointer, conn, tlsContext, callback, al, sslNegotiationTimeout);
+        connector = new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout);
     connector->noteFwdPconnUse = true;
     encryptionWait.start(connector, callback);
 }

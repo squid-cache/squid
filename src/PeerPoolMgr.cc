@@ -103,7 +103,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         const int timeUsed = squid_curtime - params.conn->startTime();
         // Use positive timeout when less than one second is left for conn.
         const int timeLeft = positiveTimeout(peerTimeout - timeUsed);
-        const auto connector = new Security::BlindPeerConnector(request, params.conn, nullptr, callback, nullptr, timeLeft);
+        const auto connector = new Security::BlindPeerConnector(request, params.conn, callback, nullptr, timeLeft);
         encryptionWait.start(connector, callback);
         return;
     }

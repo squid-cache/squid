@@ -23,7 +23,6 @@ class BlindPeerConnector: public Security::PeerConnector {
 public:
     BlindPeerConnector(HttpRequestPointer &aRequest,
                        const Comm::ConnectionPointer &aServerConn,
-                       const Security::FuturePeerContextPointer &,
                        const AsyncCallback<EncryptorAnswer> &aCallback,
                        const AccessLogEntryPointer &alp,
                        time_t timeout = 0);

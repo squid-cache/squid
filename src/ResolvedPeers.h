@@ -12,8 +12,6 @@
 #include "base/RefCount.h"
 #include "comm/Connection.h"
 #include "mem/AllocatorProxy.h"
-#include "security/PeerOptions.h"
-#include "security/Session.h"
 
 #include <iosfwd>
 #include <limits>
@@ -22,10 +20,10 @@
 class ResolvedPeerPath
 {
 public:
-    explicit ResolvedPeerPath(const Comm::ConnectionPointer &conn): connection(conn) {}
+    explicit ResolvedPeerPath(const Comm::ConnectionPointer &conn) : connection(conn), available(true) {}
 
     Comm::ConnectionPointer connection; ///< (the address of) a path
-    bool available = true; ///< whether this path may be extracted
+    bool available; ///< whether this path may be used (i.e., has not been tried already)
 };
 
 class PeerConnectionPointer;
@@ -127,10 +125,7 @@ public:
 
     PeerConnectionPointer() = default;
     PeerConnectionPointer(std::nullptr_t): PeerConnectionPointer() {} ///< implicit nullptr conversion
-    PeerConnectionPointer(const Comm::ConnectionPointer &conn, const size_type pos):
-        connection_(conn),
-        position_(pos)
-    {}
+    PeerConnectionPointer(const Comm::ConnectionPointer &conn, const size_type pos): connection_(conn), position_(pos) {}
 
     /* read-only pointer API; for Connection assignment, see finalize() */
     explicit operator bool() const { return static_cast<bool>(connection_); }

@@ -19,12 +19,11 @@ CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 namespace Security
 {
 BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &, const Comm::ConnectionPointer & aServerConn,
-                                       const FuturePeerContextPointer &aPeerContextPointer,
                                        const AsyncCallback<EncryptorAnswer> & aCallback,
                                        const AccessLogEntryPointer &alp,
                                        time_t) :
     AsyncJob("Security::BlindPeerConnector"),
-    Security::PeerConnector(aServerConn, aPeerContextPointer, aCallback, alp, 0)
+    Security::PeerConnector(aServerConn, aCallback, alp, 0)
 {STUB_NOP}
 
 bool BlindPeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
@@ -84,12 +83,7 @@ const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion 
 class TlsNegotiationDetails: public RefCountable {};
 namespace Security
 {
-PeerConnector::PeerConnector(
-    const Comm::ConnectionPointer &,
-    const Security::FuturePeerContextPointer &,
-    const AsyncCallback<EncryptorAnswer> &,
-    const AccessLogEntryPointer &,
-    time_t):
+PeerConnector::PeerConnector(const Comm::ConnectionPointer &, const AsyncCallback<EncryptorAnswer> &, const AccessLogEntryPointer &, const time_t):
     AsyncJob("Security::PeerConnector") {STUB}
 PeerConnector::~PeerConnector() STUB
 void PeerConnector::start() STUB

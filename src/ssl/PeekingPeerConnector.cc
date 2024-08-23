@@ -27,13 +27,12 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 
 Ssl::PeekingPeerConnector::PeekingPeerConnector(HttpRequestPointer &aRequest,
         const Comm::ConnectionPointer &aServerConn,
-        const Security::FuturePeerContextPointer &aPeerContextPointer,
         const Comm::ConnectionPointer &aClientConn,
         const AsyncCallback<Security::EncryptorAnswer> &aCallback,
         const AccessLogEntryPointer &alp,
         const time_t timeout):
     AsyncJob("Ssl::PeekingPeerConnector"),
-    Security::PeerConnector(aServerConn, aPeerContextPointer, aCallback, alp, timeout),
+    Security::PeerConnector(aServerConn, aCallback, alp, timeout),
     clientConn(aClientConn),
     splice(false),
     serverCertificateHandled(false)
@@ -146,7 +145,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceGuess() const
 Security::FuturePeerContextPointer
 Ssl::PeekingPeerConnector::peerContext() const
 {
-    return tlsContext_ ? tlsContext_ : Security::DefaultOutgoingContext;
+    return Security::DefaultOutgoingContext;
 }
 
 bool

@@ -1195,12 +1195,12 @@ TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
     connectedToPeer(conn);
 }
 
-/// encrypts an established TCP connection to cache_peer
+/// encrypts an established TCP connection to peer
 void
 TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
     const auto callback = asyncCallback(5, 4, TunnelStateData::noteSecurityPeerConnectorAnswer, this);
-    const auto connector = new Security::BlindPeerConnector(request, conn, nullptr, callback, al);
+    const auto connector = new Security::BlindPeerConnector(request, conn, callback, al);
     encryptionWait.start(connector, callback);
 }
 
