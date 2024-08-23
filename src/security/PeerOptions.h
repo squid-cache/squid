@@ -152,26 +152,9 @@ public:
     bool encryptTransport = false;
 };
 
-// TODO: Move this declaration.
-/// A combination of PeerOptions and the corresponding Context. Used by Squid
-/// TLS client code.
-class PeerContext: public RefCountable
-{
-public:
-    explicit PeerContext(ConfigParser &);
-
-    /// creates TLS context reflecting the configured options
-    void open();
-
-    PeerOptions options; ///< context configuration
-    ContextPointer raw; ///< context configured using options
-
-    /// restrict usage to matching transactions
-    std::unique_ptr<ACLList> preconditions;
-};
-
 // XXX: Remove this shim after upgrading legacy code to store PeerContext
-// objects instead of disjoint PeerOptons and Context objects.
+// objects instead of disjoint PeerOptons and Context objects, where PeerContext
+// is a class that creates and manages (PeerOptions, ContextPointer) pair.
 /// A combination of PeerOptions and the corresponding Context. Used by Squid
 /// TLS client code.
 class FuturePeerContext: public RefCountable
@@ -195,16 +178,6 @@ extern FuturePeerContextPointer DefaultOutgoingContext;
 void parse_securePeerOptions(Security::PeerOptions *);
 #define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
 #define dump_securePeerOptions(e,n,x) do { PackableStream os_(*(e)); os_ << n; (x).dumpCfg(os_,""); os_ << '\n'; } while (false)
-
-// For modern code forced to use this shim.
-// XXX: Replace calls with the call parameter.
-inline Security::FuturePeerContextPointer
-PassThroughFuture(const Security::PeerContextPointer &ctx)
-{
-    if (!ctx)
-        return nullptr;
-    return new Security::FuturePeerContext(ctx->options, ctx->raw);
-}
 
 // For legacy code that will be refactored/removed together with this shim.
 // XXX: Replace calls with the right Security::ContextPointer object.

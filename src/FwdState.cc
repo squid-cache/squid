@@ -999,7 +999,7 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
     HttpRequest::Pointer requestPointer = request;
     const auto callback = asyncCallback(17, 4, FwdState::connectedToPeer, this);
     const auto sslNegotiationTimeout = connectingTimeout(conn);
-    const auto &tlsContext = PassThroughFuture(destinationReceipt.tlsContext());
+    const auto tlsContext = nullptr; // TODO: destinationReceipt.tlsContext()
     Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
     if (request->flags.sslPeek)

@@ -25,7 +25,6 @@ public:
     explicit ResolvedPeerPath(const Comm::ConnectionPointer &conn): connection(conn) {}
 
     Comm::ConnectionPointer connection; ///< (the address of) a path
-    Security::PeerContextPointer tlsContext; ///< custom TLS session options (or nil)
     bool available = true; ///< whether this path may be extracted
 };
 
@@ -54,10 +53,6 @@ public:
     /// makes the previously extracted path available for extraction at its
     /// original position
     void reinstatePath(const PeerConnectionPointer &);
-
-    /// makes the previously extracted path available for extraction at its
-    /// original position and resets TLS parameters to use for that path
-    void reinstatePath(const PeerConnectionPointer &, const Security::PeerContextPointer &);
 
     /// extracts and returns the first queued address
     PeerConnectionPointer extractFront();
@@ -132,10 +127,9 @@ public:
 
     PeerConnectionPointer() = default;
     PeerConnectionPointer(std::nullptr_t): PeerConnectionPointer() {} ///< implicit nullptr conversion
-    PeerConnectionPointer(const Comm::ConnectionPointer &conn, const size_type pos, const Security::PeerContextPointer &ctx):
+    PeerConnectionPointer(const Comm::ConnectionPointer &conn, const size_type pos):
         connection_(conn),
-        position_(pos),
-        tlsContext_(ctx)
+        position_(pos)
     {}
 
     /* read-only pointer API; for Connection assignment, see finalize() */
@@ -145,9 +139,6 @@ public:
 
     /// convenience conversion to Comm::ConnectionPointer
     operator const Comm::ConnectionPointer&() const { return connection_; }
-
-    /// custom TLS communication settings (or nil)
-    auto &tlsContext() const { return tlsContext_; }
 
     /// upgrade stored peer selection details with a matching actual connection
     void finalize(const Comm::ConnectionPointer &conn) { connection_ = conn; }
@@ -165,9 +156,6 @@ private:
     /// ResolvedPeers-maintained membership index (or npos)
     size_type position_ = npos;
     friend class ResolvedPeers;
-
-    /// \copydoc tlsContext()
-    Security::PeerContextPointer tlsContext_;
 };
 
 /// summarized ResolvedPeers (for debugging)
