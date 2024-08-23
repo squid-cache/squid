@@ -9,17 +9,12 @@
 #ifndef SQUID_SRC_SECURITY_PEEROPTIONS_H
 #define SQUID_SRC_SECURITY_PEEROPTIONS_H
 
-#include "acl/Tree.h"
 #include "base/YesNoNone.h"
 #include "ConfigParser.h"
-#include "mem/PoolingAllocator.h"
 #include "security/Context.h"
 #include "security/forward.h"
 #include "security/KeyData.h"
 #include "security/Session.h"
-
-#include <memory>
-#include <vector>
 
 class Packable;
 

@@ -7,18 +7,13 @@
  */
 
 #include "squid.h"
-#include "acl/Checklist.h"
-#include "acl/Tree.h"
 #include "base/Packable.h"
-#include "base/PackableStream.h"
-#include "ConfigOption.h"
 #include "debug/Stream.h"
 #include "fatal.h"
 #include "globals.h"
 #include "parser/Tokenizer.h"
 #include "Parsing.h"
 #include "security/PeerOptions.h"
-#include "Store.h"
 
 #if USE_OPENSSL
 #include "ssl/support.h"
