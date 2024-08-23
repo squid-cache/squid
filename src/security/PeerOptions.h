@@ -173,13 +173,5 @@ void parse_securePeerOptions(Security::PeerOptions *);
 #define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
 #define dump_securePeerOptions(e,n,x) do { PackableStream os_(*(e)); os_ << n; (x).dumpCfg(os_,""); os_ << '\n'; } while (false)
 
-// For legacy code that will be refactored/removed together with this shim.
-// XXX: Replace calls with the right Security::ContextPointer object.
-inline Security::FuturePeerContextPointer
-MakeLikeFuture(Security::PeerOptions &options, const Security::ContextPointer &rawContext)
-{
-    return new Security::FuturePeerContext(options, rawContext);
-}
-
 #endif /* SQUID_SRC_SECURITY_PEEROPTIONS_H */
 

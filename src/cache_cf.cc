@@ -974,7 +974,7 @@ configDoConfigure(void)
 #if USE_OPENSSL
         Ssl::useSquidUntrusted(Config.ssl_client.sslContext.get());
 #endif
-        Security::DefaultOutgoingContext = MakeLikeFuture(Security::ProxyOutgoingConfig, Config.ssl_client.sslContext);
+        Security::DefaultOutgoingContext = new Security::FuturePeerContext(Security::ProxyOutgoingConfig, Config.ssl_client.sslContext);
     }
 
     for (const auto &p: CurrentCachePeers()) {
