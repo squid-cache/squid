@@ -298,7 +298,7 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
             ])
           ])
         ])
-        squid_build_info="Git branch: ${squid_git_branch:-unavailable} revision ${squid_git_revno:-unavailable}"
+        squid_build_info="Git: branch ${squid_git_branch:-unavailable} revision ${squid_git_revno:-unavailable}"
       ],
       [squid_build_info=$enableval]
     )
