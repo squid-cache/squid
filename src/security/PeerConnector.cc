@@ -712,12 +712,12 @@ Security::PeerConnector::computeMissingCertificateUrls(const Connection &sconn)
     }
     debugs(83, 5, "server certificates: " << sk_X509_num(certs));
 
-    const auto futureContext = peerContext();
-    if (!futureContext) {
+    const auto optionalContext = peerContext();
+    if (!optionalContext) {
         debugs(83, 3, "cannot compute due to disabled TLS support");
         return false;
     }
-    const auto ctx = futureContext->raw;
+    const auto ctx = optionalContext->raw;
     if (!Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, *certs, ctx))
         return false; // missingChainCertificatesUrls() reports the exact reason
 
