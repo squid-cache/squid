@@ -22,7 +22,6 @@
 #include <bitset>
 
 Security::PeerOptions Security::ProxyOutgoingConfig;
-Security::FuturePeerContextPointer Security::DefaultOutgoingContext;
 
 Security::PeerOptions::PeerOptions()
 {

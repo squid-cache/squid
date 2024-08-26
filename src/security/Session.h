@@ -31,10 +31,9 @@
 
 namespace Security {
 
-// XXX: Should be in src/security/forward.h (which should not include us because
-// that #include creates a circular reference and problems like this).
+// XXX: Should be only in src/security/forward.h (which should not include us
+// because that #include creates a circular reference and problems like this).
 class FuturePeerContext;
-using FuturePeerContextPointer = RefCount<FuturePeerContext>;
 
 /// Creates TLS Client connection structure (aka 'session' state) and initializes TLS/SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns false.

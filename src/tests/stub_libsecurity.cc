@@ -27,7 +27,7 @@ BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &, const Comm::Connect
 {STUB_NOP}
 
 bool BlindPeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
-FuturePeerContextPointer BlindPeerConnector::peerContext() const STUB_RETVAL(FuturePeerContextPointer())
+FuturePeerContext *BlindPeerConnector::peerContext() const STUB_RETVAL(nullptr)
 void BlindPeerConnector::noteNegotiationDone(ErrorState *) STUB
 }
 
@@ -111,7 +111,6 @@ EncryptorAnswer &PeerConnector::answer() STUB_RETREF(EncryptorAnswer)
 
 #include "security/PeerOptions.h"
 Security::PeerOptions Security::ProxyOutgoingConfig;
-Security::FuturePeerContextPointer Security::DefaultOutgoingContext;
 
 Security::PeerOptions::PeerOptions() {
 #if USE_OPENSSL

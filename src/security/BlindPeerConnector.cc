@@ -20,14 +20,14 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 
-Security::FuturePeerContextPointer
+Security::FuturePeerContext *
 Security::BlindPeerConnector::peerContext() const
 {
     const auto peer = serverConnection()->getPeer();
     if (peer && peer->secure.encryptTransport)
-        return peer->peerContext();
+        return peer->securityContext();
 
-    return DefaultOutgoingContext;
+    return Config.ssl_client.defaultPeerContext;
 }
 
 bool

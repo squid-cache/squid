@@ -130,8 +130,9 @@ protected:
     /// \param error if not NULL the SSL negotiation was aborted with an error
     virtual void noteNegotiationDone(ErrorState *) {}
 
-    /// peer's security context; never nil
-    virtual FuturePeerContextPointer peerContext() const = 0;
+    /// peer's security context
+    /// \returns nil if Squid is built without TLS support (XXX: Prevent PeerConnector creation in those cases instead)
+    virtual FuturePeerContext *peerContext() const = 0;
 
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }

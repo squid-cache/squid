@@ -142,10 +142,10 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceGuess() const
     return Ssl::bumpSplice;
 }
 
-Security::FuturePeerContextPointer
+Security::FuturePeerContext *
 Ssl::PeekingPeerConnector::peerContext() const
 {
-    return Security::DefaultOutgoingContext;
+    return ::Config.ssl_client.defaultPeerContext;
 }
 
 bool

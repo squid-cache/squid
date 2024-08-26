@@ -54,11 +54,7 @@ public:
     /* Security::PeerConnector API */
     bool initialize(Security::SessionPointer &) override;
     void noteNegotiationDone(ErrorState *error) override;
-    Security::FuturePeerContextPointer peerContext() const override {
-        // XXX: We should be able to keep the options part constant.
-        auto &cfg = const_cast<Adaptation::ServiceConfig&>(icapService->cfg());
-        return new Security::FuturePeerContext(cfg.secure, icapService->sslContext);
-    }
+    Security::FuturePeerContext *peerContext() const override { return &icapService->tlsContext; }
 
 private:
     /* Acl::ChecklistFiller API */

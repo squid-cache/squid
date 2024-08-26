@@ -163,9 +163,6 @@ public:
 /// configuration options for DIRECT server access
 extern PeerOptions ProxyOutgoingConfig;
 
-/// XXX: future Config.ssl_client.defaultContext
-extern FuturePeerContextPointer DefaultOutgoingContext;
-
 } // namespace Security
 
 // parse the tls_outgoing_options directive
