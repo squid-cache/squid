@@ -23,7 +23,7 @@ ACLStringData::insert(const char *value)
 bool
 ACLStringData::match(const SBuf &tf)
 {
-    if (stringValues.empty() || tf.isEmpty())
+    if (stringValues.empty())
         return 0;
 
     debugs(28, 3, "aclMatchStringList: checking '" << tf << "'");
@@ -38,6 +38,11 @@ ACLStringData::match(const SBuf &tf)
 bool
 ACLStringData::match(char const *toFind)
 {
+    if (!toFind) {
+        // TODO: Check whether we can Assure(toFind) instead.
+        debugs(28, 3, "not matching a nil c-string");
+        return false;
+    }
     return match(SBuf(toFind));
 }
 

@@ -343,7 +343,7 @@ AppendTokens(NotePairs::Entries &entries, const SBuf &key, const SBuf &val, cons
     while (tok.token(v, delimiters))
         entries.push_back(new NotePairs::Entry(key, v));
     v = tok.remaining();
-    if (!v.isEmpty())
+    if (!v.isEmpty() || entries.empty())
         entries.push_back(new NotePairs::Entry(key, v));
 }
 
