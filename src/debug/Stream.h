@@ -203,6 +203,11 @@ void ResyncDebugLog(FILE *newDestination);
         } \
    } while (/*CONSTCOND*/ 0)
 
+/// Convenience wrapper for displaying protocol message flow in cache.log
+#define traceProtocol(SECTION, LABEL, ID, MESSAGE) \
+    debugs(SECTION, 2, LABEL << ": " << ID << \
+           "\n----------\n" << MESSAGE << "\n----------")
+
 /// Does not change the stream being manipulated. Exists for its side effect:
 /// In a debugs() context, forces the message to become a syslog ALERT.
 /// Outside of debugs() context, has no effect and should not be used.

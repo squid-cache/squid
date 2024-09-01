@@ -1185,8 +1185,15 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, Ip::Address &from
         return;
     }
 
-    debugs(31, 2, "HTCP TST request: " << s->method << " " << s->uri << " " << s->version);
-    debugs(31, 2, "HTCP TST headers: " << s->req_hdrs);
+    traceProtocol(31, "HTCP Client REQUEST", from,
+                  " opcode=" << dhdr->opcode << " " << htcpOpcodeStr[dhdr->opcode] <<
+                  " response=" << dhdr->response <<
+                  " F1=" << dhdr->F1 <<
+                  " RR=" << dhdr->RR <<
+                  " msg_id=" << dhdr->msg_id << "\n" <<
+                  s->method << " " << s->uri << " " << s->version << "\n" <<
+                  s->req_hdrs);
+
     s->checkHit();
 }
 
@@ -1242,8 +1249,14 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
         return;
     }
 
-    debugs(31, 2, "HTCP CLR request: " << s->method << " " << s->uri << " " << s->version);
-    debugs(31, 2, "HTCP CLR headers: " << s->req_hdrs);
+    traceProtocol(31, "HTCP Client REQUEST", from,
+                  " opcode=" << hdr->opcode << " " << htcpOpcodeStr[hdr->opcode] <<
+                  " response=" << hdr->response <<
+                  " F1=" << hdr->F1 <<
+                  " RR=" << hdr->RR <<
+                  " msg_id=" << hdr->msg_id << "\n" <<
+                  s->method << " " << s->uri << " " << s->version << "\n" <<
+                  s->req_hdrs);
 
     /* Release objects from cache
      * analog to clientPurgeRequest in client_side.c
