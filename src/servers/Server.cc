@@ -146,6 +146,7 @@ Server::doClientRead(const CommIoCbParams &io)
 
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
+    Assure(Config.maxRequestBufferSize > inBuf.length());
     rd.size = Config.maxRequestBufferSize - inBuf.length();
 
     switch (Comm::ReadNow(rd, inBuf)) {
