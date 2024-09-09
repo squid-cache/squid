@@ -442,6 +442,7 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
 
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
+    rd.size = SQUID_TCP_SO_RCVBUF - readBuf.length();
 
     switch (Comm::ReadNow(rd, readBuf)) {
     case Comm::INPROGRESS:
