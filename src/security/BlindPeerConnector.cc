@@ -20,14 +20,14 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 
-Security::ContextPointer
-Security::BlindPeerConnector::getTlsContext()
+Security::FuturePeerContextPointer
+Security::BlindPeerConnector::peerContext() const
 {
-    const CachePeer *peer = serverConnection()->getPeer();
+    const auto peer = serverConnection()->getPeer();
     if (peer && peer->secure.encryptTransport)
-        return peer->sslContext;
+        return peer->peerContext();
 
-    return ::Config.ssl_client.sslContext;
+    return tlsContext_ ? tlsContext_ : DefaultOutgoingContext;
 }
 
 bool
@@ -88,11 +88,12 @@ Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
 
 Security::BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &aRequest,
         const Comm::ConnectionPointer &aServerConn,
+        const Security::FuturePeerContextPointer &aPeerContextPointer,
         const AsyncCallback<EncryptorAnswer> &aCallback,
         const AccessLogEntryPointer &alp,
         time_t timeout) :
     AsyncJob("Security::BlindPeerConnector"),
-    Security::PeerConnector(aServerConn, aCallback, alp, timeout)
+    Security::PeerConnector(aServerConn, aPeerContextPointer, aCallback, alp, timeout)
 {
     request = aRequest;
 }

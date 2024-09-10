@@ -44,6 +44,9 @@ public:
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
+    /// TLS settings for communicating with this TLS cache_peer (or nil)
+    Security::FuturePeerContextPointer peerContext();
+
     /// n-th cache_peer directive, starting with 1
     u_int index = 0;
 

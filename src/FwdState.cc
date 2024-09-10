@@ -467,6 +467,8 @@ FwdState::fail(ErrorState * errorState)
 
     if (err->type == ERR_ZERO_SIZE_OBJECT)
         reactToZeroSizeObject();
+    else if (err->type == ERR_SECURE_CONNECT_FAIL)
+        reactToSecureConnectFailure();
 
     destinationReceipt = nullptr; // may already be nil
 }
@@ -490,6 +492,49 @@ FwdState::reactToZeroSizeObject()
         pinned_connection->pinning.zeroReply = true;
         debugs(17, 4, "zero reply on pinned connection");
     }
+}
+
+/// ERR_SECURE_CONNECT_FAIL may require special adjustments
+void
+FwdState::reactToSecureConnectFailure()
+{
+    if (!Config.ssl_client.retriesContexts)
+        return; // admin did not enable ERR_SECURE_CONNECT_FAIL retries
+
+    if (!destinationReceipt) {
+        debugs(17, DBG_CRITICAL, "ERROR: Squid BUG: destinationReceipt loss prevents ERR_SECURE_CONNECT_FAIL retries");
+        return;
+    }
+
+    if (const auto cachePeer = destinationReceipt->getPeer()) {
+        if (cachePeer->secure.encryptTransport) {
+            debugs(17, 5, "will not retry a connection to TLS cache_peer: " << destinationReceipt);
+            return;
+        }
+        // else: ERR_SECURE_CONNECT_FAIL implies that we were just tunneling
+        // through a plain-text cache_peer to a TLS origin server and may need
+        // to retry that TLS connection to the origin server with new options.
+    }
+
+    if (destinationReceipt.tlsContext()) {
+        debugs(17, 3, "will not retry twice: " << destinationReceipt);
+        return;
+    }
+
+    ACLFilledChecklist ch(nullptr, request, nullptr);
+    ch.al = al;
+    ch.syncAle(request, nullptr);
+    ch.dst_peer_name = destinationReceipt->getPeer() ? destinationReceipt->getPeer()->name : nullptr;
+    ch.dst_addr = destinationReceipt->remote;
+    const auto matchingContext = Config.ssl_client.retriesContexts->findContext(ch);
+    if (!matchingContext) {
+        debugs(17, 3, "no TLS options to retry with: " << destinationReceipt);
+        return;
+    }
+
+    debugs(17, 3, "will retry the same destination with custom TLS options: " << destinationReceipt);
+    destinations->reinstatePath(destinationReceipt, matchingContext);
+    destinationReceipt = nullptr;
 }
 
 /**
@@ -998,13 +1043,14 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
     HttpRequest::Pointer requestPointer = request;
     const auto callback = asyncCallback(17, 4, FwdState::connectedToPeer, this);
     const auto sslNegotiationTimeout = connectingTimeout(conn);
+    const auto &tlsContext = PassThroughFuture(destinationReceipt.tlsContext());
     Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
     if (request->flags.sslPeek)
-        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, callback, al, sslNegotiationTimeout);
+        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, tlsContext, clientConn, callback, al, sslNegotiationTimeout);
     else
 #endif
-        connector = new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout);
+        connector = new Security::BlindPeerConnector(requestPointer, conn, tlsContext, callback, al, sslNegotiationTimeout);
     connector->noteFwdPconnUse = true;
     encryptionWait.start(connector, callback);
 }

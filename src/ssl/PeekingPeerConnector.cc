@@ -27,12 +27,13 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 
 Ssl::PeekingPeerConnector::PeekingPeerConnector(HttpRequestPointer &aRequest,
         const Comm::ConnectionPointer &aServerConn,
+        const Security::FuturePeerContextPointer &aPeerContextPointer,
         const Comm::ConnectionPointer &aClientConn,
         const AsyncCallback<Security::EncryptorAnswer> &aCallback,
         const AccessLogEntryPointer &alp,
         const time_t timeout):
     AsyncJob("Ssl::PeekingPeerConnector"),
-    Security::PeerConnector(aServerConn, aCallback, alp, timeout),
+    Security::PeerConnector(aServerConn, aPeerContextPointer, aCallback, alp, timeout),
     clientConn(aClientConn),
     splice(false),
     serverCertificateHandled(false)
@@ -140,10 +141,10 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceGuess() const
     return Ssl::bumpSplice;
 }
 
-Security::ContextPointer
-Ssl::PeekingPeerConnector::getTlsContext()
+Security::FuturePeerContextPointer
+Ssl::PeekingPeerConnector::peerContext() const
 {
-    return ::Config.ssl_client.sslContext;
+    return tlsContext_ ? tlsContext_ : Security::DefaultOutgoingContext;
 }
 
 bool
@@ -197,9 +198,6 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             srvBio->recordInput(true);
             srvBio->mode(csd->sslBumpMode);
         } else {
-            // Set client SSL options
-            ::Security::ProxyOutgoingConfig.updateSessionOptions(serverSession);
-
             const bool redirected = request->flags.redirected && ::Config.onoff.redir_rewrites_host;
             const char *sniServer = (!hostName || redirected) ?
                                     request->url.host() :

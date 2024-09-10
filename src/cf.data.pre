@@ -3083,6 +3083,82 @@ DOC_START
 			used.
 DOC_END
 
+NAME: tls_outgoing_options_for_retries
+IFDEF: USE_GNUTLS||USE_OPENSSL
+TYPE: Security::PeerContexts*
+REPETITIONS: update
+DEFAULT: none
+DEFAULT_DOC: Do not retry the same destination after ERR_SECURE_CONNECT_FAIL.
+LOC: Config.ssl_client.retriesContexts
+DOC_START
+
+	Enables same-destination retries (with new custom TLS options) after
+	ERR_SECURE_CONNECT_FAIL.
+
+		tls_outgoing_options_for_retries <option>... [if [!]<acl>...]
+
+	See tls_outgoing_options for documentation of recognized options,
+	including "ciphers=..." and "cafile=...".
+
+	This directive is consulted whenever an attempt to establish a TLS
+	connection with an origin server fails with ERR_SECURE_CONNECT_FAIL:
+
+	* If no rules are configured or if no configured rules matched, Squid does
+	  not treat ERR_SECURE_CONNECT_FAIL outcome specially (i.e. Squid may
+	  still attempt to reforward the request to a different IP address, using
+	  regular reforwarding logic).
+
+	* If the failed destination IP address was already tried with custom TLS
+	  options (from the previous tls_outgoing_options_for_retries match),
+	  Squid stops treating ERR_SECURE_CONNECT_FAIL outcome specially: Squid
+	  does _not_ attempt to find another set of custom TLS options to retry
+	  the same failed destination with.
+
+	* Otherwise, if a configured rule matches, Squid returns the failed
+	  destination IP address to the set of candidate addresses to consider,
+	  together with the corresponding custom TLS options. During the
+	  subsequent reforwarding attempt (if any), that destination will usually
+	  be chosen by the Happy Eyeballs algorithm. If a reusable persistent
+	  connection to that destination is not available at that time, Squid will
+	  attempt to establish a new TCP connection and to negotiate a new TLS
+	  session using the previously matched custom TLS options.
+
+	Directives are evaluated in configuration order. The first matching
+	directive wins and stops further evaluation. A directive without ACLs
+	always matches when evaluated.
+
+	This directive has no effect on TLS cache_peers. Admins should use
+	cache_peer directives to customize TLS settings for those connections.
+	However, TLS connections through plain-text cache_peers may be retried.
+
+	This directive is handy in environments where Squid should communicate
+	using strict TLS options by default (see tls_outgoing_options) but may
+	relax those restrictions to accommodate older origin servers that require
+	inferior (but still deemed "secure enough") settings.
+
+	Popular browsers also retry with special TLS options after certain TLS
+	failures, but Squid may be unable to relay enough TLS server information
+	to rely on browser-initiated retries or may be dealing with a user agent
+	that does not retry (to Squid admin's satisfaction).
+
+	This directive is meant for environments where using any configured TLS
+	options variant is acceptable to the admin: Squid does not yet check
+	whether the available same-destination persistent connection has matching
+	TLS options. Similarly, Squid does not yet check whether the matched
+	custom TLS options differ from the options used for the first attempt.
+	Such verification may be unconditionally enabled later.
+
+	The following configuration sketch illustrates how to downgrade TLS
+	security level for transactions matching some custom shouldRetry ACL:
+
+		acl shouldRetry ...
+		tls_outgoing_options cipher=ALL@SECLEVEL=4
+		tls_outgoing_options_for_retries cipher=ALL@SECLEVEL=3 if shouldRetry
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+DOC_END
+
 COMMENT_START
  SSL OPTIONS
  -----------------------------------------------------------------------------

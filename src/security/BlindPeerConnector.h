@@ -17,12 +17,13 @@ class ErrorState;
 namespace Security
 {
 
-/// A simple PeerConnector for SSL/TLS cache_peers. No SslBump capabilities.
+/// A PeerConnector for TLS cache_peers and origin servers. No SslBump capabilities.
 class BlindPeerConnector: public Security::PeerConnector {
     CBDATA_CHILD(BlindPeerConnector);
 public:
     BlindPeerConnector(HttpRequestPointer &aRequest,
                        const Comm::ConnectionPointer &aServerConn,
+                       const Security::FuturePeerContextPointer &,
                        const AsyncCallback<EncryptorAnswer> &aCallback,
                        const AccessLogEntryPointer &alp,
                        time_t timeout = 0);
@@ -35,8 +36,7 @@ public:
     /// \returns true on successful initialization
     bool initialize(Security::SessionPointer &) override;
 
-    /// Return the configured TLS context object
-    Security::ContextPointer getTlsContext() override;
+    FuturePeerContextPointer peerContext() const override;
 
     /// On success, stores the used TLS session for later use.
     /// On error, informs the peer.
