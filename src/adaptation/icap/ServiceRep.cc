@@ -32,6 +32,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ServiceRep);
 
 Adaptation::Icap::ServiceRep::ServiceRep(const ServiceConfigPointer &svcCfg):
     AsyncJob("Adaptation::Icap::ServiceRep"), Adaptation::Service(svcCfg),
+    tlsContext(writeableCfg().secure, sslContext),
     theOptions(nullptr), theOptionsFetcher(nullptr), theLastUpdate(0),
     theBusyConns(0),
     theAllWaiters(0),

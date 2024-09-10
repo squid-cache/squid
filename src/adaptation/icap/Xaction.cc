@@ -54,9 +54,7 @@ public:
     /* Security::PeerConnector API */
     bool initialize(Security::SessionPointer &) override;
     void noteNegotiationDone(ErrorState *error) override;
-    Security::ContextPointer getTlsContext() override {
-        return icapService->sslContext;
-    }
+    Security::FuturePeerContext *peerContext() const override { return &icapService->tlsContext; }
 
 private:
     /* Acl::ChecklistFiller API */

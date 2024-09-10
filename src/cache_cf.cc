@@ -973,6 +973,7 @@ configDoConfigure(void)
 #if USE_OPENSSL
         Ssl::useSquidUntrusted(Config.ssl_client.sslContext.get());
 #endif
+        Config.ssl_client.defaultPeerContext = new Security::FuturePeerContext(Security::ProxyOutgoingConfig, Config.ssl_client.sslContext);
     }
 
     for (const auto &p: CurrentCachePeers()) {
@@ -3913,6 +3914,8 @@ configFreeMemory(void)
 {
     free_all();
     Dns::ResolveClientAddressesAsap = false;
+    delete Config.ssl_client.defaultPeerContext;
+    Config.ssl_client.defaultPeerContext = nullptr;
     Config.ssl_client.sslContext.reset();
 #if USE_OPENSSL
     Ssl::unloadSquidUntrusted();

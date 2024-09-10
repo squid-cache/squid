@@ -112,6 +112,8 @@ public: // treat these as private, they are for callbacks only
     void noteAdaptationAnswer(const Answer &answer) override;
 
     Security::ContextPointer sslContext;
+    // TODO: Remove sslContext above when FuturePeerContext below becomes PeerContext
+    Security::FuturePeerContext tlsContext;
     Security::SessionStatePointer sslSession;
 
 private:

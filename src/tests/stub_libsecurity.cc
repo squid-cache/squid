@@ -27,7 +27,7 @@ BlindPeerConnector::BlindPeerConnector(HttpRequestPointer &, const Comm::Connect
 {STUB_NOP}
 
 bool BlindPeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
-Security::ContextPointer BlindPeerConnector::getTlsContext() STUB_RETVAL(Security::ContextPointer())
+FuturePeerContext *BlindPeerConnector::peerContext() const STUB_RETVAL(nullptr)
 void BlindPeerConnector::noteNegotiationDone(ErrorState *) STUB
 }
 
@@ -100,7 +100,6 @@ void PeerConnector::handleNegotiationResult(const Security::IoResult &) STUB;
 void PeerConnector::noteWantRead() STUB
 void PeerConnector::noteWantWrite() STUB
 void PeerConnector::noteNegotiationError(const Security::ErrorDetailPointer &) STUB
-//    virtual Security::ContextPointer getTlsContext() = 0;
 void PeerConnector::bail(ErrorState *) STUB
 void PeerConnector::sendSuccess() STUB
 void PeerConnector::callBack() STUB
@@ -112,6 +111,7 @@ EncryptorAnswer &PeerConnector::answer() STUB_RETREF(EncryptorAnswer)
 
 #include "security/PeerOptions.h"
 Security::PeerOptions Security::ProxyOutgoingConfig;
+
 Security::PeerOptions::PeerOptions() {
 #if USE_OPENSSL
     parsedOptions = 0;
@@ -147,7 +147,7 @@ void Security::ServerOptions::updateContextSessionId(Security::ContextPointer &)
 
 #include "security/Session.h"
 namespace Security {
-bool CreateClientSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *) STUB_RETVAL(false)
+bool CreateClientSession(FuturePeerContext &, const Comm::ConnectionPointer &, const char *) STUB_RETVAL(false)
 bool CreateServerSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, Security::PeerOptions &, const char *) STUB_RETVAL(false)
 void SessionSendGoodbye(const Security::SessionPointer &) STUB
 bool SessionIsResumed(const Security::SessionPointer &) STUB_RETVAL(false)

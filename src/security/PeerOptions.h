@@ -147,6 +147,19 @@ public:
     bool encryptTransport = false;
 };
 
+// XXX: Remove this shim after upgrading legacy code to store PeerContext
+// objects instead of disjoint PeerOptons and Context objects (where PeerContext
+// is a class that creates and manages {PeerOptions, ContextPointer} pair).
+/// A combination of PeerOptions and the corresponding Context.
+class FuturePeerContext
+{
+public:
+    FuturePeerContext(PeerOptions &o, const ContextPointer &c): options(o), raw(c) {}
+
+    PeerOptions &options; ///< TLS context configuration
+    const ContextPointer &raw; ///< TLS context configured using options
+};
+
 /// configuration options for DIRECT server access
 extern PeerOptions ProxyOutgoingConfig;
 
