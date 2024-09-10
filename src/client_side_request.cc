@@ -758,7 +758,7 @@ ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
             status = Http::scForbidden;
 #endif
             if (page_id == ERR_NONE)
-                page_id = ERR_CACHE_ACCESS_DENIED;
+                page_id = (status == Http::scForbidden) ? ERR_ACCESS_DENIED : ERR_CACHE_ACCESS_DENIED;
         } else {
             status = Http::scForbidden;
 
