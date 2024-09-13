@@ -858,6 +858,7 @@ nodist_tests_testClpMap_SOURCES = \
 	tests/stub_libip.cc \
 	tests/stub_libtime.cc
 tests_testClpMap_LDADD = \
+	SquidConfig.o \
 	mem/libminimal.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
@@ -2146,6 +2147,7 @@ nodist_tests_testHttpReply_SOURCES = \
 	tests/stub_libtime.cc
 tests_testHttpReply_LDADD=\
 	CommCalls.o \
+	SquidConfig.o \
 	http/libhttp.la \
 	parser/libparser.la \
 	acl/libacls.la \
