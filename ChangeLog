@@ -1,4 +1,4 @@
-Changes in squid-6.11 (18 Aug 2024)
+Changes in squid-6.11 (15 Sep 2024)
 	- Fix Kerberos detection when cross-compiling
 	- Improve robustness of DNS code on reconfigure
 	- Prevent slow memory leak in TCP DNS queries
