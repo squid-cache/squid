@@ -10,6 +10,8 @@
 #include "compat/cppunit.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "unitTestMain.h"
 
 #include <cstring>
@@ -48,6 +50,7 @@ class TestIpAddress : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testtoUrl_fromSockAddr);
     CPPUNIT_TEST(testgetReverseString);
     CPPUNIT_TEST(testMasking);
+    CPPUNIT_TEST(testAddressText);
 
     CPPUNIT_TEST(testBugNullingDisplay);
     CPPUNIT_TEST_SUITE_END();
@@ -72,6 +75,7 @@ protected:
     void testtoStr();
     void testtoUrl_fromInAddr();
     void testtoUrl_fromSockAddr();
+    void testAddressText();
     void testgetReverseString();
     void testMasking();
 
@@ -465,24 +469,23 @@ void
 TestIpAddress::testtoStr()
 {
     struct in_addr inval;
-    char buf[MAX_IPSTRLEN];
     Ip::Address anIPA;
 
     anIPA.setAnyAddr();
 
     /* test AnyAddr display values */
-    CPPUNIT_ASSERT( memcmp("::", anIPA.toStr(buf,MAX_IPSTRLEN), 2) == 0 );
+    CPPUNIT_ASSERT_EQUAL(SBuf("::"), ToSBuf(anIPA.asText().bracketed(false)));
 
     inval.s_addr = htonl(0xC0A8640C);
     anIPA = inval;
 
     /* test IP display */
-    CPPUNIT_ASSERT( memcmp("192.168.100.12",anIPA.toStr(buf,MAX_IPSTRLEN), 14) == 0 );
+    CPPUNIT_ASSERT_EQUAL(SBuf("192.168.100.12"), ToSBuf(anIPA.asText()));
 
     anIPA.setNoAddr();
 
     /* test NoAddr display values */
-    CPPUNIT_ASSERT( memcmp("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",anIPA.toStr(buf,MAX_IPSTRLEN), 39) == 0 );
+    CPPUNIT_ASSERT_EQUAL(SBuf("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"), ToSBuf(anIPA.asText().bracketed(false)));
 }
 
 void
@@ -588,7 +591,6 @@ TestIpAddress::testgetReverseString()
 void
 TestIpAddress::testMasking()
 {
-    char buf[MAX_IPSTRLEN];
     Ip::Address anIPA;
     Ip::Address maskIPA;
 
@@ -617,8 +619,7 @@ TestIpAddress::testMasking()
     CPPUNIT_ASSERT_EQUAL( 80, anIPA.cidr() );
 
     /* BUG Check: test values by display. */
-    CPPUNIT_ASSERT( anIPA.toStr(buf,MAX_IPSTRLEN) != nullptr );
-    CPPUNIT_ASSERT( memcmp("ffff:ffff:ffff:ffff:ffff::", buf, 26) == 0 );
+    CPPUNIT_ASSERT_EQUAL(SBuf("ffff:ffff:ffff:ffff:ffff::"), ToSBuf(anIPA.asText().bracketed(false)) );
 
     /* Test Network Bitmask from Ip::Address */
     anIPA.setNoAddr();
@@ -635,7 +636,7 @@ TestIpAddress::testMasking()
     CPPUNIT_ASSERT_EQUAL( (uint32_t)htonl(0xFFFFF000), btest.s_addr );
 
     /* BUG Check failing test. Masked values for display. */
-    CPPUNIT_ASSERT( memcmp("255.255.240.0",anIPA.toStr(buf,MAX_IPSTRLEN), 13) == 0 );
+    CPPUNIT_ASSERT_EQUAL(SBuf("255.255.240.0"), ToSBuf(anIPA.asText()));
 
     anIPA.setNoAddr();
     maskIPA.setNoAddr();
@@ -797,6 +798,56 @@ TestIpAddress::testBugNullingDisplay()
     anIPA.getInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
 
+}
+
+void
+TestIpAddress::testAddressText()
+{
+    std::vector<const char *> testAddresses = {
+        "192.168.100.12",
+        "2000:800::45",
+        "::",
+        "0.0.0.0",
+        "::1",
+        "::ffff:192.168.100.12",
+    };
+
+    std::vector<unsigned short int> testPorts = {
+        0,
+        1,
+        1024,
+        65535,
+    };
+
+    for (const auto p : testPorts) {
+        for (const auto& a : testAddresses) {
+            Ip::Address addr(a);
+            addr.port(p);
+
+            static char buf[MAX_IPSTRLEN];
+            SBufStream ss;
+
+            ss << Ip::AddressText(addr).bracketed(false).withPort(false);
+            addr.toStr(buf, MAX_IPSTRLEN);
+            CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
+            ss.clearBuf();
+
+            ss << Ip::AddressText(addr).bracketed(true).withPort(true);
+            addr.toUrl(buf, MAX_IPSTRLEN);
+            CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
+            ss.clearBuf();
+
+            ss << Ip::AddressText(addr).withPort(true);
+            addr.toUrl(buf, MAX_IPSTRLEN);
+            CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
+            ss.clearBuf();
+
+            ss << Ip::AddressText(addr);
+            addr.toHostStr(buf, MAX_IPSTRLEN);
+            CPPUNIT_ASSERT_EQUAL(SBuf(buf), ss.buf());
+            ss.clearBuf();
+        }
+    }
 }
 
 int
