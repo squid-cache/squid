@@ -1,3 +1,10 @@
+Changes in squid-6.11 (15 Sep 2024)
+	- Fix Kerberos detection when cross-compiling
+	- Improve robustness of DNS code on reconfigure
+	- Prevent slow memory leak in TCP DNS queries
+	- Improve errors emitted when invalid ACLs are parsed
+	- Remove some unused code and obsolete compatiblity hacks
+
 Changes in squid-6.10 (10 Jun 2024)
 	- Bug 5378: type mismatch in libTrie
 	- Disable ESI in default build
