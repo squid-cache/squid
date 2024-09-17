@@ -117,6 +117,9 @@ dnl Libtool 2.2.6 requires: rm -f
 RM="$RM -f"
 
 PKG_PROG_PKG_CONFIG
+AS_IF([test -z "$PKG_CONFIG"],[
+  AC_MSG_ERROR([pkg-config is required to compile Squid. Please install and then re-run configure ])
+])
 
 AC_PATH_PROG(PERL, perl, none)
 AS_IF([test "x$ac_cv_path_PERL" = "xnone"],[
