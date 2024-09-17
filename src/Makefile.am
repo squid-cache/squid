@@ -16,7 +16,31 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = mem time debug base anyp helper dns html ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+# subdir Y that requires a file built in subdir X must appear after X
+SUBDIRS = \
+	mem \
+	time \
+	debug \
+	base \
+	anyp \
+	helper \
+	dns \
+	html \
+	ftp \
+	parser \
+	comm \
+	error \
+	eui \
+	sbuf \
+	acl \
+	format \
+	clients \
+	servers \
+	fs \
+	repl \
+	store \
+	DiskIO \
+	proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -24,7 +48,13 @@ AUTH_LIBS= auth/libauth.la
 AUTH_ACL_LIBS= auth/libacls.la
 endif
 
-SUBDIRS	+= http ip icmp log ipc mgr
+SUBDIRS += \
+	http \
+	ip \
+	icmp \
+	log \
+	ipc \
+	mgr
 
 SSL_LIBS=
 if ENABLE_SSL

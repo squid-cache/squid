@@ -36,7 +36,7 @@ Acl::NotNode::doMatch(ACLChecklist *checklist, Nodes::const_iterator start) cons
 {
     assert(start == nodes.begin()); // we only have one node
 
-    if (checklist->matchChild(this, start, *start))
+    if (checklist->matchChild(this, start))
         return 0; // converting match into mismatch
 
     if (!checklist->keepMatching())
@@ -72,7 +72,7 @@ Acl::AndNode::doMatch(ACLChecklist *checklist, Nodes::const_iterator start) cons
 {
     // find the first node that does not match
     for (Nodes::const_iterator i = start; i != nodes.end(); ++i) {
-        if (!checklist->matchChild(this, i, *i))
+        if (!checklist->matchChild(this, i))
             return checklist->keepMatching() ? 0 : -1;
     }
 
@@ -110,7 +110,7 @@ Acl::OrNode::doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const
     for (Nodes::const_iterator i = start; i != nodes.end(); ++i) {
         if (bannedAction(checklist, i))
             continue;
-        if (checklist->matchChild(this, i, *i)) {
+        if (checklist->matchChild(this, i)) {
             lastMatch_ = i;
             return 1;
         }

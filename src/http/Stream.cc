@@ -293,7 +293,7 @@ Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
             ACLFilledChecklist chl(pool->access, nullptr);
             clientAclChecklistFill(chl, http);
             chl.updateReply(rep);
-            const auto answer = chl.fastCheck();
+            const auto &answer = chl.fastCheck();
             if (answer.allowed()) {
                 writeQuotaHandler = pool->createBucket();
                 fd_table[clientConnection->fd].writeQuotaHandler = writeQuotaHandler;

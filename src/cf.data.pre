@@ -1089,7 +1089,7 @@ DOC_END
 
 NAME: acl
 TYPE: acl
-LOC: Config.aclList
+LOC: Config.namedAcls
 IF USE_OPENSSL
 DEFAULT: ssl::certHasExpired ssl_error X509_V_ERR_CERT_HAS_EXPIRED
 DEFAULT: ssl::certNotYetValid ssl_error X509_V_ERR_CERT_NOT_YET_VALID
@@ -4954,10 +4954,34 @@ DOC_START
 		[http::]<pt	Peer response time in milliseconds. The timer starts
 				when the last request byte is sent to the next hop
 				and stops when the last response byte is received.
-		[http::]<tt	Total time in milliseconds. The timer
-				starts with the first connect request (or write I/O)
-				sent to the first selected peer. The timer stops
-				with the last I/O with the last peer.
+		[http::]<tt	Total time spent forwarding to origin servers or
+				cache_peers (milliseconds).
+
+				The timer starts when Squid decides to forward the request (to
+				an origin server or cache_peer) and peer selection begins. The
+				timer stops when relevant forwarding activities (including any
+				retries) end.
+
+				Between those two timer events, Squid may perform DNS lookups,
+				query external ACL helpers, adapt responses using pre-cache
+				RESPMOD services, and participate in other concurrent
+				secondary activities. Most secondary activities increase
+				peering time. In some cases, a secondary activity may start
+				before the timer starts or end after the timer stops, leading
+				to misleading results of simple computations like %<tt - %dt.
+
+				If this logformat %code is used before its timer starts, the
+				corresponding measurement has no value (and the %code expands
+				to a single dash ("-") character).
+
+				If this code is used while its timer is running, the time
+				spent so far is used as the measurement value.
+
+				When Squid re-forwards the request (e.g., after certain cache
+				revalidation failures), the timer may restart. In this case,
+				the new measurement is added to the value accumulated from
+				previous forwarding attempts. The time interval between
+				forwarding attempts is not added to the final result.
 
 	Squid handling related format codes:
 

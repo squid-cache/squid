@@ -7,7 +7,9 @@
 
 include $(top_srcdir)/src/Common.am
 
-DIST_SUBDIRS= DB file
+DIST_SUBDIRS = \
+	DB \
+	file
 SUBDIRS= $(LOG_DAEMON_HELPERS)
 EXTRA_DIST= helpers.m4
 

@@ -20,14 +20,23 @@
 #include "debug/Stream.h"
 #include "fatal.h"
 #include "globals.h"
+#include "mem/PoolingAllocator.h"
+#include "sbuf/Algorithms.h"
 #include "sbuf/List.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
 
 #include <algorithm>
 #include <map>
+#include <unordered_map>
 
 namespace Acl {
+
+/// parsed "acl aclname ..." directives indexed by aclname
+class NamedAcls: public std::unordered_map<SBuf, Acl::Node::Pointer,
+    CaseInsensitiveSBufHash, CaseInsensitiveSBufEqual,
+    PoolingAllocator< std::pair<const SBuf, Acl::Node::Pointer> > > {
+};
 
 /// Acl::Node type name comparison functor
 class TypeNameCmp {
@@ -52,11 +61,8 @@ Acl::Node *
 Make(TypeName typeName)
 {
     const auto pos = TheMakers().find(typeName);
-    if (pos == TheMakers().end()) {
-        debugs(28, DBG_CRITICAL, "FATAL: Invalid ACL type '" << typeName << "'");
-        self_destruct();
-        assert(false); // not reached
-    }
+    if (pos == TheMakers().end())
+        throw TextException(ToSBuf("invalid ACL type '", typeName, "'"), Here());
 
     auto *result = (pos->second)(pos->first);
     debugs(28, 4, typeName << '=' << result);
@@ -149,39 +155,29 @@ void Acl::Node::operator delete(void *)
     fatal ("unusable Acl::Node::delete");
 }
 
-/// implements both Acl::Node::FindByName() variations
-template <typename SBufOrCString>
-static Acl::Node *
-FindByNameT(const SBufOrCString name)
-{
-    for (auto a = Config.aclList; a; a = a->next) {
-        if (a->name.caseCmp(name) == 0) {
-            debugs(28, 8, "found " << a->name);
-            return a;
-        }
-    }
-
-    debugs(28, 8, "cannot find " << name);
-    return nullptr;
-}
-
 Acl::Node *
 Acl::Node::FindByName(const SBuf &name)
 {
-    return FindByNameT(name);
+    if (!Config.namedAcls) {
+        debugs(28, 8, "no named ACLs to find " << name);
+        return nullptr;
+    }
+
+    const auto result = Config.namedAcls->find(name);
+    if (result == Config.namedAcls->end()) {
+        debugs(28, 8, "no ACL named " << name);
+        return nullptr;
+    }
+
+    debugs(28, 8, result->second << " is named " << name);
+    assert(result->second);
+    return result->second.getRaw();
 }
 
-Acl::Node *
-Acl::Node::FindByName(const char *name)
+Acl::Node::Node()
 {
-    return FindByNameT(name);
+    debugs(28, 8, "constructing, this=" << this);
 }
-
-Acl::Node::Node() :
-    cfgline(nullptr),
-    next(nullptr),
-    registered(false)
-{}
 
 bool
 Acl::Node::valid() const
@@ -230,7 +226,7 @@ Acl::Node::context(const SBuf &aName, const char *aCfgLine)
 }
 
 void
-Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
+Acl::Node::ParseNamedAcl(ConfigParser &parser, NamedAcls *&namedAcls)
 {
     /* we're already using strtok() to grok the line */
     char *t = nullptr;
@@ -243,15 +239,18 @@ Acl::Node::ParseAclLine(ConfigParser &parser, Node ** head)
         return;
     }
 
+    if (!namedAcls)
+        namedAcls = new NamedAcls();
+
     SBuf aclname(t);
     CallParser(ParsingContext::Pointer::Make(aclname), [&] {
-        ParseNamed(parser, head, aclname);
+        ParseNamed(parser, *namedAcls, aclname);
     });
 }
 
 /// parses acl directive parts that follow aclname
 void
-Acl::Node::ParseNamed(ConfigParser &parser, Node ** const head, const SBuf &aclname)
+Acl::Node::ParseNamed(ConfigParser &parser, NamedAcls &namedAcls, const SBuf &aclname)
 {
     /* snarf the ACL type */
     const char *theType;
@@ -293,9 +292,9 @@ Acl::Node::ParseNamed(ConfigParser &parser, Node ** const head, const SBuf &acln
         theType = "client_connection_mark";
     }
 
-    Node *A = nullptr;
+    auto A = FindByName(aclname);
     int new_acl = 0;
-    if ((A = FindByName(aclname)) == nullptr) {
+    if (!A) {
         debugs(28, 3, "aclParseAclLine: Creating ACL '" << aclname << "'");
         A = Acl::Make(theType);
         A->context(aclname, config_input_line);
@@ -328,13 +327,27 @@ Acl::Node::ParseNamed(ConfigParser &parser, Node ** const head, const SBuf &acln
                A->cfgline);
     }
 
-    // add to the global list for searching explicit ACLs by name
-    assert(head && *head == Config.aclList);
-    A->next = *head;
-    *head = A;
+    const auto insertion = namedAcls.emplace(A->name, A);
+    Assure(insertion.second); // FindByName() above checked that A is a new ACL
+}
 
-    // register for centralized cleanup
-    aclRegister(A);
+void
+Acl::DumpNamedAcls(std::ostream &os, const char * const directiveName, NamedAcls * const namedAcls)
+{
+    if (namedAcls) {
+        for (const auto &nameAndAcl: *namedAcls) {
+            debugs(3, 3, directiveName << ' ' << nameAndAcl.first);
+            nameAndAcl.second->dumpWhole(directiveName, os);
+        }
+    }
+}
+
+void
+Acl::FreeNamedAcls(NamedAcls ** const namedAcls)
+{
+    assert(namedAcls);
+    delete *namedAcls;
+    *namedAcls = nullptr;
 }
 
 bool
@@ -450,19 +463,17 @@ Acl::Node::requiresRequest() const
 
 Acl::Node::~Node()
 {
-    debugs(28, 3, "freeing ACL " << name);
+    debugs(28, 8, "destructing " <<  name << ", this=" << this);
     safe_free(cfgline);
 }
 
 void
 Acl::Node::Initialize()
 {
-    auto *a = Config.aclList;
-    debugs(53, 3, "Acl::Node::Initialize");
-
-    while (a) {
-        a->prepareForUse();
-        a = a->next;
+    debugs(28, 3, (Config.namedAcls ? Config.namedAcls->size() : 0));
+    if (Config.namedAcls) {
+        for (const auto &nameAndAcl: *Config.namedAcls)
+            nameAndAcl.second->prepareForUse();
     }
 }
 

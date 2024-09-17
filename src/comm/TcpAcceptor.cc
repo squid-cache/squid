@@ -126,9 +126,8 @@ Comm::TcpAcceptor::status() const
     if (conn == nullptr)
         return "[nil connection]";
 
-    static char ipbuf[MAX_IPSTRLEN] = {'\0'};
-    if (ipbuf[0] == '\0')
-        conn->local.toHostStr(ipbuf, MAX_IPSTRLEN);
+    char ipbuf[MAX_IPSTRLEN];
+    conn->local.toHostStr(ipbuf, MAX_IPSTRLEN); // XXX: report port using toUrl()
 
     static MemBuf buf;
     buf.reset();

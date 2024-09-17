@@ -5,11 +5,41 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-for hdr in w32api/dsrole.h dsrole.h; do
+AC_CHECK_HEADERS([dsrole.h],[
+  # required API feature
   AC_COMPILE_IFELSE([
-    AC_LANG_PROGRAM([[#include <$hdr>]], [[
+    AC_LANG_PROGRAM([[
+#     if HAVE_WINDOWS_H
+#     include <windows.h>
+#     endif
+#     if HAVE_DSROLE_H
+#     include <dsrole.h>
+#     endif
+  ]], [[
       PDSROLE_PRIMARY_DOMAIN_INFO_BASIC pDSRoleInfo;
       DWORD ret = DsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, (PBYTE *) & pDSRoleInfo);
     ]])
-  ],[BUILD_HELPER="AD_group"],[])
-done
+  ],[BUILD_HELPER="AD_group"],[:])
+  # required headers
+  AC_CHECK_HEADERS([ \
+    objbase.h \
+    initguid.h \
+    adsiid.h \
+    iads.h \
+    adshlp.h \
+    adserr.h \
+    lm.h \
+    sddl.h
+  ],[:],[BUILD_HELPER=""],[
+#   if HAVE_WINDOWS_H
+#   include <windows.h>
+#   endif
+#   if HAVE_IADS_H
+#   include <iads.h>
+#   endif
+  ])
+],,[
+#  if HAVE_WINDOWS_H
+#  include <windows.h>
+#  endif
+])

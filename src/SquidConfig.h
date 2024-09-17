@@ -353,7 +353,7 @@ public:
 
     std::chrono::nanoseconds paranoid_hit_validation;
 
-    class Acl::Node *aclList;
+    Acl::NamedAcls *namedAcls; ///< acl aclname acltype ...
 
     struct {
         acl_access *http;
@@ -503,6 +503,8 @@ public:
     external_acl *externalAclHelperList;
 
     struct {
+        Security::FuturePeerContext *defaultPeerContext;
+        // TODO: Remove when FuturePeerContext above becomes PeerContext
         Security::ContextPointer sslContext;
 #if USE_OPENSSL
         char *foreignIntermediateCertsPath;

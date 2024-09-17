@@ -128,7 +128,8 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     waitingForDispatched(false),
     destinations(new ResolvedPeers()),
     pconnRace(raceImpossible),
-    storedWholeReply_(nullptr)
+    storedWholeReply_(nullptr),
+    peeringTimer(r)
 {
     debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
     HTTPMSGLOCK(request);
@@ -185,6 +186,8 @@ FwdState::stopAndDestroy(const char *reason)
     debugs(17, 3, "for " << reason);
 
     cancelStep(reason);
+
+    peeringTimer.stop();
 
     PeerSelectionInitiator::subscribed = false; // may already be false
     self = nullptr; // we hope refcounting destroys us soon; may already be nil
@@ -258,8 +261,6 @@ FwdState::completed()
     }
 
     flags.forward_completed = true;
-
-    request->hier.stopPeerClock(false);
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         debugs(17, 3, "entry aborted");
@@ -780,8 +781,6 @@ FwdState::retryOrBail()
     // TODO: should we call completed() here and move doneWithRetries there?
     doneWithRetries();
 
-    request->hier.stopPeerClock(false);
-
     if (self != nullptr && !err && shutting_down && entry->isEmpty()) {
         const auto anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request, al);
         errorAppendEntry(entry, anErr);
@@ -1127,8 +1126,6 @@ FwdState::connectStart()
     delete err;
     err = nullptr;
     request->clearError();
-
-    request->hier.startPeerClock();
 
     const auto callback = asyncCallback(17, 5, FwdState::noteConnection, this);
     HttpRequest::Pointer cause = request;
@@ -1570,5 +1567,27 @@ ResetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
         Ip::Qos::setSockTos(&conn, conn.tos);
     if (conn.nfmark)
         Ip::Qos::setSockNfmark(&conn, conn.nfmark);
+}
+
+/* PeeringActivityTimer */
+
+// The simple methods below are not inlined to avoid exposing some of the
+// current FwdState.h users to a full HttpRequest definition they do not need.
+
+PeeringActivityTimer::PeeringActivityTimer(const HttpRequestPointer &r): request(r)
+{
+    Assure(request);
+    timer().resume();
+}
+
+PeeringActivityTimer::~PeeringActivityTimer()
+{
+    stop();
+}
+
+Stopwatch &
+PeeringActivityTimer::timer()
+{
+    return request->hier.totalPeeringTime;
 }
 

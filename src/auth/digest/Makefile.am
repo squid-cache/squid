@@ -7,7 +7,11 @@
 
 include $(top_srcdir)/src/Common.am
 
-DIST_SUBDIRS= eDirectory file LDAP
+DIST_SUBDIRS = \
+	eDirectory \
+	file \
+	LDAP
+
 SUBDIRS= $(DIGEST_AUTH_HELPERS)
 EXTRA_DIST= helpers.m4
 

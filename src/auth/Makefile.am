@@ -8,7 +8,11 @@
 include $(top_srcdir)/src/Common.am
 
 SUBDIRS = $(AUTH_MODULES)
-DIST_SUBDIRS = basic digest negotiate ntlm
+DIST_SUBDIRS = \
+	basic \
+	digest \
+	negotiate \
+	ntlm
 
 noinst_LTLIBRARIES = libauth.la libacls.la
 ## not needed? $(AUTH_LIBS_TO_BUILD)
