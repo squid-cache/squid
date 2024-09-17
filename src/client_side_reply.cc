@@ -388,8 +388,15 @@ clientReplyContext::sendClientOldEntry()
 {
     /* Get the old request back */
     restoreState();
+
+    if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED)) {
+        debugs(88, 3, "stale entry aborted while we revalidated: " << *http->storeEntry());
+        http->updateLoggingTags(LOG_TCP_MISS);
+        processMiss();
+        return;
+    }
+
     /* here the data to send is in the next nodes buffers already */
-    assert(!EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED));
     Assure(matchesStreamBodyBuffer(lastStreamBufferedBytes));
     Assure(!lastStreamBufferedBytes.offset);
     sendMoreData(lastStreamBufferedBytes);
@@ -551,7 +558,12 @@ clientReplyContext::cacheHit(const StoreIOBuffer result)
         return;
     }
 
-    assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
+    if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
+        debugs(88, 3, "refusing aborted " << *e);
+        http->updateLoggingTags(LOG_TCP_MISS);
+        processMiss();
+        return;
+    }
 
     /*
      * Got the headers, now grok them
