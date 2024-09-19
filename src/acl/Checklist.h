@@ -40,28 +40,6 @@ public:
     virtual ~ACLChecklist();
 
     /**
-     * Start a non-blocking (async) check for a list of allow/deny rules.
-     * Each rule comes with a list of ACLs.
-     *
-     * The callback specified will be called with the result of the check.
-     *
-     * The first rule where all ACLs match wins. If there is such a rule,
-     * the result becomes that rule keyword (ACCESS_ALLOWED or ACCESS_DENIED).
-     *
-     * If there are rules but all ACL lists mismatch, an implicit rule is used.
-     * Its result is the negation of the keyword of the last seen rule.
-     *
-     * Some ACLs may stop the check prematurely by setting an exceptional
-     * check result (e.g., ACCESS_AUTH_REQUIRED) instead of declaring a
-     * match or mismatch.
-     *
-     * If there are no rules to check at all, the result becomes ACCESS_DUNNO.
-     * Calling this method with no rules to check wastes a lot of CPU cycles
-     * and will result in a DBG_CRITICAL debugging message.
-     */
-    void nonBlockingCheck(ACLCB * callback, void *callback_data);
-
-    /**
      * Perform a blocking (immediate) check for a list of allow/deny rules.
      * Each rule comes with a list of ACLs.
      *
@@ -104,15 +82,15 @@ public:
      *
      * If there are no ACLs to check at all, the result becomes ACCESS_ALLOWED.
      */
-    Acl::Answer const & fastCheck(const Acl::Tree *list);
+    const Acl::Answer &fastCheck(const ACLList *);
 
     /// If slow lookups are allowed, switches into "async in progress" state.
     /// Otherwise, returns false; the caller is expected to handle the failure.
     bool goAsync(AsyncStarter, const Acl::Node &);
 
-    /// Matches (or resumes matching of) a child node while maintaning
+    /// Matches (or resumes matching of) a child node at pos while maintaining
     /// resumption breadcrumbs if a [grand]child node goes async.
-    bool matchChild(const Acl::InnerNode *parent, Acl::Nodes::const_iterator pos, const Acl::Node *child);
+    bool matchChild(const Acl::InnerNode *parent, Acl::Nodes::const_iterator pos);
 
     /// Whether we should continue to match tree nodes or stop/pause.
     bool keepMatching() const { return !finished() && !asyncInProgress(); }
@@ -144,18 +122,33 @@ public:
     virtual void verifyAle() const = 0;
 
     /// change the current ACL list
-    /// \return a pointer to the old list value (may be nullptr)
-    const Acl::Tree *changeAcl(const Acl::Tree *t) {
-        const Acl::Tree *old = accessList;
-        if (t != accessList) {
-            cbdataReferenceDone(accessList);
-            accessList = cbdataReference(t);
-        }
-        return old;
-    }
+    void changeAcl(const acl_access *);
 
     /// remember the name of the last ACL being evaluated
     void setLastCheckedName(const SBuf &name) { lastCheckedName_ = name; }
+
+protected:
+    /**
+     * Start a non-blocking (async) check for a list of allow/deny rules.
+     * Each rule comes with a list of ACLs.
+     *
+     * The callback specified will be called with the result of the check.
+     *
+     * The first rule where all ACLs match wins. If there is such a rule,
+     * the result becomes that rule keyword (ACCESS_ALLOWED or ACCESS_DENIED).
+     *
+     * If there are rules but all ACL lists mismatch, an implicit rule is used.
+     * Its result is the negation of the keyword of the last seen rule.
+     *
+     * Some ACLs may stop the check prematurely by setting an exceptional
+     * check result (e.g., ACCESS_AUTH_REQUIRED) instead of declaring a
+     * match or mismatch.
+     *
+     * If there are no rules to check at all, the result becomes ACCESS_DUNNO.
+     * Calling this method with no rules to check wastes a lot of CPU cycles
+     * and will result in a DBG_CRITICAL debugging message.
+     */
+    void nonBlockingCheck(ACLCB * callback, void *callback_data);
 
 private:
     /// Calls non-blocking check callback with the answer and destroys self.
@@ -164,7 +157,12 @@ private:
 
     void matchAndFinish();
 
-    const Acl::Tree *accessList;
+    /// \copydoc changeAcl()
+    /// \returns old accessList pointer (that may be nil)
+    Acl::TreePointer swapAcl(const acl_access *);
+
+    Acl::TreePointer accessList;
+
 public:
 
     ACLCB *callback;
@@ -184,7 +182,7 @@ private: /* internal methods */
         bool operator ==(const Breadcrumb &b) const { return parent == b.parent && (!parent || position == b.position); }
         bool operator !=(const Breadcrumb &b) const { return !this->operator ==(b); }
         void clear() { parent = nullptr; }
-        const Acl::InnerNode *parent; ///< intermediate node in the ACL tree
+        RefCount<const Acl::InnerNode> parent; ///< intermediate node in the ACL tree
         Acl::Nodes::const_iterator position; ///< child position inside parent
     };
 

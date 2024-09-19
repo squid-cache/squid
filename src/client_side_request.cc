@@ -438,13 +438,13 @@ clientFollowXForwardedForCheck(Acl::Answer answer, void *data)
         if ((addr = asciiaddr)) {
             request->indirect_client_addr = addr;
             request->x_forwarded_for_iterator.cut(l);
-            calloutContext->acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
+            auto ch = clientAclChecklistCreate(Config.accessList.followXFF, http);
             if (!Config.onoff.acl_uses_indirect_client) {
                 /* override the default src_addr tested if we have to go deeper than one level into XFF */
-                Filled(calloutContext->acl_checklist)->src_addr = request->indirect_client_addr;
+                ch->src_addr = request->indirect_client_addr;
             }
             if (++calloutContext->currentXffHopNumber < SQUID_X_FORWARDED_FOR_HOP_MAX) {
-                calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
+                ACLFilledChecklist::NonBlockingCheck(std::move(ch), clientFollowXForwardedForCheck, data);
                 return;
             }
             const auto headerName = Http::HeaderLookupTable.lookup(Http::HdrType::X_FORWARDED_FOR).name;
@@ -666,15 +666,15 @@ ClientRequestContext::clientAccessCheck()
         http->request->x_forwarded_for_iterator = http->request->header.getList(Http::HdrType::X_FORWARDED_FOR);
 
         /* begin by checking to see if we trust direct client enough to walk XFF */
-        acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
-        acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, this);
+        auto acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), clientFollowXForwardedForCheck, this);
         return;
     }
 #endif
 
     if (Config.accessList.http) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
-        acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
+        auto acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), clientAccessCheckDoneWrapper, this);
     } else {
         debugs(0, DBG_CRITICAL, "No http_access configuration found. This will block ALL traffic");
         clientAccessCheckDone(ACCESS_DENIED);
@@ -690,8 +690,8 @@ void
 ClientRequestContext::clientAccessCheck2()
 {
     if (Config.accessList.adapted_http) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.adapted_http, http);
-        acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
+        auto acl_checklist = clientAclChecklistCreate(Config.accessList.adapted_http, http);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), clientAccessCheckDoneWrapper, this);
     } else {
         debugs(85, 2, "No adapted_http_access configuration. default: ALLOW");
         clientAccessCheckDone(ACCESS_ALLOWED);
@@ -712,7 +712,6 @@ clientAccessCheckDoneWrapper(Acl::Answer answer, void *data)
 void
 ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
 {
-    acl_checklist = nullptr;
     Http::StatusCode status;
     debugs(85, 2, "The request " << http->request->method << ' ' <<
            http->uri << " is " << answer <<
@@ -821,7 +820,6 @@ clientRedirectAccessCheckDone(Acl::Answer answer, void *data)
 {
     ClientRequestContext *context = (ClientRequestContext *)data;
     ClientHttpRequest *http = context->http;
-    context->acl_checklist = nullptr;
 
     if (answer.allowed())
         redirectStart(http, clientRedirectDoneWrapper, context);
@@ -837,8 +835,8 @@ ClientRequestContext::clientRedirectStart()
     debugs(33, 5, "'" << http->uri << "'");
     http->al->syncNotes(http->request);
     if (Config.accessList.redirector) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);
-        acl_checklist->nonBlockingCheck(clientRedirectAccessCheckDone, this);
+        auto acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), clientRedirectAccessCheckDone, this);
     } else
         redirectStart(http, clientRedirectDoneWrapper, this);
 }
@@ -852,7 +850,6 @@ clientStoreIdAccessCheckDone(Acl::Answer answer, void *data)
 {
     ClientRequestContext *context = static_cast<ClientRequestContext *>(data);
     ClientHttpRequest *http = context->http;
-    context->acl_checklist = nullptr;
 
     if (answer.allowed())
         storeIdStart(http, clientStoreIdDoneWrapper, context);
@@ -874,8 +871,8 @@ ClientRequestContext::clientStoreIdStart()
     debugs(33, 5,"'" << http->uri << "'");
 
     if (Config.accessList.store_id) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.store_id, http);
-        acl_checklist->nonBlockingCheck(clientStoreIdAccessCheckDone, this);
+        auto acl_checklist = clientAclChecklistCreate(Config.accessList.store_id, http);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), clientStoreIdAccessCheckDone, this);
     } else
         storeIdStart(http, clientStoreIdDoneWrapper, this);
 }
@@ -1313,8 +1310,8 @@ void
 ClientRequestContext::checkNoCache()
 {
     if (Config.accessList.noCache) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http);
-        acl_checklist->nonBlockingCheck(checkNoCacheDoneWrapper, this);
+        auto acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), checkNoCacheDoneWrapper, this);
     } else {
         /* unless otherwise specified, we try to cache. */
         checkNoCacheDone(ACCESS_ALLOWED);
@@ -1335,7 +1332,6 @@ checkNoCacheDoneWrapper(Acl::Answer answer, void *data)
 void
 ClientRequestContext::checkNoCacheDone(const Acl::Answer &answer)
 {
-    acl_checklist = nullptr;
     if (answer.denied()) {
         http->request->flags.disableCacheUse("a cache deny rule matched");
     }
@@ -1409,8 +1405,8 @@ ClientRequestContext::sslBumpAccessCheck()
 
     debugs(85, 5, "SslBump possible, checking ACL");
 
-    ACLFilledChecklist *aclChecklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
-    aclChecklist->nonBlockingCheck(sslBumpAccessCheckDoneWrapper, this);
+    auto aclChecklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
+    ACLFilledChecklist::NonBlockingCheck(std::move(aclChecklist), sslBumpAccessCheckDoneWrapper, this);
     return true;
 }
 

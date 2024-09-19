@@ -140,10 +140,10 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 {
     Must(Comm::IsConnOpen(serverConnection()));
 
-    Security::ContextPointer ctx(getTlsContext());
-    debugs(83, 5, serverConnection() << ", ctx=" << (void*)ctx.get());
+    const auto ctx = peerContext();
+    debugs(83, 5, serverConnection() << ", ctx=" << ctx);
 
-    if (!ctx || !Security::CreateClientSession(ctx, serverConnection(), "server https start")) {
+    if (!ctx || !Security::CreateClientSession(*ctx, serverConnection(), "server https start")) {
         const auto xerrno = errno;
         if (!ctx) {
             debugs(83, DBG_IMPORTANT, "ERROR: initializing TLS connection: No security context.");
@@ -169,9 +169,9 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
         // TODO: Remove ACLFilledChecklist::sslErrors and other pre-computed
         // state in favor of the ACLs accessing current/fresh info directly.
         if (acl_access *acl = ::Config.ssl_client.cert_error) {
-            const auto check = new ACLFilledChecklist(acl, request.getRaw());
+            auto check = ACLFilledChecklist::Make(acl, request.getRaw());
             fillChecklist(*check);
-            SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check);
+            SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check.release());
         }
     }
 
@@ -647,7 +647,7 @@ Security::PeerConnector::certDownloadingDone(DownloaderAnswer &downloaderAnswer)
             downloadedCerts.reset(sk_X509_new_null());
         sk_X509_push(downloadedCerts.get(), cert);
 
-        ContextPointer ctx(getTlsContext());
+        const auto ctx = peerContext()->raw;
         const auto certsList = SSL_get_peer_cert_chain(&sconn);
         if (!Ssl::findIssuerCertificate(cert, certsList, ctx)) {
             if (const auto issuerUri = Ssl::findIssuerUri(cert)) {
@@ -712,7 +712,12 @@ Security::PeerConnector::computeMissingCertificateUrls(const Connection &sconn)
     }
     debugs(83, 5, "server certificates: " << sk_X509_num(certs));
 
-    const auto ctx = getTlsContext();
+    const auto optionalContext = peerContext();
+    if (!optionalContext) {
+        debugs(83, 3, "cannot compute due to disabled TLS support");
+        return false;
+    }
+    const auto ctx = optionalContext->raw;
     if (!Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, *certs, ctx))
         return false; // missingChainCertificatesUrls() reports the exact reason
 

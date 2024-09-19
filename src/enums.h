@@ -198,8 +198,7 @@ typedef enum {
     DIGEST_READ_NONE,
     DIGEST_READ_REPLY,
     DIGEST_READ_CBLOCK,
-    DIGEST_READ_MASK,
-    DIGEST_READ_DONE
+    DIGEST_READ_MASK
 } digest_read_state_t;
 
 /* CygWin & Windows NT Port */

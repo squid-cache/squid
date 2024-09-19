@@ -85,16 +85,25 @@ Server::maybeMakeSpaceAvailable()
         debugs(33, 4, "request buffer full: client_request_buffer_max_size=" << Config.maxRequestBufferSize);
 }
 
+bool
+Server::mayBufferMoreRequestBytes() const
+{
+    // TODO: Account for bodyPipe buffering as well.
+    if (inBuf.length() >= Config.maxRequestBufferSize) {
+        debugs(33, 4, "no: " << inBuf.length() << '-' << Config.maxRequestBufferSize << '=' << (inBuf.length() - Config.maxRequestBufferSize));
+        return false;
+    }
+    debugs(33, 7, "yes: " << Config.maxRequestBufferSize << '-' << inBuf.length() << '=' << (Config.maxRequestBufferSize - inBuf.length()));
+    return true;
+}
+
 void
 Server::readSomeData()
 {
     if (reading())
         return;
 
-    debugs(33, 4, clientConnection << ": reading request...");
-
-    // we can only read if there is more than 1 byte of space free
-    if (Config.maxRequestBufferSize - inBuf.length() < 2)
+    if (!mayBufferMoreRequestBytes())
         return;
 
     typedef CommCbMemFunT<Server, CommIoCbParams> Dialer;
@@ -125,9 +134,21 @@ Server::doClientRead(const CommIoCbParams &io)
      * Plus, it breaks our lame *HalfClosed() detection
      */
 
+    // mayBufferMoreRequestBytes() was true during readSomeData(), but variables
+    // like Config.maxRequestBufferSize may have changed since that check
+    if (!mayBufferMoreRequestBytes()) {
+        // XXX: If we avoid Comm::ReadNow(), we should not Comm::Read() again
+        // when the wait is over; resume these doClientRead() checks instead.
+        return; // wait for noteMoreBodySpaceAvailable() or a similar inBuf draining event
+    }
     maybeMakeSpaceAvailable();
+    Assure(inBuf.spaceSize());
+
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
+    Assure(Config.maxRequestBufferSize > inBuf.length());
+    rd.size = Config.maxRequestBufferSize - inBuf.length();
+
     switch (Comm::ReadNow(rd, inBuf)) {
     case Comm::INPROGRESS:
 
