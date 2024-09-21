@@ -25,7 +25,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-snmp \
 	--enable-htcp \
 	--enable-carp \
-	--enable-esi \
 	--enable-useragent-log \
 	--enable-referer-log \
 	--disable-wccp \

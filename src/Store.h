@@ -26,10 +26,6 @@
 #include "StoreIOBuffer.h"
 #include "StoreStats.h"
 
-#if USE_SQUID_ESI
-#include "esi/Element.h"
-#endif
-
 #include <ostream>
 
 class AsyncCall;
@@ -253,10 +249,7 @@ public:
 
     void *operator new(size_t byteCount);
     void operator delete(void *address);
-#if USE_SQUID_ESI
 
-    ESIElement::Pointer cachedESITree;
-#endif
     int64_t objectLen() const { return mem().object_sz; }
     int64_t contentLen() const { return objectLen() - mem().baseReply().hdr_sz; }
 
