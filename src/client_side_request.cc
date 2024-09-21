@@ -924,9 +924,7 @@ clientCheckPinning(ClientHttpRequest * http)
     HttpHeader *req_hdr = &request->header;
     ConnStateData *http_conn = http->getConn();
 
-    /* Internal requests such as those from ESI includes may be without
-     * a client connection
-     */
+    // Internal requests may be without a client connection
     if (!http_conn)
         return;
 

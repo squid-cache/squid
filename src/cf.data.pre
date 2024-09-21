@@ -1499,7 +1499,6 @@ ENDIF
 	  # Matches transaction's initiator [fast]
 	  #
 	  # Supported initiators are:
-	  #  esi: matches transactions fetching ESI resources
 	  #  certificate-fetching: matches transactions fetching
 	  #     a missing intermediate TLS certificate
 	  #  cache-digest: matches transactions fetching Cache Digests
@@ -4978,7 +4977,7 @@ DOC_START
 			as a forwarding attempt. Pure cache hits log zero, but cache hits
 			that triggered HTTP cache revalidation log the number of attempts
 			made when sending an internal revalidation request. DNS, ICMP,
-			ICP, HTCP, ESI, ICAP, eCAP, helper, and other secondary requests
+			ICP, HTCP, ICAP, eCAP, helper, and other secondary requests
 			sent by Squid as a part of a master transaction do not increment
 			the counter logged for the received request.
 
@@ -6739,9 +6738,6 @@ DOC_START
 	In reverse proxy environments it might be desirable to honor
 	shorter object lifetimes. It is most likely better to make
 	your server return a meaningful Last-Modified header however.
-
-	In ESI environments where page fragments often have short
-	lifetimes, this will often be best set to 0.
 DOC_END
 
 NAME: store_avg_object_size
