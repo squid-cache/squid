@@ -55,17 +55,6 @@ if ENABLE_ADAPTATION
 SUBDIRS += adaptation
 endif
 
-if ENABLE_ESI
-SUBDIRS += esi
-ESI_LIBS = \
-	esi/libesi.la \
-	$(top_builddir)/lib/libTrie/libTrie.a \
-	$(LIBEXPAT_LIBS) \
-	$(LIBXML2_LIBS)
-else
-ESI_LIBS =
-endif
-
 DELAY_POOL_ALL_SOURCE = \
 	BandwidthBucket.cc \
 	BandwidthBucket.h \
@@ -514,7 +503,6 @@ squid_LDADD = \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \
 	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
 	html/libhtml.la \
 	$(SNMP_LIBS) \
 	mem/libmem.la \
@@ -1957,7 +1945,6 @@ tests_testHttpRange_LDADD = \
 	format/libformat.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	dns/libdns.la \
@@ -2355,7 +2342,6 @@ tests_testHttpRequest_LDADD = \
 	debug/libdebug.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2642,7 +2628,6 @@ tests_testCacheManager_LDADD = \
 	format/libformat.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	anyp/libanyp.la \
 	ipc/libipc.la \

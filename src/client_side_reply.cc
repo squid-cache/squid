@@ -43,9 +43,6 @@
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
-#if USE_SQUID_ESI
-#include "esi/Esi.h"
-#endif
 
 #include <memory>
 
@@ -1886,18 +1883,6 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
     debugs(88, 3, "clientReplyContext::sendMoreData: Appending " <<
            (int) body_size << " bytes after " << reply->hdr_sz <<
            " bytes of headers");
-
-#if USE_SQUID_ESI
-
-    if (http->flags.accel && reply->sline.status() != Http::scForbidden &&
-            !alwaysAllowResponse(reply->sline.status()) &&
-            esiEnableProcessing(reply)) {
-        debugs(88, 2, "Enabling ESI processing for " << http->uri);
-        clientStreamInsertHead(&http->client_stream, esiStreamRead,
-                               esiProcessStream, esiStreamDetach, esiStreamStatus, nullptr);
-    }
-
-#endif
 
     if (http->request->method == Http::METHOD_HEAD) {
         /* do not forward body for HEAD replies */

@@ -87,9 +87,6 @@
 #include "ssl/Config.h"
 #include "ssl/support.h"
 #endif
-#if USE_SQUID_ESI
-#include "esi/Parser.h"
-#endif
 #if SQUID_SNMP
 #include "snmp.h"
 #endif

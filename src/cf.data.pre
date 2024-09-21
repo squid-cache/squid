@@ -181,6 +181,14 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
+# Options removed in 7.x
+NAME: esi_parser
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
+
 # Options removed in 6.x
 NAME: announce_file
 TYPE: obsolete
@@ -7613,20 +7621,6 @@ DOC_START
 	"Surrogate-Control: no-store-remote".
 
 	Set this to on to have squid behave as a remote surrogate.
-DOC_END
-
-NAME: esi_parser
-IFDEF: USE_SQUID_ESI
-COMMENT: libxml2|expat
-TYPE: string
-LOC: ESIParser::Type
-DEFAULT: auto
-DEFAULT_DOC: Selects libxml2 if available at ./configure time or libexpat otherwise.
-DOC_START
-	Selects the XML parsing library to use when interpreting responses with
-	Edge Side Includes.
-
-	To disable ESI handling completely, ./configure Squid with --disable-esi.
 DOC_END
 
 COMMENT_START

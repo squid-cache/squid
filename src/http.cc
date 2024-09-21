@@ -1950,11 +1950,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     if (request->flags.accelerated) {
         /* Append Surrogate-Capabilities */
         String strSurrogate(hdr_in->getList(Http::HdrType::SURROGATE_CAPABILITY));
-#if USE_SQUID_ESI
-        snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"", Config.Accel.surrogate_id);
-#else
         snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0\"", Config.Accel.surrogate_id);
-#endif
         strListAdd(&strSurrogate, bbuf, ',');
         hdr_out->putStr(Http::HdrType::SURROGATE_CAPABILITY, strSurrogate.termedBuf());
     }

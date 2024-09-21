@@ -99,7 +99,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-auto-locale \
 	--enable-translation \
 	--enable-zph-qos \
-	--enable-esi \
 	--with-aio \
 	--with-build-environment=default \
 	--with-dl \

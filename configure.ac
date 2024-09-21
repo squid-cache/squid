@@ -817,38 +817,6 @@ AC_ARG_ENABLE(delay-pools,
 dnl disable generic/common adaptation support by default
 squid_opt_use_adaptation=no
 
-AH_TEMPLATE([USE_SQUID_ESI],[whether to enable ESI processing])
-AC_ARG_ENABLE(esi,[
-  AS_HELP_STRING([--enable-esi],
-                 [Enable ESI for accelerators. ESI requires expat or xml2 library.
-                  Enabling ESI will cause squid reverse proxies to be capable
-                  of the Edge Acceleration Specification (www.esi.org).])
-],[
-  SQUID_DEFINE_BOOL(USE_SQUID_ESI,$enable_esi)
-])
-AC_MSG_NOTICE([Enable ESI processor: ${enable_esi:=no (auto)}])
-
-# ESI support libraries: expat
-SQUID_AUTO_LIB(expat,[ESI expat library],[LIBEXPAT])
-SQUID_CHECK_LIB_WORKS(expat,[
-  PKG_CHECK_MODULES([LIBEXPAT],[expat],[:],[:])
-  CPPFLAGS="$LIBEXPAT_CFLAGS $CPPFLAGS"
-  AC_CHECK_HEADERS(expat.h)
-])
-
-# ESI support libraries: xml2
-SQUID_AUTO_LIB(xml2,[ESI xml2 library],[LIBXML2])
-SQUID_CHECK_LIB_WORKS(xml2,[
-  PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[:],[:])
-  CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
-  AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
-])
-
-AS_IF([test "x$enable_esi" = "xyes" -a "x$LIBXML2_LIBS" = "x" -a "x$LIBEXPAT_LIBS" = "x"],[
-  AC_MSG_ERROR([ESI processor requires libxml2 or libexpat])
-])
-AM_CONDITIONAL(ENABLE_ESI,[test "x$enable_esi" = "xyes"])
-
 AC_ARG_ENABLE(icap-client,
   AS_HELP_STRING([--disable-icap-client],[Disable the ICAP client.]),[
   SQUID_YESNO([$enableval],[--enable-icap-client])
@@ -2519,8 +2487,6 @@ AC_CONFIG_FILES([
 	errors/Makefile
 	icons/Makefile
 	lib/Makefile
-	lib/libTrie/Makefile
-	lib/libTrie/test/Makefile
 	lib/ntlmauth/Makefile
 	lib/rfcnb/Makefile
 	lib/smblib/Makefile
@@ -2587,7 +2553,6 @@ AC_CONFIG_FILES([
 	src/DiskIO/IpcIo/Makefile
 	src/DiskIO/Mmapped/Makefile
 	src/error/Makefile
-	src/esi/Makefile
 	src/eui/Makefile
 	src/format/Makefile
 	src/fs/Makefile
