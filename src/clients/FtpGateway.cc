@@ -2272,6 +2272,7 @@ ftpWriteTransferDone(Ftp::Gateway * ftpState)
     }
 
     ftpState->entry->timestampsSet();   /* XXX Is this needed? */
+    ftpState->markParsedVirginReplyAsWhole("ftpWriteTransferDone code 226 or 250");
     ftpSendReply(ftpState);
 }
 
