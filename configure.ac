@@ -117,6 +117,10 @@ dnl Libtool 2.2.6 requires: rm -f
 RM="$RM -f"
 
 PKG_PROG_PKG_CONFIG
+AS_IF([test "x$PKG_CONFIG" = "x"],[
+  AC_MSG_WARN([pkg-config not found. Many optional features with external dependencies will not be enabled by default, usually without further warnings.])
+])
+
 
 AC_PATH_PROG(PERL, perl, none)
 AS_IF([test "x$ac_cv_path_PERL" = "xnone"],[
