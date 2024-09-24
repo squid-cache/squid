@@ -33,8 +33,12 @@ public:
 class dwrite_q
 {
     MEMPROXY_CLASS(dwrite_q);
-
 public:
+    dwrite_q() = default;
+    dwrite_q(const size_t, char * = nullptr, FREE * = nullptr);
+    dwrite_q(dwrite_q &&) = delete; // no copying or moving of any kind
+    ~dwrite_q();
+
     off_t file_offset = 0;
     char *buf = nullptr;
     size_t len = 0;
