@@ -46,7 +46,10 @@ public:
     dwrite_q *next = nullptr;
 
 private:
-    FREE *free_func = {}; // function to free 'buf' (if any)
+
+private:
+    /// when set, gets called upon object destruction to free buf
+    FREE *free_func = nullptr;
 };
 
 int file_open(const char *path, int mode);
