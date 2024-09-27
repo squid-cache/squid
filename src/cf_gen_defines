@@ -43,7 +43,6 @@ BEGIN {
 	define["USE_LOADABLE_MODULES"]="--enable-shared"
 	define["USE_OPENSSL"]="--with-openssl"
 	define["USE_QOS_TOS"]="--enable-zph-qos"
-	define["USE_SQUID_ESI"]="--enable-esi"
 	define["USE_SQUID_EUI"]="--enable-eui"
 	define["USE_SSL_CRTD"]="--enable-ssl-crtd"
 	define["USE_UNLINKD"]="--enable-unlinkd"

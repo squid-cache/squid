@@ -199,6 +199,9 @@ This section gives an account of those changes in three categories:
 <sect1>Removed directives<label id="removeddirectives">
 <p>
 <descrip>
+	<tag>esi_parser</tag>
+	<p>Edge Side Includes (ESI) protocol is no longer supported natively.
+
 	<tag>mcast_miss_addr</tag>
 	<p>The corresponding code has not built for many years, indicating that the
 	feature is unused.
@@ -257,9 +260,7 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<tag>--disable-esi</tag>
-	<p>The ESI feature is now disabled by default.
-	   Use <em>--enable-esi</em> if needed.
+	<p>No build options have changed behaviour in this version.
 
 </descrip>
 </p>
@@ -270,8 +271,17 @@ This section gives an account of those changes in three categories:
 	<tag>--enable-cachemgr-hostname=</tag>
 	<p>The <em>cachemgr.cgi</em> tool this option relates to has been removed.
 
+	<tag>--enable-esi</tag>
+	<p>Edge Side Includes (ESI) protocol is no longer supported natively.
+
+	<tag>--without-expat</tag>
+	<p>The ESI feature using libexpat has been removed.
+
 	<tag>--without-gnugss</tag>
 	<p>Renamed to <em>--without-gss</em>.
+
+	<tag>--without-xml2</tag>
+	<p>The ESI feature using libxml2 has been removed.
 
 	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
 	<p>The code enabled by this preprocessor macro has not built for many
