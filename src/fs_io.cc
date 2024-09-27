@@ -155,8 +155,8 @@ diskCombineWrites(_fde_disk *fdd)
         for (dwrite_q *q = fdd->write_q; q != nullptr; q = q->next)
             len += q->len - q->buf_offset;
 
-        auto *wq = new dwrite_q(len);
-        while (auto *q = fdd->write_q) {
+        const auto wq = new dwrite_q(len);
+        while (const auto q = fdd->write_q) {
             len = q->len - q->buf_offset;
             memcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
             wq->len += len;
@@ -245,7 +245,7 @@ diskHandleWrite(int fd, void *)
              * repeated write failures for the same FD because of
              * the queued data.
              */
-            while (auto *q = fdd->write_q) {
+            while (const auto q = fdd->write_q) {
                 fdd->write_q = q->next;
                 delete q;
             }
@@ -254,7 +254,7 @@ diskHandleWrite(int fd, void *)
         len = 0;
     }
 
-    if (auto *q = fdd->write_q) {
+    if (const auto q = fdd->write_q) {
         /* q might become NULL from write failure above */
         q->buf_offset += len;
 
@@ -320,7 +320,7 @@ file_write(int fd,
     assert(fd >= 0);
     assert(F->flags.open);
     /* if we got here. Caller is eligible to write. */
-    auto *wq = new dwrite_q(len, static_cast<char *>(const_cast<void *>(ptr_to_buf)), free_func);
+    const auto wq = new dwrite_q(len, static_cast<char *>(const_cast<void *>(ptr_to_buf)), free_func);
     wq->file_offset = file_offset;
 
     if (!F->disk.wrt_handle_data) {

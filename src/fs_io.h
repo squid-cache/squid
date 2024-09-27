@@ -44,6 +44,8 @@ public:
     size_t len = 0;
     size_t buf_offset = 0;
     dwrite_q *next = nullptr;
+
+private:
     FREE *free_func = {}; // function to free 'buf' (if any)
 };
 
