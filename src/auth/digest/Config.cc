@@ -967,7 +967,15 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
             return rv;
         }
     } else {
-        /* rfc7616 section 3.3 mandates qop to be present */
+        /* RFC7616 section 3.3, qop:
+         *  "MUST be used by all implementations"
+         *
+         * RFC7616 section 3.4, qop:
+         *  "value MUST be one of the alternatives the server
+         *   indicated it supports in the WWW-Authenticate header field"
+         *
+         * Squid sends qop=auth, reject buggy or outdated clients.
+        */
         debugs(29, 2, "missing qop!");
         rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
