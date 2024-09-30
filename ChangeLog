@@ -1,3 +1,12 @@
+Changes in squid-5.10 (01 Oct 2024):
+
+	- Bug 5301: cachemgr.cgi not showing new manager interface URLs
+	- Bug 5300: cachemgr.cgi assertion
+	- Fix fatalf() undefined for environments without syslog
+	- Fix reported assertion condition being always "EX"
+	- negotiate_kerberos_auth: Fix build [-Wunused-but-set-variable]
+	- ... and some documentation changes
+
 Changes in squid-5.9 (30 Apr 2023):
 
 	- Improve reply_body_max_size matching accuracy
