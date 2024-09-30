@@ -967,7 +967,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
             return rv;
         }
     } else {
-        /* rfc7616 mandates qop to be present */
+        /* rfc7616 section 3.3 mandates qop to be present */
         debugs(29, 2, "missing qop!");
         rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
