@@ -43,8 +43,6 @@ Http::One::FieldParser::parseFieldLine(SBuf &name, SBuf &value)
 SBuf
 Http::One::FieldParser::parseFieldName()
 {
-    // TODO: handle pseudo-header which begin with ':'
-
     auto name = tok.prefix("field-name", CharacterSet::TCHAR);
 
     /*
