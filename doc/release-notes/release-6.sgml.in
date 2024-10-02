@@ -195,6 +195,7 @@ This section gives an account of those changes in three categories:
 	<item><ref id="newdirectives" name="New directives">
 	<item><ref id="modifieddirectives" name="Changes to existing directives">
 	<item><ref id="removeddirectives" name="Removed directives">
+	<item><ref id="otherchanges" name="Other changes">
 </itemize>
 <p>
 
@@ -278,6 +279,14 @@ This section gives an account of those changes in three categories:
 	   upgraded to an HTTP/1.1 message.
 </descrip>
 
+<sect1>Other changes<label id="otherchanges">
+<p>
+<descrip>
+	<tag>Adjusted configuration and format of ext_time_quota_acl helper debugging</tag>
+	<p>The <em>-l</em> option that enables <em>ext_time_quota_acl</em> to log debug messages
+		to a custom logfile has been removed, and their format has been
+		changed to be in line with Squid's cache.log format.
+</descrip>
 
 <sect>Changes to ./configure options since Squid-@SQUID_RELEASE_OLD@
 <p>

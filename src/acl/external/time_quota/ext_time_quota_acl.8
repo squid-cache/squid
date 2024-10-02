@@ -7,7 +7,7 @@ Version 1.0
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B ext_time_quota_acl
-.if !'po4a'hide' .B "[\-b database] [\-l logfile] [\-d] [\-p pauselen] [\-h] configfile
+.if !'po4a'hide' .B "[\-b database] [\-d] [\-p pauselen] [\-h] configfile
 .
 .SH DESCRIPTION
 .B ext_time_quota_acl
@@ -35,14 +35,8 @@ Pauses shorter than this value will be counted against the quota, longer ones ig
 Default is 300 seconds (5 minutes).
 .
 .if !'po4a'hide' .TP
-.if !'po4a'hide' .B "\-l logfile"
-.B Filename
-where all logging and debugging information will be written. If none is given,
-then stderr will be used and the logging will go to Squids main cache.log.
-.
-.if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-d"
-Enables debug logging in the logfile.
+Enables debug logging to stderr.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-h"
