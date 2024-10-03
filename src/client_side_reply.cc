@@ -13,6 +13,7 @@
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
 #include "client_side_reply.h"
+#include "clientStream.h"
 #include "errorpage.h"
 #include "ETag.h"
 #include "fd.h"
