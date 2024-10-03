@@ -58,6 +58,9 @@ protected:
     bool mayInitiateCollapsing() const { return onCollapsingPath(); }
     /// whether Squid configuration allows collapsing for this transaction
     bool onCollapsingPath() const;
+
+    /// whether startCollapsingOn() was called and returned true
+    mutable bool didCollapse = false;
 };
 
 #if USE_DELAY_POOLS

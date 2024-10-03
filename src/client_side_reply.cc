@@ -627,7 +627,7 @@ clientReplyContext::cacheHit(const StoreIOBuffer result)
         http->updateLoggingTags(LOG_TCP_MISS);
         processMiss();
         return;
-    } else if (!r->flags.internal && refreshCheckHTTP(e, r)) {
+    } else if (!r->flags.internal && !didCollapse && refreshCheckHTTP(e, r)) {
         debugs(88, 5, "clientCacheHit: in refreshCheck() block");
         /*
          * We hold a stale copy; it needs to be validated

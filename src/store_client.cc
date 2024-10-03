@@ -80,6 +80,7 @@ StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation
             tags->collapsingHistory.otherCollapses++;
     }
 
+    didCollapse = true;
     debugs(85, 5, e << " doingRevalidation=" << doingRevalidation);
     return true;
 }

@@ -574,7 +574,6 @@ refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
     ++ refreshCounts[rcHTTP].total;
     ++ refreshCounts[rcHTTP].status[reason];
     request->flags.staleIfHit = refreshIsStaleIfHit(reason);
-    // TODO: Treat collapsed responses as fresh but second-hand.
     return (Config.onoff.offline || reason < 200) ? 0 : 1;
 }
 
