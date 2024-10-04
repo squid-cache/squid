@@ -520,6 +520,10 @@ refreshIsCachable(const StoreEntry * entry)
      * minimum_expiry_time seconds delta (defaults to 60 seconds), to
      * avoid objects which expire almost immediately, and which can't
      * be refreshed.
+     *
+     * No hittingRequiresCollapsing() or didCollapse concerns here: This
+     * incoming response is fresh now, but we want to check whether it can be
+     * refreshed Config.minimum_expiry_time seconds later.
      */
     int reason = refreshCheck(entry, nullptr, Config.minimum_expiry_time);
     ++ refreshCounts[rcStore].total;
