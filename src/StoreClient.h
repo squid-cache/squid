@@ -35,6 +35,7 @@ class StoreEntry;
 class ACLFilledChecklist;
 class LogTags;
 
+// TODO: Merge store_client into StoreClient.
 /// a storeGetPublic*() caller
 class StoreClient: public Acl::ChecklistFiller
 {
