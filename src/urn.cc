@@ -282,6 +282,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
+    // XXX: Missing reply freshness checks (e.g., calling refreshCheckHTTP()).
+
     urls = urnParseReply(urnState->parsingBuffer.toSBuf(), urnState->request->method);
 
     if (!urls) {     /* unknown URN error */
