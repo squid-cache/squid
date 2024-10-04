@@ -981,10 +981,10 @@ htcpSpecifier::checkHit()
         debugs(31, 3, "NO; public object not found");
     } else if (!e->validToSend()) {
         debugs(31, 3, "NO; entry not valid to send" );
-    } else if (refreshCheckHTCP(e, checkHitRequest.getRaw())) {
-        debugs(31, 3, "NO; cached response is stale");
     } else if (e->hittingRequiresCollapsing() && !startCollapsingOn(*e, false)) {
         debugs(31, 3, "NO; prohibited CF hit: " << *e);
+    } else if (!didCollapse && refreshCheckHTCP(e, checkHitRequest.getRaw())) {
+        debugs(31, 3, "NO; cached response is stale");
     } else {
         debugs(31, 3, "YES!?");
         hit = e;
