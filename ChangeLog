@@ -1,3 +1,9 @@
+Changes in squid-6.12 (12 Oct 2024)
+	- Fix validation of Digest auth header parameters
+	- Fix build with libtool v2.4 + automake v1.17
+	- Use git to extract default build-info when enabled
+	- ... and a minor source-maintenance portability fix
+
 Changes in squid-6.11 (15 Sep 2024)
 	- Fix Kerberos detection when cross-compiling
 	- Improve robustness of DNS code on reconfigure
