@@ -5692,7 +5692,9 @@ DOC_START
 
 	This is where general information about Squid behavior goes. You can
 	increase the amount of data logged to this file and how often it is
-	rotated with "debug_options"
+	rotated with "debug_options".
+	Caching the general information would introduce extra I/O and may cause performance issue 
+	when the workload is heavy. The cache_log can be disabled by setting the configuration to cache_log /dev/null 
 DOC_END
 
 NAME: cache_log_message
@@ -10190,7 +10192,7 @@ TYPE: int
 DEFAULT: 1024
 LOC: Config.ipcache.size
 DOC_START
-	Maximum number of DNS IP cache entries.
+	Maximum number of DNS IP cache entries. A large ipcache size may improve performance because it avoid more address lookups but excessively large values would waste memory. Since the entry only takes very small amounts of memory and the default value is relatively small, the developer may need to set a large size in production.
 DOC_END
 
 NAME: ipcache_low
