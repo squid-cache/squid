@@ -37,7 +37,7 @@ static void cxx_xfree(void *ptr)
     xfree(ptr);
 }
 
-dwrite_q::dwrite_q(const size_t aSize, char *aBuffer, FREE *aFree) :
+dwrite_q::dwrite_q(const size_t aSize, char * const aBuffer, FREE * const aFree):
     buf(aBuffer),
     capacity(aSize),
     free_func(aFree)
