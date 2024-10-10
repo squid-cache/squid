@@ -125,6 +125,7 @@ Http::One::TeChunkedParser::parseChunkMetadataSuffix(Tokenizer &tok)
     // Code becomes much simpler when incremental parsing functions throw on
     // bad or insufficient input, like in the code below. TODO: Expand up.
     try {
+        tok.skipAll(CharacterSet::WSP); // Some servers send SP/TAB after chunk-size
         parseChunkExtensions(tok); // a possibly empty chunk-ext list
         tok.skipRequired("CRLF after [chunk-ext]", Http1::CrLf());
         buf_ = tok.remaining();
