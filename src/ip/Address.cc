@@ -445,6 +445,12 @@ Ip::Address::operator =(struct sockaddr_in const &s)
     return *this;
 };
 
+Ip::Address::Address(struct sockaddr_storage const &s)
+{
+    setEmpty();
+    operator=(s);
+};
+
 Ip::Address &
 Ip::Address::operator =(const struct sockaddr_storage &s)
 {
@@ -456,19 +462,6 @@ Ip::Address::operator =(const struct sockaddr_storage &s)
         mSocketAddr_.sin6_port = sin->sin_port;
         map4to6( sin->sin_addr, mSocketAddr_.sin6_addr);
     }
-    return *this;
-};
-
-Ip::Address::Address(struct sockaddr_in6 const &s)
-{
-    setEmpty();
-    operator=(s);
-};
-
-Ip::Address &
-Ip::Address::operator =(struct sockaddr_in6 const &s)
-{
-    memmove(&mSocketAddr_, &s, sizeof(struct sockaddr_in6));
     return *this;
 };
 
@@ -557,8 +550,6 @@ Ip::Address::operator =(const struct addrinfo &s)
 
     struct sockaddr_in* ipv4 = nullptr;
 
-    struct sockaddr_in6* ipv6 = nullptr;
-
     //struct addrinfo {
     //             int ai_flags;           /* input flags */
     //             int ai_family;          /* protocol family for socket */
@@ -580,10 +571,9 @@ Ip::Address::operator =(const struct addrinfo &s)
         break;
 
     case AF_INET6:
-        ipv6 = (sockaddr_in6*)(s.ai_addr);
         /* this */
-        assert(ipv6);
-        operator=(*ipv6);
+        assert(s.ai_addr);
+        memmove(&mSocketAddr_, s.ai_addr, sizeof(struct sockaddr_in6));
         break;
 
     case AF_UNSPEC:
@@ -592,7 +582,7 @@ Ip::Address::operator =(const struct addrinfo &s)
         // such as those where data only comes from getsockopt()
         if (s.ai_addr != nullptr) {
             if (s.ai_addrlen == sizeof(struct sockaddr_in6)) {
-                operator=(*((struct sockaddr_in6*)s.ai_addr));
+                memmove(&mSocketAddr_, s.ai_addr, s.ai_addrlen);
                 return true;
             } else if (s.ai_addrlen == sizeof(struct sockaddr_in)) {
                 operator=(*((struct sockaddr_in*)s.ai_addr));
