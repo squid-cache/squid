@@ -24,10 +24,11 @@ typedef SessionPointer::element_type *ConnectionPointer;
 
 } // namespace Security
 
+/// common part of printGist() and printWithExtras()
 void
-Security::IoResult::print(std::ostream &os) const
+Security::IoResult::printDescription(std::ostream &os) const
 {
-    const char *strCat = "unknown";
+    const char *strCat = nullptr;
     switch (category) {
     case ioSuccess:
         strCat = "success";
@@ -39,16 +40,29 @@ Security::IoResult::print(std::ostream &os) const
         strCat = "want-write";
         break;
     case ioError:
-        strCat = "error";
+        strCat = errorDescription;
         break;
     }
-    os << strCat;
+    os << (strCat ? strCat : "unknown");
+}
 
-    if (errorDescription)
-        os << ", " << errorDescription;
-
+void
+Security::IoResult::printGist(std::ostream &os) const
+{
+    printDescription(os);
     if (important)
         os << ", important";
+    // no errorDetail in this summary output
+}
+
+void
+Security::IoResult::printWithExtras(std::ostream &os) const
+{
+    printDescription(os);
+    if (errorDetail)
+        os << Debug::Extra << "error detail: " << errorDetail;
+    // this->important flag may affect caller debugs() level, but the flag
+    // itself is not reported to the admin explicitly
 }
 
 // TODO: Replace high-level ERR_get_error() calls with ForgetErrors() calls or
