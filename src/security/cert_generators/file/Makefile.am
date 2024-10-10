@@ -24,11 +24,13 @@ security_file_certgen_SOURCES = \
 
 security_file_certgen_LDADD = \
 	$(top_builddir)/src/ssl/libsslutil.la \
+	$(top_builddir)/src/ip/libip.la \
 	$(top_builddir)/src/sbuf/libsbuf.la \
 	$(top_builddir)/src/debug/libdebug.la \
 	$(top_builddir)/src/error/liberror.la \
 	$(top_builddir)/src/comm/libminimal.la \
 	$(top_builddir)/src/mem/libminimal.la \
+	$(top_builddir)/src/anyp/libanyp.la \
 	$(top_builddir)/src/base/libbase.la \
 	$(top_builddir)/src/time/libtime.la \
 	$(SSLLIB) \
