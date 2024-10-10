@@ -155,7 +155,7 @@ diskCombineWrites(_fde_disk *fdd)
         size_t wantCapacity = 0;
 
         for (dwrite_q *q = fdd->write_q; q != nullptr; q = q->next)
-            wantCapacity += q->len - q->buf_offset;
+            wantCapacity += q->len - q->buf_offset; // XXX: might overflow
 
         const auto wq = new dwrite_q(wantCapacity);
         while (const auto q = fdd->write_q) {
