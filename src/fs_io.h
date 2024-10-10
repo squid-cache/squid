@@ -45,7 +45,6 @@ public:
 int file_open(const char *path, int mode);
 void file_close(int fd);
 void file_write(int, off_t, void const *, int len, DWCB *, void *, FREE *);
-void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void *handler_data);
 void file_read(int, char *, int, off_t, DRCB *, void *);
 void safeunlink(const char *path, int quiet);
 
