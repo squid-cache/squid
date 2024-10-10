@@ -106,7 +106,7 @@ public:
     SBuf();
     SBuf(const SBuf &S);
     SBuf(SBuf&& S) : store_(std::move(S.store_)), off_(S.off_), len_(S.len_) {
-        ++stats.moves;
+        ++Stats().moves;
         S.store_ = nullptr; //RefCount supports nullptr, and S is about to be destructed
         S.off_ = S.len_ = 0;
     }
@@ -141,7 +141,7 @@ public:
      */
     SBuf& operator =(const SBuf & S) {return assign(S);}
     SBuf& operator =(SBuf &&S) {
-        ++stats.moves;
+        ++Stats().moves;
         if (this != &S) {
             store_ = std::move(S.store_);
             off_ = S.off_;
@@ -243,7 +243,7 @@ public:
      *
      * does not check access bounds. If you need that, use at()
      */
-    char operator [](size_type pos) const {++stats.getChar; return store_->mem[off_+pos];}
+    char operator [](size_type pos) const {++Stats().getChar; return store_->mem[off_+pos];}
 
     /** random-access read to any char within the SBuf.
      *
@@ -339,7 +339,7 @@ public:
     SBuf consume(size_type n = npos);
 
     /// gets global statistic information
-    static const SBufStats& GetStats();
+    static const SBufStats & GetStats() { return Stats(); }
 
     /** Copy SBuf contents into user-supplied C buffer.
      *
@@ -633,7 +633,8 @@ private:
     MemBlob::Pointer store_; ///< memory block, possibly shared with other SBufs
     size_type off_ = 0; ///< our content start offset from the beginning of shared store_
     size_type len_ = 0; ///< number of our content bytes in shared store_
-    static SBufStats stats; ///< class-wide statistics
+
+    static SBufStats &Stats(); ///< class-wide statistics
 
     /** obtain prototype store
      *
