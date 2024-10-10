@@ -140,10 +140,10 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceGuess() const
     return Ssl::bumpSplice;
 }
 
-Security::ContextPointer
-Ssl::PeekingPeerConnector::getTlsContext()
+Security::FuturePeerContext *
+Ssl::PeekingPeerConnector::peerContext() const
 {
-    return ::Config.ssl_client.sslContext;
+    return ::Config.ssl_client.defaultPeerContext;
 }
 
 bool
@@ -197,9 +197,6 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             srvBio->recordInput(true);
             srvBio->mode(csd->sslBumpMode);
         } else {
-            // Set client SSL options
-            ::Security::ProxyOutgoingConfig.updateSessionOptions(serverSession);
-
             const bool redirected = request->flags.redirected && ::Config.onoff.redir_rewrites_host;
             const char *sniServer = (!hostName || redirected) ?
                                     request->url.host() :

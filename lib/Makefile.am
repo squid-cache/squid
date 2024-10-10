@@ -10,9 +10,6 @@ include $(top_srcdir)/src/Common.am
 SUBDIRS=
 EXTRA_DIST=
 
-if ENABLE_ESI
-SUBDIRS += libTrie
-endif
 if ENABLE_SNMP
 SUBDIRS += snmplib
 endif

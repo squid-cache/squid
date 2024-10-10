@@ -14,6 +14,7 @@
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
+#include "clientStream.h"
 #include "comm/Connection.h"
 #include "fde.h"
 #include "format/Format.h"

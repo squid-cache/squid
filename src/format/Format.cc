@@ -635,9 +635,16 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME: {
-            struct timeval totalResponseTime;
-            if (al->hier.totalResponseTime(totalResponseTime)) {
-                outtv = totalResponseTime;
+            // XXX: al->hier.totalPeeringTime is not updated until prepareLogWithRequestDetails().
+            // TODO: Avoid the need for updates by keeping totalPeeringTime (or even ALE::hier) in one place.
+            const auto &timer = (!al->hier.totalPeeringTime.ran() && al->request) ?
+                                al->request->hier.totalPeeringTime : al->hier.totalPeeringTime;
+            if (timer.ran()) {
+                using namespace std::chrono_literals;
+                const auto duration = timer.total();
+                outtv.tv_sec = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+                const auto totalUsec = std::chrono::duration_cast<std::chrono::microseconds>(duration);
+                outtv.tv_usec = (totalUsec % std::chrono::microseconds(1s)).count();
                 doMsec = 1;
             }
         }

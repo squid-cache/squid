@@ -18,7 +18,6 @@ public:
         initClient = 1 << 0, ///< HTTP or FTP client
         initPeerPool = 1 << 1, ///< PeerPool manager
         initCertFetcher = 1 << 2, ///< Missing intermediate certificates fetching code
-        initEsi = 1 << 3, ///< ESI processing code
         initCacheDigest = 1 << 4, ///< Cache Digest fetching code
         initHtcp = 1<< 5, ///< HTCP client
         initIcp = 1 << 6, ///< the ICP/neighbors subsystem
@@ -48,7 +47,7 @@ public:
 
     /// internally generated requests
     static Initiators InternalInitiators() {
-        return initPeerPool | initCertFetcher | initEsi | initCacheDigest | initIcp | initIcmp | initIpc | initAdaptation | initIcon | initPeerMcast;
+        return initPeerPool | initCertFetcher | initCacheDigest | initIcp | initIcmp | initIpc | initAdaptation | initIcon | initPeerMcast;
     }
 
     /// all initiators

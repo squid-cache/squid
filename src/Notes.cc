@@ -76,7 +76,7 @@ Note::match(HttpRequest *request, HttpReply *reply, const AccessLogEntry::Pointe
 
     for (const auto &v: values) {
         assert(v->aclList);
-        const auto ret = ch.fastCheck(v->aclList);
+        const auto &ret = ch.fastCheck(v->aclList);
         debugs(93, 5, "Check for header name: " << theKey << ": " << v->value() <<
                ", HttpRequest: " << request << " HttpReply: " << reply << " matched: " << ret);
         if (ret.allowed()) {
@@ -339,12 +339,12 @@ static void
 AppendTokens(NotePairs::Entries &entries, const SBuf &key, const SBuf &val, const CharacterSet &delimiters)
 {
     Parser::Tokenizer tok(val);
-    SBuf v;
-    while (tok.token(v, delimiters))
-        entries.push_back(new NotePairs::Entry(key, v));
-    v = tok.remaining();
-    if (!v.isEmpty())
-        entries.push_back(new NotePairs::Entry(key, v));
+    const auto tokenCharacters = delimiters.complement("non-delimiters");
+    do {
+        SBuf token;
+        (void)tok.prefix(token, tokenCharacters);
+        entries.push_back(new NotePairs::Entry(key, token)); // token may be empty
+    } while (tok.skipOne(delimiters));
 }
 
 const NotePairs::Entries &

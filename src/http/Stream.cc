@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "client_side_request.h"
+#include "clientStream.h"
 #include "http/Stream.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
@@ -293,7 +294,7 @@ Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
             ACLFilledChecklist chl(pool->access, nullptr);
             clientAclChecklistFill(chl, http);
             chl.updateReply(rep);
-            const auto answer = chl.fastCheck();
+            const auto &answer = chl.fastCheck();
             if (answer.allowed()) {
                 writeQuotaHandler = pool->createBucket();
                 fd_table[clientConnection->fd].writeQuotaHandler = writeQuotaHandler;
