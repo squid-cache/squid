@@ -39,12 +39,14 @@ static void cxx_xfree(void *ptr)
 
 dwrite_q::dwrite_q(const size_t aSize, char *aBuffer, FREE *aFree) :
     buf(aBuffer),
-    len(aSize),
+    capacity(aSize),
     free_func(aFree)
 {
     if (!buf) {
-        buf = static_cast<char *>(xmalloc(len));
+        buf = static_cast<char *>(xmalloc(aSize));
         free_func = cxx_xfree; // dwrite_q buffer xfree()
+    } else {
+        len = aSize;
     }
 }
 
@@ -150,14 +152,14 @@ diskCombineWrites(_fde_disk *fdd)
      */
 
     if (fdd->write_q != nullptr && fdd->write_q->next != nullptr) {
-        int len = 0;
+        size_t wantCapacity = 0;
 
         for (dwrite_q *q = fdd->write_q; q != nullptr; q = q->next)
-            len += q->len - q->buf_offset;
+            wantCapacity += q->len - q->buf_offset;
 
-        const auto wq = new dwrite_q(len);
+        const auto wq = new dwrite_q(wantCapacity);
         while (const auto q = fdd->write_q) {
-            len = q->len - q->buf_offset;
+            const auto len = q->len - q->buf_offset;
             memcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
             wq->len += len;
             fdd->write_q = q->next;
