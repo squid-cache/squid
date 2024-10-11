@@ -125,11 +125,11 @@ Http::One::TeChunkedParser::parseChunkMetadataSuffix(Tokenizer &tok)
     // Code becomes much simpler when incremental parsing functions throw on
     // bad or insufficient input, like in the code below. TODO: Expand up.
     try {
-        // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
-        ParseBws(tok, true);
+        // Bug 4492: IBM_HTTP_Server sends SP after chunk-size.
+        // No ParseBws() here because it may consume CR required further below.
+        ParseStrictBws(tok);
 
-        parseChunkExtensions(tok);
-
+        parseChunkExtensions(tok); // a possibly empty chunk-ext list
         tok.skipRequired("CRLF after [chunk-ext]", Http1::CrLf());
         buf_ = tok.remaining();
         parsingStage_ = theChunkSize ? Http1::HTTP_PARSE_CHUNK : Http1::HTTP_PARSE_MIME;
@@ -143,22 +143,20 @@ Http::One::TeChunkedParser::parseChunkMetadataSuffix(Tokenizer &tok)
 
 /// Parses the chunk-ext list (RFC 9112 section 7.1.1:
 /// chunk-ext = *( BWS ";" BWS chunk-ext-name [ BWS "=" BWS chunk-ext-val ] )
-bool
+void
 Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &callerTok)
 {
-    bool foundChunkExt = false;
     do {
         auto tok = callerTok;
 
         ParseBws(tok);
 
         if (!tok.skip(';'))
-            return foundChunkExt; // reached the end of extensions (if any)
+            return; // reached the end of extensions (if any)
 
         parseOneChunkExtension(tok);
         buf_ = tok.remaining(); // got one extension
         callerTok = tok;
-        foundChunkExt = true;
     } while (true);
 }
 

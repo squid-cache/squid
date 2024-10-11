@@ -71,7 +71,7 @@ public:
 private:
     bool parseChunkSize(Tokenizer &tok);
     bool parseChunkMetadataSuffix(Tokenizer &);
-    bool parseChunkExtensions(Tokenizer &);
+    void parseChunkExtensions(Tokenizer &);
     void parseOneChunkExtension(Tokenizer &);
     bool parseChunkBody(Tokenizer &tok);
     bool parseChunkEnd(Tokenizer &tok);
