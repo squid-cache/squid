@@ -273,9 +273,9 @@ Http::One::ErrorLevel()
 
 // BWS = *( SP / HTAB ) ; WhitespaceCharacters() may relax this RFC 7230 rule
 void
-Http::One::ParseBws(Parser::Tokenizer &tok)
+Http::One::ParseBws(Parser::Tokenizer &tok, const bool wsp_only)
 {
-    const auto count = tok.skipAll(Parser::WhitespaceCharacters());
+    const auto count = tok.skipAll(wsp_only ? CharacterSet::WSP : Parser::WhitespaceCharacters());
 
     if (tok.atEnd())
         throw InsufficientInput(); // even if count is positive

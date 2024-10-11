@@ -163,8 +163,9 @@ private:
 };
 
 /// skips and, if needed, warns about RFC 7230 BWS ("bad" whitespace)
+/// \param wsp_only force skipping of whitespaces only, don't consider skipping relaxed delimeter chars
 /// \throws InsufficientInput when the end of BWS cannot be confirmed
-void ParseBws(Parser::Tokenizer &);
+void ParseBws(Parser::Tokenizer &, const bool wsp_only = false);
 
 /// the right debugs() level for logging HTTP violation messages
 int ErrorLevel();
