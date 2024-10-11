@@ -296,12 +296,12 @@ ParseBws_(Parser::Tokenizer &tok, const CharacterSet &bwsChars)
 void
 Http::One::ParseBws(Parser::Tokenizer &tok)
 {
-    ParseBws_(tok, CharacterSet::WSP);
+    ParseBws_(tok, Parser::WhitespaceCharacters());
 }
 
 void
 Http::One::ParseStrictBws(Parser::Tokenizer &tok)
 {
-    ParseBws_(tok, Parser::WhitespaceCharacters());
+    ParseBws_(tok, CharacterSet::WSP);
 }
 
