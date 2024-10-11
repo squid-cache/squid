@@ -42,6 +42,7 @@ dwrite_q::dwrite_q(const size_t aSize, char * const aBuffer, FREE * const aFree)
     capacity(aSize),
     free_func(aFree)
 {
+    assert(buf || !free_func);
     if (!buf) {
         buf = static_cast<char *>(xmalloc(aSize));
         free_func = cxx_xfree; // dwrite_q buffer xfree()
