@@ -191,9 +191,7 @@ main(int, char **)
 #endif
 
     for (;;) {
-        struct timeval tv;
-        tv.tv_sec = std::chrono::seconds(PingerTimeout).count();
-        tv.tv_usec = 0;
+        auto tv = ToTimeval(PingerTimeout);
         FD_ZERO(&R);
         if (icmp4_worker >= 0) {
             FD_SET(icmp4_worker, &R);
