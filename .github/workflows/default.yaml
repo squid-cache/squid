@@ -3,11 +3,11 @@ name: GitHub CI
 on:
   push:
     # test this branch and staged PRs based on this branch code
-    branches: [ "master" ]
+    branches: [ "master", "v6" ]
 
   pull_request:
     # test PRs targeting this branch code
-    branches: [ "master" ]
+    branches: [ "master", "v6" ]
 
 env:
   # empty except for pull_request events
