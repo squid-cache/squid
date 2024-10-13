@@ -61,11 +61,13 @@ jobs:
           max-size: "128M" # default 500M
           verbose: 2 # default 0
           append-timestamp: false
+          key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
 
       - name: Run build test
         id: test
         run: |
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export CC="/usr/bin/ccache $CC"
+          export CXX="/usr/bin/ccache $CXX"
           ./test-builds.sh --verbose --use-config-cache ${{ matrix.layer.name }}
 
       - name: Publish build logs
