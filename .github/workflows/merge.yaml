@@ -1,11 +1,8 @@
-name: "GitHub CI merge checks library"
+name: "GitHub CI merge checks"
 
 on:
-  workflow_call
-
-# on:
-#   push:
-#     branches: [ "auto", "github-actions-merge-tests" ]
+  push:
+    branches: [ "auto", "github-actions-merge-tests" ]
 
 env:
   PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
@@ -60,7 +57,7 @@ jobs:
 
       - name: Run build test
         id: test
-        run: /bin/true || ./test-builds.sh --verbose --use-config-cache ${{ matrix.layer.name }}
+        run: ./test-builds.sh --verbose --use-config-cache ${{ matrix.layer.name }}
 
       - name: Publish build logs
         if: success() || failure()
@@ -118,7 +115,7 @@ jobs:
           sed -i.bak 's@ltdl_ac_aux_dir=""@ltdl_ac_aux_dir="../build-aux"@' $editable || true
           diff -u $editable.bak $editable || true
 
-          /bin/true || ./test-builds.sh
+          ./test-builds.sh --verbose
 
       - name: Publish build logs
         if: success() || failure()
