@@ -1,7 +1,7 @@
 name: "GitHub CI merge checks library"
 
 on:
-  workflow-call
+  workflow_call
 
 # on:
 #   push:
