@@ -61,11 +61,12 @@ jobs:
           max-size: "128M" # default 500M
           verbose: 2 # default 0
           append-timestamp: false
-          create-symlink: true
 
       - name: Run build test
         id: test
-        run: ./test-builds.sh --verbose --use-config-cache ${{ matrix.layer.name }}
+        run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./test-builds.sh --verbose --use-config-cache ${{ matrix.layer.name }}
 
       - name: Publish build logs
         if: success() || failure()
