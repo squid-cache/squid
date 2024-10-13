@@ -1,4 +1,4 @@
-name: GitHub CI merge checks
+name: "GitHub CI merge checks"
 
 on:
   push:
@@ -38,6 +38,7 @@ jobs:
         # exclude:
         #  if any combinations needs to be excluded, do it here
         #   - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
+
     runs-on: ubuntu-latest
     container:
       image: squidcache/buildfarm-${{ matrix.os }}:latest
