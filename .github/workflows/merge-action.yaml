@@ -1,0 +1,10 @@
+name: "GitHub CI merge checks"
+
+on:
+  push:
+    branches: [ "auto", "github-actions-merge-tests" ]
+
+jobs:
+  full-merge-checks:
+    uses:
+      ./.github/workflows/merge.yaml

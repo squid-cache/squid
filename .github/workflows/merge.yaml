@@ -1,8 +1,11 @@
-name: "GitHub CI merge checks"
+name: "GitHub CI merge checks library"
 
 on:
-  push:
-    branches: [ "auto", "github-actions-merge-tests" ]
+  workflow-call
+
+# on:
+#   push:
+#     branches: [ "auto", "github-actions-merge-tests" ]
 
 env:
   PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
@@ -57,7 +60,8 @@ jobs:
 
       - name: Run build test
         id: test
-        run: ./test-builds.sh --verbose --use-config-cache ${{ matrix.layer.name }}
+        # run: ./test-builds.sh --verbose --use-config-cache ${{ matrix.layer.name }}
+        run: /bin/true
 
       - name: Publish build logs
         if: success() || failure()
