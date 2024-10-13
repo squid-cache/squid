@@ -3,7 +3,7 @@ name: GitHub CI
 on:
   push:
     # test this branch and staged PRs based on this branch code
-    branches: [ "master", "auto" ]
+    branches: [ "master" ]
 
   pull_request:
     # test PRs targeting this branch code

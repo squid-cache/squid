@@ -1,0 +1,224 @@
+name: GitHub CI merge checks
+
+on:
+  push:
+    branches: [ "auto" ]
+
+env:
+  PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+  CHECKOUT_FETCH_DEPTH: 1001
+
+jobs:
+  linux-matrix-tests:
+
+    strategy:
+      matrix:
+        os:
+          - centos-stream-9
+          - debian-stable
+          - debian-testing
+          - debian-unstable
+          - fedora-39
+          - fedora-40
+          - fedora-rawhide
+          - gentoo
+          - opensuse-leap
+          - opensuse-tumbleweed
+          - ubuntu-focal
+          - ubuntu-jammy
+          - ubuntu-noble # EOL 2036-04
+          - ubuntu-oracular # EOL 2025-07
+        compiler:
+          - { CC: gcc, CXX: g++ }
+          - { CC: clang, CXX: clang++ }
+        layer:
+          - { name: layer-00-default, nick: default }
+          - { name: layer-01-minimal, nick: minimal }
+          - { name: layer-02-maximus, nick: maximus }
+        # exclude:
+        #  if any combinations needs to be excluded, do it here
+        #   - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
+    runs-on: ubuntu-latest
+    container:
+      image: squidcache/buildfarm-${{ matrix.os }}:latest
+      options: --user 1001 # uid used by worfklow runner
+
+    name:  linux-matrix-test(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+    env:
+      CC: ${{ matrix.compiler.CC }}
+      CXX: ${{ matrix.compiler.CXX }}
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+
+      - name: Run build test
+        id: test
+        run: ./test-builds.sh --verbose --use-config-cache ${{ matrix.layer.name }}
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
+          path: btlayer-*.log
+
+  macos:
+    runs-on: macos-14
+    name: macos-test
+
+    steps:
+      - name: Install prerequisite MacOS packages
+        run: |
+          brew install \
+            automake coreutils cppunit gawk \
+            gnu-getopt gnu-sed grep libtool \
+            make cyrus-sasl
+            # openldap openssl # already provided by github workers base-image
+
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+
+      - name: Run build test
+        run: |
+          eval `brew shellenv`
+          PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
+          PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig"
+          PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
+          export PKG_CONFIG_PATH
+          export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
+          export MAKE="$HOMEBREW_PREFIX/bin/gmake"
+          # ensure we use Homebrew headers and libraries
+          # this is needed because pkg-config --libs openssl points to the wrong directory
+          #   in version openssl@3: stable 3.3.0
+          export CPPFLAGS="-I$HOMEBREW_PREFIX/include${CPPFLAGS:+ $CPPFLAGS}"
+          export LDFLAGS="-L$HOMEBREW_PREFIX/lib${LDFLAGS:+ $LDFLAGS}"
+          export CFLAGS="-Wno-compound-token-split-by-macro${CFLAGS:+ $CFLAGS}" # needed fir ltdl with Xcode
+
+          # libtool package referenced below fails to copy its configure*
+          # files, possibly due to a packaging/brewing bug. The following sed
+          # command restores installed libtoolize code to its earlier (and
+          # working) variation.
+          echo "brew libtool package details:"
+          brew info libtool --json | grep -E 'rebuild|tap_git_head'
+          # This hack was tested on libtoolize package with the following output:
+          # "rebuild": 2,
+          # "tap_git_head": "5cede8ea3b7b12c7f68215f75a951430b38d945f",
+          #
+          editable=$HOMEBREW_CELLAR/libtool/2.4.7/bin/glibtoolize
+          sed -i.bak 's@ltdl_ac_aux_dir=""@ltdl_ac_aux_dir="../build-aux"@' $editable || true
+          diff -u $editable.bak $editable || true
+
+          ./test-builds.sh
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-macos
+          path: btlayer-*.log
+
+  freebsd:
+    runs-on: ubuntu-latest
+    if: false # issues with linking
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+
+      - name: Test in FreeBSD
+        id: test-freebsd
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          sync: sshfs
+          # release: "14.1" # supported: 12.4, 13.2, 13.3, 14.1
+          prepare: |
+            pkg install -y \
+              autoconf \
+              autoconf-archive \
+              automake \
+              bash \
+              cppunit \
+              gmake \
+              libltdl \
+              libtool \
+              libxml2 \
+              m4 \
+              nettle &&
+            df .
+
+          run: |
+            export MAKE=gmake
+            export CFLAGS='-Wno-compound-token-split-by-macro'
+            export CC=clang
+            export CXX=clang++
+            ./test-builds.sh --verbose
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          path: btlayer-*.log
+
+  openbsd:
+    runs-on: ubuntu-latest
+    if: false # currently failing with permission problems in ltdl
+
+    steps:
+      - name: Checkout Squid sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+
+      - name: Test
+        id: test
+        uses: vmactions/openbsd-vm@v1
+        with:
+          usesh: true
+          sync: sshfs
+          prepare: |
+            pkg_add \
+              autoconf-2.72p0 \
+              automake-1.16.5 \
+              bash \
+              coreutils \
+              cppunit \
+              git \
+              ggrep \
+              gmake \
+              libxml \
+              libtool \
+              m4 \
+              metaauto
+            mkdir $HOME/bin
+            ln -s /usr/local/bin/ggrep $HOME/bin/grep
+            ls -ld /usr/local/share/aclocal*
+            ls -l /usr/local/bin/auto*
+
+          run: |
+            export MAKE=gmake
+            export pjobs="-j`gnproc`"
+            export AUTOMAKE_VERSION=1.16
+            export amver=${AUTOMAKE_VERSION}
+            export ACLOCAL_AUTOMAKE_DIR="/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
+            export ACLOCAL_PATH="/usr/local/share/aclocal:/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
+            export AUTOCONF_VERSION=2.72
+            export acver=${AUTOCONF_VERSION}
+            export ltver=2.4.2
+            export CFLAGS='-Wno-compound-token-split-by-macro'
+            export LDFLAGS="-L/usr/local/lib"
+\            export PATH="$HOME/bin:$PATH"
+            ./test-builds.sh --verbose
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          path: btlayer-*.log
