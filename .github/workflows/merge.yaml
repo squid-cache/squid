@@ -58,7 +58,6 @@ jobs:
       - name: setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          max-size: "128M" # default 500M
           verbose: 2 # default 0
           append-timestamp: false
           key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
