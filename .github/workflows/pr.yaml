@@ -134,8 +134,13 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
+      - name: setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          verbose: 2 # default 0
+          append-timestamp: false
+
       - name: Run build on Linux
-        if: runner.os == 'Linux'
         run: ./test-builds.sh ${{ matrix.layer.name }}
 
       - name: Publish build logs
@@ -155,7 +160,6 @@ jobs:
     steps:
 
       - name: Install Squid prerequisite Linux packages
-        if: runner.os == 'Linux'
         run: |
           # required for "apt-get build-dep" to work
           sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
