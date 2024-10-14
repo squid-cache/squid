@@ -3,11 +3,11 @@ name: "GitHub CI merge checks"
 on:
   push:
     # test this branch and staged PRs based on this branch code
-    branches: [ "master", "v6" ]
+    branches: [ "master" ]
 
   pull_request:
     # test PRs targeting this branch code
-    branches: [ "master", "v6" ]
+    branches: [ "master" ]
 
 env:
   # empty except for pull_request events
