@@ -79,7 +79,6 @@ jobs:
   macos:
     runs-on: macos-14
     name: macos-test
-    if: false
 
     steps:
       - name: Install prerequisite MacOS packages
