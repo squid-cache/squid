@@ -42,12 +42,6 @@ jobs:
         with:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
-      - name: setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          verbose: 2 # default 0
-          append-timestamp: false
-
       - run: ./bootstrap.sh
       - run: ./configure --with-openssl
       - run: make -j`nproc`
@@ -133,12 +127,6 @@ jobs:
 
       - name: Checkout sources
         uses: actions/checkout@v4
-
-      - name: setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          verbose: 2 # default 0
-          append-timestamp: false
 
       - name: Run build on Linux
         run: ./test-builds.sh ${{ matrix.layer.name }}

@@ -55,18 +55,9 @@ jobs:
         with:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
-      - name: setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          verbose: 2 # default 0
-          append-timestamp: false
-          key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
-
       - name: Run build test
         id: test
         run: |
-          export CC="/usr/bin/ccache $CC"
-          export CXX="/usr/bin/ccache $CXX"
           ./test-builds.sh --verbose --use-config-cache ${{ matrix.layer.name }}
 
       - name: Publish build logs
