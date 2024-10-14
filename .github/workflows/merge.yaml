@@ -41,7 +41,7 @@ jobs:
 
     runs-on: ubuntu-latest
     container:
-      image: squidcache/buildfarm-${{ matrix.os }}:latest
+      image: squidcache/buildfarm-${{ matrix.os }}:latest # TODO: use stable before merge
       options: --user 1001 # uid used by worfklow runner
 
     name:  linux-matrix-test(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
