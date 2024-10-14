@@ -1,4 +1,4 @@
-name: GitHub CI
+name: "GitHub CI merge checks"
 
 on:
   push:
