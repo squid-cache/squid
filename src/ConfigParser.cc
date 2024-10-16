@@ -486,15 +486,15 @@ ConfigParser::regex(const char *expectedRegexDescription)
         throw TextException("Cannot read regex expression while configuration_includes_quoted_values is enabled", Here());
 
     SBuf pattern;
-    int flags = REG_EXTENDED | REG_NOSUB;
+    auto flags = std::regex::extended;
 
     ConfigParser::RecognizeQuotedPair_ = true;
     const auto flagOrPattern = token(expectedRegexDescription);
     if (flagOrPattern.cmp("-i") == 0) {
-        flags |= REG_ICASE;
+        flags |= std::regex::icase;
         pattern = token(expectedRegexDescription);
     } else if (flagOrPattern.cmp("+i") == 0) {
-        flags &= ~REG_ICASE;
+        flags &= ~std::regex::icase;
         pattern = token(expectedRegexDescription);
     } else {
         pattern = flagOrPattern;
