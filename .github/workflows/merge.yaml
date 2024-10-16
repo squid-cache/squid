@@ -13,9 +13,6 @@ jobs:
 
     strategy:
       matrix:
-        cpu:
-          - x86_64
-          - i386
         os:
           - centos-stream-9
           - debian-stable
@@ -38,24 +35,16 @@ jobs:
           - { name: layer-00-default, nick: default }
           - { name: layer-01-minimal, nick: minimal }
           - { name: layer-02-maximus, nick: maximus }
-        exclude:
-          - { os: centos-stream-9, cpu: i386 }
-          - { os: fedora-39, cpu: i386 }
-          - { os: fedora-40, cpu: i386 }
-          - { os: fedora-rawhide, cpu: i386 }
-          - { os: opensuse-leap, cpu: i386 }
-          - { os: opensuse-tumbleweed, cpu: i386 }
-          - { os: ubuntu-focal, cpu: i386 }
-          - { os: ubuntu-jammy, cpu: i386 }
-          - { os: ubuntu-noble, cpu: i386 }
-          - { os: ubuntu-oracular, cpu: i386 }
+        # exclude:
+        #  if any combinations needs to be excluded, do it here
+        #   - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
 
     runs-on: ubuntu-latest
     container:
-      image: squidcache/buildfarm-${{ matrix.os }}:latest # TODO: use stable
-      options: --user 1001 --platform ${{ matrix.cpu }} # uid used by worfklow runner
+      image: squidcache/buildfarm-${{ matrix.os }}:stable
+      options: --user 1001 # uid used by worfklow runner
 
-    name:  linux-matrix-test(${{matrix.cpu}},${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+    name:  linux-matrix-test(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
     env:
       CC: ${{ matrix.compiler.CC }}
       CXX: ${{ matrix.compiler.CXX }}
