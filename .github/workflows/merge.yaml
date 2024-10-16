@@ -2,7 +2,7 @@ name: "GitHub CI merge checks"
 
 on:
   push:
-    branches: [ "auto", "github-actions-merge-tests" ]
+    branches: [ "auto" ]
 
 env:
   PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
