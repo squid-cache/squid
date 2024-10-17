@@ -1,4 +1,4 @@
-name: "GitHub CI merge checks"
+name: GitHub CI merge checks
 
 on:
   push:
@@ -40,7 +40,7 @@ jobs:
       image: squidcache/buildfarm-${{ matrix.os }}:stable
       options: --user 1001 # uid used by worfklow runner
 
-    name: ${{ vars.GITHUB_JOB }}(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+    name: linux-distros-tests(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
     env:
       CC: ${{ matrix.compiler.CC }}
       CXX: ${{ matrix.compiler.CXX }}
@@ -65,7 +65,7 @@ jobs:
 
   macos-test:
     runs-on: macos-14
-    name: ${{ vars.GITHUB_JOB }}
+    name: macos-test
 
     steps:
       - name: Install prerequisite MacOS packages

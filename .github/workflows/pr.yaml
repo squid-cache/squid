@@ -106,7 +106,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    name: ${{ vars.GITHUB_JOB }}(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+    name: build-tests(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
 
     env:
       CC: ${{ matrix.compiler.CC }}
