@@ -1,4 +1,4 @@
-name: "GitHub CI merge checks"
+name: GitHub CI merge checks
 
 on:
   push:
@@ -106,7 +106,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    name: build-tests(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+    name: ${{ vars.GITHUB_JOB }}(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
 
     env:
       CC: ${{ matrix.compiler.CC }}
