@@ -103,9 +103,6 @@ jobs:
           - { name: layer-00-default, nick: default }
           - { name: layer-01-minimal, nick: minimal }
           - { name: layer-02-maximus, nick: maximus }
-        exclude:
-          # Non-clang testing on MacOS is too much work for very little gain
-          # - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
 
     runs-on: ${{ matrix.os }}
 
