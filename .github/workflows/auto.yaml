@@ -40,7 +40,7 @@ jobs:
       image: squidcache/buildfarm-${{ matrix.os }}:stable
       options: --user 1001 # uid used by worfklow runner
 
-    name: linux-distros-tests(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+    name: ${{ vars.GITHUB_JOB }}(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
     env:
       CC: ${{ matrix.compiler.CC }}
       CXX: ${{ matrix.compiler.CXX }}
@@ -63,9 +63,9 @@ jobs:
           name: build-logs-${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
           path: btlayer-*.log
 
-  macos:
+  macos-test:
     runs-on: macos-14
-    name: macos-test
+    name: ${{ vars.GITHUB_JOB }}
 
     steps:
       - name: Install prerequisite MacOS packages
@@ -117,5 +117,5 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-macos
+          name: build-logs
           path: btlayer-*.log
