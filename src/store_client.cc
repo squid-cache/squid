@@ -990,7 +990,7 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
         return false;
     }
 
-    if ((curlen / (expectlen / 100)) > (Config.quickAbort.pct)) {
+    if (curlen > expectlen*(Config.quickAbort.pct/100.0)) {
         debugs(90, 3, "quick-abort? NO past point of no return");
         return false;
     }
