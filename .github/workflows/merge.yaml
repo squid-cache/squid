@@ -114,7 +114,7 @@ jobs:
           sed -i.bak 's@ltdl_ac_aux_dir=""@ltdl_ac_aux_dir="../build-aux"@' $editable || true
           diff -u $editable.bak $editable || true
 
-          ./test-builds.sh --verbose
+          ./test-builds.sh --verbose --use-config-cache
 
       - name: Publish build logs
         if: success() || failure()
