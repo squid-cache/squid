@@ -1,4 +1,4 @@
-name: GitHub CI merge checks
+name: GitHub CI PR checks
 
 on:
   push:
