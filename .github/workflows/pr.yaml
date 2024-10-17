@@ -2,7 +2,7 @@ name: "GitHub CI merge checks"
 
 on:
   push:
-    # test this branch and staged PRs based on this branch code
+    # test commits on this branch
     branches: [ "master" ]
 
   pull_request:

@@ -5,11 +5,10 @@ on:
     branches: [ "auto" ]
 
 env:
-  PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
   CHECKOUT_FETCH_DEPTH: 1001
 
 jobs:
-  linux-matrix-tests:
+  linux-distros-tests:
 
     strategy:
       matrix:
@@ -39,12 +38,12 @@ jobs:
         #  if any combinations needs to be excluded, do it here
         #   - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     container:
       image: squidcache/buildfarm-${{ matrix.os }}:stable
       options: --user 1001 # uid used by worfklow runner
 
-    name:  linux-matrix-test(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+    name: linux-matrix-test(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
     env:
       CC: ${{ matrix.compiler.CC }}
       CXX: ${{ matrix.compiler.CXX }}
