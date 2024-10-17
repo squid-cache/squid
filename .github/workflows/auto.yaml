@@ -34,9 +34,6 @@ jobs:
           - { name: layer-00-default, nick: default }
           - { name: layer-01-minimal, nick: minimal }
           - { name: layer-02-maximus, nick: maximus }
-        # exclude:
-        #  if any combinations needs to be excluded, do it here
-        #   - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
 
     runs-on: ubuntu-22.04
     container:
