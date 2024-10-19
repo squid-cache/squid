@@ -30,16 +30,25 @@ public:
     void *client_data;
 };
 
-// POD
 class dwrite_q
 {
+    MEMPROXY_CLASS(dwrite_q);
 public:
-    off_t file_offset;
-    char *buf;
-    size_t len;
-    size_t buf_offset;
-    dwrite_q *next;
-    FREE *free_func;
+    dwrite_q(const size_t wantCapacity) : dwrite_q(wantCapacity, nullptr, nullptr) {}
+    dwrite_q(size_t, char *, FREE *);
+    dwrite_q(dwrite_q &&) = delete; // no copying or moving of any kind
+    ~dwrite_q();
+
+    off_t file_offset = 0;
+    char *buf = nullptr;
+    size_t len = 0; ///< length of content in buf
+    size_t buf_offset = 0;
+    dwrite_q *next = nullptr;
+
+private:
+    size_t capacity = 0; ///< allocation size of buf
+    /// when set, gets called upon object destruction to free buf
+    FREE *free_func = nullptr;
 };
 
 int file_open(const char *path, int mode);
