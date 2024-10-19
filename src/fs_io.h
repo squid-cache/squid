@@ -35,7 +35,7 @@ class dwrite_q
     MEMPROXY_CLASS(dwrite_q);
 public:
     dwrite_q(const size_t wantCapacity) : dwrite_q(wantCapacity, nullptr, nullptr) {}
-    dwrite_q(const size_t hasLength, char *, FREE *);
+    dwrite_q(size_t, char *, FREE *);
     dwrite_q(dwrite_q &&) = delete; // no copying or moving of any kind
     ~dwrite_q();
 
