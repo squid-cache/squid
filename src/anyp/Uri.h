@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_ANYP_URI_H
 #define SQUID_SRC_ANYP_URI_H
 
+#include "anyp/forward.h"
 #include "anyp/UriScheme.h"
 #include "ip/Address.h"
 #include "rfc2181.h"
@@ -75,6 +76,10 @@ public:
     const char *host(void) const {return host_;}
     int hostIsNumeric(void) const {return hostIsNumeric_;}
     Ip::Address const & hostIP(void) const {return hostAddr_;}
+
+    /// Successfully interpreted non-empty host subcomponent of the authority
+    /// component (if any). XXX: Remove hostOrIp() and print Host instead.
+    std::optional<Host> parsedHost() const;
 
     /// \returns the host subcomponent of the authority component
     /// If the host is an IPv6 address, returns that IP address with

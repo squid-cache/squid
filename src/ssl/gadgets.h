@@ -11,11 +11,14 @@
 
 #if USE_OPENSSL
 
+#include "anyp/forward.h"
 #include "base/HardFun.h"
 #include "compat/openssl.h"
+#include "sbuf/forward.h"
 #include "security/forward.h"
 #include "ssl/crtd_message.h"
 
+#include <optional>
 #include <string>
 
 #if HAVE_OPENSSL_ASN1_H
@@ -277,6 +280,16 @@ bool certificateMatchesProperties(X509 *peer_cert, CertificateProperties const &
    * Uses static memory to temporary store the extracted name.
 */
 const char *CommonHostName(X509 *x509);
+
+/// converts ASN1_STRING to SBuf
+SBuf AsnToSBuf(const ASN1_STRING &);
+
+/// interprets X.509 Subject or Issuer name entry (at the given position) as CN
+std::optional<AnyP::Host> ParseCommonNameAt(X509_NAME &, int);
+
+/// interprets the given buffer as either a textual representation of an IP
+/// address (if possible) or a domain name without wildcard support (otherwise)
+std::optional<AnyP::Host> ParseAsSimpleDomainNameOrIp(const SBuf &);
 
 /**
    \ingroup ServerProtocolSSLAPI
