@@ -129,7 +129,7 @@ AS_IF([test "x$ac_cv_path_PERL" = "xnone"],[
 AC_PATH_PROG(POD2MAN, pod2man, $FALSE)
 AM_CONDITIONAL(ENABLE_POD2MAN_DOC, test "x${ac_cv_path_POD2MAN}" != "x$FALSE")
 
-AC_PATH_PROG(AR, ar, $FALSE)
+AC_CHECK_TOOL(AR, ar, :)
 AR_R="$AR r"
 AC_SUBST(AR_R)
 
