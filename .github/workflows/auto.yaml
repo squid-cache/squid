@@ -4,9 +4,6 @@ on:
   push:
     branches: [ "auto" ]
 
-env:
-  CHECKOUT_FETCH_DEPTH: 1001
-
 jobs:
   linux-distros-tests:
 
@@ -48,8 +45,6 @@ jobs:
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
-        with:
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
       - name: Run build test
         id: test
