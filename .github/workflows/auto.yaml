@@ -73,8 +73,6 @@ jobs:
 
       - name: Checkout Sources
         uses: actions/checkout@v4
-        with:
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
       - name: Run build test
         run: |
