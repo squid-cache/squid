@@ -1,4 +1,4 @@
-name: GitHub CI PR checks
+name: PR commit checks and PR target branch commit checks
 
 on:
   push:
