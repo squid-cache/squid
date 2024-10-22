@@ -5,7 +5,7 @@ on:
     branches: [ "auto" ]
 
 jobs:
-  linux-distros-tests:
+  linux-distros:
 
     strategy:
       matrix:
@@ -37,7 +37,7 @@ jobs:
       image: squidcache/buildfarm-${{ matrix.os }}:stable
       options: --user 1001 # uid used by worfklow runner
 
-    name: linux-distros-tests(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+    name: linux-distros(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
     env:
       CC: ${{ matrix.compiler.CC }}
       CXX: ${{ matrix.compiler.CXX }}
@@ -46,8 +46,8 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
-      - name: Run build test
-        id: test
+      - name: Run test-builds
+        id: test-builds
         run: |
           ./test-builds.sh ${{ matrix.layer.name }}
 
@@ -58,9 +58,9 @@ jobs:
           name: build-logs-${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
           path: btlayer-*.log
 
-  macos-test:
+  macos:
     runs-on: macos-14
-    name: macos-test
+    name: macos
 
     steps:
       - name: Install prerequisite MacOS packages
@@ -74,7 +74,8 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
-      - name: Run build test
+      - name: Run test-builds
+        id: test-builds
         run: |
           eval `brew shellenv`
           PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
