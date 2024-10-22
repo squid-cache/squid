@@ -126,7 +126,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run build on Linux
-        run: ./test-builds.sh --verbose --use-config-cache ${{ matrix.layer.name }}
+        run: ./test-builds.sh ${{ matrix.layer.name }}
 
       - name: Publish build logs
         if: success() || failure()
@@ -159,7 +159,7 @@ jobs:
         uses: github/codeql-action/init@v3
 
       - name: Build Squid
-        run: ./test-builds.sh --verbose --use-config-cache ./test-suite/buildtests/layer-02-maximus.opts
+        run: ./test-builds.sh ./test-suite/buildtests/layer-02-maximus.opts
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
