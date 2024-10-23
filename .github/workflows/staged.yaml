@@ -1,4 +1,13 @@
-name: Staged commit checks
+name: Staged commit
+# This is the full suite of tests which is run on
+# a staged commit, just prior to merging into the
+# main tree.
+# This is meant to be the most comprehensive suite of
+# tests; they are expensive and slow to run and
+# therefore we want to limit our reliance on them.
+#
+# The number of these tests needs to be kept
+# in sync with Anubis configuration
 
 on:
   push:
