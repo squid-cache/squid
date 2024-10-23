@@ -120,5 +120,5 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs
+          name: build-logs-macos
           path: btlayer-*.log
