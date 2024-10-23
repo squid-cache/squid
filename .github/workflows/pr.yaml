@@ -3,13 +3,13 @@ name: PR commit
 # whenever a PR is created or updated. These
 # are meant to quickly and cheaply identify issues with
 # the code as presented, leaving more expensive
-# multiplatform checks to the "staged commit" phase
-
+# multiplatform checks to the "staged commit" phase.
+# To ensure proper serialization of changes
 
 on:
   push:
-    # test commits on this branch
-    branches: [ "master" ]
+    # test commits on this branch, and staged commits
+    branches: [ "master", "auto" ]
 
   pull_request:
     # test PRs targeting this branch code
