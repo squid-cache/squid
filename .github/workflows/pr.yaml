@@ -1,10 +1,11 @@
-name: PR commit
-# These are fast-react checks that are executed
-# whenever a PR is created or updated. These
-# are meant to quickly and cheaply identify issues with
+# Checks defined in this file are meant to be
+# run every time a PR is created, updated, and staged
+# for merge.
+# They aim to and cheaply identify issues with
 # the code as presented, leaving more expensive
 # multiplatform checks to the "staged commit" phase.
-# To ensure proper serialization of changes
+
+name: PR commit
 
 on:
   push:
