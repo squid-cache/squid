@@ -4,6 +4,10 @@
 # They aim to and cheaply identify issues with
 # the code as presented, leaving more expensive
 # multiplatform checks to the "staged commit" phase.
+#
+# Be mindful about keeping at all times Anubis' configuration
+# in sync with the total number of tests targeting
+# the "auto" branch, regardless of the file defining them
 
 name: PR commit
 

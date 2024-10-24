@@ -1,13 +1,12 @@
-name: Staged commit
-# This is the full suite of tests which is run on
-# a staged commit, just prior to merging into the
-# main tree.
-# This is meant to be the most comprehensive suite of
-# tests; they are expensive and slow to run and
-# therefore we want to limit our reliance on them.
+# Checks in this file are run when a merge-commit is staged.
+# Their focus is to identify as comprehensively as possible
+# compiler, OS and platform portability issues
 #
-# The number of these tests needs to be kept
-# in sync with Anubis configuration
+# Be mindful about keeping at all times Anubis' configuration
+# in sync with the total number of tests targeting
+# the "auto" branch, regardless of the file defining them
+
+name: Staged commit
 
 on:
   push:
