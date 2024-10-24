@@ -984,12 +984,6 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
         return true;
     }
 
-    // XXX: This is absurd! TODO: For positives, "a/(b/c) > d" is "a*c > b*d".
-    if (expectlen < 100) {
-        debugs(90, 3, "quick-abort? NO avoid FPE");
-        return false;
-    }
-
     if (curlen > expectlen*(Config.quickAbort.pct/100.0)) {
         debugs(90, 3, "quick-abort? NO past point of no return");
         return false;
