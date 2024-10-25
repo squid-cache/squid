@@ -1797,7 +1797,7 @@ ClientHttpRequest::setLogUriToRawUri(const char *rawUri, const HttpRequestMethod
     // Should(!request);
 
     // TODO: SBuf() performance regression, fix by converting rawUri to SBuf
-    char *canonicalUri = urlCanonicalCleanWithoutRequest(SBuf(rawUri), method, AnyP::UriScheme());
+    char *canonicalUri = urlCanonicalCleanWithoutRequest(SBuf(rawUri), method);
 
     absorbLogUri(AnyP::Uri::cleanup(canonicalUri));
 
@@ -1823,7 +1823,7 @@ ClientHttpRequest::setErrorUri(const char *aUri)
     uri = xstrdup(aUri);
     // TODO: SBuf() performance regression, fix by converting setErrorUri() parameter to SBuf
     const SBuf errorUri(aUri);
-    const auto canonicalUri = urlCanonicalCleanWithoutRequest(errorUri, HttpRequestMethod(), AnyP::UriScheme());
+    const auto canonicalUri = urlCanonicalCleanWithoutRequest(errorUri, HttpRequestMethod());
     absorbLogUri(xstrndup(canonicalUri, MAX_URL));
 
     al->setVirginUrlForMissingRequest(errorUri);

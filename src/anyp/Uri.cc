@@ -325,11 +325,6 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             if (scheme == AnyP::PROTO_NONE)
                 return false; // invalid scheme
 
-            if (scheme == AnyP::PROTO_URN) {
-                parseUrn(tok); // throws on any error
-                return true;
-            }
-
             // URLs then have "//"
             static const SBuf doubleSlash("//");
             if (!tok.skip(doubleSlash))
@@ -531,48 +526,6 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
     }
 }
 
-/**
- * Governed by RFC 8141 section 2:
- *
- *  assigned-name = "urn" ":" NID ":" NSS
- *  NID           = (alphanum) 0*30(ldh) (alphanum)
- *  ldh           = alphanum / "-"
- *  NSS           = pchar *(pchar / "/")
- *
- * RFC 3986 Appendix D.2 defines (as deprecated):
- *
- *   alphanum     = ALPHA / DIGIT
- *
- * Notice that NID is exactly 2-32 characters in length.
- */
-void
-AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
-{
-    static const auto nidChars = CharacterSet("NID","-") + CharacterSet::ALPHA + CharacterSet::DIGIT;
-    static const auto alphanum = (CharacterSet::ALPHA + CharacterSet::DIGIT).rename("alphanum");
-    SBuf nid;
-    if (!tok.prefix(nid, nidChars, 32))
-        throw TextException("NID not found", Here());
-
-    if (!tok.skip(':'))
-        throw TextException("NID too long or missing ':' delimiter", Here());
-
-    if (nid.length() < 2)
-        throw TextException("NID too short", Here());
-
-    if (!alphanum[*nid.begin()])
-        throw TextException("NID prefix is not alphanumeric", Here());
-
-    if (!alphanum[*nid.rbegin()])
-        throw TextException("NID suffix is not alphanumeric", Here());
-
-    setScheme(AnyP::PROTO_URN, nullptr);
-    host(nid.c_str());
-    // TODO validate path characters
-    path(tok.remaining());
-    debugs(23, 3, "Split URI into proto=urn, nid=" << nid << ", " << Raw("path",path().rawContent(),path().length()));
-}
-
 /// Extracts and returns a (suspected but only partially validated) uri-host
 /// IPv6address, IPv4address, or reg-name component. This function uses (and
 /// quotes) RFC 3986, Section 3.2.2 syntax rules.
@@ -695,23 +648,18 @@ AnyP::Uri::absolute() const
 
         absolute_.append(getScheme().image());
         absolute_.append(":",1);
-        if (getScheme() != AnyP::PROTO_URN) {
-            absolute_.append("//", 2);
-            const bool allowUserInfo = getScheme() == AnyP::PROTO_FTP ||
-                                       getScheme() == AnyP::PROTO_UNKNOWN;
+        absolute_.append("//", 2);
+        const bool allowUserInfo = getScheme() == AnyP::PROTO_FTP ||
+                                   getScheme() == AnyP::PROTO_UNKNOWN;
 
-            if (allowUserInfo && !userInfo().isEmpty()) {
-                static const CharacterSet uiChars = CharacterSet(UserInfoChars())
-                                                    .remove('%')
-                                                    .rename("userinfo-reserved");
-                absolute_.append(Encode(userInfo(), uiChars));
-                absolute_.append("@", 1);
-            }
-            absolute_.append(authority());
-        } else {
-            absolute_.append(host());
-            absolute_.append(":", 1);
+        if (allowUserInfo && !userInfo().isEmpty()) {
+            static const CharacterSet uiChars = CharacterSet(UserInfoChars())
+                                                .remove('%')
+                                                .rename("userinfo-reserved");
+            absolute_.append(Encode(userInfo(), uiChars));
+            absolute_.append("@", 1);
         }
+        absolute_.append(authority());
         absolute_.append(path()); // TODO: Encode each URI subcomponent in path_ as needed.
     }
 
@@ -723,15 +671,15 @@ AnyP::Uri::absolute() const
  *        and never copy the query-string part in the first place
  */
 char *
-urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method, const AnyP::UriScheme &scheme)
+urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method)
 {
     LOCAL_ARRAY(char, buf, MAX_URL);
 
     snprintf(buf, sizeof(buf), SQUIDSBUFPH, SQUIDSBUFPRINT(url));
     buf[sizeof(buf)-1] = '\0';
 
-    // URN, CONNECT method, and non-stripped URIs can go straight out
-    if (Config.onoff.strip_query_terms && !(method == Http::METHOD_CONNECT || scheme == AnyP::PROTO_URN)) {
+    // CONNECT method and non-stripped URIs can go straight out
+    if (Config.onoff.strip_query_terms && !(method == Http::METHOD_CONNECT)) {
         // strip anything AFTER a question-mark
         // leaving the '?' in place
         if (auto t = strchr(buf, '?')) {
@@ -814,10 +762,6 @@ urlIsRelative(const char *url)
 void
 AnyP::Uri::addRelativePath(const char *relUrl)
 {
-    // URN cannot be merged
-    if (getScheme() == AnyP::PROTO_URN)
-        return;
-
     // TODO: Handle . and .. segment normalization
 
     const auto lastSlashPos = path_.rfind('/');
@@ -962,7 +906,6 @@ urlCheckRequest(const HttpRequest * r)
     /* does method match the protocol? */
     switch (r->url.getScheme()) {
 
-    case AnyP::PROTO_URN:
     case AnyP::PROTO_HTTP:
         return true;
 

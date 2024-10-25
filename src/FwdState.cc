@@ -55,7 +55,6 @@
 #include "ssl/PeekingPeerConnector.h"
 #include "Store.h"
 #include "StoreClient.h"
-#include "urn.h"
 #if USE_OPENSSL
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
@@ -388,19 +387,8 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
         return;
     }
 
-    switch (request->url.getScheme()) {
-
-    case AnyP::PROTO_URN:
-        urnStart(request, entry, al);
-        return;
-
-    default:
-        FwdState::Pointer fwd = new FwdState(clientConn, entry, request, al);
-        fwd->start(fwd);
-        return;
-    }
-
-    /* NOTREACHED */
+    FwdState::Pointer fwd = new FwdState(clientConn, entry, request, al);
+    fwd->start(fwd);
 }
 
 void
@@ -1270,10 +1258,6 @@ FwdState::dispatch()
                 Ftp::StartRelay(this);
             else
                 Ftp::StartGateway(this);
-            break;
-
-        case AnyP::PROTO_URN:
-            fatal_dump("Should never get here");
             break;
 
         case AnyP::PROTO_WHOIS:
