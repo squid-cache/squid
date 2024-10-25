@@ -1,6 +1,8 @@
-# Checks in this file are run when a merge-commit is staged.
-# Their focus is to identify as comprehensively as possible
-# compiler, OS and platform portability issues
+# Tests in this workflow file are slower or more expensive than build
+# tests in pr.yaml. These tests improve build environment coverage, but
+# most are unlikely to fail after pr.yaml tests succeed. Limiting these
+# tests execution to staged commits optimizes CI responsiveness and
+# costs while preserving decent pr.yaml problem detection probability.
 #
 # Be mindful about keeping at all times Anubis' configuration
 # in sync with the total number of tests targeting
