@@ -1,8 +1,8 @@
 # Tests in this workflow file are slower or more expensive than build
-# tests in pr.yaml. These tests improve build environment coverage, but
-# most are unlikely to fail after pr.yaml tests succeed. Limiting these
+# tests in quick.yaml. These tests improve build environment coverage, but
+# most are unlikely to fail after quick.yaml tests succeed. Limiting these
 # tests execution to staged commits optimizes CI responsiveness and
-# costs while preserving decent pr.yaml problem detection probability.
+# costs while preserving decent quick.yaml problem detection probability.
 #
 # Be mindful about keeping at all times Anubis' configuration
 # in sync with the total number of tests targeting
