@@ -98,7 +98,6 @@ section 49    SNMP Interface
 section 49    SNMP support
 section 50    Log file handling
 section 51    Filedescriptor Functions
-section 52    URN Parsing
 section 53    AS Number handling
 section 53    Radix Tree data structure implementation
 section 54    Interprocess Communication
