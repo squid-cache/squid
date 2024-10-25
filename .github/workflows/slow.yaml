@@ -4,9 +4,9 @@
 # tests execution to staged commits optimizes CI responsiveness and
 # costs while preserving decent quick.yaml problem detection probability.
 #
-# Be mindful about keeping at all times Anubis' configuration
-# in sync with the total number of tests targeting
-# the "auto" branch, regardless of the file defining them
+# Anubis configuration must be kept in sync with the total number of
+# tests executed for "auto" branch commits, including tests in other
+# GitHub workflow file(s).
 
 name: Staged commit
 
