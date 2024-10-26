@@ -1,13 +1,20 @@
-name: GitHub CI
+# The jobs below are executed on every PR branch push (among other
+# events), quickly and cheaply detecting many common PR problems.
+#
+# Anubis configuration must be kept in sync with the total number of
+# tests executed for "auto" branch commits, including tests in other
+# GitHub workflow file(s).
+
+name: PR commit
 
 on:
   push:
-    # test this branch and staged PRs based on this branch code
+    # test commits on this branch and staged commits
     branches: [ "v6", "auto" ]
 
   pull_request:
     # test PRs targeting this branch code
-    branches: [ "v6" ]
+    branches: [ "master" ]
 
 env:
   # empty except for pull_request events
@@ -33,18 +40,18 @@ jobs:
           sudo apt-get --quiet=2 install libtool-bin
 
       - name: Setup a nodejs environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
 
       - name: Checkout Squid sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
       - run: ./bootstrap.sh
       - run: ./configure --with-openssl
-      - run: make -j2
+      - run: make -j`nproc`
       - run: |
           sudo make install
           sudo chown -R nobody:nogroup /usr/local/squid
@@ -58,7 +65,7 @@ jobs:
 
       - name: Publish test logs
         if: success() || failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-logs
           path: |
@@ -83,7 +90,7 @@ jobs:
               --progress-bar off \
               codespell==1.16 # TODO: Upgrade to codespell v2
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
@@ -94,29 +101,43 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-22.04 ]
+        os:
+          - ubuntu-22.04
+        compiler:
+          - { CC: gcc, CXX: g++ }
+          - { CC: clang, CXX: clang++ }
+        layer:
+          - { name: layer-00-default, nick: default }
+          - { name: layer-01-minimal, nick: minimal }
+          - { name: layer-02-maximus, nick: maximus }
 
     runs-on: ${{ matrix.os }}
+
+    name: build-tests(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+
+    env:
+      CC: ${{ matrix.compiler.CC }}
+      CXX: ${{ matrix.compiler.CXX }}
 
     steps:
 
       - name: Install prerequisite Linux packages
-        if: runner.os == 'Linux'
         run: |
           # required for "apt-get build-dep" to work
           sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
-          sudo apt-get --quiet=2 install linuxdoc-tools
+          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin ${{ matrix.compiler.CC }}
 
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - run: ./test-builds.sh
+      - name: Run build on Linux
+        run: ./test-builds.sh ${{ matrix.layer.name }}
 
       - name: Publish build logs
         if: success() || failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: build-logs-${{ runner.os }}
+          name: build-logs-${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
           path: btlayer-*.log
