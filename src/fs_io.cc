@@ -425,13 +425,7 @@ void
 file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *client_data)
 {
     assert(fd >= 0);
-    auto *ctrl_dat = new dread_ctrl;
-    ctrl_dat->fd = fd;
-    ctrl_dat->offset = offset;
-    ctrl_dat->req_len = req_len;
-    ctrl_dat->buf = buf;
-    ctrl_dat->handler = handler;
-    ctrl_dat->client_data = cbdataReference(client_data);
+    const auto ctrl_dat = new dread_ctrl(fd, offset, buf, req_len, handler, cbdataReference(client_data));
     diskHandleRead(fd, ctrl_dat);
 }
 

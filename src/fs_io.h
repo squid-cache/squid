@@ -20,8 +20,18 @@ class MemBuf;
 class dread_ctrl
 {
     MEMPROXY_CLASS(dread_ctrl);
-
 public:
+    dread_ctrl(int aFd, off_t aOffset, char *aBuf, int aLen, DRCB *aHandler, void *aData) :
+        fd(aFd),
+        offset(aOffset),
+        req_len(aLen),
+        buf(aBuf),
+        handler(aHandler),
+        client_data(aData)
+    {}
+    dread_ctrl(dread_ctrl &&) = delete; // no copying or moving of any kind
+    ~dread_ctrl() = default;
+
     int fd = -1;
     off_t offset = 0;
     int req_len = 0;
