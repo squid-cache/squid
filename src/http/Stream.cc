@@ -271,8 +271,7 @@ Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
     MemBuf *mb = rep->pack();
 
     // dump now, so we do not output any body.
-    debugs(11, 2, "HTTP Client " << clientConnection);
-    debugs(11, 2, "HTTP Client REPLY:\n---------\n" << mb->buf << "\n----------");
+    traceProtocol(11, "HTTP Client REQUEST", clientConnection, mb->buf);
 
     /* Save length of headers for persistent conn checks */
     http->out.headers_sz = mb->contentSize();

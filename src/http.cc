@@ -693,11 +693,9 @@ HttpStateData::processReplyHeader()
     }
 
     /* We know the whole response is in parser now */
-    debugs(11, 2, "HTTP Server " << serverConnection);
-    debugs(11, 2, "HTTP Server RESPONSE:\n---------\n" <<
-           hp->messageProtocol() << " " << hp->messageStatus() << " " << hp->reasonPhrase() << "\n" <<
-           hp->mimeHeader() <<
-           "----------");
+    traceProtocol(11, "HTTP Server RESPONSE", serverConnection,
+                  hp->messageProtocol() << " " << hp->messageStatus() << " " << hp->reasonPhrase() << "\n" <<
+                  hp->mimeHeader());
 
     // reset payload tracking to begin after message headers
     payloadSeen = inBuf.length();
@@ -2479,9 +2477,7 @@ HttpStateData::sendRequest()
     request->peer_host=_peer?_peer->host:nullptr;
     buildRequestPrefix(&mb);
 
-    debugs(11, 2, "HTTP Server " << serverConnection);
-    debugs(11, 2, "HTTP Server REQUEST:\n---------\n" << mb.buf << "\n----------");
-
+    traceProtocol(11, "HTTP Server REQUEST", serverConnection, mb.buf);
     Comm::Write(serverConnection, &mb, requestSender);
     return true;
 }

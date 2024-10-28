@@ -363,9 +363,7 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
 
     MemBuf *mb = rep->pack();
 
-    debugs(11, 2, "HTTP Client " << clientConnection);
-    debugs(11, 2, "HTTP Client CONTROL MSG:\n---------\n" << mb->buf << "\n----------");
-
+    traceProtocol(11, "HTTP Client RESPONSE", clientConnection, mb->buf);
     Comm::Write(clientConnection, mb, call);
 
     delete mb;
@@ -391,12 +389,14 @@ Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext serve
 ConnStateData *
 Http::NewServer(const MasterXaction::Pointer &xact)
 {
+    debugs(11, 2, "switch to HTTP on: " << xact->tcpClient);
     return new Http1::Server(xact, false);
 }
 
 ConnStateData *
 Https::NewServer(const MasterXaction::Pointer &xact)
 {
+    debugs(11, 2, "switch to HTTP on: " << xact->tcpClient);
     return new Http1::Server(xact, true);
 }
 
