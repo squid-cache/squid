@@ -446,7 +446,7 @@ icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
         return false;
     }
 
-    ACLFilledChecklist checklist(Config.accessList.icp, icp_request, nullptr);
+    ACLFilledChecklist checklist(Config.accessList.icp, icp_request);
     checklist.src_addr = from;
     checklist.my_addr.setNoAddr();
     const auto &answer = checklist.fastCheck();

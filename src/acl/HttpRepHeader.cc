@@ -14,6 +14,6 @@
 int
 Acl::HttpRepHeaderCheck::match(ACLChecklist * const ch)
 {
-    return data->match(Filled(ch)->reply->header);
+    return data->match(Filled(ch)->reply().header);
 }
 

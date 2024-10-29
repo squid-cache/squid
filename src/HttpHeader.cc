@@ -945,7 +945,7 @@ void
 HttpHeader::addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from)
 {
     // TODO: do not add Via header for messages where Squid itself
-    // generated the message (i.e., Downloader or ESI) there should be no Via header added at all.
+    // generated the message (i.e., Downloader) there should be no Via header added at all.
 
     if (Config.onoff.via) {
         SBuf buf;

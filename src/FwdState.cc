@@ -128,7 +128,8 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     waitingForDispatched(false),
     destinations(new ResolvedPeers()),
     pconnRace(raceImpossible),
-    storedWholeReply_(nullptr)
+    storedWholeReply_(nullptr),
+    peeringTimer(r)
 {
     debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
     HTTPMSGLOCK(request);
@@ -185,6 +186,8 @@ FwdState::stopAndDestroy(const char *reason)
     debugs(17, 3, "for " << reason);
 
     cancelStep(reason);
+
+    peeringTimer.stop();
 
     PeerSelectionInitiator::subscribed = false; // may already be false
     self = nullptr; // we hope refcounting destroys us soon; may already be nil
@@ -258,8 +261,6 @@ FwdState::completed()
     }
 
     flags.forward_completed = true;
-
-    request->hier.stopPeerClock(false);
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         debugs(17, 3, "entry aborted");
@@ -348,7 +349,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
          * Intentionally replace the src_addr automatically selected by the checklist code
          * we do NOT want the indirect client address to be tested here.
          */
-        ACLFilledChecklist ch(Config.accessList.miss, request, nullptr);
+        ACLFilledChecklist ch(Config.accessList.miss, request);
         ch.al = al;
         ch.src_addr = request->client_addr;
         ch.syncAle(request, nullptr);
@@ -456,7 +457,7 @@ FwdState::useDestinations()
 void
 FwdState::fail(ErrorState * errorState)
 {
-    debugs(17, 3, err_type_str[errorState->type] << " \"" << Http::StatusCodeString(errorState->httpStatus) << "\"\n\t" << entry->url());
+    debugs(17, 3, errorState << "; was: " << err);
 
     delete err;
     err = errorState;
@@ -779,8 +780,6 @@ FwdState::retryOrBail()
 
     // TODO: should we call completed() here and move doneWithRetries there?
     doneWithRetries();
-
-    request->hier.stopPeerClock(false);
 
     if (self != nullptr && !err && shutting_down && entry->isEmpty()) {
         const auto anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request, al);
@@ -1128,15 +1127,13 @@ FwdState::connectStart()
     err = nullptr;
     request->clearError();
 
-    request->hier.startPeerClock();
-
     const auto callback = asyncCallback(17, 5, FwdState::noteConnection, this);
     HttpRequest::Pointer cause = request;
     const auto cs = new HappyConnOpener(destinations, callback, cause, start_t, n_tries, al);
     cs->setHost(request->url.host());
     bool retriable = checkRetriable();
     if (!retriable && Config.accessList.serverPconnForNonretriable) {
-        ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request, nullptr);
+        ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request);
         ch.al = al;
         ch.syncAle(request, nullptr);
         retriable = ch.fastCheck().allowed();
@@ -1504,7 +1501,7 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
         return; // anything will do.
     }
 
-    ACLFilledChecklist ch(nullptr, request, nullptr);
+    ACLFilledChecklist ch(nullptr, request);
     ch.dst_peer_name = conn->getPeer() ? conn->getPeer()->name : nullptr;
     ch.dst_addr = conn->remote;
 
@@ -1531,7 +1528,7 @@ GetTosToServer(HttpRequest * request, Comm::Connection &conn)
     if (!Ip::Qos::TheConfig.tosToServer)
         return 0;
 
-    ACLFilledChecklist ch(nullptr, request, nullptr);
+    ACLFilledChecklist ch(nullptr, request);
     ch.dst_peer_name = conn.getPeer() ? conn.getPeer()->name : nullptr;
     ch.dst_addr = conn.remote;
     return aclMapTOS(Ip::Qos::TheConfig.tosToServer, &ch);
@@ -1544,7 +1541,7 @@ GetNfmarkToServer(HttpRequest * request, Comm::Connection &conn)
     if (!Ip::Qos::TheConfig.nfmarkToServer)
         return 0;
 
-    ACLFilledChecklist ch(nullptr, request, nullptr);
+    ACLFilledChecklist ch(nullptr, request);
     ch.dst_peer_name = conn.getPeer() ? conn.getPeer()->name : nullptr;
     ch.dst_addr = conn.remote;
     const auto mc = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToServer, &ch);
@@ -1570,5 +1567,27 @@ ResetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
         Ip::Qos::setSockTos(&conn, conn.tos);
     if (conn.nfmark)
         Ip::Qos::setSockNfmark(&conn, conn.nfmark);
+}
+
+/* PeeringActivityTimer */
+
+// The simple methods below are not inlined to avoid exposing some of the
+// current FwdState.h users to a full HttpRequest definition they do not need.
+
+PeeringActivityTimer::PeeringActivityTimer(const HttpRequestPointer &r): request(r)
+{
+    Assure(request);
+    timer().resume();
+}
+
+PeeringActivityTimer::~PeeringActivityTimer()
+{
+    stop();
+}
+
+Stopwatch &
+PeeringActivityTimer::timer()
+{
+    return request->hier.totalPeeringTime;
 }
 

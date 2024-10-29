@@ -22,7 +22,6 @@ XactionInitiator::ParseInitiators(const char *name)
         {"client", initClient},
         {"peer-pool", initPeerPool},
         {"certificate-fetching", initCertFetcher},
-        {"esi", initEsi},
         {"cache-digest", initCacheDigest},
         {"server", initServer},
         {"htcp", initHtcp},

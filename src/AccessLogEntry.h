@@ -60,9 +60,6 @@ public:
     /// Side effect: Enables reverse DNS lookups of future client addresses.
     const char *getLogClientFqdn(char *buf, size_t bufSize) const;
 
-    /// Fetch the client IDENT string, or nil if none is available.
-    const char *getClientIdent() const;
-
     /// Fetch the external ACL provided 'user=' string, or nil if none is available.
     const char *getExtUser() const;
 
@@ -157,7 +154,6 @@ public:
         LogTags code;
         struct timeval start_time; ///< The time the master transaction started
         struct timeval trTime; ///< The response time
-        const char *rfc931 = nullptr;
         const char *extuser = nullptr;
 #if USE_OPENSSL
         const char *ssluser = nullptr;

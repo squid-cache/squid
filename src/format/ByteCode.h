@@ -150,7 +150,6 @@ typedef enum {
     /* client credentials */
     LFT_USER_NAME,   /* any source will do */
     LFT_USER_LOGIN,
-    LFT_USER_IDENT,
     /*LFT_USER_REALM, */
     /*LFT_USER_SCHEME, */
     LFT_USER_EXTERNAL,

@@ -45,10 +45,29 @@ Mgr::Action::atomic() const
     return command().profile->isAtomic;
 }
 
+Mgr::Format
+Mgr::Action::format() const
+{
+    return command().profile->format;
+}
+
 const char*
 Mgr::Action::name() const
 {
     return command().profile->name;
+}
+
+const char *
+Mgr::Action::contentType() const
+{
+    switch (format()) {
+    case Format::yaml:
+        return "application/yaml;charset=utf-8";
+    case Format::informal:
+        return "text/plain;charset=utf-8";
+    }
+    assert(!"unreachable code");
+    return "";
 }
 
 StoreEntry*
@@ -120,3 +139,26 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
         entry->complete();
 }
 
+void
+Mgr::OpenKidSection(StoreEntry * const entry, const Format format)
+{
+    switch (format) {
+    case Format::yaml:
+        return storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
+    case Format::informal:
+        return storeAppendPrintf(entry, "by kid%d {\n", KidIdentifier);
+    }
+    // unreachable code
+}
+
+void
+Mgr::CloseKidSection(StoreEntry * const entry, const Format format)
+{
+    switch (format) {
+    case Format::yaml:
+        return storeAppendPrintf(entry, "...\n");
+    case Format::informal:
+        return storeAppendPrintf(entry, "} by kid%d\n\n", KidIdentifier);
+    }
+    // unreachable code
+}

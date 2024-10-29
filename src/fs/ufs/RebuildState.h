@@ -28,7 +28,7 @@ class RebuildState
 public:
     static EVH RebuildStep;
 
-    RebuildState(RefCount<UFSSwapDir> sd);
+    RebuildState(const RefCount<UFSSwapDir> &sd);
     virtual ~RebuildState();
 
     virtual bool error() const;

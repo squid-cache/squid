@@ -60,7 +60,7 @@ private:
     RefCount<IORequestor> ioRequestor;
     void doClose();
 
-    void readDone(int fd, const char *buf, int len, int errflag, RefCount<ReadRequest> request);
+    void readDone(int fd, const char *buf, int len, int errflag, const RefCount<ReadRequest> &request);
     void writeDone(int fd, int errflag, size_t len, RefCount<WriteRequest> request);
 };
 

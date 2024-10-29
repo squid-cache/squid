@@ -179,8 +179,6 @@ private:
 /// cache.log FILE or, as the last resort, stderr stream;
 /// may be nil during static initialization and destruction!
 FILE *DebugStream();
-/// change-avoidance macro; new code should call DebugStream() instead
-#define debug_log DebugStream()
 
 /// a hack for low-level file descriptor manipulations in ipcCreate()
 void ResyncDebugLog(FILE *newDestination);

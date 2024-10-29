@@ -27,27 +27,16 @@ EXTRA_DIST = \
 	test-squid-conf.sh \
 	testHeader.cc.in
 
-ESI_ALL_TESTS = \
-	ESIExpressions
-
-if ENABLE_ESI
-  ESI_TESTS = $(ESI_ALL_TESTS)
-else
-  ESI_TESTS =
-endif
-
 ## Sort by dependencies - test lowest layers first
 TESTS += \
 	syntheticoperators \
 	VirtualDeleteOperator \
 	splay\
 	mem_node_test\
-	mem_hdr_test\
-	$(ESI_TESTS)
+	mem_hdr_test
 
 ## Sort by alpha - any build failures are significant.
 check_PROGRAMS += \
-		$(ESI_TESTS) \
 		mem_node_test\
 		mem_hdr_test \
 		splay \
@@ -86,15 +75,6 @@ stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
 
 STUB.h: $(top_srcdir)/src/tests/STUB.h
 	cp $(top_srcdir)/src/tests/STUB.h $@
-
-ESIExpressions_SOURCES = \
-	$(DEBUG_SOURCE) \
-	ESIExpressions.cc \
-	stub_libmem.cc
-ESIExpressions_LDADD = $(top_builddir)/src/esi/Expression.o \
-	$(top_builddir)/src/debug/libdebug.la \
-	$(top_builddir)/src/comm/libminimal.la \
-		$(LDADD)
 
 mem_node_test_SOURCES = \
 	$(DEBUG_SOURCE) \

@@ -29,6 +29,7 @@ void Mgr::Action::fillEntry(StoreEntry *, bool) STUB
 void Mgr::Action::add(const Action &) STUB
 void Mgr::Action::respond(const Request &) STUB
 void Mgr::Action::sendResponse(const Ipc::RequestId) STUB
+Mgr::Format Mgr::Action::format() const STUB_RETVAL(Mgr::Format::informal)
 bool Mgr::Action::atomic() const STUB_RETVAL(false)
 const char * Mgr::Action::name() const STUB_RETVAL(nullptr)
 static Mgr::Command static_Command;
@@ -181,8 +182,8 @@ void Mgr::QueryParams::Parse(Parser::Tokenizer &, QueryParams &) STUB
 Mgr::QueryParam::Pointer Mgr::QueryParams::CreateParam(QueryParam::Type) STUB_RETVAL(Mgr::QueryParam::Pointer(nullptr))
 
 #include "mgr/Registration.h"
-//void Mgr::RegisterAction(char const *, char const *, OBJH *, int, int);
-//void Mgr::RegisterAction(char const *, char const *, ClassActionCreationHandler *, int, int);
+//void Mgr::RegisterAction(char const *, char const *, OBJH *, Protected, Atomic, Format);
+//void Mgr::RegisterAction(char const *, char const *, ClassActionCreationHandler *, Protected, Atomic, Format);
 
 #include "mgr/Request.h"
 //Mgr::Request::Request(int, unsigned int, int, const Mgr::ActionParams &) STUB

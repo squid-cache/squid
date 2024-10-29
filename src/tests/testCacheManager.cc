@@ -11,6 +11,7 @@
 #include "CacheManager.h"
 #include "compat/cppunit.h"
 #include "mgr/Action.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "unitTestMain.h"
 
@@ -50,26 +51,13 @@ public:
 void
 CacheManagerInternals::testValidUrl(const AnyP::Uri &url)
 {
-    try {
-        (void)ParseUrl(url);
-    } catch (...) {
-        std::cerr << "\nFAIL: " << url <<
-                  Debug::Extra << "error: " << CurrentException << "\n";
-        CPPUNIT_FAIL("rejected a valid URL");
-    }
+    CPPUNIT_ASSERT_NO_THROW(ParseUrl(url));
 }
 
 void
 CacheManagerInternals::testInvalidUrl(const AnyP::Uri &url, const char *const problem)
 {
-    try {
-        (void)ParseUrl(url);
-        std::cerr << "\nFAIL: " << url <<
-                  Debug::Extra << "error: should be rejected due to '" << problem << "'\n";
-    } catch (const TextException &) {
-        return; // success -- the parser signaled bad input
-    }
-    CPPUNIT_FAIL("failed to reject an invalid URL");
+    CPPUNIT_ASSERT_THROW_MESSAGE(problem, ParseUrl(url), TextException);
 }
 
 /// customizes our test setup
@@ -112,7 +100,7 @@ TestCacheManager::testRegister()
     CacheManager *manager=CacheManager::GetInstance();
     CPPUNIT_ASSERT(manager != nullptr);
 
-    manager->registerProfile("sample", "my sample", &dummy_action, false, false);
+    Mgr::RegisterAction("sample", "my sample", &dummy_action, Mgr::Protected::no, Mgr::Atomic::no, Mgr::Format::informal);
     Mgr::Action::Pointer action = manager->createNamedAction("sample");
     CPPUNIT_ASSERT(action != nullptr);
 
@@ -121,9 +109,12 @@ TestCacheManager::testRegister()
     CPPUNIT_ASSERT(profile->creator != nullptr);
     CPPUNIT_ASSERT_EQUAL(false, profile->isPwReq);
     CPPUNIT_ASSERT_EQUAL(false, profile->isAtomic);
+    CPPUNIT_ASSERT_EQUAL(Mgr::Format::informal, profile->format);
+    CPPUNIT_ASSERT_EQUAL(Mgr::Format::informal, action->format());
     CPPUNIT_ASSERT_EQUAL(String("sample"), String(action->name()));
 
     StoreEntry *sentry=new StoreEntry();
+    sentry->createMemObject();
     sentry->flags=0x25; //arbitrary test value
     action->run(sentry, false);
     CPPUNIT_ASSERT_EQUAL(1,(int)sentry->flags);

@@ -555,9 +555,6 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
 
     comm_init_opened(conn, note, AI);
 
-    if (!(conn->flags & COMM_NOCLOEXEC))
-        fd_table[conn->fd].flags.close_on_exec = true;
-
     if (conn->local.port() > (unsigned short) 0) {
 #if _SQUID_WINDOWS_
         if (AI->ai_socktype != SOCK_DGRAM)
@@ -1146,9 +1143,6 @@ commSetCloseOnExec(int fd)
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "ERROR: " << MYNAME << "FD " << fd << ": set close-on-exec failed: " << xstrerr(xerrno));
     }
-
-    fd_table[fd].flags.close_on_exec = true;
-
 #endif
 }
 

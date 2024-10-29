@@ -49,6 +49,40 @@ void ResetMarkingsToServer(HttpRequest *, Comm::Connection &);
 
 class HelperReply;
 
+/// Eliminates excessive Stopwatch pause() calls in a task with multiple code
+/// locations that pause a stopwatch. Ideally, there would be just one such
+/// location (e.g., a task class destructor), but current code idiosyncrasies
+/// necessitate this state. For simplicity sake, this class currently manages a
+/// Stopwatch at a hard-coded location: HttpRequest::hier.totalPeeringTime.
+class PeeringActivityTimer
+{
+public:
+    PeeringActivityTimer(const HttpRequestPointer &); ///< resumes timer
+    ~PeeringActivityTimer(); ///< \copydoc stop()
+
+    /// pauses timer if stop() has not been called
+    void stop()
+    {
+        if (!stopped) {
+            timer().pause();
+            stopped = true;
+        }
+    }
+
+private:
+    /// managed Stopwatch object within HierarchyLogEntry
+    Stopwatch &timer();
+
+    /// the owner of managed HierarchyLogEntry
+    HttpRequestPointer request;
+
+    // We cannot rely on timer().ran(): This class eliminates excessive calls
+    // within a single task (e.g., an AsyncJob) while the timer (and its ran()
+    // state) may be shared/affected by multiple concurrent tasks.
+    /// Whether the task is done participating in the managed activity.
+    bool stopped = false;
+};
+
 class FwdState: public RefCountable, public PeerSelectionInitiator
 {
     CBDATA_CHILD(FwdState);
@@ -212,6 +246,9 @@ private:
     /// Whether the entire reply (including any body) was written to Store.
     /// The string literal value is only used for debugging.
     const char *storedWholeReply_;
+
+    /// Measures time spent on selecting and communicating with peers.
+    PeeringActivityTimer peeringTimer;
 };
 
 class acl_tos;
