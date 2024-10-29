@@ -679,7 +679,7 @@ urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method
     buf[sizeof(buf)-1] = '\0';
 
     // CONNECT method and non-stripped URIs can go straight out
-    if (Config.onoff.strip_query_terms && !(method == Http::METHOD_CONNECT)) {
+    if (Config.onoff.strip_query_terms && method != Http::METHOD_CONNECT) {
         // strip anything AFTER a question-mark
         // leaving the '?' in place
         if (auto t = strchr(buf, '?')) {

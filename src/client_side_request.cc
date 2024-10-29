@@ -1797,7 +1797,7 @@ ClientHttpRequest::setLogUriToRawUri(const char *rawUri, const HttpRequestMethod
     // Should(!request);
 
     // TODO: SBuf() performance regression, fix by converting rawUri to SBuf
-    char *canonicalUri = urlCanonicalCleanWithoutRequest(SBuf(rawUri), method);
+    const auto canonicalUri = urlCanonicalCleanWithoutRequest(SBuf(rawUri), method);
 
     absorbLogUri(AnyP::Uri::cleanup(canonicalUri));
 
