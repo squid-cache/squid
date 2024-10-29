@@ -146,10 +146,6 @@ msgstr ""
 "Lugejal katkes v&otilde;rgust andmeid lugedes kannatus. V&otilde;rk v&otilde;"
 "iserver v&otilde;ib olla maas v&otilde;i umbes. Proovige uuesti."
 
-#: templates/ERR_URN_RESOLVE+html.body.div.h2:16-1
-msgid "A URL for the requested URN could not be retrieved"
-msgstr "P&auml;ring URNile ei saa vastust"
-
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:27-1
 msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
@@ -261,10 +257,6 @@ msgstr "Vahemälu serveri kasutamine keelatud."
 msgid "Cache Manager Access Denied."
 msgstr "Vahemälu serveri haldaja kasutamine keelatud."
 
-#: templates/ERR_URN_RESOLVE+html.body.div.blockquote.p:24-1
-msgid "Cannot Resolve URN"
-msgstr "Ei suuda lahendada URN"
-
 #: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.descr:1
 msgid "Cert validation infinite loop detected"
 msgstr ""
@@ -354,7 +346,6 @@ msgstr "POST v&otilde;i PUT p&auml;ringutel puudub Content-Length"
 #: templates/ERR_TOO_BIG+html.head.meta:-1--1
 #: templates/ERR_UNSUP_HTTPVERSION+html.head.meta:-1--1
 #: templates/ERR_UNSUP_REQ+html.head.meta:-1--1
-#: templates/ERR_URN_RESOLVE+html.head.meta:-1--1
 #: templates/ERR_WRITE_ERROR+html.head.meta:-1--1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.head.meta:-1--1
 msgid "Copyright (C) 1996-2017 The Squid Software Foundation and contributors"
@@ -416,7 +407,6 @@ msgstr ""
 #: templates/ERR_TOO_BIG+html.body.div.h1:15-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h1:15-1
 #: templates/ERR_UNSUP_REQ+html.body.div.h1:15-1
-#: templates/ERR_URN_RESOLVE+html.body.div.h1:15-1
 #: templates/ERR_WRITE_ERROR+html.body.div.h1:15-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h1:15-1
 msgid "ERROR"
@@ -468,11 +458,6 @@ msgstr "VIGA: FTP PUT eba&otilde;nnestus"
 #: templates/ERR_WRITE_ERROR+html.head.title:5-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.head.title:5-1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr "VIGA: P&auml;ring URLile ei saa vastust"
-
-#: templates/ERR_URN_RESOLVE+html.head.title:5-1
-#, fuzzy
-msgid "ERROR: The requested URN could not be retrieved"
 msgstr "VIGA: P&auml;ring URLile ei saa vastust"
 
 #: templates/ERR_ESI+html.body.div.blockquote.p:24-1
@@ -584,7 +569,6 @@ msgstr ""
 #: templates/ERR_TOO_BIG+html.body.div.p:37-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:35-1
 #: templates/ERR_UNSUP_REQ+html.body.div.p:35-1
-#: templates/ERR_URN_RESOLVE+html.body.div.p:35-1
 #: templates/ERR_WRITE_ERROR+html.body.div.p:37-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:35-1
 msgid "Generated %T by %h (%s)"
@@ -598,10 +582,6 @@ msgstr ""
 #: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:5
 msgid "Handshake with SSL server failed"
 msgstr ""
-
-#: templates/ERR_URN_RESOLVE+html.body.div.p:27-1
-msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr "Hei, mida sa ootad URNidelt %T peal:)"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:25-1
 #: templates/ERR_AGENT_WPAD+html.body.div.p:25-1
@@ -953,15 +933,6 @@ msgid ""
 "href=\"%U\">%U</a>"
 msgstr ""
 "Tekkis j&auml;rgnev viga sooritades p&auml;ringut URLile <a href=\"%U\">%U</"
-"a>"
-
-#: templates/ERR_URN_RESOLVE+html.body.div.p:21-1
-#, fuzzy
-msgid ""
-"The following error was encountered while trying to retrieve the URN: <a "
-"href=\"%U\">%U</a>"
-msgstr ""
-"Tekkis j&auml;rgnev viga Sooritades p&auml;ringut URNile <a href=\"%U\">%U</"
 "a>"
 
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:29-1
@@ -1319,7 +1290,6 @@ msgstr ""
 #: templates/ERR_TOO_BIG+html.body.div.p:31-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:29-1
 #: templates/ERR_UNSUP_REQ+html.body.div.p:29-1
-#: templates/ERR_URN_RESOLVE+html.body.div.p:29-1
 #: templates/ERR_WRITE_ERROR+html.body.div.p:31-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:29-1
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
@@ -1413,9 +1383,6 @@ msgstr ""
 #: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_NAME_SYNTAX.descr:213
 msgid "unsupported or invalid name syntax"
 msgstr ""
-
-#~ msgid "ERROR: The requested URN not be retrieved"
-#~ msgstr "VIGA: P&auml;ring URNile ei saa vastust"
 
 #~ msgid "FTP PUT Successful: File Updated"
 #~ msgstr "FTP PUT &Otilde;nnestus: fail on uuendatud"

@@ -144,10 +144,6 @@ msgstr ""
 "ha congesti&oacute; o indisposici&oacute; del servidor i/o la xarxa.Intenteu-"
 "ho d'aqui a una estona."
 
-#: templates/ERR_URN_RESOLVE+html.body.div.h2:16-1
-msgid "A URL for the requested URN could not be retrieved"
-msgstr "No es pot mostrar la URN que heu sol.licitat"
-
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:27-1
 msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
@@ -262,10 +258,6 @@ msgstr "Acc&eacute;s denegat a la cache"
 msgid "Cache Manager Access Denied."
 msgstr "Acc&eacute;s denegat a l'administraci&oacute; de la cache."
 
-#: templates/ERR_URN_RESOLVE+html.body.div.blockquote.p:24-1
-msgid "Cannot Resolve URN"
-msgstr "No s'ha pogut resoldre la URN"
-
 #: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.descr:1
 msgid "Cert validation infinite loop detected"
 msgstr ""
@@ -354,7 +346,6 @@ msgstr "Falta el camp <q>Content-Length</q>."
 #: templates/ERR_TOO_BIG+html.head.meta:-1--1
 #: templates/ERR_UNSUP_HTTPVERSION+html.head.meta:-1--1
 #: templates/ERR_UNSUP_REQ+html.head.meta:-1--1
-#: templates/ERR_URN_RESOLVE+html.head.meta:-1--1
 #: templates/ERR_WRITE_ERROR+html.head.meta:-1--1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.head.meta:-1--1
 msgid "Copyright (C) 1996-2017 The Squid Software Foundation and contributors"
@@ -416,7 +407,6 @@ msgstr ""
 #: templates/ERR_TOO_BIG+html.body.div.h1:15-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h1:15-1
 #: templates/ERR_UNSUP_REQ+html.body.div.h1:15-1
-#: templates/ERR_URN_RESOLVE+html.body.div.h1:15-1
 #: templates/ERR_WRITE_ERROR+html.body.div.h1:15-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h1:15-1
 msgid "ERROR"
@@ -469,11 +459,6 @@ msgstr "ERROR: Ha fallat l'enviament del fitxer FTP"
 #: templates/ERR_WRITE_ERROR+html.head.title:5-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.head.title:5-1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr "ERROR: No es pot mostrar la URL que heu sol.licitat"
-
-#: templates/ERR_URN_RESOLVE+html.head.title:5-1
-#, fuzzy
-msgid "ERROR: The requested URN could not be retrieved"
 msgstr "ERROR: No es pot mostrar la URL que heu sol.licitat"
 
 #: templates/ERR_ESI+html.body.div.blockquote.p:24-1
@@ -585,7 +570,6 @@ msgstr ""
 #: templates/ERR_TOO_BIG+html.body.div.p:37-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:35-1
 #: templates/ERR_UNSUP_REQ+html.body.div.p:35-1
-#: templates/ERR_URN_RESOLVE+html.body.div.p:35-1
 #: templates/ERR_WRITE_ERROR+html.body.div.p:37-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:35-1
 msgid "Generated %T by %h (%s)"
@@ -599,10 +583,6 @@ msgstr ""
 #: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:5
 msgid "Handshake with SSL server failed"
 msgstr ""
-
-#: templates/ERR_URN_RESOLVE+html.body.div.p:27-1
-msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr "Ei :) no esperis massa de les URN a %T !!"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:25-1
 #: templates/ERR_AGENT_WPAD+html.body.div.p:25-1
@@ -947,12 +927,6 @@ msgstr ""
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:21-1
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
-"href=\"%U\">%U</a>"
-msgstr ""
-
-#: templates/ERR_URN_RESOLVE+html.body.div.p:21-1
-msgid ""
-"The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
 
@@ -1311,7 +1285,6 @@ msgstr ""
 #: templates/ERR_TOO_BIG+html.body.div.p:31-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:29-1
 #: templates/ERR_UNSUP_REQ+html.body.div.p:29-1
-#: templates/ERR_URN_RESOLVE+html.body.div.p:29-1
 #: templates/ERR_WRITE_ERROR+html.body.div.p:31-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:29-1
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
@@ -1405,9 +1378,6 @@ msgstr ""
 #: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_NAME_SYNTAX.descr:213
 msgid "unsupported or invalid name syntax"
 msgstr ""
-
-#~ msgid "ERROR: The requested URN not be retrieved"
-#~ msgstr "ERROR: No es pot mostrar la URN que heu sol.licitat"
 
 #, fuzzy
 #~ msgid "FTP PUT Successful: File Updated"

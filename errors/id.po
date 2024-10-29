@@ -153,10 +153,6 @@ msgstr ""
 "Timeout terjadi ketika menunggu untuk membaca data dari jaringan. Jaringan "
 "atau server mungkin mati atau tersumbat. Coba coba lagi permintaan anda."
 
-#: templates/ERR_URN_RESOLVE+html.body.div.h2:16-1
-msgid "A URL for the requested URN could not be retrieved"
-msgstr "URL untuk URN yang diminta tidak bisa didapatkan kembali"
-
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:27-1
 msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
@@ -270,10 +266,6 @@ msgstr "Akses Cache Ditolak"
 msgid "Cache Manager Access Denied."
 msgstr "Cache manager Akses ditolak."
 
-#: templates/ERR_URN_RESOLVE+html.body.div.blockquote.p:24-1
-msgid "Cannot Resolve URN"
-msgstr "Tidak dapat menyelesaikan URN"
-
 #: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.descr:1
 msgid "Cert validation infinite loop detected"
 msgstr ""
@@ -362,7 +354,6 @@ msgstr ""
 #: templates/ERR_TOO_BIG+html.head.meta:-1--1
 #: templates/ERR_UNSUP_HTTPVERSION+html.head.meta:-1--1
 #: templates/ERR_UNSUP_REQ+html.head.meta:-1--1
-#: templates/ERR_URN_RESOLVE+html.head.meta:-1--1
 #: templates/ERR_WRITE_ERROR+html.head.meta:-1--1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.head.meta:-1--1
 msgid "Copyright (C) 1996-2017 The Squid Software Foundation and contributors"
@@ -424,7 +415,6 @@ msgstr ""
 #: templates/ERR_TOO_BIG+html.body.div.h1:15-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h1:15-1
 #: templates/ERR_UNSUP_REQ+html.body.div.h1:15-1
-#: templates/ERR_URN_RESOLVE+html.body.div.h1:15-1
 #: templates/ERR_WRITE_ERROR+html.body.div.h1:15-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h1:15-1
 msgid "ERROR"
@@ -477,11 +467,6 @@ msgstr ""
 #: templates/ERR_ZERO_SIZE_OBJECT+html.head.title:5-1
 msgid "ERROR: The requested URL could not be retrieved"
 msgstr ""
-
-#: templates/ERR_URN_RESOLVE+html.head.title:5-1
-#, fuzzy
-msgid "ERROR: The requested URN could not be retrieved"
-msgstr "URL untuk URN yang diminta tidak bisa didapatkan kembali"
 
 #: templates/ERR_ESI+html.body.div.blockquote.p:24-1
 msgid "ESI Processing failed."
@@ -590,7 +575,6 @@ msgstr ""
 #: templates/ERR_TOO_BIG+html.body.div.p:37-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:35-1
 #: templates/ERR_UNSUP_REQ+html.body.div.p:35-1
-#: templates/ERR_URN_RESOLVE+html.body.div.p:35-1
 #: templates/ERR_WRITE_ERROR+html.body.div.p:37-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:35-1
 msgid "Generated %T by %h (%s)"
@@ -603,10 +587,6 @@ msgstr ""
 
 #: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:5
 msgid "Handshake with SSL server failed"
-msgstr ""
-
-#: templates/ERR_URN_RESOLVE+html.body.div.p:27-1
-msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr ""
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:25-1
@@ -920,12 +900,6 @@ msgstr ""
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:21-1
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
-"href=\"%U\">%U</a>"
-msgstr ""
-
-#: templates/ERR_URN_RESOLVE+html.body.div.p:21-1
-msgid ""
-"The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
 
@@ -1249,7 +1223,6 @@ msgstr ""
 #: templates/ERR_TOO_BIG+html.body.div.p:31-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:29-1
 #: templates/ERR_UNSUP_REQ+html.body.div.p:29-1
-#: templates/ERR_URN_RESOLVE+html.body.div.p:29-1
 #: templates/ERR_WRITE_ERROR+html.body.div.p:31-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:29-1
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
