@@ -194,6 +194,14 @@ This section gives an account of those changes in three categories:
 	<tag>external_acl_type</tag>
 	<p>Removed <em>%IDENT</em> format code with Ident protocol support.
 
+	<tag>collapsed_forwarding</tag>
+	<p>Squid no longer revalidates responses to collapsed requests, treating
+	all such responses as fresh. This change follows IETF HTTP Working Group
+	advice (in an HTTP gray area) and prevents arguably excessive freshness
+	checks for responses to collapsed requests. This change does not prevent
+	freshness checks for responses that were, at the time of a hit request,
+	either fully cached or still receiving response body bytes.
+
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
