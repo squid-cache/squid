@@ -48,6 +48,7 @@ AS_IF([test -n "$squid_host_os_version"],[
 ])
 AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
+
 AS_IF([test -e /etc/os-release],[
   . /etc/os-release
   printed_os_name="no"
@@ -58,6 +59,9 @@ AS_IF([test -e /etc/os-release],[
   AS_IF([test "x$printed_os_name" = "xno" -a "x$NAME" != "x"],[
     AC_MSG_NOTICE([Building on $NAME])
     printed_os_name="yes"
+  ])
+  AS_IF([test "x$printed_os_name" = "xno"],[
+    AC_MSG_NOTICE([Building on `uname -a`])
   ])
 ])
 
