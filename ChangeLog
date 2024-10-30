@@ -1,24 +1,28 @@
-Changes in squid-6.12 (12 Oct 2024)
+Changes in squid-6.12 (12 Oct 2024):
+
 	- Fix validation of Digest auth header parameters
 	- Fix build with libtool v2.4 + automake v1.17
 	- Use git to extract default build-info when enabled
 	- ... and a minor source-maintenance portability fix
 
-Changes in squid-6.11 (15 Sep 2024)
+Changes in squid-6.11 (15 Sep 2024):
+
 	- Fix Kerberos detection when cross-compiling
 	- Improve robustness of DNS code on reconfigure
 	- Prevent slow memory leak in TCP DNS queries
 	- Improve errors emitted when invalid ACLs are parsed
 	- Remove some unused code and obsolete compatiblity hacks
 
-Changes in squid-6.10 (10 Jun 2024)
+Changes in squid-6.10 (10 Jun 2024):
+
 	- Bug 5378: type mismatch in libTrie
 	- Disable ESI in default build
 	- Fix build with clang v18 [-Wvla-cxx-extension]
 	- ... and some unit test improvements
 	- ... and some documentation improvements
 
-Changes in squid-6.9 (7 Apr 2024)
+Changes in squid-6.9 (7 Apr 2024):
+
 	- Regression Bug 5349: basic_nis_auth build error: unterminated #ifndef
 	- Bug 5069: Keep listening after getsockname() error
 	- Bug 5360: FwdState::noteDestinationsEnd() assertion "err"
@@ -27,7 +31,7 @@ Changes in squid-6.9 (7 Apr 2024)
 	- Fix error: template-id not allowed for constructor in C++20
 	- Improve release packaging automation
 
-Changes in squid-6.8 (4 Mar 2024)
+Changes in squid-6.8 (4 Mar 2024):
 
 	- Bug 5344: mgr:config segfaults without logformat
 	- Bug 5343: Fix build on GCC 14
@@ -37,7 +41,7 @@ Changes in squid-6.8 (4 Mar 2024)
 	- Improved portability to MacOS
 	- ... and some documentation improvements
 
-Changes in squid-6.7 (4 Feb 2024)
+Changes in squid-6.7 (4 Feb 2024):
 
 	- Bug 5337: workaround for crash on startup if -a option is used
 	- Bug 5274: Successful tunnels logged as TCP_TUNNEL/500
