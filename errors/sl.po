@@ -144,6 +144,10 @@ msgstr ""
 "Med čakanjem na branje podatkov iz omrežja je prišlo do zakasnitve. Morda "
 "omrežje ali strežnik ne delujeta ali sta preobremenjena. Ponovite zahtevo!"
 
+#: templates/ERR_URN_RESOLVE+html.body.div.h2:16-1
+msgid "A URL for the requested URN could not be retrieved"
+msgstr "Ni bilo mogoče naložiti naslova URL za zahtevano ime URN"
+
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:27-1
 msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
@@ -255,6 +259,10 @@ msgstr "Dostop do predpomnilnika zavrnjen."
 msgid "Cache Manager Access Denied."
 msgstr "Dostop do upravitelja predpomnilnika zavrnjen."
 
+#: templates/ERR_URN_RESOLVE+html.body.div.blockquote.p:24-1
+msgid "Cannot Resolve URN"
+msgstr "Ni mogoče razrešiti imena URN"
+
 #: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.descr:1
 msgid "Cert validation infinite loop detected"
 msgstr ""
@@ -343,6 +351,7 @@ msgstr "Manjka podatek Content-Length za zahteve POST ali PUT."
 #: templates/ERR_TOO_BIG+html.head.meta:-1--1
 #: templates/ERR_UNSUP_HTTPVERSION+html.head.meta:-1--1
 #: templates/ERR_UNSUP_REQ+html.head.meta:-1--1
+#: templates/ERR_URN_RESOLVE+html.head.meta:-1--1
 #: templates/ERR_WRITE_ERROR+html.head.meta:-1--1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.head.meta:-1--1
 msgid "Copyright (C) 1996-2017 The Squid Software Foundation and contributors"
@@ -404,6 +413,7 @@ msgstr "Mapa: <a href=\"%U\">%U</a>/"
 #: templates/ERR_TOO_BIG+html.body.div.h1:15-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h1:15-1
 #: templates/ERR_UNSUP_REQ+html.body.div.h1:15-1
+#: templates/ERR_URN_RESOLVE+html.body.div.h1:15-1
 #: templates/ERR_WRITE_ERROR+html.body.div.h1:15-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h1:15-1
 msgid "ERROR"
@@ -456,6 +466,10 @@ msgstr "NAPAKA: Pošiljanje prek FTP spodletelo"
 #: templates/ERR_ZERO_SIZE_OBJECT+html.head.title:5-1
 msgid "ERROR: The requested URL could not be retrieved"
 msgstr "NAPAKA: Zahtevanega naslova URL ni bilo mogoče naložiti."
+
+#: templates/ERR_URN_RESOLVE+html.head.title:5-1
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "NAPAKA: Zahtevanega imena URN ni bilo mogoče naložiti"
 
 #: templates/ERR_ESI+html.body.div.blockquote.p:24-1
 msgid "ESI Processing failed."
@@ -564,6 +578,7 @@ msgstr "Napaka posredniškega prehoda"
 #: templates/ERR_TOO_BIG+html.body.div.p:37-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:35-1
 #: templates/ERR_UNSUP_REQ+html.body.div.p:35-1
+#: templates/ERR_URN_RESOLVE+html.body.div.p:35-1
 #: templates/ERR_WRITE_ERROR+html.body.div.p:37-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:35-1
 msgid "Generated %T by %h (%s)"
@@ -577,6 +592,10 @@ msgstr "Prvina HTTP/1.1 <q>Expect:</q> se zahteva od programa HTTP/1.0."
 #: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:5
 msgid "Handshake with SSL server failed"
 msgstr ""
+
+#: templates/ERR_URN_RESOLVE+html.body.div.p:27-1
+msgid "Hey, don't expect too much from URNs on %T :)"
+msgstr "Od imen URN na %T ne pričakujte preveč :)"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:25-1
 #: templates/ERR_AGENT_WPAD+html.body.div.p:25-1
@@ -920,6 +939,12 @@ msgid ""
 "href=\"%U\">%U</a>"
 msgstr ""
 "Prišlo je do napake med poskusom nalaganja naslova URL: <a href=\"%U\">%U</a>"
+
+#: templates/ERR_URN_RESOLVE+html.body.div.p:21-1
+msgid ""
+"The following error was encountered while trying to retrieve the URN: <a "
+"href=\"%U\">%U</a>"
+msgstr "Prišlo je do napake med poskusom nalaganja URN: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:29-1
 msgid "The remote host or network may be down. Please try the request again."
@@ -1283,6 +1308,7 @@ msgstr ""
 #: templates/ERR_TOO_BIG+html.body.div.p:31-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:29-1
 #: templates/ERR_UNSUP_REQ+html.body.div.p:29-1
+#: templates/ERR_URN_RESOLVE+html.body.div.p:29-1
 #: templates/ERR_WRITE_ERROR+html.body.div.p:31-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:29-1
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."

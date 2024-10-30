@@ -147,6 +147,10 @@ msgstr ""
 "red o el servidor puede estar fuera de servicio o congestionados."
 "Por favor, inténtelo de nuevo."
 
+#: templates/ERR_URN_RESOLVE+html.body.div.h2:16-1
+msgid "A URL for the requested URN could not be retrieved"
+msgstr "No se ha podido obtener una URL para el URN solicitado"
+
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:27-1
 msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
@@ -266,6 +270,10 @@ msgstr "Acceso a Caché denegado"
 msgid "Cache Manager Access Denied."
 msgstr "Acceso Denegado al Administrador del Caché."
 
+#: templates/ERR_URN_RESOLVE+html.body.div.blockquote.p:24-1
+msgid "Cannot Resolve URN"
+msgstr "No se puede resolver el URN"
+
 #: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.descr:1
 msgid "Cert validation infinite loop detected"
 msgstr "Ciclo infinito detectado en la validación del certificado"
@@ -353,6 +361,7 @@ msgstr "Falta Content-Length en las solicitudes POST o PUT"
 #: templates/ERR_TOO_BIG+html.head.meta:-1--1
 #: templates/ERR_UNSUP_HTTPVERSION+html.head.meta:-1--1
 #: templates/ERR_UNSUP_REQ+html.head.meta:-1--1
+#: templates/ERR_URN_RESOLVE+html.head.meta:-1--1
 #: templates/ERR_WRITE_ERROR+html.head.meta:-1--1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.head.meta:-1--1
 msgid "Copyright (C) 1996-2017 The Squid Software Foundation and contributors"
@@ -414,6 +423,7 @@ msgstr "Directorio: <a href=\"%U\">%U</a>/"
 #: templates/ERR_TOO_BIG+html.body.div.h1:15-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h1:15-1
 #: templates/ERR_UNSUP_REQ+html.body.div.h1:15-1
+#: templates/ERR_URN_RESOLVE+html.body.div.h1:15-1
 #: templates/ERR_WRITE_ERROR+html.body.div.h1:15-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h1:15-1
 msgid "ERROR"
@@ -466,6 +476,10 @@ msgstr "ERROR: fallo al cargar FTP"
 #: templates/ERR_ZERO_SIZE_OBJECT+html.head.title:5-1
 msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ERROR: El URL solicitado no se ha podido obetener"
+
+#: templates/ERR_URN_RESOLVE+html.head.title:5-1
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "ERROR: La URN requerida no pudo ser obtenida."
 
 #: templates/ERR_ESI+html.body.div.blockquote.p:24-1
 msgid "ESI Processing failed."
@@ -574,6 +588,7 @@ msgstr "Error en puerta de enlace del proxy"
 #: templates/ERR_TOO_BIG+html.body.div.p:37-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:35-1
 #: templates/ERR_UNSUP_REQ+html.body.div.p:35-1
+#: templates/ERR_URN_RESOLVE+html.body.div.p:35-1
 #: templates/ERR_WRITE_ERROR+html.body.div.p:37-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:35-1
 msgid "Generated %T by %h (%s)"
@@ -589,6 +604,10 @@ msgstr ""
 #: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:5
 msgid "Handshake with SSL server failed"
 msgstr "Fallo en el protocolo de enlace con el servidor SSL"
+
+#: templates/ERR_URN_RESOLVE+html.body.div.p:27-1
+msgid "Hey, don't expect too much from URNs on %T :)"
+msgstr "Oye, no esperes mucho de las URNs en %T :)"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:25-1
 #: templates/ERR_AGENT_WPAD+html.body.div.p:25-1
@@ -941,6 +960,14 @@ msgid ""
 "href=\"%U\">%U</a>"
 msgstr ""
 "Se encontró el siguiente error al intentar recuperar la dirección URL: <a "
+"href=\"%U\">%U</a>"
+
+#: templates/ERR_URN_RESOLVE+html.body.div.p:21-1
+msgid ""
+"The following error was encountered while trying to retrieve the URN: <a "
+"href=\"%U\">%U</a>"
+msgstr ""
+"Se encontró el siguiente error al intentar recuperar la dirección URN: <a "
 "href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:29-1
@@ -1312,6 +1339,7 @@ msgstr ""
 #: templates/ERR_TOO_BIG+html.body.div.p:31-1
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:29-1
 #: templates/ERR_UNSUP_REQ+html.body.div.p:29-1
+#: templates/ERR_URN_RESOLVE+html.body.div.p:29-1
 #: templates/ERR_WRITE_ERROR+html.body.div.p:31-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:29-1
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
