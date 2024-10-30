@@ -24,8 +24,8 @@ jobs:
           - debian-stable
           - debian-testing
           - debian-unstable
-          - fedora-39
           - fedora-40
+          - fedora-41
           - fedora-rawhide
           - gentoo
           - opensuse-leap
