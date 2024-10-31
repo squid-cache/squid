@@ -218,9 +218,6 @@ storeRebuildProgress(size_t sd_index, int total, int sofar)
     double n = 0.0;
     double d = 0.0;
 
-    if (sd_index < 0)
-        return;
-
     if (sd_index >= Config.cacheSwap.n_configured)
         return;
 

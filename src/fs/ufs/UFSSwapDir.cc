@@ -757,6 +757,7 @@ Fs::Ufs::UFSSwapDir::closeLog()
     if (swaplog_fd < 0) /* not open */
         return;
 
+    assert(NumberOfUFSDirs > 0);
     --NumberOfUFSDirs;
     if (!NumberOfUFSDirs)
         safe_free(UFSDirToGlobalDirMapping);

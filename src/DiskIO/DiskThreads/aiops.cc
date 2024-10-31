@@ -1011,7 +1011,7 @@ squidaio_stats(StoreEntry * sentry)
     threadp = threads;
 
     for (i = 0; i < NUMTHREADS; ++i) {
-        storeAppendPrintf(sentry, "%lu\t0x%lx\t%ld\n", i + 1, (unsigned long)threadp->thread, threadp->requests);
+        storeAppendPrintf(sentry, "%zu\t0x%lx\t%ld\n", i + 1, (unsigned long)threadp->thread, threadp->requests);
         threadp = threadp->next;
     }
 }
