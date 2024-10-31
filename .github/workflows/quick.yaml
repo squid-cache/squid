@@ -14,7 +14,7 @@ on:
 
   pull_request:
     # test PRs targeting this branch code
-    branches: [ "master" ]
+    branches: [ "v6" ]
 
 env:
   # empty except for pull_request events
