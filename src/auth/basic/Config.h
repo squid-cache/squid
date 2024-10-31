@@ -34,7 +34,7 @@ public:
     bool dump(StoreEntry *, const char *, Auth::SchemeConfig *) const override;
     void fixHeader(Auth::UserRequest::Pointer, HttpReply *, Http::HdrType, HttpRequest *) override;
     void init(Auth::SchemeConfig *) override;
-    void parse(Auth::SchemeConfig *, int, char *) override;
+    void parse(Auth::SchemeConfig *, size_t, char *) override;
     void decode(char const *httpAuthHeader, Auth::UserRequest::Pointer);
     void registerWithCacheManager(void) override;
     const char * type() const override;

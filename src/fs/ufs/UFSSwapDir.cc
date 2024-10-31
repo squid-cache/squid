@@ -37,7 +37,7 @@
 #include <sys/stat.h>
 #endif
 
-int Fs::Ufs::UFSSwapDir::NumberOfUFSDirs = 0;
+size_t Fs::Ufs::UFSSwapDir::NumberOfUFSDirs = 0;
 int *Fs::Ufs::UFSSwapDir::UFSDirToGlobalDirMapping = nullptr;
 
 class UFSCleanLog : public SwapDir::CleanLog
@@ -758,7 +758,6 @@ Fs::Ufs::UFSSwapDir::closeLog()
         return;
 
     --NumberOfUFSDirs;
-    assert(NumberOfUFSDirs >= 0);
     if (!NumberOfUFSDirs)
         safe_free(UFSDirToGlobalDirMapping);
 
@@ -1039,9 +1038,9 @@ int
 Fs::Ufs::UFSSwapDir::HandleCleanEvent()
 {
     static int swap_index = 0;
-    int i;
+    size_t i;
     int j = 0;
-    int n = 0;
+    size_t n = 0;
 
     if (!NumberOfUFSDirs)
         return 0; // probably in the middle of reconfiguration
@@ -1112,7 +1111,7 @@ Fs::Ufs::UFSSwapDir::IsUFSDir(SwapDir * sd)
  * if not UFSSwapDir return 0;
  */
 bool
-Fs::Ufs::UFSSwapDir::FilenoBelongsHere(int fn, int F0, int F1, int F2)
+Fs::Ufs::UFSSwapDir::FilenoBelongsHere(int fn, size_t F0, int F1, int F2)
 {
     int D1, D2;
     int L1, L2;

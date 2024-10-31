@@ -38,7 +38,7 @@ public:
      * \param level1dir level-1 dir in the cachedir
      * \param level2dir level-2 dir
      */
-    static bool FilenoBelongsHere(int fn, int cachedir, int level1dir, int level2dir);
+    static bool FilenoBelongsHere(int fn, size_t cachedir, int level1dir, int level2dir);
 
     UFSSwapDir(char const *aType, const char *aModuleType);
     ~UFSSwapDir() override;
@@ -123,7 +123,7 @@ protected:
 
 private:
     void parseSizeL1L2();
-    static int NumberOfUFSDirs;
+    static size_t NumberOfUFSDirs;
     static int * UFSDirToGlobalDirMapping;
     bool pathIsDirectory(const char *path)const;
     int swaplog_fd;
