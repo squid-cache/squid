@@ -570,6 +570,10 @@ refreshIsStaleIfHit(const int reason)
  *
  * \retval 1 if STALE
  * \retval 0 if FRESH
+ *
+ * Do not call this when StoreClient::didCollapse is true. XXX: Callers should
+ * not have to remember to check didCollapse. TODO: Refactor by adding something
+ * like pure virtual StoreClient::refreshCheck() with protocol specializations?
  */
 int
 refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
