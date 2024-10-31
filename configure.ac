@@ -50,16 +50,14 @@ AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
 
 AS_IF([test -e /etc/os-release],[
-  squid_cv_linux_distro_name=`grep '^PRETTY_NAME=' /etc/os-release | sed 's/^[[^"]]*"//;s/".*$//'`
-  AS_IF([test "x$squid_cv_linux_distro_name" = "x"],[
-    squid_cv_linux_distro_name=`grep '^NAME=' /etc/os-release | sed 's/^[[^"]]*"//;s/".*$//'`
+  squid_build_os_release_name=`grep '^PRETTY_NAME=' /etc/os-release | sed 's/^[[^"]]*"//;s/".*$//'`
+  AS_IF([test "x$squid_build_os_release_name" = "x"],[
+    squid_build_os_release_name=`grep '^NAME=' /etc/os-release | sed 's/^[[^"]]*"//;s/".*$//'`
   ])
-  AS_IF([test "x$squid_cv_linux_distro_name" != "x"],[
-    AC_MSG_NOTICE([Building on $squid_cv_linux_distro_name])
+  AS_IF([test "x$squid_build_os_release_name" != "x"],[
+    AC_MSG_NOTICE([Building on $squid_build_os_release_name])
   ])
 ])
-
-
 
 AC_PROG_CC
 AM_PROG_CC_C_O
