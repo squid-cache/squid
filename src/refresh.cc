@@ -265,7 +265,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     else if (request)
         uri = request->effectiveRequestUri();
 
-    debugs(22, 3, "checking freshness of URI: " << uri);
+    debugs(22, 3, "checking freshness of " << *entry << " with URI: " << uri);
 
     // age is not necessarily the age now, but the age at the given check_time
     if (check_time > entry->timestamp)
@@ -480,11 +480,14 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
         }
 
 #endif
+        debugs(22, 3, "returning STALE_EXPIRES");
         return STALE_EXPIRES;
     }
 
-    if (sf.max)
+    if (sf.max) {
+        debugs(22, 3, "returning STALE_MAX_RULE");
         return STALE_MAX_RULE;
+    }
 
     if (sf.lmfactor) {
 #if USE_HTTP_VIOLATIONS
