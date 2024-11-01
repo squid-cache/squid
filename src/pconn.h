@@ -66,7 +66,7 @@ public:
     void endingShutdown() override;
 private:
     bool isAvailable(int i) const;
-    bool removeAt(size_t index);
+    bool removeAt(int index);
     int findIndexOf(const Comm::ConnectionPointer &conn) const;
     void findAndClose(const Comm::ConnectionPointer &conn);
     static IOCB Read;
@@ -83,7 +83,7 @@ private:
     /// Number of entries theList can currently hold without re-allocating (capacity).
     size_t capacity_;
     ///< Number of in-use entries in theList
-    size_t size_;
+    int size_;
 
     /** The pool containing this sub-list.
      * The parent performs all stats accounting, and
