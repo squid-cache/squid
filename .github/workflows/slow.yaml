@@ -1,0 +1,70 @@
+# Tests in this workflow file are slower or more expensive than build
+# tests in quick.yaml. These tests improve build environment coverage, but
+# most are unlikely to fail after quick.yaml tests succeed. Limiting these
+# tests execution to staged commits optimizes CI responsiveness and
+# costs while preserving decent quick.yaml problem detection probability.
+#
+# Anubis configuration must be kept in sync with the total number of
+# tests executed for "auto" branch commits, including tests in other
+# GitHub workflow file(s).
+
+name: Staged commit
+
+on:
+  push:
+    branches: [ "auto" ]
+
+jobs:
+  linux-distros:
+
+    strategy:
+      matrix:
+        os:
+          - centos-stream-9
+          - debian-stable
+          - debian-testing
+          - debian-unstable
+          - fedora-39
+          - fedora-40
+          - fedora-rawhide
+          - gentoo
+          - opensuse-leap
+          - opensuse-tumbleweed
+          - ubuntu-focal
+          - ubuntu-jammy
+          - ubuntu-noble # EOL 2036-04
+          - ubuntu-oracular # EOL 2025-07
+        compiler:
+          - { CC: gcc, CXX: g++ }
+          - { CC: clang, CXX: clang++ }
+        layer:
+          - { name: layer-00-default, nick: default }
+          - { name: layer-01-minimal, nick: minimal }
+          - { name: layer-02-maximus, nick: maximus }
+
+    runs-on: ubuntu-22.04
+    container:
+      image: squidcache/buildfarm-${{ matrix.os }}:stable
+      options: --user 1001 # uid used by worfklow runner
+
+    name: linux-distros(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+    env:
+      CC: ${{ matrix.compiler.CC }}
+      CXX: ${{ matrix.compiler.CXX }}
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Run test-builds
+        id: test-builds
+        run: |
+          ./test-builds.sh ${{ matrix.layer.name }}
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
+          path: btlayer-*.log
+
