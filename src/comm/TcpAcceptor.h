@@ -54,6 +54,9 @@ public:
     TcpAcceptor(const Comm::ConnectionPointer &conn, const char *note, const Subscription::Pointer &aSub);
     TcpAcceptor(const AnyP::PortCfgPointer &listenPort, const char *note, const Subscription::Pointer &aSub);
 
+    /// delay accept(2) until another FD becomes available
+    void defer(const AsyncCall::Pointer &);
+
 protected:
     /** Subscribe a handler to receive calls back about new connections.
      * Unsubscribes any existing subscribed handler.
@@ -85,6 +88,9 @@ protected:
 
 private:
     Subscription::Pointer theCallSub;    ///< used to generate AsyncCalls handling our events.
+
+    /// the Call registered with AcceptLimiter when FD limits are reached
+    AsyncCall::Pointer limited;
 
     /// conn being listened on for new connections
     /// Reserved for read-only use.

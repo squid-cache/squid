@@ -115,8 +115,7 @@ Comm::TcpAcceptor::swanSong()
         conn->close();
     }
 
-    conn = nullptr;
-    AcceptLimiter::Instance().removeDead(this);
+    AcceptLimiter::Instance().removeDead(limited);
     AsyncJob::swanSong();
 }
 
@@ -197,6 +196,14 @@ Comm::TcpAcceptor::handleClosure(const CommCloseCbParams &)
     Must(done());
 }
 
+void
+Comm::TcpAcceptor::defer(const AsyncCall::Pointer &call)
+{
+    Must(!limited || limited->LockCount() == 1);
+    limited = call;
+    AcceptLimiter::Instance().defer(call);
+}
+
 /**
  * This private callback is called whenever a filedescriptor is ready
  * to dupe itself and fob off an accept()ed connection
@@ -213,12 +220,16 @@ Comm::TcpAcceptor::doAccept(int fd, void *data)
         debugs(5, 2, "New connection on FD " << fd);
 
         Must(isOpen(fd));
-        TcpAcceptor *afd = static_cast<TcpAcceptor*>(data);
+        // We are now outside the all AsyncJob protections.
+        // get back inside by scheduling another call for the accept(2).
+        typedef NullaryMemFunT<Comm::TcpAcceptor> Dialer;
+        auto *job = static_cast<Comm::TcpAcceptor *>(data);
+        AsyncCall::Pointer call = JobCallback(5, 5, Dialer, job, Comm::TcpAcceptor::acceptNext);
 
         if (!okToAccept()) {
-            AcceptLimiter::Instance().defer(afd);
+            job->defer(call);
         } else {
-            afd->acceptNext();
+            ScheduleCallHere(call);
         }
 
     } catch (const std::exception &e) {

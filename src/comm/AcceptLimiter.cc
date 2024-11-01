@@ -13,6 +13,14 @@
 #include "fde.h"
 #include "globals.h"
 
+class KickDialer : public CallDialer
+{
+public:
+    virtual bool canDial(AsyncCall &) { return true; }
+    virtual void dial(AsyncCall &) { Comm::AcceptLimiter::Instance().kick(); }
+    virtual void print(std::ostream &os) const { os << "()"; }
+};
+
 Comm::AcceptLimiter Comm::AcceptLimiter::Instance_;
 
 Comm::AcceptLimiter &
@@ -22,38 +30,45 @@ Comm::AcceptLimiter::Instance()
 }
 
 void
-Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &afd)
+Comm::AcceptLimiter::defer(const AsyncCall::Pointer &call)
 {
-    debugs(5, 5, afd->conn << "; already queued: " << deferred_.size());
-    deferred_.push_back(afd);
+    debugs(5, 5, call << "; already queued: " << deferred_.size());
+    deferred_.push_back(call);
 }
 
 void
-Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
+Comm::AcceptLimiter::removeDead(const AsyncCall::Pointer &call)
 {
-    for (auto it = deferred_.begin(); it != deferred_.end(); ++it) {
-        if (*it == afd) {
-            *it = nullptr; // fast. kick() will skip empty entries later.
-            debugs(5,4, "Abandoned client TCP SYN by closing socket: " << afd->conn);
-            return;
-        }
+    int found = 0;
+    for (auto &it : deferred_) {
+        if (it != call)
+            continue;
+
+        it = nullptr;
+        debugs(5, 4, call << "; abandoned " << ++found << " client TCP SYN by closing listener FD");
     }
-    debugs(5,4, "Not found " << afd->conn << " in queue, size: " << deferred_.size());
+
+    if (!found)
+        debugs(5, 4, call << "; not found in queue, size=" << deferred_.size());
 }
 
 void
 Comm::AcceptLimiter::kick()
 {
     debugs(5, 5, "size=" << deferred_.size());
-    while (deferred_.size() > 0 && Comm::TcpAcceptor::okToAccept()) {
-        /* NP: shift() is equivalent to pop_front(). Giving us a FIFO queue. */
-        TcpAcceptor::Pointer temp = deferred_.front();
-        deferred_.erase(deferred_.begin());
-        if (temp.valid()) {
-            debugs(5, 5, "doing one.");
-            temp->acceptNext();
-            break;
-        }
-    }
+    if (deferred_.size() == 0)
+        return;
+
+    if (!Comm::TcpAcceptor::okToAccept())
+        return;
+
+    AsyncCall::Pointer call = deferred_.front();
+    deferred_.erase(deferred_.begin());
+    ScheduleCallHere(call);
+
+    // Schedule a repeat kick() for AFTER the deferred accept(2) is dialed.
+    // This order requirement ensures okToAccept() result is correct.
+    AsyncCall::Pointer retry = asyncCall(5, 5, "Comm::AcceptLimiter::kick", KickDialer());
+    ScheduleCallHere(retry);
 }
 
