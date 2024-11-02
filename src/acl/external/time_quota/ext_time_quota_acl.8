@@ -7,7 +7,7 @@ Version 1.0
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B ext_time_quota_acl
-.if !'po4a'hide' .B "[\-b database] [\-d] [\-p pauselen] [\-h] configfile
+.if !'po4a'hide' .B "[\-b database] [\-d level] [\-p pauselen] [\-h] configfile
 .
 .SH DESCRIPTION
 .B ext_time_quota_acl
@@ -36,7 +36,7 @@ Default is 300 seconds (5 minutes).
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-d"
-Enables debug logging to stderr.
+Enables debug logging to stderr, at growing levels of verbosity from 0 to 9.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-h"

@@ -328,13 +328,12 @@ static void usage(void)
     debugs(MY_DEBUG_SECTION, DBG_CRITICAL, "Wrong usage. Please reconfigure in squid.conf.");
 
     std::cerr <<
-              "Usage: " << program_name << " [-d] [-b dbpath] [-p pauselen] [-h] configfile\n"
-              "	-d            enable debugging output\n"
-              "	-l logfile    log messages to logfile\n"
-              "	-b dbpath     Path where persistent session database will be kept\n"
-              "	              If option is not used, then " DEFAULT_QUOTA_DB " will be used.\n"
-              "	-p pauselen   length in seconds to describe a pause between 2 requests.\n"
-              "	-h            show show command line help.\n"
+              "Usage: " << program_name << " [-d] [-b dbpath] [-p pauselen] [-h] configfile\n" <<
+              "	-d level      enable debugging output at level\n" <<
+              "	-b dbpath     Path where persistent session database will be kept\n" <<
+              "	              If option is not used, then " DEFAULT_QUOTA_DB " will be used.\n" <<
+              "	-p pauselen   length in seconds to describe a pause between 2 requests.\n" <<
+              "	-h            show show command line help.\n" <<
               "configfile is a file containing time quota definitions.\n";
 }
 
@@ -346,10 +345,10 @@ int main(int argc, char **argv)
     program_name = argv[0];
     Debug::NameThisHelper("ext_time_quota_acl");
 
-    while ((opt = getopt(argc, argv, "dp:b:h")) != -1) {
+    while ((opt = getopt(argc, argv, "d:p:b:h")) != -1) {
         switch (opt) {
         case 'd':
-            Debug::Levels[MY_DEBUG_SECTION] = DBG_DATA;
+            Debug::Levels[DEBUG_SECTION] = atoi(optarg);
             break;
         case 'b':
             db_path = optarg;
