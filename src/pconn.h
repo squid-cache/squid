@@ -81,7 +81,7 @@ private:
     Comm::ConnectionPointer *theList_;
 
     /// Number of entries theList can currently hold without re-allocating (capacity).
-    size_t capacity_;
+    int capacity_;
     ///< Number of in-use entries in theList
     int size_;
 
