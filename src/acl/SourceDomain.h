@@ -23,7 +23,6 @@ class SourceDomainCheck: public ParameterizedNode< ACLData<const char *> >
 public:
     /* Acl::Node API */
     int match(ACLChecklist *) override;
-    bool requiresRequest() const override { return true; }
 };
 
 } // namespace Acl
