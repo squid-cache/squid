@@ -89,9 +89,9 @@ IdleConnList::findIndexOf(const Comm::ConnectionPointer &conn) const
  * \retval false The index is not an in-use entry.
  */
 bool
-IdleConnList::removeAt(int index)
+IdleConnList::removeAt(size_t index)
 {
-    if (index < 0 || index >= size_)
+    if (index >= size_)
         return false;
 
     // shuffle the remaining entries to fill the new gap.
@@ -169,12 +169,13 @@ IdleConnList::clearHandlers(const Comm::ConnectionPointer &conn)
 void
 IdleConnList::push(const Comm::ConnectionPointer &conn)
 {
-    if ((unsigned int) size_ == capacity_) {
+    if (size_ == capacity_) {
         debugs(48, 3, "growing idle Connection array");
+        assert(capacity_ >= 2);
         capacity_ <<= 1;
         const Comm::ConnectionPointer *oldList = theList_;
         theList_ = new Comm::ConnectionPointer[capacity_];
-        for (int index = 0; index < size_; ++index)
+        for (size_t index = 0; index < size_; ++index)
             theList_[index] = oldList[index];
 
         delete[] oldList;

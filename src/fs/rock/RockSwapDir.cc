@@ -1118,7 +1118,7 @@ DefineRunnerRegistratorIn(Rock, SwapDirRr);
 void Rock::SwapDirRr::create()
 {
     Must(mapOwners.empty() && freeSlotsOwners.empty());
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+    for (size_t i = 0; i < Config.cacheSwap.n_configured; ++i) {
         if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
             rebuildStatsOwners.push_back(Rebuild::Stats::Init(*sd));
 

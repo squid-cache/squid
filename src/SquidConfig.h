@@ -66,10 +66,10 @@ public:
     ~DiskConfig() { delete[] swapDirs; }
 
     RefCount<SwapDir> *swapDirs = nullptr;
-    unsigned int n_allocated = 0;
-    int n_configured = 0;
+    size_t n_allocated = 0;
+    size_t n_configured = 0;
     /// number of disk processes required to support all cache_dirs
-    int n_strands = 0;
+    size_t n_strands = 0;
 };
 #define INDEXSD(i) (Config.cacheSwap.swapDirs[i].getRaw())
 }

@@ -33,7 +33,7 @@ void Kids::init()
         storage.emplace_back("squid", storage.size() + 1);
 
     // add Kid records for all disk processes
-    for (int i = 0; i < Config.cacheSwap.n_strands; ++i)
+    for (size_t i = 0; i < Config.cacheSwap.n_strands; ++i)
         storage.emplace_back("squid-disk", storage.size() + 1);
 
     // if coordination is needed, add a Kid record for Coordinator

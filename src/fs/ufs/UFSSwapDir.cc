@@ -37,7 +37,7 @@
 #include <sys/stat.h>
 #endif
 
-int Fs::Ufs::UFSSwapDir::NumberOfUFSDirs = 0;
+size_t Fs::Ufs::UFSSwapDir::NumberOfUFSDirs = 0;
 int *Fs::Ufs::UFSSwapDir::UFSDirToGlobalDirMapping = nullptr;
 
 class UFSCleanLog : public SwapDir::CleanLog
@@ -757,8 +757,8 @@ Fs::Ufs::UFSSwapDir::closeLog()
     if (swaplog_fd < 0) /* not open */
         return;
 
+    assert(NumberOfUFSDirs > 0);
     --NumberOfUFSDirs;
-    assert(NumberOfUFSDirs >= 0);
     if (!NumberOfUFSDirs)
         safe_free(UFSDirToGlobalDirMapping);
 
@@ -1035,17 +1035,16 @@ Fs::Ufs::UFSSwapDir::writeCleanDone()
 }
 
 /// safely cleans a few unused files if possible
-int
+size_t
 Fs::Ufs::UFSSwapDir::HandleCleanEvent()
 {
     static int swap_index = 0;
-    int i;
-    int j = 0;
-    int n = 0;
 
     if (!NumberOfUFSDirs)
         return 0; // probably in the middle of reconfiguration
 
+    size_t j = 0;
+    size_t n = 0;
     if (nullptr == UFSDirToGlobalDirMapping) {
         SwapDir *sd;
         /*
@@ -1054,7 +1053,7 @@ Fs::Ufs::UFSSwapDir::HandleCleanEvent()
          */
         UFSDirToGlobalDirMapping = (int *)xcalloc(NumberOfUFSDirs, sizeof(*UFSDirToGlobalDirMapping));
 
-        for (i = 0, n = 0; i < Config.cacheSwap.n_configured; ++i) {
+        for (size_t i = 0; i < Config.cacheSwap.n_configured; ++i) {
             /* This is bogus, the controller should just clean each instance once */
             sd = dynamic_cast <SwapDir *>(INDEXSD(i));
 
@@ -1094,7 +1093,7 @@ Fs::Ufs::UFSSwapDir::HandleCleanEvent()
 void
 Fs::Ufs::UFSSwapDir::CleanEvent(void *)
 {
-    const int n = HandleCleanEvent();
+    const auto n = HandleCleanEvent();
     eventAdd("storeDirClean", CleanEvent, nullptr,
              15.0 * exp(-0.25 * n), 1);
 }
@@ -1112,7 +1111,7 @@ Fs::Ufs::UFSSwapDir::IsUFSDir(SwapDir * sd)
  * if not UFSSwapDir return 0;
  */
 bool
-Fs::Ufs::UFSSwapDir::FilenoBelongsHere(int fn, int F0, int F1, int F2)
+Fs::Ufs::UFSSwapDir::FilenoBelongsHere(int fn, size_t F0, int F1, int F2)
 {
     int D1, D2;
     int L1, L2;
@@ -1318,10 +1317,10 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
     int n = 0;
     int k = 0;
     int N0, N1, N2;
-    int D0, D1, D2;
+    int D1, D2;
     UFSSwapDir *SD;
     N0 = NumberOfUFSDirs;
-    D0 = UFSDirToGlobalDirMapping[swap_index % N0];
+    size_t D0 = UFSDirToGlobalDirMapping[swap_index % N0];
     SD = dynamic_cast<UFSSwapDir *>(INDEXSD(D0));
     assert (SD);
     N1 = SD->l1;
