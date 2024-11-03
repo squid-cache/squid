@@ -133,7 +133,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup ccache
-        uses: squid-cache/ccache-action@v1.2
+        uses: squid-cache/ccache-action@v1.2.14
         with:
           verbose: 2 # default 0
           append-timestamp: false
