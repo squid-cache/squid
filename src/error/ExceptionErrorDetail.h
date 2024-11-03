@@ -1,14 +1,15 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H
-#define _SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H
+#ifndef SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H
+#define SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H
 
+#include "base/IoManip.h"
 #include "error/Detail.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
@@ -26,17 +27,17 @@ public:
     explicit ExceptionErrorDetail(const SourceLocationId id): exceptionId(SQUID_EXCEPTION_START_BASE + id) {}
 
     /* ErrorDetail API */
-    virtual SBuf brief() const override {
-        return ToSBuf("exception=", std::hex, exceptionId);
+    SBuf brief() const override {
+        return ToSBuf("exception=", asHex(exceptionId));
     }
 
-    virtual SBuf verbose(const HttpRequestPointer &) const override {
-        return ToSBuf("Exception (ID=", std::hex, exceptionId, ')');
+    SBuf verbose(const HttpRequestPointer &) const override {
+        return ToSBuf("Exception (ID=", asHex(exceptionId), ')');
     }
 
 private:
     SourceLocationId exceptionId; ///< identifies the thrower or catcher
 };
 
-#endif /* _SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H */
+#endif /* SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H */
 

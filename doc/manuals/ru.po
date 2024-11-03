@@ -726,11 +726,11 @@ msgstr "СООБЩЕНИЕ ОБ ОШИБКАХ"
 #: src/security/cert_generators/file/security_file_certgen.8.in:167
 #: src/squid.8.in:261
 msgid ""
-"Bug reports need to be made in English.  See http://wiki.squid-cache.org/"
+"Bug reports need to be made in English.  See https://wiki.squid-cache.org/"
 "SquidFaq/BugReporting for details of what you need to include with your bug "
 "report."
 msgstr ""
-"Отчёты об ошибках должны быть написаны на английском языке. См. на http://"
+"Отчёты об ошибках должны быть написаны на английском языке. См. на https://"
 "wiki.squid-cache.org/SquidFaq/BugReporting, что нужно включать в отчёт."
 
 #. type: Plain text
@@ -757,9 +757,9 @@ msgstr ""
 #: src/security/cert_generators/file/security_file_certgen.8.in:169
 #: src/squid.8.in:263 tools/cachemgr.cgi.8.in:72 tools/purge/purge.1:278
 #: tools/squidclient/squidclient.1:254
-msgid "Report bugs or bug fixes using http://bugs.squid-cache.org/"
+msgid "Report bugs or bug fixes using https://bugs.squid-cache.org/"
 msgstr ""
-"Сообщите об ошибках или их исправлениях используя http://bugs.squid-cache."
+"Сообщите об ошибках или их исправлениях используя https://bugs.squid-cache."
 "org/"
 
 #. type: Plain text
@@ -2226,9 +2226,9 @@ msgstr ""
 msgid ""
 "User is just a unique key value. The above example uses %LOGIN and the "
 "username but any of the B<external_acl_type> format tags can be substituted "
-"in its place.  B<%EXT_TAG> , B<%LOGIN> , B<%IDENT> , B<%EXT_USER> , B<"
+"in its place.  B<%EXT_TAG> , B<%LOGIN> , B<%EXT_USER> , B<"
 "%SRC> , B<%SRCEUI48> , and B<%SRCEUI64> are all likely candidates for client "
-"identification.  The Squid wiki has more examples at http://wiki.squid-cache."
+"identification.  The Squid wiki has more examples at https://wiki.squid-cache."
 "org/ConfigExamples."
 msgstr ""
 
@@ -3877,7 +3877,7 @@ msgstr ""
 msgid ""
 "This manual page only lists the command line arguments.  For details on how "
 "to configure Squid see the file B<@SYSCONFDIR@/squid.conf.documented,> the "
-"Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the "
+"Squid wiki FAQ and examples at https://wiki.squid-cache.org/ , or the "
 "configuration manual on the Squid home page"
 msgstr ""
 
@@ -4190,7 +4190,7 @@ msgstr ""
 #: tools/cachemgr.cgi.8.in:70 tools/purge/purge.1:276
 #: tools/squidclient/squidclient.1:252
 msgid ""
-"See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what "
+"See https://wiki.squid-cache.org/SquidFaq/BugReporting for details of what "
 "you need to include with your bug report."
 msgstr ""
 

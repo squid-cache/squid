@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "debug/Messages.h"
@@ -609,8 +610,11 @@ Store::Disks::evictIfFound(const cache_key *key)
 }
 
 bool
-Store::Disks::anchorToCache(StoreEntry &entry, bool &inSync)
+Store::Disks::anchorToCache(StoreEntry &entry)
 {
+    if (entry.hasDisk())
+        return true; // already anchored
+
     if (const int cacheDirs = Config.cacheSwap.n_configured) {
         // ask each cache_dir until the entry is found; use static starting
         // point to avoid asking the same subset of disks more often
@@ -622,7 +626,7 @@ Store::Disks::anchorToCache(StoreEntry &entry, bool &inSync)
             if (!sd.active())
                 continue;
 
-            if (sd.anchorToCache(entry, inSync)) {
+            if (sd.anchorToCache(entry)) {
                 debugs(20, 3, "cache_dir " << idx << " anchors " << entry);
                 return true;
             }
@@ -850,7 +854,7 @@ storeDirSwapLog(const StoreEntry * e, int op)
            swap_log_op_str[op] << " " <<
            e->getMD5Text() << " " <<
            e->swap_dirn << " " <<
-           std::hex << std::uppercase << std::setfill('0') << std::setw(8) << e->swap_filen);
+           asHex(e->swap_filen).upperCase().minDigits(8));
 
     e->disk().logEntry(*e, op);
 }

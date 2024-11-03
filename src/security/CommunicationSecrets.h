@@ -1,16 +1,16 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_SECURITY_COMMUNICATION_SECRETS_H
-#define SQUID_SRC_SECURITY_COMMUNICATION_SECRETS_H
+#ifndef SQUID_SRC_SECURITY_COMMUNICATIONSECRETS_H
+#define SQUID_SRC_SECURITY_COMMUNICATIONSECRETS_H
 
 #include "sbuf/SBuf.h"
-#include "security/forward.h"
+#include "security/Session.h"
 
 #include <iosfwd>
 
@@ -52,5 +52,5 @@ private:
 
 } // namespace Security
 
-#endif /* SQUID_SRC_SECURITY_COMMUNICATION_SECRETS_H */
+#endif /* SQUID_SRC_SECURITY_COMMUNICATIONSECRETS_H */
 

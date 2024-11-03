@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMM_READ_H
-#define _SQUID_COMM_READ_H
+#ifndef SQUID_SRC_COMM_READ_H
+#define SQUID_SRC_COMM_READ_H
 
 #include "base/AsyncCall.h"
 #include "comm/forward.h"
@@ -63,5 +63,5 @@ inline void comm_read(const Comm::ConnectionPointer &conn, char *buf, int len, A
 }
 void comm_read_cancel(int fd, IOCB *callback, void *data);
 
-#endif /* _SQUID_COMM_READ_H */
+#endif /* SQUID_SRC_COMM_READ_H */
 

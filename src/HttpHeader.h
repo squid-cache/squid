@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPHEADER_H
-#define SQUID_HTTPHEADER_H
+#ifndef SQUID_SRC_HTTPHEADER_H
+#define SQUID_SRC_HTTPHEADER_H
 
 #include "anyp/ProtocolVersion.h"
 #include "base/LookupTable.h"
@@ -60,6 +60,9 @@ public:
     int getInt() const;
     int64_t getInt64() const;
 
+    /// expected number of bytes written by packInto(), including ": " and CRLF
+    size_t length() const { return name.length() + 2 + value.size() + 2; }
+
     Http::HdrType id;
     SBuf name;
     String value;
@@ -72,7 +75,6 @@ class HttpHeader
 {
 
 public:
-    HttpHeader();
     explicit HttpHeader(const http_hdr_owner_type owner);
     HttpHeader(const HttpHeader &other);
     ~HttpHeader();
@@ -106,7 +108,6 @@ public:
     void delAt(HttpHeaderPos pos, int &headers_deleted);
     void refreshMask();
     void addEntry(HttpHeaderEntry * e);
-    void insertEntry(HttpHeaderEntry * e);
     String getList(Http::HdrType id) const;
     bool getList(Http::HdrType id, String *s) const;
     bool conflictingContentLength() const { return conflictingContentLength_; }
@@ -137,11 +138,16 @@ public:
     void putTime(Http::HdrType id, time_t htime);
     void putStr(Http::HdrType id, const char *str);
     void putAuth(const char *auth_scheme, const char *realm);
-    void putCc(const HttpHdrCc * cc);
+    void putCc(const HttpHdrCc &cc);
     void putContRange(const HttpHdrContRange * cr);
     void putRange(const HttpHdrRange * range);
     void putSc(HttpHdrSc *sc);
     void putExt(const char *name, const char *value);
+
+    /// Ensures that the header has the given field, removing or replacing any
+    /// same-name fields with conflicting values as needed.
+    void updateOrAddStr(Http::HdrType, const SBuf &);
+
     int getInt(Http::HdrType id) const;
     int64_t getInt64(Http::HdrType id) const;
     time_t getTime(Http::HdrType id) const;
@@ -193,6 +199,26 @@ private:
 
 int httpHeaderParseQuotedString(const char *start, const int len, String *val);
 
+namespace Http {
+
+/**
+ * Parses an HTTP quoted-string sequence (RFC 9110, Section 5.6.4).
+ *
+ * \param a brief human-friendly description of the string being parsed
+ * \param start input buffer (an opening double-quote is expected at *start)
+ * \param length is the number of characters in the given buffer
+ *
+ * \returns string contents with open/closing quotes stripped and any quoted-pairs decoded
+ *
+ * Avoid this slow function on performance-sensitive code paths.
+ * TODO: Replace with an efficient, SBuf-friendly implementation.
+ *
+ * \sa httpHeaderParseQuotedString() for a String-friendly function.
+ */
+SBuf SlowlyParseQuotedString(const char *description, const char *start, size_t length);
+
+}
+
 /// quotes string using RFC 7230 quoted-string rules
 SBuf httpHeaderQuoteString(const char *raw);
 
@@ -200,5 +226,5 @@ void httpHeaderCalcMask(HttpHeaderMask * mask, Http::HdrType http_hdr_type_enums
 
 void httpHeaderInitModule(void);
 
-#endif /* SQUID_HTTPHEADER_H */
+#endif /* SQUID_SRC_HTTPHEADER_H */
 

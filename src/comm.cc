@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 05    Socket Functions */
 
 #include "squid.h"
+#include "base/AsyncFunCalls.h"
 #include "ClientInfo.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
@@ -57,6 +58,7 @@
  */
 
 static IOCB commHalfClosedReader;
+static int comm_openex(int sock_type, int proto, Ip::Address &, int flags, const char *note);
 static void comm_init_opened(const Comm::ConnectionPointer &conn, const char *note, struct addrinfo *AI);
 static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
@@ -74,6 +76,7 @@ static EVH commHalfClosedCheck;
 static void commPlanHalfClosedCheck();
 
 static Comm::Flag commBind(int s, struct addrinfo &);
+static void commSetBindAddressNoPort(int);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
 #ifdef TCP_NODELAY
@@ -200,6 +203,22 @@ comm_local_port(int fd)
     return F->local_addr.port();
 }
 
+/// sets the IP_BIND_ADDRESS_NO_PORT socket option to optimize ephemeral port
+/// reuse by outgoing TCP connections that must bind(2) to a source IP address
+static void
+commSetBindAddressNoPort(const int fd)
+{
+#if defined(IP_BIND_ADDRESS_NO_PORT)
+    int flag = 1;
+    if (setsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, reinterpret_cast<char*>(&flag), sizeof(flag)) < 0) {
+        const auto savedErrno = errno;
+        debugs(50, DBG_IMPORTANT, "ERROR: setsockopt(IP_BIND_ADDRESS_NO_PORT) failure: " << xstrerr(savedErrno));
+    }
+#else
+    (void)fd;
+#endif
+}
+
 static Comm::Flag
 commBind(int s, struct addrinfo &inaddr)
 {
@@ -226,6 +245,10 @@ comm_open(int sock_type,
           int flags,
           const char *note)
 {
+    // assume zero-port callers do not need to know the assigned port right away
+    if (sock_type == SOCK_STREAM && addr.port() == 0 && ((flags & COMM_DOBIND) || !addr.isAnyAddr()))
+        flags |= COMM_DOBIND_PORT_LATER;
+
     return comm_openex(sock_type, proto, addr, flags, note);
 }
 
@@ -307,6 +330,7 @@ comm_set_transparent(int fd)
 
 #else
     debugs(50, DBG_CRITICAL, "WARNING: comm_open: setsockopt(TPROXY) not supported on this platform");
+    (void)fd;
 #endif /* sockopt */
 
 #if defined(soLevel) && defined(soFlag)
@@ -327,7 +351,7 @@ comm_set_transparent(int fd)
  * Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
  * is OR of flags specified in defines.h:COMM_*
  */
-int
+static int
 comm_openex(int sock_type,
             int proto,
             Ip::Address &addr,
@@ -340,6 +364,12 @@ comm_openex(int sock_type,
     /* Create socket for accepting new connections. */
     ++ statCounter.syscalls.sock.sockets;
 
+    if (!Ip::EnableIpv6 && addr.isIPv6()) {
+        debugs(50, 2, "refusing to open an IPv6 socket when IPv6 support is disabled: " << addr);
+        errno = ENOTSUP;
+        return -1;
+    }
+
     /* Setup the socket addrinfo details for use */
     addr.getAddrInfo(AI);
     AI->ai_socktype = sock_type;
@@ -348,7 +378,7 @@ comm_openex(int sock_type,
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
     new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
-    int xerrno = errno;
+    const auto firstErrNo = errno;
 
     /* under IPv6 there is the possibility IPv6 is present but disabled. */
     /* try again as IPv4-native if possible */
@@ -361,6 +391,8 @@ comm_openex(int sock_type,
         AI->ai_protocol = proto;
         debugs(50, 3, "Attempt fallback open socket for: " << addr );
         new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+        // TODO: Report failures of this second socket() call.
+        // if both socket() calls fail, we use firstErrNo
         debugs(50, 2, "attempt open " << note << " socket on: " << addr);
     }
 
@@ -369,16 +401,16 @@ comm_openex(int sock_type,
          * are failing because the open file table is full.  This
          * limits the number of simultaneous clients */
 
-        if (limitError(errno)) {
-            debugs(50, DBG_IMPORTANT, MYNAME << "socket failure: " << xstrerr(xerrno));
+        if (limitError(firstErrNo)) {
+            debugs(50, DBG_IMPORTANT, MYNAME << "socket failure: " << xstrerr(firstErrNo));
             fdAdjustReserved();
         } else {
-            debugs(50, DBG_CRITICAL, MYNAME << "socket failure: " << xstrerr(xerrno));
+            debugs(50, DBG_CRITICAL, MYNAME << "socket failure: " << xstrerr(firstErrNo));
         }
 
         Ip::Address::FreeAddr(AI);
 
-        errno = xerrno; // restore for caller
+        errno = firstErrNo; // restore for caller
         return -1;
     }
 
@@ -404,7 +436,9 @@ comm_openex(int sock_type,
 
     // XXX transition only. prevent conn from closing the new FD on function exit.
     conn->fd = -1;
-    errno = xerrno; // restore for caller
+    // XXX: firstErrNo is not applicable here -- socket() calls succeeded above!
+    // TODO: Stop reporting error codes via errno.
+    errno = firstErrNo;
     return new_socket;
 }
 
@@ -482,6 +516,10 @@ comm_apply_flags(int new_socket,
             }
         }
 #endif
+
+        if ((flags & COMM_DOBIND_PORT_LATER))
+            commSetBindAddressNoPort(new_socket);
+
         if (commBind(new_socket, *AI) != Comm::OK) {
             comm_close(new_socket);
             return -1;
@@ -516,9 +554,6 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
     assert(AI);
 
     comm_init_opened(conn, note, AI);
-
-    if (!(conn->flags & COMM_NOCLOEXEC))
-        fd_table[conn->fd].flags.close_on_exec = true;
 
     if (conn->local.port() > (unsigned short) 0) {
 #if _SQUID_WINDOWS_
@@ -560,7 +595,7 @@ commUnsetFdTimeout(int fd)
 }
 
 int
-commSetConnTimeout(const Comm::ConnectionPointer &conn, int timeout, AsyncCall::Pointer &callback)
+commSetConnTimeout(const Comm::ConnectionPointer &conn, time_t timeout, AsyncCall::Pointer &callback)
 {
     debugs(5, 3, conn << " timeout " << timeout);
     assert(Comm::IsConnOpen(conn));
@@ -779,19 +814,19 @@ old_comm_reset_close(int fd)
 }
 
 static void
-commStartTlsClose(const FdeCbParams &params)
+commStartTlsClose(const int fd)
 {
-    Security::SessionSendGoodbye(fd_table[params.fd].ssl);
+    Security::SessionSendGoodbye(fd_table[fd].ssl);
 }
 
 static void
-comm_close_complete(const FdeCbParams &params)
+comm_close_complete(const int fd)
 {
-    fde *F = &fd_table[params.fd];
+    auto F = &fd_table[fd];
     F->ssl.reset();
     F->dynamicTlsContext.reset();
-    fd_close(params.fd);        /* update fdstat */
-    close(params.fd);
+    fd_close(fd); /* update fdstat */
+    close(fd);
 
     ++ statCounter.syscalls.sock.closes;
 
@@ -843,10 +878,8 @@ _comm_close(int fd, char const *file, int line)
     // allowing individual advanced callbacks to overwrite it.
 
     if (F->ssl) {
-        AsyncCall::Pointer startCall=commCbCall(5,4, "commStartTlsClose",
-                                                FdeCbPtrFun(commStartTlsClose, nullptr));
-        FdeCbParams &startParams = GetCommParams<FdeCbParams>(startCall);
-        startParams.fd = fd;
+        const auto startCall = asyncCall(5, 4, "commStartTlsClose",
+                                         callDialer(commStartTlsClose, fd));
         ScheduleCallHere(startCall);
     }
 
@@ -858,11 +891,11 @@ _comm_close(int fd, char const *file, int line)
     // notify read/write handlers after canceling select reservations, if any
     if (COMMIO_FD_WRITECB(fd)->active()) {
         Comm::SetSelect(fd, COMM_SELECT_WRITE, nullptr, nullptr, 0);
-        COMMIO_FD_WRITECB(fd)->finish(Comm::ERR_CLOSING, errno);
+        COMMIO_FD_WRITECB(fd)->finish(Comm::ERR_CLOSING, 0);
     }
     if (COMMIO_FD_READCB(fd)->active()) {
         Comm::SetSelect(fd, COMM_SELECT_READ, nullptr, nullptr, 0);
-        COMMIO_FD_READCB(fd)->finish(Comm::ERR_CLOSING, errno);
+        COMMIO_FD_READCB(fd)->finish(Comm::ERR_CLOSING, 0);
     }
 
 #if USE_DELAY_POOLS
@@ -876,12 +909,10 @@ _comm_close(int fd, char const *file, int line)
 
     comm_empty_os_read_buffers(fd);
 
-    AsyncCall::Pointer completeCall=commCbCall(5,4, "comm_close_complete",
-                                    FdeCbPtrFun(comm_close_complete, nullptr));
-    FdeCbParams &completeParams = GetCommParams<FdeCbParams>(completeCall);
-    completeParams.fd = fd;
     // must use async call to wait for all callbacks
     // scheduled before comm_close() to finish
+    const auto completeCall = asyncCall(5, 4, "comm_close_complete",
+                                        callDialer(comm_close_complete, fd));
     ScheduleCallHere(completeCall);
 }
 
@@ -1112,9 +1143,6 @@ commSetCloseOnExec(int fd)
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "ERROR: " << MYNAME << "FD " << fd << ": set close-on-exec failed: " << xstrerr(xerrno));
     }
-
-    fd_table[fd].flags.close_on_exec = true;
-
 #endif
 }
 

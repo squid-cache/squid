@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 25    MiME Header Parsing */
 
-#ifndef SQUID_MIME_HEADER_H_
-#define SQUID_MIME_HEADER_H_
+#ifndef SQUID_SRC_MIME_HEADER_H
+#define SQUID_SRC_MIME_HEADER_H
 
 #include "sbuf/forward.h"
 
@@ -44,5 +44,5 @@ headersEnd(const char *buf, size_t sz)
     return headersEnd(buf, sz, ignored);
 }
 
-#endif /* SQUID_MIME_HEADER_H_ */
+#endif /* SQUID_SRC_MIME_HEADER_H */
 

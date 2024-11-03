@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_ENUMITERATOR_H
-#define SQUID_BASE_ENUMITERATOR_H
+#ifndef SQUID_SRC_BASE_ENUMITERATOR_H
+#define SQUID_SRC_BASE_ENUMITERATOR_H
 
 #include <iterator>
 #include <type_traits>
@@ -23,11 +23,7 @@ template <typename EnumType>
 class EnumIteratorBase
 {
 protected:
-#if HAVE_STD_UNDERLYING_TYPE
     typedef typename std::underlying_type<EnumType>::type iterator_type;
-#else
-    typedef int iterator_type;
-#endif
 
 public:
     using iterator_category = std::bidirectional_iterator_tag;
@@ -228,5 +224,20 @@ public:
     WholeEnum() : EnumRangeT<EnumType>(EnumType::enumBegin_, EnumType::enumEnd_) {}
 };
 
-#endif /* SQUID_BASE_ENUMITERATOR_H */
+/// Compile-time iteration of sequential enum values from First to Last,
+/// inclusive. The given function is called once on each iteration, with the
+/// current enum value as an argument.
+template <auto First, auto Last, class F>
+constexpr void
+ConstexprForEnum(F &&f)
+{
+    using enumType = decltype(First);
+    using underlyingType = typename std::underlying_type<enumType>::type;
+    // std::integral_constant trick makes f(First) argument a constexpr
+    f(std::integral_constant<enumType, First>()); // including when First is Last
+    if constexpr (First < Last)
+        ConstexprForEnum<enumType(static_cast<underlyingType>(First) + 1), Last>(f);
+}
+
+#endif /* SQUID_SRC_BASE_ENUMITERATOR_H */
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef HTTPHEADERSTAT_H_
-#define HTTPHEADERSTAT_H_
+#ifndef SQUID_SRC_HTTPHEADERSTAT_H
+#define SQUID_SRC_HTTPHEADERSTAT_H
 
 #include "HttpHdrCc.h"
 #include "HttpHdrSc.h"
@@ -67,5 +67,5 @@ public:
     int busyDestroyedCount;
 };
 
-#endif /* HTTPHEADERSTAT_H_ */
+#endif /* SQUID_SRC_HTTPHEADERSTAT_H */
 

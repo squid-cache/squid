@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLPROTOCOLDATA_H
-#define SQUID_ACLPROTOCOLDATA_H
+#ifndef SQUID_SRC_ACL_PROTOCOLDATA_H
+#define SQUID_SRC_ACL_PROTOCOLDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -21,14 +21,14 @@ class ACLProtocolData : public ACLData<AnyP::ProtocolType>
 
 public:
     ACLProtocolData() {}
-    virtual ~ACLProtocolData();
-    bool match(AnyP::ProtocolType);
-    virtual SBufList dump() const;
-    void parse();
-    bool empty() const {return values.empty();}
+    ~ACLProtocolData() override;
+    bool match(AnyP::ProtocolType) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override {return values.empty();}
 
     std::list<AnyP::ProtocolType> values;
 };
 
-#endif /* SQUID_ACLPROTOCOLDATA_H */
+#endif /* SQUID_SRC_ACL_PROTOCOLDATA_H */
 

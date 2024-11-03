@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,9 +7,8 @@
  */
 
 #include "squid.h"
-#include "base/TextException.h"
-#include "mgr/Registration.h"
-#include "Store.h"
+#include "mem/forward.h"
+#include "SquidString.h"
 
 #include <climits>
 
@@ -19,7 +18,7 @@ void
 String::allocBuffer(String::size_type sz)
 {
     assert (undefined());
-    char *newBuffer = (char*)memAllocString(sz, &sz);
+    auto *newBuffer = static_cast<char*>(memAllocBuf(sz, &sz));
     setBuffer(newBuffer, sz);
 }
 
@@ -34,20 +33,10 @@ String::setBuffer(char *aBuf, String::size_type aSize)
     size_ = aSize;
 }
 
-String::String()
-{
-#if DEBUGSTRINGS
-    StringRegistry::Instance().add(this);
-#endif
-}
-
 String::String(char const *aString)
 {
     if (aString)
         allocAndFill(aString, strlen(aString));
-#if DEBUGSTRINGS
-    StringRegistry::Instance().add(this);
-#endif
 }
 
 String &
@@ -108,10 +97,6 @@ String::String(String const &old) : size_(0), len_(0), buf_(nullptr)
 {
     if (old.size() > 0)
         allocAndFill(old.rawBuf(), old.size());
-#if DEBUGSTRINGS
-
-    StringRegistry::Instance().add(this);
-#endif
 }
 
 void
@@ -119,7 +104,7 @@ String::clean()
 {
     /* TODO if mempools has already closed this will FAIL!! */
     if (defined())
-        memFreeString(size_, buf_);
+        memFreeBuf(size_, buf_);
 
     len_ = 0;
 
@@ -131,10 +116,6 @@ String::clean()
 String::~String()
 {
     clean();
-#if DEBUGSTRINGS
-
-    StringRegistry::Instance().remove(this);
-#endif
 }
 
 void
@@ -300,66 +281,6 @@ String::caseCmp(char const *aString, String::size_type count) const
 
     return strncasecmp(termedBuf(), aString, count);
 }
-
-#if DEBUGSTRINGS
-void
-String::stat(StoreEntry *entry) const
-{
-    storeAppendPrintf(entry, "%p : %d/%d \"%.*s\"\n",this,len_, size_, size(), rawBuf());
-}
-
-StringRegistry &
-StringRegistry::Instance()
-{
-    return Instance_;
-}
-
-template <class C>
-int
-ptrcmp(C const &lhs, C const &rhs)
-{
-    return lhs - rhs;
-}
-
-StringRegistry::StringRegistry()
-{
-#if DEBUGSTRINGS
-    Mgr::RegisterAction("strings",
-                        "Strings in use in squid", Stat, 0, 1);
-#endif
-}
-
-void
-StringRegistry::add(String const *entry)
-{
-    entries.insert(entry, ptrcmp);
-}
-
-void
-StringRegistry::remove(String const *entry)
-{
-    entries.remove(entry, ptrcmp);
-}
-
-StringRegistry StringRegistry::Instance_;
-
-String::size_type memStringCount();
-
-void
-StringRegistry::Stat(StoreEntry *entry)
-{
-    storeAppendPrintf(entry, "%lu entries, %lu reported from MemPool\n", (unsigned long) Instance().entries.elements, (unsigned long) memStringCount());
-    Instance().entries.head->walk(Stater, entry);
-}
-
-void
-StringRegistry::Stater(String const * const & nodedata, void *state)
-{
-    StoreEntry *entry = (StoreEntry *) state;
-    nodedata->stat(entry);
-}
-
-#endif
 
 /* TODO: move onto String */
 int

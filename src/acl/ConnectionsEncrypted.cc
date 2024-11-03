@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -55,8 +55,8 @@ Acl::ConnectionsEncrypted::match(ACLChecklist *checklist)
 
     const bool safeRequest =
         !(filled->request->sources & Http::Message::srcUnsafe);
-    const bool safeReply = !filled->reply ||
-                           !(filled->reply->sources & Http::Message::srcUnsafe);
+    const bool safeReply = !filled->hasReply() ||
+                           !(filled->reply().sources & Http::Message::srcUnsafe);
 
     return (safeRequest && safeReply) ? 1 : 0;
 }

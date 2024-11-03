@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,10 +18,19 @@
 #include "debug/Stream.h"
 #include "EventLoop.h"
 
+#if HAVE_LIBECAP_ADAPTER_SERVICE_H
 #include <libecap/adapter/service.h>
+#endif
+#if HAVE_LIBECAP_COMMON_OPTIONS_H
 #include <libecap/common/options.h>
+#endif
+#if HAVE_LIBECAP_COMMON_NAME_H
 #include <libecap/common/name.h>
+#endif
+#if HAVE_LIBECAP_COMMON_NAMED_VALUES_H
 #include <libecap/common/named_values.h>
+#endif
+
 #include <limits>
 #include <map>
 
@@ -48,8 +57,8 @@ public:
     ConfigRep(const Master &aMaster);
 
     // libecap::Options API
-    virtual const libecap::Area option(const libecap::Name &name) const;
-    virtual void visitEachOption(libecap::NamedValueVisitor &visitor) const;
+    const libecap::Area option(const libecap::Name &name) const override;
+    void visitEachOption(libecap::NamedValueVisitor &visitor) const override;
 
     const Master &master; ///< the configuration being wrapped
 };
@@ -59,7 +68,7 @@ class Engine: public AsyncEngine
 {
 public:
     /* AsyncEngine API */
-    virtual int checkEvents(int timeout);
+    int checkEvents(int timeout) override;
 
 private:
     void kickAsyncServices(timeval &timeout);

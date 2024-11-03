@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FDE_H
-#define SQUID_FDE_H
+#ifndef SQUID_SRC_FDE_H
+#define SQUID_SRC_FDE_H
 
 #include "base/CodeContext.h" /* XXX: Remove by de-inlining ctor and clear() */
 #include "base/forward.h"
@@ -124,7 +124,6 @@ public:
         bool ipc = false;
         bool called_connect = false;
         bool nodelay = false;
-        bool close_on_exec = false;
         /// buffering readMethod_ has data to give (regardless of socket state)
         bool read_pending = false;
         //bool write_pending; //XXX seems not to be used
@@ -202,5 +201,5 @@ FD_WRITE_METHOD(int fd, const char *buf, int len)
     return fd_table[fd].write(fd, buf, len);
 }
 
-#endif /* SQUID_FDE_H */
+#endif /* SQUID_SRC_FDE_H */
 

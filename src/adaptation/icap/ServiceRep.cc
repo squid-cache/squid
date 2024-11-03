@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,6 +32,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ServiceRep);
 
 Adaptation::Icap::ServiceRep::ServiceRep(const ServiceConfigPointer &svcCfg):
     AsyncJob("Adaptation::Icap::ServiceRep"), Adaptation::Service(svcCfg),
+    tlsContext(writeableCfg().secure, sslContext),
     theOptions(nullptr), theOptionsFetcher(nullptr), theLastUpdate(0),
     theBusyConns(0),
     theAllWaiters(0),
@@ -80,7 +81,7 @@ Adaptation::Icap::ServiceRep::finalize()
         writeableCfg().secure.encryptTransport = true;
 
     if (cfg().secure.encryptTransport) {
-        debugs(3, DBG_IMPORTANT, "Initializing service " << cfg().resource << " SSL context");
+        debugs(3, 2, "initializing service " << cfg().resource << " SSL context");
         sslContext = writeableCfg().secure.createClientContext(true);
     }
 

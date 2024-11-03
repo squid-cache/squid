@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@
 #include "globals.h"
 #include "md5.h"
 #include "sbuf/Stream.h"
+#include "SquidMath.h"
 #include "Store.h"
 #include "tools.h"
 
@@ -695,18 +696,29 @@ Rock::Rebuild::swanSong()
 }
 
 void
-Rock::Rebuild::failure(const char *msg, int errNo)
+Rock::Rebuild::callException(const std::exception &)
 {
+    // For now, treat all Rebuild exceptions as fatal errors rather than letting
+    // the default callException() implementation to silently stop this job.
+    throw;
+}
+
+/// a helper to handle rebuild-killing I/O errors
+void
+Rock::Rebuild::failure(const char * const msg, const int errNo)
+{
+    assert(sd);
     debugs(47,5, sd->index << " slot " << loadingPos << " at " <<
            dbOffset << " <= " << dbSize);
 
+    SBufStream error;
+    error << "Cannot rebuild rock cache_dir index for " << sd->filePath <<
+          Debug::Extra << "problem: " << msg;
     if (errNo)
-        debugs(47, DBG_CRITICAL, "ERROR: Rock cache_dir rebuild failure: " << xstrerr(errNo));
-    debugs(47, DBG_CRITICAL, "Do you need to run 'squid -z' to initialize storage?");
+        error << Debug::Extra << "I/O error: " << xstrerr(errNo);
+    error << Debug::Extra << "scan progress: " << Math::int64Percent(loadingPos, dbSlotLimit) << '%';
 
-    assert(sd);
-    fatalf("Rock cache_dir[%d] rebuild of %s failed: %s.",
-           sd->index, sd->filePath, msg);
+    throw TextException(error.buf(), Here());
 }
 
 /// adds slot to the free slot index

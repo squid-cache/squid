@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -49,10 +49,12 @@ Mgr::FunAction::dump(StoreEntry* entry)
 {
     debugs(16, 5, MYNAME);
     Must(entry != nullptr);
-    if (UsingSmp())
-        storeAppendPrintf(entry, "by kid%d {\n", KidIdentifier);
-    handler(entry);
-    if (atomic() && UsingSmp())
-        storeAppendPrintf(entry, "} by kid%d\n\n", KidIdentifier);
-}
 
+    OpenKidSection(entry, format());
+
+    handler(entry);
+
+    if (atomic())
+        CloseKidSection(entry, format());
+    // non-atomic() actions must call CloseKidSection() when they are done
+}

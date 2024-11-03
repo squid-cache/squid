@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_INCLUDE_RFC1738_H
-#define _SQUID_INCLUDE_RFC1738_H
+#ifndef SQUID_INCLUDE_RFC1738_H
+#define SQUID_INCLUDE_RFC1738_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,5 +67,5 @@ extern void rfc1738_unescape(char *url);
 #ifdef __cplusplus
 }
 #endif
-#endif /* _SQUID_INCLUDE_RFC1738_H */
+#endif /* SQUID_INCLUDE_RFC1738_H */
 

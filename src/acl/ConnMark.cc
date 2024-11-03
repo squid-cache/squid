@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -50,10 +50,10 @@ Acl::ConnMark::match(ACLChecklist *cl)
 
         for (const auto &m : marks) {
             if (m.matches(connmark)) {
-                debugs(28, 5, "found " << m << " matching " << asHex(connmark));
+                debugs(28, 5, "found " << m << " matching 0x" << asHex(connmark));
                 return 1;
             }
-            debugs(28, 7, "skipped " << m << " mismatching " << asHex(connmark));
+            debugs(28, 7, "skipped " << m << " mismatching 0x" << asHex(connmark));
         }
     } else {
         debugs(28, 7, "fails: no client connection");

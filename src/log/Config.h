@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,8 @@ public:
 
     void parseFormats();
     void dumpFormats(StoreEntry *e, const char *name) {
-        logformats->dump(e, name);
+        if (logformats)
+            logformats->dump(e, name);
     }
 
     /// File path to logging daemon executable
@@ -63,5 +64,5 @@ extern LogConfig TheConfig;
 #define free_logformat(X)   do{ delete (*X).logformats; (*X).logformats=NULL; }while(false)
 #define dump_logformat(E,N,D) (D).dumpFormats((E),(N))
 
-#endif
+#endif /* SQUID_SRC_LOG_CONFIG_H */
 

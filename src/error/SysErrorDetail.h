@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_ERROR_SYSERRORDETAIL_H
-#define _SQUID_SRC_ERROR_SYSERRORDETAIL_H
+#ifndef SQUID_SRC_ERROR_SYSERRORDETAIL_H
+#define SQUID_SRC_ERROR_SYSERRORDETAIL_H
 
 #include "error/Detail.h"
 #include "sbuf/forward.h"
@@ -29,8 +29,8 @@ public:
     static SBuf Brief(int errorNo);
 
     /* ErrorDetail API */
-    virtual SBuf brief() const override;
-    virtual SBuf verbose(const HttpRequestPointer &) const override;
+    SBuf brief() const override;
+    SBuf verbose(const HttpRequestPointer &) const override;
 
 private:
     // hidden by NewIfAny() to avoid creating SysErrorDetail from zero errno
@@ -50,5 +50,5 @@ public:
 /// reports a system call error (if any) on a dedicated Debug::Extra line
 std::ostream &operator <<(std::ostream &, ReportSysError);
 
-#endif /* _SQUID_SRC_ERROR_SYSERRORDETAIL_H */
+#endif /* SQUID_SRC_ERROR_SYSERRORDETAIL_H */
 

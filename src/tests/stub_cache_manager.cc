@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,8 +22,9 @@ void CacheManager::start(const Comm::ConnectionPointer &, HttpRequest *, StoreEn
 }
 static CacheManager* instance = nullptr;
 CacheManager* CacheManager::GetInstance() STUB_RETVAL(instance)
-void Mgr::RegisterAction(char const*, char const*, OBJH, int, int) {}
-void Mgr::RegisterAction(char const *, char const *, Mgr::ClassActionCreationHandler *, int, int) {}
+void Mgr::RegisterAction(char const *, char const *, OBJH *, Protected, Atomic, Format) {}
+void Mgr::RegisterAction(char const *, char const *, ClassActionCreationHandler *, Protected, Atomic, Format) {}
 
 Mgr::Action::Pointer CacheManager::createRequestedAction(const Mgr::ActionParams &) STUB_RETVAL(nullptr)
+void CacheManager::PutCommonResponseHeaders(HttpReply &, const char *) STUB
 

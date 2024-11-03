@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,13 +17,15 @@
 #include "MemObject.h"
 #include "MemStore.h"
 #include "mime_header.h"
+#include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "StoreStats.h"
 #include "tools.h"
 
 /// shared memory segment path to use for MemStore maps
-static const SBuf MapLabel("cache_mem_map");
+static const auto MapLabel = "cache_mem_map";
 /// shared memory segment path to use for the free slices index
 static const char *SpaceLabel = "cache_mem_space";
 /// shared memory segment path to use for IDs of shared pages with slice data
@@ -38,8 +40,8 @@ public:
     ShmWriter(MemStore &aStore, StoreEntry *anEntry, const sfileno aFileNo, Ipc::StoreMapSliceId aFirstSlice = -1);
 
     /* Packable API */
-    virtual void append(const char *aBuf, int aSize) override;
-    virtual void vappendf(const char *fmt, va_list ap) override;
+    void append(const char *aBuf, int aSize) override;
+    void vappendf(const char *fmt, va_list ap) override;
 
 public:
     StoreEntry *entry; ///< the entry being updated
@@ -194,7 +196,7 @@ MemStore::init()
     extras = shm_old(Extras)(ExtrasLabel);
 
     Must(!map);
-    map = new MemStoreMap(MapLabel);
+    map = new MemStoreMap(SBuf(MapLabel));
     map->cleaner = this;
 }
 
@@ -311,19 +313,25 @@ MemStore::get(const cache_key *key)
     // create a brand new store entry and initialize it with stored info
     StoreEntry *e = new StoreEntry();
 
-    // XXX: We do not know the URLs yet, only the key, but we need to parse and
-    // store the response for the Root().find() callers to be happy because they
-    // expect IN_MEMORY entries to already have the response headers and body.
-    e->createMemObject();
+    try {
+        // XXX: We do not know the URLs yet, only the key, but we need to parse and
+        // store the response for the Root().find() callers to be happy because they
+        // expect IN_MEMORY entries to already have the response headers and body.
+        e->createMemObject();
 
-    anchorEntry(*e, index, *slot);
+        anchorEntry(*e, index, *slot);
 
-    const bool copied = copyFromShm(*e, index, *slot);
+        // TODO: make copyFromShm() throw on all failures, simplifying this code
+        if (copyFromShm(*e, index, *slot))
+            return e;
+        debugs(20, 3, "failed for " << *e);
+    } catch (...) {
+        // see store_client::parseHttpHeadersFromDisk() for problems this may log
+        debugs(20, DBG_IMPORTANT, "ERROR: Cannot load a cache hit from shared memory" <<
+               Debug::Extra << "exception: " << CurrentException <<
+               Debug::Extra << "cache_mem entry: " << *e);
+    }
 
-    if (copied)
-        return e;
-
-    debugs(20, 3, "failed for " << *e);
     map->freeEntry(index); // do not let others into the same trap
     destroyStoreEntry(static_cast<hash_link *>(e));
     return nullptr;
@@ -390,8 +398,11 @@ MemStore::updateHeadersOrThrow(Ipc::StoreMapUpdate &update)
 }
 
 bool
-MemStore::anchorToCache(StoreEntry &entry, bool &inSync)
+MemStore::anchorToCache(StoreEntry &entry)
 {
+    Assure(!entry.hasMemStore());
+    Assure(entry.mem().memCache.io != MemObject::ioDone);
+
     if (!map)
         return false;
 
@@ -402,8 +413,9 @@ MemStore::anchorToCache(StoreEntry &entry, bool &inSync)
         return false;
 
     anchorEntry(entry, index, *slot);
-    inSync = updateAnchoredWith(entry, index, *slot);
-    return true; // even if inSync is false
+    if (!updateAnchoredWith(entry, index, *slot))
+        throw TextException("updateAnchoredWith() failure", Here());
+    return true;
 }
 
 bool
@@ -465,6 +477,8 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     Ipc::StoreMapSliceId sid = anchor.start; // optimize: remember the last sid
     bool wasEof = anchor.complete() && sid < 0;
     int64_t sliceOffset = 0;
+
+    SBuf httpHeaderParsingBuffer;
     while (sid >= 0) {
         const Ipc::StoreMapSlice &slice = map->readableSlice(index, sid);
         // slice state may change during copying; take snapshots now
@@ -487,10 +501,18 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
             const StoreIOBuffer sliceBuf(wasSize - prefixSize,
                                          e.mem_obj->endOffset(),
                                          page + prefixSize);
-            if (!copyFromShmSlice(e, sliceBuf, wasEof))
-                return false;
+
+            copyFromShmSlice(e, sliceBuf);
             debugs(20, 8, "entry " << index << " copied slice " << sid <<
                    " from " << extra.page << '+' << prefixSize);
+
+            // parse headers if needed; they might span multiple slices!
+            if (!e.hasParsedReplyHeader()) {
+                httpHeaderParsingBuffer.append(sliceBuf.data, sliceBuf.length);
+                auto &reply = e.mem().adjustableBaseReply();
+                if (reply.parseTerminatedPrefix(httpHeaderParsingBuffer.c_str(), httpHeaderParsingBuffer.length()))
+                    httpHeaderParsingBuffer = SBuf(); // we do not need these bytes anymore
+            }
         }
         // else skip a [possibly incomplete] slice that we copied earlier
 
@@ -513,8 +535,17 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
         return true;
     }
 
+    if (anchor.writerHalted) {
+        debugs(20, 5, "mem-loaded aborted " << e.mem_obj->endOffset() << '/' <<
+               anchor.basics.swap_file_sz << " bytes of " << e);
+        return false;
+    }
+
     debugs(20, 5, "mem-loaded all " << e.mem_obj->endOffset() << '/' <<
            anchor.basics.swap_file_sz << " bytes of " << e);
+
+    if (!e.hasParsedReplyHeader())
+        throw TextException(ToSBuf("truncated mem-cached headers; accumulated: ", httpHeaderParsingBuffer.length()), Here());
 
     // from StoreEntry::complete()
     e.mem_obj->object_sz = e.mem_obj->endOffset();
@@ -531,31 +562,10 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
 }
 
 /// imports one shared memory slice into local memory
-bool
-MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof)
+void
+MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf)
 {
     debugs(20, 7, "buf: " << buf.offset << " + " << buf.length);
-
-    // from store_client::readBody()
-    // parse headers if needed; they might span multiple slices!
-    const auto rep = &e.mem().adjustableBaseReply();
-    if (rep->pstate < Http::Message::psParsed) {
-        // XXX: have to copy because httpMsgParseStep() requires 0-termination
-        MemBuf mb;
-        mb.init(buf.length+1, buf.length+1);
-        mb.append(buf.data, buf.length);
-        mb.terminate();
-        const int result = rep->httpMsgParseStep(mb.buf, buf.length, eof);
-        if (result > 0) {
-            assert(rep->pstate == Http::Message::psParsed);
-        } else if (result < 0) {
-            debugs(20, DBG_IMPORTANT, "Corrupted mem-cached headers: " << e);
-            return false;
-        } else { // more slices are needed
-            assert(!eof);
-        }
-    }
-    debugs(20, 7, "rep pstate: " << rep->pstate);
 
     // local memory stores both headers and body so copy regardless of pstate
     const int64_t offBefore = e.mem_obj->endOffset();
@@ -564,7 +574,6 @@ MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof)
     // expect to write the entire buf because StoreEntry::write() never fails
     assert(offAfter >= 0 && offBefore <= offAfter &&
            static_cast<size_t>(offAfter - offBefore) == buf.length);
-    return true;
 }
 
 /// whether we should cache the entry
@@ -578,6 +587,19 @@ MemStore::shouldCache(StoreEntry &e) const
 
     if (e.mem_obj && e.mem_obj->memCache.offset > 0) {
         debugs(20, 5, "already written to mem-cache: " << e);
+        return false;
+    }
+
+    if (shutting_down) {
+        debugs(20, 5, "avoid heavy optional work during shutdown: " << e);
+        return false;
+    }
+
+    // To avoid SMP workers releasing each other caching attempts, restrict disk
+    // caching to StoreEntry publisher. This check goes before memoryCachable()
+    // that may incorrectly release() publisher's entry via checkCachable().
+    if (Store::Root().transientsReader(e)) {
+        debugs(20, 5, "yield to entry publisher: " << e);
         return false;
     }
 
@@ -873,8 +895,8 @@ MemStore::completeWriting(StoreEntry &e)
     e.mem_obj->memCache.io = MemObject::ioDone;
     map->closeForWriting(index);
 
-    CollapsedForwarding::Broadcast(e); // before we close our transient entry!
-    Store::Root().transientsCompleteWriting(e);
+    CollapsedForwarding::Broadcast(e);
+    e.storeWriterDone();
 }
 
 void
@@ -913,7 +935,8 @@ MemStore::disconnect(StoreEntry &e)
             map->abortWriting(mem_obj.memCache.index);
             mem_obj.memCache.index = -1;
             mem_obj.memCache.io = MemObject::ioDone;
-            Store::Root().stopSharing(e); // broadcasts after the change
+            CollapsedForwarding::Broadcast(e);
+            e.storeWriterDone();
         } else {
             assert(mem_obj.memCache.io == MemObject::ioReading);
             map->closeForReading(mem_obj.memCache.index);
@@ -949,14 +972,14 @@ class MemStoreRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     MemStoreRr(): spaceOwner(nullptr), mapOwner(nullptr), extrasOwner(nullptr) {}
-    virtual void finalizeConfig();
-    virtual void claimMemoryNeeds();
-    virtual void useConfig();
-    virtual ~MemStoreRr();
+    void finalizeConfig() override;
+    void claimMemoryNeeds() override;
+    void useConfig() override;
+    ~MemStoreRr() override;
 
 protected:
     /* Ipc::Mem::RegisteredRunner API */
-    virtual void create();
+    void create() override;
 
 private:
     Ipc::Mem::Owner<Ipc::Mem::PageStack> *spaceOwner; ///< free slices Owner
@@ -964,7 +987,7 @@ private:
     Ipc::Mem::Owner<MemStoreMapExtras> *extrasOwner; ///< PageIds Owner
 };
 
-RunnerRegistrationEntry(MemStoreRr);
+DefineRunnerRegistrator(MemStoreRr);
 
 void
 MemStoreRr::claimMemoryNeeds()
@@ -1017,7 +1040,7 @@ MemStoreRr::create()
     Must(!spaceOwner);
     spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel, spaceConfig);
     Must(!mapOwner);
-    mapOwner = MemStoreMap::Init(MapLabel, entryLimit);
+    mapOwner = MemStoreMap::Init(SBuf(MapLabel), entryLimit);
     Must(!extrasOwner);
     extrasOwner = shm_new(MemStoreMapExtras)(ExtrasLabel, entryLimit);
 }

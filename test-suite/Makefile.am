@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -18,20 +18,14 @@ LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
-EXTRA_PROGRAMS = mem_node_test splay tcp-banger2
+EXTRA_PROGRAMS = mem_node_test splay
 
 EXTRA_DIST = \
 	$(srcdir)/squidconf/* \
-	testheaders.sh
-
-ESI_ALL_TESTS = \
-	ESIExpressions
-
-if ENABLE_ESI
-  ESI_TESTS = $(ESI_ALL_TESTS)
-else
-  ESI_TESTS =
-endif
+	test-functionality.sh \
+	test-sources.sh \
+	test-squid-conf.sh \
+	testHeader.cc.in
 
 ## Sort by dependencies - test lowest layers first
 TESTS += \
@@ -39,21 +33,15 @@ TESTS += \
 	VirtualDeleteOperator \
 	splay\
 	mem_node_test\
-	mem_hdr_test\
-	$(ESI_TESTS) \
-	squid-conf-tests
+	mem_hdr_test
 
 ## Sort by alpha - any build failures are significant.
 check_PROGRAMS += \
-		$(ESI_TESTS) \
 		mem_node_test\
 		mem_hdr_test \
 		splay \
 		syntheticoperators \
 		VirtualDeleteOperator
-
-
-tcp_banger2_LDADD = $(top_builddir)/lib/libmiscutil.la
 
 #do not include stub_libmem.cc here, as it would override libmem.la in
 # several tests whose purpose is testing libmem itself.
@@ -87,15 +75,6 @@ stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
 
 STUB.h: $(top_srcdir)/src/tests/STUB.h
 	cp $(top_srcdir)/src/tests/STUB.h $@
-
-ESIExpressions_SOURCES = \
-	$(DEBUG_SOURCE) \
-	ESIExpressions.cc \
-	stub_libmem.cc
-ESIExpressions_LDADD = $(top_builddir)/src/esi/Expression.o \
-	$(top_builddir)/src/debug/libdebug.la \
-	$(top_builddir)/src/comm/libminimal.la \
-		$(LDADD)
 
 mem_node_test_SOURCES = \
 	$(DEBUG_SOURCE) \
@@ -133,10 +112,23 @@ VirtualDeleteOperator_SOURCES = \
 	VirtualDeleteOperator.cc \
 	stub_libmem.cc
 
-squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
-	@failed=0; cfglist="$?"; rm -f $@ || $(TRUE); \
+installcheck-local: squid-conf-tests
+
+squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
+	@instructionFiles="$(srcdir)/squidconf/*.conf.instructions"; \
+	for instructionFile in $$instructionFiles; do \
+		cfgBasename=`basename $$instructionFile .instructions`; \
+		cfg=$(srcdir)/squidconf/$$cfgBasename; \
+		if ! test -f $$cfg; then \
+			echo "FAIL: $$instructionFile has no matching $$cfg"; \
+			exit 1; \
+		fi; \
+	done; \
+	failed=0; \
+	cfglist="$(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf"; \
+	rm -f $@ || $(TRUE); \
 	for cfg in $$cfglist ; do \
-		$(top_builddir)/src/squid -k parse -f $$cfg || \
+		$(srcdir)/test-squid-conf.sh $(top_builddir) $(sbindir) $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
 				sed s%$(top_builddir)/src/%% | \
 				sed s%$(srcdir)/squidconf/%% ; \
@@ -148,6 +140,11 @@ squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
 				sed s%$(srcdir)/squidconf/%% ; \
 		else break; fi; \
 	done; \
-	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; fi
+	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; else exit 1; fi
 
-CLEANFILES += squid-conf-tests
+CLEANFILES += \
+	squid-conf-tests \
+	squid-expected-messages \
+	squid-stderr.log \
+	squid-stderr.log.next \
+	squid-stderr.log.unmatched

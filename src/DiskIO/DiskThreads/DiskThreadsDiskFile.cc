@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -67,7 +67,7 @@ DiskThreadsDiskFile::open(int flags, mode_t mode, RefCount<IORequestor> callback
 
 #else
 
-    openDone(fd, NULL, fd, 0);
+    openDone(fd, nullptr, fd, 0);
 
 #endif
 }
@@ -116,7 +116,7 @@ DiskThreadsDiskFile::create(int flags, mode_t mode, RefCount<IORequestor> callba
 
 #else
 
-    openDone (fd, NULL, fd, 0);
+    openDone (fd, nullptr, fd, 0);
 
 #endif
 }
@@ -247,7 +247,7 @@ DiskThreadsDiskFile::ReadDone(int fd, const char *buf, int len, int errflag, voi
 }
 
 void
-DiskThreadsDiskFile::readDone(int rvfd, const char *buf, int len, int errflag, RefCount<ReadRequest> request)
+DiskThreadsDiskFile::readDone(int rvfd, const char *buf, int len, int errflag, const RefCount<ReadRequest> &request)
 {
     debugs(79, 3, "DiskThreadsDiskFile::readDone: FD " << rvfd);
     assert (fd == rvfd);

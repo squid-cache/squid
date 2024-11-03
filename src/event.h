@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_EVENT_H
-#define SQUID_EVENT_H
+#ifndef SQUID_SRC_EVENT_H
+#define SQUID_SRC_EVENT_H
 
 #include "AsyncEngine.h"
 #include "base/Packable.h"
@@ -21,7 +21,6 @@ void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cb
 void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int);
 void eventDelete(EVH * func, void *arg);
 void eventInit(void);
-void eventFreeMemory(void);
 int eventFind(EVH *, void *);
 
 class ev_entry
@@ -48,7 +47,7 @@ class EventScheduler : public AsyncEngine
 
 public:
     EventScheduler();
-    ~EventScheduler();
+    ~EventScheduler() override;
     /* cancel a scheduled but not dispatched event */
     void cancel(EVH * func, void * arg);
     /* clean up the used memory in the scheduler */
@@ -61,7 +60,7 @@ public:
     bool find(EVH * func, void * arg);
     /* schedule a callback function to run in when seconds */
     void schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata=true);
-    int checkEvents(int timeout);
+    int checkEvents(int timeout) override;
     static EventScheduler *GetInstance();
 
 private:
@@ -69,5 +68,5 @@ private:
     ev_entry * tasks;
 };
 
-#endif /* SQUID_EVENT_H */
+#endif /* SQUID_SRC_EVENT_H */
 

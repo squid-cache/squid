@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,24 +10,27 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncCallbacks.h"
 #include "base/CbcPointer.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "client_db.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
-#include "comm/UdpOpenDialer.h"
 #include "fatal.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "ipc/StartListening.h"
 #include "snmp/Forwarder.h"
 #include "snmp_agent.h"
 #include "snmp_core.h"
 #include "SnmpRequest.h"
 #include "SquidConfig.h"
+#include "SquidMath.h"
 #include "tools.h"
 
-static void snmpPortOpened(const Comm::ConnectionPointer &conn, int errNo);
+static void snmpPortOpened(Ipc::StartListeningAnswer&);
 
 mib_tree_entry *mib_tree_head;
 mib_tree_entry *mib_tree_last;
@@ -273,8 +276,7 @@ snmpOpenPorts(void)
         snmpIncomingConn->local.setIPv4();
     }
 
-    AsyncCall::Pointer call = asyncCall(49, 2, "snmpIncomingConnectionOpened",
-                                        Comm::UdpOpenDialer(&snmpPortOpened));
+    auto call = asyncCallbackFun(49, 2, snmpPortOpened);
     Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpIncomingConn, Ipc::fdnInSnmpSocket, call);
 
     if (!Config.Addrs.snmp_outgoing.isNoAddr()) {
@@ -290,8 +292,8 @@ snmpOpenPorts(void)
         if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && snmpOutgoingConn->local.isAnyAddr()) {
             snmpOutgoingConn->local.setIPv4();
         }
-        AsyncCall::Pointer c = asyncCall(49, 2, "snmpOutgoingConnectionOpened",
-                                         Comm::UdpOpenDialer(&snmpPortOpened));
+        // TODO: Add/use snmpOutgoingPortOpened() instead of snmpPortOpened().
+        auto c = asyncCallbackFun(49, 2, snmpPortOpened);
         Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpOutgoingConn, Ipc::fdnOutSnmpSocket, c);
     } else {
         snmpOutgoingConn = snmpIncomingConn;
@@ -300,8 +302,10 @@ snmpOpenPorts(void)
 }
 
 static void
-snmpPortOpened(const Comm::ConnectionPointer &conn, int)
+snmpPortOpened(Ipc::StartListeningAnswer &answer)
 {
+    const auto &conn = answer.conn;
+
     if (!Comm::IsConnOpen(conn))
         fatalf("Cannot open SNMP %s Port",(conn->fd == snmpIncomingConn->fd?"receiving":"sending"));
 
@@ -398,7 +402,7 @@ snmpDecodePacket(SnmpRequest * rq)
     /* Check if we have explicit permission to access SNMP data.
      * default (set above) is to deny all */
     if (Community) {
-        ACLFilledChecklist checklist(Config.accessList.snmp, nullptr, nullptr);
+        ACLFilledChecklist checklist(Config.accessList.snmp, nullptr);
         checklist.src_addr = rq->from;
         checklist.snmp_community = (char *) Community;
 
@@ -722,9 +726,9 @@ static oid *
 peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 {
     oid *instance = nullptr;
-    CachePeer *peers = Config.peers;
+    const auto peersAvailable = CurrentCachePeers().size();
 
-    if (peers == nullptr) {
+    if (!peersAvailable) {
         debugs(49, 6, "snmp peer_Inst: No Peers.");
         current = current->parent->parent->parent->leaves[1];
         while ((current) && (!current->parsefunction))
@@ -744,9 +748,9 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         int no = name[current->len] ;
         int i;
         // Note: This works because the Config.peers keeps its index according to its position.
-        for ( i=0 ; peers && (i < no) ; peers = peers->next, ++i ) ;
+        for (i = 0; Less(i, peersAvailable) && Less(i, no); ++i);
 
-        if (peers) {
+        if (Less(i, peersAvailable)) {
             debugs(49, 6, "snmp peer_Inst: Encode peer #" << i);
             instance = (oid *)xmalloc(sizeof(*name) * (current->len + 1 ));
             memcpy(instance, name, (sizeof(*name) * current->len ));
@@ -1130,8 +1134,10 @@ oid2addr(oid * id, Ip::Address &addr, u_int size)
 }
 
 int
-ACLSNMPCommunityStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::SnmpCommunityCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     return data->match (checklist->snmp_community);
 }
 

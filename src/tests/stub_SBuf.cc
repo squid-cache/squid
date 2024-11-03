@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,7 +35,7 @@ SBuf& SBuf::assign(const char *, size_type) STUB_RETVAL(*this)
 void SBuf::clear() STUB
 SBuf& SBuf::append(const SBuf &) STUB_RETVAL(*this)
 SBuf& SBuf::append(const char *, size_type) STUB_RETVAL(*this)
-SBuf& SBuf::append(const char) STUB_RETVAL(*this)
+void SBuf::push_back(char) STUB
 SBuf& SBuf::Printf(const char *, ...) STUB_RETVAL(*this)
 SBuf& SBuf::appendf(const char *, ...) STUB_RETVAL(*this)
 SBuf& SBuf::vappendf(const char *, va_list) STUB_RETVAL(*this)

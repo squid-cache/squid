@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -207,7 +207,7 @@ static void
 random_vector(char *aVector)
 {
     static std::mt19937 mt(RandomSeed32());
-    static xuniform_int_distribution<uint8_t> dist;
+    static std::uniform_int_distribution<uint8_t> dist;
 
     for (int i = 0; i < AUTH_VECTOR_LEN; ++i)
         aVector[i] = static_cast<char>(dist(mt) & 0xFF);

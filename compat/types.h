@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_TYPES_H
-#define SQUID_TYPES_H
+#ifndef SQUID_COMPAT_TYPES_H
+#define SQUID_COMPAT_TYPES_H
 
 /*
  * Here are defined several known-width types, obtained via autoconf
@@ -43,12 +43,6 @@
 #if HAVE_NETINET_IN_SYSTM_H
 /* Several OS require types declared by in_systm.h without including it themselves. */
 #include <netinet/in_systm.h>
-#endif
-
-#if __cplusplus && HAVE_TR1_RANDOM
-#if !HAVE_STD_UNIFORM_INT_DISTRIBUTION && !HAVE_STD_UNIFORM_REAL_DISTRIBUTION
-#include <tr1/random>
-#endif
 #endif
 
 /******************************************************/
@@ -131,21 +125,6 @@
 #endif
 #endif
 
-#ifndef PRIuSIZE
-// NP: configure checks for support of %zu and defines where possible
-#if SIZEOF_SIZE_T == 4 && _SQUID_MINGW_
-#define PRIuSIZE "I32u"
-#elif SIZEOF_SIZE_T == 4
-#define PRIuSIZE "u"
-#elif SIZEOF_SIZE_T == 8 && _SQUID_MINGW_
-#define PRIuSIZE "I64u"
-#elif SIZEOF_SIZE_T == 8
-#define PRIuSIZE "lu"
-#else
-#error size_t is not 32-bit or 64-bit
-#endif
-#endif /* PRIuSIZE */
-
 #ifndef HAVE_MODE_T
 typedef unsigned short mode_t;
 #endif
@@ -166,20 +145,5 @@ typedef long mtyp_t;
 #define NULL 0
 #endif
 
-/***********************************************************/
-/* uniform_int_distribution backward compatibility wrapper */
-/***********************************************************/
-#if HAVE_STD_UNIFORM_INT_DISTRIBUTION
-#define xuniform_int_distribution std::uniform_int_distribution
-#else
-#define xuniform_int_distribution std::tr1::uniform_int
-#endif
-
-#if HAVE_STD_UNIFORM_REAL_DISTRIBUTION
-#define xuniform_real_distribution std::uniform_real_distribution
-#else
-#define xuniform_real_distribution std::tr1::uniform_real
-#endif
-
-#endif /* SQUID_TYPES_H */
+#endif /* SQUID_COMPAT_TYPES_H */
 

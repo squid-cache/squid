@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,10 @@
 #include "squid.h"
 #include "cache_snmp.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "globals.h"
+#include "mem/Meter.h"
+#include "mem/Stats.h"
 #include "mem_node.h"
 #include "neighbors.h"
 #include "snmp_agent.h"
@@ -188,14 +191,14 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
     Ip::Address laddr;
     char *cp = nullptr;
     CachePeer *p = nullptr;
-    int cnt = 0;
     debugs(49, 5, "snmp_meshPtblFn: peer " << Var->name[LEN_SQ_MESH + 3] << " requested!");
     *ErrP = SNMP_ERR_NOERROR;
 
     u_int index = Var->name[LEN_SQ_MESH + 3] ;
-    for (p = Config.peers; p != nullptr; p = p->next, ++cnt) {
-        if (p->index == index) {
-            laddr = p->in_addr ;
+    for (const auto &peer: CurrentCachePeers()) {
+        if (peer->index == index) {
+            laddr = peer->in_addr ;
+            p = peer.get();
             break;
         }
     }
@@ -339,11 +342,14 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
                                       SMI_COUNTER32);
         break;
 
-    case PERF_SYS_MEMUSAGE:
+    case PERF_SYS_MEMUSAGE: {
+        Mem::PoolStats stats;
+        Mem::GlobalStats(stats);
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) statMemoryAccounted() >> 10,
+                                      (snint) stats.meter->alloc.currentLevel() >> 10,
                                       ASN_INTEGER);
-        break;
+    }
+    break;
 
     case PERF_SYS_CPUTIME:
         squid_getrusage(&rusage);

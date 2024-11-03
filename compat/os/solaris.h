@@ -1,15 +1,21 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_OS_SOLARIS_H
-#define SQUID_OS_SOLARIS_H
+#ifndef SQUID_COMPAT_OS_SOLARIS_H
+#define SQUID_COMPAT_OS_SOLARIS_H
 
 #if _SQUID_SOLARIS_
+
+/****************************************************************************
+ *--------------------------------------------------------------------------*
+ * DO *NOT* MAKE ANY CHANGES below here unless you know what you're doing...*
+ *--------------------------------------------------------------------------*
+ ****************************************************************************/
 
 /*
  * ugly hack. System headers require wcsstr, but don't define it.
@@ -65,25 +71,10 @@ SQUIDCEXTERN int getpagesize(void);
 SQUIDCEXTERN int gethostname(char *, int);
 #endif
 
-/*
- * SunStudio CC does not define C++ portability API __FUNCTION__
- */
-#if defined(__SUNPRO_CC) && !defined(__FUNCTION__)
-#define __FUNCTION__ ""
-#endif
-
 /* Bug 2500: Solaris 10/11 require s6_addr* defines. */
 //#define s6_addr8   _S6_un._S6_u8
 //#define s6_addr16  _S6_un._S6_u16
 #define s6_addr32  _S6_un._S6_u32
-
-/* Bug 3057: Solaris 9 defines struct addrinfo with size_t instead of socklen_t
- *           this causes binary incompatibility on 64-bit systems.
- *  Fix this by bundling a copy of the OpenSolaris 10 netdb.h to use instead.
- */
-#if defined(__sparcv9)
-#include "compat/os/opensolaris_10_netdb.h"
-#endif
 
 /* Solaris 10 lacks SUN_LEN */
 #if !defined(SUN_LEN)
@@ -104,5 +95,5 @@ SQUIDCEXTERN int gethostname(char *, int);
 #endif
 
 #endif /* _SQUID_SOLARIS_ */
-#endif /* SQUID_OS_SOALRIS_H */
+#endif /* SQUID_COMPAT_OS_SOLARIS_H */
 

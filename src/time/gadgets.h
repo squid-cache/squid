@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__SRC_TIME_GADGETS_H
-#define SQUID__SRC_TIME_GADGETS_H
+#ifndef SQUID_SRC_TIME_GADGETS_H
+#define SQUID_SRC_TIME_GADGETS_H
 
 #include <ctime>
 #include <iosfwd>
@@ -139,5 +139,5 @@ operator ==(const timeval &a, const timeval &b)
     return !(a != b);
 }
 
-#endif /* SQUID__SRC_TIME_GADGETS_H */
+#endif /* SQUID_SRC_TIME_GADGETS_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -74,16 +74,16 @@ operator <<(std::ostream &os, const SipcIo &sio)
 /* IpcIo::Command */
 
 std::ostream &
-operator <<(std::ostream &os, const IpcIo::Command command)
+IpcIo::operator <<(std::ostream &os, const Command command)
 {
     switch (command) {
-    case IpcIo::cmdNone:
+    case cmdNone:
         return os << '-';
-    case IpcIo::cmdOpen:
+    case cmdOpen:
         return os << 'o';
-    case IpcIo::cmdRead:
+    case cmdRead:
         return os << 'r';
-    case IpcIo::cmdWrite:
+    case cmdWrite:
         return os << 'w';
     }
     // unreachable code
@@ -741,7 +741,7 @@ diskerRead(IpcIoMsg &ipcIo)
     char *const buf = Ipc::Mem::PagePointer(ipcIo.page);
     const ssize_t read = pread(TheFile, buf, min(ipcIo.len, Ipc::Mem::PageSize()), ipcIo.offset);
     ++statCounter.syscalls.disk.reads;
-    fd_bytes(TheFile, read, FD_READ);
+    fd_bytes(TheFile, read, IoDirection::Read);
 
     if (read >= 0) {
         ipcIo.xerrno = 0;
@@ -773,7 +773,7 @@ diskerWriteAttempts(IpcIoMsg &ipcIo)
     for (int attempts = 1; attempts <= attemptLimit; ++attempts) {
         const ssize_t result = pwrite(TheFile, buf, toWrite, offset);
         ++statCounter.syscalls.disk.writes;
-        fd_bytes(TheFile, result, FD_WRITE);
+        fd_bytes(TheFile, result, IoDirection::Write);
 
         if (result < 0) {
             ipcIo.xerrno = errno;
@@ -1015,18 +1015,18 @@ class IpcIoRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     IpcIoRr(): owner(nullptr) {}
-    virtual ~IpcIoRr();
-    virtual void claimMemoryNeeds();
+    ~IpcIoRr() override;
+    void claimMemoryNeeds() override;
 
 protected:
     /* Ipc::Mem::RegisteredRunner API */
-    virtual void create();
+    void create() override;
 
 private:
     Ipc::FewToFewBiQueue::Owner *owner;
 };
 
-RunnerRegistrationEntry(IpcIoRr);
+DefineRunnerRegistrator(IpcIoRr);
 
 void
 IpcIoRr::claimMemoryNeeds()

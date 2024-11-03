@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 37    ICMP Routines */
 
-#ifndef _INCLUDE_ICMPV6_H
-#define _INCLUDE_ICMPV6_H
+#ifndef SQUID_SRC_ICMP_ICMP6_H
+#define SQUID_SRC_ICMP_ICMP6_H
 
 #include "Icmp.h"
 
@@ -46,13 +46,13 @@ class Icmp6 : public Icmp
 {
 public:
     Icmp6();
-    virtual ~Icmp6();
+    ~Icmp6() override;
 
-    virtual int Open();
+    int Open() override;
 
 #if USE_ICMP
-    virtual void SendEcho(Ip::Address &, int, const char*, int);
-    virtual void Recv(void);
+    void SendEcho(Ip::Address &, int, const char*, int) override;
+    void Recv(void) override;
 #endif
 };
 
@@ -62,5 +62,5 @@ public:
 extern Icmp6 icmp6;
 
 #endif /* USE_ICMP && SQUID_HELPER */
-#endif /* _INCLUDE_ICMPV6_H */
+#endif /* SQUID_SRC_ICMP_ICMP6_H */
 

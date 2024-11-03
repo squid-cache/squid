@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -70,7 +70,7 @@
 #include "include/util.h"
 
 #if _SQUID_CYGWIN_
-#include <wchar.h>
+#include <cwchar>
 int _wcsicmp(const wchar_t *, const wchar_t *);
 #endif
 
@@ -78,19 +78,37 @@ int _wcsicmp(const wchar_t *, const wchar_t *);
 #include <cassert>
 #include <cctype>
 #include <cstring>
+
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#include <windows.h>
+#if HAVE_OBJBASE_H
 #include <objbase.h>
+#endif
+#if HAVE_INITGUID_H
 #include <initguid.h>
+#endif
+#if HAVE_ADSIID_H
 #include <adsiid.h>
+#endif
+#if HAVE_IADS_H
 #include <iads.h>
+#endif
+#if HAVE_ADSHLP_H
 #include <adshlp.h>
+#endif
+#if HAVE_ADSERR_H
 #include <adserr.h>
+#endif
+#if HAVE_LM_H
 #include <lm.h>
+#endif
+#if HAVE_DSROLE_H
 #include <dsrole.h>
+#endif
+#if HAVE_SDDL_H
 #include <sddl.h>
+#endif
 
 enum ADSI_PATH {
     LDAP_MODE,
@@ -102,25 +120,25 @@ char *program_name;
 pid_t mypid;
 char *machinedomain;
 int use_case_insensitive_compare = 0;
-char *DefaultDomain = NULL;
+char *DefaultDomain = nullptr;
 const char NTV_VALID_DOMAIN_SEPARATOR[] = "\\/";
 int numberofgroups = 0;
 int WIN32_COM_initialized = 0;
-char *WIN32_ErrorMessage = NULL;
+char *WIN32_ErrorMessage = nullptr;
 wchar_t **User_Groups;
 int User_Groups_Count = 0;
 
-wchar_t *My_NameTranslate(wchar_t *, int, int);
-char *Get_WIN32_ErrorMessage(HRESULT);
+static wchar_t *My_NameTranslate(wchar_t *, int, int);
+static char *Get_WIN32_ErrorMessage(HRESULT);
 
-void
+static void
 CloseCOM(void)
 {
     if (WIN32_COM_initialized == 1)
         CoUninitialize();
 }
 
-HRESULT
+static HRESULT
 GetLPBYTEtoOctetString(VARIANT * pVar, LPBYTE * ppByte)
 {
     HRESULT hr = E_FAIL;
@@ -150,14 +168,14 @@ GetLPBYTEtoOctetString(VARIANT * pVar, LPBYTE * ppByte)
     return hr;
 }
 
-wchar_t *
+static wchar_t *
 Get_primaryGroup(IADs * pUser)
 {
     HRESULT hr;
     VARIANT var;
     unsigned User_primaryGroupID;
     char tmpSID[SECURITY_MAX_SID_SIZE * 2];
-    wchar_t *wc = NULL, *result = NULL;
+    wchar_t *wc = nullptr, *result = nullptr;
     int wcsize;
 
     VariantInit(&var);
@@ -177,8 +195,8 @@ Get_primaryGroup(IADs * pUser)
     hr = pUser->lpVtbl->Get(pUser, L"objectSid", &var);
     if (SUCCEEDED(hr)) {
         PSID pObjectSID;
-        LPBYTE pByte = NULL;
-        char *szSID = NULL;
+        LPBYTE pByte = nullptr;
+        char *szSID = nullptr;
         hr = GetLPBYTEtoOctetString(&var, &pByte);
 
         pObjectSID = (PSID) pByte;
@@ -208,21 +226,21 @@ Get_primaryGroup(IADs * pUser)
     return result;
 }
 
-char *
+static char *
 Get_WIN32_ErrorMessage(HRESULT hr)
 {
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
                   FORMAT_MESSAGE_IGNORE_INSERTS,
-                  NULL,
+                  nullptr,
                   hr,
                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                   (LPTSTR) & WIN32_ErrorMessage,
                   0,
-                  NULL);
+                  nullptr);
     return WIN32_ErrorMessage;
 }
 
-wchar_t *
+static wchar_t *
 My_NameTranslate(wchar_t * name, int in_format, int out_format)
 {
     IADsNameTranslate *pNto;
@@ -240,7 +258,7 @@ My_NameTranslate(wchar_t * name, int in_format, int out_format)
         WIN32_COM_initialized = 1;
     }
     hr = CoCreateInstance(&CLSID_NameTranslate,
-                          NULL,
+                          nullptr,
                           CLSCTX_INPROC_SERVER,
                           &IID_IADsNameTranslate,
                           (void **) &pNto);
@@ -260,13 +278,13 @@ My_NameTranslate(wchar_t * name, int in_format, int out_format)
     if (FAILED(hr)) {
         debug("My_NameTranslate: cannot set translate of %S, ERROR: %s\n", name, Get_WIN32_ErrorMessage(hr));
         pNto->lpVtbl->Release(pNto);
-        return NULL;
+        return nullptr;
     }
     hr = pNto->lpVtbl->Get(pNto, out_format, &bstr);
     if (FAILED(hr)) {
         debug("My_NameTranslate: cannot get translate of %S, ERROR: %s\n", name, Get_WIN32_ErrorMessage(hr));
         pNto->lpVtbl->Release(pNto);
-        return NULL;
+        return nullptr;
     }
     debug("My_NameTranslate: %S translated to %S\n", name, bstr);
 
@@ -277,7 +295,7 @@ My_NameTranslate(wchar_t * name, int in_format, int out_format)
     return wc;
 }
 
-wchar_t *
+static wchar_t *
 GetLDAPPath(wchar_t * Base_DN, int query_mode)
 {
     wchar_t *wc;
@@ -293,14 +311,14 @@ GetLDAPPath(wchar_t * Base_DN, int query_mode)
     return wc;
 }
 
-char *
+static char *
 GetDomainName(void)
 {
-    static char *DomainName = NULL;
+    static char *DomainName = nullptr;
     PDSROLE_PRIMARY_DOMAIN_INFO_BASIC pDSRoleInfo;
     DWORD netret;
 
-    if ((netret = DsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, (PBYTE *) & pDSRoleInfo) == ERROR_SUCCESS)) {
+    if ((netret = DsRoleGetPrimaryDomainInformation(nullptr, DsRolePrimaryDomainInfoBasic, (PBYTE *) & pDSRoleInfo) == ERROR_SUCCESS)) {
         /*
          * Check the machine role.
          */
@@ -317,7 +335,7 @@ GetDomainName(void)
             DomainName = (char *) xmalloc(len + 1);
 
             /* copy unicode buffer */
-            WideCharToMultiByte(CP_ACP, 0, pDSRoleInfo->DomainNameFlat, -1, DomainName, len, NULL, NULL);
+            WideCharToMultiByte(CP_ACP, 0, pDSRoleInfo->DomainNameFlat, -1, DomainName, len, nullptr, nullptr);
 
             /* add null termination */
             DomainName[len] = '\0';
@@ -343,14 +361,14 @@ GetDomainName(void)
     return DomainName;
 }
 
-int
+static int
 add_User_Group(wchar_t * Group)
 {
     wchar_t **array;
 
     if (User_Groups_Count == 0) {
         User_Groups = (wchar_t **) xmalloc(sizeof(wchar_t *));
-        *User_Groups = NULL;
+        *User_Groups = nullptr;
         ++User_Groups_Count;
     }
     array = User_Groups;
@@ -360,7 +378,7 @@ add_User_Group(wchar_t * Group)
         ++array;
     }
     User_Groups = (wchar_t **) xrealloc(User_Groups, sizeof(wchar_t *) * (User_Groups_Count + 1));
-    User_Groups[User_Groups_Count] = NULL;
+    User_Groups[User_Groups_Count] = nullptr;
     User_Groups[User_Groups_Count - 1] = (wchar_t *) xmalloc((wcslen(Group) + 1) * sizeof(wchar_t));
     wcscpy(User_Groups[User_Groups_Count - 1], Group);
     ++User_Groups_Count;
@@ -398,7 +416,7 @@ wcstrcmparray(const wchar_t * str, const char **array)
     return -1;
 }
 
-HRESULT
+static HRESULT
 Recursive_Memberof(IADs * pObj)
 {
     VARIANT var;
@@ -480,7 +498,7 @@ Recursive_Memberof(IADs * pObj)
 static wchar_t **
 build_groups_DN_array(const char **array, char *userdomain)
 {
-    wchar_t *wc = NULL;
+    wchar_t *wc = nullptr;
     int wcsize;
     int source_group_format;
     char Group[GNLEN + 1];
@@ -515,12 +533,12 @@ build_groups_DN_array(const char **array, char *userdomain)
         }
         ++entry;
     }
-    *entry = NULL;
+    *entry = nullptr;
     return wc_array;
 }
 
 /* returns 1 on success, 0 on failure */
-int
+static int
 Valid_Local_Groups(char *UserName, const char **Groups)
 {
     int result = 0;
@@ -537,7 +555,7 @@ Valid_Local_Groups(char *UserName, const char **Groups)
     NET_API_STATUS nStatus;
     DWORD i;
     DWORD dwTotalCount = 0;
-    LPBYTE pBufTmp = NULL;
+    LPBYTE pBufTmp = nullptr;
 
     if ((Domain_Separator = strchr(UserName, '/')) != NULL)
         *Domain_Separator = '\\';
@@ -557,7 +575,7 @@ Valid_Local_Groups(char *UserName, const char **Groups)
      * function should also return the names of the local
      * groups in which the user is indirectly a member.
      */
-    nStatus = NetUserGetLocalGroups(NULL,
+    nStatus = NetUserGetLocalGroups(nullptr,
                                     wszUserName,
                                     dwLevel,
                                     dwFlags,
@@ -598,14 +616,14 @@ Valid_Local_Groups(char *UserName, const char **Groups)
 }
 
 /* returns 1 on success, 0 on failure */
-int
+static int
 Valid_Global_Groups(char *UserName, const char **Groups)
 {
     int result = 0;
     WCHAR wszUser[DNLEN + UNLEN + 2];   /* Unicode user name */
     char NTDomain[DNLEN + UNLEN + 2];
 
-    char *domain_qualify = NULL;
+    char *domain_qualify = nullptr;
     char User[DNLEN + UNLEN + 2];
     size_t j;
 
@@ -730,7 +748,7 @@ usage(const char *program)
             program);
 }
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt;
@@ -756,7 +774,7 @@ process_options(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
-        /* [[fallthrough]] */
+            [[fallthrough]];
         default:
             fprintf(stderr, "%s: FATAL: Unknown option: -%c. Exiting\n", program_name, opt);
             usage(argv[0]);
@@ -785,8 +803,8 @@ main(int argc, char *argv[])
     }
     mypid = getpid();
 
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stderr, nullptr);
 
     /* Check Command Line */
     process_options(argc, argv);
@@ -833,11 +851,11 @@ main(int argc, char *argv[])
             continue;
         }
         username = strtok(buf, " ");
-        for (n = 0; (group = strtok(NULL, " ")) != NULL; ++n) {
+        for (n = 0; (group = strtok(nullptr, " ")) != NULL; ++n) {
             rfc1738_unescape(group);
             groups[n] = group;
         }
-        groups[n] = NULL;
+        groups[n] = nullptr;
         numberofgroups = n;
 
         if (NULL == username) {

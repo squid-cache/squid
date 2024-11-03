@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -127,7 +127,6 @@ static fqdncache_entry *fqdncache_get(const char *);
 static int fqdncacheExpiredEntry(const fqdncache_entry *);
 static void fqdncacheLockEntry(fqdncache_entry * f);
 static void fqdncacheUnlockEntry(fqdncache_entry * f);
-static FREE fqdncacheFreeEntry;
 static void fqdncacheAddEntry(fqdncache_entry * f);
 
 /// \ingroup FQDNCacheInternal
@@ -305,7 +304,7 @@ fqdncacheCallback(fqdncache_entry * f, int wait)
     f->handler = nullptr;
 
     if (cbdataReferenceValidDone(f->handlerData, &cbdata)) {
-        const Dns::LookupDetails details(f->error_message, wait);
+        const Dns::LookupDetails details(SBuf(f->error_message), wait);
         callback(f->name_count ? f->names[0] : nullptr, details, cbdata);
     }
 
@@ -423,7 +422,7 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
 
     if (name[0] == '\0') {
         debugs(35, 4, "fqdncache_nbgethostbyaddr: Invalid name!");
-        const Dns::LookupDetails details("Invalid hostname", -1); // error, no lookup
+        static const Dns::LookupDetails details(SBuf("Invalid hostname"), -1); // error, no lookup
         if (handler)
             handler(nullptr, details, handlerData);
         return;
@@ -601,14 +600,6 @@ fqdncacheUnlockEntry(fqdncache_entry * f)
         fqdncacheRelease(f);
 }
 
-/// \ingroup FQDNCacheInternal
-static void
-fqdncacheFreeEntry(void *data)
-{
-    fqdncache_entry *f = (fqdncache_entry *)data;
-    delete f;
-}
-
 fqdncache_entry::~fqdncache_entry()
 {
     for (int k = 0; k < (int)name_count; ++k)
@@ -616,15 +607,6 @@ fqdncache_entry::~fqdncache_entry()
 
     xfree(hash.key);
     xfree(error_message);
-}
-
-/// \ingroup FQDNCacheAPI
-void
-fqdncacheFreeMemory(void)
-{
-    hashFreeItems(fqdn_table, fqdncacheFreeEntry);
-    hashFreeMemory(fqdn_table);
-    fqdn_table = nullptr;
 }
 
 /**

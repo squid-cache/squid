@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 77    Delay Pools */
 
-#ifndef DELAYTAGGED_H
-#define DELAYTAGGED_H
+#ifndef SQUID_SRC_DELAYTAGGED_H
+#define SQUID_SRC_DELAYTAGGED_H
 
 #if USE_DELAY_POOLS
 
@@ -19,6 +19,7 @@
 #include "DelayBucket.h"
 #include "DelayIdComposite.h"
 #include "DelaySpec.h"
+#include "sbuf/SBuf.h"
 #include "splay.h"
 
 /// \ingroup DelayPoolsAPI
@@ -30,10 +31,10 @@ public:
     typedef RefCount<DelayTaggedBucket> Pointer;
 
     void stats(StoreEntry *)const;
-    DelayTaggedBucket(String &aTag);
-    ~DelayTaggedBucket();
+    explicit DelayTaggedBucket(const SBuf &aTag);
+    ~DelayTaggedBucket() override;
     DelayBucket theBucket;
-    String tag;
+    const SBuf tag;
 };
 
 /// \ingroup DelayPoolsAPI
@@ -45,13 +46,13 @@ public:
     typedef RefCount<DelayTagged> Pointer;
 
     DelayTagged();
-    virtual ~DelayTagged();
-    virtual void stats(StoreEntry * sentry);
-    virtual void dump(StoreEntry *entry) const;
-    virtual void update(int incr);
-    virtual void parse();
+    ~DelayTagged() override;
+    void stats(StoreEntry * sentry) override;
+    void dump(StoreEntry *entry) const override;
+    void update(int incr) override;
+    void parse() override;
 
-    virtual DelayIdComposite::Pointer id(CompositeSelectionDetails &);
+    DelayIdComposite::Pointer id(CompositeSelectionDetails &) override;
 
 private:
 
@@ -61,11 +62,11 @@ private:
         MEMPROXY_CLASS(DelayTagged::Id);
 
     public:
-        Id (RefCount<DelayTagged>, String &);
-        ~Id();
-        virtual int bytesWanted (int min, int max) const;
-        virtual void bytesIn(int qty);
-        virtual void delayRead(const AsyncCallPointer &);
+        Id(const RefCount<DelayTagged> &, const SBuf &);
+        ~Id() override;
+        int bytesWanted (int min, int max) const override;
+        void bytesIn(int qty) override;
+        void delayRead(const AsyncCallPointer &) override;
 
     private:
         RefCount<DelayTagged> theTagged;
@@ -79,5 +80,5 @@ private:
 };
 
 #endif /* USE_DELAY_POOLS */
-#endif /* DELAYTAGGED_H */
+#endif /* SQUID_SRC_DELAYTAGGED_H */
 

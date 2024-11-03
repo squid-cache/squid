@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -379,7 +379,7 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
     assert(ctrl.offset < ctrl.size);
 
     if (io.flag == Comm::OK && io.size > 0) {
-        fd_bytes(io.fd, io.size, FD_READ);
+        fd_bytes(io.fd, io.size, IoDirection::Read);
     }
 
     if (io.flag != Comm::OK) {
@@ -696,7 +696,7 @@ Ftp::Client::sendPassive()
             state = SENT_EPSV_2;
             break;
         }
-    /* [[fallthrough]] to skip EPSV 2 */
+        [[fallthrough]]; // to skip EPSV 2
 
     case SENT_EPSV_2: /* EPSV IPv6 failed. Try EPSV IPv4 */
         if (ctrl.conn->local.isIPv4()) {
@@ -709,7 +709,7 @@ Ftp::Client::sendPassive()
             failed(ERR_FTP_FAILURE, 0);
             return false;
         }
-    /* [[fallthrough]] to skip EPSV 1 */
+        [[fallthrough]]; // to skip EPSV 1
 
     case SENT_EPSV_1: /* EPSV options exhausted. Try PASV now. */
         debugs(9, 5, "FTP Channel (" << ctrl.conn->remote << ") rejects EPSV connection attempts. Trying PASV instead.");
@@ -720,7 +720,7 @@ Ftp::Client::sendPassive()
     default: {
         bool doEpsv = true;
         if (Config.accessList.ftp_epsv) {
-            ACLFilledChecklist checklist(Config.accessList.ftp_epsv, fwd->request, nullptr);
+            ACLFilledChecklist checklist(Config.accessList.ftp_epsv, fwd->request);
             doEpsv = checklist.fastCheck().allowed();
         }
         if (!doEpsv) {
@@ -858,7 +858,7 @@ Ftp::Client::writeCommandCallback(const CommIoCbParams &io)
     debugs(9, 5, "wrote " << io.size << " bytes");
 
     if (io.size > 0) {
-        fd_bytes(io.fd, io.size, FD_WRITE);
+        fd_bytes(io.fd, io.size, IoDirection::Write);
         statCounter.server.all.kbytes_out += io.size;
         statCounter.server.ftp.kbytes_out += io.size;
     }
@@ -907,6 +907,8 @@ Ftp::Client::dataConnection() const
 void
 Ftp::Client::noteDelayAwareReadChance()
 {
+    // TODO: Merge with HttpStateData::noteDelayAwareReadChance()
+    waitingForDelayAwareReadChance = false;
     data.read_pending = false;
     maybeReadVirginBody();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,17 +19,13 @@
 #include "dns/rfc2671.h"
 #include "util.h"
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cassert>
+#include <cstring>
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #if HAVE_MEMORY_H
 #include <memory.h>
-#endif
-#if HAVE_ASSERT_H
-#include <assert.h>
 #endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
@@ -104,10 +100,11 @@ rfc1035HeaderPack(char *buf, size_t sz, rfc1035_message * hdr)
 static int
 rfc1035LabelPack(char *buf, size_t sz, const char *label)
 {
+    assert(label);
+    assert(!strchr(label, '.'));
+
     int off = 0;
-    size_t len = label ? strlen(label) : 0;
-    if (label)
-        assert(!strchr(label, '.'));
+    auto len = strlen(label);
     if (len > RFC1035_MAXLABELSZ)
         len = RFC1035_MAXLABELSZ;
     assert(sz >= len + 1);
@@ -138,8 +135,12 @@ rfc1035NamePack(char *buf, size_t sz, const char *name)
     for (t = strtok(copy, "."); t; t = strtok(nullptr, "."))
         off += rfc1035LabelPack(buf + off, sz - off, t);
     xfree(copy);
-    off += rfc1035LabelPack(buf + off, sz - off, nullptr);
-    assert(off <= sz);
+
+    // add a terminating root (i.e. zero length) label
+    assert(off < sz);
+    buf[off] = 0;
+    ++off;
+
     return off;
 }
 
@@ -264,14 +265,14 @@ rfc1035NameUnpack(const char *buf, size_t sz, unsigned int *off, unsigned short 
                 RFC1035_UNPACK_DEBUG;
                 return 1;
             }
-            memcpy(&s, buf + (*off), sizeof(s));
-            s = ntohs(s);
-            (*off) += sizeof(s);
-            /* Sanity check */
-            if ((*off) > sz) {
+            /* before copying compression offset value, ensure it is inside the buffer */
+            if ((*off) + sizeof(s) > sz) {
                 RFC1035_UNPACK_DEBUG;
                 return 1;
             }
+            memcpy(&s, buf + (*off), sizeof(s));
+            s = ntohs(s);
+            (*off) += sizeof(s);
             ptr = s & 0x3FFF;
             /* Make sure the pointer is inside this message */
             if (ptr >= sz) {

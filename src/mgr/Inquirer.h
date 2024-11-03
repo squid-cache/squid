@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_INQUIRER_H
-#define SQUID_MGR_INQUIRER_H
+#ifndef SQUID_SRC_MGR_INQUIRER_H
+#define SQUID_SRC_MGR_INQUIRER_H
 
 #include "comm/forward.h"
 #include "ipc/Inquirer.h"
@@ -25,7 +25,7 @@ namespace Mgr
 /// aggregating individual strand responses and dumping the result if needed
 class Inquirer: public Ipc::Inquirer
 {
-    CBDATA_CLASS(Inquirer);
+    CBDATA_CHILD(Inquirer);
 
 public:
     Inquirer(Action::Pointer anAction, const Request &aCause,
@@ -33,13 +33,13 @@ public:
 
 protected:
     /* AsyncJob API */
-    virtual void start();
-    virtual bool doneAll() const;
+    void start() override;
+    bool doneAll() const override;
 
     /* Ipc::Inquirer API */
-    virtual void cleanup();
-    virtual void sendResponse();
-    virtual bool aggregate(Ipc::Response::Pointer aResponse);
+    void cleanup() override;
+    void sendResponse() override;
+    bool aggregate(Ipc::Response::Pointer aResponse) override;
 
 private:
     void noteWroteHeader(const CommIoCbParams& params);
@@ -58,5 +58,5 @@ private:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_INQUIRER_H */
+#endif /* SQUID_SRC_MGR_INQUIRER_H */
 

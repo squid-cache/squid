@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -287,7 +287,7 @@ int aio_open(const char *path, int mode)
     if ((hndl = CreateFile(path,                    /* file name               */
                            dwDesiredAccess,         /* access mode             */
                            0,                       /* share mode              */
-                           NULL,                    /* SD                      */
+                           nullptr,                    /* SD                      */
                            dwCreationDisposition,   /* how to create           */
                            FILE_FLAG_OVERLAPPED,    /* file attributes         */
                            NULL                     /* handle to template file */

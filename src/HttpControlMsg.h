@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTP_CONTROL_MSG_H
-#define SQUID_HTTP_CONTROL_MSG_H
+#ifndef SQUID_SRC_HTTPCONTROLMSG_H
+#define SQUID_SRC_HTTPCONTROLMSG_H
 
 #include "base/AsyncCall.h"
 #include "HttpReply.h"
@@ -66,5 +66,5 @@ operator <<(std::ostream &os, const HttpControlMsg &msg)
     return os << msg.reply << ", " << msg.cbSuccess;
 }
 
-#endif /* SQUID_HTTP_CONTROL_MSG_H */
+#endif /* SQUID_SRC_HTTPCONTROLMSG_H */
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CONFIGPARSER_H
-#define SQUID_CONFIGPARSER_H
+#ifndef SQUID_SRC_CONFIGPARSER_H
+#define SQUID_SRC_CONFIGPARSER_H
 
 #include "acl/forward.h"
 #include "base/forward.h"
@@ -19,6 +19,7 @@
 #include <stack>
 #include <string>
 
+class CachePeer;
 class wordlist;
 
 /**
@@ -71,10 +72,13 @@ public:
     bool skipOptional(const char *keyword);
 
     /// parses an [if [!]<acl>...] construct
-    Acl::Tree *optionalAclList();
+    ACLList *optionalAclList();
 
     /// extracts and returns a regex (including any optional flags)
     std::unique_ptr<RegexPattern> regex(const char *expectedRegexDescription);
+
+    /// extracts a cache_peer name token and returns the corresponding CachePeer
+    CachePeer &cachePeer(const char *peerNameTokenDescription);
 
     static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);
@@ -228,7 +232,10 @@ protected:
     static enum ParsingStates {atParseKey, atParseValue} KvPairState_; ///< Parsing state while parsing kv-pair tokens
 };
 
-int parseConfigFile(const char *file_name);
+namespace Configuration {
+/// interprets (and partially applies) squid.conf or equivalent configuration
+void Parse();
+}
 
-#endif /* SQUID_CONFIGPARSER_H */
+#endif /* SQUID_SRC_CONFIGPARSER_H */
 

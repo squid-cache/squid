@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_INSTANCE_ID_H
-#define SQUID_BASE_INSTANCE_ID_H
+#ifndef SQUID_SRC_BASE_INSTANCEID_H
+#define SQUID_SRC_BASE_INSTANCEID_H
 
 #include <iosfwd>
 
@@ -49,6 +49,7 @@ public:
     typedef ValueType Value; ///< id storage type
 
     InstanceId() {change();}
+    InstanceId(InstanceId &&) = delete; // no copying/moving of any kind
 
     operator Value() const { return value; }
     bool operator ==(const InstanceId &o) const { return value == o.value; }
@@ -67,10 +68,6 @@ public:
 
 public:
     Value value = Value(); ///< instance identifier
-
-private:
-    InstanceId(const InstanceId &); ///< not implemented; IDs are unique
-    InstanceId& operator=(const InstanceId &); ///< not implemented
 };
 
 /// An InstanceIdDefinitions() helper. Avoid direct use.
@@ -100,5 +97,5 @@ std::ostream &operator <<(std::ostream &os, const InstanceId<Class, ValueType> &
     return id.print(os);
 }
 
-#endif /* SQUID_BASE_INSTANCE_ID_H */
+#endif /* SQUID_SRC_BASE_INSTANCEID_H */
 

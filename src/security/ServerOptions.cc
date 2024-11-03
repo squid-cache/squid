@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
+#include "base/IoManip.h"
 #include "base/Packable.h"
 #include "cache_cf.h"
 #include "error/SysErrorDetail.h"
@@ -136,26 +137,26 @@ Security::ServerOptions::parse(const char *token)
 }
 
 void
-Security::ServerOptions::dumpCfg(Packable *p, const char *pfx) const
+Security::ServerOptions::dumpCfg(std::ostream &os, const char *pfx) const
 {
     // dump out the generic TLS options
-    Security::PeerOptions::dumpCfg(p, pfx);
+    Security::PeerOptions::dumpCfg(os, pfx);
 
     if (!encryptTransport)
         return; // no other settings are relevant
 
     // dump the server-only options
     if (!dh.isEmpty())
-        p->appendf(" %sdh=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(dh));
+        os << ' ' << pfx << "dh=" << dh;
 
     if (!generateHostCertificates)
-        p->appendf(" %sgenerate-host-certificates=off", pfx);
+        os << ' ' << pfx << "generate-host-certificates=off";
 
     if (dynamicCertMemCacheSize != 4*1024*1024) // 4MB default, no 'tls-' prefix
-        p->appendf(" dynamic_cert_mem_cache_size=%" PRIuSIZE "bytes", dynamicCertMemCacheSize);
+        os << ' ' << "dynamic_cert_mem_cache_size=" << dynamicCertMemCacheSize << "bytes";
 
     if (!staticContextSessionId.isEmpty())
-        p->appendf(" %scontext=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(staticContextSessionId));
+        os << ' ' << pfx << "context=" << staticContextSessionId;
 }
 
 Security::ContextPointer
@@ -172,7 +173,7 @@ Security::ServerOptions::createBlankContext() const
     }
     ctx = convertContextFromRawPtr(t);
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     // Initialize for X.509 certificate exchange
     gnutls_certificate_credentials_t t;
     if (const auto x = gnutls_certificate_allocate_credentials(&t)) {
@@ -248,7 +249,7 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &)
             }
         }
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         for (auto &keys : certs) {
             gnutls_x509_crt_t crt = keys.cert.get();
             gnutls_x509_privkey_t xkey = keys.pkey.get();
@@ -301,7 +302,7 @@ Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
 
 #if USE_OPENSSL
     Ssl::generateUntrustedCert(untrustedSigningCa.cert, untrustedSigningCa.pkey, signingCa.cert, signingCa.pkey);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     // TODO: implement for GnuTLS. Just a warning for now since generate is implicitly on for all crypto builds.
     signingCa.cert.reset();
     signingCa.pkey.reset();
@@ -380,7 +381,7 @@ Security::ServerOptions::loadDhParams()
     int codes;
     if (DH_check(dhp, &codes) == 0) {
         if (codes) {
-            debugs(83, DBG_IMPORTANT, "WARNING: Failed to verify DH parameters '" << dhParamsFile << "' (" << std::hex << codes << ")");
+            debugs(83, DBG_IMPORTANT, "WARNING: Failed to verify DH parameters '" << dhParamsFile << "' (" << asHex(codes) << ")");
             DH_free(dhp);
             dhp = nullptr;
         }

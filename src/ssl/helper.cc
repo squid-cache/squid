@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,13 +9,13 @@
 #include "squid.h"
 #include "../helper.h"
 #include "anyp/PortCfg.h"
+#include "base/AsyncCallbacks.h"
 #include "cache_cf.h"
 #include "fs_io.h"
 #include "helper/Reply.h"
 #include "Parsing.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
-#include "SquidString.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
@@ -71,7 +71,7 @@ operator <<(std::ostream &os, const Ssl::GeneratorRequest &gr)
 /// pending Ssl::Helper requests (to all certificate generator helpers combined)
 static Ssl::GeneratorRequests TheGeneratorRequests;
 
-helper *Ssl::Helper::ssl_crtd = nullptr;
+Helper::Client::Pointer Ssl::Helper::ssl_crtd;
 
 void Ssl::Helper::Init()
 {
@@ -85,7 +85,7 @@ void Ssl::Helper::Init()
     if (!found)
         return;
 
-    ssl_crtd = new helper("sslcrtd_program");
+    ssl_crtd = ::Helper::Client::Make("sslcrtd_program");
     ssl_crtd->childs.updateLimits(Ssl::TheConfig.ssl_crtdChildren);
     ssl_crtd->ipc_type = IPC_STREAM;
     // The crtd messages may contain the eol ('\n') character. We are
@@ -101,7 +101,7 @@ void Ssl::Helper::Init()
         }
         safe_free(tmp_begin);
     }
-    helperOpenServers(ssl_crtd);
+    ssl_crtd->openSessions();
 }
 
 void Ssl::Helper::Shutdown()
@@ -110,7 +110,6 @@ void Ssl::Helper::Shutdown()
         return;
     helperShutdown(ssl_crtd);
     wordlistDestroy(&ssl_crtd->cmdline);
-    delete ssl_crtd;
     ssl_crtd = nullptr;
 }
 
@@ -166,7 +165,7 @@ Ssl::HandleGeneratorReply(void *data, const ::Helper::Reply &reply)
 }
 #endif //USE_SSL_CRTD
 
-helper *Ssl::CertValidationHelper::ssl_crt_validator = nullptr;
+Helper::Client::Pointer Ssl::CertValidationHelper::ssl_crt_validator;
 
 void Ssl::CertValidationHelper::Init()
 {
@@ -182,7 +181,7 @@ void Ssl::CertValidationHelper::Init()
     if (!found)
         return;
 
-    ssl_crt_validator = new helper("ssl_crt_validator");
+    ssl_crt_validator = ::Helper::Client::Make("ssl_crt_validator");
     ssl_crt_validator->childs.updateLimits(Ssl::TheConfig.ssl_crt_validator_Children);
     ssl_crt_validator->ipc_type = IPC_STREAM;
     // The crtd messages may contain the eol ('\n') character. We are
@@ -222,7 +221,7 @@ void Ssl::CertValidationHelper::Init()
         }
         xfree(tmp_begin);
     }
-    helperOpenServers(ssl_crt_validator);
+    ssl_crt_validator->openSessions();
 
     //WARNING: initializing static member in an object initialization method
     assert(HelperCache == nullptr);
@@ -235,7 +234,6 @@ void Ssl::CertValidationHelper::Shutdown()
         return;
     helperShutdown(ssl_crt_validator);
     wordlistDestroy(&ssl_crt_validator->cmdline);
-    delete ssl_crt_validator;
     ssl_crt_validator = nullptr;
 
     // CertValidationHelper::HelperCache is a static member, it is not good policy to
@@ -258,7 +256,7 @@ class submitData
 
 public:
     SBuf query;
-    AsyncCall::Pointer callback;
+    Ssl::CertValidationHelper::Callback callback;
     Security::SessionPointer ssl;
 };
 CBDATA_CLASS_INIT(submitData);
@@ -285,10 +283,8 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
     } else
         validationResponse->resultCode = reply.result;
 
-    Ssl::CertValidationHelper::CbDialer *dialer = dynamic_cast<Ssl::CertValidationHelper::CbDialer*>(crtdvdData->callback->getDialer());
-    Must(dialer);
-    dialer->arg1 = validationResponse;
-    ScheduleCallHere(crtdvdData->callback);
+    crtdvdData->callback.answer() = validationResponse;
+    ScheduleCallHere(crtdvdData->callback.release());
 
     if (Ssl::CertValidationHelper::HelperCache &&
             (validationResponse->resultCode == ::Helper::Okay || validationResponse->resultCode == ::Helper::Error)) {
@@ -298,7 +294,8 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
     delete crtdvdData;
 }
 
-void Ssl::CertValidationHelper::Submit(Ssl::CertValidationRequest const &request, AsyncCall::Pointer &callback)
+void
+Ssl::CertValidationHelper::Submit(const Ssl::CertValidationRequest &request, const Callback &callback)
 {
     Ssl::CertValidationMsg message(Ssl::CrtdMessage::REQUEST);
     message.setCode(Ssl::CertValidationMsg::code_cert_validate);
@@ -315,10 +312,8 @@ void Ssl::CertValidationHelper::Submit(Ssl::CertValidationRequest const &request
     if (CertValidationHelper::HelperCache &&
             (validationResponse = CertValidationHelper::HelperCache->get(crtdvdData->query))) {
 
-        CertValidationHelper::CbDialer *dialer = dynamic_cast<CertValidationHelper::CbDialer*>(callback->getDialer());
-        Must(dialer);
-        dialer->arg1 = *validationResponse;
-        ScheduleCallHere(callback);
+        crtdvdData->callback.answer() = *validationResponse;
+        ScheduleCallHere(crtdvdData->callback.release());
         delete crtdvdData;
         return;
     }
@@ -330,10 +325,8 @@ void Ssl::CertValidationHelper::Submit(Ssl::CertValidationRequest const &request
 
     Ssl::CertValidationResponse::Pointer resp = new Ssl::CertValidationResponse(crtdvdData->ssl);
     resp->resultCode = ::Helper::BrokenHelper;
-    Ssl::CertValidationHelper::CbDialer *dialer = dynamic_cast<Ssl::CertValidationHelper::CbDialer*>(callback->getDialer());
-    Must(dialer);
-    dialer->arg1 = resp;
-    ScheduleCallHere(callback);
+    crtdvdData->callback.answer() = resp;
+    ScheduleCallHere(crtdvdData->callback.release());
     delete crtdvdData;
     return;
 }

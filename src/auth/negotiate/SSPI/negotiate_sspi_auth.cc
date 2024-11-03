@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,17 +48,12 @@
 #include "helper/protocol_defines.h"
 #include "ntlmauth/ntlmauth.h"
 #include "ntlmauth/support_bits.cci"
-#include "sspwin32.h"
+#include "sspi/sspwin32.h"
 #include "util.h"
 
-#include <windows.h>
-#include <sspi.h>
-#include <security.h>
+#include <cctype>
 #if HAVE_GETOPT_H
 #include <getopt.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
 #endif
 
 int Negotiate_packet_debug_enabled = 0;
@@ -75,16 +70,14 @@ static int have_serverblob;
 #define SEND3(X,Y,Z) debug("sending '" X "' to squid\n",Y,Z); printf(X "\n",Y,Z);
 #endif
 
-char *negotiate_check_auth(SSP_blobP auth, int auth_length);
-
 /*
  * options:
  * -d enable debugging.
  * -v enable verbose Negotiate packet debugging.
  */
-char *my_program_name = NULL;
+char *my_program_name = nullptr;
 
-void
+static void
 usage()
 {
     fprintf(stderr,
@@ -95,7 +88,7 @@ usage()
             my_program_name);
 }
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt, had_error = 0;
@@ -115,7 +108,7 @@ process_options(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
-        /* [[fallthrough]] */
+            [[fallthrough]];
         default:
             fprintf(stderr, "ERROR: unknown option: -%c. Exiting\n", opt);
             usage();
@@ -140,7 +133,7 @@ token_decode(size_t *decodedLen, uint8_t decoded[], const char *buf)
     return true;
 }
 
-int
+static int
 manage_request()
 {
     char buf[HELPER_INPUT_BUFFER];
@@ -242,12 +235,12 @@ manage_request()
         if (status == SSP_ERROR) {
             FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
                           FORMAT_MESSAGE_IGNORE_INSERTS,
-                          NULL,
+                          nullptr,
                           GetLastError(),
                           MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),    /* Default language */
                           (LPTSTR) & ErrorMessage,
                           0,
-                          NULL);
+                          nullptr);
             if (ErrorMessage[strlen(ErrorMessage) - 1] == '\n')
                 ErrorMessage[strlen(ErrorMessage) - 1] = '\0';
             if (ErrorMessage[strlen(ErrorMessage) - 1] == '\r')
@@ -313,8 +306,8 @@ main(int argc, char *argv[])
     atexit(UnloadSecurityDll);
 
     /* initialize FDescs */
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stderr, nullptr);
 
     while (manage_request()) {
         /* everything is done within manage_request */

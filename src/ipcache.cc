@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 14    IP Cache */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "CacheManager.h"
 #include "cbdata.h"
 #include "debug/Messages.h"
@@ -164,7 +165,7 @@ public:
     void addGood(const rfc1035_rr &rr, Specs &specs);
 
     /// remembers the last error seen, overwriting any previous errors
-    void latestError(const char *text, const int debugLevel = 3);
+    void latestError(const char *text);
 
 protected:
     void updateTtl(const unsigned int rrTtl);
@@ -227,18 +228,20 @@ IpCacheLookupForwarder::IpCacheLookupForwarder(IPH *fun, void *data):
 }
 
 void
-IpCacheLookupForwarder::finalCallback(const Dns::CachedIps *addrs, const Dns::LookupDetails &details)
+IpCacheLookupForwarder::finalCallback(const Dns::CachedIps * const possiblyEmptyAddrs, const Dns::LookupDetails &details)
 {
+    // TODO: Consider removing nil-supplying IpcacheStats.invalid code and refactoring accordingly.
+    // may be nil but is never empty
+    const auto addrs = (possiblyEmptyAddrs && possiblyEmptyAddrs->empty()) ? nullptr : possiblyEmptyAddrs;
+
     debugs(14, 7, addrs << " " << details);
     if (receiverObj.set()) {
         if (auto receiver = receiverObj.valid())
             receiver->noteIps(addrs, details);
         receiverObj.clear();
     } else if (receiverFun) {
-        if (receiverData.valid()) {
-            const Dns::CachedIps *emptyIsNil = (addrs && !addrs->empty()) ? addrs : nullptr;
-            receiverFun(emptyIsNil, details, receiverData.validDone());
-        }
+        if (receiverData.valid())
+            receiverFun(addrs, details, receiverData.validDone());
         receiverFun = nullptr;
     }
 }
@@ -280,7 +283,7 @@ IpCacheLookupForwarder::forwardLookup(const char *error)
     // are sequential. Give it just the new, yet-unaccounted-for delay.
     if (receiverObj.set()) {
         if (auto receiver = receiverObj.valid()) {
-            receiver->noteLookup(Dns::LookupDetails(error, additionalLookupDelay()));
+            receiver->noteLookup(Dns::LookupDetails(SBuf(error), additionalLookupDelay()));
             lastLookupEnd = current_time;
         }
     }
@@ -445,16 +448,16 @@ ipcacheCallback(ipcache_entry *i, const bool hit, const int wait)
 
     if (hit)
         i->handler.forwardHits(i->addrs);
-    const Dns::LookupDetails details(i->error_message, wait);
+    const Dns::LookupDetails details(SBuf(i->error_message), wait);
     i->handler.finalCallback(&i->addrs, details);
 
     ipcacheUnlockEntry(i);
 }
 
 void
-ipcache_entry::latestError(const char *text, const int debugLevel)
+ipcache_entry::latestError(const char *text)
 {
-    debugs(14, debugLevel, "ERROR: DNS failure while resolving " << name() << ": " << text);
+    debugs(14, 3, "ERROR: DNS failure while resolving " << name() << ": " << text);
     safe_free(error_message);
     error_message = xstrdup(text);
 }
@@ -543,8 +546,15 @@ ipcache_entry::updateTtl(const unsigned int rrTtl)
                                 Config.positiveDnsTtl); // largest value allowed
 
     const time_t rrExpires = squid_curtime + ttl;
-    if (rrExpires < expires)
+    if (addrs.size() <= 1) {
+        debugs(14, 5, "use first " << ttl << " from RR TTL " << rrTtl);
         expires = rrExpires;
+    } else if (rrExpires < expires) {
+        debugs(14, 5, "use smaller " << ttl << " from RR TTL " << rrTtl << "; was: " << (expires - squid_curtime));
+        expires = rrExpires;
+    } else {
+        debugs(14, 7, "ignore " << ttl << " from RR TTL " << rrTtl << "; keep: " << (expires - squid_curtime));
+    }
 }
 
 /// \ingroup IPCacheInternal
@@ -568,7 +578,7 @@ ipcacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *e
         i->expires = squid_curtime + Config.negativeDnsTtl;
 
         if (!i->error_message) {
-            i->latestError("No valid address records", DBG_IMPORTANT);
+            i->latestError("No valid address records");
             if (i->sawCname)
                 ++IpcacheStats.cname_only;
         }
@@ -620,7 +630,7 @@ ipcache_nbgethostbyname_(const char *name, IpCacheLookupForwarder handler)
     if (name == nullptr || name[0] == '\0') {
         debugs(14, 4, "ipcache_nbgethostbyname: Invalid name!");
         ++IpcacheStats.invalid;
-        const Dns::LookupDetails details("Invalid hostname", -1); // error, no lookup
+        static const Dns::LookupDetails details(SBuf("Invalid hostname"), -1); // error, no lookup
         handler.finalCallback(nullptr, details);
         return;
     }
@@ -720,7 +730,7 @@ ipcache_gethostbyname(const char *name, int flags)
 {
     ipcache_entry *i = nullptr;
     assert(name);
-    debugs(14, 3, "ipcache_gethostbyname: '" << name  << "', flags=" << std::hex << flags);
+    debugs(14, 3, "'" << name  << "', flags=" << asHex(flags));
     ++IpcacheStats.requests;
     i = ipcache_get(name);
 
@@ -964,9 +974,10 @@ Dns::CachedIps::restoreGoodness(const char *name)
         for (auto &cachedIp: ips)
             cachedIp.forgetMarking();
         badCount_ = 0;
+        debugs(14, 3, "cleared all " << size() << " bad IPs for " << name);
+        // fall through to reset goodPosition and report the current state
     }
     Must(seekNewGood(name));
-    debugs(14, 3, "cleared all IPs for " << name << "; now back to " << *this);
 }
 
 bool
@@ -981,6 +992,7 @@ Dns::CachedIps::have(const Ip::Address &ip, size_t *positionOrNil) const
             debugs(14, 7, ip << " at " << pos << " in " << *this);
             return true;
         }
+        ++pos; // TODO: Replace with std::views::enumerate() after upgrading to C++23
     }
     // no such address; leave *position as is
     debugs(14, 7, " no " << ip << " in " << *this);
@@ -991,8 +1003,8 @@ void
 Dns::CachedIps::pushUnique(const Ip::Address &ip)
 {
     assert(!have(ip));
-    ips.emplace_back(ip);
-    assert(!raw().back().bad());
+    [[maybe_unused]] auto &cachedIp = ips.emplace_back(ip);
+    assert(!cachedIp.bad());
 }
 
 void
@@ -1080,15 +1092,6 @@ ipcache_entry::~ipcache_entry()
 {
     xfree(error_message);
     xfree(hash.key);
-}
-
-/// \ingroup IPCacheAPI
-void
-ipcacheFreeMemory(void)
-{
-    hashFreeItems(ip_table, ipcacheFreeEntry);
-    hashFreeMemory(ip_table);
-    ip_table = nullptr;
 }
 
 /**

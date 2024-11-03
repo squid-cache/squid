@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,7 @@
 namespace Store
 {
 Controller::Controller() {STUB_NOP}
-Controller::~Controller() {STUB_NOP}
+Controller::~Controller() STUB
 void Controller::create() STUB
 void Controller::init() STUB
 uint64_t Controller::maxSize() const STUB_RETVAL(0)
@@ -41,26 +41,21 @@ void Controller::configure() STUB
 void Controller::handleIdleEntry(StoreEntry &) STUB
 void Controller::freeMemorySpace(const int) STUB
 void Controller::memoryOut(StoreEntry &, const bool) STUB
-void Controller::updateOnNotModified(StoreEntry *, StoreEntry &) STUB
+bool Controller::updateOnNotModified(StoreEntry *, StoreEntry &) STUB
 bool Controller::allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &) STUB_RETVAL(false)
 void Controller::addReading(StoreEntry *, const cache_key *) STUB
 void Controller::addWriting(StoreEntry *, const cache_key *) STUB
 bool Controller::transientsReader(const StoreEntry &) const STUB_RETVAL(false)
 bool Controller::transientsWriter(const StoreEntry &) const STUB_RETVAL(false)
-void Controller::transientsCompleteWriting(StoreEntry &) STUB
 void Controller::syncCollapsed(const sfileno) STUB
-void Controller::stopSharing(StoreEntry &) STUB
+void Controller::noteStoppedSharedWriting(StoreEntry &) STUB
 int Controller::transientReaders(const StoreEntry &) const STUB_RETVAL(0)
 void Controller::transientsDisconnect(StoreEntry &) STUB
-void Controller::transientsClearCollapsingRequirement(StoreEntry &) STUB
 void Controller::memoryDisconnect(StoreEntry &) STUB
 StoreSearch *Controller::search() STUB_RETVAL(nullptr)
 bool Controller::SmpAware() STUB_RETVAL(false)
 int Controller::store_dirs_rebuilding = 0;
-Controller nil;
-Controller &Root() STUB_RETVAL(Store::nil)
-void Init(Controller *) STUB
-void FreeMemory() STUB
+Controller &Root() STUB_RETREF(Controller)
 }
 
 #include "store/Disk.h"
@@ -117,7 +112,7 @@ void Disks::reference(StoreEntry &) STUB
 bool Disks::dereference(StoreEntry &) STUB_RETVAL(false)
 void Disks::updateHeaders(StoreEntry *) STUB
 void Disks::maintain() STUB
-bool Disks::anchorToCache(StoreEntry &, bool &) STUB_RETVAL(false)
+bool Disks::anchorToCache(StoreEntry &) STUB_RETVAL(false)
 bool Disks::updateAnchored(StoreEntry &) STUB_RETVAL(false)
 void Disks::evictCached(StoreEntry &) STUB
 void Disks::evictIfFound(const cache_key *) STUB

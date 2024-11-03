@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STOREIOBUFFER_H
-#define SQUID_STOREIOBUFFER_H
+#ifndef SQUID_SRC_STOREIOBUFFER_H
+#define SQUID_SRC_STOREIOBUFFER_H
 
 #include "base/Range.h"
 #include "MemBuf.h"
@@ -43,6 +43,9 @@ public:
         return Range<int64_t>(offset, offset + length);
     }
 
+    /// convenience method for changing the offset of a being-configured buffer
+    StoreIOBuffer &positionAt(const int64_t newOffset) { offset = newOffset; return *this; }
+
     void dump() const {
         if (fwrite(data, length, 1, stderr)) {}
         if (fwrite("\n", 1, 1, stderr)) {}
@@ -64,5 +67,5 @@ operator <<(std::ostream &os, const StoreIOBuffer &b)
            (void*)b.data << (b.flags.error ? ", ERR" : "") << ')';
 }
 
-#endif /* SQUID_STOREIOBUFFER_H */
+#endif /* SQUID_SRC_STOREIOBUFFER_H */
 

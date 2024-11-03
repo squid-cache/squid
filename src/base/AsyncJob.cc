@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,13 +12,26 @@
 #include "base/AsyncCall.h"
 #include "base/AsyncJob.h"
 #include "base/AsyncJobCalls.h"
+#include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "cbdata.h"
+#include "mem/PoolingAllocator.h"
 #include "MemBuf.h"
+#include "mgr/Registration.h"
+#include "Store.h"
 
 #include <ostream>
+#include <unordered_set>
 
 InstanceIdDefinitions(AsyncJob, "job");
+
+/// a set of all AsyncJob objects in existence
+static auto &
+AllJobs()
+{
+    static const auto jobs = new std::unordered_set<AsyncJob *, std::hash<AsyncJob *>, std::equal_to<AsyncJob *>, PoolingAllocator<AsyncJob *> >();
+    return *jobs;
+}
 
 void
 AsyncJob::Start(const Pointer &job)
@@ -32,6 +45,7 @@ AsyncJob::AsyncJob(const char *aTypeName) :
 {
     debugs(93,5, "AsyncJob constructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
+    AllJobs().insert(this);
 }
 
 AsyncJob::~AsyncJob()
@@ -39,6 +53,7 @@ AsyncJob::~AsyncJob()
     debugs(93,5, "AsyncJob destructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
     assert(!started_ || swanSang_);
+    AllJobs().erase(this);
 }
 
 void AsyncJob::start()
@@ -177,5 +192,28 @@ const char *AsyncJob::status() const
     buf.terminate();
 
     return buf.content();
+}
+
+void
+AsyncJob::ReportAllJobs(StoreEntry *e)
+{
+    PackableStream os(*e);
+    // this loop uses YAML syntax, but AsyncJob::status() still needs to be adjusted to use YAML
+    const char *indent = "    ";
+    for (const auto job: AllJobs()) {
+        os << indent << job->id << ":\n";
+        os << indent << indent << "type: '" << job->typeName << "'\n";
+        os << indent << indent << "status:" << job->status() << '\n';
+        if (!job->started_)
+            os << indent << indent << "started: false\n";
+        if (job->stopReason)
+            os << indent << indent << "stopped: '" << job->stopReason << "'\n";
+    }
+}
+
+void
+AsyncJob::RegisterWithCacheManager()
+{
+    Mgr::RegisterAction("jobs", "All AsyncJob objects", &AsyncJob::ReportAllJobs, 0, 1);
 }
 

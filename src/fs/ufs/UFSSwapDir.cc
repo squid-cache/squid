@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #define CLEAN_BUF_SZ 16384
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "base/Random.h"
 #include "cache_cf.h"
 #include "ConfigOption.h"
@@ -26,7 +27,6 @@
 #include "SquidMath.h"
 #include "StatCounters.h"
 #include "store_key_md5.h"
-#include "StoreSearchUFS.h"
 #include "StoreSwapLogData.h"
 #include "tools.h"
 #include "UFSSwapDir.h"
@@ -47,10 +47,10 @@ public:
     UFSCleanLog(SwapDir *aSwapDir) : sd(aSwapDir) {}
 
     /// Get the next entry that is a candidate for clean log writing
-    virtual const StoreEntry *nextEntry();
+    const StoreEntry *nextEntry() override;
 
     /// "write" an entry to the clean log file.
-    virtual void write(StoreEntry const &);
+    void write(StoreEntry const &) override;
 
     SBuf cur;
     SBuf newLog;
@@ -340,8 +340,8 @@ Fs::Ufs::UFSSwapDir::~UFSSwapDir()
 void
 Fs::Ufs::UFSSwapDir::dumpEntry(StoreEntry &e) const
 {
-    debugs(47, DBG_CRITICAL, "FILENO "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e.swap_filen);
-    debugs(47, DBG_CRITICAL, "PATH " << fullPath(e.swap_filen, nullptr)   );
+    debugs(47, DBG_CRITICAL, "FILENO " << asHex(e.swap_filen).upperCase().minDigits(8) <<
+           ", PATH " << fullPath(e.swap_filen, nullptr));
     e.dump(0);
 }
 
@@ -543,15 +543,15 @@ Fs::Ufs::UFSSwapDir::dereference(StoreEntry & e)
 }
 
 StoreIOState::Pointer
-Fs::Ufs::UFSSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * aCallback, void *callback_data)
+Fs::Ufs::UFSSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STIOCB * const aCallback, void * const callback_data)
 {
-    return IO->create (this, &e, file_callback, aCallback, callback_data);
+    return IO->create(this, &e, aCallback, callback_data);
 }
 
 StoreIOState::Pointer
-Fs::Ufs::UFSSwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * aCallback, void *callback_data)
+Fs::Ufs::UFSSwapDir::openStoreIO(StoreEntry &e, StoreIOState::STIOCB * const aCallback, void * const callback_data)
 {
-    return IO->open (this, &e, file_callback, aCallback, callback_data);
+    return IO->open(this, &e, aCallback, callback_data);
 }
 
 int
@@ -797,8 +797,7 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
                                     int)
 {
     StoreEntry *e = nullptr;
-    debugs(47, 5, storeKeyText(key)  <<
-           ", fileno="<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << file_number);
+    debugs(47, 5, storeKeyText(key) << ", fileno=" << asHex(file_number).upperCase().minDigits(8));
     /* if you call this you'd better be sure file_number is not
      * already in use! */
     e = new StoreEntry();
@@ -1079,7 +1078,7 @@ Fs::Ufs::UFSSwapDir::HandleCleanEvent()
          * swap directories
          */
         static std::mt19937 mt(RandomSeed32());
-        xuniform_int_distribution<> dist(0, j);
+        std::uniform_int_distribution<> dist(0, j);
         swap_index = dist(mt);
     }
 
@@ -1162,8 +1161,7 @@ Fs::Ufs::UFSSwapDir::validFileno(sfileno filn, int flag) const
 void
 Fs::Ufs::UFSSwapDir::unlinkFile(sfileno f)
 {
-    debugs(79, 3, "unlinking fileno " <<  std::setfill('0') <<
-           std::hex << std::uppercase << std::setw(8) << f << " '" <<
+    debugs(79, 3, "unlinking fileno " << asHex(f).upperCase().minDigits(8) << " '" <<
            fullPath(f,nullptr) << "'");
     /* commonUfsDirMapBitReset(this, f); */
     IO->unlinkFile(fullPath(f,nullptr));
@@ -1376,7 +1374,7 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
         k = 10;
 
     for (n = 0; n < k; ++n) {
-        debugs(36, 3, "Cleaning file "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << files[n]);
+        debugs(36, 3, "Cleaning file " << asHex(files[n]).upperCase().minDigits(8));
         SBuf p2(p1);
         p2.appendf("/%08X", files[n]);
         safeunlink(p2.c_str(), 0);

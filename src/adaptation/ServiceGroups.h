@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__SERVICE_GROUPS_H
-#define SQUID_ADAPTATION__SERVICE_GROUPS_H
+#ifndef SQUID_SRC_ADAPTATION_SERVICEGROUPS_H
+#define SQUID_SRC_ADAPTATION_SERVICEGROUPS_H
 
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
@@ -33,7 +33,7 @@ public:
 
 public:
     ServiceGroup(const String &aKind, bool areAllServicesSame);
-    virtual ~ServiceGroup();
+    ~ServiceGroup() override;
 
     virtual void parse();
     virtual void finalize(); // called after all are parsed
@@ -156,5 +156,5 @@ ServiceGroupPointer FindGroup(const ServiceGroup::Id &id);
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__SERVICE_GROUPS_H */
+#endif /* SQUID_SRC_ADAPTATION_SERVICEGROUPS_H */
 

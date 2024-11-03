@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -91,7 +91,7 @@ Comm::HandleWrite(int fd, void *data)
     }
 #endif /* USE_DELAY_POOLS */
 
-    fd_bytes(fd, len, FD_WRITE);
+    fd_bytes(fd, len, IoDirection::Write);
     ++statCounter.syscalls.sock.writes;
     // After each successful partial write,
     // reset fde::writeStart to the current time.

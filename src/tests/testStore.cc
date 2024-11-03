@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,117 +14,7 @@
 
 #include <limits>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testStore );
-
-int
-TestStore::callback()
-{
-    return 1;
-}
-
-StoreEntry*
-TestStore::get(const cache_key*)
-{
-    return nullptr;
-}
-
-void
-TestStore::get(String, void (*)(StoreEntry*, void*), void*)
-{}
-
-void
-TestStore::init()
-{}
-
-uint64_t
-TestStore::maxSize() const
-{
-    return 3;
-}
-
-uint64_t
-TestStore::minSize() const
-{
-    return 1;
-}
-
-uint64_t
-TestStore::currentSize() const
-{
-    return 2;
-}
-
-uint64_t
-TestStore::currentCount() const
-{
-    return 2;
-}
-
-int64_t
-TestStore::maxObjectSize() const
-{
-    return 1;
-}
-
-void
-TestStore::getStats(StoreInfoStats &) const
-{
-}
-
-void
-TestStore::stat(StoreEntry &) const
-{
-    const_cast<TestStore *>(this)->statsCalled = true;
-}
-
-StoreSearch *
-TestStore::search()
-{
-    return nullptr;
-}
-
-void
-testStore::testSetRoot()
-{
-    Store::Controller *aStore(new TestStore);
-    Store::Init(aStore);
-
-    CPPUNIT_ASSERT_EQUAL(&Store::Root(), aStore);
-    Store::FreeMemory();
-}
-
-void
-testStore::testUnsetRoot()
-{
-    Store::Controller *aStore(new TestStore);
-    Store::Controller *aStore2(new TestStore);
-    Store::Init(aStore);
-    Store::FreeMemory();
-    Store::Init(aStore2);
-    CPPUNIT_ASSERT_EQUAL(&Store::Root(),aStore2);
-    Store::FreeMemory();
-}
-
-void
-testStore::testStats()
-{
-    TestStore *aStore(new TestStore);
-    Store::Init(aStore);
-    CPPUNIT_ASSERT_EQUAL(false, aStore->statsCalled);
-    StoreEntry entry;
-    Store::Stats(&entry);
-    CPPUNIT_ASSERT_EQUAL(true, aStore->statsCalled);
-    Store::FreeMemory();
-}
-
-void
-testStore::testMaxSize()
-{
-    Store::Controller *aStore(new TestStore);
-    Store::Init(aStore);
-    CPPUNIT_ASSERT_EQUAL(static_cast<uint64_t>(3), aStore->maxSize());
-    Store::FreeMemory();
-}
+CPPUNIT_TEST_SUITE_REGISTRATION( TestStore );
 
 namespace Store {
 
@@ -188,7 +78,7 @@ checkSwapMetaRawType(const RawSwapMetaType rawType)
 } // namespace Store
 
 void
-testStore::testSwapMetaTypeClassification()
+TestStore::testSwapMetaTypeClassification()
 {
     using limits = std::numeric_limits<Store::RawSwapMetaType>;
     for (auto rawType = limits::min(); true; ++rawType) {
@@ -201,5 +91,19 @@ testStore::testSwapMetaTypeClassification()
 
     // Store::RawSwapMetaTypeTop() is documented as an honored type value
     CPPUNIT_ASSERT(Store::HonoredSwapMetaType(Store::RawSwapMetaTypeTop()));
+}
+
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override { Mem::Init(); }
+};
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

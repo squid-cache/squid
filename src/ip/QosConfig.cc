@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,8 @@
 #include "squid.h"
 #include "acl/Gadgets.h"
 #include "base/IoManip.h"
+#include "base/PackableStream.h"
+#include "base/TextException.h"
 #include "cache_cf.h"
 #include "comm/Connection.h"
 #include "compat/cmsg.h"
@@ -19,6 +21,8 @@
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "Parsing.h"
+#include "sbuf/Stream.h"
+#include "Store.h"
 
 #include <cerrno>
 #include <limits>
@@ -97,7 +101,7 @@ getNfmarkCallback(enum nf_conntrack_msg_type, struct nf_conntrack *ct, void *con
 {
     auto *mark = static_cast<nfmark_t *>(connmark);
     *mark = nfct_get_attr_u32(ct, ATTR_MARK);
-    debugs(17, 3, asHex(*mark));
+    debugs(17, 3, "mark=0x" << asHex(*mark));
     return NFCT_CB_CONTINUE;
 }
 
@@ -303,8 +307,7 @@ Ip::Qos::Config::parseConfigLine()
     /* Assume preserve is true. We don't set at initialisation as this affects isHitTosActive().
        We have to do this now, as we may never match the 'tos' parameter below */
 #if !USE_QOS_TOS
-    debugs(3, DBG_CRITICAL, "ERROR: Invalid option 'qos_flows'. QOS features not enabled in this build");
-    self_destruct();
+    throw TextException(ToSBuf("Invalid option 'qos_flows'. QOS features not enabled in this build"), Here());
 #endif
 
     while ( (token = ConfigParser::NextToken()) ) {
@@ -312,7 +315,7 @@ Ip::Qos::Config::parseConfigLine()
         // Work out TOS or mark. Default to TOS for backwards compatibility
         if (!(mark || tos)) {
             if (strncmp(token, "mark",4) == 0) {
-#if SO_MARK && USE_LIBCAP
+#if HAVE_LIBCAP && SO_MARK
                 mark = true;
                 // Assume preserve is true. We don't set at initialisation as this affects isHitNfmarkActive()
 #if USE_LIBNETFILTERCONNTRACK
@@ -322,15 +325,11 @@ Ip::Qos::Config::parseConfigLine()
                 debugs(3, DBG_IMPORTANT, "WARNING: Squid not compiled with Netfilter conntrack library. "
                        << "Netfilter mark preservation not available.");
 #endif // USE_LIBNETFILTERCONNTRACK
-#elif SO_MARK // SO_MARK && USE_LIBCAP
-                debugs(3, DBG_CRITICAL, "ERROR: Invalid parameter 'mark' in qos_flows option. "
-                       << "Linux Netfilter marking not available without LIBCAP support.");
-                self_destruct();
-#else // SO_MARK && USE_LIBCAP
-                debugs(3, DBG_CRITICAL, "ERROR: Invalid parameter 'mark' in qos_flows option. "
-                       << "Linux Netfilter marking not available on this platform.");
-                self_destruct();
-#endif // SO_MARK && USE_LIBCAP
+
+#else // HAVE_LIBCAP && SO_MARK
+                throw TextException(ToSBuf("Invalid parameter 'mark' in qos_flows option. ",
+                                           "Linux Netfilter marking not available on this platform."), Here());
+#endif
             } else if (strncmp(token, "tos",3) == 0) {
                 preserveMissTos = true;
                 tos = true;
@@ -344,14 +343,12 @@ Ip::Qos::Config::parseConfigLine()
 
             if (mark) {
                 if (!xstrtoui(&token[10], nullptr, &markLocalHit, 0, std::numeric_limits<nfmark_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark local-hit value " << &token[10]);
-                    self_destruct();
+                    throw TextException(ToSBuf("Bad mark local-hit value ", &token[10]), Here());
                 }
             } else {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[10], nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS local-hit value " << &token[10]);
-                    self_destruct();
+                    throw TextException(ToSBuf("Bad TOS local-hit value ", &token[10]), Here());
                 }
                 tosLocalHit = (tos_t)v;
             }
@@ -360,14 +357,12 @@ Ip::Qos::Config::parseConfigLine()
 
             if (mark) {
                 if (!xstrtoui(&token[12], nullptr, &markSiblingHit, 0, std::numeric_limits<nfmark_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark sibling-hit value " << &token[12]);
-                    self_destruct();
+                    throw TextException(ToSBuf("Bad mark sibling-hit value ", &token[12]), Here());
                 }
             } else {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[12], nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS sibling-hit value " << &token[12]);
-                    self_destruct();
+                    throw TextException(ToSBuf("Bad TOS sibling-hit value ", &token[12]), Here());
                 }
                 tosSiblingHit = (tos_t)v;
             }
@@ -376,14 +371,12 @@ Ip::Qos::Config::parseConfigLine()
 
             if (mark) {
                 if (!xstrtoui(&token[11], nullptr, &markParentHit, 0, std::numeric_limits<nfmark_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark parent-hit value " << &token[11]);
-                    self_destruct();
+                    throw TextException(ToSBuf("Bad mark parent-hit value ", &token[11]), Here());
                 }
             } else {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[11], nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS parent-hit value " << &token[11]);
-                    self_destruct();
+                    throw TextException(ToSBuf("Bad TOS parent-hit value ", &token[11]), Here());
                 }
                 tosParentHit = (tos_t)v;
             }
@@ -393,8 +386,7 @@ Ip::Qos::Config::parseConfigLine()
             char *end;
             if (mark) {
                 if (!xstrtoui(&token[5], &end, &markMiss, 0, std::numeric_limits<nfmark_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark miss value " << &token[5]);
-                    self_destruct();
+                    throw TextException(ToSBuf("Bad mark miss value ", &token[5]), Here());
                 }
                 if (*end == '/') {
                     if (!xstrtoui(end + 1, nullptr, &markMissMask, 0, std::numeric_limits<nfmark_t>::max())) {
@@ -407,8 +399,7 @@ Ip::Qos::Config::parseConfigLine()
             } else {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[5], &end, &v, 0, std::numeric_limits<tos_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS miss value " << &token[5]);
-                    self_destruct();
+                    throw TextException(ToSBuf("Bad TOS miss value ", &token[5]), Here());
                 }
                 tosMiss = (tos_t)v;
                 if (*end == '/') {
@@ -425,8 +416,7 @@ Ip::Qos::Config::parseConfigLine()
         } else if (strcmp(token, "disable-preserve-miss") == 0) {
 
             if (preserveMissTosMask!=0xFFU || preserveMissMarkMask!=0xFFFFFFFFU) {
-                debugs(3, DBG_CRITICAL, "ERROR: miss-mask feature cannot be set with disable-preserve-miss");
-                self_destruct();
+                throw TextException(ToSBuf("miss-mask feature cannot be set with disable-preserve-miss"), Here());
             }
             if (mark) {
                 preserveMissMark = false;
@@ -440,89 +430,83 @@ Ip::Qos::Config::parseConfigLine()
 
             if (mark && preserveMissMark) {
                 if (!xstrtoui(&token[10], nullptr, &preserveMissMarkMask, 0, std::numeric_limits<nfmark_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark miss-mark value " << &token[10]);
-                    self_destruct();
+                    throw TextException(ToSBuf("Bad mark miss-mark value ", &token[10]), Here());
                 }
             } else if (preserveMissTos) {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[10], nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS miss-mark value " << &token[10]);
-                    self_destruct();
+                    throw TextException(ToSBuf("Bad TOS miss-mark value ", &token[10]), Here());
                 }
                 preserveMissTosMask = (tos_t)v;
             } else {
-                debugs(3, DBG_CRITICAL, "ERROR: miss-mask feature cannot be set without miss-preservation enabled");
-                self_destruct();
+                throw TextException(ToSBuf("miss-mask feature cannot be set without miss-preservation enabled"), Here());
             }
 
         }
     }
 }
 
-/**
- * NOTE: Due to the low-level nature of the library these
- * objects are part of the dump function must be self-contained.
- * which means no StoreEntry references. Just a basic char* buffer.
-*/
-void
-Ip::Qos::Config::dumpConfigLine(char *entry, const char *name) const
-{
-    char *p = entry;
-    if (isHitTosActive()) {
+/// helper function for printing Ip::Qos::Config mark and tos values
+template <class Integer>
+static auto asQosConfigHex(const Integer n) { return asHex(n).upperCase().minDigits(2); }
 
-        p += snprintf(p, 11, "%s", name); // strlen("qos_flows ");
-        p += snprintf(p, 4, "%s", "tos");
+/// report configuration using qos_flows syntax
+void
+Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *directiveName) const
+{
+    if (isHitTosActive()) {
+        os << directiveName << " tos";
 
         if (tosLocalHit > 0) {
-            p += snprintf(p, 16, " local-hit=0x%02X", tosLocalHit);
+            os << " local-hit=0x" << asQosConfigHex(tosLocalHit);
         }
         if (tosSiblingHit > 0) {
-            p += snprintf(p, 18, " sibling-hit=0x%02X", tosSiblingHit);
+            os << " sibling-hit=0x" << asQosConfigHex(tosSiblingHit);
         }
         if (tosParentHit > 0) {
-            p += snprintf(p, 17, " parent-hit=0x%02X", tosParentHit);
+            os << " parent-hit=0x" << asQosConfigHex(tosParentHit);
         }
         if (tosMiss > 0) {
-            p += snprintf(p, 11, " miss=0x%02X", tosMiss);
+            os << " miss=0x" << asQosConfigHex(tosMiss);
             if (tosMissMask!=0xFFU) {
-                p += snprintf(p, 6, "/0x%02X", tosMissMask);
+                os << "/0x" << asQosConfigHex(tosMissMask);
             }
         }
         if (preserveMissTos == 0) {
-            p += snprintf(p, 23, " disable-preserve-miss");
+            os << " disable-preserve-miss";
         }
         if (preserveMissTos && preserveMissTosMask != 0) {
-            p += snprintf(p, 16, " miss-mask=0x%02X", preserveMissTosMask);
+            os << " miss-mask=0x" << asQosConfigHex(preserveMissTosMask);
         }
-        p += snprintf(p, 2, "\n");
+        os << "\n";
+        return;
     }
 
     if (isHitNfmarkActive()) {
-        p += snprintf(p, 11, "%s", name); // strlen("qos_flows ");
-        p += snprintf(p, 5, "%s", "mark");
+        os << directiveName << " mark";
 
         if (markLocalHit > 0) {
-            p += snprintf(p, 22, " local-hit=0x%02X", markLocalHit);
+            os << " local-hit=0x" << asQosConfigHex(markLocalHit);
         }
         if (markSiblingHit > 0) {
-            p += snprintf(p, 24, " sibling-hit=0x%02X", markSiblingHit);
+            os << " sibling-hit=0x" << asQosConfigHex(markSiblingHit);
         }
         if (markParentHit > 0) {
-            p += snprintf(p, 23, " parent-hit=0x%02X", markParentHit);
+            os << " parent-hit=0x" << asQosConfigHex(markParentHit);
         }
         if (markMiss > 0) {
-            p += snprintf(p, 17, " miss=0x%02X", markMiss);
+            os << " miss=0x" << asQosConfigHex(markMiss);
             if (markMissMask!=0xFFFFFFFFU) {
-                p += snprintf(p, 12, "/0x%02X", markMissMask);
+                os << "/0x" << asQosConfigHex(markMissMask);
             }
         }
         if (preserveMissMark == false) {
-            p += snprintf(p, 23, " disable-preserve-miss");
+            os << " disable-preserve-miss";
         }
         if (preserveMissMark && preserveMissMarkMask != 0) {
-            p += snprintf(p, 22, " miss-mask=0x%02X", preserveMissMarkMask);
+            os << " miss-mask=" << asQosConfigHex(preserveMissMarkMask);
         }
-        p += snprintf(p, 2, "\n");
+        os << "\n";
     }
 }
 
@@ -577,7 +561,7 @@ Ip::Qos::setSockTos(const Comm::ConnectionPointer &conn, tos_t tos)
 int
 Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
 {
-#if SO_MARK && USE_LIBCAP
+#if HAVE_LIBCAP && SO_MARK
     debugs(50, 3, "for FD " << fd << " to " << mark);
     const int x = setsockopt(fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
     if (x < 0) {
@@ -585,7 +569,7 @@ Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
         debugs(50, 2, "setsockopt(SO_MARK) on " << fd << ": " << xstrerr(xerrno));
     }
     return x;
-#elif USE_LIBCAP
+#elif HAVE_LIBCAP
     (void)mark;
     (void)fd;
     debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(SO_MARK) not supported on this platform");
@@ -593,7 +577,7 @@ Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
 #else
     (void)mark;
     (void)fd;
-    debugs(50, DBG_IMPORTANT, "WARNING: Netfilter marking disabled (netfilter marking requires build with LIBCAP)");
+    debugs(50, DBG_IMPORTANT, "WARNING: Netfilter marking disabled (requires build --with-cap)");
     return -1;
 #endif
 }
@@ -640,3 +624,9 @@ Ip::Qos::Config::isAclTosActive() const
     return false;
 }
 
+void
+dump_QosConfig(StoreEntry * const entry, const char * const directiveName, const Ip::Qos::Config &config)
+{
+    PackableStream os(*entry);
+    config.dumpConfigLine(os, directiveName);
+}

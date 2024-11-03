@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,13 +43,12 @@ int comm_open_uds(int, int, struct sockaddr_un*, int) STUB_RETVAL(-1)
 void comm_import_opened(const Comm::ConnectionPointer &, const char *, struct addrinfo *) STUB
 int comm_open_listener(int, int, Ip::Address &, int, const char *) STUB_RETVAL(-1)
 void comm_open_listener(int, int, Comm::ConnectionPointer &, const char *) STUB
-// int comm_openex(int, int, Ip::Address &, int, tos_t, nfmark_t, const char *) STUB_RETVAL(-1)
 unsigned short comm_local_port(int) STUB_RETVAL(0)
 int comm_udp_sendto(int, const Ip::Address &, const void *, int) STUB_RETVAL(-1)
 void commCallCloseHandlers(int) STUB
 void commUnsetFdTimeout(int) STUB
 // int commSetTimeout(const Comm::ConnectionPointer &, int, AsyncCall::Pointer&) STUB_RETVAL(-1)
-int commSetConnTimeout(const Comm::ConnectionPointer &, int, AsyncCall::Pointer &) STUB_RETVAL(-1)
+int commSetConnTimeout(const Comm::ConnectionPointer &, time_t, AsyncCall::Pointer &) STUB_RETVAL(-1)
 int commUnsetConnTimeout(const Comm::ConnectionPointer &) STUB_RETVAL(-1)
 int ignoreErrno(int) STUB_RETVAL(-1)
 void commCloseAllSockets(void) STUB

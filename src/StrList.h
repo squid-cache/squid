@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 66    HTTP Header Tools */
 
-#ifndef SQUID_STRLIST_H_
-#define SQUID_STRLIST_H_
+#ifndef SQUID_SRC_STRLIST_H
+#define SQUID_SRC_STRLIST_H
 
 #include "sbuf/forward.h"
 
@@ -37,5 +37,5 @@ int strListGetItem(const String * str, char del, const char **item, int *ilen, c
 /// \returns the value of the found pair or an empty string.
 SBuf getListMember(const String &list, const char *key, const char delimiter);
 
-#endif /* SQUID_STRLIST_H_ */
+#endif /* SQUID_SRC_STRLIST_H */
 

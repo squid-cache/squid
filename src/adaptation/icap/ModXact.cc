@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,7 +42,7 @@
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ModXact);
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ModXactLauncher);
 
-static const size_t TheBackupLimit = BodyPipe::MaxCapacity;
+static constexpr auto TheBackupLimit = BodyPipe::MaxCapacity;
 
 const SBuf Adaptation::Icap::ChunkExtensionValueParser::UseOriginalBodyName("use-original-body");
 
@@ -1341,9 +1341,6 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     // XXX: This reply (and other ALE members!) may have been needed earlier.
     al.reply = adapted_reply_;
 
-    if (h->rfc931.size())
-        al.cache.rfc931 = h->rfc931.termedBuf();
-
 #if USE_OPENSSL
     if (h->ssluser.size())
         al.cache.ssluser = h->ssluser.termedBuf();
@@ -1482,7 +1479,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         makeUsernameHeader(request, buf);
 
     // Adaptation::Config::metaHeaders
-    for (auto h: Adaptation::Config::metaHeaders) {
+    for (const auto &h: Adaptation::Config::metaHeaders()) {
         HttpRequest *r = virgin.cause ?
                          virgin.cause : dynamic_cast<HttpRequest*>(virgin.header);
         Must(r);

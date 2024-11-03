@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -52,24 +52,24 @@ MemObject::inUseCount()
 const char *
 MemObject::storeId() const
 {
-    if (!storeId_.size()) {
+    if (storeId_.isEmpty()) {
         debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: Missing MemObject::storeId value");
         dump();
         storeId_ = "[unknown_URI]";
     }
-    return storeId_.termedBuf();
+    return storeId_.c_str();
 }
 
 const char *
 MemObject::logUri() const
 {
-    return logUri_.size() ? logUri_.termedBuf() : storeId();
+    return logUri_.isEmpty() ? storeId() : logUri_.c_str();
 }
 
 bool
 MemObject::hasUris() const
 {
-    return storeId_.size();
+    return !storeId_.isEmpty();
 }
 
 void
@@ -83,7 +83,7 @@ MemObject::setUris(char const *aStoreId, char const *aLogUri, const HttpRequestM
 
     // fast pointer comparison for a common storeCreateEntry(url,url,...) case
     if (!aLogUri || aLogUri == aStoreId)
-        logUri_.clean(); // use storeId_ by default to minimize copying
+        logUri_.clear(); // use storeId_ by default to minimize copying
     else
         logUri_ = aLogUri;
 
@@ -110,11 +110,9 @@ MemObject::~MemObject()
     checkUrlChecksum();
 #endif
 
-    if (!shutting_down) { // Store::Root() is FATALly missing during shutdown
-        assert(xitTable.index < 0);
-        assert(memCache.index < 0);
-        assert(swapout.sio == nullptr);
-    }
+    assert(xitTable.index < 0);
+    assert(memCache.index < 0);
+    assert(swapout.sio == nullptr);
 
     data_hdr.freeContent();
 }
@@ -169,7 +167,7 @@ struct LowestMemReader : public unary_function<store_client, void> {
 
     void operator() (store_client const &x) {
         if (x.getType() == STORE_MEM_CLIENT)
-            current = std::min(current, x.readOffset());
+            current = std::min(current, x.discardableHttpEnd());
     }
 
     int64_t current;
@@ -355,6 +353,12 @@ MemObject::policyLowestOffsetToKeep(bool swap) const
      */
     int64_t lowest_offset = lowestMemReaderOffset();
 
+    // XXX: Remove the last (Config.onoff.memory_cache_first-based) condition
+    // and update keepForLocalMemoryCache() accordingly. The caller wants to
+    // remove all local memory that is safe to remove. Honoring caching
+    // preferences is its responsibility. Our responsibility is safety. The
+    // situation was different when ff4b33f added that condition -- there was no
+    // keepInLocalMemory/keepForLocalMemoryCache() call guard back then.
     if (endOffset() < lowest_offset ||
             endOffset() - inmem_lo > (int64_t)Config.Store.maxInMemObjSize ||
             (swap && !Config.onoff.memory_cache_first))

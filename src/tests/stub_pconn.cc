@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,13 +29,12 @@ void PconnPool::push(const Comm::ConnectionPointer &, const char *) STUB
 Comm::ConnectionPointer PconnPool::pop(const Comm::ConnectionPointer &, const char *, bool) STUB_RETVAL(Comm::ConnectionPointer())
 void PconnPool::count(int) STUB
 void PconnPool::noteUses(int) STUB
-void PconnPool::dumpHist(StoreEntry *) const STUB
-void PconnPool::dumpHash(StoreEntry *) const STUB
+void PconnPool::dump(std::ostream&) const STUB
 void PconnPool::unlinkList(IdleConnList *) STUB
 PconnModule * PconnModule::GetInstance() STUB_RETVAL(nullptr)
 void PconnModule::DumpWrapper(StoreEntry *) STUB
 PconnModule::PconnModule() STUB
 void PconnModule::registerWithCacheManager(void) STUB
 void PconnModule::add(PconnPool *) STUB
-void PconnModule::dump(StoreEntry *) STUB
+void PconnModule::dump(std::ostream &) STUB
 

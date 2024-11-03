@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 03    Configuration File Parsing */
 
-#ifndef SQUID_PARSING_H
-#define SQUID_PARSING_H
+#ifndef SQUID_SRC_PARSING_H
+#define SQUID_SRC_PARSING_H
 
 #include "ip/Address.h"
 
@@ -60,5 +60,5 @@ bool StringToInt64(const char *str, int64_t &result, const char **p, int base);
  */
 bool GetHostWithPort(char *token, Ip::Address *ipa);
 
-#endif /* SQUID_PARSING_H */
+#endif /* SQUID_SRC_PARSING_H */
 

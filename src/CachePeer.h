@@ -1,23 +1,23 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CACHEPEER_H_
-#define SQUID_CACHEPEER_H_
+#ifndef SQUID_SRC_CACHEPEER_H
+#define SQUID_SRC_CACHEPEER_H
 
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "enums.h"
+#include "http/StatusCode.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
 #include "security/PeerOptions.h"
 
-//TODO: remove, it is unconditionally defined and always used.
-#define PEER_MULTICAST_SIBLINGS 1
+#include <iosfwd>
 
 class NeighborTypeDomainList;
 class PconnPool;
@@ -29,15 +29,41 @@ class CachePeer
     CBDATA_CLASS(CachePeer);
 
 public:
-    CachePeer() = default;
+    explicit CachePeer(const char *hostname);
     ~CachePeer();
+
+    /// reacts to a successful establishment of a connection to this cache_peer
+    void noteSuccess();
+
+    /// reacts to a failed attempt to establish a connection to this cache_peer
+    void noteFailure();
+
+    /// (re)configure cache_peer name=value
+    void rename(const char *);
 
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
+    /// TLS settings for communicating with this TLS cache_peer (if encryption
+    /// is required; see secure.encryptTransport) or nil (otherwise)
+    Security::FuturePeerContext *securityContext();
+
+    /// n-th cache_peer directive, starting with 1
     u_int index = 0;
+
+    /// cache_peer name (if explicitly configured) or hostname (otherwise).
+    /// Unique across already configured cache_peers in the current configuration.
+    /// The value may change during CachePeer configuration.
+    /// The value affects various peer selection hashes (e.g., carp.hash).
+    /// Preserves configured spelling (i.e. does not lower letters case).
+    /// Never nil.
     char *name = nullptr;
+
+    /// The lowercase version of the configured cache_peer hostname.
+    /// May not be unique among cache_peers.
+    /// Never nil.
     char *host = nullptr;
+
     peer_t type = PEER_NONE;
 
     Ip::Address in_addr;
@@ -116,9 +142,7 @@ public:
         bool sourcehash = false;
         bool originserver = false;
         bool no_tproxy = false;
-#if PEER_MULTICAST_SIBLINGS
         bool mcast_siblings = false;
-#endif
         bool auth_no_keytab = false;
     } options;
 
@@ -143,14 +167,17 @@ public:
     char *digest_url = nullptr;
 #endif
 
-    int tcp_up = 0;         /* 0 if a connect() fails */
+    /// The number of failures sufficient to stop selecting this cache_peer. All
+    /// cache_peer selection algorithms skip cache_peers with 0 tcp_up values.
+    /// The initial 0 value prevents unprobed cache_peers from being selected.
+    int tcp_up = 0;
+
     /// whether to do another TCP probe after current TCP probes
     bool reprobe = false;
 
     Ip::Address addresses[10];
     int n_addresses = 0;
     int rr_count = 0;
-    CachePeer *next = nullptr;
     int testing_now = 0;
 
     struct {
@@ -186,14 +213,41 @@ public:
 
     char *domain = nullptr; ///< Forced domain
 
+    // TODO: Remove secure and sslContext when FuturePeerContext below becomes PeerContext
     /// security settings for peer connection
     Security::PeerOptions secure;
     Security::ContextPointer sslContext;
+    Security::FuturePeerContext tlsContext;
+
     Security::SessionStatePointer sslSession;
 
     int front_end_https = 0; ///< 0 - off, 1 - on, 2 - auto
     int connection_auth = 2; ///< 0 - off, 1 - on, 2 - auto
+
+private:
+    void countFailure();
 };
 
-#endif /* SQUID_CACHEPEER_H_ */
+/// reacts to a successful establishment of a connection to an origin server or cache_peer
+/// \param peer nil if Squid established a connection to an origin server
+inline void
+NoteOutgoingConnectionSuccess(CachePeer * const peer)
+{
+    if (peer)
+        peer->noteSuccess();
+}
+
+/// reacts to a failed attempt to establish a connection to an origin server or cache_peer
+/// \param peer nil if the connection is to an origin server
+inline void
+NoteOutgoingConnectionFailure(CachePeer * const peer)
+{
+    if (peer)
+        peer->noteFailure();
+}
+
+/// identify the given cache peer in cache.log messages and such
+std::ostream &operator <<(std::ostream &, const CachePeer &);
+
+#endif /* SQUID_SRC_CACHEPEER_H */
 

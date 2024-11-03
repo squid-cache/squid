@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -449,7 +449,7 @@ HttpRequest::prepForPeering(const CachePeer &peer)
     peer_login = peer.login;
     peer_domain = peer.domain;
     flags.auth_no_keytab = peer.options.auth_no_keytab;
-    debugs(11, 4, this << " to " << peer.host << (!peer.options.originserver ? " proxy" : " origin"));
+    debugs(11, 4, this << " to " << peer);
 }
 
 void
@@ -560,9 +560,6 @@ HttpRequest::maybeCacheable()
             return false;
         break;
 
-    case AnyP::PROTO_CACHE_OBJECT:
-        return false;
-
     //case AnyP::PROTO_FTP:
     default:
         break;
@@ -604,7 +601,7 @@ HttpRequest::getRangeOffsetLimit()
 
     rangeOffsetLimit = 0; // default value for rangeOffsetLimit
 
-    ACLFilledChecklist ch(nullptr, this, nullptr);
+    ACLFilledChecklist ch(nullptr, this);
     ch.src_addr = client_addr;
     ch.my_addr =  my_addr;
 
@@ -801,11 +798,10 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
         const bool proxyProtocolPort = port ? port->flags.proxySurrogate : false;
         if (flags.interceptTproxy && !proxyProtocolPort) {
             if (Config.accessList.spoof_client_ip) {
-                ACLFilledChecklist *checklist = new ACLFilledChecklist(Config.accessList.spoof_client_ip, this, clientConnection->rfc931);
-                checklist->al = al;
-                checklist->syncAle(this, nullptr);
-                flags.spoofClientIp = checklist->fastCheck().allowed();
-                delete checklist;
+                ACLFilledChecklist checklist(Config.accessList.spoof_client_ip, this);
+                checklist.al = al;
+                checklist.syncAle(this, nullptr);
+                flags.spoofClientIp = checklist.fastCheck().allowed();
             } else
                 flags.spoofClientIp = true;
         } else
@@ -872,11 +868,16 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     });
 }
 
-unsigned short
+AnyP::Port
 FindListeningPortNumber(const HttpRequest *callerRequest, const AccessLogEntry *ale)
 {
     const auto ip = FindGoodListeningPortAddress(callerRequest, ale, [](const Ip::Address &address) {
         return address.port() > 0;
     });
-    return ip ? ip->port() : 0;
+
+    if (!ip)
+        return std::nullopt;
+
+    Assure(ip->port() > 0);
+    return ip->port();
 }

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -21,6 +21,6 @@ basic_radius_auth_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/src/base/libbase.la \
 	$(COMPAT_LIB) \
-	$(NETTLELIB) \
+	$(LIBNETTLE_LIBS) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)

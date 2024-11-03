@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,10 @@
 #include "debug/Stream.h"
 #include "wordlist.h"
 
-ACLCertificateData::ACLCertificateData(Ssl::GETX509ATTRIBUTE *sslStrategy, const char *attrs, bool optionalAttr) : validAttributesStr(attrs), attributeIsOptional(optionalAttr), attribute (nullptr), values (), sslAttributeCall (sslStrategy)
+ACLCertificateData::ACLCertificateData(Ssl::GETX509ATTRIBUTE * const sslStrategy, const char * const attrs, const bool optionalAttr):
+    validAttributesStr(attrs),
+    attributeIsOptional(optionalAttr),
+    sslAttributeCall(sslStrategy)
 {
     if (attrs) {
         size_t current = 0;
@@ -37,11 +40,6 @@ xRefFree(T &thing)
     xfree (thing);
 }
 
-ACLCertificateData::~ACLCertificateData()
-{
-    safe_free (attribute);
-}
-
 template<class T>
 inline int
 splaystrcmp (T&l, T&r)
@@ -55,8 +53,8 @@ ACLCertificateData::match(X509 *cert)
     if (!cert)
         return 0;
 
-    char const *value = sslAttributeCall(cert, attribute);
-    debugs(28, 6, (attribute ? attribute : "value") << "=" << value);
+    const auto value = sslAttributeCall(cert, attribute.c_str());
+    debugs(28, 6, (attribute.isEmpty() ? attribute.c_str() : "value") << "=" << value);
     if (value == nullptr)
         return 0;
 
@@ -68,7 +66,7 @@ ACLCertificateData::dump() const
 {
     SBufList sl;
     if (validAttributesStr)
-        sl.push_back(SBuf(attribute));
+        sl.push_back(attribute);
 
     sl.splice(sl.end(),values.dump());
     return sl;
@@ -107,14 +105,10 @@ ACLCertificateData::parse()
                 return;
             }
 
-            /* an acl must use consistent attributes in all config lines */
-            if (attribute) {
-                if (strcasecmp(newAttribute, attribute) != 0) {
-                    debugs(28, DBG_CRITICAL, "FATAL: An acl must use consistent attributes in all config lines (" << newAttribute << "!=" << attribute << ").");
-                    self_destruct();
-                    return;
-                }
-            } else {
+            // If attribute has been set already, then we do not need to call OBJ_create()
+            // below because either we did that for the same attribute when we set it, or
+            // Acl::SetKey() below will reject this new/different attribute spelling.
+            if (attribute.isEmpty()) {
                 if (strcasecmp(newAttribute, "DN") != 0) {
                     int nid = OBJ_txt2nid(newAttribute);
                     if (nid == 0) {
@@ -136,8 +130,9 @@ ACLCertificateData::parse()
                         return;
                     }
                 }
-                attribute = xstrdup(newAttribute);
             }
+
+            Acl::SetKey(attribute, "SSL certificate attribute", newAttribute);
         }
     }
 

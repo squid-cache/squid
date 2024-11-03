@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -125,6 +125,23 @@ Ipc::ReadWriteLock::startAppending()
 {
     assert(writing);
     appending = true;
+}
+
+bool
+Ipc::ReadWriteLock::stopAppendingAndRestoreExclusive()
+{
+    assert(writing);
+    assert(appending);
+
+    appending = false;
+
+    // Checking `readers` here would mishandle a lockShared() call that started
+    // before we banned appending above, saw still true `appending`, got on a
+    // "success" code path, but had not incremented the `readers` counter yet.
+    // Checking `readLevel` mishandles lockShared() that saw false `appending`,
+    // got on a "failure" code path, but had not decremented `readLevel` yet.
+    // Our callers prefer the wrong "false" to the wrong "true" result.
+    return !readLevel;
 }
 
 void

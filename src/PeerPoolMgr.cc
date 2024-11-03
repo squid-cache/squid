@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,9 +8,10 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "base/AsyncJobCalls.h"
+#include "base/AsyncCallbacks.h"
 #include "base/RunnersRegistry.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "debug/Stream.h"
@@ -26,18 +27,6 @@
 #include "SquidConfig.h"
 
 CBDATA_CLASS_INIT(PeerPoolMgr);
-
-/// Gives Security::PeerConnector access to Answer in the PeerPoolMgr callback dialer.
-class MyAnswerDialer: public UnaryMemFunT<PeerPoolMgr, Security::EncryptorAnswer, Security::EncryptorAnswer&>,
-    public Security::PeerConnector::CbDialer
-{
-public:
-    MyAnswerDialer(const JobPointer &aJob, Method aMethod):
-        UnaryMemFunT<PeerPoolMgr, Security::EncryptorAnswer, Security::EncryptorAnswer&>(aJob, aMethod, Security::EncryptorAnswer()) {}
-
-    /* Security::PeerConnector::CbDialer API */
-    virtual Security::EncryptorAnswer &answer() { return arg1; }
-};
 
 PeerPoolMgr::PeerPoolMgr(CachePeer *aPeer): AsyncJob("PeerPoolMgr"),
     peer(cbdataReference(aPeer)),
@@ -98,7 +87,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
     }
 
     if (params.flag != Comm::OK) {
-        peerConnectFailed(peer);
+        NoteOutgoingConnectionFailure(peer);
         checkpoint("conn opening failure"); // may retry
         return;
     }
@@ -108,8 +97,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
     // Handle TLS peers.
     if (peer->secure.encryptTransport) {
         // XXX: Exceptions orphan params.conn
-        AsyncCall::Pointer callback = asyncCall(48, 4, "PeerPoolMgr::handleSecuredPeer",
-                                                MyAnswerDialer(this, &PeerPoolMgr::handleSecuredPeer));
+        const auto callback = asyncCallback(48, 4, PeerPoolMgr::handleSecuredPeer, this);
 
         const auto peerTimeout = peer->connectTimeout();
         const int timeUsed = squid_curtime - params.conn->startTime();
@@ -147,7 +135,7 @@ PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
     assert(!answer.tunneled);
     if (answer.error.get()) {
         assert(!answer.conn);
-        // PeerConnector calls peerConnectFailed() for us;
+        // PeerConnector calls NoteOutgoingConnectionFailure() for us
         checkpoint("conn securing failure"); // may retry
         return;
     }
@@ -248,16 +236,17 @@ class PeerPoolMgrsRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void useConfig() { syncConfig(); }
-    virtual void syncConfig();
+    void useConfig() override { syncConfig(); }
+    void syncConfig() override;
 };
 
-RunnerRegistrationEntry(PeerPoolMgrsRr);
+DefineRunnerRegistrator(PeerPoolMgrsRr);
 
 void
 PeerPoolMgrsRr::syncConfig()
 {
-    for (CachePeer *p = Config.peers; p; p = p->next) {
+    for (const auto &peer: CurrentCachePeers()) {
+        const auto p = peer.get();
         // On reconfigure, Squid deletes the old config (and old peers in it),
         // so should always be dealing with a brand new configuration.
         assert(!p->standby.mgr);

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSL_GADGETS_H
-#define SQUID_SSL_GADGETS_H
+#ifndef SQUID_SRC_SSL_GADGETS_H
+#define SQUID_SRC_SSL_GADGETS_H
 
 #if USE_OPENSSL
 
@@ -20,6 +20,9 @@
 
 #if HAVE_OPENSSL_ASN1_H
 #include <openssl/asn1.h>
+#endif
+#if HAVE_OPENSSL_PEM_H
+#include <openssl/pem.h>
 #endif
 #if HAVE_OPENSSL_TXT_DB_H
 #include <openssl/txt_db.h>
@@ -293,5 +296,5 @@ const ASN1_BIT_STRING *X509_get_signature(const Security::CertPointer &);
 } // namespace Ssl
 
 #endif // USE_OPENSSL
-#endif // SQUID_SSL_GADGETS_H
+#endif /* SQUID_SRC_SSL_GADGETS_H */
 

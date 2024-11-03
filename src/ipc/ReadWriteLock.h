@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_READ_WRITE_LOCK_H
-#define SQUID_IPC_READ_WRITE_LOCK_H
+#ifndef SQUID_SRC_IPC_READWRITELOCK_H
+#define SQUID_SRC_IPC_READWRITELOCK_H
 
 #include <atomic>
 #include <iosfwd>
@@ -42,6 +42,11 @@ public:
 
     void startAppending(); ///< writer keeps its lock but also allows reading
 
+    /// writer keeps its lock and disallows future readers
+    /// \returns whether access became exclusive (i.e. no readers)
+    /// \prec appending is true
+    bool stopAppendingAndRestoreExclusive();
+
     /// adds approximate current stats to the supplied ones
     void updateStats(ReadWriteLockStats &stats) const;
 
@@ -59,7 +64,7 @@ private:
 };
 
 /// dumps approximate lock state (for debugging)
-std::ostream &operator <<(std::ostream &os, const Ipc::ReadWriteLock &);
+std::ostream &operator <<(std::ostream &, const ReadWriteLock &);
 
 /// approximate stats of a set of ReadWriteLocks
 class ReadWriteLockStats
@@ -85,5 +90,5 @@ void AssertFlagIsSet(std::atomic_flag &flag);
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_READ_WRITE_LOCK_H */
+#endif /* SQUID_SRC_IPC_READWRITELOCK_H */
 

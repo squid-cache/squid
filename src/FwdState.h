@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FORWARD_H
-#define SQUID_FORWARD_H
+#ifndef SQUID_SRC_FWDSTATE_H
+#define SQUID_SRC_FWDSTATE_H
 
 #include "base/forward.h"
 #include "base/JobWait.h"
@@ -31,7 +31,6 @@
 
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
-class ErrorState;
 class HttpRequest;
 class PconnPool;
 class ResolvedPeers;
@@ -50,13 +49,47 @@ void ResetMarkingsToServer(HttpRequest *, Comm::Connection &);
 
 class HelperReply;
 
+/// Eliminates excessive Stopwatch pause() calls in a task with multiple code
+/// locations that pause a stopwatch. Ideally, there would be just one such
+/// location (e.g., a task class destructor), but current code idiosyncrasies
+/// necessitate this state. For simplicity sake, this class currently manages a
+/// Stopwatch at a hard-coded location: HttpRequest::hier.totalPeeringTime.
+class PeeringActivityTimer
+{
+public:
+    PeeringActivityTimer(const HttpRequestPointer &); ///< resumes timer
+    ~PeeringActivityTimer(); ///< \copydoc stop()
+
+    /// pauses timer if stop() has not been called
+    void stop()
+    {
+        if (!stopped) {
+            timer().pause();
+            stopped = true;
+        }
+    }
+
+private:
+    /// managed Stopwatch object within HierarchyLogEntry
+    Stopwatch &timer();
+
+    /// the owner of managed HierarchyLogEntry
+    HttpRequestPointer request;
+
+    // We cannot rely on timer().ran(): This class eliminates excessive calls
+    // within a single task (e.g., an AsyncJob) while the timer (and its ran()
+    // state) may be shared/affected by multiple concurrent tasks.
+    /// Whether the task is done participating in the managed activity.
+    bool stopped = false;
+};
+
 class FwdState: public RefCountable, public PeerSelectionInitiator
 {
     CBDATA_CHILD(FwdState);
 
 public:
     typedef RefCount<FwdState> Pointer;
-    virtual ~FwdState();
+    ~FwdState() override;
     static void initModule();
 
     /// Initiates request forwarding to a peer or origin server.
@@ -85,7 +118,6 @@ public:
 
     void handleUnregisteredServerEnd();
     int reforward();
-    bool reforwardableStatus(const Http::StatusCode s) const;
     void serverClosed();
     void connectStart();
     void connectDone(const Comm::ConnectionPointer & conn, Comm::Flag status, int xerrno);
@@ -112,8 +144,8 @@ private:
     void stopAndDestroy(const char *reason);
 
     /* PeerSelectionInitiator API */
-    virtual void noteDestination(Comm::ConnectionPointer conn) override;
-    virtual void noteDestinationsEnd(ErrorState *selectionError) override;
+    void noteDestination(Comm::ConnectionPointer conn) override;
+    void noteDestinationsEnd(ErrorState *selectionError) override;
 
     bool transporting() const;
 
@@ -154,6 +186,7 @@ private:
 
     /// whether we have used up all permitted forwarding attempts
     bool exhaustedTries() const;
+    void updateAttempts(int);
 
     /// \returns the time left for this connection to become connected or 1 second if it is less than one second left
     time_t connectingTimeout(const Comm::ConnectionPointer &conn) const;
@@ -213,6 +246,9 @@ private:
     /// Whether the entire reply (including any body) was written to Store.
     /// The string literal value is only used for debugging.
     const char *storedWholeReply_;
+
+    /// Measures time spent on selecting and communicating with peers.
+    PeeringActivityTimer peeringTimer;
 };
 
 class acl_tos;
@@ -224,5 +260,5 @@ void getOutgoingAddress(HttpRequest *, const Comm::ConnectionPointer &);
 /// a collection of previously used persistent Squid-to-peer HTTP(S) connections
 extern PconnPool *fwdPconnPool;
 
-#endif /* SQUID_FORWARD_H */
+#endif /* SQUID_SRC_FWDSTATE_H */
 

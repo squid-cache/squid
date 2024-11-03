@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 49    SNMP Interface */
 
-#ifndef SQUID_SNMPX_RESPONSE_H
-#define SQUID_SNMPX_RESPONSE_H
+#ifndef SQUID_SRC_SNMP_RESPONSE_H
+#define SQUID_SRC_SNMP_RESPONSE_H
 
 #include "ipc/forward.h"
 #include "ipc/Response.h"
@@ -26,8 +26,8 @@ public:
     explicit Response(Ipc::RequestId); ///< sender's constructor
     explicit Response(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
     /* Ipc::Response API */
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual Ipc::Response::Pointer clone() const;
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    Ipc::Response::Pointer clone() const override;
 
 public:
     Pdu pdu; ///< SNMP protocol data unit
@@ -35,5 +35,5 @@ public:
 
 } // namespace Snmp
 
-#endif /* SQUID_SNMPX_RESPONSE_H */
+#endif /* SQUID_SRC_SNMP_RESPONSE_H */
 

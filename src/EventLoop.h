@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_EVENTLOOP_H
-#define SQUID_EVENTLOOP_H
+#ifndef SQUID_SRC_EVENTLOOP_H
+#define SQUID_SRC_EVENTLOOP_H
 
 #include "time/forward.h"
 
@@ -92,5 +92,5 @@ private:
     bool runOnceResult; /**< the result from runOnce */
 };
 
-#endif /* SQUID_EVENTLOOP_H */
+#endif /* SQUID_SRC_EVENTLOOP_H */
 

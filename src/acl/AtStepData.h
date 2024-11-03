@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLATSTEPDATA_H
-#define SQUID_ACLATSTEPDATA_H
+#ifndef SQUID_SRC_ACL_ATSTEPDATA_H
+#define SQUID_SRC_ACL_ATSTEPDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -20,14 +20,14 @@ class ACLAtStepData : public ACLData<XactionStep>
 
 public:
     ACLAtStepData();
-    virtual ~ACLAtStepData();
-    bool match(XactionStep);
-    virtual SBufList dump() const;
-    void parse();
-    bool empty() const;
+    ~ACLAtStepData() override;
+    bool match(XactionStep) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override;
 
     std::list<XactionStep> values;
 };
 
-#endif /* SQUID_ACLSSL_ERRORDATA_H */
+#endif /* SQUID_SRC_ACL_ATSTEPDATA_H */
 

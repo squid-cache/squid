@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,8 +12,8 @@
  * Internal declarations for the DiskThreads routines
  */
 
-#ifndef __DISKTHREADS_H__
-#define __DISKTHREADS_H__
+#ifndef SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADS_H
+#define SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADS_H
 
 #include "dlink.h"
 #include "mem/forward.h"
@@ -141,5 +141,5 @@ public:
 extern AIOCounts squidaio_counts;
 extern dlink_list used_list;
 
-#endif
+#endif /* SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADS_H */
 

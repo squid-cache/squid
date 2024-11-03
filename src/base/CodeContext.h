@@ -1,16 +1,17 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS code_contexts for details.
  */
 
-#ifndef SQUID_BASE_CODE_CONTEXT_H
-#define SQUID_BASE_CODE_CONTEXT_H
+#ifndef SQUID_SRC_BASE_CODECONTEXT_H
+#define SQUID_SRC_BASE_CODECONTEXT_H
 
 #include "base/InstanceId.h"
 #include "base/RefCount.h"
+#include "base/Stopwatch.h"
 
 #include <iosfwd>
 
@@ -62,7 +63,7 @@ public:
     /// changes the current context; nil argument sets it to nil/unknown
     static void Reset(const Pointer);
 
-    virtual ~CodeContext() {}
+    ~CodeContext() override {}
 
     /// \returns a small, permanent ID of the current context
     /// gists persist forever and are suitable for passing to other SMP workers
@@ -70,6 +71,9 @@ public:
 
     /// appends human-friendly context description line(s) to a cache.log record
     virtual std::ostream &detailCodeContext(std::ostream &os) const = 0;
+
+    /// time spent in this context (see also: %busy_time)
+    Stopwatch busyTime;
 
 private:
     static void ForgetCurrent();
@@ -102,20 +106,38 @@ public:
     CodeContext::Pointer savedCodeContext;
 };
 
-/// Executes service `callback` in `callbackContext`. If an exception occurs,
-/// the callback context is preserved, so that the exception is associated with
-/// the callback that triggered them (rather than with the service).
-///
+/// A helper that calls the given function in the given call context. If the
+/// function throws, the call context is preserved, so that the exception is
+/// associated with the context that triggered it.
+template <typename Fun>
+inline void
+CallAndRestore_(const CodeContext::Pointer &context, Fun &&fun)
+{
+    const auto savedCodeContext(CodeContext::Current());
+    CodeContext::Reset(context);
+    fun();
+    CodeContext::Reset(savedCodeContext);
+}
+
 /// Service code running in its own service context should use this function.
+/// \sa CallAndRestore_()
 template <typename Fun>
 inline void
 CallBack(const CodeContext::Pointer &callbackContext, Fun &&callback)
 {
     // TODO: Consider catching exceptions and letting CodeContext handle them.
-    const auto savedCodeContext(CodeContext::Current());
-    CodeContext::Reset(callbackContext);
-    callback();
-    CodeContext::Reset(savedCodeContext);
+    CallAndRestore_(callbackContext, callback);
+}
+
+/// To supply error-reporting code with parsing context X (where the error
+/// occurred), parsing code should use this function when initiating parsing
+/// inside that context X.
+/// \sa CallAndRestore_()
+template <typename Fun>
+inline void
+CallParser(const CodeContext::Pointer &parsingContext, Fun &&parse)
+{
+    CallAndRestore_(parsingContext, parse);
 }
 
 /// Executes `service` in `serviceContext` but due to automatic caller context
@@ -150,5 +172,5 @@ CallContextCreator(Fun &&creator)
 
 /// @}
 
-#endif
+#endif /* SQUID_SRC_BASE_CODECONTEXT_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_STORE_IO_ACTION_H
-#define SQUID_MGR_STORE_IO_ACTION_H
+#ifndef SQUID_SRC_MGR_STOREIOACTION_H
+#define SQUID_SRC_MGR_STOREIOACTION_H
 
 #include "mgr/Action.h"
 
@@ -39,14 +39,14 @@ protected:
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    virtual void add(const Action& action);
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual void unpack(const Ipc::TypedMsgHdr& msg);
+    void add(const Action& action) override;
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    void unpack(const Ipc::TypedMsgHdr& msg) override;
 
 protected:
     /* Action API */
-    virtual void collect();
-    virtual void dump(StoreEntry* entry);
+    void collect() override;
+    void dump(StoreEntry* entry) override;
 
 private:
     StoreIoActionData data;
@@ -54,5 +54,5 @@ private:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_STORE_IO_ACTION_H */
+#endif /* SQUID_SRC_MGR_STOREIOACTION_H */
 

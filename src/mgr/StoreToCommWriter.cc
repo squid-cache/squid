@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,8 +19,6 @@
 #include "mgr/StoreToCommWriter.h"
 #include "Store.h"
 #include "StoreClient.h"
-
-CBDATA_NAMESPACED_CLASS_INIT(Mgr, StoreToCommWriter);
 
 Mgr::StoreToCommWriter::StoreToCommWriter(const Comm::ConnectionPointer &conn, StoreEntry* anEntry):
     AsyncJob("Mgr::StoreToCommWriter"),

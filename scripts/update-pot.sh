@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -49,7 +49,7 @@ msgcat ./pot/*.pot -s -o errpages.pot.new &&
 
 ## Update all existing dictionaries with the new content ...
 for f in `ls -1 ./*.po` ; do
-	echo -n "Update: ${f} ... "
+	printf "Update: %s ... " "${f}"
 	msgmerge --verbose -s -o ${f}.new ${f} errpages.pot
 	chown --reference=${f} ${f}.new
 	mv ${f}.new ${f}

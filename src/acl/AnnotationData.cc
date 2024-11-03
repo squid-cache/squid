@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,6 +15,7 @@
 #include "debug/Stream.h"
 #include "format/Format.h"
 #include "sbuf/Algorithms.h"
+#include "sbuf/Stream.h"
 
 ACLAnnotationData::ACLAnnotationData()
     : notes(new Notes("annotation_data")) {}
@@ -22,10 +23,12 @@ ACLAnnotationData::ACLAnnotationData()
 SBufList
 ACLAnnotationData::dump() const
 {
-    SBufList sl;
-    if (const char *strNotes = notes->toString())
-        sl.push_back(SBuf(strNotes));
-    return sl;
+    if (notes->empty())
+        return SBufList();
+
+    SBufStream os;
+    notes->printAsAnnotationAclParameters(os);
+    return SBufList{os.buf()};
 }
 
 void

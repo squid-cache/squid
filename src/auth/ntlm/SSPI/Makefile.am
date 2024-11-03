@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@ libexec_PROGRAMS= ntlm_sspi_auth
 ntlm_sspi_auth_SOURCES = ntlm_sspi_auth.cc
 ntlm_sspi_auth_LDADD= \
 	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
-	$(top_builddir)/lib/libsspwin32.la \
+	$(top_builddir)/lib/sspi/libsspwin32.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	-lnetapi32 \

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 03    Configuration File Parsing */
 
-#ifndef SQUID_CACHE_CF_H_
-#define SQUID_CACHE_CF_H_
+#ifndef SQUID_SRC_CACHE_CF_H
+#define SQUID_SRC_CACHE_CF_H
 
 class wordlist;
 
@@ -33,5 +33,5 @@ extern const char *cfg_filename;
 extern int config_lineno;
 extern char config_input_line[BUFSIZ];
 
-#endif /* SQUID_CACHE_CF_H_ */
+#endif /* SQUID_SRC_CACHE_CF_H */
 

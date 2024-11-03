@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,7 @@
 #include "base/InstanceId.h"
 #include "base/TypeTraits.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "carp.h"
 #include "client_side.h"
 #include "dns/LookupDetails.h"
@@ -94,7 +95,7 @@ operator <<(std::ostream &os, const PeerSelectionDumper &fsd)
     os << hier_code_str[fsd.code];
 
     if (fsd.peer)
-        os << '/' << fsd.peer->host;
+        os << '/' << *fsd.peer;
     else if (fsd.selector) // useful for DIRECT and gone PINNED destinations
         os << '#' << fsd.selector->request->url.host();
 
@@ -242,11 +243,6 @@ PeerSelector::~PeerSelector()
         entry->ping_status = PING_DONE;
     }
 
-    if (acl_checklist) {
-        debugs(44, DBG_IMPORTANT, "ERROR: Squid BUG: peer selector gone while waiting for a slow ACL");
-        delete acl_checklist;
-    }
-
     HTTPMSGUNLOCK(request);
 
     if (entry) {
@@ -341,7 +337,6 @@ PeerSelectionInitiator::startSelectingDestinations(HttpRequest *request, const A
 void
 PeerSelector::checkNeverDirectDone(const Acl::Answer answer)
 {
-    acl_checklist = nullptr;
     debugs(44, 3, answer);
     never_direct = answer;
     switch (answer) {
@@ -369,7 +364,6 @@ PeerSelector::CheckNeverDirectDone(Acl::Answer answer, void *data)
 void
 PeerSelector::checkAlwaysDirectDone(const Acl::Answer answer)
 {
-    acl_checklist = nullptr;
     debugs(44, 3, answer);
     always_direct = answer;
     switch (answer) {
@@ -530,7 +524,10 @@ PeerSelector::noteIp(const Ip::Address &ip)
 
     Comm::ConnectionPointer p = new Comm::Connection();
     p->remote = ip;
-    p->remote.port(peer ? peer->http_port : request->url.port());
+    // XXX: We return a (non-peer) destination with a zero port if the selection
+    // initiator supplied a request target without a port. If there are no valid
+    // use cases for this behavior, stop _selecting_ such destinations.
+    p->remote.port(peer ? peer->http_port : request->url.port().value_or(0));
     handlePath(p, *servers);
 }
 
@@ -616,20 +613,18 @@ PeerSelector::selectMore()
         if (always_direct == ACCESS_DUNNO) {
             debugs(44, 3, "direct = " << DirectStr[direct] << " (always_direct to be checked)");
             /** check always_direct; */
-            ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, nullptr);
+            auto ch = ACLFilledChecklist::Make(Config.accessList.AlwaysDirect, request);
             ch->al = al;
-            acl_checklist = ch;
-            acl_checklist->syncAle(request, nullptr);
-            acl_checklist->nonBlockingCheck(CheckAlwaysDirectDone, this);
+            ch->syncAle(request, nullptr);
+            ACLFilledChecklist::NonBlockingCheck(std::move(ch), CheckAlwaysDirectDone, this);
             return;
         } else if (never_direct == ACCESS_DUNNO) {
             debugs(44, 3, "direct = " << DirectStr[direct] << " (never_direct to be checked)");
             /** check never_direct; */
-            ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.NeverDirect, request, nullptr);
+            auto ch = ACLFilledChecklist::Make(Config.accessList.NeverDirect, request);
             ch->al = al;
-            acl_checklist = ch;
-            acl_checklist->syncAle(request, nullptr);
-            acl_checklist->nonBlockingCheck(CheckNeverDirectDone, this);
+            ch->syncAle(request, nullptr);
+            ACLFilledChecklist::NonBlockingCheck(std::move(ch), CheckNeverDirectDone, this);
             return;
         } else if (request->flags.noDirect) {
             /** if we are accelerating, direct is not an option. */
@@ -862,10 +857,10 @@ PeerSelector::selectSomeParent()
 void
 PeerSelector::selectAllParents()
 {
-    CachePeer *p;
     /* Add all alive parents */
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &peer: CurrentCachePeers()) {
+        const auto p = peer.get();
         /* XXX: neighbors.c lacks a public interface for enumerating
          * parents to a request so we have to dig some here..
          */
@@ -884,7 +879,7 @@ PeerSelector::selectAllParents()
      * simply are not configured to handle the request.
      */
     /* Add default parent as a last resort */
-    if ((p = getDefaultParent(this))) {
+    if (const auto p = getDefaultParent(this)) {
         addSelection(p, DEFAULT_PARENT);
     }
 }
@@ -1115,7 +1110,6 @@ PeerSelector::PeerSelector(PeerSelectionInitiator *initiator):
     closest_parent_miss(),
     hit(nullptr),
     hit_type(PEER_NONE),
-    acl_checklist (nullptr),
     initiator_(initiator)
 {
     ; // no local defaults.

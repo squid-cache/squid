@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,7 +32,7 @@
 
 static AUTHSSTATS authenticateNegotiateStats;
 
-statefulhelper *negotiateauthenticators = nullptr;
+Helper::StatefulClientPointer negotiateauthenticators;
 
 static int authnegotiate_initialised = 0;
 
@@ -63,7 +63,6 @@ Auth::Negotiate::Config::done()
     if (!shutting_down)
         return;
 
-    delete negotiateauthenticators;
     negotiateauthenticators = nullptr;
 
     if (authenticateProgram)
@@ -90,7 +89,7 @@ Auth::Negotiate::Config::init(Auth::SchemeConfig *)
         authnegotiate_initialised = 1;
 
         if (negotiateauthenticators == nullptr)
-            negotiateauthenticators = new statefulhelper("negotiateauthenticator");
+            negotiateauthenticators = statefulhelper::Make("negotiateauthenticator");
 
         if (!proxy_auth_cache)
             proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
@@ -103,7 +102,7 @@ Auth::Negotiate::Config::init(Auth::SchemeConfig *)
 
         negotiateauthenticators->ipc_type = IPC_STREAM;
 
-        helperStatefulOpenServers(negotiateauthenticators);
+        negotiateauthenticators->openSessions();
     }
 }
 
@@ -164,7 +163,7 @@ Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request,
              * tied to it, even if MAYBE the client could handle it - Kinkie */
             rep->header.delByName("keep-alive");
             request->flags.proxyKeepalive = false;
-        /* [[fallthrough]] */
+            [[fallthrough]];
 
         case Auth::Ok:
             /* Special case: authentication finished OK but disallowed by ACL.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "AccessLogEntry.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "client_side.h"
 #include "client_side_request.h"
 #include "comm/Connection.h"
@@ -24,6 +25,7 @@
 #include "HttpRequest.h"
 #include "IoStats.h"
 #include "mem/Pool.h"
+#include "mem/Stats.h"
 #include "mem_node.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -325,8 +327,7 @@ statObjects(void *data)
     StoreEntry *e;
 
     if (state->theSearch->isDone()) {
-        if (UsingSmp())
-            storeAppendPrintf(state->sentry, "} by kid%d\n\n", KidIdentifier);
+        Mgr::CloseKidSection(state->sentry, Mgr::Format::informal);
         state->sentry->complete();
         state->sentry->unlock("statObjects+isDone");
         delete state;
@@ -532,13 +533,12 @@ GetInfo(Mgr::InfoActionData& stats)
 
 #endif
 
-    stats.total_accounted = statMemoryAccounted();
-
     {
-        MemPoolGlobalStats mp_stats;
-        memPoolGetGlobalStats(&mp_stats);
-        stats.gb_saved_count = mp_stats.TheMeter->gb_saved.count;
-        stats.gb_freed_count = mp_stats.TheMeter->gb_freed.count;
+        Mem::PoolStats mp_stats;
+        Mem::GlobalStats(mp_stats);
+        stats.gb_saved_count = mp_stats.meter->gb_saved.count;
+        stats.gb_freed_count = mp_stats.meter->gb_freed.count;
+        stats.total_accounted = mp_stats.meter->alloc.currentLevel();
     }
 
     stats.max_fd = Squid_MaxFD;
@@ -724,8 +724,8 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "\tTotal accounted:       %6.0f KB\n",
                       stats.total_accounted / 1024);
     {
-        MemPoolGlobalStats mp_stats;
-        memPoolGetGlobalStats(&mp_stats);
+        Mem::PoolStats mp_stats;
+        Mem::GlobalStats(mp_stats); // XXX: called just for its side effects
         storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
                           stats.gb_saved_count);
         storeAppendPrintf(sentry, "\tmemPoolFree calls:  %9.0f\n",
@@ -1135,7 +1135,7 @@ DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry)
 
 #if USE_POLL
     storeAppendPrintf(sentry, "syscalls.polls = %f/sec\n", stats.syscalls_selects);
-#elif defined(USE_SELECT) || defined(USE_SELECT_WIN32)
+#elif USE_SELECT
     storeAppendPrintf(sentry, "syscalls.selects = %f/sec\n", stats.syscalls_selects);
 #endif
 
@@ -1229,9 +1229,11 @@ statCountersInitSpecial(StatCounters * C)
      * Cache Digest Stuff
      */
     C->cd.on_xition_count.enumInit(CacheDigestHashFuncCount);
-    C->comm_udp_incoming.enumInit(INCOMING_UDP_MAX);
-    C->comm_dns_incoming.enumInit(INCOMING_DNS_MAX);
-    C->comm_tcp_incoming.enumInit(INCOMING_TCP_MAX);
+#if USE_POLL || USE_SELECT
+    C->comm_udp.init(INCOMING_UDP_MAX);
+    C->comm_dns.init(INCOMING_DNS_MAX);
+    C->comm_tcp.init(INCOMING_TCP_MAX);
+#endif
     C->select_fds_hist.enumInit(256);   /* was SQUID_MAXFD, but it is way too much. It is OK to crop this statistics */
 }
 
@@ -1569,23 +1571,11 @@ DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry)
                       stats.hitValidationFailures);
 }
 
-void
-statFreeMemory(void)
-{
-    // TODO: replace with delete[]
-    for (int i = 0; i < N_COUNT_HIST; ++i)
-        CountHist[i] = StatCounters();
-
-    for (int i = 0; i < N_COUNT_HOUR_HIST; ++i)
-        CountHourHist[i] = StatCounters();
-}
-
 static void
 statPeerSelect(StoreEntry * sentry)
 {
 #if USE_CACHE_DIGESTS
     StatCounters *f = &statCounter;
-    CachePeer *peer;
     const int tot_used = f->cd.times_used + f->icp.times_used;
 
     /* totals */
@@ -1594,7 +1584,7 @@ statPeerSelect(StoreEntry * sentry)
     /* per-peer */
     storeAppendPrintf(sentry, "\nPer-peer statistics:\n");
 
-    for (peer = getFirstPeer(); peer; peer = getNextPeer(peer)) {
+    for (const auto &peer: CurrentCachePeers()) {
         if (peer->digest)
             peerDigestStatsReport(peer->digest, sentry);
         else
@@ -1824,9 +1814,6 @@ statClientRequests(StoreEntry * s)
                 p = http->request->extacl_user.termedBuf();
             }
 
-        if (!p && conn != nullptr && conn->clientConnection->rfc931[0])
-            p = conn->clientConnection->rfc931;
-
 #if USE_OPENSSL
         if (!p && conn != nullptr && Comm::IsConnOpen(conn->clientConnection))
             p = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl.get());
@@ -1928,10 +1915,4 @@ statGraphDump(StoreEntry * e)
 }
 
 #endif /* STAT_GRAPHS */
-
-int
-statMemoryAccounted(void)
-{
-    return memPoolsTotalAllocated();
-}
 

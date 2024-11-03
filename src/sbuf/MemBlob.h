@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEMBLOB_H_
-#define SQUID_MEMBLOB_H_
+#ifndef SQUID_SRC_SBUF_MEMBLOB_H
+#define SQUID_SRC_SBUF_MEMBLOB_H
 
 #define MEMBLOB_DEBUGSECTION 24
 
@@ -19,18 +19,16 @@
 class MemBlobStats
 {
 public:
-    MemBlobStats();
-
     /// dumps class-wide statistics
     std::ostream& dump(std::ostream& os) const;
 
     MemBlobStats& operator += (const MemBlobStats&);
 
 public:
-    uint64_t alloc;     ///< number of MemBlob instances created so far
-    uint64_t live;      ///< number of MemBlob instances currently alive
-    uint64_t append;    ///< number of MemBlob::append() calls
-    uint64_t liveBytes; ///< the total size of currently allocated storage
+    uint64_t alloc = 0;     ///< number of MemBlob instances created so far
+    uint64_t live = 0;      ///< number of MemBlob instances currently alive
+    uint64_t append = 0;    ///< number of MemBlob::append() calls
+    uint64_t liveBytes = 0; ///< the total size of currently allocated storage
 };
 
 /** Refcountable, fixed-size, content-agnostic memory buffer.
@@ -59,7 +57,7 @@ public:
     /// create a MemBlob containing a copy of the buffer of a given size
     MemBlob(const char *buffer, const size_type bufferSize);
 
-    virtual ~MemBlob();
+    ~MemBlob() override;
 
     /// the number unused bytes at the end of the allocated blob
     size_type spaceSize() const { return capacity - size; }
@@ -115,8 +113,6 @@ public:
     const InstanceId<MemBlob> id; ///< blob identifier
 
 private:
-    static MemBlobStats Stats; ///< class-wide statistics
-
     void memAlloc(const size_type memSize);
 
     /// whether the offset points to the end of the used area
@@ -130,5 +126,5 @@ private:
     MemBlob& operator =(const MemBlob &);
 };
 
-#endif /* SQUID_MEMBLOB_H_ */
+#endif /* SQUID_SRC_SBUF_MEMBLOB_H */
 

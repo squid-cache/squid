@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,13 +14,12 @@
 
 /* Acl::NotNode */
 
-Acl::NotNode::NotNode(ACL *acl)
+Acl::NotNode::NotNode(Acl::Node *acl)
 {
     assert(acl);
-    Must(strlen(acl->name) <= sizeof(name)-2);
-    name[0] = '!';
-    name[1] = '\0';
-    xstrncpy(&name[1], acl->name, sizeof(name)-1); // -1 for '!'
+    name.reserveCapacity(1 + acl->name.length());
+    name.append('!');
+    name.append(acl->name);
     add(acl);
 }
 
@@ -37,7 +36,7 @@ Acl::NotNode::doMatch(ACLChecklist *checklist, Nodes::const_iterator start) cons
 {
     assert(start == nodes.begin()); // we only have one node
 
-    if (checklist->matchChild(this, start, *start))
+    if (checklist->matchChild(this, start))
         return 0; // converting match into mismatch
 
     if (!checklist->keepMatching())
@@ -56,7 +55,7 @@ SBufList
 Acl::NotNode::dump() const
 {
     SBufList text;
-    text.push_back(SBuf(name));
+    text.push_back(name);
     return text;
 }
 
@@ -73,7 +72,7 @@ Acl::AndNode::doMatch(ACLChecklist *checklist, Nodes::const_iterator start) cons
 {
     // find the first node that does not match
     for (Nodes::const_iterator i = start; i != nodes.end(); ++i) {
-        if (!checklist->matchChild(this, i, *i))
+        if (!checklist->matchChild(this, i))
             return checklist->keepMatching() ? 0 : -1;
     }
 
@@ -111,7 +110,7 @@ Acl::OrNode::doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const
     for (Nodes::const_iterator i = start; i != nodes.end(); ++i) {
         if (bannedAction(checklist, i))
             continue;
-        if (checklist->matchChild(this, i, *i)) {
+        if (checklist->matchChild(this, i)) {
             lastMatch_ = i;
             return 1;
         }

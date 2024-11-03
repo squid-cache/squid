@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,8 +30,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef _RFCNB_ERROR_H_
-#define _RFCNB_ERROR_H_
+#ifndef SQUID_LIB_RFCNB_RFCNB_ERROR_H
+#define SQUID_LIB_RFCNB_RFCNB_ERROR_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,5 +69,5 @@ extern const char *RFCNB_Error_Strings[];
 }
 
 #endif
-#endif                          /* _RFCNB_ERROR_H_ */
+#endif /* SQUID_LIB_RFCNB_RFCNB_ERROR_H */
 

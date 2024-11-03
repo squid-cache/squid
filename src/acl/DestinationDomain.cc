@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,41 +9,34 @@
 /* DEBUG: section 28    Access Control */
 
 #include "squid.h"
-#include "acl/Checklist.h"
 #include "acl/DestinationDomain.h"
 #include "acl/DomainData.h"
+#include "acl/FilledChecklist.h"
 #include "acl/RegexData.h"
 #include "fqdncache.h"
 #include "HttpRequest.h"
 
-DestinationDomainLookup DestinationDomainLookup::instance_;
+static void LookupDone(const char *, const Dns::LookupDetails &, void *data);
 
-DestinationDomainLookup *
-DestinationDomainLookup::Instance()
+static void
+StartLookup(ACLFilledChecklist &cl, const Acl::Node &)
 {
-    return &instance_;
+    fqdncache_nbgethostbyaddr(cl.dst_addr, LookupDone, &cl);
 }
 
-void
-DestinationDomainLookup::checkForAsync(ACLChecklist *cl) const
-{
-    ACLFilledChecklist *checklist = Filled(cl);
-    fqdncache_nbgethostbyaddr(checklist->dst_addr, LookupDone, checklist);
-}
-
-void
-DestinationDomainLookup::LookupDone(const char *, const Dns::LookupDetails &details, void *data)
+static void
+LookupDone(const char *, const Dns::LookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     checklist->markDestinationDomainChecked();
     checklist->request->recordLookup(details);
-    checklist->resumeNonBlockingCheck(DestinationDomainLookup::Instance());
+    checklist->resumeNonBlockingCheck();
 }
 
-/* ACLDestinationDomainStrategy */
+/* Acl::DestinationDomainCheck */
 
 const Acl::Options &
-ACLDestinationDomainStrategy::options()
+Acl::DestinationDomainCheck::options()
 {
     static const Acl::BooleanOption LookupBanFlag("-n");
     static const Acl::Options MyOptions = { &LookupBanFlag };
@@ -52,8 +45,10 @@ ACLDestinationDomainStrategy::options()
 }
 
 int
-ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::DestinationDomainCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     assert(checklist != nullptr && checklist->request != nullptr);
 
     if (data->match(checklist->request->url.host())) {
@@ -61,7 +56,7 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledCheckl
     }
 
     if (lookupBanned) {
-        debugs(28, 3, "No-lookup DNS ACL '" << AclMatchedName << "' for " << checklist->request->url.host());
+        debugs(28, 3, "No-lookup DNS ACL '" << name << "' for " << checklist->request->url.host());
         return 0;
     }
 
@@ -72,7 +67,7 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledCheckl
 
     /* do we already have the rDNS? match on it if we do. */
     if (checklist->dst_rdns) {
-        debugs(28, 3, "'" << AclMatchedName << "' match with stored rDNS '" << checklist->dst_rdns << "' for " << checklist->request->url.host());
+        debugs(28, 3, "'" << name << "' match with stored rDNS '" << checklist->dst_rdns << "' for " << checklist->request->url.host());
         return data->match(checklist->dst_rdns);
     }
 
@@ -89,9 +84,8 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledCheckl
         checklist->dst_rdns = xstrdup(fqdn);
         return data->match(fqdn);
     } else if (!checklist->destinationDomainChecked()) {
-        // TODO: Using AclMatchedName here is not OO correct. Should find a way to the current acl
-        debugs(28, 3, "Can't yet compare '" << AclMatchedName << "' ACL for " << checklist->request->url.host());
-        if (checklist->goAsync(DestinationDomainLookup::Instance()))
+        debugs(28, 3, "Can't yet compare '" << name << "' ACL for " << checklist->request->url.host());
+        if (checklist->goAsync(StartLookup, *this))
             return -1;
         // else fall through to "none" match, hiding the lookup failure (XXX)
     }

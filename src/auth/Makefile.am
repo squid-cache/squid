@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -6,10 +6,13 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 SUBDIRS = $(AUTH_MODULES)
-DIST_SUBDIRS = basic digest negotiate ntlm
+DIST_SUBDIRS = \
+	basic \
+	digest \
+	negotiate \
+	ntlm
 
 noinst_LTLIBRARIES = libauth.la libacls.la
 ## not needed? $(AUTH_LIBS_TO_BUILD)

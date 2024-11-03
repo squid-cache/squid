@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 24    SBuf */
 
-#ifndef SQUID_SBUF_H
-#define SQUID_SBUF_H
+#ifndef SQUID_SRC_SBUF_SBUF_H
+#define SQUID_SRC_SBUF_SBUF_H
 
 #include "base/InstanceId.h"
 #include "base/TextException.h"
@@ -96,6 +96,7 @@ public:
     typedef MemBlob::size_type size_type;
     typedef SBufIterator const_iterator;
     typedef SBufReverseIterator const_reverse_iterator;
+    using value_type = char;
     static const size_type npos = 0xffffffff; // max(uint32_t)
 
     /// Maximum size of a SBuf. By design it MUST be < MAX(size_type)/2. Currently 256Mb.
@@ -189,8 +190,11 @@ public:
      */
     SBuf& append(const SBuf & S);
 
+    /// \copydoc push_back(char)
+    SBuf& append(const char c) { push_back(c); return *this; }
+
     /// Append a single character. The character may be NUL (\0).
-    SBuf& append(const char c);
+    void push_back(char);
 
     /** Append operation for C-style strings.
      *
@@ -211,13 +215,13 @@ public:
      * \note arguments may be evaluated more than once, be careful
      *       of side-effects
      */
-    SBuf& Printf(const char *fmt, ...);
+    SBuf& Printf(const char *fmt, ...) PRINTF_FORMAT_ARG2;
 
     /** Append operation with printf-style arguments
      * \note arguments may be evaluated more than once, be careful
      *       of side-effects
      */
-    SBuf& appendf(const char *fmt, ...);
+    SBuf& appendf(const char *fmt, ...)  PRINTF_FORMAT_ARG2;
 
     /** Append operation, with vsprintf(3)-style arguments.
      * \note arguments may be evaluated more than once, be careful
@@ -791,5 +795,5 @@ SBufIterator::operator!=(const SBufIterator &s) const
     return iter != s.iter;
 }
 
-#endif /* SQUID_SBUF_H */
+#endif /* SQUID_SRC_SBUF_SBUF_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,7 +17,7 @@
 #include <openssl/ssl.h>
 #endif
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 #if HAVE_GNUTLS_GNUTLS_H
 #include <gnutls/gnutls.h>
 #endif
@@ -28,7 +28,7 @@ namespace Security {
 #if USE_OPENSSL
 typedef std::shared_ptr<SSL_CTX> ContextPointer;
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 typedef std::shared_ptr<struct gnutls_certificate_credentials_st> ContextPointer;
 
 #else

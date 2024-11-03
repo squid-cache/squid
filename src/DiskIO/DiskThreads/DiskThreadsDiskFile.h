@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 79    Disk IO Routines */
 
-#ifndef SQUID_DISKTHREADSDISKFILE_H
-#define SQUID_DISKTHREADSDISKFILE_H
+#ifndef SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADSDISKFILE_H
+#define SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADSDISKFILE_H
 
 #include "cbdata.h"
 #include "DiskIO/DiskFile.h"
@@ -22,18 +22,18 @@ class DiskThreadsDiskFile : public DiskFile
 
 public:
     DiskThreadsDiskFile(char const *path);
-    ~DiskThreadsDiskFile();
-    virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
-    virtual void create(int flags, mode_t mode, RefCount<IORequestor> callback);
-    virtual void read(ReadRequest *);
-    virtual void write(WriteRequest *);
-    virtual void close();
-    virtual bool error() const;
-    virtual int getFD() const { return fd;}
+    ~DiskThreadsDiskFile() override;
+    void open(int flags, mode_t mode, RefCount<IORequestor> callback) override;
+    void create(int flags, mode_t mode, RefCount<IORequestor> callback) override;
+    void read(ReadRequest *) override;
+    void write(WriteRequest *) override;
+    void close() override;
+    bool error() const override;
+    int getFD() const override { return fd;}
 
-    virtual bool canRead() const;
-    virtual bool canWrite() const;
-    virtual bool ioInProgress() const;
+    bool canRead() const override;
+    bool canWrite() const override;
+    bool ioInProgress() const override;
 
 private:
 #if ASYNC_READ
@@ -60,7 +60,7 @@ private:
     RefCount<IORequestor> ioRequestor;
     void doClose();
 
-    void readDone(int fd, const char *buf, int len, int errflag, RefCount<ReadRequest> request);
+    void readDone(int fd, const char *buf, int len, int errflag, const RefCount<ReadRequest> &request);
     void writeDone(int fd, int errflag, size_t len, RefCount<WriteRequest> request);
 };
 
@@ -82,5 +82,5 @@ template <class RT>
 IoResult<RT>
 IOResult(RefCount<RT> aRequest, RefCount<DiskThreadsDiskFile> aFile) { return IoResult<RT>(aFile, aRequest);}
 
-#endif /* SQUID_DISKTHREADSDISKFILE_H */
+#endif /* SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADSDISKFILE_H */
 

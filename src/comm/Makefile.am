@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 noinst_LTLIBRARIES = \
 	libcomm.la \
@@ -21,6 +20,8 @@ libcomm_la_SOURCES = \
 	Connection.cc \
 	Connection.h \
 	Flag.h \
+	Incoming.cc \
+	Incoming.h \
 	IoCallback.cc \
 	IoCallback.h \
 	Loops.h \
@@ -29,14 +30,12 @@ libcomm_la_SOURCES = \
 	ModKqueue.cc \
 	ModPoll.cc \
 	ModSelect.cc \
-	ModSelectWin32.cc \
 	Read.cc \
 	Read.h \
 	Tcp.cc \
 	Tcp.h \
 	TcpAcceptor.cc \
 	TcpAcceptor.h \
-	UdpOpenDialer.h \
 	Write.cc \
 	Write.h \
 	comm_internal.h \

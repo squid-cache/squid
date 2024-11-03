@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -143,11 +143,10 @@ Mgr::InfoAction::dump(StoreEntry* entry)
     Must(entry != nullptr);
 
 #if XMALLOC_STATISTICS
-    if (UsingSmp())
-        storeAppendPrintf(entry, "by kid%d {\n", KidIdentifier);
+    // TODO: Move these stats into a new dedicated report.
+    Mgr::OpenKidSection(entry, Mgr::Format::informal);
     DumpMallocStatistics(entry);
-    if (UsingSmp())
-        storeAppendPrintf(entry, "} by kid%d\n\n", KidIdentifier);
+    Mgr::CloseKidSection(entry, Mgr::Format::informal);
 #endif
     if (IamPrimaryProcess())
         DumpInfo(data, entry);

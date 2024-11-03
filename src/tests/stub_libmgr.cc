@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,7 +19,7 @@
 
 // NP: used by Action.h instantiations
 #include "mgr/Command.h"
-std::ostream &operator <<(std::ostream &os, const Mgr::Command &) STUB_RETVAL(os)
+std::ostream &Mgr::operator <<(std::ostream &os, const Command &) STUB_RETVAL(os)
 
 #include "mgr/Action.h"
 Mgr::Action::Action(const CommandPointer &) STUB
@@ -29,6 +29,7 @@ void Mgr::Action::fillEntry(StoreEntry *, bool) STUB
 void Mgr::Action::add(const Action &) STUB
 void Mgr::Action::respond(const Request &) STUB
 void Mgr::Action::sendResponse(const Ipc::RequestId) STUB
+Mgr::Format Mgr::Action::format() const STUB_RETVAL(Mgr::Format::informal)
 bool Mgr::Action::atomic() const STUB_RETVAL(false)
 const char * Mgr::Action::name() const STUB_RETVAL(nullptr)
 static Mgr::Command static_Command;
@@ -40,7 +41,6 @@ static Mgr::Action::Pointer dummyAction;
 Mgr::ActionParams::ActionParams() STUB_NOP
 Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &) STUB_NOP
 void Mgr::ActionParams::pack(Ipc::TypedMsgHdr &) const STUB
-std::ostream &operator <<(std::ostream &os, const Mgr::ActionParams &) STUB_RETVAL(os)
 
 #include "mgr/ActionWriter.h"
 //Mgr::ActionWriter::ActionWriter(const Action::Pointer &, int) STUB
@@ -182,8 +182,8 @@ void Mgr::QueryParams::Parse(Parser::Tokenizer &, QueryParams &) STUB
 Mgr::QueryParam::Pointer Mgr::QueryParams::CreateParam(QueryParam::Type) STUB_RETVAL(Mgr::QueryParam::Pointer(nullptr))
 
 #include "mgr/Registration.h"
-//void Mgr::RegisterAction(char const *, char const *, OBJH *, int, int);
-//void Mgr::RegisterAction(char const *, char const *, ClassActionCreationHandler *, int, int);
+//void Mgr::RegisterAction(char const *, char const *, OBJH *, Protected, Atomic, Format);
+//void Mgr::RegisterAction(char const *, char const *, ClassActionCreationHandler *, Protected, Atomic, Format);
 
 #include "mgr/Request.h"
 //Mgr::Request::Request(int, unsigned int, int, const Mgr::ActionParams &) STUB

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@
 int
 xstatvfs(const char *path, struct statvfs *sfs)
 {
-#if !HAVE_STATFS && _SQUID_WINDOWS_
+#if !HAVE_STATFS && (_SQUID_MINGW_ || _SQUID_WINDOWS_)
     char drive[4];
     DWORD spc, bps, freec, totalc;
     DWORD vsn, maxlen, flags;

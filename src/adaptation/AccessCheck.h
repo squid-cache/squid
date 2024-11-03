@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__ACCESS_CHECK_H
-#define SQUID_ADAPTATION__ACCESS_CHECK_H
+#ifndef SQUID_SRC_ADAPTATION_ACCESSCHECK_H
+#define SQUID_SRC_ADAPTATION_ACCESSCHECK_H
 
 #include "acl/Acl.h"
 #include "adaptation/Elements.h"
@@ -29,7 +29,7 @@ class AccessRule;
 // checks adaptation_access rules to find a matching adaptation service
 class AccessCheck: public virtual AsyncJob
 {
-    CBDATA_CLASS(AccessCheck);
+    CBDATA_CHILD(AccessCheck);
 
 public:
     typedef void AccessCheckCallback(ServiceGroupPointer group, void *data);
@@ -41,12 +41,11 @@ public:
 protected:
     // use Start to start adaptation checks
     AccessCheck(const ServiceFilter &aFilter, Adaptation::Initiator *);
-    ~AccessCheck();
+    ~AccessCheck() override;
 
 private:
     const ServiceFilter filter;
     CbcPointer<Adaptation::Initiator> theInitiator; ///< the job which ordered this access check
-    ACLFilledChecklist *acl_checklist;
 
     typedef int Candidate;
     typedef std::vector<Candidate> Candidates;
@@ -64,8 +63,8 @@ public:
 
 protected:
     // AsyncJob API
-    virtual void start();
-    virtual bool doneAll() const { return false; } /// not done until mustStop
+    void start() override;
+    bool doneAll() const override { return false; } /// not done until mustStop
 
     bool usedDynamicRules();
     void check();
@@ -73,5 +72,5 @@ protected:
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__ACCESS_CHECK_H */
+#endif /* SQUID_SRC_ADAPTATION_ACCESSCHECK_H */
 

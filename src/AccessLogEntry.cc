@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -97,18 +97,6 @@ AccessLogEntry::syncNotes(HttpRequest *req)
 }
 
 const char *
-AccessLogEntry::getClientIdent() const
-{
-    if (tcpClient)
-        return tcpClient->rfc931;
-
-    if (cache.rfc931 && *cache.rfc931)
-        return cache.rfc931;
-
-    return nullptr;
-}
-
-const char *
 AccessLogEntry::getExtUser() const
 {
     if (request && request->extacl_user.size())
@@ -132,8 +120,6 @@ AccessLogEntry::~AccessLogEntry()
 
     safe_free(headers.adapted_request);
     HTTPMSGUNLOCK(adapted_request);
-
-    safe_free(lastAclName);
 
     HTTPMSGUNLOCK(request);
 #if ICAP_CLIENT

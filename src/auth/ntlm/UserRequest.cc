@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -49,18 +49,6 @@ const char *
 Auth::Ntlm::UserRequest::connLastHeader()
 {
     return nullptr;
-}
-
-int
-Auth::Ntlm::UserRequest::authenticated() const
-{
-    if (user() != nullptr && user()->credentials() == Auth::Ok) {
-        debugs(29, 9, "user authenticated.");
-        return 1;
-    }
-
-    debugs(29, 9, "user not fully authenticated.");
-    return 0;
 }
 
 const char *
@@ -295,8 +283,11 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     case Helper::TT:
         /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
-        lm_request->request->flags.mustKeepalive = true;
-        if (lm_request->request->flags.proxyKeepalive) {
+
+        if (lm_request->request)
+            lm_request->request->flags.mustKeepalive = true;
+
+        if (lm_request->request && lm_request->request->flags.proxyKeepalive) {
             const char *serverBlob = reply.notes.findFirst("token");
             lm_request->server_blob = xstrdup(serverBlob);
             auth_user_request->user()->credentials(Auth::Handshake);
@@ -360,7 +351,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     case Helper::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication Helper crashed (" << reply.reservationId << ")");
-    /* [[fallthrough]] */
+        [[fallthrough]];
 
     case Helper::TimedOut:
     case Helper::BrokenHelper:

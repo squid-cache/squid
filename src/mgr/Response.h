@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_RESPONSE_H
-#define SQUID_MGR_RESPONSE_H
+#ifndef SQUID_SRC_MGR_RESPONSE_H
+#define SQUID_SRC_MGR_RESPONSE_H
 
 #include "ipc/forward.h"
 #include "ipc/Response.h"
@@ -29,8 +29,8 @@ public:
     explicit Response(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
 
     /* Ipc::Response API */
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual Ipc::Response::Pointer clone() const;
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    Ipc::Response::Pointer clone() const override;
 
     bool hasAction() const; ///< whether response contain action object
     const Action& getAction() const; ///< returns action object
@@ -41,5 +41,5 @@ public:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_RESPONSE_H */
+#endif /* SQUID_SRC_MGR_RESPONSE_H */
 

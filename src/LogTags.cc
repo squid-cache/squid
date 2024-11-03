@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,6 +16,15 @@ LogTagsErrors::update(const LogTagsErrors &other)
     ignored = ignored || other.ignored;
     timedout = timedout || other.timedout;
     aborted = aborted || other.aborted;
+}
+
+LogTagsErrors
+LogTagsErrors::FromErrno(const int errNo)
+{
+    LogTagsErrors lte;
+    lte.timedout = (errNo == ETIMEDOUT);
+    lte.aborted = !lte.timedout; // intentionally true for zero errNo
+    return lte;
 }
 
 /* LogTags */
@@ -59,7 +68,7 @@ LogTags::update(const LogTags_ot t)
 }
 
 /*
- * This method is documented in http://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid_result_codes
+ * This method is documented in https://wiki.squid-cache.org/SquidFaq/SquidLogs#squid-result-codes
  * Please keep the wiki up to date
  */
 const char *

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,6 +15,7 @@
 #include "debug/Stream.h"
 #include "fatal.h"
 #include "globals.h"
+#include "neighbors.h"
 #include "sbuf/Stream.h"
 
 bool ConfigParser::RecognizeQuotedValues = true;
@@ -180,7 +181,7 @@ ConfigParser::UnQuote(const char *token, const char **next)
     *d = '\0';
 
     // We are expecting a separator after quoted string, space or one of "()#"
-    if (*(s + 1) != '\0' && !strchr(w_space "()#", *(s + 1)) && !errorStr) {
+    if (!errorStr && *(s + 1) != '\0' && !strchr(w_space "()#", *(s + 1))) {
         errorStr = "Expecting space after the end of quoted token";
         errorPos = token;
     }
@@ -503,6 +504,22 @@ ConfigParser::regex(const char *expectedRegexDescription)
     return std::unique_ptr<RegexPattern>(new RegexPattern(pattern, flags));
 }
 
+CachePeer &
+ConfigParser::cachePeer(const char *peerNameTokenDescription)
+{
+    if (const auto name = NextToken()) {
+        debugs(3, 5, CurrentLocation() << ' ' << peerNameTokenDescription << ": " << name);
+
+        if (const auto p = findCachePeerByName(name))
+            return *p;
+
+        throw TextException(ToSBuf("Cannot find a previously declared cache_peer referred to by ",
+                                   peerNameTokenDescription, " as ", name), Here());
+    }
+
+    throw TextException(ToSBuf("Missing ", peerNameTokenDescription), Here());
+}
+
 char *
 ConfigParser::NextQuotedToken()
 {
@@ -577,13 +594,13 @@ ConfigParser::skipOptional(const char *keyword)
     return false; // no more tokens (i.e. we are at the end of the line)
 }
 
-Acl::Tree *
+ACLList *
 ConfigParser::optionalAclList()
 {
     if (!skipOptional("if"))
         return nullptr; // OK: the directive has no ACLs
 
-    Acl::Tree *acls = nullptr;
+    ACLList *acls = nullptr;
     const auto aclCount = aclParseAclList(*this, &acls, cfg_directive);
     assert(acls);
     if (aclCount <= 0)

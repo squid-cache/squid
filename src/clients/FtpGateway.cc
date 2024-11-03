@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "FwdState.h"
-#include "html_quote.h"
+#include "html/Quoting.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
 #include "HttpHeaderRange.h"
@@ -46,6 +46,9 @@
 #endif
 
 #include <cerrno>
+#if HAVE_REGEX_H
+#include <regex.h>
+#endif
 
 namespace Ftp
 {
@@ -90,11 +93,11 @@ typedef void (StateMethod)(Ftp::Gateway *);
 /// converts one or more FTP responses into the final HTTP response.
 class Gateway : public Ftp::Client
 {
-    CBDATA_CLASS(Gateway);
+    CBDATA_CHILD(Gateway);
 
 public:
     Gateway(FwdState *);
-    virtual ~Gateway();
+    ~Gateway() override;
     char user[MAX_URL];
     char password[MAX_URL];
     int password_url;
@@ -122,8 +125,8 @@ public:
 
 public:
     // these should all be private
-    virtual void start();
-    virtual Http::StatusCode failedHttpStatus(err_type &error);
+    void start() override;
+    Http::StatusCode failedHttpStatus(err_type &error) override;
     int restartable();
     void appendSuccessHeader();
     void hackShortcut(StateMethod *nextState);
@@ -140,34 +143,33 @@ public:
     void checkUrlpath();
     void buildTitleUrl();
     void writeReplyBody(const char *, size_t len);
-    void printfReplyBody(const char *fmt, ...);
-    virtual void completeForwarding();
+    void completeForwarding() override;
     void processHeadResponse();
-    void processReplyBody();
+    void processReplyBody() override;
     void setCurrentOffset(int64_t offset) { currentOffset = offset; }
     int64_t getCurrentOffset() const { return currentOffset; }
 
-    virtual void dataChannelConnected(const CommConnectCbParams &io);
+    void dataChannelConnected(const CommConnectCbParams &io) override;
     static PF ftpDataWrite;
-    virtual void timeout(const CommTimeoutCbParams &io);
+    void timeout(const CommTimeoutCbParams &io) override;
     void ftpAcceptDataConnection(const CommAcceptCbParams &io);
 
     static HttpReply *ftpAuthRequired(HttpRequest * request, SBuf &realm, AccessLogEntry::Pointer &);
     SBuf ftpRealm();
     void loginFailed(void);
 
-    virtual void haveParsedReplyHeaders();
+    void haveParsedReplyHeaders() override;
 
     virtual bool haveControlChannel(const char *caller_name) const;
 
 protected:
-    virtual void handleControlReply();
-    virtual void dataClosed(const CommCloseCbParams &io);
+    void handleControlReply() override;
+    void dataClosed(const CommCloseCbParams &io) override;
 
 private:
-    virtual bool mayReadVirginReplyBody() const;
+    bool mayReadVirginReplyBody() const override;
     // BodyConsumer for HTTP: consume request body.
-    virtual void handleRequestBodyProducerAborted();
+    void handleRequestBodyProducerAborted() override;
 
     void loginParser(const SBuf &login, bool escaped);
 };
@@ -400,6 +402,12 @@ Ftp::Gateway::loginParser(const SBuf &login, bool escaped)
     if (login.isEmpty())
         return;
 
+    if (!login[0]) {
+        debugs(9, 2, "WARNING: Ignoring FTP credentials that start with a NUL character");
+        // TODO: Either support credentials with NUL characters (in any position) or ban all of them.
+        return;
+    }
+
     const SBuf::size_type colonPos = login.find(':');
 
     /* If there was a username part with at least one character use it.
@@ -449,7 +457,7 @@ Ftp::Gateway::listenForDataChannel(const Comm::ConnectionPointer &conn)
 
     typedef CommCbMemFunT<Gateway, CommAcceptCbParams> AcceptDialer;
     typedef AsyncCallT<AcceptDialer> AcceptCall;
-    RefCount<AcceptCall> call = static_cast<AcceptCall*>(JobCallback(11, 5, AcceptDialer, this, Ftp::Gateway::ftpAcceptDataConnection));
+    const auto call = JobCallback(11, 5, AcceptDialer, this, Ftp::Gateway::ftpAcceptDataConnection);
     Subscription::Pointer sub = new CallSubscription<AcceptCall>(call);
     const char *note = entry->url();
 
@@ -992,7 +1000,7 @@ Ftp::Gateway::processReplyBody()
         parseListing();
         maybeReadVirginBody();
         return;
-    } else if (const int csize = data.readBuf->contentSize()) {
+    } else if (const auto csize = data.readBuf->contentSize()) {
         writeReplyBody(data.readBuf->content(), csize);
         debugs(9, 5, "consuming " << csize << " bytes of readBuf");
         data.readBuf->consume(csize);
@@ -1014,7 +1022,7 @@ Ftp::Gateway::processReplyBody()
  * Special Case: A username-only may be provided in the URL and password in the HTTP headers.
  *
  * TODO: we might be able to do something about locating username from other sources:
- *       ie, external ACL user=* tag or ident lookup
+ *       ie, external ACL user=* tag
  *
  \retval 1  if we have everything needed to complete this request.
  \retval 0  if something is missing.
@@ -1040,9 +1048,8 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
     /* Test URL login syntax. Overrides any headers received. */
     loginParser(request->url.userInfo(), true);
 
-    /* name is missing. that's fatal. */
-    if (!user[0])
-        fatal("FTP login parsing destroyed username info");
+    // XXX: We we keep default "anonymous" instead of properly supporting empty usernames.
+    Assure(user[0]);
 
     /* name + password == success */
     if (password[0])
@@ -1264,8 +1271,9 @@ Ftp::Gateway::ftpRealm()
         realm.append("unknown", 7);
     else {
         realm.append(request->url.host());
-        if (request->url.port() != 21)
-            realm.appendf(" port %d", request->url.port());
+        const auto &rport = request->url.port();
+        if (rport && *rport != 21)
+            realm.appendf(" port %hu", *rport);
     }
     return realm;
 }
@@ -2264,6 +2272,7 @@ ftpWriteTransferDone(Ftp::Gateway * ftpState)
     }
 
     ftpState->entry->timestampsSet();   /* XXX Is this needed? */
+    ftpState->markParsedVirginReplyAsWhole("ftpWriteTransferDone code 226 or 250");
     ftpSendReply(ftpState);
 }
 
@@ -2608,18 +2617,6 @@ Ftp::UrlWith2f(HttpRequest * request)
     return request->effectiveRequestUri();
 }
 
-void
-Ftp::Gateway::printfReplyBody(const char *fmt, ...)
-{
-    va_list args;
-    va_start (args, fmt);
-    static char buf[4096];
-    buf[0] = '\0';
-    vsnprintf(buf, 4096, fmt, args);
-    writeReplyBody(buf, strlen(buf));
-    va_end(args);
-}
-
 /**
  * Call this when there is data from the origin server
  * which should be sent to either StoreEntry, or to ICAP...
@@ -2642,7 +2639,7 @@ Ftp::Gateway::completeForwarding()
 {
     if (fwd == nullptr || flags.completed_forwarding) {
         debugs(9, 3, "avoid double-complete on FD " <<
-               (ctrl.conn ? ctrl.conn->fd : -1) << ", Data FD " << data.conn->fd <<
+               (ctrl.conn ? ctrl.conn->fd : -1) << ", Data FD " << (data.conn ? data.conn->fd : -1) <<
                ", this " << this << ", fwd " << fwd);
         return;
     }

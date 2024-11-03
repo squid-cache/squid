@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 17    Request Forwarding */
 
-#ifndef SQUID_COLLAPSED_FORWARDING_H
-#define SQUID_COLLAPSED_FORWARDING_H
+#ifndef SQUID_SRC_COLLAPSEDFORWARDING_H
+#define SQUID_SRC_COLLAPSEDFORWARDING_H
 
 #include "ipc/forward.h"
 #include "ipc/Queue.h"
@@ -52,5 +52,5 @@ private:
     static std::unique_ptr<Queue> queue; ///< IPC queue
 };
 
-#endif /* SQUID_COLLAPSED_FORWARDING_H */
+#endif /* SQUID_SRC_COLLAPSEDFORWARDING_H */
 

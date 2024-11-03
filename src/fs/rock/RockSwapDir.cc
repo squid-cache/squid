@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "cache_cf.h"
 #include "CollapsedForwarding.h"
 #include "ConfigOption.h"
@@ -35,8 +36,6 @@
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
-
-const int64_t Rock::SwapDir::HeaderSize = 16*1024;
 
 Rock::SwapDir::SwapDir(): ::SwapDir("rock"),
     slotSize(HeaderSize), filePath(nullptr), map(nullptr), io(nullptr),
@@ -72,8 +71,10 @@ Rock::SwapDir::get(const cache_key *key)
 }
 
 bool
-Rock::SwapDir::anchorToCache(StoreEntry &entry, bool &inSync)
+Rock::SwapDir::anchorToCache(StoreEntry &entry)
 {
+    Assure(!entry.hasDisk());
+
     if (!map || !theFile || !theFile->canRead())
         return false;
 
@@ -84,8 +85,7 @@ Rock::SwapDir::anchorToCache(StoreEntry &entry, bool &inSync)
         return false;
 
     anchorEntry(entry, filen, *slot);
-    inSync = updateAnchoredWith(entry, *slot);
-    return true; // even if inSync is false
+    return true;
 }
 
 bool
@@ -96,13 +96,7 @@ Rock::SwapDir::updateAnchored(StoreEntry &entry)
 
     assert(entry.hasDisk(index));
 
-    const Ipc::StoreMapAnchor &s = map->readableEntry(entry.swap_filen);
-    return updateAnchoredWith(entry, s);
-}
-
-bool
-Rock::SwapDir::updateAnchoredWith(StoreEntry &entry, const Ipc::StoreMapAnchor &anchor)
-{
+    const auto &anchor = map->readableEntry(entry.swap_filen);
     entry.swap_file_sz = anchor.basics.swap_file_sz;
     return true;
 }
@@ -140,7 +134,8 @@ void Rock::SwapDir::disconnect(StoreEntry &e)
         map->abortWriting(e.swap_filen);
         e.detachFromDisk();
         dynamic_cast<IoState&>(*e.mem_obj->swapout.sio).writeableAnchor_ = nullptr;
-        Store::Root().stopSharing(e); // broadcasts after the change
+        CollapsedForwarding::Broadcast(e);
+        e.storeWriterDone();
     } else {
         map->closeForReading(e.swap_filen);
         e.detachFromDisk();
@@ -171,9 +166,12 @@ Rock::SwapDir::doReportStat() const
 }
 
 void
-Rock::SwapDir::finalizeSwapoutSuccess(const StoreEntry &)
+Rock::SwapDir::finalizeSwapoutSuccess(const StoreEntry &e)
 {
-    // nothing to do
+    // nothing to do; handleWriteCompletionSuccess() did everything for us
+    assert(!e.mem_obj ||
+           !e.mem_obj->swapout.sio ||
+           !dynamic_cast<IoState&>(*e.mem_obj->swapout.sio).writeableAnchor_);
 }
 
 void
@@ -610,7 +608,7 @@ Rock::SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load)
 }
 
 StoreIOState::Pointer
-Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data)
+Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STIOCB * const cbIo, void * const cbData)
 {
     if (!theFile || theFile->error()) {
         debugs(47,4, theFile);
@@ -632,15 +630,14 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
     // If that does not happen, the entry will not decrement the read level!
 
     Rock::SwapDir::Pointer self(this);
-    IoState *sio = new IoState(self, &e, cbFile, cbIo, data);
+    IoState *sio = new IoState(self, &e, cbIo, cbData);
 
     sio->swap_dirn = index;
     sio->swap_filen = filen;
     sio->writeableAnchor_ = slot;
 
     debugs(47,5, "dir " << index << " created new filen " <<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
-           sio->swap_filen << std::dec << " starting at " <<
+           asHex(sio->swap_filen).upperCase().minDigits(8) << " starting at " <<
            diskOffset(sio->swap_filen));
 
     sio->file(theFile);
@@ -650,7 +647,7 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
 }
 
 StoreIOState::Pointer
-Rock::SwapDir::createUpdateIO(const Ipc::StoreMapUpdate &update, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data)
+Rock::SwapDir::createUpdateIO(const Ipc::StoreMapUpdate &update, StoreIOState::STIOCB *cbIo, void *data)
 {
     if (!theFile || theFile->error()) {
         debugs(47,4, theFile);
@@ -661,15 +658,14 @@ Rock::SwapDir::createUpdateIO(const Ipc::StoreMapUpdate &update, StoreIOState::S
     Must(update.fresh.fileNo >= 0);
 
     Rock::SwapDir::Pointer self(this);
-    IoState *sio = new IoState(self, update.entry, cbFile, cbIo, data);
+    IoState *sio = new IoState(self, update.entry, cbIo, data);
 
     sio->swap_dirn = index;
     sio->swap_filen = update.fresh.fileNo;
     sio->writeableAnchor_ = update.fresh.anchor;
 
     debugs(47,5, "dir " << index << " updating filen " <<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
-           sio->swap_filen << std::dec << " starting at " <<
+           asHex(sio->swap_filen).upperCase().minDigits(8) << " starting at " <<
            diskOffset(sio->swap_filen));
 
     sio->file(theFile);
@@ -753,7 +749,7 @@ Rock::SwapDir::noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId)
 
 // tries to open an old entry with swap_filen for reading
 StoreIOState::Pointer
-Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data)
+Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STIOCB * const cbIo, void * const cbData)
 {
     if (!theFile || theFile->error()) {
         debugs(47,4, theFile);
@@ -781,7 +777,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
         return nullptr; // we were writing after all
 
     Rock::SwapDir::Pointer self(this);
-    IoState *sio = new IoState(self, &e, cbFile, cbIo, data);
+    IoState *sio = new IoState(self, &e, cbIo, cbData);
 
     sio->swap_dirn = index;
     sio->swap_filen = e.swap_filen;
@@ -789,10 +785,19 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
     sio->file(theFile);
 
     debugs(47,5, "dir " << index << " has old filen: " <<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
-           sio->swap_filen);
+           asHex(sio->swap_filen).upperCase().minDigits(8));
 
-    assert(slot->sameKey(static_cast<const cache_key*>(e.key)));
+    // When StoreEntry::swap_filen for e was set by our anchorEntry(), e had a
+    // public key, but it could have gone private since then (while keeping the
+    // anchor lock). The stale anchor key is not (and cannot be) erased (until
+    // the marked-for-deletion/release anchor/entry is unlocked is recycled).
+    const auto ourAnchor = [&]() {
+        if (const auto publicKey = e.publicKey())
+            return slot->sameKey(publicKey);
+        return true; // cannot check
+    };
+    assert(ourAnchor());
+
     // For collapsed disk hits: e.swap_file_sz and slot->basics.swap_file_sz
     // may still be zero and basics.swap_file_sz may grow.
     assert(slot->basics.swap_file_sz >= e.swap_file_sz);
@@ -899,6 +904,7 @@ Rock::SwapDir::handleWriteCompletionSuccess(const WriteRequest &request)
 
             map->switchWritingToReading(sio.swap_filen);
             // sio.e keeps the (now read) lock on the anchor
+            // storeSwapOutFileClosed() sets swap_status and calls storeWriterDone()
         }
         sio.writeableAnchor_ = nullptr;
         sio.finishedWriting(DISK_OK);
@@ -926,7 +932,7 @@ Rock::SwapDir::writeError(StoreIOState &sio)
     map->freeEntry(sio.swap_filen); // will mark as unusable, just in case
 
     if (sio.touchingStoreEntry())
-        Store::Root().stopSharing(*sio.e);
+        CollapsedForwarding::Broadcast(*sio.e);
     // else noop: a fresh entry update error does not affect stale entry readers
 
     // All callers must also call IoState callback, to propagate the error.
@@ -1107,10 +1113,7 @@ Rock::SwapDir::hasReadableEntry(const StoreEntry &e) const
     return map->hasReadableEntry(reinterpret_cast<const cache_key*>(e.key));
 }
 
-namespace Rock
-{
-RunnerRegistrationEntry(SwapDirRr);
-}
+DefineRunnerRegistratorIn(Rock, SwapDirRr);
 
 void Rock::SwapDirRr::create()
 {

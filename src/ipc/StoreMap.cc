@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 54    Interprocess Communication */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "ipc/StoreMap.h"
 #include "sbuf/SBuf.h"
 #include "SquidConfig.h"
@@ -100,7 +101,7 @@ Ipc::StoreMap::forgetWritingEntry(sfileno fileno)
 }
 
 const Ipc::StoreMap::Anchor *
-Ipc::StoreMap::openOrCreateForReading(const cache_key *const key, sfileno &fileno, const StoreEntry &entry)
+Ipc::StoreMap::openOrCreateForReading(const cache_key *const key, sfileno &fileno)
 {
     debugs(54, 5, "opening/creating entry with key " << storeKeyText(key)
            << " for reading " << path);
@@ -115,7 +116,7 @@ Ipc::StoreMap::openOrCreateForReading(const cache_key *const key, sfileno &filen
     // the competing openOrCreateForReading() workers race to create a new entry
     idx = fileNoByKey(key);
     if (auto anchor = openForWritingAt(idx)) {
-        anchor->set(entry, key);
+        anchor->setKey(key);
         anchor->lock.switchExclusiveToShared();
         // race ended
         assert(anchor->complete());
@@ -253,15 +254,14 @@ Ipc::StoreMap::abortWriting(const sfileno fileno)
     debugs(54, 5, "aborting entry " << fileno << " for writing " << path);
     Anchor &s = anchorAt(fileno);
     assert(s.writing());
-    s.lock.appending = false; // locks out any new readers
-    if (!s.lock.readers) {
+    if (!s.lock.appending || s.lock.stopAppendingAndRestoreExclusive()) {
         freeChain(fileno, s, false);
-        debugs(54, 5, "closed clean entry " << fileno << " for writing " << path);
+        debugs(54, 5, "closed idle entry " << fileno << " for writing " << path);
     } else {
         s.waitingToBeFreed = true;
         s.writerHalted = true;
         s.lock.unlockExclusive();
-        debugs(54, 5, "closed dirty entry " << fileno << " for writing " << path);
+        debugs(54, 5, "closed busy entry " << fileno << " for writing " << path);
     }
 }
 
@@ -857,7 +857,7 @@ Ipc::StoreMap::validateHit(const sfileno fileno)
            "    expires=" << anchor.basics.expires << "\n" <<
            "    lastmod=" << anchor.basics.lastmod << "\n" <<
            "    refcount=" << anchor.basics.refcount << "\n" <<
-           "    flags=0x" << std::hex << anchor.basics.flags << std::dec << "\n" <<
+           "    flags=0x" << asHex(anchor.basics.flags) << "\n" <<
            "    start=" << anchor.start << "\n" <<
            "    splicingPoint=" << anchor.splicingPoint << "\n" <<
            "    lock=" << anchor.lock << "\n" <<
@@ -985,12 +985,18 @@ Ipc::StoreMapAnchor::exportInto(StoreEntry &into) const
     into.lastModified(basics.lastmod);
     into.swap_file_sz = basics.swap_file_sz;
     into.refcount = basics.refcount;
+
+    // Some basics.flags are not meaningful and should not be overwritten here.
+    // ENTRY_REQUIRES_COLLAPSING is one of them. TODO: check other flags.
     const bool collapsingRequired = into.hittingRequiresCollapsing();
     into.flags = basics.flags;
-    // There are possibly several flags we do not need to overwrite,
-    // and ENTRY_REQUIRES_COLLAPSING is one of them.
-    // TODO: check for other flags.
-    into.setCollapsingRequirement(collapsingRequired);
+    // Avoid into.setCollapsingRequirement() here: We only restore the bit we
+    // just cleared in the assignment above, while that method debugging will
+    // falsely imply that the collapsing requirements have changed.
+    if (collapsingRequired)
+        EBIT_SET(into.flags, ENTRY_REQUIRES_COLLAPSING);
+    else
+        EBIT_CLR(into.flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,12 +59,12 @@ ntlm_dump_ntlmssp_flags(uint32_t flags)
 /**
  * Check the validity of a decoded NTLM packet.
  *
- * \retval NTLM_ERR_NONE      Packet is okay
- * \retval NTLM_ERR_BLOB      Packet is not even an NTLMSSP packet at all.
- * \retval NTLM_ERR_PROTOCOL  Packet is not the expected type.
+ * \retval NtlmError::None      Packet is okay
+ * \retval NtlmError::BlobError      Packet is not even an NTLMSSP packet at all.
+ * \retval NtlmError::ProtocolError  Packet is not the expected type.
  */
-int
-ntlm_validate_packet(const ntlmhdr * hdr, const int32_t type)
+NtlmError
+ntlm_validate_packet(const ntlmhdr *hdr, const int32_t type)
 {
     /*
      * Must be the correct security package and request type.
@@ -72,17 +72,17 @@ ntlm_validate_packet(const ntlmhdr * hdr, const int32_t type)
      */
     if (memcmp(hdr->signature, "NTLMSSP", 8) != 0) {
         fprintf(stderr, "ntlmCheckHeader: bad header signature\n");
-        return NTLM_ERR_BLOB;
+        return NtlmError::BlobError;
     }
     if (type == NTLM_ANY)
-        return NTLM_ERR_NONE;
+        return NtlmError::None;
 
     if ((int32_t)le32toh(hdr->type) != type) {
         /* don't report this error - it's ok as we do a if() around this function */
         debug("ntlm_validate_packet: type is %d, wanted %d\n", le32toh(hdr->type), type);
-        return NTLM_ERR_PROTOCOL;
+        return NtlmError::ProtocolError;
     }
-    return NTLM_ERR_NONE;
+    return NtlmError::None;
 }
 
 /**
@@ -108,10 +108,19 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
     int32_t o = le32toh(str->offset);
     // debug("ntlm_fetch_string(plength=%d,l=%d,o=%d)\n",packet_size,l,o);
 
-    if (l < 0 || l > NTLM_MAX_FIELD_LENGTH || o + l > packet_size || o == 0) {
-        debug("ntlm_fetch_string: insane data (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
+    if (l < 0 || l > NTLM_MAX_FIELD_LENGTH) {
+        debug("ntlm_fetch_string: insane string length (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
         return rv;
     }
+    else if (o <= 0 || o > packet_size) {
+        debug("ntlm_fetch_string: insane string offset (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
+        return rv;
+    }
+    else if (l > packet_size - o) {
+        debug("ntlm_fetch_string: truncated string data (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
+        return rv;
+    }
+
     rv.str = (char *)packet + o;
     rv.l = 0;
     if ((flags & NTLM_NEGOTIATE_ASCII) == 0) {
@@ -186,7 +195,7 @@ void
 ntlm_make_nonce(char *nonce)
 {
     static std::mt19937 mt(time(nullptr));
-    static xuniform_int_distribution<uint8_t> dist;
+    static std::uniform_int_distribution<uint8_t> dist;
 
     for (int i = 0; i < NTLM_NONCE_LEN; ++i)
         nonce[i] = static_cast<char>(dist(mt) & 0xFF);
@@ -228,19 +237,19 @@ ntlm_make_challenge(ntlm_challenge *ch,
  * this function will only insert data if the packet contains any. Otherwise
  * the buffers will be left untouched.
  *
- * \retval NTLM_ERR_NONE    username present, maybe also domain.
- * \retval NTLM_ERR_PROTOCOL    packet type is not an authentication packet.
- * \retval NTLM_ERR_LOGON   no username.
- * \retval NTLM_ERR_BLOB    domain field is apparently larger than the packet.
+ * \retval NtlmError::None    username present, maybe also domain.
+ * \retval NtlmError::ProtocolError    packet type is not an authentication packet.
+ * \retval NtlmError::LoginEror   no username.
+ * \retval NtlmError::BlobError    domain field is apparently larger than the packet.
  */
-int
+NtlmError
 ntlm_unpack_auth(const ntlm_authenticate *auth, char *user, char *domain, const int32_t size)
 {
     lstring rv;
 
-    if (ntlm_validate_packet(&auth->hdr, NTLM_AUTHENTICATE)) {
+    if (ntlm_validate_packet(&auth->hdr, NTLM_AUTHENTICATE) != NtlmError::None) {
         fprintf(stderr, "ntlm_unpack_auth: header check fails\n");
-        return NTLM_ERR_PROTOCOL;
+        return NtlmError::ProtocolError;
     }
     debug("ntlm_unpack_auth: size of %d\n", size);
     debug("ntlm_unpack_auth: flg %08x\n", auth->flags);
@@ -259,7 +268,7 @@ ntlm_unpack_auth(const ntlm_authenticate *auth, char *user, char *domain, const 
     }
     if (rv.l >= size) {
         debug("ntlm_unpack_auth: Domain length %d too big for %d byte packet.\n", rv.l, size);
-        return NTLM_ERR_BLOB;
+        return NtlmError::BlobError;
     }
 
     rv = ntlm_fetch_string(&auth->hdr, size, &auth->user, auth->flags);
@@ -268,8 +277,8 @@ ntlm_unpack_auth(const ntlm_authenticate *auth, char *user, char *domain, const 
         user[rv.l] = '\0';
         debug("ntlm_unpack_auth: Username '%s' (len=%d).\n", user, rv.l);
     } else
-        return NTLM_ERR_LOGON;
+        return NtlmError::LoginEror;
 
-    return NTLM_ERR_NONE;
+    return NtlmError::None;
 }
 

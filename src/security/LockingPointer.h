@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,8 @@
 
 #include "base/Assure.h"
 #include "base/HardFun.h"
+
+#include <cstddef>
 
 #if USE_OPENSSL
 #include "compat/openssl.h"
@@ -27,13 +29,6 @@
         }
 
 #endif /* USE_OPENSSL */
-
-// Macro to be used to define the C++ equivalent function of an extern "C"
-// function. The C++ function suffixed with the _cpp extension
-#define CtoCpp1(function, argument) \
-        extern "C++" inline void function ## _cpp(argument a) { \
-            function(a); \
-        }
 
 namespace Security
 {

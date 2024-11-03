@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__TEXTEXCEPTION_H
-#define SQUID__TEXTEXCEPTION_H
+#ifndef SQUID_SRC_BASE_TEXTEXCEPTION_H
+#define SQUID_SRC_BASE_TEXTEXCEPTION_H
 
 #include "base/Assure.h"
 #include "base/Here.h"
@@ -33,8 +33,8 @@ public:
     TextException& operator=(const TextException &) = default;
 
     /* std::runtime_error API */
-    virtual ~TextException() throw() override;
-    virtual const char *what() const throw() override;
+    ~TextException() throw() override;
+    const char *what() const throw() override;
 
     /// same-location exceptions have the same ID
     SourceLocationId id() const { return where.id(); }
@@ -51,6 +51,10 @@ public:
 
 /// prints active (i.e., thrown but not yet handled) exception
 std::ostream &CurrentException(std::ostream &);
+
+/// If there is an active (i.e., thrown but not yet handled) exception, reports
+/// it on a dedicated DebugExtra line. Otherwise, does nothing.
+std::ostream &CurrentExceptionExtra(std::ostream &);
 
 /// efficiently prints TextException
 std::ostream &operator <<(std::ostream &, const TextException &);
@@ -81,5 +85,5 @@ std::ostream &operator <<(std::ostream &, const TextException &);
                Debug::Extra << "ignored exception: " << CurrentException); \
     }
 
-#endif /* SQUID__TEXTEXCEPTION_H */
+#endif /* SQUID_SRC_BASE_TEXTEXCEPTION_H */
 

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -13,9 +13,8 @@ AC_CHECK_HEADERS([pwd.h],[
   SQUID_STATE_ROLLBACK(getpwnam_helper)
 
   # unconditionally requires crypt(3), for now
-  if test "x$ac_cv_func_crypt" != "x"; then
+  AS_IF([test "x$ac_cv_func_crypt" != "x"],[
     AC_CHECK_HEADERS(unistd.h crypt.h shadow.h)
-
     BUILD_HELPER="getpwnam"
-  fi
+  ])
 ])

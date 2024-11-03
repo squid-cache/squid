@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_STRAND_H
-#define SQUID_IPC_STRAND_H
+#ifndef SQUID_SRC_IPC_STRAND_H
+#define SQUID_SRC_IPC_STRAND_H
 
 #include "ipc/forward.h"
 #include "ipc/Port.h"
@@ -26,16 +26,16 @@ class StrandCoord;
 /// Receives coordination messages on behalf of its process or thread
 class Strand: public Port
 {
-    CBDATA_CLASS(Strand);
+    CBDATA_CHILD(Strand);
 
 public:
     Strand();
 
-    virtual void start(); // Port (AsyncJob) API
+    void start() override; // Port (AsyncJob) API
 
 protected:
-    virtual void timedout(); // Port (UsdOp) API
-    virtual void receive(const TypedMsgHdr &message); // Port API
+    void timedout() override; // Port (UsdOp) API
+    void receive(const TypedMsgHdr &message) override; // Port API
 
 private:
     void registerSelf(); /// let Coordinator know this strand exists
@@ -57,5 +57,5 @@ private:
 
 }
 
-#endif /* SQUID_IPC_STRAND_H */
+#endif /* SQUID_SRC_IPC_STRAND_H */
 

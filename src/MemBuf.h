@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEMBUF_H
-#define SQUID_MEMBUF_H
+#ifndef SQUID_SRC_MEMBUF_H
+#define SQUID_SRC_MEMBUF_H
 
 #include "base/Packable.h"
 #include "cbdata.h"
@@ -32,7 +32,7 @@ public:
         capacity(0),
         stolen(0)
     {}
-    virtual ~MemBuf() {
+    ~MemBuf() override {
         if (!stolen && buf)
             clean();
     }
@@ -109,8 +109,8 @@ public:
     FREE *freeFunc();
 
     /* Packable API */
-    virtual void append(const char *c, int sz);
-    virtual void vappendf(const char *fmt, va_list ap);
+    void append(const char *c, int sz) override;
+    void vappendf(const char *fmt, va_list ap) override;
 
 private:
     /**
@@ -159,5 +159,5 @@ public:
 /** returns free() function to be used, _freezes_ the object! */
 void memBufReport(MemBuf * mb);
 
-#endif /* SQUID_MEMBUF_H */
+#endif /* SQUID_SRC_MEMBUF_H */
 

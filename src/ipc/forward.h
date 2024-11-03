@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_FORWARD_H
-#define SQUID_IPC_FORWARD_H
+#ifndef SQUID_SRC_IPC_FORWARD_H
+#define SQUID_SRC_IPC_FORWARD_H
 
 namespace Ipc
 {
@@ -26,5 +26,5 @@ class TypedMsgHdr;
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_FORWARD_H */
+#endif /* SQUID_SRC_IPC_FORWARD_H */
 

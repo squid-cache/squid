@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,21 +12,6 @@
 #include "StoreFileSystem.h"
 
 std::vector<StoreFileSystem*> *StoreFileSystem::_FileSystems = nullptr;
-
-void
-StoreFileSystem::RegisterAllFsWithCacheManager(void)
-{
-    for (iterator i = GetFileSystems().begin(); i != GetFileSystems().end(); ++i)
-        (*i)->registerWithCacheManager();
-}
-
-void
-StoreFileSystem::SetupAllFs()
-{
-    for (iterator i = GetFileSystems().begin(); i != GetFileSystems().end(); ++i)
-        /* Call the FS to set up capabilities and initialize the FS driver */
-        (*i)->setup();
-}
 
 void
 StoreFileSystem::FsAdd(StoreFileSystem &instance)
@@ -56,20 +41,6 @@ StoreFileSystem::GetFileSystems()
     return *_FileSystems;
 }
 
-/*
- * called when a graceful shutdown is to occur
- * of each fs module.
- */
-void
-StoreFileSystem::FreeAllFs()
-{
-    while (!GetFileSystems().empty()) {
-        StoreFileSystem *fs = GetFileSystems().back();
-        GetFileSystems().pop_back();
-        fs->done();
-    }
-}
-
 StoreFileSystem *
 StoreFileSystem::FindByType(const char *type)
 {
@@ -79,9 +50,4 @@ StoreFileSystem::FindByType(const char *type)
     }
     return nullptr;
 }
-
-/* no filesystem is required to export statistics */
-void
-StoreFileSystem::registerWithCacheManager(void)
-{}
 

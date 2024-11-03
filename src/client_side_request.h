@@ -1,17 +1,17 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTSIDEREQUEST_H
-#define SQUID_CLIENTSIDEREQUEST_H
+#ifndef SQUID_SRC_CLIENT_SIDE_REQUEST_H
+#define SQUID_SRC_CLIENT_SIDE_REQUEST_H
 
 #include "AccessLogEntry.h"
+#include "acl/FilledChecklist.h"
 #include "client_side.h"
-#include "clientStream.h"
 #include "http/forward.h"
 #include "HttpHeaderRange.h"
 #include "log/forward.h"
@@ -27,21 +27,26 @@ class ClientRequestContext;
 class ConnStateData;
 class MemObject;
 
-/* client_side_request.c - client side request related routines (pure logic) */
-int clientBeginRequest(const HttpRequestMethod&, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t, const MasterXactionPointer &);
-
 class ClientHttpRequest
 #if USE_ADAPTATION
     : public Adaptation::Initiator, // to start adaptation transactions
       public BodyConsumer     // to receive reply bodies in request satisf. mode
 #endif
 {
+#if USE_ADAPTATION
+    CBDATA_CHILD(ClientHttpRequest);
+#else
     CBDATA_CLASS(ClientHttpRequest);
+#endif
 
 public:
     ClientHttpRequest(ConnStateData *);
     ClientHttpRequest(ClientHttpRequest &&) = delete;
+#if USE_ADAPTATION
+    ~ClientHttpRequest() override;
+#else
     ~ClientHttpRequest();
+#endif
 
     String rangeBoundaryStr() const;
     void freeResources();
@@ -73,6 +78,14 @@ public:
     /// request. Call this every time adaptation or redirection changes
     /// the request. To set the virgin request, use initRequest().
     void resetRequest(HttpRequest *);
+
+    // XXX: unify the uriChanged condition calculation with resetRequest() callers, removing this method
+    /// resetRequest() variation for callers with custom URI change detection logic
+    /// \param uriChanged whether the new request URI differs from the current request URI
+    void resetRequestXXX(HttpRequest *, bool uriChanged);
+
+    /// Checks whether the current request is internal and adjusts it accordingly.
+    void checkForInternalAccess();
 
     /// update the code in the transaction processing tags
     void updateLoggingTags(const LogTags_ot code) { al->cache.code.update(code); }
@@ -139,7 +152,6 @@ public:
         /// Response header and body bytes written to the client connection.
         uint64_t size = 0;
         /// Response header bytes written to the client connection.
-        /// Not to be confused with clientReplyContext::headers_sz.
         size_t headers_sz = 0;
     } out;
 
@@ -150,7 +162,6 @@ public:
 
     struct Flags {
         bool accel = false;
-        bool internal = false;
         bool done_copying = false;
     } flags;
 
@@ -200,12 +211,12 @@ public:
     bool requestSatisfactionMode() const { return request_satisfaction_mode; }
 
     /* AsyncJob API */
-    virtual bool doneAll() const {
+    bool doneAll() const override {
         return Initiator::doneAll() &&
                BodyConsumer::doneAll() &&
                false; // TODO: Refactor into a proper AsyncJob
     }
-    virtual void callException(const std::exception &);
+    void callException(const std::exception &) override;
 
 private:
     /// Handles an adaptation client request failure.
@@ -216,13 +227,13 @@ private:
     void handleAdaptationBlock(const Adaptation::Answer &);
 
     /* Adaptation::Initiator API */
-    virtual void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer);
-    virtual void noteAdaptationAnswer(const Adaptation::Answer &);
+    void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer) override;
+    void noteAdaptationAnswer(const Adaptation::Answer &) override;
 
     /* BodyConsumer API */
-    virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);
-    virtual void noteBodyProductionEnded(BodyPipe::Pointer);
-    virtual void noteBodyProducerAborted(BodyPipe::Pointer);
+    void noteMoreBodyDataAvailable(BodyPipe::Pointer) override;
+    void noteBodyProductionEnded(BodyPipe::Pointer) override;
+    void noteBodyProducerAborted(BodyPipe::Pointer) override;
 
     void endRequestSatisfaction();
     /// called by StoreEntry when it has more buffer space available
@@ -243,11 +254,11 @@ private:
 /* client http based routines */
 char *clientConstructTraceEcho(ClientHttpRequest *);
 
-ACLFilledChecklist *clientAclChecklistCreate(const acl_access *, ClientHttpRequest *);
+ACLFilledChecklist::MakingPointer clientAclChecklistCreate(const acl_access *, ClientHttpRequest *);
 void clientAclChecklistFill(ACLFilledChecklist &, ClientHttpRequest *);
 void clientAccessCheck(ClientHttpRequest *);
 
 /* ones that should be elsewhere */
 void tunnelStart(ClientHttpRequest *);
 
-#endif /* SQUID_CLIENTSIDEREQUEST_H */
+#endif /* SQUID_SRC_CLIENT_SIDE_REQUEST_H */

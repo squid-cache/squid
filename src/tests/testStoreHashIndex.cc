@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,15 +7,33 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "MemObject.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "store/Disks.h"
 #include "StoreSearch.h"
-#include "testStoreHashIndex.h"
 #include "TestSwapDir.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testStoreHashIndex );
+/*
+ * test the store framework
+ */
+
+class TestStoreHashIndex : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestStoreHashIndex);
+    CPPUNIT_TEST(testStats);
+    CPPUNIT_TEST(testMaxSize);
+    CPPUNIT_TEST(testSearch);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+protected:
+    void testStats();
+    void testMaxSize();
+    void testSearch();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestStoreHashIndex);
 
 static void
 addSwapDir(TestSwapDirPointer aStore)
@@ -26,12 +44,11 @@ addSwapDir(TestSwapDirPointer aStore)
 }
 
 void
-testStoreHashIndex::testStats()
+TestStoreHashIndex::testStats()
 {
     StoreEntry *logEntry = new StoreEntry;
     logEntry->createMemObject("dummy_storeId", nullptr, HttpRequestMethod());
     logEntry->store_status = STORE_PENDING;
-    Store::Init();
     TestSwapDirPointer aStore (new TestSwapDir);
     TestSwapDirPointer aStore2 (new TestSwapDir);
     addSwapDir(aStore);
@@ -42,23 +59,20 @@ testStoreHashIndex::testStats()
     free_cachedir(&Config.cacheSwap);
     CPPUNIT_ASSERT_EQUAL(true, aStore->statsCalled);
     CPPUNIT_ASSERT_EQUAL(true, aStore2->statsCalled);
-    Store::FreeMemory();
 }
 
 void
-testStoreHashIndex::testMaxSize()
+TestStoreHashIndex::testMaxSize()
 {
     StoreEntry *logEntry = new StoreEntry;
     logEntry->createMemObject("dummy_storeId", nullptr, HttpRequestMethod());
     logEntry->store_status = STORE_PENDING;
-    Store::Init();
     TestSwapDirPointer aStore (new TestSwapDir);
     TestSwapDirPointer aStore2 (new TestSwapDir);
     addSwapDir(aStore);
     addSwapDir(aStore2);
     CPPUNIT_ASSERT_EQUAL(static_cast<uint64_t>(6), Store::Root().maxSize());
     free_cachedir(&Config.cacheSwap);
-    Store::FreeMemory();
 }
 
 static StoreEntry *
@@ -126,10 +140,9 @@ searchCallback(void *)
 }
 
 void
-testStoreHashIndex::testSearch()
+TestStoreHashIndex::testSearch()
 {
     commonInit();
-    Store::Init();
     TestSwapDirPointer aStore (new TestSwapDir);
     TestSwapDirPointer aStore2 (new TestSwapDir);
     addSwapDir(aStore);
@@ -177,7 +190,7 @@ testStoreHashIndex::testSearch()
     CPPUNIT_ASSERT_EQUAL(true, search->isDone());
     CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(nullptr), search->currentItem());
     //CPPUNIT_ASSERT_EQUAL(false, search->next());
-
-    Store::FreeMemory();
 }
+
+// This test uses main() from ./testStore.cc.
 

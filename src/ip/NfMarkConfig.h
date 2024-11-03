@@ -1,15 +1,17 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_NFMARKCONFIG_H
-#define SQUID_NFMARKCONFIG_H
+#ifndef SQUID_SRC_IP_NFMARKCONFIG_H
+#define SQUID_SRC_IP_NFMARKCONFIG_H
 
 #include "ip/forward.h"
+
+#include <iosfwd>
 
 class SBuf;
 
@@ -42,9 +44,9 @@ public:
     nfmark_t mask = 0xffffffff;
 };
 
+std::ostream &operator <<(std::ostream &, NfMarkConfig);
+
 } // namespace Ip
 
-std::ostream &operator <<(std::ostream &os, const Ip::NfMarkConfig connmark);
-
-#endif // SQUID_NFMARKCONFIG_H
+#endif /* SQUID_SRC_IP_NFMARKCONFIG_H */
 

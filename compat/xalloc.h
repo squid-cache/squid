@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMPAT_XALLOC_H
-#define _SQUID_COMPAT_XALLOC_H
+#ifndef SQUID_COMPAT_XALLOC_H
+#define SQUID_COMPAT_XALLOC_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -80,5 +80,5 @@ static inline void xfree(const void *p) { if (p) free_const(p); }
 extern void malloc_statistics(void (*func) (int, int, int, void *), void *data);
 #endif
 
-#endif /* _SQUID_COMPAT_XALLOC_H */
+#endif /* SQUID_COMPAT_XALLOC_H */
 

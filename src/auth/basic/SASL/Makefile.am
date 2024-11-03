@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -15,7 +15,7 @@ basic_sasl_auth_SOURCES = \
 basic_sasl_auth_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
-	$(LIBSASL) \
+	$(LIBSASL_LIBS) \
 	$(XTRA_LIBS)
 
 EXTRA_DIST= \

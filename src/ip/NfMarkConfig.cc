@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -49,7 +49,7 @@ Ip::NfMarkConfig::applyToMark(nfmark_t m) const
 }
 
 std::ostream &
-operator <<(std::ostream &os, const Ip::NfMarkConfig c)
+Ip::operator <<(std::ostream &os, const NfMarkConfig c)
 {
     os << asHex(c.mark);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 54    Interprocess Communication */
 
-#ifndef SQUID_IPC_ASYNCUDSOP_H
-#define SQUID_IPC_ASYNCUDSOP_H
+#ifndef SQUID_SRC_IPC_UDSOP_H
+#define SQUID_SRC_IPC_UDSOP_H
 
 #include "base/AsyncJob.h"
 #include "base/forward.h"
@@ -31,7 +31,7 @@ class UdsOp: public AsyncJob
 {
 public:
     UdsOp(const String &pathAddr);
-    virtual ~UdsOp();
+    ~UdsOp() override;
 
 public:
     struct sockaddr_un address; ///< UDS address from path; treat as read-only
@@ -42,7 +42,7 @@ protected:
     Comm::ConnectionPointer &conn(); ///< creates if needed and returns raw UDS socket descriptor
 
     /// call timedout() if no UDS messages in a given number of seconds
-    void setTimeout(int seconds, const char *handlerName);
+    void setTimeout(time_t seconds, const char *handlerName);
     void clearTimeout(); ///< remove previously set timeout, if any
 
     void setOptions(int newOptions); ///< changes socket options
@@ -67,7 +67,7 @@ struct sockaddr_un PathToAddress(const String &pathAddr);
 /// attempts to send an IPC message a few times, with a timeout
 class UdsSender: public UdsOp
 {
-    CBDATA_CLASS(UdsSender);
+    CBDATA_CHILD(UdsSender);
 
 public:
     UdsSender(const String& pathAddr, const TypedMsgHdr& aMessage);
@@ -75,10 +75,10 @@ public:
     CodeContextPointer codeContext;
 
 protected:
-    virtual void swanSong(); // UdsOp (AsyncJob) API
-    virtual void start(); // UdsOp (AsyncJob) API
-    virtual bool doneAll() const; // UdsOp (AsyncJob) API
-    virtual void timedout(); // UdsOp API
+    void swanSong() override; // UdsOp (AsyncJob) API
+    void start() override; // UdsOp (AsyncJob) API
+    bool doneAll() const override; // UdsOp (AsyncJob) API
+    void timedout() override; // UdsOp API
 
 private:
     void startSleep();
@@ -92,7 +92,7 @@ private:
 private:
     TypedMsgHdr message; ///< what to send
     int retries; ///< how many times to try after a write error
-    int timeout; ///< total time to send the message
+    time_t timeout; ///< total time to send the message
     bool sleeping; ///< whether we are waiting to retry a failed write
     bool writing; ///< whether Comm started and did not finish writing
 
@@ -107,5 +107,5 @@ const Comm::ConnectionPointer & ImportFdIntoComm(const Comm::ConnectionPointer &
 
 }
 
-#endif /* SQUID_IPC_ASYNCUDSOP_H */
+#endif /* SQUID_SRC_IPC_UDSOP_H */
 

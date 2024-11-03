@@ -1,21 +1,29 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLMYPORTNAME_H
-#define SQUID_ACLMYPORTNAME_H
-#include "acl/Strategy.h"
+#ifndef SQUID_SRC_ACL_MYPORTNAME_H
+#define SQUID_SRC_ACL_MYPORTNAME_H
 
-class ACLMyPortNameStrategy : public ACLStrategy<const char *>
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
+
+namespace Acl
 {
 
+/// a "myportname" ACL
+class MyPortNameCheck: public ParameterizedNode< ACLData<const char *> >
+{
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
 };
 
-#endif /* SQUID_ACLMYPORTNAME_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_MYPORTNAME_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -204,10 +204,10 @@ SBuf::append(const char * S, size_type Ssize)
     return lowAppend(S, Ssize);
 }
 
-SBuf &
-SBuf::append(const char c)
+void
+SBuf::push_back(const char c)
 {
-    return lowAppend(&c, 1);
+    lowAppend(&c, 1);
 }
 
 SBuf&

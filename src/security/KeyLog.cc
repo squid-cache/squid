@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -62,7 +62,7 @@ Security::KeyLog::dump(std::ostream &os) const
     dumpOptions(os);
     if (aclList) {
         // TODO: Use Acl::dump() after fixing the XXX in dump_acl_list().
-        for (const auto &acl: aclList->treeDump("if", &Acl::AllowOrDeny))
+        for (const auto &acl: ToTree(aclList).treeDump("if", &Acl::AllowOrDeny))
             os << ' ' << acl;
     }
 }

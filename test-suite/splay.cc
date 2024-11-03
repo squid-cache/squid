@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,9 +54,9 @@ public:
     static void BeginWalk();
     static int LastValue;
     static bool ExpectedFail;
-    static void WalkVoid(void *const &, void *);
-    static void WalkNode(intnode *const &, void *);
-    static void WalkNodeRef(intnode const &, void *);
+    static void VisitVoid(void *const &);
+    static void VisitNode(intnode *const &);
+    static void VisitNodeRef(intnode const &);
     static void CheckNode(intnode const &);
 };
 
@@ -70,7 +70,7 @@ SplayCheck::BeginWalk()
 }
 
 void
-SplayCheck::WalkVoid(void *const &node, void *)
+SplayCheck::VisitVoid(void *const &node)
 {
     intnode *A = (intnode *)node;
     CheckNode(*A);
@@ -93,13 +93,13 @@ SplayCheck::CheckNode(intnode const &A)
 }
 
 void
-SplayCheck::WalkNode (intnode *const &a, void *)
+SplayCheck::VisitNode(intnode *const &a)
 {
     CheckNode (*a);
 }
 
 void
-SplayCheck::WalkNodeRef (intnode const &a, void *)
+SplayCheck::VisitNodeRef(intnode const &a)
 {
     CheckNode (a);
 }
@@ -131,59 +131,56 @@ int
 main(int, char *[])
 {
     std::mt19937 generator;
-    xuniform_int_distribution<int> distribution;
+    std::uniform_int_distribution<int> distribution;
     auto nextRandom = std::bind (distribution, generator);
 
     {
         /* test void * splay containers */
-        splayNode *top = nullptr;
+        const auto top = new Splay<void *>();
 
         for (int i = 0; i < 100; ++i) {
             intnode *I = (intnode *)xcalloc(sizeof(intnode), 1);
             I->i = nextRandom();
-            if (top)
-                top = top->insert(I, compareintvoid);
-            else
-                top = new splayNode(static_cast<void*>(new intnode(101)));
+            top->insert(I, compareintvoid);
         }
 
         SplayCheck::BeginWalk();
-        top->walk(SplayCheck::WalkVoid, nullptr);
+        top->visit(SplayCheck::VisitVoid);
 
         SplayCheck::BeginWalk();
-        top->walk(SplayCheck::WalkVoid, nullptr);
+        top->visit(SplayCheck::VisitVoid);
         top->destroy(destintvoid);
     }
 
     /* test typesafe splay containers */
     {
         /* intnode* */
-        SplayNode<intnode *> *safeTop = new SplayNode<intnode *>(new intnode(101));
+        const auto safeTop = new Splay<intnode *>();
 
         for ( int i = 0; i < 100; ++i) {
             intnode *I;
             I = new intnode;
             I->i = nextRandom();
-            safeTop = safeTop->insert(I, compareint);
+            safeTop->insert(I, compareint);
         }
 
         SplayCheck::BeginWalk();
-        safeTop->walk(SplayCheck::WalkNode, nullptr);
+        safeTop->visit(SplayCheck::VisitNode);
 
         safeTop->destroy(destint);
     }
     {
         /* intnode */
-        SplayNode<intnode> *safeTop = new SplayNode<intnode>(101);
+        const auto safeTop = new Splay<intnode>();
 
         for (int i = 0; i < 100; ++i) {
             intnode I;
             I.i = nextRandom();
-            safeTop = safeTop->insert(I, compareintref);
+            safeTop->insert(I, compareintref);
         }
 
         SplayCheck::BeginWalk();
-        safeTop->walk(SplayCheck::WalkNodeRef, nullptr);
+        safeTop->visit(SplayCheck::VisitNodeRef);
 
         safeTop->destroy(destintref);
     }
@@ -194,10 +191,10 @@ main(int, char *[])
         intnode I;
         I.i = 1;
         /* check we don't segfault on NULL splay calls */
-        SplayCheck::WalkNodeRef(I, nullptr);
+        SplayCheck::VisitNodeRef(I);
         I.i = 0;
         SplayCheck::ExpectedFail = true;
-        SplayCheck::WalkNodeRef(I, nullptr);
+        SplayCheck::VisitNodeRef(I);
     }
 
     {

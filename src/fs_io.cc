@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,6 +35,26 @@ diskWriteIsComplete(int fd)
 static void cxx_xfree(void *ptr)
 {
     xfree(ptr);
+}
+
+dwrite_q::dwrite_q(const size_t aSize, char * const aBuffer, FREE * const aFree):
+    buf(aBuffer),
+    capacity(aSize),
+    free_func(aFree)
+{
+    assert(buf || !free_func);
+    if (!buf) {
+        buf = static_cast<char *>(xmalloc(aSize));
+        free_func = cxx_xfree; // dwrite_q buffer xfree()
+    } else {
+        len = aSize;
+    }
+}
+
+dwrite_q::~dwrite_q()
+{
+    if (free_func)
+        free_func(buf);
 }
 
 /*
@@ -89,7 +109,7 @@ file_close(int fd)
          * open files, so we won't allow delayed close.
          */
         while (!diskWriteIsComplete(fd))
-            diskHandleWrite(fd, NULL);
+            diskHandleWrite(fd, nullptr);
 #else
         F->flags.close_request = true;
         debugs(6, 2, "file_close: FD " << fd << ", delaying close");
@@ -133,35 +153,18 @@ diskCombineWrites(_fde_disk *fdd)
      */
 
     if (fdd->write_q != nullptr && fdd->write_q->next != nullptr) {
-        int len = 0;
+        size_t wantCapacity = 0;
 
         for (dwrite_q *q = fdd->write_q; q != nullptr; q = q->next)
-            len += q->len - q->buf_offset;
+            wantCapacity += q->len - q->buf_offset; // XXX: might overflow
 
-        dwrite_q *wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
-
-        wq->buf = (char *)xmalloc(len);
-
-        wq->len = 0;
-
-        wq->buf_offset = 0;
-
-        wq->next = nullptr;
-
-        wq->free_func = cxx_xfree;
-
-        while (fdd->write_q != nullptr) {
-            dwrite_q *q = fdd->write_q;
-
-            len = q->len - q->buf_offset;
+        const auto wq = new dwrite_q(wantCapacity);
+        while (const auto q = fdd->write_q) {
+            const auto len = q->len - q->buf_offset;
             memcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
             wq->len += len;
             fdd->write_q = q->next;
-
-            if (q->free_func)
-                q->free_func(q->buf);
-
-            memFree(q, MEM_DWRITE_Q);
+            delete q;
         };
 
         fdd->write_q_tail = wq;
@@ -178,11 +181,10 @@ diskHandleWrite(int fd, void *)
     fde *F = &fd_table[fd];
 
     _fde_disk *fdd = &F->disk;
-    dwrite_q *q = fdd->write_q;
     int status = DISK_OK;
     bool do_close;
 
-    if (nullptr == q)
+    if (!fdd->write_q)
         return;
 
     debugs(6, 3, "diskHandleWrite: FD " << fd);
@@ -211,17 +213,17 @@ diskHandleWrite(int fd, void *)
     len = FD_WRITE_METHOD(fd,
                           fdd->write_q->buf + fdd->write_q->buf_offset,
                           fdd->write_q->len - fdd->write_q->buf_offset);
+    const auto xerrno = errno;
 
     debugs(6, 3, "diskHandleWrite: FD " << fd << " len = " << len);
 
     ++ statCounter.syscalls.disk.writes;
 
-    fd_bytes(fd, len, FD_WRITE);
+    fd_bytes(fd, len, IoDirection::Write);
 
     if (len < 0) {
-        if (!ignoreErrno(errno)) {
-            status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
-            int xerrno = errno;
+        if (!ignoreErrno(xerrno)) {
+            status = xerrno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
             debugs(50, DBG_IMPORTANT, "ERROR: diskHandleWrite: FD " << fd << ": disk write failure: " << xstrerr(xerrno));
 
             /*
@@ -246,23 +248,16 @@ diskHandleWrite(int fd, void *)
              * repeated write failures for the same FD because of
              * the queued data.
              */
-            do {
+            while (const auto q = fdd->write_q) {
                 fdd->write_q = q->next;
-
-                if (q->free_func)
-                    q->free_func(q->buf);
-
-                if (q) {
-                    memFree(q, MEM_DWRITE_Q);
-                    q = nullptr;
-                }
-            } while ((q = fdd->write_q));
+                delete q;
+            }
         }
 
         len = 0;
     }
 
-    if (q != nullptr) {
+    if (const auto q = fdd->write_q) {
         /* q might become NULL from write failure above */
         q->buf_offset += len;
 
@@ -276,14 +271,7 @@ diskHandleWrite(int fd, void *)
         if (q->buf_offset == q->len) {
             /* complete write */
             fdd->write_q = q->next;
-
-            if (q->free_func)
-                q->free_func(q->buf);
-
-            if (q) {
-                memFree(q, MEM_DWRITE_Q);
-                q = nullptr;
-            }
+            delete q;
         }
     }
 
@@ -331,18 +319,12 @@ file_write(int fd,
            void *handle_data,
            FREE * free_func)
 {
-    dwrite_q *wq = nullptr;
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->flags.open);
     /* if we got here. Caller is eligible to write. */
-    wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
+    const auto wq = new dwrite_q(len, static_cast<char *>(const_cast<void *>(ptr_to_buf)), free_func);
     wq->file_offset = file_offset;
-    wq->buf = (char *)ptr_to_buf;
-    wq->len = len;
-    wq->buf_offset = 0;
-    wq->next = nullptr;
-    wq->free_func = free_func;
 
     if (!F->disk.wrt_handle_data) {
         F->disk.wrt_handle = handle;
@@ -364,16 +346,6 @@ file_write(int fd,
     if (!F->flags.write_daemon) {
         diskHandleWrite(fd, nullptr);
     }
-}
-
-/*
- * a wrapper around file_write to allow for MemBuf to be file_written
- * in a snap
- */
-void
-file_write_mbuf(int fd, off_t off, MemBuf mb, DWCB * handler, void *handler_data)
-{
-    file_write(fd, off, mb.buf, mb.size, handler, handler_data, mb.freeFunc());
 }
 
 /* Read from FD */
@@ -422,7 +394,7 @@ diskHandleRead(int fd, void *data)
 
     ++ statCounter.syscalls.disk.reads;
 
-    fd_bytes(fd, len, FD_READ);
+    fd_bytes(fd, len, IoDirection::Read);
 
     if (len < 0) {
         if (ignoreErrno(xerrno)) {
@@ -494,7 +466,7 @@ FileRename(const SBuf &from, const SBuf &to)
         return true;
 
     int xerrno = errno;
-    debugs(21, (errno == ENOENT ? 2 : DBG_IMPORTANT), "ERROR: Cannot rename " << from << " to " << to << ": " << xstrerr(xerrno));
+    debugs(21, (xerrno == ENOENT ? 2 : DBG_IMPORTANT), "ERROR: Cannot rename " << from << " to " << to << ": " << xstrerr(xerrno));
 
     return false;
 }

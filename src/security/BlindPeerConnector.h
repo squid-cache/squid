@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_BLINDPEERCONNECTOR_H
 #define SQUID_SRC_SECURITY_BLINDPEERCONNECTOR_H
 
+#include "http/forward.h"
 #include "security/PeerConnector.h"
 
 class ErrorState;
@@ -16,20 +17,15 @@ class ErrorState;
 namespace Security
 {
 
-/// A simple PeerConnector for SSL/TLS cache_peers. No SslBump capabilities.
+/// A PeerConnector for TLS cache_peers and origin servers. No SslBump capabilities.
 class BlindPeerConnector: public Security::PeerConnector {
-    CBDATA_CLASS(BlindPeerConnector);
+    CBDATA_CHILD(BlindPeerConnector);
 public:
     BlindPeerConnector(HttpRequestPointer &aRequest,
                        const Comm::ConnectionPointer &aServerConn,
-                       AsyncCall::Pointer &aCallback,
+                       const AsyncCallback<EncryptorAnswer> &aCallback,
                        const AccessLogEntryPointer &alp,
-                       const time_t timeout = 0) :
-        AsyncJob("Security::BlindPeerConnector"),
-        Security::PeerConnector(aServerConn, aCallback, alp, timeout)
-    {
-        request = aRequest;
-    }
+                       time_t timeout = 0);
 
     /* Security::PeerConnector API */
 
@@ -37,14 +33,13 @@ public:
     /// to try and reuse a TLS session and sets the hostname to use for
     /// certificate validation
     /// \returns true on successful initialization
-    virtual bool initialize(Security::SessionPointer &);
+    bool initialize(Security::SessionPointer &) override;
 
-    /// Return the configured TLS context object
-    virtual Security::ContextPointer getTlsContext();
+    FuturePeerContext *peerContext() const override;
 
-    /// On error calls peerConnectFailed().
-    /// On success store the used TLS session for later use.
-    virtual void noteNegotiationDone(ErrorState *);
+    /// On success, stores the used TLS session for later use.
+    /// On error, informs the peer.
+    void noteNegotiationDone(ErrorState *) override;
 };
 
 } // namespace Security

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,9 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
+#include "SquidMath.h"
 #include "Store.h"
 #include "StrList.h"
 
@@ -146,7 +148,8 @@ HttpReply::make304() const
             rv->header.addEntry(e->clone());
     }
 
-    rv->putCc(cache_control);
+    if (cache_control)
+        rv->putCc(*cache_control);
 
     /* rv->body */
     return rv;
@@ -204,7 +207,7 @@ HttpReply::redirect(Http::StatusCode status, const char *loc)
     HttpHeader *hdr;
     sline.set(Http::ProtocolVersion(), status, nullptr);
     hdr = &header;
-    hdr->putStr(Http::HdrType::SERVER, APP_FULLNAME);
+    hdr->putStr(Http::HdrType::SERVER, visible_appname_string);
     hdr->putTime(Http::HdrType::DATE, squid_curtime);
     hdr->putInt64(Http::HdrType::CONTENT_LENGTH, 0);
     hdr->putStr(Http::HdrType::LOCATION, loc);
@@ -456,6 +459,44 @@ HttpReply::parseFirstLine(const char *blk_start, const char *blk_end)
     return sline.parse(protoPrefix, blk_start, blk_end);
 }
 
+size_t
+HttpReply::parseTerminatedPrefix(const char * const terminatedBuf, const size_t bufSize)
+{
+    auto error = Http::scNone;
+    const bool eof = false; // TODO: Remove after removing atEnd from HttpHeader::parse()
+    if (parse(terminatedBuf, bufSize, eof, &error)) {
+        debugs(58, 7, "success after accumulating " << bufSize << " bytes and parsing " << hdr_sz);
+        Assure(pstate == Http::Message::psParsed);
+        Assure(hdr_sz > 0);
+        Assure(!Less(bufSize, hdr_sz)); // cannot parse more bytes than we have
+        return hdr_sz; // success
+    }
+
+    Assure(pstate != Http::Message::psParsed);
+    hdr_sz = 0;
+
+    if (error) {
+        throw TextException(ToSBuf("failed to parse HTTP headers",
+                                   Debug::Extra, "parser error code: ", error,
+                                   Debug::Extra, "accumulated unparsed bytes: ", bufSize,
+                                   Debug::Extra, "reply_header_max_size: ", Config.maxReplyHeaderSize),
+                            Here());
+    }
+
+    debugs(58, 3, "need more bytes after accumulating " << bufSize << " out of " << Config.maxReplyHeaderSize);
+
+    // the parse() call above enforces Config.maxReplyHeaderSize limit
+    // XXX: Make this a strict comparison after fixing Http::Message::parse() enforcement
+    Assure(bufSize <= Config.maxReplyHeaderSize);
+    return 0; // parsed nothing, need more data
+}
+
+size_t
+HttpReply::prefixLen() const
+{
+    return sline.packedLength() + header.len + 2;
+}
+
 void
 HttpReply::configureContentLengthInterpreter(Http::ContentLengthInterpreter &interpreter)
 {
@@ -553,10 +594,8 @@ HttpReply::calcMaxBodySize(HttpRequest& request) const
     if (!Config.ReplyBodySize)
         return;
 
-    ACLFilledChecklist ch(nullptr, &request, nullptr);
-    // XXX: cont-cast becomes irrelevant when checklist is HttpReply::Pointer
-    ch.reply = const_cast<HttpReply *>(this);
-    HTTPMSGLOCK(ch.reply);
+    ACLFilledChecklist ch(nullptr, &request);
+    ch.updateReply(this);
     for (AclSizeLimit *l = Config.ReplyBodySize; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this size value */
         if (!l->aclList || ch.fastCheck(l->aclList).allowed()) {

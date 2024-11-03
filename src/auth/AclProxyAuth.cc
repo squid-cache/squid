@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -52,7 +52,7 @@ ACLProxyAuth::parse()
 int
 ACLProxyAuth::match(ACLChecklist *checklist)
 {
-    auto answer = AuthenticateAcl(checklist);
+    auto answer = AuthenticateAcl(checklist, *this);
 
     // convert to tri-state ACL match 1,0,-1
     switch (answer) {
@@ -102,29 +102,19 @@ ACLProxyAuth::valid() const
     return true;
 }
 
-ProxyAuthLookup ProxyAuthLookup::instance_;
-
-ProxyAuthLookup *
-ProxyAuthLookup::Instance()
-{
-    return &instance_;
-}
-
 void
-ProxyAuthLookup::checkForAsync(ACLChecklist *cl) const
+ACLProxyAuth::StartLookup(ACLFilledChecklist &cl, const Acl::Node &)
 {
-    ACLFilledChecklist *checklist = Filled(cl);
-
     debugs(28, 3, "checking password via authenticator");
 
     /* make sure someone created auth_user_request for us */
-    assert(checklist->auth_user_request != nullptr);
-    assert(checklist->auth_user_request->valid());
-    checklist->auth_user_request->start(checklist->request, checklist->al, LookupDone, checklist);
+    assert(cl.auth_user_request != nullptr);
+    assert(cl.auth_user_request->valid());
+    cl.auth_user_request->start(cl.request.getRaw(), cl.al, LookupDone, &cl);
 }
 
 void
-ProxyAuthLookup::LookupDone(void *data)
+ACLProxyAuth::LookupDone(void *data)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
 
@@ -139,7 +129,7 @@ ProxyAuthLookup::LookupDone(void *data)
         }
     }
 
-    checklist->resumeNonBlockingCheck(ProxyAuthLookup::Instance());
+    checklist->resumeNonBlockingCheck();
 }
 
 int

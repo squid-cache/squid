@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 77    Delay Pools */
 
-#ifndef DELAYIDCOMPOSITE_H
-#define DELAYIDCOMPOSITE_H
+#ifndef SQUID_SRC_DELAYIDCOMPOSITE_H
+#define SQUID_SRC_DELAYIDCOMPOSITE_H
 
 #if USE_DELAY_POOLS
 #include "base/forward.h"
@@ -21,7 +21,7 @@ class DelayIdComposite : public RefCountable
 
 public:
     typedef RefCount<DelayIdComposite> Pointer;
-    virtual inline ~DelayIdComposite() {}
+    inline ~DelayIdComposite() override {}
 
     virtual int bytesWanted (int min, int max) const =0;
     virtual void bytesIn(int qty) = 0;
@@ -30,5 +30,5 @@ public:
 };
 
 #endif /* USE_DELAY_POOLS */
-#endif /* DELAYIDCOMPOSITE_H */
+#endif /* SQUID_SRC_DELAYIDCOMPOSITE_H */
 

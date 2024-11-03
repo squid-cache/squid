@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncCallbacks.h"
 #include "base/CbcPointer.h"
 #include "base/JobWait.h"
 #include "base/Raw.h"
@@ -30,6 +31,7 @@
 #include "globals.h"
 #include "HappyConnOpener.h"
 #include "http.h"
+#include "http/StatusCode.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
@@ -75,7 +77,7 @@ class TunnelStateData: public PeerSelectionInitiator
 
 public:
     TunnelStateData(ClientHttpRequest *);
-    virtual ~TunnelStateData();
+    ~TunnelStateData() override;
     TunnelStateData(const TunnelStateData &); // do not implement
     TunnelStateData &operator =(const TunnelStateData &); // do not implement
 
@@ -187,12 +189,14 @@ public:
     time_t startTime; ///< object creation time, before any peer selection/connection attempts
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
     bool destinationsFound; ///< At least one candidate path found
-    /// whether another destination may be still attempted if the TCP connection
-    /// was unexpectedly closed
-    bool retriable;
 
     /// whether the decision to tunnel to a particular destination was final
     bool committedToServer;
+
+    int n_tries; ///< the number of forwarding attempts so far
+
+    /// a reason to ban reforwarding attempts (or nil)
+    const char *banRetries;
 
     // TODO: remove after fixing deferred reads in TunnelStateData::copyRead()
     CodeContext::Pointer codeContext; ///< our creator context
@@ -207,6 +211,9 @@ public:
     /// over the (encrypted, if needed) transport connection to that cache_peer
     JobWait<Http::Tunneler> peerWait;
 
+    /// Measures time spent on selecting and communicating with peers.
+    PeeringActivityTimer peeringTimer;
+
     void copyRead(Connection &from, IOCB *completion);
 
     /// continue to set up connection to a peer, going async for SSL peers
@@ -214,8 +221,8 @@ public:
     void secureConnectionToPeer(const Comm::ConnectionPointer &);
 
     /* PeerSelectionInitiator API */
-    virtual void noteDestination(Comm::ConnectionPointer conn) override;
-    virtual void noteDestinationsEnd(ErrorState *selectionError) override;
+    void noteDestination(Comm::ConnectionPointer conn) override;
+    void noteDestinationsEnd(ErrorState *selectionError) override;
 
     void syncHierNote(const Comm::ConnectionPointer &server, const char *origin);
 
@@ -232,31 +239,6 @@ public:
     void sendError(ErrorState *finalError, const char *reason);
 
 private:
-    /// Gives Security::PeerConnector access to Answer in the TunnelStateData callback dialer.
-    class MyAnswerDialer: public CallDialer, public Security::PeerConnector::CbDialer
-    {
-    public:
-        typedef void (TunnelStateData::*Method)(Security::EncryptorAnswer &);
-
-        MyAnswerDialer(Method method, TunnelStateData *tunnel):
-            method_(method), tunnel_(tunnel), answer_() {}
-
-        /* CallDialer API */
-        virtual bool canDial(AsyncCall &) { return tunnel_.valid(); }
-        void dial(AsyncCall &) { ((&(*tunnel_))->*method_)(answer_); }
-        virtual void print(std::ostream &os) const {
-            os << '(' << tunnel_.get() << ", " << answer_ << ')';
-        }
-
-        /* Security::PeerConnector::CbDialer API */
-        virtual Security::EncryptorAnswer &answer() { return answer_; }
-
-    private:
-        Method method_;
-        CbcPointer<TunnelStateData> tunnel_;
-        Security::EncryptorAnswer answer_;
-    };
-
     void usePinned();
 
     /// callback handler for the Security::PeerConnector encryptor
@@ -274,15 +256,20 @@ private:
 
     bool transporting() const;
 
+    // TODO: convert to unique_ptr
     /// details of the "last tunneling attempt" failure (if it failed)
     ErrorState *savedError = nullptr;
 
     /// resumes operations after the (possibly failed) HTTP CONNECT exchange
     void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
 
+    void finishWritingAndDelete(Connection &);
     void deleteThis();
 
     void cancelStep(const char *reason);
+
+    bool exhaustedTries() const;
+    void updateAttempts(int);
 
 public:
     bool keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to);
@@ -326,7 +313,9 @@ TunnelStateData::serverClosed()
 {
     server.noteClosure();
 
-    retryOrBail(__FUNCTION__);
+    peeringTimer.stop();
+
+    finishWritingAndDelete(client);
 }
 
 /// TunnelStateData::clientClosed() wrapper
@@ -341,12 +330,48 @@ void
 TunnelStateData::clientClosed()
 {
     client.noteClosure();
+    finishWritingAndDelete(server);
+}
 
+/// Gracefully handles non-retriable connection closure. If necessary, either
+/// starts closing the given connection or waits for its pending write to
+/// finish. Otherwise, immediately destroys the tunnel object.
+/// \prec The other Connection is not open.
+void
+TunnelStateData::finishWritingAndDelete(Connection &remainingConnection)
+{
     if (noConnections())
         return deleteThis();
 
-    if (!server.writer)
-        server.conn->close();
+    // XXX: The code below should precede the noConnections() check above. When
+    // there is no writer, we should trigger an immediate noConnections()
+    // outcome instead of waiting for an asynchronous call to our own closure
+    // callback (that will call this method again). We should not move this code
+    // until a noConnections() outcome guarantees a nil writer because such a
+    // move will unnecessary delay deleteThis().
+
+    if (remainingConnection.writer) {
+        debugs(26, 5, "waiting to finish writing to " << remainingConnection.conn);
+        // the write completion callback must close its remainingConnection
+        // after noticing that the other connection is gone
+        return;
+    }
+
+    // XXX: Stop abusing connection closure callback for terminating tunneling
+    // in cases like this, where our code knows that tunneling must end. The
+    // closure callback should be dedicated to handling rare connection closures
+    // originated _outside_ of TunnelStateData (e.g., during shutdown). In all
+    // other cases, our own close()-calling code must detail the
+    // closure-triggering error (if any) _and_ clear all callbacks: Our code
+    // does not need to be (asynchronously) notified of the closure that it
+    // itself has initiated! Until that (significant) refactoring,
+    // serverClosed() and clientClosed() callbacks will continue to mishandle
+    // those rare closures as regular ones, and access.log records will continue
+    // to lack some tunneling error indicators/details.
+    //
+    // This asynchronous close() leads to another finishWritingAndDelete() call
+    // but with true noConnections() that finally triggers deleteThis().
+    remainingConnection.conn->close();
 }
 
 /// destroys the tunnel (after performing potentially-throwing cleanup)
@@ -364,13 +389,25 @@ TunnelStateData::deleteThis()
     delete this;
 }
 
+// TODO: Replace with a reusable API guaranteeing non-nil pointer forwarding.
+/// safely extracts HttpRequest from a never-nil ClientHttpRequest pointer
+static auto &
+guaranteedRequest(const ClientHttpRequest * const cr)
+{
+    Assure(cr);
+    Assure(cr->request);
+    return *cr->request;
+}
+
 TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     startTime(squid_curtime),
     destinations(new ResolvedPeers()),
     destinationsFound(false),
-    retriable(true),
     committedToServer(false),
-    codeContext(CodeContext::Current())
+    n_tries(0),
+    banRetries(nullptr),
+    codeContext(CodeContext::Current()),
+    peeringTimer(&guaranteedRequest(clientRequest))
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
     client.readPendingFunc = &tunnelDelayedClientRead;
@@ -385,6 +422,8 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     status_ptr = &clientRequest->al->http.code;
     al = clientRequest->al;
     http = clientRequest;
+
+    al->cache.code.update(LOG_TCP_TUNNEL);
 
     client.initConnection(clientRequest->getConn()->clientConnection, tunnelClientClosed, "tunnelClientClosed", this);
 
@@ -415,12 +454,20 @@ TunnelStateData::checkRetry()
 {
     if (shutting_down)
         return "shutting down";
+    if (exhaustedTries())
+        return "exhausted tries";
     if (!FwdState::EnoughTimeToReForward(startTime))
         return "forwarding timeout";
-    if (!retriable)
-        return "not retriable";
+    if (banRetries)
+        return banRetries;
     if (noConnections())
         return "no connections";
+
+    // TODO: Use std::optional for peer_reply_status to avoid treating zero value specially.
+    if (request->hier.peer_reply_status != Http::scNone && !Http::IsReforwardableStatus(request->hier.peer_reply_status))
+        return "received HTTP status code is not reforwardable";
+
+    // TODO: check pinned connections; see FwdState::pinnedCanRetry()
     return nullptr;
 }
 
@@ -444,8 +491,7 @@ TunnelStateData::retryOrBail(const char *context)
 
     /* bail */
 
-    if (request)
-        request->hier.stopPeerClock(false);
+    peeringTimer.stop();
 
     // TODO: Add sendSavedErrorOr(err_type type, Http::StatusCode, context).
     // Then, the remaining method code (below) should become the common part of
@@ -458,14 +504,7 @@ TunnelStateData::retryOrBail(const char *context)
         return sendError(savedError, bailDescription ? bailDescription : context);
     *status_ptr = savedError->httpStatus;
 
-    if (noConnections())
-        return deleteThis();
-
-    // This is a "Comm::IsConnOpen(client.conn) but !canSendError" case.
-    // Closing the connection (after finishing writing) is the best we can do.
-    if (!client.writer)
-        client.conn->close();
-    // else writeClientDone() must notice a closed server and close the client
+    finishWritingAndDelete(client);
 }
 
 int
@@ -497,6 +536,21 @@ TunnelStateData::syncHierNote(const Comm::ConnectionPointer &conn, const char *o
 {
     request->hier.resetPeerNotes(conn, origin);
     al->hier.resetPeerNotes(conn, origin);
+}
+
+/// sets n_tries to the given value (while keeping ALE in sync)
+void
+TunnelStateData::updateAttempts(const int newValue)
+{
+    Assure(n_tries <= newValue); // n_tries cannot decrease
+
+    // Squid probably creates at most one FwdState/TunnelStateData object per
+    // ALE, but, unlike an assignment would, this increment logic works even if
+    // Squid uses multiple such objects for a given ALE in some esoteric cases.
+    al->requestAttempts += (newValue - n_tries);
+
+    n_tries = newValue;
+    debugs(26, 5, n_tries);
 }
 
 int
@@ -920,7 +974,6 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
     commSetConnTimeout(tunnelState->server.conn, Config.Timeout.read, timeoutCall);
 
     *tunnelState->status_ptr = Http::scOkay;
-    tunnelState->al->cache.code.update(LOG_TCP_TUNNEL);
     if (cbdataReferenceValid(tunnelState)) {
 
         // Shovel any payload already pushed into reply buffer by the server response
@@ -973,8 +1026,9 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
     peerWait.finish();
     server.len = 0;
 
-    al->cache.code.update(LOG_TCP_TUNNEL);
-
+    // XXX: al->http.code (i.e. *status_ptr) should not be (re)set
+    // until we actually start responding to the client. Right here/now, we only
+    // know how this cache_peer has responded to us.
     if (answer.peerResponseStatus != Http::scNone)
         *status_ptr = answer.peerResponseStatus;
 
@@ -1032,7 +1086,7 @@ void
 TunnelStateData::commitToServer(const Comm::ConnectionPointer &conn)
 {
     committedToServer = true;
-    retriable = false; // may already be false
+    banRetries = "committed to server";
     PeerSelectionInitiator::subscribed = false; // may already be false
     server.initConnection(conn, tunnelServerClosed, "tunnelServerClosed", this);
 }
@@ -1058,8 +1112,11 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
 {
     transportWait.finish();
 
+    updateAttempts(answer.n_tries);
+
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
+        banRetries = "HappyConnOpener gave up";
         Must(!Comm::IsConnOpen(answer.conn));
         syncHierNote(answer.conn, request->url.host());
         answer.error.clear();
@@ -1085,6 +1142,8 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     if (reused)
         ResetMarkingsToServer(request.getRaw(), *conn);
     // else Comm::ConnOpener already applied proper/current markings
+
+    // TODO: add pconn race state tracking
 
     syncHierNote(conn, origin);
 
@@ -1114,6 +1173,13 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     }
 }
 
+/// whether we have used up all permitted forwarding attempts
+bool
+TunnelStateData::exhaustedTries() const
+{
+    return n_tries >= Config.forward_max_tries;
+}
+
 void
 tunnelStart(ClientHttpRequest * http)
 {
@@ -1135,13 +1201,14 @@ tunnelStart(ClientHttpRequest * http)
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          * default is to allow.
          */
-        ACLFilledChecklist ch(Config.accessList.miss, request, nullptr);
+        ACLFilledChecklist ch(Config.accessList.miss, request);
         ch.al = http->al;
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
         ch.syncAle(request, http->log_uri);
         if (ch.fastCheck().denied()) {
             debugs(26, 4, "MISS access forbidden.");
+            http->updateLoggingTags(LOG_TCP_TUNNEL);
             err = new ErrorState(ERR_FORWARDING_DENIED, Http::scForbidden, request, http->al);
             http->al->http.code = Http::scForbidden;
             errorSend(http->getConn()->clientConnection, err);
@@ -1177,8 +1244,7 @@ TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
-    AsyncCall::Pointer callback = asyncCall(5,4, "TunnelStateData::noteSecurityPeerConnectorAnswer",
-                                            MyAnswerDialer(&TunnelStateData::noteSecurityPeerConnectorAnswer, this));
+    const auto callback = asyncCallback(5, 4, TunnelStateData::noteSecurityPeerConnectorAnswer, this);
     const auto connector = new Security::BlindPeerConnector(request, conn, callback, al);
     encryptionWait.start(connector, callback);
 }
@@ -1239,9 +1305,7 @@ TunnelStateData::connectedToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
-    AsyncCall::Pointer callback = asyncCall(5,4,
-                                            "TunnelStateData::tunnelEstablishmentDone",
-                                            Http::Tunneler::CbDialer<TunnelStateData>(&TunnelStateData::tunnelEstablishmentDone, this));
+    const auto callback = asyncCallback(5, 4, TunnelStateData::tunnelEstablishmentDone, this);
     const auto tunneler = new Http::Tunneler(conn, request, callback, Config.Timeout.lifetime, al);
 #if USE_DELAY_POOLS
     tunneler->setDelayId(server.delayId);
@@ -1313,7 +1377,15 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
     }
 
     // destinationsFound, but none of them worked, and we were waiting for more
-    assert(savedError);
+    debugs(17, 7, "no more destinations to try after " << n_tries << " failed attempts");
+    if (!savedError) {
+        // retryOrBail() must be preceded by saveError(), but in case we forgot:
+        const auto finalError = new ErrorState(ERR_CANNOT_FORWARD, Http::scBadGateway, request.getRaw(), al);
+        static const auto d = MakeNamedErrorDetail("RETRY_TO_NONE");
+        finalError->detailError(d);
+        saveError(finalError);
+    } // else use actual error from last forwarding attempt
+
     // XXX: Honor clientExpectsConnectResponse() before replying.
     sendError(savedError, "all found paths have failed");
 }
@@ -1344,8 +1416,7 @@ TunnelStateData::sendError(ErrorState *finalError, const char *reason)
 {
     debugs(26, 3, "aborting transaction for " << reason);
 
-    if (request)
-        request->hier.stopPeerClock(false);
+    peeringTimer.stop();
 
     cancelStep(reason);
 
@@ -1379,13 +1450,15 @@ TunnelStateData::cancelStep(const char *reason)
 void
 TunnelStateData::startConnecting()
 {
-    if (request)
-        request->hier.startPeerClock();
-
     assert(!destinations->empty());
     assert(!transporting());
-    AsyncCall::Pointer callback = asyncCall(17, 5, "TunnelStateData::noteConnection", HappyConnOpener::CbDialer<TunnelStateData>(&TunnelStateData::noteConnection, this));
-    const auto cs = new HappyConnOpener(destinations, callback, request, startTime, 0, al);
+
+    delete savedError; // may still be nil
+    savedError = nullptr;
+    request->hier.peer_reply_status = Http::scNone;
+
+    const auto callback = asyncCallback(17, 5, TunnelStateData::noteConnection, this);
+    const auto cs = new HappyConnOpener(destinations, callback, request, startTime, n_tries, al);
     cs->setHost(request->url.host());
     cs->setRetriable(false);
     cs->allowPersistent(false);
@@ -1399,19 +1472,11 @@ TunnelStateData::usePinned()
 {
     Must(request);
     const auto connManager = request->pinnedConnection();
+    Comm::ConnectionPointer serverConn = nullptr;
+
     try {
-        const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
+        serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
         debugs(26, 7, "pinned peer connection: " << serverConn);
-
-        // Set HttpRequest pinned related flags for consistency even if
-        // they are not really used by tunnel.cc code.
-        request->flags.pinned = true;
-        if (connManager->pinnedAuth())
-            request->flags.auth = true;
-
-        // the server may close the pinned connection before this request
-        const auto reused = true;
-        connectDone(serverConn, connManager->pinning.host, reused);
     } catch (ErrorState * const error) {
         syncHierNote(nullptr, connManager ? connManager->pinning.host : request->url.host());
         // XXX: Honor clientExpectsConnectResponse() before replying.
@@ -1420,6 +1485,19 @@ TunnelStateData::usePinned()
         return;
     }
 
+    updateAttempts(n_tries + 1);
+
+    // Set HttpRequest pinned related flags for consistency even if
+    // they are not really used by tunnel.cc code.
+    request->flags.pinned = true;
+
+    Assure(connManager);
+    if (connManager->pinnedAuth())
+        request->flags.auth = true;
+
+    // the server may close the pinned connection before this request
+    const auto reused = true;
+    connectDone(serverConn, connManager->pinning.host, reused);
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);

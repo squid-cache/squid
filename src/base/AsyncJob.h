@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ASYNC_JOB_H
-#define SQUID_ASYNC_JOB_H
+#ifndef SQUID_SRC_BASE_ASYNCJOB_H
+#define SQUID_SRC_BASE_ASYNCJOB_H
 
 #include "base/AsyncCall.h"
 #include "base/InstanceId.h"
@@ -44,6 +44,8 @@ public:
     /// successfully (i.e. without throwing).
     static void Start(const Pointer &job);
 
+    static void RegisterWithCacheManager();
+
 protected:
     // XXX: temporary method to replace "delete this" in jobs-in-transition.
     // Will be replaced with calls to mustStop() when transition is complete.
@@ -74,7 +76,10 @@ public:
 
 protected:
     // external destruction prohibited to ensure swanSong() is called
-    virtual ~AsyncJob();
+    ~AsyncJob() override;
+
+    /// writes a cache manager report about all jobs existing in this worker
+    static void ReportAllJobs(StoreEntry *);
 
     const char *stopReason; ///< reason for forcing done() to be true
     const char *typeName; ///< kid (leaf) class name, for debugging
@@ -84,5 +89,5 @@ protected:
     bool swanSang_ = false; ///< swanSong() was called
 };
 
-#endif /* SQUID_ASYNC_JOB_H */
+#endif /* SQUID_SRC_BASE_ASYNCJOB_H */
 

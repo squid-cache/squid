@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_ROCK_REBUILD_H
-#define SQUID_FS_ROCK_REBUILD_H
+#ifndef SQUID_SRC_FS_ROCK_ROCKREBUILD_H
+#define SQUID_SRC_FS_ROCK_ROCKREBUILD_H
 
 #include "base/AsyncJob.h"
 #include "base/RunnersRegistry.h"
@@ -52,20 +52,23 @@ public:
     /// \returns whether the indexing was necessary (and, hence, started)
     static bool Start(SwapDir &dir);
 
+    /* AsyncJob API */
+    virtual void callException(const std::exception &) override;
+
 protected:
     /// whether the current kid is responsible for rebuilding the given cache_dir
     static bool IsResponsible(const SwapDir &);
 
     Rebuild(SwapDir *dir, const Ipc::Mem::Pointer<Stats> &);
-    virtual ~Rebuild() override;
+    ~Rebuild() override;
 
     /* Registered Runner API */
-    virtual void startShutdown() override;
+    void startShutdown() override;
 
     /* AsyncJob API */
-    virtual void start() override;
-    virtual bool doneAll() const override;
-    virtual void swanSong() override;
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
     bool doneLoading() const;
     bool doneValidating() const;
@@ -130,5 +133,5 @@ private:
 
 } // namespace Rock
 
-#endif /* SQUID_FS_ROCK_REBUILD_H */
+#endif /* SQUID_SRC_FS_ROCK_ROCKREBUILD_H */
 

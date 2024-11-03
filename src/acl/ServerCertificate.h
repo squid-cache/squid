@@ -1,26 +1,31 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSERVERCERTIFICATE_H
-#define SQUID_ACLSERVERCERTIFICATE_H
+#ifndef SQUID_SRC_ACL_SERVERCERTIFICATE_H
+#define SQUID_SRC_ACL_SERVERCERTIFICATE_H
 
-#include "acl/Acl.h"
-#include "acl/Checklist.h"
 #include "acl/Data.h"
-#include "acl/Strategised.h"
+#include "acl/ParameterizedNode.h"
+#include "security/forward.h"
 #include "ssl/support.h"
 
-/// \ingroup ACLAPI
-class ACLServerCertificateStrategy : public ACLStrategy<X509 *>
+namespace Acl
+{
+
+/// a "server_cert_fingerprint" ACL
+class ServerCertificateCheck: public ParameterizedNode< ACLData<X509 *> >
 {
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
 };
 
-#endif /* SQUID_ACLSERVERCERTIFICATE_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_SERVERCERTIFICATE_H */
 

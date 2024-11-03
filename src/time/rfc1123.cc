@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,15 +13,9 @@
  *  Adapted from HTSUtils.c in CERN httpd 3.0 (http://info.cern.ch/httpd/)
  *  by Darren Hardy <hardy@cs.colorado.edu>, November 1994.
  */
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-#if HAVE_TIME_H
-#include <time.h>
-#endif
+#include <cctype>
+#include <cstring>
+#include <ctime>
 
 #define RFC850_STRFTIME "%A, %d-%b-%y %H:%M:%S GMT"
 #define RFC1123_STRFTIME "%a, %d %b %Y %H:%M:%S GMT"
@@ -50,7 +44,13 @@ make_month(const char *s)
     char month[3];
 
     month[0] = xtoupper(*s);
+    if (!month[0])
+        return -1; // protects *(s + 1) below
+
     month[1] = xtolower(*(s + 1));
+    if (!month[1])
+        return -1; // protects *(s + 2) below
+
     month[2] = xtolower(*(s + 2));
 
     for (i = 0; i < 12; i++)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/TimeData.h"
+#include "base/IoManip.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
@@ -53,7 +54,7 @@ ACLTimeData::match(time_t when)
     while (data) {
         debugs(28, 3, "aclMatchTime: checking " << t  << " in " <<
                data->start  << "-" << data->stop  << ", weekbits=" <<
-               std::hex << data->weekbits);
+               asHex(data->weekbits));
 
         if (t >= data->start && t <= data->stop && (data->weekbits & (1 << tm.tm_wday)))
             return 1;

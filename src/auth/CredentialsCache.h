@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,7 +33,7 @@ public:
     Auth::User::Pointer lookup(const SBuf &userKey) const;
 
     /// add an user to the cache with the provided key
-    void insert(const SBuf &userKey, Auth::User::Pointer anAuth_user);
+    void insert(const SBuf &userKey, const Auth::User::Pointer &anAuth_user);
 
     /// clear cache
     void reset() { store_.clear(); }

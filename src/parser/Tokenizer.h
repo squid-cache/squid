@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PARSER_TOKENIZER_H_
-#define SQUID_PARSER_TOKENIZER_H_
+#ifndef SQUID_SRC_PARSER_TOKENIZER_H
+#define SQUID_SRC_PARSER_TOKENIZER_H
 
 #include "base/CharacterSet.h"
 #include "sbuf/SBuf.h"
@@ -115,6 +115,13 @@ public:
      */
     SBuf::size_type skipAll(const CharacterSet &discardables);
 
+    /** skips a given character sequence (string);
+     * does nothing if the sequence is empty
+     *
+     * \throws exception on mismatching prefix or InsufficientInput
+     */
+    void skipRequired(const char *description, const SBuf &tokenToSkip);
+
     /** Removes a single trailing character from the set.
      *
      * \return whether a character was removed
@@ -172,5 +179,5 @@ private:
 
 } /* namespace Parser */
 
-#endif /* SQUID_PARSER_TOKENIZER_H_ */
+#endif /* SQUID_SRC_PARSER_TOKENIZER_H */
 

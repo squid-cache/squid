@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "base/TextException.h"
+#include "CacheManager.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
@@ -73,6 +74,9 @@ Mgr::Inquirer::start()
     Must(Comm::IsConnOpen(conn));
     Must(aggrAction != nullptr);
 
+    const auto &origin = aggrAction->command().params.httpOrigin;
+    const auto originOrNil = origin.size() ? origin.termedBuf() : nullptr;
+
     std::unique_ptr<MemBuf> replyBuf;
     if (strands.empty()) {
         const char *url = aggrAction->command().params.httpUri.termedBuf();
@@ -80,10 +84,12 @@ Mgr::Inquirer::start()
         auto *req = HttpRequest::FromUrlXXX(url, mx);
         ErrorState err(ERR_INVALID_URL, Http::scNotFound, req, nullptr);
         std::unique_ptr<HttpReply> reply(err.BuildHttpReply());
+        CacheManager::PutCommonResponseHeaders(*reply, originOrNil);
         replyBuf.reset(reply->pack());
     } else {
         std::unique_ptr<HttpReply> reply(new HttpReply);
-        reply->setHeaders(Http::scOkay, nullptr, "text/plain", -1, squid_curtime, squid_curtime);
+        reply->setHeaders(Http::scOkay, nullptr, aggrAction->contentType(), -1, squid_curtime, squid_curtime);
+        CacheManager::PutCommonResponseHeaders(*reply, originOrNil);
         reply->header.putStr(Http::HdrType::CONNECTION, "close"); // until we chunk response
         replyBuf.reset(reply->pack());
     }

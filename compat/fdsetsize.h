@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FDSETSIZE_H
-#define SQUID_FDSETSIZE_H
+#ifndef SQUID_COMPAT_FDSETSIZE_H
+#define SQUID_COMPAT_FDSETSIZE_H
 
 /****************************************************************************
  *--------------------------------------------------------------------------*
@@ -86,5 +86,5 @@
 # endif
 #endif
 
-#endif /* SQUID_FDSETSIZE_H */
+#endif /* SQUID_COMPAT_FDSETSIZE_H */
 

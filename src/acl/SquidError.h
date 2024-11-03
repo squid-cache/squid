@@ -1,23 +1,30 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLSQUIDERROR_H
-#define SQUID_ACLSQUIDERROR_H
+#ifndef SQUID_SRC_ACL_SQUIDERROR_H
+#define SQUID_SRC_ACL_SQUIDERROR_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 #include "error/forward.h"
 
-class ACLSquidErrorStrategy : public ACLStrategy<err_type>
+namespace Acl
 {
 
+/// a "squid_error" ACL
+class SquidErrorCheck: public ParameterizedNode< ACLData<err_type> >
+{
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
 };
 
-#endif /* SQUID_ACLSQUIDERROR_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_SQUIDERROR_H */
 

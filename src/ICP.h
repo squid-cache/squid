@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICP_H
-#define SQUID_ICP_H
+#ifndef SQUID_SRC_ICP_H
+#define SQUID_SRC_ICP_H
 
 /**
  \defgroup ServerProtocolICPAPI ICP
@@ -63,7 +63,7 @@ class ICPState: public StoreClient
 
 public:
     ICPState(icp_common_t &aHeader, HttpRequest *aRequest);
-    virtual ~ICPState();
+    ~ICPState() override;
 
     /// whether the cache contains the requested entry
     bool isHit() const;
@@ -78,8 +78,8 @@ public:
 
 protected:
     /* StoreClient API */
-    virtual LogTags *loggingTags() const override;
-    virtual void fillChecklist(ACLFilledChecklist &) const override;
+    LogTags *loggingTags() const override;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     /// either confirms and starts processing a cache hit or returns false
     bool confirmAndPrepHit(const StoreEntry &) const;
@@ -125,5 +125,5 @@ int icpSetCacheKey(const cache_key * key);
 /// \ingroup ServerProtocolICPAPI
 const cache_key *icpGetCacheKey(const char *url, int reqnum);
 
-#endif /* SQUID_ICP_H */
+#endif /* SQUID_SRC_ICP_H */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,7 +44,8 @@ Http::One::RequestParser::skipGarbageLines()
                    "Ignored due to relaxed_header_parser.");
         // Be tolerant of prefix empty lines
         // ie any series of either \n or \r\n with no other characters and no repeated \r
-        while (!buf_.isEmpty() && (buf_[0] == '\n' || (buf_[0] == '\r' && buf_[1] == '\n'))) {
+        while (!buf_.isEmpty() && (buf_[0] == '\n' ||
+                                   (buf_[0] == '\r' && buf_.length() > 1 && buf_[1] == '\n'))) {
             buf_.consume(1);
         }
     }
@@ -97,9 +98,7 @@ UriValidCharacters()
         CharacterSet("gen-delims", ":/?#[]@") +
         CharacterSet("sub-delims", "!$&'()*+,;=") +
         // RFC 3986 section 2.3 - unreserved characters
-        CharacterSet::ALPHA +
-        CharacterSet::DIGIT +
-        CharacterSet("unreserved", "-._~") +
+        CharacterSet::RFC3986_UNRESERVED() +
         // RFC 3986 section 2.1 - percent encoding "%" HEXDIG
         CharacterSet("pct-encoded", "%") +
         CharacterSet::HEXDIG;

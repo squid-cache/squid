@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -95,7 +95,7 @@ gethost_name(void)
      */
     char hostname[1024];
     struct addrinfo *hres = nullptr, *hres_list;
-    int rc, count;
+    int rc;
 
     rc = gethostname(hostname, sizeof(hostname)-1);
     if (rc) {
@@ -114,9 +114,7 @@ gethost_name(void)
         return nullptr;
     }
     hres_list = hres;
-    count = 0;
     while (hres_list) {
-        ++count;
         hres_list = hres_list->ai_next;
     }
     rc = getnameinfo(hres->ai_addr, hres->ai_addrlen, hostname,
@@ -199,7 +197,7 @@ krb5_error_code krb5_free_kt_list(krb5_context context, krb5_kt_list list)
     krb5_kt_list lp = list;
 
     while (lp) {
-#if USE_HEIMDAL_KRB5 || ( HAVE_KRB5_KT_FREE_ENTRY && HAVE_DECL_KRB5_KT_FREE_ENTRY )
+#if HAVE_LIBHEIMDAL_KRB5 || ( HAVE_KRB5_KT_FREE_ENTRY && HAVE_DECL_KRB5_KT_FREE_ENTRY )
         krb5_error_code  retval = krb5_kt_free_entry(context, lp->entry);
 #else
         krb5_error_code  retval = krb5_free_keytab_entry_contents(context, lp->entry);
@@ -332,7 +330,7 @@ main(int argc, char *const argv[])
     char ad_groups[MAX_PAC_GROUP_SIZE];
     char *ag=nullptr;
     krb5_pac pac;
-#if USE_HEIMDAL_KRB5
+#if HAVE_LIBHEIMDAL_KRB5
     gss_buffer_desc data_set = GSS_C_EMPTY_BUFFER;
 #else
     gss_buffer_desc type_id = GSS_C_EMPTY_BUFFER;
@@ -776,7 +774,7 @@ main(int argc, char *const argv[])
 #if HAVE_PAC_SUPPORT
             ret = krb5_init_context(&context);
             if (!check_k5_err(context, "krb5_init_context", ret)) {
-#if USE_HEIMDAL_KRB5
+#if HAVE_LIBHEIMDAL_KRB5
 #define ADWIN2KPAC 128
                 major_status = gsskrb5_extract_authz_data_from_sec_context(&minor_status,
                                gss_context, ADWIN2KPAC, &data_set);
@@ -889,8 +887,8 @@ cleanup:
 int
 main(int argc, char *const argv[])
 {
-    setbuf(stdout, NULL);
-    setbuf(stdin, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stdin, nullptr);
     char buf[MAX_AUTHTOKEN_LEN];
     while (1) {
         if (fgets(buf, sizeof(buf) - 1, stdin) == NULL) {

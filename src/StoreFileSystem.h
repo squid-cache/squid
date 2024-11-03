@@ -1,14 +1,15 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STOREFILESYSTEM_H
-#define SQUID_STOREFILESYSTEM_H
+#ifndef SQUID_SRC_STOREFILESYSTEM_H
+#define SQUID_SRC_STOREFILESYSTEM_H
 
+#include "base/TypeTraits.h"
 #include "store/forward.h"
 #include <vector>
 
@@ -86,41 +87,29 @@
  * The core API for storage modules this class provides all the hooks
  * squid uses to interact with a filesystem IO module.
  */
-class StoreFileSystem
+class StoreFileSystem: public Interface
 {
 
 public:
-    static void SetupAllFs();
     static void FsAdd(StoreFileSystem &);
-    static void FreeAllFs();
     static StoreFileSystem *FindByType(const char *type);
     static std::vector<StoreFileSystem*> const &FileSystems();
     typedef std::vector<StoreFileSystem*>::iterator iterator;
     typedef std::vector<StoreFileSystem*>::const_iterator const_iterator;
-    StoreFileSystem() : initialised(false) {}
 
-    virtual ~StoreFileSystem() {}
+    StoreFileSystem() = default;
+    StoreFileSystem(StoreFileSystem &&) = delete; // no copying/moving of any kind
 
     virtual char const *type () const = 0;
     virtual SwapDir *createSwapDir() = 0;
-    virtual void done() = 0;
-    virtual void setup() = 0;
-    // Not implemented
-    StoreFileSystem(StoreFileSystem const &);
-    StoreFileSystem &operator=(StoreFileSystem const&);
-
-protected:
-    bool initialised;
-    virtual void registerWithCacheManager(void);
 
 private:
     static std::vector<StoreFileSystem*> &GetFileSystems();
     static std::vector<StoreFileSystem*> *_FileSystems;
-    static void RegisterAllFsWithCacheManager(void);
 };
 
 // TODO: Kill this typedef!
 typedef StoreFileSystem storefs_entry_t;
 
-#endif /* SQUID_STOREFILESYSTEM_H */
+#endif /* SQUID_SRC_STOREFILESYSTEM_H */
 

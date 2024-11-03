@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,8 @@
 
 #ifndef SQUID_SRC_BASE_TYPETRAITS_H
 #define SQUID_SRC_BASE_TYPETRAITS_H
+
+#include <type_traits>
 
 namespace TypeTraits_ { // a hack to prevent "unintended ADL"
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,7 +44,7 @@ DelayPool::dump(StoreEntry *entry, unsigned int i) const
     if (theComposite() == nullptr)
         return;
 
-    storeAppendPrintf(entry, "delay_class %d %s\n", i + 1, pool->theClassTypeLabel());
+    storeAppendPrintf(entry, "delay_class %d " SQUIDSBUFPH "\n", i + 1, SQUIDSBUFPRINT(pool->classTypeLabel()));
 
     LOCAL_ARRAY(char, nom, 32);
 

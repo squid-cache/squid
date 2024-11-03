@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -75,31 +75,29 @@ AC_DEFUN([SQUID_LOOK_FOR_MODULES],[
 $2=""
 for dir in $1/*; do
   module="`basename $dir`"
-  if test -d "$dir" && test "$module" != CVS; then
-      $2="$$2 $module"
-  fi
+  AS_IF([test -d "$dir" -a "$module" != "CVS"], $2="$$2 $module")
 done
 ])
 
-dnl remove duplicates out of a list.
+dnl remove commas, extra whitespace, and duplicates out of a list.
 dnl argument is the name of a variable to be checked and cleaned up
 AC_DEFUN([SQUID_CLEANUP_MODULES_LIST],[
 squid_cleanup_tmp_outlist=""
-for squid_cleanup_tmp in $$1
+for squid_cleanup_tmp in `echo "$$1" | sed -e 's/,/ /g;s/  */ /g'`
 do
   squid_cleanup_tmp_dupe=0
   for squid_cleanup_tmp2 in $squid_cleanup_tmp_outlist
   do
-    if test "$squid_cleanup_tmp" = "$squid_cleanup_tmp2"; then
+    AS_IF([test "$squid_cleanup_tmp" = "$squid_cleanup_tmp2"],[
       squid_cleanup_tmp_dupe=1
       break
-    fi
+    ])
   done
-  if test $squid_cleanup_tmp_dupe -eq 0; then
+  AS_IF([test $squid_cleanup_tmp_dupe -eq 0],[
     squid_cleanup_tmp_outlist="${squid_cleanup_tmp_outlist} $squid_cleanup_tmp"
-  fi
+  ])
 done
-$1=$squid_cleanup_tmp_outlist
+$1=`echo "$squid_cleanup_tmp_outlist" | sed -e 's/^ *//'`
 unset squid_cleanup_tmp_outlist
 unset squid_cleanup_tmp_dupe
 unset squid_cleanup_tmp2
@@ -118,14 +116,67 @@ dnl and $foo_module_candidates_gazonk to "yes"
 AC_DEFUN([SQUID_CHECK_EXISTING_MODULES],[
   for squid_module_check_exist_tmp in $$2
   do
-    if test -d $1/$squid_module_check_exist_tmp
-    then
+    AS_IF([test -d "$1/$squid_module_check_exist_tmp"],[
       eval "$2_$squid_module_check_exist_tmp='yes'"
       #echo "defining $2_$squid_module_check_exist_tmp"
-    else
+    ],[
       AC_MSG_ERROR([$squid_module_check_exist_tmp not found in $1])
-    fi
+    ])
   done
+])
+
+dnl Check the requirements for a helper to be built.
+dnl Requirements can be provided as an M4/autoconf script (required.m4)
+dnl which sets a variable BUILD_HELPER to the name of the helper
+dnl directory if the helper is to be added to the built SUBDIRS list.
+dnl Or, a shell script (config.test) which returns 0 exit status if
+dnl the helper is to be built.
+AC_DEFUN([SQUID_CHECK_HELPER],[
+  AS_IF([test "x$helper" = "x$1"],[
+    AS_IF([test -d "$srcdir/src/$2/$1"],[
+      dnl find helpers providing autoconf M4 requirement checks
+      m4_include(m4_echo([src/$2/$1/required.m4]))
+      dnl find helpers not yet converted to autoconf (or third party drop-in's)
+      AS_IF([test -f "$srcdir/src/$2/$1/config.test" && sh "$srcdir/src/$2/$1/config.test" "$squid_host_os"],[
+        BUILD_HELPER="$1"
+      ])
+      AS_IF(
+        [test "x$BUILD_HELPER" = "x$1"],
+          squid_cv_BUILD_HELPERS="$squid_cv_BUILD_HELPERS $BUILD_HELPER",
+        [test "x$auto_helpers" = "xyes"],
+          AC_MSG_NOTICE([helper $2/$1 ... found but cannot be built]),
+        [AC_MSG_ERROR([required helper $2/$1 ... found but cannot be built])]
+      )
+    ],[
+      AC_MSG_ERROR([helper $2/$1 ... not found])
+    ])
+    unset BUILD_HELPER
+  ])
+])
+
+dnl macro to simplify and deduplicate logic in all helpers.m4 files
+dnl Usage:
+dnl SQUID_HELPER_FEATURE_CHECK(var_name, default, path, checks)
+dnl
+AC_DEFUN([SQUID_HELPER_FEATURE_CHECK],[
+  auto_helpers=no
+  squid_cv_BUILD_HELPERS=""
+  AS_IF([test "x$enable_$1" = "x"],[enable_$1=$2],
+    [test "x$enable_$1" = "xnone"],[enable_$1=""])
+  AS_IF([test "x$enable_$1" = "xyes"],[
+    SQUID_LOOK_FOR_MODULES([$srcdir/src/$3], enable_$1)
+    auto_helpers=yes
+  ])
+  SQUID_CLEANUP_MODULES_LIST([enable_$1])
+  AC_MSG_NOTICE([checking $3 helpers: $enable_$1])
+  AS_IF([test "x$enable_$1" != "xno" -a "x$enable_$1" != "x"],[
+    SQUID_CHECK_EXISTING_MODULES([$srcdir/src/$3],[enable_$1])
+    for helper in $enable_$1 ; do
+      $4
+    done
+  ])
+  AC_MSG_NOTICE([$3 helpers to be built: $squid_cv_BUILD_HELPERS])
+  unset auto_helpers
 ])
 
 dnl lowercases the contents of the variable whose name is passed by argument
@@ -145,11 +196,11 @@ dnl 0: "no" , "false", 0, ""
 dnl aborts with an error for unknown values
 AC_DEFUN([SQUID_DEFINE_BOOL],[
 squid_tmp_define=""
-case "$2" in
-  yes|true|1) squid_tmp_define="1" ;;
-  no|false|0|"") squid_tmp_define="0" ;;
-  *) AC_MSG_ERROR([SQUID_DEFINE[]_BOOL: unrecognized value for $1: '$2']) ;;
-esac
+AS_CASE(["$2"],
+  [yes|true|1],[squid_tmp_define="1"],
+  [no|false|0|""],[squid_tmp_define="0"],
+  [AC_MSG_ERROR([SQUID_DEFINE[]_BOOL: unrecognized value for $1: '$2'])]
+)
 ifelse([$#],3,
   [AC_DEFINE_UNQUOTED([$1], [$squid_tmp_define],[$3])],
   [AC_DEFINE_UNQUOTED([$1], [$squid_tmp_define])]
@@ -160,9 +211,40 @@ unset squid_tmp_define
 dnl aborts with an error specified as the second argument if the first argument doesn't
 dnl contain either "yes" or "no"
 AC_DEFUN([SQUID_YESNO],[
-if test "$1" != "yes" -a "$1" != "no" ; then
-  AC_MSG_ERROR([$2])
-fi
+  AS_IF([test "$1" != "yes" -a "$1" != "no"],[AC_MSG_ERROR([Bad argument for $2: "$1". Expecting "yes", "no", or no argument.])])
+])
+
+dnl Check that a library is actually available, useable,
+dnl and where its pieces are (eg headers and hack macros)
+dnl Parameters for this macro are:
+dnl 1) library name without 'lib' prefix
+dnl 2) necessary library checks to be executed by this macro
+dnl  - These checks are not run when library use is explicitly disabled.
+dnl  - These checks should set LIBFOO_LIBS automake variable on success
+dnl    and ensure that it is empty or unset on failures.
+dnl  - These checks may set or change LIBS and xxFLAGS variables as needed.
+dnl    This macro restores those variables afterward (see SQUID_STATE_SAVE for details).
+AC_DEFUN([SQUID_CHECK_LIB_WORKS],[
+AH_TEMPLATE(m4_toupper(m4_translit([HAVE_LIB$1], [-+.], [___])),[Define as 1 to enable '$1' library support.])
+AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
+  SQUID_STATE_SAVE(check_lib_works_state)
+  $2
+  SQUID_STATE_ROLLBACK(check_lib_works_state)
+  AS_IF([! test -z m4_toupper(m4_translit(["$LIB$1_LIBS"], [-+.], [___]))],[
+    m4_toupper(m4_translit([CPPFLAGS="$LIB$1_CFLAGS $CPPFLAGS"], [-+.], [___]))
+    m4_toupper(m4_translit([LIB$1_LIBS="$LIB$1_PATH $LIB$1_LIBS"], [-+.], [___]))
+    AC_MSG_NOTICE([Library '$1' support: m4_translit([${with_$1:=yes (auto)} m4_toupper($LIB$1_LIBS)], [-+.], [___])])
+    m4_translit([with_$1], [-+.], [___])=yes
+    AC_DEFINE(m4_toupper(m4_translit([HAVE_LIB$1], [-+.], [___])),1,[Define as 1 to enable '$1' library support.])
+  ],[m4_translit([test "x$with_$1" = "xyes"], [-+.], [___])],[
+    AC_MSG_ERROR([Required library '$1' not found])
+  ],[
+    m4_translit([with_$1], [-+.], [___])=no
+    AC_MSG_NOTICE([Library '$1' support: no (auto)])
+  ])
+])
+AM_CONDITIONAL(m4_toupper(m4_translit([ENABLE_LIB$1],[-+.],[___])),m4_translit([test "x$with_$1" != "xno"],[-+.],[___]))
+AC_SUBST(m4_toupper(m4_translit([LIB$1_LIBS], [-+.], [___])))
 ])
 
 dnl check the build parameters for a library to auto-enable
@@ -202,31 +284,24 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
        Default is not to add anything. If the string is not specified,
        tries to determine nick and revision number of the current
        bazaar branch]),[
-  case "$enableval" in
-    no) ${TRUE}
-        ;;
-    yes)
-      if test -d "${srcdir}/.bzr"; then
-        AC_PATH_PROG(BZR,bzr,$FALSE)
-        squid_bzr_branch_nick=`cd ${srcdir} && ${BZR} nick 2>/dev/null`
-        if test $? -eq 0 -a "x$squid_bzr_branch_nick" != "x"; then
-          squid_bzr_branch_revno=`cd ${srcdir} && ${BZR} revno 2>/dev/null | sed 's/\"//g'`
-        fi
-        if test $? -eq 0 -a "x$squid_bzr_branch_revno" != "x"; then
-          sh -c "cd ${srcdir} && ${BZR} diff 2>&1 >/dev/null"
-          if test $? -eq 1; then
-              squid_bzr_branch_revno="$squid_bzr_branch_revno+changes"
-          fi
-        fi
-        if test "x$squid_bzr_branch_revno" != "x"; then
-          squid_build_info="Built branch: ${squid_bzr_branch_nick}-r${squid_bzr_branch_revno}"
-        fi
-      fi
-      ;;
-    *)
-      squid_build_info=$enableval
-      ;;
-  esac
+    AS_CASE(["$enableval"],
+      [no],[:],
+      [yes],[
+        AC_PATH_PROG(GIT,git,$FALSE)
+        AS_IF([test "x$GIT" != "x$FALSE"],[
+          squid_git_branch="`cd ${srcdir} && ${GIT} branch --show-current 2>/dev/null`"
+          squid_git_revno="`cd ${srcdir} && ${GIT} rev-parse --short HEAD 2>/dev/null`"
+          AS_IF([test "x$squid_git_branch" != "x"], [:], [squid_git_branch="unknown"])
+          AS_IF([test "x$squid_git_revno" != "x"],[
+            AS_IF([cd ${srcdir} && ! ${GIT} diff --quiet HEAD],[ # there are uncommitted changes
+              squid_git_revno="$squid_git_revno plus changes"
+            ])
+          ])
+        ])
+        squid_build_info="Git: branch ${squid_git_branch:-unavailable} revision ${squid_git_revno:-unavailable}"
+      ],
+      [squid_build_info=$enableval]
+    )
   ])
   AC_DEFINE_UNQUOTED([SQUID_BUILD_INFO],["$squid_build_info"],
      [Squid extended build info field for "squid -v" output])
@@ -240,51 +315,21 @@ AC_CACHE_CHECK([for library containing $1], [ac_Search],
 [ac_func_search_save_LIBS=$LIBS
 AC_LANG_CONFTEST([AC_LANG_PROGRAM([$6], [$1()])])
 for ac_lib in '' $2; do
-  if test -z "$ac_lib"; then
+  AS_IF([test -z "$ac_lib"],[
     ac_res="none required"
-  else
+  ],[
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib $5 $ac_func_search_save_LIBS"
-  fi
-  AC_LINK_IFELSE([], [AS_VAR_SET([ac_Search], [$ac_res])])
+  ])
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([],[])], [AS_VAR_SET([ac_Search], [$ac_res])])
   AS_VAR_SET_IF([ac_Search], [break])
 done
 AS_VAR_SET_IF([ac_Search], , [AS_VAR_SET([ac_Search], [no])])
 rm conftest.$ac_ext
 LIBS=$ac_func_search_save_LIBS])
 ac_res=AS_VAR_GET([ac_Search])
-AS_IF([test "$ac_res" != no],
-  [test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  $3],
-      [$4])
+AS_IF([test "$ac_res" != no],[
+  AS_IF([test "$ac_res" != "none required"],[LIBS="$ac_res $LIBS"])
+  $3],[$4])
 AS_VAR_POPDEF([ac_Search])dnl
-])
-
-dnl Check for Cyrus SASL
-AC_DEFUN([SQUID_CHECK_SASL],[
-  squid_cv_check_sasl="auto"
-  AC_CHECK_HEADERS([sasl/sasl.h sasl.h])
-  AC_CHECK_LIB(sasl2,sasl_errstring,[LIBSASL="-lsasl2"],[
-    AC_CHECK_LIB(sasl,sasl_errstring,[LIBSASL="-lsasl"], [
-      squid_cv_check_sasl="no"
-    ])
-  ])
-  case "$squid_host_os" in
-    Darwin)
-      if test "$ac_cv_lib_sasl2_sasl_errstring" = "yes" ; then
-        AC_DEFINE(HAVE_SASL_DARWIN,1,[Define to 1 if Mac Darwin without sasl.h])
-        echo "checking for MAC Darwin without sasl.h ... yes"
-        squid_cv_check_sasl="yes"
-      else
-        echo "checking for MAC Darwin without sasl.h ... no"
-        squid_cv_check_sasl="no"
-      fi
-      ;;
-  esac
-  if test "x$squid_cv_check_sasl" = "xno"; then
-    AC_MSG_WARN([Neither SASL nor SASL2 found])
-  else
-    squid_cv_check_sasl="yes"
-  fi
-  AC_SUBST(LIBSASL)
 ])

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,47 +10,37 @@
  * DEBUG: section 28    Access Control
  *
  * This file contains ACL routines that are not part of the
- * ACL class, nor any other class yet, and that need to be
+ * Acl::Node class, nor any other class yet, and that need to be
  * factored into appropriate places. They are here to reduce
- * unneeded dependencies between the ACL class and the rest
+ * unneeded dependencies between the Acl::Node class and the rest
  * of squid.
  */
 
 #include "squid.h"
-#include "acl/Acl.h"
 #include "acl/AclDenyInfoList.h"
-#include "acl/Checklist.h"
 #include "acl/Gadgets.h"
-#include "acl/Strategised.h"
 #include "acl/Tree.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
 #include "globals.h"
 #include "HttpRequest.h"
+#include "SquidConfig.h"
 #include "src/sbuf/Stream.h"
 
-#include <set>
 #include <algorithm>
 
-typedef std::set<ACL*> AclSet;
-/// Accumulates all ACLs to facilitate their clean deletion despite reuse.
-static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
-
-/* does name lookup, returns page_id */
 err_type
-aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allowed)
+FindDenyInfoPage(const Acl::Answer &answer, const bool redirect_allowed)
 {
-    if (!name) {
-        debugs(28, 3, "ERR_NONE due to a NULL name");
+    if (!answer.lastCheckedName) {
+        debugs(28, 3, "ERR_NONE because access was denied without evaluating ACLs");
         return ERR_NONE;
     }
 
-    AclDenyInfoList *A = nullptr;
+    const auto &name = *answer.lastCheckedName;
 
-    debugs(28, 8, "got called for " << name);
-
-    for (A = *head; A; A = A->next) {
+    for (auto A = Config.denyInfoList; A; A = A->next) {
         if (!redirect_allowed && strchr(A->err_page_name, ':') ) {
             debugs(28, 8, "Skip '" << A->err_page_name << "' 30x redirects not allowed as response here.");
             continue;
@@ -58,35 +48,30 @@ aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allow
 
         for (const auto &aclName: A->acl_list) {
             if (aclName.cmp(name) == 0) {
-                debugs(28, 8, "match on " << name);
+                debugs(28, 8, "matched " << name << "; returning " << A->err_page_id << ' ' << A->err_page_name);
                 return A->err_page_id;
             }
         }
     }
 
-    debugs(28, 8, "aclGetDenyInfoPage: no match");
+    debugs(28, 8, "no match for " << name << (Config.denyInfoList ? "" : "; no deny_info rules"));
     return ERR_NONE;
 }
 
-/* does name lookup, returns if it is a proxy_auth acl */
-int
-aclIsProxyAuth(const char *name)
+bool
+aclIsProxyAuth(const std::optional<SBuf> &name)
 {
     if (!name) {
-        debugs(28, 3, "false due to a NULL name");
+        debugs(28, 3, "no; caller did not supply an ACL name");
         return false;
     }
 
-    debugs(28, 5, "aclIsProxyAuth: called for " << name);
-
-    ACL *a;
-
-    if ((a = ACL::FindByName(name))) {
-        debugs(28, 5, "aclIsProxyAuth: returning " << a->isProxyAuth());
+    if (const auto a = Acl::Node::FindByName(*name)) {
+        debugs(28, 5, "returning " << a->isProxyAuth() << " for ACL " << *name);
         return a->isProxyAuth();
     }
 
-    debugs(28, 3, "aclIsProxyAuth: WARNING, called for nonexistent ACL");
+    debugs(28, 3, "WARNING: Called for nonexistent ACL " << *name);
     return false;
 }
 
@@ -134,8 +119,17 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
     *T = A;
 }
 
+const Acl::Tree &
+Acl::ToTree(const TreePointer * const config)
+{
+    Assure(config);
+    const auto &treePtr = *config;
+    Assure(treePtr);
+    return *treePtr;
+}
+
 void
-aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
+aclParseAccessLine(const char *directive, ConfigParser &, acl_access **config)
 {
     /* first expect either 'allow' or 'deny' */
     const char *t = ConfigParser::NextToken();
@@ -157,14 +151,10 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
         return;
     }
 
-    const int ruleId = ((treep && *treep) ? (*treep)->childrenCount() : 0) + 1;
-    MemBuf ctxBuf;
-    ctxBuf.init();
-    ctxBuf.appendf("%s#%d", directive, ruleId);
-    ctxBuf.terminate();
+    const int ruleId = ((config && *config) ? ToTree(*config).childrenCount() : 0) + 1;
 
     Acl::AndNode *rule = new Acl::AndNode;
-    rule->context(ctxBuf.content(), config_input_line);
+    rule->context(ToSBuf(directive, '#', ruleId), config_input_line);
     rule->lineParse();
     if (rule->empty()) {
         debugs(28, DBG_CRITICAL, "aclParseAccessLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
@@ -175,96 +165,50 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
 
     /* Append to the end of this list */
 
+    assert(config);
+    if (!*config)
+        *config = new acl_access();
+    const auto treep = *config;
+
     assert(treep);
     if (!*treep) {
         *treep = new Acl::Tree;
-        (*treep)->context(directive, config_input_line);
+        (*treep)->context(SBuf(directive), config_input_line);
     }
 
     (*treep)->add(rule, action);
-
-    /* We lock _acl_access structures in ACLChecklist::matchNonBlocking() */
 }
 
 // aclParseAclList does not expect or set actions (cf. aclParseAccessLine)
 size_t
-aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
+aclParseAclList(ConfigParser &, ACLList **config, const char *label)
 {
     // accommodate callers unable to convert their ACL list context to string
     if (!label)
         label = "...";
 
-    MemBuf ctxLine;
-    ctxLine.init();
-    ctxLine.appendf("(%s %s line)", cfg_directive, label);
-    ctxLine.terminate();
-
     Acl::AndNode *rule = new Acl::AndNode;
-    rule->context(ctxLine.content(), config_input_line);
+    rule->context(ToSBuf('(', cfg_directive, ' ', label, " line)"), config_input_line);
     const auto aclCount = rule->lineParse();
 
-    MemBuf ctxTree;
-    ctxTree.init();
-    ctxTree.appendf("%s %s", cfg_directive, label);
-    ctxTree.terminate();
-
-    // We want a cbdata-protected Tree (despite giving it only one child node).
+    // XXX: We have created only one node, and our callers do not support
+    // actions, but we now have to create an action-supporting Acl::Tree because
+    // Checklist needs actions support. TODO: Add actions methods to Acl::Node,
+    // so that Checklist can be satisfied with Acl::AndNode created above.
     Acl::Tree *tree = new Acl::Tree;
     tree->add(rule);
-    tree->context(ctxTree.content(), config_input_line);
+    tree->context(ToSBuf(cfg_directive, ' ', label), config_input_line);
 
-    assert(treep);
-    assert(!*treep);
-    *treep = tree;
+    assert(config);
+    assert(!*config);
+    *config = new acl_access(tree);
 
     return aclCount;
-}
-
-void
-aclRegister(ACL *acl)
-{
-    if (!acl->registered) {
-        if (!RegisteredAcls)
-            RegisteredAcls = new AclSet;
-        RegisteredAcls->insert(acl);
-        acl->registered = true;
-    }
-}
-
-/// remove registered acl from the centralized deletion set
-static
-void
-aclDeregister(ACL *acl)
-{
-    if (acl->registered) {
-        if (RegisteredAcls)
-            RegisteredAcls->erase(acl);
-        acl->registered = false;
-    }
 }
 
 /*********************/
 /* Destroy functions */
 /*********************/
-
-/// called to delete ALL Acls.
-void
-aclDestroyAcls(ACL ** head)
-{
-    *head = nullptr; // Config.aclList
-    if (AclSet *acls = RegisteredAcls) {
-        debugs(28, 8, "deleting all " << acls->size() << " ACLs");
-        while (!acls->empty()) {
-            ACL *acl = *acls->begin();
-            // We use centralized deletion (this function) so ~ACL should not
-            // delete other ACLs, but we still deregister first to prevent any
-            // accesses to the being-deleted ACL via RegisteredAcls.
-            assert(acl->registered); // make sure we are making progress
-            aclDeregister(acl);
-            delete acl;
-        }
-    }
-}
 
 void
 aclDestroyAclList(ACLList **list)
@@ -280,7 +224,7 @@ aclDestroyAccessList(acl_access ** list)
 {
     assert(list);
     if (*list)
-        debugs(28, 3, "destroying: " << *list << ' ' << (*list)->name);
+        debugs(28, 3, "destroying: " << *list << ' ' << ToTree(*list).name);
     delete *list;
     *list = nullptr;
 }

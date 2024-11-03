@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/AsyncCbdataCalls.h"
+#include "base/IoManip.h"
 #include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "CacheDigest.h"
@@ -35,6 +36,7 @@
 #include "mgr/StoreIoAction.h"
 #include "repl_modules.h"
 #include "RequestFlags.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "stmem.h"
@@ -59,6 +61,7 @@
 /** StoreEntry uses explicit new/delete operators, which set pool chunk size to 2MB
  * XXX: convert to MEMPROXY_CLASS() API
  */
+#include "mem/Allocator.h"
 #include "mem/Pool.h"
 
 #include <climits>
@@ -117,7 +120,7 @@ static EVH storeLateRelease;
  * local variables
  */
 static std::stack<StoreEntry*> LateReleaseStack;
-MemAllocator *StoreEntry::pool = nullptr;
+Mem::Allocator *StoreEntry::pool = nullptr;
 
 void
 Store::Stats(StoreEntry * output)
@@ -225,6 +228,19 @@ StoreEntry::bytesWanted (Range<size_t> const aRange, bool ignoreDelayPools) cons
 }
 
 bool
+StoreEntry::hasParsedReplyHeader() const
+{
+    if (mem_obj) {
+        const auto &reply = mem_obj->baseReply();
+        if (reply.pstate == Http::Message::psParsed) {
+            debugs(20, 7, reply.hdr_sz);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool
 StoreEntry::checkDeferRead(int) const
 {
     return (bytesWanted(Range<size_t>(0,INT_MAX)) == 0);
@@ -255,6 +271,8 @@ StoreEntry::storeClientType() const
 
     assert(mem_obj);
 
+    debugs(20, 7, *this << " inmem_lo=" << mem_obj->inmem_lo);
+
     if (mem_obj->inmem_lo)
         return STORE_DISK_CLIENT;
 
@@ -282,6 +300,7 @@ StoreEntry::storeClientType() const
                 return STORE_MEM_CLIENT;
             }
         }
+        debugs(20, 7, "STORE_OK STORE_DISK_CLIENT");
         return STORE_DISK_CLIENT;
     }
 
@@ -289,7 +308,7 @@ StoreEntry::storeClientType() const
     /*
      * If this is the first client, let it be the mem client
      */
-    if (mem_obj->nclients == 1)
+    if (mem_obj->nclients == 0)
         return STORE_MEM_CLIENT;
 
     /*
@@ -301,10 +320,18 @@ StoreEntry::storeClientType() const
     if (swap_status == SWAPOUT_NONE)
         return STORE_MEM_CLIENT;
 
+    // TODO: The above "must make this a mem client" logic contradicts "Slight
+    // weirdness" logic in store_client::doCopy() that converts hits to misses
+    // on startSwapin() failures. We should probably attempt to open a swapin
+    // file _here_ instead (and avoid STORE_DISK_CLIENT designation for clients
+    // that fail to do so). That would also address a similar problem with Rock
+    // store that does not yet support swapin during SWAPOUT_WRITING.
+
     /*
      * otherwise, make subsequent clients read from disk so they
      * can not delay the first, and vice-versa.
      */
+    debugs(20, 7, "STORE_PENDING STORE_DISK_CLIENT");
     return STORE_DISK_CLIENT;
 }
 
@@ -360,10 +387,9 @@ StoreEntry::destroyMemObject()
 {
     debugs(20, 3, mem_obj << " in " << *this);
 
-    // Store::Root() is FATALly missing during shutdown
-    if (hasTransients() && !shutting_down)
+    if (hasTransients())
         Store::Root().transientsDisconnect(*this);
-    if (hasMemStore() && !shutting_down)
+    if (hasMemStore())
         Store::Root().memoryDisconnect(*this);
 
     if (auto memObj = mem_obj) {
@@ -380,8 +406,7 @@ destroyStoreEntry(void *data)
     StoreEntry *e = static_cast<StoreEntry *>(static_cast<hash_link *>(data));
     assert(e != nullptr);
 
-    // Store::Root() is FATALly missing during shutdown
-    if (e->hasDisk() && !shutting_down)
+    if (e->hasDisk())
         e->disk().disconnect(*e);
 
     e->destroyMemObject();
@@ -916,7 +941,7 @@ StoreEntry::checkCachable()
         return 0; // avoid rerequesting release below
     }
 
-    if (store_status == STORE_OK && EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
+    if (EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
         debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
         ++store_check_cachable_hist.no.wrong_content_length;
     } else if (!mem_obj) {
@@ -1095,8 +1120,7 @@ StoreEntry::abort()
 void
 storeGetMemSpace(int size)
 {
-    if (!shutting_down) // Store::Root() is FATALly missing during shutdown
-        Store::Root().freeMemorySpace(size);
+    Store::Root().freeMemorySpace(size);
 }
 
 /* thunk through to Store::Root().maintain(). Note that this would be better still
@@ -1254,6 +1278,9 @@ StoreEntry::memoryCachable()
     if (!checkCachable())
         return 0;
 
+    if (shutting_down)
+        return 0; // avoid heavy optional work during shutdown
+
     if (mem_obj == nullptr)
         return 0;
 
@@ -1305,16 +1332,6 @@ StoreEntry::negativeCache()
         EBIT_SET(flags, ENTRY_NEGCACHED);
         debugs(20, 6, "expires = " << expires << " +" << (expires-squid_curtime) << ' ' << *this);
     }
-}
-
-void
-storeFreeMemory(void)
-{
-    Store::FreeMemory();
-#if USE_CACHE_DIGESTS
-    delete store_digest;
-#endif
-    store_digest = nullptr;
 }
 
 int
@@ -1440,8 +1457,14 @@ StoreEntry::updateOnNotModified(const StoreEntry &e304)
     // update reply before calling timestampsSet() below
     const auto &oldReply = mem_obj->freshestReply();
     const auto updatedReply = oldReply.recreateOnNotModified(e304.mem_obj->baseReply());
-    if (updatedReply) // HTTP 304 brought in new information
+    if (updatedReply) { // HTTP 304 brought in new information
+        if (updatedReply->prefixLen() > Config.maxReplyHeaderSize) {
+            throw TextException(ToSBuf("cannot update the cached response because its updated ",
+                                       updatedReply->prefixLen(), "-byte header would exceed ",
+                                       Config.maxReplyHeaderSize, "-byte reply_header_max_size"), Here());
+        }
         mem_obj->updateReply(*updatedReply);
+    }
     // else continue to use the previous update, if any
 
     if (!timestampsSet() && !updatedReply)
@@ -1714,15 +1737,13 @@ StoreEntry::startWriting()
     rep->packHeadersUsingSlowPacker(*this);
     mem_obj->markEndOfReplyHeaders();
 
+    // Same-worker collapsing risks end with the receipt of the headers.
+    // SMP collapsing risks remain until the headers are actually cached, but
+    // that event is announced via CF-agnostic Store writing broadcasts.
+    setCollapsingRequirement(false);
+
     rep->body.packInto(this);
     flush();
-
-    // The entry headers are written, new clients
-    // should not collapse anymore.
-    if (hittingRequiresCollapsing()) {
-        setCollapsingRequirement(false);
-        Store::Root().transientsClearCollapsingRequirement(*this);
-    }
 }
 
 char const *
@@ -1732,37 +1753,61 @@ StoreEntry::getSerialisedMetaData(size_t &length) const
 }
 
 /**
- * Abandon the transient entry our worker has created if neither the shared
- * memory cache nor the disk cache wants to store it. Collapsed requests, if
- * any, should notice and use Plan B instead of getting stuck waiting for us
- * to start swapping the entry out.
+ * If needed, signal transient entry readers that no more cache changes are
+ * expected and, hence, they should switch to Plan B instead of getting stuck
+ * waiting for us to start or finish storing the entry.
  */
 void
-StoreEntry::transientsAbandonmentCheck()
+StoreEntry::storeWritingCheckpoint()
 {
-    if (mem_obj && !Store::Root().transientsReader(*this) && // this worker is responsible
-            hasTransients() && // other workers may be interested
-            !hasMemStore() && // rejected by the shared memory cache
-            mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) {
-        debugs(20, 7, "cannot be shared: " << *this);
-        if (!shutting_down) // Store::Root() is FATALly missing during shutdown
-            Store::Root().stopSharing(*this);
+    if (!hasTransients())
+        return; // no SMP complications
+
+    // writers become readers but only after completeWriting() which we trigger
+    if (Store::Root().transientsReader(*this))
+        return; // readers do not need to inform
+
+    assert(mem_obj);
+    if (mem_obj->memCache.io != Store::ioDone) {
+        debugs(20, 7, "not done with mem-caching " << *this);
+        return;
     }
+
+    const auto doneWithDiskCache =
+        // will not start
+        (mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) ||
+        // or has started but finished already
+        (mem_obj->swapout.decision == MemObject::SwapOut::swStarted && !swappingOut());
+    if (!doneWithDiskCache) {
+        debugs(20, 7, "not done with disk-caching " << *this);
+        return;
+    }
+
+    debugs(20, 7, "done with writing " << *this);
+    Store::Root().noteStoppedSharedWriting(*this);
 }
 
 void
-StoreEntry::memOutDecision(const bool)
+StoreEntry::memOutDecision(const bool willCacheInRam)
 {
-    transientsAbandonmentCheck();
+    if (!willCacheInRam)
+        return storeWritingCheckpoint();
+    assert(mem_obj->memCache.io != Store::ioDone);
+    // and wait for storeWriterDone()
 }
 
 void
 StoreEntry::swapOutDecision(const MemObject::SwapOut::Decision &decision)
 {
-    // Abandon our transient entry if neither shared memory nor disk wants it.
     assert(mem_obj);
     mem_obj->swapout.decision = decision;
-    transientsAbandonmentCheck();
+    storeWritingCheckpoint();
+}
+
+void
+StoreEntry::storeWriterDone()
+{
+    storeWritingCheckpoint();
 }
 
 void
@@ -1896,8 +1941,7 @@ StoreEntry::attachToDisk(const sdirno dirn, const sfileno fno, const swap_status
 {
     debugs(88, 3, "attaching entry with key " << getMD5Text() << " : " <<
            swapStatusStr[status] << " " << dirn << " " <<
-           std::hex << std::setw(8) << std::setfill('0') <<
-           std::uppercase << fno);
+           asHex(fno).upperCase().minDigits(8));
     checkDisk();
     swap_dirn = dirn;
     swap_filen = fno;
@@ -1967,6 +2011,10 @@ StoreEntry::describeTimestamps() const
 void
 StoreEntry::setCollapsingRequirement(const bool required)
 {
+    if (hittingRequiresCollapsing() == required)
+        return; // no change
+
+    debugs(20, 5, (required ? "adding to " : "removing from ") << *this);
     if (required)
         EBIT_SET(flags, ENTRY_REQUIRES_COLLAPSING);
     else

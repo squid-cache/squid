@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,16 +41,17 @@
 /* digest_nonce_h still uses explicit alloc()/freeOne() MemPool calls.
  * XXX: convert to MEMPROXY_CLASS() API
  */
+#include "mem/Allocator.h"
 #include "mem/Pool.h"
 
 static AUTHSSTATS authenticateDigestStats;
 
-helper *digestauthenticators = nullptr;
+Helper::ClientPointer digestauthenticators;
 
 static hash_table *digest_nonce_cache;
 
 static int authdigest_initialised = 0;
-static MemAllocator *digest_nonce_pool = nullptr;
+static Mem::Allocator *digest_nonce_pool = nullptr;
 
 enum http_digest_attr_type {
     DIGEST_USERNAME,
@@ -65,22 +66,24 @@ enum http_digest_attr_type {
     DIGEST_INVALID_ATTR
 };
 
-static const LookupTable<http_digest_attr_type>::Record
-DigestAttrs[] = {
-    {"username", DIGEST_USERNAME},
-    {"realm", DIGEST_REALM},
-    {"qop", DIGEST_QOP},
-    {"algorithm", DIGEST_ALGORITHM},
-    {"uri", DIGEST_URI},
-    {"nonce", DIGEST_NONCE},
-    {"nc", DIGEST_NC},
-    {"cnonce", DIGEST_CNONCE},
-    {"response", DIGEST_RESPONSE},
-    {nullptr, DIGEST_INVALID_ATTR}
-};
-
-LookupTable<http_digest_attr_type>
-DigestFieldsLookupTable(DIGEST_INVALID_ATTR, DigestAttrs);
+static const auto &
+digestFieldsLookupTable()
+{
+    static const LookupTable<http_digest_attr_type>::Record DigestAttrs[] = {
+        {"username", DIGEST_USERNAME},
+        {"realm", DIGEST_REALM},
+        {"qop", DIGEST_QOP},
+        {"algorithm", DIGEST_ALGORITHM},
+        {"uri", DIGEST_URI},
+        {"nonce", DIGEST_NONCE},
+        {"nc", DIGEST_NC},
+        {"cnonce", DIGEST_CNONCE},
+        {"response", DIGEST_RESPONSE},
+        {nullptr, DIGEST_INVALID_ATTR}
+    };
+    static const auto table = new LookupTable<http_digest_attr_type>(DIGEST_INVALID_ATTR, DigestAttrs);
+    return *table;
+}
 
 /*
  *
@@ -158,7 +161,7 @@ authenticateDigestNonceNew(void)
      * the hash function.
      */
     static std::mt19937 mt(RandomSeed32());
-    static xuniform_int_distribution<uint32_t> newRandomData;
+    static std::uniform_int_distribution<uint32_t> newRandomData;
 
     /* create a new nonce */
     newnonce->nc = 0;
@@ -524,7 +527,7 @@ Auth::Digest::Config::init(Auth::SchemeConfig *)
         authdigest_initialised = 1;
 
         if (digestauthenticators == nullptr)
-            digestauthenticators = new helper("digestauthenticator");
+            digestauthenticators = Helper::Client::Make("digestauthenticator");
 
         digestauthenticators->cmdline = authenticateProgram;
 
@@ -532,7 +535,7 @@ Auth::Digest::Config::init(Auth::SchemeConfig *)
 
         digestauthenticators->ipc_type = IPC_STREAM;
 
-        helperOpenServers(digestauthenticators);
+        digestauthenticators->openSessions();
     }
 }
 
@@ -558,7 +561,6 @@ Auth::Digest::Config::done()
     if (!shutting_down)
         return;
 
-    delete digestauthenticators;
     digestauthenticators = nullptr;
 
     if (authenticateProgram)
@@ -774,7 +776,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
         }
 
         /* find type */
-        const http_digest_attr_type t = DigestFieldsLookupTable.lookup(keyName);
+        const auto t = digestFieldsLookupTable().lookup(keyName);
 
         switch (t) {
         case DIGEST_USERNAME:
@@ -826,11 +828,15 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
             break;
 
         case DIGEST_NC:
-            if (value.size() != 8) {
+            if (value.size() == 8) {
+                // for historical reasons, the nc value MUST be exactly 8 bytes
+                static_assert(sizeof(digest_request->nc) == 8 + 1);
+                xstrncpy(digest_request->nc, value.rawBuf(), value.size() + 1);
+                debugs(29, 9, "Found noncecount '" << digest_request->nc << "'");
+            } else {
                 debugs(29, 9, "Invalid nc '" << value << "' in '" << temp << "'");
+                digest_request->nc[0] = 0;
             }
-            xstrncpy(digest_request->nc, value.rawBuf(), value.size() + 1);
-            debugs(29, 9, "Found noncecount '" << digest_request->nc << "'");
             break;
 
         case DIGEST_CNONCE:
@@ -961,13 +967,19 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
             return rv;
         }
     } else {
-        /* cnonce and nc both require qop */
-        if (digest_request->cnonce || digest_request->nc[0] != '\0') {
-            debugs(29, 2, "missing qop!");
-            rv = authDigestLogUsername(username, digest_request, aRequestRealm);
-            safe_free(username);
-            return rv;
-        }
+        /* RFC7616 section 3.3, qop:
+         *  "MUST be used by all implementations"
+         *
+         * RFC7616 section 3.4, qop:
+         *  "value MUST be one of the alternatives the server
+         *   indicated it supports in the WWW-Authenticate header field"
+         *
+         * Squid sends qop=auth, reject buggy or outdated clients.
+        */
+        debugs(29, 2, "missing qop!");
+        rv = authDigestLogUsername(username, digest_request, aRequestRealm);
+        safe_free(username);
+        return rv;
     }
 
     /** below nonce state dependent **/

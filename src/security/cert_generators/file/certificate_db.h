@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSL_CERTIFICATE_DB_H
-#define SQUID_SSL_CERTIFICATE_DB_H
+#ifndef SQUID_SRC_SECURITY_CERT_GENERATORS_FILE_CERTIFICATE_DB_H
+#define SQUID_SRC_SECURITY_CERT_GENERATORS_FILE_CERTIFICATE_DB_H
 
 #include "base/Here.h"
 #include "ssl/gadgets.h"
@@ -184,5 +184,5 @@ private:
 };
 
 } // namespace Ssl
-#endif // SQUID_SSL_CERTIFICATE_DB_H
+#endif /* SQUID_SRC_SECURITY_CERT_GENERATORS_FILE_CERTIFICATE_DB_H */
 

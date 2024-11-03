@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -140,14 +140,9 @@ bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info
     if (info.icapReply->sline.status() == Http::scNone) // failed to parse the reply; I/O err
         return true;
 
-    ACLFilledChecklist *cl =
-        new ACLFilledChecklist(TheConfig.repeat, info.icapRequest, dash_str);
-    cl->reply = info.icapReply;
-    HTTPMSGLOCK(cl->reply);
-
-    bool result = cl->fastCheck().allowed();
-    delete cl;
-    return result;
+    ACLFilledChecklist cl(TheConfig.repeat, info.icapRequest);
+    cl.updateReply(info.icapReply);
+    return cl.fastCheck().allowed();
 }
 
 /* ICAPXactAbortInfo */

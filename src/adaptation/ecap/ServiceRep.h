@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,13 +8,18 @@
 
 /* DEBUG: section 93    eCAP Interface */
 
-#ifndef SQUID_ECAP_SERVICE_REP_H
-#define SQUID_ECAP_SERVICE_REP_H
+#ifndef SQUID_SRC_ADAPTATION_ECAP_SERVICEREP_H
+#define SQUID_SRC_ADAPTATION_ECAP_SERVICEREP_H
 
 #include "adaptation/forward.h"
 #include "adaptation/Service.h"
+
+#if HAVE_LIBECAP_COMMON_FORWARD_H
 #include <libecap/common/forward.h>
+#endif
+#if HAVE_LIBECAP_COMMON_MEMORY_H
 #include <libecap/common/memory.h>
+#endif
 
 namespace Adaptation
 {
@@ -29,20 +34,20 @@ class ServiceRep : public Adaptation::Service
 {
 public:
     explicit ServiceRep(const ServiceConfigPointer &aConfig);
-    virtual ~ServiceRep();
+    ~ServiceRep() override;
 
     typedef libecap::shared_ptr<libecap::adapter::Service> AdapterService;
 
     /* Adaptation::Service API */
-    virtual void finalize();
-    virtual bool probed() const;
-    virtual bool up() const;
-    virtual Adaptation::Initiate *makeXactLauncher(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp);
-    virtual bool wantsUrl(const SBuf &urlPath) const;
-    virtual void noteFailure();
+    void finalize() override;
+    bool probed() const override;
+    bool up() const override;
+    Adaptation::Initiate *makeXactLauncher(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp) override;
+    bool wantsUrl(const SBuf &urlPath) const override;
+    void noteFailure() override;
     virtual const char *status() const;
-    virtual void detach();
-    virtual bool detached() const;
+    void detach() override;
+    bool detached() const override;
 
 protected:
     void tryConfigureAndStart();
@@ -66,5 +71,5 @@ void CheckUnusedAdapterServices(const Services& services);
 } // namespace Ecap
 } // namespace Adaptation
 
-#endif /* SQUID_ECAP_SERVICE_REP_H */
+#endif /* SQUID_SRC_ADAPTATION_ECAP_SERVICEREP_H */
 

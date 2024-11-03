@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -197,7 +197,7 @@ Icmp6::Recv(void)
 {
     int n;
     struct addrinfo *from = nullptr;
-//    struct ip6_hdr *ip = NULL;
+//    struct ip6_hdr *ip = nullptr;
     static char *pkt = nullptr;
     struct icmp6_hdr *icmp6header = nullptr;
     icmpEchoData *echo = nullptr;

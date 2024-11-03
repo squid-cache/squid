@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef HTTPBODY_H_
-#define HTTPBODY_H_
+#ifndef SQUID_SRC_HTTPBODY_H
+#define SQUID_SRC_HTTPBODY_H
 
 #include "sbuf/SBuf.h"
 
@@ -50,5 +50,5 @@ private:
     SBuf raw_; // body bytes
 };
 
-#endif /* HTTPBODY_H_ */
+#endif /* SQUID_SRC_HTTPBODY_H */
 

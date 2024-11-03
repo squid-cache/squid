@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICAPXACTION_H
-#define SQUID_ICAPXACTION_H
+#ifndef SQUID_SRC_ADAPTATION_ICAP_XACTION_H
+#define SQUID_SRC_ADAPTATION_ICAP_XACTION_H
 
 #include "AccessLogEntry.h"
 #include "adaptation/icap/ServiceRep.h"
@@ -45,7 +45,7 @@ class Xaction: public Adaptation::Initiate
 
 public:
     Xaction(const char *aTypeName, ServiceRep::Pointer &aService);
-    virtual ~Xaction();
+    ~Xaction() override;
 
     void disableRetries();
     void disableRepeats(const char *reason);
@@ -67,8 +67,8 @@ public:
     int attempts;
 
 protected:
-    virtual void start();
-    virtual void noteInitiatorAborted(); // TODO: move to Adaptation::Initiate
+    void start() override;
+    void noteInitiatorAborted() override; // TODO: move to Adaptation::Initiate
 
     /// starts sending/receiving ICAP messages
     virtual void startShoveling() = 0;
@@ -97,13 +97,13 @@ protected:
     virtual bool doneReading() const;
     virtual bool doneWriting() const;
     bool doneWithIo() const;
-    virtual bool doneAll() const;
+    bool doneAll() const override;
 
     // called just before the 'done' transaction is deleted
-    virtual void swanSong();
+    void swanSong() override;
 
     // returns a temporary string depicting transaction status, for debugging
-    virtual const char *status() const;
+    const char *status() const override;
     virtual void fillPendingStatus(MemBuf &buf) const;
     virtual void fillDoneStatus(MemBuf &buf) const;
 
@@ -112,12 +112,12 @@ protected:
 
 public:
     // custom exception handling and end-of-call checks
-    virtual void callException(const std::exception  &e);
-    virtual void callEnd();
+    void callException(const std::exception  &e) override;
+    void callEnd() override;
     /// clear stored error details, if any; used for retries/repeats
     virtual void clearError() {}
     virtual AccessLogEntry::Pointer masterLogEntry();
-    void dnsLookupDone(const ipcache_addrs *ia);
+    void dnsLookupDone(std::optional<Ip::Address>);
 
 protected:
     // logging
@@ -171,5 +171,5 @@ private:
 } // namespace Icap
 } // namespace Adaptation
 
-#endif /* SQUID_ICAPXACTION_H */
+#endif /* SQUID_SRC_ADAPTATION_ICAP_XACTION_H */
 

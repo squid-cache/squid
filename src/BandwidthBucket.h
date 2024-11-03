@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef BANDWIDTHBUCKET_H
-#define BANDWIDTHBUCKET_H
+#ifndef SQUID_SRC_BANDWIDTHBUCKET_H
+#define SQUID_SRC_BANDWIDTHBUCKET_H
 
 #if USE_DELAY_POOLS
 
@@ -56,5 +56,5 @@ protected:
 
 #endif /* USE_DELAY_POOLS */
 
-#endif
+#endif /* SQUID_SRC_BANDWIDTHBUCKET_H */
 

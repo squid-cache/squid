@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -132,6 +132,19 @@ Auth::UserRequest::denyMessage(char const * const default_message) const
     return getDenyMessage();
 }
 
+bool
+Auth::UserRequest::authenticated() const
+{
+    const auto u = user();
+    if (u && u->credentials() == Auth::Ok) {
+        debugs(29, 7, "yes");
+        return true;
+    }
+
+    debugs(29, 7, "no");
+    return false;
+}
+
 static void
 authenticateAuthUserRequestSetIp(Auth::UserRequest::Pointer auth_user_request, Ip::Address &ipaddr)
 {
@@ -172,11 +185,11 @@ authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer auth_user_request)
 /*
  * authenticateUserAuthenticated: is this auth_user structure logged in ?
  */
-int
-authenticateUserAuthenticated(Auth::UserRequest::Pointer auth_user_request)
+bool
+authenticateUserAuthenticated(const Auth::UserRequest::Pointer &auth_user_request)
 {
-    if (auth_user_request == nullptr || !auth_user_request->valid())
-        return 0;
+    if (!auth_user_request || !auth_user_request->valid())
+        return false;
 
     return auth_user_request->authenticated();
 }
@@ -465,10 +478,9 @@ static Auth::ConfigVector &
 schemesConfig(HttpRequest *request, HttpReply *rep)
 {
     if (!Auth::TheConfig.schemeLists.empty() && Auth::TheConfig.schemeAccess) {
-        ACLFilledChecklist ch(nullptr, request, nullptr);
-        ch.reply = rep;
-        HTTPMSGLOCK(ch.reply);
-        const auto answer = ch.fastCheck(Auth::TheConfig.schemeAccess);
+        ACLFilledChecklist ch(nullptr, request);
+        ch.updateReply(rep);
+        const auto &answer = ch.fastCheck(Auth::TheConfig.schemeAccess);
         if (answer.allowed())
             return Auth::TheConfig.schemeLists.at(answer.kind).authConfigs;
     }

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_PDU_H
-#define SQUID_SNMP_PDU_H
+#ifndef SQUID_INCLUDE_SNMP_PDU_H
+#define SQUID_INCLUDE_SNMP_PDU_H
 
 /* required for oid typedef */
 #include "asn1.h"
@@ -103,5 +103,5 @@ void snmp_add_null_var(struct snmp_pdu *, oid *, int);
 }
 #endif
 
-#endif /* SQUID_SNMP_PDU_H */
+#endif /* SQUID_INCLUDE_SNMP_PDU_H */
 

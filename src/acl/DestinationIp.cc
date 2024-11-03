@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,7 +53,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
 
     if (lookupBanned) {
         if (!checklist->request->url.hostIsNumeric()) {
-            debugs(28, 3, "No-lookup DNS ACL '" << AclMatchedName << "' for " << checklist->request->url.host());
+            debugs(28, 3, "No-lookup DNS ACL '" << name << "' for " << checklist->request->url.host());
             return 0;
         }
 
@@ -76,7 +76,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
     } else if (!checklist->request->flags.destinationIpLookedUp) {
         /* No entry in cache, lookup not attempted */
         debugs(28, 3, "can't yet compare '" << name << "' ACL for " << checklist->request->url.host());
-        if (checklist->goAsync(DestinationIPLookup::Instance()))
+        if (checklist->goAsync(StartLookup, *this))
             return -1;
         // else fall through to mismatch, hiding the lookup failure (XXX)
     }
@@ -84,27 +84,18 @@ ACLDestinationIP::match(ACLChecklist *cl)
     return 0;
 }
 
-DestinationIPLookup DestinationIPLookup::instance_;
-
-DestinationIPLookup *
-DestinationIPLookup::Instance()
+void
+ACLDestinationIP::StartLookup(ACLFilledChecklist &cl, const Acl::Node &)
 {
-    return &instance_;
+    ipcache_nbgethostbyname(cl.request->url.host(), LookupDone, &cl);
 }
 
 void
-DestinationIPLookup::checkForAsync(ACLChecklist *cl)const
-{
-    ACLFilledChecklist *checklist = Filled(cl);
-    ipcache_nbgethostbyname(checklist->request->url.host(), LookupDone, checklist);
-}
-
-void
-DestinationIPLookup::LookupDone(const ipcache_addrs *, const Dns::LookupDetails &details, void *data)
+ACLDestinationIP::LookupDone(const ipcache_addrs *, const Dns::LookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     checklist->request->flags.destinationIpLookedUp = true;
     checklist->request->recordLookup(details);
-    checklist->resumeNonBlockingCheck(DestinationIPLookup::Instance());
+    checklist->resumeNonBlockingCheck();
 }
 

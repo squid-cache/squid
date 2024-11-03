@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "time/gadgets.h"
 
+#include <chrono>
 #include <iomanip>
 #include <ostream>
 
@@ -21,12 +22,11 @@ time_t squid_curtime = 0;
 time_t
 getCurrentTime()
 {
-#if GETTIMEOFDAY_NO_TZP
-    gettimeofday(&current_time);
-#else
+    using namespace std::chrono;
+    const auto now = system_clock::now().time_since_epoch();
 
-    gettimeofday(&current_time, nullptr);
-#endif
+    current_time.tv_sec = duration_cast<seconds>(now).count();
+    current_time.tv_usec = duration_cast<microseconds>(now).count() % 1000000;
 
     current_dtime = (double) current_time.tv_sec +
                     (double) current_time.tv_usec / 1000000.0;

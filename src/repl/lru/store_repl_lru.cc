@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,11 +11,6 @@
 #include "squid.h"
 #include "MemObject.h"
 #include "Store.h"
-
-/* because LruNode use explicit memory alloc()/freeOne() calls.
- * XXX: convert to MEMPROXY_CLASS() API
- */
-#include "mem/Pool.h"
 
 REMOVALPOLICYCREATE createRemovalPolicy_lru;
 
@@ -65,16 +60,17 @@ LruPolicyData::setPolicyNode (StoreEntry *entry, void *value) const
     }
 }
 
-typedef struct _LruNode LruNode;
+class LruNode
+{
+    MEMPROXY_CLASS(LruNode);
 
-struct _LruNode {
+public:
     /* Note: the dlink_node MUST be the first member of the LruNode
      * structure. This member is later pointer typecasted to LruNode *.
      */
     dlink_node node;
 };
 
-static MemAllocator *lru_node_pool = nullptr;
 static int nr_lru_policies = 0;
 
 static void
@@ -83,7 +79,7 @@ lru_add(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
     LruPolicyData *lru = (LruPolicyData *)policy->_data;
     LruNode *lru_node;
     assert(!node->data);
-    node->data = lru_node = (LruNode *)lru_node_pool->alloc();
+    node->data = lru_node = new LruNode;
     dlinkAddTail(entry, &lru_node->node, &lru->list);
     lru->count += 1;
 
@@ -114,7 +110,7 @@ lru_remove(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
 
     dlinkDelete(&lru_node->node, &lru->list);
 
-    lru_node_pool->freeOne(lru_node);
+    delete lru_node;
 
     lru->count -= 1;
 }
@@ -228,7 +224,7 @@ try_again:
         goto try_again;
     }
 
-    lru_node_pool->freeOne(lru_node);
+    delete lru_node;
     lru->count -= 1;
     lru->setPolicyNode(entry, nullptr);
     return entry;
@@ -305,13 +301,6 @@ createRemovalPolicy_lru(wordlist * args)
     LruPolicyData *lru_data;
     /* no arguments expected or understood */
     assert(!args);
-    /* Initialize */
-
-    if (!lru_node_pool) {
-        /* Must be chunked */
-        lru_node_pool = memPoolCreate("LRU policy node", sizeof(LruNode));
-        lru_node_pool->setChunkSize(512 * 1024);
-    }
 
     /* Allocate the needed structures */
     lru_data = (LruPolicyData *)xcalloc(1, sizeof(*lru_data));

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FTP_PARSING_H
-#define SQUID_FTP_PARSING_H
+#ifndef SQUID_SRC_FTP_PARSING_H
+#define SQUID_SRC_FTP_PARSING_H
 
 #include "ip/forward.h"
 
@@ -26,5 +26,5 @@ const char *UnescapeDoubleQuoted(const char *quotedPath);
 
 } // namespace Ftp
 
-#endif /* SQUID_FTP_PARSING_H */
+#endif /* SQUID_SRC_FTP_PARSING_H */
 

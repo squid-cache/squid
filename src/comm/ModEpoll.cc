@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,6 +33,7 @@
 #if USE_EPOLL
 
 #include "base/CodeContext.h"
+#include "base/IoManip.h"
 #include "comm/Loops.h"
 #include "fde.h"
 #include "globals.h"
@@ -253,7 +254,7 @@ Comm::DoSelect(int msec)
         F = &fd_table[fd];
         CodeContext::Reset(F->codeContext);
         debugs(5, DEBUG_EPOLL ? 0 : 8, "got FD " << fd << " events=" <<
-               std::hex << cevents->events << " monitoring=" << F->epoll_state <<
+               asHex(cevents->events) << " monitoring=" << asHex(F->epoll_state) <<
                " F->read_handler=" << F->read_handler << " F->write_handler=" << F->write_handler);
 
         // TODO: add EPOLLPRI??

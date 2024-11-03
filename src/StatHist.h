@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef STATHIST_H_
-#define STATHIST_H_
+#ifndef SQUID_SRC_STATHIST_H
+#define SQUID_SRC_STATHIST_H
 
 /* for StoreEntry */
 #include "Store.h"
@@ -138,5 +138,5 @@ StatHist::operator =(const StatHist & src)
     return *this;
 }
 
-#endif /* STATHIST_H_ */
+#endif /* SQUID_SRC_STATHIST_H */
 

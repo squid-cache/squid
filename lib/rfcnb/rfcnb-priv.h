@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,8 +30,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef _RFCNB_RFCNB_PRIV_H
-#define _RFCNB_RFCNB_PRIV_H
+#ifndef SQUID_LIB_RFCNB_RFCNB_PRIV_H
+#define SQUID_LIB_RFCNB_RFCNB_PRIV_H
 
 /* Defines we need */
 
@@ -130,5 +130,5 @@ extern int RFCNB_errno;
 extern int RFCNB_saved_errno;   /* Save this from point of error */
 #endif
 
-#endif /* _RFCNB_RFCNB_PRIV_H */
+#endif /* SQUID_LIB_RFCNB_RFCNB_PRIV_H */
 

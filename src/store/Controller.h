@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_CONTROLLER_H
-#define SQUID_STORE_CONTROLLER_H
+#ifndef SQUID_SRC_STORE_CONTROLLER_H
+#define SQUID_SRC_STORE_CONTROLLER_H
 
 #include "store/Storage.h"
 
@@ -23,23 +23,22 @@ class Controller: public Storage
 {
 public:
     Controller();
-    virtual ~Controller() override;
 
     /* Storage API */
-    virtual void create() override;
-    virtual void init() override;
-    virtual uint64_t maxSize() const override;
-    virtual uint64_t minSize() const override;
-    virtual uint64_t currentSize() const override;
-    virtual uint64_t currentCount() const override;
-    virtual int64_t maxObjectSize() const override;
-    virtual void getStats(StoreInfoStats &stats) const override;
-    virtual void stat(StoreEntry &) const override;
-    virtual void sync() override;
-    virtual void maintain() override;
-    virtual void evictCached(StoreEntry &) override;
-    virtual void evictIfFound(const cache_key *) override;
-    virtual int callback() override;
+    void create() override;
+    void init() override;
+    uint64_t maxSize() const override;
+    uint64_t minSize() const override;
+    uint64_t currentSize() const override;
+    uint64_t currentCount() const override;
+    int64_t maxObjectSize() const override;
+    void getStats(StoreInfoStats &stats) const override;
+    void stat(StoreEntry &) const override;
+    void sync() override;
+    void maintain() override;
+    void evictCached(StoreEntry &) override;
+    void evictIfFound(const cache_key *) override;
+    int callback() override;
 
     /// \returns a locally indexed and SMP-tracked matching StoreEntry (or nil)
     /// Slower than peek() but does not restrict StoreEntry use and storage.
@@ -89,7 +88,8 @@ public:
     void memoryOut(StoreEntry &, const bool preserveSwappable);
 
     /// using a 304 response, update the old entry (metadata and reply headers)
-    void updateOnNotModified(StoreEntry *old, StoreEntry &e304);
+    /// \returns whether the old entry can be used (and is considered fresh)
+    bool updateOnNotModified(StoreEntry *old, StoreEntry &e304);
 
     /// tries to make the entry available for collapsing future requests
     bool allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
@@ -108,23 +108,17 @@ public:
     /// whether the entry is in "writing to Transients" I/O state
     bool transientsWriter(const StoreEntry &) const;
 
-    /// marks the entry completed for collapsed requests
-    void transientsCompleteWriting(StoreEntry &);
-
     /// Update local intransit entry after changes made by appending worker.
     void syncCollapsed(const sfileno);
 
-    /// stop any current (and prevent any future) SMP sharing of the given entry
-    void stopSharing(StoreEntry &);
+    /// adjust shared state after this worker stopped changing the entry
+    void noteStoppedSharedWriting(StoreEntry &);
 
     /// number of the transient entry readers some time ago
     int transientReaders(const StoreEntry &) const;
 
     /// disassociates the entry from the intransit table
     void transientsDisconnect(StoreEntry &);
-
-    /// removes collapsing requirement (for future hits)
-    void transientsClearCollapsingRequirement(StoreEntry &e);
 
     /// disassociates the entry from the memory cache, preserving cached data
     void memoryDisconnect(StoreEntry &);
@@ -139,6 +133,8 @@ public:
     static int store_dirs_rebuilding;
 
 private:
+    ~Controller() override;
+
     bool memoryCacheHasSpaceFor(const int pagesRequired) const;
 
     void referenceBusy(StoreEntry &e);
@@ -150,11 +146,11 @@ private:
     void memoryEvictCached(StoreEntry &);
     void transientsUnlinkByKeyIfFound(const cache_key *);
     bool keepForLocalMemoryCache(StoreEntry &e) const;
-    bool anchorToCache(StoreEntry &e, bool &inSync);
+    bool anchorToCache(StoreEntry &);
     void checkTransients(const StoreEntry &) const;
     void checkFoundCandidate(const StoreEntry &) const;
 
-    Disks *swapDir; ///< summary view of all disk caches
+    Disks *disks; ///< summary view of all disk caches (including none); never nil
     Memory *sharedMemStore; ///< memory cache that multiple workers can use
     bool localMemStore; ///< whether local (non-shared) memory cache is enabled
 
@@ -170,13 +166,7 @@ private:
 /// safely access controller singleton
 extern Controller &Root();
 
-/// initialize the storage module; a custom root is used by unit tests only
-extern void Init(Controller *root = nullptr);
-
-/// undo Init()
-extern void FreeMemory();
-
 } // namespace Store
 
-#endif /* SQUID_STORE_CONTROLLER_H */
+#endif /* SQUID_SRC_STORE_CONTROLLER_H */
 

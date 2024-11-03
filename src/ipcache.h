@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_IPCACHE_H
-#define _SQUID_IPCACHE_H
+#ifndef SQUID_SRC_IPCACHE_H
+#define SQUID_SRC_IPCACHE_H
 
 #include "base/CbcPointer.h"
 #include "dns/forward.h"
@@ -194,11 +194,12 @@ private:
 class IpReceiver: public virtual CbdataParent
 {
 public:
-    virtual ~IpReceiver() {}
+    ~IpReceiver() override {}
 
     /// Called when nbgethostbyname() fully resolves the name.
     /// The `ips` may contain both bad and good IP addresses, but each good IP
     /// (if any) is guaranteed to had been previously reported via noteIp().
+    /// When no IPs were obtained, `ips` is nil.
     virtual void noteIps(const CachedIps *ips, const LookupDetails &details) = 0;
 
     /// Called when/if nbgethostbyname() discovers a new good IP address.
@@ -211,6 +212,13 @@ public:
 
 /// initiate an (often) asynchronous DNS lookup; the `receiver` gets the results
 void nbgethostbyname(const char *name, const CbcPointer<IpReceiver> &receiver);
+
+inline std::ostream &
+operator <<(std::ostream &os, const CachedIps &ips)
+{
+    ips.reportCurrent(os);
+    return os;
+}
 
 } // namespace Dns
 
@@ -226,16 +234,8 @@ void ipcacheInvalidateNegative(const char *);
 void ipcache_init(void);
 void ipcacheMarkBadAddr(const char *name, const Ip::Address &);
 void ipcacheMarkGoodAddr(const char *name, const Ip::Address &);
-void ipcacheFreeMemory(void);
 void ipcache_restart(void);
 int ipcacheAddEntryFromHosts(const char *name, const char *ipaddr);
-
-inline std::ostream &
-operator <<(std::ostream &os, const Dns::CachedIps &ips)
-{
-    ips.reportCurrent(os);
-    return os;
-}
 
 /* inlined implementations */
 
@@ -251,5 +251,5 @@ Dns::CachedIps::goodAndBad() const
     return IpsSelector<IpsIterator>(*this);
 }
 
-#endif /* _SQUID_IPCACHE_H */
+#endif /* SQUID_SRC_IPCACHE_H */
 

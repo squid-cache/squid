@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_STORE_MAP_H
-#define SQUID_IPC_STORE_MAP_H
+#ifndef SQUID_SRC_IPC_STOREMAP_H
+#define SQUID_SRC_IPC_STOREMAP_H
 
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
@@ -314,7 +314,7 @@ public:
     void closeForReadingAndFreeIdle(const sfileno fileno);
 
     /// openForReading() but creates a new entry if there is no old one
-    const Anchor *openOrCreateForReading(const cache_key *, sfileno &, const StoreEntry &);
+    const Anchor *openOrCreateForReading(const cache_key *, sfileno &);
 
     /// writeable slice within an entry chain created by openForWriting()
     Slice &writeableSlice(const AnchorId anchorId, const SliceId sliceId);
@@ -408,5 +408,5 @@ public:
 // We do not reuse FileMap because we cannot control its size,
 // resulting in sfilenos that are pointing beyond the database.
 
-#endif /* SQUID_IPC_STORE_MAP_H */
+#endif /* SQUID_SRC_IPC_STOREMAP_H */
 

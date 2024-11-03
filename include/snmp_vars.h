@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_VARS_H
-#define SQUID_SNMP_VARS_H
+#ifndef SQUID_INCLUDE_SNMP_VARS_H
+#define SQUID_INCLUDE_SNMP_VARS_H
 
 /**********************************************************************
  *
@@ -125,5 +125,5 @@ typedef struct variable_list variable_list;
 }
 #endif
 
-#endif /* SQUID_SNMP_VARS_H */
+#endif /* SQUID_INCLUDE_SNMP_VARS_H */
 

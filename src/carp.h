@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,14 +8,13 @@
 
 /* DEBUG: section 39    Cache Array Routing Protocol */
 
-#ifndef SQUID_CARP_H_
-#define SQUID_CARP_H_
+#ifndef SQUID_SRC_CARP_H
+#define SQUID_SRC_CARP_H
 
 class CachePeer;
 class PeerSelector;
 
-void carpInit(void);
 CachePeer *carpSelectParent(PeerSelector *);
 
-#endif /* SQUID_CARP_H_ */
+#endif /* SQUID_SRC_CARP_H */
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_ANYP_PROTOCOLTYPE_H
-#define _SQUID_SRC_ANYP_PROTOCOLTYPE_H
+#ifndef SQUID_SRC_ANYP_PROTOCOLTYPE_H
+#define SQUID_SRC_ANYP_PROTOCOLTYPE_H
 
 #include <ostream>
 
@@ -28,7 +28,6 @@ typedef enum {
     PROTO_COAP,
     PROTO_COAPS,
     PROTO_WAIS,
-    PROTO_CACHE_OBJECT,
     PROTO_ICP,
 #if USE_HTCP
     PROTO_HTCP,
@@ -61,5 +60,5 @@ operator <<(std::ostream &os, ProtocolType const &p)
 
 } // namespace AnyP
 
-#endif /* _SQUID_SRC_ANYP_PROTOCOLTYPE_H */
+#endif /* SQUID_SRC_ANYP_PROTOCOLTYPE_H */
 

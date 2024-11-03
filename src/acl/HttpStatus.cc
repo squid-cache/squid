@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,9 +11,11 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/HttpStatus.h"
+#include "acl/SplayInserter.h"
 #include "debug/Stream.h"
 #include "HttpReply.h"
 
+#include <algorithm>
 #include <climits>
 
 static void aclParseHTTPStatusList(Splay<acl_httpstatus_data *> **curlist);
@@ -37,23 +39,36 @@ acl_httpstatus_data::toStr() const
     return rv;
 }
 
-int acl_httpstatus_data::compare(acl_httpstatus_data* const& a, acl_httpstatus_data* const& b)
+template <>
+int
+Acl::SplayInserter<acl_httpstatus_data*>::Compare(const Value &a, const Value &b)
 {
-    int ret;
-    ret = aclHTTPStatusCompare(b, a);
+    return aclHTTPStatusCompare(a, b);
+}
 
-    if (ret != 0)
-        ret = aclHTTPStatusCompare(a, b);
+template <>
+bool
+Acl::SplayInserter<acl_httpstatus_data*>::IsSubset(const Value &a, const Value &b)
+{
+    return b->status1 <= a->status1 && a->status2 <= b->status2;
+}
 
-    if (ret == 0) {
-        const SBuf sa = a->toStr();
-        const SBuf sb = b->toStr();
-        debugs(28, DBG_CRITICAL, "WARNING: '" << sa << "' is a subrange of '" << sb << "'");
-        debugs(28, DBG_CRITICAL, "WARNING: because of this '" << sa << "' is ignored to keep splay tree searching predictable");
-        debugs(28, DBG_CRITICAL, "WARNING: You should probably remove '" << sb << "' from the ACL named '" << AclMatchedName << "'");
-    }
+template <>
+Acl::SplayInserter<acl_httpstatus_data*>::Value
+Acl::SplayInserter<acl_httpstatus_data*>::MakeCombinedValue(const Value &a, const Value &b)
+{
+    const auto minLeft = std::min(a->status1, b->status1);
+    const auto maxRight = std::max(a->status2, b->status2);
+    return new acl_httpstatus_data(minLeft, maxRight);
+}
 
-    return ret;
+/// reports acl_httpstatus_data using squid.conf http_status ACL value format
+static std::ostream &
+operator <<(std::ostream &os, const acl_httpstatus_data *status)
+{
+    if (status)
+        os << status->toStr();
+    return os;
 }
 
 ACLHTTPStatus::ACLHTTPStatus (char const *theClass) : data(nullptr), class_ (theClass)
@@ -109,14 +124,14 @@ aclParseHTTPStatusList(Splay<acl_httpstatus_data *> **curlist)
 {
     while (char *t = ConfigParser::strtokFile()) {
         if (acl_httpstatus_data *q = aclParseHTTPStatusData(t))
-            (*curlist)->insert(q, acl_httpstatus_data::compare);
+            Acl::SplayInserter<acl_httpstatus_data*>::Merge(**curlist, std::move(q));
     }
 }
 
 int
 ACLHTTPStatus::match(ACLChecklist *checklist)
 {
-    return aclMatchHTTPStatus(&data, Filled(checklist)->reply->sline.status());
+    return aclMatchHTTPStatus(&data, Filled(checklist)->reply().sline.status());
 }
 
 int
@@ -132,13 +147,13 @@ aclMatchHTTPStatus(Splay<acl_httpstatus_data*> **dataptr, const Http::StatusCode
 static int
 aclHTTPStatusCompare(acl_httpstatus_data * const &a, acl_httpstatus_data * const &b)
 {
-    if (a->status1 < b->status1)
-        return 1;
+    if (a->status2 < b->status1)
+        return 1; // the entire range a is to the left of range b
 
     if (a->status1 > b->status2)
-        return -1;
+        return -1; // the entire range a is to the right of range b
 
-    return 0;
+    return 0; // equal or partially overlapping ranges
 }
 
 struct HttpStatusAclDumpVisitor {

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_CONNECTIONS_ENCRYPTED_H
-#define SQUID_ACL_CONNECTIONS_ENCRYPTED_H
+#ifndef SQUID_SRC_ACL_CONNECTIONSENCRYPTED_H
+#define SQUID_SRC_ACL_CONNECTIONSENCRYPTED_H
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
@@ -15,19 +15,19 @@
 namespace Acl
 {
 
-class ConnectionsEncrypted : public ACL
+class ConnectionsEncrypted : public Acl::Node
 {
     MEMPROXY_CLASS(ConnectionsEncrypted);
 
 public:
     ConnectionsEncrypted(char const *);
-    virtual ~ConnectionsEncrypted();
+    ~ConnectionsEncrypted() override;
 
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual int match(ACLChecklist *checklist);
-    virtual SBufList dump() const;
-    virtual bool empty () const;
+    char const *typeString() const override;
+    void parse() override;
+    int match(ACLChecklist *checklist) override;
+    SBufList dump() const override;
+    bool empty () const override;
 
 protected:
     char const *class_;
@@ -35,5 +35,5 @@ protected:
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_CONNECTIONS_ENCRYPTED_H */
+#endif /* SQUID_SRC_ACL_CONNECTIONSENCRYPTED_H */
 

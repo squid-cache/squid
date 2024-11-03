@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,8 +11,9 @@
 #include "debug/Stream.h"
 #include "sbuf/Stream.h"
 #include "tools.h"
-#include "xusleep.h"
 
+#include <chrono>
+#include <thread>
 #include <utility>
 
 #if HAVE_FCNTL_H
@@ -33,7 +34,7 @@ FileOpeningConfig::ReadOnly()
     FileOpeningConfig cfg;
 
     /* I/O */
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     cfg.desiredAccess = GENERIC_READ;
     cfg.shareMode = FILE_SHARE_READ;
 #else
@@ -41,7 +42,7 @@ FileOpeningConfig::ReadOnly()
 #endif
 
     /* locking (if enabled later) */
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     cfg.lockFlags = 0; // no named constant for a shared lock
 #elif _SQUID_SOLARIS_
     cfg.lockType = F_RDLCK;
@@ -58,7 +59,7 @@ FileOpeningConfig::ReadWrite()
     FileOpeningConfig cfg;
 
     /* I/O */
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     cfg.desiredAccess = GENERIC_READ | GENERIC_WRITE;
     cfg.shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
 #else
@@ -66,7 +67,7 @@ FileOpeningConfig::ReadWrite()
 #endif
 
     /* locking (if enabled later) */
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     cfg.lockFlags = LOCKFILE_EXCLUSIVE_LOCK;
 #elif _SQUID_SOLARIS_
     cfg.lockType = F_WRLCK;
@@ -88,7 +89,7 @@ FileOpeningConfig::locked(unsigned int attempts)
 FileOpeningConfig &
 FileOpeningConfig::createdIfMissing()
 {
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     Must((desiredAccess & GENERIC_WRITE) == GENERIC_WRITE);
     creationDisposition = OPEN_ALWAYS;
 #else
@@ -105,7 +106,7 @@ FileOpeningConfig::createdIfMissing()
 // XXX: fcntl() locks are incompatible with complex applications that may lock
 // multiple open descriptors corresponding to the same underlying file. There is
 // nothing better on Solaris, but do not be tempted to use this elsewhere. For
-// more info, see http://bugs.squid-cache.org/show_bug.cgi?id=4212#c14
+// more info, see https://bugs.squid-cache.org/show_bug.cgi?id=4212#c14
 /// fcntl(... struct flock) convenience wrapper
 static int
 fcntlLock(const int fd, const short lockType)
@@ -169,7 +170,7 @@ File::operator = (File &&other)
 void
 File::open(const FileOpeningConfig &cfg)
 {
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     fd_ = CreateFile(TEXT(name_.c_str()), cfg.desiredAccess, cfg.shareMode, nullptr, cfg.creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (fd_ == InvalidHandle) {
         const auto savedError = GetLastError();
@@ -196,7 +197,7 @@ File::close()
 {
     if (!isOpen())
         return;
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     if (!CloseHandle(fd_)) {
         const auto savedError = GetLastError();
         debugs(54, DBG_IMPORTANT, sysCallFailure("CloseHandle", WindowsErrorMessage(savedError)));
@@ -213,7 +214,7 @@ File::close()
 void
 File::truncate()
 {
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     if (!SetFilePointer(fd_, 0, nullptr, FILE_BEGIN)) {
         const auto savedError = GetLastError();
         throw TexcHere(sysCallFailure("SetFilePointer", WindowsErrorMessage(savedError)));
@@ -242,7 +243,7 @@ File::readSmall(const SBuf::size_type minBytes, const SBuf::size_type maxBytes)
     SBuf buf;
     const auto readLimit = maxBytes + 1; // to detect excessively large files that we do not handle
     char *rawBuf = buf.rawAppendStart(readLimit);
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     DWORD result = 0;
     if (!ReadFile(fd_, rawBuf, readLimit, &result, nullptr)) {
         const auto savedError = GetLastError();
@@ -278,7 +279,7 @@ File::readSmall(const SBuf::size_type minBytes, const SBuf::size_type maxBytes)
 void
 File::writeAll(const SBuf &data)
 {
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     DWORD nBytesWritten = 0;
     if (!WriteFile(fd_, data.rawContent(), data.length(), &nBytesWritten, nullptr)) {
         const auto savedError = GetLastError();
@@ -302,7 +303,7 @@ File::writeAll(const SBuf &data)
 void
 File::synchronize()
 {
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     if (!FlushFileBuffers(fd_)) {
         const auto savedError = GetLastError();
         throw TexcHere(sysCallFailure("FlushFileBuffers", WindowsErrorMessage(savedError)));
@@ -331,7 +332,7 @@ File::lock(const FileOpeningConfig &cfg)
                    " more time(s) after a failure: " << ex.what());
         }
         Must(attemptsLeft); // the catch statement handles the last attempt
-        xusleep(cfg.RetryGapUsec);
+        std::this_thread::sleep_for(std::chrono::microseconds(cfg.retryGapUsec));
     }
     debugs(54, 9, "disabled");
 }
@@ -340,7 +341,7 @@ File::lock(const FileOpeningConfig &cfg)
 void
 File::lockOnce(const FileOpeningConfig &cfg)
 {
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     if (!LockFileEx(fd_, cfg.lockFlags, 0, 0, 1, 0)) {
         const auto savedError = GetLastError();
         throw TexcHere(sysCallFailure("LockFileEx", WindowsErrorMessage(savedError)));
@@ -373,7 +374,7 @@ File::sysCallError(const char *callName, const int savedErrno) const
     return sysCallFailure(callName, SBuf(xstrerr(savedErrno)));
 }
 
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
 const HANDLE File::InvalidHandle = INVALID_HANDLE_VALUE;
-#endif /* _SQUID_WINDOWS_ */
+#endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_*/
 

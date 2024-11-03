@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 33    Client-side Routines */
 
-#ifndef SQUID_SERVERS_SERVER_H
-#define SQUID_SERVERS_SERVER_H
+#ifndef SQUID_SRC_SERVERS_SERVER_H
+#define SQUID_SRC_SERVERS_SERVER_H
 
 #include "anyp/forward.h"
 #include "anyp/ProtocolVersion.h"
@@ -17,6 +17,8 @@
 #include "BodyPipe.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "error/forward.h"
+#include "http/Stream.h"
 #include "log/forward.h"
 #include "Pipeline.h"
 #include "sbuf/SBuf.h"
@@ -30,12 +32,12 @@ class Server : virtual public AsyncJob, public BodyProducer
 {
 public:
     Server(const MasterXactionPointer &xact);
-    virtual ~Server() {}
+    ~Server() override {}
 
     /* AsyncJob API */
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
     /// whether to stop serving our client after reading EOF on its connection
     virtual bool shouldCloseOnEof() const = 0;
@@ -119,6 +121,9 @@ protected:
     /// abort any pending transactions and prevent new ones (by closing)
     virtual void terminateAll(const Error &, const LogTagsErrors &) = 0;
 
+    /// whether client_request_buffer_max_size allows inBuf.length() increase
+    bool mayBufferMoreRequestBytes() const;
+
     void doClientRead(const CommIoCbParams &io);
     void clientWriteDone(const CommIoCbParams &io);
 
@@ -126,5 +131,5 @@ protected:
     AsyncCall::Pointer writer; ///< set when we are writing
 };
 
-#endif /* SQUID_SERVERS_SERVER_H */
+#endif /* SQUID_SRC_SERVERS_SERVER_H */
 

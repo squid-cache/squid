@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMPAT_STRTOLL_H
-#define _SQUID_COMPAT_STRTOLL_H
+#ifndef SQUID_COMPAT_STRTOLL_H
+#define SQUID_COMPAT_STRTOLL_H
 
 #if !HAVE_STRTOLL
 
@@ -22,5 +22,5 @@
 SQUIDCEXTERN int64_t strtoll(const char *nptr, char **endptr, int base);
 
 #endif /* !HAVE_STRTOLL */
-#endif /* _SQUID_COMPAT_STRTOLL_H */
+#endif /* SQUID_COMPAT_STRTOLL_H */
 

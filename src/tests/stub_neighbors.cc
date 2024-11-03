@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,6 +16,7 @@
 
 void
 peerConnClosed(CachePeer *) STUB
+CachePeer *findCachePeerByName(const char *) STUB_RETVAL(nullptr)
 
 time_t
 FwdState::ForwardTimeout(const time_t) STUB_RETVAL(0)

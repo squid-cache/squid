@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,12 @@
 #include <limits>
 
 /// shared memory segment path to use for Transients map
-static const SBuf MapLabel("transients_map");
+static const auto &
+MapLabel()
+{
+    static const auto label = new SBuf("transients_map");
+    return *label;
+}
 
 Transients::Transients(): map(nullptr), locals(nullptr)
 {
@@ -45,7 +50,7 @@ Transients::init()
     assert(entryLimit > 0);
 
     Must(!map);
-    map = new TransientsMap(MapLabel);
+    map = new TransientsMap(MapLabel());
     map->cleaner = this;
     map->disableHitValidation(); // Transients lacks slices to validate
 
@@ -164,18 +169,9 @@ Transients::get(const cache_key *key)
         return nullptr;
     }
 
-    // store hadWriter before checking ENTRY_REQUIRES_COLLAPSING to avoid racing
-    // the writer that clears that flag and then leaves
-    const auto hadWriter = map->peekAtWriter(index);
-    if (!hadWriter && EBIT_TEST(anchor->basics.flags, ENTRY_REQUIRES_COLLAPSING)) {
-        debugs(20, 3, "not joining abandoned entry " << index);
-        map->closeForReadingAndFreeIdle(index);
-        return nullptr;
-    }
-
     StoreEntry *e = new StoreEntry();
     e->createMemObject();
-    anchorEntry(*e, index, *anchor);
+    e->mem_obj->xitTable.open(index, Store::ioReading);
 
     // keep read lock to receive updates from others
     return e;
@@ -188,27 +184,13 @@ Transients::findCollapsed(const sfileno index)
         return nullptr;
 
     if (StoreEntry *oldE = locals->at(index)) {
-        debugs(20, 5, "found " << *oldE << " at " << index << " in " << MapLabel);
+        debugs(20, 5, "found " << *oldE << " at " << index << " in " << MapLabel());
         assert(oldE->mem_obj && oldE->mem_obj->xitTable.index == index);
         return oldE;
     }
 
-    debugs(20, 3, "no entry at " << index << " in " << MapLabel);
+    debugs(20, 3, "no entry at " << index << " in " << MapLabel());
     return nullptr;
-}
-
-void
-Transients::clearCollapsingRequirement(const StoreEntry &e)
-{
-    assert(map);
-    assert(e.hasTransients());
-    assert(isWriter(e));
-    const auto idx = e.mem_obj->xitTable.index;
-    auto &anchor = map->writeableEntry(idx);
-    if (EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING)) {
-        EBIT_CLR(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
-        CollapsedForwarding::Broadcast(e);
-    }
 }
 
 void
@@ -257,11 +239,9 @@ Transients::addWriterEntry(StoreEntry &e, const cache_key *key)
 
     // set ASAP in hope to unlock the slot if something throws
     // and to provide index to such methods as hasWriter()
-    auto &xitTable = e.mem_obj->xitTable;
-    xitTable.index = index;
-    xitTable.io = Store::ioWriting;
+    e.mem_obj->xitTable.open(index, Store::ioWriting);
 
-    anchor->set(e, key);
+    anchor->setKey(key);
     // allow reading and receive remote DELETE events, but do not switch to
     // the reading lock because transientReaders() callers want true readers
     map->startAppending(index);
@@ -273,29 +253,12 @@ void
 Transients::addReaderEntry(StoreEntry &e, const cache_key *key)
 {
     sfileno index = 0;
-    const auto anchor = map->openOrCreateForReading(key, index, e);
+    const auto anchor = map->openOrCreateForReading(key, index);
     if (!anchor)
         throw TextException("reader collision", Here());
 
-    anchorEntry(e, index, *anchor);
+    e.mem_obj->xitTable.open(index, Store::ioReading);
     // keep the entry locked (for reading) to receive remote DELETE events
-}
-
-/// fills (recently created) StoreEntry with information currently in Transients
-void
-Transients::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor)
-{
-    // set ASAP in hope to unlock the slot if something throws
-    // and to provide index to such methods as hasWriter()
-    auto &xitTable = e.mem_obj->xitTable;
-    xitTable.index = index;
-    xitTable.io = Store::ioReading;
-
-    const auto hadWriter = hasWriter(e); // before computing collapsingRequired
-    anchor.exportInto(e);
-    const bool collapsingRequired = EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
-    assert(!collapsingRequired || hadWriter);
-    e.setCollapsingRequirement(collapsingRequired);
 }
 
 bool
@@ -320,18 +283,19 @@ Transients::status(const StoreEntry &entry, Transients::EntryStatus &entryStatus
     const auto idx = entry.mem_obj->xitTable.index;
     const auto &anchor = isWriter(entry) ?
                          map->writeableEntry(idx) : map->readableEntry(idx);
-    entryStatus.abortedByWriter = anchor.writerHalted;
+    entryStatus.hasWriter = anchor.writing();
     entryStatus.waitingToBeFreed = anchor.waitingToBeFreed;
-    entryStatus.collapsed = EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 void
 Transients::completeWriting(const StoreEntry &e)
 {
+    debugs(20, 5, e);
     assert(e.hasTransients());
     assert(isWriter(e));
     map->switchWritingToReading(e.mem_obj->xitTable.index);
     e.mem_obj->xitTable.io = Store::ioReading;
+    CollapsedForwarding::Broadcast(e);
 }
 
 int
@@ -377,14 +341,18 @@ Transients::disconnect(StoreEntry &entry)
         auto &xitTable = entry.mem_obj->xitTable;
         assert(map);
         if (isWriter(entry)) {
-            map->abortWriting(xitTable.index);
+            // completeWriting() was not called, so there could be an active
+            // Store writer out there, but we should not abortWriting() here
+            // because another writer may have succeeded, making readers happy.
+            // If none succeeded, the readers will notice the lack of writers.
+            map->closeForWriting(xitTable.index);
+            CollapsedForwarding::Broadcast(entry);
         } else {
             assert(isReader(entry));
             map->closeForReadingAndFreeIdle(xitTable.index);
         }
         locals->at(xitTable.index) = nullptr;
-        xitTable.index = -1;
-        xitTable.io = Store::ioDone;
+        xitTable.close();
     }
 }
 
@@ -420,17 +388,17 @@ class TransientsRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void useConfig();
-    virtual ~TransientsRr();
+    void useConfig() override;
+    ~TransientsRr() override;
 
 protected:
-    virtual void create();
+    void create() override;
 
 private:
     TransientsMap::Owner *mapOwner = nullptr;
 };
 
-RunnerRegistrationEntry(TransientsRr);
+DefineRunnerRegistrator(TransientsRr);
 
 void
 TransientsRr::useConfig()
@@ -447,7 +415,7 @@ TransientsRr::create()
         return; // no SMP configured or a misconfiguration
 
     Must(!mapOwner);
-    mapOwner = TransientsMap::Init(MapLabel, entryLimit);
+    mapOwner = TransientsMap::Init(MapLabel(), entryLimit);
 }
 
 TransientsRr::~TransientsRr()

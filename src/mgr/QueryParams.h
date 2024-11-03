@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_QUERY_PARAMS_H
-#define SQUID_MGR_QUERY_PARAMS_H
+#ifndef SQUID_SRC_MGR_QUERYPARAMS_H
+#define SQUID_SRC_MGR_QUERYPARAMS_H
 
 #include "ipc/forward.h"
 #include "mgr/QueryParam.h"
@@ -48,5 +48,5 @@ private:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_QUERY_PARAMS_H */
+#endif /* SQUID_SRC_MGR_QUERYPARAMS_H */
 

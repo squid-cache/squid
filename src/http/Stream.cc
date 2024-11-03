@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "client_side_request.h"
+#include "clientStream.h"
 #include "http/Stream.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
@@ -275,9 +276,6 @@ Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
 
     /* Save length of headers for persistent conn checks */
     http->out.headers_sz = mb->contentSize();
-#if HEADERS_LOG
-    headersLog(0, 0, http->request->method, rep);
-#endif
 
     if (bodyData.data && bodyData.length) {
         if (multipartRangeRequest())
@@ -293,10 +291,10 @@ Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
 #if USE_DELAY_POOLS
     for (const auto &pool: MessageDelayPools::Instance()->pools) {
         if (pool->access) {
-            std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(pool->access, http));
-            chl->reply = rep;
-            HTTPMSGLOCK(chl->reply);
-            const auto answer = chl->fastCheck();
+            ACLFilledChecklist chl(pool->access, nullptr);
+            clientAclChecklistFill(chl, http);
+            chl.updateReply(rep);
+            const auto &answer = chl.fastCheck();
             if (answer.allowed()) {
                 writeQuotaHandler = pool->createBucket();
                 fd_table[clientConnection->fd].writeQuotaHandler = writeQuotaHandler;

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_REFRESHPATTERN_H_
-#define SQUID_REFRESHPATTERN_H_
+#ifndef SQUID_SRC_REFRESHPATTERN_H
+#define SQUID_SRC_REFRESHPATTERN_H
 
 #include "base/RegexPattern.h"
 
@@ -35,7 +35,7 @@ public:
     explicit RefreshPattern(RegexPointer aRegex):
         min(0), pct(0.20), max(REFRESH_DEFAULT_MAX),
         next(nullptr),
-        max_stale(0),
+        max_stale(-1),
         regex_(std::move(aRegex))
     {
         memset(&flags, 0, sizeof(flags));
@@ -99,5 +99,5 @@ operator <<(std::ostream &os, const RefreshPattern &r)
     return os;
 }
 
-#endif /* SQUID_REFRESHPATTERN_H_ */
+#endif /* SQUID_SRC_REFRESHPATTERN_H */
 

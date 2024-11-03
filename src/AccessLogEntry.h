@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPACCESSLOGENTRY_H
-#define SQUID_HTTPACCESSLOGENTRY_H
+#ifndef SQUID_SRC_ACCESSLOGENTRY_H
+#define SQUID_SRC_ACCESSLOGENTRY_H
 
 #include "anyp/PortCfg.h"
 #include "base/CodeContext.h"
@@ -23,7 +23,7 @@
 #include "MessageSizes.h"
 #include "Notes.h"
 #include "proxyp/forward.h"
-#include "sbuf/SBuf.h"
+#include "sbuf/forward.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif
@@ -44,11 +44,11 @@ public:
     typedef RefCount<AccessLogEntry> Pointer;
 
     AccessLogEntry();
-    virtual ~AccessLogEntry();
+    ~AccessLogEntry() override;
 
     /* CodeContext API */
-    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
-    virtual ScopedId codeContextGist() const override;
+    std::ostream &detailCodeContext(std::ostream &os) const override;
+    ScopedId codeContextGist() const override;
 
     /// Fetch the client IP log string into the given buffer.
     /// Knows about several alternate locations of the IP
@@ -59,9 +59,6 @@ public:
     /// \returns result for immediate logging (not necessarily pointing to buf)
     /// Side effect: Enables reverse DNS lookups of future client addresses.
     const char *getLogClientFqdn(char *buf, size_t bufSize) const;
-
-    /// Fetch the client IDENT string, or nil if none is available.
-    const char *getClientIdent() const;
 
     /// Fetch the external ACL provided 'user=' string, or nil if none is available.
     const char *getExtUser() const;
@@ -157,7 +154,6 @@ public:
         LogTags code;
         struct timeval start_time; ///< The time the master transaction started
         struct timeval trTime; ///< The response time
-        const char *rfc931 = nullptr;
         const char *extuser = nullptr;
 #if USE_OPENSSL
         const char *ssluser = nullptr;
@@ -188,7 +184,7 @@ public:
     } adapt;
 #endif
 
-    const char *lastAclName = nullptr; ///< string for external_acl_type %ACL format code
+    SBuf lastAclName; ///< string for external_acl_type %ACL format code
     SBuf lastAclData; ///< string for external_acl_type %DATA format code
 
     HierarchyLogEntry hier;
@@ -199,6 +195,12 @@ public:
     /// key:value pairs set by squid.conf note directive and
     /// key=value pairs returned from URL rewrite/redirect helper
     NotePairs::Pointer notes;
+
+    /// The total number of finished attempts to establish a connection.
+    /// Excludes discarded HappyConnOpener attempts. Includes failed
+    /// HappyConnOpener attempts and [always successful] persistent connection
+    /// reuse. See %request_attempts.
+    int requestAttempts = 0;
 
     /// see ConnStateData::proxyProtocolHeader_
     ProxyProtocol::HeaderPointer proxyProtocolHeader;
@@ -288,5 +290,5 @@ void accessLogClose(void);
 void accessLogInit(void);
 const char *accessLogTime(time_t);
 
-#endif /* SQUID_HTTPACCESSLOGENTRY_H */
+#endif /* SQUID_SRC_ACCESSLOGENTRY_H */
 

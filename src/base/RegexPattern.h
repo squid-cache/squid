@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,9 +9,12 @@
 #ifndef SQUID_SRC_BASE_REGEXPATTERN_H
 #define SQUID_SRC_BASE_REGEXPATTERN_H
 
-#include "compat/GnuRegex.h"
 #include "mem/forward.h"
 #include "sbuf/SBuf.h"
+
+#if HAVE_REGEX_H
+#include <regex.h>
+#endif
 
 /**
  * A regular expression,

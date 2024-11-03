@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 37    ICMP Routines */
 
-#ifndef _INCLUDE_ICMPSQUID_H
-#define _INCLUDE_ICMPSQUID_H
+#ifndef SQUID_SRC_ICMP_ICMPSQUID_H
+#define SQUID_SRC_ICMP_ICMPSQUID_H
 
 #include "Icmp.h"
 
@@ -25,21 +25,21 @@ class IcmpSquid : public Icmp
 {
 public:
     IcmpSquid();
-    virtual ~IcmpSquid();
+    ~IcmpSquid() override;
 
-    virtual int Open();
-    virtual void Close();
+    int Open() override;
+    void Close() override;
 
     void DomainPing(Ip::Address &to, const char *domain);
 
 #if USE_ICMP
-    virtual void SendEcho(Ip::Address &to, int opcode, const char* payload=nullptr, int len=0);
-    virtual void Recv(void);
+    void SendEcho(Ip::Address &to, int opcode, const char* payload=nullptr, int len=0) override;
+    void Recv(void) override;
 #endif
 };
 
 // global engine within squid.
 extern IcmpSquid icmpEngine;
 
-#endif /* _INCLUDE_ICMPSQUID_H */
+#endif /* SQUID_SRC_ICMP_ICMPSQUID_H */
 

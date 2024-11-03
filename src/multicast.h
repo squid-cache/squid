@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,13 +8,13 @@
 
 /* DEBUG: section 07    Multicast */
 
-#ifndef SQUID_MULTICAST_H_
-#define SQUID_MULTICAST_H_
+#ifndef SQUID_SRC_MULTICAST_H
+#define SQUID_SRC_MULTICAST_H
 
 #include "ipcache.h"
 
 int mcastSetTtl(int, int);
 extern IPH mcastJoinGroups;
 
-#endif /* SQUID_MULTICAST_H_ */
+#endif /* SQUID_SRC_MULTICAST_H */
 
