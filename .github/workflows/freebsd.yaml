@@ -1,0 +1,55 @@
+name: Staged commit - FreeBSD
+
+on:
+  push:
+    branches: [ "bsd-merge-tests" ]
+
+env:
+  # empty except for pull_request events
+  PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+
+jobs:
+  freebsd-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Test in FreeBSD
+        id: test-freebsd
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          # release: "14.1" # supported: 12.4, 13.2, 13.3, 14.1
+          # release: 13.3
+          prepare: |
+            pkg update
+            pkg install -y \
+              autoconf \
+              autoconf-archive \
+              automake \
+              bash \
+              cppunit \
+              gmake \
+              libltdl \
+              libtool \
+              libxml2 \
+              m4 \
+              nettle \
+              pkgconf &&
+            true
+
+          run: |
+            export MAKE=gmake
+            export CFLAGS='-Wno-compound-token-split-by-macro'
+            export CC=clang
+            export CXX=clang++
+            ./test-builds.sh --verbose --use-config-cache
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: freebsd-build-logs
+          path: btlayer-*.log
