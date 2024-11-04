@@ -51,7 +51,7 @@ jobs:
             export CFLAGS='-Wno-compound-token-split-by-macro'
             export CC=clang
             export CXX=clang++
-            ./test-builds.sh --verbose --use-config-cache
+            ./test-builds.sh --verbose --aggressively-use-config-cache layer-00-default #TODO: remove layer before release
 
       - name: Publish build logs
         if: success() || failure()
