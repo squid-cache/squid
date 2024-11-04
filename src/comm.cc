@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/AsyncFunCalls.h"
+#include "base/OnOff.h"
 #include "ClientInfo.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
@@ -779,9 +780,6 @@ commCallCloseHandlers(int fd)
         }
     }
 }
-
-/// safer than bool in a list of integer-like function parameters
-enum class OnOff { off, on }; // TODO: Move somewhere to reuse.
 
 /// sets SO_LINGER socket(7) option
 /// \param enabled -- whether linger will be active (sets linger::l_onoff)
