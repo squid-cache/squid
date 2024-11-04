@@ -16,7 +16,6 @@ jobs:
         osversion:
           - 14.1
           - 13.3
-          - 12.4
 
     runs-on: ubuntu-22.04
     name: freebsd(${{ matrix.osversion }})
