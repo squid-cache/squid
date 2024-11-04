@@ -11,6 +11,12 @@ env:
 jobs:
   freebsd-test:
     runs-on: ubuntu-22.04
+    matrix:
+      osversion:
+        - 14.1
+        - 13.3
+        - 12.4
+    name: freebsd(${{ matrix.osversion }})
 
     steps:
       - name: Checkout Sources
@@ -21,8 +27,7 @@ jobs:
         uses: vmactions/freebsd-vm@v1
         with:
           usesh: true
-          # release: "14.1" # supported: 12.4, 13.2, 13.3, 14.1
-          # release: 13.3
+          release: ${{ matrix.osversion }}
           prepare: |
             pkg update
             pkg install -y \
@@ -30,6 +35,7 @@ jobs:
               autoconf-archive \
               automake \
               bash \
+              ccache \
               cppunit \
               gmake \
               libltdl \
