@@ -128,6 +128,8 @@ public:
         bool read_pending = false;
         //bool write_pending; //XXX seems not to be used
         bool transparent = false;
+        /// whether comm_reset_close() (or old_comm_reset_close()) has been called
+        bool harshClosureRequested = false;
     } flags;
 
     int64_t bytes_read = 0;

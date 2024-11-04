@@ -807,6 +807,7 @@ comm_reset_close(const Comm::ConnectionPointer &conn)
     if (Comm::IsConnOpen(conn)) {
         commConfigureLinger(conn->fd, OnOff::on, 0);
         debugs(5, 7, conn->id);
+        fd_table[conn->fd].flags.harshClosureRequested = true;
         conn->close();
     }
 }
@@ -816,6 +817,7 @@ void
 old_comm_reset_close(int fd)
 {
     commConfigureLinger(fd, OnOff::on, 0);
+    fd_table[fd].flags.harshClosureRequested = true;
     comm_close(fd);
 }
 
@@ -883,7 +885,7 @@ _comm_close(int fd, char const *file, int line)
     // For simplicity sake, we remain in the caller's context while still
     // allowing individual advanced callbacks to overwrite it.
 
-    if (F->ssl) {
+    if (F->ssl && !F->flags.harshClosureRequested) {
         const auto startCall = asyncCall(5, 4, "commStartTlsClose",
                                          callDialer(commStartTlsClose, fd));
         ScheduleCallHere(startCall);
