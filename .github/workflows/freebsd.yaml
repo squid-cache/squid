@@ -10,12 +10,15 @@ env:
 
 jobs:
   freebsd-test:
+    strategy:
+      fail-fast: true
+      matrix:
+        osversion:
+          - 14.1
+          - 13.3
+          - 12.4
+
     runs-on: ubuntu-22.04
-    matrix:
-      osversion:
-        - 14.1
-        - 13.3
-        - 12.4
     name: freebsd(${{ matrix.osversion }})
 
     steps:
