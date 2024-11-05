@@ -136,7 +136,7 @@ jobs:
         uses: squid-cache/ccache-action@v1.2.14
         with:
           verbose: 2 # default 0
-          key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
+          key: ${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
 
       - name: Run build on Linux
         run: ./test-builds.sh ${{ matrix.layer.name }}
