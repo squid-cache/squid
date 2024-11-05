@@ -783,13 +783,12 @@ commCallCloseHandlers(int fd)
 
 /// sets SO_LINGER socket(7) option
 /// \param enabled -- whether linger will be active (sets linger::l_onoff)
-/// \param timeoutInSeconds -- how long to linger for (sets linger::l_linger)
 static void
-commConfigureLinger(const int fd, const OnOff enabled, const int timeoutInSeconds = 0)
+commConfigureLinger(const int fd, const OnOff enabled)
 {
-    struct linger l;
+    struct linger l = {};
     l.l_onoff = (enabled == OnOff::on ? 1 : 0);
-    l.l_linger = timeoutInSeconds;
+    l.l_linger = 0; // how long to linger for, in seconds
 
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
         const auto xerrno = errno;
@@ -805,7 +804,7 @@ void
 comm_reset_close(const Comm::ConnectionPointer &conn)
 {
     if (Comm::IsConnOpen(conn)) {
-        commConfigureLinger(conn->fd, OnOff::on, 0);
+        commConfigureLinger(conn->fd, OnOff::on);
         debugs(5, 7, conn->id);
         conn->close();
     }
@@ -815,8 +814,10 @@ comm_reset_close(const Comm::ConnectionPointer &conn)
 void
 old_comm_reset_close(int fd)
 {
-    commConfigureLinger(fd, OnOff::on, 0);
-    comm_close(fd);
+    if (fd >= 0) {
+        commConfigureLinger(fd, OnOff::on);
+        comm_close(fd);
+    }
 }
 
 static void
