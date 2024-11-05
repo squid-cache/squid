@@ -27,6 +27,7 @@ public:
     char const *typeString() const override;
     void parse() override;
     int match(ACLChecklist *checklist) override;
+    bool requiresRequest() const override { return true; }
     SBufList dump() const override;
     bool empty () const override;
 
