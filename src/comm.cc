@@ -79,7 +79,7 @@ static void commPlanHalfClosedCheck();
 static Comm::Flag commBind(int s, struct addrinfo &);
 static void commSetBindAddressNoPort(int);
 static void commSetReuseAddr(int);
-static void commSetNoLinger(int);
+static void commConfigureLinger(int fd, OnOff);
 #ifdef TCP_NODELAY
 static void commSetTcpNoDelay(int);
 #endif
@@ -486,7 +486,7 @@ comm_apply_flags(int new_socket,
 #if _SQUID_WINDOWS_
         if (sock_type != SOCK_DGRAM)
 #endif
-            commSetNoLinger(new_socket);
+            commConfigureLinger(new_socket, OnOff::off);
 
         if (opt_reuseaddr)
             commSetReuseAddr(new_socket);
@@ -555,13 +555,6 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
     assert(AI);
 
     comm_init_opened(conn, note, AI);
-
-    if (conn->local.port() > (unsigned short) 0) {
-#if _SQUID_WINDOWS_
-        if (AI->ai_socktype != SOCK_DGRAM)
-#endif
-            fd_table[conn->fd].flags.nolinger = true;
-    }
 
     if ((conn->flags & COMM_TRANSPARENT))
         fd_table[conn->fd].flags.transparent = true;
@@ -1026,13 +1019,6 @@ comm_remove_close_handler(int fd, AsyncCall::Pointer &call)
     if (p != nullptr)
         p->dequeue(fd_table[fd].closeHandler, prev);
     call->cancel("comm_remove_close_handler");
-}
-
-static void
-commSetNoLinger(int fd)
-{
-    commConfigureLinger(fd, OnOff::off);
-    fd_table[fd].flags.nolinger = true;
 }
 
 static void
