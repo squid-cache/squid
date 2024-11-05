@@ -49,12 +49,18 @@ jobs:
 
     name: linux-distros(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
     env:
-      CC: ${{ matrix.compiler.CC }}
-      CXX: ${{ matrix.compiler.CXX }}
+      CC: /usr/bin/ccache ${{ matrix.compiler.CC }}
+      CXX: /usr/bin/ccache ${{ matrix.compiler.CXX }}
 
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
+
+      - name: Setup ccache
+        uses: squid-cache/ccache-action@v1.2.14
+        with:
+          verbose: 2 # default 0
+          key: ${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
 
       - name: Run test-builds
         id: test-builds
