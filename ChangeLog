@@ -3510,7 +3510,7 @@ Squid-2 ChangeLog of versions fully ported to Squid-3 follows.
 Changes to squid-2.6.STABLE22 (19 October 2008)
 
 	- Bug #2396: Correct the opening of the PF device file.
-	- Make --with-large-files and --with-build-envirnment=default play
+	- Make --with-large-files and --with-build-environment=default play
 	  nice together
 	- Workaround for Linux-2.6.24 & 2.6.25 netfiler_ipv4.h include header
 	  __u32 problem
