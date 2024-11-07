@@ -348,7 +348,7 @@ int main(int argc, char **argv)
     while ((opt = getopt(argc, argv, "d:p:b:h")) != -1) {
         switch (opt) {
         case 'd':
-            Debug::Levels[MY_DEBUG_SECTION] = atoi(optarg);
+            Debug::parseOptions(ToSBuf("debug_options ", MY_DEBUG_SECTION, ",", optarg).c_str());
             break;
         case 'b':
             db_path = optarg;
