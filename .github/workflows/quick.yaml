@@ -17,9 +17,10 @@ on:
     branches: [ "master" ]
 
 concurrency:
-  # cancel old runs in case of push to same pr or branch
+  # Cancel ongoing tests in case of push to the same PR or staging branch,
+  # but let previous master commit tests complete.
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'master' }}
 
 env:
   # empty except for pull_request events
