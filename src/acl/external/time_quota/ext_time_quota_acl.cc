@@ -328,7 +328,7 @@ static void usage(void)
     debugs(MY_DEBUG_SECTION, DBG_CRITICAL, "Wrong usage. Please reconfigure in squid.conf.");
 
     std::cerr <<
-              "Usage: " << program_name << " [-d] [-b dbpath] [-p pauselen] [-h] configfile\n" <<
+              "Usage: " << program_name << " [-d level] [-b dbpath] [-p pauselen] [-h] configfile\n" <<
               "	-d level      enable debugging output at level\n" <<
               "	-b dbpath     Path where persistent session database will be kept\n" <<
               "	              If option is not used, then " DEFAULT_QUOTA_DB " will be used.\n" <<
