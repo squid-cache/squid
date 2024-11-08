@@ -330,7 +330,7 @@ static void usage(void)
     std::cerr <<
               "Usage: " << program_name << " [-d level] [-b dbpath] [-p pauselen] [-h] configfile\n" <<
               "	-d level      set section " << MY_DEBUG_SECTION << " debugging to the specified level,\n"
-              "               overwriting for this helper Squid's debug_options (default: 1)\n"
+              "               overwriting Squid's debug_options (default: 1)\n"
               "	-b dbpath     Path where persistent session database will be kept\n" <<
               "	              If option is not used, then " DEFAULT_QUOTA_DB " will be used.\n" <<
               "	-p pauselen   length in seconds to describe a pause between 2 requests.\n" <<
