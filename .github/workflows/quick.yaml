@@ -16,6 +16,11 @@ on:
     # test PRs targeting this branch code
     branches: [ "master" ]
 
+concurrency:
+  # cancel old runs in case of push to same pr or branch
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   # empty except for pull_request events
   PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
