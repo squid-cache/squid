@@ -79,7 +79,7 @@ static void commPlanHalfClosedCheck();
 static Comm::Flag commBind(int s, struct addrinfo &);
 static void commSetBindAddressNoPort(int);
 static void commSetReuseAddr(int);
-static void commSetNoLinger(int);
+static void commConfigureLinger(int fd, OnOff);
 #ifdef TCP_NODELAY
 static void commSetTcpNoDelay(int);
 #endif
@@ -486,7 +486,7 @@ comm_apply_flags(int new_socket,
 #if _SQUID_WINDOWS_
         if (sock_type != SOCK_DGRAM)
 #endif
-            commSetNoLinger(new_socket);
+            commConfigureLinger(new_socket, OnOff::off);
 
         if (opt_reuseaddr)
             commSetReuseAddr(new_socket);
@@ -555,13 +555,6 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
     assert(AI);
 
     comm_init_opened(conn, note, AI);
-
-    if (conn->local.port() > (unsigned short) 0) {
-#if _SQUID_WINDOWS_
-        if (AI->ai_socktype != SOCK_DGRAM)
-#endif
-            fd_table[conn->fd].flags.nolinger = true;
-    }
 
     if ((conn->flags & COMM_TRANSPARENT))
         fd_table[conn->fd].flags.transparent = true;
@@ -783,13 +776,12 @@ commCallCloseHandlers(int fd)
 
 /// sets SO_LINGER socket(7) option
 /// \param enabled -- whether linger will be active (sets linger::l_onoff)
-/// \param timeoutInSeconds -- how long to linger for (sets linger::l_linger)
 static void
-commConfigureLinger(const int fd, const OnOff enabled, const int timeoutInSeconds = 0)
+commConfigureLinger(const int fd, const OnOff enabled)
 {
-    struct linger l;
+    struct linger l = {};
     l.l_onoff = (enabled == OnOff::on ? 1 : 0);
-    l.l_linger = timeoutInSeconds;
+    l.l_linger = 0; // how long to linger for, in seconds
 
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
         const auto xerrno = errno;
@@ -805,7 +797,7 @@ void
 comm_reset_close(const Comm::ConnectionPointer &conn)
 {
     if (Comm::IsConnOpen(conn)) {
-        commConfigureLinger(conn->fd, OnOff::on, 0);
+        commConfigureLinger(conn->fd, OnOff::on);
         debugs(5, 7, conn->id);
         fd_table[conn->fd].flags.harshClosureRequested = true;
         conn->close();
@@ -816,9 +808,11 @@ comm_reset_close(const Comm::ConnectionPointer &conn)
 void
 old_comm_reset_close(int fd)
 {
-    commConfigureLinger(fd, OnOff::on, 0);
-    fd_table[fd].flags.harshClosureRequested = true;
-    comm_close(fd);
+    if (fd >= 0) {
+        commConfigureLinger(fd, OnOff::on);
+        fd_table[fd].flags.harshClosureRequested = true;
+        comm_close(fd);
+    }
 }
 
 static void
@@ -1027,13 +1021,6 @@ comm_remove_close_handler(int fd, AsyncCall::Pointer &call)
     if (p != nullptr)
         p->dequeue(fd_table[fd].closeHandler, prev);
     call->cancel("comm_remove_close_handler");
-}
-
-static void
-commSetNoLinger(int fd)
-{
-    commConfigureLinger(fd, OnOff::off);
-    fd_table[fd].flags.nolinger = true;
 }
 
 static void
