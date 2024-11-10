@@ -22,7 +22,8 @@ typedef enum {
     scContinue = 100,
     scSwitchingProtocols = 101,
     scProcessing = 102,      /**< RFC2518 section 10.1 */
-    scEarlyHints = 103,      /**< draft-kazuho-early-hints-status-code */
+    scEarlyHints = 103,      /**< RFC8297 */
+    scUploadResumptionSupported = 104, /**< draft-ietf-httpbis-resumable-upload */
     scOkay = 200,
     scCreated = 201,
     scAccepted = 202,
@@ -63,6 +64,7 @@ typedef enum {
     scUnprocessableEntity = 422,    /**< RFC2518 section 10.3 / RFC4918 */
     scLocked = 423,                 /**< RFC2518 section 10.4 / RFC4918 */
     scFailedDependency = 424,       /**< RFC2518 section 10.5 / RFC4918 */
+    scTooEarly = 425, /**< RFC8470 */
     scUpgradeRequired = 426,
     scPreconditionRequired = 428,   /**< RFC6585 */
     scTooManyRequests = 429,        /**< RFC6585 */
