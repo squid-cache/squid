@@ -1,4 +1,7 @@
-
+---
+title: squid
+section: 8
+---
 # NAME
 
 **squid** - HTTP web proxy caching server
