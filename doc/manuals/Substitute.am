@@ -17,7 +17,7 @@ SUBSTITUTE=sed "\
 	s%@SYSCONFDIR@%$(sysconfdir)%g;\
 	"
 
-%.8: %.md
+.md.8:
 	$(SUBSTITUTE) < $(srcdir)/`basename $<` | \
-	$(PANDOC) -t man -f gfm -s -V title:`basename -s .md "$<"` -V section:8 -o $@
+	$(PANDOC) -t man -f gfm -s -o $@
 
