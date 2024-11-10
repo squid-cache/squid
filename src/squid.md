@@ -200,7 +200,8 @@ Squid was written over many years by a changing team of
 developers and maintained in turn by
  *Duane Wessels <duane@squid-cache.org>*,
  *Henrik Nordstrom <hno@squid-cache.org>*,
- *Amos Jeffries <amosjeffries@squid-cache.org>*
+ *Amos Jeffries <amosjeffries@squid-cache.org>*,
+ *Francesco Chemolli <kinkie@squid-cache.org>*
 
 With contributions from many others in the Squid community.
 
@@ -212,7 +213,7 @@ holders.
 
 # COPYRIGHT
 
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2024 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
