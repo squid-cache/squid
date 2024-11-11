@@ -85,8 +85,8 @@ typedef enum {
     // The 6xx codes below are for internal use only: Bad requests result
     // in scBadRequest; bad responses in scGatewayTimeout.
 
-    scInvalidHeader = 600, /**< Squid header parsing error */
-    scHeaderTooLarge = 601 /* Header too large to process */
+    scInvalidHeader = 600, ///< Squid header parsing error
+    scHeaderTooLarge = 601 ///< Header too large to process
 } StatusCode;
 
 const char *StatusCodeString(const Http::StatusCode status);
