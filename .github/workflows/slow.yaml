@@ -15,10 +15,9 @@ on:
     branches: [ "auto" ]
 
 concurrency:
-  # Cancel ongoing tests in case of push to the same PR or staging branch,
-  # but let previous master commit tests complete.
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+  # Cancel ongoing tests in case of push to staging branch.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   linux-distros:
