@@ -783,7 +783,7 @@ commConfigureLinger(const int fd, const OnOff enabled)
     l.l_onoff = (enabled == OnOff::on ? 1 : 0);
     l.l_linger = 0; // how long to linger for, in seconds
 
-    fd_table[fd].flags.harshClosureRequested = (l.l_onoff && !l.l_linger); // will RST if true
+    fd_table[fd].flags.harshClosureRequested = (l.l_onoff && !l.l_linger); // close(2) sends TCP RST if true
 
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
         const auto xerrno = errno;
