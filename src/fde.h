@@ -127,7 +127,7 @@ public:
         bool read_pending = false;
         //bool write_pending; //XXX seems not to be used
         bool transparent = false;
-        /// whether comm_reset_close() (or old_comm_reset_close()) has been called
+        /// whether SO_LINGER socket option with zero linger timeout was applied (meaning sending RST)
         bool harshClosureRequested = false;
     } flags;
 

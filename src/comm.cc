@@ -783,6 +783,8 @@ commConfigureLinger(const int fd, const OnOff enabled)
     l.l_onoff = (enabled == OnOff::on ? 1 : 0);
     l.l_linger = 0; // how long to linger for, in seconds
 
+    fd_table[fd].flags.harshClosureRequested = (l.l_onoff && !l.l_linger); // will RST if true
+
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
         const auto xerrno = errno;
         debugs(50, DBG_CRITICAL, "ERROR: Failed to set closure behavior (SO_LINGER) for FD " << fd << ": " << xstrerr(xerrno));
@@ -799,7 +801,6 @@ comm_reset_close(const Comm::ConnectionPointer &conn)
     if (Comm::IsConnOpen(conn)) {
         commConfigureLinger(conn->fd, OnOff::on);
         debugs(5, 7, conn->id);
-        fd_table[conn->fd].flags.harshClosureRequested = true;
         conn->close();
     }
 }
@@ -810,7 +811,6 @@ old_comm_reset_close(int fd)
 {
     if (fd >= 0) {
         commConfigureLinger(fd, OnOff::on);
-        fd_table[fd].flags.harshClosureRequested = true;
         comm_close(fd);
     }
 }
