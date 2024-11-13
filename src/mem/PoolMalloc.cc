@@ -31,6 +31,7 @@ MemPoolMalloc::allocate()
     if (obj) {
         --meter.idle;
         ++countSavedAllocs;
+        (void)VALGRIND_MAKE_MEM_UNDEFINED(obj, objectSize);
     } else {
         if (doZero)
             obj = xcalloc(1, objectSize);
@@ -52,6 +53,7 @@ MemPoolMalloc::deallocate(void *obj)
     } else {
         if (doZero)
             memset(obj, 0, objectSize);
+        (void)VALGRIND_MAKE_MEM_NOACCESS(obj, objectSize);
         ++meter.idle;
         freelist.push(obj);
     }
