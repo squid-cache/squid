@@ -31,7 +31,10 @@ MemPoolMalloc::allocate()
     if (obj) {
         --meter.idle;
         ++countSavedAllocs;
-        (void)VALGRIND_MAKE_MEM_UNDEFINED(obj, objectSize);
+        if (doZero)
+            (void)VALGRIND_MAKE_MEM_DEFINED(obj, objectSize);
+        else
+            (void)VALGRIND_MAKE_MEM_UNDEFINED(obj, objectSize);
     } else {
         if (doZero)
             obj = xcalloc(1, objectSize);
