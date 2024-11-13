@@ -61,7 +61,6 @@ MemPoolMalloc::deallocate(void *obj)
 size_t
 MemPoolMalloc::getStats(Mem::PoolStats &stats)
 {
-    stats.pool = this;
     stats.label = label;
     stats.meter = &meter;
     stats.obj_size = objectSize;

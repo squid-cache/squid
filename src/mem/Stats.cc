@@ -16,11 +16,6 @@ Mem::GlobalStats(PoolStats &stats)
 {
     MemPools::GetInstance().flushMeters();
 
-    stats.meter = &TheMeter;
-    stats.label = "Total";
-    stats.obj_size = 1;
-    stats.overhead += sizeof(MemPools);
-
     /* gather all stats for Totals */
     size_t pools_inuse = 0;
     for (const auto pool: MemPools::GetInstance().pools) {
@@ -28,6 +23,13 @@ Mem::GlobalStats(PoolStats &stats)
             ++pools_inuse;
         stats.overhead += sizeof(Allocator *);
     }
+
+    // Reset PoolStats::meter, label, and obj_size data members after getStats()
+    // calls in the above loop set them. TODO: Refactor to remove these members.
+    stats.meter = &TheMeter;
+    stats.label = "Total";
+    stats.obj_size = 1;
+    stats.overhead += sizeof(MemPools);
 
     return pools_inuse;
 }

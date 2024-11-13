@@ -586,7 +586,7 @@ Mem::Report(std::ostream &stream)
         PoolStats mp_stats;
         pool->getStats(mp_stats);
 
-        if (mp_stats.pool->meter.gb_allocated.count > 0)
+        if (pool->meter.gb_allocated.count > 0)
             usedPools.emplace_back(mp_stats);
         else
             ++not_used;
