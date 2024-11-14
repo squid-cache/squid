@@ -13,10 +13,10 @@
 #include "tests/STUB.h"
 
 #include "ip/Address.h"
+Ip::Address::Address(const struct sockaddr_storage &) STUB
 Ip::Address::Address(const struct in_addr &) STUB
 Ip::Address::Address(const struct sockaddr_in &) STUB
 Ip::Address::Address(const struct in6_addr &) STUB
-Ip::Address::Address(const struct sockaddr_in6 &) STUB
 Ip::Address::Address(const struct hostent &) STUB
 Ip::Address::Address(const struct addrinfo &) STUB
 Ip::Address::Address(const char*) STUB
@@ -24,7 +24,6 @@ Ip::Address& Ip::Address::operator =(struct sockaddr_in const &) STUB_RETVAL(*th
 Ip::Address& Ip::Address::operator =(struct sockaddr_storage const &) STUB_RETVAL(*this)
 Ip::Address& Ip::Address::operator =(struct in_addr const &) STUB_RETVAL(*this)
 Ip::Address& Ip::Address::operator =(struct in6_addr const &) STUB_RETVAL(*this)
-Ip::Address& Ip::Address::operator =(struct sockaddr_in6 const &) STUB_RETVAL(*this)
 bool Ip::Address::operator =(const struct hostent &) STUB_RETVAL(false)
 bool Ip::Address::operator =(const struct addrinfo &) STUB_RETVAL(false)
 bool Ip::Address::operator =(const char *) STUB_RETVAL(false)
