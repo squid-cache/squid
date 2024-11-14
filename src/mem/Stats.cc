@@ -25,10 +25,11 @@ Mem::GlobalStats(PoolStats &stats)
     }
 
     // Reset PoolStats::meter, label, and obj_size data members after getStats()
-    // calls in the above loop set them. TODO: Refactor to remove these members.
+    // calls in the above loop set them. TODO: Refactor to remove these data members.
     stats.meter = &TheMeter;
     stats.label = "Total";
     stats.obj_size = 1;
+
     stats.overhead += sizeof(MemPools);
 
     return pools_inuse;
