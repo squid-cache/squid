@@ -119,7 +119,6 @@ public:
         bool close_request = false; ///< true if file_ or comm_close has been called
         bool write_daemon = false;
         bool socket_eof = false;
-        bool nolinger = false;
         bool nonblocking = false;
         bool ipc = false;
         bool called_connect = false;
