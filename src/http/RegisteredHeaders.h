@@ -109,8 +109,8 @@ enum HdrType {
     X_SQUID_ERROR,                  /**< Squid custom header on generated error responses */
     HDR_X_ACCELERATOR_VARY,             /**< obsolete Squid custom header. */
     X_NEXT_SERVICES,                /**< Squid custom ICAP header */
-    SURROGATE_CAPABILITY,           /**< Edge Side Includes (ESI) header */
-    SURROGATE_CONTROL,              /**< Edge Side Includes (ESI) header */
+    SURROGATE_CAPABILITY,           /**< W3C Edge Architecture Specification */
+    SURROGATE_CONTROL,              /**< W3C Edge Architecture Specification */
     FRONT_END_HTTPS,                /**< MS Exchange custom header we may have to add */
     FTP_COMMAND,                    /**< Internal header for FTP command */
     FTP_ARGUMENTS,                  /**< Internal header for FTP command arguments */

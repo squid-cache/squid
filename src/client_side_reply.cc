@@ -13,6 +13,7 @@
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
 #include "client_side_reply.h"
+#include "clientStream.h"
 #include "errorpage.h"
 #include "ETag.h"
 #include "fd.h"
@@ -42,9 +43,6 @@
 #endif
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
-#endif
-#if USE_SQUID_ESI
-#include "esi/Esi.h"
 #endif
 
 #include <memory>
@@ -388,8 +386,15 @@ clientReplyContext::sendClientOldEntry()
 {
     /* Get the old request back */
     restoreState();
+
+    if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED)) {
+        debugs(88, 3, "stale entry aborted while we revalidated: " << *http->storeEntry());
+        http->updateLoggingTags(LOG_TCP_MISS);
+        processMiss();
+        return;
+    }
+
     /* here the data to send is in the next nodes buffers already */
-    assert(!EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED));
     Assure(matchesStreamBodyBuffer(lastStreamBufferedBytes));
     Assure(!lastStreamBufferedBytes.offset);
     sendMoreData(lastStreamBufferedBytes);
@@ -551,7 +556,12 @@ clientReplyContext::cacheHit(const StoreIOBuffer result)
         return;
     }
 
-    assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
+    if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
+        debugs(88, 3, "refusing aborted " << *e);
+        http->updateLoggingTags(LOG_TCP_MISS);
+        processMiss();
+        return;
+    }
 
     /*
      * Got the headers, now grok them
@@ -844,9 +854,10 @@ clientReplyContext::blockedHit() const
         return false; // internal content "hits" cannot be blocked
 
     {
-        std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
-        chl->updateReply(&http->storeEntry()->mem().freshestReply());
-        return !chl->fastCheck().allowed(); // when in doubt, block
+        ACLFilledChecklist chl(Config.accessList.sendHit, nullptr);
+        clientAclChecklistFill(chl, http);
+        chl.updateReply(&http->storeEntry()->mem().freshestReply());
+        return !chl.fastCheck().allowed(); // when in doubt, block
     }
 }
 
@@ -1834,10 +1845,10 @@ clientReplyContext::processReplyAccess ()
     }
 
     /** Process http_reply_access lists */
-    ACLFilledChecklist *replyChecklist =
+    auto replyChecklist =
         clientAclChecklistCreate(Config.accessList.reply, http);
     replyChecklist->updateReply(reply);
-    replyChecklist->nonBlockingCheck(ProcessReplyAccessResult, this);
+    ACLFilledChecklist::NonBlockingCheck(std::move(replyChecklist), ProcessReplyAccessResult, this);
 }
 
 void
@@ -1885,18 +1896,6 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
     debugs(88, 3, "clientReplyContext::sendMoreData: Appending " <<
            (int) body_size << " bytes after " << reply->hdr_sz <<
            " bytes of headers");
-
-#if USE_SQUID_ESI
-
-    if (http->flags.accel && reply->sline.status() != Http::scForbidden &&
-            !alwaysAllowResponse(reply->sline.status()) &&
-            esiEnableProcessing(reply)) {
-        debugs(88, 2, "Enabling ESI processing for " << http->uri);
-        clientStreamInsertHead(&http->client_stream, esiStreamRead,
-                               esiProcessStream, esiStreamDetach, esiStreamStatus, nullptr);
-    }
-
-#endif
 
     if (http->request->method == Http::METHOD_HEAD) {
         /* do not forward body for HEAD replies */

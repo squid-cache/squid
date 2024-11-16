@@ -10,8 +10,8 @@
 #define SQUID_SRC_CLIENT_SIDE_REQUEST_H
 
 #include "AccessLogEntry.h"
+#include "acl/FilledChecklist.h"
 #include "client_side.h"
-#include "clientStream.h"
 #include "http/forward.h"
 #include "HttpHeaderRange.h"
 #include "log/forward.h"
@@ -26,9 +26,6 @@
 class ClientRequestContext;
 class ConnStateData;
 class MemObject;
-
-/* client_side_request.c - client side request related routines (pure logic) */
-int clientBeginRequest(const HttpRequestMethod &, char const *, CSCB *, CSD *, const ClientStreamData &, const HttpHeader *, char *, size_t, const MasterXactionPointer &);
 
 class ClientHttpRequest
 #if USE_ADAPTATION
@@ -257,7 +254,7 @@ private:
 /* client http based routines */
 char *clientConstructTraceEcho(ClientHttpRequest *);
 
-ACLFilledChecklist *clientAclChecklistCreate(const acl_access *, ClientHttpRequest *);
+ACLFilledChecklist::MakingPointer clientAclChecklistCreate(const acl_access *, ClientHttpRequest *);
 void clientAclChecklistFill(ACLFilledChecklist &, ClientHttpRequest *);
 void clientAccessCheck(ClientHttpRequest *);
 

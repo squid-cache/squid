@@ -291,7 +291,7 @@ checkMakeNamedErrorDetails ()
     problems=1 # assume there are problems until proven otherwise
 
     options='-h --only-matching --extended-regexp'
-    git grep $options 'MakeNamedErrorDetail[(]".*?"[)]' src |
+    git grep $options 'MakeNamedErrorDetail[(]"[^"]*"[)]' src |
         sort |
         uniq --count > \
         MakeNamedErrorDetail.tmp

@@ -1950,11 +1950,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     if (request->flags.accelerated) {
         /* Append Surrogate-Capabilities */
         String strSurrogate(hdr_in->getList(Http::HdrType::SURROGATE_CAPABILITY));
-#if USE_SQUID_ESI
-        snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"", Config.Accel.surrogate_id);
-#else
         snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0\"", Config.Accel.surrogate_id);
-#endif
         strListAdd(&strSurrogate, bbuf, ',');
         hdr_out->putStr(Http::HdrType::SURROGATE_CAPABILITY, strSurrogate.termedBuf());
     }
@@ -2109,7 +2105,7 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
         Config.http_upgrade_request_protocols->forApplicable(offeredProto, [&ch, offeredStr, offeredStrLen, &upgradeOut] (const SBuf &cfgProto, const acl_access *guard) {
             debugs(11, 5, "checks " << cfgProto << " rule(s)");
             ch.changeAcl(guard);
-            const auto answer = ch.fastCheck();
+            const auto &answer = ch.fastCheck();
             if (answer.implicit)
                 return false; // keep looking for an explicit rule match
             if (answer.allowed())

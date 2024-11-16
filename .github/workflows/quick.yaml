@@ -1,13 +1,26 @@
-name: GitHub CI
+# The jobs below are executed on every PR branch push (among other
+# events), quickly and cheaply detecting many common PR problems.
+#
+# Anubis configuration must be kept in sync with the total number of
+# tests executed for "auto" branch commits, including tests in other
+# GitHub workflow file(s).
+
+name: PR commit
 
 on:
   push:
-    # test this branch and staged PRs based on this branch code
+    # test commits on this branch and staged commits
     branches: [ "master", "auto" ]
 
   pull_request:
     # test PRs targeting this branch code
     branches: [ "master" ]
+
+concurrency:
+  # Cancel ongoing tests in case of push to the same PR or staging branch,
+  # but let previous master commit tests complete.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 env:
   # empty except for pull_request events
@@ -33,9 +46,9 @@ jobs:
           sudo apt-get --quiet=2 install libtool-bin
 
       - name: Setup a nodejs environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
 
       - name: Checkout Squid sources
         uses: actions/checkout@v4
@@ -58,7 +71,7 @@ jobs:
 
       - name: Publish test logs
         if: success() || failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-logs
           path: |
@@ -94,59 +107,51 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-22.04, macos-14 ]
+        os:
+          - ubuntu-22.04
+        compiler:
+          - { CC: gcc, CXX: g++ }
+          - { CC: clang, CXX: clang++ }
+        layer:
+          - { name: layer-00-default, nick: default }
+          - { name: layer-01-minimal, nick: minimal }
+          - { name: layer-02-maximus, nick: maximus }
 
     runs-on: ${{ matrix.os }}
+
+    name: build-tests(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+
+    env:
+      CC: /usr/bin/ccache ${{ matrix.compiler.CC }}
+      CXX: /usr/bin/ccache ${{ matrix.compiler.CXX }}
 
     steps:
 
       - name: Install prerequisite Linux packages
-        if: runner.os == 'Linux'
         run: |
           # required for "apt-get build-dep" to work
           sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
-          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin
-
-      - name: Install prerequisite MacOS packages
-        if: runner.os == 'macOS'
-        run: |
-          brew install \
-            automake coreutils cppunit gawk \
-            gnu-getopt gnu-sed grep libtool \
-            make openldap openssl cyrus-sasl
+          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin ${{ matrix.compiler.CC }} ccache
 
       - name: Checkout sources
         uses: actions/checkout@v4
 
-      - name: Run build on Linux
-        if: runner.os == 'Linux'
-        run: ./test-builds.sh
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2.14
+        with:
+          verbose: 2 # default 0
+          key: ${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
 
-      - name: Run build on MacOS
-        if: runner.os == 'macOS'
-        run: |
-          eval `brew shellenv`
-          PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
-          PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig"
-          PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
-          export PKG_CONFIG_PATH
-          export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
-          export MAKE="$HOMEBREW_PREFIX/bin/gmake"
-          # ensure we use Homebrew headers and libraries
-          # this is needed because pkg-config --libs openssl points to the wrong directory
-          #   in version openssl@3: stable 3.3.0
-          export CPPFLAGS="-I$HOMEBREW_PREFIX/include${CPPFLAGS:+ $CPPFLAGS}"
-          export LDFLAGS="-L$HOMEBREW_PREFIX/lib${LDFLAGS:+ $LDFLAGS}"
-          export CFLAGS="-Wno-compound-token-split-by-macro${CFLAGS:+ $CFLAGS}" # needed fir ltdl with Xcode
-          ./test-builds.sh
+      - name: Run build on Linux
+        run: ./test-builds.sh ${{ matrix.layer.name }}
 
       - name: Publish build logs
         if: success() || failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: build-logs-${{ runner.os }}
+          name: build-logs-${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
           path: btlayer-*.log
 
   CodeQL-tests:
@@ -159,7 +164,6 @@ jobs:
     steps:
 
       - name: Install Squid prerequisite Linux packages
-        if: runner.os == 'Linux'
         run: |
           # required for "apt-get build-dep" to work
           sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
@@ -171,10 +175,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
 
       - name: Build Squid
         run: ./test-builds.sh ./test-suite/buildtests/layer-02-maximus.opts
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3

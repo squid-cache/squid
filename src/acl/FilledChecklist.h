@@ -32,17 +32,29 @@ class ConnStateData;
  */
 class ACLFilledChecklist: public ACLChecklist
 {
-    CBDATA_CLASS(ACLFilledChecklist);
+    CBDATA_CLASS_WITH_MAKE(ACLFilledChecklist);
 
 public:
+    /// Unlike regular Foo::Pointer types, this smart pointer is meant for use
+    /// during checklist configuration only, when it provides exception safety.
+    /// Any other/long-term checklist storage requires CbcPointer or equivalent.
+    using MakingPointer = std::unique_ptr<ACLFilledChecklist>;
+
     ACLFilledChecklist();
-    ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident = nullptr);
+    ACLFilledChecklist(const acl_access *, HttpRequest *);
     ~ACLFilledChecklist() override;
+
+    /// Creates an ACLFilledChecklist object with given constructor arguments.
+    /// Callers are expected to eventually proceed with NonBlockingCheck().
+    static MakingPointer Make(const acl_access *a, HttpRequest *r) { return MakingPointer(new ACLFilledChecklist(a, r)); }
+
+    /// \copydoc ACLChecklist::nonBlockingCheck()
+    /// This public nonBlockingCheck() wrapper should be paired with Make(). The
+    /// pair prevents exception-caused Checklist memory leaks in caller code.
+    static void NonBlockingCheck(MakingPointer &&p, ACLCB *cb, void *data) { p->nonBlockingCheck(cb, data); (void)p.release(); }
 
     /// configure client request-related fields for the first time
     void setRequest(HttpRequest *);
-    /// configure rfc931 user identity for the first time
-    void setIdent(const char *userIdentity);
 
     /// Remembers the given ALE (if it is not nil) or does nothing (otherwise).
     /// When (and only when) remembering ALE, populates other still-unset fields
@@ -90,7 +102,6 @@ public:
 
     HttpRequest::Pointer request;
 
-    char rfc931[USER_IDENT_SZ];
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
 #endif
@@ -117,7 +128,7 @@ public:
     err_type requestErrorType;
 
 private:
-    ConnStateData * conn_;          /**< hack for ident and NTLM */
+    ConnStateData *conn_; ///< hack: client-to-Squid connection manager (if any)
     int fd_;                        /**< may be available when conn_ is not */
 
     HttpReply::Pointer reply_; ///< response added by updateReply() or nil

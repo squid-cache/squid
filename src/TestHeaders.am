@@ -20,7 +20,7 @@ testHeaders: $(SOURCES) $(noinst_HEADERS) $(EXTRA_DIST) $(top_srcdir)/test-suite
 .h.hdrtest:
 	@SrcFilePath=`echo $< | $(SED) 's%^$(top_srcdir)/%%'`; \
 	SrcFileName=`basename $$SrcFilePath`; \
-	TargetFileName=`basename $@`; \
+	TargetFileName=tmp$$$$-`basename $@`; \
 	if test "$(EXCLUDE_FROM_HDR_TESTING)" != "" && echo "$(EXCLUDE_FROM_HDR_TESTING)" | $(TR) ' ' '\n' | $(FGREP) -x -q "$$SrcFileName" ; then \
 		echo "header-test: skip - $$SrcFilePath"; \
 		exit 0; \

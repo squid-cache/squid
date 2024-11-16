@@ -649,7 +649,7 @@ gen_parse(const EntryList &head, std::ostream &fout)
          "parse_line(char *buff)\n"
          "{\n"
          "\tchar\t*token;\n"
-         "\tif ((token = strtok(buff, w_space)) == NULL) \n"
+         "\tif ((token = strtok(buff, \" \\t\")) == NULL) \n"
          "\t\treturn 1;\t/* ignore empty lines */\n"
          "\tConfigParser::SetCfgLine(strtok(nullptr, \"\"));\n";
 

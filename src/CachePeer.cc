@@ -22,7 +22,8 @@ CBDATA_CLASS_INIT(CachePeer);
 
 CachePeer::CachePeer(const char * const hostname):
     name(xstrdup(hostname)),
-    host(xstrdup(hostname))
+    host(xstrdup(hostname)),
+    tlsContext(secure, sslContext)
 {
     Tolower(host); // but .name preserves original spelling
 }
@@ -41,9 +42,7 @@ CachePeer::~CachePeer()
     aclDestroyAccessList(&access);
 
 #if USE_CACHE_DIGESTS
-    void *digestTmp = nullptr;
-    if (cbdataReferenceValidDone(digest, &digestTmp))
-        peerDigestNotePeerGone(static_cast<PeerDigest *>(digestTmp));
+    delete digest;
     xfree(digest_url);
 #endif
 
@@ -55,6 +54,14 @@ CachePeer::~CachePeer()
     PeerPoolMgr::Checkpoint(standby.mgr, "peer gone");
 
     xfree(domain);
+}
+
+Security::FuturePeerContext *
+CachePeer::securityContext()
+{
+    if (secure.encryptTransport)
+        return &tlsContext;
+    return nullptr;
 }
 
 void

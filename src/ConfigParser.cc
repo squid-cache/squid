@@ -594,13 +594,13 @@ ConfigParser::skipOptional(const char *keyword)
     return false; // no more tokens (i.e. we are at the end of the line)
 }
 
-Acl::Tree *
+ACLList *
 ConfigParser::optionalAclList()
 {
     if (!skipOptional("if"))
         return nullptr; // OK: the directive has no ACLs
 
-    Acl::Tree *acls = nullptr;
+    ACLList *acls = nullptr;
     const auto aclCount = aclParseAclList(*this, &acls, cfg_directive);
     assert(acls);
     if (aclCount <= 0)

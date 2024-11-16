@@ -33,6 +33,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<item>Cache Manager changes
 	<item>Removed purge tool
 	<item>Remove deprecated languages
+	<item>Remove Ident protocol support
 </itemize>
 
 <p>Most user-facing changes are reflected in squid.conf (see further below).
@@ -103,6 +104,24 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 <p>See <url url="https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes"> for
    the full ISO-639 list. HTTP uses the 2-letter (set 1) codes.
 
+<sect1>Removed Ident protocol support
+
+<p>Ident protocol (RFC 931 obsoleted by RFC 1413) has been considered
+seriously insecure and broken since at least 2009 when SANS issued an update
+recommending its removal from all networks. Squid Ident implementation had its
+own set of problems (that could not be addressed without significant code
+refactoring).
+
+<p>Configurations using ident/ident_regex ACLs, %ui logformat codes, %IDENT
+external_acl_type format code, or ident_lookup_access/ident_timeout directives
+are now rejected, leading to fatal startup failures.
+
+<p>To avoid inconveniencing admins that do <em>not</em> use Ident features,
+access logs with "common" and "combined" logformats now always receive a dash
+in the position of what used to be a %ui record field.
+
+<p>If necessary, an external ACL helper can be written to perform Ident transactions
+and deliver the user identity to Squid through the **user=** annotation.
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
@@ -143,6 +162,8 @@ This section gives an account of those changes in three categories:
 	   necessary.
 	<p>Changed <em>http_status</em> to detect and handle overlapping
 	   status and status-range values. Merging where necessary.
+	<p>Removed <em>ident</em> with Ident protocol support.
+	<p>Removed <em>ident_regex</em> with Ident protocol support.
 
 	<tag>buffered_logs</tag>
 	<p>Honor the <em>off</em> setting in 'udp' access_log module.
@@ -151,11 +172,36 @@ This section gives an account of those changes in three categories:
 	<p>Removed the <em>non_peers</em> action. See the Cache Manager
 	<ref id="mgr" name="section"> for details.
 
+	<tag>dns_packet_max</tag>
+	<p>Honor positive <em>dns_packet_max</em> values when sending DNS A queries
+	and PTR queries containing IPv4 addresses. Prior to this change, Squid did
+	not add EDNS extension (RFC 6891) to those DNS queries because 2010 tests
+	revealed compatibility problems with some DNS resolvers. We hope that those
+	problems are now sufficiently rare to enable this useful optimization for
+	all DNS queries, as originally intended. Squid still sends EDNS extension
+	with DNS AAAA queries and PTR queries containing IPv6 addresses (when
+	dns_packet_max is set to a positive value). Rare deployments that must use
+	buggy DNS resolvers should not set <em>dns_packet_max</em>.
+
+	<tag>access_log</tag>
+	<p>Built-in <em>common</em> and <em>combined</em> logformats now always
+	receive a dash character ("-") in the position of what used to be a
+	<em>%ui</em> record field.
+
+	<tag>logformat</tag>
+	<p>Removed <em>%ui</em> format code with Ident protocol support.
+
+	<tag>external_acl_type</tag>
+	<p>Removed <em>%IDENT</em> format code with Ident protocol support.
+
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
 <p>
 <descrip>
+	<tag>esi_parser</tag>
+	<p>Edge Side Includes (ESI) protocol is no longer supported natively.
+
 	<tag>mcast_miss_addr</tag>
 	<p>The corresponding code has not built for many years, indicating that the
 	feature is unused.
@@ -171,6 +217,12 @@ This section gives an account of those changes in three categories:
 	<tag>mcast_miss_encode_key</tag>
 	<p>The corresponding code has not built for many years, indicating that the
 	feature is unused.
+
+	<tag>ident_lookup_access</tag>
+	<p>Ident protocol is no longer supported natively.
+
+	<tag>ident_timeout</tag>
+	<p>Ident protocol is no longer supported natively.
 
 </descrip>
 
@@ -208,9 +260,7 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<tag>--disable-esi</tag>
-	<p>The ESI feature is now disabled by default.
-	   Use <em>--enable-esi</em> if needed.
+	<p>No build options have changed behaviour in this version.
 
 </descrip>
 </p>
@@ -221,8 +271,17 @@ This section gives an account of those changes in three categories:
 	<tag>--enable-cachemgr-hostname=</tag>
 	<p>The <em>cachemgr.cgi</em> tool this option relates to has been removed.
 
+	<tag>--enable-esi</tag>
+	<p>Edge Side Includes (ESI) protocol is no longer supported natively.
+
+	<tag>--without-expat</tag>
+	<p>The ESI feature using libexpat has been removed.
+
 	<tag>--without-gnugss</tag>
 	<p>Renamed to <em>--without-gss</em>.
+
+	<tag>--without-xml2</tag>
+	<p>The ESI feature using libxml2 has been removed.
 
 	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
 	<p>The code enabled by this preprocessor macro has not built for many
@@ -232,6 +291,18 @@ This section gives an account of those changes in three categories:
 	<p>The code enabled by this preprocessor macro has not built for many
 	   years, indicating that the feature is unused.
 
+	<tag>--disable-ident-lookups</tag>
+	<p>The option was dropped during Ident protocol support removal.
+
+</descrip>
+
+<sect1>Other changes<label id="otherchanges">
+<p>
+<descrip>
+	<tag>Adjusted configuration and format of ext_time_quota_acl helper debugging</tag>
+	<p>The <em>-l</em> option that enables <em>ext_time_quota_acl</em> to log debug messages
+		to a custom logfile has been removed, and their format has been
+		changed to be in line with Squid's cache.log format.
 </descrip>
 
 <sect>Copyright

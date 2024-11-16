@@ -28,7 +28,6 @@ public:
     Ip::Address from;
 
     struct snmp_pdu *PDU;
-    ACLChecklist *acl_checklist;
     u_char *community;
 
     struct snmp_session session;

@@ -181,6 +181,14 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
+# Options removed in 7.x
+NAME: esi_parser
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
+
 # Options removed in 6.x
 NAME: announce_file
 TYPE: obsolete
@@ -604,7 +612,7 @@ DOC_START
 
 	A client with credentials is requested to re-authenticate if http_access
 	or adapted_http_access denies its request _and_ the last evaluated ACL was
-	either proxy_auth, proxy_auth_regex, ident, ident_regex, or an external
+	either proxy_auth, proxy_auth_regex, or an external
 	ACL with %ul or %LOGIN parameter (regardless of whether that last
 	evaluated ACL matched the denied request). Note that a max_user_ip ACL
 	does not have this effect: Requests denied after evaluating max_user_ip
@@ -1089,7 +1097,7 @@ DOC_END
 
 NAME: acl
 TYPE: acl
-LOC: Config.aclList
+LOC: Config.namedAcls
 IF USE_OPENSSL
 DEFAULT: ssl::certHasExpired ssl_error X509_V_ERR_CERT_HAS_EXPIRED
 DEFAULT: ssl::certNotYetValid ssl_error X509_V_ERR_CERT_NOT_YET_VALID
@@ -1274,18 +1282,19 @@ ENDIF
 	  # pattern match on Referer header [fast]
 	  # Referer is highly unreliable, so use with care
 
-	acl aclname ident [-i] username ...
-	acl aclname ident_regex [-i] pattern ...
-	  # string match on ident output [slow]
-	  # use REQUIRED to accept any non-null ident.
-
 	acl aclname proxy_auth [-i] username ...
-	acl aclname proxy_auth_regex [-i] pattern ...
 	  # perform http authentication challenge to the client and match against
 	  # supplied credentials [slow]
 	  #
 	  # takes a list of allowed usernames.
 	  # use REQUIRED to accept any valid username.
+	  #
+	  # See proxy_auth_regex for more information. The two ACLs differ only in
+	  # their parameter syntax and username matching algorithm.
+
+	acl aclname proxy_auth_regex [-i] username_pattern ...
+	  # perform http authentication challenge to the client and regex match
+	  # supplied username [slow]
 	  #
 	  # Will use proxy authentication in forward-proxy scenarios, and plain
 	  # http authentication in reverse-proxy scenarios
@@ -1370,9 +1379,14 @@ ENDIF
 	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID  [fast]
 
 	acl aclname ext_user [-i] username ...
-	acl aclname ext_user_regex [-i] pattern ...
 	  # string match on username returned by external acl helper [slow]
 	  # use REQUIRED to accept any non-null user name.
+	  #
+	  # See also: ext_user_regex. The two ACLs differ only in their parameter
+	  # syntax and username matching algorithm.
+
+	acl aclname ext_user_regex [-i] username_pattern ...
+	  # regex match on username returned by external acl helper [slow]
 
 	acl aclname tag tagvalue ...
 	  # string match on tag returned by external acl helper [fast]
@@ -1485,7 +1499,6 @@ ENDIF
 	  # Matches transaction's initiator [fast]
 	  #
 	  # Supported initiators are:
-	  #  esi: matches transactions fetching ESI resources
 	  #  certificate-fetching: matches transactions fetching
 	  #     a missing intermediate TLS certificate
 	  #  cache-digest: matches transactions fetching Cache Digests
@@ -2096,35 +2109,6 @@ DOC_START
 
 	The default for this setting allows all clients who passed the
 	http_access rules to relay via this proxy.
-
-	This clause only supports fast acl types.
-	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
-DOC_END
-
-NAME: ident_lookup_access
-TYPE: acl_access
-IFDEF: USE_IDENT
-DEFAULT: none
-DEFAULT_DOC: Unless rules exist in squid.conf, IDENT is not fetched.
-LOC: Ident::TheConfig.identLookup
-DOC_START
-	A list of ACL elements which, if matched, cause an ident
-	(RFC 931) lookup to be performed for this request.  For
-	example, you might choose to always perform ident lookups
-	for your main multi-user Unix boxes, but not for your Macs
-	and PCs.  By default, ident lookups are not performed for
-	any requests.
-
-	To enable ident lookups for specific client addresses, you
-	can follow this example:
-
-	acl ident_aware_hosts src 198.168.1.0/24
-	ident_lookup_access allow ident_aware_hosts
-	ident_lookup_access deny all
-
-	Only src type ACL checks are fully supported.  A srcdomain
-	ACL might work at times, but it will not always provide
-	the correct result.
 
 	This clause only supports fast acl types.
 	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
@@ -3692,7 +3676,7 @@ DOC_START
 			The requests will be distributed among the parents based on the
 			CARP load balancing hash function based on their weight.
 
-	userhash	Load-balance parents based on the client proxy_auth or ident username.
+	userhash	Load-balance parents based on the client proxy_auth username.
 
 	sourcehash	Load-balance parents based on the client source IP.
 
@@ -4875,13 +4859,11 @@ DOC_START
 		un	User name (any available)
 		ul	User name from authentication
 		ue	User name from external acl helper
-		ui	User name from ident
 		un	A user name. Expands to the first available name
 			from the following list of information sources:
 			- authenticated user name, like %ul
 			- user name supplied by an external ACL, like %ue
 			- SSL client name, like %us
-			- ident user name, like %ui
 		credentials Client credentials. The exact meaning depends on
 			the authentication scheme: For Basic authentication,
 			it is the password; for Digest, the realm sent by the
@@ -4989,10 +4971,34 @@ DOC_START
 		[http::]<pt	Peer response time in milliseconds. The timer starts
 				when the last request byte is sent to the next hop
 				and stops when the last response byte is received.
-		[http::]<tt	Total time in milliseconds. The timer
-				starts with the first connect request (or write I/O)
-				sent to the first selected peer. The timer stops
-				with the last I/O with the last peer.
+		[http::]<tt	Total time spent forwarding to origin servers or
+				cache_peers (milliseconds).
+
+				The timer starts when Squid decides to forward the request (to
+				an origin server or cache_peer) and peer selection begins. The
+				timer stops when relevant forwarding activities (including any
+				retries) end.
+
+				Between those two timer events, Squid may perform DNS lookups,
+				query external ACL helpers, adapt responses using pre-cache
+				RESPMOD services, and participate in other concurrent
+				secondary activities. Most secondary activities increase
+				peering time. In some cases, a secondary activity may start
+				before the timer starts or end after the timer stops, leading
+				to misleading results of simple computations like %<tt - %dt.
+
+				If this logformat %code is used before its timer starts, the
+				corresponding measurement has no value (and the %code expands
+				to a single dash ("-") character).
+
+				If this code is used while its timer is running, the time
+				spent so far is used as the measurement value.
+
+				When Squid re-forwards the request (e.g., after certain cache
+				revalidation failures), the timer may restart. In this case,
+				the new measurement is added to the value accumulated from
+				previous forwarding attempts. The time interval between
+				forwarding attempts is not added to the final result.
 
 	Squid handling related format codes:
 
@@ -5005,7 +5011,7 @@ DOC_START
 			as a forwarding attempt. Pure cache hits log zero, but cache hits
 			that triggered HTTP cache revalidation log the number of attempts
 			made when sending an internal revalidation request. DNS, ICMP,
-			ICP, HTCP, ESI, ICAP, eCAP, helper, and other secondary requests
+			ICP, HTCP, ICAP, eCAP, helper, and other secondary requests
 			sent by Squid as a part of a master transaction do not increment
 			the counter logged for the received request.
 
@@ -5205,8 +5211,8 @@ DOC_START
 	The default formats available (which do not need re-defining) are:
 
 logformat squid      %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %[un %Sh/%<a %mt
-logformat common     %>a %[ui %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
-logformat combined   %>a %[ui %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
+logformat common     %>a - %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
+logformat combined   %>a - %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
 logformat referrer   %ts.%03tu %>a %{Referer}>h %ru
 logformat useragent  %>a [%tl] "%{User-Agent}>h"
 
@@ -6766,9 +6772,6 @@ DOC_START
 	In reverse proxy environments it might be desirable to honor
 	shorter object lifetimes. It is most likely better to make
 	your server return a meaningful Last-Modified header however.
-
-	In ESI environments where page fragments often have short
-	lifetimes, this will often be best set to 0.
 DOC_END
 
 NAME: store_avg_object_size
@@ -7477,19 +7480,6 @@ DOC_START
 	proxies.
 DOC_END
 
-NAME: ident_timeout
-TYPE: time_t
-IFDEF: USE_IDENT
-LOC: Ident::TheConfig.timeout
-DEFAULT: 10 seconds
-DOC_START
-	Maximum time to wait for IDENT lookups to complete.
-
-	If this is too high, and you enabled IDENT lookups from untrusted
-	users, you might be susceptible to denial-of-service by having
-	many ident requests going at once.
-DOC_END
-
 NAME: shutdown_lifetime
 COMMENT: time-units
 TYPE: time_t
@@ -7661,20 +7651,6 @@ DOC_START
 	"Surrogate-Control: no-store-remote".
 
 	Set this to on to have squid behave as a remote surrogate.
-DOC_END
-
-NAME: esi_parser
-IFDEF: USE_SQUID_ESI
-COMMENT: libxml2|expat
-TYPE: string
-LOC: ESIParser::Type
-DEFAULT: auto
-DEFAULT_DOC: Selects libxml2 if available at ./configure time or libexpat otherwise.
-DOC_START
-	Selects the XML parsing library to use when interpreting responses with
-	Edge Side Includes.
-
-	To disable ESI handling completely, ./configure Squid with --disable-esi.
 DOC_END
 
 COMMENT_START
@@ -10464,7 +10440,7 @@ DOC_START
 	are governed by forward_max_tries instead.
 
 	See also: connect_timeout, forward_timeout, icap_connect_timeout,
-	ident_timeout, and forward_max_tries.
+	and forward_max_tries.
 DOC_END
 
 NAME: retry_on_error

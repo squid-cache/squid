@@ -49,6 +49,16 @@ AS_IF([test -n "$squid_host_os_version"],[
 AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
 
+AS_IF([test -e /etc/os-release],[
+  squid_build_os_release_name=`grep '^PRETTY_NAME=' /etc/os-release | sed 's/^[[^"]]*"//;s/".*$//'`
+  AS_IF([test "x$squid_build_os_release_name" = "x"],[
+    squid_build_os_release_name=`grep '^NAME=' /etc/os-release | sed 's/^[[^"]]*"//;s/".*$//'`
+  ])
+  AS_IF([test "x$squid_build_os_release_name" != "x"],[
+    AC_MSG_NOTICE([Building on $squid_build_os_release_name])
+  ])
+])
+
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_CXX
@@ -117,6 +127,10 @@ dnl Libtool 2.2.6 requires: rm -f
 RM="$RM -f"
 
 PKG_PROG_PKG_CONFIG
+AS_IF([test "x$PKG_CONFIG" = "x"],[
+  AC_MSG_WARN([pkg-config not found. Many optional features with external dependencies will not be enabled by default, usually without further warnings.])
+])
+
 
 AC_PATH_PROG(PERL, perl, none)
 AS_IF([test "x$ac_cv_path_PERL" = "xnone"],[
@@ -817,38 +831,6 @@ AC_ARG_ENABLE(delay-pools,
 dnl disable generic/common adaptation support by default
 squid_opt_use_adaptation=no
 
-AH_TEMPLATE([USE_SQUID_ESI],[whether to enable ESI processing])
-AC_ARG_ENABLE(esi,[
-  AS_HELP_STRING([--enable-esi],
-                 [Enable ESI for accelerators. ESI requires expat or xml2 library.
-                  Enabling ESI will cause squid reverse proxies to be capable
-                  of the Edge Acceleration Specification (www.esi.org).])
-],[
-  SQUID_DEFINE_BOOL(USE_SQUID_ESI,$enable_esi)
-])
-AC_MSG_NOTICE([Enable ESI processor: ${enable_esi:=no (auto)}])
-
-# ESI support libraries: expat
-SQUID_AUTO_LIB(expat,[ESI expat library],[LIBEXPAT])
-SQUID_CHECK_LIB_WORKS(expat,[
-  PKG_CHECK_MODULES([LIBEXPAT],[expat],[:],[:])
-  CPPFLAGS="$LIBEXPAT_CFLAGS $CPPFLAGS"
-  AC_CHECK_HEADERS(expat.h)
-])
-
-# ESI support libraries: xml2
-SQUID_AUTO_LIB(xml2,[ESI xml2 library],[LIBXML2])
-SQUID_CHECK_LIB_WORKS(xml2,[
-  PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[:],[:])
-  CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
-  AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
-])
-
-AS_IF([test "x$enable_esi" = "xyes" -a "x$LIBXML2_LIBS" = "x" -a "x$LIBEXPAT_LIBS" = "x"],[
-  AC_MSG_ERROR([ESI processor requires libxml2 or libexpat])
-])
-AM_CONDITIONAL(ENABLE_ESI,[test "x$enable_esi" = "xyes"])
-
 AC_ARG_ENABLE(icap-client,
   AS_HELP_STRING([--disable-icap-client],[Disable the ICAP client.]),[
   SQUID_YESNO([$enableval],[--enable-icap-client])
@@ -1521,14 +1503,6 @@ AC_ARG_ENABLE(follow-x-forwarded-for,
 AC_MSG_NOTICE([Support for X-Forwarded-For enabled: ${enable_follow_x_forwarded_for:=yes}])
 SQUID_DEFINE_BOOL(FOLLOW_X_FORWARDED_FOR,$enable_follow_x_forwarded_for,
   [Enable following X-Forwarded-For headers])
-
-AC_ARG_ENABLE(ident-lookups,
-  AS_HELP_STRING([--disable-ident-lookups],
-                 [Remove code that supports performing Ident (RFC 931) lookups.]), [
-  SQUID_YESNO([$enableval],[--enable-ident-lookups])
-])
-AC_MSG_NOTICE([Support for Ident lookups enabled: ${enable_ident_lookups:=yes}])
-SQUID_DEFINE_BOOL(USE_IDENT,$enable_ident_lookups,[Support for Ident (RFC 931) lookups])
 
 dnl Select Default hosts file location
 AC_ARG_ENABLE(default-hostsfile,
@@ -2527,8 +2501,6 @@ AC_CONFIG_FILES([
 	errors/Makefile
 	icons/Makefile
 	lib/Makefile
-	lib/libTrie/Makefile
-	lib/libTrie/test/Makefile
 	lib/ntlmauth/Makefile
 	lib/rfcnb/Makefile
 	lib/smblib/Makefile
@@ -2595,7 +2567,6 @@ AC_CONFIG_FILES([
 	src/DiskIO/IpcIo/Makefile
 	src/DiskIO/Mmapped/Makefile
 	src/error/Makefile
-	src/esi/Makefile
 	src/eui/Makefile
 	src/format/Makefile
 	src/fs/Makefile
@@ -2608,7 +2579,6 @@ AC_CONFIG_FILES([
 	src/http/url_rewriters/fake/Makefile
 	src/http/url_rewriters/LFS/Makefile
 	src/icmp/Makefile
-	src/ident/Makefile
 	src/ip/Makefile
 	src/ipc/Makefile
 	src/log/Makefile

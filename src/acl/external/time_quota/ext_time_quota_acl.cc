@@ -26,18 +26,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
 
-#include "squid.h"
-#include "helper/protocol_defines.h"
+/* DEBUG: section 82    External ACL Helpers */
 
-#include <cstdlib>
-#include <cstring>
+#include "squid.h"
+#include "debug/Stream.h"
+#include "helper/protocol_defines.h"
+#include "sbuf/Stream.h"
+
 #include <ctime>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
@@ -49,19 +45,20 @@
 #error "Please define DEFAULT_QUOTA_DB preprocessor constant."
 #endif
 
+static const auto MY_DEBUG_SECTION = 82;
 const char *db_path = DEFAULT_QUOTA_DB;
 const char *program_name;
 
 TDB_CONTEXT *db = nullptr;
 
-#define KEY_LAST_ACTIVITY            "last-activity"
-#define KEY_PERIOD_START             "period-start"
-#define KEY_PERIOD_LENGTH_CONFIGURED "period-length-configured"
-#define KEY_TIME_BUDGET_LEFT         "time-budget-left"
-#define KEY_TIME_BUDGET_CONFIGURED   "time-budget-configured"
+static const auto KeyLastActivity = "last-activity";
+static const auto KeyPeriodStart = "period-start";
+static const auto KeyPeriodLengthConfigured = "period-length-configured";
+static const auto KeyTimeBudgetLeft = "time-budget-left";
+static const auto KeyTimeBudgetConfigured = "time-budget-configured";
 
 /** Maximum size of buffers used to read or display lines. */
-#define TQ_BUFFERSIZE                     1024
+static const size_t TQ_BUFFERSIZE = 1024;
 
 /** If there is more than this given number of seconds between two
  * successive requests, than the second request will be treated as a
@@ -73,74 +70,17 @@ TDB_CONTEXT *db = nullptr;
  */
 static int pauseLength = 300;
 
-static FILE *logfile = stderr;
-static int tq_debug_enabled = false;
-
-static void open_log(const char *logfilename)
-{
-    logfile = fopen(logfilename, "a");
-    if ( logfile == NULL ) {
-        perror(logfilename);
-        logfile = stderr;
-    }
-}
-
-static void vlog(const char *level, const char *format, va_list args)
-{
-    time_t now = time(NULL);
-
-    fprintf(logfile, "%ld %s| %s: ", static_cast<long int>(now),
-            program_name, level);
-    vfprintf (logfile, format, args);
-    fflush(logfile);
-}
-
-static void log_debug(const char *format, ...)
-{
-    va_list args;
-
-    if ( tq_debug_enabled ) {
-        va_start (args, format);
-        vlog("DEBUG", format, args);
-        va_end (args);
-    }
-}
-
-static void log_info(const char *format, ...)
-{
-    va_list args;
-
-    va_start (args, format);
-    vlog("INFO", format, args);
-    va_end (args);
-}
-
-static void log_error(const char *format, ...)
-{
-    va_list args;
-
-    va_start (args, format);
-    vlog("ERROR", format, args);
-    va_end (args);
-}
-
-static void log_fatal(const char *format, ...)
-{
-    va_list args;
-
-    va_start (args, format);
-    vlog("FATAL", format, args);
-    va_end (args);
-}
-
 static void init_db(void)
 {
-    log_info("opening time quota database \"%s\".\n", db_path);
+    debugs(MY_DEBUG_SECTION, 2, "opening time quota database \"" << db_path << "\".");
+
     db = tdb_open(db_path, 0, TDB_CLEAR_IF_FIRST, O_CREAT | O_RDWR, 0666);
     if (!db) {
-        log_fatal("Failed to open time_quota db '%s'\n", db_path);
+        debugs(MY_DEBUG_SECTION, DBG_CRITICAL, "FATAL: Failed to open time_quota db '" << db_path << '\'');
         exit(EXIT_FAILURE);
     }
+    // count the number of entries in the database, only used for debugging
+    debugs(MY_DEBUG_SECTION, 2, "Database contains " << tdb_traverse(db, nullptr, nullptr) << " entries");
 }
 
 static void shutdown_db(void)
@@ -148,65 +88,53 @@ static void shutdown_db(void)
     tdb_close(db);
 }
 
-static char *KeyString(int &len, const char *user_key, const char *sub_key)
+static SBuf KeyString(const char *user_key, const char *sub_key)
 {
-    static char keybuffer[TQ_BUFFERSIZE];
-    *keybuffer = 0;
-
-    len = snprintf(keybuffer, sizeof(keybuffer), "%s-%s", user_key, sub_key);
-    if (len < 0) {
-        log_error("Cannot add entry: %s-%s", user_key, sub_key);
-        len = 0;
-
-    } else if (static_cast<size_t>(len) >= sizeof(keybuffer)) {
-        log_error("key too long (%s,%s)\n", user_key, sub_key);
-        len = 0;
-    }
-
-    return keybuffer;
+    return ToSBuf(user_key, "-", sub_key);
 }
 
 static void writeTime(const char *user_key, const char *sub_key, time_t t)
 {
-    int len = 0;
-    if (/* const */ char *keybuffer = KeyString(len, user_key, sub_key)) {
+    auto ks = KeyString(user_key, sub_key);
+    const TDB_DATA key {
+        reinterpret_cast<unsigned char *>(const_cast<char *>(ks.rawContent())),
+        ks.length()
+    };
+    const TDB_DATA data {
+        reinterpret_cast<unsigned char *>(&t),
+        sizeof(t)
+    };
 
-        TDB_DATA key, data;
-
-        key.dptr = reinterpret_cast<unsigned char *>(keybuffer);
-        key.dsize = len;
-
-        data.dptr = reinterpret_cast<unsigned char *>(&t);
-        data.dsize = sizeof(t);
-
-        tdb_store(db, key, data, TDB_REPLACE);
-        log_debug("writeTime(\"%s\", %d)\n", keybuffer, t);
-    }
+    tdb_store(db, key, data, TDB_REPLACE);
+    debugs(MY_DEBUG_SECTION, 3, "writeTime(\"" << ks << "\", " << t << ')');
 }
 
 static time_t readTime(const char *user_key, const char *sub_key)
 {
-    int len = 0;
-    if (/* const */ char *keybuffer = KeyString(len, user_key, sub_key)) {
+    auto ks = KeyString(user_key, sub_key);
+    const TDB_DATA key {
+        reinterpret_cast<unsigned char *>(const_cast<char *>(ks.rawContent())),
+        ks.length()
+    };
+    auto data = tdb_fetch(db, key);
 
-        TDB_DATA key;
-        key.dptr = reinterpret_cast<unsigned char *>(keybuffer);
-        key.dsize = len;
-
-        auto data = tdb_fetch(db, key);
-
-        time_t t = 0;
-        if (data.dsize != sizeof(t)) {
-            log_error("CORRUPTED DATABASE (%s)\n", keybuffer);
-        } else {
-            memcpy(&t, data.dptr, sizeof(t));
-        }
-
-        log_debug("readTime(\"%s\")=%d\n", keybuffer, t);
-        return t;
+    if (!data.dptr) {
+        debugs(MY_DEBUG_SECTION, 3, "no data found for key \"" << ks << "\".");
+        return 0;
     }
 
-    return 0;
+    time_t t = 0;
+    if (data.dsize == sizeof(t)) {
+        memcpy(&t, data.dptr, sizeof(t));
+    } else {
+        debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "ERROR: Incompatible or corrupted database. " <<
+               "key: '" << ks <<
+               "', expected time value size: " << sizeof(t) <<
+               ", actual time value size: " << data.dsize);
+    }
+
+    debugs(MY_DEBUG_SECTION, 3, "readTime(\"" << ks << "\")=" << t);
+    return t;
 }
 
 static void parseTime(const char *s, time_t *secs, time_t *start)
@@ -244,7 +172,7 @@ static void parseTime(const char *s, time_t *secs, time_t *start)
         *start += 24 * 3600;         // in europe, the week starts monday
         break;
     default:
-        log_error("Wrong time unit \"%c\". Only \"m\", \"h\", \"d\", or \"w\" allowed.\n", unit);
+        debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "ERROR: Wrong time unit \"" << unit << "\". Only \"m\", \"h\", \"d\", or \"w\" allowed");
         break;
     }
 
@@ -268,7 +196,7 @@ static void readConfig(const char *filename)
     time_t budgetSecs, periodSecs;
     time_t start;
 
-    log_info("reading config file \"%s\".\n", filename);
+    debugs(MY_DEBUG_SECTION, 2, "reading config file \"" << filename << "\".");
 
     FH = fopen(filename, "r");
     if ( FH ) {
@@ -283,30 +211,30 @@ static void readConfig(const char *filename)
                 /* chop \n characters */
                 *cp = '\0';
             }
-            log_debug("read config line %u: \"%s\".\n", lineCount, line);
+            debugs(MY_DEBUG_SECTION, 3, "read config line " << lineCount << ": \"" << line << '\"');
             if ((username = strtok(line, "\t ")) != NULL) {
 
                 /* get the time budget */
                 if ((budget = strtok(nullptr, "/")) == NULL) {
-                    fprintf(stderr, "ERROR: missing 'budget' field on line %u of '%s'.\n", lineCount, filename);
+                    debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "ERROR: missing 'budget' field on line " << lineCount << " of '" << filename << '\'');
                     continue;
                 }
                 if ((period = strtok(nullptr, "/")) == NULL) {
-                    fprintf(stderr, "ERROR: missing 'period' field on line %u of '%s'.\n", lineCount, filename);
+                    debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "ERROR: missing 'period' field on line " << lineCount << " of '" << filename << '\'');
                     continue;
                 }
 
                 parseTime(budget, &budgetSecs, &start);
                 parseTime(period, &periodSecs, &start);
 
-                log_debug("read time quota for user \"%s\": %lds / %lds starting %lds\n",
-                          username, budgetSecs, periodSecs, start);
+                debugs(MY_DEBUG_SECTION, 3, "read time quota for user \"" << username << "\": " <<
+                       budgetSecs << "s / " << periodSecs << "s starting " << start);
 
-                writeTime(username, KEY_PERIOD_START, start);
-                writeTime(username, KEY_PERIOD_LENGTH_CONFIGURED, periodSecs);
-                writeTime(username, KEY_TIME_BUDGET_CONFIGURED, budgetSecs);
-                t = readTime(username, KEY_TIME_BUDGET_CONFIGURED);
-                writeTime(username, KEY_TIME_BUDGET_LEFT, t);
+                writeTime(username, KeyPeriodStart, start);
+                writeTime(username, KeyPeriodLengthConfigured, periodSecs);
+                writeTime(username, KeyTimeBudgetConfigured, budgetSecs);
+                t = readTime(username, KeyTimeBudgetConfigured);
+                writeTime(username, KeyTimeBudgetLeft, t);
             }
         }
         fclose(FH);
@@ -325,88 +253,89 @@ static void processActivity(const char *user_key)
     time_t userPeriodLength;
     time_t timeBudgetCurrent;
     time_t timeBudgetConfigured;
-    char message[TQ_BUFFERSIZE];
 
-    log_debug("processActivity(\"%s\")\n", user_key);
+    debugs(MY_DEBUG_SECTION, 3, "processActivity(\"" << user_key << "\")");
 
     // [1] Reset period if over
-    periodStart = readTime(user_key, KEY_PERIOD_START);
+    periodStart = readTime(user_key, KeyPeriodStart);
     if ( periodStart == 0 ) {
         // This is the first period ever.
         periodStart = now;
-        writeTime(user_key, KEY_PERIOD_START, periodStart);
+        writeTime(user_key, KeyPeriodStart, periodStart);
     }
 
     periodLength = now - periodStart;
-    userPeriodLength = readTime(user_key, KEY_PERIOD_LENGTH_CONFIGURED);
+    userPeriodLength = readTime(user_key, KeyPeriodLengthConfigured);
     if ( userPeriodLength == 0 ) {
         // This user is not configured. Allow anything.
-        log_debug("No period length found for user \"%s\". Quota for this user disabled.\n", user_key);
-        writeTime(user_key, KEY_TIME_BUDGET_LEFT, pauseLength);
+        debugs(MY_DEBUG_SECTION, 3, "disabling user quota for user '" <<
+               user_key << "': no period length found");
+        writeTime(user_key, KeyTimeBudgetLeft, pauseLength);
     } else {
         if ( periodLength >= userPeriodLength ) {
             // a new period has started.
-            log_debug("New time period started for user \"%s\".\n", user_key);
+            debugs(MY_DEBUG_SECTION, 3, "New time period started for user \"" << user_key << '\"');
             while ( periodStart < now ) {
                 periodStart += periodLength;
             }
-            writeTime(user_key, KEY_PERIOD_START, periodStart);
-            timeBudgetConfigured = readTime(user_key, KEY_TIME_BUDGET_CONFIGURED);
+            writeTime(user_key, KeyPeriodStart, periodStart);
+            timeBudgetConfigured = readTime(user_key, KeyTimeBudgetConfigured);
             if ( timeBudgetConfigured == 0 ) {
-                log_debug("No time budget configured for user \"%s\". Quota for this user disabled.\n", user_key);
-                writeTime(user_key, KEY_TIME_BUDGET_LEFT, pauseLength);
+                debugs(MY_DEBUG_SECTION, 3, "No time budget configured for user \"" << user_key  <<
+                       "\". Quota for this user disabled.");
+                writeTime(user_key, KeyTimeBudgetLeft, pauseLength);
             } else {
-                writeTime(user_key, KEY_TIME_BUDGET_LEFT, timeBudgetConfigured);
+                writeTime(user_key, KeyTimeBudgetLeft, timeBudgetConfigured);
             }
         }
     }
 
     // [2] Decrease time budget iff activity
-    lastActivity = readTime(user_key, KEY_LAST_ACTIVITY);
+    lastActivity = readTime(user_key, KeyLastActivity);
     if ( lastActivity == 0 ) {
         // This is the first request ever
-        writeTime(user_key, KEY_LAST_ACTIVITY, now);
+        writeTime(user_key, KeyLastActivity, now);
     } else {
         activityLength = now - lastActivity;
         if ( activityLength >= pauseLength ) {
             // This is an activity pause.
-            log_debug("Activity pause detected for user \"%s\".\n", user_key);
-            writeTime(user_key, KEY_LAST_ACTIVITY, now);
+            debugs(MY_DEBUG_SECTION, 3, "Activity pause detected for user \"" << user_key << "\".");
+            writeTime(user_key, KeyLastActivity, now);
         } else {
             // This is real usage.
-            writeTime(user_key, KEY_LAST_ACTIVITY, now);
+            writeTime(user_key, KeyLastActivity, now);
 
-            log_debug("Time budget reduced by %ld for user \"%s\".\n",
-                      activityLength, user_key);
-            timeBudgetCurrent = readTime(user_key, KEY_TIME_BUDGET_LEFT);
+            debugs(MY_DEBUG_SECTION, 3, "Time budget reduced by " << activityLength <<
+                   " for user \"" << user_key << "\".");
+            timeBudgetCurrent = readTime(user_key, KeyTimeBudgetLeft);
             timeBudgetCurrent -= activityLength;
-            writeTime(user_key, KEY_TIME_BUDGET_LEFT, timeBudgetCurrent);
+            writeTime(user_key, KeyTimeBudgetLeft, timeBudgetCurrent);
         }
     }
 
-    timeBudgetCurrent = readTime(user_key, KEY_TIME_BUDGET_LEFT);
-    snprintf(message, TQ_BUFFERSIZE, "message=\"Remaining quota for '%s' is %d seconds.\"", user_key, (int)timeBudgetCurrent);
+    timeBudgetCurrent = readTime(user_key, KeyTimeBudgetLeft);
+
+    const auto message = ToSBuf(HLP_MSG("Remaining quota for '"), user_key, "' is ", timeBudgetCurrent, " seconds.");
     if ( timeBudgetCurrent > 0 ) {
-        log_debug("OK %s.\n", message);
         SEND_OK(message);
     } else {
-        log_debug("ERR %s\n", message);
         SEND_ERR("Time budget exceeded.");
     }
 }
 
 static void usage(void)
 {
-    log_error("Wrong usage. Please reconfigure in squid.conf.\n");
+    debugs(MY_DEBUG_SECTION, DBG_CRITICAL, "Wrong usage. Please reconfigure in squid.conf.");
 
-    fprintf(stderr, "Usage: %s [-d] [-l logfile] [-b dbpath] [-p pauselen] [-h] configfile\n", program_name);
-    fprintf(stderr, "	-d            enable debugging output to logfile\n");
-    fprintf(stderr, "	-l logfile    log messages to logfile\n");
-    fprintf(stderr, "	-b dbpath     Path where persistent session database will be kept\n");
-    fprintf(stderr, "	              If option is not used, then " DEFAULT_QUOTA_DB " will be used.\n");
-    fprintf(stderr, "	-p pauselen   length in seconds to describe a pause between 2 requests.\n");
-    fprintf(stderr, "	-h            show show command line help.\n");
-    fprintf(stderr, "configfile is a file containing time quota definitions.\n");
+    std::cerr <<
+              "Usage: " << program_name << " [-d level] [-b dbpath] [-p pauselen] [-h] configfile\n" <<
+              "	-d level      set section " << MY_DEBUG_SECTION << " debugging to the specified level,\n"
+              "               overwriting Squid's debug_options (default: 1)\n"
+              "	-b dbpath     Path where persistent session database will be kept\n" <<
+              "	              If option is not used, then " << DEFAULT_QUOTA_DB << " will be used.\n" <<
+              "	-p pauselen   length in seconds to describe a pause between 2 requests.\n" <<
+              "	-h            show show command line help.\n" <<
+              "configfile is a file containing time quota definitions.\n";
 }
 
 int main(int argc, char **argv)
@@ -415,14 +344,12 @@ int main(int argc, char **argv)
     int opt;
 
     program_name = argv[0];
+    Debug::NameThisHelper("ext_time_quota_acl");
 
-    while ((opt = getopt(argc, argv, "dp:l:b:h")) != -1) {
+    while ((opt = getopt(argc, argv, "d:p:b:h")) != -1) {
         switch (opt) {
         case 'd':
-            tq_debug_enabled = true;
-            break;
-        case 'l':
-            open_log(optarg);
+            Debug::parseOptions(ToSBuf(MY_DEBUG_SECTION, ",", optarg).c_str());
             break;
         case 'b':
             db_path = optarg;
@@ -434,10 +361,15 @@ int main(int argc, char **argv)
             usage();
             exit(EXIT_SUCCESS);
             break;
+        default:
+            // getopt() emits error message to stderr
+            usage();
+            exit(EXIT_FAILURE);
+            break;
         }
     }
 
-    log_info("Starting %s\n", __FILE__);
+    debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "Starting " << program_name);
     setbuf(stdout, nullptr);
 
     init_db();
@@ -449,7 +381,7 @@ int main(int argc, char **argv)
         readConfig(argv[optind]);
     }
 
-    log_info("Waiting for requests...\n");
+    debugs(MY_DEBUG_SECTION, 2, "Waiting for requests...");
     while (fgets(request, HELPER_INPUT_BUFFER, stdin)) {
         // we expect the following line syntax: %LOGIN
         const char *user_key = strtok(request, " \n");
@@ -459,7 +391,7 @@ int main(int argc, char **argv)
         }
         processActivity(user_key);
     }
-    log_info("Ending %s\n", __FILE__);
+    debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "Ending " << program_name);
     shutdown_db();
     return EXIT_SUCCESS;
 }

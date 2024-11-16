@@ -182,16 +182,30 @@ bool
 Ip::Intercept::IpfwInterception(const Comm::ConnectionPointer &newConn)
 {
 #if IPFW_TRANSPARENT
-    /* The getsockname() call performed already provided the TCP packet details.
-     * There is no way to identify whether they came from NAT or not.
-     * Trust the user configured properly.
-     */
-    debugs(89, 5, "address NAT: " << newConn);
-    return true;
+    return UseInterceptionAddressesLookedUpEarlier(__FUNCTION__, newConn);
 #else
     (void)newConn;
     return false;
 #endif
+}
+
+/// Assume that getsockname() has been called already and provided the necessary
+/// TCP packet details. There is no way to identify whether they came from NAT.
+/// Trust the user configured properly.
+bool
+Ip::Intercept::UseInterceptionAddressesLookedUpEarlier(const char * const caller, const Comm::ConnectionPointer &newConn)
+{
+    // paranoid: ./configure should prohibit these combinations
+#if LINUX_NETFILTER && PF_TRANSPARENT && !USE_NAT_DEVPF
+    static_assert(!"--enable-linux-netfilter is incompatible with --enable-pf-transparent --without-nat-devpf");
+#endif
+#if LINUX_NETFILTER && IPFW_TRANSPARENT
+    static_assert(!"--enable-linux-netfilter is incompatible with --enable-ipfw-transparent");
+#endif
+    // --enable-linux-netfilter is compatible with --enable-ipf-transparent
+
+    debugs(89, 5, caller << " uses " << newConn);
+    return true;
 }
 
 bool
@@ -313,14 +327,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
 #if PF_TRANSPARENT  /* --enable-pf-transparent */
 
 #if !USE_NAT_DEVPF
-    /* On recent PF versions the getsockname() call performed already provided
-     * the required TCP packet details.
-     * There is no way to identify whether they came from NAT or not.
-     *
-     * Trust the user configured properly.
-     */
-    debugs(89, 5, "address NAT divert-to: " << newConn);
-    return true;
+    return UseInterceptionAddressesLookedUpEarlier("recent PF version", newConn);
 
 #else /* USE_NAT_DEVPF / --with-nat-devpf */
 

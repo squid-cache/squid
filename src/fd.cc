@@ -252,7 +252,7 @@ fdDumpOpen(void)
         if (!F->flags.open)
             continue;
 
-        if (i == fileno(debug_log))
+        if (i == fileno(DebugStream()))
             continue;
 
         debugs(51, Important(17), "Open FD "<< std::left<< std::setw(10) <<

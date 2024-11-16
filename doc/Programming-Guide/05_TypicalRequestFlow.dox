@@ -11,8 +11,7 @@
 
 \par
 \li	A client connection is accepted by the client-side socket
-	support and parsed, or is directly created via
-	clientBeginRequest().
+	support and parsed.
 
 \li	The access controls are checked.  The client-side-request builds
 	an ACL state data structure and registers a callback function

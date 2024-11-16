@@ -12,6 +12,7 @@
 #define SQUID_SRC_MGR_ACTION_H
 
 #include "ipc/forward.h"
+#include "mgr/ActionFeatures.h"
 #include "mgr/forward.h"
 
 class StoreEntry;
@@ -63,14 +64,17 @@ public:
     /// combined data should be written at the end of the coordinated response
     virtual bool aggregatable() const { return true; } // most kid classes are
 
+    /// action report syntax
+    virtual Format format() const;
+
     bool atomic() const; ///< dump() call writes everything before returning
     const char *name() const; ///< label as seen in the cache manager menu
     const Command &command() const; ///< the cause of this action
 
     StoreEntry *createStoreEntry() const; ///< creates store entry from params
 
-    ///< Content-Type: header value for this report
-    virtual const char *contentType() const {return "text/plain;charset=utf-8";}
+    /// HTTP Content-Type header value for this Action report
+    const char *contentType() const;
 
 protected:
     /// calculate and keep local action-specific information
@@ -89,6 +93,14 @@ private:
     Action(const Action &); // not implemented
     Action &operator= (const Action &); // not implemented
 };
+
+/// starts writing a portion of the report specific to the current process
+/// \sa CloseKidSection()
+void OpenKidSection(StoreEntry *, Format);
+
+/// finishes writing a portion of the report specific to the current process
+/// \sa OpenKidSection()
+void CloseKidSection(StoreEntry *, Format);
 
 } // namespace Mgr
 

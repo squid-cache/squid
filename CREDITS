@@ -1522,15 +1522,6 @@ src/auth/ntlm/smb_lm/:
 
 ==============================================================================
 
-src/esi/Libxml2Parser.cc,
-src/esi/Libxml2Parser.h:
-
- * The ESI Libxml2 parser is Copyright (c) 2004 by Joachim Bauch
- * http://www.joachim-bauch.de
- * mail@joachim-bauch.de
-
-==============================================================================
-
 src/external_acl.c:
 
  Copyright (C) 2002 MARA Systems AB, Sweden <info@marasystems.com>

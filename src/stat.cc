@@ -327,8 +327,7 @@ statObjects(void *data)
     StoreEntry *e;
 
     if (state->theSearch->isDone()) {
-        if (UsingSmp())
-            storeAppendPrintf(state->sentry, "} by kid%d\n\n", KidIdentifier);
+        Mgr::CloseKidSection(state->sentry, Mgr::Format::informal);
         state->sentry->complete();
         state->sentry->unlock("statObjects+isDone");
         delete state;
@@ -1814,9 +1813,6 @@ statClientRequests(StoreEntry * s)
             if (http->request->extacl_user.size() > 0) {
                 p = http->request->extacl_user.termedBuf();
             }
-
-        if (!p && conn != nullptr && conn->clientConnection->rfc931[0])
-            p = conn->clientConnection->rfc931;
 
 #if USE_OPENSSL
         if (!p && conn != nullptr && Comm::IsConnOpen(conn->clientConnection))

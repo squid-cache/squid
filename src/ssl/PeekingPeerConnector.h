@@ -29,7 +29,7 @@ public:
 
     /* Security::PeerConnector API */
     bool initialize(Security::SessionPointer &) override;
-    Security::ContextPointer getTlsContext() override;
+    Security::FuturePeerContext *peerContext() const override;
     void noteWantWrite() override;
     void noteNegotiationError(const Security::ErrorDetailPointer &) override;
     void noteNegotiationDone(ErrorState *error) override;

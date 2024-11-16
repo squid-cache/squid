@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "client_side_request.h"
+#include "clientStream.h"
 #include "http/Stream.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
@@ -290,9 +291,10 @@ Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
 #if USE_DELAY_POOLS
     for (const auto &pool: MessageDelayPools::Instance()->pools) {
         if (pool->access) {
-            std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(pool->access, http));
-            chl->updateReply(rep);
-            const auto answer = chl->fastCheck();
+            ACLFilledChecklist chl(pool->access, nullptr);
+            clientAclChecklistFill(chl, http);
+            chl.updateReply(rep);
+            const auto &answer = chl.fastCheck();
             if (answer.allowed()) {
                 writeQuotaHandler = pool->createBucket();
                 fd_table[clientConnection->fd].writeQuotaHandler = writeQuotaHandler;
