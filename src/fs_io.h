@@ -37,8 +37,8 @@ public:
     int req_len = 0;
     char *buf = nullptr;
     int end_of_file = 0;
-    DRCB *handler = {};
-    void *client_data = {};
+    DRCB *handler = nullptr;
+    void *client_data = nullptr;
 };
 
 class dwrite_q
