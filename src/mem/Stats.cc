@@ -25,7 +25,7 @@ Mem::GlobalStats(PoolStats &stats)
     }
 
     // Reset PoolStats::meter, label, and obj_size data members after getStats()
-    // calls in the above loop set them. TODO: Refactor to remove these data members.
+    // calls in the above loop set them.
     stats.meter = &TheMeter;
     stats.label = "Total";
     stats.obj_size = 1;
