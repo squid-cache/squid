@@ -1486,7 +1486,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
     if (const Security::CertPointer &srvCert = sslServerBump->serverCert) {
         HttpRequest *request = http->request;
         const auto host = request->url.parsedHost();
-        if (host && Ssl::findSubjectName(*srvCert, *host)) {
+        if (host && Ssl::HasSubjectName(*srvCert, *host)) {
             debugs(33, 5, "certificate matches requested host: " << *host);
             return false;
         } else {

@@ -299,7 +299,7 @@ ParseSubjectAltName(const GENERAL_NAME &san)
 }
 
 bool
-Ssl::findMatchingSubjectName(X509 &cert, const GeneralNameMatcher &matcher)
+Ssl::HasMatchingSubjectName(X509 &cert, const GeneralNameMatcher &matcher)
 {
     const auto name = X509_get_subject_name(&cert);
     for (int i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
@@ -330,9 +330,9 @@ Ssl::findMatchingSubjectName(X509 &cert, const GeneralNameMatcher &matcher)
 }
 
 bool
-Ssl::findSubjectName(X509 &cert, const AnyP::Host &host)
+Ssl::HasSubjectName(X509 &cert, const AnyP::Host &host)
 {
-    return findMatchingSubjectName(cert, OneNameMatcher(host));
+    return HasMatchingSubjectName(cert, OneNameMatcher(host));
 }
 
 /// adjusts OpenSSL validation results for each verified certificate in ctx
@@ -379,7 +379,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             // enforced by the AnyP::Host::ParseSimpleDomainName() call below.
             // TODO: Store AnyP::Host (or equivalent) in ssl_ex_index_server.
             if (const auto host = Ssl::ParseAsSimpleDomainNameOrIp(*server)) {
-                if (Ssl::findSubjectName(*peer_cert, *host)) {
+                if (Ssl::HasSubjectName(*peer_cert, *host)) {
                     debugs(83, 5, "certificate subject matches " << *host);
                 } else {
                     debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << *peer_cert << " does not match domainname " << *host);

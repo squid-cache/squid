@@ -312,10 +312,10 @@ protected:
 
 /// Determines whether at least one common or alternate subject names matches.
 /// The first match (if any) terminates the search.
-bool findMatchingSubjectName(X509 &, const GeneralNameMatcher &);
+bool HasMatchingSubjectName(X509 &, const GeneralNameMatcher &);
 
 /// whether at least one common or alternate subject name matches the given one
-bool findSubjectName(X509 &, const AnyP::Host &);
+bool HasSubjectName(X509 &, const AnyP::Host &);
 
 /**
    \ingroup ServerProtocolSSLAPI
