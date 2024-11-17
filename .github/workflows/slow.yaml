@@ -123,3 +123,55 @@ jobs:
         with:
           name: build-logs-macos
           path: btlayer-*.log
+
+  freebsd:
+    strategy:
+      matrix:
+        osversion:
+          - 14.1
+          - 13.3
+
+    runs-on: ubuntu-22.04
+    name: freebsd(${{ matrix.osversion }})
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Test in FreeBSD
+        id: test-freebsd
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          release: ${{ matrix.osversion }}
+          prepare: |
+            pkg update
+            pkg install -y \
+              autoconf \
+              autoconf-archive \
+              automake \
+              bash \
+              ccache \
+              cppunit \
+              gmake \
+              libltdl \
+              libtool \
+              libxml2 \
+              m4 \
+              nettle \
+              pkgconf &&
+            true
+
+          run: |
+            export MAKE=gmake
+            export CFLAGS='-Wno-compound-token-split-by-macro'
+            export CC=clang
+            export CXX=clang++
+            ./test-builds.sh
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-freebsd-${{ matrix.osversion }}
+          path: btlayer-*.log
