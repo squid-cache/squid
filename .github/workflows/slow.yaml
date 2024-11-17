@@ -149,6 +149,12 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2.14
+        with:
+          verbose: 2 # default 0
+          key: freebsd-${{ matrix.osversion }}
+
       - name: Test in FreeBSD
         id: test-freebsd
         uses: vmactions/freebsd-vm@v1
@@ -176,8 +182,8 @@ jobs:
           run: |
             export MAKE=gmake
             export CFLAGS='-Wno-compound-token-split-by-macro'
-            export CC=clang
-            export CXX=clang++
+            export CC=/usr/local/bin/ccache clang
+            export CXX=/usr/local/bin/ccache clang++
             ./test-builds.sh
 
       - name: Publish build logs
