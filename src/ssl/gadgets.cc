@@ -7,8 +7,10 @@
  */
 
 #include "squid.h"
+#include "anyp/Host.h"
 #include "base/IoManip.h"
 #include "error/SysErrorDetail.h"
+#include "ip/Address.h"
 #include "sbuf/Stream.h"
 #include "security/Io.h"
 #include "ssl/gadgets.h"
@@ -467,6 +469,62 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
     return added;
 }
 
+SBuf
+Ssl::AsnToSBuf(const ASN1_STRING &buffer)
+{
+    return SBuf(reinterpret_cast<const char *>(buffer.data), buffer.length);
+}
+
+/// OpenSSL ASN1_STRING_to_UTF8() wrapper
+static std::optional<SBuf>
+ParseAsUtf8(const ASN1_STRING &asnBuffer)
+{
+    unsigned char *utfBuffer = nullptr;
+    const auto conversionResult = ASN1_STRING_to_UTF8(&utfBuffer, &asnBuffer);
+    if (conversionResult < 0) {
+        debugs(83, 3, "failed" << Ssl::ReportAndForgetErrors);
+        return std::nullopt;
+    }
+    Assure(utfBuffer);
+    const auto utfChars = reinterpret_cast<char *>(utfBuffer);
+    const auto utfLength = static_cast<size_t>(conversionResult);
+    Ssl::UniqueCString bufferDestroyer(utfChars);
+    return SBuf(utfChars, utfLength);
+}
+
+std::optional<AnyP::Host>
+Ssl::ParseAsSimpleDomainNameOrIp(const SBuf &text)
+{
+    if (const auto ip = Ip::Address::Parse(SBuf(text).c_str()))
+        return AnyP::Host::ParseIp(*ip);
+    return AnyP::Host::ParseSimpleDomainName(text);
+}
+
+std::optional<AnyP::Host>
+Ssl::ParseCommonNameAt(X509_NAME &name, const int cnIndex)
+{
+    const auto cn = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(&name, cnIndex));
+    if (!cn) {
+        debugs(83, 7, "no CN at " << cnIndex);
+        return std::nullopt;
+    }
+
+    // CN buffer usually contains an ASCII domain name, but X.509 and TLS allow
+    // other name encodings (e.g., UTF-16), and some CNs are not domain names
+    // (e.g., organization name or perhaps even a dotted IP address). We do our
+    // best to identify IP addresses and treat anything else as a domain name.
+    // TODO: Do not treat CNs with spaces or without periods as domain names.
+
+    // OpenSSL does not offer ASN1_STRING_to_ASCII(), so we convert to UTF-8
+    // that usually "works" for further parsing/validation/comparison purposes
+    // even though Squid code will treat multi-byte characters as char bytes.
+    // TODO: Confirm that OpenSSL preserves UTF-8 when we add a "DNS:..." SAN.
+
+    if (const auto utf = ParseAsUtf8(*cn))
+        return ParseAsSimpleDomainNameOrIp(*utf);
+    return std::nullopt;
+}
+
 /// Adds a new subjectAltName extension contining Subject CN or returns false
 /// expects the caller to check for the existing subjectAltName extension
 static bool
@@ -480,16 +538,17 @@ addAltNameWithSubjectCn(Security::CertPointer &cert)
     if (loc < 0)
         return false;
 
-    ASN1_STRING *cn_data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, loc));
-    if (!cn_data)
+    const auto cn = Ssl::ParseCommonNameAt(*name, loc);
+    if (!cn)
         return false;
 
-    char dnsName[1024]; // DNS names are limited to 256 characters
-    const int res = snprintf(dnsName, sizeof(dnsName), "DNS:%*s", cn_data->length, cn_data->data);
-    if (res <= 0 || res >= static_cast<int>(sizeof(dnsName)))
-        return false;
-
-    X509_EXTENSION *ext = X509V3_EXT_conf_nid(nullptr, nullptr, NID_subject_alt_name, dnsName);
+    // We create an "IP:address" or "DNS:name" text that X509V3_EXT_conf_nid()
+    // then parses and converts to OpenSSL GEN_IPADD or GEN_DNS GENERAL_NAME.
+    // TODO: Use X509_add1_ext_i2d() to add a GENERAL_NAME extension directly:
+    // https://github.com/openssl/openssl/issues/11706#issuecomment-633180151
+    const auto altNamePrefix = cn->ip() ? "IP:" : "DNS:";
+    auto altName = ToSBuf(altNamePrefix, *cn);
+    const auto ext = X509V3_EXT_conf_nid(nullptr, nullptr, NID_subject_alt_name, altName.c_str());
     if (!ext)
         return false;
 

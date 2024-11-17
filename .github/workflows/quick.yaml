@@ -16,6 +16,12 @@ on:
     # test PRs targeting this branch code
     branches: [ "master" ]
 
+concurrency:
+  # Cancel ongoing tests in case of push to the same PR or staging branch,
+  # but let previous master commit tests complete.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
 env:
   # empty except for pull_request events
   PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
@@ -116,8 +122,8 @@ jobs:
     name: build-tests(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
 
     env:
-      CC: ${{ matrix.compiler.CC }}
-      CXX: ${{ matrix.compiler.CXX }}
+      CC: /usr/bin/ccache ${{ matrix.compiler.CC }}
+      CXX: /usr/bin/ccache ${{ matrix.compiler.CXX }}
 
     steps:
 
@@ -127,10 +133,16 @@ jobs:
           sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
-          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin ${{ matrix.compiler.CC }}
+          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin ${{ matrix.compiler.CC }} ccache
 
       - name: Checkout sources
         uses: actions/checkout@v4
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2.14
+        with:
+          verbose: 2 # default 0
+          key: ${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
 
       - name: Run build on Linux
         run: ./test-builds.sh ${{ matrix.layer.name }}

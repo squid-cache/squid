@@ -10,6 +10,8 @@ include $(top_srcdir)/src/Common.am
 noinst_LTLIBRARIES = libanyp.la
 
 libanyp_la_SOURCES = \
+	Host.cc \
+	Host.h \
 	PortCfg.cc \
 	PortCfg.h \
 	ProtocolType.cc \

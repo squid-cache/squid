@@ -9,6 +9,7 @@
 /* DEBUG: section 23    URL Parsing */
 
 #include "squid.h"
+#include "anyp/Host.h"
 #include "anyp/Uri.h"
 #include "base/Raw.h"
 #include "globals.h"
@@ -133,6 +134,7 @@ AnyP::Uri::host(const char *src)
     touch();
 }
 
+// TODO: Replace with ToSBuf(parsedHost()) or similar.
 SBuf
 AnyP::Uri::hostOrIp() const
 {
@@ -142,6 +144,25 @@ AnyP::Uri::hostOrIp() const
         return SBuf(ip, hostStrLen);
     } else
         return SBuf(host());
+}
+
+std::optional<AnyP::Host>
+AnyP::Uri::parsedHost() const
+{
+    if (hostIsNumeric())
+        return Host::ParseIp(hostIP());
+
+    // XXX: Interpret host subcomponent as reg-name representing a DNS name. It
+    // may actually be, for example, a URN namespace ID (NID; see RFC 8141), but
+    // current Squid APIs do not support adequate representation of those cases.
+    const SBuf regName(host());
+
+    if (regName.find('%') != SBuf::npos) {
+        debugs(23, 3, "rejecting percent-encoded reg-name: " << regName);
+        return std::nullopt; // TODO: Decode() instead
+    }
+
+    return Host::ParseSimpleDomainName(regName);
 }
 
 const SBuf &
