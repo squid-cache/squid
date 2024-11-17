@@ -505,7 +505,7 @@ public:
     struct {
         Security::FuturePeerContext *defaultPeerContext;
         // TODO: Remove when FuturePeerContext above becomes PeerContext
-        Security::ContextPointer sslContext;
+        Security::ContextPointer *sslContext;
 #if USE_OPENSSL
         char *foreignIntermediateCertsPath;
         acl_access *cert_error;
