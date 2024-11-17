@@ -184,6 +184,7 @@ jobs:
             export CFLAGS='-Wno-compound-token-split-by-macro'
             export CC=ccache clang
             export CXX=ccache clang++
+            echo -n "CCache location: `which ccache`"
             ./test-builds.sh
 
       - name: Publish build logs
