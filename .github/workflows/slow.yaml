@@ -182,8 +182,8 @@ jobs:
           run: |
             export MAKE=gmake
             export CFLAGS='-Wno-compound-token-split-by-macro'
-            export CC=ccache clang
-            export CXX=ccache clang++
+            export CC="ccache clang"
+            export CXX="ccache clang++"
             echo -n "CCache location: `which ccache`"
             ./test-builds.sh
 
