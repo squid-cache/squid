@@ -176,8 +176,7 @@ jobs:
               libxml2 \
               m4 \
               nettle \
-              pkgconf &&
-            true
+              pkgconf
 
           run: |
             export MAKE=gmake
