@@ -58,7 +58,7 @@ static void neighborAlive(CachePeer *, const MemObject *, const icp_common_t *);
 static void neighborAliveHtcp(CachePeer *, const MemObject *, const HtcpReplyData *);
 #endif
 static void neighborCountIgnored(CachePeer *);
-static void peerRefreshDNS(void *);
+static void peerRefreshDNSNow();
 static IPH peerDNSConfigure;
 static void peerProbeConnect(CachePeer *, const bool reprobeIfBusy = false);
 static CNCB peerProbeConnectDone;
@@ -533,7 +533,7 @@ neighbors_init(void)
         }
     }
 
-    peerRefreshDNS((void *) 1);
+    peerRefreshDNSNow();
 
     sep = getservbyname("echo", "udp");
     echo_port = sep ? ntohs((unsigned short) sep->s_port) : 7;
@@ -1159,6 +1159,12 @@ peerRefreshDNS(void *data)
         return;
     }
 
+    peerRefreshDNSNow();
+}
+
+static void
+peerRefreshDNSNow()
+{
     for (const auto &p: CurrentCachePeers())
         ipcache_nbgethostbyname(p->host, peerDNSConfigure, p.get());
 
