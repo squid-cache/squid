@@ -155,8 +155,8 @@ jobs:
           verbose: 2 # default 0
           key: freebsd-${{ matrix.osversion }}
 
-      - name: Test in FreeBSD
-        id: test-freebsd
+      - name: Run test-builds
+        id: test-builds
         uses: vmactions/freebsd-vm@v1
         with:
           usesh: true
