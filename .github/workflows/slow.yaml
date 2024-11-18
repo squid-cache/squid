@@ -179,7 +179,6 @@ jobs:
 
           run: |
             export MAKE=gmake
-            export CFLAGS='-Wno-compound-token-split-by-macro'
             export CC="/usr/local/bin/ccache clang"
             export CXX="/usr/local/bin/ccache clang++"
             ./test-builds.sh
