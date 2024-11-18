@@ -390,12 +390,12 @@ Security::ServerOptions::loadDhParams()
     parsedDhParams.resetWithoutLocking(dhp);
 
 #else // OpenSSL 3.0+
-    const auto type = eecdhCurve.isEmpty() ? "DH" : "EC";
+    const auto type = "DH";
 
     Ssl::ForgetErrors();
     EVP_PKEY *rawPkey = nullptr;
     using DecoderContext = std::unique_ptr<OSSL_DECODER_CTX, HardFun<void, OSSL_DECODER_CTX*, &OSSL_DECODER_CTX_free> >;
-    if (const DecoderContext dctx{OSSL_DECODER_CTX_new_for_pkey(&rawPkey, "PEM", nullptr, type, 0, nullptr, nullptr)}) {
+    if (const DecoderContext dctx{OSSL_DECODER_CTX_new_for_pkey(&rawPkey, "PEM", nullptr, type, OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS, nullptr, nullptr)}) {
 
         // OpenSSL documentation is vague on this, but OpenSSL code and our
         // tests suggest that rawPkey remains nil here while rawCtx keeps
@@ -414,7 +414,6 @@ Security::ServerOptions::loadDhParams()
                 assert(rawPkey);
                 const Security::DhePointer pkey(rawPkey);
                 // TODO: verify that the loaded parameters match the curve named in eecdhCurve
-
                 if (const Ssl::EVP_PKEY_CTX_Pointer pkeyCtx{EVP_PKEY_CTX_new_from_pkey(nullptr, pkey.get(), nullptr)}) {
                     switch (EVP_PKEY_param_check(pkeyCtx.get())) {
                     case 1: // success
@@ -566,9 +565,19 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
     // set DH parameters into the server context
 #if USE_OPENSSL
     if (parsedDhParams) {
-        SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get());
-    }
+#if OPENSSL_VERSION_MAJOR < 3
+        if (1 != SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get())) {
+            debugs(83, DBG_IMPORTANT, "ERROR: failed to set DH parameters on SSL CTX " << Ssl::ReportAndForgetErrors);
+        }
+#else
+        EVP_PKEY *tmp = EVP_PKEY_dup(parsedDhParams.get());
+        if (1 != SSL_CTX_set0_tmp_dh_pkey(ctx.get(), tmp)) {
+            EVP_PKEY_free(tmp);
+            debugs(83, DBG_IMPORTANT, "ERROR: failed to set DH parameters on SSL CTX " << Ssl::ReportAndForgetErrors);
+        }
 #endif
+    }
+#endif // USE_OPENSSL
 }
 
 void
