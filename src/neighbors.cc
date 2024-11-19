@@ -1153,7 +1153,7 @@ peerRefreshDNS(void *data)
     if (eventFind(peerRefreshDNS, nullptr))
         eventDelete(peerRefreshDNS, nullptr);
 
-    if (!data && 0 == stat5minClientRequests()) {
+    if (!data && !statSawRecentRequests()) {
         /* no recent client traffic, wait a bit */
         eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 180.0, 1);
         return;

@@ -1684,11 +1684,15 @@ snmpStatGet(int minutes)
     return &CountHist[minutes];
 }
 
-int
-stat5minClientRequests(void)
+bool
+statSawRecentRequests()
 {
-    assert(N_COUNT_HIST > 5);
-    return statCounter.client_http.requests - CountHist[5].client_http.requests;
+    static const int recentMinutes = 5;
+    assert(N_COUNT_HIST > recentMinutes);
+
+    if (NCountHist > recentMinutes)
+        return statCounter.client_http.requests - CountHist[recentMinutes].client_http.requests;
+    return 0;
 }
 
 static double
