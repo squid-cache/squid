@@ -144,10 +144,6 @@ jobs:
 
     runs-on: ubuntu-22.04
     name: freebsd(${{ matrix.osversion }})
-    env:
-      CC: /usr/local/bin/ccache clang
-      CXX: /usr/local/bin/ccache clang++
-      MAKE: gmake
 
     steps:
       - name: Checkout Sources
@@ -182,6 +178,9 @@ jobs:
               pkgconf
 
           run: |
+            export MAKE=gmake
+            export CC="/usr/local/bin/ccache clang"
+            export CXX="/usr/local/bin/ccache clang++"
             ./test-builds.sh
 
       - name: Publish build logs
