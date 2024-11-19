@@ -577,8 +577,8 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
             return;
         }
         if (SSL_CTX_set0_tmp_dh_pkey(ctx.get(), tmp) != 1) {
-            EVP_PKEY_free(tmp);
             debugs(83, DBG_IMPORTANT, "ERROR: Unable to set DH parameters in TLS context: " << Ssl::ReportAndForgetErrors);
+            EVP_PKEY_free(tmp);
         }
 #endif
     }
