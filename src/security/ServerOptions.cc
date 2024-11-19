@@ -351,6 +351,12 @@ Security::ServerOptions::loadClientCaFile()
     return bool(clientCaStack);
 }
 
+/// Interprets DHE parameters stored in a previously configured dhParamsFile.
+/// These DHE parameters are orthogonal to ECDHE curve name that may also be
+/// configured when naming that DHE parameters configuration file. When both are
+/// configured, the server selects either FFDHE or ECDHE key exchange mechanism
+/// (and its cipher suites) depending on client-supported cipher suites.
+/// \sa Security::ServerOptions::updateContextEecdh() and RFC 7919 Section 1.2
 void
 Security::ServerOptions::loadDhParams()
 {
@@ -413,8 +419,6 @@ Security::ServerOptions::loadDhParams()
             if (OSSL_DECODER_from_fp(dctx.get(), in)) {
                 assert(rawPkey);
                 const Security::DhePointer pkey(rawPkey);
-                // TODO: verify that the loaded parameters match the curve named in eecdhCurve
-
                 if (const Ssl::EVP_PKEY_CTX_Pointer pkeyCtx{EVP_PKEY_CTX_new_from_pkey(nullptr, pkey.get(), nullptr)}) {
                     switch (EVP_PKEY_param_check(pkeyCtx.get())) {
                     case 1: // success
