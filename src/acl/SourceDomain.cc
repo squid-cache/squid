@@ -36,7 +36,11 @@ SourceDomainLookup::LookupDone(const char *, const Dns::LookupDetails &details, 
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     checklist->markSourceDomainChecked();
-    checklist->request->recordLookup(details);
+    if (checklist->request)
+        checklist->request->recordLookup(details);
+    else
+        debugs(28, 3, "no request to recordLookup()");
+
     checklist->resumeNonBlockingCheck(SourceDomainLookup::Instance());
 }
 
