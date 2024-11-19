@@ -182,7 +182,7 @@ jobs:
             export MAKE=gmake
             export CC="/usr/local/bin/ccache clang"
             export CXX="/usr/local/bin/ccache clang++"
-            ./test-builds.sh
+            ./test-builds.sh layer-00-default layer-01-minimal layer-02-maximus
 
       - name: Publish build logs
         if: success() || failure()
