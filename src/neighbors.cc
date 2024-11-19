@@ -58,7 +58,7 @@ static void neighborAlive(CachePeer *, const MemObject *, const icp_common_t *);
 static void neighborAliveHtcp(CachePeer *, const MemObject *, const HtcpReplyData *);
 #endif
 static void neighborCountIgnored(CachePeer *);
-static void peerScheduleDnsRefreshCheck(double);
+static void peerDnsRefreshCheck(void *);
 static void peerDnsRefreshStart();
 static IPH peerDNSConfigure;
 static void peerProbeConnect(CachePeer *, const bool reprobeIfBusy = false);
@@ -1149,12 +1149,11 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
 }
 
 static void
-peerDnsRefreshStart()
+peerScheduleDnsRefreshCheck(const double delayInSeconds)
 {
-    for (const auto &p: CurrentCachePeers())
-        ipcache_nbgethostbyname(p->host, peerDNSConfigure, p.get());
-
-    peerScheduleDnsRefreshCheck(3600.0);
+    if (eventFind(peerDnsRefreshCheck, nullptr))
+        eventDelete(peerDnsRefreshCheck, nullptr);
+    eventAddIsh("peerDnsRefreshCheck", peerDnsRefreshCheck, nullptr, delayInSeconds, 1);
 }
 
 static void
@@ -1170,11 +1169,12 @@ peerDnsRefreshCheck(void *)
 }
 
 static void
-peerScheduleDnsRefreshCheck(const double delayInSeconds)
+peerDnsRefreshStart()
 {
-    if (eventFind(peerDnsRefreshCheck, nullptr))
-        eventDelete(peerDnsRefreshCheck, nullptr);
-    eventAddIsh("peerDnsRefreshCheck", peerDnsRefreshCheck, nullptr, delayInSeconds, 1);
+    for (const auto &p: CurrentCachePeers())
+        ipcache_nbgethostbyname(p->host, peerDNSConfigure, p.get());
+
+    peerScheduleDnsRefreshCheck(3600.0);
 }
 
 /// whether new TCP probes are currently banned
