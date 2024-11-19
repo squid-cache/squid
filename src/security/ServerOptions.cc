@@ -580,7 +580,7 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
             debugs(83, DBG_IMPORTANT, "ERROR: Unable to set DH parameters in TLS context: " << Ssl::ReportAndForgetErrors);
             EVP_PKEY_free(tmp);
         }
-#endif
+#endif // OPENSSL_VERSION_MAJOR
     }
 #endif // USE_OPENSSL
 }
