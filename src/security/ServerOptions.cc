@@ -568,13 +568,13 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
     if (parsedDhParams) {
 #if OPENSSL_VERSION_MAJOR < 3
         if (SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get()) != 1) {
-            debugs(83, DBG_IMPORTANT, "ERROR: failed to set DH parameters on SSL CTX " << Ssl::ReportAndForgetErrors);
+            debugs(83, DBG_IMPORTANT, "ERROR: Unable to set DH parameters in TLS context: " << Ssl::ReportAndForgetErrors);
         }
 #else
         const auto tmp = EVP_PKEY_dup(parsedDhParams.get());
         if (SSL_CTX_set0_tmp_dh_pkey(ctx.get(), tmp) != 1) {
             EVP_PKEY_free(tmp);
-            debugs(83, DBG_IMPORTANT, "ERROR: failed to set DH parameters on SSL CTX " << Ssl::ReportAndForgetErrors);
+            debugs(83, DBG_IMPORTANT, "ERROR: Unable to set DH parameters in TLS context: " << Ssl::ReportAndForgetErrors);
         }
 #endif
     }
