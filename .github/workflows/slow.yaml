@@ -173,7 +173,6 @@ jobs:
               gmake \
               libltdl \
               libtool \
-              libxml2 \
               m4 \
               nettle \
               pkgconf
