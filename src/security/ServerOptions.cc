@@ -568,7 +568,7 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
     if (parsedDhParams) {
 #if OPENSSL_VERSION_MAJOR < 3
         if (SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get()) != 1) {
-            debugs(83, DBG_IMPORTANT, "ERROR: Unable to set DH parameters in TLS context: " << Ssl::ReportAndForgetErrors);
+            debugs(83, DBG_IMPORTANT, "ERROR: Unable to set DH parameters in TLS context (using legacy OpenSSL): " << Ssl::ReportAndForgetErrors);
         }
 #else
         const auto tmp = EVP_PKEY_dup(parsedDhParams.get());
