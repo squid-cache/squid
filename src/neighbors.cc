@@ -58,7 +58,8 @@ static void neighborAlive(CachePeer *, const MemObject *, const icp_common_t *);
 static void neighborAliveHtcp(CachePeer *, const MemObject *, const HtcpReplyData *);
 #endif
 static void neighborCountIgnored(CachePeer *);
-static void peerRefreshDNSNow();
+static void peerScheduleDnsRefreshCheck(double);
+static void peerDnsRefreshStart();
 static IPH peerDNSConfigure;
 static void peerProbeConnect(CachePeer *, const bool reprobeIfBusy = false);
 static CNCB peerProbeConnectDone;
@@ -533,7 +534,7 @@ neighbors_init(void)
         }
     }
 
-    peerRefreshDNSNow();
+    peerDnsRefreshStart();
 
     sep = getservbyname("echo", "udp");
     echo_port = sep ? ntohs((unsigned short) sep->s_port) : 7;
@@ -1148,28 +1149,33 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
 }
 
 static void
-peerRefreshDNS(void *data)
-{
-    if (eventFind(peerRefreshDNS, nullptr))
-        eventDelete(peerRefreshDNS, nullptr);
-
-    if (!data && 0 == stat5minClientRequests()) {
-        /* no recent client traffic, wait a bit */
-        eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 180.0, 1);
-        return;
-    }
-
-    peerRefreshDNSNow();
-}
-
-static void
-peerRefreshDNSNow()
+peerDnsRefreshStart()
 {
     for (const auto &p: CurrentCachePeers())
         ipcache_nbgethostbyname(p->host, peerDNSConfigure, p.get());
 
     /* Reconfigure the peers every hour */
-    eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 3600.0, 1);
+    peerScheduleDnsRefreshCheck(3600.0);
+}
+
+static void
+peerDnsRefreshCheck(void *data)
+{
+    if (!data && 0 == stat5minClientRequests()) {
+        /* no recent client traffic, wait a bit */
+        peerScheduleDnsRefreshCheck(180.0);
+        return;
+    }
+
+    peerDnsRefreshStart();
+}
+
+static void
+peerScheduleDnsRefreshCheck(const double delayInSeconds)
+{
+    if (eventFind(peerDnsRefreshCheck, nullptr))
+        eventDelete(peerDnsRefreshCheck, nullptr);
+    eventAddIsh("peerDnsRefreshCheck", peerDnsRefreshCheck, nullptr, delayInSeconds, 1);
 }
 
 /// whether new TCP probes are currently banned
