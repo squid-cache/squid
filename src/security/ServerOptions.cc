@@ -414,6 +414,7 @@ Security::ServerOptions::loadDhParams()
                 assert(rawPkey);
                 const Security::DhePointer pkey(rawPkey);
                 // TODO: verify that the loaded parameters match the curve named in eecdhCurve
+
                 if (const Ssl::EVP_PKEY_CTX_Pointer pkeyCtx{EVP_PKEY_CTX_new_from_pkey(nullptr, pkey.get(), nullptr)}) {
                     switch (EVP_PKEY_param_check(pkeyCtx.get())) {
                     case 1: // success
