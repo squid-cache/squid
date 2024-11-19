@@ -567,12 +567,12 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
 #if USE_OPENSSL
     if (parsedDhParams) {
 #if OPENSSL_VERSION_MAJOR < 3
-        if (1 != SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get())) {
+        if (SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get()) != 1) {
             debugs(83, DBG_IMPORTANT, "ERROR: failed to set DH parameters on SSL CTX " << Ssl::ReportAndForgetErrors);
         }
 #else
         EVP_PKEY *tmp = EVP_PKEY_dup(parsedDhParams.get());
-        if (1 != SSL_CTX_set0_tmp_dh_pkey(ctx.get(), tmp)) {
+        if (SSL_CTX_set0_tmp_dh_pkey(ctx.get(), tmp) != 1) {
             EVP_PKEY_free(tmp);
             debugs(83, DBG_IMPORTANT, "ERROR: failed to set DH parameters on SSL CTX " << Ssl::ReportAndForgetErrors);
         }
