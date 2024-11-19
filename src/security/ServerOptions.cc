@@ -572,6 +572,10 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
         }
 #else
         const auto tmp = EVP_PKEY_dup(parsedDhParams.get());
+        if (!tmp) {
+            debugs(83, DBG_IMPORTANT, "ERROR: Unable to duplicate DH parameters: " << Ssl::ReportAndForgetErrors);
+            return;
+        }
         if (SSL_CTX_set0_tmp_dh_pkey(ctx.get(), tmp) != 1) {
             EVP_PKEY_free(tmp);
             debugs(83, DBG_IMPORTANT, "ERROR: Unable to set DH parameters in TLS context: " << Ssl::ReportAndForgetErrors);
