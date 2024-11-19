@@ -1159,9 +1159,9 @@ peerDnsRefreshStart()
 }
 
 static void
-peerDnsRefreshCheck(void *data)
+peerDnsRefreshCheck(void *)
 {
-    if (!data && 0 == stat5minClientRequests()) {
+    if (!stat5minClientRequests()) {
         /* no recent client traffic, wait a bit */
         peerScheduleDnsRefreshCheck(180.0);
         return;
