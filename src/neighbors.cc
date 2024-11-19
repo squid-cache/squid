@@ -1154,7 +1154,6 @@ peerDnsRefreshStart()
     for (const auto &p: CurrentCachePeers())
         ipcache_nbgethostbyname(p->host, peerDNSConfigure, p.get());
 
-    /* Reconfigure the peers every hour */
     peerScheduleDnsRefreshCheck(3600.0);
 }
 
