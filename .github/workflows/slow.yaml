@@ -149,12 +149,6 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2.14
-        with:
-          verbose: 2 # default 0
-          key: freebsd-${{ matrix.osversion }}
-
       - name: Run test-builds
         id: test-builds
         uses: vmactions/freebsd-vm@v1
@@ -168,7 +162,6 @@ jobs:
               autoconf-archive \
               automake \
               bash \
-              ccache \
               cppunit \
               gmake \
               libltdl \
@@ -180,8 +173,8 @@ jobs:
 
           run: |
             export MAKE=gmake
-            export CC="/usr/local/bin/ccache clang"
-            export CXX="/usr/local/bin/ccache clang++"
+            export CC=clang
+            export CXX=clang++
             ./test-builds.sh layer-00-default layer-01-minimal layer-02-maximus
 
       - name: Publish build logs
