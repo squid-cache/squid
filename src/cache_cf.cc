@@ -959,8 +959,10 @@ configDoConfigure(void)
 
     if (Security::ProxyOutgoingConfig.encryptTransport) {
         debugs(3, 2, "initializing https:// proxy context");
-        Config.ssl_client.sslContext = new Security::ContextPointer(Security::ProxyOutgoingConfig.createClientContext(false));
-        if (!Config.ssl_client.sslContext->get()) {
+
+        const auto rawSslContext = Security::ProxyOutgoingConfig.createClientContext(false);
+        Config.ssl_client.sslContext = rawSslContext ? new Security::ContextPointer(rawSslContext) : nullptr;
+        if (!Config.ssl_client.sslContext) {
 #if USE_OPENSSL
             fatal("ERROR: Could not initialize https:// proxy context");
 #else
@@ -970,7 +972,7 @@ configDoConfigure(void)
 #if USE_OPENSSL
         Ssl::useSquidUntrusted(Config.ssl_client.sslContext->get());
 #endif
-        Config.ssl_client.defaultPeerContext = new Security::FuturePeerContext(Security::ProxyOutgoingConfig, *(Config.ssl_client.sslContext));
+        Config.ssl_client.defaultPeerContext = new Security::FuturePeerContext(Security::ProxyOutgoingConfig, *Config.ssl_client.sslContext);
     }
 
     for (const auto &p: CurrentCachePeers()) {
