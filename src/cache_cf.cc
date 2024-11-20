@@ -3914,8 +3914,8 @@ configFreeMemory(void)
     free_all();
     Dns::ResolveClientAddressesAsap = false;
     delete Config.ssl_client.defaultPeerContext;
-    delete Config.ssl_client.sslContext;
     Config.ssl_client.defaultPeerContext = nullptr;
+    delete Config.ssl_client.sslContext;
     Config.ssl_client.sslContext = nullptr;
 #if USE_OPENSSL
     Ssl::unloadSquidUntrusted();
