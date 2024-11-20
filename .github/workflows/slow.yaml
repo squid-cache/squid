@@ -175,7 +175,7 @@ jobs:
             export MAKE=gmake
             export CC=clang
             export CXX=clang++
-            ./test-builds.sh layer-00-default layer-01-minimal layer-02-maximus
+            ./test-builds.sh
 
       - name: Publish build logs
         if: success() || failure()
