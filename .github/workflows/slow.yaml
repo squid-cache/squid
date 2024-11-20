@@ -173,8 +173,6 @@ jobs:
 
           run: |
             export MAKE=gmake
-            export CC=clang
-            export CXX=clang++
             ./test-builds.sh
 
       - name: Publish build logs
