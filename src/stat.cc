@@ -1687,7 +1687,7 @@ snmpStatGet(int minutes)
 bool
 statSawRecentRequests()
 {
-    static const auto recentMinutes = 5;
+    const auto recentMinutes = 5;
     assert(N_COUNT_HIST > recentMinutes);
 
     // Math below computes the number of requests during the last 0-6 minutes.
