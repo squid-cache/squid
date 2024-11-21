@@ -321,7 +321,7 @@ This section gives an account of those changes in three categories:
 	   (e.g., receiving 1% more bytes would have triggered full download). In
 	   most such cases, the decision could probably go either way due to
 	   response header size fluctuations anyway.
-<descrip>
+</descrip>
 
 <sect>Copyright
 <p>
