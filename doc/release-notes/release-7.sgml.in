@@ -308,15 +308,19 @@ This section gives an account of those changes in three categories:
 <sect1> <label id="modifiedoptions">
 <p>
 <descrip>
-	<tag> Updated precision of quick_abort_pct directive</tag>
-	<p> The <em>quick_abort_pct<em> used to keep the connection open with the 
-	server if the total size of data (header_size + content_length) was smaller
-	than 100 bytes. Now Squid would honour the quick_abort_pct directive for 
-	data of all sizes. 
-	Additionally quick_abort_* directive's documentation incorrectly states that
-	Squid would continue downloading the data if the size of data is less than 
-	16 KB. In reality squid closes connection if niether of the three quick_abort 
-	directive prevent it from doing so.
+	<tag>quick_abort_pct</tag>
+	<p>Instead of ignoring <em>quick_abort_pct</em> settings that would,
+	   together with other conditions, abort a pending download of a 99-byte or
+	   smaller response, Squid now honors <em>quick_abort_pct</em> for all
+	   response sizes. Most Squids are not going to be affected by this change
+	   because default quick_abort_min settings (16KB) prevent aborts of
+	   99-byte responses even before <em>quick_abort_pct</em> is checked.
+	<p>Due to conversion from integer to floating point math, this change may
+	   affect responses larger than 99 bytes as well, but these effects ought
+	   to be limited to cases where the decision is based on a tiny difference
+	   (e.g., receiving 1% more bytes would have triggered full download). In
+	   most such cases, the decision could probably go either way due to
+	   response header size fluctuations anyway.
 <descrip>
 
 <sect>Copyright
