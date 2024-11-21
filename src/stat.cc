@@ -1693,9 +1693,8 @@ statSawRecentRequests()
     // Math below computes the number of requests during the last 0-6 minutes.
     // CountHist is based on "minutes passed since Squid start" periods. It cannot
     // deliver precise info for "last N minutes", but we do not need to be precise.
-    if (NCountHist > recentMinutes)
-        return statCounter.client_http.requests - CountHist[recentMinutes].client_http.requests;
-    return 0;
+    const auto oldRequests = (NCountHist > recentMinutes) ? CountHist[recentMinutes].client_http.requests : 0;
+    return statCounter.client_http.requests - oldRequests;
 }
 
 static double
