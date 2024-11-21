@@ -305,6 +305,20 @@ This section gives an account of those changes in three categories:
 		changed to be in line with Squid's cache.log format.
 </descrip>
 
+<sect1> <label id="modifiedoptions">
+<p>
+<descrip>
+	<tag> Updated precision of quick_abort_pct directive</tag>
+	<p> The <em>quick_abort_pct<em> used to keep the connection open with the 
+	server if the total size of data (header_size + content_length) was smaller
+	than 100 bytes. Now Squid would honour the quick_abort_pct directive for 
+	data of all sizes. 
+	Additionally quick_abort_* directive's documentation incorrectly states that
+	Squid would continue downloading the data if the size of data is less than 
+	16 KB. In reality squid closes connection if niether of the three quick_abort 
+	directive prevent it from doing so.
+<descrip>
+
 <sect>Copyright
 <p>
 Copyright (C) 1996-2023 The Squid Software Foundation and contributors
