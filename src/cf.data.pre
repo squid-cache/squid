@@ -5718,7 +5718,7 @@ DOC_START
 
 	Most messages have _not_ been instrumented to support this directive
 	yet. For the list of instrumented messages and their IDs, please see
-	the doc/debug-messages.txt file.
+	the doc/debug-messages.dox file.
 
 	Message ID corresponds to the message semantics rather than message
 	text or source code location. The ID is stable across Squid
