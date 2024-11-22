@@ -207,6 +207,7 @@ This section gives an account of those changes in three categories:
 	receiving 1% more bytes would have triggered full download). In most such
 	cases, the decision could probably go either way due to response header
 	size fluctuations anyway.
+
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
