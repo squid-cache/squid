@@ -849,7 +849,6 @@ EXCLUDE_SYMLINKS       = NO
 
 EXCLUDE_PATTERNS       = */CVS/* \
                          */.git* \
-                         */lib/libTrie/* \
                          */libltdl/* \
                          */Programming-Guide/html/* \
                          */Programming-guide/dyn/* \
@@ -2096,7 +2095,6 @@ PREDEFINED             = __cplusplus \
                          USE_QOS_TOS \
                          USE_SELECT \
                          USE_SOLARIS_KRB5 \
-                         USE_SQUID_ESI \
                          USE_SQUID_EUI \
                          USE_SSL_CRTD \
                          USE_OPENSSL \

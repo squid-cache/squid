@@ -2272,6 +2272,7 @@ ftpWriteTransferDone(Ftp::Gateway * ftpState)
     }
 
     ftpState->entry->timestampsSet();   /* XXX Is this needed? */
+    ftpState->markParsedVirginReplyAsWhole("ftpWriteTransferDone code 226 or 250");
     ftpSendReply(ftpState);
 }
 
@@ -2638,7 +2639,7 @@ Ftp::Gateway::completeForwarding()
 {
     if (fwd == nullptr || flags.completed_forwarding) {
         debugs(9, 3, "avoid double-complete on FD " <<
-               (ctrl.conn ? ctrl.conn->fd : -1) << ", Data FD " << data.conn->fd <<
+               (ctrl.conn ? ctrl.conn->fd : -1) << ", Data FD " << (data.conn ? data.conn->fd : -1) <<
                ", this " << this << ", fwd " << fwd);
         return;
     }

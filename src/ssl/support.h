@@ -13,9 +13,13 @@
 
 #if USE_OPENSSL
 
+#include "anyp/forward.h"
 #include "base/CbDataList.h"
+#include "base/TypeTraits.h"
 #include "comm/forward.h"
 #include "compat/openssl.h"
+#include "dns/forward.h"
+#include "ip/Address.h"
 #include "sbuf/SBuf.h"
 #include "security/Session.h"
 #include "ssl/gadgets.h"
@@ -31,6 +35,8 @@
 #endif
 #include <queue>
 #include <map>
+#include <optional>
+#include <variant>
 
 /**
  \defgroup ServerProtocolSSLAPI Server-Side SSL API
@@ -142,6 +148,21 @@ inline const char *bumpMode(int bm)
 
 /// certificates indexed by issuer name
 typedef std::multimap<SBuf, X509 *> CertsIndexedList;
+
+/// A successfully extracted/parsed certificate "name" field. See RFC 5280
+/// GeneralName and X520CommonName types for examples of information sources.
+/// For now, we only support the same two name variants as AnyP::Host:
+///
+/// * An IPv4 or an IPv6 address. This info comes (with very little validation)
+///   from RFC 5280 "iPAddress" variant of a subjectAltName
+///
+/// * A domain name or domain name wildcard (e.g., *.example.com). This info
+///   comes (with very little validation) from a source like these two:
+///   - RFC 5280 "dNSName" variant of a subjectAltName extension (GeneralName
+///     index is 2, underlying value type is IA5String);
+///   - RFC 5280 X520CommonName component of a Subject distinguished name field
+///     (underlying value type is DirectoryName).
+using GeneralName = AnyP::Host;
 
 /**
  * Load PEM-encoded certificates from the given file.
@@ -273,25 +294,28 @@ bool configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
  */
 void useSquidUntrusted(SSL_CTX *sslContext);
 
-/**
-   \ingroup ServerProtocolSSLAPI
-   * Iterates over the X509 common and alternate names and to see if  matches with given data
-   * using the check_func.
-   \param peer_cert  The X509 cert to check
-   \param check_data The data with which the X509 CNs compared
-   \param check_func The function used to match X509 CNs. The CN data passed as ASN1_STRING data
-   \return   1 if any of the certificate CN matches, 0 if none matches.
- */
-int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data));
+/// an algorithm for checking/testing/comparing X.509 certificate names
+class GeneralNameMatcher: public Interface
+{
+public:
+    /// whether the given name satisfies algorithm conditions
+    bool match(const Ssl::GeneralName &) const;
 
-/**
-   \ingroup ServerProtocolSSLAPI
-   * Check if the certificate is valid for a server
-   \param cert  The X509 cert to check.
-   \param server The server name.
-   \return   true if the certificate is valid for the server or false otherwise.
- */
-bool checkX509ServerValidity(X509 *cert, const char *server);
+protected:
+    // The methods below implement public match() API for each of the
+    // GeneralName variants. For each public match() method call, exactly one of
+    // these methods is called.
+
+    virtual bool matchDomainName(const Dns::DomainName &) const = 0;
+    virtual bool matchIp(const Ip::Address &) const = 0;
+};
+
+/// Determines whether at least one common or alternate subject names matches.
+/// The first match (if any) terminates the search.
+bool HasMatchingSubjectName(X509 &, const GeneralNameMatcher &);
+
+/// whether at least one common or alternate subject name matches the given one
+bool HasSubjectName(X509 &, const AnyP::Host &);
 
 /**
    \ingroup ServerProtocolSSLAPI

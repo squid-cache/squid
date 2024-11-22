@@ -12,6 +12,7 @@
 #include "client_side_reply.h"
 #include "client_side_request.h"
 #include "ClientRequestContext.h"
+#include "clientStream.h"
 #include "Downloader.h"
 #include "fatal.h"
 #include "http/one/RequestParser.h"

@@ -181,6 +181,14 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
+# Options removed in 7.x
+NAME: esi_parser
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
+
 # Options removed in 6.x
 NAME: announce_file
 TYPE: obsolete
@@ -1491,7 +1499,6 @@ ENDIF
 	  # Matches transaction's initiator [fast]
 	  #
 	  # Supported initiators are:
-	  #  esi: matches transactions fetching ESI resources
 	  #  certificate-fetching: matches transactions fetching
 	  #     a missing intermediate TLS certificate
 	  #  cache-digest: matches transactions fetching Cache Digests
@@ -1602,6 +1609,12 @@ IF USE_OPENSSL
 	  #
 	  # Unlike dstdomain, this ACL does not perform DNS lookups.
 	  #
+	  # A server name may be an IP address. For example, subject alternative
+	  # names (a.k.a. SANs) in some real server certificates include IPv4 and
+	  # IPv6 entries. Internally, Squid uses inet_ntop(3) to prep IP names for
+	  # matching. When using IPv6 names, use "::" notation (if applicable).
+	  # Do not use brackets. For example: 1080::8:800:200c:417a.
+	  #
 	  # An ACL option below may be used to restrict what information
 	  # sources are used to extract the server names from:
 	  #
@@ -1625,6 +1638,10 @@ IF USE_OPENSSL
 
 	acl aclname ssl::server_name_regex [-i] \.foo\.com ...
 	  # regex matches server name obtained from various sources [fast]
+	  #
+	  # See ssl::server_name for details, including IPv6 address formatting
+	  # caveats. Use case-insensitive matching (i.e. -i option) to reduce
+	  # dependency on how Squid formats or sanitizes server names.
 
 	acl aclname connections_encrypted
 	  # matches transactions with all HTTP messages received over TLS
@@ -4994,7 +5011,7 @@ DOC_START
 			as a forwarding attempt. Pure cache hits log zero, but cache hits
 			that triggered HTTP cache revalidation log the number of attempts
 			made when sending an internal revalidation request. DNS, ICMP,
-			ICP, HTCP, ESI, ICAP, eCAP, helper, and other secondary requests
+			ICP, HTCP, ICAP, eCAP, helper, and other secondary requests
 			sent by Squid as a part of a master transaction do not increment
 			the counter logged for the received request.
 
@@ -6755,9 +6772,6 @@ DOC_START
 	In reverse proxy environments it might be desirable to honor
 	shorter object lifetimes. It is most likely better to make
 	your server return a meaningful Last-Modified header however.
-
-	In ESI environments where page fragments often have short
-	lifetimes, this will often be best set to 0.
 DOC_END
 
 NAME: store_avg_object_size
@@ -7637,20 +7651,6 @@ DOC_START
 	"Surrogate-Control: no-store-remote".
 
 	Set this to on to have squid behave as a remote surrogate.
-DOC_END
-
-NAME: esi_parser
-IFDEF: USE_SQUID_ESI
-COMMENT: libxml2|expat
-TYPE: string
-LOC: ESIParser::Type
-DEFAULT: auto
-DEFAULT_DOC: Selects libxml2 if available at ./configure time or libexpat otherwise.
-DOC_START
-	Selects the XML parsing library to use when interpreting responses with
-	Edge Side Includes.
-
-	To disable ESI handling completely, ./configure Squid with --disable-esi.
 DOC_END
 
 COMMENT_START

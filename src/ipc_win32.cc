@@ -674,7 +674,7 @@ ipc_thread_1(void *in_params)
     }
 
     /* else {                       IPC_TCP_SOCKET */
-    /*     commSetNoLinger(fd); */
+    /*     commConfigureLinger(fd, OnOff::off); */
     /*  } */
     thread_params.prog = prog;
 

@@ -80,7 +80,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-poll \
 	--enable-select \
 	--enable-http-violations \
-	--enable-ipfw-transparent \
 	--enable-follow-x-forwarded-for \
 	--enable-internal-dns \
 	--enable-default-hostsfile \
@@ -101,7 +100,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-auto-locale \
 	--disable-translation \
 	--enable-zph-qos \
-	--enable-esi \
 	--with-aio \
 	--with-build-environment=default \
 	--with-dl \

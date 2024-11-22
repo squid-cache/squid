@@ -338,11 +338,4 @@ TODO: get RFCs linked from ietf
 	see (http://squid.nlanr.net/Squid/urn-support.html) URN Support in Squid
 	.
 
-\section ESI ESI
-\par
-	ESI is an implementation of Edge Side Includes (http://www.esi.org).
-	ESI is implemented as a client side stream and a small
-	modification to client_side_reply.c to check whether
-	ESI should be inserted into the reply stream or not.
-
  */

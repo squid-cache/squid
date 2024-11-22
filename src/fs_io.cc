@@ -37,6 +37,26 @@ static void cxx_xfree(void *ptr)
     xfree(ptr);
 }
 
+dwrite_q::dwrite_q(const size_t aSize, char * const aBuffer, FREE * const aFree):
+    buf(aBuffer),
+    capacity(aSize),
+    free_func(aFree)
+{
+    assert(buf || !free_func);
+    if (!buf) {
+        buf = static_cast<char *>(xmalloc(aSize));
+        free_func = cxx_xfree; // dwrite_q buffer xfree()
+    } else {
+        len = aSize;
+    }
+}
+
+dwrite_q::~dwrite_q()
+{
+    if (free_func)
+        free_func(buf);
+}
+
 /*
  * opens a disk file specified by 'path'.  This function always
  * blocks!  There is no callback.
@@ -133,35 +153,18 @@ diskCombineWrites(_fde_disk *fdd)
      */
 
     if (fdd->write_q != nullptr && fdd->write_q->next != nullptr) {
-        int len = 0;
+        size_t wantCapacity = 0;
 
         for (dwrite_q *q = fdd->write_q; q != nullptr; q = q->next)
-            len += q->len - q->buf_offset;
+            wantCapacity += q->len - q->buf_offset; // XXX: might overflow
 
-        dwrite_q *wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
-
-        wq->buf = (char *)xmalloc(len);
-
-        wq->len = 0;
-
-        wq->buf_offset = 0;
-
-        wq->next = nullptr;
-
-        wq->free_func = cxx_xfree;
-
-        while (fdd->write_q != nullptr) {
-            dwrite_q *q = fdd->write_q;
-
-            len = q->len - q->buf_offset;
+        const auto wq = new dwrite_q(wantCapacity);
+        while (const auto q = fdd->write_q) {
+            const auto len = q->len - q->buf_offset;
             memcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
             wq->len += len;
             fdd->write_q = q->next;
-
-            if (q->free_func)
-                q->free_func(q->buf);
-
-            memFree(q, MEM_DWRITE_Q);
+            delete q;
         };
 
         fdd->write_q_tail = wq;
@@ -178,11 +181,10 @@ diskHandleWrite(int fd, void *)
     fde *F = &fd_table[fd];
 
     _fde_disk *fdd = &F->disk;
-    dwrite_q *q = fdd->write_q;
     int status = DISK_OK;
     bool do_close;
 
-    if (nullptr == q)
+    if (!fdd->write_q)
         return;
 
     debugs(6, 3, "diskHandleWrite: FD " << fd);
@@ -246,23 +248,16 @@ diskHandleWrite(int fd, void *)
              * repeated write failures for the same FD because of
              * the queued data.
              */
-            do {
+            while (const auto q = fdd->write_q) {
                 fdd->write_q = q->next;
-
-                if (q->free_func)
-                    q->free_func(q->buf);
-
-                if (q) {
-                    memFree(q, MEM_DWRITE_Q);
-                    q = nullptr;
-                }
-            } while ((q = fdd->write_q));
+                delete q;
+            }
         }
 
         len = 0;
     }
 
-    if (q != nullptr) {
+    if (const auto q = fdd->write_q) {
         /* q might become NULL from write failure above */
         q->buf_offset += len;
 
@@ -276,14 +271,7 @@ diskHandleWrite(int fd, void *)
         if (q->buf_offset == q->len) {
             /* complete write */
             fdd->write_q = q->next;
-
-            if (q->free_func)
-                q->free_func(q->buf);
-
-            if (q) {
-                memFree(q, MEM_DWRITE_Q);
-                q = nullptr;
-            }
+            delete q;
         }
     }
 
@@ -331,18 +319,12 @@ file_write(int fd,
            void *handle_data,
            FREE * free_func)
 {
-    dwrite_q *wq = nullptr;
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->flags.open);
     /* if we got here. Caller is eligible to write. */
-    wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
+    const auto wq = new dwrite_q(len, static_cast<char *>(const_cast<void *>(ptr_to_buf)), free_func);
     wq->file_offset = file_offset;
-    wq->buf = (char *)ptr_to_buf;
-    wq->len = len;
-    wq->buf_offset = 0;
-    wq->next = nullptr;
-    wq->free_func = free_func;
 
     if (!F->disk.wrt_handle_data) {
         F->disk.wrt_handle = handle;
@@ -366,16 +348,6 @@ file_write(int fd,
     }
 }
 
-/*
- * a wrapper around file_write to allow for MemBuf to be file_written
- * in a snap
- */
-void
-file_write_mbuf(int fd, off_t off, MemBuf mb, DWCB * handler, void *handler_data)
-{
-    file_write(fd, off, mb.buf, mb.size, handler, handler_data, mb.freeFunc());
-}
-
 /* Read from FD */
 static void
 diskHandleRead(int fd, void *data)
@@ -392,7 +364,7 @@ diskHandleRead(int fd, void *data)
      */
 
     if (fd < 0) {
-        memFree(ctrl_dat, MEM_DREAD_CTRL);
+        delete ctrl_dat;
         return;
     }
 
@@ -442,7 +414,7 @@ diskHandleRead(int fd, void *data)
 
     cbdataReferenceDone(ctrl_dat->client_data);
 
-    memFree(ctrl_dat, MEM_DREAD_CTRL);
+    delete ctrl_dat;
 }
 
 /* start read operation */
@@ -452,16 +424,8 @@ diskHandleRead(int fd, void *data)
 void
 file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *client_data)
 {
-    dread_ctrl *ctrl_dat;
     assert(fd >= 0);
-    ctrl_dat = (dread_ctrl *)memAllocate(MEM_DREAD_CTRL);
-    ctrl_dat->fd = fd;
-    ctrl_dat->offset = offset;
-    ctrl_dat->req_len = req_len;
-    ctrl_dat->buf = buf;
-    ctrl_dat->end_of_file = 0;
-    ctrl_dat->handler = handler;
-    ctrl_dat->client_data = cbdataReference(client_data);
+    const auto ctrl_dat = new dread_ctrl(fd, offset, buf, req_len, handler, cbdataReference(client_data));
     diskHandleRead(fd, ctrl_dat);
 }
 

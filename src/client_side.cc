@@ -59,6 +59,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "anyp/Host.h"
 #include "anyp/PortCfg.h"
 #include "base/AsyncCallbacks.h"
 #include "base/Subscription.h"
@@ -1470,9 +1471,13 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
     // when we can extract the intended name from the bumped HTTP request.
     if (const Security::CertPointer &srvCert = sslServerBump->serverCert) {
         HttpRequest *request = http->request;
-        if (!Ssl::checkX509ServerValidity(srvCert.get(), request->url.host())) {
+        const auto host = request->url.parsedHost();
+        if (host && Ssl::HasSubjectName(*srvCert, *host)) {
+            debugs(33, 5, "certificate matches requested host: " << *host);
+            return false;
+        } else {
             debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " <<
-                   "does not match domainname " << request->url.host());
+                   "does not match request target " << RawPointer(host));
 
             bool allowDomainMismatch = false;
             if (Config.ssl_client.cert_error) {
@@ -2288,8 +2293,8 @@ clientNegotiateSSL(int fd, void *data)
         return;
 
     case Security::IoResult::ioError:
-        debugs(83, (handshakeResult.important ? Important(62) : 2), "ERROR: " << handshakeResult.errorDescription <<
-               " while accepting a TLS connection on " << conn->clientConnection << ": " << handshakeResult.errorDetail);
+        debugs(83, (handshakeResult.important ? Important(62) : 2), "ERROR: Cannot accept a TLS connection" <<
+               Debug::Extra << "problem: " << WithExtras(handshakeResult));
         // TODO: No ConnStateData::tunnelOnError() on this forward-proxy code
         // path because we cannot know the intended connection target?
         conn->updateError(ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
@@ -3036,8 +3041,8 @@ ConnStateData::handleSslBumpHandshakeError(const Security::IoResult &handshakeRe
     }
 
     case Security::IoResult::ioError:
-        debugs(83, (handshakeResult.important ? DBG_IMPORTANT : 2), "ERROR: " << handshakeResult.errorDescription <<
-               " while SslBump-accepting a TLS connection on " << clientConnection << ": " << handshakeResult.errorDetail);
+        debugs(83, (handshakeResult.important ? DBG_IMPORTANT : 2), "ERROR: Cannot SslBump-accept a TLS connection" <<
+               Debug::Extra << "problem: " << WithExtras(handshakeResult));
         updateError(errCategory = ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
         break;
 

@@ -117,6 +117,8 @@ private:
      */
     bool PfInterception(const Comm::ConnectionPointer &newConn);
 
+    bool UseInterceptionAddressesLookedUpEarlier(const char *, const Comm::ConnectionPointer &);
+
     int transparentActive_;
     int interceptActive_;
 };
