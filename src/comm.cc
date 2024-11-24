@@ -783,6 +783,8 @@ commConfigureLinger(const int fd, const OnOff enabled)
     l.l_onoff = (enabled == OnOff::on ? 1 : 0);
     l.l_linger = 0; // how long to linger for, in seconds
 
+    fd_table[fd].flags.harshClosureRequested = (l.l_onoff && !l.l_linger); // close(2) sends TCP RST if true
+
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
         const auto xerrno = errno;
         debugs(50, DBG_CRITICAL, "ERROR: Failed to set closure behavior (SO_LINGER) for FD " << fd << ": " << xstrerr(xerrno));
@@ -877,7 +879,7 @@ _comm_close(int fd, char const *file, int line)
     // For simplicity sake, we remain in the caller's context while still
     // allowing individual advanced callbacks to overwrite it.
 
-    if (F->ssl) {
+    if (F->ssl && !F->flags.harshClosureRequested) {
         const auto startCall = asyncCall(5, 4, "commStartTlsClose",
                                          callDialer(commStartTlsClose, fd));
         ScheduleCallHere(startCall);
