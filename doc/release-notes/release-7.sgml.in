@@ -126,10 +126,13 @@ and deliver the user identity to Squid through the **user=** annotation.
 
 <sect1>Removed URN protocol support
 
-<p>Squid URN resolution code has been neglected for a very long time and caused
-multiple security vulnerabilities. This feature was rarely used (if at all).
+<p>Squid URN resolution code has been neglected for a very long time and
+caused multiple security vulnerabilities. This feature was rarely used (if at
+all). Squid now treats URN as any unknown (to Squid) URI scheme, typically
+responding with an HTTP 400 (Bad Request) ERR_INVALID_URL.
 
-<p>If necessary, a similar feature can be implemented externally, using
+<p>If necessary, Squid handling of unknown (to Squid) URI schemes can be
+enhanced, and a similar feature can be implemented externally, using
 url_rewrite_program helpers or adaptation services.
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
