@@ -149,8 +149,6 @@ Adaptation::Ecap::FirstLineRep::protocol() const
         return libecap::protocolWais;
     case AnyP::PROTO_WHOIS:
         return libecap::protocolWhois;
-    case AnyP::PROTO_URN:
-        return libecap::protocolUrn;
     case AnyP::PROTO_ICP:
         return protocolIcp;
 #if USE_HTCP

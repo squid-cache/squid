@@ -34,7 +34,6 @@
  *   This information is used in numerous ways:
  \li  - Sent in ICP replies so neighbor caches know how close
  *      you are to the source.
- \li  - For finding the closest instance of a URN.
  \li  - With the 'test_reachability' option.  Squid will return
  *      ICP_OP_MISS_NOFETCH for sites which it cannot ping.
  */

@@ -32,7 +32,6 @@ typedef enum {
 #if USE_HTCP
     PROTO_HTCP,
 #endif
-    PROTO_URN,
     PROTO_WHOIS,
     PROTO_ICY,
     PROTO_TLS,
