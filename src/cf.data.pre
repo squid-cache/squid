@@ -6448,7 +6448,9 @@ LOC: Config.accessList.sendHit
 DOC_START
 	Responses denied by this directive will not be served from the cache
 	(but may still be cached, see store_miss). This directive has no
-	effect on the responses it allows and on the cached objects.
+	effect on the responses it allows and on the cached objects. This
+	directive is applied to both regular from-cache responses and responses
+	reused by collapsed requests (see collapsed_forwarding).
 
 	Please see the "cache" directive for a summary of differences among
 	store_miss, send_hit, and cache directives.
@@ -7237,6 +7239,11 @@ DOC_START
        requests hitting a stale cached object. Revalidation collapsing
        is currently disabled for Squid instances containing SMP-aware
        disk or memory caches and for Vary-controlled cached objects.
+
+       A response reused by the collapsed request is deemed fresh in that
+       request processing context -- Squid does not apply refresh_pattern and
+       internal freshness validation checks to collapsed transactions. Squid
+       does apply send_hit rules.
 DOC_END
 
 NAME: collapsed_forwarding_access

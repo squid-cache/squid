@@ -170,10 +170,10 @@ ICPState::confirmAndPrepHit(const StoreEntry &e) const
     if (!e.validToSend())
         return false;
 
-    if (!Config.onoff.icp_hit_stale && refreshCheckICP(&e, request))
+    if (e.hittingRequiresCollapsing() && !startCollapsingOn(e, false))
         return false;
 
-    if (e.hittingRequiresCollapsing() && !startCollapsingOn(e, false))
+    if (!Config.onoff.icp_hit_stale && !didCollapse && refreshCheckICP(&e, request))
         return false;
 
     return true;
