@@ -14,6 +14,11 @@ on:
   push:
     branches: [ "auto" ]
 
+concurrency:
+  # Cancel ongoing tests in case of push to staging branch.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   linux-distros:
 
@@ -24,8 +29,8 @@ jobs:
           - debian-stable
           - debian-testing
           - debian-unstable
-          - fedora-39
           - fedora-40
+          - fedora-41
           - fedora-rawhide
           - gentoo
           - opensuse-leap
@@ -49,12 +54,18 @@ jobs:
 
     name: linux-distros(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
     env:
-      CC: ${{ matrix.compiler.CC }}
-      CXX: ${{ matrix.compiler.CXX }}
+      CC: /usr/bin/ccache ${{ matrix.compiler.CC }}
+      CXX: /usr/bin/ccache ${{ matrix.compiler.CXX }}
 
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2.14
+        with:
+          verbose: 2 # default 0
+          key: ${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
 
       - name: Run test-builds
         id: test-builds
@@ -122,4 +133,51 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-logs-macos
+          path: btlayer-*.log
+
+  freebsd:
+    strategy:
+      matrix:
+        osversion:
+          - 14.1
+          - 13.3
+
+    runs-on: ubuntu-22.04
+    name: freebsd(${{ matrix.osversion }})
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Run test-builds
+        id: test-builds
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          release: ${{ matrix.osversion }}
+          prepare: |
+            pkg update
+            pkg install -y \
+              autoconf \
+              autoconf-archive \
+              automake \
+              bash \
+              cppunit \
+              gmake \
+              libltdl \
+              libtool \
+              m4 \
+              nettle \
+              pkgconf \
+              translate-toolkit
+
+          run: |
+            export MAKE=gmake
+            ./test-builds.sh
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-freebsd-${{ matrix.osversion }}
           path: btlayer-*.log

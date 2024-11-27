@@ -1609,6 +1609,12 @@ IF USE_OPENSSL
 	  #
 	  # Unlike dstdomain, this ACL does not perform DNS lookups.
 	  #
+	  # A server name may be an IP address. For example, subject alternative
+	  # names (a.k.a. SANs) in some real server certificates include IPv4 and
+	  # IPv6 entries. Internally, Squid uses inet_ntop(3) to prep IP names for
+	  # matching. When using IPv6 names, use "::" notation (if applicable).
+	  # Do not use brackets. For example: 1080::8:800:200c:417a.
+	  #
 	  # An ACL option below may be used to restrict what information
 	  # sources are used to extract the server names from:
 	  #
@@ -1632,6 +1638,10 @@ IF USE_OPENSSL
 
 	acl aclname ssl::server_name_regex [-i] \.foo\.com ...
 	  # regex matches server name obtained from various sources [fast]
+	  #
+	  # See ssl::server_name for details, including IPv6 address formatting
+	  # caveats. Use case-insensitive matching (i.e. -i option) to reduce
+	  # dependency on how Squid formats or sanitizes server names.
 
 	acl aclname connections_encrypted
 	  # matches transactions with all HTTP messages received over TLS
@@ -5708,7 +5718,7 @@ DOC_START
 
 	Most messages have _not_ been instrumented to support this directive
 	yet. For the list of instrumented messages and their IDs, please see
-	the doc/debug-messages.txt file.
+	the doc/debug-messages.dox file.
 
 	Message ID corresponds to the message semantics rather than message
 	text or source code location. The ID is stable across Squid
@@ -6628,16 +6638,14 @@ TYPE: int
 DEFAULT: 95
 LOC: Config.quickAbort.pct
 DOC_START
-	The cache by default continues downloading aborted requests
-	which are almost completed (less than 16 KB remaining). This
-	may be undesirable on slow (e.g. SLIP) links and/or very busy
-	caches.  Impatient users may tie up file descriptors and
-	bandwidth by repeatedly requesting and immediately aborting
-	downloads.
-
-	When the user aborts a request, Squid will check the
-	quick_abort values to the amount of data transferred until
-	then.
+	Continuing to download a cachable response after its request is aborted is
+	going to waste resources if the received response is not requested again.
+	On the other hand, aborting an in-progress download may effectively waste
+	(already spent) resources if the received cachable response is requested
+	again. Such waste is especially noticeable when, for example, impatient
+	users repeatedly request and then abort slow downloads. To balance these
+	trade-offs when a request is aborted during response download, Squid may
+	check quick_abort_* directives to decide whether to finish the retrieval:
 
 	If the transfer has less than 'quick_abort_min' KB remaining,
 	it will finish the retrieval.
@@ -6654,6 +6662,10 @@ DOC_START
 
 	If you want retrievals to always continue if they are being
 	cached set 'quick_abort_min' to '-1 KB'.
+
+	Many other conditions affect Squid decision to abort or continue download.
+	For example, Squid continues to download responses that feed other
+	requests but aborts responses with unknown body length.
 DOC_END
 
 NAME: read_ahead_gap

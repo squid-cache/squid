@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/AsyncFunCalls.h"
+#include "base/OnOff.h"
 #include "ClientInfo.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
@@ -78,7 +79,7 @@ static void commPlanHalfClosedCheck();
 static Comm::Flag commBind(int s, struct addrinfo &);
 static void commSetBindAddressNoPort(int);
 static void commSetReuseAddr(int);
-static void commSetNoLinger(int);
+static void commConfigureLinger(int fd, OnOff);
 #ifdef TCP_NODELAY
 static void commSetTcpNoDelay(int);
 #endif
@@ -485,7 +486,7 @@ comm_apply_flags(int new_socket,
 #if _SQUID_WINDOWS_
         if (sock_type != SOCK_DGRAM)
 #endif
-            commSetNoLinger(new_socket);
+            commConfigureLinger(new_socket, OnOff::off);
 
         if (opt_reuseaddr)
             commSetReuseAddr(new_socket);
@@ -554,13 +555,6 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
     assert(AI);
 
     comm_init_opened(conn, note, AI);
-
-    if (conn->local.port() > (unsigned short) 0) {
-#if _SQUID_WINDOWS_
-        if (AI->ai_socktype != SOCK_DGRAM)
-#endif
-            fd_table[conn->fd].flags.nolinger = true;
-    }
 
     if ((conn->flags & COMM_TRANSPARENT))
         fd_table[conn->fd].flags.transparent = true;
@@ -780,6 +774,23 @@ commCallCloseHandlers(int fd)
     }
 }
 
+/// sets SO_LINGER socket(7) option
+/// \param enabled -- whether linger will be active (sets linger::l_onoff)
+static void
+commConfigureLinger(const int fd, const OnOff enabled)
+{
+    struct linger l = {};
+    l.l_onoff = (enabled == OnOff::on ? 1 : 0);
+    l.l_linger = 0; // how long to linger for, in seconds
+
+    fd_table[fd].flags.harshClosureRequested = (l.l_onoff && !l.l_linger); // close(2) sends TCP RST if true
+
+    if (setsockopt(fd, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
+        const auto xerrno = errno;
+        debugs(50, DBG_CRITICAL, "ERROR: Failed to set closure behavior (SO_LINGER) for FD " << fd << ": " << xstrerr(xerrno));
+    }
+}
+
 /**
  * enable linger with time of 0 so that when the socket is
  * closed, TCP generates a RESET
@@ -787,30 +798,21 @@ commCallCloseHandlers(int fd)
 void
 comm_reset_close(const Comm::ConnectionPointer &conn)
 {
-    struct linger L;
-    L.l_onoff = 1;
-    L.l_linger = 0;
-
-    if (setsockopt(conn->fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_CRITICAL, "ERROR: Closing " << conn << " with TCP RST: " << xstrerr(xerrno));
+    if (Comm::IsConnOpen(conn)) {
+        commConfigureLinger(conn->fd, OnOff::on);
+        debugs(5, 7, conn->id);
+        conn->close();
     }
-    conn->close();
 }
 
 // Legacy close function.
 void
 old_comm_reset_close(int fd)
 {
-    struct linger L;
-    L.l_onoff = 1;
-    L.l_linger = 0;
-
-    if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_CRITICAL, "ERROR: Closing FD " << fd << " with TCP RST: " << xstrerr(xerrno));
+    if (fd >= 0) {
+        commConfigureLinger(fd, OnOff::on);
+        comm_close(fd);
     }
-    comm_close(fd);
 }
 
 static void
@@ -877,7 +879,7 @@ _comm_close(int fd, char const *file, int line)
     // For simplicity sake, we remain in the caller's context while still
     // allowing individual advanced callbacks to overwrite it.
 
-    if (F->ssl) {
+    if (F->ssl && !F->flags.harshClosureRequested) {
         const auto startCall = asyncCall(5, 4, "commStartTlsClose",
                                          callDialer(commStartTlsClose, fd));
         ScheduleCallHere(startCall);
@@ -1019,21 +1021,6 @@ comm_remove_close_handler(int fd, AsyncCall::Pointer &call)
     if (p != nullptr)
         p->dequeue(fd_table[fd].closeHandler, prev);
     call->cancel("comm_remove_close_handler");
-}
-
-static void
-commSetNoLinger(int fd)
-{
-
-    struct linger L;
-    L.l_onoff = 0;      /* off */
-    L.l_linger = 0;
-
-    if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_CRITICAL, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
-    }
-    fd_table[fd].flags.nolinger = true;
 }
 
 static void

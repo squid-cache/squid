@@ -58,7 +58,8 @@ static void neighborAlive(CachePeer *, const MemObject *, const icp_common_t *);
 static void neighborAliveHtcp(CachePeer *, const MemObject *, const HtcpReplyData *);
 #endif
 static void neighborCountIgnored(CachePeer *);
-static void peerRefreshDNS(void *);
+static void peerDnsRefreshCheck(void *);
+static void peerDnsRefreshStart();
 static IPH peerDNSConfigure;
 static void peerProbeConnect(CachePeer *, const bool reprobeIfBusy = false);
 static CNCB peerProbeConnectDone;
@@ -533,7 +534,7 @@ neighbors_init(void)
         }
     }
 
-    peerRefreshDNS((void *) 1);
+    peerDnsRefreshStart();
 
     sep = getservbyname("echo", "udp");
     echo_port = sep ? ntohs((unsigned short) sep->s_port) : 7;
@@ -1148,22 +1149,32 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
 }
 
 static void
-peerRefreshDNS(void *data)
+peerScheduleDnsRefreshCheck(const double delayInSeconds)
 {
-    if (eventFind(peerRefreshDNS, nullptr))
-        eventDelete(peerRefreshDNS, nullptr);
+    if (eventFind(peerDnsRefreshCheck, nullptr))
+        eventDelete(peerDnsRefreshCheck, nullptr);
+    eventAddIsh("peerDnsRefreshCheck", peerDnsRefreshCheck, nullptr, delayInSeconds, 1);
+}
 
-    if (!data && 0 == stat5minClientRequests()) {
+static void
+peerDnsRefreshCheck(void *)
+{
+    if (!stat5minClientRequests()) {
         /* no recent client traffic, wait a bit */
-        eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 180.0, 1);
+        peerScheduleDnsRefreshCheck(180.0);
         return;
     }
 
+    peerDnsRefreshStart();
+}
+
+static void
+peerDnsRefreshStart()
+{
     for (const auto &p: CurrentCachePeers())
         ipcache_nbgethostbyname(p->host, peerDNSConfigure, p.get());
 
-    /* Reconfigure the peers every hour */
-    eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 3600.0, 1);
+    peerScheduleDnsRefreshCheck(3600.0);
 }
 
 /// whether new TCP probes are currently banned
