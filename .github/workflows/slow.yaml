@@ -188,6 +188,11 @@ jobs:
   coverity-scan:
     runs-on: ubuntu-22.04
     name: Scan with Coverity
+    env:
+        coverity_url: ${{ vars.COVERITY_URL }}
+        coverity_user: ${{ secrets.COVERITY_USER }}
+        coverity_passphrase: ${{ secrets.COVERITY_PASSPHRASE }}
+
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
