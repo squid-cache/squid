@@ -187,7 +187,7 @@ jobs:
 
   coverity-scan:
     runs-on: ubuntu-22.04
-    name: Scan with Coverity
+    name: Coverity Scan
     env:
         coverity_url: ${{ vars.COVERITY_URL }}
         coverity_user: ${{ secrets.COVERITY_USER }}
@@ -206,3 +206,5 @@ jobs:
           coverity_project_name: ${{ github.event.repository.name }}
           coverity_stream_name: ${{ github.event.repository.name }}-${{ github.ref_name }}
           coverity_policy_view: 'Outstanding Issues'
+          coverity_waitForScan: true
+          coverity_build_command: ./test-builds.sh layer-02-maximus
