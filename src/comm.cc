@@ -1155,7 +1155,7 @@ comm_init(void)
     assert(fd_table);
 
     /* make sure the accept() socket FIFO delay queue exists */
-    Comm::AcceptLimiter::Instance();
+    (void)Comm::AcceptLimiter::Instance();
 
     // make sure the IO pending callback table exists
     Comm::CallbackTableInit();
