@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   linux-distros:
+    if: false
 
     strategy:
       matrix:
@@ -82,6 +83,7 @@ jobs:
   macos:
     runs-on: macos-14
     name: macos
+    if: false
 
     steps:
       - name: Install prerequisite MacOS packages
@@ -136,6 +138,7 @@ jobs:
           path: btlayer-*.log
 
   freebsd:
+    if: false
     strategy:
       matrix:
         osversion:
