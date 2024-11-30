@@ -505,7 +505,8 @@ public:
     struct {
         Security::FuturePeerContext *defaultPeerContext;
         // TODO: Remove when FuturePeerContext above becomes PeerContext
-        Security::ContextPointer sslContext;
+        /// \deprecated Legacy storage. Use defaultPeerContext instead.
+        Security::ContextPointer *sslContext_;
 #if USE_OPENSSL
         char *foreignIntermediateCertsPath;
         acl_access *cert_error;
