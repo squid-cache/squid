@@ -588,7 +588,7 @@ commUnsetFdTimeout(int fd)
     F->timeout = 0;
 }
 
-int
+time_t
 commSetConnTimeout(const Comm::ConnectionPointer &conn, time_t timeout, AsyncCall::Pointer &callback)
 {
     debugs(5, 3, conn << " timeout " << timeout);
@@ -614,7 +614,7 @@ commSetConnTimeout(const Comm::ConnectionPointer &conn, time_t timeout, AsyncCal
     return F->timeout;
 }
 
-int
+time_t
 commUnsetConnTimeout(const Comm::ConnectionPointer &conn)
 {
     debugs(5, 3, "Remove timeout for " << conn);

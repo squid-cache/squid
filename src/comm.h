@@ -75,8 +75,8 @@ void commUnsetFdTimeout(int fd);
  * Set or clear the timeout for some action on an active connection.
  * API to replace commSetTimeout() when a Comm::ConnectionPointer is available.
  */
-int commSetConnTimeout(const Comm::ConnectionPointer &conn, time_t seconds, AsyncCall::Pointer &callback);
-int commUnsetConnTimeout(const Comm::ConnectionPointer &conn);
+time_t commSetConnTimeout(const Comm::ConnectionPointer &conn, time_t seconds, AsyncCall::Pointer &callback);
+time_t commUnsetConnTimeout(const Comm::ConnectionPointer &conn);
 
 int ignoreErrno(int);
 void commCloseAllSockets(void);
