@@ -1684,11 +1684,17 @@ snmpStatGet(int minutes)
     return &CountHist[minutes];
 }
 
-int
-stat5minClientRequests(void)
+bool
+statSawRecentRequests()
 {
-    assert(N_COUNT_HIST > 5);
-    return statCounter.client_http.requests - CountHist[5].client_http.requests;
+    const auto recentMinutes = 5;
+    assert(N_COUNT_HIST > recentMinutes);
+
+    // Math below computes the number of requests during the last 0-6 minutes.
+    // CountHist is based on "minutes passed since Squid start" periods. It cannot
+    // deliver precise info for "last N minutes", but we do not need to be precise.
+    const auto oldRequests = (NCountHist > recentMinutes) ? CountHist[recentMinutes].client_http.requests : 0;
+    return statCounter.client_http.requests - oldRequests;
 }
 
 static double

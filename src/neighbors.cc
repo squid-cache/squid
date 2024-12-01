@@ -1159,7 +1159,7 @@ peerScheduleDnsRefreshCheck(const double delayInSeconds)
 static void
 peerDnsRefreshCheck(void *)
 {
-    if (!stat5minClientRequests()) {
+    if (!statSawRecentRequests()) {
         /* no recent client traffic, wait a bit */
         peerScheduleDnsRefreshCheck(180.0);
         return;

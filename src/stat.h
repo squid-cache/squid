@@ -14,8 +14,9 @@
 void statInit(void);
 double median_svc_get(int, int);
 void pconnHistCount(int, int);
-int stat5minClientRequests(void);
-double stat5minCPUUsage(void);
+/// whether we processed any incoming requests in the last few minutes
+/// \sa ClientHttpRequest::updateCounters()
+bool statSawRecentRequests();
 double statRequestHitRatio(int minutes);
 double statRequestHitMemoryRatio(int minutes);
 double statRequestHitDiskRatio(int minutes);
