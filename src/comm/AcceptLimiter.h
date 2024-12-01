@@ -43,8 +43,6 @@ public:
     void kick();
 
 private:
-    static AcceptLimiter Instance_;
-
     /** FIFO queue */
     std::deque<TcpAcceptor::Pointer> deferred_;
 };

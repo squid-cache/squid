@@ -13,12 +13,11 @@
 #include "fde.h"
 #include "globals.h"
 
-Comm::AcceptLimiter Comm::AcceptLimiter::Instance_;
-
 Comm::AcceptLimiter &
 Comm::AcceptLimiter::Instance()
 {
-    return Instance_;
+    static const auto Instance_ = new AcceptLimiter();
+    return *Instance_;
 }
 
 void
