@@ -588,7 +588,7 @@ commUnsetFdTimeout(int fd)
     F->timeout = 0;
 }
 
-time_t
+void
 commSetConnTimeout(const Comm::ConnectionPointer &conn, time_t timeout, AsyncCall::Pointer &callback)
 {
     debugs(5, 3, conn << " timeout " << timeout);
@@ -608,18 +608,16 @@ commSetConnTimeout(const Comm::ConnectionPointer &conn, time_t timeout, AsyncCal
             F->timeoutHandler = callback;
         }
 
-        F->timeout = squid_curtime + (time_t) timeout;
+        F->timeout = squid_curtime + timeout;
     }
-
-    return F->timeout;
 }
 
-time_t
+void
 commUnsetConnTimeout(const Comm::ConnectionPointer &conn)
 {
     debugs(5, 3, "Remove timeout for " << conn);
     AsyncCall::Pointer nil;
-    return commSetConnTimeout(conn, -1, nil);
+    commSetConnTimeout(conn, -1, nil);
 }
 
 /**
