@@ -96,9 +96,9 @@ int squidaio_stat(const char *, struct stat *, squidaio_result_t *);
 int squidaio_unlink(const char *, squidaio_result_t *);
 int squidaio_opendir(const char *, squidaio_result_t *);
 squidaio_result_t *squidaio_poll_done(void);
-int squidaio_operations_pending(void);
+size_t squidaio_operations_pending();
 int squidaio_sync(void);
-int squidaio_get_queue_len(void);
+size_t squidaio_get_queue_len();
 void *squidaio_xmalloc(int size);
 void squidaio_xfree(void *p, int size);
 void squidaio_stats(StoreEntry *);
@@ -113,7 +113,7 @@ void aioRead(int, off_t offset, size_t size, AIOCB *, void *);
 
 void aioStat(char *, struct stat *, AIOCB *, void *);
 void aioUnlink(const char *, AIOCB *, void *);
-int aioQueueSize(void);
+size_t aioQueueSize();
 
 #include "DiskIO/DiskFile.h"
 
