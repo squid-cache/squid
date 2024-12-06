@@ -186,10 +186,13 @@ jobs:
           path: btlayer-*.log
 
   coverity-scan:
-    runs-on: ubuntu-22.04
     name: Coverity Scan
+    runs-on: ubuntu-22.04
+    if: ${{ secrets.COVERITY_USER }} && ${{ secrets.COVERITY_PASSPHRASE }}
+    container:
+      image: squidcache/buildfarm-coverity:stable
+      options: --user 1001 # uid used by worfklow runner
     env:
-        coverity_url: ${{ vars.COVERITY_URL }}
         coverity_user: ${{ secrets.COVERITY_USER }}
         coverity_passphrase: ${{ secrets.COVERITY_PASSPHRASE }}
 
@@ -198,13 +201,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Coverity Full Scan
-        uses: synopsys-sig/synopsys-action@v1.13.0
-        with:
-          coverity_url: ${{ vars.COVERITY_URL }}
-          coverity_user: ${{ secrets.COVERITY_USER }}
-          coverity_passphrase: ${{ secrets.COVERITY_PASSPHRASE }}
-          coverity_project_name: ${{ github.event.repository.name }}
-          coverity_stream_name: ${{ github.event.repository.name }}-${{ github.ref_name }}
-          coverity_policy_view: 'Outstanding Issues'
-          coverity_waitForScan: true
-          coverity_build_command: ./test-builds.sh layer-02-maximus
+        run: |
+          cov-build --dir cov-int ./test-builds.sh layer-02-maximus
+          tar cfz cov-int.tar.gz cov-int
+          curl --form project=Squid \
+            --form file=@cov-int.tar.gz \
+            --form token=${coverity_passphrase} \
+            --form email=$${coverity_user} \
+            https://scan.coverity.com/builds
