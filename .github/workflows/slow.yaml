@@ -203,11 +203,11 @@ jobs:
       - name: Coverity Full Scan
         if: ${{ env.coverity_user }} && ${{ env.coverity_token }}
         run: |
+          echo "user:  ${{ env.coverity_user }}"
           cov-build --dir cov-int ./test-builds.sh layer-02-maximus
           tar cfz cov-int.tar.gz cov-int
-          echo "user: ${coverity_user}"
           curl --form project=Squid \
             --form file=@cov-int.tar.gz \
-            --form token=${coverity_token} \
-            --form email=${coverity_user} \
+            --form token="${{ env.coverity_token }}" \
+            --form email="${{ env.coverity_user }}" \
             https://scan.coverity.com/builds
