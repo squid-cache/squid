@@ -19,6 +19,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  coverity_user: ${{ secrets.COVERITY_USER }}
+  coverity_token: ${{ secrets.COVERITY_TOKEN }}
+
 jobs:
   linux-distros:
     if: false
@@ -188,9 +192,6 @@ jobs:
   coverity-scan:
     name: Coverity Scan
     runs-on: ubuntu-22.04
-    env:
-      coverity_user: ${{ secrets.COVERITY_USER }}
-      coverity_token: ${{ secrets.COVERITY_TOKEN }}
 
     if: ${{ env.coverity_user }} && ${{ env.coverity_token }}
     container:
