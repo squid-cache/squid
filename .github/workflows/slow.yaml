@@ -190,7 +190,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       coverity_user: ${{ secrets.COVERITY_USER }}
-      coverity_token: ${{ secrets.COVERITY_TOKEN }}
+      coverity_token: ${{ secrets.COVERITY_PASSPHRASE }}
 
     container:
       image: squidcache/buildfarm-coverity:stable
