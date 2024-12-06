@@ -215,7 +215,6 @@ squidaio_xstrfree(char *str)
 void
 squidaio_init(void)
 {
-    size_t i;
     squidaio_thread_t *threadp;
 
     if (squidaio_initialised)
@@ -294,7 +293,7 @@ squidaio_init(void)
 
     assert(NUMTHREADS != 0);
 
-    for (i = 0; i < NUMTHREADS; ++i) {
+    for (size_t i = 0; i < NUMTHREADS; ++i) {
         threadp = (squidaio_thread_t *)squidaio_thread_pool->alloc();
         threadp->status = _THREAD_STARTING;
         threadp->current_req = nullptr;
@@ -999,7 +998,6 @@ void
 squidaio_stats(StoreEntry * sentry)
 {
     squidaio_thread_t *threadp;
-    size_t i;
 
     if (!squidaio_initialised)
         return;
@@ -1010,7 +1008,7 @@ squidaio_stats(StoreEntry * sentry)
 
     threadp = threads;
 
-    for (i = 0; i < NUMTHREADS; ++i) {
+    for (size_t i = 0; i < NUMTHREADS; ++i) {
         storeAppendPrintf(sentry, "%zu\t0x%lx\t%ld\n", i + 1, (unsigned long)threadp->thread, threadp->requests);
         threadp = threadp->next;
     }

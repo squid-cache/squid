@@ -1039,7 +1039,6 @@ int
 Fs::Ufs::UFSSwapDir::HandleCleanEvent()
 {
     static int swap_index = 0;
-    size_t i;
     int j = 0;
     size_t n = 0;
 
@@ -1054,7 +1053,7 @@ Fs::Ufs::UFSSwapDir::HandleCleanEvent()
          */
         UFSDirToGlobalDirMapping = (int *)xcalloc(NumberOfUFSDirs, sizeof(*UFSDirToGlobalDirMapping));
 
-        for (i = 0, n = 0; i < Config.cacheSwap.n_configured; ++i) {
+        for (size_t i = 0; i < Config.cacheSwap.n_configured; ++i) {
             /* This is bogus, the controller should just clean each instance once */
             sd = dynamic_cast <SwapDir *>(INDEXSD(i));
 
