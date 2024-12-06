@@ -19,10 +19,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  coverity_user: ${{ secrets.COVERITY_USER }}
-  coverity_token: ${{ secrets.COVERITY_TOKEN }}
-
 jobs:
   linux-distros:
     if: false
@@ -192,8 +188,10 @@ jobs:
   coverity-scan:
     name: Coverity Scan
     runs-on: ubuntu-22.04
+    env:
+      coverity_user: ${{ secrets.COVERITY_USER }}
+      coverity_token: ${{ secrets.COVERITY_TOKEN }}
 
-    if: ${{ env.coverity_user }} && ${{ env.coverity_token }}
     container:
       image: squidcache/buildfarm-coverity:stable
       options: --user 1001 # uid used by worfklow runner
@@ -203,6 +201,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Coverity Full Scan
+        if: ${{ env.coverity_user }} && ${{ env.coverity_token }}
         run: |
           cov-build --dir cov-int ./test-builds.sh layer-02-maximus
           tar cfz cov-int.tar.gz cov-int
