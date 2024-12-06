@@ -188,13 +188,14 @@ jobs:
   coverity-scan:
     name: Coverity Scan
     runs-on: ubuntu-22.04
-    if: ${{ secrets.COVERITY_USER }} && ${{ secrets.COVERITY_PASSPHRASE }}
+    env:
+      coverity_user: ${{ secrets.COVERITY_USER }}
+      coverity_token: ${{ secrets.COVERITY_TOKEN }}
+
+    if: ${{ env.coverity_user }} && ${{ env.coverity_token }}
     container:
       image: squidcache/buildfarm-coverity:stable
       options: --user 1001 # uid used by worfklow runner
-    env:
-        coverity_user: ${{ secrets.COVERITY_USER }}
-        coverity_passphrase: ${{ secrets.COVERITY_PASSPHRASE }}
 
     steps:
       - name: Checkout Sources
