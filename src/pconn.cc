@@ -73,7 +73,8 @@ IdleConnList::~IdleConnList()
 int
 IdleConnList::findIndexOf(const Comm::ConnectionPointer &conn) const
 {
-    for (int index = size_ - 1; index >= 0; --index) {
+    for (auto right = size_; right > 0; --right) {
+        const auto index = right - 1;
         if (conn->fd == theList_[index]->fd) {
             debugs(48, 3, "found " << conn << " at index " << index);
             return index;
@@ -89,10 +90,11 @@ IdleConnList::findIndexOf(const Comm::ConnectionPointer &conn) const
  * \retval false The index is not an in-use entry.
  */
 bool
-IdleConnList::removeAt(int index)
+IdleConnList::removeAt(size_t index)
 {
-    if (index < 0 || index >= size_)
+    if (index >= size_)
         return false;
+    assert(size_ > 0);
 
     // shuffle the remaining entries to fill the new gap.
     for (; index < size_ - 1; ++index)
@@ -112,12 +114,12 @@ IdleConnList::removeAt(int index)
 
 // almost a duplicate of removeFD. But drops multiple entries.
 void
-IdleConnList::closeN(size_t n)
+IdleConnList::closeN(const size_t n)
 {
     if (n < 1) {
         debugs(48, 2, "Nothing to do.");
         return;
-    } else if (n >= (size_t)size_) {
+    } else if (n >= size_) {
         debugs(48, 2, "Closing all entries.");
         while (size_ > 0) {
             const Comm::ConnectionPointer conn = theList_[--size_];
@@ -141,11 +143,11 @@ IdleConnList::closeN(size_t n)
                 parent_->noteConnectionRemoved();
         }
         // shuffle the list N down.
-        for (index = 0; index < (size_t)size_ - n; ++index) {
+        for (index = 0; index < size_ - n; ++index) {
             theList_[index] = theList_[index + n];
         }
         // ensure the last N entries are unset
-        while (index < ((size_t)size_)) {
+        while (index < size_) {
             theList_[index] = nullptr;
             ++index;
         }
@@ -174,7 +176,7 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
         capacity_ <<= 1;
         const Comm::ConnectionPointer *oldList = theList_;
         theList_ = new Comm::ConnectionPointer[capacity_];
-        for (int index = 0; index < size_; ++index)
+        for (size_t index = 0; index < size_; ++index)
             theList_[index] = oldList[index];
 
         delete[] oldList;
@@ -214,7 +216,8 @@ IdleConnList::isAvailable(int i) const
 Comm::ConnectionPointer
 IdleConnList::pop()
 {
-    for (int i=size_-1; i>=0; --i) {
+    for (auto right = size_; right > 0; --right) {
+        const auto i = right - 1;
 
         if (!isAvailable(i))
             continue;
@@ -252,7 +255,8 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &aKey)
     const bool keyCheckAddr = !aKey->local.isAnyAddr();
     const bool keyCheckPort = aKey->local.port() > 0;
 
-    for (int i=size_-1; i>=0; --i) {
+    for (auto right = size_; right > 0; --right) {
+        const auto i = right - 1;
 
         if (!isAvailable(i))
             continue;

@@ -211,16 +211,18 @@ storeRebuildStart(void)
  * progress.
  */
 void
-storeRebuildProgress(int sd_index, int total, int sofar)
+storeRebuildProgress(const int sd_index_raw, const int total, const int sofar)
 {
     static time_t last_report = 0;
     // TODO: Switch to int64_t and fix handling of unknown totals.
     double n = 0.0;
     double d = 0.0;
 
-    if (sd_index < 0)
+    if (sd_index_raw < 0)
         return;
 
+    // TODO: Upgrade Disk::index and sd_index_raw to size_t, removing this cast.
+    const auto sd_index = static_cast<size_t>(sd_index_raw);
     if (sd_index >= Config.cacheSwap.n_configured)
         return;
 
@@ -234,9 +236,9 @@ storeRebuildProgress(int sd_index, int total, int sofar)
     if (squid_curtime - last_report < 15)
         return;
 
-    for (sd_index = 0; sd_index < Config.cacheSwap.n_configured; ++sd_index) {
-        n += (double) RebuildProgress[sd_index].scanned;
-        d += (double) RebuildProgress[sd_index].total;
+    for (size_t diskIndex = 0; diskIndex < Config.cacheSwap.n_configured; ++diskIndex) {
+        n += (double) RebuildProgress[diskIndex].scanned;
+        d += (double) RebuildProgress[diskIndex].total;
     }
 
     debugs(20, Important(57), "Indexing cache entries: " << Progress(n, d));

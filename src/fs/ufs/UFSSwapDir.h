@@ -123,7 +123,7 @@ protected:
 
 private:
     void parseSizeL1L2();
-    static int NumberOfUFSDirs;
+    static size_t NumberOfUFSDirs;
     static int * UFSDirToGlobalDirMapping;
     bool pathIsDirectory(const char *path)const;
     int swaplog_fd;
