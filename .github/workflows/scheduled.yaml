@@ -1,8 +1,10 @@
 # Tests in this workflow are run periodically.
 # They are generally very expensive and not on the critical path
 # for development
+# scheduled workflows only run in the default branch
 
-# scheduled workwlows only run in the default branch
+name: Scheduled Tests
+
 on:
   schedule:
     - cron: "42 3 * * 0"
@@ -14,6 +16,9 @@ concurrency:
 jobs:
   coverity-scan:
     name: Scan with Coverity
+    # only run the workflow on Squid's main repository
+    if: github.repository == 'squid-cache/squid'
+
     runs-on: ubuntu-22.04
     # this job only runs if the github repository contains username
     # and password to access the Coverity Scan service
