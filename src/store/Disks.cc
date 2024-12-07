@@ -80,7 +80,7 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
         firstCandidate = 0;
 
     for (size_t i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        const int dirn = (firstCandidate + i) % Config.cacheSwap.n_configured;
+        const auto dirn = (firstCandidate + i) % Config.cacheSwap.n_configured;
         auto &dir = SwapDirByIndex(dirn);
 
         int load = 0;
