@@ -202,11 +202,16 @@ jobs:
 
       - name: Coverity Full Scan
         if: ${{ env.coverity_user }} && ${{ env.coverity_token }}
+        env:
+          coverity_token: ${{ secrets.COVERITY_PASSPHRASE }}
+          coverity_user: ${{ secrets.COVERITY_USER }}
+
         run: |
           cov-build --dir cov-int ./test-builds.sh layer-02-maximus
-          tar cfz cov-int.tar.gz cov-int
-          curl --form project=Squid \
-            --form file=@cov-int.tar.gz \
-            --form token="${coverity_token}" \
-            --form email="${coverity_user}" \
-            https://scan.coverity.com/builds
+          tar caf cov-int.tar.xz cov-int
+          curl \
+            --form email=${coverity_user} \
+            --form token=${coverity_token} \
+            --form version=coverity_scan \
+            --form file=@cov-int.tar.xz \
+            https://scan.coverity.com/builds?project=Squid
