@@ -119,7 +119,7 @@ IdleConnList::closeN(size_t n)
     if (n < 1) {
         debugs(48, 2, "Nothing to do.");
         return;
-    } else if (n >= (size_t)size_) {
+    } else if (n >= size_) {
         debugs(48, 2, "Closing all entries.");
         while (size_ > 0) {
             const Comm::ConnectionPointer conn = theList_[--size_];
@@ -143,11 +143,11 @@ IdleConnList::closeN(size_t n)
                 parent_->noteConnectionRemoved();
         }
         // shuffle the list N down.
-        for (index = 0; index < (size_t)size_ - n; ++index) {
+        for (index = 0; index < size_ - n; ++index) {
             theList_[index] = theList_[index + n];
         }
         // ensure the last N entries are unset
-        while (index < ((size_t)size_)) {
+        while (index < size_) {
             theList_[index] = nullptr;
             ++index;
         }
