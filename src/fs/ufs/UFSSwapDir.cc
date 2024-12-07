@@ -1111,7 +1111,7 @@ Fs::Ufs::UFSSwapDir::IsUFSDir(SwapDir * sd)
  * if not UFSSwapDir return 0;
  */
 bool
-Fs::Ufs::UFSSwapDir::FilenoBelongsHere(const int fn, const size_t F0, const int F1, const int F2)
+Fs::Ufs::UFSSwapDir::FilenoBelongsHere(int fn, int F0, int F1, int F2)
 {
     int D1, D2;
     int L1, L2;
