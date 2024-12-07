@@ -1116,7 +1116,8 @@ Fs::Ufs::UFSSwapDir::FilenoBelongsHere(int fn, int F0, int F1, int F2)
     int D1, D2;
     int L1, L2;
     int filn = fn;
-    assert(F0 < Config.cacheSwap.n_configured);
+    assert(F0 >= 0);
+    assert(static_cast<size_t>(F0) < Config.cacheSwap.n_configured);
     assert (UFSSwapDir::IsUFSDir (dynamic_cast<SwapDir *>(INDEXSD(F0))));
     UFSSwapDir *sd = dynamic_cast<UFSSwapDir *>(INDEXSD(F0));
 
