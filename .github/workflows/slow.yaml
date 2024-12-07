@@ -187,7 +187,7 @@ jobs:
           path: btlayer-*.log
 
   coverity-scan:
-    name: Coverity Scan
+    name: Scan with Coverity
     runs-on: ubuntu-22.04
     env:
       coverity_user: ${{ secrets.COVERITY_USER }}
@@ -199,9 +199,10 @@ jobs:
 
     steps:
       - name: Checkout Sources
+        if: env.coverity_user && env.coverity_token
         uses: actions/checkout@v4
 
-      - name: Scan with Coverity
+      - name: Scan
         if: env.coverity_user && env.coverity_token
         run: |
           cov-build --dir cov-int ./test-builds.sh layer-02-maximus
