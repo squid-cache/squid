@@ -201,7 +201,7 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
-      - name: Coverity Full Scan
+      - name: Scan with Coverity
         if: env.coverity_user && env.coverity_token
         run: |
           cov-build --dir cov-int ./test-builds.sh layer-02-maximus
