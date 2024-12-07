@@ -114,7 +114,7 @@ IdleConnList::removeAt(size_t index)
 
 // almost a duplicate of removeFD. But drops multiple entries.
 void
-IdleConnList::closeN(size_t n)
+IdleConnList::closeN(const size_t n)
 {
     if (n < 1) {
         debugs(48, 2, "Nothing to do.");

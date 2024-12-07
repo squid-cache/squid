@@ -59,7 +59,9 @@ public:
 
     void clearHandlers(const Comm::ConnectionPointer &conn);
 
+    // TODO: Upgrade to return size_t
     int count() const { return size_; }
+
     void closeN(size_t count);
 
     // IndependentRunner API

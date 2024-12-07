@@ -211,7 +211,7 @@ storeRebuildStart(void)
  * progress.
  */
 void
-storeRebuildProgress(size_t sd_index, int total, int sofar)
+storeRebuildProgress(size_t sd_index, const int total, const int sofar)
 {
     static time_t last_report = 0;
     // TODO: Switch to int64_t and fix handling of unknown totals.
