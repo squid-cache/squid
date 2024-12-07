@@ -190,7 +190,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       coverity_user: ${{ secrets.COVERITY_USER }}
-      coverity_token: ${{ secrets.COVERITY_PASSPHRASE }}
+      coverity_token: ${{ secrets.COVERITY_TOKEN }}
 
     container:
       image: squidcache/buildfarm-coverity:stable
@@ -203,8 +203,8 @@ jobs:
       - name: Coverity Full Scan
         if: ${{ env.coverity_user }} && ${{ env.coverity_token }}
         env:
-          coverity_token: ${{ secrets.COVERITY_PASSPHRASE }}
           coverity_user: ${{ secrets.COVERITY_USER }}
+          coverity_token: ${{ secrets.COVERITY_TOKEN }}
 
         run: |
           cov-build --dir cov-int ./test-builds.sh layer-02-maximus
