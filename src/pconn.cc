@@ -73,7 +73,8 @@ IdleConnList::~IdleConnList()
 int
 IdleConnList::findIndexOf(const Comm::ConnectionPointer &conn) const
 {
-    for (int index = size_ - 1; index >= 0; --index) {
+    for (auto right = size_; right > 0; --right) {
+        const auto index = right - 1;
         if (conn->fd == theList_[index]->fd) {
             debugs(48, 3, "found " << conn << " at index " << index);
             return index;
@@ -93,6 +94,7 @@ IdleConnList::removeAt(size_t index)
 {
     if (index >= size_)
         return false;
+    assert(size_ > 0);
 
     // shuffle the remaining entries to fill the new gap.
     for (; index < size_ - 1; ++index)
@@ -214,7 +216,8 @@ IdleConnList::isAvailable(int i) const
 Comm::ConnectionPointer
 IdleConnList::pop()
 {
-    for (int i=size_-1; i>=0; --i) {
+    for (auto right = size_; right > 0; --right) {
+        const auto i = right - 1;
 
         if (!isAvailable(i))
             continue;
@@ -252,7 +255,8 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &aKey)
     const bool keyCheckAddr = !aKey->local.isAnyAddr();
     const bool keyCheckPort = aKey->local.port() > 0;
 
-    for (int i=size_-1; i>=0; --i) {
+    for (auto right = size_; right > 0; --right) {
+        const auto i = right - 1;
 
         if (!isAvailable(i))
             continue;
