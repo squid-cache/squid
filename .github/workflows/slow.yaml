@@ -85,6 +85,7 @@ jobs:
     name: macos
     if: false
 
+
     steps:
       - name: Install prerequisite MacOS packages
         run: |
@@ -202,9 +203,6 @@ jobs:
 
       - name: Coverity Full Scan
         if: ${{ env.coverity_user }} && ${{ env.coverity_token }}
-        # env:
-        #   coverity_user: ${{ secrets.COVERITY_USER }}
-        #   coverity_token: ${{ secrets.COVERITY_TOKEN }}
 
         run: |
           cov-build --dir cov-int ./test-builds.sh layer-02-maximus
@@ -215,3 +213,4 @@ jobs:
             --form version=coverity_scan \
             --form file=@cov-int.tar.xz \
             https://scan.coverity.com/builds?project=Squid
+          true # ignore curl exit code
