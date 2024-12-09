@@ -40,6 +40,7 @@ jobs:
           cov-build --dir cov-int ./test-builds.sh layer-02-maximus
           tar caf cov-int.tar.xz cov-int
           curl \
+            --fail-with-body \
             --form email=${coverity_user} \
             --form token=${coverity_token} \
             --form version=coverity_scan \
