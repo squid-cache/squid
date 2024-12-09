@@ -46,4 +46,3 @@ jobs:
             --form version=coverity_scan \
             --form file=@cov-int.tar.xz \
             https://scan.coverity.com/builds?project=Squid
-          true # ignore curl exit code
