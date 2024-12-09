@@ -3,15 +3,13 @@
 # for development
 # scheduled workflows only run in the default branch
 
-name: Scheduled Tests
+name: Coverity Scan
 
 on:
   schedule:
     - cron: "42 3 * * 0" # once a week
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # allows to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   coverity-scan:
