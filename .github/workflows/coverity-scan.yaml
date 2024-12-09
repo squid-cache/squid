@@ -32,7 +32,6 @@ jobs:
 
     steps:
       - name: Checkout Sources
-        if: env.coverity_user && env.coverity_token
         uses: actions/checkout@v4
 
       - name: Scan
