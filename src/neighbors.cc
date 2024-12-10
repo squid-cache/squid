@@ -14,6 +14,7 @@
 #include "base/EnumIterator.h"
 #include "base/IoManip.h"
 #include "base/PackableStream.h"
+#include "base/PrecomputedCodeContext.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
@@ -570,8 +571,11 @@ neighborsUdpPing(HttpRequest * request,
 
     reqnum = icpSetCacheKey((const cache_key *)entry->key);
 
+    const auto savedContext = CodeContext::Current();
     for (size_t i = 0; i < Config.peers->size(); ++i) {
         const auto p = &Config.peers->nextPeerToPing(i);
+
+        CodeContext::Reset(p->probeCodeContext);
 
         debugs(15, 5, "candidate: " << *p);
 
@@ -661,6 +665,7 @@ neighborsUdpPing(HttpRequest * request,
         if ((p->type != PEER_MULTICAST) && (p->stats.probe_start == 0))
             p->stats.probe_start = squid_curtime;
     }
+    CodeContext::Reset(savedContext);
 
     /*
      * How many replies to expect?
@@ -1054,8 +1059,7 @@ int
 neighborUp(const CachePeer * p)
 {
     if (!p->tcp_up) {
-        // TODO: When CachePeer gets its own CodeContext, pass that context instead of nullptr
-        CallService(nullptr, [&] {
+        CallService(p->probeCodeContext, [&] {
             peerProbeConnect(const_cast<CachePeer*>(p));
         });
         return 0;
@@ -1171,8 +1175,12 @@ peerDnsRefreshCheck(void *)
 static void
 peerDnsRefreshStart()
 {
-    for (const auto &p: CurrentCachePeers())
+    const auto savedContext = CodeContext::Current();
+    for (const auto &p: CurrentCachePeers()) {
+        CodeContext::Reset(p->probeCodeContext);
         ipcache_nbgethostbyname(p->host, peerDNSConfigure, p.get());
+    }
+    CodeContext::Reset(savedContext);
 
     peerScheduleDnsRefreshCheck(3600.0);
 }
