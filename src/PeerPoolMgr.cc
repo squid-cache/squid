@@ -40,6 +40,7 @@ PeerPoolMgr::PeerPoolMgr(CachePeer *aPeer): AsyncJob("PeerPoolMgr"),
 
     codeContext = new PrecomputedCodeContext("cache_peer standby pool", ToSBuf("current cache_peer standby pool: ", *peer,
             Debug::Extra, "current master transaction: ", mx->id));
+
     // ErrorState, getOutgoingAddress(), and other APIs may require a request.
     // We fake one. TODO: Optionally send this request to peers?
     request = new HttpRequest(Http::METHOD_OPTIONS, AnyP::PROTO_HTTP, "http", "*", mx);

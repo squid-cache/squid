@@ -13,6 +13,8 @@
 #include "base/InstanceId.h"
 #include "sbuf/SBuf.h"
 
+#include <ostream>
+
 /// CodeContext with constant details known at construction time
 class PrecomputedCodeContext: public CodeContext
 {
