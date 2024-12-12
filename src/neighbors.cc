@@ -296,11 +296,13 @@ getFirstUpParent(PeerSelector *ps)
         if (!peerHTTPOkay(p, ps))
             continue;
 
-        break;
+        debugs(15, 3, "returning " << *p);
+
+        return p;
     }
 
-    debugs(15, 3, "returning " << RawPointer(p).orNil());
-    return p;
+    debugs(15, 3, "none found");
+    return nullptr;
 }
 
 CachePeer *
