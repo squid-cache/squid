@@ -36,7 +36,7 @@ jobs:
       - name: Prepare and upload sources to Coverity Scan
         run: |
           cov-build --dir cov-int ./test-builds.sh layer-02-maximus
-          tar caf cov-int.tar.xz cov-int
+          tar -c -a -f cov-int.tar.xz cov-int
           curl \
             --fail-with-body \
             --form email=${coverity_user} \
