@@ -282,10 +282,8 @@ getFirstUpParent(PeerSelector *ps)
     assert(ps);
     HttpRequest *request = ps->request;
 
-    CachePeer *p = nullptr;
-
     for (const auto &peer: CurrentCachePeers()) {
-        p = peer.get();
+        const auto p = peer.get();
 
         if (!neighborUp(p))
             continue;
@@ -297,7 +295,6 @@ getFirstUpParent(PeerSelector *ps)
             continue;
 
         debugs(15, 3, "returning " << *p);
-
         return p;
     }
 
