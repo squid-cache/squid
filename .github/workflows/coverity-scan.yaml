@@ -1,4 +1,4 @@
-# Coverity Scan service terms limit analysis requests frequency, 
+# Coverity Scan service terms limit analysis requests frequency,
 # and the service runs analysis in the background. Thus, we submit
 # default branch analysis requests on a schedule rather than testing PRs.
 
