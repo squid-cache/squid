@@ -33,7 +33,7 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
-      - name: Scan
+      - name: Prepare and upload sources to Coverity Scan
         run: |
           cov-build --dir cov-int ./test-builds.sh layer-02-maximus
           tar caf cov-int.tar.xz cov-int
