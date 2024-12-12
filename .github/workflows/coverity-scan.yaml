@@ -18,8 +18,9 @@ jobs:
     if: github.repository == 'squid-cache/squid'
 
     runs-on: ubuntu-22.04
-    # this job only runs if the github repository contains username
-    # and password to access the Coverity Scan service
+
+    # this job relies on GitHub repository configuration containing
+    # username and password to access the Coverity Scan service
     env:
       coverity_user: ${{ secrets.COVERITY_USER }}
       coverity_token: ${{ secrets.COVERITY_TOKEN }}
