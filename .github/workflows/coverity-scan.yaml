@@ -19,7 +19,7 @@ jobs:
 
     runs-on: ubuntu-22.04
 
-    # this job relies on GitHub repository configuration containing
+    # this job relies on GitHub repository secrets containing
     # username and password to access the Coverity Scan service
     env:
       coverity_user: ${{ secrets.COVERITY_USER }}
