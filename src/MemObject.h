@@ -168,10 +168,10 @@ public:
 
     SwapOut swapout;
 
-    static constexpr Store::IoStatus ioUndecided = Store::ioUndecided;
-    static constexpr Store::IoStatus ioReading = Store::ioReading;
-    static constexpr Store::IoStatus ioWriting = Store::ioWriting;
-    static constexpr Store::IoStatus ioDone = Store::ioDone;
+    // static constexpr Store::IoStatus ioUndecided = Store::ioUndecided;
+    // static constexpr Store::IoStatus ioReading = Store::ioReading;
+    // static constexpr Store::IoStatus ioWriting = Store::ioWriting;
+    // static constexpr Store::IoStatus ioDone = Store::ioDone;
 
     /// State of an entry with regards to the [shared] in-transit table.
     class XitTable
@@ -192,7 +192,7 @@ public:
         }
 
         int32_t index = -1; ///< entry position inside the in-transit table
-        Store::IoStatus io = ioUndecided; ///< current I/O state
+        Store::IoStatus io = Store::ioUndecided; ///< current I/O state
     };
     XitTable xitTable; ///< current [shared] memory caching state for the entry
 

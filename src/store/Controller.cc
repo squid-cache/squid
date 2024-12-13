@@ -18,6 +18,7 @@
 #include "store/LocalSearch.h"
 #include "tools.h"
 #include "Transients.h"
+#include "store/forward.h"
 
 #if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
@@ -801,7 +802,7 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
 
     bool found = false;
     bool inSync = false;
-    if (sharedMemStore && collapsed->mem_obj->memCache.io == MemObject::ioDone) {
+    if (sharedMemStore && collapsed->mem_obj->memCache.io == Store::ioDone) {
         found = true;
         inSync = true;
         debugs(20, 7, "already handled by memory store: " << *collapsed);
@@ -868,7 +869,7 @@ Store::Controller::anchorToCache(StoreEntry &entry)
     // TODO: Attach entries to both memory and disk
 
     // TODO: Reduce code duplication with syncCollapsed()
-    if (sharedMemStore && entry.mem().memCache.io == MemObject::ioDone) {
+    if (sharedMemStore && entry.mem().memCache.io == Store::ioDone) {
         debugs(20, 5, "already handled by memory store: " << entry);
         return true;
     } else if (sharedMemStore && entry.hasMemStore()) {
