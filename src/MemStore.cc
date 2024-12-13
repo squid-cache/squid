@@ -21,9 +21,9 @@
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
+#include "store/forward.h"
 #include "StoreStats.h"
 #include "tools.h"
-#include "store/forward.h"
 
 /// shared memory segment path to use for MemStore maps
 static const auto MapLabel = "cache_mem_map";

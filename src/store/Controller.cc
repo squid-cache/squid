@@ -15,10 +15,10 @@
 #include "SquidMath.h"
 #include "store/Controller.h"
 #include "store/Disks.h"
+#include "store/forward.h"
 #include "store/LocalSearch.h"
 #include "tools.h"
 #include "Transients.h"
-#include "store/forward.h"
 
 #if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
