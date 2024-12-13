@@ -21,6 +21,7 @@
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
+#include "store/forward.h"
 #include "StoreStats.h"
 #include "tools.h"
 
@@ -401,7 +402,7 @@ bool
 MemStore::anchorToCache(StoreEntry &entry)
 {
     Assure(!entry.hasMemStore());
-    Assure(entry.mem().memCache.io != MemObject::ioDone);
+    Assure(entry.mem().memCache.io != Store::ioDone);
 
     if (!map)
         return false;
@@ -462,7 +463,7 @@ MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
 
     MemObject::MemCache &mc = e.mem_obj->memCache;
     mc.index = index;
-    mc.io = MemObject::ioReading;
+    mc.io = Store::ioReading;
 }
 
 /// copies the entire entry from shared to local memory
@@ -656,7 +657,7 @@ MemStore::startCaching(StoreEntry &e)
 
     assert(e.mem_obj);
     e.mem_obj->memCache.index = index;
-    e.mem_obj->memCache.io = MemObject::ioWriting;
+    e.mem_obj->memCache.io = Store::ioWriting;
     slot->set(e);
     // Do not allow others to feed off an unknown-size entry because we will
     // stop swapping it out if it grows too large.
@@ -850,19 +851,19 @@ MemStore::write(StoreEntry &e)
     debugs(20, 7, "entry " << e);
 
     switch (e.mem_obj->memCache.io) {
-    case MemObject::ioUndecided:
+    case Store::ioUndecided:
         if (!shouldCache(e) || !startCaching(e)) {
-            e.mem_obj->memCache.io = MemObject::ioDone;
+            e.mem_obj->memCache.io = Store::ioDone;
             e.memOutDecision(false);
             return;
         }
         break;
 
-    case MemObject::ioDone:
-    case MemObject::ioReading:
+    case Store::ioDone:
+    case Store::ioReading:
         return; // we should not write in all of the above cases
 
-    case MemObject::ioWriting:
+    case Store::ioWriting:
         break; // already decided to write and still writing
     }
 
@@ -892,7 +893,7 @@ MemStore::completeWriting(StoreEntry &e)
     debugs(20, 5, "mem-cached all " << e.mem_obj->memCache.offset << " bytes of " << e);
 
     e.mem_obj->memCache.index = -1;
-    e.mem_obj->memCache.io = MemObject::ioDone;
+    e.mem_obj->memCache.io = Store::ioDone;
     map->closeForWriting(index);
 
     CollapsedForwarding::Broadcast(e);
@@ -931,17 +932,17 @@ MemStore::disconnect(StoreEntry &e)
     assert(e.mem_obj);
     MemObject &mem_obj = *e.mem_obj;
     if (e.hasMemStore()) {
-        if (mem_obj.memCache.io == MemObject::ioWriting) {
+        if (mem_obj.memCache.io == Store::ioWriting) {
             map->abortWriting(mem_obj.memCache.index);
             mem_obj.memCache.index = -1;
-            mem_obj.memCache.io = MemObject::ioDone;
+            mem_obj.memCache.io = Store::ioDone;
             CollapsedForwarding::Broadcast(e);
             e.storeWriterDone();
         } else {
-            assert(mem_obj.memCache.io == MemObject::ioReading);
+            assert(mem_obj.memCache.io == Store::ioReading);
             map->closeForReading(mem_obj.memCache.index);
             mem_obj.memCache.index = -1;
-            mem_obj.memCache.io = MemObject::ioDone;
+            mem_obj.memCache.io = Store::ioDone;
         }
     }
 }
