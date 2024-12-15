@@ -12,7 +12,6 @@ jobs:
 
   openbsd:
     runs-on: ubuntu-latest
-    if: false
 
     steps:
       - name: Checkout Squid sources
