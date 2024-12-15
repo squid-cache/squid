@@ -2,7 +2,7 @@ name: Staged commit - OpenBSD
 
 on:
   push:
-    branches: [ "bsd-merge-tests" ]
+    branches: [ "openbsd-merge-tests" ]
 
 env:
   # empty except for pull_request events
