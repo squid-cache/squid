@@ -14,17 +14,18 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout Squid sources
+      - name: Checkout Sources
         uses: actions/checkout@v4
 
-      - name: Test
-        id: test
+      - name: Run test-builds
+        id: test-builds
         uses: vmactions/openbsd-vm@v1
         with:
           usesh: true
           prepare: |
             pkg_add \
               autoconf-2.72p0 \
+              autoconf-archive \
               automake-1.16.5 \
               bash \
               coreutils \
@@ -32,6 +33,9 @@ jobs:
               git \
               ggrep \
               gmake \
+              libltdl \
+              libtool \
+              libnettle \
               libxml \
               libtool \
               m4 \
