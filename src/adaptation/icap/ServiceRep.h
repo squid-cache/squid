@@ -173,7 +173,7 @@ private:
     /// Set the maximum allowed connections for the service
     void setMaxConnections();
     /// The number of connections which excess the Max-Connections limit
-    int excessConnections() const;
+    size_t excessConnections() const;
     /**
      * The available connections slots to the ICAP server
      \return the available slots, or -1 if there is no limit on allowed connections

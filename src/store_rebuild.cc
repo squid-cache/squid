@@ -211,15 +211,12 @@ storeRebuildStart(void)
  * progress.
  */
 void
-storeRebuildProgress(int sd_index, int total, int sofar)
+storeRebuildProgress(size_t sd_index, int total, int sofar)
 {
     static time_t last_report = 0;
     // TODO: Switch to int64_t and fix handling of unknown totals.
     double n = 0.0;
     double d = 0.0;
-
-    if (sd_index < 0)
-        return;
 
     if (sd_index >= Config.cacheSwap.n_configured)
         return;
