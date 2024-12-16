@@ -215,8 +215,6 @@ jobs:
 
             mkdir $HOME/bin
             ln -s /usr/local/bin/ggrep $HOME/bin/grep
-            ls -ld /usr/local/share/aclocal*
-            ls -l /usr/local/bin/auto*
 
           run: |
             export MAKE=gmake
