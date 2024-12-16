@@ -231,7 +231,7 @@ jobs:
             export CFLAGS='-Wno-compound-token-split-by-macro'
             export LDFLAGS="-L/usr/local/lib"
             export PATH="$HOME/bin:$PATH"
-            ./test-builds.sh --verbose --aggressively-use-config-cache layer-02-maximus # TODO: test all layers
+            ./test-builds.sh
 
       - name: Publish build logs
         if: success() || failure()
