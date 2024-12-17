@@ -228,6 +228,8 @@ jobs:
             export ltver=2.4.2
             export CFLAGS='-Wno-compound-token-split-by-macro'
             export LDFLAGS="-L/usr/local/lib"
+            # until we remove GNUisms from our grep commands,
+            # shadow system `grep` with `ggrep` installed/linked earlier
             export PATH="$HOME/bin:$PATH"
             ./test-builds.sh
 
