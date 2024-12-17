@@ -237,5 +237,5 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: openbsd-build-logs
+          name: build-logs-openbsd
           path: btlayer-*.log
