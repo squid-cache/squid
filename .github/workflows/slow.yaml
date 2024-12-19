@@ -70,7 +70,7 @@ jobs:
       - name: Run test-builds
         id: test-builds
         run: |
-          ./test-builds.sh ${{ matrix.layer.name }}
+          ./test-builds.sh --verbose ${{ matrix.layer.name }}
 
       - name: Publish build logs
         if: success() || failure()
@@ -126,7 +126,7 @@ jobs:
           sed -i.bak 's@ltdl_ac_aux_dir=""@ltdl_ac_aux_dir="../build-aux"@' $editable || true
           diff -u $editable.bak $editable || true
 
-          ./test-builds.sh
+          ./test-builds.sh --verbose
 
       - name: Publish build logs
         if: success() || failure()
@@ -173,7 +173,7 @@ jobs:
 
           run: |
             export MAKE=gmake
-            ./test-builds.sh
+            ./test-builds.sh --verbose
 
       - name: Publish build logs
         if: success() || failure()
