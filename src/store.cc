@@ -1966,7 +1966,7 @@ StoreEntry::checkDisk() const
             Must(swap_status == SWAPOUT_NONE);
         } else {
             Must(swap_filen >= 0);
-            Must(swap_dirn < Config.cacheSwap.n_configured);
+            Must(static_cast<size_t>(swap_dirn) < Config.cacheSwap.n_configured);
             if (swapoutFailed()) {
                 Must(EBIT_TEST(flags, RELEASE_REQUEST));
             } else {
