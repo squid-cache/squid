@@ -15,6 +15,7 @@ class AsyncJob;
 class CallDialer;
 class CodeContext;
 class DelayedAsyncCalls;
+class PrecomputedCodeContext;
 class Raw;
 class RegexPattern;
 class ScopedId;
@@ -28,6 +29,7 @@ template<class Answer> class AsyncCallback;
 typedef CbcPointer<AsyncJob> AsyncJobPointer;
 typedef RefCount<CodeContext> CodeContextPointer;
 using AsyncCallPointer = RefCount<AsyncCall>;
+using PrecomputedCodeContextPointer = RefCount<PrecomputedCodeContext>;
 
 #endif /* SQUID_SRC_BASE_FORWARD_H */
 
