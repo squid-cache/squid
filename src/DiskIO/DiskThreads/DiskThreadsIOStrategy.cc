@@ -178,7 +178,7 @@ DiskThreadsIOStrategy::aioStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "  stat\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.stat_start, squidaio_counts.stat_finish);
     storeAppendPrintf(sentry, "  unlink\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.unlink_start, squidaio_counts.unlink_finish);
     storeAppendPrintf(sentry, "  check_callback\t%" PRIu64 "\t-\n", squidaio_counts.check_callback);
-    storeAppendPrintf(sentry, "  queue\t%d\t-\n", squidaio_get_queue_len());
+    storeAppendPrintf(sentry, "  queue\t%zu\t-\n", squidaio_get_queue_len());
     squidaio_stats(sentry);
 }
 
