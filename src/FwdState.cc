@@ -1349,6 +1349,8 @@ FwdState::reforward()
     return Http::IsReforwardableStatus(s);
 }
 
+// TODO: Refactor to fix multiple mgr:forward accounting/reporting bugs. See
+// https://lists.squid-cache.org/pipermail/squid-users/2024-December/027331.html
 static void
 fwdStats(StoreEntry * s)
 {
@@ -1356,19 +1358,25 @@ fwdStats(StoreEntry * s)
     int j;
     storeAppendPrintf(s, "Status");
 
-    for (j = 1; j < MAX_FWD_STATS_IDX; ++j) {
+    // XXX: Missing try#0 heading for FwdReplyCodes[0][i]
+    for (j = 1; j <= MAX_FWD_STATS_IDX; ++j) {
         storeAppendPrintf(s, "\ttry#%d", j);
     }
 
     storeAppendPrintf(s, "\n");
 
     for (i = 0; i <= (int) Http::scInvalidHeader; ++i) {
-        if (FwdReplyCodes[0][i] == 0)
+        // XXX: Missing reporting of status codes for which logReplyStatus() was
+        // only called with n_tries exceeding 1. To be more precise, we are
+        // missing (the equivalent of) logReplyStatus() calls for attempts done
+        // outside of FwdState. Relying on n_tries<=1 counters is too fragile.
+        if (!FwdReplyCodes[0][i] && !FwdReplyCodes[1][i])
             continue;
 
         storeAppendPrintf(s, "%3d", i);
 
-        for (j = 0; j <= MAX_FWD_STATS_IDX; ++j) {
+        // XXX: Missing FwdReplyCodes[0][i] reporting
+        for (j = 1; j <= MAX_FWD_STATS_IDX; ++j) {
             storeAppendPrintf(s, "\t%d", FwdReplyCodes[j][i]);
         }
 
