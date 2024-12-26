@@ -278,6 +278,12 @@ Http::Tunneler::handleResponse(const bool eof)
         hp = new Http1::ResponseParser;
 
     auto parsedOk = hp->parse(readBuf); // may be refined below
+
+    debugs(11, 2, "Tunnel Server " << connection);
+    debugs(11, 2, "Tunnel Server RESPONSE:\n---------\n" <<
+           Raw(nullptr, readBuf.rawContent(), readBuf.length()).minLevel(2).gap(false) <<
+           "----------");
+
     readBuf = hp->remaining();
     if (hp->needsMoreData()) {
         if (!eof) {
@@ -312,11 +318,6 @@ Http::Tunneler::handleResponse(const bool eof)
     auto &futureAnswer = callback.answer();
     futureAnswer.peerResponseStatus = rep->sline.status();
     request->hier.peer_reply_status = rep->sline.status();
-
-    debugs(11, 2, "Tunnel Server " << connection);
-    debugs(11, 2, "Tunnel Server RESPONSE:\n---------\n" <<
-           Raw(nullptr, readBuf.rawContent(), rep->hdr_sz).minLevel(2).gap(false) <<
-           "----------");
 
     // bail if we did not get an HTTP 200 (Connection Established) response
     if (rep->sline.status() != Http::scOkay) {
