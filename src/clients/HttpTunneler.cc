@@ -278,7 +278,6 @@ Http::Tunneler::handleResponse(const bool eof)
         hp = new Http1::ResponseParser;
 
     auto parsedOk = hp->parse(readBuf); // may be refined below
-
     readBuf = hp->remaining();
     if (hp->needsMoreData()) {
         if (!eof) {
