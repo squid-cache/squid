@@ -1043,7 +1043,7 @@ AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 
 # Cryptograhic libraries
 SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
-AS_IF(test "x$with_nettle" != "xno"],[
+AS_IF([test "x$with_nettle" != "xno"],[
   SQUID_STATE_SAVE(squid_nettle_state)
   PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[],[
     CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
