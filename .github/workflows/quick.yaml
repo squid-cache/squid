@@ -154,31 +154,3 @@ jobs:
           name: build-logs-${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
           path: btlayer-*.log
 
-  CodeQL-tests:
-
-    runs-on: [ ubuntu-22.04 ]
-
-    permissions:
-      security-events: write
-
-    steps:
-
-      - name: Install Squid prerequisite Linux packages
-        run: |
-          # required for "apt-get build-dep" to work
-          sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
-          sudo apt-get --quiet=2 update
-          sudo apt-get --quiet=2 build-dep squid
-          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-
-      - name: Build Squid
-        run: ./test-builds.sh ./test-suite/buildtests/layer-02-maximus.opts
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
