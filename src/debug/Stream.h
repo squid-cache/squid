@@ -209,7 +209,7 @@ void ResyncDebugLog(FILE *newDestination);
 std::ostream& ForceAlert(std::ostream& s);
 
 /*
- * MYNAME is for use at debug levels 0 and 1 where HERE is too messy.
+ * MYNAME is for use (in rare/special cases) at debug levels 0 and 1
  *
  * debugs(1,1, MYNAME << "WARNING: some message");
  */
