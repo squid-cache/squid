@@ -1772,7 +1772,6 @@ AC_CHECK_HEADERS( \
   poll.h \
   priv.h \
   pwd.h \
-  regex.h \
   sched.h \
   siginfo.h \
   signal.h \
@@ -2148,9 +2147,6 @@ AC_CHECK_FUNCS(\
 	pthread_setschedparam \
 	pthread_sigmask \
 	putenv \
-	regcomp \
-	regexec \
-	regfree \
 	res_init \
 	__res_init \
 	rint \
@@ -2387,8 +2383,16 @@ AS_IF([test "x$enable_zph_qos" = "xyes"],[
     [Enable support for QOS netfilter mark preservation])
 ])
 
-AC_CHECK_LIB(regex, regexec, [REGEXLIB="-lregex"],[REGEXLIB=''])
-AC_SUBST(REGEXLIB)
+dnl Look for libregex with regcomp() API
+SQUID_AUTO_LIB(regex,[GNU Regex],[LIBREGEX])
+SQUID_CHECK_LIB_WORKS(regex,[
+  PKG_CHECK_MODULES([LIBREGEX],[libregex],[:],[:])
+  CPPFLAGS="$LIBREGEX_CFLAGS $CPPFLAGS"
+  LIBS="$LIBREGEX_PATH $LIBREGEX_LIBS $LIBS"
+  AC_CHECK_HEADERS([regex.h],[
+    LIBREGEX_LIBS="$LIBREGEX_PATH -lregex"
+  ])
+])
 
 SQUID_DETECT_UDP_SND_BUFSIZE
 SQUID_DETECT_UDP_RECV_BUFSIZE
