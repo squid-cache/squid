@@ -296,6 +296,8 @@ Http::Tunneler::handleResponse(const bool eof)
     }
 
     if (!parsedOk) {
+        // XXX: This code and Server RESPONSE reporting code below duplicate
+        // HttpStateData::processReplyHeader() reporting code, including its problems.
         debugs(11, 3, "Non-HTTP-compliant header:\n---------\n" << readBuf << "\n----------");
         bailOnResponseError("malformed CONNECT response from peer", nullptr);
         return;
