@@ -570,7 +570,7 @@ void
 AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
 {
     static const auto nidChars = CharacterSet("NID","-") + CharacterSet::ALPHA + CharacterSet::DIGIT;
-    static const auto alphanum = (CharacterSet::ALPHA + CharacterSet::DIGIT).rename("alphanum");
+    static const auto alphanum = CharacterSet("alphanum", "") + CharacterSet::ALPHA + CharacterSet::DIGIT;
     SBuf nid;
     if (!tok.prefix(nid, nidChars, 32))
         throw TextException("NID not found", Here());
@@ -612,9 +612,8 @@ AnyP::Uri::parseHost(Parser::Tokenizer &tok) const
     if (tok.skip('[')) {
         // Add "." because IPv6address in RFC 3986 includes ls32, which includes
         // IPv4address: ls32 = ( h16 ":" h16 ) / IPv4address
-        // This set rejects IPvFuture that needs a "v" character.
-        static const CharacterSet IPv6chars = (
-                CharacterSet::HEXDIG + CharacterSet("colon", ":") + CharacterSet("period", ".")).rename("IPv6");
+        // XXX: This set rejects IPvFuture that needs a "v" character.
+        static const CharacterSet IPv6chars = CharacterSet("IPv6",":.") + CharacterSet::HEXDIG;
         SBuf ipv6ish;
         if (!tok.prefix(ipv6ish, IPv6chars))
             throw TextException("malformed or unsupported bracketed IP address in uri-host", Here());
