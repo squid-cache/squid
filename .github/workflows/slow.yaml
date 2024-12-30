@@ -181,3 +181,61 @@ jobs:
         with:
           name: build-logs-freebsd-${{ matrix.osversion }}
           path: btlayer-*.log
+
+  openbsd:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Run test-builds
+        id: test-builds
+        uses: vmactions/openbsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg_add \
+              autoconf-2.72p0 \
+              autoconf-archive \
+              automake-1.16.5 \
+              bash \
+              coreutils \
+              cppunit \
+              git \
+              ggrep \
+              gmake \
+              libltdl \
+              libtool \
+              libnettle \
+              libxml \
+              libtool \
+              m4 \
+              metaauto
+
+            mkdir $HOME/bin
+            ln -s /usr/local/bin/ggrep $HOME/bin/grep
+
+          run: |
+            export MAKE=gmake
+            export pjobs="-j`gnproc`"
+            export AUTOMAKE_VERSION=1.16
+            export amver=${AUTOMAKE_VERSION}
+            export ACLOCAL_AUTOMAKE_DIR="/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
+            export ACLOCAL_PATH="/usr/local/share/aclocal:/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
+            export AUTOCONF_VERSION=2.72
+            export acver=${AUTOCONF_VERSION}
+            export ltver=2.4.2
+            export CFLAGS='-Wno-compound-token-split-by-macro'
+            export LDFLAGS="-L/usr/local/lib"
+            # until we remove GNUisms from our grep commands,
+            # shadow system `grep` with `ggrep` installed/linked earlier
+            export PATH="$HOME/bin:$PATH"
+            ./test-builds.sh
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-openbsd
+          path: btlayer-*.log
