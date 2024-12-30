@@ -51,6 +51,7 @@ libbase_la_SOURCES = \
 	OnOff.h \
 	Packable.h \
 	PackableStream.h \
+	PrecomputedCodeContext.h \
 	Random.cc \
 	Random.h \
 	RandomUuid.cc \
