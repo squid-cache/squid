@@ -16,6 +16,8 @@ on:
     # test PRs targeting this branch code
     branches: [ "master" ]
 
+  workflow_dispatch:
+
 concurrency:
   # Cancel ongoing tests in case of push to the same PR or staging branch,
   # but let previous master commit tests complete.

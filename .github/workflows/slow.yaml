@@ -14,6 +14,8 @@ on:
   push:
     branches: [ "auto" ]
 
+  workflow_dispatch:
+
 concurrency:
   # Cancel ongoing tests in case of push to staging branch.
   group: ${{ github.workflow }}-${{ github.ref }}
