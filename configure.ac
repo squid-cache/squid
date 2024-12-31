@@ -887,7 +887,7 @@ AC_ARG_ENABLE(ecap,
 dnl Perform configuration consistency checks for eCAP
 AS_IF([test "x$enable_ecap" != "xno"],[
   AS_IF([test "x$enable_shared" != "xyes"],[
-    AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-shared with --enable-ecap.])
+    AC_MSG_ERROR([eCAP support requires loadable modules (i.e. --enable-shared or equivalent).])
   ])
 
   AS_IF([test -n "$PKG_CONFIG"],[
