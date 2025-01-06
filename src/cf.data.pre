@@ -2575,6 +2575,9 @@ DOC_START
 	The tls-cert= option is mandatory on HTTPS ports.
 
 	See http_port for a list of modes and options.
+
+    http_port options not supported for https_port:
+    - require-proxy-header
 DOC_END
 
 NAME: ftp_port
@@ -2639,6 +2642,10 @@ DOC_START
 
 	Other http_port modes and options that are not specific to HTTP and
 	HTTPS may also work.
+
+    http_port options not supported for https_port:
+    - require-proxy-header
+    - ssl-bump
 DOC_END
 
 NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoing_dscp
