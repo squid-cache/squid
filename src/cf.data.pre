@@ -2575,8 +2575,8 @@ DOC_START
 	The tls-cert= option is mandatory on HTTPS ports.
 
 	See http_port for a list of modes and options.
-	Not all http_port options are supported for https_port.
-	Among the unsupported options:
+	Not all http_port options are available for https_port.
+	Among the unavalable options:
 	- require-proxy-header
 DOC_END
 
