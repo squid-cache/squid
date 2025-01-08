@@ -10545,8 +10545,8 @@ DOC_START
 	HTTP clients may send a pipeline of 1+N requests to Squid using a
 	single connection, without waiting for Squid to respond to the first
 	of those requests. This option limits the number of concurrent
-	requests Squid will try to handle in parallel. If set to N, Squid
-	will try to receive and process up to 1+N requests on the same
+	requests Squid will try to handle in parallel. If set to the number N,
+	Squid will try to receive and process up to 1+N requests on the same
 	connection concurrently.
 
 	Defaults to 0 (off) for bandwidth management and access logging
