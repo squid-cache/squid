@@ -2308,8 +2308,10 @@ DOC_START
 			Squid, and treat them as unencrypted HTTP messages,
 			becoming the man-in-the-middle.
 
-			The ssl_bump option is required to fully enable
+			The ssl-bump option is required to fully enable
 			bumping of CONNECT requests.
+			Enabling this option requires also specifying either
+			tproxy or intercept
 
 	Omitting the mode flag causes default forward proxy mode to be used.
 
