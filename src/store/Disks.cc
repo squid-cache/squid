@@ -80,7 +80,7 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
         firstCandidate = 0;
 
     for (size_t i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        const int dirn = (firstCandidate + i) % Config.cacheSwap.n_configured;
+        const auto dirn = (firstCandidate + i) % Config.cacheSwap.n_configured;
         auto &dir = SwapDirByIndex(dirn);
 
         int load = 0;
@@ -118,11 +118,10 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
     int least_load = INT_MAX;
     int load;
     SwapDir *selectedDir = nullptr;
-    size_t i;
 
     const int64_t objsize = objectSizeForDirSelection(*e);
 
-    for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
+    for (size_t i = 0; i < Config.cacheSwap.n_configured; ++i) {
         auto &sd = SwapDirByIndex(i);
         sd.flags.selected = false;
 
@@ -173,13 +172,13 @@ Store::Disks::Disks():
 }
 
 SwapDir *
-Store::Disks::store(int const x) const
+Store::Disks::store(const size_t x) const
 {
     return &SwapDirByIndex(x);
 }
 
 SwapDir &
-Store::Disks::Dir(const int i)
+Store::Disks::Dir(const size_t i)
 {
     return SwapDirByIndex(i);
 }
@@ -232,11 +231,11 @@ Store::Disks::create()
 StoreEntry *
 Store::Disks::get(const cache_key *key)
 {
-    if (const size_t cacheDirs = Config.cacheSwap.n_configured) {
+    if (const auto cacheDirs = Config.cacheSwap.n_configured) {
         // ask each cache_dir until the entry is found; use static starting
         // point to avoid asking the same subset of disks more often
         // TODO: coordinate with put() to be able to guess the right disk often
-        static int idx = 0;
+        static size_t idx = 0;
         for (size_t n = 0; n < cacheDirs; ++n) {
             idx = (idx + 1) % cacheDirs;
             auto &sd = Dir(idx);
@@ -531,11 +530,9 @@ Store::Disks::getStats(StoreInfoStats &stats) const
 void
 Store::Disks::stat(StoreEntry & output) const
 {
-    size_t i;
-
     /* Now go through each store, calling its stat routine */
 
-    for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
+    for (size_t i = 0; i < Config.cacheSwap.n_configured; ++i) {
         storeAppendPrintf(&output, "\n");
         store(i)->stat(output);
     }
@@ -563,10 +560,9 @@ Store::Disks::updateHeaders(StoreEntry *e)
 void
 Store::Disks::maintain()
 {
-    size_t i;
     /* walk each fs */
 
-    for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
+    for (size_t i = 0; i < Config.cacheSwap.n_configured; ++i) {
         /* XXX FixMe: This should be done "in parallel" on the different
          * cache_dirs, not one at a time.
          */
@@ -618,7 +614,7 @@ Store::Disks::anchorToCache(StoreEntry &entry)
         // ask each cache_dir until the entry is found; use static starting
         // point to avoid asking the same subset of disks more often
         // TODO: coordinate with put() to be able to guess the right disk often
-        static int idx = 0;
+        static size_t idx = 0;
         for (size_t n = 0; n < cacheDirs; ++n) {
             idx = (idx + 1) % cacheDirs;
             SwapDir &sd = Dir(idx);
@@ -703,7 +699,6 @@ storeDirWriteCleanLogs(int reopen)
 
     struct timeval start;
     double dt;
-    size_t dirn;
     int notdone = 1;
 
     // Check for store_dirs_rebuilding because fatal() often calls us in early
@@ -719,7 +714,7 @@ storeDirWriteCleanLogs(int reopen)
     getCurrentTime();
     start = current_time;
 
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn) {
+    for (size_t dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn) {
         auto &sd = SwapDirByIndex(dirn);
 
         if (sd.writeCleanStart() < 0) {
@@ -736,7 +731,7 @@ storeDirWriteCleanLogs(int reopen)
     while (notdone) {
         notdone = 0;
 
-        for (dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn) {
+        for (size_t dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn) {
             auto &sd = SwapDirByIndex(dirn);
 
             if (!sd.cleanLog)
@@ -763,7 +758,7 @@ storeDirWriteCleanLogs(int reopen)
     }
 
     /* Flush */
-    for (dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn)
+    for (size_t dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn)
         SwapDirByIndex(dirn).writeCleanDone();
 
     if (reopen)
