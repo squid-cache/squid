@@ -208,23 +208,8 @@ void ResyncDebugLog(FILE *newDestination);
 /// Outside of debugs() context, has no effect and should not be used.
 std::ostream& ForceAlert(std::ostream& s);
 
-/** stream manipulator which does nothing.
- * \deprecated Do not add to new code, and remove when editing old code
- *
- * Its purpose is to inactivate calls made following previous debugs()
- * guidelines such as
- * debugs(1,2, "some message");
- *
- * His former objective is now absorbed in the debugs call itself
- */
-inline std::ostream&
-HERE(std::ostream& s)
-{
-    return s;
-}
-
 /*
- * MYNAME is for use at debug levels 0 and 1 where HERE is too messy.
+ * MYNAME is for use (in rare/special cases) at debug levels 0 and 1
  *
  * debugs(1,1, MYNAME << "WARNING: some message");
  */
