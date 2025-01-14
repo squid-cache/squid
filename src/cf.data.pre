@@ -487,8 +487,8 @@ DOC_START
 	In SMP mode, each worker does nearly all what a single Squid daemon
 	does (e.g., listen on http_port and forward HTTP requests).
 
-	Note: changes to this parameter will not be activated
-	by reconfigure, they require a full restart of Squid
+	Changing the number of workers requires a restart: Squid warns about but
+	otherwise ignores attempts to change this setting via reconfiguration.
 DOC_END
 
 NAME: cpu_affinity_map
