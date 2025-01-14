@@ -2383,14 +2383,17 @@ AS_IF([test "x$enable_zph_qos" = "xyes"],[
     [Enable support for QOS netfilter mark preservation])
 ])
 
-dnl Look for libregex with regcomp() API
 SQUID_AUTO_LIB(regex,[GNU Regex],[LIBREGEX])
 SQUID_CHECK_LIB_WORKS(regex,[
   PKG_CHECK_MODULES([LIBREGEX],[libregex],[:],[:])
   CPPFLAGS="$LIBREGEX_CFLAGS $CPPFLAGS"
   LIBS="$LIBREGEX_PATH $LIBREGEX_LIBS $LIBS"
-  AC_CHECK_HEADERS([regex.h],[
-    LIBREGEX_LIBS="$LIBREGEX_PATH -lregex"
+  AS_IF([test "x$LIBREGEX_LIBS" = "x"],[LIBREGEX_LIBS="-lregex"])
+  AC_CHECK_HEADERS([regex.h],,[LIBREGEX_LIBS=""])
+  AC_CHECK_FUNCS([ \
+    regcomp \
+    regexec \
+    regfree \
   ])
 ])
 
