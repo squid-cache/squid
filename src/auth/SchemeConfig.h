@@ -119,7 +119,7 @@ public:
     virtual void registerWithCacheManager(void);
 
     /** parse config options */
-    virtual void parse(SchemeConfig *, int, char *);
+    virtual void parse(SchemeConfig *, size_t, char *);
 
     /** the http string id */
     virtual const char * type() const = 0;
