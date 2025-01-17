@@ -10,7 +10,12 @@
  * AUTHOR: Flavio Pescuma. <flavio@marasystems.com>
  */
 
+#ifndef SQUID_SRC_AUTH_DIGEST_EDIRECTORY_LDAP_BACKEND_H
+#define SQUID_SRC_AUTH_DIGEST_EDIRECTORY_LDAP_BACKEND_H
+
 #include "auth/digest/eDirectory/digest_common.h"
 extern int LDAPArguments(int argc, char **argv);
 extern void LDAPHHA1(RequestData * requestData);
+
+#endif /* SQUID_SRC_AUTH_DIGEST_EDIRECTORY_LDAP_BACKEND_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 33    Client-side Routines */
 
-#ifndef SQUID_SERVERS_SERVER_H
-#define SQUID_SERVERS_SERVER_H
+#ifndef SQUID_SRC_SERVERS_SERVER_H
+#define SQUID_SRC_SERVERS_SERVER_H
 
 #include "anyp/forward.h"
 #include "anyp/ProtocolVersion.h"
@@ -17,6 +17,8 @@
 #include "BodyPipe.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "error/forward.h"
+#include "http/Stream.h"
 #include "log/forward.h"
 #include "Pipeline.h"
 #include "sbuf/SBuf.h"
@@ -119,6 +121,9 @@ protected:
     /// abort any pending transactions and prevent new ones (by closing)
     virtual void terminateAll(const Error &, const LogTagsErrors &) = 0;
 
+    /// whether client_request_buffer_max_size allows inBuf.length() increase
+    bool mayBufferMoreRequestBytes() const;
+
     void doClientRead(const CommIoCbParams &io);
     void clientWriteDone(const CommIoCbParams &io);
 
@@ -126,5 +131,5 @@ protected:
     AsyncCall::Pointer writer; ///< set when we are writing
 };
 
-#endif /* SQUID_SERVERS_SERVER_H */
+#endif /* SQUID_SRC_SERVERS_SERVER_H */
 

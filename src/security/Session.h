@@ -11,7 +11,7 @@
 
 #include "base/HardFun.h"
 #include "comm/forward.h"
-#include "security/forward.h"
+#include "security/Context.h"
 #include "security/LockingPointer.h"
 
 #include <memory>
@@ -23,7 +23,7 @@
 #endif
 #endif
 
-#if USE_GNUTLS
+#if HAVE_LIBGNUTLS
 #if HAVE_GNUTLS_GNUTLS_H
 #include <gnutls/gnutls.h>
 #endif
@@ -31,9 +31,13 @@
 
 namespace Security {
 
+// XXX: Should be only in src/security/forward.h (which should not include us
+// because that #include creates a circular reference and problems like this).
+class FuturePeerContext;
+
 /// Creates TLS Client connection structure (aka 'session' state) and initializes TLS/SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns false.
-bool CreateClientSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
+bool CreateClientSession(FuturePeerContext &, const Comm::ConnectionPointer &, const char *squidCtx);
 
 class PeerOptions;
 
@@ -50,7 +54,7 @@ typedef std::shared_ptr<SSL> SessionPointer;
 
 typedef std::unique_ptr<SSL_SESSION, HardFun<void, SSL_SESSION*, &SSL_SESSION_free>> SessionStatePointer;
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 // to be finalized when it is actually needed/used
 struct Connection {};
 

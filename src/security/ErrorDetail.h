@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_SECURITY_DETAIL_H
-#define SQUID_SRC_SECURITY_DETAIL_H
+#ifndef SQUID_SRC_SECURITY_ERRORDETAIL_H
+#define SQUID_SRC_SECURITY_ERRORDETAIL_H
 
 #include "base/RefCount.h"
 #include "error/Detail.h"
@@ -17,6 +17,10 @@
 
 #if USE_OPENSSL
 #include "ssl/ErrorDetailManager.h"
+#endif
+
+#if USE_OPENSSL
+#include <optional>
 #endif
 
 namespace Security {
@@ -48,7 +52,7 @@ public:
     /// \param anIoErrorNo TLS I/O function outcome; \see ErrorDetail::ioErrorNo
     /// \param aSysErrorNo saved errno(3); \see ErrorDetail::sysErrorNo
     ErrorDetail(ErrorCode anErrorCode, int anIoErrorNo, int aSysErrorNo);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     /// Details (or starts detailing) a non-validation failure.
     /// \param anLibErrorNo TLS function outcome; \see ErrorDetail::lib_error_no
     /// \param aSysErrorNo saved errno(3); \see ErrorDetail::sysErrorNo
@@ -81,15 +85,15 @@ private:
     ErrorDetail(ErrorCode err, int aSysErrorNo);
 
     /* methods for formatting error details using admin-configurable %codes */
-    const char *subject() const;
-    const char *ca_name() const;
-    const char *cn() const;
-    const char *notbefore() const;
-    const char *notafter() const;
-    const char *err_code() const;
-    const char *err_descr() const;
-    const char *err_lib_error() const;
-    size_t convert(const char *code, const char **value) const;
+    void printSubject(std::ostream &os) const;
+    void printCaName(std::ostream &os) const;
+    void printCommonName(std::ostream &os) const;
+    void printNotBefore(std::ostream &os) const;
+    void printNotAfter(std::ostream &os) const;
+    void printErrorCode(std::ostream &os) const;
+    void printErrorDescription(std::ostream &os) const;
+    void printErrorLibError(std::ostream &os) const;
+    size_t convertErrorCodeToDescription(const char *code, std::ostream &os) const;
 
     CertPointer peer_cert; ///< A pointer to the peer certificate
     CertPointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)
@@ -111,7 +115,7 @@ private:
     int ioErrorNo = 0;
 
     using ErrorDetailEntry = Ssl::ErrorDetailEntry;
-    mutable ErrorDetailEntry detailEntry;
+    mutable std::optional<ErrorDetailEntry> detailEntry;
 #else
     // other TLS libraries do not use custom ErrorDetail members
 #endif
@@ -138,5 +142,5 @@ operator <<(std::ostream &os, const ErrorDetail::Pointer &p)
 
 } // namespace Security
 
-#endif
+#endif /* SQUID_SRC_SECURITY_ERRORDETAIL_H */
 

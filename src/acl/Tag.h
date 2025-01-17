@@ -6,17 +6,24 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLTAG_H
-#define SQUID_ACLTAG_H
+#ifndef SQUID_SRC_ACL_TAG_H
+#define SQUID_SRC_ACL_TAG_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 
-class ACLTagStrategy : public ACLStrategy<const char *>
+namespace Acl
 {
 
+/// a "tag" ACL
+class TagCheck: public ParameterizedNode< ACLData<const char *> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
 };
 
-#endif /* SQUID_ACLMYPORTNAME_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_TAG_H */
 

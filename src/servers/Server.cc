@@ -85,16 +85,25 @@ Server::maybeMakeSpaceAvailable()
         debugs(33, 4, "request buffer full: client_request_buffer_max_size=" << Config.maxRequestBufferSize);
 }
 
+bool
+Server::mayBufferMoreRequestBytes() const
+{
+    // TODO: Account for bodyPipe buffering as well.
+    if (inBuf.length() >= Config.maxRequestBufferSize) {
+        debugs(33, 4, "no: " << inBuf.length() << '-' << Config.maxRequestBufferSize << '=' << (inBuf.length() - Config.maxRequestBufferSize));
+        return false;
+    }
+    debugs(33, 7, "yes: " << Config.maxRequestBufferSize << '-' << inBuf.length() << '=' << (Config.maxRequestBufferSize - inBuf.length()));
+    return true;
+}
+
 void
 Server::readSomeData()
 {
     if (reading())
         return;
 
-    debugs(33, 4, clientConnection << ": reading request...");
-
-    // we can only read if there is more than 1 byte of space free
-    if (Config.maxRequestBufferSize - inBuf.length() < 2)
+    if (!mayBufferMoreRequestBytes())
         return;
 
     typedef CommCbMemFunT<Server, CommIoCbParams> Dialer;
@@ -125,9 +134,21 @@ Server::doClientRead(const CommIoCbParams &io)
      * Plus, it breaks our lame *HalfClosed() detection
      */
 
+    // mayBufferMoreRequestBytes() was true during readSomeData(), but variables
+    // like Config.maxRequestBufferSize may have changed since that check
+    if (!mayBufferMoreRequestBytes()) {
+        // XXX: If we avoid Comm::ReadNow(), we should not Comm::Read() again
+        // when the wait is over; resume these doClientRead() checks instead.
+        return; // wait for noteMoreBodySpaceAvailable() or a similar inBuf draining event
+    }
     maybeMakeSpaceAvailable();
+    Assure(inBuf.spaceSize());
+
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
+    Assure(Config.maxRequestBufferSize > inBuf.length());
+    rd.size = Config.maxRequestBufferSize - inBuf.length();
+
     switch (Comm::ReadNow(rd, inBuf)) {
     case Comm::INPROGRESS:
 
@@ -173,10 +194,7 @@ Server::doClientRead(const CommIoCbParams &io)
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
-        LogTagsErrors lte;
-        lte.timedout = rd.xerrno == ETIMEDOUT;
-        lte.aborted = !lte.timedout; // intentionally true for zero rd.xerrno
-        terminateAll(Error(ERR_CLIENT_GONE, SysErrorDetail::NewIfAny(rd.xerrno)), lte);
+        terminateAll(Error(ERR_READ_ERROR, SysErrorDetail::NewIfAny(rd.xerrno)), LogTagsErrors::FromErrno(rd.xerrno));
         return;
     }
 
@@ -204,8 +222,11 @@ Server::clientWriteDone(const CommIoCbParams &io)
 
     Must(io.conn->fd == clientConnection->fd);
 
-    if (io.flag && pipeline.front())
-        pipeline.front()->initiateClose("write failure");
+    if (io.flag) {
+        debugs(33, 2, "bailing after a write failure: " << xstrerr(io.xerrno));
+        terminateAll(Error(ERR_WRITE_ERROR, SysErrorDetail::NewIfAny(io.xerrno)), LogTagsErrors::FromErrno(io.xerrno));
+        return;
+    }
 
     afterClientWrite(io.size); // update state
     writeSomeData(); // maybe schedules another write

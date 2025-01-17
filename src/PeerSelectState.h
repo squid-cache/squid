@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef   SQUID_PEERSELECTSTATE_H
-#define   SQUID_PEERSELECTSTATE_H
+#ifndef SQUID_SRC_PEERSELECTSTATE_H
+#define SQUID_SRC_PEERSELECTSTATE_H
 
 #include "AccessLogEntry.h"
 #include "acl/Checklist.h"
@@ -158,7 +158,6 @@ private:
      */
     CachePeer *hit;
     peer_t hit_type;
-    ACLChecklist *acl_checklist;
 
     typedef CbcPointer<PeerSelectionInitiator> Initiator;
     Initiator initiator_; ///< recipient of the destinations we select; use interestedInitiator() to access
@@ -166,5 +165,5 @@ private:
     const InstanceId<PeerSelector> id; ///< unique identification in worker log
 };
 
-#endif /* SQUID_PEERSELECTSTATE_H */
+#endif /* SQUID_SRC_PEERSELECTSTATE_H */
 

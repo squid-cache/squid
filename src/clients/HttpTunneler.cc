@@ -90,7 +90,7 @@ Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &)
 {
     closer = nullptr;
     if (connection) {
-        countFailingConnection(nullptr);
+        countFailingConnection();
         connection->noteClosure();
         connection = nullptr;
     }
@@ -296,15 +296,25 @@ Http::Tunneler::handleResponse(const bool eof)
     }
 
     if (!parsedOk) {
+        // XXX: This code and Server RESPONSE reporting code below duplicate
+        // HttpStateData::processReplyHeader() reporting code, including its problems.
+        debugs(11, 3, "Non-HTTP-compliant header:\n---------\n" << readBuf << "\n----------");
         bailOnResponseError("malformed CONNECT response from peer", nullptr);
         return;
     }
+
+    /* We know the whole response is in parser now */
+    debugs(11, 2, "Tunnel Server " << connection);
+    debugs(11, 2, "Tunnel Server RESPONSE:\n---------\n" <<
+           hp->messageProtocol() << " " << hp->messageStatus() << " " << hp->reasonPhrase() << "\n" <<
+           hp->mimeHeader() <<
+           "----------");
 
     HttpReply::Pointer rep = new HttpReply;
     rep->sources |= Http::Message::srcHttp;
     rep->sline.set(hp->messageProtocol(), hp->messageStatus());
     if (!rep->parseHeader(*hp) && rep->sline.status() == Http::scOkay) {
-        bailOnResponseError("malformed CONNECT response from peer", nullptr);
+        bailOnResponseError("malformed CONNECT response headers mime block from peer", nullptr);
         return;
     }
 
@@ -312,11 +322,6 @@ Http::Tunneler::handleResponse(const bool eof)
     auto &futureAnswer = callback.answer();
     futureAnswer.peerResponseStatus = rep->sline.status();
     request->hier.peer_reply_status = rep->sline.status();
-
-    debugs(11, 2, "Tunnel Server " << connection);
-    debugs(11, 2, "Tunnel Server RESPONSE:\n---------\n" <<
-           Raw(nullptr, readBuf.rawContent(), rep->hdr_sz).minLevel(2).gap(false) <<
-           "----------");
 
     // bail if we did not get an HTTP 200 (Connection Established) response
     if (rep->sline.status() != Http::scOkay) {
@@ -339,7 +344,7 @@ Http::Tunneler::bailOnResponseError(const char *error, HttpReply *errorReply)
 
     ErrorState *err;
     if (errorReply) {
-        err = new ErrorState(request.getRaw(), errorReply);
+        err = new ErrorState(request.getRaw(), errorReply, al);
     } else {
         // with no reply suitable for relaying, answer with 502 (Bad Gateway)
         err = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al);
@@ -355,7 +360,7 @@ Http::Tunneler::bailWith(ErrorState *error)
 
     if (const auto failingConnection = connection) {
         // TODO: Reuse to-peer connections after a CONNECT error response.
-        countFailingConnection(error);
+        countFailingConnection();
         disconnect();
         failingConnection->close();
     }
@@ -374,10 +379,12 @@ Http::Tunneler::sendSuccess()
 }
 
 void
-Http::Tunneler::countFailingConnection(const ErrorState * const error)
+Http::Tunneler::countFailingConnection()
 {
     assert(connection);
-    NoteOutgoingConnectionFailure(connection->getPeer(), error ? error->httpStatus : Http::scNone);
+    // No NoteOutgoingConnectionFailure(connection->getPeer()) call here because
+    // we do not blame cache_peer for CONNECT failures (on top of a successfully
+    // established connection to that cache_peer).
     if (noteFwdPconnUse && connection->isOpen())
         fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
 }

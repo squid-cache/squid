@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLREQUESTMIMETYPE_H
-#define SQUID_ACLREQUESTMIMETYPE_H
+#ifndef SQUID_SRC_ACL_REQUESTMIMETYPE_H
+#define SQUID_SRC_ACL_REQUESTMIMETYPE_H
 
 #include "acl/Data.h"
 #include "acl/FilledChecklist.h"
@@ -17,8 +17,10 @@
 
 template <>
 inline int
-ACLRequestHeaderStrategy<Http::HdrType::CONTENT_TYPE>::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)
+Acl::RequestHeaderCheck<Http::HdrType::CONTENT_TYPE>::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     char const *theHeader = checklist->request->header.getStr(Http::HdrType::CONTENT_TYPE);
 
     if (nullptr == theHeader)
@@ -27,5 +29,5 @@ ACLRequestHeaderStrategy<Http::HdrType::CONTENT_TYPE>::match (ACLData<char const
     return data->match(theHeader);
 }
 
-#endif /* SQUID_ACLREQUESTMIMETYPE_H */
+#endif /* SQUID_SRC_ACL_REQUESTMIMETYPE_H */
 

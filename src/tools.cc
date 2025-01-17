@@ -168,9 +168,9 @@ dumpMallocStats(void)
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
 
     struct mstats ms = mstats();
-    fprintf(debug_log, "\ttotal space in arena:  %6d KB\n",
+    fprintf(DebugStream(), "\ttotal space in arena:  %6d KB\n",
             (int) (ms.bytes_total >> 10));
-    fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
+    fprintf(DebugStream(), "\tTotal free:            %6d KB %d%%\n",
             (int) (ms.bytes_free >> 10),
             Math::intPercent(ms.bytes_free, ms.bytes_total));
 #endif
@@ -331,13 +331,13 @@ PrintRusage(void)
 
     struct rusage rusage;
     squid_getrusage(&rusage);
-    fprintf(debug_log, "CPU Usage: %.3f seconds = %.3f user + %.3f sys\n",
+    fprintf(DebugStream(), "CPU Usage: %.3f seconds = %.3f user + %.3f sys\n",
             rusage_cputime(&rusage),
             rusage.ru_utime.tv_sec + ((double) rusage.ru_utime.tv_usec / 1000000.0),
             rusage.ru_stime.tv_sec + ((double) rusage.ru_stime.tv_usec / 1000000.0));
-    fprintf(debug_log, "Maximum Resident Size: %d KB\n",
+    fprintf(DebugStream(), "Maximum Resident Size: %d KB\n",
             rusage_maxrss(&rusage));
-    fprintf(debug_log, "Page faults with physical i/o: %d\n",
+    fprintf(DebugStream(), "Page faults with physical i/o: %d\n",
             rusage_pagefaults(&rusage));
 }
 
@@ -355,8 +355,8 @@ death(int sig)
 #if _SQUID_HPUX_
     {
         extern void U_STACK_TRACE(void);    /* link with -lcl */
-        fflush(debug_log);
-        dup2(fileno(debug_log), 2);
+        fflush(DebugStream());
+        dup2(fileno(DebugStream()), 2);
         U_STACK_TRACE();
     }
 
@@ -364,8 +364,8 @@ death(int sig)
 #if _SQUID_SOLARIS_ && HAVE_LIBOPCOM_STACK
     {   /* get ftp://opcom.sun.ca/pub/tars/opcom_stack.tar.gz and */
         extern void opcom_stack_trace(void);    /* link with -lopcom_stack */
-        fflush(debug_log);
-        dup2(fileno(debug_log), fileno(stdout));
+        fflush(DebugStream());
+        dup2(fileno(DebugStream()), fileno(stdout));
         opcom_stack_trace();
         fflush(stdout);
     }
@@ -376,7 +376,7 @@ death(int sig)
         static void *callarray[8192];
         int n;
         n = backtrace(callarray, 8192);
-        backtrace_symbols_fd(callarray, n, fileno(debug_log));
+        backtrace_symbols_fd(callarray, n, fileno(DebugStream()));
     }
 
 #endif
@@ -776,7 +776,7 @@ setMaxFD(void)
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_NOFILE: " << xstrerr(xerrno));
     } else if (Config.max_filedescriptors > 0) {
-#if USE_SELECT || USE_SELECT_WIN32
+#if USE_SELECT
         /* select() breaks if this gets set too big */
         if (Config.max_filedescriptors > FD_SETSIZE) {
             rl.rlim_cur = FD_SETSIZE;
@@ -930,8 +930,8 @@ squid_signal(int sig, SIGHDLR * func, int flags)
 void
 logsFlush(void)
 {
-    if (debug_log)
-        fflush(debug_log);
+    if (DebugStream())
+        fflush(DebugStream());
 }
 
 void
@@ -1121,8 +1121,7 @@ strwordquote(MemBuf * mb, const char *str)
 void
 keepCapabilities(void)
 {
-#if USE_LIBCAP && HAVE_PRCTL && defined(PR_SET_KEEPCAPS)
-
+#if HAVE_LIBCAP && HAVE_PRCTL && defined(PR_SET_KEEPCAPS)
     if (prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0)) {
         Ip::Interceptor.StopTransparency("capability setting has failed.");
     }
@@ -1132,8 +1131,7 @@ keepCapabilities(void)
 static void
 restoreCapabilities(bool keep)
 {
-    /* NP: keep these two if-endif separate. Non-Linux work perfectly well without Linux syscap support. */
-#if USE_LIBCAP
+#if HAVE_LIBCAP
     cap_t caps;
     if (keep)
         caps = cap_get_proc();
@@ -1169,11 +1167,13 @@ restoreCapabilities(bool keep)
         cap_free(caps);
     }
 #elif _SQUID_LINUX_
-    (void)keep;
+    /* Linux requires syscap support from libcap. */
     Ip::Interceptor.StopTransparency("Missing needed capability support.");
-#else
     (void)keep;
-#endif /* HAVE_SYS_CAPABILITY_H */
+#else
+    /* Non-Linux transparent proxy works with or without libcap support. */
+    (void)keep;
+#endif
 }
 
 pid_t
@@ -1186,7 +1186,7 @@ WaitForOnePid(pid_t pid, PidStatus &status, int flags)
 #endif
 }
 
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
 SBuf
 WindowsErrorMessage(DWORD errorId)
 {
@@ -1209,5 +1209,5 @@ WindowsErrorMessage(DWORD errorId)
     LocalFree(rawMessage);
     return result;
 }
-#endif // _SQUID_WINDOWS_
+#endif // _SQUID_WINDOWS_ || _SQUID_MINGW_
 

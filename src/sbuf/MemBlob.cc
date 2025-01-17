@@ -14,13 +14,9 @@
 
 #include <iostream>
 
-MemBlobStats MemBlob::Stats;
 InstanceIdDefinitions(MemBlob, "blob");
 
 /* MemBlobStats */
-
-MemBlobStats::MemBlobStats(): alloc(0), live(0), append(0), liveBytes(0)
-{}
 
 MemBlobStats&
 MemBlobStats::operator += (const MemBlobStats& s)
@@ -44,6 +40,19 @@ MemBlobStats::dump(std::ostream &os) const
        "\nlive MemBlob mean current allocation size: " <<
        (static_cast<double>(liveBytes)/(live?live:1)) << std::endl;
     return os;
+}
+
+static auto &
+WriteableStats()
+{
+    static const auto stats = new MemBlobStats();
+    return *stats;
+}
+
+const MemBlobStats &
+MemBlob::GetStats()
+{
+    return WriteableStats();
 }
 
 /* MemBlob */
@@ -71,9 +80,10 @@ MemBlob::MemBlob(const char *buffer, const MemBlob::size_type bufSize) :
 MemBlob::~MemBlob()
 {
     if (mem || capacity)
-        memFreeString(capacity,mem);
-    Stats.liveBytes -= capacity;
-    --Stats.live;
+        memFreeBuf(capacity, mem);
+    auto &stats = WriteableStats();
+    stats.liveBytes -= capacity;
+    --stats.live;
     SBufStats::RecordMemBlobSizeAtDestruct(capacity);
 
     debugs(MEMBLOB_DEBUGSECTION,9, "destructed, this="
@@ -91,7 +101,7 @@ MemBlob::memAlloc(const size_type minSize)
     size_t actualAlloc = minSize;
 
     Must(!mem);
-    mem = static_cast<char*>(memAllocString(actualAlloc, &actualAlloc));
+    mem = static_cast<char*>(memAllocBuf(actualAlloc, &actualAlloc));
     Must(mem);
 
     capacity = actualAlloc;
@@ -99,9 +109,10 @@ MemBlob::memAlloc(const size_type minSize)
     debugs(MEMBLOB_DEBUGSECTION, 8,
            id << " memAlloc: requested=" << minSize <<
            ", received=" << capacity);
-    ++Stats.live;
-    ++Stats.alloc;
-    Stats.liveBytes += capacity;
+    auto &stats = WriteableStats();
+    ++stats.live;
+    ++stats.alloc;
+    stats.liveBytes += capacity;
 }
 
 void
@@ -109,7 +120,7 @@ MemBlob::appended(const size_type n)
 {
     Must(willFit(n));
     size += n;
-    ++Stats.append;
+    ++WriteableStats().append;
 }
 
 void
@@ -121,7 +132,7 @@ MemBlob::append(const char *source, const size_type n)
         memmove(mem + size, source, n);
         size += n;
     }
-    ++Stats.append;
+    ++WriteableStats().append;
 }
 
 void
@@ -143,12 +154,6 @@ MemBlob::consume(const size_type rawN)
         if (size)
             memmove(mem, mem + n, size);
     }
-}
-
-const MemBlobStats&
-MemBlob::GetStats()
-{
-    return Stats;
 }
 
 std::ostream&

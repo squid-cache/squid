@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ASYNCCALLQUEUE_H
-#define SQUID_ASYNCCALLQUEUE_H
+#ifndef SQUID_SRC_BASE_ASYNCCALLQUEUE_H
+#define SQUID_SRC_BASE_ASYNCCALLQUEUE_H
 
 #include "base/AsyncCallList.h"
 #include "base/forward.h"
@@ -34,5 +34,5 @@ private:
     static AsyncCallQueue *TheInstance;
 };
 
-#endif /* SQUID_ASYNCCALLQUEUE_H */
+#endif /* SQUID_SRC_BASE_ASYNCCALLQUEUE_H */
 

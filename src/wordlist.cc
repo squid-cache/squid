@@ -34,21 +34,8 @@ wordlistAdd(wordlist ** list, const char *key)
 void
 wordlistCat(const wordlist * w, MemBuf * mb)
 {
-    while (nullptr != w) {
-        mb->appendf("%s\n", w->key);
-        w = w->next;
-    }
-}
-
-SBufList
-ToSBufList(wordlist *wl)
-{
-    SBufList rv;
-    while (wl != nullptr) {
-        rv.push_back(SBuf(wl->key));
-        wl = wl->next;
-    }
-    return rv;
+    for (const auto &word: *w)
+        mb->appendf("%s\n", word);
 }
 
 char *

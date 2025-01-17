@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__HIER_CODE_H
-#define SQUID__HIER_CODE_H
+#ifndef SQUID_SRC_HIER_CODE_H
+#define SQUID_SRC_HIER_CODE_H
 
 typedef enum {
     HIER_NONE,
@@ -42,5 +42,5 @@ extern const char *hier_code_str[];
 
 inline hier_code operator++(hier_code &i) { return i = (hier_code)(1+(int)i); }
 
-#endif /* SQUID__HIER_CODE_H */
+#endif /* SQUID_SRC_HIER_CODE_H */
 

@@ -9,8 +9,11 @@
 #include "squid.h"
 
 #include "anyp/Uri.h"
+#include "base/CharacterSet.h"
+#include "base/TextException.h"
 #include "compat/cppunit.h"
 #include "debug/Stream.h"
+#include "sbuf/Stream.h"
 #include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
@@ -25,21 +28,26 @@ class TestUri : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE(TestUri);
     CPPUNIT_TEST(testConstructScheme);
     CPPUNIT_TEST(testDefaultConstructor);
+    CPPUNIT_TEST(testEncoding);
     CPPUNIT_TEST_SUITE_END();
-
-public:
-    void setUp() override;
 
 protected:
     void testConstructScheme();
     void testDefaultConstructor();
+    void testEncoding();
 };
 CPPUNIT_TEST_SUITE_REGISTRATION(TestUri);
 
-/* init memory pools */
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
 
 void
-TestUri::setUp()
+MyTestProgram::startup()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -76,5 +84,54 @@ TestUri::testDefaultConstructor()
     auto *urlPointer = new AnyP::Uri;
     CPPUNIT_ASSERT(urlPointer != nullptr);
     delete urlPointer;
+}
+
+void
+TestUri::testEncoding()
+{
+    const std::vector< std::pair<SBuf, SBuf> > basicTestCases = {
+        {SBuf(""), SBuf("")},
+        {SBuf("foo"), SBuf("foo")},
+        {SBuf("%"), SBuf("%25")},
+        {SBuf("%foo"), SBuf("%25foo")},
+        {SBuf("foo%"), SBuf("foo%25")},
+        {SBuf("fo%o"), SBuf("fo%25o")},
+        {SBuf("fo%%o"), SBuf("fo%25%25o")},
+        {SBuf("fo o"), SBuf("fo%20o")},
+        {SBuf("?1"), SBuf("%3F1")},
+        {SBuf("\377"), SBuf("%FF")},
+        {SBuf("fo\0o", 4), SBuf("fo%00o")},
+    };
+
+    for (const auto &testCase: basicTestCases) {
+        CPPUNIT_ASSERT_EQUAL(testCase.first, AnyP::Uri::Decode(testCase.second));
+        CPPUNIT_ASSERT_EQUAL(testCase.second, AnyP::Uri::Encode(testCase.first, CharacterSet::RFC3986_UNRESERVED()));
+    };
+
+    const auto invalidEncodings = {
+        SBuf("%"),
+        SBuf("%%"),
+        SBuf("%%%"),
+        SBuf("%1"),
+        SBuf("%1Z"),
+        SBuf("%1\000", 2),
+        SBuf("%1\377"),
+        SBuf("%\0002", 3),
+        SBuf("%\3772"),
+    };
+
+    for (const auto &invalidEncoding: invalidEncodings) {
+        // test various input positions of an invalid escape sequence
+        CPPUNIT_ASSERT_THROW(AnyP::Uri::Decode(invalidEncoding), TextException);
+        CPPUNIT_ASSERT_THROW(AnyP::Uri::Decode(ToSBuf("word", invalidEncoding)), TextException);
+        CPPUNIT_ASSERT_THROW(AnyP::Uri::Decode(ToSBuf(invalidEncoding, "word")), TextException);
+        CPPUNIT_ASSERT_THROW(AnyP::Uri::Decode(ToSBuf("word", invalidEncoding, "word")), TextException);
+    };
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

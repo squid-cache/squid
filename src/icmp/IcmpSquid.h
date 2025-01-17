@@ -8,8 +8,8 @@
 
 /* DEBUG: section 37    ICMP Routines */
 
-#ifndef _INCLUDE_ICMPSQUID_H
-#define _INCLUDE_ICMPSQUID_H
+#ifndef SQUID_SRC_ICMP_ICMPSQUID_H
+#define SQUID_SRC_ICMP_ICMPSQUID_H
 
 #include "Icmp.h"
 
@@ -41,5 +41,5 @@ public:
 // global engine within squid.
 extern IcmpSquid icmpEngine;
 
-#endif /* _INCLUDE_ICMPSQUID_H */
+#endif /* SQUID_SRC_ICMP_ICMPSQUID_H */
 

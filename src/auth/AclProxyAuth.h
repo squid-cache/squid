@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLPROXYAUTH_H
-#define SQUID_ACLPROXYAUTH_H
+#ifndef SQUID_SRC_AUTH_ACLPROXYAUTH_H
+#define SQUID_SRC_AUTH_ACLPROXYAUTH_H
 
 #if USE_AUTH
 
@@ -15,27 +15,17 @@
 #include "acl/Checklist.h"
 #include "acl/Data.h"
 
-class ProxyAuthLookup : public ACLChecklist::AsyncState
-{
-
-public:
-    static ProxyAuthLookup *Instance();
-    void checkForAsync(ACLChecklist *) const override;
-
-private:
-    static ProxyAuthLookup instance_;
-    static void LookupDone(void *data);
-};
-
-class ACLProxyAuth : public ACL
+class ACLProxyAuth : public Acl::Node
 {
     MEMPROXY_CLASS(ACLProxyAuth);
 
 public:
+    static void StartLookup(ACLFilledChecklist &, const Acl::Node &);
+
     ~ACLProxyAuth() override;
     ACLProxyAuth(ACLData<char const *> *, char const *);
 
-    /* ACL API */
+    /* Acl::Node API */
     char const *typeString() const override;
     void parse() override;
     bool isProxyAuth() const override {return true;}
@@ -47,7 +37,9 @@ public:
     int matchForCache(ACLChecklist *checklist) override;
 
 private:
-    /* ACL API */
+    static void LookupDone(void *data);
+
+    /* Acl::Node API */
     const Acl::Options &lineOptions() override;
 
     int matchProxyAuth(ACLChecklist *);
@@ -56,5 +48,5 @@ private:
 };
 
 #endif /* USE_AUTH */
-#endif /* SQUID_ACLPROXYAUTH_H */
+#endif /* SQUID_SRC_AUTH_ACLPROXYAUTH_H */
 

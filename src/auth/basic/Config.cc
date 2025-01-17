@@ -36,7 +36,7 @@
 /* Basic Scheme */
 static AUTHSSTATS authenticateBasicStats;
 
-helper *basicauthenticators = nullptr;
+Helper::ClientPointer basicauthenticators;
 
 static int authbasic_initialised = 0;
 
@@ -109,7 +109,6 @@ Auth::Basic::Config::done()
         helperShutdown(basicauthenticators);
     }
 
-    delete basicauthenticators;
     basicauthenticators = nullptr;
 
     if (authenticateProgram)
@@ -305,7 +304,7 @@ Auth::Basic::Config::init(Auth::SchemeConfig *)
         authbasic_initialised = 1;
 
         if (basicauthenticators == nullptr)
-            basicauthenticators = new helper("basicauthenticator");
+            basicauthenticators = Helper::Client::Make("basicauthenticator");
 
         basicauthenticators->cmdline = authenticateProgram;
 
@@ -313,7 +312,7 @@ Auth::Basic::Config::init(Auth::SchemeConfig *)
 
         basicauthenticators->ipc_type = IPC_STREAM;
 
-        helperOpenServers(basicauthenticators);
+        basicauthenticators->openSessions();
     }
 }
 

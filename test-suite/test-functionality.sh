@@ -214,9 +214,13 @@ main() {
     then
         local default_tests="
             pconn
+            dead-peer
             proxy-update-headers-after-304
+            accumulate-headers-after-304
             upgrade-protocols
+            cache-response
             proxy-collapsed-forwarding
+            hit-revalidation
             busy-restart
             truncated-responses
             malformed-request

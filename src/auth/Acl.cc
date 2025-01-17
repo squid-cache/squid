@@ -25,13 +25,13 @@
  * \retval ACCESS_ALLOWED       user authenticated and authorized
  */
 Acl::Answer
-AuthenticateAcl(ACLChecklist *ch)
+AuthenticateAcl(ACLChecklist *ch, const Acl::Node &acl)
 {
     ACLFilledChecklist *checklist = Filled(ch);
-    HttpRequest *request = checklist->request;
+    const auto request = checklist->request;
     Http::HdrType headertype;
 
-    if (nullptr == request) {
+    if (!request) {
         fatal ("requiresRequest SHOULD have been true for this ACL!!");
         return ACCESS_DENIED;
     } else if (request->flags.sslBumped) {
@@ -55,7 +55,7 @@ AuthenticateAcl(ACLChecklist *ch)
     /* get authed here */
     /* Note: this fills in auth_user_request when applicable */
     const AuthAclState result = Auth::UserRequest::tryToAuthenticateAndSetAuthUser(
-                                    &checklist->auth_user_request, headertype, request,
+                                    &checklist->auth_user_request, headertype, checklist->request.getRaw(),
                                     checklist->conn(), checklist->src_addr, checklist->al);
     switch (result) {
 
@@ -68,7 +68,7 @@ AuthenticateAcl(ACLChecklist *ch)
         break;
 
     case AUTH_ACL_HELPER:
-        if (checklist->goAsync(ProxyAuthLookup::Instance()))
+        if (checklist->goAsync(ACLProxyAuth::StartLookup, acl))
             debugs(28, 4, "returning " << ACCESS_DUNNO << " sending credentials to helper.");
         else
             debugs(28, 2, "cannot go async; returning " << ACCESS_DUNNO);

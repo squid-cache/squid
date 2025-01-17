@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/AsyncCbdataCalls.h"
+#include "base/IoManip.h"
 #include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "CacheDigest.h"
@@ -35,6 +36,7 @@
 #include "mgr/StoreIoAction.h"
 #include "repl_modules.h"
 #include "RequestFlags.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "stmem.h"
@@ -223,6 +225,19 @@ StoreEntry::bytesWanted (Range<size_t> const aRange, bool ignoreDelayPools) cons
         return 0;
 
     return mem_obj->mostBytesWanted(aRange.end, ignoreDelayPools);
+}
+
+bool
+StoreEntry::hasParsedReplyHeader() const
+{
+    if (mem_obj) {
+        const auto &reply = mem_obj->baseReply();
+        if (reply.pstate == Http::Message::psParsed) {
+            debugs(20, 7, reply.hdr_sz);
+            return true;
+        }
+    }
+    return false;
 }
 
 bool
@@ -1442,8 +1457,14 @@ StoreEntry::updateOnNotModified(const StoreEntry &e304)
     // update reply before calling timestampsSet() below
     const auto &oldReply = mem_obj->freshestReply();
     const auto updatedReply = oldReply.recreateOnNotModified(e304.mem_obj->baseReply());
-    if (updatedReply) // HTTP 304 brought in new information
+    if (updatedReply) { // HTTP 304 brought in new information
+        if (updatedReply->prefixLen() > Config.maxReplyHeaderSize) {
+            throw TextException(ToSBuf("cannot update the cached response because its updated ",
+                                       updatedReply->prefixLen(), "-byte header would exceed ",
+                                       Config.maxReplyHeaderSize, "-byte reply_header_max_size"), Here());
+        }
         mem_obj->updateReply(*updatedReply);
+    }
     // else continue to use the previous update, if any
 
     if (!timestampsSet() && !updatedReply)
@@ -1920,8 +1941,7 @@ StoreEntry::attachToDisk(const sdirno dirn, const sfileno fno, const swap_status
 {
     debugs(88, 3, "attaching entry with key " << getMD5Text() << " : " <<
            swapStatusStr[status] << " " << dirn << " " <<
-           std::hex << std::setw(8) << std::setfill('0') <<
-           std::uppercase << fno);
+           asHex(fno).upperCase().minDigits(8));
     checkDisk();
     swap_dirn = dirn;
     swap_filen = fno;

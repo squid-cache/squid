@@ -6,29 +6,37 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLREPLYHEADERSTRATEGY_H
-#define SQUID_ACLREPLYHEADERSTRATEGY_H
+#ifndef SQUID_SRC_ACL_REPLYHEADERSTRATEGY_H
+#define SQUID_SRC_ACL_REPLYHEADERSTRATEGY_H
 
-#include "acl/Acl.h"
 #include "acl/Data.h"
 #include "acl/FilledChecklist.h"
-#include "acl/Strategy.h"
+#include "acl/ParameterizedNode.h"
+#include "acl/ReplyHeaderStrategy.h"
 #include "HttpReply.h"
 
-template <Http::HdrType header>
-class ACLReplyHeaderStrategy : public ACLStrategy<char const *>
+namespace Acl
 {
 
+/// matches the value of a given reply header (e.g., "rep_mime_type" ACL)
+template <Http::HdrType header>
+class ReplyHeaderCheck: public ParameterizedNode< ACLData<const char *> >
+{
 public:
-    int match (ACLData<char const *> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
     bool requiresReply() const override {return true;}
 };
 
+} // namespace Acl
+
 template <Http::HdrType header>
 int
-ACLReplyHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)
+Acl::ReplyHeaderCheck<header>::match(ACLChecklist * const ch)
 {
-    char const *theHeader = checklist->reply->header.getStr(header);
+    const auto checklist = Filled(ch);
+
+    const auto theHeader = checklist->reply().header.getStr(header);
 
     if (nullptr == theHeader)
         return 0;
@@ -36,5 +44,5 @@ ACLReplyHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLFilledC
     return data->match(theHeader);
 }
 
-#endif /* SQUID_REPLYHEADERSTRATEGY_H */
+#endif /* SQUID_SRC_ACL_REPLYHEADERSTRATEGY_H */
 

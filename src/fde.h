@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FDE_H
-#define SQUID_FDE_H
+#ifndef SQUID_SRC_FDE_H
+#define SQUID_SRC_FDE_H
 
 #include "base/CodeContext.h" /* XXX: Remove by de-inlining ctor and clear() */
 #include "base/forward.h"
@@ -119,16 +119,16 @@ public:
         bool close_request = false; ///< true if file_ or comm_close has been called
         bool write_daemon = false;
         bool socket_eof = false;
-        bool nolinger = false;
         bool nonblocking = false;
         bool ipc = false;
         bool called_connect = false;
         bool nodelay = false;
-        bool close_on_exec = false;
         /// buffering readMethod_ has data to give (regardless of socket state)
         bool read_pending = false;
         //bool write_pending; //XXX seems not to be used
         bool transparent = false;
+        /// whether comm_reset_close() (or old_comm_reset_close()) has been called
+        bool harshClosureRequested = false;
     } flags;
 
     int64_t bytes_read = 0;
@@ -202,5 +202,5 @@ FD_WRITE_METHOD(int fd, const char *buf, int len)
     return fd_table[fd].write(fd, buf, len);
 }
 
-#endif /* SQUID_FDE_H */
+#endif /* SQUID_SRC_FDE_H */
 

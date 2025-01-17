@@ -23,10 +23,11 @@
 #include "http/Stream.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
-#include "HttpHeaderFieldInfo.h"
 #include "HttpHeaderTools.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "sbuf/Stream.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StrList.h"
@@ -234,6 +235,15 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
 }
 
 SBuf
+Http::SlowlyParseQuotedString(const char * const description, const char * const start, const size_t length)
+{
+    String s;
+    if (!httpHeaderParseQuotedString(start, length, &s))
+        throw TextException(ToSBuf("Cannot parse ", description, " as a quoted string"), Here());
+    return StringToSBuf(s);
+}
+
+SBuf
 httpHeaderQuoteString(const char *raw)
 {
     assert(raw);
@@ -287,13 +297,8 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms, c
         return 1;
     }
 
-    ACLFilledChecklist checklist(hm->access_list, request, nullptr);
-
-    checklist.al = al;
-    if (al && al->reply) {
-        checklist.reply = al->reply.getRaw();
-        HTTPMSGLOCK(checklist.reply);
-    }
+    ACLFilledChecklist checklist(hm->access_list, request);
+    checklist.updateAle(al);
 
     // XXX: The two "It was denied" clauses below mishandle cases with no
     // matching rules, violating the "If no rules within the set have matching
@@ -487,13 +492,8 @@ HeaderManglers::find(const HttpHeaderEntry &e) const
 void
 httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headersAdd)
 {
-    ACLFilledChecklist checklist(nullptr, request, nullptr);
-
-    checklist.al = al;
-    if (al && al->reply) {
-        checklist.reply = al->reply.getRaw();
-        HTTPMSGLOCK(checklist.reply);
-    }
+    ACLFilledChecklist checklist(nullptr, request);
+    checklist.updateAle(al);
 
     for (HeaderWithAclList::const_iterator hwa = headersAdd.begin(); hwa != headersAdd.end(); ++hwa) {
         if (!hwa->aclList || checklist.fastCheck(hwa->aclList).allowed()) {

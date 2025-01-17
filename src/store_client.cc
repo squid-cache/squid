@@ -57,7 +57,7 @@ StoreClient::onCollapsingPath() const
     if (!Config.accessList.collapsedForwardingAccess)
         return true;
 
-    ACLFilledChecklist checklist(Config.accessList.collapsedForwardingAccess, nullptr, nullptr);
+    ACLFilledChecklist checklist(Config.accessList.collapsedForwardingAccess, nullptr);
     fillChecklist(checklist);
     return checklist.fastCheck().allowed();
 }
@@ -80,6 +80,7 @@ StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation
             tags->collapsingHistory.otherCollapses++;
     }
 
+    didCollapse = true;
     debugs(85, 5, e << " doingRevalidation=" << doingRevalidation);
     return true;
 }
@@ -162,6 +163,16 @@ store_client::finishCallback()
     if (object_ok && parsingBuffer && parsingBuffer->contentSize())
         result = parsingBuffer->packBack();
     result.flags.error = object_ok ? 0 : 1;
+
+    // TODO: Move object_ok handling above into this `if` statement.
+    if (object_ok) {
+        // works for zero hdr_sz cases as well; see also: nextHttpReadOffset()
+        discardableHttpEnd_ = NaturalSum<int64_t>(entry->mem().baseReply().hdr_sz, result.offset, result.length).value();
+    } else {
+        // object_ok is sticky, so we will not be able to use any response bytes
+        discardableHttpEnd_ = entry->mem().endOffset();
+    }
+    debugs(90, 7, "with " << result << "; discardableHttpEnd_=" << discardableHttpEnd_);
 
     // no HTTP headers and no body bytes (but not because there was no space)
     atEof_ = !sendingHttpHeaders() && !result.length && copyInto.length;
@@ -264,6 +275,9 @@ store_client::copy(StoreEntry * anEntry,
     Assure(!copyInto.offset || answeredOnce());
 
     parsingBuffer.emplace(copyInto);
+
+    discardableHttpEnd_ = nextHttpReadOffset();
+    debugs(90, 7, "discardableHttpEnd_=" << discardableHttpEnd_);
 
     static bool copying (false);
     assert (!copying);
@@ -396,8 +410,9 @@ store_client::doCopy(StoreEntry *anEntry)
             return; // failure
     }
 
-    // send any immediately available body bytes even if we also sendHttpHeaders
-    if (canReadFromMemory()) {
+    // Send any immediately available body bytes unless we sendHttpHeaders.
+    // TODO: Send those body bytes when we sendHttpHeaders as well.
+    if (!sendHttpHeaders && canReadFromMemory()) {
         readFromMemory();
         noteNews(); // will sendHttpHeaders (if needed) as well
         flags.store_copying = false;
@@ -483,6 +498,7 @@ store_client::canReadFromMemory() const
 {
     const auto &mem = entry->mem();
     const auto memReadOffset = nextHttpReadOffset();
+    // XXX: This (lo <= offset < end) logic does not support Content-Range gaps.
     return mem.inmem_lo <= memReadOffset && memReadOffset < mem.endOffset() &&
            parsingBuffer->spaceSize();
 }
@@ -618,7 +634,7 @@ store_client::handleBodyFromDisk()
     if (!answeredOnce()) {
         // All on-disk responses have HTTP headers. First disk body read(s)
         // include HTTP headers that we must parse (if needed) and skip.
-        const auto haveHttpHeaders = entry->mem_obj->baseReply().pstate == Http::Message::psParsed;
+        const auto haveHttpHeaders = entry->hasParsedReplyHeader();
         if (!haveHttpHeaders && !parseHttpHeadersFromDisk())
             return;
         skipHttpHeadersFromDisk();
@@ -969,13 +985,7 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
         return true;
     }
 
-    // XXX: This is absurd! TODO: For positives, "a/(b/c) > d" is "a*c > b*d".
-    if (expectlen < 100) {
-        debugs(90, 3, "quick-abort? NO avoid FPE");
-        return false;
-    }
-
-    if ((curlen / (expectlen / 100)) > (Config.quickAbort.pct)) {
+    if (curlen > expectlen*(Config.quickAbort.pct/100.0)) {
         debugs(90, 3, "quick-abort? NO past point of no return");
         return false;
     }

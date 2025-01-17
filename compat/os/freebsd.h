@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_OS_FREEBSD_H
-#define SQUID_OS_FREEBSD_H
+#ifndef SQUID_COMPAT_OS_FREEBSD_H
+#define SQUID_COMPAT_OS_FREEBSD_H
 
 #if _SQUID_FREEBSD_
 
@@ -40,5 +40,5 @@
 #define s6_addr32 __u6_addr.__u6_addr32
 
 #endif /* _SQUID_FREEBSD_ */
-#endif /* SQUID_OS_FREEBSD_H */
+#endif /* SQUID_COMPAT_OS_FREEBSD_H */
 

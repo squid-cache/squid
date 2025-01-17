@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPHEADER_H
-#define SQUID_HTTPHEADER_H
+#ifndef SQUID_SRC_HTTPHEADER_H
+#define SQUID_SRC_HTTPHEADER_H
 
 #include "anyp/ProtocolVersion.h"
 #include "base/LookupTable.h"
@@ -59,6 +59,9 @@ public:
     void packInto(Packable *p) const;
     int getInt() const;
     int64_t getInt64() const;
+
+    /// expected number of bytes written by packInto(), including ": " and CRLF
+    size_t length() const { return name.length() + 2 + value.size() + 2; }
 
     Http::HdrType id;
     SBuf name;
@@ -196,6 +199,26 @@ private:
 
 int httpHeaderParseQuotedString(const char *start, const int len, String *val);
 
+namespace Http {
+
+/**
+ * Parses an HTTP quoted-string sequence (RFC 9110, Section 5.6.4).
+ *
+ * \param a brief human-friendly description of the string being parsed
+ * \param start input buffer (an opening double-quote is expected at *start)
+ * \param length is the number of characters in the given buffer
+ *
+ * \returns string contents with open/closing quotes stripped and any quoted-pairs decoded
+ *
+ * Avoid this slow function on performance-sensitive code paths.
+ * TODO: Replace with an efficient, SBuf-friendly implementation.
+ *
+ * \sa httpHeaderParseQuotedString() for a String-friendly function.
+ */
+SBuf SlowlyParseQuotedString(const char *description, const char *start, size_t length);
+
+}
+
 /// quotes string using RFC 7230 quoted-string rules
 SBuf httpHeaderQuoteString(const char *raw);
 
@@ -203,5 +226,5 @@ void httpHeaderCalcMask(HttpHeaderMask * mask, Http::HdrType http_hdr_type_enums
 
 void httpHeaderInitModule(void);
 
-#endif /* SQUID_HTTPHEADER_H */
+#endif /* SQUID_SRC_HTTPHEADER_H */
 

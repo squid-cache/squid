@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSL_HELPER_H
-#define SQUID_SSL_HELPER_H
+#ifndef SQUID_SRC_SSL_HELPER_H
+#define SQUID_SRC_SSL_HELPER_H
 
 #if USE_OPENSSL
 
@@ -34,7 +34,7 @@ public:
     /// Submit crtd message to external crtd server.
     static void Submit(CrtdMessage const & message, HLPCB * callback, void *data);
 private:
-    static helper * ssl_crtd; ///< helper for management of ssl_crtd.
+    static ::Helper::ClientPointer ssl_crtd; ///< helper for management of ssl_crtd.
 };
 #endif
 
@@ -53,7 +53,7 @@ public:
     /// Submit crtd request message to external crtd server.
     static void Submit(const Ssl::CertValidationRequest &, const Callback &);
 private:
-    static helper * ssl_crt_validator; ///< helper for management of ssl_crtd.
+    static ::Helper::ClientPointer ssl_crt_validator; ///< helper for management of ssl_crtd.
 public:
     typedef ClpMap<SBuf, CertValidationResponse::Pointer, CertValidationResponse::MemoryUsedByResponse> CacheType;
     static CacheType *HelperCache; ///< cache for cert validation helper
@@ -62,5 +62,5 @@ public:
 } //namespace Ssl
 
 #endif /* USE_OPENSSL */
-#endif // SQUID_SSL_HELPER_H
+#endif /* SQUID_SRC_SSL_HELPER_H */
 

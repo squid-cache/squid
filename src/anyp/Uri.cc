@@ -9,6 +9,7 @@
 /* DEBUG: section 23    URL Parsing */
 
 #include "squid.h"
+#include "anyp/Host.h"
 #include "anyp/Uri.h"
 #include "base/Raw.h"
 #include "globals.h"
@@ -17,7 +18,6 @@
 #include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidString.h"
 
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -82,6 +82,29 @@ AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &ignore)
     return output;
 }
 
+SBuf
+AnyP::Uri::Decode(const SBuf &buf)
+{
+    SBuf output;
+    Parser::Tokenizer tok(buf);
+    while (!tok.atEnd()) {
+        SBuf token;
+        static const auto unencodedChars = CharacterSet("percent", "%").complement("unencoded");
+        if (tok.prefix(token, unencodedChars))
+            output.append(token);
+
+        // we are either at '%' or at end of input
+        if (tok.skip('%')) {
+            int64_t hex1 = 0, hex2 = 0;
+            if (tok.int64(hex1, 16, false, 1) && tok.int64(hex2, 16, false, 1))
+                output.append(static_cast<char>((hex1 << 4) | hex2));
+            else
+                throw TextException("invalid pct-encoded triplet", Here());
+        }
+    }
+    return output;
+}
+
 const SBuf &
 AnyP::Uri::Asterisk()
 {
@@ -111,6 +134,7 @@ AnyP::Uri::host(const char *src)
     touch();
 }
 
+// TODO: Replace with ToSBuf(parsedHost()) or similar.
 SBuf
 AnyP::Uri::hostOrIp() const
 {
@@ -120,6 +144,25 @@ AnyP::Uri::hostOrIp() const
         return SBuf(ip, hostStrLen);
     } else
         return SBuf(host());
+}
+
+std::optional<AnyP::Host>
+AnyP::Uri::parsedHost() const
+{
+    if (hostIsNumeric())
+        return Host::ParseIp(hostIP());
+
+    // XXX: Interpret host subcomponent as reg-name representing a DNS name. It
+    // may actually be, for example, a URN namespace ID (NID; see RFC 8141), but
+    // current Squid APIs do not support adequate representation of those cases.
+    const SBuf regName(host());
+
+    if (regName.find('%') != SBuf::npos) {
+        debugs(23, 3, "rejecting percent-encoded reg-name: " << regName);
+        return std::nullopt; // TODO: Decode() instead
+    }
+
+    return Host::ParseSimpleDomainName(regName);
 }
 
 const SBuf &
@@ -174,6 +217,10 @@ urlInitialize(void)
     assert(0 == matchDomainName("*.foo.com", ".x.foo.com", mdnHonorWildcards));
     assert(0 == matchDomainName("*.foo.com", ".foo.com", mdnHonorWildcards));
     assert(0 != matchDomainName("*.foo.com", "foo.com", mdnHonorWildcards));
+
+    assert(0 != matchDomainName("foo.com", ""));
+    assert(0 != matchDomainName("foo.com", "", mdnHonorWildcards));
+    assert(0 != matchDomainName("foo.com", "", mdnRejectSubsubDomains));
 
     /* more cases? */
 }
@@ -772,12 +819,9 @@ urlIsRelative(const char *url)
         return true; // path-empty
 
     if (*url == '/') {
-        // RFC 3986 section 5.2.3
-        // path-absolute   ; begins with "/" but not "//"
-        if (url[1] == '/')
-            return true; // network-path reference, aka. 'scheme-relative URI'
-        else
-            return true; // path-absolute, aka 'absolute-path reference'
+        // network-path reference (a.k.a. 'scheme-relative URI') or
+        // path-absolute (a.k.a. 'absolute-path reference')
+        return true;
     }
 
     for (const auto *p = url; *p != '\0' && *p != '/' && *p != '?' && *p != '#'; ++p) {
@@ -828,6 +872,8 @@ matchDomainName(const char *h, const char *d, MatchDomainNameFlags flags)
         return -1;
 
     dl = strlen(d);
+    if (dl == 0)
+        return 1;
 
     /*
      * Start at the ends of the two strings and work towards the
@@ -956,7 +1002,7 @@ urlCheckRequest(const HttpRequest * r)
         return false;
 
     case AnyP::PROTO_HTTPS:
-#if USE_OPENSSL || USE_GNUTLS
+#if USE_OPENSSL || HAVE_LIBGNUTLS
         return true;
 #else
         /*

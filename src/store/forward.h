@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_STORE_FORWARD_H
-#define SQUID_STORE_FORWARD_H
+#ifndef SQUID_SRC_STORE_FORWARD_H
+#define SQUID_SRC_STORE_FORWARD_H
 
 // bug 4610 see comments 22-38
 // Nasty hack, but it turns out C++ allows int32_t to be
@@ -60,5 +60,5 @@ typedef Store::Disk SwapDir;
 template <class C> class RefCount;
 typedef RefCount<Store::Disk> SwapDirPointer;
 
-#endif /* SQUID_STORE_FORWARD_H */
+#endif /* SQUID_SRC_STORE_FORWARD_H */
 

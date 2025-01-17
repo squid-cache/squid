@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 noinst_LTLIBRARIES = libclients.la
 
@@ -21,4 +20,6 @@ libclients_la_SOURCES = \
 	HttpTunneler.h \
 	HttpTunnelerAnswer.cc \
 	HttpTunnelerAnswer.h \
+	WhoisGateway.cc \
+	WhoisGateway.h \
 	forward.h

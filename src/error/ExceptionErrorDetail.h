@@ -6,9 +6,10 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H
-#define _SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H
+#ifndef SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H
+#define SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H
 
+#include "base/IoManip.h"
 #include "error/Detail.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
@@ -27,16 +28,16 @@ public:
 
     /* ErrorDetail API */
     SBuf brief() const override {
-        return ToSBuf("exception=", std::hex, exceptionId);
+        return ToSBuf("exception=", asHex(exceptionId));
     }
 
     SBuf verbose(const HttpRequestPointer &) const override {
-        return ToSBuf("Exception (ID=", std::hex, exceptionId, ')');
+        return ToSBuf("Exception (ID=", asHex(exceptionId), ')');
     }
 
 private:
     SourceLocationId exceptionId; ///< identifies the thrower or catcher
 };
 
-#endif /* _SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H */
+#endif /* SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H */
 

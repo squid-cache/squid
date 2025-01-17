@@ -9,6 +9,9 @@
 #ifndef SQUID_SRC_SERVERS_HTTP1SERVER_H
 #define SQUID_SRC_SERVERS_HTTP1SERVER_H
 
+#include "client_side.h"
+#include "http/one/RequestParser.h"
+#include "http/Stream.h"
 #include "servers/forward.h"
 
 namespace Http

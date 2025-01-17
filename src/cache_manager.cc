@@ -44,24 +44,6 @@
 /// \ingroup CacheManagerInternal
 #define MGR_PASSWD_SZ 128
 
-/// creates Action using supplied Action::Create method and command
-class ClassActionCreator: public Mgr::ActionCreator
-{
-public:
-    typedef Mgr::Action::Pointer Handler(const Mgr::Command::Pointer &cmd);
-
-public:
-    ClassActionCreator(Handler *aHandler): handler(aHandler) {}
-
-    Mgr::Action::Pointer create(const Mgr::Command::Pointer &cmd) const override {
-        return handler(cmd);
-    }
-
-private:
-    Handler *handler;
-};
-
-/// Registers new profiles, ignoring attempts to register a duplicate
 void
 CacheManager::registerProfile(const Mgr::ActionProfile::Pointer &profile)
 {
@@ -72,37 +54,6 @@ CacheManager::registerProfile(const Mgr::ActionProfile::Pointer &profile)
     } else {
         debugs(16, 2, "skipped duplicate profile: " << *profile);
     }
-}
-
-/**
- \ingroup CacheManagerAPI
- * Registers a C-style action, which is implemented as a pointer to a function
- * taking as argument a pointer to a StoreEntry and returning void.
- * Implemented via CacheManagerActionLegacy.
- */
-void
-CacheManager::registerProfile(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic)
-{
-    debugs(16, 3, "registering legacy " << action);
-    const Mgr::ActionProfile::Pointer profile = new Mgr::ActionProfile(action,
-            desc, pw_req_flag, atomic, new Mgr::FunActionCreator(handler));
-    registerProfile(profile);
-}
-
-/**
- * \ingroup CacheManagerAPI
- * Registers a C++-style action, via a pointer to a subclass of
- * a CacheManagerAction object, whose run() method will be invoked when
- * CacheManager identifies that the user has requested the action.
- */
-void
-CacheManager::registerProfile(char const * action, char const * desc,
-                              ClassActionCreator::Handler *handler,
-                              int pw_req_flag, int atomic)
-{
-    const Mgr::ActionProfile::Pointer profile = new Mgr::ActionProfile(action,
-            desc, pw_req_flag, atomic, new ClassActionCreator(handler));
-    registerProfile(profile);
 }
 
 /**
@@ -152,6 +103,13 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
     return cmd->profile->creator->create(cmd);
 }
 
+const SBuf &
+CacheManager::WellKnownUrlPathPrefix()
+{
+    static const SBuf prefix("/squid-internal-mgr/");
+    return prefix;
+}
+
 /**
  * Parses the action requested by the user and checks via
  * CacheManager::ActionProtection() that the item is accessible by the user.
@@ -169,8 +127,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
 {
     Parser::Tokenizer tok(uri.path());
 
-    static const SBuf internalMagicPrefix("/squid-internal-mgr/");
-    Assure(tok.skip(internalMagicPrefix));
+    Assure(tok.skip(WellKnownUrlPathPrefix()));
 
     Mgr::Command::Pointer cmd = new Mgr::Command();
     cmd->params.httpUri = SBufToString(uri.absolute());
@@ -300,7 +257,6 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
         err->url = xstrdup(entry->url());
         err->detailError(new ExceptionErrorDetail(Here().id()));
         errorAppendEntry(entry, err);
-        entry->expires = squid_curtime;
         return;
     }
 
@@ -367,7 +323,7 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
            client << " requesting '" <<
            actionName << "'" );
 
-    // special case: /squid-internal-mgr/ index page
+    // special case: an index page
     if (!strcmp(cmd->profile->name, "index")) {
         ErrorState err(MGR_INDEX, Http::scOkay, request, ale);
         err.url = xstrdup(entry->url());

@@ -164,7 +164,7 @@ main(int, char **)
         exit(EXIT_FAILURE);
     }
 
-#if USE_LIBCAP
+#if HAVE_LIBCAP
     // Drop remaining capabilities (if installed as non-setuid setcap cap_net_raw=ep).
     // If pinger binary was installed setuid root, setuid() above already dropped all
     // capabilities, and this is no-op.

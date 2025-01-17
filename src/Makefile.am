@@ -16,7 +16,31 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = mem time debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+# subdir Y that requires a file built in subdir X must appear after X
+SUBDIRS = \
+	mem \
+	time \
+	debug \
+	base \
+	anyp \
+	helper \
+	dns \
+	html \
+	ftp \
+	parser \
+	comm \
+	error \
+	eui \
+	sbuf \
+	acl \
+	format \
+	clients \
+	servers \
+	fs \
+	repl \
+	store \
+	DiskIO \
+	proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -24,7 +48,13 @@ AUTH_LIBS= auth/libauth.la
 AUTH_ACL_LIBS= auth/libacls.la
 endif
 
-SUBDIRS	+= http ip icmp ident log ipc mgr
+SUBDIRS += \
+	http \
+	ip \
+	icmp \
+	log \
+	ipc \
+	mgr
 
 SSL_LIBS=
 if ENABLE_SSL
@@ -41,27 +71,18 @@ SNMP_ALL_SOURCE = \
 	snmp_core.cc \
 	snmp_agent.h \
 	snmp_agent.cc
+
 if ENABLE_SNMP
 SNMP_SOURCE = $(SNMP_ALL_SOURCE)
 SUBDIRS += snmp
 SNMP_LIBS = snmp/libsnmp.la $(SNMPLIB)
 else
 SNMP_SOURCE =
+EXCLUDE_FROM_HDR_TESTING += $(SNMP_ALL_SOURCE)
 endif
 
 if ENABLE_ADAPTATION
 SUBDIRS += adaptation
-endif
-
-if ENABLE_ESI
-SUBDIRS += esi
-ESI_LIBS = \
-	esi/libesi.la \
-	$(top_builddir)/lib/libTrie/libTrie.a \
-	$(LIBEXPAT_LIBS) \
-	$(LIBXML2_LIBS)
-else
-ESI_LIBS =
 endif
 
 DELAY_POOL_ALL_SOURCE = \
@@ -100,10 +121,14 @@ if ENABLE_DELAY_POOLS
 DELAY_POOL_SOURCE = $(DELAY_POOL_ALL_SOURCE)
 else
 DELAY_POOL_SOURCE =
+EXCLUDE_FROM_HDR_TESTING += $(DELAY_POOL_ALL_SOURCE)
 endif
 
+KNOWN_HTCP_SOURCE = htcp.cc htcp.h
 if ENABLE_HTCP
-HTCPSOURCE = htcp.cc htcp.h
+HTCPSOURCE = $(KNOWN_HTCP_SOURCE)
+else
+EXCLUDE_FROM_HDR_TESTING += $(KNOWN_HTCP_SOURCE)
 endif
 
 if ENABLE_UNLINKD
@@ -117,11 +142,11 @@ endif
 WIN32_ALL_SOURCE = \
 	win32.h \
 	win32.cc \
-	WinSvc.h \
-	WinSvc.cc
+	windows_service.h \
+	windows_service.cc
 if ENABLE_WIN32SPECIFIC
 WIN32_SOURCE = win32.cc
-WINSVC_SOURCE = WinSvc.cc
+WINSVC_SOURCE = windows_service.cc
 else
 WIN32_SOURCE =
 WINSVC_SOURCE =
@@ -199,6 +224,8 @@ squid_SOURCES = \
 	CacheManager.h \
 	CachePeer.cc \
 	CachePeer.h \
+	CachePeers.cc \
+	CachePeers.h \
 	ClientInfo.h \
 	ClientRequestContext.h \
 	CollapsedForwarding.cc \
@@ -248,7 +275,6 @@ squid_SOURCES = \
 	HttpHdrScTarget.h \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderMask.h \
 	HttpHeaderRange.h \
@@ -435,8 +461,6 @@ squid_SOURCES = \
 	wccp.h \
 	wccp2.cc \
 	wccp2.h \
-	whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 
@@ -474,7 +498,6 @@ nodist_squid_SOURCES = \
 
 squid_LDADD = \
 	$(AUTH_ACL_LIBS) \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
@@ -510,7 +533,7 @@ squid_LDADD = \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \
 	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
+	html/libhtml.la \
 	$(SNMP_LIBS) \
 	mem/libmem.la \
 	store/libstore.la \
@@ -519,12 +542,16 @@ squid_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBGNUTLS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(SSLLIB) \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
-	$(KRB5LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
+	$(LIBMIT_KRB5_LIBS) \
+	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -539,10 +566,6 @@ squid_LDFLAGS = -export-dynamic -dlopen force
 ## LTDL headers require their local include path...
 AM_CPPFLAGS += $(INCLTDL)
 endif
-
-## Kerberos libraries require their include path...
-AM_CPPFLAGS += $(KRB5INCS)
-
 
 unlinkd_SOURCES = unlinkd_daemon.cc
 unlinkd_LDADD = \
@@ -559,7 +582,6 @@ data_DATA = \
 
 LDADD = \
 	$(AUTH_ACL_LIBS) \
-	ident/libident.la \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
@@ -701,6 +723,9 @@ uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE) $(srcdir)/mime.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE) squid.conf.default
 
+clean-local:
+	-rm -rf cf_gen.dSYM
+
 CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 	test_tools.cc *.a
 
@@ -739,8 +764,7 @@ TESTSOURCES= \
 ## involved in writing tests.
 check_PROGRAMS += tests/testBoilerplate
 tests_testBoilerplate_SOURCES = \
-	tests/testBoilerplate.cc \
-	tests/testBoilerplate.h
+	tests/testBoilerplate.cc
 nodist_tests_testBoilerplate_SOURCES = \
 	$(TESTSOURCES)
 tests_testBoilerplate_LDADD= \
@@ -752,6 +776,8 @@ tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
 # Unit Tests are listed below by sub-directory with order matching the SUBDIRS
 # dependency-based list so that simpler code is tested before more complex code
 # which uses it.
+
+TESTS += $(check_PROGRAMS)
 
 ## Tests of SquidMath.h
 check_PROGRAMS += tests/testMath
@@ -770,7 +796,7 @@ check_PROGRAMS += tests/testRandomUuid
 tests_testRandomUuid_SOURCES = \
 	tests/testRandomUuid.cc
 nodist_tests_testRandomUuid_SOURCES = \
-	RandomUuid.h \
+	base/RandomUuid.h \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc
 tests_testRandomUuid_LDADD = \
@@ -1020,7 +1046,6 @@ tests_testRock_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1149,6 +1174,7 @@ tests_testRock_LDADD = \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -1190,7 +1216,6 @@ tests_testUfs_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1298,7 +1323,6 @@ tests_testUfs_LDADD = \
 	http/libhttp.la \
 	parser/libparser.la \
 	CommCalls.o \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
@@ -1326,6 +1350,7 @@ tests_testUfs_LDADD = \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -1363,7 +1388,6 @@ tests_testStore_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1468,7 +1492,6 @@ tests_testStore_LDADD= \
 	libsquid.la \
 	http/libhttp.la \
 	parser/libparser.la \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
@@ -1490,6 +1513,7 @@ tests_testStore_LDADD= \
 	$(SSLLIB) \
 	CommCalls.o \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -1527,7 +1551,6 @@ tests_testDiskIO_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -1642,7 +1665,6 @@ tests_testDiskIO_LDADD = \
 	parser/libparser.la \
 	SquidConfig.o \
 	CommCalls.o \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	comm/libcomm.la \
@@ -1666,6 +1688,7 @@ tests_testDiskIO_LDADD = \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -1689,6 +1712,7 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	String.cc \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
+	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_client_side.cc \
 	tests/stub_debug.cc \
@@ -1714,6 +1738,7 @@ tests_testACLMaxUserIP_LDADD = \
 	base/libbase.la \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
@@ -1722,10 +1747,28 @@ EXTRA_DIST += \
 	tests/testACLMaxUserIP.cc
 endif
 
+## Tests of html/*
+
+check_PROGRAMS += tests/testHtmlQuote
+tests_testHtmlQuote_SOURCES = \
+	tests/testHtmlQuote.cc
+nodist_tests_testHtmlQuote_SOURCES = \
+	$(TESTSOURCES) \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc
+tests_testHtmlQuote_LDADD= \
+	html/libhtml.la \
+	sbuf/libsbuf.la \
+	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testHtmlQuote_LDFLAGS = $(LIBADD_DL)
+
 ## Tests of http/* and HTTP Protocol objects
 
-check_PROGRAMS += tests/test_http_range
-tests_test_http_range_SOURCES = \
+check_PROGRAMS += tests/testHttpRange
+tests_testHttpRange_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	$(DNSSOURCE) \
 	$(HTCPSOURCE) \
@@ -1740,6 +1783,8 @@ tests_test_http_range_SOURCES = \
 	CacheDigest.h \
 	CachePeer.cc \
 	CachePeer.h \
+	CachePeers.cc \
+	CachePeers.h \
 	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
@@ -1767,10 +1812,10 @@ tests_test_http_range_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
+	tests/testHttpRange.cc \
 	HttpReply.cc \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
@@ -1808,7 +1853,6 @@ tests_test_http_range_SOURCES = \
 	StrList.h \
 	String.cc \
 	Transients.cc \
-	tests/test_http_range.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	cache_manager.cc \
@@ -1904,14 +1948,12 @@ tests_test_http_range_SOURCES = \
 	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
-	tests/stub_whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
-nodist_tests_test_http_range_SOURCES = \
+nodist_tests_testHttpRange_SOURCES = \
 	$(BUILT_SOURCES) \
 	tests/stub_libtime.cc
-tests_test_http_range_LDADD = \
+tests_testHttpRange_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
@@ -1919,7 +1961,6 @@ tests_test_http_range_LDADD = \
 	helper/libhelper.la \
 	http/libhttp.la \
 	parser/libparser.la \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
@@ -1934,12 +1975,12 @@ tests_test_http_range_LDADD = \
 	format/libformat.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	dns/libdns.la \
 	base/libbase.la \
 	mgr/libmgr.la \
+	html/libhtml.la \
 	sbuf/libsbuf.la \
 	debug/libdebug.la \
 	store/libstore.la \
@@ -1948,16 +1989,20 @@ tests_test_http_range_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBGNUTLS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
-	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
+	$(LIBMIT_KRB5_LIBS) \
+	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
-tests_test_http_range_LDFLAGS = $(LIBADD_DL)
+tests_testHttpRange_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttp1Parser
 tests_testHttp1Parser_SOURCES = \
@@ -2000,6 +2045,7 @@ tests_testHttp1Parser_LDADD= \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
@@ -2025,7 +2071,6 @@ tests_testHttpReply_SOURCES = \
 	HttpHdrScTarget.h \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderMask.h \
 	HttpHeaderTools.cc \
@@ -2103,6 +2148,7 @@ tests_testHttpReply_LDADD=\
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
@@ -2123,6 +2169,8 @@ tests_testHttpRequest_SOURCES = \
 	CacheDigest.h \
 	CachePeer.cc \
 	CachePeer.h \
+	CachePeers.cc \
+	CachePeers.h \
 	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
@@ -2150,7 +2198,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -2288,8 +2335,6 @@ tests_testHttpRequest_SOURCES = \
 	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
-	tests/stub_whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testHttpRequest_SOURCES = \
@@ -2302,7 +2347,6 @@ tests_testHttpRequest_LDADD = \
 	helper/libhelper.la \
 	ftp/libftp.la \
 	http/libhttp.la \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
@@ -2316,6 +2360,7 @@ tests_testHttpRequest_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	mgr/libmgr.la \
+	html/libhtml.la \
 	anyp/libanyp.la \
 	$(SNMP_LIBS) \
 	icmp/libicmp.la \
@@ -2327,17 +2372,20 @@ tests_testHttpRequest_LDADD = \
 	debug/libdebug.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBGNUTLS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
-	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
+	$(LIBMIT_KRB5_LIBS) \
+	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -2419,6 +2467,8 @@ tests_testCacheManager_SOURCES = \
 	tests/testCacheManager.cc \
 	CachePeer.cc \
 	CachePeer.h \
+	CachePeers.cc \
+	CachePeers.h \
 	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
@@ -2447,7 +2497,6 @@ tests_testCacheManager_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
@@ -2531,7 +2580,6 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_libdiskio.cc \
 	tests/stub_liberror.cc \
 	tests/stub_libsecurity.cc \
-	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
 	mem_node.cc \
 	mime.cc \
@@ -2582,13 +2630,10 @@ tests_testCacheManager_SOURCES = \
 	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
-	tests/stub_whois.cc \
-	whois.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testCacheManager_SOURCES = \
-	$(BUILT_SOURCES) \
-	tests/stub_libtime.cc
+	$(BUILT_SOURCES)
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	libsquid.la \
@@ -2599,7 +2644,6 @@ tests_testCacheManager_LDADD = \
 	http/libhttp.la \
 	proxyp/libproxyp.la \
 	parser/libparser.la \
-	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
@@ -2614,26 +2658,31 @@ tests_testCacheManager_LDADD = \
 	format/libformat.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	anyp/libanyp.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
+	html/libhtml.la \
 	$(SNMP_LIBS) \
 	mem/libmem.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
+	time/libtime.la \
 	debug/libdebug.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCAP_LIBS) \
+	$(LIBGNUTLS_LIBS) \
+	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
-	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBGSS_LIBS) \
+	$(LIBMIT_KRB5_LIBS) \
+	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -2737,15 +2786,17 @@ tests_testEventLoop_LDADD = \
 	$(XTRA_LIBS)
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 
-## Run the unit tests. check_PROGRAMS only builds the binaries.
-TESTS += $(check_PROGRAMS) testHeaders
-
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(srcdir)/*.h $(srcdir)/DiskIO/*.h $(srcdir)/DiskIO/*/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
-## src/repl/ has no .h files and its own makefile.
-
-CLEANFILES += testHeaders
-.PHONY: testHeaders
-
+check_PROGRAMS += tests/testIoManip
+tests_testIoManip_SOURCES = \
+	tests/testIoManip.cc
+nodist_tests_testIoManip_SOURCES = \
+	tests/stub_SBuf.cc \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
+	tests/stub_libtime.cc
+tests_testIoManip_LDADD = \
+	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testIoManip_LDFLAGS = $(LIBADD_DL)

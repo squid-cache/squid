@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICAPLAUNCHER_H
-#define SQUID_ICAPLAUNCHER_H
+#ifndef SQUID_SRC_ADAPTATION_ICAP_LAUNCHER_H
+#define SQUID_SRC_ADAPTATION_ICAP_LAUNCHER_H
 
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiate.h"
@@ -110,5 +110,5 @@ operator <<(std::ostream &os, const XactAbortInfo &xai)
 } // namespace Icap
 } // namespace Adaptation
 
-#endif /* SQUID_ICAPLAUNCHER_H */
+#endif /* SQUID_SRC_ADAPTATION_ICAP_LAUNCHER_H */
 

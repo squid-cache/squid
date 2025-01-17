@@ -6,11 +6,12 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 noinst_LTLIBRARIES = libanyp.la
 
 libanyp_la_SOURCES = \
+	Host.cc \
+	Host.h \
 	PortCfg.cc \
 	PortCfg.h \
 	ProtocolType.cc \

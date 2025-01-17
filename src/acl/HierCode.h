@@ -6,20 +6,26 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLHIERCODE_H
-#define SQUID_ACLHIERCODE_H
+#ifndef SQUID_SRC_ACL_HIERCODE_H
+#define SQUID_SRC_ACL_HIERCODE_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 #include "hier_code.h"
 
-/// \ingroup ACLAPI
-class ACLHierCodeStrategy : public ACLStrategy<hier_code>
+namespace Acl
 {
 
+/// a "hier_code" ACL
+class HierCodeCheck: public ParameterizedNode< ACLData<hier_code> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
 };
 
-#endif /* SQUID_ACLHIERCODE_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_HIERCODE_H */
 

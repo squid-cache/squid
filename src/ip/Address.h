@@ -8,8 +8,8 @@
 
 /* DEBUG: section 14    IP Storage and Handling */
 
-#ifndef _SQUID_SRC_IP_ADDRESS_H
-#define _SQUID_SRC_IP_ADDRESS_H
+#ifndef SQUID_SRC_IP_ADDRESS_H
+#define SQUID_SRC_IP_ADDRESS_H
 
 #include "ip/forward.h"
 
@@ -31,6 +31,8 @@
 #include <netdb.h>
 #endif
 
+#include <optional>
+
 namespace Ip
 {
 
@@ -41,6 +43,14 @@ class Address
 {
 
 public:
+    /// Creates an IP address object by parsing a given c-string. Accepts all
+    /// three forms of IPv6 addresses from RFC 4291 section 2.2. Examples of
+    /// valid input: 0, 1.0, 1.2.3.4, ff01::101, and ::FFFF:129.144.52.38.
+    /// Fails if input contains characters before or after a valid IP address.
+    /// For example, fails if given a bracketed IPv6 address (e.g., [::1]).
+    /// \returns std::nullopt if parsing fails
+    static std::optional<Address> Parse(const char *);
+
     /** @name Constructors */
     /*@{*/
     Address() { setEmpty(); }
@@ -62,6 +72,11 @@ public:
     Address& operator =(struct sockaddr_in6 const &s);
     bool operator =(const struct hostent &s);
     bool operator =(const struct addrinfo &s);
+
+    /// Interprets the given c-string as an IP address and, upon success,
+    /// assigns that address. Does nothing if that interpretation fails.
+    /// \returns whether the assignment was performed
+    /// \deprecated Use Parse() instead.
     bool operator =(const char *s);
     /*@}*/
 
@@ -194,6 +209,11 @@ public:
     /// IPv6 clients use 'privacy addressing' instead.
     void applyClientMask(const Address &mask);
 
+    /// Set bits of the stored IP address on if they are on in the given mask.
+    /// For example, supplying a /24 mask turns 127.0.0.1 into 127.0.0.255.
+    /// \sa applyMask(const Address &)
+    void turnMaskedBitsOn(const Address &mask);
+
     /** Return the ASCII equivalent of the address
      *  Semantically equivalent to the IPv4 inet_ntoa()
      *  eg. 127.0.0.1 (IPv4) or ::1 (IPv6)
@@ -228,8 +248,7 @@ public:
     unsigned int toHostStr(char *buf, const unsigned int len) const;
 
     /// Empties the address and then slowly imports the IP from a possibly
-    /// [bracketed] portless host. For the semi-reverse operation, see
-    /// toHostStr() which does export the port.
+    /// [bracketed] portless host. For the reverse operation, see toHostStr().
     /// \returns whether the conversion was successful
     bool fromHost(const char *hostWithoutPort);
 
@@ -374,5 +393,5 @@ public:
 
 void parse_IpAddress_list_token(Ip::Address_list **, char *);
 
-#endif /* _SQUID_SRC_IP_ADDRESS_H */
+#endif /* SQUID_SRC_IP_ADDRESS_H */
 

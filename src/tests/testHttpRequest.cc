@@ -24,9 +24,6 @@ class TestHttpRequest : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testSanityCheckStartLine);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testCreateFromUrl();
     void testIPv6HostColonBug();
@@ -43,10 +40,16 @@ public:
     bool doSanityCheckStartLine(const char *b, const size_t h, Http::StatusCode *e) { return sanityCheckStartLine(b,h,e); };
 };
 
-/* init memory pools */
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
 
 void
-TestHttpRequest::setUp()
+MyTestProgram::startup()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -209,5 +212,11 @@ TestHttpRequest::testSanityCheckStartLine()
     CPPUNIT_ASSERT_EQUAL(error, Http::scInvalidHeader);
     input.reset();
     error = Http::scNone;
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

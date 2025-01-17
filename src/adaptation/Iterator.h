@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__ITERATOR_H
-#define SQUID_ADAPTATION__ITERATOR_H
+#ifndef SQUID_SRC_ADAPTATION_ITERATOR_H
+#define SQUID_SRC_ADAPTATION_ITERATOR_H
 
 #include "adaptation/Initiate.h"
 #include "adaptation/Initiator.h"
@@ -75,5 +75,5 @@ protected:
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__ITERATOR_H */
+#endif /* SQUID_SRC_ADAPTATION_ITERATOR_H */
 

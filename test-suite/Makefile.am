@@ -25,16 +25,7 @@ EXTRA_DIST = \
 	test-functionality.sh \
 	test-sources.sh \
 	test-squid-conf.sh \
-	testheaders.sh
-
-ESI_ALL_TESTS = \
-	ESIExpressions
-
-if ENABLE_ESI
-  ESI_TESTS = $(ESI_ALL_TESTS)
-else
-  ESI_TESTS =
-endif
+	testHeader.cc.in
 
 ## Sort by dependencies - test lowest layers first
 TESTS += \
@@ -42,12 +33,10 @@ TESTS += \
 	VirtualDeleteOperator \
 	splay\
 	mem_node_test\
-	mem_hdr_test\
-	$(ESI_TESTS)
+	mem_hdr_test
 
 ## Sort by alpha - any build failures are significant.
 check_PROGRAMS += \
-		$(ESI_TESTS) \
 		mem_node_test\
 		mem_hdr_test \
 		splay \
@@ -86,15 +75,6 @@ stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
 
 STUB.h: $(top_srcdir)/src/tests/STUB.h
 	cp $(top_srcdir)/src/tests/STUB.h $@
-
-ESIExpressions_SOURCES = \
-	$(DEBUG_SOURCE) \
-	ESIExpressions.cc \
-	stub_libmem.cc
-ESIExpressions_LDADD = $(top_builddir)/src/esi/Expression.o \
-	$(top_builddir)/src/debug/libdebug.la \
-	$(top_builddir)/src/comm/libminimal.la \
-		$(LDADD)
 
 mem_node_test_SOURCES = \
 	$(DEBUG_SOURCE) \
@@ -135,7 +115,18 @@ VirtualDeleteOperator_SOURCES = \
 installcheck-local: squid-conf-tests
 
 squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
-	@failed=0; cfglist="$(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf"; rm -f $@ || $(TRUE); \
+	@instructionFiles="$(srcdir)/squidconf/*.conf.instructions"; \
+	for instructionFile in $$instructionFiles; do \
+		cfgBasename=`basename $$instructionFile .instructions`; \
+		cfg=$(srcdir)/squidconf/$$cfgBasename; \
+		if ! test -f $$cfg; then \
+			echo "FAIL: $$instructionFile has no matching $$cfg"; \
+			exit 1; \
+		fi; \
+	done; \
+	failed=0; \
+	cfglist="$(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf"; \
+	rm -f $@ || $(TRUE); \
 	for cfg in $$cfglist ; do \
 		$(srcdir)/test-squid-conf.sh $(top_builddir) $(sbindir) $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
@@ -151,4 +142,9 @@ squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.de
 	done; \
 	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; else exit 1; fi
 
-CLEANFILES += squid-conf-tests squid-stderr.log
+CLEANFILES += \
+	squid-conf-tests \
+	squid-expected-messages \
+	squid-stderr.log \
+	squid-stderr.log.next \
+	squid-stderr.log.unmatched

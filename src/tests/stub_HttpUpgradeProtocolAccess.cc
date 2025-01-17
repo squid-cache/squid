@@ -19,7 +19,6 @@ std::ostream &operator <<(std::ostream &os, const ProtocolView &) STUB_RETVAL(os
 HttpUpgradeProtocolAccess::~HttpUpgradeProtocolAccess() STUB
 const acl_access *HttpUpgradeProtocolAccess::findGuard(const SBuf &) const STUB_RETVAL(nullptr)
 void HttpUpgradeProtocolAccess::configureGuard(ConfigParser &) STUB
-const SBuf HttpUpgradeProtocolAccess::ProtoOther("STUB-OTHER");
 HttpUpgradeProtocolAccess::NamedGuard::~NamedGuard() STUB_NOP
 HttpUpgradeProtocolAccess::NamedGuard::NamedGuard(const char *, acl_access *): protocol("STUB-UNDEF"), proto(protocol) STUB_NOP
 

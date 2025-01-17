@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SNMP_API_ERROR_H
-#define SQUID_SNMP_API_ERROR_H
+#ifndef SQUID_INCLUDE_SNMP_API_ERROR_H
+#define SQUID_INCLUDE_SNMP_API_ERROR_H
 
 /***************************************************************************
  *
@@ -73,5 +73,5 @@ void snmp_set_api_error(int);
 
 #endif
 
-#endif              /* SQUID_SNMP_API_ERROR_H */
+#endif /* SQUID_INCLUDE_SNMP_API_ERROR_H */
 

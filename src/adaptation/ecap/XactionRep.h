@@ -8,18 +8,21 @@
 
 /* DEBUG: section 93    eCAP Interface */
 
-#ifndef SQUID_ECAP_XACTION_REP_H
-#define SQUID_ECAP_XACTION_REP_H
+#ifndef SQUID_SRC_ADAPTATION_ECAP_XACTIONREP_H
+#define SQUID_SRC_ADAPTATION_ECAP_XACTIONREP_H
 
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/Initiate.h"
 #include "adaptation/Message.h"
 #include "BodyPipe.h"
-#include <libecap/common/forward.h>
-#include <libecap/common/memory.h>
-#include <libecap/host/xaction.h>
+
+#if HAVE_LIBECAP_ADAPTER_XACTION_H
 #include <libecap/adapter/xaction.h>
+#endif
+#if HAVE_LIBECAP_HOST_XACTION_H
+#include <libecap/host/xaction.h>
+#endif
 
 namespace Adaptation
 {
@@ -129,5 +132,5 @@ private:
 } // namespace Ecap
 } // namespace Adaptation
 
-#endif /* SQUID_ECAP_XACTION_REP_H */
+#endif /* SQUID_SRC_ADAPTATION_ECAP_XACTIONREP_H */
 

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 05    Socket Functions */
 
-#ifndef _SQUIDCONNECTIONDETAIL_H_
-#define _SQUIDCONNECTIONDETAIL_H_
+#ifndef SQUID_SRC_COMM_CONNECTION_H
+#define SQUID_SRC_COMM_CONNECTION_H
 
 #include "base/CodeContext.h"
 #include "base/InstanceId.h"
@@ -173,8 +173,6 @@ public:
     /** COMM flags set on this connection */
     int flags;
 
-    char rfc931[USER_IDENT_SZ];
-
 #if USE_SQUID_EUI
     Eui::Eui48 remoteEui48;
     Eui::Eui64 remoteEui64;
@@ -205,5 +203,5 @@ operator <<(std::ostream &os, const ConnectionPointer &conn)
 
 } // namespace Comm
 
-#endif
+#endif /* SQUID_SRC_COMM_CONNECTION_H */
 

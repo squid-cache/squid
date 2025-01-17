@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ADAPTATION__ACCESS_CHECK_H
-#define SQUID_ADAPTATION__ACCESS_CHECK_H
+#ifndef SQUID_SRC_ADAPTATION_ACCESSCHECK_H
+#define SQUID_SRC_ADAPTATION_ACCESSCHECK_H
 
 #include "acl/Acl.h"
 #include "adaptation/Elements.h"
@@ -46,7 +46,6 @@ protected:
 private:
     const ServiceFilter filter;
     CbcPointer<Adaptation::Initiator> theInitiator; ///< the job which ordered this access check
-    ACLFilledChecklist *acl_checklist;
 
     typedef int Candidate;
     typedef std::vector<Candidate> Candidates;
@@ -73,5 +72,5 @@ protected:
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__ACCESS_CHECK_H */
+#endif /* SQUID_SRC_ADAPTATION_ACCESSCHECK_H */
 

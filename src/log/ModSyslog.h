@@ -8,12 +8,12 @@
 
 /* DEBUG: section 50    Log file handling */
 
-#ifndef _SQUID_SRC_LOG_MODSYSLOG_H
-#define _SQUID_SRC_LOG_MODSYSLOG_H
+#ifndef SQUID_SRC_LOG_MODSYSLOG_H
+#define SQUID_SRC_LOG_MODSYSLOG_H
 
 class Logfile;
 
 int logfile_mod_syslog_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag);
 
-#endif /* _SQUID_SRC_LOG_MODSYSLOG_H */
+#endif /* SQUID_SRC_LOG_MODSYSLOG_H */
 

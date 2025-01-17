@@ -17,6 +17,9 @@
 class LogTagsErrors
 {
 public:
+    /// constructs an object matching errno(3) of a failed I/O call
+    static LogTagsErrors FromErrno(int errNo);
+
     /// Update each of this object flags to "set" if the corresponding
     /// flag of the given object is set
     void update(const LogTagsErrors &other);
@@ -31,7 +34,7 @@ public:
  * These codes indicate how the request was received
  * and some details about its processing pathway.
  *
- * see also http://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid_result_codes
+ * see also https://wiki.squid-cache.org/SquidFaq/SquidLogs#squid-result-codes
  * for details on particular components.
  */
 typedef enum {
@@ -103,5 +106,5 @@ inline LogTags_ot &operator++ (LogTags_ot &aLogType)
     return aLogType;
 }
 
-#endif
+#endif /* SQUID_SRC_LOGTAGS_H */
 

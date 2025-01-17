@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMPAT_SHARED_H
-#define _SQUID_COMPAT_SHARED_H
+#ifndef SQUID_COMPAT_COMPAT_SHARED_H
+#define SQUID_COMPAT_COMPAT_SHARED_H
 
 /*
  * This file contains all the compatibility and portability hacks
@@ -61,7 +61,7 @@ extern void (*failure_notify) (const char *);
  *     Linux and others including FreeBSD <7, define it as signed.
  *     If this causes any issues please contact squid-dev mailing list.
  */
-#if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
+#if defined(USE_SELECT)
 /* Limited by design */
 # define SQUID_MAXFD_LIMIT    ((signed int)FD_SETSIZE)
 
@@ -227,32 +227,21 @@ extern "C" {
 #define memmove(d,s,n) bcopy((s),(d),(n))
 #endif
 
-/*
- * strnstr() is needed. The OS may not provide a working copy.
- */
-#if HAVE_STRNSTR
-/* If strnstr exists and is usable we do so. */
-#define squid_strnstr(a,b,c)    strnstr(a,b,c)
-#else
-/* If not we have our own copy imported from FreeBSD */
-const char * squid_strnstr(const char *s, const char *find, size_t slen);
-#endif
-
 #if __GNUC__
-#if !defined(PRINTF_FORMAT_ARG1)
+#if _SQUID_MINGW_
+#define PRINTF_FORMAT_ARG1 __attribute__ ((format (gnu_printf, 1, 2)))
+#define PRINTF_FORMAT_ARG2 __attribute__ ((format (gnu_printf, 2, 3)))
+#define PRINTF_FORMAT_ARG3 __attribute__ ((format (gnu_printf, 3, 4)))
+#else
 #define PRINTF_FORMAT_ARG1 __attribute__ ((format (printf, 1, 2)))
-#endif
-#if !defined(PRINTF_FORMAT_ARG2)
 #define PRINTF_FORMAT_ARG2 __attribute__ ((format (printf, 2, 3)))
-#endif
-#if !defined(PRINTF_FORMAT_ARG3)
 #define PRINTF_FORMAT_ARG3 __attribute__ ((format (printf, 3, 4)))
-#endif
+#endif /* !_SQUID_MINGW_ */
 #else /* !__GNU__ */
 #define PRINTF_FORMAT_ARG1
 #define PRINTF_FORMAT_ARG2
 #define PRINTF_FORMAT_ARG3
 #endif
 
-#endif /* _SQUID_COMPAT_SHARED_H */
+#endif /* SQUID_COMPAT_COMPAT_SHARED_H */
 

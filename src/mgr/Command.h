@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_COMMAND_H
-#define SQUID_MGR_COMMAND_H
+#ifndef SQUID_SRC_MGR_COMMAND_H
+#define SQUID_SRC_MGR_COMMAND_H
 
 #include "mgr/ActionParams.h"
 #include "mgr/forward.h"
@@ -32,5 +32,5 @@ std::ostream &operator <<(std::ostream &, const Command &);
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_COMMAND_H */
+#endif /* SQUID_SRC_MGR_COMMAND_H */
 

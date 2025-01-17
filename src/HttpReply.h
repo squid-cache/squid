@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPREPLY_H
-#define SQUID_HTTPREPLY_H
+#ifndef SQUID_SRC_HTTPREPLY_H
+#define SQUID_SRC_HTTPREPLY_H
 
 #include "http/StatusLine.h"
 #include "HttpBody.h"
@@ -132,6 +132,10 @@ public:
     /// \retval 0 implies that more data is needed to parse the response prefix
     size_t parseTerminatedPrefix(const char *, size_t);
 
+    /// approximate size of a "status-line CRLF headers CRLF" sequence
+    /// \sa HttpRequest::prefixLen()
+    size_t prefixLen() const;
+
 private:
     /** initialize */
     void init();
@@ -164,5 +168,5 @@ protected:
     bool parseFirstLine(const char *start, const char *end) override;
 };
 
-#endif /* SQUID_HTTPREPLY_H */
+#endif /* SQUID_SRC_HTTPREPLY_H */
 

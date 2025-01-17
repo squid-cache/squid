@@ -16,6 +16,7 @@
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "globals.h"
+#include "sbuf/SBuf.h"
 #include <algorithm>
 
 void
@@ -32,11 +33,10 @@ Acl::InnerNode::empty() const
 }
 
 void
-Acl::InnerNode::add(ACL *node)
+Acl::InnerNode::add(Acl::Node *node)
 {
     assert(node != nullptr);
     nodes.push_back(node);
-    aclRegister(node);
 }
 
 // kids use this method to handle [multiple] parse() calls correctly
@@ -56,7 +56,8 @@ Acl::InnerNode::lineParse()
             ++t;
 
         debugs(28, 3, "looking for ACL " << t);
-        ACL *a = ACL::FindByName(t);
+        // XXX: Performance regression: SBuf will allocate memory.
+        const auto a = Acl::Node::FindByName(SBuf(t));
 
         if (a == nullptr) {
             debugs(28, DBG_CRITICAL, "ERROR: ACL not found: " << t);
@@ -80,8 +81,8 @@ SBufList
 Acl::InnerNode::dump() const
 {
     SBufList rv;
-    for (Nodes::const_iterator i = nodes.begin(); i != nodes.end(); ++i)
-        rv.push_back(SBuf((*i)->name));
+    for (const auto &node: nodes)
+        rv.push_back(node->name);
     return rv;
 }
 

@@ -491,6 +491,12 @@ HttpReply::parseTerminatedPrefix(const char * const terminatedBuf, const size_t 
     return 0; // parsed nothing, need more data
 }
 
+size_t
+HttpReply::prefixLen() const
+{
+    return sline.packedLength() + header.len + 2;
+}
+
 void
 HttpReply::configureContentLengthInterpreter(Http::ContentLengthInterpreter &interpreter)
 {
@@ -588,10 +594,8 @@ HttpReply::calcMaxBodySize(HttpRequest& request) const
     if (!Config.ReplyBodySize)
         return;
 
-    ACLFilledChecklist ch(nullptr, &request, nullptr);
-    // XXX: cont-cast becomes irrelevant when checklist is HttpReply::Pointer
-    ch.reply = const_cast<HttpReply *>(this);
-    HTTPMSGLOCK(ch.reply);
+    ACLFilledChecklist ch(nullptr, &request);
+    ch.updateReply(this);
     for (AclSizeLimit *l = Config.ReplyBodySize; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this size value */
         if (!l->aclList || ch.fastCheck(l->aclList).allowed()) {

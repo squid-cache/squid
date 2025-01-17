@@ -291,7 +291,7 @@ checkMakeNamedErrorDetails ()
     problems=1 # assume there are problems until proven otherwise
 
     options='-h --only-matching --extended-regexp'
-    git grep $options 'MakeNamedErrorDetail[(]".*?"[)]' src |
+    git grep $options 'MakeNamedErrorDetail[(]"[^"]*"[)]' src |
         sort |
         uniq --count > \
         MakeNamedErrorDetail.tmp
@@ -616,14 +616,13 @@ printRawAmFile ()
     echo "## $GeneratedByMe"
     echo
 
-    echo -n "$1 ="
+    printf "%s =" "$1"
     # Only some files are formed from *.po filenames, but all such files
     # should list *.lang filenames instead.
     git ls-files $2$3 | sed -e s%$2%%g -e 's%\.po%\.lang%g' | while read f; do
-        echo " \\"
-        echo -n "    ${f}"
+        printf ' \\\n\t%s' "${f}"
     done
-    echo ""
+    printf '\n'
 }
 
 generateAmFile ()
@@ -757,7 +756,7 @@ collectAuthors ()
     # but do not add committers (--format='    %cn <%ce>').
 
     # add collected new (co-)authors, if any, to CONTRIBUTORS
-    if ./scripts/update-contributors.pl < authors.tmp > CONTRIBUTORS.new
+    if ./scripts/update-contributors.pl --quiet < authors.tmp > CONTRIBUTORS.new
     then
         updateIfChanged CONTRIBUTORS CONTRIBUTORS.new  \
             "A human PR description should match: $vettedCommitPhraseRegex"

@@ -181,7 +181,7 @@ ConfigParser::UnQuote(const char *token, const char **next)
     *d = '\0';
 
     // We are expecting a separator after quoted string, space or one of "()#"
-    if (*(s + 1) != '\0' && !strchr(w_space "()#", *(s + 1)) && !errorStr) {
+    if (!errorStr && *(s + 1) != '\0' && !strchr(w_space "()#", *(s + 1))) {
         errorStr = "Expecting space after the end of quoted token";
         errorPos = token;
     }
@@ -594,13 +594,13 @@ ConfigParser::skipOptional(const char *keyword)
     return false; // no more tokens (i.e. we are at the end of the line)
 }
 
-Acl::Tree *
+ACLList *
 ConfigParser::optionalAclList()
 {
     if (!skipOptional("if"))
         return nullptr; // OK: the directive has no ACLs
 
-    Acl::Tree *acls = nullptr;
+    ACLList *acls = nullptr;
     const auto aclCount = aclParseAclList(*this, &acls, cfg_directive);
     assert(acls);
     if (aclCount <= 0)

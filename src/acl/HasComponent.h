@@ -6,18 +6,24 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLHASCOMPONENT_H
-#define SQUID_ACLHASCOMPONENT_H
+#ifndef SQUID_SRC_ACL_HASCOMPONENT_H
+#define SQUID_SRC_ACL_HASCOMPONENT_H
 
-#include "acl/Strategised.h"
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 
-/// \ingroup ACLAPI
-class ACLHasComponentStrategy : public ACLStrategy<ACLChecklist *>
+namespace Acl
+{
+
+/// a "has" ACL
+class HasComponentCheck: public ParameterizedNode< ACLData<ACLChecklist *> >
 {
 public:
-    int match(ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
 };
 
-#endif
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_HASCOMPONENT_H */
 

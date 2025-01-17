@@ -144,14 +144,10 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, 
         sf->expires = true;
 
         if (entry->expires > check_time) {
-            debugs(22, 3, "FRESH: expires " << entry->expires <<
-                   " >= check_time " << check_time << " ");
-
+            debugs(22, 3, "FRESH: expires " << entry->expires << " > check_time " << check_time);
             return -1;
         } else {
-            debugs(22, 3, "STALE: expires " << entry->expires <<
-                   " < check_time " << check_time << " ");
-
+            debugs(22, 3, "STALE: expires " << entry->expires << " <= check_time " << check_time);
             return (check_time - entry->expires);
         }
     }
@@ -160,7 +156,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, 
 
     // 2. If the entry is older than the maximum age in the refresh_pattern, it is STALE.
     if (age > R->max) {
-        debugs(22, 3, "STALE: age " << age << " > max " << R->max << " ");
+        debugs(22, 3, "STALE: age " << age << " > max " << R->max);
         sf->max = true;
         return (age - R->max);
     }
@@ -269,7 +265,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     else if (request)
         uri = request->effectiveRequestUri();
 
-    debugs(22, 3, "checking freshness of URI: " << uri);
+    debugs(22, 3, "checking freshness of " << *entry << " with URI: " << uri);
 
     // age is not necessarily the age now, but the age at the given check_time
     if (check_time > entry->timestamp)
@@ -484,11 +480,14 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
         }
 
 #endif
+        debugs(22, 3, "returning STALE_EXPIRES");
         return STALE_EXPIRES;
     }
 
-    if (sf.max)
+    if (sf.max) {
+        debugs(22, 3, "returning STALE_MAX_RULE");
         return STALE_MAX_RULE;
+    }
 
     if (sf.lmfactor) {
 #if USE_HTTP_VIOLATIONS
@@ -524,6 +523,10 @@ refreshIsCachable(const StoreEntry * entry)
      * minimum_expiry_time seconds delta (defaults to 60 seconds), to
      * avoid objects which expire almost immediately, and which can't
      * be refreshed.
+     *
+     * No hittingRequiresCollapsing() or didCollapse concerns here: This
+     * incoming response is fresh now, but we want to check whether it can be
+     * refreshed Config.minimum_expiry_time seconds later.
      */
     int reason = refreshCheck(entry, nullptr, Config.minimum_expiry_time);
     ++ refreshCounts[rcStore].total;
@@ -570,6 +573,10 @@ refreshIsStaleIfHit(const int reason)
  *
  * \retval 1 if STALE
  * \retval 0 if FRESH
+ *
+ * Do not call this when StoreClient::didCollapse is true. XXX: Callers should
+ * not have to remember to check didCollapse. TODO: Refactor by adding something
+ * like pure virtual StoreClient::refreshCheck() with protocol specializations?
  */
 int
 refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
@@ -578,7 +585,6 @@ refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
     ++ refreshCounts[rcHTTP].total;
     ++ refreshCounts[rcHTTP].status[reason];
     request->flags.staleIfHit = refreshIsStaleIfHit(reason);
-    // TODO: Treat collapsed responses as fresh but second-hand.
     return (Config.onoff.offline || reason < 200) ? 0 : 1;
 }
 

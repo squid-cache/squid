@@ -7,7 +7,7 @@ Version 1.0
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B ext_time_quota_acl
-.if !'po4a'hide' .B "[\-b database] [\-l logfile] [\-d] [\-p pauselen] [\-h] configfile
+.if !'po4a'hide' .B "[\-b database] [\-d level] [\-p pauselen] [\-h] configfile
 .
 .SH DESCRIPTION
 .B ext_time_quota_acl
@@ -35,14 +35,8 @@ Pauses shorter than this value will be counted against the quota, longer ones ig
 Default is 300 seconds (5 minutes).
 .
 .if !'po4a'hide' .TP
-.if !'po4a'hide' .B "\-l logfile"
-.B Filename
-where all logging and debugging information will be written. If none is given,
-then stderr will be used and the logging will go to Squids main cache.log.
-.
-.if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-d"
-Enables debug logging in the logfile.
+Sets verbosity level for debugging section 82 (0-9; defaults to 1; see debug_options).
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-h"
@@ -128,8 +122,6 @@ format tags can be substituted in its place.
 ,
 .B %LOGIN
 , 
-.B %IDENT
-, 
 .B %EXT_USER
 , 
 .B %SRC 
@@ -138,7 +130,7 @@ format tags can be substituted in its place.
 , and 
 .B %SRCEUI64
 are all likely candidates for client identification.
-The Squid wiki has more examples at http://wiki.squid-cache.org/ConfigExamples.
+The Squid wiki has more examples at https://wiki.squid-cache.org/ConfigExamples.
 .
 .SH LIMITATIONS
 .PP
@@ -234,9 +226,9 @@ Questions on the usage of this program can be sent to the
 .
 .SH REPORTING BUGS
 Bug reports need to be made in English.
-See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+See https://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
 .PP
-Report bugs or bug fixes using http://bugs.squid-cache.org/
+Report bugs or bug fixes using https://bugs.squid-cache.org/
 .PP
 Report serious security bugs to
 .I Squid Bugs <squid-bugs@lists.squid-cache.org>
@@ -250,7 +242,7 @@ Report ideas for new improvements to the
 .if !'po4a'hide' .BR GPL "(7), "
 .br
 The Squid FAQ wiki
-.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.if !'po4a'hide' https://wiki.squid-cache.org/SquidFaq
 .br
 The Squid Configuration Manual
 .if !'po4a'hide' http://www.squid-cache.org/Doc/config/

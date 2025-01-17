@@ -6,20 +6,25 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLURLLOGIN_H
-#define SQUID_ACLURLLOGIN_H
+#ifndef SQUID_SRC_ACL_URLLOGIN_H
+#define SQUID_SRC_ACL_URLLOGIN_H
 
-#include "acl/Acl.h"
 #include "acl/Data.h"
-#include "acl/Strategy.h"
+#include "acl/ParameterizedNode.h"
 
-class ACLUrlLoginStrategy : public ACLStrategy<char const *>
+namespace Acl
 {
 
+/// a "urllogin" ACL
+class UrlLoginCheck: public ParameterizedNode< ACLData<const char *> >
+{
 public:
-    int match (ACLData<char const *> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
 };
 
-#endif /* SQUID_ACLURLLOGIN_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_URLLOGIN_H */
 

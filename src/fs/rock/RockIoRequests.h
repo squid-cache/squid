@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FS_ROCK_IO_REQUESTS_H
-#define SQUID_FS_ROCK_IO_REQUESTS_H
+#ifndef SQUID_SRC_FS_ROCK_ROCKIOREQUESTS_H
+#define SQUID_SRC_FS_ROCK_ROCKIOREQUESTS_H
 
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
@@ -56,5 +56,5 @@ public:
 
 } // namespace Rock
 
-#endif /* SQUID_FS_ROCK_IO_REQUESTS_H */
+#endif /* SQUID_SRC_FS_ROCK_ROCKIOREQUESTS_H */
 

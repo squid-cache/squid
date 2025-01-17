@@ -8,14 +8,13 @@
 
 /* DEBUG: section 39    Peer source hash based selection */
 
-#ifndef SQUID_PEER_SOURCEHASH_H_
-#define SQUID_PEER_SOURCEHASH_H_
+#ifndef SQUID_SRC_PEER_SOURCEHASH_H
+#define SQUID_SRC_PEER_SOURCEHASH_H
 
 class CachePeer;
 class PeerSelector;
 
-void peerSourceHashInit(void);
 CachePeer * peerSourceHashSelectParent(PeerSelector*);
 
-#endif /* SQUID_PEER_SOURCEHASH_H_ */
+#endif /* SQUID_SRC_PEER_SOURCEHASH_H */
 

@@ -8,8 +8,10 @@
 
 /* DEBUG: section 89    NAT / IP Interception */
 
-#ifndef SQUID_IP_IPINTERCEPT_H
-#define SQUID_IP_IPINTERCEPT_H
+#ifndef SQUID_SRC_IP_INTERCEPT_H
+#define SQUID_SRC_IP_INTERCEPT_H
+
+#include "comm/forward.h"
 
 namespace Ip
 {
@@ -31,6 +33,9 @@ public:
     ~Intercept() {};
 
     /// perform NAT lookups for the local address of the given connection
+    /// \return true to indicate a successful lookup
+    /// \return false on errors that do not warrant listening socket closure
+    /// \throw exception on errors that warrant listening socket closure
     bool LookupNat(const Comm::Connection &);
 
     /**
@@ -112,6 +117,8 @@ private:
      */
     bool PfInterception(const Comm::ConnectionPointer &newConn);
 
+    bool UseInterceptionAddressesLookedUpEarlier(const char *, const Comm::ConnectionPointer &);
+
     int transparentActive_;
     int interceptActive_;
 };
@@ -129,5 +136,5 @@ extern Intercept Interceptor;
 
 } // namespace Ip
 
-#endif /* SQUID_IP_IPINTERCEPT_H */
+#endif /* SQUID_SRC_IP_INTERCEPT_H */
 

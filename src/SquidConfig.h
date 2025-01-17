@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SQUIDCONFIG_H_
-#define SQUID_SQUIDCONFIG_H_
+#ifndef SQUID_SRC_SQUIDCONFIG_H
+#define SQUID_SRC_SQUIDCONFIG_H
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
@@ -23,6 +23,7 @@
 #include "MessageDelayPools.h"
 #endif
 #include "Notes.h"
+#include "security/Context.h"
 #include "security/forward.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
@@ -42,7 +43,8 @@ namespace Mgr
 {
 class ActionPasswordList;
 } // namespace Mgr
-class CachePeer;
+
+class CachePeers;
 class CustomLog;
 class CpuAffinityMap;
 class DebugMessages;
@@ -225,7 +227,7 @@ public:
     char *etcHostsPath;
     char *visibleHostname;
     char *uniqueHostname;
-    wordlist *hostnameAliases;
+    SBufList hostnameAliases;
     char *errHtmlText;
 
     struct {
@@ -242,7 +244,7 @@ public:
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
     wordlist *mcast_group_list;
-    CachePeer *peers;
+    CachePeers *peers;
     int npeers;
 
     struct {
@@ -351,7 +353,7 @@ public:
 
     std::chrono::nanoseconds paranoid_hit_validation;
 
-    class ACL *aclList;
+    Acl::NamedAcls *namedAcls; ///< acl aclname acltype ...
 
     struct {
         acl_access *http;
@@ -445,8 +447,8 @@ public:
     MessageDelayConfig MessageDelay;
 #endif
 
-    struct {
-        struct {
+    struct CommIncoming {
+        struct Measure {
             int average;
             int min_poll;
         } dns, udp, tcp;
@@ -501,7 +503,10 @@ public:
     external_acl *externalAclHelperList;
 
     struct {
-        Security::ContextPointer sslContext;
+        Security::FuturePeerContext *defaultPeerContext;
+        // TODO: Remove when FuturePeerContext above becomes PeerContext
+        /// \deprecated Legacy storage. Use defaultPeerContext instead.
+        Security::ContextPointer *sslContext_;
 #if USE_OPENSSL
         char *foreignIntermediateCertsPath;
         acl_access *cert_error;
@@ -517,7 +522,7 @@ public:
     CpuAffinityMap *cpuAffinityMap;
 
 #if USE_LOADABLE_MODULES
-    wordlist *loadable_module_names;
+    SBufList loadable_module_names;
 #endif
 
     int client_ip_max_connections;
@@ -562,5 +567,5 @@ public:
 
 extern SquidConfig2 Config2;
 
-#endif /* SQUID_SQUIDCONFIG_H_ */
+#endif /* SQUID_SRC_SQUIDCONFIG_H */
 

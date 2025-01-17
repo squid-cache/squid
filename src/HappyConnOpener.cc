@@ -638,7 +638,7 @@ HappyConnOpener::handleConnOpenerAnswer(Attempt &attempt, const CommConnectCbPar
     lastError = makeError(ERR_CONNECT_FAIL);
     lastError->xerrno = params.xerrno;
 
-    NoteOutgoingConnectionFailure(params.conn->getPeer(), lastError->httpStatus);
+    NoteOutgoingConnectionFailure(params.conn->getPeer());
 
     if (spareWaiting)
         updateSpareWaitAfterPrimeFailure();

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_ENUMITERATOR_H
-#define SQUID_BASE_ENUMITERATOR_H
+#ifndef SQUID_SRC_BASE_ENUMITERATOR_H
+#define SQUID_SRC_BASE_ENUMITERATOR_H
 
 #include <iterator>
 #include <type_traits>
@@ -224,5 +224,20 @@ public:
     WholeEnum() : EnumRangeT<EnumType>(EnumType::enumBegin_, EnumType::enumEnd_) {}
 };
 
-#endif /* SQUID_BASE_ENUMITERATOR_H */
+/// Compile-time iteration of sequential enum values from First to Last,
+/// inclusive. The given function is called once on each iteration, with the
+/// current enum value as an argument.
+template <auto First, auto Last, class F>
+constexpr void
+ConstexprForEnum(F &&f)
+{
+    using enumType = decltype(First);
+    using underlyingType = typename std::underlying_type<enumType>::type;
+    // std::integral_constant trick makes f(First) argument a constexpr
+    f(std::integral_constant<enumType, First>()); // including when First is Last
+    if constexpr (First < Last)
+        ConstexprForEnum<enumType(static_cast<underlyingType>(First) + 1), Last>(f);
+}
+
+#endif /* SQUID_SRC_BASE_ENUMITERATOR_H */
 

@@ -6,17 +6,24 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLPEERNAME_H
-#define SQUID_ACLPEERNAME_H
+#ifndef SQUID_SRC_ACL_PEERNAME_H
+#define SQUID_SRC_ACL_PEERNAME_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 
-class ACLPeerNameStrategy : public ACLStrategy<const char *>
+namespace Acl
 {
 
+/// a "peername" or "peername_regex" ACL
+class PeerNameCheck: public ParameterizedNode< ACLData<const char *> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
 };
 
-#endif /* SQUID_ACLPEERNAME_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_PEERNAME_H */
 

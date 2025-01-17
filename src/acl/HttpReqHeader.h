@@ -6,20 +6,26 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLHTTPREQHEADER_H
-#define SQUID_ACLHTTPREQHEADER_H
+#ifndef SQUID_SRC_ACL_HTTPREQHEADER_H
+#define SQUID_SRC_ACL_HTTPREQHEADER_H
 
-#include "acl/Strategy.h"
-#include "HttpHeader.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
+#include "http/forward.h"
 
-/// \ingroup ACLAPI
-class ACLHTTPReqHeaderStrategy : public ACLStrategy<HttpHeader*>
+namespace Acl
 {
 
+/// a "req_header" ACL
+class HttpReqHeaderCheck: public ParameterizedNode< ACLData<const HttpHeader &> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* Acl::Node API */
+    int match(ACLChecklist *) override;
     bool requiresRequest() const override { return true; }
 };
 
-#endif /* SQUID_ACLHTTPREQHEADER_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_HTTPREQHEADER_H */
 

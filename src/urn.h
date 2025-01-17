@@ -8,8 +8,8 @@
 
 /* DEBUG: section 52    URN Parsing */
 
-#ifndef SQUID_URN_H_
-#define SQUID_URN_H_
+#ifndef SQUID_SRC_URN_H
+#define SQUID_SRC_URN_H
 
 #include "log/forward.h"
 
@@ -18,5 +18,5 @@ class StoreEntry;
 
 void urnStart(HttpRequest *, StoreEntry *, const AccessLogEntryPointer &ale);
 
-#endif /* SQUID_URN_H_ */
+#endif /* SQUID_SRC_URN_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLNOTEDATA_H
-#define SQUID_ACLNOTEDATA_H
+#ifndef SQUID_SRC_ACL_NOTEDATA_H
+#define SQUID_SRC_ACL_NOTEDATA_H
 
 #include "acl/Data.h"
 #include "Notes.h"
@@ -33,5 +33,5 @@ private:
     ACLStringData *values; ///< if set, at least one value must match
 };
 
-#endif /* SQUID_ACLNOTEDATA_H */
+#endif /* SQUID_SRC_ACL_NOTEDATA_H */
 

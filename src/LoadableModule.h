@@ -6,29 +6,29 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_LOADABLE_MODULE_H
-#define SQUID_LOADABLE_MODULE_H
+#ifndef SQUID_SRC_LOADABLEMODULE_H
+#define SQUID_SRC_LOADABLEMODULE_H
 
-#include "SquidString.h"
+#include "sbuf/SBuf.h"
 
 // wrapper for dlopen(3), libltdl, and friends
 class LoadableModule
 {
 public:
-    LoadableModule(const String &aName);
+    explicit LoadableModule(const SBuf &aName);
     ~LoadableModule();           // unloads if loaded
 
     bool loaded() const;
-    const String &name() const { return theName; }
-    const String &error() const { return theError; }
+    const auto &name() const { return theName; }
+    const auto &error() const { return theError; }
 
     void load(); // throws Texc
     void unload(); // throws Texc
 
 protected:
-    String theName;
-    String theError;
-    void *theHandle;
+    SBuf theName;
+    SBuf theError;
+    void *theHandle = nullptr;
 
 private:
     void *openModule();
@@ -36,5 +36,5 @@ private:
     const char *errorMsg();
 };
 
-#endif
+#endif /* SQUID_SRC_LOADABLEMODULE_H */
 

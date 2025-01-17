@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_MEM_POINTER_H
-#define SQUID_IPC_MEM_POINTER_H
+#ifndef SQUID_SRC_IPC_MEM_POINTER_H
+#define SQUID_SRC_IPC_MEM_POINTER_H
 
 #include "base/RefCount.h"
 #include "base/TextException.h"
@@ -204,5 +204,5 @@ Object<Class>::Old(const char *const id)
 
 } // namespace Ipc
 
-#endif /* SQUID_IPC_MEM_POINTER_H */
+#endif /* SQUID_SRC_IPC_MEM_POINTER_H */
 

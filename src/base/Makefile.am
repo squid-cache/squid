@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 noinst_LTLIBRARIES = libbase.la
 
@@ -49,8 +48,10 @@ libbase_la_SOURCES = \
 	JobWait.h \
 	Lock.h \
 	LookupTable.h \
+	OnOff.h \
 	Packable.h \
 	PackableStream.h \
+	PrecomputedCodeContext.h \
 	Random.cc \
 	Random.h \
 	RandomUuid.cc \
@@ -69,6 +70,7 @@ libbase_la_SOURCES = \
 	SupportOrVeto.h \
 	TextException.cc \
 	TextException.h \
+	ToCpp.h \
 	TypeTraits.h \
 	YesNoNone.h \
 	forward.h

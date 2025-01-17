@@ -8,8 +8,8 @@
 
 /* DEBUG: section 04    Error Generation */
 
-#ifndef   SQUID_ERRORPAGE_H
-#define   SQUID_ERRORPAGE_H
+#ifndef SQUID_SRC_ERRORPAGE_H
+#define SQUID_SRC_ERRORPAGE_H
 
 #include "cbdata.h"
 #include "comm/forward.h"
@@ -95,7 +95,7 @@ public:
     ErrorState() = delete; // not implemented.
 
     /// creates an ERR_RELAY_REMOTE error
-    ErrorState(HttpRequest * request, HttpReply *);
+    ErrorState(HttpRequest * request, HttpReply *, const AccessLogEntryPointer &);
 
     ~ErrorState();
 
@@ -120,7 +120,7 @@ private:
     typedef ErrorPage::Build Build;
 
     /// initializations shared by public constructors
-    explicit ErrorState(err_type type);
+    ErrorState(err_type, const AccessLogEntryPointer &);
 
     /// locates the right error page template for this error and compiles it
     SBuf buildBody();
@@ -145,18 +145,18 @@ private:
 
     /// React to a compile() error, throwing if buildContext allows.
     /// \param msg description of what went wrong
-    /// \param near approximate start of the problematic input
-    void noteBuildError(const char *msg, const char *near) {
-        noteBuildError_(msg, near, false);
+    /// \param errorLocation approximate start of the problematic input
+    void noteBuildError(const char *const msg, const char * const errorLocation) {
+        noteBuildError_(msg, errorLocation, false);
     }
 
     /// Note a compile() error but do not throw for backwards
     /// compatibility with older configurations that may have such errors.
     /// Should eventually be replaced with noteBuildError().
     /// \param msg description of what went wrong
-    /// \param near approximate start of the problematic input
-    void bypassBuildErrorXXX(const char *msg, const char *near) {
-        noteBuildError_(msg, near, true);
+    /// \param errorLocation approximate start of the problematic input
+    void bypassBuildErrorXXX(const char *const msg, const char * const errorLocation) {
+        noteBuildError_(msg, errorLocation, true);
     }
 
     /**
@@ -207,7 +207,7 @@ public:
     HttpReplyPointer response_;
 
 private:
-    void noteBuildError_(const char *msg, const char *near, const bool forceBypass);
+    void noteBuildError_(const char *msg, const char *errorLocation, bool forceBypass);
 
     static const SBuf LogformatMagic; ///< marks each embedded logformat entry
 };
@@ -354,5 +354,5 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
 
 std::ostream &operator <<(std::ostream &, const ErrorState *);
 
-#endif /* SQUID_ERRORPAGE_H */
+#endif /* SQUID_SRC_ERRORPAGE_H */
 

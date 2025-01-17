@@ -64,12 +64,6 @@
 #define SEND3 printf
 #endif
 
-const char *make_challenge(char *domain, char *controller);
-char *ntlm_check_auth(ntlm_authenticate * auth, int auth_length);
-void dc_disconnect(void);
-int connectedp(void);
-int is_dc_ok(char *domain, char *domain_controller);
-
 typedef struct _dc dc;
 struct _dc {
     char *domain;
@@ -79,10 +73,13 @@ struct _dc {
 };
 
 /* local functions */
-void usage(void);
-void process_options(int argc, char *argv[]);
-const char * obtain_challenge(void);
-void manage_request(void);
+static void usage(void);
+static void process_options(int argc, char *argv[]);
+static const char * obtain_challenge(void);
+static void manage_request(void);
+static const char *make_challenge(char *domain, char *controller);
+static char *ntlm_check_auth(ntlm_authenticate * auth, int auth_length);
+static void dc_disconnect(void);
 
 #define ENCODED_PASS_LEN 24
 #define MAX_USERNAME_LEN 255
@@ -93,7 +90,7 @@ static unsigned char challenge[NTLM_NONCE_LEN];
 static unsigned char lmencoded_empty_pass[ENCODED_PASS_LEN],
        ntencoded_empty_pass[ENCODED_PASS_LEN];
 SMB_Handle_Type handle = nullptr;
-int ntlm_errno;
+static NtlmError ntlm_errno;
 static char credentials[MAX_USERNAME_LEN+MAX_DOMAIN_LEN+2]; /* we can afford to waste */
 static char my_domain[100], my_domain_controller[100];
 static char errstr[1001];
@@ -108,29 +105,12 @@ char smb_error_buffer[1000];
 
 /* Disconnects from the DC. A reconnection will be done upon the next request
  */
-void
+static void
 dc_disconnect()
 {
     if (handle != NULL)
         SMB_Discon(handle, 0);
     handle = nullptr;
-}
-
-int
-connectedp()
-{
-    return (handle != NULL);
-}
-
-/* Tries to connect to a DC. Returns 0 on failure, 1 on OK */
-int
-is_dc_ok(char *domain, char *domain_controller)
-{
-    SMB_Handle_Type h = SMB_Connect_Server(nullptr, domain_controller, domain);
-    if (h == NULL)
-        return 0;
-    SMB_Discon(h, 0);
-    return 1;
 }
 
 /* returns 0 on success, > 0 on failure */
@@ -169,7 +149,7 @@ init_challenge(char *domain, char *domain_controller)
     return 0;
 }
 
-const char *
+static const char *
 make_challenge(char *domain, char *domain_controller)
 {
     /* trying to circumvent some strange problem with pointers in SMBLib */
@@ -215,10 +195,9 @@ make_challenge(char *domain, char *domain_controller)
  * In case of problem sets as side-effect ntlm_errno to one of the
  * codes defined in ntlm.h
  */
-char *
+static char *
 ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 {
-    int rv;
     char pass[MAX_PASSWD_LEN+1];
     char *domain = credentials;
     char *user;
@@ -226,7 +205,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 
     if (handle == NULL) {   /*if null we aren't connected, but it shouldn't happen */
         debug("Weird, we've been disconnected\n");
-        ntlm_errno = NTLM_ERR_NOT_CONNECTED;
+        ntlm_errno = NtlmError::NotConnected;
         return nullptr;
     }
 
@@ -234,12 +213,12 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     tmp = ntlm_fetch_string(&(auth->hdr), auth_length, &auth->domain, auth->flags);
     if (tmp.str == NULL || tmp.l == 0) {
         debug("No domain supplied. Returning no-auth\n");
-        ntlm_errno = NTLM_ERR_LOGON;
+        ntlm_errno = NtlmError::LoginEror;
         return nullptr;
     }
     if (tmp.l > MAX_DOMAIN_LEN) {
         debug("Domain string exceeds %d bytes, rejecting\n", MAX_DOMAIN_LEN);
-        ntlm_errno = NTLM_ERR_LOGON;
+        ntlm_errno = NtlmError::LoginEror;
         return nullptr;
     }
     memcpy(domain, tmp.str, tmp.l);
@@ -251,12 +230,12 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     tmp = ntlm_fetch_string(&(auth->hdr), auth_length, &auth->user, auth->flags);
     if (tmp.str == NULL || tmp.l == 0) {
         debug("No username supplied. Returning no-auth\n");
-        ntlm_errno = NTLM_ERR_LOGON;
+        ntlm_errno = NtlmError::LoginEror;
         return nullptr;
     }
     if (tmp.l > MAX_USERNAME_LEN) {
         debug("Username string exceeds %d bytes, rejecting\n", MAX_USERNAME_LEN);
-        ntlm_errno = NTLM_ERR_LOGON;
+        ntlm_errno = NtlmError::LoginEror;
         return nullptr;
     }
     memcpy(user, tmp.str, tmp.l);
@@ -272,7 +251,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 
         if (len != ENCODED_PASS_LEN || offset + len > auth_length || offset == 0) {
             debug("LM response: insane data (pkt-sz: %d, fetch len: %d, offset: %d)\n", auth_length, len, offset);
-            ntlm_errno = NTLM_ERR_LOGON;
+            ntlm_errno = NtlmError::LoginEror;
             return nullptr;
         }
         tmp.str = (char *)packet + offset;
@@ -280,7 +259,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     }
     if (tmp.l > MAX_PASSWD_LEN) {
         debug("Password string exceeds %d bytes, rejecting\n", MAX_PASSWD_LEN);
-        ntlm_errno = NTLM_ERR_LOGON;
+        ntlm_errno = NtlmError::LoginEror;
         return nullptr;
     }
 
@@ -293,7 +272,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
         fprintf(stderr,"Empty LM password supplied for user %s\\%s. "
                 "No-auth\n",domain,user);
-        ntlm_errno=NTLM_ERR_LOGON;
+        ntlm_errno=NtlmError::LoginEror;
         return nullptr;
     }
 
@@ -307,7 +286,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 
             if (len != ENCODED_PASS_LEN || offset + len > auth_length || offset == 0) {
                 debug("NT response: insane data (pkt-sz: %d, fetch len: %d, offset: %d)\n", auth_length, len, offset);
-                ntlm_errno = NTLM_ERR_LOGON;
+                ntlm_errno = NtlmError::LoginEror;
                 return nullptr;
             }
             tmp.str = (char *)packet + offset;
@@ -317,7 +296,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
                   user,ntencoded_empty_pass,tmp.str,tmp.l);
             if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
                 fprintf(stderr,"ERROR: Empty NT password supplied for user %s\\%s. No-auth\n", domain, user);
-                ntlm_errno = NTLM_ERR_LOGON;
+                ntlm_errno = NtlmError::LoginEror;
                 return nullptr;
             }
         }
@@ -325,25 +304,50 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 
     debug("checking domain: '%s', user: '%s', pass='%s'\n", domain, user, pass);
 
-    rv = SMB_Logon_Server(handle, user, pass, domain, 1);
+    const auto rv = SMB_Logon_Server(handle, user, pass, domain, 1);
     debug("Login attempt had result %d\n", rv);
 
-    if (rv != NTLM_ERR_NONE) {  /* failed */
-        ntlm_errno = rv;
+    switch (rv) {
+    case SMBlibE_Success:
+        ntlm_errno = NtlmError::None;
+        break;
+    case SMBlibE_BAD:
+        ntlm_errno = NtlmError::BlobError;
+        return nullptr;
+    case SMBlibE_ProtLow:
+    case SMBlibE_NoSpace:
+    case SMBlibE_BadParam:
+    case SMBlibE_NegNoProt:
+    case SMBlibE_LowerLayer:
+    case SMBlibE_SendFailed:
+    case SMBlibE_RecvFailed:
+    case SMBlibE_ProtUnknown:
+    case SMBlibE_NoSuchMsg:
+        ntlm_errno = NtlmError::ProtocolError;
+        return nullptr;
+    case SMBlibE_NotImpl:
+    case SMBlibE_CallFailed:
+    case SMBlibE_Remote:
+        ntlm_errno = NtlmError::ServerError;
+        return nullptr;
+    case SMBlibE_GuestOnly:
+        ntlm_errno = NtlmError::LoginEror;
+        return nullptr;
+    default:
+        ntlm_errno = NtlmError::ServerError;
         return nullptr;
     }
+
     *(user - 1) = '\\';     /* hack. Performing, but ugly. */
 
     debug("credentials: %s\n", credentials);
     return credentials;
 }
 
-extern "C" void timeout_during_auth(int signum);
-
 static char got_timeout = 0;
 /** signal handler to be invoked when the authentication operation
  * times out */
-void
+extern "C" void
 timeout_during_auth(int)
 {
     dc_disconnect();
@@ -359,7 +363,7 @@ timeout_during_auth(int)
  */
 char *my_program_name = nullptr;
 
-void
+static void
 usage()
 {
     fprintf(stderr,
@@ -375,7 +379,7 @@ usage()
 
 /* int debug_enabled=0; defined in libcompat */
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt, j, had_error = 0;
@@ -455,7 +459,7 @@ process_options(int argc, char *argv[])
  * tries connecting to the domain controllers in the "controllers" ring,
  * with failover if the adequate option is specified.
  */
-const char *
+static const char *
 obtain_challenge()
 {
     int j = 0;
@@ -492,7 +496,7 @@ obtain_challenge()
     return nullptr;
 }
 
-void
+static void
 manage_request()
 {
     ntlmhdr *fast_header;
@@ -561,7 +565,7 @@ manage_request()
             }
             if (cred == NULL) {
                 int smblib_err, smb_errorclass, smb_errorcode, nb_error;
-                if (ntlm_errno == NTLM_ERR_LOGON) { /* hackish */
+                if (ntlm_errno == NtlmError::LoginEror) { /* hackish */
                     SEND("NA Logon Failure");
                     return;
                 }

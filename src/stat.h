@@ -8,14 +8,15 @@
 
 /* DEBUG: section 18    Cache Manager Statistics */
 
-#ifndef SQUID_STAT_H_
-#define SQUID_STAT_H_
+#ifndef SQUID_SRC_STAT_H
+#define SQUID_SRC_STAT_H
 
 void statInit(void);
 double median_svc_get(int, int);
 void pconnHistCount(int, int);
-int stat5minClientRequests(void);
-double stat5minCPUUsage(void);
+/// whether we processed any incoming requests in the last few minutes
+/// \sa ClientHttpRequest::updateCounters()
+bool statSawRecentRequests();
 double statRequestHitRatio(int minutes);
 double statRequestHitMemoryRatio(int minutes);
 double statRequestHitDiskRatio(int minutes);
@@ -24,5 +25,5 @@ double statByteHitRatio(int minutes);
 class StatCounters;
 StatCounters *snmpStatGet(int);
 
-#endif /* SQUID_STAT_H_ */
+#endif /* SQUID_SRC_STAT_H */
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEM_NODE_H
-#define SQUID_MEM_NODE_H
+#ifndef SQUID_SRC_MEM_NODE_H
+#define SQUID_SRC_MEM_NODE_H
 
 #include "base/Range.h"
 #include "defines.h"
@@ -47,5 +47,5 @@ operator << (std::ostream &os, mem_node &aNode)
 
 void memNodeWriteComplete(void *);
 
-#endif /* SQUID_MEM_NODE_H */
+#endif /* SQUID_SRC_MEM_NODE_H */
 

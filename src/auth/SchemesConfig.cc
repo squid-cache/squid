@@ -11,6 +11,8 @@
 #include "fatal.h"
 #include "parser/Tokenizer.h"
 
+#include <algorithm>
+
 static void
 addUnique(const SBuf &scheme, std::vector<SBuf> &vec)
 {

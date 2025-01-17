@@ -12,15 +12,13 @@
 #define STUB_API "helper.cc"
 #include "tests/STUB.h"
 
-void helperSubmit(helper *, const char *, HLPCB *, void *) STUB
-void helperStatefulSubmit(statefulhelper *, const char *, HLPCB *, void *, uint64_t) STUB
-helper::~helper() STUB
-CBDATA_CLASS_INIT(helper);
-void helper::packStatsInto(Packable *, const char *) const STUB
+void helperSubmit(const Helper::Client::Pointer &, const char *, HLPCB *, void *) STUB
+void helperStatefulSubmit(const statefulhelper::Pointer &, const char *, HLPCB *, void *, const Helper::ReservationId &) STUB
+Helper::Client::~Client() STUB
+void Helper::Client::packStatsInto(Packable *, const char *) const STUB
+void Helper::Client::openSessions() STUB
 
-void helperShutdown(helper *) STUB
-void helperStatefulShutdown(statefulhelper *) STUB
-void helperOpenServers(helper *) STUB
-void helperStatefulOpenServers(statefulhelper *) STUB
-CBDATA_CLASS_INIT(statefulhelper);
+void helperShutdown(const Helper::Client::Pointer &) STUB
+void helperStatefulShutdown(const statefulhelper::Pointer &) STUB
+void statefulhelper::openSessions() STUB
 

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__SRC_MEM_STATS_H
-#define SQUID__SRC_MEM_STATS_H
+#ifndef SQUID_SRC_MEM_STATS_H
+#define SQUID_SRC_MEM_STATS_H
 
 #include "mem/forward.h"
 
@@ -47,4 +47,4 @@ extern size_t GlobalStats(PoolStats &);
 
 } // namespace Mem
 
-#endif /* SQUID__SRC_MEM_STATS_H */
+#endif /* SQUID_SRC_MEM_STATS_H */

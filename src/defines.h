@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_DEFINES_H
-#define SQUID_DEFINES_H
+#ifndef SQUID_SRC_DEFINES_H
+#define SQUID_SRC_DEFINES_H
 
 #ifndef TRUE
 #define TRUE 1
@@ -33,8 +33,6 @@
 
 #define FQDN_LOOKUP_IF_MISS 0x01
 #define FQDN_MAX_NAMES 5
-
-#define USER_IDENT_SZ 64
 
 #define IP_LOOKUP_IF_MISS   0x01
 
@@ -159,5 +157,5 @@
 #define _WIN_SQUID_RUN_MODE_SERVICE     1
 #endif
 
-#endif /* SQUID_DEFINES_H */
+#endif /* SQUID_SRC_DEFINES_H */
 

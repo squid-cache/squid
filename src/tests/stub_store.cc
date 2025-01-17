@@ -76,9 +76,6 @@ void *StoreEntry::operator new(size_t)
     return new StoreEntry();
 }
 void StoreEntry::operator delete(void *) STUB
-//#if USE_SQUID_ESI
-//ESIElement::Pointer StoreEntry::cachedESITree STUB_RETVAL(nullptr)
-//#endif
 void StoreEntry::buffer() STUB
 void StoreEntry::flush() STUB
 int StoreEntry::unlock(const char *) STUB_RETVAL(0)

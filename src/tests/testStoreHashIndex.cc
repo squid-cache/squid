@@ -49,7 +49,6 @@ TestStoreHashIndex::testStats()
     StoreEntry *logEntry = new StoreEntry;
     logEntry->createMemObject("dummy_storeId", nullptr, HttpRequestMethod());
     logEntry->store_status = STORE_PENDING;
-    Store::Init();
     TestSwapDirPointer aStore (new TestSwapDir);
     TestSwapDirPointer aStore2 (new TestSwapDir);
     addSwapDir(aStore);
@@ -60,7 +59,6 @@ TestStoreHashIndex::testStats()
     free_cachedir(&Config.cacheSwap);
     CPPUNIT_ASSERT_EQUAL(true, aStore->statsCalled);
     CPPUNIT_ASSERT_EQUAL(true, aStore2->statsCalled);
-    Store::FreeMemory();
 }
 
 void
@@ -69,14 +67,12 @@ TestStoreHashIndex::testMaxSize()
     StoreEntry *logEntry = new StoreEntry;
     logEntry->createMemObject("dummy_storeId", nullptr, HttpRequestMethod());
     logEntry->store_status = STORE_PENDING;
-    Store::Init();
     TestSwapDirPointer aStore (new TestSwapDir);
     TestSwapDirPointer aStore2 (new TestSwapDir);
     addSwapDir(aStore);
     addSwapDir(aStore2);
     CPPUNIT_ASSERT_EQUAL(static_cast<uint64_t>(6), Store::Root().maxSize());
     free_cachedir(&Config.cacheSwap);
-    Store::FreeMemory();
 }
 
 static StoreEntry *
@@ -147,7 +143,6 @@ void
 TestStoreHashIndex::testSearch()
 {
     commonInit();
-    Store::Init();
     TestSwapDirPointer aStore (new TestSwapDir);
     TestSwapDirPointer aStore2 (new TestSwapDir);
     addSwapDir(aStore);
@@ -195,7 +190,7 @@ TestStoreHashIndex::testSearch()
     CPPUNIT_ASSERT_EQUAL(true, search->isDone());
     CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(nullptr), search->currentItem());
     //CPPUNIT_ASSERT_EQUAL(false, search->next());
-
-    Store::FreeMemory();
 }
+
+// This test uses main() from ./testStore.cc.
 

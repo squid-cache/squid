@@ -6,14 +6,15 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEMOBJECT_H
-#define SQUID_MEMOBJECT_H
+#ifndef SQUID_SRC_MEMOBJECT_H
+#define SQUID_SRC_MEMOBJECT_H
 
 #include "base/DelayedAsyncCalls.h"
 #include "dlink.h"
 #include "http/RequestMethod.h"
+#include "HttpReply.h"
 #include "RemovalPolicy.h"
-#include "SquidString.h"
+#include "sbuf/SBuf.h"
 #include "stmem.h"
 #include "store/forward.h"
 #include "StoreIOBuffer.h"
@@ -167,19 +168,12 @@ public:
 
     SwapOut swapout;
 
-    /* TODO: Remove this change-minimizing hack */
-    using Io = Store::IoStatus;
-    static constexpr Io ioUndecided = Store::ioUndecided;
-    static constexpr Io ioReading = Store::ioReading;
-    static constexpr Io ioWriting = Store::ioWriting;
-    static constexpr Io ioDone = Store::ioDone;
-
     /// State of an entry with regards to the [shared] in-transit table.
     class XitTable
     {
     public:
         /// associate our StoreEntry with a Transients entry at the given index
-        void open(const int32_t anIndex, const Io anIo)
+        void open(const int32_t anIndex, const Store::IoStatus anIo)
         {
             index = anIndex;
             io = anIo;
@@ -193,7 +187,7 @@ public:
         }
 
         int32_t index = -1; ///< entry position inside the in-transit table
-        Io io = ioUndecided; ///< current I/O state
+        Store::IoStatus io = Store::ioUndecided; ///< current I/O state
     };
     XitTable xitTable; ///< current [shared] memory caching state for the entry
 
@@ -204,7 +198,7 @@ public:
         int32_t index = -1; ///< entry position inside the memory cache
         int64_t offset = 0; ///< bytes written/read to/from the memory cache so far
 
-        Io io = ioUndecided; ///< current I/O state
+        Store::IoStatus io = Store::ioUndecided; ///< current I/O state
     };
     MemCache memCache; ///< current [shared] memory caching state for the entry
 
@@ -233,8 +227,8 @@ private:
     HttpReplyPointer reply_; ///< \see baseReply()
     HttpReplyPointer updatedReply_; ///< \see updatedReply()
 
-    mutable String storeId_; ///< StoreId for our entry (usually request URI)
-    mutable String logUri_;  ///< URI used for logging (usually request URI)
+    mutable SBuf storeId_; ///< StoreId for our entry (usually request URI)
+    mutable SBuf logUri_;  ///< URI used for logging (usually request URI)
 
     DelayedAsyncCalls deferredReads;
 };
@@ -242,5 +236,5 @@ private:
 /** global current memory removal policy */
 extern RemovalPolicy *mem_policy;
 
-#endif /* SQUID_MEMOBJECT_H */
+#endif /* SQUID_SRC_MEMOBJECT_H */
 

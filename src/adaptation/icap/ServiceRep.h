@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ICAPSERVICEREP_H
-#define SQUID_ICAPSERVICEREP_H
+#ifndef SQUID_SRC_ADAPTATION_ICAP_SERVICEREP_H
+#define SQUID_SRC_ADAPTATION_ICAP_SERVICEREP_H
 
 #include "adaptation/forward.h"
 #include "adaptation/icap/Elements.h"
@@ -112,6 +112,8 @@ public: // treat these as private, they are for callbacks only
     void noteAdaptationAnswer(const Answer &answer) override;
 
     Security::ContextPointer sslContext;
+    // TODO: Remove sslContext above when FuturePeerContext below becomes PeerContext
+    Security::FuturePeerContext tlsContext;
     Security::SessionStatePointer sslSession;
 
 private:
@@ -205,5 +207,5 @@ public:
 } // namespace Icap
 } // namespace Adaptation
 
-#endif /* SQUID_ICAPSERVICEREP_H */
+#endif /* SQUID_SRC_ADAPTATION_ICAP_SERVICEREP_H */
 

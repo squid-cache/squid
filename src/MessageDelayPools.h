@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef MESSAGEDELAYPOOLS_H
-#define MESSAGEDELAYPOOLS_H
+#ifndef SQUID_SRC_MESSAGEDELAYPOOLS_H
+#define SQUID_SRC_MESSAGEDELAYPOOLS_H
 
 #if USE_DELAY_POOLS
 
@@ -131,5 +131,5 @@ parse_response_delay_pool_access(MessageDelayConfig * cfg)
 }
 
 #endif
-#endif
+#endif /* SQUID_SRC_MESSAGEDELAYPOOLS_H */
 

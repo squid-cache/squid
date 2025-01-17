@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef   SQUID_PEERDIGEST_H
-#define   SQUID_PEERDIGEST_H
+#ifndef SQUID_SRC_PEERDIGEST_H
+#define SQUID_SRC_PEERDIGEST_H
 
 #if USE_CACHE_DIGESTS
 
@@ -49,7 +49,7 @@ public:
     DigestFetchState(PeerDigest *,HttpRequest *);
     ~DigestFetchState();
 
-    PeerDigest *pd;
+    CbcPointer<PeerDigest> pd;
     StoreEntry *entry;
     StoreEntry *old_entry;
     store_client *sc;
@@ -78,6 +78,10 @@ class PeerDigest
 public:
     PeerDigest(CachePeer *);
     ~PeerDigest();
+
+    /// reacts to digest transfer completion
+    /// \prec DigestFetchState stats were finalized (by calling peerDigestFetchSetStats())
+    void noteFetchFinished(const DigestFetchState &, const char *outcomeDescription, bool sawError);
 
     CbcPointer<CachePeer> peer; ///< pointer back to peer structure, argh
     CacheDigest *cd = nullptr;            /**< actual digest structure */
@@ -121,5 +125,5 @@ void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
 #endif /* USE_CACHE_DIGESTS */
 
-#endif /* SQUID_PEERDIGEST_H */
+#endif /* SQUID_SRC_PEERDIGEST_H */
 

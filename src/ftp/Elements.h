@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FTP_ELEMENTS_H
-#define SQUID_FTP_ELEMENTS_H
+#ifndef SQUID_SRC_FTP_ELEMENTS_H
+#define SQUID_SRC_FTP_ELEMENTS_H
 
 #include "http/forward.h"
 #include "http/StatusCode.h"
@@ -54,5 +54,5 @@ inline bool Is1xx(const int sc) { return Http::scContinue <= sc && sc < Http::sc
 
 } // namespace Ftp
 
-#endif /* SQUID_FTP_ELEMENTS_H */
+#endif /* SQUID_SRC_FTP_ELEMENTS_H */
 

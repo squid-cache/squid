@@ -25,11 +25,23 @@ RELEASE_TIME=`date +%s`
 #
 # check that $rev has the right syntax
 #
-checkrev=`expr $rev : '\([0-9]\.[0-9]\(\.[0-9\.]\)*\)'`
+checkrev=`expr $rev : '\([0-9]\.[0-9][0-9]*\(\.[0-9\.]\)*\)'`
 if test "$rev" != "$checkrev" ; then
 	echo "revision '$rev' has incorrect syntax.  Should be like '3.1.0.1'"
 	exit 1;
 fi
+
+po2html=`which po2html`
+if test -z "$po2html" ; then
+    echo "cannot find po2html"
+    exit 1
+fi
+po2txt=`which po2txt`
+if test -z "$po2txt" ; then
+    echo "cannot find po2txt"
+    exit 1
+fi
+
 
 tmpdir=${TMPDIR:-${PWD}}/${name}-mkrelease
 

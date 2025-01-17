@@ -22,7 +22,6 @@
 #include "base/TextException.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
-#include "carp.h"
 #include "client_db.h"
 #include "client_side.h"
 #include "comm.h"
@@ -61,8 +60,6 @@
 #include "parser/Tokenizer.h"
 #include "Parsing.h"
 #include "pconn.h"
-#include "peer_sourcehash.h"
-#include "peer_userhash.h"
 #include "PeerSelectState.h"
 #include "protos.h"
 #include "redirect.h"
@@ -81,7 +78,7 @@
 #include "unlinkd.h"
 #include "wccp.h"
 #include "wccp2.h"
-#include "WinSvc.h"
+#include "windows_service.h"
 
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
@@ -806,14 +803,8 @@ serverConnectionsOpen(void)
         icmpEngine.Open();
         netdbInit();
         asnInit();
-        ACL::Initialize();
+        Acl::Node::Initialize();
         peerSelectInit();
-
-        carpInit();
-#if USE_AUTH
-        peerUserHashInit();
-#endif
-        peerSourceHashInit();
     }
 }
 
@@ -884,6 +875,18 @@ mainReconfigureStart(void)
              false);
 }
 
+/// error message to log when Configuration::Parse() fails
+static SBuf
+ConfigurationFailureMessage()
+{
+    SBufStream out;
+    out << (reconfiguring ? "re" : "");
+    out << "configuration failure: " << CurrentException;
+    if (!opt_parse_cfg_only)
+        out << Debug::Extra << "advice: Run 'squid -k parse' and check for ERRORs.";
+    return out.buf();
+}
+
 static void
 mainReconfigureFinish(void *)
 {
@@ -896,18 +899,13 @@ mainReconfigureFinish(void *)
     if (Config2.onoff.enable_purge)
         Config2.onoff.enable_purge = 2;
 
-    // parse the config returns a count of errors encountered.
     const int oldWorkers = Config.workers;
+
     try {
-        if (parseConfigFile(ConfigFile) != 0) {
-            // for now any errors are a fatal condition...
-            self_destruct();
-        }
+        Configuration::Parse();
     } catch (...) {
         // for now any errors are a fatal condition...
-        debugs(1, DBG_CRITICAL, "FATAL: Unhandled exception parsing config file. " <<
-               " Run squid -k parse and check for errors.");
-        self_destruct();
+        fatal(ConfigurationFailureMessage().c_str());
     }
 
     if (oldWorkers != Config.workers) {
@@ -1203,6 +1201,8 @@ mainInitialize(void)
     FwdState::initModule();
     SBufStatsAction::RegisterWithCacheManager();
 
+    AsyncJob::RegisterWithCacheManager();
+
     /* These use separate calls so that the comm loops can eventually
      * coexist.
      */
@@ -1258,8 +1258,6 @@ mainInitialize(void)
 
 #endif
 
-    memCheckInit();
-
 #if USE_LOADABLE_MODULES
     LoadableModulesConfigure(Config.loadable_module_names);
 #endif
@@ -1305,7 +1303,7 @@ OnTerminate()
         return;
     terminating = true;
 
-    debugs(1, DBG_CRITICAL, "FATAL: Dying from an exception handling failure; exception: " << CurrentException);
+    debugs(1, DBG_CRITICAL, "FATAL: Dying after an undetermined failure" << CurrentExceptionExtra);
 
     Debug::PrepareToDie();
     abort();
@@ -1437,9 +1435,56 @@ StartUsingConfig()
     }
 }
 
+/// register all known modules for handling future RegisteredRunner events
+static void
+RegisterModules()
+{
+    // These registration calls do not represent a RegisteredRunner "event". The
+    // modules registered here should be initialized later, during those events.
+
+    // RegisteredRunner event handlers should not depend on handler call order
+    // and, hence, should not depend on the registration call order below.
+
+    CallRunnerRegistrator(CarpRr);
+    CallRunnerRegistrator(ClientDbRr);
+    CallRunnerRegistrator(CollapsedForwardingRr);
+    CallRunnerRegistrator(MemStoreRr);
+    CallRunnerRegistrator(PeerPoolMgrsRr);
+    CallRunnerRegistrator(PeerSourceHashRr);
+    CallRunnerRegistrator(SharedMemPagesRr);
+    CallRunnerRegistrator(SharedSessionCacheRr);
+    CallRunnerRegistrator(TransientsRr);
+    CallRunnerRegistratorIn(Dns, ConfigRr);
+
+#if HAVE_DISKIO_MODULE_IPCIO
+    CallRunnerRegistrator(IpcIoRr);
+#endif
+
+#if HAVE_AUTH_MODULE_NTLM
+    CallRunnerRegistrator(NtlmAuthRr);
+#endif
+
+#if USE_AUTH
+    CallRunnerRegistrator(PeerUserHashRr);
+#endif
+
+#if USE_OPENSSL
+    CallRunnerRegistrator(sslBumpCfgRr);
+#endif
+
+#if HAVE_FS_ROCK
+    CallRunnerRegistratorIn(Rock, SwapDirRr);
+#endif
+}
+
 int
 SquidMain(int argc, char **argv)
 {
+    // We must register all modules before the first RunRegisteredHere() call.
+    // We do it ASAP/here so that we do not need to move this code when we add
+    // earlier hooks to the RegisteredRunner API.
+    RegisterModules();
+
     const CommandLine cmdLine(argc, argv, shortOpStr, squidOptions);
 
     ConfigureCurrentKid(cmdLine);
@@ -1486,6 +1531,7 @@ SquidMain(int argc, char **argv)
     WIN32_svcstatusupdate(SERVICE_START_PENDING, 10000);
 
 #endif
+    AnyP::UriScheme::Init(); // needs to be before arg parsing, bug 5337
 
     cmdLine.forEachOption(mainHandleCommandLineOption);
 
@@ -1518,16 +1564,12 @@ SquidMain(int argc, char **argv)
     /* parse configuration file
      * note: in "normal" case this used to be called from mainInitialize() */
     {
-        int parse_err;
-
         if (!ConfigFile)
             ConfigFile = xstrdup(DEFAULT_CONFIG_FILE);
 
         assert(!configured_once);
 
         Mem::Init();
-
-        AnyP::UriScheme::Init();
 
         storeFsInit();      /* required for config parsing */
 
@@ -1537,7 +1579,6 @@ SquidMain(int argc, char **argv)
         DiskIOModule::SetupAllModules();
 
         /* we may want the parsing process to set this up in the future */
-        Store::Init();
         Acl::Init();
         Auth::Init();      /* required for config parsing. NOP if !USE_AUTH */
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
@@ -1547,16 +1588,20 @@ SquidMain(int argc, char **argv)
         RunRegisteredHere(RegisteredRunner::bootstrapConfig);
 
         try {
-            parse_err = parseConfigFile(ConfigFile);
+            Configuration::Parse();
         } catch (...) {
-            // for now any errors are a fatal condition...
-            debugs(1, DBG_CRITICAL, "FATAL: Unhandled exception parsing config file." <<
-                   (opt_parse_cfg_only ? " Run squid -k parse and check for errors." : ""));
-            parse_err = 1;
+            auto msg = ConfigurationFailureMessage();
+            if (opt_parse_cfg_only) {
+                debugs(3, DBG_CRITICAL, "FATAL: " << msg);
+                return EXIT_FAILURE;
+            } else {
+                fatal(msg.c_str());
+                return EXIT_FAILURE; // unreachable
+            }
         }
 
-        if (opt_parse_cfg_only || parse_err > 0)
-            return parse_err;
+        if (opt_parse_cfg_only)
+            return EXIT_SUCCESS;
     }
     setUmask(Config.umask);
 

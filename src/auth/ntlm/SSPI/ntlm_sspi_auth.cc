@@ -97,7 +97,7 @@ int fail_debug_enabled = 0;
 #endif
 
 /* returns 1 on success, 0 on failure */
-int
+static int
 Valid_Group(char *UserName, char *Group)
 {
     int result = FALSE;
@@ -164,178 +164,68 @@ Valid_Group(char *UserName, char *Group)
     return result;
 }
 
-char * AllocStrFromLSAStr(LSA_UNICODE_STRING LsaStr)
-{
-    size_t len;
-    static char * target;
-
-    len = LsaStr.Length/sizeof(WCHAR) + 1;
-
-    /* allocate buffer for str + null termination */
-    safe_free(target);
-    target = (char *)xmalloc(len);
-    if (target == NULL)
-        return nullptr;
-
-    /* copy unicode buffer */
-    WideCharToMultiByte(CP_ACP, 0, LsaStr.Buffer, LsaStr.Length, target, len, nullptr, nullptr);
-
-    /* add null termination */
-    target[len-1] = '\0';
-    return target;
-}
-
-char * GetDomainName(void)
-
-{
-    LSA_HANDLE PolicyHandle;
-    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
-    NTSTATUS status;
-    PPOLICY_PRIMARY_DOMAIN_INFO ppdiDomainInfo;
-    PWKSTA_INFO_100 pwkiWorkstationInfo;
-    DWORD netret;
-    char * DomainName = nullptr;
-
-    /*
-     * Always initialize the object attributes to all zeroes.
-     */
-    memset(&ObjectAttributes, '\0', sizeof(ObjectAttributes));
-
-    /*
-     * You need the local workstation name. Use NetWkstaGetInfo at level
-     * 100 to retrieve a WKSTA_INFO_100 structure.
-     *
-     * The wki100_computername field contains a pointer to a UNICODE
-     * string containing the local computer name.
-     */
-    netret = NetWkstaGetInfo(nullptr, 100, (LPBYTE *)&pwkiWorkstationInfo);
-    if (netret == NERR_Success) {
-        /*
-         * We have the workstation name in:
-         * pwkiWorkstationInfo->wki100_computername
-         *
-         * Next, open the policy object for the local system using
-         * the LsaOpenPolicy function.
-         */
-        status = LsaOpenPolicy(
-                     nullptr,
-                     &ObjectAttributes,
-                     GENERIC_READ | POLICY_VIEW_LOCAL_INFORMATION,
-                     &PolicyHandle
-                 );
-
-        /*
-         * Error checking.
-         */
-        if (status) {
-            debug("OpenPolicy Error: %ld\n", status);
-        } else {
-
-            /*
-             * You have a handle to the policy object. Now, get the
-             * domain information using LsaQueryInformationPolicy.
-             */
-            status = LsaQueryInformationPolicy(PolicyHandle,
-                                               PolicyPrimaryDomainInformation,
-                                               (void **)&ppdiDomainInfo);
-            if (status) {
-                debug("LsaQueryInformationPolicy Error: %ld\n", status);
-            } else  {
-
-                /* Get name in usable format */
-                DomainName = AllocStrFromLSAStr(ppdiDomainInfo->Name);
-
-                /*
-                 * Check the Sid pointer, if it is null, the
-                 * workstation is either a stand-alone computer
-                 * or a member of a workgroup.
-                 */
-                if (ppdiDomainInfo->Sid) {
-
-                    /*
-                     * Member of a domain. Display it in debug mode.
-                     */
-                    debug("Member of Domain %s\n",DomainName);
-                } else {
-                    DomainName = nullptr;
-                }
-            }
-        }
-
-        /*
-         * Clean up all the memory buffers created by the LSA and
-         * Net* APIs.
-         */
-        NetApiBufferFree(pwkiWorkstationInfo);
-        LsaFreeMemory((LPVOID)ppdiDomainInfo);
-    } else
-        debug("NetWkstaGetInfo Error: %ld\n", netret);
-    return DomainName;
-}
-
 /*
  * Fills auth with the user's credentials.
  *
  * In case of problem returns one of the
  * codes defined in libntlmauth/ntlmauth.h
  */
-int
+static NtlmError
 ntlm_check_auth(ntlm_authenticate * auth, char *user, char *domain, int auth_length)
 {
-    int x;
-    int rv;
     char credentials[DNLEN+UNLEN+2];    /* we can afford to waste */
 
     if (!NTLM_LocalCall) {
 
         user[0] = '\0';
         domain[0] = '\0';
-        x = ntlm_unpack_auth(auth, user, domain, auth_length);
+        const auto x = ntlm_unpack_auth(auth, user, domain, auth_length);
 
-        if (x != NTLM_ERR_NONE)
+        if (x != NtlmError::None)
             return x;
 
         if (domain[0] == '\0') {
             debug("No domain supplied. Returning no-auth\n");
-            return NTLM_BAD_REQUEST;
+            return NtlmError::BadRequest;
         }
         if (user[0] == '\0') {
             debug("No username supplied. Returning no-auth\n");
-            return NTLM_BAD_REQUEST;
+            return NtlmError::BadRequest;
         }
         debug("checking domain: '%s', user: '%s'\n", domain, user);
 
-    } else
+    } else {
         debug("checking local user\n");
+    }
 
     snprintf(credentials, DNLEN+UNLEN+2, "%s\\%s", domain, user);
 
-    rv = SSP_ValidateNTLMCredentials(auth, auth_length, credentials);
+    const auto rv = SSP_ValidateNTLMCredentials(auth, auth_length, credentials);
 
     debug("Login attempt had result %d\n", rv);
 
     if (!rv) {          /* failed */
-        return NTLM_SSPI_ERROR;
+        return NtlmError::SspiError;
     }
 
     if (UseAllowedGroup) {
         if (!Valid_Group(credentials, NTAllowedGroup)) {
             debug("User %s not in allowed Group %s\n", credentials, NTAllowedGroup);
-            return NTLM_BAD_NTGROUP;
+            return NtlmError::BadNtGroup;
         }
     }
     if (UseDisallowedGroup) {
         if (Valid_Group(credentials, NTDisAllowedGroup)) {
             debug("User %s is in denied Group %s\n", credentials, NTDisAllowedGroup);
-            return NTLM_BAD_NTGROUP;
+            return NtlmError::BadNtGroup;
         }
     }
 
     debug("credentials: %s\n", credentials);
-    return NTLM_ERR_NONE;
+    return NtlmError::None;
 }
 
-void
+static void
 helperfail(const char *reason)
 {
 #if FAIL_DEBUG
@@ -353,7 +243,7 @@ helperfail(const char *reason)
  */
 char *my_program_name = nullptr;
 
-void
+static void
 usage()
 {
     fprintf(stderr,
@@ -366,7 +256,7 @@ usage()
             my_program_name);
 }
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt, had_error = 0;
@@ -421,7 +311,7 @@ token_decode(size_t *decodedLen, uint8_t decoded[], const char *buf)
     return true;
 }
 
-int
+static int
 manage_request()
 {
     ntlmhdr *fast_header;
@@ -469,7 +359,9 @@ manage_request()
     if ((strlen(buf) > 3) && NTLM_packet_debug_enabled) {
         if (!token_decode(&decodedLen, decoded, buf+3))
             return 1;
-        strncpy(helper_command, buf, 2);
+        helper_command[0] = buf[0];
+        helper_command[1] = buf[1];
+        helper_command[2] = '\0';
         debug("Got '%s' from Squid with data:\n", helper_command);
         hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
     } else
@@ -492,7 +384,7 @@ manage_request()
         fast_header = (struct _ntlmhdr *) decoded;
 
         /* sanity-check: it IS a NTLMSSP packet, isn't it? */
-        if (ntlm_validate_packet(fast_header, NTLM_ANY) != NTLM_ERR_NONE) {
+        if (ntlm_validate_packet(fast_header, NTLM_ANY) != NtlmError::None) {
             SEND_ERR("message=\"Broken authentication packet\"");
             return 1;
         }
@@ -550,7 +442,7 @@ manage_request()
         fast_header = (struct _ntlmhdr *) decoded;
 
         /* sanity-check: it IS a NTLMSSP packet, isn't it? */
-        if (ntlm_validate_packet(fast_header, NTLM_ANY) != NTLM_ERR_NONE) {
+        if (ntlm_validate_packet(fast_header, NTLM_ANY) != NtlmError::None) {
             SEND_ERR("message=\"Broken authentication packet\"");
             return 1;
         }
@@ -565,22 +457,22 @@ manage_request()
         /* notreached */
         case NTLM_AUTHENTICATE: {
             /* check against SSPI */
-            int err = ntlm_check_auth((ntlm_authenticate *) decoded, user, domain, decodedLen);
+            const auto err = ntlm_check_auth((ntlm_authenticate *) decoded, user, domain, decodedLen);
             have_challenge = 0;
-            if (err != NTLM_ERR_NONE) {
+            if (err != NtlmError::None) {
 #if FAIL_DEBUG
                 fail_debug_enabled =1;
 #endif
                 switch (err) {
-                case NTLM_ERR_NONE:
+                case NtlmError::None:
                     break;
-                case NTLM_BAD_NTGROUP:
+                case NtlmError::BadNtGroup:
                     SEND_ERR("message=\"Incorrect Group Membership\"");
                     return 1;
-                case NTLM_BAD_REQUEST:
+                case NtlmError::BadRequest:
                     SEND_ERR("message=\"Incorrect Request Format\"");
                     return 1;
-                case NTLM_SSPI_ERROR:
+                case NtlmError::SspiError:
                     FormatMessage(
                         FORMAT_MESSAGE_ALLOCATE_BUFFER |
                         FORMAT_MESSAGE_FROM_SYSTEM |

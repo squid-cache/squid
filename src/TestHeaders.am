@@ -5,21 +5,31 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-## Test ./*.h files in a directory using test-suite/testheaders.sh
+# A space-separated list of header files to be skipped by
+# testHeaders during "make check"
+EXCLUDE_FROM_HDR_TESTING =
 
-## TODO: include in src/Common.am when all testHeaders users are the same.
+
+# to test header files in addition to those tested by default,
+# add an empty target named 'testHeaders' depending on the additional
+# headers to test
+
+testHeaders: $(SOURCES) $(noinst_HEADERS) $(EXTRA_DIST) $(top_srcdir)/test-suite/testHeader.cc.in
+	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
+
+.h.hdrtest:
+	@SrcFilePath=`echo $< | $(SED) 's%^$(top_srcdir)/%%'`; \
+	SrcFileName=`basename $$SrcFilePath`; \
+	TargetFileName=tmp$$$$-`basename $@`; \
+	if test "$(EXCLUDE_FROM_HDR_TESTING)" != "" && echo "$(EXCLUDE_FROM_HDR_TESTING)" | $(TR) ' ' '\n' | $(FGREP) -x -q "$$SrcFileName" ; then \
+		echo "header-test: skip - $$SrcFilePath"; \
+		exit 0; \
+	fi; \
+	$(SED) "s%[@]HEADER[@]%${<}%" "$(top_srcdir)/test-suite/testHeader.cc.in" >"$$TargetFileName.cc" && \
+	echo "$(CXXCOMPILE) -c -o" "$$TargetFileName" "$$TargetFileName.cc" && \
+	if $(CXXCOMPILE) -c -o "$$TargetFileName" "$$TargetFileName.cc" ; \
+		then echo "header-test: ok - $$SrcFilePath"; $(RM) "$$TargetFileName.cc" "$$TargetFileName"; \
+		else echo "header-test: not ok - $$SrcFilePath"; exit 1; fi
 
 TESTS += testHeaders
-
-## .h dependency test script
-## aborts build process on errors; XXX: even with "make -k"
-testHeaders: $(srcdir)/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
-
-## XXX: this is only needed because testheaders.sh creates a dummy file called
-## testHeaders and distclean does not know about it.
-## Remove when testheaders.sh and its users are fixed.
 CLEANFILES += testHeaders
-
-
-.PHONY: testHeaders

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_ANYP_FORWARD_H
-#define _SQUID_SRC_ANYP_FORWARD_H
+#ifndef SQUID_SRC_ANYP_FORWARD_H
+#define SQUID_SRC_ANYP_FORWARD_H
 
 #include "base/RefCount.h"
 
@@ -17,10 +17,12 @@ namespace AnyP
 class PortCfg;
 typedef RefCount<PortCfg> PortCfgPointer;
 
+class Bracketed;
+class Host;
 class Uri;
 class UriScheme;
 
 } // namespace AnyP
 
-#endif /* _SQUID_SRC_ANYP_FORWARD_H */
+#endif /* SQUID_SRC_ANYP_FORWARD_H */
 

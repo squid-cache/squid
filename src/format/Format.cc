@@ -399,6 +399,12 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             out = "";
             break;
 
+        case LFT_BYTE:
+            tmp[0] = static_cast<char>(fmt->data.byteValue);
+            tmp[1] = '\0';
+            out = tmp;
+            break;
+
         case LFT_STRING:
             out = fmt->data.string;
             break;
@@ -629,9 +635,16 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME: {
-            struct timeval totalResponseTime;
-            if (al->hier.totalResponseTime(totalResponseTime)) {
-                outtv = totalResponseTime;
+            // XXX: al->hier.totalPeeringTime is not updated until prepareLogWithRequestDetails().
+            // TODO: Avoid the need for updates by keeping totalPeeringTime (or even ALE::hier) in one place.
+            const auto &timer = (!al->hier.totalPeeringTime.ran() && al->request) ?
+                                al->request->hier.totalPeeringTime : al->hier.totalPeeringTime;
+            if (timer.ran()) {
+                using namespace std::chrono_literals;
+                const auto duration = timer.total();
+                outtv.tv_sec = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+                const auto totalUsec = std::chrono::duration_cast<std::chrono::microseconds>(duration);
+                outtv.tv_usec = (totalUsec % std::chrono::microseconds(1s)).count();
                 doMsec = 1;
             }
         }
@@ -942,8 +955,6 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (!out)
                 out = strOrNull(al->cache.ssluser);
 #endif
-            if (!out)
-                out = strOrNull(al->getClientIdent());
             break;
 
         case LFT_USER_LOGIN:
@@ -951,10 +962,6 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->request && al->request->auth_user_request)
                 out = strOrNull(al->request->auth_user_request->username());
 #endif
-            break;
-
-        case LFT_USER_IDENT:
-            out = strOrNull(al->getClientIdent());
             break;
 
         case LFT_USER_EXTERNAL:
@@ -1004,8 +1011,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SQUID_ERROR_DETAIL:
             if (const auto error = al->error()) {
-                if (const auto detail = error->detail) {
-                    sb = detail->brief();
+                if (!error->details.empty()) {
+                    sb = ToSBuf(error->details);
                     out = sb.c_str();
                 }
             }
@@ -1401,16 +1408,20 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 out = sb.c_str();
                 quote = 1;
             } else {
+                // No specific annotation requested. Report all annotations.
+
                 // if no argument given use default "\r\n" as notes separator
                 const char *separator = fmt->data.string ? tmp : "\r\n";
+                SBufStream os;
 #if USE_ADAPTATION
                 Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
-                if (ah && ah->metaHeaders && !ah->metaHeaders->empty())
-                    sb.append(ah->metaHeaders->toString(separator));
+                if (ah && ah->metaHeaders)
+                    ah->metaHeaders->print(os, ": ", separator);
 #endif
-                if (al->notes && !al->notes->empty())
-                    sb.append(al->notes->toString(separator));
+                if (al->notes)
+                    al->notes->print(os, ": ", separator);
 
+                sb = os.buf();
                 out = sb.c_str();
                 quote = 1;
             }
@@ -1428,7 +1439,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_EXT_ACL_NAME:
-            out = al->lastAclName;
+            if (!al->lastAclName.isEmpty())
+                out = al->lastAclName.c_str();
             break;
 
         case LFT_EXT_ACL_DATA:

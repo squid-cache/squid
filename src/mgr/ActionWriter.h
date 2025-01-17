@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_ACTION_WRITER_H
-#define SQUID_MGR_ACTION_WRITER_H
+#ifndef SQUID_SRC_MGR_ACTIONWRITER_H
+#define SQUID_SRC_MGR_ACTIONWRITER_H
 
 #include "comm/forward.h"
 #include "mgr/StoreToCommWriter.h"
@@ -36,5 +36,5 @@ private:
 
 } // namespace Mgr
 
-#endif /* SQUID_MGR_ACTION_WRITER_H */
+#endif /* SQUID_SRC_MGR_ACTIONWRITER_H */
 

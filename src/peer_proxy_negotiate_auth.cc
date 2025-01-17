@@ -13,10 +13,6 @@
 #include "squid.h"
 
 #if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
-#if USE_APPLE_KRB5
-#define GSSKRB_APPLE_DEPRECATED(x)
-#endif
-
 #include "base64.h"
 #include "compat/krb5.h"
 #include "debug/Stream.h"
@@ -31,13 +27,17 @@
 #if HAVE_COM_ERR_H
 #include <com_err.h>
 #endif              /* HAVE_COM_ERR_H */
-
+#if HAVE_GSS_H
+#include <gss.h>
+#endif
+#if USE_APPLE_KRB5
+#define GSSKRB_APPLE_DEPRECATED(x)
+#endif
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
 #endif              /* HAVE_GSSAPI_H */
-#if !USE_HEIMDAL_KRB5
 #if HAVE_GSSAPI_GSSAPI_EXT_H
 #include <gssapi/gssapi_ext.h>
 #endif              /* HAVE_GSSAPI_GSSAPI_EXT_H */
@@ -47,7 +47,6 @@
 #if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
 #endif              /* HAVE_GSSAPI_GSSAPI_GENERIC_H */
-#endif              /* !USE_HEIMDAL_KRB5 */
 
 #ifndef gss_nt_service_name
 #define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
@@ -189,7 +188,7 @@ int krb5_create_cache(char *kf, char *pn) {
     static krb5_keytab_entry entry;
     static krb5_kt_cursor cursor;
     static krb5_creds *creds = nullptr;
-#if USE_HEIMDAL_KRB5 && !HAVE_KRB5_GET_RENEWED_CREDS
+#if HAVE_LIBHEIMDAL_KRB5 && !HAVE_KRB5_GET_RENEWED_CREDS
     static krb5_creds creds2;
 #endif
     static krb5_principal principal = nullptr;
@@ -205,7 +204,7 @@ int krb5_create_cache(char *kf, char *pn) {
 #if HAVE_PROFILE_H && HAVE_KRB5_GET_PROFILE && HAVE_PROFILE_GET_INTEGER && HAVE_PROFILE_RELEASE
     profile_t profile;
 #endif
-#if USE_HEIMDAL_KRB5 && !HAVE_KRB5_GET_RENEWED_CREDS
+#if HAVE_LIBHEIMDAL_KRB5 && !HAVE_KRB5_GET_RENEWED_CREDS
     krb5_kdc_flags flags;
 #if HAVE_KRB5_PRINCIPAL_GET_REALM
     const char *client_realm;
@@ -308,10 +307,8 @@ restart:
                    error_message(code));
             return (1);
         }
-#elif USE_HEIMDAL_KRB5 && HAVE_KRB5_GET_MAX_TIME_SKEW
+#elif HAVE_LIBHEIMDAL_KRB5
         skew = krb5_get_max_time_skew(kparam.context);
-#elif USE_HEIMDAL_KRB5 && HAVE_MAX_SKEW_IN_KRB5_CONTEXT
-        skew = kparam.context->max_skew;
 #else
         skew = DEFAULT_SKEW;
 #endif
@@ -363,7 +360,7 @@ restart:
                        error_message(code));
                 return (1);
             }
-#if USE_HEIMDAL_KRB5 || ( HAVE_KRB5_KT_FREE_ENTRY && HAVE_DECL_KRB5_KT_FREE_ENTRY)
+#if HAVE_LIBHEIMDAL_KRB5 || ( HAVE_KRB5_KT_FREE_ENTRY && HAVE_DECL_KRB5_KT_FREE_ENTRY)
             code = krb5_kt_free_entry(kparam.context, &entry);
 #else
             code = krb5_free_keytab_entry_contents(kparam.context, &entry);

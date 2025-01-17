@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPREQUESTMETHOD_H
-#define SQUID_HTTPREQUESTMETHOD_H
+#ifndef SQUID_SRC_HTTP_REQUESTMETHOD_H
+#define SQUID_SRC_HTTP_REQUESTMETHOD_H
 
 #include "http/forward.h"
 #include "http/MethodType.h"
@@ -119,5 +119,5 @@ operator << (std::ostream &os, HttpRequestMethod const &method)
     return os;
 }
 
-#endif /* SQUID_HTTPREQUESTMETHOD_H */
+#endif /* SQUID_SRC_HTTP_REQUESTMETHOD_H */
 

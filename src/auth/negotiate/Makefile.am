@@ -6,9 +6,11 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
-DIST_SUBDIRS= kerberos SSPI wrapper
+DIST_SUBDIRS = \
+	kerberos \
+	SSPI \
+	wrapper
 SUBDIRS= $(NEGOTIATE_AUTH_HELPERS)
 EXTRA_DIST= helpers.m4
 

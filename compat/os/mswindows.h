@@ -11,8 +11,8 @@
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  */
 
-#ifndef SQUID_OS_MSWINDOWS_H
-#define SQUID_OS_MSWINDOWS_H
+#ifndef SQUID_COMPAT_OS_MSWINDOWS_H
+#define SQUID_COMPAT_OS_MSWINDOWS_H
 
 #if _SQUID_WINDOWS_
 
@@ -283,11 +283,6 @@ struct timezone {
 #ifndef _PATH_DEVNULL
 #define _PATH_DEVNULL "NUL"
 #endif
-
-#undef FD_CLOSE
-#undef FD_OPEN
-#undef FD_READ
-#undef FD_WRITE
 
 #ifndef EISCONN
 #define EISCONN WSAEISCONN
@@ -885,15 +880,6 @@ SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
 SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
 SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
 
-/* gcc doesn't recognize the Windows native 64 bit formatting tags causing
- * the compile fail, so we must disable the check on native Windows.
- */
-#if __GNUC__
-#define PRINTF_FORMAT_ARG1
-#define PRINTF_FORMAT_ARG2
-#define PRINTF_FORMAT_ARG3
-#endif
-
 /* XXX: the logic around this is a bit warped:
  *   we #define ACL unconditionally at the top of this file,
  *   then #undef ACL unconditionally hafway down,
@@ -931,5 +917,5 @@ void syslog(int priority, const char *fmt, ...);
 void WIN32_maperror(unsigned long WIN32_oserrno);
 
 #endif /* _SQUID_WINDOWS_ */
-#endif /* SQUID_OS_MSWINDOWS_H */
+#endif /* SQUID_COMPAT_OS_MSWINDOWS_H */
 

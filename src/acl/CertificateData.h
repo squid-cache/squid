@@ -6,12 +6,13 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLCERTIFICATEDATA_H
-#define SQUID_ACLCERTIFICATEDATA_H
+#ifndef SQUID_SRC_ACL_CERTIFICATEDATA_H
+#define SQUID_SRC_ACL_CERTIFICATEDATA_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "acl/StringData.h"
+#include "security/forward.h"
 #include "ssl/support.h"
 #include <string>
 #include <list>
@@ -45,5 +46,5 @@ private:
     Ssl::GETX509ATTRIBUTE *sslAttributeCall;
 };
 
-#endif /* SQUID_ACLCERTIFICATEDATA_H */
+#endif /* SQUID_SRC_ACL_CERTIFICATEDATA_H */
 

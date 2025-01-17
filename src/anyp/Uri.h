@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_ANYP_URI_H
 #define SQUID_SRC_ANYP_URI_H
 
+#include "anyp/forward.h"
 #include "anyp/UriScheme.h"
 #include "ip/Address.h"
 #include "rfc2181.h"
@@ -34,20 +35,10 @@ class Uri
 public:
     Uri(): hostIsNumeric_(false) { *host_ = 0; }
     Uri(AnyP::UriScheme const &aScheme);
-    Uri(const Uri &other) {
-        this->operator =(other);
-    }
-    Uri &operator =(const Uri &o) {
-        scheme_ = o.scheme_;
-        userInfo_ = o.userInfo_;
-        memcpy(host_, o.host_, sizeof(host_));
-        hostIsNumeric_ = o.hostIsNumeric_;
-        hostAddr_ = o.hostAddr_;
-        port_ = o.port_;
-        path_ = o.path_;
-        touch();
-        return *this;
-    }
+    Uri(const Uri &) = default;
+    Uri(Uri &&) = default;
+    Uri &operator =(const Uri &) = default;
+    Uri &operator =(Uri &&) = default;
 
     void clear() {
         scheme_=AnyP::PROTO_NONE;
@@ -86,6 +77,10 @@ public:
     int hostIsNumeric(void) const {return hostIsNumeric_;}
     Ip::Address const & hostIP(void) const {return hostAddr_;}
 
+    /// Successfully interpreted non-empty host subcomponent of the authority
+    /// component (if any). XXX: Remove hostOrIp() and print Host instead.
+    std::optional<Host> parsedHost() const;
+
     /// \returns the host subcomponent of the authority component
     /// If the host is an IPv6 address, returns that IP address with
     /// [brackets]. See RFC 3986 Section 3.2.2.
@@ -122,6 +117,9 @@ public:
     /// %-encode characters in a buffer which do not conform to
     /// the provided set of expected characters.
     static SBuf Encode(const SBuf &, const CharacterSet &expected);
+
+    /// %-decode the given buffer
+    static SBuf Decode(const SBuf &);
 
     /**
      * The authority-form URI for currently stored values.

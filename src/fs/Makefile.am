@@ -65,17 +65,3 @@ ufs/clean: clean
 rock/all: librock.la
 rock/clean: clean
 
-
-TESTS += testHeaders
-
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(srcdir)/ufs/*.h $(srcdir)/rock/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
-## diskd/ has no .h files
-## aufs/ has no .h files
-## ./ has no .h files
-
-CLEANFILES += testHeaders
-
-.PHONY: testHeaders

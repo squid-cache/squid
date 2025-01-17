@@ -23,7 +23,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "FwdState.h"
-#include "html_quote.h"
+#include "html/Quoting.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
 #include "HttpHeaderRange.h"
@@ -401,6 +401,12 @@ Ftp::Gateway::loginParser(const SBuf &login, bool escaped)
 
     if (login.isEmpty())
         return;
+
+    if (!login[0]) {
+        debugs(9, 2, "WARNING: Ignoring FTP credentials that start with a NUL character");
+        // TODO: Either support credentials with NUL characters (in any position) or ban all of them.
+        return;
+    }
 
     const SBuf::size_type colonPos = login.find(':');
 
@@ -994,7 +1000,7 @@ Ftp::Gateway::processReplyBody()
         parseListing();
         maybeReadVirginBody();
         return;
-    } else if (const int csize = data.readBuf->contentSize()) {
+    } else if (const auto csize = data.readBuf->contentSize()) {
         writeReplyBody(data.readBuf->content(), csize);
         debugs(9, 5, "consuming " << csize << " bytes of readBuf");
         data.readBuf->consume(csize);
@@ -1016,7 +1022,7 @@ Ftp::Gateway::processReplyBody()
  * Special Case: A username-only may be provided in the URL and password in the HTTP headers.
  *
  * TODO: we might be able to do something about locating username from other sources:
- *       ie, external ACL user=* tag or ident lookup
+ *       ie, external ACL user=* tag
  *
  \retval 1  if we have everything needed to complete this request.
  \retval 0  if something is missing.
@@ -1042,9 +1048,8 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
     /* Test URL login syntax. Overrides any headers received. */
     loginParser(request->url.userInfo(), true);
 
-    /* name is missing. that's fatal. */
-    if (!user[0])
-        fatal("FTP login parsing destroyed username info");
+    // XXX: We we keep default "anonymous" instead of properly supporting empty usernames.
+    Assure(user[0]);
 
     /* name + password == success */
     if (password[0])
@@ -2267,6 +2272,7 @@ ftpWriteTransferDone(Ftp::Gateway * ftpState)
     }
 
     ftpState->entry->timestampsSet();   /* XXX Is this needed? */
+    ftpState->markParsedVirginReplyAsWhole("ftpWriteTransferDone code 226 or 250");
     ftpSendReply(ftpState);
 }
 
@@ -2633,7 +2639,7 @@ Ftp::Gateway::completeForwarding()
 {
     if (fwd == nullptr || flags.completed_forwarding) {
         debugs(9, 3, "avoid double-complete on FD " <<
-               (ctrl.conn ? ctrl.conn->fd : -1) << ", Data FD " << data.conn->fd <<
+               (ctrl.conn ? ctrl.conn->fd : -1) << ", Data FD " << (data.conn ? data.conn->fd : -1) <<
                ", this " << this << ", fwd " << fwd);
         return;
     }

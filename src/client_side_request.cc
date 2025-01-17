@@ -28,6 +28,7 @@
 #include "clientStream.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
+#include "debug/Messages.h"
 #include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"
@@ -41,6 +42,7 @@
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "internal.h"
 #include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"
 #include "ipcache.h"
@@ -74,6 +76,11 @@
 #endif
 
 #if FOLLOW_X_FORWARDED_FOR
+
+#if !defined(SQUID_X_FORWARDED_FOR_HOP_MAX)
+#define SQUID_X_FORWARDED_FOR_HOP_MAX 64
+#endif
+
 static void clientFollowXForwardedForCheck(Acl::Answer answer, void *data);
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
@@ -92,9 +99,9 @@ static void clientInterpretRequestHeaders(ClientHttpRequest * http);
 static HLPCB clientRedirectDoneWrapper;
 static HLPCB clientStoreIdDoneWrapper;
 static void checkNoCacheDoneWrapper(Acl::Answer, void *);
-SQUIDCEXTERN CSR clientGetMoreData;
-SQUIDCEXTERN CSS clientReplyStatus;
-SQUIDCEXTERN CSD clientReplyDetach;
+CSR clientGetMoreData;
+CSS clientReplyStatus;
+CSD clientReplyDetach;
 static void checkFailureRatio(err_type, hier_code);
 
 ClientRequestContext::~ClientRequestContext()
@@ -104,8 +111,7 @@ ClientRequestContext::~ClientRequestContext()
      * still have one
      */
 
-    if (http)
-        cbdataReferenceDone(http);
+    cbdataReferenceDone(http);
 
     delete error;
     debugs(85,3, "ClientRequestContext destructed, this=" << this);
@@ -256,106 +262,10 @@ ClientHttpRequest::~ClientHttpRequest()
 
     delete calloutContext;
 
-    if (conn_)
-        cbdataReferenceDone(conn_);
+    cbdataReferenceDone(conn_);
 
     /* moving to the next connection is handled by the context free */
     dlinkDelete(&active, &ClientActiveRequests);
-}
-
-/**
- * Create a request and kick it off
- *
- * \retval 0     success
- * \retval -1    failure
- *
- * TODO: Pass in the buffers to be used in the initial Read request, as they are
- * determined by the user
- */
-int
-clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * streamcallback,
-                   CSD * streamdetach, ClientStreamData streamdata, HttpHeader const *header,
-                   char *tailbuf, size_t taillen, const MasterXaction::Pointer &mx)
-{
-    size_t url_sz;
-    ClientHttpRequest *http = new ClientHttpRequest(nullptr);
-    HttpRequest *request;
-    StoreIOBuffer tempBuffer;
-    if (http->al != nullptr)
-        http->al->cache.start_time = current_time;
-    /* this is only used to adjust the connection offset in client_side.c */
-    http->req_sz = 0;
-    tempBuffer.length = taillen;
-    tempBuffer.data = tailbuf;
-    /* client stream setup */
-    clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
-                     clientReplyStatus, new clientReplyContext(http), streamcallback,
-                     streamdetach, streamdata, tempBuffer);
-    /* make it visible in the 'current acctive requests list' */
-    /* Set flags */
-    /* internal requests only makes sense in an
-     * accelerator today. TODO: accept flags ? */
-    http->flags.accel = true;
-    /* allow size for url rewriting */
-    url_sz = strlen(url) + Config.appendDomainLen + 5;
-    http->uri = (char *)xcalloc(url_sz, 1);
-    strcpy(http->uri, url); // XXX: polluting http->uri before parser validation
-
-    request = HttpRequest::FromUrlXXX(http->uri, mx, method);
-    if (!request) {
-        debugs(85, 5, "Invalid URL: " << http->uri);
-        return -1;
-    }
-
-    /*
-     * now update the headers in request with our supplied headers.
-     * HttpRequest::FromUrl() should return a blank header set, but
-     * we use Update to be sure of correctness.
-     */
-    if (header)
-        request->header.update(header);
-
-    /* http struct now ready */
-
-    /*
-     * build new header list *? TODO
-     */
-    request->flags.accelerated = http->flags.accel;
-
-    /* this is an internally created
-     * request, not subject to acceleration
-     * target overrides */
-    // TODO: detect and handle internal requests of internal objects?
-
-    /* Internally created requests cannot have bodies today */
-    request->content_length = 0;
-
-    request->client_addr.setNoAddr();
-
-#if FOLLOW_X_FORWARDED_FOR
-    request->indirect_client_addr.setNoAddr();
-#endif /* FOLLOW_X_FORWARDED_FOR */
-
-    request->my_addr.setNoAddr();   /* undefined for internal requests */
-
-    request->my_addr.port(0);
-
-    request->http_ver = Http::ProtocolVersion();
-
-    http->initRequest(request);
-
-    /* optional - skip the access check ? */
-    http->calloutContext = new ClientRequestContext(http);
-
-    http->calloutContext->http_access_done = false;
-
-    http->calloutContext->redirect_done = true;
-
-    http->calloutContext->no_cache_done = true;
-
-    http->doCallouts();
-
-    return 0;
 }
 
 bool
@@ -433,13 +343,21 @@ clientFollowXForwardedForCheck(Acl::Answer answer, void *data)
         if ((addr = asciiaddr)) {
             request->indirect_client_addr = addr;
             request->x_forwarded_for_iterator.cut(l);
-            calloutContext->acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
+            auto ch = clientAclChecklistCreate(Config.accessList.followXFF, http);
             if (!Config.onoff.acl_uses_indirect_client) {
                 /* override the default src_addr tested if we have to go deeper than one level into XFF */
-                Filled(calloutContext->acl_checklist)->src_addr = request->indirect_client_addr;
+                ch->src_addr = request->indirect_client_addr;
             }
-            calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
-            return;
+            if (++calloutContext->currentXffHopNumber < SQUID_X_FORWARDED_FOR_HOP_MAX) {
+                ACLFilledChecklist::NonBlockingCheck(std::move(ch), clientFollowXForwardedForCheck, data);
+                return;
+            }
+            const auto headerName = Http::HeaderLookupTable.lookup(Http::HdrType::X_FORWARDED_FOR).name;
+            debugs(28, DBG_CRITICAL, "ERROR: Ignoring trailing " << headerName << " addresses" <<
+                   Debug::Extra << "addresses allowed by follow_x_forwarded_for: " << calloutContext->currentXffHopNumber <<
+                   Debug::Extra << "last/accepted address: " << request->indirect_client_addr <<
+                   Debug::Extra << "ignored trailing addresses: " << request->x_forwarded_for_iterator);
+            // fall through to resume clientAccessCheck() processing
         }
     }
 
@@ -653,15 +571,15 @@ ClientRequestContext::clientAccessCheck()
         http->request->x_forwarded_for_iterator = http->request->header.getList(Http::HdrType::X_FORWARDED_FOR);
 
         /* begin by checking to see if we trust direct client enough to walk XFF */
-        acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
-        acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, this);
+        auto acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), clientFollowXForwardedForCheck, this);
         return;
     }
 #endif
 
     if (Config.accessList.http) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
-        acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
+        auto acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), clientAccessCheckDoneWrapper, this);
     } else {
         debugs(0, DBG_CRITICAL, "No http_access configuration found. This will block ALL traffic");
         clientAccessCheckDone(ACCESS_DENIED);
@@ -677,8 +595,8 @@ void
 ClientRequestContext::clientAccessCheck2()
 {
     if (Config.accessList.adapted_http) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.adapted_http, http);
-        acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
+        auto acl_checklist = clientAclChecklistCreate(Config.accessList.adapted_http, http);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), clientAccessCheckDoneWrapper, this);
     } else {
         debugs(85, 2, "No adapted_http_access configuration. default: ALLOW");
         clientAccessCheckDone(ACCESS_ALLOWED);
@@ -699,12 +617,10 @@ clientAccessCheckDoneWrapper(Acl::Answer answer, void *data)
 void
 ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
 {
-    acl_checklist = nullptr;
-    err_type page_id;
     Http::StatusCode status;
     debugs(85, 2, "The request " << http->request->method << ' ' <<
            http->uri << " is " << answer <<
-           "; last ACL checked: " << (AclMatchedName ? AclMatchedName : "[none]"));
+           "; last ACL checked: " << answer.lastCheckDescription());
 
 #if USE_AUTH
     char const *proxy_auth_msg = "<null>";
@@ -719,21 +635,14 @@ ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
 
         /* Send an auth challenge or error */
         // XXX: do we still need aclIsProxyAuth() ?
-        bool auth_challenge = (answer == ACCESS_AUTH_REQUIRED || aclIsProxyAuth(AclMatchedName));
+        const auto auth_challenge = (answer == ACCESS_AUTH_REQUIRED || aclIsProxyAuth(answer.lastCheckedName));
         debugs(85, 5, "Access Denied: " << http->uri);
-        debugs(85, 5, "AclMatchedName = " << (AclMatchedName ? AclMatchedName : "<null>"));
 #if USE_AUTH
         if (auth_challenge)
             debugs(33, 5, "Proxy Auth Message = " << (proxy_auth_msg ? proxy_auth_msg : "<null>"));
 #endif
 
-        /*
-         * NOTE: get page_id here, based on AclMatchedName because if
-         * USE_DELAY_POOLS is enabled, then AclMatchedName gets clobbered in
-         * the clientCreateStoreEntry() call just below.  Pedro Ribeiro
-         * <pribeiro@isel.pt>
-         */
-        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_AUTH_REQUIRED);
+        auto page_id = FindDenyInfoPage(answer, answer != ACCESS_AUTH_REQUIRED);
 
         http->updateLoggingTags(LOG_TCP_DENIED);
 
@@ -754,7 +663,7 @@ ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
             status = Http::scForbidden;
 #endif
             if (page_id == ERR_NONE)
-                page_id = ERR_CACHE_ACCESS_DENIED;
+                page_id = (status == Http::scForbidden) ? ERR_ACCESS_DENIED : ERR_CACHE_ACCESS_DENIED;
         } else {
             status = Http::scForbidden;
 
@@ -789,7 +698,6 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
     Adaptation::Icap::History::Pointer ih = request->icapHistory();
     if (ih != nullptr) {
         if (getConn() != nullptr && getConn()->clientConnection != nullptr) {
-            ih->rfc931 = getConn()->clientConnection->rfc931;
 #if USE_OPENSSL
             if (getConn()->clientConnection->isOpen()) {
                 ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl.get());
@@ -817,7 +725,6 @@ clientRedirectAccessCheckDone(Acl::Answer answer, void *data)
 {
     ClientRequestContext *context = (ClientRequestContext *)data;
     ClientHttpRequest *http = context->http;
-    context->acl_checklist = nullptr;
 
     if (answer.allowed())
         redirectStart(http, clientRedirectDoneWrapper, context);
@@ -833,8 +740,8 @@ ClientRequestContext::clientRedirectStart()
     debugs(33, 5, "'" << http->uri << "'");
     http->al->syncNotes(http->request);
     if (Config.accessList.redirector) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);
-        acl_checklist->nonBlockingCheck(clientRedirectAccessCheckDone, this);
+        auto acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), clientRedirectAccessCheckDone, this);
     } else
         redirectStart(http, clientRedirectDoneWrapper, this);
 }
@@ -848,7 +755,6 @@ clientStoreIdAccessCheckDone(Acl::Answer answer, void *data)
 {
     ClientRequestContext *context = static_cast<ClientRequestContext *>(data);
     ClientHttpRequest *http = context->http;
-    context->acl_checklist = nullptr;
 
     if (answer.allowed())
         storeIdStart(http, clientStoreIdDoneWrapper, context);
@@ -870,8 +776,8 @@ ClientRequestContext::clientStoreIdStart()
     debugs(33, 5,"'" << http->uri << "'");
 
     if (Config.accessList.store_id) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.store_id, http);
-        acl_checklist->nonBlockingCheck(clientStoreIdAccessCheckDone, this);
+        auto acl_checklist = clientAclChecklistCreate(Config.accessList.store_id, http);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), clientStoreIdAccessCheckDone, this);
     } else
         storeIdStart(http, clientStoreIdDoneWrapper, this);
 }
@@ -923,9 +829,7 @@ clientCheckPinning(ClientHttpRequest * http)
     HttpHeader *req_hdr = &request->header;
     ConnStateData *http_conn = http->getConn();
 
-    /* Internal requests such as those from ESI includes may be without
-     * a client connection
-     */
+    // Internal requests may be without a client connection
     if (!http_conn)
         return;
 
@@ -1222,9 +1126,6 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                     new_request->url = tmpUrl;
                     debugs(61, 2, "URL-rewriter diverts URL from " << old_request->effectiveRequestUri() << " to " << new_request->effectiveRequestUri());
 
-                    // update the new request to flag the re-writing was done on it
-                    new_request->flags.redirected = true;
-
                     // unlink bodypipe from the old request. Not needed there any longer.
                     if (old_request->body_pipe != nullptr) {
                         old_request->body_pipe = nullptr;
@@ -1232,7 +1133,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                                " from request " << old_request << " to " << new_request);
                     }
 
-                    http->resetRequest(new_request);
+                    http->resetRequestXXX(new_request, true);
                     old_request = nullptr;
                 } else {
                     debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
@@ -1312,8 +1213,8 @@ void
 ClientRequestContext::checkNoCache()
 {
     if (Config.accessList.noCache) {
-        acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http);
-        acl_checklist->nonBlockingCheck(checkNoCacheDoneWrapper, this);
+        auto acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), checkNoCacheDoneWrapper, this);
     } else {
         /* unless otherwise specified, we try to cache. */
         checkNoCacheDone(ACCESS_ALLOWED);
@@ -1334,7 +1235,6 @@ checkNoCacheDoneWrapper(Acl::Answer answer, void *data)
 void
 ClientRequestContext::checkNoCacheDone(const Acl::Answer &answer)
 {
-    acl_checklist = nullptr;
     if (answer.denied()) {
         http->request->flags.disableCacheUse("a cache deny rule matched");
     }
@@ -1408,8 +1308,8 @@ ClientRequestContext::sslBumpAccessCheck()
 
     debugs(85, 5, "SslBump possible, checking ACL");
 
-    ACLFilledChecklist *aclChecklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
-    aclChecklist->nonBlockingCheck(sslBumpAccessCheckDoneWrapper, this);
+    auto aclChecklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
+    ACLFilledChecklist::NonBlockingCheck(std::move(aclChecklist), sslBumpAccessCheckDoneWrapper, this);
     return true;
 }
 
@@ -1627,11 +1527,47 @@ ClientHttpRequest::initRequest(HttpRequest *aRequest)
 void
 ClientHttpRequest::resetRequest(HttpRequest *newRequest)
 {
+    const auto uriChanged = request->effectiveRequestUri() != newRequest->effectiveRequestUri();
+    resetRequestXXX(newRequest, uriChanged);
+}
+
+void
+ClientHttpRequest::resetRequestXXX(HttpRequest *newRequest, const bool uriChanged)
+{
     assert(request != newRequest);
     clearRequest();
     assignRequest(newRequest);
     xfree(uri);
     uri = SBufToCstring(request->effectiveRequestUri());
+
+    if (uriChanged) {
+        request->flags.redirected = true;
+        checkForInternalAccess();
+    }
+}
+
+void
+ClientHttpRequest::checkForInternalAccess()
+{
+    if (!internalCheck(request->url.path()))
+        return;
+
+    if (request->url.port() == getMyPort() && internalHostnameIs(SBuf(request->url.host()))) {
+        debugs(33, 3, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true));
+        request->flags.internal = true;
+    } else if (Config.onoff.global_internal_static && internalStaticCheck(request->url.path())) {
+        debugs(33, 3, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (global_internal_static on)");
+        request->url.setScheme(AnyP::PROTO_HTTP, "http");
+        request->url.host(internalHostname());
+        request->url.port(getMyPort());
+        request->flags.internal = true;
+        setLogUriToRequestUri();
+    } else {
+        debugs(33, 3, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
+    }
+
+    if (ForSomeCacheManager(request->url.path()))
+        request->flags.disableCacheUse("cache manager URL");
 }
 
 void
@@ -1764,7 +1700,7 @@ ClientHttpRequest::doCallouts()
 
     // Set appropriate MARKs and CONNMARKs if needed.
     if (getConn() && Comm::IsConnOpen(getConn()->clientConnection)) {
-        ACLFilledChecklist ch(nullptr, request, nullptr);
+        ACLFilledChecklist ch(nullptr, request);
         ch.al = calloutContext->http->al;
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
@@ -1963,9 +1899,6 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
     assert(msg);
 
     if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
-        // update the new message to flag whether URL re-writing was done on it
-        if (request->effectiveRequestUri() != new_req->effectiveRequestUri())
-            new_req->flags.redirected = true;
         resetRequest(new_req);
         assert(request->method.id());
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {
@@ -2007,10 +1940,8 @@ ClientHttpRequest::handleAdaptationBlock(const Adaptation::Answer &answer)
 {
     static const auto d = MakeNamedErrorDetail("REQMOD_BLOCK");
     request->detailError(ERR_ACCESS_DENIED, d);
-    AclMatchedName = answer.ruleId.termedBuf();
     assert(calloutContext);
-    calloutContext->clientAccessCheckDone(ACCESS_DENIED);
-    AclMatchedName = nullptr;
+    calloutContext->clientAccessCheckDone(answer.blockedToChecklistAnswer());
 }
 
 void
@@ -2058,7 +1989,7 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
         // XXX: Setting receivedWholeAdaptedReply here is a workaround for a
         // regression, as described in https://bugs.squid-cache.org/show_bug.cgi?id=5187#c6
         receivedWholeAdaptedReply = true;
-        debugs(85, DBG_IMPORTANT, "WARNING: Squid bug 5187 workaround triggered");
+        debugs(85, Important(72), "WARNING: Squid bug 5187 workaround triggered");
         endRequestSatisfaction();
     }
     // else wait for more body data

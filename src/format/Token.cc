@@ -11,6 +11,7 @@
 #include "format/Token.h"
 #include "format/TokenTableEntry.h"
 #include "globals.h"
+#include "parser/Tokenizer.h"
 #include "proxyp/Elements.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -76,7 +77,6 @@ static TokenTableEntry TokenTable2C[] = {
     TokenTableEntry("ul", LFT_USER_LOGIN),
     /*TokenTableEntry( "ur", LFT_USER_REALM ), */
     /*TokenTableEntry( "us", LFT_USER_SCHEME ), */
-    TokenTableEntry("ui", LFT_USER_IDENT),
     TokenTableEntry("ue", LFT_USER_EXTERNAL),
 
     TokenTableEntry("Hs", LFT_HTTP_SENT_STATUS_CODE_OLD_30),
@@ -139,6 +139,7 @@ static TokenTableEntry TokenTable2C[] = {
 
 /// Miscellaneous >2 byte tokens
 static TokenTableEntry TokenTableMisc[] = {
+    TokenTableEntry("byte", LFT_BYTE),
     TokenTableEntry(">eui", LFT_CLIENT_EUI),
     TokenTableEntry(">qos", LFT_CLIENT_LOCAL_TOS),
     TokenTableEntry("<qos", LFT_SERVER_LOCAL_TOS),
@@ -160,7 +161,6 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry("EXT_LOG", LFT_EXT_LOG),
     TokenTableEntry("EXT_TAG", LFT_TAG),
     TokenTableEntry("EXT_USER", LFT_USER_EXTERNAL),
-    TokenTableEntry("IDENT", LFT_USER_IDENT),
     TokenTableEntry("LOGIN", LFT_USER_LOGIN),
     TokenTableEntry("METHOD", LFT_CLIENT_REQ_METHOD),
     TokenTableEntry("MYADDR", LFT_LOCAL_LISTENING_IP),
@@ -283,6 +283,66 @@ Format::Token::scanForToken(TokenTableEntry const table[], const char *cur)
         }
     }
     return cur;
+}
+
+// TODO: Reduce code duplication across this and other custom integer parsers.
+/// interprets input as an unsigned decimal integer that fits the specified Integer type
+template <typename Integer>
+static Integer
+ParseUnsignedDecimalInteger(const char *description, const SBuf &rawInput)
+{
+    constexpr auto minValue = std::numeric_limits<Integer>::min();
+    constexpr auto maxValue = std::numeric_limits<Integer>::max();
+
+    Parser::Tokenizer tok(rawInput);
+    if (tok.skip('0')) {
+        if (!tok.atEnd()) {
+            // e.g., 077, 0xFF, 0b101, or 0.1
+            throw TextException(ToSBuf("Malformed ", description,
+                                       ": Expected a decimal integer without leading zeros but got '",
+                                       rawInput, "'"), Here());
+        }
+        // for simplicity, we currently assume that zero is always in range
+        static_assert(minValue <= 0);
+        static_assert(0 <= maxValue);
+        return Integer(0);
+    }
+    // else the value might still be zero (e.g., -0)
+
+    // check that our caller is compatible with Tokenizer::int64() use below
+    using ParsedInteger = int64_t;
+    static_assert(minValue >= std::numeric_limits<ParsedInteger>::min());
+    static_assert(maxValue <= std::numeric_limits<ParsedInteger>::max());
+
+    ParsedInteger rawValue = 0;
+    if (!tok.int64(rawValue, 10, false)) {
+        // e.g., FF, -1, or 18446744073709551616
+        // TODO: Provide better diagnostic for values exceeding int64_t maximum.
+        throw TextException(ToSBuf("Malformed ", description,
+                                   ": Expected an unsigned decimal integer but got '",
+                                   rawInput, "'"), Here());
+    }
+
+    if (!tok.atEnd()) {
+        // e.g., 1,000, 1.0, or 1e6
+        throw TextException(ToSBuf("Malformed ", description,
+                                   ": Trailing garbage after ", rawValue, " in '",
+                                   rawInput, "'"), Here());
+    }
+
+    if (rawValue > maxValue) {
+        throw TextException(ToSBuf("Malformed ", description,
+                                   ": Expected an integer value not exceeding ", maxValue,
+                                   " but got ", rawValue), Here());
+    }
+
+    if (rawValue < minValue) {
+        throw TextException(ToSBuf("Malformed ", description,
+                                   ": Expected an integer value not below ", minValue,
+                                   " but got ", rawValue), Here());
+    }
+
+    return Integer(rawValue);
 }
 
 /* parses a single token. Returns the token length in characters,
@@ -475,6 +535,16 @@ Format::Token::parse(const char *def, Quoting *quoting)
     }
 
     switch (type) {
+
+    case LFT_BYTE:
+        if (!data.string)
+            throw TextException("logformat %byte requires a parameter (e.g., %byte{10})", Here());
+        // TODO: Convert Format::Token::data.string to SBuf.
+        if (const auto v = ParseUnsignedDecimalInteger<uint8_t>("logformat %byte{value}", SBuf(data.string)))
+            data.byteValue = v;
+        else
+            throw TextException("logformat %byte{n} does not support zero n values yet", Here());
+        break;
 
 #if USE_ADAPTATION
     case LFT_ADAPTATION_LAST_HEADER:
@@ -682,6 +752,7 @@ Format::Token::Token() : type(LFT_NONE),
     data.header.element = nullptr;
     data.header.separator = ',';
     data.headerId = ProxyProtocol::Two::htUnknown;
+    data.byteValue = 0;
 }
 
 Format::Token::~Token()

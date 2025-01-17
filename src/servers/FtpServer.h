@@ -8,13 +8,14 @@
 
 /* DEBUG: section 33    Client-side Routines */
 
-#ifndef SQUID_SERVERS_FTP_SERVER_H
-#define SQUID_SERVERS_FTP_SERVER_H
+#ifndef SQUID_SRC_SERVERS_FTPSERVER_H
+#define SQUID_SRC_SERVERS_FTPSERVER_H
 
 #include "base/JobWait.h"
 #include "base/Lock.h"
 #include "client_side.h"
 #include "comm/forward.h"
+#include "http/forward.h"
 
 namespace Ftp
 {
@@ -208,5 +209,5 @@ private:
 
 } // namespace Ftp
 
-#endif /* SQUID_SERVERS_FTP_SERVER_H */
+#endif /* SQUID_SRC_SERVERS_FTPSERVER_H */
 

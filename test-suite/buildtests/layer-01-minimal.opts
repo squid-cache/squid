@@ -43,7 +43,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-removal-policies \
 	--disable-icmp \
 	--disable-delay-pools \
-	--disable-esi \
 	--disable-icap-client \
 	--disable-ecap \
 	--disable-useragent-log \
@@ -51,7 +50,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-wccp \
 	--disable-wccpv2 \
 	--disable-snmp \
-	--disable-cachemgr-hostname \
 	--disable-eui \
 	--disable-htcp \
 	--disable-ssl-crtd \
@@ -68,7 +66,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-linux-netfilter \
 	--disable-linux-tproxy \
 	--disable-follow-x-forwarded-for \
-	--disable-ident-lookups \
 	--disable-default-hostsfile \
 	--disable-auth \
 	--disable-basic-auth-helpers \

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CONFIG_H
-#define SQUID_CONFIG_H
+#ifndef SQUID_INCLUDE_SQUID_H
+#define SQUID_INCLUDE_SQUID_H
 
 #include "autoconf.h"       /* For GNU autoconf variables */
 #include "version.h"
@@ -37,12 +37,6 @@
 #endif
 #endif
 
-#if !defined(CACHEMGR_HOSTNAME)
-#define CACHEMGR_HOSTNAME ""
-#else
-#define CACHEMGR_HOSTNAME_DEFINED 1
-#endif
-
 #if SQUID_DETECT_UDP_SO_SNDBUF > 16384
 #define SQUID_UDP_SO_SNDBUF 16384
 #else
@@ -67,5 +61,5 @@ using namespace Squid;
 
 #define LOCAL_ARRAY(type, name, size) static type name[size]
 
-#endif /* SQUID_CONFIG_H */
+#endif /* SQUID_INCLUDE_SQUID_H */
 

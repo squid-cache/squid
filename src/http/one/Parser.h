@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HTTP_ONE_PARSER_H
-#define _SQUID_SRC_HTTP_ONE_PARSER_H
+#ifndef SQUID_SRC_HTTP_ONE_PARSER_H
+#define SQUID_SRC_HTTP_ONE_PARSER_H
 
 #include "anyp/ProtocolVersion.h"
 #include "http/one/forward.h"
@@ -124,9 +124,7 @@ protected:
      * detect and skip the CRLF or (if tolerant) LF line terminator
      * consume from the tokenizer.
      *
-     * \throws exception on bad or InsuffientInput.
-     * \retval true only if line terminator found.
-     * \retval false incomplete or missing line terminator, need more data.
+     * \throws exception on bad or InsufficientInput
      */
     void skipLineTerminator(Tokenizer &) const;
 
@@ -166,7 +164,14 @@ private:
 
 /// skips and, if needed, warns about RFC 7230 BWS ("bad" whitespace)
 /// \throws InsufficientInput when the end of BWS cannot be confirmed
+/// \sa WhitespaceCharacters() for the definition of BWS characters
+/// \sa ParseStrictBws() that avoids WhitespaceCharacters() uncertainties
 void ParseBws(Parser::Tokenizer &);
+
+/// Like ParseBws() but only skips CharacterSet::WSP characters. This variation
+/// must be used if the next element may start with CR or any other character
+/// from RelaxedDelimiterCharacters().
+void ParseStrictBws(Parser::Tokenizer &);
 
 /// the right debugs() level for logging HTTP violation messages
 int ErrorLevel();
@@ -174,5 +179,5 @@ int ErrorLevel();
 } // namespace One
 } // namespace Http
 
-#endif /*  _SQUID_SRC_HTTP_ONE_PARSER_H */
+#endif /* SQUID_SRC_HTTP_ONE_PARSER_H */
 

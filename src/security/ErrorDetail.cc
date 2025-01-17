@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "base/IoManip.h"
 #include "error/SysErrorDetail.h"
-#include "html_quote.h"
+#include "html/Quoting.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 #include "security/Certificate.h"
@@ -20,12 +20,13 @@
 
 #if USE_OPENSSL
 #include "ssl/ErrorDetailManager.h"
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 #if HAVE_GNUTLS_GNUTLS_H
 #include <gnutls/gnutls.h>
 #endif
 #endif
 #include <map>
+#include <optional>
 
 namespace Security {
 
@@ -452,7 +453,7 @@ Security::ErrorDetail::ErrorDetail(const ErrorCode err, const int aSysErrorNo):
 #if USE_OPENSSL
     /// Extract and remember errors stored internally by the TLS library.
     if ((lib_error_no = ERR_get_error())) {
-        debugs(83, 7, "got " << asHex(lib_error_no));
+        debugs(83, 7, "got 0x" << asHex(lib_error_no));
         // more errors may be stacked
         // TODO: Save/detail all stacked errors by always flushing stale ones.
         ForgetErrors();
@@ -477,7 +478,7 @@ Security::ErrorDetail::ErrorDetail(const ErrorCode anErrorCode, const int anIoEr
     ioErrorNo = anIoErrorNo;
 }
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
 Security::ErrorDetail::ErrorDetail(const ErrorCode anErrorCode, const LibErrorCode aLibErrorNo, const int aSysErrorNo):
     ErrorDetail(anErrorCode, aSysErrorNo)
 {
@@ -498,15 +499,17 @@ Security::ErrorDetail::setPeerCertificate(const CertPointer &cert)
 SBuf
 Security::ErrorDetail::brief() const
 {
-    SBuf buf(err_code()); // TODO: Upgrade err_code()/etc. to return SBuf.
+    SBufStream os;
+
+    printErrorCode(os);
 
     if (lib_error_no) {
 #if USE_OPENSSL
         // TODO: Log ERR_error_string_n() instead, despite length, whitespace?
         // Example: `error:1408F09C:SSL routines:ssl3_get_record:http request`.
-        buf.append(ToSBuf("+TLS_LIB_ERR=", std::hex, std::uppercase, lib_error_no));
-#elif USE_GNUTLS
-        buf.append(ToSBuf("+", gnutls_strerror_name(lib_error_no)));
+        os << "+TLS_LIB_ERR=" << asHex(lib_error_no).upperCase();
+#elif HAVE_LIBGNUTLS
+        os << '+' << gnutls_strerror_name(lib_error_no);
 #endif
     }
 
@@ -514,185 +517,222 @@ Security::ErrorDetail::brief() const
     // TODO: Consider logging long but human-friendly names (e.g.,
     // SSL_ERROR_SYSCALL).
     if (ioErrorNo)
-        buf.append(ToSBuf("+TLS_IO_ERR=", ioErrorNo));
+        os << "+TLS_IO_ERR=" << ioErrorNo;
 #endif
 
     if (sysErrorNo) {
-        buf.append('+');
-        buf.append(SysErrorDetail::Brief(sysErrorNo));
+        os << '+' << SysErrorDetail::Brief(sysErrorNo);
     }
 
     if (broken_cert)
-        buf.append("+broken_cert");
+        os << "+broken_cert";
 
-    return buf;
+    return os.buf();
 }
 
 SBuf
 Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
 {
-    char const *format = nullptr;
+    std::optional<SBuf> customFormat;
 #if USE_OPENSSL
-    if (Ssl::ErrorDetailsManager::GetInstance().getErrorDetail(error_no, request, detailEntry))
-        format = detailEntry.detail.termedBuf();
+    if (const auto errorDetail = Ssl::ErrorDetailsManager::GetInstance().findDetail(error_no, request))
+        customFormat = errorDetail->detail;
 #else
     (void)request;
 #endif
-    if (!format)
-        format = "SSL handshake error (%err_name)";
+    auto format = customFormat ? customFormat->c_str() : "SSL handshake error (%err_name)";
 
-    SBuf errDetailStr;
+    SBufStream os;
     assert(format);
     auto remainder = format;
     while (auto p = strchr(remainder, '%')) {
-        errDetailStr.append(remainder, p - remainder);
-        char const *converted = nullptr;
-        const auto formattingCodeLen = convert(++p, &converted);
-        if (formattingCodeLen)
-            errDetailStr.append(converted);
-        else
-            errDetailStr.append("%");
+        os.write(remainder, p - remainder);
+        const auto formattingCodeLen = convertErrorCodeToDescription(++p, os);
+        if (!formattingCodeLen)
+            os << '%';
         remainder = p + formattingCodeLen;
     }
-    errDetailStr.append(remainder, strlen(remainder));
-    return errDetailStr;
+    os << remainder;
+    return os.buf();
 }
 
 /// textual representation of the subject of the broken certificate
-const char *
-Security::ErrorDetail::subject() const
+void
+Security::ErrorDetail::printSubject(std::ostream &os) const
 {
     if (broken_cert) {
         auto buf = SubjectName(*broken_cert);
         if (!buf.isEmpty()) {
+            // TODO: Convert html_quote() into an std::ostream manipulator.
             // quote to avoid possible html code injection through
             // certificate subject
-            return html_quote(buf.c_str());
+            os << html_quote(buf.c_str());
+            return;
         }
     }
-    return "[Not available]";
+    os << "[Not available]";
 }
 
 #if USE_OPENSSL
-/// helper function to collect CNs using Ssl::matchX509CommonNames()
-static int
-copy_cn(void *check_data,  ASN1_STRING *cn_data)
+/// prints X.509 names extracted using Ssl::HasMatchingSubjectName()
+class CommonNamesPrinter: public Ssl::GeneralNameMatcher
 {
-    const auto str = static_cast<String*>(check_data);
-    if (!str) // no data? abort
-        return 0;
-    if (cn_data && cn_data->length) {
-        if (str->size() > 0)
-            str->append(", ");
-        str->append(reinterpret_cast<const char *>(cn_data->data), cn_data->length);
-    }
-    return 1;
+public:
+    explicit CommonNamesPrinter(std::ostream &os): os_(os) {}
+
+    /// the number of names printed so far
+    mutable size_t printed = 0;
+
+protected:
+    /* GeneralNameMatcher API */
+    bool matchDomainName(const Dns::DomainName &) const override;
+    bool matchIp(const Ip::Address &) const override;
+
+private:
+    std::ostream &itemStream() const;
+
+    std::ostream &os_; ///< destination for printed names
+};
+
+bool
+CommonNamesPrinter::matchDomainName(const Dns::DomainName &domain) const
+{
+    // TODO: Convert html_quote() into an std::ostream manipulator accepting (buf, n).
+    itemStream() << html_quote(SBuf(domain).c_str());
+    return false; // keep going
 }
+
+bool
+CommonNamesPrinter::matchIp(const Ip::Address &ip) const
+{
+    char hostStr[MAX_IPSTRLEN];
+    (void)ip.toStr(hostStr, sizeof(hostStr)); // no html_quote() is needed; no brackets
+    itemStream().write(hostStr, strlen(hostStr));
+    return false; // keep going
+}
+
+/// prints a comma in front of each item except for the very first one
+/// \returns a stream for printing the name
+std::ostream &
+CommonNamesPrinter::itemStream() const
+{
+    if (printed++)
+        os_ << ", ";
+    return os_;
+}
+
 #endif // USE_OPENSSL
 
 /// a list of the broken certificates CN and alternate names
-const char *
-Security::ErrorDetail::cn() const
+void
+Security::ErrorDetail::printCommonName(std::ostream &os) const
 {
 #if USE_OPENSSL
     if (broken_cert.get()) {
-        static String tmpStr;
-        tmpStr.clean();
-        Ssl::matchX509CommonNames(broken_cert.get(), &tmpStr, copy_cn);
-        if (tmpStr.size()) {
-            // quote to avoid possible HTML code injection through
-            // certificate subject
-            return html_quote(tmpStr.termedBuf());
-        }
+        CommonNamesPrinter printer(os);
+        (void)Ssl::HasMatchingSubjectName(*broken_cert, printer);
+        if (printer.printed)
+            return;
     }
 #endif // USE_OPENSSL
-    return "[Not available]";
+    os << "[Not available]";
 }
 
 /// the issuer of the broken certificate
-const char *
-Security::ErrorDetail::ca_name() const
+void
+Security::ErrorDetail::printCaName(std::ostream &os) const
 {
     if (broken_cert) {
         auto buf = IssuerName(*broken_cert);
         if (!buf.isEmpty()) {
             // quote to avoid possible html code injection through
             // certificate issuer subject
-            return html_quote(buf.c_str());
+            os << html_quote(buf.c_str());
+            return;
         }
     }
-    return "[Not available]";
+    os << "[Not available]";
 }
 
 /// textual representation of the "not before" field of the broken certificate
-const char *
-Security::ErrorDetail::notbefore() const
+void
+Security::ErrorDetail::printNotBefore(std::ostream &os) const
 {
 #if USE_OPENSSL
     if (broken_cert.get()) {
         if (const auto tm = X509_getm_notBefore(broken_cert.get())) {
+            // TODO: Add and use an ASN1_TIME printing operator instead.
             static char tmpBuffer[256]; // A temporary buffer
             Ssl::asn1timeToString(tm, tmpBuffer, sizeof(tmpBuffer));
-            return tmpBuffer;
+            os << tmpBuffer;
+            return;
         }
     }
 #endif // USE_OPENSSL
-    return "[Not available]";
+    os << "[Not available]";
 }
 
 /// textual representation of the "not after" field of the broken certificate
-const char *
-Security::ErrorDetail::notafter() const
+void
+Security::ErrorDetail::printNotAfter(std::ostream &os) const
 {
 #if USE_OPENSSL
     if (broken_cert.get()) {
         if (const auto tm = X509_getm_notAfter(broken_cert.get())) {
+            // XXX: Reduce code duplication.
             static char tmpBuffer[256]; // A temporary buffer
             Ssl::asn1timeToString(tm, tmpBuffer, sizeof(tmpBuffer));
-            return tmpBuffer;
+            os << tmpBuffer;
+            return;
         }
     }
 #endif // USE_OPENSSL
-    return "[Not available]";
+    os << "[Not available]";
 }
 
 /// textual representation of error_no
-const char *
-Security::ErrorDetail::err_code() const
+void
+Security::ErrorDetail::printErrorCode(std::ostream &os) const
 {
 #if USE_OPENSSL
     // try detailEntry first because it is faster
-    if (const char *err = detailEntry.name.termedBuf())
-        return err;
+    if (detailEntry) {
+        os << detailEntry->name;
+        return;
+    }
 #endif
-
-    return ErrorNameFromCode(error_no);
+    os << ErrorNameFromCode(error_no);
 }
 
 /// short description of error_no
-const char *
-Security::ErrorDetail::err_descr() const
+void
+Security::ErrorDetail::printErrorDescription(std::ostream &os) const
 {
-    if (!error_no)
-        return "[No Error]";
+    if (!error_no) {
+        os << "[No Error]";
+        return;
+    }
+
 #if USE_OPENSSL
-    if (const char *err = detailEntry.descr.termedBuf())
-        return err;
+    if (detailEntry) {
+        os << detailEntry->descr;
+        return;
+    }
 #endif
-    return "[Not available]";
+
+    os << "[Not available]";
 }
 
 /// textual representation of lib_error_no
-const char *
-Security::ErrorDetail::err_lib_error() const
+void
+Security::ErrorDetail::printErrorLibError(std::ostream &os) const
 {
     if (errReason.size() > 0)
-        return errReason.termedBuf();
+        os << errReason;
     else if (lib_error_no)
-        return ErrorString(lib_error_no);
+        os << ErrorString(lib_error_no);
     else
-        return "[No Error]";
-    return "[Not available]";
+        os << "[No Error]";
 }
 
 /**
@@ -714,31 +754,32 @@ Security::ErrorDetail::err_lib_error() const
  \retval 0 for unsupported codes
 */
 size_t
-Security::ErrorDetail::convert(const char *code, const char **value) const
+Security::ErrorDetail::convertErrorCodeToDescription(const char * const code, std::ostream &os) const
 {
-    typedef const char *(ErrorDetail::*PartDescriber)() const;
+    using PartDescriber = void (ErrorDetail::*)(std::ostream &os) const;
     static const std::map<const char*, PartDescriber> PartDescriberByCode = {
-        {"ssl_subject", &ErrorDetail::subject},
-        {"ssl_ca_name", &ErrorDetail::ca_name},
-        {"ssl_cn", &ErrorDetail::cn},
-        {"ssl_notbefore", &ErrorDetail::notbefore},
-        {"ssl_notafter", &ErrorDetail::notafter},
-        {"err_name", &ErrorDetail::err_code},
-        {"ssl_error_descr", &ErrorDetail::err_descr},
-        {"ssl_lib_error", &ErrorDetail::err_lib_error}
+        {"ssl_subject", &ErrorDetail::printSubject},
+        {"ssl_ca_name", &ErrorDetail::printCaName},
+        {"ssl_cn", &ErrorDetail::printCommonName},
+        {"ssl_notbefore", &ErrorDetail::printNotBefore},
+        {"ssl_notafter", &ErrorDetail::printNotAfter},
+        {"err_name", &ErrorDetail::printErrorCode},
+        {"ssl_error_descr", &ErrorDetail::printErrorDescription},
+        {"ssl_lib_error", &ErrorDetail::printErrorLibError}
     };
 
+    // We can refactor the map to find matches without looping, but that
+    // requires a "starts with" comparison function -- `code` length is unknown.
     for (const auto &pair: PartDescriberByCode) {
         const auto len = strlen(pair.first);
         if (strncmp(code, pair.first, len) == 0) {
             const auto method = pair.second;
-            *value = (this->*method)();
+            (this->*method)(os);
             return len;
         }
     }
 
     // TODO: Support logformat %codes.
-    *value = ""; // unused with zero return
     return 0;
 }
 

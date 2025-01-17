@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BODY_PIPE_H
-#define SQUID_BODY_PIPE_H
+#ifndef SQUID_SRC_BODYPIPE_H
+#define SQUID_SRC_BODYPIPE_H
 
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
@@ -97,7 +97,7 @@ public:
     typedef BodyConsumer Consumer;
     typedef BodyPipeCheckout Checkout;
 
-    enum { MaxCapacity = 64*1024 };
+    static constexpr size_t MaxCapacity = 64*1024;
 
     friend class BodyPipeCheckout;
 
@@ -168,5 +168,5 @@ private:
     bool isCheckedOut; // to keep track of checkout violations
 };
 
-#endif /* SQUID_BODY_PIPE_H */
+#endif /* SQUID_SRC_BODYPIPE_H */
 

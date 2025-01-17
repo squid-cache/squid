@@ -1,0 +1,244 @@
+# Tests in this workflow file are slower or more expensive than build
+# tests in quick.yaml. These tests improve build environment coverage, but
+# most are unlikely to fail after quick.yaml tests succeed. Limiting these
+# tests execution to staged commits optimizes CI responsiveness and
+# costs while preserving decent quick.yaml problem detection probability.
+#
+# Anubis configuration must be kept in sync with the total number of
+# tests executed for "auto" branch commits, including tests in other
+# GitHub workflow file(s).
+
+name: Staged commit
+
+on:
+  push:
+    branches: [ "auto" ]
+
+  # allows to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+concurrency:
+  # Cancel ongoing tests in case of push to staging branch.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-distros:
+
+    strategy:
+      matrix:
+        os:
+          - centos-stream-9
+          - debian-stable
+          - debian-testing
+          - debian-unstable
+          - fedora-40
+          - fedora-41
+          - fedora-rawhide
+          - gentoo
+          - opensuse-leap
+          - opensuse-tumbleweed
+          - ubuntu-focal
+          - ubuntu-jammy
+          - ubuntu-noble # EOL 2036-04
+          - ubuntu-oracular # EOL 2025-07
+        compiler:
+          - { CC: gcc, CXX: g++ }
+          - { CC: clang, CXX: clang++ }
+        layer:
+          - { name: layer-00-default, nick: default }
+          - { name: layer-01-minimal, nick: minimal }
+          - { name: layer-02-maximus, nick: maximus }
+
+    runs-on: ubuntu-22.04
+    container:
+      image: squidcache/buildfarm-${{ matrix.os }}:stable
+      options: --user 1001 # uid used by worfklow runner
+
+    name: linux-distros(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
+    env:
+      CC: /usr/bin/ccache ${{ matrix.compiler.CC }}
+      CXX: /usr/bin/ccache ${{ matrix.compiler.CXX }}
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2.14
+        with:
+          verbose: 2 # default 0
+          key: ${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
+
+      - name: Run test-builds
+        id: test-builds
+        run: |
+          ./test-builds.sh ${{ matrix.layer.name }}
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
+          path: btlayer-*.log
+
+  macos:
+    runs-on: macos-14
+    name: macos
+
+    steps:
+      - name: Install prerequisite MacOS packages
+        run: |
+          brew install \
+            automake coreutils cppunit gawk \
+            gnu-getopt gnu-sed grep libtool \
+            make cyrus-sasl
+            # openldap openssl # already provided by github workers base-image
+
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Run test-builds
+        id: test-builds
+        run: |
+          eval `brew shellenv`
+          PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
+          PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig"
+          PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
+          export PKG_CONFIG_PATH
+          export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
+          export MAKE="$HOMEBREW_PREFIX/bin/gmake"
+          # ensure we use Homebrew headers and libraries
+          # this is needed because pkg-config --libs openssl points to the wrong directory
+          #   in version openssl@3: stable 3.3.0
+          export CPPFLAGS="-I$HOMEBREW_PREFIX/include${CPPFLAGS:+ $CPPFLAGS}"
+          export LDFLAGS="-L$HOMEBREW_PREFIX/lib${LDFLAGS:+ $LDFLAGS}"
+          export CFLAGS="-Wno-compound-token-split-by-macro${CFLAGS:+ $CFLAGS}" # needed fir ltdl with Xcode
+
+          # libtool package referenced below fails to copy its configure*
+          # files, possibly due to a packaging/brewing bug. The following sed
+          # command restores installed libtoolize code to its earlier (and
+          # working) variation.
+          echo "brew libtool package details:"
+          brew info libtool --json | grep -E 'rebuild|tap_git_head'
+          # This hack was tested on libtoolize package with the following output:
+          # "rebuild": 2,
+          # "tap_git_head": "5cede8ea3b7b12c7f68215f75a951430b38d945f",
+          #
+          editable=$HOMEBREW_CELLAR/libtool/2.4.7/bin/glibtoolize
+          sed -i.bak 's@ltdl_ac_aux_dir=""@ltdl_ac_aux_dir="../build-aux"@' $editable || true
+          diff -u $editable.bak $editable || true
+
+          ./test-builds.sh
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-macos
+          path: btlayer-*.log
+
+  freebsd:
+    strategy:
+      matrix:
+        osversion:
+          - 14.1
+          - 13.3
+
+    runs-on: ubuntu-22.04
+    name: freebsd(${{ matrix.osversion }})
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Run test-builds
+        id: test-builds
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          release: ${{ matrix.osversion }}
+          prepare: |
+            pkg update
+            pkg install -y \
+              autoconf \
+              autoconf-archive \
+              automake \
+              bash \
+              cppunit \
+              gmake \
+              libltdl \
+              libtool \
+              m4 \
+              nettle \
+              pkgconf \
+              translate-toolkit
+
+          run: |
+            export MAKE=gmake
+            ./test-builds.sh
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-freebsd-${{ matrix.osversion }}
+          path: btlayer-*.log
+
+  openbsd:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Run test-builds
+        id: test-builds
+        uses: vmactions/openbsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg_add \
+              autoconf-2.72p0 \
+              autoconf-archive \
+              automake-1.16.5 \
+              bash \
+              coreutils \
+              cppunit \
+              git \
+              ggrep \
+              gmake \
+              libltdl \
+              libtool \
+              libnettle \
+              libxml \
+              libtool \
+              m4 \
+              metaauto
+
+            mkdir $HOME/bin
+            ln -s /usr/local/bin/ggrep $HOME/bin/grep
+
+          run: |
+            export MAKE=gmake
+            export pjobs="-j`gnproc`"
+            export AUTOMAKE_VERSION=1.16
+            export amver=${AUTOMAKE_VERSION}
+            export ACLOCAL_AUTOMAKE_DIR="/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
+            export ACLOCAL_PATH="/usr/local/share/aclocal:/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
+            export AUTOCONF_VERSION=2.72
+            export acver=${AUTOCONF_VERSION}
+            export ltver=2.4.2
+            export CFLAGS='-Wno-compound-token-split-by-macro'
+            export LDFLAGS="-L/usr/local/lib"
+            # until we remove GNUisms from our grep commands,
+            # shadow system `grep` with `ggrep` installed/linked earlier
+            export PATH="$HOME/bin:$PATH"
+            ./test-builds.sh
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-openbsd
+          path: btlayer-*.log

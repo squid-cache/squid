@@ -40,6 +40,16 @@
         } printf("\n"); assert(b); \
     }
 
+std::optional<Ip::Address>
+Ip::Address::Parse(const char * const raw)
+{
+    Address tmp;
+    // TODO: Merge with lookupHostIP() after removing DNS lookups from Ip.
+    if (tmp.lookupHostIP(raw, true))
+        return tmp;
+    return std::nullopt;
+}
+
 int
 Ip::Address::cidr() const
 {
@@ -99,6 +109,16 @@ Ip::Address::applyMask(Ip::Address const &mask_addr)
     }
 
     return changes;
+}
+
+void
+Ip::Address::turnMaskedBitsOn(const Address &mask)
+{
+    const auto addressWords = reinterpret_cast<uint32_t*>(&mSocketAddr_.sin6_addr);
+    const auto maskWords = reinterpret_cast<const uint32_t*>(&mask.mSocketAddr_.sin6_addr);
+    const auto len = sizeof(mSocketAddr_.sin6_addr)/sizeof(uint32_t);
+    for (size_t i = 0; i < len; ++i)
+        addressWords[i] |= ~maskWords[i];
 }
 
 void
@@ -623,7 +643,7 @@ Ip::Address::getAddrInfo(struct addrinfo *&dst, int force) const
             && dst->ai_protocol == 0)
         dst->ai_protocol = IPPROTO_UDP;
 
-    if (force == AF_INET6 || (force == AF_UNSPEC && Ip::EnableIpv6 && isIPv6()) ) {
+    if (force == AF_INET6 || (force == AF_UNSPEC && isIPv6()) ) {
         dst->ai_addr = (struct sockaddr*)new sockaddr_in6;
 
         memset(dst->ai_addr,0,sizeof(struct sockaddr_in6));

@@ -6,22 +6,22 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACL_TREE_H
-#define SQUID_ACL_TREE_H
+#ifndef SQUID_SRC_ACL_TREE_H
+#define SQUID_SRC_ACL_TREE_H
 
+#include "acl/Acl.h"
 #include "acl/BoolOps.h"
+#include "cbdata.h"
 #include "sbuf/List.h"
 
 namespace Acl
 {
 
-/// An ORed set of rules at the top of the ACL expression tree, providing two
-/// unique properties: cbdata protection and optional rule actions.
+/// An ORed set of rules at the top of the ACL expression tree with support for
+/// optional rule actions.
 class Tree: public OrNode
 {
-    // XXX: We should use refcounting instead, but it requires making ACLs
-    // refcounted as well. Otherwise, async lookups will reach deleted ACLs.
-    CBDATA_CLASS(Tree);
+    MEMPROXY_CLASS(Tree);
 
 public:
     /// dumps <name, action, rule, new line> tuples
@@ -36,8 +36,8 @@ public:
     Answer lastAction() const;
 
     /// appends and takes control over the rule with a given action
-    void add(ACL *rule, const Answer &action);
-    void add(ACL *rule); ///< same as InnerNode::add()
+    void add(Acl::Node *rule, const Answer &action);
+    void add(Acl::Node *rule); ///< same as InnerNode::add()
 
 protected:
     /// Acl::OrNode API
@@ -81,5 +81,5 @@ Tree::treeDump(const char *prefix, ActionToStringConverter converter) const
 
 } // namespace Acl
 
-#endif /* SQUID_ACL_TREE_H */
+#endif /* SQUID_SRC_ACL_TREE_H */
 

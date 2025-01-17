@@ -8,8 +8,8 @@
 
 /* DEBUG: section 16    Cache Manager API */
 
-#ifndef SQUID_MGR_FUN_ACTION_H
-#define SQUID_MGR_FUN_ACTION_H
+#ifndef SQUID_SRC_MGR_FUNACTION_H
+#define SQUID_SRC_MGR_FUNACTION_H
 
 #include "mgr/Action.h"
 #include "mgr/ActionCreator.h"
@@ -40,22 +40,7 @@ private:
     OBJH *handler; ///< legacy function that collects and dumps info
 };
 
-/// creates FunAction using ActionCreator API
-class FunActionCreator: public ActionCreator
-{
-public:
-    explicit FunActionCreator(OBJH *aHandler): handler(aHandler) {}
-
-    /* ActionCreator API */
-    Action::Pointer create(const CommandPointer &cmd) const override {
-        return FunAction::Create(cmd, handler);
-    }
-
-private:
-    OBJH *handler; ///< legacy function to pass to the FunAction wrapper
-};
-
 } // namespace Mgr
 
-#endif /* SQUID_MGR_FUN_ACTION_H */
+#endif /* SQUID_SRC_MGR_FUNACTION_H */
 

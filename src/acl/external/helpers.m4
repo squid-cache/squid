@@ -5,6 +5,8 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
+SQUID_CHECK_LIBTDB
+
 EXTERNAL_ACL_HELPERS=""
 SQUID_HELPER_FEATURE_CHECK([external_acl_helpers],[yes],[acl/external],[
   # NP: we only need this list because m4_include() does not accept variables

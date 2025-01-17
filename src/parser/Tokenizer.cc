@@ -145,6 +145,18 @@ Parser::Tokenizer::skipAll(const CharacterSet &tokenChars)
     return success(prefixLen);
 }
 
+void
+Parser::Tokenizer::skipRequired(const char *description, const SBuf &tokenToSkip)
+{
+    if (skip(tokenToSkip) || tokenToSkip.isEmpty())
+        return;
+
+    if (tokenToSkip.startsWith(buf_))
+        throw InsufficientInput();
+
+    throw TextException(ToSBuf("cannot skip ", description), Here());
+}
+
 bool
 Parser::Tokenizer::skipOne(const CharacterSet &chars)
 {
@@ -252,7 +264,6 @@ Parser::Tokenizer::int64(int64_t & result, int base, bool allowSign, const SBuf:
     if (base == 0) {
         if ( *s == '0') {
             base = 8;
-            ++s;
         } else {
             base = 10;
         }

@@ -6,12 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CLIENTSIDEREQUEST_H
-#define SQUID_CLIENTSIDEREQUEST_H
+#ifndef SQUID_SRC_CLIENT_SIDE_REQUEST_H
+#define SQUID_SRC_CLIENT_SIDE_REQUEST_H
 
 #include "AccessLogEntry.h"
+#include "acl/FilledChecklist.h"
 #include "client_side.h"
-#include "clientStream.h"
 #include "http/forward.h"
 #include "HttpHeaderRange.h"
 #include "log/forward.h"
@@ -26,9 +26,6 @@
 class ClientRequestContext;
 class ConnStateData;
 class MemObject;
-
-/* client_side_request.c - client side request related routines (pure logic) */
-int clientBeginRequest(const HttpRequestMethod&, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t, const MasterXactionPointer &);
 
 class ClientHttpRequest
 #if USE_ADAPTATION
@@ -81,6 +78,14 @@ public:
     /// request. Call this every time adaptation or redirection changes
     /// the request. To set the virgin request, use initRequest().
     void resetRequest(HttpRequest *);
+
+    // XXX: unify the uriChanged condition calculation with resetRequest() callers, removing this method
+    /// resetRequest() variation for callers with custom URI change detection logic
+    /// \param uriChanged whether the new request URI differs from the current request URI
+    void resetRequestXXX(HttpRequest *, bool uriChanged);
+
+    /// Checks whether the current request is internal and adjusts it accordingly.
+    void checkForInternalAccess();
 
     /// update the code in the transaction processing tags
     void updateLoggingTags(const LogTags_ot code) { al->cache.code.update(code); }
@@ -249,11 +254,11 @@ private:
 /* client http based routines */
 char *clientConstructTraceEcho(ClientHttpRequest *);
 
-ACLFilledChecklist *clientAclChecklistCreate(const acl_access *, ClientHttpRequest *);
+ACLFilledChecklist::MakingPointer clientAclChecklistCreate(const acl_access *, ClientHttpRequest *);
 void clientAclChecklistFill(ACLFilledChecklist &, ClientHttpRequest *);
 void clientAccessCheck(ClientHttpRequest *);
 
 /* ones that should be elsewhere */
 void tunnelStart(ClientHttpRequest *);
 
-#endif /* SQUID_CLIENTSIDEREQUEST_H */
+#endif /* SQUID_SRC_CLIENT_SIDE_REQUEST_H */

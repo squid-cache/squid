@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_IPC_STORE_MAP_H
-#define SQUID_IPC_STORE_MAP_H
+#ifndef SQUID_SRC_IPC_STOREMAP_H
+#define SQUID_SRC_IPC_STOREMAP_H
 
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
@@ -408,5 +408,5 @@ public:
 // We do not reuse FileMap because we cannot control its size,
 // resulting in sfilenos that are pointing beyond the database.
 
-#endif /* SQUID_IPC_STORE_MAP_H */
+#endif /* SQUID_SRC_IPC_STOREMAP_H */
 

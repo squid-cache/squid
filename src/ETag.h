@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_ETAG_H
-#define _SQUID_ETAG_H
+#ifndef SQUID_SRC_ETAG_H
+#define SQUID_SRC_ETAG_H
 
 /**
  * ETag support is rudimantal; this struct is likely to change
@@ -28,5 +28,5 @@ bool etagIsStrongEqual(const ETag &tag1, const ETag &tag2);
 /// whether etags are weak-equal
 bool etagIsWeakEqual(const ETag &tag1, const ETag &tag2);
 
-#endif /* _SQUIDETAG_H */
+#endif /* SQUID_SRC_ETAG_H */
 

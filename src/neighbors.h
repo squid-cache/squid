@@ -8,8 +8,8 @@
 
 /* DEBUG: section 15    Neighbor Routines */
 
-#ifndef SQUID_NEIGHBORS_H_
-#define SQUID_NEIGHBORS_H_
+#ifndef SQUID_SRC_NEIGHBORS_H
+#define SQUID_SRC_NEIGHBORS_H
 
 #include "anyp/forward.h"
 #include "enums.h"
@@ -23,9 +23,7 @@ class CachePeer;
 class StoreEntry;
 class PeerSelector;
 
-CachePeer *getFirstPeer(void);
 CachePeer *getFirstUpParent(PeerSelector *);
-CachePeer *getNextPeer(CachePeer *);
 CachePeer *getSingleParent(PeerSelector *);
 int neighborsCount(PeerSelector *);
 int neighborsUdpPing(HttpRequest *,
@@ -78,5 +76,5 @@ void peerConnClosed(CachePeer *p);
 
 CachePeer *whichPeer(const Ip::Address &from);
 
-#endif /* SQUID_NEIGHBORS_H_ */
+#endif /* SQUID_SRC_NEIGHBORS_H */
 

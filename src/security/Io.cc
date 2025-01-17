@@ -24,10 +24,11 @@ typedef SessionPointer::element_type *ConnectionPointer;
 
 } // namespace Security
 
+/// common part of printGist() and printWithExtras()
 void
-Security::IoResult::print(std::ostream &os) const
+Security::IoResult::printDescription(std::ostream &os) const
 {
-    const char *strCat = "unknown";
+    const char *strCat = nullptr;
     switch (category) {
     case ioSuccess:
         strCat = "success";
@@ -39,16 +40,29 @@ Security::IoResult::print(std::ostream &os) const
         strCat = "want-write";
         break;
     case ioError:
-        strCat = "error";
+        strCat = errorDescription;
         break;
     }
-    os << strCat;
+    os << (strCat ? strCat : "unknown");
+}
 
-    if (errorDescription)
-        os << ", " << errorDescription;
-
+void
+Security::IoResult::printGist(std::ostream &os) const
+{
+    printDescription(os);
     if (important)
         os << ", important";
+    // no errorDetail in this summary output
+}
+
+void
+Security::IoResult::printWithExtras(std::ostream &os) const
+{
+    printDescription(os);
+    if (errorDetail)
+        os << Debug::Extra << "error detail: " << errorDetail;
+    // this->important flag may affect caller debugs() level, but the flag
+    // itself is not reported to the admin explicitly
 }
 
 // TODO: Replace high-level ERR_get_error() calls with ForgetErrors() calls or
@@ -146,7 +160,7 @@ Security::Handshake(Comm::Connection &transport, const ErrorCode topError, Fun i
 
     return ioResult;
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     if (callResult == GNUTLS_E_SUCCESS) {
         // TODO: Avoid gnutls_*() calls if debugging is off.
         const auto desc = gnutls_session_get_desc(connection);
@@ -199,7 +213,7 @@ Security::Accept(Comm::Connection &transport)
     return Handshake(transport, SQUID_TLS_ERR_ACCEPT, [] (ConnectionPointer tlsConn) {
 #if USE_OPENSSL
         return SSL_accept(tlsConn);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         return gnutls_handshake(tlsConn);
 #else
         return sizeof(tlsConn); // the value is unused; should be unreachable
@@ -214,7 +228,7 @@ Security::Connect(Comm::Connection &transport)
     return Handshake(transport, SQUID_TLS_ERR_CONNECT, [] (ConnectionPointer tlsConn) {
 #if USE_OPENSSL
         return SSL_connect(tlsConn);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         return gnutls_handshake(tlsConn);
 #else
         return sizeof(tlsConn); // the value is unused; should be unreachable

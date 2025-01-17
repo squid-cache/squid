@@ -20,7 +20,7 @@
 #include "HttpHdrContRange.h"
 #include "HttpHdrScTarget.h" // also includes HttpHdrSc.h
 #include "HttpHeader.h"
-#include "HttpHeaderFieldInfo.h"
+#include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
 #include "MemBuf.h"
@@ -135,7 +135,6 @@ httpHeaderInitModule(void)
     assert(HttpHeaderStats[hoEnd-1].label && "HttpHeaderStats created with all elements");
 
     /* init dependent modules */
-    httpHdrCcInitModule();
     httpHdrScInitModule();
 
     httpHeaderRegisterWithCacheManager();
@@ -752,8 +751,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
 
     entries.push_back(e);
 
-    /* increment header length, allow for ": " and crlf */
-    len += e->name.length() + 2 + e->value.size() + 2;
+    len += e->length();
 }
 
 bool
@@ -947,7 +945,7 @@ void
 HttpHeader::addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from)
 {
     // TODO: do not add Via header for messages where Squid itself
-    // generated the message (i.e., Downloader or ESI) there should be no Via header added at all.
+    // generated the message (i.e., Downloader) there should be no Via header added at all.
 
     if (Config.onoff.via) {
         SBuf buf;
