@@ -185,16 +185,16 @@ void
 lutil_sasl_freedefs(
     void *defaults)
 {
-    lutilSASLdefaults *defs = (lutilSASLdefaults *) defaults;
+    if (const auto defs = static_cast<lutilSASLdefaults*>(defaults)) {
+        xfree(defs->mech);
+        xfree(defs->realm);
+        xfree(defs->authcid);
+        xfree(defs->passwd);
+        xfree(defs->authzid);
+        xfree(defs->resps);
 
-    xfree(defs->mech);
-    xfree(defs->realm);
-    xfree(defs->authcid);
-    xfree(defs->passwd);
-    xfree(defs->authzid);
-    xfree(defs->resps);
-
-    xfree(defs);
+        xfree(defs);
+    }
 }
 
 int

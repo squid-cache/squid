@@ -205,6 +205,12 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
         return nullptr;
     }
 
+    if (!Rids) {
+        debug((char *) "%s| %s: ERR: Invalid RIDS list\n",
+              LogTime(), PROGRAM);
+        return nullptr;
+    }
+
     if (DomainLogonId!= 0) {
         uint8_t rev;
         uint64_t idauth;
