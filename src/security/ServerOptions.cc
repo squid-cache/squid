@@ -474,6 +474,20 @@ Security::ServerOptions::updateContextConfig(Security::ContextPointer &ctx)
         }
     }
 
+    // log ciphers enabled for this context
+    if (const auto *enabledCiphers = SSL_CTX_get_ciphers(ctx.get())) {
+        int i = 0;
+	while (const auto *value = sk_SSL_CIPHER_value(enabledCiphers, ++i)) {
+	    debugs(83, 5, "Enabled cipher: " << value);
+	}
+    } else {
+        debugs(83, DBG_CRITICAL, "ERROR: No ciphers enabled with " <<
+               (tlsMinVersion.isEmpty() ? "" : " tls-min-version=") << tlsMinVersion <<
+               (sslOptions.isEmpty() ? "" : " tls-options=") << sslOptions <<
+               (sslCipher.isEmpty() ? "" : " cipher=") << sslCipher);
+        return false;
+    }
+
     Ssl::MaybeSetupRsaCallback(ctx);
 #endif
 
@@ -521,9 +535,11 @@ Security::ServerOptions::updateContextClientCa(Security::ContextPointer &ctx)
 void
 Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
 {
+    debugs(83, 8, "dh=" << dh << ", eecdhCurve=" << eecdhCurve << ", dhParamsFile=" << dhParamsFile);
+
     // set Elliptic Curve details into the server context
     if (!eecdhCurve.isEmpty()) {
-        debugs(83, 9, "Setting Ephemeral ECDH curve to " << eecdhCurve << ".");
+        debugs(83, 8, "Setting Ephemeral ECDH curve to " << eecdhCurve << ".");
 
 #if USE_OPENSSL && OPENSSL_VERSION_NUMBER >= 0x0090800fL && !defined(OPENSSL_NO_ECDH)
 
@@ -566,6 +582,7 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
     // set DH parameters into the server context
 #if USE_OPENSSL
     if (parsedDhParams) {
+        debugs(83, 8, "setting DH parameters from " << dhParamsFile);
         SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get());
     }
 #endif
