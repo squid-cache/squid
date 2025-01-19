@@ -124,6 +124,26 @@ if test -n "$OPENSSL"; then
 	cat leaf-rsa.pkey leaf-rsa.crt > leaf-key-rsa.pem
 	cat leaf-rsa.crt ca-root-rsa.crt > leaf-chain-nokey-rsa.pem
 
+	#
+	# Diffie-Hellman parameters
+	#
+	$OPENSSL dhparam -out dh-params.pem 2048
+
+	#
+	# Elliptic Curve parameters
+	#
+	$OPENSSL ecparam -name secp256k1 \
+		-out ecdh-curve-only.pem
+
+	$OPENSSL ecparam -name secp256k1 \
+		-param_enc explicit \
+		-out ecdh-params.pem
+
+	$OPENSSL ecparam -name secp256k1 \
+		-param_enc explicit \
+		-genkey \
+		-out ecdh-key.pem
+
 elif test -n "$CERTTOOL"; then
 
 	#
