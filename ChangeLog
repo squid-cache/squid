@@ -26,7 +26,6 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Bug 5312: Startup aborts if OPEN_MAX exceeds RLIMIT_NOFILE
 	- Bug 4156: comm.cc "!commHasHalfClosedMonitor(fd)" assertion
 	- Work around some mgr:forward accounting/reporting bugs
-	- Nil request dereference in ACLExtUser and SourceDomainCheck ACLs
 	- Ftp::Gateway may segfault in level-3 double-complete debugs()
 	- Do not mark successful FTP PUT entries with ENTRY_BAD_LENGTH
 	- Fix ENTRY_ABORTED assertion in sendClientOldEntry()
@@ -87,7 +86,6 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Remove krb5_get_max_time_skew portability hack
 	- Simplified quick_abort_pct code and improved its docs
 	- Replace MEM_DREAD_CTRL pool with MEMPROXY class pool
-	- Refactor peerRefreshDNS() to clarify its (void*)1 logic
 	- Update HTTP status codes
 	- Reduce SO_LINGER code duplication
 	- Report all refreshCheck() outcomes and entry gist
@@ -201,6 +199,28 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- ... and many code cleanups
 	- ... and improvements to unit tests
 	- ... and some error page translation improvements
+
+Changes in squid-6.13 (31 Jan 2025):
+
+	- Bug 5352: Do not get stuck when RESPMOD is slower than read(2)
+	- Bug 5405: Large uploads fill request buffer and die
+	- Bug 5093: List http_port params that https_port/ftp_port lack
+	- Bug 5311: clarify configuration byte units
+	- Bug 5091: document that changes to workers require restart
+	- Bug 5481: Fix GCC v14 build [-Wmaybe-uninitialized]
+	- Nil request dereference in ACLExtUser and SourceDomainCheck ACLs
+	- Fix GCC v14 [-Wanalyzer-null-dereference] warnings in Kerberos
+	- Clarify --enable-ecap failure on missing shared library support
+	- Fix syntax error in configure.ac
+	- Remove GNU'ism in release notes Makefile
+	- Annotate PoolMalloc memory in valgrind builds
+	- Fix systemd startup sequence to require active Local Filesystem
+	- Display Linux variant at ./configure time
+	- Refactor peerRefreshDNS() to clarify its (void*)1 logic
+	- Portability: remove explicit check for libdl
+	- ext_time_quota_acl: remove -l option
+	- ... and some documentation updates
+	- ... and some CI updates
 
 Changes in squid-6.12 (12 Oct 2024):
 
