@@ -256,7 +256,7 @@ Auth::User::CredentialsCacheStats(StoreEntry *output)
                           Auth::Type_str[auth_user->auth_type],
                           CredentialState_str[auth_user->credentials()],
                           auth_user->ttl(),
-                          static_cast<int32_t>(auth_user->expiretime - squid_curtime + Auth::TheConfig.credentialsTtl),
+                          static_cast<Auth::Ttl>(auth_user->expiretime - squid_curtime + Auth::TheConfig.credentialsTtl),
                           auth_user->username(),
                           SQUIDSBUFPRINT(auth_user->userKey())
                          );

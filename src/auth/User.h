@@ -66,10 +66,15 @@ public:
     const SBuf userKey() const {return userKey_;}
 
     /**
-     * How long these credentials are still valid for.
-     * Negative numbers means already expired.
+     * Credentials are not permitted to be re-used from a
+     * credentials cache unless the authentication scheme
+     * defines a way to determin a TTL with which to bound
+     * the scope of their valid re-use.
+     *
+     * \returns How long these credentials are still valid for.
+     *          Negative numbers means already expired.
      */
-    virtual int32_t ttl() const = 0;
+    virtual Ttl ttl() const { return -1; }
 
     /* Manage list of IPs using this username */
     void clearIp();
