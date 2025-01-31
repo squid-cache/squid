@@ -111,9 +111,7 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- basic_sspi_auth: MinGW build fixes
 	- Ensure ACLChecklist::markFinished() is called
 	- Optimization: clientStreamInit() copied ClientStreamData
-	- Optimization: esiChoose constructor call copied parent pointer
 	- Optimization: Fs::Ufs::RebuildState constructor copied dir ptr
-	- Optimization: clientBeginRequest() call copied streamData ptr
 	- Optimization: DelayUser::Id constructor copied user pointers
 	- Optimization: DelayId::compositePosition() copied position ptr
 	- Optimization: DiskThreadsDiskFile::readDone copied request ptr
@@ -124,8 +122,6 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Improve AnyP::Uri::port_ and related port storage types
 	- Enable EDNS for DNS A queries and reverse IPv4 lookups
 	- Format mgr:pconn as YAML
-	- Add AsList::quoted()
-	- Add AtMostOnce stream manipulator
 	- Maintenance: update --with-tdb detection
 	- Refactor and improve ErrorState::Dump
 	- Have SQUID_CHECK_LIB_WORKS do state SAVE/RESTORE
@@ -199,6 +195,7 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- ... and many code cleanups
 	- ... and improvements to unit tests
 	- ... and some error page translation improvements
+	- ... and all fixes from 6.13
 
 Changes in squid-6.13 (31 Jan 2025):
 
