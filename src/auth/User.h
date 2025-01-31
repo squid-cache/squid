@@ -68,7 +68,7 @@ public:
     /**
      * Credentials are not permitted to be re-used from a
      * credentials cache unless the authentication scheme
-     * defines a way to determin a TTL with which to bound
+     * defines a way to determine a TTL with which to bound
      * the scope of their valid re-use.
      *
      * \returns How long these credentials are still valid for.
