@@ -13,6 +13,8 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Remove dead "binary HTTP header logging" code (-DHEADERS_LOG)
 	- Rename --with-gnugss to --with-gss
 	- Remove krb5_get_max_time_skew portability hack
+	- Remove PRIuSIZE macro
+	- Remove ADD_X_REQUEST_URI
 	- Bug 5390: Non-POD SquidConfig::ssl_client::sslContext exit crash
 	- Bug 5363: Handle IP-based X.509 SANs better
 	- Bug 5383: handleNegotiationResult() level-2 debugs() crash
@@ -33,6 +35,8 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- negotiate_wrapper_auth: protect from responses over 64KB
 	- negotiate_kerberos_auth: Support Kerberos PAC-ResourceGroups
 	- pinger: improve timer accuracy and resolution
+	- testheaders.sh: force-remove temporary files
+	- squid-conf-tests: Ignore tests with mismatching autoconf macro
 	- MinGW: Emulate fsync
 	- MinGW: fix winsock dependency issues
 	- MinGW-w64: enable native file locking
@@ -40,6 +44,9 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Windows: Improve PSAPI.dll detection
 	- basic_sspi_auth: MinGW build fixes
 	- HTTP: Protect just-parsed responses from accidental destruction
+	- WCCP: fix inverted range check
+	- Y2038: Fix cache_peer connect-timeout reporting
+	- Y2038: Use time_t for commSetConnTimeout() timeout parameter
 	- Work around some mgr:forward accounting/reporting bugs
 	- Fix Ftp::Gateway may segfault in level-3 double-complete debugs()
 	- Do not mark successful FTP PUT entries with ENTRY_BAD_LENGTH
@@ -75,7 +82,6 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Fix rock/RockSwapDir.cc "slot->sameKey()" assertion
 	- Fix dupe handling in Splay ACLs: src, dst, http_status, etc.
 	- Protect ACLFilledChecklist heap allocations from leaking
-	- WCCP: fix inverted range check
 	- Stop leaking PeerDigests on reconfiguration
 	- Handle helper program startup failure as its death
 	- Kill helpers that speak without being spoken to
@@ -90,7 +96,6 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Simplified quick_abort_pct code and improved its docs
 	- Replace MEM_DREAD_CTRL pool with MEMPROXY class pool
 	- Update HTTP status codes
-	- Reduce SO_LINGER code duplication
 	- Report all refreshCheck() outcomes and entry gist
 	- Replace MEM_DWRITE_Q pool with MEMPROXY class pool
 	- Prohibit bad --enable-linux-netfilter combinations
@@ -101,17 +106,12 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Enable EDNS for DNS A queries and reverse IPv4 lookups
 	- Format mgr:pconn as YAML
 	- Use ERR_READ_ERROR for read-from-client I/O errors
-	- squid-conf-tests: Ignore tests with mismatching autoconf macro
 	- Use AnyP::Uri::Decode() for urllogin and url_regex checks
 	- Throw, not self_destruct(), on qos_flow configuration errors
-	- Remove ADD_X_REQUEST_URI
 	- Add %byte{value} logformat code for logging or sending any byte
 	- Do not report bogus/empty SMP cache_dir indexing stats
 	- Report/abort on any catastrophic rock cache_dir indexing failure
 	- Recognize internal requests created by adaptation/redirection
-	- Y2038: Fix cache_peer connect-timeout reporting
-	- Y2038: Use time_t for commSetConnTimeout() timeout parameter
-	- testheaders.sh: force-remove temporary files
 	- Log %err_code for ERR_RELAY_REMOTE transactions
 	- Restore errno in %err_detail for ERR_CONNECT_FAIL
 	- Report all AsyncJob objects (mgr:jobs)
@@ -119,7 +119,6 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Keep ::helper objects alive while in use by helper_servers
 	- Add SQUID_CHECK_LIB_WORKS macro
 	- Reject more CONNECT requests with malformed targets
-	- Drop PRIuSIZE macro
 	- Forget non-peer access details
 	- Do not report DNS answers without A/AAAA records by default
 	- Destroy an idle PeerDigest after its CachePeer disappears
