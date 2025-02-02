@@ -10,11 +10,11 @@ name: PR commit
 on:
   push:
     # test commits on this branch and staged commits
-    branches: [ "master", "auto" ]
+    branches: [ "v7", "auto" ]
 
   pull_request:
     # test PRs targeting this branch code
-    branches: [ "master" ]
+    branches: [ "v7" ]
 
   # allows to run this workflow manually from the Actions tab
   workflow_dispatch:
