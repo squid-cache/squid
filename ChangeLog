@@ -12,6 +12,9 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Remove deprecated string memory pools API
 	- Remove dead "binary HTTP header logging" code (-DHEADERS_LOG)
 	- Rename --with-gnugss to --with-gss
+	- Remove krb5_get_max_time_skew portability hack
+	- Remove PRIuSIZE macro
+	- Remove ADD_X_REQUEST_URI
 	- Bug 5390: Non-POD SquidConfig::ssl_client::sslContext exit crash
 	- Bug 5363: Handle IP-based X.509 SANs better
 	- Bug 5383: handleNegotiationResult() level-2 debugs() crash
@@ -25,14 +28,33 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Bug 5254, part 1: Do not leak master process' cache.log to kids
 	- Bug 5312: Startup aborts if OPEN_MAX exceeds RLIMIT_NOFILE
 	- Bug 4156: comm.cc "!commHasHalfClosedMonitor(fd)" assertion
+	- ext_time_quota_acl: restore debug level feature and argument
+	- ext_ad_group_acl: fix dependency detection
+	- ext_time_quota_acl: convert to c++
+	- scripts/find-alive.pl: Auto-detect auto-added ctors/dtors names
+	- negotiate_wrapper_auth: protect from responses over 64KB
+	- negotiate_kerberos_auth: Support Kerberos PAC-ResourceGroups
+	- pinger: improve timer accuracy and resolution
+	- testheaders.sh: force-remove temporary files
+	- squid-conf-tests: Ignore tests with mismatching autoconf macro
+	- MinGW: Emulate fsync
+	- MinGW: fix winsock dependency issues
+	- MinGW-w64: enable native file locking
+	- Windows: Drop obsolete WinSock v1 library
+	- Windows: Improve PSAPI.dll detection
+	- basic_sspi_auth: MinGW build fixes
+	- HTTP: Protect just-parsed responses from accidental destruction
+	- WCCP: fix inverted range check
+	- Y2038: Fix cache_peer connect-timeout reporting
+	- Y2038: Use time_t for commSetConnTimeout() timeout parameter
 	- Work around some mgr:forward accounting/reporting bugs
-	- Ftp::Gateway may segfault in level-3 double-complete debugs()
+	- Fix Ftp::Gateway may segfault in level-3 double-complete debugs()
 	- Do not mark successful FTP PUT entries with ENTRY_BAD_LENGTH
 	- Fix ENTRY_ABORTED assertion in sendClientOldEntry()
 	- Limit Server::inBuf growth
 	- Reject config with unknown directives before committing to it
-	- Fixed and redefined total peering time (%<tt)
-	- Fix a use-after-free bug in peerDigestFetchReply()
+	- Fix and redefine meaning of total peering time (%<tt)
+	- Fix use-after-free in peerDigestFetchReply()
 	- Fix use-after-free in statefulhelper::submit() level-9 debug
 	- Fix PeerDigest lifetime management
 	- Fix Tokenizer::int64() parsing of "0" when guessing base
@@ -42,7 +64,6 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Fix heap buffer overead in ConfigParser::UnQuote()
 	- Do not die when parsing obsolete log_access and log_icap
 	- Extend in-use ACLs lifetime across reconfiguration
-	- HTTP: Protect just-parsed responses from accidental destruction
 	- Fix MemObject.cc:123: "!updatedReply_" assertion
 	- Avoid UB when packing a domain name
 	- Fix qos_flows confguration reporting
@@ -55,143 +76,53 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Fix Controller.cc TheRoot assertion during shutdown
 	- Fix Comm::TcpAcceptor::status() reporting of listening address
 	- Fix performance regressions with fastCheck() result copying
-	- Fix handling of zero cache_peers with --enable-cache-digests
 	- Fix handling of zero cache_peers
 	- Fix cbdata assertion in carpInit()
 	- Fix: REQMOD stuck when adapted request (body) is not forwarded
 	- Fix rock/RockSwapDir.cc "slot->sameKey()" assertion
 	- Fix dupe handling in Splay ACLs: src, dst, http_status, etc.
 	- Protect ACLFilledChecklist heap allocations from leaking
-	- WCCP: fix inverted range check
 	- Stop leaking PeerDigests on reconfiguration
 	- Handle helper program startup failure as its death
 	- Kill helpers that speak without being spoken to
 	- annotate_client and annotate_transaction ACLs must always match
 	- Restrict squid.conf preprocessor space characters to SP and HT
-	- CI: Move to GitHub Actions as our main CI/CD pipeline
-	- CI: Enable GitHub CodeQL static analysis
 	- Drop helpless helper requests
-	- ext_time_quota_acl: restore debug level feature and argument
-	- ext_ad_group_acl: fix dependency detection
-	- ext_time_quota_acl: convert to c++
-	- scripts/find-alive.pl: Auto-detect auto-added ctors/dtors names
-	- negotiate_wrapper_auth: protect from responses over 64KB
-	- negotiate_kerberos_auth: Support Kerberos PAC-ResourceGroups
-	- pinger: improve timer accuracy and resolution
 	- Improve Tunnel Server RESPONSE dumps
 	- Do not lookup IP addresses of X509 certificate subject CNs
 	- Report cache_peer context in probe and standby pool messages
 	- Treat responses to collapsed requests as fresh
 	- Do not TLS close_notify when resetting a TCP connection
-	- Remove krb5_get_max_time_skew portability hack
 	- Simplified quick_abort_pct code and improved its docs
 	- Replace MEM_DREAD_CTRL pool with MEMPROXY class pool
 	- Update HTTP status codes
-	- Reduce SO_LINGER code duplication
 	- Report all refreshCheck() outcomes and entry gist
 	- Replace MEM_DWRITE_Q pool with MEMPROXY class pool
 	- Prohibit bad --enable-linux-netfilter combinations
 	- Use ERR_ACCESS_DENIED for HTTP 403 (Forbidden) errors
 	- Scaffolding for YAML-formatted cache manager reports
 	- Improve ErrorState debugging
-	- Improve bounds checking in rfc1035NameUnpack
-	- MinGW: Fix error: cannot convert 'size_t*' to 'int*'
-	- MinGW: Fix error: cannot convert 'const int*' to 'const char*'
-	- MinGW: fix error: cannot convert 'size_t*' to 'int*'
-	- MinGW: Emulate fsync
-	- MinGW: PRINTF_FORMAT_ARG workaround
-	- MinGW: fix winsock dependency issues
-	- MinGW-w64: enable native file locking
-	- MinGW-w64: update libcompat structure
-	- Windows: Drop obsolete WinSock v1 library
-	- Windows: Fix symbol collisions
-	- Windows: Improve PSAPI.dll detection
-	- Windows: Update libsspwin32
-	- Windows: Remove outdated Win32 select() module
-	- basic_sspi_auth: MinGW build fixes
-	- Ensure ACLChecklist::markFinished() is called
-	- Optimization: clientStreamInit() copied ClientStreamData
-	- Optimization: esiChoose constructor call copied parent pointer
-	- Optimization: Fs::Ufs::RebuildState constructor copied dir ptr
-	- Optimization: clientBeginRequest() call copied streamData ptr
-	- Optimization: DelayUser::Id constructor copied user pointers
-	- Optimization: DelayId::compositePosition() copied position ptr
-	- Optimization: DiskThreadsDiskFile::readDone copied request ptr
-	- Optimization: Do not zero-terminate Server::inBuf
-	- Allocate fast-checking ACLFilledChecklists on stack
 	- Stop zeroing huge memAllocBuf() buffers
-	- Rewrite SplayNode to eliminate recursive calls
-	- Improve AnyP::Uri::port_ and related port storage types
 	- Enable EDNS for DNS A queries and reverse IPv4 lookups
 	- Format mgr:pconn as YAML
-	- Add AsList::quoted()
-	- Add AtMostOnce stream manipulator
-	- Maintenance: update --with-tdb detection
-	- Refactor and improve ErrorState::Dump
-	- Have SQUID_CHECK_LIB_WORKS do state SAVE/RESTORE
-	- Refactor portions of getCurrentTime() to use std::chrono
-	- Make BodyPipe::MaxCapacity constexpr
-	- Implement iterator for wordlist
-	- De-duplicate I/O error-detailing code
 	- Use ERR_READ_ERROR for read-from-client I/O errors
-	- Implement default Auth::UserRequest::authenticated()
-	- squid-conf-tests: Ignore tests with mismatching autoconf macro
-	- Update SQUID_CHECK_LIB_WORKS
-	- Use AnyP::Uri::Decode() for urllogin checks
-	- Use AnyP::Uri::Decode() for url_regex checks
+	- Use AnyP::Uri::Decode() for urllogin and url_regex checks
 	- Throw, not self_destruct(), on qos_flow configuration errors
-	- Add AnyP::Uri::Decode()
-	- Remove AclMatchedName from ACL::ParseAclLine()
-	- Add SBuf::push_back()
-	- Polished TunnelStateData::usePinned()
-	- Remove ADD_X_REQUEST_URI
-	- Remove unnecessary checks for nil Store::Controller::swapDir
 	- Add %byte{value} logformat code for logging or sending any byte
-	- Make static analysis tools happier about peerDigestLookup()
-	- Move memory initialization check
 	- Do not report bogus/empty SMP cache_dir indexing stats
 	- Report/abort on any catastrophic rock cache_dir indexing failure
-	- Use PackableStream for dump_acl
-	- Refactor Ssl::ErrorDetailsManager to use SBuf
-	- Add AsList::suffixedBy()
-	- Move WHOIS code to libclients.la
-	- Do not double-check cbdataReferenceDone() argument
-	- Remove unused HttpHeaderFieldInfo class
-	- Upgrade AsList separators to support c-strings
 	- Recognize internal requests created by adaptation/redirection
-	- Upgrade ACLFilledChecklist::request to smart Pointer
-	- Reduce helper callback code duplication
-	- Converted helperOpenServers() to a virtual Helper::Client member
-	- Y2038: Fix cache_peer connect-timeout reporting
-	- Y2038: Use time_t for commSetConnTimeout() timeout parameter
-	- testheaders.sh: force-remove temporary files
-	- Do not use raw pointers to index sourcehash CachePeers
-	- Do not use raw pointers to index userhash CachePeers
 	- Log %err_code for ERR_RELAY_REMOTE transactions
 	- Restore errno in %err_detail for ERR_CONNECT_FAIL
 	- Report all AsyncJob objects (mgr:jobs)
-	- Do not use invasive lists to store CachePeers
-	- Allow creation of RefCountable objects via Make()
-	- Upgrade Security::PeerOptions::dumpCfg() to std::ostream
-	- Define RefCount nullptr assignment operator
 	- Cover OnTerminate() calls unrelated to exception handling
 	- Keep ::helper objects alive while in use by helper_servers
-	- Use SBuf in CompositeSelectionDetails and DelayTaggedBucket
-	- Use SBuf instead of SquidString in CommonPool
-	- Replace ACLStrategised, enabling other ACL improvements
-	- Do not use raw pointers to index CARP CachePeers
-	- Remove Splay::walk() method
-	- Encapsulate HttpHeaderEntry length calculation
 	- Add SQUID_CHECK_LIB_WORKS macro
-	- Drop ClientHttpRequest::flags::internal
-	- Support read-only ClpMap iteration by ClpMap users
 	- Reject more CONNECT requests with malformed targets
-	- Drop PRIuSIZE macro
 	- Forget non-peer access details
 	- Do not report DNS answers without A/AAAA records by default
 	- Destroy an idle PeerDigest after its CachePeer disappears
 	- Do not apply custom debugs() format to Debug::Extra lines
-	- Do not populate StoreEntry basics from Transients
 	- Do not check store_status when checking ENTRY_BAD_LENGTH
 	- Add buffered_logs OFF support to UDP logger
 	- ... and many documentation improvements
@@ -199,6 +130,7 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- ... and many code cleanups
 	- ... and improvements to unit tests
 	- ... and some error page translation improvements
+	- ... and all fixes from 6.13
 
 Changes in squid-6.13 (31 Jan 2025):
 
