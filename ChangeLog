@@ -48,7 +48,7 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Y2038: Fix cache_peer connect-timeout reporting
 	- Y2038: Use time_t for commSetConnTimeout() timeout parameter
 	- Work around some mgr:forward accounting/reporting bugs
-	- Fix Ftp::Gateway may segfault in level-3 double-complete debugs()
+	- Fix: Ftp::Gateway may segfault in level-3 double-complete debugs()
 	- Do not mark successful FTP PUT entries with ENTRY_BAD_LENGTH
 	- Fix ENTRY_ABORTED assertion in sendClientOldEntry()
 	- Limit Server::inBuf growth
@@ -94,10 +94,8 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Treat responses to collapsed requests as fresh
 	- Do not TLS close_notify when resetting a TCP connection
 	- Simplified quick_abort_pct code and improved its docs
-	- Replace MEM_DREAD_CTRL pool with MEMPROXY class pool
 	- Update HTTP status codes
 	- Report all refreshCheck() outcomes and entry gist
-	- Replace MEM_DWRITE_Q pool with MEMPROXY class pool
 	- Prohibit bad --enable-linux-netfilter combinations
 	- Use ERR_ACCESS_DENIED for HTTP 403 (Forbidden) errors
 	- Scaffolding for YAML-formatted cache manager reports
@@ -117,7 +115,7 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- Report all AsyncJob objects (mgr:jobs)
 	- Cover OnTerminate() calls unrelated to exception handling
 	- Keep ::helper objects alive while in use by helper_servers
-	- Add SQUID_CHECK_LIB_WORKS macro
+	- Add SQUID_CHECK_LIB_WORKS autoconf macro
 	- Reject more CONNECT requests with malformed targets
 	- Forget non-peer access details
 	- Do not report DNS answers without A/AAAA records by default
