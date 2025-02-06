@@ -531,7 +531,6 @@ squid_LDADD = \
 	$(XTRA_OBJS) \
 	$(REPL_OBJS) \
 	$(CRYPTLIB) \
-	$(REGEXLIB) \
 	$(ADAPTATION_LIBS) \
 	html/libhtml.la \
 	$(SNMP_LIBS) \
@@ -554,6 +553,7 @@ squid_LDADD = \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
+	$(LIBREGEX_LIBS) \
 	$(XTRA_LIBS)
 
 if ENABLE_LOADABLE_MODULES
@@ -1171,12 +1171,12 @@ tests_testRock_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBREGEX_LIBS) \
 	$(XTRA_LIBS)
 tests_testRock_LDFLAGS = $(AM_CPPFLAGS) $(LIBADD_DL)
 else
@@ -1347,12 +1347,12 @@ tests_testUfs_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBREGEX_LIBS) \
 	$(XTRA_LIBS)
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
 else
@@ -1509,13 +1509,13 @@ tests_testStore_LDADD= \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(REGEXLIB) \
 	$(SSLLIB) \
 	CommCalls.o \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBREGEX_LIBS) \
 	$(XTRA_LIBS)
 tests_testStore_LDFLAGS = $(LIBADD_DL)
 
@@ -1685,12 +1685,12 @@ tests_testDiskIO_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBREGEX_LIBS) \
 	$(XTRA_LIBS)
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 
@@ -1991,7 +1991,6 @@ tests_testHttpRange_LDADD = \
 	$(LIBCAP_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(LIBHEIMDAL_KRB5_LIBS) \
-	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
@@ -2001,6 +2000,7 @@ tests_testHttpRange_LDADD = \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
+	$(LIBREGEX_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpRange_LDFLAGS = $(LIBADD_DL)
 
@@ -2378,7 +2378,6 @@ tests_testHttpRequest_LDADD = \
 	$(LIBCAP_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(LIBHEIMDAL_KRB5_LIBS) \
-	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
@@ -2388,6 +2387,7 @@ tests_testHttpRequest_LDADD = \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
+	$(LIBREGEX_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
@@ -2675,7 +2675,6 @@ tests_testCacheManager_LDADD = \
 	$(LIBCAP_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(LIBHEIMDAL_KRB5_LIBS) \
-	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
@@ -2685,6 +2684,7 @@ tests_testCacheManager_LDADD = \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
+	$(LIBREGEX_LIBS) \
 	$(XTRA_LIBS)
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 
