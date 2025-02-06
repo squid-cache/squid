@@ -113,7 +113,7 @@ void aioRead(int, off_t offset, size_t size, AIOCB *, void *);
 
 void aioStat(char *, struct stat *, AIOCB *, void *);
 void aioUnlink(const char *, AIOCB *, void *);
-int aioQueueSize(void);
+size_t aioQueueSize(void);
 
 #include "DiskIO/DiskFile.h"
 

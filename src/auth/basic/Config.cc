@@ -135,7 +135,7 @@ Auth::Basic::Config::Config() :
 }
 
 void
-Auth::Basic::Config::parse(Auth::SchemeConfig * scheme, int n_configured, char *param_str)
+Auth::Basic::Config::parse(Auth::SchemeConfig * scheme, size_t n_configured, char *param_str)
 {
     if (strcmp(param_str, "credentialsttl") == 0) {
         parse_time_t(&credentialsTTL);
