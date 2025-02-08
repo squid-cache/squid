@@ -265,7 +265,7 @@ while (<>) {
         my (@aliases) = split(/ /, $1);
         $data = {};
         $data->{'version'} = $version;
-        foreach (@aliases) {
+        foreach (sort @aliases) {
             $all_names{$_} = $data;
         }
 
@@ -329,7 +329,7 @@ while (<>) {
     } elsif ($_ =~ /^DOC_END$/) {
         $state = "";
         my $othername;
-        foreach $othername (@chained) {
+        foreach $othername (sort @chained) {
             $option{$othername}{'doc'} = $data->{'doc'};
         }
         undef @chained;
@@ -362,7 +362,7 @@ while (<>) {
         print "NOTICE: line $.: unknown line '$_'\n";
     }
 }
-foreach my $condition (@ifelse) {
+foreach my $condition (sort @ifelse) {
     print "ERROR: missing ENDIF to match $condition\n";
 }
 end_options;
@@ -372,7 +372,7 @@ print $index "<hr />\n" if $format eq "singlehtml";
 
 # and now, build the option pages
 my (@names) = keys %option;
-foreach $name (@names) {
+foreach $name (sort @names) {
     next if $option{$name}->{'type'} eq "obsolete";
     generate_page("${top}/${pagetemplate}", $option{$name});
 }
