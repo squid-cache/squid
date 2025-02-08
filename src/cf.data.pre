@@ -9142,7 +9142,7 @@ DOC_START
 	you understand the algorithms in comm_select.c first!
 DOC_END
 
-NAME: incoming_tcp_average  incoming_http_average
+NAME: incoming_tcp_average incoming_http_average
 TYPE: int
 DEFAULT: 4
 LOC: Config.comm_incoming.tcp.average
