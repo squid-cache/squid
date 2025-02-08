@@ -66,7 +66,7 @@ my (%defines);
 my $version = "3.1.0";
 my $verbose = '';
 my $path = "/tmp";
-my $format = "splithtml";
+my $format = "html";
 my $pagetemplate;
 my $file_extension=".html"; # .md for markdown
 my $link_extension=".html"; # empty for markdown
@@ -82,7 +82,7 @@ GetOptions(
     'format=s' => \$format
     );
 
-if ($format eq "splithtml") {
+if ($format eq "html") {
     $pagetemplate = "template.html";
 } elsif ($format eq "markdown") {
     $pagetemplate = "template.md";
@@ -355,7 +355,7 @@ foreach my $condition (sort @ifelse) {
     print "ERROR: missing ENDIF to match $condition\n";
 }
 end_options;
-print $index "<p><a href=\"index_all$link_extension\">Alphabetic index</a></p>\n" if $format eq "splithtml";
+print $index "<p><a href=\"index_all$link_extension\">Alphabetic index</a></p>\n" if $format eq "html";
 
 # and now, build the option pages
 my (@names) = keys %option;
