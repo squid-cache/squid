@@ -186,7 +186,7 @@ sub generate_page($$)
     }
 }
 
-$index->open(filename("index"), "w") || die "Couldn't open ".filename("index").": $!\n" if ($format eq "splithtml");
+$index->open(filename("index"), "w") || die "Couldn't open ".filename("index").": $!\n";
 print $index <<EOF
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -368,12 +368,11 @@ foreach $name (sort @names) {
 my $fh;
 my $fh_open = 0;
 
-if ($format eq "splithtml") {
-    $fh = new IO::File;
-    my ($indexname) = filename("index_all");
-    $fh->open($indexname, "w") || die "Couldn't open $indexname for writing: $!\n";
-    $fh_open = 1;
-    print $fh <<EOF
+$fh = new IO::File;
+my ($indexname) = filename("index_all");
+$fh->open($indexname, "w") || die "Couldn't open $indexname for writing: $!\n";
+$fh_open = 1;
+print $fh <<EOF
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -396,8 +395,7 @@ if ($format eq "splithtml") {
 
   <h1>Alphabetic index of all options</h1>
 EOF
-        ;
-}
+;
 
 print $fh "<ul>\n";
 
