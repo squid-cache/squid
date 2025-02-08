@@ -150,14 +150,10 @@ sub generate_page($$)
     my $fh;
     my $fh_open = 0;
     # XXX should make sure the config option is a valid unix filename!
-    if ($format eq "splithtml") {
-        my ($fn) = filename($data->{'name'});
-        $fh = new IO::File;
-        $fh->open($fn, "w") || die "Couldn't open $fn: $!\n";
-        $fh_open = 1;
-    } else {
-        $fh = $index;
-    }
+    my ($fn) = filename($data->{'name'});
+    $fh = new IO::File;
+    $fh->open($fn, "w") || die "Couldn't open $fn: $!\n";
+    $fh_open = 1;
 
     $data->{"ifdef"} = $defines{$data->{"ifdef"}} if (exists $data->{"ifdef"} && exists $defines{$data->{"ifdef"}});
 
