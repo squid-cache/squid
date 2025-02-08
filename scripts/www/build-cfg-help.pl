@@ -372,6 +372,7 @@ while (<>) {
         print "NOTICE: line $.: unknown line '$_'\n";
     }
 }
+
 foreach my $condition (sort @ifelse) {
     print "ERROR: missing ENDIF to match $condition\n";
 }
