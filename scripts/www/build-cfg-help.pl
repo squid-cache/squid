@@ -68,6 +68,8 @@ my $verbose = '';
 my $path = "/tmp";
 my $format = "splithtml";
 my $pagetemplate;
+my $file_extension=".html"; # .md for markdown
+my $link_extension=".html"; # empty for markdown
 
 my ($index) = new IO::File;
 
@@ -84,6 +86,12 @@ if ($format eq "splithtml") {
     $pagetemplate = "template.html";
 } elsif ($format eq "singlehtml") {
     $pagetemplate = "template_single.html";
+} elsif ($format eq "markdown") {
+    $pagetemplate = "template.md";
+    $file_extension = ".md";
+    $link_extension = "";
+} else {
+    die "Unknown format '$format'\n";
 }
 
 # Load defines
@@ -106,7 +114,7 @@ sub uriescape($)
 sub filename($)
 {
     my ($name) = @_;
-    return $path . "/" . $name . ".html";
+    return $path . "/" . $name . $file_extension;
 }
 
 sub htmlescape($)
@@ -122,19 +130,21 @@ sub htmlescape($)
 
 sub section_link($)
 {
-    return uriescape($_[0]).".html" if $format eq "splithtml";
+    return uriescape($_[0]).$link_extension if $format eq "splithtml";
     return "#".$_[0] if $format eq "singlehtml";
+    return uriescape($_[0]) if $format eq "markdown";
 }
 
 sub toc_link($)
 {
-    return "index.html#toc_".uriescape($_[0]) if $format eq "splithtml";
+    return "index$link_extension#toc_".uriescape($_[0]) if $format eq "splithtml";
     return "#toc_".uriescape($_[0]) if $format eq "singlehtml";
+    return "index$link_extension#toc_".uriescape($_[0]) if $format eq "markdown";
 }
 
 sub alpha_link($)
 {
-    return "index_all.html#toc_".uriescape($_[0]);
+    return "index_all$link_extension#toc_".uriescape($_[0]);
 }
 
 #
@@ -356,7 +366,7 @@ foreach my $condition (@ifelse) {
     print "ERROR: missing ENDIF to match $condition\n";
 }
 end_options;
-print $index "<p><a href=\"index_all.html\">Alphabetic index</a></p>\n" if $format eq "splithtml";
+print $index "<p><a href=\"index_all$link_extension\">Alphabetic index</a></p>\n" if $format eq "splithtml";
 print $index "<p><a href=\"#index\">Alphabetic index</a></p>\n" if $format eq "singlehtml";
 print $index "<hr />\n" if $format eq "singlehtml";
 
@@ -395,7 +405,7 @@ if ($format eq "splithtml") {
     </div>
     </div>
 
-  <p>| <a href="index.html">Table of contents</a> |</p>
+  <p>| <a href="index$link_extension">Table of contents</a> |</p>
 
   <h1>Alphabetic index of all options</h1>
 EOF
@@ -410,13 +420,13 @@ print $fh "<ul>\n";
 foreach $name (sort keys %all_names) {
     my ($data) = $all_names{$name};
     next if $data->{'type'} eq "obsolete";
-    print $fh '    <li><a href="' . uriescape($data->{'name'}) . '.html" name="toc_' . htmlescape($name) . '">' . htmlescape($name) . "</a></li>\n";
+    print $fh '    <li><a href="' . uriescape($data->{'name'}) . $link_extension . '" name="toc_' . htmlescape($name) . '">' . htmlescape($name) . "</a></li>\n";
 }
 
 print $fh "</ul>\n";
 if ($fh_open) {
     print $fh <<EOF
-  <p>| <a href="index.html">Table of contents</a> |</p>
+  <p>| <a href="index$link_extension">Table of contents</a> |</p>
   </body>
 </html>
 EOF
