@@ -84,8 +84,6 @@ GetOptions(
 
 if ($format eq "splithtml") {
     $pagetemplate = "template.html";
-} elsif ($format eq "singlehtml") {
-    $pagetemplate = "template_single.html";
 } elsif ($format eq "markdown") {
     $pagetemplate = "template.md";
     $file_extension = ".md";
@@ -130,16 +128,12 @@ sub htmlescape($)
 
 sub section_link($)
 {
-    return uriescape($_[0]).$link_extension if $format eq "splithtml";
-    return "#".$_[0] if $format eq "singlehtml";
-    return uriescape($_[0]) if $format eq "markdown";
+    return uriescape($_[0]).$link_extension;
 }
 
 sub toc_link($)
 {
-    return "index$link_extension#toc_".uriescape($_[0]) if $format eq "splithtml";
-    return "#toc_".uriescape($_[0]) if $format eq "singlehtml";
-    return "index$link_extension#toc_".uriescape($_[0]) if $format eq "markdown";
+    return "index$link_extension#toc_".uriescape($_[0]);
 }
 
 sub alpha_link($)
@@ -197,7 +191,6 @@ sub generate_page($$)
 }
 
 $index->open(filename("index"), "w") || die "Couldn't open ".filename("index").": $!\n" if ($format eq "splithtml");
-$index->open($path, "w") || die "Couldn't open ".filename("index").": $!\n" if ($format eq "singlehtml");
 print $index <<EOF
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -367,8 +360,6 @@ foreach my $condition (sort @ifelse) {
 }
 end_options;
 print $index "<p><a href=\"index_all$link_extension\">Alphabetic index</a></p>\n" if $format eq "splithtml";
-print $index "<p><a href=\"#index\">Alphabetic index</a></p>\n" if $format eq "singlehtml";
-print $index "<hr />\n" if $format eq "singlehtml";
 
 # and now, build the option pages
 my (@names) = keys %option;
@@ -410,9 +401,6 @@ if ($format eq "splithtml") {
   <h1>Alphabetic index of all options</h1>
 EOF
         ;
-} elsif ($format eq "singlehtml") {
-    $fh = $index;
-    print $fh "<h2><a name=\"index\">Alphabetic index of all options</a></h2>\n";
 }
 
 print $fh "<ul>\n";
