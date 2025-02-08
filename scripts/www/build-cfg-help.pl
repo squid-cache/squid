@@ -186,8 +186,10 @@ sub generate_page($$)
     }
 }
 
+# generate the index
 $index->open(filename("index"), "w") || die "Couldn't open ".filename("index").": $!\n";
-print $index <<EOF
+if ($format eq "html") {
+    print $index <<EOF
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -201,6 +203,16 @@ print $index <<EOF
 <body>
 EOF
     ;
+} elsif ($format eq "markdown") {
+    print $index <<EOF
+---
+title: Squid $version configuration file
+keywords: squid squid.conf config configure
+description: Squid $version
+---
+EOF
+    ;
+}
 
 
 my ($name, $data);
