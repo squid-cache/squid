@@ -223,24 +223,33 @@ sub start_option($$)
 {
     my ($name, $type) = @_;
     if (!$in_options) {
-        print $index "<ul>\n";
+        print $index "<ul>\n" if $format eq "html";
         $in_options = 1;
     }
     return if $type eq "obsolete";
-    print $index '    <li><a href="' . htmlescape(section_link($name)) . '" name="toc_' . htmlescape($name) . '">' . htmlescape($name) . "</a></li>\n";
+    if ($format eq "html") {
+        print $index '    <li><a href="' . htmlescape(section_link($name)) . '" name="toc_' . htmlescape($name) . '">' . htmlescape($name) . "</a></li>\n";
+    } elsif ($format eq "markdown") {
+        print $index " * [$name](".uriescape(section_link($name)).")\n";
+    }
 }
 sub end_options()
 {
     return if !$in_options;
-    print $index "</ul>\n";
+    print $index "</ul>\n" if $format eq "html";
     $in_options = 0;
 }
 sub section_heading($)
 {
     my ($comment) = @_;
-    print $index "<pre>\n";
-    print $index $comment;
-    print $index "</pre>\n";
+    if ($format eq "html") {
+        print $index "<pre>\n";
+        print $index $comment;
+        print $index "</pre>\n";
+    } elsif ($format eq "markdown") {
+        print $index $comment;
+        print "\n";
+    }
 }
 sub update_defaults()
 {
@@ -368,6 +377,7 @@ foreach my $condition (sort @ifelse) {
 }
 end_options;
 print $index "<p><a href=\"index_all$link_extension\">Alphabetic index</a></p>\n" if $format eq "html";
+print $index "\n[Alphabetic index](index_all$link_extension)\n" if $format eq "markdown";
 
 # and now, build the option pages
 my (@names) = keys %option;
@@ -384,7 +394,8 @@ $fh = new IO::File;
 my ($indexname) = filename("index_all");
 $fh->open($indexname, "w") || die "Couldn't open $indexname for writing: $!\n";
 $fh_open = 1;
-print $fh <<EOF
+if ($format eq "html") {
+    print $fh <<EOF
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -407,32 +418,56 @@ print $fh <<EOF
 
   <h1>Alphabetic index of all options</h1>
 EOF
-;
+    ;
+} elsif ($format eq "markdown") {
+    print $fh <<EOF
+---
+title: Squid $version configuration file
+keywords: squid squid.conf config configure
+description: Squid $version
+---
+[Table of contents](index$link_extension)
+# Alphabetic index of all options
 
-print $fh "<ul>\n";
+EOF
+    ;
+}
+
+print $fh "<ul>\n" if $format eq "html";
 
 foreach $name (sort keys %all_names) {
     my ($data) = $all_names{$name};
     next if $data->{'type'} eq "obsolete";
-    print $fh '    <li><a href="' . uriescape($data->{'name'}) . $link_extension . '" name="toc_' . htmlescape($name) . '">' . htmlescape($name) . "</a></li>\n";
+    if ($format eq "html") {
+        print $fh '    <li><a href="' . uriescape($data->{'name'}) . $link_extension . '" name="toc_' . htmlescape($name) . '">' . htmlescape($name) . "</a></li>\n";
+    } elsif ($format eq "markdown") {
+        print $fh " * [$name](".uriescape($data->{'name'}).$link_extension.")\n";
+    }
 }
 
-print $fh "</ul>\n";
+print $fh "</ul>\n" if $format eq "html";
+
 if ($fh_open) {
-    print $fh <<EOF
+    if ($format eq "html") {
+        print $fh <<EOF
   <p>| <a href="index$link_extension">Table of contents</a> |</p>
   </body>
 </html>
 EOF
         ;
+    } elsif ($format eq "markdown") {
+        print $fh "\n[Table of contents](index$link_extension)\n";
+    }
     $fh->close;
 }
 undef $fh;
 
-print $index <<EOF
+if ($format eq "html") {
+    print $index <<EOF
   </body>
 </html>
 EOF
     ;
+}
 $index->close;
 undef $index;
