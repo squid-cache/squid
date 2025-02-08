@@ -248,7 +248,7 @@ sub section_heading($)
         print $index "</pre>\n";
     } elsif ($format eq "markdown") {
         print $index $comment;
-        print "\n";
+        print $index "\n";
     }
 }
 sub update_defaults()
