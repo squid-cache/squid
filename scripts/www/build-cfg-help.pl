@@ -288,6 +288,7 @@ while (<>) {
         $data->{'aliases'} = \@aliases;
         $data->{'default'} = "";
         $data->{'default_doc'} = "";
+        $data->{'doc'} = "";
         $data->{'default_if_none'} = "";
 
         print "DEBUG: line $.: new option: $name\n" if $verbose;
@@ -345,6 +346,16 @@ while (<>) {
             $option{$othername}{'doc'} = $data->{'doc'};
         }
         undef @chained;
+    } elsif ($_ =~ /^CONFIG_START$/) {
+        $state = "config";
+        next;
+    } elsif ($_ =~ /^CONFIG_END$/) {
+        $state = "";
+        my $othername;
+        foreach $othername (sort @chained) {
+            $option{$othername}{'doc'} .= $data->{'doc'};
+        }
+        undef @chained;
     } elsif ($_ =~ /^DOC_NONE$/) {
         update_defaults;
         push(@chained, $name);
@@ -359,6 +370,9 @@ while (<>) {
     } elsif ($state eq "nocomment") {
         $data->{"config"} .= $_ . "\n";
     } elsif ($state eq "doc") {
+        $data->{"doc"} .= $_ . "\n";
+    } elsif ($state eq "config") {
+        $data->{"doc"} .= "    " if $format eq "markdown";
         $data->{"doc"} .= $_ . "\n";
     } elsif ($_ =~ /^COMMENT_START$/) {
         end_options;
