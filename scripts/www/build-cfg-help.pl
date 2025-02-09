@@ -348,8 +348,12 @@ while (<>) {
         undef @chained;
     } elsif ($_ =~ /^CONFIG_START$/) {
         $state = "config";
+        $data->{'doc'} .= "```plaintext\n" if $format eq "markdown";
+        $data->{'doc'} .= "<pre>\n" if $format eq "html";
         next;
     } elsif ($_ =~ /^CONFIG_END$/) {
+        $data->{'doc'} .= "```" if $format eq "markdown";
+        $data->{'doc'} .= "</pre>\n" if $format eq "html";
         $state = "";
         my $othername;
         foreach $othername (sort @chained) {
@@ -372,7 +376,6 @@ while (<>) {
     } elsif ($state eq "doc") {
         $data->{"doc"} .= $_ . "\n";
     } elsif ($state eq "config") {
-        $data->{"doc"} .= "    " if $format eq "markdown";
         $data->{"doc"} .= $_ . "\n";
     } elsif ($_ =~ /^COMMENT_START$/) {
         end_options;
