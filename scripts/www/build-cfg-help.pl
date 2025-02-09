@@ -247,7 +247,9 @@ sub section_heading($)
         print $index $comment;
         print $index "</pre>\n";
     } elsif ($format eq "markdown") {
-        print $index $comment;
+        $comment =~ s/---*\n//m;
+        $comment =~ s/^\s+$//gm;
+        print $index "\n##$comment";
         print $index "\n";
     }
 }
