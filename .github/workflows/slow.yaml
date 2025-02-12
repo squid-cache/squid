@@ -70,7 +70,7 @@ jobs:
       - name: Run test-builds
         id: test-builds
         run: |
-          echo "::group:: output from ./test-builds.sh ${{ matrix.layer.name }}"
+          echo "::group::output"
           ./test-builds.sh --verbose ${{ matrix.layer.name }}
           echo "::endgroup::"
 
@@ -100,7 +100,7 @@ jobs:
       - name: Run test-builds
         id: test-builds
         run: |
-          echo "::group:: Output from setup phase"
+          echo "::group::setup output"
           eval `brew shellenv`
           PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
           PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig"
@@ -130,7 +130,7 @@ jobs:
           diff -u $editable.bak $editable || true
           echo "::endgroup::"
 
-          echo "::group:: Output from ./test-builds.sh"
+          echo "::group::build output"
           ./test-builds.sh --verbose
           echo "::endgroup::"
 
@@ -179,7 +179,7 @@ jobs:
 
           run: |
             export MAKE=gmake
-            echo "::group:: Output from ./test-builds.sh"
+            echo "::group::output"
             ./test-builds.sh --verbose
             echo "::endgroup::"
 

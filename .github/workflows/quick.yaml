@@ -146,7 +146,7 @@ jobs:
 
       - name: Run build on Linux
         run: |
-          echo "::group:: output from ./test-builds.sh"
+          echo "::group::output"
           ./test-builds.sh --verbose ${{ matrix.layer.name }}
           echo "::endgroup::"
 
@@ -182,7 +182,7 @@ jobs:
 
       - name: Build Squid
         run: |
-          echo "::group:: output from ./test-builds.sh"
+          echo "::group::output"
           ./test-builds.sh --verbose ./test-suite/buildtests/layer-02-maximus.opts
           echo "::endgroup::"
 
