@@ -70,7 +70,9 @@ jobs:
       - name: Run test-builds
         id: test-builds
         run: |
+          echo "::group:: output from ./test-builds.sh ${{ matrix.layer.name }}"
           ./test-builds.sh --verbose ${{ matrix.layer.name }}
+          echo "::endgroup::"
 
       - name: Publish build logs
         if: success() || failure()
@@ -98,6 +100,7 @@ jobs:
       - name: Run test-builds
         id: test-builds
         run: |
+          echo "::group:: Output from setup phase"
           eval `brew shellenv`
           PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
           PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig"
@@ -125,8 +128,11 @@ jobs:
           editable=$HOMEBREW_CELLAR/libtool/2.4.7/bin/glibtoolize
           sed -i.bak 's@ltdl_ac_aux_dir=""@ltdl_ac_aux_dir="../build-aux"@' $editable || true
           diff -u $editable.bak $editable || true
+          echo "::endgroup::"
 
+          echo "::group:: Output from ./test-builds.sh"
           ./test-builds.sh --verbose
+          echo "::endgroup::"
 
       - name: Publish build logs
         if: success() || failure()
@@ -173,7 +179,9 @@ jobs:
 
           run: |
             export MAKE=gmake
+            echo "::group:: Output from ./test-builds.sh"
             ./test-builds.sh --verbose
+            echo "::endgroup::"
 
       - name: Publish build logs
         if: success() || failure()
