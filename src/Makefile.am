@@ -164,8 +164,8 @@ EXTRA_PROGRAMS = \
 	unlinkd
 
 ## cfgen is used when building squid
-noinst_PROGRAMS = \
-	cf_gen
+#noinst_PROGRAMS = \
+#	cf_gen
 
 sbin_PROGRAMS = \
 	squid
@@ -601,10 +601,7 @@ LDADD = \
 include $(srcdir)/tests/Stub.am
 
 EXTRA_DIST = \
-	cf_gen_defines \
-	cf.data.pre \
 	cf.data.depend \
-	cf.data.sed \
 	mk-globals-c.awk \
 	mk-string-arrays.awk \
 	repl_modules.sh \
@@ -644,18 +641,52 @@ cache_cf.o: cf_parser.cci
 cf_gen$(EXEEXT): $(cf_gen_SOURCES) $(cf_gen_DEPENDENCIES) cf_gen_defines.cci
 	$(BUILDCXX) $(BUILDCXXFLAGS) -o $@ $(srcdir)/cf_gen.cc -I$(srcdir) -I$(top_builddir)/include/ -I$(top_builddir)/src
 
-# squid.conf.default is built by cf_gen when making cf_parser.cci
-squid.conf.default squid.conf.documented: cf_parser.cci
-	true
+squid.conf.default: squid.conf.yaml cf.data.depend
+	$(top_srcdir)/scripts/mk-squid.conf-parser.pl --config squid.conf.yaml $(srcdir)/cf.data.depend |\
+	  sed -f $(srcdir)/cf.yaml.sed >$@
 
-cf_parser.cci: cf.data cf_gen$(EXEEXT)
-	./cf_gen$(EXEEXT) cf.data $(srcdir)/cf.data.depend
+squid.conf.documented: squid.conf.yaml cf.data.depend cf.yaml.sed
+	$(top_srcdir)/scripts/mk-squid.conf-parser.pl --documentation squid.conf.yaml $(srcdir)/cf.data.depend |\
+	  sed -f $(srcdir)/cf.yaml.sed >$@
+EXTRA_DIST += cf.yaml.sed
+
+cf_parser.cci: squid.conf.yaml cf.data.depend
+	$(top_srcdir)/scripts/mk-squid.conf-parser.pl --parser squid.conf.yaml $(srcdir)/cf.data.depend >$@
 
 # The cf_gen_defines.cci is auto-generated and does not exist when the
 # dependencies computed. We need to add its include files (autoconf.h) here
-cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre $(top_builddir)/include/autoconf.h
-	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
+#cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre $(top_builddir)/include/autoconf.h
+#	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
 
+## TODO: generate a sed command file from configure. Then this doesn't
+## depend on the Makefile.
+EXTRA_DIST += squid.conf.yaml.in
+squid.conf.yaml: squid.conf.yaml.in Makefile
+	sed \
+	-e "s%[@]DEFAULT_HTTP_PORT[@]%$(DEFAULT_HTTP_PORT)%g" \
+	-e "s%[@]DEFAULT_ICP_PORT[@]%$(DEFAULT_ICP_PORT)%g" \
+	-e "s%[@]DEFAULT_CACHE_EFFECTIVE_USER[@]%$(CACHE_EFFECTIVE_USER)%g" \
+	-e "s%[@]DEFAULT_MIME_TABLE[@]%$(DEFAULT_MIME_TABLE)%g" \
+	-e "s%[@]DEFAULT_SSL_CRTD[@]%$(DEFAULT_SSL_CRTD)%g" \
+	-e "s%[@]DEFAULT_UNLINKD[@]%$(DEFAULT_UNLINKD)%g" \
+	-e "s%[@]DEFAULT_PINGER[@]%$(DEFAULT_PINGER)%g" \
+	-e "s%[@]DEFAULT_DISKD[@]%$(DEFAULT_DISKD)%g" \
+	-e "s%[@]DEFAULT_LOGFILED[@]%$(DEFAULT_LOGFILED)%g;" \
+	-e "s%[@]DEFAULT_CACHE_LOG[@]%$(DEFAULT_CACHE_LOG)%g" \
+	-e "s%[@]DEFAULT_ACCESS_LOG[@]%$(DEFAULT_ACCESS_LOG)%g" \
+	-e "s%[@]DEFAULT_STORE_LOG[@]%$(DEFAULT_STORE_LOG)%g" \
+	-e "s%[@]DEFAULT_PID_FILE[@]%$(DEFAULT_PID_FILE)%g" \
+	-e "s%[@]DEFAULT_NETDB_FILE[@]%$(DEFAULT_NETDB_FILE)%g" \
+	-e "s%[@]DEFAULT_SWAP_DIR[@]%$(DEFAULT_SWAP_DIR)%g" \
+	-e "s%[@]DEFAULT_SSL_DB_DIR[@]%$(DEFAULT_SSL_DB_DIR)%g" \
+	-e "s%[@]DEFAULT_ICON_DIR[@]%$(DEFAULT_ICON_DIR)%g" \
+	-e "s%[@]DEFAULT_CONFIG_DIR[@]%$(DEFAULT_CONFIG_DIR)%g" \
+	-e "s%[@]DEFAULT_ERROR_DIR[@]%$(DEFAULT_ERROR_DIR)%g" \
+	-e "s%[@]DEFAULT_PREFIX[@]%$(DEFAULT_PREFIX)%g" \
+	-e "s%[@]DEFAULT_HOSTS[@]%$(DEFAULT_HOSTS)%g" \
+	-e "s%[@]SQUID[@]%SQUID\ $(VERSION)%g" \
+	< $(srcdir)/squid.conf.yaml.in >$@
+CLEANFILES += squid.conf.yaml
 
 ## TODO: generate a sed command file from configure. Then this doesn't
 ## depend on the Makefile.
