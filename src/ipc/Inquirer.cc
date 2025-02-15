@@ -104,7 +104,7 @@ Ipc::Inquirer::inquire()
         ++LastRequestId;
     request->requestId = LastRequestId;
     const int kidId = pos->kidId;
-    debugs(54, 4, "inquire kid: " << kidId << status());
+    debugs(54, 4, "inquire kid: " << kidId << ' ' << status());
     TheWaitingInquirers[request->requestId] = this;
     TypedMsgHdr message;
     request->pack(message);
@@ -221,7 +221,7 @@ Ipc::Inquirer::status() const
 {
     static MemBuf buf;
     buf.reset();
-    buf.appendf(" [requestId %u]", request->requestId.index());
+    buf.appendf("requestId %u", request->requestId.index());
     buf.terminate();
     return buf.content();
 }
