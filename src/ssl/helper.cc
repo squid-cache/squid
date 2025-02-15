@@ -42,18 +42,34 @@ class GeneratorRequest {
     CBDATA_CLASS(GeneratorRequest);
 
 public:
+    /// helper query contents plus Squid configuration ID
+    using Key = std::pair<SBuf, SquidConfig::Id::Value>;
+
+    explicit GeneratorRequest(const Key &aKey): key(aKey) {}
+
     /// adds a GeneratorRequestor
     void emplace(HLPCB *callback, void *data) { requestors.emplace_back(callback, data); }
 
-    SBuf query; ///< Ssl::Helper request message (GeneratorRequests key)
+    const Key key; ///< identifies this request in TheGeneratorRequests collection
 
     /// Ssl::Helper request initiators waiting for the same answer (FIFO).
     typedef std::vector<GeneratorRequestor> GeneratorRequestors;
     GeneratorRequestors requestors;
 };
 
-/// Ssl::Helper query:GeneratorRequest map
-typedef std::unordered_map<SBuf, GeneratorRequest*> GeneratorRequests;
+struct GeneratorRequestKeyHash
+{
+    std::size_t operator() (const GeneratorRequest::Key &pair) const {
+        return std::hash<SBuf>()(pair.first) ^ std::hash<SquidConfig::Id::Value>()(pair.second);
+    }
+};
+
+/// a fast way to locate an existing GeneratorRequest for the new Ssl::Helper query
+using GeneratorRequests = std::unordered_map<GeneratorRequest::Key, GeneratorRequest*,
+      GeneratorRequestKeyHash,
+      std::equal_to<GeneratorRequest::Key>,
+      PoolingAllocator< std::pair<const GeneratorRequest::Key, GeneratorRequest*> >
+      >;
 
 static void HandleGeneratorReply(void *data, const ::Helper::Reply &reply);
 
@@ -65,7 +81,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, GeneratorRequest);
 static std::ostream &
 operator <<(std::ostream &os, const Ssl::GeneratorRequest &gr)
 {
-    return os << "crtGenRq" << gr.query.id.value << "/" << gr.requestors.size();
+    return os << ScopedId("crtGenRq", gr.key.first.id.value) << '/' << gr.requestors.size();
 }
 
 /// pending Ssl::Helper requests (to all certificate generator helpers combined)
@@ -125,21 +141,23 @@ void Ssl::Helper::Submit(CrtdMessage const & message, HLPCB * callback, void * d
     SBuf rawMessage(message.compose().c_str()); // XXX: helpers cannot use SBuf
     rawMessage.append("\n", 1);
 
-    const auto pending = TheGeneratorRequests.find(rawMessage);
+    const auto key = GeneratorRequest::Key(rawMessage, ::Config.id().value);
+
+    const auto pending = TheGeneratorRequests.find(key);
     if (pending != TheGeneratorRequests.end()) {
         pending->second->emplace(callback, data);
         debugs(83, 5, "collapsed request from " << data << " onto " << *pending->second);
         return;
     }
 
-    GeneratorRequest *request = new GeneratorRequest;
-    request->query = rawMessage;
+    const auto request = new GeneratorRequest(key);
     request->emplace(callback, data);
-    TheGeneratorRequests.emplace(request->query, request);
+    TheGeneratorRequests.emplace(key, request);
     debugs(83, 5, "request from " << data << " as " << *request);
+
     // ssl_crtd becomes nil if Squid is reconfigured without SslBump or
     // certificate generation disabled in the new configuration
-    if (ssl_crtd && ssl_crtd->trySubmit(request->query.c_str(), HandleGeneratorReply, request))
+    if (ssl_crtd && ssl_crtd->trySubmit(rawMessage.c_str(), HandleGeneratorReply, request))
         return;
 
     ::Helper::Reply failReply(::Helper::BrokenHelper);
@@ -153,7 +171,7 @@ Ssl::HandleGeneratorReply(void *data, const ::Helper::Reply &reply)
 {
     const std::unique_ptr<Ssl::GeneratorRequest> request(static_cast<Ssl::GeneratorRequest*>(data));
     assert(request);
-    const auto erased = TheGeneratorRequests.erase(request->query);
+    const auto erased = TheGeneratorRequests.erase(request->key);
     assert(erased);
 
     for (auto &requestor: request->requestors) {

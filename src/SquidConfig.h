@@ -78,6 +78,10 @@ public:
 class SquidConfig
 {
 public:
+    /// similar to a constructor; called at the start of each (re)configuration
+    /// exists because (re)configuration does not create SquidConfig objects
+    void lifecycleStart();
+
     struct {
         /* These should be for the Store::Root instance.
         * this needs pluggable parsing to be done smoothly.
@@ -547,6 +551,14 @@ public:
         int connect_gap;
         int connect_timeout;
     } happyEyeballs;
+
+    using Id = InstanceId<SquidConfig>;
+
+    /// configuration ID that changes with each lifecycleStart() call
+    const Id &id() const { return id_; }
+
+private:
+    Id id_;
 };
 
 extern SquidConfig Config;
