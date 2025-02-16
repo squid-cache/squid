@@ -71,7 +71,7 @@ logtee() {
     local layer=$2
     case $verbose in
     yes)
-        echo "::group::$layer output" # github collapsable section
+        echo "::group::$layer output" # github collapsible section
         tee $1
         echo "::endgroup::"
         ;;
