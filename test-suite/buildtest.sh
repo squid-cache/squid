@@ -16,6 +16,16 @@
 action="${1}"
 config="${2}"
 
+# Allow a layer to enable optional features supported in current build environment
+if ${PKG_CONFIG:-pkg-config} --exists --exact-version=1.0.0 libecap 2>/dev/null
+then
+    CONFIGURE_FLAGS_MAYBE_ENABLE_ECAP="--enable-ecap"
+fi
+if ${PKG_CONFIG:-pkg-config} --exists  valgrind 2>/dev/null
+then
+    CONFIGURE_FLAGS_MAYBE_ENABLE_VALGRIND="--with-valgrind-debug"
+fi
+
 # cache_file may be set by environment variable
 configcache=""
 if [ -n "$cache_file" ]; then
