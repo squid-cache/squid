@@ -92,21 +92,6 @@ AS_IF([test "x$user_cxx" = "x"],[
   AX_CXX_COMPILE_STDCXX([17],[noext],[mandatory])
 ])
 
-# Prerequisite: CXX has been finalized.
-# BUILDCXXFLAGS are defined later, after CXXFLAGS have been finalized.
-AC_ARG_VAR([BUILDCXX],[path to compiler for building compile-time tools. e.g. cf_gen])
-AS_IF([test "x$HOSTCXX" != "x" -a "x$BUILDCXX" = "x"],[
-  AC_MSG_WARN([Cross-compiling with HOSTCXX is deprecated. Use BUILDCXX instead.])
-  BUILDCXX="$HOSTCXX"
-])
-AS_IF([test "x$BUILDCXX" = "x"],[
-  BUILDCXX="$CXX"
-  AS_IF([test "x$squid_cv_check_marchnative" = "xyes"],[
-    CXXFLAGS="$CXXFLAGS -march=native"
-  ])
-])
-AC_SUBST(BUILDCXX)
-
 # test for programs
 AC_PROG_RANLIB
 AC_PROG_CPP
@@ -2461,19 +2446,6 @@ AC_SUBST(XTRA_LIBS)
 AC_SUBST(SQUID_CFLAGS)
 AC_SUBST(SQUID_CXXFLAGS)
 
-# Prerequisite: CXXFLAGS have been finalized.
-AC_ARG_VAR([BUILDCXXFLAGS],[C++ compiler flags for building compile-time tools. e.g. cf_gen])
-AS_IF([test "x$BUILDCXXFLAGS" = "x"],[
-  # if we are NOT cross-compiling, use the default build flags for cf_gen and friends
-  # otherwise rely on the user-provided value
-  AS_IF([test "x$squid_cv_check_marchnative" = "xyes"],[
-    # always valid for the Build compiler.
-    BUILDCXXFLAGS="-march=native"
-  ])
-  BUILDCXXFLAGS="$BUILDCXXFLAGS $CXXFLAGS"
-])
-AC_SUBST(BUILDCXXFLAGS)
-
 AC_MSG_NOTICE([BUILD LIBRARIES: $LIBS])
 AC_MSG_NOTICE([BUILD EXTRA LIBRARIES: $XTRA_LIBS])
 AC_MSG_NOTICE([BUILD OBJECTS: $OBJS])
@@ -2482,7 +2454,6 @@ AC_MSG_NOTICE([BUILD C FLAGS: $CFLAGS])
 AC_MSG_NOTICE([BUILD EXTRA C FLAGS: $SQUID_CFLAGS])
 AC_MSG_NOTICE([BUILD C++ FLAGS: $CXXFLAGS])
 AC_MSG_NOTICE([BUILD EXTRA C++ FLAGS: $SQUID_CXXFLAGS])
-AC_MSG_NOTICE([BUILD Tools C++ FLAGS: $BUILDCXXFLAGS])
 
 dnl Clean up after OSF/1 core dump bug
 rm -f core

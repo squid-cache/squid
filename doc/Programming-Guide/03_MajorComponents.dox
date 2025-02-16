@@ -191,13 +191,10 @@ TODO: decide what to do for comm_poll() since its either obsolete or uses other 
 \section ConfigurationFileParsing Configuration File Parsing
 \par
 	The primary configuration file specification is in the file
-	cf.data.pre.  A simple utility program, cf_gen,
-	reads the cf.data.pre file and generates cf_parser.cci
+	squid.conf.yaml.in.  A simple utility mk-squid-conf-parser.pl
+	reads the squid.conf.yaml.in file and generates cf_parser.cci
 	and squid.conf.  cf_parser.cci is included directly
 	into cache_cf.cc at compile time.
-TODO: get cf.data.pre documenting
-TODO: get squid.conf documenting
-TODO: get cf_gen documenting and linking.
 
 \section Callback Data Allocator
 \par

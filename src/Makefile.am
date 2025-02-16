@@ -163,10 +163,6 @@ noinst_LTLIBRARIES = libsquid.la
 EXTRA_PROGRAMS = \
 	unlinkd
 
-## cfgen is used when building squid
-#noinst_PROGRAMS = \
-#	cf_gen
-
 sbin_PROGRAMS = \
 	squid
 
@@ -175,13 +171,7 @@ bin_PROGRAMS =
 libexec_PROGRAMS = \
 	$(UNLINKD)
 
-cf_gen_SOURCES = cf_gen.cc
-nodist_cf_gen_HEADER = cf_gen_defines.cci
-## cf_gen must be stand-alone executable. It is a purely build-time executable.
-cf_gen_LDADD=
-cf_gen.$(OBJEXT): cf_gen_defines.cci
-
-## cf_gen.cc needs src/cf_gen_defines.cci
+## let compiler access the BUILT_SOURCES
 AM_CPPFLAGS += -I$(top_builddir)/src
 
 
@@ -482,7 +472,6 @@ noinst_HEADERS = \
 	SquidString.h
 
 BUILT_SOURCES = \
-	cf_gen_defines.cci \
 	cf_parser.cci \
 	globals.cc \
 	hier_code.cc \
@@ -637,10 +626,6 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 ## If autodependency works well this is not needed anymore
 cache_cf.o: cf_parser.cci
 
-# cf_gen builds the configuration files.
-cf_gen$(EXEEXT): $(cf_gen_SOURCES) $(cf_gen_DEPENDENCIES) cf_gen_defines.cci
-	$(BUILDCXX) $(BUILDCXXFLAGS) -o $@ $(srcdir)/cf_gen.cc -I$(srcdir) -I$(top_builddir)/include/ -I$(top_builddir)/src
-
 squid.conf.default: squid.conf.yaml cf.data.depend
 	$(top_srcdir)/scripts/mk-squid.conf-parser.pl --config squid.conf.yaml $(srcdir)/cf.data.depend |\
 	  sed -f $(srcdir)/cf.yaml.sed >$@
@@ -652,11 +637,6 @@ EXTRA_DIST += cf.yaml.sed
 
 cf_parser.cci: squid.conf.yaml cf.data.depend
 	$(top_srcdir)/scripts/mk-squid.conf-parser.pl --parser squid.conf.yaml $(srcdir)/cf.data.depend >$@
-
-# The cf_gen_defines.cci is auto-generated and does not exist when the
-# dependencies computed. We need to add its include files (autoconf.h) here
-#cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre $(top_builddir)/include/autoconf.h
-#	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
 
 ## TODO: generate a sed command file from configure. Then this doesn't
 ## depend on the Makefile.
@@ -687,35 +667,6 @@ squid.conf.yaml: squid.conf.yaml.in Makefile
 	-e "s%[@]SQUID[@]%SQUID\ $(VERSION)%g" \
 	< $(srcdir)/squid.conf.yaml.in >$@
 CLEANFILES += squid.conf.yaml
-
-## TODO: generate a sed command file from configure. Then this doesn't
-## depend on the Makefile.
-cf.data: cf.data.pre Makefile
-	sed \
-	-e "s%[@]DEFAULT_HTTP_PORT[@]%$(DEFAULT_HTTP_PORT)%g" \
-	-e "s%[@]DEFAULT_ICP_PORT[@]%$(DEFAULT_ICP_PORT)%g" \
-	-e "s%[@]DEFAULT_CACHE_EFFECTIVE_USER[@]%$(CACHE_EFFECTIVE_USER)%g" \
-	-e "s%[@]DEFAULT_MIME_TABLE[@]%$(DEFAULT_MIME_TABLE)%g" \
-	-e "s%[@]DEFAULT_SSL_CRTD[@]%$(DEFAULT_SSL_CRTD)%g" \
-	-e "s%[@]DEFAULT_UNLINKD[@]%$(DEFAULT_UNLINKD)%g" \
-	-e "s%[@]DEFAULT_PINGER[@]%$(DEFAULT_PINGER)%g" \
-	-e "s%[@]DEFAULT_DISKD[@]%$(DEFAULT_DISKD)%g" \
-	-e "s%[@]DEFAULT_LOGFILED[@]%$(DEFAULT_LOGFILED)%g;" \
-	-e "s%[@]DEFAULT_CACHE_LOG[@]%$(DEFAULT_CACHE_LOG)%g" \
-	-e "s%[@]DEFAULT_ACCESS_LOG[@]%$(DEFAULT_ACCESS_LOG)%g" \
-	-e "s%[@]DEFAULT_STORE_LOG[@]%$(DEFAULT_STORE_LOG)%g" \
-	-e "s%[@]DEFAULT_PID_FILE[@]%$(DEFAULT_PID_FILE)%g" \
-	-e "s%[@]DEFAULT_NETDB_FILE[@]%$(DEFAULT_NETDB_FILE)%g" \
-	-e "s%[@]DEFAULT_SWAP_DIR[@]%$(DEFAULT_SWAP_DIR)%g" \
-	-e "s%[@]DEFAULT_SSL_DB_DIR[@]%$(DEFAULT_SSL_DB_DIR)%g" \
-	-e "s%[@]DEFAULT_ICON_DIR[@]%$(DEFAULT_ICON_DIR)%g" \
-	-e "s%[@]DEFAULT_CONFIG_DIR[@]%$(DEFAULT_CONFIG_DIR)%g" \
-	-e "s%[@]DEFAULT_ERROR_DIR[@]%$(DEFAULT_ERROR_DIR)%g" \
-	-e "s%[@]DEFAULT_PREFIX[@]%$(DEFAULT_PREFIX)%g" \
-	-e "s%[@]DEFAULT_HOSTS[@]%$(DEFAULT_HOSTS)%g" \
-	-e "s%[@]SQUID[@]%SQUID\ $(VERSION)%g" \
-	-f $(srcdir)/cf.data.sed \
-	< $(srcdir)/cf.data.pre >$@
 
 repl_modules.cc: repl_modules.sh Makefile
 	$(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.cc
@@ -754,10 +705,7 @@ uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE) $(srcdir)/mime.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE) squid.conf.default
 
-clean-local:
-	-rm -rf cf_gen.dSYM
-
-CLEANFILES += cf.data squid.conf.default squid.conf.documented \
+CLEANFILES += squid.conf.default squid.conf.documented \
 	test_tools.cc *.a
 
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
