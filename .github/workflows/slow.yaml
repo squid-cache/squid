@@ -69,10 +69,7 @@ jobs:
 
       - name: Run test-builds
         id: test-builds
-        run: |
-          echo "::group::output"
-          ./test-builds.sh --verbose ${{ matrix.layer.name }}
-          echo "::endgroup::"
+        run: ./test-builds.sh --verbose ${{ matrix.layer.name }}
 
       - name: Publish build logs
         if: success() || failure()
@@ -130,9 +127,7 @@ jobs:
           diff -u $editable.bak $editable || true
           echo "::endgroup::"
 
-          echo "::group::build output"
           ./test-builds.sh --verbose
-          echo "::endgroup::"
 
       - name: Publish build logs
         if: success() || failure()
@@ -179,9 +174,7 @@ jobs:
 
           run: |
             export MAKE=gmake
-            echo "::group::output"
             ./test-builds.sh --verbose
-            echo "::endgroup::"
 
       - name: Publish build logs
         if: success() || failure()
