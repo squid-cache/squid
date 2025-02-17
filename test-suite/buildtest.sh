@@ -19,7 +19,7 @@ config="${2}"
 # Allow a layer to enable optional default-disabled features when
 # those features are supported in the current build environment
 # (and we can easily detect such support).
-if ${PKG_CONFIG:-pkg-config} --exists --atleast-version=1.0.0 libecap 2>/dev/null
+if ${PKG_CONFIG:-pkg-config} --exists 'libecap >= 1.0 libecap < 1.1' 2>/dev/null
 then
     CONFIGURE_FLAGS_MAYBE_ENABLE_ECAP="--enable-ecap"
 fi
