@@ -16,12 +16,14 @@
 action="${1}"
 config="${2}"
 
-# Allow a layer to enable optional features supported in current build environment
+# Allow a layer to enable optional default-disabled features when
+# those features are supported in the current build environment
+# (and we can easily detect such support).
 if ${PKG_CONFIG:-pkg-config} --exists --exact-version=1.0.0 libecap 2>/dev/null
 then
     CONFIGURE_FLAGS_MAYBE_ENABLE_ECAP="--enable-ecap"
 fi
-if ${PKG_CONFIG:-pkg-config} --exists  valgrind 2>/dev/null
+if ${PKG_CONFIG:-pkg-config} --exists valgrind 2>/dev/null
 then
     CONFIGURE_FLAGS_MAYBE_ENABLE_VALGRIND="--with-valgrind-debug"
 fi
