@@ -1542,6 +1542,19 @@ AC_ARG_ENABLE(auth-basic,
 ])
 m4_include([src/auth/basic/helpers.m4])
 
+AC_ARG_ENABLE(auth-bearer,
+  AS_HELP_STRING([--enable-auth-bearer="list of helpers"],
+     [Enable the OAuth 2.0 Bearer authentication scheme, and build the
+      specified helpers.
+      Not providing an explicit list of helpers will attempt build of
+      all possible helpers. Default is to do so.
+      To disable the Bearer authentication scheme, use --disable-auth-bearer.
+      To enable but build no helpers, specify "none".
+      To see available helpers, see the src/auth/bearer/ directory. ]),[
+#nothing to do really
+])
+m4_include([src/auth/bearer/helpers.m4])
+
 AC_ARG_ENABLE(auth-digest,
   AS_HELP_STRING([--enable-auth-digest="list of helpers"],
      [Enable the Digest authentication scheme, and build the specified helpers.
@@ -2535,6 +2548,7 @@ AC_CONFIG_FILES([
 	src/auth/basic/SMB/Makefile
 	src/auth/basic/SMB_LM/Makefile
 	src/auth/basic/SSPI/Makefile
+	src/auth/bearer/Makefile
 	src/auth/digest/Makefile
 	src/auth/digest/eDirectory/Makefile
 	src/auth/digest/file/Makefile
