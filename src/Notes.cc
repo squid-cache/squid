@@ -339,10 +339,9 @@ static void
 AppendTokens(NotePairs::Entries &entries, const SBuf &key, const SBuf &val, const CharacterSet &delimiters)
 {
     Parser::Tokenizer tok(val);
-    const auto tokenCharacters = delimiters.complement("non-delimiters");
     do {
         SBuf token;
-        (void)tok.prefix(token, tokenCharacters);
+        (void)tok.prefixUntil(token, delimiters);
         entries.push_back(new NotePairs::Entry(key, token)); // token may be empty
     } while (tok.skipOne(delimiters));
 }

@@ -76,15 +76,16 @@ Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 }
 
 bool
-Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBuf::size_type limit)
+Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &charSet, const SBuf::size_type limit, const CharacterSetType csType)
 {
-    SBuf::size_type prefixLen = buf_.substr(0,limit).findFirstNotOf(tokenChars);
+    const auto str = buf_.substr(0,limit);
+    auto prefixLen = (csType == csDelimiter) ? str.findFirstOf(charSet) : str.findFirstNotOf(charSet);
     if (prefixLen == 0) {
-        debugs(24, 8, "no prefix for set " << tokenChars.name);
+        debugs(24, 8, "no prefix for set " << charSet.name);
         return false;
     }
     if (prefixLen == SBuf::npos && (atEnd() || limit == 0)) {
-        debugs(24, 8, "no char in set " << tokenChars.name << " while looking for prefix");
+        debugs(24, 8, "insufficient input or zero limit while looking for prefix");
         return false;
     }
     if (prefixLen == SBuf::npos && limit > 0) {
@@ -96,6 +97,12 @@ Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, c
     return true;
 }
 
+bool
+Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBuf::size_type limit)
+{
+    return prefix(returnedToken, tokenChars, limit, csToken);
+}
+
 SBuf
 Parser::Tokenizer::prefix(const char *description, const CharacterSet &tokenChars, const SBuf::size_type limit)
 {
@@ -104,13 +111,19 @@ Parser::Tokenizer::prefix(const char *description, const CharacterSet &tokenChar
 
     SBuf result;
 
-    if (!prefix(result, tokenChars, limit))
+    if (!prefix(result, tokenChars, limit, csToken))
         throw TexcHere(ToSBuf("cannot parse ", description));
 
     if (atEnd())
         throw InsufficientInput();
 
     return result;
+}
+
+bool
+Parser::Tokenizer::prefixUntil(SBuf &returnedToken, const CharacterSet &delimiters, SBuf::size_type limit)
+{
+    return prefix(returnedToken, delimiters, limit, csDelimiter);
 }
 
 bool
