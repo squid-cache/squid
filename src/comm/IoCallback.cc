@@ -36,7 +36,7 @@ MakeCallbackTable()
     return iocb_table;
 }
 
-}
+} // namespace Comm
 
 Comm::CbEntry &
 Comm::ioCallbacks(const int fd)
