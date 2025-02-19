@@ -195,8 +195,8 @@ aioUnlink(const char *path, AIOCB * callback, void *callback_data)
     dlinkAdd(ctrlp, &ctrlp->node, &used_list);
 }               /* aioUnlink */
 
-int
-aioQueueSize(void)
+size_t
+aioQueueSize()
 {
     return squidaio_ctrl_t::UseCount();
 }

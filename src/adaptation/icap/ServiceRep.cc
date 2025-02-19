@@ -220,7 +220,8 @@ int Adaptation::Icap::ServiceRep::availableConnections() const
 }
 
 // The number of connections which excess the Max-Connections limit
-int Adaptation::Icap::ServiceRep::excessConnections() const
+size_t
+Adaptation::Icap::ServiceRep::excessConnections() const
 {
     if (theMaxConnections < 0)
         return 0;
@@ -228,7 +229,7 @@ int Adaptation::Icap::ServiceRep::excessConnections() const
     // Waiters affect the number of needed connections but a needed
     // connection may still be excessive from Max-Connections p.o.v.
     // so we should not account for waiting transaction needs here.
-    const int debt =  theBusyConns + theIdleConns->count() - theMaxConnections;
+    const int64_t debt =  theBusyConns + theIdleConns->count() - theMaxConnections;
     if (debt > 0)
         return debt;
     else
@@ -583,10 +584,10 @@ void Adaptation::Icap::ServiceRep::handleNewOptions(Adaptation::Icap::Options *n
 
     // XXX: this whole feature bases on the false assumption a service only has one IP
     setMaxConnections();
-    const int excess = excessConnections();
+    const auto excess = excessConnections();
     // if we owe connections and have idle pconns, close the latter
     if (excess && theIdleConns->count() > 0) {
-        const int n = min(excess, theIdleConns->count());
+        const auto n = min(excess, theIdleConns->count());
         debugs(93,5, "closing " << n << " pconns to relief debt");
         theIdleConns->closeN(n);
     }
