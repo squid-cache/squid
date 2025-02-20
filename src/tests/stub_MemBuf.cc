@@ -12,20 +12,20 @@
 #define STUB_API "MemBuf.cc"
 #include "tests/STUB.h"
 
-mb_size_t MemBuf::spaceSize() const STUB_RETVAL(0)
-mb_size_t MemBuf::potentialSpaceSize() const STUB_RETVAL(0)
-void MemBuf::consume(mb_size_t) STUB
-void MemBuf::appended(mb_size_t) STUB
-void MemBuf::truncate(mb_size_t) STUB
-void MemBuf::terminate() STUB
-void MemBuf::init(mb_size_t, mb_size_t) STUB
-void MemBuf::init() STUB
-void MemBuf::clean() STUB
-void MemBuf::reset() STUB
-int MemBuf::isNull() const STUB_RETVAL(1)
-FREE *MemBuf::freeFunc() STUB_RETVAL(nullptr)
-void MemBuf::append(const char *, int) STUB
-void MemBuf::vappendf(const char *, va_list) STUB
+mb_size_t MemBuf::spaceSize() const STUB_RETVAL(0);
+mb_size_t MemBuf::potentialSpaceSize() const STUB_RETVAL(0);
+void MemBuf::consume(mb_size_t) STUB();
+void MemBuf::appended(mb_size_t) STUB();
+void MemBuf::truncate(mb_size_t) STUB();
+void MemBuf::terminate() STUB();
+void MemBuf::init(mb_size_t, mb_size_t) STUB();
+void MemBuf::init() STUB();
+void MemBuf::clean() STUB();
+void MemBuf::reset() STUB();
+int MemBuf::isNull() const STUB_RETVAL(1);
+FREE *MemBuf::freeFunc() STUB_RETVAL(nullptr);
+void MemBuf::append(const char *, int) STUB();
+void MemBuf::vappendf(const char *, va_list) STUB();
 
-void memBufReport(MemBuf *) STUB
+void memBufReport(MemBuf *) STUB();
 

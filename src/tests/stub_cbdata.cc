@@ -12,11 +12,11 @@
 #include "tests/STUB.h"
 
 #include "cbdata.h"
-void *cbdataInternalAlloc(cbdata_type) STUB_RETVAL(nullptr)
-void *cbdataInternalFree(void *) STUB_RETVAL(nullptr)
-void cbdataInternalLock(const void *) STUB
-void cbdataInternalUnlock(const void *) STUB
-int cbdataInternalReferenceDoneValid(void **, void **) STUB_RETVAL(0)
-int cbdataReferenceValid(const void *) STUB_RETVAL(0)
-cbdata_type cbdataInternalAddType(cbdata_type, const char *, int) STUB_RETVAL(CBDATA_UNKNOWN)
+void *cbdataInternalAlloc(cbdata_type) STUB_RETVAL(nullptr);
+void *cbdataInternalFree(void *) STUB_RETVAL(nullptr);
+void cbdataInternalLock(const void *) STUB();
+void cbdataInternalUnlock(const void *) STUB();
+int cbdataInternalReferenceDoneValid(void **, void **) STUB_RETVAL(0);
+int cbdataReferenceValid(const void *) STUB_RETVAL(0);
+cbdata_type cbdataInternalAddType(cbdata_type, const char *, int) STUB_RETVAL(CBDATA_UNKNOWN);
 

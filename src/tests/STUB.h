@@ -31,11 +31,11 @@
 #define stub_fatal(m) { std::cerr<<"FATAL: "<<(m)<<" for use of "<<__func__<<"\n"; exit(EXIT_FAILURE); }
 
 /// macro to stub a void function.
-#define STUB { stub_fatal(STUB_API " required"); }
+#define STUB() { stub_fatal(STUB_API " required"); }
 
 /// macro to stub a void function without a fatal message
 /// Intended for registration pattern APIs where the function result does not matter to the test
-#define STUB_NOP { std::cerr<<"SKIP: "<<STUB_API<<" "<<__func__<<" (not implemented).\n"; }
+#define STUB_NOP() { std::cerr<<"SKIP: "<<STUB_API<<" "<<__func__<<" (not implemented).\n"; }
 
 /// macro to stub a function with return value.
 /// Aborts unit tests requiring its definition with a message about the missing linkage

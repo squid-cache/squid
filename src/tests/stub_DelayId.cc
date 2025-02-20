@@ -21,10 +21,10 @@ DelayId::DelayId(): pool_(0), compositeId(nullptr), markedAsNoDelay(false) {}
 DelayId::~DelayId() {}
 
 void DelayId::delayRead(const AsyncCallPointer &) STUB_NOP
-void BandwidthBucket::refillBucket() STUB
-bool BandwidthBucket::applyQuota(int &, Comm::IoCallback *) STUB_RETVAL(false)
-BandwidthBucket *BandwidthBucket::SelectBucket(fde *) STUB_RETVAL(nullptr)
-void BandwidthBucket::reduceBucket(const int) STUB
+void BandwidthBucket::refillBucket() STUB();
+bool BandwidthBucket::applyQuota(int &, Comm::IoCallback *) STUB_RETVAL(false);
+BandwidthBucket *BandwidthBucket::SelectBucket(fde *) STUB_RETVAL(nullptr);
+void BandwidthBucket::reduceBucket(const int) STUB();
 
 #endif /* USE_DELAY_POOLS */
 

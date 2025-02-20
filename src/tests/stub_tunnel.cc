@@ -16,7 +16,7 @@
 #include "tests/STUB.h"
 class ClientHttpRequest;
 
-void tunnelStart(ClientHttpRequest *) STUB
+void tunnelStart(ClientHttpRequest *) STUB();
 
-void switchToTunnel(HttpRequest *, const Comm::ConnectionPointer &, const Comm::ConnectionPointer &, const SBuf &) STUB
+void switchToTunnel(HttpRequest *, const Comm::ConnectionPointer &, const Comm::ConnectionPointer &, const SBuf &) STUB();
 

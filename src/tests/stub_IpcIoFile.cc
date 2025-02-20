@@ -15,7 +15,7 @@
 
 #include "tests/STUB.h"
 
-void IpcIoFile::StatQueue(std::ostream &) STUB
+void IpcIoFile::StatQueue(std::ostream &) STUB();
 
 #endif /* HAVE_DISKIO_MODULE_IPCIO */
 

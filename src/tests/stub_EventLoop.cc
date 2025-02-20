@@ -18,5 +18,5 @@ EventLoop::EventLoop(): errcount(0), last_loop(false), timeService(nullptr),
     primaryEngine(nullptr), loop_delay(0), error(false), runOnceResult(false)
     STUB_NOP
 
-    void EventLoop::registerEngine(AsyncEngine *) STUB
+    void EventLoop::registerEngine(AsyncEngine *) STUB();
 

@@ -12,6 +12,6 @@
 #define STUB_API "wordlist.cc"
 #include "tests/STUB.h"
 
-const char *wordlistAdd(wordlist **, const char *) STUB_RETVAL(nullptr)
-void wordlistDestroy(wordlist **) STUB
+const char *wordlistAdd(wordlist **, const char *) STUB_RETVAL(nullptr);
+void wordlistDestroy(wordlist **) STUB();
 

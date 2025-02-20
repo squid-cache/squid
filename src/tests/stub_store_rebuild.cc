@@ -19,8 +19,8 @@
 #define STUB_API "stub_store_rebuild.cc"
 #include "tests/STUB.h"
 
-void storeRebuildProgress(int, int, int) STUB
-bool storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, StoreRebuildData &, uint64_t) STUB_RETVAL(false)
+void storeRebuildProgress(int, int, int) STUB();
+bool storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, StoreRebuildData &, uint64_t) STUB_RETVAL(false);
 
 void StoreRebuildData::updateStartTime(const timeval &dirStartTime)
 {
@@ -47,5 +47,5 @@ storeRebuildLoadEntry(int fd, int, MemBuf &buf, StoreRebuildData &)
     return true;
 }
 
-void Progress::print(std::ostream &) const STUB
+void Progress::print(std::ostream &) const STUB();
 

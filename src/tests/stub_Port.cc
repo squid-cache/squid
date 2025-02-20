@@ -14,6 +14,6 @@
 
 const char Ipc::strandAddrLabel[] = "-kid";
 
-String Ipc::Port::MakeAddr(char const*, int) STUB_RETVAL("")
-String Ipc::Port::CoordinatorAddr() STUB_RETVAL("")
+String Ipc::Port::MakeAddr(char const*, int) STUB_RETVAL("");
+String Ipc::Port::CoordinatorAddr() STUB_RETVAL("");
 

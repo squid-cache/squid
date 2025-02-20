@@ -15,16 +15,16 @@
 
 // #include "DiskIO/DiskFile.h"
 #include "DiskIO/DiskIOModule.h"
-void DiskIOModule::SetupAllModules() STUB
-void DiskIOModule::ModuleAdd(DiskIOModule &) STUB
-void DiskIOModule::FreeAllModules() STUB
-DiskIOModule *DiskIOModule::Find(char const *) STUB_RETVAL(nullptr)
-DiskIOModule *DiskIOModule::FindDefault() STUB_RETVAL(nullptr)
+void DiskIOModule::SetupAllModules() STUB();
+void DiskIOModule::ModuleAdd(DiskIOModule &) STUB();
+void DiskIOModule::FreeAllModules() STUB();
+DiskIOModule *DiskIOModule::Find(char const *) STUB_RETVAL(nullptr);
+DiskIOModule *DiskIOModule::FindDefault() STUB_RETVAL(nullptr);
 std::vector<DiskIOModule*> const &DiskIOModule::Modules() STUB_RETSTATREF(std::vector<DiskIOModule*>)
 DiskIOModule::DiskIOModule() {STUB}
 DiskIOModule::DiskIOModule(DiskIOModule const &) {STUB}
-DiskIOModule &DiskIOModule::operator=(DiskIOModule const&) STUB
-void DiskIOModule::RegisterAllModulesWithCacheManager() STUB
+DiskIOModule &DiskIOModule::operator=(DiskIOModule const&) STUB();
+void DiskIOModule::RegisterAllModulesWithCacheManager() STUB();
 
 // #include "DiskIO/DiskIOStrategy.h"
 // #include "DiskIO/DiskIORequestor.h"

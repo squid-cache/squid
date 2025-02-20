@@ -15,5 +15,5 @@
 
 class HttpRequest;
 class HttpReply;
-SBuf httpMakeVaryMark(HttpRequest *, HttpReply const *) STUB_RETVAL(SBuf())
+SBuf httpMakeVaryMark(HttpRequest *, HttpReply const *) STUB_RETVAL(SBuf());
 

@@ -12,5 +12,5 @@
 #define STUB_API "internal.cc"
 #include "tests/STUB.h"
 
-char *internalLocalUri(const char *, const SBuf &) STUB_RETVAL(nullptr)
+char *internalLocalUri(const char *, const SBuf &) STUB_RETVAL(nullptr);
 

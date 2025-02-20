@@ -13,12 +13,12 @@
 
 #include "ipc/Forwarder.h"
 Ipc::Forwarder::Forwarder(Request::Pointer, double): AsyncJob("Ipc::Forwarder"), timeout(0) {STUB}
-Ipc::Forwarder::~Forwarder() STUB
-void Ipc::Forwarder::start() STUB
-bool Ipc::Forwarder::doneAll() const STUB_RETVAL(false)
-void Ipc::Forwarder::swanSong() STUB
-void Ipc::Forwarder::callException(const std::exception &) STUB
-void Ipc::Forwarder::handleError() STUB
-void Ipc::Forwarder::handleTimeout() STUB
-void Ipc::Forwarder::handleException(const std::exception &) STUB
+Ipc::Forwarder::~Forwarder() STUB();
+void Ipc::Forwarder::start() STUB();
+bool Ipc::Forwarder::doneAll() const STUB_RETVAL(false);
+void Ipc::Forwarder::swanSong() STUB();
+void Ipc::Forwarder::callException(const std::exception &) STUB();
+void Ipc::Forwarder::handleError() STUB();
+void Ipc::Forwarder::handleTimeout() STUB();
+void Ipc::Forwarder::handleException(const std::exception &) STUB();
 

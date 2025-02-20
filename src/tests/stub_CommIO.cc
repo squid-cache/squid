@@ -17,9 +17,9 @@ bool CommIO::DoneSignalled = false;
 int CommIO::DoneFD = -1;
 int CommIO::DoneReadFD = -1;
 
-void CommIO::ResetNotifications() STUB
-void CommIO::Initialise() STUB
-void CommIO::NotifyIOClose() STUB
-void CommIO::NULLFDHandler(int, void *) STUB
-void CommIO::FlushPipe() STUB
+void CommIO::ResetNotifications() STUB();
+void CommIO::Initialise() STUB();
+void CommIO::NotifyIOClose() STUB();
+void CommIO::NULLFDHandler(int, void *) STUB();
+void CommIO::FlushPipe() STUB();
 

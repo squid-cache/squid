@@ -12,7 +12,7 @@
 #define STUB_API "stub_main_cc.cc"
 #include "tests/STUB.h"
 
-void shut_down(int) STUB
-void reconfigure(int) STUB
-void rotate_logs(int) STUB
+void shut_down(int) STUB();
+void reconfigure(int) STUB();
+void rotate_logs(int) STUB();
 

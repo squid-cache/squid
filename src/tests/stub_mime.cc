@@ -13,6 +13,6 @@
 #define STUB_API "mime.cc"
 #include "tests/STUB.h"
 
-size_t headersEnd(const char *, size_t, bool &) STUB_RETVAL(0)
-size_t headersEnd(const SBuf &, bool &) STUB_RETVAL(0)
+size_t headersEnd(const char *, size_t, bool &) STUB_RETVAL(0);
+size_t headersEnd(const SBuf &, bool &) STUB_RETVAL(0);
 

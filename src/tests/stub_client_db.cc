@@ -12,16 +12,16 @@
 #include "tests/STUB.h"
 
 #include "client_db.h"
-void clientdbUpdate(const Ip::Address &, const LogTags &, AnyP::ProtocolType, size_t) STUB
-int clientdbCutoffDenied(const Ip::Address &) STUB_RETVAL(-1)
-void clientdbDump(StoreEntry *) STUB
-int clientdbEstablished(const Ip::Address &, int) STUB_RETVAL(-1)
+void clientdbUpdate(const Ip::Address &, const LogTags &, AnyP::ProtocolType, size_t) STUB();
+int clientdbCutoffDenied(const Ip::Address &) STUB_RETVAL(-1);
+void clientdbDump(StoreEntry *) STUB();
+int clientdbEstablished(const Ip::Address &, int) STUB_RETVAL(-1);
 #if USE_DELAY_POOLS
-void clientdbSetWriteLimiter(ClientInfo *, const int,const double,const double) STUB
-ClientInfo *clientdbGetInfo(const Ip::Address &) STUB_RETVAL(nullptr)
+void clientdbSetWriteLimiter(ClientInfo *, const int,const double,const double) STUB();
+ClientInfo *clientdbGetInfo(const Ip::Address &) STUB_RETVAL(nullptr);
 #endif
 #if SQUID_SNMP
-Ip::Address *client_entry(Ip::Address *) STUB_RETVAL(nullptr)
-variable_list *snmp_meshCtblFn(variable_list *, snint *) STUB_RETVAL(nullptr)
+Ip::Address *client_entry(Ip::Address *) STUB_RETVAL(nullptr);
+variable_list *snmp_meshCtblFn(variable_list *, snint *) STUB_RETVAL(nullptr);
 #endif
 

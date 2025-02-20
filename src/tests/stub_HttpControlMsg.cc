@@ -12,6 +12,6 @@
 #include "tests/STUB.h"
 
 #include "HttpControlMsg.h"
-void HttpControlMsgSink::wroteControlMsg(CommIoCbParams const&) STUB
-void HttpControlMsgSink::doneWithControlMsg() STUB
+void HttpControlMsgSink::wroteControlMsg(CommIoCbParams const&) STUB();
+void HttpControlMsgSink::doneWithControlMsg() STUB();
 

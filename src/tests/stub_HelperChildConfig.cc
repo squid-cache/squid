@@ -39,7 +39,7 @@ Helper::ChildConfig::ChildConfig(const unsigned int m):
     defaultQueueSize(true)
 {}
 
-int Helper::ChildConfig::needNew() const STUB_RETVAL(0)
-void Helper::ChildConfig::parseConfig() STUB
-Helper::ChildConfig & Helper::ChildConfig::updateLimits(const Helper::ChildConfig &) STUB_RETVAL(*this)
+int Helper::ChildConfig::needNew() const STUB_RETVAL(0);
+void Helper::ChildConfig::parseConfig() STUB();
+Helper::ChildConfig & Helper::ChildConfig::updateLimits(const Helper::ChildConfig &) STUB_RETVAL(*this);
 

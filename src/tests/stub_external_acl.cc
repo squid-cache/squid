@@ -14,14 +14,14 @@
 #include "ExternalACL.h"
 #include "ExternalACLEntry.h"
 
-void parse_externalAclHelper(external_acl ** ) STUB
-void dump_externalAclHelper(StoreEntry *, const char *, const external_acl *) STUB
-void free_externalAclHelper(external_acl **) STUB
-void ACLExternal::parse() STUB
-bool ACLExternal::valid () const STUB_RETVAL(false)
-bool ACLExternal::empty () const STUB_RETVAL(false)
-int ACLExternal::match(ACLChecklist *) STUB_RETVAL(0)
-SBufList ACLExternal::dump() const STUB_RETVAL(SBufList())
+void parse_externalAclHelper(external_acl ** ) STUB();
+void dump_externalAclHelper(StoreEntry *, const char *, const external_acl *) STUB();
+void free_externalAclHelper(external_acl **) STUB();
+void ACLExternal::parse() STUB();
+bool ACLExternal::valid () const STUB_RETVAL(false);
+bool ACLExternal::empty () const STUB_RETVAL(false);
+int ACLExternal::match(ACLChecklist *) STUB_RETVAL(0);
+SBufList ACLExternal::dump() const STUB_RETVAL(SBufList());
 void externalAclInit(void) STUB_NOP
 void externalAclShutdown(void) STUB_NOP
 

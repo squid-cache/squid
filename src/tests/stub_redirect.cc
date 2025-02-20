@@ -12,8 +12,8 @@
 #define STUB_API "redirect.cc"
 #include "tests/STUB.h"
 
-void redirectInit(void) STUB
-void redirectShutdown(void) STUB
-void redirectStart(ClientHttpRequest *, HLPCB *, void *) STUB
-void storeIdStart(ClientHttpRequest *, HLPCB *, void *) STUB
+void redirectInit(void) STUB();
+void redirectShutdown(void) STUB();
+void redirectStart(ClientHttpRequest *, HLPCB *, void *) STUB();
+void storeIdStart(ClientHttpRequest *, HLPCB *, void *) STUB();
 

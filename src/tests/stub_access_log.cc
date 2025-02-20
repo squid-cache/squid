@@ -12,11 +12,11 @@
 #define STUB_API "access.log.cc"
 #include "tests/STUB.h"
 
-HierarchyLogEntry::HierarchyLogEntry() STUB
+HierarchyLogEntry::HierarchyLogEntry() STUB();
 
-void HierarchyLogEntry::notePeerRead() STUB
-void HierarchyLogEntry::notePeerWrite() STUB
-bool HierarchyLogEntry::peerResponseTime(struct timeval &) STUB_RETVAL(false)
+void HierarchyLogEntry::notePeerRead() STUB();
+void HierarchyLogEntry::notePeerWrite() STUB();
+bool HierarchyLogEntry::peerResponseTime(struct timeval &) STUB_RETVAL(false);
 
 ping_data::ping_data() :
     n_sent(0),

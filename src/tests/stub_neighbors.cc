@@ -15,11 +15,11 @@
 #include "neighbors.h"
 
 void
-peerConnClosed(CachePeer *) STUB
-CachePeer *findCachePeerByName(const char *) STUB_RETVAL(nullptr)
+peerConnClosed(CachePeer *) STUB();
+CachePeer *findCachePeerByName(const char *) STUB_RETVAL(nullptr);
 
 time_t
-FwdState::ForwardTimeout(const time_t) STUB_RETVAL(0)
+FwdState::ForwardTimeout(const time_t) STUB_RETVAL(0);
 bool
-FwdState::EnoughTimeToReForward(const time_t) STUB_RETVAL(false)
+FwdState::EnoughTimeToReForward(const time_t) STUB_RETVAL(false);
 

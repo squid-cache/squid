@@ -12,5 +12,5 @@
 #define STUB_API "UdsOp.cc"
 #include "tests/STUB.h"
 
-void Ipc::SendMessage(const String&, const TypedMsgHdr&) STUB
+void Ipc::SendMessage(const String&, const TypedMsgHdr&) STUB();
 

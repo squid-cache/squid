@@ -25,9 +25,9 @@ int Debug::rotateNumber = 0;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::override_X = 0;
 bool Debug::log_syslog = false;
-void Debug::ForceAlert() STUB
+void Debug::ForceAlert() STUB();
 
-void ResyncDebugLog(FILE *) STUB
+void ResyncDebugLog(FILE *) STUB();
 
 FILE *
 DebugStream()
@@ -71,8 +71,8 @@ Debug::Extra(std::ostream &os)
     return os;
 }
 
-bool Debug::StderrEnabled() STUB_RETVAL(false)
-void Debug::PrepareToDie() STUB
+bool Debug::StderrEnabled() STUB_RETVAL(false);
+void Debug::PrepareToDie() STUB();
 
 void
 Debug::parseOptions(char const *)

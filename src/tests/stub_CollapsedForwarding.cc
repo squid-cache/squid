@@ -12,7 +12,7 @@
 #define STUB_API "CollapsedForwarding.cc"
 #include "tests/STUB.h"
 
-void CollapsedForwarding::Broadcast(StoreEntry const&, const bool) STUB
-void CollapsedForwarding::Broadcast(const sfileno, const bool) STUB
-void CollapsedForwarding::StatQueue(std::ostream &) STUB
+void CollapsedForwarding::Broadcast(StoreEntry const&, const bool) STUB();
+void CollapsedForwarding::Broadcast(const sfileno, const bool) STUB();
+void CollapsedForwarding::StatQueue(std::ostream &) STUB();
 

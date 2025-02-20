@@ -14,10 +14,10 @@
 
 bool Dns::ResolveClientAddressesAsap = false;
 
-void fqdncache_init(void) STUB
-void fqdnStats(StoreEntry *) STUB
-void fqdncache_restart(void) STUB
-void fqdncache_purgelru(void *) STUB
-void fqdncacheAddEntryFromHosts(char *, SBufList &) STUB
-const char *fqdncache_gethostbyaddr(const Ip::Address &, int) STUB_RETVAL(nullptr)
-void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *) STUB
+void fqdncache_init(void) STUB();
+void fqdnStats(StoreEntry *) STUB();
+void fqdncache_restart(void) STUB();
+void fqdncache_purgelru(void *) STUB();
+void fqdncacheAddEntryFromHosts(char *, SBufList &) STUB();
+const char *fqdncache_gethostbyaddr(const Ip::Address &, int) STUB_RETVAL(nullptr);
+void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *) STUB();

@@ -19,7 +19,7 @@
 void *Mem::AllocatorProxy::alloc() {return xmalloc(64*1024);}
 void Mem::AllocatorProxy::freeOne(void *address) {xfree(address);}
 int Mem::AllocatorProxy::inUseCount() const {return 0;}
-size_t Mem::AllocatorProxy::getStats(PoolStats &) STUB_RETVAL(0)
+size_t Mem::AllocatorProxy::getStats(PoolStats &) STUB_RETVAL(0);
 
 #include "mem/forward.h"
 void Mem::Init() STUB_NOP
@@ -28,10 +28,10 @@ void Mem::CleanIdlePools(void *) STUB_NOP
 void Mem::Report(std::ostream &) STUB_NOP
 void Mem::PoolReport(const PoolStats *, const PoolMeter *, std::ostream &) STUB_NOP
 //const size_t squidSystemPageSize = 4096;
-void memClean(void) STUB
-void memInitModule(void) STUB
-void memCleanModule(void) STUB
-void memConfigure(void) STUB
+void memClean(void) STUB();
+void memInitModule(void) STUB();
+void memCleanModule(void) STUB();
+void memConfigure(void) STUB();
 
 void *memAllocate(mem_type)
 {
@@ -64,16 +64,16 @@ void memFree(void *p, int) {xfree(p);}
 void memFreeBuf(size_t, void *buf) {xfree(buf);}
 static void cxx_xfree(void * ptr) {xfree(ptr);}
 FREE *memFreeBufFunc(size_t) {return cxx_xfree;}
-int memInUse(mem_type) STUB_RETVAL(0)
+int memInUse(mem_type) STUB_RETVAL(0);
 
 #include "mem/Pool.h"
 static MemPools tmpMemPools;
 MemPools &MemPools::GetInstance() {return tmpMemPools;}
 MemPools::MemPools() STUB_NOP
-void MemPools::flushMeters() STUB
+void MemPools::flushMeters() STUB();
 Mem::Allocator * MemPools::create(const char *, size_t) STUB_RETVAL(nullptr);
-void MemPools::clean(time_t) STUB
-void MemPools::setDefaultPoolChunking(bool const &) STUB
+void MemPools::clean(time_t) STUB();
+void MemPools::setDefaultPoolChunking(bool const &) STUB();
 
 #include "mem/Stats.h"
-size_t Mem::GlobalStats(PoolStats &) STUB_RETVAL(0)
+size_t Mem::GlobalStats(PoolStats &) STUB_RETVAL(0);
