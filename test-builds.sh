@@ -71,9 +71,7 @@ logtee() {
     local layer=$2
     case $verbose in
     yes)
-        echo "::group::$layer output" # github collapsible section
         tee $1
-        echo "::endgroup::"
         ;;
     progress)
         tee $1 | awk '{printf "."; n++; if (!(n % 80)) print "" } END {print ""}'
