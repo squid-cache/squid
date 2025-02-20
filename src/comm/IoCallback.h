@@ -58,7 +58,7 @@ private:
     void reset();
 };
 
-/// Entry nodes for the IO callback table: iocb_table
+/// Entry nodes for the IO callback table.
 /// Keyed off the FD which the event applies to.
 class CbEntry
 {
@@ -70,13 +70,10 @@ public:
 
 /// Table of scheduled IO events which have yet to be processed ??
 /// Callbacks which might be scheduled in future are stored in fd_table.
-extern CbEntry *iocb_table;
+CbEntry &ioCallbacks(int fd);
 
-void CallbackTableInit();
-void CallbackTableDestruct();
-
-#define COMMIO_FD_READCB(fd)    (&Comm::iocb_table[(fd)].readcb)
-#define COMMIO_FD_WRITECB(fd)   (&Comm::iocb_table[(fd)].writecb)
+#define COMMIO_FD_READCB(fd) (&(Comm::ioCallbacks(fd).readcb))
+#define COMMIO_FD_WRITECB(fd) (&(Comm::ioCallbacks(fd).writecb))
 
 } // namespace Comm
 

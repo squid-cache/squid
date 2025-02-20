@@ -1152,9 +1152,6 @@ comm_init(void)
 {
     assert(fd_table);
 
-    // make sure the IO pending callback table exists
-    Comm::CallbackTableInit();
-
     /* XXX account fd_table */
     /* Keep a few file descriptors free so that we don't run out of FD's
      * after accepting a client but before it opens a socket or a file.
@@ -1172,8 +1169,6 @@ comm_exit(void)
 {
     delete TheHalfClosed;
     TheHalfClosed = nullptr;
-
-    Comm::CallbackTableDestruct();
 }
 
 #if USE_DELAY_POOLS
