@@ -235,7 +235,7 @@ jobs:
             # until we remove GNUisms from our grep commands,
             # shadow system `grep` with `ggrep` installed/linked earlier
             export PATH="$HOME/bin:$PATH"
-            ./test-builds.sh
+            ./test-builds.sh --verbose
 
       - name: Publish build logs
         if: success() || failure()
