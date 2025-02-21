@@ -68,7 +68,6 @@ while [ $# -ge 1 ]; do
 done
 
 logtee() {
-    local layer=$2
     case $verbose in
     yes)
         tee $1
@@ -112,7 +111,7 @@ buildtest() {
 
 	# log the result for the outer script to notice
 	echo "buildtest.sh result is $result";
-    } 2>&1 | logtee ${log} ${layer}
+    } 2>&1 | logtee ${log}
 
     result=1 # failure by default
     if grep -q '^buildtest.sh result is 0$' ${log}; then
