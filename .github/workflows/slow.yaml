@@ -72,7 +72,7 @@ jobs:
 
       - name: Run test-builds
         id: test-builds
-        run: ./test-builds.sh --verbose ${{ matrix.layer.name }}
+        run: ./test-builds.sh ${{ matrix.layer.name }}
 
       - name: Publish build logs
         if: success() || failure()
@@ -130,7 +130,7 @@ jobs:
           diff -u $editable.bak $editable || true
           echo "::endgroup::"
 
-          ./test-builds.sh --verbose
+          ./test-builds.sh
 
       - name: Publish build logs
         if: success() || failure()
@@ -177,7 +177,7 @@ jobs:
 
           run: |
             export MAKE=gmake
-            ./test-builds.sh --verbose
+            ./test-builds.sh
 
       - name: Publish build logs
         if: success() || failure()
@@ -235,7 +235,7 @@ jobs:
             # until we remove GNUisms from our grep commands,
             # shadow system `grep` with `ggrep` installed/linked earlier
             export PATH="$HOME/bin:$PATH"
-            ./test-builds.sh --verbose
+            ./test-builds.sh
 
       - name: Publish build logs
         if: success() || failure()

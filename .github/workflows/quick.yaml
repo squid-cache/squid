@@ -148,7 +148,7 @@ jobs:
           key: ${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
 
       - name: Run build on Linux
-        run: ./test-builds.sh --verbose ${{ matrix.layer.name }}
+        run: ./test-builds.sh ${{ matrix.layer.name }}
 
       - name: Publish build logs
         if: success() || failure()
@@ -181,7 +181,7 @@ jobs:
         uses: github/codeql-action/init@v3
 
       - name: Build Squid
-        run: ./test-builds.sh --verbose ./test-suite/buildtests/layer-02-maximus.opts
+        run: ./test-builds.sh ./test-suite/buildtests/layer-02-maximus.opts
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
