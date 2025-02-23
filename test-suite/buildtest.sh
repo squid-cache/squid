@@ -22,10 +22,14 @@ config="${2}"
 if ${PKG_CONFIG:-pkg-config} --exists 'libecap >= 1.0 libecap < 1.1' 2>/dev/null
 then
     CONFIGURE_FLAGS_MAYBE_ENABLE_ECAP="--enable-ecap"
+else
+    echo "WARNING: eCAP testing disabled" >&2
 fi
 if ${PKG_CONFIG:-pkg-config} --exists valgrind 2>/dev/null
 then
     CONFIGURE_FLAGS_MAYBE_ENABLE_VALGRIND="--with-valgrind-debug"
+else
+    echo "WARNING: Valgrind testing disabled" >&2
 fi
 
 # cache_file may be set by environment variable
