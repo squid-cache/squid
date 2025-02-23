@@ -37,7 +37,7 @@
 #include <sys/stat.h>
 #endif
 
-int Fs::Ufs::UFSSwapDir::NumberOfUFSDirs = 0;
+size_t Fs::Ufs::UFSSwapDir::NumberOfUFSDirs = 0;
 int *Fs::Ufs::UFSSwapDir::UFSDirToGlobalDirMapping = nullptr;
 
 class UFSCleanLog : public SwapDir::CleanLog
@@ -757,8 +757,8 @@ Fs::Ufs::UFSSwapDir::closeLog()
     if (swaplog_fd < 0) /* not open */
         return;
 
+    assert(NumberOfUFSDirs > 0);
     --NumberOfUFSDirs;
-    assert(NumberOfUFSDirs >= 0);
     if (!NumberOfUFSDirs)
         safe_free(UFSDirToGlobalDirMapping);
 
@@ -1039,9 +1039,8 @@ int
 Fs::Ufs::UFSSwapDir::HandleCleanEvent()
 {
     static int swap_index = 0;
-    int i;
     int j = 0;
-    int n = 0;
+    size_t n = 0;
 
     if (!NumberOfUFSDirs)
         return 0; // probably in the middle of reconfiguration
@@ -1054,7 +1053,7 @@ Fs::Ufs::UFSSwapDir::HandleCleanEvent()
          */
         UFSDirToGlobalDirMapping = (int *)xcalloc(NumberOfUFSDirs, sizeof(*UFSDirToGlobalDirMapping));
 
-        for (i = 0, n = 0; i < Config.cacheSwap.n_configured; ++i) {
+        for (size_t i = 0; i < Config.cacheSwap.n_configured; ++i) {
             /* This is bogus, the controller should just clean each instance once */
             sd = dynamic_cast <SwapDir *>(INDEXSD(i));
 
@@ -1117,7 +1116,8 @@ Fs::Ufs::UFSSwapDir::FilenoBelongsHere(int fn, int F0, int F1, int F2)
     int D1, D2;
     int L1, L2;
     int filn = fn;
-    assert(F0 < Config.cacheSwap.n_configured);
+    assert(F0 >= 0);
+    assert(static_cast<size_t>(F0) < Config.cacheSwap.n_configured);
     assert (UFSSwapDir::IsUFSDir (dynamic_cast<SwapDir *>(INDEXSD(F0))));
     UFSSwapDir *sd = dynamic_cast<UFSSwapDir *>(INDEXSD(F0));
 
