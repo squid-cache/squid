@@ -60,8 +60,8 @@ public:
 
 private:
     /* migration logic */
-    SwapDir *store(int const x) const;
-    static SwapDir &Dir(int const idx);
+    SwapDir *store(size_t index) const;
+    static SwapDir &Dir(size_t index);
 
     int64_t largestMinimumObjectSize; ///< maximum of all Disk::minObjectSize()s
     int64_t largestMaximumObjectSize; ///< maximum of all Disk::maxObjectSize()s
