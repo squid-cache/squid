@@ -174,11 +174,13 @@ public:
     int64_t udec64(const char *description, SBuf::size_type limit = SBuf::npos);
 
 protected:
-    using SearchMethod = decltype(&SBuf::findFirstOf);
+    /// SBuf searches supported by prefix_()
+    using SearchAlgorithm = enum { findFirstOf, findFirstNotOf };
 
     /// Code shared by prefix() and prefixUntil() methods.
-    /// \param searchMethod specifies how to scan buf_ prefix using the given CharacterSet
-    bool prefix_(SBuf &returnedToken, SBuf::size_type limit, SearchMethod searchMethod, const CharacterSet &);
+    /// \param searchAlgorithm specifies how to scan buf_ prefix using the given CharacterSet
+    /// \param chars searchAlgorithm parameter -- permitted token or delimiter characters
+    bool prefix_(SBuf &returnedToken, SBuf::size_type limit, SearchAlgorithm searchAlgorithm, const CharacterSet &chars);
     SBuf consume(const SBuf::size_type n);
     SBuf::size_type success(const SBuf::size_type n);
     SBuf consumeTrailing(const SBuf::size_type n);
