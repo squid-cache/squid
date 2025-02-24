@@ -70,14 +70,13 @@ public:
      */
     bool prefix(SBuf &returnedToken, const CharacterSet &tokenChars, SBuf::size_type limit = SBuf::npos);
 
-    /** Extracts all sequential non-delimiter characters up to an optional length limit.
-     *
-     *  Note that Tokenizer cannot tell whether the prefix will
-     *  continue when/if more input data becomes available later.
-     *
-     * \retval true one or more characters were found, the sequence (string) is placed in returnedToken
-     * \retval false no characters from the permitted set were found
-     */
+    /// Extracts all sequential non-delimiter characters up to an optional
+    /// length limit. Any subsequent characters are left intact. If no delimiter
+    /// characters were found, and the length limit has not been reached, then
+    /// the prefix may continue when/if more input data becomes available later!
+    ///
+    /// \retval true if one or more permitted characters were found
+    /// \param returnedToken is used to store permitted characters found
     bool prefixUntil(SBuf &returnedToken, const CharacterSet &delimiters, SBuf::size_type limit = SBuf::npos);
 
     /** Extracts all sequential permitted characters up to an optional length limit.
