@@ -76,12 +76,12 @@ Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 }
 
 bool
-Parser::Tokenizer::prefix_(SBuf &returnedToken, const SBuf::size_type limit, const SearchAlgorithm searchAlgorithm, const CharacterSet &charSet)
+Parser::Tokenizer::prefix_(SBuf &returnedToken, const SBuf::size_type limit, const SearchAlgorithm searchAlgorithm, const CharacterSet &chars)
 {
     const auto str = buf_.substr(0, limit);
-    auto prefixLen = (searchAlgorithm == findFirstOf) ? str.findFirstOf(charSet) : str.findFirstNotOf(charSet);
+    auto prefixLen = (searchAlgorithm == findFirstOf) ? str.findFirstOf(chars) : str.findFirstNotOf(chars);
     if (prefixLen == 0) {
-        debugs(24, 8, "empty needle with set=" << charSet.name);
+        debugs(24, 8, "empty needle with set=" << chars.name);
         return false;
     }
     if (prefixLen == SBuf::npos && !str.length()) {
