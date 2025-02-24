@@ -11,9 +11,12 @@
  * is not available to be tested.
  */
 
- int main() {
+#include "squid.h"
+
+int main() {
     /* 77 is a magic return code, informing Makefile's test harness
      * that a test was skipped
      */
     return 77;
- }
+}
+
