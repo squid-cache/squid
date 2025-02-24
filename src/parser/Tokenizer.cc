@@ -76,10 +76,10 @@ Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 }
 
 bool
-Parser::Tokenizer::prefix_(SBuf &returnedToken, const CharacterSet &charSet, const SBuf::size_type limit, const CharacterSetType csType)
+Parser::Tokenizer::prefix_(SBuf &returnedToken, const SBuf::size_type limit, const SearchMethod searchMethod, const CharacterSet &charSet)
 {
-    const auto str = buf_.substr(0,limit);
-    auto prefixLen = (csType == csDelimiter) ? str.findFirstOf(charSet) : str.findFirstNotOf(charSet);
+    const auto str = buf_.substr(0, limit);
+    auto prefixLen = (str.*searchMethod)(charSet, 0);
     if (prefixLen == 0) {
         debugs(24, 8, "empty needle with set=" << charSet.name);
         return false;
@@ -100,7 +100,7 @@ Parser::Tokenizer::prefix_(SBuf &returnedToken, const CharacterSet &charSet, con
 bool
 Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBuf::size_type limit)
 {
-    return prefix_(returnedToken, tokenChars, limit, csToken);
+    return prefix_(returnedToken, limit, &SBuf::findFirstNotOf, tokenChars);
 }
 
 SBuf
@@ -111,7 +111,7 @@ Parser::Tokenizer::prefix(const char *description, const CharacterSet &tokenChar
 
     SBuf result;
 
-    if (!prefix_(result, tokenChars, limit, csToken))
+    if (!prefix_(result, limit, &SBuf::findFirstNotOf, tokenChars))
         throw TexcHere(ToSBuf("cannot parse ", description));
 
     if (atEnd())
@@ -123,7 +123,7 @@ Parser::Tokenizer::prefix(const char *description, const CharacterSet &tokenChar
 bool
 Parser::Tokenizer::prefixUntil(SBuf &returnedToken, const CharacterSet &delimiters, SBuf::size_type limit)
 {
-    return prefix_(returnedToken, delimiters, limit, csDelimiter);
+    return prefix_(returnedToken, limit, &SBuf::findFirstOf, delimiters);
 }
 
 bool
