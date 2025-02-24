@@ -81,14 +81,14 @@ Parser::Tokenizer::prefix_(SBuf &returnedToken, const CharacterSet &charSet, con
     const auto str = buf_.substr(0,limit);
     auto prefixLen = (csType == csDelimiter) ? str.findFirstOf(charSet) : str.findFirstNotOf(charSet);
     if (prefixLen == 0) {
-        debugs(24, 8, "no prefix for set " << charSet.name);
+        debugs(24, 8, "empty needle with set=" << charSet.name);
         return false;
     }
-    if (prefixLen == SBuf::npos && (atEnd() || limit == 0)) {
-        debugs(24, 8, "insufficient input or zero limit while looking for prefix");
+    if (prefixLen == SBuf::npos && !str.length()) {
+        debugs(24, 8, "empty haystack with limit=" << limit);
         return false;
     }
-    if (prefixLen == SBuf::npos && limit > 0) {
+    if (prefixLen == SBuf::npos) {
         debugs(24, 8, "whole haystack matched");
         prefixLen = limit;
     }
