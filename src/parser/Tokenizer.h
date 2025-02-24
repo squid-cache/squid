@@ -180,6 +180,7 @@ protected:
     /// \param searchAlgorithm specifies how to scan buf_ prefix using the given CharacterSet
     /// \param chars searchAlgorithm parameter -- permitted token or delimiter characters
     bool prefix_(SBuf &returnedToken, SBuf::size_type limit, SearchAlgorithm searchAlgorithm, const CharacterSet &chars);
+
     SBuf consume(const SBuf::size_type n);
     SBuf::size_type success(const SBuf::size_type n);
     SBuf consumeTrailing(const SBuf::size_type n);
