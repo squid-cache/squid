@@ -176,9 +176,9 @@ public:
 protected:
     enum CharacterSetType { csDelimiter, csToken };
 
-    /// prefix() implementation
+    /// Code shared by prefix() and prefixUntil() methods.
     /// \param csType determines whether the passed CharacterSet specifies delimiters or allowed token symbols
-    bool prefix(SBuf &returnedToken, const CharacterSet &, SBuf::size_type limit, CharacterSetType csType);
+    bool prefix_(SBuf &returnedToken, const CharacterSet &, SBuf::size_type limit, CharacterSetType csType);
     SBuf consume(const SBuf::size_type n);
     SBuf::size_type success(const SBuf::size_type n);
     SBuf consumeTrailing(const SBuf::size_type n);

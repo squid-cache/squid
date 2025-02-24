@@ -76,7 +76,7 @@ Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 }
 
 bool
-Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &charSet, const SBuf::size_type limit, const CharacterSetType csType)
+Parser::Tokenizer::prefix_(SBuf &returnedToken, const CharacterSet &charSet, const SBuf::size_type limit, const CharacterSetType csType)
 {
     const auto str = buf_.substr(0,limit);
     auto prefixLen = (csType == csDelimiter) ? str.findFirstOf(charSet) : str.findFirstNotOf(charSet);
@@ -100,7 +100,7 @@ Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &charSet, cons
 bool
 Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBuf::size_type limit)
 {
-    return prefix(returnedToken, tokenChars, limit, csToken);
+    return prefix_(returnedToken, tokenChars, limit, csToken);
 }
 
 SBuf
@@ -111,7 +111,7 @@ Parser::Tokenizer::prefix(const char *description, const CharacterSet &tokenChar
 
     SBuf result;
 
-    if (!prefix(result, tokenChars, limit, csToken))
+    if (!prefix_(result, tokenChars, limit, csToken))
         throw TexcHere(ToSBuf("cannot parse ", description));
 
     if (atEnd())
@@ -123,7 +123,7 @@ Parser::Tokenizer::prefix(const char *description, const CharacterSet &tokenChar
 bool
 Parser::Tokenizer::prefixUntil(SBuf &returnedToken, const CharacterSet &delimiters, SBuf::size_type limit)
 {
-    return prefix(returnedToken, delimiters, limit, csDelimiter);
+    return prefix_(returnedToken, delimiters, limit, csDelimiter);
 }
 
 bool
