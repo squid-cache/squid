@@ -81,11 +81,11 @@ Parser::Tokenizer::prefix_(SBuf &returnedToken, const SBuf::size_type limit, con
     const auto str = buf_.substr(0, limit);
     auto prefixLen = (searchAlgorithm == findFirstOf) ? str.findFirstOf(chars) : str.findFirstNotOf(chars);
     if (prefixLen == 0) {
-        debugs(24, 8, "empty needle with set=" << chars.name);
+        debugs(24, 8, "empty needle with set " << chars.name);
         return false;
     }
     if (prefixLen == SBuf::npos && !str.length()) {
-        debugs(24, 8, "empty haystack with limit=" << limit);
+        debugs(24, 8, "empty haystack with limit " << limit);
         return false;
     }
     if (prefixLen == SBuf::npos) {
