@@ -124,23 +124,27 @@ squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.de
 			exit 1; \
 		fi; \
 	done; \
-	failed=0; \
+	result=0; \
 	cfglist="$(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf"; \
 	rm -f $@ || $(TRUE); \
 	for cfg in $$cfglist ; do \
-		$(srcdir)/test-squid-conf.sh $(top_builddir) $(sbindir) $$cfg || \
-			{ echo "FAIL: squid.conf test: $$cfg" | \
+		$(srcdir)/test-squid-conf.sh $(top_builddir) $(sbindir) $$cfg; result=$$?; \
+        case $$result in \
+        0) echo "PASS: squid.conf test: $$cfg" | \
 				sed s%$(top_builddir)/src/%% | \
 				sed s%$(srcdir)/squidconf/%% ; \
-				failed=1; break; \
-			}; \
-		if test "$$failed" -eq 0; then \
-			echo "PASS: squid.conf test: $$cfg" | \
+                continue ;; \
+        77) echo "SKIP: squid.conf test: $$cfg" | \
 				sed s%$(top_builddir)/src/%% | \
 				sed s%$(srcdir)/squidconf/%% ; \
-		else break; fi; \
+				continue ;; \
+        *) echo "FAIL: squid.conf test: $$cfg" | \
+				sed s%$(top_builddir)/src/%% | \
+				sed s%$(srcdir)/squidconf/%% ; \
+				exit $$result ;; \
+        esac; \
 	done; \
-	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; else exit 1; fi
+	if test "$$result" -eq 0; then cp $(TRUE) $@ ; else exit 1; fi
 
 CLEANFILES += \
 	squid-conf-tests \
