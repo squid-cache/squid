@@ -13,10 +13,10 @@
 
 #include "squid.h"
 
-int main() {
-    /* 77 is a magic return code, informing Makefile's test harness
-     * that a test was skipped
-     */
+int
+main() {
+    // use this magic return code to inform Automake cfgaux/test-driver
+    // that a test was skipped
     return 77;
 }
 
