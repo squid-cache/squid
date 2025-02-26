@@ -85,6 +85,7 @@ Parser::Tokenizer::prefix_(SBuf &returnedToken, const SBuf::size_type limit, con
         return false;
     }
     if (prefixLen == SBuf::npos && !limitedBuf.length()) {
+        // TODO: Evaluate whether checking limitedBuf.length() before computing prefixLen is an optimization.
         debugs(24, 8, "empty haystack with limit " << limit);
         return false;
     }
