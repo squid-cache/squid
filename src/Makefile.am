@@ -12,6 +12,7 @@ dist_doc_DATA = squid.md
 if ENABLE_PANDOC_DOC
 man_MANS = squid.8
 CLEANFILES += squid.8
+squid.8: Makefile
 endif
 
 DNSSOURCE = \
