@@ -961,7 +961,7 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
     }
 
     if (reply.content_length < 0) {
-        // XXX: cf.data.pre does not document what should happen in this case
+        // XXX: squid.conf.yaml.in does not document what should happen in this case
         // We know that quick_abort is enabled, but no limit can be applied.
         debugs(90, 3, "quick-abort? YES unknown content length");
         return true;

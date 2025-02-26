@@ -14,4 +14,5 @@ EXTRA_DIST	= AnnounceCache.pl access-log-matrix.pl cache-compare.pl \
 		update-contributors.pl \
 		calc-must-ids.pl calc-must-ids.sh
 
-dist_noinst_SCRIPTS = remove-cfg.sh
+dist_noinst_SCRIPTS = remove-cfg.sh \
+	mk-squid.conf-parser.pl
