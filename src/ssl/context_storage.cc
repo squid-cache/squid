@@ -41,7 +41,7 @@ void Ssl::CertificateStorageAction::dump (StoreEntry *sentry)
     stream << "Port" << delimiter << "Max mem(KB)" << delimiter << "Cert number" << delimiter << "KB/cert" << delimiter << "Mem used(KB)" << delimiter << "Mem free(KB)" << endString;
 
     // Add info for each port.
-    for (std::map<Ip::Address, LocalContextStorage *>::iterator i = TheGlobalContextStorage.storage.begin(); i != TheGlobalContextStorage.storage.end(); ++i) {
+    for (std::map<Ip::Address, LocalContextStorage *>::iterator i = TheGlobalContextStorage().storage.begin(); i != TheGlobalContextStorage().storage.end(); ++i) {
         stream << i->first << delimiter;
         LocalContextStorage & ssl_store_policy(*(i->second));
         const auto memoryPerEntry = ssl_store_policy.entries() ?
@@ -120,5 +120,10 @@ void Ssl::GlobalContextStorage::reconfigureFinish()
     }
 }
 
-Ssl::GlobalContextStorage Ssl::TheGlobalContextStorage;
+Ssl::GlobalContextStorage &
+Ssl::TheGlobalContextStorage()
+{
+    static const auto storage = new GlobalContextStorage();
+    return *storage;
+}
 
