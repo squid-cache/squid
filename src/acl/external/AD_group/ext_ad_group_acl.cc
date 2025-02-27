@@ -68,6 +68,7 @@
 #include "squid.h"
 #include "helper/protocol_defines.h"
 #include "include/util.h"
+#include "rfc1738.h"
 
 #if _SQUID_CYGWIN_
 #include <cwchar>
@@ -256,10 +257,10 @@ My_NameTranslate(wchar_t * name, int in_format, int out_format)
         }
         WIN32_COM_initialized = 1;
     }
-    hr = CoCreateInstance(&CLSID_NameTranslate,
+    hr = CoCreateInstance(CLSID_NameTranslate,
                           nullptr,
                           CLSCTX_INPROC_SERVER,
-                          &IID_IADsNameTranslate,
+                          IID_IADsNameTranslate,
                           (void **) &pNto);
     if (FAILED(hr)) {
         debug("My_NameTranslate: cannot create COM instance, ERROR: %s\n", Get_WIN32_ErrorMessage(hr));
@@ -385,17 +386,18 @@ add_User_Group(wchar_t * Group)
     return 1;
 }
 
-/* returns 0 on match, -1 if no match */
-static int
-wccmparray(const wchar_t * str, const wchar_t ** array)
+/* returns true on match, false if no match */
+/* TODO: convert to std::containers */
+static bool
+wccmparray(const wchar_t * str, wchar_t ** array)
 {
     while (*array) {
         debug("Windows group: %S, Squid group: %S\n", str, *array);
         if (wcscmp(str, *array) == 0)
-            return 0;
+            return true;
         ++array;
     }
-    return -1;
+    return false;
 }
 
 /* returns 0 on match, -1 if no match */
@@ -431,13 +433,13 @@ Recursive_Memberof(IADs * pObj)
                 IADs *pGrp;
 
                 Group_Path = GetLDAPPath(var.bstrVal, GC_MODE);
-                hr = ADsGetObject(Group_Path, &IID_IADs, (void **) &pGrp);
+                hr = ADsGetObject(Group_Path, IID_IADs, (void **) &pGrp);
                 if (SUCCEEDED(hr)) {
                     hr = Recursive_Memberof(pGrp);
                     pGrp->Release();
                     safe_free(Group_Path);
                     Group_Path = GetLDAPPath(var.bstrVal, LDAP_MODE);
-                    hr = ADsGetObject(Group_Path, &IID_IADs, (void **) &pGrp);
+                    hr = ADsGetObject(Group_Path, IID_IADs, (void **) &pGrp);
                     if (SUCCEEDED(hr)) {
                         hr = Recursive_Memberof(pGrp);
                         pGrp->Release();
@@ -459,13 +461,13 @@ Recursive_Memberof(IADs * pObj)
                             IADs *pGrp;
 
                             Group_Path = GetLDAPPath(elem.bstrVal, GC_MODE);
-                            hr = ADsGetObject(Group_Path, &IID_IADs, (void **) &pGrp);
+                            hr = ADsGetObject(Group_Path, IID_IADs, (void **) &pGrp);
                             if (SUCCEEDED(hr)) {
                                 hr = Recursive_Memberof(pGrp);
                                 pGrp->Release();
                                 safe_free(Group_Path);
                                 Group_Path = GetLDAPPath(elem.bstrVal, LDAP_MODE);
-                                hr = ADsGetObject(Group_Path, &IID_IADs, (void **) &pGrp);
+                                hr = ADsGetObject(Group_Path, IID_IADs, (void **) &pGrp);
                                 if (SUCCEEDED(hr)) {
                                     hr = Recursive_Memberof(pGrp);
                                     pGrp->Release();
@@ -488,8 +490,9 @@ Recursive_Memberof(IADs * pObj)
         }
         VariantClear(&var);
     } else {
-        if (hr != E_ADS_PROPERTY_NOT_FOUND)
+        if (hr != E_ADS_PROPERTY_NOT_FOUND) {
             debug("Recursive_Memberof: ERROR getting memberof attribute: %s\n", Get_WIN32_ErrorMessage(hr));
+        }
     }
     return hr;
 }
@@ -627,7 +630,6 @@ Valid_Global_Groups(char *UserName, const char **Groups)
     size_t j;
 
     wchar_t *User_DN, *User_LDAP_path, *User_PrimaryGroup;
-    wchar_t **wszGroups, **tmp;
     IADs *pUser;
     HRESULT hr;
 
@@ -661,11 +663,11 @@ Valid_Global_Groups(char *UserName, const char **Groups)
         debug("Valid_Global_Groups: cannot get DN for '%s'.\n", User);
         return result;
     }
-    wszGroups = build_groups_DN_array(Groups, NTDomain);
+    auto wszGroups = build_groups_DN_array(Groups, NTDomain);
 
     User_LDAP_path = GetLDAPPath(User_DN, GC_MODE);
 
-    hr = ADsGetObject(User_LDAP_path, &IID_IADs, (void **) &pUser);
+    hr = ADsGetObject(User_LDAP_path, IID_IADs, (void **) &pUser);
     if (SUCCEEDED(hr)) {
         wchar_t *User_PrimaryGroup_Path;
         IADs *pGrp;
@@ -676,13 +678,13 @@ Valid_Global_Groups(char *UserName, const char **Groups)
         else {
             add_User_Group(User_PrimaryGroup);
             User_PrimaryGroup_Path = GetLDAPPath(User_PrimaryGroup, GC_MODE);
-            hr = ADsGetObject(User_PrimaryGroup_Path, &IID_IADs, (void **) &pGrp);
+            hr = ADsGetObject(User_PrimaryGroup_Path, IID_IADs, (void **) &pGrp);
             if (SUCCEEDED(hr)) {
                 hr = Recursive_Memberof(pGrp);
                 pGrp->Release();
                 safe_free(User_PrimaryGroup_Path);
                 User_PrimaryGroup_Path = GetLDAPPath(User_PrimaryGroup, LDAP_MODE);
-                hr = ADsGetObject(User_PrimaryGroup_Path, &IID_IADs, (void **) &pGrp);
+                hr = ADsGetObject(User_PrimaryGroup_Path, IID_IADs, (void **) &pGrp);
                 if (SUCCEEDED(hr)) {
                     hr = Recursive_Memberof(pGrp);
                     pGrp->Release();
@@ -696,28 +698,29 @@ Valid_Global_Groups(char *UserName, const char **Groups)
         pUser->Release();
         safe_free(User_LDAP_path);
         User_LDAP_path = GetLDAPPath(User_DN, LDAP_MODE);
-        hr = ADsGetObject(User_LDAP_path, &IID_IADs, (void **) &pUser);
+        hr = ADsGetObject(User_LDAP_path, IID_IADs, (void **) &pUser);
         if (SUCCEEDED(hr)) {
             hr = Recursive_Memberof(pUser);
             pUser->Release();
         } else
             debug("Valid_Global_Groups: ADsGetObject for %S failed, ERROR: %s\n", User_LDAP_path, Get_WIN32_ErrorMessage(hr));
 
-        tmp = User_Groups;
+        auto tmp = User_Groups;
         while (*tmp) {
-            if (wccmparray(*tmp, wszGroups) == 0) {
+            if (wccmparray(*tmp, wszGroups)) {
                 result = 1;
                 break;
             }
             ++tmp;
         }
-    } else
+    } else {
         debug("Valid_Global_Groups: ADsGetObject for %S failed, ERROR: %s\n", User_LDAP_path, Get_WIN32_ErrorMessage(hr));
+    }
 
     safe_free(User_DN);
     safe_free(User_LDAP_path);
     safe_free(User_PrimaryGroup);
-    tmp = wszGroups;
+    auto tmp = wszGroups;
     while (*tmp) {
         safe_free(*tmp);
         ++tmp;
@@ -793,13 +796,10 @@ main(int argc, char *argv[])
     const char *groups[512];
     int n;
 
-    if (argc > 0) {     /* should always be true */
-        program_name = strrchr(argv[0], '/');
-        if (program_name == NULL)
-            program_name = argv[0];
-    } else {
-        program_name = "(unknown)";
-    }
+    assert(argc > 0);
+    program_name = strrchr(argv[0], '/');
+    if (program_name == NULL)
+        program_name = argv[0];
     mypid = getpid();
 
     setbuf(stdout, nullptr);
@@ -818,10 +818,12 @@ main(int argc, char *argv[])
             DefaultDomain = xstrdup(machinedomain);
     }
     debug("%s " VERSION " " SQUID_BUILD_INFO " starting up...\n", argv[0]);
-    if (use_global)
+    if (use_global) {
         debug("Domain Global group mode enabled using '%s' as default domain.\n", DefaultDomain);
-    if (use_case_insensitive_compare)
+    }
+    if (use_case_insensitive_compare) {
         debug("Warning: running in case insensitive mode !!!\n");
+    }
 
     atexit(CloseCOM);
 
@@ -843,7 +845,7 @@ main(int argc, char *argv[])
         if ((p = strchr(buf, '\r')) != NULL)
             *p = '\0';      /* strip \r */
 
-        debug("Got '%s' from Squid (length: %d).\n", buf, strlen(buf));
+        debug("Got '%s' from Squid (length: %d).\n", buf, static_cast<int>(strlen(buf)));
 
         if (buf[0] == '\0') {
             SEND_BH(HLP_MSG("Invalid Request. No Input."));
@@ -868,7 +870,6 @@ main(int argc, char *argv[])
         } else {
             SEND_ERR("");
         }
-        err = 0;
     }
     return EXIT_SUCCESS;
 }

@@ -19,6 +19,7 @@ ext_ad_group_acl_SOURCES = ext_ad_group_acl.cc
 # TODO: test for these libraries in required.m4
 #
 ext_ad_group_acl_LDADD = \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	-lnetapi32 \
 	-ladvapi32 \
