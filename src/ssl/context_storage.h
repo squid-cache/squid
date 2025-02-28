@@ -74,7 +74,7 @@ private:
 };
 
 /// Global cache for store all SSL server certificates.
-extern GlobalContextStorage TheGlobalContextStorage;
+GlobalContextStorage &TheGlobalContextStorage();
 } //namespace Ssl
 #endif // USE_OPENSSL
 

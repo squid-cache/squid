@@ -41,8 +41,6 @@
 // TODO: Move ssl_ex_index_* global variables from global.cc here.
 static int ssl_ex_index_verify_callback_parameters = -1;
 
-static Ssl::CertsIndexedList SquidUntrustedCerts;
-
 const EVP_MD *Ssl::DefaultSignHash = nullptr;
 
 std::vector<const char *> Ssl::BumpModeStr = {
@@ -72,6 +70,13 @@ protected:
 
     AnyP::Host needle_; ///< a name we are looking for
 };
+
+static CertsIndexedList &
+SquidUntrustedCerts()
+{
+    static auto untrustedCerts = new CertsIndexedList();
+    return *untrustedCerts;
+}
 
 } // namespace Ssl
 
@@ -1306,7 +1311,7 @@ Ssl::findIssuerCertificate(X509 *cert, const STACK_OF(X509) *serverCertificates,
     }
 
     // check untrusted certificates
-    if (const auto issuer = findCertIssuerFast(SquidUntrustedCerts, cert)) {
+    if (const auto issuer = findCertIssuerFast(SquidUntrustedCerts(), cert)) {
         X509_up_ref(issuer);
         return Security::CertPointer(issuer);
     }
@@ -1347,7 +1352,7 @@ static void
 completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) &untrustedCerts)
 {
     debugs(83, 2,  "completing " << sk_X509_num(&untrustedCerts) <<
-           " OpenSSL untrusted certs using " << SquidUntrustedCerts.size() <<
+           " OpenSSL untrusted certs using " << Ssl::SquidUntrustedCerts().size() <<
            " configured untrusted certificates");
 
     const X509_VERIFY_PARAM *param = X509_STORE_CTX_get0_param(ctx);
@@ -1397,7 +1402,7 @@ VerifyCtxCertificates(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
 
     // If the local untrusted certificates internal database is used
     // run completeIssuers to add missing certificates if possible.
-    if (SquidUntrustedCerts.size() > 0)
+    if (Ssl::SquidUntrustedCerts().size() > 0)
         completeIssuers(ctx, *untrustedCerts);
 
     X509_STORE_CTX_set0_untrusted(ctx, untrustedCerts.get()); // No locking/unlocking, just sets ctx->untrusted
@@ -1441,17 +1446,17 @@ Ssl::useSquidUntrusted(SSL_CTX *sslContext)
 bool
 Ssl::loadSquidUntrusted(const char *path)
 {
-    return Ssl::loadCerts(path, SquidUntrustedCerts);
+    return Ssl::loadCerts(path, SquidUntrustedCerts());
 }
 
 void
 Ssl::unloadSquidUntrusted()
 {
-    if (SquidUntrustedCerts.size()) {
-        for (Ssl::CertsIndexedList::iterator it = SquidUntrustedCerts.begin(); it != SquidUntrustedCerts.end(); ++it) {
-            X509_free(it->second);
+    if (SquidUntrustedCerts().size()) {
+        for (const auto &i: SquidUntrustedCerts()) {
+            X509_free(i.second);
         }
-        SquidUntrustedCerts.clear();
+        SquidUntrustedCerts().clear();
     }
 }
 
