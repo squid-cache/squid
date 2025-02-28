@@ -41,7 +41,7 @@ void Ssl::CertificateStorageAction::dump (StoreEntry *sentry)
     stream << "Port" << delimiter << "Max mem(KB)" << delimiter << "Cert number" << delimiter << "KB/cert" << delimiter << "Mem used(KB)" << delimiter << "Mem free(KB)" << endString;
 
     // Add info for each port.
-    for (const auto &i : TheGlobalContextStorage().storage) {
+    for (const auto &i: TheGlobalContextStorage().storage) {
         stream << i.first << delimiter;
         LocalContextStorage & ssl_store_policy(*(i.second));
         const auto memoryPerEntry = ssl_store_policy.entries() ?

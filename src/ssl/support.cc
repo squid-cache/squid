@@ -1453,7 +1453,7 @@ void
 Ssl::unloadSquidUntrusted()
 {
     if (SquidUntrustedCerts().size()) {
-        for (const auto &i : SquidUntrustedCerts()) {
+        for (const auto &i: SquidUntrustedCerts()) {
             X509_free(i.second);
         }
         SquidUntrustedCerts().clear();
