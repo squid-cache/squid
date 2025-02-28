@@ -181,7 +181,8 @@ Get_primaryGroup(IADs * pUser)
     VariantInit(&var);
 
     /* Get the primaryGroupID property */
-    hr = pUser->Get(SysAllocString(L"primaryGroupID"), &var);
+    static const auto primaryGroupIDStr = SysAllocString(L"primaryGroupID");
+    hr = pUser->Get(primaryGroupIDStr, &var);
     if (SUCCEEDED(hr)) {
         User_primaryGroupID = var.uintVal;
     } else {
@@ -192,7 +193,8 @@ Get_primaryGroup(IADs * pUser)
     VariantClear(&var);
 
     /*Get the objectSid property */
-    hr = pUser->Get(SysAllocString(L"objectSid"), &var);
+    static const auto objectSidStr = SysAllocString(L"objectSid");
+    hr = pUser->Get(objectSidStr, &var);
     if (SUCCEEDED(hr)) {
         PSID pObjectSID;
         LPBYTE pByte = nullptr;
@@ -266,7 +268,8 @@ My_NameTranslate(wchar_t * name, int in_format, int out_format)
         /* This is a fatal error */
         exit(EXIT_FAILURE);
     }
-    hr = pNto->Init(ADS_NAME_INITTYPE_GC, SysAllocString(L""));
+    static const auto emtpyStr = SysAllocString(L"");
+    hr = pNto->Init(ADS_NAME_INITTYPE_GC, emtpyStr);
     if (FAILED(hr)) {
         debug("My_NameTranslate: cannot initialise NameTranslate API, ERROR: %s\n", Get_WIN32_ErrorMessage(hr));
         pNto->Release();
@@ -424,7 +427,8 @@ Recursive_Memberof(IADs * pObj)
     HRESULT hr;
 
     VariantInit(&var);
-    hr = pObj->Get(SysAllocString(L"memberOf"), &var);
+    static const auto memberOfStr = SysAllocString(L"memberOf");
+    hr = pObj->Get(memberOfStr, &var);
     if (SUCCEEDED(hr)) {
         if (VT_BSTR == var.vt) {
             if (add_User_Group(var.bstrVal)) {
