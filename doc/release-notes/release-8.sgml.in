@@ -68,6 +68,12 @@ This section gives an account of those changes in three categories:
 
 </descrip>
 
+<sect1>Helper-related changes<
+<p>
+<descrip>
+    <p>Helpers relying on the LM (Lan Manager) protocol have been removed;
+       no product currently on the market supports LM anymore
+</descrip>
 
 <sect>Changes to ./configure options since Squid-@SQUID_RELEASE_OLD@
 <p>

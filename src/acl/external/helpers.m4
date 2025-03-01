@@ -12,7 +12,6 @@ SQUID_HELPER_FEATURE_CHECK([external_acl_helpers],[yes],[acl/external],[
   # NP: we only need this list because m4_include() does not accept variables
   SQUID_CHECK_HELPER([AD_group],[acl/external])
   SQUID_CHECK_HELPER([LDAP_group],[acl/external])
-  SQUID_CHECK_HELPER([LM_group],[acl/external])
   SQUID_CHECK_HELPER([delayer],[acl/external])
   SQUID_CHECK_HELPER([SQL_session],[acl/external])
   SQUID_CHECK_HELPER([eDirectory_userip],[acl/external])
