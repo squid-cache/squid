@@ -327,7 +327,7 @@ create_gd(struct main_args *margs)
     char *hp2 = hex_utf_char(margs, 1);
     char *up = utf8dup(margs);
 
-    // NP: will point to the start of a temporary assembly buffer used by 'p' and 'gp'
+    // Note: will point to the start of a temporary assembly buffer used by 'p' and 'gp'
     //     for catenation of the hp1, hp2, and up buffer contents from above.
     //     necessary for xfree() because both p and gp move over the assembly area
     char *gpbuf = nullptr;

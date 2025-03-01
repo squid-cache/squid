@@ -8,7 +8,7 @@
 AS_IF([test "x$enable_auth" != "xno"],[
   DIGEST_AUTH_HELPERS=""
   SQUID_HELPER_FEATURE_CHECK([auth_digest],[$enable_auth],[auth/digest],[
-    # NP: we only need this list because m4_include() does not accept variables
+    # Note: we only need this list because m4_include() does not accept variables
     SQUID_CHECK_HELPER([eDirectory],[auth/digest])
     SQUID_CHECK_HELPER([file],[auth/digest])
     SQUID_CHECK_HELPER([LDAP],[auth/digest])

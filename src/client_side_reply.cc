@@ -1293,7 +1293,7 @@ clientReplyContext::buildReplyHeader()
      * Add a Date: header if missing.
      * We have access to a clock therefore are required to amend any shortcoming in servers.
      *
-     * NP: done after Age: to prevent ENTRY_SPECIAL double-handling this header.
+     * Note: done after Age: to prevent ENTRY_SPECIAL double-handling this header.
      */
     if ( !hdr->has(Http::HdrType::DATE) ) {
         if (!http->storeEntry())
@@ -1821,7 +1821,7 @@ clientReplyContext::sendNotModifiedOrPreconditionFailedError()
 void
 clientReplyContext::processReplyAccess ()
 {
-    /* NP: this should probably soft-fail to a zero-sized-reply error ?? */
+    /* Note: this should probably soft-fail to a zero-sized-reply error ?? */
     assert(reply);
 
     /** Don't block our own responses or HTTP status messages */

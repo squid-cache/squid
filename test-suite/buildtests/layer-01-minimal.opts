@@ -30,7 +30,7 @@ MAKETEST="distcheck"
 #   --without-filedescriptors \
 #   --without-build-environment \
 #
-# NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the
+# Note: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the
 #     distcheck target recursive tests beteen scripted runs.
 #     we use it to perform the same duty between our nested scripts.
 DISTCHECK_CONFIGURE_FLAGS=" \

@@ -107,7 +107,7 @@ public:
     /// send some HTTP reply message payload
     void sendBody(StoreIOBuffer bodyData);
     /// update stream state when N bytes are being sent.
-    /// NP: Http1Server bytes actually not sent yet, just packed into a MemBuf ready
+    /// Note: Http1Server bytes actually not sent yet, just packed into a MemBuf ready
     void noteSentBodyBytes(size_t);
 
     /// add Range headers (if any) to the given HTTP reply message

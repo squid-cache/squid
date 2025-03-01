@@ -326,7 +326,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
         return decision.make(ReuseDecision::reuseNot, "the response has an older date header");
 
     // Check for Surrogate/1.0 protocol conditions
-    // NP: reverse-proxy traffic our parent server has instructed us never to cache
+    // Note: reverse-proxy traffic our parent server has instructed us never to cache
     if (surrogateNoStore)
         return decision.make(ReuseDecision::reuseNot, "Surrogate-Control:no-store");
 
@@ -342,7 +342,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
             return decision.make(ReuseDecision::reuseNot,
                                  "client request Cache-Control:no-store");
 
-        // NP: request CC:no-cache only means cache READ is forbidden. STORE is permitted.
+        // Note: request CC:no-cache only means cache READ is forbidden. STORE is permitted.
         if (rep->cache_control && rep->cache_control->hasNoCacheWithParameters()) {
             /* TODO: we are allowed to cache when no-cache= has parameters.
              * Provided we strip away any of the listed headers unless they are revalidated
@@ -353,8 +353,8 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
                                  "server reply Cache-Control:no-cache has parameters");
         }
 
-        // NP: request CC:private is undefined. We ignore.
-        // NP: other request CC flags are limiters on HIT/MISS. We don't care about here.
+        // Note: request CC:private is undefined. We ignore.
+        // Note: other request CC flags are limiters on HIT/MISS. We don't care about here.
 
         // RFC 2616 section 14.9.2 - MUST NOT cache any response with CC:no-store
         if (rep->cache_control && rep->cache_control->hasNoStore() &&
@@ -401,7 +401,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
             mayStore = true;
 
 #if USE_HTTP_VIOLATIONS
-            // NP: given the must-revalidate exception we should also be able to exempt no-cache.
+            // Note: given the must-revalidate exception we should also be able to exempt no-cache.
             // HTTPbis WG verdict on this is that it is omitted from the spec due to being 'unexpected' by
             // some. The caching+revalidate is not exactly unsafe though with Squids interpretation of no-cache
             // (without parameters) as equivalent to must-revalidate in the reply.
@@ -419,8 +419,8 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
         if (!mayStore)
             return decision.make(ReuseDecision::reuseNot, "authenticated transaction");
 
-        // NP: response CC:no-cache is equivalent to CC:must-revalidate,max-age=0. We MAY cache, and do so.
-        // NP: other request CC flags are limiters on HIT/MISS/REFRESH. We don't care about here.
+        // Note: response CC:no-cache is equivalent to CC:must-revalidate,max-age=0. We MAY cache, and do so.
+        // Note: other request CC flags are limiters on HIT/MISS/REFRESH. We don't care about here.
     }
 
     /* HACK: The "multipart/x-mixed-replace" content type is used for
@@ -2124,7 +2124,7 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
          * order to prevent Upgrade from being accidentally forwarded by
          * intermediaries that might not implement the listed protocols.
          *
-         * NP: Squid does not truly implement the protocol(s) in this Upgrade.
+         * Note: Squid does not truly implement the protocol(s) in this Upgrade.
          * For now we are treating an explicit blind tunnel as "implemented"
          * regardless of the security implications.
          */

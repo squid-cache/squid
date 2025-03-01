@@ -46,7 +46,7 @@ Auth::Negotiate::Config::rotateHelpers()
         helperStatefulShutdown(negotiateauthenticators);
     }
 
-    /* NP: dynamic helper restart will ensure they start up again as needed. */
+    /* Note: dynamic helper restart will ensure they start up again as needed. */
 }
 
 void

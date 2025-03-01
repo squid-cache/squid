@@ -104,7 +104,7 @@ TestHttpReply::testSanityCheckFirstLine()
     CPPUNIT_ASSERT_EQUAL(error, Http::scNone);
     input.reset();
     error = Http::scNone;
-    /* NP: the engine saves details about the protocol. even when being reset :( */
+    /* Note: the engine saves details about the protocol. even when being reset :( */
     engine.protoPrefix="HTTP/";
     engine.reset();
 

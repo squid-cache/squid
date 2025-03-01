@@ -145,7 +145,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
 
             opts.updateSessionOptions(session);
 
-            // NP: GnuTLS does not yet support the BIO operations
+            // Note: GnuTLS does not yet support the BIO operations
             //     this does the equivalent of SSL_set_fd() for now.
             gnutls_transport_set_int(session.get(), fd);
             gnutls_handshake_set_timeout(session.get(), GNUTLS_DEFAULT_HANDSHAKE_TIMEOUT);

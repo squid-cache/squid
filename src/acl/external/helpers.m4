@@ -9,7 +9,7 @@ SQUID_CHECK_LIBTDB
 
 EXTERNAL_ACL_HELPERS=""
 SQUID_HELPER_FEATURE_CHECK([external_acl_helpers],[yes],[acl/external],[
-  # NP: we only need this list because m4_include() does not accept variables
+  # Note: we only need this list because m4_include() does not accept variables
   SQUID_CHECK_HELPER([AD_group],[acl/external])
   SQUID_CHECK_HELPER([LDAP_group],[acl/external])
   SQUID_CHECK_HELPER([LM_group],[acl/external])

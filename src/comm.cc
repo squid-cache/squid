@@ -455,7 +455,7 @@ comm_init_opened(const Comm::ConnectionPointer &conn,
     /* update fdstat */
     debugs(5, 5, conn << " is a new socket");
 
-    assert(!isOpen(conn->fd)); // NP: global isOpen checks the fde entry for openness not the Comm::Connection
+    assert(!isOpen(conn->fd)); // Note: global isOpen checks the fde entry for openness not the Comm::Connection
     fd_open(conn->fd, FD_SOCKET, note);
 
     fde *F = &fd_table[conn->fd];
@@ -641,7 +641,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
 
     /* Handle IPv6 over IPv4-only socket case.
      * this case must presently be handled here since the getAddrInfo asserts on bad mappings.
-     * NP: because commResetFD is private to ConnStateData we have to return an error and
+     * Note: because commResetFD is private to ConnStateData we have to return an error and
      *     trust its handled properly.
      */
     if (F->sock_family == AF_INET && !address.isIPv4()) {

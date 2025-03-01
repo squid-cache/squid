@@ -8,7 +8,7 @@
 AS_IF([test "x$enable_auth" != "xno"],[
   BASIC_AUTH_HELPERS=""
   SQUID_HELPER_FEATURE_CHECK([auth_basic],[$enable_auth],[auth/basic],[
-    # NP: we only need this list because m4_include() does not accept variables
+    # Note: we only need this list because m4_include() does not accept variables
     SQUID_CHECK_HELPER([DB],[auth/basic])
     SQUID_CHECK_HELPER([LDAP],[auth/basic])
     SQUID_CHECK_HELPER([NCSA],[auth/basic])

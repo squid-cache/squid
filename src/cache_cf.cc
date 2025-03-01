@@ -3678,10 +3678,10 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
                "in " << cfg_directive << ". Use 'tls-dh=' instead.");
         s->secure.parse(token);
     } else if (strncmp(token, "sslflags=", 9) == 0) {
-        // NP: deprecation warnings output by secure.parse() when relevant
+        // Note: deprecation warnings output by secure.parse() when relevant
         s->secure.parse(token+3);
     } else if (strncmp(token, "sslcontext=", 11) == 0) {
-        // NP: deprecation warnings output by secure.parse() when relevant
+        // Note: deprecation warnings output by secure.parse() when relevant
         s->secure.parse(token+3);
     } else if (strncmp(token, "generate-host-certificates", 26) == 0) {
         s->secure.parse(token);

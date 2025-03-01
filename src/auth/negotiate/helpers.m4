@@ -8,7 +8,7 @@
 AS_IF([test "x$enable_auth" != "xno"],[
   NEGOTIATE_AUTH_HELPERS=""
   SQUID_HELPER_FEATURE_CHECK([auth_negotiate],[$enable_auth],[auth/negotiate],[
-    # NP: we only need this list because m4_include() does not accept variables
+    # Note: we only need this list because m4_include() does not accept variables
     SQUID_CHECK_HELPER([SSPI],[auth/negotiate])
     SQUID_CHECK_HELPER([kerberos],[auth/negotiate])
     SQUID_CHECK_HELPER([wrapper],[auth/negotiate])

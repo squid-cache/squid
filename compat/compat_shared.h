@@ -42,7 +42,7 @@ extern void (*failure_notify) (const char *);
 
 /* The structure dirent also varies between 64-bit and 32-bit environments.
  * Define our own dirent_t type for consistent simple internal use.
- * NP: GCC seems not to care about the type naming differences.
+ * Note: GCC seems not to care about the type naming differences.
  */
 #if HAVE_DIRENT_H
 #include <dirent.h>
@@ -56,7 +56,7 @@ extern void (*failure_notify) (const char *);
 /*
  * Filedescriptor limits in the different select loops
  *
- * NP: FreeBSD 7 defines FD_SETSIZE as unsigned but Squid needs
+ * Note: FreeBSD 7 defines FD_SETSIZE as unsigned but Squid needs
  *     it to be signed to compare it with signed values.
  *     Linux and others including FreeBSD <7, define it as signed.
  *     If this causes any issues please contact squid-dev mailing list.

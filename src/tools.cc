@@ -118,7 +118,7 @@ mail_warranty(void)
     static char command[256];
 
     /*
-     * NP: umask() takes the mask of bits we DONT want set.
+     * Note: umask() takes the mask of bits we DONT want set.
      *
      * We want the current user to have read/write access
      * and since this file will be passed to mailsystem,

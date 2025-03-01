@@ -518,7 +518,7 @@ Ip::Qos::setSockTos(const int fd, tos_t tos, int type)
 {
     // Bug 3731: FreeBSD produces 'invalid option'
     // unless we pass it a 32-bit variable storing 8-bits of data.
-    // NP: it is documented as 'int' for all systems, even those like Linux which accept 8-bit char
+    // Note: it is documented as 'int' for all systems, even those like Linux which accept 8-bit char
     //     so we convert to a int before setting.
     int bTos = tos;
 

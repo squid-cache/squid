@@ -200,7 +200,7 @@ ACLChecklist::swapAcl(const acl_access * const replacement)
 /**
  * Kick off a non-blocking (slow) ACL access list test
  *
- * NP: this should probably be made Async now.
+ * Note: this should probably be made Async now.
  */
 void
 ACLChecklist::nonBlockingCheck(ACLCB * callback_, void *callback_data_)

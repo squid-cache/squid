@@ -720,7 +720,7 @@ FwdState::checkRetry()
     if (request->bodyNibbled())
         return false;
 
-    // NP: not yet actually connected anywhere. retry is safe.
+    // Note: not yet actually connected anywhere. retry is safe.
     if (!flags.connected_okay)
         return true;
 

@@ -243,7 +243,7 @@ Ftp::Server::AcceptCtrlConnection(const CommAcceptCbParams &params)
 {
     Assure(params.port);
 
-    // NP: it is possible the port was reconfigured when the call or accept() was queued.
+    // Note: it is possible the port was reconfigured when the call or accept() was queued.
 
     if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected

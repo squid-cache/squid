@@ -46,7 +46,7 @@ Auth::Ntlm::Config::rotateHelpers()
         helperStatefulShutdown(ntlmauthenticators);
     }
 
-    /* NP: dynamic helper restart will ensure they start up again as needed. */
+    /* Note: dynamic helper restart will ensure they start up again as needed. */
 }
 
 /* free any allocated configuration details */

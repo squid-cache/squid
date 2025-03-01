@@ -75,7 +75,7 @@ public:
      *  - On read calls this is the connection just read from.
      *  - On close calls this describes the connection which is now closed.
      *  - On timeouts this is the connection whose operation timed out.
-     *   + NP: timeouts might also return to the connect/read/write handler with Comm::TIMEOUT.
+     *   + Note: timeouts might also return to the connect/read/write handler with Comm::TIMEOUT.
      */
     Comm::ConnectionPointer conn;
 

@@ -62,7 +62,7 @@ print_esc(FILE * p, char *s)
 
     for (t = s; *t != '\0'; ++t) {
         /*
-         * NP: The shell escaping permits 'i' to jump up to 2 octets per loop,
+         * Note: The shell escaping permits 'i' to jump up to 2 octets per loop,
          *     so ensure we have at least 3 free.
          */
         if (i > HELPER_INPUT_BUFFER-3) {

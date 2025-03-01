@@ -449,7 +449,7 @@ Auth::Digest::Config::rotateHelpers()
         helperShutdown(digestauthenticators);
     }
 
-    /* NP: dynamic helper restart will ensure they start up again as needed. */
+    /* Note: dynamic helper restart will ensure they start up again as needed. */
 }
 
 bool
