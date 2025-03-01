@@ -924,7 +924,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     }
 
     /* ignore range header in non-GETs or non-HEADs */
-    if (request->method == Http::METHOD_GET || request->method == Http::METHOD_HEAD) {
+    if (request->method == Http::METHOD_GET || request->method == Http::METHOD_HEAD || request->method == Http::METHOD_QUERY) {
         // XXX: initialize if we got here without HttpRequest::parseHeader()
         if (!request->range)
             request->range = req_hdr->getRange();
@@ -943,7 +943,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
     }
 
-    /* Only HEAD and GET requests permit a Range or Request-Range header.
+    /* Only HEAD, GET, and QUERY requests permit a Range or Request-Range header.
      * If these headers appear on any other type of request, delete them now.
      */
     else {
