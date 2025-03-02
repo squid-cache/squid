@@ -68,6 +68,13 @@ This section gives an account of those changes in three categories:
 
 </descrip>
 
+<sect1>Helper-related changes
+<p>
+<descrip>
+	<p>Removed ext_lm_group_acl external acl helper. No product
+		currently on the market suports the LanManager protocol
+		in their default configuration
+</descrip>
 
 <sect>Changes to ./configure options since Squid-@SQUID_RELEASE_OLD@
 <p>
