@@ -1185,7 +1185,7 @@ SQUID_CHECK_LIB_WORKS(ldap,[
     dnl On MinGW OpenLDAP is not available, try Windows LDAP libraries
     dnl TODO: use AC_CHECK_LIB
     LIBLDAP_LIBS="-lwldap32"
-    AC_CHECK_HEADERS(winldap.h,,,[
+    AC_CHECK_HEADERS([windows.h winldap.h],,,[
       #if HAVE_WINDOWS_H
       #include <windows.h>
       #endif
