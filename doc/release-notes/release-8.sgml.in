@@ -68,7 +68,7 @@ This section gives an account of those changes in three categories:
 
 </descrip>
 
-<sect1>Helper-related changes<
+<sect1>Helper-related changes
 <p>
 <descrip>
     <p>Helpers relying on the LM (Lan Manager) protocol have been removed;
