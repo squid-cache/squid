@@ -111,7 +111,7 @@ This section gives an account of those changes in three categories:
 	   <em>--enable-external-acl-helpers=AD_group</em>,
 	   <em>--enable-external-acl-helpers=LDAP_group</em>,
 	   <em>--enable-external-acl-helpers=kerberos_ldap_group</em>,
-	   <em>--enable-external-acl-helpers=wbinfo_group/em>.
+	   <em>--enable-external-acl-helpers=wbinfo_group</em>.
 
 
 </descrip>
