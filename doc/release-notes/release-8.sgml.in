@@ -30,8 +30,17 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>
+	<item>Helper binary changes
 </itemize>
+
+<sect1>Helper binary changes
+<p>
+<descrip>
+	<p>Removed ext_lm_group_acl external acl helper. No product
+	   currently on the market suports the LanManager protocol
+	   in their default configuration
+</descrip>
+
 
 Most user-facing changes are reflected in squid.conf (see below).
 
@@ -68,14 +77,6 @@ This section gives an account of those changes in three categories:
 
 </descrip>
 
-<sect1>Helper-related changes
-<p>
-<descrip>
-	<p>Removed ext_lm_group_acl external acl helper. No product
-		currently on the market suports the LanManager protocol
-		in their default configuration
-</descrip>
-
 <sect>Changes to ./configure options since Squid-@SQUID_RELEASE_OLD@
 <p>
 This section gives an account of those changes in three categories:
@@ -104,7 +105,14 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
-	<p>No removed options in this version.
+	<tag>--enable-external-acl-helpers=LM_Group</tag>
+	<p>The LM protocol is insecure and no longer supported
+	   on the market since 2008. Replaced by any of
+	   <em>--enable-external-acl-helpers=AD_group</em>,
+	   <em>--enable-external-acl-helpers=LDAP_group</em>,
+	   <em>--enable-external-acl-helpers=kerberos_ldap_group</em>,
+	   <em>--enable-external-acl-helpers=wbinfo_group/em>.
+
 
 </descrip>
 
