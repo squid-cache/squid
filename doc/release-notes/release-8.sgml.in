@@ -30,10 +30,10 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>Helper binary changes
+	<item>
 </itemize>
 
-<sect1>Helper binary changes
+<sect1>Helper changes
 <p>
 <descrip>
 	<p>Removed <em>ext_lm_group_acl</em> external acl helper. No product
@@ -77,6 +77,7 @@ This section gives an account of those changes in three categories:
 	<p>No removed directives in this version.
 
 </descrip>
+
 
 <sect>Changes to ./configure options since Squid-@SQUID_RELEASE_OLD@
 <p>
