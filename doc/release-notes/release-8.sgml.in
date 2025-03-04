@@ -33,6 +33,16 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<item>
 </itemize>
 
+<sect1>Helper changes
+<p>
+<descrip>
+	<p>Removed <em>ext_lm_group_acl</em> external acl helper. No product
+	   currently on the market suports the LanManager protocol
+	   in their default configuration.
+
+</descrip>
+
+
 Most user-facing changes are reflected in squid.conf (see below).
 
 
@@ -89,7 +99,9 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p>No changed options in this version.
+	<tag>--enable-external-acl-helpers=</tag>
+	<p>Removed <em>LM_Group</em> helper. The LM protocol is
+	   insecure and no longer supported on the market since 2008.
 
 </descrip>
 </p>

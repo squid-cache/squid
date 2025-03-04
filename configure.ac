@@ -2514,7 +2514,6 @@ AC_CONFIG_FILES([
 	src/acl/external/kerberos_ldap_group/Makefile
 	src/acl/external/kerberos_sid_group/Makefile
 	src/acl/external/LDAP_group/Makefile
-	src/acl/external/LM_group/Makefile
 	src/acl/external/session/Makefile
 	src/acl/external/SQL_session/Makefile
 	src/acl/external/unix_group/Makefile
