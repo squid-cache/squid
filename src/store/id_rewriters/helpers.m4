@@ -7,7 +7,7 @@
 
 STOREID_REWRITE_HELPERS=""
 SQUID_HELPER_FEATURE_CHECK([storeid_rewrite_helpers],[yes],[store/id_rewriters],[
-  # NP: we only need this list because m4_include() does not accept variables
+  # Note: we only need this list because m4_include() does not accept variables
   SQUID_CHECK_HELPER([file],[store/id_rewriters])
 ])
 STOREID_REWRITE_HELPERS=$squid_cv_BUILD_HELPERS

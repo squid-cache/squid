@@ -396,7 +396,7 @@ HttpReply::bodySize(const HttpRequestMethod& method) const
  * Checks the first line of an HTTP Reply is valid.
  * currently only checks "HTTP/" exists.
  *
- * NP: not all error cases are detected yet. Some are left for detection later in parse.
+ * Note: not all error cases are detected yet. Some are left for detection later in parse.
  */
 bool
 HttpReply::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error)

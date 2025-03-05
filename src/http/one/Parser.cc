@@ -198,7 +198,7 @@ Http::One::Parser::grabMimeBlock(const char *which, const size_t limit)
     } else
         debugs(33, 3, "Missing HTTP/1.x identifier");
 
-    // NP: we do not do any further stages here yet so go straight to DONE
+    // Note: we do not do any further stages here yet so go straight to DONE
     parsingStage_ = HTTP_PARSE_DONE;
 
     return true;

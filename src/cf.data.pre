@@ -1268,7 +1268,7 @@ ENDIF
 	  # ports (e.g., HTTP requests with URN targets)
 
 	acl aclname localport 3128 ...	      # TCP port the client connected to [fast]
-	                                      # NP: for interception mode this is usually '80'
+	                                      # Note: for interception mode this is usually '80'
 
 	acl aclname myportname 3128 ...       # *_port name [fast]
 
@@ -2294,11 +2294,11 @@ DOC_START
 
 	   intercept	Support for IP-Layer NAT interception delivering
 			traffic to this Squid port.
-			NP: disables authentication on the port.
+			Note: disables authentication on the port.
 
 	   tproxy	Support Linux TPROXY (or BSD divert-to) with spoofing
 			of outgoing connections using the client IP address.
-			NP: disables authentication on the port.
+			Note: disables authentication on the port.
 
 	   accel	Accelerator / reverse proxy mode
 
@@ -2621,7 +2621,7 @@ DOC_START
 
 	   tproxy	Support Linux TPROXY for spoofing outgoing
 			connections using the client IP address.
-			NP: disables authentication and maybe IPv6 on the port.
+			Note: disables authentication and maybe IPv6 on the port.
 
 	By default (i.e., without an explicit mode option), Squid extracts the
 	FTP origin address from the login@origin parameter of the FTP USER
@@ -6767,7 +6767,7 @@ DOC_START
 
 	'aclname' is the name of a defined ACL.
 
-	NP: Using 'none' as the byte value here will override any quick_abort settings
+	Note: Using 'none' as the byte value here will override any quick_abort settings
 	    that may otherwise apply to the range request. The range request will
 	    be fully fetched from start to finish regardless of the client
 	    actions. This affects bandwidth usage.
@@ -8936,7 +8936,7 @@ DOC_START
 	- When the decision to deny access was made by an adaptation service,
 	  the acl name is the corresponding eCAP or ICAP service_name.
 
-	NP: If providing your own custom error pages with error_directory
+	Note: If providing your own custom error pages with error_directory
 	    you may also specify them by your custom file name:
 	    Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
 
