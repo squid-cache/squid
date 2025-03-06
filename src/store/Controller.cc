@@ -74,7 +74,7 @@ Store::Controller::create()
 {
     disks->create();
 
-#if !_SQUID_WINDOWS_
+#if !_SQUID_WINDOWS_ && !_SQUID_MINGW_
     pid_t pid;
     do {
         PidStatus status;
