@@ -14,7 +14,6 @@ SQUID_HELPER_FEATURE_CHECK([external_acl_helpers],[yes],[acl/external],[
   SQUID_CHECK_HELPER([LDAP_group],[acl/external])
   SQUID_CHECK_HELPER([delayer],[acl/external])
   SQUID_CHECK_HELPER([SQL_session],[acl/external])
-  SQUID_CHECK_HELPER([eDirectory_userip],[acl/external])
   SQUID_CHECK_HELPER([file_userip],[acl/external])
   SQUID_CHECK_HELPER([kerberos_ldap_group],[acl/external])
   SQUID_CHECK_HELPER([kerberos_sid_group],[acl/external])
