@@ -857,7 +857,7 @@ mainReconfigureStart(void)
     htcpClosePorts();
 #endif
 #if USE_OPENSSL
-    Ssl::TheGlobalContextStorage.reconfigureStart();
+    Ssl::TheGlobalContextStorage().reconfigureStart();
 #endif
 #if USE_AUTH
     authenticateReset();

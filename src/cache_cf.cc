@@ -957,10 +957,10 @@ configDoConfigure(void)
         Ssl::loadSquidUntrusted(Config.ssl_client.foreignIntermediateCertsPath);
 #endif
 
-    if (Security::ProxyOutgoingConfig.encryptTransport) {
+    if (Security::ProxyOutgoingConfig().encryptTransport) {
         debugs(3, 2, "initializing https:// proxy context");
 
-        const auto rawSslContext = Security::ProxyOutgoingConfig.createClientContext(false);
+        const auto rawSslContext = Security::ProxyOutgoingConfig().createClientContext(false);
         Config.ssl_client.sslContext_ = rawSslContext ? new Security::ContextPointer(rawSslContext) : nullptr;
         if (!Config.ssl_client.sslContext_) {
 #if USE_OPENSSL
@@ -972,7 +972,7 @@ configDoConfigure(void)
 #if USE_OPENSSL
         Ssl::useSquidUntrusted(Config.ssl_client.sslContext_->get());
 #endif
-        Config.ssl_client.defaultPeerContext = new Security::FuturePeerContext(Security::ProxyOutgoingConfig, *Config.ssl_client.sslContext_);
+        Config.ssl_client.defaultPeerContext = new Security::FuturePeerContext(Security::ProxyOutgoingConfig(), *Config.ssl_client.sslContext_);
     }
 
     for (const auto &p: CurrentCachePeers()) {
@@ -1112,7 +1112,7 @@ parse_obsolete(const char *name)
             throw TextException(ToSBuf("missing required parameter for obsolete directive: ", name), Here());
 
         tmp.append(token, strlen(token));
-        Security::ProxyOutgoingConfig.parse(tmp.c_str());
+        Security::ProxyOutgoingConfig().parse(tmp.c_str());
     }
 }
 

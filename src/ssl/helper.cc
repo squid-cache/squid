@@ -57,6 +57,14 @@ typedef std::unordered_map<SBuf, GeneratorRequest*> GeneratorRequests;
 
 static void HandleGeneratorReply(void *data, const ::Helper::Reply &reply);
 
+/// pending Ssl::Helper requests (to all certificate generator helpers combined)
+static GeneratorRequests &
+TheGeneratorRequests()
+{
+    static auto generatorRequests = new GeneratorRequests();
+    return *generatorRequests;
+}
+
 } // namespace Ssl
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, GeneratorRequest);
@@ -67,9 +75,6 @@ operator <<(std::ostream &os, const Ssl::GeneratorRequest &gr)
 {
     return os << "crtGenRq" << gr.query.id.value << "/" << gr.requestors.size();
 }
-
-/// pending Ssl::Helper requests (to all certificate generator helpers combined)
-static Ssl::GeneratorRequests TheGeneratorRequests;
 
 Helper::Client::Pointer Ssl::Helper::ssl_crtd;
 
@@ -125,8 +130,8 @@ void Ssl::Helper::Submit(CrtdMessage const & message, HLPCB * callback, void * d
     SBuf rawMessage(message.compose().c_str()); // XXX: helpers cannot use SBuf
     rawMessage.append("\n", 1);
 
-    const auto pending = TheGeneratorRequests.find(rawMessage);
-    if (pending != TheGeneratorRequests.end()) {
+    const auto pending = TheGeneratorRequests().find(rawMessage);
+    if (pending != TheGeneratorRequests().end()) {
         pending->second->emplace(callback, data);
         debugs(83, 5, "collapsed request from " << data << " onto " << *pending->second);
         return;
@@ -135,7 +140,7 @@ void Ssl::Helper::Submit(CrtdMessage const & message, HLPCB * callback, void * d
     GeneratorRequest *request = new GeneratorRequest;
     request->query = rawMessage;
     request->emplace(callback, data);
-    TheGeneratorRequests.emplace(request->query, request);
+    TheGeneratorRequests().emplace(request->query, request);
     debugs(83, 5, "request from " << data << " as " << *request);
     // ssl_crtd becomes nil if Squid is reconfigured without SslBump or
     // certificate generation disabled in the new configuration
@@ -153,7 +158,7 @@ Ssl::HandleGeneratorReply(void *data, const ::Helper::Reply &reply)
 {
     const std::unique_ptr<Ssl::GeneratorRequest> request(static_cast<Ssl::GeneratorRequest*>(data));
     assert(request);
-    const auto erased = TheGeneratorRequests.erase(request->query);
+    const auto erased = TheGeneratorRequests().erase(request->query);
     assert(erased);
 
     for (auto &requestor: request->requestors) {
