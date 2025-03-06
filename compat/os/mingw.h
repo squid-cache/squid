@@ -48,5 +48,7 @@ fsync(int fd)
 
 #define mkdir(p,F) mkdir((p))
 
+void WIN32_maperror(unsigned long WIN32_oserrno);
+
 #endif /* _SQUID_MINGW_*/
 #endif /* SQUID_COMPAT_OS_MINGW_H */
