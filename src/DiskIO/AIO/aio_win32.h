@@ -15,7 +15,7 @@
 typedef int64_t off64_t;
 #endif
 
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
 
 union sigval {
     int sival_int; /* integer value */
