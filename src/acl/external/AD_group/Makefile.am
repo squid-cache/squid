@@ -12,12 +12,7 @@ man_MANS = ext_ad_group_acl.8
 
 ext_ad_group_acl_SOURCES = ext_ad_group_acl.cc
 
-#
-# Currently activeds and adsiid libraries are not available on MinGW or Cygwin,
-# so the following library list is just a placeholder for future MinGW/Cygwin releases.
-# This helper can be compiled only using Microsoft Visual Studio.
 # TODO: test for these libraries in required.m4
-#
 ext_ad_group_acl_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
