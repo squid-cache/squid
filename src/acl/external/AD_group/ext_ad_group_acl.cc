@@ -182,7 +182,7 @@ Get_primaryGroup(IADs * pUser)
     VariantInit(&var);
 
     /* Get the primaryGroupID property */
-    stsatic const auto primaryGroupIdString = SysAllocString(L"primaryGroupID");
+    static const auto primaryGroupIdString = SysAllocString(L"primaryGroupID");
     hr = pUser->Get(primaryGroupIdString, &var);
     if (SUCCEEDED(hr)) {
         User_primaryGroupID = var.uintVal;
@@ -283,6 +283,7 @@ My_NameTranslate(wchar_t * name, int in_format, int out_format)
         pNto->Release();
         return nullptr;
     }
+    BSTR bstr;
     hr = pNto->Get(out_format, &bstr);
     if (FAILED(hr)) {
         debug("My_NameTranslate: cannot get translate of %S, ERROR: %s\n", name, Get_WIN32_ErrorMessage(hr));
@@ -489,8 +490,9 @@ Recursive_Memberof(IADs * pObj)
                     }
                     ++lBound;
                 }
-            } else
+            } else {
                 debug("Recursive_Memberof: ERROR SafeArrayGetxBound failed: %s\n", Get_WIN32_ErrorMessage(hr));
+            }
         }
         VariantClear(&var);
     } else {
@@ -637,7 +639,7 @@ Valid_Global_Groups(char *UserName, const char **Groups)
     IADs *pUser;
     HRESULT hr;
 
-    strncpy(NTDomain, UserName, sizeof(NTDomain));
+    strncpy(NTDomain, UserName, sizeof(NTDomain)-1);
 
     for (j = 0; j < strlen(NTV_VALID_DOMAIN_SEPARATOR); ++j) {
         if ((domain_qualify = strchr(NTDomain, NTV_VALID_DOMAIN_SEPARATOR[j])) != NULL)
