@@ -635,7 +635,8 @@ Valid_Global_Groups(char *UserName, const char **Groups)
     char User[DNLEN + UNLEN + 2];
     size_t j;
 
-    wchar_t *User_DN, *User_LDAP_path, *User_PrimaryGroup;
+    wchar_t *User_DN = nullptr, *User_LDAP_path = nullptr;
+    wchar_t *User_PrimaryGroup = nullptr;
     IADs *pUser;
     HRESULT hr;
 
