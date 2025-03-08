@@ -849,7 +849,7 @@ main(int argc, char *argv[])
         if ((p = strchr(buf, '\r')) != NULL)
             *p = '\0';      /* strip \r */
 
-        debug("Got '%s' from Squid (length: %d).\n", buf, static_cast<int>(strlen(buf)));
+        debug("Got '%s' from Squid (length: %zu).\n", buf, strlen(buf));
 
         if (buf[0] == '\0') {
             SEND_BH(HLP_MSG("Invalid Request. No Input."));
