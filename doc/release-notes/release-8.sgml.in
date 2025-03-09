@@ -36,6 +36,9 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 <sect1>Helper changes
 <p>
 <descrip>
+	<p>Removed <em>basic_smb_lm_auth</em> NTLM authentication helper.
+	   Use the <em>ntlm_auth</em> helper from the Samba project instead.
+
 	<p>Removed <em>ext_lm_group_acl</em> external acl helper. No product
 	   currently on the market suports the LanManager protocol
 	   in their default configuration.
@@ -102,11 +105,15 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
+	<tag>--enable-auth-basic=</tag>
+	<p>Removed <em>SMB_LM</em> helper, in favour of the <em>ntlm_auth</em>
+	   alternative offered by the Samba project.
+
 	<tag>--enable-auth-ntlm=</tag>
 	<p>Removed <em>SMB_LM</em> helper, in favour of the <em>ntlm_auth</em>
 	   alternative offered by the Samba project.
 
-	<tag>--enable-external-acl-helpers=</tag>
+  <tag>--enable-external-acl-helpers=</tag>
 	<p>Removed <em>LM_Group</em> helper. The LM protocol is
 	   insecure and no longer supported on the market since 2008.
 
