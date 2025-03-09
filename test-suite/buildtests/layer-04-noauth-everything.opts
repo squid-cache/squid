@@ -42,11 +42,9 @@ MAKETEST="distcheck"
 #	We can't test them automatically everywhere without detecting those
 #	optional packages first.
 #
-#   --enable-ecap \
 #   --enable-epoll \
 #   --enable-kqueue \
 #   --enable-win32-service \
-#   --with-valgrind-debug \
 #   --with-ldap \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
@@ -110,6 +108,8 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--with-pic \
 	--with-pthreads \
 	--enable-build-info=squid\ test\ build \
+	$CONFIGURE_FLAGS_MAYBE_ENABLE_ECAP \
+	$CONFIGURE_FLAGS_MAYBE_ENABLE_VALGRIND \
 	"
 
 # Fix the distclean testing.
