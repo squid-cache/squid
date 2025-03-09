@@ -59,7 +59,7 @@ private:
 // For clarity we provide some aliases for the tracking mechanisms
 // using Lock so that we can easily see what type of smart pointers
 // are to be used for the child object.
-// NP: CbcPointer<> and RefCount<> pointers should be used consistently
+// Note: CbcPointer<> and RefCount<> pointers should be used consistently
 //     for any given child class type
 
 /// The locking interface for use on Reference-Counted classes
