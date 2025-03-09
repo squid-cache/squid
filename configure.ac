@@ -2536,7 +2536,6 @@ AC_CONFIG_FILES([
 	src/auth/basic/RADIUS/Makefile
 	src/auth/basic/SASL/Makefile
 	src/auth/basic/SMB/Makefile
-	src/auth/basic/SMB_LM/Makefile
 	src/auth/basic/SSPI/Makefile
 	src/auth/digest/Makefile
 	src/auth/digest/eDirectory/Makefile
