@@ -18,6 +18,7 @@ AS_IF([test "x$enable_auth" != "xno"],[
     SQUID_CHECK_HELPER([RADIUS],[auth/basic])
     SQUID_CHECK_HELPER([SASL],[auth/basic])
     SQUID_CHECK_HELPER([SMB],[auth/basic])
+    SQUID_CHECK_HELPER([SMB_LM],[auth/basic])
     SQUID_CHECK_HELPER([SSPI],[auth/basic])
     SQUID_CHECK_HELPER([fake],[auth/basic])
     SQUID_CHECK_HELPER([getpwnam],[auth/basic])
