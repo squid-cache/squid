@@ -55,6 +55,7 @@
 #include "mgr/Registration.h"
 #include "neighbors.h"
 #include "NeighborTypeDomainList.h"
+#include "parser/Tokenizer.h"
 #include "Parsing.h"
 #include "pconn.h"
 #include "PeerDigest.h"
@@ -178,7 +179,7 @@ static void parse_string(char **);
 static void default_all(void);
 static void defaults_if_none(void);
 static void defaults_postscriptum(void);
-static int parse_line(char *);
+static int parse_line(const SBuf &);
 static void parse_obsolete(const char *);
 static void parseBytesLine(size_t * bptr, const char *units);
 static void parseBytesLineSigned(ssize_t * bptr, const char *units);
@@ -215,7 +216,7 @@ static int check_null_IpAddress_list(const Ip::Address_list *);
 #endif /* USE_WCCPv2 */
 
 static void parsePortCfg(AnyP::PortCfgPointer *, const char *protocol);
-#define parse_PortCfg(l) parsePortCfg((l), token)
+#define parse_PortCfg(l) parsePortCfg((l), cfg_directive)
 static void dump_PortCfg(StoreEntry *, const char *, const AnyP::PortCfgPointer &);
 #define free_PortCfg(h)  *(h)=NULL
 
@@ -308,20 +309,23 @@ skip_ws(const char* s)
     return s;
 }
 
+/// Parsers included configuration files identified by their filenames or glob
+/// patterns and included at the given nesting level (a.k.a. depth).
+/// For example, parses include files in `include /path/to/include/files/*.acl`.
+/// \returns the number of errors (that did not immediately terminate parsing)
 static int
-parseManyConfigFiles(char* files, int depth)
+parseIncludedConfigFiles(const SBuf &paths, const int depth)
 {
     int error_count = 0;
-    char* saveptr = nullptr;
+    Parser::Tokenizer tk(paths);
 #if HAVE_GLOB
-    char *path;
     glob_t globbuf;
     int i;
     memset(&globbuf, 0, sizeof(globbuf));
-    for (path = strwordtok(files, &saveptr); path; path = strwordtok(nullptr, &saveptr)) {
-        if (glob(path, globbuf.gl_pathc ? GLOB_APPEND : 0, nullptr, &globbuf) != 0) {
-            int xerrno = errno;
-            fatalf("Unable to find configuration file: %s: %s", path, xstrerr(xerrno));
+    while (auto path = NextWordWhileRemovingDoubleQuotesAndBackslashesInsideThem(tk)) {
+        if (glob(path->c_str(), globbuf.gl_pathc ? GLOB_APPEND : 0, nullptr, &globbuf) != 0) {
+            const auto xerrno = errno;
+            throw TextException(ToSBuf("Unable to find configuration file: ", *path, ": ", xstrerr(xerrno)), Here());
         }
     }
     for (i = 0; i < (int)globbuf.gl_pathc; ++i) {
@@ -329,118 +333,195 @@ parseManyConfigFiles(char* files, int depth)
     }
     globfree(&globbuf);
 #else
-    char* file = strwordtok(files, &saveptr);
-    while (file != NULL) {
-        error_count += parseOneConfigFile(file, depth);
-        file = strwordtok(nullptr, &saveptr);
+    while (auto path = NextWordWhileRemovingDoubleQuotesAndBackslashesInsideThem(tk)) {
+        error_count += parseOneConfigFile(path->c_str(), depth);
     }
 #endif /* HAVE_GLOB */
     return error_count;
 }
 
+/// Replaces all occurrences of macroName in buf with macroValue. When looking
+/// for the next macroName occurrence, this one-scan algorithm does not revisit
+/// previously scanned buf areas and does not visit replaced values.
 static void
-ReplaceSubstr(char*& str, int& len, unsigned substrIdx, unsigned substrLen, const char* newSubstr)
+SubstituteMacro(SBuf &buf, const SBuf &macroName, const SBuf &macroValue)
 {
-    assert(str != nullptr);
-    assert(newSubstr != nullptr);
+    SBuf remainingInput = buf;
+    buf.clear();
+    while (!remainingInput.isEmpty()) {
+        const auto pos = remainingInput.find(macroName);
+        if (pos == SBuf::npos) {
+            buf.append(remainingInput);
+            return;
+        }
 
-    unsigned newSubstrLen = strlen(newSubstr);
-    if (newSubstrLen > substrLen)
-        str = (char*)realloc(str, len - substrLen + newSubstrLen + 1);
-
-    // move tail part including zero
-    memmove(str + substrIdx + newSubstrLen, str + substrIdx + substrLen, len - substrIdx - substrLen + 1);
-    // copy new substring in place
-    memcpy(str + substrIdx, newSubstr, newSubstrLen);
-
-    len = strlen(str);
+        buf.append(remainingInput.substr(0, pos));
+        buf.append(macroValue);
+        remainingInput.chop(pos + macroName.length());
+    }
 }
 
 static void
-SubstituteMacro(char*& line, int& len, const char* macroName, const char* substStr)
+ProcessMacros(SBuf &buf)
 {
-    assert(line != nullptr);
-    assert(macroName != nullptr);
-    assert(substStr != nullptr);
-    unsigned macroNameLen = strlen(macroName);
-    while (const char* macroPos = strstr(line, macroName)) // we would replace all occurrences
-        ReplaceSubstr(line, len, macroPos - line, macroNameLen, substStr);
+    static const auto macroServiceName = SBuf("${service_name}");
+    static const auto macroProcessName = SBuf("${process_name}");
+    static const auto macroProcessNumber = SBuf("${process_number}");
+    static const auto kidIdentifier = ToSBuf(KidIdentifier);
+    SubstituteMacro(buf, macroServiceName, service_name);
+    SubstituteMacro(buf, macroProcessName, TheKidName);
+    SubstituteMacro(buf, macroProcessNumber, kidIdentifier);
 }
 
-static void
-ProcessMacros(char*& line, int& len)
+/// extracts all leading space characters (if any)
+/// \returns whether at least one character was extracted
+static bool
+SkipOptionalSpace(Parser::Tokenizer &tk)
 {
-    SubstituteMacro(line, len, "${service_name}", service_name.c_str());
-    SubstituteMacro(line, len, "${process_name}", TheKidName.c_str());
-    SubstituteMacro(line, len, "${process_number}", xitoa(KidIdentifier));
+    return tk.skipAll(CharacterSet::WSP);
 }
 
-static void
-trim_trailing_ws(char* str)
+/// extracts all (and at least one) characters matching tokenChars surrounded by optional space
+static SBuf
+ExtractToken(const char * const description, Parser::Tokenizer &tk, const CharacterSet &tokenChars)
 {
-    assert(str != nullptr);
-    unsigned i = strlen(str);
-    while ((i > 0) && IsSpace(str[i - 1]))
-        --i;
-    str[i] = '\0';
-}
+    const auto savedTk = tk;
 
-static const char*
-FindStatement(const char* line, const char* statement)
-{
-    assert(line != nullptr);
-    assert(statement != nullptr);
+    (void)SkipOptionalSpace(tk);
 
-    const char* str = skip_ws(line);
-    unsigned len = strlen(statement);
-    if (strncmp(str, statement, len) == 0) {
-        str += len;
-        if (*str == '\0')
-            return str;
-        else if (IsSpace(*str))
-            return skip_ws(str);
+    SBuf token;
+    if (tk.prefix(token, tokenChars)) {
+        (void)SkipOptionalSpace(tk);
+        return token;
     }
 
-    return nullptr;
+    tk = savedTk;
+    throw TextException(ToSBuf("cannot find ", description, " near ", tk.remaining()), Here());
 }
 
-static bool
-StrToInt(const char* str, long& number)
+/// extracts an operand of a preprocessor condition
+static SBuf
+ExtractOperand(const char * const description, Parser::Tokenizer &tk)
 {
-    assert(str != nullptr);
-
-    char* end;
-    number = strtol(str, &end, 0);
-
-    return (end != str) && (*end == '\0'); // returns true if string contains nothing except number
+    static const auto operandChars = (CharacterSet::ALPHA + CharacterSet::DIGIT).add('-').add('+').rename("preprocessor condition operand");
+    return ExtractToken(description, tk, operandChars);
 }
 
-static bool
-EvalBoolExpr(const char* expr)
+/// extracts an operator of a preprocessor condition
+static SBuf
+ExtractOperator(const char * const description, Parser::Tokenizer &tk)
 {
-    assert(expr != nullptr);
-    if (strcmp(expr, "true") == 0) {
+    static const auto operatorChars = CharacterSet("preprocessor condition operator", "<=>%/*^!");
+    return ExtractToken(description, tk, operatorChars);
+}
+
+/// throws on non-empty remaining input
+static void
+RejectTrailingGarbage(const char * const parsedInputDescription, const SBuf &parsedInput, const Parser::Tokenizer &tk)
+{
+    if (!tk.atEnd()) {
+        throw TextException(ToSBuf("found trailing garbage after parsing ",
+                                   parsedInputDescription, ' ', parsedInput, ": ",
+                                   tk.remaining()), Here());
+    }
+}
+
+/// interprets the given raw string as a signed integer (in decimal, hex, or
+/// octal base per Parser::Tokenizer::int64())
+static int64_t
+EvalNumber(const SBuf &raw)
+{
+    auto numberParser = Parser::Tokenizer(raw);
+    int64_t result = 0;
+    if (!numberParser.int64(result, 0, true))
+        throw TextException(ToSBuf("malformed integer near ", raw), Here());
+    RejectTrailingGarbage("integer", raw, numberParser);
+    return result;
+}
+
+/// IsIfStatementOpening() helper that interprets input prefix as a preprocessor condition
+static bool
+EvalBoolExpr(Parser::Tokenizer &tk)
+{
+    const auto operand = ExtractOperand("preprocessor condition", tk);
+
+    static const auto keywordTrue = SBuf("true");
+    if (operand == keywordTrue)
         return true;
-    } else if (strcmp(expr, "false") == 0) {
+
+    static const auto keywordFalse = SBuf("false");
+    if (operand == keywordFalse)
         return false;
-    } else if (const char* equation = strchr(expr, '=')) {
-        const char* rvalue = skip_ws(equation + 1);
-        char* lvalue = (char*)xmalloc(equation - expr + 1);
-        xstrncpy(lvalue, expr, equation - expr + 1);
-        trim_trailing_ws(lvalue);
 
-        long number1;
-        if (!StrToInt(lvalue, number1))
-            fatalf("String is not a integer number: '%s'\n", lvalue);
-        long number2;
-        if (!StrToInt(rvalue, number2))
-            fatalf("String is not a integer number: '%s'\n", rvalue);
+    const auto lhs = operand;
 
-        xfree(lvalue);
-        return number1 == number2;
+    const auto op = ExtractOperator("equality sign in an equality condition", tk);
+    static const auto keywordEqual = SBuf("=");
+    if (op != keywordEqual)
+        throw TextException(ToSBuf("expected equality sign (=) but got ", op), Here());
+
+    const auto rhs = ExtractOperand("right-hand operand of an equality condition", tk);
+    return EvalNumber(lhs) == EvalNumber(rhs);
+}
+
+/// interprets input as the first line of a preprocessor `if` statement
+/// \returns std::nullopt if input does not look like an `if` statement
+/// \returns `if` condition value if input is an `if` statement
+static std::optional<bool>
+IsIfStatementOpening(Parser::Tokenizer tk)
+{
+    // grammar: space* "if" space condition space* END
+    (void)SkipOptionalSpace(tk);
+    const auto keywordIf = SBuf("if");
+    if (tk.skip(keywordIf) && SkipOptionalSpace(tk)) {
+        const auto condition = tk.remaining();
+        const auto result = EvalBoolExpr(tk);
+        (void)SkipOptionalSpace(tk);
+        RejectTrailingGarbage("preprocessor condition", condition, tk);
+        return result;
     }
-    fatalf("Unable to evaluate expression '%s'\n", expr);
-    return false; // this place cannot be reached
+
+    // e.g., "iffy_error_responses on"
+    return std::nullopt;
+}
+
+/// interprets input as an `else` or `endif` line of a preprocessor `if` statement
+/// \returns false if input does not look like an `else` or `endif` line
+static bool
+IsIfStatementLine(const SBuf &keyword, Parser::Tokenizer tk)
+{
+    // grammar: space* keyword space* END
+    (void)SkipOptionalSpace(tk);
+    if (tk.skip(keyword)) {
+        if (tk.atEnd())
+            return true;
+
+        if (SkipOptionalSpace(tk)) {
+            RejectTrailingGarbage("preprocessor keyword", keyword, tk);
+            return true;
+        }
+        // e.g., "elseif"
+    }
+
+    return false;
+}
+
+/// interprets input as an `include <files>` preprocessor directive
+/// \returns std::nullopt if input does not look like an `include` statement
+/// \returns `include` parameters if input is an `include` statement
+static std::optional<SBuf>
+IsIncludeLine(Parser::Tokenizer tk)
+{
+    // grammar: space* "include" space files space* END
+    (void)SkipOptionalSpace(tk);
+    const auto keywordInclude = SBuf("include");
+    if (tk.skip(keywordInclude) && SkipOptionalSpace(tk)) {
+        // for simplicity sake, we leave trailing space, if any, in the result
+        return tk.remaining();
+    }
+
+    // e.g., "include_version_info allow all"
+    return std::nullopt;
 }
 
 static int
@@ -450,8 +531,6 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     const char *orig_cfg_filename = cfg_filename;
     const int orig_config_lineno = config_lineno;
     char *token = nullptr;
-    char *tmp_line = nullptr;
-    int tmp_line_len = 0;
     int err_count = 0;
     int is_pipe = 0;
 
@@ -482,6 +561,9 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     memset(config_input_line, '\0', BUFSIZ);
 
     config_lineno = 0;
+
+    // sequential raw input lines merged to honor line continuation markers
+    SBuf wholeLine;
 
     std::vector<bool> if_states;
     while (fgets(config_input_line, BUFSIZ, fp)) {
@@ -532,46 +614,44 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
         if (config_input_line[0] == '\0')
             continue;
 
-        const char* append = tmp_line_len ? skip_ws(config_input_line) : config_input_line;
+        wholeLine.append(config_input_line);
 
-        size_t append_len = strlen(append);
-
-        tmp_line = (char*)xrealloc(tmp_line, tmp_line_len + append_len + 1);
-
-        strcpy(tmp_line + tmp_line_len, append);
-
-        tmp_line_len += append_len;
-
-        if (tmp_line[tmp_line_len-1] == '\\') {
-            debugs(3, 5, "parseConfigFile: tmp_line='" << tmp_line << "'");
-            tmp_line[--tmp_line_len] = '\0';
+        if (!wholeLine.isEmpty() && *wholeLine.rbegin() == '\\') {
+            debugs(3, 5, "expecting line continuation after " << wholeLine);
+            wholeLine.chop(0, wholeLine.length() - 1); // drop trailing backslash
             continue;
         }
 
-        trim_trailing_ws(tmp_line);
-        ProcessMacros(tmp_line, tmp_line_len);
-        debugs(3, (opt_parse_cfg_only?1:5), "Processing: " << tmp_line);
+        ProcessMacros(wholeLine);
+        auto tk = Parser::Tokenizer(wholeLine);
 
-        if (const char* expr = FindStatement(tmp_line, "if")) {
-            if_states.push_back(EvalBoolExpr(expr)); // store last if-statement meaning
-        } else if (FindStatement(tmp_line, "endif")) {
+        // (void)tk.skipAll(CharacterSet::WSP) is not necessary due to earlier skip_ws()
+        (void)tk.skipAllTrailing(CharacterSet::WSP);
+
+        debugs(3, (opt_parse_cfg_only?1:5), "Processing: " << tk.remaining());
+
+        static const auto keywordElse = SBuf("else");
+        static const auto keywordEndif = SBuf("endif");
+        if (const auto condition = IsIfStatementOpening(tk)) {
+            if_states.push_back(*condition); // store last if-statement meaning
+        } else if (IsIfStatementLine(keywordEndif, tk)) {
             if (!if_states.empty())
                 if_states.pop_back(); // remove last if-statement meaning
             else
                 fatalf("'endif' without 'if'\n");
-        } else if (FindStatement(tmp_line, "else")) {
+        } else if (IsIfStatementLine(keywordElse, tk)) {
             if (!if_states.empty())
                 if_states.back() = !if_states.back();
             else
                 fatalf("'else' without 'if'\n");
         } else if (if_states.empty() || if_states.back()) { // test last if-statement meaning if present
             /* Handle includes here */
-            if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && IsSpace(tmp_line[7])) {
-                err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
+            if (const auto files = IsIncludeLine(tk)) {
+                err_count += parseIncludedConfigFiles(*files, depth + 1);
             } else {
                 try {
-                    if (!parse_line(tmp_line)) {
-                        debugs(3, DBG_CRITICAL, "ERROR: unrecognized directive near '" << tmp_line << "'" <<
+                    if (!parse_line(wholeLine)) {
+                        debugs(3, DBG_CRITICAL, "ERROR: unrecognized directive near '" << wholeLine << "'" <<
                                Debug::Extra << "directive location: " << ConfigParser::CurrentLocation());
                         ++err_count;
                     }
@@ -583,9 +663,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             }
         }
 
-        safe_free(tmp_line);
-        tmp_line_len = 0;
-
+        wholeLine.clear();
     }
     if (!if_states.empty())
         fatalf("if-statement without 'endif'\n");
@@ -602,7 +680,6 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     SetConfigFilename(orig_cfg_filename, false);
     config_lineno = orig_config_lineno;
 
-    xfree(tmp_line);
     return err_count;
 }
 
@@ -666,10 +743,10 @@ ParseDirective(T &raw, ConfigParser &parser)
     if (SawDirective(raw))
         parser.rejectDuplicateDirective();
 
-    // TODO: parser.openDirective(directiveName);
     Must(!raw);
     raw = Configuration::Component<T>::Parse(parser);
     Must(raw);
+    // TODO: Move to parse_line() when ready to reject trailing garbage in all directives.
     parser.closeDirective();
 }
 
@@ -4383,20 +4460,20 @@ sslBumpCfgRr::finalizeConfig()
 {
     if (lastDeprecatedRule != Ssl::bumpEnd) {
         assert( lastDeprecatedRule == Ssl::bumpClientFirst || lastDeprecatedRule == Ssl::bumpNone);
-        static char buf[1024];
+        SBuf conversionRule;
         if (lastDeprecatedRule == Ssl::bumpClientFirst) {
-            strcpy(buf, "ssl_bump deny all");
+            conversionRule = SBuf("ssl_bump deny all");
             debugs(3, DBG_CRITICAL, "WARNING: auto-converting deprecated implicit "
                    "\"ssl_bump deny all\" to \"ssl_bump none all\". New ssl_bump configurations "
                    "must not use implicit rules. Update your ssl_bump rules.");
         } else {
-            strcpy(buf, "ssl_bump allow all");
+            conversionRule = SBuf("ssl_bump allow all");
             debugs(3, DBG_CRITICAL, "SECURITY NOTICE: auto-converting deprecated implicit "
                    "\"ssl_bump allow all\" to \"ssl_bump client-first all\" which is usually "
                    "inferior to the newer server-first bumping mode. New ssl_bump"
                    " configurations must not use implicit rules. Update your ssl_bump rules.");
         }
-        parse_line(buf);
+        parse_line(conversionRule);
     }
 }
 
