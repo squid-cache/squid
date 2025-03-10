@@ -516,7 +516,7 @@ build_groups_DN_array(const char **array, char *userdomain)
 
     while (*array) {
         if (strchr(*array, '/') != NULL) {
-            strncpy(Group, *array, GNLEN);
+            xstrncpy(Group, *array, GNLEN);
             source_group_format = ADS_NAME_TYPE_CANONICAL;
         } else {
             source_group_format = ADS_NAME_TYPE_NT4;
@@ -525,7 +525,7 @@ build_groups_DN_array(const char **array, char *userdomain)
                 strcat(Group, "\\");
                 strncat(Group, *array, GNLEN - sizeof(userdomain) - 1);
             } else
-                strncpy(Group, *array, GNLEN);
+                xstrncpy(Group, *array, GNLEN);
         }
 
         wcsize = MultiByteToWideChar(CP_ACP, 0, Group, -1, wc, 0);
@@ -639,20 +639,20 @@ Valid_Global_Groups(char *UserName, const char **Groups)
     IADs *pUser;
     HRESULT hr;
 
-    strncpy(NTDomain, UserName, sizeof(NTDomain)-1);
+    xstrncpy(NTDomain, UserName, sizeof(NTDomain));
 
     for (j = 0; j < strlen(NTV_VALID_DOMAIN_SEPARATOR); ++j) {
         if ((domain_qualify = strchr(NTDomain, NTV_VALID_DOMAIN_SEPARATOR[j])) != NULL)
             break;
     }
     if (domain_qualify == NULL) {
-        strncpy(User, DefaultDomain, DNLEN);
+        xstrncpy(User, DefaultDomain, DNLEN);
         strcat(User, "\\");
         strncat(User, UserName, UNLEN);
-        strncpy(NTDomain, DefaultDomain, DNLEN);
+        xstrncpy(NTDomain, DefaultDomain, DNLEN);
     } else {
         domain_qualify[0] = '\\';
-        strncpy(User, NTDomain, DNLEN + UNLEN + 2);
+        xstrncpy(User, NTDomain, DNLEN + UNLEN + 2);
         domain_qualify[0] = '\0';
     }
 
