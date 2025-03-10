@@ -8,17 +8,17 @@ section: 8
 
 # SYNOPSIS
 
-**squid** [-dsCFNRSXY] [-\-foreground] [-l facility] [-f file] [-[au] port] [-k signal] [-n service]
+**squid** [-sCFNRSXY] [-d level] [-\-foreground] [-l facility] [-f file] [-[au] port] [-k signal] [-n service]
 
 **squid** -[hv]
 
-**squid** -n service -i [-dsX] [-\-foreground] [-l facility]
+**squid** -n service -i [-sX] [-d level] [-\-foreground] [-l facility]
 
-**squid** -n service -r [-dsX] [-\-foreground] [-l facility]
+**squid** -n service -r [-sX] [-d level] [-\-foreground] [-l facility]
 
-**squid** -n service -O command [-ds] [-\-foreground] [-l facility]
+**squid** -n service -O command [-s] [-d level] [-\-foreground] [-l facility]
 
-**squid** -z [-NS] [-dsX] [-\-foreground] [-l facility] [-f file] [-n service]
+**squid** -z [-NS] [-sX] [-d level] [-\-foreground] [-l facility] [-f file] [-n service]
 
 # DESCRIPTION
 
