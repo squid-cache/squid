@@ -39,7 +39,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<p>Removed <em>ext_lm_group_acl</em> external acl helper. No product
 	   currently on the market suports the LanManager protocol
 	   in their default configuration.
-	<p>Removed <em>ntlm_smb_lm_auth</em> NTLM authentication helper.
+	<p>Removed <em>basic_smb_lm_auth</em> NTLM authentication helper.
 	   Use the <em>ntlm_auth</em> helper from the Samba project instead.
 
 </descrip>
