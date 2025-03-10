@@ -50,6 +50,7 @@ public:
                                        StoreEntry * entry,
                                        const AccessLogEntryPointer &al,
                                        HttpHeader * hdr_out,
+                                       char *peerHost,
                                        const Http::StateFlags &flags);
 
     const Comm::ConnectionPointer & dataConnection() const override;

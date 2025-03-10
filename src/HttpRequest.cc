@@ -93,7 +93,6 @@ HttpRequest::init()
     error.clear();
     peer_login = nullptr;      // not allocated/deallocated by this class
     peer_domain = nullptr;     // not allocated/deallocated by this class
-    peer_host = nullptr;
     vary_headers = SBuf();
     myportname = null_string;
     tag = null_string;

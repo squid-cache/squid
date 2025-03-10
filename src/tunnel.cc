@@ -1155,8 +1155,6 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
 
     netdbPingSite(request->url.host());
 
-    request->peer_host = conn->getPeer() ? conn->getPeer()->host : nullptr;
-
     bool toOrigin = false; // same semantics as StateFlags::toOrigin
     if (const auto * const peer = conn->getPeer()) {
         request->prepForPeering(*peer);
@@ -1565,8 +1563,6 @@ switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, 
     if (!srvConn->getPeer() || !srvConn->getPeer()->options.no_delay)
         tunnelState->server.setDelayId(DelayId::DelayClient(context->http));
 #endif
-
-    request->peer_host = srvConn->getPeer() ? srvConn->getPeer()->host : nullptr;
 
     debugs(26, 4, "determine post-connect handling pathway.");
     if (const auto peer = srvConn->getPeer())

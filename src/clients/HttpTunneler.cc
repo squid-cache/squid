@@ -146,10 +146,12 @@ Http::Tunneler::writeRequest()
         mb.init();
         mb.appendf("CONNECT %s HTTP/1.1\r\n", url.c_str());
         HttpHeader hdr_out(hoRequest);
+        const auto peer = connection->getPeer();
         HttpStateData::httpBuildRequestHeader(request.getRaw(),
                                               nullptr, // StoreEntry
                                               al,
                                               &hdr_out,
+                                              (peer ? peer->host : nullptr),
                                               flags);
         hdr_out.packInto(&mb);
         hdr_out.clean();
