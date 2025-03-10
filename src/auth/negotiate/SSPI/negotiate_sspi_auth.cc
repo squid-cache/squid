@@ -168,7 +168,7 @@ manage_request()
     if ((strlen(buf) > 3) && Negotiate_packet_debug_enabled) {
         if (!token_decode(&decodedLen, decoded, buf+3))
             return 1;
-        strncpy(helper_command, buf, 2);
+        xstrncpy(helper_command, buf, 2);
         debug("Got '%s' from Squid with data:\n", helper_command);
         hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
     } else
