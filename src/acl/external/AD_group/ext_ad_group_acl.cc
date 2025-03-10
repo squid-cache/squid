@@ -496,9 +496,8 @@ Recursive_Memberof(IADs * pObj)
         }
         VariantClear(&var);
     } else {
-        if (hr != E_ADS_PROPERTY_NOT_FOUND) {
+        if (hr != E_ADS_PROPERTY_NOT_FOUND)
             debug("Recursive_Memberof: ERROR getting memberof attribute: %s\n", Get_WIN32_ErrorMessage(hr));
-        }
     }
     return hr;
 }
