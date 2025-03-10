@@ -42,7 +42,7 @@ Security::BlindPeerConnector::initialize(Security::SessionPointer &serverSession
     if (peer && peer->secure.encryptTransport) {
         assert(peer);
 
-        // NP: domain may be a raw-IP but it is now always set
+        // Note: domain may be a raw-IP but it is now always set
         assert(!peer->secure.sslDomain.isEmpty());
 
 #if USE_OPENSSL

@@ -7,7 +7,7 @@
 AS_IF([test "x$enable_auth" != "xno"],[
   NTLM_AUTH_HELPERS=""
   SQUID_HELPER_FEATURE_CHECK([auth_ntlm],[$enable_auth],[auth/ntlm],[
-    # NP: we only need this list because m4_include() does not accept variables
+    # Note: we only need this list because m4_include() does not accept variables
     SQUID_CHECK_HELPER([fake],[auth/ntlm])
     SQUID_CHECK_HELPER([SMB_LM],[auth/ntlm])
     SQUID_CHECK_HELPER([SSPI],[auth/ntlm])

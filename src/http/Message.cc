@@ -81,7 +81,7 @@ Http::Message::parse(const char *buf, const size_t sz, bool eof, Http::StatusCod
 
     // sanity check the start line to see if this is in fact an HTTP message
     if (!sanityCheckStartLine(buf, hdr_len, error)) {
-        // NP: sanityCheck sets *error and sends debug warnings on syntax errors.
+        // Note: sanityCheck sets *error and sends debug warnings on syntax errors.
         // if we have seen the connection close, this is an error too
         if (eof && *error == Http::scNone)
             *error = Http::scInvalidHeader;
