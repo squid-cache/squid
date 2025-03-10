@@ -16,6 +16,7 @@ AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
 m4_include([acinclude/ax_with_prog.m4])
+m4_include([acinclude/ax_compare_version.m4])
 m4_include([acinclude/init.m4])
 m4_include([acinclude/squid-util.m4])
 m4_include([acinclude/compiler-flags.m4])
@@ -142,6 +143,11 @@ AM_CONDITIONAL(ENABLE_POD2MAN_DOC, test "x${ac_cv_path_POD2MAN}" != "x$FALSE")
 AC_PATH_PROG(AR, ar, $FALSE)
 AR_R="$AR r"
 AC_SUBST(AR_R)
+
+AC_PATH_PROG(PANDOC, pandoc,[$FALSE missing])
+pandoc_version=`$PANDOC --version | head -n 1 | cut -d' ' -f2`
+AX_COMPARE_VERSION([$pandoc_version],[ge],[3.1],,[PANDOC="$FALSE bad-version"])
+AM_CONDITIONAL(ENABLE_PANDOC_DOC, test "x${ac_cv_path_PANDOC}" != "x$FALSE")
 
 AC_PATH_PROG(LINUXDOC, linuxdoc, $FALSE)
 AM_CONDITIONAL(ENABLE_RELEASE_DOCS, test "x${ac_cv_path_LINUXDOC}" != "x$FALSE")
