@@ -144,9 +144,9 @@ AC_PATH_PROG(AR, ar, $FALSE)
 AR_R="$AR r"
 AC_SUBST(AR_R)
 
-AC_PATH_PROG(PANDOC, pandoc, $FALSE)
-pandoc_version=`$PANDOC --version`
-AX_COMPARE_VERSION([$pandoc_version],[ge],[3.1],,[PANDOC=$FALSE])
+AC_PATH_PROG(PANDOC, pandoc,[$FALSE missing])
+pandoc_version=`$PANDOC --version | head -n 1 | cut -d' ' -f2`
+AX_COMPARE_VERSION([$pandoc_version],[ge],[3.1],,[PANDOC="$FALSE bad-version"])
 AM_CONDITIONAL(ENABLE_PANDOC_DOC, test "x${ac_cv_path_PANDOC}" != "x$FALSE")
 
 AC_PATH_PROG(LINUXDOC, linuxdoc, $FALSE)
