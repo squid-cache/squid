@@ -77,16 +77,16 @@ details on how to configure Squid see the file
 
 -i
 
-> Install as a Windows Service (see **"-n"** option).
+> Install as a Windows Service (see `-n` option).
 
 -k [ reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse ]
 
 > Parse configuration file, then send signal to running copy
-  (except **"-k parse"**) and exit.
+  (except `-k parse`) and exit.
 
 -l facility
 
-> Use specified syslog facility. Implies **"-s"**
+> Use specified syslog facility. Implies `-s`
 
 -n name
 
@@ -100,7 +100,7 @@ details on how to configure Squid see the file
 -\-foreground
 
 > Parent process does not exit until its children have finished.
-  It has no effect with **"-N"** which does not fork/exit at
+  It has no effect with `-N` which does not fork/exit at
   startup.
 
 -\-kid roleID
@@ -115,7 +115,7 @@ details on how to configure Squid see the file
 
 -r
 
-> Remove a Windows Service (see **"-n"** option).
+> Remove a Windows Service (see `-n` option).
 
 -R
 
@@ -144,7 +144,7 @@ details on how to configure Squid see the file
 
 -Y
 
-> Only return **UDP_HIT** or **UDP_MISS_NOFETCH** during fast
+> Only return `UDP_HIT` or `UDP_MISS_NOFETCH` during fast
   reload.
 
 -z
@@ -159,12 +159,12 @@ details on how to configure Squid see the file
 > This option does not enable validation of any present swap
   structures. Its focus is on creation of missing pieces.
 
-> If nothing is missing, **squid -z** just exits.
+> If nothing is missing, squid `-z` just exits.
 
 > If you suspect cache_dir corruption, you must delete the
-  top-level cache_dir directory before running **squid -z**.
+  top-level cache_dir directory before running squid `-z`.
 
-> By default, **squid -z** runs in daemon mode so that
+> By default, squid `-z` runs in daemon mode so that
   configuration macros and other SMP features work as expected,
   returning control to the caller before cache_dirs are fully
   initialized.
@@ -173,9 +173,9 @@ details on how to configure Squid see the file
   needs to wait for the initialization to complete before
   proceeding further.
 
-> Use **"-\-foreground"** option to prevent premature exits.
+> Use `-\-foreground` option to prevent premature exits.
 
-> Use **-N** option to disable daemon mode.
+> Use `-N` option to disable daemon mode.
 
 # FILES
 
