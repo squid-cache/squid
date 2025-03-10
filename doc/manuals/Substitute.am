@@ -17,6 +17,7 @@ SUBSTITUTE=sed "\
 	s%@SYSCONFDIR@%$(sysconfdir)%g;\
 	"
 
+if ENABLE_PANDOC_DOC
 ## Due to use of $(SUBSTITUTE), built .8 files need to explicitly
 ## depend on Makefile. That dependency should be declared at the
 ## location where a .8 file is built. Due to the suffix rule below,
@@ -25,4 +26,4 @@ SUBSTITUTE=sed "\
 .md.8:
 	$(SUBSTITUTE) < $(srcdir)/`basename $<` | \
 	$(PANDOC) -t man -f gfm -s -o $@
-
+endif
