@@ -17,14 +17,11 @@ SUBSTITUTE=sed "\
 	s%@SYSCONFDIR@%$(sysconfdir)%g;\
 	"
 
-## Important:
-##  Due to use of $(SUBSTITUTE) the built files
-##  need to explicitly depend on Makefile at the
-##  location where they are built. The .md file
-##  does not need to be listed as a dependency.
-##  For Example, see how squid.8 is built in
-##  src/Makefile.am.
-##
+## Due to use of $(SUBSTITUTE), built .8 files need to explicitly
+## depend on Makefile. That dependency should be declared at the
+## location where a .8 file is built. Due to the suffix rule below,
+## that explicit .8 file dependency list should not include an .md file.
+## See squid.8 in src/Makefile.am for an example to follow.
 .md.8:
 	$(SUBSTITUTE) < $(srcdir)/`basename $<` | \
 	$(PANDOC) -t man -f gfm -s -o $@
