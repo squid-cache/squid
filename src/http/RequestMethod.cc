@@ -259,8 +259,7 @@ HttpRequestMethod::respMaybeCacheable() const
 
     // draft-ietf-httpbis-safe-method-w-body
     case Http::METHOD_QUERY:
-        // TODO: this method requires request content normalization and
-        //  inclusion into the cache_key string per section 2.4.
+        // TODO: To cache, add request content to our cache key (see Draft section 2.4).
         return false;
 
     // Special Squid method tokens are not cacheable.
