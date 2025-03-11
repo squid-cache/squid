@@ -923,7 +923,9 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             request->flags.noCache = true;
     }
 
-    /* ignore range header in non-GETs or non-HEADs */
+    /* Only some request methods permit a Range or Request-Range header.
+     * If these headers appear on any other type of request, delete them.
+     */
     if (request->method == Http::METHOD_GET || request->method == Http::METHOD_HEAD || request->method == Http::METHOD_QUERY) {
         // XXX: initialize if we got here without HttpRequest::parseHeader()
         if (!request->range)
@@ -941,15 +943,10 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
              */
             node->readBuffer.offset = request->range->lowestOffset(0);
         }
-    }
-
-    /* Only HEAD, GET, and QUERY requests permit a Range or Request-Range header.
-     * If these headers appear on any other type of request, delete them now.
-     */
-    else {
+    } else {
         req_hdr->delById(Http::HdrType::RANGE);
         req_hdr->delById(Http::HdrType::REQUEST_RANGE);
-        request->ignoreRange("neither HEAD nor GET");
+        request->ignoreRange("prohibited by request method");
     }
 
     if (req_hdr->has(Http::HdrType::AUTHORIZATION))
