@@ -3024,7 +3024,7 @@ NAME: tls_outgoing_options
 IFDEF: HAVE_LIBGNUTLS||USE_OPENSSL
 TYPE: securePeerOptions
 DEFAULT: min-version=1.0
-LOC: Security::ProxyOutgoingConfig
+LOC: Security::ProxyOutgoingConfig()
 DOC_START
 	disable		Do not support https:// URLs.
 

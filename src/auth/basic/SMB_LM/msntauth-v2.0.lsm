@@ -1,8 +1,8 @@
 Begin3
-Title:         msntauth 
-Version:       2.0 
-Entered-date:  01SEP01 
-Description:   Squid web proxy NT domain authentication module 
+Title:         msntauth
+Version:       2.0
+Entered-date:  01SEP01
+Description:   Squid web proxy NT domain authentication module
 Keywords:      Squid WWW proxy SMB NT domain authentication module source
 Author:         antonino@rager.com.au (Antonino Iannella)
 Maintained-by:  antonino@rager.com.au (Antonino Iannella)
