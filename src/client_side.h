@@ -200,7 +200,7 @@ public:
     /// \throws a newly allocated ErrorState if validation fails
     static Comm::ConnectionPointer BorrowPinnedConnection(HttpRequest *, const AccessLogEntryPointer &);
     /// \returns the pinned CachePeer if one exists, nil otherwise
-    CachePeer *pinnedPeer() const { return pinning.peer(); }
+    CachePeer *pinnedPeer() const { return pinning.serverConnection ? pinning.serverConnection->getPeer() : nullptr; }
     bool pinnedAuth() const {return pinning.auth;}
 
     /// called just before a FwdState-dispatched job starts using connection

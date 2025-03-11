@@ -116,6 +116,9 @@ public:
      */
     void setPeer(CachePeer * p);
 
+    /// whether this connection is to a cache_peer which was removed during reconfiguration
+    bool toGoneCachePeer() const;
+
     /** The time the connection started */
     time_t startTime() const {return startTime_;}
 
