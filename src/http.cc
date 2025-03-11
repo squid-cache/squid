@@ -1790,7 +1790,7 @@ HttpStateData::doneWithServer() const
  * Fixup authentication request headers for special cases
  */
 static void
-httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, char *peerHost, const Http::StateFlags &flags)
+httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, const CachePeer * const peer, const Http::StateFlags &flags)
 {
     /* Nothing to do unless we are forwarding to a peer */
     if (!flags.peering)
@@ -1881,7 +1881,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         if (request->flags.auth_no_keytab) {
             negotiate_flags |= PEER_PROXY_NEGOTIATE_NOKEYTAB;
         }
-        Token = peer_proxy_negotiate_auth(PrincipalName, peerHost, negotiate_flags);
+        Token = peer_proxy_negotiate_auth(PrincipalName, (peer ? peer->host : nullptr), negotiate_flags);
         if (Token) {
             httpHeaderPutStrf(hdr_out, header, "Negotiate %s",Token);
         }
@@ -1905,7 +1905,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                                       StoreEntry * entry,
                                       const AccessLogEntryPointer &al,
                                       HttpHeader * hdr_out,
-                                      char *peerHost,
+                                      const CachePeer * const peer,
                                       const Http::StateFlags &flags)
 {
     /* building buffer for complex strings */
@@ -2024,7 +2024,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     }
 
     /* Fixup (Proxy-)Authorization special cases. Plain relaying dealt with above */
-    httpFixupAuthentication(request, hdr_in, hdr_out, peerHost, flags);
+    httpFixupAuthentication(request, hdr_in, hdr_out, peer, flags);
 
     /* append Cache-Control, add max-age if not there already */
     {
@@ -2378,7 +2378,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     {
         HttpHeader hdr(hoRequest);
         forwardUpgrade(hdr); // before httpBuildRequestHeader() for CONNECTION
-        httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, (_peer ? _peer->host : nullptr), flags);
+        httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, _peer, flags);
 
         if (request->flags.pinned && request->flags.connectionAuth)
             request->flags.authSent = true;
