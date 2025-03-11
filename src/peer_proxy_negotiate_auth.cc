@@ -483,7 +483,7 @@ restart:
  * peer_proxy_negotiate_auth gets a GSSAPI token for principal_name
  * and base64 encodes it.
  */
-char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags) {
+char *peer_proxy_negotiate_auth(char *principal_name, const char * const proxy, int flags) {
     int rc = 0;
     OM_uint32 major_status, minor_status;
     gss_ctx_id_t gss_context = GSS_C_NO_CONTEXT;
