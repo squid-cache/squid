@@ -1887,6 +1887,8 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         }
         return;
     }
+#else
+    (void)peer;
 #endif /* HAVE_KRB5 && HAVE_GSSAPI */
 
     blen = base64_encode_update(&ctx, loginbuf, strlen(request->peer_login), reinterpret_cast<const uint8_t*>(request->peer_login));
