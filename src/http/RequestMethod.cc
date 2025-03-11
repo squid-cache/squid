@@ -320,6 +320,12 @@ HttpRequestMethod::purgesOthers() const
     case Http::METHOD_SEARCH:
         return false;
 
+    // draft-ietf-httpbis-safe-method-w-body section 2:
+    //  The content returned in response to a QUERY cannot be assumed to be
+    //  a representation of the resource identified by the target URI.
+    case Http::METHOD_QUERY:
+        return false;
+
     default:
         return true;
     }
