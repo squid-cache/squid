@@ -343,7 +343,7 @@ Ipc::Mem::Segment::create(const off_t aSize)
 }
 
 void
-Ipc::Mem::Segment::open(const bool)
+Ipc::Mem::Segment::open(bool)
 {
     assert(!theMem);
     checkSupport("Fake segment open");
