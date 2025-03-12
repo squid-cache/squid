@@ -219,7 +219,7 @@ Get_primaryGroup(IADs * pUser)
         result = My_NameTranslate(wc, ADS_NAME_TYPE_SID_OR_SID_HISTORY_NAME, ADS_NAME_TYPE_1779);
         safe_free(wc);
 
-        if (result == NULL)
+        if (!result)
             debug("Get_primaryGroup: cannot get DN for %s.\n", tmpSID);
         else
             debug("Get_primaryGroup: Primary group DN: %S.\n", result);
@@ -251,7 +251,7 @@ My_NameTranslate(wchar_t * name, int in_format, int out_format)
     wchar_t *wc;
 
     if (WIN32_COM_initialized == 0) {
-        hr = CoInitialize(NULL);
+        hr = CoInitialize(nullptr);
         if (FAILED(hr)) {
             debug("My_NameTranslate: cannot initialize COM interface, ERROR: %s\n", Get_WIN32_ErrorMessage(hr));
             /* This is a fatal error */
@@ -359,7 +359,7 @@ GetDomainName(void)
     /*
      * Free the allocated memory.
      */
-    if (pDSRoleInfo != NULL)
+    if (pDSRoleInfo)
         DsRoleFreeMemory(pDSRoleInfo);
 
     return DomainName;
@@ -517,12 +517,12 @@ build_groups_DN_array(const char **array, char *userdomain)
     entry = wc_array = (wchar_t **) xmalloc((numberofgroups + 1) * sizeof(wchar_t *));
 
     while (*array) {
-        if (strchr(*array, '/') != NULL) {
+        if (strchr(*array, '/')) {
             xstrncpy(Group, *array, GNLEN);
             source_group_format = ADS_NAME_TYPE_CANONICAL;
         } else {
             source_group_format = ADS_NAME_TYPE_NT4;
-            if (strchr(*array, '\\') == NULL) {
+            if (!strchr(*array, '\\')) {
                 strcpy(Group, userdomain);
                 strcat(Group, "\\");
                 strncat(Group, *array, GNLEN - sizeof(userdomain) - 1);
@@ -536,7 +536,7 @@ build_groups_DN_array(const char **array, char *userdomain)
         *entry = My_NameTranslate(wc, source_group_format, ADS_NAME_TYPE_1779);
         safe_free(wc);
         ++array;
-        if (*entry == NULL) {
+        if (!(*entry)) {
             debug("build_groups_DN_array: cannot get DN for '%s'.\n", Group);
             continue;
         }
@@ -566,7 +566,7 @@ Valid_Local_Groups(char *UserName, const char **Groups)
     DWORD dwTotalCount = 0;
     LPBYTE pBufTmp = nullptr;
 
-    if ((Domain_Separator = strchr(UserName, '/')) != NULL)
+    if ((Domain_Separator = strchr(UserName, '/')))
         *Domain_Separator = '\\';
 
     debug("Valid_Local_Groups: checking group membership of '%s'.\n", UserName);
@@ -597,10 +597,9 @@ Valid_Local_Groups(char *UserName, const char **Groups)
      * If the call succeeds,
      */
     if (nStatus == NERR_Success) {
-        if ((pTmpBuf = pBuf) != NULL) {
+        if ((pTmpBuf = pBuf)) {
             for (i = 0; i < dwEntriesRead; ++i) {
-                assert(pTmpBuf != NULL);
-                if (pTmpBuf == NULL) {
+                if (!pTmpBuf) {
                     result = 0;
                     break;
                 }
@@ -619,7 +618,7 @@ Valid_Local_Groups(char *UserName, const char **Groups)
     /*
      * Free the allocated memory.
      */
-    if (pBuf != NULL)
+    if (pBuf)
         NetApiBufferFree(pBuf);
     return result;
 }
@@ -644,10 +643,10 @@ Valid_Global_Groups(char *UserName, const char **Groups)
     xstrncpy(NTDomain, UserName, sizeof(NTDomain));
 
     for (j = 0; j < strlen(NTV_VALID_DOMAIN_SEPARATOR); ++j) {
-        if ((domain_qualify = strchr(NTDomain, NTV_VALID_DOMAIN_SEPARATOR[j])) != NULL)
+        if ((domain_qualify = strchr(NTDomain, NTV_VALID_DOMAIN_SEPARATOR[j])))
             break;
     }
-    if (domain_qualify == NULL) {
+    if (!domain_qualify) {
         xstrncpy(User, DefaultDomain, DNLEN);
         strcat(User, "\\");
         strncat(User, UserName, UNLEN);
@@ -667,7 +666,7 @@ Valid_Global_Groups(char *UserName, const char **Groups)
                         sizeof(wszUser) / sizeof(wszUser[0]));
 
     /* Get CN of User */
-    if ((User_DN = My_NameTranslate(wszUser, ADS_NAME_TYPE_NT4, ADS_NAME_TYPE_1779)) == NULL) {
+    if (!(User_DN = My_NameTranslate(wszUser, ADS_NAME_TYPE_NT4, ADS_NAME_TYPE_1779))) {
         debug("Valid_Global_Groups: cannot get DN for '%s'.\n", User);
         return result;
     }
@@ -681,7 +680,7 @@ Valid_Global_Groups(char *UserName, const char **Groups)
         IADs *pGrp;
 
         User_PrimaryGroup = Get_primaryGroup(pUser);
-        if (User_PrimaryGroup == NULL)
+        if (!User_PrimaryGroup)
             debug("Valid_Global_Groups: cannot get Primary Group for '%s'.\n", User);
         else {
             add_User_Group(User_PrimaryGroup);
@@ -806,7 +805,7 @@ main(int argc, char *argv[])
 
     assert(argc > 0);
     program_name = strrchr(argv[0], '/');
-    if (program_name == NULL)
+    if (!program_name)
         program_name = argv[0];
     mypid = getpid();
 
@@ -817,7 +816,7 @@ main(int argc, char *argv[])
     process_options(argc, argv);
 
     if (use_global) {
-        if ((machinedomain = GetDomainName()) == NULL) {
+        if (!(machinedomain = GetDomainName())) {
             fprintf(stderr, "%s: FATAL: Can't read machine domain\n", program_name);
             exit(EXIT_FAILURE);
         }
@@ -837,20 +836,20 @@ main(int argc, char *argv[])
 
     /* Main Loop */
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin)) {
-        if (NULL == strchr(buf, '\n')) {
+        if (!strchr(buf, '\n')) {
             /* too large message received.. skip and deny */
             fprintf(stderr, "%s: ERROR: Too large: %s\n", argv[0], buf);
             while (fgets(buf, HELPER_INPUT_BUFFER, stdin)) {
                 fprintf(stderr, "%s: ERROR: Too large..: %s\n", argv[0], buf);
-                if (strchr(buf, '\n') != NULL)
+                if (strchr(buf, '\n'))
                     break;
             }
             SEND_BH(HLP_MSG("Invalid Request. Too Long."));
             continue;
         }
-        if ((p = strchr(buf, '\n')) != NULL)
+        if ((p = strchr(buf, '\n')))
             *p = '\0';      /* strip \n */
-        if ((p = strchr(buf, '\r')) != NULL)
+        if ((p = strchr(buf, '\r')))
             *p = '\0';      /* strip \r */
 
         debug("Got '%s' from Squid (length: %zu).\n", buf, strlen(buf));
@@ -860,14 +859,14 @@ main(int argc, char *argv[])
             continue;
         }
         username = strtok(buf, " ");
-        for (n = 0; (group = strtok(nullptr, " ")) != NULL; ++n) {
+        for (n = 0; (group = strtok(nullptr, " ")); ++n) {
             rfc1738_unescape(group);
             groups[n] = group;
         }
         groups[n] = nullptr;
         numberofgroups = n;
 
-        if (NULL == username) {
+        if (!username) {
             SEND_BH(HLP_MSG("Invalid Request. No Username."));
             continue;
         }
