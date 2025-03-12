@@ -393,8 +393,10 @@ add_User_Group(wchar_t * Group)
 /* returns true on match, false if no match */
 /* TODO: convert to std::containers */
 static bool
-wccmparray(const wchar_t * str, wchar_t ** array)
+wStrIsInArray(const wchar_t * str, wchar_t ** array)
 {
+    if (!array)
+        return false;
     while (*array) {
         debug("Windows group: %S, Squid group: %S\n", str, *array);
         if (wcscmp(str, *array) == 0)
@@ -713,7 +715,7 @@ Valid_Global_Groups(char *UserName, const char **Groups)
 
         auto tmp = User_Groups;
         while (*tmp) {
-            if (wccmparray(*tmp, wszGroups)) {
+            if (wStrIsInArray(*tmp, wszGroups)) {
                 result = 1;
                 break;
             }
