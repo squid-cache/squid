@@ -223,8 +223,9 @@ Get_primaryGroup(IADs * pUser)
             debug("Get_primaryGroup: cannot get DN for %s.\n", tmpSID);
         else
             debug("Get_primaryGroup: Primary group DN: %S.\n", result);
-    } else
+    } else {
         debug("Get_primaryGroup: cannot get objectSid, ERROR: %s\n", Get_WIN32_ErrorMessage(hr));
+    }
     VariantClear(&var);
     return result;
 }
@@ -353,8 +354,9 @@ GetDomainName(void)
         } else {
             debug("Not a Domain member\n");
         }
-    } else
+    } else {
         debug("GetDomainName: ERROR DsRoleGetPrimaryDomainInformation returned: %s\n", Get_WIN32_ErrorMessage(netret));
+    }
 
     /*
      * Free the allocated memory.
@@ -450,10 +452,12 @@ Recursive_Memberof(IADs * pObj)
                     if (SUCCEEDED(hr)) {
                         hr = Recursive_Memberof(pGrp);
                         pGrp->Release();
-                    } else
+                    } else {
                         debug("Recursive_Memberof: ERROR ADsGetObject for %S failed: %s\n", Group_Path, Get_WIN32_ErrorMessage(hr));
-                } else
+                    }
+                } else {
                     debug("Recursive_Memberof: ERROR ADsGetObject for %S failed: %s\n", Group_Path, Get_WIN32_ErrorMessage(hr));
+                }
                 safe_free(Group_Path);
             }
         } else {
@@ -479,10 +483,12 @@ Recursive_Memberof(IADs * pObj)
                                     hr = Recursive_Memberof(pGrp);
                                     pGrp->Release();
                                     safe_free(Group_Path);
-                                } else
+                                } else {
                                     debug("Recursive_Memberof: ERROR ADsGetObject for %S failed: %s\n", Group_Path, Get_WIN32_ErrorMessage(hr));
-                            } else
+                                }
+                            } else {
                                 debug("Recursive_Memberof: ERROR ADsGetObject for %S failed: %s\n", Group_Path, Get_WIN32_ErrorMessage(hr));
+                            }
                             safe_free(Group_Path);
                         }
                         VariantClear(&elem);
@@ -680,9 +686,9 @@ Valid_Global_Groups(char *UserName, const char **Groups)
         IADs *pGrp;
 
         User_PrimaryGroup = Get_primaryGroup(pUser);
-        if (!User_PrimaryGroup)
+        if (!User_PrimaryGroup) {
             debug("Valid_Global_Groups: cannot get Primary Group for '%s'.\n", User);
-        else {
+        } else {
             add_User_Group(User_PrimaryGroup);
             User_PrimaryGroup_Path = GetLDAPPath(User_PrimaryGroup, GC_MODE);
             hr = ADsGetObject(User_PrimaryGroup_Path, IID_IADs, (void **) &pGrp);
@@ -695,10 +701,12 @@ Valid_Global_Groups(char *UserName, const char **Groups)
                 if (SUCCEEDED(hr)) {
                     hr = Recursive_Memberof(pGrp);
                     pGrp->Release();
-                } else
+                } else {
                     debug("Valid_Global_Groups: ADsGetObject for %S failed, ERROR: %s\n", User_PrimaryGroup_Path, Get_WIN32_ErrorMessage(hr));
-            } else
+                }
+            } else {
                 debug("Valid_Global_Groups: ADsGetObject for %S failed, ERROR: %s\n", User_PrimaryGroup_Path, Get_WIN32_ErrorMessage(hr));
+            }
             safe_free(User_PrimaryGroup_Path);
         }
         hr = Recursive_Memberof(pUser);
@@ -709,8 +717,9 @@ Valid_Global_Groups(char *UserName, const char **Groups)
         if (SUCCEEDED(hr)) {
             hr = Recursive_Memberof(pUser);
             pUser->Release();
-        } else
+        } else {
             debug("Valid_Global_Groups: ADsGetObject for %S failed, ERROR: %s\n", User_LDAP_path, Get_WIN32_ErrorMessage(hr));
+        }
 
         auto tmp = User_Groups;
         while (*tmp) {
@@ -825,12 +834,10 @@ main(int argc, char *argv[])
             DefaultDomain = xstrdup(machinedomain);
     }
     debug("%s " VERSION " " SQUID_BUILD_INFO " starting up...\n", argv[0]);
-    if (use_global) {
+    if (use_global)
         debug("Domain Global group mode enabled using '%s' as default domain.\n", DefaultDomain);
-    }
-    if (use_case_insensitive_compare) {
+    if (use_case_insensitive_compare)
         debug("Warning: running in case insensitive mode !!!\n");
-    }
 
     atexit(CloseCOM);
 
