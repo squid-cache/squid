@@ -542,7 +542,7 @@ build_groups_DN_array(const char **array, char *userdomain)
         *entry = My_NameTranslate(wc, source_group_format, ADS_NAME_TYPE_1779);
         safe_free(wc);
         ++array;
-        if (!(*entry)) {
+        if (!*entry) {
             debug("build_groups_DN_array: cannot get DN for '%s'.\n", Group);
             continue;
         }
