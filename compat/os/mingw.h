@@ -46,7 +46,6 @@ fsync(int fd)
 }
 #endif
 
-/* importaed from mswindows.h */
 #define mkdir(p, F) ::mkdir((p))
 
 #endif /* _SQUID_MINGW_*/
