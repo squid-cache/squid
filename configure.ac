@@ -2178,7 +2178,6 @@ AC_CHECK_FUNCS(\
 dnl ... and some we provide local replacements for
 AC_REPLACE_FUNCS(\
 	initgroups \
-	psignal \
 	strerror \
 	strtoll \
 	tempnam \
