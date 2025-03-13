@@ -351,6 +351,12 @@ Security::ServerOptions::loadClientCaFile()
     return bool(clientCaStack);
 }
 
+/// Interprets DHE parameters stored in a previously configured dhParamsFile.
+/// These DHE parameters are orthogonal to ECDHE curve name that may also be
+/// configured when naming that DHE parameters configuration file. When both are
+/// configured, the server selects either FFDHE or ECDHE key exchange mechanism
+/// (and its cipher suites) depending on client-supported cipher suites.
+/// \sa Security::ServerOptions::updateContextEecdh() and RFC 7919 Section 1.2
 void
 Security::ServerOptions::loadDhParams()
 {
@@ -390,7 +396,7 @@ Security::ServerOptions::loadDhParams()
     parsedDhParams.resetWithoutLocking(dhp);
 
 #else // OpenSSL 3.0+
-    const auto type = eecdhCurve.isEmpty() ? "DH" : "EC";
+    const auto type = "DH";
 
     Ssl::ForgetErrors();
     EVP_PKEY *rawPkey = nullptr;
@@ -413,8 +419,6 @@ Security::ServerOptions::loadDhParams()
             if (OSSL_DECODER_from_fp(dctx.get(), in)) {
                 assert(rawPkey);
                 const Security::DhePointer pkey(rawPkey);
-                // TODO: verify that the loaded parameters match the curve named in eecdhCurve
-
                 if (const Ssl::EVP_PKEY_CTX_Pointer pkeyCtx{EVP_PKEY_CTX_new_from_pkey(nullptr, pkey.get(), nullptr)}) {
                     switch (EVP_PKEY_param_check(pkeyCtx.get())) {
                     case 1: // success
@@ -566,9 +570,23 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
     // set DH parameters into the server context
 #if USE_OPENSSL
     if (parsedDhParams) {
-        SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get());
+#if OPENSSL_VERSION_MAJOR < 3
+        if (SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get()) != 1) {
+            debugs(83, DBG_IMPORTANT, "ERROR: Unable to set DH parameters in TLS context (using legacy OpenSSL): " << Ssl::ReportAndForgetErrors);
+        }
+#else
+        const auto tmp = EVP_PKEY_dup(parsedDhParams.get());
+        if (!tmp) {
+            debugs(83, DBG_IMPORTANT, "ERROR: Unable to duplicate DH parameters: " << Ssl::ReportAndForgetErrors);
+            return;
+        }
+        if (SSL_CTX_set0_tmp_dh_pkey(ctx.get(), tmp) != 1) {
+            debugs(83, DBG_IMPORTANT, "ERROR: Unable to set DH parameters in TLS context: " << Ssl::ReportAndForgetErrors);
+            EVP_PKEY_free(tmp);
+        }
+#endif // OPENSSL_VERSION_MAJOR
     }
-#endif
+#endif // USE_OPENSSL
 }
 
 void
