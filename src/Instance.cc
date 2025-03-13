@@ -265,7 +265,7 @@ Instance::WriteOurPid()
 }
 
 /// Returns murmur3 hash of the PID file name to make a uniq service name.
-/// It is called from the Ipc::Mem::Segment::GenerateName() function.
+/// It is called from Ipc::Mem::Segment::GenerateName() and Ipc::Port::MakeAddr() functions.
 SBuf
 Instance::GetPidFilenameHash()
 {
