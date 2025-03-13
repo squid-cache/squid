@@ -14,6 +14,7 @@
 #include "comm/Read.h"
 #include "CommCalls.h"
 #include "ipc/Port.h"
+#include "Instance.h"
 #include "sbuf/Stream.h"
 #include "tools.h"
 #include "util.h"
@@ -54,6 +55,8 @@ String Ipc::Port::MakeAddr(const char* processLabel, int id)
     assert(id >= 0);
     String addr = channelPathPfx;
     addr.append(service_name.c_str());
+    addr.append('.');
+    addr.append(Instance::GetPidFilenameHash().c_str());
     addr.append(processLabel);
     addr.append('-');
     addr.append(xitoa(id));
