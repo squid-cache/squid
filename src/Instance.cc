@@ -45,14 +45,19 @@ murmur3_32(const char *key, size_t len, uint32_t seed) {
     // tail
     k = 0;
     switch (len & 3) {
-        case 3: k = ((unsigned char)key[(len & ~3) + 2]) << 16; [[fallthrough]];
-        case 2: k |= ((unsigned char)key[(len & ~3) + 1]) << 8; [[fallthrough]];
-        case 1: k |= ((unsigned char)key[len & ~3]);
-                k *= 0xcc9e2d51;
-                k = (k << 15) | (k >> 17);
-                k *= 0x1b873593;
-                h ^= k;
-                break;
+    case 3:
+        k = ((unsigned char)key[(len & ~3) + 2]) << 16;
+        [[fallthrough]];
+    case 2:
+        k |= ((unsigned char)key[(len & ~3) + 1]) << 8;
+        [[fallthrough]];
+    case 1:
+        k |= ((unsigned char)key[len & ~3]);
+        k *= 0xcc9e2d51;
+        k = (k << 15) | (k >> 17);
+        k *= 0x1b873593;
+        h ^= k;
+        break;
     }
 
     // finalize
