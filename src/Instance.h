@@ -30,6 +30,10 @@ void WriteOurPid();
 /// Throws if PID file maintenance is disabled.
 pid_t Other();
 
+/// Returns murmur3 hash of the PID file name to make a uniq service name
+/// to use it in the shared memory segments naming
+SBuf GetPidFilenameHash();
+
 } // namespace Instance
 
 #endif /* SQUID_SRC_INSTANCE_H */
