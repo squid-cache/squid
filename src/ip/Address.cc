@@ -45,7 +45,7 @@ Ip::Address::Parse(const char * const raw)
 {
     Address tmp;
     // TODO: Merge with lookupHostIP() after removing DNS lookups from Ip.
-    if (tmp.lookupHostIP(raw, false))
+    if (tmp.lookupHostIP(raw, true))
         return tmp;
     return std::nullopt;
 }

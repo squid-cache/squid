@@ -36,22 +36,19 @@ CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 bool Comm::ConnOpener::doneAll() const STUB_RETVAL(false)
 void Comm::ConnOpener::start() STUB
 void Comm::ConnOpener::swanSong() STUB
-Comm::ConnOpener::ConnOpener(const Comm::ConnectionPointer &, const AsyncCall::Pointer &, time_t) : AsyncJob("STUB Comm::ConnOpener") STUB
-    Comm::ConnOpener::~ConnOpener() STUB
-    void Comm::ConnOpener::setHost(const char *) STUB
-    const char * Comm::ConnOpener::getHost() const STUB_RETVAL(nullptr)
+Comm::ConnOpener::ConnOpener(const Comm::ConnectionPointer &, const AsyncCall::Pointer &, time_t) : AsyncJob("STUB Comm::ConnOpener") {STUB}
+Comm::ConnOpener::~ConnOpener() STUB
+void Comm::ConnOpener::setHost(const char *) STUB
+const char * Comm::ConnOpener::getHost() const STUB_RETVAL(nullptr)
 
 #include "comm/forward.h"
-    bool Comm::IsConnOpen(const Comm::ConnectionPointer &) STUB_RETVAL(false)
+bool Comm::IsConnOpen(const Comm::ConnectionPointer &) STUB_RETVAL(false)
 
 #include "comm/IoCallback.h"
-    void Comm::IoCallback::setCallback(iocb_type, AsyncCall::Pointer &, char *, FREE *, int) STUB
-    void Comm::IoCallback::selectOrQueueWrite() STUB
-    void Comm::IoCallback::cancel(const char *) STUB
-    void Comm::IoCallback::finish(Comm::Flag, int) STUB
-    Comm::CbEntry *Comm::iocb_table = nullptr;
-void Comm::CallbackTableInit() STUB
-void Comm::CallbackTableDestruct() STUB
+void Comm::IoCallback::setCallback(iocb_type, AsyncCall::Pointer &, char *, FREE *, int) STUB
+void Comm::IoCallback::selectOrQueueWrite() STUB
+void Comm::IoCallback::cancel(const char *) STUB
+void Comm::IoCallback::finish(Comm::Flag, int) STUB
 
 #include "comm/Loops.h"
 void Comm::SelectLoopInit(void) STUB

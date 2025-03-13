@@ -118,7 +118,7 @@ static Mem::Allocator *squidaio_small_bufs = nullptr; /* 4K */
 static Mem::Allocator *squidaio_tiny_bufs = nullptr; /* 2K */
 static Mem::Allocator *squidaio_micro_bufs = nullptr; /* 128K */
 
-static int request_queue_len = 0;
+static size_t request_queue_len = 0;
 static Mem::Allocator *squidaio_request_pool = nullptr;
 static Mem::Allocator *squidaio_thread_pool = nullptr;
 static squidaio_request_queue_t request_queue;
@@ -215,7 +215,6 @@ squidaio_xstrfree(char *str)
 void
 squidaio_init(void)
 {
-    int i;
     squidaio_thread_t *threadp;
 
     if (squidaio_initialised)
@@ -294,7 +293,7 @@ squidaio_init(void)
 
     assert(NUMTHREADS != 0);
 
-    for (i = 0; i < NUMTHREADS; ++i) {
+    for (size_t i = 0; i < NUMTHREADS; ++i) {
         threadp = (squidaio_thread_t *)squidaio_thread_pool->alloc();
         threadp->status = _THREAD_STARTING;
         threadp->current_req = nullptr;
@@ -515,7 +514,7 @@ squidaio_queue_request(squidaio_request_t * request)
     /* Warn if out of threads */
     if (request_queue_len > MAGIC1) {
         static int last_warn = 0;
-        static int queue_high, queue_low;
+        static size_t queue_high, queue_low;
 
         if (high_start == 0) {
             high_start = squid_curtime;
@@ -999,7 +998,6 @@ void
 squidaio_stats(StoreEntry * sentry)
 {
     squidaio_thread_t *threadp;
-    int i;
 
     if (!squidaio_initialised)
         return;
@@ -1010,8 +1008,8 @@ squidaio_stats(StoreEntry * sentry)
 
     threadp = threads;
 
-    for (i = 0; i < NUMTHREADS; ++i) {
-        storeAppendPrintf(sentry, "%i\t0x%lx\t%ld\n", i + 1, (unsigned long)threadp->thread, threadp->requests);
+    for (size_t i = 0; i < NUMTHREADS; ++i) {
+        storeAppendPrintf(sentry, "%zu\t0x%lx\t%ld\n", i + 1, (unsigned long)threadp->thread, threadp->requests);
         threadp = threadp->next;
     }
 }

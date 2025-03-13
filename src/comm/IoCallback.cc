@@ -16,29 +16,34 @@
 #include "fde.h"
 #include "globals.h"
 
-Comm::CbEntry *Comm::iocb_table;
+namespace Comm
+{
 
-void
-Comm::CallbackTableInit()
+// XXX: Add API to react to Squid_MaxFD changes.
+/// Creates a new callback table using the current value of Squid_MaxFD.
+/// \sa fde::Init()
+static CbEntry *
+MakeCallbackTable()
 {
     // XXX: convert this to a std::map<> ?
-    iocb_table = static_cast<CbEntry*>(xcalloc(Squid_MaxFD, sizeof(CbEntry)));
+    // XXX: Stop bypassing CbEntry-associated constructors! Refactor to use new() instead.
+    const auto iocb_table = static_cast<CbEntry*>(xcalloc(Squid_MaxFD, sizeof(CbEntry)));
     for (int pos = 0; pos < Squid_MaxFD; ++pos) {
         iocb_table[pos].fd = pos;
         iocb_table[pos].readcb.type = IOCB_READ;
         iocb_table[pos].writecb.type = IOCB_WRITE;
     }
+    return iocb_table;
 }
 
-void
-Comm::CallbackTableDestruct()
+} // namespace Comm
+
+Comm::CbEntry &
+Comm::ioCallbacks(const int fd)
 {
-    // release any Comm::Connections being held.
-    for (int pos = 0; pos < Squid_MaxFD; ++pos) {
-        iocb_table[pos].readcb.conn = nullptr;
-        iocb_table[pos].writecb.conn = nullptr;
-    }
-    safe_free(iocb_table);
+    static const auto table = MakeCallbackTable();
+    assert(fd < Squid_MaxFD);
+    return table[fd];
 }
 
 /**

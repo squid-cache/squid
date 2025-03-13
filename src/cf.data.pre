@@ -51,9 +51,10 @@ COMMENT_START
 
 	Units accepted by Squid are:
 		bytes - byte
-		KB - Kilobyte (1024 bytes)
-		MB - Megabyte
-		GB - Gigabyte
+		KB - Kilobyte (2^10, 1'024 bytes)
+		MB - Megabyte (2^20, 1'048'576 bytes)
+		GB - Gigabyte (2^30, 1'073'741'824 bytes)
+	Squid does not yet support KiB, MiB, and GiB unit names.
 
   Values with time units
 
@@ -486,6 +487,9 @@ DOC_START
 
 	In SMP mode, each worker does nearly all what a single Squid daemon
 	does (e.g., listen on http_port and forward HTTP requests).
+
+	Changing the number of workers requires a restart: Squid warns about but
+	otherwise ignores attempts to change this setting via reconfiguration.
 DOC_END
 
 NAME: cpu_affinity_map
@@ -2575,6 +2579,9 @@ DOC_START
 	The tls-cert= option is mandatory on HTTPS ports.
 
 	See http_port for a list of modes and options.
+	Not all http_port options are available for https_port.
+	Among the unavalable options:
+	- require-proxy-header
 DOC_END
 
 NAME: ftp_port
@@ -2639,6 +2646,9 @@ DOC_START
 
 	Other http_port modes and options that are not specific to HTTP and
 	HTTPS may also work.
+	Among the options that are not available for ftp_port:
+	- require-proxy-header
+	- ssl-bump
 DOC_END
 
 NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoing_dscp
@@ -3014,7 +3024,7 @@ NAME: tls_outgoing_options
 IFDEF: HAVE_LIBGNUTLS||USE_OPENSSL
 TYPE: securePeerOptions
 DEFAULT: min-version=1.0
-LOC: Security::ProxyOutgoingConfig
+LOC: Security::ProxyOutgoingConfig()
 DOC_START
 	disable		Do not support https:// URLs.
 

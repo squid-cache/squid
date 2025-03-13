@@ -957,35 +957,6 @@ src/acl/external/LDAP_group/:
  *
  * In part based on squid_ldap_auth by Glen Newton and Henrik Nordstrom.
 
-
-==============================================================================
-
-src/acl/external/LM_group/:
-
- * (C)2002,2005 Guido Serassio - Acme Consulting S.r.l.
- *
- * Authors:
- *  Guido Serassio <guido.serassio@acmeconsulting.it>
- *  Acme Consulting S.r.l., Italy <http://www.acmeconsulting.it>
-
- * In part based on check_group by Rodrigo Albani de Campos.
- *
- * Dependencies: Windows NT4 SP4 and later.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
-
 ==============================================================================
 
 src/acl/external/SQL_session/:

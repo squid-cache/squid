@@ -90,7 +90,12 @@ struct CBDataIndex {
 int cbdata_types = 0;
 
 #if WITH_VALGRIND
-static std::map<const void *, cbdata *> cbdata_htable;
+static auto &
+CbdataTable()
+{
+    static const auto htable = new std::map<const void *, cbdata *>();
+    return *htable;
+}
 #endif
 
 cbdata::~cbdata()
@@ -106,7 +111,7 @@ cbdata::~cbdata()
 cbdata *
 cbdata::FromUserData(const void *p) {
 #if WITH_VALGRIND
-    return cbdata_htable.at(p);
+    return CbdataTable().at(p);
 #else
     const auto t = static_cast<const char *>(p) - offsetof(cbdata, data);
     return reinterpret_cast<cbdata *>(const_cast<char *>(t));
@@ -154,7 +159,7 @@ cbdataInternalAlloc(cbdata_type type)
     c = new cbdata;
     p = cbdata_index[type].pool->alloc();
     c->data = p;
-    cbdata_htable.emplace(p,c);
+    CbdataTable().emplace(p, c);
 #else
     c = new (cbdata_index[type].pool->alloc()) cbdata;
     p = (void *)&c->data;
@@ -182,7 +187,7 @@ cbdataRealFree(cbdata *c)
     debugs(45, 9, "Freeing " << p);
 
 #if WITH_VALGRIND
-    cbdata_htable.erase(p);
+    CbdataTable().erase(p);
     delete c;
 #else
     /* This is ugly. But: operator delete doesn't get

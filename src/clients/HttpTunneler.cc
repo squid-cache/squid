@@ -296,15 +296,25 @@ Http::Tunneler::handleResponse(const bool eof)
     }
 
     if (!parsedOk) {
+        // XXX: This code and Server RESPONSE reporting code below duplicate
+        // HttpStateData::processReplyHeader() reporting code, including its problems.
+        debugs(11, 3, "Non-HTTP-compliant header:\n---------\n" << readBuf << "\n----------");
         bailOnResponseError("malformed CONNECT response from peer", nullptr);
         return;
     }
+
+    /* We know the whole response is in parser now */
+    debugs(11, 2, "Tunnel Server " << connection);
+    debugs(11, 2, "Tunnel Server RESPONSE:\n---------\n" <<
+           hp->messageProtocol() << " " << hp->messageStatus() << " " << hp->reasonPhrase() << "\n" <<
+           hp->mimeHeader() <<
+           "----------");
 
     HttpReply::Pointer rep = new HttpReply;
     rep->sources |= Http::Message::srcHttp;
     rep->sline.set(hp->messageProtocol(), hp->messageStatus());
     if (!rep->parseHeader(*hp) && rep->sline.status() == Http::scOkay) {
-        bailOnResponseError("malformed CONNECT response from peer", nullptr);
+        bailOnResponseError("malformed CONNECT response headers mime block from peer", nullptr);
         return;
     }
 
@@ -312,11 +322,6 @@ Http::Tunneler::handleResponse(const bool eof)
     auto &futureAnswer = callback.answer();
     futureAnswer.peerResponseStatus = rep->sline.status();
     request->hier.peer_reply_status = rep->sline.status();
-
-    debugs(11, 2, "Tunnel Server " << connection);
-    debugs(11, 2, "Tunnel Server RESPONSE:\n---------\n" <<
-           Raw(nullptr, readBuf.rawContent(), rep->hdr_sz).minLevel(2).gap(false) <<
-           "----------");
 
     // bail if we did not get an HTTP 200 (Connection Established) response
     if (rep->sline.status() != Http::scOkay) {

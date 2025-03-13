@@ -1,3 +1,200 @@
+Changes in squid-7.0.1 (2 Feb 2025):
+
+	- Remove Edge Side Include (ESI) protocol
+	- Remove Ident protocol support
+	- Remove cache_object protocol support
+	- Remove cachemgr.cgi tool
+	- Remove tool 'purge' for management of UFS/AUFS/DiskD caches
+	- Remove squidclient
+	- Remove disabled classful networks code
+	- Remove dead Multicast Miss Stream feature
+	- Remove broken and disabled icpPktDump()
+	- Remove deprecated string memory pools API
+	- Remove dead "binary HTTP header logging" code (-DHEADERS_LOG)
+	- Rename --with-gnugss to --with-gss
+	- Remove krb5_get_max_time_skew portability hack
+	- Remove PRIuSIZE macro
+	- Remove ADD_X_REQUEST_URI
+	- Bug 5390: Non-POD SquidConfig::ssl_client::sslContext exit crash
+	- Bug 5363: Handle IP-based X.509 SANs better
+	- Bug 5383: handleNegotiationResult() level-2 debugs() crash
+	- Bug 5449: Ignore SP and HTAB chars after chunk-size
+	- Bug 5428: Warn if pkg-config is not found
+	- Bug 5293: Security::CreateClientSession uses wrong TLS options
+	- Bug 5417: An empty annotation value does not match
+	- Bug 5322: Do not leak HttpReply when checking http_reply_access
+	- Bug 5329: cbdata.cc:276 "c->locks > 0" assertion on reconfigure
+	- Bug 5119: Null pointer dereference in makeMemNodeDataOffset()
+	- Bug 5254, part 1: Do not leak master process' cache.log to kids
+	- Bug 5312: Startup aborts if OPEN_MAX exceeds RLIMIT_NOFILE
+	- Bug 4156: comm.cc "!commHasHalfClosedMonitor(fd)" assertion
+	- ext_time_quota_acl: restore debug level feature and argument
+	- ext_ad_group_acl: fix dependency detection
+	- ext_time_quota_acl: convert to c++
+	- scripts/find-alive.pl: Auto-detect auto-added ctors/dtors names
+	- negotiate_wrapper_auth: protect from responses over 64KB
+	- negotiate_kerberos_auth: Support Kerberos PAC-ResourceGroups
+	- pinger: improve timer accuracy and resolution
+	- testheaders.sh: force-remove temporary files
+	- squid-conf-tests: Ignore tests with mismatching autoconf macro
+	- MinGW: Emulate fsync
+	- MinGW: fix winsock dependency issues
+	- MinGW-w64: enable native file locking
+	- Windows: Drop obsolete WinSock v1 library
+	- Windows: Improve PSAPI.dll detection
+	- basic_sspi_auth: MinGW build fixes
+	- HTTP: Protect just-parsed responses from accidental destruction
+	- WCCP: fix inverted range check
+	- Y2038: Fix cache_peer connect-timeout reporting
+	- Y2038: Use time_t for commSetConnTimeout() timeout parameter
+	- Work around some mgr:forward accounting/reporting bugs
+	- Fix: Ftp::Gateway may segfault in level-3 double-complete debugs()
+	- Do not mark successful FTP PUT entries with ENTRY_BAD_LENGTH
+	- Fix ENTRY_ABORTED assertion in sendClientOldEntry()
+	- Limit Server::inBuf growth
+	- Reject config with unknown directives before committing to it
+	- Fix and redefine meaning of total peering time (%<tt)
+	- Fix use-after-free in peerDigestFetchReply()
+	- Fix use-after-free in statefulhelper::submit() level-9 debug
+	- Fix PeerDigest lifetime management
+	- Fix Tokenizer::int64() parsing of "0" when guessing base
+	- Fix SMP mgr:userhash, mgr:sourcehash, and mgr:carp reports
+	- Fix reporting of unrecognized directives
+	- Do not blame cache_peer for CONNECT errors
+	- Fix heap buffer overead in ConfigParser::UnQuote()
+	- Do not die when parsing obsolete log_access and log_icap
+	- Extend in-use ACLs lifetime across reconfiguration
+	- Fix MemObject.cc:123: "!updatedReply_" assertion
+	- Avoid UB when packing a domain name
+	- Fix qos_flows confguration reporting
+	- Fix and improve annotation reporting
+	- Fix configuration crashes on malformed sslproxy_* directives
+	- Avoid UB when copying AnyP::Uri
+	- Fix and improve html_quote()
+	- Fix acl annotate_transaction reporting in mgr:config
+	- Fix ipv4 and expand ipv6 ACL parameter matching
+	- Fix Controller.cc TheRoot assertion during shutdown
+	- Fix Comm::TcpAcceptor::status() reporting of listening address
+	- Fix performance regressions with fastCheck() result copying
+	- Fix handling of zero cache_peers
+	- Fix cbdata assertion in carpInit()
+	- Fix: REQMOD stuck when adapted request (body) is not forwarded
+	- Fix rock/RockSwapDir.cc "slot->sameKey()" assertion
+	- Fix dupe handling in Splay ACLs: src, dst, http_status, etc.
+	- Protect ACLFilledChecklist heap allocations from leaking
+	- Stop leaking PeerDigests on reconfiguration
+	- Handle helper program startup failure as its death
+	- Kill helpers that speak without being spoken to
+	- annotate_client and annotate_transaction ACLs must always match
+	- Restrict squid.conf preprocessor space characters to SP and HT
+	- Drop helpless helper requests
+	- Improve Tunnel Server RESPONSE dumps
+	- Do not lookup IP addresses of X509 certificate subject CNs
+	- Report cache_peer context in probe and standby pool messages
+	- Treat responses to collapsed requests as fresh
+	- Do not TLS close_notify when resetting a TCP connection
+	- Simplified quick_abort_pct code and improved its docs
+	- Update HTTP status codes
+	- Report all refreshCheck() outcomes and entry gist
+	- Prohibit bad --enable-linux-netfilter combinations
+	- Use ERR_ACCESS_DENIED for HTTP 403 (Forbidden) errors
+	- Scaffolding for YAML-formatted cache manager reports
+	- Improve ErrorState debugging
+	- Stop zeroing huge memAllocBuf() buffers
+	- Enable EDNS for DNS A queries and reverse IPv4 lookups
+	- Format mgr:pconn as YAML
+	- Use ERR_READ_ERROR for read-from-client I/O errors
+	- Use AnyP::Uri::Decode() for urllogin and url_regex checks
+	- Throw, not self_destruct(), on qos_flow configuration errors
+	- Add %byte{value} logformat code for logging or sending any byte
+	- Do not report bogus/empty SMP cache_dir indexing stats
+	- Report/abort on any catastrophic rock cache_dir indexing failure
+	- Recognize internal requests created by adaptation/redirection
+	- Log %err_code for ERR_RELAY_REMOTE transactions
+	- Restore errno in %err_detail for ERR_CONNECT_FAIL
+	- Report all AsyncJob objects (mgr:jobs)
+	- Cover OnTerminate() calls unrelated to exception handling
+	- Keep ::helper objects alive while in use by helper_servers
+	- Add SQUID_CHECK_LIB_WORKS autoconf macro
+	- Reject more CONNECT requests with malformed targets
+	- Forget non-peer access details
+	- Do not report DNS answers without A/AAAA records by default
+	- Destroy an idle PeerDigest after its CachePeer disappears
+	- Do not apply custom debugs() format to Debug::Extra lines
+	- Do not check store_status when checking ENTRY_BAD_LENGTH
+	- Add buffered_logs OFF support to UDP logger
+	- ... and many documentation improvements
+	- ... and many portability and compatibility fixes
+	- ... and many code cleanups
+	- ... and improvements to unit tests
+	- ... and some error page translation improvements
+	- ... and all fixes from 6.13
+
+Changes in squid-6.13 (31 Jan 2025):
+
+	- Bug 5352: Do not get stuck when RESPMOD is slower than read(2)
+	- Bug 5405: Large uploads fill request buffer and die
+	- Bug 5093: List http_port params that https_port/ftp_port lack
+	- Bug 5311: clarify configuration byte units
+	- Bug 5091: document that changes to workers require restart
+	- Bug 5481: Fix GCC v14 build [-Wmaybe-uninitialized]
+	- Nil request dereference in ACLExtUser and SourceDomainCheck ACLs
+	- Fix GCC v14 [-Wanalyzer-null-dereference] warnings in Kerberos
+	- Clarify --enable-ecap failure on missing shared library support
+	- Fix syntax error in configure.ac
+	- Remove GNU'ism in release notes Makefile
+	- Annotate PoolMalloc memory in valgrind builds
+	- Fix systemd startup sequence to require active Local Filesystem
+	- Display Linux variant at ./configure time
+	- Refactor peerRefreshDNS() to clarify its (void*)1 logic
+	- Portability: remove explicit check for libdl
+	- ext_time_quota_acl: remove -l option
+	- ... and some documentation updates
+	- ... and some CI updates
+
+Changes in squid-6.12 (12 Oct 2024):
+
+	- Fix validation of Digest auth header parameters
+	- Fix build with libtool v2.4 + automake v1.17
+	- Use git to extract default build-info when enabled
+	- ... and a minor source-maintenance portability fix
+
+Changes in squid-6.11 (15 Sep 2024):
+
+	- Fix Kerberos detection when cross-compiling
+	- Improve robustness of DNS code on reconfigure
+	- Prevent slow memory leak in TCP DNS queries
+	- Improve errors emitted when invalid ACLs are parsed
+	- Remove some unused code and obsolete compatiblity hacks
+
+Changes in squid-6.10 (10 Jun 2024):
+
+	- Bug 5378: type mismatch in libTrie
+	- Disable ESI in default build
+	- Fix build with clang v18 [-Wvla-cxx-extension]
+	- ... and some unit test improvements
+	- ... and some documentation improvements
+
+Changes in squid-6.9 (7 Apr 2024):
+
+	- Regression Bug 5349: basic_nis_auth build error: unterminated #ifndef
+	- Bug 5069: Keep listening after getsockname() error
+	- Bug 5360: FwdState::noteDestinationsEnd() assertion "err"
+	- Reduce stale errno usage
+	- Plug memory leak in handling cache manager requests
+	- Fix error: template-id not allowed for constructor in C++20
+	- Improve release packaging automation
+
+Changes in squid-6.8 (4 Mar 2024):
+
+	- Bug 5344: mgr:config segfaults without logformat
+	- Bug 5343: Fix build on GCC 14
+	- Fix infinite recursion when parsing malformed HTTP chunks
+	- Fix max-stale in default refresh_pattern
+	- Fix marking of problematic cached IP addresses
+	- Improved portability to MacOS
+	- ... and some documentation improvements
+
 Changes in squid-6.7 (4 Feb 2024)
 
 	- Bug 5337: workaround for crash on startup if -a option is used
@@ -202,6 +399,15 @@ Changes in squid-6.0.1 (28 Feb 2023):
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
 	- ... and all fixes from 5.8
+
+Changes in squid-5.10 (01 Oct 2024):
+
+	- Bug 5301: cachemgr.cgi not showing new manager interface URLs
+	- Bug 5300: cachemgr.cgi assertion
+	- Fix fatalf() undefined for environments without syslog
+	- Fix reported assertion condition being always "EX"
+	- negotiate_kerberos_auth: Fix build [-Wunused-but-set-variable]
+	- ... and some documentation changes
 
 Changes in squid-5.9 (30 Apr 2023):
 

@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[7.0.0-VCS],[https://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[8.0.0-VCS],[https://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -840,7 +840,7 @@ AC_ARG_ENABLE(ecap,
 dnl Perform configuration consistency checks for eCAP
 AS_IF([test "x$enable_ecap" != "xno"],[
   AS_IF([test "x$enable_shared" != "xyes"],[
-    AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-shared with --enable-ecap.])
+    AC_MSG_ERROR([eCAP support requires loadable modules (i.e. --enable-shared or equivalent).])
   ])
 
   AS_IF([test -n "$PKG_CONFIG"],[
@@ -1185,7 +1185,11 @@ SQUID_CHECK_LIB_WORKS(ldap,[
     dnl On MinGW OpenLDAP is not available, try Windows LDAP libraries
     dnl TODO: use AC_CHECK_LIB
     LIBLDAP_LIBS="-lwldap32"
-    AC_CHECK_HEADERS(winldap.h)
+    AC_CHECK_HEADERS([windows.h winldap.h],,,[
+      #if HAVE_WINDOWS_H
+      #include <windows.h>
+      #endif
+    ])
   ])
   AC_CHECK_HEADERS(ldap.h lber.h)
   AC_CHECK_HEADERS(mozldap/ldap.h)
@@ -2517,7 +2521,6 @@ AC_CONFIG_FILES([
 	src/acl/external/kerberos_ldap_group/Makefile
 	src/acl/external/kerberos_sid_group/Makefile
 	src/acl/external/LDAP_group/Makefile
-	src/acl/external/LM_group/Makefile
 	src/acl/external/session/Makefile
 	src/acl/external/SQL_session/Makefile
 	src/acl/external/unix_group/Makefile
@@ -2540,7 +2543,6 @@ AC_CONFIG_FILES([
 	src/auth/basic/RADIUS/Makefile
 	src/auth/basic/SASL/Makefile
 	src/auth/basic/SMB/Makefile
-	src/auth/basic/SMB_LM/Makefile
 	src/auth/basic/SSPI/Makefile
 	src/auth/digest/Makefile
 	src/auth/digest/eDirectory/Makefile
@@ -2552,7 +2554,6 @@ AC_CONFIG_FILES([
 	src/auth/negotiate/wrapper/Makefile
 	src/auth/ntlm/Makefile
 	src/auth/ntlm/fake/Makefile
-	src/auth/ntlm/SMB_LM/Makefile
 	src/auth/ntlm/SSPI/Makefile
 	src/base/Makefile
 	src/clients/Makefile

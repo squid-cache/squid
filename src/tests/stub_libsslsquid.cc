@@ -40,7 +40,6 @@ void Ssl::GlobalContextStorage::addLocalStorage(Ip::Address const &, size_t ) ST
 Ssl::LocalContextStorage *Ssl::GlobalContextStorage::getLocalStorage(Ip::Address const &)
 { fatal(STUB_API " required"); static LocalContextStorage v(0); return &v; }
 void Ssl::GlobalContextStorage::reconfigureStart() STUB
-//Ssl::GlobalContextStorage Ssl::TheGlobalContextStorage;
 
 #include "ssl/ErrorDetail.h"
 #include "ssl/support.h"

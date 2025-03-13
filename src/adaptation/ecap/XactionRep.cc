@@ -195,7 +195,7 @@ Adaptation::Ecap::XactionRep::metaValue(const libecap::Name &name) const
     HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);
 
     if (name.known()) { // must check to avoid empty names matching unset cfg
-        for (auto h: Adaptation::Config::metaHeaders) {
+        for (const auto &h: Adaptation::Config::metaHeaders()) {
             if (name == h->key().toStdString()) {
                 SBuf matched;
                 if (h->match(request, reply, al, matched))
@@ -217,7 +217,7 @@ Adaptation::Ecap::XactionRep::visitEachMetaHeader(libecap::NamedValueVisitor &vi
     Must(request);
     HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);
 
-    for (auto h: Adaptation::Config::metaHeaders) {
+    for (const auto &h: Adaptation::Config::metaHeaders()) {
         SBuf matched;
         if (h->match(request, reply, al, matched)) {
             const libecap::Name name(h->key().toStdString());
@@ -246,7 +246,7 @@ Adaptation::Ecap::XactionRep::start()
         // retrying=false because ecap never retries transactions
         adaptHistoryId = ah->recordXactStart(service().cfg().key, current_time, false);
         SBuf matched;
-        for (auto h: Adaptation::Config::metaHeaders) {
+        for (const auto &h: Adaptation::Config::metaHeaders()) {
             if (h->match(request, reply, al, matched)) {
                 if (ah->metaHeaders == nullptr)
                     ah->metaHeaders = new NotePairs();
