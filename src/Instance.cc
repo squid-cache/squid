@@ -11,6 +11,7 @@
 #include "debug/Messages.h"
 #include "fs_io.h"
 #include "Instance.h"
+#include "md5.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -23,53 +24,6 @@
 /// Describes the (last) instance PID file being processed.
 /// This hack shortens reporting code while keeping its messages consistent.
 static SBuf TheFile;
-
-// murmur3 hash function (32-bit)
-// Algorithm: https://en.wikipedia.org/wiki/MurmurHash
-static uint32_t
-murmur3_32(const char *key, size_t len, uint32_t seed) {
-    uint32_t h = seed;
-    uint32_t i = 0, k;
-
-    // body
-    for (i = 0; i < (len & ~3); i+= sizeof(uint32_t)) {
-        memcpy(&k, key + i, 4);
-        k *= 0xcc9e2d51;
-        k = (k << 15) | (k >> 17);
-        k *= 0x1b873593;
-        h ^= k;
-        h = (h << 13) | (h >> 19);
-        h = h * 5 + 0xe6546b64;
-    }
-
-    // tail
-    k = 0;
-    switch (len & 3) {
-    case 3:
-        k = ((unsigned char)key[(len & ~3) + 2]) << 16;
-        [[fallthrough]];
-    case 2:
-        k |= ((unsigned char)key[(len & ~3) + 1]) << 8;
-        [[fallthrough]];
-    case 1:
-        k |= ((unsigned char)key[len & ~3]);
-        k *= 0xcc9e2d51;
-        k = (k << 15) | (k >> 17);
-        k *= 0x1b873593;
-        h ^= k;
-        break;
-    }
-
-    // finalize
-    h ^= len;
-    h ^= h >> 16;
-    h *= 0x85ebca6b;
-    h ^= h >> 13;
-    h *= 0xc2b2ae35;
-    h ^= h >> 16;
-
-    return h;
-}
 
 /// PidFilename() helper
 /// \returns PID file name or, if PID signaling was disabled, an empty SBuf
@@ -269,15 +223,21 @@ Instance::WriteOurPid()
     debugs(50, Important(23), "Created " << TheFile);
 }
 
-/// Returns murmur3 hash of the PID file name to make a uniq service name.
-/// It is called from Ipc::Mem::Segment::GenerateName() and Ipc::Port::MakeAddr() functions.
+/// Returns MD5 hash of the PID file name to make a uniq service name.
+/// It is called from Ipc::Mem::Segment::GenerateName(), Ipc::Port::MakeAddr()
+/// and Ipc::Port::CoordinatorAddr() functions.
 SBuf
 Instance::GetPidFilenameHash()
 {
-    SBuf name = PidFilenameCalc();
-    const auto hash = murmur3_32(name.c_str(), name.length(), 0);
+    cache_key hash[SQUID_MD5_DIGEST_LENGTH];
+    const auto name = PidFilenameCalc().c_str();
+
+    SquidMD5_CTX ctx;
+    SquidMD5Init(&ctx);
+    SquidMD5Update(&ctx, (unsigned char*) name, strlen(name));
+    SquidMD5Final(hash, &ctx);
 
     SBuf pid_filename_hash;
-    pid_filename_hash.appendf("%08x", hash);
+    pid_filename_hash.appendf("%08x", *(int32_t*) hash);
     return pid_filename_hash;
 }
