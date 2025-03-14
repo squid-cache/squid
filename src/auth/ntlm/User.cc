@@ -22,12 +22,6 @@ Auth::Ntlm::User::~User()
     debugs(29, 5, "doing nothing to clear NTLM scheme data for '" << this << "'");
 }
 
-int32_t
-Auth::Ntlm::User::ttl() const
-{
-    return -1; // NTLM credentials cannot be cached.
-}
-
 CbcPointer<Auth::CredentialsCache>
 Auth::Ntlm::User::Cache()
 {
