@@ -1149,7 +1149,6 @@ nodist_tests_testRock_SOURCES = \
 tests_testRock_LDADD = \
         Instance.o \
         debug/debug.o \
-        fs_io.o \
 	http/libhttp.la \
 	parser/libparser.la \
 	libsquid.la \
@@ -1325,7 +1324,6 @@ nodist_tests_testUfs_SOURCES = \
 tests_testUfs_LDADD = \
         Instance.o \
         debug/debug.o \
-        fs_io.o \
 	http/libhttp.la \
 	parser/libparser.la \
 	CommCalls.o \
@@ -1497,7 +1495,6 @@ nodist_tests_testStore_SOURCES = \
 tests_testStore_LDADD= \
         Instance.o \
         debug/debug.o \
-        fs_io.o \
 	libsquid.la \
 	http/libhttp.la \
 	parser/libparser.la \
@@ -1671,7 +1668,6 @@ nodist_tests_testDiskIO_SOURCES = \
 tests_testDiskIO_LDADD = \
         Instance.o \
         debug/debug.o \
-        fs_io.o \
 	libsquid.la \
 	http/libhttp.la \
 	parser/libparser.la \
@@ -1968,7 +1964,6 @@ nodist_tests_testHttpRange_SOURCES = \
 tests_testHttpRange_LDADD = \
         Instance.o \
         debug/debug.o \
-        fs_io.o \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
@@ -2361,7 +2356,6 @@ nodist_tests_testHttpRequest_SOURCES = \
 tests_testHttpRequest_LDADD = \
         Instance.o \
         debug/debug.o \
-        fs_io.o \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
@@ -2659,7 +2653,6 @@ nodist_tests_testCacheManager_SOURCES = \
 tests_testCacheManager_LDADD = \
         Instance.o \
         debug/debug.o \
-        fs_io.o \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
