@@ -1493,6 +1493,8 @@ nodist_tests_testStore_SOURCES = \
 	tests/stub_libtime.cc \
 	swap_log_op.cc
 tests_testStore_LDADD= \
+        Instance.o \
+        debug/debug.o \
 	libsquid.la \
 	http/libhttp.la \
 	parser/libparser.la \
@@ -1664,6 +1666,8 @@ nodist_tests_testDiskIO_SOURCES = \
 	tests/stub_libtime.cc \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
+        Instance.o \
+        debug/debug.o \
 	libsquid.la \
 	http/libhttp.la \
 	parser/libparser.la \
@@ -2139,6 +2143,8 @@ nodist_tests_testHttpReply_SOURCES = \
 	tests/stub_libtime.cc
 tests_testHttpReply_LDADD=\
 	CommCalls.o \
+        Instance.o \
+        debug/debug.o \
 	http/libhttp.la \
 	parser/libparser.la \
 	acl/libacls.la \
