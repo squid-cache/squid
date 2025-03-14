@@ -1147,6 +1147,8 @@ nodist_tests_testRock_SOURCES = \
 	hier_code.cc \
 	swap_log_op.cc
 tests_testRock_LDADD = \
+        Instance.o \
+        debug/debug.o \
 	http/libhttp.la \
 	parser/libparser.la \
 	libsquid.la \
@@ -1320,6 +1322,8 @@ nodist_tests_testUfs_SOURCES = \
 	hier_code.cc \
 	swap_log_op.cc
 tests_testUfs_LDADD = \
+        Instance.o \
+        debug/debug.o \
 	http/libhttp.la \
 	parser/libparser.la \
 	CommCalls.o \
