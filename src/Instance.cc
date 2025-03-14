@@ -11,6 +11,7 @@
 #include "debug/Messages.h"
 #include "fs_io.h"
 #include "Instance.h"
+#include "md5.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -222,3 +223,21 @@ Instance::WriteOurPid()
     debugs(50, Important(23), "Created " << TheFile);
 }
 
+/// Returns MD5 hash of the PID file name to make a uniq service name.
+/// It is called from Ipc::Mem::Segment::GenerateName(), Ipc::Port::MakeAddr()
+/// and Ipc::Port::CoordinatorAddr() functions.
+SBuf
+Instance::GetPidFilenameHash()
+{
+    cache_key hash[SQUID_MD5_DIGEST_LENGTH];
+    const auto name = PidFilenameCalc().c_str();
+
+    SquidMD5_CTX ctx;
+    SquidMD5Init(&ctx);
+    SquidMD5Update(&ctx, (unsigned char*) name, strlen(name));
+    SquidMD5Final(hash, &ctx);
+
+    SBuf pid_filename_hash;
+    pid_filename_hash.appendf("%08x", *(int32_t*) hash);
+    return pid_filename_hash;
+}

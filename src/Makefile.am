@@ -1147,6 +1147,8 @@ nodist_tests_testRock_SOURCES = \
 	hier_code.cc \
 	swap_log_op.cc
 tests_testRock_LDADD = \
+        Instance.o \
+        debug/debug.o \
 	http/libhttp.la \
 	parser/libparser.la \
 	libsquid.la \
@@ -1320,6 +1322,8 @@ nodist_tests_testUfs_SOURCES = \
 	hier_code.cc \
 	swap_log_op.cc
 tests_testUfs_LDADD = \
+        Instance.o \
+        debug/debug.o \
 	http/libhttp.la \
 	parser/libparser.la \
 	CommCalls.o \
@@ -1489,6 +1493,8 @@ nodist_tests_testStore_SOURCES = \
 	tests/stub_libtime.cc \
 	swap_log_op.cc
 tests_testStore_LDADD= \
+        Instance.o \
+        debug/debug.o \
 	libsquid.la \
 	http/libhttp.la \
 	parser/libparser.la \
@@ -1660,6 +1666,8 @@ nodist_tests_testDiskIO_SOURCES = \
 	tests/stub_libtime.cc \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
+        Instance.o \
+        debug/debug.o \
 	libsquid.la \
 	http/libhttp.la \
 	parser/libparser.la \
@@ -1954,6 +1962,8 @@ nodist_tests_testHttpRange_SOURCES = \
 	$(BUILT_SOURCES) \
 	tests/stub_libtime.cc
 tests_testHttpRange_LDADD = \
+        Instance.o \
+        debug/debug.o \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
@@ -2133,6 +2143,9 @@ nodist_tests_testHttpReply_SOURCES = \
 	tests/stub_libtime.cc
 tests_testHttpReply_LDADD=\
 	CommCalls.o \
+        Instance.o \
+        debug/debug.o \
+        fs_io.o \
 	http/libhttp.la \
 	parser/libparser.la \
 	acl/libacls.la \
@@ -2341,6 +2354,8 @@ nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES) \
 	tests/stub_libtime.cc
 tests_testHttpRequest_LDADD = \
+        Instance.o \
+        debug/debug.o \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
@@ -2636,6 +2651,8 @@ nodist_tests_testCacheManager_SOURCES = \
 	$(BUILT_SOURCES)
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
+        Instance.o \
+        debug/debug.o \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
