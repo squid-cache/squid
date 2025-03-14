@@ -30,6 +30,9 @@
  * test the store framework
  */
 
+/// Define Chrooted variable to use Instance.o
+bool Chrooted = false;
+
 class TestUfs : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestUfs);
