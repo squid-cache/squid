@@ -23,6 +23,9 @@
  * test the DiskIO framework
  */
 
+/// Define Chrooted variable to use Instance.o
+bool Chrooted = false;
+
 class TestDiskIO : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestDiskIO);
