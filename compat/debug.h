@@ -26,10 +26,12 @@ extern int debug_enabled;
 #if defined(__GNUC__) || defined(__SUNPRO_CC)
 
 #define debug(X...) \
-                     if (debug_enabled) { \
-                         fprintf(stderr, "%s(%d): pid=%ld :", __FILE__, __LINE__, static_cast<long>(getpid())); \
-                         fprintf(stderr,X); \
-                     } else (void)0
+    do { \
+        if (debug_enabled) { \
+            fprintf(stderr, "%s(%d): pid=%ld :", __FILE__, __LINE__, static_cast<long>(getpid())); \
+            fprintf(stderr, X); \
+        } \
+    } while (/*CONSTCOND*/ 0)
 
 #define ndebug(content) ndebug_(__FILE__, __LINE__, content)
 #define ndebug_(file, line, content) if (debug_enabled) { \
