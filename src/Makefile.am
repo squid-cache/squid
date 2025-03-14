@@ -1958,6 +1958,8 @@ nodist_tests_testHttpRange_SOURCES = \
 	$(BUILT_SOURCES) \
 	tests/stub_libtime.cc
 tests_testHttpRange_LDADD = \
+        Instance.o \
+        debug/debug.o \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
@@ -2345,6 +2347,8 @@ nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES) \
 	tests/stub_libtime.cc
 tests_testHttpRequest_LDADD = \
+        Instance.o \
+        debug/debug.o \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
@@ -2640,6 +2644,8 @@ nodist_tests_testCacheManager_SOURCES = \
 	$(BUILT_SOURCES)
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
+        Instance.o \
+        debug/debug.o \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
