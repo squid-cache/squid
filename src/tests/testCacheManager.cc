@@ -20,6 +20,9 @@
  * test the CacheManager implementation
  */
 
+/// Define Chrooted variable to use Instance.o
+bool Chrooted = false;
+
 class TestCacheManager : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestCacheManager);
