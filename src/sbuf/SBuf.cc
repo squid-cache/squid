@@ -214,7 +214,7 @@ SBuf&
 SBuf::Printf(const char *fmt, ...)
 {
     // with printf() the fmt or an arg might be a dangerous char*
-    // NP: can't rely on vappendf() Locker because of clear()
+    // Note: can't rely on vappendf() Locker because of clear()
     const Locker blobKeeper(this, buf());
 
     va_list args;
@@ -428,7 +428,7 @@ SBuf::compare(const char *s, const SBufCaseSensitive isCaseSensitive, const size
     // If we stopped scanning because we reached the end
     //  of buf() before we reached the end of s,
     // pretend we have a 0-terminator there to compare.
-    // NP: the loop already incremented "right" ready for this comparison
+    // Note: the loop already incremented "right" ready for this comparison
     if (!byteCount && length() < n)
         return '\0' - *right;
 
@@ -701,7 +701,7 @@ SBuf::rfind(char c, SBuf::size_type endPos) const
     if (endPos == npos || endPos >= length()) {
         endPos = length();
     } else {
-        // NP: off-by-one weirdness:
+        // Note: off-by-one weirdness:
         // endPos is an offset ... 0-based
         // length() is a count ... 1-based
         // memrhr() requires a 1-based count of space to scan.

@@ -31,7 +31,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
 
-/* NP: we only need struct variable_list and typedef oid from SNMP library     */
+/* Note: we only need struct variable_list and typedef oid from SNMP library     */
 /*     we use as ptrs. If this was true C++ we could pre-define their classes. */
 #include "snmp_vars.h"
 
