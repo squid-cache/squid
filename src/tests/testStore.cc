@@ -14,6 +14,9 @@
 
 #include <limits>
 
+/// Define Chrooted variable to use Instance.o
+bool Chrooted = false;
+
 CPPUNIT_TEST_SUITE_REGISTRATION( TestStore );
 
 namespace Store {
