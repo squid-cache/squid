@@ -55,7 +55,6 @@ String Ipc::Port::MakeAddr(const char* processLabel, int id)
     assert(id >= 0);
     String addr = channelPathPfx;
     addr.append(service_name.c_str());
-    addr.append('-');
     addr.append(Instance::GetPidFilenameHash().c_str());
     addr.append(processLabel);
     addr.append('-');
@@ -71,7 +70,6 @@ Ipc::Port::CoordinatorAddr()
     if (!coordinatorAddr.size()) {
         coordinatorAddr = channelPathPfx;
         coordinatorAddr.append(service_name.c_str());
-        coordinatorAddr.append('-');
         coordinatorAddr.append(Instance::GetPidFilenameHash().c_str());
         coordinatorAddr.append(coordinatorAddrLabel);
         coordinatorAddr.append(".ipc");
