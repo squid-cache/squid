@@ -14,7 +14,7 @@
 
 #include <limits>
 
-/// Define Chrooted variable to use Instance.o
+// XXX: for Instance.cc linkage. keep in sync with main.cc
 bool Chrooted = false;
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestStore );

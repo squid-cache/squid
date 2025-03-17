@@ -107,6 +107,9 @@ Debug::Finish()
     }
 }
 
+// Dummy function
+void Debug::StopCacheLogUse(){}
+
 std::ostream&
 ForceAlert(std::ostream& s)
 {

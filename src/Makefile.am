@@ -1142,13 +1142,12 @@ tests_testRock_SOURCES = \
 	wordlist.h
 nodist_tests_testRock_SOURCES = \
 	$(TESTSOURCES) \
+        Instance.cc \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
 	swap_log_op.cc
 tests_testRock_LDADD = \
-        Instance.o \
-        debug/debug.o \
 	http/libhttp.la \
 	parser/libparser.la \
 	libsquid.la \
@@ -1317,13 +1316,12 @@ tests_testUfs_SOURCES = \
 	wordlist.h
 nodist_tests_testUfs_SOURCES = \
 	$(TESTSOURCES) \
+        Instance.cc \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
 	swap_log_op.cc
 tests_testUfs_LDADD = \
-        Instance.o \
-        debug/debug.o \
 	http/libhttp.la \
 	parser/libparser.la \
 	CommCalls.o \
@@ -1488,13 +1486,12 @@ tests_testStore_SOURCES = \
 	wordlist.h
 nodist_tests_testStore_SOURCES = \
 	$(TESTSOURCES) \
+        Instance.cc \
 	SquidMath.cc \
 	SquidMath.h \
 	tests/stub_libtime.cc \
 	swap_log_op.cc
 tests_testStore_LDADD= \
-        Instance.o \
-        debug/debug.o \
 	libsquid.la \
 	http/libhttp.la \
 	parser/libparser.la \
@@ -1660,14 +1657,13 @@ tests_testDiskIO_SOURCES = \
 	wordlist.h
 nodist_tests_testDiskIO_SOURCES = \
 	$(TESTSOURCES) \
+        Instance.cc \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
 	tests/stub_libtime.cc \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
-        Instance.o \
-        debug/debug.o \
 	libsquid.la \
 	http/libhttp.la \
 	parser/libparser.la \
@@ -1960,10 +1956,9 @@ tests_testHttpRange_SOURCES = \
 	wordlist.h
 nodist_tests_testHttpRange_SOURCES = \
 	$(BUILT_SOURCES) \
+        Instance.cc \
 	tests/stub_libtime.cc
 tests_testHttpRange_LDADD = \
-        Instance.o \
-        debug/debug.o \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
@@ -2139,13 +2134,12 @@ tests_testHttpReply_SOURCES = \
 	wordlist.h
 nodist_tests_testHttpReply_SOURCES = \
 	$(TESTSOURCES) \
+        Instance.cc \
+        fs_io.cc \
 	hier_code.cc \
 	tests/stub_libtime.cc
 tests_testHttpReply_LDADD=\
 	CommCalls.o \
-        Instance.o \
-        debug/debug.o \
-        fs_io.o \
 	http/libhttp.la \
 	parser/libparser.la \
 	acl/libacls.la \
@@ -2352,10 +2346,9 @@ tests_testHttpRequest_SOURCES = \
 	wordlist.h
 nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES) \
+        Instance.cc \
 	tests/stub_libtime.cc
 tests_testHttpRequest_LDADD = \
-        Instance.o \
-        debug/debug.o \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
@@ -2648,11 +2641,10 @@ tests_testCacheManager_SOURCES = \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testCacheManager_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+        Instance.cc
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
-        Instance.o \
-        debug/debug.o \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \

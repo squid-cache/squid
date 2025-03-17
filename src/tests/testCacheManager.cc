@@ -20,7 +20,7 @@
  * test the CacheManager implementation
  */
 
-/// Define Chrooted variable to use Instance.o
+// XXX: for Instance.cc linkage. keep in sync with main.cc
 bool Chrooted = false;
 
 class TestCacheManager : public CPPUNIT_NS::TestFixture

@@ -229,15 +229,17 @@ Instance::WriteOurPid()
 SBuf
 Instance::GetPidFilenameHash()
 {
+    const auto code_table = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     cache_key hash[SQUID_MD5_DIGEST_LENGTH];
-    const auto name = PidFilenameCalc().c_str();
+    unsigned char *p = hash;
 
     SquidMD5_CTX ctx;
     SquidMD5Init(&ctx);
-    SquidMD5Update(&ctx, (unsigned char*) name, strlen(name));
+    const auto name = PidFilenameCalc();
+    SquidMD5Update(&ctx, name.rawContent(), name.length());
     SquidMD5Final(hash, &ctx);
 
     SBuf pid_filename_hash;
-    pid_filename_hash.appendf("%08x", *(int32_t*) hash);
+    pid_filename_hash.appendf("%c%c%c%c", code_table[p[0] % 36], code_table[p[1] % 36], code_table[p[2] % 36], code_table[p[3] % 36]);
     return pid_filename_hash;
 }
