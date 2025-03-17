@@ -223,9 +223,7 @@ Instance::WriteOurPid()
     debugs(50, Important(23), "Created " << TheFile);
 }
 
-/// Returns MD5 hash of the PID file name to make a uniq service name.
-/// It is called from Ipc::Mem::Segment::GenerateName(), Ipc::Port::MakeAddr()
-/// and Ipc::Port::CoordinatorAddr() functions.
+/// \returns hash of the PID file name to make a unique service name for this Squid instance
 SBuf
 Instance::GetPidFilenameHash()
 {
