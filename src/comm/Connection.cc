@@ -139,6 +139,12 @@ Comm::Connection::setPeer(CachePeer *p)
     }
 }
 
+bool
+Comm::Connection::toGoneCachePeer() const
+{
+    return peer_ && !cbdataReferenceValid(peer_);
+}
+
 time_t
 Comm::Connection::timeLeft(const time_t idleTimeout) const
 {
