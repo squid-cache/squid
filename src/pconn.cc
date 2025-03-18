@@ -227,6 +227,11 @@ IdleConnList::pop()
         if (fd_table[theList_[i]->fd].timeoutHandler == nullptr)
             continue;
 
+        // the cache_peer has been removed from the configuration
+        // TODO: remove all such connections at once during reconfiguration
+        if (theList_[i]->toGoneCachePeer())
+            continue;
+
         // finally, a match. pop and return it.
         Comm::ConnectionPointer result = theList_[i];
         clearHandlers(result);
@@ -272,6 +277,11 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &aKey)
         // our connection timeout handler is scheduled to run already. unsafe for now.
         // TODO: cancel the pending timeout callback and allow re-use of the conn.
         if (fd_table[theList_[i]->fd].timeoutHandler == nullptr)
+            continue;
+
+        // the cache_peer has been removed from the configuration
+        // TODO: remove all such connections at once during reconfiguration
+        if (theList_[i]->toGoneCachePeer())
             continue;
 
         // finally, a match. pop and return it.
