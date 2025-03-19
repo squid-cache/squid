@@ -1796,6 +1796,10 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     if (!flags.peering)
         return;
 
+    // do nothing if our cache_peer was reconfigured away
+    if (!peer)
+        return;
+
     // This request is going "through" rather than "to" our _peer.
     if (flags.tunneling)
         return;
@@ -1881,14 +1885,12 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         if (request->flags.auth_no_keytab) {
             negotiate_flags |= PEER_PROXY_NEGOTIATE_NOKEYTAB;
         }
-        Token = peer_proxy_negotiate_auth(PrincipalName, (peer ? peer->host : nullptr), negotiate_flags);
+        Token = peer_proxy_negotiate_auth(PrincipalName, peer->host, negotiate_flags);
         if (Token) {
             httpHeaderPutStrf(hdr_out, header, "Negotiate %s",Token);
         }
         return;
     }
-#else
-    (void)peer;
 #endif /* HAVE_KRB5 && HAVE_GSSAPI */
 
     blen = base64_encode_update(&ctx, loginbuf, strlen(request->peer_login), reinterpret_cast<const uint8_t*>(request->peer_login));
@@ -2380,7 +2382,8 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     {
         HttpHeader hdr(hoRequest);
         forwardUpgrade(hdr); // before httpBuildRequestHeader() for CONNECTION
-        httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, _peer, flags);
+        const auto peer = cbdataReferenceValid(_peer) ? _peer : nullptr;
+        httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, peer, flags);
 
         if (request->flags.pinned && request->flags.connectionAuth)
             request->flags.authSent = true;
