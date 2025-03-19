@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
+#include "compat/xaccept.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -334,7 +335,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     if (type == IPC_TCP_SOCKET) {
         debugs(54, 3, "ipcCreate: calling accept on FD " << crfd);
 
-        if ((fd = accept(crfd, nullptr, nullptr)) < 0) {
+        if ((fd = xaccept(crfd, nullptr, nullptr)) < 0) {
             xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: FD " << crfd << " accept: " << xstrerr(xerrno));
             _exit(1);
