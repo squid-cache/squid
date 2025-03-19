@@ -12,6 +12,7 @@
 #include "cache_cf.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "compat/xaccept.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -393,7 +394,7 @@ ipc_thread_1(void *in_params)
     if (type == IPC_TCP_SOCKET) {
         debugs(54, 3, "ipcCreate: calling accept on FD " << crfd);
 
-        if ((fd = accept(crfd, nullptr, nullptr)) < 0) {
+        if ((fd = xaccept(crfd, nullptr, nullptr)) < 0) {
             int xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: FD " << crfd << " accept: " << xstrerr(xerrno));
             goto cleanup;
