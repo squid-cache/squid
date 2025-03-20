@@ -1105,14 +1105,13 @@ squidaio_stats(StoreEntry * sentry)
     PackableStream os(*sentry);
 
     os << "\n\nThreads Status:\n" <<
-        "#\tID\t# Requests\n";
-
+       "#\tID\t# Requests\n";
 
     auto threadp = threads;
 
     for (size_t i = 0; i < NUMTHREADS; ++i) {
         os << i+1 << '\t' << threadp->dwThreadId <<
-            '\t' << threadp->requests << '\n';
+           '\t' << threadp->requests << '\n';
         threadp = threadp->next;
     }
 }
