@@ -162,8 +162,6 @@ public:
 
     char *peer_login;       /* Configured peer login:password */
 
-    char *peer_host;           /* Selected peer host*/
-
     time_t lastmod;     /* Used on refreshes */
 
     /// The variant second-stage cache key. Generated from Vary header pattern for this request.

@@ -1790,10 +1790,14 @@ HttpStateData::doneWithServer() const
  * Fixup authentication request headers for special cases
  */
 static void
-httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, const Http::StateFlags &flags)
+httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, const CachePeer * const peer, const Http::StateFlags &flags)
 {
     /* Nothing to do unless we are forwarding to a peer */
     if (!flags.peering)
+        return;
+
+    // do nothing if our cache_peer was reconfigured away
+    if (!peer)
         return;
 
     // This request is going "through" rather than "to" our _peer.
@@ -1881,7 +1885,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         if (request->flags.auth_no_keytab) {
             negotiate_flags |= PEER_PROXY_NEGOTIATE_NOKEYTAB;
         }
-        Token = peer_proxy_negotiate_auth(PrincipalName, request->peer_host, negotiate_flags);
+        Token = peer_proxy_negotiate_auth(PrincipalName, peer->host, negotiate_flags);
         if (Token) {
             httpHeaderPutStrf(hdr_out, header, "Negotiate %s",Token);
         }
@@ -1905,6 +1909,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                                       StoreEntry * entry,
                                       const AccessLogEntryPointer &al,
                                       HttpHeader * hdr_out,
+                                      const CachePeer * const peer,
                                       const Http::StateFlags &flags)
 {
     /* building buffer for complex strings */
@@ -2023,7 +2028,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     }
 
     /* Fixup (Proxy-)Authorization special cases. Plain relaying dealt with above */
-    httpFixupAuthentication(request, hdr_in, hdr_out, flags);
+    httpFixupAuthentication(request, hdr_in, hdr_out, peer, flags);
 
     /* append Cache-Control, add max-age if not there already */
     {
@@ -2377,7 +2382,8 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     {
         HttpHeader hdr(hoRequest);
         forwardUpgrade(hdr); // before httpBuildRequestHeader() for CONNECTION
-        httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, flags);
+        const auto peer = cbdataReferenceValid(_peer) ? _peer : nullptr;
+        httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, peer, flags);
 
         if (request->flags.pinned && request->flags.connectionAuth)
             request->flags.authSent = true;
@@ -2476,7 +2482,6 @@ HttpStateData::sendRequest()
     }
 
     mb.init();
-    request->peer_host=_peer?_peer->host:nullptr;
     buildRequestPrefix(&mb);
 
     debugs(11, 2, "HTTP Server " << serverConnection);
