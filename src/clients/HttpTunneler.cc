@@ -150,6 +150,7 @@ Http::Tunneler::writeRequest()
                                               nullptr, // StoreEntry
                                               al,
                                               &hdr_out,
+                                              connection->getPeer(),
                                               flags);
         hdr_out.packInto(&mb);
         hdr_out.clean();
