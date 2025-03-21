@@ -17,6 +17,7 @@ namespace Auth
 typedef enum {
     AUTH_UNKNOWN,               /* default */
     AUTH_BASIC,
+    AUTH_BEARER,
     AUTH_NTLM,
     AUTH_DIGEST,
     AUTH_NEGOTIATE,
