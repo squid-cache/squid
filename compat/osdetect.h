@@ -73,9 +73,6 @@
 #elif defined(__APPLE__)
 #define _SQUID_APPLE_ 1
 
-#elif defined(sony_news) && defined(__svr4)
-#define _SQUID_NEWSOS6_ 1
-
 #elif defined(__QNX__)
 #define _SQUID_QNX_ 1
 
