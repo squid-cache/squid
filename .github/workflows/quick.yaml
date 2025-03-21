@@ -46,7 +46,7 @@ jobs:
       - name: Install prerequisite packages
         run: |
           sudo apt-get --quiet=2 update
-          sudo apt-get --quiet=2 install libtool-bin
+          sudo apt-get --quiet=2 install libtool-bin libyaml-tiny-perl
 
       - name: Setup a nodejs environment
         uses: actions/setup-node@v4
@@ -91,6 +91,7 @@ jobs:
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 install astyle
           sudo apt-get --quiet=2 install gperf
+          sudo apt-get --quiet=2 install libyaml-tiny-perl
           pip install \
               --user \
               --no-cache-dir \
@@ -136,7 +137,7 @@ jobs:
           sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
-          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin ${{ matrix.compiler.CC }} ccache valgrind
+          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin ${{ matrix.compiler.CC }} ccache libyaml-tiny-perl valgrind
 
       - name: Checkout sources
         uses: actions/checkout@v4

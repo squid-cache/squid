@@ -30,7 +30,7 @@ template <class T>
 class Component
 {
 public:
-    /* the code adding "TYPE: T" to cf.data.pre must specialize these */
+    /* the code adding "TYPE: T" to squid.conf.yaml.in must specialize these */
 
     /// creates a new T instance using the given parser; never returns nil
     static T Parse(ConfigParser &);
