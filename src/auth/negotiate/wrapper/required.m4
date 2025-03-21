@@ -5,4 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-BUILD_HELPER="wrapper"
+AS_IF([test "x$squid_host_os" != "xmingw"], [
+    BUILD_HELPER="wrapper"
+])

@@ -11,7 +11,7 @@
 
 #if HAVE_DISKIO_MODULE_AIO
 
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
 #include "DiskIO/AIO/aio_win32.h"
 #else
 #if HAVE_AIO_H
