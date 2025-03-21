@@ -1098,18 +1098,20 @@ squidaio_debug(squidaio_request_t * request)
 void
 squidaio_stats(StoreEntry * sentry)
 {
+    squidaio_thread_t *threadp;
+    size_t i;
+
     if (!squidaio_initialised)
         return;
 
-    PackableStream os(*sentry);
+    storeAppendPrintf(sentry, "\n\nThreads Status:\n");
 
-    os << "\n\nThreads Status:\n" <<
-       "#\tID\t# Requests\n";
+    storeAppendPrintf(sentry, "#\tID\t# Requests\n");
 
-    auto threadp = threads;
-    for (size_t i = 0; i < NUMTHREADS; ++i) {
-        os << i+1 << '\t' << threadp->dwThreadId <<
-           '\t' << threadp->requests << '\n';
+    threadp = threads;
+
+    for (i = 0; i < NUMTHREADS; ++i) {
+        storeAppendPrintf(sentry, "%zu\t0x%lx\t%ld\n", i + 1, threadp->dwThreadId, threadp->requests);
         threadp = threadp->next;
     }
 }
