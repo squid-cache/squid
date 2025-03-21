@@ -507,7 +507,7 @@ PconnPool::popStored(const Comm::ConnectionPointer &dest, const char *domain, co
         // successful pop notifications replenish standby connections pool
         notifyManager("pop");
 
-        if (keepOpen && !popped->toGoneCachePeer())
+        if (keepOpen)
             return popped;
 
         popped->close();
