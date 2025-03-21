@@ -46,7 +46,6 @@ fsync(int fd)
 }
 #endif
 
-#define mkdir(p, F) ::mkdir((p))
 #define pipe(pipefd) ::_pipe((pipefd), 4096, _O_BINARY)
 
 #endif /* _SQUID_MINGW_*/
