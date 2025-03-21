@@ -46,7 +46,5 @@ fsync(int fd)
 }
 #endif
 
-#define pipe(pipefd) ::_pipe((pipefd), 4096, _O_BINARY)
-
 #endif /* _SQUID_MINGW_*/
 #endif /* SQUID_COMPAT_OS_MINGW_H */

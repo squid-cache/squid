@@ -710,12 +710,6 @@ socket(int f, int t, int p)
 }
 #define socket(f,t,p) Squid::socket(f,t,p)
 
-inline int
-pipe(int pipefd[2])
-{
-    return _pipe(pipefd,4096,_O_BINARY);
-}
-#define pipe(a) Squid::pipe(a)
 
 inline int
 WSAAsyncSelect(int s, HWND h, unsigned int w, long e)

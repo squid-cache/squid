@@ -31,6 +31,7 @@
  */
 
 #include "squid.h"
+#include "compat/xpipe.h"
 #include "base64.h"
 
 #include <cerrno>
@@ -358,11 +359,11 @@ main(int argc, char *const argv[])
        to the right helper. squid must keep session state
     */
 
-    if (pipe(pkin) < 0) {
+    if (xpipe(pkin) < 0) {
         fprintf(stderr, "%s| %s: Could not assign streams for pkin\n", LogTime(), PROGRAM);
         exit(EXIT_FAILURE);
     }
-    if (pipe(pkout) < 0) {
+    if (xpipe(pkout) < 0) {
         fprintf(stderr, "%s| %s: Could not assign streams for pkout\n", LogTime(), PROGRAM);
         exit(EXIT_FAILURE);
     }
@@ -394,11 +395,11 @@ main(int argc, char *const argv[])
     close(pkin[0]);
     close(pkout[1]);
 
-    if (pipe(pnin) < 0) {
+    if (xpipe(pnin) < 0) {
         fprintf(stderr, "%s| %s: Could not assign streams for pnin\n", LogTime(), PROGRAM);
         exit(EXIT_FAILURE);
     }
-    if (pipe(pnout) < 0) {
+    if (xpipe(pnout) < 0) {
         fprintf(stderr, "%s| %s: Could not assign streams for pnout\n", LogTime(), PROGRAM);
         exit(EXIT_FAILURE);
     }
