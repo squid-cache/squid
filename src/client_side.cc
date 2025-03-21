@@ -3720,7 +3720,7 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, const Htt
     pinning.auth = request.flags.connectionAuth;
     char stmp[MAX_IPSTRLEN];
     char desc[FD_DESC_SZ];
-    const auto peer = pinning.serverConnection->getPeer();
+    const auto peer = pinning.peer();
     snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s (%d)",
              (pinning.auth || !peer) ? pinnedHost : peer->name,
              clientConnection->remote.toUrl(stmp,MAX_IPSTRLEN),
