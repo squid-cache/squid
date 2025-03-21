@@ -797,7 +797,7 @@ tests_testRandomUuid_SOURCES = \
 	tests/testRandomUuid.cc
 nodist_tests_testRandomUuid_SOURCES = \
 	base/RandomUuid.h \
-	tests/stub_debug.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libmem.cc
 tests_testRandomUuid_LDADD = \
 	libsquid.la \
@@ -867,7 +867,7 @@ tests_testLookupTable_SOURCES = \
 	tests/testLookupTable.cc
 nodist_tests_testLookupTable_SOURCES = \
 	base/LookupTable.h \
-	tests/stub_debug.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libmem.cc
 tests_testLookupTable_LDADD = \
 	sbuf/libsbuf.la \
@@ -894,7 +894,7 @@ tests_testYesNoNone_SOURCES = \
 nodist_tests_testYesNoNone_SOURCES = \
 	tests/stub_SBuf.cc \
 	base/YesNoNone.h \
-	tests/stub_debug.cc
+	tests/stub_libdebug.cc
 tests_testYesNoNone_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
@@ -918,7 +918,7 @@ nodist_tests_testURL_SOURCES = \
 	anyp/Uri.h \
 	anyp/UriScheme.h \
 	tests/stub_cbdata.cc \
-	tests/stub_debug.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc
 tests_testURL_LDADD = \
@@ -954,7 +954,7 @@ tests_testTokenizer_SOURCES = \
 	tests/testTokenizer.cc
 nodist_tests_testTokenizer_SOURCES = \
 	tests/stub_StatHist.cc \
-	tests/stub_debug.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libmem.cc \
 	parser/Tokenizer.h
 tests_testTokenizer_LDADD = \
@@ -975,7 +975,7 @@ tests_testSBuf_SOURCES = \
 	tests/SBufFindTest.h
 nodist_tests_testSBuf_SOURCES = \
 	tests/stub_StatHist.cc \
-	tests/stub_debug.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libmem.cc
 tests_testSBuf_LDADD = \
 	sbuf/libsbuf.la \
@@ -990,7 +990,7 @@ tests_testSBufList_SOURCES = \
 	tests/testSBufList.cc
 nodist_tests_testSBufList_SOURCES = \
 	tests/stub_StatHist.cc \
-	tests/stub_debug.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libmem.cc
 tests_testSBufList_LDADD = \
 	sbuf/libsbuf.la \
@@ -1006,8 +1006,8 @@ tests_testString_SOURCES = \
 nodist_tests_testString_SOURCES = \
 	tests/stub_SBuf.cc \
 	String.cc \
-	tests/stub_debug.cc \
 	tests/stub_event.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libmem.cc
 tests_testString_LDADD = \
 	base/libbase.la \
@@ -1089,7 +1089,6 @@ tests_testRock_SOURCES = \
 	tests/stub_client_db.cc \
 	tests/stub_client_side.cc \
 	tests/stub_client_side_request.cc \
-	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
 	event.cc \
 	fatal.cc \
@@ -1145,6 +1144,7 @@ nodist_tests_testRock_SOURCES = \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
+	tests/stub_libdebug.cc \
 	swap_log_op.cc
 tests_testRock_LDADD = \
 	http/libhttp.la \
@@ -1258,7 +1258,6 @@ tests_testUfs_SOURCES = \
 	client_db.h \
 	tests/stub_client_side.cc \
 	tests/stub_client_side_request.cc \
-	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
 	event.cc \
 	tests/stub_fatal.cc \
@@ -1318,6 +1317,7 @@ nodist_tests_testUfs_SOURCES = \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
+	tests/stub_libdebug.cc \
 	swap_log_op.cc
 tests_testUfs_LDADD = \
 	http/libhttp.la \
@@ -1432,7 +1432,6 @@ tests_testStore_SOURCES = \
 	tests/stub_client_side.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_comm.cc \
-	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
 	event.cc \
 	tests/stub_fatal.cc \
@@ -1486,6 +1485,7 @@ nodist_tests_testStore_SOURCES = \
 	$(TESTSOURCES) \
 	SquidMath.cc \
 	SquidMath.h \
+	tests/stub_libdebug.cc \
 	tests/stub_libtime.cc \
 	swap_log_op.cc
 tests_testStore_LDADD= \
@@ -1595,7 +1595,6 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_client_side.cc \
 	tests/stub_client_side_request.cc \
 	client_side_request.h \
-	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
 	event.cc \
 	tests/stub_fatal.cc \
@@ -1657,6 +1656,7 @@ nodist_tests_testDiskIO_SOURCES = \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libtime.cc \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
@@ -1715,13 +1715,13 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_client_side.cc \
-	tests/stub_debug.cc \
 	dlink.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_fatal.cc \
 	globals.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
@@ -1754,7 +1754,7 @@ tests_testHtmlQuote_SOURCES = \
 	tests/testHtmlQuote.cc
 nodist_tests_testHtmlQuote_SOURCES = \
 	$(TESTSOURCES) \
-	tests/stub_debug.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libmem.cc
 tests_testHtmlQuote_LDADD= \
 	html/libhtml.la \
@@ -2017,7 +2017,6 @@ tests_testHttp1Parser_SOURCES = \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_comm.cc \
-	tests/stub_debug.cc \
 	tests/stub_event.cc \
 	tests/stub_libanyp.cc \
 	tests/stub_libmem.cc \
@@ -2033,6 +2032,7 @@ tests_testHttp1Parser_SOURCES = \
 	wordlist.h
 nodist_tests_testHttp1Parser_SOURCES = \
 	$(TESTSOURCES) \
+	tests/stub_libdebug.cc \
 	tests/stub_libtime.cc
 tests_testHttp1Parser_LDADD= \
 	http/libhttp.la \
@@ -2101,7 +2101,6 @@ tests_testHttpReply_SOURCES = \
 	cbdata.h \
 	tests/stub_client_side.cc \
 	tests/stub_comm.cc \
-	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_event.cc \
 	tests/stub_fatal.cc \
@@ -2130,6 +2129,7 @@ tests_testHttpReply_SOURCES = \
 nodist_tests_testHttpReply_SOURCES = \
 	$(TESTSOURCES) \
 	hier_code.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libtime.cc
 tests_testHttpReply_LDADD=\
 	CommCalls.o \
@@ -2398,7 +2398,7 @@ tests_testIpAddress_SOURCES = \
 	tests/testIpAddress.cc
 nodist_tests_testIpAddress_SOURCES = \
 	tests/stub_SBuf.cc \
-	tests/stub_debug.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libmem.cc \
 	tests/stub_tools.cc
 tests_testIpAddress_LDADD = \
@@ -2417,8 +2417,8 @@ tests_testIcmp_SOURCES = \
 	tests/testIcmp.cc
 nodist_tests_testIcmp_SOURCES = \
 	tests/stub_SBuf.cc \
-	tests/stub_debug.cc \
 	icmp/Icmp.h \
+	tests/stub_libdebug.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libtime.cc
 tests_testIcmp_LDADD=\
@@ -2435,7 +2435,7 @@ tests_testNetDb_SOURCES = \
 	tests/testNetDb.cc
 nodist_tests_testNetDb_SOURCES = \
 	tests/stub_SBuf.cc \
-	tests/stub_debug.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libtime.cc
 tests_testNetDb_LDADD = \
@@ -2701,7 +2701,6 @@ tests_testStatHist_SOURCES = \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_comm.cc \
-	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
 	tests/stub_libmem.cc \
@@ -2716,6 +2715,7 @@ tests_testStatHist_SOURCES = \
 	tools.h
 nodist_tests_testStatHist_SOURCES = \
 	$(TESTSOURCES) \
+	tests/stub_libdebug.cc \
 	tests/stub_libtime.cc
 tests_testStatHist_LDADD = \
 	sbuf/libsbuf.la \
@@ -2737,8 +2737,8 @@ nodist_tests_testConfigParser_SOURCES = \
 	String.cc \
 	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
-	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libmem.cc \
 	tests/stub_neighbors.cc
 tests_testConfigParser_LDADD = \
@@ -2758,8 +2758,8 @@ nodist_tests_testEvent_SOURCES = \
 	tests/stub_SBuf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
-	tests/stub_debug.cc \
 	event.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libtime.cc \
 	tests/stub_tools.cc
@@ -2776,8 +2776,8 @@ tests_testEventLoop_SOURCES = \
 nodist_tests_testEventLoop_SOURCES = \
 	EventLoop.cc \
 	tests/stub_SBuf.cc \
-	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libtime.cc
 tests_testEventLoop_LDADD = \
 	base/libbase.la \
@@ -2791,7 +2791,7 @@ tests_testIoManip_SOURCES = \
 	tests/testIoManip.cc
 nodist_tests_testIoManip_SOURCES = \
 	tests/stub_SBuf.cc \
-	tests/stub_debug.cc \
+	tests/stub_libdebug.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libtime.cc
 tests_testIoManip_LDADD = \
