@@ -1098,7 +1098,6 @@ squidaio_debug(squidaio_request_t * request)
 void
 squidaio_stats(StoreEntry * sentry)
 {
-
     if (!squidaio_initialised)
         return;
 
@@ -1108,7 +1107,6 @@ squidaio_stats(StoreEntry * sentry)
        "#\tID\t# Requests\n";
 
     auto threadp = threads;
-
     for (size_t i = 0; i < NUMTHREADS; ++i) {
         os << i+1 << '\t' << threadp->dwThreadId <<
            '\t' << threadp->requests << '\n';
