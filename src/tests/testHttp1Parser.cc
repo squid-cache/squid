@@ -600,7 +600,7 @@ TestHttp1Parser::testParseRequestLineTerminators()
 
     // alternative EOL sequence: double-NL-only
     // RFC 7230 tolerance permits omitted CR
-    // NP: represents a request with no mime headers
+    // Note: represents a request with no mime headers
     {
         input.append("GET / HTTP/1.1\n\n", 16);
         Config.onoff.relaxed_header_parser = 1;

@@ -262,7 +262,7 @@ HttpRequest::inheritProperties(const Http::Message *aMsg)
  * Checks the first line of an HTTP request is valid
  * currently just checks the request method is present.
  *
- * NP: Other errors are left for detection later in the parse.
+ * Note: Other errors are left for detection later in the parse.
  */
 bool
 HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *scode)
@@ -554,7 +554,7 @@ HttpRequest::maybeCacheable()
         // "The no-store request directive indicates that a cache MUST NOT
         //  store any part of either this request or any response to it."
         //
-        // NP: refresh_pattern ignore-no-store only applies to response messages
+        // Note: refresh_pattern ignore-no-store only applies to response messages
         //     this test is handling request message CC header.
         if (!flags.ignoreCc && cache_control && cache_control->hasNoStore())
             return false;
