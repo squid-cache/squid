@@ -981,7 +981,7 @@ squidaio_poll_queues(void)
         done_queue.tailp = &done_queue.head;
 
         if (!ReleaseMutex(done_queue.mutex)) {
-            /* unexpected error */
+            assert(false); /* something is seriously broken here */
         }
 
         Sleep(0);
