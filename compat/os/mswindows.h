@@ -710,7 +710,6 @@ socket(int f, int t, int p)
 }
 #define socket(f,t,p) Squid::socket(f,t,p)
 
-
 inline int
 WSAAsyncSelect(int s, HWND h, unsigned int w, long e)
 {

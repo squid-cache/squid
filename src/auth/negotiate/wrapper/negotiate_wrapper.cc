@@ -31,8 +31,8 @@
  */
 
 #include "squid.h"
-#include "compat/xpipe.h"
 #include "base64.h"
+#include "compat/xpipe.h"
 
 #include <cerrno>
 #include <cstring>
