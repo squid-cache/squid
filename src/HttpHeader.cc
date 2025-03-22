@@ -1479,10 +1479,10 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
         theName = Http::HeaderLookupTable.lookup(id).name;
 
     /* trim field value */
-    while (value_start < field_end && xisspace(*value_start))
+    while (value_start < field_end && CharacterSet::WSP[*value_start])
         ++value_start;
 
-    while (value_start < field_end && xisspace(field_end[-1]))
+    while (value_start < field_end && CharacterSet::WSP[field_end[-1]])
         --field_end;
 
     if (field_end - value_start > 65534) {
