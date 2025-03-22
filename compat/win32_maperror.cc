@@ -76,7 +76,7 @@ WIN32_maperror(unsigned long WIN32_oserrno)
         min_eaccess_range = ERROR_WRITE_PROTECT,
         max_eaccess_range = ERROR_SHARING_BUFFER_EXCEEDED;
 
-    _doserrno = WIN32_oserrno;
+    _set_doserrno(WIN32_oserrno);
     auto it = errormap.find(WIN32_oserrno);
     if (it != errormap.end()) {
         errno = it->second;
