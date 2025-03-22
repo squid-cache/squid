@@ -90,5 +90,4 @@ WIN32_maperror(unsigned long WIN32_oserrno)
         errno = EINVAL;
 }
 
-
 #endif

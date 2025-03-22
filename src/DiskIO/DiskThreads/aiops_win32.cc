@@ -9,7 +9,7 @@
 /* DEBUG: section 43    Windows AIOPS */
 
 #include "squid.h"
-#include "base/PackableStream.h"
+#include "compat/win32_maperror.h"
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "DiskThreads.h"
 #include "fd.h"
