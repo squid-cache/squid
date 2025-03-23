@@ -130,7 +130,7 @@ struct sockaddr_un {
 
 // CMSG_SPACE is not constant on some systems (in particular Max OS X),
 // provide a replacement that can be used at build time in that case
-// NP: this must go below our replacement definitions.
+// Note: this must go below our replacement definitions.
 
 #if HAVE_CONSTANT_CMSG_SPACE
 #define SQUID_CMSG_SPACE CMSG_SPACE

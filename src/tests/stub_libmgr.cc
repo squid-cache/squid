@@ -14,10 +14,10 @@
 
 #include "ipc/RequestId.h"
 
-// NP: used by Command.h instantiations
+// Note: used by Command.h instantiations
 #include "mgr/ActionProfile.h"
 
-// NP: used by Action.h instantiations
+// Note: used by Action.h instantiations
 #include "mgr/Command.h"
 std::ostream &Mgr::operator <<(std::ostream &os, const Command &) STUB_RETVAL(os)
 

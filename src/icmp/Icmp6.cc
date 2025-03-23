@@ -31,7 +31,7 @@
 static const char *
 IcmpPacketType(uint8_t v)
 {
-    // NP: LowPktStr is for codes 0-127
+    // Note: LowPktStr is for codes 0-127
     static const char *icmp6LowPktStr[] = {
         "ICMPv6 0",         // 0
         "Destination Unreachable",  // 1 - RFC2463
@@ -44,7 +44,7 @@ IcmpPacketType(uint8_t v)
     if (0 < v && v < 5)
         return icmp6LowPktStr[(int)(v&0x7f)];
 
-    // NP: HighPktStr is for codes 128-255
+    // Note: HighPktStr is for codes 128-255
     static const char *icmp6HighPktStr[] = {
         "Echo Request",                 // 128 - RFC2463
         "Echo Reply",                   // 129 - RFC2463
