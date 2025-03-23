@@ -52,9 +52,9 @@ void
 Http::FieldParser::parseFieldValue(::Parser::Tokenizer &tok)
 {
     static const CharacterSet fvCharacters =
-            (CharacterSet::VCHAR +
-            CharacterSet::WSP +
-            CharacterSet::OBSTEXT).rename("field-value");
+        (CharacterSet::VCHAR +
+         CharacterSet::WSP +
+         CharacterSet::OBSTEXT).rename("field-value");
 
     // may be missing
     (void)tok.prefix(theValue, fvCharacters);
