@@ -2087,9 +2087,7 @@ assert(myBar != NULL);
     ])
   ],
 
-  [*-*-solaris2.[[0-4]]],[AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)],
-
-  [*-sony-newsos[[56]]*],[AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)]
+  [*-*-solaris2.[[0-4]]],[AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)]
 )
 
 dnl This has to be before AC_CHECK_FUNCS
