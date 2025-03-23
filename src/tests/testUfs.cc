@@ -121,18 +121,14 @@ TestUfs::testUfsSearch()
 
     char *path=xstrdup(TESTDIR);
 
-    char *config_line=xstrdup("100 1 1");
-
     visible_appname_string = xstrdup(PACKAGE "/" VERSION);
 
-    ConfigParser::SetCfgLine(config_line);
+    ConfigParser::SetCfgLine(SBuf("100 1 1"));
 
     aStore->parse(0, path);
     store_maxobjsize = 1024*1024*2;
 
     safe_free(path);
-
-    safe_free(config_line);
 
     /* ok, ready to create */
     aStore->create();
@@ -240,11 +236,9 @@ TestUfs::testUfsDefaultEngine()
     mem_policy = createRemovalPolicy(Config.replPolicy);
 
     char *path=xstrdup(TESTDIR);
-    char *config_line=xstrdup("100 1 1");
-    ConfigParser::SetCfgLine(config_line);
+    ConfigParser::SetCfgLine(SBuf("100 1 1"));
     aStore->parse(0, path);
     safe_free(path);
-    safe_free(config_line);
     CPPUNIT_ASSERT(aStore->IO->io != nullptr);
 
     free_cachedir(&Config.cacheSwap);
