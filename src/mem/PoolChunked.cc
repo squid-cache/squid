@@ -437,7 +437,6 @@ MemPoolChunked::getStats(Mem::PoolStats &stats)
 
     clean((time_t) 555555); /* don't want to get chunks released before reporting */
 
-    stats.pool = this;
     stats.label = label;
     stats.meter = &meter;
     stats.obj_size = objectSize;
