@@ -13,6 +13,7 @@
 #include "compat/shm.h"
 #include "debug/Stream.h"
 #include "fatal.h"
+#include "Instance.h"
 #include "ipc/mem/Segment.h"
 #include "sbuf/SBuf.h"
 #include "SquidConfig.h"
@@ -279,6 +280,7 @@ Ipc::Mem::Segment::GenerateName(const char *id)
     } else {
         name.append('/');
         name.append(service_name.c_str());
+        name.append(Instance::GetPidFilenameHash().c_str());
         name.append('-');
     }
 

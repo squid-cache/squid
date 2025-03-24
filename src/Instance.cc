@@ -11,6 +11,7 @@
 #include "debug/Messages.h"
 #include "fs_io.h"
 #include "Instance.h"
+#include "md5.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -222,3 +223,21 @@ Instance::WriteOurPid()
     debugs(50, Important(23), "Created " << TheFile);
 }
 
+/// \returns hash of the PID file name to make a unique service name for this Squid instance
+SBuf
+Instance::GetPidFilenameHash()
+{
+    const auto code_table = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    cache_key hash[SQUID_MD5_DIGEST_LENGTH];
+    unsigned char *p = hash;
+
+    SquidMD5_CTX ctx;
+    SquidMD5Init(&ctx);
+    const auto name = PidFilenameCalc();
+    SquidMD5Update(&ctx, name.rawContent(), name.length());
+    SquidMD5Final(hash, &ctx);
+
+    SBuf pid_filename_hash;
+    pid_filename_hash.appendf("%c%c%c%c", code_table[p[0] % 36], code_table[p[1] % 36], code_table[p[2] % 36], code_table[p[3] % 36]);
+    return pid_filename_hash;
+}

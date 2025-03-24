@@ -23,6 +23,9 @@
  * test the DiskIO framework
  */
 
+// XXX: for Instance.cc linkage. keep in sync with main.cc
+bool Chrooted = false;
+
 class TestDiskIO : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestDiskIO);

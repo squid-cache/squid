@@ -13,6 +13,8 @@
 #include <sys/types.h>
 #endif
 
+#include "sbuf/SBuf.h"
+
 /// code related to Squid Instance and PID file management
 namespace Instance {
 
@@ -29,6 +31,9 @@ void WriteOurPid();
 /// \returns another Squid instance PID
 /// Throws if PID file maintenance is disabled.
 pid_t Other();
+
+/// \returns hash of the PID file name to make a unique service name for this Squid instance
+SBuf GetPidFilenameHash();
 
 } // namespace Instance
 
