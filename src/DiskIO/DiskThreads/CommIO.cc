@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
-#include "compat/xpipe.h"
+#include "compat/pipe.h"
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "fd.h"
 #include "globals.h"
@@ -24,7 +24,7 @@ CommIO::Initialize()
 
     /* Initialize done pipe signal */
     int DonePipe[2];
-    if (xpipe(DonePipe)) {}
+    if (pipe(DonePipe)) {}
     DoneFD = DonePipe[1];
     DoneReadFD = DonePipe[0];
     fd_open(DoneReadFD, FD_PIPE, "async-io completion event: main");

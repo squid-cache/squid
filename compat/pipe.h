@@ -7,7 +7,7 @@
  */
 
 #ifndef SQUID_COMPAT_XPIPE_H
-#define SQUID_COMPAT_XPIPE_H
+#define SQUID_COMPAT_PIPE_H
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -15,14 +15,17 @@
 
 #if _SQUID_WINDOWS_ || _SQUID_MINGW_
 
-int xpipe(int fildes[2]);
-
-#else /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
+#if HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+#if HAVE_IO_H
+#include <io.h>
+#endif
 
 inline int
-xpipe(int fildes[2])
+pipe(int pipefd[2])
 {
-    return pipe(fildes);
+    return _pipe(pipefd, 4096, _O_BINARY);
 }
 
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */

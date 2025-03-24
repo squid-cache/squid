@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
-#include "compat/xpipe.h"
+#include "compat/pipe.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -133,7 +133,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         int p2c[2];
         int c2p[2];
 
-        if (xpipe(p2c) < 0) {
+        if (pipe(p2c) < 0) {
             xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: pipe: " << xstrerr(xerrno));
             return -1; // maybe ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
@@ -141,7 +141,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         fd_open(prfd = p2c[0], FD_PIPE, "IPC FIFO Parent Read");
         fd_open(cwfd = p2c[1], FD_PIPE, "IPC FIFO Child Write");
 
-        if (xpipe(c2p) < 0) {
+        if (pipe(c2p) < 0) {
             xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: pipe: " << xstrerr(xerrno));
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
