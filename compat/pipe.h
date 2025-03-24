@@ -6,7 +6,7 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_COMPAT_XPIPE_H
+#ifndef SQUID_COMPAT_PIPE_H
 #define SQUID_COMPAT_PIPE_H
 
 #if HAVE_UNISTD_H
@@ -30,4 +30,4 @@ pipe(int pipefd[2])
 
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
 
-#endif /* SQUID_COMPAT_XPIPE_H */
+#endif /* SQUID_COMPAT_PIPE_H */
