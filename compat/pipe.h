@@ -9,7 +9,6 @@
 #ifndef SQUID_COMPAT_PIPE_H
 #define SQUID_COMPAT_PIPE_H
 
-
 #if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
 inline int
 pipe(int pipefd[2])
