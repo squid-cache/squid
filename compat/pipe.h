@@ -9,18 +9,11 @@
 #ifndef SQUID_COMPAT_PIPE_H
 #define SQUID_COMPAT_PIPE_H
 
-#if HAVE_WINDOWS_H
-#include <windows.h>
-#endif
-#if HAVE_IO_H
-#include <io.h>
-#endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
 #if _SQUID_WINDOWS_ || _SQUID_MINGW_
-
 inline int
 pipe(int pipefd[2])
 {
