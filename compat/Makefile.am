@@ -62,6 +62,7 @@ libcompatsquid_la_SOURCES = \
 	os/solaris.h \
 	os/sunos.h \
 	osdetect.h \
+	pipe.h \
 	shm.cc \
 	shm.h \
 	statvfs.cc \

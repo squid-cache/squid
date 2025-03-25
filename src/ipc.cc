@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
+#include "compat/pipe.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
