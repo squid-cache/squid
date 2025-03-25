@@ -9,17 +9,20 @@
 #ifndef SQUID_COMPAT_PIPE_H
 #define SQUID_COMPAT_PIPE_H
 
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
-#if _SQUID_WINDOWS_ || _SQUID_MINGW_
+#if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
 inline int
 pipe(int pipefd[2])
 {
     return _pipe(pipefd, 4096, _O_BINARY);
 }
 
-#endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
+#else /* (_SQUID_WINDOWS_ || _SQUID_MINGW_) */
+
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#endif /* (_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 
 #endif /* SQUID_COMPAT_PIPE_H */
