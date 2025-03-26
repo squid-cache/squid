@@ -981,7 +981,7 @@ squidaio_poll_queues(void)
         done_queue.tailp = &done_queue.head;
 
         if (!ReleaseMutex(done_queue.mutex)) {
-            assert(false); /* something is seriously broken here */
+            /* unexpected error */
         }
 
         Sleep(0);
@@ -1099,7 +1099,6 @@ void
 squidaio_stats(StoreEntry * sentry)
 {
     squidaio_thread_t *threadp;
-    size_t i;
 
     if (!squidaio_initialised)
         return;
@@ -1110,7 +1109,7 @@ squidaio_stats(StoreEntry * sentry)
 
     threadp = threads;
 
-    for (i = 0; i < NUMTHREADS; ++i) {
+    for (size_t i = 0; i < NUMTHREADS; ++i) {
         storeAppendPrintf(sentry, "%zu\t0x%lx\t%ld\n", i + 1, threadp->dwThreadId, threadp->requests);
         threadp = threadp->next;
     }
