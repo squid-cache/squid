@@ -9,21 +9,18 @@
 #include "squid.h"
 #include "compat/win32_maperror.h"
 
-#if _SQUID_WINDOWS_ || _SQUID_MINGW_ && !_SQUID_CYGWIN_
+#if (_SQUID_WINDOWS_ || _SQUID_MINGW_) && !_SQUID_CYGWIN_
 
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
-// for _doserrno
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
+#include <cstdlib>
 #include <unordered_map>
 
 void
 WIN32_maperror(unsigned long WIN32_oserrno)
 {
-    static const auto errormap = std::unordered_map<unsigned long, int> {
+    static const auto errormap = new std::unordered_map<unsigned long, int> {
         {ERROR_INVALID_FUNCTION, EINVAL},
         {ERROR_FILE_NOT_FOUND, ENOENT},
         {ERROR_PATH_NOT_FOUND, ENOENT},
@@ -70,18 +67,17 @@ WIN32_maperror(unsigned long WIN32_oserrno)
         {ERROR_NESTING_NOT_ALLOWED, EAGAIN},
         {ERROR_NOT_ENOUGH_QUOTA, ENOMEM}
     };
-    static const auto
-        min_exec_error = ERROR_INVALID_STARTING_CODESEG,
-        max_exec_error = ERROR_INFLOOP_IN_RELOC_CHAIN,
-        min_eaccess_range = ERROR_WRITE_PROTECT,
-        max_eaccess_range = ERROR_SHARING_BUFFER_EXCEEDED;
-
     _set_doserrno(WIN32_oserrno);
-    auto it = errormap.find(WIN32_oserrno);
-    if (it != errormap.end()) {
+    auto it = errormap->find(WIN32_oserrno);
+    if (it != errormap->end()) {
         errno = it->second;
         return;
     }
+    const auto min_exec_error = ERROR_INVALID_STARTING_CODESEG;
+    const auto max_exec_error = ERROR_INFLOOP_IN_RELOC_CHAIN;
+    const auto min_eaccess_range = ERROR_WRITE_PROTECT;
+    const auto max_eaccess_range = ERROR_SHARING_BUFFER_EXCEEDED;
+
     if (WIN32_oserrno >= min_eaccess_range && WIN32_oserrno <= max_eaccess_range)
         errno = EACCES;
     else if (WIN32_oserrno >= min_exec_error && WIN32_oserrno <= max_exec_error)
@@ -90,4 +86,4 @@ WIN32_maperror(unsigned long WIN32_oserrno)
         errno = EINVAL;
 }
 
-#endif
+#endif /* (_SQUID_WINDOWS_ || _SQUID_MINGW_) && !_SQUID_CYGWIN_ */
