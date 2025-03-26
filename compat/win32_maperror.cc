@@ -68,7 +68,7 @@ WIN32_maperror(unsigned long WIN32_oserrno)
         {ERROR_NOT_ENOUGH_QUOTA, ENOMEM}
     };
     _set_doserrno(WIN32_oserrno);
-    auto it = errormap->find(WIN32_oserrno);
+    const auto it = errormap->find(WIN32_oserrno);
     if (it != errormap->end()) {
         errno = it->second;
         return;
@@ -78,9 +78,9 @@ WIN32_maperror(unsigned long WIN32_oserrno)
     const auto min_eaccess_range = ERROR_WRITE_PROTECT;
     const auto max_eaccess_range = ERROR_SHARING_BUFFER_EXCEEDED;
 
-    if (WIN32_oserrno >= min_eaccess_range && WIN32_oserrno <= max_eaccess_range)
+    if (min_eaccess_range <= WIN32_oserrno && WIN32_oserrno <= max_eaccess_range)
         errno = EACCES;
-    else if (WIN32_oserrno >= min_exec_error && WIN32_oserrno <= max_exec_error)
+    else if (min_exec_error <= WIN32_oserrno && WIN32_oserrno <= max_exec_error)
         errno = ENOEXEC;
     else
         errno = EINVAL;
