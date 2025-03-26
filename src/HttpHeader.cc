@@ -16,16 +16,17 @@
 #include "base64.h"
 #include "globals.h"
 #include "http/ContentLengthInterpreter.h"
+#include "http/one/FieldParser.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrScTarget.h" // also includes HttpHdrSc.h
 #include "HttpHeader.h"
-#include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "mime_header.h"
+#include "parser/Tokenizer.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "StatHist.h"
@@ -64,9 +65,6 @@
 /*
  * local constants and vars
  */
-
-// statistics counters for headers. clients must not allow Http::HdrType::BAD_HDR to be counted
-std::vector<HttpHeaderFieldStat> headerStatsTable(Http::HdrType::enumEnd_);
 
 /* request-only headers. Used for cachemgr */
 static HttpHeaderMask RequestHeadersMask;   /* set run-time using RequestHeaders */
@@ -743,7 +741,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
 
     if (e->id != Http::HdrType::BAD_HDR) {
         if (CBIT_TEST(mask, e->id)) {
-            ++ headerStatsTable[e->id].repCount;
+            ++ Http::FieldStats(e->id).repCount;
         } else {
             CBIT_SET(mask, e->id);
         }
@@ -1369,8 +1367,7 @@ HttpHeaderEntry::HttpHeaderEntry(Http::HdrType anId, const SBuf &aName, const ch
 
     value = aValue;
 
-    if (id != Http::HdrType::BAD_HDR)
-        ++ headerStatsTable[id].aliveCount;
+    ++ Http::FieldStats(id).aliveCount;
 
     debugs(55, 9, "created HttpHeaderEntry " << this << ": '" << name << " : " << value );
 }
@@ -1380,126 +1377,38 @@ HttpHeaderEntry::~HttpHeaderEntry()
     debugs(55, 9, "destroying entry " << this << ": '" << name << ": " << value << "'");
 
     if (id != Http::HdrType::BAD_HDR) {
-        assert(headerStatsTable[id].aliveCount);
-        -- headerStatsTable[id].aliveCount;
+        assert(Http::FieldStats(id).aliveCount);
+        -- Http::FieldStats(id).aliveCount;
         id = Http::HdrType::BAD_HDR; // it already is BAD_HDR, no sense in resetting it
     }
 
 }
 
-/* parses and inits header entry, returns true/false */
+/**
+ * Parses an HTTP/1.x header field, to generate a header entry object.
+ * \retval true on successful parse
+ */
 HttpHeaderEntry *
 HttpHeaderEntry::parse(const char *field_start, const char *field_end, const http_hdr_owner_type msgType)
 {
-    /* note: name_start == field_start */
-    const char *name_end = (const char *)memchr(field_start, ':', field_end - field_start);
-    int name_len = name_end ? name_end - field_start :0;
-    const char *value_start = field_start + name_len + 1;   /* skip ':' */
-    /* note: value_end == field_end */
+    try {
+        Parser::Tokenizer tok(SBuf(field_start, field_end-field_start));
+        Http1::FieldParser fp;
 
-    ++ HeaderEntryParsedCount;
+        fp.parseFieldLine(tok, msgType);
 
-    /* do we have a valid field name within this field? */
+        ++ HeaderEntryParsedCount;
 
-    if (!name_len || name_end > field_end)
-        return nullptr;
+        SBuf theName = fp.name();
+        SBuf theValue = fp.value();
 
-    if (name_len > 65534) {
-        /* String must be LESS THAN 64K and it adds a terminating NULL */
-        // TODO: update this to show proper name_len in Raw markup, but not print all that
-        debugs(55, 2, "ignoring huge header field (" << Raw("field_start", field_start, 100) << "...)");
-        return nullptr;
-    }
+        debugs(55, 9, "parsed HttpHeaderEntry: '" << theName << ": " << theValue << "'");
+        return new HttpHeaderEntry(fp.id(), theName, theValue.c_str());
 
-    /*
-     * RFC 7230 section 3.2.4:
-     * "No whitespace is allowed between the header field-name and colon.
-     * ...
-     *  A server MUST reject any received request message that contains
-     *  whitespace between a header field-name and colon with a response code
-     *  of 400 (Bad Request).  A proxy MUST remove any such whitespace from a
-     *  response message before forwarding the message downstream."
-     */
-    if (xisspace(field_start[name_len - 1])) {
-
-        if (msgType == hoRequest)
-            return nullptr;
-
-        // for now, also let relaxed parser remove this BWS from any non-HTTP messages
-        const bool stripWhitespace = (msgType == hoReply) ||
-                                     Config.onoff.relaxed_header_parser;
-        if (!stripWhitespace)
-            return nullptr; // reject if we cannot strip
-
-        debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
-               "WARNING: Whitespace after header name in '" << getStringPrefix(field_start, field_end-field_start) << "'");
-
-        while (name_len > 0 && xisspace(field_start[name_len - 1]))
-            --name_len;
-
-        if (!name_len) {
-            debugs(55, 2, "found header with only whitespace for name");
-            return nullptr;
-        }
-    }
-
-    /* RFC 7230 section 3.2:
-     *
-     *  header-field   = field-name ":" OWS field-value OWS
-     *  field-name     = token
-     *  token          = 1*TCHAR
-     */
-    for (const char *pos = field_start; pos < (field_start+name_len); ++pos) {
-        if (!CharacterSet::TCHAR[*pos]) {
-            debugs(55, 2, "found header with invalid characters in " <<
-                   Raw("field-name", field_start, min(name_len,100)) << "...");
-            return nullptr;
-        }
-    }
-
-    /* now we know we can parse it */
-
-    debugs(55, 9, "parsing HttpHeaderEntry: near '" <<  getStringPrefix(field_start, field_end-field_start) << "'");
-
-    /* is it a "known" field? */
-    Http::HdrType id = Http::HeaderLookupTable.lookup(field_start,name_len).id;
-    debugs(55, 9, "got hdr-id=" << id);
-
-    SBuf theName;
-
-    String value;
-
-    if (id == Http::HdrType::BAD_HDR)
-        id = Http::HdrType::OTHER;
-
-    /* set field name */
-    if (id == Http::HdrType::OTHER)
-        theName.append(field_start, name_len);
-    else
-        theName = Http::HeaderLookupTable.lookup(id).name;
-
-    /* trim field value */
-    while (value_start < field_end && xisspace(*value_start))
-        ++value_start;
-
-    while (value_start < field_end && xisspace(field_end[-1]))
-        --field_end;
-
-    if (field_end - value_start > 65534) {
-        /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, 2, "WARNING: found '" << theName << "' header of " << (field_end - value_start) << " bytes");
+    } catch(...) {
+        debugs(55, 2, "ignoring invalid header: " << CurrentException);
         return nullptr;
     }
-
-    /* set field value */
-    value.assign(value_start, field_end - value_start);
-
-    if (id != Http::HdrType::BAD_HDR)
-        ++ headerStatsTable[id].seenCount;
-
-    debugs(55, 9, "parsed HttpHeaderEntry: '" << theName << ": " << value << "'");
-
-    return new HttpHeaderEntry(id, theName, value.termedBuf());
 }
 
 HttpHeaderEntry *
@@ -1542,12 +1451,10 @@ HttpHeaderEntry::getInt64() const
 static void
 httpHeaderNoteParsedEntry(Http::HdrType id, String const &context, bool error)
 {
-    if (id != Http::HdrType::BAD_HDR)
-        ++ headerStatsTable[id].parsCount;
+    ++ Http::FieldStats(id).parsCount;
 
     if (error) {
-        if (id != Http::HdrType::BAD_HDR)
-            ++ headerStatsTable[id].errCount;
+        ++ Http::FieldStats(id).errCount;
         debugs(55, 2, "cannot parse hdr field: '" << Http::HeaderLookupTable.lookup(id).name << ": " << context << "'");
     }
 }
@@ -1642,7 +1549,7 @@ httpHeaderStoreReport(StoreEntry * e)
 
     // scan heaaderTable and output
     for (auto h : WholeEnum<Http::HdrType>()) {
-        auto stats = headerStatsTable[h];
+        const auto stats = Http::FieldStats(h);
         storeAppendPrintf(e, "%2d\t %-25s\t %5d\t %6.3f\t %6.3f\n",
                           Http::HeaderLookupTable.lookup(h).id,
                           Http::HeaderLookupTable.lookup(h).name,
