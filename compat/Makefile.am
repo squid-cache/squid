@@ -73,6 +73,8 @@ libcompatsquid_la_SOURCES = \
 	tempnam.h \
 	types.h \
 	valgrind.h \
+	win32_maperror.cc \
+	win32_maperror.h \
 	xalloc.cc \
 	xalloc.h \
 	xis.h \
