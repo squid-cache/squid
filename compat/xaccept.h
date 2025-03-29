@@ -15,7 +15,8 @@
 
 #if _SQUID_WINDOWS_ || _SQUID_MINGW_
 
-int xaccept(int s, struct sockaddr *a, socklen_t *l);
+int
+xaccept(int s, struct sockaddr *a, socklen_t *l);
 
 #else /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 
