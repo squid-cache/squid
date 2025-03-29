@@ -476,19 +476,6 @@ namespace Squid
  */
 
 inline int
-accept(int s, struct sockaddr * a, socklen_t * l)
-{
-    SOCKET result;
-    if ((result = ::accept(_get_osfhandle(s), a, l)) == INVALID_SOCKET) {
-        if (WSAEMFILE == (errno = WSAGetLastError()))
-            errno = EMFILE;
-        return -1;
-    } else
-        return _open_osfhandle(result, 0);
-}
-#define accept(s,a,l) Squid::accept(s,a,reinterpret_cast<socklen_t*>(l))
-
-inline int
 bind(int s, const struct sockaddr * n, socklen_t l)
 {
     if (::bind(_get_osfhandle(s),n,l) == SOCKET_ERROR) {

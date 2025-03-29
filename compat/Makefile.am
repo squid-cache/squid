@@ -73,6 +73,8 @@ libcompatsquid_la_SOURCES = \
 	tempnam.h \
 	types.h \
 	valgrind.h \
+	xaccept.cc \
+	xaccept.h \
 	xalloc.cc \
 	xalloc.h \
 	xis.h \
