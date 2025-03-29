@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_COMPAT_OS_SOCKET_H
-#define SQUID_COMPAT_OS_SOCKET_H
+#ifndef SQUID_COMPAT_XACCEPT_H
+#define SQUID_COMPAT_XACCEPT_H
 
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -27,4 +27,4 @@ xaccept(int s, struct sockaddr *a, socklen_t *l)
 
 #endif /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 
-#endif /* SQUID_COMPAT_OS_SOCKET_H */
+#endif /* SQUID_COMPAT_XACCEPT_H */

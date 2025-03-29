@@ -475,7 +475,6 @@ namespace Squid
  * - map the FD value used by Squid to the socket handes used by Windows.
  */
 
-
 inline int
 bind(int s, const struct sockaddr * n, socklen_t l)
 {
