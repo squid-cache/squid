@@ -114,7 +114,7 @@ char *gethost_name(void);
 
 #if (HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT || HAVE_GSS_MAP_NAME_TO_ANY) && HAVE_KRB5_PAC
 #define HAVE_PAC_SUPPORT 1
-#define MAX_PAC_GROUP_SIZE 200*60
+#define MAX_PAC_GROUP_SIZE 1024*98
 typedef struct {
     uint16_t length;
     uint16_t maxlength;
