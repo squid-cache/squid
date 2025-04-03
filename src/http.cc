@@ -761,14 +761,32 @@ HttpStateData::handle1xx(const HttpReply::Pointer &reply)
     Must(!flags.serverSwitchedProtocols);
     flags.serverSwitchedProtocols = (statusCode == Http::scSwitchingProtocols);
 
-    if (statusCode == Http::scContinue && request->forcedBodyContinuation)
-        return drop1xx("we have sent it already");
+    // old clients do not support 1xx unless they sent Expect: 100-continue
+    if (statusCode == Http::scContinue) {
+        // traffic optimization
+        if (request->forcedBodyContinuation)
+            return drop1xx("we have sent 100-continue already");
+        // tolerate HTTP/1.0 clients sending "Expect: 100-continue",
+        // and broken servers emitting 100 status without receiving Expect.
+        if (!request->header.has(Http::HdrType::EXPECT)) {
+            return drop1xx("the client did not request 100-continue");
+    }
+    else if (port->actAsOrigin) {
+        // RFC 9110 section 15.2:
+        //  a server MUST NOT send a 1xx response to an HTTP/1.0 client
+        static const h1 = Http::ProtocolVersion(1,0);
+        if (port->transport <= h1 || request->http_ver <= h1)
+            return drop1xx("HTTP/1.0 protocol does not support 1xx status");
+    }
+    // else; RFC 9110 section 15.2: A proxy MUST forward 1xx responses
 
-    if (!request->canHandle1xx())
-        return drop1xx("the client does not support it");
+    if (flags.serverSwitchedProtocols) {
+        if (const auto reason = blockSwitchingProtocols(*reply))
+            return drop1xx(reason);
+    }
 
 #if USE_HTTP_VIOLATIONS
-    // check whether the 1xx response forwarding is allowed by squid.conf
+    // check whether the 1xx response forwarding is denied by squid.conf
     if (Config.accessList.reply) {
         ACLFilledChecklist ch(Config.accessList.reply, originalRequest().getRaw());
         ch.updateAle(fwd->al);
@@ -778,11 +796,6 @@ HttpStateData::handle1xx(const HttpReply::Pointer &reply)
             return drop1xx("http_reply_access blocked it");
     }
 #endif // USE_HTTP_VIOLATIONS
-
-    if (flags.serverSwitchedProtocols) {
-        if (const auto reason = blockSwitchingProtocols(*reply))
-            return drop1xx(reason);
-    }
 
     debugs(11, 2, "forwarding 1xx to client");
 
@@ -808,7 +821,7 @@ HttpStateData::drop1xx(const char *reason)
         const auto err = new ErrorState(ERR_INVALID_RESP, Http::scBadGateway, request.getRaw(), fwd->al);
         fwd->fail(err);
         closeServer();
-        mustStop("prohibited HTTP/101 response");
+        mustStop("prohibited HTTP 101 response");
         return;
     }
 
@@ -824,21 +837,41 @@ HttpStateData::blockSwitchingProtocols(const HttpReply &reply) const
     if (!upgradeHeaderOut)
         return "Squid offered no Upgrade at all, but server switched to a tunnel";
 
-    // See RFC 7230 section 6.7 for the corresponding MUSTs
+    // RFC 9110 section 7.8 paragraph 12:
+    //   A server that receives an Upgrade header field in an
+    //   HTTP/1.0 request MUST ignore that Upgrade field.
+    if (request->http_ver <= Http::ProtocolVersion(1,0))
+        return "HTTP/1.0 does not suport Upgrade header field";
 
-    if (!reply.header.has(Http::HdrType::UPGRADE))
-        return "server did not send an Upgrade header field";
-
+    // RFC 9110 section 7.8 paragraph 12:
+    //  A sender of Upgrade MUST also send an "Upgrade" connection option
+    //  in the Connection header field
     if (!reply.header.hasListMember(Http::HdrType::CONNECTION, "upgrade", ','))
         return "server did not send 'Connection: upgrade'";
 
-    const auto acceptedProtos = reply.header.getList(Http::HdrType::UPGRADE);
-    const char *pos = nullptr;
-    const char *accepted = nullptr;
-    int acceptedLen = 0;
-    while (strListGetItem(&acceptedProtos, ',', &accepted, &acceptedLen, &pos)) {
-        debugs(11, 5, "server accepted at least" << Raw(nullptr, accepted, acceptedLen));
-        return nullptr; // OK: let the client validate server's selection
+    if (reply.header.has(Http::HdrType::UPGRADE)) {
+        // RFC 9110 section 7.8 paragraph 5:
+        //  A server that sends a 101 (Switching Protocols) response MUST send
+        //  an Upgrade header field to indicate the new protocol(s) to which
+        //  the connection is being switched
+        const auto acceptedProtos = reply.header.getList(Http::HdrType::UPGRADE);
+        const char *pos = nullptr;
+        const char *accepted = nullptr;
+        int acceptedLen = 0;
+        while (strListGetItem(&acceptedProtos, ',', &accepted, &acceptedLen, &pos)) {
+            debugs(11, 5, "server accepted at least" << Raw(nullptr, accepted, acceptedLen));
+            return nullptr; // OK: let the client validate server's selection
+        }
+
+        // RFC 9110 section 7.8 paragraph 5:
+        //   A server MUST NOT switch to a protocol that was not indicated
+        //   by the client in the corresponding request's Upgrade header field.
+        // TODO: abort when server violates this condition.
+
+    } else {
+        // RFC 9110 section 15.2.2:
+        //  The server MUST generate an Upgrade header field in the response
+        return "server did not send an Upgrade header field";
     }
 
     return "server sent an essentially empty Upgrade header field";
