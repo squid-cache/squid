@@ -1399,11 +1399,11 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
 
         ++ HeaderEntryParsedCount;
 
-        SBuf theName = fp.name();
-        SBuf theValue = fp.value();
+        SBuf foundName = fp.name();
+        SBuf foundValue = fp.value();
 
-        debugs(55, 9, "parsed HttpHeaderEntry: '" << theName << ": " << theValue << "'");
-        return new HttpHeaderEntry(fp.id(), theName, theValue.c_str());
+        debugs(55, 9, "parsed HttpHeaderEntry: '" << foundName << ": " << foundValue << "'");
+        return new HttpHeaderEntry(fp.id(), foundName, foundValue.c_str());
 
     } catch(...) {
         debugs(55, 2, "ignoring invalid header: " << CurrentException);

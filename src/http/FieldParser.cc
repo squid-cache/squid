@@ -10,10 +10,12 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
+#include "base/Raw.h"
 #include "base/TextException.h"
 #include "debug/Stream.h"
 #include "http/FieldParser.h"
 #include "parser/Tokenizer.h"
+#include "sbuf/Stream.h"
 
 /**
  * Governed by RFC 9110 section 5.1:
@@ -26,6 +28,15 @@ Http::FieldParser::parseFieldName(::Parser::Tokenizer &tok)
 {
     if (!tok.prefix(theName, CharacterSet::TCHAR))
         throw TextException(SBuf("missing field name"), Here());
+
+    // TODO: remove when String is gone from Squid
+    if (name().length() > 65534) {
+        /* String must be LESS THAN 64K and it adds a terminating NULL */
+        debugs(55, 2, "ignoring huge header field (" <<
+               Raw("field_start", name().rawContent(), 100) <<
+               "...[skip " << name().length()-100 << " characters])");
+        throw TextException(SBuf("huge-header-name"), Here());
+    }
 
     /* is it a "known" field? */
     theId = Http::HeaderLookupTable.lookup(theName.rawContent(),theName.length()).id;
@@ -58,6 +69,12 @@ Http::FieldParser::parseFieldValue(::Parser::Tokenizer &tok)
 
     // may be missing
     (void)tok.prefix(theValue, fvCharacters);
+
+    // TODO: remove when String is gone from Squid
+    if (value().length() > 65534) {
+        /* String must be LESS THAN 64K and it adds a terminating NULL */
+        throw TextException(ToSBuf("'", name(), "' header of ", value().length(), " bytes"), Here());
+    }
 }
 
 HttpHeaderFieldStat &

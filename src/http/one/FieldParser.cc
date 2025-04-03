@@ -29,15 +29,6 @@ Http1::FieldParser::parseFieldLine(::Parser::Tokenizer &tok, const http_hdr_owne
     // Isolate the: field-name
     parseFieldName(tok);
 
-    // TODO: remove when String is gone from Squid
-    if (name().length() > 65534) {
-        /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, 2, "ignoring huge header field (" <<
-               Raw("field_start", name().rawContent(), 100) <<
-               "...[skip " << name().length()-100 << " characters])");
-        throw TextException(SBuf("huge-header-name"), Here());
-    }
-
     // handle delimiter ( BWS ":" ) or abort
     skipColonDelimiter(tok, msgType);
 
@@ -45,12 +36,6 @@ Http1::FieldParser::parseFieldLine(::Parser::Tokenizer &tok, const http_hdr_owne
     (void)tok.skipAll(CharacterSet::WSP); // at least an SP expected
     parseFieldValue(tok);
     (void)tok.skipAll(CharacterSet::WSP);
-
-    // TODO: remove when String is gone from Squid
-    if (value().length() > 65534) {
-        /* String must be LESS THAN 64K and it adds a terminating NULL */
-        throw TextException(ToSBuf("'", name(), "' header of ", value().length(), " bytes"), Here());
-    }
 
     if (!tok.atEnd()) {
         const auto garbage = tok.remaining();
