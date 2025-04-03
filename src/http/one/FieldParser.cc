@@ -55,7 +55,7 @@ Http1::FieldParser::parseFieldLine(::Parser::Tokenizer &tok, const http_hdr_owne
     if (!tok.atEnd()) {
         const auto garbage = tok.remaining();
         const auto limit = min(garbage.length(), SBuf::size_type(100));
-        throw TextException(ToSBuf("invalid ", Raw("field-value", garbage.rawContent(), limit), "..."), Here());
+        throw TextException(ToSBuf(name() , " has invalid ", Raw("field-value", garbage.rawContent(), limit), "..."), Here());
     }
 }
 
