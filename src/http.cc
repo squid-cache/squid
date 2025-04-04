@@ -761,7 +761,6 @@ HttpStateData::handle1xx(const HttpReply::Pointer &reply)
     Must(!flags.serverSwitchedProtocols);
     flags.serverSwitchedProtocols = (statusCode == Http::scSwitchingProtocols);
 
-    // old clients do not support 1xx unless they sent Expect: 100-continue
     if (statusCode == Http::scContinue) {
         // traffic optimization
         if (request->forcedBodyContinuation)
@@ -786,7 +785,7 @@ HttpStateData::handle1xx(const HttpReply::Pointer &reply)
     }
 
 #if USE_HTTP_VIOLATIONS
-    // check whether the 1xx response forwarding is denied by squid.conf
+    // check whether the 1xx response forwarding is allowed by squid.conf
     if (Config.accessList.reply) {
         ACLFilledChecklist ch(Config.accessList.reply, originalRequest().getRaw());
         ch.updateAle(fwd->al);
