@@ -218,7 +218,7 @@ Client::completeForwarding()
 {
     debugs(11,5, "completing forwarding for "  << fwd);
 
-    const char *receivedWholeReply = receivedWholeVirginReply ? "complete virgin reply" : nullptr;
+    auto receivedWholeReply = receivedWholeVirginReply ? "complete virgin reply" : nullptr;
 #if USE_ADAPTATION
     if (startedAdaptation)
         receivedWholeReply = receivedWholeAdaptedReply ? "complete adapted reply" : nullptr;
