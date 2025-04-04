@@ -766,7 +766,12 @@ HttpStateData::handle1xx(const HttpReply::Pointer &reply)
         if (request->forcedBodyContinuation)
             return drop1xx("we have sent 100-continue already");
         // tolerate HTTP/1.0 clients sending "Expect: 100-continue",
-        // and broken servers emitting 100 status without receiving Expect.
+        // but drop for servers emitting 100 status without receiving Expect.
+        //
+        // RFC 9110 section 15.2.1:
+        //  If the request did not contain an Expect header field containing
+        //  the 100-continue expectation, the client can simply discard this
+        //  interim response.
         if (!request->header.has(Http::HdrType::EXPECT)) {
             return drop1xx("the client did not request 100-continue");
     }
