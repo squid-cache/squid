@@ -159,7 +159,6 @@ Client::markParsedVirginReplyAsWhole(const char *reasonWeAreSure)
 {
     assert(reasonWeAreSure);
     debugs(11, 3, reasonWeAreSure);
-
     receivedWholeVirginReply = true;
 }
 
@@ -826,7 +825,7 @@ void
 Client::checkAdaptationWithBodyCompletion()
 {
     if (!adaptedBodySource) {
-        debugs(11, 7, "already completed");
+        debugs(11, 7, "not consuming; " << startedAdaptation);
         return;
     }
 
@@ -838,7 +837,7 @@ Client::checkAdaptationWithBodyCompletion()
     }
 
     if (!adaptedBodySource->exhausted()) {
-        debugs(11,5, "waiting to consume the remainder of the adapted body");
+        debugs(11, 5, "waiting to consume the remainder of the adapted body from " << adaptedBodySource->status());
         return; // resumeBodyStorage() should eventually consume the rest
     }
 
