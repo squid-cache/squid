@@ -220,6 +220,14 @@ Client::completeForwarding()
 
     auto receivedWholeReply = receivedWholeVirginReply ? "complete virgin reply" : nullptr;
 #if USE_ADAPTATION
+    // If we are still deciding whether to adapt, then receivedWholeVirginReply
+    // must be false because we do not yet know whether to give virgin reply to
+    // Store or to the adaptation service.
+    Assure(!adaptationAccessCheckPending || !receivedWholeVirginReply);
+
+    // If adaptation has started, then Store gets bytes from the adaptation
+    // service, so we rewrite receivedWholeReply, disregarding whether we
+    // receivedWholeVirginReply.
     if (startedAdaptation)
         receivedWholeReply = receivedWholeAdaptedReply ? "complete adapted reply" : nullptr;
 #endif
