@@ -845,7 +845,7 @@ HttpStateData::blockSwitchingProtocols(const HttpReply &reply) const
     //   A server that receives an Upgrade header field in an
     //   HTTP/1.0 request MUST ignore that Upgrade field.
     if (request->http_ver <= Http::ProtocolVersion(1,0))
-        return "HTTP/1.0 does not suport Upgrade header field";
+        return "HTTP/1.0 does not support Upgrade header field";
 
     // RFC 9110 section 7.8 paragraph 12:
     //  A sender of Upgrade MUST also send an "Upgrade" connection option
