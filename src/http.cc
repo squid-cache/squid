@@ -772,14 +772,14 @@ HttpStateData::handle1xx(const HttpReply::Pointer &reply)
         //  If the request did not contain an Expect header field containing
         //  the 100-continue expectation, the client can simply discard this
         //  interim response.
-        if (!request->header.has(Http::HdrType::EXPECT)) {
+        if (!request->header.has(Http::HdrType::EXPECT))
             return drop1xx("the client did not request 100-continue");
-    }
-    else if (port->actAsOrigin) {
+
+    } else if (fwd->al->cache.port->actAsOrigin) {
         // RFC 9110 section 15.2:
         //  a server MUST NOT send a 1xx response to an HTTP/1.0 client
-        static const h1 = Http::ProtocolVersion(1,0);
-        if (port->transport <= h1 || request->http_ver <= h1)
+        static const auto h1 = Http::ProtocolVersion(1,0);
+        if (fwd->al->cache.port->transport <= h1 || request->http_ver <= h1)
             return drop1xx("HTTP/1.0 protocol does not support 1xx status");
     }
     // else; RFC 9110 section 15.2: A proxy MUST forward 1xx responses
