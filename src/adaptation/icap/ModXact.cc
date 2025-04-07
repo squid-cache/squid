@@ -438,7 +438,7 @@ void Adaptation::Icap::ModXact::virginConsume()
     // Why > 2? HttpState does not use the last bytes in the buffer
     // because Client::delayRead() is arguably broken. See
     // HttpStateData::maybeReadVirginBody for more details.
-    if (wantToPostpone && bp.buf().hasPotentialSpace) {
+    if (wantToPostpone && bp.buf().hasPotentialSpace()) {
         // Postponing may increase memory footprint and slow the HTTP side
         // down. Not postponing may increase the number of ICAP errors
         // if the ICAP service fails. We may also use "potential" space to
