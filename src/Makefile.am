@@ -510,10 +510,10 @@ squid_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	libsquid.la \
-	ip/libip.la \
 	fs/libfs.la \
 	DiskIO/libdiskio.la \
 	comm/libcomm.la \
+	ip/libip.la \
 	anyp/libanyp.la \
 	security/libsecurity.la \
 	$(SSL_LIBS) \
