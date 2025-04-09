@@ -88,8 +88,7 @@ Adaptation::Icap::ServiceRep::finalize()
     if (!cfg().connectionEncryption.configured())
         writeableCfg().connectionEncryption.defaultTo(cfg().secure.encryptTransport);
 
-    theSessionFailures.configure(TheConfig.oldest_service_failure > 0 ?
-                                 TheConfig.oldest_service_failure : -1);
+    theSessionFailures.configure(TheConfig.oldest_service_failure);
 }
 
 void Adaptation::Icap::ServiceRep::noteFailure()
@@ -97,7 +96,7 @@ void Adaptation::Icap::ServiceRep::noteFailure()
     const auto failures = theSessionFailures.count(1);
     debugs(93,4, " failure " << failures << " out of " <<
            TheConfig.service_failure_limit << " allowed in " <<
-           TheConfig.oldest_service_failure << "sec " << status());
+           TheConfig.oldest_service_failure.count() << "sec " << status());
 
     if (isSuspended)
         return;

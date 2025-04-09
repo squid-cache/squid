@@ -17,28 +17,28 @@
 void
 FadingCounter::clear()
 {
-    std::fill(counters.begin(), counters.end(), 0);
+    counters = {};
     lastTime = current_dtime;
     total = 0;
 }
 
 void
-FadingCounter::configure(const time_t newHorizon)
+FadingCounter::configure(const Horizon &newHorizon)
 {
     if (newHorizon != horizon_) {
         clear(); // for simplicity
         horizon_ = newHorizon;
-        delta = horizon_ / counters.size(); // may become zero
+        delta = horizon_.count() / counters.size(); // may become zero
     }
 }
 
 uint64_t
 FadingCounter::count(uint64_t howMany)
 {
-    if (horizon() < 0)
+    if (horizon() == Horizon::max())
         return total += howMany; // forget nothing
 
-    if (horizon() == 0)
+    if (horizon() == Horizon::zero())
         return howMany; // remember nothing
 
     const double deltas = (current_dtime - lastTime) / delta;
@@ -47,10 +47,12 @@ FadingCounter::count(uint64_t howMany)
     } else {
         // forget stale values, if any
         // fmod() or "current_dtime/delta" will overflow int for small deltas
-        const auto lastSlot = static_cast<int>(fmod(lastTime, horizon()) / delta);
+        const auto lastSlot = static_cast<int>(fmod(lastTime, horizon().count()) / delta);
         const int staleSlots = static_cast<int>(deltas);
         for (int i = 0, s = lastSlot + 1; i < staleSlots; ++i, ++s) {
             const auto idx = s % counters.size();
+            Assure(counters[idx] >= 0);
+            Assure(total >= uint64_t(counters[idx]));
             total -= counters[idx];
             counters[idx] = 0;
         }
@@ -58,10 +60,9 @@ FadingCounter::count(uint64_t howMany)
 
     // apply new information
     lastTime = current_dtime;
-    const auto curSlot = static_cast<int>(fmod(lastTime, horizon()) / delta);
+    const auto curSlot = static_cast<int>(fmod(lastTime, horizon().count()) / delta);
     counters[curSlot % counters.size()] += howMany;
     total += howMany;
 
     return total;
 }
-
