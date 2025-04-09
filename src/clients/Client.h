@@ -199,12 +199,14 @@ protected:
 
     bool adaptedReplyAborted = false; ///< handleAdaptedBodyProducerAborted() has been called
 #endif
-
-    bool receivedWholeVirginReply = false; ///< markParsedVirginReplyAsWhole() has been called
     bool receivedWholeRequestBody = false; ///< handleRequestBodyProductionEnded called
 
     /// whether we are waiting for MemObject::delayRead() to call us back
     bool waitingForDelayAwareReadChance = false;
+
+    /// markParsedVirginReplyAsWhole() parameter (if that method was called) or nil;
+    /// points to a string literal which is used only for debugging
+    const char *markedParsedVirginReplyAsWhole = nullptr;
 
     /// whether we should not be talking to FwdState; XXX: clear fwd instead
     /// points to a string literal which is used only for debugging

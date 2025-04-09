@@ -159,7 +159,7 @@ Client::markParsedVirginReplyAsWhole(const char *reasonWeAreSure)
 {
     assert(reasonWeAreSure);
     debugs(11, 3, reasonWeAreSure);
-    receivedWholeVirginReply = true;
+    markedParsedVirginReplyAsWhole = reasonWeAreSure;
 }
 
 // called when no more server communication is expected; may quit
@@ -218,7 +218,7 @@ Client::completeForwarding()
 {
     debugs(11,5, "completing forwarding for "  << fwd);
 
-    auto receivedWholeReply = receivedWholeVirginReply ? "complete virgin reply" : nullptr;
+    auto receivedWholeReply = markedParsedVirginReplyAsWhole;
 #if USE_ADAPTATION
     // The startedAdaptation check below correctly detects all adaptation cases
     // because this method's doneWithAdaptation() precondition implies that we
@@ -227,7 +227,7 @@ Client::completeForwarding()
 
     // If adaptation has started, then Store gets bytes from the adaptation
     // service, so we rewrite receivedWholeReply, disregarding whether we
-    // receivedWholeVirginReply.
+    // markedParsedVirginReplyAsWhole.
     if (startedAdaptation)
         receivedWholeReply = receivedWholeAdaptedReply ? "complete adapted reply" : nullptr;
 #endif
