@@ -49,7 +49,7 @@ Comm::Write(const Comm::ConnectionPointer &conn, const char *buf, int size, Asyn
 
 /** Write to FD.
  * This function is used by the lowest level of IO loop which only has access to FD numbers.
- * We have to use the comm iocb_table to map FD numbers to waiting data and Comm::Connections.
+ * We have to use the Comm::ioCallbacks() to map FD numbers to waiting data and Comm::Connections.
  * Once the write has been concluded we schedule the waiting call with success/fail results.
  */
 void

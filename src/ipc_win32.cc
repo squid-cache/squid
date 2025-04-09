@@ -522,7 +522,7 @@ ipc_thread_1(void *in_params)
 
     dup2(p2c[1], 1);
 
-    dup2(fileno(debug_log), 2);
+    dup2(fileno(DebugStream()), 2);
 
     close(c2p[0]);
 
@@ -674,7 +674,7 @@ ipc_thread_1(void *in_params)
     }
 
     /* else {                       IPC_TCP_SOCKET */
-    /*     commSetNoLinger(fd); */
+    /*     commConfigureLinger(fd, OnOff::off); */
     /*  } */
     thread_params.prog = prog;
 

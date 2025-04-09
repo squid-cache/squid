@@ -220,6 +220,7 @@ main() {
             upgrade-protocols
             cache-response
             proxy-collapsed-forwarding
+            hit-revalidation
             busy-restart
             truncated-responses
             malformed-request

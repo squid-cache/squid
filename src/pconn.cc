@@ -9,6 +9,8 @@
 /* DEBUG: section 48    Persistent Connections */
 
 #include "squid.h"
+#include "base/IoManip.h"
+#include "base/PackableStream.h"
 #include "CachePeer.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -71,7 +73,8 @@ IdleConnList::~IdleConnList()
 int
 IdleConnList::findIndexOf(const Comm::ConnectionPointer &conn) const
 {
-    for (int index = size_ - 1; index >= 0; --index) {
+    for (auto right = size_; right > 0; --right) {
+        const auto index = right - 1;
         if (conn->fd == theList_[index]->fd) {
             debugs(48, 3, "found " << conn << " at index " << index);
             return index;
@@ -87,10 +90,11 @@ IdleConnList::findIndexOf(const Comm::ConnectionPointer &conn) const
  * \retval false The index is not an in-use entry.
  */
 bool
-IdleConnList::removeAt(int index)
+IdleConnList::removeAt(size_t index)
 {
-    if (index < 0 || index >= size_)
+    if (index >= size_)
         return false;
+    assert(size_ > 0);
 
     // shuffle the remaining entries to fill the new gap.
     for (; index < size_ - 1; ++index)
@@ -110,12 +114,12 @@ IdleConnList::removeAt(int index)
 
 // almost a duplicate of removeFD. But drops multiple entries.
 void
-IdleConnList::closeN(size_t n)
+IdleConnList::closeN(const size_t n)
 {
     if (n < 1) {
         debugs(48, 2, "Nothing to do.");
         return;
-    } else if (n >= (size_t)size_) {
+    } else if (n >= size_) {
         debugs(48, 2, "Closing all entries.");
         while (size_ > 0) {
             const Comm::ConnectionPointer conn = theList_[--size_];
@@ -139,11 +143,11 @@ IdleConnList::closeN(size_t n)
                 parent_->noteConnectionRemoved();
         }
         // shuffle the list N down.
-        for (index = 0; index < (size_t)size_ - n; ++index) {
+        for (index = 0; index < size_ - n; ++index) {
             theList_[index] = theList_[index + n];
         }
         // ensure the last N entries are unset
-        while (index < ((size_t)size_)) {
+        while (index < size_) {
             theList_[index] = nullptr;
             ++index;
         }
@@ -172,7 +176,7 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
         capacity_ <<= 1;
         const Comm::ConnectionPointer *oldList = theList_;
         theList_ = new Comm::ConnectionPointer[capacity_];
-        for (int index = 0; index < size_; ++index)
+        for (size_t index = 0; index < size_; ++index)
             theList_[index] = oldList[index];
 
         delete[] oldList;
@@ -212,7 +216,8 @@ IdleConnList::isAvailable(int i) const
 Comm::ConnectionPointer
 IdleConnList::pop()
 {
-    for (int i=size_-1; i>=0; --i) {
+    for (auto right = size_; right > 0; --right) {
+        const auto i = right - 1;
 
         if (!isAvailable(i))
             continue;
@@ -220,6 +225,11 @@ IdleConnList::pop()
         // our connection timeout handler is scheduled to run already. unsafe for now.
         // TODO: cancel the pending timeout callback and allow re-use of the conn.
         if (fd_table[theList_[i]->fd].timeoutHandler == nullptr)
+            continue;
+
+        // the cache_peer has been removed from the configuration
+        // TODO: remove all such connections at once during reconfiguration
+        if (theList_[i]->toGoneCachePeer())
             continue;
 
         // finally, a match. pop and return it.
@@ -250,7 +260,8 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &aKey)
     const bool keyCheckAddr = !aKey->local.isAnyAddr();
     const bool keyCheckPort = aKey->local.port() > 0;
 
-    for (int i=size_-1; i>=0; --i) {
+    for (auto right = size_; right > 0; --right) {
+        const auto i = right - 1;
 
         if (!isAvailable(i))
             continue;
@@ -266,6 +277,11 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &aKey)
         // our connection timeout handler is scheduled to run already. unsafe for now.
         // TODO: cancel the pending timeout callback and allow re-use of the conn.
         if (fd_table[theList_[i]->fd].timeoutHandler == nullptr)
+            continue;
+
+        // the cache_peer has been removed from the configuration
+        // TODO: remove all such connections at once during reconfiguration
+        if (theList_[i]->toGoneCachePeer())
             continue;
 
         // finally, a match. pop and return it.
@@ -348,34 +364,41 @@ PconnPool::key(const Comm::ConnectionPointer &destLink, const char *domain)
 }
 
 void
-PconnPool::dumpHist(StoreEntry * e) const
+PconnPool::dumpHist(std::ostream &yaml) const
 {
-    storeAppendPrintf(e,
-                      "%s persistent connection counts:\n"
-                      "\n"
-                      "\t Requests\t Connection Count\n"
-                      "\t --------\t ----------------\n",
-                      descr);
+    AtMostOnce heading(
+        "  connection use histogram:\n"
+        "    # requests per connection: closed connections that carried that many requests\n");
 
     for (int i = 0; i < PCONN_HIST_SZ; ++i) {
         if (hist[i] == 0)
             continue;
 
-        storeAppendPrintf(e, "\t%d\t%d\n", i, hist[i]);
+        yaml << heading <<
+             "    " << i << ": " << hist[i] << "\n";
     }
 }
 
 void
-PconnPool::dumpHash(StoreEntry *e) const
+PconnPool::dumpHash(std::ostream &yaml) const
 {
-    hash_table *hid = table;
+    const auto hid = table;
     hash_first(hid);
-
-    int i = 0;
-    for (hash_link *walker = hash_next(hid); walker; walker = hash_next(hid)) {
-        storeAppendPrintf(e, "\t item %d:\t%s\n", i, (char *)(walker->key));
-        ++i;
+    AtMostOnce title("  open connections list:\n");
+    for (auto *walker = hash_next(hid); walker; walker = hash_next(hid)) {
+        yaml << title <<
+             "    \"" << static_cast<char *>(walker->key) << "\": " <<
+             static_cast<IdleConnList *>(walker)->count() <<
+             "\n";
     }
+}
+
+void
+PconnPool::dump(std::ostream &yaml) const
+{
+    yaml << "pool " << descr << ":\n";
+    dumpHist(yaml);
+    dumpHash(yaml);
 }
 
 /* ========== PconnPool PUBLIC FUNCTIONS ============================================ */
@@ -566,7 +589,8 @@ PconnModule::registerWithCacheManager(void)
 {
     Mgr::RegisterAction("pconn",
                         "Persistent Connection Utilization Histograms",
-                        DumpWrapper, 0, 1);
+                        DumpWrapper, Mgr::Protected::no, Mgr::Atomic::yes,
+                        Mgr::Format::yaml);
 }
 
 void
@@ -582,22 +606,16 @@ PconnModule::remove(PconnPool *aPool)
 }
 
 void
-PconnModule::dump(StoreEntry *e)
+PconnModule::dump(std::ostream &yaml)
 {
-    typedef Pools::const_iterator PCI;
-    int i = 0; // TODO: Why number pools if they all have names?
-    for (PCI p = pools.begin(); p != pools.end(); ++p, ++i) {
-        // TODO: Let each pool dump itself the way it wants to.
-        storeAppendPrintf(e, "\n Pool %d Stats\n", i);
-        (*p)->dumpHist(e);
-        storeAppendPrintf(e, "\n Pool %d Hash Table\n",i);
-        (*p)->dumpHash(e);
-    }
+    for (const auto &p: pools)
+        p->dump(yaml);
 }
 
 void
 PconnModule::DumpWrapper(StoreEntry *e)
 {
-    PconnModule::GetInstance()->dump(e);
+    PackableStream yaml(*e);
+    PconnModule::GetInstance()->dump(yaml);
 }
 

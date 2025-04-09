@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
+#include "compat/pipe.h"
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "fd.h"
 #include "globals.h"

@@ -13,6 +13,7 @@
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
+#include "clientStream.h"
 #include "comm/Write.h"
 #include "http/one/RequestParser.h"
 #include "http/Stream.h"
@@ -264,7 +265,7 @@ Http::One::Server::processParsedRequest(Http::StreamPointer &context)
         }
 
         if (Config.accessList.forceRequestBodyContinuation) {
-            ACLFilledChecklist bodyContinuationCheck(Config.accessList.forceRequestBodyContinuation, request.getRaw(), nullptr);
+            ACLFilledChecklist bodyContinuationCheck(Config.accessList.forceRequestBodyContinuation, request.getRaw());
             bodyContinuationCheck.al = http->al;
             bodyContinuationCheck.syncAle(request.getRaw(), http->log_uri);
             if (bodyContinuationCheck.fastCheck().allowed()) {

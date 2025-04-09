@@ -93,7 +93,6 @@ HttpRequest::init()
     error.clear();
     peer_login = nullptr;      // not allocated/deallocated by this class
     peer_domain = nullptr;     // not allocated/deallocated by this class
-    peer_host = nullptr;
     vary_headers = SBuf();
     myportname = null_string;
     tag = null_string;
@@ -601,7 +600,7 @@ HttpRequest::getRangeOffsetLimit()
 
     rangeOffsetLimit = 0; // default value for rangeOffsetLimit
 
-    ACLFilledChecklist ch(nullptr, this, nullptr);
+    ACLFilledChecklist ch(nullptr, this);
     ch.src_addr = client_addr;
     ch.my_addr =  my_addr;
 
@@ -798,11 +797,10 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
         const bool proxyProtocolPort = port ? port->flags.proxySurrogate : false;
         if (flags.interceptTproxy && !proxyProtocolPort) {
             if (Config.accessList.spoof_client_ip) {
-                ACLFilledChecklist *checklist = new ACLFilledChecklist(Config.accessList.spoof_client_ip, this, clientConnection->rfc931);
-                checklist->al = al;
-                checklist->syncAle(this, nullptr);
-                flags.spoofClientIp = checklist->fastCheck().allowed();
-                delete checklist;
+                ACLFilledChecklist checklist(Config.accessList.spoof_client_ip, this);
+                checklist.al = al;
+                checklist.syncAle(this, nullptr);
+                flags.spoofClientIp = checklist.fastCheck().allowed();
             } else
                 flags.spoofClientIp = true;
         } else

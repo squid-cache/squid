@@ -119,16 +119,16 @@ public:
         bool close_request = false; ///< true if file_ or comm_close has been called
         bool write_daemon = false;
         bool socket_eof = false;
-        bool nolinger = false;
         bool nonblocking = false;
         bool ipc = false;
         bool called_connect = false;
         bool nodelay = false;
-        bool close_on_exec = false;
         /// buffering readMethod_ has data to give (regardless of socket state)
         bool read_pending = false;
         //bool write_pending; //XXX seems not to be used
         bool transparent = false;
+        /// whether comm_reset_close() (or old_comm_reset_close()) has been called
+        bool harshClosureRequested = false;
     } flags;
 
     int64_t bytes_read = 0;

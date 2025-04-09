@@ -16,25 +16,45 @@
 action="${1}"
 config="${2}"
 
+# Allow a layer to enable optional default-disabled features when
+# those features are supported in the current build environment
+# (and we can easily detect such support).
+if ${PKG_CONFIG:-pkg-config} --exists 'libecap >= 1.0 libecap < 1.1' 2>/dev/null
+then
+    CONFIGURE_FLAGS_MAYBE_ENABLE_ECAP="--enable-ecap"
+else
+    echo "WARNING: eCAP testing disabled" >&2
+fi
+if ${PKG_CONFIG:-pkg-config} --exists valgrind 2>/dev/null
+then
+    CONFIGURE_FLAGS_MAYBE_ENABLE_VALGRIND="--with-valgrind-debug"
+else
+    echo "WARNING: Valgrind testing disabled" >&2
+fi
+
 # cache_file may be set by environment variable
 configcache=""
 if [ -n "$cache_file" ]; then
     configcache="--cache-file=$cache_file"
 fi
 
-#if we are on Linux, let's try parallelizing
+# let's try parallelizing
+if [ -z "$pjobs" ] && nproc > /dev/null 2>&1 ; then
+    ncpus=`nproc`
+    pjobs="-j${ncpus}"
+fi
 if [ -z "$pjobs" -a -e /proc/cpuinfo ]; then
     ncpus=`grep '^processor' /proc/cpuinfo | tail -1|awk '{print $3}'`
     ncpus=`expr ${ncpus} + 1`
     pjobs="-j${ncpus}"
 fi
-#if we are on FreeBSD, let's try parallelizing
 if [ -z "$pjobs" -a -x /sbin/sysctl ]; then
     ncpus=`sysctl kern.smp.cpus | cut -f2 -d" "`
     if [ $? -eq 0 -a -n "$ncpus" -a "$ncpus" -gt 1 ]; then
         pjobs="-j${ncpus}"
     fi
 fi
+echo "pjobs: $pjobs"
 
 if test -e ${config} ; then
 	echo "BUILD: ${config}"

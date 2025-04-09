@@ -16,6 +16,7 @@ ntlm_sspi_auth_LDADD= \
 	$(top_builddir)/lib/sspi/libsspwin32.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
+	$(LIBNETTLE_LIBS) \
 	-lnetapi32 \
 	-ladvapi32 \
 	$(XTRA_LIBS)

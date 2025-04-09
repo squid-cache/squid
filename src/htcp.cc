@@ -802,7 +802,7 @@ htcpAccessAllowed(acl_access * acl, const htcpSpecifier::Pointer &s, Ip::Address
     if (!acl)
         return false;
 
-    ACLFilledChecklist checklist(acl, s->request.getRaw(), nullptr);
+    ACLFilledChecklist checklist(acl, s->request.getRaw());
     checklist.src_addr = from;
     checklist.my_addr.setNoAddr();
     return checklist.fastCheck().allowed();
@@ -981,10 +981,10 @@ htcpSpecifier::checkHit()
         debugs(31, 3, "NO; public object not found");
     } else if (!e->validToSend()) {
         debugs(31, 3, "NO; entry not valid to send" );
-    } else if (refreshCheckHTCP(e, checkHitRequest.getRaw())) {
-        debugs(31, 3, "NO; cached response is stale");
     } else if (e->hittingRequiresCollapsing() && !startCollapsingOn(*e, false)) {
         debugs(31, 3, "NO; prohibited CF hit: " << *e);
+    } else if (!didCollapse && refreshCheckHTCP(e, checkHitRequest.getRaw())) {
+        debugs(31, 3, "NO; cached response is stale");
     } else {
         debugs(31, 3, "YES!?");
         hit = e;
@@ -1533,7 +1533,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
     stuff.S.method = sb.c_str();
     stuff.S.uri = (char *) e->url();
     stuff.S.version = vbuf;
-    HttpStateData::httpBuildRequestHeader(req, e, nullptr, &hdr, flags);
+    HttpStateData::httpBuildRequestHeader(req, e, nullptr, &hdr, p, flags);
     MemBuf mb;
     mb.init();
     hdr.packInto(&mb);
@@ -1588,7 +1588,7 @@ htcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &, CachePee
     stuff.S.uri = uri.c_str();
     stuff.S.version = vbuf;
     if (reason != HTCP_CLR_INVALIDATION) {
-        HttpStateData::httpBuildRequestHeader(req, e, nullptr, &hdr, flags);
+        HttpStateData::httpBuildRequestHeader(req, e, nullptr, &hdr, p, flags);
         mb.init();
         hdr.packInto(&mb);
         hdr.clean();

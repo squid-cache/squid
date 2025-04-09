@@ -66,8 +66,8 @@ public:
     ~DiskConfig() { delete[] swapDirs; }
 
     RefCount<SwapDir> *swapDirs = nullptr;
-    int n_allocated = 0;
-    int n_configured = 0;
+    size_t n_allocated = 0;
+    size_t n_configured = 0;
     /// number of disk processes required to support all cache_dirs
     int n_strands = 0;
 };
@@ -353,7 +353,7 @@ public:
 
     std::chrono::nanoseconds paranoid_hit_validation;
 
-    class Acl::Node *aclList;
+    Acl::NamedAcls *namedAcls; ///< acl aclname acltype ...
 
     struct {
         acl_access *http;
@@ -503,7 +503,10 @@ public:
     external_acl *externalAclHelperList;
 
     struct {
-        Security::ContextPointer sslContext;
+        Security::FuturePeerContext *defaultPeerContext;
+        // TODO: Remove when FuturePeerContext above becomes PeerContext
+        /// \deprecated Legacy storage. Use defaultPeerContext instead.
+        Security::ContextPointer *sslContext_;
 #if USE_OPENSSL
         char *foreignIntermediateCertsPath;
         acl_access *cert_error;

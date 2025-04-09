@@ -13,7 +13,6 @@
 #include "base/LookupTable.h"
 #include "HttpHdrCc.h"
 #include "HttpHeader.h"
-#include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
 #include "sbuf/SBuf.h"
@@ -80,8 +79,6 @@ ccNameByType(const RawId rawId)
     return std::nullopt;
 }
 
-std::vector<HttpHeaderFieldStat> ccHeaderStats(HttpHdrCcType::CC_ENUM_END);
-
 /// used to walk a table of http_header_cc_type structs
 static HttpHdrCcType &
 operator++ (HttpHdrCcType &aHeader)
@@ -144,7 +141,6 @@ HttpHdrCc::parse(const String & str)
         if (isSet(type)) {
             if (type != HttpHdrCcType::CC_OTHER) {
                 debugs(65, 2, "hdr cc: ignoring duplicate cache-directive: near '" << item << "' in '" << str << "'");
-                ++ ccHeaderStats[type].repCount;
                 continue;
             }
         }

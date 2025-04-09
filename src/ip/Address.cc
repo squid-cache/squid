@@ -40,6 +40,16 @@
         } printf("\n"); assert(b); \
     }
 
+std::optional<Ip::Address>
+Ip::Address::Parse(const char * const raw)
+{
+    Address tmp;
+    // TODO: Merge with lookupHostIP() after removing DNS lookups from Ip.
+    if (tmp.lookupHostIP(raw, true))
+        return tmp;
+    return std::nullopt;
+}
+
 int
 Ip::Address::cidr() const
 {

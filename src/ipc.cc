@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
+#include "compat/pipe.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -385,7 +386,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     /*
      * This double-dup stuff avoids problems when one of
-     *  crfd, cwfd, or debug_log are in the rage 0-2.
+     *  crfd, cwfd, or DebugStream() are in the rage 0-2.
      */
 
     do {
@@ -399,7 +400,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     t2 = dupOrExit(cwfd);
 
-    t3 = dupOrExit(fileno(debug_log));
+    t3 = dupOrExit(fileno(DebugStream()));
 
     assert(t1 > 2 && t2 > 2 && t3 > 2);
 
@@ -407,7 +408,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     close(cwfd);
 
-    close(fileno(debug_log));
+    close(fileno(DebugStream()));
 
     dup2(t1, 0);
 

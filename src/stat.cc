@@ -327,8 +327,7 @@ statObjects(void *data)
     StoreEntry *e;
 
     if (state->theSearch->isDone()) {
-        if (UsingSmp())
-            storeAppendPrintf(state->sentry, "} by kid%d\n\n", KidIdentifier);
+        Mgr::CloseKidSection(state->sentry, Mgr::Format::informal);
         state->sentry->complete();
         state->sentry->unlock("statObjects+isDone");
         delete state;
@@ -1685,11 +1684,17 @@ snmpStatGet(int minutes)
     return &CountHist[minutes];
 }
 
-int
-stat5minClientRequests(void)
+bool
+statSawRecentRequests()
 {
-    assert(N_COUNT_HIST > 5);
-    return statCounter.client_http.requests - CountHist[5].client_http.requests;
+    const auto recentMinutes = 5;
+    assert(N_COUNT_HIST > recentMinutes);
+
+    // Math below computes the number of requests during the last 0-6 minutes.
+    // CountHist is based on "minutes passed since Squid start" periods. It cannot
+    // deliver precise info for "last N minutes", but we do not need to be precise.
+    const auto oldRequests = (NCountHist > recentMinutes) ? CountHist[recentMinutes].client_http.requests : 0;
+    return statCounter.client_http.requests - oldRequests;
 }
 
 static double
@@ -1814,9 +1819,6 @@ statClientRequests(StoreEntry * s)
             if (http->request->extacl_user.size() > 0) {
                 p = http->request->extacl_user.termedBuf();
             }
-
-        if (!p && conn != nullptr && conn->clientConnection->rfc931[0])
-            p = conn->clientConnection->rfc931;
 
 #if USE_OPENSSL
         if (!p && conn != nullptr && Comm::IsConnOpen(conn->clientConnection))

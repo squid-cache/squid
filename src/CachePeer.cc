@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "acl/Gadgets.h"
+#include "base/PrecomputedCodeContext.h"
 #include "CachePeer.h"
 #include "defines.h"
 #include "neighbors.h"
@@ -15,6 +16,7 @@
 #include "pconn.h"
 #include "PeerDigest.h"
 #include "PeerPoolMgr.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "util.h"
 
@@ -22,7 +24,9 @@ CBDATA_CLASS_INIT(CachePeer);
 
 CachePeer::CachePeer(const char * const hostname):
     name(xstrdup(hostname)),
-    host(xstrdup(hostname))
+    host(xstrdup(hostname)),
+    tlsContext(secure, sslContext),
+    probeCodeContext(new PrecomputedCodeContext("cache_peer probe", ToSBuf("current cache_peer probe: ", *this)))
 {
     Tolower(host); // but .name preserves original spelling
 }
@@ -41,9 +45,7 @@ CachePeer::~CachePeer()
     aclDestroyAccessList(&access);
 
 #if USE_CACHE_DIGESTS
-    void *digestTmp = nullptr;
-    if (cbdataReferenceValidDone(digest, &digestTmp))
-        peerDigestNotePeerGone(static_cast<PeerDigest *>(digestTmp));
+    delete digest;
     xfree(digest_url);
 #endif
 
@@ -55,6 +57,14 @@ CachePeer::~CachePeer()
     PeerPoolMgr::Checkpoint(standby.mgr, "peer gone");
 
     xfree(domain);
+}
+
+Security::FuturePeerContext *
+CachePeer::securityContext()
+{
+    if (secure.encryptTransport)
+        return &tlsContext;
+    return nullptr;
 }
 
 void

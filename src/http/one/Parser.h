@@ -164,7 +164,14 @@ private:
 
 /// skips and, if needed, warns about RFC 7230 BWS ("bad" whitespace)
 /// \throws InsufficientInput when the end of BWS cannot be confirmed
+/// \sa WhitespaceCharacters() for the definition of BWS characters
+/// \sa ParseStrictBws() that avoids WhitespaceCharacters() uncertainties
 void ParseBws(Parser::Tokenizer &);
+
+/// Like ParseBws() but only skips CharacterSet::WSP characters. This variation
+/// must be used if the next element may start with CR or any other character
+/// from RelaxedDelimiterCharacters().
+void ParseStrictBws(Parser::Tokenizer &);
 
 /// the right debugs() level for logging HTTP violation messages
 int ErrorLevel();

@@ -10,7 +10,9 @@ if ENABLE_RELEASE_DOCS
 
 DOC= release-$(SQUID_RELEASE)
 
-%.sgml: %.sgml.in
+SUFFIXES= .sgml.in .sgml
+
+.sgml.in.sgml:
 	sed \
         -e "s%[@]SQUID_VERSION[@]%$(VERSION)%g" \
         -e "s%[@]SQUID_RELEASE[@]%$(SQUID_RELEASE)%g" \
@@ -18,18 +20,18 @@ DOC= release-$(SQUID_RELEASE)
         < $< >$@
 	test `grep -c "@SQUID" $@` -eq 0
 
-%.txt: %.sgml
+.sgml.txt:
 	linuxdoc -B txt --filter $<
 
-%.html: %.sgml
+.sgml.html:
 	linuxdoc -B html -T 2 --split=0 $<
 	perl -i -p -e "s%$@%%" $@
 	cp -p $@ $(top_builddir)/RELEASENOTES.html
 
-%.man: %.sgml
+.sgml.man:
 	linuxdoc -B txt --manpage $<
 
-%.info: %.sgml
+.sgml.info:
 	linuxdoc -B info $<
 
 dist-hook: $(DOC).html

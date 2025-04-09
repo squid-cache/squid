@@ -78,7 +78,7 @@ AC_DEFUN([SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H], [
   AC_CACHE_CHECK([for broken Heimdal krb5.h],squid_cv_broken_heimdal_krb5_h, [
     SQUID_STATE_SAVE(squid_krb5_heimdal_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #include <krb5.h>
 int
 main(void)
@@ -88,7 +88,7 @@ main(void)
         return 0;
 }
 ]])], [ squid_cv_broken_heimdal_krb5_h=no ], [
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #define HAVE_BROKEN_HEIMDAL_KRB5_H  1
 #include "compat/krb5.h"
 int
@@ -104,23 +104,6 @@ main(void)
   ])
   SQUID_DEFINE_BOOL(HAVE_BROKEN_HEIMDAL_KRB5_H,$squid_cv_broken_heimdal_krb5_h,[Heimdal krb5.h is broken for C++])
 ]) dnl SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
-
-dnl check the max skew in the krb5 context, and sets squid_cv_max_skew_context
-AC_DEFUN([SQUID_CHECK_MAX_SKEW_IN_KRB5_CONTEXT],[
-  AC_CACHE_CHECK([for max_skew in struct krb5_context],
-                  squid_cv_max_skew_context, [
-    SQUID_STATE_SAVE(squid_krb5_test)
-    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_COMPILE_IFELSE([
-      AC_LANG_PROGRAM([[
-#include "compat/krb5.h"
-krb5_context kc; kc->max_skew = 1;
-      ]])
-    ],[ squid_cv_max_skew_context=yes ],
-    [ squid_cv_max_skew_context=no ])
-    SQUID_STATE_ROLLBACK(squid_krb5_test)
-  ])
-])
 
 dnl check whether the kerberos context has a memory cache. Sets
 dnl squid_cv_memory_cache if that's the case.
@@ -172,7 +155,7 @@ int main(int argc, char *argv[])
 dnl checks that gssapi is ok, and sets squid_cv_working_gssapi accordingly
 AC_DEFUN([SQUID_CHECK_WORKING_GSSAPI], [
   AC_CACHE_CHECK([for working gssapi], squid_cv_working_gssapi, [
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_GSS_H
 #include <gss.h>
 #endif
@@ -255,7 +238,7 @@ AC_DEFUN([SQUID_CHECK_WORKING_KRB5],[
   AC_CACHE_CHECK([for working krb5], squid_cv_working_krb5, [
     SQUID_STATE_SAVE(squid_krb5_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #include "compat/krb5.h"
 int
 main(void)
@@ -315,9 +298,6 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
   AC_CHECK_LIB(krb5,krb5_get_init_creds_keytab,
     AC_DEFINE(HAVE_GET_INIT_CREDS_KEYTAB,1,
       [Define to 1 if you have krb5_get_init_creds_keytab]),)
-  AC_CHECK_LIB(krb5,krb5_get_max_time_skew,
-    AC_DEFINE(HAVE_KRB5_GET_MAX_TIME_SKEW,1,
-      [Define to 1 if you have krb5_get_max_time_skew]),)
   AC_CHECK_LIB(krb5,krb5_get_profile,
     AC_DEFINE(HAVE_KRB5_GET_PROFILE,1,
       [Define to 1 if you have krb5_get_profile]),)

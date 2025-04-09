@@ -771,10 +771,9 @@ HttpStateData::handle1xx(const HttpReply::Pointer &reply)
     // check whether the 1xx response forwarding is allowed by squid.conf
     if (Config.accessList.reply) {
         ACLFilledChecklist ch(Config.accessList.reply, originalRequest().getRaw());
-        ch.al = fwd->al;
-        ch.reply = reply.getRaw();
+        ch.updateAle(fwd->al);
+        ch.updateReply(reply);
         ch.syncAle(originalRequest().getRaw(), nullptr);
-        HTTPMSGLOCK(ch.reply);
         if (!ch.fastCheck().allowed()) // TODO: support slow lookups?
             return drop1xx("http_reply_access blocked it");
     }
@@ -1791,10 +1790,14 @@ HttpStateData::doneWithServer() const
  * Fixup authentication request headers for special cases
  */
 static void
-httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, const Http::StateFlags &flags)
+httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, const CachePeer * const peer, const Http::StateFlags &flags)
 {
     /* Nothing to do unless we are forwarding to a peer */
     if (!flags.peering)
+        return;
+
+    // do nothing if our cache_peer was reconfigured away
+    if (!peer)
         return;
 
     // This request is going "through" rather than "to" our _peer.
@@ -1882,7 +1885,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         if (request->flags.auth_no_keytab) {
             negotiate_flags |= PEER_PROXY_NEGOTIATE_NOKEYTAB;
         }
-        Token = peer_proxy_negotiate_auth(PrincipalName, request->peer_host, negotiate_flags);
+        Token = peer_proxy_negotiate_auth(PrincipalName, peer->host, negotiate_flags);
         if (Token) {
             httpHeaderPutStrf(hdr_out, header, "Negotiate %s",Token);
         }
@@ -1906,6 +1909,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                                       StoreEntry * entry,
                                       const AccessLogEntryPointer &al,
                                       HttpHeader * hdr_out,
+                                      const CachePeer * const peer,
                                       const Http::StateFlags &flags)
 {
     /* building buffer for complex strings */
@@ -1951,11 +1955,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     if (request->flags.accelerated) {
         /* Append Surrogate-Capabilities */
         String strSurrogate(hdr_in->getList(Http::HdrType::SURROGATE_CAPABILITY));
-#if USE_SQUID_ESI
-        snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"", Config.Accel.surrogate_id);
-#else
         snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0\"", Config.Accel.surrogate_id);
-#endif
         strListAdd(&strSurrogate, bbuf, ',');
         hdr_out->putStr(Http::HdrType::SURROGATE_CAPABILITY, strSurrogate.termedBuf());
     }
@@ -2028,7 +2028,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     }
 
     /* Fixup (Proxy-)Authorization special cases. Plain relaying dealt with above */
-    httpFixupAuthentication(request, hdr_in, hdr_out, flags);
+    httpFixupAuthentication(request, hdr_in, hdr_out, peer, flags);
 
     /* append Cache-Control, add max-age if not there already */
     {
@@ -2110,7 +2110,7 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
         Config.http_upgrade_request_protocols->forApplicable(offeredProto, [&ch, offeredStr, offeredStrLen, &upgradeOut] (const SBuf &cfgProto, const acl_access *guard) {
             debugs(11, 5, "checks " << cfgProto << " rule(s)");
             ch.changeAcl(guard);
-            const auto answer = ch.fastCheck();
+            const auto &answer = ch.fastCheck();
             if (answer.implicit)
                 return false; // keep looking for an explicit rule match
             if (answer.allowed())
@@ -2382,7 +2382,8 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     {
         HttpHeader hdr(hoRequest);
         forwardUpgrade(hdr); // before httpBuildRequestHeader() for CONNECTION
-        httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, flags);
+        const auto peer = cbdataReferenceValid(_peer) ? _peer : nullptr;
+        httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, peer, flags);
 
         if (request->flags.pinned && request->flags.connectionAuth)
             request->flags.authSent = true;
@@ -2481,7 +2482,6 @@ HttpStateData::sendRequest()
     }
 
     mb.init();
-    request->peer_host=_peer?_peer->host:nullptr;
     buildRequestPrefix(&mb);
 
     debugs(11, 2, "HTTP Server " << serverConnection);

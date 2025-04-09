@@ -116,6 +116,9 @@ public:
      */
     void setPeer(CachePeer * p);
 
+    /// whether this is a connection to a cache_peer that was removed during reconfiguration
+    bool toGoneCachePeer() const;
+
     /** The time the connection started */
     time_t startTime() const {return startTime_;}
 
@@ -172,8 +175,6 @@ public:
 
     /** COMM flags set on this connection */
     int flags;
-
-    char rfc931[USER_IDENT_SZ];
 
 #if USE_SQUID_EUI
     Eui::Eui48 remoteEui48;

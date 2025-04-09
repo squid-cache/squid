@@ -209,6 +209,8 @@ class PeerOptions;
 
 class ServerOptions;
 
+class FuturePeerContext;
+
 class ErrorDetail;
 typedef RefCount<ErrorDetail> ErrorDetailPointer;
 

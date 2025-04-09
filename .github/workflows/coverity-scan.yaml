@@ -1,0 +1,46 @@
+# Coverity Scan service terms limit analysis requests frequency,
+# and the service runs analysis in the background. Thus, we submit
+# default branch analysis requests on a schedule rather than testing PRs.
+
+name: Coverity Scan
+
+on:
+  schedule:
+    - cron: "42 3 * * 0" # once a week
+
+  # allows to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  coverity-scan:
+    name: Scan with Coverity
+    # only run the workflow on Squid's main repository
+    if: github.repository == 'squid-cache/squid'
+
+    runs-on: ubuntu-22.04
+
+    # this job relies on GitHub repository secrets containing
+    # username and password to access the Coverity Scan service
+    env:
+      coverity_user: ${{ secrets.COVERITY_USER }}
+      coverity_token: ${{ secrets.COVERITY_TOKEN }}
+
+    container:
+      image: squidcache/buildfarm-coverity:stable
+      options: --user 1001 # uid used by worfklow runner
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Prepare and upload sources to Coverity Scan
+        run: |
+          cov-build --dir cov-int ./test-builds.sh layer-02-maximus
+          tar -c -a -f cov-int.tar.xz cov-int
+          curl \
+            --fail-with-body \
+            --form email=${coverity_user} \
+            --form token=${coverity_token} \
+            --form version=coverity_scan \
+            --form file=@cov-int.tar.xz \
+            https://scan.coverity.com/builds?project=Squid

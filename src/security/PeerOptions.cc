@@ -21,7 +21,12 @@
 
 #include <bitset>
 
-Security::PeerOptions Security::ProxyOutgoingConfig;
+Security::PeerOptions &
+Security::ProxyOutgoingConfig()
+{
+    static const auto peerOptions = new PeerOptions();
+    return *peerOptions;
+}
 
 Security::PeerOptions::PeerOptions()
 {

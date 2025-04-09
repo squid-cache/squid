@@ -22,6 +22,7 @@
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #include "AuthReg.h"
+#include "base/CharacterSet.h"
 #include "base/PackableStream.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
@@ -41,7 +42,6 @@
 #include "HttpHeaderTools.h"
 #include "HttpUpgradeProtocolAccess.h"
 #include "icmp/IcmpConfig.h"
-#include "ident/Config.h"
 #include "ip/Intercept.h"
 #include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"
@@ -86,9 +86,6 @@
 #if USE_OPENSSL
 #include "ssl/Config.h"
 #include "ssl/support.h"
-#endif
-#if USE_SQUID_ESI
-#include "esi/Parser.h"
 #endif
 #if SQUID_SNMP
 #include "snmp.h"
@@ -290,10 +287,22 @@ SetConfigFilename(char const *file_name, bool is_pipe)
         cfg_filename = file_name;
 }
 
+/// Determines whether the given squid.conf character is a token-delimiting
+/// space character according to squid.conf preprocessor grammar. That grammar
+/// only recognizes two space characters: ASCII SP and HT. Unlike isspace(3),
+/// this function is not sensitive to locale(1) and does not classify LF, VT,
+/// FF, and CR characters as token-delimiting space. However, some squid.conf
+/// directive-specific parsers still define space based on isspace(3).
+static bool
+IsSpace(const char ch)
+{
+    return CharacterSet::WSP[ch];
+}
+
 static const char*
 skip_ws(const char* s)
 {
-    while (xisspace(*s))
+    while (IsSpace(*s))
         ++s;
 
     return s;
@@ -371,7 +380,7 @@ trim_trailing_ws(char* str)
 {
     assert(str != nullptr);
     unsigned i = strlen(str);
-    while ((i > 0) && xisspace(str[i - 1]))
+    while ((i > 0) && IsSpace(str[i - 1]))
         --i;
     str[i] = '\0';
 }
@@ -388,7 +397,7 @@ FindStatement(const char* line, const char* statement)
         str += len;
         if (*str == '\0')
             return str;
-        else if (xisspace(*str))
+        else if (IsSpace(*str))
             return skip_ws(str);
     }
 
@@ -499,7 +508,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             if (file == token)
                 continue;   /* Not a valid #line directive, may be a comment */
 
-            while (*file && xisspace((unsigned char) *file))
+            while (*file && IsSpace(*file))
                 ++file;
 
             if (*file) {
@@ -557,12 +566,13 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                 fatalf("'else' without 'if'\n");
         } else if (if_states.empty() || if_states.back()) { // test last if-statement meaning if present
             /* Handle includes here */
-            if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
+            if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && IsSpace(tmp_line[7])) {
                 err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
             } else {
                 try {
                     if (!parse_line(tmp_line)) {
-                        debugs(3, DBG_CRITICAL, ConfigParser::CurrentLocation() << ": unrecognized: '" << tmp_line << "'");
+                        debugs(3, DBG_CRITICAL, "ERROR: unrecognized directive near '" << tmp_line << "'" <<
+                               Debug::Extra << "directive location: " << ConfigParser::CurrentLocation());
                         ++err_count;
                     }
                 } catch (...) {
@@ -596,12 +606,9 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     return err_count;
 }
 
-static
-int
-parseConfigFileOrThrow(const char *file_name)
+void
+Configuration::Parse()
 {
-    int err_count = 0;
-
     debugs(5, 4, MYNAME);
 
     configFreeMemory();
@@ -609,11 +616,14 @@ parseConfigFileOrThrow(const char *file_name)
     ACLMethodData::ThePurgeCount = 0;
     default_all();
 
-    err_count = parseOneConfigFile(file_name, 0);
+    const auto unrecognizedDirectives = parseOneConfigFile(ConfigFile, 0);
 
     defaults_if_none();
 
     defaults_postscriptum();
+
+    if (unrecognizedDirectives)
+        throw TextException(ToSBuf("Found ", unrecognizedDirectives, " unrecognized directive(s)"), Here());
 
     /*
      * We must call configDoConfigure() before leave_suid() because
@@ -627,22 +637,6 @@ parseConfigFileOrThrow(const char *file_name)
                             "Current Squid Configuration",
                             dump_config,
                             1, 1);
-    }
-
-    return err_count;
-}
-
-// TODO: Refactor main.cc to centrally handle (and report) all exceptions.
-int
-parseConfigFile(const char *file_name)
-{
-    try {
-        return parseConfigFileOrThrow(file_name);
-    }
-    catch (const std::exception &ex) {
-        debugs(3, DBG_CRITICAL, "FATAL: bad configuration: " << ex.what());
-        self_destruct();
-        return 1; // not reached
     }
 }
 
@@ -963,10 +957,12 @@ configDoConfigure(void)
         Ssl::loadSquidUntrusted(Config.ssl_client.foreignIntermediateCertsPath);
 #endif
 
-    if (Security::ProxyOutgoingConfig.encryptTransport) {
+    if (Security::ProxyOutgoingConfig().encryptTransport) {
         debugs(3, 2, "initializing https:// proxy context");
-        Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
-        if (!Config.ssl_client.sslContext) {
+
+        const auto rawSslContext = Security::ProxyOutgoingConfig().createClientContext(false);
+        Config.ssl_client.sslContext_ = rawSslContext ? new Security::ContextPointer(rawSslContext) : nullptr;
+        if (!Config.ssl_client.sslContext_) {
 #if USE_OPENSSL
             fatal("ERROR: Could not initialize https:// proxy context");
 #else
@@ -974,8 +970,9 @@ configDoConfigure(void)
 #endif
         }
 #if USE_OPENSSL
-        Ssl::useSquidUntrusted(Config.ssl_client.sslContext.get());
+        Ssl::useSquidUntrusted(Config.ssl_client.sslContext_->get());
 #endif
+        Config.ssl_client.defaultPeerContext = new Security::FuturePeerContext(Security::ProxyOutgoingConfig(), *Config.ssl_client.sslContext_);
     }
 
     for (const auto &p: CurrentCachePeers()) {
@@ -1076,16 +1073,6 @@ parse_obsolete(const char *name)
         Config.redirectChildren.concurrency = cval;
     }
 
-    if (!strcmp(name, "log_access")) {
-        self_destruct();
-        return;
-    }
-
-    if (!strcmp(name, "log_icap")) {
-        self_destruct();
-        return;
-    }
-
     if (!strcmp(name, "ignore_ims_on_miss")) {
         // the replacement directive cache_revalidate_on_miss has opposite meanings for ON/OFF value
         // than the 2.7 directive. We need to parse and invert the configured value.
@@ -1125,7 +1112,7 @@ parse_obsolete(const char *name)
             throw TextException(ToSBuf("missing required parameter for obsolete directive: ", name), Here());
 
         tmp.append(token, strlen(token));
-        Security::ProxyOutgoingConfig.parse(tmp.c_str());
+        Security::ProxyOutgoingConfig().parse(tmp.c_str());
     }
 }
 
@@ -1493,26 +1480,23 @@ free_SBufList(SBufList *list)
 }
 
 static void
-dump_acl(StoreEntry * entry, const char *name, Acl::Node * ae)
+dump_acl(StoreEntry *entry, const char *directiveName, Acl::NamedAcls *config)
 {
     PackableStream os(*entry);
-    while (ae != nullptr) {
-        debugs(3, 3, "dump_acl: " << name << " " << ae->name);
-        ae->dumpWhole(name, os);
-        ae = ae->next;
-    }
+    Acl::DumpNamedAcls(os, directiveName, config);
 }
 
 static void
-parse_acl(Acl::Node ** ae)
+parse_acl(Acl::NamedAcls **config)
 {
-    Acl::Node::ParseAclLine(LegacyParser, ae);
+    assert(config);
+    Acl::Node::ParseNamedAcl(LegacyParser, *config);
 }
 
 static void
-free_acl(Acl::Node ** ae)
+free_acl(Acl::NamedAcls **config)
 {
-    aclDestroyAcls(ae);
+    Acl::FreeNamedAcls(config);
 }
 
 void
@@ -1520,14 +1504,14 @@ dump_acl_list(StoreEntry * entry, ACLList * head)
 {
     // XXX: Should dump ACL names like "foo !bar" but dumps parsing context like
     // "(clientside_tos 0x11 line)".
-    dump_SBufList(entry, head->dump());
+    dump_SBufList(entry, ToTree(head).dump());
 }
 
 void
 dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {
     if (head)
-        dump_SBufList(entry, head->treeDump(name, &Acl::AllowOrDeny));
+        dump_SBufList(entry, ToTree(head).treeDump(name, &Acl::AllowOrDeny));
 }
 
 static void
@@ -2018,7 +2002,7 @@ static void
 dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 {
     if (authSchemes)
-        dump_SBufList(entry, authSchemes->treeDump(name, [](const Acl::Answer &action) {
+        dump_SBufList(entry, ToTree(authSchemes).treeDump(name, [](const Acl::Answer &action) {
         return Auth::TheConfig.schemeLists.at(action.kind).rawSchemes;
     }));
 }
@@ -2026,13 +2010,17 @@ dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 #endif /* USE_AUTH */
 
 static void
-ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, Acl::Node *acl)
+ParseAclWithAction(acl_access **config, const Acl::Answer &action, const char *desc, Acl::Node *acl)
 {
-    assert(access);
-    if (!*access) {
-        *access = new Acl::Tree;
-        (*access)->context(ToSBuf('(', desc, " rules)"), config_input_line);
+    assert(config);
+    auto &access = *config;
+    if (!access) {
+        const auto tree = new Acl::Tree;
+        tree->context(ToSBuf('(', desc, " rules)"), config_input_line);
+        access = new acl_access(tree);
     }
+    assert(access);
+
     Acl::AndNode *rule = new Acl::AndNode;
     rule->context(ToSBuf('(', desc, " rule)"), config_input_line);
     if (acl)
@@ -2217,10 +2205,8 @@ parse_peer(CachePeers **peers)
             p->options.no_tproxy = true;
         } else if (!strcmp(token, "multicast-responder")) {
             p->options.mcast_responder = true;
-#if PEER_MULTICAST_SIBLINGS
         } else if (!strcmp(token, "multicast-siblings")) {
             p->options.mcast_siblings = true;
-#endif
         } else if (!strncmp(token, "weight=", 7)) {
             p->weight = xatoi(token + 7);
         } else if (!strncmp(token, "basetime=", 9)) {
@@ -2401,10 +2387,8 @@ parse_peer(CachePeers **peers)
         p->connect_fail_limit = 10;
 
 #if USE_CACHE_DIGESTS
-    if (!p->options.no_digest) {
-        const auto pd = new PeerDigest(p);
-        p->digest = cbdataReference(pd); // CachePeer destructor unlocks
-    }
+    if (!p->options.no_digest)
+        p->digest = new PeerDigest(p);
 #endif
 
     if (p->secure.encryptTransport)
@@ -3929,7 +3913,10 @@ configFreeMemory(void)
 {
     free_all();
     Dns::ResolveClientAddressesAsap = false;
-    Config.ssl_client.sslContext.reset();
+    delete Config.ssl_client.defaultPeerContext;
+    Config.ssl_client.defaultPeerContext = nullptr;
+    delete Config.ssl_client.sslContext_;
+    Config.ssl_client.sslContext_ = nullptr;
 #if USE_OPENSSL
     Ssl::unloadSquidUntrusted();
 #endif
@@ -4496,7 +4483,7 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump)
 {
     if (ssl_bump)
-        dump_SBufList(entry, ssl_bump->treeDump(name, [](const Acl::Answer &action) {
+        dump_SBufList(entry, ToTree(ssl_bump).treeDump(name, [](const Acl::Answer &action) {
         return Ssl::BumpModeStr.at(action.kind);
     }));
 }
@@ -4740,7 +4727,7 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
 static void dump_ftp_epsv(StoreEntry *entry, const char *name, acl_access *ftp_epsv)
 {
     if (ftp_epsv)
-        dump_SBufList(entry, ftp_epsv->treeDump(name, Acl::AllowOrDeny));
+        dump_SBufList(entry, ToTree(ftp_epsv).treeDump(name, Acl::AllowOrDeny));
 }
 
 static void free_ftp_epsv(acl_access **ftp_epsv)
@@ -4911,7 +4898,7 @@ dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *ac
         "respond"
     };
     if (access) {
-        SBufList lines = access->treeDump(name, [](const Acl::Answer &action) {
+        const auto lines = ToTree(access).treeDump(name, [](const Acl::Answer &action) {
             return onErrorTunnelMode.at(action.kind);
         });
         dump_SBufList(entry, lines);
@@ -4945,7 +4932,7 @@ dump_http_upgrade_request_protocols(StoreEntry *entry, const char *rawName, Http
         SBufList line;
         line.push_back(name);
         line.push_back(proto);
-        const auto acld = acls->treeDump("", &Acl::AllowOrDeny);
+        const auto acld = ToTree(acls).treeDump("", &Acl::AllowOrDeny);
         line.insert(line.end(), acld.begin(), acld.end());
         dump_SBufList(entry, line);
     });

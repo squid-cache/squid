@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "base64.h"
+#include "compat/pipe.h"
 
 #include <cerrno>
 #include <cstring>

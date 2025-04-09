@@ -308,8 +308,6 @@ Mem::Init(void)
     memDataInit(MEM_32K_BUF, "32K Buffer", 32768, 10, false);
     memDataInit(MEM_64K_BUF, "64K Buffer", 65536, 10, false);
     // TODO: Carefully stop zeroing these objects memory and drop the doZero parameter
-    memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0, true);
-    memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0, true);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0, true);
     GetPool(MEM_MD5_DIGEST)->setChunkSize(512 * 1024);
 

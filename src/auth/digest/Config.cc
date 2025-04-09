@@ -577,7 +577,7 @@ Auth::Digest::Config::Config() :
 {}
 
 void
-Auth::Digest::Config::parse(Auth::SchemeConfig * scheme, int n_configured, char *param_str)
+Auth::Digest::Config::parse(Auth::SchemeConfig * scheme, size_t n_configured, char *param_str)
 {
     if (strcmp(param_str, "nonce_garbage_interval") == 0) {
         parse_time_t(&nonceGCInterval);
@@ -967,13 +967,19 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
             return rv;
         }
     } else {
-        /* cnonce and nc both require qop */
-        if (digest_request->cnonce || digest_request->nc[0] != '\0') {
-            debugs(29, 2, "missing qop!");
-            rv = authDigestLogUsername(username, digest_request, aRequestRealm);
-            safe_free(username);
-            return rv;
-        }
+        /* RFC7616 section 3.3, qop:
+         *  "MUST be used by all implementations"
+         *
+         * RFC7616 section 3.4, qop:
+         *  "value MUST be one of the alternatives the server
+         *   indicated it supports in the WWW-Authenticate header field"
+         *
+         * Squid sends qop=auth, reject buggy or outdated clients.
+        */
+        debugs(29, 2, "missing qop!");
+        rv = authDigestLogUsername(username, digest_request, aRequestRealm);
+        safe_free(username);
+        return rv;
     }
 
     /** below nonce state dependent **/

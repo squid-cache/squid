@@ -297,13 +297,8 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms, c
         return 1;
     }
 
-    ACLFilledChecklist checklist(hm->access_list, request, nullptr);
-
-    checklist.al = al;
-    if (al && al->reply) {
-        checklist.reply = al->reply.getRaw();
-        HTTPMSGLOCK(checklist.reply);
-    }
+    ACLFilledChecklist checklist(hm->access_list, request);
+    checklist.updateAle(al);
 
     // XXX: The two "It was denied" clauses below mishandle cases with no
     // matching rules, violating the "If no rules within the set have matching
@@ -497,13 +492,8 @@ HeaderManglers::find(const HttpHeaderEntry &e) const
 void
 httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headersAdd)
 {
-    ACLFilledChecklist checklist(nullptr, request, nullptr);
-
-    checklist.al = al;
-    if (al && al->reply) {
-        checklist.reply = al->reply.getRaw();
-        HTTPMSGLOCK(checklist.reply);
-    }
+    ACLFilledChecklist checklist(nullptr, request);
+    checklist.updateAle(al);
 
     for (HeaderWithAclList::const_iterator hwa = headersAdd.begin(); hwa != headersAdd.end(); ++hwa) {
         if (!hwa->aclList || checklist.fastCheck(hwa->aclList).allowed()) {

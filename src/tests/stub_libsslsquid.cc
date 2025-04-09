@@ -40,7 +40,6 @@ void Ssl::GlobalContextStorage::addLocalStorage(Ip::Address const &, size_t ) ST
 Ssl::LocalContextStorage *Ssl::GlobalContextStorage::getLocalStorage(Ip::Address const &)
 { fatal(STUB_API " required"); static LocalContextStorage v(0); return &v; }
 void Ssl::GlobalContextStorage::reconfigureStart() STUB
-//Ssl::GlobalContextStorage Ssl::TheGlobalContextStorage;
 
 #include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
@@ -69,8 +68,8 @@ bool generateUntrustedCert(Security::CertPointer &, Security::PrivateKeyPointer 
 Security::ContextPointer GenerateSslContext(CertificateProperties const &, Security::ServerOptions &, bool) STUB_RETVAL(Security::ContextPointer())
 bool verifySslCertificate(const Security::ContextPointer &, CertificateProperties const &) STUB_RETVAL(false)
 Security::ContextPointer GenerateSslContextUsingPkeyAndCertFromMemory(const char *, Security::ServerOptions &, bool) STUB_RETVAL(Security::ContextPointer())
-int matchX509CommonNames(X509 *, void *, int (*)(void *,  ASN1_STRING *)) STUB_RETVAL(0)
-bool checkX509ServerValidity(X509 *, const char *) STUB_RETVAL(false)
+bool HasMatchingSubjectName(X509 &, const GeneralNameMatcher &) STUB_RETVAL(false)
+bool HasSubjectName(X509 &, const AnyP::Host &) STUB_RETVAL(false)
 int asn1timeToString(ASN1_TIME *, char *, int) STUB_RETVAL(0)
 void setClientSNI(SSL *, const char *) STUB
 SBuf GetX509PEM(X509 *) STUB_RETVAL(SBuf())

@@ -57,7 +57,7 @@ StoreClient::onCollapsingPath() const
     if (!Config.accessList.collapsedForwardingAccess)
         return true;
 
-    ACLFilledChecklist checklist(Config.accessList.collapsedForwardingAccess, nullptr, nullptr);
+    ACLFilledChecklist checklist(Config.accessList.collapsedForwardingAccess, nullptr);
     fillChecklist(checklist);
     return checklist.fastCheck().allowed();
 }
@@ -80,6 +80,7 @@ StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation
             tags->collapsingHistory.otherCollapses++;
     }
 
+    didCollapse = true;
     debugs(85, 5, e << " doingRevalidation=" << doingRevalidation);
     return true;
 }
@@ -984,13 +985,7 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
         return true;
     }
 
-    // XXX: This is absurd! TODO: For positives, "a/(b/c) > d" is "a*c > b*d".
-    if (expectlen < 100) {
-        debugs(90, 3, "quick-abort? NO avoid FPE");
-        return false;
-    }
-
-    if ((curlen / (expectlen / 100)) > (Config.quickAbort.pct)) {
+    if (curlen > expectlen*(Config.quickAbort.pct/100.0)) {
         debugs(90, 3, "quick-abort? NO past point of no return");
         return false;
     }

@@ -11,6 +11,7 @@
 
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
+#include "base/forward.h"
 #include "enums.h"
 #include "http/StatusCode.h"
 #include "icp_opcode.h"
@@ -18,9 +19,6 @@
 #include "security/PeerOptions.h"
 
 #include <iosfwd>
-
-//TODO: remove, it is unconditionally defined and always used.
-#define PEER_MULTICAST_SIBLINGS 1
 
 class NeighborTypeDomainList;
 class PconnPool;
@@ -46,6 +44,10 @@ public:
 
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
+
+    /// TLS settings for communicating with this TLS cache_peer (if encryption
+    /// is required; see secure.encryptTransport) or nil (otherwise)
+    Security::FuturePeerContext *securityContext();
 
     /// n-th cache_peer directive, starting with 1
     u_int index = 0;
@@ -141,9 +143,7 @@ public:
         bool sourcehash = false;
         bool originserver = false;
         bool no_tproxy = false;
-#if PEER_MULTICAST_SIBLINGS
         bool mcast_siblings = false;
-#endif
         bool auth_no_keytab = false;
     } options;
 
@@ -214,13 +214,18 @@ public:
 
     char *domain = nullptr; ///< Forced domain
 
+    // TODO: Remove secure and sslContext when FuturePeerContext below becomes PeerContext
     /// security settings for peer connection
     Security::PeerOptions secure;
     Security::ContextPointer sslContext;
+    Security::FuturePeerContext tlsContext;
+
     Security::SessionStatePointer sslSession;
 
     int front_end_https = 0; ///< 0 - off, 1 - on, 2 - auto
     int connection_auth = 2; ///< 0 - off, 1 - on, 2 - auto
+
+    PrecomputedCodeContextPointer probeCodeContext;
 
 private:
     void countFailure();

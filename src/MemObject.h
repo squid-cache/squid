@@ -168,19 +168,12 @@ public:
 
     SwapOut swapout;
 
-    /* TODO: Remove this change-minimizing hack */
-    using Io = Store::IoStatus;
-    static constexpr Io ioUndecided = Store::ioUndecided;
-    static constexpr Io ioReading = Store::ioReading;
-    static constexpr Io ioWriting = Store::ioWriting;
-    static constexpr Io ioDone = Store::ioDone;
-
     /// State of an entry with regards to the [shared] in-transit table.
     class XitTable
     {
     public:
         /// associate our StoreEntry with a Transients entry at the given index
-        void open(const int32_t anIndex, const Io anIo)
+        void open(const int32_t anIndex, const Store::IoStatus anIo)
         {
             index = anIndex;
             io = anIo;
@@ -194,7 +187,7 @@ public:
         }
 
         int32_t index = -1; ///< entry position inside the in-transit table
-        Io io = ioUndecided; ///< current I/O state
+        Store::IoStatus io = Store::ioUndecided; ///< current I/O state
     };
     XitTable xitTable; ///< current [shared] memory caching state for the entry
 
@@ -205,7 +198,7 @@ public:
         int32_t index = -1; ///< entry position inside the memory cache
         int64_t offset = 0; ///< bytes written/read to/from the memory cache so far
 
-        Io io = ioUndecided; ///< current I/O state
+        Store::IoStatus io = Store::ioUndecided; ///< current I/O state
     };
     MemCache memCache; ///< current [shared] memory caching state for the entry
 

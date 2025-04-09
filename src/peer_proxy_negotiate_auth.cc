@@ -307,10 +307,8 @@ restart:
                    error_message(code));
             return (1);
         }
-#elif HAVE_LIBHEIMDAL_KRB5 && HAVE_KRB5_GET_MAX_TIME_SKEW
+#elif HAVE_LIBHEIMDAL_KRB5
         skew = krb5_get_max_time_skew(kparam.context);
-#elif HAVE_LIBHEIMDAL_KRB5 && HAVE_MAX_SKEW_IN_KRB5_CONTEXT
-        skew = kparam.context->max_skew;
 #else
         skew = DEFAULT_SKEW;
 #endif
@@ -485,7 +483,7 @@ restart:
  * peer_proxy_negotiate_auth gets a GSSAPI token for principal_name
  * and base64 encodes it.
  */
-char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags) {
+char *peer_proxy_negotiate_auth(char *principal_name, const char * const proxy, int flags) {
     int rc = 0;
     OM_uint32 major_status, minor_status;
     gss_ctx_id_t gss_context = GSS_C_NO_CONTEXT;

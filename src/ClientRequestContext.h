@@ -62,7 +62,6 @@ public:
 #endif
 
     ClientHttpRequest *http;
-    ACLChecklist *acl_checklist = nullptr; ///< need ptr back so we can unregister if needed
     int redirect_state = REDIRECT_NONE;
     int store_id_state = REDIRECT_NONE;
 

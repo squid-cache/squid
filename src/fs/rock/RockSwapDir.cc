@@ -37,8 +37,6 @@
 #include <sys/stat.h>
 #endif
 
-const int64_t Rock::SwapDir::HeaderSize = 16*1024;
-
 Rock::SwapDir::SwapDir(): ::SwapDir("rock"),
     slotSize(HeaderSize), filePath(nullptr), map(nullptr), io(nullptr),
     waitingForPage(nullptr)
@@ -1120,7 +1118,7 @@ DefineRunnerRegistratorIn(Rock, SwapDirRr);
 void Rock::SwapDirRr::create()
 {
     Must(mapOwners.empty() && freeSlotsOwners.empty());
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+    for (size_t i = 0; i < Config.cacheSwap.n_configured; ++i) {
         if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
             rebuildStatsOwners.push_back(Rebuild::Stats::Init(*sd));
 

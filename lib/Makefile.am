@@ -10,9 +10,6 @@ include $(top_srcdir)/src/Common.am
 SUBDIRS=
 EXTRA_DIST=
 
-if ENABLE_ESI
-SUBDIRS += libTrie
-endif
 if ENABLE_SNMP
 SUBDIRS += snmplib
 endif
@@ -54,7 +51,6 @@ libmisccontainers_la_SOURCES = \
 	hash.cc
 
 libmiscutil_la_SOURCES = \
-	$(SNPRINTFSOURCE) \
 	Splay.cc \
 	heap.c \
 	radix.c \
