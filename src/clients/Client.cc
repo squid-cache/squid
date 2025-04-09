@@ -217,6 +217,7 @@ void
 Client::completeForwarding()
 {
     debugs(11,5, "completing forwarding for "  << fwd);
+    assert(fwd != nullptr);
 
     auto storedWholeReply = markedParsedVirginReplyAsWhole;
 #if USE_ADAPTATION
@@ -235,7 +236,6 @@ Client::completeForwarding()
     if (storedWholeReply)
         fwd->markStoredReplyAsWhole(storedWholeReply);
 
-    assert(fwd != nullptr);
     doneWithFwd = "completeForwarding()";
     fwd->complete();
 }
