@@ -220,14 +220,14 @@ Client::completeForwarding()
 
     auto receivedWholeReply = markedParsedVirginReplyAsWhole;
 #if USE_ADAPTATION
-    // The startedAdaptation check below correctly detects all adaptation cases
-    // because this method's doneWithAdaptation() precondition implies that we
-    // cannot be waiting to decide whether to adapt this response.
-    Assure(!adaptationAccessCheckPending);
+    // This precondition is necessary for its two implications:
+    // * We cannot be waiting to decide whether to adapt this response. Thus,
+    //   the startedAdaptation check below correctly detects all adaptation
+    //   cases (i.e. it does not miss adaptationAccessCheckPending ones).
+    // * We cannot be waiting to consume/store received adapted response bytes.
+    //   Thus, receivedWholeAdaptedReply implies that we stored everything.
+    Assure(doneWithAdaptation());
 
-    // If adaptation has started, then Store gets bytes from the adaptation
-    // service, so we rewrite receivedWholeReply, disregarding whether we
-    // markedParsedVirginReplyAsWhole.
     if (startedAdaptation)
         receivedWholeReply = receivedWholeAdaptedReply ? "receivedWholeAdaptedReply" : nullptr;
 #endif
