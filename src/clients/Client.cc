@@ -218,7 +218,7 @@ Client::completeForwarding()
 {
     debugs(11,5, "completing forwarding for "  << fwd);
 
-    auto receivedWholeReply = markedParsedVirginReplyAsWhole;
+    auto storedWholeReply = markedParsedVirginReplyAsWhole;
 #if USE_ADAPTATION
     // This precondition is necessary for its two implications:
     // * We cannot be waiting to decide whether to adapt this response. Thus,
@@ -229,11 +229,11 @@ Client::completeForwarding()
     Assure(doneWithAdaptation());
 
     if (startedAdaptation)
-        receivedWholeReply = receivedWholeAdaptedReply ? "receivedWholeAdaptedReply" : nullptr;
+        storedWholeReply = receivedWholeAdaptedReply ? "receivedWholeAdaptedReply" : nullptr;
 #endif
 
-    if (receivedWholeReply)
-        fwd->markStoredReplyAsWhole(receivedWholeReply);
+    if (storedWholeReply)
+        fwd->markStoredReplyAsWhole(storedWholeReply);
 
     assert(fwd != nullptr);
     doneWithFwd = "completeForwarding()";
