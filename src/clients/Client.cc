@@ -229,7 +229,7 @@ Client::completeForwarding()
     // service, so we rewrite receivedWholeReply, disregarding whether we
     // markedParsedVirginReplyAsWhole.
     if (startedAdaptation)
-        receivedWholeReply = receivedWholeAdaptedReply ? "complete adapted reply" : nullptr;
+        receivedWholeReply = receivedWholeAdaptedReply ? "receivedWholeAdaptedReply" : nullptr;
 #endif
 
     if (receivedWholeReply)
