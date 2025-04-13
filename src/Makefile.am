@@ -494,10 +494,10 @@ squid_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	libsquid.la \
-	ip/libip.la \
 	fs/libfs.la \
 	DiskIO/libdiskio.la \
 	comm/libcomm.la \
+	ip/libip.la \
 	anyp/libanyp.la \
 	security/libsecurity.la \
 	$(SSL_LIBS) \
@@ -1943,11 +1943,11 @@ tests_test_http_range_LDADD = \
 	acl/libapi.la \
 	proxyp/libproxyp.la \
 	parser/libparser.la \
-	ip/libip.la \
 	fs/libfs.la \
 	anyp/libanyp.la \
 	icmp/libicmp.la \
 	comm/libcomm.la \
+	ip/libip.la \
 	log/liblog.la \
 	format/libformat.la \
 	$(REPL_OBJS) \
@@ -2328,7 +2328,6 @@ tests_testHttpRequest_LDADD = \
 	acl/libstate.la \
 	acl/libapi.la \
 	parser/libparser.la \
-	ip/libip.la \
 	fs/libfs.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
@@ -2341,6 +2340,7 @@ tests_testHttpRequest_LDADD = \
 	$(SNMP_LIBS) \
 	icmp/libicmp.la \
 	comm/libcomm.la \
+	ip/libip.la \
 	log/liblog.la \
 	format/libformat.la \
 	store/libstore.la \
@@ -2628,9 +2628,9 @@ tests_testCacheManager_LDADD = \
 	acl/libapi.la \
 	dns/libdns.la \
 	base/libbase.la \
-	ip/libip.la \
 	fs/libfs.la \
 	comm/libcomm.la \
+	ip/libip.la \
 	eui/libeui.la \
 	icmp/libicmp.la \
 	log/liblog.la \
