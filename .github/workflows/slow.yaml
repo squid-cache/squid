@@ -142,8 +142,8 @@ jobs:
     strategy:
       matrix:
         osversion:
-          - 14.1
-          - 13.3
+          - 14.2
+          - 13.4
 
     runs-on: ubuntu-22.04
     name: freebsd(${{ matrix.osversion }})
