@@ -325,7 +325,7 @@ manage_request()
     char domain[DNLEN+1];
     char user[UNLEN+1];
 
-    /* NP: for some reason this helper sometimes needs to accept
+    /* Note: for some reason this helper sometimes needs to accept
      * from clients that send no negotiate packet. */
     if (memcpy(local_nego.hdr.signature, "NTLMSSP", 8) != 0) {
         memset(&local_nego, 0, sizeof(ntlm_negotiate)); /* reset */
