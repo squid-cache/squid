@@ -14,6 +14,9 @@
 
 #include <limits>
 
+// XXX: for Instance.cc linkage. keep in sync with main.cc
+bool Chrooted = false;
+
 CPPUNIT_TEST_SUITE_REGISTRATION( TestStore );
 
 namespace Store {

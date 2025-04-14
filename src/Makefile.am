@@ -1142,6 +1142,7 @@ tests_testRock_SOURCES = \
 	wordlist.h
 nodist_tests_testRock_SOURCES = \
 	$(TESTSOURCES) \
+	Instance.cc \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
@@ -1315,6 +1316,7 @@ tests_testUfs_SOURCES = \
 	wordlist.h
 nodist_tests_testUfs_SOURCES = \
 	$(TESTSOURCES) \
+	Instance.cc \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
@@ -1484,6 +1486,7 @@ tests_testStore_SOURCES = \
 	wordlist.h
 nodist_tests_testStore_SOURCES = \
 	$(TESTSOURCES) \
+	Instance.cc \
 	SquidMath.cc \
 	SquidMath.h \
 	tests/stub_libtime.cc \
@@ -1654,6 +1657,7 @@ tests_testDiskIO_SOURCES = \
 	wordlist.h
 nodist_tests_testDiskIO_SOURCES = \
 	$(TESTSOURCES) \
+	Instance.cc \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
@@ -1952,6 +1956,7 @@ tests_testHttpRange_SOURCES = \
 	wordlist.h
 nodist_tests_testHttpRange_SOURCES = \
 	$(BUILT_SOURCES) \
+	Instance.cc \
 	tests/stub_libtime.cc
 tests_testHttpRange_LDADD = \
 	libsquid.la \
@@ -2129,6 +2134,8 @@ tests_testHttpReply_SOURCES = \
 	wordlist.h
 nodist_tests_testHttpReply_SOURCES = \
 	$(TESTSOURCES) \
+	Instance.cc \
+	fs_io.cc \
 	hier_code.cc \
 	tests/stub_libtime.cc
 tests_testHttpReply_LDADD=\
@@ -2339,6 +2346,7 @@ tests_testHttpRequest_SOURCES = \
 	wordlist.h
 nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES) \
+	Instance.cc \
 	tests/stub_libtime.cc
 tests_testHttpRequest_LDADD = \
 	libsquid.la \
@@ -2633,7 +2641,8 @@ tests_testCacheManager_SOURCES = \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testCacheManager_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	Instance.cc
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	libsquid.la \
