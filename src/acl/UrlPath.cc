@@ -11,8 +11,8 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/UrlPath.h"
+#include "anyp/Uri.h"
 #include "HttpRequest.h"
-#include "rfc1738.h"
 
 int
 Acl::UrlPathCheck::match(ACLChecklist * const ch)
@@ -22,10 +22,7 @@ Acl::UrlPathCheck::match(ACLChecklist * const ch)
     if (checklist->request->url.path().isEmpty())
         return -1;
 
-    char *esc_buf = SBufToCstring(checklist->request->url.path());
-    rfc1738_unescape(esc_buf);
-    int result = data->match(esc_buf);
-    xfree(esc_buf);
-    return result;
+    auto decodedPath = AnyP::Uri::Decode(checklist->request->url.path());
+    return data->match(decodedPath.c_str());
 }
 
