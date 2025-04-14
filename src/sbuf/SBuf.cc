@@ -79,6 +79,10 @@ SBuf::GetStorePrototype()
     return InitialStore;
 }
 
+/** Explicit assignment.
+ *
+ * Current SBuf will share backing store with the assigned one.
+ */
 SBuf&
 SBuf::assign(const SBuf &S)
 {
@@ -92,6 +96,17 @@ SBuf::assign(const SBuf &S)
     return *this;
 }
 
+
+/** Import a c-string into a SBuf, copying the data.
+ *
+ * It is the caller's duty to free the imported string, if needed.
+ * \param S the c-string to be copied
+ * \param n how many bytes to import into the SBuf. If it is npos
+ *              or unspecified, imports to end-of-cstring
+ * \note it is the caller's responsibility not to go out of bounds
+ * \note to assign a std::string use the pattern:
+ *    assign(stdstr.data(), stdstd.length())
+ */
 SBuf&
 SBuf::assign(const char *S, size_type n)
 {
@@ -171,8 +186,9 @@ SBuf::rawSpace(size_type minSpace)
     return bufEnd();
 }
 
+/// Resets the SBuf to empty, memory is freed lazily.
 void
-SBuf::clear()
+SBuf::clear() noexcept
 {
     if (store_->LockCount() == 1)
         store_->clear();
@@ -191,6 +207,18 @@ SBuf::append(const SBuf &S)
     return lowAppend(S.buf(), S.length());
 }
 
+/** Append operation for C-style strings.
+ *
+ * Append the supplied c-string to the SBuf; extend storage
+ * as needed.
+ *
+ * \param S the c string to be copied. Can be NULL.
+ * \param Ssize how many bytes to import into the SBuf. If it is npos
+ *              or unspecified, imports to end-of-cstring. If S is NULL,
+ *              Ssize is ignored.
+ * \note to append a std::string use the pattern
+ *     cstr_append(stdstr.data(), stdstd.length())
+ */
 SBuf &
 SBuf::append(const char * S, size_type Ssize)
 {
@@ -572,6 +600,13 @@ SBuf::trim(const SBuf &toRemove, bool atBeginning, bool atEnd)
     return *this;
 }
 
+/** Extract a part of the current SBuf.
+ *
+ * \returns an SBuf object with a substring of this object.
+ *          The same parameter conventions apply as for SBuf::chop.
+ *
+ * see also: SBuf::trim, SBuf::chop
+ */
 SBuf
 SBuf::substr(size_type pos, size_type n) const
 {
@@ -580,8 +615,17 @@ SBuf::substr(size_type pos, size_type n) const
     return rv;
 }
 
+/** Find first occurrence of character in SBuf
+ *
+ * \param startPos if specified, ignore any occurrences before that position
+ *     if startPos is npos or greater than length() npos is always returned
+ *     if startPos is less than zero, it is ignored
+ *
+ * \retval N the index in the SBuf of the first occurrence of char c
+ * \retval npos if the char was not found
+ */
 SBuf::size_type
-SBuf::find(char c, size_type startPos) const
+SBuf::find(char c, size_type startPos) const noexcept
 {
     ++stats.find;
 
@@ -600,8 +644,16 @@ SBuf::find(char c, size_type startPos) const
     return (static_cast<const char *>(i)-buf());
 }
 
+/** Find first occurrence of needle in SBuf.
+ *
+ * \param startPos if specified, ignore any occurrences before that position
+ *     if startPos is npos or greater than length() npos is always returned
+ *
+ * \retval N the index in the SBuf of the first occurrence of needle.
+ * \retval npos if the SBuf was not found
+ */
 SBuf::size_type
-SBuf::find(const SBuf &needle, size_type startPos) const
+SBuf::find(const SBuf &needle, size_type startPos) const noexcept
 {
     if (startPos == npos) { // can't find anything if we look past end of SBuf
         ++stats.find;
@@ -652,8 +704,16 @@ SBuf::find(const SBuf &needle, size_type startPos) const
     return npos;
 }
 
+/** Find last occurrence of needle in SBuf
+ *
+ * \param endPos if specified, ignore any occurrences after that position.
+ *   if npos or greater than length(), the whole SBuf is considered
+ *
+ * \retval N the index in the SBuf of the last occurrence of needle
+ * \retval npos if the needle was not found
+ */
 SBuf::size_type
-SBuf::rfind(const SBuf &needle, SBuf::size_type endPos) const
+SBuf::rfind(const SBuf &needle, SBuf::size_type endPos) const noexcept
 {
     // when the needle is 1 char, use the 1-char rfind()
     if (needle.length() == 1)
@@ -688,8 +748,17 @@ SBuf::rfind(const SBuf &needle, SBuf::size_type endPos) const
     return npos;
 }
 
+// TODO: replace 'c' with 'needle' and copy the documentation of rfind(SBuf) above
+/** Find last occurrence of character in SBuf
+ *
+ * \param endPos if specified, ignore any occurrences after that position.
+ *   if npos or greater than length(), the whole SBuf is considered
+ *
+ * \retval N the index in the SBuf of the last occurrence of char c.
+ * \retval npos if the char was not found
+ */
 SBuf::size_type
-SBuf::rfind(char c, SBuf::size_type endPos) const
+SBuf::rfind(char c, SBuf::size_type endPos) const noexcept
 {
     ++stats.find;
 
@@ -704,7 +773,7 @@ SBuf::rfind(char c, SBuf::size_type endPos) const
         // NP: off-by-one weirdness:
         // endPos is an offset ... 0-based
         // length() is a count ... 1-based
-        // memrhr() requires a 1-based count of space to scan.
+        // memrchr() requires a 1-based count of space to scan.
         ++endPos;
     }
 
