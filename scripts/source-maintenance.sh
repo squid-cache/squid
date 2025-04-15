@@ -499,12 +499,9 @@ for FILENAME in $FilesToOperateOn; do
 	# REQUIRE squid.h first #include
 	#
 	case ${FILENAME} in
-	src/cf_gen.cc)
-		# ignore, this is a build tool.
-		;;
 	*.c|*.cc)
 		FI=`grep "#include" ${FILENAME} | head -1`;
-		if test "${FI}" != "#include \"squid.h\"" -a "${FILENAME}" != "cf_gen.cc"; then
+		if test "${FI}" != "#include \"squid.h\""; then
 			echo "ERROR: ${FILENAME} does not include squid.h first!"
 		fi
 		;;

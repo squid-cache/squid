@@ -163,10 +163,6 @@ noinst_LTLIBRARIES = libsquid.la
 EXTRA_PROGRAMS = \
 	unlinkd
 
-## cfgen is used when building squid
-noinst_PROGRAMS = \
-	cf_gen
-
 sbin_PROGRAMS = \
 	squid
 
@@ -175,13 +171,7 @@ bin_PROGRAMS =
 libexec_PROGRAMS = \
 	$(UNLINKD)
 
-cf_gen_SOURCES = cf_gen.cc
-nodist_cf_gen_HEADER = cf_gen_defines.cci
-## cf_gen must be stand-alone executable. It is a purely build-time executable.
-cf_gen_LDADD=
-cf_gen.$(OBJEXT): cf_gen_defines.cci
-
-## cf_gen.cc needs src/cf_gen_defines.cci
+## let compiler access the BUILT_SOURCES
 AM_CPPFLAGS += -I$(top_builddir)/src
 
 
@@ -482,7 +472,6 @@ noinst_HEADERS = \
 	SquidString.h
 
 BUILT_SOURCES = \
-	cf_gen_defines.cci \
 	cf_parser.cci \
 	globals.cc \
 	hier_code.cc \
@@ -601,10 +590,7 @@ LDADD = \
 include $(srcdir)/tests/Stub.am
 
 EXTRA_DIST = \
-	cf_gen_defines \
-	cf.data.pre \
 	cf.data.depend \
-	cf.data.sed \
 	mk-globals-c.awk \
 	mk-string-arrays.awk \
 	repl_modules.sh \
@@ -640,26 +626,22 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 ## If autodependency works well this is not needed anymore
 cache_cf.o: cf_parser.cci
 
-# cf_gen builds the configuration files.
-cf_gen$(EXEEXT): $(cf_gen_SOURCES) $(cf_gen_DEPENDENCIES) cf_gen_defines.cci
-	$(BUILDCXX) $(BUILDCXXFLAGS) -o $@ $(srcdir)/cf_gen.cc -I$(srcdir) -I$(top_builddir)/include/ -I$(top_builddir)/src
+squid.conf.default: squid.conf.yaml cf.data.depend
+	$(top_srcdir)/scripts/mk-squid.conf-parser.pl --config squid.conf.yaml $(srcdir)/cf.data.depend |\
+	  sed -f $(srcdir)/cf.yaml.sed >$@
 
-# squid.conf.default is built by cf_gen when making cf_parser.cci
-squid.conf.default squid.conf.documented: cf_parser.cci
-	true
+squid.conf.documented: squid.conf.yaml cf.data.depend cf.yaml.sed
+	$(top_srcdir)/scripts/mk-squid.conf-parser.pl --documentation squid.conf.yaml $(srcdir)/cf.data.depend |\
+	  sed -f $(srcdir)/cf.yaml.sed >$@
+EXTRA_DIST += cf.yaml.sed
 
-cf_parser.cci: cf.data cf_gen$(EXEEXT)
-	./cf_gen$(EXEEXT) cf.data $(srcdir)/cf.data.depend
-
-# The cf_gen_defines.cci is auto-generated and does not exist when the
-# dependencies computed. We need to add its include files (autoconf.h) here
-cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre $(top_builddir)/include/autoconf.h
-	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
-
+cf_parser.cci: squid.conf.yaml cf.data.depend
+	$(top_srcdir)/scripts/mk-squid.conf-parser.pl --parser squid.conf.yaml $(srcdir)/cf.data.depend >$@
 
 ## TODO: generate a sed command file from configure. Then this doesn't
 ## depend on the Makefile.
-cf.data: cf.data.pre Makefile
+EXTRA_DIST += squid.conf.yaml.in
+squid.conf.yaml: squid.conf.yaml.in Makefile
 	sed \
 	-e "s%[@]DEFAULT_HTTP_PORT[@]%$(DEFAULT_HTTP_PORT)%g" \
 	-e "s%[@]DEFAULT_ICP_PORT[@]%$(DEFAULT_ICP_PORT)%g" \
@@ -683,8 +665,8 @@ cf.data: cf.data.pre Makefile
 	-e "s%[@]DEFAULT_PREFIX[@]%$(DEFAULT_PREFIX)%g" \
 	-e "s%[@]DEFAULT_HOSTS[@]%$(DEFAULT_HOSTS)%g" \
 	-e "s%[@]SQUID[@]%SQUID\ $(VERSION)%g" \
-	-f $(srcdir)/cf.data.sed \
-	< $(srcdir)/cf.data.pre >$@
+	< $(srcdir)/squid.conf.yaml.in >$@
+CLEANFILES += squid.conf.yaml
 
 repl_modules.cc: repl_modules.sh Makefile
 	$(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.cc
@@ -723,10 +705,7 @@ uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE) $(srcdir)/mime.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE) squid.conf.default
 
-clean-local:
-	-rm -rf cf_gen.dSYM
-
-CLEANFILES += cf.data squid.conf.default squid.conf.documented \
+CLEANFILES += squid.conf.default squid.conf.documented \
 	test_tools.cc *.a
 
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
