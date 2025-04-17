@@ -124,7 +124,7 @@ file_close(int fd)
      */
     assert(F->write_handler == nullptr);
 
-    close(fd);
+    xclose(fd);
 
     debugs(6, F->flags.close_request ? 2 : 5, "file_close: FD " << fd << " really closing");
 

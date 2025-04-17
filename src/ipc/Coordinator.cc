@@ -176,7 +176,7 @@ Ipc::Coordinator::handleCacheMgrRequest(const Mgr::Request& request)
         debugs(54, DBG_IMPORTANT, "ERROR: Squid BUG: cannot aggregate mgr:" <<
                request.params.actionName << ": " << ex.what());
         // TODO: Avoid half-baked Connections or teach them how to close.
-        ::close(request.conn->fd);
+        ::xclose(request.conn->fd);
         request.conn->fd = -1;
         return; // the worker will timeout and close
     }

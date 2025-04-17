@@ -82,7 +82,7 @@ void Ssl::Lock::unlock()
 #else
         flock(fd, LOCK_UN);
 #endif
-        close(fd);
+        xclose(fd);
         fd = -1;
     }
 #endif

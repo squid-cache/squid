@@ -612,7 +612,7 @@ main(int argc, char **argv)
 
         authenticate(sockfd, username, passwd);
     }
-    close(sockfd);
+    xclose(sockfd);
     return EXIT_SUCCESS;
 }
 

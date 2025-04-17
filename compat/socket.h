@@ -18,12 +18,30 @@
 int
 xaccept(int s, struct sockaddr *a, socklen_t *l);
 
+int
+xbind(int s, const struct sockaddr * n, socklen_t l);
+
+int
+xclose(int fd);
+
 #else /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 
 inline int
 xaccept(int s, struct sockaddr *a, socklen_t *l)
 {
     return accept(s,a,l);
+}
+
+inline int
+bind(int s, const struct sockaddr * n, socklen_t l)
+{
+    return bind(s,n,l);
+}
+
+inline int
+xclose(int fd)
+{
+    return close(fd);
 }
 
 #endif /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */

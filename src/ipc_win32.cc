@@ -12,7 +12,7 @@
 #include "cache_cf.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "compat/xaccept.h"
+#include "compat/socket.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"

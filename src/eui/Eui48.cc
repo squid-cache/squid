@@ -204,7 +204,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     debugs(28, 4, "id=" << (void*)this << " query ARP table");
     if (ioctl(tmpSocket, SIOCGARP, &arpReq) != -1) {
         /* Skip non-ethernet interfaces */
-        close(tmpSocket);
+        xclose(tmpSocket);
 
         if (arpReq.arp_ha.sa_family != ARPHRD_ETHER) {
             debugs(28, 4, "id=" << (void*)this << " ... not an Ethernet interface: " << arpReq.arp_ha.sa_data);
@@ -227,14 +227,14 @@ Eui::Eui48::lookup(const Ip::Address &c)
         int xerrno = errno;
         debugs(28, DBG_IMPORTANT, "ERROR: Attempt to retrieve interface list failed: " << xstrerr(xerrno));
         clear();
-        close(tmpSocket);
+        xclose(tmpSocket);
         return false;
     }
 
     if (ifc.ifc_len > (int)sizeof(ifbuffer)) {
         debugs(28, DBG_IMPORTANT, "Interface list too long - " << ifc.ifc_len);
         clear();
-        close(tmpSocket);
+        xclose(tmpSocket);
         return false;
     }
 
@@ -295,11 +295,11 @@ Eui::Eui48::lookup(const Ip::Address &c)
          */
 
         /* AYJ: 2009-10-06: for now we have to. We can only store one EUI at a time. */
-        close(tmpSocket);
+        xclose(tmpSocket);
         return true;
     }
 
-    close(tmpSocket);
+    xclose(tmpSocket);
 
 #elif _SQUID_SOLARIS_
 
@@ -325,7 +325,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
         *  Solaris (at least 2.6/x86) does not use arp_ha.sa_family -
         * it returns 00:00:00:00:00:00 for non-ethernet media
         */
-        close(tmpSocket);
+        xclose(tmpSocket);
 
         if (arpReq.arp_ha.sa_data[0] == 0 &&
                 arpReq.arp_ha.sa_data[1] == 0 &&
@@ -341,7 +341,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
         set(arpReq.arp_ha.sa_data, 6);
         return true;
     } else {
-        close(tmpSocket);
+        xclose(tmpSocket);
     }
 
 #elif _SQUID_FREEBSD_ || _SQUID_NETBSD_ || _SQUID_OPENBSD_ || _SQUID_DRAGONFLY_ || _SQUID_KFREEBSD_

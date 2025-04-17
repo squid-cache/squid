@@ -20,7 +20,7 @@
 #include "comm/Loops.h"
 #include "comm/TcpAcceptor.h"
 #include "CommCalls.h"
-#include "compat/xaccept.h"
+#include "compat/socket.h"
 #include "eui/Config.h"
 #include "fd.h"
 #include "fde.h"

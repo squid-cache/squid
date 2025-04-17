@@ -392,26 +392,6 @@ SQUIDCEXTERN THREADLOCAL int ws32_result;
 
 #if defined(__cplusplus)
 
-inline int
-close(int fd)
-{
-    char l_so_type[sizeof(int)];
-    int l_so_type_siz = sizeof(l_so_type);
-    SOCKET sock = _get_osfhandle(fd);
-
-    if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0) {
-        int result = 0;
-        if (closesocket(sock) == SOCKET_ERROR) {
-            errno = WSAGetLastError();
-            result = 1;
-        }
-        _free_osfhnd(fd);
-        _osfile(fd) = 0;
-        return result;
-    } else
-        return _close(fd);
-}
-
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 
 #ifndef _S_IREAD
@@ -474,17 +454,6 @@ namespace Squid
  * - record errors in POSIX errno variable, and
  * - map the FD value used by Squid to the socket handes used by Windows.
  */
-
-inline int
-bind(int s, const struct sockaddr * n, socklen_t l)
-{
-    if (::bind(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return 0;
-}
-#define bind(s,n,l) Squid::bind(s,n,l)
 
 inline int
 connect(int s, const struct sockaddr * n, socklen_t l)

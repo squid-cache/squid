@@ -203,7 +203,7 @@ File::close()
         debugs(54, DBG_IMPORTANT, sysCallFailure("CloseHandle", WindowsErrorMessage(savedError)));
     }
 #else
-    if (::close(fd_) != 0) {
+    if (::xclose(fd_) != 0) {
         const auto savedErrno = errno;
         debugs(54, DBG_IMPORTANT, sysCallError("close", savedErrno));
     }

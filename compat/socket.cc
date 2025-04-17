@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "compat/xaccept.h"
+#include "compat/socket.h"
 
 #if _SQUID_WINDOWS_ || _SQUID_MINGW_
 #if HAVE_WINDOWS_H
@@ -29,6 +29,35 @@ xaccept(int s, struct sockaddr *a, socklen_t *l)
     }
     else
         return _open_osfhandle(result, 0);
+}
+
+int
+xbind(int s, const struct sockaddr * n, socklen_t l)
+{
+    if (::bind(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
+        errno = WSAGetLastError();
+        return -1;
+    } else
+        return 0;
+}
+
+int
+xclose(int fd)
+{
+    char l_so_type[sizeof(int)];
+    int l_so_type_siz = sizeof(l_so_type);
+    auto sock = _get_osfhandle(fd);
+
+    if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
+    {
+        if (closesocket(sock) == SOCKET_ERROR)
+        {
+            errno = WSAGetLastError();
+            return 1;
+        }
+        return 0;
+    } else
+        return _close(fd);
 }
 
 #endif

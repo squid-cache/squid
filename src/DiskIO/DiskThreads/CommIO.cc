@@ -40,8 +40,8 @@ CommIO::NotifyIOClose()
 {
     /* Close done pipe signal */
     FlushPipe();
-    close(DoneFD);
-    close(DoneReadFD);
+    xclose(DoneFD);
+    xclose(DoneReadFD);
     fd_close(DoneFD);
     fd_close(DoneReadFD);
     Initialized = false;

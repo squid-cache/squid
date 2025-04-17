@@ -63,7 +63,7 @@ Ip::ProbeTransport()
     if (ip.isIPv6()) { // paranoid; always succeeds if we got this far
         struct sockaddr_in6 sin;
         ip.getSockAddr(sin);
-        if (bind(s, reinterpret_cast<struct sockaddr *>(&sin), sizeof(sin)) != 0) {
+        if (xbind(s, reinterpret_cast<struct sockaddr *>(&sin), sizeof(sin)) != 0) {
             debugs(3, Critical(66), "WARNING: BCP 177 violation. Detected non-functional IPv6 loopback.");
             EnableIpv6 = IPV6_OFF;
         } else {
@@ -71,7 +71,7 @@ Ip::ProbeTransport()
         }
     }
 
-    close(s);
+    xclose(s);
 
 #if USE_IPV6
     debugs(3, 2, "IPv6 transport " << (EnableIpv6?"Enabled":"Disabled"));

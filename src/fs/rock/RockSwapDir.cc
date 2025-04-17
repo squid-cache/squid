@@ -12,6 +12,7 @@
 #include "base/IoManip.h"
 #include "cache_cf.h"
 #include "CollapsedForwarding.h"
+#include "compat/socket.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"
@@ -262,7 +263,7 @@ Rock::SwapDir::create()
         createError("write");
 #endif
 
-    close(swap);
+    xclose(swap);
 }
 
 // report Rock DB creation error and exit

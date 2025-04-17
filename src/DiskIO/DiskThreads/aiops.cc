@@ -578,7 +578,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
     case _AIO_OP_OPEN:
         if (cancelled && requestp->ret >= 0)
             /* The open() was cancelled but completed */
-            close(requestp->ret);
+            xclose(requestp->ret);
 
         squidaio_xstrfree(requestp->path);
 
@@ -586,8 +586,8 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
 
     case _AIO_OP_CLOSE:
         if (cancelled && requestp->ret < 0)
-            /* The close() was cancelled and never got executed */
-            close(requestp->fd);
+            /* The xclose() was cancelled and never got executed */
+            xclose(requestp->fd);
 
         break;
 
@@ -769,7 +769,7 @@ squidaio_close(int fd, squidaio_result_t * resultp)
 static void
 squidaio_do_close(squidaio_request_t * requestp)
 {
-    requestp->ret = close(requestp->fd);
+    requestp->ret = xclose(requestp->fd);
     requestp->err = errno;
 }
 

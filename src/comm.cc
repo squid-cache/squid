@@ -225,7 +225,7 @@ commBind(int s, struct addrinfo &inaddr)
 {
     ++ statCounter.syscalls.sock.binds;
 
-    if (bind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0) {
+    if (xbind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0) {
         debugs(50, 6, "bind socket FD " << s << " to " << fd_table[s].local_addr);
         return Comm::OK;
     }
@@ -813,7 +813,7 @@ comm_close_complete(const int fd)
     F->ssl.reset();
     F->dynamicTlsContext.reset();
     fd_close(fd); /* update fdstat */
-    close(fd);
+    xclose(fd);
 
     ++ statCounter.syscalls.sock.closes;
 
