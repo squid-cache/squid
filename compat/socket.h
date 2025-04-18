@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_COMPAT_XACCEPT_H
-#define SQUID_COMPAT_XACCEPT_H
+#ifndef SQUID_COMPAT_SOCKET_H
+#define SQUID_COMPAT_SOCKET_H
 
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -74,4 +74,4 @@ xsetsockopt(int s, int l, int o, const void *v, socklen_t n)
 
 #endif /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 
-#endif /* SQUID_COMPAT_XACCEPT_H */
+#endif /* SQUID_COMPAT_SOCKET_H */
