@@ -608,21 +608,6 @@ sendto(int s, const void * b, size_t l, int f, const struct sockaddr * t, sockle
 #define sendto(a,b,l,f,t,n) Squid::sendto(a,b,l,f,t,n)
 
 inline int
-setsockopt(SOCKET s, int l, int o, const void * v, socklen_t n)
-{
-    SOCKET socket;
-
-    socket = ((s == INVALID_SOCKET) ? s : (SOCKET)_get_osfhandle((int)s));
-
-    if (::setsockopt(socket, l, o, (const char *)v, n) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return 0;
-}
-#define setsockopt(s,l,o,v,n) Squid::setsockopt(s,l,o,v,n)
-
-inline int
 shutdown(int s, int h)
 {
     if (::shutdown(_get_osfhandle(s),h) == SOCKET_ERROR) {

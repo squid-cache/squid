@@ -80,4 +80,16 @@ xgethostbyname(const char *n) {
     return result;
 }
 
+int
+xsetsockopt(int s, int l, int o, const void *v, socklen_t n)
+{
+    if (setsockopt(_get_osfhandle(s), l, o, static_cast<const char *>(v), n) == SOCKET_ERROR)
+    {
+        errno = WSAGetLastError();
+        return -1;
+    }
+    else
+        return 0;
+}
+
 #endif

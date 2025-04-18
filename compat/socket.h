@@ -30,6 +30,10 @@ xclose(int fd);
 struct hostent *
 xgethostbyname(const char *n);
 
+int
+xsetsockopt(int s, int l, int o, const void *v, socklen_t n);
+// for windows/mingw calls referring to INVALID_SOCKET, use setsockopt()
+
 #else /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 
 inline int
@@ -50,7 +54,7 @@ xclose(int fd)
     return close(fd);
 }
 
-int
+inline int
 xconnect(int s, const struct sockaddr * n, socklen_t l)
 {
     return connect(s,n,l);
@@ -60,6 +64,12 @@ inline struct hostent *
 xgethostbyname(const char *n)
 {
     return gethostbyname(n);
+}
+
+inline int
+xsetsockopt(int s, int l, int o, const void *v, socklen_t n)
+{
+    return setsockopt(s, l, o, v, n);
 }
 
 #endif /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
