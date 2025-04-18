@@ -22,7 +22,13 @@ int
 xbind(int s, const struct sockaddr * n, socklen_t l);
 
 int
+xconnect(int s, const struct sockaddr * n, socklen_t l);
+
+int
 xclose(int fd);
+
+struct hostent *
+xgethostbyname(const char *n);
 
 #else /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 
@@ -33,7 +39,7 @@ xaccept(int s, struct sockaddr *a, socklen_t *l)
 }
 
 inline int
-bind(int s, const struct sockaddr * n, socklen_t l)
+xbind(int s, const struct sockaddr * n, socklen_t l)
 {
     return bind(s,n,l);
 }
@@ -42,6 +48,18 @@ inline int
 xclose(int fd)
 {
     return close(fd);
+}
+
+int
+xconnect(int s, const struct sockaddr * n, socklen_t l)
+{
+    return connect(s,n,l);
+}
+
+inline struct hostent *
+xgethostbyname(const char *n)
+{
+    return gethostbyname(n);
 }
 
 #endif /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */

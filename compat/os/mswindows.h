@@ -455,26 +455,6 @@ namespace Squid
  * - map the FD value used by Squid to the socket handes used by Windows.
  */
 
-inline int
-connect(int s, const struct sockaddr * n, socklen_t l)
-{
-    if (::connect(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
-        if (WSAEMFILE == (errno = WSAGetLastError()))
-            errno = EMFILE;
-        return -1;
-    } else
-        return 0;
-}
-#define connect(s,n,l) Squid::connect(s,n,l)
-
-inline struct hostent *
-gethostbyname(const char *n) {
-    HOSTENT FAR * result;
-    if ((result = ::gethostbyname(n)) == NULL)
-        errno = WSAGetLastError();
-    return result;
-}
-#define gethostbyname(n) Squid::gethostbyname(n)
 
 inline SERVENT FAR *
 getservbyname(const char * n, const char * p)

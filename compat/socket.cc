@@ -60,4 +60,24 @@ xclose(int fd)
         return _close(fd);
 }
 
+int
+xconnect(int s, const struct sockaddr * n, socklen_t l)
+{
+    if (::connect(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
+        if (WSAEMFILE == (errno = WSAGetLastError()))
+            errno = EMFILE;
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
+struct hostent *
+xgethostbyname(const char *n) {
+    HOSTENT FAR * result;
+    if ((result = ::gethostbyname(n)) == NULL)
+        errno = WSAGetLastError();
+    return result;
+}
+
 #endif

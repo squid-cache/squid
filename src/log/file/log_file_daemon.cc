@@ -8,6 +8,7 @@
 
 #include "squid.h"
 
+#include "compat/socket.h"
 #include <cassert>
 #include <cerrno>
 #include <csignal>

@@ -9,6 +9,7 @@
 /* DEBUG: section 21    Misc Functions */
 
 #include "squid.h"
+#include "compat/socket.h"
 #include "debug/Messages.h"
 #include "ip/Address.h"
 #include "ip/tools.h"

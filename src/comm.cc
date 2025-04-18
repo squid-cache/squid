@@ -21,6 +21,7 @@
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "compat/cmsg.h"
+#include "compat/socket.h"
 #include "DescriptorSet.h"
 #include "event.h"
 #include "fd.h"
@@ -671,7 +672,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
         ++ statCounter.syscalls.sock.connects;
 
         errno = 0;
-        if ((x = connect(sock, AI->ai_addr, AI->ai_addrlen)) < 0) {
+        if ((x = xconnect(sock, AI->ai_addr, AI->ai_addrlen)) < 0) {
             xerrno = errno;
             debugs(5,5, "sock=" << sock << ", addrinfo(" <<
                    " flags=" << AI->ai_flags <<

@@ -57,6 +57,7 @@
 #include "auth/basic/RADIUS/radius-util.h"
 #include "auth/basic/RADIUS/radius.h"
 #include "base/Random.h"
+#include "compat/socket.h"
 #include "helper/protocol_defines.h"
 #include "md5.h"
 
@@ -559,7 +560,7 @@ main(int argc, char **argv)
     saremote.sin_addr.s_addr = htonl(auth_ipaddr);
     saremote.sin_port = htons(svc_port);
 
-    if (connect(sockfd, (struct sockaddr *) &saremote, sizeof(saremote)) < 0) {
+    if (xconnect(sockfd, (struct sockaddr *) &saremote, sizeof(saremote)) < 0) {
         perror("connect");
         exit(EXIT_FAILURE);
     }

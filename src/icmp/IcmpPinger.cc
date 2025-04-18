@@ -100,7 +100,7 @@ IcmpPinger::Open(void)
         return -1;
     }
 
-    x = connect(icmp_sock, (struct sockaddr *) &PS, sizeof(PS));
+    x = xconnect(icmp_sock, (struct sockaddr *) &PS, sizeof(PS));
 
     if (SOCKET_ERROR == x) {
         xerrno = errno;
