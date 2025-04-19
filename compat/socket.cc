@@ -10,12 +10,6 @@
 #include "compat/socket.h"
 
 #if _SQUID_WINDOWS_ || _SQUID_MINGW_
-#if HAVE_WINDOWS_H
-#include <windows.h>
-#endif
-#if HAVE_WKINSOCK2_H
-#include <winsock2.h>
-#endif
 
 int
 xaccept(int s, struct sockaddr *a, socklen_t *l)
