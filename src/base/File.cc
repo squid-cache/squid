@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "base/File.h"
+#include "compat/socket.h"
 #include "debug/Stream.h"
 #include "sbuf/Stream.h"
 #include "tools.h"
@@ -203,7 +204,7 @@ File::close()
         debugs(54, DBG_IMPORTANT, sysCallFailure("CloseHandle", WindowsErrorMessage(savedError)));
     }
 #else
-    if (::xclose(fd_) != 0) {
+    if (xclose(fd_) != 0) {
         const auto savedErrno = errno;
         debugs(54, DBG_IMPORTANT, sysCallError("close", savedErrno));
     }

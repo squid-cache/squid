@@ -16,6 +16,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "compat/socket.h"
 #include "ConfigParser.h"
 #include "event.h"
 #include "ip/Address.h"

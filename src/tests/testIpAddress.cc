@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "compat/cppunit.h"
+#include "compat/socket.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "unitTestMain.h"

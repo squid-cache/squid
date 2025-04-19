@@ -9,6 +9,7 @@
 /* DEBUG: section 37    ICMP Routines */
 
 #include "squid.h"
+#include "compat/socket.h"
 #include "debug/Stream.h"
 #include "Icmp.h"
 #include "time/gadgets.h"
