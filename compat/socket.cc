@@ -59,8 +59,10 @@ xclose(int fd)
 int
 xconnect(int s, const struct sockaddr * n, socklen_t l)
 {
-    if (::connect(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
-        if (WSAEMFILE == (errno = WSAGetLastError()))
+    const auto result = ::connect(_get_osfhandle(s),n,l);
+    if (result == SOCKET_ERROR) {
+        errno = WSAGetLastError();
+        if (errno == WSAEMFILE)
             errno = EMFILE;
         return -1;
     } else {
