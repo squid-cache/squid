@@ -20,6 +20,7 @@
 #include "comm/Loops.h"
 #include "comm/TcpAcceptor.h"
 #include "CommCalls.h"
+#include "compat/socket.h"
 #include "eui/Config.h"
 #include "fd.h"
 #include "fde.h"
@@ -162,7 +163,7 @@ Comm::TcpAcceptor::setListen()
         bzero(&afa, sizeof(afa));
         debugs(5, DBG_IMPORTANT, "Installing accept filter '" << Config.accept_filter << "' on " << conn);
         xstrncpy(afa.af_name, Config.accept_filter, sizeof(afa.af_name));
-        if (setsockopt(conn->fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa)) < 0) {
+        if (xsetsockopt(conn->fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa)) < 0) {
             int xerrno = errno;
             debugs(5, DBG_CRITICAL, "WARNING: SO_ACCEPTFILTER '" << Config.accept_filter << "': '" << xstrerr(xerrno));
         }
@@ -170,7 +171,7 @@ Comm::TcpAcceptor::setListen()
         int seconds = 30;
         if (strncmp(Config.accept_filter, "data=", 5) == 0)
             seconds = atoi(Config.accept_filter + 5);
-        if (setsockopt(conn->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &seconds, sizeof(seconds)) < 0) {
+        if (xsetsockopt(conn->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &seconds, sizeof(seconds)) < 0) {
             int xerrno = errno;
             debugs(5, DBG_CRITICAL, "WARNING: TCP_DEFER_ACCEPT '" << Config.accept_filter << "': '" << xstrerr(xerrno));
         }
@@ -348,7 +349,7 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     errcode = 0; // reset local errno copy.
     struct sockaddr_storage remoteAddress = {};
     socklen_t remoteAddressSize = sizeof(remoteAddress);
-    const auto rawSock = accept(conn->fd, reinterpret_cast<struct sockaddr *>(&remoteAddress), &remoteAddressSize);
+    const auto rawSock = xaccept(conn->fd, reinterpret_cast<struct sockaddr *>(&remoteAddress), &remoteAddressSize);
     if (rawSock < 0) {
         errcode = errno; // store last accept errno locally.
         if (ignoreErrno(errcode) || errcode == ECONNABORTED) {

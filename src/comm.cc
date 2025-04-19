@@ -21,6 +21,7 @@
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "compat/cmsg.h"
+#include "compat/socket.h"
 #include "DescriptorSet.h"
 #include "event.h"
 #include "fd.h"
@@ -211,7 +212,7 @@ commSetBindAddressNoPort(const int fd)
 {
 #if defined(IP_BIND_ADDRESS_NO_PORT)
     int flag = 1;
-    if (setsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, reinterpret_cast<char*>(&flag), sizeof(flag)) < 0) {
+    if (xsetsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, reinterpret_cast<char*>(&flag), sizeof(flag)) < 0) {
         const auto savedErrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: setsockopt(IP_BIND_ADDRESS_NO_PORT) failure: " << xstrerr(savedErrno));
     }
@@ -225,7 +226,7 @@ commBind(int s, struct addrinfo &inaddr)
 {
     ++ statCounter.syscalls.sock.binds;
 
-    if (bind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0) {
+    if (xbind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0) {
         debugs(50, 6, "bind socket FD " << s << " to " << fd_table[s].local_addr);
         return Comm::OK;
     }
@@ -294,7 +295,7 @@ static void
 comm_set_v6only(int fd, int tos)
 {
 #ifdef IPV6_V6ONLY
-    if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0) {
+    if (xsetsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "setsockopt(IPV6_V6ONLY) " << (tos?"ON":"OFF") << " for FD " << fd << ": " << xstrerr(xerrno));
     }
@@ -336,7 +337,7 @@ comm_set_transparent(int fd)
 
 #if defined(soLevel) && defined(soFlag)
     int tos = 1;
-    if (setsockopt(fd, soLevel, soFlag, (char *) &tos, sizeof(int)) < 0) {
+    if (xsetsockopt(fd, soLevel, soFlag, (char *) &tos, sizeof(int)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "setsockopt(TPROXY) on FD " << fd << ": " << xstrerr(xerrno));
     } else {
@@ -506,7 +507,7 @@ comm_apply_flags(int new_socket,
 #if defined(SO_REUSEPORT)
         if (flags & COMM_REUSEPORT) {
             int on = 1;
-            if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEPORT, reinterpret_cast<char*>(&on), sizeof(on)) < 0) {
+            if (xsetsockopt(new_socket, SOL_SOCKET, SO_REUSEPORT, reinterpret_cast<char*>(&on), sizeof(on)) < 0) {
                 const auto savedErrno = errno;
                 const auto errorMessage = ToSBuf("cannot enable SO_REUSEPORT socket option when binding to ",
                                                  addr, ": ", xstrerr(savedErrno));
@@ -671,7 +672,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
         ++ statCounter.syscalls.sock.connects;
 
         errno = 0;
-        if ((x = connect(sock, AI->ai_addr, AI->ai_addrlen)) < 0) {
+        if ((x = xconnect(sock, AI->ai_addr, AI->ai_addrlen)) < 0) {
             xerrno = errno;
             debugs(5,5, "sock=" << sock << ", addrinfo(" <<
                    " flags=" << AI->ai_flags <<
@@ -770,7 +771,7 @@ commConfigureLinger(const int fd, const OnOff enabled)
 
     fd_table[fd].flags.harshClosureRequested = (l.l_onoff && !l.l_linger); // close(2) sends TCP RST if true
 
-    if (setsockopt(fd, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
         const auto xerrno = errno;
         debugs(50, DBG_CRITICAL, "ERROR: Failed to set closure behavior (SO_LINGER) for FD " << fd << ": " << xstrerr(xerrno));
     }
@@ -813,7 +814,7 @@ comm_close_complete(const int fd)
     F->ssl.reset();
     F->dynamicTlsContext.reset();
     fd_close(fd); /* update fdstat */
-    close(fd);
+    xclose(fd);
 
     ++ statCounter.syscalls.sock.closes;
 
@@ -1012,7 +1013,7 @@ static void
 commSetReuseAddr(int fd)
 {
     int on = 1;
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
     }
@@ -1021,16 +1022,16 @@ commSetReuseAddr(int fd)
 static void
 commSetTcpRcvbuf(int fd, int size)
 {
-    if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(size)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(size)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
     }
-    if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *) &size, sizeof(size)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *) &size, sizeof(size)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
     }
 #ifdef TCP_WINDOW_CLAMP
-    if (setsockopt(fd, SOL_TCP, TCP_WINDOW_CLAMP, (char *) &size, sizeof(size)) < 0) {
+    if (xsetsockopt(fd, SOL_TCP, TCP_WINDOW_CLAMP, (char *) &size, sizeof(size)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
     }
@@ -1124,7 +1125,7 @@ commSetTcpNoDelay(int fd)
 {
     int on = 1;
 
-    if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0) {
+    if (xsetsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
     }

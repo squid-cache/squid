@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "compat/cppunit.h"
+#include "compat/socket.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "unitTestMain.h"
@@ -241,7 +242,7 @@ TestIpAddress::testHostentConstructor()
 
     expectval.s_addr = htonl(0xC0A8640C);
 
-    hp = gethostbyname("192.168.100.12");
+    hp = xgethostbyname("192.168.100.12");
     CPPUNIT_ASSERT( hp != nullptr /* gethostbyname failure.*/ );
 
     Ip::Address anIPA(*hp);

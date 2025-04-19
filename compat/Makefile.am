@@ -65,6 +65,8 @@ libcompatsquid_la_SOURCES = \
 	pipe.h \
 	shm.cc \
 	shm.h \
+	socket.cc \
+	socket.h \
 	statvfs.cc \
 	statvfs.h \
 	stdio.h \

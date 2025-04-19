@@ -9,6 +9,7 @@
 /* DEBUG: section --    External DISKD process implementation. */
 
 #include "squid.h"
+#include "compat/socket.h"
 #include "DiskIO/DiskDaemon/diomsg.h"
 #include "hash.h"
 
@@ -111,7 +112,7 @@ do_close(diomsg * r, int)
                 fs);
     }
     xfree(fs);
-    return close(fd);
+    return xclose(fd);
 }
 
 static int

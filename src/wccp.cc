@@ -14,6 +14,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "compat/socket.h"
 #include "event.h"
 #include "fatal.h"
 #include "SquidConfig.h"
@@ -145,7 +146,7 @@ wccpConnectionOpen(void)
 
     struct sockaddr_in router;
     Config.Wccp.router.getSockAddr(router);
-    if (connect(theWccpConnection, (struct sockaddr*)&router, sizeof(router)))
+    if (xconnect(theWccpConnection, (struct sockaddr*)&router, sizeof(router)))
         fatal("Unable to connect WCCP out socket");
 
     struct sockaddr_in local;

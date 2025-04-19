@@ -392,26 +392,6 @@ SQUIDCEXTERN THREADLOCAL int ws32_result;
 
 #if defined(__cplusplus)
 
-inline int
-close(int fd)
-{
-    char l_so_type[sizeof(int)];
-    int l_so_type_siz = sizeof(l_so_type);
-    SOCKET sock = _get_osfhandle(fd);
-
-    if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0) {
-        int result = 0;
-        if (closesocket(sock) == SOCKET_ERROR) {
-            errno = WSAGetLastError();
-            result = 1;
-        }
-        _free_osfhnd(fd);
-        _osfile(fd) = 0;
-        return result;
-    } else
-        return _close(fd);
-}
-
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 
 #ifndef _S_IREAD
@@ -474,51 +454,6 @@ namespace Squid
  * - record errors in POSIX errno variable, and
  * - map the FD value used by Squid to the socket handes used by Windows.
  */
-
-inline int
-accept(int s, struct sockaddr * a, socklen_t * l)
-{
-    SOCKET result;
-    if ((result = ::accept(_get_osfhandle(s), a, l)) == INVALID_SOCKET) {
-        if (WSAEMFILE == (errno = WSAGetLastError()))
-            errno = EMFILE;
-        return -1;
-    } else
-        return _open_osfhandle(result, 0);
-}
-#define accept(s,a,l) Squid::accept(s,a,reinterpret_cast<socklen_t*>(l))
-
-inline int
-bind(int s, const struct sockaddr * n, socklen_t l)
-{
-    if (::bind(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return 0;
-}
-#define bind(s,n,l) Squid::bind(s,n,l)
-
-inline int
-connect(int s, const struct sockaddr * n, socklen_t l)
-{
-    if (::connect(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
-        if (WSAEMFILE == (errno = WSAGetLastError()))
-            errno = EMFILE;
-        return -1;
-    } else
-        return 0;
-}
-#define connect(s,n,l) Squid::connect(s,n,l)
-
-inline struct hostent *
-gethostbyname(const char *n) {
-    HOSTENT FAR * result;
-    if ((result = ::gethostbyname(n)) == NULL)
-        errno = WSAGetLastError();
-    return result;
-}
-#define gethostbyname(n) Squid::gethostbyname(n)
 
 inline SERVENT FAR *
 getservbyname(const char * n, const char * p)
@@ -670,21 +605,6 @@ sendto(int s, const void * b, size_t l, int f, const struct sockaddr * t, sockle
         return result;
 }
 #define sendto(a,b,l,f,t,n) Squid::sendto(a,b,l,f,t,n)
-
-inline int
-setsockopt(SOCKET s, int l, int o, const void * v, socklen_t n)
-{
-    SOCKET socket;
-
-    socket = ((s == INVALID_SOCKET) ? s : (SOCKET)_get_osfhandle((int)s));
-
-    if (::setsockopt(socket, l, o, (const char *)v, n) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return 0;
-}
-#define setsockopt(s,l,o,v,n) Squid::setsockopt(s,l,o,v,n)
 
 inline int
 shutdown(int s, int h)

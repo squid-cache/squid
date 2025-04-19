@@ -16,6 +16,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "compat/socket.h"
 #include "ConfigParser.h"
 #include "event.h"
 #include "ip/Address.h"
@@ -983,7 +984,7 @@ wccp2ConnectionOpen(void)
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
     {
         int i = IP_PMTUDISC_DONT;
-        if (setsockopt(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i) < 0) {
+        if (xsetsockopt(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i) < 0) {
             int xerrno = errno;
             debugs(80, 2, "WARNING: Path MTU discovery could not be disabled on FD " << theWccp2Connection << ": " << xstrerr(xerrno));
         }
@@ -1010,7 +1011,7 @@ wccp2ConnectionOpen(void)
             router.sin_port = htons(WCCP_PORT);
             router.sin_addr = router_list_ptr->router_sendto_address;
 
-            if (connect(theWccp2Connection, (struct sockaddr *) &router, router_len))
+            if (xconnect(theWccp2Connection, (struct sockaddr *) &router, router_len))
                 fatal("Unable to connect WCCP out socket");
 
             local_len = sizeof(local);
@@ -1026,7 +1027,7 @@ wccp2ConnectionOpen(void)
              * but disconnects anyway so we have to just assume it worked
              */
             if (wccp2_numrouters > 1) {
-                (void)connect(theWccp2Connection, (struct sockaddr *) &null, router_len);
+                (void)xconnect(theWccp2Connection, (struct sockaddr *) &null, router_len);
             }
         }
 

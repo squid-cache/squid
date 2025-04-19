@@ -14,6 +14,7 @@
 
 #if USE_ICMP
 
+#include "compat/socket.h"
 #include "debug/Stream.h"
 #include "Icmp4.h"
 #include "Icmp6.h"
@@ -100,7 +101,7 @@ IcmpPinger::Open(void)
         return -1;
     }
 
-    x = connect(icmp_sock, (struct sockaddr *) &PS, sizeof(PS));
+    x = xconnect(icmp_sock, (struct sockaddr *) &PS, sizeof(PS));
 
     if (SOCKET_ERROR == x) {
         xerrno = errno;
@@ -152,7 +153,7 @@ IcmpPinger::Close(void)
 #if _SQUID_WINDOWS_
 
     shutdown(icmp_sock, SD_BOTH);
-    close(icmp_sock);
+    xclose(icmp_sock);
     icmp_sock = -1;
 #endif
 

@@ -13,6 +13,7 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
+#include "compat/socket.h"
 #include "fde.h"
 #include "ip/Intercept.h"
 #include "ip/tools.h"
@@ -295,7 +296,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
         const auto xerrno = errno;
         if (xerrno != ESRCH) {
             debugs(89, DBG_IMPORTANT, "ERROR: IPF (IPFilter) NAT lookup failed: ioctl(SIOCGNATL) (v=" << IPFILTER_VERSION << "): " << xstrerr(xerrno));
-            close(natfd);
+            xclose(natfd);
             natfd = -1;
         }
 
@@ -365,7 +366,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
         const auto xerrno = errno;
         if (xerrno != ENOENT) {
             debugs(89, DBG_IMPORTANT, "ERROR: PF lookup failed: ioctl(DIOCNATLOOK): " << xstrerr(xerrno));
-            close(pffd);
+            xclose(pffd);
             pffd = -1;
         }
         debugs(89, 9, "address: " << newConn);
@@ -444,17 +445,17 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         tmp.getSockAddr(tmp_ip6);
 
         if ( (tmp_sock = socket(PF_INET6, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
-                setsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&
-                bind(tmp_sock, (struct sockaddr*)&tmp_ip6, sizeof(struct sockaddr_in6)) == 0 ) {
+                xsetsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&
+                xbind(tmp_sock, (struct sockaddr*)&tmp_ip6, sizeof(struct sockaddr_in6)) == 0 ) {
 
             debugs(3, 3, "IPv6 TPROXY support detected. Using.");
-            close(tmp_sock);
+            xclose(tmp_sock);
             if (doneSuid)
                 leave_suid();
             return true;
         }
         if (tmp_sock >= 0) {
-            close(tmp_sock);
+            xclose(tmp_sock);
             tmp_sock = -1;
         }
     }
@@ -476,17 +477,17 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         tmp.getSockAddr(tmp_ip4);
 
         if ( (tmp_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
-                setsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&
-                bind(tmp_sock, (struct sockaddr*)&tmp_ip4, sizeof(struct sockaddr_in)) == 0 ) {
+                xsetsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&
+                xbind(tmp_sock, (struct sockaddr*)&tmp_ip4, sizeof(struct sockaddr_in)) == 0 ) {
 
             debugs(3, 3, "IPv4 TPROXY support detected. Using.");
-            close(tmp_sock);
+            xclose(tmp_sock);
             if (doneSuid)
                 leave_suid();
             return true;
         }
         if (tmp_sock >= 0) {
-            close(tmp_sock);
+            xclose(tmp_sock);
         }
     }
 
