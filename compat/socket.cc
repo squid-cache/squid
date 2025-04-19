@@ -28,11 +28,11 @@ xaccept(int s, struct sockaddr *a, socklen_t *l)
 int
 xbind(int s, const struct sockaddr * n, socklen_t l)
 {
-    if (::bind(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
+    static_assert(SOCKET_ERROR == -1);
+    const auto result = ::bind(_get_osfhandle(s),n,l);
+    if (result == SOCKET_ERROR)
         errno = WSAGetLastError();
-        return -1;
-    } else
-        return 0;
+    return result;
 }
 
 int
