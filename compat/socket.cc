@@ -44,14 +44,16 @@ xclose(int fd)
 
     if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
     {
-        if (closesocket(sock) == SOCKET_ERROR)
+        const auto result = closesocket(sock);
+        if (result == SOCKET_ERROR)
         {
             errno = WSAGetLastError();
-            return 1;
+            return -1;
         }
         return 0;
-    } else
+    } else {
         return _close(fd);
+    }
 }
 
 int
