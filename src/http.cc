@@ -1696,11 +1696,14 @@ HttpStateData::canBufferMoreReplyBytes() const
 size_t
 HttpStateData::maybeMakeSpaceAvailable(const size_t maxReadSize)
 {
+    inBuf.reserveSpace(0); // does nothing but cow() to be able to get the actual spaceSize() below
     // how much we want to read
     const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), maxReadSize);
-    // we may need to grow the buffer
-    inBuf.reserveSpace(read_size);
-    debugs(11, 7, "may read up to " << read_size << " bytes info buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+    if (read_size) {
+        // we may need to grow the buffer
+        inBuf.reserveSpace(read_size);
+        debugs(11, 7, "may read up to " << read_size << " bytes info buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+    }
     return read_size;
 }
 
