@@ -17,7 +17,7 @@ static_assert(SOCKET_ERROR == -1);
 /**
  * Squid socket code is written to handle POSIX errno codes.
  * Set errno to the relevant POSIX or WSA code.
- */ 
+ */
 static void
 SetErrnoFromWsaError()
 {
@@ -43,7 +43,7 @@ SetErrnoFromWsaError()
         // values checked by limitError()
         { WSAEMFILE, EMFILE },
         // WSAENFILE not defined
-        
+
         // values checked by TunnelStateData::Connection::debugLevelForError()
         { WSAECONNRESET, ECONNRESET }
     };
@@ -118,6 +118,18 @@ xsetsockopt(int s, int l, int o, const void *v, socklen_t n)
     if (result == SOCKET_ERROR)
         errno = WSAGetLastError();
     return result;
+}
+
+int
+xsocket(int f, int t, int p)
+{
+    auto result = ::socket(f, t, p);
+    if (result == INVALID_SOCKET) {
+        SetErrnoFromWsaError();
+        return SOCKET_ERROR;
+    } else {
+        return _open_osfhandle(result, 0);
+    }
 }
 
 #endif

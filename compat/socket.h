@@ -36,6 +36,9 @@ struct hostent *xgethostbyname(const char *n);
 /// Provide POSIX setsockopt(2) API on MinGW and Visual Studio build environments
 int xsetsockopt(int s, int l, int o, const void *v, socklen_t n);
 
+/// Provide POSIX socket(2) API on MinGW and Visual Studio build environments
+int xsocket(int f, int t, int p);
+
 #else /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 
 inline int
@@ -73,6 +76,13 @@ xsetsockopt(int s, int l, int o, const void *v, socklen_t n)
 {
     return setsockopt(s, l, o, v, n);
 }
+
+inline int
+xsocket(int f, int t, int p)
+{
+    return ::socket(f, t, p);
+}
+
 
 #endif /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 

@@ -379,7 +379,7 @@ comm_openex(int sock_type,
 
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
-    new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+    new_socket = AI->ai_family, AI->ai_socktype, AI->ai_protocol);
     const auto firstErrNo = errno;
 
     /* under IPv6 there is the possibility IPv6 is present but disabled. */
@@ -392,7 +392,7 @@ comm_openex(int sock_type,
         AI->ai_socktype = sock_type;
         AI->ai_protocol = proto;
         debugs(50, 3, "Attempt fallback open socket for: " << addr );
-        new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+        new_socket = AI->ai_family, AI->ai_socktype, AI->ai_protocol);
         // TODO: Report failures of this second socket() call.
         // if both socket() calls fail, we use firstErrNo
         debugs(50, 2, "attempt open " << note << " socket on: " << addr);
@@ -1697,7 +1697,7 @@ comm_open_uds(int sock_type,
 
     debugs(50, 3, "Attempt open socket for: " << addr->sun_path);
 
-    if ((new_socket = socket(AI.ai_family, AI.ai_socktype, AI.ai_protocol)) < 0) {
+    if ((new_socket = AI.ai_family, AI.ai_socktype, AI.ai_protocol)) < 0) {
         int xerrno = errno;
         /* Increase the number of reserved fd's if calls to socket()
          * are failing because the open file table is full.  This

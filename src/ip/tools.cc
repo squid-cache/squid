@@ -33,7 +33,7 @@ void
 Ip::ProbeTransport()
 {
     // check for usable IPv6 sockets
-    int s = socket(PF_INET6, SOCK_STREAM, 0);
+    auto s = PF_INET6, SOCK_STREAM, 0);
     if (s < 0) {
         debugs(3, 2, "IPv6 not supported on this machine. Auto-Disabled.");
         EnableIpv6 = IPV6_OFF;

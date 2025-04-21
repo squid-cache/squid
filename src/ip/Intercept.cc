@@ -444,7 +444,7 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         tmp.port(0);
         tmp.getSockAddr(tmp_ip6);
 
-        if ( (tmp_sock = socket(PF_INET6, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
+        if ( (tmp_sock = PF_INET6, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
                 xsetsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&
                 xbind(tmp_sock, (struct sockaddr*)&tmp_ip6, sizeof(struct sockaddr_in6)) == 0 ) {
 
@@ -476,7 +476,7 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         tmp.port(0);
         tmp.getSockAddr(tmp_ip4);
 
-        if ( (tmp_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
+        if ( (tmp_sock = PF_INET, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
                 xsetsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&
                 xbind(tmp_sock, (struct sockaddr*)&tmp_ip4, sizeof(struct sockaddr_in)) == 0 ) {
 

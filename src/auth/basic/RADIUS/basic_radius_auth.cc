@@ -550,7 +550,7 @@ main(int argc, char **argv)
         fprintf(stderr, "FATAL: %s: Couldn't find host %s\n", argv[0], server);
         exit(EXIT_FAILURE);
     }
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    sockfd = AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {
         perror("socket");
         exit(EXIT_FAILURE);

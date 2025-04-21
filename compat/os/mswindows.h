@@ -618,19 +618,6 @@ shutdown(int s, int h)
 #define shutdown(s,h) Squid::shutdown(s,h)
 
 inline int
-socket(int f, int t, int p)
-{
-    SOCKET result;
-    if ((result = ::socket(f, t, p)) == INVALID_SOCKET) {
-        if (WSAEMFILE == (errno = WSAGetLastError()))
-            errno = EMFILE;
-        return -1;
-    } else
-        return _open_osfhandle(result, 0);
-}
-#define socket(f,t,p) Squid::socket(f,t,p)
-
-inline int
 WSAAsyncSelect(int s, HWND h, unsigned int w, long e)
 {
     if (::WSAAsyncSelect(_get_osfhandle(s), h, w, e) == SOCKET_ERROR) {
