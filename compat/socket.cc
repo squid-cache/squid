@@ -103,7 +103,8 @@ xconnect(int s, const struct sockaddr * n, socklen_t l)
 }
 
 struct hostent *
-xgethostbyname(const char *n) {
+xgethostbyname(const char *n)
+{
     auto result = ::gethostbyname(n);
     if (!result)
         errno = WSAGetLastError();
