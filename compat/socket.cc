@@ -51,7 +51,7 @@ SetErrnoFromWsaError()
     const auto wsa = WSAGetLastError();
     const auto itr = CodeMap.find(wsa);
     if (itr != CodeMap.cend())
-        errno = *result;
+        errno = itr->second;
     else
         errno = wsa;
 }
