@@ -18,24 +18,23 @@
 
 #if _SQUID_WINDOWS_ || _SQUID_MINGW_
 
-int
-xaccept(int s, struct sockaddr *a, socklen_t *l);
+/// Provide POSIX accept(2) API on MinGW and Visual Studio build environments
+int xaccept(int s, struct sockaddr *a, socklen_t *l);
 
-int
-xbind(int s, const struct sockaddr * n, socklen_t l);
+/// Provide POSIX bind(2) API on MinGW and Visual Studio build environments
+int xbind(int s, const struct sockaddr * n, socklen_t l);
 
-int
-xconnect(int s, const struct sockaddr * n, socklen_t l);
+/// Provide POSIX connect(2) API on MinGW and Visual Studio build environments
+int xconnect(int s, const struct sockaddr * n, socklen_t l);
 
-int
-xclose(int fd);
+/// Provide POSIX close(2) API on MinGW and Visual Studio build environments
+int xclose(int fd);
 
-struct hostent *
-xgethostbyname(const char *n);
+/// Provide POSIX gethostbyname(2) API on MinGW and Visual Studio build environments
+struct hostent *xgethostbyname(const char *n);
 
-int
-xsetsockopt(int s, int l, int o, const void *v, socklen_t n);
-// for windows/mingw calls referring to INVALID_SOCKET, use setsockopt()
+/// Provide POSIX setsockopt(2) API on MinGW and Visual Studio build environments
+int xsetsockopt(int s, int l, int o, const void *v, socklen_t n);
 
 #else /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 
