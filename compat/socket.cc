@@ -70,7 +70,6 @@ xaccept(int s, struct sockaddr *a, socklen_t *l)
 int
 xbind(int s, const struct sockaddr * n, socklen_t l)
 {
-    static_assert(SOCKET_ERROR == -1);
     const auto result = ::bind(_get_osfhandle(s),n,l);
     if (result == SOCKET_ERROR)
         errno = WSAGetLastError();
