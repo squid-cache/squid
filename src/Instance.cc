@@ -240,3 +240,4 @@ Instance::PidFilenameHash()
     pid_filename_hash.appendf("%c%c%c%c", code_table[p[0] % 36], code_table[p[1] % 36], code_table[p[2] % 36], code_table[p[3] % 36]);
     return pid_filename_hash;
 }
+
