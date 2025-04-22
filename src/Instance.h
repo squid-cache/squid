@@ -9,11 +9,11 @@
 #ifndef SQUID_SRC_INSTANCE_H
 #define SQUID_SRC_INSTANCE_H
 
+#include "sbuf/forward.h"
+
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-
-#include "sbuf/SBuf.h"
 
 /// code related to Squid Instance and PID file management
 namespace Instance {
