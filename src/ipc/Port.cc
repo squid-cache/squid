@@ -68,7 +68,7 @@ Ipc::Port::CoordinatorAddr()
 {
     static String coordinatorAddr;
     if (!coordinatorAddr.size()) {
-        coordinatorAddr = channelPathPfx;
+        coordinatorAddr= channelPathPfx;
         coordinatorAddr.append(service_name.c_str());
         coordinatorAddr.append(Instance::PidFilenameHash().c_str());
         coordinatorAddr.append(coordinatorAddrLabel);
