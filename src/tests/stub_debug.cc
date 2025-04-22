@@ -73,6 +73,7 @@ Debug::Extra(std::ostream &os)
 
 bool Debug::StderrEnabled() STUB_RETVAL(false)
 void Debug::PrepareToDie() STUB
+void Debug::StopCacheLogUse() STUB
 
 void
 Debug::parseOptions(char const *)
@@ -106,9 +107,6 @@ Debug::Finish()
         Current = nullptr;
     }
 }
-
-// Dummy function
-void Debug::StopCacheLogUse() {}
 
 std::ostream&
 ForceAlert(std::ostream& s)
