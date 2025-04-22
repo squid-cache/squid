@@ -435,8 +435,6 @@ void Adaptation::Icap::ModXact::virginConsume()
     BodyPipe &bp = *virgin.body_pipe;
     const bool wantToPostpone = isRepeatable || canStartBypass || protectGroupBypass;
 
-    // Calculate the space size the same way as the body producer does, e.g.,
-    // see HttpStateData::maybeMakeSpaceAvailable().
     if (wantToPostpone && bp.buf().spaceSize() > 0) {
         // Postponing may increase memory footprint and slow the HTTP side
         // down. Not postponing may increase the number of ICAP errors
