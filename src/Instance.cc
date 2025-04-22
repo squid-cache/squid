@@ -223,7 +223,6 @@ Instance::WriteOurPid()
     debugs(50, Important(23), "Created " << TheFile);
 }
 
-/// \returns hash of the PID file name to make a unique service name for this Squid instance
 SBuf
 Instance::GetPidFilenameHash()
 {

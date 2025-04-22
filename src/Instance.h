@@ -32,7 +32,10 @@ void WriteOurPid();
 /// Throws if PID file maintenance is disabled.
 pid_t Other();
 
-/// \returns hash of the PID file name to make a unique service name for this Squid instance
+/// A hash that is likely to be unique across Squid instances running on the
+/// same host because such concurrent instances should use unique PID filenames.
+/// All instances with disabled PID file maintenance have the same hash value.
+/// \returns a 4-character string suitable for use in file names
 SBuf GetPidFilenameHash();
 
 } // namespace Instance
