@@ -224,7 +224,7 @@ Instance::WriteOurPid()
 }
 
 SBuf
-Instance::GetPidFilenameHash()
+Instance::PidFilenameHash()
 {
     const auto code_table = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     cache_key hash[SQUID_MD5_DIGEST_LENGTH];

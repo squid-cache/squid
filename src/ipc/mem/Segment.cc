@@ -280,7 +280,7 @@ Ipc::Mem::Segment::GenerateName(const char *id)
     } else {
         name.append('/');
         name.append(service_name.c_str());
-        name.append(Instance::GetPidFilenameHash().c_str());
+        name.append(Instance::PidFilenameHash().c_str());
         name.append('-');
     }
 

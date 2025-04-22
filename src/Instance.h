@@ -36,7 +36,7 @@ pid_t Other();
 /// same host because such concurrent instances should use unique PID filenames.
 /// All instances with disabled PID file maintenance have the same hash value.
 /// \returns a 4-character string suitable for use in file names
-SBuf GetPidFilenameHash();
+SBuf PidFilenameHash();
 
 } // namespace Instance
 
