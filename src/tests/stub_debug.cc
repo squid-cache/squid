@@ -73,7 +73,6 @@ Debug::Extra(std::ostream &os)
 
 bool Debug::StderrEnabled() STUB_RETVAL(false)
 void Debug::PrepareToDie() STUB
-void Debug::StopCacheLogUse() STUB
 
 void
 Debug::parseOptions(char const *)

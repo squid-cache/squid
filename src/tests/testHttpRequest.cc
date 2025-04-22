@@ -16,9 +16,6 @@
 
 #include <cppunit/TestAssert.h>
 
-// XXX: for Instance.cc linkage. keep in sync with main.cc
-bool Chrooted = false;
-
 class TestHttpRequest : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestHttpRequest);

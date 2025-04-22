@@ -20,9 +20,6 @@
  * test the CacheManager implementation
  */
 
-// XXX: for Instance.cc linkage. keep in sync with main.cc
-bool Chrooted = false;
-
 class TestCacheManager : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestCacheManager);
