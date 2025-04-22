@@ -17,5 +17,5 @@
 void Instance::ThrowIfAlreadyRunning() STUB
 void Instance::WriteOurPid() STUB
 pid_t Instance::Other() STUB_RETVAL({})
-SBuf Instance::PidFilenameHash() STUB_RETVAL_NOP(SBuf("STUB"))
+SBuf Instance::NamePrefix(const char *, const char *) STUB_RETVAL_NOP(SBuf("STUB-Instance-NamePrefix"))
 

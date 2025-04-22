@@ -278,9 +278,7 @@ Ipc::Mem::Segment::GenerateName(const char *id)
         if (name[name.size()-1] != '/')
             name.append('/');
     } else {
-        name.append('/');
-        name.append(service_name.c_str());
-        name.append(Instance::PidFilenameHash().c_str());
+        name.append(Instance::NamePrefix("/").c_str());
         name.append('-');
     }
 

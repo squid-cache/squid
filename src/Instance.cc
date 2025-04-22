@@ -223,8 +223,12 @@ Instance::WriteOurPid()
     debugs(50, Important(23), "Created " << TheFile);
 }
 
-SBuf
-Instance::PidFilenameHash()
+/// A hash that is likely to be unique across Squid instances running on the
+/// same host because such concurrent instances should use unique PID filenames.
+/// All instances with disabled PID file maintenance have the same hash value.
+/// \returns a 4-character string suitable for use in file names
+static SBuf
+PidFilenameHash()
 {
     const auto code_table = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     uint8_t hash[SQUID_MD5_DIGEST_LENGTH];
@@ -239,5 +243,17 @@ Instance::PidFilenameHash()
     SBuf pid_filename_hash;
     pid_filename_hash.appendf("%c%c%c%c", code_table[p[0] % 36], code_table[p[1] % 36], code_table[p[2] % 36], code_table[p[3] % 36]);
     return pid_filename_hash;
+}
+
+SBuf
+Instance::NamePrefix(const char * const head, const char * const tail)
+{
+    SBuf buf(head);
+    buf.append(service_name);
+    buf.append(PidFilenameHash());
+    if (tail) {
+        buf.append(tail);
+    }
+    return buf;
 }
 

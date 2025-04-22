@@ -32,11 +32,13 @@ void WriteOurPid();
 /// Throws if PID file maintenance is disabled.
 pid_t Other();
 
-/// A hash that is likely to be unique across Squid instances running on the
-/// same host because such concurrent instances should use unique PID filenames.
-/// All instances with disabled PID file maintenance have the same hash value.
-/// \returns a 4-character string suitable for use in file names
-SBuf PidFilenameHash();
+/// A service_name-derived string that is likely to be unique across all Squid
+/// instances concurrently running on the same host (as long as they do not
+/// disable PID file maintenance).
+/// \param head is used at the beginning of the generated name
+/// \param tail, when given, is used at the end of the generated name
+/// \returns a head-...-tail string suitable for making file and shm segment names
+SBuf NamePrefix(const char *head, const char *tail = nullptr);
 
 } // namespace Instance
 
