@@ -232,7 +232,6 @@ PidFilenameHash()
 {
     const auto code_table = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     uint8_t hash[SQUID_MD5_DIGEST_LENGTH];
-    const auto p = hash;
 
     SquidMD5_CTX ctx;
     SquidMD5Init(&ctx);
@@ -241,7 +240,7 @@ PidFilenameHash()
     SquidMD5Final(hash, &ctx);
 
     SBuf pid_filename_hash;
-    pid_filename_hash.appendf("%c%c%c%c", code_table[p[0] % 36], code_table[p[1] % 36], code_table[p[2] % 36], code_table[p[3] % 36]);
+    pid_filename_hash.appendf("%c%c%c%c", code_table[hash[0] % 36], code_table[hash[1] % 36], code_table[hash[2] % 36], code_table[hash[3] % 36]);
     return pid_filename_hash;
 }
 
