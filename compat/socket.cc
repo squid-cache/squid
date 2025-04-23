@@ -73,7 +73,7 @@ xbind(int s, const struct sockaddr * n, socklen_t l)
 {
     const auto result = ::bind(_get_osfhandle(s),n,l);
     if (result == SOCKET_ERROR)
-        errno = WSAGetLastError();
+        SetErrnoFromWsaError();
     return result;
 }
 
@@ -87,7 +87,7 @@ xclose(int fd)
     if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0) {
         const auto result = closesocket(sock);
         if (result == SOCKET_ERROR)
-            errno = WSAGetLastError();
+            SetErrnoFromWsaError();
         return result;
     } else {
         return _close(fd);
@@ -108,7 +108,7 @@ xgethostbyname(const char *n)
 {
     auto result = ::gethostbyname(n);
     if (!result)
-        errno = WSAGetLastError();
+        SetErrnoFromWsaError();
     return result;
 }
 
@@ -117,7 +117,7 @@ xsetsockopt(int s, int l, int o, const void *v, socklen_t n)
 {
     const auto result = ::setsockopt(_get_osfhandle(s), l, o, static_cast<const char *>(v), n);
     if (result == SOCKET_ERROR)
-        errno = WSAGetLastError();
+        SetErrnoFromWsaError();
     return result;
 }
 
