@@ -1699,7 +1699,7 @@ HttpStateData::maybeMakeSpaceAvailable(const size_t maxReadSize)
     // how much we want to read
     const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), maxReadSize);
 
-    if (read_size < 2) {
+    if (!read_size) {
         debugs(11, 7, "will not read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
         return 0;
     }

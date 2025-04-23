@@ -929,7 +929,7 @@ Ftp::Client::maybeReadVirginBody()
 
     debugs(9, 9, "FTP may read up to " << read_sz << " bytes");
 
-    if (read_sz < 2) // see http.cc
+    if (!read_sz)
         return;
 
     data.read_pending = true;
