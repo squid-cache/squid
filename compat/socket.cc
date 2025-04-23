@@ -10,7 +10,7 @@
 #include "compat/socket.h"
 
 #if _SQUID_WINDOWS_ || _SQUID_MINGW_
-#include <map>
+#include <unordered_map>
 
 static_assert(SOCKET_ERROR == -1);
 
@@ -22,7 +22,7 @@ static void
 SetErrnoFromWsaError()
 {
     // POSIX codes which socket API users may care about
-    static const auto *CodeMap = new std::map<int, int> {
+    static const auto *CodeMap = new std::unordered_map<int, int> {
 
         // values checked for by accept(2) callers
         { WSAECONNABORTED, ECONNABORTED },
