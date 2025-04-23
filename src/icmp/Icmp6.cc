@@ -97,7 +97,7 @@ Icmp6::~Icmp6()
 int
 Icmp6::Open(void)
 {
-    icmp_sock = PF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
+    icmp_sock = xsocket(PF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
 
     if (icmp_sock < 0) {
         int xerrno = errno;

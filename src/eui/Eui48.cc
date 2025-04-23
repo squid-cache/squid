@@ -172,7 +172,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     int offset;
 
     /* IPv6 builds do not provide the first http_port as an IPv4 socket for ARP */
-    auto tmpSocket = AF_INET,SOCK_STREAM,0);
+    auto tmpSocket = xsocket(AF_INET,SOCK_STREAM,0);
     if (tmpSocket < 0) {
         int xerrno = errno;
         debugs(28, DBG_IMPORTANT, "ERROR: Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));
@@ -305,7 +305,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
 #elif _SQUID_SOLARIS_
 
     /* IPv6 builds do not provide the first http_port as an IPv4 socket for ARP */
-    auto tmpSocket = AF_INET,SOCK_STREAM,0);
+    auto tmpSocket = xsocket(AF_INET,SOCK_STREAM,0);
     if (tmpSocket < 0) {
         int xerrno = errno;
         debugs(28, DBG_IMPORTANT, "ERROR: Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));

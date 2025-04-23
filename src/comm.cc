@@ -379,7 +379,7 @@ comm_openex(int sock_type,
 
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
-    new_socket = AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+    new_socket = xsocket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
     const auto firstErrNo = errno;
 
     /* under IPv6 there is the possibility IPv6 is present but disabled. */
@@ -392,7 +392,7 @@ comm_openex(int sock_type,
         AI->ai_socktype = sock_type;
         AI->ai_protocol = proto;
         debugs(50, 3, "Attempt fallback open socket for: " << addr );
-        new_socket = AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+        new_socket = xsocket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
         // TODO: Report failures of this second socket() call.
         // if both socket() calls fail, we use firstErrNo
         debugs(50, 2, "attempt open " << note << " socket on: " << addr);
@@ -432,7 +432,7 @@ comm_openex(int sock_type,
         comm_set_v6only(conn->fd, 0);
 
     comm_init_opened(conn, note, AI);
-    new_socket = comm_apply_flags(conn->fd, addr, flags, AI);
+    new_socket = xsocket(comm_apply_flags(conn->fd, addr, flags, AI);
 
     Ip::Address::FreeAddr(AI);
 

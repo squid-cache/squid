@@ -65,7 +65,7 @@ Icmp4::~Icmp4()
 int
 Icmp4::Open(void)
 {
-    icmp_sock = PF_INET, SOCK_RAW, IPPROTO_ICMP);
+    icmp_sock = xsocket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
 
     if (icmp_sock < 0) {
         int xerrno = errno;
