@@ -35,7 +35,7 @@ SetErrnoFromWsaError()
 
         // values checked by ignoreErrno()
         { WSAEWOULDBLOCK, EWOULDBLOCK },
-        // WSAEAGAIN no defined
+        // WSAEAGAIN not defined
         { WSAEALREADY, EALREADY },
         { WSAEINTR, EINTR },
         // WSARESTART not defined
@@ -55,6 +55,7 @@ SetErrnoFromWsaError()
     else
         errno = wsa;
 }
+
 int
 xaccept(int s, struct sockaddr *a, socklen_t *l)
 {
@@ -132,4 +133,4 @@ xsocket(int f, int t, int p)
     }
 }
 
-#endif
+#endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
