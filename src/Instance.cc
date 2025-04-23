@@ -239,7 +239,7 @@ PidFilenameHash()
     SquidMD5Final(hash, &ctx);
 
     // converts raw hash byte at a given position to a filename-suitable character
-    auto hashAt = [&hash](const size_t idx) {
+    const auto hashAt = [&hash](const size_t idx) {
         const auto safeChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         return safeChars[hash[idx] % strlen(safeChars)];
     };
