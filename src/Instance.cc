@@ -254,6 +254,7 @@ Instance::NamePrefix(const char * const head, const char * const tail)
 {
     SBuf buf(head);
     buf.append(service_name);
+    buf.append("-");
     buf.append(PidFilenameHash());
     if (tail) {
         buf.append(tail);
