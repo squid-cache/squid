@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "base/File.h"
-#include "base/IoManip.h"
 #include "debug/Messages.h"
 #include "fs_io.h"
 #include "Instance.h"
@@ -239,16 +238,15 @@ PidFilenameHash()
     SquidMD5Update(&ctx, name.rawContent(), name.length());
     SquidMD5Final(hash, &ctx);
 
-    // TODO: Refactor storeKeyText() and use similar SQUID_MD5_DIGEST printing code in both places
-    uint16_t prefix; // we do not need to store more than 0xFFFF because our output is limited to four hex digits
-    static_assert(sizeof(prefix) <= sizeof(hash));
-    memcpy(&prefix, hash, sizeof(prefix));
+    // convert raw hash byte at the given position to a filename-suitable character
+    auto hashAt = [&hash](const size_t idx) {
+        const auto code_table = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        return code_table[hash[idx] % strlen(code_table)];
+    };
 
-    // * use hex to fit more random/hash bits into short output
-    // * limit to four hex characters to keep output short
-    // * use uppercase to reduce chances of output being mistaken for a word
-    // * produce at least four digits to make output length constant
-    return ToSBuf(asHex(prefix & 0xFFFF).upperCase().minDigits(4));
+    SBuf pid_filename_hash;
+    pid_filename_hash.appendf("%c%c%c%c", hashAt(0), hashAt(1), hashAt(2), hashAt(3));
+    return pid_filename_hash;
 }
 
 SBuf
