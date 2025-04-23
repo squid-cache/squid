@@ -226,7 +226,7 @@ Instance::WriteOurPid()
 /// A hash that is likely to be unique across Squid instances running on the
 /// same host because such concurrent instances should use unique PID filenames.
 /// All instances with disabled PID file maintenance have the same hash value.
-/// \returns a 4-character string suitable for use in file names
+/// \returns a 4-character string suitable for use in file names and similar contexts
 static SBuf
 PidFilenameHash()
 {
@@ -238,15 +238,15 @@ PidFilenameHash()
     SquidMD5Update(&ctx, name.rawContent(), name.length());
     SquidMD5Final(hash, &ctx);
 
-    // convert raw hash byte at the given position to a filename-suitable character
+    // converts raw hash byte at a given position to a filename-suitable character
     auto hashAt = [&hash](const size_t idx) {
-        const auto code_table = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        return code_table[hash[idx] % strlen(code_table)];
+        const auto safeChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        return safeChars[hash[idx] % strlen(safeChars)];
     };
 
-    SBuf pid_filename_hash;
-    pid_filename_hash.appendf("%c%c%c%c", hashAt(0), hashAt(1), hashAt(2), hashAt(3));
-    return pid_filename_hash;
+    SBuf buf;
+    buf.appendf("%c%c%c%c", hashAt(0), hashAt(1), hashAt(2), hashAt(3));
+    return buf;
 }
 
 SBuf

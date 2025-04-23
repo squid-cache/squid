@@ -8,11 +8,10 @@
 
 #include "squid.h"
 #include "Instance.h"
+#include "sbuf/SBuf.h"
 
 #define STUB_API "Instance.cc"
 #include "tests/STUB.h"
-
-#include "sbuf/SBuf.h"
 
 void Instance::ThrowIfAlreadyRunning() STUB
 void Instance::WriteOurPid() STUB

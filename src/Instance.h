@@ -36,7 +36,7 @@ pid_t Other();
 /// instances concurrently running on the same host (as long as they do not
 /// disable PID file maintenance).
 /// \param head is used at the beginning of the generated name
-/// \param tail, when given, is used at the end of the generated name
+/// \param tail is used at the end of the generated name (when not nil)
 /// \returns a head-...-tail string suitable for making file and shm segment names
 SBuf NamePrefix(const char *head, const char *tail = nullptr);
 
