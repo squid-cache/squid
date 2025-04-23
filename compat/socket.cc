@@ -90,7 +90,10 @@ xclose(int fd)
             SetErrnoFromWsaError();
         return result;
     } else {
-        return _close(fd);
+        const auto result = _close(fd);
+        if (result)
+            SetErrnoFromWsaError();
+        return result;
     }
 }
 
