@@ -22,7 +22,7 @@ static void
 SetErrnoFromWsaError()
 {
     // POSIX codes which socket API users may care about
-    static const std::map<int, int> CodeMap = {
+    static const auto *CodeMap = new std::map<int, int> {
 
         // values checked for by accept(2) callers
         { WSAECONNABORTED, ECONNABORTED },
@@ -49,8 +49,8 @@ SetErrnoFromWsaError()
     };
 
     const auto wsa = WSAGetLastError();
-    const auto itr = CodeMap.find(wsa);
-    if (itr != CodeMap.cend())
+    const auto itr = CodeMap->find(wsa);
+    if (itr != CodeMap->cend())
         errno = itr->second;
     else
         errno = wsa;
