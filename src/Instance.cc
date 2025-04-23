@@ -257,6 +257,7 @@ Instance::NamePrefix(const char * const head, const char * const tail)
     buf.append("-");
     buf.append(PidFilenameHash());
     if (tail) {
+        // TODO: Remove leading "-" from callers and explicitly add it here.
         buf.append(tail);
     }
     return buf;
