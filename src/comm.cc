@@ -432,7 +432,7 @@ comm_openex(int sock_type,
         comm_set_v6only(conn->fd, 0);
 
     comm_init_opened(conn, note, AI);
-    new_socket = xsocket(comm_apply_flags(conn->fd, addr, flags, AI);
+    new_socket = comm_apply_flags(conn->fd, addr, flags, AI);
 
     Ip::Address::FreeAddr(AI);
 
@@ -1697,7 +1697,7 @@ comm_open_uds(int sock_type,
 
     debugs(50, 3, "Attempt open socket for: " << addr->sun_path);
 
-    if ((new_socket = AI.ai_family, AI.ai_socktype, AI.ai_protocol)) < 0) {
+    if ((new_socket = xsocket(AI.ai_family, AI.ai_socktype, AI.ai_protocol)) < 0) {
         int xerrno = errno;
         /* Increase the number of reserved fd's if calls to socket()
          * are failing because the open file table is full.  This
