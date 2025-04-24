@@ -18,6 +18,9 @@
 
 #if _SQUID_WINDOWS_ || _SQUID_MINGW_
 
+// use to test errors for _get_osfhandle()
+static const auto INVALID_HANDLE = (intptr_t)INVALID_HANDLE_VALUE;
+
 /// Provide POSIX accept(2) API on MinGW and Visual Studio build environments
 int xaccept(int s, struct sockaddr *a, socklen_t *l);
 

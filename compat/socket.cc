@@ -59,7 +59,12 @@ SetErrnoFromWsaError()
 int
 xaccept(int s, struct sockaddr *a, socklen_t *l)
 {
-    const auto result = ::accept(_get_osfhandle(s), a, l);
+    const auto handle = _get_osfhandle(s);
+    if (handle == INVALID_HANDLE) {
+        // errno is already set by _get_osfhandle()
+        return EBADF;
+    }
+    const auto result = ::accept(handle, a, l);
     if (result == INVALID_SOCKET) {
         SetErrnoFromWsaError();
         return SOCKET_ERROR;
@@ -71,7 +76,12 @@ xaccept(int s, struct sockaddr *a, socklen_t *l)
 int
 xbind(int s, const struct sockaddr * n, socklen_t l)
 {
-    const auto result = ::bind(_get_osfhandle(s),n,l);
+    const auto handle = _get_osfhandle(s);
+    if (handle == INVALID_HANDLE) {
+        // errno is already set by _get_osfhandle()
+        return EBADF;
+    }
+    const auto result = ::bind(handle,n,l);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
@@ -80,10 +90,14 @@ xbind(int s, const struct sockaddr * n, socklen_t l)
 int
 xclose(int fd)
 {
+    auto sock = _get_osfhandle(fd);
+    if (sock == INVALID_HANDLE) {
+        // errno is already set by _get_osfhandle()
+        return EBADF;
+    }
+
     char l_so_type[sizeof(int)];
     int l_so_type_siz = sizeof(l_so_type);
-    auto sock = _get_osfhandle(fd);
-
     if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0) {
         const auto result = closesocket(sock);
         if (result == SOCKET_ERROR)
@@ -100,7 +114,12 @@ xclose(int fd)
 int
 xconnect(int s, const struct sockaddr * n, socklen_t l)
 {
-    const auto result = ::connect(_get_osfhandle(s),n,l);
+    const auto handle = _get_osfhandle(s);
+    if (handle == INVALID_HANDLE) {
+        // errno is already set by _get_osfhandle()
+        return EBADF;
+    }
+    const auto result = ::connect(handle,n,l);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
@@ -118,7 +137,12 @@ xgethostbyname(const char *n)
 int
 xsetsockopt(int s, int l, int o, const void *v, socklen_t n)
 {
-    const auto result = ::setsockopt(_get_osfhandle(s), l, o, static_cast<const char *>(v), n);
+    const auto handle = _get_osfhandle(s);
+    if (handle == INVALID_HANDLE) {
+        // errno is already set by _get_osfhandle()
+        return EBADF;
+    }
+    const auto result = ::setsockopt(handle, l, o, static_cast<const char *>(v), n);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
