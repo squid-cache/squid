@@ -672,7 +672,8 @@ comm_connect_addr(int sock, const Ip::Address &address)
         ++ statCounter.syscalls.sock.connects;
 
         errno = 0;
-        if ((x = xconnect(sock, AI->ai_addr, AI->ai_addrlen)) < 0) {
+        x = xconnect(sock, AI->ai_addr, AI->ai_addrlen);
+        if (x < 0) {
             xerrno = errno;
             debugs(5,5, "sock=" << sock << ", addrinfo(" <<
                    " flags=" << AI->ai_flags <<
