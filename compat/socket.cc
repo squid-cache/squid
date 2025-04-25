@@ -143,7 +143,7 @@ xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)
     const auto handle = _get_osfhandle(socketFd);
     if (handle == INVALID_HANDLE) {
         // errno is already set by _get_osfhandle()
-        return EBADF;
+        return SOCKET_ERROR;
     }
     const auto result = ::setsockopt(handle, l, o, static_cast<const char *>(v), n);
     if (result == SOCKET_ERROR)
