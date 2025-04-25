@@ -47,7 +47,7 @@ xclose(int fd)
 }
 
 inline int
-xopen(const char *filename, int oflag, int pmode = 0)
+xopen(const char *filename, int oflag, int pmode)
 {
     return ::open(filename, oflag, pmode);
 }
