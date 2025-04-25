@@ -280,9 +280,6 @@ struct timezone {
 
 #include <io.h>
 
-#ifndef _PATH_DEVNULL
-#define _PATH_DEVNULL "NUL"
-#endif
 
 #ifndef EISCONN
 #define EISCONN WSAEISCONN

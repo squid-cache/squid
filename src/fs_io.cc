@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "comm/Loops.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "fd.h"
 #include "fde.h"
 #include "fs_io.h"

@@ -14,6 +14,7 @@
 
 #include "base/IoManip.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "debug/Stream.h"
 #include "eui/Eui48.h"
 #include "globals.h"

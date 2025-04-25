@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "DiskIO/DiskDaemon/diomsg.h"
 #include "hash.h"
 

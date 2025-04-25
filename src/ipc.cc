@@ -12,6 +12,7 @@
 #include "comm/Connection.h"
 #include "compat/pipe.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"

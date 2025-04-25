@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "debug/Messages.h"
 #include "ip/Address.h"
 #include "ip/tools.h"

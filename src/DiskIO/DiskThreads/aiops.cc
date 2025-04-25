@@ -14,6 +14,7 @@
 
 #include "squid.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "DiskThreads.h"
 #include "SquidConfig.h"

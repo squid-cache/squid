@@ -9,6 +9,7 @@
 #include "squid.h"
 
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include <cassert>
 #include <cerrno>
 #include <csignal>

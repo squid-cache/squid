@@ -12,6 +12,7 @@
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "HttpReply.h"
 #include "ipc/Port.h"
 #include "mgr/Action.h"

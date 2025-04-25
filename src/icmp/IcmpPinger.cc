@@ -15,6 +15,7 @@
 #if USE_ICMP
 
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "debug/Stream.h"
 #include "Icmp4.h"
 #include "Icmp6.h"

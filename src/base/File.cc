@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "base/File.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "debug/Stream.h"
 #include "sbuf/Stream.h"
 #include "tools.h"

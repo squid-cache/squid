@@ -13,6 +13,7 @@
 #include "cache_cf.h"
 #include "CollapsedForwarding.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"

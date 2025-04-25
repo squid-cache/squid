@@ -22,6 +22,7 @@
 #include "comm/Write.h"
 #include "compat/cmsg.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "DescriptorSet.h"
 #include "event.h"
 #include "fd.h"

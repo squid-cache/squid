@@ -14,6 +14,7 @@
 #include "squid.h"
 #include "comm/Connection.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "fde.h"
 #include "ip/Intercept.h"
 #include "ip/tools.h"

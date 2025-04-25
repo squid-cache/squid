@@ -58,6 +58,7 @@
 #include "auth/basic/RADIUS/radius.h"
 #include "base/Random.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "helper/protocol_defines.h"
 #include "md5.h"
 

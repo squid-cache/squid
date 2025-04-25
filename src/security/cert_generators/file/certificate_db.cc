@@ -10,6 +10,7 @@
 #include "base/HardFun.h"
 #include "base/TextException.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "sbuf/Stream.h"
 #include "security/cert_generators/file/certificate_db.h"
 
