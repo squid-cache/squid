@@ -20,39 +20,39 @@
 static const auto INVALID_HANDLE = (intptr_t)INVALID_HANDLE_VALUE;
 
 /// Provide POSIX accept(2) API on MinGW and Visual Studio build environments
-int xaccept(int, struct sockaddr *, socklen_t *);
+int xaccept(int socketFd, struct sockaddr *, socklen_t *);
 
 /// Provide POSIX bind(2) API on MinGW and Visual Studio build environments
-int xbind(int, const struct sockaddr *, socklen_t);
+int xbind(int socketFd, const struct sockaddr *, socklen_t);
 
 /// Provide POSIX connect(2) API on MinGW and Visual Studio build environments
-int xconnect(int, const struct sockaddr *, socklen_t);
+int xconnect(int socketFd, const struct sockaddr *, socklen_t);
 
 /// Provide POSIX close(2) API on MinGW and Visual Studio build environments
-int xclose(int);
+int xclose(int fd);
 
 /// Provide POSIX gethostbyname(2) API on MinGW and Visual Studio build environments
-struct hostent *xgethostbyname(const char *);
+struct hostent *xgethostbyname(const char * name);
 
 /// Provide POSIX setsockopt(2) API on MinGW and Visual Studio build environments
-int xsetsockopt(int, int, int, const void *, socklen_t);
+int xsetsockopt(int socketFd, int level, int option_name, const void * value, socklen_t len);
 
 /// Provide POSIX socket(2) API on MinGW and Visual Studio build environments
-int xsocket(int, int, int);
+int xsocket(int domain, int type, int protocol);
 
 #if !(_SQUID_WINDOWS_ || _SQUID_MINGW_)
 // Windows and MinGW implementations are in compat/socket.cc
 
 inline int
-xaccept(int s, struct sockaddr *a, socklen_t *l)
+xaccept(int socketFd, struct sockaddr *a, socklen_t *l)
 {
-    return accept(s,a,l);
+    return accept(socketFd, a, l);
 }
 
 inline int
-xbind(int s, const struct sockaddr * n, socklen_t l)
+xbind(int socketFd, const struct sockaddr * n, socklen_t l)
 {
-    return bind(s,n,l);
+    return bind(socketFd, n, l);
 }
 
 inline int
@@ -62,29 +62,28 @@ xclose(int fd)
 }
 
 inline int
-xconnect(int s, const struct sockaddr * n, socklen_t l)
+xconnect(int socketFd, const struct sockaddr * n, socklen_t l)
 {
-    return connect(s,n,l);
+    return connect(socketFd, n, l);
 }
 
 inline struct hostent *
-xgethostbyname(const char *n)
+xgethostbyname(const char *name)
 {
-    return gethostbyname(n);
+    return gethostbyname(name);
 }
 
 inline int
-xsetsockopt(int s, int l, int o, const void *v, socklen_t n)
+xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)
 {
-    return setsockopt(s, l, o, v, n);
+    return setsockopt(socketFd, l, o, v, n);
 }
 
 inline int
-xsocket(int f, int t, int p)
+xsocket(int domain, int type, int protocol)
 {
-    return ::socket(f, t, p);
+    return ::socket(domain, type, protocol);
 }
-
 
 #endif /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 

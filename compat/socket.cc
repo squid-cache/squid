@@ -57,9 +57,9 @@ SetErrnoFromWsaError()
 }
 
 int
-xaccept(int s, struct sockaddr *a, socklen_t *l)
+xaccept(int socketFd, struct sockaddr *a, socklen_t *l)
 {
-    const auto handle = _get_osfhandle(s);
+    const auto handle = _get_osfhandle(socketFd);
     if (handle == INVALID_HANDLE) {
         // errno is already set by _get_osfhandle()
         return EBADF;
@@ -74,9 +74,9 @@ xaccept(int s, struct sockaddr *a, socklen_t *l)
 }
 
 int
-xbind(int s, const struct sockaddr * n, socklen_t l)
+xbind(int socketFd, const struct sockaddr * n, socklen_t l)
 {
-    const auto handle = _get_osfhandle(s);
+    const auto handle = _get_osfhandle(socketFd);
     if (handle == INVALID_HANDLE) {
         // errno is already set by _get_osfhandle()
         return EBADF;
@@ -112,9 +112,9 @@ xclose(int fd)
 }
 
 int
-xconnect(int s, const struct sockaddr * n, socklen_t l)
+xconnect(int socketFd, const struct sockaddr * n, socklen_t l)
 {
-    const auto handle = _get_osfhandle(s);
+    const auto handle = _get_osfhandle(socketFd);
     if (handle == INVALID_HANDLE) {
         // errno is already set by _get_osfhandle()
         return EBADF;
@@ -126,18 +126,18 @@ xconnect(int s, const struct sockaddr * n, socklen_t l)
 }
 
 struct hostent *
-xgethostbyname(const char *n)
+xgethostbyname(const char *name)
 {
-    auto result = ::gethostbyname(n);
+    auto result = ::gethostbyname(name);
     if (!result)
         SetErrnoFromWsaError();
     return result;
 }
 
 int
-xsetsockopt(int s, int l, int o, const void *v, socklen_t n)
+xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)
 {
-    const auto handle = _get_osfhandle(s);
+    const auto handle = _get_osfhandle(socketFd);
     if (handle == INVALID_HANDLE) {
         // errno is already set by _get_osfhandle()
         return EBADF;
@@ -149,9 +149,9 @@ xsetsockopt(int s, int l, int o, const void *v, socklen_t n)
 }
 
 int
-xsocket(int f, int t, int p)
+xsocket(int domain, int type, int protocol)
 {
-    auto result = ::socket(f, t, p);
+    auto result = ::socket(domain, type, protocol);
     if (result == INVALID_SOCKET) {
         SetErrnoFromWsaError();
         return SOCKET_ERROR;
