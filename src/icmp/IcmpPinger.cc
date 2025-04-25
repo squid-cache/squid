@@ -103,7 +103,7 @@ IcmpPinger::Open(void)
 
     x = xconnect(icmp_sock, (struct sockaddr *) &PS, sizeof(PS));
 
-    if (SOCKET_ERROR == x) {
+    if (x != 0) {
         xerrno = errno;
         getCurrentTime();
         debugs(42, DBG_CRITICAL, MYNAME << "connect: " << xstrerr(xerrno));
