@@ -20,25 +20,25 @@
 static const auto INVALID_HANDLE = (intptr_t)INVALID_HANDLE_VALUE;
 
 /// Provide POSIX accept(2) API on MinGW and Visual Studio build environments
-int xaccept(int s, struct sockaddr *a, socklen_t *l);
+int xaccept(int, struct sockaddr *, socklen_t *);
 
 /// Provide POSIX bind(2) API on MinGW and Visual Studio build environments
-int xbind(int s, const struct sockaddr * n, socklen_t l);
+int xbind(int, const struct sockaddr *, socklen_t);
 
 /// Provide POSIX connect(2) API on MinGW and Visual Studio build environments
-int xconnect(int s, const struct sockaddr * n, socklen_t l);
+int xconnect(int, const struct sockaddr *, socklen_t);
 
 /// Provide POSIX close(2) API on MinGW and Visual Studio build environments
-int xclose(int fd);
+int xclose(int);
 
 /// Provide POSIX gethostbyname(2) API on MinGW and Visual Studio build environments
-struct hostent *xgethostbyname(const char *n);
+struct hostent *xgethostbyname(const char *);
 
 /// Provide POSIX setsockopt(2) API on MinGW and Visual Studio build environments
-int xsetsockopt(int s, int l, int o, const void *v, socklen_t n);
+int xsetsockopt(int, int, int, const void *, socklen_t);
 
 /// Provide POSIX socket(2) API on MinGW and Visual Studio build environments
-int xsocket(int f, int t, int p);
+int xsocket(int, int, int);
 
 #if !(_SQUID_WINDOWS_ || _SQUID_MINGW_)
 // Windows and MinGW implementations are in compat/socket.cc
