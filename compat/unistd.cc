@@ -8,14 +8,15 @@
 
 #include "squid.h"
 #include "compat/unistd.h"
+#include "compat/wserrno.h"
 
 int
 xclose(int fd)
 {
     auto sock = _get_osfhandle(fd);
-    if (sock == INVALID_HANDLE) {
+    if (sock == intptr_t(INVALID_HANDLE_VALUE)) {
         // errno is already set by _get_osfhandle()
-        return SOCKET_ERROR;
+        return -1;
     }
 
     char l_so_type[sizeof(int)];

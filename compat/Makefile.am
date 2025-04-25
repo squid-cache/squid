@@ -81,6 +81,8 @@ libcompatsquid_la_SOURCES = \
 	valgrind.h \
 	win32_maperror.cc \
 	win32_maperror.h \
+	wserrno.cc \
+	wserrno.h \
 	xalloc.cc \
 	xalloc.h \
 	xis.h \

@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "compat/netdb.h"
+#include "compat/wserrno.h"
 
 struct hostent *
 xgethostbyname(const char *name)
