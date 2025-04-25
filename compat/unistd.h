@@ -12,7 +12,6 @@
 /// Provide POSIX close(2) API on MinGW and Visual Studio build environments
 int xclose(int fd);
 
-
 #if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
 
 #ifndef _PATH_DEVNULL

@@ -9,9 +9,6 @@
 #ifndef SQUID_COMPAT_SOCKET_H
 #define SQUID_COMPAT_SOCKET_H
 
-#if HAVE_NETDB_H
-#include <netdb.h>
-#endif
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -24,9 +21,6 @@ int xbind(int socketFd, const struct sockaddr *, socklen_t);
 
 /// Provide POSIX connect(2) API on MinGW and Visual Studio build environments
 int xconnect(int socketFd, const struct sockaddr *, socklen_t);
-
-/// Provide POSIX gethostbyname(2) API on MinGW and Visual Studio build environments
-struct hostent *xgethostbyname(const char * name);
 
 /// Provide POSIX setsockopt(2) API on MinGW and Visual Studio build environments
 int xsetsockopt(int socketFd, int level, int option_name, const void * value, socklen_t len);
@@ -53,12 +47,6 @@ inline int
 xconnect(int socketFd, const struct sockaddr * n, socklen_t l)
 {
     return connect(socketFd, n, l);
-}
-
-inline struct hostent *
-xgethostbyname(const char *name)
-{
-    return gethostbyname(name);
 }
 
 inline int

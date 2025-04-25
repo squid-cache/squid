@@ -104,15 +104,6 @@ xconnect(int socketFd, const struct sockaddr * n, socklen_t l)
     return result;
 }
 
-struct hostent *
-xgethostbyname(const char *name)
-{
-    auto result = ::gethostbyname(name);
-    if (!result)
-        SetErrnoFromWsaError();
-    return result;
-}
-
 int
 xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)
 {
