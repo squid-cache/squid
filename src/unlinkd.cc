@@ -11,6 +11,7 @@
 #include "squid.h"
 
 #if USE_UNLINKD
+#include "compat/unistd.h"
 #include "fd.h"
 #include "fde.h"
 #include "fs_io.h"
@@ -88,7 +89,7 @@ unlinkdUnlink(const char *path)
         int bytes_read;
         int i;
         char rbuf[512];
-        bytes_read = read(unlinkd_rfd, rbuf, 511);
+        bytes_read = xread(unlinkd_rfd, rbuf, 511);
 
         if (bytes_read > 0) {
             rbuf[bytes_read] = '\0';

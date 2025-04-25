@@ -286,7 +286,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         if (type == IPC_UDP_SOCKET)
             x = comm_udp_recv(prfd, hello_buf, sizeof(hello_buf)-1, 0);
         else
-            x = read(prfd, hello_buf, sizeof(hello_buf)-1);
+            x = xread(prfd, hello_buf, sizeof(hello_buf)-1);
         xerrno = errno;
         if (x >= 0)
             hello_buf[x] = '\0';

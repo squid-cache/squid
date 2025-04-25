@@ -13,6 +13,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -613,7 +614,7 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        x = read(p2c[0], buf1, bufSz-1);
+        x = xread(p2c[0], buf1, bufSz-1);
 
         if (x < 0) {
             int xerrno = errno;
@@ -640,7 +641,7 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        x = read(p2c[0], buf1, bufSz-1);
+        x = xread(p2c[0], buf1, bufSz-1);
 
         if (x < 0) {
             int xerrno = errno;
@@ -805,7 +806,7 @@ ipc_thread_2(void *in_params)
 
     for (;;) {
         if (type == IPC_TCP_SOCKET)
-            x = read(rfd, buf2, bufSz-1);
+            x = xread(rfd, buf2, bufSz-1);
         else
             x = recv(rfd, (void *)buf2, bufSz-1, 0);
 

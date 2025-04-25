@@ -43,4 +43,17 @@ xopen(const char *filename, int oflag, int pmode)
     return _open(filename, oflag, pmode & (_S_IREAD | _S_IWRITE));
 }
 
+int
+xread(int fd, void * buf, size_t sz)
+{
+    char l_so_type[sizeof(int)];
+    int l_so_type_siz = sizeof(l_so_type);
+    SOCKET sock = _get_osfhandle(fd);
+
+    if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
+        return ::recv(sock, (char FAR *) buf, (int)sz, 0);
+    else
+        return _read(fd, buf, (unsigned int)sz);
+}
+
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */

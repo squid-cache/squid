@@ -27,6 +27,8 @@ int xclose(int fd);
 
 int xopen(const char *filename, int oflag, int pmode = 0);
 
+int xread(int fd, void * buf, size_t sz);
+
 #if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
 
 #ifndef _PATH_DEVNULL
@@ -46,6 +48,12 @@ inline int
 xopen(const char *filename, int oflag, int pmode = 0)
 {
     return ::open(filename, oflag, pmode);
+}
+
+int
+xread(int fd, void * buf, size_t sz)
+{
+    return ::read(fd, buf, sz);
 }
 
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */

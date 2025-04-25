@@ -67,7 +67,7 @@ IcmpPinger::Open(void)
 
     setmode(0, O_BINARY);
     setmode(1, O_BINARY);
-    x = read(0, buf, sizeof(wpi));
+    x = xread(0, buf, sizeof(wpi));
 
     if (x < (int)sizeof(wpi)) {
         xerrno = errno;
@@ -80,7 +80,7 @@ IcmpPinger::Open(void)
     memcpy(&wpi, buf, sizeof(wpi));
 
     write(1, "OK\n", 3);
-    x = read(0, buf, sizeof(PS));
+    x = xread(0, buf, sizeof(PS));
 
     if (x < (int)sizeof(PS)) {
         xerrno = errno;

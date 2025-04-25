@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
+#include "compat/unistd.h"
 #include "debug/Messages.h"
 #include "debug/Stream.h"
 #include "fatal.h"
@@ -128,7 +129,7 @@ file_write_method(int fd, const char *buf, int len)
 int
 default_read_method(int fd, char *buf, int len)
 {
-    return read(fd, buf, len);
+    return xread(fd, buf, len);
 }
 
 int

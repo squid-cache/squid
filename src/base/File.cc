@@ -252,7 +252,7 @@ File::readSmall(const SBuf::size_type minBytes, const SBuf::size_type maxBytes)
         throw TexcHere(sysCallFailure("ReadFile", WindowsErrorMessage(savedError)));
     }
 #else
-    const auto result = ::read(fd_, rawBuf, readLimit);
+    const auto result = xread(fd_, rawBuf, readLimit);
     if (result < 0) {
         const auto savedErrno = errno;
         throw TexcHere(sysCallError("read", savedErrno));

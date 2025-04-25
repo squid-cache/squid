@@ -147,7 +147,7 @@ do_read(diomsg * r, int, char *buf)
         }
     }
 
-    x = read(fs->fd, buf, readlen);
+    x = xread(fs->fd, buf, readlen);
     DEBUG(2) {
         fprintf(stderr, "%d READ %d,%d,%" PRId64 " ret %d\n", (int) mypid,
                 fs->fd, readlen, (int64_t)r->offset, x);
@@ -372,7 +372,7 @@ main(int argc, char *argv[])
 
         if (rlen < 0) {
             if (EINTR == errno) {
-                if (read(0, rbuf, 512) <= 0) {
+                if (xread(0, rbuf, 512) <= 0) {
                     if (EWOULDBLOCK == errno)
                         (void) 0;
                     else if (EAGAIN == errno)
