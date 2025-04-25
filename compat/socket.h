@@ -16,8 +16,6 @@
 #include <sys/socket.h>
 #endif
 
-#if _SQUID_WINDOWS_ || _SQUID_MINGW_
-
 // use to test errors for _get_osfhandle()
 static const auto INVALID_HANDLE = (intptr_t)INVALID_HANDLE_VALUE;
 
@@ -42,7 +40,8 @@ int xsetsockopt(int s, int l, int o, const void *v, socklen_t n);
 /// Provide POSIX socket(2) API on MinGW and Visual Studio build environments
 int xsocket(int f, int t, int p);
 
-#else /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
+#if !(_SQUID_WINDOWS_ || _SQUID_MINGW_)
+// Windows and MinGW implementations are in compat/socket.cc
 
 inline int
 xaccept(int s, struct sockaddr *a, socklen_t *l)
