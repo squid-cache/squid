@@ -16,9 +16,6 @@
 #include <sys/socket.h>
 #endif
 
-// use to test errors for _get_osfhandle()
-static const auto INVALID_HANDLE = (intptr_t)INVALID_HANDLE_VALUE;
-
 /// Provide POSIX accept(2) API on MinGW and Visual Studio build environments
 int xaccept(int socketFd, struct sockaddr *, socklen_t *);
 

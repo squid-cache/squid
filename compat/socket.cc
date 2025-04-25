@@ -14,6 +14,9 @@
 
 static_assert(SOCKET_ERROR == -1);
 
+// use to test errors for _get_osfhandle() without needing type casting
+static const auto INVALID_HANDLE = (intptr_t)INVALID_HANDLE_VALUE;
+
 /**
  * Squid socket code is written to handle POSIX errno codes.
  * Set errno to the relevant POSIX or WSA code.
@@ -62,7 +65,7 @@ xaccept(int socketFd, struct sockaddr *a, socklen_t *l)
     const auto handle = _get_osfhandle(socketFd);
     if (handle == INVALID_HANDLE) {
         // errno is already set by _get_osfhandle()
-        return EBADF;
+        return SOCKET_ERROR;
     }
     const auto result = ::accept(handle, a, l);
     if (result == INVALID_SOCKET) {
@@ -79,7 +82,7 @@ xbind(int socketFd, const struct sockaddr * n, socklen_t l)
     const auto handle = _get_osfhandle(socketFd);
     if (handle == INVALID_HANDLE) {
         // errno is already set by _get_osfhandle()
-        return EBADF;
+        return SOCKET_ERROR;
     }
     const auto result = ::bind(handle,n,l);
     if (result == SOCKET_ERROR)
@@ -93,7 +96,7 @@ xclose(int fd)
     auto sock = _get_osfhandle(fd);
     if (sock == INVALID_HANDLE) {
         // errno is already set by _get_osfhandle()
-        return EBADF;
+        return SOCKET_ERROR;
     }
 
     char l_so_type[sizeof(int)];
@@ -117,7 +120,7 @@ xconnect(int socketFd, const struct sockaddr * n, socklen_t l)
     const auto handle = _get_osfhandle(socketFd);
     if (handle == INVALID_HANDLE) {
         // errno is already set by _get_osfhandle()
-        return EBADF;
+        return SOCKET_ERROR;
     }
     const auto result = ::connect(handle,n,l);
     if (result == SOCKET_ERROR)
