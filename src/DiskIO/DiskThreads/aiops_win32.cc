@@ -662,7 +662,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
 
     case _AIO_OP_CLOSE:
         if (cancelled && requestp->ret < 0)
-            /* The xclose() was cancelled and never got executed */
+            /* The close() was cancelled and never got executed */
             xclose(requestp->fd);
 
         break;
