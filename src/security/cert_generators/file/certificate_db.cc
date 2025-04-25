@@ -54,7 +54,7 @@ void Ssl::Lock::lock()
     hFile = CreateFile(TEXT(filename.c_str()), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE)
 #else
-    fd = open(filename.c_str(), O_RDWR);
+    fd = xopen(filename.c_str(), O_RDWR);
     if (fd == -1)
 #endif
         throw TextException(ToSBuf("Failed to open file ", filename), Here());

@@ -73,7 +73,7 @@ file_open(const char *path, int mode)
 
     errno = 0;
 
-    fd = open(path, mode, 0644);
+    fd = xopen(path, mode, 0644);
 
     ++ statCounter.syscalls.disk.opens;
 

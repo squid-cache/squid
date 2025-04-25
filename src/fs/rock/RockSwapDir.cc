@@ -241,7 +241,7 @@ Rock::SwapDir::create()
     }
 
     debugs (47, DBG_IMPORTANT, "Creating Rock db: " << filePath);
-    const int swap = open(filePath, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0600);
+    const int swap = xopen(filePath, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0600);
     if (swap < 0)
         createError("create");
 

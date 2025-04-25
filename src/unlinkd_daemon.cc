@@ -53,7 +53,7 @@ main(int, char *[])
 {
     std::string sbuf;
     close(2);
-    if (open(_PATH_DEVNULL, O_RDWR) < 0) {
+    if (xopen(_PATH_DEVNULL, O_RDWR) < 0) {
         ; // the irony of having to close(2) earlier is that we cannot report this failure.
     }
     while (getline(std::cin, sbuf)) {

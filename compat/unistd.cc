@@ -7,6 +7,9 @@
  */
 
 #include "squid.h"
+
+#if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
+
 #include "compat/unistd.h"
 #include "compat/wserrno.h"
 
@@ -34,3 +37,10 @@ xclose(int fd)
     }
 }
 
+int
+xopen(const char *filename, int oflag, int pmode)
+{
+    return _open(filename, oflag, pmode & (_S_IREAD | _S_IWRITE));
+}
+
+#endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */

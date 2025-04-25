@@ -60,7 +60,7 @@ do_open(diomsg * r, int, const char *buf)
     /*
      * note r->offset holds open() flags
      */
-    fd = open(buf, r->offset, 0600);
+    fd = xopen(buf, r->offset, 0600);
 
     if (fd < 0) {
         DEBUG(1) {

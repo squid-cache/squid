@@ -115,7 +115,7 @@ main(int argc, char *argv[])
      * able to collect and manage modules' stderr first.
      */
     xclose(2);
-    t = open(_PATH_DEVNULL, O_RDWR);
+    t = xopen(_PATH_DEVNULL, O_RDWR);
     assert(t > -1);
     dup2(t, 2);
 

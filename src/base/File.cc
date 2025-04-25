@@ -184,7 +184,7 @@ File::open(const FileOpeningConfig &cfg)
     enter_suid();
     if (cfg.creationMask)
         oldCreationMask = umask(cfg.creationMask); // XXX: Why here? Should not this be set for the whole Squid?
-    fd_ = ::open(filename, cfg.openFlags, cfg.openMode);
+    fd_ = xopen(filename, cfg.openFlags, cfg.openMode);
     const auto savedErrno = errno;
     if (cfg.creationMask)
         umask(oldCreationMask);

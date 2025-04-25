@@ -7,6 +7,9 @@
  */
 
 #include "squid.h"
+
+#if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
+
 #include "compat/netdb.h"
 #include "compat/wserrno.h"
 
@@ -19,3 +22,4 @@ xgethostbyname(const char *name)
     return result;
 }
 
+#endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */

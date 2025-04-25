@@ -9,8 +9,23 @@
 #ifndef SQUID_COMPAT_UNISTD_H
 #define SQUID_COMPAT_UNISTD_H
 
+#if HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
+
+// MSVC might not define these
+#ifndef _S_IREAD
+#define _S_IREAD 0x0100
+#endif
+
+#ifndef _S_IWRITE
+#define _S_IWRITE 0x0080
+#endif
+
 /// Provide POSIX close(2) API on MinGW and Visual Studio build environments
 int xclose(int fd);
+
+int xopen(const char *filename, int oflag, int pmode = 0);
 
 #if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
 
@@ -24,7 +39,13 @@ int xclose(int fd);
 inline int
 xclose(int fd)
 {
-    return close(fd);
+    return ::close(fd);
+}
+
+inline int
+xopen(const char *filename, int oflag, int pmode = 0)
+{
+    return ::open(filename, oflag, pmode);
 }
 
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */

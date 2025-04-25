@@ -11,6 +11,8 @@
 
 #include "squid.h"
 
+#include "compat/unistd.h"
+
 // The following code section is part of an EXPERIMENTAL native Windows NT/2000 Squid port.
 // Compiles only on MS Visual C++
 // CygWin appears not to need any of these
@@ -159,7 +161,7 @@ WIN32_truncate(const char *pathname, off_t length)
     int fd;
     int res = -1;
 
-    fd = open(pathname, O_RDWR);
+    fd = xopen(pathname, O_RDWR);
 
     if (fd == -1)
         errno = EBADF;

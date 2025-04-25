@@ -252,9 +252,9 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
         int save_errno;
         enter_suid();
 #ifdef IPNAT_NAME
-        natfd = open(IPNAT_NAME, O_RDONLY, 0);
+        natfd = xopen(IPNAT_NAME, O_RDONLY, 0);
 #else
-        natfd = open(IPL_NAT, O_RDONLY, 0);
+        natfd = xopen(IPL_NAT, O_RDONLY, 0);
 #endif
         save_errno = errno;
         leave_suid();
@@ -337,7 +337,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
     static int pffd = -1;
 
     if (pffd < 0)
-        pffd = open("/dev/pf", O_RDONLY);
+        pffd = xopen("/dev/pf", O_RDONLY);
 
     if (pffd < 0) {
         const auto xerrno = errno;

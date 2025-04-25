@@ -390,19 +390,6 @@ SQUIDCEXTERN THREADLOCAL int ws32_result;
 
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 
-#ifndef _S_IREAD
-#define _S_IREAD 0x0100
-#endif
-
-#ifndef _S_IWRITE
-#define _S_IWRITE 0x0080
-#endif
-
-inline int
-open(const char *filename, int oflag, int pmode = 0)
-{
-    return _open(filename, oflag, pmode & (_S_IREAD | _S_IWRITE));
-}
 #endif
 
 inline int

@@ -14,7 +14,7 @@
 #endif
 
 /// Provide POSIX gethostbyname(2) API on MinGW and Visual Studio build environments
-struct hostent *xgethostbyname(const char * name);
+struct hostent * xgethostbyname(const char * name);
 
 #if !(_SQUID_WINDOWS_ || _SQUID_MINGW_)
 // Windows and MinGW implementations are in compat/netdb.cc
