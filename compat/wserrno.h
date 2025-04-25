@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
- #ifndef SQUID_COMPAT_WSERNO_H
- #define SQUID_COMPAT_WSERNO_H
+#ifndef SQUID_COMPAT_WSERRNO_H
+#define SQUID_COMPAT_WSERRNO_H
 
 #if (SQUID_WINDOWS_ || _SQUID_MINGW_)
 
@@ -20,4 +20,4 @@ SetErrnoFromWsaError();
 
 #endif
 
-#endif /* SQUID_COMPAT_WSERNO_H */
+#endif /* SQUID_COMPAT_WSERRNO_H */
