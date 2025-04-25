@@ -251,7 +251,7 @@ Rock::SwapDir::create()
     memset(block, '\0', sizeof(block));
 
     for (off_t offset = 0; offset < maxSize(); offset += sizeof(block)) {
-        if (write(swap, block, sizeof(block)) != sizeof(block))
+        if (xwrite(swap, block, sizeof(block)) != sizeof(block))
             createError("write");
     }
 #else
@@ -260,7 +260,7 @@ Rock::SwapDir::create()
 
     char header[HeaderSize];
     memset(header, '\0', sizeof(header));
-    if (write(swap, header, sizeof(header)) != sizeof(header))
+    if (xwrite(swap, header, sizeof(header)) != sizeof(header))
         createError("write");
 #endif
 

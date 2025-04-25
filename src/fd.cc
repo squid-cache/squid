@@ -135,7 +135,7 @@ default_read_method(int fd, char *buf, int len)
 int
 default_write_method(int fd, const char *buf, int len)
 {
-    return write(fd, buf, len);
+    return xwrite(fd, buf, len);
 }
 
 int

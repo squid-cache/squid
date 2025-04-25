@@ -289,7 +289,7 @@ File::writeAll(const SBuf &data)
     }
     const auto bytesWritten = static_cast<size_t>(nBytesWritten);
 #else
-    const auto result = ::write(fd_, data.rawContent(), data.length());
+    const auto result = xwrite(fd_, data.rawContent(), data.length());
     if (result < 0) {
         const auto savedErrno = errno;
         throw TexcHere(sysCallError("write", savedErrno));

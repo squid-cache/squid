@@ -361,7 +361,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
             _exit(1);
         }
     } else {
-        if (write(cwfd, hello_string, strlen(hello_string) + 1) < 0) {
+        if (xwrite(cwfd, hello_string, strlen(hello_string) + 1) < 0) {
             xerrno = errno;
             debugs(54, DBG_CRITICAL, "write FD " << cwfd << ": " << xstrerr(xerrno));
             debugs(54, DBG_CRITICAL, "ERROR: ipcCreate: CHILD: hello write test failed");

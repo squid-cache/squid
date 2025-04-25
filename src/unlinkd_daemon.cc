@@ -12,6 +12,8 @@
 
 #include "squid.h"
 
+#include "compat/unistd.h"
+
 #include <iostream>
 #include <cstdio>
 #if HAVE_PATHS_H

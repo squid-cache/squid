@@ -742,7 +742,7 @@ squidaio_write(int fd, char *bufp, size_t bufs, off_t offset, int whence, squida
 static void
 squidaio_do_write(squidaio_request_t * requestp)
 {
-    requestp->ret = write(requestp->fd, requestp->bufferp, requestp->buflen);
+    requestp->ret = xwrite(requestp->fd, requestp->bufferp, requestp->buflen);
     requestp->err = errno;
 }
 

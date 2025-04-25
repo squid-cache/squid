@@ -604,7 +604,7 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        x = write(c2p[1], (const char *) &wpi, sizeof(wpi));
+        x = xwrite(c2p[1], (const char *) &wpi, sizeof(wpi));
 
         if (x < (ssize_t)sizeof(wpi)) {
             int xerrno = errno;
@@ -631,7 +631,7 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        x = write(c2p[1], (const char *) &PS_ipc, sizeof(PS_ipc));
+        x = xwrite(c2p[1], (const char *) &PS_ipc, sizeof(PS_ipc));
 
         if (x < (ssize_t)sizeof(PS_ipc)) {
             int xerrno = errno;
@@ -726,7 +726,7 @@ ipc_thread_1(void *in_params)
         debugs(54, 5, "ipc(" << prog << "," << pid << "): received from parent: " << rfc1738_escape_unescaped(buf1));
 
         if (type == IPC_TCP_SOCKET)
-            x = write(c2p[1], buf1, x);
+            x = xwrite(c2p[1], buf1, x);
         else
             x = send(pwfd_ipc, (const void *)buf1, x, 0);
 

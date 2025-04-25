@@ -73,20 +73,20 @@ IcmpPinger::Open(void)
         xerrno = errno;
         getCurrentTime();
         debugs(42, DBG_CRITICAL, MYNAME << " read: FD 0: " << xstrerr(xerrno));
-        write(1, "ERR\n", 4);
+        xwrite(1, "ERR\n", 4);
         return -1;
     }
 
     memcpy(&wpi, buf, sizeof(wpi));
 
-    write(1, "OK\n", 3);
+    xwrite(1, "OK\n", 3);
     x = xread(0, buf, sizeof(PS));
 
     if (x < (int)sizeof(PS)) {
         xerrno = errno;
         getCurrentTime();
         debugs(42, DBG_CRITICAL, MYNAME << " read: FD 0: " << xstrerr(xerrno));
-        write(1, "ERR\n", 4);
+        xwrite(1, "ERR\n", 4);
         return -1;
     }
 
@@ -98,7 +98,7 @@ IcmpPinger::Open(void)
         xerrno = errno;
         getCurrentTime();
         debugs(42, DBG_CRITICAL, MYNAME << "WSASocket: " << xstrerr(xerrno));
-        write(1, "ERR\n", 4);
+        xwrite(1, "ERR\n", 4);
         return -1;
     }
 
@@ -108,11 +108,11 @@ IcmpPinger::Open(void)
         xerrno = errno;
         getCurrentTime();
         debugs(42, DBG_CRITICAL, MYNAME << "connect: " << xstrerr(xerrno));
-        write(1, "ERR\n", 4);
+        xwrite(1, "ERR\n", 4);
         return -1;
     }
 
-    write(1, "OK\n", 3);
+    xwrite(1, "OK\n", 3);
     memset(buf, 0, sizeof(buf));
     x = recv(icmp_sock, (void *) buf, sizeof(buf), 0);
 

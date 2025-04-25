@@ -197,7 +197,7 @@ do_write(diomsg * r, int, const char *buf)
         fprintf(stderr, "%d WRITE %d,%d,%" PRId64 "\n", (int) mypid,
                 fs->fd, wrtlen, (int64_t)r->offset);
     }
-    x = write(fs->fd, buf, wrtlen);
+    x = xwrite(fs->fd, buf, wrtlen);
 
     if (x < 0) {
         DEBUG(1) {

@@ -56,4 +56,18 @@ xread(int fd, void * buf, size_t sz)
         return _read(fd, buf, (unsigned int)sz);
 }
 
+int
+xwrite(int fd, const void * buf, size_t siz)
+{
+    char l_so_type[sizeof(int)];
+    int l_so_type_siz = sizeof(l_so_type);
+    SOCKET sock = _get_osfhandle(fd);
+
+    if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
+        return ::send(sock, (char FAR *) buf, siz, 0);
+    else
+        return _write(fd, buf, siz);
+}
+
+
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */

@@ -107,7 +107,7 @@ unlinkdUnlink(const char *path)
     xstrncpy(buf, path, MAXPATHLEN);
     buf[l] = '\n';
     ++l;
-    bytes_written = write(unlinkd_wfd, buf, l);
+    bytes_written = xwrite(unlinkd_wfd, buf, l);
 
     if (bytes_written < 0) {
         int xerrno = errno;

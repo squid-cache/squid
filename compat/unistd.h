@@ -29,6 +29,8 @@ int xopen(const char *filename, int oflag, int pmode = 0);
 
 int xread(int fd, void * buf, size_t sz);
 
+int xwrite(int fd, const void * buf, size_t sz);
+
 #if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
 
 #ifndef _PATH_DEVNULL
@@ -54,6 +56,12 @@ int
 xread(int fd, void * buf, size_t sz)
 {
     return ::read(fd, buf, sz);
+}
+
+int
+xwrite(int fd, const void * buf, size_t sz)
+{
+    return ::write(fd, buf, sz);
 }
 
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
