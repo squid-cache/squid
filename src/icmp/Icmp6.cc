@@ -14,6 +14,7 @@
 
 #if USE_ICMP
 
+#include "compat/socket.h"
 #include "debug/Stream.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
