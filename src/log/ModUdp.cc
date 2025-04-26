@@ -10,8 +10,8 @@
 
 #include "squid.h"
 #include "comm.h"
-#include "compat/unistd.h"
 #include "comm/Connection.h"
+#include "compat/unistd.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fs_io.h"

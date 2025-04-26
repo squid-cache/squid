@@ -69,5 +69,4 @@ xwrite(int fd, const void * buf, size_t siz)
         return _write(fd, buf, siz);
 }
 
-
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */

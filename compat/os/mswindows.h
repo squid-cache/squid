@@ -392,7 +392,6 @@ SQUIDCEXTERN THREADLOCAL int ws32_result;
 
 #endif
 
-
 // stdlib <functional> definitions are required before std API redefinitions.
 #include <functional>
 
@@ -422,16 +421,6 @@ getservbyname(const char * n, const char * p)
     return result;
 }
 #define getservbyname(n,p) Squid::getservbyname(n,p)
-
-inline HOSTENT FAR *
-gethostbyaddr(const void * a, size_t l, int t)
-{
-    HOSTENT FAR * result;
-    if ((result = ::gethostbyaddr((const char*)a, l, t)) == NULL)
-        errno = WSAGetLastError();
-    return result;
-}
-#define gethostbyaddr(a,l,t) Squid::gethostbyaddr(a,l,t)
 
 inline int
 getsockname(int s, struct sockaddr * n, socklen_t * l)
