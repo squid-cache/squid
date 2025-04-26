@@ -20,6 +20,8 @@
 #include "CachePeers.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
+#include "compat/netdb.h"
+#include "compat/socket.h"
 #include "debug/Messages.h"
 #include "event.h"
 #include "FwdState.h"

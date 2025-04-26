@@ -376,7 +376,7 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     // lookup the local-end details of this new connection
     struct sockaddr_storage localAddress = {};
     socklen_t localAddressSize = sizeof(localAddress);
-    if (getsockname(sock, reinterpret_cast<struct sockaddr *>(&localAddress), &localAddressSize) != 0) {
+    if (xgetsockname(sock, reinterpret_cast<struct sockaddr *>(&localAddress), &localAddressSize) != 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: Closing accepted TCP connection after failing to obtain its local IP address" <<
                Debug::Extra << "accepted connection: " << details <<

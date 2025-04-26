@@ -413,18 +413,6 @@ namespace Squid
  */
 
 inline int
-getsockname(int s, struct sockaddr * n, socklen_t * l)
-{
-    int i=*l;
-    if (::getsockname(_get_osfhandle(s), n, &i) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return 0;
-}
-#define getsockname(s,a,l) Squid::getsockname(s,a,reinterpret_cast<socklen_t*>(l))
-
-inline int
 gethostname(char * n, size_t l)
 {
     if ((::gethostname(n, l)) == SOCKET_ERROR) {

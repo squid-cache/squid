@@ -1018,7 +1018,7 @@ wccp2ConnectionOpen(void)
 
             memset(&local, '\0', local_len);
 
-            if (getsockname(theWccp2Connection, (struct sockaddr *) &local, &local_len))
+            if (xgetsockname(theWccp2Connection, (struct sockaddr *) &local, &local_len))
                 fatal("Unable to getsockname on WCCP out socket");
 
             router_list_ptr->local_ip = local.sin_addr;

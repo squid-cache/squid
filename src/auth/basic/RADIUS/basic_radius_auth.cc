@@ -57,6 +57,7 @@
 #include "auth/basic/RADIUS/radius-util.h"
 #include "auth/basic/RADIUS/radius.h"
 #include "base/Random.h"
+#include "compat/netdb.h"
 #include "compat/socket.h"
 #include "compat/unistd.h"
 #include "helper/protocol_defines.h"
@@ -566,7 +567,7 @@ main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     salen = sizeof(salocal);
-    if (getsockname(sockfd, (struct sockaddr *) &salocal, &salen) < 0) {
+    if (xgetsockname(sockfd, (struct sockaddr *) &salocal, &salen) < 0) {
         perror("getsockname");
         exit(EXIT_FAILURE);
     }

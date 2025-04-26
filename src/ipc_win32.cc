@@ -186,7 +186,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
         Ip::Address::InitAddr(aiPS);
 
-        if (getsockname(pwfd, aiPS->ai_addr, &(aiPS->ai_addrlen) ) < 0) {
+        if (xgetsockname(pwfd, aiPS->ai_addr, &(aiPS->ai_addrlen) ) < 0) {
             int xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerr(xerrno));
             Ip::Address::FreeAddr(aiPS);
@@ -200,7 +200,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
         Ip::Address::InitAddr(aiCS);
 
-        if (getsockname(crfd, aiCS->ai_addr, &(aiCS->ai_addrlen) ) < 0) {
+        if (xgetsockname(crfd, aiCS->ai_addr, &(aiCS->ai_addrlen) ) < 0) {
             int xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerr(xerrno));
             Ip::Address::FreeAddr(aiCS);
@@ -473,7 +473,7 @@ ipc_thread_1(void *in_params)
 
         Ip::Address::InitAddr(aiPS_ipc);
 
-        if (getsockname(pwfd_ipc, aiPS_ipc->ai_addr, &(aiPS_ipc->ai_addrlen)) < 0) {
+        if (xgetsockname(pwfd_ipc, aiPS_ipc->ai_addr, &(aiPS_ipc->ai_addrlen)) < 0) {
             int xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerr(xerrno));
             ipcSend(cwfd, err_string, strlen(err_string));
@@ -488,7 +488,7 @@ ipc_thread_1(void *in_params)
 
         Ip::Address::InitAddr(aiCS_ipc);
 
-        if (getsockname(crfd_ipc, aiCS_ipc->ai_addr, &(aiCS_ipc->ai_addrlen)) < 0) {
+        if (xgetsockname(crfd_ipc, aiCS_ipc->ai_addr, &(aiCS_ipc->ai_addrlen)) < 0) {
             int xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerr(xerrno));
             ipcSend(cwfd, err_string, strlen(err_string));

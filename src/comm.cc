@@ -185,7 +185,7 @@ comm_local_port(int fd)
 
     Ip::Address::InitAddr(addr);
 
-    if (getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
+    if (xgetsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: " << MYNAME << "Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerr(xerrno));
         Ip::Address::FreeAddr(addr);

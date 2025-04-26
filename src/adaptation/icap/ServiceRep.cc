@@ -17,6 +17,8 @@
 #include "adaptation/icap/ServiceRep.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
+#include "compat/netdb.h"
+#include "compat/socket.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "fde.h"

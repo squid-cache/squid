@@ -28,6 +28,8 @@
 #include "cache_cf.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
+#include "compat/netdb.h"
+#include "compat/socket.h"
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
