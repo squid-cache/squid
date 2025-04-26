@@ -52,13 +52,13 @@ xopen(const char *filename, int oflag, int pmode)
     return ::open(filename, oflag, pmode);
 }
 
-int
+inline int
 xread(int fd, void * buf, size_t sz)
 {
     return ::read(fd, buf, sz);
 }
 
-int
+inline int
 xwrite(int fd, const void * buf, size_t sz)
 {
     return ::write(fd, buf, sz);
