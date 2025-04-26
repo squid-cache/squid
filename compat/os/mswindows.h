@@ -413,17 +413,6 @@ namespace Squid
  */
 
 inline int
-gethostname(char * n, size_t l)
-{
-    if ((::gethostname(n, l)) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return 0;
-}
-#define gethostname(n,l) Squid::gethostname(n,l)
-
-inline int
 getsockopt(int s, int l, int o, void * v, socklen_t * n)
 {
     Sleep(1);
@@ -596,9 +585,6 @@ WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
 #define gethostbyname(n) \
     (NULL == ((HOSTENT FAR*)(ws32_result = (int)gethostbyname(n))) ? \
     (errno = WSAGetLastError()), (HOSTENT FAR*)NULL : (HOSTENT FAR*)ws32_result)
-#define gethostname(n,l) \
-    (SOCKET_ERROR == gethostname(n,l) ? \
-    (errno = WSAGetLastError()), -1 : 0)
 #define recv(s,b,l,f) \
     (SOCKET_ERROR == (ws32_result = recv(_get_osfhandle(s),b,l,f)) ? \
     (errno = WSAGetLastError()), -1 : ws32_result)

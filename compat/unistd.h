@@ -25,6 +25,8 @@
 /// Provide POSIX close(2) API on MinGW and Visual Studio build environments
 int xclose(int fd);
 
+int xgethostname(char *name, size_t namelen);
+
 int xopen(const char *filename, int oflag, int pmode = 0);
 
 int xread(int fd, void * buf, size_t sz);
@@ -44,6 +46,12 @@ inline int
 xclose(int fd)
 {
     return ::close(fd);
+}
+
+inline int
+xgethostname(char *name, size_t namelen)
+{
+    return ::gethostname(name, namelen);
 }
 
 inline int

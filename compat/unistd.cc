@@ -38,6 +38,15 @@ xclose(int fd)
 }
 
 int
+xgethostname(char *name, size_t namelen)
+{
+    auto result = ::gethostname(name, namelen);
+    if (result == SOCKET_ERROR)
+        SetErrnoFromWsaError();
+    return result;
+}
+
+int
 xopen(const char *filename, int oflag, int pmode)
 {
     return _open(filename, oflag, pmode & (_S_IREAD | _S_IWRITE));
