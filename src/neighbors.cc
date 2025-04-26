@@ -536,7 +536,7 @@ neighbors_init(void)
 
     peerDnsRefreshStart();
 
-    sep = getservbyname("echo", "udp");
+    sep = xgetservbyname("echo", "udp");
     echo_port = sep ? ntohs((unsigned short) sep->s_port) : 7;
 }
 

@@ -412,16 +412,6 @@ namespace Squid
  * - map the FD value used by Squid to the socket handes used by Windows.
  */
 
-inline SERVENT FAR *
-getservbyname(const char * n, const char * p)
-{
-    SERVENT FAR * result;
-    if ((result = ::getservbyname(n, p)) == NULL)
-        errno = WSAGetLastError();
-    return result;
-}
-#define getservbyname(n,p) Squid::getservbyname(n,p)
-
 inline int
 getsockname(int s, struct sockaddr * n, socklen_t * l)
 {

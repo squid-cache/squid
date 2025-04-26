@@ -538,7 +538,7 @@ main(int argc, char **argv)
     /*
      *    Open a connection to the server.
      */
-    svp = getservbyname(svc_name, "udp");
+    svp = xgetservbyname(svc_name, "udp");
     if (svp != nullptr)
         svc_port = ntohs((unsigned short) svp->s_port);
     else

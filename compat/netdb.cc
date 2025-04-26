@@ -22,4 +22,13 @@ xgethostbyname(const char *name)
     return result;
 }
 
+struct servent *
+xgetservbyname(const char *name, const char *proto)
+{
+    auto result = ::getservbyname(name, proto);
+    if (!result)
+        SetErrnoFromWsaError();
+    return result;
+}
+
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
