@@ -61,7 +61,7 @@ xread(int fd, void * buf, size_t sz)
     SOCKET sock = _get_osfhandle(fd);
 
     if (::xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
-        return ::recv(sock, (char FAR *) buf, (int)sz, 0);
+        return xrecv(sock, (char FAR *) buf, (int)sz, 0);
     else
         return _read(fd, buf, (unsigned int)sz);
 }

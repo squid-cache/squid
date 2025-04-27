@@ -104,7 +104,7 @@ fd_close(int fd)
 int
 socket_read_method(int fd, char *buf, int len)
 {
-    return recv(fd, (void *) buf, len, 0);
+    return xrecv(fd, (void *) buf, len, 0);
 }
 
 int

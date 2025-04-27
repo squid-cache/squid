@@ -28,6 +28,8 @@ int xgetsockname(int sockfd, struct sockaddr * name, socklen_t * namelen);
 
 int xlisten(int socketFd, int backlog);
 
+ssize_t xrecv(int socketFd, void * buf, size_t len, int flags);
+
 /// Provide POSIX setsockopt(2) API on MinGW and Visual Studio build environments
 int xsetsockopt(int socketFd, int level, int option_name, const void * value, socklen_t len);
 
@@ -71,6 +73,12 @@ inline int
 xgetsockopt(int socket, int level, int option_name, void * option_value, socklen_t * option_len)
 {
     return ::getsockopt(socket, level, option_name, option_value, option_len);
+}
+
+inline ssize_t
+xrecv(int socketFd, void * buf, size_t len, int flags)
+{
+    return ::recv(socketFd, static_cast<char *>(buf), static_cast<int>(len), flags);
 }
 
 inline int

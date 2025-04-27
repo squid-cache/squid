@@ -114,7 +114,7 @@ IcmpPinger::Open(void)
 
     xwrite(1, "OK\n", 3);
     memset(buf, 0, sizeof(buf));
-    x = recv(icmp_sock, (void *) buf, sizeof(buf), 0);
+    x = xrecv(icmp_sock, (void *) buf, sizeof(buf), 0);
 
     if (x < 3) {
         xerrno = errno;
@@ -171,7 +171,7 @@ IcmpPinger::Recv(void)
     int guess_size;
 
     pecho = pingerEchoData();
-    n = recv(socket_from_squid, &pecho, sizeof(pecho), 0);
+    n = xrecv(socket_from_squid, &pecho, sizeof(pecho), 0);
 
     if (n < 0) {
         debugs(42, DBG_IMPORTANT, "Pinger exiting.");

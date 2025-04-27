@@ -256,7 +256,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     memset(hello_buf, '\0', HELLO_BUF_SZ);
-    x = recv(prfd, (void *)hello_buf, HELLO_BUF_SZ - 1, 0);
+    x = xrecv(prfd, (void *)hello_buf, HELLO_BUF_SZ - 1, 0);
 
     if (x < 0) {
         int xerrno = errno;
@@ -283,7 +283,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     memset(hello_buf, '\0', HELLO_BUF_SZ);
-    x = recv(prfd, (void *)hello_buf, HELLO_BUF_SZ - 1, 0);
+    x = xrecv(prfd, (void *)hello_buf, HELLO_BUF_SZ - 1, 0);
 
     if (x < 0) {
         int xerrno = errno;
@@ -423,7 +423,7 @@ ipc_thread_1(void *in_params)
 
     PutEnvironment();
     memset(buf1, '\0', bufSz);
-    x = recv(crfd, (void *)buf1, bufSz-1, 0);
+    x = xrecv(crfd, (void *)buf1, bufSz-1, 0);
 
     if (x < 0) {
         int xerrno = errno;
@@ -659,7 +659,7 @@ ipc_thread_1(void *in_params)
         }
 
         x = send(pwfd_ipc, (const void *)ok_string, strlen(ok_string), 0);
-        x = recv(prfd_ipc, (void *)(buf1 + 200), bufSz -1 - 200, 0);
+        x = xrecv(prfd_ipc, (void *)(buf1 + 200), bufSz -1 - 200, 0);
         assert((size_t) x == strlen(ok_string)
                && !strncmp(ok_string, buf1 + 200, strlen(ok_string)));
     }               /* IPC_UDP_SOCKET */
@@ -707,7 +707,7 @@ ipc_thread_1(void *in_params)
 
     /* cycle */
     for (;;) {
-        x = recv(crfd, (void *)buf1, bufSz-1, 0);
+        x = xrecv(crfd, (void *)buf1, bufSz-1, 0);
 
         if (x <= 0) {
             debugs(54, 3, "ipc(" << prog << "," << pid << "): " << x << " bytes received from parent. Exiting...");
@@ -808,7 +808,7 @@ ipc_thread_2(void *in_params)
         if (type == IPC_TCP_SOCKET)
             x = xread(rfd, buf2, bufSz-1);
         else
-            x = recv(rfd, (void *)buf2, bufSz-1, 0);
+            x = xrecv(rfd, (void *)buf2, bufSz-1, 0);
 
         if ((x <= 0 && type == IPC_TCP_SOCKET) ||
                 (x < 0 && type == IPC_UDP_SOCKET)) {
