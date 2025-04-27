@@ -11,6 +11,7 @@
 #if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
 
 #include "compat/unistd.h"
+#include "compat/socket.h"
 #include "compat/wserrno.h"
 
 int
@@ -24,7 +25,7 @@ xclose(int fd)
 
     char l_so_type[sizeof(int)];
     int l_so_type_siz = sizeof(l_so_type);
-    if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0) {
+    if (::xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0) {
         const auto result = closesocket(sock);
         if (result == SOCKET_ERROR)
             SetErrnoFromWsaError();
@@ -59,7 +60,7 @@ xread(int fd, void * buf, size_t sz)
     int l_so_type_siz = sizeof(l_so_type);
     SOCKET sock = _get_osfhandle(fd);
 
-    if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
+    if (::xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
         return ::recv(sock, (char FAR *) buf, (int)sz, 0);
     else
         return _read(fd, buf, (unsigned int)sz);
@@ -72,7 +73,7 @@ xwrite(int fd, const void * buf, size_t siz)
     int l_so_type_siz = sizeof(l_so_type);
     SOCKET sock = _get_osfhandle(fd);
 
-    if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
+    if (::xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
         return ::send(sock, (char FAR *) buf, siz, 0);
     else
         return _write(fd, buf, siz);

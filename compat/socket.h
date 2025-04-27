@@ -22,6 +22,8 @@ int xbind(int socketFd, const struct sockaddr *, socklen_t);
 /// Provide POSIX connect(2) API on MinGW and Visual Studio build environments
 int xconnect(int socketFd, const struct sockaddr *, socklen_t);
 
+int xgetsockopt(int socket, int level, int option_name, void * option_value, socklen_t * option_len);
+
 int xgetsockname(int sockfd, struct sockaddr * name, socklen_t * namelen);
 
 /// Provide POSIX setsockopt(2) API on MinGW and Visual Studio build environments
@@ -56,6 +58,13 @@ xgetsockname(int sockfd, struct sockaddr * name, socklen_t * namelen)
 {
     return ::getsockname(sockfd, name, namelen);
 }
+
+inline int
+xgetsockopt(int socket, int level, int option_name, void * option_value, socklen_t * option_len)
+{
+    return ::getsockopt(socket, level, option_name, option_value, option_len);
+}
+
 
 inline int
 xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)

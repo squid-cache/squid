@@ -696,7 +696,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
     } else {
         errno = 0;
         errlen = sizeof(err);
-        x = getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
+        x = xgetsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
         if (x == 0)
             xerrno = err;
 

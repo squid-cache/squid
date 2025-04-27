@@ -55,7 +55,7 @@ Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
     if (xsetsockopt(server->fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0) {
         unsigned char buf[512];
         int len = 512;
-        if (getsockopt(server->fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0) {
+        if (xgetsockopt(server->fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0) {
             /* Parse the PKTOPTIONS structure to locate the TOS data message
              * prepared in the kernel by the ZPH incoming TCP TOS preserving
              * patch.

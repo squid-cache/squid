@@ -76,6 +76,21 @@ xgetsockname(int sockfd, struct sockaddr * addr, socklen_t * addrlen)
 }
 
 int
+xgetsockopt(int socket, int level, int option_name, void * option_value, socklen_t * option_len)
+{
+    const auto handle = _get_osfhandle(socket);
+    if (handle == intptr_t(INVALID_HANDLE_VALUE)) {
+        // errno is already set by _get_osfhandle()
+        return SOCKET_ERROR;
+    }
+    int ol = *option_len;
+    const auto result = ::getsockopt(handle, level, option_name, static_cast<char *>(option_value), &ol);
+    if (result == SOCKET_ERROR)
+        SetErrnoFromWsaError();
+    return result;
+}
+
+int
 xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)
 {
     const auto handle = _get_osfhandle(socketFd);
