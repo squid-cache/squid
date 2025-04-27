@@ -10,8 +10,8 @@
 
 #if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
 
-#include "compat/unistd.h"
 #include "compat/socket.h"
+#include "compat/unistd.h"
 #include "compat/wserrno.h"
 
 int

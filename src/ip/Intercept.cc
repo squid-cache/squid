@@ -133,10 +133,10 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
     /** \par
      * Try NAT lookup for REDIRECT or DNAT targets. */
     if ( xgetsockopt(newConn->fd,
-                    newConn->local.isIPv6() ? IPPROTO_IPV6 : IPPROTO_IP,
-                    newConn->local.isIPv6() ? IP6T_SO_ORIGINAL_DST : SO_ORIGINAL_DST,
-                    &lookup,
-                    &len) != 0) {
+                     newConn->local.isIPv6() ? IPPROTO_IPV6 : IPPROTO_IP,
+                     newConn->local.isIPv6() ? IP6T_SO_ORIGINAL_DST : SO_ORIGINAL_DST,
+                     &lookup,
+                     &len) != 0) {
         const auto xerrno = errno;
         debugs(89, DBG_IMPORTANT, "ERROR: NF getsockopt(ORIGINAL_DST) failed on " << newConn << ": " << xstrerr(xerrno));
         return false;

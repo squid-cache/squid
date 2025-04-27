@@ -65,7 +65,6 @@ xgetsockopt(int socket, int level, int option_name, void * option_value, socklen
     return ::getsockopt(socket, level, option_name, option_value, option_len);
 }
 
-
 inline int
 xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)
 {
