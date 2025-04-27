@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -905,9 +905,6 @@ SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
 void openlog(const char *ident, int logopt, int facility);
 void syslog(int priority, const char *fmt, ...);
 #endif
-
-/* prototypes */
-void WIN32_maperror(unsigned long WIN32_oserrno);
 
 #endif /* _SQUID_WINDOWS_ */
 #endif /* SQUID_COMPAT_OS_MSWINDOWS_H */
