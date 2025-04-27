@@ -151,7 +151,7 @@ void
 Comm::TcpAcceptor::setListen()
 {
     errcode = errno = 0;
-    if (listen(conn->fd, Squid_MaxFD >> 2) < 0) {
+    if (xlisten(conn->fd, Squid_MaxFD >> 2) < 0) {
         errcode = errno;
         debugs(50, DBG_CRITICAL, "ERROR: listen(..., " << (Squid_MaxFD >> 2) << ") system call failed: " << xstrerr(errcode));
         return;

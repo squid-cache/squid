@@ -91,6 +91,20 @@ xgetsockopt(int socket, int level, int option_name, void * option_value, socklen
 }
 
 int
+xlisten(int socketFd, int backlog)
+{
+    const auto handle = _get_osfhandle(socketFd);
+    if (handle == intptr_t(INVALID_HANDLE_VALUE)) {
+        // errno is already set by _get_osfhandle()
+        return SOCKET_ERROR;
+    }
+    const auto result = ::listen(handle, backlog);
+    if (result == SOCKET_ERROR)
+        SetErrnoFromWsaError();
+    return result;
+}
+
+int
 xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)
 {
     const auto handle = _get_osfhandle(socketFd);

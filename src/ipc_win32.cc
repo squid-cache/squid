@@ -215,7 +215,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     if (type == IPC_TCP_SOCKET) {
-        if (listen(crfd, 1) < 0) {
+        if (xlisten(crfd, 1) < 0) {
             int xerrno = errno;
             debugs(54, DBG_IMPORTANT, "ipcCreate: listen FD " << crfd << ": " << xstrerr(xerrno));
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);

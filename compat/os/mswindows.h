@@ -434,18 +434,6 @@ ioctlsocket(int s, long c, u_long FAR * a)
 }
 #define ioctlsocket(s,c,a) Squid::ioctlsocket(s,c,a)
 
-inline int
-listen(int s, int b)
-{
-    if (::listen(_get_osfhandle(s), b) == SOCKET_ERROR) {
-        if (WSAEMFILE == (errno = WSAGetLastError()))
-            errno = EMFILE;
-        return -1;
-    } else
-        return 0;
-}
-#define listen(s,b) Squid::listen(s,b)
-
 inline ssize_t
 recv(int s, void * b, size_t l, int f)
 {
