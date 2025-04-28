@@ -223,8 +223,8 @@ Instance::WriteOurPid()
     debugs(50, Important(23), "Created " << TheFile);
 }
 
-/// A hash that is likely to be unique across Squid instances running on the
-/// same host because such concurrent instances should use unique PID filenames.
+/// A hash that is likely to be unique across instances running on the same host
+/// because such concurrent instances should use unique PID filenames.
 /// All instances with disabled PID file maintenance have the same hash value.
 /// \returns a 4-character string suitable for use in file names and similar contexts
 static SBuf
