@@ -126,7 +126,7 @@ accessLogLogTo(CustomLog *log, const AccessLogEntryPointer &al, ACLChecklist *ch
             logfileLineEnd(log->logfile);
         }
 
-        // NP:  WTF?  if _any_ log line has no checklist ignore the following ones?
+        // Note:  WTF?  if _any_ log line has no checklist ignore the following ones?
         if (!checklist)
             break;
     }

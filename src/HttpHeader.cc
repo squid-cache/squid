@@ -75,7 +75,7 @@ static HttpHeaderMask RequestHeadersMask;   /* set run-time using RequestHeaders
 static HttpHeaderMask ReplyHeadersMask;     /* set run-time using ReplyHeaders */
 
 /* header accounting */
-// NP: keep in sync with enum http_hdr_owner_type
+// Note: keep in sync with enum http_hdr_owner_type
 static std::array<HttpHeaderStat, hoEnd> HttpHeaderStats = {{
         HttpHeaderStat(/*hoNone*/ "all", nullptr),
 #if USE_HTCP

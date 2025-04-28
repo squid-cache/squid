@@ -62,7 +62,7 @@ public:
     char const *username() const { return username_; }
     void username(char const *); ///< set stored username and userKey
 
-    // NP: key is set at the same time as username_. Until then both are empty/NULL.
+    // Note: key is set at the same time as username_. Until then both are empty/NULL.
     const SBuf userKey() const {return userKey_;}
 
     /**

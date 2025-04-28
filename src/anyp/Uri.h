@@ -103,7 +103,7 @@ public:
      *
      * The caller must ensure relUrl is a valid relative-path.
      *
-     * NP: absolute-path are also accepted, but path() method
+     * Note: absolute-path are also accepted, but path() method
      * should be used instead when possible.
      */
     void addRelativePath(const char *relUrl);

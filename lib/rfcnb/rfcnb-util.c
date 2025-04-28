@@ -57,7 +57,7 @@ const char *RFCNB_Error_Strings[] = {
     "RFCNBE_ConnectFailed: Connection failed. See errno.",
     "RFCNBE_CallRejNLOCN: Call rejected. Not listening on called name.",
     "RFCNBE_CallRejNLFCN: Call rejected. Not listening for called name.",
-    "RFCNBE_CallRejCNNP: Call rejected. Called name not present.",
+    "RFCNBE_CallRejCNNote: Call rejected. Called name not present.",
     "RFCNBE_CallRejInfRes: Call rejected. Name present, but insufficient resources.",
     "RFCNBE_CallRejUnSpec: Call rejected. Unspecified error.",
     "RFCNBE_BadParam: Bad parameters passed to a routine.",
