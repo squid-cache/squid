@@ -1,0 +1,35 @@
+# Test a cross-build of the branch on mingw.
+# This test will fail until the mingw build will be fully functional
+# Remove this workflow prior to merging, it belongs to its own PR
+
+name: MinGW cross-compilation
+
+on:
+  pull_request:
+    branches: [ "master" ]
+
+  # allows to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  mingw-cross:
+    name: MinGW cross-compile
+
+    runs-on: ubuntu-22.04
+
+    container:
+      image: squidcache/buildfarm-fedora-mingw:latest
+      options: --user 1001 # uid used by worfklow runner
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: run build
+        continue-on-error: true
+        run: |
+            ./bootstrap.sh
+            export BUILDCXX=g++ BUILDCXXFLAGS=-DFOO
+            ./configure --disable-ssl --without-openssl --host=x86_64-w64-mingw32
+            make -j`nproc` -k -O recurse all
+            make -j`nproc` -O recurse check
