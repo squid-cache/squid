@@ -216,7 +216,7 @@ Icmp6::Recv(void)
 
     Ip::Address::InitAddr(from);
 
-    n = recvfrom(icmp_sock,
+    n = xrecvfrom(icmp_sock,
                  (void *)pkt,
                  MAX_PKT6_SZ,
                  0,

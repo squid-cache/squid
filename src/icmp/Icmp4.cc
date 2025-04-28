@@ -175,7 +175,7 @@ Icmp4::Recv(void)
         pkt = (char *)xmalloc(MAX_PKT4_SZ);
 
     Ip::Address::InitAddr(from);
-    n = recvfrom(icmp_sock,
+    n = xrecvfrom(icmp_sock,
                  (void *)pkt,
                  MAX_PKT4_SZ,
                  0,

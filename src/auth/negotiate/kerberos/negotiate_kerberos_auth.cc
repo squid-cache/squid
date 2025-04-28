@@ -40,7 +40,7 @@
 
 #if HAVE_GSSAPI
 
-#include "compat/unistd.h"
+#include "compat/unistdq.h"
 #include "negotiate_kerberos.h"
 
 #if HAVE_SYS_STAT_H

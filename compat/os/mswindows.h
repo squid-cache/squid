@@ -434,19 +434,6 @@ ioctlsocket(int s, long c, u_long FAR * a)
 }
 #define ioctlsocket(s,c,a) Squid::ioctlsocket(s,c,a)
 
-inline ssize_t
-recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, socklen_t * fl)
-{
-    ssize_t result;
-    int ifl=*fl;
-    if ((result = ::recvfrom(_get_osfhandle(s), (char *)b, l, f, fr, &ifl)) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return result;
-}
-#define recvfrom(s,b,l,f,r,n) Squid::recvfrom(s,b,l,f,r,reinterpret_cast<socklen_t*>(n))
-
 inline int
 select(int n, fd_set * r, fd_set * w, fd_set * e, struct timeval * t)
 {

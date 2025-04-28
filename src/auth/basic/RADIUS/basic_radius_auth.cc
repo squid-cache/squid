@@ -443,7 +443,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
             if (select(socket_fd + 1, &readfds, nullptr, nullptr, &tv) == 0)  /* Select timeout */
                 break;
             salen = sizeof(saremote);
-            len = recvfrom(socket_fd, recv_buffer, sizeof(i_recv_buffer),
+            len = xrecvfrom(socket_fd, recv_buffer, sizeof(i_recv_buffer),
                            0, (struct sockaddr *) &saremote, &salen);
 
             if (len < 0)

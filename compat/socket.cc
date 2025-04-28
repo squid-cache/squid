@@ -104,6 +104,21 @@ xrecv(int socketFd, void * buf, size_t len, int flags)
     return result;
 }
 
+ssize_t
+xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockaddr * from, socklen_t * fromlen)
+{
+    const auto handle = _get_osfhandle(socketFd);
+    if (handle == intptr_t(INVALID_HANDLE_VALUE)) {
+        // errno is already set by _get_osfhandle()
+        return SOCKET_ERROR;
+    }
+    int fl = *fromlen;
+    const auto result = ::recvfrom(handle, static_cast<char *>(buf), static_cast<int>(len), flags, from, &fl);
+    if (result == SOCKET_ERROR)
+        SetErrnoFromWsaError();
+    return result;
+}
+
 int
 xlisten(int socketFd, int backlog)
 {

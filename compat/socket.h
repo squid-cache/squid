@@ -30,6 +30,8 @@ int xlisten(int socketFd, int backlog);
 
 ssize_t xrecv(int socketFd, void * buf, size_t len, int flags);
 
+ssize_t xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockaddr * from, socklen_t * fromlen);
+
 /// Provide POSIX setsockopt(2) API on MinGW and Visual Studio build environments
 int xsetsockopt(int socketFd, int level, int option_name, const void * value, socklen_t len);
 
@@ -79,6 +81,12 @@ inline ssize_t
 xrecv(int socketFd, void * buf, size_t len, int flags)
 {
     return ::recv(socketFd, static_cast<char *>(buf), static_cast<int>(len), flags);
+}
+
+inline ssize_t
+xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockaddr * from, socklen_t * fromlen)
+{
+    return ::recvfrom(socketFd, static_cast<char *>(buf), static_cast<int>(len), flags, from, fromlen);
 }
 
 inline int
