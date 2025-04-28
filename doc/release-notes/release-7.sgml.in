@@ -262,6 +262,12 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--with-regex=PATH</tag>
+	<p>Added ability to build against custom installs of the
+	   GNU Regular Expression library.
+	<p>Note: <em>libregex</em> is required to build Squid.
+	   Using the <em>--without-regex</em> option will fail.
+
 	<tag>--without-gss</tag>
 	<p>Renamed from <em>--without-gnugss</em>.
 
