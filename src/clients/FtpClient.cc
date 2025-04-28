@@ -925,7 +925,7 @@ Ftp::Client::maybeReadVirginBody()
 
     initReadBuf();
 
-    const int read_sz = replyBodySpace(*data.readBuf, 0);
+    const auto read_sz = calcBufferSpaceToReserve(data.readBuf->spaceSize(), 0);
 
     debugs(9, 9, "FTP may read up to " << read_sz << " bytes");
 
