@@ -15,11 +15,17 @@
 
 static_assert(SOCKET_ERROR == -1);
 
+static inline bool
+isValidSocketHandle(intptr_t handle)
+{
+    return handle != intptr_t(INVALID_HANDLE_VALUE);
+}
+
 int
 xaccept(int socketFd, struct sockaddr *a, socklen_t *l)
 {
     const auto handle = _get_osfhandle(socketFd);
-    if (handle == intptr_t(INVALID_HANDLE_VALUE)) {
+    if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
@@ -36,7 +42,7 @@ int
 xbind(int socketFd, const struct sockaddr * n, socklen_t l)
 {
     const auto handle = _get_osfhandle(socketFd);
-    if (handle == intptr_t(INVALID_HANDLE_VALUE)) {
+    if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
@@ -50,7 +56,7 @@ int
 xconnect(int socketFd, const struct sockaddr * n, socklen_t l)
 {
     const auto handle = _get_osfhandle(socketFd);
-    if (handle == intptr_t(INVALID_HANDLE_VALUE)) {
+    if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
@@ -64,7 +70,7 @@ int
 xgetsockname(int sockfd, struct sockaddr * addr, socklen_t * addrlen)
 {
     const auto handle = _get_osfhandle(sockfd);
-    if (handle == intptr_t(INVALID_HANDLE_VALUE)) {
+    if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
@@ -79,7 +85,7 @@ int
 xgetsockopt(int socket, int level, int option_name, void * option_value, socklen_t * option_len)
 {
     const auto handle = _get_osfhandle(socket);
-    if (handle == intptr_t(INVALID_HANDLE_VALUE)) {
+    if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
@@ -94,7 +100,7 @@ ssize_t
 xrecv(int socketFd, void * buf, size_t len, int flags)
 {
     const auto handle = _get_osfhandle(socketFd);
-    if (handle == intptr_t(INVALID_HANDLE_VALUE)) {
+    if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
@@ -108,7 +114,7 @@ ssize_t
 xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockaddr * from, socklen_t * fromlen)
 {
     const auto handle = _get_osfhandle(socketFd);
-    if (handle == intptr_t(INVALID_HANDLE_VALUE)) {
+    if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
@@ -123,7 +129,7 @@ int
 xlisten(int socketFd, int backlog)
 {
     const auto handle = _get_osfhandle(socketFd);
-    if (handle == intptr_t(INVALID_HANDLE_VALUE)) {
+    if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
@@ -137,7 +143,7 @@ int
 xsend(int socketFd, const void * buf, size_t len, int flags)
 {
     const auto handle = _get_osfhandle(socketFd);
-    if (handle == intptr_t(INVALID_HANDLE_VALUE)) {
+    if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
@@ -151,7 +157,7 @@ int
 xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)
 {
     const auto handle = _get_osfhandle(socketFd);
-    if (handle == intptr_t(INVALID_HANDLE_VALUE)) {
+    if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
