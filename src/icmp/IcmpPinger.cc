@@ -122,7 +122,7 @@ IcmpPinger::Open(void)
         return -1;
     }
 
-    x = send(icmp_sock, (const void *) buf, strlen(buf), 0);
+    x = xsend(icmp_sock, (const void *) buf, strlen(buf), 0);
     xerrno = errno;
 
     if (x < 3 || strncmp("OK\n", buf, 3)) {
@@ -221,7 +221,7 @@ IcmpPinger::SendResult(pingerReplyData &preply, int len)
 {
     debugs(42, 2, "return result to squid. len=" << len);
 
-    if (send(socket_to_squid, &preply, len, 0) < 0) {
+    if (xsend(socket_to_squid, &preply, len, 0) < 0) {
         int xerrno = errno;
         debugs(42, DBG_CRITICAL, "FATAL: send failure: " << xstrerr(xerrno));
         Close();

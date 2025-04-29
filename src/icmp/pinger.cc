@@ -45,6 +45,7 @@
 #if USE_ICMP
 
 #include "base/Stopwatch.h"
+#include "compat/socket.h"
 #include "Icmp4.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
@@ -228,7 +229,7 @@ main(int, char **)
 
         const auto delay = std::chrono::duration_cast<std::chrono::seconds>(timer.total());
         if (delay >= PingerTimeout) {
-            if (send(LINK_TO_SQUID, &tv, 0, 0) < 0) {
+            if (xsend(LINK_TO_SQUID, &tv, 0, 0) < 0) {
                 debugs(42, DBG_CRITICAL, "Closing. No requests in last " << delay.count() << " seconds.");
                 control.Close();
                 exit(EXIT_FAILURE);

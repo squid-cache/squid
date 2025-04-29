@@ -74,7 +74,7 @@ xwrite(int fd, const void * buf, size_t siz)
     SOCKET sock = _get_osfhandle(fd);
 
     if (::xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
-        return ::send(sock, (char FAR *) buf, siz, 0);
+        return xsend(sock, (char FAR *) buf, siz, 0);
     else
         return _write(fd, buf, siz);
 }

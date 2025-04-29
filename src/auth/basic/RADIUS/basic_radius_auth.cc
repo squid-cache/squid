@@ -420,7 +420,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
          *    Send the request we've built.
          */
         gettimeofday(&sent, nullptr);
-        if (send(socket_fd, (char *) auth, total_length, 0) < 0) {
+        if (xsend(socket_fd, (char *) auth, total_length, 0) < 0) {
             int xerrno = errno;
             // EAGAIN is expected at high traffic, just retry
             // TODO: block/sleep a few ms to let the apparently full buffer drain ?

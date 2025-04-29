@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
+#include "compat/socket.h"
 #include "compat/unistd.h"
 #include "debug/Messages.h"
 #include "debug/Stream.h"
@@ -116,7 +117,7 @@ file_read_method(int fd, char *buf, int len)
 int
 socket_write_method(int fd, const char *buf, int len)
 {
-    return send(fd, (const void *) buf, len, 0);
+    return xsend(fd, (const void *) buf, len, 0);
 }
 
 int
