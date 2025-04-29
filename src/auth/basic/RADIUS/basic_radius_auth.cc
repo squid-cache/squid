@@ -444,7 +444,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
                 break;
             salen = sizeof(saremote);
             len = xrecvfrom(socket_fd, recv_buffer, sizeof(i_recv_buffer),
-                           0, (struct sockaddr *) &saremote, &salen);
+                            0, (struct sockaddr *) &saremote, &salen);
 
             if (len < 0)
                 continue;

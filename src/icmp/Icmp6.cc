@@ -217,11 +217,11 @@ Icmp6::Recv(void)
     Ip::Address::InitAddr(from);
 
     n = xrecvfrom(icmp_sock,
-                 (void *)pkt,
-                 MAX_PKT6_SZ,
-                 0,
-                 from->ai_addr,
-                 &from->ai_addrlen);
+                  (void *)pkt,
+                  MAX_PKT6_SZ,
+                  0,
+                  from->ai_addr,
+                  &from->ai_addrlen);
 
     if (n <= 0) {
         debugs(42, DBG_CRITICAL, "ERROR: when calling recvfrom() on ICMPv6 socket.");
