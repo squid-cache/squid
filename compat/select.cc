@@ -10,6 +10,8 @@
 #include "compat/select.h"
 #include "compat/wserrno.h"
 
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
+
 int
 xselect(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval * timeout)
 {
@@ -18,3 +20,5 @@ xselect(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struc
         SetErrnoFromWsaError();
     return result;
 }
+
+#endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
