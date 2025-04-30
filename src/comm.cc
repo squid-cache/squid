@@ -920,7 +920,7 @@ comm_udp_sendto(int fd,
 
     struct addrinfo *AI = nullptr;
     to_addr.getAddrInfo(AI, fd_table[fd].sock_family);
-    int x = sendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
+    int x = xsendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
     int xerrno = errno;
     Ip::Address::FreeAddr(AI);
 

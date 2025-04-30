@@ -173,7 +173,7 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     debugs(42, 5, "Send Icmp6 packet to " << to << ".");
 
-    x = sendto(icmp_sock,
+    x = xsendto(icmp_sock,
                (const void *) pkt,
                icmp6_pktsize,
                0,

@@ -446,18 +446,6 @@ select(int n, fd_set * r, fd_set * w, fd_set * e, struct timeval * t)
 }
 #define select(n,r,w,e,t) Squid::select(n,r,w,e,t)
 
-inline ssize_t
-sendto(int s, const void * b, size_t l, int f, const struct sockaddr * t, socklen_t tl)
-{
-    ssize_t result;
-    if ((result = ::sendto(_get_osfhandle(s), (char *)b, l, f, t, tl)) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return result;
-}
-#define sendto(a,b,l,f,t,n) Squid::sendto(a,b,l,f,t,n)
-
 inline int
 shutdown(int s, int h)
 {

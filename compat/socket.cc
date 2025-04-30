@@ -153,6 +153,20 @@ xsend(int socketFd, const void * buf, size_t len, int flags)
     return result;
 }
 
+ssize_t
+xsendto(int socketFd, const void * buf, size_t len, int flags, const struct sockaddr * to, socklen_t tolen)
+{
+    const auto handle = _get_osfhandle(socketFd);
+    if (!isValidSocketHandle(handle)) {
+        // errno is already set by _get_osfhandle()
+        return SOCKET_ERROR;
+    }
+    const auto result = ::sendto(handle, static_cast<const char *>(buf), static_cast<int>(len), flags, to, tolen);
+    if (result == SOCKET_ERROR)
+        SetErrnoFromWsaError();
+    return result;
+}
+
 int
 xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)
 {
