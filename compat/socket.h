@@ -34,7 +34,7 @@ ssize_t xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockad
 
 int xsend(int socketFd, const void * buf, size_t len, int flags);
 
-ssize_t xsendto(int socketFd, const void * buf, size_t len, int flags, const struct sockaddr * to, socklen_t toLen);
+ssize_t xsendto(int socketFd, const void * buf, size_t len, int flags, const struct sockaddr * to, socklen_t l);
 
 /// Provide POSIX setsockopt(2) API on MinGW and Visual Studio build environments
 int xsetsockopt(int socketFd, int level, int option_name, const void * value, socklen_t len);
@@ -100,9 +100,9 @@ xsend(int socketFd, const void * buf, size_t len, int flags)
 }
 
 inline ssize_t
-xsendto(int socketFd, const void * buf, size_t len, int flags, const struct sockaddr * to, socklen_t toLen)
+xsendto(int socketFd, const void * buf, size_t len, int flags, const struct sockaddr * to, socklen_t l)
 {
-    return ::sendto(socketFd, static_cast<const char *>(buf), static_cast<int>(len), flags, to, toLen);
+    return ::sendto(socketFd, static_cast<const char *>(buf), static_cast<int>(len), flags, to, l);
 }
 
 inline int
