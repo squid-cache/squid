@@ -22,15 +22,19 @@
 #define _S_IWRITE 0x0080
 #endif
 
-/// Provide POSIX close(2) API on MinGW and Visual Studio build environments
+/// POSIX close(2) equivalent
 int xclose(int fd);
 
+/// POSIX gethostname(2) equivalent
 int xgethostname(char *name, size_t namelen);
 
+/// POSIX open(2) equivalent
 int xopen(const char *filename, int oflag, int pmode = 0);
 
+/// POSIX read(2) equivalent
 int xread(int fd, void * buf, size_t sz);
 
+/// POSIX write(2) equivalent
 int xwrite(int fd, const void * buf, size_t sz);
 
 #if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
@@ -40,7 +44,6 @@ int xwrite(int fd, const void * buf, size_t sz);
 #endif
 
 #else /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
-// Windows and MinGW implementations are in compat/unistd.cc
 
 inline int
 xclose(int fd)

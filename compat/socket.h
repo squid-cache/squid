@@ -50,7 +50,6 @@ int xsetsockopt(int socketFd, int level, int option_name, const void * value, so
 int xsocket(int domain, int type, int protocol);
 
 #if !(_SQUID_WINDOWS_ || _SQUID_MINGW_)
-// Windows and MinGW implementations are in compat/socket.cc
 
 inline int
 xaccept(int socketFd, struct sockaddr *a, socklen_t *l)
