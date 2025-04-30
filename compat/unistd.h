@@ -45,31 +45,31 @@ int xwrite(int fd, const void * buf, size_t sz);
 inline int
 xclose(int fd)
 {
-    return ::close(fd);
+    return close(fd);
 }
 
 inline int
 xgethostname(char *name, size_t namelen)
 {
-    return ::gethostname(name, namelen);
+    return gethostname(name, namelen);
 }
 
 inline int
 xopen(const char *filename, int oflag, int pmode)
 {
-    return ::open(filename, oflag, pmode);
+    return open(filename, oflag, pmode);
 }
 
 inline int
 xread(int fd, void * buf, size_t sz)
 {
-    return ::read(fd, buf, sz);
+    return read(fd, buf, sz);
 }
 
 inline int
 xwrite(int fd, const void * buf, size_t sz)
 {
-    return ::write(fd, buf, sz);
+    return write(fd, buf, sz);
 }
 
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */

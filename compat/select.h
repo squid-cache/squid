@@ -20,7 +20,7 @@ int xselect(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, s
 inline int
 xselect(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval * timeout)
 {
-    return ::select(nfds, readfds, writefds, exceptfds, timeout);
+    return select(nfds, readfds, writefds, exceptfds, timeout);
 }
 
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */

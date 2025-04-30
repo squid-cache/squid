@@ -13,19 +13,17 @@
 #include <sys/ioctl.h>
 #endif
 
+/// POSIX ioctl(2) equivalent
 int xioctl(int fd, int io, void * arg);
 
-#if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
-
-
-#else /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
+#if !(_SQUID_WINDOWS_ || _SQUID_MINGW_)
 
 inline int
 xioctl(int fd, int io, void * arg)
 {
-    return ::ioctl(fd, io, arg);
+    return ioctl(fd, io, arg);
 }
 
-#endif
+#endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
 
 #endif /* SQUID_COMPAT_IOCTL_H */

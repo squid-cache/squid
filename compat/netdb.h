@@ -13,9 +13,10 @@
 #include <netdb.h>
 #endif
 
-/// Provide POSIX gethostbyname(2) API on MinGW and Visual Studio build environments
+/// POSIX gethostbyname(3) equivalent
 struct hostent * xgethostbyname(const char * name);
 
+/// POSIX getservbyname(3) equivalent
 struct servent * xgetservbyname(const char * name, const char * proto);
 
 #if !(_SQUID_WINDOWS_ || _SQUID_MINGW_)
@@ -30,7 +31,7 @@ xgethostbyname(const char *name)
 inline struct servent *
 xgetservbyname(const char *name, const char *proto)
 {
-    return ::getservbyname(name, proto);
+    return getservbyname(name, proto);
 }
 
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
