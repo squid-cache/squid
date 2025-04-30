@@ -138,11 +138,11 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     debugs(42, 5, "Send ICMP packet to " << to << ".");
 
     x = xsendto(icmp_sock,
-               (const void *) pkt,
-               icmp_pktsize,
-               0,
-               S->ai_addr,
-               S->ai_addrlen);
+                (const void *) pkt,
+                icmp_pktsize,
+                0,
+                S->ai_addr,
+                S->ai_addrlen);
 
     if (x < 0) {
         int xerrno = errno;
