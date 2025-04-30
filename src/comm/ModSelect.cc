@@ -15,6 +15,8 @@
 #include "anyp/PortCfg.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "compat/select.h"
+#include "compat/socket.h"
 #include "fde.h"
 #include "globals.h"
 #include "ICP.h"

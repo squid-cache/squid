@@ -140,15 +140,6 @@ xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockaddr * fro
 }
 
 int
-xselect(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval * timeout)
-{
-    const auto result = ::select(nfds, readfds, writefds, exceptfds, timeout);
-    if (result == SOCKET_ERROR)
-        SetErrnoFromWsaError();
-    return result;
-}
-
-int
 xsend(int socketFd, const void * buf, size_t len, int flags)
 {
     const auto handle = _get_osfhandle(socketFd);

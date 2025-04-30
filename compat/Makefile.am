@@ -65,6 +65,8 @@ libcompatsquid_la_SOURCES = \
 	os/sunos.h \
 	osdetect.h \
 	pipe.h \
+	select.cc \
+	select.h \
 	shm.cc \
 	shm.h \
 	socket.cc \

@@ -11,6 +11,7 @@
 #include "squid.h"
 
 #if USE_UNLINKD
+#include "compat/select.h"
 #include "compat/unistd.h"
 #include "fd.h"
 #include "fde.h"

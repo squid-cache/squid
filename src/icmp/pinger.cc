@@ -45,6 +45,7 @@
 #if USE_ICMP
 
 #include "base/Stopwatch.h"
+#include "compat/select.h"
 #include "compat/socket.h"
 #include "Icmp4.h"
 #include "Icmp6.h"

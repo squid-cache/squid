@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "comm/Loops.h"
+#include "compat/select.h"
 #include "ConfigOption.h"
 #include "diomsg.h"
 #include "DiskdFile.h"
