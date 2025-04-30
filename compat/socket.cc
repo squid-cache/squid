@@ -154,14 +154,14 @@ xsend(int socketFd, const void * buf, size_t len, int flags)
 }
 
 ssize_t
-xsendto(int socketFd, const void * buf, size_t len, int flags, const struct sockaddr * to, socklen_t tolen)
+xsendto(int socketFd, const void * buf, size_t len, int flags, const struct sockaddr * to, socklen_t toLen)
 {
     const auto handle = _get_osfhandle(socketFd);
     if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    const auto result = ::sendto(handle, static_cast<const char *>(buf), static_cast<int>(len), flags, to, tolen);
+    const auto result = ::sendto(handle, static_cast<const char *>(buf), static_cast<int>(len), flags, to, toLen);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
