@@ -435,18 +435,6 @@ ioctlsocket(int s, long c, u_long FAR * a)
 #define ioctlsocket(s,c,a) Squid::ioctlsocket(s,c,a)
 
 inline int
-select(int n, fd_set * r, fd_set * w, fd_set * e, struct timeval * t)
-{
-    int result;
-    if ((result = ::select(n,r,w,e,t)) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return result;
-}
-#define select(n,r,w,e,t) Squid::select(n,r,w,e,t)
-
-inline int
 shutdown(int s, int h)
 {
     if (::shutdown(_get_osfhandle(s),h) == SOCKET_ERROR) {
@@ -513,12 +501,6 @@ WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
     (errno = WSAGetLastError()), (HOSTENT FAR*)NULL : (HOSTENT FAR*)ws32_result)
 #define recv(s,b,l,f) \
     (SOCKET_ERROR == (ws32_result = recv(_get_osfhandle(s),b,l,f)) ? \
-    (errno = WSAGetLastError()), -1 : ws32_result)
-#define sendto(s,b,l,f,t,tl) \
-    (SOCKET_ERROR == (ws32_result = sendto(_get_osfhandle(s),b,l,f,t,tl)) ? \
-    (errno = WSAGetLastError()), -1 : ws32_result)
-#define select(n,r,w,e,t) \
-    (SOCKET_ERROR == (ws32_result = select(n,r,w,e,t)) ? \
     (errno = WSAGetLastError()), -1 : ws32_result)
 #define socket(f,t,p) \
     (INVALID_SOCKET == ((SOCKET)(ws32_result = (int)socket(f,t,p))) ? \

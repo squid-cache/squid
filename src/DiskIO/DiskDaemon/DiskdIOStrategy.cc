@@ -409,7 +409,7 @@ DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, size_t size, off_t offset, s
     struct timeval delay = {0, 1};
 
     while (away > magic2) {
-        select(0, nullptr, nullptr, nullptr, &delay);
+        xselect(0, nullptr, nullptr, nullptr, &delay);
         Store::Root().callback();
 
         if (delay.tv_usec < 1000000)

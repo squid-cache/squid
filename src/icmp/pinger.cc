@@ -206,7 +206,7 @@ main(int, char **)
         FD_SET(squid_link, &R);
         Stopwatch timer;
         timer.resume();
-        x = select(max_fd+1, &R, nullptr, nullptr, &tv);
+        x = xselect(max_fd+1, &R, nullptr, nullptr, &tv);
         getCurrentTime();
 
         if (x < 0) {

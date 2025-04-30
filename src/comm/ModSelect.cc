@@ -156,7 +156,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 
     ++ statCounter.syscalls.selects;
 
-    if (select(maxfd, &read_mask, &write_mask, nullptr, &zero_tv) < 1)
+    if (xselect(maxfd, &read_mask, &write_mask, nullptr, &zero_tv) < 1)
         return incoming_sockets_accepted;
 
     for (i = 0; i < nfds; ++i) {
@@ -320,7 +320,7 @@ Comm::DoSelect(int msec)
             poll_time.tv_sec = msec / 1000;
             poll_time.tv_usec = (msec % 1000) * 1000;
             ++ statCounter.syscalls.selects;
-            num = select(maxfd, &readfds, &writefds, nullptr, &poll_time);
+            num = xselect(maxfd, &readfds, &writefds, nullptr, &poll_time);
             int xerrno = errno;
             ++ statCounter.select_loops;
 

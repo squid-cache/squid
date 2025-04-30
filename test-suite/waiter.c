@@ -30,7 +30,7 @@ main(int argc, char *argv[])
         to.tv_usec += 1000000;
         to.tv_sec -= 1;
     }
-    select(1, NULL, NULL, NULL, &to);
+    xselect(1, NULL, NULL, NULL, &to);
     return 0;
 }
 

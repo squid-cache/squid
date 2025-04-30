@@ -440,7 +440,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
             }
             FD_ZERO(&readfds);
             FD_SET(socket_fd, &readfds);
-            if (select(socket_fd + 1, &readfds, nullptr, nullptr, &tv) == 0)  /* Select timeout */
+            if (xselect(socket_fd + 1, &readfds, nullptr, nullptr, &tv) == 0)  /* Select timeout */
                 break;
             salen = sizeof(saremote);
             len = xrecvfrom(socket_fd, recv_buffer, sizeof(i_recv_buffer),
