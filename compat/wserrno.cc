@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "compat/wserrno.h"
 
-#if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
 
 #include <unordered_map>
 void

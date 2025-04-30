@@ -8,7 +8,7 @@
 
 #include "squid.h"
 
-#if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
 
 #include "compat/socket.h"
 #include "compat/unistd.h"

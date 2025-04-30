@@ -13,6 +13,7 @@
 #include <sys/select.h>
 #endif
 
+/// POSIX select(2) equivalent
 int xselect(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval * timeout);
 
 #if !(_SQUID_WINDOWS_ || _SQUID_MINGW_)

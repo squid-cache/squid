@@ -37,7 +37,7 @@ int xread(int fd, void * buf, size_t sz);
 /// POSIX write(2) equivalent
 int xwrite(int fd, const void * buf, size_t sz);
 
-#if (_SQUID_WINDOWS_ || _SQUID_MINGW_)
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
 
 #ifndef _PATH_DEVNULL
 #define _PATH_DEVNULL "NUL"
