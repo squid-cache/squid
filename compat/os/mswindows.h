@@ -493,13 +493,6 @@ WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
 } /* namespace Squid */
 
 #else /* #ifdef __cplusplus */
-#define gethostbyname(n) \
-    (NULL == ((HOSTENT FAR*)(ws32_result = (int)gethostbyname(n))) ? \
-    (errno = WSAGetLastError()), (HOSTENT FAR*)NULL : (HOSTENT FAR*)ws32_result)
-#define socket(f,t,p) \
-    (INVALID_SOCKET == ((SOCKET)(ws32_result = (int)socket(f,t,p))) ? \
-    ((WSAEMFILE == (errno = WSAGetLastError()) ? errno = EMFILE : -1), -1) : \
-    (SOCKET)_open_osfhandle(ws32_result,0))
 #define write      _write /* Needed in util.c */
 #define open       _open /* Needed in win32lib.c */
 #endif /* #ifdef __cplusplus */
