@@ -2021,11 +2021,11 @@ ConnStateData::handleChunkedRequestBody()
         // if parser needs more space and we can consume nothing, we will stall
         Must(!bodyParser->needsMoreSpace() || bodyPipe->buf().hasContent());
     } catch (...) { // TODO: be more specific
-        debugs(33, 3, "malformed chunks" << bodyPipe->status());
+        debugs(33, 3, "malformed chunks " << bodyPipe->status());
         return ERR_INVALID_REQ;
     }
 
-    debugs(33, 7, "need more chunked data" << *bodyPipe->status());
+    debugs(33, 7, "need more chunked data " << *bodyPipe->status());
     return ERR_NONE;
 }
 
@@ -3581,7 +3581,7 @@ void
 ConnStateData::startDechunkingRequest()
 {
     Must(bodyPipe != nullptr);
-    debugs(33, 5, "start dechunking" << bodyPipe->status());
+    debugs(33, 5, "start dechunking " << bodyPipe->status());
     assert(!bodyParser);
     bodyParser = new Http1::TeChunkedParser;
 }

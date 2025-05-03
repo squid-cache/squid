@@ -357,7 +357,7 @@ Adaptation::Ecap::XactionRep::doneAll() const
 void
 Adaptation::Ecap::XactionRep::sinkVb(const char *reason)
 {
-    debugs(93,4, "sink for " << reason << "; status:" << status());
+    debugs(93,4, "sink for " << reason << "; status: " << status());
 
     // we reset raw().body_pipe when we are done, so use this one for checking
     const BodyPipePointer &permPipe = theVirginRep.raw().header->body_pipe;
@@ -371,7 +371,7 @@ Adaptation::Ecap::XactionRep::sinkVb(const char *reason)
 void
 Adaptation::Ecap::XactionRep::preserveVb(const char *reason)
 {
-    debugs(93,4, "preserve for " << reason << "; status:" << status());
+    debugs(93,4, "preserve for " << reason << "; status: " << status());
 
     // we reset raw().body_pipe when we are done, so use this one for checking
     const BodyPipePointer &permPipe = theVirginRep.raw().header->body_pipe;
@@ -387,7 +387,7 @@ Adaptation::Ecap::XactionRep::preserveVb(const char *reason)
 void
 Adaptation::Ecap::XactionRep::forgetVb(const char *reason)
 {
-    debugs(93,9, "forget vb " << reason << "; status:" << status());
+    debugs(93,9, "forget vb " << reason << "; status: " << status());
 
     BodyPipePointer &p = theVirginRep.raw().body_pipe;
     if (p != nullptr && p->stillConsuming(this))
@@ -442,7 +442,7 @@ Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Mess
         updateHistory(msg);
         sendAnswer(Answer::Forward(msg));
 
-        debugs(93,4, "adapter will produce body" << status());
+        debugs(93,4, "adapter will produce body " << status());
         theMaster->abMake(); // libecap will produce
     }
 }
@@ -702,8 +702,6 @@ Adaptation::Ecap::XactionRep::status() const
     static MemBuf buf;
     buf.reset();
 
-    buf.append(" [", 2);
-
     if (makingVb)
         buf.appendf("M%d", static_cast<int>(makingVb));
 
@@ -731,8 +729,6 @@ Adaptation::Ecap::XactionRep::status() const
         else
             buf.append(" A?", 3);
     }
-
-    buf.appendf(" %s%u]", id.prefix(), id.value);
 
     buf.terminate();
 
