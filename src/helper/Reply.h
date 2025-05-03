@@ -16,6 +16,7 @@
 #include "MemBuf.h"
 #include "Notes.h"
 
+#include <optional>
 #include <ostream>
 
 namespace Helper
@@ -63,6 +64,10 @@ public:
 
     /// The stateful replies should include the reservation ID
     Helper::ReservationId reservationId;
+
+    /// Absolute time when this response becomes stale.
+    std::optional<time_t> expires;
+
 private:
     static void CheckReceivedKey(const SBuf &, const SBuf &);
 
