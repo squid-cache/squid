@@ -412,10 +412,10 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
         break;
 
     case PERF_SYS_NUMOBJCNT: {
-        StoreInfoStats storestats;
-        Store::Root().getStats(storestats);
+        StoreInfoStats stats;
+        Store::Root().getStats(stats);
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) storestats.swap.count,
+                                      (snint) stats.swap.count,
                                       SMI_GAUGE32);
         break;
     }
