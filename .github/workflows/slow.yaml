@@ -197,11 +197,12 @@ jobs:
         uses: vmactions/openbsd-vm@v1
         with:
           usesh: true
+          release: "7.7"
           prepare: |
             pkg_add \
               autoconf-2.72p0 \
               autoconf-archive \
-              automake-1.16.5 \
+              automake-1.17 \
               bash \
               coreutils \
               cppunit \
