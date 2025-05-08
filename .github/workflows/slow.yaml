@@ -223,7 +223,7 @@ jobs:
           run: |
             export MAKE=gmake
             export pjobs="-j`gnproc`"
-            export AUTOMAKE_VERSION=1.16
+            export AUTOMAKE_VERSION=1.17
             export amver=${AUTOMAKE_VERSION}
             export ACLOCAL_AUTOMAKE_DIR="/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
             export ACLOCAL_PATH="/usr/local/share/aclocal:/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
