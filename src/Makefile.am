@@ -917,10 +917,13 @@ nodist_tests_testURL_SOURCES = \
 	tests/stub_access_log.cc \
 	anyp/Uri.h \
 	anyp/UriScheme.h \
+	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
+	tests/stub_libcomm.cc \
 	tests/stub_libhttp.cc \
-	tests/stub_libmem.cc
+	tests/stub_libmem.cc \
+	tests/stub_MemBuf.cc
 tests_testURL_LDADD = \
 	libsquid.la \
 	anyp/libanyp.la \
@@ -2033,6 +2036,7 @@ tests_testHttp1Parser_SOURCES = \
 	wordlist.h
 nodist_tests_testHttp1Parser_SOURCES = \
 	$(TESTSOURCES) \
+	tests/stub_libcomm.cc \
 	tests/stub_libtime.cc
 tests_testHttp1Parser_LDADD= \
 	http/libhttp.la \
@@ -2363,8 +2367,8 @@ tests_testHttpRequest_LDADD = \
 	anyp/libanyp.la \
 	$(SNMP_LIBS) \
 	icmp/libicmp.la \
-	comm/libcomm.la \
 	ip/libip.la \
+	comm/libcomm.la \
 	log/liblog.la \
 	format/libformat.la \
 	store/libstore.la \
@@ -2397,8 +2401,12 @@ check_PROGRAMS += tests/testIpAddress
 tests_testIpAddress_SOURCES = \
 	tests/testIpAddress.cc
 nodist_tests_testIpAddress_SOURCES = \
+	tests/stub_MemBuf.cc \
 	tests/stub_SBuf.cc \
+	tests/stub_cache_manager.cc \
+	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
+	tests/stub_libcomm.cc \
 	tests/stub_libmem.cc \
 	tests/stub_tools.cc
 tests_testIpAddress_LDADD = \
@@ -2416,9 +2424,13 @@ check_PROGRAMS += tests/testIcmp
 tests_testIcmp_SOURCES = \
 	tests/testIcmp.cc
 nodist_tests_testIcmp_SOURCES = \
+	tests/stub_MemBuf.cc \
 	tests/stub_SBuf.cc \
+	tests/stub_cache_manager.cc \
+	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
 	icmp/Icmp.h \
+	tests/stub_libcomm.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libtime.cc
 tests_testIcmp_LDADD=\

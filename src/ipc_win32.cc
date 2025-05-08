@@ -126,7 +126,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     if (WIN32_OS_version != _WIN_OS_WINNT) {
         getsockopt(INVALID_SOCKET, SOL_SOCKET, SO_OPENTYPE, (char *) &opt, &optlen);
         opt = opt & ~(SO_SYNCHRONOUS_NONALERT | SO_SYNCHRONOUS_ALERT);
-        setsockopt(INVALID_SOCKET, SOL_SOCKET, SO_OPENTYPE, (char *) &opt, sizeof(opt));
+        Comm::SetSocketOption(INVALID_SOCKET, SOL_SOCKET, SO_OPENTYPE, opt, SBuf("SO_OPENTYPE"));
     }
 
     if (type == IPC_TCP_SOCKET) {

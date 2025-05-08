@@ -16,6 +16,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "comm/Tcp.h"
 #include "ConfigParser.h"
 #include "event.h"
 #include "ip/Address.h"
@@ -981,15 +982,10 @@ wccp2ConnectionOpen(void)
         fatal("Cannot open WCCP Port");
 
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
-    {
-        int i = IP_PMTUDISC_DONT;
-        if (setsockopt(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i) < 0) {
-            int xerrno = errno;
-            debugs(80, 2, "WARNING: Path MTU discovery could not be disabled on FD " << theWccp2Connection << ": " << xstrerr(xerrno));
-        }
-    }
-
+    static_assert(IP_PMTUDISC_DONT == 0);
+    Comm::SetBooleanSocketOption(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, false, SBuf("IP_MTU_DISCOVER for WCCPv2 receiver"));
 #endif
+
     Comm::SetSelect(theWccp2Connection, COMM_SELECT_READ, wccp2HandleUdp, nullptr, 0);
 
     debugs(80, DBG_IMPORTANT, "Accepting WCCPv2 messages on port " << WCCP_PORT << ", FD " << theWccp2Connection << ".");

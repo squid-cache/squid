@@ -75,6 +75,7 @@ void Comm::TcpAcceptor::notify(const Comm::Flag, const Comm::ConnectionPointer &
 
 #include "comm/Tcp.h"
 void Comm::ApplyTcpKeepAlive(int, const TcpKeepAlive &) STUB
+bool Comm::SetBooleanSocketOption(int, int, int, bool, SBuf const &) STUB_RETVAL(false)
 
 #include "comm/Write.h"
 void Comm::Write(const Comm::ConnectionPointer &, const char *, int, AsyncCall::Pointer &, FREE *) STUB

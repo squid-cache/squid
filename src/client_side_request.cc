@@ -1708,8 +1708,7 @@ ClientHttpRequest::doCallouts()
 
         if (!calloutContext->toClientMarkingDone) {
             calloutContext->toClientMarkingDone = true;
-            tos_t tos = aclMapTOS(Ip::Qos::TheConfig.tosToClient, &ch);
-            if (tos)
+            if (tos_t tos = aclMapTOS(Ip::Qos::TheConfig.tosToClient, &ch))
                 Ip::Qos::setSockTos(getConn()->clientConnection, tos);
 
             const auto packetMark = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToClient, &ch);

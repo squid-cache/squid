@@ -43,4 +43,6 @@ libcomm_la_SOURCES = \
 
 # a bare-bones implementation of few Comm APIs sufficient for helpers use
 libminimal_la_SOURCES = \
+	Tcp.cc \
+	Tcp.h \
 	minimal.cc
