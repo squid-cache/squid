@@ -121,7 +121,7 @@ char *gethost_name(void);
 * of groups multiplied by the maximum encoded group entry size.
 *
 * A group value is reported as the base64 encoded binary representation
-* of the objectSID. The theoretical size limit of an objectSID is 68 bytes. 
+* of the objectSID. The theoretical size limit of an objectSID is 68 bytes.
 * The base64 representation of this byte array would count max 91 characters.
 *
 * A single group membership entry gets reported by a key-value pair followed
