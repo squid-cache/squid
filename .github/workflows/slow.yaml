@@ -223,13 +223,13 @@ jobs:
           run: |
             export MAKE=gmake
             export pjobs="-j`gnproc`"
-            export AUTOMAKE_VERSION=1.16
+            export AUTOMAKE_VERSION=`ls /usr/local/bin/automake-* | sed 's/.*-//' | tail -1`
             export amver=${AUTOMAKE_VERSION}
             export ACLOCAL_AUTOMAKE_DIR="/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
             export ACLOCAL_PATH="/usr/local/share/aclocal:/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
-            export AUTOCONF_VERSION=2.72
+            export AUTOCONF_VERSION=`ls /usr/local/bin/autoconf-* | sed 's/.*-//' | tail -1`
             export acver=${AUTOCONF_VERSION}
-            export ltver=2.4.2
+            export ltver=`libtool --version | head -1 | sed 's/.* //'`
             export CFLAGS='-Wno-compound-token-split-by-macro'
             export LDFLAGS="-L/usr/local/lib"
             # until we remove GNUisms from our grep commands,
