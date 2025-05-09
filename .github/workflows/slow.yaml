@@ -197,12 +197,12 @@ jobs:
         uses: vmactions/openbsd-vm@v1
         with:
           usesh: true
-          release: "7.7"
+          release: "7.6"
           prepare: |
             pkg_add \
               autoconf-2.72p0 \
               autoconf-archive \
-              automake-1.17 \
+              automake-1.16.5 \
               bash \
               coreutils \
               cppunit \
@@ -223,7 +223,7 @@ jobs:
           run: |
             export MAKE=gmake
             export pjobs="-j`gnproc`"
-            export AUTOMAKE_VERSION=1.17
+            export AUTOMAKE_VERSION=1.16
             export amver=${AUTOMAKE_VERSION}
             export ACLOCAL_AUTOMAKE_DIR="/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
             export ACLOCAL_PATH="/usr/local/share/aclocal:/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
