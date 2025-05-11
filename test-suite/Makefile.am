@@ -10,16 +10,6 @@ include $(top_srcdir)/src/Common.am
 ## we need our local files too (but avoid -I. at all costs)
 AM_CPPFLAGS += -I$(srcdir)
 
-LDADD = \
-	$(top_builddir)/src/base/libbase.la \
-	$(top_builddir)/src/globals.o \
-	$(top_builddir)/src/time/libtime.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-
-EXTRA_PROGRAMS = mem_node_test splay
-
 EXTRA_DIST = \
 	$(srcdir)/squidconf/* \
 	test-functionality.sh \
@@ -51,6 +41,7 @@ STUBS = \
 	stub_SBuf.cc \
 	stub_tools.cc \
 	stub_fatal.cc \
+	stub_libtime.cc \
 	STUB.h
 DEBUG_SOURCE = test_tools.cc $(STUBS)
 CLEANFILES += $(STUBS) stub_libmem.cc
@@ -73,6 +64,9 @@ stub_fatal.cc: $(top_srcdir)/src/tests/stub_fatal.cc
 stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
 	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
 
+stub_libtime.cc: $(top_srcdir)/src/tests/stub_libtime.cc STUB.h
+	cp $(top_srcdir)/src/tests/stub_libtime.cc $@
+
 STUB.h: $(top_srcdir)/src/tests/STUB.h
 	cp $(top_srcdir)/src/tests/STUB.h $@
 
@@ -84,7 +78,10 @@ mem_node_test_LDADD = \
 	$(top_builddir)/src/mem/libmem.la \
 	$(top_builddir)/src/debug/libdebug.la \
 	$(top_builddir)/src/comm/libminimal.la \
-	$(LDADD)
+	$(top_builddir)/src/base/libbase.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 mem_hdr_test_SOURCES = \
 	$(DEBUG_SOURCE) \
@@ -95,22 +92,35 @@ mem_hdr_test_LDADD = \
 	$(top_builddir)/src/mem/libmem.la \
 	$(top_builddir)/src/debug/libdebug.la \
 	$(top_builddir)/src/comm/libminimal.la \
-	$(LDADD)
+	$(top_builddir)/src/base/libbase.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 splay_SOURCES = \
 	$(DEBUG_SOURCE) \
 	splay.cc \
 	stub_libmem.cc
+splay_LDADD = \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 syntheticoperators_SOURCES = \
 	$(DEBUG_SOURCE) \
 	stub_libmem.cc \
 	syntheticoperators.cc
+syntheticoperators_LDADD = \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 VirtualDeleteOperator_SOURCES = \
 	$(DEBUG_SOURCE) \
 	VirtualDeleteOperator.cc \
 	stub_libmem.cc
+VirtualDeleteOperator_LDADD = \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 installcheck-local: squid-conf-tests
 
