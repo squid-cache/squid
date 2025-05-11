@@ -197,6 +197,7 @@ jobs:
         uses: vmactions/openbsd-vm@v1
         with:
           usesh: true
+          release: "7.6"
           prepare: |
             pkg_add \
               autoconf-2.72p0 \
