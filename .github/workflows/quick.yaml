@@ -43,6 +43,8 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
+      - run: cat /etc/hosts
+
       - name: Install prerequisite packages
         run: |
           sudo apt-get --quiet=2 update
