@@ -40,7 +40,7 @@ jobs:
 
   functionality-tests:
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Install prerequisite packages
@@ -83,7 +83,7 @@ jobs:
 
   source-maintenance-tests:
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Install prerequisite packages
@@ -111,7 +111,7 @@ jobs:
       fail-fast: true
       matrix:
         os:
-          - ubuntu-22.04
+          - ubuntu-24.04
         compiler:
           - { CC: gcc, CXX: g++ }
           - { CC: clang, CXX: clang++ }
@@ -159,7 +159,7 @@ jobs:
 
   CodeQL-tests:
 
-    runs-on: [ ubuntu-22.04 ]
+    runs-on: [ ubuntu-24.04 ]
 
     permissions:
       security-events: write
