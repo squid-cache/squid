@@ -168,8 +168,11 @@ jobs:
 
       - name: Install Squid prerequisite Linux packages
         run: |
+          cat /etc/apt/sources.list.d/ubuntu.sources
+          cp -pi /etc/apt/sources.list.d/ubuntu.sources /tmp/tus
           # required for "apt-get build-dep" to work
-          sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
+          sudo sed --in-place -E 's/^Types: deb$/\1 deb-src/' /etc/apt/sources.list.d/ubuntu.sources
+          diff -u /tmp/tus /etc/apt/sources.list.d/ubuntu.sources
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
           sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin
