@@ -26,7 +26,9 @@
 #include "StatHist.h"
 #include "Store.h"
 #include "store/Controller.h"
+#include "StoreFileSystem.h"
 #include "StoreStats.h"
+#include "SquidConfig.h"
 #include "tools.h"
 #include "util.h"
 
@@ -412,10 +414,20 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
         break;
 
     case PERF_SYS_NUMOBJCNT: {
-        StoreInfoStats storestats;
-        Store::Root().getStats(storestats);
+        StoreInfoStats stats;
+        Store::Root().getStats(stats);
+        double memCount = stats.mem.count;
+        if (strcasecmp(INDEXSD(0)->type(), "rock") == 0 && Config.workers > 1)
+        {
+            memCount = memCount / Config.workers;
+            // Rock cache reports the same mem.count for each thread, and they are
+            // summed. Dividing by the number of workers avoids overcounting.
+            // Unfortunately, the integer truncation below drops fractions, so the
+            // total can be off by the number of workers.
+            // XXX A better fix is needed.
+        }
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) storestats.swap.count,
+                                      (snint) (memCount + stats.swap.count),
                                       SMI_GAUGE32);
         break;
     }
