@@ -43,7 +43,13 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - run: cat /etc/hosts
+      # XXX: A hack to fix Ubuntu runners that were created in April 2025.
+      - name: Fix /etc/hosts
+      - run: |
+          cat /etc/hosts
+          cp -p /etc/hosts /tmp/etc-hosts.bak
+          sudo sed --in-place -E 's/^-e.*/# \1/' /etc/hosts
+          diff -u /tmp/etc-hosts.bak /etc/hosts.bak
 
       - name: Install prerequisite packages
         run: |
