@@ -45,7 +45,7 @@ jobs:
     steps:
       # XXX: A hack to fix Ubuntu runners that were created in April 2025.
       - name: Fix /etc/hosts
-      - run: |
+        run: |
           cat /etc/hosts
           cp -p /etc/hosts /tmp/etc-hosts.bak
           sudo sed --in-place -E 's/^(-e.*)/# \1/' /etc/hosts
