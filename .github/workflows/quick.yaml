@@ -49,7 +49,7 @@ jobs:
           cat /etc/hosts
           cp -p /etc/hosts /tmp/etc-hosts.bak
           sudo sed --in-place -E 's/^(-e.*)/# \1/' /etc/hosts
-          diff -u /tmp/etc-hosts.bak /etc/hosts.bak
+          diff -u /tmp/etc-hosts.bak /etc/hosts || true
 
       - name: Install prerequisite packages
         run: |
@@ -180,7 +180,7 @@ jobs:
           cp -pi /etc/apt/sources.list.d/ubuntu.sources /tmp/tus
           # required for "apt-get build-dep" to work
           sudo sed --in-place -E 's/^(Types: deb)$/\1 deb-src/' /etc/apt/sources.list.d/ubuntu.sources
-          diff -u /tmp/tus /etc/apt/sources.list.d/ubuntu.sources
+          diff -u /tmp/tus /etc/apt/sources.list.d/ubuntu.sources || true
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
           sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin
