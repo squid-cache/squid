@@ -51,10 +51,15 @@ jobs:
           sudo sed --in-place -E 's/^(-e.*)/# \1/' /etc/hosts
           diff -u /tmp/etc-hosts.bak /etc/hosts || true
 
-      - name: Install prerequisite packages
+      - name: Install prerequisite Linux packages
         run: |
+          cp -p /etc/apt/sources.list.d/ubuntu.sources /tmp/ubuntu.sources.bak
+          # required for "apt-get build-dep" to work
+          sudo sed --in-place -E 's/^(Types: deb)$/\1 deb-src/' /etc/apt/sources.list.d/ubuntu.sources
+          diff -u /tmp/ubuntu.sources.bak /etc/apt/sources.list.d/ubuntu.sources || true
           sudo apt-get --quiet=2 update
-          sudo apt-get --quiet=2 install libtool-bin libltdl-dev
+          sudo apt-get --quiet=2 build-dep squid
+          sudo apt-get --quiet=2 install libtool-bin
 
       - name: Setup a nodejs environment
         uses: actions/setup-node@v4
