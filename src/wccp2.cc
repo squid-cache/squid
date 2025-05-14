@@ -983,7 +983,7 @@ wccp2ConnectionOpen(void)
 
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
     static_assert(IP_PMTUDISC_DONT == 0);
-    Comm::SetBooleanSocketOption(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, false, SBuf("IP_MTU_DISCOVER for WCCPv2 receiver"));
+    (void)Comm::SetBooleanSocketOption(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, false, SBuf("IP_MTU_DISCOVER for WCCPv2 receiver"));
 #endif
 
     Comm::SetSelect(theWccp2Connection, COMM_SELECT_READ, wccp2HandleUdp, nullptr, 0);

@@ -210,7 +210,7 @@ static void
 commSetBindAddressNoPort(const int fd)
 {
 #if defined(IP_BIND_ADDRESS_NO_PORT)
-    Comm::SetBooleanSocketOption(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, true, SBuf("IP_BIND_ADDRESS_NO_PORT"));
+    (void)Comm::SetBooleanSocketOption(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, true, SBuf("IP_BIND_ADDRESS_NO_PORT"));
 #else
     (void)fd;
 #endif
@@ -290,7 +290,7 @@ static void
 comm_set_v6only(int fd, bool enabled)
 {
 #if defined(IPV6_V6ONLY)
-    Comm::SetBooleanSocketOption(fd, IPPROTO_IPV6, IPV6_V6ONLY, enabled, SBuf("IPV6_V6ONLY"));
+    (void)Comm::SetBooleanSocketOption(fd, IPPROTO_IPV6, IPV6_V6ONLY, enabled, SBuf("IPV6_V6ONLY"));
 #else
     debugs(50, DBG_CRITICAL, "WARNING: setsockopt(IPV6_V6ONLY) not supported on this platform");
 #endif
@@ -761,7 +761,7 @@ commConfigureLinger(const int fd, const OnOff enabled)
 
     fd_table[fd].flags.harshClosureRequested = (l.l_onoff && !l.l_linger); // close(2) sends TCP RST if true
 
-    Comm::SetSocketOption(fd, SOL_SOCKET, SO_LINGER, l, ToSBuf("SO_LINGER (0 seconds) ", (l.l_onoff?"enabled":"disabled")));
+    (void)Comm::SetSocketOption(fd, SOL_SOCKET, SO_LINGER, l, ToSBuf("SO_LINGER (0 seconds) ", (l.l_onoff?"enabled":"disabled")));
 }
 
 /**
@@ -999,16 +999,16 @@ comm_remove_close_handler(int fd, AsyncCall::Pointer &call)
 static void
 commSetReuseAddr(int fd)
 {
-    Comm::SetBooleanSocketOption(fd, SOL_SOCKET, SO_REUSEADDR, true, SBuf("SO_REUSEADDR"));
+    (void)Comm::SetBooleanSocketOption(fd, SOL_SOCKET, SO_REUSEADDR, true, SBuf("SO_REUSEADDR"));
 }
 
 static void
 commSetTcpRcvbuf(int fd, int size)
 {
-    Comm::SetSocketOption(fd, SOL_SOCKET, SO_RCVBUF, size, ToSBuf("SO_RCVBUF to ", size, " bytes"));
-    Comm::SetSocketOption(fd, SOL_SOCKET, SO_SNDBUF, size, ToSBuf("SO_SNDBUF to ", size, " bytes"));
+    (void)Comm::SetSocketOption(fd, SOL_SOCKET, SO_RCVBUF, size, ToSBuf("SO_RCVBUF to ", size, " bytes"));
+    (void)Comm::SetSocketOption(fd, SOL_SOCKET, SO_SNDBUF, size, ToSBuf("SO_SNDBUF to ", size, " bytes"));
 #if defined(TCP_WINDOW_CLAMP)
-    Comm::SetSocketOption(fd, SOL_TCP, TCP_WINDOW_CLAMP, size, ToSBuf("TCP_WINDOW_CLAMP to ", size, " bytes"));
+    (void)Comm::SetSocketOption(fd, SOL_TCP, TCP_WINDOW_CLAMP, size, ToSBuf("TCP_WINDOW_CLAMP to ", size, " bytes"));
 #endif
 }
 
@@ -1097,7 +1097,7 @@ commSetCloseOnExec(int fd)
 static void
 commSetTcpNoDelay(int fd)
 {
-    Comm::SetBooleanSocketOption(fd, IPPROTO_TCP, TCP_NODELAY, true, SBuf("TCP_NODELAY"));
+    (void)Comm::SetBooleanSocketOption(fd, IPPROTO_TCP, TCP_NODELAY, true, SBuf("TCP_NODELAY"));
     fd_table[fd].flags.nodelay = true;
 }
 #endif

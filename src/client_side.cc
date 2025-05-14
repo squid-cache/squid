@@ -2134,7 +2134,7 @@ ConnStateData::start()
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
         int i = IP_PMTUDISC_DONT;
-        Comm::SetSocketOption(clientConnection->fd, SOL_IP, IP_MTU_DISCOVER, i, ToSBuf("IP_MTU_DISCOVER disabled for client ", clientConnection));
+        (void)Comm::SetSocketOption(clientConnection->fd, SOL_IP, IP_MTU_DISCOVER, i, ToSBuf("IP_MTU_DISCOVER disabled for client ", clientConnection));
 #else
         static bool reported = false;
 

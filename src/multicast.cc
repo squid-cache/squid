@@ -23,7 +23,7 @@ mcastSetTtl(int fd, int mcast_ttl)
 {
 #if defined(IP_MULTICAST_TTL)
     auto ttl = char(mcast_ttl);
-    Comm::SetSocketOption(fd, IPPROTO_IP, IP_MULTICAST_TTL, ttl, ToSBuf("IP_MULTICAST_TTL to ", mcast_ttl, " hops"));
+    (void)Comm::SetSocketOption(fd, IPPROTO_IP, IP_MULTICAST_TTL, ttl, ToSBuf("IP_MULTICAST_TTL to ", mcast_ttl, " hops"));
 #endif
     return 0;
 }
@@ -51,10 +51,10 @@ mcastJoinGroups(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
 
         mr.imr_interface.s_addr = INADDR_ANY;
 
-        Comm::SetSocketOption(icpIncomingConn->fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, mr,
+        (void)Comm::SetSocketOption(icpIncomingConn->fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, mr,
                               ToSBuf("IP_ADD_MEMBERSHIP for multicast-IP=", ip, " on ICP listener ", icpIncomingConn));
 
-        Comm::SetBooleanSocketOption(icpIncomingConn->fd, IPPROTO_IP, IP_MULTICAST_LOOP, false,
+        (void)Comm::SetBooleanSocketOption(icpIncomingConn->fd, IPPROTO_IP, IP_MULTICAST_LOOP, false,
                                      ToSBuf("IP_MULTICAST_LOOP on ICP listener ", icpIncomingConn));
     }
 

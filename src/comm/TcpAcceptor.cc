@@ -163,12 +163,12 @@ Comm::TcpAcceptor::setListen()
         bzero(&afa, sizeof(afa));
         debugs(5, DBG_IMPORTANT, "Installing accept filter '" << Config.accept_filter << "' on " << conn);
         xstrncpy(afa.af_name, Config.accept_filter, sizeof(afa.af_name));
-        Comm::SetSocketOption(conn->fd, SOL_SOCKET, SO_ACCEPTFILTER, afa, ToSBuf("SO_ACCEPTFILTER to '", Config.accept_filter, "'"));
+        (void)Comm::SetSocketOption(conn->fd, SOL_SOCKET, SO_ACCEPTFILTER, afa, ToSBuf("SO_ACCEPTFILTER to '", Config.accept_filter, "'"));
 #elif defined(TCP_DEFER_ACCEPT)
         int seconds = 30;
         if (strncmp(Config.accept_filter, "data=", 5) == 0)
             seconds = atoi(Config.accept_filter + 5);
-        Comm::SetSocketOption(conn->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, seconds, ToSBuf("TCP_DEFER_ACCEPT to '", Config.accept_filter, "'"));
+        (void)Comm::SetSocketOption(conn->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, seconds, ToSBuf("TCP_DEFER_ACCEPT to '", Config.accept_filter, "'"));
 #else
         debugs(5, DBG_CRITICAL, "WARNING: accept_filter not supported on your OS");
 #endif
