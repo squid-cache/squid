@@ -46,6 +46,8 @@ char util_sccsid[] =
 
 #include "squid.h"
 #include "auth/basic/RADIUS/radius-util.h"
+#include "compat/netdb.h"
+#include "compat/socket.h"
 #include "md5.h"
 
 #include <cctype>
@@ -146,7 +148,7 @@ uint32_t get_ipaddr(char *host)
 
     if (good_ipaddr(host) == 0) {
         return(ipstr2long(host));
-    } else if ((hp = gethostbyname(host)) == (struct hostent *)nullptr) {
+    } else if ((hp = xgethostbyname(host)) == (struct hostent *)nullptr) {
         return((uint32_t)0);
     }
     return(ntohl(*(uint32_t *)hp->h_addr));

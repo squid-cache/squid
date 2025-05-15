@@ -10,6 +10,8 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "debug/Messages.h"
 #include "debug/Stream.h"
 #include "fatal.h"
@@ -103,7 +105,7 @@ fd_close(int fd)
 int
 socket_read_method(int fd, char *buf, int len)
 {
-    return recv(fd, (void *) buf, len, 0);
+    return xrecv(fd, (void *) buf, len, 0);
 }
 
 int
@@ -115,7 +117,7 @@ file_read_method(int fd, char *buf, int len)
 int
 socket_write_method(int fd, const char *buf, int len)
 {
-    return send(fd, (const void *) buf, len, 0);
+    return xsend(fd, (const void *) buf, len, 0);
 }
 
 int
@@ -128,13 +130,13 @@ file_write_method(int fd, const char *buf, int len)
 int
 default_read_method(int fd, char *buf, int len)
 {
-    return read(fd, buf, len);
+    return xread(fd, buf, len);
 }
 
 int
 default_write_method(int fd, const char *buf, int len)
 {
-    return write(fd, buf, len);
+    return xwrite(fd, buf, len);
 }
 
 int

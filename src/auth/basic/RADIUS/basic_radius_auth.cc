@@ -57,6 +57,10 @@
 #include "auth/basic/RADIUS/radius-util.h"
 #include "auth/basic/RADIUS/radius.h"
 #include "base/Random.h"
+#include "compat/netdb.h"
+#include "compat/select.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "helper/protocol_defines.h"
 #include "md5.h"
 
@@ -417,7 +421,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
          *    Send the request we've built.
          */
         gettimeofday(&sent, nullptr);
-        if (send(socket_fd, (char *) auth, total_length, 0) < 0) {
+        if (xsend(socket_fd, (char *) auth, total_length, 0) < 0) {
             int xerrno = errno;
             // EAGAIN is expected at high traffic, just retry
             // TODO: block/sleep a few ms to let the apparently full buffer drain ?
@@ -437,11 +441,11 @@ authenticate(int socket_fd, const char *username, const char *passwd)
             }
             FD_ZERO(&readfds);
             FD_SET(socket_fd, &readfds);
-            if (select(socket_fd + 1, &readfds, nullptr, nullptr, &tv) == 0)  /* Select timeout */
+            if (xselect(socket_fd + 1, &readfds, nullptr, nullptr, &tv) == 0)  /* Select timeout */
                 break;
             salen = sizeof(saremote);
-            len = recvfrom(socket_fd, recv_buffer, sizeof(i_recv_buffer),
-                           0, (struct sockaddr *) &saremote, &salen);
+            len = xrecvfrom(socket_fd, recv_buffer, sizeof(i_recv_buffer),
+                            0, (struct sockaddr *) &saremote, &salen);
 
             if (len < 0)
                 continue;
@@ -536,7 +540,7 @@ main(int argc, char **argv)
     /*
      *    Open a connection to the server.
      */
-    svp = getservbyname(svc_name, "udp");
+    svp = xgetservbyname(svc_name, "udp");
     if (svp != nullptr)
         svc_port = ntohs((unsigned short) svp->s_port);
     else
@@ -549,7 +553,7 @@ main(int argc, char **argv)
         fprintf(stderr, "FATAL: %s: Couldn't find host %s\n", argv[0], server);
         exit(EXIT_FAILURE);
     }
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    sockfd = xsocket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {
         perror("socket");
         exit(EXIT_FAILURE);
@@ -559,12 +563,12 @@ main(int argc, char **argv)
     saremote.sin_addr.s_addr = htonl(auth_ipaddr);
     saremote.sin_port = htons(svc_port);
 
-    if (connect(sockfd, (struct sockaddr *) &saremote, sizeof(saremote)) < 0) {
+    if (xconnect(sockfd, (struct sockaddr *) &saremote, sizeof(saremote)) < 0) {
         perror("connect");
         exit(EXIT_FAILURE);
     }
     salen = sizeof(salocal);
-    if (getsockname(sockfd, (struct sockaddr *) &salocal, &salen) < 0) {
+    if (xgetsockname(sockfd, (struct sockaddr *) &salocal, &salen) < 0) {
         perror("getsockname");
         exit(EXIT_FAILURE);
     }
@@ -612,7 +616,7 @@ main(int argc, char **argv)
 
         authenticate(sockfd, username, passwd);
     }
-    close(sockfd);
+    xclose(sockfd);
     return EXIT_SUCCESS;
 }
 

@@ -11,6 +11,8 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "compat/shm.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "debug/Stream.h"
 #include "fatal.h"
 #include "ipc/mem/Segment.h"
@@ -69,7 +71,7 @@ Ipc::Mem::Segment::~Segment()
 {
     if (theFD >= 0) {
         detach();
-        if (close(theFD) != 0) {
+        if (xclose(theFD) != 0) {
             int xerrno = errno;
             debugs(54, 5, "close " << theName << ": " << xstrerr(xerrno));
         }

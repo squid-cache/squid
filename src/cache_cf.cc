@@ -28,6 +28,8 @@
 #include "cache_cf.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
+#include "compat/netdb.h"
+#include "compat/socket.h"
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
@@ -2130,7 +2132,7 @@ GetService(const char *proto)
     }
     /** Returns either the service port number from /etc/services */
     if ( !isUnsignedNumeric(token, strlen(token)) )
-        port = getservbyname(token, proto);
+        port = xgetservbyname(token, proto);
     if (port != nullptr) {
         return ntohs((unsigned short)port->s_port);
     }

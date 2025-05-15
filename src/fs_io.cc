@@ -10,6 +10,8 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "fd.h"
 #include "fde.h"
 #include "fs_io.h"
@@ -71,7 +73,7 @@ file_open(const char *path, int mode)
 
     errno = 0;
 
-    fd = open(path, mode, 0644);
+    fd = xopen(path, mode, 0644);
 
     ++ statCounter.syscalls.disk.opens;
 
@@ -124,7 +126,7 @@ file_close(int fd)
      */
     assert(F->write_handler == nullptr);
 
-    close(fd);
+    xclose(fd);
 
     debugs(6, F->flags.close_request ? 2 : 5, "file_close: FD " << fd << " really closing");
 

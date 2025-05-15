@@ -17,6 +17,8 @@
 #include "adaptation/icap/ServiceRep.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
+#include "compat/netdb.h"
+#include "compat/socket.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "fde.h"
@@ -66,9 +68,9 @@ Adaptation::Icap::ServiceRep::finalize()
     if (!have_port) {
         struct servent *serv;
         if (cfg().protocol.caseCmp("icaps") == 0)
-            serv = getservbyname("icaps", "tcp");
+            serv = xgetservbyname("icaps", "tcp");
         else
-            serv = getservbyname("icap", "tcp");
+            serv = xgetservbyname("icap", "tcp");
 
         if (serv) {
             writeableCfg().port = htons(serv->s_port);
