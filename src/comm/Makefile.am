@@ -32,6 +32,8 @@ libcomm_la_SOURCES = \
 	ModSelect.cc \
 	Read.cc \
 	Read.h \
+	SocketOptions.cc \
+	SocketOptions.h \
 	Tcp.cc \
 	Tcp.h \
 	TcpAcceptor.cc \
@@ -43,4 +45,6 @@ libcomm_la_SOURCES = \
 
 # a bare-bones implementation of few Comm APIs sufficient for helpers use
 libminimal_la_SOURCES = \
+	SocketOptions.cc \
+	SocketOptions.h \
 	minimal.cc

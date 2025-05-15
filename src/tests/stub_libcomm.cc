@@ -66,6 +66,9 @@ void Comm::ReadCancel(int, AsyncCall::Pointer &) STUB
 void comm_read_base(const Comm::ConnectionPointer &, char *, int, AsyncCall::Pointer &) STUB
 void comm_read_cancel(int, IOCB *, void *) STUB
 
+#include "comm/SocketOptions.h"
+bool Comm::SetBooleanSocketOption(int, int, int, bool, SBuf const &) STUB_RETVAL(false)
+
 #include "comm/TcpAcceptor.h"
 //Comm::TcpAcceptor(const Comm::ConnectionPointer &, const char *, const Subscription::Pointer &) STUB
 void Comm::TcpAcceptor::subscribe(const Subscription::Pointer &) STUB
