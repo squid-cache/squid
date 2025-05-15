@@ -18,7 +18,7 @@
 #include "comm/comm_internal.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
-#include "comm/Tcp.h"
+#include "comm/SocketOptions.h"
 #include "comm/TcpAcceptor.h"
 #include "CommCalls.h"
 #include "eui/Config.h"

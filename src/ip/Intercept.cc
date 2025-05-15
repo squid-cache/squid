@@ -13,7 +13,7 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
-#include "comm/Tcp.h"
+#include "comm/SocketOptions.h"
 #include "fde.h"
 #include "ip/Intercept.h"
 #include "ip/tools.h"

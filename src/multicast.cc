@@ -10,8 +10,7 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
-#include "comm/Tcp.h"
-#include "debug/Stream.h"
+#include "comm/SocketOptions.h"
 // XXX: for icpIncomingConn - need to pass it as a generic parameter.
 #include "ICP.h"
 #include "ipcache.h"
@@ -52,10 +51,10 @@ mcastJoinGroups(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
         mr.imr_interface.s_addr = INADDR_ANY;
 
         (void)Comm::SetSocketOption(icpIncomingConn->fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, mr,
-                              ToSBuf("IP_ADD_MEMBERSHIP for multicast-IP=", ip, " on ICP listener ", icpIncomingConn));
+                                    ToSBuf("IP_ADD_MEMBERSHIP for multicast-IP=", ip, " on ICP listener ", icpIncomingConn));
 
         (void)Comm::SetBooleanSocketOption(icpIncomingConn->fd, IPPROTO_IP, IP_MULTICAST_LOOP, false,
-                                     ToSBuf("IP_MULTICAST_LOOP on ICP listener ", icpIncomingConn));
+                                           ToSBuf("IP_MULTICAST_LOOP on ICP listener ", icpIncomingConn));
     }
 
 #endif

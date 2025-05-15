@@ -912,6 +912,7 @@ nodist_tests_testURL_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpHeader.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_MemBuf.cc \
 	tests/stub_StatHist.cc \
 	String.cc \
 	tests/stub_access_log.cc \
@@ -922,8 +923,7 @@ nodist_tests_testURL_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_libhttp.cc \
-	tests/stub_libmem.cc \
-	tests/stub_MemBuf.cc
+	tests/stub_libmem.cc
 tests_testURL_LDADD = \
 	libsquid.la \
 	anyp/libanyp.la \

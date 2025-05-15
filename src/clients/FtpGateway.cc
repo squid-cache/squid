@@ -16,6 +16,7 @@
 #include "comm.h"
 #include "comm/ConnOpener.h"
 #include "comm/Read.h"
+#include "comm/SocketOptions.h"
 #include "comm/TcpAcceptor.h"
 #include "CommCalls.h"
 #include "compat/strtoll.h"

@@ -13,7 +13,7 @@
 #include "base/TextException.h"
 #include "cache_cf.h"
 #include "comm/Connection.h"
-#include "comm/Tcp.h"
+#include "comm/SocketOptions.h"
 #include "compat/cmsg.h"
 #include "ConfigParser.h"
 #include "fde.h"

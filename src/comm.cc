@@ -18,6 +18,7 @@
 #include "comm/IoCallback.h"
 #include "comm/Loops.h"
 #include "comm/Read.h"
+#include "comm/SocketOptions.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "compat/cmsg.h"
