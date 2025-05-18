@@ -988,9 +988,22 @@ include <windows.h>
 #include <sys/param.h>
 #endif
   ]])
+  AC_CHECK_MEMBER([struct arpreq.arp_pa],,,[
+#include <sys/types.h>
+#include <sys/socket.h>
+#if HAVE_NET_IF_ARP_H
+#include <net/if_arp.h>
+#endif
+  ])
+  SQUID_DEFINE_BOOL(HAVE_WORKABLE_STRUCT_ARPREQ,${ac_cv_member_struct_arpreq_arp_pa:=no},
+    [Does the system provide a struct arpreq we can use])
   SQUID_STATE_ROLLBACK(LIBEUI)
 ])
 AC_SUBST(EUILIB)
+AS_IF([ test "$enable_eui" = "yes" -a "$squid_host_os" != "windows" -a "x${ac_cv_member_struct_arpreq_arp_pa}" = "xno"],[
+    AC_MSG_NOTICE([OS support for EUI seems incomplete, disabling it])
+    enable_eui=no
+])
 AC_MSG_NOTICE([EUI (MAC address) controls enabled: $enable_eui])
 SQUID_DEFINE_BOOL(USE_SQUID_EUI,$enable_eui,
    [Define this to include code which lets you use ethernet addresses. This code uses API initially defined in 4.4-BSD.])
