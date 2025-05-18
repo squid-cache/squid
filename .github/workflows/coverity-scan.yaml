@@ -17,7 +17,7 @@ jobs:
     # only run the workflow on Squid's main repository
     if: github.repository == 'squid-cache/squid'
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     # this job relies on GitHub repository secrets containing
     # username and password to access the Coverity Scan service
