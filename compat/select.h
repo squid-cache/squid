@@ -24,6 +24,6 @@ xselect(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struc
     return select(nfds, readfds, writefds, exceptfds, timeout);
 }
 
-#endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
+#endif /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 
 #endif /* SQUID_COMPAT_SELECT_H */

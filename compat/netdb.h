@@ -33,5 +33,5 @@ xgetservbyname(const char *name, const char *proto)
     return getservbyname(name, proto);
 }
 
-#endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
+#endif /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 #endif /* SQUID_COMPAT_NETDB_H */

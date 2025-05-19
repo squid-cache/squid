@@ -33,9 +33,8 @@ xaccept(int socketFd, struct sockaddr *a, socklen_t *l)
     if (result == INVALID_SOCKET) {
         SetErrnoFromWsaError();
         return SOCKET_ERROR;
-    } else {
-        return _open_osfhandle(result, 0);
     }
+    return _open_osfhandle(result, 0);
 }
 
 int
@@ -188,9 +187,8 @@ xsocket(int domain, int type, int protocol)
     if (result == INVALID_SOCKET) {
         SetErrnoFromWsaError();
         return SOCKET_ERROR;
-    } else {
-        return _open_osfhandle(result, 0);
     }
+    return _open_osfhandle(result, 0);
 }
 
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
