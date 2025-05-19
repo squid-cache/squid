@@ -999,8 +999,6 @@ include <windows.h>
 #include <net/if_arp.h>
 #endif
   ])
-  SQUID_DEFINE_BOOL(HAVE_WORKABLE_STRUCT_ARPREQ,${ac_cv_member_struct_arpreq_arp_pa:=no},
-    [Does the system provide a struct arpreq we can use])
   SQUID_STATE_ROLLBACK(LIBEUI)
 ])
 AC_SUBST(EUILIB)
