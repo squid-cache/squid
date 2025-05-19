@@ -96,7 +96,7 @@ load_dict(FILE * FH) {
             *cp = '\0';
         }
         if (strtok(line, "\t ") != nullptr) {
-            // NP: line begins with IP/mask. Skipped to the end of it with this strtok()
+            // Note: line begins with IP/mask. Skipped to the end of it with this strtok()
 
             /* get the username */
             char *username;

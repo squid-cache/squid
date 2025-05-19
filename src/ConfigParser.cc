@@ -254,7 +254,7 @@ ConfigParser::TokenParse(const char * &nextToken, ConfigParser::TokenType &type)
     nextToken += strcspn(nextToken, sep);
 
     while (ConfigParser::RecognizeQuotedPair_ && *nextToken == '\\') {
-        // NP: do not permit \0 terminator to be escaped.
+        // Note: do not permit \0 terminator to be escaped.
         if (*(nextToken+1) && *(nextToken+1) != '\r' && *(nextToken+1) != '\n') {
             nextToken += 2; // skip the quoted-pair (\-escaped) character
             nextToken += strcspn(nextToken, sep);

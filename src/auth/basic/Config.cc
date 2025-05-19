@@ -94,7 +94,7 @@ Auth::Basic::Config::rotateHelpers()
         helperShutdown(basicauthenticators);
     }
 
-    /* NP: dynamic helper restart will ensure they start up again as needed. */
+    /* Note: dynamic helper restart will ensure they start up again as needed. */
 }
 
 /** shutdown the auth helpers and free any allocated configuration details */

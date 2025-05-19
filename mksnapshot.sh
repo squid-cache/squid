@@ -134,6 +134,6 @@ if (groff --help >/dev/null); then
 fi
 
 # Generate language-pack tarballs
-# NP: Only useful on development branch
+# Note: Only useful on development branch
 sh -c "cd ${tmpdir}/errors && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${suffix}-langpack.tar.gz ./*/* ./alias* ./TRANSLATORS ./COPYRIGHT "
 echo ${PACKAGE}-${VERSION}-${suffix}-langpack.tar.gz >>${branch}.out

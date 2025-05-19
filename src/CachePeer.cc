@@ -72,7 +72,7 @@ CachePeer::noteSuccess()
 {
     if (!tcp_up) {
         debugs(15, 2, "connection to " << *this << " succeeded");
-        tcp_up = connect_fail_limit; // NP: so peerAlive() works properly.
+        tcp_up = connect_fail_limit; // Note: so peerAlive() works properly.
         peerAlive(this);
     } else {
         tcp_up = connect_fail_limit;
