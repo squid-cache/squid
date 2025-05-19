@@ -1,0 +1,64 @@
+
+name: PR Approval
+
+on:
+  schedule:
+    - cron: "10 1 * * *" # once a day
+
+  pull_request:
+    # test PRs targeting this branch code
+    branches: [ "master" ]
+
+  # allows to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+concurrency:
+  # Cancel ongoing tests in case of push to the same PR or staging branch,
+  # but let previous master commit tests complete.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+env:
+  # empty except for pull_request events
+  PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+
+  # required for use of gh CLI tool
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+
+  hold-for-review:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout Squid sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Check Review Status
+        # Any Reviewer needing changes has priority hold.
+        run: |
+          gh pr view ${{ github.event.pull_request.number }} --json latestReviews \
+            --template '{{range .latestReviews}}{{.state}}{{end}}' |
+            grep CHANGES_REQUESTED && false
+
+      - name: Fast Track Approval
+        # Unanimous Approval from Squid Foundation review team overrides 48hr hold check.
+        # Authorship is treated as implicit approval.
+        id: fast-track
+        run: |
+          test `gh pr view ${{ github.event.pull_request.number }} --json author,latestReviews \
+            --template '{{.author.login}} APPROVED {{range .latestReviews}}{{.author.login}} {{.state}} {{end}}' |
+            grep -E "(kinkie|rousskov|yadij) APPROVED" | wc -l` -eq 3
+
+      - name: Time Check
+        # Squid Project grants a 48hr delay to allow
+        # reviewer a chance to veto new additions.
+        if: ${{ steps.fast-track.outcome }} != 'success'
+        run: |
+          last_commit_date=$(git log -1 --format="%cd" --date=short)
+          last_commit_date_in_seconds=$(date -d "$last_commit_date" +%s)
+          current_date=$(date --utc +%Y-%m-%d)
+          current_date_in_seconds=$(date -d "$current_date" +%s)
+          test $((current_date_in_seconds - last_commit_date_in_seconds)) -gt 172800
