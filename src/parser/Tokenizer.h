@@ -70,6 +70,15 @@ public:
      */
     bool prefix(SBuf &returnedToken, const CharacterSet &tokenChars, SBuf::size_type limit = SBuf::npos);
 
+    /// Extracts all sequential non-delimiter characters up to an optional
+    /// length limit. Any subsequent characters are left intact. If no delimiter
+    /// characters were found, and the length limit has not been reached, then
+    /// the prefix may continue when/if more input data becomes available later!
+    ///
+    /// \retval true if one or more permitted characters were found
+    /// \param returnedToken is used to store permitted characters found
+    bool prefixUntil(SBuf &returnedToken, const CharacterSet &delimiters, SBuf::size_type limit = SBuf::npos);
+
     /** Extracts all sequential permitted characters up to an optional length limit.
      * Operates on the trailing end of the buffer.
      *
@@ -164,6 +173,14 @@ public:
     int64_t udec64(const char *description, SBuf::size_type limit = SBuf::npos);
 
 protected:
+    /// SBuf searches supported by prefix_()
+    using SearchAlgorithm = enum { findFirstOf, findFirstNotOf };
+
+    /// Code shared by prefix() and prefixUntil() methods.
+    /// \param searchAlgorithm specifies how to scan buf_ prefix using the given CharacterSet
+    /// \param chars searchAlgorithm parameter -- permitted token or delimiter characters
+    bool prefix_(SBuf &returnedToken, SBuf::size_type limit, SearchAlgorithm searchAlgorithm, const CharacterSet &chars);
+
     SBuf consume(const SBuf::size_type n);
     SBuf::size_type success(const SBuf::size_type n);
     SBuf consumeTrailing(const SBuf::size_type n);
