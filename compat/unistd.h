@@ -13,15 +13,6 @@
 #include <unistd.h>
 #endif
 
-// 2025 MinGW and pre-2022 MSVC do not define these
-#ifndef _S_IREAD
-#define _S_IREAD 0x0100
-#endif
-
-#ifndef _S_IWRITE
-#define _S_IWRITE 0x0080
-#endif
-
 /// POSIX close(2) equivalent
 int xclose(int fd);
 
