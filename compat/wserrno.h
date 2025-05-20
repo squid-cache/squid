@@ -9,7 +9,7 @@
 #ifndef SQUID_COMPAT_WSERRNO_H
 #define SQUID_COMPAT_WSERRNO_H
 
-#if SQUID_WINDOWS_ || _SQUID_MINGW_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
 
 /**
  * Squid socket code is written to handle POSIX errno codes.
