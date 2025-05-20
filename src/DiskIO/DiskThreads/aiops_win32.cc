@@ -9,7 +9,6 @@
 /* DEBUG: section 43    Windows AIOPS */
 
 #include "squid.h"
-#include "compat/socket.h"
 #include "compat/unistd.h"
 #include "compat/win32_maperror.h"
 #include "DiskIO/DiskThreads/CommIO.h"
