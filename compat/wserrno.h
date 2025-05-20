@@ -17,6 +17,6 @@
  */
 void SetErrnoFromWsaError();
 
-#endif
+#endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
 
 #endif /* SQUID_COMPAT_WSERRNO_H */
