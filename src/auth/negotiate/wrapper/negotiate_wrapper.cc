@@ -39,9 +39,6 @@
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
-#if HAVE_NETDB_H
-#include <netdb.h>
-#endif
 
 #if !defined(HAVE_DECL_XMALLOC) || !HAVE_DECL_XMALLOC
 #define xmalloc malloc
