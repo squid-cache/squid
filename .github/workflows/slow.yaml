@@ -200,7 +200,6 @@ jobs:
           release: "7.6"
           prepare: |
             pkg_add \
-              autoconf-2.72p0 \
               autoconf-archive \
               automake-1.16.5 \
               bash \
@@ -223,10 +222,10 @@ jobs:
           run: |
             export MAKE=gmake
             export pjobs="-j`gnproc`"
-            export AUTOMAKE_VERSION=`ls /usr/local/bin/automake-* | sed 's/.*-//' | tail -1`
+            export AUTOMAKE_VERSION=`ls /usr/local/bin/automake-* | sed 's/.*-//'`
             export ACLOCAL_AUTOMAKE_DIR="/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
             export ACLOCAL_PATH="/usr/local/share/aclocal:/usr/local/share/aclocal-${AUTOMAKE_VERSION}"
-            export AUTOCONF_VERSION=`ls /usr/local/bin/autoconf-* | sed 's/.*-//' | tail -1`
+            export AUTOCONF_VERSION=`ls /usr/local/bin/autoconf-* | sed 's/.*-//'`
             export CFLAGS='-Wno-compound-token-split-by-macro'
             export LDFLAGS="-L/usr/local/lib"
             # until we remove GNUisms from our grep commands,
