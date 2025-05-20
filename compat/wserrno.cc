@@ -12,6 +12,7 @@
 #if _SQUID_WINDOWS_ || _SQUID_MINGW_
 
 #include <unordered_map>
+
 void
 SetErrnoFromWsaError()
 {
