@@ -68,26 +68,14 @@
 #include <cerrno>
 #include <cstring>
 #include <ctime>
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
 #endif
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
 #if _SQUID_WINDOWS_
 #include <io.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#if HAVE_NETDB_H
-#include <netdb.h>
 #endif
 #if HAVE_PWD_H
 #include <pwd.h>
