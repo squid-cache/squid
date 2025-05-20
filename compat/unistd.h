@@ -13,7 +13,7 @@
 #include <unistd.h>
 #endif
 
-// MSVC might not define these
+// 2025 MinGW and pre-2022 MSVC do not define these
 #ifndef _S_IREAD
 #define _S_IREAD 0x0100
 #endif
