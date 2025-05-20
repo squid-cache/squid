@@ -27,10 +27,6 @@
 #include <thread>
 #include <cstdlib>
 
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 static const char *hello_string = "hi there\n";
 #ifndef HELLO_BUF_SZ
 #define HELLO_BUF_SZ 32

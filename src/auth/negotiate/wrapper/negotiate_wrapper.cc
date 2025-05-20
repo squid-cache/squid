@@ -43,9 +43,6 @@
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
 #if !defined(HAVE_DECL_XMALLOC) || !HAVE_DECL_XMALLOC
 #define xmalloc malloc
