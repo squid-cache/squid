@@ -46,9 +46,6 @@
 #if HAVE_SYS_STAT_H
 #include "sys/stat.h"
 #endif
-#if HAVE_UNISTD_H
-#include "unistd.h"
-#endif
 
 #if HAVE_KRB5_MEMORY_KEYTAB
 typedef struct _krb5_kt_list {
