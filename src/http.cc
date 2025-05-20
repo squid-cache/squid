@@ -1224,7 +1224,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
             return; // wait for Client::noteMoreBodySpaceAvailable()
         }
 
-        if (virginBodyDestination && virginBodyDestination->buf().hasContent()) {
+        if (virginBodyDestination && !virginBodyDestination->buf().hasPotentialSpace()) {
             debugs(11, 5, "avoid delayRead() to give adaptation a chance to drain body pipe buffer: " << virginBodyDestination->buf().contentSize());
             return; // wait for Client::noteMoreBodySpaceAvailable()
         }
