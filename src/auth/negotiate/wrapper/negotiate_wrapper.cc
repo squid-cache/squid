@@ -33,7 +33,6 @@
 #include "squid.h"
 #include "base64.h"
 #include "compat/pipe.h"
-#include "compat/socket.h"
 #include "compat/unistd.h"
 
 #include <cerrno>
