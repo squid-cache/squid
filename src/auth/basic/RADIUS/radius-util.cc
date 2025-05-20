@@ -59,9 +59,6 @@ char util_sccsid[] =
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
-#if HAVE_NETDB_H
-#include <netdb.h>
-#endif
 #if HAVE_PWD_H
 #include <pwd.h>
 #endif
