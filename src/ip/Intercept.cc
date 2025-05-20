@@ -77,7 +77,6 @@
 #endif /* IPF_TRANSPARENT required headers */
 
 #if PF_TRANSPARENT
-#include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <net/if.h>
