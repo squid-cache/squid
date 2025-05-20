@@ -15,8 +15,7 @@
  * Squid socket code is written to handle POSIX errno codes.
  * Set errno to the relevant POSIX or WSA code.
  */
-void
-SetErrnoFromWsaError();
+void SetErrnoFromWsaError();
 
 #endif
 
