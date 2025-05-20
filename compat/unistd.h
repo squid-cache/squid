@@ -9,6 +9,10 @@
 #ifndef SQUID_COMPAT_UNISTD_H
 #define SQUID_COMPAT_UNISTD_H
 
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 // MSVC might not define these
 #ifndef _S_IREAD
 #define _S_IREAD 0x0100
