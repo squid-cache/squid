@@ -73,7 +73,7 @@ xgetsockname(int sockfd, struct sockaddr * addr, socklen_t * addrlen)
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    int al = *addrlen;
+    auto al = static_cast<int>(*addrlen);
     const auto result = ::getsockname(handle, addr, &al);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
@@ -131,7 +131,7 @@ xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockaddr * fro
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    int fl = *fromlen;
+    auto fl = static_cast<int>(*fromlen);
     const auto result = ::recvfrom(handle, static_cast<char *>(buf), static_cast<int>(len), flags, from, &fl);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
