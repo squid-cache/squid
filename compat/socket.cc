@@ -88,7 +88,7 @@ xgetsockopt(int socket, int level, int option_name, void * option_value, socklen
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    int ol = *option_len;
+    auto ol = static_cast<int>(*option_len);
     const auto result = ::getsockopt(handle, level, option_name, static_cast<char *>(option_value), &ol);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
