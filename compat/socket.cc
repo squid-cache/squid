@@ -29,7 +29,7 @@ xaccept(int socketFd, struct sockaddr *a, socklen_t *l)
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    const auto result = ::accept(handle, a, l);
+    const auto result = accept(handle, a, l);
     if (result == INVALID_SOCKET) {
         SetErrnoFromWsaError();
         return SOCKET_ERROR;
@@ -45,7 +45,7 @@ xbind(int socketFd, const struct sockaddr * n, socklen_t l)
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    const auto result = ::bind(handle,n,l);
+    const auto result = bind(handle,n,l);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
@@ -59,7 +59,7 @@ xconnect(int socketFd, const struct sockaddr * n, socklen_t l)
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    const auto result = ::connect(handle,n,l);
+    const auto result = connect(handle,n,l);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
@@ -74,9 +74,10 @@ xgetsockname(int sockfd, struct sockaddr * addr, socklen_t * addrlen)
         return SOCKET_ERROR;
     }
     auto al = static_cast<int>(*addrlen);
-    const auto result = ::getsockname(handle, addr, &al);
+    const auto result = getsockname(handle, addr, &al);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
+    *addrlen = static_cast<socklen_t>(al);
     return result;
 }
 
@@ -89,7 +90,7 @@ xgetsockopt(int socket, int level, int option_name, void * option_value, socklen
         return SOCKET_ERROR;
     }
     auto ol = static_cast<int>(*option_len);
-    const auto result = ::getsockopt(handle, level, option_name, static_cast<char *>(option_value), &ol);
+    const auto result = getsockopt(handle, level, option_name, static_cast<char *>(option_value), &ol);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     *option_len = static_cast<socklen_t>(ol);
@@ -104,7 +105,7 @@ xlisten(int socketFd, int backlog)
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    const auto result = ::listen(handle, backlog);
+    const auto result = listen(handle, backlog);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
@@ -118,7 +119,7 @@ xrecv(int socketFd, void * buf, size_t len, int flags)
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    const auto result = ::recv(handle, static_cast<char *>(buf), static_cast<int>(len), flags);
+    const auto result = recv(handle, static_cast<char *>(buf), static_cast<int>(len), flags);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
@@ -133,7 +134,7 @@ xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockaddr * fro
         return SOCKET_ERROR;
     }
     auto fl = static_cast<int>(*fromlen);
-    const auto result = ::recvfrom(handle, static_cast<char *>(buf), static_cast<int>(len), flags, from, &fl);
+    const auto result = recvfrom(handle, static_cast<char *>(buf), static_cast<int>(len), flags, from, &fl);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
@@ -147,7 +148,7 @@ xsend(int socketFd, const void * buf, size_t len, int flags)
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    const auto result = ::send(handle, static_cast<const char *>(buf), static_cast<int>(len), flags);
+    const auto result = send(handle, static_cast<const char *>(buf), static_cast<int>(len), flags);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
@@ -161,7 +162,7 @@ xsendto(int socketFd, const void * buf, size_t len, int flags, const struct sock
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    const auto result = ::sendto(handle, static_cast<const char *>(buf), static_cast<int>(len), flags, to, l);
+    const auto result = sendto(handle, static_cast<const char *>(buf), static_cast<int>(len), flags, to, l);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
@@ -175,7 +176,7 @@ xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    const auto result = ::setsockopt(handle, l, o, static_cast<const char *>(v), n);
+    const auto result = setsockopt(handle, l, o, static_cast<const char *>(v), n);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
@@ -184,7 +185,7 @@ xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)
 int
 xsocket(int domain, int type, int protocol)
 {
-    auto result = ::socket(domain, type, protocol);
+    auto result = socket(domain, type, protocol);
     if (result == INVALID_SOCKET) {
         SetErrnoFromWsaError();
         return SOCKET_ERROR;
