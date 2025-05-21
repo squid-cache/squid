@@ -26,7 +26,7 @@
 int
 xclose(int fd)
 {
-    auto sock = _get_osfhandle(fd);
+    const auto sock = _get_osfhandle(fd);
     if (sock == intptr_t(INVALID_HANDLE_VALUE)) {
         // errno is already set by _get_osfhandle()
         return -1;
@@ -50,7 +50,7 @@ xclose(int fd)
 int
 xgethostname(char *name, size_t namelen)
 {
-    auto result = gethostname(name, namelen);
+    const auto result = gethostname(name, namelen);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
@@ -67,7 +67,7 @@ xread(int fd, void * buf, size_t sz)
 {
     char l_so_type[sizeof(int)];
     int l_so_type_siz = sizeof(l_so_type);
-    SOCKET sock = _get_osfhandle(fd);
+    const auto sock = _get_osfhandle(fd);
 
     if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
         return xrecv(sock, (char FAR *) buf, (int)sz, 0);
@@ -80,7 +80,7 @@ xwrite(int fd, const void * buf, size_t siz)
 {
     char l_so_type[sizeof(int)];
     int l_so_type_siz = sizeof(l_so_type);
-    SOCKET sock = _get_osfhandle(fd);
+    const auto sock = _get_osfhandle(fd);
 
     if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
         return xsend(sock, (char FAR *) buf, siz, 0);
