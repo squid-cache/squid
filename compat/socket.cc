@@ -119,6 +119,7 @@ xrecv(int socketFd, void * buf, size_t len, int flags)
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
+    assert(len <= INT_MAX);
     const auto result = recv(handle, static_cast<char *>(buf), static_cast<int>(len), flags);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
@@ -134,6 +135,7 @@ xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockaddr * fro
         return SOCKET_ERROR;
     }
     auto fl = static_cast<int>(*fromlen);
+    assert(len <= INT_MAX);
     const auto result = recvfrom(handle, static_cast<char *>(buf), static_cast<int>(len), flags, from, &fl);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
@@ -148,6 +150,7 @@ xsend(int socketFd, const void * buf, size_t len, int flags)
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
+    assert(len <= INT_MAX);
     const auto result = send(handle, static_cast<const char *>(buf), static_cast<int>(len), flags);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
@@ -162,6 +165,7 @@ xsendto(int socketFd, const void * buf, size_t len, int flags, const struct sock
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
+    assert(len <= INT_MAX);
     const auto result = sendto(handle, static_cast<const char *>(buf), static_cast<int>(len), flags, to, l);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
