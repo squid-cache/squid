@@ -92,6 +92,7 @@ xgetsockopt(int socket, int level, int option_name, void * option_value, socklen
     const auto result = ::getsockopt(handle, level, option_name, static_cast<char *>(option_value), &ol);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
+    *option_len = static_cast<socklen_t>(ol);
     return result;
 }
 
