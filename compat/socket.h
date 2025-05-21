@@ -49,6 +49,13 @@ int xsetsockopt(int socketFd, int level, int option_name, const void * value, so
 /// POSIX socket(2) equivalent
 int xsocket(int domain, int type, int protocol);
 
+// Solaris and possibly others lack MSG_NOSIGNAL optimization
+// TODO: move this into compat/? Use a dedicated compat file to avoid dragging
+// sys/socket.h into the rest of Squid??
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
 #if !(_SQUID_WINDOWS_ || _SQUID_MINGW_)
 
 inline int

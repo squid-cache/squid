@@ -19,13 +19,6 @@
 #include "fde.h"
 #include "globals.h"
 
-// Solaris and possibly others lack MSG_NOSIGNAL optimization
-// TODO: move this into compat/? Use a dedicated compat file to avoid dragging
-// sys/socket.h into the rest of Squid??
-#ifndef MSG_NOSIGNAL
-#define MSG_NOSIGNAL 0
-#endif
-
 int default_read_method(int, char *, int);
 int default_write_method(int, const char *, int);
 #if _SQUID_WINDOWS_
