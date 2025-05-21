@@ -14,7 +14,6 @@
 #include "CacheManager.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "compat/socket.h"
 #include "compat/unistd.h"
 #include "ipc/Coordinator.h"
 #include "ipc/SharedListen.h"
@@ -29,6 +28,10 @@
 #endif
 
 #include <cerrno>
+
+#if HAVE_SYS_UNISTD_H
+#include <sys/unistd.h>
+#endif
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
 Ipc::Coordinator* Ipc::Coordinator::TheInstance = nullptr;
