@@ -211,13 +211,15 @@ MemStore::getStats(StoreInfoStats &stats) const
         Ipc::Mem::PageLimit(Ipc::Mem::PageId::cachePage) * pageSize;
     stats.mem.size =
         Ipc::Mem::PageLevel(Ipc::Mem::PageId::cachePage) * pageSize;
+
+    // In SMP mode, only the first worker reports non-zero stats to avoid adding
+    // up same-cache positive stats (reported by multiple worker processes) when
+    // Coordinator aggregates worker-reported stats.
+    // See also: Store::Disk::doReportStat().
+    if (UsingSmp() && KidIdentifier != 1)
+        return;
+
     stats.mem.count = currentCount();
-    if (Config.workers > 1 && KidIdentifier < Config.workers) {
-            stats.mem.count = 0.0;
-            // When there are N workers, the mem.count will be summed for kids
-            // 1 to N. To avoid overcounting, just return the count once for
-            // kidN and zero for the others.
-    }
 }
 
 void
