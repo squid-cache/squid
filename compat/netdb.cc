@@ -16,7 +16,7 @@
 struct hostent *
 xgethostbyname(const char *name)
 {
-    const auto result = ::gethostbyname(name);
+    const auto result = gethostbyname(name);
     if (!result)
         SetErrnoFromWsaError();
     return result;
@@ -25,7 +25,7 @@ xgethostbyname(const char *name)
 struct servent *
 xgetservbyname(const char *name, const char *proto)
 {
-    const auto result = ::getservbyname(name, proto);
+    const auto result = getservbyname(name, proto);
     if (!result)
         SetErrnoFromWsaError();
     return result;

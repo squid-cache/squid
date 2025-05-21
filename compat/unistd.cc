@@ -34,7 +34,7 @@ xclose(int fd)
 
     char l_so_type[sizeof(int)];
     int l_so_type_siz = sizeof(l_so_type);
-    if (::xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0) {
+    if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0) {
         const auto result = closesocket(sock);
         if (result == SOCKET_ERROR)
             SetErrnoFromWsaError();
@@ -50,7 +50,7 @@ xclose(int fd)
 int
 xgethostname(char *name, size_t namelen)
 {
-    auto result = ::gethostname(name, namelen);
+    auto result = gethostname(name, namelen);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
@@ -69,7 +69,7 @@ xread(int fd, void * buf, size_t sz)
     int l_so_type_siz = sizeof(l_so_type);
     SOCKET sock = _get_osfhandle(fd);
 
-    if (::xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
+    if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
         return xrecv(sock, (char FAR *) buf, (int)sz, 0);
     else
         return _read(fd, buf, (unsigned int)sz);
@@ -82,7 +82,7 @@ xwrite(int fd, const void * buf, size_t siz)
     int l_so_type_siz = sizeof(l_so_type);
     SOCKET sock = _get_osfhandle(fd);
 
-    if (::xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
+    if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
         return xsend(sock, (char FAR *) buf, siz, 0);
     else
         return _write(fd, buf, siz);

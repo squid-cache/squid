@@ -15,7 +15,7 @@
 int
 xselect(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval * timeout)
 {
-    const auto result = ::select(nfds, readfds, writefds, exceptfds, timeout);
+    const auto result = select(nfds, readfds, writefds, exceptfds, timeout);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
