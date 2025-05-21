@@ -216,9 +216,7 @@ MemStore::getStats(StoreInfoStats &stats) const
             stats.mem.count = 0.0;
             // When there are N workers, the mem.count will be summed for kids
             // 1 to N. To avoid overcounting, just return the count once for
-            // kidN and zero for the others. For mgr:info, the mem.count value
-            // from kidN is used by the Primary Process (kidN+2) to report
-            // "Hot Object Cache Items".
+            // kidN and zero for the others.
     }
 }
 
