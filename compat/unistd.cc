@@ -32,9 +32,9 @@ xclose(int fd)
         return -1;
     }
 
-    char l_so_type[sizeof(int)];
-    int l_so_type_siz = sizeof(l_so_type);
-    if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0) {
+    int l_so_type = 0;
+    int l_so_type_siz = sizeof(int);
+    if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, &l_so_type, &l_so_type_siz) == 0) {
         const auto result = closesocket(sock);
         if (result == SOCKET_ERROR)
             SetErrnoFromWsaError();
@@ -65,11 +65,11 @@ xopen(const char *filename, int oflag, int pmode)
 int
 xread(int fd, void * buf, size_t sz)
 {
-    char l_so_type[sizeof(int)];
-    int l_so_type_siz = sizeof(l_so_type);
+    int l_so_type = 0;
+    int l_so_type_siz = sizeof(int);
     const auto sock = _get_osfhandle(fd);
 
-    if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
+    if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, &l_so_type, &l_so_type_siz) == 0)
         return xrecv(sock, (char FAR *) buf, (int)sz, 0);
     else
         return _read(fd, buf, (unsigned int)sz);
@@ -78,11 +78,11 @@ xread(int fd, void * buf, size_t sz)
 int
 xwrite(int fd, const void * buf, size_t siz)
 {
-    char l_so_type[sizeof(int)];
-    int l_so_type_siz = sizeof(l_so_type);
+    int l_so_type = 0;
+    int l_so_type_siz = sizeof(int);
     const auto sock = _get_osfhandle(fd);
 
-    if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
+    if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, &l_so_type, &l_so_type_siz) == 0)
         return xsend(sock, (char FAR *) buf, siz, 0);
     else
         return _write(fd, buf, siz);
