@@ -23,6 +23,24 @@
 #define _S_IWRITE 0x0080
 #endif
 
+/// true if handle is a socket, false if a file or error
+static bool
+isSocket(intptr_t handle)
+{
+    if (!isValidSocketHandle(handle)) {
+        // errno is already set by _get_osfhandle()
+        return false;
+    }
+
+    int l_so_type = 0;
+    int l_so_type_siz = sizeof(l_so_type);
+    // use the Windows API directly
+    if (getsockopt(handle, SOL_SOCKET, SO_TYPE, reinterpret_cast<char *>(&l_so_type), &l_so_type_siz) == 0)
+        return true;
+
+    return false;
+}
+
 int
 xclose(int fd)
 {
@@ -32,9 +50,7 @@ xclose(int fd)
         return -1;
     }
 
-    int l_so_type = 0;
-    int l_so_type_siz = sizeof(int);
-    if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, &l_so_type, &l_so_type_siz) == 0) {
+    if (isSocket(sock)) {
         const auto result = closesocket(sock);
         if (result == SOCKET_ERROR)
             SetErrnoFromWsaError();
@@ -65,11 +81,9 @@ xopen(const char *filename, int oflag, int pmode)
 int
 xread(int fd, void * buf, size_t sz)
 {
-    int l_so_type = 0;
-    int l_so_type_siz = sizeof(int);
     const auto sock = _get_osfhandle(fd);
 
-    if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, &l_so_type, &l_so_type_siz) == 0)
+    if (isSocket(sock))
         return xrecv(sock, (char FAR *) buf, (int)sz, 0);
     else
         return _read(fd, buf, (unsigned int)sz);
@@ -78,11 +92,9 @@ xread(int fd, void * buf, size_t sz)
 int
 xwrite(int fd, const void * buf, size_t siz)
 {
-    int l_so_type = 0;
-    int l_so_type_siz = sizeof(int);
     const auto sock = _get_osfhandle(fd);
 
-    if (xgetsockopt(sock, SOL_SOCKET, SO_TYPE, &l_so_type, &l_so_type_siz) == 0)
+    if (isSocket(sock))
         return xsend(sock, (char FAR *) buf, siz, 0);
     else
         return _write(fd, buf, siz);

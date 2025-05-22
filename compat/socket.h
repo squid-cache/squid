@@ -130,6 +130,16 @@ xsocket(int domain, int type, int protocol)
     return socket(domain, type, protocol);
 }
 
+#else
+
+static_assert(SOCKET_ERROR == -1);
+
+static inline bool
+isValidSocketHandle(intptr_t handle)
+{
+    return handle != intptr_t(INVALID_HANDLE_VALUE);
+}
+
 #endif /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
 
 #endif /* SQUID_COMPAT_SOCKET_H */

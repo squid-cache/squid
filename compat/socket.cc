@@ -13,14 +13,6 @@
 #if _SQUID_WINDOWS_ || _SQUID_MINGW_
 #include <unordered_map>
 
-static_assert(SOCKET_ERROR == -1);
-
-static inline bool
-isValidSocketHandle(intptr_t handle)
-{
-    return handle != intptr_t(INVALID_HANDLE_VALUE);
-}
-
 int
 xaccept(int socketFd, struct sockaddr *a, socklen_t *l)
 {
