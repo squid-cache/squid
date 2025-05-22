@@ -19,27 +19,22 @@ SetErrnoFromWsaError()
     // POSIX codes which socket API users may care about
     static const auto *CodeMap = new std::unordered_map<int, int> {
 
-        // values checked for by accept(2) callers
         { WSAECONNABORTED, ECONNABORTED },
 
-        // values checked for by connect(2) callers
         { WSAEINPROGRESS, EINPROGRESS },
         { WSAEAFNOSUPPORT, EAFNOSUPPORT },
         { WSAEINVAL, EINVAL },
         { WSAEISCONN, EISCONN },
 
-        // values checked by ignoreErrno()
         { WSAEWOULDBLOCK, EWOULDBLOCK },
-        // WSAEAGAIN not defined
+        // WSAEAGAIN has no equivalent
         { WSAEALREADY, EALREADY },
         { WSAEINTR, EINTR },
-        // WSARESTART not defined
+        // WSARESTART has no equivalent
 
-        // values checked by limitError()
         { WSAEMFILE, EMFILE },
-        // WSAENFILE not defined
+        // WSAENFILE has no equivalent
 
-        // values checked by TunnelStateData::Connection::debugLevelForError()
         { WSAECONNRESET, ECONNRESET }
     };
 
