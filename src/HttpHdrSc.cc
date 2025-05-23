@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,7 +35,6 @@ static const LookupTable<http_hdr_sc_type>::Record ScAttrs[] {
     {nullptr, SC_ENUM_END} /* SC_ENUM_END taken as invalid value */
 };
 LookupTable<http_hdr_sc_type> scLookupTable(SC_ENUM_END, ScAttrs);
-std::vector<HttpHeaderFieldStat> scHeaderStats(SC_ENUM_END);
 
 // used when iterating over flags
 http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader)
@@ -134,9 +133,6 @@ HttpHdrSc::parse(const String * str)
         if (sct->isSet(type)) {
             if (type != SC_OTHER)
                 debugs(90, 2, "ignoring duplicate control-directive near '" << item << "' in '" << *str << "'");
-
-            ++ scHeaderStats[type].repCount;
-
             continue;
         }
 

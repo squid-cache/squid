@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -2639,7 +2639,7 @@ Ftp::Gateway::completeForwarding()
 {
     if (fwd == nullptr || flags.completed_forwarding) {
         debugs(9, 3, "avoid double-complete on FD " <<
-               (ctrl.conn ? ctrl.conn->fd : -1) << ", Data FD " << data.conn->fd <<
+               (ctrl.conn ? ctrl.conn->fd : -1) << ", Data FD " << (data.conn ? data.conn->fd : -1) <<
                ", this " << this << ", fwd " << fwd);
         return;
     }

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -51,9 +51,10 @@ COMMENT_START
 
 	Units accepted by Squid are:
 		bytes - byte
-		KB - Kilobyte (1024 bytes)
-		MB - Megabyte
-		GB - Gigabyte
+		KB - Kilobyte (2^10, 1'024 bytes)
+		MB - Megabyte (2^20, 1'048'576 bytes)
+		GB - Gigabyte (2^30, 1'073'741'824 bytes)
+	Squid does not yet support KiB, MiB, and GiB unit names.
 
   Values with time units
 
@@ -486,6 +487,9 @@ DOC_START
 
 	In SMP mode, each worker does nearly all what a single Squid daemon
 	does (e.g., listen on http_port and forward HTTP requests).
+
+	Changing the number of workers requires a restart: Squid warns about but
+	otherwise ignores attempts to change this setting via reconfiguration.
 DOC_END
 
 NAME: cpu_affinity_map
@@ -1609,6 +1613,12 @@ IF USE_OPENSSL
 	  #
 	  # Unlike dstdomain, this ACL does not perform DNS lookups.
 	  #
+	  # A server name may be an IP address. For example, subject alternative
+	  # names (a.k.a. SANs) in some real server certificates include IPv4 and
+	  # IPv6 entries. Internally, Squid uses inet_ntop(3) to prep IP names for
+	  # matching. When using IPv6 names, use "::" notation (if applicable).
+	  # Do not use brackets. For example: 1080::8:800:200c:417a.
+	  #
 	  # An ACL option below may be used to restrict what information
 	  # sources are used to extract the server names from:
 	  #
@@ -1632,6 +1642,10 @@ IF USE_OPENSSL
 
 	acl aclname ssl::server_name_regex [-i] \.foo\.com ...
 	  # regex matches server name obtained from various sources [fast]
+	  #
+	  # See ssl::server_name for details, including IPv6 address formatting
+	  # caveats. Use case-insensitive matching (i.e. -i option) to reduce
+	  # dependency on how Squid formats or sanitizes server names.
 
 	acl aclname connections_encrypted
 	  # matches transactions with all HTTP messages received over TLS
@@ -2565,6 +2579,9 @@ DOC_START
 	The tls-cert= option is mandatory on HTTPS ports.
 
 	See http_port for a list of modes and options.
+	Not all http_port options are available for https_port.
+	Among the unavalable options:
+	- require-proxy-header
 DOC_END
 
 NAME: ftp_port
@@ -2629,6 +2646,9 @@ DOC_START
 
 	Other http_port modes and options that are not specific to HTTP and
 	HTTPS may also work.
+	Among the options that are not available for ftp_port:
+	- require-proxy-header
+	- ssl-bump
 DOC_END
 
 NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoing_dscp
@@ -3004,7 +3024,7 @@ NAME: tls_outgoing_options
 IFDEF: HAVE_LIBGNUTLS||USE_OPENSSL
 TYPE: securePeerOptions
 DEFAULT: min-version=1.0
-LOC: Security::ProxyOutgoingConfig
+LOC: Security::ProxyOutgoingConfig()
 DOC_START
 	disable		Do not support https:// URLs.
 
@@ -5708,7 +5728,7 @@ DOC_START
 
 	Most messages have _not_ been instrumented to support this directive
 	yet. For the list of instrumented messages and their IDs, please see
-	the doc/debug-messages.txt file.
+	the doc/debug-messages.dox file.
 
 	Message ID corresponds to the message semantics rather than message
 	text or source code location. The ID is stable across Squid
@@ -6438,7 +6458,9 @@ LOC: Config.accessList.sendHit
 DOC_START
 	Responses denied by this directive will not be served from the cache
 	(but may still be cached, see store_miss). This directive has no
-	effect on the responses it allows and on the cached objects.
+	effect on the responses it allows and on the cached objects. This
+	directive is applied to both regular from-cache responses and responses
+	reused by collapsed requests (see collapsed_forwarding).
 
 	Please see the "cache" directive for a summary of differences among
 	store_miss, send_hit, and cache directives.
@@ -6626,16 +6648,14 @@ TYPE: int
 DEFAULT: 95
 LOC: Config.quickAbort.pct
 DOC_START
-	The cache by default continues downloading aborted requests
-	which are almost completed (less than 16 KB remaining). This
-	may be undesirable on slow (e.g. SLIP) links and/or very busy
-	caches.  Impatient users may tie up file descriptors and
-	bandwidth by repeatedly requesting and immediately aborting
-	downloads.
-
-	When the user aborts a request, Squid will check the
-	quick_abort values to the amount of data transferred until
-	then.
+	Continuing to download a cachable response after its request is aborted is
+	going to waste resources if the received response is not requested again.
+	On the other hand, aborting an in-progress download may effectively waste
+	(already spent) resources if the received cachable response is requested
+	again. Such waste is especially noticeable when, for example, impatient
+	users repeatedly request and then abort slow downloads. To balance these
+	trade-offs when a request is aborted during response download, Squid may
+	check quick_abort_* directives to decide whether to finish the retrieval:
 
 	If the transfer has less than 'quick_abort_min' KB remaining,
 	it will finish the retrieval.
@@ -6652,6 +6672,10 @@ DOC_START
 
 	If you want retrievals to always continue if they are being
 	cached set 'quick_abort_min' to '-1 KB'.
+
+	Many other conditions affect Squid decision to abort or continue download.
+	For example, Squid continues to download responses that feed other
+	requests but aborts responses with unknown body length.
 DOC_END
 
 NAME: read_ahead_gap
@@ -7225,6 +7249,11 @@ DOC_START
        requests hitting a stale cached object. Revalidation collapsing
        is currently disabled for Squid instances containing SMP-aware
        disk or memory caches and for Vary-controlled cached objects.
+
+       A response reused by the collapsed request is deemed fresh in that
+       request processing context -- Squid does not apply refresh_pattern and
+       internal freshness validation checks to collapsed transactions. Squid
+       does apply send_hit rules.
 DOC_END
 
 NAME: collapsed_forwarding_access

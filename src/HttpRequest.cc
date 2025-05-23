@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -93,7 +93,6 @@ HttpRequest::init()
     error.clear();
     peer_login = nullptr;      // not allocated/deallocated by this class
     peer_domain = nullptr;     // not allocated/deallocated by this class
-    peer_host = nullptr;
     vary_headers = SBuf();
     myportname = null_string;
     tag = null_string;

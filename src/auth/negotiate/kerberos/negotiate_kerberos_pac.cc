@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -201,6 +201,12 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
 {
     if (!ad_groups) {
         debug((char *) "%s| %s: ERR: No space to store groups\n",
+              LogTime(), PROGRAM);
+        return nullptr;
+    }
+
+    if (!Rids) {
+        debug((char *) "%s| %s: ERR: Invalid RIDS list\n",
               LogTime(), PROGRAM);
         return nullptr;
     }

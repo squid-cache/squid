@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,12 @@
 
 #include <bitset>
 
-Security::PeerOptions Security::ProxyOutgoingConfig;
+Security::PeerOptions &
+Security::ProxyOutgoingConfig()
+{
+    static const auto peerOptions = new PeerOptions();
+    return *peerOptions;
+}
 
 Security::PeerOptions::PeerOptions()
 {

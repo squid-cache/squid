@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,7 @@
 #include "base/EnumIterator.h"
 #include "base/IoManip.h"
 #include "base/PackableStream.h"
+#include "base/PrecomputedCodeContext.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
@@ -58,7 +59,8 @@ static void neighborAlive(CachePeer *, const MemObject *, const icp_common_t *);
 static void neighborAliveHtcp(CachePeer *, const MemObject *, const HtcpReplyData *);
 #endif
 static void neighborCountIgnored(CachePeer *);
-static void peerRefreshDNS(void *);
+static void peerDnsRefreshCheck(void *);
+static void peerDnsRefreshStart();
 static IPH peerDNSConfigure;
 static void peerProbeConnect(CachePeer *, const bool reprobeIfBusy = false);
 static CNCB peerProbeConnectDone;
@@ -281,10 +283,8 @@ getFirstUpParent(PeerSelector *ps)
     assert(ps);
     HttpRequest *request = ps->request;
 
-    CachePeer *p = nullptr;
-
     for (const auto &peer: CurrentCachePeers()) {
-        p = peer.get();
+        const auto p = peer.get();
 
         if (!neighborUp(p))
             continue;
@@ -295,11 +295,12 @@ getFirstUpParent(PeerSelector *ps)
         if (!peerHTTPOkay(p, ps))
             continue;
 
-        break;
+        debugs(15, 3, "returning " << *p);
+        return p;
     }
 
-    debugs(15, 3, "returning " << RawPointer(p).orNil());
-    return p;
+    debugs(15, 3, "none found");
+    return nullptr;
 }
 
 CachePeer *
@@ -533,7 +534,7 @@ neighbors_init(void)
         }
     }
 
-    peerRefreshDNS((void *) 1);
+    peerDnsRefreshStart();
 
     sep = getservbyname("echo", "udp");
     echo_port = sep ? ntohs((unsigned short) sep->s_port) : 7;
@@ -569,8 +570,11 @@ neighborsUdpPing(HttpRequest * request,
 
     reqnum = icpSetCacheKey((const cache_key *)entry->key);
 
+    const auto savedContext = CodeContext::Current();
     for (size_t i = 0; i < Config.peers->size(); ++i) {
         const auto p = &Config.peers->nextPeerToPing(i);
+
+        CodeContext::Reset(p->probeCodeContext);
 
         debugs(15, 5, "candidate: " << *p);
 
@@ -660,6 +664,7 @@ neighborsUdpPing(HttpRequest * request,
         if ((p->type != PEER_MULTICAST) && (p->stats.probe_start == 0))
             p->stats.probe_start = squid_curtime;
     }
+    CodeContext::Reset(savedContext);
 
     /*
      * How many replies to expect?
@@ -1053,8 +1058,7 @@ int
 neighborUp(const CachePeer * p)
 {
     if (!p->tcp_up) {
-        // TODO: When CachePeer gets its own CodeContext, pass that context instead of nullptr
-        CallService(nullptr, [&] {
+        CallService(p->probeCodeContext, [&] {
             peerProbeConnect(const_cast<CachePeer*>(p));
         });
         return 0;
@@ -1148,22 +1152,36 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
 }
 
 static void
-peerRefreshDNS(void *data)
+peerScheduleDnsRefreshCheck(const double delayInSeconds)
 {
-    if (eventFind(peerRefreshDNS, nullptr))
-        eventDelete(peerRefreshDNS, nullptr);
+    if (eventFind(peerDnsRefreshCheck, nullptr))
+        eventDelete(peerDnsRefreshCheck, nullptr);
+    eventAddIsh("peerDnsRefreshCheck", peerDnsRefreshCheck, nullptr, delayInSeconds, 1);
+}
 
-    if (!data && 0 == stat5minClientRequests()) {
+static void
+peerDnsRefreshCheck(void *)
+{
+    if (!statSawRecentRequests()) {
         /* no recent client traffic, wait a bit */
-        eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 180.0, 1);
+        peerScheduleDnsRefreshCheck(180.0);
         return;
     }
 
-    for (const auto &p: CurrentCachePeers())
-        ipcache_nbgethostbyname(p->host, peerDNSConfigure, p.get());
+    peerDnsRefreshStart();
+}
 
-    /* Reconfigure the peers every hour */
-    eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 3600.0, 1);
+static void
+peerDnsRefreshStart()
+{
+    const auto savedContext = CodeContext::Current();
+    for (const auto &p: CurrentCachePeers()) {
+        CodeContext::Reset(p->probeCodeContext);
+        ipcache_nbgethostbyname(p->host, peerDNSConfigure, p.get());
+    }
+    CodeContext::Reset(savedContext);
+
+    peerScheduleDnsRefreshCheck(3600.0);
 }
 
 /// whether new TCP probes are currently banned

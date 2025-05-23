@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -135,7 +135,7 @@ Auth::Basic::Config::Config() :
 }
 
 void
-Auth::Basic::Config::parse(Auth::SchemeConfig * scheme, int n_configured, char *param_str)
+Auth::Basic::Config::parse(Auth::SchemeConfig * scheme, size_t n_configured, char *param_str)
 {
     if (strcmp(param_str, "credentialsttl") == 0) {
         parse_time_t(&credentialsTTL);

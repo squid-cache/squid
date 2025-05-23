@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,7 +34,7 @@ public:
     bool dump(StoreEntry *, const char *, Auth::SchemeConfig *) const override;
     void fixHeader(Auth::UserRequest::Pointer, HttpReply *, Http::HdrType, HttpRequest *) override;
     void init(Auth::SchemeConfig *) override;
-    void parse(Auth::SchemeConfig *, int, char *) override;
+    void parse(Auth::SchemeConfig *, size_t, char *) override;
     void decode(char const *httpAuthHeader, Auth::UserRequest::Pointer);
     void registerWithCacheManager(void) override;
     const char * type() const override;

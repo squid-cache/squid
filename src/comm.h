@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -75,8 +75,8 @@ void commUnsetFdTimeout(int fd);
  * Set or clear the timeout for some action on an active connection.
  * API to replace commSetTimeout() when a Comm::ConnectionPointer is available.
  */
-int commSetConnTimeout(const Comm::ConnectionPointer &conn, time_t seconds, AsyncCall::Pointer &callback);
-int commUnsetConnTimeout(const Comm::ConnectionPointer &conn);
+void commSetConnTimeout(const Comm::ConnectionPointer &, time_t seconds, AsyncCall::Pointer &);
+void commUnsetConnTimeout(const Comm::ConnectionPointer &);
 
 int ignoreErrno(int);
 void commCloseAllSockets(void);

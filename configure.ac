@@ -1,11 +1,11 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[7.0.0-VCS],[https://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[8.0.0-VCS],[https://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -48,6 +48,16 @@ AS_IF([test -n "$squid_host_os_version"],[
 ])
 AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
+
+AS_IF([test -e /etc/os-release],[
+  squid_build_os_release_name=`grep '^PRETTY_NAME=' /etc/os-release | sed 's/^[[^"]]*"//;s/".*$//'`
+  AS_IF([test "x$squid_build_os_release_name" = "x"],[
+    squid_build_os_release_name=`grep '^NAME=' /etc/os-release | sed 's/^[[^"]]*"//;s/".*$//'`
+  ])
+  AS_IF([test "x$squid_build_os_release_name" != "x"],[
+    AC_MSG_NOTICE([Building on $squid_build_os_release_name])
+  ])
+])
 
 AC_PROG_CC
 AM_PROG_CC_C_O
@@ -391,13 +401,6 @@ AS_IF([test "x$squid_opt_aufs_threads" != "x"],[
   AC_MSG_NOTICE([With $squid_opt_aufs_threads aufs threads])
   AC_DEFINE_UNQUOTED(AUFS_IO_THREADS,$squid_opt_aufs_threads,
     [Defines how many threads aufs uses for I/O])
-])
-
-## TODO check if this is necessary, LT_INIT does these checks
-SQUID_AUTO_LIB(dl,[dynamic linking],[LIBDL])
-SQUID_CHECK_LIB_WORKS(dl,[
-  LDFLAGS="$LIBDL_PATH $LDFLAGS"
-  AC_CHECK_LIB(dl, dlopen,[LIBDL_LIBS="-ldl"])
 ])
 
 AC_DEFUN([LIBATOMIC_CHECKER],[
@@ -837,7 +840,7 @@ AC_ARG_ENABLE(ecap,
 dnl Perform configuration consistency checks for eCAP
 AS_IF([test "x$enable_ecap" != "xno"],[
   AS_IF([test "x$enable_shared" != "xyes"],[
-    AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-shared with --enable-ecap.])
+    AC_MSG_ERROR([eCAP support requires loadable modules (i.e. --enable-shared or equivalent).])
   ])
 
   AS_IF([test -n "$PKG_CONFIG"],[
@@ -1182,7 +1185,11 @@ SQUID_CHECK_LIB_WORKS(ldap,[
     dnl On MinGW OpenLDAP is not available, try Windows LDAP libraries
     dnl TODO: use AC_CHECK_LIB
     LIBLDAP_LIBS="-lwldap32"
-    AC_CHECK_HEADERS(winldap.h)
+    AC_CHECK_HEADERS([windows.h winldap.h],,,[
+      #if HAVE_WINDOWS_H
+      #include <windows.h>
+      #endif
+    ])
   ])
   AC_CHECK_HEADERS(ldap.h lber.h)
   AC_CHECK_HEADERS(mozldap/ldap.h)
@@ -2080,9 +2087,7 @@ assert(myBar != NULL);
     ])
   ],
 
-  [*-*-solaris2.[[0-4]]],[AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)],
-
-  [*-sony-newsos[[56]]*],[AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)]
+  [*-*-solaris2.[[0-4]]],[AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)]
 )
 
 dnl This has to be before AC_CHECK_FUNCS
@@ -2171,7 +2176,6 @@ AC_CHECK_FUNCS(\
 dnl ... and some we provide local replacements for
 AC_REPLACE_FUNCS(\
 	initgroups \
-	psignal \
 	strerror \
 	strtoll \
 	tempnam \
@@ -2507,7 +2511,6 @@ AC_CONFIG_FILES([
 	src/acl/external/kerberos_ldap_group/Makefile
 	src/acl/external/kerberos_sid_group/Makefile
 	src/acl/external/LDAP_group/Makefile
-	src/acl/external/LM_group/Makefile
 	src/acl/external/session/Makefile
 	src/acl/external/SQL_session/Makefile
 	src/acl/external/unix_group/Makefile
@@ -2530,7 +2533,6 @@ AC_CONFIG_FILES([
 	src/auth/basic/RADIUS/Makefile
 	src/auth/basic/SASL/Makefile
 	src/auth/basic/SMB/Makefile
-	src/auth/basic/SMB_LM/Makefile
 	src/auth/basic/SSPI/Makefile
 	src/auth/digest/Makefile
 	src/auth/digest/eDirectory/Makefile
@@ -2542,7 +2544,6 @@ AC_CONFIG_FILES([
 	src/auth/negotiate/wrapper/Makefile
 	src/auth/ntlm/Makefile
 	src/auth/ntlm/fake/Makefile
-	src/auth/ntlm/SMB_LM/Makefile
 	src/auth/ntlm/SSPI/Makefile
 	src/base/Makefile
 	src/clients/Makefile

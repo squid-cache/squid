@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,6 +39,16 @@
             printf(" %x", mSocketAddr_.sin6_addr.s6_addr[i]); \
         } printf("\n"); assert(b); \
     }
+
+std::optional<Ip::Address>
+Ip::Address::Parse(const char * const raw)
+{
+    Address tmp;
+    // TODO: Merge with lookupHostIP() after removing DNS lookups from Ip.
+    if (tmp.lookupHostIP(raw, true))
+        return tmp;
+    return std::nullopt;
+}
 
 int
 Ip::Address::cidr() const

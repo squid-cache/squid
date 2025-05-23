@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -278,9 +278,9 @@ Security::PeerConnector::handleNegotiationResult(const Security::IoResult &resul
     }
 
     // TODO: Honor result.important when working in a reverse proxy role?
-    debugs(83, 2, "ERROR: Cannot establish a TLS connection to " << serverConnection() << ':' <<
-           Debug::Extra << "problem: " << result.errorDescription <<
-           RawPointer("detail: ", result.errorDetail).asExtra());
+    debugs(83, 2, "ERROR: Cannot establish a TLS connection" <<
+           Debug::Extra << "problem: " << WithExtras(result) <<
+           Debug::Extra << "connection: " << serverConnection());
     recordNegotiationDetails();
     noteNegotiationError(result.errorDetail);
 }

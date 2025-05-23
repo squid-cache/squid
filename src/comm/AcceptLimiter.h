@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,8 +43,6 @@ public:
     void kick();
 
 private:
-    static AcceptLimiter Instance_;
-
     /** FIFO queue */
     std::deque<TcpAcceptor::Pointer> deferred_;
 };

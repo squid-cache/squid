@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -46,8 +46,12 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 
 #else
 
+#if HAVE_LBER_H
 #include <lber.h>
+#endif
+#if HAVE_LDAP_H
 #include <ldap.h>
+#endif
 
 #endif
 #define PROGRAM_NAME "digest_pw_auth(LDAP_backend)"

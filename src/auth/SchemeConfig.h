@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -119,7 +119,7 @@ public:
     virtual void registerWithCacheManager(void);
 
     /** parse config options */
-    virtual void parse(SchemeConfig *, int, char *);
+    virtual void parse(SchemeConfig *, size_t, char *);
 
     /** the http string id */
     virtual const char * type() const = 0;

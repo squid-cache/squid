@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,6 +48,8 @@ bool Security::HandshakeParser::parseHello(const SBuf &) STUB_RETVAL(false)
 #include "security/Io.h"
 Security::IoResult Security::Accept(Comm::Connection &) STUB_RETVAL(IoResult(IoResult::ioError))
 Security::IoResult Security::Connect(Comm::Connection &) STUB_RETVAL(IoResult(IoResult::ioError))
+void Security::IoResult::printGist(std::ostream &) const STUB
+void Security::IoResult::printWithExtras(std::ostream &) const STUB
 void Security::ForgetErrors() STUB
 
 #include "security/KeyData.h"
@@ -110,7 +112,7 @@ EncryptorAnswer &PeerConnector::answer() STUB_RETREF(EncryptorAnswer)
 }
 
 #include "security/PeerOptions.h"
-Security::PeerOptions Security::ProxyOutgoingConfig;
+Security::PeerOptions &Security::ProxyOutgoingConfig() STUB_RETREF(Security::PeerOptions)
 
 Security::PeerOptions::PeerOptions() {
 #if USE_OPENSSL

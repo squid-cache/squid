@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -81,7 +81,7 @@ Auth::SchemeConfig::registerWithCacheManager(void)
 {}
 
 void
-Auth::SchemeConfig::parse(Auth::SchemeConfig * scheme, int, char *param_str)
+Auth::SchemeConfig::parse(Auth::SchemeConfig * scheme, size_t, char *param_str)
 {
     if (strcmp(param_str, "program") == 0) {
         if (authenticateProgram)
