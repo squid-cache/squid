@@ -206,6 +206,14 @@ MemStore::getStats(StoreInfoStats &stats) const
     const size_t pageSize = Ipc::Mem::PageSize();
 
     stats.mem.shared = true;
+
+    // In SMP mode, only the first worker reports shared memory stats to avoid
+    // adding up same-cache positive stats (reported by multiple worker
+    // processes) when Coordinator aggregates worker-reported stats.
+    // See also: Store::Disk::doReportStat().
+    if (UsingSmp() && KidIdentifier != 1)
+        return;
+
     stats.mem.capacity =
         Ipc::Mem::PageLimit(Ipc::Mem::PageId::cachePage) * pageSize;
     stats.mem.size =
