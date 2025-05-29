@@ -291,12 +291,10 @@ Comm::ConnOpener::createFd()
     }
 
     // Set TOS if needed.
-    if (conn_->tos &&
-            Ip::Qos::setSockTos(temporaryFd_, conn_->tos, conn_->remote.isIPv4() ? AF_INET : AF_INET6) < 0)
+    if (conn_->tos && !Ip::Qos::setSockTos(temporaryFd_, conn_->tos, conn_->remote.isIPv4() ? AF_INET : AF_INET6))
         conn_->tos = 0;
 #if SO_MARK
-    if (conn_->nfmark &&
-            Ip::Qos::setSockNfmark(temporaryFd_, conn_->nfmark) < 0)
+    if (conn_->nfmark && !Ip::Qos::setSockNfmark(temporaryFd_, conn_->nfmark))
         conn_->nfmark = 0;
 #endif
 
