@@ -12,7 +12,7 @@ MAKETEST="distcheck"
 # Default configuration options.
 #  - Nothing special configured. Just whatever is found by "./configure"
 #
-# NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the
+# Note: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the
 #     distcheck target recursive tests beteen scripted runs.
 #     we use it to perform the same duty between our nested scripts.
 DISTCHECK_CONFIGURE_FLAGS=""
