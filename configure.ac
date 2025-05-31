@@ -989,7 +989,7 @@ include <windows.h>
 #endif
   ]])
   AC_CHECK_MEMBER([struct arpreq.arp_pa],[],[
-  AS_IF([test "x$squid_host_os" != "xwindows"],[
+  AS_IF([test "x$squid_host_os" != "xmingw" -a "x$squid_host_os" != "xcygwin"],[
     AC_MSG_NOTICE([OS support for EUI seems incomplete, disabling it])
     enable_eui=no
   ],[
