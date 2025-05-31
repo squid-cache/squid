@@ -989,10 +989,10 @@ include <windows.h>
 #endif
   ]])
   AC_CHECK_MEMBER([struct arpreq.arp_pa],[],[
-  AS_IF([test "x$squid_host_os" != "xmingw" -a "x$squid_host_os" != "xcygwin"],[
-    AC_MSG_NOTICE([OS support for EUI seems incomplete, disabling it])
-    enable_eui=no
-  ],[
+    AS_IF([test "x$squid_host_os" != "xmingw" -a "x$squid_host_os" != "xcygwin"],[
+      AC_MSG_NOTICE([OS support for EUI seems incomplete, disabling it])
+      enable_eui=no
+    ])],[[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -1002,9 +1002,8 @@ include <windows.h>
 #if HAVE_NET_IF_ARP_H
 #include <net/if_arp.h>
 #endif
-  ])
+  ]])
   SQUID_STATE_ROLLBACK(LIBEUI)
-  ])
 ])
 AC_SUBST(EUILIB)
 AC_MSG_NOTICE([EUI (MAC address) controls enabled: $enable_eui])
