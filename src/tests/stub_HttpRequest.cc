@@ -13,6 +13,8 @@
 #define STUB_API "HttpRequest.cc"
 #include "tests/STUB.h"
 
+static const SBuf nilSBuf;
+
 // void httpRequestPack(void *obj, Packable *p);
 
 HttpRequest::HttpRequest(const MasterXaction::Pointer&) : Http::Message(hoRequest) {STUB}
@@ -24,7 +26,7 @@ HttpRequest * HttpRequest::clone() const STUB_RETVAL(nullptr)
 bool HttpRequest::maybeCacheable() STUB_RETVAL(false)
 bool HttpRequest::conditional() const STUB_RETVAL(false)
 bool HttpRequest::canHandle1xx() const STUB_RETVAL(false)
-char * HttpRequest::canonicalCleanUrl() const STUB_RETVAL(nullptr)
+SBuf HttpRequest::canonicalCleanUrl() const STUB_RETVAL(nilSBuf)
 #if USE_ADAPTATION
 Adaptation::History::Pointer HttpRequest::adaptLogHistory() const STUB_RETVAL(Adaptation::History::Pointer())
 Adaptation::History::Pointer HttpRequest::adaptHistory(bool) const STUB_RETVAL(Adaptation::History::Pointer())
@@ -37,7 +39,6 @@ void HttpRequest::recordLookup(const Dns::LookupDetails &) STUB
 void HttpRequest::clearError() STUB
 void HttpRequest::clean() STUB
 void HttpRequest::init() STUB
-static const SBuf nilSBuf;
 const SBuf &HttpRequest::effectiveRequestUri() const STUB_RETVAL(nilSBuf)
 bool HttpRequest::multipartRangeRequest() const STUB_RETVAL(false)
 bool HttpRequest::parseFirstLine(const char *, const char *) STUB_RETVAL(false)
