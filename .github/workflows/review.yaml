@@ -1,4 +1,7 @@
-
+#
+# Check for the Squid Project Merg Process criteria
+# published at https://wiki.squid-cache.org/MergeProcedure#votes
+#
 name: PR Approval
 
 on:
@@ -36,8 +39,9 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Check Review Status
+      - name: Reviewer Veto
         # Any Reviewer needing changes has priority hold.
+        id: core-veto
         run: |
           gh pr view ${{ github.event.pull_request.number }} --json latestReviews \
             --template '{{range .latestReviews}}{{.state}}{{end}}' |
@@ -52,13 +56,46 @@ jobs:
             --template '{{.author.login}} APPROVED {{range .latestReviews}}{{.author.login}} {{.state}} {{end}}' |
             grep -E "(kinkie|rousskov|yadij) APPROVED" | wc -l` -eq 3
 
-      - name: Time Check
-        # Squid Project grants a 48hr delay to allow
-        # reviewer a chance to veto new additions.
+      - name: Hold 48 hours for review
+        # Squid Project grants a delay to allow review a chance to veto new additions.
         if: ${{ steps.fast-track.outcome }} != 'success'
+        id: early-hold
         run: |
           last_commit_date=$(git log -1 --format="%cd" --date=short)
           last_commit_date_in_seconds=$(date -d "$last_commit_date" +%s)
           current_date=$(date --utc +%Y-%m-%d)
           current_date_in_seconds=$(date -d "$current_date" +%s)
           test $((current_date_in_seconds - last_commit_date_in_seconds)) -gt 172800
+
+      - name: Core Team Approval
+        # Two positive votes from core developers accept the submission.
+        # Authorship is treated as implicit approval.
+        if: ${{ steps.fast-track.outcome }} != 'success'
+        id: core-approval
+        run: |
+          test `gh pr view ${{ github.event.pull_request.number }} --json author,latestReviews \
+            --template '{{.author.login}} APPROVED {{range .latestReviews}}{{.author.login}} {{.state}} {{end}}' |
+            grep -E "(kinkie|rousskov|yadij) APPROVED" | wc -l` -eq 2
+
+      - name: Any 3 Positive Reviews
+        # Any three positive votes accept the submission.
+        # Authorship is treated as implicit approval.
+        if: ${{ steps.fast-track.outcome }} != 'success'
+        id: three-votes
+        run: |
+          test `gh pr view ${{ github.event.pull_request.number }} --json author,latestReviews \
+            --template '{{.author.login}} APPROVED {{range .latestReviews}}{{.author.login}} {{.state}} {{end}}' |
+            grep -E "APPROVED" | wc -l` -eq 3
+
+      - name: Aged 10 days without negative reviews
+        # Submissions older than 10 days without negative votes are accepted.
+        if: ${{ steps.fast-track.outcome }} != 'success' &&
+            ${{ steps.core-approved.outcome }} != 'success' &&
+            ${{ steps.three-votes.outcome }} != 'success'
+        id: old-aged
+        run: |
+          last_commit_date=$(git log -1 --format="%cd" --date=short)
+          last_commit_date_in_seconds=$(date -d "$last_commit_date" +%s)
+          current_date=$(date --utc +%Y-%m-%d)
+          current_date_in_seconds=$(date -d "$current_date" +%s)
+          test $((current_date_in_seconds - last_commit_date_in_seconds)) -gt 864000
