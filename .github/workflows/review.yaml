@@ -30,7 +30,7 @@ env:
 
 jobs:
 
-  hold-for-review:
+  Review:
     runs-on: ubuntu-24.04
 
     steps:
