@@ -313,7 +313,7 @@ static const class HeaderTableRecord HttpHeaderDefinitionsTable[] =
 #line 95 "RegisteredHeadersHash.gperf"
     {"WWW-Authenticate", Http::HdrType::WWW_AUTHENTICATE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
 #line 53 "RegisteredHeadersHash.gperf"
-    {"Forwarded", Http::HdrType::FORWARDED, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader},
+    {"Forwarded", Http::HdrType::FORWARDED, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
 #line 38 "RegisteredHeadersHash.gperf"
     {"Content-Base", Http::HdrType::CONTENT_BASE, Http::HdrFieldType::ftStr, HdrKind::EntityHeader},
 #line 98 "RegisteredHeadersHash.gperf"
