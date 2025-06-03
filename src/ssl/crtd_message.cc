@@ -128,9 +128,7 @@ void Ssl::CrtdMessage::setCode(std::string const & aCode) { code = aCode; }
 std::string Ssl::CrtdMessage::compose() const
 {
     if (code.empty()) return std::string();
-    char buffer[10];
-    snprintf(buffer, sizeof(buffer), "%zd", body.length());
-    return code + ' ' + buffer + ' ' + body;
+    return code + ' ' + std::to_string(body.length()) + ' ' + body;
 }
 
 void Ssl::CrtdMessage::clear()
