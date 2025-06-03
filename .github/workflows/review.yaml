@@ -53,8 +53,8 @@ jobs:
         id: fast-track
         run: |
           test `gh pr view ${{ github.event.pull_request.number }} --json author,latestReviews \
-            --template '{{.author.login}} APPROVED {{range .latestReviews}}{{.author.login}} {{.state}} {{end}}' |
-            grep -o -E "(kinkie|rousskov|yadij) APPROVED" | wc -l` -eq 3
+            --template ' {{.author.login}} APPROVED {{range .latestReviews}}{{.author.login}} {{.state}} {{end}}' |
+            grep -o -E " (kinkie|rousskov|yadij) APPROVED" | wc -l` -eq 3
 
       - name: Hold 48 hours for review
         # Squid Project grants a delay to allow review a chance to veto new additions.
@@ -74,8 +74,8 @@ jobs:
         id: core-approval
         run: |
           test `gh pr view ${{ github.event.pull_request.number }} --json author,latestReviews \
-            --template '{{.author.login}} APPROVED {{range .latestReviews}}{{.author.login}} {{.state}} {{end}}' |
-            grep -o -E "(kinkie|rousskov|yadij) APPROVED" | wc -l` -eq 2
+            --template ' {{.author.login}} APPROVED {{range .latestReviews}}{{.author.login}} {{.state}} {{end}}' |
+            grep -o -E " (kinkie|rousskov|yadij) APPROVED" | wc -l` -eq 2
 
       - name: Any 3 Positive Reviews
         # Any three positive votes accept the submission.
@@ -84,8 +84,8 @@ jobs:
         id: three-votes
         run: |
           test `gh pr view ${{ github.event.pull_request.number }} --json author,latestReviews \
-            --template '{{.author.login}} APPROVED {{range .latestReviews}}{{.author.login}} {{.state}} {{end}}' |
-            grep -o -E "APPROVED" | wc -l` -eq 3
+            --template ' {{.author.login}} APPROVED {{range .latestReviews}}{{.author.login}} {{.state}} {{end}} ' |
+            grep -o -E " APPROVED" | wc -l` -eq 3
 
       - name: Aged 10 days without negative reviews
         # Submissions older than 10 days without negative votes are accepted.
