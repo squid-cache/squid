@@ -22,6 +22,7 @@ STUB_SOURCE = \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
+	tests/stub_Instance.cc \
 	tests/stub_IpcIoFile.cc \
 	tests/stub_MemBuf.cc \
 	tests/stub_MemObject.cc \
