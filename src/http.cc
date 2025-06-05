@@ -2511,8 +2511,12 @@ HttpStateData::getMoreRequestBody(MemBuf &buf)
 
     // optimization: pre-allocate buffer size that should be enough
     const mb_size_t rawDataSize = raw.contentSize();
-    // we may need to send: hex-chunk-size CRLF raw-data CRLF last-chunk
-    buf.init(16 + 2 + rawDataSize + 2 + 5, raw.max_capacity);
+    // we may need to send: hex-chunk-size CRLF raw-data CRLF last-chunk CRLF
+    const auto expectedSize = 16 + 2 // hex-chunk-size CRLF
+                              + rawDataSize + 2 //  raw-data CRLF
+                              + 1 + 2 // last-chunk CRLF
+                              + request->trailer.len + 2; // trailer-section CRLF
+    buf.init(expectedSize, raw.max_capacity);
 
     buf.appendf("%x\r\n", static_cast<unsigned int>(rawDataSize));
     buf.append(raw.content(), rawDataSize);
@@ -2521,13 +2525,22 @@ HttpStateData::getMoreRequestBody(MemBuf &buf)
     Must(rawDataSize > 0); // we did not accidentally created last-chunk above
 
     // Do not send last-chunk unless we successfully received everything
-    if (receivedWholeRequestBody) {
-        Must(!flags.sentLastChunk);
-        flags.sentLastChunk = true;
-        buf.append("0\r\n\r\n", 5);
-    }
+    if (receivedWholeRequestBody)
+        generateLastChunk(buf);
 
     return true;
+}
+
+void
+HttpStateData::generateLastChunk(MemBuf &buf)
+{
+    Must(!flags.sentLastChunk);
+    flags.sentLastChunk = true;
+
+    buf.append("0\r\n", 3);
+    if (request->trailer.len > 0)
+        request->trailer.packInto(buf);
+    buf.append("\r\n", 2);
 }
 
 void
@@ -2601,11 +2614,15 @@ HttpStateData::finishingChunkedRequest()
     }
 
     Must(receivedWholeRequestBody); // or we should not be sending last-chunk
-    flags.sentLastChunk = true;
+
+    MemBuf buf;
+    // we may need to send: last-chunk CRLF [ trailer-section ] CRLF
+    buf.init(3 + request->trailer.len + 2);
+    generateLastChunk(buf);
 
     typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
     requestSender = JobCallback(11,5, Dialer, this, HttpStateData::wroteLast);
-    Comm::Write(serverConnection, "0\r\n\r\n", 5, requestSender, nullptr);
+    Comm::Write(serverConnection, &buf, requestSender);
     return true;
 }
 

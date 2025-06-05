@@ -129,6 +129,7 @@ private:
     bool decodeAndWriteReplyBody();
     bool finishingBrokenPost();
     bool finishingChunkedRequest();
+    void generateLastChunk(MemBuf &);
     void doneSendingRequestBody() override;
     void requestBodyHandler(MemBuf &);
     void sentRequestBody(const CommIoCbParams &io) override;
