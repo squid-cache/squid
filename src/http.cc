@@ -2071,6 +2071,8 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         hdr_out->putStr(Http::HdrType::TRANSFER_ENCODING, "chunked");
     }
 
+    // TODO: ensure Trailers field-value lists any being sent
+
     /* Now mangle the headers. */
     httpHdrMangleList(hdr_out, request, al, ROR_REQUEST);
 
@@ -2435,6 +2437,9 @@ HttpStateData::sendRequest()
         Must(!flags.chunked_request);
         // use chunked encoding if we do not know the length
         if (request->content_length < 0)
+            flags.chunked_request = true;
+        // or if HTTP Trailer feature is being used
+        if (request->trailer.len > 0 || request->header.has(Http::HdrType::TRAILER))
             flags.chunked_request = true;
     } else {
         assert(!requestBodySource);
