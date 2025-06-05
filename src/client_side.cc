@@ -89,6 +89,7 @@
 #include "helper.h"
 #include "helper/Reply.h"
 #include "http.h"
+#include "http/ContentLengthInterpreter.h"
 #include "http/one/RequestParser.h"
 #include "http/one/TeChunkedParser.h"
 #include "http/Stream.h"
@@ -3600,13 +3601,46 @@ ConnStateData::finishDechunkingRequest(bool withSuccess)
         if (withSuccess) {
             Must(myPipe->bodySizeKnown());
             Http::StreamPointer context = pipeline.front();
-            if (context != nullptr && context->http && context->http->request)
-                context->http->request->setContentLength(myPipe->bodySize());
+            if (context && context->http) {
+                if (const auto req = context->http->request) {
+                    req->setContentLength(myPipe->bodySize());
+                    handleVirginRequestTrailers(req->trailer, bodyParser->mimeHeader());
+                }
+            }
         }
     }
 
     delete bodyParser;
     bodyParser = nullptr;
+}
+
+void
+ConnStateData::handleVirginRequestTrailers(HttpHeader &trailer, const SBuf &rawMime)
+{
+    if (rawMime.length() == 0)
+        return; // nothing to do
+
+    /* We know the whole request is in parser now */
+    debugs(11, 2, "HTTP Client " << clientConnection);
+    debugs(11, 2, "HTTP Client REQUEST TRAILER:\n---------\n" << rawMime << "----------");
+
+    Http::ContentLengthInterpreter nil;
+    nil.applyTrailerRules();
+    trailer.parse(rawMime.rawContent(), rawMime.length(), nil);
+
+    // apply forbidden Trailer filter
+    std::list<Http::HdrType> toDrop;
+    for (const auto field : trailer.entries) {
+        if (Http::HeaderLookupTable.lookup(field->id).deniedtrailer) {
+            debugs(55, 3, field->name << " is prohibited in trailers");
+            toDrop.emplace_back(field->id);
+        }
+    }
+    for (const auto i : toDrop) {
+        trailer.delById(i);
+    }
+
+    // TODO: merge relevant trailers into context->http->request->header
 }
 
 // XXX: this is an HTTP/1-only operation

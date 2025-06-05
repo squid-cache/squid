@@ -443,6 +443,7 @@ private:
     void checkLogging();
 
     void parseRequests();
+    void handleVirginRequestTrailers(HttpHeader &, const SBuf &);
     void clientAfterReadingRequests();
     bool concurrentRequestQueueFilled() const;
 
