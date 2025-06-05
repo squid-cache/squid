@@ -2211,11 +2211,25 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
 
     case Http::HdrType::CONNECTION:          /** \par Connection: */
-    case Http::HdrType::TE:                  /** \par TE: */
     case Http::HdrType::KEEP_ALIVE:          /** \par Keep-Alive: */
     case Http::HdrType::PROXY_AUTHENTICATE:  /** \par Proxy-Authenticate: */
-    case Http::HdrType::TRAILER:             /** \par Trailer: */
     case Http::HdrType::TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
+        break;
+
+    case Http::HdrType::TRAILER:
+        /** \par Trailer:
+         * Pass through only if chunked encoding is used */
+        if (flags.chunked_request)
+            hdr_out->addEntry(e->clone());
+        break;
+
+    case Http::HdrType::TE:
+        /** \par TE:
+         * Hop-by-Hop header, but advertise our Trailer support if client also does.
+         * Requires chunked encoding.
+         */
+        if (flags.chunked_request && request->header.hasListMember(Http::HdrType::TE, "trailers", ','))
+            hdr_out->putStr(Http::HdrType::TE, "trailers");
         break;
 
     /// \par Upgrade is hop-by-hop but forwardUpgrade() may send a filtered one
@@ -2470,7 +2484,7 @@ HttpStateData::sendRequest()
         if (request->content_length < 0)
             flags.chunked_request = true;
         // or if HTTP Trailer feature is being used
-        if (request->trailer.len > 0 || request->header.has(Http::HdrType::TRAILER))
+        if (request->trailer.len > 0 || request->header.has(Http::HdrType::TRAILER) || request->header.hasListMember(Http::HdrType::TE, "trailers",','))
             flags.chunked_request = true;
     } else {
         assert(!requestBodySource);
