@@ -8,6 +8,8 @@
 
 #include "squid.h"
 #include "base/File.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "debug/Stream.h"
 #include "sbuf/Stream.h"
 #include "tools.h"
@@ -21,9 +23,6 @@
 #endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
 #endif
 
 /* FileOpeningConfig */
@@ -182,7 +181,7 @@ File::open(const FileOpeningConfig &cfg)
     enter_suid();
     if (cfg.creationMask)
         oldCreationMask = umask(cfg.creationMask); // XXX: Why here? Should not this be set for the whole Squid?
-    fd_ = ::open(filename, cfg.openFlags, cfg.openMode);
+    fd_ = xopen(filename, cfg.openFlags, cfg.openMode);
     const auto savedErrno = errno;
     if (cfg.creationMask)
         umask(oldCreationMask);
@@ -203,7 +202,7 @@ File::close()
         debugs(54, DBG_IMPORTANT, sysCallFailure("CloseHandle", WindowsErrorMessage(savedError)));
     }
 #else
-    if (::close(fd_) != 0) {
+    if (xclose(fd_) != 0) {
         const auto savedErrno = errno;
         debugs(54, DBG_IMPORTANT, sysCallError("close", savedErrno));
     }
@@ -250,7 +249,7 @@ File::readSmall(const SBuf::size_type minBytes, const SBuf::size_type maxBytes)
         throw TexcHere(sysCallFailure("ReadFile", WindowsErrorMessage(savedError)));
     }
 #else
-    const auto result = ::read(fd_, rawBuf, readLimit);
+    const auto result = xread(fd_, rawBuf, readLimit);
     if (result < 0) {
         const auto savedErrno = errno;
         throw TexcHere(sysCallError("read", savedErrno));
@@ -287,7 +286,7 @@ File::writeAll(const SBuf &data)
     }
     const auto bytesWritten = static_cast<size_t>(nBytesWritten);
 #else
-    const auto result = ::write(fd_, data.rawContent(), data.length());
+    const auto result = xwrite(fd_, data.rawContent(), data.length());
     if (result < 0) {
         const auto savedErrno = errno;
         throw TexcHere(sysCallError("write", savedErrno));
