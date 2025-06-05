@@ -127,6 +127,8 @@ private:
 
     void writeReplyBody();
     bool decodeAndWriteReplyBody();
+    void handleVirginReplyTrailers(HttpHeader &, const SBuf &);
+
     bool finishingBrokenPost();
     bool finishingChunkedRequest();
     void generateLastChunk(MemBuf &);

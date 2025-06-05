@@ -31,6 +31,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "http.h"
+#include "http/ContentLengthInterpreter.h"
 #include "http/one/ResponseParser.h"
 #include "http/one/TeChunkedParser.h"
 #include "http/StatusCode.h"
@@ -1460,6 +1461,7 @@ HttpStateData::decodeAndWriteReplyBody()
         addVirginReplyBody(decodedData.content(), decodedData.contentSize());
         if (doneParsing) {
             lastChunk = 1;
+            handleVirginReplyTrailers(virginReply()->trailer, httpChunkDecoder->mimeHeader());
             markParsedVirginReplyAsWhole("http parsed last-chunk");
         } else if (eof) {
             markPrematureReplyBodyEofFailure();
@@ -1470,6 +1472,35 @@ HttpStateData::decodeAndWriteReplyBody()
         debugs (11, 2, "de-chunking failure: " << CurrentException);
     }
     return false;
+}
+
+void
+HttpStateData::handleVirginReplyTrailers(HttpHeader &trailer, const SBuf &rawMime)
+{
+    if (rawMime.length() == 0)
+        return; // nothing to do
+
+    /* We know the whole response is in parser now */
+    debugs(11, 2, "HTTP Server " << serverConnection);
+    debugs(11, 2, "HTTP Server RESPONSE TRAILER:\n---------\n" << rawMime << "----------");
+
+    Http::ContentLengthInterpreter nil;
+    nil.applyTrailerRules();
+    trailer.parse(rawMime.rawContent(), rawMime.length(), nil);
+
+    // apply forbidden Trailer filter
+    std::list<Http::HdrType> toDrop;
+    for (const auto field : virginReply()->trailer.entries) {
+        if (Http::HeaderLookupTable.lookup(field->id).deniedtrailer) {
+            debugs(55, 3, field->name << " is prohibited in trailers");
+            toDrop.emplace_back(field->id);
+        }
+    }
+    for (const auto i : toDrop) {
+        trailer.delById(i);
+    }
+
+    // TODO: merge relevant trailers into reply->header
 }
 
 /**
@@ -2539,7 +2570,7 @@ HttpStateData::generateLastChunk(MemBuf &buf)
 
     buf.append("0\r\n", 3);
     if (request->trailer.len > 0)
-        request->trailer.packInto(buf);
+        request->trailer.packInto(&buf);
     buf.append("\r\n", 2);
 }
 
@@ -2617,7 +2648,7 @@ HttpStateData::finishingChunkedRequest()
 
     MemBuf buf;
     // we may need to send: last-chunk CRLF [ trailer-section ] CRLF
-    buf.init(3 + request->trailer.len + 2);
+    buf.init(3 + request->trailer.len + 2, 64*1024);
     generateLastChunk(buf);
 
     typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
