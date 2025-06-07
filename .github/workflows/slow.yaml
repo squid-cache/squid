@@ -28,20 +28,22 @@ jobs:
     strategy:
       matrix:
         os:
+          - centos-stream-10
           - centos-stream-9
           - debian-stable
           - debian-testing
           - debian-unstable
-          - fedora-40
           - fedora-41
+          - fedora-42
           - fedora-rawhide
           - gentoo
           - opensuse-leap
           - opensuse-tumbleweed
           - ubuntu-focal
           - ubuntu-jammy
-          - ubuntu-noble # EOL 2036-04
-          - ubuntu-oracular # EOL 2025-07
+          - ubuntu-noble
+          - ubuntu-oracular
+          - ubuntu-plucky
         compiler:
           - { CC: gcc, CXX: g++ }
           - { CC: clang, CXX: clang++ }
