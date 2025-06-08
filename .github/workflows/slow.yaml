@@ -41,8 +41,8 @@ jobs:
           - opensuse-tumbleweed
           - ubuntu-focal
           - ubuntu-jammy
-          - ubuntu-noble
-          - ubuntu-oracular
+          - ubuntu-noble # EOL 2036-04
+          - ubuntu-oracular # EOL 2025-07
           - ubuntu-plucky
         compiler:
           - { CC: gcc, CXX: g++ }
