@@ -663,8 +663,8 @@ generateRawGperfFile ()
     echo
 
     if test `gperf --version | head -1 | cut -d ' ' -f 3 | cut -d. -f '-2' | sed -e 's/\.//'` -lt 32 ; then
-        # our C++17 compilers complain about missing '[[fallthrough]]' attribute
-        # when old gperf versions use a '/*FALLTHROUGH*/' code comment.
+        # We configure C++ compilers to complain about missing '[[fallthrough]]' attribute
+        # where old gperf versions use a '/*FALLTHROUGH*/' code comment.
         (cd `dirname $gperfFile` && gperf -m 100000 `basename $gperfFile`) | \
             sed -e 's@/[*]FALLTHROUGH[*]/@[[fallthrough]];@g'
     else
