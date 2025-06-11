@@ -13,12 +13,12 @@
 
 #include "anyp/forward.h"
 #include "enums.h"
+#include "http/forward.h"
 #include "ICP.h"
 #include "lookup_t.h"
 #include "typedefs.h" //for IRCB
 
 class HttpRequest;
-class HttpRequestMethod;
 class CachePeer;
 class StoreEntry;
 class PeerSelector;
@@ -38,7 +38,7 @@ void neighborsUdpAck(const cache_key *, icp_common_t *, const Ip::Address &);
 void neighborAdd(const char *, const char *, int, int, int, int, int);
 void neighbors_init(void);
 #if USE_HTCP
-void neighborsHtcpClear(StoreEntry *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
+void neighborsHtcpClear(StoreEntry *, HttpRequest *, const Http::RequestMethod &, htcp_clr_reason);
 #endif
 
 /// cache_peer with a given name (or nil)

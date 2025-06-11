@@ -151,10 +151,10 @@ public:
     void createMemObject();
 
     /// initialize mem_obj with URIs/method; assert if mem_obj already exists
-    void createMemObject(const char *storeId, const char *logUri, const HttpRequestMethod &aMethod);
+    void createMemObject(const char *storeId, const char *logUri, const Http::RequestMethod &aMethod);
 
     /// initialize mem_obj (if needed) and set URIs/method (if missing)
-    void ensureMemObject(const char *storeId, const char *logUri, const HttpRequestMethod &aMethod);
+    void ensureMemObject(const char *storeId, const char *logUri, const Http::RequestMethod &aMethod);
 
     void dump(int debug_lvl) const;
     void hashDelete();
@@ -401,21 +401,21 @@ const char *storeEntryFlags(const StoreEntry *);
 void storeEntryReplaceObject(StoreEntry *, HttpReply *);
 
 /// \ingroup StoreAPI
-StoreEntry *storeGetPublic(const char *uri, const HttpRequestMethod& method);
+StoreEntry *storeGetPublic(const char *uri, const Http::RequestMethod& method);
 
 /// \ingroup StoreAPI
 StoreEntry *storeGetPublicByRequest(HttpRequest * request, const KeyScope keyScope = ksDefault);
 
 /// \ingroup StoreAPI
-StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method, const KeyScope keyScope = ksDefault);
+StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const Http::RequestMethod& method, const KeyScope keyScope = ksDefault);
 
 /// \ingroup StoreAPI
 /// Like storeCreatePureEntry(), but also locks the entry and sets entry key.
-StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const HttpRequestMethod&);
+StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const Http::RequestMethod&);
 
 /// \ingroup StoreAPI
 /// Creates a new StoreEntry with mem_obj and sets initial flags/states.
-StoreEntry *storeCreatePureEntry(const char *storeId, const char *logUrl, const HttpRequestMethod&);
+StoreEntry *storeCreatePureEntry(const char *storeId, const char *logUrl, const Http::RequestMethod&);
 
 /// \ingroup StoreAPI
 void storeInit(void);

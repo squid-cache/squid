@@ -108,10 +108,10 @@ clientReplyContext::setReplyToError(
 #if USE_AUTH
     errstate->auth_user_request = auth_user_request;
 #endif
-    setReplyToError(failedrequest ? failedrequest->method : HttpRequestMethod(Http::METHOD_NONE), errstate);
+    setReplyToError(failedrequest ? failedrequest->method : Http::RequestMethod(Http::METHOD_NONE), errstate);
 }
 
-void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorState *errstate)
+void clientReplyContext::setReplyToError(const Http::RequestMethod& method, ErrorState *errstate)
 {
     if (errstate->httpStatus == Http::scNotImplemented && http->request)
         /* prevent confusion over whether we default to persistent or not */
@@ -134,7 +134,7 @@ clientReplyContext::setReplyToReply(HttpReply *futureReply)
     Must(futureReply);
     http->al->http.code = futureReply->sline.status();
 
-    HttpRequestMethod method;
+    Http::RequestMethod method;
     if (http->request) { // nil on responses to unparsable requests
         http->request->ignoreRange("responding with a Squid-generated reply");
         method = http->request->method;
@@ -870,7 +870,7 @@ clientReplyContext::blockedHit() const
 void
 purgeEntriesByUrl(HttpRequest * req, const char *url)
 {
-    for (HttpRequestMethod m(Http::METHOD_NONE); m != Http::METHOD_ENUM_END; ++m) {
+    for (Http::RequestMethod m(Http::METHOD_NONE); m != Http::METHOD_ENUM_END; ++m) {
         if (m.respMaybeCacheable()) {
             const cache_key *key = storeKeyPublic(url, m);
             debugs(88, 5, m << ' ' << url << ' ' << storeKeyText(key));
@@ -990,7 +990,7 @@ clientReplyContext::purgeEntry(StoreEntry &entry, const Http::MethodType methodT
 {
     debugs(88, 4, descriptionPrefix << Http::MethodStr(methodType) << " '" << entry.url() << "'" );
 #if USE_HTCP
-    neighborsHtcpClear(&entry, http->request, HttpRequestMethod(methodType), HTCP_CLR_PURGE);
+    neighborsHtcpClear(&entry, http->request, Http::RequestMethod(methodType), HTCP_CLR_PURGE);
 #endif
     entry.release(true);
     purgeStatus = Http::scOkay;
@@ -2061,7 +2061,7 @@ clientReplyContext::fillChecklist(ACLFilledChecklist &checklist) const
 /* Using this breaks the client layering just a little!
  */
 void
-clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags reqFlags)
+clientReplyContext::createStoreEntry(const Http::RequestMethod& m, RequestFlags reqFlags)
 {
     assert(http != nullptr);
     /*

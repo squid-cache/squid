@@ -501,13 +501,13 @@ StoreEntry::doAbandon(const char *context)
 }
 
 StoreEntry *
-storeGetPublic(const char *uri, const HttpRequestMethod& method)
+storeGetPublic(const char *uri, const Http::RequestMethod& method)
 {
     return Store::Root().find(storeKeyPublic(uri, method));
 }
 
 StoreEntry *
-storeGetPublicByRequestMethod(HttpRequest * req, const HttpRequestMethod& method, const KeyScope keyScope)
+storeGetPublicByRequestMethod(HttpRequest * req, const Http::RequestMethod& method, const KeyScope keyScope)
 {
     return Store::Root().find(storeKeyPublicByRequestMethod(req, method, keyScope));
 }
@@ -738,7 +738,7 @@ StoreEntry::adjustVary()
 }
 
 StoreEntry *
-storeCreatePureEntry(const char *url, const char *log_url, const HttpRequestMethod& method)
+storeCreatePureEntry(const char *url, const char *log_url, const Http::RequestMethod& method)
 {
     StoreEntry *e = nullptr;
     debugs(20, 3, "storeCreateEntry: '" << url << "'");
@@ -756,7 +756,7 @@ storeCreatePureEntry(const char *url, const char *log_url, const HttpRequestMeth
 }
 
 StoreEntry *
-storeCreateEntry(const char *url, const char *logUrl, const RequestFlags &flags, const HttpRequestMethod& method)
+storeCreateEntry(const char *url, const char *logUrl, const RequestFlags &flags, const Http::RequestMethod& method)
 {
     StoreEntry *e = storeCreatePureEntry(url, logUrl, method);
     e->lock("storeCreateEntry");
@@ -1579,14 +1579,14 @@ StoreEntry::createMemObject()
 }
 
 void
-StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl, const HttpRequestMethod &aMethod)
+StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl, const Http::RequestMethod &aMethod)
 {
     assert(!mem_obj);
     ensureMemObject(aUrl, aLogUrl, aMethod);
 }
 
 void
-StoreEntry::ensureMemObject(const char *aUrl, const char *aLogUrl, const HttpRequestMethod &aMethod)
+StoreEntry::ensureMemObject(const char *aUrl, const char *aLogUrl, const Http::RequestMethod &aMethod)
 {
     if (!mem_obj)
         mem_obj = new MemObject();

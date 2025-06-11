@@ -786,7 +786,7 @@ static int
 clientHierarchical(ClientHttpRequest * http)
 {
     HttpRequest *request = http->request;
-    HttpRequestMethod method = request->method;
+    Http::RequestMethod method = request->method;
 
     // intercepted requests MUST NOT (yet) be sent to peers unless verified
     if (!request->flags.hostVerified && (request->flags.intercepted || request->flags.interceptTproxy))
@@ -1791,7 +1791,7 @@ ClientHttpRequest::setLogUriToRequestUri()
 }
 
 void
-ClientHttpRequest::setLogUriToRawUri(const char *rawUri, const HttpRequestMethod &method)
+ClientHttpRequest::setLogUriToRawUri(const char *rawUri, const Http::RequestMethod &method)
 {
     assert(rawUri);
     // Should(!request);
@@ -1823,7 +1823,7 @@ ClientHttpRequest::setErrorUri(const char *aUri)
     uri = xstrdup(aUri);
     // TODO: SBuf() performance regression, fix by converting setErrorUri() parameter to SBuf
     const SBuf errorUri(aUri);
-    const auto canonicalUri = urlCanonicalCleanWithoutRequest(errorUri, HttpRequestMethod(), AnyP::UriScheme());
+    const auto canonicalUri = urlCanonicalCleanWithoutRequest(errorUri, Http::RequestMethod(), AnyP::UriScheme());
     absorbLogUri(xstrndup(canonicalUri, MAX_URL));
 
     al->setVirginUrlForMissingRequest(errorUri);

@@ -68,7 +68,7 @@ typedef struct {
 } url_entry;
 
 static STCB urnHandleReply;
-static url_entry *urnParseReply(const SBuf &, const HttpRequestMethod &);
+static url_entry *urnParseReply(const SBuf &, const Http::RequestMethod &);
 static const char *const crlf = "\r\n";
 
 CBDATA_CLASS_INIT(UrnState);
@@ -90,7 +90,7 @@ UrnState::~UrnState()
 }
 
 static url_entry *
-urnFindMinRtt(url_entry * urls, const HttpRequestMethod &, int *rtt_ret)
+urnFindMinRtt(url_entry * urls, const Http::RequestMethod &, int *rtt_ret)
 {
     int min_rtt = 0;
     url_entry *u = nullptr;
@@ -354,7 +354,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 }
 
 static url_entry *
-urnParseReply(const SBuf &inBuf, const HttpRequestMethod &m)
+urnParseReply(const SBuf &inBuf, const Http::RequestMethod &m)
 {
     char *token;
     url_entry *list;
