@@ -11,13 +11,11 @@
 
 #include "anyp/forward.h"
 #include "anyp/UriScheme.h"
+#include "http/forward.h"
 #include "ip/Address.h"
 #include "rfc2181.h"
-#include "sbuf/SBuf.h"
 
 #include <iosfwd>
-
-class HttpRequestMethod;
 
 namespace AnyP
 {
@@ -50,7 +48,7 @@ public:
     }
     void touch(); ///< clear the cached URI display forms
 
-    bool parse(const HttpRequestMethod &, const SBuf &url);
+    bool parse(const Http::RequestMethod &, const SBuf &url);
 
     /// \return a new URI that honors uri_whitespace
     static char *cleanup(const char *uri);
@@ -216,7 +214,7 @@ void urlInitialize(void);
 /// call HttpRequest::canonicalCleanUrl() instead if you have HttpRequest
 /// \returns a pointer to a local static buffer containing request URI
 /// that honors strip_query_terms and %-encodes unsafe URI characters
-char *urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &, const AnyP::UriScheme &);
+char *urlCanonicalCleanWithoutRequest(const SBuf &url, const Http::RequestMethod &, const AnyP::UriScheme &);
 const char *urlCanonicalFakeHttps(const HttpRequest * request);
 bool urlIsRelative(const char *);
 char *urlRInternal(const char *host, unsigned short port, const char *dir, const char *name);
