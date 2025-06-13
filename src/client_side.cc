@@ -881,7 +881,7 @@ ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferredRequest, Con
         /** defer now. */
         clientSocketRecipient(deferredRequest->deferredparams.node,
                               deferredRequest->http,
-                              deferredRequest->deferredparams.rep,
+                              deferredRequest->deferredparams.rep.getRaw(),
                               deferredRequest->deferredparams.queuedBuffer);
     }
 
