@@ -34,7 +34,6 @@ Http::Stream::Stream(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aR
     flags.deferred = 0;
     flags.parsed_ok = 0;
     deferredparams.node = nullptr;
-    deferredparams.rep = nullptr;
 }
 
 Http::Stream::~Stream()

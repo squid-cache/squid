@@ -152,7 +152,7 @@ public: // HTTP/1.x state data
 
     public:
         clientStreamNode *node;
-        HttpReply *rep;
+        HttpReplyPointer rep;
         StoreIOBuffer queuedBuffer;
     };
 
