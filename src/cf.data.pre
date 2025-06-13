@@ -1265,7 +1265,7 @@ ENDIF
 	  # destination TCP port (or port range) of the request [fast]
 	  #
 	  # Port 0 matches requests that have no explicit and no default destination
-	  # ports (e.g., HTTP requests with URN targets)
+	  # ports (e.g., HTTP requests with ICY, ICP, and HTCP targets).
 
 	acl aclname localport 3128 ...	      # TCP port the client connected to [fast]
 	                                      # NP: for interception mode this is usually '80'
