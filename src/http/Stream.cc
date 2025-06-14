@@ -33,7 +33,6 @@ Http::Stream::Stream(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aR
     memset(reqbuf, '\0', sizeof (reqbuf));
     flags.deferred = 0;
     flags.parsed_ok = 0;
-    deferredparams.node = nullptr;
     deferredparams.rep = nullptr;
 }
 
