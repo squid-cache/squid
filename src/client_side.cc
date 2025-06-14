@@ -874,14 +874,15 @@ ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferredRequest, Con
     debugs(33, 2, conn->clientConnection << " Sending next");
 
     /** If the client stream is waiting on a socket write to occur, then */
-
-    if (deferredRequest->flags.deferred) {
+    if (const auto savedReply = deferredRequest->deferredparams.rep) {
         /** NO data is allowed to have been sent. */
         assert(deferredRequest->http->out.size == 0);
-        /** defer now. */
+        // clientSocketRecipient may re-schedule the defer (or not).
+        // ensure that the pointer reference is not kept
+        deferredRequest->deferredparams.rep = nullptr;
         clientSocketRecipient(deferredRequest->deferredparams.node,
                               deferredRequest->http,
-                              deferredRequest->deferredparams.rep.getRaw(),
+                              savedReply.getRaw(),
                               deferredRequest->deferredparams.queuedBuffer);
     }
 
