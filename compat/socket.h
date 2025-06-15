@@ -134,7 +134,7 @@ xsocket(int domain, int type, int protocol)
 
 static_assert(SOCKET_ERROR == -1);
 
-static inline bool
+inline bool
 isValidSocketHandle(intptr_t handle)
 {
     return handle != intptr_t(INVALID_HANDLE_VALUE);
