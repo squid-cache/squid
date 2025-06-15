@@ -30,10 +30,10 @@ SetErrnoFromWsaError()
         // WSAEAGAIN has no equivalent
         { WSAEALREADY, EALREADY },
         { WSAEINTR, EINTR },
-        // WSARESTART has no equivalent
+        // no Windows error code maps to ERESTART
 
         { WSAEMFILE, EMFILE },
-        // WSAENFILE has no equivalent
+        // no Windows error code maps to ENFILE
 
         { WSAECONNRESET, ECONNRESET }
     };
