@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -986,6 +986,21 @@ include <windows.h>
   [], [], [[
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
+#endif
+  ]])
+  AC_CHECK_MEMBER([struct arpreq.arp_pa],[],[
+    AS_IF([test "x$squid_host_os" != "xmingw" -a "x$squid_host_os" != "xcygwin"],[
+      AC_MSG_NOTICE([OS support for EUI seems incomplete, disabling it])
+      enable_eui=no
+    ])],[[
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#if HAVE_NET_IF_ARP_H
+#include <net/if_arp.h>
 #endif
   ]])
   SQUID_STATE_ROLLBACK(LIBEUI)

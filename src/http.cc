@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1216,7 +1216,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
             return; // wait for Client::noteMoreBodySpaceAvailable()
         }
 
-        if (virginBodyDestination && virginBodyDestination->buf().hasContent()) {
+        if (virginBodyDestination && !virginBodyDestination->buf().hasPotentialSpace()) {
             debugs(11, 5, "avoid delayRead() to give adaptation a chance to drain body pipe buffer: " << virginBodyDestination->buf().contentSize());
             return; // wait for Client::noteMoreBodySpaceAvailable()
         }
@@ -1699,7 +1699,7 @@ HttpStateData::maybeMakeSpaceAvailable(const size_t maxReadSize)
     // how much we want to read
     const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), maxReadSize);
 
-    if (read_size < 2) {
+    if (!read_size) {
         debugs(11, 7, "will not read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
         return 0;
     }

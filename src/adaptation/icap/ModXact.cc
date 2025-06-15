@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -435,14 +435,10 @@ void Adaptation::Icap::ModXact::virginConsume()
     BodyPipe &bp = *virgin.body_pipe;
     const bool wantToPostpone = isRepeatable || canStartBypass || protectGroupBypass;
 
-    // Why > 2? HttpState does not use the last bytes in the buffer
-    // because Client::delayRead() is arguably broken. See
-    // HttpStateData::maybeReadVirginBody for more details.
-    if (wantToPostpone && bp.buf().spaceSize() > 2) {
+    if (wantToPostpone && bp.buf().potentialSpaceSize() > 0) {
         // Postponing may increase memory footprint and slow the HTTP side
         // down. Not postponing may increase the number of ICAP errors
-        // if the ICAP service fails. We may also use "potential" space to
-        // postpone more aggressively. Should the trade-off be configurable?
+        // if the ICAP service fails. Should the trade-off be configurable?
         debugs(93, 8, "postponing consumption from " << bp.status());
         return;
     }

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -579,24 +579,6 @@ sysconf_DATA = \
 
 data_DATA = \
 	mib.txt
-
-LDADD = \
-	$(AUTH_ACL_LIBS) \
-	acl/libacls.la \
-	eui/libeui.la \
-	acl/libstate.la \
-	$(AUTH_LIBS) \
-	acl/libapi.la \
-	base/libbase.la \
-	libsquid.la \
-	ip/libip.la \
-	fs/libfs.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	$(EPOLL_LIBS) \
-	$(MINGW_LIBS) \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
 
 include $(srcdir)/tests/Stub.am
 
