@@ -20,6 +20,7 @@
 #include "CachePeers.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
+#include "compat/netdb.h"
 #include "debug/Messages.h"
 #include "event.h"
 #include "FwdState.h"
@@ -536,7 +537,7 @@ neighbors_init(void)
 
     peerDnsRefreshStart();
 
-    sep = getservbyname("echo", "udp");
+    sep = xgetservbyname("echo", "udp");
     echo_port = sep ? ntohs((unsigned short) sep->s_port) : 7;
 }
 

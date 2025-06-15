@@ -26,6 +26,7 @@
 #include "client_side.h"
 #include "comm.h"
 #include "CommandLine.h"
+#include "compat/unistd.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
 #include "debug/Messages.h"
@@ -1921,7 +1922,7 @@ watch_child(const CommandLine &masterCommand)
 
 #ifdef TIOCNOTTY
 
-    if ((i = open("/dev/tty", O_RDWR | O_TEXT)) >= 0) {
+    if ((i = xopen("/dev/tty", O_RDWR | O_TEXT)) >= 0) {
         ioctl(i, TIOCNOTTY, nullptr);
         close(i);
     }
@@ -1934,7 +1935,7 @@ watch_child(const CommandLine &masterCommand)
      * 1.1.3.  execvp had a bit overflow error in a loop..
      */
     /* Connect stdio to /dev/null in daemon mode */
-    nullfd = open(_PATH_DEVNULL, O_RDWR | O_TEXT);
+    nullfd = xopen(_PATH_DEVNULL, O_RDWR | O_TEXT);
 
     if (nullfd < 0) {
         int xerrno = errno;
