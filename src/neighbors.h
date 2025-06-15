@@ -18,7 +18,6 @@
 #include "lookup_t.h"
 #include "typedefs.h" //for IRCB
 
-class HttpRequest;
 class CachePeer;
 class StoreEntry;
 class PeerSelector;
