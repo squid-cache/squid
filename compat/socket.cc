@@ -26,7 +26,7 @@ xaccept(int socketFd, struct sockaddr *a, socklen_t *l)
         SetErrnoFromWsaError();
         return SOCKET_ERROR;
     }
-    auto rv = _open_osfhandle(result, 0);
+    const auto rv = _open_osfhandle(result, 0);
     if (rv == -1)
         errno = EBADF;
     return rv;
@@ -189,7 +189,7 @@ xsocket(int domain, int type, int protocol)
         SetErrnoFromWsaError();
         return SOCKET_ERROR;
     }
-    auto rv=_open_osfhandle(result, 0);
+    const auto rv = _open_osfhandle(result, 0);
     if (rv == -1)
         errno = EBADF;
     return rv;
