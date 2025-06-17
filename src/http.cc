@@ -1964,6 +1964,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0\"", Config.Accel.surrogate_id);
 #endif
         strListAdd(&strSurrogate, bbuf, ',');
+        hdr_out->delById(Http::HdrType::SURROGATE_CAPABILITY);
         hdr_out->putStr(Http::HdrType::SURROGATE_CAPABILITY, strSurrogate.termedBuf());
     }
 
