@@ -11,6 +11,8 @@
 #include "squid.h"
 
 #if USE_UNLINKD
+#include "compat/select.h"
+#include "compat/unistd.h"
 #include "fd.h"
 #include "fde.h"
 #include "fs_io.h"
@@ -74,7 +76,7 @@ unlinkdUnlink(const char *path)
         FD_SET(unlinkd_rfd, &R);
         to.tv_sec = 0;
         to.tv_usec = 100000;
-        select(unlinkd_rfd + 1, &R, nullptr, nullptr, &to);
+        xselect(unlinkd_rfd + 1, &R, nullptr, nullptr, &to);
 #endif
     }
 
@@ -88,7 +90,7 @@ unlinkdUnlink(const char *path)
         int bytes_read;
         int i;
         char rbuf[512];
-        bytes_read = read(unlinkd_rfd, rbuf, 511);
+        bytes_read = xread(unlinkd_rfd, rbuf, 511);
 
         if (bytes_read > 0) {
             rbuf[bytes_read] = '\0';
@@ -106,7 +108,7 @@ unlinkdUnlink(const char *path)
     xstrncpy(buf, path, MAXPATHLEN);
     buf[l] = '\n';
     ++l;
-    bytes_written = write(unlinkd_wfd, buf, l);
+    bytes_written = xwrite(unlinkd_wfd, buf, l);
 
     if (bytes_written < 0) {
         int xerrno = errno;
