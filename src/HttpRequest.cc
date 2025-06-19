@@ -47,7 +47,7 @@ HttpRequest::HttpRequest(const MasterXaction::Pointer &mx) :
     init();
 }
 
-HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aSchemeImg, const char *aUrlpath, const MasterXaction::Pointer &mx) :
+HttpRequest::HttpRequest(const Http::RequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aSchemeImg, const char *aUrlpath, const MasterXaction::Pointer &mx) :
     Http::Message(hoRequest),
     masterXaction(mx)
 {
@@ -65,7 +65,7 @@ HttpRequest::~HttpRequest()
 }
 
 void
-HttpRequest::initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aSchemeImg, const char *aUrlpath)
+HttpRequest::initHTTP(const Http::RequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aSchemeImg, const char *aUrlpath)
 {
     method = aMethod;
     url.setScheme(aProtocol, aSchemeImg);
@@ -278,7 +278,7 @@ HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::S
     }
 
     /* See if the request buffer starts with a non-whitespace HTTP request 'method'. */
-    HttpRequestMethod m;
+    Http::RequestMethod m;
     m.HttpRequestMethodXXX(buf);
     if (m == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
@@ -484,7 +484,7 @@ HttpRequest::packFirstLineInto(Packable * p, bool full_uri) const
  * along with this request
  */
 bool
-HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &theSize) const
+HttpRequest::expectingBody(const Http::RequestMethod &, int64_t &theSize) const
 {
     bool expectBody = false;
 
@@ -513,7 +513,7 @@ HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &theSize) const
  * If the request cannot be created cleanly, NULL is returned
  */
 HttpRequest *
-HttpRequest::FromUrl(const SBuf &url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
+HttpRequest::FromUrl(const SBuf &url, const MasterXaction::Pointer &mx, const Http::RequestMethod& method)
 {
     std::unique_ptr<HttpRequest> req(new HttpRequest(mx));
     if (req->url.parse(method, url)) {
@@ -524,7 +524,7 @@ HttpRequest::FromUrl(const SBuf &url, const MasterXaction::Pointer &mx, const Ht
 }
 
 HttpRequest *
-HttpRequest::FromUrlXXX(const char * url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
+HttpRequest::FromUrlXXX(const char * url, const MasterXaction::Pointer &mx, const Http::RequestMethod& method)
 {
     return FromUrl(SBuf(url), mx, method);
 }
