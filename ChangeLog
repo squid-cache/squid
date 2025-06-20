@@ -10,14 +10,6 @@ Changes in squid-7.0.2 (19 Jun 2025):
 	- Fix SNMP cacheNumObjCount -- number of cached objects
 	- Fix Mem::Segment::open() stub to fix build without shm_open()
 	- Disable EUI when arpreq is missing and cannot be defined
-	- NoNewGlobals for cbdata_htable
-	- Portability: add include guards to ldap_backend.cc
-	- Maintenance: Remove shared LDADD
-	- CI: update FreeBSD version
-	- CI: Do not classify "no failures" stats as test-build errors
-	- CI: Fix gperf 3.2 output filter
-	- CI: Pin OpenBSD 7.6
-	- CI: Update tested Linux versions to current
 	- MinGW: use nameless unions in ext_ad_group_acl
 	- MinGW: do not build ext_edirectory_userip_acl
 	- MinGW: add mkdir adapter
@@ -26,6 +18,8 @@ Changes in squid-7.0.2 (19 Jun 2025):
 	- MinGW: add libnettle to negotiate_sspi_auth
 	- negotiate_sspi_auth: Fix command debugging (-v)
 	- ntlm_sspi_auth: Fix missing base64 symbol linkage
+	- ... and many portability and compatibility fixes
+	- ... and some code cleanup
 
 Changes in squid-7.0.1 (2 Feb 2025):
 
