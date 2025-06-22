@@ -58,6 +58,15 @@
 #include <climits>
 #include <cerrno>
 
+#if defined(_SQUID_FREEBSD_) && !defined(FREEBSD_NO_SP_SPLICE)
+#if __FreeBSD_version >= 1403000    /* FreeBSD 14.3-RELEASE or later */
+#if USE_DELAY_POOLS
+#error "USE_FREEBSD_SO_SPLICE is incompatible with USE_DELAY_POOLS"
+#endif
+#define USE_FREEBSD_SO_SPLICE 1
+#endif
+#endif
+
 /**
  * TunnelStateData is the state engine performing the tasks for
  * setup of a TCP tunnel from an existing open client FD to a server
@@ -129,9 +138,11 @@ public:
 
     class Connection
     {
+    private:
+        bool so_spliced;
 
     public:
-        Connection() : len (0), buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(nullptr), delayedLoops(0),
+        Connection() : so_spliced(false), len (0), buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(nullptr), delayedLoops(0),
             dirty(false),
             readPending(nullptr), readPendingFunc(nullptr) {}
 
@@ -151,10 +162,14 @@ public:
         void setDelayId(DelayId const &);
 #endif
 
+        int setSoSplice(Connection &to_conn);
+        off_t unsetSoSplice();
+
         void error(int const xerrno);
         int debugLevelForError(int const xerrno) const;
 
         void dataSent (size_t amount);
+        void dataSentSoSplice (size_t amount);
         /// writes 'b' buffer, setting the 'writer' member to 'callback'.
         void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
         int len;
@@ -291,6 +306,16 @@ public:
     /// tries connecting to another destination, if available,
     /// otherwise, initiates the transaction termination
     void retryOrBail(const char *context);
+
+    void clientCountSoSpliced();
+    void serverCountSoSpliced();
+	
+    static const int SO_SPLICE_INTERVAL = 
+#if USE_FREEBSD_SO_SPLICE
+        3;
+#else
+        0;
+#endif
 };
 
 static ERCB tunnelErrorComplete;
@@ -315,6 +340,7 @@ TunnelStateData::serverClosed()
 
     peeringTimer.stop();
 
+    clientCountSoSpliced();
     finishWritingAndDelete(client);
 }
 
@@ -330,6 +356,7 @@ void
 TunnelStateData::clientClosed()
 {
     client.noteClosure();
+    serverCountSoSpliced();
     finishWritingAndDelete(server);
 }
 
@@ -586,6 +613,8 @@ TunnelStateData::readServer(char *, size_t len, Comm::Flag errcode, int xerrno)
     debugs(26, 3, server.conn << ", read " << len << " bytes, err=" << errcode);
     server.delayedLoops=0;
 
+    serverCountSoSpliced();
+
     /*
      * Bail out early on Comm::ERR_CLOSING
      * - close handlers will tidy up for us
@@ -624,11 +653,148 @@ TunnelStateData::ReadClient(const Comm::ConnectionPointer &, char *buf, size_t l
     tunnelState->readClient(buf, len, errcode, xerrno);
 }
 
+
+#if USE_FREEBSD_SO_SPLICE
+static int
+_setSoSplice(const int s1, const int s2)
+{
+    if ((s1 >= 0 && fd_table[s1].ssl) || (s2 >= 0 && fd_table[s2].ssl)) {
+        debugs(97, 2, "SO_SPLICE not applicable to SSL sessions " << s1 << ":" << s2);
+        return -1;
+    }
+
+    struct splice sp;
+    struct timeval tv;
+
+    tv.tv_sec = TunnelStateData::SO_SPLICE_INTERVAL;
+    tv.tv_usec = 0;
+
+    memset(&sp, 0, sizeof(sp));
+    sp.sp_fd = s2;
+    sp.sp_idle = tv;
+    
+    if (setsockopt(s1, SOL_SOCKET, SO_SPLICE, &sp, sizeof(sp)) == -1) {
+        if (s2 != -1)
+            debugs(97, 3, "SO_SPLICE failed " << errno << " " << s1 << ":" << s2);
+        return -1;
+    }
+
+    debugs(97, 4, "SO_SPLICE " << s1 << ":" << s2);
+    return 0;
+}
+
+off_t
+TunnelStateData::Connection::unsetSoSplice()
+{
+    if (!so_spliced)
+        return 0;
+
+    so_spliced = false;
+
+    if (!IsConnOpen(conn))
+        return 0;
+
+    if (_setSoSplice(conn->fd, -1)) {
+        //may get error if already unset
+        //return 0;
+    }
+
+    const int s = conn->fd;
+    off_t transmitted;
+    socklen_t optlen = sizeof(transmitted);
+
+    if (getsockopt(s, SOL_SOCKET, SO_SPLICE, &transmitted, &optlen) == -1) {
+        debugs(97, 3, "getsockopt SO_SPLICE failed " << errno << " " << s);
+        return 0;
+    }
+
+    dataSentSoSplice(transmitted);
+
+    return transmitted;
+}
+
+int
+TunnelStateData::Connection::setSoSplice(Connection &to_conn)
+{
+    if (so_spliced)
+        return -1;
+
+    if (!IsConnOpen(conn))
+        return -1;
+
+    if (!IsConnOpen(to_conn.conn))
+        return -1;
+
+    const int ret = _setSoSplice(conn->fd, to_conn.conn->fd);
+
+    if ( ret == 0 )
+        so_spliced = true;
+
+    return ret;
+}
+
+void
+TunnelStateData::clientCountSoSpliced()
+{
+    const off_t transmitted = client.unsetSoSplice();
+    
+    if (transmitted > 0) {
+        debugs(97, 4, "client SO_SPLICE " << transmitted << " bytes transmitted " << client.conn->fd );
+
+        statCounter.client_http.kbytes_in += transmitted;
+
+        statCounter.server.all.kbytes_out += transmitted;
+        statCounter.server.other.kbytes_out += transmitted;
+    }
+}
+
+void
+TunnelStateData::serverCountSoSpliced()
+{
+    const off_t transmitted = server.unsetSoSplice();
+
+    if (transmitted > 0) {
+        debugs(97, 4, "server SO_SPLICE " << transmitted << " bytes transmitted " << server.conn->fd );
+        
+        statCounter.server.all.kbytes_in += transmitted;
+        statCounter.server.other.kbytes_in += transmitted;
+        
+        statCounter.client_http.kbytes_out += transmitted;
+    }
+}
+
+#else
+off_t
+TunnelStateData::Connection::unsetSoSplice()
+{
+    return 0;
+}
+
+int
+TunnelStateData::Connection::setSoSplice(Connection &to_conn)
+{
+    debugs(26, 9, "so_spliced " << to_conn.so_spliced);
+    return -1;
+}
+
+void
+TunnelStateData::clientCountSoSpliced(){
+    return;
+}
+
+void
+TunnelStateData::serverCountSoSpliced(){
+    return;
+}
+#endif
+
 void
 TunnelStateData::readClient(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, client.conn << ", read " << len << " bytes, err=" << errcode);
     client.delayedLoops=0;
+
+    clientCountSoSpliced();
 
     /*
      * Bail out early on Comm::ERR_CLOSING
@@ -664,7 +830,7 @@ TunnelStateData::keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, 
     if (Comm::IsConnOpen(from.conn)) {
         AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                          CommTimeoutCbPtrFun(tunnelTimeout, this));
-        commSetConnTimeout(from.conn, Config.Timeout.read, timeoutCall);
+        commSetConnTimeout(from.conn, Config.Timeout.read + TunnelStateData::SO_SPLICE_INTERVAL, timeoutCall);
     }
 
     /* Bump the dest connection read timeout on any activity */
@@ -672,13 +838,17 @@ TunnelStateData::keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, 
     if (Comm::IsConnOpen(to.conn)) {
         AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                          CommTimeoutCbPtrFun(tunnelTimeout, this));
-        commSetConnTimeout(to.conn, Config.Timeout.read, timeoutCall);
+        commSetConnTimeout(to.conn, Config.Timeout.read + TunnelStateData::SO_SPLICE_INTERVAL, timeoutCall);
     }
 
     if (errcode)
         from.error (xerrno);
     else if (len == 0 || !Comm::IsConnOpen(to.conn)) {
         debugs(26, 3, "Nothing to write or client gone. Terminate the tunnel.");
+
+        clientCountSoSpliced();
+        serverCountSoSpliced();
+
         from.conn->close();
 
         /* Only close the remote end if we've finished queueing data to it */
@@ -776,6 +946,13 @@ TunnelStateData::Connection::dataSent(size_t amount)
     if (size_ptr)
         *size_ptr += amount;
 
+}
+
+void
+TunnelStateData::Connection::dataSentSoSplice(size_t amount)
+{
+    if (size_ptr)
+        *size_ptr += amount;
 }
 
 void
@@ -939,8 +1116,10 @@ TunnelStateData::copyClientBytes()
         client.bytesIn(copyBytes);
         if (keepGoingAfterRead(copyBytes, Comm::OK, 0, client, server))
             copy(copyBytes, client, server, TunnelStateData::WriteServerDone);
-    } else
+    } else {
+        client.setSoSplice(server);
         copyRead(client, ReadClient);
+    }
 }
 
 void
@@ -953,8 +1132,10 @@ TunnelStateData::copyServerBytes()
         server.bytesIn(copyBytes);
         if (keepGoingAfterRead(copyBytes, Comm::OK, 0, server, client))
             copy(copyBytes, server, client, TunnelStateData::WriteClientDone);
-    } else
+    } else {
+        server.setSoSplice(client);
         copyRead(server, ReadServer);
+    }
 }
 
 /**
@@ -971,7 +1152,7 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
     assert(tunnelState->server.conn);
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
-    commSetConnTimeout(tunnelState->server.conn, Config.Timeout.read, timeoutCall);
+    commSetConnTimeout(tunnelState->server.conn, Config.Timeout.read + TunnelStateData::SO_SPLICE_INTERVAL, timeoutCall);
 
     *tunnelState->status_ptr = Http::scOkay;
     if (cbdataReferenceValid(tunnelState)) {
