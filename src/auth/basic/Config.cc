@@ -38,8 +38,6 @@ static AUTHSSTATS authenticateBasicStats;
 
 Helper::ClientPointer basicauthenticators;
 
-static int authbasic_initialised = 0;
-
 /*
  *
  * Public Functions
@@ -47,12 +45,6 @@ static int authbasic_initialised = 0;
  */
 
 /* internal functions */
-
-bool
-Auth::Basic::Config::active() const
-{
-    return authbasic_initialised == 1;
-}
 
 bool
 Auth::Basic::Config::configured() const
@@ -102,8 +94,6 @@ void
 Auth::Basic::Config::done()
 {
     Auth::SchemeConfig::done();
-
-    authbasic_initialised = 0;
 
     if (basicauthenticators) {
         helperShutdown(basicauthenticators);
@@ -301,7 +291,7 @@ void
 Auth::Basic::Config::init(Auth::SchemeConfig *)
 {
     if (authenticateProgram) {
-        authbasic_initialised = 1;
+        activate();
 
         if (basicauthenticators == nullptr)
             basicauthenticators = Helper::Client::Make("basicauthenticator");

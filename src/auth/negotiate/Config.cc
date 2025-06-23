@@ -34,8 +34,6 @@ static AUTHSSTATS authenticateNegotiateStats;
 
 Helper::StatefulClientPointer negotiateauthenticators;
 
-static int authnegotiate_initialised = 0;
-
 static hash_table *proxy_auth_cache = nullptr;
 
 void
@@ -53,8 +51,6 @@ void
 Auth::Negotiate::Config::done()
 {
     Auth::SchemeConfig::done();
-
-    authnegotiate_initialised = 0;
 
     if (negotiateauthenticators) {
         helperStatefulShutdown(negotiateauthenticators);
@@ -86,7 +82,7 @@ Auth::Negotiate::Config::init(Auth::SchemeConfig *)
 {
     if (authenticateProgram) {
 
-        authnegotiate_initialised = 1;
+        activate();
 
         if (negotiateauthenticators == nullptr)
             negotiateauthenticators = statefulhelper::Make("negotiateauthenticator");
@@ -112,12 +108,6 @@ Auth::Negotiate::Config::registerWithCacheManager(void)
     Mgr::RegisterAction("negotiateauthenticator",
                         "Negotiate User Authenticator Stats",
                         authenticateNegotiateStats, 0, 1);
-}
-
-bool
-Auth::Negotiate::Config::active() const
-{
-    return authnegotiate_initialised == 1;
 }
 
 bool

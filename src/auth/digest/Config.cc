@@ -50,7 +50,6 @@ Helper::ClientPointer digestauthenticators;
 
 static hash_table *digest_nonce_cache;
 
-static int authdigest_initialised = 0;
 static Mem::Allocator *digest_nonce_pool = nullptr;
 
 enum http_digest_attr_type {
@@ -264,7 +263,7 @@ authenticateDigestNonceCacheCleanup(void *)
 
     debugs(29, 3, "Finished cleaning the nonce cache.");
 
-    if (static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->active())
+    if (Auth::SchemeConfig::Find("digest")->active())
         eventAdd("Digest nonce cache maintenance", authenticateDigestNonceCacheCleanup, nullptr, static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->nonceGCInterval, 1);
 }
 
@@ -466,12 +465,6 @@ Auth::Digest::Config::dump(StoreEntry * entry, const char *name, Auth::SchemeCon
 }
 
 bool
-Auth::Digest::Config::active() const
-{
-    return authdigest_initialised == 1;
-}
-
-bool
 Auth::Digest::Config::configured() const
 {
     if ((authenticateProgram != nullptr) &&
@@ -524,7 +517,7 @@ Auth::Digest::Config::init(Auth::SchemeConfig *)
 {
     if (authenticateProgram) {
         authenticateDigestNonceSetup();
-        authdigest_initialised = 1;
+        activate();
 
         if (digestauthenticators == nullptr)
             digestauthenticators = Helper::Client::Make("digestauthenticator");
@@ -552,8 +545,6 @@ void
 Auth::Digest::Config::done()
 {
     Auth::SchemeConfig::done();
-
-    authdigest_initialised = 0;
 
     if (digestauthenticators)
         helperShutdown(digestauthenticators);
