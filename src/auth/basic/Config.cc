@@ -75,14 +75,15 @@ Auth::Basic::Config::type() const
 void
 Auth::Basic::Config::fixHeader(Auth::UserRequest::Pointer, HttpReply *rep, Http::HdrType hdrType, HttpRequest *)
 {
-    if (authenticateProgram) {
-        if (utf8) {
-            debugs(29, 9, "Sending type:" << hdrType << " header: 'Basic realm=\"" << realm << "\", charset=\"UTF-8\"'");
-            httpHeaderPutStrf(&rep->header, hdrType, "Basic realm=\"" SQUIDSBUFPH "\", charset=\"UTF-8\"", SQUIDSBUFPRINT(realm));
-        } else {
-            debugs(29, 9, "Sending type:" << hdrType << " header: 'Basic realm=\"" << realm << "\"'");
-            httpHeaderPutStrf(&rep->header, hdrType, "Basic realm=\"" SQUIDSBUFPH "\"", SQUIDSBUFPRINT(realm));
-        }
+    if (!active())
+        return;
+
+    if (utf8) {
+        debugs(29, 9, "Sending type:" << hdrType << " header: 'Basic realm=\"" << realm << "\", charset=\"UTF-8\"'");
+        httpHeaderPutStrf(&rep->header, hdrType, "Basic realm=\"" SQUIDSBUFPH "\", charset=\"UTF-8\"", SQUIDSBUFPRINT(realm));
+    } else {
+        debugs(29, 9, "Sending type:" << hdrType << " header: 'Basic realm=\"" << realm << "\"'");
+        httpHeaderPutStrf(&rep->header, hdrType, "Basic realm=\"" SQUIDSBUFPH "\"", SQUIDSBUFPRINT(realm));
     }
 }
 
@@ -300,20 +301,19 @@ Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, 
 void
 Auth::Basic::Config::init(Auth::SchemeConfig *)
 {
-    if (authenticateProgram) {
-        authbasic_initialised = 1;
+    if (!configured())
+        return;
 
-        if (basicauthenticators == nullptr)
-            basicauthenticators = Helper::Client::Make("basicauthenticator");
+    assert(!active());
+    authbasic_initialised = 1;
 
-        basicauthenticators->cmdline = authenticateProgram;
+    if (!basicauthenticators)
+        basicauthenticators = Helper::Client::Make("basicauthenticator");
 
-        basicauthenticators->childs.updateLimits(authenticateChildren);
-
-        basicauthenticators->ipc_type = IPC_STREAM;
-
-        basicauthenticators->openSessions();
-    }
+    basicauthenticators->cmdline = authenticateProgram;
+    basicauthenticators->childs.updateLimits(authenticateChildren);
+    basicauthenticators->ipc_type = IPC_STREAM;
+    basicauthenticators->openSessions();
 }
 
 void

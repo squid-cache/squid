@@ -84,26 +84,24 @@ Auth::Negotiate::Config::type() const
 void
 Auth::Negotiate::Config::init(Auth::SchemeConfig *)
 {
-    if (authenticateProgram) {
+    if (!configured())
+        return;
 
-        authnegotiate_initialised = 1;
+    assert(!active());
+    authnegotiate_initialised = 1;
 
-        if (negotiateauthenticators == nullptr)
-            negotiateauthenticators = statefulhelper::Make("negotiateauthenticator");
+    if (!negotiateauthenticators)
+        negotiateauthenticators = statefulhelper::Make("negotiateauthenticator");
 
-        if (!proxy_auth_cache)
-            proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
+    if (!proxy_auth_cache)
+        proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
 
-        assert(proxy_auth_cache);
+    assert(proxy_auth_cache);
 
-        negotiateauthenticators->cmdline = authenticateProgram;
-
-        negotiateauthenticators->childs.updateLimits(authenticateChildren);
-
-        negotiateauthenticators->ipc_type = IPC_STREAM;
-
-        negotiateauthenticators->openSessions();
-    }
+    negotiateauthenticators->cmdline = authenticateProgram;
+    negotiateauthenticators->childs.updateLimits(authenticateChildren);
+    negotiateauthenticators->ipc_type = IPC_STREAM;
+    negotiateauthenticators->openSessions();
 }
 
 void
@@ -135,7 +133,7 @@ Auth::Negotiate::Config::configured() const
 void
 Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, Http::HdrType reqType, HttpRequest * request)
 {
-    if (!authenticateProgram)
+    if (!active())
         return;
 
     /* Need keep-alive */

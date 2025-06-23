@@ -486,7 +486,7 @@ Auth::Digest::Config::configured() const
 void
 Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, Http::HdrType hdrType, HttpRequest *)
 {
-    if (!authenticateProgram)
+    if (!active())
         return;
 
     bool stale = false;
@@ -522,21 +522,21 @@ Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Ht
 void
 Auth::Digest::Config::init(Auth::SchemeConfig *)
 {
-    if (authenticateProgram) {
-        authenticateDigestNonceSetup();
-        authdigest_initialised = 1;
+    if (!configured())
+        return;
 
-        if (digestauthenticators == nullptr)
-            digestauthenticators = Helper::Client::Make("digestauthenticator");
+    assert(!active());
 
-        digestauthenticators->cmdline = authenticateProgram;
+    authenticateDigestNonceSetup();
+    authdigest_initialised = 1;
 
-        digestauthenticators->childs.updateLimits(authenticateChildren);
+    if (!digestauthenticators)
+        digestauthenticators = Helper::Client::Make("digestauthenticator");
 
-        digestauthenticators->ipc_type = IPC_STREAM;
-
-        digestauthenticators->openSessions();
-    }
+    digestauthenticators->cmdline = authenticateProgram;
+    digestauthenticators->childs.updateLimits(authenticateChildren);
+    digestauthenticators->ipc_type = IPC_STREAM;
+    digestauthenticators->openSessions();
 }
 
 void

@@ -83,26 +83,24 @@ Auth::Ntlm::Config::type() const
 void
 Auth::Ntlm::Config::init(Auth::SchemeConfig *)
 {
-    if (authenticateProgram) {
+    if (!configured())
+        return;
 
-        authntlm_initialised = 1;
+    assert(!active());
+    authntlm_initialised = 1;
 
-        if (ntlmauthenticators == nullptr)
-            ntlmauthenticators = statefulhelper::Make("ntlmauthenticator");
+    if (!ntlmauthenticators)
+        ntlmauthenticators = statefulhelper::Make("ntlmauthenticator");
 
-        if (!proxy_auth_cache)
-            proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
+    if (!proxy_auth_cache)
+        proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
 
-        assert(proxy_auth_cache);
+    assert(proxy_auth_cache);
 
-        ntlmauthenticators->cmdline = authenticateProgram;
-
-        ntlmauthenticators->childs.updateLimits(authenticateChildren);
-
-        ntlmauthenticators->ipc_type = IPC_STREAM;
-
-        ntlmauthenticators->openSessions();
-    }
+    ntlmauthenticators->cmdline = authenticateProgram;
+    ntlmauthenticators->childs.updateLimits(authenticateChildren);
+    ntlmauthenticators->ipc_type = IPC_STREAM;
+    ntlmauthenticators->openSessions();
 }
 
 void
@@ -136,7 +134,7 @@ Auth::Ntlm::Config::configured() const
 void
 Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, Http::HdrType hdrType, HttpRequest * request)
 {
-    if (!authenticateProgram)
+    if (!active())
         return;
 
     /* Need keep-alive */
