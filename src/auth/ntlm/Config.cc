@@ -119,18 +119,6 @@ Auth::Ntlm::Config::active() const
     return authntlm_initialised == 1;
 }
 
-bool
-Auth::Ntlm::Config::configured() const
-{
-    if ((authenticateProgram != nullptr) && (authenticateChildren.n_max != 0)) {
-        debugs(29, 9, "returning configured");
-        return true;
-    }
-
-    debugs(29, 9, "returning unconfigured");
-    return false;
-}
-
 /* NTLM Scheme */
 
 void
