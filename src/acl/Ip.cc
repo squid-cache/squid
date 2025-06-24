@@ -320,8 +320,8 @@ acl_ip_data::FactoryParse(const char *t)
             r->addr1 = *x;
             x = x->ai_next;
             acl_ip_data* cmp = q;
-            for( cmp = q; cmp != nullptr; cmp = cmp->next )
-                if( cmp->next != nullptr && cmp->addr1 == r->addr1 ) {
+            for (cmp = q; cmp != nullptr; cmp = cmp->next)
+                if (cmp->next != nullptr && cmp->addr1 == r->addr1) {
                     debugs(28, 3, "aclIpParseIpData: Duplicate host/IP: '" << r->addr1 << "' dropped.");
                     delete r;
                     *Q = nullptr;
