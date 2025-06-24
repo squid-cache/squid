@@ -290,7 +290,7 @@ acl_ip_data::FactoryParse(const char *t)
         debugs(28, 5, "aclIpParseIpData: Lookup Host/IP " << addr1);
         struct addrinfo *hp = nullptr, *x = nullptr;
         struct addrinfo hints;
-      
+
         memset(&hints, 0, sizeof(struct addrinfo));
 
         int errcode = getaddrinfo(addr1,nullptr,&hints,&hp);
@@ -336,7 +336,8 @@ acl_ip_data::FactoryParse(const char *t)
             Q = &r->next;
 
             debugs(28, 3, "" << addr1 << " --> " << r->addr1 );
-skip:;
+skip:
+            ;
         }
 
         freeaddrinfo(hp);
