@@ -1,3 +1,12 @@
+Changes in squid-6.14 (24 Jun 2025):
+
+	- Bug 5352: Do not get stuck in RESPMOD after pausing peer read(2)
+	- Bug 5489: Fix "make check" linking on Solaris
+	- Fix SNMP cacheNumObjCount -- number of cached objects
+	- Do not duplicate received Surrogate-Capability in sent requests
+	- Fix Mem::Segment::open() stub to fix build without shm_open()
+	- ... and CI and documentation updates
+
 Changes in squid-6.13 (31 Jan 2025):
 
 	- Bug 5352: Do not get stuck when RESPMOD is slower than read(2)
