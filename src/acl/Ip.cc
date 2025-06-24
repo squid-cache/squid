@@ -290,8 +290,7 @@ acl_ip_data::FactoryParse(const char *t)
         debugs(28, 5, "aclIpParseIpData: Lookup Host/IP " << addr1);
         struct addrinfo *hp = nullptr, *x = nullptr;
         struct addrinfo hints;
-        Ip::Address *prev_addr = nullptr;
-
+      
         memset(&hints, 0, sizeof(struct addrinfo));
 
         int errcode = getaddrinfo(addr1,nullptr,&hints,&hp);
@@ -315,16 +314,19 @@ acl_ip_data::FactoryParse(const char *t)
                 r = *Q = new acl_ip_data;
 
             /* getaddrinfo given a host has a nasty tendency to return duplicate addr's */
-            /* BUT sorted fortunately, so we can drop most of them easily */
+            /* Since these are not always sorted (e.g. for a host having multiple A RRs */
+            /* and at least on FreeBSD) we check them against the list of already known */
+            /* addresses. */
             r->addr1 = *x;
             x = x->ai_next;
-            if ( prev_addr && r->addr1 == *prev_addr) {
-                debugs(28, 3, "aclIpParseIpData: Duplicate host/IP: '" << r->addr1 << "' dropped.");
-                delete r;
-                *Q = nullptr;
-                continue;
-            } else
-                prev_addr = &r->addr1;
+            acl_ip_data* cmp = q;
+            for( cmp = q; cmp != nullptr; cmp = cmp->next )
+                if( cmp->next != nullptr && cmp->addr1 == r->addr1 ) {
+                    debugs(28, 3, "aclIpParseIpData: Duplicate host/IP: '" << r->addr1 << "' dropped.");
+                    delete r;
+                    *Q = nullptr;
+                    goto skip;
+                }
 
             debugs(28, 3, "aclIpParseIpData: Located host/IP: '" << r->addr1 << "'");
 
@@ -334,6 +336,7 @@ acl_ip_data::FactoryParse(const char *t)
             Q = &r->next;
 
             debugs(28, 3, "" << addr1 << " --> " << r->addr1 );
+skip:;
         }
 
         freeaddrinfo(hp);
