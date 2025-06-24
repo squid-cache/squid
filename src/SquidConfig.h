@@ -340,6 +340,7 @@ public:
 #if USE_OPENSSL
         bool logTlsServerHelloDetails;
 #endif
+        int so_splice;
     } onoff;
 
     int64_t shared_transient_entries_limit;
