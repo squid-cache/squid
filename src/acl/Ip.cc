@@ -214,6 +214,21 @@ acl_ip_data::DecodeMask(const char *asc, Ip::Address &mask, int ctype)
     return false;
 }
 
+/// whether we have parsed and vetted an item with an addr1 field that matches the needle
+bool
+acl_ip_data::containsVetted(const Ip::Address &needle) const
+{
+    // XXX: FactoryParse() adds an item and only then checks its validity. This
+    // loop excludes the last (i.e. being vetted) item. TODO: Refactor parsing
+    // to use a temporary container of vetted items instead of the current
+    // acl_ip_data::next hack.
+    for (const auto *i = this; i && i->next; i = i->next) {
+        if (i->addr1 == needle)
+            return true;
+    }
+    return false;
+}
+
 /* Handle either type of address, IPv6 will be discarded with a warning if disabled */
 #define SCAN_ACL1_6       "%[0123456789ABCDEFabcdef:]-%[0123456789ABCDEFabcdef:]/%[0123456789]"
 #define SCAN_ACL2_6       "%[0123456789ABCDEFabcdef:]-%[0123456789ABCDEFabcdef:]%c"
@@ -313,20 +328,15 @@ acl_ip_data::FactoryParse(const char *t)
             if ((r = *Q) == nullptr)
                 r = *Q = new acl_ip_data;
 
-            /* getaddrinfo given a host has a nasty tendency to return duplicate addr's */
-            /* Since these are not always sorted (e.g. for a host having multiple A RRs */
-            /* and at least on FreeBSD) we check them against the list of already known */
-            /* addresses. */
             r->addr1 = *x;
             x = x->ai_next;
-            acl_ip_data* cmp = q;
-            for (cmp = q; cmp != nullptr; cmp = cmp->next)
-                if (cmp->next != nullptr && cmp->addr1 == r->addr1) {
-                    debugs(28, 3, "aclIpParseIpData: Duplicate host/IP: '" << r->addr1 << "' dropped.");
-                    delete r;
-                    *Q = nullptr;
-                    goto skip;
-                }
+            if (q->containsVetted(r->addr1)) {
+                // getaddrinfo() returned duplicate ai_addr values; we have already added one of them
+                debugs(28, 3, "aclIpParseIpData: Duplicate host/IP: '" << r->addr1 << "' dropped.");
+                delete r;
+                *Q = nullptr;
+                continue;
+            }
 
             debugs(28, 3, "aclIpParseIpData: Located host/IP: '" << r->addr1 << "'");
 
@@ -336,8 +346,6 @@ acl_ip_data::FactoryParse(const char *t)
             Q = &r->next;
 
             debugs(28, 3, "" << addr1 << " --> " << r->addr1 );
-skip:
-            ;
         }
 
         freeaddrinfo(hp);
