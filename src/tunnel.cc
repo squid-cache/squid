@@ -617,7 +617,7 @@ TunnelStateData::readServer(char *, size_t len, Comm::Flag errcode, int xerrno)
 
     if (len > 0) {
     	if (server.isSoSpliced())
-            debugs(97, 1, "server SP_SPLICE unexpected return from select, len " << len << " " << server.conn->fd );
+            debugs(97, 1, "server SO_SPLICE unexpected return from select, len " << len << " " << server.conn->fd );
 
         server.bytesIn(len);
         statCounter.server.all.kbytes_in += len;
@@ -833,7 +833,7 @@ TunnelStateData::readClient(char *, size_t len, Comm::Flag errcode, int xerrno)
 
     if (len > 0) {
     	if (client.isSoSpliced())
-            debugs(97, 1, "client SP_SPLICE unexpected return from select, len " << len << " " << client.conn->fd );
+            debugs(97, 1, "client SO_SPLICE unexpected return from select, len " << len << " " << client.conn->fd );
             
         client.bytesIn(len);
         statCounter.client_http.kbytes_in += len;
@@ -1058,11 +1058,11 @@ checkSoSpliceTraffic(TunnelStateData::Connection &connection)
 
     if (!connection.hadSoSplicedTraffic())
     {
-        debugs(97, 5, "SP_SPLICE traffic not detected " << connection.conn->fd);
+        debugs(97, 5, "SO_SPLICE traffic not detected " << connection.conn->fd);
         return false;
     }
 
-    debugs(97, 5, "SP_SPLICE traffic detected, not timeout " << connection.conn->fd);
+    debugs(97, 5, "SO_SPLICE traffic detected, not timeout " << connection.conn->fd);
 
     return true;
 }
