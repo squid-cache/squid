@@ -306,6 +306,9 @@ public:
 
     void clientCountSoSpliced();
     void serverCountSoSpliced();
+
+    void clientUnsetAndCountSoSplice();
+    void serverUnsetAndCountSoSplice();
 };
 
 static ERCB tunnelErrorComplete;
@@ -333,8 +336,7 @@ TunnelStateData::serverClosed()
 
     peeringTimer.stop();
 
-    client.unsetSoSplice();
-    clientCountSoSpliced();
+    clientUnsetAndCountSoSplice();
     finishWritingAndDelete(client);
 }
 
@@ -350,8 +352,7 @@ void
 TunnelStateData::clientClosed()
 {
     client.noteClosure();
-    server.unsetSoSplice();
-    serverCountSoSpliced();
+    serverUnsetAndCountSoSplice();
     finishWritingAndDelete(server);
 }
 
@@ -818,6 +819,20 @@ TunnelStateData::serverCountSoSpliced()
 }
 
 void
+TunnelStateData::clientUnsetAndCountSoSplice()
+{
+    client.unsetSoSplice();
+    clientCountSoSpliced();
+}
+
+void
+TunnelStateData::serverUnsetAndCountSoSplice()
+{
+    server.unsetSoSplice();
+    serverCountSoSpliced();
+}
+
+void
 TunnelStateData::readClient(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, client.conn << ", read " << len << " bytes, err=" << errcode);
@@ -866,11 +881,8 @@ TunnelStateData::keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, 
     else if (len == 0 || !Comm::IsConnOpen(to.conn)) {
         debugs(26, 3, "Nothing to write or client gone. Terminate the tunnel.");
 
-        client.unsetSoSplice();
-        clientCountSoSpliced();
-
-        server.unsetSoSplice();
-        serverCountSoSpliced();
+        clientUnsetAndCountSoSplice();
+        serverUnsetAndCountSoSplice();
 
         from.conn->close();
 
@@ -1143,13 +1155,11 @@ void
 TunnelStateData::closeConnections()
 {
     if (Comm::IsConnOpen(server.conn)){
-        server.unsetSoSplice();
-        serverCountSoSpliced();
+        serverUnsetAndCountSoSplice();
         server.conn->close();
     }
     if (Comm::IsConnOpen(client.conn)){
-        client.unsetSoSplice();
-        clientCountSoSpliced();
+        clientUnsetAndCountSoSplice();
         client.conn->close();
     }
 }
@@ -1219,7 +1229,7 @@ clientSelectSoSpliced(int fd, void *data)
     debugs(97, 3, "select returned for SO_SPLICE client " << fd);
 
     // fallback to non_so_splice operation
-    tunnelState->client.unsetSoSplice();
+    tunnelState->clientUnsetAndCountSoSplice();
 
     if (Comm::IsConnOpen(tunnelState->client.conn)) {
         setTunnelTimeouts(tunnelState);
@@ -1238,7 +1248,7 @@ serverSelectSoSpliced(int fd, void *data)
     debugs(97, 3, "select returned for SO_SPLICE server " << fd);
 
     // fallback to non_so_splice operation
-    tunnelState->server.unsetSoSplice();
+    tunnelState->serverUnsetAndCountSoSplice();
 
     if (Comm::IsConnOpen(tunnelState->server.conn)) {
         setTunnelTimeouts(tunnelState);
