@@ -492,7 +492,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
             if (strncmp(cur,"http::", 6) == 0 && *(cur+6) != '%' )
                 cur += 6;
 
-            // NP: scan the sets of tokens in decreasing size to guarantee no
+            // Note: scan the sets of tokens in decreasing size to guarantee no
             //     mistakes made with overlapping names. (Bug 3310)
 
             // Scan for various long tokens
