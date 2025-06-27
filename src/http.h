@@ -163,7 +163,7 @@ private:
 
 std::ostream &operator <<(std::ostream &os, const HttpStateData::ReuseDecision &d);
 
-int httpCachable(const HttpRequestMethod&);
+int httpCachable(const Http::RequestMethod&);
 void httpStart(FwdState *);
 SBuf httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
