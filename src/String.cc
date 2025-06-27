@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "mem/forward.h"
+#include "sbuf/SBuf.h"
 #include "SquidString.h"
 
 #include <climits>
@@ -37,6 +38,11 @@ String::String(char const *aString)
 {
     if (aString)
         allocAndFill(aString, strlen(aString));
+}
+
+String::String(const SBuf &buf)
+{
+    allocAndFill(buf.rawContent(), buf.length());
 }
 
 String &
@@ -173,6 +179,12 @@ void
 String::append(String const &old)
 {
     append(old.rawBuf(), old.len_);
+}
+
+void
+String::append(const SBuf &buf)
+{
+    append(buf.rawContent(), buf.length());
 }
 
 void

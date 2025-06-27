@@ -13,6 +13,7 @@
 
 #include "base/TextException.h"
 #include "debug/Stream.h"
+#include "sbuf/forward.h"
 
 #include <ostream>
 
@@ -28,6 +29,8 @@ class String
 public:
     String() = default;
     String(char const *);
+    explicit String(const SBuf &);
+
     String(String const &);
     String(String && S) : size_(S.size_), len_(S.len_), buf_(S.buf_) {
         S.buf_ = nullptr; // S is about to be destructed
@@ -98,6 +101,7 @@ public:
     void append(char const *buf);
     void append(char const);
     void append(String const &);
+    void append(const SBuf &); ///< adds the entire given buffer
     void absorb(String &old);
     const char * pos(char const *aString) const;
     const char * pos(char const ch) const;
