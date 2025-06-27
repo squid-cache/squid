@@ -19,7 +19,6 @@
 #include "fatal.h"
 #include "SquidConfig.h"
 #include "tools.h"
-#include "wccp.h"
 
 #define WCCP_PORT 2048
 #define WCCP_REVISION 0
@@ -81,15 +80,7 @@ static int wccpLowestIP(void);
 static EVH wccpHereIam;
 static void wccpAssignBuckets(void);
 
-/*
- * The functions used during startup:
- * wccpInit
- * wccpConnectionOpen
- * wccpConnectionShutdown
- * wccpConnectionClose
- */
-
-void
+static void
 wccpInit(void)
 {
     if (!IamPrimaryProcess())
@@ -110,7 +101,7 @@ wccpInit(void)
             eventAdd("wccpHereIam", wccpHereIam, nullptr, 5.0, 1);
 }
 
-void
+static void
 wccpConnectionOpen(void)
 {
     if (!IamPrimaryProcess())
@@ -165,7 +156,7 @@ wccpConnectionOpen(void)
     local_ip = local;
 }
 
-void
+static void
 wccpConnectionClose(void)
 {
     if (!IamPrimaryProcess())

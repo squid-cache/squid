@@ -653,7 +653,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
     return (memcmp(md5Digest, md5_challenge, SQUID_MD5_DIGEST_LENGTH) == 0);
 }
 
-void
+static void
 wccp2Init(void)
 {
     if (!IamPrimaryProcess())
@@ -952,7 +952,7 @@ wccp2Init(void)
     }
 }
 
-void
+static void
 wccp2ConnectionOpen(void)
 {
     if (!IamPrimaryProcess())
@@ -1043,7 +1043,7 @@ wccp2ConnectionOpen(void)
     wccp2_connected = 1;
 }
 
-void
+static void
 wccp2ConnectionClose(void)
 {
     if (!IamPrimaryProcess())
