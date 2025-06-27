@@ -13,6 +13,7 @@
 #include "base/TextException.h"
 #include "cache_cf.h"
 #include "comm/Connection.h"
+#include "comm/SocketOptions.h"
 #include "compat/cmsg.h"
 #include "ConfigParser.h"
 #include "fde.h"
@@ -49,36 +50,33 @@ Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
 #if USE_QOS_TOS && _SQUID_LINUX_
     /* Bug 2537: This part of ZPH only applies to patched Linux kernels. */
     tos_t tos = 1;
-    int tos_len = sizeof(tos);
     clientFde->tosFromServer = 0;
-    if (setsockopt(server->fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0) {
-        unsigned char buf[512];
-        int len = 512;
-        if (getsockopt(server->fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0) {
-            /* Parse the PKTOPTIONS structure to locate the TOS data message
-             * prepared in the kernel by the ZPH incoming TCP TOS preserving
-             * patch.
-             */
-            unsigned char * pbuf = buf;
-            while (pbuf-buf < len) {
-                struct cmsghdr *o = (struct cmsghdr*)pbuf;
-                if (o->cmsg_len<=0)
-                    break;
+    if (!Comm::SetSocketOption(server->fd, SOL_IP, IP_RECVTOS, tos, ToSBuf("IP_RECVTOS to 0x1 for server ", server)))
+        return;
 
-                if (o->cmsg_level == SOL_IP && o->cmsg_type == IP_TOS) {
-                    int *tmp = (int*)SQUID_CMSG_DATA(o);
-                    clientFde->tosFromServer = (tos_t)*tmp;
-                    break;
-                }
-                pbuf += CMSG_LEN(o->cmsg_len);
+    unsigned char buf[512];
+    int len = 512;
+    if (getsockopt(server->fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0) {
+        /* Parse the PKTOPTIONS structure to locate the TOS data message
+         * prepared in the kernel by the ZPH incoming TCP TOS preserving
+         * patch.
+         */
+        unsigned char * pbuf = buf;
+        while (pbuf-buf < len) {
+            struct cmsghdr *o = (struct cmsghdr*)pbuf;
+            if (o->cmsg_len<=0)
+                break;
+
+            if (o->cmsg_level == SOL_IP && o->cmsg_type == IP_TOS) {
+                int *tmp = (int*)SQUID_CMSG_DATA(o);
+                clientFde->tosFromServer = (tos_t)*tmp;
+                break;
             }
-        } else {
-            int xerrno = errno;
-            debugs(33, DBG_IMPORTANT, "ERROR: QOS: getsockopt(IP_PKTOPTIONS) failure on " << server << " " << xstrerr(xerrno));
+            pbuf += CMSG_LEN(o->cmsg_len);
         }
     } else {
         int xerrno = errno;
-        debugs(33, DBG_IMPORTANT, "ERROR: QOS: setsockopt(IP_RECVTOS) failure on " << server << " " << xstrerr(xerrno));
+        debugs(33, DBG_IMPORTANT, "ERROR: QOS: getsockopt(IP_PKTOPTIONS) failure on " << server << " " << xstrerr(xerrno));
     }
 #else
     (void)server;
@@ -226,7 +224,7 @@ Ip::Qos::setNfConnmark(Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionD
     return ret;
 }
 
-int
+bool
 Ip::Qos::doTosLocalMiss(const Comm::ConnectionPointer &conn, const hier_code hierCode)
 {
     tos_t tos = 0;
@@ -247,7 +245,7 @@ Ip::Qos::doTosLocalMiss(const Comm::ConnectionPointer &conn, const hier_code hie
     return setSockTos(conn, tos);
 }
 
-int
+bool
 Ip::Qos::doNfmarkLocalMiss(const Comm::ConnectionPointer &conn, const hier_code hierCode)
 {
     nfmark_t mark = 0;
@@ -268,14 +266,14 @@ Ip::Qos::doNfmarkLocalMiss(const Comm::ConnectionPointer &conn, const hier_code 
     return setSockNfmark(conn, mark);
 }
 
-int
+bool
 Ip::Qos::doTosLocalHit(const Comm::ConnectionPointer &conn)
 {
     debugs(33, 2, "QOS: Setting TOS for local hit, TOS=" << int(Ip::Qos::TheConfig.tosLocalHit));
     return setSockTos(conn, Ip::Qos::TheConfig.tosLocalHit);
 }
 
-int
+bool
 Ip::Qos::doNfmarkLocalHit(const Comm::ConnectionPointer &conn)
 {
     debugs(33, 2, "QOS: Setting netfilter mark for local hit, mark=" << Ip::Qos::TheConfig.markLocalHit);
@@ -513,7 +511,7 @@ Ip::Qos::Config::dumpConfigLine(std::ostream &os, const char *directiveName) con
     }
 }
 
-int
+bool
 Ip::Qos::setSockTos(const int fd, tos_t tos, int type)
 {
     // Bug 3731: FreeBSD produces 'invalid option'
@@ -526,70 +524,52 @@ Ip::Qos::setSockTos(const int fd, tos_t tos, int type)
 
     if (type == AF_INET) {
 #if defined(IP_TOS)
-        const int x = setsockopt(fd, IPPROTO_IP, IP_TOS, &bTos, sizeof(bTos));
-        if (x < 0) {
-            int xerrno = errno;
-            debugs(50, 2, "setsockopt(IP_TOS) on " << fd << ": " << xstrerr(xerrno));
-        }
-        return x;
+        return Comm::SetSocketOption(fd, IPPROTO_IP, IP_TOS, &bTos, ToSBuf("IP_TOS to ", AsHex(tos)));
 #else
         debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(IP_TOS) not supported on this platform");
-        return -1;
 #endif
     } else { // type == AF_INET6
 #if defined(IPV6_TCLASS)
-        const int x = setsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, &bTos, sizeof(bTos));
-        if (x < 0) {
-            int xerrno = errno;
-            debugs(50, 2, "setsockopt(IPV6_TCLASS) on " << fd << ": " << xstrerr(xerrno));
-        }
-        return x;
+        return Comm::SetSocketOption(fd, IPPROTO_IPV6, IPV6_TCLASS, bTos, ToSBuf("IPV6_TCLASS to ", AsHex(tos)));
 #else
         debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(IPV6_TCLASS) not supported on this platform");
-        return -1;
 #endif
     }
-
-    /* CANNOT REACH HERE */
+    return false;
 }
 
-int
+bool
 Ip::Qos::setSockTos(const Comm::ConnectionPointer &conn, tos_t tos)
 {
-    const int x = Ip::Qos::setSockTos(conn->fd, tos, conn->remote.isIPv4() ? AF_INET : AF_INET6);
-    conn->tos = (x >= 0) ? tos : 0;
+    const auto x = Ip::Qos::setSockTos(conn->fd, tos, conn->remote.isIPv4() ? AF_INET : AF_INET6);
+    conn->tos = (x ? tos : 0);
     return x;
 }
 
-int
+bool
 Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
 {
 #if HAVE_LIBCAP && SO_MARK
     debugs(50, 3, "for FD " << fd << " to " << mark);
-    const int x = setsockopt(fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
-    if (x < 0) {
-        int xerrno = errno;
-        debugs(50, 2, "setsockopt(SO_MARK) on " << fd << ": " << xstrerr(xerrno));
-    }
-    return x;
+    return Comm::SetSocketOption(fd, SOL_SOCKET, SO_MARK, mark, ToSBuf("SO_MARK to ", AsHex(mark)));
 #elif HAVE_LIBCAP
     (void)mark;
     (void)fd;
     debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(SO_MARK) not supported on this platform");
-    return -1;
+    return false;
 #else
     (void)mark;
     (void)fd;
     debugs(50, DBG_IMPORTANT, "WARNING: Netfilter marking disabled (requires build --with-cap)");
-    return -1;
+    return false;
 #endif
 }
 
-int
+bool
 Ip::Qos::setSockNfmark(const Comm::ConnectionPointer &conn, nfmark_t mark)
 {
-    const int x = Ip::Qos::setSockNfmark(conn->fd, mark);
-    conn->nfmark = (x >= 0) ? mark : 0;
+    const auto x = Ip::Qos::setSockNfmark(conn->fd, mark);
+    conn->nfmark = (x ? mark : 0);
     return x;
 }
 

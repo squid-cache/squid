@@ -16,6 +16,7 @@
 #include "comm.h"
 #include "comm/ConnOpener.h"
 #include "comm/Read.h"
+#include "comm/SocketOptions.h"
 #include "comm/TcpAcceptor.h"
 #include "CommCalls.h"
 #include "compat/strtoll.h"
@@ -1774,15 +1775,7 @@ ftpOpenListenSocket(Ftp::Gateway * ftpState, int fallback)
      * REUSEADDR is needed in fallback mode, since the same port is
      * used for both control and data.
      */
-    if (fallback) {
-        int on = 1;
-        errno = 0;
-        if (setsockopt(ftpState->ctrl.conn->fd, SOL_SOCKET, SO_REUSEADDR,
-                       (char *) &on, sizeof(on)) == -1) {
-            int xerrno = errno;
-            // SO_REUSEADDR is only an optimization, no need to be verbose about error
-            debugs(9, 4, "setsockopt failed: " << xstrerr(xerrno));
-        }
+    if (fallback && Comm::SetBooleanSocketOption(ftpState->ctrl.conn->fd, SOL_SOCKET, SO_REUSEADDR, true, SBuf("SO_REUSEADDR"))) {
         ftpState->ctrl.conn->flags |= COMM_REUSEADDR;
         temp->flags |= COMM_REUSEADDR;
     } else {

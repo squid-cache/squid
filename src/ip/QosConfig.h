@@ -106,45 +106,38 @@ bool setNfConnmark(Comm::ConnectionPointer &conn, const ConnectionDirection conn
 * TOS value to set on packets when items have not been retrieved from
 * local cache. Called by clientReplyContext::sendMoreData if QOS is
 * enabled for TOS.
-* @param conn     Descriptor of socket to set the TOS for
-* @param hierCode Hier code of request
 */
-int doTosLocalMiss(const Comm::ConnectionPointer &conn, const hier_code hierCode);
+bool doTosLocalMiss(const Comm::ConnectionPointer &, const hier_code);
 
 /**
 * Function to work out and then apply to the socket the appropriate
 * netfilter mark value to set on packets when items have not been
 * retrieved from local cache. Called by clientReplyContext::sendMoreData
 * if QOS is enabled for TOS.
-* @param conn     Descriptor of socket to set the mark for
-* @param hierCode Hier code of request
 */
-int doNfmarkLocalMiss(const Comm::ConnectionPointer &conn, const hier_code hierCode);
+bool doNfmarkLocalMiss(const Comm::ConnectionPointer &, const hier_code);
 
 /**
 * Function to work out and then apply to the socket the appropriate
 * TOS value to set on packets when items *have* been retrieved from
 * local cache. Called by clientReplyContext::doGetMoreData if QOS is
 * enabled for TOS.
-* @param conn Descriptor of socket to set the TOS for
 */
-int doTosLocalHit(const Comm::ConnectionPointer &conn);
+bool doTosLocalHit(const Comm::ConnectionPointer &);
 
 /**
 * Function to work out and then apply to the socket the appropriate
 * netfilter mark value to set on packets when items *have* been
 * retrieved from local cache. Called by clientReplyContext::doGetMoreData
 * if QOS is enabled for TOS.
-* @param conn Descriptor of socket to set the mark for
 */
-int doNfmarkLocalHit(const Comm::ConnectionPointer &conn);
+bool doNfmarkLocalHit(const Comm::ConnectionPointer &);
 
 /**
 * Function to set the TOS value of packets. Sets the value on the socket
 * which then gets copied to the packets.
-* @param conn Descriptor of socket to set the TOS for
 */
-int setSockTos(const Comm::ConnectionPointer &conn, tos_t tos);
+bool setSockTos(const Comm::ConnectionPointer &, tos_t);
 
 /**
 * The low level variant of setSockTos function to set TOS value of packets.
@@ -152,22 +145,20 @@ int setSockTos(const Comm::ConnectionPointer &conn, tos_t tos);
 * @param fd Descriptor of socket to set the TOS for
 * @param type The socket family, AF_INET or AF_INET6
 */
-int setSockTos(const int fd, tos_t tos, int type);
+bool setSockTos(const int fd, tos_t, int type);
 
 /**
 * Function to set the netfilter mark value of packets. Sets the value on the
 * socket which then gets copied to the packets. Called from Ip::Qos::doNfmarkLocalMiss
-* @param conn Descriptor of socket to set the mark for
 */
-int setSockNfmark(const Comm::ConnectionPointer &conn, nfmark_t mark);
+bool setSockNfmark(const Comm::ConnectionPointer &, nfmark_t);
 
 /**
 * The low level variant of setSockNfmark function to set the netfilter mark
 * value of packets.
 * Avoid if you can use the Connection-based setSockNfmark().
-* @param fd Descriptor of socket to set the mark for
 */
-int setSockNfmark(const int fd, nfmark_t mark);
+bool setSockNfmark(const int fd, nfmark_t);
 
 /**
  * QOS configuration class. Contains all the parameters for QOS functions as well
