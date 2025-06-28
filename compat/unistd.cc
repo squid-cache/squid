@@ -82,6 +82,10 @@ int
 xread(int fd, void * buf, size_t sz)
 {
     const auto sock = _get_osfhandle(fd);
+    if (sock == intptr_t(INVALID_HANDLE_VALUE)) {
+        // errno is already set by _get_osfhandle()
+        return -1;
+    }
 
     if (isSocket(sock))
         return xrecv(sock, (char FAR *) buf, (int)sz, 0);
@@ -93,6 +97,10 @@ int
 xwrite(int fd, const void * buf, size_t siz)
 {
     const auto sock = _get_osfhandle(fd);
+    if (sock == intptr_t(INVALID_HANDLE_VALUE)) {
+        // errno is already set by _get_osfhandle()
+        return -1;
+    }
 
     if (isSocket(sock))
         return xsend(sock, (char FAR *) buf, siz, 0);
