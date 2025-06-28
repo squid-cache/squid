@@ -111,15 +111,9 @@ Auth::Ntlm::Config::registerWithCacheManager(void)
 }
 
 bool
-Auth::Ntlm::Config::configured() const
+Auth::Ntlm::Config::active() const
 {
-    if ((authenticateProgram != nullptr) && (authenticateChildren.n_max != 0)) {
-        debugs(29, 9, "returning configured");
-        return true;
-    }
-
-    debugs(29, 9, "returning unconfigured");
-    return false;
+    return authntlm_initialised == 1;
 }
 
 /* NTLM Scheme */

@@ -467,12 +467,7 @@ Auth::Digest::Config::dump(StoreEntry * entry, const char *name, Auth::SchemeCon
 bool
 Auth::Digest::Config::configured() const
 {
-    if ((authenticateProgram != nullptr) &&
-            (authenticateChildren.n_max != 0) &&
-            !realm.isEmpty() && (noncemaxduration > -1))
-        return true;
-
-    return false;
+    return (SchemeConfig::configured() && !realm.isEmpty() && noncemaxduration > -1);
 }
 
 /* add the [www-|Proxy-]authenticate header on a 407 or 401 reply */

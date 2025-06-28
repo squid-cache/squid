@@ -28,7 +28,7 @@ namespace Ntlm
 class Config : public Auth::SchemeConfig
 {
 public:
-    bool configured() const override;
+    bool active() const override;
     Auth::UserRequest::Pointer decode(char const *proxy_auth, const HttpRequest *request, const char *requestRealm) override;
     void done() override;
     void rotateHelpers() override;

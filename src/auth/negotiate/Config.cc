@@ -111,15 +111,9 @@ Auth::Negotiate::Config::registerWithCacheManager(void)
 }
 
 bool
-Auth::Negotiate::Config::configured() const
+Auth::Negotiate::Config::active() const
 {
-    if (authenticateProgram && (authenticateChildren.n_max != 0)) {
-        debugs(29, 9, "returning configured");
-        return true;
-    }
-
-    debugs(29, 9, "returning unconfigured");
-    return false;
+    return authnegotiate_initialised == 1;
 }
 
 void
