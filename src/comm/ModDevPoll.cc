@@ -102,7 +102,7 @@ comm_flush_updates(void)
         (devpoll_update.cur + 1) << " fds queued"
     );
 
-    i = write(
+    i = xwrite(
             devpoll_fd, /* open handle to /dev/poll */
             devpoll_update.pfds, /* pointer to array of struct pollfd */
             (devpoll_update.cur + 1) * sizeof(struct pollfd) /* bytes to process */
@@ -191,7 +191,7 @@ Comm::SelectLoopInit(void)
                           );
 
     /* attempt to open /dev/poll device */
-    devpoll_fd = open("/dev/poll", O_RDWR);
+    devpoll_fd = xopen("/dev/poll", O_RDWR);
     if (devpoll_fd < 0) {
         int xerrno = errno;
         fatalf("comm_select_init: can't open /dev/poll: %s\n", xstrerr(xerrno));
