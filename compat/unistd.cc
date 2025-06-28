@@ -32,10 +32,10 @@ isSocket(intptr_t handle)
         return false;
     }
 
-    int l_so_type = 0;
-    int l_so_type_siz = sizeof(l_so_type);
+    int value = 0;
+    int valueSize = sizeof(value);
     // use the Windows API directly
-    if (getsockopt(handle, SOL_SOCKET, SO_TYPE, reinterpret_cast<char *>(&l_so_type), &l_so_type_siz) == 0)
+    if (getsockopt(handle, SOL_SOCKET, SO_TYPE, reinterpret_cast<char *>(&value), &valueSize) == 0)
         return true;
 
     return false;
