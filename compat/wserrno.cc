@@ -27,7 +27,7 @@ SetErrnoFromWsaError()
         { WSAEISCONN, EISCONN },
 
         { WSAEWOULDBLOCK, EWOULDBLOCK },
-        // WSAEAGAIN has no equivalent
+        // Windows does not have a equivalent of EAGAIN
         { WSAEALREADY, EALREADY },
         { WSAEINTR, EINTR },
         // no Windows error code maps to ERESTART
