@@ -655,6 +655,9 @@ TunnelStateData::ReadClient(const Comm::ConnectionPointer &, char *buf, size_t l
 static int
 _setSoSplice(const int s1, const int s2)
 {
+    // s2 >= 0: enable SO_SPLICE for s1
+    // s2 = -1: disable SO_SPLICE for s1
+
     if ((s1 >= 0 && fd_table[s1].ssl) || (s2 >= 0 && fd_table[s2].ssl)) {
         debugs(97, 2, "SO_SPLICE not applicable to SSL sessions " << s1 << ":" << s2);
         return -1;
@@ -671,6 +674,8 @@ _setSoSplice(const int s1, const int s2)
     // sp.sp_idle = tv;	// only for test
 
     if (setsockopt(s1, SOL_SOCKET, SO_SPLICE, &sp, sizeof(sp)) == -1) {
+        // When unsetting SO_SPLICE, if it has already been disabled by OS, an error is returned.
+        // However, it is not an actual error, so suppress "failed" debug message here.
         if (s2 != -1)
             debugs(97, 3, "SO_SPLICE failed " << errno << " " << s1 << ":" << s2);
         return -1;
@@ -1221,8 +1226,13 @@ TunnelStateData::copyRead(Connection &from, IOCB *completion)
 static void
 clientSelectSoSpliced(int fd, void *data)
 {
-    // generally called only at the end of sessions (connection is about to be closed)
-    // unless unexpected cancellation of SO_SPLICE occurs
+    // generally called only at the end of sessions (connection is about to be closed).
+    // This does not necessarily mean there is no more data to read on this socket because
+    // SO_SPLICE is also canceled if the paired socket is terminated first.
+
+    // potentially called if unexpected cancellation of SO_SPLICE by OS
+    // or undefined return from select() with SO_SPLICE still active occurs,
+    // even though there are no known such undefined cases yet.
 
     TunnelStateData *tunnelState = (TunnelStateData *)data;
 
@@ -1233,6 +1243,9 @@ clientSelectSoSpliced(int fd, void *data)
 
     if (Comm::IsConnOpen(tunnelState->client.conn)) {
         setTunnelTimeouts(tunnelState);
+
+        // Ideally, we want to directly call ReadClient() here to avoid extra call of select(2).
+        // However, doing so requires duplication of some part of Comm::XXX functions.
         tunnelState->copyRead(tunnelState->client, tunnelState->ReadClient);
     }
 }
@@ -1241,7 +1254,12 @@ static void
 serverSelectSoSpliced(int fd, void *data)
 {
     // generally called only at the end of sessions (connection is about to be closed)
-    // unless unexpected cancellation of SO_SPLICE occurs
+    // This does not necessarily mean there is no more data to read on this socket because
+    // SO_SPLICE is also canceled if the paired socket is terminated first.
+
+    // potentially called if unexpected cancellation of SO_SPLICE by OS
+    // or undefined return from select() with SO_SPLICE still active occurs,
+    // even though there are no known such undefined cases yet.
 
     TunnelStateData *tunnelState = (TunnelStateData *)data;
 
@@ -1252,6 +1270,9 @@ serverSelectSoSpliced(int fd, void *data)
 
     if (Comm::IsConnOpen(tunnelState->server.conn)) {
         setTunnelTimeouts(tunnelState);
+
+        // Ideally, we want to directly call ReadServer() here to avoid extra call of select(2).
+        // However, doing so requires duplication of some part of Comm::XXX functions.
         tunnelState->copyRead(tunnelState->server, tunnelState->ReadServer);
     }
 }
