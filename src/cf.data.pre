@@ -7693,8 +7693,6 @@ DOC_START
 
 	See also delay_parameters, delay_class, delay_access for pool
 	configuration details.
-
-	Delay pools do not function for connections with SO_SPLICE enabled.
 DOC_END
 
 NAME: delay_class
@@ -10931,6 +10929,8 @@ DEFAULT: on
 LOC: Config.onoff.so_splice
 DOC_START
     Enable kernel-level TCP proxying (SO_SPLICE) for TCP_TUNNEL if supported.
+    
+    SO_SPLICE is not enabled for delay pool target connections.
 DOC_END
 
 EOF

@@ -709,6 +709,14 @@ TunnelStateData::Connection::setSoSplice(Connection &to_conn)
     const int s1 = conn->fd;
     const int s2 = to_conn.conn->fd;
 
+#if USE_DELAY_POOLS
+    if (delayId && !delayId.getNoDelay()) {
+        debugs(97, 4, "no SO_SPLICE for delay pool target " << s1);
+        so_spliced = -1;
+        return -1;
+    }
+#endif
+
     if (fd_table[s1].ssl || fd_table[s2].ssl) {
         debugs(97, 2, "SO_SPLICE not applicable to SSL sessions " << s1 << ":" << s2);
         return -1;
