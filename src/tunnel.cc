@@ -658,10 +658,8 @@ _setSoSplice(const int s1, const int s2)
     // s2 >= 0: enable SO_SPLICE for s1
     // s2 = -1: disable SO_SPLICE for s1
 
-    if ((s1 >= 0 && fd_table[s1].ssl) || (s2 >= 0 && fd_table[s2].ssl)) {
-        debugs(97, 2, "SO_SPLICE not applicable to SSL sessions " << s1 << ":" << s2);
-        return -1;
-    }
+    Assure(s1 >= 0);
+    Assure(s2 >= -1);
 
     struct splice sp;
     // struct timeval tv;
@@ -708,7 +706,15 @@ TunnelStateData::Connection::setSoSplice(Connection &to_conn)
     if (!IsConnOpen(to_conn.conn))
         return -1;
 
-    const int ret = _setSoSplice(conn->fd, to_conn.conn->fd);
+    const int s1 = conn->fd;
+    const int s2 = to_conn.conn->fd;
+
+    if (fd_table[s1].ssl || fd_table[s2].ssl) {
+        debugs(97, 2, "SO_SPLICE not applicable to SSL sessions " << s1 << ":" << s2);
+        return -1;
+    }
+
+    const int ret = _setSoSplice(s1, s2);
 
     if (ret == 0)
         so_spliced = 1;
