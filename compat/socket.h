@@ -118,6 +118,12 @@ xsendto(int socketFd, const void * buf, size_t len, int flags, const struct sock
     return sendto(socketFd, static_cast<const char *>(buf), static_cast<int>(len), flags, to, l);
 }
 
+inline ssize_t
+xrecv(int socketFd, void * buf, size_t len, int flags)
+{
+    return ::recv(socketFd, static_cast<char *>(buf), static_cast<int>(len), flags);
+}
+
 inline int
 xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)
 {
