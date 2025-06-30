@@ -53,7 +53,7 @@ String Ipc::Port::MakeAddr(const char* processLabel, int id)
 {
     assert(id >= 0);
     String addr = channelPathPfx;
-    addr.append(service_name.c_str());
+    addr.append(service_name);
     addr.append(processLabel);
     addr.append('-');
     addr.append(xitoa(id));
@@ -67,7 +67,7 @@ Ipc::Port::CoordinatorAddr()
     static String coordinatorAddr;
     if (!coordinatorAddr.size()) {
         coordinatorAddr= channelPathPfx;
-        coordinatorAddr.append(service_name.c_str());
+        coordinatorAddr.append(service_name);
         coordinatorAddr.append(coordinatorAddrLabel);
         coordinatorAddr.append(".ipc");
     }

@@ -278,7 +278,7 @@ Ipc::Mem::Segment::GenerateName(const char *id)
             name.append('/');
     } else {
         name.append('/');
-        name.append(service_name.c_str());
+        name.append(service_name);
         name.append('-');
     }
 
