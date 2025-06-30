@@ -40,11 +40,6 @@ String::String(char const *aString)
         allocAndFill(aString, strlen(aString));
 }
 
-String::String(const SBuf &buf)
-{
-    allocAndFill(buf.rawContent(), buf.length());
-}
-
 String &
 String::operator =(char const *aString)
 {

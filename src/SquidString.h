@@ -29,8 +29,6 @@ class String
 public:
     String() = default;
     String(char const *);
-    explicit String(const SBuf &);
-
     String(String const &);
     String(String && S) : size_(S.size_), len_(S.len_), buf_(S.buf_) {
         S.buf_ = nullptr; // S is about to be destructed
