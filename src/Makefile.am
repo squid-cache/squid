@@ -455,8 +455,6 @@ squid_SOURCES = \
 	tunnel.cc \
 	tunnel.h \
 	typedefs.h \
-	urn.cc \
-	urn.h \
 	wccp.cc \
 	wccp2.cc \
 	wccp2.h \
@@ -1925,8 +1923,6 @@ tests_testHttpRange_SOURCES = \
 	tools.h \
 	tests/stub_tunnel.cc \
 	tunnel.h \
-	urn.cc \
-	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
 	wordlist.cc \
@@ -2312,8 +2308,6 @@ tests_testHttpRequest_SOURCES = \
 	tools.h \
 	tests/stub_tunnel.cc \
 	tunnel.h \
-	urn.cc \
-	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
 	wordlist.cc \
@@ -2607,8 +2601,6 @@ tests_testCacheManager_SOURCES = \
 	tools.h \
 	tests/stub_tunnel.cc \
 	tunnel.h \
-	urn.cc \
-	urn.h \
 	tests/stub_wccp2.cc \
 	wccp2.h \
 	wordlist.cc \
