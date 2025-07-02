@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -12,13 +12,9 @@ man_MANS = ext_ad_group_acl.8
 
 ext_ad_group_acl_SOURCES = ext_ad_group_acl.cc
 
-#
-# Currently activeds and adsiid libraries are not available on MinGW or Cygwin,
-# so the following library list is just a placeholder for future MinGW/Cygwin releases.
-# This helper can be compiled only using Microsoft Visual Studio.
 # TODO: test for these libraries in required.m4
-#
 ext_ad_group_acl_LDADD = \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	-lnetapi32 \
 	-ladvapi32 \

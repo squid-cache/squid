@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -3717,13 +3717,12 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, const Htt
     pinning.port = request.url.port();
     pinnedHost = pinning.host;
     pinning.pinned = true;
-    if (CachePeer *aPeer = pinServer->getPeer())
-        pinning.peer = cbdataReference(aPeer);
     pinning.auth = request.flags.connectionAuth;
     char stmp[MAX_IPSTRLEN];
     char desc[FD_DESC_SZ];
+    const auto peer = pinning.peer();
     snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s (%d)",
-             (pinning.auth || !pinning.peer) ? pinnedHost : pinning.peer->name,
+             (pinning.auth || !peer) ? pinnedHost : peer->name,
              clientConnection->remote.toUrl(stmp,MAX_IPSTRLEN),
              clientConnection->fd);
     fd_note(pinning.serverConnection->fd, desc);
@@ -3854,7 +3853,7 @@ ConnStateData::borrowPinnedConnection(HttpRequest *request, const AccessLogEntry
     if (pinning.port != request->url.port())
         throw pinningError(ERR_CANNOT_FORWARD); // or generalize ERR_CONFLICT_HOST
 
-    if (pinning.peer && !cbdataReferenceValid(pinning.peer))
+    if (pinning.serverConnection->toGoneCachePeer())
         throw pinningError(ERR_ZERO_SIZE_OBJECT);
 
     if (pinning.peerAccessDenied)
@@ -3880,8 +3879,6 @@ void
 ConnStateData::unpinConnection(const bool andClose)
 {
     debugs(33, 3, pinning.serverConnection);
-
-    cbdataReferenceDone(pinning.peer);
 
     if (Comm::IsConnOpen(pinning.serverConnection)) {
         if (pinning.closeHandler != nullptr) {

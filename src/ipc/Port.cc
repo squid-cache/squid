@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,7 +54,7 @@ String Ipc::Port::MakeAddr(const char* processLabel, int id)
 {
     assert(id >= 0);
     String addr;
-    addr.append(Instance::NamePrefix(channelPathPfx, processLabel).c_str());
+    addr.append(Instance::NamePrefix(channelPathPfx, processLabel));
     addr.append('-');
     addr.append(xitoa(id));
     addr.append(".ipc");
@@ -66,7 +66,7 @@ Ipc::Port::CoordinatorAddr()
 {
     static String coordinatorAddr;
     if (!coordinatorAddr.size()) {
-        coordinatorAddr.append(Instance::NamePrefix(channelPathPfx, coordinatorAddrLabel).c_str());
+        coordinatorAddr.append(Instance::NamePrefix(channelPathPfx, coordinatorAddrLabel));
         coordinatorAddr.append(".ipc");
     }
     return coordinatorAddr;

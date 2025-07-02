@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -662,8 +662,15 @@ generateRawGperfFile ()
     echo "/* $GeneratedByMe */"
     echo
 
-    (cd `dirname $gperfFile` && gperf -m 100000 `basename $gperfFile`) | \
-        sed 's@/[*]FALLTHROUGH[*]/@[[fallthrough]];@g'
+    if test `gperf --version | head -1 | cut -d ' ' -f 3 | cut -d. -f '-2' | sed -e 's/\.//'` -lt 32 ; then
+        # We configure C++ compilers to complain about missing '[[fallthrough]]' attribute
+        # where old gperf versions use a '/*FALLTHROUGH*/' code comment.
+        (cd `dirname $gperfFile` && gperf -m 100000 `basename $gperfFile`) | \
+            sed -e 's@/[*]FALLTHROUGH[*]/@[[fallthrough]];@g'
+    else
+        # gperf 3.2+ provide fallthrough attributes
+        (cd `dirname $gperfFile` && gperf -m 100000 `basename $gperfFile`)
+    fi
 }
 
 generateGperfFile ()

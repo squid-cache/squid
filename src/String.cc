@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "mem/forward.h"
+#include "sbuf/SBuf.h"
 #include "SquidString.h"
 
 #include <climits>
@@ -173,6 +174,12 @@ void
 String::append(String const &old)
 {
     append(old.rawBuf(), old.len_);
+}
+
+void
+String::append(const SBuf &buf)
+{
+    append(buf.rawContent(), buf.length());
 }
 
 void

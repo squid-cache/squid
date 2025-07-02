@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 #if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
 
 /* upstream proxy authentication */
-char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags);
+char *peer_proxy_negotiate_auth(char *principal_name, const char *proxy, int flags);
 #endif
 
 #endif /* SQUID_SRC_PEER_PROXY_NEGOTIATE_AUTH_H */
