@@ -134,7 +134,9 @@ sub worseThan
 sub isManuallyExcluded
 {
     my ($c) = @_;
-    return lc(contributorToString($c)) =~ /squidadm/; # a known bot
+    return true if lc(contributorToString($c)) =~ /squidadm/; # a known bot
+    return true if lc(contributorToString($c)) =~ /Copilot@users.noreply.github.com/; # a known bot
+    return false;
 }
 
 sub contributorToString
