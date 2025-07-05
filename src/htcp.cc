@@ -615,7 +615,7 @@ htcpUnpackSpecifier(char *buf, int sz)
 {
     static const htcpSpecifier::Pointer nil;
     htcpSpecifier::Pointer s(new htcpSpecifier);
-    HttpRequestMethod method;
+    Http::RequestMethod method;
 
     /* Find length of METHOD */
     uint16_t l = ntohs(*(uint16_t *) buf);
@@ -704,7 +704,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     method.HttpRequestMethodXXX(s->method);
 
     const auto mx = MasterXaction::MakePortless<XactionInitiator::initHtcp>();
-    s->request = HttpRequest::FromUrlXXX(s->uri, mx, method == Http::METHOD_NONE ? HttpRequestMethod(Http::METHOD_GET) : method);
+    s->request = HttpRequest::FromUrlXXX(s->uri, mx, method == Http::METHOD_NONE ? Http::RequestMethod(Http::METHOD_GET) : method);
     if (!s->request) {
         debugs(31, 3, "failed to create request. Invalid URI?");
         return nil;
@@ -1561,7 +1561,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
  * Send an HTCP CLR message for a specified item to a given CachePeer.
  */
 void
-htcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &, CachePeer * p, htcp_clr_reason reason)
+htcpClear(StoreEntry * e, HttpRequest * req, const Http::RequestMethod &, CachePeer * p, htcp_clr_reason reason)
 {
     static char pkt[8192];
     ssize_t pktlen;
