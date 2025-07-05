@@ -999,8 +999,8 @@ tests_testString_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of fs/*
 
-if ENABLE_FS_ROCK
 check_PROGRAMS += tests/testRock
+if ENABLE_FS_ROCK
 tests_testRock_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	$(UNLINKDSOURCE) \
@@ -1161,14 +1161,15 @@ tests_testRock_LDADD = \
 	$(XTRA_LIBS)
 tests_testRock_LDFLAGS = $(AM_CPPFLAGS) $(LIBADD_DL)
 else
+tests_testRock_SOURCES = tests/testSkipped.cc
 EXTRA_DIST += \
         tests/testRock.cc \
         tests/testStoreSupport.cc \
         tests/testStoreSupport.h
 endif
 
-if ENABLE_FS_UFS
 check_PROGRAMS += tests/testUfs
+if ENABLE_FS_UFS
 tests_testUfs_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	$(UNLINKDSOURCE) \
@@ -1337,6 +1338,7 @@ tests_testUfs_LDADD = \
 	$(XTRA_LIBS)
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
 else
+tests_testUfs_SOURCES = tests/testSkipped.cc
 EXTRA_DIST += \
 	tests/testUfs.cc
 endif
@@ -1677,8 +1679,8 @@ tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of auth/*
 
-if ENABLE_AUTH
 check_PROGRAMS += tests/testACLMaxUserIP
+if ENABLE_AUTH
 tests_testACLMaxUserIP_SOURCES = \
 	tests/testACLMaxUserIP.cc
 nodist_tests_testACLMaxUserIP_SOURCES = \
@@ -1724,6 +1726,7 @@ tests_testACLMaxUserIP_LDADD = \
 	$(XTRA_LIBS)
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
 else
+tests_testACLMaxUserIP_SOURCES = tests/testSkipped.cc
 EXTRA_DIST += \
 	tests/testACLMaxUserIP.cc
 endif
