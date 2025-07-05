@@ -51,7 +51,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
    can use for instance the command
    <em>curl -u user:&lt;cachemgr_passwd&gt; http://&lt;squid_hostname:squid_port&gt;/squid-internal-mgr/&lt;section&gt;</em>
    where <em>section</em> is the name of the desired cache manager report.
-   To list available report, use report name <em>menu</em>
+   To list available reports, use the report name <em>menu</em>.
 
 <sect2>Removal of the <em>cachemgr.cgi</em> tool.
 <p>Access to the Cache Manager API is available by sending HTTP(S) requests
