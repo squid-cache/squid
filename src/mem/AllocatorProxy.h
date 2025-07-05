@@ -25,7 +25,7 @@
 #define MEMPROXY_CLASS(CLASS) \
     private: \
     static inline Mem::Allocator &Pool() { \
-        static Mem::Allocator *thePool = memPoolCreate(#CLASS, sizeof(CLASS)); \
+        static auto *thePool = MemPools::GetInstance().create(#CLASS, sizeof(CLASS)); \
         thePool->zeroBlocks(false); \
         return *thePool; \
     } \
