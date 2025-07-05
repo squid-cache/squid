@@ -22,7 +22,7 @@
 #include "hier_code.h"
 #include "ip/Address.h"
 #include "ip/forward.h"
-#include "mem/forward.h"
+#include "mem/AllocatorProxy.h"
 #include "time/gadgets.h"
 
 #include <iosfwd>

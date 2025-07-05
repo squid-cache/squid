@@ -8,39 +8,7 @@
 
 #include "squid.h"
 #include "mem/AllocatorProxy.h"
-#include "mem/forward.h"
-
-/// The number of currently alive objects (poor man's meter.alloc=meter.inuse).
-/// Technically, this is supposed to be a per-allocator statistics, but
-/// AllocatorProxy is not a Mem::Allocator so we maintain a global counter
-/// instead. We probably do not have to maintain this statistics at all.
-static int Alive = 0;
-
-void *
-Mem::AllocatorProxy::alloc()
-{
-    const auto memory = doZero ? xcalloc(1, size) : xmalloc(size);
-    ++Alive;
-    return memory;
-}
-
-void
-Mem::AllocatorProxy::freeOne(void *memory) {
-    xfree(memory);
-    --Alive;
-}
-
-int
-Mem::AllocatorProxy::inUseCount() const
-{
-    return Alive;
-}
-
-size_t
-Mem::AllocatorProxy::getStats(PoolStats &)
-{
-    return Alive;
-}
+#include "mem/Meter.h"
 
 void *
 memAllocBuf(const size_t netSize, size_t * const grossSize)

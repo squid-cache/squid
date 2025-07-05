@@ -12,14 +12,13 @@ noinst_LTLIBRARIES = \
 	libminimal.la
 
 noinst_HEADERS = \
-	AllocatorProxy.h \
 	Sensitive.h \
 	forward.h
 
 # a full-featured memory management library for sbin/squid use
 libmem_la_SOURCES = \
 	Allocator.h \
-	AllocatorProxy.cc \
+	AllocatorProxy.h \
 	Meter.h \
 	Pool.cc \
 	Pool.h \
@@ -34,4 +33,6 @@ libmem_la_SOURCES = \
 
 # a bare-bones implementation of few libmem.la APIs sufficient for helpers use
 libminimal_la_SOURCES = \
+	Allocator.h \
+	AllocatorProxy.h \
 	minimal.cc
