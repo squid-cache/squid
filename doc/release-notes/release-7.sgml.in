@@ -47,13 +47,17 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <sect2>Removal of the <em>squidclient</em> tool.
 <p>Popular command-line tools such as <em>curl</em> or <em>wget</em>
-   provide equivalent features.
+   provide equivalent features. To access the cache manager, administrators
+   can use for instance the command
+   <em>curl -u user:&lt;cachemgr_passwd&gt; http://&lt;squid_hostname:squid_port&gt;/squid-internal-mgr/&lt;section&gt;</em>
+   where <em>section</em> is the name of the desired cache manager report.
+   To list available reports, use the report name <em>menu</em>.
 
 <sect2>Removal of the <em>cachemgr.cgi</em> tool.
 <p>Access to the Cache Manager API is available by sending HTTP(S) requests
-   directly to Squid with the URL-path prefix <em>/squid-internal-mgr/</em>.
-   A plethora of tools, such as curl, wget, or any web browser, can be used
-   instead of cachemgr.cgi.
+   directly to Squid with the URL-path prefix <em>/squid-internal-mgr/</em>
+   as described above. As Squid cache manager uses native HTTP(S),
+   it is now possible to access it directly with a web browser.
 
 <sect2>Removal of the <em>cache_object:</em> URI scheme.
 <p>This custom scheme does not conform to RFC 3986 URI sytax. It has been replaced
