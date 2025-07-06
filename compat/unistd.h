@@ -9,6 +9,9 @@
 #ifndef SQUID_COMPAT_UNISTD_H
 #define SQUID_COMPAT_UNISTD_H
 
+#if HAVE_PATHS_H
+#include <paths.h>
+#endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
