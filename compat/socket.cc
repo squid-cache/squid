@@ -129,9 +129,9 @@ xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockaddr * fro
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    auto fl = static_cast<int>(*fromlen);
+    auto fl = static_cast<int *>(fromlen);
     assert(len <= INT_MAX);
-    const auto result = recvfrom(handle, static_cast<char *>(buf), static_cast<int>(len), flags, from, &fl);
+    const auto result = recvfrom(handle, static_cast<char *>(buf), static_cast<int>(len), flags, from, fl);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
