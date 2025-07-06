@@ -23,21 +23,25 @@
 #define _S_IWRITE 0x0080
 #endif
 
-/// returns true if handle is a valid socket
+/// returns true if handle is a valid socket. Preserves errno.
 static bool
 isSocket(intptr_t handle)
 {
     if (!isValidSocketHandle(handle)) {
-        // errno is already set by _get_osfhandle()
+        // isValidSocketHandle does not touch errno
         return false;
     }
 
     int value = 0;
     int valueSize = sizeof(value);
     // use the Windows API directly
-    if (getsockopt(handle, SOL_SOCKET, SO_TYPE, reinterpret_cast<char *>(&value), &valueSize) == 0)
+    auto saved_errno = errno;
+    if (getsockopt(handle, SOL_SOCKET, SO_TYPE, reinterpret_cast<char *>(&value), &valueSize) == 0) {
+        errno = saved_errno;
         return true;
+    }
 
+    errno = saved_errno;
     return false;
 }
 
