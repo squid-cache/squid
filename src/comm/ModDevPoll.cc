@@ -30,6 +30,7 @@
 
 #include "base/IoManip.h"
 #include "comm/Loops.h"
+#include "compat/unistd.h"
 #include "fd.h"
 #include "fde.h"
 #include "mgr/Registration.h"
