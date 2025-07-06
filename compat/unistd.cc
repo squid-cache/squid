@@ -23,7 +23,7 @@
 #define _S_IWRITE 0x0080
 #endif
 
-/// true if handle is a socket, false if a file or error
+/// returns true if handle is a valid socket
 static bool
 isSocket(intptr_t handle)
 {
