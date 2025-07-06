@@ -1217,9 +1217,9 @@ ENDIF
 	acl aclname dstdomain [-n] .foo.com ...
 	  # Destination server from URL [fast]
 	acl aclname srcdom_regex [-i] \.foo\.com ...
-	  # regex matching client name [slow]
+	  # POSIX regex matching client name [slow]
 	acl aclname dstdom_regex [-n] [-i] \.foo\.com ...
-	  # regex matching server [fast]
+	  # POSIX regex matching server [fast]
 	  #
 	  # For dstdomain and dstdom_regex a reverse lookup is tried if a IP
 	  # based URL is used and no match is found. The name "none" is used
@@ -1255,11 +1255,11 @@ ENDIF
 	  #  h1:m1 must be less than h2:m2
 
 	acl aclname url_regex [-i] ^http:// ...
-	  # regex matching on whole URL [fast]
+	  # POSIX regex matching on whole URL [fast]
 	acl aclname urllogin [-i] [^a-zA-Z0-9] ...
-	  # regex matching on URL login field
+	  # POSIX regex matching on URL login field
 	acl aclname urlpath_regex [-i] \.gif$ ...
-	  # regex matching on URL path [fast]
+	  # POSIX regex matching on URL path [fast]
 
 	acl aclname port 80 70 21 0-1024 ...
 	  # destination TCP port (or port range) of the request [fast]
@@ -1280,10 +1280,11 @@ ENDIF
 	  # status code in reply [fast]
 
 	acl aclname browser [-i] regexp ...
-	  # pattern match on User-Agent header (see also req_header below) [fast]
+	  # POSIX regexp match on User-Agent header
+      # (see also req_header below) [fast]
 
 	acl aclname referer_regex [-i] regexp ...
-	  # pattern match on Referer header [fast]
+	  # POSIX regexp match on Referer header [fast]
 	  # Referer is highly unreliable, so use with care
 
 	acl aclname proxy_auth [-i] username ...
@@ -1297,8 +1298,8 @@ ENDIF
 	  # their parameter syntax and username matching algorithm.
 
 	acl aclname proxy_auth_regex [-i] username_pattern ...
-	  # perform http authentication challenge to the client and regex match
-	  # supplied username [slow]
+	  # perform http authentication challenge to the client and
+	  # POSIX regexp supplied username [slow]
 	  #
 	  # Will use proxy authentication in forward-proxy scenarios, and plain
 	  # http authentication in reverse-proxy scenarios
@@ -1346,19 +1347,19 @@ ENDIF
 	  # or ratio of matches:non-matches (3:5).
 
 	acl aclname req_mime_type [-i] mime-type ...
-	  # regex match against the mime type of the request generated
+	  # POSIX regex match against the mime type of the request generated
 	  # by the client. Can be used to detect file upload or some
 	  # types HTTP tunneling requests [fast]
 	  # NOTE: This does NOT match the reply. You cannot use this
 	  # to match the returned file type.
 
 	acl aclname req_header header-name [-i] any\.regex\.here
-	  # regex match against any of the known request headers.  May be
+	  # POSIX regex match against any of the known request headers.  May be
 	  # thought of as a superset of "browser", "referer" and "mime-type"
 	  # ACL [fast]
 
 	acl aclname rep_mime_type [-i] mime-type ...
-	  # regex match against the mime type of the reply received by
+	  # POSIX regex match against the mime type of the reply received by
 	  # squid. Can be used to detect file download or some
 	  # types HTTP tunneling requests. [fast]
 	  # NOTE: This has no effect in http_access rules. It only has
@@ -1366,7 +1367,7 @@ ENDIF
 	  # http_reply_access.
 
 	acl aclname rep_header header-name [-i] any\.regex\.here
-	  # regex match against any of the known reply headers. May be
+	  # POSIX regex match against any of the known reply headers. May be
 	  # thought of as a superset of "browser", "referer" and "mime-type"
 	  # ACLs [fast]
 
@@ -1390,7 +1391,7 @@ ENDIF
 	  # syntax and username matching algorithm.
 
 	acl aclname ext_user_regex [-i] username_pattern ...
-	  # regex match on username returned by external acl helper [slow]
+	  # POSIX regex match on username returned by external acl helper [slow]
 
 	acl aclname tag tagvalue ...
 	  # string match on tag returned by external acl helper [fast]
@@ -1641,7 +1642,7 @@ IF USE_OPENSSL
 	  # connection, this target is the destination IP address).
 
 	acl aclname ssl::server_name_regex [-i] \.foo\.com ...
-	  # regex matches server name obtained from various sources [fast]
+	  # POSIX regex matches server name obtained from various sources [fast]
 	  #
 	  # See ssl::server_name for details, including IPv6 address formatting
 	  # caveats. Use case-insensitive matching (i.e. -i option) to reduce
