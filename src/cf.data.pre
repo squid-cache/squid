@@ -1281,7 +1281,7 @@ ENDIF
 
 	acl aclname browser [-i] regexp ...
 	  # POSIX extended regexp match on User-Agent header
-      # (see also req_header below) [fast]
+	  # (see also req_header below) [fast]
 
 	acl aclname referer_regex [-i] regexp ...
 	  # POSIX extended regexp match on Referer header [fast]
