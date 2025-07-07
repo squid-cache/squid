@@ -30,7 +30,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>
+	<item>Remove ASN support
 </itemize>
 
 <sect1>Helper changes
@@ -48,6 +48,14 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 </descrip>
 
+<sect1>Removed ASN support
+
+<p>ASN startup code is broken in configurations that require cache_peer when
+connecting to ASN server. ASN-based ACLs are considered to be essentially unused
+and can be replaced with more flexible external ACLs.
+
+<p>Configurations using src_as and dst_as are now rejected, leading to fatal startup
+failures.
 
 Most user-facing changes are reflected in squid.conf (see below).
 
