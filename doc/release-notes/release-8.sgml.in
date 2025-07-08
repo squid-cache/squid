@@ -30,7 +30,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>Remove support for src_as and dst_as ACLs
+	<item>
 </itemize>
 
 <sect1>Helper changes
@@ -48,17 +48,6 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 </descrip>
 
-<sect1>Remove support for src_as and dst_as ACLs
-
-<p>Based on admins feedback and a history of fatal implementation bugs that
-went unnoticed for a long time, the two ACLs are considered to be essentially
-unused. The corresponding Autonomous System Numbers (ASN) lookups can be
-implemented (with more features) using external ACLs. Removing ASN lookup ACLs
-also removes ancient and neglected C code implementing Radix tree algorithms,
-improving Squid security posture and simplifying development.
-
-<p>Configurations using src_as or dst_as ACL types are now rejected with FATAL
-errors.
 
 Most user-facing changes are reflected in squid.conf (see below).
 
@@ -84,7 +73,17 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
-	<p>No changed directives in this version.
+	<tag>acl</tag>
+
+	<p>Removed support for <em>src_as</em> and <em>dst_as</em> ACLs. Based on
+	admin feedback and a history of serious implementation bugs that went
+	unnoticed for a long time, the two ACLs are considered to be essentially
+	unused. The corresponding Autonomous System Numbers (ASN) lookups can be
+	implemented (with more features) using external ACLs. Removing ASN lookup
+	support also removes ancient and neglected C code, improving Squid
+	security posture and simplifying development. Configurations using
+	<em>src_as</em> and <em>dst_as</em> ACL types are now rejected with FATAL
+	errors.
 
 </descrip>
 
