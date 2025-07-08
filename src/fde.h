@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -119,7 +119,6 @@ public:
         bool close_request = false; ///< true if file_ or comm_close has been called
         bool write_daemon = false;
         bool socket_eof = false;
-        bool nolinger = false;
         bool nonblocking = false;
         bool ipc = false;
         bool called_connect = false;
@@ -128,6 +127,8 @@ public:
         bool read_pending = false;
         //bool write_pending; //XXX seems not to be used
         bool transparent = false;
+        /// whether comm_reset_close() (or old_comm_reset_close()) has been called
+        bool harshClosureRequested = false;
     } flags;
 
     int64_t bytes_read = 0;

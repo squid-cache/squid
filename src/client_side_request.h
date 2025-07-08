@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,6 @@
 #include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "client_side.h"
-#include "clientStream.h"
 #include "http/forward.h"
 #include "HttpHeaderRange.h"
 #include "log/forward.h"
@@ -27,9 +26,6 @@
 class ClientRequestContext;
 class ConnStateData;
 class MemObject;
-
-/* client_side_request.c - client side request related routines (pure logic) */
-int clientBeginRequest(const HttpRequestMethod &, char const *, CSCB *, CSD *, const ClientStreamData &, const HttpHeader *, char *, size_t, const MasterXactionPointer &);
 
 class ClientHttpRequest
 #if USE_ADAPTATION

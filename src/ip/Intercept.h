@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -116,6 +116,8 @@ private:
      * \return         Whether successfully located the new address.
      */
     bool PfInterception(const Comm::ConnectionPointer &newConn);
+
+    bool UseInterceptionAddressesLookedUpEarlier(const char *, const Comm::ConnectionPointer &);
 
     int transparentActive_;
     int interceptActive_;

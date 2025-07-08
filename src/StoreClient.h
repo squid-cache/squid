@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,6 +35,7 @@ class StoreEntry;
 class ACLFilledChecklist;
 class LogTags;
 
+// TODO: Merge store_client into StoreClient.
 /// a storeGetPublic*() caller
 class StoreClient: public Acl::ChecklistFiller
 {
@@ -58,6 +59,9 @@ protected:
     bool mayInitiateCollapsing() const { return onCollapsingPath(); }
     /// whether Squid configuration allows collapsing for this transaction
     bool onCollapsingPath() const;
+
+    /// whether startCollapsingOn() was called and returned true
+    mutable bool didCollapse = false;
 };
 
 #if USE_DELAY_POOLS

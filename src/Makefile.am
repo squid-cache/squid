@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -83,17 +83,6 @@ endif
 
 if ENABLE_ADAPTATION
 SUBDIRS += adaptation
-endif
-
-if ENABLE_ESI
-SUBDIRS += esi
-ESI_LIBS = \
-	esi/libesi.la \
-	$(top_builddir)/lib/libTrie/libTrie.a \
-	$(LIBEXPAT_LIBS) \
-	$(LIBXML2_LIBS)
-else
-ESI_LIBS =
 endif
 
 DELAY_POOL_ALL_SOURCE = \
@@ -469,7 +458,6 @@ squid_SOURCES = \
 	urn.cc \
 	urn.h \
 	wccp.cc \
-	wccp.h \
 	wccp2.cc \
 	wccp2.h \
 	wordlist.cc \
@@ -521,10 +509,10 @@ squid_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	libsquid.la \
-	ip/libip.la \
 	fs/libfs.la \
 	DiskIO/libdiskio.la \
 	comm/libcomm.la \
+	ip/libip.la \
 	anyp/libanyp.la \
 	security/libsecurity.la \
 	$(SSL_LIBS) \
@@ -544,7 +532,6 @@ squid_LDADD = \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \
 	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
 	html/libhtml.la \
 	$(SNMP_LIBS) \
 	mem/libmem.la \
@@ -591,24 +578,6 @@ sysconf_DATA = \
 
 data_DATA = \
 	mib.txt
-
-LDADD = \
-	$(AUTH_ACL_LIBS) \
-	acl/libacls.la \
-	eui/libeui.la \
-	acl/libstate.la \
-	$(AUTH_LIBS) \
-	acl/libapi.la \
-	base/libbase.la \
-	libsquid.la \
-	ip/libip.la \
-	fs/libfs.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	$(EPOLL_LIBS) \
-	$(MINGW_LIBS) \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
 
 include $(srcdir)/tests/Stub.am
 
@@ -1978,16 +1947,15 @@ tests_testHttpRange_LDADD = \
 	acl/libapi.la \
 	proxyp/libproxyp.la \
 	parser/libparser.la \
-	ip/libip.la \
 	fs/libfs.la \
 	anyp/libanyp.la \
 	icmp/libicmp.la \
 	comm/libcomm.la \
+	ip/libip.la \
 	log/liblog.la \
 	format/libformat.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	dns/libdns.la \
@@ -2364,7 +2332,6 @@ tests_testHttpRequest_LDADD = \
 	acl/libstate.la \
 	acl/libapi.la \
 	parser/libparser.la \
-	ip/libip.la \
 	fs/libfs.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
@@ -2378,6 +2345,7 @@ tests_testHttpRequest_LDADD = \
 	$(SNMP_LIBS) \
 	icmp/libicmp.la \
 	comm/libcomm.la \
+	ip/libip.la \
 	log/liblog.la \
 	format/libformat.la \
 	store/libstore.la \
@@ -2385,7 +2353,6 @@ tests_testHttpRequest_LDADD = \
 	debug/libdebug.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2663,16 +2630,15 @@ tests_testCacheManager_LDADD = \
 	acl/libapi.la \
 	dns/libdns.la \
 	base/libbase.la \
-	ip/libip.la \
 	fs/libfs.la \
 	comm/libcomm.la \
+	ip/libip.la \
 	eui/libeui.la \
 	icmp/libicmp.la \
 	log/liblog.la \
 	format/libformat.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	anyp/libanyp.la \
 	ipc/libipc.la \

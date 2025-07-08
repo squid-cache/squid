@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -180,7 +180,7 @@ bool
 unlinkdNeeded(void)
 {
     // we should start unlinkd if there are any cache_dirs using it
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+    for (size_t i = 0; i < Config.cacheSwap.n_configured; ++i) {
         const RefCount<SwapDir> sd = Config.cacheSwap.swapDirs[i];
         if (sd->unlinkdUseful())
             return true;

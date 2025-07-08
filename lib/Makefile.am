@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -10,9 +10,6 @@ include $(top_srcdir)/src/Common.am
 SUBDIRS=
 EXTRA_DIST=
 
-if ENABLE_ESI
-SUBDIRS += libTrie
-endif
 if ENABLE_SNMP
 SUBDIRS += snmplib
 endif

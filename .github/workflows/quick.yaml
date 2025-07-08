@@ -1,13 +1,29 @@
-name: GitHub CI
+# The jobs below are executed on every PR branch push (among other
+# events), quickly and cheaply detecting many common PR problems.
+#
+# Anubis configuration must be kept in sync with the total number of
+# tests executed for "auto" branch commits, including tests in other
+# GitHub workflow file(s).
+
+name: PR commit
 
 on:
   push:
-    # test this branch and staged PRs based on this branch code
+    # test commits on this branch and staged commits
     branches: [ "master", "auto" ]
 
   pull_request:
     # test PRs targeting this branch code
     branches: [ "master" ]
+
+  # allows to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+concurrency:
+  # Cancel ongoing tests in case of push to the same PR or staging branch,
+  # but let previous master commit tests complete.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 env:
   # empty except for pull_request events
@@ -24,12 +40,23 @@ jobs:
 
   functionality-tests:
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
-      - name: Install prerequisite packages
+      # XXX: A hack to fix Ubuntu runners that were created in April 2025.
+      - name: Fix /etc/hosts
         run: |
+          cat /etc/hosts
+          cp -p /etc/hosts /tmp/etc-hosts.bak
+          sudo sed --in-place -E 's/^(-e.*)/# \1/' /etc/hosts
+          diff -u /tmp/etc-hosts.bak /etc/hosts || true
+
+      - name: Install prerequisite Linux packages
+        run: |
+          # required for "apt-get build-dep" to work
+          sudo sed --in-place -E 's/^(Types: deb)$/\1 deb-src/' /etc/apt/sources.list.d/ubuntu.sources
           sudo apt-get --quiet=2 update
+          sudo apt-get --quiet=2 build-dep squid
           sudo apt-get --quiet=2 install libtool-bin
 
       - name: Setup a nodejs environment
@@ -67,7 +94,7 @@ jobs:
 
   source-maintenance-tests:
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Install prerequisite packages
@@ -95,8 +122,7 @@ jobs:
       fail-fast: true
       matrix:
         os:
-          - ubuntu-22.04
-          - macos-14
+          - ubuntu-24.04
         compiler:
           - { CC: gcc, CXX: g++ }
           - { CC: clang, CXX: clang++ }
@@ -104,77 +130,36 @@ jobs:
           - { name: layer-00-default, nick: default }
           - { name: layer-01-minimal, nick: minimal }
           - { name: layer-02-maximus, nick: maximus }
-        exclude:
-          # Non-clang testing on MacOS is too much work for very little gain
-          - { os: macos-14, compiler: { CC: gcc, CXX: g++ } }
 
     runs-on: ${{ matrix.os }}
 
     name: build-tests(${{ matrix.os }},${{ matrix.compiler.CC }},${{ matrix.layer.nick }})
 
     env:
-      CC: ${{ matrix.compiler.CC }}
-      CXX: ${{ matrix.compiler.CXX }}
+      CC: /usr/bin/ccache ${{ matrix.compiler.CC }}
+      CXX: /usr/bin/ccache ${{ matrix.compiler.CXX }}
 
     steps:
 
       - name: Install prerequisite Linux packages
-        if: runner.os == 'Linux'
         run: |
           # required for "apt-get build-dep" to work
-          sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
+          sudo sed --in-place -E 's/^(Types: deb)$/\1 deb-src/' /etc/apt/sources.list.d/ubuntu.sources
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
-          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin ${{ matrix.compiler.CC }}
-
-      - name: Install prerequisite MacOS packages
-        if: runner.os == 'macOS'
-        run: |
-          brew install \
-            automake coreutils cppunit gawk \
-            gnu-getopt gnu-sed grep libtool \
-            make cyrus-sasl
-            # openldap openssl # already provided by github workers base-image
+          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin ${{ matrix.compiler.CC }} ccache valgrind
 
       - name: Checkout sources
         uses: actions/checkout@v4
 
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2.17
+        with:
+          verbose: 2 # default 0
+          key: ${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
+
       - name: Run build on Linux
-        if: runner.os == 'Linux'
         run: ./test-builds.sh ${{ matrix.layer.name }}
-
-      - name: Run build on MacOS
-        if: runner.os == 'macOS'
-        run: |
-          eval `brew shellenv`
-          PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
-          PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig"
-          PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
-          export PKG_CONFIG_PATH
-          export GETOPT="$HOMEBREW_PREFIX/opt/gnu-getopt/bin/getopt"
-          export MAKE="$HOMEBREW_PREFIX/bin/gmake"
-          # ensure we use Homebrew headers and libraries
-          # this is needed because pkg-config --libs openssl points to the wrong directory
-          #   in version openssl@3: stable 3.3.0
-          export CPPFLAGS="-I$HOMEBREW_PREFIX/include${CPPFLAGS:+ $CPPFLAGS}"
-          export LDFLAGS="-L$HOMEBREW_PREFIX/lib${LDFLAGS:+ $LDFLAGS}"
-          export CFLAGS="-Wno-compound-token-split-by-macro${CFLAGS:+ $CFLAGS}" # needed fir ltdl with Xcode
-
-          # libtool package referenced below fails to copy its configure*
-          # files, possibly due to a packaging/brewing bug. The following sed
-          # command restores installed libtoolize code to its earlier (and
-          # working) variation.
-          echo "brew libtool package details:"
-          brew info libtool --json | grep -E 'rebuild|tap_git_head'
-          # This hack was tested on libtoolize package with the following output:
-          # "rebuild": 2,
-          # "tap_git_head": "5cede8ea3b7b12c7f68215f75a951430b38d945f",
-          #
-          editable=$HOMEBREW_CELLAR/libtool/2.4.7/bin/glibtoolize
-          sed -i.bak 's@ltdl_ac_aux_dir=""@ltdl_ac_aux_dir="../build-aux"@' $editable || true
-          diff -u $editable.bak $editable || true
-
-          ./test-builds.sh ${{ matrix.layer.name }}
 
       - name: Publish build logs
         if: success() || failure()
@@ -185,18 +170,17 @@ jobs:
 
   CodeQL-tests:
 
-    runs-on: [ ubuntu-22.04 ]
+    runs-on: [ ubuntu-24.04 ]
 
     permissions:
       security-events: write
 
     steps:
 
-      - name: Install Squid prerequisite Linux packages
-        if: runner.os == 'Linux'
+      - name: Install prerequisite Linux packages
         run: |
           # required for "apt-get build-dep" to work
-          sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
+          sudo sed --in-place -E 's/^(Types: deb)$/\1 deb-src/' /etc/apt/sources.list.d/ubuntu.sources
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
           sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin

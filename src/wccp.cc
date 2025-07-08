@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,13 +11,14 @@
 #include "squid.h"
 
 #if USE_WCCP
+#include "base/RunnersRegistry.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "event.h"
 #include "fatal.h"
 #include "SquidConfig.h"
-#include "wccp.h"
+#include "tools.h"
 
 #define WCCP_PORT 2048
 #define WCCP_REVISION 0
@@ -79,17 +80,12 @@ static int wccpLowestIP(void);
 static EVH wccpHereIam;
 static void wccpAssignBuckets(void);
 
-/*
- * The functions used during startup:
- * wccpInit
- * wccpConnectionOpen
- * wccpConnectionShutdown
- * wccpConnectionClose
- */
-
-void
+static void
 wccpInit(void)
 {
+    if (!IamPrimaryProcess())
+        return;
+
     debugs(80, 5, "wccpInit: Called");
     memset(&wccp_here_i_am, '\0', sizeof(wccp_here_i_am));
     wccp_here_i_am.type = htonl(WCCP_HERE_I_AM);
@@ -105,9 +101,12 @@ wccpInit(void)
             eventAdd("wccpHereIam", wccpHereIam, nullptr, 5.0, 1);
 }
 
-void
+static void
 wccpConnectionOpen(void)
 {
+    if (!IamPrimaryProcess())
+        return;
+
     debugs(80, 5, "wccpConnectionOpen: Called");
 
     if (Config.Wccp.router.isAnyAddr()) {
@@ -157,15 +156,28 @@ wccpConnectionOpen(void)
     local_ip = local;
 }
 
-void
+static void
 wccpConnectionClose(void)
 {
+    if (!IamPrimaryProcess())
+        return;
+
     if (theWccpConnection > -1) {
         debugs(80, DBG_IMPORTANT, "FD " << theWccpConnection << " Closing WCCPv1 socket");
         comm_close(theWccpConnection);
         theWccpConnection = -1;
     }
 }
+
+class WccpRr : public RegisteredRunner
+{
+public:
+    void useConfig() override { wccpInit(); wccpConnectionOpen(); }
+    void startReconfigure() override { wccpConnectionClose(); }
+    void syncConfig() override { wccpConnectionOpen(); }
+    void startShutdown() override { wccpConnectionClose(); }
+};
+DefineRunnerRegistrator(WccpRr);
 
 /*
  * Functions for handling the requests.

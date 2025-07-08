@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -281,6 +281,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
         delete urnState;
         return;
     }
+
+    // XXX: Missing reply freshness checks (e.g., calling refreshCheckHTTP()).
 
     urls = urnParseReply(urnState->parsingBuffer.toSBuf(), urnState->request->method);
 

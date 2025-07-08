@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -87,9 +87,6 @@
 #if USE_OPENSSL
 #include "ssl/Config.h"
 #include "ssl/support.h"
-#endif
-#if USE_SQUID_ESI
-#include "esi/Parser.h"
 #endif
 #if SQUID_SNMP
 #include "snmp.h"
@@ -1037,10 +1034,12 @@ configDoConfigure(void)
         Ssl::loadSquidUntrusted(Config.ssl_client.foreignIntermediateCertsPath);
 #endif
 
-    if (Security::ProxyOutgoingConfig.encryptTransport) {
+    if (Security::ProxyOutgoingConfig().encryptTransport) {
         debugs(3, 2, "initializing https:// proxy context");
-        Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
-        if (!Config.ssl_client.sslContext) {
+
+        const auto rawSslContext = Security::ProxyOutgoingConfig().createClientContext(false);
+        Config.ssl_client.sslContext_ = rawSslContext ? new Security::ContextPointer(rawSslContext) : nullptr;
+        if (!Config.ssl_client.sslContext_) {
 #if USE_OPENSSL
             fatal("ERROR: Could not initialize https:// proxy context");
 #else
@@ -1048,9 +1047,9 @@ configDoConfigure(void)
 #endif
         }
 #if USE_OPENSSL
-        Ssl::useSquidUntrusted(Config.ssl_client.sslContext.get());
+        Ssl::useSquidUntrusted(Config.ssl_client.sslContext_->get());
 #endif
-        Config.ssl_client.defaultPeerContext = new Security::FuturePeerContext(Security::ProxyOutgoingConfig, Config.ssl_client.sslContext);
+        Config.ssl_client.defaultPeerContext = new Security::FuturePeerContext(Security::ProxyOutgoingConfig(), *Config.ssl_client.sslContext_);
     }
 
     for (const auto &p: CurrentCachePeers()) {
@@ -1190,7 +1189,7 @@ parse_obsolete(const char *name)
             throw TextException(ToSBuf("missing required parameter for obsolete directive: ", name), Here());
 
         tmp.append(token, strlen(token));
-        Security::ProxyOutgoingConfig.parse(tmp.c_str());
+        Security::ProxyOutgoingConfig().parse(tmp.c_str());
     }
 }
 
@@ -3993,7 +3992,8 @@ configFreeMemory(void)
     Dns::ResolveClientAddressesAsap = false;
     delete Config.ssl_client.defaultPeerContext;
     Config.ssl_client.defaultPeerContext = nullptr;
-    Config.ssl_client.sslContext.reset();
+    delete Config.ssl_client.sslContext_;
+    Config.ssl_client.sslContext_ = nullptr;
 #if USE_OPENSSL
     Ssl::unloadSquidUntrusted();
 #endif

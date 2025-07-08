@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,7 +30,11 @@ LookupDone(const char *, const Dns::LookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     checklist->markSourceDomainChecked();
-    checklist->request->recordLookup(details);
+    if (checklist->request)
+        checklist->request->recordLookup(details);
+    else
+        debugs(28, 3, "no request to recordLookup()");
+
     checklist->resumeNonBlockingCheck();
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -337,12 +337,5 @@ TODO: get RFCs linked from ietf
 	of handling lists of mirror sites.  For more details, please
 	see (http://squid.nlanr.net/Squid/urn-support.html) URN Support in Squid
 	.
-
-\section ESI ESI
-\par
-	ESI is an implementation of Edge Side Includes (http://www.esi.org).
-	ESI is implemented as a client side stream and a small
-	modification to client_side_reply.c to check whether
-	ESI should be inserted into the reply stream or not.
 
  */

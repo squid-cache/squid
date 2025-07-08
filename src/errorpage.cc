@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -740,6 +740,29 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     assert(entry->mem_obj != nullptr);
     assert (entry->isEmpty());
     debugs(4, 4, "storing " << err << " in " << *entry);
+
+    if (const auto &request = err->request) {
+        if (const auto &bodyPipe = request->body_pipe) {
+            // We cannot expectNoConsumption() here (yet): This request may be a
+            // virgin request being consumed by adaptation that should continue
+            // even in error-handling cases. startAutoConsumptionIfNeeded() call
+            // triggered by enableAutoConsumption() below skips such requests.
+            //
+            // Today, we also cannot enableAutoConsumption() earlier because it
+            // could result in premature consumption in BodyPipe::postAppend()
+            // followed by an unwanted setConsumerIfNotLate() failure.
+            //
+            // TODO: Simplify BodyPipe auto-consumption by automatically
+            // enabling it when no new consumers are expected, removing the need
+            // for explicit enableAutoConsumption() calls like the one below.
+            //
+            // Code like clientReplyContext::sendClientOldEntry() might use
+            // another StoreEntry for this master transaction, but we want to
+            // consume this request body even in those hypothetical error cases
+            // to prevent stuck (client-Squid or REQMOD) transactions.
+            bodyPipe->enableAutoConsumption();
+        }
+    }
 
     if (entry->store_status != STORE_PENDING) {
         debugs(4, 2, "Skipping error page due to store_status: " << entry->store_status);

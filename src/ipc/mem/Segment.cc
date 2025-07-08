@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -278,7 +278,7 @@ Ipc::Mem::Segment::GenerateName(const char *id)
             name.append('/');
     } else {
         name.append('/');
-        name.append(service_name.c_str());
+        name.append(service_name);
         name.append('-');
     }
 
@@ -343,7 +343,7 @@ Ipc::Mem::Segment::create(const off_t aSize)
 }
 
 void
-Ipc::Mem::Segment::open()
+Ipc::Mem::Segment::open(bool)
 {
     assert(!theMem);
     checkSupport("Fake segment open");

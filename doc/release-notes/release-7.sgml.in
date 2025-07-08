@@ -47,13 +47,17 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <sect2>Removal of the <em>squidclient</em> tool.
 <p>Popular command-line tools such as <em>curl</em> or <em>wget</em>
-   provide equivalent features.
+   provide equivalent features. To access the cache manager, administrators
+   can use for instance the command
+   <em>curl -u user:&lt;cachemgr_passwd&gt; http://&lt;squid_hostname:squid_port&gt;/squid-internal-mgr/&lt;section&gt;</em>
+   where <em>section</em> is the name of the desired cache manager report.
+   To list available reports, use the report name <em>menu</em>.
 
 <sect2>Removal of the <em>cachemgr.cgi</em> tool.
 <p>Access to the Cache Manager API is available by sending HTTP(S) requests
-   directly to Squid with the URL-path prefix <em>/squid-internal-mgr/</em>.
-   A plethora of tools, such as curl, wget, or any web browser, can be used
-   instead of cachemgr.cgi.
+   directly to Squid with the URL-path prefix <em>/squid-internal-mgr/</em>
+   as described above. As Squid cache manager uses native HTTP(S),
+   it is now possible to access it directly with a web browser.
 
 <sect2>Removal of the <em>cache_object:</em> URI scheme.
 <p>This custom scheme does not conform to RFC 3986 URI sytax. It has been replaced
@@ -194,11 +198,36 @@ This section gives an account of those changes in three categories:
 	<tag>external_acl_type</tag>
 	<p>Removed <em>%IDENT</em> format code with Ident protocol support.
 
+	<tag>collapsed_forwarding</tag>
+	<p>Squid no longer revalidates responses to collapsed requests, treating
+	all such responses as fresh. This change follows IETF HTTP Working Group
+	advice (in an HTTP gray area) and prevents arguably excessive freshness
+	checks for responses to collapsed requests. This change does not prevent
+	freshness checks for responses that were, at the time of a hit request,
+	either fully cached or still receiving response body bytes.
+
+	<tag>quick_abort_pct</tag>
+	<p>Instead of ignoring <em>quick_abort_pct</em> settings that would,
+	together with other conditions, abort a pending download of a 99-byte or
+	smaller response, Squid now honors <em>quick_abort_pct</em> for all
+	response sizes. Most Squids are not going to be affected by this change
+	because default quick_abort_min settings (16KB) prevent aborts of 99-byte
+	responses even before <em>quick_abort_pct</em> is checked.
+	<p>Due to conversion from integer to floating point math, this change may
+	affect responses larger than 99 bytes as well, but these effects ought to
+	be limited to cases where the decision is based on a tiny difference (e.g.,
+	receiving 1% more bytes would have triggered full download). In most such
+	cases, the decision could probably go either way due to response header
+	size fluctuations anyway.
+
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
 <p>
 <descrip>
+	<tag>esi_parser</tag>
+	<p>Edge Side Includes (ESI) protocol is no longer supported natively.
+
 	<tag>mcast_miss_addr</tag>
 	<p>The corresponding code has not built for many years, indicating that the
 	feature is unused.
@@ -257,9 +286,7 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<tag>--disable-esi</tag>
-	<p>The ESI feature is now disabled by default.
-	   Use <em>--enable-esi</em> if needed.
+	<p>No build options have changed behaviour in this version.
 
 </descrip>
 </p>
@@ -270,8 +297,17 @@ This section gives an account of those changes in three categories:
 	<tag>--enable-cachemgr-hostname=</tag>
 	<p>The <em>cachemgr.cgi</em> tool this option relates to has been removed.
 
+	<tag>--enable-esi</tag>
+	<p>Edge Side Includes (ESI) protocol is no longer supported natively.
+
+	<tag>--without-expat</tag>
+	<p>The ESI feature using libexpat has been removed.
+
 	<tag>--without-gnugss</tag>
 	<p>Renamed to <em>--without-gss</em>.
+
+	<tag>--without-xml2</tag>
+	<p>The ESI feature using libxml2 has been removed.
 
 	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
 	<p>The code enabled by this preprocessor macro has not built for many
@@ -297,7 +333,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.

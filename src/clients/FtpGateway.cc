@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1122,8 +1122,8 @@ Ftp::Gateway::buildTitleUrl()
 
     SBuf authority = request->url.authority(request->url.getScheme() != AnyP::PROTO_FTP);
 
-    title_url.append(authority.rawContent(), authority.length());
-    title_url.append(request->url.path().rawContent(), request->url.path().length());
+    title_url.append(authority);
+    title_url.append(request->url.path());
 
     base_href = "ftp://";
 
@@ -1138,8 +1138,8 @@ Ftp::Gateway::buildTitleUrl()
         base_href.append("@");
     }
 
-    base_href.append(authority.rawContent(), authority.length());
-    base_href.append(request->url.path().rawContent(), request->url.path().length());
+    base_href.append(authority);
+    base_href.append(request->url.path());
     base_href.append("/");
 }
 
@@ -2272,6 +2272,7 @@ ftpWriteTransferDone(Ftp::Gateway * ftpState)
     }
 
     ftpState->entry->timestampsSet();   /* XXX Is this needed? */
+    ftpState->markParsedVirginReplyAsWhole("ftpWriteTransferDone code 226 or 250");
     ftpSendReply(ftpState);
 }
 
@@ -2638,7 +2639,7 @@ Ftp::Gateway::completeForwarding()
 {
     if (fwd == nullptr || flags.completed_forwarding) {
         debugs(9, 3, "avoid double-complete on FD " <<
-               (ctrl.conn ? ctrl.conn->fd : -1) << ", Data FD " << data.conn->fd <<
+               (ctrl.conn ? ctrl.conn->fd : -1) << ", Data FD " << (data.conn ? data.conn->fd : -1) <<
                ", this " << this << ", fwd " << fwd);
         return;
     }

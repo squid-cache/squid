@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,6 +17,8 @@ namespace AnyP
 class PortCfg;
 typedef RefCount<PortCfg> PortCfgPointer;
 
+class Bracketed;
+class Host;
 class Uri;
 class UriScheme;
 

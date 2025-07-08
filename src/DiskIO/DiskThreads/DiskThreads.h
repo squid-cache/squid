@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -113,7 +113,7 @@ void aioRead(int, off_t offset, size_t size, AIOCB *, void *);
 
 void aioStat(char *, struct stat *, AIOCB *, void *);
 void aioUnlink(const char *, AIOCB *, void *);
-int aioQueueSize(void);
+size_t aioQueueSize(void);
 
 #include "DiskIO/DiskFile.h"
 

@@ -24,7 +24,7 @@
 # for the list of possible encodings.
 # The default value is: UTF-8.
 
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -849,7 +849,6 @@ EXCLUDE_SYMLINKS       = NO
 
 EXCLUDE_PATTERNS       = */CVS/* \
                          */.git* \
-                         */lib/libTrie/* \
                          */libltdl/* \
                          */Programming-Guide/html/* \
                          */Programming-guide/dyn/* \
@@ -2096,7 +2095,6 @@ PREDEFINED             = __cplusplus \
                          USE_QOS_TOS \
                          USE_SELECT \
                          USE_SOLARIS_KRB5 \
-                         USE_SQUID_ESI \
                          USE_SQUID_EUI \
                          USE_SSL_CRTD \
                          USE_OPENSSL \

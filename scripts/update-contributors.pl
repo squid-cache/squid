@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -134,7 +134,9 @@ sub worseThan
 sub isManuallyExcluded
 {
     my ($c) = @_;
-    return lc(contributorToString($c)) =~ /squidadm/; # a known bot
+    return true if lc(contributorToString($c)) =~ /squidadm/; # a known bot
+    return true if lc(contributorToString($c)) =~ /Copilot@users.noreply.github.com/; # a known bot
+    return false;
 }
 
 sub contributorToString

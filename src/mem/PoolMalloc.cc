@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,6 +31,10 @@ MemPoolMalloc::allocate()
     if (obj) {
         --meter.idle;
         ++countSavedAllocs;
+        if (doZero)
+            (void)VALGRIND_MAKE_MEM_DEFINED(obj, objectSize);
+        else
+            (void)VALGRIND_MAKE_MEM_UNDEFINED(obj, objectSize);
     } else {
         if (doZero)
             obj = xcalloc(1, objectSize);
@@ -52,6 +56,7 @@ MemPoolMalloc::deallocate(void *obj)
     } else {
         if (doZero)
             memset(obj, 0, objectSize);
+        (void)VALGRIND_MAKE_MEM_NOACCESS(obj, objectSize);
         ++meter.idle;
         freelist.push(obj);
     }

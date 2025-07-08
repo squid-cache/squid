@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,7 +33,12 @@ public:
     /// convenience wrapper to detect whether more I/O is needed
     bool wantsIo() const { return category == ioWantRead || category == ioWantWrite; }
 
-    void print(std::ostream &os) const;
+    /// reports brief summary (on one line) suitable for low-level debugging
+    void printGist(std::ostream &) const;
+
+    /// reports detailed summary, often using multiple Debug::Extra lines
+    /// suitable for level-0/1 cache.log messages
+    void printWithExtras(std::ostream &) const;
 
     ErrorDetailPointer errorDetail; ///< ioError case details (or nil)
 
@@ -42,12 +47,15 @@ public:
     /* the data members below facilitate human-friendly debugging */
     const char *errorDescription = nullptr; ///< a brief description of an error
     bool important = false; ///< whether the error was serious/unusual
+
+private:
+    void printDescription(std::ostream &) const;
 };
 
 inline std::ostream &
 operator <<(std::ostream &os, const IoResult &result)
 {
-    result.print(os);
+    result.printGist(os);
     return os;
 }
 

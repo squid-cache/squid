@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -48,8 +48,10 @@ libbase_la_SOURCES = \
 	JobWait.h \
 	Lock.h \
 	LookupTable.h \
+	OnOff.h \
 	Packable.h \
 	PackableStream.h \
+	PrecomputedCodeContext.h \
 	Random.cc \
 	Random.h \
 	RandomUuid.cc \

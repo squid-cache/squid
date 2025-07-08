@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,12 +16,14 @@
 #if USE_OPENSSL
 
 #include "acl/FilledChecklist.h"
+#include "anyp/Host.h"
 #include "anyp/PortCfg.h"
 #include "anyp/Uri.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
+#include "ip/Address.h"
 #include "ipc/MemMap.h"
 #include "security/CertError.h"
 #include "security/Certificate.h"
@@ -39,8 +41,6 @@
 // TODO: Move ssl_ex_index_* global variables from global.cc here.
 static int ssl_ex_index_verify_callback_parameters = -1;
 
-static Ssl::CertsIndexedList SquidUntrustedCerts;
-
 const EVP_MD *Ssl::DefaultSignHash = nullptr;
 
 std::vector<const char *> Ssl::BumpModeStr = {
@@ -54,6 +54,73 @@ std::vector<const char *> Ssl::BumpModeStr = {
     "terminate"
     /*,"err"*/
 };
+
+namespace Ssl {
+
+/// GeneralNameMatcher for matching a single AnyP::Host given at construction time
+class OneNameMatcher: public GeneralNameMatcher
+{
+public:
+    explicit OneNameMatcher(const AnyP::Host &needle): needle_(needle) {}
+
+protected:
+    /* GeneralNameMatcher API */
+    bool matchDomainName(const Dns::DomainName &) const override;
+    bool matchIp(const Ip::Address &) const override;
+
+    AnyP::Host needle_; ///< a name we are looking for
+};
+
+static CertsIndexedList &
+SquidUntrustedCerts()
+{
+    static auto untrustedCerts = new CertsIndexedList();
+    return *untrustedCerts;
+}
+
+} // namespace Ssl
+
+bool
+Ssl::GeneralNameMatcher::match(const GeneralName &name) const
+{
+    if (const auto domain = name.domainName())
+        return matchDomainName(*domain);
+    if (const auto ip = name.ip())
+        return matchIp(*ip);
+    Assure(!"unreachable code: the above `if` statements must cover all name variants");
+    return false;
+}
+
+bool
+Ssl::OneNameMatcher::matchDomainName(const Dns::DomainName &rawName) const {
+    // TODO: Add debugs() stream manipulator to safely (i.e. without breaking
+    // cache.log message framing) dump raw input that may contain new lines. Use
+    // here and in similar contexts where we report such raw input.
+    debugs(83, 5, "needle=" << needle_ << " domain=" << rawName);
+    if (needle_.ip()) {
+        // for example, a 127.0.0.1 IP needle does not match DNS:127.0.0.1 SAN
+        debugs(83, 7, "needle is an IP; mismatch");
+        return false;
+    }
+
+    Assure(needle_.domainName());
+    auto domainNeedle = *needle_.domainName();
+
+    auto name = rawName;
+    if (name.length() > 0 && name[0] == '*')
+        name.consume(1);
+
+    return ::matchDomainName(domainNeedle.c_str(), name.c_str(), mdnRejectSubsubDomains) == 0;
+}
+
+bool
+Ssl::OneNameMatcher::matchIp(const Ip::Address &ip) const {
+    debugs(83, 5, "needle=" << needle_ << " ip=" << ip);
+    if (const auto needleIp = needle_.ip())
+        return (*needleIp == ip);
+    debugs(83, 7, "needle is not an IP; mismatch");
+    return false;
+}
 
 /**
  \defgroup ServerProtocolSSLInternal Server-Side SSL Internals
@@ -192,68 +259,85 @@ int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len)
     return write;
 }
 
-int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data))
+static std::optional<AnyP::Host>
+ParseSubjectAltName(const GENERAL_NAME &san)
 {
-    assert(peer_cert);
-
-    X509_NAME *name = X509_get_subject_name(peer_cert);
-
-    for (int i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
-
-        ASN1_STRING *cn_data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, i));
-
-        if ( (*check_func)(check_data, cn_data) == 0)
-            return 1;
+    switch(san.type) {
+    case GEN_DNS: {
+        Assure(san.d.dNSName);
+        // GEN_DNS is an IA5STRING. IA5STRING is a subset of ASCII that does not
+        // need to be converted to UTF-8 (or some such) before we parse it.
+        const auto buffer = Ssl::AsnToSBuf(*san.d.dNSName);
+        return AnyP::Host::ParseWildDomainName(buffer);
     }
 
-    STACK_OF(GENERAL_NAME) * altnames;
-    altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(peer_cert, NID_subject_alt_name, nullptr, nullptr);
+    case GEN_IPADD: {
+        // san.d.iPAddress is OpenSSL ASN1_OCTET_STRING
+        Assure(san.d.iPAddress);
 
-    if (altnames) {
-        int numalts = sk_GENERAL_NAME_num(altnames);
-        for (int i = 0; i < numalts; ++i) {
-            const GENERAL_NAME *check = sk_GENERAL_NAME_value(altnames, i);
-            if (check->type != GEN_DNS) {
-                continue;
-            }
-            ASN1_STRING *cn_data = check->d.dNSName;
+        // RFC 5280 section 4.2.1.6 signals IPv4/IPv6 address family using data length
 
-            if ( (*check_func)(check_data, cn_data) == 0) {
-                sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
-                return 1;
+        if (san.d.iPAddress->length == 4) {
+            struct in_addr addr;
+            static_assert(sizeof(addr.s_addr) == 4);
+            memcpy(&addr.s_addr, san.d.iPAddress->data, sizeof(addr.s_addr));
+            const Ip::Address ip(addr);
+            return AnyP::Host::ParseIp(ip);
+        }
+
+        if (san.d.iPAddress->length == 16) {
+            struct in6_addr addr;
+            static_assert(sizeof(addr.s6_addr) == 16);
+            memcpy(&addr.s6_addr, san.d.iPAddress->data, sizeof(addr.s6_addr));
+            const Ip::Address ip(addr);
+            return AnyP::Host::ParseIp(ip);
+        }
+
+        debugs(83, 3, "unexpected length of an IP address SAN: " << san.d.iPAddress->length);
+        return std::nullopt;
+    }
+
+    default:
+        debugs(83, 3, "unsupported SAN kind: " << san.type);
+        return std::nullopt;
+    }
+}
+
+bool
+Ssl::HasMatchingSubjectName(X509 &cert, const GeneralNameMatcher &matcher)
+{
+    const auto name = X509_get_subject_name(&cert);
+    for (int i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
+        debugs(83, 7, "checking CN at " << i);
+        if (const auto cn = ParseCommonNameAt(*name, i)) {
+            if (matcher.match(*cn))
+                return true;
+        }
+    }
+
+    const Ssl::GENERAL_NAME_STACK_Pointer sans(static_cast<STACK_OF(GENERAL_NAME)*>(
+                X509_get_ext_d2i(&cert, NID_subject_alt_name, nullptr, nullptr)));
+    if (sans) {
+        const auto sanCount = sk_GENERAL_NAME_num(sans.get());
+        for (int i = 0; i < sanCount; ++i) {
+            debugs(83, 7, "checking SAN at " << i);
+            const auto rawSan = sk_GENERAL_NAME_value(sans.get(), i);
+            Assure(rawSan);
+            if (const auto san = ParseSubjectAltName(*rawSan)) {
+                if (matcher.match(*san))
+                    return true;
             }
         }
-        sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
     }
-    return 0;
+
+    debugs(83, 7, "no matches");
+    return false;
 }
 
-static int check_domain( void *check_data, ASN1_STRING *cn_data)
+bool
+Ssl::HasSubjectName(X509 &cert, const AnyP::Host &host)
 {
-    char cn[1024];
-    const char *server = (const char *)check_data;
-
-    if (cn_data->length == 0)
-        return 1; // zero length cn, ignore
-
-    if (cn_data->length > (int)sizeof(cn) - 1)
-        return 1; //if does not fit our buffer just ignore
-
-    char *s = reinterpret_cast<char*>(cn_data->data);
-    char *d = cn;
-    for (int i = 0; i < cn_data->length; ++i, ++d, ++s) {
-        if (*s == '\0')
-            return 1; // always a domain mismatch. contains 0x00
-        *d = *s;
-    }
-    cn[cn_data->length] = '\0';
-    debugs(83, 4, "Verifying server domain " << server << " to certificate name/subjectAltName " << cn);
-    return matchDomainName(server, (cn[0] == '*' ? cn + 1 : cn), mdnRejectSubsubDomains);
-}
-
-bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
-{
-    return matchX509CommonNames(cert, (void *)server, check_domain);
+    return HasMatchingSubjectName(cert, OneNameMatcher(host));
 }
 
 /// adjusts OpenSSL validation results for each verified certificate in ctx
@@ -295,8 +379,20 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 
         // Check for domain mismatch only if the current certificate is the peer certificate.
         if (!dont_verify_domain && server && peer_cert.get() == X509_STORE_CTX_get_current_cert(ctx)) {
-            if (!Ssl::checkX509ServerValidity(peer_cert.get(), server->c_str())) {
-                debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << *peer_cert << " does not match domainname " << server);
+            // XXX: This code does not know where the server name came from. The
+            // name may be valid but not compatible with requirements assumed or
+            // enforced by the AnyP::Host::ParseSimpleDomainName() call below.
+            // TODO: Store AnyP::Host (or equivalent) in ssl_ex_index_server.
+            if (const auto host = Ssl::ParseAsSimpleDomainNameOrIp(*server)) {
+                if (Ssl::HasSubjectName(*peer_cert, *host)) {
+                    debugs(83, 5, "certificate subject matches " << *host);
+                } else {
+                    debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << *peer_cert << " does not match domainname " << *host);
+                    ok = 0;
+                    error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
+                }
+            } else {
+                debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Cannot check whether certificate " << *peer_cert << " subject matches malformed domainname " << *server);
                 ok = 0;
                 error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
             }
@@ -1215,7 +1311,7 @@ Ssl::findIssuerCertificate(X509 *cert, const STACK_OF(X509) *serverCertificates,
     }
 
     // check untrusted certificates
-    if (const auto issuer = findCertIssuerFast(SquidUntrustedCerts, cert)) {
+    if (const auto issuer = findCertIssuerFast(SquidUntrustedCerts(), cert)) {
         X509_up_ref(issuer);
         return Security::CertPointer(issuer);
     }
@@ -1256,7 +1352,7 @@ static void
 completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) &untrustedCerts)
 {
     debugs(83, 2,  "completing " << sk_X509_num(&untrustedCerts) <<
-           " OpenSSL untrusted certs using " << SquidUntrustedCerts.size() <<
+           " OpenSSL untrusted certs using " << Ssl::SquidUntrustedCerts().size() <<
            " configured untrusted certificates");
 
     const X509_VERIFY_PARAM *param = X509_STORE_CTX_get0_param(ctx);
@@ -1306,7 +1402,7 @@ VerifyCtxCertificates(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
 
     // If the local untrusted certificates internal database is used
     // run completeIssuers to add missing certificates if possible.
-    if (SquidUntrustedCerts.size() > 0)
+    if (Ssl::SquidUntrustedCerts().size() > 0)
         completeIssuers(ctx, *untrustedCerts);
 
     X509_STORE_CTX_set0_untrusted(ctx, untrustedCerts.get()); // No locking/unlocking, just sets ctx->untrusted
@@ -1350,17 +1446,17 @@ Ssl::useSquidUntrusted(SSL_CTX *sslContext)
 bool
 Ssl::loadSquidUntrusted(const char *path)
 {
-    return Ssl::loadCerts(path, SquidUntrustedCerts);
+    return Ssl::loadCerts(path, SquidUntrustedCerts());
 }
 
 void
 Ssl::unloadSquidUntrusted()
 {
-    if (SquidUntrustedCerts.size()) {
-        for (Ssl::CertsIndexedList::iterator it = SquidUntrustedCerts.begin(); it != SquidUntrustedCerts.end(); ++it) {
-            X509_free(it->second);
+    if (SquidUntrustedCerts().size()) {
+        for (const auto &i: SquidUntrustedCerts()) {
+            X509_free(i.second);
         }
-        SquidUntrustedCerts.clear();
+        SquidUntrustedCerts().clear();
     }
 }
 

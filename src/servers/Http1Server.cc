@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
+#include "clientStream.h"
 #include "comm/Write.h"
 #include "http/one/RequestParser.h"
 #include "http/Stream.h"

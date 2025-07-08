@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 #define SQUID_SRC_PEERPOOLMGR_H
 
 #include "base/AsyncJob.h"
+#include "base/forward.h"
 #include "base/JobWait.h"
 #include "comm/forward.h"
 #include "security/forward.h"
@@ -31,6 +32,8 @@ public:
 
     explicit PeerPoolMgr(CachePeer *aPeer);
     ~PeerPoolMgr() override;
+
+    PrecomputedCodeContextPointer codeContext;
 
 protected:
     /* AsyncJob API */

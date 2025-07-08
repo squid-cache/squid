@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -945,7 +945,7 @@ void
 HttpHeader::addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from)
 {
     // TODO: do not add Via header for messages where Squid itself
-    // generated the message (i.e., Downloader or ESI) there should be no Via header added at all.
+    // generated the message (i.e., Downloader) there should be no Via header added at all.
 
     if (Config.onoff.via) {
         SBuf buf;

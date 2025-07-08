@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,6 +59,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "anyp/Host.h"
 #include "anyp/PortCfg.h"
 #include "base/AsyncCallbacks.h"
 #include "base/Subscription.h"
@@ -1470,9 +1471,13 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
     // when we can extract the intended name from the bumped HTTP request.
     if (const Security::CertPointer &srvCert = sslServerBump->serverCert) {
         HttpRequest *request = http->request;
-        if (!Ssl::checkX509ServerValidity(srvCert.get(), request->url.host())) {
+        const auto host = request->url.parsedHost();
+        if (host && Ssl::HasSubjectName(*srvCert, *host)) {
+            debugs(33, 5, "certificate matches requested host: " << *host);
+            return false;
+        } else {
             debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " <<
-                   "does not match domainname " << request->url.host());
+                   "does not match request target " << RawPointer(host));
 
             bool allowDomainMismatch = false;
             if (Config.ssl_client.cert_error) {
@@ -2288,8 +2293,8 @@ clientNegotiateSSL(int fd, void *data)
         return;
 
     case Security::IoResult::ioError:
-        debugs(83, (handshakeResult.important ? Important(62) : 2), "ERROR: " << handshakeResult.errorDescription <<
-               " while accepting a TLS connection on " << conn->clientConnection << ": " << handshakeResult.errorDetail);
+        debugs(83, (handshakeResult.important ? Important(62) : 2), "ERROR: Cannot accept a TLS connection" <<
+               Debug::Extra << "problem: " << WithExtras(handshakeResult));
         // TODO: No ConnStateData::tunnelOnError() on this forward-proxy code
         // path because we cannot know the intended connection target?
         conn->updateError(ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
@@ -2642,7 +2647,7 @@ Security::ContextPointer
 ConnStateData::getTlsContextFromCache(const SBuf &cacheKey, const Ssl::CertificateProperties &certProperties)
 {
     debugs(33, 5, "Finding SSL certificate for " << cacheKey << " in cache");
-    Ssl::LocalContextStorage * ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
+    const auto ssl_ctx_cache = Ssl::TheGlobalContextStorage().getLocalStorage(port->s);
     if (const auto ctx = ssl_ctx_cache ? ssl_ctx_cache->get(cacheKey) : nullptr) {
         if (Ssl::verifySslCertificate(*ctx, certProperties)) {
             debugs(33, 5, "Cached SSL certificate for " << certProperties.commonName << " is valid");
@@ -2659,7 +2664,7 @@ ConnStateData::getTlsContextFromCache(const SBuf &cacheKey, const Ssl::Certifica
 void
 ConnStateData::storeTlsContextToCache(const SBuf &cacheKey, Security::ContextPointer &ctx)
 {
-    Ssl::LocalContextStorage *ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
+    const auto ssl_ctx_cache = Ssl::TheGlobalContextStorage().getLocalStorage(port->s);
     if (!ssl_ctx_cache || !ssl_ctx_cache->add(cacheKey, ctx)) {
         // If it is not in storage delete after using. Else storage deleted it.
         fd_table[clientConnection->fd].dynamicTlsContext = ctx;
@@ -3036,8 +3041,8 @@ ConnStateData::handleSslBumpHandshakeError(const Security::IoResult &handshakeRe
     }
 
     case Security::IoResult::ioError:
-        debugs(83, (handshakeResult.important ? DBG_IMPORTANT : 2), "ERROR: " << handshakeResult.errorDescription <<
-               " while SslBump-accepting a TLS connection on " << clientConnection << ": " << handshakeResult.errorDetail);
+        debugs(83, (handshakeResult.important ? DBG_IMPORTANT : 2), "ERROR: Cannot SslBump-accept a TLS connection" <<
+               Debug::Extra << "problem: " << WithExtras(handshakeResult));
         updateError(errCategory = ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
         break;
 
@@ -3263,7 +3268,7 @@ clientHttpConnectionsOpen(void)
             }
             if (s->flags.tunnelSslBumping) {
                 // Create ssl_ctx cache for this port.
-                Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->secure.dynamicCertMemCacheSize);
+                Ssl::TheGlobalContextStorage().addLocalStorage(s->s, s->secure.dynamicCertMemCacheSize);
             }
         }
 #endif
@@ -3712,13 +3717,12 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, const Htt
     pinning.port = request.url.port();
     pinnedHost = pinning.host;
     pinning.pinned = true;
-    if (CachePeer *aPeer = pinServer->getPeer())
-        pinning.peer = cbdataReference(aPeer);
     pinning.auth = request.flags.connectionAuth;
     char stmp[MAX_IPSTRLEN];
     char desc[FD_DESC_SZ];
+    const auto peer = pinning.peer();
     snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s (%d)",
-             (pinning.auth || !pinning.peer) ? pinnedHost : pinning.peer->name,
+             (pinning.auth || !peer) ? pinnedHost : peer->name,
              clientConnection->remote.toUrl(stmp,MAX_IPSTRLEN),
              clientConnection->fd);
     fd_note(pinning.serverConnection->fd, desc);
@@ -3849,7 +3853,7 @@ ConnStateData::borrowPinnedConnection(HttpRequest *request, const AccessLogEntry
     if (pinning.port != request->url.port())
         throw pinningError(ERR_CANNOT_FORWARD); // or generalize ERR_CONFLICT_HOST
 
-    if (pinning.peer && !cbdataReferenceValid(pinning.peer))
+    if (pinning.serverConnection->toGoneCachePeer())
         throw pinningError(ERR_ZERO_SIZE_OBJECT);
 
     if (pinning.peerAccessDenied)
@@ -3875,8 +3879,6 @@ void
 ConnStateData::unpinConnection(const bool andClose)
 {
     debugs(33, 3, pinning.serverConnection);
-
-    cbdataReferenceDone(pinning.peer);
 
     if (Comm::IsConnOpen(pinning.serverConnection)) {
         if (pinning.closeHandler != nullptr) {

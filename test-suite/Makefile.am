@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -10,16 +10,6 @@ include $(top_srcdir)/src/Common.am
 ## we need our local files too (but avoid -I. at all costs)
 AM_CPPFLAGS += -I$(srcdir)
 
-LDADD = \
-	$(top_builddir)/src/base/libbase.la \
-	$(top_builddir)/src/globals.o \
-	$(top_builddir)/src/time/libtime.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-
-EXTRA_PROGRAMS = mem_node_test splay
-
 EXTRA_DIST = \
 	$(srcdir)/squidconf/* \
 	test-functionality.sh \
@@ -27,27 +17,16 @@ EXTRA_DIST = \
 	test-squid-conf.sh \
 	testHeader.cc.in
 
-ESI_ALL_TESTS = \
-	ESIExpressions
-
-if ENABLE_ESI
-  ESI_TESTS = $(ESI_ALL_TESTS)
-else
-  ESI_TESTS =
-endif
-
 ## Sort by dependencies - test lowest layers first
 TESTS += \
 	syntheticoperators \
 	VirtualDeleteOperator \
 	splay\
 	mem_node_test\
-	mem_hdr_test\
-	$(ESI_TESTS)
+	mem_hdr_test
 
 ## Sort by alpha - any build failures are significant.
 check_PROGRAMS += \
-		$(ESI_TESTS) \
 		mem_node_test\
 		mem_hdr_test \
 		splay \
@@ -62,6 +41,7 @@ STUBS = \
 	stub_SBuf.cc \
 	stub_tools.cc \
 	stub_fatal.cc \
+	stub_libtime.cc \
 	STUB.h
 DEBUG_SOURCE = test_tools.cc $(STUBS)
 CLEANFILES += $(STUBS) stub_libmem.cc
@@ -84,17 +64,11 @@ stub_fatal.cc: $(top_srcdir)/src/tests/stub_fatal.cc
 stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
 	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
 
+stub_libtime.cc: $(top_srcdir)/src/tests/stub_libtime.cc STUB.h
+	cp $(top_srcdir)/src/tests/stub_libtime.cc $@
+
 STUB.h: $(top_srcdir)/src/tests/STUB.h
 	cp $(top_srcdir)/src/tests/STUB.h $@
-
-ESIExpressions_SOURCES = \
-	$(DEBUG_SOURCE) \
-	ESIExpressions.cc \
-	stub_libmem.cc
-ESIExpressions_LDADD = $(top_builddir)/src/esi/Expression.o \
-	$(top_builddir)/src/debug/libdebug.la \
-	$(top_builddir)/src/comm/libminimal.la \
-		$(LDADD)
 
 mem_node_test_SOURCES = \
 	$(DEBUG_SOURCE) \
@@ -104,7 +78,10 @@ mem_node_test_LDADD = \
 	$(top_builddir)/src/mem/libmem.la \
 	$(top_builddir)/src/debug/libdebug.la \
 	$(top_builddir)/src/comm/libminimal.la \
-	$(LDADD)
+	$(top_builddir)/src/base/libbase.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 mem_hdr_test_SOURCES = \
 	$(DEBUG_SOURCE) \
@@ -115,22 +92,35 @@ mem_hdr_test_LDADD = \
 	$(top_builddir)/src/mem/libmem.la \
 	$(top_builddir)/src/debug/libdebug.la \
 	$(top_builddir)/src/comm/libminimal.la \
-	$(LDADD)
+	$(top_builddir)/src/base/libbase.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 splay_SOURCES = \
 	$(DEBUG_SOURCE) \
 	splay.cc \
 	stub_libmem.cc
+splay_LDADD = \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 syntheticoperators_SOURCES = \
 	$(DEBUG_SOURCE) \
 	stub_libmem.cc \
 	syntheticoperators.cc
+syntheticoperators_LDADD = \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 VirtualDeleteOperator_SOURCES = \
 	$(DEBUG_SOURCE) \
 	VirtualDeleteOperator.cc \
 	stub_libmem.cc
+VirtualDeleteOperator_LDADD = \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 installcheck-local: squid-conf-tests
 
