@@ -325,7 +325,7 @@ parseIncludedConfigFiles(const SBuf &paths, const int depth)
     glob_t globbuf;
     int i;
     memset(&globbuf, 0, sizeof(globbuf));
-    while (auto path = NextWordWhileRemovingDoubleQuotesAndBackslashesInsideThem(tk)) {
+    while (auto path = NextWordWhileUnescapingQuotedStrings(tk)) {
         if (glob(path->c_str(), globbuf.gl_pathc ? GLOB_APPEND : 0, nullptr, &globbuf) != 0) {
             const auto xerrno = errno;
             throw TextException(ToSBuf("Unable to find configuration file: ", *path, ": ", xstrerr(xerrno)), Here());
@@ -336,7 +336,7 @@ parseIncludedConfigFiles(const SBuf &paths, const int depth)
     }
     globfree(&globbuf);
 #else
-    while (auto path = NextWordWhileRemovingDoubleQuotesAndBackslashesInsideThem(tk)) {
+    while (auto path = NextWordWhileUnescapingQuotedStrings(tk)) {
         error_count += parseOneConfigFile(path->c_str(), depth);
     }
 #endif /* HAVE_GLOB */

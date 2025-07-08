@@ -332,8 +332,8 @@ Parser::Tokenizer::udec64(const char *description, const SBuf::size_type limit)
     return result;
 }
 
-/// NextWordWhileRemovingDoubleQuotesAndBackslashesInsideThem() helper that
-/// parses an optional "quoted string" sequence at the start of its input.
+/// NextWordWhileUnescapingQuotedStrings() helper that parses an optional
+/// "quoted string" sequence at the start of the remaining tk input.
 static std::optional<SBuf>
 UnquoteSequence_(Parser::Tokenizer &tk)
 {
@@ -365,7 +365,7 @@ UnquoteSequence_(Parser::Tokenizer &tk)
 }
 
 std::optional<SBuf>
-NextWordWhileRemovingDoubleQuotesAndBackslashesInsideThem(Parser::Tokenizer &tk)
+NextWordWhileUnescapingQuotedStrings(Parser::Tokenizer &tk)
 {
     const auto &spaceChars = CharacterSet::WSP;
 

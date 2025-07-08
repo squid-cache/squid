@@ -185,7 +185,7 @@ private:
 /// strwordtok() decoding conventions. Allows upgrading strwordtok() callers to
 /// SBuf while preserving their "rudimentary" parsing grammar/logic.
 /// \returns std::nullopt when remaining input is zero or more isspace(3) characters
-std::optional<SBuf> NextWordWhileRemovingDoubleQuotesAndBackslashesInsideThem(Parser::Tokenizer &);
+std::optional<SBuf> NextWordWhileUnescapingQuotedStrings(Parser::Tokenizer &);
 
 #endif /* SQUID_SRC_PARSER_TOKENIZER_H */
 
