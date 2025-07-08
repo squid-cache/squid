@@ -48,6 +48,11 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 </descrip>
 
+<sect1>Cache Manager changes
+
+<p>Removed support for <em>asndb</em> cache manager report after removing
+support for <em>src_as</em> and <em>dst_as</em> ACLs and associated ASN
+lookups. Requests for that report now result in HTTP 404 errors.
 
 Most user-facing changes are reflected in squid.conf (see below).
 
@@ -84,6 +89,11 @@ This section gives an account of those changes in three categories:
 	security posture and simplifying development. Configurations using
 	<em>src_as</em> and <em>dst_as</em> ACL types are now rejected with FATAL
 	errors.
+
+	<p>Removed support for <em>asn</em> initiator in
+	<em>transaction_initiator</em> ACLs. After removing support for
+	<em>src_as</em> and <em>dst_as</em> ACLs, Squid no longer initiates ASN
+	lookups.
 
 </descrip>
 

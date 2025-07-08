@@ -1499,7 +1499,6 @@ ENDIF
 	  #  htcp: matches HTCP requests from peers
 	  #  icp: matches ICP requests to peers
 	  #  icmp: matches ICMP RTT database (NetDB) requests to peers
-	  #  asn: matches asns db requests
 	  #  internal: matches any of the above
 	  #  client: matches transactions containing an HTTP or FTP
 	  #     client request received at a Squid *_port
@@ -10332,7 +10331,6 @@ DOC_START
 	Some valid actions are (see cache manager menu for a full list):
 		5min
 		60min
-		asndb
 		authenticator
 		cbdata
 		client_list
