@@ -354,10 +354,20 @@ UnquoteSequence_(Parser::Tokenizer &tk)
         if (tk.skipOne(backslashChar)) {
             SBuf escaped;
             static const auto allChars = CharacterSet().complement("any char");
-            if (tk.prefix(escaped, allChars, 1))
-                decoded.append(escaped);
-            else
+            if (tk.prefix(escaped, allChars, 1)) {
+                switch (escaped[0]) {
+                case 'n':
+                    decoded.append('\n');
+                    break;
+                case 'r':
+                    decoded.append('\r');
+                    break;
+                default:
+                    decoded.append(escaped);
+                }
+            } else {
                 Assure(tk.atEnd()); // input ends at backslash (which we skip)
+            }
         }
     }
 
@@ -383,7 +393,7 @@ NextWordWhileUnescapingQuotedStrings(Parser::Tokenizer &tk)
         if (const auto sequence = UnquoteSequence_(tk))
             decoded.append(*sequence);
 
-        if (tk.skipOne(spaceChars))
+        if (tk.skipAll(spaceChars))
             break;
     } while (!tk.atEnd());
     return decoded; // may be empty (e.g., ` ""` or `"\`)
