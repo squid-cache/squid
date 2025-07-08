@@ -184,7 +184,8 @@ private:
 /// Extracts the next "token" or "word" from Tokenizer::remaining() input using
 /// most of legacy strwordtok() decoding conventions. Uses CharacterSet::WSP
 /// rather than isspace(3) used by strwordtok() for identifying space
-/// characters, but may simplify upgrading strwordtok() callers to SBuf.
+/// characters, but may simplify upgrading strwordtok() callers to SBuf. The
+/// next token or word does not have to start with or contain double quotes.
 /// \returns std::nullopt when remaining input is zero or more CharacterSet::WSP characters
 std::optional<SBuf> NextWordWhileUnescapingQuotedStrings(Parser::Tokenizer &);
 
