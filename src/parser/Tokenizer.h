@@ -181,10 +181,11 @@ private:
 
 } /* namespace Parser */
 
-/// Extracts the next "word" from Tokenizer::remaining() input using legacy
-/// strwordtok() decoding conventions. Allows upgrading strwordtok() callers to
-/// SBuf while preserving their "rudimentary" parsing grammar/logic.
-/// \returns std::nullopt when remaining input is zero or more isspace(3) characters
+/// Extracts the next "token" or "word" from Tokenizer::remaining() input using
+/// most of legacy strwordtok() decoding conventions. Uses CharacterSet::WSP
+/// rather than isspace(3) used by strwordtok() for identifying space
+/// characters, but may simplify upgrading strwordtok() callers to SBuf.
+/// \returns std::nullopt when remaining input is zero or more CharacterSet::WSP characters
 std::optional<SBuf> NextWordWhileUnescapingQuotedStrings(Parser::Tokenizer &);
 
 #endif /* SQUID_SRC_PARSER_TOKENIZER_H */
