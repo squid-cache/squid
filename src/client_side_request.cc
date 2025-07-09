@@ -1708,17 +1708,16 @@ ClientHttpRequest::doCallouts()
 
         if (!calloutContext->toClientMarkingDone) {
             calloutContext->toClientMarkingDone = true;
-            tos_t tos = aclMapTOS(Ip::Qos::TheConfig.tosToClient, &ch);
-            if (tos)
-                Ip::Qos::setSockTos(getConn()->clientConnection, tos);
+            if (tos_t tos = aclMapTOS(Ip::Qos::TheConfig.tosToClient, &ch))
+                (void)Ip::Qos::setSockTos(getConn()->clientConnection, tos);
 
             const auto packetMark = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToClient, &ch);
             if (!packetMark.isEmpty())
-                Ip::Qos::setSockNfmark(getConn()->clientConnection, packetMark.mark);
+                (void)Ip::Qos::setSockNfmark(getConn()->clientConnection, packetMark.mark);
 
             const auto connmark = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfConnmarkToClient, &ch);
             if (!connmark.isEmpty())
-                Ip::Qos::setNfConnmark(getConn()->clientConnection, Ip::Qos::dirAccepted, connmark);
+                (void)Ip::Qos::setNfConnmark(getConn()->clientConnection, Ip::Qos::dirAccepted, connmark);
         }
     }
 

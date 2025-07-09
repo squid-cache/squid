@@ -13,6 +13,7 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
+#include "comm/SocketOptions.h"
 #include "fde.h"
 #include "ip/Intercept.h"
 #include "ip/tools.h"
@@ -444,7 +445,7 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         tmp.getSockAddr(tmp_ip6);
 
         if ( (tmp_sock = socket(PF_INET6, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
-                setsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&
+                Comm::SetSocketOption(tmp_sock, soLevel, soFlag, tos, SBuf("IPv6 TPROXY check")) &&
                 bind(tmp_sock, (struct sockaddr*)&tmp_ip6, sizeof(struct sockaddr_in6)) == 0 ) {
 
             debugs(3, 3, "IPv6 TPROXY support detected. Using.");
@@ -476,7 +477,7 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         tmp.getSockAddr(tmp_ip4);
 
         if ( (tmp_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
-                setsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&
+                Comm::SetSocketOption(tmp_sock, soLevel, soFlag, tos, SBuf("IPv4 TPROXY check")) &&
                 bind(tmp_sock, (struct sockaddr*)&tmp_ip4, sizeof(struct sockaddr_in)) == 0 ) {
 
             debugs(3, 3, "IPv4 TPROXY support detected. Using.");
