@@ -609,6 +609,10 @@ TunnelStateData::readServer(char *, size_t len, Comm::Flag errcode, int xerrno)
     debugs(26, 3, server.conn << ", read " << len << " bytes, err=" << errcode);
     server.delayedLoops=0;
 
+    // XXX: Clear SO_SPLICE earlier, before read(2), to ensure not to read a socket with SO_SPLICE enabled
+    if (server.isSoSpliced())
+        serverUnsetAndCountSoSplice();
+
     /*
      * Bail out early on Comm::ERR_CLOSING
      * - close handlers will tidy up for us
@@ -618,9 +622,6 @@ TunnelStateData::readServer(char *, size_t len, Comm::Flag errcode, int xerrno)
         return;
 
     if (len > 0) {
-        if (server.isSoSpliced())
-            debugs(97, 1, "server SO_SPLICE unexpected return from select, len " << len << " " << server.conn->fd);
-
         server.bytesIn(len);
         statCounter.server.all.kbytes_in += len;
         statCounter.server.other.kbytes_in += len;
@@ -857,6 +858,10 @@ TunnelStateData::readClient(char *, size_t len, Comm::Flag errcode, int xerrno)
     debugs(26, 3, client.conn << ", read " << len << " bytes, err=" << errcode);
     client.delayedLoops=0;
 
+    // XXX: Clear SO_SPLICE earlier, before read(2), to ensure not to read a socket with SO_SPLICE enabled
+    if (client.isSoSpliced())
+        clientUnsetAndCountSoSplice();
+
     /*
      * Bail out early on Comm::ERR_CLOSING
      * - close handlers will tidy up for us
@@ -866,9 +871,6 @@ TunnelStateData::readClient(char *, size_t len, Comm::Flag errcode, int xerrno)
         return;
 
     if (len > 0) {
-        if (client.isSoSpliced())
-            debugs(97, 1, "client SO_SPLICE unexpected return from select, len " << len << " " << client.conn->fd);
-
         client.bytesIn(len);
         statCounter.client_http.kbytes_in += len;
     }
@@ -1237,59 +1239,17 @@ TunnelStateData::copyRead(Connection &from, IOCB *completion)
     comm_read(from.conn, from.buf, bw, call);
 }
 
-static void
-clientSelectSoSpliced(int fd, void *data)
-{
-    // generally called only at the end of sessions (connection is about to be closed).
-    // This does not necessarily mean there is no more data to read on this socket because
-    // SO_SPLICE is also canceled if the paired socket is terminated first.
-
-    // potentially called if unexpected cancellation of SO_SPLICE by OS
-    // or undefined return from select() with SO_SPLICE still active occurs,
-    // even though there are no known such undefined cases yet.
-
-    TunnelStateData *tunnelState = (TunnelStateData *)data;
-
-    debugs(97, 3, "select returned for SO_SPLICE client " << fd);
-
-    // fallback to non_so_splice operation
-    tunnelState->clientUnsetAndCountSoSplice();
-
-    if (Comm::IsConnOpen(tunnelState->client.conn)) {
-        setTunnelTimeouts(tunnelState);
-
-        // Ideally, we want to directly call ReadClient() here to avoid extra call of select(2).
-        // However, doing so requires duplication of some part of Comm::XXX functions.
-        tunnelState->copyRead(tunnelState->client, tunnelState->ReadClient);
-    }
-}
-
-static void
-serverSelectSoSpliced(int fd, void *data)
-{
-    // generally called only at the end of sessions (connection is about to be closed)
-    // This does not necessarily mean there is no more data to read on this socket because
-    // SO_SPLICE is also canceled if the paired socket is terminated first.
-
-    // potentially called if unexpected cancellation of SO_SPLICE by OS
-    // or undefined return from select() with SO_SPLICE still active occurs,
-    // even though there are no known such undefined cases yet.
-
-    TunnelStateData *tunnelState = (TunnelStateData *)data;
-
-    debugs(97, 3, "select returned for SO_SPLICE server " << fd);
-
-    // fallback to non_so_splice operation
-    tunnelState->serverUnsetAndCountSoSplice();
-
-    if (Comm::IsConnOpen(tunnelState->server.conn)) {
-        setTunnelTimeouts(tunnelState);
-
-        // Ideally, we want to directly call ReadServer() here to avoid extra call of select(2).
-        // However, doing so requires duplication of some part of Comm::XXX functions.
-        tunnelState->copyRead(tunnelState->server, tunnelState->ReadServer);
-    }
-}
+/**
+ * Regarding SO_SPLICE (without unsplice condition set),
+ * 
+ * select() for read on a socket generally returns only at the end of sessions (connection is about to be closed).
+ * This does not necessarily mean there is no more data to read on the socket because
+ * SO_SPLICE is also canceled by OS if the paired socket is terminated first.
+ * 
+ * It also potentially returns if unexpected cancellation of SO_SPLICE by OS
+ * or undefined condition with SO_SPLICE still active occurs,
+ * even though there are no known such undefined cases yet.
+**/
 
 void
 TunnelStateData::copyClientBytes()
@@ -1303,11 +1263,8 @@ TunnelStateData::copyClientBytes()
             copy(copyBytes, client, server, TunnelStateData::WriteServerDone);
     } else {
         client.setSoSplice(server);
-        if (client.isSoSpliced()) {
-            Comm::SetSelect(client.conn->fd, COMM_SELECT_READ, clientSelectSoSpliced, this, 0);
+        if (client.isSoSpliced())
             setTunnelTimeouts(this);
-            return;
-        }
         copyRead(client, ReadClient);
     }
 }
@@ -1324,11 +1281,8 @@ TunnelStateData::copyServerBytes()
             copy(copyBytes, server, client, TunnelStateData::WriteClientDone);
     } else {
         server.setSoSplice(client);
-        if (server.isSoSpliced()) {
-            Comm::SetSelect(server.conn->fd, COMM_SELECT_READ, serverSelectSoSpliced, this, 0);
+        if (server.isSoSpliced())
             setTunnelTimeouts(this);
-            return;
-        }
         copyRead(server, ReadServer);
     }
 }
