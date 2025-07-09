@@ -13,8 +13,10 @@
 #include "comm/Connection.h"
 #include "comm/Read.h"
 #include "CommCalls.h"
+#include "Instance.h"
 #include "ipc/Port.h"
 #include "sbuf/Stream.h"
+#include "sbuf/StringConvert.h"
 #include "tools.h"
 #include "util.h"
 
@@ -52,9 +54,8 @@ bool Ipc::Port::doneAll() const
 String Ipc::Port::MakeAddr(const char* processLabel, int id)
 {
     assert(id >= 0);
-    String addr = channelPathPfx;
-    addr.append(service_name.c_str());
-    addr.append(processLabel);
+    String addr;
+    addr.append(SBufToString(Instance::NamePrefix(channelPathPfx, processLabel)));
     addr.append('-');
     addr.append(xitoa(id));
     addr.append(".ipc");
@@ -66,9 +67,7 @@ Ipc::Port::CoordinatorAddr()
 {
     static String coordinatorAddr;
     if (!coordinatorAddr.size()) {
-        coordinatorAddr= channelPathPfx;
-        coordinatorAddr.append(service_name.c_str());
-        coordinatorAddr.append(coordinatorAddrLabel);
+        coordinatorAddr.append(SBufToString(Instance::NamePrefix(channelPathPfx, coordinatorAddrLabel)));
         coordinatorAddr.append(".ipc");
     }
     return coordinatorAddr;
