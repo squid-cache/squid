@@ -1225,17 +1225,6 @@ ENDIF
 	  # based URL is used and no match is found. The name "none" is used
 	  # if the reverse lookup fails.
 
-	acl aclname src_as number ...
-	acl aclname dst_as number ...
-	  # [fast]
-	  # Except for access control, AS numbers can be used for
-	  # routing of requests to specific caches. Here's an
-	  # example for routing all requests for AS#1241 and only
-	  # those to mycache.mydomain.net:
-	  # acl asexample dst_as 1241
-	  # cache_peer_access mycache.mydomain.net allow asexample
-	  # cache_peer_access mycache_mydomain.net deny all
-
 	acl aclname peername myPeer ...
 	acl aclname peername_regex [-i] regex-pattern ...
 	  # [fast]
@@ -1511,7 +1500,6 @@ ENDIF
 	  #  htcp: matches HTCP requests from peers
 	  #  icp: matches ICP requests to peers
 	  #  icmp: matches ICMP RTT database (NetDB) requests to peers
-	  #  asn: matches asns db requests
 	  #  internal: matches any of the above
 	  #  client: matches transactions containing an HTTP or FTP
 	  #     client request received at a Squid *_port
@@ -1698,7 +1686,6 @@ ENDIF
 
 	Examples:
 		acl macaddress arp 09:00:2b:23:45:67
-		acl myexample dst_as 1241
 		acl password proxy_auth REQUIRED
 		acl fileupload req_mime_type -i ^multipart/form-data$
 		acl javascript rep_mime_type -i ^application/x-javascript$
@@ -10345,7 +10332,6 @@ DOC_START
 	Some valid actions are (see cache manager menu for a full list):
 		5min
 		60min
-		asndb
 		authenticator
 		cbdata
 		client_list

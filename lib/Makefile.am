@@ -53,7 +53,6 @@ libmisccontainers_la_SOURCES = \
 libmiscutil_la_SOURCES = \
 	Splay.cc \
 	heap.c \
-	radix.c \
 	util.cc
 
 TESTS += tests/testRFC1738

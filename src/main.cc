@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 //#include "acl/Acl.h"
-#include "acl/Asn.h"
 #include "acl/forward.h"
 #include "anyp/UriScheme.h"
 #include "auth/Config.h"
@@ -790,7 +789,6 @@ serverConnectionsOpen(void)
 
         icmpEngine.Open();
         netdbInit();
-        asnInit();
         Acl::Node::Initialize();
         peerSelectInit();
     }
@@ -812,8 +810,6 @@ serverConnectionsClose(void)
 #if SQUID_SNMP
         snmpClosePorts();
 #endif
-
-        asnFreeMemory();
     }
 }
 
