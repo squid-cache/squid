@@ -25,7 +25,7 @@ using KnownPort = uint16_t;
 /// validated/supported port number (if any)
 using Port = std::optional<KnownPort>;
 
-/** This class represents a URI Scheme such as http:// https://, wais://, urn: etc.
+/** This class represents a URI Scheme such as http:// https://, wais:// etc.
  * It does not represent the PROTOCOL that such schemes refer to.
  */
 class UriScheme

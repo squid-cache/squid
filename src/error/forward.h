@@ -33,7 +33,6 @@ typedef enum {
 
     /* DNS Errors */
     ERR_DNS_FAIL,
-    ERR_URN_RESOLVE,
 
     /* HTTP Errors */
     ERR_ONLY_IF_CACHED_MISS,    /* failure to satisfy only-if-cached request */

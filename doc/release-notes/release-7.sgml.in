@@ -34,6 +34,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<item>Removed purge tool
 	<item>Remove deprecated languages
 	<item>Remove Ident protocol support
+	<item>Remove URN protocol support
 </itemize>
 
 <p>Most user-facing changes are reflected in squid.conf (see further below).
@@ -126,6 +127,17 @@ in the position of what used to be a %ui record field.
 
 <p>If necessary, an external ACL helper can be written to perform Ident transactions
 and deliver the user identity to Squid through the **user=** annotation.
+
+<sect1>Removed URN protocol support
+
+<p>Squid URN resolution code has been neglected for a very long time and
+caused multiple security vulnerabilities. This feature was rarely used (if at
+all). Squid now treats URN as any unknown (to Squid) URI scheme, typically
+responding with an HTTP 400 (Bad Request) ERR_INVALID_URL.
+
+<p>If necessary, Squid handling of unknown (to Squid) URI schemes can be
+enhanced, and a similar feature can be implemented externally, using
+url_rewrite_program helpers or adaptation services.
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>

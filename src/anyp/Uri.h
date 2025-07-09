@@ -24,7 +24,6 @@ namespace AnyP
 
 /**
  * Represents a Uniform Resource Identifier.
- * Can store both URL or URN representations.
  *
  * Governed by RFC 3986
  */
@@ -143,8 +142,6 @@ public:
     SBuf &absolute() const;
 
 private:
-    void parseUrn(Parser::Tokenizer&);
-
     SBuf parseHost(Parser::Tokenizer &) const;
     int parsePort(Parser::Tokenizer &) const;
 
@@ -197,9 +194,7 @@ operator <<(std::ostream &os, const Uri &url)
         os << url.getScheme().image();
     os << ":";
 
-    // no authority section on URN
-    if (url.getScheme() != PROTO_URN)
-        os << "//" << url.authority();
+    os << "//" << url.authority();
 
     // path is what it is - including absent
     os << url.path();
@@ -216,7 +211,7 @@ void urlInitialize(void);
 /// call HttpRequest::canonicalCleanUrl() instead if you have HttpRequest
 /// \returns a pointer to a local static buffer containing request URI
 /// that honors strip_query_terms and %-encodes unsafe URI characters
-char *urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &, const AnyP::UriScheme &);
+char *urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &);
 const char *urlCanonicalFakeHttps(const HttpRequest * request);
 bool urlIsRelative(const char *);
 char *urlRInternal(const char *host, unsigned short port, const char *dir, const char *name);

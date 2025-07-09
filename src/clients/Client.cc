@@ -493,8 +493,6 @@ purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, Http::Message *rep, H
     if (urlIsRelative(hdrUrl)) {
         if (req->method.id() == Http::METHOD_CONNECT)
             absUrl = hdrUrl; // TODO: merge authority-uri and hdrUrl
-        else if (req->url.getScheme() == AnyP::PROTO_URN)
-            absUrl = req->url.absolute().c_str();
         else {
             AnyP::Uri tmpUrl = req->url;
             if (*hdrUrl == '/') {

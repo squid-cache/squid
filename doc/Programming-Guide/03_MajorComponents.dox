@@ -329,13 +329,4 @@ TODO: get RFCs linked from ietf
 	we have made almost all of the cachemgr information available
 	via SNMP.
 
-\section URNSupport URN Support
-\par
-	We are experimenting with URN support in Squid version 1.2.
-	Note, we're not talking full-blown generic URN's here. This
-	is primarily targeted toward using URN's as an smart way
-	of handling lists of mirror sites.  For more details, please
-	see (http://squid.nlanr.net/Squid/urn-support.html) URN Support in Squid
-	.
-
  */

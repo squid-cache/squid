@@ -811,7 +811,7 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
 char *
 HttpRequest::canonicalCleanUrl() const
 {
-    return urlCanonicalCleanWithoutRequest(effectiveRequestUri(), method, url.getScheme());
+    return urlCanonicalCleanWithoutRequest(effectiveRequestUri(), method);
 }
 
 /// a helper for handling PortCfg cases of FindListeningPortAddress()
