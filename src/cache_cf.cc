@@ -35,6 +35,7 @@
 #include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
 #include "ExternalACL.h"
+#include "FadingCounter.h"
 #include "format/Format.h"
 #include "fqdncache.h"
 #include "ftp/Elements.h"
@@ -4230,21 +4231,23 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
         return;
     }
 
-    parse_time_t(&cfg->oldest_service_failure);
+    cfg->oldest_service_failure = parseTimeLine<FadingCounter::Horizon>();
+    if (cfg->oldest_service_failure == 0s)
+        cfg->oldest_service_failure = FadingCounter::Horizon::max();
 }
 
 static void dump_icap_service_failure_limit(StoreEntry *entry, const char *name, const Adaptation::Icap::Config &cfg)
 {
     storeAppendPrintf(entry, "%s %d", name, cfg.service_failure_limit);
-    if (cfg.oldest_service_failure > 0) {
-        storeAppendPrintf(entry, " in %d seconds", (int)cfg.oldest_service_failure);
+    if (cfg.oldest_service_failure != FadingCounter::Horizon::max()) {
+        storeAppendPrintf(entry, " in %lu seconds", cfg.oldest_service_failure.count());
     }
     storeAppendPrintf(entry, "\n");
 }
 
 static void free_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
 {
-    cfg->oldest_service_failure = 0;
+    cfg->oldest_service_failure = FadingCounter::Horizon::max();
     cfg->service_failure_limit = 0;
 }
 #endif

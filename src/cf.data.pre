@@ -9301,7 +9301,7 @@ DOC_START
 DOC_END
 
 NAME: icap_service_failure_limit
-COMMENT: limit [in memory-depth time-units]
+COMMENT: limit [" in " memory-depth " seconds"]
 TYPE: icap_service_failure_limit
 IFDEF: ICAP_CLIENT
 LOC: Adaptation::Icap::TheConfig
