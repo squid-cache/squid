@@ -18,6 +18,7 @@ AM_MAINTAINER_MODE
 m4_include([acinclude/ax_with_prog.m4])
 m4_include([acinclude/init.m4])
 m4_include([acinclude/squid-util.m4])
+m4_include([acinclude/squid-feature.m4])
 m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
@@ -68,22 +69,6 @@ AC_USE_SYSTEM_EXTENSIONS
 
 AC_LANG([C++])
 
-# Clang 3.2 on some CPUs requires -march-native to detect correctly.
-# GCC 4.3+ can also produce faster executables when its used.
-# But building inside a virtual machine environment has been found to
-# cause random Illegal Instruction errors due to mis-detection of CPU.
-AC_ARG_ENABLE(arch-native,
-  AS_HELP_STRING([--disable-arch-native],[Some compilers offer CPU-specific
-                 optimizations with the -march=native parameter.
-                 This flag disables the optimization. The default is to
-                 auto-detect compiler support and use where available.]), [
-  SQUID_YESNO([$enableval],[--enable-arch-native])
-])
-AC_MSG_NOTICE([CPU arch native optimization enabled: ${enable_arch_native:=auto}])
-AS_IF([test "x${enable_arch_native}" != "xno"],[
-  SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
-])
-
 # If the user did not specify a C++ version.
 user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "(-)std="`
 AS_IF([test "x$user_cxx" = "x"],[
@@ -99,12 +84,7 @@ AS_IF([test "x$HOSTCXX" != "x" -a "x$BUILDCXX" = "x"],[
   AC_MSG_WARN([Cross-compiling with HOSTCXX is deprecated. Use BUILDCXX instead.])
   BUILDCXX="$HOSTCXX"
 ])
-AS_IF([test "x$BUILDCXX" = "x"],[
-  BUILDCXX="$CXX"
-  AS_IF([test "x$squid_cv_check_marchnative" = "xyes"],[
-    CXXFLAGS="$CXXFLAGS -march=native"
-  ])
-])
+AS_IF([test "x$BUILDCXX" = "x"],[BUILDCXX="$CXX"])
 AC_SUBST(BUILDCXX)
 
 # test for programs
@@ -377,6 +357,20 @@ AC_ARG_ENABLE(optimizations,
 dnl Nasty hack to get autoconf 2.64 on Linux to run.
 dnl all other uses of RUN_IFELSE are wrapped inside CACHE_CHECK which breaks on 2.64
 AC_RUN_IFELSE([AC_LANG_SOURCE([[ int main(int argc, char **argv) { return 0; } ]])],[],[],[:])
+
+SQUID_FEATURE(arch-native, on, [CPU arch native optimization],[
+  Some compilers offer CPU-specific optimizations with the -march=native parameter.
+  The default is to auto-detect compiler support and use where available.
+],[
+  # Clang 3.2 on some CPUs requires -march-native to detect correctly.
+  # GCC 4.3+ can also produce faster executables when its used.
+  # But building inside a virtual machine environment has been found to
+  # cause random Illegal Instruction errors due to mis-detection of CPU.
+  SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
+  AS_IF([test "x$BUILDCXX" = "x$CXX" -a "x$squid_cv_check_marchnative" = "xyes"],[
+    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -march=native"
+  ])
+])
 
 AH_TEMPLATE(XMALLOC_STATISTICS,[Define to have malloc statistics])
 AC_ARG_ENABLE(xmalloc-statistics,
