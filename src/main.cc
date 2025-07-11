@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 //#include "acl/Acl.h"
-#include "acl/Asn.h"
 #include "acl/forward.h"
 #include "anyp/UriScheme.h"
 #include "auth/Config.h"
@@ -76,8 +75,6 @@
 #include "time/Engine.h"
 #include "tools.h"
 #include "unlinkd.h"
-#include "wccp.h"
-#include "wccp2.h"
 #include "windows_service.h"
 
 #if USE_ADAPTATION
@@ -779,16 +776,6 @@ sig_child(int sig)
 static void
 serverConnectionsOpen(void)
 {
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-        wccpConnectionOpen();
-#endif
-
-#if USE_WCCPv2
-
-        wccp2ConnectionOpen();
-#endif
-    }
     // start various proxying services if we are responsible for them
     if (IamWorkerProcess()) {
         clientOpenListenSockets();
@@ -802,7 +789,6 @@ serverConnectionsOpen(void)
 
         icmpEngine.Open();
         netdbInit();
-        asnInit();
         Acl::Node::Initialize();
         peerSelectInit();
     }
@@ -813,16 +799,6 @@ serverConnectionsClose(void)
 {
     assert(shutting_down || reconfiguring);
 
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-
-        wccpConnectionClose();
-#endif
-#if USE_WCCPv2
-
-        wccp2ConnectionClose();
-#endif
-    }
     if (IamWorkerProcess()) {
         clientConnectionsClose();
         icpConnectionShutdown();
@@ -834,8 +810,6 @@ serverConnectionsClose(void)
 #if SQUID_SNMP
         snmpClosePorts();
 #endif
-
-        asnFreeMemory();
     }
 }
 
@@ -965,17 +939,6 @@ mainReconfigureFinish(void *)
     authenticateInit(&Auth::TheConfig.schemes);
 #endif
     externalAclInit();
-
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-
-        wccpInit();
-#endif
-#if USE_WCCPv2
-
-        wccp2Init();
-#endif
-    }
 
     serverConnectionsOpen();
 
@@ -1212,18 +1175,6 @@ mainInitialize(void)
     // TODO: pconn is a good candidate for new-style registration
     // PconnModule::GetInstance()->registerWithCacheManager();
     // moved to PconnModule::PconnModule()
-
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-        wccpInit();
-
-#endif
-#if USE_WCCPv2
-
-        wccp2Init();
-
-#endif
-    }
 
     serverConnectionsOpen();
 
@@ -1474,6 +1425,13 @@ RegisterModules()
 
 #if HAVE_FS_ROCK
     CallRunnerRegistratorIn(Rock, SwapDirRr);
+#endif
+
+#if USE_WCCP
+    CallRunnerRegistrator(WccpRr);
+#endif
+#if USE_WCCPv2
+    CallRunnerRegistrator(Wccp2Rr);
 #endif
 }
 
@@ -2086,15 +2044,6 @@ SquidShutdown()
 #if SQUID_SNMP
     snmpClosePorts();
 #endif
-#if USE_WCCP
-
-    wccpConnectionClose();
-#endif
-#if USE_WCCPv2
-
-    wccp2ConnectionClose();
-#endif
-
     releaseServerSockets();
     commCloseAllSockets();
 

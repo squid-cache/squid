@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_INSTANCE_H
 #define SQUID_SRC_INSTANCE_H
 
+#include "sbuf/forward.h"
+
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -29,6 +31,14 @@ void WriteOurPid();
 /// \returns another Squid instance PID
 /// Throws if PID file maintenance is disabled.
 pid_t Other();
+
+/// A service_name-derived string that is likely to be unique across all Squid
+/// instances concurrently running on the same host (as long as they do not
+/// disable PID file maintenance).
+/// \param head is used at the beginning of the generated name
+/// \param tail is used at the end of the generated name (when not nil)
+/// \returns a head-...tail string suitable for making file and shm segment names
+SBuf NamePrefix(const char *head, const char *tail = nullptr);
 
 } // namespace Instance
 
