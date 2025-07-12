@@ -12,7 +12,7 @@
 #include "anyp/forward.h"
 #include "hash.h"
 #include "ip/forward.h"
-#include "mem/forward.h"
+#include "mem/AllocatorProxy.h"
 
 class CachePeer;
 class HttpRequest;
