@@ -70,14 +70,17 @@ const HeaderLookupTable_t HeaderLookupTable;
 std::ostream &Http::operator <<(std::ostream &os, HdrType) STUB_RETVAL(os)
 
 #include "http/RequestMethod.h"
-HttpRequestMethod::HttpRequestMethod(const SBuf &) {STUB}
-void HttpRequestMethod::HttpRequestMethodXXX(char const *) STUB
-const SBuf &HttpRequestMethod::image() const STUB_RETVAL(theImage)
-bool HttpRequestMethod::isHttpSafe() const STUB_RETVAL(false)
-bool HttpRequestMethod::isIdempotent() const STUB_RETVAL(false)
-bool HttpRequestMethod::respMaybeCacheable() const STUB_RETVAL(false)
-bool HttpRequestMethod::shouldInvalidate() const STUB_RETVAL(false)
-bool HttpRequestMethod::purgesOthers() const STUB_RETVAL(false)
+namespace Http
+{
+RequestMethod::RequestMethod(const SBuf &) {STUB}
+void RequestMethod::HttpRequestMethodXXX(char const *) STUB
+const SBuf &RequestMethod::image() const STUB_RETVAL(theImage)
+bool RequestMethod::isHttpSafe() const STUB_RETVAL(false)
+bool RequestMethod::isIdempotent() const STUB_RETVAL(false)
+bool RequestMethod::respMaybeCacheable() const STUB_RETVAL(false)
+bool RequestMethod::shouldInvalidate() const STUB_RETVAL(false)
+bool RequestMethod::purgesOthers() const STUB_RETVAL(false)
+}
 
 #include "http/StatusCode.h"
 namespace Http
