@@ -720,6 +720,7 @@ TunnelStateData::Connection::setSoSplice(Connection &to_conn)
 
     if (fd_table[s1].ssl || fd_table[s2].ssl) {
         debugs(97, 2, "SO_SPLICE not applicable to SSL sessions " << s1 << ":" << s2);
+        so_spliced = -1;
         return -1;
     }
 
