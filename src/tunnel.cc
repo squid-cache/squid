@@ -701,11 +701,11 @@ TunnelStateData::Connection::setSoSplice(Connection &to_conn)
         return -1;
     }
 
-    if (!IsConnOpen(conn))
+    if (!IsConnOpen(conn) || !IsConnOpen(to_conn.conn)) {
+        debugs(97, 2, "SO_SPLICE invalid conn or to_conn ");
+        so_spliced = -1;
         return -1;
-
-    if (!IsConnOpen(to_conn.conn))
-        return -1;
+    }
 
     const int s1 = conn->fd;
     const int s2 = to_conn.conn->fd;
