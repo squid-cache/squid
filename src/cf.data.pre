@@ -10924,11 +10924,12 @@ DOC_START
 DOC_END
 
 NAME: so_splice
-TYPE: onoff
-DEFAULT: on
-LOC: Config.onoff.so_splice
+TYPE: YesNoNone
+DEFAULT: none
+DEFAULT_DOC: "on" where SO_SPLICE is supported.
+LOC: Config.soSplice
 DOC_START
-    Enable kernel-level TCP proxying (SO_SPLICE) for TCP_TUNNEL if supported.
+    Enable kernel-level TCP proxying (SO_SPLICE) for TCP_TUNNEL.
     
     SO_SPLICE is not enabled for delay pool target connections.
 DOC_END

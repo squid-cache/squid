@@ -704,8 +704,8 @@ TunnelStateData::Connection::setSoSplice(Connection &to_conn)
     if (so_spliced != 0)
         return -1;
 
-    if (!Config.onoff.so_splice) {
-        debugs(97, 4, "Config.onoff.so_splice=off");
+    if (!Config.soSplice) {
+        debugs(97, 4, "Config.soSplice=off");
         so_spliced = -1;
         return -1;
     }
@@ -1913,3 +1913,31 @@ switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, 
     tunnelStartShoveling(tunnelState);
 }
 
+class TunnelRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    void finalizeConfig() override;
+
+protected:
+
+private:
+};
+
+void
+TunnelRr::finalizeConfig()
+{
+    if (Config.soSplice.configured()) {
+#ifndef SO_SPLICE
+        if (Config.soSplice)
+            fatal("so_splice is on, but no support for SO_SPLICE detected");
+#endif
+    } else
+#ifndef SO_SPLICE
+        Config.soSplice.configure(false);
+#else
+        Config.soSplice.configure(true);
+#endif
+}
+
+DefineRunnerRegistrator(TunnelRr);

@@ -88,6 +88,7 @@ public:
 
     YesNoNone memShared; ///< whether the memory cache is shared among workers
     YesNoNone shmLocking; ///< shared_memory_locking
+    YesNoNone soSplice; ///< SO_SPLICE
     size_t memMaxSize;
 
     struct {
@@ -340,7 +341,6 @@ public:
 #if USE_OPENSSL
         bool logTlsServerHelloDetails;
 #endif
-        int so_splice;
     } onoff;
 
     int64_t shared_transient_entries_limit;

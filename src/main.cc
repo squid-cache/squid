@@ -1454,6 +1454,7 @@ RegisterModules()
     CallRunnerRegistrator(SharedMemPagesRr);
     CallRunnerRegistrator(SharedSessionCacheRr);
     CallRunnerRegistrator(TransientsRr);
+    CallRunnerRegistrator(TunnelRr);
     CallRunnerRegistratorIn(Dns, ConfigRr);
 
 #if HAVE_DISKIO_MODULE_IPCIO
