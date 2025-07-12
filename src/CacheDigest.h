@@ -24,7 +24,7 @@ public:
     CacheDigest(uint64_t capacity, uint8_t bpe);
     ~CacheDigest();
 
-    // NP: only used by broken unit-test
+    // Note: only used by broken unit-test
     /// produce a new identical copy of the digest object
     CacheDigest *clone() const;
 
