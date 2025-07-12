@@ -57,8 +57,7 @@ MemBlob::GetStats()
 
 /* MemBlob */
 
-MemBlob::MemBlob(const MemBlob::size_type reserveSize) :
-    mem(nullptr), capacity(0), size(0) // will be set by memAlloc
+MemBlob::MemBlob(const size_type reserveSize)
 {
     debugs(MEMBLOB_DEBUGSECTION,9, "constructed, this="
            << static_cast<void*>(this) << " id=" << id
@@ -66,8 +65,7 @@ MemBlob::MemBlob(const MemBlob::size_type reserveSize) :
     memAlloc(reserveSize);
 }
 
-MemBlob::MemBlob(const char *buffer, const MemBlob::size_type bufSize) :
-    mem(nullptr), capacity(0), size(0) // will be set by memAlloc
+MemBlob::MemBlob(const_pointer buffer, const size_type bufSize)
 {
     debugs(MEMBLOB_DEBUGSECTION,9, "constructed, this="
            << static_cast<void*>(this) << " id=" << id
@@ -101,7 +99,7 @@ MemBlob::memAlloc(const size_type minSize)
     size_t actualAlloc = minSize;
 
     Must(!mem);
-    mem = static_cast<char*>(memAllocBuf(actualAlloc, &actualAlloc));
+    mem = static_cast<value_type *>(memAllocBuf(actualAlloc, &actualAlloc));
     Must(mem);
 
     capacity = actualAlloc;
@@ -124,7 +122,7 @@ MemBlob::appended(const size_type n)
 }
 
 void
-MemBlob::append(const char *source, const size_type n)
+MemBlob::append(const_pointer source, const size_type n)
 {
     if (n > 0) { // appending zero bytes is allowed but only affects the stats
         Must(willFit(n));
