@@ -35,6 +35,7 @@ public:
     int bytesWanted(int min, int max) const;
     void bytesIn (int qty);
     void setNoDelay(bool const);
+    bool getNoDelay();
     void delayRead(const AsyncCallPointer &);
 
 private:
