@@ -34,15 +34,11 @@ isSocket(intptr_t handle)
 
     int value = 0;
     int valueSize = sizeof(value);
-    // use the Windows API directly
-    auto saved_errno = errno;
-    if (getsockopt(handle, SOL_SOCKET, SO_TYPE, reinterpret_cast<char *>(&value), &valueSize) == 0) {
-        errno = saved_errno;
-        return true;
-    }
-
-    errno = saved_errno;
-    return false;
+    const auto savedErrno = errno;
+    // use Windows API directly
+    const auto result = (getsockopt(handle, SOL_SOCKET, SO_TYPE, reinterpret_cast<char *>(&value), &valueSize) == 0);
+    errno = savedErrno;
+    return result;
 }
 
 int
