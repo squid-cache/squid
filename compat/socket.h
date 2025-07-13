@@ -97,19 +97,19 @@ xgetsockopt(int socket, int level, int option_name, void * option_value, socklen
 inline ssize_t
 xrecv(int socketFd, void * buf, size_t len, int flags)
 {
-    return recv(socketFd, static_cast<char *>(buf), len, flags);
+    return recv(socketFd, buf, len, flags);
 }
 
 inline ssize_t
 xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockaddr * from, socklen_t * fromlen)
 {
-    return recvfrom(socketFd, static_cast<char *>(buf), len, flags, from, fromlen);
+    return recvfrom(socketFd, buf, len, flags, from, fromlen);
 }
 
 inline int
 xsend(int socketFd, const void * buf, size_t len, int flags)
 {
-    return send(socketFd, static_cast<const char *>(buf), len, flags);
+    return send(socketFd, buf, len, flags);
 }
 
 inline ssize_t
