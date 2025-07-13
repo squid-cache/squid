@@ -441,6 +441,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     peeringTimer(&guaranteedRequest(clientRequest))
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
+    last_traffic_time = 0;
     client.timeout_v = Config.Timeout.lifetime;
     server.timeout_v = Config.Timeout.read;
 
@@ -1032,6 +1033,7 @@ TunnelStateData::Connection::initConnection(const Comm::ConnectionPointer &aConn
     Must(Comm::IsConnOpen(aConn));
     owner = tunnelState;
     conn = aConn;
+    idler = nullptr;
     closer = commCbCall(5, 4, name, CommCloseCbPtrFun(method, tunnelState));
     comm_add_close_handler(conn->fd, closer);
 }
@@ -1059,6 +1061,7 @@ TunnelStateData::Connection::noteClosure()
 {
     debugs(26, 3, conn);
     conn = nullptr;
+    idler = nullptr;
     closer = nullptr;
     writer = nullptr; // may already be nil
 }
