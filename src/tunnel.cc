@@ -1931,9 +1931,14 @@ TunnelRr::finalizeConfig()
 #ifndef SO_SPLICE
         if (Config.soSplice)
             fatal("so_splice is on, but no support for SO_SPLICE detected");
+#elif _SQUID_FREEBSD_ && __FreeBSD_version < 1403000
+        if (Config.soSplice)
+            debugs(97, DBG_IMPORTANT, "WARNING: so_splice is on, but SO_SPLICE is officially supported on 14.3-RELEASE or later");
 #endif
     } else
 #ifndef SO_SPLICE
+        Config.soSplice.configure(false);
+#elif _SQUID_FREEBSD_ && __FreeBSD_version < 1403000
         Config.soSplice.configure(false);
 #else
         Config.soSplice.configure(true);
