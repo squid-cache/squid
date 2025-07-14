@@ -5,13 +5,20 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-dnl check the build parameters for a Squid feature
+dnl Check the build parameters for a Squid feature.
+dnl
 dnl Parameters for this macro are:
 dnl 1) feature name
 dnl 2) default: ON/OFF
 dnl 3) brief title/description for log entry
 dnl 4) long description for --help text
 dnl 5) conditions to be tested
+dnl
+dnl Sets:
+dnl  $enable_feature_name variable for autoconf scripts,
+dnl  ENABLE_FEATURE_NAME conditional for automake scripts, and
+dnl  USE_FEATURE_NAME macro for C/C++ code.
+dnl
 AC_DEFUN([SQUID_FEATURE],[
 
   pushdef([FEATURE],$1)
@@ -24,14 +31,14 @@ AC_DEFUN([SQUID_FEATURE],[
   AH_TEMPLATE([]PPVARIABLE[],[Define to have $3])
   AC_ARG_ENABLE([]FEATURE[],
     AS_HELP_STRING([--INVERT-FEATURE],[$3. $4]),
-    SQUID_YESNO([$enableval],[--INVERT-FEATURE])
+    SQUID_YESNO([$enableval],[--enable-FEATURE])
   )
-  AS_IF([test "x${ACVARIABLE:=DEFAULT}" != "xno"],[
+  AS_IF([test "x${ACVARIABLE:-DEFAULT}" != "xno"],[
     $5
   ])
+  AC_MSG_NOTICE([$3 enabled: ${ACVARIABLE:-DEFAULT (auto)}])
   SQUID_DEFINE_BOOL([]PPVARIABLE[],[${ACVARIABLE:=DEFAULT}])
   AM_CONDITIONAL([]AMVARIABLE[],[test "x$ACVARIABLE" != "xno"])
-  AC_MSG_NOTICE([$3 enabled: ${ACVARIABLE:=DEFAULT (auto)}])
 
   popdef([PPVARIABLE])
   popdef([AMVARIABLE])
