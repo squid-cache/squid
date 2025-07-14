@@ -118,6 +118,12 @@ DelayId::setNoDelay(bool const newValue)
     markedAsNoDelay = newValue;
 }
 
+bool
+DelayId::getNoDelay()
+{
+    return markedAsNoDelay;
+}
+
 /*
  * this returns the number of bytes the client is permitted. it does not take
  * into account bytes already buffered - that is up to the caller.
