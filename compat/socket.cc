@@ -122,19 +122,21 @@ xrecv(int socketFd, void * buf, size_t len, int flags)
 }
 
 ssize_t
-xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockaddr * from, socklen_t * fromlen)
+xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockaddr * from, socklen_t * fromLen)
 {
     const auto handle = _get_osfhandle(socketFd);
     if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    auto fl = static_cast<int>(*fromlen);
+    int fl = fromLen ? static_cast<int>(*fromLen) : 0;
+    auto flp = fromLen ? &fl : nullptr;
     assert(len <= INT_MAX);
-    const auto result = recvfrom(handle, static_cast<char *>(buf), static_cast<int>(len), flags, from, &fl);
+    const auto result = recvfrom(handle, static_cast<char *>(buf), static_cast<int>(len), flags, from, flp);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
-    *fromlen = static_cast<socklen_t>(fl);
+    if (fromLen != nullptr)
+        *fromLen = static_cast<socklen_t>(fl);
     return result;
 }
 
