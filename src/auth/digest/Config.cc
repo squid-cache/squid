@@ -51,7 +51,6 @@ Helper::ClientPointer digestauthenticators;
 static hash_table *digest_nonce_cache;
 
 static int authdigest_initialised = 0;
-static Mem::Allocator *digest_nonce_pool = nullptr;
 
 enum http_digest_attr_type {
     DIGEST_USERNAME,
@@ -121,7 +120,7 @@ authDigestNonceEncode(digest_nonce_h * nonce)
 digest_nonce_h *
 authenticateDigestNonceNew(void)
 {
-    digest_nonce_h *newnonce = static_cast < digest_nonce_h * >(digest_nonce_pool->alloc());
+    auto *newnonce = new Auth::Digest::Nonce;
 
     /* NONCE CREATION - NOTES AND REASONING. RBC 20010108
      * === EXCERPT FROM RFC 2617 ===
@@ -194,17 +193,13 @@ authenticateDigestNonceDelete(digest_nonce_h * nonce)
         assert(!nonce->flags.incache);
 
         safe_free(nonce->key);
-
-        digest_nonce_pool->freeOne(nonce);
+        delete nonce;
     }
 }
 
 static void
 authenticateDigestNonceSetup(void)
 {
-    if (!digest_nonce_pool)
-        digest_nonce_pool = memPoolCreate("Digest Scheme nonce's", sizeof(digest_nonce_h));
-
     if (!digest_nonce_cache) {
         digest_nonce_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
         assert(digest_nonce_cache);
