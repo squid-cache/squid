@@ -18,23 +18,18 @@ SetErrnoFromWsaError()
 {
     // POSIX codes which socket API users may care about
     static const auto *CodeMap = new std::unordered_map<int, int> {
-
         { WSAECONNABORTED, ECONNABORTED },
-
         { WSAEINPROGRESS, EINPROGRESS },
         { WSAEAFNOSUPPORT, EAFNOSUPPORT },
         { WSAEINVAL, EINVAL },
         { WSAEISCONN, EISCONN },
-
         { WSAEWOULDBLOCK, EWOULDBLOCK },
         // no Windows error code maps to EAGAIN
         { WSAEALREADY, EALREADY },
         { WSAEINTR, EINTR },
         // no Windows error code maps to ERESTART
-
         { WSAEMFILE, EMFILE },
         // no Windows error code maps to ENFILE
-
         { WSAECONNRESET, ECONNRESET }
     };
 
