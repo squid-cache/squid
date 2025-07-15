@@ -206,7 +206,7 @@ xsetsockopt(int socketFd, int l, int o, const void *v, socklen_t n)
 int
 xsocket(int domain, int type, int protocol)
 {
-    auto result = socket(domain, type, protocol);
+    const auto result = socket(domain, type, protocol);
     if (result == INVALID_SOCKET) {
         SetErrnoFromWsaError();
         return SOCKET_ERROR;
