@@ -367,8 +367,10 @@ SQUID_FEATURE(arch-native, on, [CPU arch native optimization],[
   # But building inside a virtual machine environment has been found to
   # cause random Illegal Instruction errors due to mis-detection of CPU.
   SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
-  AS_IF([test "x$BUILDCXX" = "x$CXX" -a "x$squid_cv_check_marchnative" = "xyes"],[
+  AS_IF([test "x$cross_compiling" = "xno" -a "x$squid_cv_check_marchnative" = "xyes"],[
     SQUID_CXXFLAGS="$SQUID_CXXFLAGS -march=native"
+  ],[
+    enable_arch_native=no
   ])
 ])
 
