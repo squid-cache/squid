@@ -134,13 +134,13 @@ xrecvfrom(int socketFd, void * buf, size_t len, int flags, struct sockaddr * fro
         return SOCKET_ERROR;
     }
     assert(len <= INT_MAX);
-    assert(fromLen == nullptr || *fromLen <= INT_MAX);
+    assert(!fromLen || *fromLen <= INT_MAX);
     int fl = fromLen ? static_cast<int>(*fromLen) : 0;
     auto flp = fromLen ? &fl : nullptr;
     const auto result = recvfrom(handle, static_cast<char *>(buf), static_cast<int>(len), flags, from, flp);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
-    if (fromLen != nullptr)
+    if (fromLen)
         *fromLen = static_cast<socklen_t>(fl);
     return result;
 }
