@@ -30,7 +30,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>
+	<item>Build Requirement Changes
 </itemize>
 
 <sect1>Helper changes
@@ -66,6 +66,9 @@ support for <em>src_as</em> and <em>dst_as</em> ACLs and associated ASN
 lookups. Requests for that report now result in HTTP 404 errors.
 
 Most user-facing changes are reflected in squid.conf (see below).
+
+<sect1>Build Requirement Changes
+<p>The <em>libtool</em> version required to build Squid has been adjusted to a minimum of <em>version 2.4</em>.
 
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
