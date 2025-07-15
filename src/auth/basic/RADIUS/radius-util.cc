@@ -142,7 +142,7 @@ uint32_t get_ipaddr(char *host)
 
     if (good_ipaddr(host) == 0) {
         return(ipstr2long(host));
-    } else if ((hp = xgethostbyname(host)) == (struct hostent *)nullptr) {
+    } else if (!(hp = xgethostbyname(host))) {
         return((uint32_t)0);
     }
     return(ntohl(*(uint32_t *)hp->h_addr));

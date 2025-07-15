@@ -110,7 +110,7 @@ file_read_method(int fd, char *buf, int len)
 int
 socket_write_method(int fd, const char *buf, int len)
 {
-    return xsend(fd, (const void *) buf, len, 0);
+    return xsend(fd, buf, len, 0);
 }
 
 int

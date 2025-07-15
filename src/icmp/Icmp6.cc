@@ -174,7 +174,7 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     debugs(42, 5, "Send Icmp6 packet to " << to << ".");
 
     x = xsendto(icmp_sock,
-                (const void *) pkt,
+                pkt,
                 icmp6_pktsize,
                 0,
                 S->ai_addr,
@@ -217,7 +217,7 @@ Icmp6::Recv(void)
     Ip::Address::InitAddr(from);
 
     n = xrecvfrom(icmp_sock,
-                  (void *)pkt,
+                  pkt,
                   MAX_PKT6_SZ,
                   0,
                   from->ai_addr,

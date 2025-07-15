@@ -114,7 +114,7 @@ IcmpPinger::Open(void)
 
     xwrite(1, "OK\n", 3);
     memset(buf, 0, sizeof(buf));
-    x = xrecv(icmp_sock, (void *) buf, sizeof(buf), 0);
+    x = xrecv(icmp_sock, buf, sizeof(buf), 0);
 
     if (x < 3) {
         xerrno = errno;
@@ -122,7 +122,7 @@ IcmpPinger::Open(void)
         return -1;
     }
 
-    x = xsend(icmp_sock, (const void *) buf, strlen(buf), 0);
+    x = xsend(icmp_sock, buf, strlen(buf), 0);
     xerrno = errno;
 
     if (x < 3 || strncmp("OK\n", buf, 3)) {

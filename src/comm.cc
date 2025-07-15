@@ -213,7 +213,7 @@ commSetBindAddressNoPort(const int fd)
 {
 #if defined(IP_BIND_ADDRESS_NO_PORT)
     int flag = 1;
-    if (xsetsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, reinterpret_cast<char*>(&flag), sizeof(flag)) < 0) {
+    if (xsetsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, &flag, sizeof(flag)) < 0) {
         const auto savedErrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: setsockopt(IP_BIND_ADDRESS_NO_PORT) failure: " << xstrerr(savedErrno));
     }
@@ -296,7 +296,7 @@ static void
 comm_set_v6only(int fd, int tos)
 {
 #ifdef IPV6_V6ONLY
-    if (xsetsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0) {
+    if (xsetsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &tos, sizeof(int)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "setsockopt(IPV6_V6ONLY) " << (tos?"ON":"OFF") << " for FD " << fd << ": " << xstrerr(xerrno));
     }
@@ -338,7 +338,7 @@ comm_set_transparent(int fd)
 
 #if defined(soLevel) && defined(soFlag)
     int tos = 1;
-    if (xsetsockopt(fd, soLevel, soFlag, (char *) &tos, sizeof(int)) < 0) {
+    if (xsetsockopt(fd, soLevel, soFlag, &tos, sizeof(int)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "setsockopt(TPROXY) on FD " << fd << ": " << xstrerr(xerrno));
     } else {
@@ -508,7 +508,7 @@ comm_apply_flags(int new_socket,
 #if defined(SO_REUSEPORT)
         if (flags & COMM_REUSEPORT) {
             int on = 1;
-            if (xsetsockopt(new_socket, SOL_SOCKET, SO_REUSEPORT, reinterpret_cast<char*>(&on), sizeof(on)) < 0) {
+            if (xsetsockopt(new_socket, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0) {
                 const auto savedErrno = errno;
                 const auto errorMessage = ToSBuf("cannot enable SO_REUSEPORT socket option when binding to ",
                                                  addr, ": ", xstrerr(savedErrno));
@@ -773,7 +773,7 @@ commConfigureLinger(const int fd, const OnOff enabled)
 
     fd_table[fd].flags.harshClosureRequested = (l.l_onoff && !l.l_linger); // close(2) sends TCP RST if true
 
-    if (xsetsockopt(fd, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_LINGER, &l, sizeof(l)) < 0) {
         const auto xerrno = errno;
         debugs(50, DBG_CRITICAL, "ERROR: Failed to set closure behavior (SO_LINGER) for FD " << fd << ": " << xstrerr(xerrno));
     }
@@ -1015,7 +1015,7 @@ static void
 commSetReuseAddr(int fd)
 {
     int on = 1;
-    if (xsetsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
     }
@@ -1024,16 +1024,16 @@ commSetReuseAddr(int fd)
 static void
 commSetTcpRcvbuf(int fd, int size)
 {
-    if (xsetsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(size)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
     }
-    if (xsetsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *) &size, sizeof(size)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_SNDBUF, &size, sizeof(size)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
     }
 #ifdef TCP_WINDOW_CLAMP
-    if (xsetsockopt(fd, SOL_TCP, TCP_WINDOW_CLAMP, (char *) &size, sizeof(size)) < 0) {
+    if (xsetsockopt(fd, SOL_TCP, TCP_WINDOW_CLAMP, &size, sizeof(size)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
     }
@@ -1127,7 +1127,7 @@ commSetTcpNoDelay(int fd)
 {
     int on = 1;
 
-    if (xsetsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0) {
+    if (xsetsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
     }

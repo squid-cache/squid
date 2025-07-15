@@ -272,7 +272,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         return ipcCloseAllFD(prfd, pwfd, -1, -1);
     }
 
-    x = xsend(pwfd, (const void *)ok_string, strlen(ok_string), 0);
+    x = xsend(pwfd, ok_string, strlen(ok_string), 0);
 
     if (x < 0) {
         int xerrno = errno;
@@ -335,7 +335,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 static int
 ipcSend(int cwfd, const char *buf, int len)
 {
-    int x = xsend(cwfd, (const void *)buf, len, 0);
+    int x = xsend(cwfd, buf, len, 0);
 
     if (x < 0) {
         int xerrno = errno;
@@ -412,7 +412,7 @@ ipc_thread_1(void *in_params)
             goto cleanup;
     }
 
-    x = xsend(cwfd, (const void *)hello_string, strlen(hello_string) + 1, 0);
+    x = xsend(cwfd, hello_string, strlen(hello_string) + 1, 0);
 
     if (x < 0) {
         int xerrno = errno;
@@ -658,7 +658,7 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        x = xsend(pwfd_ipc, (const void *)ok_string, strlen(ok_string), 0);
+        x = xsend(pwfd_ipc, ok_string, strlen(ok_string), 0);
         x = xrecv(prfd_ipc, (void *)(buf1 + 200), bufSz -1 - 200, 0);
         assert((size_t) x == strlen(ok_string)
                && !strncmp(ok_string, buf1 + 200, strlen(ok_string)));
@@ -728,7 +728,7 @@ ipc_thread_1(void *in_params)
         if (type == IPC_TCP_SOCKET)
             x = xwrite(c2p[1], buf1, x);
         else
-            x = xsend(pwfd_ipc, (const void *)buf1, x, 0);
+            x = xsend(pwfd_ipc, buf1, x, 0);
 
         if (x <= 0) {
             debugs(54, 3, "ipc(" << prog << "," << pid << "): " << x << " bytes written to " << prog << ". Exiting...");
@@ -748,7 +748,7 @@ cleanup:
         ipcCloseAllFD(-1, -1, crfd, cwfd);
 
     if (prfd_ipc != -1) {
-        xsend(crfd_ipc, (const void *)shutdown_string, strlen(shutdown_string), 0);
+        xsend(crfd_ipc, shutdown_string, strlen(shutdown_string), 0);
         shutdown(crfd_ipc, SD_BOTH);
         shutdown(prfd_ipc, SD_BOTH);
     }
@@ -834,7 +834,7 @@ ipc_thread_2(void *in_params)
 
         debugs(54, 5, "ipc(" << prog << "," << pid << "): received from child : " << rfc1738_escape_unescaped(buf2));
 
-        x = xsend(send_fd, (const void *)buf2, x, 0);
+        x = xsend(send_fd, buf2, x, 0);
 
         if ((x <= 0 && type == IPC_TCP_SOCKET) ||
                 (x < 0 && type == IPC_UDP_SOCKET)) {
