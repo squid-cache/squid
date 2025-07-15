@@ -40,7 +40,7 @@ xbind(int socketFd, const struct sockaddr * n, socklen_t l)
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    const auto result = bind(handle,n,l);
+    const auto result = bind(handle,n,static_cast<int>(l));
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
