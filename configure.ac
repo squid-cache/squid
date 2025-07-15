@@ -165,8 +165,8 @@ AC_ARG_ENABLE(strict-error-checking,
 ])
 AC_MSG_NOTICE([strict error checking enabled: ${enable_strict_error_checking:=yes}])
 
-# LT_INIT requires libtool v2, might as well state it loud
-LT_PREREQ([2.2])
+dnl LT_INIT requires libtool v2, might as well state it loud
+LT_PREREQ([2.4])
 LT_INIT([dlopen])
 AS_IF([test "x$ac_top_build_prefix" != "x"],[
   # LTDL v3-v7 macros assume the autoconf 2.62 variable top_build_prefix is defined
