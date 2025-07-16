@@ -103,11 +103,13 @@ xgetsockopt(int socketFd, int level, int optionName, void * optionValue, socklen
         return SOCKET_ERROR;
     }
     int ol = 0;
+    int *olp = nullptr;
     if (optionLen) {
         assert(*optionLen <= INT_MAX);
         ol = static_cast<int>(*optionLen);
+        olp = &ol;
     }
-    const auto result = getsockopt(handle, level, optionName, static_cast<char *>(optionValue), &ol);
+    const auto result = getsockopt(handle, level, optionName, static_cast<char *>(optionValue), &olp);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     if (optionLen)
