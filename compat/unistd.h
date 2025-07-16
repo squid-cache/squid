@@ -20,16 +20,16 @@
 int xclose(int fd);
 
 /// POSIX gethostname(2) equivalent
-int xgethostname(char *name, size_t namelen);
+int xgethostname(char *name, size_t nameLen);
 
 /// POSIX open(2) equivalent
 int xopen(const char *filename, int oflag, int pmode = 0);
 
 /// POSIX read(2) equivalent
-int xread(int fd, void * buf, size_t sz);
+int xread(int fd, void * buf, size_t bufSize);
 
 /// POSIX write(2) equivalent
-int xwrite(int fd, const void * buf, size_t sz);
+int xwrite(int fd, const void * buf, size_t bufSize);
 
 #if _SQUID_WINDOWS_ || _SQUID_MINGW_
 
@@ -46,9 +46,9 @@ xclose(int fd)
 }
 
 inline int
-xgethostname(char *name, size_t namelen)
+xgethostname(char *name, size_t nameLen)
 {
-    return gethostname(name, namelen);
+    return gethostname(name, nameLen);
 }
 
 inline int
@@ -58,15 +58,15 @@ xopen(const char *filename, int oflag, int pmode)
 }
 
 inline int
-xread(int fd, void * buf, size_t sz)
+xread(int fd, void * buf, size_t bufSize)
 {
-    return read(fd, buf, sz);
+    return read(fd, buf, bufSize);
 }
 
 inline int
-xwrite(int fd, const void * buf, size_t sz)
+xwrite(int fd, const void * buf, size_t bufSize)
 {
-    return write(fd, buf, sz);
+    return write(fd, buf, bufSize);
 }
 
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */

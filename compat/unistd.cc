@@ -64,10 +64,10 @@ xclose(int fd)
 }
 
 int
-xgethostname(char *name, size_t namelen)
+xgethostname(char *name, size_t nameLen)
 {
-    assert(namelen <= INT_MAX);
-    const auto result = gethostname(name, static_cast<int>(namelen));
+    assert(nameLen <= INT_MAX);
+    const auto result = gethostname(name, static_cast<int>(nameLen));
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
@@ -80,7 +80,7 @@ xopen(const char *filename, int oflag, int pmode)
 }
 
 int
-xread(int fd, void * buf, size_t sz)
+xread(int fd, void * buf, size_t bufSize)
 {
     const auto sock = _get_osfhandle(fd);
     if (sock == intptr_t(INVALID_HANDLE_VALUE)) {
@@ -88,15 +88,15 @@ xread(int fd, void * buf, size_t sz)
         return -1;
     }
 
-    assert(sz <= INT_MAX);
+    assert(bufSize <= UINT_MAX);
     if (isSocket(sock))
-        return xrecv(sock, buf, sz, 0);
+        return xrecv(sock, buf, bufSize, 0);
     else
-        return _read(fd, buf, static_cast<unsigned int>(sz));
+        return _read(fd, buf, static_cast<unsigned int>(bufSize));
 }
 
 int
-xwrite(int fd, const void * buf, size_t siz)
+xwrite(int fd, const void * buf, size_t bufSize)
 {
     const auto sock = _get_osfhandle(fd);
     if (sock == intptr_t(INVALID_HANDLE_VALUE)) {
@@ -104,11 +104,11 @@ xwrite(int fd, const void * buf, size_t siz)
         return -1;
     }
 
-    assert(siz <= INT_MAX);
+    assert(bufSize <= UINT_MAX);
     if (isSocket(sock))
-        return xsend(sock, buf, siz, 0);
+        return xsend(sock, buf, bufSize, 0);
     else
-        return _write(fd, buf, static_cast<unsigned int>(siz));
+        return _write(fd, buf, static_cast<unsigned int>(bufSize));
 }
 
 #endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
