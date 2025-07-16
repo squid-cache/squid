@@ -32,9 +32,10 @@ public:
     void compositePosition(const DelayIdComposite::Pointer &);
     bool operator == (DelayId const &rhs) const;
 
-    /// whether we may limit reading (i.e. return zero from bytesWanted()
-    /// with a positive maximum limit)
+    /// whether we may delay reading (i.e. return zero from bytesWanted() called
+    /// with a positive maximum limit parameter)
     operator bool() const;
+
     int bytesWanted(int min, int max) const;
     void bytesIn (int qty);
     void setNoDelay(bool const);
