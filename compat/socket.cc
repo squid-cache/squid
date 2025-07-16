@@ -21,7 +21,14 @@ xaccept(int socketFd, struct sockaddr *sa, socklen_t *saLen)
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    const auto result = accept(handle, sa, saLen);
+    int al = 0;
+    int *alp = nullptr;
+    if (saLen) {
+        assert(*saLen <= INT_MAX);
+        al = static_cast<int>(*saLen);
+        alp = &al;
+    }
+    const auto result = accept(handle, sa, alp);
     if (result == INVALID_SOCKET) {
         SetErrnoFromWsaError();
         return SOCKET_ERROR;
@@ -29,6 +36,8 @@ xaccept(int socketFd, struct sockaddr *sa, socklen_t *saLen)
     const auto rv = _open_osfhandle(result, 0);
     if (rv == -1)
         errno = EBADF;
+    if (saLen)
+        *saLen = static_cast<socklen_t>(al);
     return rv;
 }
 
@@ -70,12 +79,14 @@ xgetsockname(int socketFd, struct sockaddr * sa, socklen_t * saLen)
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    int al;
+    int al = 0;
+    int *alp = nullptr;
     if (saLen) {
         assert(*saLen <= INT_MAX);
         al = static_cast<int>(*saLen);
+        alp = &al;
     }
-    const auto result = getsockname(handle, sa, &al);
+    const auto result = getsockname(handle, sa, alp);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     if (saLen)
