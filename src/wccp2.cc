@@ -2022,7 +2022,7 @@ wccp2AssignBuckets(void *)
                                     &wccp_packet,
                                     offset);
                 } else {
-                    if (xsend(theWccp2Connection, &wccp_packet, offset, 0) < static_cast<int>(offset)) {
+                    if (xsend(theWccp2Connection, &wccp_packet, offset, 0) < offset) {
                         int xerrno = errno;
                         debugs(80, 2, "ERROR: failed to send WCCPv2 HERE_I_AM packet to " << tmp_rtr << " : " << xstrerr(xerrno));
                     }
