@@ -14,37 +14,37 @@
 #endif
 
 /// POSIX accept(2) equivalent
-int xaccept(int socketFd, struct sockaddr *sa, socklen_t *saLen);
+int xaccept(int socketFd, struct sockaddr *sa, socklen_t *saLength);
 
 /// POSIX bind(2) equivalent
-int xbind(int socketFd, const struct sockaddr *sa, socklen_t saLen);
+int xbind(int socketFd, const struct sockaddr *sa, socklen_t saLength);
 
 /// POSIX connect(2) equivalent
-int xconnect(int socketFd, const struct sockaddr *sa, socklen_t saLen);
+int xconnect(int socketFd, const struct sockaddr *sa, socklen_t saLength);
 
 /// POSIX getsockopt(2) equivalent
-int xgetsockopt(int socketFd, int level, int optionName, void * optionValue, socklen_t * optionLen);
+int xgetsockopt(int socketFd, int level, int optionName, void * optionValue, socklen_t * optionLength);
 
 /// POSIX getsockname(2) equivalent
-int xgetsockname(int socketFd, struct sockaddr * sa, socklen_t * saLen);
+int xgetsockname(int socketFd, struct sockaddr * sa, socklen_t * saLength);
 
 /// POSIX listen(2) equivalent
 int xlisten(int socketFd, int backlog);
 
 /// POSIX recv(2) equivalent
-ssize_t xrecv(int socketFd, void * buf, size_t bufLen, int flags);
+ssize_t xrecv(int socketFd, void * buf, size_t bufLength, int flags);
 
 /// POSIX recvfrom(2) equivalent
-ssize_t xrecvfrom(int socketFd, void * buf, size_t bufLen, int flags, struct sockaddr * from, socklen_t * fromLen);
+ssize_t xrecvfrom(int socketFd, void * buf, size_t bufLength, int flags, struct sockaddr * from, socklen_t * fromLength);
 
 /// POSIX send(2) equivalent
-int xsend(int socketFd, const void * buf, size_t bufLen, int flags);
+int xsend(int socketFd, const void * buf, size_t bufLength, int flags);
 
 /// POSIX sendto(2) equivalent
-ssize_t xsendto(int socketFd, const void * buf, size_t bufLen, int flags, const struct sockaddr * to, socklen_t toLen);
+ssize_t xsendto(int socketFd, const void * buf, size_t bufLength, int flags, const struct sockaddr * to, socklen_t toLength);
 
 /// POSIX setsockopt(2) equivalent
-int xsetsockopt(int socketFd, int level, int option, const void * value, socklen_t valueLen);
+int xsetsockopt(int socketFd, int level, int option, const void * value, socklen_t valueLength);
 
 /// POSIX socket(2) equivalent
 int xsocket(int domain, int type, int protocol);
@@ -59,27 +59,27 @@ int xsocket(int domain, int type, int protocol);
 #if !(_SQUID_WINDOWS_ || _SQUID_MINGW_)
 
 inline int
-xaccept(int socketFd, struct sockaddr *sa, socklen_t *saLen)
+xaccept(int socketFd, struct sockaddr *sa, socklen_t *saLength)
 {
-    return accept(socketFd, sa, saLen);
+    return accept(socketFd, sa, saLength);
 }
 
 inline int
-xbind(int socketFd, const struct sockaddr *sa, socklen_t saLen)
+xbind(int socketFd, const struct sockaddr *sa, socklen_t saLength)
 {
-    return bind(socketFd, sa, saLen);
+    return bind(socketFd, sa, saLength);
 }
 
 inline int
-xconnect(int socketFd, const struct sockaddr *sa, socklen_t saLen)
+xconnect(int socketFd, const struct sockaddr *sa, socklen_t saLength)
 {
-    return connect(socketFd, sa, saLen);
+    return connect(socketFd, sa, saLength);
 }
 
 inline int
-xgetsockname(int socketFd, struct sockaddr * sa, socklen_t * saLen)
+xgetsockname(int socketFd, struct sockaddr * sa, socklen_t * saLength)
 {
-    return getsockname(socketFd, sa, saLen);
+    return getsockname(socketFd, sa, saLength);
 }
 
 inline int
@@ -89,39 +89,39 @@ xlisten(int socketFd, int backlog)
 }
 
 inline int
-xgetsockopt(int socketFd, int level, int optionName, void * optionValue, socklen_t * optionLen)
+xgetsockopt(int socketFd, int level, int optionName, void * optionValue, socklen_t * optionLength)
 {
-    return getsockopt(socketFd, level, optionName, optionValue, optionLen);
+    return getsockopt(socketFd, level, optionName, optionValue, optionLength);
 }
 
 inline ssize_t
-xrecv(int socketFd, void * buf, size_t bufLen, int flags)
+xrecv(int socketFd, void * buf, size_t bufLength, int flags)
 {
-    return recv(socketFd, buf, bufLen, flags);
+    return recv(socketFd, buf, bufLength, flags);
 }
 
 inline ssize_t
-xrecvfrom(int socketFd, void * buf, size_t bufLen, int flags, struct sockaddr * from, socklen_t * fromLen)
+xrecvfrom(int socketFd, void * buf, size_t bufLength, int flags, struct sockaddr * from, socklen_t * fromLength)
 {
-    return recvfrom(socketFd, buf, bufLen, flags, from, fromLen);
+    return recvfrom(socketFd, buf, bufLength, flags, from, fromLength);
 }
 
 inline int
-xsend(int socketFd, const void * buf, size_t bufLen, int flags)
+xsend(int socketFd, const void * buf, size_t bufLength, int flags)
 {
-    return send(socketFd, buf, bufLen, flags);
+    return send(socketFd, buf, bufLength, flags);
 }
 
 inline ssize_t
-xsendto(int socketFd, const void * buf, size_t bufLen, int flags, const struct sockaddr * to, socklen_t l)
+xsendto(int socketFd, const void * buf, size_t bufLength, int flags, const struct sockaddr * to, socklen_t l)
 {
-    return sendto(socketFd, buf, bufLen, flags, to, l);
+    return sendto(socketFd, buf, bufLength, flags, to, l);
 }
 
 inline int
-xsetsockopt(int socketFd, int level, int option, const void *value, socklen_t valueLen)
+xsetsockopt(int socketFd, int level, int option, const void *value, socklen_t valueLength)
 {
-    return setsockopt(socketFd, level, option, value, valueLen);
+    return setsockopt(socketFd, level, option, value, valueLength);
 }
 
 inline int

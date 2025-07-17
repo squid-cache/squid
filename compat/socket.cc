@@ -14,7 +14,7 @@
 #include <unordered_map>
 
 int
-xaccept(int socketFd, struct sockaddr *sa, socklen_t *saLen)
+xaccept(int socketFd, struct sockaddr *sa, socklen_t *saLength)
 {
     const auto handle = _get_osfhandle(socketFd);
     if (!isValidSocketHandle(handle)) {
@@ -23,9 +23,9 @@ xaccept(int socketFd, struct sockaddr *sa, socklen_t *saLen)
     }
     int al = 0;
     int *alp = nullptr;
-    if (saLen) {
-        assert(*saLen <= INT_MAX);
-        al = static_cast<int>(*saLen);
+    if (saLength) {
+        assert(*saLength <= INT_MAX);
+        al = static_cast<int>(*saLength);
         alp = &al;
     }
     const auto result = accept(handle, sa, alp);
@@ -36,43 +36,43 @@ xaccept(int socketFd, struct sockaddr *sa, socklen_t *saLen)
     const auto rv = _open_osfhandle(result, 0);
     if (rv == -1)
         errno = EBADF;
-    if (saLen)
-        *saLen = static_cast<socklen_t>(al);
+    if (saLength)
+        *saLength = static_cast<socklen_t>(al);
     return rv;
 }
 
 int
-xbind(int socketFd, const struct sockaddr *sa, socklen_t saLen)
+xbind(int socketFd, const struct sockaddr *sa, socklen_t saLength)
 {
     const auto handle = _get_osfhandle(socketFd);
     if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    assert(saLen <= INT_MAX);
-    const auto result = bind(handle, sa, static_cast<int>(saLen));
+    assert(saLength <= INT_MAX);
+    const auto result = bind(handle, sa, static_cast<int>(saLength));
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
 }
 
 int
-xconnect(int socketFd, const struct sockaddr *sa, socklen_t saLen)
+xconnect(int socketFd, const struct sockaddr *sa, socklen_t saLength)
 {
     const auto handle = _get_osfhandle(socketFd);
     if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    assert(saLen <= INT_MAX);
-    const auto result = connect(handle, sa, static_cast<int>(saLen));
+    assert(saLength <= INT_MAX);
+    const auto result = connect(handle, sa, static_cast<int>(saLength));
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
 }
 
 int
-xgetsockname(int socketFd, struct sockaddr * sa, socklen_t * saLen)
+xgetsockname(int socketFd, struct sockaddr * sa, socklen_t * saLength)
 {
     const auto handle = _get_osfhandle(socketFd);
     if (!isValidSocketHandle(handle)) {
@@ -81,21 +81,21 @@ xgetsockname(int socketFd, struct sockaddr * sa, socklen_t * saLen)
     }
     int al = 0;
     int *alp = nullptr;
-    if (saLen) {
-        assert(*saLen <= INT_MAX);
-        al = static_cast<int>(*saLen);
+    if (saLength) {
+        assert(*saLength <= INT_MAX);
+        al = static_cast<int>(*saLength);
         alp = &al;
     }
     const auto result = getsockname(handle, sa, alp);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
-    if (saLen)
-        *saLen = static_cast<socklen_t>(al);
+    if (saLength)
+        *saLength = static_cast<socklen_t>(al);
     return result;
 }
 
 int
-xgetsockopt(int socketFd, int level, int optionName, void * optionValue, socklen_t * optionLen)
+xgetsockopt(int socketFd, int level, int optionName, void * optionValue, socklen_t * optionLength)
 {
     const auto handle = _get_osfhandle(socketFd);
     if (!isValidSocketHandle(handle)) {
@@ -104,16 +104,16 @@ xgetsockopt(int socketFd, int level, int optionName, void * optionValue, socklen
     }
     int ol = 0;
     int *olp = nullptr;
-    if (optionLen) {
-        assert(*optionLen <= INT_MAX);
-        ol = static_cast<int>(*optionLen);
+    if (optionLength) {
+        assert(*optionLength <= INT_MAX);
+        ol = static_cast<int>(*optionLength);
         olp = &ol;
     }
     const auto result = getsockopt(handle, level, optionName, static_cast<char *>(optionValue), olp);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
-    if (optionLen)
-        *optionLen = static_cast<socklen_t>(ol);
+    if (optionLength)
+        *optionLength = static_cast<socklen_t>(ol);
     return result;
 }
 
@@ -132,77 +132,77 @@ xlisten(int socketFd, int backlog)
 }
 
 ssize_t
-xrecv(int socketFd, void * buf, size_t bufLen, int flags)
+xrecv(int socketFd, void * buf, size_t bufLength, int flags)
 {
     const auto handle = _get_osfhandle(socketFd);
     if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    assert(bufLen <= INT_MAX);
-    const auto result = recv(handle, static_cast<char *>(buf), static_cast<int>(bufLen), flags);
+    assert(bufLength <= INT_MAX);
+    const auto result = recv(handle, static_cast<char *>(buf), static_cast<int>(bufLength), flags);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
 }
 
 ssize_t
-xrecvfrom(int socketFd, void * buf, size_t bufLen, int flags, struct sockaddr * from, socklen_t * fromLen)
+xrecvfrom(int socketFd, void * buf, size_t bufLength, int flags, struct sockaddr * from, socklen_t * fromLength)
 {
     const auto handle = _get_osfhandle(socketFd);
     if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    assert(bufLen <= INT_MAX);
+    assert(bufLength <= INT_MAX);
     int fl = 0;
     int *flp = nullptr;
-    if (fromLen) {
-        assert(*fromLen <= INT_MAX);
-        fl = static_cast<int>(*fromLen);
+    if (fromLength) {
+        assert(*fromLength <= INT_MAX);
+        fl = static_cast<int>(*fromLength);
         flp = &fl;
     }
-    const auto result = recvfrom(handle, static_cast<char *>(buf), static_cast<int>(bufLen), flags, from, flp);
+    const auto result = recvfrom(handle, static_cast<char *>(buf), static_cast<int>(bufLength), flags, from, flp);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
-    if (fromLen)
-        *fromLen = static_cast<socklen_t>(fl);
+    if (fromLength)
+        *fromLength = static_cast<socklen_t>(fl);
     return result;
 }
 
 int
-xsend(int socketFd, const void * buf, size_t bufLen, int flags)
+xsend(int socketFd, const void * buf, size_t bufLength, int flags)
 {
     const auto handle = _get_osfhandle(socketFd);
     if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    assert(bufLen <= INT_MAX);
-    const auto result = send(handle, static_cast<const char *>(buf), static_cast<int>(bufLen), flags);
+    assert(bufLength <= INT_MAX);
+    const auto result = send(handle, static_cast<const char *>(buf), static_cast<int>(bufLength), flags);
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
 }
 
 ssize_t
-xsendto(int socketFd, const void * buf, size_t bufLen, int flags, const struct sockaddr * to, socklen_t toLen)
+xsendto(int socketFd, const void * buf, size_t bufLength, int flags, const struct sockaddr * to, socklen_t toLength)
 {
     const auto handle = _get_osfhandle(socketFd);
     if (!isValidSocketHandle(handle)) {
         // errno is already set by _get_osfhandle()
         return SOCKET_ERROR;
     }
-    assert(bufLen <= INT_MAX);
-    assert(toLen <= INT_MAX);
-    const auto result = sendto(handle, static_cast<const char *>(buf), static_cast<int>(bufLen), flags, to, static_cast<int>(toLen));
+    assert(bufLength <= INT_MAX);
+    assert(toLength <= INT_MAX);
+    const auto result = sendto(handle, static_cast<const char *>(buf), static_cast<int>(bufLength), flags, to, static_cast<int>(toLength));
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
 }
 
 int
-xsetsockopt(int socketFd, int level, int option, const void *value, socklen_t valueLen)
+xsetsockopt(int socketFd, int level, int option, const void *value, socklen_t valueLength)
 {
     const auto handle = _get_osfhandle(socketFd);
     if (!isValidSocketHandle(handle)) {
@@ -210,7 +210,7 @@ xsetsockopt(int socketFd, int level, int option, const void *value, socklen_t va
         return SOCKET_ERROR;
     }
     assert(option <= INT_MAX);
-    const auto result = setsockopt(handle, level, option, static_cast<const char *>(value), static_cast<int>(valueLen));
+    const auto result = setsockopt(handle, level, option, static_cast<const char *>(value), static_cast<int>(valueLength));
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
