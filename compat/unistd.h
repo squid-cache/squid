@@ -20,7 +20,7 @@
 int xclose(int fd);
 
 /// POSIX gethostname(2) equivalent
-int xgethostname(char *name, size_t nameLen);
+int xgethostname(char *name, size_t nameLength);
 
 /// POSIX open(2) equivalent
 int xopen(const char *filename, int oflag, int pmode = 0);
@@ -46,9 +46,9 @@ xclose(int fd)
 }
 
 inline int
-xgethostname(char *name, size_t nameLen)
+xgethostname(char *name, size_t nameLength)
 {
-    return gethostname(name, nameLen);
+    return gethostname(name, nameLength);
 }
 
 inline int

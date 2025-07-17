@@ -64,10 +64,10 @@ xclose(int fd)
 }
 
 int
-xgethostname(char *name, size_t nameLen)
+xgethostname(char *name, size_t nameLength)
 {
-    assert(nameLen <= INT_MAX);
-    const auto result = gethostname(name, static_cast<int>(nameLen));
+    assert(nameLength <= INT_MAX);
+    const auto result = gethostname(name, static_cast<int>(nameLength));
     if (result == SOCKET_ERROR)
         SetErrnoFromWsaError();
     return result;
