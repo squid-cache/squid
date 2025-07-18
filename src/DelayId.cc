@@ -28,9 +28,10 @@
 DelayId::DelayId () : pool_ (0), compositeId(nullptr), markedAsNoDelay(false)
 {}
 
-DelayId::DelayId(unsigned short aPool, const DelayIdComposite::Pointer &composite) :
-    pool_(aPool), compositeId(composite), markedAsNoDelay(false)
+DelayId::DelayId(unsigned short aPool, const DelayIdComposite::Pointer &aCompositeId):
+    pool_(aPool), compositeId(aCompositeId), markedAsNoDelay(false)
 {
+    assert(bool(pool_) == bool(compositeId));
     debugs(77, 3, "DelayId::DelayId: Pool " << aPool << "u");
 }
 
@@ -54,7 +55,6 @@ DelayId::operator == (DelayId const &rhs) const
 
 DelayId::operator bool() const
 {
-    assert(bool(pool_) == bool(compositeId));
     return pool_;
 }
 
@@ -136,15 +136,13 @@ DelayId::bytesIn(int qty)
     if (markedAsNoDelay)
         return;
 
-    assert ((unsigned short)(pool() - 1) != 0xFFFF);
-
     compositeId->bytesIn(qty);
 }
 
 void
 DelayId::delayRead(const AsyncCall::Pointer &aRead)
 {
-    assert(*this);
+    assert (compositeId != nullptr);
     compositeId->delayRead(aRead);
 
 }
