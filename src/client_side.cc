@@ -734,7 +734,7 @@ clientPackRangeHdr(const HttpReplyPointer &rep, const HttpHdrRangeSpec * spec, S
 /** returns expected content length for multi-range replies
  * note: assumes that httpHdrRangeCanonize has already been called
  * warning: assumes that HTTP headers for individual ranges at the
- *          time of the actuall assembly will be exactly the same as
+ *          time of the actual assembly will be exactly the same as
  *          the headers when clientMRangeCLen() is called */
 int64_t
 ClientHttpRequest::mRangeCLen() const
