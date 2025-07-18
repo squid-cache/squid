@@ -119,7 +119,7 @@ DelayId::bytesWanted(int minimum, int maximum) const
 {
     const auto maxBytes = max(minimum, maximum);
     return (!(*this) || markedAsNoDelay) ?
-        maxBytes : compositeId->bytesWanted(minimum, maxBytes);
+           maxBytes : compositeId->bytesWanted(minimum, maxBytes);
 }
 
 /*
