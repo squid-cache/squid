@@ -24,12 +24,9 @@ class DelayId
 public:
     static DelayId DelayClient(ClientHttpRequest *, HttpReply *reply = nullptr);
     DelayId ();
-    DelayId (unsigned short);
+    DelayId(unsigned short, const DelayIdComposite::Pointer &);
     ~DelayId ();
     unsigned short pool() const;
-    DelayIdComposite::Pointer compositePosition();
-    DelayIdComposite::Pointer const compositePosition() const;
-    void compositePosition(const DelayIdComposite::Pointer &);
     bool operator == (DelayId const &rhs) const;
     operator bool() const;
     int bytesWanted(int min, int max) const;
