@@ -34,7 +34,7 @@ public:
 
     /// Whether we may delay reading. This operator is meant to be used as an
     /// optimization that helps avoid more expensive bytesWanted() computations.
-    /// \returns false if bytesWanted() called with a positive maximum limit
+    /// \retval false if bytesWanted() called with a positive maximum limit
     /// parameter will never return zero
     operator bool() const;
 
