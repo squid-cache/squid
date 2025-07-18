@@ -446,7 +446,7 @@ Client::getMoreRequestBody(MemBuf &buf)
     return requestBodySource->getMoreData(buf);
 }
 
-// Compares hosts in urls, returns false if different, no sheme, or no host.
+// Compares hosts in urls, returns false if different, no scheme, or no host.
 static bool
 sameUrlHosts(const char *url1, const char *url2)
 {

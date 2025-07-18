@@ -142,7 +142,7 @@ accepty as the second parameter.
 
   }
 
-If we wnat to find out the protocol that was negotiated then we can do the 
+If we want to find out the protocol that was negotiated then we can do the 
 following:
 
   protocol = SMB_Get_Protocol_IDX(con);

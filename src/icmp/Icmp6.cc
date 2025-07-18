@@ -19,7 +19,7 @@
 #include "IcmpPinger.h"
 #include "time/gadgets.h"
 
-// Some system headers are only neeed internally here.
+// Some system headers are only needed internally here.
 // They should not be included via the header.
 
 #if HAVE_NETINET_IP6_H
