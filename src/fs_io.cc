@@ -65,14 +65,12 @@ dwrite_q::~dwrite_q()
 int
 file_open(const char *path, int mode)
 {
-    int fd;
-
     if (FILE_MODE(mode) == O_WRONLY)
         mode |= O_APPEND;
 
     errno = 0;
 
-    fd = xopen(path, mode, 0644);
+    auto fd = xopen(path, mode, 0644);
 
     ++ statCounter.syscalls.disk.opens;
 

@@ -158,10 +158,9 @@ WIN32_ftruncate(int fd, off_t size)
 int
 WIN32_truncate(const char *pathname, off_t length)
 {
-    int fd;
     int res = -1;
 
-    fd = xopen(pathname, O_RDWR);
+    const auto fd = xopen(pathname, O_RDWR);
 
     if (fd == -1)
         errno = EBADF;

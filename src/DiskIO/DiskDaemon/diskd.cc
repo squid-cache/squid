@@ -55,12 +55,11 @@ static int DebugLevel = 0;
 static int
 do_open(diomsg * r, int, const char *buf)
 {
-    int fd;
     file_state *fs;
     /*
      * note r->offset holds open() flags
      */
-    fd = xopen(buf, r->offset, 0600);
+    const auto fd = xopen(buf, r->offset, 0600);
 
     if (fd < 0) {
         DEBUG(1) {

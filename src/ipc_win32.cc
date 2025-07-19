@@ -335,7 +335,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 static int
 ipcSend(int cwfd, const char *buf, int len)
 {
-    int x = xsend(cwfd, buf, len, 0);
+    const auto x = xsend(cwfd, buf, len, 0);
 
     if (x < 0) {
         int xerrno = errno;
