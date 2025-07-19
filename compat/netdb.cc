@@ -14,7 +14,7 @@
 #include "compat/wserrno.h"
 
 struct hostent *
-xgethostbyname(const char *name)
+xgethostbyname(const char * const name)
 {
     const auto result = gethostbyname(name);
     if (!result)
@@ -23,7 +23,7 @@ xgethostbyname(const char *name)
 }
 
 struct servent *
-xgetservbyname(const char *name, const char *proto)
+xgetservbyname(const char * const name, const char * const proto)
 {
     const auto result = getservbyname(name, proto);
     if (!result)
