@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "comm/Loops.h"
 #include "compat/pipe.h"
+#include "compat/unistd.h"
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "fd.h"
 #include "globals.h"
@@ -40,8 +41,8 @@ CommIO::NotifyIOClose()
 {
     /* Close done pipe signal */
     FlushPipe();
-    close(DoneFD);
-    close(DoneReadFD);
+    xclose(DoneFD);
+    xclose(DoneReadFD);
     fd_close(DoneFD);
     fd_close(DoneReadFD);
     Initialized = false;
