@@ -127,7 +127,7 @@ DelayId::bytesWanted(int minimum, int maximum) const
 {
     /* unlimited */
 
-    if (!*this)
+    (! (*this))
         return max(minimum, maximum);
 
     /* limited */
