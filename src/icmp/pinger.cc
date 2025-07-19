@@ -103,7 +103,6 @@ int
 main(int, char **)
 {
     fd_set R;
-    int x;
     int max_fd = 0;
 
     /*
@@ -207,7 +206,7 @@ main(int, char **)
         FD_SET(squid_link, &R);
         Stopwatch timer;
         timer.resume();
-        x = xselect(max_fd+1, &R, nullptr, nullptr, &tv);
+        const auto x = xselect(max_fd+1, &R, nullptr, nullptr, &tv);
         getCurrentTime();
 
         if (x < 0) {
@@ -246,7 +245,7 @@ main(int, char **)
 
 #include <ostream>
 int
-main(int argc, char *argv[])
+main(int, char *argv[])
 {
     std::cerr << argv[0] << ": ICMP support not compiled in." << std::endl;
     return EXIT_FAILURE;
