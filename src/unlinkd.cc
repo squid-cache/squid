@@ -42,7 +42,6 @@ unlinkdUnlink(const char *path)
 {
     char buf[MAXPATHLEN];
     int l;
-    int bytes_written;
     static int queuelen = 0;
 
     if (unlinkd_wfd < 0) {
@@ -107,7 +106,7 @@ unlinkdUnlink(const char *path)
     xstrncpy(buf, path, MAXPATHLEN);
     buf[l] = '\n';
     ++l;
-    bytes_written = xwrite(unlinkd_wfd, buf, l);
+    const auto bytes_written = xwrite(unlinkd_wfd, buf, l);
 
     if (bytes_written < 0) {
         int xerrno = errno;

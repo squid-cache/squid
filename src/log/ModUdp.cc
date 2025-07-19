@@ -41,8 +41,7 @@ static void
 logfile_mod_udp_write(Logfile * lf, const char *buf, size_t len)
 {
     l_udp_t *ll = (l_udp_t *) lf->data;
-    ssize_t s;
-    s = xwrite(ll->fd, (char const *) buf, len);
+    const auto s = xwrite(ll->fd, buf, len);
     fd_bytes(ll->fd, s, IoDirection::Write);
 #if 0
     // TODO: Enable after polishing to properly log these errors.

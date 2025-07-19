@@ -168,7 +168,6 @@ static int
 do_write(diomsg * r, int, const char *buf)
 {
     int wrtlen = r->size;
-    int x;
     file_state *fs;
     fs = (file_state *) hash_lookup(hash, &r->id);
 
@@ -195,7 +194,7 @@ do_write(diomsg * r, int, const char *buf)
         fprintf(stderr, "%d WRITE %d,%d,%" PRId64 "\n", (int) mypid,
                 fs->fd, wrtlen, (int64_t)r->offset);
     }
-    x = xwrite(fs->fd, buf, wrtlen);
+    const auto x = xwrite(fs->fd, buf, wrtlen);
 
     if (x < 0) {
         DEBUG(1) {
