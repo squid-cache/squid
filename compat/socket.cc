@@ -170,7 +170,7 @@ xrecvfrom(int socketFd, void * buf, size_t bufLength, int flags, struct sockaddr
     return result;
 }
 
-int
+ssize_t
 xsend(int socketFd, const void * buf, size_t bufLength, int flags)
 {
     const auto handle = _get_osfhandle(socketFd);

@@ -38,7 +38,7 @@ ssize_t xrecv(int socketFd, void * buf, size_t bufLength, int flags);
 ssize_t xrecvfrom(int socketFd, void * buf, size_t bufLength, int flags, struct sockaddr * from, socklen_t * fromLength);
 
 /// POSIX send(2) equivalent
-int xsend(int socketFd, const void * buf, size_t bufLength, int flags);
+ssize_t xsend(int socketFd, const void * buf, size_t bufLength, int flags);
 
 /// POSIX sendto(2) equivalent
 ssize_t xsendto(int socketFd, const void * buf, size_t bufLength, int flags, const struct sockaddr * to, socklen_t toLength);
@@ -106,7 +106,7 @@ xrecvfrom(int socketFd, void * buf, size_t bufLength, int flags, struct sockaddr
     return recvfrom(socketFd, buf, bufLength, flags, from, fromLength);
 }
 
-inline int
+inline ssize_t
 xsend(int socketFd, const void * buf, size_t bufLength, int flags)
 {
     return send(socketFd, buf, bufLength, flags);
