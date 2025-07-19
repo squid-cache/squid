@@ -87,10 +87,9 @@ unlinkdUnlink(const char *path)
     * decrement the queue size by the number of newlines read.
     */
     if (queuelen > 0) {
-        int bytes_read;
         int i;
         char rbuf[512];
-        bytes_read = xread(unlinkd_rfd, rbuf, 511);
+        const auto bytes_read = xread(unlinkd_rfd, rbuf, 511);
 
         if (bytes_read > 0) {
             rbuf[bytes_read] = '\0';

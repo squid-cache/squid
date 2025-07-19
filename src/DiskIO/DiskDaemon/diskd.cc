@@ -118,7 +118,6 @@ do_close(diomsg * r, int)
 static int
 do_read(diomsg * r, int, char *buf)
 {
-    int x;
     int readlen = r->size;
     file_state *fs;
     fs = (file_state *) hash_lookup(hash, &r->id);
@@ -146,7 +145,7 @@ do_read(diomsg * r, int, char *buf)
         }
     }
 
-    x = xread(fs->fd, buf, readlen);
+    const auto x = xread(fs->fd, buf, readlen);
     DEBUG(2) {
         fprintf(stderr, "%d READ %d,%d,%" PRId64 " ret %d\n", (int) mypid,
                 fs->fd, readlen, (int64_t)r->offset, x);
