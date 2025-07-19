@@ -31,7 +31,8 @@ DelayId::DelayId () : pool_ (0), compositeId(nullptr), markedAsNoDelay(false)
 DelayId::DelayId(unsigned short aPool, const DelayIdComposite::Pointer &aCompositeId):
     pool_(aPool), compositeId(aCompositeId), markedAsNoDelay(false)
 {
-    assert(bool(pool_) == bool(compositeId));
+    assert(pool_);
+    assert(compositeId);
     debugs(77, 3, "DelayId::DelayId: Pool " << aPool << "u");
 }
 
