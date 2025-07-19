@@ -233,13 +233,12 @@ TestIpAddress::testCopyConstructor()
 void
 TestIpAddress::testHostentConstructor()
 {
-    struct hostent *hp = nullptr;
     struct in_addr outval;
     struct in_addr expectval;
 
     expectval.s_addr = htonl(0xC0A8640C);
 
-    hp = xgethostbyname("192.168.100.12");
+    const auto hp = xgethostbyname("192.168.100.12");
     CPPUNIT_ASSERT( hp != nullptr /* gethostbyname failure.*/ );
 
     Ip::Address anIPA(*hp);
