@@ -60,7 +60,7 @@ DelayId::operator == (DelayId const &rhs) const
 
 DelayId::operator bool() const
 {
-    return pool_ || compositeId.getRaw();
+    return (pool_ || compositeId.getRaw()) && !markedAsNoDelay;
 }
 
 /* create a delay Id for a given request */
@@ -127,7 +127,7 @@ DelayId::bytesWanted(int minimum, int maximum) const
 {
     /* unlimited */
 
-    if (! (*this) || markedAsNoDelay)
+    if (! (*this))
         return max(minimum, maximum);
 
     /* limited */
@@ -148,9 +148,6 @@ void
 DelayId::bytesIn(int qty)
 {
     if (! (*this))
-        return;
-
-    if (markedAsNoDelay)
         return;
 
     assert ((unsigned short)(pool() - 1) != 0xFFFF);
