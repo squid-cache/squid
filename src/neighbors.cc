@@ -504,7 +504,6 @@ neighborsRegisterWithCacheManager()
 void
 neighbors_init(void)
 {
-    struct servent *sep = nullptr;
     const char *me = getMyHostname();
 
     neighborsRegisterWithCacheManager();
@@ -537,7 +536,7 @@ neighbors_init(void)
 
     peerDnsRefreshStart();
 
-    sep = xgetservbyname("echo", "udp");
+    const auto sep = xgetservbyname("echo", "udp");
     echo_port = sep ? ntohs((unsigned short) sep->s_port) : 7;
 }
 

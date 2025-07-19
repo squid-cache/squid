@@ -460,7 +460,6 @@ main(int argc, char **argv)
 {
     struct sockaddr_in salocal;
     struct sockaddr_in saremote;
-    struct servent *svp;
     unsigned short svc_port;
     char username[MAXPWNAM];
     char passwd[MAXPASS];
@@ -528,7 +527,7 @@ main(int argc, char **argv)
     /*
      *    Open a connection to the server.
      */
-    svp = xgetservbyname(svc_name, "udp");
+    const auto svp = xgetservbyname(svc_name, "udp");
     if (svp != nullptr)
         svc_port = ntohs((unsigned short) svp->s_port);
     else
