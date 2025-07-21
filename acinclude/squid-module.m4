@@ -26,7 +26,7 @@ AC_DEFUN([SQUID_MODULE],[
 
   AH_TEMPLATE([]PPVARIABLE[],[Define to have $3])
   AC_ARG_ENABLE([]FEATURE[],
-    AS_HELP_STRING([--disable-FEATURE],[$3. $4]),
+    AS_HELP_STRING([--enable-FEATURE="list of modules"],[$3. $4]),
     AS_CASE(["$enableval"],
       [""|yes],[ACVARIABLE="yes"],
       [no|none],[ACVARIABLE="no"],
