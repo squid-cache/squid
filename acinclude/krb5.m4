@@ -256,6 +256,19 @@ main(void)
   ])
 ])
 
+dnl FreeBSD port of heimdal-krb5.pc contains errors
+AC_DEFUN([SQUID_FIX_HEIMDAL_BROKEN_PKGCONF],[
+  # Fix:
+  #  libdir=/usr/local/lib/heindal (should be heimdal).
+  #  includedir=/usr/local/include/heindal (should be heimdal).
+  LIBHEIMDAL_KRB5_LIBS=`echo "$LIBHEIMDAL_KRB5_LIBS" | sed -e 's/heindal/heimdal/g'`
+
+  #  Libs: -L$ilibdirt -1krb5 (typos in $libdir and -lkrb5).
+  LIBHEIMDAL_KRB5_CFLAGS=`echo "$LIBHEIMDAL_KRB5_CFLAGS" | sed -e 's/heindal/heimdal/g' -e 's/ilibdirt/libdir/g' -e 's/1krb5/lkrb5/g'`
+
+  #  Extra -I flags like -Icom_err which don’t make sense.
+  # ignore for now, TODO strip if they actually cause issues.
+])
 
 dnl checks for existence of krb5 functions
 AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
