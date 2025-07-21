@@ -33,6 +33,7 @@ AC_DEFUN([SQUID_MODULE],[
       [CANDIDATES="$enableval"]
     )
   )
+  SQUID_CLEANUP_MODULES_LIST(CANDIDATES)
   $5
   SQUID_DEFINE_BOOL([]PPVARIABLE[],[${ACVARIABLE:-yes}],[FEATURE modules are expected to be available.])
   AM_CONDITIONAL([]AMVARIABLE[],[test "x$ACVARIABLE" != "xno"])
