@@ -28,7 +28,7 @@
 DelayId::DelayId () : pool_ (0), compositeId(nullptr), markedAsNoDelay(false)
 {}
 
-DelayId::DelayId(unsigned short aPool, const DelayIdComposite::Pointer &aCompositeId):
+DelayId::DelayId(const unsigned short aPool, const DelayIdComposite::Pointer &aCompositeId):
     pool_(aPool), compositeId(aCompositeId), markedAsNoDelay(false)
 {
     assert(pool_);
@@ -56,7 +56,7 @@ DelayId::operator == (DelayId const &rhs) const
 
 DelayId::operator bool() const
 {
-    return pool_ && !markedAsNoDelay;
+    return compositeId && !markedAsNoDelay;
 }
 
 /* create a delay Id for a given request */
@@ -130,8 +130,10 @@ DelayId::bytesWanted(int minimum, int maximum) const
 void
 DelayId::bytesIn(int qty)
 {
-    if (*this)
-        compositeId->bytesIn(qty);
+    if (! (*this))
+        return;
+
+    compositeId->bytesIn(qty);
 }
 
 void
