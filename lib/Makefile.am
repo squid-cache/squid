@@ -68,6 +68,4 @@ tests_testRFC1738_LDADD= \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB)
 
-tests_testRFC1738_LDFLAGS = $(LIBADD_DL)
-
 testHeaders: $(top_srcdir)/include/*.h
