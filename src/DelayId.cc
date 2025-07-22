@@ -56,7 +56,7 @@ DelayId::operator == (DelayId const &rhs) const
 
 DelayId::operator bool() const
 {
-    return pool_;
+    return pool_ && !markedAsNoDelay;
 }
 
 /* create a delay Id for a given request */
@@ -119,8 +119,7 @@ int
 DelayId::bytesWanted(int minimum, int maximum) const
 {
     const auto maxBytes = max(minimum, maximum);
-    return (!(*this) || markedAsNoDelay) ?
-           maxBytes : compositeId->bytesWanted(minimum, maxBytes);
+    return (*this) ? compositeId->bytesWanted(minimum, maxBytes) : maxBytes;
 }
 
 /*
@@ -131,13 +130,8 @@ DelayId::bytesWanted(int minimum, int maximum) const
 void
 DelayId::bytesIn(int qty)
 {
-    if (! (*this))
-        return;
-
-    if (markedAsNoDelay)
-        return;
-
-    compositeId->bytesIn(qty);
+    if (*this)
+        compositeId->bytesIn(qty);
 }
 
 void

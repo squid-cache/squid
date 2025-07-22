@@ -28,7 +28,13 @@ public:
     ~DelayId ();
     unsigned short pool() const;
     bool operator == (DelayId const &rhs) const;
+
+    /// Whether we may delay reading. This operator is meant to be used as an
+    /// optimization that helps avoid more expensive bytesWanted() computations.
+    /// \retval false if bytesWanted() called with a positive maximum limit
+    /// parameter will never return zero
     operator bool() const;
+
     int bytesWanted(int min, int max) const;
     void bytesIn (int qty);
     void setNoDelay(bool const);
