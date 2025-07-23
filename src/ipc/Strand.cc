@@ -117,8 +117,9 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 }
 
 void
-Ipc::Strand::handleRegistrationResponse(const StrandMessage &)
+Ipc::Strand::handleRegistrationResponse(const StrandMessage &msg)
 {
+    Assure(KidIdentifier == msg.strand.kidId);
     debugs(54, 6, "kid" << KidIdentifier << " registered");
     clearTimeout(); // we are done
 }
