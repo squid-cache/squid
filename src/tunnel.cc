@@ -721,7 +721,7 @@ TunnelStateData::Connection::setSoSplice(Connection &to_conn)
     const int s2 = to_conn.conn->fd;
 
 #if USE_DELAY_POOLS
-    if (delayId && !delayId.getNoDelay()) {
+    if (delayId) {
         debugs(97, 4, "no SO_SPLICE for delay pool target " << s1);
         so_spliced = -1;
         return -1;
