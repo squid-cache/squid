@@ -983,7 +983,7 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
     // TODO: Should we check receivedBodyTooLarge as well?
 
     if (!group) {
-        debugs(11,3, "no adapation needed");
+        debugs(11, 3, "no adaptation needed");
         setFinalReply(virginReply());
         processReplyBody();
         return;

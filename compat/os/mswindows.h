@@ -430,29 +430,29 @@ open(const char *filename, int oflag, int pmode = 0)
 #endif
 
 inline int
-read(int fd, void * buf, size_t siz)
+read(int fd, void * buf, size_t buf_size)
 {
     char l_so_type[sizeof(int)];
     int l_so_type_siz = sizeof(l_so_type);
     SOCKET sock = _get_osfhandle(fd);
 
     if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
-        return ::recv(sock, (char FAR *) buf, (int)siz, 0);
+        return ::recv(sock, (char FAR *) buf, (int)buf_size, 0);
     else
-        return _read(fd, buf, (unsigned int)siz);
+        return _read(fd, buf, (unsigned int)buf_size);
 }
 
 inline int
-write(int fd, const void * buf, size_t siz)
+write(int fd, const void * buf, size_t buf_size)
 {
     char l_so_type[sizeof(int)];
     int l_so_type_siz = sizeof(l_so_type);
     SOCKET sock = _get_osfhandle(fd);
 
     if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
-        return ::send(sock, (char FAR *) buf, siz, 0);
+        return ::send(sock, (char FAR *) buf, buf_size, 0);
     else
-        return _write(fd, buf, siz);
+        return _write(fd, buf, buf_size);
 }
 
 // stdlib <functional> definitions are required before std API redefinitions.

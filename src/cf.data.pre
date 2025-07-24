@@ -798,8 +798,8 @@ IF HAVE_AUTH_MODULE_BASIC
 		forced to lower case before user credentials are checked or stored.
 
 		Most user databases are case insensitive, allowing the same username to be
-		spelled using both lower and upper case letters. For such databases, any
-		casesenstive setting should work, but forcing usernames to lower case may
+		spelled using both lower and upper case letters. For such databases,
+		either setting should work, but forcing usernames to lower case may
 		still make a big difference for Squid internal caches like those used by
 		an external ACL with %un logformat code in FORMAT and a user_max_ip ACL.
 

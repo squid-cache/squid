@@ -2807,7 +2807,7 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     // Fix timeout to request_start_timeout
     resetReadTimeout(Config.Timeout.request_start_timeout);
     // Also reset receivedFirstByte_ flag to allow this timeout work in the case we have
-    // a bumbed "connect" request on non transparent port.
+    // a bumped "connect" request on non transparent port.
     receivedFirstByte_ = false;
     // Get more data to peek at Tls
     parsingTlsHandshake = true;

@@ -279,7 +279,7 @@ ACLChecklist::fastCheck(const ACLList * const list)
     // may use a mixture of fastCheck(void) and fastCheck(list) calls.
     const auto savedList = swapAcl(list);
 
-    // assume DENY/ALLOW on mis/matches due to action-free accessList
+    // assume DENY/ALLOW on mismatches/matches due to action-free accessList
     // matchAndFinish() takes care of the ALLOW case
     if (accessList)
         matchAndFinish(); // calls markFinished() on success

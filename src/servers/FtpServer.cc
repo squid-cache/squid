@@ -1467,7 +1467,7 @@ Ftp::Server::createDataConnection(Ip::Address cltAddr)
         // server IP the client is connecting to, it can be spoofed by Squid.
         //
         // In both cases some clients may refuse to accept data connections if
-        // these control connectin local-IP's are not used.
+        // these control connection local-IP's are not used.
         conn->setAddrs(clientConnection->local, cltAddr);
 
         // Using non-local addresses in TPROXY mode requires appropriate socket option.

@@ -1924,11 +1924,11 @@ uint64_t Adaptation::Icap::VirginBodyAct::offset() const
 Adaptation::Icap::Preview::Preview(): theWritten(0), theAd(0), theState(stDisabled)
 {}
 
-void Adaptation::Icap::Preview::enable(size_t anAd)
+void Adaptation::Icap::Preview::enable(size_t anAdvertisedSize)
 {
-    // TODO: check for anAd not exceeding preview size limit
+    // TODO: check for anAdvertisedSize not exceeding preview size limit
     Must(!enabled());
-    theAd = anAd;
+    theAd = anAdvertisedSize;
     theState = stWriting;
 }
 

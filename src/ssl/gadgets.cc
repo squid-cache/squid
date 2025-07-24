@@ -525,7 +525,7 @@ Ssl::ParseCommonNameAt(X509_NAME &name, const int cnIndex)
     return std::nullopt;
 }
 
-/// Adds a new subjectAltName extension contining Subject CN or returns false
+/// Adds a new subjectAltName extension containing Subject CN or returns false
 /// expects the caller to check for the existing subjectAltName extension
 static bool
 addAltNameWithSubjectCn(Security::CertPointer &cert)
