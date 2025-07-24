@@ -7356,6 +7356,10 @@ DOC_START
 	amount.  If no data is read again after this amount of time,
 	the request is aborted and logged with ERR_READ_TIMEOUT.
 
+	For a tunnel connection with SO_SPLICE enabled, the timeout is
+	checked per interval specified by this option. Therefore, the timeout
+	is detected within this amount of time and double of it.
+
 	The default is 15 minutes.
 DOC_END
 
@@ -10904,6 +10908,17 @@ DOC_START
 	The following Happy Eyeballs directives place additional connection
 	opening restrictions: happy_eyeballs_connect_timeout and
 	happy_eyeballs_connect_gap. See the former for related terminology.
+DOC_END
+
+NAME: so_splice
+TYPE: YesNoNone
+DEFAULT: none
+DEFAULT_DOC: "on" where SO_SPLICE is supported.
+LOC: Config.soSplice
+DOC_START
+    Enable kernel-level TCP proxying (SO_SPLICE) for TCP_TUNNEL.
+    
+    SO_SPLICE is not enabled for delay pool target connections.
 DOC_END
 
 EOF

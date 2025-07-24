@@ -88,6 +88,7 @@ public:
 
     YesNoNone memShared; ///< whether the memory cache is shared among workers
     YesNoNone shmLocking; ///< shared_memory_locking
+    YesNoNone soSplice; ///< SO_SPLICE
     size_t memMaxSize;
 
     struct {
