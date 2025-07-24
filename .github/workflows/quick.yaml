@@ -29,6 +29,8 @@ env:
   # empty except for pull_request events
   PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
 
+  GH_TOKEN: ${{ github.token }}
+
   # Full clones of Squid repository branches (depth=19000+) waste resources,
   # while excessively shallow clones break tests that check for past commits
   # (e.g., to skip a particular test until a known bug is fixed) or generate
