@@ -29,6 +29,7 @@ env:
   # empty except for pull_request events
   PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
 
+  #enables GitHub CLI (gh)
   GH_TOKEN: ${{ github.token }}
 
   # Full clones of Squid repository branches (depth=19000+) waste resources,
