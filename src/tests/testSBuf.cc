@@ -426,7 +426,7 @@ TestSBuf::testComparisons()
     CPPUNIT_ASSERT(s1 < s2);
     // specifying the max-length and overhanging size
     CPPUNIT_ASSERT_EQUAL(1,SBuf("foolong").caseCmp(SBuf("foo"), 5));
-    // case-insensive comaprison
+    // case-insensive comparison
     s1 = "foo";
     s2 = "fOo";
     CPPUNIT_ASSERT_EQUAL(0,s1.caseCmp(s2));
