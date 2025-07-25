@@ -330,8 +330,8 @@ mimicAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mi
     if (addKeyId) {
         X509_EXTENSION *ext;
         // Check if the issuer has the Subject Key Identifier extension
-        const int indx = X509_get_ext_by_NID(issuerCert.get(), NID_subject_key_identifier, -1);
-        if (indx >= 0 && (ext = X509_get_ext(issuerCert.get(), indx))) {
+        const int index = X509_get_ext_by_NID(issuerCert.get(), NID_subject_key_identifier, -1);
+        if (index >= 0 && (ext = X509_get_ext(issuerCert.get(), index))) {
             issuerKeyId.reset((ASN1_OCTET_STRING *)X509V3_EXT_d2i(ext));
         }
     }
@@ -525,7 +525,7 @@ Ssl::ParseCommonNameAt(X509_NAME &name, const int cnIndex)
     return std::nullopt;
 }
 
-/// Adds a new subjectAltName extension contining Subject CN or returns false
+/// Adds a new subjectAltName extension containing Subject CN or returns false
 /// expects the caller to check for the existing subjectAltName extension
 static bool
 addAltNameWithSubjectCn(Security::CertPointer &cert)

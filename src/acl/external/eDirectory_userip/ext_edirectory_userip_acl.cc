@@ -986,7 +986,7 @@ SearchFilterLDAP(edui_ldap_t *l, char *group)
 /*
  * SearchLDAP() - <edui_ldap_t> <scope> <filter> <attrib>
  *
- * Initate LDAP query, under <scope> levels, filtering matches with <filter> and optionally <attrib>
+ * Initiate LDAP query, under <scope> levels, filtering matches with <filter> and optionally <attrib>
  * <attrib> will generally be networkAddress ...
  *
  */

@@ -53,7 +53,7 @@ static EVH wccp2AssignBuckets;
 #define WCCP2_NUMPORTS  8
 #define WCCP2_PASSWORD_LEN  8 + 1 /* + 1 for C-string NUL terminator */
 
-/* WCCPv2 Pakcet format structures */
+/* WCCPv2 Packet format structures */
 /* Defined in draft-wilson-wccp-v2-12-oct-2001.txt */
 
 /** \interface WCCPv2_Protocol

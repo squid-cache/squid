@@ -338,7 +338,7 @@ validUsername(const char *user)
         return 0;
     while (p[0] && p[1]) {
         if (xisspace(p[0])) {
-            /* More than one consequitive space? */
+            /* More than one consecutive space? */
             if (xisspace(p[1]))
                 return 0;
             /* or odd space type character used? */

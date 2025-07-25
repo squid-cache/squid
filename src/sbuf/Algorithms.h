@@ -38,7 +38,7 @@ private:
     SBufCaseSensitive sensitivity_;
 };
 
-/** SBuf size addition accumulator for STL contaniners
+/** SBuf size addition accumulator for STL containers
  *
  * Equivalent to prefix_length +  SBuf.length() +  separator.length()
  */

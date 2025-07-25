@@ -2103,7 +2103,7 @@ Changes to squid-3.3.0.3 (09 Jan 2013):
 Changes to squid-3.3.0.2 (03 Dec 2012):
 
 	- Support matching empty header field values using req_header and rep_header
-	- ... and some minor code polish and input vaidations
+	- ... and some minor code polish and input validation
 	- ... and all changes from squid 3.2.4
 
 Changes to squid-3.3.0.1 (21 Oct 2012):

@@ -92,7 +92,7 @@ protected:
     /// Called after each negotiation step to handle the result
     void handleNegotiationResult(const Security::IoResult &);
 
-    /// Called when the openSSL SSL_connect fnction request more data from
+    /// Called when the openSSL SSL_connect function request more data from
     /// the remote SSL server. Sets the read timeout and sets the
     /// Squid COMM_SELECT_READ handler.
     void noteWantRead();

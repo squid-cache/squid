@@ -1058,7 +1058,7 @@ ACLExternal::startLookup(ACLFilledChecklist *ch, external_acl_data *acl, bool in
         state->queue = oldstate->queue;
         oldstate->queue = state;
     } else {
-        /* No pending lookup found. Sumbit to helper */
+        /* No pending lookup found. Submit to helper */
 
         MemBuf buf;
         buf.init();

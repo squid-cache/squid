@@ -1035,7 +1035,7 @@ clientReplyContext::checkTransferDone()
 
     /*
      * Handle STORE_OK objects.
-     * objectLen(entry) will be set proprely.
+     * objectLen(entry) will be set properly.
      * RC: Does objectLen(entry) include the Headers?
      * RC: Yes.
      */

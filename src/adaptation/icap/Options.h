@@ -80,7 +80,7 @@ protected:
         TransferKind kind; // to simplify caller's life
     };
 
-    // varios Transfer-* lists
+    // various Transfer-* lists
     struct Transfers {
         TransferList preview;
         TransferList ignore;
