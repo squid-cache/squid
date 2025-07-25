@@ -35,7 +35,7 @@ public:
 
         ReuseDecision(const StoreEntry *e, const Http::StatusCode code);
         /// stores the corresponding decision
-        Answers make(const Answers, const char *why);
+        Answers make(const Answers ans, const char *why);
 
         Answers answer; ///< the decision id
         const char *reason; ///< the decision reason
