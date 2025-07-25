@@ -1243,7 +1243,7 @@ Ftp::Gateway::loginFailed()
     }
 
     failed(ERR_NONE, ctrl.replycode, err);
-    // any other problems are general falures.
+    // any other problems are general failures.
 
     HttpReply *newrep = err->BuildHttpReply();
     delete err;

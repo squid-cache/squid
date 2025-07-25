@@ -177,7 +177,7 @@ rfc1035QuestionPack(char *buf,
  * of the rfc1035_message structure.
  *
  * Updates the buffer offset, which is the same as number of
- * octects unpacked since the header starts at offset 0.
+ * octets unpacked since the header starts at offset 0.
  *
  * Returns 0 (success) or 1 (error)
  */

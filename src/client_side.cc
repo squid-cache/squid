@@ -1080,7 +1080,7 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
-    // XXX: re-use proper URL parser for this
+    // XXX: reuse proper URL parser for this
     SBuf url = hp->requestUri(); // use full provided URI if we abort
     do { // use a loop so we can break out of it
         ::Parser::Tokenizer tok(url);
@@ -2089,7 +2089,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     * Just close the connection to not confuse browsers
     * using persistent connections. Some browsers open
     * a connection and then do not use it until much
-    * later (presumeably because the request triggering
+    * later (presumably because the request triggering
     * the open has already been completed on another
     * connection)
     */
@@ -2323,7 +2323,7 @@ clientNegotiateSSL(int fd, void *data)
 #elif (ALLOW_ALWAYS_SSL_SESSION_DETAIL == 1)
 
             /* When using gcc 3.3.x and OpenSSL 0.9.7x sometimes a compile error can occur here.
-            * This is caused by an unpredicatble gcc behaviour on a cast of the first argument
+            * This is caused by an unpredictable gcc behaviour on a cast of the first argument
             * of PEM_ASN1_write(). For this reason this code section is disabled. To enable it,
             * define ALLOW_ALWAYS_SSL_SESSION_DETAIL=1.
             * Because there are two possible usable cast, if you get an error here, try the other
@@ -2603,7 +2603,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
                 else if (ca->alg == Ssl::algSetValidBefore)
                     certProperties.setValidBefore = true;
 
-                debugs(33, 5, "Matches certificate adaptation aglorithm: " <<
+                debugs(33, 5, "Matches certificate adaptation algorithm: " <<
                        alg << " param: " << (param ? param : "-"));
             }
         }

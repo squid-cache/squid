@@ -27,7 +27,7 @@ AnyP::ProtocolVersion ProtocolVersion();
 /// Create an internal HttpReply structure to house FTP control response info.
 HttpReply *HttpReplyWrapper(const int ftpStatus, const char *ftpReason, const Http::StatusCode httpStatus, const int64_t clen);
 
-/* FTP Commands used by Squid. ALLCAPS case. Safe for static initializaton. */
+/* FTP Commands used by Squid. ALLCAPS case. Safe for static initialization. */
 const SBuf &cmdAppe();
 const SBuf &cmdAuth();
 const SBuf &cmdCwd();

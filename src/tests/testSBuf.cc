@@ -920,7 +920,7 @@ TestSBuf::testReserve()
         for (SBuf::size_type filled = 0; filled < requirements.maxCapacity +5; ++filled) {
             CPPUNIT_ASSERT_EQUAL(b.length(), min(filled, requirements.maxCapacity));
             auto x = b.reserve(requirements);
-            // the amount of space advertized must not cause users to exceed capacity
+            // the amount of space advertised must not cause users to exceed capacity
             CPPUNIT_ASSERT(x <= requirements.maxCapacity - filled);
             CPPUNIT_ASSERT(b.spaceSize() <= requirements.maxCapacity - filled);
             // the total size of buffer must not cause users to exceed capacity
