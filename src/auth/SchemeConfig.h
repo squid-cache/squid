@@ -54,7 +54,7 @@ public:
     /// already configured.
     static SchemeConfig *GetParsed(const char *proxy_auth);
     SchemeConfig() : authenticateChildren(20) {}
-
+    SchemeConfig(SchemeConfig &&) = delete; // no support for copying/moving of any kind
     virtual ~SchemeConfig() {}
 
     /**
