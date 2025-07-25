@@ -729,6 +729,12 @@ collectAuthors ()
     if test -n "${PULL_REQUEST_NUMBER}"
     then
         vettedByPr=`gh pr view $PULL_REQUEST_NUMBER --json body --jq ".body | test(\"${vettedPhraseRegex}\")"`
+        ghResult=$?
+        if test $ghResult -ne 0
+        then
+            echo "ERROR: Unable to determine whether the PR description contains the vetting phrase"
+            return 1
+        fi
     fi
 
     if test "x$vettedByPr" = xtrue
