@@ -14,6 +14,7 @@
 
 #if USE_ICMP
 
+#include "compat/socket.h"
 #include "debug/Stream.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
@@ -97,7 +98,7 @@ Icmp6::~Icmp6()
 int
 Icmp6::Open(void)
 {
-    icmp_sock = socket(PF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
+    icmp_sock = xsocket(PF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
 
     if (icmp_sock < 0) {
         int xerrno = errno;
@@ -172,12 +173,12 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     debugs(42, 5, "Send Icmp6 packet to " << to << ".");
 
-    x = sendto(icmp_sock,
-               (const void *) pkt,
-               icmp6_pktsize,
-               0,
-               S->ai_addr,
-               S->ai_addrlen);
+    x = xsendto(icmp_sock,
+                pkt,
+                icmp6_pktsize,
+                0,
+                S->ai_addr,
+                S->ai_addrlen);
 
     if (x < 0) {
         int xerrno = errno;
@@ -215,12 +216,12 @@ Icmp6::Recv(void)
 
     Ip::Address::InitAddr(from);
 
-    n = recvfrom(icmp_sock,
-                 (void *)pkt,
-                 MAX_PKT6_SZ,
-                 0,
-                 from->ai_addr,
-                 &from->ai_addrlen);
+    n = xrecvfrom(icmp_sock,
+                  pkt,
+                  MAX_PKT6_SZ,
+                  0,
+                  from->ai_addr,
+                  &from->ai_addrlen);
 
     if (n <= 0) {
         debugs(42, DBG_CRITICAL, "ERROR: when calling recvfrom() on ICMPv6 socket.");

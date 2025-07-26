@@ -45,6 +45,8 @@
 #if USE_ICMP
 
 #include "base/Stopwatch.h"
+#include "compat/select.h"
+#include "compat/socket.h"
 #include "Icmp4.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
@@ -101,7 +103,6 @@ int
 main(int, char **)
 {
     fd_set R;
-    int x;
     int max_fd = 0;
 
     /*
@@ -205,7 +206,7 @@ main(int, char **)
         FD_SET(squid_link, &R);
         Stopwatch timer;
         timer.resume();
-        x = select(max_fd+1, &R, nullptr, nullptr, &tv);
+        const auto x = xselect(max_fd+1, &R, nullptr, nullptr, &tv);
         getCurrentTime();
 
         if (x < 0) {
@@ -228,7 +229,7 @@ main(int, char **)
 
         const auto delay = std::chrono::duration_cast<std::chrono::seconds>(timer.total());
         if (delay >= PingerTimeout) {
-            if (send(LINK_TO_SQUID, &tv, 0, 0) < 0) {
+            if (xsend(LINK_TO_SQUID, &tv, 0, 0) < 0) {
                 debugs(42, DBG_CRITICAL, "Closing. No requests in last " << delay.count() << " seconds.");
                 control.Close();
                 exit(EXIT_FAILURE);
@@ -244,7 +245,7 @@ main(int, char **)
 
 #include <ostream>
 int
-main(int argc, char *argv[])
+main(int, char *argv[])
 {
     std::cerr << argv[0] << ": ICMP support not compiled in." << std::endl;
     return EXIT_FAILURE;

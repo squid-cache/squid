@@ -45,6 +45,8 @@ libcompatsquid_la_SOURCES = \
 	memrchr.cc \
 	memrchr.h \
 	mswindows.cc \
+	netdb.cc \
+	netdb.h \
 	os/aix.h \
 	os/android.h \
 	os/dragonfly.h \
@@ -63,8 +65,12 @@ libcompatsquid_la_SOURCES = \
 	os/sunos.h \
 	osdetect.h \
 	pipe.h \
+	select.cc \
+	select.h \
 	shm.cc \
 	shm.h \
+	socket.cc \
+	socket.h \
 	statvfs.cc \
 	statvfs.h \
 	stdio.h \
@@ -72,9 +78,13 @@ libcompatsquid_la_SOURCES = \
 	strtoll.h \
 	tempnam.h \
 	types.h \
+	unistd.cc \
+	unistd.h \
 	valgrind.h \
 	win32_maperror.cc \
 	win32_maperror.h \
+	wserrno.cc \
+	wserrno.h \
 	xalloc.cc \
 	xalloc.h \
 	xis.h \

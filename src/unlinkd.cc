@@ -11,6 +11,8 @@
 #include "squid.h"
 
 #if USE_UNLINKD
+#include "compat/select.h"
+#include "compat/unistd.h"
 #include "fd.h"
 #include "fde.h"
 #include "fs_io.h"
@@ -40,7 +42,6 @@ unlinkdUnlink(const char *path)
 {
     char buf[MAXPATHLEN];
     int l;
-    int bytes_written;
     static int queuelen = 0;
 
     if (unlinkd_wfd < 0) {
@@ -74,7 +75,7 @@ unlinkdUnlink(const char *path)
         FD_SET(unlinkd_rfd, &R);
         to.tv_sec = 0;
         to.tv_usec = 100000;
-        select(unlinkd_rfd + 1, &R, nullptr, nullptr, &to);
+        xselect(unlinkd_rfd + 1, &R, nullptr, nullptr, &to);
 #endif
     }
 
@@ -85,10 +86,9 @@ unlinkdUnlink(const char *path)
     * decrement the queue size by the number of newlines read.
     */
     if (queuelen > 0) {
-        int bytes_read;
         int i;
         char rbuf[512];
-        bytes_read = read(unlinkd_rfd, rbuf, 511);
+        const auto bytes_read = xread(unlinkd_rfd, rbuf, 511);
 
         if (bytes_read > 0) {
             rbuf[bytes_read] = '\0';
@@ -106,7 +106,7 @@ unlinkdUnlink(const char *path)
     xstrncpy(buf, path, MAXPATHLEN);
     buf[l] = '\n';
     ++l;
-    bytes_written = write(unlinkd_wfd, buf, l);
+    const auto bytes_written = xwrite(unlinkd_wfd, buf, l);
 
     if (bytes_written < 0) {
         int xerrno = errno;
