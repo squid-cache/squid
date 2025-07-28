@@ -712,8 +712,7 @@ run_ checkMakeNamedErrorDetails || exit 1
 # A human authoring an official GitHub pull request containing a new
 # CONTRIBUTORS version (that they want to be used as a new vetting point)
 # should add a phrase matching $vettedPhraseRegex to the PR description.
-# Adding a phrase matching $vettedPhraseRegex renders the entire PR branch
-# vetted, i.e., CONTRIBUTORS for such PR branch is not updated.
+# Doing so blocks this function from updating CONTRIBUTORS.
 #
 # [1] As defined by the --update-contributors-since script parameter.
 collectAuthors ()
@@ -732,7 +731,7 @@ collectAuthors ()
         ghResult=$?
         if test $ghResult -ne 0
         then
-            echo "ERROR: Unable to determine whether the PR description contains the vetting phrase"
+            echo "ERROR: Cannot determine whether the PR description contains the vetting phrase"
             return 1
         fi
     fi
