@@ -707,11 +707,12 @@ run_ checkMakeNamedErrorDetails || exit 1
 # considered vetted:
 #
 # * authored (in "git log --author" sense) by squidadm,
-# * matching (in "git log --grep" sense) $vettedCommitPhraseRegex set below.
+# * matching (in "git log --grep" sense) $vettedPhraseRegex set below.
 #
 # A human authoring an official GitHub pull request containing a new
 # CONTRIBUTORS version (that they want to be used as a new vetting point)
-# should add a phrase matching $vettedCommitPhraseRegex to the PR description.
+# should add a phrase matching $vettedPhraseRegex to the PR description.
+# Doing so blocks this function from updating CONTRIBUTORS.
 #
 # [1] As defined by the --update-contributors-since script parameter.
 collectAuthors ()
@@ -721,13 +722,31 @@ collectAuthors ()
         return 0 # successfully did nothing, as requested
     fi
 
-    vettedCommitPhraseRegex='[Rr]eference point for automated CONTRIBUTORS updates'
+    vettedPhraseRegex='[Rr]eference point for automated CONTRIBUTORS updates'
+
+    vettedByPr=false
+    if test -n "${PULL_REQUEST_NUMBER}"
+    then
+        vettedByPr=`gh pr view $PULL_REQUEST_NUMBER --json body --jq ".body | test(\"${vettedPhraseRegex}\")"`
+        ghResult=$?
+        if test $ghResult -ne 0
+        then
+            echo "ERROR: Cannot determine whether the PR description contains the vetting phrase"
+            return $ghResult
+        fi
+    fi
+
+    if test "x$vettedByPr" = xtrue
+    then
+        echo 'successfully vetted by the PR description'
+        return 0
+    fi
 
     since="$UpdateContributorsSince"
     if test "x$UpdateContributorsSince" = xauto
     then
         # find the last CONTRIBUTORS commit vetted by a human
-        humanSha=`git log -n1 --format='%H' --grep="$vettedCommitPhraseRegex" CONTRIBUTORS`
+        humanSha=`git log -n1 --format='%H' --grep="$vettedPhraseRegex" CONTRIBUTORS`
         # find the last CONTRIBUTORS commit attributed to this script
         botSha=`git log -n1 --format='%H' --author=squidadm CONTRIBUTORS`
         if test "x$humanSha" = x && test "x$botSha" = x
@@ -765,7 +784,7 @@ collectAuthors ()
     # add collected new (co-)authors, if any, to CONTRIBUTORS
     ./scripts/update-contributors.pl --quiet < authors.tmp > CONTRIBUTORS.new || return
     updateIfChanged CONTRIBUTORS CONTRIBUTORS.new  \
-        "A human PR description should match: $vettedCommitPhraseRegex" || return
+        "A human PR description should match: $vettedPhraseRegex" || return
 
     rm -f authors.tmp
     return 0
