@@ -732,7 +732,7 @@ collectAuthors ()
         if test $ghResult -ne 0
         then
             echo "ERROR: Cannot determine whether the PR description contains the vetting phrase"
-            return 1
+            return $ghResult
         fi
     fi
 
