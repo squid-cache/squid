@@ -120,18 +120,6 @@ Auth::Negotiate::Config::active() const
     return authnegotiate_initialised == 1;
 }
 
-bool
-Auth::Negotiate::Config::configured() const
-{
-    if (authenticateProgram && (authenticateChildren.n_max != 0)) {
-        debugs(29, 9, "returning configured");
-        return true;
-    }
-
-    debugs(29, 9, "returning unconfigured");
-    return false;
-}
-
 void
 Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, Http::HdrType reqType, HttpRequest * request)
 {

@@ -1123,8 +1123,8 @@ Ftp::Gateway::buildTitleUrl()
 
     SBuf authority = request->url.authority(request->url.getScheme() != AnyP::PROTO_FTP);
 
-    title_url.append(authority.rawContent(), authority.length());
-    title_url.append(request->url.path().rawContent(), request->url.path().length());
+    title_url.append(authority);
+    title_url.append(request->url.path());
 
     base_href = "ftp://";
 
@@ -1139,8 +1139,8 @@ Ftp::Gateway::buildTitleUrl()
         base_href.append("@");
     }
 
-    base_href.append(authority.rawContent(), authority.length());
-    base_href.append(request->url.path().rawContent(), request->url.path().length());
+    base_href.append(authority);
+    base_href.append(request->url.path());
     base_href.append("/");
 }
 

@@ -11,7 +11,7 @@
 #include "squid.h"
 
 #if USE_WCCPv2
-
+#include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -24,6 +24,7 @@
 #include "Parsing.h"
 #include "SquidConfig.h"
 #include "Store.h"
+#include "tools.h"
 #include "wccp2.h"
 
 #define WCCP_PORT 2048
@@ -649,9 +650,12 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
     return (memcmp(md5Digest, md5_challenge, SQUID_MD5_DIGEST_LENGTH) == 0);
 }
 
-void
+static void
 wccp2Init(void)
 {
+    if (!IamPrimaryProcess())
+        return;
+
     Ip::Address_list *s;
     char *ptr;
     uint32_t service_flags;
@@ -945,9 +949,12 @@ wccp2Init(void)
     }
 }
 
-void
+static void
 wccp2ConnectionOpen(void)
 {
+    if (!IamPrimaryProcess())
+        return;
+
     struct sockaddr_in router, local, null;
     socklen_t local_len, router_len;
 
@@ -1033,9 +1040,11 @@ wccp2ConnectionOpen(void)
     wccp2_connected = 1;
 }
 
-void
+static void
 wccp2ConnectionClose(void)
 {
+    if (!IamPrimaryProcess())
+        return;
 
     struct wccp2_service_list_t *service_list_ptr;
 
@@ -1101,6 +1110,16 @@ wccp2ConnectionClose(void)
     eventDelete(wccp2HereIam, nullptr);
     wccp2_connected = 0;
 }
+
+class Wccp2Rr : public RegisteredRunner
+{
+public:
+    void useConfig() override { wccp2Init(); wccp2ConnectionOpen(); }
+    void startReconfigure() override { wccp2ConnectionClose(); }
+    void syncConfig() override { wccp2ConnectionOpen(); }
+    void startShutdown() override { wccp2ConnectionClose(); }
+};
+DefineRunnerRegistrator(Wccp2Rr);
 
 /*
  * Functions for handling the requests.

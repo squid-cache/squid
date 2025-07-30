@@ -14,6 +14,7 @@
 #include "compat/unistd.h"
 #include "debug/Stream.h"
 #include "fatal.h"
+#include "Instance.h"
 #include "ipc/mem/Segment.h"
 #include "sbuf/SBuf.h"
 #include "SquidConfig.h"
@@ -275,8 +276,7 @@ Ipc::Mem::Segment::GenerateName(const char *id)
         if (name[name.size()-1] != '/')
             name.append('/');
     } else {
-        name.append('/');
-        name.append(service_name.c_str());
+        name.append(Instance::NamePrefix("/"));
         name.append('-');
     }
 
