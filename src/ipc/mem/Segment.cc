@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "compat/shm.h"
+#include "compat/unistd.h"
 #include "debug/Stream.h"
 #include "fatal.h"
 #include "Instance.h"
@@ -27,9 +28,6 @@
 #endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
 #endif
 
 // test cases change this
@@ -70,7 +68,7 @@ Ipc::Mem::Segment::~Segment()
 {
     if (theFD >= 0) {
         detach();
-        if (close(theFD) != 0) {
+        if (xclose(theFD) != 0) {
             int xerrno = errno;
             debugs(54, 5, "close " << theName << ": " << xstrerr(xerrno));
         }
