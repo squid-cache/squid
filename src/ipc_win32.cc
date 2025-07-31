@@ -126,7 +126,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     if (WIN32_OS_version != _WIN_OS_WINNT) {
         getsockopt(INVALID_SOCKET, SOL_SOCKET, SO_OPENTYPE, (char *) &opt, &optlen);
         opt = opt & ~(SO_SYNCHRONOUS_NONALERT | SO_SYNCHRONOUS_ALERT);
-        setsockopt(INVALID_SOCKET, SOL_SOCKET, SO_OPENTYPE, (char *) &opt, sizeof(opt));
+        setsockopt(INVALID_SOCKET, SOL_SOCKET, SO_OPENTYPE, reinterpret_cast<char *>(&opt), sizeof(opt));
     }
 
     if (type == IPC_TCP_SOCKET) {
@@ -166,7 +166,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     if (WIN32_OS_version != _WIN_OS_WINNT) {
         getsockopt(INVALID_SOCKET, SOL_SOCKET, SO_OPENTYPE, (char *) &opt, &optlen);
         opt = opt | SO_SYNCHRONOUS_NONALERT;
-        setsockopt(INVALID_SOCKET, SOL_SOCKET, SO_OPENTYPE, (char *) &opt, optlen);
+        setsockopt(INVALID_SOCKET, SOL_SOCKET, SO_OPENTYPE, reinterpret_cast<char *>(&opt), optlen);
     }
 
     if (crfd < 0) {

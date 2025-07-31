@@ -990,7 +990,7 @@ wccp2ConnectionOpen(void)
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
     {
         int i = IP_PMTUDISC_DONT;
-        if (setsockopt(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i) < 0) {
+        if (setsockopt(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, reinterpret_cast<char *>(&i), sizeof(i)) < 0) {
             int xerrno = errno;
             debugs(80, 2, "WARNING: Path MTU discovery could not be disabled on FD " << theWccp2Connection << ": " << xstrerr(xerrno));
         }
