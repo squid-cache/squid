@@ -42,7 +42,7 @@
  *
  * basic_radius_auth-1.0 is based on modules from the Cistron-radiusd-1.5.4.
  *
- * Currently you should only start 1 authentificator at a time because the
+ * Currently you should only start 1 authenticator at a time because the
  * the ID's of the different programs can start to conflict. I'm not sure it
  * would help anyway. I think the RADIUS server is close by and I don't think
  * it will handle requests in parallel anyway (correct me if I'm wrong here)

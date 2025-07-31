@@ -851,7 +851,7 @@ tunnelTimeout(const CommTimeoutCbParams &io)
 {
     TunnelStateData *tunnelState = static_cast<TunnelStateData *>(io.data);
     debugs(26, 3, io.conn);
-    /* Temporary lock to protect our own feets (comm_close -> tunnelClientClosed -> Free) */
+    /* Temporary lock to protect our own feet (comm_close -> tunnelClientClosed -> Free) */
     CbcPointer<TunnelStateData> safetyLock(tunnelState);
 
     tunnelState->closeConnections();
@@ -1097,7 +1097,7 @@ tunnelErrorComplete(int fd/*const Comm::ConnectionPointer &*/, void *data, size_
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, "FD " << fd);
     assert(tunnelState != nullptr);
-    /* temporary lock to save our own feets (comm_close -> tunnelClientClosed -> Free) */
+    /* temporary lock to save our own feet (comm_close -> tunnelClientClosed -> Free) */
     CbcPointer<TunnelStateData> safetyLock(tunnelState);
 
     if (Comm::IsConnOpen(tunnelState->client.conn))

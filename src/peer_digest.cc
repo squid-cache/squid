@@ -682,7 +682,7 @@ PeerDigest::noteFetchFinished(const DigestFetchState &finishedFetch, const char 
         /* XXX: ugly condition, but how? */
 
         if (fetch->entry->store_status == STORE_OK)
-            debugs(72, 2, "re-used old digest from " << host);
+            debugs(72, 2, "reused old digest from " << host);
         else
             debugs(72, 2, "received valid digest from " << host);
     }

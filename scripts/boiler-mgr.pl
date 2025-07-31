@@ -74,7 +74,7 @@ my $reClaimPrefix = qr{
     Portions\s
 }xi;
 
-# We have persmission to move these frequent claims to CONTRIBUTORS.
+# We have permission to move these frequent claims to CONTRIBUTORS.
 my $reClaimsOkToMove = qr{
     Robert.Collins|<robertc\@squid-cache.org>|<rbtcollins\@hotmail.com>|
 

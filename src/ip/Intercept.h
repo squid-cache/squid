@@ -24,7 +24,7 @@ class Address;
  \par
  * There is no formal state-machine for transparency and interception
  * instead there is this neutral API which other connection state machines
- * and the comm layer use to co-ordinate their own state for transparency.
+ * and the comm layer use to coordinate their own state for transparency.
  */
 class Intercept
 {

@@ -18,8 +18,8 @@ public:
     int aliveCount;     /* created but not destroyed (count) */
     int seenCount;      /* number of fields we've seen */
     int parsCount;      /* number of parsing attempts */
-    int errCount;       /* number of pasring errors */
-    int repCount;       /* number of repetitons */
+    int errCount;       /* number of parsing errors */
+    int repCount;       /* number of repetitions */
 };
 
 #endif /* SQUID_SRC_HTTPHEADERFIELDSTAT_H */

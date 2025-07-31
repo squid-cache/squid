@@ -21,9 +21,9 @@ namespace One {
  * upgrading HTTP/0.9 syntax responses to HTTP/1.1
  *
  * Works on a raw character I/O buffer and tokenizes the content into
- * the major CRLF delimited segments of an HTTP/1 respone message:
+ * the major CRLF delimited segments of an HTTP/1 response message:
  *
- * \li status-line (version SP status SP reash-phrase)
+ * \li status-line (version SP status SP reason-phrase)
  * \li mime-header (set of RFC2616 syntax header fields)
  */
 class ResponseParser : public Http1::Parser
@@ -41,7 +41,7 @@ public:
     Http1::Parser::size_type firstLineSize() const override;
     bool parse(const SBuf &aBuf) override;
 
-    /* respone specific fields, read-only */
+    /* response specific fields, read-only */
     Http::StatusCode messageStatus() const { return statusCode_;}
     SBuf reasonPhrase() const { return reasonPhrase_;}
 

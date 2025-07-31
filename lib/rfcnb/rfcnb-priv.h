@@ -78,7 +78,7 @@ struct redirect_addr {
 
 typedef struct RFCNB_Con {
 
-    int fd;                     /* File descripter for TCP/IP connection */
+    int fd;                     /* File descriptor for TCP/IP connection */
     int errn;                   /* last error                            */
     int timeout;                /* How many milli-secs before IO times out */
     int redirects;              /* How many times we were redirected     */

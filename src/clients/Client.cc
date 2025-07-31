@@ -446,7 +446,7 @@ Client::getMoreRequestBody(MemBuf &buf)
     return requestBodySource->getMoreData(buf);
 }
 
-// Compares hosts in urls, returns false if different, no sheme, or no host.
+// Compares hosts in urls, returns false if different, no scheme, or no host.
 static bool
 sameUrlHosts(const char *url1, const char *url2)
 {
@@ -983,7 +983,7 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
     // TODO: Should we check receivedBodyTooLarge as well?
 
     if (!group) {
-        debugs(11,3, "no adapation needed");
+        debugs(11, 3, "no adaptation needed");
         setFinalReply(virginReply());
         processReplyBody();
         return;

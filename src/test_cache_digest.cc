@@ -55,7 +55,7 @@ typedef struct {
 } RawAccessLogEntry;
 
 typedef enum {
-    frError = -2, frMore = -1, frEof = 0, frOk = 1
+    frError = -2, frMore = -1, frEof = 0, frSuccess = 1
 } fr_result;
 
 typedef struct _FileIterator FileIterator;
@@ -369,7 +369,7 @@ swapStateReader(FileIterator * fi)
         exit(-3);
     }
 
-    return frOk;
+    return frSuccess;
 }
 
 static fr_result
@@ -455,7 +455,7 @@ accessLogReader(FileIterator * fi)
 
     /*fprintf(stdout, "%s:%d: %s %s %s %s\n",
      * fname, count, method, storeKeyText(entry->key), url, hier); */
-    return frOk;
+    return frSuccess;
 }
 
 static void
