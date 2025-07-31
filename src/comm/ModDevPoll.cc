@@ -103,10 +103,10 @@ comm_flush_updates(void)
     );
 
     const auto i = xwrite(
-            devpoll_fd, /* open handle to /dev/poll */
-            devpoll_update.pfds, /* pointer to array of struct pollfd */
-            (devpoll_update.cur + 1) * sizeof(struct pollfd) /* bytes to process */
-        );
+                       devpoll_fd, /* open handle to /dev/poll */
+                       devpoll_update.pfds, /* pointer to array of struct pollfd */
+                       (devpoll_update.cur + 1) * sizeof(struct pollfd) /* bytes to process */
+                   );
     assert(i > 0);
     assert(static_cast<size_t>(i) == (sizeof(struct pollfd) * (devpoll_update.cur + 1)));
     devpoll_update.cur = -1; /* reset size of array, no elements remain */
