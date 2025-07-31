@@ -39,7 +39,8 @@
 #define MAX_RETRIES 2
 
 /// Helpers input buffer size.
-const size_t ReadBufSize(32*1024);
+/// Keep in sync with MAX_PAC_GROUP_SIZE until converted to SBuf
+const size_t ReadBufSize(128*1024);
 
 static IOCB helperHandleRead;
 static IOCB helperStatefulHandleRead;
