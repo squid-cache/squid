@@ -82,14 +82,14 @@ acl_nfmark::~acl_nfmark() STUB
 void Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &, fde *) STUB
 nfmark_t Ip::Qos::getNfConnmark(const Comm::ConnectionPointer &, const ConnectionDirection) STUB_RETVAL(-1)
 bool Ip::Qos::setNfConnmark(Comm::ConnectionPointer &, const ConnectionDirection, const Ip::NfMarkConfig &) STUB_RETVAL(false)
-int Ip::Qos::doTosLocalMiss(const Comm::ConnectionPointer &, const hier_code) STUB_RETVAL(-1)
-int Ip::Qos::doNfmarkLocalMiss(const Comm::ConnectionPointer &, const hier_code) STUB_RETVAL(-1)
-int Ip::Qos::doTosLocalHit(const Comm::ConnectionPointer &) STUB_RETVAL(-1)
-int Ip::Qos::doNfmarkLocalHit(const Comm::ConnectionPointer &) STUB_RETVAL(-1)
-int Ip::Qos::setSockTos(const Comm::ConnectionPointer &, tos_t) STUB_RETVAL(-1)
-int Ip::Qos::setSockTos(const int, tos_t, int) STUB_RETVAL(-1)
-int Ip::Qos::setSockNfmark(const Comm::ConnectionPointer &, nfmark_t) STUB_RETVAL(-1)
-int Ip::Qos::setSockNfmark(const int, nfmark_t) STUB_RETVAL(-1)
+bool Ip::Qos::doTosLocalMiss(const Comm::ConnectionPointer &, const hier_code) STUB_RETVAL(false)
+bool Ip::Qos::doNfmarkLocalMiss(const Comm::ConnectionPointer &, const hier_code) STUB_RETVAL(false)
+bool Ip::Qos::doTosLocalHit(const Comm::ConnectionPointer &) STUB_RETVAL(false)
+bool Ip::Qos::doNfmarkLocalHit(const Comm::ConnectionPointer &) STUB_RETVAL(false)
+bool Ip::Qos::setSockTos(const Comm::ConnectionPointer &, tos_t) STUB_RETVAL(false)
+bool Ip::Qos::setSockTos(const int, tos_t, int) STUB_RETVAL(false)
+bool Ip::Qos::setSockNfmark(const Comm::ConnectionPointer &, nfmark_t) STUB_RETVAL(false)
+bool Ip::Qos::setSockNfmark(const int, nfmark_t) STUB_RETVAL(false)
 Ip::Qos::Config::Config() STUB_NOP
 void Ip::Qos::Config::parseConfigLine() STUB
 void Ip::Qos::Config::dumpConfigLine(std::ostream &, const char *) const STUB

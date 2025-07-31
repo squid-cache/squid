@@ -18,6 +18,7 @@
 #include "comm/IoCallback.h"
 #include "comm/Loops.h"
 #include "comm/Read.h"
+#include "comm/SocketOptions.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "compat/cmsg.h"
@@ -210,11 +211,7 @@ static void
 commSetBindAddressNoPort(const int fd)
 {
 #if defined(IP_BIND_ADDRESS_NO_PORT)
-    int flag = 1;
-    if (setsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, reinterpret_cast<char*>(&flag), sizeof(flag)) < 0) {
-        const auto savedErrno = errno;
-        debugs(50, DBG_IMPORTANT, "ERROR: setsockopt(IP_BIND_ADDRESS_NO_PORT) failure: " << xstrerr(savedErrno));
-    }
+    (void)Comm::SetBooleanSocketOption(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, true, SBuf("IP_BIND_ADDRESS_NO_PORT"));
 #else
     (void)fd;
 #endif
@@ -291,16 +288,13 @@ limitError(int const anErrno)
 }
 
 static void
-comm_set_v6only(int fd, int tos)
+comm_set_v6only(int fd, bool enabled)
 {
-#ifdef IPV6_V6ONLY
-    if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, MYNAME << "setsockopt(IPV6_V6ONLY) " << (tos?"ON":"OFF") << " for FD " << fd << ": " << xstrerr(xerrno));
-    }
+#if defined(IPV6_V6ONLY)
+    (void)Comm::SetBooleanSocketOption(fd, IPPROTO_IPV6, IPV6_V6ONLY, enabled, SBuf("IPV6_V6ONLY"));
 #else
-    debugs(50, DBG_CRITICAL, MYNAME << "WARNING: setsockopt(IPV6_V6ONLY) not supported on this platform");
-#endif /* sockopt */
+    debugs(50, DBG_CRITICAL, "WARNING: setsockopt(IPV6_V6ONLY) not supported on this platform");
+#endif
 }
 
 /**
@@ -315,17 +309,20 @@ comm_set_transparent(int fd)
 #if _SQUID_LINUX_ && defined(IP_TRANSPARENT) // Linux
 # define soLevel SOL_IP
 # define soFlag  IP_TRANSPARENT
+    const SBuf name("IP_TRANSPARENT");
     bool doneSuid = false;
 
 #elif defined(SO_BINDANY) // OpenBSD 4.7+ and NetBSD with PF
 # define soLevel SOL_SOCKET
 # define soFlag  SO_BINDANY
+    const SBuf name("SO_BINDANY");
     enter_suid();
     bool doneSuid = true;
 
 #elif defined(IP_BINDANY) // FreeBSD with IPFW
 # define soLevel IPPROTO_IP
 # define soFlag  IP_BINDANY
+    const SBuf name("IP_BINDANY");
     enter_suid();
     bool doneSuid = true;
 
@@ -335,11 +332,7 @@ comm_set_transparent(int fd)
 #endif /* sockopt */
 
 #if defined(soLevel) && defined(soFlag)
-    int tos = 1;
-    if (setsockopt(fd, soLevel, soFlag, (char *) &tos, sizeof(int)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, MYNAME << "setsockopt(TPROXY) on FD " << fd << ": " << xstrerr(xerrno));
-    } else {
+    if (Comm::SetBooleanSocketOption(fd, soLevel, soFlag, true, name)) {
         /* mark the socket as having transparent options */
         fd_table[fd].flags.transparent = true;
     }
@@ -423,12 +416,12 @@ comm_openex(int sock_type,
     debugs(50, 3, "comm_openex: Opened socket " << conn << " : family=" << AI->ai_family << ", type=" << AI->ai_socktype << ", protocol=" << AI->ai_protocol );
 
     if ( Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.isIPv6() )
-        comm_set_v6only(conn->fd, 1);
+        comm_set_v6only(conn->fd, true);
 
     /* Windows Vista supports Dual-Sockets. BUT defaults them to V6ONLY. Turn it OFF. */
     /* Other OS may have this administratively disabled for general use. Same deal. */
     if ( Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING && addr.isIPv6() )
-        comm_set_v6only(conn->fd, 0);
+        comm_set_v6only(conn->fd, false);
 
     comm_init_opened(conn, note, AI);
     new_socket = comm_apply_flags(conn->fd, addr, flags, AI);
@@ -505,8 +498,7 @@ comm_apply_flags(int new_socket,
 
 #if defined(SO_REUSEPORT)
         if (flags & COMM_REUSEPORT) {
-            int on = 1;
-            if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEPORT, reinterpret_cast<char*>(&on), sizeof(on)) < 0) {
+            if (!Comm::SetBooleanSocketOption(new_socket, SOL_SOCKET, SO_REUSEPORT, true, ToSBuf("SO_REUSEPORT on ", addr))) {
                 const auto savedErrno = errno;
                 const auto errorMessage = ToSBuf("cannot enable SO_REUSEPORT socket option when binding to ",
                                                  addr, ": ", xstrerr(savedErrno));
@@ -770,10 +762,7 @@ commConfigureLinger(const int fd, const OnOff enabled)
 
     fd_table[fd].flags.harshClosureRequested = (l.l_onoff && !l.l_linger); // close(2) sends TCP RST if true
 
-    if (setsockopt(fd, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
-        const auto xerrno = errno;
-        debugs(50, DBG_CRITICAL, "ERROR: Failed to set closure behavior (SO_LINGER) for FD " << fd << ": " << xstrerr(xerrno));
-    }
+    (void)Comm::SetSocketOption(fd, SOL_SOCKET, SO_LINGER, l, ToSBuf("SO_LINGER (0 seconds) ", (l.l_onoff?"enabled":"disabled")));
 }
 
 /**
@@ -1011,29 +1000,16 @@ comm_remove_close_handler(int fd, AsyncCall::Pointer &call)
 static void
 commSetReuseAddr(int fd)
 {
-    int on = 1;
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
-    }
+    (void)Comm::SetBooleanSocketOption(fd, SOL_SOCKET, SO_REUSEADDR, true, SBuf("SO_REUSEADDR"));
 }
 
 static void
 commSetTcpRcvbuf(int fd, int size)
 {
-    if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(size)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
-    }
-    if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *) &size, sizeof(size)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
-    }
-#ifdef TCP_WINDOW_CLAMP
-    if (setsockopt(fd, SOL_TCP, TCP_WINDOW_CLAMP, (char *) &size, sizeof(size)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
-    }
+    (void)Comm::SetSocketOption(fd, SOL_SOCKET, SO_RCVBUF, size, ToSBuf("SO_RCVBUF to ", size, " bytes"));
+    (void)Comm::SetSocketOption(fd, SOL_SOCKET, SO_SNDBUF, size, ToSBuf("SO_SNDBUF to ", size, " bytes"));
+#if defined(TCP_WINDOW_CLAMP)
+    (void)Comm::SetSocketOption(fd, SOL_TCP, TCP_WINDOW_CLAMP, size, ToSBuf("TCP_WINDOW_CLAMP to ", size, " bytes"));
 #endif
 }
 
@@ -1118,20 +1094,13 @@ commSetCloseOnExec(int fd)
 #endif
 }
 
-#ifdef TCP_NODELAY
+#if defined(TCP_NODELAY)
 static void
 commSetTcpNoDelay(int fd)
 {
-    int on = 1;
-
-    if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
-    }
-
+    (void)Comm::SetBooleanSocketOption(fd, IPPROTO_TCP, TCP_NODELAY, true, SBuf("TCP_NODELAY"));
     fd_table[fd].flags.nodelay = true;
 }
-
 #endif
 
 void

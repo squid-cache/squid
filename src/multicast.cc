@@ -10,24 +10,20 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
-#include "debug/Stream.h"
+#include "comm/SocketOptions.h"
 // XXX: for icpIncomingConn - need to pass it as a generic parameter.
 #include "ICP.h"
 #include "ipcache.h"
 #include "multicast.h"
+#include "sbuf/Stream.h"
 
 int
 mcastSetTtl(int fd, int mcast_ttl)
 {
-#ifdef IP_MULTICAST_TTL
-    char ttl = (char) mcast_ttl;
-
-    if (setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, 1) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, "mcastSetTtl: FD " << fd << ", TTL: " << mcast_ttl << ": " << xstrerr(xerrno));
-    }
+#if defined(IP_MULTICAST_TTL)
+    auto ttl = char(mcast_ttl);
+    (void)Comm::SetSocketOption(fd, IPPROTO_IP, IP_MULTICAST_TTL, ttl, ToSBuf("IP_MULTICAST_TTL to ", mcast_ttl, " hops"));
 #endif
-
     return 0;
 }
 
@@ -54,14 +50,11 @@ mcastJoinGroups(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
 
         mr.imr_interface.s_addr = INADDR_ANY;
 
-        if (setsockopt(icpIncomingConn->fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *) &mr, sizeof(struct ip_mreq)) < 0)
-            debugs(7, DBG_IMPORTANT, "ERROR: Join failed for " << icpIncomingConn << ", Multicast IP=" << ip);
+        (void)Comm::SetSocketOption(icpIncomingConn->fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, mr,
+                                    ToSBuf("IP_ADD_MEMBERSHIP for multicast-IP=", ip, " on ICP listener ", icpIncomingConn));
 
-        char c = 0;
-        if (setsockopt(icpIncomingConn->fd, IPPROTO_IP, IP_MULTICAST_LOOP, &c, 1) < 0) {
-            int xerrno = errno;
-            debugs(7, DBG_IMPORTANT, "ERROR: " << icpIncomingConn << " can't disable multicast loopback: " << xstrerr(xerrno));
-        }
+        (void)Comm::SetBooleanSocketOption(icpIncomingConn->fd, IPPROTO_IP, IP_MULTICAST_LOOP, false,
+                                           ToSBuf("IP_MULTICAST_LOOP on ICP listener ", icpIncomingConn));
     }
 
 #endif
