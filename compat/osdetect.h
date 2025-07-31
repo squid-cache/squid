@@ -18,7 +18,7 @@
 /*
  * Define the _SQUID_TYPE_ based on a guess of the OS.
  *
- * NP: This MUST come first in compat.h with no OS-specific includes
+ * Note: This MUST come first in compat.h with no OS-specific includes
  *     or other definitions within this if-else structure.
  */
 
