@@ -34,6 +34,7 @@ MAKETEST="distcheck"
 #     distcheck target recursive tests beteen scripted runs.
 #     we use it to perform the same duty between our nested scripts.
 DISTCHECK_CONFIGURE_FLAGS=" \
+	--disable-arch-native \
 	--disable-build-info \
 	--disable-shared \
 	--disable-xmalloc-statistics \
