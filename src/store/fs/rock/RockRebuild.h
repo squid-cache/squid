@@ -6,16 +6,18 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_FS_ROCK_ROCKREBUILD_H
-#define SQUID_SRC_FS_ROCK_ROCKREBUILD_H
+#ifndef SQUID_SRC_STORE_FS_ROCK_ROCKREBUILD_H
+#define SQUID_SRC_STORE_FS_ROCK_ROCKREBUILD_H
+
+#if USE_STORE_FS_ROCK
 
 #include "base/AsyncJob.h"
 #include "base/RunnersRegistry.h"
 #include "cbdata.h"
-#include "fs/rock/forward.h"
 #include "ipc/mem/Pointer.h"
 #include "ipc/StoreMap.h"
 #include "MemBuf.h"
+#include "store/fs/rock/forward.h"
 #include "store_rebuild.h"
 
 namespace Rock
@@ -133,5 +135,5 @@ private:
 
 } // namespace Rock
 
-#endif /* SQUID_SRC_FS_ROCK_ROCKREBUILD_H */
-
+#endif /* USE_STORE_FS_ROCK */
+#endif /* SQUID_SRC_STORE_FS_ROCK_ROCKREBUILD_H */

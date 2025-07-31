@@ -6,13 +6,10 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_FS_UFS_STOREFSUFS_H
-#define SQUID_SRC_FS_UFS_STOREFSUFS_H
+#ifndef SQUID_SRC_STORE_FS_UFS_STOREFSUFS_H
+#define SQUID_SRC_STORE_FS_UFS_STOREFSUFS_H
 
-/**
- \defgroup UFS  UFS Storage Filesystem
- \ingroup FileSystems
- */
+#if USE_STORE_FS_UFS
 
 #include "StoreFileSystem.h"
 
@@ -23,8 +20,6 @@ namespace Fs
 namespace Ufs
 {
 /**
- \ingroup UFS, FileSystems
- *
  * Core UFS class. This template provides compile time aliases for
  * ufs/aufs/diskd to ease configuration conversion - each becomes a
  * StoreFS module whose createSwapDir method parameterises the common
@@ -72,5 +67,5 @@ StoreFSufs<C>::createSwapDir()
 } /* namespace Ufs */
 } /* namespace Fs */
 
-#endif /* SQUID_SRC_FS_UFS_STOREFSUFS_H */
-
+#endif /* USE_STORE_FS_UFS */
+#endif /* SQUID_SRC_STORE_FS_UFS_STOREFSUFS_H */

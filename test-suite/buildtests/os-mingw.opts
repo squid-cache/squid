@@ -18,7 +18,7 @@ MAKETEST="check installcheck uninstallcheck"
 #     we use it to perform the same duty between our nested scripts.
 DISTCHECK_CONFIGURE_FLAGS=" \
 	--prefix=c:/squid \
-	--enable-storeio="ufs,aufs" \
+	--enable-store-fs="ufs" \
 	--enable-removal-policies="lru,heap" \
 	--enable-delay-pools \
 	--enable-cache-digests \

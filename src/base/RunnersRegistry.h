@@ -20,7 +20,7 @@
  * those I/O modules really are.
  *
  * A module in this context is code providing a functionality or service to the
- * rest of Squid, such as src/DiskIO/Blocking, src/fs/ufs, or Cache Manager. To
+ * rest of Squid, such as src/DiskIO/Blocking, src/store/fs/ufs, or Cache Manager. To
  * receive notifications, a module must declare a RegisteredRunner child class
  * and implement the methods corresponding to the events the module is
  * interested in.

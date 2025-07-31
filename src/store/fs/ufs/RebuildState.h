@@ -6,13 +6,15 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_FS_UFS_REBUILDSTATE_H
-#define SQUID_SRC_FS_UFS_REBUILDSTATE_H
+#ifndef SQUID_SRC_STORE_FS_UFS_REBUILDSTATE_H
+#define SQUID_SRC_STORE_FS_UFS_REBUILDSTATE_H
+
+#if USE_STORE_FS_UFS
 
 #include "base/RefCount.h"
+#include "store/fs/ufs/UFSSwapDir.h"
+#include "store/fs/ufs/UFSSwapLogParser.h"
 #include "store_rebuild.h"
-#include "UFSSwapDir.h"
-#include "UFSSwapLogParser.h"
 
 class StoreEntry;
 
@@ -83,5 +85,5 @@ private:
 } /* namespace Ufs */
 } /* namespace Fs */
 
-#endif /* SQUID_SRC_FS_UFS_REBUILDSTATE_H */
-
+#endif /* USE_STORE_FS_UFS */
+#endif /* SQUID_SRC_STORE_FS_UFS_REBUILDSTATE_H */

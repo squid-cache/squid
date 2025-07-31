@@ -6,16 +6,18 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_FS_UFS_UFSSWAPDIR_H
-#define SQUID_SRC_FS_UFS_UFSSWAPDIR_H
+#ifndef SQUID_SRC_STORE_FS_UFS_UFSSWAPDIR_H
+#define SQUID_SRC_STORE_FS_UFS_UFSSWAPDIR_H
+
+#if USE_STORE_FS_UFS
 
 #include "SquidString.h"
 #include "Store.h"
 #include "store/Disk.h"
+#include "store/fs/ufs/UFSStrategy.h"
 #include "StoreIOState.h"
 #include "StoreSearch.h"
 #include "swap_log_op.h"
-#include "UFSStrategy.h"
 
 class HttpRequest;
 class ConfigOptionVector;
@@ -153,5 +155,6 @@ private:
 
 } //namespace Ufs
 } //namespace Fs
-#endif /* SQUID_SRC_FS_UFS_UFSSWAPDIR_H */
 
+#endif /* USE_STORE_FS_UFS */
+#endif /* SQUID_SRC_STORE_FS_UFS_UFSSWAPDIR_H */

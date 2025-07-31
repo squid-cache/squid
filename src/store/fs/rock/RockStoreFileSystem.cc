@@ -9,8 +9,8 @@
 /* DEBUG: section 92    Storage File System */
 
 #include "squid.h"
-#include "fs/rock/RockStoreFileSystem.h"
-#include "fs/rock/RockSwapDir.h"
+#include "store/fs/rock/RockStoreFileSystem.h"
+#include "store/fs/rock/RockSwapDir.h"
 
 Rock::StoreFileSystem::StoreFileSystem()
 {

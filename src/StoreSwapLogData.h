@@ -74,7 +74,7 @@ operator <<(std::ostream &os, const SwapChecksum24 &sum)
  *
  \par
  * Defines the structure of a binary swap.state file entry for UFS stores.
- * TODO: Move to fs/ufs
+ * TODO: Move to src/store/fs/ufs
  *
  \note StoreSwapLogData entries are written in native machine byte order
  *     They are not necessarily portable across architectures.

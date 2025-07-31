@@ -12,15 +12,15 @@
 #include "base/AsyncJobCalls.h"
 #include "compat/unistd.h"
 #include "debug/Messages.h"
-#include "fs/rock/RockDbCell.h"
-#include "fs/rock/RockRebuild.h"
-#include "fs/rock/RockSwapDir.h"
 #include "fs_io.h"
 #include "globals.h"
 #include "md5.h"
 #include "sbuf/Stream.h"
 #include "SquidMath.h"
 #include "Store.h"
+#include "store/fs/rock/RockDbCell.h"
+#include "store/fs/rock/RockRebuild.h"
+#include "store/fs/rock/RockSwapDir.h"
 #include "tools.h"
 
 #include <array>

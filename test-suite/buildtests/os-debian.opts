@@ -37,7 +37,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-dependency-tracking \
 	--enable-inline \
 	--enable-async-io=8 \
-	--enable-storeio="ufs,aufs,coss,diskd,null" \
+	--enable-store-fs="rock,ufs" \
 	--enable-removal-policies="lru,heap" \
 	--enable-poll \
 	--enable-delay-pools \

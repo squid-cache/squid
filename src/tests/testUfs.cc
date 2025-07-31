@@ -10,7 +10,6 @@
 #include "compat/cppunit.h"
 #include "DiskIO/DiskIOModule.h"
 #include "fde.h"
-#include "fs/ufs/UFSSwapDir.h"
 #include "globals.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
@@ -19,6 +18,7 @@
 #include "SquidConfig.h"
 #include "Store.h"
 #include "store/Disks.h"
+#include "store/fs/ufs/UFSSwapDir.h"
 #include "testStoreSupport.h"
 #include "unitTestMain.h"
 
