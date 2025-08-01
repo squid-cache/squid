@@ -1,0 +1,45 @@
+/*
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+#include "squid.h"
+#include "diskio/Mmapped/MmappedDiskIOModule.h"
+#include "diskio/Mmapped/MmappedIOStrategy.h"
+
+MmappedDiskIOModule::MmappedDiskIOModule()
+{
+    ModuleAdd(*this);
+}
+
+MmappedDiskIOModule &
+MmappedDiskIOModule::GetInstance()
+{
+    return Instance;
+}
+
+void
+MmappedDiskIOModule::init()
+{}
+
+void
+MmappedDiskIOModule::gracefulShutdown()
+{}
+
+DiskIOStrategy*
+MmappedDiskIOModule::createStrategy()
+{
+    return new MmappedIOStrategy();
+}
+
+MmappedDiskIOModule MmappedDiskIOModule::Instance;
+
+char const *
+MmappedDiskIOModule::type () const
+{
+    return "Mmapped";
+}
+
