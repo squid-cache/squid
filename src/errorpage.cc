@@ -841,6 +841,7 @@ ErrorState::~ErrorState()
     wordlistDestroy(&ftp.server_msg);
     safe_free(ftp.request);
     safe_free(ftp.reply);
+    safe_free(ftp.cwd_msg);
     safe_free(err_msg);
 #if USE_ERR_LOCALES
     if (err_language != Config.errorDefaultLanguage)

@@ -166,6 +166,7 @@ Ftp::DataChannel::DataChannel():
 
 Ftp::DataChannel::~DataChannel()
 {
+    xfree(host);
     delete readBuf;
 }
 
@@ -1165,6 +1166,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
 
         if (complete) {
             // use list->key for last_reply because s contains the new line
+            safe_free(ctrl.last_reply);
             ctrl.last_reply = xstrdup(list->key + 4);
             ctrl.replycode = atoi(list->key);
         }
