@@ -696,6 +696,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
             switch (*ct) {
 
             case '\t':
+                safe_free(p->name); // TODO: properly handle multiple p->name occurrences
                 p->name = xstrndup(ct + 1, l + 1);
                 break;
 
@@ -709,6 +710,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                 if (tmp != ct + 1)
                     break;  /* not a valid integer */
 
+                safe_free(p->date); // TODO: properly handle multiple p->name occurrences
                 p->date = xstrdup(ctime(&tm));
 
                 *(strstr(p->date, "\n")) = '\0';
@@ -2221,6 +2223,7 @@ Ftp::Gateway::completedListing()
     entry->lock("Ftp::Gateway");
     ErrorState ferr(ERR_DIR_LISTING, Http::scOkay, request.getRaw(), fwd->al);
     ferr.ftp.listing = &listing;
+    safe_free(ferr.ftp.cwd_msg);
     ferr.ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
     ferr.ftp.server_msg = ctrl.message;
     ctrl.message = nullptr;
