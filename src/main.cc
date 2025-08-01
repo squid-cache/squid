@@ -29,7 +29,7 @@
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
 #include "debug/Messages.h"
-#include "DiskIO/DiskIOModule.h"
+#include "diskio/DiskIOModule.h"
 #include "dns/forward.h"
 #include "errorpage.h"
 #include "event.h"
@@ -1408,9 +1408,9 @@ RegisterModules()
     CallRunnerRegistrator(TransientsRr);
     CallRunnerRegistratorIn(Dns, ConfigRr);
 
-#if HAVE_DISKIO_MODULE_IPCIO
+#if USE_DISKIO_IPCIO
     CallRunnerRegistrator(IpcIoRr);
-#endif
+#endif /* USE_DISKIO_IPCIO */
 
 #if HAVE_AUTH_MODULE_NTLM
     CallRunnerRegistrator(NtlmAuthRr);

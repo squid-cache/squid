@@ -39,7 +39,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-xmalloc-statistics \
 	--disable-async-io \
 	--disable-storeio \
-	--disable-disk-io \
+	--disable-diskio \
 	--disable-removal-policies \
 	--disable-icmp \
 	--disable-delay-pools \

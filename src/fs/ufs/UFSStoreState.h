@@ -9,8 +9,8 @@
 #ifndef SQUID_SRC_FS_UFS_UFSSTORESTATE_H
 #define SQUID_SRC_FS_UFS_UFSSTORESTATE_H
 
-#include "DiskIO/DiskFile.h"
-#include "DiskIO/IORequestor.h"
+#include "diskio/DiskFile.h"
+#include "diskio/IORequestor.h"
 #include "StoreIOState.h"
 
 #include <queue>

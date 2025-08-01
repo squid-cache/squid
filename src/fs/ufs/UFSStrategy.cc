@@ -11,7 +11,7 @@
 #include "squid.h"
 
 #include "base/IoManip.h"
-#include "DiskIO/DiskIOStrategy.h"
+#include "diskio/DiskIOStrategy.h"
 #include "UFSStoreState.h"
 #include "UFSStrategy.h"
 #include "UFSSwapDir.h"
