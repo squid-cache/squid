@@ -289,7 +289,7 @@ void Ipc::Coordinator::broadcastSignal(int sig) const
     for (SCI iter = strands_.begin(); iter != strands_.end(); ++iter) {
         debugs(54, 5, "signal " << sig << " to kid" << iter->kidId <<
                ", PID=" << iter->pid);
-        kill(iter->pid, sig);
+        xkill(iter->pid, sig);
     }
 }
 

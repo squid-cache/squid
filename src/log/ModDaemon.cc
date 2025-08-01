@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "cbdata.h"
 #include "comm/Loops.h"
+#include "compat/signal.h"
 #include "fatal.h"
 #include "fde.h"
 #include "globals.h"
@@ -261,7 +262,7 @@ logfile_mod_daemon_close(Logfile * lf)
         comm_close(ll->rfd);
         comm_close(ll->wfd);
     }
-    kill(ll->pid, SIGTERM);
+    xkill(ll->pid, SIGTERM);
     eventDelete(logfileFlushEvent, lf);
     xfree(ll);
     lf->data = nullptr;

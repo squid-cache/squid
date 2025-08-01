@@ -1686,7 +1686,7 @@ sendSignal(void)
     WIN32_sendSignal(opt_send_signal);
 #else
     const auto pid = Instance::Other();
-    if (kill(pid, opt_send_signal) &&
+    if (xkill(pid, opt_send_signal) &&
             /* ignore permissions if just running check */
             !(opt_send_signal == 0 && errno == EPERM)) {
         const auto savedErrno = errno;
