@@ -6,12 +6,14 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_FS_ROCK_ROCKIOSTATE_H
-#define SQUID_SRC_FS_ROCK_ROCKIOSTATE_H
+#ifndef SQUID_SRC_STORE_FS_ROCK_ROCKIOSTATE_H
+#define SQUID_SRC_STORE_FS_ROCK_ROCKIOSTATE_H
 
-#include "fs/rock/forward.h"
-#include "fs/rock/RockSwapDir.h"
+#if USE_STORE_FS_ROCK
+
 #include "sbuf/MemBlob.h"
+#include "store/fs/rock/forward.h"
+#include "store/fs/rock/RockSwapDir.h"
 
 class DiskFile;
 
@@ -106,5 +108,5 @@ private:
 
 } // namespace Rock
 
-#endif /* SQUID_SRC_FS_ROCK_ROCKIOSTATE_H */
-
+#endif /* USE_STORE_FS_ROCK */
+#endif /* SQUID_SRC_STORE_FS_ROCK_ROCKIOSTATE_H */

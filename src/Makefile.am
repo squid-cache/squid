@@ -36,7 +36,6 @@ SUBDIRS = \
 	format \
 	clients \
 	servers \
-	fs \
 	repl \
 	store \
 	DiskIO \
@@ -509,7 +508,6 @@ squid_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	libsquid.la \
-	fs/libfs.la \
 	DiskIO/libdiskio.la \
 	comm/libcomm.la \
 	ip/libip.la \
@@ -997,9 +995,9 @@ tests_testString_LDADD = \
 	$(XTRA_LIBS)
 tests_testString_LDFLAGS = $(LIBADD_DL)
 
-## Tests of fs/*
+## Tests of store/fs/*
 
-if ENABLE_FS_ROCK
+if ENABLE_STORE_FS_ROCK
 check_PROGRAMS += tests/testRock
 tests_testRock_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
@@ -1133,7 +1131,6 @@ tests_testRock_LDADD = \
 	parser/libparser.la \
 	libsquid.la \
 	comm/libcomm.la \
-	fs/libfs.la \
 	$(COMMON_LIBS) \
 	$(REPL_OBJS) \
 	DiskIO/libdiskio.la \
@@ -1168,7 +1165,7 @@ EXTRA_DIST += \
         tests/testStoreSupport.h
 endif
 
-if ENABLE_FS_UFS
+if ENABLE_STORE_FS_UFS
 check_PROGRAMS += tests/testUfs
 tests_testUfs_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
@@ -1310,7 +1307,6 @@ tests_testUfs_LDADD = \
 	acl/libstate.la \
 	acl/libapi.la \
 	libsquid.la \
-	fs/libfs.la \
 	mgr/libmgr.la \
 	$(REPL_OBJS) \
 	acl/libacls.la \
@@ -1482,7 +1478,6 @@ tests_testStore_LDADD= \
 	dns/libdns.la \
 	base/libbase.la \
 	ip/libip.la \
-	fs/libfs.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
 	mem/libmem.la \
@@ -1653,7 +1648,6 @@ tests_testDiskIO_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	comm/libcomm.la \
-	fs/libfs.la \
 	ipc/libipc.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
@@ -1952,7 +1946,6 @@ tests_testHttpRange_LDADD = \
 	acl/libapi.la \
 	proxyp/libproxyp.la \
 	parser/libparser.la \
-	fs/libfs.la \
 	anyp/libanyp.la \
 	icmp/libicmp.la \
 	comm/libcomm.la \
@@ -2339,7 +2332,6 @@ tests_testHttpRequest_LDADD = \
 	acl/libstate.la \
 	acl/libapi.la \
 	parser/libparser.la \
-	fs/libfs.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	proxyp/libproxyp.la \
@@ -2638,7 +2630,6 @@ tests_testCacheManager_LDADD = \
 	acl/libapi.la \
 	dns/libdns.la \
 	base/libbase.la \
-	fs/libfs.la \
 	comm/libcomm.la \
 	ip/libip.la \
 	eui/libeui.la \

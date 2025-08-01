@@ -7,6 +7,7 @@
 
 include $(top_srcdir)/src/Common.am
 
+DIST_SUBDIRS= fs id_rewriters
 SUBDIRS= id_rewriters
 
 noinst_LTLIBRARIES = libstore.la
@@ -33,3 +34,8 @@ libstore_la_SOURCES = \
 	SwapMetaView.cc \
 	SwapMetaView.h \
 	forward.h
+
+if ENABLE_STORE_FS
+SUBDIRS += fs
+libstore_la_LIBADD = fs/libfs.la
+endif

@@ -6,13 +6,17 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 79    Disk IO Routines */
+#ifndef SQUID_SRC_STORE_FS_MODULE_H
+#define SQUID_SRC_STORE_FS_MODULE_H
 
-#include "squid.h"
-#include "fs/rock/RockDbCell.h"
+#if USE_STORE_FS
 
-Rock::DbCellHeader::DbCellHeader()
+namespace Fs
 {
-    memset(this, 0, sizeof(*this));
-}
 
+void Init();
+
+} // namespace Fs
+
+#endif /* USE_STORE_FS */
+#endif /* SQUID_SRC_STORE_FS_MODULE_H */

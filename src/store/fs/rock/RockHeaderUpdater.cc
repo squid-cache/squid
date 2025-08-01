@@ -9,10 +9,10 @@
 #include "squid.h"
 #include "base/AsyncJobCalls.h"
 #include "debug/Stream.h"
-#include "fs/rock/RockHeaderUpdater.h"
-#include "fs/rock/RockIoState.h"
 #include "mime_header.h"
 #include "Store.h"
+#include "store/fs/rock/RockHeaderUpdater.h"
+#include "store/fs/rock/RockIoState.h"
 #include "store/SwapMetaIn.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Rock, HeaderUpdater);

@@ -6,13 +6,15 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_FS_ROCK_ROCKIOREQUESTS_H
-#define SQUID_SRC_FS_ROCK_ROCKIOREQUESTS_H
+#ifndef SQUID_SRC_STORE_FS_ROCK_ROCKIOREQUESTS_H
+#define SQUID_SRC_STORE_FS_ROCK_ROCKIOREQUESTS_H
+
+#if USE_STORE_FS_ROCK
 
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
-#include "fs/rock/forward.h"
-#include "fs/rock/RockIoState.h"
+#include "store/fs/rock/forward.h"
+#include "store/fs/rock/RockIoState.h"
 
 class DiskFile;
 
@@ -56,5 +58,5 @@ public:
 
 } // namespace Rock
 
-#endif /* SQUID_SRC_FS_ROCK_ROCKIOREQUESTS_H */
-
+#endif /* USE_STORE_FS_ROCK */
+#endif /* SQUID_SRC_STORE_FS_ROCK_ROCKIOREQUESTS_H */

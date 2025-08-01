@@ -59,7 +59,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-inline \
 	--enable-xmalloc-statistics \
 	--enable-async-io \
-	--enable-storeio \
+	--enable-store-fs \
 	--enable-disk-io \
 	--enable-removal-policies \
 	--enable-icmp \
