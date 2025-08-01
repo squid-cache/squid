@@ -36,10 +36,10 @@ SUBDIRS = \
 	format \
 	clients \
 	servers \
+	diskio \
 	fs \
 	repl \
 	store \
-	DiskIO \
 	proxyp
 
 if ENABLE_AUTH
@@ -510,7 +510,7 @@ squid_LDADD = \
 	base/libbase.la \
 	libsquid.la \
 	fs/libfs.la \
-	DiskIO/libdiskio.la \
+	diskio/libdiskio.la \
 	comm/libcomm.la \
 	ip/libip.la \
 	anyp/libanyp.la \
@@ -1136,7 +1136,7 @@ tests_testRock_LDADD = \
 	fs/libfs.la \
 	$(COMMON_LIBS) \
 	$(REPL_OBJS) \
-	DiskIO/libdiskio.la \
+	diskio/libdiskio.la \
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
@@ -1314,7 +1314,7 @@ tests_testUfs_LDADD = \
 	mgr/libmgr.la \
 	$(REPL_OBJS) \
 	acl/libacls.la \
-	DiskIO/libdiskio.la \
+	diskio/libdiskio.la \
 	acl/libapi.la \
 	anyp/libanyp.la \
 	$(SSL_LIBS) \
@@ -1488,7 +1488,7 @@ tests_testStore_LDADD= \
 	mem/libmem.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
-	DiskIO/libdiskio.la \
+	diskio/libdiskio.la \
 	ipc/libipc.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -1503,8 +1503,8 @@ tests_testStore_LDADD= \
 	$(XTRA_LIBS)
 tests_testStore_LDFLAGS = $(LIBADD_DL)
 
-## Tests of DiskIO/*
-
+## Tests of diskio/*
+if ENABLE_DISKIO
 check_PROGRAMS += tests/testDiskIO
 tests_testDiskIO_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
@@ -1657,7 +1657,7 @@ tests_testDiskIO_LDADD = \
 	ipc/libipc.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
-	DiskIO/libdiskio.la \
+	diskio/libdiskio.la \
 	acl/libapi.la \
 	anyp/libanyp.la \
 	mgr/libmgr.la \
@@ -1678,6 +1678,7 @@ tests_testDiskIO_LDADD = \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
+endif
 
 ## Tests of auth/*
 

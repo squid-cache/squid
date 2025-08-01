@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "compat/cppunit.h"
-#include "DiskIO/DiskIOModule.h"
+#include "diskio/DiskIOModule.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "MemObject.h"

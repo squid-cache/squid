@@ -60,7 +60,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-xmalloc-statistics \
 	--enable-async-io \
 	--enable-storeio \
-	--enable-disk-io \
+	--enable-diskio \
 	--enable-removal-policies \
 	--enable-icmp \
 	--enable-delay-pools \

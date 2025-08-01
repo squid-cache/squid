@@ -18,6 +18,7 @@ AM_MAINTAINER_MODE
 m4_include([acinclude/ax_with_prog.m4])
 m4_include([acinclude/init.m4])
 m4_include([acinclude/squid-util.m4])
+m4_include([acinclude/squid-module.m4])
 m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
@@ -455,241 +456,139 @@ AS_IF([test "x$ac_cv_search_shm_open" != "xno"],[
   AC_DEFINE(HAVE_SHM,1,[Support shared memory features])
 ])
 
-squid_disk_module_candidates=
-AC_ARG_ENABLE(disk-io,
-  AS_HELP_STRING([--enable-disk-io="list of modules"],
-    [Build support for the list of disk I/O modules.
-     Set without a value or omitted, all available modules will be built.
-     See src/DiskIO for a list of available modules, or
-     Programmers Guide section on DiskIO
-     for details on how to build your custom disk module]),
-  AS_CASE(["$enableval"],
-    [yes],[],
-    [no|none],[enable_disk_io="no"],
-    [
-      enable_disk_io="yes"
-      squid_disk_module_candidates="$enableval"
-  ])
-)
-AS_IF([test "x${enable_disk_io:=yes}" = "xyes"],[
-  SQUID_LOOK_FOR_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
-  AS_IF([test "x$ac_cv_search_shm_open" = "xno"],[
-    squid_disk_module_candidates=`echo "$squid_disk_module_candidates" | sed 's/IpcIo//g'`
+ENABLE_WIN32_AIO=0
+SQUID_AUTO_LIB(aio,[POSIX AIO],[LIBAIO])
+SQUID_CHECK_LIB_WORKS(aio,[
+  CPPFLAGS="$LIBAIO_CFLAGS $CPPFLAGS"
+  LIBS="$LIBAIO_PATH $LIBS"
+  dnl On some systems POSIX AIO functions are in librt
+  dnl On some systems POSIX AIO functions are in libaio
+  AC_CHECK_LIB([rt],[aio_read],[LIBAIO_LIBS="-lrt"],
+    AC_CHECK_LIB([aio],[aio_read],[LIBAIO_LIBS="-laio"],[])
+  )
+  AC_CHECK_HEADERS([aio.h],,[LIBAIO_LIBS=""])
+
+  AS_IF([test "x$LIBAIO_LIBS" != "x"],[
+    dnl Windows does things differently. We provide wrappers.
+    dnl TODO: Windows really needs its own DiskIO module or its Overlaped IO
+    AS_IF([test "$squid_host_os" = "mingw"],[
+      AC_MSG_NOTICE([Windows being built. Replacing AIO with Windows Overlapped I/O support])
+      ENABLE_WIN32_AIO=1
+      with_aio="yes"
+    ],[
+      AC_MSG_NOTICE([Native POSIX AIO support not detected. AIO automatically disabled.])
+      with_aio="no"
+    ])
   ])
 ])
-SQUID_CLEANUP_MODULES_LIST([squid_disk_module_candidates])
-SQUID_CHECK_EXISTING_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
-AC_MSG_NOTICE([DiskIO modules built: ${squid_disk_module_candidates:-none}])
-SQUID_DEFINE_BOOL(USE_DISKIO,$enable_disk_io,[DiskIO modules are expected to be available.])
+AM_CONDITIONAL(ENABLE_WIN32_AIO,[test "x$ENABLE_WIN32_AIO" = "x1"])
 
-dnl Some autoconf.h defines we might enable later...
-AC_ARG_WITH(pthreads,AS_HELP_STRING([--without-pthreads],[Disable POSIX Threads]))
-AC_ARG_WITH(aio, AS_HELP_STRING([--without-aio],[Do not use POSIX AIO. Default: auto-detect]))
 ENABLE_WIN32_AIOPS=0
-squid_opt_use_aio=
-squid_opt_use_diskthreads=
-AIOLIB=
+SQUID_AUTO_LIB(pthreads,[POSIX Threads],[LIBPTHREADS])
+SQUID_CHECK_LIB_WORKS(pthreads,[
+  dnl TODO: this needs to be extended to handle more systems and better
+  dnl REF: http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
+  dnl REF: http://autoconf-archive.cryp.to/acx_pthread.html
+  AS_CASE(["$squid_host_os"],
+    [mingw],[
+      ENABLE_WIN32_AIOPS=1
+      AC_MSG_NOTICE([Windows threads support automatically enabled])
+    ],
 
-dnl Setup the module paths etc.
-DISK_LIBS=
-DISK_MODULES=
-AH_TEMPLATE(HAVE_DISKIO_MODULE_AIO, [Whether POSIX AIO Disk I/O module is built])
-AH_TEMPLATE(HAVE_DISKIO_MODULE_BLOCKING, [Whether Blocking Disk I/O module is built])
-AH_TEMPLATE(HAVE_DISKIO_MODULE_DISKDAEMON, [Whether DiskDaemon Disk I/O module is built])
-AH_TEMPLATE(HAVE_DISKIO_MODULE_DISKTHREADS, [Whether DiskThreads Disk I/O module is built])
-AH_TEMPLATE(HAVE_DISKIO_MODULE_IPCIO, [Whether IpcIo Disk I/O module is built])
-AH_TEMPLATE(HAVE_DISKIO_MODULE_MMAPPED, [Whether Mmapped Disk I/O module is built])
-for module in $squid_disk_module_candidates none; do
-  # maybe not needed
-  AS_IF([test "x$module" = "xnone"],[continue])
-  AS_IF([! test -d "$srcdir/src/DiskIO/$module"],[AC_MSG_ERROR([disk-io $module does not exist])])
-  AS_CASE(["$module"],
-    [AIO],[
-      dnl Check for POSIX AIO availability
-      squid_opt_use_aio="yes"
-      AIOLIB=
-      AS_IF([test "x$with_aio" != "xno"],[
-        have_aio_header=no
-        AC_CHECK_HEADERS(aio.h,[have_aio_header=yes])
-        dnl On some systems POSIX AIO functions are in librt
-        dnl On some systems POSIX AIO functions are in libaio
-        AC_CHECK_LIB(rt,aio_read,[AIOLIB="-lrt"],AC_CHECK_LIB(aio,aio_read,[AIOLIB="-laio"],[]))
-        dnl Enable AIO if the library and headers are found
-        AS_IF([test "x$AIOLIB" != "x" -a "x$have_aio_header" = "xyes"],[
-          AC_MSG_NOTICE([Native POSIX AIO support detected.])
-          squid_opt_use_aio="yes"
-        ],[
-          dnl Windows does things differently. We provide wrappers.
-          dnl TODO: Windows really needs its own DiskIO module or its Overlaped IO
-          AS_IF([test "$squid_host_os" = "mingw"],[
-            squid_opt_use_aio="yes"
-            AC_MSG_NOTICE([Windows being built. Maybe-enable POSIX AIO.])
-          ],[
-            squid_opt_use_aio="no"
-            AC_MSG_NOTICE([Native POSIX AIO support not detected. AIO automatically disabled.])
-          ])
-        ])
+    [freebsd],[
+      AS_IF([test `echo "$squid_host_os_version" | tr -d .` -lt 70],[
+        AC_MSG_ERROR([pthread library requires FreeBSD 7 or later])
       ],[
-        AC_MSG_NOTICE([POSIX AIO support manually disabled.])
-        squid_opt_use_aio="no"
-      ])
-      dnl Use the POSIX AIO pieces if we actually need them.
-      AS_IF([test "x$squid_opt_use_aio" = "xyes"],[
-        DISK_MODULES="$DISK_MODULES AIO"
-        AC_DEFINE([HAVE_DISKIO_MODULE_AIO],1,[POSIX AIO Disk I/O module is built])
-        AS_IF([test "$squid_host_os" = "mingw"],[
-          ENABLE_WIN32_AIO=1
-          AC_MSG_NOTICE([Replacing AIO DiskIO module with: Windows overlapped I/O support])
-        ],[
-          AC_MSG_NOTICE([Enabling AIO DiskIO module])
-        ])
-      ],[
-        AC_MSG_NOTICE([AIO DiskIO Module disabled. Missing POSIX AIO support.])
-        squid_disk_module_candidates_AIO=no
+        LIBPTHREADS_CFLAGS="$LIBPTHREADS_CFLAGS -D_REENTRANT"
+        AS_IF([test "x$GCC" = "xyes"],[LIBPTHREADS_LIBS="-pthread"])
       ])
     ],
 
-    [Blocking],[
-      AC_MSG_NOTICE([Enabling Blocking DiskIO module])
-      DISK_MODULES="$DISK_MODULES Blocking"
-      AC_DEFINE([HAVE_DISKIO_MODULE_BLOCKING],1,[Blocking Disk I/O module is built])
-    ],
-
-    [DiskDaemon],[
-      AS_IF([test "$squid_host_os" = "mingw"],[
-        AC_MSG_NOTICE([DiskDaemon not supported on MinGW])
-        squid_disk_module_candidates_DiskDaemon=no
+    [openbsd],[
+      AS_IF([test `echo "$squid_host_os_version" | tr -d .` -lt 52],[
+        AC_MSG_ERROR([pthread library requires OpenBSD 5.2 or later])
       ],[
-        AC_MSG_NOTICE([Enabling DiskDaemon DiskIO module])
-        DISK_MODULES="$DISK_MODULES DiskDaemon"
-        AC_DEFINE([HAVE_DISKIO_MODULE_DISKDAEMON],1,[DiskDaemon Disk I/O module is built])
+        LIBPTHREADS_CFLAGS="$LIBPTHREADS_CFLAGS -D_REENTRANT"
+        LIBPTHREADS_LIBS="-lpthread"
       ])
     ],
 
-    [DiskThreads],[
-      squid_opt_use_diskthreads="yes"
-      LIBPTHREADS=
-      SQUID_STATE_SAVE([diskthreads_state],[SQUID_CFLAGS SQUID_CXXFLAGS])
-      AS_IF([test "x$with_pthreads" != "xno"],[
-        dnl TODO: this needs to be extended to handle more systems and better
-        dnl REF: http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
-        dnl REF: http://autoconf-archive.cryp.to/acx_pthread.html
-        AS_CASE(["$squid_host_os"],
-          [mingw],[
-            ENABLE_WIN32_AIOPS=1
-            AC_MSG_NOTICE([Windows threads support automatically enabled])
-          ],
-
-          [freebsd],[
-            AS_IF([test `echo "$squid_host_os_version" | tr -d .` -lt 70],[
-              AC_MSG_NOTICE(pthread library requires FreeBSD 7 or later)
-              squid_opt_use_diskthreads="no"
-            ],[
-              SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
-              SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
-              AS_IF([test "x$GCC" = "xyes" -a "x$PRESET_LDFLAGS" = "x"],[LDFLAGS="$LDFLAGS -pthread"])
-            ])
-          ],
-
-          [openbsd],[
-            AS_IF([test `echo "$squid_host_os_version" | tr -d .` -lt 52],[
-              AC_MSG_NOTICE(pthread library requires OpenBSD 5.2 or later)
-              squid_opt_use_diskthreads="no"
-            ],[
-              SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
-              SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
-              LDFLAGS="$LDFLAGS -lpthread"
-            ])
-          ],
-
-          [solaris],[
-            AS_IF([test "x$GCC" = "xyes"],[
-              SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT -pthreads"
-              SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT -pthreads"
-              AC_CHECK_LIB(pthread, pthread_create ,[LIBPTHREADS="-lpthread"], [
-                AC_MSG_NOTICE(pthread library required but cannot be found.)
-                squid_opt_use_diskthreads="no"
-               ])
-            ],[
-              dnl test for -lpthread first. libc version is a stub apparently on Solaris.
-              SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT -lpthread"
-              SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT -lpthread"
-              AC_SEARCH_LIBS([pthread_create],[pthread thread],[
-                LIBPTHREADS="" #in LIBS
-              ],[
-                AC_MSG_NOTICE(pthread library required but cannot be found.)
-                squid_opt_use_diskthreads="no"
-              ])
-            ])
-          ],
-
-          [
-            SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
-            SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
-            AC_CHECK_LIB(pthread, pthread_create ,[LIBPTHREADS="-lpthread"], [
-              AC_MSG_NOTICE(pthread library required but cannot be found.)
-              squid_opt_use_diskthreads="no"
-            ])
-          ]
-        )
+    [solaris],[
+      AS_IF([test "x$GCC" = "xyes"],[
+        LIBPTHREADS_CFLAGS="$LIBPTHREADS_CFLAGS -D_REENTRANT -pthreads"
+        CPPFLAGS="$LIBPTHREADS_CFLAGS $CPPFLAGS $SQUID_CFLAGS"
+        AC_CHECK_LIB([pthread],[pthread_create],[LIBPTHREADS_LIBS="-lpthread"],[LIBPTHREADS_LIBS=""])
       ],[
-        AC_MSG_NOTICE([Native pthreads support manually disabled.])
-        squid_opt_use_diskthreads="no"
-      ])
-      AS_IF([test "x$squid_opt_use_diskthreads" = "xyes"],[
-        AC_MSG_NOTICE([Enabling DiskThreads DiskIO module])
-        DISK_MODULES="$DISK_MODULES DiskThreads"
-        AC_DEFINE([HAVE_DISKIO_MODULE_DISKTHREADS],1,[DiskThreads Disk I/O module is built])
-      ],[
-        AC_MSG_NOTICE([Native pthreads support disabled. DiskThreads module automaticaly disabled.])
-        SQUID_STATE_ROLLBACK([diskthreads_state])
-        squid_disk_module_candidates_DiskThreads=no
-      ])
-    ],
-
-    [IpcIo],[
-      AS_IF([test "x$ac_cv_search_shm_open" = "xno"],[
-        AC_MSG_NOTICE([DiskIO IpcIo module requires shared memory support])
-        squid_disk_module_candidates_IpcIo=no
-      ],[
-        AC_MSG_NOTICE([Enabling IpcIo DiskIO module])
-        DISK_MODULES="$DISK_MODULES IpcIo"
-        AC_DEFINE([HAVE_DISKIO_MODULE_IPCIO],1,[IpcIo Disk I/O module is built])
-      ])
-    ],
-
-    [Mmapped],[
-      dnl TODO: use availability of sys/mman.h and/or mmap to define
-      dnl  OR support windows mmap functions
-      AS_IF([test "x$squid_host_os" = "xmingw"],[
-        AC_MSG_NOTICE([Mmapped DiskIO is not available on Mingw])
-        squid_disk_module_candidates_Mmapped=no
-      ],[
-        AC_MSG_NOTICE([Enabling Mmapped DiskIO module])
-        DISK_MODULES="$DISK_MODULES Mmapped"
-        AC_DEFINE([HAVE_DISKIO_MODULE_MMAPPED],1,[Mmapped Disk I/O module is built])
+        dnl test for -lpthread first. libc version is a stub apparently on Solaris.
+        LIBPTHREADS_CFLAGS="$LIBPTHREADS_CFLAGS -D_REENTRANT"
+        CPPFLAGS="$CXXFLAGS $SQUID_CXXFLAGS $LIBPTHREADS_CFLAGS"
+        AC_SEARCH_LIBS([pthread_create],[pthread thread],[LIBPTHREADS_LIBS="$LIBS"])
       ])
     ],
 
     [
-      AC_MSG_NOTICE([Enabling $module DiskIO module])
-      DISK_LIBS="$DISK_LIBS lib${module}.la"
-      DISK_MODULES="$DISK_MODULES ${module}"
-    ])
-done
-AC_MSG_NOTICE([IO Modules built: $DISK_MODULES])
-AC_SUBST(DISK_MODULES)
-AC_SUBST(DISK_LIBS)
-AM_CONDITIONAL(ENABLE_DISKIO_AIO, test "x$squid_disk_module_candidates_AIO" = "xyes")
-AC_SUBST(AIOLIB)
-AM_CONDITIONAL(ENABLE_WIN32_AIO, test "x$squid_disk_module_candidates_AIO" = "xyes" -a "x$ENABLE_WIN32_AIO" = "x1")
-AM_CONDITIONAL(ENABLE_DISKIO_BLOCKING, test "x$squid_disk_module_candidates_Blocking" = "xyes")
-AM_CONDITIONAL(ENABLE_DISKIO_DISKDAEMON, test "x$squid_disk_module_candidates_DiskDaemon" = "xyes")
-AM_CONDITIONAL(ENABLE_DISKIO_DISKTHREADS, test "x$squid_disk_module_candidates_DiskThreads" = "xyes")
-AC_SUBST(LIBPTHREADS)
-AM_CONDITIONAL(ENABLE_WIN32_AIOPS, test "x$squid_disk_module_candidates_DiskThreads" = "xyes" -a "x$ENABLE_WIN32_AIOPS" = "x1")
-AM_CONDITIONAL(ENABLE_DISKIO_IPCIO, test "x$squid_disk_module_candidates_IpcIo" = "xyes")
-AM_CONDITIONAL(ENABLE_DISKIO_MMAPPED, test "x$squid_disk_module_candidates_Mmapped" = "xyes")
+      LIBPTHREADS_CFLAGS="$LIBPTHREADS_CFLAGS -D_REENTRANT"
+      CPPFLAGS="$LIBPTHREADS_CFLAGS $CPPFLAGS $SQUID_CFLAGS"
+      AC_CHECK_LIB([pthread],[pthread_create],[LIBPTHREADS_LIBS="-lpthread"])
+    ]
+  )
+])
+AM_CONDITIONAL(ENABLE_WIN32_AIOPS,[test "x$ENABLE_WIN32_AIOPS" = "x1"])
+
+SQUID_MODULE(diskio,[AIO Blocking DiskDaemon DiskThreads IpcIo Mmapped],[Disk I/O],[
+  Build support for the list of disk I/O modules.
+  Set without a value or omitted, all available modules will be built.
+  See src/disk_io for a list of available modules.
+],[
+  for module in $squid_diskio_candidates; do
+    AS_CASE([$module],
+      [AIO],[
+        AS_IF([test "x$squid_diskio_candidates_AIO" = "xno"],[:],
+          [test "x$with_aio" = "xyes"],[:],
+          [test "x$squid_diskio_candidates_AIO" != "xyes"],[squid_diskio_candidates_AIO="no"],
+          [AC_MSG_ERROR([DiskIO AIO module requires POSIX AIO support.])
+        ])
+      ],
+
+      [Blocking],[:],
+
+      [DiskDaemon],[
+        AS_IF([test "x$squid_diskio_candidates_DiskDaemon" = "xno"],[:],
+          [test "$squid_host_os" != "mingw"],[:],
+          [test "x$squid_diskio_candidates_DiskDaemon" != "xyes"],[squid_diskio_candidates_DiskDaemon="no"],
+          [AC_MSG_ERROR([DiskIO DiskDaemon module is not available on MinGW.])
+        ])
+      ],
+
+      [DiskThreads],[
+        AS_IF([test "x$squid_diskio_candidates_DiskThreads" = "xno"],[:],
+          [test "x$with_pthreads" = "xyes"],[:],
+          [test "x$squid_diskio_candidates_DiskThreads" != "xyes"],[squid_diskio_candidates_DiskThreads="no"],
+          [AC_MSG_ERROR([DiskIO DiskThreads module requires pthread support.])
+        ])
+      ],
+
+      [IpcIo],[
+        AC_SEARCH_LIBS([shm_open],[rt],[AC_DEFINE(HAVE_SHM,1,[Support shared memory features])])
+        AS_IF([test "x$squid_diskio_candidates_IpcIo" = "xno"],[:],
+          [test "x$ac_cv_search_shm_open" != "xno"],[:],
+          [test "x$squid_diskio_candidates_IpcIo" != "xyes"],[squid_diskio_candidates_IpcIo="no"],
+          [AC_MSG_ERROR([DiskIO IpcIo module requires shared memory support.])
+        ])
+      ],
+
+      [Mmapped],[
+        dnl TODO: use availability of sys/mman.h and/or mmap to define
+        dnl  OR support windows mmap functions
+        AS_IF([test "x$squid_diskio_candidates_Mmapped" = "xno"],[:],
+          [test "$squid_host_os" != "mingw"],[:],
+          [test "x$squid_diskio_candidates_Mmapped" != "xyes"],[squid_diskio_candidates_Mmapped="no"],
+          [AC_MSG_ERROR([DiskIO Mmapped module is not available on MinGW.])
+        ])
+      ]
+    )
+  done
+])
 
 dnl Check what Storage formats are wanted.
 dnl This version will error out with a message saying why if a required DiskIO is missing.
@@ -720,26 +619,26 @@ AC_MSG_NOTICE([Store modules built: ${squid_storeio_module_candidates:-none}])
 for fs in ${squid_storeio_module_candidates:-none}; do
   AS_CASE([$fs],
     [diskd],[
-      AS_IF([test "x$squid_disk_module_candidates_Blocking" != "xyes" -a \
-        "x$squid_disk_module_candidates_DiskDaemon" != "xyes"],[
+      AS_IF([test "x$squid_diskio_candidates_Blocking" != "xyes" -a \
+        "x$squid_diskio_candidates_DiskDaemon" != "xyes"],[
         AC_MSG_ERROR([Storage diskd module requires DiskIO module: Blocking or DiskDaemon])
       ])
     ],
     [aufs],[
-      AS_IF([test "x$squid_disk_module_candidates_Blocking" != "xyes" -a \
-        "x$squid_disk_module_candidates_DiskThreads" != "xyes"],[
+      AS_IF([test "x$squid_diskio_candidates_Blocking" != "xyes" -a \
+        "x$squid_diskio_candidates_DiskThreads" != "xyes"],[
         AC_MSG_ERROR([Storage module aufs requires DiskIO module: Blocking or DiskThreads])
       ])
     ],
     [rock],[
-      AS_IF([test "x$squid_disk_module_candidates_IpcIo" != "xyes" -a \
-        "x$squid_disk_module_candidates_Blocking" != "xyes"],[
+      AS_IF([test "x$squid_diskio_candidates_IpcIo" != "xyes" -a \
+        "x$squid_diskio_candidates_Blocking" != "xyes"],[
          AC_MSG_ERROR([Storage module Rock requires DiskIO module: Blocking or IpcIo])
       ])
       squid_do_build_rock=true
     ],
     [ufs],[
-      AS_IF([test "x$squid_disk_module_candidates_Blocking" != "xyes"],[
+      AS_IF([test "x$squid_diskio_candidates_Blocking" != "xyes"],[
         AC_MSG_ERROR([Storage module ufs requires DiskIO module: Blocking])
       ])
       squid_do_build_ufs=true
@@ -2565,13 +2464,13 @@ AC_CONFIG_FILES([
 	src/comm/Makefile
 	src/debug/Makefile
 	src/dns/Makefile
-	src/DiskIO/Makefile
-	src/DiskIO/AIO/Makefile
-	src/DiskIO/Blocking/Makefile
-	src/DiskIO/DiskDaemon/Makefile
-	src/DiskIO/DiskThreads/Makefile
-	src/DiskIO/IpcIo/Makefile
-	src/DiskIO/Mmapped/Makefile
+	src/diskio/Makefile
+	src/diskio/AIO/Makefile
+	src/diskio/Blocking/Makefile
+	src/diskio/DiskDaemon/Makefile
+	src/diskio/DiskThreads/Makefile
+	src/diskio/IpcIo/Makefile
+	src/diskio/Mmapped/Makefile
 	src/error/Makefile
 	src/eui/Makefile
 	src/format/Makefile

@@ -8,14 +8,12 @@
 
 #include "squid.h"
 
-#if HAVE_DISKIO_MODULE_IPCIO
-#include "DiskIO/IpcIo/IpcIoFile.h"
+#if USE_DISKIO_IPCIO
 
-#define STUB_API "DiskIO/IocIo/IpcIoFile.cc"
-
+#define STUB_API "diskio/IpcIo/IpcIoFile.cc"
 #include "tests/STUB.h"
 
+#include "diskio/IpcIo/IpcIoFile.h"
 void IpcIoFile::StatQueue(std::ostream &) STUB
 
-#endif /* HAVE_DISKIO_MODULE_IPCIO */
-
+#endif /* USE_DISKIO_IPCIO */

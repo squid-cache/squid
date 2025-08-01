@@ -34,7 +34,7 @@
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
 #include "debug/Messages.h"
-#include "DiskIO/DiskIOModule.h"
+#include "diskio/DiskIOModule.h"
 #include "eui/Config.h"
 #include "ExternalACL.h"
 #include "format/Format.h"

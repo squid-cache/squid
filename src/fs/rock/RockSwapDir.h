@@ -9,8 +9,8 @@
 #ifndef SQUID_SRC_FS_ROCK_ROCKSWAPDIR_H
 #define SQUID_SRC_FS_ROCK_ROCKSWAPDIR_H
 
-#include "DiskIO/DiskFile.h"
-#include "DiskIO/IORequestor.h"
+#include "diskio/DiskFile.h"
+#include "diskio/IORequestor.h"
 #include "fs/rock/forward.h"
 #include "fs/rock/RockDbCell.h"
 #include "fs/rock/RockRebuild.h"

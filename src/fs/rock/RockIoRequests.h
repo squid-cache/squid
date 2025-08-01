@@ -9,8 +9,8 @@
 #ifndef SQUID_SRC_FS_ROCK_ROCKIOREQUESTS_H
 #define SQUID_SRC_FS_ROCK_ROCKIOREQUESTS_H
 
-#include "DiskIO/ReadRequest.h"
-#include "DiskIO/WriteRequest.h"
+#include "diskio/ReadRequest.h"
+#include "diskio/WriteRequest.h"
 #include "fs/rock/forward.h"
 #include "fs/rock/RockIoState.h"
 

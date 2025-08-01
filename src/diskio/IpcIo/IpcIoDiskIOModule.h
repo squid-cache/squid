@@ -1,0 +1,32 @@
+/*
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+#ifndef SQUID_SRC_DISKIO_IPCIO_IPCIODISKIOMODULE_H
+#define SQUID_SRC_DISKIO_IPCIO_IPCIODISKIOMODULE_H
+
+#if USE_DISKIO_IPCIO
+
+#include "diskio/DiskIOModule.h"
+
+class IpcIoDiskIOModule : public DiskIOModule
+{
+
+public:
+    static IpcIoDiskIOModule &GetInstance();
+    IpcIoDiskIOModule();
+    void init() override;
+    void gracefulShutdown() override;
+    char const *type () const override;
+    DiskIOStrategy* createStrategy() override;
+
+private:
+    static IpcIoDiskIOModule Instance;
+};
+
+#endif /* USE_DISKIO_IPCIO */
+#endif /* SQUID_SRC_DISKIO_IPCIO_IPCIODISKIOMODULE_H */

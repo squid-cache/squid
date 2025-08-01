@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_FS_UFS_UFSSTRATEGY_H
 #define SQUID_SRC_FS_UFS_UFSSTRATEGY_H
 
-#include "DiskIO/DiskFile.h"
+#include "diskio/DiskFile.h"
 #include "StoreIOState.h"
 
 class Swapdir;

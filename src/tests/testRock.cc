@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "compat/cppunit.h"
 #include "ConfigParser.h"
-#include "DiskIO/DiskIOModule.h"
+#include "diskio/DiskIOModule.h"
 #include "fde.h"
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
