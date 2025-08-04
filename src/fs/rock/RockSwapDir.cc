@@ -964,7 +964,7 @@ Rock::SwapDir::full() const
     return freeSlots != nullptr && !freeSlots->size();
 }
 
-// storeSwapOutFileClosed calls this nethod on DISK_NO_SPACE_LEFT,
+// storeSwapOutFileClosed calls this method on DISK_NO_SPACE_LEFT,
 // but it should not happen for us
 void
 Rock::SwapDir::diskFull()

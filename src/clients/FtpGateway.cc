@@ -1216,7 +1216,7 @@ ftpReadWelcome(Ftp::Gateway * ftpState)
 
 /**
  * Translate FTP login failure into HTTP error
- * this is an attmpt to get the 407 message to show up outside Squid.
+ * this is an attempt to get the 407 message to show up outside Squid.
  * its NOT a general failure. But a correct FTP response type.
  */
 void
@@ -1246,7 +1246,7 @@ Ftp::Gateway::loginFailed()
     }
 
     failed(ERR_NONE, ctrl.replycode, err);
-    // any other problems are general falures.
+    // any other problems are general failures.
 
     HttpReply *newrep = err->BuildHttpReply();
     delete err;

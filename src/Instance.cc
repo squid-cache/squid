@@ -19,7 +19,7 @@
 
 #include <cerrno>
 
-/* To support concurrent PID files, convert local statics into PidFile class */
+/* To support concurrent PID files, convert local static variables into PidFile class */
 
 /// Describes the (last) instance PID file being processed.
 /// This hack shortens reporting code while keeping its messages consistent.

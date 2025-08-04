@@ -109,7 +109,7 @@ static STCB netdbExchangeHandleReply;
 
 /* We have to keep a local list of CachePeer names.  The Peers structure
  * gets freed during a reconfigure.  We want this database to
- * remain persisitent, so _net_db_peer->peername points into this
+ * remain persistent, so _net_db_peer->peername points into this
  * linked list */
 static wordlist *peer_names = nullptr;
 

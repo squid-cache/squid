@@ -164,7 +164,7 @@ if test -f SPONSORS.list; then
 fi
 
 # Fixup autoconf recursion using --silent/--quiet option
-# autoconf should inherit this option whe recursing into subdirectories
+# autoconf should inherit this option when recursing into subdirectories
 # but it currently doesn't for some reason.
 if ! grep  "configure_args --quiet" configure >/dev/null; then
 echo "Fixing configure recursion"

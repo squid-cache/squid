@@ -529,7 +529,7 @@ Comm::SelectLoopInit(void)
  * I spend the day chasing this core dump that occurs when both the client
  * and the server side of a cache fetch simultaneoulsy abort the
  * connection.  While I haven't really studied the code to figure out how
- * it happens, the snippet below may prevent the cache from exitting:
+ * it happens, the snippet below may prevent the cache from exiting:
  *
  * Call this from where the select loop fails.
  */

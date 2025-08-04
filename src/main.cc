@@ -408,7 +408,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
 
     case 'C':
         /** \par C
-         * Unset/disabel global option for catchign signals. opt_catch_signals */
+         * Unset/disable global option for catchign signals. opt_catch_signals */
         opt_catch_signals = 0;
         break;
 
@@ -1001,7 +1001,7 @@ setEffectiveUser(void)
     if (geteuid() == 0) {
         debugs(0, DBG_CRITICAL, "Squid is not safe to run as root!  If you must");
         debugs(0, DBG_CRITICAL, "start Squid as root, then you must configure");
-        debugs(0, DBG_CRITICAL, "it to run as a non-priveledged user with the");
+        debugs(0, DBG_CRITICAL, "it to run as a non-privileged user with the");
         debugs(0, DBG_CRITICAL, "'cache_effective_user' option in the config file.");
         fatal("Don't run Squid as root, set 'cache_effective_user'!");
     }

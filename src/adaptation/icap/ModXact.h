@@ -20,9 +20,9 @@
 /*
  * ICAPModXact implements ICAP REQMOD and RESPMOD transaction using
  * ICAPXaction as the base. The ICAPModXact receives a virgin HTTP message
- * from an ICAP vecoring point, (a.k.a., initiator), communicates with the
+ * from an ICAP vectoring point, (a.k.a. initiator), communicates with the
  * ICAP server, and sends the adapted HTTP message headers back.
- * Virgin/adapted HTTP message body is reveived/sent using BodyPipe
+ * Virgin/adapted HTTP message body is received/sent using BodyPipe
  * interface. The initiator (or its associate) is expected to send and/or
  * receive the HTTP body.
  */
@@ -88,7 +88,7 @@ class Preview
 
 public:
     Preview();            // disabled
-    void enable(size_t anAd); // enabled with advertised size
+    void enable(size_t anAdvertisedSize); // enabled with advertised size
     bool enabled() const;
 
     /* other members can be accessed iff enabled() */
