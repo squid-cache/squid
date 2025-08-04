@@ -19,9 +19,7 @@
 #include "comm/Connection.h"
 #include "comm/Read.h"
 #include "debug/Messages.h"
-#if HAVE_DISKIO_MODULE_IPCIO
-#include "DiskIO/IpcIo/IpcIoFile.h"
-#endif
+#include "diskio/IpcIo/IpcIoFile.h"
 #include "ETag.h"
 #include "event.h"
 #include "fde.h"
@@ -136,10 +134,10 @@ StatQueues(StoreEntry *e)
     assert(e);
     PackableStream stream(*e);
     CollapsedForwarding::StatQueue(stream);
-#if HAVE_DISKIO_MODULE_IPCIO
+#if USE_DISKIO_IPCIO
     stream << "\n";
     IpcIoFile::StatQueue(stream);
-#endif
+#endif /* USE_DISKIO_IPCIO */
     stream.flush();
 }
 

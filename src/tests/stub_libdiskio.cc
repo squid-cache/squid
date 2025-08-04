@@ -8,13 +8,13 @@
 
 #include "squid.h"
 
-#define STUB_API "DiskIO/libdiskio.la"
+#define STUB_API "diskio/libdiskio.la"
 #include "tests/STUB.h"
 
 #include <vector>
 
-// #include "DiskIO/DiskFile.h"
-#include "DiskIO/DiskIOModule.h"
+// #include "diskio/DiskFile.h"
+#include "diskio/DiskIOModule.h"
 void DiskIOModule::SetupAllModules() STUB
 void DiskIOModule::ModuleAdd(DiskIOModule &) STUB
 void DiskIOModule::FreeAllModules() STUB
@@ -26,11 +26,11 @@ DiskIOModule::DiskIOModule(DiskIOModule const &) {STUB}
 DiskIOModule &DiskIOModule::operator=(DiskIOModule const&) STUB
 void DiskIOModule::RegisterAllModulesWithCacheManager() STUB
 
-// #include "DiskIO/DiskIOStrategy.h"
-// #include "DiskIO/DiskIORequestor.h"
-#include "DiskIO/ReadRequest.h"
+// #include "diskio/DiskIOStrategy.h"
+// #include "diskio/DiskIORequestor.h"
+#include "diskio/ReadRequest.h"
 ReadRequest::ReadRequest(char *, off_t, size_t) {STUB}
 
-#include "DiskIO/WriteRequest.h"
+#include "diskio/WriteRequest.h"
 WriteRequest::WriteRequest(char const *, off_t, size_t, FREE *) {STUB}
 

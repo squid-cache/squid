@@ -14,6 +14,7 @@
 #include "CacheManager.h"
 #include "CollapsedForwarding.h"
 #include "comm/Connection.h"
+#include "diskio/IpcIo/IpcIoFile.h" /* XXX: scope boundary violation */
 #include "fatal.h"
 #include "globals.h"
 #include "ipc/Kids.h"
@@ -26,9 +27,6 @@
 #include "mgr/Forwarder.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#if HAVE_DISKIO_MODULE_IPCIO
-#include "DiskIO/IpcIo/IpcIoFile.h" /* XXX: scope boundary violation */
-#endif
 #if SQUID_SNMP
 #include "snmp/Forwarder.h"
 #include "snmp/Request.h"
@@ -70,7 +68,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         SharedListenJoined(Mine(SharedListenResponse(message)));
         break;
 
-#if HAVE_DISKIO_MODULE_IPCIO
+#if USE_DISKIO_IPCIO
     case mtStrandReady:
         IpcIoFile::HandleOpenResponse(Mine(StrandMessage(message)));
         break;
@@ -78,7 +76,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
     case mtIpcIoNotification:
         IpcIoFile::HandleNotification(message);
         break;
-#endif /* HAVE_DISKIO_MODULE_IPCIO */
+#endif /* USE_DISKIO_IPCIO */
 
     case mtCacheMgrRequest: {
         const Mgr::Request req(message);

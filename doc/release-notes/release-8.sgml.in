@@ -118,7 +118,8 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p>No new options in this version.
+	<tag>--enable-diskio=</tag>
+	<p>Renamed from <em>--enable-disk-io=</em>.
 
 </descrip>
 
@@ -143,7 +144,8 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
-	<p>No removed options in this version.
+	<tag>--enable-disk-io=</tag>
+	<p>Renamed to <em>--enable-diskio=</em>.
 
 </descrip>
 
