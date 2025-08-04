@@ -12,6 +12,8 @@
 #include "base/IoManip.h"
 #include "cache_cf.h"
 #include "CollapsedForwarding.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"
@@ -239,7 +241,7 @@ Rock::SwapDir::create()
     }
 
     debugs (47, DBG_IMPORTANT, "Creating Rock db: " << filePath);
-    const int swap = open(filePath, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0600);
+    const auto swap = xopen(filePath, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0600);
     if (swap < 0)
         createError("create");
 
@@ -249,7 +251,7 @@ Rock::SwapDir::create()
     memset(block, '\0', sizeof(block));
 
     for (off_t offset = 0; offset < maxSize(); offset += sizeof(block)) {
-        if (write(swap, block, sizeof(block)) != sizeof(block))
+        if (xwrite(swap, block, sizeof(block)) != sizeof(block))
             createError("write");
     }
 #else
@@ -258,11 +260,11 @@ Rock::SwapDir::create()
 
     char header[HeaderSize];
     memset(header, '\0', sizeof(header));
-    if (write(swap, header, sizeof(header)) != sizeof(header))
+    if (xwrite(swap, header, sizeof(header)) != sizeof(header))
         createError("write");
 #endif
 
-    close(swap);
+    xclose(swap);
 }
 
 // report Rock DB creation error and exit

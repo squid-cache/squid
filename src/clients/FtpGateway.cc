@@ -18,6 +18,7 @@
 #include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "CommCalls.h"
+#include "compat/socket.h"
 #include "compat/strtoll.h"
 #include "errorpage.h"
 #include "fd.h"
@@ -695,6 +696,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
             switch (*ct) {
 
             case '\t':
+                safe_free(p->name); // TODO: properly handle multiple p->name occurrences
                 p->name = xstrndup(ct + 1, l + 1);
                 break;
 
@@ -708,6 +710,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                 if (tmp != ct + 1)
                     break;  /* not a valid integer */
 
+                safe_free(p->date); // TODO: properly handle multiple p->name occurrences
                 p->date = xstrdup(ctime(&tm));
 
                 *(strstr(p->date, "\n")) = '\0';
@@ -1777,8 +1780,8 @@ ftpOpenListenSocket(Ftp::Gateway * ftpState, int fallback)
     if (fallback) {
         int on = 1;
         errno = 0;
-        if (setsockopt(ftpState->ctrl.conn->fd, SOL_SOCKET, SO_REUSEADDR,
-                       (char *) &on, sizeof(on)) == -1) {
+        if (xsetsockopt(ftpState->ctrl.conn->fd, SOL_SOCKET, SO_REUSEADDR,
+                        &on, sizeof(on)) == -1) {
             int xerrno = errno;
             // SO_REUSEADDR is only an optimization, no need to be verbose about error
             debugs(9, 4, "setsockopt failed: " << xstrerr(xerrno));
@@ -2220,6 +2223,7 @@ Ftp::Gateway::completedListing()
     entry->lock("Ftp::Gateway");
     ErrorState ferr(ERR_DIR_LISTING, Http::scOkay, request.getRaw(), fwd->al);
     ferr.ftp.listing = &listing;
+    safe_free(ferr.ftp.cwd_msg);
     ferr.ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
     ferr.ftp.server_msg = ctrl.message;
     ctrl.message = nullptr;
