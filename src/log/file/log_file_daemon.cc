@@ -8,13 +8,12 @@
 
 #include "squid.h"
 
+#include "compat/unistd.h"
+
 #include <cassert>
 #include <cerrno>
 #include <csignal>
 #include <cstring>
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
@@ -112,8 +111,8 @@ main(int argc, char *argv[])
     /* XXX stderr should not be closed, but in order to support squid must be
      * able to collect and manage modules' stderr first.
      */
-    close(2);
-    t = open(_PATH_DEVNULL, O_RDWR);
+    xclose(2);
+    t = xopen(_PATH_DEVNULL, O_RDWR);
     assert(t > -1);
     dup2(t, 2);
 
