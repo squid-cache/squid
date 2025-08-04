@@ -116,7 +116,7 @@ char *gethost_name(void);
 #define HAVE_PAC_SUPPORT 1
 
 /**
-* MAX_PAC_GROU_SIZE limits the string length, wherein group membership per
+* MAX_PAC_GROUP_SIZE limits the string length, wherein group membership per
 * authenticated user is reported back to Squid, to a reasonable number
 * of groups multiplied by the maximum encoded group entry size.
 *
