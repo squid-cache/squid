@@ -18,6 +18,7 @@ AM_MAINTAINER_MODE
 m4_include([acinclude/ax_with_prog.m4])
 m4_include([acinclude/init.m4])
 m4_include([acinclude/squid-util.m4])
+m4_include([acinclude/squid-module.m4])
 m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
@@ -691,89 +692,29 @@ AM_CONDITIONAL(ENABLE_WIN32_AIOPS, test "x$squid_disk_module_candidates_DiskThre
 AM_CONDITIONAL(ENABLE_DISKIO_IPCIO, test "x$squid_disk_module_candidates_IpcIo" = "xyes")
 AM_CONDITIONAL(ENABLE_DISKIO_MMAPPED, test "x$squid_disk_module_candidates_Mmapped" = "xyes")
 
-dnl Check what Storage formats are wanted.
-dnl This version will error out with a message saying why if a required DiskIO is missing.
-AC_ARG_ENABLE([storeio],
-  AS_HELP_STRING([--enable-storeio="list of modules"],
-                 [Build support for the list of store I/O modules.
-                  The default is only to build the "ufs" module.
-                  See src/fs for a list of available modules, or
-                  Programmers Guide section <not yet written>
-                  for details on how to build your custom store module]), [
-  AS_CASE(["$enableval"],
-    [yes],[],
-    [no|none],[enable_storeio="no"],
-    [
-      enable_storeio="yes"
-      # ufs is really always needed as it has low-level routines
-      # if it is a dupe it will be cleaned-up later
-      squid_storeio_module_candidates="$enableval ufs"
-  ])
+SQUID_MODULE(store-fs,[rock ufs],[cache_dir Filesystems],[
+  Build support for the list of cache_dir types.
+  Set without a value or omitted, all available modules will be built.
+  See src/store/fs for a list of available modules.
+],[
+  for module in $squid_store_fs_candidates; do
+    AS_CASE([$module],
+      [rock],
+      AS_IF([test "x$squid_disk_module_candidates_Blocking" = "xyes"],[:],
+        [test "x$squid_disk_module_candidates_IpcIo" = "xyes"],[:],
+        [test "x$squid_store_fs_candidates_rock" != "xyes"],[squid_store_fs_candidates_rock="no"],
+        [AC_MSG_ERROR([Storage rock module requires DiskIO module: Blocking or IpcIo])]
+      ),
+      [ufs],
+      AS_IF([test "x$squid_disk_module_candidates_Blocking" = "xyes"],[:],
+        [test "x$squid_disk_module_candidates_DiskDaemon" = "xyes"],[:],
+        [test "x$squid_disk_module_candidates_DiskThreads" = "xyes"],[:],
+        [test "x$squid_store_fs_candidates_ufs" != "xyes"],[squid_store_fs_candidates_ufs="no"],
+        [AC_MSG_ERROR([Storage ufs module requires DiskIO module: Blocking or DiskDaemon or DiskThreads])]
+      )
+    )
+  done
 ])
-AS_IF([test "x${enable_storeio:=yes}" = "xyes"],[
-  SQUID_LOOK_FOR_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
-])
-SQUID_CLEANUP_MODULES_LIST([squid_storeio_module_candidates])
-SQUID_CHECK_EXISTING_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
-AC_MSG_NOTICE([Store modules built: ${squid_storeio_module_candidates:-none}])
-
-for fs in ${squid_storeio_module_candidates:-none}; do
-  AS_CASE([$fs],
-    [diskd],[
-      AS_IF([test "x$squid_disk_module_candidates_Blocking" != "xyes" -a \
-        "x$squid_disk_module_candidates_DiskDaemon" != "xyes"],[
-        AC_MSG_ERROR([Storage diskd module requires DiskIO module: Blocking or DiskDaemon])
-      ])
-    ],
-    [aufs],[
-      AS_IF([test "x$squid_disk_module_candidates_Blocking" != "xyes" -a \
-        "x$squid_disk_module_candidates_DiskThreads" != "xyes"],[
-        AC_MSG_ERROR([Storage module aufs requires DiskIO module: Blocking or DiskThreads])
-      ])
-    ],
-    [rock],[
-      AS_IF([test "x$squid_disk_module_candidates_IpcIo" != "xyes" -a \
-        "x$squid_disk_module_candidates_Blocking" != "xyes"],[
-         AC_MSG_ERROR([Storage module Rock requires DiskIO module: Blocking or IpcIo])
-      ])
-      squid_do_build_rock=true
-    ],
-    [ufs],[
-      AS_IF([test "x$squid_disk_module_candidates_Blocking" != "xyes"],[
-        AC_MSG_ERROR([Storage module ufs requires DiskIO module: Blocking])
-      ])
-      squid_do_build_ufs=true
-    ]
-  )
-done
-
-AM_CONDITIONAL(ENABLE_FS_UFS, test "x$squid_do_build_ufs" = "xtrue")
-AM_CONDITIONAL(ENABLE_FS_ROCK, test "x$squid_do_build_rock" = "xtrue")
-dnl hack: need to define those even if not used in the build system to
-dnl make sure that global FS objects are linked to the squid binary.
-AH_TEMPLATE(HAVE_FS_UFS, "Define to 1 if ufs filesystem module is build")
-AH_TEMPLATE(HAVE_FS_AUFS, "Define to 1 if aufs filesystem module is build")
-AH_TEMPLATE(HAVE_FS_DISKD, "Define to 1 if diskd filesystem module is build")
-AH_TEMPLATE(HAVE_FS_ROCK, "Define to 1 if rock filesystem module is build")
-
-
-dnl got final squid_storeio_module_candidates, build library lists
-dnl This list will not be needed when each fs library has its own Makefile
-STORE_LIBS_TO_BUILD=
-dnl File system libraries to link executables with.
-dnl These are the same as STORE_LIBS_TO_BUILD, but with a path
-STORE_LIBS_TO_ADD=
-for fs in $squid_storeio_module_candidates; do
-    STORE_LIBS_TO_BUILD="$STORE_LIBS_TO_BUILD lib${fs}.la"
-    STORE_LIBS_TO_ADD="$STORE_LIBS_TO_ADD fs/lib${fs}.la"
-    SQUID_TOUPPER_VAR_CONTENTS([fs])
-    AC_DEFINE_UNQUOTED(HAVE_FS_${fs}, 1)
-done
-
-AC_SUBST(STORE_LIBS_TO_BUILD)
-AC_SUBST(STORE_LIBS_TO_ADD)
-AC_SUBST(STORE_TESTS)
-
 
 dnl At lest one removal policy is always needed.
 dnl 'lru' removal policy is currently hard-coded by name for tests
@@ -2575,7 +2516,6 @@ AC_CONFIG_FILES([
 	src/error/Makefile
 	src/eui/Makefile
 	src/format/Makefile
-	src/fs/Makefile
 	src/ftp/Makefile
 	src/helper/Makefile
 	src/html/Makefile
@@ -2605,6 +2545,9 @@ AC_CONFIG_FILES([
 	src/snmp/Makefile
 	src/ssl/Makefile
 	src/store/Makefile
+	src/store/fs/Makefile
+	src/store/fs/rock/Makefile
+	src/store/fs/ufs/Makefile
 	src/store/id_rewriters/Makefile
 	src/store/id_rewriters/file/Makefile
 	src/time/Makefile

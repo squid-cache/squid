@@ -6,14 +6,16 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_FS_ROCK_ROCKHEADERUPDATER_H
-#define SQUID_SRC_FS_ROCK_ROCKHEADERUPDATER_H
+#ifndef SQUID_SRC_STORE_FS_ROCK_ROCKHEADERUPDATER_H
+#define SQUID_SRC_STORE_FS_ROCK_ROCKHEADERUPDATER_H
+
+#if USE_STORE_FS_ROCK
 
 #include "base/AsyncJob.h"
 #include "cbdata.h"
-#include "fs/rock/forward.h"
-#include "fs/rock/RockSwapDir.h"
 #include "ipc/StoreMap.h"
+#include "store/fs/rock/forward.h"
+#include "store/fs/rock/RockSwapDir.h"
 
 namespace Rock
 {
@@ -82,5 +84,5 @@ std::ostream &operator <<(std::ostream &os, const HeaderUpdater::IoCbParams &par
 
 } // namespace Rock
 
-#endif /* SQUID_SRC_FS_ROCK_ROCKHEADERUPDATER_H */
-
+#endif /* USE_STORE_FS_ROCK */
+#endif /* SQUID_SRC_STORE_FS_ROCK_ROCKHEADERUPDATER_H */

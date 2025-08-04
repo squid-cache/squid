@@ -6,19 +6,22 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_FS_ROCK_ROCKSWAPDIR_H
-#define SQUID_SRC_FS_ROCK_ROCKSWAPDIR_H
+#ifndef SQUID_SRC_STORE_FS_ROCK_ROCKSWAPDIR_H
+#define SQUID_SRC_STORE_FS_ROCK_ROCKSWAPDIR_H
+
+#if USE_STORE_FS_ROCK
 
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
-#include "fs/rock/forward.h"
-#include "fs/rock/RockDbCell.h"
-#include "fs/rock/RockRebuild.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
 #include "ipc/StoreMap.h"
 #include "store/Disk.h"
+#include "store/fs/rock/forward.h"
+#include "store/fs/rock/RockDbCell.h"
+#include "store/fs/rock/RockRebuild.h"
 #include "store_rebuild.h"
+
 #include <vector>
 
 class DiskIOStrategy;
@@ -170,5 +173,5 @@ private:
 
 } // namespace Rock
 
-#endif /* SQUID_SRC_FS_ROCK_ROCKSWAPDIR_H */
-
+#endif /* USE_STORE_FS_ROCK */
+#endif /* SQUID_SRC_STORE_FS_ROCK_ROCKSWAPDIR_H */

@@ -118,7 +118,15 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p>No new options in this version.
+	<tag>--enable-store-fs[="list of modules"]</tag>
+	<p>The <em>ufs</em> filesystem provides <em>cache_dir</em>
+	   types <em>ufs</em>, <em>aufs</em>, and/or <em>diskd</em>
+	   depending on which Dosk I/O modules are also enabled.
+	<p>The <em>rock</em> filesystem provides <em>cache_dir</em>
+	   type <em>rock</em>.
+	<p>The default behaviour for this option when omitted, or
+	   provided without a list of modules is to auto-enable
+	   any which are able to be built.
 
 </descrip>
 
@@ -143,7 +151,8 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
-	<p>No removed options in this version.
+	<tag>--enable-storeio=</tag>
+	<p>Replaced with <em>--enable-store-fs=</em>.
 
 </descrip>
 

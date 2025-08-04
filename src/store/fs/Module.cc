@@ -7,45 +7,31 @@
  */
 
 #include "squid.h"
-#include "Module.h"
-#if defined(HAVE_FS_UFS) || defined(HAVE_FS_AUFS) || defined(HAVE_FS_DISKD)
-#include "fs/ufs/StoreFSufs.h"
-#include "fs/ufs/UFSSwapDir.h"
-#endif
+#include "store/fs/Module.h"
+#include "store/fs/rock/RockStoreFileSystem.h"
+#include "store/fs/ufs/StoreFSufs.h"
+#include "store/fs/ufs/UFSSwapDir.h"
 
-#if HAVE_FS_UFS
+#if USE_STORE_FS_UFS
 static Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *UfsInstance;
-#endif
-
-#if HAVE_FS_AUFS
 static Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *AufsInstance;
-#endif
-
-#if HAVE_FS_DISKD
 static Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *DiskdInstance;
 #endif
 
-#if HAVE_FS_ROCK
-#include "fs/rock/RockStoreFileSystem.h"
+#if USE_STORE_FS_ROCK
 static Rock::StoreFileSystem *RockInstance = nullptr;
 #endif
 
 void Fs::Init()
 {
 
-#if HAVE_FS_UFS
+#if USE_STORE_FS_UFS
     UfsInstance = new Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir>("Blocking", "ufs");
-#endif
-
-#if HAVE_FS_AUFS
     AufsInstance = new Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir>("DiskThreads", "aufs");;
-#endif
-
-#if HAVE_FS_DISKD
     DiskdInstance = new Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir>("DiskDaemon", "diskd");;
 #endif
 
-#if HAVE_FS_ROCK
+#if USE_STORE_FS_ROCK
     RockInstance = new Rock::StoreFileSystem();
 #endif
 

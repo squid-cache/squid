@@ -38,23 +38,20 @@
  *
  \section BuildStructure Build structure
  \par
- * The storage types live in \em src/fs/. Each subdirectory corresponds
+ * The storage types live in \em src/store/fs/. Each subdirectory corresponds
  * to the name of the storage type. When a new storage type is implemented
  * configure.ac must be updated to autogenerate a Makefile in
- * \em src/fs/foo/ from a Makefile.in file.
- *
- * TODO: DOCS: add template addition to configure.ac for storage module addition.
- * TODO: DOCS: add template Makefile.am for storage module addition.
+ * \em src/store/fs/foo/ from a Makefile.in file.
  *
  \par
  * configure will take a list of storage types through the
- * --enable-store-io parameter. This parameter takes a list of
+ * --enable-store-fs parameter. This parameter takes a list of
  * space separated storage types. For example,
- * --enable-store-io="ufs aufs" .
+ * --enable-store-fs="rock ufs" .
  *
  \par
- * Each storage type must create an archive file
- * in \em src/fs/foo/.a . This file is automatically linked into
+ * Each storage type must create a convenience library
+ * in \em src/store/fs/foo/libfoo.la . This file is automatically linked into
  * squid at compile time.
  *
  \par

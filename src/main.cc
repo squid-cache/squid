@@ -38,7 +38,6 @@
 #include "fd.h"
 #include "format/Token.h"
 #include "fqdncache.h"
-#include "fs/Module.h"
 #include "fs_io.h"
 #include "FwdState.h"
 #include "globals.h"
@@ -71,6 +70,7 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "store/Disks.h"
+#include "store/fs/Module.h"
 #include "store_log.h"
 #include "StoreFileSystem.h"
 #include "time/Engine.h"
@@ -1424,7 +1424,7 @@ RegisterModules()
     CallRunnerRegistrator(sslBumpCfgRr);
 #endif
 
-#if HAVE_FS_ROCK
+#if USE_STORE_FS_ROCK
     CallRunnerRegistratorIn(Rock, SwapDirRr);
 #endif
 
@@ -1532,7 +1532,9 @@ SquidMain(int argc, char **argv)
 
         storeFsInit();      /* required for config parsing */
 
+#if USE_STORE_FS
         Fs::Init();
+#endif
 
         /* May not be needed for parsing, have not audited for such */
         DiskIOModule::SetupAllModules();

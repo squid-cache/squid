@@ -6,8 +6,10 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_FS_UFS_UFSSTRATEGY_H
-#define SQUID_SRC_FS_UFS_UFSSTRATEGY_H
+#ifndef SQUID_SRC_STORE_FS_UFS_UFSSTRATEGY_H
+#define SQUID_SRC_STORE_FS_UFS_UFSSTRATEGY_H
+
+#if USE_STORE_FS_UFS
 
 #include "DiskIO/DiskFile.h"
 #include "StoreIOState.h"
@@ -64,5 +66,5 @@ private:
 } //namespace Ufs
 } //namespace Fs
 
-#endif /* SQUID_SRC_FS_UFS_UFSSTRATEGY_H */
-
+#endif /* USE_STORE_FS_UFS */
+#endif /* SQUID_SRC_STORE_FS_UFS_UFSSTRATEGY_H */
