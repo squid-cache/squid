@@ -10323,11 +10323,11 @@ DOC_START
 	off	Sends received X-Forwarded-For with 'unknown' appended.
 		Or, if no such header was received, sends a new one
 		containing the 'unknown' word.
-		Any received Forwarded header is removed.
+		Any received Forwarded header is not sent.
 
 	truncate
 		Any received X-Forwarded-For or Forwarded header is removed.
-		Send X-Forwarded-For containing only the client IP or
+		Sends X-Forwarded-For containing only the client IP or
 		'unknown' word.
 DOC_END
 
