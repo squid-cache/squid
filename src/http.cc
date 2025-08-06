@@ -1901,14 +1901,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     return;
 }
 
-/** Handle X-Forwarded-For and Forwarded headers
- *
- *  off          - append 'unknown' to X-Forwarded-For (only).
- *  on           - append client IP or 'unknown' to X-Forwarded-For (only).
- *  truncate     - replace X-Forwarded-For with client IP or 'unknown'.
- *  delete       - do not copy Forwarded or X-Forwarded-For through.
- *  transparent  - pass Forwarded or X-Forwarded-For unchanged.
- */
+/// handle Forwarded and X-Forwarded-For headers
 static void
 fixupForwardedHeader(const HttpRequest &request, HttpHeader &hdr_out)
 {
