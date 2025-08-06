@@ -34,7 +34,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<item>Removed purge tool
 	<item>Remove deprecated languages
 	<item>Remove Ident protocol support
-	<item>Forwarded HTTP Extension support
+	<item>>Support RFC 7239: Forwarded HTTP Extension
 </itemize>
 
 <p>Most user-facing changes are reflected in squid.conf (see further below).
@@ -128,7 +128,7 @@ in the position of what used to be a %ui record field.
 <p>If necessary, an external ACL helper can be written to perform Ident transactions
 and deliver the user identity to Squid through the **user=** annotation.
 
-<sect1>Forwarded HTTP Extension support
+<sect1>>Support RFC 7239: Forwarded HTTP Extension
 <p>Details in <url url="https://tools.ietf.org/html/rfc7239" name="RFC 7239: Forwarded HTTP Extension">
 
 <p>The <em>Forwarded</em> extension has been standardized to replace
@@ -136,10 +136,9 @@ and deliver the user identity to Squid through the **user=** annotation.
    initial support for managing this HTTP extension in Squid with the
    <em>http_header_forwarded</em> directive.
 
-<p>The default behaviour is <em>transparent</em> - to relay any <em>Forwarded</em>
+<p>The default Squid behaviour is now <em>transparent</em> - to relay any <em>Forwarded</em>
    or <em>X-Forwarded-For</em> headers from the client unchanged to the server.
-   Unlike <em>X-Forwarded-For</em> the default is not to expose client IP in the
-   <em>Forwarded</em>.
+   This prevents unintentionally exposing client IP in the HTTP headers.
 
 <p>To send client IP and other details in the <em>Forwarded</em> header, the
    <em>header_add</em> directive and ACLs can be used to control what gets
@@ -148,11 +147,11 @@ and deliver the user identity to Squid through the **user=** annotation.
    acl internal dstdomain .example.com
    acl ipv6 src ipv6
 
-   request_header_add Forwarded "for=%>a;by=%>la:%>lp" !ipv6 internal
-   request_header_add Forwarded "for=[%>a];by=[%>la]:%>lp" ipv6 internal
+   request_header_add Forwarded "for=\"%>a\";by=\"%>la:%>lp\"" !ipv6 internal
+   request_header_add Forwarded "for=\"[%>a]\";by=\"[%>la]:%>lp\"" ipv6 internal
 
-   request_header_add Forwarded "for=%>a" !ipv6 !internal
-   request_header_add Forwarded "for=[%>a]" ipv6 !internal
+   request_header_add Forwarded "for=\"%>a\"" !ipv6 !internal
+   request_header_add Forwarded "for=\"[%>a]\"" ipv6 !internal
 </verb>
 
 <p>The <em>delete</em> option can be selected to remove all <em>X-Forwarded-For</em>
