@@ -1914,16 +1914,10 @@ fixupForwardedHeader(const HttpRequest &request, HttpHeader &hdr_out)
         // do not send
         break;
 
-    case Http::ExtForwarded::Mode::fwdTransparent: {
+    case Http::ExtForwarded::Mode::fwdTransparent:
         // send what was received
-        auto strXff = request.header.getList(Http::HdrType::X_FORWARDED_FOR);
-        if (strXff.size() > 0)
-            hdr_out.putStr(Http::HdrType::X_FORWARDED_FOR, strXff.termedBuf());
-        auto strFwd = request.header.getList(Http::HdrType::FORWARDED);
-        if (strFwd.size() > 0)
-            hdr_out.putStr(Http::HdrType::FORWARDED, strFwd.termedBuf());
-    }
-    break;
+        // handled by copyOneHeaderFromClientsideRequestToUpstreamRequest()
+        break;
 
     case Http::ExtForwarded::Mode::xffOn: {
         // send what was received, with client-IP or 'unknown' appended
@@ -2364,8 +2358,10 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case Http::HdrType::X_FORWARDED_FOR:
     case Http::HdrType::FORWARDED:
         /** \par X-Forwarded-For:, Forwarded:
-         * handled specially by fixupForwardedHeader()
+         * Pass thru only for 'transparent' action configured or default'ed.
          */
+        if (!Config.http.header_forwarded || Config.http.header_forwarded->mode == Http::ExtForwarded::Mode::fwdTransparent)
+            hdr_out->addEntry(e->clone());
         break;
 
     default:
