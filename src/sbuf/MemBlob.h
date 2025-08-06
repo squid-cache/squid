@@ -13,7 +13,7 @@
 
 #include "base/InstanceId.h"
 #include "base/RefCount.h"
-#include "mem/forward.h"
+#include "mem/AllocatorProxy.h"
 
 /// Various MemBlob class-wide statistics.
 class MemBlobStats
