@@ -34,6 +34,7 @@
 #include "http.h"
 #include "http/one/ResponseParser.h"
 #include "http/one/TeChunkedParser.h"
+#include "http/ExtForwarded.h"
 #include "http/StatusCode.h"
 #include "http/Stream.h"
 #include "HttpControlMsg.h"
@@ -1911,13 +1912,16 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
 static void
 fixupForwardedHeader(const HttpRequest &request, HttpHeader &hdr_out)
 {
-    switch (Config.http.header_forwarded.mode)
+    if (!Config.http.header_forwarded)
+        return;
+
+    switch (Config.http.header_forwarded->mode)
     {
-    case SquidConfig::Http::ExtForwarded::Mode::fwdDelete:
+    case Http::ExtForwarded::Mode::fwdDelete:
         // do not send
         break;
 
-    case SquidConfig::Http::ExtForwarded::Mode::fwdTransparent: {
+    case Http::ExtForwarded::Mode::fwdTransparent: {
         // send what was received
         auto strXff = request.header.getList(Http::HdrType::X_FORWARDED_FOR);
         if (strXff.size() > 0)
@@ -1928,7 +1932,7 @@ fixupForwardedHeader(const HttpRequest &request, HttpHeader &hdr_out)
     }
     break;
 
-    case SquidConfig::Http::ExtForwarded::Mode::xffOn: {
+    case Http::ExtForwarded::Mode::xffOn: {
         // send what was received, with client-IP or 'unknown' appended
         auto strFwd = request.header.getList(Http::HdrType::X_FORWARDED_FOR);
 
@@ -1955,7 +1959,7 @@ fixupForwardedHeader(const HttpRequest &request, HttpHeader &hdr_out)
     }
     break;
 
-    case SquidConfig::Http::ExtForwarded::Mode::xffOff: {
+    case Http::ExtForwarded::Mode::xffOff: {
         // send what was received, with 'unknown' appended
         auto strFwd = request.header.getList(Http::HdrType::X_FORWARDED_FOR);
 
@@ -1975,7 +1979,7 @@ fixupForwardedHeader(const HttpRequest &request, HttpHeader &hdr_out)
     }
     break;
 
-    case SquidConfig::Http::ExtForwarded::Mode::xffTruncate:
+    case Http::ExtForwarded::Mode::xffTruncate:
         // send only client-IP or 'unknown'
         if (request.client_addr.isNoAddr()) {
             hdr_out.putStr(Http::HdrType::X_FORWARDED_FOR, "unknown");

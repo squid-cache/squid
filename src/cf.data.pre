@@ -10296,7 +10296,7 @@ DOC_END
 
 NAME: http_header_forwarded forwarded_for
 COMMENT: on|off|transparent|truncate|delete
-TYPE: http_header_forwarded
+TYPE: Http::ExtForwarded*
 DEFAULT: transparent
 LOC: Config.http.header_forwarded
 DOC_START

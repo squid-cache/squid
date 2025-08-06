@@ -1836,65 +1836,6 @@ parse_client_delay_pool_access(ClientDelayConfig * cfg)
 }
 #endif
 
-static void
-parse_http_header_forwarded(SquidConfig::Http::ExtForwarded *cfg)
-{
-    char *t = ConfigParser::NextToken();
-
-    if (!t) {
-        debugs(3, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(3, DBG_CRITICAL, "ERROR: " << cfg_directive << " missing action parameter.");
-        return;
-    }
-
-    // legacy X-Forwarded-For modes
-    if (strcmp(t, "on") == 0) {
-        cfg->mode = SquidConfig::Http::ExtForwarded::Mode::xffOn;
-    } else if (strcmp(t, "off") == 0) {
-        cfg->mode = SquidConfig::Http::ExtForwarded::Mode::xffOff;
-    } else if (strcmp(t, "truncate") == 0) {
-        cfg->mode = SquidConfig::Http::ExtForwarded::Mode::xffTruncate;
-    }
-
-    // TODO: else options specific to Forwarded
-
-    // modes shared by X-Forwarded-For and Forwarded
-    if (strcmp(t, "delete") == 0) {
-        cfg->mode = SquidConfig::Http::ExtForwarded::Mode::fwdDelete;
-    } else if (strcmp(t, "transparent") == 0) {
-        cfg->mode = SquidConfig::Http::ExtForwarded::Mode::fwdTransparent;
-    }
-}
-
-static void
-dump_http_header_forwarded(StoreEntry *e, const char *name, const SquidConfig::Http::ExtForwarded &cfg)
-{
-    switch (cfg.mode)
-    {
-    case SquidConfig::Http::ExtForwarded::Mode::xffOn:
-        e->appendf("%s on\n", name);
-        break;
-    case SquidConfig::Http::ExtForwarded::Mode::xffOff:
-        e->append("forwarded_for off\n", 18);
-        break;
-    case SquidConfig::Http::ExtForwarded::Mode::xffTruncate:
-        e->append("forwarded_for truncate\n", 23);
-        break;
-    case SquidConfig::Http::ExtForwarded::Mode::fwdDelete:
-        e->appendf("%s delete\n", name);
-        break;
-    case SquidConfig::Http::ExtForwarded::Mode::fwdTransparent:
-        // default
-        break;
-    }
-}
-
-static void
-free_http_header_forwarded(SquidConfig::Http::ExtForwarded *)
-{
-    ; // do nothing
-}
-
 #if USE_HTTP_VIOLATIONS
 static void
 dump_http_header_access(StoreEntry * entry, const char *name, const HeaderManglers *manglers)

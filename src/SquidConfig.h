@@ -17,6 +17,7 @@
 #include "DelayConfig.h"
 #endif
 #include "helper/ChildConfig.h"
+#include "http/forward.h"
 #include "HttpHeaderTools.h"
 #include "ip/Address.h"
 #if USE_DELAY_POOLS
@@ -407,19 +408,8 @@ public:
     } accessList;
     AclDenyInfoList *denyInfoList;
 
-    struct Http {
-        // settings for the 'Forwarded:' HTTP header extension
-        // and legacy X-Forwarded-For header
-        struct ExtForwarded {
-            enum class Mode {
-                fwdTransparent,
-                fwdDelete,
-                xffTruncate,
-                xffOn,
-                xffOff
-            } mode;
-        } header_forwarded;
-
+    struct {
+        Http::ExtForwarded *header_forwarded;
     } http;
 
     struct {
