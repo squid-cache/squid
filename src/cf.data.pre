@@ -10318,7 +10318,7 @@ DOC_START
 		or 'unknown' appended. Or, if no such header was
 		received, sends a new one containing the client IP or
 		'unknown' word.
-		Any received Forwarded header is removed.
+		Any received Forwarded header is not sent.
 
 	off	Sends received X-Forwarded-For with 'unknown' appended.
 		Or, if no such header was received, sends a new one
