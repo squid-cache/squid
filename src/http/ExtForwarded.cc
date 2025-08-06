@@ -20,10 +20,13 @@ Http::ExtForwarded::ExtForwarded(ConfigParser &parser)
 
     // legacy X-Forwarded-For modes
     if (t.cmp("on") == 0) {
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: action 'on' is deprecated. Please remove this line. Use request_header_add instead.");
         mode = Mode::xffOn;
     } else if (t.cmp("off") == 0) {
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: action 'off' is deprecated. Consider using action 'delete', or removing entirely.");
         mode = Mode::xffOff;
     } else if (t.cmp("truncate") == 0) {
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: action 'truncate' is deprecated. Consider using action 'delete' instead.");
         mode = Mode::xffTruncate;
     }
 
@@ -33,6 +36,7 @@ Http::ExtForwarded::ExtForwarded(ConfigParser &parser)
     if (t.cmp("delete") == 0) {
         mode = Mode::fwdDelete;
     } else if (t.cmp("transparent") == 0) {
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: default action 'transparent' does not need to be configured.");
         mode = Mode::fwdTransparent;
     }
 }
