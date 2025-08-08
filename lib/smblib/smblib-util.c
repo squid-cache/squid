@@ -734,12 +734,12 @@ int SMB_TreeDisconnect(SMB_Tree_Handle Tree_Handle, BOOL discard)
     if (discard == TRUE) { /* Unlink it and free it ... */
 
         if (Tree_Handle -> next == NULL)
-            Tree_Handle -> con -> first_tree = Tree_Handle -> prev;
+            Tree_Handle -> con -> last_tree = Tree_Handle -> prev;
         else
             Tree_Handle -> next -> prev = Tree_Handle -> prev;
 
         if (Tree_Handle -> prev == NULL)
-            Tree_Handle -> con -> last_tree = Tree_Handle -> next;
+            Tree_Handle -> con -> first_tree = Tree_Handle -> next;
         else
             Tree_Handle -> prev -> next = Tree_Handle -> next;
 

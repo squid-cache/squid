@@ -338,8 +338,8 @@ SMB_Tree_Handle SMB_Logon_And_TCon(SMB_Handle_Type Con_Handle,
 
     if (Con_Handle -> first_tree == NULL) {
 
-        Con_Handle -> first_tree == tree;
-        Con_Handle -> last_tree == tree;
+        Con_Handle -> first_tree = tree;
+        Con_Handle -> last_tree = tree;
 
     } else {
 
@@ -731,8 +731,8 @@ int SMB_Logon_TCon_Open(SMB_Handle_Type Con_Handle, char *UserName,
 
     if (Con_Handle -> first_tree == NULL) {
 
-        Con_Handle -> first_tree == tree;
-        Con_Handle -> last_tree == tree;
+        Con_Handle -> first_tree = tree;
+        Con_Handle -> last_tree = tree;
 
     } else {
 
