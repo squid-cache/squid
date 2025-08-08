@@ -40,34 +40,4 @@ public:
 
 } // namespace Http
 
-// GCC v6 requires "reopening" of the namespace here, instead of the usual
-// definitions like Configuration::Component<T>::Parse():
-// error: specialization of Configuration::Component... in different namespace
-// TODO: Refactor to use the usual style after we stop GCC v6 support.
-namespace Configuration {
-
-template <>
-inline Http::ExtForwarded *
-Configuration::Component<Http::ExtForwarded*>::Parse(ConfigParser &parser)
-{
-    return new Http::ExtForwarded(parser);
-}
-
-template <>
-inline void
-Configuration::Component<Http::ExtForwarded*>::Print(std::ostream &os, Http::ExtForwarded* const & ExtForwarded)
-{
-    assert(ExtForwarded);
-    ExtForwarded->dump(os);
-}
-
-template <>
-inline void
-Configuration::Component<Http::ExtForwarded*>::Free(Http::ExtForwarded * const ExtForwarded)
-{
-    delete ExtForwarded;
-}
-
-} // namespace Configuration
-
 #endif /* SQUID_SRC_HTTP_EXTFORWARDED_H */
