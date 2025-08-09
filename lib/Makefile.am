@@ -25,10 +25,6 @@ noinst_LTLIBRARIES = \
 	libmisccontainers.la \
 	libmiscutil.la
 
-if ENABLE_SMBLIB
-# smblib is the only user of the rfcnb library
-SUBDIRS += rfcnb smblib
-endif
 if ENABLE_AUTH_NTLM
 SUBDIRS += ntlmauth
 endif
