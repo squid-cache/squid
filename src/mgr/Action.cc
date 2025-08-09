@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
+#include "compat/unistd.h"
 #include "HttpReply.h"
 #include "ipc/Port.h"
 #include "mgr/Action.h"
@@ -91,7 +92,7 @@ Mgr::Action::respond(const Request &request)
     // Assume most kid classes are fully aggregatable (i.e., they do not dump
     // local info at all). Do not import the remote HTTP fd into our Comm
     // space; collect and send an IPC msg with collected info to Coordinator.
-    ::close(request.conn->fd);
+    xclose(request.conn->fd);
     request.conn->fd = -1;
     collect();
     sendResponse(request.requestId);

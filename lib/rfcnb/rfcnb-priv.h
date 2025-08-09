@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -78,7 +78,7 @@ struct redirect_addr {
 
 typedef struct RFCNB_Con {
 
-    int fd;                     /* File descripter for TCP/IP connection */
+    int fd;                     /* File descriptor for TCP/IP connection */
     int errn;                   /* last error                            */
     int timeout;                /* How many milli-secs before IO times out */
     int redirects;              /* How many times we were redirected     */

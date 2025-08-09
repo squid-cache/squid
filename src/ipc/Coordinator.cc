@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,7 @@
 #include "CacheManager.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "compat/unistd.h"
 #include "ipc/Coordinator.h"
 #include "ipc/SharedListen.h"
 #include "mgr/Inquirer.h"
@@ -27,6 +28,10 @@
 #endif
 
 #include <cerrno>
+
+#if HAVE_SYS_UNISTD_H
+#include <sys/unistd.h>
+#endif
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
 Ipc::Coordinator* Ipc::Coordinator::TheInstance = nullptr;
@@ -176,7 +181,7 @@ Ipc::Coordinator::handleCacheMgrRequest(const Mgr::Request& request)
         debugs(54, DBG_IMPORTANT, "ERROR: Squid BUG: cannot aggregate mgr:" <<
                request.params.actionName << ": " << ex.what());
         // TODO: Avoid half-baked Connections or teach them how to close.
-        ::close(request.conn->fd);
+        xclose(request.conn->fd);
         request.conn->fd = -1;
         return; // the worker will timeout and close
     }

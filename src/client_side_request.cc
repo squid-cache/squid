@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -935,7 +935,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             /* XXX: This is suboptimal. We should give the stream the range set,
              * and thereby let the top of the stream set the offset when the
              * size becomes known. As it is, we will end up requesting from 0
-             * for evey -X range specification.
+             * for every -X range specification.
              * RBC - this may be somewhat wrong. We should probably set the range
              * iter up at this point.
              */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
+#include "compat/unistd.h"
 #include "fd.h"
 #include "fde.h"
 #include "fs_io.h"
@@ -64,14 +65,12 @@ dwrite_q::~dwrite_q()
 int
 file_open(const char *path, int mode)
 {
-    int fd;
-
     if (FILE_MODE(mode) == O_WRONLY)
         mode |= O_APPEND;
 
     errno = 0;
 
-    fd = open(path, mode, 0644);
+    auto fd = xopen(path, mode, 0644);
 
     ++ statCounter.syscalls.disk.opens;
 
@@ -124,7 +123,7 @@ file_close(int fd)
      */
     assert(F->write_handler == nullptr);
 
-    close(fd);
+    xclose(fd);
 
     debugs(6, F->flags.close_request ? 2 : 5, "file_close: FD " << fd << " really closing");
 

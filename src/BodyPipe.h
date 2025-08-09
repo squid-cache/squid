@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -142,7 +142,7 @@ protected:
     // lower-level interface used by Checkout
     MemBuf &checkOut(); // obtain raw buffer
     void checkIn(Checkout &checkout); // return updated raw buffer
-    void undoCheckOut(Checkout &checkout); // undo checkout efffect
+    void undoCheckOut(Checkout &checkout); // undo checkout effect
 
     void scheduleBodyDataNotification();
     void scheduleBodyEndNotification();

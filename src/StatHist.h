@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -74,7 +74,7 @@ public:
 
     /** Import values from another histogram
      *
-     * \note: the two histograms MUST have the same capicity, min and max or
+     * \note: the two histograms MUST have the same capacity, min and max or
      *      an exception will be raised
      */
     StatHist &operator += (const StatHist &B);

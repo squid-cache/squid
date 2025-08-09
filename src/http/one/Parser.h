@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,7 +32,7 @@ enum ParseState {
 /** HTTP/1.x protocol parser
  *
  * Works on a raw character I/O buffer and tokenizes the content into
- * the major CRLF delimited segments of an HTTP/1 procotol message:
+ * the major CRLF delimited segments of an HTTP/1 protocol message:
  *
  * \li first-line (request-line / simple-request / status-line)
  * \li mime-header 0*( header-name ':' SP field-value CRLF)

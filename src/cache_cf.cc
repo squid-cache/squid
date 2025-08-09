@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,6 +28,8 @@
 #include "cache_cf.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
+#include "compat/netdb.h"
+#include "compat/socket.h"
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
@@ -103,9 +105,6 @@
 #endif
 #if HAVE_GRP_H
 #include <grp.h>
-#endif
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
 #endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -957,10 +956,10 @@ configDoConfigure(void)
         Ssl::loadSquidUntrusted(Config.ssl_client.foreignIntermediateCertsPath);
 #endif
 
-    if (Security::ProxyOutgoingConfig.encryptTransport) {
+    if (Security::ProxyOutgoingConfig().encryptTransport) {
         debugs(3, 2, "initializing https:// proxy context");
 
-        const auto rawSslContext = Security::ProxyOutgoingConfig.createClientContext(false);
+        const auto rawSslContext = Security::ProxyOutgoingConfig().createClientContext(false);
         Config.ssl_client.sslContext_ = rawSslContext ? new Security::ContextPointer(rawSslContext) : nullptr;
         if (!Config.ssl_client.sslContext_) {
 #if USE_OPENSSL
@@ -972,7 +971,7 @@ configDoConfigure(void)
 #if USE_OPENSSL
         Ssl::useSquidUntrusted(Config.ssl_client.sslContext_->get());
 #endif
-        Config.ssl_client.defaultPeerContext = new Security::FuturePeerContext(Security::ProxyOutgoingConfig, *Config.ssl_client.sslContext_);
+        Config.ssl_client.defaultPeerContext = new Security::FuturePeerContext(Security::ProxyOutgoingConfig(), *Config.ssl_client.sslContext_);
     }
 
     for (const auto &p: CurrentCachePeers()) {
@@ -1112,7 +1111,7 @@ parse_obsolete(const char *name)
             throw TextException(ToSBuf("missing required parameter for obsolete directive: ", name), Here());
 
         tmp.append(token, strlen(token));
-        Security::ProxyOutgoingConfig.parse(tmp.c_str());
+        Security::ProxyOutgoingConfig().parse(tmp.c_str());
     }
 }
 
@@ -2130,7 +2129,7 @@ GetService(const char *proto)
     }
     /** Returns either the service port number from /etc/services */
     if ( !isUnsignedNumeric(token, strlen(token)) )
-        port = getservbyname(token, proto);
+        port = xgetservbyname(token, proto);
     if (port != nullptr) {
         return ntohs((unsigned short)port->s_port);
     }

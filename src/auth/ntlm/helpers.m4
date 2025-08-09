@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -9,7 +9,6 @@ AS_IF([test "x$enable_auth" != "xno"],[
   SQUID_HELPER_FEATURE_CHECK([auth_ntlm],[$enable_auth],[auth/ntlm],[
     # Note: we only need this list because m4_include() does not accept variables
     SQUID_CHECK_HELPER([fake],[auth/ntlm])
-    SQUID_CHECK_HELPER([SMB_LM],[auth/ntlm])
     SQUID_CHECK_HELPER([SSPI],[auth/ntlm])
   ])
   NTLM_AUTH_HELPERS=$squid_cv_BUILD_HELPERS

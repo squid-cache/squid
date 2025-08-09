@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,8 @@
 #include "cache_cf.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -184,7 +186,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
         Ip::Address::InitAddr(aiPS);
 
-        if (getsockname(pwfd, aiPS->ai_addr, &(aiPS->ai_addrlen) ) < 0) {
+        if (xgetsockname(pwfd, aiPS->ai_addr, &(aiPS->ai_addrlen) ) < 0) {
             int xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerr(xerrno));
             Ip::Address::FreeAddr(aiPS);
@@ -198,7 +200,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
         Ip::Address::InitAddr(aiCS);
 
-        if (getsockname(crfd, aiCS->ai_addr, &(aiCS->ai_addrlen) ) < 0) {
+        if (xgetsockname(crfd, aiCS->ai_addr, &(aiCS->ai_addrlen) ) < 0) {
             int xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerr(xerrno));
             Ip::Address::FreeAddr(aiCS);
@@ -213,7 +215,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     if (type == IPC_TCP_SOCKET) {
-        if (listen(crfd, 1) < 0) {
+        if (xlisten(crfd, 1) < 0) {
             int xerrno = errno;
             debugs(54, DBG_IMPORTANT, "ipcCreate: listen FD " << crfd << ": " << xstrerr(xerrno));
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
@@ -254,7 +256,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     memset(hello_buf, '\0', HELLO_BUF_SZ);
-    x = recv(prfd, (void *)hello_buf, HELLO_BUF_SZ - 1, 0);
+    x = xrecv(prfd, (void *)hello_buf, HELLO_BUF_SZ - 1, 0);
 
     if (x < 0) {
         int xerrno = errno;
@@ -270,7 +272,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         return ipcCloseAllFD(prfd, pwfd, -1, -1);
     }
 
-    x = send(pwfd, (const void *)ok_string, strlen(ok_string), 0);
+    x = xsend(pwfd, ok_string, strlen(ok_string), 0);
 
     if (x < 0) {
         int xerrno = errno;
@@ -281,7 +283,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     memset(hello_buf, '\0', HELLO_BUF_SZ);
-    x = recv(prfd, (void *)hello_buf, HELLO_BUF_SZ - 1, 0);
+    x = xrecv(prfd, (void *)hello_buf, HELLO_BUF_SZ - 1, 0);
 
     if (x < 0) {
         int xerrno = errno;
@@ -333,7 +335,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 static int
 ipcSend(int cwfd, const char *buf, int len)
 {
-    int x = send(cwfd, (const void *)buf, len, 0);
+    const auto x = xsend(cwfd, buf, len, 0);
 
     if (x < 0) {
         int xerrno = errno;
@@ -393,7 +395,7 @@ ipc_thread_1(void *in_params)
     if (type == IPC_TCP_SOCKET) {
         debugs(54, 3, "ipcCreate: calling accept on FD " << crfd);
 
-        if ((fd = accept(crfd, nullptr, nullptr)) < 0) {
+        if ((fd = xaccept(crfd, nullptr, nullptr)) < 0) {
             int xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: FD " << crfd << " accept: " << xstrerr(xerrno));
             goto cleanup;
@@ -410,7 +412,7 @@ ipc_thread_1(void *in_params)
             goto cleanup;
     }
 
-    x = send(cwfd, (const void *)hello_string, strlen(hello_string) + 1, 0);
+    x = xsend(cwfd, hello_string, strlen(hello_string) + 1, 0);
 
     if (x < 0) {
         int xerrno = errno;
@@ -421,7 +423,7 @@ ipc_thread_1(void *in_params)
 
     PutEnvironment();
     memset(buf1, '\0', bufSz);
-    x = recv(crfd, (void *)buf1, bufSz-1, 0);
+    x = xrecv(crfd, (void *)buf1, bufSz-1, 0);
 
     if (x < 0) {
         int xerrno = errno;
@@ -471,7 +473,7 @@ ipc_thread_1(void *in_params)
 
         Ip::Address::InitAddr(aiPS_ipc);
 
-        if (getsockname(pwfd_ipc, aiPS_ipc->ai_addr, &(aiPS_ipc->ai_addrlen)) < 0) {
+        if (xgetsockname(pwfd_ipc, aiPS_ipc->ai_addr, &(aiPS_ipc->ai_addrlen)) < 0) {
             int xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerr(xerrno));
             ipcSend(cwfd, err_string, strlen(err_string));
@@ -486,7 +488,7 @@ ipc_thread_1(void *in_params)
 
         Ip::Address::InitAddr(aiCS_ipc);
 
-        if (getsockname(crfd_ipc, aiCS_ipc->ai_addr, &(aiCS_ipc->ai_addrlen)) < 0) {
+        if (xgetsockname(crfd_ipc, aiCS_ipc->ai_addr, &(aiCS_ipc->ai_addrlen)) < 0) {
             int xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerr(xerrno));
             ipcSend(cwfd, err_string, strlen(err_string));
@@ -602,7 +604,7 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        x = write(c2p[1], (const char *) &wpi, sizeof(wpi));
+        x = xwrite(c2p[1], (const char *) &wpi, sizeof(wpi));
 
         if (x < (ssize_t)sizeof(wpi)) {
             int xerrno = errno;
@@ -612,7 +614,7 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        x = read(p2c[0], buf1, bufSz-1);
+        x = xread(p2c[0], buf1, bufSz-1);
 
         if (x < 0) {
             int xerrno = errno;
@@ -629,7 +631,7 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        x = write(c2p[1], (const char *) &PS_ipc, sizeof(PS_ipc));
+        x = xwrite(c2p[1], (const char *) &PS_ipc, sizeof(PS_ipc));
 
         if (x < (ssize_t)sizeof(PS_ipc)) {
             int xerrno = errno;
@@ -639,7 +641,7 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        x = read(p2c[0], buf1, bufSz-1);
+        x = xread(p2c[0], buf1, bufSz-1);
 
         if (x < 0) {
             int xerrno = errno;
@@ -656,8 +658,8 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        x = send(pwfd_ipc, (const void *)ok_string, strlen(ok_string), 0);
-        x = recv(prfd_ipc, (void *)(buf1 + 200), bufSz -1 - 200, 0);
+        x = xsend(pwfd_ipc, ok_string, strlen(ok_string), 0);
+        x = xrecv(prfd_ipc, (void *)(buf1 + 200), bufSz -1 - 200, 0);
         assert((size_t) x == strlen(ok_string)
                && !strncmp(ok_string, buf1 + 200, strlen(ok_string)));
     }               /* IPC_UDP_SOCKET */
@@ -705,7 +707,7 @@ ipc_thread_1(void *in_params)
 
     /* cycle */
     for (;;) {
-        x = recv(crfd, (void *)buf1, bufSz-1, 0);
+        x = xrecv(crfd, (void *)buf1, bufSz-1, 0);
 
         if (x <= 0) {
             debugs(54, 3, "ipc(" << prog << "," << pid << "): " << x << " bytes received from parent. Exiting...");
@@ -724,9 +726,9 @@ ipc_thread_1(void *in_params)
         debugs(54, 5, "ipc(" << prog << "," << pid << "): received from parent: " << rfc1738_escape_unescaped(buf1));
 
         if (type == IPC_TCP_SOCKET)
-            x = write(c2p[1], buf1, x);
+            x = xwrite(c2p[1], buf1, x);
         else
-            x = send(pwfd_ipc, (const void *)buf1, x, 0);
+            x = xsend(pwfd_ipc, buf1, x, 0);
 
         if (x <= 0) {
             debugs(54, 3, "ipc(" << prog << "," << pid << "): " << x << " bytes written to " << prog << ". Exiting...");
@@ -746,7 +748,7 @@ cleanup:
         ipcCloseAllFD(-1, -1, crfd, cwfd);
 
     if (prfd_ipc != -1) {
-        send(crfd_ipc, (const void *)shutdown_string, strlen(shutdown_string), 0);
+        xsend(crfd_ipc, shutdown_string, strlen(shutdown_string), 0);
         shutdown(crfd_ipc, SD_BOTH);
         shutdown(prfd_ipc, SD_BOTH);
     }
@@ -804,9 +806,9 @@ ipc_thread_2(void *in_params)
 
     for (;;) {
         if (type == IPC_TCP_SOCKET)
-            x = read(rfd, buf2, bufSz-1);
+            x = xread(rfd, buf2, bufSz-1);
         else
-            x = recv(rfd, (void *)buf2, bufSz-1, 0);
+            x = xrecv(rfd, (void *)buf2, bufSz-1, 0);
 
         if ((x <= 0 && type == IPC_TCP_SOCKET) ||
                 (x < 0 && type == IPC_UDP_SOCKET)) {
@@ -832,7 +834,7 @@ ipc_thread_2(void *in_params)
 
         debugs(54, 5, "ipc(" << prog << "," << pid << "): received from child : " << rfc1738_escape_unescaped(buf2));
 
-        x = send(send_fd, (const void *)buf2, x, 0);
+        x = xsend(send_fd, buf2, x, 0);
 
         if ((x <= 0 && type == IPC_TCP_SOCKET) ||
                 (x < 0 && type == IPC_UDP_SOCKET)) {

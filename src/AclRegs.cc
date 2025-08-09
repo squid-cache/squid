@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,11 +25,9 @@
 #include "acl/AtStep.h"
 #include "acl/AtStepData.h"
 #endif
-#include "acl/Asn.h"
 #include "acl/Checklist.h"
 #include "acl/ConnectionsEncrypted.h"
 #include "acl/Data.h"
-#include "acl/DestinationAsn.h"
 #include "acl/DestinationDomain.h"
 #include "acl/DestinationIp.h"
 #include "acl/DomainData.h"
@@ -70,7 +68,6 @@
 #include "acl/ReplyMimeType.h"
 #include "acl/RequestHeaderStrategy.h"
 #include "acl/RequestMimeType.h"
-#include "acl/SourceAsn.h"
 #include "acl/SourceDomain.h"
 #include "acl/SourceIp.h"
 #include "acl/SquidError.h"
@@ -198,8 +195,6 @@ Acl::Init()
     RegisterMaker("any-of", [](TypeName)->Node* { return new AnyOf; }); // XXX: Add name parameter to ctor
     RegisterMaker("random", [](TypeName name)->Node* { return new ACLRandom(name); });
     RegisterMaker("time", [](TypeName name)->Node* { return new FinalizedParameterizedNode<CurrentTimeCheck>(name, new ACLTimeData); });
-    RegisterMaker("src_as", [](TypeName name)->Node* { return new FinalizedParameterizedNode<SourceAsnCheck>(name, new ACLASN); });
-    RegisterMaker("dst_as", [](TypeName name)->Node* { return new FinalizedParameterizedNode<DestinationAsnCheck>(name, new ACLASN); });
     RegisterMaker("browser", [](TypeName name)->Node* { return new FinalizedParameterizedNode<RequestHeaderCheck<Http::HdrType::USER_AGENT> >(name, new ACLRegexData); });
 
     RegisterMaker("dstdomain", [](TypeName name)->Node* { return new FinalizedParameterizedNode<DestinationDomainCheck>(name, new ACLDomainData); });

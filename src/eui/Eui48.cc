@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,8 @@
 #if USE_SQUID_EUI
 
 #include "base/IoManip.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "debug/Stream.h"
 #include "eui/Eui48.h"
 #include "globals.h"
@@ -171,7 +173,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     int offset;
 
     /* IPv6 builds do not provide the first http_port as an IPv4 socket for ARP */
-    int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
+    auto tmpSocket = xsocket(AF_INET,SOCK_STREAM,0);
     if (tmpSocket < 0) {
         int xerrno = errno;
         debugs(28, DBG_IMPORTANT, "ERROR: Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));
@@ -204,7 +206,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     debugs(28, 4, "id=" << (void*)this << " query ARP table");
     if (ioctl(tmpSocket, SIOCGARP, &arpReq) != -1) {
         /* Skip non-ethernet interfaces */
-        close(tmpSocket);
+        xclose(tmpSocket);
 
         if (arpReq.arp_ha.sa_family != ARPHRD_ETHER) {
             debugs(28, 4, "id=" << (void*)this << " ... not an Ethernet interface: " << arpReq.arp_ha.sa_data);
@@ -227,14 +229,14 @@ Eui::Eui48::lookup(const Ip::Address &c)
         int xerrno = errno;
         debugs(28, DBG_IMPORTANT, "ERROR: Attempt to retrieve interface list failed: " << xstrerr(xerrno));
         clear();
-        close(tmpSocket);
+        xclose(tmpSocket);
         return false;
     }
 
     if (ifc.ifc_len > (int)sizeof(ifbuffer)) {
         debugs(28, DBG_IMPORTANT, "Interface list too long - " << ifc.ifc_len);
         clear();
-        close(tmpSocket);
+        xclose(tmpSocket);
         return false;
     }
 
@@ -295,16 +297,16 @@ Eui::Eui48::lookup(const Ip::Address &c)
          */
 
         /* AYJ: 2009-10-06: for now we have to. We can only store one EUI at a time. */
-        close(tmpSocket);
+        xclose(tmpSocket);
         return true;
     }
 
-    close(tmpSocket);
+    xclose(tmpSocket);
 
 #elif _SQUID_SOLARIS_
 
     /* IPv6 builds do not provide the first http_port as an IPv4 socket for ARP */
-    int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
+    auto tmpSocket = xsocket(AF_INET,SOCK_STREAM,0);
     if (tmpSocket < 0) {
         int xerrno = errno;
         debugs(28, DBG_IMPORTANT, "ERROR: Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));
@@ -325,7 +327,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
         *  Solaris (at least 2.6/x86) does not use arp_ha.sa_family -
         * it returns 00:00:00:00:00:00 for non-ethernet media
         */
-        close(tmpSocket);
+        xclose(tmpSocket);
 
         if (arpReq.arp_ha.sa_data[0] == 0 &&
                 arpReq.arp_ha.sa_data[1] == 0 &&
@@ -341,7 +343,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
         set(arpReq.arp_ha.sa_data, 6);
         return true;
     } else {
-        close(tmpSocket);
+        xclose(tmpSocket);
     }
 
 #elif _SQUID_FREEBSD_ || _SQUID_NETBSD_ || _SQUID_OPENBSD_ || _SQUID_DRAGONFLY_ || _SQUID_KFREEBSD_

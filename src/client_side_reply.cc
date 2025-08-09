@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1035,7 +1035,7 @@ clientReplyContext::checkTransferDone()
 
     /*
      * Handle STORE_OK objects.
-     * objectLen(entry) will be set proprely.
+     * objectLen(entry) will be set properly.
      * RC: Does objectLen(entry) include the Headers?
      * RC: Yes.
      */

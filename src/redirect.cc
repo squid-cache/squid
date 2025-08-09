@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -100,7 +100,7 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
             size_t replySize = 0;
             if (const char *t = strchr(res, ' ')) {
                 static int warn = 0;
-                debugs(61, (!(warn++%50)? DBG_CRITICAL:2), "WARNING: UPGRADE: URL rewriter reponded with garbage '" << t <<
+                debugs(61, (!(warn++%50)? DBG_CRITICAL:2), "WARNING: UPGRADE: URL rewriter responded with garbage '" << t <<
                        "'. Future Squid will treat this as part of the URL.");
                 replySize = t - res;
             } else

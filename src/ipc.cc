@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,9 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
+#include "compat/pipe.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -23,10 +26,6 @@
 #include <chrono>
 #include <thread>
 #include <cstdlib>
-
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
 static const char *hello_string = "hi there\n";
 #ifndef HELLO_BUF_SZ
@@ -164,22 +163,22 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         }
 
         errno = 0;
-        if (setsockopt(fds[0], SOL_SOCKET, SO_SNDBUF, (void *) &buflen, sizeof(buflen)) == -1)  {
+        if (xsetsockopt(fds[0], SOL_SOCKET, SO_SNDBUF, &buflen, sizeof(buflen)) == -1)  {
             xerrno = errno;
             debugs(54, DBG_IMPORTANT, "ERROR: setsockopt failed: " << xstrerr(xerrno));
             errno = 0;
         }
-        if (setsockopt(fds[0], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen)) == -1) {
+        if (xsetsockopt(fds[0], SOL_SOCKET, SO_RCVBUF, &buflen, sizeof(buflen)) == -1) {
             xerrno = errno;
             debugs(54, DBG_IMPORTANT, "ERROR: setsockopt failed: " << xstrerr(xerrno));
             errno = 0;
         }
-        if (setsockopt(fds[1], SOL_SOCKET, SO_SNDBUF, (void *) &buflen, sizeof(buflen)) == -1) {
+        if (xsetsockopt(fds[1], SOL_SOCKET, SO_SNDBUF, &buflen, sizeof(buflen)) == -1) {
             xerrno = errno;
             debugs(54, DBG_IMPORTANT, "ERROR: setsockopt failed: " << xstrerr(xerrno));
             errno = 0;
         }
-        if (setsockopt(fds[1], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen)) == -1) {
+        if (xsetsockopt(fds[1], SOL_SOCKET, SO_RCVBUF, &buflen, sizeof(buflen)) == -1) {
             xerrno = errno;
             debugs(54, DBG_IMPORTANT, "ERROR: setsockopt failed: " << xstrerr(xerrno));
             errno = 0;
@@ -217,7 +216,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     if (type == IPC_TCP_SOCKET || type == IPC_UDP_SOCKET) {
         Ip::Address::InitAddr(AI);
 
-        if (getsockname(pwfd, AI->ai_addr, &AI->ai_addrlen) < 0) {
+        if (xgetsockname(pwfd, AI->ai_addr, &AI->ai_addrlen) < 0) {
             xerrno = errno;
             Ip::Address::FreeAddr(AI);
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerr(xerrno));
@@ -232,7 +231,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
         Ip::Address::InitAddr(AI);
 
-        if (getsockname(crfd, AI->ai_addr, &AI->ai_addrlen) < 0) {
+        if (xgetsockname(crfd, AI->ai_addr, &AI->ai_addrlen) < 0) {
             xerrno = errno;
             Ip::Address::FreeAddr(AI);
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerr(xerrno));
@@ -248,7 +247,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     if (type == IPC_TCP_SOCKET) {
-        if (listen(crfd, 1) < 0) {
+        if (xlisten(crfd, 1) < 0) {
             xerrno = errno;
             debugs(54, DBG_IMPORTANT, "ipcCreate: listen FD " << crfd << ": " << xstrerr(xerrno));
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
@@ -283,7 +282,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         if (type == IPC_UDP_SOCKET)
             x = comm_udp_recv(prfd, hello_buf, sizeof(hello_buf)-1, 0);
         else
-            x = read(prfd, hello_buf, sizeof(hello_buf)-1);
+            x = xread(prfd, hello_buf, sizeof(hello_buf)-1);
         xerrno = errno;
         if (x >= 0)
             hello_buf[x] = '\0';
@@ -324,24 +323,24 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     no_suid();          /* give up extra privileges */
 
     /* close shared socket with parent */
-    close(prfd);
+    xclose(prfd);
 
     if (pwfd != prfd)
-        close(pwfd);
+        xclose(pwfd);
 
     pwfd = prfd = -1;
 
     if (type == IPC_TCP_SOCKET) {
         debugs(54, 3, "ipcCreate: calling accept on FD " << crfd);
 
-        if ((fd = accept(crfd, nullptr, nullptr)) < 0) {
+        if ((fd = xaccept(crfd, nullptr, nullptr)) < 0) {
             xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: FD " << crfd << " accept: " << xstrerr(xerrno));
             _exit(1);
         }
 
         debugs(54, 3, "ipcCreate: CHILD accepted new FD " << fd);
-        close(crfd);
+        xclose(crfd);
         cwfd = crfd = fd;
     } else if (type == IPC_UDP_SOCKET) {
         if (comm_connect_addr(crfd, PaS) == Comm::COMM_ERROR)
@@ -358,7 +357,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
             _exit(1);
         }
     } else {
-        if (write(cwfd, hello_string, strlen(hello_string) + 1) < 0) {
+        if (xwrite(cwfd, hello_string, strlen(hello_string) + 1) < 0) {
             xerrno = errno;
             debugs(54, DBG_CRITICAL, "write FD " << cwfd << ": " << xstrerr(xerrno));
             debugs(54, DBG_CRITICAL, "ERROR: ipcCreate: CHILD: hello write test failed");
@@ -393,7 +392,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         x = dupOrExit(crfd);
     } while (x < 3);
 
-    close(x);
+    xclose(x);
 
     t1 = dupOrExit(crfd);
 
@@ -403,11 +402,11 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     assert(t1 > 2 && t2 > 2 && t3 > 2);
 
-    close(crfd);
+    xclose(crfd);
 
-    close(cwfd);
+    xclose(cwfd);
 
-    close(fileno(DebugStream()));
+    xclose(fileno(DebugStream()));
 
     dup2(t1, 0);
 
@@ -415,15 +414,15 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     dup2(t3, 2);
 
-    close(t1);
+    xclose(t1);
 
-    close(t2);
+    xclose(t2);
 
-    close(t3);
+    xclose(t3);
 
     /* Make sure all other filedescriptors are closed */
     for (x = 3; x < SQUID_MAXFD; ++x)
-        close(x);
+        xclose(x);
 
 #if HAVE_SETSID
     if (opt_no_daemon)

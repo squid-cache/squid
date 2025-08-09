@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -958,7 +958,7 @@ idnsSendQuery(idns_query * q)
     // sockets and server listening sockets) and the reconfigure completing
     // (Runner syncConfig() being run). Transactions which loose this race will
     // produce DNS timeouts (or whatever the caller set) as their queries never
-    // get queued to be re-tried after the DNS socekts are re-opened.
+    // get queued to be re-tried after the DNS sockets are re-opened.
 
     if (DnsSocketA < 0 && DnsSocketB < 0) {
         debugs(78, DBG_IMPORTANT, "WARNING: idnsSendQuery: Can't send query, no DNS socket!");

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -115,6 +115,9 @@ public:
      * Perform appropriate CBDATA operations for locking the CachePeer pointer
      */
     void setPeer(CachePeer * p);
+
+    /// whether this is a connection to a cache_peer that was removed during reconfiguration
+    bool toGoneCachePeer() const;
 
     /** The time the connection started */
     time_t startTime() const {return startTime_;}

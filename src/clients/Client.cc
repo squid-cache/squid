@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -159,20 +159,7 @@ Client::markParsedVirginReplyAsWhole(const char *reasonWeAreSure)
 {
     assert(reasonWeAreSure);
     debugs(11, 3, reasonWeAreSure);
-
-    // The code storing adapted reply takes care of markStoredReplyAsWhole().
-    // We need to take care of the remaining regular network-to-store case.
-#if USE_ADAPTATION
-    if (startedAdaptation) {
-        debugs(11, 5, "adaptation handles markStoredReplyAsWhole()");
-        return;
-    }
-#endif
-
-    // Convert the "parsed whole virgin reply" event into the "stored..." event
-    // because, without adaptation, we store everything we parse: There is no
-    // buffer for parsed content; addVirginReplyBody() stores every parsed byte.
-    fwd->markStoredReplyAsWhole(reasonWeAreSure);
+    markedParsedVirginReplyAsWhole = reasonWeAreSure;
 }
 
 // called when no more server communication is expected; may quit
@@ -230,6 +217,24 @@ Client::completeForwarding()
 {
     debugs(11,5, "completing forwarding for "  << fwd);
     assert(fwd != nullptr);
+
+    auto storedWholeReply = markedParsedVirginReplyAsWhole;
+#if USE_ADAPTATION
+    // This precondition is necessary for its two implications:
+    // * We cannot be waiting to decide whether to adapt this response. Thus,
+    //   the startedAdaptation check below correctly detects all adaptation
+    //   cases (i.e. it does not miss adaptationAccessCheckPending ones).
+    // * We cannot be waiting to consume/store received adapted response bytes.
+    //   Thus, receivedWholeAdaptedReply implies that we stored everything.
+    Assure(doneWithAdaptation());
+
+    if (startedAdaptation)
+        storedWholeReply = receivedWholeAdaptedReply ? "receivedWholeAdaptedReply" : nullptr;
+#endif
+
+    if (storedWholeReply)
+        fwd->markStoredReplyAsWhole(storedWholeReply);
+
     doneWithFwd = "completeForwarding()";
     fwd->complete();
 }
@@ -441,7 +446,7 @@ Client::getMoreRequestBody(MemBuf &buf)
     return requestBodySource->getMoreData(buf);
 }
 
-// Compares hosts in urls, returns false if different, no sheme, or no host.
+// Compares hosts in urls, returns false if different, no scheme, or no host.
 static bool
 sameUrlHosts(const char *url1, const char *url2)
 {
@@ -738,9 +743,11 @@ Client::handleAdaptedHeader(Http::Message *msg)
         // assume that ICAP does not auto-consume on failures
         const bool result = adaptedBodySource->setConsumerIfNotLate(this);
         assert(result);
+        checkAdaptationWithBodyCompletion();
     } else {
         // no body
-        fwd->markStoredReplyAsWhole("setFinalReply() stored header-only adapted reply");
+        Assure(!adaptedReplyAborted);
+        receivedWholeAdaptedReply = true;
         if (doneWithAdaptation()) // we may still be sending virgin response
             handleAdaptationCompleted();
     }
@@ -757,8 +764,7 @@ Client::resumeBodyStorage()
 
     handleMoreAdaptedBodyAvailable();
 
-    if (adaptedBodySource != nullptr && adaptedBodySource->exhausted())
-        endAdaptedBodyConsumption();
+    checkAdaptationWithBodyCompletion();
 }
 
 // more adapted response body is available
@@ -815,28 +821,36 @@ Client::handleAdaptedBodyProductionEnded()
     if (abortOnBadEntry("entry went bad while waiting for adapted body eof"))
         return;
 
-    // distinguish this code path from handleAdaptedBodyProducerAborted()
+    Assure(!adaptedReplyAborted);
     receivedWholeAdaptedReply = true;
 
-    // end consumption if we consumed everything
-    if (adaptedBodySource != nullptr && adaptedBodySource->exhausted())
-        endAdaptedBodyConsumption();
-    // else resumeBodyStorage() will eventually consume the rest
+    checkAdaptationWithBodyCompletion();
 }
 
 void
-Client::endAdaptedBodyConsumption()
+Client::checkAdaptationWithBodyCompletion()
 {
-    stopConsumingFrom(adaptedBodySource);
-
-    if (receivedWholeAdaptedReply) {
-        // We received the entire adapted reply per receivedWholeAdaptedReply.
-        // We are called when we consumed everything received (per our callers).
-        // We consume only what we store per handleMoreAdaptedBodyAvailable().
-        fwd->markStoredReplyAsWhole("received,consumed=>stored the entire RESPMOD reply");
+    if (!adaptedBodySource) {
+        debugs(11, 7, "not consuming; " << startedAdaptation);
+        return;
     }
 
-    handleAdaptationCompleted();
+    if (!receivedWholeAdaptedReply && !adaptedReplyAborted) {
+        // wait for noteBodyProductionEnded() or noteBodyProducerAborted()
+        // because completeForwarding() needs to know whether we receivedWholeAdaptedReply
+        debugs(11, 7, "waiting for adapted body production ending");
+        return;
+    }
+
+    if (!adaptedBodySource->exhausted()) {
+        debugs(11, 5, "waiting to consume the remainder of the adapted body from " << adaptedBodySource->status());
+        return; // resumeBodyStorage() should eventually consume the rest
+    }
+
+    stopConsumingFrom(adaptedBodySource);
+
+    if (doneWithAdaptation()) // we may still be sending virgin response
+        handleAdaptationCompleted();
 }
 
 // premature end of the adapted response body
@@ -845,18 +859,18 @@ void Client::handleAdaptedBodyProducerAborted()
     if (abortOnBadEntry("entry went bad while waiting for the now-aborted adapted body"))
         return;
 
+    Assure(!receivedWholeAdaptedReply);
+    adaptedReplyAborted = true;
     Must(adaptedBodySource != nullptr);
     if (!adaptedBodySource->exhausted()) {
         debugs(11,5, "waiting to consume the remainder of the aborted adapted body");
         return; // resumeBodyStorage() should eventually consume the rest
     }
 
-    stopConsumingFrom(adaptedBodySource);
-
     if (handledEarlyAdaptationAbort())
         return;
 
-    handleAdaptationCompleted(); // the user should get a truncated response
+    checkAdaptationWithBodyCompletion(); // the user should get a truncated response
 }
 
 // common part of noteAdaptationAnswer and handleAdaptedBodyProductionEnded
@@ -969,7 +983,7 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
     // TODO: Should we check receivedBodyTooLarge as well?
 
     if (!group) {
-        debugs(11,3, "no adapation needed");
+        debugs(11, 3, "no adaptation needed");
         setFinalReply(virginReply());
         processReplyBody();
         return;
@@ -1090,47 +1104,6 @@ Client::calcBufferSpaceToReserve(size_t space, const size_t wantSpace) const
 
         if (adaptor_space < space)
             space = adaptor_space;
-    }
-#endif
-
-    return space;
-}
-
-size_t
-Client::replyBodySpace(const MemBuf &readBuf, const size_t minSpace) const
-{
-    size_t space = readBuf.spaceSize(); // available space w/o heroic measures
-    if (space < minSpace) {
-        const size_t maxSpace = readBuf.potentialSpaceSize(); // absolute best
-        space = min(minSpace, maxSpace); // do not promise more than asked
-    }
-
-#if USE_ADAPTATION
-    if (responseBodyBuffer) {
-        return 0;   // Stop reading if already overflowed waiting for ICAP to catch up
-    }
-
-    if (virginBodyDestination != nullptr) {
-        /*
-         * BodyPipe buffer has a finite size limit.  We
-         * should not read more data from the network than will fit
-         * into the pipe buffer or we _lose_ what did not fit if
-         * the response ends sooner that BodyPipe frees up space:
-         * There is no code to keep pumping data into the pipe once
-         * response ends and serverComplete() is called.
-         *
-         * If the pipe is totally full, don't register the read handler.
-         * The BodyPipe will call our noteMoreBodySpaceAvailable() method
-         * when it has free space again.
-         */
-        size_t adaptation_space =
-            virginBodyDestination->buf().potentialSpaceSize();
-
-        debugs(11,9, "Client may read up to min(" <<
-               adaptation_space << ", " << space << ") bytes");
-
-        if (adaptation_space < space)
-            space = adaptation_space;
     }
 #endif
 

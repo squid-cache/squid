@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "comm/Tcp.h"
+#include "compat/socket.h"
 #include "debug/Stream.h"
 
 #if HAVE_NETINET_TCP_H
@@ -18,19 +19,16 @@
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
 #include <type_traits>
 
-/// setsockopt(2) wrapper
+/// xsetsockopt(2) wrapper
 template <typename Option>
 static bool
 SetSocketOption(const int fd, const int level, const int optName, const Option &optValue)
 {
     static_assert(std::is_trivially_copyable<Option>::value, "setsockopt() expects POD-like options");
     static_assert(!std::is_same<Option, bool>::value, "setsockopt() uses int to represent boolean options");
-    if (setsockopt(fd, level, optName, reinterpret_cast<const char *>(&optValue), sizeof(optValue)) < 0) {
+    if (xsetsockopt(fd, level, optName, &optValue, sizeof(optValue)) < 0) {
         const auto xerrno = errno;
         debugs(5, DBG_IMPORTANT, "ERROR: setsockopt(2) failure: " << xstrerr(xerrno));
         // TODO: Generalize to throw on errors when some callers need that.

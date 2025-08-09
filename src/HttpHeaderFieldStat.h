@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,8 +18,8 @@ public:
     int aliveCount;     /* created but not destroyed (count) */
     int seenCount;      /* number of fields we've seen */
     int parsCount;      /* number of parsing attempts */
-    int errCount;       /* number of pasring errors */
-    int repCount;       /* number of repetitons */
+    int errCount;       /* number of parsing errors */
+    int repCount;       /* number of repetitions */
 };
 
 #endif /* SQUID_SRC_HTTPHEADERFIELDSTAT_H */

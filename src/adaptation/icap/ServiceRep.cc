@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,6 +17,7 @@
 #include "adaptation/icap/ServiceRep.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
+#include "compat/netdb.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "fde.h"
@@ -66,9 +67,9 @@ Adaptation::Icap::ServiceRep::finalize()
     if (!have_port) {
         struct servent *serv;
         if (cfg().protocol.caseCmp("icaps") == 0)
-            serv = getservbyname("icaps", "tcp");
+            serv = xgetservbyname("icaps", "tcp");
         else
-            serv = getservbyname("icap", "tcp");
+            serv = xgetservbyname("icap", "tcp");
 
         if (serv) {
             writeableCfg().port = htons(serv->s_port);
@@ -172,7 +173,7 @@ void Adaptation::Icap::ServiceRep::putConnection(const Comm::ConnectionPointer &
 void Adaptation::Icap::ServiceRep::noteConnectionUse(const Comm::ConnectionPointer &conn)
 {
     Must(Comm::IsConnOpen(conn));
-    fd_table[conn->fd].noteUse(); // pconn re-use, albeit not via PconnPool API
+    fd_table[conn->fd].noteUse(); // pconn reuse, albeit not via PconnPool API
 }
 
 void Adaptation::Icap::ServiceRep::noteConnectionFailed(const char *comment)

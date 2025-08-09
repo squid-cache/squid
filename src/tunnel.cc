@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -851,7 +851,7 @@ tunnelTimeout(const CommTimeoutCbParams &io)
 {
     TunnelStateData *tunnelState = static_cast<TunnelStateData *>(io.data);
     debugs(26, 3, io.conn);
-    /* Temporary lock to protect our own feets (comm_close -> tunnelClientClosed -> Free) */
+    /* Temporary lock to protect our own feet (comm_close -> tunnelClientClosed -> Free) */
     CbcPointer<TunnelStateData> safetyLock(tunnelState);
 
     tunnelState->closeConnections();
@@ -1097,7 +1097,7 @@ tunnelErrorComplete(int fd/*const Comm::ConnectionPointer &*/, void *data, size_
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, "FD " << fd);
     assert(tunnelState != nullptr);
-    /* temporary lock to save our own feets (comm_close -> tunnelClientClosed -> Free) */
+    /* temporary lock to save our own feet (comm_close -> tunnelClientClosed -> Free) */
     CbcPointer<TunnelStateData> safetyLock(tunnelState);
 
     if (Comm::IsConnOpen(tunnelState->client.conn))
@@ -1154,8 +1154,6 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
 #endif
 
     netdbPingSite(request->url.host());
-
-    request->peer_host = conn->getPeer() ? conn->getPeer()->host : nullptr;
 
     bool toOrigin = false; // same semantics as StateFlags::toOrigin
     if (const auto * const peer = conn->getPeer()) {
@@ -1565,8 +1563,6 @@ switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, 
     if (!srvConn->getPeer() || !srvConn->getPeer()->options.no_delay)
         tunnelState->server.setDelayId(DelayId::DelayClient(context->http));
 #endif
-
-    request->peer_host = srvConn->getPeer() ? srvConn->getPeer()->host : nullptr;
 
     debugs(26, 4, "determine post-connect handling pathway.");
     if (const auto peer = srvConn->getPeer())

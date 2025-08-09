@@ -29,6 +29,9 @@ env:
   # empty except for pull_request events
   PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
 
+  # enables GitHub CLI (gh)
+  GH_TOKEN: ${{ github.token }}
+
   # Full clones of Squid repository branches (depth=19000+) waste resources,
   # while excessively shallow clones break tests that check for past commits
   # (e.g., to skip a particular test until a known bug is fixed) or generate
@@ -40,12 +43,23 @@ jobs:
 
   functionality-tests:
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
-      - name: Install prerequisite packages
+      # XXX: A hack to fix Ubuntu runners that were created in April 2025.
+      - name: Fix /etc/hosts
         run: |
+          cat /etc/hosts
+          cp -p /etc/hosts /tmp/etc-hosts.bak
+          sudo sed --in-place -E 's/^(-e.*)/# \1/' /etc/hosts
+          diff -u /tmp/etc-hosts.bak /etc/hosts || true
+
+      - name: Install prerequisite Linux packages
+        run: |
+          # required for "apt-get build-dep" to work
+          sudo sed --in-place -E 's/^(Types: deb)$/\1 deb-src/' /etc/apt/sources.list.d/ubuntu.sources
           sudo apt-get --quiet=2 update
+          sudo apt-get --quiet=2 build-dep squid
           sudo apt-get --quiet=2 install libtool-bin
 
       - name: Setup a nodejs environment
@@ -83,7 +97,7 @@ jobs:
 
   source-maintenance-tests:
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Install prerequisite packages
@@ -111,7 +125,7 @@ jobs:
       fail-fast: true
       matrix:
         os:
-          - ubuntu-22.04
+          - ubuntu-24.04
         compiler:
           - { CC: gcc, CXX: g++ }
           - { CC: clang, CXX: clang++ }
@@ -133,16 +147,16 @@ jobs:
       - name: Install prerequisite Linux packages
         run: |
           # required for "apt-get build-dep" to work
-          sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
+          sudo sed --in-place -E 's/^(Types: deb)$/\1 deb-src/' /etc/apt/sources.list.d/ubuntu.sources
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
-          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin ${{ matrix.compiler.CC }} ccache
+          sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin ${{ matrix.compiler.CC }} ccache valgrind
 
       - name: Checkout sources
         uses: actions/checkout@v4
 
       - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2.14
+        uses: hendrikmuhs/ccache-action@v1.2.17
         with:
           verbose: 2 # default 0
           key: ${{ matrix.os }}-${{ matrix.compiler.CC }}-${{ matrix.layer.nick }}
@@ -159,17 +173,17 @@ jobs:
 
   CodeQL-tests:
 
-    runs-on: [ ubuntu-22.04 ]
+    runs-on: [ ubuntu-24.04 ]
 
     permissions:
       security-events: write
 
     steps:
 
-      - name: Install Squid prerequisite Linux packages
+      - name: Install prerequisite Linux packages
         run: |
           # required for "apt-get build-dep" to work
-          sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
+          sudo sed --in-place -E 's/^(Types: deb)$/\1 deb-src/' /etc/apt/sources.list.d/ubuntu.sources
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
           sudo apt-get --quiet=2 install linuxdoc-tools libtool-bin

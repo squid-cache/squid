@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -56,7 +56,7 @@ and is parametrized by the kids (see the allServicesSame member).
 
 If an ICAP service with the routing=1 option in squid.conf returns an ICAP
 X-Next-Services response header during a successful REQMOD or RESPMOD
-transaction, Squid abandones the original adaptation plan and forms a new
+transaction, Squid abandons the original adaptation plan and forms a new
 adaptation chain consisting of services identified in the X-Next-Services
 header value (using a comma-separated list of adaptation service names from
 squid.conf).  The dynamically created chain is destroyed once the new plan is

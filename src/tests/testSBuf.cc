@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -426,7 +426,7 @@ TestSBuf::testComparisons()
     CPPUNIT_ASSERT(s1 < s2);
     // specifying the max-length and overhanging size
     CPPUNIT_ASSERT_EQUAL(1,SBuf("foolong").caseCmp(SBuf("foo"), 5));
-    // case-insensive comaprison
+    // case-insensive comparison
     s1 = "foo";
     s2 = "fOo";
     CPPUNIT_ASSERT_EQUAL(0,s1.caseCmp(s2));
@@ -920,7 +920,7 @@ TestSBuf::testReserve()
         for (SBuf::size_type filled = 0; filled < requirements.maxCapacity +5; ++filled) {
             CPPUNIT_ASSERT_EQUAL(b.length(), min(filled, requirements.maxCapacity));
             auto x = b.reserve(requirements);
-            // the amount of space advertized must not cause users to exceed capacity
+            // the amount of space advertised must not cause users to exceed capacity
             CPPUNIT_ASSERT(x <= requirements.maxCapacity - filled);
             CPPUNIT_ASSERT(b.spaceSize() <= requirements.maxCapacity - filled);
             // the total size of buffer must not cause users to exceed capacity

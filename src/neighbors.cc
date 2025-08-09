@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,6 +20,7 @@
 #include "CachePeers.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
+#include "compat/netdb.h"
 #include "debug/Messages.h"
 #include "event.h"
 #include "FwdState.h"
@@ -503,7 +504,6 @@ neighborsRegisterWithCacheManager()
 void
 neighbors_init(void)
 {
-    struct servent *sep = nullptr;
     const char *me = getMyHostname();
 
     neighborsRegisterWithCacheManager();
@@ -536,7 +536,7 @@ neighbors_init(void)
 
     peerDnsRefreshStart();
 
-    sep = getservbyname("echo", "udp");
+    const auto sep = xgetservbyname("echo", "udp");
     echo_port = sep ? ntohs((unsigned short) sep->s_port) : 7;
 }
 

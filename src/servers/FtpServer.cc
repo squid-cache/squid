@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1188,7 +1188,7 @@ Ftp::Server::writeForwardedReplyAndCall(const HttpReply *reply, AsyncCall::Point
                 // TODO: Add connect timeout for passive connections listener?
                 // TODO: Remember server response so that we can forward it?
             } else {
-                // Either the connection was establised and closed after the
+                // Either the connection was established and closed after the
                 // data was transferred OR we failed to establish an active
                 // data connection and already sent the error to the client.
                 // In either case, there is nothing more to do.
@@ -1467,7 +1467,7 @@ Ftp::Server::createDataConnection(Ip::Address cltAddr)
         // server IP the client is connecting to, it can be spoofed by Squid.
         //
         // In both cases some clients may refuse to accept data connections if
-        // these control connectin local-IP's are not used.
+        // these control connection local-IP's are not used.
         conn->setAddrs(clientConnection->local, cltAddr);
 
         // Using non-local addresses in TPROXY mode requires appropriate socket option.

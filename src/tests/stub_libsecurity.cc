@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -112,7 +112,7 @@ EncryptorAnswer &PeerConnector::answer() STUB_RETREF(EncryptorAnswer)
 }
 
 #include "security/PeerOptions.h"
-Security::PeerOptions Security::ProxyOutgoingConfig;
+Security::PeerOptions &Security::ProxyOutgoingConfig() STUB_RETREF(Security::PeerOptions)
 
 Security::PeerOptions::PeerOptions() {
 #if USE_OPENSSL

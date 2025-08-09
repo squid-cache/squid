@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,7 +39,8 @@
 #define MAX_RETRIES 2
 
 /// Helpers input buffer size.
-const size_t ReadBufSize(32*1024);
+/// Keep in sync with MAX_PAC_GROUP_SIZE until converted to SBuf
+const size_t ReadBufSize(128*1024);
 
 static IOCB helperHandleRead;
 static IOCB helperStatefulHandleRead;

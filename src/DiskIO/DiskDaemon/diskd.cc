@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,8 @@
 /* DEBUG: section --    External DISKD process implementation. */
 
 #include "squid.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "DiskIO/DiskDaemon/diomsg.h"
 #include "hash.h"
 
@@ -53,12 +55,11 @@ static int DebugLevel = 0;
 static int
 do_open(diomsg * r, int, const char *buf)
 {
-    int fd;
     file_state *fs;
     /*
      * note r->offset holds open() flags
      */
-    fd = open(buf, r->offset, 0600);
+    const auto fd = xopen(buf, r->offset, 0600);
 
     if (fd < 0) {
         DEBUG(1) {
@@ -111,13 +112,12 @@ do_close(diomsg * r, int)
                 fs);
     }
     xfree(fs);
-    return close(fd);
+    return xclose(fd);
 }
 
 static int
 do_read(diomsg * r, int, char *buf)
 {
-    int x;
     int readlen = r->size;
     file_state *fs;
     fs = (file_state *) hash_lookup(hash, &r->id);
@@ -145,7 +145,7 @@ do_read(diomsg * r, int, char *buf)
         }
     }
 
-    x = read(fs->fd, buf, readlen);
+    const auto x = xread(fs->fd, buf, readlen);
     DEBUG(2) {
         fprintf(stderr, "%d READ %d,%d,%" PRId64 " ret %d\n", (int) mypid,
                 fs->fd, readlen, (int64_t)r->offset, x);
@@ -168,7 +168,6 @@ static int
 do_write(diomsg * r, int, const char *buf)
 {
     int wrtlen = r->size;
-    int x;
     file_state *fs;
     fs = (file_state *) hash_lookup(hash, &r->id);
 
@@ -195,7 +194,7 @@ do_write(diomsg * r, int, const char *buf)
         fprintf(stderr, "%d WRITE %d,%d,%" PRId64 "\n", (int) mypid,
                 fs->fd, wrtlen, (int64_t)r->offset);
     }
-    x = write(fs->fd, buf, wrtlen);
+    const auto x = xwrite(fs->fd, buf, wrtlen);
 
     if (x < 0) {
         DEBUG(1) {
@@ -370,7 +369,7 @@ main(int argc, char *argv[])
 
         if (rlen < 0) {
             if (EINTR == errno) {
-                if (read(0, rbuf, 512) <= 0) {
+                if (xread(0, rbuf, 512) <= 0) {
                     if (EWOULDBLOCK == errno)
                         (void) 0;
                     else if (EAGAIN == errno)

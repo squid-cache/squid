@@ -33,6 +33,27 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<item>
 </itemize>
 
+<sect1>Helper changes
+<p>
+<descrip>
+	<p>Removed <em>basic_smb_lm_auth</em> NTLM authentication helper.
+	   Use the <em>ntlm_auth</em> helper from the Samba project instead.
+
+	<p>Removed <em>ext_lm_group_acl</em> external acl helper. No product
+	   currently on the market suports the LanManager protocol
+	   in their default configuration.
+
+	<p>Removed <em>ntlm_smb_lm_auth</em> NTLM authentication helper.
+	   Use the <em>ntlm_auth</em> helper from the Samba project instead.
+
+</descrip>
+
+<sect1>Cache Manager changes
+
+<p>Removed support for <em>asndb</em> cache manager report after removing
+support for <em>src_as</em> and <em>dst_as</em> ACLs and associated ASN
+lookups. Requests for that report now result in HTTP 404 errors.
+
 Most user-facing changes are reflected in squid.conf (see below).
 
 
@@ -57,7 +78,22 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
-	<p>No changed directives in this version.
+	<tag>acl</tag>
+
+	<p>Removed support for <em>src_as</em> and <em>dst_as</em> ACLs. Based on
+	admin feedback and a history of serious implementation bugs that went
+	unnoticed for a long time, the two ACLs are considered to be essentially
+	unused. The corresponding Autonomous System Numbers (ASN) lookups can be
+	implemented (with more features) using external ACLs. Removing ASN lookup
+	support also removes ancient and neglected C code, improving Squid
+	security posture and simplifying development. Configurations using
+	<em>src_as</em> and <em>dst_as</em> ACL types are now rejected with FATAL
+	errors.
+
+	<p>Removed support for <em>asn</em> initiator in
+	<em>transaction_initiator</em> ACLs. After removing support for
+	<em>src_as</em> and <em>dst_as</em> ACLs, Squid no longer initiates ASN
+	lookups.
 
 </descrip>
 
@@ -89,7 +125,17 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p>No changed options in this version.
+	<tag>--enable-auth-basic=</tag>
+	<p>Removed <em>SMB_LM</em> helper, in favour of the <em>ntlm_auth</em>
+	   alternative offered by the Samba project.
+
+	<tag>--enable-auth-ntlm=</tag>
+	<p>Removed <em>SMB_LM</em> helper, in favour of the <em>ntlm_auth</em>
+	   alternative offered by the Samba project.
+
+	<tag>--enable-external-acl-helpers=</tag>
+	<p>Removed <em>LM_Group</em> helper. The LM protocol is
+	   insecure and no longer supported on the market since 2008.
 
 </descrip>
 </p>
@@ -103,7 +149,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.

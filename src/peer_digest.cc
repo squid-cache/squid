@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -682,7 +682,7 @@ PeerDigest::noteFetchFinished(const DigestFetchState &finishedFetch, const char 
         /* XXX: ugly condition, but how? */
 
         if (fetch->entry->store_status == STORE_OK)
-            debugs(72, 2, "re-used old digest from " << host);
+            debugs(72, 2, "reused old digest from " << host);
         else
             debugs(72, 2, "received valid digest from " << host);
     }

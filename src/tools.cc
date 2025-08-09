@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "anyp/PortCfg.h"
 #include "base/Subscription.h"
 #include "client_side.h"
+#include "compat/unistd.h"
 #include "fatal.h"
 #include "fde.h"
 #include "fqdncache.h"
@@ -508,7 +509,7 @@ getMyHostname(void)
     }
 
     // still no host. fallback to gethostname()
-    if (gethostname(host, SQUIDHOSTNAMELEN) < 0) {
+    if (xgethostname(host, SQUIDHOSTNAMELEN) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "WARNING: gethostname failed: " << xstrerr(xerrno));
     } else {

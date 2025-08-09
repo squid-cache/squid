@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -841,6 +841,7 @@ ErrorState::~ErrorState()
     wordlistDestroy(&ftp.server_msg);
     safe_free(ftp.request);
     safe_free(ftp.reply);
+    safe_free(ftp.cwd_msg);
     safe_free(err_msg);
 #if USE_ERR_LOCALES
     if (err_language != Config.errorDefaultLanguage)

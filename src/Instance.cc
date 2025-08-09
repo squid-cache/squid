@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "debug/Messages.h"
 #include "fs_io.h"
 #include "Instance.h"
+#include "md5.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -18,7 +19,7 @@
 
 #include <cerrno>
 
-/* To support concurrent PID files, convert local statics into PidFile class */
+/* To support concurrent PID files, convert local static variables into PidFile class */
 
 /// Describes the (last) instance PID file being processed.
 /// This hack shortens reporting code while keeping its messages consistent.
@@ -220,5 +221,45 @@ Instance::WriteOurPid()
     pidFile.synchronize();
 
     debugs(50, Important(23), "Created " << TheFile);
+}
+
+/// A hash that is likely to be unique across instances running on the same host
+/// because such concurrent instances should use unique PID filenames.
+/// All instances with disabled PID file maintenance have the same hash value.
+/// \returns a 4-character string suitable for use in file names and similar contexts
+static SBuf
+PidFilenameHash()
+{
+    uint8_t hash[SQUID_MD5_DIGEST_LENGTH];
+
+    SquidMD5_CTX ctx;
+    SquidMD5Init(&ctx);
+    const auto name = PidFilenameCalc();
+    SquidMD5Update(&ctx, name.rawContent(), name.length());
+    SquidMD5Final(hash, &ctx);
+
+    // converts raw hash byte at a given position to a filename-suitable character
+    const auto hashAt = [&hash](const size_t idx) {
+        const auto safeChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        return safeChars[hash[idx] % strlen(safeChars)];
+    };
+
+    SBuf buf;
+    buf.appendf("%c%c%c%c", hashAt(0), hashAt(1), hashAt(2), hashAt(3));
+    return buf;
+}
+
+SBuf
+Instance::NamePrefix(const char * const head, const char * const tail)
+{
+    SBuf buf(head);
+    buf.append(service_name);
+    buf.append("-");
+    buf.append(PidFilenameHash());
+    if (tail) {
+        // TODO: Remove leading "-" from callers and explicitly add it here.
+        buf.append(tail);
+    }
+    return buf;
 }
 

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -211,7 +211,7 @@ unset squid_tmp_define
 dnl aborts with an error specified as the second argument if the first argument doesn't
 dnl contain either "yes" or "no"
 AC_DEFUN([SQUID_YESNO],[
-  AS_IF([test "$1" != "yes" -a "$1" != "no"],[AC_MSG_ERROR([Bad argument for $2: "$1". Expecting "yes", "no", or no argument.])])
+  AS_IF([test "$1" != "yes" -a "$1" != "no"],[AC_MSG_ERROR([[Bad argument for $2: '$1'. Expecting 'yes', 'no', or no argument.]])])
 ])
 
 dnl Check that a library is actually available, useable,

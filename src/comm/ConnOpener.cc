@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,7 @@
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Loops.h"
+#include "compat/socket.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -431,7 +432,7 @@ Comm::ConnOpener::lookupLocalAddress()
 {
     struct sockaddr_storage addr = {};
     socklen_t len = sizeof(addr);
-    if (getsockname(conn_->fd, reinterpret_cast<struct sockaddr *>(&addr), &len) != 0) {
+    if (xgetsockname(conn_->fd, reinterpret_cast<struct sockaddr *>(&addr), &len) != 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: Failed to retrieve TCP/UDP details for socket: " << conn_ << ": " << xstrerr(xerrno));
         return;

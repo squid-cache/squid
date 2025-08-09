@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "base/HardFun.h"
 #include "base/TextException.h"
+#include "compat/unistd.h"
 #include "sbuf/Stream.h"
 #include "security/cert_generators/file/certificate_db.h"
 
@@ -52,7 +53,7 @@ void Ssl::Lock::lock()
     hFile = CreateFile(TEXT(filename.c_str()), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE)
 #else
-    fd = open(filename.c_str(), O_RDWR);
+    fd = xopen(filename.c_str(), O_RDWR);
     if (fd == -1)
 #endif
         throw TextException(ToSBuf("Failed to open file ", filename), Here());
@@ -82,7 +83,7 @@ void Ssl::Lock::unlock()
 #else
         flock(fd, LOCK_UN);
 #endif
-        close(fd);
+        xclose(fd);
         fd = -1;
     }
 #endif

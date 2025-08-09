@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,9 +15,6 @@
 
 class StoreEntry;
 
-void wccp2Init(void);
-void wccp2ConnectionOpen(void);
-void wccp2ConnectionClose(void);
 void parse_wccp2_method(int *v);
 void free_wccp2_method(int *v);
 void dump_wccp2_method(StoreEntry * e, const char *label, int v);

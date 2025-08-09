@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,8 @@
 #define SQUID_HELPER 1
 
 #include "squid.h"
+
+#include "compat/unistd.h"
 
 #include <iostream>
 #include <cstdio>
@@ -53,7 +55,7 @@ main(int, char *[])
 {
     std::string sbuf;
     close(2);
-    if (open(_PATH_DEVNULL, O_RDWR) < 0) {
+    if (xopen(_PATH_DEVNULL, O_RDWR) < 0) {
         ; // the irony of having to close(2) earlier is that we cannot report this failure.
     }
     while (getline(std::cin, sbuf)) {
