@@ -19,7 +19,7 @@
 
 /// Parse a swap header entry created on a system with 32-bit size_t and sfileno
 /// this is typical of 32-bit systems without large file support
-/// NP: SQUID_MD5_DIGEST_LENGTH is very risky still.
+/// Note: SQUID_MD5_DIGEST_LENGTH is very risky still.
 class UFSSwapLogParser_v1_32bs:public Fs::Ufs::UFSSwapLogParser
 {
 public:

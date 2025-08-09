@@ -249,7 +249,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
 
-    /* NP: tmp_addr was left with eiether empty or aiCS in Ip::Address format */
+    /* Note: tmp_addr was left with eiether empty or aiCS in Ip::Address format */
     if (comm_connect_addr(pwfd, tmp_addr) == Comm::COMM_ERROR) {
         CloseHandle((HANDLE) thread);
         return ipcCloseAllFD(prfd, pwfd, -1, -1);

@@ -59,7 +59,7 @@ typedef void AUTHCB(void*);
 namespace Auth
 {
 
-// NP: numeric values specified for old code backward compatibility.
+// Note: numeric values specified for old code backward compatibility.
 //  remove after transition is complete
 enum Direction {
     CRED_CHALLENGE = 1, ///< Client needs to be challenged. secure token.

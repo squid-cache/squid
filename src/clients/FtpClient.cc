@@ -659,7 +659,7 @@ Ftp::Client::sendPassive()
       * Checks for EPSV ALL special conditions:
       * If enabled to be sent, squid MUST NOT request any other connect methods.
       * If 'ALL' is sent and fails the entire FTP Session fails.
-      * NP: By my reading exact EPSV protocols maybe attempted, but only EPSV method. */
+      * Note: By my reading exact EPSV protocols maybe attempted, but only EPSV method. */
     if (Config.Ftp.epsv_all && state == SENT_EPSV_1 ) {
         // We are here because the last "EPSV 1" failed, but because of epsv_all
         // no other method allowed.
@@ -1094,7 +1094,7 @@ Ftp::Client::doneSendingRequestBody()
     ::Client::doneSendingRequestBody();
     debugs(9, 3, status());
     dataComplete();
-    /* NP: RFC 959  3.3.  DATA CONNECTION MANAGEMENT
+    /* Note: RFC 959  3.3.  DATA CONNECTION MANAGEMENT
      * if transfer type is 'stream' call dataComplete()
      * otherwise leave open. (reschedule control channel read?)
      */

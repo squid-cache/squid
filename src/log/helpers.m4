@@ -7,7 +7,7 @@
 
 LOG_DAEMON_HELPERS=""
 SQUID_HELPER_FEATURE_CHECK([log_daemon_helpers],[yes],[log],[
-  # NP: we only need this list because m4_include() does not accept variables
+  # Note: we only need this list because m4_include() does not accept variables
   SQUID_CHECK_HELPER([DB],[log])
   SQUID_CHECK_HELPER([file],[log])
 ])

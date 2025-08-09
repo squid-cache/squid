@@ -447,7 +447,7 @@ void
 Security::PeerOptions::parseOptions()
 {
     // do not allow repeated parsing when multiple contexts are created
-    // NP: we cannot use !parsedOptions because a nil value does have meaning there
+    // Note: we cannot use !parsedOptions because a nil value does have meaning there
     if (!optsReparse)
         return;
     optsReparse = false;
@@ -642,7 +642,7 @@ Security::PeerOptions::updateContextOptions(Security::ContextPointer &ctx)
 #if USE_OPENSSL
     SSL_CTX_set_options(ctx.get(), parsedOptions);
 #elif HAVE_LIBGNUTLS
-    // NP: GnuTLS uses 'priorities' which are set only per-session instead.
+    // Note: GnuTLS uses 'priorities' which are set only per-session instead.
     (void)ctx;
 #else
     (void)ctx;

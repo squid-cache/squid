@@ -78,7 +78,7 @@
 #define MAX_RCODE 17
 #define MAX_ATTEMPT 3
 static int RcodeMatrix[MAX_RCODE][MAX_ATTEMPT];
-// NP: see http://www.iana.org/assignments/dns-parameters
+// Note: see http://www.iana.org/assignments/dns-parameters
 static const char *Rcodes[] = {
     /* RFC 1035 */
     "Success",
@@ -1056,7 +1056,7 @@ idnsFindQuery(unsigned short id)
 static unsigned short
 idnsQueryID()
 {
-    // NP: apparently ranlux are faster, but not quite as "proven"
+    // Note: apparently ranlux are faster, but not quite as "proven"
     static std::mt19937 mt(RandomSeed32());
     unsigned short id = mt() & 0xFFFF;
     unsigned short first_id = id;

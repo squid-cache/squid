@@ -503,7 +503,7 @@ ConnStateData::setAuth(const Auth::UserRequest::Pointer &aur, const char *by)
     }
 
     // clobered with self-pointer
-    // NP: something nasty is going on in Squid, but harmless.
+    // Note: something nasty is going on in Squid, but harmless.
     if (aur == auth_) {
         debugs(33, 2, "WARNING: Ignoring duplicate connection-auth for " << clientConnection << " from " << by);
         return;
@@ -527,7 +527,7 @@ ConnStateData::setAuth(const Auth::UserRequest::Pointer &aur, const char *by)
      * Expecting the same level of consistency we should have received.
      * This prevents upstream being faced with multiple or missing
      * credentials after authentication.
-     * NP: un-pin is left to the cleanup in ConnStateData::swanSong()
+     * Note: un-pin is left to the cleanup in ConnStateData::swanSong()
      *     we just trigger that cleanup here via comm_reset_close() or
      *     ConnStateData::stopReceiving()
      *
@@ -550,7 +550,7 @@ ConnStateData::setAuth(const Auth::UserRequest::Pointer &aur, const char *by)
         auth_->releaseAuthServer();
         auth_ = nullptr;
         // XXX: need to test whether the connection re-auth challenge is sent. If not, how to trigger it from here.
-        // NP: the current situation seems to fix challenge loops in Safari without visible issues in others.
+        // Note: the current situation seems to fix challenge loops in Safari without visible issues in others.
         // we stop receiving more traffic but can leave the Job running to terminate after the error or challenge is delivered.
         stopReceiving("connection-auth removed");
         return;
@@ -605,7 +605,7 @@ ConnStateData::swanSong()
     Server::swanSong();
 
 #if USE_AUTH
-    // NP: do this bit after closing the connections to avoid side effects from unwanted TCP RST
+    // Note: do this bit after closing the connections to avoid side effects from unwanted TCP RST
     setAuth(nullptr, "ConnStateData::SwanSong cleanup");
 #endif
 
@@ -1344,7 +1344,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
     debugs(33,5, "Prepare absolute URL from " <<
            (transparent()?"intercept":(port->flags.accelSurrogate ? "accel":"")));
     /* Rewrite the URL in transparent or accelerator mode */
-    /* NP: there are several cases to traverse here:
+    /* Note: there are several cases to traverse here:
      *  - standard mode (forward proxy)
      *  - transparent mode (TPROXY)
      *  - transparent mode with failures
@@ -1362,7 +1362,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
         /* intercept or transparent mode, properly working with no failures */
         http->uri = prepareTransparentURL(this, hp);
 
-    } else if (internalCheck(hp->requestUri())) { // NP: only matches relative-URI
+    } else if (internalCheck(hp->requestUri())) { // Note: only matches relative-URI
         /* internal URL mode */
         // XXX: By prepending our name and port, we create an absolute URL
         // that may mismatch the (yet unparsed) Host header in the request.
@@ -2240,7 +2240,7 @@ httpAccept(const CommAcceptCbParams &params)
 {
     Assure(params.port);
 
-    // NP: it is possible the port was reconfigured when the call or accept() was queued.
+    // Note: it is possible the port was reconfigured when the call or accept() was queued.
 
     if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected
@@ -2442,7 +2442,7 @@ httpsAccept(const CommAcceptCbParams &params)
 {
     Assure(params.port);
 
-    // NP: it is possible the port was reconfigured when the call or accept() was queued.
+    // Note: it is possible the port was reconfigured when the call or accept() was queued.
 
     if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected

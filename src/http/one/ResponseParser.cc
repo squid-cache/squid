@@ -33,7 +33,7 @@ Http::One::ResponseParser::firstLineSize() const
     default: // no other protocols supported
         return result;
     }
-    // NP: the parser does not accept >2 DIGIT for version numbers
+    // Note: the parser does not accept >2 DIGIT for version numbers
     if (msgProtocol_.minor > 9)
         result += 2;
     else
@@ -45,7 +45,7 @@ Http::One::ResponseParser::firstLineSize() const
     return result;
 }
 
-// NP: we found the protocol version and consumed it already.
+// Note: we found the protocol version and consumed it already.
 // just need the status code and reason phrase
 int
 Http::One::ResponseParser::parseResponseStatusAndReason(Tokenizer &tok)
@@ -159,7 +159,7 @@ Http::One::ResponseParser::parseResponseFirstLine()
         debugs(74, 6, "found prefix magic " << IcyMagic);
         // ICY Response status-line parse (same as HTTP/1 after the magic version)
         msgProtocol_.protocol = AnyP::PROTO_ICY;
-        // NP: ICY has no /major.minor details
+        // Note: ICY has no /major.minor details
         debugs(74, DBG_DATA, "parse remaining buf={length=" << tok.remaining().length() << ", data='" << tok.remaining() << "'}");
         buf_ = tok.remaining(); // resume checkpoint
         return parseResponseStatusAndReason(tok);

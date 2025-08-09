@@ -25,7 +25,7 @@
 
 /******************************************************/
 /* Define the _SQUID_TYPE_ based on a guess of the OS */
-/* NP: this MUST come first within compat.h           */
+/* Note: this MUST come first within compat.h         */
 /******************************************************/
 #include "compat/osdetect.h"
 

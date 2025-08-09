@@ -47,7 +47,7 @@ HttpRequestMethod::HttpRequestMethodXXX(char const *begin)
     // TODO: Optimize this linear search.
     for (++theMethod; theMethod < Http::METHOD_ENUM_END; ++theMethod) {
         // RFC 2616 section 5.1.1 - Method names are case-sensitive
-        // NP: this is not a HTTP_VIOLATIONS case since there is no MUST/SHOULD involved.
+        // Note: this is not a HTTP_VIOLATIONS case since there is no MUST/SHOULD involved.
         if (0 == image().caseCmp(begin, end-begin)) {
 
             // relaxed parser allows mixed-case and corrects them on output
@@ -78,7 +78,7 @@ HttpRequestMethod::HttpRequestMethod(const SBuf &s) : theMethod(Http::METHOD_NON
     // TODO: Optimize this linear search.
     for (++theMethod; theMethod < Http::METHOD_ENUM_END; ++theMethod) {
         // RFC 2616 section 5.1.1 - Method names are case-sensitive
-        // NP: this is not a HTTP_VIOLATIONS case since there is no MUST/SHOULD involved.
+        // Note: this is not a HTTP_VIOLATIONS case since there is no MUST/SHOULD involved.
         if (0 == image().caseCmp(s)) {
 
             // relaxed parser allows mixed-case and corrects them on output

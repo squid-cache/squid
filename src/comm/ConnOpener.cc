@@ -450,13 +450,13 @@ Comm::ConnOpener::earlyAbort(const CommCloseCbParams &io)
 {
     debugs(5, 3, io.conn);
     calls_.earlyAbort_ = nullptr;
-    // NP: is closing or shutdown better?
+    // Note: is closing or shutdown better?
     sendAnswer(Comm::ERR_CLOSING, io.xerrno, "Comm::ConnOpener::earlyAbort");
 }
 
 /**
  * Handles the case(s) when a partially setup connection gets timed out.
- * NP: When commSetConnTimeout accepts generic CommCommonCbParams this can die.
+ * Note: When commSetConnTimeout accepts generic CommCommonCbParams this can die.
  */
 void
 Comm::ConnOpener::timeout(const CommTimeoutCbParams &)

@@ -168,7 +168,7 @@ fetchKey(/*const*/ DB_ENTRY &key, DB_ENTRY *data)
 #if USE_BERKLEYDB
     return (db->get(db, nullptr, &key, data, 0) == 0);
 #elif HAVE_LIBTDB
-    // NP: API says returns NULL on errors, but return is a struct type WTF??
+    // Note: API says returns NULL on errors, but return is a struct type WTF??
     *data = tdb_fetch(db, key);
     return (data->dptr != nullptr);
 #endif

@@ -218,7 +218,7 @@ struct wccp2_cache_mask_identity_info_t {
 
     /* Sect 5.7.2 Mask Assignment Data Element
      *
-     * NP: draft specifies a variable-length set of keys here.
+     * Note: draft specifies a variable-length set of keys here.
      *     the following fields only matche the special case Squid sends outbound (single-cache).
      */
     uint32_t mask_element_count;
@@ -259,7 +259,7 @@ struct wccp2_cache_view_header_t {
 static struct wccp2_cache_view_header_t wccp2_cache_view_header;
 
 /// \interface WCCPv2_Protocol
-/* NP: special-case 5.6.5 or 5.6.6 * View Info when no routers or caches are advertised? */
+/* Note: special-case 5.6.5 or 5.6.6 * View Info when no routers or caches are advertised? */
 struct wccp2_cache_view_info_t {
     uint32_t num_routers;
     uint32_t num_caches;

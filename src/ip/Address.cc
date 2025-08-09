@@ -428,7 +428,7 @@ Ip::Address::lookupHostIP(const char *s, bool nodns)
     }
 
     /*
-     *  NP: =(sockaddr_*) may alter the port. we don't want that.
+     *  Note: =(sockaddr_*) may alter the port. we don't want that.
      *      all we have been given as input was an IPA.
      */
     short portSaved = port();
@@ -713,7 +713,7 @@ Ip::Address::FreeAddr(struct addrinfo *&ai)
 
     ai->ai_addrlen = 0;
 
-    // NP: name fields are NOT allocated at present.
+    // Note: name fields are NOT allocated at present.
     delete ai;
 
     ai = nullptr;
@@ -726,7 +726,7 @@ Ip::Address::matchIPAddr(const Ip::Address &rhs) const
     uint8_t *r = (uint8_t*)rhs.mSocketAddr_.sin6_addr.s6_addr;
 
     // loop a byte-wise compare
-    // NP: match MUST be R-to-L : L-to-R produces inconsistent gt/lt results at varying CIDR
+    // Note: match MUST be R-to-L : L-to-R produces inconsistent gt/lt results at varying CIDR
     //     expected difference on CIDR is gt/eq or lt/eq ONLY.
     for (unsigned int i = 0 ; i < sizeof(mSocketAddr_.sin6_addr) ; ++i) {
 

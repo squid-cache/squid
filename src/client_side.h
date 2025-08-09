@@ -55,7 +55,7 @@ class ServerBump;
 /**
  * Legacy Server code managing a connection to a client.
  *
- * NP: presents AsyncJob API but does not operate autonomously as a Job.
+ * Note: presents AsyncJob API but does not operate autonomously as a Job.
  *     So Must() is not safe to use.
  *
  * Multiple requests (up to pipeline_prefetch) can be pipelined.

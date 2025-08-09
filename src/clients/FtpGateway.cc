@@ -320,7 +320,7 @@ Ftp::Gateway::dataClosed(const CommCloseCbParams &io)
     failed(ERR_FTP_FAILURE, 0);
     /* failed closes ctrl.conn and frees ftpState */
 
-    /* NP: failure recovery may be possible when its only a data.conn failure.
+    /* Note: failure recovery may be possible when its only a data.conn failure.
      *     if the ctrl.conn is still fine, we can send ABOR down it and retry.
      *     Just need to watch out for wider Squid states like shutting down or reconfigure.
      */
@@ -1754,7 +1754,7 @@ ftpOpenListenSocket(Ftp::Gateway * ftpState, int fallback)
     /// Close old data channels, if any. We may open a new one below.
     if (ftpState->data.conn != nullptr) {
         if ((ftpState->data.conn->flags & COMM_REUSEADDR))
-            // NP: in fact it points to the control channel. just clear it.
+            // Note: in fact it points to the control channel. just clear it.
             ftpState->data.clear();
         else
             ftpState->data.close();

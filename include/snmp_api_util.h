@@ -9,7 +9,7 @@
 #ifndef SQUID_INCLUDE_SNMP_API_UTIL_H
 #define SQUID_INCLUDE_SNMP_API_UTIL_H
 
-/* NP: required for typedef ipaddr */
+/* Note: required for typedef ipaddr */
 #include "snmp_pdu.h"
 
 /***********************************************************
