@@ -84,12 +84,18 @@ research project called The Harvest Information Discovery and Access System:
 
 ==============================================================================
 
-acinclude/ax_cxx_compile_stdcxx_11.m4:
+acinclude/ax_cxx_compile_stdcxx.m4:
 
 #   Copyright (c) 2008 Benjamin Kosnik <bkoz@redhat.com>
 #   Copyright (c) 2012 Zack Weinberg <zackw@panix.com>
 #   Copyright (c) 2013 Roy Stogner <roystgnr@ices.utexas.edu>
-#   Copyright (c) 2014 Alexey Sokolov <sokolov@google.com>
+#   Copyright (c) 2014, 2015 Google Inc.; contributed by Alexey Sokolov <sokolov@google.com>
+#   Copyright (c) 2015 Paul Norman <penorman@mac.com>
+#   Copyright (c) 2015 Moritz Klammler <moritz@klammler.eu>
+#   Copyright (c) 2016, 2018 Krzesimir Nowak <qdlacz@gmail.com>
+#   Copyright (c) 2019 Enji Cooper <yaneurabeya@gmail.com>
+#   Copyright (c) 2020 Jason Merrill <jason@redhat.com>
+#   Copyright (c) 2021 Jörn Heusipp <osmanx@problemloesungsmaschine.de>
 #
 #   Copying and distribution of this file, with or without modification, are
 #   permitted in any medium without royalty provided the copyright notice
@@ -464,7 +470,7 @@ include/snmp_session.h,
 include/snmp_vars.h,
 include/snmp.h,
 lib/snmplib/asn1.c,
-lib/snmplib/coexistence.c,
+lib/snmplib/coexistance.c,
 lib/snmplib/snmp_api.c,
 lib/snmplib/snmp_api_error.c,
 lib/snmplib/snmp_error.c,
@@ -530,7 +536,7 @@ lib/base64.c:
 ==============================================================================
 
 include/heap.h,
-lib/heap.cc:
+lib/heap.c:
 
  * AUTHOR: John Dilley, Hewlett Packard
 
@@ -975,7 +981,7 @@ src/acl/external/unix_group/:
 
 ==============================================================================
 
-src/acl/external/wbinfo_group/wbinfo_group.pl:
+src/acl/external/wbinfo_group/ext_wbinfo_group_acl.pl.in:
 
  This program is put in the public domain by Jerry Murdock 
  <jmurdock@itraktech.com>. It is distributed in the hope that it will
@@ -1338,7 +1344,7 @@ src/auth/basic/SSPI/:
 
 ==============================================================================
 
-src/auth/digest/eDirectory/digest_ldap.c:
+src/auth/digest/eDirectory/edir_ldapext.cc:
 
  * Copied From Samba-3.0.24 pdb_nds.c and trimmed down to the
  * limited functionality needed to access the plain text password only
@@ -1437,7 +1443,7 @@ src/auth/ntlm/fake/ntlm_fake_auth.pl.in:
 
 ==============================================================================
 
-src/auth/ntlm/smb_lm/:
+src/auth/ntlm/SMB_LM/:
 
  * (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
  * Distributed freely under the terms of the GNU General Public License,
@@ -1454,7 +1460,7 @@ src/auth/ntlm/smb_lm/:
 
 ==============================================================================
 
-src/external_acl.c:
+src/external_acl.cc:
 
  Copyright (C) 2002 MARA Systems AB, Sweden <info@marasystems.com>
 
@@ -1494,7 +1500,7 @@ src/repl/heap/store_heap_replacement.cc:
 
 ==============================================================================
 
-src/security/cert_validators/fake/security_fake_certv.pl.in:
+src/security/cert_validators/fake/security_fake_certverify.pl.in:
 
 (C) 2012 The Measurement Factory, Author: Tsantilas Christos
 
@@ -1525,7 +1531,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
 
 ==============================================================================
 
-tools/helper-mux.pl:
+tools/helper-mux/helper-mux.pl.in:
 
 # AUTHOR: Francesco Chemolli <kinkie@squid-cache.org>
 #
