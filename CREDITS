@@ -1297,29 +1297,6 @@ src/auth/basic/SMB/:
 
 ==============================================================================
 
-src/auth/basic/SMB_LM/:
-
- * (C) 2000 Antonino Iannella, Stellar-X Pty Ltd
- * Released under GPL, see COPYING-2.0 for details.
-
- * Released under GNU Public License
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-==============================================================================
-
 src/auth/basic/SSPI/:
 
   Guido Serassio, Torino - Italy
@@ -1440,23 +1417,6 @@ src/auth/ntlm/fake/ntlm_fake_auth.pl.in:
 # Distributed freely under the terms of the GNU General Public License,
 # version 2 or later. For the licensing terms, see the file COPYING that
 # came with Squid.
-
-==============================================================================
-
-src/auth/ntlm/SMB_LM/:
-
- * (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
- * Distributed freely under the terms of the GNU General Public License,
- * version 2 or later. See the file COPYING for licensing details
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
 ==============================================================================
 
