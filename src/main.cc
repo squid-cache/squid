@@ -25,6 +25,7 @@
 #include "client_side.h"
 #include "comm.h"
 #include "CommandLine.h"
+#include "compat/signal.h"
 #include "compat/unistd.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"

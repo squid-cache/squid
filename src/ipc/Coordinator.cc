@@ -14,6 +14,7 @@
 #include "CacheManager.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "compat/signal.h"
 #include "compat/unistd.h"
 #include "ipc/Coordinator.h"
 #include "ipc/SharedListen.h"
