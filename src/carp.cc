@@ -186,13 +186,13 @@ carpSelectParent(PeerSelector *ps)
             }
             if (tp->options.carp_key.path) {
                 // XXX: fix when path and query are separate
-                key.append(request->url.path().substr(0,request->url.path().find('?'))); // 0..N
+                key.append(request->url.absolutePath().substr(0,request->url.absolutePath().find('?'))); // 0..N
             }
             if (tp->options.carp_key.params) {
                 // XXX: fix when path and query are separate
                 SBuf::size_type pos;
-                if ((pos=request->url.path().find('?')) != SBuf::npos)
-                    key.append(request->url.path().substr(pos)); // N..npos
+                if ((pos=request->url.absolutePath().find('?')) != SBuf::npos)
+                    key.append(request->url.absolutePath().substr(pos)); // N..npos
             }
         }
         // if the url-based key is empty, e.g. because the user is
