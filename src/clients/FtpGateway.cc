@@ -1078,6 +1078,8 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
 void
 Ftp::Gateway::checkUrlpath()
 {
+    // TODO: parse FTP URL syntax properly in AnyP::Uri::parse()
+
     // If typecode was specified, extract it and leave just the filename in
     // url.path. Tolerate trailing garbage or missing typecode value. Roughly:
     // [filename] ;type=[typecode char] [trailing garbage]
@@ -1126,7 +1128,7 @@ Ftp::Gateway::buildTitleUrl()
     SBuf authority = request->url.authority(request->url.getScheme() != AnyP::PROTO_FTP);
 
     title_url.append(authority);
-    title_url.append(request->url.path());
+    title_url.append(request->url.absolutePath());
 
     base_href = "ftp://";
 
@@ -1161,7 +1163,7 @@ Ftp::Gateway::start()
     checkUrlpath();
     buildTitleUrl();
     debugs(9, 5, "FD " << (ctrl.conn ? ctrl.conn->fd : -1) << " : host=" << request->url.host() <<
-           ", path=" << request->url.path() << ", user=" << user << ", passwd=" << password);
+           ", path=" << request->url.absolutePath() << ", user=" << user << ", passwd=" << password);
     state = BEGIN;
     Ftp::Client::start();
 }
@@ -2304,7 +2306,6 @@ ftpReadQuit(Ftp::Gateway * ftpState)
 static void
 ftpTrySlashHack(Ftp::Gateway * ftpState)
 {
-    char *path;
     ftpState->flags.try_slash_hack = 1;
     /* Free old paths */
 
@@ -2313,14 +2314,9 @@ ftpTrySlashHack(Ftp::Gateway * ftpState)
     if (ftpState->pathcomps)
         wordlistDestroy(&ftpState->pathcomps);
 
+    /* Build the new path */
     safe_free(ftpState->filepath);
-
-    /* Build the new path (urlpath begins with /) */
-    path = SBufToCstring(ftpState->request->url.path());
-
-    rfc1738_unescape(path);
-
-    ftpState->filepath = path;
+    ftpState->filepath = SBufToCstring(AnyP::Uri::Decode(ftpState->request->url.absolutePath()));
 
     /* And off we go */
     ftpGetFile(ftpState);
@@ -2610,7 +2606,7 @@ Ftp::UrlWith2f(HttpRequest * request)
         return nil;
     }
 
-    if (request->url.path()[0] == '/') {
+    if (request->url.path().startsWith(AnyP::Uri::SlashPath())) {
         newbuf.append(request->url.path());
         request->url.path(newbuf);
     } else if (!request->url.path().startsWith(newbuf)) {

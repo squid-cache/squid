@@ -102,9 +102,6 @@ public:
      * Implements RFC 3986 section 5.2.3
      *
      * The caller must ensure relUrl is a valid relative-path.
-     *
-     * NP: absolute-path are also accepted, but path() method
-     * should be used instead when possible.
      */
     void addRelativePath(const char *relUrl);
 
@@ -141,6 +138,12 @@ public:
      * when the protocol scheme is http: or https:.
      */
     SBuf &absolute() const;
+
+    /// RFC 3986 section 4.2 relative reference called 'absolute-path'.
+    SBuf &absolutePath() const;
+
+    /// The RFC 7230 origin-form URI for currently stored values.
+    SBuf &originForm() const { return absolutePath(); }
 
 private:
     void parseUrn(Parser::Tokenizer&);
@@ -187,6 +190,7 @@ private:
     mutable SBuf authorityHttp_;     ///< RFC 7230 section 5.3.3 authority, maybe without default-port
     mutable SBuf authorityWithPort_; ///< RFC 7230 section 5.3.3 authority with explicit port
     mutable SBuf absolute_;          ///< RFC 7230 section 5.3.2 absolute-URI
+    mutable SBuf absolutePath_; ///< RFC 3986 section 4.2 absolute-path
 };
 
 inline std::ostream &
@@ -202,7 +206,7 @@ operator <<(std::ostream &os, const Uri &url)
         os << "//" << url.authority();
 
     // path is what it is - including absent
-    os << url.path();
+    os << url.absolutePath();
     return os;
 }
 

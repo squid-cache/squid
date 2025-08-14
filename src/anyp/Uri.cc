@@ -50,6 +50,25 @@ UserInfoChars()
     return userInfoValid;
 }
 
+/// Characters which are valid within a URI path section
+static const CharacterSet &
+PathChars()
+{
+    /*
+     * RFC 3986 section 3.3
+     *
+     *   path          = path-abempty    ; begins with "/" or is empty
+     * ...
+     *   path-abempty  = *( "/" segment )
+     *   segment       = *pchar
+     *   pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
+     */
+    static const auto pathValid = CharacterSet("path", "/:@-._~%!$&'()*+,;=") +
+                                  CharacterSet::ALPHA +
+                                  CharacterSet::DIGIT;
+    return pathValid;
+}
+
 /**
  * Governed by RFC 3986 section 2.1
  */
@@ -683,6 +702,7 @@ AnyP::Uri::touch()
     absolute_.clear();
     authorityHttp_.clear();
     authorityWithPort_.clear();
+    absolutePath_.clear();
 }
 
 SBuf &
@@ -733,10 +753,21 @@ AnyP::Uri::absolute() const
             absolute_.append(host());
             absolute_.append(":", 1);
         }
-        absolute_.append(path()); // TODO: Encode each URI subcomponent in path_ as needed.
+        absolute_.append(absolutePath());
     }
 
     return absolute_;
+}
+
+SBuf &
+AnyP::Uri::absolutePath() const
+{
+    if (absolutePath_.isEmpty()) {
+        // TODO: Encode each URI subcomponent in path_ as needed.
+        absolutePath_ = Encode(path(), PathChars());
+    }
+
+    return absolutePath_;
 }
 
 /* XXX: Performance: This is an *almost* duplicate of HttpRequest::effectiveRequestUri(). But elides the query-string.

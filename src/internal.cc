@@ -34,7 +34,7 @@ internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, 
     ErrorState *err;
 
     Assure(request);
-    const SBuf upath = request->url.path();
+    const SBuf upath = request->url.absolutePath();
     debugs(76, 3, clientConn << " requesting '" << upath << "'");
 
     Assure(request->flags.internal);
