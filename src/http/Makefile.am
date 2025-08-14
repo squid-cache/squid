@@ -16,6 +16,8 @@ noinst_LTLIBRARIES = libhttp.la
 libhttp_la_SOURCES = \
 	ContentLengthInterpreter.cc \
 	ContentLengthInterpreter.h \
+	ExtForwarded.cc \
+	ExtForwarded.h \
 	Message.cc \
 	Message.h \
 	MethodType.cc \
