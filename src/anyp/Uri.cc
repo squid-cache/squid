@@ -69,6 +69,19 @@ PathChars()
     return pathValid;
 }
 
+/// Characters which are valid within a URI query section
+static const CharacterSet &
+QueryChars()
+{
+    /*
+     * RFC 3986 section 3.4
+     *
+     *  query         = *( pchar / "/" / "?" )
+     */
+    static const auto queryValid = CharacterSet("query", "/?") + PathChars();
+    return queryValid;
+}
+
 /**
  * Governed by RFC 3986 section 2.1
  */
@@ -208,6 +221,22 @@ AnyP::Uri::path() const
     return path_;
 }
 
+const SBuf &
+AnyP::Uri::query() const
+{
+    /*
+     * RFC 3986 section 3.4:
+     *
+     *  query = *( pchar / "/" / "?" )
+     */
+
+    static SBuf empty;
+    if (scheme_ == AnyP::PROTO_FTP)
+        return empty; // FTP does not have a query section
+
+    return query_;
+}
+
 void
 urlInitialize(void)
 {
@@ -310,6 +339,47 @@ urlAppendDomain(char *host)
     return true;
 }
 
+/// returns whether whitespace has 'chopped' the URL apart.
+static bool
+StripAnyWsp(char *buf)
+{
+    if (stringHasWhitespace(buf)) {
+        switch (Config.uri_whitespace) {
+
+        case URI_WHITESPACE_DENY:
+            throw TextException("URI has whitespace", Here());
+
+        case URI_WHITESPACE_ALLOW:
+            break;
+
+        case URI_WHITESPACE_ENCODE: {
+            auto *t = rfc1738_escape_unescaped(buf);
+            xstrncpy(buf, t, MAX_URL);
+            }
+            break;
+
+        case URI_WHITESPACE_CHOP:
+            *(buf + strcspn(buf, w_space)) = '\0';
+            return true;
+
+        case URI_WHITESPACE_STRIP:
+        default: {
+            char *t = buf;
+            char *q = buf;
+            while (*t) {
+                if (!xisspace(*t)) {
+                    *q = *t;
+                    ++q;
+                }
+                ++t;
+            }
+            *q = '\0';
+            }
+        }
+    }
+    return false;
+}
+
 /*
  * Parse a URI/URL.
  *
@@ -330,14 +400,14 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         LOCAL_ARRAY(char, login, MAX_URL);
         LOCAL_ARRAY(char, foundHost, MAX_URL);
         LOCAL_ARRAY(char, urlpath, MAX_URL);
+        LOCAL_ARRAY(char, foundQuery, MAX_URL);
         char *t = nullptr;
-        char *q = nullptr;
         int foundPort;
         int l;
         int i;
         const char *src;
         char *dst;
-        foundHost[0] = urlpath[0] = login[0] = '\0';
+        foundHost[0] = urlpath[0] = foundQuery[0] = login[0] = '\0';
 
         if ((l = rawUrl.length()) + Config.appendDomainLen > (MAX_URL - 1)) {
             debugs(23, DBG_IMPORTANT, MYNAME << "URL too large (" << l << " bytes)");
@@ -411,23 +481,56 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                 return false;
             *dst = '\0';
 
-            // We are looking at path-abempty.
-            if (*src != '/') {
-                // path-empty, including the end of the `src` c-string cases
-                urlpath[0] = '/';
-                dst = &urlpath[1];
-            } else {
+            bool chopped = false;
+            if (*src == '/') {
                 dst = urlpath;
-            }
-            /* Then everything from / (inclusive) until \r\n or \0 - that's urlpath */
-            for (; i < l && *src != '\r' && *src != '\n' && *src != '\0'; ++i, ++src, ++dst) {
-                *dst = *src;
+                /* Then everything from / (inclusive) until '?', '#', '\r\n' or '\0' - that's urlpath */
+                for (; i < l && *src != '?' && *src != '#' && *src != '\r' && *src != '\n' && *src != '\0'; ++i, ++src, ++dst) {
+                    *dst = *src;
+                }
+                *dst = '\0';
+                chopped = StripAnyWsp(urlpath);
+            } else {
+                // We should be looking at path-abempty. relative-path is not supported (yet).
+                urlpath[0] = '/';
+                urlpath[1] = '\0';
             }
 
             /* We -could- be at the end of the buffer here */
             if (i > l)
                 return false;
-            *dst = '\0';
+
+            if (*src == '?') {
+                dst = foundQuery;
+                ++src; // skip '?' delimiter
+                ++i; // keep track of bytes 'consumed' from src
+                /* Then everything from '?' (exclusive) until '#', '\r\n' or '\0' - that's query */
+                for (; i < l && *src != '#' && *src != '\r' && *src != '\n' && *src != '\0'; ++i, ++src, ++dst) {
+                    *dst = *src;
+                }
+                *dst = '\0';
+                if (chopped)
+                    *foundQuery = '\0';
+                else
+                    chopped = StripAnyWsp(foundQuery);
+            }
+            if (i > l)
+                return false;
+
+            if (*src == '#') {
+                ++src; // skip '#' delimiter
+                ++i; // keep track of bytes 'consumed' from src
+                /* Then everything from '#' (exclusive) until '\r\n' or '\0' - that's fragment */
+                for (; i < l && *src != '\r' && *src != '\n' && *src != '\0'; ++i, ++src) {
+                    ; // fragment component is not expected in network protocols. discard for now.
+                }
+            }
+
+            if (i > l)
+                return false;
+
+            if (*src != '\r' && *src != '\n' && *src != '\0')
+                throw TextException("invalid URL", Here());
 
             // If the parsed scheme has no (known) default port, and there is no
             // explicit port, then we will reject the zero port during foundPort
@@ -490,27 +593,20 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                 *t = '\0';
                 ++t;
                 foundPort = atoi(t);
+                // BUG: fails to detect non-DIGIT garbage like "http://localhost:80fubar"
             }
         }
 
         for (t = foundHost; *t; ++t)
             *t = xtolower(*t);
 
-        if (stringHasWhitespace(foundHost)) {
-            if (URI_WHITESPACE_STRIP == Config.uri_whitespace) {
-                t = q = foundHost;
-                while (*t) {
-                    if (!xisspace(*t)) {
-                        *q = *t;
-                        ++q;
-                    }
-                    ++t;
-                }
-                *q = '\0';
-            }
+        if (StripAnyWsp(foundHost)) {
+            urlpath[0] = '/';
+            urlpath[1] = '\0';
+            *foundQuery = '\0';
         }
 
-        debugs(23, 3, "Split URL '" << rawUrl << "' into proto='" << scheme.image() << "', host='" << foundHost << "', port='" << foundPort << "', path='" << urlpath << "'");
+        debugs(23, 3, "Split URL '" << rawUrl << "' into proto='" << scheme.image() << "', host='" << foundHost << "', port='" << foundPort << "', path='" << urlpath << "', query='" << foundQuery << "'");
 
         if (Config.onoff.check_hostnames &&
                 strspn(foundHost, Config.onoff.allow_underscore ? valid_hostname_chars_u : valid_hostname_chars) != strlen(foundHost)) {
@@ -536,41 +632,8 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             return false;
         }
 
-        if (stringHasWhitespace(urlpath)) {
-            debugs(23, 2, "URI has whitespace: {" << rawUrl << "}");
-
-            switch (Config.uri_whitespace) {
-
-            case URI_WHITESPACE_DENY:
-                return false;
-
-            case URI_WHITESPACE_ALLOW:
-                break;
-
-            case URI_WHITESPACE_ENCODE:
-                t = rfc1738_escape_unescaped(urlpath);
-                xstrncpy(urlpath, t, MAX_URL);
-                break;
-
-            case URI_WHITESPACE_CHOP:
-                *(urlpath + strcspn(urlpath, w_space)) = '\0';
-                break;
-
-            case URI_WHITESPACE_STRIP:
-            default:
-                t = q = urlpath;
-                while (*t) {
-                    if (!xisspace(*t)) {
-                        *q = *t;
-                        ++q;
-                    }
-                    ++t;
-                }
-                *q = '\0';
-            }
-        }
-
         setScheme(scheme);
+        query(SBuf(foundQuery));
         path(urlpath);
         host(foundHost);
         userInfo(SBuf(login));
@@ -775,8 +838,12 @@ SBuf &
 AnyP::Uri::absolutePath() const
 {
     if (absolutePath_.isEmpty()) {
-        // TODO: Encode each URI subcomponent in path_ as needed.
-        absolutePath_ = Encode(path(), PathChars());
+        if (!path().isEmpty())
+            absolutePath_ = Encode(path(), PathChars());
+        if (!query().isEmpty()) {
+            absolutePath_.append("?");
+            absolutePath_.append(Encode(query(), QueryChars()));
+        }
     }
 
     return absolutePath_;
