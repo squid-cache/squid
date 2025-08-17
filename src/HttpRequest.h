@@ -73,7 +73,7 @@ public:
 
     /// \returns a pointer to a local static buffer containing request URI
     /// that honors strip_query_terms and %-encodes unsafe URI characters
-    char *canonicalCleanUrl() const;
+    SBuf canonicalCleanUrl() const;
 
 #if USE_ADAPTATION
     /// Returns possibly nil history, creating it if adapt. logging is enabled

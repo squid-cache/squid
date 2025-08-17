@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "anyp/Host.h"
 #include "anyp/Uri.h"
+#include "base/CharacterSet.h"
 #include "base/Raw.h"
 #include "globals.h"
 #include "HttpRequest.h"
@@ -743,27 +744,25 @@ AnyP::Uri::absolute() const
  *        After copying it on in the first place! Would be less code to merge the two with a flag parameter.
  *        and never copy the query-string part in the first place
  */
-char *
+SBuf
 urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method, const AnyP::UriScheme &scheme)
 {
-    LOCAL_ARRAY(char, buf, MAX_URL);
-
-    snprintf(buf, sizeof(buf), SQUIDSBUFPH, SQUIDSBUFPRINT(url));
-    buf[sizeof(buf)-1] = '\0';
-
     // URN, CONNECT method, and non-stripped URIs can go straight out
+    SBuf out = url;
     if (Config.onoff.strip_query_terms && !(method == Http::METHOD_CONNECT || scheme == AnyP::PROTO_URN)) {
-        // strip anything AFTER a question-mark
-        // leaving the '?' in place
-        if (auto t = strchr(buf, '?')) {
-            *(++t) = '\0';
-        }
+        // strip anything after a path segment
+        // leaving the delimiter in place as a visual cue of truncation (if any)
+        static const CharacterSet pathDelims("path-delim", "?#");
+        const auto pathEnd = url.findFirstOf(pathDelims);
+        if (pathEnd != SBuf::npos)
+            out = url.substr(0, pathEnd+1);
     }
 
-    if (stringHasCntl(buf))
-        xstrncpy(buf, rfc1738_escape_unescaped(buf), MAX_URL);
-
-    return buf;
+    // check for unescaped control characters
+    // RFC 1738, 5234 and 7230 require the UTF-8 range (0x80-0xFF)
+    // and the ASCII control characters (0x00-0x1F, 0x7f) be encoded.
+    static const auto asciiValid = (CharacterSet::OBSTEXT + CharacterSet::CTL).complement("ascii").remove('\0');
+    return AnyP::Uri::Encode(out, asciiValid);
 }
 
 /**
@@ -772,15 +771,16 @@ urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method
  * for use in error page outputs.
  * Luckily we can leverage the others instead of duplicating.
  */
-const char *
-urlCanonicalFakeHttps(const HttpRequest * request)
+const SBuf
+urlCanonicalFakeHttps(const HttpRequestPointer &request)
 {
-    LOCAL_ARRAY(char, buf, MAX_URL);
-
     // method CONNECT and port HTTPS
     if (request->method == Http::METHOD_CONNECT && request->url.port() == 443) {
-        snprintf(buf, MAX_URL, "https://%s/*", request->url.host());
-        return buf;
+        SBuf out;
+        out.append("https://", 8);
+        out.append(request->url.host());
+        out.append("/*", 2);
+        return out;
     }
 
     // else do the normal complete canonical thing.
@@ -1029,56 +1029,54 @@ AnyP::Uri::Uri(AnyP::UriScheme const &aScheme) :
 }
 
 // TODO: fix code duplication with AnyP::Uri::parse()
-char *
-AnyP::Uri::cleanup(const char *uri)
+SBuf
+AnyP::Uri::Cleanup(const SBuf &uri)
 {
-    char *cleanedUri = nullptr;
+    // 'whitespace' for chop and strip are different
+    static const CharacterSet wspChop = (CharacterSet::WSP +
+                                         CharacterSet::LF +
+                                         CharacterSet::CR).rename("wsp-chop");
+#if 0 // XXX: use these instead of xisspace() character match (it varies)
+    static const CharacterSet wspStrip = (CharacterSet("VT,FF","\v\f") +
+                                          wspChop).rename("wsp-strip");
+#endif
+
+    int flags = 0;
+    SBuf cleanedUri;
     switch (Config.uri_whitespace) {
     case URI_WHITESPACE_ALLOW: {
-        const auto flags = RFC1738_ESCAPE_NOSPACE | RFC1738_ESCAPE_UNESCAPED;
-        cleanedUri = xstrndup(rfc1738_do_escape(uri, flags), MAX_URL);
-        break;
+        flags |= RFC1738_ESCAPE_NOSPACE | RFC1738_ESCAPE_UNESCAPED;
+        SBuf tmp = uri;
+        cleanedUri = SBuf(rfc1738_do_escape(tmp.c_str(), flags));
     }
+    break;
 
-    case URI_WHITESPACE_ENCODE:
-        cleanedUri = xstrndup(rfc1738_do_escape(uri, RFC1738_ESCAPE_UNESCAPED), MAX_URL);
-        break;
+    case URI_WHITESPACE_ENCODE: {
+        flags |= RFC1738_ESCAPE_UNESCAPED;
+        SBuf tmp = uri;
+        cleanedUri = SBuf(rfc1738_do_escape(tmp.c_str(), flags));
+    }
+    break;
 
     case URI_WHITESPACE_CHOP: {
-        const auto pos = strcspn(uri, w_space);
-        char *choppedUri = nullptr;
-        if (pos < strlen(uri))
-            choppedUri = xstrndup(uri, pos + 1);
-        cleanedUri = xstrndup(rfc1738_do_escape(choppedUri ? choppedUri : uri,
-                                                RFC1738_ESCAPE_UNESCAPED), MAX_URL);
-        cleanedUri[pos] = '\0';
-        xfree(choppedUri);
-        break;
+        flags |= RFC1738_ESCAPE_UNESCAPED;
+        const auto pos = uri.findFirstOf(wspChop);
+        SBuf choppedUri = uri.substr(0, pos);
+        cleanedUri = SBuf(rfc1738_do_escape(choppedUri.c_str(), flags));
     }
+    break;
 
     case URI_WHITESPACE_DENY:
     case URI_WHITESPACE_STRIP:
     default: {
-        // TODO: avoid duplication with urlParse()
-        const char *t;
-        char *tmp_uri = static_cast<char*>(xmalloc(strlen(uri) + 1));
-        char *q = tmp_uri;
-        t = uri;
-        while (*t) {
-            if (!xisspace(*t)) {
-                *q = *t;
-                ++q;
-            }
-            ++t;
-        }
-        *q = '\0';
-        cleanedUri = xstrndup(rfc1738_escape_unescaped(tmp_uri), MAX_URL);
-        xfree(tmp_uri);
-        break;
+        // XXX: isspace() changes characters matched depending on locale
+        // XXX: we should only strip the wspStrip characters (if any)
+        flags |= RFC1738_ESCAPE_UNESCAPED | RFC1738_ERASE_ISSPACE;
+        SBuf tmp = uri;
+        cleanedUri = SBuf(rfc1738_do_escape(tmp.c_str(), flags));
     }
+    break;
     }
 
-    assert(cleanedUri);
     return cleanedUri;
 }
-

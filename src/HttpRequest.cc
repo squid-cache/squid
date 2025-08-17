@@ -808,7 +808,7 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
     }
 }
 
-char *
+SBuf
 HttpRequest::canonicalCleanUrl() const
 {
     return urlCanonicalCleanWithoutRequest(effectiveRequestUri(), method, url.getScheme());

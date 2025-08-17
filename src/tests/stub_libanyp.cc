@@ -32,7 +32,7 @@ const SBuf &AnyP::Uri::Asterisk()
 SBuf &AnyP::Uri::authority(bool) const STUB_RETVAL(nil)
 SBuf &AnyP::Uri::absolute() const STUB_RETVAL(nil)
 void urlInitialize() STUB
-const char *urlCanonicalFakeHttps(const HttpRequest *) STUB_RETVAL(nullptr)
+const SBuf urlCanonicalFakeHttps(const HttpRequestPointer &) STUB_RETVAL(SBuf())
 bool urlIsRelative(const char *) STUB_RETVAL(false)
 char *urlRInternal(const char *, unsigned short, const char *, const char *) STUB_RETVAL(nullptr)
 char *urlInternal(const char *, const char *) STUB_RETVAL(nullptr)
