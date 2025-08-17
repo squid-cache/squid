@@ -148,7 +148,8 @@ Security::KeyData::loadX509PrivateKeyFromFile()
     Ssl::ReadPrivateKeyFromFile(keyFilename, pkey, cb);
 
     if (pkey && !X509_check_private_key(cert.get(), pkey.get())) {
-        debugs(83, DBG_IMPORTANT, "WARNING: '" << privateKeyFile << "' X509_check_private_key() failed");
+        const auto x = ERR_get_error();
+        debugs(83, DBG_IMPORTANT, "WARNING: '" << privateKeyFile << "' X509_check_private_key() failed: " << ErrorString(x));
         pkey.reset();
     }
 
