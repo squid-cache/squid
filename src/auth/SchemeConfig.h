@@ -63,7 +63,8 @@ public:
      \retval true   Authentication Module loaded and running.
      \retval false  No Authentication Module loaded.
      */
-    virtual bool active() const = 0;
+    bool active() const { return _active; }
+    void activate() { _active = true; }
 
     /**
      * new decode API: virtual factory pattern
@@ -144,6 +145,9 @@ protected:
 
     /// RFC 7235 section 2.2 - Protection Space (Realm)
     SBuf realm;
+
+    /// whether this scheme has been configured and initialized
+    bool _active = false;
 };
 
 } // namespace Auth
