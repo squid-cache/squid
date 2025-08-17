@@ -11,7 +11,7 @@
 
 #include "base/Range.h"
 #include "defines.h"
-#include "mem/forward.h"
+#include "mem/AllocatorProxy.h"
 #include "StoreIOBuffer.h"
 
 class mem_node
