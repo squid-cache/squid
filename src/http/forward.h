@@ -18,6 +18,8 @@ namespace Http
 
 class ContentLengthInterpreter;
 
+class ExtForwarded;
+
 class Message;
 typedef RefCount<Http::Message> MessagePointer;
 

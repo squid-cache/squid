@@ -57,6 +57,7 @@ externalAclHelper	auth_param
 HelperChildConfig
 hostdomain		cache_peer
 hostdomaintype		cache_peer
+Http::ExtForwarded*
 http_header_access	acl
 http_header_replace
 http_upgrade_request_protocols acl
