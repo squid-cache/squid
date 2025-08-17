@@ -88,6 +88,9 @@ typedef enum _method_t {
     // RFC 9113
     METHOD_PRI,
 
+    // draft-ietf-httpbis-safe-method-w-body
+    METHOD_QUERY,
+
     // Squid extension methods
     METHOD_PURGE,
     METHOD_OTHER,
