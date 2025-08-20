@@ -13,6 +13,7 @@
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
+#include "base/RunnersRegistry.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
 #include "comm.h"
@@ -1432,15 +1433,12 @@ htcpRecv(int fd, void *)
     Comm::SetSelect(fd, COMM_SELECT_READ, htcpRecv, nullptr, 0);
 }
 
-/*
- * ======================================================================
- * PUBLIC FUNCTIONS
- * ======================================================================
- */
-
-void
-htcpOpenPorts(void)
+static void
+htcpOpenPorts()
 {
+    if (!IamWorkerProcess())
+        return;
+
     if (Config.Port.htcp <= 0) {
         debugs(31, Important(21), "HTCP Disabled.");
         return;
@@ -1612,8 +1610,8 @@ htcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &, CachePee
  * htcpSocketShutdown only closes the 'in' socket if it is
  * different than the 'out' socket.
  */
-void
-htcpSocketShutdown(void)
+static void
+htcpSocketShutdown()
 {
     if (!Comm::IsConnOpen(htcpIncomingConn))
         return;
@@ -1641,9 +1639,12 @@ htcpSocketShutdown(void)
     Comm::SetSelect(htcpOutgoingConn->fd, COMM_SELECT_READ, nullptr, nullptr, 0);
 }
 
-void
-htcpClosePorts(void)
+static void
+htcpClosePorts()
 {
+    if (!IamWorkerProcess())
+        return;
+
     htcpSocketShutdown();
 
     if (htcpOutgoingConn != nullptr) {
@@ -1651,6 +1652,16 @@ htcpClosePorts(void)
         htcpOutgoingConn = nullptr;
     }
 }
+
+class HtcpRr : public RegisteredRunner
+{
+public:
+    void useConfig() override { htcpOpenPorts(); }
+    void startReconfigure() override { htcpClosePorts(); }
+    void syncConfig() override { htcpOpenPorts(); }
+    void startShutdown() override { htcpClosePorts(); }
+};
+DefineRunnerRegistrator(HtcpRr);
 
 static void
 htcpLogHtcp(Ip::Address &caddr, const int opcode, const LogTags_ot logcode, const char *url, AccessLogEntryPointer al)
