@@ -47,9 +47,6 @@ AggrType snmpAggrType(oid* Current, snint CurrentLen);
 extern Comm::ConnectionPointer snmpOutgoingConn;
 
 extern PF snmpHandleUdp;
-void snmpInit(void);
-void snmpOpenPorts(void);
-void snmpClosePorts(void);
 const char * snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf);
 void addr2oid(Ip::Address &addr, oid *Dest);
 void oid2addr(oid *Dest, Ip::Address &addr, u_int code);
