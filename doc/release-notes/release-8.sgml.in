@@ -68,7 +68,7 @@ lookups. Requests for that report now result in HTTP 404 errors.
 Most user-facing changes are reflected in squid.conf (see below).
 
 <sect1>Build Requirement Changes
-<p>The <em>libtool</em> version required to build Squid has been adjusted to a minimum of <em>version 2.4</em>.
+<p>The minimum <em>libtool</em> version required to build Squid has been increased to <em>version 2.4</em>.
 
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
