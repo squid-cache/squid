@@ -8,6 +8,15 @@
 
 /* DEBUG: section 66    HTTP Header Tools */
 
+/**
+ * Checks the anonymizer (header_access) configuration.
+ *
+ * \retval 0    Header is explicitly blocked for removal
+ * \retval 1    Header is explicitly allowed
+ * \retval 1    Header has been replaced, the current version can be used.
+ * \retval 1    Header has no access controls to test
+ */
+
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
@@ -23,7 +32,7 @@
 #include "http/Stream.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
-#include "HttpHeaderTools.h"
+#include "http/HeaderTools.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "sbuf/Stream.h"
@@ -40,248 +49,8 @@
 #include <cerrno>
 #include <string>
 
-static void httpHeaderPutStrvf(HttpHeader * hdr, Http::HdrType id, const char *fmt, va_list vargs);
 static void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headersAdd);
 
-void
-httpHeaderMaskInit(HttpHeaderMask * mask, int value)
-{
-    memset(mask, value, sizeof(*mask));
-}
-
-/* same as httpHeaderPutStr, but formats the string using snprintf first */
-void
-httpHeaderPutStrf(HttpHeader * hdr, Http::HdrType id, const char *fmt,...)
-{
-    va_list args;
-    va_start(args, fmt);
-
-    httpHeaderPutStrvf(hdr, id, fmt, args);
-    va_end(args);
-}
-
-/* used by httpHeaderPutStrf */
-static void
-httpHeaderPutStrvf(HttpHeader * hdr, Http::HdrType id, const char *fmt, va_list vargs)
-{
-    MemBuf mb;
-    mb.init();
-    mb.vappendf(fmt, vargs);
-    hdr->putStr(id, mb.buf);
-    mb.clean();
-}
-
-/** wrapper arrounf PutContRange */
-void
-httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, int64_t ent_len)
-{
-    HttpHdrContRange *cr = httpHdrContRangeCreate();
-    assert(hdr && ent_len >= 0);
-    httpHdrContRangeSet(cr, spec, ent_len);
-    hdr->putContRange(cr);
-    delete cr;
-}
-
-/**
- * \return true if a given directive is found in the Connection header field-value.
- *
- * \note if no Connection header exists we may check the Proxy-Connection header
- */
-bool
-httpHeaderHasConnDir(const HttpHeader * hdr, const SBuf &directive)
-{
-    String list;
-
-    /* what type of header do we have? */
-    if (hdr->getList(Http::HdrType::CONNECTION, &list))
-        return strListIsMember(&list, directive, ',') != 0;
-
-#if USE_HTTP_VIOLATIONS
-    if (hdr->getList(Http::HdrType::PROXY_CONNECTION, &list))
-        return strListIsMember(&list, directive, ',') != 0;
-#endif
-
-    // else, no connection header for it to exist in
-    return false;
-}
-
-/** handy to printf prefixes of potentially very long buffers */
-const char *
-getStringPrefix(const char *str, size_t sz)
-{
-#define SHORT_PREFIX_SIZE 512
-    LOCAL_ARRAY(char, buf, SHORT_PREFIX_SIZE);
-    xstrncpy(buf, str, (sz+1 > SHORT_PREFIX_SIZE) ? SHORT_PREFIX_SIZE : sz);
-    return buf;
-}
-
-/**
- * parses an int field, complains if something went wrong, returns true on
- * success
- */
-int
-httpHeaderParseInt(const char *start, int *value)
-{
-    assert(value);
-    *value = atoi(start);
-
-    if (!*value && !xisdigit(*start)) {
-        debugs(66, 2, "failed to parse an int header field near '" << start << "'");
-        return 0;
-    }
-
-    return 1;
-}
-
-bool
-httpHeaderParseOffset(const char *start, int64_t *value, char **endPtr)
-{
-    char *end = nullptr;
-    errno = 0;
-    const int64_t res = strtoll(start, &end, 10);
-    if (errno && !res) {
-        debugs(66, 7, "failed to parse malformed offset in " << start);
-        return false;
-    }
-    if (errno == ERANGE && (res == LLONG_MIN || res == LLONG_MAX)) { // no overflow
-        debugs(66, 7, "failed to parse huge offset in " << start);
-        return false;
-    }
-    if (start == end) {
-        debugs(66, 7, "failed to parse empty offset");
-        return false;
-    }
-    *value = res;
-    if (endPtr)
-        *endPtr = end;
-    debugs(66, 7, "offset " << start << " parsed as " << res);
-    return true;
-}
-
-/**
- * Parses a quoted-string field (RFC 2616 section 2.2), complains if
- * something went wrong, returns non-zero on success.
- * Un-escapes quoted-pair characters found within the string.
- * start should point at the first double-quote.
- */
-int
-httpHeaderParseQuotedString(const char *start, const int len, String *val)
-{
-    const char *end, *pos;
-    val->clean();
-    if (*start != '"') {
-        debugs(66, 2, "failed to parse a quoted-string header field near '" << start << "'");
-        return 0;
-    }
-    pos = start + 1;
-
-    while (*pos != '"' && len > (pos-start)) {
-
-        if (*pos =='\r') {
-            ++pos;
-            if ((pos-start) > len || *pos != '\n') {
-                debugs(66, 2, "failed to parse a quoted-string header field with '\\r' octet " << (start-pos)
-                       << " bytes into '" << start << "'");
-                val->clean();
-                return 0;
-            }
-        }
-
-        if (*pos == '\n') {
-            ++pos;
-            if ( (pos-start) > len || (*pos != ' ' && *pos != '\t')) {
-                debugs(66, 2, "failed to parse multiline quoted-string header field '" << start << "'");
-                val->clean();
-                return 0;
-            }
-            // TODO: replace the entire LWS with a space
-            val->append(" ");
-            ++pos;
-            debugs(66, 2, "len < pos-start => " << len << " < " << (pos-start));
-            continue;
-        }
-
-        bool quoted = (*pos == '\\');
-        if (quoted) {
-            ++pos;
-            if (!*pos || (pos-start) > len) {
-                debugs(66, 2, "failed to parse a quoted-string header field near '" << start << "'");
-                val->clean();
-                return 0;
-            }
-        }
-        end = pos;
-        while (end < (start+len) && *end != '\\' && *end != '\"' && (unsigned char)*end > 0x1F && *end != 0x7F)
-            ++end;
-        if (((unsigned char)*end <= 0x1F && *end != '\r' && *end != '\n') || *end == 0x7F) {
-            debugs(66, 2, "failed to parse a quoted-string header field with CTL octet " << (start-pos)
-                   << " bytes into '" << start << "'");
-            val->clean();
-            return 0;
-        }
-        val->append(pos, end-pos);
-        pos = end;
-    }
-
-    if (*pos != '\"') {
-        debugs(66, 2, "failed to parse a quoted-string header field which did not end with \" ");
-        val->clean();
-        return 0;
-    }
-    /* Make sure it's defined even if empty "" */
-    if (!val->termedBuf())
-        val->assign("", 0);
-    return 1;
-}
-
-SBuf
-Http::SlowlyParseQuotedString(const char * const description, const char * const start, const size_t length)
-{
-    String s;
-    if (!httpHeaderParseQuotedString(start, length, &s))
-        throw TextException(ToSBuf("Cannot parse ", description, " as a quoted string"), Here());
-    return StringToSBuf(s);
-}
-
-SBuf
-httpHeaderQuoteString(const char *raw)
-{
-    assert(raw);
-
-    // TODO: Optimize by appending a sequence of characters instead of a char.
-    // This optimization may be easier with Tokenizer after raw becomes SBuf.
-
-    // RFC 7230 says a "sender SHOULD NOT generate a quoted-pair in a
-    // quoted-string except where necessary" (i.e., DQUOTE and backslash)
-    bool needInnerQuote = false;
-    for (const char *s = raw; !needInnerQuote &&  *s; ++s)
-        needInnerQuote = *s == '"' || *s == '\\';
-
-    SBuf quotedStr;
-    quotedStr.append('"');
-
-    if (needInnerQuote) {
-        for (const char *s = raw; *s; ++s) {
-            if (*s == '"' || *s == '\\')
-                quotedStr.append('\\');
-            quotedStr.append(*s);
-        }
-    } else {
-        quotedStr.append(raw);
-    }
-
-    quotedStr.append('"');
-    return quotedStr;
-}
-
-/**
- * Checks the anonymizer (header_access) configuration.
- *
- * \retval 0    Header is explicitly blocked for removal
- * \retval 1    Header is explicitly allowed
- * \retval 1    Header has been replaced, the current version can be used.
- * \retval 1    Header has no access controls to test
- */
 static int
 httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms, const AccessLogEntryPointer &al)
 {

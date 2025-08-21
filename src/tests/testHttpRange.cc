@@ -9,7 +9,19 @@
 #include "squid.h"
 #include "compat/cppunit.h"
 #include "HttpHeaderRange.h"
+#include "http/HeaderTools.h"
 #include "unitTestMain.h"
+
+// XXX: Misplaced
+#define STUB_API "http/Message.cc"
+#include "tests/STUB.h"
+#include "http/Message.h"
+#include "http/StatusLine.h"
+Http::Message::Message(const http_hdr_owner_type owner): header(owner) { STUB; }
+Http::Message::~Message() STUB
+int Http::Message::httpMsgParseError() STUB_RETVAL(-1)
+void Http::Message::hdrCacheInit() STUB
+void Http::StatusLine::packInto(Packable*) const STUB
 
 class TestHttpRange : public CPPUNIT_NS::TestFixture
 {

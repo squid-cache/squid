@@ -17,7 +17,8 @@
 #include "DelayConfig.h"
 #endif
 #include "helper/ChildConfig.h"
-#include "HttpHeaderTools.h"
+#include "HeaderMangling.h"
+#include "http/HeaderTools.h"
 #include "ip/Address.h"
 #if USE_DELAY_POOLS
 #include "MessageDelayPools.h"

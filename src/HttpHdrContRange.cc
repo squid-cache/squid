@@ -13,7 +13,8 @@
 #include "debug/Stream.h"
 #include "enums.h"
 #include "HttpHdrContRange.h"
-#include "HttpHeaderTools.h"
+#include "HeaderMangling.h"
+#include "http/HeaderTools.h"
 
 /*
  *    Currently only byte ranges are supported

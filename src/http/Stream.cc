@@ -11,7 +11,8 @@
 #include "clientStream.h"
 #include "http/Stream.h"
 #include "HttpHdrContRange.h"
-#include "HttpHeaderTools.h"
+#include "HeaderMangling.h"
+#include "http/HeaderTools.h"
 #include "Store.h"
 #include "TimeOrTag.h"
 #if USE_DELAY_POOLS
