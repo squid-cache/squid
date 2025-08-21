@@ -9,36 +9,18 @@
 /* DEBUG: section 66    HTTP Header Tools */
 
 #include "squid.h"
-#include "acl/FilledChecklist.h"
-#include "acl/Gadgets.h"
-#include "base/EnumIterator.h"
-#include "client_side.h"
-#include "client_side_request.h"
-#include "comm/Connection.h"
 #include "compat/strtoll.h"
-#include "ConfigParser.h"
-#include "fde.h"
-#include "globals.h"
-#include "http/RegisteredHeaders.h"
-#include "http/Stream.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
 #include "http/HeaderTools.h"
-#include "HttpRequest.h"
 #include "MemBuf.h"
-#include "sbuf/Stream.h"
-#include "sbuf/StringConvert.h"
-#include "SquidConfig.h"
-#include "Store.h"
 #include "StrList.h"
 
 #if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
-#include <algorithm>
 #include <cerrno>
-#include <string>
 
 static void httpHeaderPutStrvf(HttpHeader * hdr, Http::HdrType id, const char *fmt, va_list vargs);
 

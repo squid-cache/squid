@@ -6,20 +6,10 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_HTTPHEADERTOOLS_H
-#define SQUID_SRC_HTTPHEADERTOOLS_H
+#ifndef SQUID_SRC_HTTP_HEADERTOOLS_H
+#define SQUID_SRC_HTTP_HEADERTOOLS_H
 
-#include "format/Format.h"
-#include "HttpHeader.h"
 #include "sbuf/forward.h"
-
-#include <functional>
-#include <list>
-#include <map>
-#include <string>
-#if HAVE_STRINGS_H
-#include <strings.h>
-#endif
 
 class HttpHeader;
 class HttpRequest;
@@ -38,5 +28,5 @@ void httpHeaderPutStrf(HttpHeader * hdr, Http::HdrType id, const char *fmt,...) 
 
 const char *getStringPrefix(const char *str, size_t len);
 
-#endif /* SQUID_SRC_HTTPHEADERTOOLS_H */
+#endif /* SQUID_SRC_HTTP_HEADERTOOLS_H */
 
