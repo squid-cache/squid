@@ -903,8 +903,8 @@ nodist_tests_testURL_SOURCES = \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc
 tests_testURL_LDADD = \
-	libsquid.la \
 	anyp/libanyp.la \
+	libsquid.la \
 	parser/libparser.la \
 	base/libbase.la \
 	ip/libip.la \
@@ -1028,8 +1028,6 @@ tests_testRock_SOURCES = \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderFieldStat.h \
-	HttpHeaderTools.cc \
-	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_Instance.cc \
@@ -1199,8 +1197,6 @@ tests_testUfs_SOURCES = \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderFieldStat.h \
-	HttpHeaderTools.cc \
-	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_Instance.cc \
@@ -1372,8 +1368,6 @@ tests_testStore_SOURCES = \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderFieldStat.h \
-	HttpHeaderTools.cc \
-	HttpHeaderTools.h \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_Instance.cc \
@@ -1536,8 +1530,6 @@ tests_testDiskIO_SOURCES = \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderFieldStat.h \
-	HttpHeaderTools.cc \
-	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_Instance.cc \
@@ -1844,8 +1836,6 @@ tests_testHttpReply_SOURCES = \
 	HttpHeader.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderMask.h \
-	HttpHeaderTools.cc \
-	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/testHttpReply.cc \
 	HttpReply.h \
@@ -1970,9 +1960,11 @@ tests_testHttpRequest_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
+	http/HeaderTools.cc \
+	http/HeaderTools.h \
+	HeaderMangling.cc \
+	HeaderMangling.h \
 	HttpHeaderFieldStat.h \
-	HttpHeaderTools.cc \
-	HttpHeaderTools.h \
 	HttpReply.cc \
 	HttpRequest.cc \
 	tests/testHttpRequest.cc \
@@ -2259,6 +2251,8 @@ tests_testCacheManager_SOURCES = \
 	FwdState.h \
 	HappyConnOpener.cc \
 	HappyConnOpener.h \
+	HeaderMangling.cc \
+	HeaderMangling.h \
 	HttpBody.cc \
 	HttpBody.h \
 	tests/stub_HttpControlMsg.cc \
@@ -2271,8 +2265,6 @@ tests_testCacheManager_SOURCES = \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderFieldStat.h \
-	HttpHeaderTools.cc \
-	HttpHeaderTools.h \
 	HttpReply.cc \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
