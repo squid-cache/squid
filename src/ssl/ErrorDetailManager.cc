@@ -134,9 +134,9 @@ Ssl::ErrorDetailsManager::findDetail(const Security::ErrorCode value, const Http
             errDetails = new ErrorDetailsList();
             ErrorDetailFile detailTmpl(errDetails);
             if (detailTmpl.loadFor(request.getRaw())) {
-                if (detailTmpl.language()) {
-                    debugs(83, 8, "Found details on disk for language " << detailTmpl.language());
-                    errDetails->errLanguage = detailTmpl.language();
+                if (detailTmpl.errLanguage()) {
+                    errDetails->errLanguage = *detailTmpl.errLanguage();
+                    debugs(83, 8, "Found details on disk for language " << errDetails->errLanguage);
                     cacheDetails(errDetails);
                 }
             }
