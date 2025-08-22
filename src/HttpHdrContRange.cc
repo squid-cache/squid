@@ -13,7 +13,6 @@
 #include "debug/Stream.h"
 #include "enums.h"
 #include "HttpHdrContRange.h"
-#include "HeaderMangling.h"
 #include "http/HeaderTools.h"
 
 /*

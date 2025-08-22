@@ -42,7 +42,6 @@
 #include "ftp/Elements.h"
 #include "globals.h"
 #include "HeaderMangling.h"
-#include "http/HeaderTools.h"
 #include "HttpUpgradeProtocolAccess.h"
 #include "icmp/IcmpConfig.h"
 #include "ip/Intercept.h"

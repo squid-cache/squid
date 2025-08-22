@@ -15,7 +15,6 @@
 #include "HttpHeader.h"
 #include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
-#include "HeaderMangling.h"
 #include "http/HeaderTools.h"
 #include "Store.h"
 #include "StrList.h"

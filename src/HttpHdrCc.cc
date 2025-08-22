@@ -14,7 +14,6 @@
 #include "HttpHdrCc.h"
 #include "HttpHeader.h"
 #include "HttpHeaderStat.h"
-#include "HeaderMangling.h"
 #include "http/HeaderTools.h"
 #include "sbuf/SBuf.h"
 #include "SquidMath.h"

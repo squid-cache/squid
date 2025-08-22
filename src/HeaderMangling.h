@@ -34,7 +34,6 @@ typedef enum {
     ROR_REPLY
 } req_or_rep_t;
 
-
 // Currently a POD
 class headerMangler
 {

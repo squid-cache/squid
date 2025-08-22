@@ -14,7 +14,6 @@
 #include "http/Message.h"
 #include "http/one/Parser.h"
 #include "HttpHdrCc.h"
-#include "HeaderMangling.h"
 #include "http/HeaderTools.h"
 #include "MemBuf.h"
 #include "mime_header.h"

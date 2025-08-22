@@ -22,7 +22,6 @@
 #include "HttpHeader.h"
 #include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
-#include "HeaderMangling.h"
 #include "http/HeaderTools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"

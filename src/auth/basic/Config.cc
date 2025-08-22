@@ -24,7 +24,6 @@
 #include "base64.h"
 #include "cache_cf.h"
 #include "helper.h"
-#include "HeaderMangling.h"
 #include "http/HeaderTools.h"
 #include "HttpReply.h"
 #include "mgr/Registration.h"
