@@ -11,11 +11,11 @@
 #include "squid.h"
 #include "base/LookupTable.h"
 //#include "HttpHdrSc.h" // pulled in by HttpHdrScTarget.h
+#include "http/HeaderTools.h"
 #include "HttpHdrScTarget.h"
 #include "HttpHeader.h"
 #include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
-#include "http/HeaderTools.h"
 #include "Store.h"
 #include "StrList.h"
 #include "util.h"

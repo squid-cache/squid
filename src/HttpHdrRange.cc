@@ -10,9 +10,9 @@
 
 #include "squid.h"
 #include "client_side_request.h"
+#include "http/HeaderTools.h"
 #include "http/Stream.h"
 #include "HttpHeaderRange.h"
-#include "http/HeaderTools.h"
 #include "HttpReply.h"
 #include "Store.h"
 #include "StrList.h"

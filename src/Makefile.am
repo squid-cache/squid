@@ -1748,17 +1748,17 @@ check_PROGRAMS += tests/testHttpRange
 tests_testHttpRange_SOURCES = \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
-	http/HeaderTools.cc \
+	tests/stub_HttpHeader.cc \
+	tests/testHttpRange.cc \
+	tests/stub_HttpReply.cc \
+	tests/stub_MemBuf.cc \
 	StrList.cc \
 	String.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
-	tests/stub_HttpHeader.cc \
-	tests/stub_HttpReply.cc \
-	tests/stub_libmem.cc \
+	http/HeaderTools.cc \
 	tests/stub_libhttp.cc \
-	tests/stub_MemBuf.cc \
-	tests/testHttpRange.cc
+	tests/stub_libmem.cc
 tests_testHttpRange_LDADD = \
 	sbuf/libsbuf.la \
 	base/libbase.la \
@@ -1949,6 +1949,8 @@ tests_testHttpRequest_SOURCES = \
 	FwdState.h \
 	HappyConnOpener.cc \
 	HappyConnOpener.h \
+	HeaderMangling.cc \
+	HeaderMangling.h \
 	HttpBody.cc \
 	HttpBody.h \
 	tests/stub_HttpControlMsg.cc \
@@ -1960,10 +1962,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeader.h \
-	http/HeaderTools.cc \
-	http/HeaderTools.h \
-	HeaderMangling.cc \
-	HeaderMangling.h \
 	HttpHeaderFieldStat.h \
 	HttpReply.cc \
 	HttpRequest.cc \
@@ -2034,6 +2032,8 @@ tests_testHttpRequest_SOURCES = \
 	helper.cc \
 	hier_code.h \
 	http.cc \
+	http/HeaderTools.cc \
+	http/HeaderTools.h \
 	icp_v2.cc \
 	icp_v3.cc \
 	int.cc \
