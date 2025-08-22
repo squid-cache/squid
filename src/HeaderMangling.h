@@ -10,8 +10,7 @@
 #define SQUID_SRC_HEADERMANGLING_H
 
 #include "format/Format.h"
-#include "HttpHeader.h"
-#include "sbuf/forward.h"
+#include "http/RegisteredHeaders.h"
 
 #include <functional>
 #include <list>
@@ -22,6 +21,8 @@
 #endif
 
 class HeaderWithAcl;
+class HttpHeader;
+class HttpHeaderEntry;
 class StoreEntry;
 
 typedef std::list<HeaderWithAcl> HeaderWithAclList;

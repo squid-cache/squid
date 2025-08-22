@@ -8,15 +8,6 @@
 
 /* DEBUG: section 66    HTTP Header Tools */
 
-/**
- * Checks the anonymizer (header_access) configuration.
- *
- * \retval 0    Header is explicitly blocked for removal
- * \retval 1    Header is explicitly allowed
- * \retval 1    Header has been replaced, the current version can be used.
- * \retval 1    Header has no access controls to test
- */
-
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
@@ -34,6 +25,14 @@
 
 static void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headersAdd);
 
+/**
+ * Checks the anonymizer (header_access) configuration.
+ *
+ * \retval 0    Header is explicitly blocked for removal
+ * \retval 1    Header is explicitly allowed
+ * \retval 1    Header has been replaced, the current version can be used.
+ * \retval 1    Header has no access controls to test
+ */
 static int
 httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms, const AccessLogEntryPointer &al)
 {

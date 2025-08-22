@@ -16,10 +16,6 @@
 #include "MemBuf.h"
 #include "StrList.h"
 
-#if USE_OPENSSL
-#include "ssl/support.h"
-#endif
-
 #include <cerrno>
 
 static void httpHeaderPutStrvf(HttpHeader * hdr, Http::HdrType id, const char *fmt, va_list vargs);
