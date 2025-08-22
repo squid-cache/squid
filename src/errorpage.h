@@ -169,7 +169,7 @@ private:
 public:
     err_type type = ERR_NONE;
     int page_id = ERR_NONE;
-    char *err_language = nullptr;
+    std::optional<SBuf> errLanguage; ///< Content-Language response header value
     Http::StatusCode httpStatus = Http::scNone;
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
@@ -309,8 +309,8 @@ public:
      */
     bool loadFromFile(const char *path);
 
-    /// The language used for the template
-    const char *language() {return errLanguage.termedBuf();}
+    /// The language of the first language-specific template read by loadFor().
+    const auto &errLanguage() const { return errLanguage_; }
 
     SBuf filename; ///< where the template was loaded from
 
@@ -332,7 +332,7 @@ protected:
 
     SBuf template_; ///< raw template contents
     bool wasLoaded; ///< True if the template data read from disk without any problem
-    String errLanguage; ///< The error language of the template.
+    std::optional<SBuf> errLanguage_; ///< \copydoc errLanguage()
     String templateName; ///< The name of the template
     err_type templateCode; ///< The internal code for this template.
 };
