@@ -1764,6 +1764,7 @@ tests_testHttpRange_SOURCES = \
 	tests/stub_HttpHeader.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_libmem.cc \
+	tests/stub_libhttp.cc \
 	tests/stub_MemBuf.cc \
 	tests/testHttpRange.cc
 tests_testHttpRange_LDADD = \

@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_HTTP_HEADERTOOLS_H
 #define SQUID_SRC_HTTP_HEADERTOOLS_H
 
+#include "http/RegisteredHeaders.h"
 #include "sbuf/forward.h"
 
 class HttpHeader;
