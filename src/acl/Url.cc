@@ -20,8 +20,9 @@ Acl::UrlCheck::match(ACLChecklist * const ch)
     const auto checklist = Filled(ch);
 
     // TODO: Consider refactoring so that effectiveRequestUri() returns decoded URI.
-    auto decodedUri = AnyP::Uri::Decode(checklist->request->effectiveRequestUri());
-    const auto result = data->match(decodedUri.c_str());
-    return result;
+    if (auto decodedUri = AnyP::Uri::Decode(checklist->request->effectiveRequestUri()))
+        return data->match(decodedUri->c_str());
+    // Malformed URI. XXX: No good way for the admin to detect these cases.
+    return 0; // malformed URI matches nothing
 }
 

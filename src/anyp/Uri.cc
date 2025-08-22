@@ -82,7 +82,7 @@ AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &ignore)
     return output;
 }
 
-SBuf
+std::optional<SBuf>
 AnyP::Uri::Decode(const SBuf &buf)
 {
     SBuf output;
@@ -99,7 +99,7 @@ AnyP::Uri::Decode(const SBuf &buf)
             if (tok.int64(hex1, 16, false, 1) && tok.int64(hex2, 16, false, 1))
                 output.append(static_cast<char>((hex1 << 4) | hex2));
             else
-                throw TextException("invalid pct-encoded triplet", Here());
+                return std::nullopt;
         }
     }
     return output;

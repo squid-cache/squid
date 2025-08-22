@@ -119,7 +119,8 @@ public:
     static SBuf Encode(const SBuf &, const CharacterSet &expected);
 
     /// %-decode the given buffer
-    static SBuf Decode(const SBuf &);
+    /// \retval std::nullopt on decoding failures
+    static std::optional<SBuf> Decode(const SBuf &);
 
     /**
      * The authority-form URI for currently stored values.
