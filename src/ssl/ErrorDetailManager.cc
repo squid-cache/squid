@@ -125,7 +125,7 @@ Ssl::ErrorDetailsManager::findDetail(const Security::ErrorCode value, const Http
         //Try to retrieve from cache
         size_t pos = 0;
         char lang[256];
-        // Get the first ellement of the Accept-Language header
+        // Get the first element of the Accept-Language header
         strHdrAcptLangGetItem(hdr, lang, 256, pos);
         errDetails = getCachedDetails(lang); // search in cache
 

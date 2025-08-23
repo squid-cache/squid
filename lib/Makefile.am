@@ -25,10 +25,6 @@ noinst_LTLIBRARIES = \
 	libmisccontainers.la \
 	libmiscutil.la
 
-if ENABLE_SMBLIB
-# smblib is the only user of the rfcnb library
-SUBDIRS += rfcnb smblib
-endif
 if ENABLE_AUTH_NTLM
 SUBDIRS += ntlmauth
 endif
@@ -53,7 +49,6 @@ libmisccontainers_la_SOURCES = \
 libmiscutil_la_SOURCES = \
 	Splay.cc \
 	heap.c \
-	radix.c \
 	util.cc
 
 TESTS += tests/testRFC1738

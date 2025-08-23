@@ -14,6 +14,7 @@
 
 #if USE_ICMP
 
+#include "compat/socket.h"
 #include "debug/Stream.h"
 #include "Icmp4.h"
 #include "IcmpPinger.h"
@@ -65,7 +66,7 @@ Icmp4::~Icmp4()
 int
 Icmp4::Open(void)
 {
-    icmp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
+    icmp_sock = xsocket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
 
     if (icmp_sock < 0) {
         int xerrno = errno;
@@ -136,12 +137,12 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     debugs(42, 5, "Send ICMP packet to " << to << ".");
 
-    x = sendto(icmp_sock,
-               (const void *) pkt,
-               icmp_pktsize,
-               0,
-               S->ai_addr,
-               S->ai_addrlen);
+    x = xsendto(icmp_sock,
+                pkt,
+                icmp_pktsize,
+                0,
+                S->ai_addr,
+                S->ai_addrlen);
 
     if (x < 0) {
         int xerrno = errno;
@@ -174,12 +175,12 @@ Icmp4::Recv(void)
         pkt = (char *)xmalloc(MAX_PKT4_SZ);
 
     Ip::Address::InitAddr(from);
-    n = recvfrom(icmp_sock,
-                 (void *)pkt,
-                 MAX_PKT4_SZ,
-                 0,
-                 from->ai_addr,
-                 &from->ai_addrlen);
+    n = xrecvfrom(icmp_sock,
+                  pkt,
+                  MAX_PKT4_SZ,
+                  0,
+                  from->ai_addr,
+                  &from->ai_addrlen);
 
     if (n <= 0) {
         debugs(42, DBG_CRITICAL, "ERROR: when calling recvfrom() on ICMP socket.");

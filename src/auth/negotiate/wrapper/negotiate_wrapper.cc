@@ -33,17 +33,12 @@
 #include "squid.h"
 #include "base64.h"
 #include "compat/pipe.h"
+#include "compat/unistd.h"
 
 #include <cerrno>
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
-#if HAVE_NETDB_H
-#include <netdb.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
 #if !defined(HAVE_DECL_XMALLOC) || !HAVE_DECL_XMALLOC
 #define xmalloc malloc
@@ -376,13 +371,13 @@ main(int argc, char *const argv[])
     if ( fpid == 0 ) {
         /* First Child for Kerberos helper */
 
-        close(pkin[1]);
+        xclose(pkin[1]);
         dup2(pkin[0],STDIN_FILENO);
-        close(pkin[0]);
+        xclose(pkin[0]);
 
-        close(pkout[0]);
+        xclose(pkout[0]);
         dup2(pkout[1],STDOUT_FILENO);
-        close(pkout[1]);
+        xclose(pkout[1]);
 
         setbuf(stdin, nullptr);
         setbuf(stdout, nullptr);
@@ -392,8 +387,8 @@ main(int argc, char *const argv[])
         exit(EXIT_FAILURE);
     }
 
-    close(pkin[0]);
-    close(pkout[1]);
+    xclose(pkin[0]);
+    xclose(pkout[1]);
 
     if (pipe(pnin) < 0) {
         fprintf(stderr, "%s| %s: Could not assign streams for pnin\n", LogTime(), PROGRAM);
@@ -412,13 +407,13 @@ main(int argc, char *const argv[])
     if ( fpid == 0 ) {
         /* Second Child for NTLM helper */
 
-        close(pnin[1]);
+        xclose(pnin[1]);
         dup2(pnin[0],STDIN_FILENO);
-        close(pnin[0]);
+        xclose(pnin[0]);
 
-        close(pnout[0]);
+        xclose(pnout[0]);
         dup2(pnout[1],STDOUT_FILENO);
-        close(pnout[1]);
+        xclose(pnout[1]);
 
         setbuf(stdin, nullptr);
         setbuf(stdout, nullptr);
@@ -428,8 +423,8 @@ main(int argc, char *const argv[])
         exit(EXIT_FAILURE);
     }
 
-    close(pnin[0]);
-    close(pnout[1]);
+    xclose(pnin[0]);
+    xclose(pnout[1]);
 
     FILE *FDKIN=fdopen(pkin[1],"w");
     FILE *FDKOUT=fdopen(pkout[0],"r");

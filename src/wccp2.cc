@@ -11,11 +11,12 @@
 #include "squid.h"
 
 #if USE_WCCPv2
-
+#include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "compat/socket.h"
 #include "ConfigParser.h"
 #include "event.h"
 #include "ip/Address.h"
@@ -23,11 +24,8 @@
 #include "Parsing.h"
 #include "SquidConfig.h"
 #include "Store.h"
+#include "tools.h"
 #include "wccp2.h"
-
-#if HAVE_NETDB_H
-#include <netdb.h>
-#endif
 
 #define WCCP_PORT 2048
 #define WCCP_RESPONSE_SIZE 12448
@@ -52,7 +50,7 @@ static EVH wccp2AssignBuckets;
 #define WCCP2_NUMPORTS  8
 #define WCCP2_PASSWORD_LEN  8 + 1 /* + 1 for C-string NUL terminator */
 
-/* WCCPv2 Pakcet format structures */
+/* WCCPv2 Packet format structures */
 /* Defined in draft-wilson-wccp-v2-12-oct-2001.txt */
 
 /** \interface WCCPv2_Protocol
@@ -652,9 +650,12 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
     return (memcmp(md5Digest, md5_challenge, SQUID_MD5_DIGEST_LENGTH) == 0);
 }
 
-void
+static void
 wccp2Init(void)
 {
+    if (!IamPrimaryProcess())
+        return;
+
     Ip::Address_list *s;
     char *ptr;
     uint32_t service_flags;
@@ -948,9 +949,12 @@ wccp2Init(void)
     }
 }
 
-void
+static void
 wccp2ConnectionOpen(void)
 {
+    if (!IamPrimaryProcess())
+        return;
+
     struct sockaddr_in router, local, null;
     socklen_t local_len, router_len;
 
@@ -983,7 +987,7 @@ wccp2ConnectionOpen(void)
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
     {
         int i = IP_PMTUDISC_DONT;
-        if (setsockopt(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i) < 0) {
+        if (xsetsockopt(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i) < 0) {
             int xerrno = errno;
             debugs(80, 2, "WARNING: Path MTU discovery could not be disabled on FD " << theWccp2Connection << ": " << xstrerr(xerrno));
         }
@@ -1010,14 +1014,14 @@ wccp2ConnectionOpen(void)
             router.sin_port = htons(WCCP_PORT);
             router.sin_addr = router_list_ptr->router_sendto_address;
 
-            if (connect(theWccp2Connection, (struct sockaddr *) &router, router_len))
+            if (xconnect(theWccp2Connection, (struct sockaddr *) &router, router_len))
                 fatal("Unable to connect WCCP out socket");
 
             local_len = sizeof(local);
 
             memset(&local, '\0', local_len);
 
-            if (getsockname(theWccp2Connection, (struct sockaddr *) &local, &local_len))
+            if (xgetsockname(theWccp2Connection, (struct sockaddr *) &local, &local_len))
                 fatal("Unable to getsockname on WCCP out socket");
 
             router_list_ptr->local_ip = local.sin_addr;
@@ -1026,7 +1030,7 @@ wccp2ConnectionOpen(void)
              * but disconnects anyway so we have to just assume it worked
              */
             if (wccp2_numrouters > 1) {
-                (void)connect(theWccp2Connection, (struct sockaddr *) &null, router_len);
+                (void)xconnect(theWccp2Connection, (struct sockaddr *) &null, router_len);
             }
         }
 
@@ -1036,9 +1040,11 @@ wccp2ConnectionOpen(void)
     wccp2_connected = 1;
 }
 
-void
+static void
 wccp2ConnectionClose(void)
 {
+    if (!IamPrimaryProcess())
+        return;
 
     struct wccp2_service_list_t *service_list_ptr;
 
@@ -1104,6 +1110,16 @@ wccp2ConnectionClose(void)
     eventDelete(wccp2HereIam, nullptr);
     wccp2_connected = 0;
 }
+
+class Wccp2Rr : public RegisteredRunner
+{
+public:
+    void useConfig() override { wccp2Init(); wccp2ConnectionOpen(); }
+    void startReconfigure() override { wccp2ConnectionClose(); }
+    void syncConfig() override { wccp2ConnectionOpen(); }
+    void startShutdown() override { wccp2ConnectionClose(); }
+};
+DefineRunnerRegistrator(Wccp2Rr);
 
 /*
  * Functions for handling the requests.
@@ -1641,7 +1657,7 @@ wccp2HereIam(void *)
                                 &service_list_ptr->wccp_packet,
                                 service_list_ptr->wccp_packet_size);
             } else {
-                if (send(theWccp2Connection, &service_list_ptr->wccp_packet, service_list_ptr->wccp_packet_size, 0) < static_cast<int>(service_list_ptr->wccp_packet_size)) {
+                if (xsend(theWccp2Connection, &service_list_ptr->wccp_packet, service_list_ptr->wccp_packet_size, 0) < static_cast<int>(service_list_ptr->wccp_packet_size)) {
                     int xerrno = errno;
                     debugs(80, 2, "ERROR: failed to send WCCPv2 HERE_I_AM packet to " << router << " : " << xstrerr(xerrno));
                 }
@@ -2025,7 +2041,7 @@ wccp2AssignBuckets(void *)
                                     &wccp_packet,
                                     offset);
                 } else {
-                    if (send(theWccp2Connection, &wccp_packet, offset, 0) < static_cast<int>(offset)) {
+                    if (xsend(theWccp2Connection, &wccp_packet, offset, 0) < offset) {
                         int xerrno = errno;
                         debugs(80, 2, "ERROR: failed to send WCCPv2 HERE_I_AM packet to " << tmp_rtr << " : " << xstrerr(xerrno));
                     }

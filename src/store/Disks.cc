@@ -725,7 +725,7 @@ storeDirWriteCleanLogs(int reopen)
 
     /*
      * This may look inefficient as CPU wise it is more efficient to do this
-     * sequentially, but I/O wise the parallellism helps as it allows more
+     * sequentially, but I/O wise the parallelism helps as it allows more
      * hdd spindles to be active.
      */
     while (notdone) {

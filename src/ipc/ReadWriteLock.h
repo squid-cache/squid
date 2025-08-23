@@ -21,7 +21,7 @@ class ReadWriteLockStats;
 
 /// an atomic readers-writer or shared-exclusive lock suitable for maps/tables
 /// Also supports reading-while-appending mode when readers and writer are
-/// allowed to access the same locked object because the writer promisses
+/// allowed to access the same locked object because the writer promises
 /// to only append new data and all size-related object properties are atomic.
 class ReadWriteLock
 {

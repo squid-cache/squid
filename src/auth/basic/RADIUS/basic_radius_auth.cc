@@ -42,7 +42,7 @@
  *
  * basic_radius_auth-1.0 is based on modules from the Cistron-radiusd-1.5.4.
  *
- * Currently you should only start 1 authentificator at a time because the
+ * Currently you should only start 1 authenticator at a time because the
  * the ID's of the different programs can start to conflict. I'm not sure it
  * would help anyway. I think the RADIUS server is close by and I don't think
  * it will handle requests in parallel anyway (correct me if I'm wrong here)
@@ -57,6 +57,10 @@
 #include "auth/basic/RADIUS/radius-util.h"
 #include "auth/basic/RADIUS/radius.h"
 #include "base/Random.h"
+#include "compat/netdb.h"
+#include "compat/select.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "helper/protocol_defines.h"
 #include "md5.h"
 
@@ -64,26 +68,14 @@
 #include <cerrno>
 #include <cstring>
 #include <ctime>
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
 #endif
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
 #if _SQUID_WINDOWS_
 #include <io.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#if HAVE_NETDB_H
-#include <netdb.h>
 #endif
 #if HAVE_PWD_H
 #include <pwd.h>
@@ -417,7 +409,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
          *    Send the request we've built.
          */
         gettimeofday(&sent, nullptr);
-        if (send(socket_fd, (char *) auth, total_length, 0) < 0) {
+        if (xsend(socket_fd, auth, total_length, 0) < 0) {
             int xerrno = errno;
             // EAGAIN is expected at high traffic, just retry
             // TODO: block/sleep a few ms to let the apparently full buffer drain ?
@@ -437,11 +429,11 @@ authenticate(int socket_fd, const char *username, const char *passwd)
             }
             FD_ZERO(&readfds);
             FD_SET(socket_fd, &readfds);
-            if (select(socket_fd + 1, &readfds, nullptr, nullptr, &tv) == 0)  /* Select timeout */
+            if (xselect(socket_fd + 1, &readfds, nullptr, nullptr, &tv) == 0)  /* Select timeout */
                 break;
             salen = sizeof(saremote);
-            len = recvfrom(socket_fd, recv_buffer, sizeof(i_recv_buffer),
-                           0, (struct sockaddr *) &saremote, &salen);
+            len = xrecvfrom(socket_fd, recv_buffer, sizeof(i_recv_buffer),
+                            0, (struct sockaddr *) &saremote, &salen);
 
             if (len < 0)
                 continue;
@@ -468,7 +460,6 @@ main(int argc, char **argv)
 {
     struct sockaddr_in salocal;
     struct sockaddr_in saremote;
-    struct servent *svp;
     unsigned short svc_port;
     char username[MAXPWNAM];
     char passwd[MAXPASS];
@@ -536,7 +527,7 @@ main(int argc, char **argv)
     /*
      *    Open a connection to the server.
      */
-    svp = getservbyname(svc_name, "udp");
+    const auto svp = xgetservbyname(svc_name, "udp");
     if (svp != nullptr)
         svc_port = ntohs((unsigned short) svp->s_port);
     else
@@ -549,7 +540,7 @@ main(int argc, char **argv)
         fprintf(stderr, "FATAL: %s: Couldn't find host %s\n", argv[0], server);
         exit(EXIT_FAILURE);
     }
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    sockfd = xsocket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {
         perror("socket");
         exit(EXIT_FAILURE);
@@ -559,12 +550,12 @@ main(int argc, char **argv)
     saremote.sin_addr.s_addr = htonl(auth_ipaddr);
     saremote.sin_port = htons(svc_port);
 
-    if (connect(sockfd, (struct sockaddr *) &saremote, sizeof(saremote)) < 0) {
+    if (xconnect(sockfd, (struct sockaddr *) &saremote, sizeof(saremote)) < 0) {
         perror("connect");
         exit(EXIT_FAILURE);
     }
     salen = sizeof(salocal);
-    if (getsockname(sockfd, (struct sockaddr *) &salocal, &salen) < 0) {
+    if (xgetsockname(sockfd, (struct sockaddr *) &salocal, &salen) < 0) {
         perror("getsockname");
         exit(EXIT_FAILURE);
     }
@@ -612,7 +603,7 @@ main(int argc, char **argv)
 
         authenticate(sockfd, username, passwd);
     }
-    close(sockfd);
+    xclose(sockfd);
     return EXIT_SUCCESS;
 }
 

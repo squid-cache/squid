@@ -43,7 +43,7 @@ public:
      * After this all schemes will appear completely unsupported
      * until a call to InitAuthModules().
      * Release the Auth::TheConfig handles instead to disable authentication
-     * without terminiating all support.
+     * without terminating all support.
      */
     static void FreeAll();
 
