@@ -40,13 +40,11 @@
 
 #if HAVE_GSSAPI
 
+#include "compat/unistd.h"
 #include "negotiate_kerberos.h"
 
 #if HAVE_SYS_STAT_H
 #include "sys/stat.h"
-#endif
-#if HAVE_UNISTD_H
-#include "unistd.h"
 #endif
 
 #if HAVE_KRB5_MEMORY_KEYTAB
@@ -97,7 +95,7 @@ gethost_name(void)
     struct addrinfo *hres = nullptr, *hres_list;
     int rc;
 
-    rc = gethostname(hostname, sizeof(hostname)-1);
+    rc = xgethostname(hostname, sizeof(hostname)-1);
     if (rc) {
         debug((char *) "%s| %s: ERROR: resolving hostname '%s' failed\n", LogTime(), PROGRAM, hostname);
         fprintf(stderr, "%s| %s: ERROR: resolving hostname '%s' failed\n",

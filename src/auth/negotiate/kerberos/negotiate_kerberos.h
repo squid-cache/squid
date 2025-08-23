@@ -114,7 +114,21 @@ char *gethost_name(void);
 
 #if (HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT || HAVE_GSS_MAP_NAME_TO_ANY) && HAVE_KRB5_PAC
 #define HAVE_PAC_SUPPORT 1
-#define MAX_PAC_GROUP_SIZE 200*60
+
+/**
+* MAX_PAC_GROUP_SIZE limits the string length, wherein group membership per
+* authenticated user is reported back to Squid, to a reasonable number
+* of groups multiplied by the maximum encoded group entry size.
+*
+* A group value is reported as the base64 encoded binary representation
+* of the objectSID. The theoretical size limit of an objectSID is 68 bytes.
+* The base64 representation of this byte array would count max 91 characters.
+*
+* A single group membership entry gets reported by a key-value pair followed
+* by a whitespace character as a delimiter, adding 7 more characters per entry:
+* "group=<Base64 encoded binary group objectSID> ".
+*/
+#define MAX_PAC_GROUP_SIZE (1024*98)
 typedef struct {
     uint16_t length;
     uint16_t maxlength;

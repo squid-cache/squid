@@ -643,11 +643,8 @@ Ip::Address::getAddrInfo(struct addrinfo *&dst, int force) const
             && dst->ai_protocol == 0)
         dst->ai_protocol = IPPROTO_UDP;
 
+    InitAddr(dst);
     if (force == AF_INET6 || (force == AF_UNSPEC && isIPv6()) ) {
-        dst->ai_addr = (struct sockaddr*)new sockaddr_in6;
-
-        memset(dst->ai_addr,0,sizeof(struct sockaddr_in6));
-
         getSockAddr(*((struct sockaddr_in6*)dst->ai_addr));
 
         dst->ai_addrlen = sizeof(struct sockaddr_in6);
@@ -669,11 +666,6 @@ Ip::Address::getAddrInfo(struct addrinfo *&dst, int force) const
 #endif
 
     } else if ( force == AF_INET || (force == AF_UNSPEC && isIPv4()) ) {
-
-        dst->ai_addr = (struct sockaddr*)new sockaddr_in;
-
-        memset(dst->ai_addr,0,sizeof(struct sockaddr_in));
-
         getSockAddr(*((struct sockaddr_in*)dst->ai_addr));
 
         dst->ai_addrlen = sizeof(struct sockaddr_in);
@@ -693,12 +685,12 @@ Ip::Address::InitAddr(struct addrinfo *&ai)
     }
 
     // remove any existing data.
-    if (ai->ai_addr) delete ai->ai_addr;
+    delete reinterpret_cast<struct sockaddr_storage *>(ai->ai_addr);
 
-    ai->ai_addr = (struct sockaddr*)new sockaddr_in6;
-    memset(ai->ai_addr, 0, sizeof(struct sockaddr_in6));
+    ai->ai_addr = reinterpret_cast<struct sockaddr *>(new sockaddr_storage);
+    memset(ai->ai_addr, 0, sizeof(struct sockaddr_storage));
 
-    ai->ai_addrlen = sizeof(struct sockaddr_in6);
+    ai->ai_addrlen = sizeof(struct sockaddr_storage);
 
 }
 
@@ -707,7 +699,7 @@ Ip::Address::FreeAddr(struct addrinfo *&ai)
 {
     if (ai == nullptr) return;
 
-    if (ai->ai_addr) delete ai->ai_addr;
+    delete reinterpret_cast<struct sockaddr_storage *>(ai->ai_addr);
 
     ai->ai_addr = nullptr;
 

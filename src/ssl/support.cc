@@ -809,7 +809,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
         return false;
 
     if (!peer.sslCipher.isEmpty()) {
-        debugs(83, 5, "Using chiper suite " << peer.sslCipher << ".");
+        debugs(83, 5, "Using cipher suite " << peer.sslCipher << ".");
 
         const char *cipher = peer.sslCipher.c_str();
         if (!SSL_CTX_set_cipher_list(ctx.get(), cipher)) {

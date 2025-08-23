@@ -78,6 +78,7 @@
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "compat/socket.h"
 #include "debug/Messages.h"
 #include "error/ExceptionErrorDetail.h"
 #include "errorpage.h"
@@ -734,7 +735,7 @@ clientPackRangeHdr(const HttpReplyPointer &rep, const HttpHdrRangeSpec * spec, S
 /** returns expected content length for multi-range replies
  * note: assumes that httpHdrRangeCanonize has already been called
  * warning: assumes that HTTP headers for individual ranges at the
- *          time of the actuall assembly will be exactly the same as
+ *          time of the actual assembly will be exactly the same as
  *          the headers when clientMRangeCLen() is called */
 int64_t
 ClientHttpRequest::mRangeCLen() const
@@ -1080,7 +1081,7 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
-    // XXX: re-use proper URL parser for this
+    // XXX: reuse proper URL parser for this
     SBuf url = hp->requestUri(); // use full provided URI if we abort
     do { // use a loop so we can break out of it
         ::Parser::Tokenizer tok(url);
@@ -2089,7 +2090,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     * Just close the connection to not confuse browsers
     * using persistent connections. Some browsers open
     * a connection and then do not use it until much
-    * later (presumeably because the request triggering
+    * later (presumably because the request triggering
     * the open has already been completed on another
     * connection)
     */
@@ -2134,7 +2135,7 @@ ConnStateData::start()
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
         int i = IP_PMTUDISC_DONT;
-        if (setsockopt(clientConnection->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof(i)) < 0) {
+        if (xsetsockopt(clientConnection->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof(i)) < 0) {
             int xerrno = errno;
             debugs(33, 2, "WARNING: Path MTU discovery disabling failed on " << clientConnection << " : " << xstrerr(xerrno));
         }
@@ -2323,7 +2324,7 @@ clientNegotiateSSL(int fd, void *data)
 #elif (ALLOW_ALWAYS_SSL_SESSION_DETAIL == 1)
 
             /* When using gcc 3.3.x and OpenSSL 0.9.7x sometimes a compile error can occur here.
-            * This is caused by an unpredicatble gcc behaviour on a cast of the first argument
+            * This is caused by an unpredictable gcc behaviour on a cast of the first argument
             * of PEM_ASN1_write(). For this reason this code section is disabled. To enable it,
             * define ALLOW_ALWAYS_SSL_SESSION_DETAIL=1.
             * Because there are two possible usable cast, if you get an error here, try the other
@@ -2603,7 +2604,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
                 else if (ca->alg == Ssl::algSetValidBefore)
                     certProperties.setValidBefore = true;
 
-                debugs(33, 5, "Matches certificate adaptation aglorithm: " <<
+                debugs(33, 5, "Matches certificate adaptation algorithm: " <<
                        alg << " param: " << (param ? param : "-"));
             }
         }
@@ -2807,7 +2808,7 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     // Fix timeout to request_start_timeout
     resetReadTimeout(Config.Timeout.request_start_timeout);
     // Also reset receivedFirstByte_ flag to allow this timeout work in the case we have
-    // a bumbed "connect" request on non transparent port.
+    // a bumped "connect" request on non transparent port.
     receivedFirstByte_ = false;
     // Get more data to peek at Tls
     parsingTlsHandshake = true;

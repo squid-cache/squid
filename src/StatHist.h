@@ -74,7 +74,7 @@ public:
 
     /** Import values from another histogram
      *
-     * \note: the two histograms MUST have the same capicity, min and max or
+     * \note: the two histograms MUST have the same capacity, min and max or
      *      an exception will be raised
      */
     StatHist &operator += (const StatHist &B);

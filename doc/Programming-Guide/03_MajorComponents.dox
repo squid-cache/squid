@@ -180,14 +180,6 @@ TODO: decide what to do for comm_poll() since its either obsolete or uses other 
 	Common applications for this feature are extended access controls
 	and local mirroring.  File: redirect.c.
 
-\section ASN Autonomous System Numbers
-\par
-	Squid supports Autonomous System (AS) numbers as another
-	access control element.  The routines in asn.c
-	query databases which map AS numbers into lists of CIDR
-	prefixes.  These results are stored in a radix tree which
-	allows fast searching of the AS number for a given IP address.
-
 \section ConfigurationFileParsing Configuration File Parsing
 \par
 	The primary configuration file specification is in the file
