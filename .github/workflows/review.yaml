@@ -55,7 +55,7 @@ jobs:
         run: |
           test `gh pr view ${{ github.event.pull_request.number }} --json author,latestReviews \
             --template ' {{.author.login}} APPROVED {{range .latestReviews}}{{.author.login}} {{.state}} {{end}}' |
-            grep -o -E " (kinkie|rousskov|yadij) APPROVED" | wc -l` -eq 3
+            grep -o -E " (hno|kinkie|rousskov|yadij) APPROVED" | wc -l` -eq 3
 
       - name: Hold 48 hours for review
         # Squid Project grants a delay to allow review a chance to veto new additions.
@@ -76,7 +76,7 @@ jobs:
         run: |
           test `gh pr view ${{ github.event.pull_request.number }} --json author,latestReviews \
             --template ' {{.author.login}} APPROVED {{range .latestReviews}}{{.author.login}} {{.state}} {{end}}' |
-            grep -o -E " (kinkie|rousskov|yadij) APPROVED" | wc -l` -eq 2
+            grep -o -E " (hno|kinkie|rousskov|yadij) APPROVED" | wc -l` -eq 2
 
       - name: Any 3 Positive Reviews
         # Any three positive votes accept the submission.
