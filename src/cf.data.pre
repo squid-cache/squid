@@ -1245,8 +1245,24 @@ ENDIF
 
 	acl aclname url_regex [-i] ^http:// ...
 	  # POSIX extended regex matching on whole URL [fast]
+	  #
+	  # If request URL contains only valid pct-encoded triplets (RFC 3986),
+	  # all of them are decoded before matching (e.g., `%25` triplet is
+	  # replaced with a single `%` character). If request URL contains at
+	  # least one `%` character that does not start a valid pct-encoded
+	  # triplet (e.g., `%%`, `%X`, or `%2Y`), then the URL is not decoded at
+	  # all (i.e. the raw request URL is used for matching).
+	  #
+	  # ACL parameters are not decoded.
+
 	acl aclname urllogin [-i] [^a-zA-Z0-9] ...
-	  # POSIX extended regex matching on URL login field
+	  # POSIX extended regex matching on URL login field [fast]
+	  #
+	  # This ACL does not match requests with a URL that lacks a login field.
+	  #
+	  # This ACL handles RFC 3986 pct-encoded triplets in the login field as
+	  # url_regex ACL handles those triplets in the entire request URL.
+
 	acl aclname urlpath_regex [-i] \.gif$ ...
 	  # POSIX extended regex matching on URL path [fast]
 
