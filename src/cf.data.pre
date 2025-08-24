@@ -1253,6 +1253,11 @@ ENDIF
 	  # triplet (e.g., `%%`, `%X`, or `%2Y`), then the URL is not decoded at
 	  # all (i.e. the raw request URL is used for matching).
 	  #
+	  # If a request URL is decoded as described above, then all request URL
+	  # characters starting with the decoded `%00` pct-encoded triplet (if
+	  # any) are ignored during matching. There is currently no way to match
+	  # that triplet itself in a correctly percent-encoded URL.
+	  #
 	  # ACL parameters are not decoded.
 
 	acl aclname urllogin [-i] [^a-zA-Z0-9] ...
