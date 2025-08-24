@@ -114,6 +114,7 @@ TestUri::testEncoding()
         SBuf("%"),
         SBuf("%%"),
         SBuf("%%%"),
+        SBuf("%0"),
         SBuf("%1"),
         SBuf("%1Z"),
         SBuf("%1\000", 2),

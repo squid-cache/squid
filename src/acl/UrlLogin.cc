@@ -24,6 +24,7 @@ Acl::UrlLoginCheck::match(ACLChecklist * const ch)
         return 0; // nothing can match
     }
 
+    // XXX: c_str() truncates where %00 was decoded
     return data->match(AnyP::Uri::DecodeOrDupe(checklist->request->url.userInfo()).c_str());
 }
 

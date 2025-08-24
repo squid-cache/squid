@@ -20,6 +20,7 @@ Acl::UrlCheck::match(ACLChecklist * const ch)
     const auto checklist = Filled(ch);
 
     // TODO: Consider refactoring so that effectiveRequestUri() returns decoded URI.
+    // XXX: c_str() truncates where %00 was decoded
     return data->match(AnyP::Uri::DecodeOrDupe(checklist->request->effectiveRequestUri()).c_str());
 }
 
