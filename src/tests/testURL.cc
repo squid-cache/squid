@@ -128,6 +128,7 @@ TestUri::testEncoding()
         CPPUNIT_ASSERT(!AnyP::Uri::Decode(ToSBuf("word", invalidEncoding)));
         CPPUNIT_ASSERT(!AnyP::Uri::Decode(ToSBuf(invalidEncoding, "word")));
         CPPUNIT_ASSERT(!AnyP::Uri::Decode(ToSBuf("word", invalidEncoding, "word")));
+        CPPUNIT_ASSERT_EQUAL(invalidEncoding, AnyP::Uri::DecodeOrDupe(invalidEncoding));
     };
 }
 

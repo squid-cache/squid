@@ -105,6 +105,14 @@ AnyP::Uri::Decode(const SBuf &buf)
     return output;
 }
 
+SBuf
+AnyP::Uri::DecodeOrDupe(const SBuf &input)
+{
+    if (const auto decoded = Decode(input))
+        return *decoded;
+    return input;
+}
+
 const SBuf &
 AnyP::Uri::Asterisk()
 {

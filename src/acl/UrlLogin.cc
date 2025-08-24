@@ -24,9 +24,6 @@ Acl::UrlLoginCheck::match(ACLChecklist * const ch)
         return 0; // nothing can match
     }
 
-    if (auto decodedUserInfo = AnyP::Uri::Decode(checklist->request->url.userInfo()))
-        return data->match(decodedUserInfo->c_str());
-    // Malformed user_info. XXX: No good way for the admin to detect these cases.
-    return 0; // malformed user_info matches nothing
+    return data->match(AnyP::Uri::DecodeOrDupe(checklist->request->url.userInfo()).c_str());
 }
 
