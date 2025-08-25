@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_HEADERMANGLING_H
 #define SQUID_SRC_HEADERMANGLING_H
 
+#include "acl/forward.h"
 #include "format/Format.h"
 #include "http/RegisteredHeaders.h"
 
@@ -26,8 +27,6 @@ class HttpHeaderEntry;
 class StoreEntry;
 
 typedef std::list<HeaderWithAcl> HeaderWithAclList;
-
-#include "acl/forward.h"
 
 /* Distinguish between Request and Reply (for header mangling) */
 typedef enum {

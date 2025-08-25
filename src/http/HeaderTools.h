@@ -13,7 +13,6 @@
 #include "sbuf/forward.h"
 
 class HttpHeader;
-class HttpRequest;
 
 /// A strtoll(10) wrapper that checks for strtoll() failures and other problems.
 /// XXX: This function is not fully compatible with some HTTP syntax rules.
@@ -26,7 +25,6 @@ bool httpHeaderParseOffset(const char *start, int64_t *offPtr, char **endPtr = n
 bool httpHeaderHasConnDir(const HttpHeader * hdr, const SBuf &directive);
 int httpHeaderParseInt(const char *start, int *val);
 void httpHeaderPutStrf(HttpHeader * hdr, Http::HdrType id, const char *fmt,...) PRINTF_FORMAT_ARG3;
-
 const char *getStringPrefix(const char *str, size_t len);
 
 #endif /* SQUID_SRC_HTTP_HEADERTOOLS_H */
