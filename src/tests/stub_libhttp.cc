@@ -18,7 +18,7 @@
 namespace Http
 {
 // XXX: use C++11 initialization for this class
-ContentLengthInterpreter::ContentLengthInterpreter(): headerWideProblem(nullptr), debugLevel(DBG_IMPORTANT) STUB_NOP
+ContentLengthInterpreter::ContentLengthInterpreter(): headerWideProblem(nullptr), debugLevel(DBG_IMPORTANT) STUB
 bool ContentLengthInterpreter::checkField(const String &) STUB_RETVAL(false)
 bool ContentLengthInterpreter::goodSuffix(const char *, const char * const) const STUB_RETVAL(false)
 bool ContentLengthInterpreter::checkValue(const char *, const int) STUB_RETVAL(false)
