@@ -8479,7 +8479,7 @@ DOC_START
 	and from neighbor caches.  The standard UDP port for ICP is 3130.
 
 	Example:
-		icp_port @DEFAULT_ICP_PORT@
+		icp_port 3130
 DOC_END
 
 NAME: htcp_port
