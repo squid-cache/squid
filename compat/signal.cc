@@ -38,8 +38,8 @@ GetProcessName(pid_t pid, char *ProcessName)
 }
 
 /// true if the given pid is the current process, false otherwise
-static bool
-IsPidSelf(int pid)
+bool
+IsPidValid(pid_t pid)
 {
     char MyProcessName[MAX_PATH];
     GetProcessName(getpid(), MyProcessName);
@@ -70,9 +70,9 @@ xkill(pid_t pid, int sig)
         break;
     case 0:
         CloseHandle(hProcess);
-        if (IsPidSelf(pid))
-            return 0; // self is always "killed" by SIGNULL
-        return -1; // cannot kill other processes with SIGNULL
+        if (IsPidValid(pid))
+            return 0;
+        return -1;
         break;
     default:
         // Unsupported signal

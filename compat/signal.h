@@ -37,6 +37,10 @@
 /// POSIX kill(2) equivalent
 int xkill(pid_t pid, int sig);
 
+/// true if pid can be sent a signal (no signal is sent)
+inline bool
+IsPidValid(pid_t pid);
+
 #if !defined(WIFEXITED)
 inline int
 WIFEXITED(int status) {
@@ -72,5 +76,12 @@ inline int xkill(pid_t pid, int sig)
     return kill(pid, sig);
 }
 
+inline bool
+IsPidValid(pid_t pid)
+{
+    return kill(pid, 0) == 0;
+}
+
 #endif /* !(_SQUID_WINDOWS_ || _SQUID_MINGW_) */
+
 #endif /* SQUID_COMPAT_SIGNAL_H */
