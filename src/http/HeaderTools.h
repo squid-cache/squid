@@ -25,7 +25,6 @@ bool httpHeaderParseOffset(const char *start, int64_t *offPtr, char **endPtr = n
 bool httpHeaderHasConnDir(const HttpHeader * hdr, const SBuf &directive);
 int httpHeaderParseInt(const char *start, int *val);
 void httpHeaderPutStrf(HttpHeader * hdr, Http::HdrType id, const char *fmt,...) PRINTF_FORMAT_ARG3;
-const char *getStringPrefix(const char *str, size_t len);
 
 #endif /* SQUID_SRC_HTTP_HEADERTOOLS_H */
 

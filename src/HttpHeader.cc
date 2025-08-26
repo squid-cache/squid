@@ -118,6 +118,22 @@ httpHeaderRegisterWithCacheManager(void)
                         httpHeaderStoreReport, 0, 1);
 }
 
+static void
+httpHeaderMaskInit(HttpHeaderMask * mask, int value)
+{
+    memset(mask, value, sizeof(*mask));
+}
+
+/** handy to printf prefixes of potentially very long buffers */
+static const char *
+getStringPrefix(const char *str, size_t sz)
+{
+#define SHORT_PREFIX_SIZE 512
+    LOCAL_ARRAY(char, buf, SHORT_PREFIX_SIZE);
+    xstrncpy(buf, str, (sz+1 > SHORT_PREFIX_SIZE) ? SHORT_PREFIX_SIZE : sz);
+    return buf;
+}
+
 void
 httpHeaderInitModule(void)
 {
@@ -246,12 +262,6 @@ httpHeaderQuoteString(const char *raw)
 
     quotedStr.append('"');
     return quotedStr;
-}
-
-void
-httpHeaderMaskInit(HttpHeaderMask * mask, int value)
-{
-    memset(mask, value, sizeof(*mask));
 }
 
 SBuf
