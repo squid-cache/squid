@@ -23,7 +23,7 @@
 #include "format/Format.h"
 #include "fs_io.h"
 #include "html/Quoting.h"
-#include "http/HeaderTools.h"
+#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"

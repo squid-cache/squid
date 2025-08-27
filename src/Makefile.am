@@ -281,6 +281,8 @@ squid_SOURCES = \
 	HttpHeaderMask.h \
 	HttpHeaderRange.h \
 	HttpHeaderStat.h \
+	HttpHeaderTools.cc \
+	HttpHeaderTools.h \
 	HttpReply.cc \
 	HttpReply.h \
 	HttpRequest.cc \
@@ -1028,6 +1030,8 @@ tests_testRock_SOURCES = \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderFieldStat.h \
+	HttpHeaderTools.cc \
+	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_Instance.cc \
@@ -1197,6 +1201,8 @@ tests_testUfs_SOURCES = \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderFieldStat.h \
+	HttpHeaderTools.cc \
+	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_Instance.cc \
@@ -1368,6 +1374,8 @@ tests_testStore_SOURCES = \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderFieldStat.h \
+	HttpHeaderTools.cc \
+	HttpHeaderTools.h \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_Instance.cc \
@@ -1530,6 +1538,8 @@ tests_testDiskIO_SOURCES = \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderFieldStat.h \
+	HttpHeaderTools.cc \
+	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_Instance.cc \
@@ -1756,7 +1766,7 @@ tests_testHttpRange_SOURCES = \
 	String.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
-	http/HeaderTools.cc \
+	HttpHeaderTools.cc \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc
 tests_testHttpRange_LDADD = \
@@ -1836,6 +1846,8 @@ tests_testHttpReply_SOURCES = \
 	HttpHeader.h \
 	HttpHeaderFieldStat.h \
 	HttpHeaderMask.h \
+	HttpHeaderTools.cc \
+	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/testHttpReply.cc \
 	HttpReply.h \
@@ -1963,6 +1975,8 @@ tests_testHttpRequest_SOURCES = \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderFieldStat.h \
+	HttpHeaderTools.cc \
+	HttpHeaderTools.h \
 	HttpReply.cc \
 	HttpRequest.cc \
 	tests/testHttpRequest.cc \
@@ -2032,8 +2046,6 @@ tests_testHttpRequest_SOURCES = \
 	helper.cc \
 	hier_code.h \
 	http.cc \
-	http/HeaderTools.cc \
-	http/HeaderTools.h \
 	icp_v2.cc \
 	icp_v3.cc \
 	int.cc \
@@ -2265,6 +2277,8 @@ tests_testCacheManager_SOURCES = \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderFieldStat.h \
+	HttpHeaderTools.cc \
+	HttpHeaderTools.h \
 	HttpReply.cc \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \

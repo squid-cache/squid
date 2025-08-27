@@ -22,7 +22,7 @@
 #include "cache_cf.h"
 #include "client_side.h"
 #include "helper.h"
-#include "http/HeaderTools.h"
+#include "HttpHeaderTools.h"
 #include "http/Stream.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "base/LookupTable.h"
 //#include "HttpHdrSc.h" // pulled in by HttpHdrScTarget.h
-#include "http/HeaderTools.h"
+#include "HttpHeaderTools.h"
 #include "HttpHdrScTarget.h"
 #include "HttpHeader.h"
 #include "HttpHeaderFieldStat.h"

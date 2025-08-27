@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "base/EnumIterator.h"
 #include "base/LookupTable.h"
-#include "http/HeaderTools.h"
+#include "HttpHeaderTools.h"
 #include "HttpHdrCc.h"
 #include "HttpHeader.h"
 #include "HttpHeaderStat.h"

@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "compat/cppunit.h"
-#include "http/HeaderTools.h"
+#include "HttpHeaderTools.h"
 #include "HttpHeaderRange.h"
 #include "unitTestMain.h"
 

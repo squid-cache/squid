@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "compat/strtoll.h"
-#include "http/HeaderTools.h"
+#include "HttpHeaderTools.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
 #include "MemBuf.h"

@@ -26,7 +26,7 @@
 #include "cache_cf.h"
 #include "event.h"
 #include "helper.h"
-#include "http/HeaderTools.h"
+#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "md5.h"

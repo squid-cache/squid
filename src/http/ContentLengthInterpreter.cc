@@ -13,7 +13,7 @@
 #include "base/Raw.h"
 #include "debug/Stream.h"
 #include "http/ContentLengthInterpreter.h"
-#include "http/HeaderTools.h"
+#include "HttpHeaderTools.h"
 #include "http/one/Parser.h"
 #include "SquidConfig.h"
 #include "SquidString.h"

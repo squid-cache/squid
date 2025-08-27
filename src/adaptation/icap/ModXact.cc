@@ -27,7 +27,7 @@
 #include "error/Detail.h"
 #include "error/ExceptionErrorDetail.h"
 #include "http/ContentLengthInterpreter.h"
-#include "http/HeaderTools.h"
+#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "MasterXaction.h"
 #include "parser/Tokenizer.h"

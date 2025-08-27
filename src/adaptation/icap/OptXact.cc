@@ -15,7 +15,7 @@
 #include "adaptation/icap/OptXact.h"
 #include "base/TextException.h"
 #include "comm.h"
-#include "http/HeaderTools.h"
+#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 

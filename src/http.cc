@@ -32,7 +32,7 @@
 #include "globals.h"
 #include "HeaderMangling.h"
 #include "http.h"
-#include "http/HeaderTools.h"
+#include "HttpHeaderTools.h"
 #include "http/one/ResponseParser.h"
 #include "http/one/TeChunkedParser.h"
 #include "http/StatusCode.h"

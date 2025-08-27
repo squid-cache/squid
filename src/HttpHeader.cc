@@ -16,7 +16,7 @@
 #include "base64.h"
 #include "globals.h"
 #include "http/ContentLengthInterpreter.h"
-#include "http/HeaderTools.h"
+#include "HttpHeaderTools.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrScTarget.h" // also includes HttpHdrSc.h
