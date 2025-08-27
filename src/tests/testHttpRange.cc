@@ -8,8 +8,8 @@
 
 #include "squid.h"
 #include "compat/cppunit.h"
-#include "HttpHeaderTools.h"
 #include "HttpHeaderRange.h"
+#include "HttpHeaderTools.h"
 #include "unitTestMain.h"
 
 class TestHttpRange : public CPPUNIT_NS::TestFixture

@@ -1759,6 +1759,7 @@ tests_testHttpRange_SOURCES = \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	tests/stub_HttpHeader.cc \
+	HttpHeaderTools.cc \
 	tests/testHttpRange.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_MemBuf.cc \
@@ -1766,7 +1767,6 @@ tests_testHttpRange_SOURCES = \
 	String.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
-	HttpHeaderTools.cc \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc
 tests_testHttpRange_LDADD = \

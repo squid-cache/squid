@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_HTTP_HEADERTOOLS_H
-#define SQUID_SRC_HTTP_HEADERTOOLS_H
+#ifndef SQUID_SRC_HTTPHEADERTOOLS_H
+#define SQUID_SRC_HTTPHEADERTOOLS_H
 
 #include "http/RegisteredHeaders.h"
 #include "sbuf/forward.h"
@@ -26,5 +26,5 @@ bool httpHeaderHasConnDir(const HttpHeader * hdr, const SBuf &directive);
 int httpHeaderParseInt(const char *start, int *val);
 void httpHeaderPutStrf(HttpHeader * hdr, Http::HdrType id, const char *fmt,...) PRINTF_FORMAT_ARG3;
 
-#endif /* SQUID_SRC_HTTP_HEADERTOOLS_H */
+#endif /* SQUID_SRC_HTTPHEADERTOOLS_H */
 

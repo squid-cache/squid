@@ -12,8 +12,8 @@
 #include "base/Packable.h"
 #include "debug/Stream.h"
 #include "enums.h"
-#include "HttpHeaderTools.h"
 #include "HttpHdrContRange.h"
+#include "HttpHeaderTools.h"
 
 /*
  *    Currently only byte ranges are supported
