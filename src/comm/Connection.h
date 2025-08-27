@@ -188,7 +188,7 @@ private:
     CachePeer *peer_ = nullptr;
 
     /** The time the connection object was created */
-    time_t startTime_ = 0;
+    time_t startTime_;
 
     /** TLS connection details*/
     Security::NegotiationHistory *tlsHistory = nullptr;
