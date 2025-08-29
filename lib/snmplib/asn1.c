@@ -735,6 +735,7 @@ asn_build_objid(u_char * data, int *datalength,
      * lastbyte ::= 0 7bitvalue
      */
     u_char buf[MAX_OID_LEN];
+    u_char *bufEnd = buf + sizeof(buf);
     u_char *bp = buf;
     oid *op = objid;
     int asnlength;
@@ -753,6 +754,10 @@ asn_build_objid(u_char * data, int *datalength,
     while (objidlength-- > 0) {
         subid = *op++;
         if (subid < 127) {  /* off by one? */
+            if (bp >= bufEnd) {
+                snmp_set_api_error(SNMPERR_ASN_ENCODE);
+                return (NULL);
+            }
             *bp++ = subid;
         } else {
             mask = 0x7F;    /* handle subid == 0 case */
@@ -770,7 +775,15 @@ asn_build_objid(u_char * data, int *datalength,
                 /* fix a mask that got truncated above */
                 if (mask == 0x1E00000)
                     mask = 0xFE00000;
+                if (bp >= bufEnd) {
+                    snmp_set_api_error(SNMPERR_ASN_ENCODE);
+                    return (NULL);
+                }
                 *bp++ = (u_char) (((subid & mask) >> bits) | ASN_BIT8);
+            }
+            if (bp >= bufEnd) {
+                snmp_set_api_error(SNMPERR_ASN_ENCODE);
+                return (NULL);
             }
             *bp++ = (u_char) (subid & mask);
         }
