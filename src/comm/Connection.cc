@@ -29,17 +29,6 @@ Comm::IsConnOpen(const Comm::ConnectionPointer &conn)
     return conn != nullptr && conn->isOpen();
 }
 
-Comm::Connection::Connection() :
-    peerType(HIER_NONE),
-    fd(-1),
-    tos(0),
-    nfmark(0),
-    flags(COMM_NONBLOCKING),
-    peer_(nullptr),
-    startTime_(squid_curtime),
-    tlsHistory(nullptr)
-{}
-
 Comm::Connection::~Connection()
 {
     if (fd >= 0) {
