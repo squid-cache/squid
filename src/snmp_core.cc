@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
 #include "base/CbcPointer.h"
+#include "base/RunnersRegistry.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
 #include "client_db.h"
@@ -58,18 +59,14 @@ static mib_tree_entry *snmpTreeSiblingEntry(oid entry, snint len, mib_tree_entry
 extern "C" void snmpSnmplibDebug(int lvl, char *buf);
 
 /*
- * The functions used during startup:
- * snmpInit
- * snmpConnectionOpen
- * snmpConnectionClose
- */
-
-/*
  * Turns the MIB into a Tree structure. Called during the startup process.
  */
-void
-snmpInit(void)
+static void
+snmpInit()
 {
+    if (!IamWorkerProcess())
+        return;
+
     debugs(49, 5, "snmpInit: Building SNMP mib tree structure");
 
     snmplib_debug_hook = snmpSnmplibDebug;
@@ -255,10 +252,11 @@ snmpInit(void)
     debugs(49, 9, "snmpInit: Completed SNMP mib tree structure");
 }
 
-void
-snmpOpenPorts(void)
+static void
+snmpOpenPorts()
 {
-    debugs(49, 5, "snmpConnectionOpen: Called");
+    if (!IamWorkerProcess())
+        return;
 
     if (Config.Port.snmp <= 0)
         return;
@@ -319,9 +317,12 @@ snmpPortOpened(Ipc::StartListeningAnswer &answer)
         fatalf("Lost SNMP port (%d) on FD %d", (int)conn->local.port(), conn->fd);
 }
 
-void
-snmpClosePorts(void)
+static void
+snmpClosePorts()
 {
+    if (!IamWorkerProcess())
+        return;
+
     if (Comm::IsConnOpen(snmpIncomingConn)) {
         debugs(49, DBG_IMPORTANT, "Closing SNMP receiving port " << snmpIncomingConn->local);
         snmpIncomingConn->close();
@@ -336,9 +337,16 @@ snmpClosePorts(void)
     snmpOutgoingConn = nullptr;
 }
 
-/*
- * Functions for handling the requests.
- */
+class SnmpRr : public RegisteredRunner
+{
+public:
+    void finalizeConfig() override { snmpInit(); }
+    void useConfig() override { snmpOpenPorts(); }
+    void startReconfigure() override { snmpClosePorts(); }
+    void syncConfig() override { snmpOpenPorts(); }
+    void startShutdown() override { snmpClosePorts(); }
+};
+DefineRunnerRegistrator(SnmpRr);
 
 /*
  * Accept the UDP packet
