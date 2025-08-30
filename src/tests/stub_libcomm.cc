@@ -20,7 +20,6 @@ void Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &) STUB
 void Comm::AcceptLimiter::kick() STUB
 
 #include "comm/Connection.h"
-Comm::Connection::Connection() STUB
 Comm::Connection::~Connection() STUB
 Comm::ConnectionPointer Comm::Connection::cloneProfile() const STUB_RETVAL(nullptr)
 void Comm::Connection::close() STUB

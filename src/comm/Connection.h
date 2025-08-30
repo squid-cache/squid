@@ -74,7 +74,7 @@ class Connection: public CodeContext
     MEMPROXY_CLASS(Comm::Connection);
 
 public:
-    Connection();
+    Connection() { noteStart(); }
 
     /** Clear the connection properties and close any open socket. */
     ~Connection() override;
@@ -149,18 +149,18 @@ public:
     Ip::Address remote;
 
     /** Hierarchy code for this connection link */
-    hier_code peerType;
+    hier_code peerType = HIER_NONE;
 
     /** Socket used by this connection. Negative if not open. */
-    int fd;
+    int fd = -1;
 
     /** Quality of Service TOS values currently sent on this connection */
-    tos_t tos;
+    tos_t tos = 0;
 
     /** Netfilter MARK values currently sent on this connection
      * In case of FTP, the MARK will be sent on data connections as well.
      */
-    nfmark_t nfmark;
+    nfmark_t nfmark = 0;
 
     /** Netfilter CONNMARK value previously retrieved from this connection
      * In case of FTP, the CONNMARK will NOT be applied to data connections, for one main reason:
@@ -171,7 +171,7 @@ public:
     nfmark_t nfConnmark = 0;
 
     /** COMM flags set on this connection */
-    int flags;
+    int flags = COMM_NONBLOCKING;
 
 #if USE_SQUID_EUI
     Eui::Eui48 remoteEui48;
@@ -182,13 +182,13 @@ public:
 
 private:
     /** cache_peer data object (if any) */
-    CachePeer *peer_;
+    CachePeer *peer_ = nullptr;
 
     /** The time the connection object was created */
     time_t startTime_;
 
     /** TLS connection details*/
-    Security::NegotiationHistory *tlsHistory;
+    Security::NegotiationHistory *tlsHistory = nullptr;
 };
 
 std::ostream &operator <<(std::ostream &, const Connection &);
