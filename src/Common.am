@@ -12,7 +12,6 @@
 
 ## Default variables
 DEFAULT_HTTP_PORT	= 3128
-DEFAULT_ICP_PORT	= 3130
 DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_DIR	= $(sysconfdir)
 DEFAULT_CONFIG_FILE	= $(DEFAULT_CONFIG_DIR)/squid.conf
