@@ -26,6 +26,7 @@
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "mime_header.h"
+#include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "StatHist.h"
@@ -117,6 +118,22 @@ httpHeaderRegisterWithCacheManager(void)
                         httpHeaderStoreReport, 0, 1);
 }
 
+static void
+httpHeaderMaskInit(HttpHeaderMask * mask, int value)
+{
+    memset(mask, value, sizeof(*mask));
+}
+
+/** handy to printf prefixes of potentially very long buffers */
+static const char *
+getStringPrefix(const char *str, size_t sz)
+{
+#define SHORT_PREFIX_SIZE 512
+    LOCAL_ARRAY(char, buf, SHORT_PREFIX_SIZE);
+    xstrncpy(buf, str, (sz+1 > SHORT_PREFIX_SIZE) ? SHORT_PREFIX_SIZE : sz);
+    return buf;
+}
+
 void
 httpHeaderInitModule(void)
 {
@@ -138,6 +155,122 @@ httpHeaderInitModule(void)
     httpHdrScInitModule();
 
     httpHeaderRegisterWithCacheManager();
+}
+
+/**
+ * Parses a quoted-string field (RFC 2616 section 2.2), complains if
+ * something went wrong, returns non-zero on success.
+ * Un-escapes quoted-pair characters found within the string.
+ * start should point at the first double-quote.
+ */
+int
+httpHeaderParseQuotedString(const char *start, const int len, String *val)
+{
+    const char *end, *pos;
+    val->clean();
+    if (*start != '"') {
+        debugs(66, 2, "failed to parse a quoted-string header field near '" << start << "'");
+        return 0;
+    }
+    pos = start + 1;
+
+    while (*pos != '"' && len > (pos-start)) {
+
+        if (*pos =='\r') {
+            ++pos;
+            if ((pos-start) > len || *pos != '\n') {
+                debugs(66, 2, "failed to parse a quoted-string header field with '\\r' octet " << (start-pos)
+                       << " bytes into '" << start << "'");
+                val->clean();
+                return 0;
+            }
+        }
+
+        if (*pos == '\n') {
+            ++pos;
+            if ( (pos-start) > len || (*pos != ' ' && *pos != '\t')) {
+                debugs(66, 2, "failed to parse multiline quoted-string header field '" << start << "'");
+                val->clean();
+                return 0;
+            }
+            // TODO: replace the entire LWS with a space
+            val->append(" ");
+            ++pos;
+            debugs(66, 2, "len < pos-start => " << len << " < " << (pos-start));
+            continue;
+        }
+
+        bool quoted = (*pos == '\\');
+        if (quoted) {
+            ++pos;
+            if (!*pos || (pos-start) > len) {
+                debugs(66, 2, "failed to parse a quoted-string header field near '" << start << "'");
+                val->clean();
+                return 0;
+            }
+        }
+        end = pos;
+        while (end < (start+len) && *end != '\\' && *end != '\"' && (unsigned char)*end > 0x1F && *end != 0x7F)
+            ++end;
+        if (((unsigned char)*end <= 0x1F && *end != '\r' && *end != '\n') || *end == 0x7F) {
+            debugs(66, 2, "failed to parse a quoted-string header field with CTL octet " << (start-pos)
+                   << " bytes into '" << start << "'");
+            val->clean();
+            return 0;
+        }
+        val->append(pos, end-pos);
+        pos = end;
+    }
+
+    if (*pos != '\"') {
+        debugs(66, 2, "failed to parse a quoted-string header field which did not end with \" ");
+        val->clean();
+        return 0;
+    }
+    /* Make sure it's defined even if empty "" */
+    if (!val->termedBuf())
+        val->assign("", 0);
+    return 1;
+}
+
+SBuf
+httpHeaderQuoteString(const char *raw)
+{
+    assert(raw);
+
+    // TODO: Optimize by appending a sequence of characters instead of a char.
+    // This optimization may be easier with Tokenizer after raw becomes SBuf.
+
+    // RFC 7230 says a "sender SHOULD NOT generate a quoted-pair in a
+    // quoted-string except where necessary" (i.e., DQUOTE and backslash)
+    bool needInnerQuote = false;
+    for (const char *s = raw; !needInnerQuote &&  *s; ++s)
+        needInnerQuote = *s == '"' || *s == '\\';
+
+    SBuf quotedStr;
+    quotedStr.append('"');
+
+    if (needInnerQuote) {
+        for (const char *s = raw; *s; ++s) {
+            if (*s == '"' || *s == '\\')
+                quotedStr.append('\\');
+            quotedStr.append(*s);
+        }
+    } else {
+        quotedStr.append(raw);
+    }
+
+    quotedStr.append('"');
+    return quotedStr;
+}
+
+SBuf
+Http::SlowlyParseQuotedString(const char * const description, const char * const start, const size_t length)
+{
+    String s;
+    if (!httpHeaderParseQuotedString(start, length, &s))
+        throw TextException(ToSBuf("Cannot parse ", description, " as a quoted string"), Here());
+    return StringToSBuf(s);
 }
 
 /*

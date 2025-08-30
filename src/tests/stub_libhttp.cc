@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "client_side.h"
 #include "comm/Connection.h"
-#include "SquidConfig.h"
 
 #define STUB_API "http/libhttp.la"
 #include "tests/STUB.h"
@@ -21,7 +20,7 @@ namespace Http
 Http::ContentLengthInterpreter::ContentLengthInterpreter():
     value(-1),
     headerWideProblem(nullptr),
-    debugLevel(Config.onoff.relaxed_header_parser <= 0 ? DBG_IMPORTANT : 2),
+    debugLevel(DBG_IMPORTANT),
     sawBad(false),
     needsSanitizing(false),
     sawGood(false),

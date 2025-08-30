@@ -94,7 +94,6 @@
 #include "http/one/TeChunkedParser.h"
 #include "http/Stream.h"
 #include "HttpHdrContRange.h"
-#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "internal.h"
