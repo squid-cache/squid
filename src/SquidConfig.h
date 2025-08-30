@@ -17,6 +17,7 @@
 #include "DelayConfig.h"
 #endif
 #include "helper/ChildConfig.h"
+#include "http/forward.h"
 #include "HttpHeaderTools.h"
 #include "ip/Address.h"
 #if USE_DELAY_POOLS
@@ -406,6 +407,10 @@ public:
         acl_access *collapsedForwardingAccess;
     } accessList;
     AclDenyInfoList *denyInfoList;
+
+    struct {
+        Http::ExtForwarded *header_forwarded;
+    } http;
 
     struct {
         size_t list_width;
