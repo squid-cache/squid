@@ -52,7 +52,7 @@ jobs:
             grep -q CHANGES_REQUESTED && false
 
       - name: Fast Track Approval
-        # Unanimous Approval from Squid Core team overrides 48hr hold check.
+        # Approval from all (currently active) Squid Core team overrides 48hr hold check.
         # Authorship is treated as implicit approval.
         id: fast-track
         run: |
