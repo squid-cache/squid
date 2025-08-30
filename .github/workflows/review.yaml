@@ -49,7 +49,7 @@ jobs:
         run: |
           gh pr view ${{ github.event.pull_request.number }} --json latestReviews \
             --template '{{range .latestReviews}}{{.state}}{{end}}' |
-            grep CHANGES_REQUESTED && false
+            grep -q CHANGES_REQUESTED && false
 
       - name: Fast Track Approval
         # Unanimous Approval from Squid Core team overrides 48hr hold check.
