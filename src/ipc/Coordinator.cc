@@ -265,11 +265,12 @@ Ipc::Coordinator::openListenSocket(const SharedListenRequest& request,
            request.requestorId);
 
     Comm::ConnectionPointer newConn = new Comm::Connection;
+    newConn->transport = AnyP::ProtocolType(p.sock_type);
     newConn->local = p.addr; // comm_open_listener may modify it
     newConn->flags = p.flags;
 
     enter_suid();
-    comm_open_listener(p.sock_type, p.proto, newConn, FdNote(p.fdNote));
+    comm_open_listener(newConn, FdNote(p.fdNote));
     errNo = Comm::IsConnOpen(newConn) ? 0 : errno;
     leave_suid();
 

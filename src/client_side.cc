@@ -3294,6 +3294,7 @@ clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrC
 {
     // Fill out a Comm::Connection which IPC will open as a listener for us
     port->listenConn = new Comm::Connection;
+    port->listenConn->transport = AnyP::PROTO_TCP;
     port->listenConn->local = port->s;
     port->listenConn->flags =
         COMM_NONBLOCKING |
@@ -3309,7 +3310,7 @@ clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrC
                   ListeningStartedDialer(&clientListenerConnectionOpened,
                                          port, fdNote, sub));
     AsyncCallback<Ipc::StartListeningAnswer> callback(listenCall);
-    Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, port->listenConn, fdNote, callback);
+    Ipc::StartListening(port->listenConn, fdNote, callback);
 
     assert(NHttpSockets < MAXTCPLISTENPORTS);
     HttpSockets[NHttpSockets] = -1;
