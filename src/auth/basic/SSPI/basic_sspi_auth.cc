@@ -149,7 +149,7 @@ main(int argc, char **argv)
         /* Clear any current settings */
         username[0] = '\0';
         password[0] = '\0';
-        sscanf(wstr, "%s %s", username, password);  /* Extract parameters */
+        sscanf(wstr, "%255s %255s", username, password);  /* Extract parameters */
 
         debug("Got %s from Squid\n", wstr);
 
