@@ -112,8 +112,10 @@ main(int argc, char **argv)
     char wstr[HELPER_INPUT_BUFFER];
     char username[256];
     char password[256];
+    char sep = '\0', junk = '\0';
     char *p;
     int err = 0;
+    int parsed = 0;
 
     process_options(argc, argv);
 
@@ -149,7 +151,23 @@ main(int argc, char **argv)
         /* Clear any current settings */
         username[0] = '\0';
         password[0] = '\0';
-        sscanf(wstr, "%s %s", username, password);  /* Extract parameters */
+
+        parsed = sscanf(wstr, " %255s%1c%255s %c", username, &sep, password, &junk);
+
+        if (parsed < 2 || !isspace((unsigned char)sep)) {
+            username[0] = '\0';
+            password[0] = '\0';
+            puts("ERR");
+            continue;
+        }
+        if (parsed == 4) {
+            username[0] = '\0';
+            password[0] = '\0';
+            puts("ERR");
+            continue;
+        }
+        if (parsed == 2)
+            password[0] = '\0';
 
         debug("Got %s from Squid\n", wstr);
 
