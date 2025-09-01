@@ -15,10 +15,11 @@
 #include "security/Io.h"
 #include "ssl/gadgets.h"
 
-static bool keyNeedsDigest(const EVP_PKEY *pkey) {
+static bool
+keyNeedsDigest(const EVP_PKEY *pkey) {
     int id = EVP_PKEY_id(pkey);
 
-    // For provider-based keys, id may be -1
+    // For provider-based keys, id is -1
     if (id == -1) {
         // Try all known ML-DSA names
         if (EVP_PKEY_is_a(pkey, "ML-DSA") ||
@@ -50,7 +51,7 @@ static bool keyNeedsDigest(const EVP_PKEY *pkey) {
 
         default:
             // Unknown type — safest is to assume digest required
-            // For provider-based keys, id may be -1
+            // For provider-based keys, id is -1
             return true;
     }
 }
@@ -717,9 +718,9 @@ static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Secu
     assert(hash);
     /*Now sign the request */
     if (properties.signAlgorithm != Ssl::algSignSelf && properties.signWithPkey.get())
-        ret = X509_sign(cert.get(), properties.signWithPkey.get(), keyNeedsDigest(properties.signWithPkey.get()) ? hash : NULL);
+        ret = X509_sign(cert.get(), properties.signWithPkey.get(), keyNeedsDigest(properties.signWithPkey.get()) ? hash : nullptr);
     else //else sign with self key (self signed request)
-        ret = X509_sign(cert.get(), pkey.get(), keyNeedsDigest(pkey.get()) ? hash : NULL);
+        ret = X509_sign(cert.get(), pkey.get(), keyNeedsDigest(pkey.get()) ? hash : nullptr);
 
     if (!ret)
         return false;
