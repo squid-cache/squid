@@ -367,22 +367,26 @@ snmpHandleUdp(int sock, void *)
 
     len = comm_udp_recvfrom(sock, buf, sizeof(buf)-1, 0, from);
 
-    if (len > 0) {
-        debugs(49, 3, "snmpHandleUdp: FD " << sock << ": received " << len << " bytes from " << from << ".");
+    if (len == 0)
+        return;
 
-        snmp_rq = (SnmpRequest *)xcalloc(1, sizeof(SnmpRequest));
-        snmp_rq->buf = (u_char *) buf;
-        snmp_rq->len = len;
-        snmp_rq->sock = sock;
-        snmp_rq->outbuf = (unsigned char *)xmalloc(snmp_rq->outlen = SNMP_REQUEST_SIZE);
-        snmp_rq->from = from;
-        snmpDecodePacket(snmp_rq);
-        xfree(snmp_rq->outbuf);
-        xfree(snmp_rq);
-    } else {
+    if (len < 0) {
         int xerrno = errno;
         debugs(49, DBG_IMPORTANT, "snmpHandleUdp: FD " << sock << " recvfrom: " << xstrerr(xerrno));
+        return;
     }
+
+    debugs(49, 3, "snmpHandleUdp: FD " << sock << ": received " << len << " bytes from " << from << ".");
+
+    snmp_rq = (SnmpRequest *)xcalloc(1, sizeof(SnmpRequest));
+    snmp_rq->buf = (u_char *) buf;
+    snmp_rq->len = len;
+    snmp_rq->sock = sock;
+    snmp_rq->outbuf = (unsigned char *)xmalloc(snmp_rq->outlen = SNMP_REQUEST_SIZE);
+    snmp_rq->from = from;
+    snmpDecodePacket(snmp_rq);
+    xfree(snmp_rq->outbuf);
+    xfree(snmp_rq);
 }
 
 /*

@@ -1230,8 +1230,15 @@ wccp2HandleUdp(int sock, void *)
 
     const auto lenOrError = comm_udp_recvfrom(sock, &wccp2_i_see_you, WCCP_RESPONSE_SIZE, 0, from_tmp);
 
-    if (lenOrError < 0)
+    if (lenOrError == 0)
         return;
+
+    if (lenOrError < 0) {
+        int xerrno = errno;
+        debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: FD " << sock << " recvfrom: " << xstrerr(xerrno));
+        return;
+    }
+
     const auto len = static_cast<size_t>(lenOrError);
 
     try {
