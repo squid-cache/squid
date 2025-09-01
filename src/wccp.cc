@@ -204,6 +204,12 @@ wccpHandleUdp(int sock, void *)
                             sizeof(wccp_i_see_you),
                             0,
                             from);
+    if (len < 0) {
+        int xerrno = errno;
+        debugs(80, DBG_IMPORTANT, "wccpHandleUdp: FD " << sock << " recvfrom: " << xstrerr(xerrno));
+        return;
+    }
+
     debugs(80, 3, "wccpHandleUdp: " << len << " bytes WCCP pkt from " << from <<
            ": type=" <<
            (unsigned) ntohl(wccp_i_see_you.type) << ", version=" <<
@@ -211,9 +217,6 @@ wccpHandleUdp(int sock, void *)
            (unsigned) ntohl(wccp_i_see_you.change) << ", id=" <<
            (unsigned) ntohl(wccp_i_see_you.id) << ", number=" <<
            (unsigned) ntohl(wccp_i_see_you.number));
-
-    if (len < 0)
-        return;
 
     if (from != Config.Wccp.router)
         return;
