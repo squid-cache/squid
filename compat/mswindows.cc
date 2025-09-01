@@ -204,7 +204,8 @@ void
 syslog(int priority, const char *fmt, ...)
 {
     WORD logtype;
-    char *str=static_cast<char *>(xmalloc(SYSLOG_MAX_MSG_SIZE));
+    char buf[SYSLOG_MAX_MSG_SIZE];
+    const char* strings[1] = { buf };
     int str_len;
     va_list ap;
 
@@ -212,7 +213,7 @@ syslog(int priority, const char *fmt, ...)
         return;
 
     va_start(ap, fmt);
-    str_len = vsnprintf(str, SYSLOG_MAX_MSG_SIZE-1, fmt, ap);
+    str_len = vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
 
     if (str_len < 0) {
@@ -242,7 +243,7 @@ syslog(int priority, const char *fmt, ...)
 
     //Windows API suck. They are overengineered
     ReportEventA(ms_eventlog, logtype, 0, 0, nullptr, 1, 0,
-                 const_cast<const char **>(&str), nullptr);
+                 strings, nullptr);
 }
 
 /* note: this is all MSWindows-specific code; all of it should be conditional */
