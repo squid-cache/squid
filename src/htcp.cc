@@ -456,13 +456,19 @@ static ssize_t
 htcpBuildClrOpData(char *buf, size_t buflen, htcpStuff * stuff)
 {
     unsigned short reason;
+    ssize_t s;
 
     switch (stuff->rr) {
     case RR_REQUEST:
         debugs(31, 3, "htcpBuildClrOpData: RR_REQUEST");
         reason = htons((unsigned short)stuff->reason);
+        if (buflen < 2)
+            return -1;
         memcpy(buf, &reason, 2);
-        return htcpBuildSpecifier(buf + 2, buflen - 2, stuff) + 2;
+        s = htcpBuildSpecifier(buf + 2, buflen - 2, stuff);
+        if (s < 0)
+            return s;
+        return s + 2;
     case RR_RESPONSE:
         break;
     default:
@@ -618,7 +624,14 @@ htcpUnpackSpecifier(char *buf, int sz)
     HttpRequestMethod method;
 
     /* Find length of METHOD */
-    uint16_t l = ntohs(*(uint16_t *) buf);
+    if (sz < 2) {
+        debugs(31, 3, "htcpUnpackSpecifier: too short for METHOD length");
+        return nil;
+    }
+    uint16_t l;
+    memcpy(&l, buf, 2);
+    l = ntohs(l);
+
     sz -= 2;
     buf += 2;
 
@@ -634,7 +647,12 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: METHOD (" << l << "/" << sz << ") '" << s->method << "'");
 
     /* Find length of URI */
-    l = ntohs(*(uint16_t *) buf);
+    if (sz < 2) {
+        debugs(31, 3, "htcpUnpackSpecifier: too short for URI length");
+        return nil;
+    }
+    memcpy(&l, buf, 2);
+    l = ntohs(l);
     sz -= 2;
 
     if (l > sz) {
@@ -653,7 +671,12 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: URI (" << l << "/" << sz << ") '" << s->uri << "'");
 
     /* Find length of VERSION */
-    l = ntohs(*(uint16_t *) buf);
+    if (sz < 2) {
+        debugs(31, 3, "htcpUnpackSpecifier: too short for VERSION length");
+        return nil;
+    }
+    memcpy(&l, buf, 2);
+    l = ntohs(l);
     sz -= 2;
 
     if (l > sz) {
@@ -672,7 +695,12 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: VERSION (" << l << "/" << sz << ") '" << s->version << "'");
 
     /* Find length of REQ-HDRS */
-    l = ntohs(*(uint16_t *) buf);
+    if (sz < 2) {
+        debugs(31, 3, "htcpUnpackSpecifier: too short for REQ-HDRS length");
+        return nil;
+    }
+    memcpy(&l, buf, 2);
+    l = ntohs(l);
     sz -= 2;
 
     if (l > sz) {
@@ -723,7 +751,14 @@ htcpUnpackDetail(char *buf, int sz)
     htcpDetail *d = new htcpDetail;
 
     /* Find length of RESP-HDRS */
-    uint16_t l = ntohs(*(uint16_t *) buf);
+    if (sz < 2) {
+        debugs(31, 3, "htcpUnpackDetail: too short for RESP-HDRS length");
+        delete d;
+        return nullptr;
+    }
+    uint16_t l;
+    memcpy(&l, buf, 2);
+    l = ntohs(l);
     sz -= 2;
     buf += 2;
 
@@ -740,7 +775,13 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= l;
 
     /* Find length of ENTITY-HDRS */
-    l = ntohs(*(uint16_t *) buf);
+    if (sz < 2) {
+        debugs(31, 3, "htcpUnpackDetail: too short for ENTITY-HDRS length");
+        delete d;
+        return nullptr;
+    }
+    memcpy(&l, buf, 2);
+    l = ntohs(l);
 
     sz -= 2;
 
@@ -762,7 +803,13 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= l;
 
     /* Find length of CACHE-HDRS */
-    l = ntohs(*(uint16_t *) buf);
+    if (sz < 2) {
+        debugs(31, 3, "htcpUnpackDetail: too short for CACHE-HDRS length");
+        delete d;
+        return nullptr;
+    }
+    memcpy(&l, buf, 2);
+    l = ntohs(l);
 
     sz -= 2;
 
@@ -1206,7 +1253,12 @@ static void
 htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 {
     /* buf[0/1] is reserved and reason */
-    int reason = buf[1] << 4;
+    if (sz < 2) {
+        debugs(31, 4, "htcpHandleClr: too short for reason field (sz=" << sz << ")");
+        htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str, nullptr);
+        return;
+    }
+    int reason = static_cast<unsigned char>(buf[1]) << 4;
     debugs(31, 2, "HTCP CLR reason: " << reason);
     buf += 2;
     sz -= 2;
@@ -1346,8 +1398,16 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
     if (!old_squid_format) {
         memcpy(&hdr, hbuf, sizeof(hdr));
     } else {
+        // old Squid format (minor==0) uses a wider struct due to bitfield layout.
+        // Never read more than available; zero-init then copy the safe prefix.
         htcpDataHeaderSquid hdrSquid;
-        memcpy(&hdrSquid, hbuf, sizeof(hdrSquid));
+        memset(&hdrSquid, 0, sizeof(hdrSquid));
+        if ((size_t)hsz >= sizeof(htcpDataHeaderSquid))
+            memcpy(&hdrSquid, hbuf, sizeof(htcpDataHeaderSquid));
+        else
+            // Guaranteed earlier: hsz >= sizeof(htcpDataHeader) (compact prefix).
+            memcpy(&hdrSquid, hbuf, sizeof(htcpDataHeader));
+
         hdr.length = hdrSquid.length;
         hdr.opcode = hdrSquid.opcode;
         hdr.response = hdrSquid.response;
@@ -1372,6 +1432,13 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
     debugs(31, 3, "htcpHandleData: F1 = " << hdr.F1);
     debugs(31, 3, "htcpHandleData: RR = " << hdr.RR);
     debugs(31, 3, "htcpHandleData: msg_id = " << hdr.msg_id);
+
+    // DATA length must include at least the data header itself
+    if (hdr.length < sizeof(htcpDataHeader)) {
+        debugs(31, 3, "htcpHandleData: invalid hdr.length " << hdr.length
+               << " (< " << sizeof(htcpDataHeader) << ")");
+        return;
+    }
 
     if (hsz < hdr.length) {
         debugs(31, 3, "htcpHandleData: sz < hdr.length");
