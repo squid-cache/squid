@@ -14,7 +14,6 @@
 #include "sbuf/Stream.h"
 #include "security/Io.h"
 #include "ssl/gadgets.h"
-#include <openssl/evp.h>
 
 static bool keyNeedsDigest(const EVP_PKEY *pkey) {
     int id = EVP_PKEY_id(pkey);
