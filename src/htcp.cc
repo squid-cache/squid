@@ -456,7 +456,6 @@ static ssize_t
 htcpBuildClrOpData(char *buf, size_t buflen, htcpStuff * stuff)
 {
     unsigned short reason;
-    ssize_t s;
 
     switch (stuff->rr) {
     case RR_REQUEST:
@@ -465,10 +464,12 @@ htcpBuildClrOpData(char *buf, size_t buflen, htcpStuff * stuff)
         if (buflen < 2)
             return -1;
         memcpy(buf, &reason, 2);
-        s = htcpBuildSpecifier(buf + 2, buflen - 2, stuff);
-        if (s < 0)
-            return s;
-        return s + 2;
+        {
+            const auto s = htcpBuildSpecifier(buf + 2, buflen - 2, stuff);
+            if (s < 0)
+                return s;
+            return s + 2;
+        }
     case RR_RESPONSE:
         break;
     default:
