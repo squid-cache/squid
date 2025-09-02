@@ -109,9 +109,6 @@
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
 #endif
-#if SQUID_SNMP
-#include "snmp_core.h"
-#endif
 
 #include <cerrno>
 #if HAVE_GETOPT_H
@@ -780,10 +777,6 @@ serverConnectionsOpen(void)
     if (IamWorkerProcess()) {
         clientOpenListenSockets();
         icpOpenPorts();
-#if SQUID_SNMP
-        snmpOpenPorts();
-#endif
-
         icmpEngine.Open();
         netdbInit();
         Acl::Node::Initialize();
@@ -800,9 +793,6 @@ serverConnectionsClose(void)
         clientConnectionsClose();
         icpConnectionShutdown();
         icmpEngine.Close();
-#if SQUID_SNMP
-        snmpClosePorts();
-#endif
     }
 }
 
@@ -1127,11 +1117,6 @@ mainInitialize(void)
     icapLogOpen();
 #endif
 
-#if SQUID_SNMP
-
-    snmpInit();
-
-#endif
 #if MALLOC_DBG
 
     malloc_debug(0, malloc_debug_level);
@@ -1417,6 +1402,10 @@ RegisterModules()
 
 #if HAVE_FS_ROCK
     CallRunnerRegistratorIn(Rock, SwapDirRr);
+#endif
+
+#if SQUID_SNMP
+    CallRunnerRegistrator(SnmpRr);
 #endif
 
 #if USE_WCCP
@@ -2027,9 +2016,6 @@ SquidShutdown()
     redirectShutdown();
     externalAclShutdown();
     icpClosePorts();
-#if SQUID_SNMP
-    snmpClosePorts();
-#endif
     releaseServerSockets();
     commCloseAllSockets();
 

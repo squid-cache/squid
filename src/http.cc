@@ -30,6 +30,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
+#include "HeaderMangling.h"
 #include "http.h"
 #include "http/one/ResponseParser.h"
 #include "http/one/TeChunkedParser.h"
@@ -2373,7 +2374,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
      * not the one we are sending. Needs checking.
      */
     const AnyP::ProtocolVersion httpver = Http::ProtocolVersion();
-    const SBuf url(flags.toOrigin ? request->url.path() : request->effectiveRequestUri());
+    const SBuf url(flags.toOrigin ? request->url.originForm() : request->effectiveRequestUri());
     mb->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\r\n",
                 SQUIDSBUFPRINT(request->method.image()),
                 SQUIDSBUFPRINT(url),
