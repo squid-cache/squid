@@ -150,9 +150,12 @@ rfc1738_unescape(char *s)
         s[i] = s[j];
         if (s[j] != '%') {
             /* normal case, nothing more to do */
+        } else if (!s[j + 1]) {         /* trailing '%' */
+            /* leave '%' as-is; next loop test on s[j+1] will end the loop */
+            continue;
         } else if (s[j + 1] == '%') {   /* %% case */
             j++;        /* Skip % */
-        } else {
+        } else if (s[j + 2]) {          /* need two hex digits */
             /* decode */
             int v1, v2, x;
             v1 = fromhex(s[j + 1]);
@@ -166,6 +169,9 @@ rfc1738_unescape(char *s)
                 s[i] = x;
                 j += 2;
             }
+        } else {
+            /* incomplete escape like "%A\0": leave as-is */
+            continue;
         }
     }
     s[i] = '\0';

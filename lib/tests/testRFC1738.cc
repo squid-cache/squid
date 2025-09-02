@@ -97,6 +97,42 @@ void TestRfc1738::testUrlDecode()
     rfc1738_unescape(unescaped_str);
     CPPUNIT_ASSERT(memcmp(unescaped_str, "Good String \032",14)==0);
     xfree(unescaped_str);
+
+    /* Trailing '%' should remain unchanged */
+    unescaped_str = xstrdup("abc%");
+    rfc1738_unescape(unescaped_str);
+    CPPUNIT_ASSERT(memcmp(unescaped_str, "abc%", 5) == 0);
+    xfree(unescaped_str);
+
+    /* Lone '%' should remain unchanged */
+    unescaped_str = xstrdup("%");
+    rfc1738_unescape(unescaped_str);
+    CPPUNIT_ASSERT(memcmp(unescaped_str, "%", 2) == 0);
+    xfree(unescaped_str);
+
+    /* Incomplete escape at end: "%A" should remain unchanged */
+    unescaped_str = xstrdup("abc%A");
+    rfc1738_unescape(unescaped_str);
+    CPPUNIT_ASSERT(memcmp(unescaped_str, "abc%A", 6) == 0);
+    xfree(unescaped_str);
+
+    /* Lone incomplete escape: "%A" should remain unchanged */
+    unescaped_str = xstrdup("%A");
+    rfc1738_unescape(unescaped_str);
+    CPPUNIT_ASSERT(memcmp(unescaped_str, "%A", 3) == 0);
+    xfree(unescaped_str);
+
+    /* Non-hex after '%' leaves sequence untouched */
+    unescaped_str = xstrdup("foo%G1bar");
+    rfc1738_unescape(unescaped_str);
+    CPPUNIT_ASSERT(memcmp(unescaped_str, "foo%G1bar", 10) == 0);
+    xfree(unescaped_str);
+
+    /* "%%" becomes "%" */
+    unescaped_str = xstrdup("%%");
+    rfc1738_unescape(unescaped_str);
+    CPPUNIT_ASSERT(memcmp(unescaped_str, "%", 2) == 0);
+    xfree(unescaped_str);
 }
 
 /**
