@@ -267,7 +267,7 @@ retrydnattr:
         if (rc == LDAP_SUCCESS) {
             entry = ldap_first_entry(ld, res);
             if (entry) {
-                char *dn = ldap_get_dn(ld, entry);
+                const auto dn = ldap_get_dn(ld, entry);
                 if (!dn) {
                     fprintf(stderr, PROGRAM_NAME ": ERROR, could not get user DN for '%s'\n", login);
                     ldap_msgfree(res);
