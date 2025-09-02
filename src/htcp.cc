@@ -639,7 +639,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     HttpRequestMethod method;
 
     /* Find length of METHOD */
-    uint16_t l = 0;
+    auto l = 0;
     if (!parseUint16(buf, sz, l, "htcpUnpackSpecifier", "METHOD length"))
         return nil;
 
