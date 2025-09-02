@@ -569,7 +569,7 @@ Ftp::Client::handleEpsvReply(Ip::Address &remoteAddr)
     unsigned short port;
     int n = sscanf(buf, "(%c%c%c%hu%c)", &h1, &h2, &h3, &port, &h4);
 
-    if (n < 4 || h1 != h2 || h1 != h3 || h1 != h4) {
+    if (n != 5 || h1 != h2 || h1 != h3 || h1 != h4) {
         debugs(9, DBG_IMPORTANT, "ERROR: Invalid EPSV reply from " <<
                ctrl.conn->remote << ": " <<
                ctrl.last_reply);
