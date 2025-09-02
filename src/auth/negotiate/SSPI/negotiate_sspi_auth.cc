@@ -242,7 +242,8 @@ manage_request()
                                     0,
                                     nullptr);
             if (!n) {
-                SEND("NA * Windows error: %s", GetLastError());
+                SEND2("NA * Windows error: %s", GetLastError());
+                return 1;
             }
             if (ErrorMessage[strlen(ErrorMessage) - 1] == '\n')
                 ErrorMessage[strlen(ErrorMessage) - 1] = '\0';
