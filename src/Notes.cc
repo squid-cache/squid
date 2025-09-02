@@ -277,10 +277,11 @@ Notes::printAsAnnotationAclParameters(std::ostream &os) const
     }
 }
 
-bool
-NotePairs::find(SBuf &resultNote, const char *noteKey, const char *sep) const
+std::optional<SBuf>
+NotePairs::find(const char *noteKey, const char *sep) const
 {
-    resultNote.clear();
+    SBuf resultNote;
+
     for (const auto &e: entries) {
         if (!e->name().cmp(noteKey)) {
             if (!resultNote.isEmpty())
@@ -288,7 +289,11 @@ NotePairs::find(SBuf &resultNote, const char *noteKey, const char *sep) const
             resultNote.append(e->value());
         }
     }
-    return resultNote.length();
+
+    if (resultNote.isEmpty())
+        return std::nullopt;
+
+    return result;
 }
 
 void
