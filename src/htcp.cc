@@ -39,6 +39,7 @@
 #include "StoreClient.h"
 #include "tools.h"
 
+#include <memory>
 typedef struct _Countstr Countstr;
 
 typedef struct _htcpHeader htcpHeader;
@@ -311,6 +312,19 @@ htcpHexdump(const char *tag, const char *s, int sz)
     (void)s;
     (void)sz;
 #endif
+}
+
+static bool
+parseUint16(char *buf, int sz, uint16_t &out, const char *context, const char *field)
+{
+    if (sz < 2) {
+        debugs(31, 3, context << ": too short for " << field);
+        return false;
+    }
+
+    memcpy(&out, buf, 2);
+    out = ntohs(out);
+    return true;
 }
 
 /*
@@ -625,13 +639,9 @@ htcpUnpackSpecifier(char *buf, int sz)
     HttpRequestMethod method;
 
     /* Find length of METHOD */
-    if (sz < 2) {
-        debugs(31, 3, "htcpUnpackSpecifier: too short for METHOD length");
+    uint16_t l = 0;
+    if (!parseUint16(buf, sz, l, "htcpUnpackSpecifier", "METHOD length"))
         return nil;
-    }
-    uint16_t l;
-    memcpy(&l, buf, 2);
-    l = ntohs(l);
 
     sz -= 2;
     buf += 2;
@@ -648,12 +658,9 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: METHOD (" << l << "/" << sz << ") '" << s->method << "'");
 
     /* Find length of URI */
-    if (sz < 2) {
-        debugs(31, 3, "htcpUnpackSpecifier: too short for URI length");
+    if (!parseUint16(buf, sz, l, "htcpUnpackSpecifier", "URI length"))
         return nil;
-    }
-    memcpy(&l, buf, 2);
-    l = ntohs(l);
+
     sz -= 2;
 
     if (l > sz) {
@@ -672,12 +679,9 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: URI (" << l << "/" << sz << ") '" << s->uri << "'");
 
     /* Find length of VERSION */
-    if (sz < 2) {
-        debugs(31, 3, "htcpUnpackSpecifier: too short for VERSION length");
+    if (!parseUint16(buf, sz, l, "htcpUnpackSpecifier", "VERSION length"))
         return nil;
-    }
-    memcpy(&l, buf, 2);
-    l = ntohs(l);
+
     sz -= 2;
 
     if (l > sz) {
@@ -696,12 +700,9 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: VERSION (" << l << "/" << sz << ") '" << s->version << "'");
 
     /* Find length of REQ-HDRS */
-    if (sz < 2) {
-        debugs(31, 3, "htcpUnpackSpecifier: too short for REQ-HDRS length");
+    if (!parseUint16(buf, sz, l, "htcpUnpackSpecifier", "REQ-HDRS length"))
         return nil;
-    }
-    memcpy(&l, buf, 2);
-    l = ntohs(l);
+
     sz -= 2;
 
     if (l > sz) {
@@ -749,23 +750,18 @@ htcpUnpackSpecifier(char *buf, int sz)
 static htcpDetail *
 htcpUnpackDetail(char *buf, int sz)
 {
-    htcpDetail *d = new htcpDetail;
+    std::unique_ptr<htcpDetail> d(new htcpDetail);
 
     /* Find length of RESP-HDRS */
-    if (sz < 2) {
-        debugs(31, 3, "htcpUnpackDetail: too short for RESP-HDRS length");
-        delete d;
+    uint16_t l = 0;
+    if (!parseUint16(buf, sz, l, "htcpUnpackDetail", "RESP-HDRS length"))
         return nullptr;
-    }
-    uint16_t l;
-    memcpy(&l, buf, 2);
-    l = ntohs(l);
+
     sz -= 2;
     buf += 2;
 
     if (l > sz) {
         debugs(31, 3, "htcpUnpackDetail: failed to unpack RESP_HDRS");
-        delete d;
         return nullptr;
     }
 
@@ -776,19 +772,13 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= l;
 
     /* Find length of ENTITY-HDRS */
-    if (sz < 2) {
-        debugs(31, 3, "htcpUnpackDetail: too short for ENTITY-HDRS length");
-        delete d;
+    if (!parseUint16(buf, sz, l, "htcpUnpackDetail", "ENTITY-HDRS length"))
         return nullptr;
-    }
-    memcpy(&l, buf, 2);
-    l = ntohs(l);
 
     sz -= 2;
 
     if (l > sz) {
         debugs(31, 3, "htcpUnpackDetail: failed to unpack ENTITY_HDRS");
-        delete d;
         return nullptr;
     }
 
@@ -804,19 +794,13 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= l;
 
     /* Find length of CACHE-HDRS */
-    if (sz < 2) {
-        debugs(31, 3, "htcpUnpackDetail: too short for CACHE-HDRS length");
-        delete d;
+    if (!parseUint16(buf, sz, l, "htcpUnpackDetail", "CACHE-HDRS length"))
         return nullptr;
-    }
-    memcpy(&l, buf, 2);
-    l = ntohs(l);
 
     sz -= 2;
 
     if (l > sz) {
         debugs(31, 3, "htcpUnpackDetail: failed to unpack CACHE_HDRS");
-        delete d;
         return nullptr;
     }
 
@@ -840,7 +824,7 @@ htcpUnpackDetail(char *buf, int sz)
      */
     *buf = '\0';
 
-    return d;
+    return d.release();
 }
 
 static bool
