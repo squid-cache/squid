@@ -42,7 +42,6 @@
 #include "fs_io.h"
 #include "FwdState.h"
 #include "globals.h"
-#include "htcp.h"
 #include "http/Stream.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
@@ -778,9 +777,6 @@ serverConnectionsOpen(void)
     if (IamWorkerProcess()) {
         clientOpenListenSockets();
         icpOpenPorts();
-#if USE_HTCP
-        htcpOpenPorts();
-#endif
         icmpEngine.Open();
         netdbInit();
         Acl::Node::Initialize();
@@ -796,10 +792,6 @@ serverConnectionsClose(void)
     if (IamWorkerProcess()) {
         clientConnectionsClose();
         icpConnectionShutdown();
-#if USE_HTCP
-        htcpSocketShutdown();
-#endif
-
         icmpEngine.Close();
     }
 }
@@ -818,9 +810,6 @@ mainReconfigureStart(void)
     // Initiate asynchronous closing sequence
     serverConnectionsClose();
     icpClosePorts();
-#if USE_HTCP
-    htcpClosePorts();
-#endif
 #if USE_OPENSSL
     Ssl::TheGlobalContextStorage().reconfigureStart();
 #endif
@@ -1404,7 +1393,9 @@ RegisterModules()
 #if USE_AUTH
     CallRunnerRegistrator(PeerUserHashRr);
 #endif
-
+#if USE_HTCP
+    CallRunnerRegistrator(HtcpRr);
+#endif
 #if USE_OPENSSL
     CallRunnerRegistrator(sslBumpCfgRr);
 #endif
@@ -2025,9 +2016,6 @@ SquidShutdown()
     redirectShutdown();
     externalAclShutdown();
     icpClosePorts();
-#if USE_HTCP
-    htcpClosePorts();
-#endif
     releaseServerSockets();
     commCloseAllSockets();
 
