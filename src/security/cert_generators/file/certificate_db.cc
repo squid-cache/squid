@@ -59,13 +59,20 @@ void Ssl::Lock::lock()
         throw TextException(ToSBuf("Failed to open file ", filename), Here());
 
 #if _SQUID_WINDOWS_
-    if (!LockFile(hFile, 0, 0, 1, 0))
+    if (!LockFile(hFile, 0, 0, 1, 0)) {
+        CloseHandle(hFile);
+        hFile = INVALID_HANDLE_VALUE;
 #elif _SQUID_SOLARIS_
-    if (lockf(fd, F_LOCK, 0) != 0)
+    if (lockf(fd, F_LOCK, 0) != 0) {
+        xclose(fd);
+        fd = -1;
 #else
-    if (flock(fd, LOCK_EX) != 0)
+    if (flock(fd, LOCK_EX) != 0) {
+        xclose(fd);
+        fd = -1;
 #endif
         throw TextException(ToSBuf("Failed to get a lock of ", filename), Here());
+    }
 }
 
 void Ssl::Lock::unlock()
@@ -159,7 +166,7 @@ void Ssl::CertificateDb::Row::setValue(size_t cell, char const * value)
 {
     assert(cell < width);
     if (row[cell]) {
-        free(row[cell]);
+        OPENSSL_free(row[cell]);
     }
     if (value) {
         row[cell] = static_cast<char *>(OPENSSL_malloc(sizeof(char) * (strlen(value) + 1)));
