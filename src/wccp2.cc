@@ -2270,7 +2270,7 @@ parse_wccp2_service_flags(char *flags)
     char *flag = flags;
     int retflag = 0;
 
-    while (size_t len = strcspn(flag, ",")) {
+    while (const auto len = strcspn(flag, ",")) {
 
         if (strncmp(flag, "src_ip_hash", len) == 0) {
             retflag |= WCCP2_SERVICE_SRC_IP_HASH;
@@ -2315,7 +2315,7 @@ parse_wccp2_service_ports(char *options, int portlist[])
     char *tmp = options;
     static char copy[10];
 
-    while (size_t len = strcspn(tmp, ",")) {
+    while (const auto len = strcspn(tmp, ",")) {
         if (i >= WCCP2_NUMPORTS) {
             fatalf("parse_wccp2_service_ports: too many ports (maximum: 8) in list '%s'\n", options);
         }
