@@ -128,7 +128,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
             fprintf(stdout, "BH input error\n");
             return 0;
         }
-        c = static_cast<char*>(memchr(buf, '\n', sizeof(buf) - 1));
+        c = strchr(buf, '\n');
         if (c) {
             *c = '\0';
             length = c - buf;
@@ -221,7 +221,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
                 return 0;
             }
 
-            if (!memchr(tbuff, '\n', sizeof(tbuff) - 1)) {
+            if (!strchr(tbuff, '\n')) {
                 fprintf(stderr, "%s| %s: Oversized NTLM helper response\n",
                         LogTime(), PROGRAM);
                 return 0;
@@ -260,7 +260,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
                 return 0;
             }
 
-            if (!memchr(buff, '\n', sizeof(buff) - 1)) {
+            if (!strchr(buff, '\n')) {
                 fprintf(stderr, "%s| %s: Oversized Kerberos helper response\n",
                         LogTime(), PROGRAM);
                 return 0;
