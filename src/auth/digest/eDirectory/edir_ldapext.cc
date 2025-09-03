@@ -352,6 +352,7 @@ static int getLoginConfig(
 /**********************************************************************
  Attempts to get the Simple Password
 **********************************************************************/
+#define SMB_MALLOC_ARRAY(type, nelem)       calloc(nelem, sizeof(type))
 
 static int nmasldap_get_simple_pwd(
     LDAP     *ld,
@@ -375,8 +376,6 @@ static int nmasldap_get_simple_pwd(
     err = getLoginConfig(ld, objectDN, methodIDLen, &methodID, tag, &pwdBufLen, pwdBuf);
     if (err == 0) {
         if (pwdBufLen !=0) {
-            pwdBuf[pwdBufLen] = 0;       /* null terminate */
-
             switch (pwdBuf[0]) {
             case 1:  /* cleartext password  */
                 break;
@@ -388,10 +387,10 @@ static int nmasldap_get_simple_pwd(
                 err = LDAP_INAPPROPRIATE_AUTH;  /* only return clear text */
                 break;
             }
-
             if (!err) {
-                if (pwdLen >= pwdBufLen-1) {
+                if (pwdLen >= pwdBufLen) {
                     memcpy(pwd, &pwdBuf[1], pwdBufLen-1);  /* skip digest tag and include null */
+                    pwd[pwdBufLen - 1] = '\0';
                 } else {
                     err = LDAP_NO_MEMORY;
                 }
