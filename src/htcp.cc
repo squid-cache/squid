@@ -1239,7 +1239,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 {
     /* buf[0/1] is reserved and reason */
     if (sz < 2) {
-        debugs(31, 4, "htcpHandleClr: too short for reason field (sz=" << sz << ")");
+        debugs(31, 4, "too short for reason field (sz=" << sz << ")");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str, nullptr);
         return;
     }
