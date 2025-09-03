@@ -208,18 +208,17 @@ match_group(char *dict_group, char *username)
                    so we rip it off by incrementing
                    * the pointer by one */
 
-    if ((g = getgrnam(dict_group)) == nullptr) {
-        debug("Group does not exist '%s'\n", dict_group);
+    struct group *g = getgrnam(dict_group);
+    if (!g || !g->gr_mem) {
+        debug("Group does not exist or has no members '%s'\n", dict_group);
         return 0;
-    } else {
-        while (*(g->gr_mem) != nullptr) {
-            if (strcmp(*((g->gr_mem)++), username) == 0) {
-                return 1;
-            }
-        }
+    }
+
+    for (char **m = g->gr_mem; *m; ++m) {
+        if (strcmp(*m, username) == 0)
+            return 1;
     }
     return 0;
-
 }
 
 static void
