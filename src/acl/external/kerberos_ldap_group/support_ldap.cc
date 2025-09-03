@@ -615,10 +615,9 @@ ldap_set_ssl_defaults(struct main_args *margs)
      * rc = ldapssl_client_init( ssl_certdbpath, nullptr);
      * rc = ldapssl_advclientauth_init( ssl_certdbpath, nullptr, 0 , nullptr, nullptr, 0, nullptr, 2);
      */
-    ssl_certdbpath = getenv("SSL_CERTDBPATH");
-    if (!ssl_certdbpath) {
-        ssl_certdbpath = xstrdup("/etc/certs");
-    }
+    const auto envp = getenv("SSL_CERTDBPATH");
+    ssl_certdbpath = xstrdup(envp ? envp : "/etc/certs");
+
     debug((char *)
           "%s| %s: DEBUG: Set certificate database path for ldap server to %s. (Changeable through setting environment variable SSL_CERTDBPATH)\n",
           LogTime(), PROGRAM, ssl_certdbpath);
