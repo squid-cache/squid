@@ -106,12 +106,12 @@ Auth::User::absorb(Auth::User::Pointer from)
             }
 
             if (!found) {
-                /* This ip is not in the seen list. Add it. */
-                dlinkAddTail(&new_ipdata->node, &ipdata->node, &ip_list);
-                ++ipcount;
                 /* remove from the source list */
                 dlinkDelete(&new_ipdata->node, &(from->ip_list));
-                ++from->ipcount;
+                -- from->ipcount;
+                /* This ip is not in the seen list. Add it. */
+                dlinkAddTail(new_ipdata, &new_ipdata->node, &ip_list);
+                ++ipcount;
             }
         }
     }
