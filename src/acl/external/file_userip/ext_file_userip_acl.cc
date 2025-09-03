@@ -61,6 +61,16 @@ int dict_lookup(struct ip_user_dict *, char *, char *);
 /** Size of lines read from the dictionary file */
 #define DICT_BUFFER_SIZE    8196
 
+static void
+free_dict(struct ip_user_dict *head){
+    while (head) {
+        struct ip_user_dict *next = head->next_entry;
+        free(head->username);
+        free(head);
+        head = next;
+    }
+}
+
 /** This function parses the dictionary file and loads it
  * in memory. All IP addresses are processed with a bitwise AND
  * with their netmasks before they are stored.
@@ -289,6 +299,7 @@ main (int argc, char *argv[])
     }
 
     fclose (FH);
+    free_dict(current_entry);
     return EXIT_SUCCESS;
 }
 
