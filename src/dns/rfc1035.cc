@@ -616,6 +616,7 @@ rfc1035MessageUnpack(const char *buf,
         if (rfc1035QueryUnpack(buf, sz, &off, &querys[j])) {
             RFC1035_UNPACK_DEBUG;
             rfc1035MessageDestroy(&msg);
+            *answer = nullptr;
             return -rfc1035_unpack_error;
         }
     }
