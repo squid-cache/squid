@@ -110,7 +110,6 @@ static int berEncodePasswordData(
     /* Allocate a BerElement for the request parameters. */
     if ((requestBer = ber_alloc()) == nullptr) {
         err = LDAP_ENCODING_ERROR;
-        ber_free(requestBer, 1);
         return err;
     }
 
