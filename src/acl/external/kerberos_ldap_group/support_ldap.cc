@@ -298,7 +298,7 @@ escape_filter(char *filter)
 int
 check_AD(struct main_args *margs, LDAP * ld)
 {
-    LDAPMessage *res;
+    LDAPMessage *res = nullptr;
     char **attr_value = nullptr;
     struct timeval searchtime;
     size_t max_attr = 0;
@@ -322,6 +322,7 @@ check_AD(struct main_args *margs, LDAP * ld)
 
     if (max_attr == 1) {
         ldap_msgfree(res);
+        res = nullptr;
         debug((char *)
               "%s| %s: DEBUG: Search ldap server with bind path %s and filter: %s\n",
               LogTime(), PROGRAM, attr_value[0], FILTER_SAM);
@@ -350,6 +351,7 @@ check_AD(struct main_args *margs, LDAP * ld)
         safe_free(attr_value);
     }
     ldap_msgfree(res);
+    res = nullptr
     return rc;
 }
 
