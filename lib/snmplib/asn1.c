@@ -676,10 +676,13 @@ asn_parse_objid(u_char * data, int *datalength,
         subidentifier = 0;
 
         do {            /* shift and add in low order 7 bits */
+            if (length-- <= 0) {
+                snmp_set_api_error(SNMPERR_ASN_DECODE);
+                return (NULL);
+            }
             subidentifier = (subidentifier << 7)
-                            + (*(u_char *) bufp & ~ASN_BIT8);
-            length--;
-        } while (*(u_char *) bufp++ & ASN_BIT8);
+                            | (*bufp & ~ASN_BIT8);
+        } while (*bufp++ & ASN_BIT8);
 
         /* while last byte has high bit clear */
         if (subidentifier > (u_int) MAX_SUBID) {
