@@ -53,13 +53,11 @@ extern int
 check_k5_err(krb5_context context, const char *function, krb5_error_code code);
 
 void
-align(int n)
+align(auto n)
 {
-    if ( bpos % n != 0 ) {
-        int al;
-        al = (bpos/n);
-        bpos = bpos+(bpos-n*al);
-    }
+    auto r = bpos % n;
+    if (r)
+        bpos += (n - r);
 }
 
 void
