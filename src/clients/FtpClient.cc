@@ -1113,6 +1113,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
     wordlist *head = nullptr;
     wordlist *list;
     wordlist **tail = &head;
+    size_t linelen;
     debugs(9, 3, status());
     /*
      * We need a NULL-terminated buffer for scanning, ick
@@ -1146,7 +1147,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
 
         debugs(9, 5, "s = {" << s << "}");
 
-        const auto linelen = strcspn(s, crlf) + 1;
+        linelen = strcspn(s, crlf) + 1;
 
         if (linelen < 2)
             break;

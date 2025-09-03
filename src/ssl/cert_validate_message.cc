@@ -118,7 +118,7 @@ Ssl::CertValidationMsg::tryParsingResponse(CertValidationResponse &resp)
         if (! *param)
             break;
 
-        const auto param_len = strcspn(param, "=\r\n");
+        size_t param_len = strcspn(param, "=\r\n");
         if (param[param_len] !=  '=') {
             throw TextException(ToSBuf("Missing parameter value: ", param), Here());
         }

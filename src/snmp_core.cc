@@ -948,7 +948,7 @@ snmpCreateOidFromStr(const char *str, oid **name, int *nl)
     const char *s = str;
 
     /* Parse the OID string into oid bits */
-    while (const auto len = strcspn(s, delim)) {
+    while (size_t len = strcspn(s, delim)) {
         *name = (oid*)xrealloc(*name, sizeof(oid) * ((*nl) + 1));
         (*name)[*nl] = atoi(s); // stops at the '.' delimiter
         ++(*nl);
