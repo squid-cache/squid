@@ -168,8 +168,10 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     entry->lock("UrnState::start");
     setUriResFromRequest(r);
 
-    if (urlres_r == nullptr)
+    if (urlres_r == nullptr) {
+        delete this;
         return;
+    }
 
     auto urlEntry = storeGetPublic(urlres, Http::METHOD_GET);
 
