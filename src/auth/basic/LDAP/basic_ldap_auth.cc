@@ -603,7 +603,7 @@ recover:
         if (ld == nullptr && persistent)
             ld = open_ldap_connection(ldapServer, port);
         if (checkLDAP(ld, user, passwd, ldapServer, port) != 0) {
-            const auto e = squid_ldap_errno(ld);
+            const auto e = ld ? squid_ldap_errno(ld) : LDAP_OTHER;
             if (tryagain && e != LDAP_INVALID_CREDENTIALS) {
                 tryagain = 0;
                 ldap_unbind(ld);
@@ -782,12 +782,12 @@ readSecret(const char *filename)
 
     if (!(f = fopen(filename, "r"))) {
         fprintf(stderr, PROGRAM_NAME " ERROR: Can not read secret file %s\n", filename);
-        return 1;
+        exit(EXIT_FAILURE);
     }
     if (!fgets(buf, sizeof(buf) - 1, f)) {
         fprintf(stderr, PROGRAM_NAME " ERROR: Secret file %s is empty\n", filename);
         fclose(f);
-        return 1;
+        exit(EXIT_FAILURE);
     }
     /* strip whitespaces on end */
     if ((e = strrchr(buf, '\n')))
