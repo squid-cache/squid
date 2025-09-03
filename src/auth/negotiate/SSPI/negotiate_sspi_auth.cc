@@ -148,7 +148,7 @@ manage_request()
     BOOL Done = FALSE;
 
     do {
-        if (fgets(buf, HELPER_INPUT_BUFFER, stdin))
+        if (!fgets(buf, HELPER_INPUT_BUFFER, stdin))
             return 0;
 
         c = static_cast<char*>(memchr(buf, '\n', HELPER_INPUT_BUFFER));
