@@ -354,7 +354,7 @@ rfc1035RRPack(char *buf, const size_t sz, const rfc1035_rr * RR)
     s = htons(RR->rdlength);
     memcpy(buf + off, &s, sizeof(s));
     off += sizeof(s);
-    memcpy(buf + off, &(RR->rdata), RR->rdlength);
+    memcpy(buf + off, RR->rdata, RR->rdlength);
     off += RR->rdlength;
     assert(off <= sz);
     return off;
