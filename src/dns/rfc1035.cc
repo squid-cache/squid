@@ -354,7 +354,7 @@ rfc1035RRPack(char *buf, const size_t sz, const rfc1035_rr * RR)
     s = htons(RR->rdlength);
     memcpy(buf + off, &s, sizeof(s));
     off += sizeof(s);
-    memcpy(buf + off, &(RR->rdata), RR->rdlength);
+    memcpy(buf + off, RR->rdata, RR->rdlength);
     off += RR->rdlength;
     assert(off <= sz);
     return off;
@@ -522,11 +522,11 @@ rfc1035QueryUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_query 
         memset(query, '\0', sizeof(*query));
         return 1;
     }
-    memcpy(&s, buf + *off, 2);
-    *off += 2;
+    memcpy(&s, buf + *off, sizeof(s));
+    *off += sizeof(s);
     query->qtype = ntohs(s);
-    memcpy(&s, buf + *off, 2);
-    *off += 2;
+    memcpy(&s, buf + *off, sizeof(s));
+    *off += sizeof(s);
     query->qclass = ntohs(s);
     return 0;
 }
