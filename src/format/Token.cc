@@ -183,10 +183,12 @@ static TokenTableEntry TokenTableMisc[] = {
 
 static TokenTableEntry TokenTableProxyProtocol[] = {
     TokenTableEntry(">h", LFT_PROXY_PROTOCOL_RECEIVED_HEADER),
+    TokenTableEntry(nullptr, LFT_NONE)           /* this must be last */
 };
 
 static TokenTableEntry TokenTableTransport[] = {
     TokenTableEntry(">connection_id", LFT_TRANSPORT_CLIENT_CONNECTION_ID),
+    TokenTableEntry(nullptr, LFT_NONE)           /* this must be last */
 };
 
 #if USE_ADAPTATION
