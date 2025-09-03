@@ -320,10 +320,10 @@ static char *
 GetDomainName(void)
 {
     static char *DomainName = nullptr;
-    PDSROLE_PRIMARY_DOMAIN_INFO_BASIC pDSRoleInfo;
+    PDSROLE_PRIMARY_DOMAIN_INFO_BASIC pDSRoleInfo = nullptr;
     DWORD netret;
 
-    if ((netret = DsRoleGetPrimaryDomainInformation(nullptr, DsRolePrimaryDomainInfoBasic, (PBYTE *) & pDSRoleInfo) == ERROR_SUCCESS)) {
+    if ((netret = DsRoleGetPrimaryDomainInformation(nullptr, DsRolePrimaryDomainInfoBasic, (PBYTE *) & pDSRoleInfo)) == ERROR_SUCCESS) {
         /*
          * Check the machine role.
          */
