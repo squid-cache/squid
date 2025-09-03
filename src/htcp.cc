@@ -315,10 +315,10 @@ htcpHexdump(const char *tag, const char *s, int sz)
 }
 
 static bool
-parseUint16(char *buf, int sz, uint16_t &out, const char *context, const char *field)
+parseUint16(char *buf, int sz, uint16_t &out, const char *field)
 {
     if (sz < 2) {
-        debugs(31, 3, context << ": too short for " << field);
+        debugs(31, 3, "too short for " << field);
         return false;
     }
 
@@ -639,7 +639,7 @@ htcpUnpackSpecifier(char *buf, int sz)
 
     /* Find length of METHOD */
     auto l = 0;
-    if (!parseUint16(buf, sz, l, "htcpUnpackSpecifier", "METHOD length"))
+    if (!parseUint16(buf, sz, l, "METHOD length"))
         return nil;
 
     sz -= 2;
@@ -657,7 +657,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: METHOD (" << l << "/" << sz << ") '" << s->method << "'");
 
     /* Find length of URI */
-    if (!parseUint16(buf, sz, l, "htcpUnpackSpecifier", "URI length"))
+    if (!parseUint16(buf, sz, l, "URI length"))
         return nil;
 
     sz -= 2;
@@ -678,7 +678,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: URI (" << l << "/" << sz << ") '" << s->uri << "'");
 
     /* Find length of VERSION */
-    if (!parseUint16(buf, sz, l, "htcpUnpackSpecifier", "VERSION length"))
+    if (!parseUint16(buf, sz, l, "VERSION length"))
         return nil;
 
     sz -= 2;
@@ -699,7 +699,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: VERSION (" << l << "/" << sz << ") '" << s->version << "'");
 
     /* Find length of REQ-HDRS */
-    if (!parseUint16(buf, sz, l, "htcpUnpackSpecifier", "REQ-HDRS length"))
+    if (!parseUint16(buf, sz, l, "REQ-HDRS length"))
         return nil;
 
     sz -= 2;
@@ -753,7 +753,7 @@ htcpUnpackDetail(char *buf, int sz)
 
     /* Find length of RESP-HDRS */
     uint16_t l = 0;
-    if (!parseUint16(buf, sz, l, "htcpUnpackDetail", "RESP-HDRS length"))
+    if (!parseUint16(buf, sz, l, "RESP-HDRS length"))
         return nullptr;
 
     sz -= 2;
@@ -771,7 +771,7 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= l;
 
     /* Find length of ENTITY-HDRS */
-    if (!parseUint16(buf, sz, l, "htcpUnpackDetail", "ENTITY-HDRS length"))
+    if (!parseUint16(buf, sz, l, "ENTITY-HDRS length"))
         return nullptr;
 
     sz -= 2;
@@ -793,7 +793,7 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= l;
 
     /* Find length of CACHE-HDRS */
-    if (!parseUint16(buf, sz, l, "htcpUnpackDetail", "CACHE-HDRS length"))
+    if (!parseUint16(buf, sz, l, "CACHE-HDRS length"))
         return nullptr;
 
     sz -= 2;
