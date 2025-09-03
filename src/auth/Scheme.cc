@@ -61,10 +61,15 @@ Auth::Scheme::FreeAll()
 {
     assert(shutting_down);
 
+    if (!_Schemes)
+        return;
+
     while (GetSchemes().size()) {
         Auth::Scheme::Pointer scheme = GetSchemes().back();
         GetSchemes().pop_back();
         scheme->shutdownCleanup();
     }
+    delete _Schemes;
+    _Schemes = nullptr;
 }
 
