@@ -1421,8 +1421,7 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
 
     // DATA length must include at least the data header itself
     if (hdr.length < sizeof(htcpDataHeader)) {
-        debugs(31, 3, "htcpHandleData: invalid hdr.length " << hdr.length
-               << " (< " << sizeof(htcpDataHeader) << ")");
+        debugs(31, 3, "invalid hdr.length " << hdr.length << " (< " << sizeof(htcpDataHeader) << ")");
         return;
     }
 
