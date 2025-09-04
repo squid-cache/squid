@@ -327,7 +327,7 @@ manage_request()
 
     /* NP: for some reason this helper sometimes needs to accept
      * from clients that send no negotiate packet. */
-    if (memcpy(local_nego.hdr.signature, "NTLMSSP", 8) != 0) {
+    if (memcmp(local_nego.hdr.signature, "NTLMSSP", 8) != 0) {
         memset(&local_nego, 0, sizeof(ntlm_negotiate)); /* reset */
         memcpy(local_nego.hdr.signature, "NTLMSSP", 8);     /* set the signature */
         local_nego.hdr.type = le32toh(NTLM_NEGOTIATE);      /* this is a challenge */
