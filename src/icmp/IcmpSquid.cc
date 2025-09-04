@@ -154,29 +154,29 @@ IcmpSquid::Recv()
         return;
     }
 
-    const auto base = sizeof(preply) - sizeof(preply.payload);
-    if (n < (int)base) {
-        debugs(37, DBG_IMPORTANT, "short reply header (" << n << " < " << base << "); dropping");
+    const auto base = static_cast<int>(sizeof(preply) - sizeof(preply.payload));
+    if (n < base) {
+        debugs(37, 2, "short reply header (" << n << " < " << base << "); dropping");
         return;
     }
     const auto avail = n - base;
-    if (avail > sizeof(preply.payload)) {
-        debugs(37, DBG_IMPORTANT, "oversized reply payload (" << avail << "); dropping");
+    if (avail > static_cast<int>(sizeof(preply.payload))) {
+        debugs(37, 2, "oversized reply payload (" << avail << "); dropping");
         return;
     }
     if (preply.psize < 0) {
-        debugs(37, DBG_IMPORTANT, "negative psize (" << preply.psize << "); dropping");
+        debugs(37, 2, "negative psize (" << preply.psize << "); dropping");
         return;
     }
-    if (preply.psize > (int)avail) {
-        debugs(37, DBG_IMPORTANT, "truncated reply (psize=" << preply.psize << ", avail=" << avail << "); dropping");
+    if (preply.psize > avail) {
+        debugs(37, 2, "truncated reply (psize=" << preply.psize << ", avail=" << avail << "); dropping");
         return;
     }
     // Accept variable-length replies: base header + psize bytes.
     // We already validated 'n >= base' and 'preply.psize <= avail'.
     // If the datagram was truncated in transit, drop it.
-    if (n < (int)(base + preply.psize)) {
-        debugs(37, DBG_IMPORTANT, "truncated reply datagram; dropping");
+    if (n < (base + preply.psize)) {
+        debugs(37, 2, "truncated reply datagram; dropping");
         return;
     }
 
