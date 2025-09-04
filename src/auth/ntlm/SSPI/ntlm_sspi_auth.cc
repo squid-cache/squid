@@ -175,10 +175,10 @@ ntlm_check_auth(ntlm_authenticate * auth, char *user, char *domain, int auth_len
 {
     char credentials[DNLEN+UNLEN+2];    /* we can afford to waste */
 
+    user[0] = '\0';
+    domain[0] = '\0';
     if (!NTLM_LocalCall) {
 
-        user[0] = '\0';
-        domain[0] = '\0';
         const auto x = ntlm_unpack_auth(auth, user, domain, auth_length);
 
         if (x != NtlmError::None)
