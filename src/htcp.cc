@@ -753,7 +753,7 @@ htcpUnpackDetail(char *buf, int sz)
     std::unique_ptr<htcpDetail> d(new htcpDetail);
 
     /* Find length of RESP-HDRS */
-    uint16_t l = 0;
+    auto l = 0;
     if (!parseUint16(buf, sz, l, "RESP-HDRS length"))
         return nullptr;
 
