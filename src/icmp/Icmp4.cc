@@ -230,7 +230,7 @@ Icmp4::Recv(void)
 #endif
 #endif /* HAVE_STRUCT_IPHDR_IP_HL */
 
-    if (iphdrlen < 20 || iphdrlen > n) {
+    if (iphdrlen < 20 || n < iphdrlen) {
         debugs(42, DBG_IMPORTANT, "Bogus IP header length " << iphdrlen << " in " << n << "-byte packet.");
         Ip::Address::FreeAddr(from);
         return;
