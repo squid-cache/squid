@@ -25,7 +25,7 @@ public:
     void parse() override;
     bool empty() const override;
 
-    Splay<char *> *domains;
+    Splay<char *> *domains = nullptr;
 };
 
 #endif /* SQUID_SRC_ACL_DOMAINDATA_H */

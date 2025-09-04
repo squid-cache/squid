@@ -63,8 +63,8 @@ aclHostDomainCompare( char *const &a, char * const &b)
 bool
 ACLDomainData::match(char const *host)
 {
-    if (host == nullptr)
-        return 0;
+    if (!host || !domains)
+        return false;
 
     debugs(28, 3, "aclMatchDomainList: checking '" << host << "'");
 
@@ -86,6 +86,9 @@ struct AclDomainDataDumpVisitor {
 SBufList
 ACLDomainData::dump() const
 {
+    if (!domains)
+        return {};
+
     AclDomainDataDumpVisitor visitor;
     domains->visit(visitor);
     return visitor.contents;
@@ -170,6 +173,6 @@ ACLDomainData::parse()
 bool
 ACLDomainData::empty() const
 {
-    return domains->empty();
+    return !domains || domains->empty();
 }
 
