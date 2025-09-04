@@ -208,7 +208,7 @@ Icmp4::Recv(void)
     debugs(42, 8, n << " bytes from " << preply.from);
 
     ip = (struct iphdr *) (void *) pkt;
-    if (n < (int)sizeof(*ip)) {
+    if (n < static_cast<int>(sizeof(*ip))) {
         debugs(42, DBG_IMPORTANT, "Short packet: only " << n << " bytes (no IP header).");
         Ip::Address::FreeAddr(from);
         return;
