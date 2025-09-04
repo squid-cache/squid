@@ -88,8 +88,8 @@ parseEPSV(Parser::Tokenizer &tz, const SBuf &tuple, uint16_t &outPort)
 
         // same delimiter three times
         if (!tz.skip(static_cast<char>(delim)) ||
-            !tz.skip(static_cast<char>(delim)) ||
-            !tz.skip(static_cast<char>(delim)))
+                !tz.skip(static_cast<char>(delim)) ||
+                !tz.skip(static_cast<char>(delim)))
             throw TextException("EPSV tuple missing repeated delimiters", Here());
 
         // 1..5 decimal digits (port)
