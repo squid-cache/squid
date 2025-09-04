@@ -237,7 +237,7 @@ Icmp4::Recv(void)
     }
     icmp = (struct icmphdr *) (void *) (pkt + iphdrlen);
     const int icmpAvail = n - iphdrlen;
-    if (icmpAvail < (int)sizeof(*icmp)) {
+    if (icmpAvail < static_cast<int>(sizeof(*icmp))) {
         debugs(42, DBG_IMPORTANT, "Short ICMP header: only " << icmpAvail << " bytes available.");
         Ip::Address::FreeAddr(from);
         return;
