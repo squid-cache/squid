@@ -56,6 +56,7 @@ my_free(void *p)
     user_data *u = static_cast<user_data*>(p);
     xfree(u->hash.key);
     xfree(u->passwd);
+    xfree(u->ha1);
     xfree(u);
 }
 
@@ -71,6 +72,8 @@ read_passwd_file(const char *passwordFile, int isHa1Mode)
 
     if (hash != nullptr) {
         hashFreeItems(hash, my_free);
+        hashFreeMemory(hash);
+        hash = nullptr;
     }
     /* initial setup */
     hash = hash_create((HASHCMP *) strcmp, 7921, hash_string);
@@ -86,6 +89,7 @@ read_passwd_file(const char *passwordFile, int isHa1Mode)
     }
     unsigned int lineCount = 0;
     while (fgets(buf, sizeof(buf), f) != nullptr) {
+        ha1 = nullptr;
         ++lineCount;
         if ((buf[0] == '#') || (buf[0] == ' ') || (buf[0] == '\t') ||
                 (buf[0] == '\n'))
