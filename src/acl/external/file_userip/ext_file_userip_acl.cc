@@ -138,7 +138,7 @@ load_dict(FILE * FH) {
 
             /* get space and point current_entry to the new entry */
             current_entry->next_entry =
-                static_cast<struct ip_user_dict*>(calloc(1, sizeof(struct ip_user_dict)));
+                static_cast<struct ip_user_dict*>(xcalloc(1, sizeof(struct ip_user_dict)));
             current_entry = current_entry->next_entry;
         }
 
