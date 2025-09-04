@@ -498,7 +498,7 @@ manage_request()
             /* let's lowercase them for our convenience */
             lc(domain);
             lc(user);
-            fprintf(stdout, "OK user=\"%s\\%s\"", domain, user);
+            fprintf(stdout, "OK user=\"%s\\%s\"\n", domain, user);
             return 1;
         }
         default:
