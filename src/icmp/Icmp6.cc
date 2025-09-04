@@ -325,7 +325,7 @@ Icmp6::Recv(void)
      */
     preply.hops = 1;
 
-    int payload_len = n - sizeof(struct icmp6_hdr) - meta;
+    auto payload_len = n - meta;
     assert(payload_len >= 0);
     if (payload_len > MAX_PAYLOAD)
         payload_len = MAX_PAYLOAD;
