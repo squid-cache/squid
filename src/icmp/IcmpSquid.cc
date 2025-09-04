@@ -73,8 +73,7 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     // TODO: This should perhapse be reduced to a truncated payload? or no payload.
     if (len > PINGER_PAYLOAD_SZ) {
-        debugs(37, DBG_IMPORTANT, "payload too large (" << len
-               << ")");
+        debugs(37, DBG_IMPORTANT, "payload too large. (" << len << " bytes)");
         return;
     }
 
