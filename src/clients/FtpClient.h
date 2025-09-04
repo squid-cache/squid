@@ -11,8 +11,12 @@
 #ifndef SQUID_SRC_CLIENTS_FTPCLIENT_H
 #define SQUID_SRC_CLIENTS_FTPCLIENT_H
 
+#include "base/TextException.h"
+#include "base/CharacterSet.h"
 #include "clients/Client.h"
 #include "error/Detail.h"
+#include "parser/BinaryTokenizer.h"
+#include "parser/Tokenizer.h"
 
 class String;
 namespace Ftp
