@@ -53,7 +53,7 @@ extern int
 check_k5_err(krb5_context context, const char *function, krb5_error_code code);
 
 void
-align(auto n)
+align(int n)
 {
     auto r = bpos % n;
     if (r)
