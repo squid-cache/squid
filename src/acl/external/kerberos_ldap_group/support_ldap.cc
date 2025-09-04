@@ -351,7 +351,7 @@ check_AD(struct main_args *margs, LDAP * ld)
         safe_free(attr_value);
     }
     ldap_msgfree(res);
-    res = nullptr
+    res = nullptr;
     return rc;
 }
 
