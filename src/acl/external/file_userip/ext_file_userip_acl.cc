@@ -90,7 +90,7 @@ load_dict(FILE * FH) {
                    bitwise AND */
 
     /* the pointer to the first entry in the linked list */
-    first_entry = static_cast<struct ip_user_dict*>(xmalloc(sizeof(struct ip_user_dict)));
+    first_entry = static_cast<struct ip_user_dict*>(calloc(1, sizeof(struct ip_user_dict)));
     current_entry = first_entry;
 
     unsigned int lineCount = 0;
@@ -138,14 +138,10 @@ load_dict(FILE * FH) {
 
             /* get space and point current_entry to the new entry */
             current_entry->next_entry =
-                static_cast<struct ip_user_dict*>(xmalloc(sizeof(struct ip_user_dict)));
+                static_cast<struct ip_user_dict*>(calloc(1, sizeof(struct ip_user_dict)));
             current_entry = current_entry->next_entry;
         }
 
-    }
-
-    if (current_entry) {
-        memset(current_entry, 0, sizeof *current_entry);
     }
 
     /* Return a pointer to the first entry linked list */
