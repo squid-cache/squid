@@ -103,7 +103,6 @@ parseEPSV(const char* s, uint16_t& out_port)
     return true;
 }
 
-
 /* Ftp::ErrorDetail */
 
 SBuf
@@ -599,7 +598,6 @@ Ftp::Client::handleEpsvReply(Ip::Address &remoteAddr)
     debugs(9, 5, "scanning: " << ctrl.last_reply);
 
     buf = ctrl.last_reply + strcspn(ctrl.last_reply, "(");
-
 
     uint16_t port;
     if (!parseEPSV(buf, port)) {
