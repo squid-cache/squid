@@ -375,7 +375,7 @@ static int nmasldap_get_simple_pwd(
 
     err = getLoginConfig(ld, objectDN, methodIDLen, &methodID, tag, &pwdBufLen, pwdBuf);
     if (err == 0) {
-        if (pwdBufLen !=0) {
+        if (pwdBufLen > 1) {
             switch (pwdBuf[0]) {
             case 1:  /* cleartext password  */
                 break;
@@ -462,6 +462,8 @@ static int nmasldap_get_password(
             if (*pwdSize >= pwdBufLen+1 && pwd != nullptr) {
                 memcpy(pwd, pwdBuf, pwdBufLen);
                 pwd[pwdBufLen] = 0; /* add null termination */
+            } else {
+                err = LDAP_OPERATIONS_ERROR;
             }
             *pwdSize = pwdBufLen; /* does not include null termination */
         }
