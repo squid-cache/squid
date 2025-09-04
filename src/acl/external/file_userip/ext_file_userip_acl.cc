@@ -62,7 +62,7 @@ int dict_lookup(struct ip_user_dict *, char *, char *);
 #define DICT_BUFFER_SIZE    8196
 
 static void
-free_dict(struct ip_user_dict *head){
+free_dict(struct ip_user_dict *head) {
     while (head) {
         struct ip_user_dict *next = head->next_entry;
         free(head->username);
