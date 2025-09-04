@@ -266,13 +266,14 @@ retrydnattr:
 
                     /* allocate some memory for the universal password returned by NMAS */
                     universal_password = (char*)calloc(1, universal_password_len);
-                    values = (char**)calloc(1, sizeof(char *));
+                    values = (char**)calloc(2, sizeof(char *));
 
                     /* actually talk to NMAS to get a password */
                     nmas_res = nds_get_password(ld, ldap_get_dn(ld, entry), &universal_password_len, universal_password);
                     if (nmas_res == LDAP_SUCCESS && universal_password) {
                         debug("NMAS returned value %s\n", universal_password);
                         values[0] = universal_password;
+                        values[1] = nullptr;
                     } else {
                         debug("Error reading Universal Password: %d = %s\n", nmas_res, ldap_err2string(nmas_res));
                     }
