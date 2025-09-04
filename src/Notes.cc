@@ -293,7 +293,7 @@ NotePairs::find(const char *noteKey, const char *sep) const
     if (resultNote.isEmpty())
         return std::nullopt;
 
-    return result;
+    return resultNote;
 }
 
 void
