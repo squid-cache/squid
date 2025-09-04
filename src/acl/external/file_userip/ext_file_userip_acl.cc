@@ -210,7 +210,7 @@ match_group(char *dict_group, char *username)
         return 0;
     }
 
-    for (char **m = g->gr_mem; *m; ++m) {
+    for (char * const *m = g->gr_mem; *m; ++m) {
         if (strcmp(*m, username) == 0)
             return 1;
     }
