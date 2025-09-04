@@ -322,7 +322,8 @@ parseUint16(char *buf, int sz, uint16_t &out, const char *field)
         return false;
     }
 
-    out = ntohs(*(uint16_t *) buf);
+    memcpy(&out, buf, 2);
+    out = ntohs(out);
     return true;
 }
 
