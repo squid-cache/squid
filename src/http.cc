@@ -2244,7 +2244,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case Http::HdrType::IF_NONE_MATCH:
         /** \par If-None-Match:
          * append if the wildcard '*' special case value is present, or
-         *   cache_miss_revalidate is disabled, or
+         *   cache_miss_revalidate is enabled, or
          *   the request is not cacheable in this proxy, or
          *   the request contains authentication credentials.
          * \note this header lists a set of responses for the server to elide sending. Squid added values are extending that set.
