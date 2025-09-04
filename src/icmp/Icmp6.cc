@@ -298,7 +298,7 @@ Icmp6::Recv(void)
         return;
     }
 
-    if (ntohs(icmp6header->icmp6_id) != (uint16_t)icmp_ident) {
+    if (ntohs(icmp6header->icmp6_id) != static_cast<uint16_t>(icmp_ident)) {
         debugs(42, 8, "dropping Icmp6 read. IDENT check failed. ident=='" << icmp_ident << "'=='" << icmp6header->icmp6_id << "'");
         Ip::Address::FreeAddr(from);
         return;
