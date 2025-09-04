@@ -674,9 +674,9 @@ DOC_START
 		commonly part of the text the user will see when prompted for
 		their username and password.
 
-		For Basic the default is "Squid proxy-caching web server".
+		For Basic and Bearer, the default is "Squid proxy-caching web server".
 		For Digest there is no default, this parameter is mandatory.
-		For NTLM and Negotiate this parameter is ignored.
+		For NTLM and Negotiate, this parameter is ignored.
 
 	"children" numberofchildren [startup=N] [idle=N] [concurrency=N]
 		[queue-size=N] [on-persistent-overload=action]
@@ -812,6 +812,15 @@ IF HAVE_AUTH_MODULE_BASIC
 		instead of converting it to "bob" before the ACL is checked).
 
 ENDIF
+IF HAVE_AUTH_MODULE_BEARER
+	=== Bearer authentication parameters ===
+
+	"scope" scopestring
+		A space-delimited list of case-sensitive scope names to be sent to the
+		client for the Bearer proxy authentication scheme.
+		The default is:   proxy:HTTP
+
+ENDIF
 IF HAVE_AUTH_MODULE_DIGEST
 	=== Digest authentication parameters ===
 
@@ -861,6 +870,8 @@ ENDIF
 #auth_param digest nonce_garbage_interval 5 minutes
 #auth_param digest nonce_max_duration 30 minutes
 #auth_param digest nonce_max_count 50
+#
+#auth_param bearer program <uncomment and complete this line>
 #
 #auth_param ntlm program <uncomment and complete this line to activate>
 #auth_param ntlm children 20 startup=0 idle=1
