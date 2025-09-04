@@ -273,7 +273,7 @@ Icmp4::Recv(void)
 
     // Payload length = (ICMP total data) - (opcode + timeval)
     preply.psize = icmpDataLen - echoHdr;
-    if (preply.psize > (int)MAX_PAYLOAD)
+    if (preply.psize > MAX_PAYLOAD)
         preply.psize = MAX_PAYLOAD;
 
     if (preply.psize < 0) {
