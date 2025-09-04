@@ -146,7 +146,7 @@ snmp_parse(struct snmp_session * session,
     if (bufp == NULL)
         return (NULL);
 
-    strncpy((char *) bufp, (char *) Community, CommunityLen);
+    memcpy((char *)bufp, (char *) Community, CommunityLen);
     bufp[CommunityLen] = '\0';
 
     session->community = bufp;
