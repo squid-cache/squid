@@ -255,8 +255,8 @@ Icmp4::Recv(void)
 
     echo = (icmpEchoData *) (void *) (icmp + 1);
 
-    const int echoHdr = (int)sizeof(struct timeval) + (int)sizeof(unsigned char);
-    const int icmpDataLen = icmpAvail - (int)sizeof(*icmp);
+    const auto echoHdr = static_cast<int>(sizeof(struct timeval) + sizeof(unsigned char));
+    const auto icmpDataLen = icmpAvail - sizeof(*icmp);
     if (icmpDataLen < echoHdr) { // would read past end of packet
         debugs(42, DBG_IMPORTANT, "Short ICMP echo data: " << icmpDataLen << " bytes.");
         Ip::Address::FreeAddr(from);
