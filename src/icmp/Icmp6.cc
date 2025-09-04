@@ -304,8 +304,8 @@ Icmp6::Recv(void)
         return;
     }
 
-    const int meta = (int)(sizeof(struct timeval) + sizeof(unsigned char));
-    if (n < (int)sizeof(struct icmp6_hdr) + meta) {
+    const auto meta = static_cast<int>(sizeof(struct icmp6_hdr) + sizeof(struct timeval) + sizeof(unsigned char));
+    if (n < meta) {
         Ip::Address::FreeAddr(from);
         return;
     }
