@@ -208,7 +208,7 @@ match_group(char *dict_group, char *username)
                    so we rip it off by incrementing
                    * the pointer by one */
 
-    struct group *g = getgrnam(dict_group);
+    g = getgrnam(dict_group);
     if (!g || !g->gr_mem) {
         debug("Group does not exist or has no members '%s'\n", dict_group);
         return 0;
