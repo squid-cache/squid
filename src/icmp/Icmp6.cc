@@ -233,7 +233,7 @@ Icmp6::Recv(void)
         Ip::Address::FreeAddr(from);
         return;
     }
-    if (n < (int)sizeof(struct icmp6_hdr)) {
+    if (n < static_cast<int>(sizeof(struct icmp6_hdr))) {
         Ip::Address::FreeAddr(from);
         return;
     }
