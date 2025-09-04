@@ -159,7 +159,7 @@ dict_lookup(struct ip_user_dict *first_entry, char *username,
     /* Move the pointer to the first entry of the linked list. */
     struct ip_user_dict *current_entry = first_entry;
 
-    while (current_entry && current_entry->username != nullptr) {
+    while (current_entry && current_entry->username) {
         debug("user: %s\naddr: %lu\nmask: %lu\n\n",
               current_entry->username, current_entry->address,
               current_entry->netmask);
