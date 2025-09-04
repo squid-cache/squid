@@ -32,6 +32,9 @@
 #include "tools.h"
 #include "wordlist.h"
 
+#include <charconv>
+#include <cstdint>
+#include <system_error>
 #include <set>
 
 namespace Ftp
@@ -68,6 +71,38 @@ escapeIAC(const char *buf)
     assert((r - (unsigned char *)ret) == n );
     return ret;
 }
+
+static bool
+parseEPSV(const char* s, uint16_t& out_port)
+{
+    auto p = s;
+    if (*p++ != '(') return false;
+
+    auto d = *p++;
+    // RFC 2428: delimiter MUST be ASCII 33..126 inclusive
+    auto ud = static_cast<unsigned char>(d);
+    if (ud < 33 || ud > 126) return false;
+
+    if (*p++ != d || *p++ != d) return false;
+
+    const auto digits_start = p;
+    while (*p >= '0' && *p <= '9') ++p;
+    if (p == digits_start || (p - digits_start) > 5) return false;
+
+    unsigned v = 0;
+    auto rc = std::from_chars(digits_start, p, v, 10);
+    if (rc.ec != std::errc() || rc.ptr != p || v == 0 || v > 65535u) return false;
+
+    if (*p++ != d) return false;
+    if (*p++ != ')') return false;
+
+    while (*p == '\r' || *p == '\n' || *p == ' ') ++p;
+    if (*p != '\0') return false;
+
+    out_port = static_cast<uint16_t>(v);
+    return true;
+}
+
 
 /* Ftp::ErrorDetail */
 
@@ -565,15 +600,12 @@ Ftp::Client::handleEpsvReply(Ip::Address &remoteAddr)
 
     buf = ctrl.last_reply + strcspn(ctrl.last_reply, "(");
 
-    char h1, h2, h3, h4;
-    unsigned short port;
-    int n = sscanf(buf, "(%c%c%c%hu%c)", &h1, &h2, &h3, &port, &h4);
 
-    if (n != 5 || h1 != h2 || h1 != h3 || h1 != h4) {
+    uint16_t port;
+    if (!parseEPSV(buf, port)) {
         debugs(9, DBG_IMPORTANT, "ERROR: Invalid EPSV reply from " <<
                ctrl.conn->remote << ": " <<
                ctrl.last_reply);
-
         return sendPassive();
     }
 
