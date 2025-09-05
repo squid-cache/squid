@@ -119,7 +119,6 @@ icmpSquidRecv(int, void *)
 void
 IcmpSquid::Recv()
 {
-    auto n = 0;
     static int fail_count = 0;
     pingerReplyData preply;
     static Ip::Address F;
