@@ -473,16 +473,20 @@ manage_request()
                     SEND_ERR("message=\"Incorrect Request Format\"");
                     return 1;
                 case NtlmError::SspiError:
-                    FormatMessage(
-                        FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                        FORMAT_MESSAGE_FROM_SYSTEM |
-                        FORMAT_MESSAGE_IGNORE_INSERTS,
-                        nullptr,
-                        GetLastError(),
-                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-                        (LPTSTR) &ErrorMessage,
-                        0,
-                        nullptr);
+                    DWORD n = FormatMessage(
+                                  FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                                  FORMAT_MESSAGE_FROM_SYSTEM |
+                                  FORMAT_MESSAGE_IGNORE_INSERTS,
+                                  nullptr,
+                                  GetLastError(),
+                                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+                                  (LPTSTR) &ErrorMessage,
+                                  0,
+                                  nullptr);
+                    if (!n) {
+                        SEND("message=\"windows error\"");
+                        return 1;
+                    }
                     if (ErrorMessage[strlen(ErrorMessage) - 1] == '\n')
                         ErrorMessage[strlen(ErrorMessage) - 1] = '\0';
                     if (ErrorMessage[strlen(ErrorMessage) - 1] == '\r')
