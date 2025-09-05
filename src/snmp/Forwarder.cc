@@ -87,8 +87,10 @@ Snmp::Forwarder::sendError(int error)
     req.pdu.errstat = error;
     u_char buffer[SNMP_REQUEST_SIZE];
     int len = sizeof(buffer);
-    snmp_build(&req.session, &req.pdu, buffer, &len);
-    comm_udp_sendto(fd, req.address, buffer, len);
+    if (snmp_build(&req.session, &req.pdu, buffer, &len) == 0)
+        comm_udp_sendto(fd, req.address, buffer, len);
+    else
+        debugs(49, DBG_IMPORTANT, "ERROR: Failed to encode an error response to SNMP agent query from " << req.address);
 }
 
 void
