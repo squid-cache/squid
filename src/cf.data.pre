@@ -6027,6 +6027,9 @@ DOC_START
 		Location headers and embedded URLs after the helper rewrites
 		the request URL.
 
+		WARNING: Squid discards an invalid URL value returned by the helper,
+		warns the admin about the problem and uses the original request's URL.
+
 	  OK
 		Keep the client request intact.
 
