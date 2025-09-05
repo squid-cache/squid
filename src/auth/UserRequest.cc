@@ -25,6 +25,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "sbuf/Stream.h"
 
 /* Generic Functions */
 
@@ -575,11 +576,11 @@ Auth::UserRequest::helperRequestKeyExtras(HttpRequest *request, AccessLogEntry::
 void
 Auth::UserRequest::denyMessageFromHelper(const char *proto, const Helper::Reply &reply)
 {
-    static SBuf messageNote;
-    if (!reply.notes.find(messageNote, "message")) {
-        messageNote.append(proto);
-        messageNote.append(" Authentication denied with no reason given");
-    }
-    setDenyMessage(messageNote.c_str());
-}
+    auto messageNote = reply.notes.find("message");
 
+    if (!messageNote) {
+        messageNote = ToSBuf(proto, " Authentication denied with no reason given");
+    }
+
+    setDenyMessage(messageNote->c_str());
+}
