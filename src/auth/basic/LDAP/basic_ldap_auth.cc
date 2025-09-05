@@ -178,8 +178,11 @@ static int readSecret(const char *filename);
 static int
 squid_ldap_errno(LDAP * ld)
 {
-    int err = 0;
-    ldap_get_option(ld, LDAP_OPT_ERROR_NUMBER, &err);
+    auto err = 0;
+    if (ld)
+        ldap_get_option(ld, LDAP_OPT_ERROR_NUMBER, &err);
+    else
+        err = LDAP_OTHER;
     return err;
 }
 static void
@@ -221,7 +224,12 @@ squid_ldap_memfree(char *p)
 static int
 squid_ldap_errno(LDAP * ld)
 {
-    return ld->ld_errno;
+    auto err = 0;
+    if (ld)
+        err = ld->ld_errno;
+    else
+        err = LDAP_OTHER;
+    return err;
 }
 static void
 squid_ldap_set_aliasderef(LDAP * ld, int deref)
@@ -603,7 +611,7 @@ recover:
         if (ld == nullptr && persistent)
             ld = open_ldap_connection(ldapServer, port);
         if (checkLDAP(ld, user, passwd, ldapServer, port) != 0) {
-            const auto e = ld ? squid_ldap_errno(ld) : LDAP_OTHER;
+            const auto e = squid_ldap_errno(ld);
             if (tryagain && e != LDAP_INVALID_CREDENTIALS) {
                 tryagain = 0;
                 ldap_unbind(ld);

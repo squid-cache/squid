@@ -128,7 +128,12 @@ squid_ldap_set_connect_timeout(int aTimeLimit)
 static int
 squid_ldap_errno(LDAP * ld)
 {
-    return ld->ld_errno;
+    auto err = 0;
+    if (ld)
+        err = ld->ld_errno;
+    else
+        err = LDAP_OTHER;
+    return err;
 }
 static void
 squid_ldap_set_aliasderef(int deref)
