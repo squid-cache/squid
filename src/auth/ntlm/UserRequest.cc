@@ -190,16 +190,19 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
     const char *blob = proxy_auth;
 
     /* if proxy_auth is actually NULL, we'd better not manipulate it. */
-    if (blob) {
-        while (xisspace(*blob) && *blob)
-            ++blob;
-
-        while (!xisspace(*blob) && *blob)
-            ++blob;
-
-        while (xisspace(*blob) && *blob)
-            ++blob;
+    if (!blob) {
+        debugs(29, 4, "WARNING: NTLM Authentication missing authorization header");
+        return;
     }
+
+    while (xisspace(*blob) && *blob)
+        ++blob;
+
+    while (!xisspace(*blob) && *blob)
+        ++blob;
+
+    while (xisspace(*blob) && *blob)
+        ++blob;
 
     switch (user()->credentials()) {
 
