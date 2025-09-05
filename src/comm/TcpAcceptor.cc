@@ -125,14 +125,14 @@ const char *
 Comm::TcpAcceptor::status() const
 {
     if (conn == nullptr)
-        return "[nil connection]";
+        return "nil connection";
 
     char ipbuf[MAX_IPSTRLEN];
     conn->local.toHostStr(ipbuf, MAX_IPSTRLEN); // XXX: report port using toUrl()
 
     static MemBuf buf;
     buf.reset();
-    buf.appendf(" FD %d, %s",conn->fd, ipbuf);
+    buf.appendf("FD %d, %s",conn->fd, ipbuf);
 
     const char *jobStatus = AsyncJob::status();
     buf.append(jobStatus, strlen(jobStatus));

@@ -569,7 +569,7 @@ void Adaptation::Icap::ServiceRep::callException(const std::exception &e)
 {
     clearAdaptation(theOptionsFetcher);
     debugs(93,2, "ICAP probably failed to fetch options (" << e.what() <<
-           ")" << status());
+           ") " << status());
     handleNewOptions(nullptr);
 }
 
@@ -676,12 +676,12 @@ Adaptation::Icap::ServiceRep::makeXactLauncher(Http::Message *virgin,
 }
 
 // returns a temporary string depicting service status, for debugging
-const char *Adaptation::Icap::ServiceRep::status() const
+const char *
+Adaptation::Icap::ServiceRep::status() const
 {
     static MemBuf buf;
 
     buf.reset();
-    buf.append("[", 1);
 
     if (up())
         buf.append("up", 2);
@@ -710,7 +710,6 @@ const char *Adaptation::Icap::ServiceRep::status() const
     if (const int failures = theSessionFailures.remembered())
         buf.appendf(",fail%d", failures);
 
-    buf.append("]", 1);
     buf.terminate();
 
     return buf.content();

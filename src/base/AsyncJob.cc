@@ -16,7 +16,6 @@
 #include "base/TextException.h"
 #include "cbdata.h"
 #include "mem/PoolingAllocator.h"
-#include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 
@@ -136,7 +135,7 @@ void AsyncJob::callStart(AsyncCall &call)
 
     inCall = &call; // XXX: ugly, but safe if callStart/callEnd,Ex are paired
     debugs(inCall->debugSection, inCall->debugLevel,
-           typeName << " status in:" << status());
+           typeName << " status in: " << status());
 }
 
 void
@@ -152,7 +151,7 @@ AsyncJob::callException(const std::exception &ex)
 void AsyncJob::callEnd()
 {
     if (done()) {
-        debugs(93, 5, *inCall << " ends job" << status());
+        debugs(93, 5, *inCall << " ends job " << status());
 
         AsyncCall::Pointer inCallSaved = inCall;
         void *thisSaved = this;
@@ -174,21 +173,20 @@ void AsyncJob::callEnd()
     }
 
     debugs(inCall->debugSection, inCall->debugLevel,
-           typeName << " status out:" << status());
+           typeName << " status out: " << status());
     inCall = nullptr;
 }
 
 // returns a temporary string depicting transaction status, for debugging
-const char *AsyncJob::status() const
+const char *
+AsyncJob::status() const
 {
     static MemBuf buf;
     buf.reset();
 
-    buf.append(" [", 2);
     if (stopReason != nullptr) {
-        buf.appendf("Stopped, reason:%s", stopReason);
+        buf.appendf("Stopped, reason: %s", stopReason);
     }
-    buf.appendf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
 
     return buf.content();
@@ -199,15 +197,16 @@ AsyncJob::ReportAllJobs(StoreEntry *e)
 {
     PackableStream os(*e);
     // this loop uses YAML syntax, but AsyncJob::status() still needs to be adjusted to use YAML
-    const char *indent = "    ";
+    const SBuf indent("  ");
     for (const auto job: AllJobs()) {
-        os << indent << job->id << ":\n";
-        os << indent << indent << "type: '" << job->typeName << "'\n";
-        os << indent << indent << "status:" << job->status() << '\n';
-        if (!job->started_)
-            os << indent << indent << "started: false\n";
+        os << job->id << ":\n";
+        os << indent << "type: '" << job->typeName << "'\n";
+        const char *status = job->status();
+        if (status && strlen(status))
+            os << indent << "status: '" << job->status() << "'\n";
+        os << indent << "started: " << (job->started_ ? "Yes": "No" ) << '\n';
         if (job->stopReason)
-            os << indent << indent << "stopped: '" << job->stopReason << "'\n";
+            os << indent << "stopped: \'" << job->stopReason << "'\n";
     }
 }
 
