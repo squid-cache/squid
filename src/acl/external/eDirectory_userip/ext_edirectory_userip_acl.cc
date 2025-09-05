@@ -459,7 +459,7 @@ DisplayConf()
     else
         local_printfx("	Binding DN: Anonymous\n");
     if (edui_conf.passwd[0] != '\0')
-        local_printfx("	Binding Password: %s\n", edui_conf.passwd);
+        local_printfx("	Binding Password: [redacted]\n");
     else
         local_printfx("	Binding Password: None\n");
     switch (edui_conf.scope) {
