@@ -188,7 +188,7 @@ static void
 squid_ldap_set_referrals(LDAP * ld, int referrals)
 {
     if (referrals)
-        ld->ld_options |= ~LDAP_OPT_REFERRALS;
+        ld->ld_options |= LDAP_OPT_REFERRALS;
     else
         ld->ld_options &= ~LDAP_OPT_REFERRALS;
 }
@@ -410,7 +410,7 @@ main(int argc, char **argv)
     if (!ldapServer)
         ldapServer = (char *) "localhost";
 
-    if (!basedn || !searchfilter) {
+    if (!basedn || !searchfilter || !userbasedn || !usersearchfilter) {
         fprintf(stderr, "\n" PROGRAM_NAME " version " PROGRAM_VERSION "\n\n");
         fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn -f filter [options] ldap_server_name\n\n");
         fprintf(stderr, "\t-b basedn (REQUIRED)\tbase dn under where to search for groups\n");
@@ -654,10 +654,10 @@ build_filter(std::string &filter, const char *templ, const char *user, const cha
             ++templ;
             switch (*templ) {
             case 'u':
-            case 'v':
                 ++templ;
                 str << ldap_escape_value(user);
                 break;
+            case 'v':
             case 'g':
             case 'a':
                 ++templ;
@@ -778,7 +778,7 @@ searchLDAP(LDAP * ld, char *group, char *login, char *extension_dn)
         entry = ldap_first_entry(ld, ldapRes.get());
         if (!entry) {
             std::cerr << PROGRAM_NAME << ": WARNING: User '" << login <<
-                      " not found in '" << searchbase.c_str() << "'" << std::endl;
+                      "' not found in '" << searchbase.c_str() << "'" << std::endl;
             return 1;
         }
         userdn = ldap_get_dn(ld, entry);
