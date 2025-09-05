@@ -354,7 +354,7 @@ rfc1035RRPack(char *buf, const size_t sz, const rfc1035_rr * RR)
     s = htons(RR->rdlength);
     memcpy(buf + off, &s, sizeof(s));
     off += sizeof(s);
-    memcpy(buf + off, &(RR->rdata), RR->rdlength);
+    memcpy(buf + off, RR->rdata, RR->rdlength);
     off += RR->rdlength;
     assert(off <= sz);
     return off;
@@ -420,6 +420,8 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
         RR->rdlength = 0;   /* Filled in by rfc1035NameUnpack */
         if (rfc1035NameUnpack(buf, sz, &rdata_off, &RR->rdlength, RR->rdata, RFC1035_MAXHOSTNAMESZ, 0)) {
             RFC1035_UNPACK_DEBUG;
+            xfree(RR->rdata);
+            memset(RR, '\0', sizeof(*RR));
             return 1;
         }
         if (rdata_off > ((*off) + rdlength)) {
