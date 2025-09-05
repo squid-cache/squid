@@ -125,9 +125,9 @@ IcmpSquid::Recv()
 
     Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, nullptr, 0);
     const auto n = comm_udp_recv(icmp_sock,
-                      (char *) &preply,
-                      sizeof(pingerReplyData),
-                      0);
+                                 (char *) &preply,
+                                 sizeof(pingerReplyData),
+                                 0);
 
     if (n < 0 && EAGAIN != errno) {
         int xerrno = errno;
