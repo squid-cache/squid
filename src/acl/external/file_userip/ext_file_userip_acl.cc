@@ -65,8 +65,8 @@ static void
 free_dict(struct ip_user_dict *head) {
     while (head) {
         struct ip_user_dict *next = head->next_entry;
-        free(head->username);
-        free(head);
+        safe_free(head->username);
+        xfree(head);
         head = next;
     }
 }
