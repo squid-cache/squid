@@ -118,7 +118,7 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     echo->opcode = (unsigned char) opcode;
     memcpy(&echo->tv, &current_time, sizeof(struct timeval));
 
-    icmp_pktsize += sizeof(struct timeval) + sizeof(char);
+    icmp_pktsize += sizeof(icmpEchoData) - MAX_PAYLOAD;
 
     if (payload) {
         if (len > MAX_PAYLOAD)
@@ -255,9 +255,9 @@ Icmp4::Recv(void)
 
     echo = (icmpEchoData *) (void *) (icmp + 1);
 
-    const auto echoHdr = static_cast<int>(sizeof(struct timeval) + sizeof(unsigned char));
+    const auto echoHdr = static_cast<int>(sizeof(icmpEchoData) - MAX_PAYLOAD);
     const auto icmpDataLen = icmpAvail - sizeof(*icmp);
-    if (icmpDataLen < echoHdr) { // would read past end of packet
+    if (icmpDataLen < echoHdr) { // do not read past end of the packet
         debugs(42, DBG_IMPORTANT, "Short ICMP echo data: " << icmpDataLen << " bytes.");
         Ip::Address::FreeAddr(from);
         return;
