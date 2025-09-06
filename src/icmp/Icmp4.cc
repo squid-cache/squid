@@ -132,11 +132,9 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     icmp->icmp_cksum = CheckSum((unsigned short *) icmp, icmp_pktsize);
 
     to.getAddrInfo(S, AF_INET);
-    if (!S || !S->ai_addr || S->ai_family != AF_INET) {
-        debugs(42, DBG_IMPORTANT, MYNAME << " invalid destination address for ICMPv4");
-        Ip::Address::FreeAddr(S);
-        return;
-    }
+    Assure(S);
+    Assure(S->ai_family == AF_INET);
+
     ((sockaddr_in*)S->ai_addr)->sin_port = 0;
     assert(icmp_pktsize <= MAX_PKT4_SZ);
 
