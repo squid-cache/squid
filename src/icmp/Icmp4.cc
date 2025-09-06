@@ -14,6 +14,7 @@
 
 #if USE_ICMP
 
+#include "base/Assure.h"
 #include "compat/socket.h"
 #include "debug/Stream.h"
 #include "Icmp4.h"
@@ -133,7 +134,6 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     to.getAddrInfo(S, AF_INET);
     Assure(S);
-    Assure(S->ai_family == AF_INET);
 
     ((sockaddr_in*)S->ai_addr)->sin_port = 0;
     assert(icmp_pktsize <= MAX_PKT4_SZ);

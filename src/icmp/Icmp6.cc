@@ -14,6 +14,7 @@
 
 #if USE_ICMP
 
+#include "base/Assure.h"
 #include "compat/socket.h"
 #include "debug/Stream.h"
 #include "Icmp6.h"
@@ -166,12 +167,9 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     icmp->icmp6_cksum = CheckSum((unsigned short *) icmp, icmp6_pktsize);
 
-    to.getAddrInfo(S);
-    if (!S || !S->ai_addr || S->ai_family != AF_INET6) {
-        debugs(42, DBG_IMPORTANT, MYNAME << " invalid destination address for ICMPv6");
-        Ip::Address::FreeAddr(S);
-        return;
-    }
+    to.getAddrInfo(S, AF_INET6);
+    Assure(S);
+
     ((sockaddr_in6*)S->ai_addr)->sin6_port = 0;
 
     assert(icmp6_pktsize <= MAX_PKT6_SZ);
@@ -187,7 +185,7 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     if (x < 0) {
         int xerrno = errno;
-        debugs(42, DBG_IMPORTANT, MYNAME << "ERROR: sending ICMPv6 packet to " << to << ": " << xstrerr(xerrno));
+        debugs(42, DBG_IMPORTANT, "ERROR: sending ICMPv6 packet to " << to << ": " << xstrerr(xerrno));
     }
     debugs(42,9, "x=" << x);
 
