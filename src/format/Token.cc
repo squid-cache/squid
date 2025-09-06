@@ -354,9 +354,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
 {
     const char *cur = def;
 
-    int l;
-
-    l = strcspn(cur, "%");
+    auto l = strcspn(cur, "%");
 
     if (l > 0) {
         char *cp;

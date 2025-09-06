@@ -294,7 +294,7 @@ log_quoted_string(const char *str, char *out)
     char *p = out;
 
     while (*str) {
-        int l = strcspn(str, "\"\\\r\n\t");
+        const auto l = strcspn(str, "\"\\\r\n\t");
         memcpy(p, str, l);
         str += l;
         p += l;
