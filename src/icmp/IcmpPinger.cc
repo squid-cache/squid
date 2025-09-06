@@ -122,7 +122,7 @@ IcmpPinger::Open(void)
         return -1;
     }
 
-    x = xsend(icmp_sock, buf, strlen(buf), 0);
+    x = xsend(icmp_sock, buf, x, 0);
     xerrno = errno;
 
     if (x < 3 || strncmp("OK\n", buf, 3)) {

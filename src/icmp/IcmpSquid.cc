@@ -71,9 +71,11 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     else if (payload && len == 0)
         len = strlen(payload);
 
-    // XXX: If length specified or auto-detected is greater than the possible payload squid will die with an assert.
-    // TODO: This should perhapse be reduced to a truncated payload? or no payload. A WARNING is due anyway.
-    assert(len <= PINGER_PAYLOAD_SZ);
+    // TODO: This should perhapse be reduced to a truncated payload? or no payload.
+    if (len > PINGER_PAYLOAD_SZ) {
+        debugs(37, DBG_IMPORTANT, "payload too large. (" << len << " bytes)");
+        return;
+    }
 
     pecho.to = to;
 
@@ -117,16 +119,15 @@ icmpSquidRecv(int, void *)
 void
 IcmpSquid::Recv()
 {
-    int n;
     static int fail_count = 0;
     pingerReplyData preply;
     static Ip::Address F;
 
     Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, nullptr, 0);
-    n = comm_udp_recv(icmp_sock,
-                      (char *) &preply,
-                      sizeof(pingerReplyData),
-                      0);
+    const auto n = comm_udp_recv(icmp_sock,
+                                 (char *) &preply,
+                                 sizeof(pingerReplyData),
+                                 0);
 
     if (n < 0 && EAGAIN != errno) {
         int xerrno = errno;
@@ -148,6 +149,32 @@ IcmpSquid::Recv()
 
     /** If its a test probe from the pinger. Do nothing. */
     if (n == 0) {
+        return;
+    }
+
+    const auto base = static_cast<int>(sizeof(preply) - sizeof(preply.payload));
+    if (n < base) {
+        debugs(37, 2, "short reply header (" << n << " < " << base << "); dropping");
+        return;
+    }
+    const auto avail = n - base;
+    if (avail > static_cast<int>(sizeof(preply.payload))) {
+        debugs(37, 2, "oversized reply payload (" << avail << "); dropping");
+        return;
+    }
+    if (preply.psize < 0) {
+        debugs(37, 2, "negative psize (" << preply.psize << "); dropping");
+        return;
+    }
+    if (preply.psize > avail) {
+        debugs(37, 2, "truncated reply (psize=" << preply.psize << ", avail=" << avail << "); dropping");
+        return;
+    }
+    // Accept variable-length replies: base header + psize bytes.
+    // We already validated 'n >= base' and 'preply.psize <= avail'.
+    // If the datagram was truncated in transit, drop it.
+    if (n < (base + preply.psize)) {
+        debugs(37, 2, "truncated reply datagram; dropping");
         return;
     }
 
