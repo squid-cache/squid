@@ -168,8 +168,10 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     entry->lock("UrnState::start");
     setUriResFromRequest(r);
 
-    if (urlres_r == nullptr)
+    if (urlres_r == nullptr) {
+        delete this;
         return;
+    }
 
     auto urlEntry = storeGetPublic(urlres, Http::METHOD_GET);
 
@@ -301,6 +303,11 @@ urnHandleReply(void *data, StoreIOBuffer result)
     debugs(53, 3, "urnFindMinRtt: Counted " << i << " URLs");
 
     min_u = urnFindMinRtt(urls, urnState->request->method, nullptr);
+    char *min_url = nullptr;
+    if (min_u) {
+        min_url = xstrdup(min_u->url);
+    }
+
     qsort(urls, urlcnt, sizeof(*urls), url_entry_sort);
     e->buffer();
     SBuf body;
@@ -335,8 +342,9 @@ urnHandleReply(void *data, StoreIOBuffer result)
     const auto rep = new HttpReply;
     rep->setHeaders(Http::scFound, nullptr, "text/html", mb->length(), 0, squid_curtime);
 
-    if (min_u) {
-        rep->header.putStr(Http::HdrType::LOCATION, min_u->url);
+    if (min_url) {
+        rep->header.putStr(Http::HdrType::LOCATION, min_url);
+        safe_free(min_url);
     }
 
     rep->body.set(body);
