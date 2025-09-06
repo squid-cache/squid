@@ -3774,14 +3774,14 @@ ConnStateData::handleIdleClientPinnedTlsRead()
         return false;
 
     char buf[1];
-    const int readResult = SSL_read(ssl, buf, sizeof(buf));
+    const int peekResult = SSL_peek(ssl, buf, sizeof(buf));
 
-    if (readResult > 0 || SSL_pending(ssl) > 0) {
-        debugs(83, 2, pinning.serverConnection << " TLS application data read");
+    if (peekResult > 0 || SSL_pending(ssl) > 0) {
+        debugs(83, 2, pinning.serverConnection << " TLS application data peeked");
         return false;
     }
 
-    switch(const int error = SSL_get_error(ssl, readResult)) {
+    switch (const int error = SSL_get_error(ssl, peekResult)) {
     case SSL_ERROR_WANT_WRITE:
         debugs(83, DBG_IMPORTANT, pinning.serverConnection << " TLS SSL_ERROR_WANT_WRITE request for idle pinned connection");
         [[fallthrough]]; // to restart monitoring, for now
