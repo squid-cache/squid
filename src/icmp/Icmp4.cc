@@ -151,7 +151,7 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     if (x < 0) {
         int xerrno = errno;
-        debugs(42, DBG_IMPORTANT, MYNAME << "ERROR: sending ICMP packet to " << to << ": " << xstrerr(xerrno));
+        debugs(42, DBG_IMPORTANT, "ERROR: sending ICMP packet to " << to << ": " << xstrerr(xerrno));
     }
 
     Log(to, ' ', "", 0, 0);
