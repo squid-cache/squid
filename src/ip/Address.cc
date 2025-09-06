@@ -889,7 +889,7 @@ Ip::Address::toUrl(char* buf, unsigned int blen) const
 
     // Ensure we have a buffer.
 
-    if (buf == nullptr) {
+    if (buf == nullptr || blen < 8) {
         return nullptr;
     }
 
