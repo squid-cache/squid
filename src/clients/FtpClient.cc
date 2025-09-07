@@ -415,7 +415,6 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
         return;
     }
 
-
     unsigned int len =io.size + ctrl.offset;
 
     if (len >= Config.maxReplyHeaderSize) {
