@@ -108,7 +108,8 @@ Auth::User::absorb(Auth::User::Pointer from)
             if (!found) {
                 /* remove from the source list */
                 dlinkDelete(&new_ipdata->node, &(from->ip_list));
-                -- from->ipcount;
+                assert(from->ipcount);
+                --from->ipcount;
                 /* This ip is not in the seen list. Add it. */
                 dlinkAddTail(new_ipdata, &new_ipdata->node, &ip_list);
                 ++ipcount;
