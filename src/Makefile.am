@@ -1930,72 +1930,72 @@ tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 check_PROGRAMS += tests/testHttpRequest
 tests_testHttpRequest_SOURCES = \
 	AccessLogEntry.cc \
-	anyp/UriScheme.h \
-	anyp/UriScheme.cc \
+	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
-	dlink.cc \
-	dlink.h \
-	fs_io.cc \
-	HttpHeaderTools.cc \
-	HttpHdrContRange.cc \
-	HttpHeader.cc \
+	tests/stub_DelayId.cc \
+	tests/stub_ETag.cc \
+	tests/stub_HelperChildConfig.cc \
 	HttpHdrCc.cc \
+	HttpHdrContRange.cc \
+	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
-	HttpHdrRange.cc \
+	HttpHeader.cc \
+	HttpHeaderTools.cc \
 	HttpHeaderTools.h \
 	tests/stub_HttpReply.cc \
 	HttpRequest.cc \
-	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
-	mime_header.cc \
-	mime_header.h \
-	Notes.cc \
-	RequestFlags.cc \
-	Parsing.cc \
-	RemovalPolicy.cc \
-	RequestFlags.h \
-	StatCounters.cc \
-	StatCounters.h \
 	tests/testHttpRequest.cc \
 	tests/testHttpRequestMethod.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_Instance.cc \
+	LogTags.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
+	MemBuf.cc \
+	Notes.cc \
+	Parsing.cc \
+	RemovalPolicy.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
+	StatCounters.cc \
+	StatCounters.h \
 	StatHist.cc \
 	StrList.cc \
 	StrList.h \
 	String.cc \
-	MemBuf.cc \
-	tests/stub_cbdata.cc \
+	anyp/UriScheme.cc \
+	anyp/UriScheme.h \
 	tests/stub_cache_cf.cc \
-	tests/stub_CachePeer.cc \
-	tests/stub_client_side.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_cbdata.cc \
+	tests/stub_client_side.cc \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
-	tests/stub_DelayId.cc \
+	dlink.cc \
+	dlink.h \
 	tests/stub_errorpage.cc \
-	tests/stub_ETag.cc \
 	tests/stub_event.cc \
 	tests/stub_fatal.cc \
-	tests/stub_fqdncache.cc \
 	tests/stub_fd.cc \
-	tests/stub_libicmp.cc \
+	tests/stub_fqdncache.cc \
+	fs_io.cc \
+	tests/stub_ipc.cc \
+	tests/stub_ipcache.cc \
 	tests/stub_libauth.cc \
-	tests/stub_HelperChildConfig.cc \
 	tests/stub_libdiskio.cc \
 	tests/stub_liberror.cc \
 	tests/stub_libformat.cc \
-	tests/stub_ipc.cc \
-	tests/stub_ipcache.cc \
+	tests/stub_libicmp.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_libtime.cc \
+	mime_header.cc \
+	mime_header.h \
+	tests/stub_neighbors.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
-	tests/stub_wordlist.cc \
-	tests/stub_neighbors.cc
+	tests/stub_wordlist.cc
 nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testHttpRequest_LDADD = \
