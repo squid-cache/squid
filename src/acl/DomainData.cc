@@ -25,6 +25,11 @@ xRefFree(T &thing)
     xfree (thing);
 }
 
+ACLDomainData::ACLDomainData() : domains(new Splay<char *>())
+{
+}
+
+
 ACLDomainData::~ACLDomainData()
 {
     if (domains) {
@@ -63,7 +68,7 @@ aclHostDomainCompare( char *const &a, char * const &b)
 bool
 ACLDomainData::match(char const *host)
 {
-    if (!host || !domains)
+    if (!host)
         return false;
 
     debugs(28, 3, "aclMatchDomainList: checking '" << host << "'");
@@ -86,9 +91,6 @@ struct AclDomainDataDumpVisitor {
 SBufList
 ACLDomainData::dump() const
 {
-    if (!domains)
-        return {};
-
     AclDomainDataDumpVisitor visitor;
     domains->visit(visitor);
     return visitor.contents;
@@ -161,9 +163,6 @@ Acl::SplayInserter<char*>::DestroyValue(Value v)
 void
 ACLDomainData::parse()
 {
-    if (!domains)
-        domains = new Splay<char *>();
-
     while (char *t = ConfigParser::strtokFile()) {
         Tolower(t);
         Acl::SplayInserter<char*>::Merge(*domains, xstrdup(t));
@@ -173,6 +172,6 @@ ACLDomainData::parse()
 bool
 ACLDomainData::empty() const
 {
-    return !domains || domains->empty();
+    return domains->empty();
 }
 

@@ -18,7 +18,7 @@ class ACLDomainData : public ACLData<char const *>
     MEMPROXY_CLASS(ACLDomainData);
 
 public:
-    ACLDomainData() : domains(nullptr) {}
+    ACLDomainData();
     ~ACLDomainData() override;
     bool match(char const *) override;
     SBufList dump() const override;
