@@ -331,6 +331,13 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
         /* We've already read some reply data */
         handleControlReply();
     } else {
+        /*  If we're at/over the configured cap OR out of space, give up. */
+        if (ctrl.offset >= Config.maxReplyHeaderSize || ctrl.offset == ctrl.size) {
+            debugs(9, DBG_IMPORTANT, "ERROR: Control Reply too large: " << ctrl.offset << " >= " << Config.maxReplyHeaderSize);
+            failed(ERR_FTP_FAILURE, 0);
+            /* failed closes ctrl.conn and frees ftpState */
+            return;
+        }
 
         if (!Comm::IsConnOpen(ctrl.conn)) {
             debugs(9, 3, "cannot read without ctrl " << ctrl.conn);
@@ -408,7 +415,16 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
         return;
     }
 
+
     unsigned int len =io.size + ctrl.offset;
+
+    if (len >= Config.maxReplyHeaderSize) {
+        debugs(9, DBG_IMPORTANT, "ERROR: FTP control reply exceeded cap: (" << len << " >= " << Config.maxReplyHeaderSize << ")");
+        failed(ERR_FTP_FAILURE, 0);
+        /* failed closes ctrl.conn and frees ftpState */
+        return;
+    }
+
     ctrl.offset = len;
     assert(len <= ctrl.size);
     if (Comm::IsConnOpen(ctrl.conn))
@@ -428,7 +444,25 @@ Ftp::Client::handleControlReply()
         /* didn't get complete reply yet */
 
         if (ctrl.offset == ctrl.size) {
-            ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, ctrl.size << 1, &ctrl.size));
+            // If we are already at/over the cap, abort instead of growing.
+            if (ctrl.size >= Config.maxReplyHeaderSize) {
+                debugs(9, DBG_IMPORTANT, "ERROR: FTP control reply too long (" << ctrl.size << " >= " << Config.maxReplyHeaderSize << ")");
+                failed(ERR_FTP_FAILURE, 0);
+                /* failed closes ctrl.conn and frees ftpState */
+                return;
+            }
+            auto newSize = ctrl.size << 1;
+            if (newSize <= ctrl.size || newSize > Config.maxReplyHeaderSize)
+                newSize = Config.maxReplyHeaderSize;
+
+            if (newSize == ctrl.size) {
+                debugs(9, DBG_IMPORTANT, "ERROR: FTP control reply buffer cannot grow over " << Config.maxReplyHeaderSize << " bytes");
+                failed(ERR_FTP_FAILURE, 0);
+                /* failed closes ctrl.conn and frees ftpState */
+                return;
+            }
+
+            ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, newSize, &ctrl.size));
         }
 
         scheduleReadControlReply(0);
