@@ -502,7 +502,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
         case ASN_OCTET_STR:
         case SMI_IPADDRESS:
         case SMI_OPAQUE:
-            Var->val_len = *&ThisVarLen > 0 ? *&ThisVarLen : 0;    /* String is this at most */
+            Var->val_len = ThisVarLen >= 0 ? ThisVarLen : 0; // input contains at most this many bytes
             Var->val.string = (u_char *) xmalloc((unsigned) Var->val_len + 1);
             if (Var->val.string == NULL) {
                 snmp_set_api_error(SNMPERR_OS_ERR);
