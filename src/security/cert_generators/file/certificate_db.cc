@@ -371,7 +371,7 @@ Ssl::CertificateDb::Create(std::string const & db_path) {
     std::string cert_full(db_path + "/" + cert_dir);
     std::string size_full(db_path + "/" + size_file);
 
-    if (mkdir(db_path.c_str(), 0700))
+    if (mkdir(db_path.c_str(), 0750))
         throw TextException(ToSBuf("Cannot create ", db_path), Here());
 
     if (mkdir(cert_full.c_str(), 0750))
