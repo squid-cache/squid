@@ -69,7 +69,7 @@ escapeIAC(const char *buf)
     return ret;
 }
 
-static bool
+bool
 parseEPSV(Parser::Tokenizer &tz, const SBuf &tuple, uint16_t &outPort)
 {
     try {

@@ -24,6 +24,8 @@ namespace Ftp
 
 extern const char *const crlf;
 
+bool parseEPSV(Parser::Tokenizer &tz, const SBuf &tuple, uint16_t &outPort);
+
 /// Holds FTP server reply error code
 /// Squid needs to interpret internally FTP reply codes and respond with
 /// custom error (eg in the case of Ftp::Gateway), however still we need
