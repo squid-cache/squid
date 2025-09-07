@@ -25,7 +25,7 @@ xRefFree(T &thing)
     xfree (thing);
 }
 
-ACLDomainData::ACLDomainData() = default
+ACLDomainData::ACLDomainData() = default;
 
 ACLDomainData::~ACLDomainData()
 {
