@@ -272,7 +272,7 @@ constructHelperQuery(const char * const name, const Helper::Client::Pointer &hlp
     /** TODO: create a standalone method to initialize
      * the RedirectStateData for all the helpers.
      */
-    RedirectStateData *r = new RedirectStateData(http->uri);
+    auto r = new RedirectStateData(http->uri);
     r->handler = handler;
     r->data = cbdataReference(data);
 
