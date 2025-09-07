@@ -23,14 +23,13 @@
 Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     auth_type(Auth::AUTH_UNKNOWN),
     config(aConfig),
-    ipcount(0),
     expiretime(0),
     credentials_state(Auth::Unchecked),
     username_(nullptr),
-    requestRealm_(aRequestRealm)
+    requestRealm_(aRequestRealm),
+    ipList(256*1024) // XXX: figure a more reasonable value than ~256KB cache per-username
 {
     proxy_match_cache.head = proxy_match_cache.tail = nullptr;
-    ip_list.head = ip_list.tail = nullptr;
     debugs(29, 5, "Initialised auth_user '" << this << "'.");
 }
 
@@ -69,52 +68,19 @@ Auth::User::absorb(Auth::User::Pointer from)
     notes.appendNewOnly(&from->notes);
 
     /* absorb the list of IP address sources (for max_user_ip controls) */
-    AuthUserIP *new_ipdata;
-    while (from->ip_list.head != nullptr) {
-        new_ipdata = static_cast<AuthUserIP *>(from->ip_list.head->data);
+    ipList.merge(from->ipList);
 
+#if 0
+    for (auto &newIp : from->ipList) {
         /* If this IP has expired - ignore the expensive merge actions. */
-        if (new_ipdata->ip_expiretime <= squid_curtime) {
-            /* This IP has expired - remove from the source list */
-            dlinkDelete(&new_ipdata->node, &(from->ip_list));
-            delete new_ipdata;
-            /* catch incipient underflow */
-            -- from->ipcount;
-        } else {
-            /* add to our list. replace if already present. */
-            AuthUserIP *ipdata = static_cast<AuthUserIP *>(ip_list.head->data);
-            bool found = false;
-            while (ipdata) {
-                AuthUserIP *tempnode = static_cast<AuthUserIP *>(ipdata->node.next->data);
-
-                if (ipdata->ipaddr == new_ipdata->ipaddr) {
-                    /* This IP has already been seen. */
-                    found = true;
-                    /* update IP ttl and stop searching. */
-                    ipdata->ip_expiretime = max(ipdata->ip_expiretime, new_ipdata->ip_expiretime);
-                    break;
-                } else if (ipdata->ip_expiretime <= squid_curtime) {
-                    /* This IP has expired - cleanup the destination list */
-                    dlinkDelete(&ipdata->node, &ip_list);
-                    delete ipdata;
-                    /* catch incipient underflow */
-                    assert(ipcount);
-                    -- ipcount;
-                }
-
-                ipdata = tempnode;
-            }
-
-            if (!found) {
-                /* This ip is not in the seen list. Add it. */
-                dlinkAddTail(&new_ipdata->node, &ipdata->node, &ip_list);
-                ++ipcount;
-                /* remove from the source list */
-                dlinkDelete(&new_ipdata->node, &(from->ip_list));
-                ++from->ipcount;
-            }
+        if (!newIp.expired()) {
+            /* add to our list. update if already present. */
+            if (const auto *old = ipList.find(ipa.key))
+                newIp.expires = max(newIp.expires, old->expires);
+            ipList.add(newIp.key, newIp.value, newIp.expires);
         }
     }
+#endif
 }
 
 Auth::User::~User()
@@ -125,9 +91,6 @@ Auth::User::~User()
     /* free cached acl results */
     aclCacheMatchFlush(&proxy_match_cache);
 
-    /* free seen ip address's */
-    clearIp();
-
     if (username_)
         xfree((char*)username_);
 
@@ -135,94 +98,36 @@ Auth::User::~User()
     auth_type = Auth::AUTH_UNKNOWN;
 }
 
+/// generate the cache key for an ipList entry
+static const SBuf
+BuildIpKey(const Ip::Address &ip)
+{
+    SBuf key;
+    auto *buf = key.rawAppendStart(MAX_IPSTRLEN);
+    const auto len = ip.toHostStr(buf, MAX_IPSTRLEN);
+    key.rawAppendFinish(buf, len);
+    return key;
+}
+
 void
 Auth::User::clearIp()
 {
-    AuthUserIP *ipdata, *tempnode;
-
-    ipdata = (AuthUserIP *) ip_list.head;
-
-    while (ipdata) {
-        tempnode = (AuthUserIP *) ipdata->node.next;
-        /* walk the ip list */
-        dlinkDelete(&ipdata->node, &ip_list);
-        delete ipdata;
-        /* catch incipient underflow */
-        assert(ipcount);
-        -- ipcount;
-        ipdata = tempnode;
-    }
-
-    /* integrity check */
-    assert(ipcount == 0);
+    const auto savedLimit = ipList.memLimit();
+    ipList.setMemLimit(0);
+    ipList.setMemLimit(savedLimit);
 }
 
 void
-Auth::User::removeIp(Ip::Address ipaddr)
+Auth::User::removeIp(const Ip::Address &ip)
 {
-    AuthUserIP *ipdata = (AuthUserIP *) ip_list.head;
-
-    while (ipdata) {
-        /* walk the ip list */
-
-        if (ipdata->ipaddr == ipaddr) {
-            /* remove the node */
-            dlinkDelete(&ipdata->node, &ip_list);
-            delete ipdata;
-            /* catch incipient underflow */
-            assert(ipcount);
-            -- ipcount;
-            return;
-        }
-
-        ipdata = (AuthUserIP *) ipdata->node.next;
-    }
-
+    ipList.del(BuildIpKey(ip));
 }
 
 void
-Auth::User::addIp(Ip::Address ipaddr)
+Auth::User::addIp(const Ip::Address &ip)
 {
-    AuthUserIP *ipdata = (AuthUserIP *) ip_list.head;
-    int found = 0;
-
-    /*
-     * we walk the entire list to prevent the first item in the list
-     * preventing old entries being flushed and locking a user out after
-     * a timeout+reconfigure
-     */
-    while (ipdata) {
-        AuthUserIP *tempnode = (AuthUserIP *) ipdata->node.next;
-        /* walk the ip list */
-
-        if (ipdata->ipaddr == ipaddr) {
-            /* This ip has already been seen. */
-            found = 1;
-            /* update IP ttl */
-            ipdata->ip_expiretime = squid_curtime + Auth::TheConfig.ipTtl;
-        } else if (ipdata->ip_expiretime <= squid_curtime) {
-            /* This IP has expired - remove from the seen list */
-            dlinkDelete(&ipdata->node, &ip_list);
-            delete ipdata;
-            /* catch incipient underflow */
-            assert(ipcount);
-            -- ipcount;
-        }
-
-        ipdata = tempnode;
-    }
-
-    if (found)
-        return;
-
-    /* This ip is not in the seen list */
-    ipdata = new AuthUserIP(ipaddr, squid_curtime + Auth::TheConfig.ipTtl);
-
-    dlinkAddTail(ipdata, &ipdata->node, &ip_list);
-
-    ++ipcount;
-
-    debugs(29, 2, "user '" << username() << "' has been seen at a new IP address (" << ipaddr << ")");
+    ipList.add(BuildIpKey(ip), ip, Auth::TheConfig.ipTtl);
+    debugs(29, 2, "user '" << username() << "' has been seen at a new IP address (" << ip << ")");
 }
 
 SBuf

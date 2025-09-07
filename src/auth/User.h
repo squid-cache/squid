@@ -15,10 +15,12 @@
 #include "auth/forward.h"
 #include "auth/Type.h"
 #include "base/CbcPointer.h"
+#include "base/ClpMap.h"
 #include "base/RefCount.h"
 #include "dlink.h"
 #include "ip/Address.h"
 #include "Notes.h"
+#include "sbuf/Algorithms.h"
 #include "sbuf/SBuf.h"
 
 class StoreEntry;
@@ -49,7 +51,6 @@ public:
     /** the config for this user */
     Auth::SchemeConfig *config;
     dlink_list proxy_match_cache;
-    size_t ipcount;
     long expiretime;
 
     /// list of key=value pairs the helper produced
@@ -73,8 +74,10 @@ public:
 
     /* Manage list of IPs using this username */
     void clearIp();
-    void removeIp(Ip::Address);
-    void addIp(Ip::Address);
+    void removeIp(const Ip::Address &);
+    void addIp(const Ip::Address &);
+    /// how many IPs this client has been seen at
+    size_t ipCount() const { return ipList.entries(); }
 
     /// add the Auth::User to the protocol-specific username cache.
     virtual void addToNameCache() = 0;
@@ -117,8 +120,8 @@ private:
      */
     SBuf userKey_;
 
-    /** what ip addresses has this user been seen at?, plus a list length cache */
-    dlink_list ip_list;
+    /// what IP addresses has this user been seen at?
+    ClpMap<SBuf, Ip::Address> ipList;
 };
 
 } // namespace Auth

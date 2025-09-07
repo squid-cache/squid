@@ -93,6 +93,14 @@ public:
     /// Remove the corresponding entry (if any)
     void del(const Key &);
 
+    /// Merge entries from another ClpMap.
+    ///  * Entries imported from the other list will retain their LRU order
+    ///    and be placed before existing entries.
+    ///  * Entries which have expired will be ignored.
+    ///  * When an key collision occurs the existing entry will be replaced
+    ///    and the new entry given the largest of the two TTL values.
+    void merge(const ClpMap<Key, Value, MemoryUsedBy> &other);
+
     /// Reset the memory capacity for this map, purging if needed
     void setMemLimit(uint64_t newLimit);
 
@@ -270,6 +278,20 @@ ClpMap<Key, Value, MemoryUsedBy>::del(const Key &key)
     const auto i = find(key);
     if (i != index_.end())
         erase(i);
+}
+
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
+void
+ClpMap<Key, Value, MemoryUsedBy>::merge(const ClpMap<Key, Value, MemoryUsedBy> &other)
+{
+    // reverse-order across other - to preserve old LRU
+    for (auto i = other.entries_.rbegin(); i != other.entries_.rend(); ++i) {
+        if (!i->expired()) {
+            const auto ours = find(i->key);
+            const auto newTtl = (ours != index_.cend() ? max(i->expires, ours->second->expires) : i->expires) - squid_curtime;
+            add(i->key, i->value, newTtl);
+        }
+    }
 }
 
 /// purges entries to make free memory large enough to fit wantSpace bytes
