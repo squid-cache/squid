@@ -1230,12 +1230,14 @@ wccp2HandleUdp(int sock, void *)
 
     const auto lenOrError = comm_udp_recvfrom(sock, &wccp2_i_see_you, WCCP_RESPONSE_SIZE, 0, from_tmp);
 
-    if (lenOrError == 0)
-        return;
-
     if (lenOrError < 0) {
         int xerrno = errno;
-        debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: FD " << sock << " recvfrom: " << xstrerr(xerrno));
+        debugs(80, DBG_IMPORTANT, "FD " << sock << " recvfrom: " << xstrerr(xerrno));
+        return;
+    }
+
+    if (lenOrError == 0) {
+        debugs(80, DBG_IMPORTANT, "empty UDP datagram from " << from_tmp << ", ignoring.");
         return;
     }
 

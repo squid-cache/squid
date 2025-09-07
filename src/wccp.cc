@@ -206,7 +206,12 @@ wccpHandleUdp(int sock, void *)
                             from);
     if (len < 0) {
         int xerrno = errno;
-        debugs(80, DBG_IMPORTANT, "wccpHandleUdp: FD " << sock << " recvfrom: " << xstrerr(xerrno));
+        debugs(80, DBG_IMPORTANT, "FD " << sock << " recvfrom: " << xstrerr(xerrno));
+        return;
+    }
+
+    if (len == 0) {
+        debugs(80, DBG_IMPORTANT, "empty UDP datagram from " << from << ", ignoring.");
         return;
     }
 
