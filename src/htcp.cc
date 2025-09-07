@@ -315,7 +315,7 @@ htcpHexdump(const char *tag, const char *s, int sz)
 }
 
 static bool
-parseUint16(char *buf, int sz, uint16_t &out, const char *field)
+parseUint16(const char * const buf, const int sz, uint16_t &out, const char * const field)
 {
     if (sz < 2) {
         debugs(31, 3, "too short for " << field);
