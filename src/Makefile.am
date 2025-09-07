@@ -1986,14 +1986,12 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_libdiskio.cc \
 	tests/stub_liberror.cc \
-	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_libtime.cc \
-	tests/stub_main_cc.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_wordlist.cc \
