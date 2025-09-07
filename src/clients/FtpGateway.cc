@@ -710,10 +710,14 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                 if (tmp == ct + 1)
                     break;  /* not a valid integer */
 
-                safe_free(p->date); // TODO: properly handle multiple p->name occurrences
-                p->date = xstrdup(ctime(&tm));
+                const auto cts = ctime(&tm);
+                if (!cts)
+                    break;
 
-                *(strstr(p->date, "\n")) = '\0';
+                safe_free(p->date); // TODO: properly handle multiple p->name occurrences
+
+                auto n = strcspn(cts, "\n");
+                p->date = xstrndup(cts, n);
 
                 break;
 
