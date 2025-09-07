@@ -14,8 +14,6 @@
 #include "auth/SchemeConfig.h"
 #include "globals.h"
 
-std::vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = nullptr;
-
 void
 Auth::Scheme::AddScheme(Auth::Scheme::Pointer instance)
 {
@@ -43,10 +41,8 @@ Auth::Scheme::Find(const char *typestr)
 std::vector<Auth::Scheme::Pointer> &
 Auth::Scheme::GetSchemes()
 {
-    if (!_Schemes)
-        _Schemes = new std::vector<Auth::Scheme::Pointer>;
-
-    return *_Schemes;
+    static std::vector<Auth::Scheme::Pointer> schemes;
+    return schemes;
 }
 
 /**
@@ -59,17 +55,10 @@ Auth::Scheme::GetSchemes()
 void
 Auth::Scheme::FreeAll()
 {
-    assert(shutting_down);
-
-    if (!_Schemes)
-        return;
-
     while (GetSchemes().size()) {
         Auth::Scheme::Pointer scheme = GetSchemes().back();
         GetSchemes().pop_back();
         scheme->shutdownCleanup();
     }
-    delete _Schemes;
-    _Schemes = nullptr;
 }
 
