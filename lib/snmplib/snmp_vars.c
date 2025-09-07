@@ -511,7 +511,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
             bufp = asn_parse_string(DataPtr, &ThisVarLen,
                                     &Var->type, Var->val.string,
                                     &Var->val_len);
-            Var->val.string[Var->val_len] = '\0';
+            Var->val.string[Var->val_len] = '\0'; // for cases where the parsed value is treated as a c-string
 #if DEBUG_VARS_DECODE
             printf("VARS: Decoded string '%s' (length %d) (%d bytes left)\n",
                    (Var->val.string), Var->val_len, ThisVarLen);
