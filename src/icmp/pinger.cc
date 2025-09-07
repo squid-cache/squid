@@ -52,6 +52,7 @@
 #include "IcmpPinger.h"
 #include "ip/tools.h"
 #include "time/gadgets.h"
+#include <exception>
 
 #if HAVE_SYS_CAPABILITY_H
 #include <sys/capability.h>
@@ -217,14 +218,35 @@ main(int, char **)
         }
 
         if (FD_ISSET(squid_link, &R)) {
-            control.Recv();
+            try {
+                control.Recv();
+            } catch (const std::exception &ex) {
+                debugs(42, DBG_CRITICAL, "FATAL: " << ex.what());
+                control.Close();
+                exit(EXIT_FAILURE);
+            }
         }
 
+#if USE_IPV6
         if (icmp6_worker >= 0 && FD_ISSET(icmp6_worker, &R)) {
-            icmp6.Recv();
+            try {
+                icmp6.Recv();
+            } catch (const std::exception &ex) {
+                debugs(42, DBG_CRITICAL, "FATAL: " << ex.what());
+                control.Close();
+                exit(EXIT_FAILURE);
+            }
         }
+#endif
+
         if (icmp4_worker >= 0 && FD_ISSET(icmp4_worker, &R)) {
-            icmp4.Recv();
+            try {
+                icmp4.Recv();
+            } catch (const std::exception &ex) {
+                debugs(42, DBG_CRITICAL, "FATAL: " << ex.what());
+                control.Close();
+                exit(EXIT_FAILURE);
+            }
         }
 
         const auto delay = std::chrono::duration_cast<std::chrono::seconds>(timer.total());
