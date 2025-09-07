@@ -687,6 +687,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
         while (ct && *ct) {
             time_t tm;
+            const char* cts = nullptr;
             int l = strcspn(ct, ",");
             char *tmp;
 
@@ -710,14 +711,13 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                 if (tmp == ct + 1)
                     break;  /* not a valid integer */
 
-                const auto cts = ctime(&tm);
+                cts = ctime(&tm);
                 if (!cts)
                     break;
 
                 safe_free(p->date); // TODO: properly handle multiple p->name occurrences
 
-                auto n = strcspn(cts, "\n");
-                p->date = xstrndup(cts, n);
+                p->date = xstrndup(cts, strcspn(cts, "\n"));
 
                 break;
 
