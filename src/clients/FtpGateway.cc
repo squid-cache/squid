@@ -707,7 +707,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
             case 'm':
                 tm = (time_t) strtol(ct + 1, &tmp, 0);
 
-                if (tmp != ct + 1)
+                if (tmp == ct + 1)
                     break;  /* not a valid integer */
 
                 safe_free(p->date); // TODO: properly handle multiple p->name occurrences
