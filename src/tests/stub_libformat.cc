@@ -13,6 +13,8 @@
 #define STUB_API "stub_libformat.cc"
 #include "tests/STUB.h"
 
+const SBuf Format::Dash("-");
+
 void Format::Format::assemble(MemBuf &, const AccessLogEntryPointer &, int) const STUB
 bool Format::Format::parse(char const*) STUB_RETVAL(false)
 Format::Format::Format(char const*) STUB

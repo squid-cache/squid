@@ -1951,6 +1951,7 @@ tests_testHttpRequest_SOURCES = \
 	MasterXaction.h \
 	mime_header.cc \
 	mime_header.h \
+	Notes.cc \
 	RequestFlags.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
@@ -1982,7 +1983,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_fd.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_libauth.cc \
-	tests/stub_libauth_acls.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_libdiskio.cc \
 	tests/stub_liberror.cc \
@@ -2016,6 +2016,7 @@ tests_testHttpRequest_LDADD = \
 	mem/libmem.la \
 	http/libhttp.la \
 	anyp/libanyp.la \
+	dns/libdns.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2023,7 +2024,6 @@ tests_testHttpRequest_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(REPL_OBJS) \
-	$(SSL_LIBS) \
 	$(SSLLIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
