@@ -1383,7 +1383,7 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
     if (!old_squid_format) {
         memcpy(&hdr, hbuf, sizeof(hdr));
     } else {
-        // old Squid format (minor==0) uses a wider struct due to bitfield layout.
+        // Old Squid format (minor==0) uses a wider struct due to bitfield layout.
         // Never read more than available; zero-init then copy the safe prefix.
         htcpDataHeaderSquid hdrSquid;
         memset(&hdrSquid, 0, sizeof(hdrSquid));
