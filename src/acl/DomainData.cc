@@ -25,17 +25,11 @@ xRefFree(T &thing)
     xfree (thing);
 }
 
-ACLDomainData::ACLDomainData() : domains(new Splay<char *>())
-{
-}
-
+ACLDomainData::ACLDomainData() = default
 
 ACLDomainData::~ACLDomainData()
 {
-    if (domains) {
-        domains->destroy(xRefFree);
-        delete domains;
-    }
+    domains.destroy(xRefFree);
 }
 
 template<class T>
@@ -74,7 +68,7 @@ ACLDomainData::match(char const *host)
     debugs(28, 3, "aclMatchDomainList: checking '" << host << "'");
 
     char *h = const_cast<char *>(host);
-    char const * const * result = domains->find(h, aclHostDomainCompare);
+    char const * const * result = domains.find(h, aclHostDomainCompare);
 
     debugs(28, 3, "aclMatchDomainList: '" << host << "' " << (result ? "found" : "NOT found"));
 
@@ -92,7 +86,7 @@ SBufList
 ACLDomainData::dump() const
 {
     AclDomainDataDumpVisitor visitor;
-    domains->visit(visitor);
+    domains.visit(visitor);
     return visitor.contents;
 }
 
@@ -165,13 +159,13 @@ ACLDomainData::parse()
 {
     while (char *t = ConfigParser::strtokFile()) {
         Tolower(t);
-        Acl::SplayInserter<char*>::Merge(*domains, xstrdup(t));
+        Acl::SplayInserter<char*>::Merge(domains, xstrdup(t));
     }
 }
 
 bool
 ACLDomainData::empty() const
 {
-    return domains->empty();
+    return domains.empty();
 }
 
