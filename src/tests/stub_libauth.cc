@@ -30,10 +30,7 @@ void authenticateReset(void) STUB
 
 #include "auth/Scheme.h"
 #include <vector>
-namespace {
-    static std::vector<Auth::Scheme::Pointer> sSchemes;
-}
-std::vector<Auth::Scheme::Pointer> & Auth::Scheme::GetSchemes() { return sSchemes; }
+std::vector<Auth::Scheme::Pointer> & Auth::Scheme::GetSchemes() STUB_RETVAL(0)
 void Auth::Scheme::AddScheme(Auth::Scheme::Pointer) STUB
 Auth::Scheme::Pointer Auth::Scheme::Find(const char *) STUB_RETVAL(nullptr)
 void Auth::Scheme::FreeAll() STUB
