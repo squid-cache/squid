@@ -614,7 +614,7 @@ Fs::Ufs::UFSSwapDir::createDirectory(const char *aPath, int should_exist)
         } else {
             fatalf("Swap directory %s is not a directory.", aPath);
         }
-    } else if (0 == mkdir(aPath, 0700)) {
+    } else if (0 == mkdir(aPath, 0750)) {
         debugs(47, (should_exist ? DBG_IMPORTANT : 3), aPath << " created");
         created = 1;
     } else {
