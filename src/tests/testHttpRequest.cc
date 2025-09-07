@@ -16,6 +16,58 @@
 
 #include <cppunit/TestAssert.h>
 
+// XXX: Misplaced
+#define STUB_API "Notes.cc"
+#include "tests/STUB.h"
+#include "dns/LookupDetails.h"
+#include "anyp/ProtocolType.h"
+#include "Notes.h"
+const char *NotePairs::findFirst(const char *) const STUB_RETVAL(nullptr)
+void NotePairs::add(const char *, const char *) STUB
+void NotePairs::remove(const char *) STUB
+void NotePairs::replaceOrAddOrAppend(const NotePairs *, const NotePairs::Names &) STUB
+void NotePairs::replaceOrAdd(const NotePairs *) STUB
+Notes::Notes(const char *, const Keys *, bool) STUB
+std::ostream &Dns::LookupDetails::print(std::ostream &os) const STUB_RETVAL(os)
+const SBuf Format::Dash("-");
+AnyP::PortCfgPointer HttpPortList;
+const char * ProtocolType_str[] = {
+	"NONE",
+	"HTTP",
+	"FTP",
+	"HTTPS",
+	"COAP",
+	"COAPS",
+	"WAIS",
+	"ICP",
+#if USE_HTCP
+	"HTCP",
+#endif
+	"URN",
+	"WHOIS",
+	"ICY",
+	"TLS",
+	"SSL",
+	"AUTHORITY_FORM",
+	"UNKNOWN",
+	"MAX"
+};
+#include "PingData.h"
+ping_data::ping_data() :
+    n_sent(0),
+    n_recv(0),
+    n_replies_expected(0),
+    timeout(0),
+    timedout(0),
+    w_rtt(0),
+    p_rtt(0)
+{
+    start.tv_sec = 0;
+    start.tv_usec = 0;
+    stop.tv_sec = 0;
+    stop.tv_usec = 0;
+}
+
 class TestHttpRequest : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestHttpRequest);

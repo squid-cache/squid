@@ -1929,241 +1929,103 @@ tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpRequest
 tests_testHttpRequest_SOURCES = \
-	$(DELAY_POOL_SOURCE) \
-	$(DNSSOURCE) \
-	$(HTCPSOURCE) \
-	$(IPC_SOURCE) \
-	$(SNMP_SOURCE) \
-	$(WIN32_SOURCE) \
 	AccessLogEntry.cc \
-	AuthReg.h \
-	BodyPipe.cc \
-	tests/stub_CacheDigest.cc \
-	CacheDigest.h \
-	CachePeer.cc \
-	CachePeer.h \
-	CachePeers.cc \
-	CachePeers.h \
-	ClientInfo.h \
-	tests/stub_CollapsedForwarding.cc \
-	ConfigOption.cc \
+	anyp/UriScheme.h \
+	anyp/UriScheme.cc \
 	ConfigParser.cc \
-	CpuAffinityMap.cc \
-	CpuAffinityMap.h \
-	CpuAffinitySet.cc \
-	CpuAffinitySet.h \
-	tests/stub_ETag.cc \
-	tests/stub_EventLoop.cc \
-	ExternalACLEntry.cc \
-	FadingCounter.cc \
-	FwdState.cc \
-	FwdState.h \
-	HappyConnOpener.cc \
-	HappyConnOpener.h \
-	HeaderMangling.cc \
-	HeaderMangling.h \
-	HttpBody.cc \
-	HttpBody.h \
-	tests/stub_HttpControlMsg.cc \
-	HttpHdrCc.cc \
-	HttpHdrCc.h \
+	dlink.cc \
+	dlink.h \
+	fs_io.cc \
+	HttpHeaderTools.cc \
 	HttpHdrContRange.cc \
-	HttpHdrRange.cc \
+	HttpHeader.cc \
+	HttpHdrCc.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
-	HttpHeader.cc \
-	HttpHeader.h \
-	HttpHeaderFieldStat.h \
-	HttpHeaderTools.cc \
+	HttpHdrRange.cc \
 	HttpHeaderTools.h \
-	HttpReply.cc \
+	tests/stub_HttpReply.cc \
 	HttpRequest.cc \
+	LogTags.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
+	mime_header.cc \
+	mime_header.h \
+	RequestFlags.cc \
+	Parsing.cc \
+	RemovalPolicy.cc \
+	RequestFlags.h \
+	StatCounters.cc \
+	StatCounters.h \
 	tests/testHttpRequest.cc \
 	tests/testHttpRequestMethod.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_Instance.cc \
-	IoStats.h \
-	tests/stub_IpcIoFile.cc \
-	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
-	MemBuf.cc \
-	MemObject.cc \
-	MemStore.cc \
-	Notes.cc \
-	Notes.h \
-	Parsing.cc \
-	PeerPoolMgr.cc \
-	PeerPoolMgr.h \
-	Pipeline.cc \
-	Pipeline.h \
-	RefreshPattern.h \
-	RemovalPolicy.cc \
-	RequestFlags.cc \
-	RequestFlags.h \
-	ResolvedPeers.cc \
-	ResolvedPeers.h \
-	SquidMath.cc \
-	SquidMath.h \
-	StatCounters.cc \
-	StatCounters.h \
 	StatHist.cc \
-	StatHist.h \
-	StoreFileSystem.cc \
-	StoreIOState.cc \
-	StoreSwapLogData.cc \
 	StrList.cc \
 	StrList.h \
 	String.cc \
-	Transients.cc \
+	MemBuf.cc \
+	tests/stub_cbdata.cc \
 	tests/stub_cache_cf.cc \
-	cache_cf.h \
-	cache_manager.cc \
-	tests/stub_carp.cc \
-	carp.h \
-	cbdata.cc \
-	clientStream.cc \
-	tests/stub_client_db.cc \
-	client_side.cc \
-	client_side.h \
-	client_side_reply.cc \
-	client_side_request.cc \
-	dlink.cc \
-	dlink.h \
-	errorpage.cc \
-	event.cc \
-	external_acl.cc \
+	tests/stub_CachePeer.cc \
+	tests/stub_client_side.cc \
+	tests/stub_cache_manager.cc \
+	tests/stub_comm.cc \
+	tests/stub_debug.cc \
+	tests/stub_DelayId.cc \
+	tests/stub_errorpage.cc \
+	tests/stub_ETag.cc \
+	tests/stub_event.cc \
 	tests/stub_fatal.cc \
-	fatal.h \
-	fd.cc \
-	fd.h \
-	fde.cc \
-	fqdncache.cc \
-	fqdncache.h \
-	fs_io.cc \
-	fs_io.h \
-	helper.cc \
-	hier_code.h \
-	http.cc \
-	icp_v2.cc \
-	icp_v3.cc \
-	int.cc \
-	int.h \
-	internal.cc \
-	internal.h \
-	tests/stub_ipc_Forwarder.cc \
-	ipcache.cc \
+	tests/stub_fqdncache.cc \
+	tests/stub_fd.cc \
+	tests/stub_libicmp.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libauth_acls.cc \
+	tests/stub_HelperChildConfig.cc \
 	tests/stub_libdiskio.cc \
 	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
-	tests/stub_libmem.cc \
+	tests/stub_libformat.cc \
+	tests/stub_ipc.cc \
+	tests/stub_ipcache.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
+	tests/stub_libtime.cc \
 	tests/stub_main_cc.cc \
-	mem_node.cc \
-	mime.cc \
-	mime.h \
-	mime_header.cc \
-	mime_header.h \
-	multicast.cc \
-	multicast.h \
-	neighbors.cc \
-	neighbors.h \
-	pconn.cc \
-	peer_digest.cc \
-	peer_proxy_negotiate_auth.cc \
-	peer_proxy_negotiate_auth.h \
-	peer_select.cc \
-	peer_sourcehash.cc \
-	peer_sourcehash.h \
-	peer_userhash.cc \
-	peer_userhash.h \
-	tests/stub_redirect.cc \
-	redirect.h \
-	refresh.cc \
-	refresh.h \
-	repl_modules.h \
-	stat.cc \
-	stat.h \
-	stmem.cc \
-	store.cc \
-	store_client.cc \
-	tests/stub_store_digest.cc \
-	store_digest.h \
-	store_io.cc \
-	store_key_md5.cc \
-	store_key_md5.h \
-	store_log.cc \
-	store_log.h \
-	store_rebuild.cc \
-	store_rebuild.h \
+	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
-	store_swapin.cc \
-	store_swapin.h \
-	store_swapout.cc \
-	tools.cc \
-	tools.h \
-	tests/stub_tunnel.cc \
-	tunnel.h \
-	urn.cc \
-	urn.h \
-	tests/stub_wccp2.cc \
-	wccp2.h \
-	wordlist.cc \
-	wordlist.h
+	tests/stub_wordlist.cc \
+	tests/stub_neighbors.cc
 nodist_tests_testHttpRequest_SOURCES = \
-	$(BUILT_SOURCES) \
-	tests/stub_libtime.cc
+	$(BUILT_SOURCES)
 tests_testHttpRequest_LDADD = \
-	libsquid.la \
-	clients/libclients.la \
-	servers/libservers.la \
-	helper/libhelper.la \
-	ftp/libftp.la \
-	http/libhttp.la \
+	base/libbase.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
-	parser/libparser.la \
-	fs/libfs.la \
-	$(SSL_LIBS) \
-	ipc/libipc.la \
-	proxyp/libproxyp.la \
-	parser/libparser.la \
-	dns/libdns.la \
-	base/libbase.la \
-	mgr/libmgr.la \
-	html/libhtml.la \
-	anyp/libanyp.la \
-	$(SNMP_LIBS) \
-	icmp/libicmp.la \
+	sbuf/libsbuf.la \
+	SquidConfig.o \
+	log/liblog.la \
+	$(ADAPTATION_LIBS) \
+	CommCalls.o \
 	comm/libcomm.la \
 	ip/libip.la \
-	log/liblog.la \
-	format/libformat.la \
-	store/libstore.la \
-	sbuf/libsbuf.la \
-	debug/libdebug.la \
-	$(REPL_OBJS) \
-	$(ADAPTATION_LIBS) \
+	parser/libparser.la \
+	mem/libmem.la \
+	http/libhttp.la \
+	anyp/libanyp.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(LIBCAP_LIBS) \
-	$(LIBGNUTLS_LIBS) \
-	$(LIBHEIMDAL_KRB5_LIBS) \
-	$(REGEXLIB) \
-	$(SSLLIB) \
-	$(LIBCPPUNIT_LIBS) \
-	$(LIBSYSTEMD_LIBS) \
-	$(COMPAT_LIB) \
-	$(LIBGSS_LIBS) \
-	$(LIBMIT_KRB5_LIBS) \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(REPL_OBJS) \
+	$(SSL_LIBS) \
+	$(SSLLIB) \
 	$(LIBNETTLE_LIBS) \
-	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
