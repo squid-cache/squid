@@ -675,11 +675,12 @@ asn_parse_objid(u_char * data, int *datalength,
     while (length > 0 && (*objidlength)-- > 0) {
         subidentifier = 0;
 
-        do {            /* shift and add in low order 7 bits */
+        do {
             if (length-- <= 0) {
                 snmp_set_api_error(SNMPERR_ASN_DECODE);
                 return (NULL);
             }
+            // shift and add in low order 7 bits
             subidentifier = (subidentifier << 7)
                             | (*bufp & ~ASN_BIT8);
         } while (*bufp++ & ASN_BIT8);
