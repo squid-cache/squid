@@ -1387,7 +1387,7 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
         // Never read more than available; zero-init then copy the safe prefix.
         htcpDataHeaderSquid hdrSquid;
         memset(&hdrSquid, 0, sizeof(hdrSquid));
-        if ((size_t)hsz >= sizeof(htcpDataHeaderSquid)) {
+        if (static_cast<size_t>(hsz) >= sizeof(htcpDataHeaderSquid)) {
             memcpy(&hdrSquid, hbuf, sizeof(htcpDataHeaderSquid));
         } else {
             // Guaranteed earlier: hsz >= sizeof(htcpDataHeader) (compact prefix).
