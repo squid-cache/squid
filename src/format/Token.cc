@@ -183,10 +183,12 @@ static TokenTableEntry TokenTableMisc[] = {
 
 static TokenTableEntry TokenTableProxyProtocol[] = {
     TokenTableEntry(">h", LFT_PROXY_PROTOCOL_RECEIVED_HEADER),
+    TokenTableEntry(nullptr, LFT_NONE)           /* this must be last */
 };
 
 static TokenTableEntry TokenTableTransport[] = {
     TokenTableEntry(">connection_id", LFT_TRANSPORT_CLIENT_CONNECTION_ID),
+    TokenTableEntry(nullptr, LFT_NONE)           /* this must be last */
 };
 
 #if USE_ADAPTATION
@@ -724,7 +726,8 @@ Format::Token::parse(const char *def, Quoting *quoting)
     case LFT_REQUEST_URLGROUP_OLD_2X:
         debugs(46, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: The \"rG\" formatting code is deprecated. Use \"note{urlgroup}\" instead.");
         type = LFT_NOTE;
-        data.header.header = xstrdup("urlgroup");
+        data.string = xstrdup("urlgroup");
+        data.header.header = data.string;
         break;
 
     default:
