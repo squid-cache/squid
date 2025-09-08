@@ -15,7 +15,7 @@
 #include "security/Io.h"
 #include "ssl/gadgets.h"
 
-// Determines whether the given key requires a digest when signing.
+/// whether the given key requires a digest when signing
 static bool
 keyNeedsDigest(const EVP_PKEY * const pkey) {
     const auto id = EVP_PKEY_id(pkey);
