@@ -33,10 +33,6 @@ ping_data::ping_data() :
     stop.tv_usec = 0;
 }
 
-// XXX: cannot use stub_icp.cc because in includes icp_opcode.cc the second time (after BUILT_SOURCES list)
-Comm::ConnectionPointer icpIncomingConn;
-Comm::ConnectionPointer icpOutgoingConn;
-
 /* globals required to resolve link issues */
 AnyP::PortCfgPointer HttpPortList;
 

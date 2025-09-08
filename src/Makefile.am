@@ -1932,6 +1932,8 @@ tests_testHttpRequest_SOURCES = \
 	AccessLogEntry.cc \
 	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
+	globals.cc \
+	hier_code.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_ETag.cc \
 	tests/stub_HelperChildConfig.cc \
@@ -1980,6 +1982,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_fd.cc \
 	tests/stub_fqdncache.cc \
 	fs_io.cc \
+	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
 	tests/stub_libauth.cc \
@@ -1998,8 +2001,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_wordlist.cc
-nodist_tests_testHttpRequest_SOURCES = \
-	$(BUILT_SOURCES)
 tests_testHttpRequest_LDADD = \
 	base/libbase.la \
 	acl/libacls.la \
