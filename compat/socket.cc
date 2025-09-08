@@ -228,6 +228,7 @@ xsocket(int domain, int type, int protocol)
     if (rv == -1) {
         closesocket(s);
         errno = EBADF;
+        return SOCKET_ERROR;
     }
     return rv;
 }
