@@ -25,8 +25,6 @@ xRefFree(T &thing)
     xfree (thing);
 }
 
-ACLDomainData::ACLDomainData() = default;
-
 ACLDomainData::~ACLDomainData()
 {
     domains.destroy(xRefFree);
