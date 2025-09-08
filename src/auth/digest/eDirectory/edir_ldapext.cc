@@ -352,7 +352,6 @@ static int getLoginConfig(
 /**********************************************************************
  Attempts to get the Simple Password
 **********************************************************************/
-#define SMB_MALLOC_ARRAY(type, nelem)       calloc(nelem, sizeof(type))
 
 static int nmasldap_get_simple_pwd(
     LDAP     *ld,
