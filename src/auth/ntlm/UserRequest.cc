@@ -186,14 +186,14 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
     /* get header */
     const char *proxy_auth = aRequest->header.getStr(type);
 
-    /* locate second word */
-    const char *blob = proxy_auth;
-
     /* if proxy_auth is actually NULL, we'd better not manipulate it. */
-    if (!blob) {
+    if (!proxy_auth) {
         debugs(29, 4, "WARNING: NTLM Authentication missing authorization header");
         return;
     }
+
+    /* locate second word */
+    const char *blob = proxy_auth;
 
     while (xisspace(*blob) && *blob)
         ++blob;
