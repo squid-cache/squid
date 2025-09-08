@@ -184,6 +184,14 @@ This section gives an account of those changes in three categories:
 	<p>Removed the <em>non_peers</em> action. See the Cache Manager
 	<ref id="mgr" name="section"> for details.
 
+
+	<tag>client_ip_max_connections</tag>
+	<p>Fixed off-by-one enforcement. Squid now allows at most <em>N</em>
+	concurrent connections per client IP (not <em>N</em>+1), where <em>N</em>
+	is the configured directive value. Deployments that relied on the extra
+	connection should increase the configured limit by one to preserve
+	previous behavior.
+
 	<tag>dns_packet_max</tag>
 	<p>Honor positive <em>dns_packet_max</em> values when sending DNS A queries
 	and PTR queries containing IPv4 addresses. Prior to this change, Squid did
