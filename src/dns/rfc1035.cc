@@ -511,7 +511,7 @@ rfc1035RRDestroy(rfc1035_rr ** rr, int n)
 static int
 rfc1035QueryUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_query * query)
 {
-    unsigned short s;
+    uint16_t s;
     if (rfc1035NameUnpack(buf, sz, off, nullptr, query->name, RFC1035_MAXHOSTNAMESZ, 0)) {
         RFC1035_UNPACK_DEBUG;
         memset(query, '\0', sizeof(*query));
