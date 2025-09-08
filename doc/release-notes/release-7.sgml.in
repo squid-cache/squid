@@ -228,6 +228,14 @@ This section gives an account of those changes in three categories:
 	cases, the decision could probably go either way due to response header
 	size fluctuations anyway.
 
+	<tag>client_ip_max_connections</tag>
+
+	<p>Fixed off-by-one enforcement. Squid now allows at most <em>N</em>
+	concurrent connections per client IP (not <em>N</em>+1), where <em>N</em>
+	is the configured directive value. Deployments that relied on the extra
+	connection should increase the configured limit by one to preserve
+	previous behavior.
+
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
