@@ -1957,7 +1957,6 @@ tests_testHttpRequest_SOURCES = \
 	MemBuf.cc \
 	Notes.cc \
 	Parsing.cc \
-	RemovalPolicy.cc \
 	RequestFlags.cc \
 	RequestFlags.h \
 	StatCounters.cc \
