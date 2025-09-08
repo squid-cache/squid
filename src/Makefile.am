@@ -1992,7 +1992,9 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_libtime.cc \
 	mime_header.cc \
 	mime_header.h \
+	tests/stub_MemObject.cc \
 	tests/stub_neighbors.cc \
+	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_wordlist.cc
@@ -2015,6 +2017,7 @@ tests_testHttpRequest_LDADD = \
 	http/libhttp.la \
 	anyp/libanyp.la \
 	dns/libdns.la \
+	$(REPL_OBJS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2022,7 +2025,6 @@ tests_testHttpRequest_LDADD = \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(REPL_OBJS) \
 	$(SSLLIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
