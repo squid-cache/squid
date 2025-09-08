@@ -1338,7 +1338,7 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
         int xerrno = errno;
         if (xerrno == ENOENT) {
             debugs(36, DBG_CRITICAL, MYNAME << "WARNING: Creating " << p1);
-            if (mkdir(p1.c_str(), 0700) == 0)
+            if (mkdir(p1.c_str(), 0750) == 0)
                 return 0;
         }
 
