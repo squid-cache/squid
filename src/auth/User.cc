@@ -69,18 +69,6 @@ Auth::User::absorb(Auth::User::Pointer from)
 
     /* absorb the list of IP address sources (for max_user_ip controls) */
     ipList.merge(from->ipList);
-
-#if 0
-    for (auto &newIp : from->ipList) {
-        /* If this IP has expired - ignore the expensive merge actions. */
-        if (!newIp.expired()) {
-            /* add to our list. update if already present. */
-            if (const auto *old = ipList.find(ipa.key))
-                newIp.expires = max(newIp.expires, old->expires);
-            ipList.add(newIp.key, newIp.value, newIp.expires);
-        }
-    }
-#endif
 }
 
 Auth::User::~User()
