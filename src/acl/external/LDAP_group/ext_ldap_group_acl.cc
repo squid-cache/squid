@@ -231,6 +231,7 @@ main(int argc, char **argv)
 
     setbuf(stdout, nullptr);
 
+    const auto prog = argv[0];
     while (argc > 1 && argv[1][0] == '-') {
         const char *value = "";
         char option = argv[1][1];
@@ -466,9 +467,9 @@ main(int argc, char **argv)
         int found = 0;
         if (!strchr(buf, '\n')) {
             /* too large message received.. skip and deny */
-            fprintf(stderr, "%s: ERROR: Input Too large: %s\n", argv[0], buf);
+            fprintf(stderr, "%s: ERROR: Input Too large: %s\n", prog, buf);
             while (fgets(buf, sizeof(buf), stdin)) {
-                fprintf(stderr, "%s: ERROR: Input Too large..: %s\n", argv[0], buf);
+                fprintf(stderr, "%s: ERROR: Input Too large..: %s\n", prog, buf);
                 if (strchr(buf, '\n') != nullptr)
                     break;
             }
@@ -477,7 +478,7 @@ main(int argc, char **argv)
         }
         user = strtok(buf, " \n");
         if (!user) {
-            debug("%s: Invalid request: No Username given\n", argv[0]);
+            debug("%s: Invalid request: No Username given\n", prog);
             SEND_BH(HLP_MSG("Invalid request. No Username"));
             continue;
         }
@@ -500,7 +501,7 @@ main(int argc, char **argv)
         if (use_extension_dn) {
             extension_dn = strtok(nullptr, " \n");
             if (!extension_dn) {
-                debug("%s: Invalid request: Extension DN configured, but none sent.\n", argv[0]);
+                debug("%s: Invalid request: Extension DN configured, but none sent.\n", prog);
                 SEND_BH(HLP_MSG("Invalid Request. Extension DN required"));
                 continue;
             }
@@ -517,7 +518,7 @@ recover:
                     rc = ldap_initialize(&ld, ldapServer);
                     if (rc != LDAP_SUCCESS) {
                         broken = HLP_MSG("Unable to connect to LDAP server");
-                        fprintf(stderr, "%s: ERROR: Unable to connect to LDAPURI:%s\n", argv[0], ldapServer);
+                        fprintf(stderr, "%s: ERROR: Unable to connect to LDAPURI:%s\n", prog, ldapServer);
                         break;
                     }
                 } else
