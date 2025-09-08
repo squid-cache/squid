@@ -750,7 +750,7 @@ htcpUnpackSpecifier(char *buf, int sz)
 static htcpDetail *
 htcpUnpackDetail(char *buf, int sz)
 {
-    std::unique_ptr<htcpDetail> d(new htcpDetail);
+    auto d = std::make_unique<htcpDetail>();
 
     /* Find length of RESP-HDRS */
     uint16_t l;
