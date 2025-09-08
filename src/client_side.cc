@@ -3774,7 +3774,7 @@ ConnStateData::handleIdleClientPinnedTlsRead()
         return false;
 
     char buf[1];
-    const int peekResult = SSL_peek(ssl, buf, sizeof(buf));
+    const auto peekResult = SSL_peek(ssl, buf, sizeof(buf));
 
     if (peekResult > 0 || SSL_pending(ssl) > 0) {
         debugs(83, 2, pinning.serverConnection << " TLS application data peeked");
