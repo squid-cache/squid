@@ -16,7 +16,7 @@
 
 #include <cppunit/TestAssert.h>
 
-/// XXX: cannot use stub_access_log.cc because it conflicts with log/liblog.la
+// XXX: cannot use stub_access_log.cc because it conflicts with log/liblog.la
 #include "PingData.h"
 ping_data::ping_data() :
     n_sent(0),
@@ -32,6 +32,10 @@ ping_data::ping_data() :
     stop.tv_sec = 0;
     stop.tv_usec = 0;
 }
+
+// XXX: cannot use stub_icp.cc because in includes icp_opcode.cc the second time (after BUILT_SOURCES list)
+Comm::ConnectionPointer icpIncomingConn;
+Comm::ConnectionPointer icpOutgoingConn;
 
 /* globals required to resolve link issues */
 AnyP::PortCfgPointer HttpPortList;
