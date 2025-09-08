@@ -66,7 +66,7 @@ ACLDomainData::match(char const *host)
     debugs(28, 3, "aclMatchDomainList: checking '" << host << "'");
 
     char *h = const_cast<char *>(host);
-    char const * const * result = domains.find(h, aclHostDomainCompare);
+    const auto result = domains.find(h, aclHostDomainCompare);
 
     debugs(28, 3, "aclMatchDomainList: '" << host << "' " << (result ? "found" : "NOT found"));
 
