@@ -1251,7 +1251,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
     /* buf should be a SPECIFIER */
 
     if (sz == 0) {
-        debugs(31, 4, "htcpHandleClr: nothing to do");
+        debugs(31, 4, "nothing to do");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str, nullptr);
         return;
     }
@@ -1259,7 +1259,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
     htcpSpecifier::Pointer s(htcpUnpackSpecifier(buf, sz));
 
     if (!s) {
-        debugs(31, 3, "htcpHandleClr: htcpUnpackSpecifier failed");
+        debugs(31, 3, "htcpUnpackSpecifier failed");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str, nullptr);
         return;
     } else {
@@ -1268,13 +1268,13 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
     }
 
     if (!s->request) {
-        debugs(31, 3, "htcpHandleTstRequest: failed to parse request");
+        debugs(31, 3, "failed to parse request");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str, s->al);
         return;
     }
 
     if (!htcpAccessAllowed(Config.accessList.htcp_clr, s, from)) {
-        debugs(31, 3, "htcpHandleClr: Access denied");
+        debugs(31, 3, "Access denied");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_DENIED, s->uri, s->al);
         return;
     }
