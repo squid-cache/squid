@@ -1390,19 +1390,18 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             tmp[1] = '\0';
             if (fmt->data.header.header && *fmt->data.header.header) {
                 const char *separator = tmp;
-                static SBuf note;
 #if USE_ADAPTATION
                 Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
                 if (ah && ah->metaHeaders) {
-                    if (ah->metaHeaders->find(note, fmt->data.header.header, separator))
-                        sb.append(note);
+                    if (const auto note = ah->metaHeaders->find(fmt->data.header.header, separator))
+                        sb.append(*note);
                 }
 #endif
                 if (al->notes) {
-                    if (al->notes->find(note, fmt->data.header.header, separator)) {
+                    if (const auto note = al->notes->find(fmt->data.header.header, separator)) {
                         if (!sb.isEmpty())
                             sb.append(separator);
-                        sb.append(note);
+                        sb.append(*note);
                     }
                 }
                 out = sb.c_str();
