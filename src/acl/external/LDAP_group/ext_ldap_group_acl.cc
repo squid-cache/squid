@@ -581,7 +581,7 @@ recover:
                     rc = ldap_simple_bind_s(ld, binddn, bindpasswd);
                     if (rc != LDAP_SUCCESS) {
                         broken = HLP_MSG("could not bind");
-                        fprintf(stderr, PROGRAM_NAME ": WARNING: %s to binddn '%s'\n", broken, ldap_err2string(rc));
+                        fprintf(stderr, PROGRAM_NAME ": WARNING: %s to binddn '%s'\n", broken, binddn);
                         ldap_unbind(ld);
                         ld = nullptr;
                         break;
