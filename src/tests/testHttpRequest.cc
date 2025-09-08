@@ -33,9 +33,6 @@ ping_data::ping_data() :
     stop.tv_usec = 0;
 }
 
-/* globals required to resolve link issues */
-AnyP::PortCfgPointer HttpPortList;
-
 class TestHttpRequest : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestHttpRequest);
