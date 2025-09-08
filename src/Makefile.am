@@ -1932,8 +1932,6 @@ tests_testHttpRequest_SOURCES = \
 	AccessLogEntry.cc \
 	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
-	globals.cc \
-	hier_code.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_ETag.cc \
 	tests/stub_HelperChildConfig.cc \
@@ -1955,6 +1953,7 @@ tests_testHttpRequest_SOURCES = \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
+	tests/stub_MemObject.cc \
 	Notes.cc \
 	Parsing.cc \
 	RequestFlags.cc \
@@ -1981,6 +1980,8 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_fd.cc \
 	tests/stub_fqdncache.cc \
 	fs_io.cc \
+	globals.cc \
+	hier_code.cc \
 	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
@@ -1994,7 +1995,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_libtime.cc \
 	mime_header.cc \
 	mime_header.h \
-	tests/stub_MemObject.cc \
 	tests/stub_neighbors.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
