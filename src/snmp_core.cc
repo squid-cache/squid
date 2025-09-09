@@ -327,13 +327,16 @@ snmpClosePorts()
         debugs(49, DBG_IMPORTANT, "Closing SNMP receiving port " << snmpIncomingConn->local);
         snmpIncomingConn->close();
     }
-    snmpIncomingConn = nullptr;
 
-    if (Comm::IsConnOpen(snmpOutgoingConn) && snmpIncomingConn != snmpOutgoingConn) {
+    const auto shared = snmpOutgoingConn && snmpIncomingConn && snmpOutgoingConn == snmpIncomingConn;
+
+    if (Comm::IsConnOpen(snmpOutgoingConn) && !shared) {
         // Perform OUT port closure so as not to step on IN port when sharing a conn.
         debugs(49, DBG_IMPORTANT, "Closing SNMP sending port " << snmpOutgoingConn->local);
         snmpOutgoingConn->close();
     }
+
+    snmpIncomingConn = nullptr;
     snmpOutgoingConn = nullptr;
 }
 
