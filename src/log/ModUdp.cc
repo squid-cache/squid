@@ -145,6 +145,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
     lf->f_rotate = logfile_mod_udp_rotate;
 
     l_udp_t *ll = static_cast<l_udp_t*>(xcalloc(1, sizeof(*ll)));
+    ll->fd = -1;
     lf->data = ll;
 
     if (strncmp(path, "//", 2) == 0) {
