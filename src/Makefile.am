@@ -1980,7 +1980,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_fd.cc \
 	tests/stub_fqdncache.cc \
 	fs_io.cc \
-	globals.cc \
 	hier_code.cc \
 	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
@@ -2000,6 +1999,8 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_wordlist.cc
+nodist_tests_testHttpRequest_SOURCES = \
+	$(TESTSOURCES) \
 tests_testHttpRequest_LDADD = \
 	base/libbase.la \
 	acl/libacls.la \
