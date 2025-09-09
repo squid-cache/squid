@@ -225,8 +225,11 @@ xsocket(int domain, int type, int protocol)
         return SOCKET_ERROR;
     }
     const auto rv = _open_osfhandle(result, 0);
-    if (rv == -1)
+    if (rv == -1) {
+        closesocket(result);
         errno = EBADF;
+        return SOCKET_ERROR;
+    }
     return rv;
 }
 
