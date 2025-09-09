@@ -1932,7 +1932,6 @@ tests_testHttpRequest_SOURCES = \
 	AccessLogEntry.cc \
 	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
-	tests/stub_access_log.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_ETag.cc \
 	tests/stub_HelperChildConfig.cc \
@@ -1965,6 +1964,7 @@ tests_testHttpRequest_SOURCES = \
 	StrList.cc \
 	StrList.h \
 	String.cc \
+	tests/stub_access_log.cc \
 	anyp/UriScheme.cc \
 	anyp/UriScheme.h \
 	tests/stub_cache_cf.cc \
@@ -1989,6 +1989,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_liberror.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
+	tests/stub_liblog.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_libtime.cc \
@@ -1996,7 +1997,6 @@ tests_testHttpRequest_SOURCES = \
 	mime_header.h \
 	tests/stub_neighbors.cc \
 	tests/stub_stmem.cc \
-	tests/stub_liblog.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_wordlist.cc
