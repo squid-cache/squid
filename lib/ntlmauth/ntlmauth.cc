@@ -144,8 +144,8 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
 
         for (; l>0; ++sc, --l) {
             const auto c = static_cast<unsigned char>(*sc);
-            if (*c == '\0' || !xisprint(*c)) {
-                fprintf(stderr, "ntlmssp: bad ascii: %04x\n", *c);
+            if (c == '\0' || !xisprint(c)) {
+                fprintf(stderr, "ntlmssp: bad ascii: %04x\n", c);
                 return rv;
             }
             ++rv.l;
