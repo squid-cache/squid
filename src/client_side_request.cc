@@ -731,8 +731,7 @@ static void
 clientRedirectAccessCheckDone(Acl::Answer answer, void *data)
 {
     ClientRequestContext *context = static_cast<ClientRequestContext *>(data);
-
-    if (!calloutContext->httpStateIsValid())
+    if (!context->httpStateIsValid())
         return;
 
     ClientHttpRequest *http = context->http;
@@ -1338,6 +1337,7 @@ sslBumpAccessCheckDoneWrapper(Acl::Answer answer, void *data)
 
     if (!calloutContext->httpStateIsValid())
         return;
+
     calloutContext->sslBumpAccessCheckDone(answer);
 }
 
