@@ -1932,6 +1932,7 @@ tests_testHttpRequest_SOURCES = \
 	AccessLogEntry.cc \
 	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
+	tests/stub_access_log.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_ETag.cc \
 	tests/stub_HelperChildConfig.cc \
@@ -1995,6 +1996,7 @@ tests_testHttpRequest_SOURCES = \
 	mime_header.h \
 	tests/stub_neighbors.cc \
 	tests/stub_stmem.cc \
+	tests/stub_liblog.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_wordlist.cc
@@ -2007,7 +2009,6 @@ tests_testHttpRequest_LDADD = \
 	acl/libapi.la \
 	sbuf/libsbuf.la \
 	SquidConfig.o \
-	log/liblog.la \
 	$(ADAPTATION_LIBS) \
 	CommCalls.o \
 	comm/libcomm.la \
