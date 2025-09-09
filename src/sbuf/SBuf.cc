@@ -262,7 +262,10 @@ SBuf::vappendf(const char *fmt, va_list vargs)
         // not enough space on the first go, we now know how much we need
         requiredSpaceEstimate = sz*2; // TODO: tune heuristics
         space = rawSpace(requiredSpaceEstimate);
-        sz = vsnprintf(space, spaceSize(), fmt, vargs);
+        va_list ap2;
+        va_copy(ap2, vargs);
+        sz = vsnprintf(space, spaceSize(), fmt, ap2);
+        va_end(ap2);
         Must3(sz >= 0, "vsnprintf() succeeds (with increased buffer space)", Here());
     }
 
