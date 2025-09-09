@@ -39,7 +39,7 @@ ACLServerNameData::match(const char *host)
     debugs(28, 3, "checking '" << host << "'");
 
     char *h = const_cast<char *>(host);
-    char const * const * result = domains->find(h, aclHostDomainCompare);
+    char const * const * result = domains.find(h, aclHostDomainCompare);
 
     debugs(28, 3, "'" << host << "' " << (result ? "found" : "NOT found"));
 
