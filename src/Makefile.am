@@ -1972,7 +1972,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_client_side.cc \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
-	dlink.cc \
 	dlink.h \
 	tests/stub_errorpage.cc \
 	tests/stub_event.cc \
