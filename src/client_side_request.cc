@@ -387,6 +387,9 @@ static void
 hostHeaderIpVerifyWrapper(const ipcache_addrs* ia, const Dns::LookupDetails &dns, void *data)
 {
     ClientRequestContext *c = static_cast<ClientRequestContext*>(data);
+    if (!c->httpStateIsValid())
+        return;
+
     c->hostHeaderIpVerify(ia, dns);
 }
 
@@ -723,7 +726,11 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
 static void
 clientRedirectAccessCheckDone(Acl::Answer answer, void *data)
 {
-    ClientRequestContext *context = (ClientRequestContext *)data;
+    ClientRequestContext *context = static_cast<ClientRequestContext *>(data);
+
+    if (!calloutContext->httpStateIsValid())
+        return;
+
     ClientHttpRequest *http = context->http;
 
     if (answer.allowed())
@@ -754,6 +761,9 @@ static void
 clientStoreIdAccessCheckDone(Acl::Answer answer, void *data)
 {
     ClientRequestContext *context = static_cast<ClientRequestContext *>(data);
+    if (!context->httpStateIsValid())
+        return;
+
     ClientHttpRequest *http = context->http;
 
     if (answer.allowed())
