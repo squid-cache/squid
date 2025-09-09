@@ -209,8 +209,14 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             serverBump->attachServerSession(serverSession);
             // store peeked cert to check SQUID_X509_V_ERR_CERT_CHANGE
             if (X509 *peeked_cert = serverBump->serverCert.get()) {
-                X509_up_ref(peeked_cert);
-                SSL_set_ex_data(serverSession.get(), ssl_ex_index_ssl_peeked_cert, peeked_cert);
+                if (!X509_up_ref(peeked_cert)) {
+                    debugs(83, DBG_IMPORTANT, "WARNING: X509_up_ref(peeked_cert) failed");
+                } else if (!SSL_set_ex_data(serverSession.get(),
+                                            ssl_ex_index_ssl_peeked_cert,
+                                            peeked_cert)) {
+                    debugs(83, DBG_IMPORTANT, "WARNING: SSL_set_ex_data(ssl_ex_index_ssl_peeked_cert) failed; dropping extra X509 ref");
+                    X509_free(peeked_cert);
+                }
             }
         }
     }
