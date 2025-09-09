@@ -765,6 +765,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
             instance = (oid *)xmalloc(sizeof(*name) * (current->len + 1 ));
             memcpy(instance, name, (sizeof(*name) * current->len ));
             instance[current->len] = no + 1 ; // i.e. the next index on cache_peeer table.
+            *len = current->len + 1;
         } else {
             debugs(49, 6, "snmp peer_Inst: We have " << i << " peers. Can't find #" << no);
             return (instance);
