@@ -487,10 +487,13 @@ ClientRequestContext::hostHeaderVerify()
     char *hostB = xstrdup(host);
     host = hostB;
     if (host[0] == '[') {
-        // IPv6 literal.
-        portStr = strchr(hostB, ']');
-        if (portStr && *(++portStr) != ':') {
-            portStr = nullptr;
+        // IPv6 literal: de-bracket and detect optional port
+        auto rb = strchr(hostB, ']');
+        if (rb) {
+            if (rb[1] == ':')
+                portStr = rb + 1;   // points to ':'
+            *rb = '\0';             // drop closing bracket
+            host = hostB + 1;       // drop opening bracket
         }
     } else {
         // Domain or IPv4 literal with port
