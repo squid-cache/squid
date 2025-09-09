@@ -1229,10 +1229,12 @@ void
 TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
 {
     if (const auto p = conn->getPeer()) {
-        if (p->secure.encryptTransport)
+        if (p->secure.encryptTransport) {
             advanceDestination("secure connection to peer", conn, [this,&conn] {
-            secureConnectionToPeer(conn);
-        });
+                secureConnectionToPeer(conn);
+            });
+            return;
+        }
     }
 
     connectedToPeer(conn);
