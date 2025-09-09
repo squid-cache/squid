@@ -536,6 +536,7 @@ ClientRequestContext::hostHeaderVerify()
         debugs(85, 3, "FAIL on validate URL domain length " << http->request->url.host() << " matches Host: " << host);
         hostHeaderVerifyFailed(host, http->request->url.host());
     } else if (matchDomainName(host, http->request->url.host()) != 0) {
+        /// XXX: fails on IP address-only hostname
         // Verify forward-proxy requested URL domain matches the Host: header
         debugs(85, 3, "FAIL on validate URL domain " << http->request->url.host() << " matches Host: " << host);
         hostHeaderVerifyFailed(host, http->request->url.host());
