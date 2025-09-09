@@ -848,25 +848,11 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 static mib_tree_entry *
 snmpTreeSiblingEntry(oid entry, snint len, mib_tree_entry * current)
 {
-    mib_tree_entry *next = nullptr;
-    int count = 0;
-
-    while ((!next) && (count < current->children)) {
-        if (current->leaves[count]->name[len] == entry) {
-            next = current->leaves[count];
-        }
-
-        ++count;
+    for (int i = 0; i < current->children; ++i) {
+        if (current->leaves[i]->name[len] == entry)
+            return (i + 1 < current->children) ? current->leaves[i + 1] : nullptr;
     }
-
-    /* Exactly the sibling on right */
-    if (count < current->children) {
-        next = current->leaves[count];
-    } else {
-        next = nullptr;
-    }
-
-    return (next);
+    return nullptr;
 }
 
 /*
