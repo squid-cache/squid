@@ -46,6 +46,10 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<p>Removed <em>ntlm_smb_lm_auth</em> NTLM authentication helper.
 	   Use the <em>ntlm_auth</em> helper from the Samba project instead.
 
+	<p>Fixed <em>digest_edirectory_auth</em> authentication helper. LDAPS
+		activation and referrals were broken, and memory could leak.
+		LDAPS now negotiates correctly, referrals honor configuration
+		(use <em>-R</em> to disable), and memory is now properly freed.
 </descrip>
 
 <sect1>Cache Manager changes
