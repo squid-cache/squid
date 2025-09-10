@@ -41,7 +41,7 @@ Auth::Scheme::Find(const char *typestr)
 std::vector<Auth::Scheme::Pointer> &
 Auth::Scheme::GetSchemes()
 {
-    static std::vector<Auth::Scheme::Pointer> schemes;
+    static const auto schemes = new std::vector<Auth::Scheme::Pointer>;
     return schemes;
 }
 
@@ -55,10 +55,11 @@ Auth::Scheme::GetSchemes()
 void
 Auth::Scheme::FreeAll()
 {
-    while (GetSchemes().size()) {
-        Auth::Scheme::Pointer scheme = GetSchemes().back();
-        GetSchemes().pop_back();
+    assert(shutting_down);
+    auto &v = GetSchemes();
+    while (!v.empty()) {
+        auto scheme = v.back();
+        v.pop_back();
         scheme->shutdownCleanup();
     }
 }
-
