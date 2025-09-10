@@ -56,10 +56,11 @@ void
 Auth::Scheme::FreeAll()
 {
     assert(shutting_down);
-    auto &v = GetSchemes();
-    while (!v.empty()) {
-        auto scheme = v.back();
-        v.pop_back();
+
+    while (GetSchemes().size()) {
+        Auth::Scheme::Pointer scheme = GetSchemes().back();
+        GetSchemes().pop_back();
         scheme->shutdownCleanup();
     }
 }
+
