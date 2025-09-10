@@ -59,7 +59,6 @@ IcmpPinger::Open(void)
 
     static_assert(sizeof(WSAPROTOCOL_INFO) >= sizeof(PS), "PS must fit into wpi-sized buf");
 
-
     WSAStartup(2, &wsaData);
     atexit(Win32SockCleanup);
 
