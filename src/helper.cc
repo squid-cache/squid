@@ -238,7 +238,7 @@ Helper::Client::openSessions()
     args[nargs] = nullptr;
     ++nargs;
 
-    assert(nargs <= HELPER_MAX_ARGS + 1);
+    assert(nargs <= HELPER_MAX_ARGS);
 
     int successfullyStarted = 0;
 
