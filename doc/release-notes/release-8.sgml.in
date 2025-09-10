@@ -48,7 +48,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 	<p>Fixed <em>digest_edirectory_auth</em> authentication helper. LDAPS
 		activation and referrals were broken, and memory could leak.
-		LDAPS now negotiates correctly, referrals honor configuration
+		LDAPS may now negotiate correctly, referrals honor configuration
 		(use <em>-R</em> to disable), and memory is now properly freed.
 </descrip>
 
