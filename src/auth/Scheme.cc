@@ -42,7 +42,7 @@ std::vector<Auth::Scheme::Pointer> &
 Auth::Scheme::GetSchemes()
 {
     static const auto schemes = new std::vector<Auth::Scheme::Pointer>;
-    return schemes;
+    return *schemes;
 }
 
 /**
