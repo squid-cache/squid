@@ -502,20 +502,16 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
         case ASN_OCTET_STR:
         case SMI_IPADDRESS:
         case SMI_OPAQUE:
-            Var->val_len = *&ThisVarLen;    /* String is this at most */
-            Var->val.string = (u_char *) xmalloc((unsigned) Var->val_len);
+            Var->val_len = ThisVarLen >= 0 ? ThisVarLen : 0; // input contains at most this many bytes
+            Var->val.string = (u_char *) xmalloc((unsigned) Var->val_len + 1);
             if (Var->val.string == NULL) {
                 snmp_set_api_error(SNMPERR_OS_ERR);
                 PARSE_ERROR;
             }
-            int terminatorPos = Var->val_len - 1;
             bufp = asn_parse_string(DataPtr, &ThisVarLen,
                                     &Var->type, Var->val.string,
                                     &Var->val_len);
-            if (Var->val_len < terminatorPos) {
-                terminatorPos = Var->val_len;
-            }
-            Var->val.string[terminatorPos] = '\0';
+            Var->val.string[Var->val_len] = '\0'; // for cases where the parsed value is treated as a c-string
 #if DEBUG_VARS_DECODE
             printf("VARS: Decoded string '%s' (length %d) (%d bytes left)\n",
                    (Var->val.string), Var->val_len, ThisVarLen);
