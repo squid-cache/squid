@@ -45,6 +45,7 @@
 #if USE_ICMP
 
 #include "base/Stopwatch.h"
+#include "base/TextException.h"
 #include "compat/select.h"
 #include "compat/socket.h"
 #include "Icmp4.h"
@@ -52,7 +53,6 @@
 #include "IcmpPinger.h"
 #include "ip/tools.h"
 #include "time/gadgets.h"
-#include <exception>
 
 #if HAVE_SYS_CAPABILITY_H
 #include <sys/capability.h>
@@ -250,8 +250,8 @@ main(const int argc, char ** const argv)
     // SquidMainSafe() XXX concerns apply here as well.
     try {
         return PingerMain(argc, argv);
-    } catch (const std::exception &ex) {
-        debugs(42, DBG_CRITICAL, "FATAL: " << ex.what());
+    } catch (...) {
+        debugs(42, DBG_CRITICAL, "FATAL: " << CurrentException);
         control.Close();
         exit(EXIT_FAILURE);
     }
