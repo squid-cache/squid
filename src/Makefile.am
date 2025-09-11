@@ -1929,7 +1929,6 @@ tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpRequest
 tests_testHttpRequest_SOURCES = \
-	AccessLogEntry.cc \
 	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
 	tests/stub_DelayId.cc \
@@ -1980,7 +1979,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_fd.cc \
 	tests/stub_fqdncache.cc \
 	hier_code.cc \
-	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
 	tests/stub_libauth.cc \
