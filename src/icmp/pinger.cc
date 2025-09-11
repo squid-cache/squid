@@ -100,8 +100,8 @@ int icmp_pkts_sent = 0;
  \ingroup pinger
  \par This is the pinger external process.
  */
-int
-main(int, char **)
+static int
+PingerMain(int, char *[])
 {
     fd_set R;
     int max_fd = 0;
@@ -217,20 +217,17 @@ main(int, char **)
             exit(EXIT_FAILURE);
         }
 
-        try {
-            if (FD_ISSET(squid_link, &R))
-                control.Recv();
-#if USE_IPV6
-            if (icmp6_worker >= 0 && FD_ISSET(icmp6_worker, &R))
-                icmp6.Recv();
-#endif
-            if (icmp4_worker >= 0 && FD_ISSET(icmp4_worker, &R))
-                icmp4.Recv();
+        if (FD_ISSET(squid_link, &R)) {
+            control.Recv();
+        }
 
-        } catch (const std::exception &ex) {
-            debugs(42, DBG_CRITICAL, "FATAL: " << ex.what());
-            control.Close();
-            exit(EXIT_FAILURE);
+#if USE_IPV6
+        if (icmp6_worker >= 0 && FD_ISSET(icmp6_worker, &R)) {
+            icmp6.Recv();
+        }
+#endif
+        if (icmp4_worker >= 0 && FD_ISSET(icmp4_worker, &R)) {
+            icmp4.Recv();
         }
 
         const auto delay = std::chrono::duration_cast<std::chrono::seconds>(timer.total());
@@ -245,6 +242,19 @@ main(int, char **)
 
     /* NOTREACHED */
     return EXIT_SUCCESS;
+}
+
+int
+main(const int argc, char ** const argv)
+{
+    // SquidMainSafe() XXX concerns apply here as well.
+    try {
+        return PingerMain(argc, argv);
+    } catch (const std::exception &ex) {
+        debugs(42, DBG_CRITICAL, "FATAL: " << ex.what());
+        control.Close();
+        exit(EXIT_FAILURE);
+    }
 }
 
 #else /* !USE_ICMP */
