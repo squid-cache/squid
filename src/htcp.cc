@@ -639,7 +639,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     HttpRequestMethod method;
 
     /* Find length of METHOD */
-    uint16_t l;
+    uint16_t l = 0;
     if (!parseUint16(buf, sz, l, "METHOD length"))
         return nil;
 
@@ -753,7 +753,7 @@ htcpUnpackDetail(char *buf, int sz)
     auto d = std::make_unique<htcpDetail>();
 
     /* Find length of RESP-HDRS */
-    uint16_t l;
+    uint16_t l = 0;
     if (!parseUint16(buf, sz, l, "RESP-HDRS length"))
         return nullptr;
 
