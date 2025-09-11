@@ -1979,7 +1979,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_fatal.cc \
 	tests/stub_fd.cc \
 	tests/stub_fqdncache.cc \
-	fs_io.cc \
 	hier_code.cc \
 	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
