@@ -13,16 +13,6 @@
 #define STUB_API "fd.cc"
 #include "tests/STUB.h"
 
-const char *fdTypeStr[] = {
-    "None",
-    "Log",
-    "File",
-    "Socket",
-    "Pipe",
-    "MsgHdr",
-    "Unknown"
-};
-
 fde *fde::Table = nullptr;
 
 int fdNFree(void) STUB_RETVAL(-1)
