@@ -152,10 +152,11 @@ void
 IcmpPinger::Close(void)
 {
 #if _SQUID_WINDOWS_
-
-    shutdown(icmp_sock, SD_BOTH);
-    xclose(icmp_sock);
-    icmp_sock = -1;
+    if (icmp_sock >= 0) {
+        shutdown(icmp_sock, SD_BOTH);
+        xclose(icmp_sock);
+        icmp_sock = -1;
+    }
 #endif
 
     /* also shutdown the helper engines */
