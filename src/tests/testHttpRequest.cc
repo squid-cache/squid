@@ -33,6 +33,8 @@ Adaptation::History::History():
 {
 }
 #endif
+#include "dns/LookupDetails.h"
+std::ostream &Dns::LookupDetails::print(std::ostream &os) const STUB_RETVAL(os)
 
 class TestHttpRequest : public CPPUNIT_NS::TestFixture
 {

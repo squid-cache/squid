@@ -2013,7 +2013,6 @@ tests_testHttpRequest_LDADD = \
 	mem/libmem.la \
 	http/libhttp.la \
 	anyp/libanyp.la \
-	dns/libdns.la \
 	$(REPL_OBJS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
