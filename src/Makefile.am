@@ -1711,6 +1711,7 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
+	tests/stub_libtime.cc \
 	tests/stub_neighbors.cc
 tests_testACLMaxUserIP_LDADD = \
 	$(AUTH_ACL_LIBS) \
