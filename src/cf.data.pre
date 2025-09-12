@@ -2037,13 +2037,12 @@ LOC: Config.accessList.htcp
 DEFAULT: none
 DEFAULT_DOC: Deny, unless rules exist in squid.conf.
 DOC_START
-	Allowing or Denying access to the HTCP port based on defined
-	access lists
+	Controls whether HTCP TST requests received on htcp_port are allowed.
 
 	htcp_access  allow|deny [!]aclname ...
 
-	See also htcp_clr_access for details on access control for
-	cache purge (CLR) HTCP messages.
+	This directive does not control whether HTCP CLR requests are allowed.
+	Use htcp_clr_access directive for that.
 
 	NOTE: The default if no htcp_access lines are present is to
 	deny all traffic. This default may cause problems with peers
@@ -2064,11 +2063,13 @@ LOC: Config.accessList.htcp_clr
 DEFAULT: none
 DEFAULT_DOC: Deny, unless rules exist in squid.conf.
 DOC_START
-	Allowing or Denying access to purge content using HTCP based
-	on defined access lists.
-	See htcp_access for details on general HTCP access control.
+	Controls whether HTCP CLR requests received on htcp_port are allowed.
+	See htcp_access for controlling other HTCP messages.
 
 	htcp_clr_access  allow|deny [!]aclname ...
+
+	HTCP CLR requests purge matching cached entries. They may be forwarded to
+	specially marked cache_peers (see cache_peer HTCP options for details).
 
 	This clause only supports fast acl types.
 	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
