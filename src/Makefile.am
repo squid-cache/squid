@@ -1964,6 +1964,7 @@ tests_testHttpRequest_SOURCES = \
 	StrList.h \
 	String.cc \
 	tests/stub_access_log.cc \
+	tests/stub_acl.cc \
 	anyp/UriScheme.cc \
 	anyp/UriScheme.h \
 	tests/stub_cache_cf.cc \
@@ -1992,7 +1993,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_libtime.cc \
 	mime_header.cc \
 	mime_header.h \
-	tests/stub_acl.cc \
 	tests/stub_neighbors.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
