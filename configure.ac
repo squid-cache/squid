@@ -1164,14 +1164,15 @@ SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[LIBHEIMDAL_KRB5])
 SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
   AS_IF([test "x$LIBMIT_KRB5_LIBS" = "x"],[
     PKG_CHECK_MODULES([LIBHEIMDAL_KRB5],[heimdal-krb5 heimdal-gssapi],[
-      CPPFLAGS="$LIBHEIMDAL_KRB5_CFLAGS $CPPFLAGS"
-      AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-      AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
-
-      LIBS="$LIBHEIMDAL_KRB5_PATH $LIBHEIMDAL_KRB5_LIBS $LIBS"
-      SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
-      SQUID_CHECK_KRB5_FUNCS
+      SQUID_FIX_HEIMDAL_BROKEN_PKGCONF
     ],[:])
+    CPPFLAGS="$LIBHEIMDAL_KRB5_CFLAGS $CPPFLAGS"
+    AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
+    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
+
+    LIBS="$LIBHEIMDAL_KRB5_PATH $LIBHEIMDAL_KRB5_LIBS $LIBS"
+    SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
+    SQUID_CHECK_KRB5_FUNCS
   ])
 ])
 
