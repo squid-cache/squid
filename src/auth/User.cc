@@ -106,14 +106,6 @@ BuildIpKey(const Ip::Address &ip)
 }
 
 void
-Auth::User::clearIp()
-{
-    const auto savedLimit = ipList.memLimit();
-    ipList.setMemLimit(0);
-    ipList.setMemLimit(savedLimit);
-}
-
-void
 Auth::User::removeIp(const Ip::Address &ip)
 {
     ipList.del(BuildIpKey(ip));

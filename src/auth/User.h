@@ -73,7 +73,7 @@ public:
     virtual int32_t ttl() const = 0;
 
     /* Manage list of IPs using this username */
-    void clearIp();
+    void clearIp() { ipList.clear(); }
     void removeIp(const Ip::Address &);
     void addIp(const Ip::Address &);
     /// How many unique IPs this client has been seen at.

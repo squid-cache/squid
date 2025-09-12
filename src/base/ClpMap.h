@@ -116,6 +116,9 @@ public:
     /// The number of currently stored entries, including expired ones
     size_t entries() const { return entries_.size(); }
 
+    /// Erases all elements from the container. After this call, entries() returns zero.
+    void clear();
+
     /// Read-only traversal of all cached entries in LRU order, least recently
     /// used entry first. Stored expired entries (if any) are included. Any map
     /// modification may invalidate these iterators and their derivatives.
@@ -168,6 +171,15 @@ ClpMap<Key, Value, MemoryUsedBy>::setMemLimit(const uint64_t newLimit)
     if (memUsed_ > newLimit)
         trim(memLimit_ - newLimit);
     memLimit_ = newLimit;
+}
+
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
+void
+ClpMap<Key, Value, MemoryUsedBy>::clear()
+{
+    index.clear();
+    entries.clear();
+    memUsed_ = 0;
 }
 
 /// \returns the index position of an entry identified by its key (or end())
