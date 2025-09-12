@@ -20,6 +20,10 @@
 #include "globals.h"
 #include "Store.h"
 
+constexpr auto SizeOfUserIPCacheEntry = (sizeof(SBuf)+MAX_IPSTRLEN) /* key */ +
+                                        sizeof(Ip::Address) /* value */ +
+                                        sizeof(time_t) /* expiry */;
+
 Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     auth_type(Auth::AUTH_UNKNOWN),
     config(aConfig),
@@ -27,7 +31,11 @@ Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     credentials_state(Auth::Unchecked),
     username_(nullptr),
     requestRealm_(aRequestRealm),
-    ipList(256*1024) // XXX: figure a more reasonable value than ~256KB cache per-username
+    /* IPv6 "anonymization" rotates IPv6 every 5min.
+     * This 1200 cache entries allows each user 4 such devices
+     * with 24hrs of TTL before the cache starts to trim records.
+     */
+    ipList(1200 * SizeOfUserIPCacheEntry)
 {
     proxy_match_cache.head = proxy_match_cache.tail = nullptr;
     debugs(29, 5, "Initialised auth_user '" << this << "'.");

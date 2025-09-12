@@ -76,7 +76,9 @@ public:
     void clearIp();
     void removeIp(const Ip::Address &);
     void addIp(const Ip::Address &);
-    /// how many IPs this client has been seen at
+    /// How many unique IPs this client has been seen at.
+    /// Count may be limited to the prior authenticate_ip_ttl seconds
+    /// if more than 1200 IPs are seen.
     size_t ipCount() const { return ipList.entries(); }
 
     /// add the Auth::User to the protocol-specific username cache.
