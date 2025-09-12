@@ -1929,6 +1929,7 @@ tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpRequest
 tests_testHttpRequest_SOURCES = \
+	tests/stub_adaptation_History.cc \
 	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
 	tests/stub_DelayId.cc \
@@ -1948,6 +1949,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequestMethod.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_Instance.cc \
+	tests/stub_libdns.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
