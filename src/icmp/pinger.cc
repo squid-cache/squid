@@ -251,11 +251,9 @@ main(int, char **)
             control.Recv();
         }
 
-#if USE_IPV6
         if (icmp6_worker >= 0 && FD_ISSET(icmp6_worker, &R)) {
             icmp6.Recv();
         }
-#endif
         if (icmp4_worker >= 0 && FD_ISSET(icmp4_worker, &R)) {
             icmp4.Recv();
         }
