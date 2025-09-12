@@ -33,6 +33,7 @@ STUB_SOURCE = \
 	tests/stub_UdsOp.cc \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
+	tests/stub_adaptation_History.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_carp.cc \
@@ -61,6 +62,7 @@ STUB_SOURCE = \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_libdns.cc \
 	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \

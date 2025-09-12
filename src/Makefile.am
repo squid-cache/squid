@@ -1929,7 +1929,6 @@ tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpRequest
 tests_testHttpRequest_SOURCES = \
-	tests/stub_adaptation_History.cc \
 	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
 	tests/stub_DelayId.cc \
@@ -1949,7 +1948,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequestMethod.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_Instance.cc \
-	tests/stub_libdns.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -1967,6 +1965,7 @@ tests_testHttpRequest_SOURCES = \
 	String.cc \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
+	tests/stub_adaptation_History.cc \
 	anyp/UriScheme.cc \
 	anyp/UriScheme.h \
 	tests/stub_cache_cf.cc \
@@ -1986,6 +1985,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_ipcache.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_libdns.cc \
 	tests/stub_liberror.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
