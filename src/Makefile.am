@@ -1992,6 +1992,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_libtime.cc \
 	mime_header.cc \
 	mime_header.h \
+	tests/stub_acl.cc \
 	tests/stub_neighbors.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
@@ -2001,7 +2002,6 @@ nodist_tests_testHttpRequest_SOURCES = \
 	$(TESTSOURCES)
 tests_testHttpRequest_LDADD = \
 	base/libbase.la \
-	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
 	sbuf/libsbuf.la \

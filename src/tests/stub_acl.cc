@@ -17,4 +17,8 @@
 
 #include "acl/Gadgets.h"
 size_t aclParseAclList(ConfigParser &, ACLList **, const char *) STUB_RETVAL(0)
+void aclDestroyAclList(ACLList **) STUB
+#include "acl/Tree.h"
+static Acl::Tree nil;
+const Acl::Tree &Acl::ToTree(const TreePointer * const) STUB_RETVAL(nil)
 
