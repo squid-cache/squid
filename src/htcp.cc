@@ -1235,8 +1235,6 @@ htcpSpecifier::checkedHit(StoreEntry *e)
     }
 }
 
-static void htcpForwardClr(char *buf, int sz);
-
 static void
 htcpHandleClr(htcpDataHeader * const hdr, char * const buf, const int sz, Ip::Address &from)
 {
@@ -1304,17 +1302,9 @@ htcpHandleClr(htcpDataHeader * const hdr, char * const buf, const int sz, Ip::Ad
         break;
     }
 
+    // Forward this CLR request to all peers who have requested that CLRs be
+    // forwarded to them.
     // TODO: Consider not forwarding requests with htcpClrStore() < 0.
-    htcpForwardClr(buf, sz);
-}
-
-/*
- * Forward a CLR request to all peers who have requested that CLRs be
- * forwarded to them.
- */
-static void
-htcpForwardClr(char *buf, int sz)
-{
     for (const auto &p: CurrentCachePeers()) {
         if (!p->options.htcp) {
             continue;
