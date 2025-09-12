@@ -9,6 +9,7 @@
 /* DEBUG: section 37    ICMP Routines */
 
 #include "squid.h"
+#include "base/Assure.h"
 #include "comm.h"
 #include "comm/Loops.h"
 #include "compat/socket.h"
@@ -71,11 +72,10 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     else if (payload && len == 0)
         len = strlen(payload);
 
-    // TODO: This should perhapse be reduced to a truncated payload? or no payload.
-    if (len > PINGER_PAYLOAD_SZ) {
-        debugs(37, DBG_IMPORTANT, "payload too large. (" << len << " bytes)");
-        return;
-    }
+    // All our callers supply a DNS name. PINGER_PAYLOAD_SZ must accommodate the
+    // longest DNS name Squid supports. TODO: Simplify and improve the rest of
+    // this code accordingly.
+    Assure(len <= PINGER_PAYLOAD_SZ);
 
     pecho.to = to;
 
