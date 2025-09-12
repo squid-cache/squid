@@ -2006,7 +2006,6 @@ tests_testHttpRequest_LDADD = \
 	acl/libapi.la \
 	sbuf/libsbuf.la \
 	SquidConfig.o \
-	$(ADAPTATION_LIBS) \
 	CommCalls.o \
 	comm/libcomm.la \
 	ip/libip.la \

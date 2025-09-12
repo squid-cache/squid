@@ -16,6 +16,24 @@
 
 #include <cppunit/TestAssert.h>
 
+#define STUB_API "testHttpRequest.cc"
+#include "tests/STUB.h"
+
+// XXX: misplaced
+#if ICAP_CLIENT
+int IcapLogfileStatus = LOG_DISABLE;
+Adaptation::Icap::History::History() STUB
+#endif
+
+#if USE_ADAPTATION
+Adaptation::History::History():
+    lastMeta(hoReply),
+    allMeta(hoReply),
+    theNextServices("")
+{
+}
+#endif
+
 class TestHttpRequest : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestHttpRequest);
