@@ -207,7 +207,7 @@ Icmp4::Recv(void)
 
     ip = (struct iphdr *) (void *) pkt;
     if (n < static_cast<int>(sizeof(*ip))) {
-        debugs(42, DBG_IMPORTANT, "Short packet: only " << n << " bytes (no IP header).");
+        debugs(42, 2, "short packet: only " << n << " bytes; expecting at least " << sizeof(*ip) << "-byte IP header");
         Ip::Address::FreeAddr(from);
         return;
     }
@@ -229,14 +229,14 @@ Icmp4::Recv(void)
 #endif /* HAVE_STRUCT_IPHDR_IP_HL */
 
     if (iphdrlen < 20 || n < iphdrlen) {
-        debugs(42, DBG_IMPORTANT, "Bogus IP header length " << iphdrlen << " in " << n << "-byte packet.");
+        debugs(42, 2, "bogus IP header length " << iphdrlen << " in " << n << "-byte packet");
         Ip::Address::FreeAddr(from);
         return;
     }
     icmp = (struct icmphdr *) (void *) (pkt + iphdrlen);
     const int icmpAvail = n - iphdrlen;
     if (icmpAvail < static_cast<int>(sizeof(*icmp))) {
-        debugs(42, DBG_IMPORTANT, "Short ICMP header: only " << icmpAvail << " bytes available.");
+        debugs(42, 2, "short ICMP header: only " << icmpAvail << " bytes available; expecting at least " << sizeof(*icmp));
         Ip::Address::FreeAddr(from);
         return;
     }
@@ -256,7 +256,7 @@ Icmp4::Recv(void)
     const auto echoHdr = static_cast<int>(sizeof(icmpEchoData) - MAX_PAYLOAD);
     const auto icmpDataLen = icmpAvail - sizeof(*icmp);
     if (icmpDataLen < echoHdr) { // do not read past end of the packet
-        debugs(42, DBG_IMPORTANT, "Short ICMP echo data: " << icmpDataLen << " bytes.");
+        debugs(42, 2, "short ICMP echo data: " << icmpDataLen << " bytes; expecting " << echoHdr);
         Ip::Address::FreeAddr(from);
         return;
     }
