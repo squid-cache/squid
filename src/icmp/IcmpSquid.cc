@@ -119,15 +119,16 @@ icmpSquidRecv(int, void *)
 void
 IcmpSquid::Recv()
 {
+    int n;
     static int fail_count = 0;
     pingerReplyData preply;
     static Ip::Address F;
 
     Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, nullptr, 0);
-    const auto n = comm_udp_recv(icmp_sock,
-                                 (char *) &preply,
-                                 sizeof(pingerReplyData),
-                                 0);
+    n = comm_udp_recv(icmp_sock,
+                      (char *) &preply,
+                      sizeof(pingerReplyData),
+                      0);
 
     if (n < 0 && EAGAIN != errno) {
         int xerrno = errno;
