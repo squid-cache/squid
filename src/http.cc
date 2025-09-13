@@ -232,7 +232,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     if (pe != nullptr) {
         assert(e != pe);
 #if USE_HTCP
-        neighborsHtcpClear(e, e->mem_obj->request.getRaw(), e->mem_obj->method, HTCP_CLR_INVALIDATION);
+        neighborsHtcpClear(pe, e->mem_obj->request.getRaw(), e->mem_obj->method, HTCP_CLR_INVALIDATION);
 #endif
         pe->release(true);
     }
@@ -249,7 +249,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     if (pe != nullptr) {
         assert(e != pe);
 #if USE_HTCP
-        neighborsHtcpClear(e, e->mem_obj->request.getRaw(), HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_INVALIDATION);
+        neighborsHtcpClear(pe, e->mem_obj->request.getRaw(), HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_INVALIDATION);
 #endif
         pe->release(true);
     }
