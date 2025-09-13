@@ -30,29 +30,6 @@ class HttpRequest;
 // XXX: Keep in sync with all others: bzr grep 'define MAX_AUTHTOKEN_LEN'
 #define MAX_AUTHTOKEN_LEN   65535
 
-/**
- * Node used to link an IP address to some user credentials
- * for the max_user_ip ACL feature.
- */
-class AuthUserIP
-{
-    MEMPROXY_CLASS(AuthUserIP);
-
-public:
-    AuthUserIP(const Ip::Address &ip, time_t t) : ipaddr(ip), ip_expiretime(t) {}
-
-    dlink_node node;
-
-    /// IP address this user authenticated from
-    Ip::Address ipaddr;
-
-    /** When this IP should be forgotten.
-     * Set to the time of last request made from this
-     * (user,IP) pair plus authenticate_ip_ttl seconds
-     */
-    time_t ip_expiretime;
-};
-
 // TODO: make auth schedule AsyncCalls?
 typedef void AUTHCB(void*);
 
