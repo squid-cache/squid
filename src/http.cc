@@ -2650,7 +2650,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
         }
     }
 
-    HttpStateData::handleMoreRequestBodyAvailable();
+    Client::handleMoreRequestBodyAvailable();
 }
 
 // premature end of the request body
