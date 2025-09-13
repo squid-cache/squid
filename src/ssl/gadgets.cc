@@ -15,6 +15,48 @@
 #include "security/Io.h"
 #include "ssl/gadgets.h"
 
+/// whether the given key requires a digest when signing
+static bool
+keyNeedsDigest(const EVP_PKEY * const pkey) {
+    const auto id = EVP_PKEY_id(pkey);
+
+    // For provider-based keys, id is -1
+    if (id == -1) {
+        // Try all known ML-DSA names
+        if (EVP_PKEY_is_a(pkey, "ML-DSA") ||
+            EVP_PKEY_is_a(pkey, "ML-DSA-44") ||
+            EVP_PKEY_is_a(pkey, "ML-DSA-65") ||
+            EVP_PKEY_is_a(pkey, "ML-DSA-87"))
+            return false;
+    }
+
+    switch (id) {
+        case EVP_PKEY_RSA:
+        case EVP_PKEY_RSA_PSS:
+        case EVP_PKEY_DSA:
+        case EVP_PKEY_EC:
+            return true;  // classic algorithms need digest like SHA256
+
+        case EVP_PKEY_ED25519:
+        case EVP_PKEY_ED448:
+#ifdef EVP_PKEY_ML_DSA_44
+        case EVP_PKEY_ML_DSA_44: // post-quantum ML-DSAs
+#endif
+#ifdef EVP_PKEY_ML_DSA_65
+        case EVP_PKEY_ML_DSA_65:
+#endif
+#ifdef EVP_PKEY_ML_DSA_87
+        case EVP_PKEY_ML_DSA_87:
+#endif
+            return false; // digest must be NULL
+
+        default:
+            // Unknown type — safest is to assume digest required
+            // For provider-based keys, id is -1
+            return true;
+    }
+}
+
 void
 Ssl::ForgetErrors()
 {
@@ -677,9 +719,9 @@ static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Secu
     assert(hash);
     /*Now sign the request */
     if (properties.signAlgorithm != Ssl::algSignSelf && properties.signWithPkey.get())
-        ret = X509_sign(cert.get(), properties.signWithPkey.get(), hash);
+        ret = X509_sign(cert.get(), properties.signWithPkey.get(), keyNeedsDigest(properties.signWithPkey.get()) ? hash : nullptr);
     else //else sign with self key (self signed request)
-        ret = X509_sign(cert.get(), pkey.get(), hash);
+        ret = X509_sign(cert.get(), pkey.get(), keyNeedsDigest(pkey.get()) ? hash : nullptr);
 
     if (!ret)
         return false;
