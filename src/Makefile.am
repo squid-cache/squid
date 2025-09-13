@@ -2007,11 +2007,9 @@ tests_testHttpRequest_LDADD = \
 	mem/libmem.la \
 	http/libhttp.la \
 	anyp/libanyp.la \
-	$(REPL_OBJS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(LIBGNUTLS_LIBS) \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
