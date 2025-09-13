@@ -2555,7 +2555,6 @@ AC_CONFIG_FILES([
 	src/auth/negotiate/wrapper/Makefile
 	src/auth/ntlm/Makefile
 	src/auth/ntlm/fake/Makefile
-	src/auth/ntlm/SSPI/Makefile
 	src/base/Makefile
 	src/clients/Makefile
 	src/comm/Makefile
