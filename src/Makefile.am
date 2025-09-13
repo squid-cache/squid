@@ -1941,7 +1941,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
-	HttpHeaderTools.h \
 	tests/stub_HttpReply.cc \
 	HttpRequest.cc \
 	tests/testHttpRequest.cc \
@@ -1950,31 +1949,25 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_Instance.cc \
 	LogTags.cc \
 	MasterXaction.cc \
-	MasterXaction.h \
 	MemBuf.cc \
 	tests/stub_MemObject.cc \
 	Notes.cc \
 	Parsing.cc \
 	RequestFlags.cc \
-	RequestFlags.h \
 	StatCounters.cc \
-	StatCounters.h \
 	StatHist.cc \
 	StrList.cc \
-	StrList.h \
 	String.cc \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
 	tests/stub_adaptation_History.cc \
 	anyp/UriScheme.cc \
-	anyp/UriScheme.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_client_side.cc \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
-	dlink.h \
 	tests/stub_errorpage.cc \
 	tests/stub_event.cc \
 	tests/stub_fatal.cc \
@@ -1994,7 +1987,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_libstore.cc \
 	tests/stub_libtime.cc \
 	mime_header.cc \
-	mime_header.h \
 	tests/stub_neighbors.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \

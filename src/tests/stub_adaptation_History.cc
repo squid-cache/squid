@@ -29,6 +29,7 @@ Adaptation::History::History():
     allMeta(hoReply),
     theNextServices("")
 {
+    STUB_NOP
 }
 #endif
 
