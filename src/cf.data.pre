@@ -2044,6 +2044,9 @@ DOC_START
 	This directive does not control whether HTCP CLR requests are allowed.
 	Use htcp_clr_access directive for that.
 
+	This directive does not control whether HTCP requests with other opcodes
+	are allowed (e.g., NOP, MON, and SET). Squid ignores those HTCP requests.
+
 	NOTE: The default if no htcp_access lines are present is to
 	deny all traffic. This default may cause problems with peers
 	using the htcp option.
