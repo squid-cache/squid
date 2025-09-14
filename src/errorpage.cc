@@ -837,7 +837,6 @@ ErrorState::~ErrorState()
 
     safe_free(redirect_url);
     safe_free(url);
-    safe_free(request_hdrs);
     wordlistDestroy(&ftp.server_msg);
     safe_free(ftp.request);
     safe_free(ftp.reply);
@@ -1151,8 +1150,6 @@ ErrorState::compileLegacyCode(Build &build)
         }
         else if (request)
             request->pack(&mb, true /* hide authorization data */);
-        else if (request_hdrs)
-            p = request_hdrs;
         else
             p = "[no request]";
         break;
