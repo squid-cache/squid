@@ -104,7 +104,7 @@ clientReplyContext::setReplyToError(
     auto errstate = clientBuildError(err, status, uri, conn, failedrequest, http->al);
 
     if (unparsedrequest)
-        errstate->request_hdrs = xstrdup(unparsedrequest);
+        errstate->err_msg = xstrdup(unparsedrequest);
 
 #if USE_AUTH
     errstate->auth_user_request = auth_user_request;
