@@ -103,6 +103,12 @@ This section gives an account of those changes in three categories:
 	connection should increase the configured limit by one to preserve
 	previous behavior.
 
+	<tag>htcp_clr_access</tag>
+
+	<p>HTCP CLR requests denied by this directive are no longer forwarded to
+	cache_peers that are configured to receive forwarded CLR requests. Only
+	HTCP CLR requests allowed by this directive are forwarded to those
+	cache_peers.
 
 </descrip>
 
