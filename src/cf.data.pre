@@ -2048,13 +2048,13 @@ DOC_START
 	are allowed (e.g., NOP, MON, and SET). Squid ignores those HTCP requests.
 
 	NOTE: The default if no htcp_access lines are present is to
-	deny all traffic. This default may cause problems with peers
+	deny all HTCP TST traffic. This default may cause problems with peers
 	using the htcp option.
 
 	This clause only supports fast acl types.
 	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
-# Allow HTCP queries from local networks only
+# Allow HTCP TST queries from local networks only
 #htcp_access allow localnet
 #htcp_access deny all
 DOC_END
