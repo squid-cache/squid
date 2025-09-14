@@ -340,14 +340,14 @@ HttpRequest::swapOut(StoreEntry * e)
 
 /* packs request-line and headers, appends <crlf> terminator */
 void
-HttpRequest::pack(Packable * p) const
+HttpRequest::pack(Packable * p, bool mask_sensitive_data) const
 {
     assert(p);
     /* pack request-line */
     packFirstLineInto(p, false /* origin-form */);
     /* headers */
-    header.packInto(p);
-    /* trailer */
+    header.packInto(p, mask_sensitive_data);
+    /* frame terminator */
     p->append("\r\n", 2);
 }
 
@@ -471,9 +471,10 @@ HttpRequest::packFirstLineInto(Packable * p, bool full_uri) const
     const SBuf tmp(full_uri ? effectiveRequestUri() : url.originForm());
 
     // form HTTP request-line
-    p->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " HTTP/%d.%d\r\n",
+    p->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\r\n",
                SQUIDSBUFPRINT(method.image()),
                SQUIDSBUFPRINT(tmp),
+               AnyP::ProtocolType_str[http_ver.protocol],
                http_ver.major, http_ver.minor);
 }
 

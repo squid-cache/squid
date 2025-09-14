@@ -887,7 +887,7 @@ ErrorState::Dump(MemBuf * mb)
         body << "HTTP Request:\r\n";
         MemBuf r;
         r.init();
-        request->pack(&r);
+        request->pack(&r, true /* hide authorization data */);
         body << r.content();
     }
 
@@ -1149,18 +1149,12 @@ ErrorState::compileLegacyCode(Build &build)
                 p = "[no request]";
             break;
         }
-        if (request) {
-            mb.appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\n",
-                       SQUIDSBUFPRINT(request->method.image()),
-                       SQUIDSBUFPRINT(request->url.originForm()),
-                       AnyP::ProtocolType_str[request->http_ver.protocol],
-                       request->http_ver.major, request->http_ver.minor);
-            request->header.packInto(&mb, true); //hide authorization data
-        } else if (request_hdrs) {
+        else if (request)
+            request->pack(&mb, true /* hide authorization data */);
+        else if (request_hdrs)
             p = request_hdrs;
-        } else {
+        else
             p = "[no request]";
-        }
         break;
 
     case 's':
