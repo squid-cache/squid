@@ -1033,6 +1033,7 @@ tests_testRock_SOURCES = \
 	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_Instance.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -1203,6 +1204,7 @@ tests_testUfs_SOURCES = \
 	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_Instance.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -1375,6 +1377,7 @@ tests_testStore_SOURCES = \
 	HttpHeaderTools.h \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_Instance.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
@@ -1538,6 +1541,7 @@ tests_testDiskIO_SOURCES = \
 	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_Instance.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -1801,6 +1805,7 @@ tests_testHttpRange_SOURCES = \
 	HttpReply.cc \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
+	tests/stub_Instance.cc \
 	IoStats.h \
 	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
@@ -2061,6 +2066,7 @@ tests_testHttpReply_SOURCES = \
 	tests/testHttpReply.cc \
 	HttpReply.h \
 	tests/stub_HttpRequest.cc \
+	tests/stub_Instance.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
@@ -2188,6 +2194,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequest.cc \
 	tests/testHttpRequestMethod.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
+	tests/stub_Instance.cc \
 	IoStats.h \
 	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
@@ -2485,6 +2492,7 @@ tests_testCacheManager_SOURCES = \
 	HttpReply.cc \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
+	tests/stub_Instance.cc \
 	IoStats.h \
 	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
