@@ -145,6 +145,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
     lf->f_rotate = logfile_mod_udp_rotate;
 
     l_udp_t *ll = static_cast<l_udp_t*>(xcalloc(1, sizeof(*ll)));
+    ll->fd = -1;
     lf->data = ll;
 
     if (strncmp(path, "//", 2) == 0) {
@@ -178,7 +179,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
             debugs(50, DBG_IMPORTANT, "ERROR: Unable to open UDP socket for logging");
             return FALSE;
         }
-    } else if (!comm_connect_addr(ll->fd, addr)) {
+    } else if (comm_connect_addr(ll->fd, addr) == Comm::COMM_ERROR) {
         xerrno = errno;
         if (lf->flags.fatal) {
             fatalf("Unable to connect to %s for UDP log: %s\n", lf->path, xstrerr(xerrno));
