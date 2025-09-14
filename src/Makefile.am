@@ -2010,6 +2010,7 @@ tests_testHttpRequest_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(LIBGNUTLS_LIBS) \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
