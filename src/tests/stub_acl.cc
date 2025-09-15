@@ -22,5 +22,5 @@ namespace Acl
 {
 class Tree {};
 }
-const Acl::Tree &Acl::ToTree(const TreePointer * const) STUB_RETREF(Acl::Tree)
+const Acl::Tree &Acl::ToTree(const TreePointer *) STUB_RETREF(Acl::Tree)
 
