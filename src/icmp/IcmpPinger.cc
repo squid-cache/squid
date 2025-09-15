@@ -57,6 +57,8 @@ IcmpPinger::Open(void)
     struct sockaddr_in PS;
     int xerrno;
 
+    static_assert(sizeof(WSAPROTOCOL_INFO) >= sizeof(PS), "PS must fit into wpi-sized buf");
+
     WSAStartup(2, &wsaData);
     atexit(Win32SockCleanup);
 
@@ -122,7 +124,7 @@ IcmpPinger::Open(void)
         return -1;
     }
 
-    x = xsend(icmp_sock, buf, strlen(buf), 0);
+    x = xsend(icmp_sock, buf, x, 0);
     xerrno = errno;
 
     if (x < 3 || strncmp("OK\n", buf, 3)) {
