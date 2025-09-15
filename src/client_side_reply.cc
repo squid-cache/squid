@@ -21,6 +21,7 @@
 #include "format/Token.h"
 #include "FwdState.h"
 #include "globals.h"
+#include "HeaderMangling.h"
 #include "http/Stream.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"

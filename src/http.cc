@@ -30,6 +30,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
+#include "HeaderMangling.h"
 #include "http.h"
 #include "http/one/ResponseParser.h"
 #include "http/one/TeChunkedParser.h"
@@ -2249,7 +2250,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case Http::HdrType::IF_NONE_MATCH:
         /** \par If-None-Match:
          * append if the wildcard '*' special case value is present, or
-         *   cache_miss_revalidate is disabled, or
+         *   cache_miss_revalidate is enabled, or
          *   the request is not cacheable in this proxy, or
          *   the request contains authentication credentials.
          * \note this header lists a set of responses for the server to elide sending. Squid added values are extending that set.
@@ -2373,7 +2374,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
      * not the one we are sending. Needs checking.
      */
     const AnyP::ProtocolVersion httpver = Http::ProtocolVersion();
-    const SBuf url(flags.toOrigin ? request->url.path() : request->effectiveRequestUri());
+    const SBuf url(flags.toOrigin ? request->url.originForm() : request->effectiveRequestUri());
     mb->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\r\n",
                 SQUIDSBUFPRINT(request->method.image()),
                 SQUIDSBUFPRINT(url),

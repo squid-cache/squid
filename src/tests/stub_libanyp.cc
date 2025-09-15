@@ -31,6 +31,7 @@ const SBuf &AnyP::Uri::Asterisk()
 }
 SBuf &AnyP::Uri::authority(bool) const STUB_RETVAL(nil)
 SBuf &AnyP::Uri::absolute() const STUB_RETVAL(nil)
+SBuf &AnyP::Uri::absolutePath() const STUB_RETVAL(nil)
 void urlInitialize() STUB
 const char *urlCanonicalFakeHttps(const HttpRequest *) STUB_RETVAL(nullptr)
 bool urlIsRelative(const char *) STUB_RETVAL(false)

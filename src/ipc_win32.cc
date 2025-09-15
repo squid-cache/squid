@@ -573,6 +573,7 @@ ipc_thread_1(void *in_params)
                       nullptr, nullptr, &si, &pi)) {
         pid = pi.dwProcessId;
         hProcess = pi.hProcess;
+        CloseHandle(pi.hThread);
     } else {
         pid = -1;
         x = GetLastError();

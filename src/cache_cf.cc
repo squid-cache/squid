@@ -41,7 +41,7 @@
 #include "fqdncache.h"
 #include "ftp/Elements.h"
 #include "globals.h"
-#include "HttpHeaderTools.h"
+#include "HeaderMangling.h"
 #include "HttpUpgradeProtocolAccess.h"
 #include "icmp/IcmpConfig.h"
 #include "ip/Intercept.h"

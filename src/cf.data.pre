@@ -6048,6 +6048,12 @@ DOC_START
 		Location headers and embedded URLs after the helper rewrites
 		the request URL.
 
+		If Squid cannot parse the URL value returned by the helper, it logs a
+		critical cache.log ERROR message and uses the original request URL.
+		Supported URL format depends on the request method. For example,
+		CONNECT request URLs must use `host:port` form, while GET URLs start
+		with a `scheme:` prefix (e.g., `https://example.com/`).
+
 	  OK
 		Keep the client request intact.
 
@@ -8500,7 +8506,7 @@ DOC_START
 	and from neighbor caches.  The standard UDP port for ICP is 3130.
 
 	Example:
-		icp_port @DEFAULT_ICP_PORT@
+		icp_port 3130
 DOC_END
 
 NAME: htcp_port
