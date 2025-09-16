@@ -253,7 +253,7 @@ void
 Http::Message::packInto(Packable *p, bool full_uri) const
 {
     packFirstLineInto(p, full_uri);
-    header.packInto(p);
+    header.packInto(p, MaskSensitiveInfo::off);
     p->append("\r\n", 2);
 }
 

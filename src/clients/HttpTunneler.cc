@@ -152,7 +152,7 @@ Http::Tunneler::writeRequest()
                                               &hdr_out,
                                               connection->getPeer(),
                                               flags);
-        hdr_out.packInto(&mb);
+        hdr_out.packInto(&mb, MaskSensitiveInfo::off);
         hdr_out.clean();
         mb.append("\r\n", 2);
 
