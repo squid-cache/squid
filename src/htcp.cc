@@ -1236,7 +1236,7 @@ htcpSpecifier::checkedHit(StoreEntry *e)
 }
 
 static void
-htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
+htcpHandleClr(htcpDataHeader * const hdr, char * const buf, const int sz, Ip::Address &from)
 {
     /* buf[0/1] is reserved and reason */
     if (sz < 2) {
@@ -1246,10 +1246,9 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
     }
     int reason = static_cast<unsigned char>(buf[1]) << 4;
     debugs(31, 2, "HTCP CLR reason: " << reason);
-    buf += 2;
-    sz -= 2;
 
-    /* buf should be a SPECIFIER */
+    const auto specifierStart = buf + 2;
+    const auto specifierSize = sz - 2;
 
     if (sz == 0) {
         debugs(31, 4, "nothing to do");
@@ -1257,7 +1256,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
         return;
     }
 
-    htcpSpecifier::Pointer s(htcpUnpackSpecifier(buf, sz));
+    const auto s = htcpUnpackSpecifier(specifierStart, specifierSize);
 
     if (!s) {
         debugs(31, 3, "htcpUnpackSpecifier failed");
@@ -1302,15 +1301,10 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
     default:
         break;
     }
-}
 
-/*
- * Forward a CLR request to all peers who have requested that CLRs be
- * forwarded to them.
- */
-static void
-htcpForwardClr(char *buf, int sz)
-{
+    // Forward this CLR request to all peers who have requested that CLRs be
+    // forwarded to them.
+    // TODO: Consider not forwarding requests with htcpClrStore() < 0.
     for (const auto &p: CurrentCachePeers()) {
         if (!p->options.htcp) {
             continue;
@@ -1457,7 +1451,6 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
         break;
     case HTCP_CLR:
         htcpHandleClr(&hdr, hbuf, hsz, from);
-        htcpForwardClr(buf, sz);
         break;
     default:
         break;
