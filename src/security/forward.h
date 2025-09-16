@@ -11,6 +11,7 @@
 
 #include "base/CbDataList.h"
 #include "base/forward.h"
+#include "base/OnOff.h"
 #include "base/ToCpp.h"
 #include "security/LockingPointer.h"
 
@@ -206,6 +207,9 @@ typedef long ParsedPortFlags;
 class PeerConnector;
 class BlindPeerConnector;
 class PeerOptions;
+
+/// Flags for explicit decisions on handling of sensitive information.
+using MaskSensitiveInfo = OnOff;
 
 class ServerOptions;
 

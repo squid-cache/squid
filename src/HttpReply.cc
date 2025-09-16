@@ -87,7 +87,7 @@ void
 HttpReply::packHeadersUsingFastPacker(Packable &p) const
 {
     sline.packInto(&p);
-    header.packInto(&p);
+    header.packInto(&p, Security::MaskSensitiveInfo::off);
     p.append("\r\n", 2);
 }
 
