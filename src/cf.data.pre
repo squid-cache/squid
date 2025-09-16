@@ -8899,7 +8899,7 @@ NAME: email_err_data
 COMMENT: on|off
 TYPE: onoff
 LOC: Config.onoff.emailErrData
-DEFAULT: on
+DEFAULT: off
 DOC_START
 	If enabled, information about the occurred error will be
 	included in the mailto links of the ERR pages (if %W is set)
