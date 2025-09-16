@@ -1929,6 +1929,7 @@ tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpRequest
 tests_testHttpRequest_SOURCES = \
+	tests/stub_ACLFilledChecklist.cc \
 	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
 	tests/stub_DelayId.cc \
@@ -1996,8 +1997,6 @@ nodist_tests_testHttpRequest_SOURCES = \
 	$(TESTSOURCES)
 tests_testHttpRequest_LDADD = \
 	base/libbase.la \
-	acl/libstate.la \
-	acl/libapi.la \
 	sbuf/libsbuf.la \
 	SquidConfig.o \
 	CommCalls.o \
