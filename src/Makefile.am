@@ -1999,8 +1999,6 @@ tests_testHttpRequest_LDADD = \
 	base/libbase.la \
 	sbuf/libsbuf.la \
 	SquidConfig.o \
-	CommCalls.o \
-	comm/libcomm.la \
 	ip/libip.la \
 	parser/libparser.la \
 	mem/libmem.la \
