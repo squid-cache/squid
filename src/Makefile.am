@@ -1929,6 +1929,10 @@ tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpRequest
 tests_testHttpRequest_SOURCES = \
+	tests/testHttpRequest.cc \
+	tests/testHttpRequestMethod.cc
+nodist_tests_testHttpRequest_SOURCES = \
+	$(TESTSOURCES) \
 	tests/stub_ACLFilledChecklist.cc \
 	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
@@ -1943,8 +1947,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpHeaderTools.cc \
 	tests/stub_HttpReply.cc \
 	HttpRequest.cc \
-	tests/testHttpRequest.cc \
-	tests/testHttpRequestMethod.cc \
 	MasterXaction.cc \
 	MemBuf.cc \
 	Notes.cc \
@@ -1971,8 +1973,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_neighbors.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc
-nodist_tests_testHttpRequest_SOURCES = \
-	$(TESTSOURCES)
 tests_testHttpRequest_LDADD = \
 	base/libbase.la \
 	sbuf/libsbuf.la \
@@ -1984,12 +1984,12 @@ tests_testHttpRequest_LDADD = \
 	anyp/libanyp.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
+	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
-	$(LIBCPPUNIT_LIBS) \
-	$(COMPAT_LIB) \
-	$(SSLLIB) \
 	$(LIBNETTLE_LIBS) \
+	$(SSLLIB) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
