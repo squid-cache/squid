@@ -11,6 +11,7 @@
 
 #include "anyp/ProtocolVersion.h"
 #include "base/LookupTable.h"
+#include "base/MaskSensitiveInfo.h"
 #include "http/RegisteredHeaders.h"
 /* because we pass a spec by value */
 #include "HttpHeaderMask.h"
@@ -99,7 +100,7 @@ public:
     int parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, Http::ContentLengthInterpreter &interpreter);
     /// Serialize HTTP Fields using HTTP/1.1 syntax in RFC 9112 section 5.
     /// Optionally redact credentials in HTTP Authentication headers.
-    void packInto(Packable *, Security::MaskSensitiveInfo) const;
+    void packInto(Packable *, MaskSensitiveInfo) const;
     HttpHeaderEntry *getEntry(HttpHeaderPos * pos) const;
     HttpHeaderEntry *findEntry(Http::HdrType id) const;
     /// deletes all fields with a given name, if any.

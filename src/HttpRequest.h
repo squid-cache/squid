@@ -206,7 +206,7 @@ public:
 
     /// Serialize HTTP Request using HTTP/1.1 origin-form syntax in RFC 9112 section 3.
     /// \copydoc HttpHeader::packInto()
-    void pack(Packable *, Security::MaskSensitiveInfo) const;
+    void pack(Packable *, MaskSensitiveInfo) const;
 
     static void httpRequestPack(void *obj, Packable *p);
 

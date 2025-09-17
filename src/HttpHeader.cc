@@ -669,15 +669,15 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
 
 /* packs all the entries using supplied packer */
 void
-HttpHeader::packInto(Packable * p, Security::MaskSensitiveInfo masking) const
+HttpHeader::packInto(Packable * p, MaskSensitiveInfo masking) const
 {
     HttpHeaderPos pos = HttpHeaderInitPos;
     const HttpHeaderEntry *e;
     assert(p);
-    debugs(55, 7, this << " into " << p << (masking == Security::MaskSensitiveInfo::on ? " while masking" : ""));
+    debugs(55, 7, this << " into " << p << (masking == MaskSensitiveInfo::on ? " while masking" : ""));
     /* pack all entries one by one */
     while ((e = getEntry(&pos))) {
-        if (masking == Security::MaskSensitiveInfo::off) {
+        if (masking == MaskSensitiveInfo::off) {
             e->packInto(p);
             continue;
         }
