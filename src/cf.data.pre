@@ -8905,6 +8905,12 @@ DOC_START
 	included in the mailto links of the ERR pages (if %W is set)
 	so that the email body contains the data.
 	Syntax is <A HREF="mailto:%w%W">%w</A>
+
+	SECURITY WARNING:
+		Request headers and other included facts may contain
+		sensitive information about transaction history, the
+		Squid instance, and its environment which would be
+		unavailable to error recipients otherwise).
 DOC_END
 
 NAME: deny_info
