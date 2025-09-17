@@ -8,12 +8,17 @@
 
 #include "squid.h"
 #include "format/Format.h"
+#include "format/Quoting.h"
 
 #define STUB_API "stub_libformat.cc"
 #include "tests/STUB.h"
+
+const SBuf Format::Dash("-");
 
 void Format::Format::assemble(MemBuf &, const AccessLogEntryPointer &, int) const STUB
 bool Format::Format::parse(char const*) STUB_RETVAL(false)
 Format::Format::Format(char const*) STUB
 Format::Format::~Format() STUB
+char *Format::QuoteUrlEncodeUsername(const char *) STUB_RETVAL(nullptr)
+char *Format::QuoteMimeBlob(const char *) STUB_RETVAL(nullptr)
 
