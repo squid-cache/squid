@@ -8910,7 +8910,7 @@ DOC_START
 		Request headers and other included facts may contain
 		sensitive information about transaction history, the
 		Squid instance, and its environment which would be
-		unavailable to error recipients otherwise).
+		unavailable to error recipients otherwise.
 DOC_END
 
 NAME: deny_info
