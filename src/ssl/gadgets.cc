@@ -15,6 +15,19 @@
 #include "security/Io.h"
 #include "ssl/gadgets.h"
 
+/// whether the given key requires a digest when signing
+static bool
+keyNeedsDigest(const EVP_PKEY * const pkey) {
+    if (EVP_PKEY_is_a(pkey, "ML-DSA-44") ||
+        EVP_PKEY_is_a(pkey, "ML-DSA-65") ||
+        EVP_PKEY_is_a(pkey, "ML-DSA-87") ||
+        EVP_PKEY_is_a(pkey, "ED25519") ||
+        EVP_PKEY_is_a(pkey, "ED448"))
+        return false; // no digest needed
+
+    return true; // require a digest for all other types
+}
+
 void
 Ssl::ForgetErrors()
 {
@@ -677,9 +690,9 @@ static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Secu
     assert(hash);
     /*Now sign the request */
     if (properties.signAlgorithm != Ssl::algSignSelf && properties.signWithPkey.get())
-        ret = X509_sign(cert.get(), properties.signWithPkey.get(), hash);
+        ret = X509_sign(cert.get(), properties.signWithPkey.get(), keyNeedsDigest(properties.signWithPkey.get()) ? hash : nullptr);
     else //else sign with self key (self signed request)
-        ret = X509_sign(cert.get(), pkey.get(), hash);
+        ret = X509_sign(cert.get(), pkey.get(), keyNeedsDigest(pkey.get()) ? hash : nullptr);
 
     if (!ret)
         return false;
