@@ -193,7 +193,6 @@ public:
         MemBuf *listing = nullptr;
     } ftp;
 
-    char *request_hdrs = nullptr;
     char *err_msg = nullptr; /* Preformatted error message from the cache */
 
     AccessLogEntryPointer ale; ///< transaction details (or nil)
