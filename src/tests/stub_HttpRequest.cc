@@ -16,10 +16,10 @@
 // void httpRequestPack(void *obj, Packable *p);
 
 HttpRequest::HttpRequest(const MasterXaction::Pointer&) : Http::Message(hoRequest) {STUB}
-HttpRequest::HttpRequest(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *, const MasterXaction::Pointer &) : Http::Message(hoRequest) {STUB}
+HttpRequest::HttpRequest(const Http::RequestMethod &, AnyP::ProtocolType, const char *, const char *, const MasterXaction::Pointer &) : Http::Message(hoRequest) {STUB}
 HttpRequest::~HttpRequest() STUB
 void HttpRequest::reset() STUB
-void HttpRequest::initHTTP(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *) STUB
+void HttpRequest::initHTTP(const Http::RequestMethod &, AnyP::ProtocolType, const char *, const char *) STUB
 HttpRequest * HttpRequest::clone() const STUB_RETVAL(nullptr)
 bool HttpRequest::maybeCacheable() STUB_RETVAL(false)
 bool HttpRequest::conditional() const STUB_RETVAL(false)
@@ -41,14 +41,14 @@ static const SBuf nilSBuf;
 const SBuf &HttpRequest::effectiveRequestUri() const STUB_RETVAL(nilSBuf)
 bool HttpRequest::multipartRangeRequest() const STUB_RETVAL(false)
 bool HttpRequest::parseFirstLine(const char *, const char *) STUB_RETVAL(false)
-bool HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &) const STUB_RETVAL(false)
+bool HttpRequest::expectingBody(const Http::RequestMethod &, int64_t &) const STUB_RETVAL(false)
 bool HttpRequest::bodyNibbled() const STUB_RETVAL(false)
 int HttpRequest::prefixLen() const STUB_RETVAL(0)
 void HttpRequest::swapOut(StoreEntry *) STUB
 void HttpRequest::pack(Packable *) const STUB
 void HttpRequest::httpRequestPack(void *, Packable *) STUB
-HttpRequest * HttpRequest::FromUrl(const SBuf &, const MasterXaction::Pointer &, const HttpRequestMethod &) STUB_RETVAL(nullptr)
-HttpRequest * HttpRequest::FromUrlXXX(const char *, const MasterXaction::Pointer &, const HttpRequestMethod &) STUB_RETVAL(nullptr)
+HttpRequest * HttpRequest::FromUrl(const SBuf &, const MasterXaction::Pointer &, const Http::RequestMethod &) STUB_RETVAL(nullptr)
+HttpRequest * HttpRequest::FromUrlXXX(const char *, const MasterXaction::Pointer &, const Http::RequestMethod &) STUB_RETVAL(nullptr)
 ConnStateData *HttpRequest::pinnedConnection() STUB_RETVAL(nullptr)
 const SBuf HttpRequest::storeId() STUB_RETVAL(SBuf("."))
 void HttpRequest::ignoreRange(const char *) STUB
