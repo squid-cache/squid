@@ -21,20 +21,26 @@ keyNeedsDigest(const Security::PrivateKeyPointer &key) {
     Assure(key); // TODO: Add and use Security::PrivateKey (here and in caller).
     const auto pkey = key.get();
 
-    // Tests show that X509_sign() fails when supplied with a digest for these
-    // key types. We do not know if any other key types should be listed here.
-    // We do not know of an OpenSSL API that would allow us to discover what key
-    // types should be listed here. We could try calling X509_sign() with and
-    // without a digest to see if one of the calls works, but if both calls
-    // fail, it would not be clear which failure should be reported.
-    if (EVP_PKEY_is_a(pkey, "ML-DSA-44") ||
-        EVP_PKEY_is_a(pkey, "ML-DSA-65") ||
-        EVP_PKEY_is_a(pkey, "ML-DSA-87") ||
-        EVP_PKEY_is_a(pkey, "ED25519") ||
-        EVP_PKEY_is_a(pkey, "ED448"))
+    // OpenSSL does not define a maximum name size, but does terminate longer
+    // names without returning an error to the caller. Many similar callers in
+    // OpenSSL sources use 80-byte buffers.
+    char defaultDigestName[80] = "";
+    const auto nameGetterResult = EVP_PKEY_get_default_digest_name(pkey, defaultDigestName, sizeof(defaultDigestName));
+    debugs(83, 3, "nameGetterResult=" << nameGetterResult << " defaultDigestName=" << defaultDigestName);
+    if (nameGetterResult <= 0) {
+        debugs(83, 3, "ERROR: EVP_PKEY_get_default_digest_name() failure: " << Ssl::ReportAndForgetErrors);
+        // For backward compatibility sake, assume digest is required on errors.
+        // TODO: Return false for -2 nameGetterResult as it "indicates the
+        // operation is not supported by the public key algorithm"?
+        return true;
+    }
+
+    // The name "UNDEF" signifies that a digest must (for return value 2) or may
+    // (for return value 1) be left unspecified.
+    if (nameGetterResult == 2 && strcmp(defaultDigestName, "UNDEF") == 0)
         return false;
 
-    // assume that digest is required for all other key types
+    // Defined mandatory algorithms and "may be left unspecified" cases mentioned above.
     return true;
 }
 
