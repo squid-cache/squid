@@ -15,9 +15,9 @@
 #include "security/Io.h"
 #include "ssl/gadgets.h"
 
-/// whether the given key requires a digest when signing using X509_sign()
+/// whether to supply a digest algorithm name when calling X509_sign() with the given key
 static bool
-keyNeedsDigest(const Security::PrivateKeyPointer &key) {
+signWithDigest(const Security::PrivateKeyPointer &key) {
     Assure(key); // TODO: Add and use Security::PrivateKey (here and in caller).
     const auto pkey = key.get();
 
@@ -29,7 +29,7 @@ keyNeedsDigest(const Security::PrivateKeyPointer &key) {
     debugs(83, 3, "nameGetterResult=" << nameGetterResult << " defaultDigestName=" << defaultDigestName);
     if (nameGetterResult <= 0) {
         debugs(83, 3, "ERROR: EVP_PKEY_get_default_digest_name() failure: " << Ssl::ReportAndForgetErrors);
-        // For backward compatibility sake, assume digest is required on errors.
+        // Backward compatibility: On error, assume digest should be used.
         // TODO: Return false for -2 nameGetterResult as it "indicates the
         // operation is not supported by the public key algorithm"?
         return true;
@@ -47,7 +47,7 @@ keyNeedsDigest(const Security::PrivateKeyPointer &key) {
 /// OpenSSL X509_sign() wrapper
 static auto
 Sign(Security::Certificate &cert, const Security::PrivateKeyPointer &key, const EVP_MD &availableDigest) {
-    const auto digestOrNil = keyNeedsDigest(key) ? &availableDigest : nullptr;
+    const auto digestOrNil = signWithDigest(key) ? &availableDigest : nullptr;
     return X509_sign(&cert, key.get(), digestOrNil);
 }
 
