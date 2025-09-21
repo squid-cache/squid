@@ -17,7 +17,10 @@
 
 /// whether the given key requires a digest when signing using X509_sign()
 static bool
-keyNeedsDigest(const EVP_PKEY * const pkey) {
+keyNeedsDigest(const Security::PrivateKeyPointer &key) {
+    Assure(key); // TODO: Add and use Security::PrivateKey (here and in caller).
+    const auto pkey = key.get();
+
     // Tests show that X509_sign() fails when supplied with a digest for these
     // key types. We do not know if any other key types should be listed here.
     // We do not know of an OpenSSL API that would allow us to discover what key
@@ -35,7 +38,11 @@ keyNeedsDigest(const EVP_PKEY * const pkey) {
     return true;
 }
 
-    return true; // require a digest for all other types
+/// OpenSSL X509_sign() wrapper
+static auto
+Sign(Security::Certificate &cert, const Security::PrivateKeyPointer &key, const EVP_MD &availableDigest) {
+    const auto digestOrNil = keyNeedsDigest(key) ? &availableDigest : nullptr;
+    return X509_sign(&cert, key.get(), digestOrNil);
 }
 
 void
@@ -700,9 +707,9 @@ static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Secu
     assert(hash);
     /*Now sign the request */
     if (properties.signAlgorithm != Ssl::algSignSelf && properties.signWithPkey.get())
-        ret = X509_sign(cert.get(), properties.signWithPkey.get(), keyNeedsDigest(properties.signWithPkey.get()) ? hash : nullptr);
+        ret = Sign(*cert, properties.signWithPkey, *hash);
     else //else sign with self key (self signed request)
-        ret = X509_sign(cert.get(), pkey.get(), keyNeedsDigest(pkey.get()) ? hash : nullptr);
+        ret = Sign(*cert, pkey, *hash);
 
     if (!ret)
         return false;
