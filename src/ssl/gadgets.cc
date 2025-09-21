@@ -15,15 +15,25 @@
 #include "security/Io.h"
 #include "ssl/gadgets.h"
 
-/// whether the given key requires a digest when signing
+/// whether the given key requires a digest when signing using X509_sign()
 static bool
 keyNeedsDigest(const EVP_PKEY * const pkey) {
+    // Tests show that X509_sign() fails when supplied with a digest for these
+    // key types. We do not know if any other key types should be listed here.
+    // We do not know of an OpenSSL API that would allow us to discover what key
+    // types should be listed here. We could try calling X509_sign() with and
+    // without a digest to see if one of the calls works, but if both calls
+    // fail, it would not be clear which failure should be reported.
     if (EVP_PKEY_is_a(pkey, "ML-DSA-44") ||
         EVP_PKEY_is_a(pkey, "ML-DSA-65") ||
         EVP_PKEY_is_a(pkey, "ML-DSA-87") ||
         EVP_PKEY_is_a(pkey, "ED25519") ||
         EVP_PKEY_is_a(pkey, "ED448"))
-        return false; // no digest needed
+        return false;
+
+    // assume that digest is required for all other key types
+    return true;
+}
 
     return true; // require a digest for all other types
 }
