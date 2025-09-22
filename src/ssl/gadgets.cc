@@ -44,9 +44,9 @@ signWithDigest(const Security::PrivateKeyPointer &key) {
     // Defined mandatory algorithms and "may be left unspecified" cases mentioned above.
     return true;
 
-#else
-    // TODO: Drop this legacy code when we stop supporting OpenSSL v1;
-    // EVP_PKEY_get_default_digest_name() is available starting OpenSSL v3.
+#elif HAVE_LIBCRYPTO_EVP_PKEY_IS_A
+    // This block should not be reachable because both EVP_PKEY_is_a() and
+    // EVP_PKEY_get_default_digest_name() were added in OpenSSL v3.0.0.
 
     // Tests show that X509_sign() fails when supplied with a digest for these
     // key types. We do not know if any other key types should be listed here.
@@ -60,7 +60,15 @@ signWithDigest(const Security::PrivateKeyPointer &key) {
 
     // assume that digest is required for all other key types
     return true;
-#endif // HAVE_LIBCRYPTO_EVP_PKEY_GET_DEFAULT_DIGEST_NAME
+#else
+    // TODO: Drop this legacy code and the "unreachable" EVP_PKEY_is_a() block
+    // above when we stop supporting OpenSSL v1: Both EVP_PKEY_is_a() and
+    // EVP_PKEY_get_default_digest_name() are available starting with OpenSSL
+    // v3, and we can rely on EVP_PKEY_get_default_digest_name() alone.
+
+    // assume that digest is required for all key types supported by older OpenSSL versions
+    return true;
+#endif
 }
 
 /// OpenSSL X509_sign() wrapper
@@ -470,10 +478,10 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
     // XXX: Add PublicKeyPointer. In OpenSSL, public and private keys are
     // internally represented by EVP_PKEY pair, but GnuTLS uses distinct types.
     const Security::PrivateKeyPointer certKey(X509_get_pubkey(mimicCert.get()));
-#if OPENSSL_VERSION_MAJOR < 3
-    const auto rsaPkey = EVP_PKEY_get0_RSA(certKey.get()) != nullptr;
-#else
+#if HAVE_LIBCRYPTO_EVP_PKEY_IS_A
     const auto rsaPkey = EVP_PKEY_is_a(certKey.get(), "RSA") == 1;
+#else
+    const auto rsaPkey = EVP_PKEY_get0_RSA(certKey.get()) != nullptr;
 #endif
 
     int added = 0;
