@@ -18,10 +18,10 @@
 /// whether to supply a digest algorithm name when calling X509_sign() with the given key
 static bool
 signWithDigest(const Security::PrivateKeyPointer &key) {
+#if HAVE_LIBCRYPTO_EVP_PKEY_GET_DEFAULT_DIGEST_NAME
     Assure(key); // TODO: Add and use Security::PrivateKey (here and in caller).
     const auto pkey = key.get();
 
-#if HAVE_LIBCRYPTO_EVP_PKEY_GET_DEFAULT_DIGEST_NAME
     // OpenSSL does not define a maximum name size, but does terminate longer
     // names without returning an error to the caller. Many similar callers in
     // OpenSSL sources use 80-byte buffers.
@@ -44,31 +44,14 @@ signWithDigest(const Security::PrivateKeyPointer &key) {
     // Defined mandatory algorithms and "may be left unspecified" cases mentioned above.
     return true;
 
-#elif HAVE_LIBCRYPTO_EVP_PKEY_IS_A
-    // This block should not be reachable because both EVP_PKEY_is_a() and
-    // EVP_PKEY_get_default_digest_name() were added in OpenSSL v3.0.0.
-
-    // Tests show that X509_sign() fails when supplied with a digest for these
-    // key types. We do not know if any other key types should be listed here.
-    if (EVP_PKEY_is_a(pkey, "ML-DSA-44") ||
-            EVP_PKEY_is_a(pkey, "ML-DSA-65") ||
-            EVP_PKEY_is_a(pkey, "ML-DSA-87") ||
-            EVP_PKEY_is_a(pkey, "ED25519") ||
-            EVP_PKEY_is_a(pkey, "ED448")) {
-        return false;
-    }
-
-    // assume that digest is required for all other key types
-    return true;
 #else
-    // TODO: Drop this legacy code and the "unreachable" EVP_PKEY_is_a() block
-    // above when we stop supporting OpenSSL v1: Both EVP_PKEY_is_a() and
-    // EVP_PKEY_get_default_digest_name() are available starting with OpenSSL
-    // v3, and we can rely on EVP_PKEY_get_default_digest_name() alone.
+    // TODO: Drop this legacy code when we stop supporting OpenSSL v1;
+    // EVP_PKEY_get_default_digest_name() is available starting with OpenSSL v3.
+    (void)key;
 
     // assume that digest is required for all key types supported by older OpenSSL versions
     return true;
-#endif
+#endif // HAVE_LIBCRYPTO_EVP_PKEY_GET_DEFAULT_DIGEST_NAME
 }
 
 /// OpenSSL X509_sign() wrapper
@@ -478,10 +461,10 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
     // XXX: Add PublicKeyPointer. In OpenSSL, public and private keys are
     // internally represented by EVP_PKEY pair, but GnuTLS uses distinct types.
     const Security::PrivateKeyPointer certKey(X509_get_pubkey(mimicCert.get()));
-#if HAVE_LIBCRYPTO_EVP_PKEY_IS_A
-    const auto rsaPkey = EVP_PKEY_is_a(certKey.get(), "RSA") == 1;
-#else
+#if OPENSSL_VERSION_MAJOR < 3
     const auto rsaPkey = EVP_PKEY_get0_RSA(certKey.get()) != nullptr;
+#else
+    const auto rsaPkey = EVP_PKEY_is_a(certKey.get(), "RSA") == 1;
 #endif
 
     int added = 0;
