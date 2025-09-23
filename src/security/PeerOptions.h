@@ -127,8 +127,6 @@ protected:
 #endif
     }
 
-    int sslVersion = 0;
-
     /// flags governing Squid internal TLS operations
     struct flags_ {
         flags_() : tlsDefaultCa(true), tlsNpn(true) {}
