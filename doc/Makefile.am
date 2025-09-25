@@ -14,3 +14,8 @@ DEFAULT_ERROR_DIR       = $(datadir)/errors
 EXTRA_DIST = \
 	debug-messages.dox \
 	debug-sections.txt
+
+cfgman: $(top_builddir)/src/cf.data $(top_srcdir)/scripts/www/build-cfg-help.pl
+	@mkdir -p cfgman
+	$(top_srcdir)/scripts/www/build-cfg-help.pl --version $(VERSION) -o cfgman $(top_builddir)/src/cf.data
+	$(top_srcdir)/scripts/www/build-cfg-help.pl --version $(VERSION) -o squid-$(VERSION)-cfgman.html -f singlehtml $(top_builddir)/src/cf.data
