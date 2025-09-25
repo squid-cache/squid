@@ -497,7 +497,7 @@ purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, Http::Message *rep, H
                 // for this logic replace the entire request-target URI path
                 tmpUrl.path(hdrUrl);
             } else {
-                tmpUrl.addRelativePath(reqUrl);
+                tmpUrl.addRelativePath(hdrUrl);
             }
             absUrlMaker = tmpUrl.absolute();
             absUrl = absUrlMaker.c_str();
