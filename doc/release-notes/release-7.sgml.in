@@ -310,6 +310,11 @@ This section gives an account of those changes in three categories:
 	<tag>--enable-auth-ntlm=</tag>
 	<p>Removed <em>SMB_LM</em> helper, in favour of the <em>ntlm_auth</em>
 	   alternative offered by the Samba project.
+	
+	<tag>--disable-march-native</tag>
+	<p>The <em>-march=native</em> compiler option is not used by
+		default. It is possible to enable it by using the
+		<em>--enable-march-native</em> option instead
 
 </descrip>
 </p>
