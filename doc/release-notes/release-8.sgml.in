@@ -157,6 +157,10 @@ This section gives an account of those changes in three categories:
 	<p>Removed <em>LM_Group</em> helper. The LM protocol is
 	   insecure and no longer supported on the market since 2008.
 
+	<tag>--disable-march-native</tag>
+	<p>The <em>-march=native</em> compiler option is not used by
+		default. It is possible to enable it by using the
+		<em>--enable-march-native</em> option instead
 </descrip>
 </p>
 
