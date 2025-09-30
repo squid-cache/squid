@@ -68,8 +68,7 @@ AC_USE_SYSTEM_EXTENSIONS
 
 AC_LANG([C++])
 
-# Clang 3.2 on some CPUs requires -march-native to detect correctly.
-# GCC 4.3+ can also produce faster executables when its used.
+# Some compilers can produce faster executables when its used.
 # But building inside a virtual machine environment has been found to
 # cause random Illegal Instruction errors due to mis-detection of CPU.
 AC_ARG_ENABLE(arch-native,
