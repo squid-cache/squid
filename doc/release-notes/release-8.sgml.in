@@ -166,7 +166,7 @@ This section gives an account of those changes in three categories:
 		run on a system with a different exact CPU model than the one
 		it is built on, or in some containerized environments.
 		The symptom is crashes with "illegal instruction" errors.
-		Use with caution.
+		We do not recommend enabling this optimization in virtualized environments.
 </descrip>
 </p>
 
