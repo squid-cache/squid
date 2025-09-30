@@ -76,7 +76,10 @@ AC_ARG_ENABLE(arch-native,
   AS_HELP_STRING([--enable-arch-native],[Some compilers offer CPU-specific
                  optimizations with the -march=native parameter.
                  This flag enables the optimization, by default disabled,
-                 provided that the compiler supports it.]), [
+                 provided that the compiler supports it. Enabling this
+                 optimization may cause crashes due to illegal instruction errors
+                 when Squid is run on a system different from the one it is built on,
+                 and in some containerised or virtualised environments]), [
   SQUID_YESNO([$enableval],[--enable-arch-native])
 ])
 AC_MSG_NOTICE([CPU arch native optimization enabled: ${enable_arch_native:=no}])
