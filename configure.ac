@@ -83,7 +83,8 @@ AC_ARG_ENABLE(arch-native,
 ])
 AC_MSG_NOTICE([CPU arch native optimization enabled: ${enable_arch_native:=no}])
 AS_IF([test "x${enable_arch_native}" = "xyes"],[
-  # XXX: make this a tristate yes/no/auto
+  # XXX: Fail if the explicitly requested native optimization is not available.
+  # TODO: Make this a tristate yes/no/auto.
   SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
 ])
 
