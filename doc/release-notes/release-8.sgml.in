@@ -158,7 +158,7 @@ This section gives an account of those changes in three categories:
 	   insecure and no longer supported on the market since 2008.
 
 	<tag>--disable-arch-native</tag>
-	<p>The <em>-march=native</em> compiler option is not used by
+	<p>The <em>-march=native</em> compiler option is no longer used by
 		default. It is possible to enable it by using the
 		<em>--enable-arch-native</em> option instead.
 		This optimization may cause problems when Squid is
