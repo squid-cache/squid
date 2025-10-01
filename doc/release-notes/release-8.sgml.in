@@ -162,7 +162,7 @@ This section gives an account of those changes in three categories:
 		default. It is possible to enable it by using the
 		<em>--enable-arch-native</em> option.
 		<em>--enable-arch-native</em> option instead.
-		This optimization may cause problems when Squid is
+		Using <em>-march=native</em> may cause problems when Squid is
 		run on a system with a different exact CPU model than the one
 		it is built on, or in some containerized environments.
 		The symptom is crashes with "illegal instruction" errors.
