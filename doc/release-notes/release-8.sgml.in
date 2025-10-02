@@ -157,15 +157,6 @@ This section gives an account of those changes in three categories:
 	<p>Removed <em>LM_Group</em> helper. The LM protocol is
 	   insecure and no longer supported on the market since 2008.
 
-	<tag>--disable-arch-native</tag>
-	<p>The <em>-march=native</em> compiler option is no longer used by
-		default. It is possible to enable it by using the
-		<em>--enable-arch-native</em> option.
-		Using <em>-march=native</em> may cause problems when Squid is
-		run on a system with a different exact CPU model than the one
-		it is built on, or in some containerized environments.
-		The symptom is crashes with "illegal instruction" errors.
-		We do not recommend enabling this optimization in virtualized environments.
 </descrip>
 </p>
 
