@@ -348,12 +348,9 @@ main(int argc, char *const argv[])
     char default_keytab[MAXPATHLEN] = {};
 #if HAVE_KRB5_MEMORY_KEYTAB
     char *memory_keytab_name = nullptr;
-    char *memory_keytab_name_env = nullptr;
 #endif
     char *rcache_type = nullptr;
-    char *rcache_type_env = nullptr;
     char *rcache_dir = nullptr;
-    char *rcache_dir_env = nullptr;
     OM_uint32 major_status, minor_status;
     gss_ctx_id_t gss_context = GSS_C_NO_CONTEXT;
     gss_name_t client_name = GSS_C_NO_NAME;
@@ -627,15 +624,11 @@ main(int argc, char *const argv[])
             }
             xfree(token);
             xfree(rcache_type);
-            xfree(rcache_type_env);
             xfree(rcache_dir);
-            xfree(rcache_dir_env);
             xfree(keytab_name);
-            xfree(keytab_name_env);
 #if HAVE_KRB5_MEMORY_KEYTAB
             krb5_kt_close(context, memory_keytab);
             xfree(memory_keytab_name);
-            xfree(memory_keytab_name_env);
 #endif
             xfree(rfc_user);
             fprintf(stdout, "BH quit command\n");
