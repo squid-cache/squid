@@ -77,7 +77,7 @@ AC_ARG_ENABLE(arch-native,
                  This flag enables the optimization, by default disabled,
                  provided that the compiler supports it. Enabling this
                  optimization may cause crashes due to illegal instruction errors
-                 when Squid is run on a system different from the one it is built on,
+                 when Squid is run on a CPU different from the one it is built on,
                  and in some containerized or virtualized environments]), [
   SQUID_YESNO([$enableval],[--enable-arch-native])
 ])
