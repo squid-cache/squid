@@ -161,7 +161,6 @@ This section gives an account of those changes in three categories:
 	<p>The <em>-march=native</em> compiler option is no longer used by
 		default. It is possible to enable it by using the
 		<em>--enable-arch-native</em> option.
-		<em>--enable-arch-native</em> option instead.
 		Using <em>-march=native</em> may cause problems when Squid is
 		run on a system with a different exact CPU model than the one
 		it is built on, or in some containerized environments.
