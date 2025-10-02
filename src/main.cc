@@ -1807,6 +1807,13 @@ GoIntoBackground()
         // The fork() effectively duped any saved debugs() messages. For
         // simplicity sake, let the child process deal with them.
         Debug::ForgetSaved();
+        // reset the smart pointer which will cause it to destruct and drive
+        // SSL_CTX_free. If this is not done then the destruction will occur
+        // in the C++ exit handler and can cause problems because SSL_CTX_free get's called
+        // after OpenSSL's exit handler has already run. OpenSSL cleans up external providers
+        // in it's exit handler (such as the oqs provider which requires
+        // that SSL_CTX_free be done before the C++ exit handler tries to call it)
+        Config.ssl_client.sslContext.reset();
         exit(EXIT_SUCCESS);
     }
     // child, running as a background daemon
@@ -1816,6 +1823,13 @@ GoIntoBackground()
 static void
 masterExit()
 {
+    // reset the smart pointer which will cause it to destruct and drive
+    // SSL_CTX_free. If this is not done then the destruction will occur
+    // in the C++ exit handler and can cause problems because SSL_CTX_free get's called
+    // after OpenSSL's exit handler has already run. OpenSSL cleans up external providers
+    // in it's exit handler (such as the oqs provider which requires
+    // that SSL_CTX_free be done before the C++ exit handler tries to call it)
+    Config.ssl_client.sslContext.reset();
     if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
         syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
         exit(EXIT_FAILURE);
