@@ -195,6 +195,9 @@ This section gives an account of those changes in three categories:
 	<tag>logformat</tag>
 	<p>Removed <em>%ui</em> format code with Ident protocol support.
 
+	<tag>email_err_data</tag>
+	<p>Since Squid-7.2, the default for this directive is <em>off</em>.
+
 	<tag>external_acl_type</tag>
 	<p>Removed <em>%IDENT</em> format code with Ident protocol support.
 
