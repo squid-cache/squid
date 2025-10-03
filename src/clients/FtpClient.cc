@@ -69,6 +69,61 @@ escapeIAC(const char *buf)
     return ret;
 }
 
+bool
+parseEPSV(Parser::Tokenizer &tz, const SBuf &tuple, uint16_t &outPort)
+{
+    try {
+        // '(' or need more data
+        tz.skipRequired("opening '('", SBuf("("));
+
+        // Peek the delimiter from the underlying buffer (tuple[1])
+        if (tuple.length() < 2)
+            throw TextException("empty delimiter in EPSV tuple", Here());
+
+        const auto delim = static_cast<unsigned char>(tuple[1]);
+
+        // validate delimiter: ASCII 33..126 and not a digit
+        if (delim < 33 || delim > 126 || xisdigit(delim))
+            throw TextException("invalid EPSV delimiter (must be ASCII 33..126 and not a digit)", Here());
+
+        // same delimiter three times
+        if (!tz.skip(static_cast<char>(delim)) ||
+                !tz.skip(static_cast<char>(delim)) ||
+                !tz.skip(static_cast<char>(delim)))
+            throw TextException("EPSV tuple missing repeated delimiters", Here());
+
+        // 1..5 decimal digits (port)
+        const auto port64 = tz.udec64("EPSV port", 5);
+
+        // 4th delimiter and ')'
+        if (!tz.skip(static_cast<char>(delim)))
+            throw TextException("EPSV tuple missing fourth delimiter", Here());
+        tz.skipRequired("closing ')'", SBuf(")"));
+
+        // optional trailing whitespace
+        static CharacterSet ws("epsv-ws", " \t\r\n");
+        tz.skipAll(ws);
+
+        // no garbage after tuple
+        if (!tz.atEnd())
+            throw TextException("trailing garbage after EPSV tuple", Here());
+
+        // range check
+        if (port64 < 1 || port64 > 65535)
+            throw TextException(ToSBuf("EPSV port out of range: ", port64), Here());
+
+        outPort = static_cast<uint16_t>(port64);
+        return true;
+    } catch (const Parser::InsufficientInput &) {
+        debugs(9, 6, "too-short EPSV tuple");
+    } catch (const std::exception &ex) {
+        debugs(9, 6, "invalid EPSV tuple: " << ex.what());
+    } catch (...) {
+        debugs(9, 6, "cannot parse EPSV tuple: " << CurrentException);
+    }
+    return false;
+}
+
 /* Ftp::ErrorDetail */
 
 SBuf
@@ -563,17 +618,24 @@ Ftp::Client::handleEpsvReply(Ip::Address &remoteAddr)
     /*  ANSI sez [^0-9] is undefined, it breaks on Watcom cc */
     debugs(9, 5, "scanning: " << ctrl.last_reply);
 
-    buf = ctrl.last_reply + strcspn(ctrl.last_reply, "(");
+    const auto line = ctrl.last_reply;
+    const auto open = strchr(line, '(');
+    if (!open) {
+        debugs(9, DBG_IMPORTANT, "ERROR: Missing EPSV reply from " <<
+               ctrl.conn->remote << ": " <<
+               ctrl.last_reply);
+        return sendPassive();
+    }
 
-    char h1, h2, h3, h4;
-    unsigned short port;
-    int n = sscanf(buf, "(%c%c%c%hu%c)", &h1, &h2, &h3, &port, &h4);
+    SBuf tuple;
+    tuple.assign(open, strlen(open));
 
-    if (n < 4 || h1 != h2 || h1 != h3 || h1 != h4) {
+    Parser::Tokenizer tok(tuple);
+    uint16_t port = 0;
+    if (!parseEPSV(tok, tuple, port)) {
         debugs(9, DBG_IMPORTANT, "ERROR: Invalid EPSV reply from " <<
                ctrl.conn->remote << ": " <<
                ctrl.last_reply);
-
         return sendPassive();
     }
 
