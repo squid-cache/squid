@@ -68,19 +68,23 @@ AC_USE_SYSTEM_EXTENSIONS
 
 AC_LANG([C++])
 
-# Clang 3.2 on some CPUs requires -march-native to detect correctly.
-# GCC 4.3+ can also produce faster executables when its used.
+# Some compilers can produce faster executables when its used.
 # But building inside a virtual machine environment has been found to
 # cause random Illegal Instruction errors due to mis-detection of CPU.
 AC_ARG_ENABLE(arch-native,
-  AS_HELP_STRING([--disable-arch-native],[Some compilers offer CPU-specific
+  AS_HELP_STRING([--enable-arch-native],[Some compilers offer CPU-specific
                  optimizations with the -march=native parameter.
-                 This flag disables the optimization. The default is to
-                 auto-detect compiler support and use where available.]), [
+                 This flag enables the optimization, by default disabled,
+                 provided that the compiler supports it. Enabling this
+                 optimization may cause crashes due to illegal instruction errors
+                 when Squid is run on a CPU different from the one it is built on,
+                 and in some containerized or virtualized environments]), [
   SQUID_YESNO([$enableval],[--enable-arch-native])
 ])
-AC_MSG_NOTICE([CPU arch native optimization enabled: ${enable_arch_native:=auto}])
-AS_IF([test "x${enable_arch_native}" != "xno"],[
+AC_MSG_NOTICE([CPU arch native optimization enabled: ${enable_arch_native:=no}])
+AS_IF([test "x${enable_arch_native}" = "xyes"],[
+  # XXX: Fail if the explicitly requested native optimization is not available.
+  # TODO: Make this a tristate yes/no/auto.
   SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
 ])
 
