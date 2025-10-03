@@ -12,7 +12,7 @@
 #define STUB_API "access.log.cc"
 #include "tests/STUB.h"
 
-HierarchyLogEntry::HierarchyLogEntry() STUB
+HierarchyLogEntry::HierarchyLogEntry() STUB_NOP
 
 void HierarchyLogEntry::notePeerRead() STUB
 void HierarchyLogEntry::notePeerWrite() STUB

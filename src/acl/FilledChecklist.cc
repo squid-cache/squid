@@ -24,24 +24,7 @@
 
 CBDATA_CLASS_INIT(ACLFilledChecklist);
 
-ACLFilledChecklist::ACLFilledChecklist() :
-    dst_rdns(nullptr),
-#if USE_AUTH
-    auth_user_request (nullptr),
-#endif
-#if SQUID_SNMP
-    snmp_community(nullptr),
-#endif
-    requestErrorType(ERR_MAX),
-    conn_(nullptr),
-    fd_(-1),
-    destinationDomainChecked_(false),
-    sourceDomainChecked_(false)
-{
-    my_addr.setEmpty();
-    src_addr.setEmpty();
-    dst_addr.setEmpty();
-}
+ACLFilledChecklist::ACLFilledChecklist() = default;
 
 ACLFilledChecklist::~ACLFilledChecklist()
 {
@@ -198,24 +181,8 @@ ACLFilledChecklist::markSourceDomainChecked()
  *    (XXX) or eventually/asynchronously. After this callback obligations are
  *    fulfilled, checkCallback() deletes the checklist object (i.e. "this").
  */
-ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request):
-    dst_rdns(nullptr),
-#if USE_AUTH
-    auth_user_request(nullptr),
-#endif
-#if SQUID_SNMP
-    snmp_community(nullptr),
-#endif
-    requestErrorType(ERR_MAX),
-    conn_(nullptr),
-    fd_(-1),
-    destinationDomainChecked_(false),
-    sourceDomainChecked_(false)
+ACLFilledChecklist::ACLFilledChecklist(const acl_access * const A, HttpRequest * const http_request)
 {
-    my_addr.setEmpty();
-    src_addr.setEmpty();
-    dst_addr.setEmpty();
-
     changeAcl(A);
     setRequest(http_request);
 }
