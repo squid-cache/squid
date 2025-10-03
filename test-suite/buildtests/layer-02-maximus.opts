@@ -49,6 +49,7 @@ MAKETEST="distcheck"
 #   --with-ldap \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
+#   --enable-arch-native \  can fail on virtualized environments
 #
 #
 # NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the
