@@ -1007,8 +1007,9 @@ clientReplyContext::traceReply()
     http->request->pack(&content, true /* hide authorization data */);
     const HttpReplyPointer rep(new HttpReply);
     rep->setHeaders(Http::scOkay, nullptr, "message/http", content.contentSize(), 0, squid_curtime);
+    rep->body.set(SBuf(content.buf, content.size));
     http->storeEntry()->replaceHttpReply(rep);
-    http->storeEntry()->write(StoreIOBuffer(&content, 0));
+    http->request->swapOut(http->storeEntry());
     http->storeEntry()->completeSuccessfully("traceReply() stored the entire response");
 }
 
