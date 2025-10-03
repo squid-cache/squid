@@ -686,9 +686,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
         p->type = 0;
 
         while (ct && *ct) {
-            time_t tm;
             int l = strcspn(ct, ",");
-            char *tmp;
 
             if (l < 1)
                 goto blank;
@@ -704,18 +702,22 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                 p->size = atoi(ct + 1);
                 break;
 
-            case 'm':
-                tm = (time_t) strtol(ct + 1, &tmp, 0);
-
-                if (tmp != ct + 1)
+            case 'm': {
+                char *tmp;
+                const auto tm = (time_t) strtol(ct + 1, &tmp, 0);
+                if (tmp == ct + 1)
                     break;  /* not a valid integer */
 
-                safe_free(p->date); // TODO: properly handle multiple p->name occurrences
-                p->date = xstrdup(ctime(&tm));
+                const char* cts = ctime(&tm);
+                if (!cts)
+                    break;
 
-                *(strstr(p->date, "\n")) = '\0';
+                safe_free(p->date); // TODO: properly handle multiple p->name occurrences
+
+                p->date = xstrndup(cts, strcspn(cts, "\n"));
 
                 break;
+            }
 
             case '/':
                 p->type = 'd';
