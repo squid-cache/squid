@@ -43,9 +43,6 @@ public:
 /// \ingroup ServerProtocolHTCP
 void neighborsHtcpReply(const cache_key *, HtcpReplyData *, const Ip::Address &);
 
-/// \ingroup ServerProtocolHTCP
-void htcpOpenPorts(void);
-
 class CachePeer;
 
 /**
@@ -66,13 +63,6 @@ int htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p);
 /// \ingroup ServerProtocolHTCP
 void htcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &method, CachePeer * p, htcp_clr_reason reason);
 
-/// \ingroup ServerProtocolHTCP
-void htcpSocketShutdown(void);
-
-/// \ingroup ServerProtocolHTCP
-void htcpClosePorts(void);
-
 #endif /* USE_HTCP */
-
 #endif /* SQUID_SRC_HTCP_H */
 

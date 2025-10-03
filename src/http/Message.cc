@@ -41,7 +41,7 @@ Http::Message::putCc(const HttpHdrCc &otherCc)
 static int
 httpMsgIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end)
 {
-    int slen = strcspn(*parse_start, "\r\n");
+    const auto slen = strcspn(*parse_start, "\r\n");
 
     if (!(*parse_start)[slen])  /* no CRLF found */
         return 0;
