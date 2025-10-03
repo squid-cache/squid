@@ -1009,7 +1009,7 @@ clientReplyContext::traceReply()
     rep->setHeaders(Http::scOkay, nullptr, "message/http", content.contentSize(), 0, squid_curtime);
     http->storeEntry()->replaceHttpReply(rep);
     http->storeEntry()->write(StoreIOBuffer(&content, 0));
-    http->storeEntry()->completeSuccessfully("TRACE response is atomic");
+    http->storeEntry()->completeSuccessfully("traceReply() stored the entire response");
 }
 
 #define SENDING_BODY 0
