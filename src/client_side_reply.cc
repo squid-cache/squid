@@ -1002,11 +1002,14 @@ clientReplyContext::traceReply()
     triggerInitialStoreRead();
     http->storeEntry()->releaseRequest();
     http->storeEntry()->buffer();
+    MemBuf content;
+    content.init();
+    http->request->pack(&content, true /* hide authorization data */);
     const HttpReplyPointer rep(new HttpReply);
-    rep->setHeaders(Http::scOkay, nullptr, "text/plain", http->request->prefixLen(), 0, squid_curtime);
+    rep->setHeaders(Http::scOkay, nullptr, "message/http", content.contentSize(), 0, squid_curtime);
     http->storeEntry()->replaceHttpReply(rep);
-    http->request->swapOut(http->storeEntry());
-    http->storeEntry()->complete();
+    http->storeEntry()->write(StoreIOBuffer(&content, 0));
+    http->storeEntry()->completeSuccessfully("TRACE response is atomic");
 }
 
 #define SENDING_BODY 0
