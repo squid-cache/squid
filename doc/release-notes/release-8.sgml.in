@@ -30,7 +30,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>
+	<item>SSLv3 support removal
 </itemize>
 
 <sect1>Helper changes
@@ -67,6 +67,13 @@ lookups. Requests for that report now result in HTTP 404 errors.
 
 Most user-facing changes are reflected in squid.conf (see below).
 
+<sect1>SSLv3 support removal
+<p>Details in <url url="https://tools.ietf.org/html/rfc7568" name="RFC 7568">.
+
+<p>SSLv3 is not fit for purpose. Squid no longer supports being configured with
+   any settings regarding this protocol. That includes settings manually disabling
+   its use since it is now forced to disable by default. Also settings enabling
+   various client/server workarounds specific to SSLv3 are removed.
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
@@ -106,6 +113,11 @@ This section gives an account of those changes in three categories:
 	<em>src_as</em> and <em>dst_as</em> ACLs, Squid no longer initiates ASN
 	lookups.
 
+	<tag>cache_peer</tag>
+	<p>Removed <em>sslversion=</em> option.
+	<p>Removed <em>tls-options=</em> support for <em>SSLREF2_REUSE_CERT_TYPE_BUG</em>,
+	    <em>MICROSOFT_BIG_SSLV3_BUFFER</em> and <em>NO_SSLv3</em>.
+
 	<tag>client_ip_max_connections</tag>
 
 	<p>Fixed off-by-one enforcement. Squid now allows at most <em>N</em>
@@ -114,6 +126,20 @@ This section gives an account of those changes in three categories:
 	connection should increase the configured limit by one to preserve
 	previous behavior.
 
+	<tag>http_port</tag>
+	<p>Removed <em>sslversion=</em> option.
+	<p>Removed <em>tls-options=</em> support for <em>SSLREF2_REUSE_CERT_TYPE_BUG</em>,
+	    <em>MICROSOFT_BIG_SSLV3_BUFFER</em> and <em>NO_SSLv3</em>.
+
+	<tag>https_port</tag>
+	<p>Removed <em>sslversion=</em> option.
+	<p>Removed <em>tls-options=</em> support for <em>SSLREF2_REUSE_CERT_TYPE_BUG</em>,
+	    <em>MICROSOFT_BIG_SSLV3_BUFFER</em> and <em>NO_SSLv3</em>.
+
+	<tag>tls_ougoing_options</tag>
+	<p>Removed <em>version=</em> option.
+	<p>Removed <em>options=</em> support for <em>SSLREF2_REUSE_CERT_TYPE_BUG</em>,
+	    <em>MICROSOFT_BIG_SSLV3_BUFFER</em> and <em>NO_SSLv3</em>.
 
 </descrip>
 
