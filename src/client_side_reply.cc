@@ -1006,33 +1006,9 @@ clientReplyContext::traceReply()
     http->storeEntry()->releaseRequest();
     http->storeEntry()->buffer();
 
-    auto *entry = http->storeEntry();
-
     ErrorState err(HTTP_TRACE_REPLY, Http::scOkay, http->request, http->al);
-    err.url = xstrdup(entry->url());
-    auto *rep = err.BuildHttpReply();
-    // when there is no admin provided HTTP_TRACE_REPLY template
-    if (strncmp(rep->body.content(),"Internal Error:", 15) == 0) {
-        /**
-         * RFC 9110 section 9.3.8:
-         *  The final recipient of the request SHOULD reflect the message received,
-         *  back to the client as the content of a 200 (OK) response.
-         *
-         *  The final recipient of the request SHOULD exclude any request fields
-         *  that are likely to contain sensitive data when that recipient generates
-         *  the response content.
-         */
-        MemBuf content;
-        content.init();
-        http->request->pack(&content, true /* hide authorization data */);
-        rep->body.set(SBuf(content.buf, content.size));
-        rep->header.delById(Http::HdrType::CONTENT_LENGTH);
-        rep->header.putInt64(Http::HdrType::CONTENT_LENGTH, content.size);
-        rep->content_length = content.size;
-    }
-
-    entry->replaceHttpReply(rep);
-    entry->completeSuccessfully("TRACE response is atomic");
+    http->storeEntry()->replaceHttpReply(err.BuildHttpReply());
+    http->storeEntry()->completeSuccessfully("traceReply() stored the entire response");
 }
 
 #define SENDING_BODY 0

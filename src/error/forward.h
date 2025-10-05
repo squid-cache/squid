@@ -82,9 +82,7 @@ typedef enum {
     ERR_REQUEST_PARSE_TIMEOUT, // Aborts the connection instead of error page
     ERR_RELAY_REMOTE, // Sends server reply instead of error page
 
-    // Reply message for TRACE requests is optional.
-    // HTTP specification default response (equivalent to '%R')
-    // will be generated if no template is found.
+    /* TRACE Response is optional, but SHOULD be equivalent to '%R\n' if sent */
     HTTP_TRACE_REPLY,
 
     /* Cache Manager GUI can install a manager index/home page */
