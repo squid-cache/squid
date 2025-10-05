@@ -330,7 +330,7 @@ protected:
      */
     bool tryLoadTemplate(const char *lang);
 
-    /// Try to load a "soft-coded" built-in template, if none is configured.
+    /// Try to load a built-in template, if none is configured.
     void tryInternalDefault();
 
     SBuf template_; ///< raw template contents
