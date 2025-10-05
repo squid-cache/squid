@@ -1009,7 +1009,6 @@ clientReplyContext::traceReply()
     rep->setHeaders(Http::scOkay, nullptr, "message/http", content.contentSize(), 0, squid_curtime);
     rep->body.set(SBuf(content.buf, content.size));
     http->storeEntry()->replaceHttpReply(rep);
-    http->request->swapOut(http->storeEntry());
     http->storeEntry()->completeSuccessfully("traceReply() stored the entire response");
 }
 
