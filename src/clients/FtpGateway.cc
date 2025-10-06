@@ -1631,13 +1631,23 @@ ftpReadSize(Ftp::Gateway * ftpState)
 
     if (code == 213) {
         ftpState->unhack();
-        ftpState->theSize = strtoll(ftpState->ctrl.last_reply, nullptr, 10);
 
-        if (ftpState->theSize == 0) {
-            debugs(9, 2, "SIZE reported " <<
-                   ftpState->ctrl.last_reply << " on " <<
-                   ftpState->title_url);
+        char *end = nullptr;
+        errno = 0;
+        const int64_t parsed = strtoll(ftpState->ctrl.last_reply, &end, 10);
+
+        if (end == ftpState->ctrl.last_reply) {
+            // no digits at all
+            debugs(9, DBG_IMPORTANT, "WARNING: Malformed SIZE (no digits): " <<
+                   ftpState->ctrl.last_reply << " on " << ftpState->title_url);
             ftpState->theSize = -1;
+        } else if ((errno == ERANGE && (parsed == LLONG_MIN || parsed == LLONG_MAX)) ||
+                   parsed < 0) {
+            debugs(9, DBG_IMPORTANT, "WARNING: Invalid SIZE (overflow/negative): " <<
+                   ftpState->ctrl.last_reply << " on " << ftpState->title_url);
+            ftpState->theSize = -1;
+        } else {
+            ftpState->theSize = parsed;
         }
     } else if (code < 0) {
         ftpFail(ftpState);
