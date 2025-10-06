@@ -120,6 +120,12 @@ squid_ldap_set_connect_timeout(int aTimeLimit)
 #endif
 }
 
+static void
+squid_ldap_memfree(char *p)
+{
+    ldap_memfree(p);
+}
+
 #else
 static int
 squid_ldap_errno(LDAP * ld)
@@ -135,7 +141,7 @@ static void
 squid_ldap_set_referrals(int referrals)
 {
     if (referrals)
-        ld->ld_options |= ~LDAP_OPT_REFERRALS;
+        ld->ld_options |= LDAP_OPT_REFERRALS;
     else
         ld->ld_options &= ~LDAP_OPT_REFERRALS;
 }
@@ -261,7 +267,13 @@ retrydnattr:
         if (rc == LDAP_SUCCESS) {
             entry = ldap_first_entry(ld, res);
             if (entry) {
-                debug("ldap dn: %s\n", ldap_get_dn(ld, entry));
+                const auto dn = ldap_get_dn(ld, entry);
+                if (!dn) {
+                    fprintf(stderr, PROGRAM_NAME ": ERROR, could not get user DN for '%s'\n", login);
+                    ldap_msgfree(res);
+                    return nullptr;
+                }
+                debug("ldap dn: %s\n", dn);
                 if (edir_universal_passwd) {
 
                     /* allocate some memory for the universal password returned by NMAS */
@@ -269,7 +281,7 @@ retrydnattr:
                     values = (char**)calloc(2, sizeof(char *));
 
                     /* actually talk to NMAS to get a password */
-                    nmas_res = nds_get_password(ld, ldap_get_dn(ld, entry), &universal_password_len, universal_password);
+                    nmas_res = nds_get_password(ld, dn, &universal_password_len, universal_password);
                     if (nmas_res == LDAP_SUCCESS && universal_password) {
                         debug("NMAS returned value %s\n", universal_password);
                         values[0] = universal_password;
@@ -280,6 +292,7 @@ retrydnattr:
                 } else {
                     values = ldap_get_values(ld, entry, passattr);
                 }
+                squid_ldap_memfree(dn);
             } else {
                 ldap_msgfree(res);
                 return nullptr;
@@ -397,7 +410,7 @@ ldapconnect(void)
         }
         if (use_tls) {
 #ifdef LDAP_OPT_X_TLS
-            if ((version == LDAP_VERSION3) && (ldap_start_tls_s(ld, nullptr, nullptr) == LDAP_SUCCESS)) {
+            if ((version == LDAP_VERSION3) && (ldap_start_tls_s(ld, nullptr, nullptr) != LDAP_SUCCESS)) {
                 fprintf(stderr, "Could not Activate TLS connection\n");
                 ldap_unbind(ld);
                 ld = nullptr;
