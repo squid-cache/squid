@@ -216,7 +216,7 @@ then
             if grep -q "# *undef *\b$defineName\b" $autoconfHeader
             then
                 echo "$here: WARNING: Skipping $configFile test because $defineName is not defined in $autoconfHeader";
-                exit 0;
+                exit 77
             fi
 
             if ! grep -q "# *define *\b$defineName\b" $autoconfHeader
@@ -230,7 +230,7 @@ then
                 if ! grep -q "# *define *\b$defineName *$defineValue\b" $autoconfHeader
                 then
                     echo "$here: WARNING: Skipping $configFile test because $defineName is not $defineValue in $autoconfHeader";
-                    exit 0;
+                    exit 77
                 fi
             fi
 
