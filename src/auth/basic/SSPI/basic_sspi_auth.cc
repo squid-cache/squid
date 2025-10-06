@@ -149,7 +149,17 @@ main(int argc, char **argv)
         /* Clear any current settings */
         username[0] = '\0';
         password[0] = '\0';
-        sscanf(wstr, "%s %s", username, password);  /* Extract parameters */
+
+        // Parse two space-separated tokens into bounded buffers.
+        // Reject missing separator, overlong fields, or trailing garbage.
+        auto sep = '\0', junk = '\0';
+        auto parsed = sscanf(wstr, " %255s%1c%255s %c", username, &sep, password, &junk);
+        if (parsed != 3 || !isspace((unsigned char)sep)) {
+            username[0] = '\0';
+            password[0] = '\0';
+            puts("ERR");
+            continue;
+        }
 
         debug("Got %s from Squid\n", wstr);
 
