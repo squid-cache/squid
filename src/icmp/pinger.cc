@@ -45,6 +45,7 @@
 #if USE_ICMP
 
 #include "base/Stopwatch.h"
+#include "base/TextException.h"
 #include "compat/select.h"
 #include "compat/socket.h"
 #include "Icmp4.h"
@@ -95,6 +96,33 @@ Icmp6 icmp6;
 
 int icmp_pkts_sent = 0;
 
+/// reports std::terminate() cause (e.g., an uncaught or prohibited exception)
+static std::ostream &
+TerminationReason(std::ostream &os)
+{
+    if (std::current_exception())
+        os << CurrentException;
+    else
+        os << "An undetermined failure";
+    return os;
+}
+
+static void
+OnTerminate()
+{
+    // ignore recursive calls to avoid termination loops
+    static bool terminating = false;
+    if (terminating)
+        return;
+    terminating = true;
+
+    debugs(1, DBG_CRITICAL, "FATAL: " << TerminationReason);
+
+    control.Close(); // TODO: Here and elsewhere, rely on IcmpPinger class destructor instead.
+    Debug::PrepareToDie();
+    abort();
+}
+
 /**
  \ingroup pinger
  \par This is the pinger external process.
@@ -102,6 +130,9 @@ int icmp_pkts_sent = 0;
 int
 main(int, char **)
 {
+    // TODO: Apply this try/catch-less approach to address SquidMainSafe() XXX.
+    (void)std::set_terminate(&OnTerminate);
+
     fd_set R;
     int max_fd = 0;
 
