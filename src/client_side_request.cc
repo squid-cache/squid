@@ -387,6 +387,9 @@ static void
 hostHeaderIpVerifyWrapper(const ipcache_addrs* ia, const Dns::LookupDetails &dns, void *data)
 {
     ClientRequestContext *c = static_cast<ClientRequestContext*>(data);
+    if (!c->httpStateIsValid())
+        return;
+
     c->hostHeaderIpVerify(ia, dns);
 }
 
@@ -484,10 +487,13 @@ ClientRequestContext::hostHeaderVerify()
     char *hostB = xstrdup(host);
     host = hostB;
     if (host[0] == '[') {
-        // IPv6 literal.
-        portStr = strchr(hostB, ']');
-        if (portStr && *(++portStr) != ':') {
-            portStr = nullptr;
+        // IPv6 literal: de-bracket and detect optional port
+        auto rb = strchr(hostB, ']');
+        if (rb) {
+            if (rb[1] == ':')
+                portStr = rb + 1;   // points to ':'
+            *rb = '\0';             // drop closing bracket
+            host = hostB + 1;       // drop opening bracket
         }
     } else {
         // Domain or IPv4 literal with port
@@ -530,6 +536,7 @@ ClientRequestContext::hostHeaderVerify()
         debugs(85, 3, "FAIL on validate URL domain length " << http->request->url.host() << " matches Host: " << host);
         hostHeaderVerifyFailed(host, http->request->url.host());
     } else if (matchDomainName(host, http->request->url.host()) != 0) {
+        /// XXX: fails on IP address-only hostname
         // Verify forward-proxy requested URL domain matches the Host: header
         debugs(85, 3, "FAIL on validate URL domain " << http->request->url.host() << " matches Host: " << host);
         hostHeaderVerifyFailed(host, http->request->url.host());
@@ -723,7 +730,10 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
 static void
 clientRedirectAccessCheckDone(Acl::Answer answer, void *data)
 {
-    ClientRequestContext *context = (ClientRequestContext *)data;
+    ClientRequestContext *context = static_cast<ClientRequestContext *>(data);
+    if (!context->httpStateIsValid())
+        return;
+
     ClientHttpRequest *http = context->http;
 
     if (answer.allowed())
@@ -754,6 +764,9 @@ static void
 clientStoreIdAccessCheckDone(Acl::Answer answer, void *data)
 {
     ClientRequestContext *context = static_cast<ClientRequestContext *>(data);
+    if (!context->httpStateIsValid())
+        return;
+
     ClientHttpRequest *http = context->http;
 
     if (answer.allowed())
@@ -1324,6 +1337,7 @@ sslBumpAccessCheckDoneWrapper(Acl::Answer answer, void *data)
 
     if (!calloutContext->httpStateIsValid())
         return;
+
     calloutContext->sslBumpAccessCheckDone(answer);
 }
 
