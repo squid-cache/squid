@@ -19,6 +19,7 @@ void AnyP::Uri::host(const char *) STUB
 static SBuf nil;
 const SBuf &AnyP::Uri::path() const STUB_RETVAL(nil)
 void AnyP::Uri::addRelativePath(const char *) STUB
+char *urlCanonicalCleanWithoutRequest(const SBuf &, const HttpRequestMethod &, const AnyP::UriScheme &) STUB_RETVAL(nullptr)
 const SBuf &AnyP::Uri::SlashPath()
 {
     static SBuf slash("/");
