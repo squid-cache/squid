@@ -17,7 +17,6 @@ namespace Mem
 class PoolStats
 {
 public:
-    Allocator *pool = nullptr;
     const char *label = nullptr;
     PoolMeter *meter = nullptr;
     int obj_size = 0;
