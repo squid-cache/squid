@@ -471,10 +471,9 @@ HttpRequest::packFirstLineInto(Packable * p, bool full_uri) const
     const SBuf tmp(full_uri ? effectiveRequestUri() : url.originForm());
 
     // form HTTP request-line
-    p->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\r\n",
+    p->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " HTTP/%d.%d\r\n",
                SQUIDSBUFPRINT(method.image()),
                SQUIDSBUFPRINT(tmp),
-               AnyP::ProtocolType_str[http_ver.protocol],
                http_ver.major, http_ver.minor);
 }
 
