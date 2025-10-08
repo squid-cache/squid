@@ -346,7 +346,7 @@ HttpRequest::pack(Packable * const p, const bool maskSensitiveInfo) const
     /* pack request-line */
     packFirstLineInto(p, false /* origin-form */);
     /* headers */
-    header.packInto(p, mask_sensitive_data);
+    header.packInto(p, maskSensitiveInfo);
     /* indicate the end of the header section */
     p->append("\r\n", 2);
 }
