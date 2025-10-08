@@ -204,7 +204,7 @@ public:
 
     void swapOut(StoreEntry * e);
 
-    void pack(Packable * p, bool mask_sensitive_info = false) const;
+    void pack(Packable * p, bool maskSensitiveInfo = false) const;
 
     static void httpRequestPack(void *obj, Packable *p);
 
