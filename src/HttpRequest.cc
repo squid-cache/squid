@@ -340,7 +340,7 @@ HttpRequest::swapOut(StoreEntry * e)
 
 /* packs request-line and headers, appends <crlf> terminator */
 void
-HttpRequest::pack(Packable * p, bool mask_sensitive_data) const
+HttpRequest::pack(Packable * const p, const bool maskSensitiveInfo) const
 {
     assert(p);
     /* pack request-line */
