@@ -7,15 +7,10 @@ Changes in squid-7.1 (10 Jul 2025):
 
 Changes in squid-7.0.2 (19 Jun 2025):
 
-	- Bug 5352: Do not get stuck in RESPMOD after pausing peer read(2)
 	- Bug 5316: Release note says version 6 still for testing
-	- Bug 5489: Fix "make check" linking on Solaris
-	- Do not duplicate received Surrogate-Capability in sent requests
 	- Fix GCC v13 LTO build [-Walloc-size-larger-than=]
 	- Fix OpenSSL build with GCC v15.1.1 [-Wformat-truncation=]
 	- Fix tls-dh support for DHE parameters with OpenSSL v3+
-	- Fix SNMP cacheNumObjCount -- number of cached objects
-	- Fix Mem::Segment::open() stub to fix build without shm_open()
 	- Disable EUI when arpreq is missing and cannot be defined
 	- MinGW: use nameless unions in ext_ad_group_acl
 	- MinGW: do not build ext_edirectory_userip_acl
@@ -27,6 +22,7 @@ Changes in squid-7.0.2 (19 Jun 2025):
 	- ntlm_sspi_auth: Fix missing base64 symbol linkage
 	- ... and many portability and compatibility fixes
 	- ... and some code cleanup
+	- ... and all fixes from 6.14
 
 Changes in squid-7.0.1 (2 Feb 2025):
 
@@ -159,6 +155,15 @@ Changes in squid-7.0.1 (2 Feb 2025):
 	- ... and improvements to unit tests
 	- ... and some error page translation improvements
 	- ... and all fixes from 6.13
+
+Changes in squid-6.14 (24 Jun 2025):
+
+	- Bug 5352: Do not get stuck in RESPMOD after pausing peer read(2)
+	- Bug 5489: Fix "make check" linking on Solaris
+	- Fix SNMP cacheNumObjCount -- number of cached objects
+	- Do not duplicate received Surrogate-Capability in sent requests
+	- Fix Mem::Segment::open() stub to fix build without shm_open()
+	- ... and CI and documentation updates
 
 Changes in squid-6.13 (31 Jan 2025):
 
