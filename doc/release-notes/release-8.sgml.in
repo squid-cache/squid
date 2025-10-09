@@ -18,11 +18,10 @@ This new release is available for download from <url url="http://www.squid-cache
 
 <sect1>Known issues
 <p>Although this release is deemed good enough for use in many setups, please note the existence of
-<url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=@SQUID_RELEASE@" name="open bugs against Squid-@SQUID_RELEASE@">.
+ <url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=@SQUID_RELEASE@" name="open bugs against Squid-@SQUID_RELEASE@">.
 
 <sect1>Changes since earlier releases of Squid-@SQUID_RELEASE@
-<p>
-The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squid-cache/squid/commits/v@SQUID_RELEASE@" name="viewed here">.
+<p>The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squid-cache/squid/commits/v@SQUID_RELEASE@" name="viewed here">.
 
 
 <sect>Major new features since Squid-@SQUID_RELEASE_OLD@
@@ -30,21 +29,18 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>
+	<item>Cache Manager changes
+	<item>Helper changes
 </itemize>
+
+<p>Most user-facing changes are reflected in squid.conf (see below).
 
 <sect1>Helper changes
 <p>
 <descrip>
-	<p>Removed <em>basic_smb_lm_auth</em> NTLM authentication helper.
-	   Use the <em>ntlm_auth</em> helper from the Samba project instead.
-
 	<p>Removed <em>ext_lm_group_acl</em> external acl helper. No product
 	   currently on the market suports the LanManager protocol
 	   in their default configuration.
-
-	<p>Removed <em>ntlm_smb_lm_auth</em> NTLM authentication helper.
-	   Use the <em>ntlm_auth</em> helper from the Samba project instead.
 
 	<p>Updated <em>ext_ldap_group_acl</em> external ACL helper:
 	   now requires <tt>-B</tt> (user base DN) and <tt>-F</tt>
@@ -60,12 +56,9 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 </descrip>
 
 <sect1>Cache Manager changes
-
 <p>Removed support for <em>asndb</em> cache manager report after removing
-support for <em>src_as</em> and <em>dst_as</em> ACLs and associated ASN
-lookups. Requests for that report now result in HTTP 404 errors.
-
-Most user-facing changes are reflected in squid.conf (see below).
+   support for <em>src_as</em> and <em>dst_as</em> ACLs and associated ASN
+   lookups. Requests for that report now result in HTTP 404 errors.
 
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
@@ -90,36 +83,30 @@ This section gives an account of those changes in three categories:
 <p>
 <descrip>
 	<tag>acl</tag>
-
 	<p>Removed support for <em>src_as</em> and <em>dst_as</em> ACLs. Based on
-	admin feedback and a history of serious implementation bugs that went
-	unnoticed for a long time, the two ACLs are considered to be essentially
-	unused. The corresponding Autonomous System Numbers (ASN) lookups can be
-	implemented (with more features) using external ACLs. Removing ASN lookup
-	support also removes ancient and neglected C code, improving Squid
-	security posture and simplifying development. Configurations using
-	<em>src_as</em> and <em>dst_as</em> ACL types are now rejected with FATAL
-	errors.
-
-	<p>Removed support for <em>asn</em> initiator in
-	<em>transaction_initiator</em> ACLs. After removing support for
-	<em>src_as</em> and <em>dst_as</em> ACLs, Squid no longer initiates ASN
-	lookups.
+	   admin feedback and a history of serious implementation bugs that went
+	   unnoticed for a long time, the two ACLs are considered to be essentially
+	   unused. The corresponding Autonomous System Numbers (ASN) lookups can be
+	   implemented (with more features) using external ACLs. Removing ASN lookup
+	   support also removes ancient and neglected C code, improving Squid
+	   security posture and simplifying development. Configurations using
+	   <em>src_as</em> and <em>dst_as</em> ACL types are now rejected with FATAL
+	   errors.
+	<p>Removed support for <em>asn</em> initiator in <em>transaction_initiator</em>
+	   ACLs. Squid no longer initiates ASN lookups.
 
 	<tag>client_ip_max_connections</tag>
-
 	<p>Fixed off-by-one enforcement. Squid now allows at most <em>N</em>
-	concurrent connections per client IP (not <em>N</em>+1), where <em>N</em>
-	is the configured directive value. Deployments that relied on the extra
-	connection should increase the configured limit by one to preserve
-	previous behavior.
+	   concurrent connections per client IP (not <em>N</em>+1), where <em>N</em>
+	   is the configured directive value. Deployments that relied on the extra
+	   connection should increase the configured limit by one to preserve
+	   previous behavior.
 
 	<tag>htcp_clr_access</tag>
-
 	<p>HTCP CLR requests denied by this directive are no longer forwarded to
-	cache_peers that are configured to receive forwarded CLR requests. Only
-	HTCP CLR requests allowed by this directive are forwarded to those
-	cache_peers.
+	   <em>cache_peer</em> that are configured to receive forwarded CLR requests.
+	   Only HTCP CLR requests allowed by this directive are forwarded to those
+	   <em>cache_peer</em>.
 
 </descrip>
 
@@ -151,14 +138,6 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<tag>--enable-auth-basic=</tag>
-	<p>Removed <em>SMB_LM</em> helper, in favour of the <em>ntlm_auth</em>
-	   alternative offered by the Samba project.
-
-	<tag>--enable-auth-ntlm=</tag>
-	<p>Removed <em>SMB_LM</em> helper, in favour of the <em>ntlm_auth</em>
-	   alternative offered by the Samba project.
-
 	<tag>--enable-external-acl-helpers=</tag>
 	<p>Removed <em>LM_Group</em> helper. The LM protocol is
 	   insecure and no longer supported on the market since 2008.
