@@ -341,7 +341,7 @@ HttpRequest::swapOut(StoreEntry * e)
 
 /* packs request-line and headers, appends <crlf> terminator */
 void
-HttpRequest::pack(Packable * p) const
+HttpRequest::pack(Packable * const p, const bool maskSensitiveInfo) const
 {
     assert(p);
     /* pack request-line */
@@ -349,8 +349,8 @@ HttpRequest::pack(Packable * p) const
                SQUIDSBUFPRINT(method.image()), SQUIDSBUFPRINT(url.path()),
                http_ver.major, http_ver.minor);
     /* headers */
-    header.packInto(p);
-    /* trailer */
+    header.packInto(p, maskSensitiveInfo);
+    /* indicate the end of the header section */
     p->append("\r\n", 2);
 }
 
