@@ -8912,12 +8912,18 @@ NAME: email_err_data
 COMMENT: on|off
 TYPE: onoff
 LOC: Config.onoff.emailErrData
-DEFAULT: on
+DEFAULT: off
 DOC_START
 	If enabled, information about the occurred error will be
 	included in the mailto links of the ERR pages (if %W is set)
 	so that the email body contains the data.
 	Syntax is <A HREF="mailto:%w%W">%w</A>
+
+	SECURITY WARNING:
+		Request headers and other included facts may contain
+		sensitive information about transaction history, the
+		Squid instance, and its environment which would be
+		unavailable to error recipients otherwise.
 DOC_END
 
 NAME: deny_info
