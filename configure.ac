@@ -147,9 +147,6 @@ AC_PATH_PROG(AR, ar, $FALSE)
 AR_R="$AR r"
 AC_SUBST(AR_R)
 
-AC_PATH_PROG(LINUXDOC, linuxdoc, $FALSE)
-AM_CONDITIONAL(ENABLE_RELEASE_DOCS, test "x${ac_cv_path_LINUXDOC}" != "x$FALSE")
-
 SQUID_RELEASE=`echo $VERSION | cut -d. -f1`
 AC_SUBST(SQUID_RELEASE)
 
@@ -365,10 +362,19 @@ SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_arg_pipe"
 SQUID_EMBED_BUILD_INFO
 
 AC_ARG_ENABLE(documentation,
-  AS_HELP_STRING([--enable-documentation],[Build optional documentation.]),[
+  AS_HELP_STRING([--enable-documentation],[
+    Build optional documentation.
+    Requires linuxdoc and Perl.
+  ]),[
   SQUID_YESNO([$enableval],[--enable-documentation])
 ])
-AM_CONDITIONAL(ENABLE_DOCUMENTATION,[test "x$enable_documentation" = "x$yes"])
+AS_IF([test "x$enable_documentation" = "xyes"],[
+  AC_CHECK_TOOL([LINUXDOC],[linuxdoc],[:])
+  AS_IF([test "$LINUXDOC" = ":"],[
+    AC_MSG_FAILURE([linuxdoc is required to compile Squid documentation. Please install linuxdoc tools and then re-run configure.])
+  ])
+])
+AM_CONDITIONAL(ENABLE_DOCUMENTATION,[test "x$enable_documentation" = "xyes"])
 
 AC_ARG_ENABLE(optimizations,
   AS_HELP_STRING([--disable-optimizations],
