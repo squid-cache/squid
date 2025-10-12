@@ -364,6 +364,12 @@ SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_arg_pipe"
 # possibly include some build info tag into squid -v
 SQUID_EMBED_BUILD_INFO
 
+AC_ARG_ENABLE(documentation,
+  AS_HELP_STRING([--enable-documentation],[Build optional documentation.]),[
+  SQUID_YESNO([$enableval],[--enable-documentation])
+])
+AM_CONDITIONAL(ENABLE_DOCUMENTATION,[test "x$enable_documentation" = "x$yes"])
+
 AC_ARG_ENABLE(optimizations,
   AS_HELP_STRING([--disable-optimizations],
                  [Do not compile Squid with compiler optimizations enabled.
