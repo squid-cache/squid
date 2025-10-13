@@ -6,7 +6,3 @@
 ##
 
 AS_IF([test "x$PERL" != "x"],[BUILD_HELPER="fake"])
-AS_IF([test "x$POD2MAN" = "x"],[
-  AC_MSG_WARN([pod2man not found. security_fake_certverify man(8) page will not be built])
-])
-

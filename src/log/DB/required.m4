@@ -6,7 +6,3 @@
 ##
 
 AS_IF([test "x$PERL" != "x"],[BUILD_HELPER="DB"])
-AS_IF([test "x$POD2MAN" = "x"],[
-  AC_MSG_WARN([pod2man not found. log_db_daemon man(8) page will not be built])
-])
-

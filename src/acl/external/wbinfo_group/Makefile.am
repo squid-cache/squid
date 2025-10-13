@@ -16,12 +16,8 @@ EXTRA_DIST= \
 ext_wbinfo_group_acl: ext_wbinfo_group_acl.pl.in
 	$(subst_perlshell)
 
-if ENABLE_POD2MAN_DOC
+if ENABLE_DOCUMENTATION
 man_MANS = ext_wbinfo_group_acl.8
 CLEANFILES += ext_wbinfo_group_acl.8
 EXTRA_DIST += ext_wbinfo_group_acl.8
-
-ext_wbinfo_group_acl.8: ext_wbinfo_group_acl
-	pod2man --section=8 ext_wbinfo_group_acl ext_wbinfo_group_acl.8
-
 endif

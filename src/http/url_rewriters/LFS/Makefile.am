@@ -22,12 +22,8 @@ EXTRA_DIST= \
 url_lfs_rewrite: url_lfs_rewrite.pl.in
 	$(subst_perlshell)
 
-if ENABLE_POD2MAN_DOC
+if ENABLE_DOCUMENTATION
 man_MANS = url_lfs_rewrite.8
 CLEANFILES += url_lfs_rewrite.8
 EXTRA_DIST += url_lfs_rewrite.8
-
-url_lfs_rewrite.8: url_lfs_rewrite
-	pod2man --section=8 url_lfs_rewrite url_lfs_rewrite.8
-
 endif
