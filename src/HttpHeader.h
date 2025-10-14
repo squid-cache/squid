@@ -17,7 +17,6 @@
 #include "HttpHeaderMask.h"
 #include "mem/PoolingAllocator.h"
 #include "sbuf/forward.h"
-#include "security/forward.h"
 #include "SquidString.h"
 
 #include <vector>
