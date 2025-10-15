@@ -326,15 +326,14 @@ snmpClosePorts()
     if (Comm::IsConnOpen(snmpIncomingConn)) {
         debugs(49, DBG_IMPORTANT, "Closing SNMP receiving port " << snmpIncomingConn->local);
         snmpIncomingConn->close();
-        snmpIncomingConn = nullptr;
     }
 
     if (Comm::IsConnOpen(snmpOutgoingConn)) {
-        // Perform OUT port closure so as not to step on IN port when sharing a conn.
         debugs(49, DBG_IMPORTANT, "Closing SNMP sending port " << snmpOutgoingConn->local);
         snmpOutgoingConn->close();
-        snmpOutgoingConn = nullptr;
     }
+    snmpOutgoingConn = nullptr;
+    snmpIncomingConn = nullptr;
 }
 
 class SnmpRr : public RegisteredRunner
