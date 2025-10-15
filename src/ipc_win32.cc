@@ -84,13 +84,7 @@ ipcCloseAllFD(int prfd, int pwfd, int crfd, int cwfd)
 static void
 PutEnvironment()
 {
-#if HAVE_PUTENV
-    char *env_str;
-    int tmp_s;
-    env_str = (char *)xcalloc((tmp_s = strlen(Debug::debugOptions) + 32), 1);
-    snprintf(env_str, tmp_s, "SQUID_DEBUG=%s", Debug::debugOptions);
-    putenv(env_str);
-#endif
+    (void)setenv("SQUID_DEBUG", Debug::debugOptions, 1);
 }
 
 pid_t
@@ -573,6 +567,7 @@ ipc_thread_1(void *in_params)
                       nullptr, nullptr, &si, &pi)) {
         pid = pi.dwProcessId;
         hProcess = pi.hProcess;
+        CloseHandle(pi.hThread);
     } else {
         pid = -1;
         x = GetLastError();

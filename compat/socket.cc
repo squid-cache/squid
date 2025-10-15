@@ -34,8 +34,10 @@ xaccept(int socketFd, struct sockaddr *sa, socklen_t *saLength)
         return SOCKET_ERROR;
     }
     const auto rv = _open_osfhandle(result, 0);
-    if (rv == -1)
+    if (rv == -1) {
+        closesocket(result);
         errno = EBADF;
+    }
     if (saLength)
         *saLength = static_cast<socklen_t>(al);
     return rv;
@@ -225,8 +227,11 @@ xsocket(int domain, int type, int protocol)
         return SOCKET_ERROR;
     }
     const auto rv = _open_osfhandle(result, 0);
-    if (rv == -1)
+    if (rv == -1) {
+        closesocket(result);
         errno = EBADF;
+        return SOCKET_ERROR;
+    }
     return rv;
 }
 
