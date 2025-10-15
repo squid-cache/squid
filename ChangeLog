@@ -1,3 +1,49 @@
+Changes in squid-7.2 (15 Oct 2025):
+
+	- Bug 3390: Proxy auth data visible to scripts
+	- Bug 5504: Document that Squid discards invalid rewrite-url
+	- Bug 5407: Support at least 1000 groups per Kerberos user
+	- Fix parsing of malformed quoted squid.conf strings
+	- Reduce UDS/segment name clashes across same-service instances
+	- HTCP: Check for too-small packed and too-large unpacked fields
+	- Fix off-by-one in helper args count assertion
+	- Fix purging of entries by relative [Content-]Location URLs
+	- Fix UDP log module opening and closing code
+	- Fix BodyPipe debugging in handleChunkedRequestBody()
+	- Fix debugging of Eui48::lookup() problems
+	- Reject eui64 ACL addresses with trailing garbage
+	- FTP: Avoid null dereferences when handling ftp_port traffic
+	- Fix FTP response parsing and error handling memory leaks
+	- Validate raw-IPv4 when parsing hostnames
+	- DNS: fix RRPack memcpy
+	- DNS: Do not leak RR data upon RR data unpacking errors
+	- SNMP: Improve parsing of malformed ASN.1 object identifiers
+	- Check for SNMP objid memory allocation failures
+	- Fix ASN.1 encoding of long SNMP OIDs
+	- Do not assert when debugging SNMP requests with long OIDs
+	- Avoid memory leaks when logging to MS Windows syslog
+	- Fix memory leak when parsing deprecated %rG logformat code
+	- digest_edirectory_auth: null-terminate NMAS values array
+	- digest_edirectory_auth: safely return password
+	- ext_ad_group_acl: Fix domain lookup error handling
+	- ext_edirectory_userip_acl: Redact password from stdout
+	- ext_file_userip_acl: harden lookups and memory handling
+	- ext_kerberos_ldap_group_acl: avoid freeing getenv() pointer
+	- ext_kerberos_ldap_group_acl: Improve LDAPMessage freeing
+	- ext_ldap_group_acl: avoid infinite loop on login containing '%s'
+	- negotiate_kerberos_auth: Properly align NDR data
+	- negotiate_sspi_auth: Do not exit on the first request
+	- ntlm_sspi_auth: memcmp not memcpy, send newline, no uninit mem
+	- text_backend: avoid memory leaks when reload/clearing
+	- Fix SQUID_YESNO 'syntax error near unexpected token'
+	- Flip configure --enable-arch-native default
+	- Support no-digest X509 certificate keys like ML-DSA/EdDSA
+	- Do not allow client_ip_max_connections+1 connections
+	- Remove bundled smblib and librfcnb
+	- SNMP: Match Var allocation/deallocation methods
+	- ... and several code cleanups
+	- ... and some documentation improvements
+
 Changes in squid-7.1 (10 Jul 2025):
 
 	- Bug 5497: Fix detection of duped IPs returned by getaddrinfo()
