@@ -203,7 +203,7 @@ jobs:
             pkg_add \
               autoconf-2.72p0 \
               autoconf-archive \
-              automake-1.16.5 \
+              automake-1.16.5p0 \
               bash \
               coreutils \
               cppunit \
