@@ -94,7 +94,7 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
 void
 clientReplyContext::setReplyToError(
     err_type err, Http::StatusCode status, char const *uri,
-    const ConnStateData *conn, HttpRequest *failedrequest, const char *unparsedrequest,
+    const ConnStateData *conn, HttpRequest *failedrequest, const char *,
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request
 #else
@@ -103,9 +103,6 @@ clientReplyContext::setReplyToError(
 )
 {
     auto errstate = clientBuildError(err, status, uri, conn, failedrequest, http->al);
-
-    if (unparsedrequest)
-        errstate->request_hdrs = xstrdup(unparsedrequest);
 
 #if USE_AUTH
     errstate->auth_user_request = auth_user_request;
