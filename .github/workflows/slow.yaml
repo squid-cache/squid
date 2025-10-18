@@ -201,9 +201,9 @@ jobs:
           release: "7.7"
           prepare: |
             pkg_add \
-              autoconf-2.72p0 \
+              autoconf%2.72 \
               autoconf-archive \
-              automake-1.16.5p0 \
+              automake%1.16 \
               bash \
               coreutils \
               cppunit \
