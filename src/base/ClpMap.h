@@ -93,6 +93,14 @@ public:
     /// Remove the corresponding entry (if any)
     void del(const Key &);
 
+    /// Merge entries from another ClpMap.
+    ///  * Entries imported from the other list will retain their LRU order
+    ///    and be placed before existing entries.
+    ///  * Entries which have expired will be ignored.
+    ///  * When an key collision occurs the existing entry will be replaced
+    ///    and the new entry given the largest of the two TTL values.
+    void merge(const ClpMap<Key, Value, MemoryUsedBy> &other);
+
     /// Reset the memory capacity for this map, purging if needed
     void setMemLimit(uint64_t newLimit);
 
@@ -107,6 +115,9 @@ public:
 
     /// The number of currently stored entries, including expired ones
     size_t entries() const { return entries_.size(); }
+
+    /// Erases all elements from the container. After this call, entries() returns zero.
+    void clear();
 
     /// Read-only traversal of all cached entries in LRU order, least recently
     /// used entry first. Stored expired entries (if any) are included. Any map
@@ -160,6 +171,15 @@ ClpMap<Key, Value, MemoryUsedBy>::setMemLimit(const uint64_t newLimit)
     if (memUsed_ > newLimit)
         trim(memLimit_ - newLimit);
     memLimit_ = newLimit;
+}
+
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
+void
+ClpMap<Key, Value, MemoryUsedBy>::clear()
+{
+    index.clear();
+    entries.clear();
+    memUsed_ = 0;
 }
 
 /// \returns the index position of an entry identified by its key (or end())
@@ -270,6 +290,20 @@ ClpMap<Key, Value, MemoryUsedBy>::del(const Key &key)
     const auto i = find(key);
     if (i != index_.end())
         erase(i);
+}
+
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
+void
+ClpMap<Key, Value, MemoryUsedBy>::merge(const ClpMap<Key, Value, MemoryUsedBy> &other)
+{
+    // reverse-order across other - to preserve old LRU
+    for (auto i = other.entries_.rbegin(); i != other.entries_.rend(); ++i) {
+        if (!i->expired()) {
+            const auto ours = find(i->key);
+            const auto newTtl = (ours != index_.cend() ? max(i->expires, ours->second->expires) : i->expires) - squid_curtime;
+            add(i->key, i->value, newTtl);
+        }
+    }
 }
 
 /// purges entries to make free memory large enough to fit wantSpace bytes

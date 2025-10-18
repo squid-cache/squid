@@ -39,14 +39,14 @@ void Auth::Scheme::FreeAll() STUB
 void Auth::SchemesConfig::expand() STUB
 
 #include "auth/User.h"
-Auth::User::User(Auth::SchemeConfig *, const char *) STUB
+Auth::User::User(Auth::SchemeConfig *, const char *) : ipList(0) {STUB}
 Auth::CredentialState Auth::User::credentials() const STUB_RETVAL(credentials_state)
 void Auth::User::credentials(CredentialState) STUB
 void Auth::User::absorb(Auth::User::Pointer) STUB
 Auth::User::~User() STUB_NOP
 void Auth::User::clearIp() STUB
-void Auth::User::removeIp(Ip::Address) STUB
-void Auth::User::addIp(Ip::Address) STUB
+void Auth::User::removeIp(const Ip::Address &) STUB
+void Auth::User::addIp(const Ip::Address &) STUB
 void Auth::User::CredentialsCacheStats(StoreEntry *) STUB
 
 #include "auth/UserRequest.h"
