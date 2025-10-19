@@ -107,7 +107,21 @@ SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #define mkdir(p,F) mkdir((p))
 #define pclose _pclose
 #define popen _popen
-#define putenv _putenv
+
+inline int
+setenv(const char * const name, const char * const value, const int overwrite)
+{
+    if (!overwrite && getenv(name))
+        return 0;
+
+    // overwrite requested or the variable is not set
+
+    // XXX: Unlike POSIX.1 setenv(3) we want to emulate here, _putenv_s() treats
+    // `value` that points to an empty string specially: It removes the named
+    // variable (if any) and does not create a new variable with an empty value.
+    return (_putenv_s(name, value) == 0 ? 0 : -1);
+}
+
 #define setmode _setmode
 #define sleep(t) Sleep((t)*1000)
 #define umask _umask

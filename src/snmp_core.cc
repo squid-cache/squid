@@ -453,8 +453,10 @@ snmpConstructReponse(SnmpRequest * rq)
     snmp_free_pdu(rq->PDU);
 
     if (RespPDU != nullptr) {
-        snmp_build(&rq->session, RespPDU, rq->outbuf, &rq->outlen);
-        comm_udp_sendto(rq->sock, rq->from, rq->outbuf, rq->outlen);
+        if (snmp_build(&rq->session, RespPDU, rq->outbuf, &rq->outlen) == 0)
+            comm_udp_sendto(rq->sock, rq->from, rq->outbuf, rq->outlen);
+        else
+            debugs(49, DBG_IMPORTANT, "ERROR: Failed to encode a response to SNMP agent query from " << rq->from);
         snmp_free_pdu(RespPDU);
     }
 }
@@ -1061,8 +1063,7 @@ snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf)
 {
     char mbuf[16];
     int x;
-    if (outbuf.isNull())
-        outbuf.init(16, MAX_IPSTRLEN);
+    outbuf.reset();
 
     for (x = 0; x < Len; ++x) {
         size_t bytes = snprintf(mbuf, sizeof(mbuf), ".%u", (unsigned int) Name[x]);

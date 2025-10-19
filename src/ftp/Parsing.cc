@@ -61,6 +61,9 @@ Ftp::ParseProtoIpPort(const char *buf, Ip::Address &addr)
 
     s = e + 1;
     e = strchr(s, delim);
+    if (!e)
+        return false;
+
     char ip[MAX_IPSTRLEN];
     if (static_cast<size_t>(e - s) >= sizeof(ip))
         return false;

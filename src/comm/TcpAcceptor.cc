@@ -414,7 +414,7 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     details->nfConnmark = Ip::Qos::getNfConnmark(details, Ip::Qos::dirAccepted);
 
     if (Config.client_ip_max_connections >= 0) {
-        if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
+        if (clientdbEstablished(details->remote, 0) >= Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
             return false;
         }

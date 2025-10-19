@@ -188,7 +188,7 @@ static void
 squid_ldap_set_referrals(LDAP * ld, int referrals)
 {
     if (referrals)
-        ld->ld_options |= ~LDAP_OPT_REFERRALS;
+        ld->ld_options |= LDAP_OPT_REFERRALS;
     else
         ld->ld_options &= ~LDAP_OPT_REFERRALS;
 }
@@ -231,6 +231,7 @@ main(int argc, char **argv)
 
     setbuf(stdout, nullptr);
 
+    const auto prog = argv[0];
     while (argc > 1 && argv[1][0] == '-') {
         const char *value = "";
         char option = argv[1][1];
@@ -410,7 +411,7 @@ main(int argc, char **argv)
     if (!ldapServer)
         ldapServer = (char *) "localhost";
 
-    if (!basedn || !searchfilter) {
+    if (!basedn || !searchfilter || !userbasedn || !usersearchfilter) {
         fprintf(stderr, "\n" PROGRAM_NAME " version " PROGRAM_VERSION "\n\n");
         fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn -f filter [options] ldap_server_name\n\n");
         fprintf(stderr, "\t-b basedn (REQUIRED)\tbase dn under where to search for groups\n");
@@ -466,9 +467,9 @@ main(int argc, char **argv)
         int found = 0;
         if (!strchr(buf, '\n')) {
             /* too large message received.. skip and deny */
-            fprintf(stderr, "%s: ERROR: Input Too large: %s\n", argv[0], buf);
+            fprintf(stderr, "%s: ERROR: Input Too large: %s\n", prog, buf);
             while (fgets(buf, sizeof(buf), stdin)) {
-                fprintf(stderr, "%s: ERROR: Input Too large..: %s\n", argv[0], buf);
+                fprintf(stderr, "%s: ERROR: Input Too large..: %s\n", prog, buf);
                 if (strchr(buf, '\n') != nullptr)
                     break;
             }
@@ -477,7 +478,7 @@ main(int argc, char **argv)
         }
         user = strtok(buf, " \n");
         if (!user) {
-            debug("%s: Invalid request: No Username given\n", argv[0]);
+            debug("%s: Invalid request: No Username given\n", prog);
             SEND_BH(HLP_MSG("Invalid request. No Username"));
             continue;
         }
@@ -500,7 +501,7 @@ main(int argc, char **argv)
         if (use_extension_dn) {
             extension_dn = strtok(nullptr, " \n");
             if (!extension_dn) {
-                debug("%s: Invalid request: Extension DN configured, but none sent.\n", argv[0]);
+                debug("%s: Invalid request: Extension DN configured, but none sent.\n", prog);
                 SEND_BH(HLP_MSG("Invalid Request. Extension DN required"));
                 continue;
             }
@@ -517,7 +518,7 @@ recover:
                     rc = ldap_initialize(&ld, ldapServer);
                     if (rc != LDAP_SUCCESS) {
                         broken = HLP_MSG("Unable to connect to LDAP server");
-                        fprintf(stderr, "%s: ERROR: Unable to connect to LDAPURI:%s\n", argv[0], ldapServer);
+                        fprintf(stderr, "%s: ERROR: Unable to connect to LDAPURI:%s\n", prog, ldapServer);
                         break;
                     }
                 } else
@@ -581,7 +582,7 @@ recover:
                     rc = ldap_simple_bind_s(ld, binddn, bindpasswd);
                     if (rc != LDAP_SUCCESS) {
                         broken = HLP_MSG("could not bind");
-                        fprintf(stderr, PROGRAM_NAME ": WARNING: %s to binddn '%s'\n", broken, ldap_err2string(rc));
+                        fprintf(stderr, PROGRAM_NAME ": WARNING: %s to binddn '%s'\n", broken, binddn);
                         ldap_unbind(ld);
                         ld = nullptr;
                         break;
@@ -654,10 +655,10 @@ build_filter(std::string &filter, const char *templ, const char *user, const cha
             ++templ;
             switch (*templ) {
             case 'u':
-            case 'v':
                 ++templ;
                 str << ldap_escape_value(user);
                 break;
+            case 'v':
             case 'g':
             case 'a':
                 ++templ;
@@ -747,10 +748,10 @@ searchLDAPGroup(LDAP * ld, const char *group, const char *member, const char *ex
 static void
 formatWithString(std::string &formatted, const std::string &value)
 {
-    size_t start_pos = 0;
+    std::string::size_type start_pos = 0;
     while ((start_pos = formatted.find("%s", start_pos)) != std::string::npos) {
         formatted.replace(start_pos, 2, value);
-        start_pos += 2;
+        start_pos += value.length();
     }
 }
 
@@ -778,7 +779,7 @@ searchLDAP(LDAP * ld, char *group, char *login, char *extension_dn)
         entry = ldap_first_entry(ld, ldapRes.get());
         if (!entry) {
             std::cerr << PROGRAM_NAME << ": WARNING: User '" << login <<
-                      " not found in '" << searchbase.c_str() << "'" << std::endl;
+                      "' not found in '" << searchbase.c_str() << "'" << std::endl;
             return 1;
         }
         userdn = ldap_get_dn(ld, entry);

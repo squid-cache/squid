@@ -110,7 +110,6 @@ static int berEncodePasswordData(
     /* Allocate a BerElement for the request parameters. */
     if ((requestBer = ber_alloc()) == nullptr) {
         err = LDAP_ENCODING_ERROR;
-        ber_free(requestBer, 1);
         return err;
     }
 
@@ -374,9 +373,7 @@ static int nmasldap_get_simple_pwd(
 
     err = getLoginConfig(ld, objectDN, methodIDLen, &methodID, tag, &pwdBufLen, pwdBuf);
     if (err == 0) {
-        if (pwdBufLen !=0) {
-            pwdBuf[pwdBufLen] = 0;       /* null terminate */
-
+        if (pwdBufLen > 1) {
             switch (pwdBuf[0]) {
             case 1:  /* cleartext password  */
                 break;
@@ -388,10 +385,10 @@ static int nmasldap_get_simple_pwd(
                 err = LDAP_INAPPROPRIATE_AUTH;  /* only return clear text */
                 break;
             }
-
             if (!err) {
-                if (pwdLen >= pwdBufLen-1) {
+                if (pwdLen >= pwdBufLen) {
                     memcpy(pwd, &pwdBuf[1], pwdBufLen-1);  /* skip digest tag and include null */
+                    pwd[pwdBufLen - 1] = '\0';
                 } else {
                     err = LDAP_NO_MEMORY;
                 }
@@ -463,6 +460,8 @@ static int nmasldap_get_password(
             if (*pwdSize >= pwdBufLen+1 && pwd != nullptr) {
                 memcpy(pwd, pwdBuf, pwdBufLen);
                 pwd[pwdBufLen] = 0; /* add null termination */
+            } else {
+                err = LDAP_OPERATIONS_ERROR;
             }
             *pwdSize = pwdBufLen; /* does not include null termination */
         }
