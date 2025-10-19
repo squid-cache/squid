@@ -40,6 +40,7 @@
 #include "StoreClient.h"
 #include "tools.h"
 
+#include <memory>
 typedef struct _Countstr Countstr;
 
 typedef struct _htcpHeader htcpHeader;
@@ -314,6 +315,19 @@ htcpHexdump(const char *tag, const char *s, int sz)
 #endif
 }
 
+static bool
+parseUint16(const char * const buf, const int sz, uint16_t &out, const char * const field)
+{
+    if (sz < 2) {
+        debugs(31, 3, "too short for " << field);
+        return false;
+    }
+
+    memcpy(&out, buf, 2);
+    out = ntohs(out);
+    return true;
+}
+
 /*
  * STUFF FOR SENDING HTCP MESSAGES
  */
@@ -462,8 +476,15 @@ htcpBuildClrOpData(char *buf, size_t buflen, htcpStuff * stuff)
     case RR_REQUEST:
         debugs(31, 3, "htcpBuildClrOpData: RR_REQUEST");
         reason = htons((unsigned short)stuff->reason);
+        if (buflen < 2)
+            return -1;
         memcpy(buf, &reason, 2);
-        return htcpBuildSpecifier(buf + 2, buflen - 2, stuff) + 2;
+        {
+            const auto s = htcpBuildSpecifier(buf + 2, buflen - 2, stuff);
+            if (s < 0)
+                return s;
+            return s + 2;
+        }
     case RR_RESPONSE:
         break;
     default:
@@ -619,7 +640,10 @@ htcpUnpackSpecifier(char *buf, int sz)
     HttpRequestMethod method;
 
     /* Find length of METHOD */
-    uint16_t l = ntohs(*(uint16_t *) buf);
+    uint16_t l = 0;
+    if (!parseUint16(buf, sz, l, "METHOD length"))
+        return nil;
+
     sz -= 2;
     buf += 2;
 
@@ -635,7 +659,9 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: METHOD (" << l << "/" << sz << ") '" << s->method << "'");
 
     /* Find length of URI */
-    l = ntohs(*(uint16_t *) buf);
+    if (!parseUint16(buf, sz, l, "URI length"))
+        return nil;
+
     sz -= 2;
 
     if (l > sz) {
@@ -654,7 +680,9 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: URI (" << l << "/" << sz << ") '" << s->uri << "'");
 
     /* Find length of VERSION */
-    l = ntohs(*(uint16_t *) buf);
+    if (!parseUint16(buf, sz, l, "VERSION length"))
+        return nil;
+
     sz -= 2;
 
     if (l > sz) {
@@ -673,7 +701,9 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: VERSION (" << l << "/" << sz << ") '" << s->version << "'");
 
     /* Find length of REQ-HDRS */
-    l = ntohs(*(uint16_t *) buf);
+    if (!parseUint16(buf, sz, l, "REQ-HDRS length"))
+        return nil;
+
     sz -= 2;
 
     if (l > sz) {
@@ -721,16 +751,18 @@ htcpUnpackSpecifier(char *buf, int sz)
 static htcpDetail *
 htcpUnpackDetail(char *buf, int sz)
 {
-    htcpDetail *d = new htcpDetail;
+    auto d = std::make_unique<htcpDetail>();
 
     /* Find length of RESP-HDRS */
-    uint16_t l = ntohs(*(uint16_t *) buf);
+    uint16_t l = 0;
+    if (!parseUint16(buf, sz, l, "RESP-HDRS length"))
+        return nullptr;
+
     sz -= 2;
     buf += 2;
 
     if (l > sz) {
         debugs(31, 3, "htcpUnpackDetail: failed to unpack RESP_HDRS");
-        delete d;
         return nullptr;
     }
 
@@ -741,13 +773,13 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= l;
 
     /* Find length of ENTITY-HDRS */
-    l = ntohs(*(uint16_t *) buf);
+    if (!parseUint16(buf, sz, l, "ENTITY-HDRS length"))
+        return nullptr;
 
     sz -= 2;
 
     if (l > sz) {
         debugs(31, 3, "htcpUnpackDetail: failed to unpack ENTITY_HDRS");
-        delete d;
         return nullptr;
     }
 
@@ -763,13 +795,13 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= l;
 
     /* Find length of CACHE-HDRS */
-    l = ntohs(*(uint16_t *) buf);
+    if (!parseUint16(buf, sz, l, "CACHE-HDRS length"))
+        return nullptr;
 
     sz -= 2;
 
     if (l > sz) {
         debugs(31, 3, "htcpUnpackDetail: failed to unpack CACHE_HDRS");
-        delete d;
         return nullptr;
     }
 
@@ -793,7 +825,7 @@ htcpUnpackDetail(char *buf, int sz)
      */
     *buf = '\0';
 
-    return d;
+    return d.release();
 }
 
 static bool
@@ -1204,26 +1236,30 @@ htcpSpecifier::checkedHit(StoreEntry *e)
 }
 
 static void
-htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
+htcpHandleClr(htcpDataHeader * const hdr, char * const buf, const int sz, Ip::Address &from)
 {
     /* buf[0/1] is reserved and reason */
-    int reason = buf[1] << 4;
+    if (sz < 2) {
+        debugs(31, 4, "too short for reserved+reason fields (sz=" << sz << ")");
+        htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str, nullptr);
+        return;
+    }
+    int reason = static_cast<unsigned char>(buf[1]) << 4;
     debugs(31, 2, "HTCP CLR reason: " << reason);
-    buf += 2;
-    sz -= 2;
 
-    /* buf should be a SPECIFIER */
+    const auto specifierStart = buf + 2;
+    const auto specifierSize = sz - 2;
 
     if (sz == 0) {
-        debugs(31, 4, "htcpHandleClr: nothing to do");
+        debugs(31, 4, "nothing to do");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str, nullptr);
         return;
     }
 
-    htcpSpecifier::Pointer s(htcpUnpackSpecifier(buf, sz));
+    const auto s = htcpUnpackSpecifier(specifierStart, specifierSize);
 
     if (!s) {
-        debugs(31, 3, "htcpHandleClr: htcpUnpackSpecifier failed");
+        debugs(31, 3, "htcpUnpackSpecifier failed");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str, nullptr);
         return;
     } else {
@@ -1232,13 +1268,13 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
     }
 
     if (!s->request) {
-        debugs(31, 3, "htcpHandleTstRequest: failed to parse request");
+        debugs(31, 3, "failed to parse request");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str, s->al);
         return;
     }
 
     if (!htcpAccessAllowed(Config.accessList.htcp_clr, s, from)) {
-        debugs(31, 3, "htcpHandleClr: Access denied");
+        debugs(31, 3, "Access denied");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_DENIED, s->uri, s->al);
         return;
     }
@@ -1265,15 +1301,10 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
     default:
         break;
     }
-}
 
-/*
- * Forward a CLR request to all peers who have requested that CLRs be
- * forwarded to them.
- */
-static void
-htcpForwardClr(char *buf, int sz)
-{
+    // Forward this CLR request to all peers who have requested that CLRs be
+    // forwarded to them.
+    // TODO: Consider not forwarding requests with htcpClrStore() < 0.
     for (const auto &p: CurrentCachePeers()) {
         if (!p->options.htcp) {
             continue;
@@ -1347,8 +1378,17 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
     if (!old_squid_format) {
         memcpy(&hdr, hbuf, sizeof(hdr));
     } else {
+        // Old Squid format (minor==0) uses a wider struct due to bitfield layout.
+        // Never read more than available; zero-init then copy the safe prefix.
         htcpDataHeaderSquid hdrSquid;
-        memcpy(&hdrSquid, hbuf, sizeof(hdrSquid));
+        memset(&hdrSquid, 0, sizeof(hdrSquid));
+        if (static_cast<size_t>(hsz) >= sizeof(htcpDataHeaderSquid)) {
+            memcpy(&hdrSquid, hbuf, sizeof(htcpDataHeaderSquid));
+        } else {
+            // Guaranteed earlier: hsz >= sizeof(htcpDataHeader) (compact prefix).
+            memcpy(&hdrSquid, hbuf, sizeof(htcpDataHeader));
+        }
+
         hdr.length = hdrSquid.length;
         hdr.opcode = hdrSquid.opcode;
         hdr.response = hdrSquid.response;
@@ -1373,6 +1413,12 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
     debugs(31, 3, "htcpHandleData: F1 = " << hdr.F1);
     debugs(31, 3, "htcpHandleData: RR = " << hdr.RR);
     debugs(31, 3, "htcpHandleData: msg_id = " << hdr.msg_id);
+
+    // DATA length must include at least the data header itself
+    if (hdr.length < sizeof(htcpDataHeader)) {
+        debugs(31, 3, "invalid hdr.length " << hdr.length << " (< " << sizeof(htcpDataHeader) << ")");
+        return;
+    }
 
     if (hsz < hdr.length) {
         debugs(31, 3, "htcpHandleData: sz < hdr.length");
@@ -1405,7 +1451,6 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
         break;
     case HTCP_CLR:
         htcpHandleClr(&hdr, hbuf, hsz, from);
-        htcpForwardClr(buf, sz);
         break;
     default:
         break;

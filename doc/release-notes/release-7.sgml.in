@@ -195,6 +195,9 @@ This section gives an account of those changes in three categories:
 	<tag>logformat</tag>
 	<p>Removed <em>%ui</em> format code with Ident protocol support.
 
+	<tag>email_err_data</tag>
+	<p>Since Squid-7.2, the default for this directive is <em>off</em>.
+
 	<tag>external_acl_type</tag>
 	<p>Removed <em>%IDENT</em> format code with Ident protocol support.
 
@@ -286,7 +289,16 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p>No build options have changed behaviour in this version.
+
+	<tag>--disable-arch-native</tag>
+	<p>The <em>-march=native</em> compiler option is no longer used by
+		default. It is possible to enable it by using the
+		<em>--enable-arch-native</em> option.
+		Using <em>-march=native</em> may cause problems when Squid is
+		run on a system with a different exact CPU model than the one
+		it is built on, or in some containerized environments.
+		The symptom is crashes with "illegal instruction" errors.
+		We do not recommend enabling this optimization in virtualized environments.
 
 </descrip>
 </p>

@@ -1344,7 +1344,6 @@ src/auth/digest/LDAP/:
 ==============================================================================
 
 src/auth/negotiate/SSPI/,
-src/auth/ntlm/SSPI/:
 
  * (C)2005 Guido Serassio - Acme Consulting S.r.l.
  *
