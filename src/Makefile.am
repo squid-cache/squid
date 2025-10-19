@@ -790,6 +790,19 @@ tests_testRandomUuid_LDADD = \
 	$(XTRA_LIBS)
 tests_testRandomUuid_LDFLAGS = $(LIBADD_DL)
 
+check_PROGRAMS += tests/testETag
+tests_testETag_SOURCES = \
+	tests/testETag.cc
+nodist_tests_testETag_SOURCES = \
+	$(TESTSOURCES) \
+	ETag.cc \
+	ETag.h
+tests_testETag_LDADD = \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testETag_LDFLAGS = $(LIBADD_DL)
+
 ## Tests of mem/*
 
 check_PROGRAMS += tests/testMem
