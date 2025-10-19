@@ -15,6 +15,52 @@
 #include "security/Io.h"
 #include "ssl/gadgets.h"
 
+/// whether to supply a digest algorithm name when calling X509_sign() with the given key
+static bool
+signWithDigest(const Security::PrivateKeyPointer &key) {
+#if HAVE_LIBCRYPTO_EVP_PKEY_GET_DEFAULT_DIGEST_NAME
+    Assure(key); // TODO: Add and use Security::PrivateKey (here and in caller).
+    const auto pkey = key.get();
+
+    // OpenSSL does not define a maximum name size, but does terminate longer
+    // names without returning an error to the caller. Many similar callers in
+    // OpenSSL sources use 80-byte buffers.
+    char defaultDigestName[80] = "";
+    const auto nameGetterResult = EVP_PKEY_get_default_digest_name(pkey, defaultDigestName, sizeof(defaultDigestName));
+    debugs(83, 3, "nameGetterResult=" << nameGetterResult << " defaultDigestName=" << defaultDigestName);
+    if (nameGetterResult <= 0) {
+        debugs(83, 3, "ERROR: EVP_PKEY_get_default_digest_name() failure: " << Ssl::ReportAndForgetErrors);
+        // Backward compatibility: On error, assume digest should be used.
+        // TODO: Return false for -2 nameGetterResult as it "indicates the
+        // operation is not supported by the public key algorithm"?
+        return true;
+    }
+
+    // The name "UNDEF" signifies that a digest must (for return value 2) or may
+    // (for return value 1) be left unspecified.
+    if (nameGetterResult == 2 && strcmp(defaultDigestName, "UNDEF") == 0)
+        return false;
+
+    // Defined mandatory algorithms and "may be left unspecified" cases mentioned above.
+    return true;
+
+#else
+    // TODO: Drop this legacy code when we stop supporting OpenSSL v1;
+    // EVP_PKEY_get_default_digest_name() is available starting with OpenSSL v3.
+    (void)key;
+
+    // assume that digest is required for all key types supported by older OpenSSL versions
+    return true;
+#endif // HAVE_LIBCRYPTO_EVP_PKEY_GET_DEFAULT_DIGEST_NAME
+}
+
+/// OpenSSL X509_sign() wrapper
+static auto
+Sign(Security::Certificate &cert, const Security::PrivateKeyPointer &key, const EVP_MD &availableDigest) {
+    const auto digestOrNil = signWithDigest(key) ? &availableDigest : nullptr;
+    return X509_sign(&cert, key.get(), digestOrNil);
+}
+
 void
 Ssl::ForgetErrors()
 {
@@ -677,9 +723,9 @@ static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Secu
     assert(hash);
     /*Now sign the request */
     if (properties.signAlgorithm != Ssl::algSignSelf && properties.signWithPkey.get())
-        ret = X509_sign(cert.get(), properties.signWithPkey.get(), hash);
+        ret = Sign(*cert, properties.signWithPkey, *hash);
     else //else sign with self key (self signed request)
-        ret = X509_sign(cert.get(), pkey.get(), hash);
+        ret = Sign(*cert, pkey, *hash);
 
     if (!ret)
         return false;

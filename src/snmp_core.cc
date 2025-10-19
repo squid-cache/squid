@@ -329,8 +329,7 @@ snmpClosePorts()
     }
     snmpIncomingConn = nullptr;
 
-    if (Comm::IsConnOpen(snmpOutgoingConn) && snmpIncomingConn != snmpOutgoingConn) {
-        // Perform OUT port closure so as not to step on IN port when sharing a conn.
+    if (Comm::IsConnOpen(snmpOutgoingConn)) {
         debugs(49, DBG_IMPORTANT, "Closing SNMP sending port " << snmpOutgoingConn->local);
         snmpOutgoingConn->close();
     }
@@ -765,6 +764,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
             instance = (oid *)xmalloc(sizeof(*name) * (current->len + 1 ));
             memcpy(instance, name, (sizeof(*name) * current->len ));
             instance[current->len] = no + 1 ; // i.e. the next index on cache_peeer table.
+            *len = current->len + 1;
         } else {
             debugs(49, 6, "snmp peer_Inst: We have " << i << " peers. Can't find #" << no);
             return (instance);
@@ -847,25 +847,11 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 static mib_tree_entry *
 snmpTreeSiblingEntry(oid entry, snint len, mib_tree_entry * current)
 {
-    mib_tree_entry *next = nullptr;
-    int count = 0;
-
-    while ((!next) && (count < current->children)) {
-        if (current->leaves[count]->name[len] == entry) {
-            next = current->leaves[count];
-        }
-
-        ++count;
+    for (int i = 0; i < current->children; ++i) {
+        if (current->leaves[i]->name[len] == entry)
+            return (i + 1 < current->children) ? current->leaves[i + 1] : nullptr;
     }
-
-    /* Exactly the sibling on right */
-    if (count < current->children) {
-        next = current->leaves[count];
-    } else {
-        next = nullptr;
-    }
-
-    return (next);
+    return nullptr;
 }
 
 /*
