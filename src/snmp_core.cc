@@ -1002,15 +1002,10 @@ snmpAddNodeStr(const char *base_str, int o, oid_ParseFn * parsefunction, instanc
 static mib_tree_entry *
 snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * instancefunction, AggrType aggrType, int children,...)
 {
-    va_list args;
-    int loop;
-    mib_tree_entry *entry = nullptr;
-    va_start(args, children);
-
     MemBuf tmp;
     debugs(49, 6, "snmpAddNode: Children : " << children << ", Oid : " << snmpDebugOid(name, len, tmp));
 
-    entry = (mib_tree_entry *)xmalloc(sizeof(mib_tree_entry));
+    auto entry = (mib_tree_entry *)xmalloc(sizeof(mib_tree_entry));
     entry->name = name;
     entry->len = len;
     entry->parsefunction = parsefunction;
@@ -1022,13 +1017,15 @@ snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * inst
     if (children > 0) {
         entry->leaves = (mib_tree_entry **)xmalloc(sizeof(mib_tree_entry *) * children);
 
-        for (loop = 0; loop < children; ++loop) {
+        va_list args;
+        va_start(args, children);
+        for (int loop = 0; loop < children; ++loop) {
             entry->leaves[loop] = va_arg(args, mib_tree_entry *);
             entry->leaves[loop]->parent = entry;
         }
+        va_end(args);
     }
 
-    va_end(args);
     return (entry);
 }
 /* End of tree utility functions */
