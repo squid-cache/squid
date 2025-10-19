@@ -24,21 +24,26 @@ class MemBuf;
 #define MAX_PROTOSTAT 5
 
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
-typedef struct _mib_tree_entry mib_tree_entry;
+class mib_tree_entry;
 typedef oid *(instance_Fn) (oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
 typedef enum {atNone = 0, atSum, atAverage, atMax, atMin} AggrType;
 
-struct _mib_tree_entry {
-    oid *name;
-    int len;
-    oid_ParseFn *parsefunction;
-    instance_Fn *instancefunction;
-    int children;
+class mib_tree_entry
+{
+    MEMPROXY_CLASS(mib_tree_entry);
+public:
+    mib_tree_entry(oid *aName, int aLen, AggrType type) : name(aName), len(aLen), aggrType(type) {}
 
-    struct _mib_tree_entry **leaves;
+public:
+    oid *name = nullptr;
+    const int len = 0;
+    oid_ParseFn *parsefunction = {};
+    instance_Fn *instancefunction = {};
+    int children = 0;
 
-    struct _mib_tree_entry *parent;
-    AggrType aggrType;
+    mib_tree_entry **leaves = nullptr;
+    mib_tree_entry *parent = nullptr;
+    AggrType aggrType = atNone;
 };
 
 struct snmp_pdu* snmpAgentResponse(struct snmp_pdu* PDU);
