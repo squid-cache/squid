@@ -51,7 +51,7 @@ IcmpPinger::Open(void)
 
     WSADATA wsaData;
     WSAPROTOCOL_INFO wpi;
-    char buf[sizeof(wpi)];
+    char buf[sizeof(wpi)+1];
     int x;
 
     struct sockaddr_in PS;
@@ -116,7 +116,7 @@ IcmpPinger::Open(void)
 
     xwrite(1, "OK\n", 3);
     memset(buf, 0, sizeof(buf));
-    x = xrecv(icmp_sock, buf, sizeof(buf), 0);
+    x = xrecv(icmp_sock, buf, sizeof(buf)-1, 0);
 
     if (x < 3) {
         xerrno = errno;
