@@ -1425,8 +1425,12 @@ htcpRecv(int fd, void *)
     if (len < 0) {
         int xerrno = errno;
         debugs(31, DBG_IMPORTANT, "FD " << fd << " recvfrom: " << xstrerr(xerrno));
-    } else if (len == 0) {
+        return;
+    }
+
+    if (len == 0) {
         debugs(31, DBG_IMPORTANT, "empty UDP datagram from " << from << ", ignoring.");
+        return;
     }
 
     debugs(31, 3, "htcpRecv: FD " << fd << ", " << len << " bytes from " << from );
