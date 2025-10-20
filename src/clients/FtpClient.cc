@@ -442,16 +442,11 @@ Ftp::Client::handleControlReply()
                 /* failed closes ctrl.conn and frees ftpState */
                 return;
             }
-            auto newSize = ctrl.size << 1;
-            if (newSize <= ctrl.size || newSize > Config.maxReplyHeaderSize)
-                newSize = Config.maxReplyHeaderSize;
 
-            if (newSize == ctrl.size) {
-                debugs(9, DBG_IMPORTANT, "ERROR: FTP control reply buffer cannot grow over " << Config.maxReplyHeaderSize << " bytes");
-                failed(ERR_FTP_FAILURE, 0);
-                /* failed closes ctrl.conn and frees ftpState */
-                return;
-            }
+            const auto maxSize = std::numeric_limits<size_t>::max();
+            const auto aggressiveSize = NaturalSum(ctrl.size, ctrl.size).value_or(maxSize);
+            const auto newSize = std::min(aggressiveSize, Config.maxReplyHeaderSize);
+            Assure(newSize > ctrl.size); // our parser rejects too-big responses
 
             ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, newSize, &ctrl.size));
         }
