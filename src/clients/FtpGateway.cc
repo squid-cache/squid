@@ -705,19 +705,16 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
             case 'm': {
                 char *tmp;
                 const auto tm = (time_t) strtol(ct + 1, &tmp, 0);
+
                 if (tmp == ct + 1)
                     break;  /* not a valid integer */
 
-                const char* cts = ctime(&tm);
-                if (!cts)
-                    break;
-
-                safe_free(p->date); // TODO: properly handle multiple p->name occurrences
-
-                p->date = xstrndup(cts, strcspn(cts, "\n"));
-
-                break;
+                if (const auto cts = std::ctime(&tm)) {
+                    xfree(p->date); // TODO: properly handle multiple p->name occurrences
+                    p->date = xstrndup(cts, strcspn(cts, "\n"));
+                }
             }
+            break;
 
             case '/':
                 p->type = 'd';
