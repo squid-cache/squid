@@ -704,7 +704,12 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
             case 'm': {
                 char *tmp;
-                const auto tm = (time_t) strtol(ct + 1, &tmp, 0);
+                const auto seconds = strtol(ct + 1, &tmp, 10); // zero on errors
+
+                if (seconds <= 0 || seconds > std::numeric_limits<time_t>::max())
+                    break;
+
+                const auto tm = static_cast<time_t>(seconds);
 
                 if (tmp == ct + 1)
                     break;  /* not a valid integer */
