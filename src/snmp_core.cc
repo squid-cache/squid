@@ -359,7 +359,7 @@ snmpHandleUdp(int sock, void *)
     SnmpRequest *snmp_rq;
     int len;
 
-    debugs(49, 5, "Called.");
+    debugs(49, 5, "FD " << sock);
 
     Comm::SetSelect(sock, COMM_SELECT_READ, snmpHandleUdp, nullptr, 0);
 
