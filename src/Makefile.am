@@ -938,8 +938,9 @@ nodist_tests_testFtpEpsv_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc
 tests_testFtpEpsv_LDADD = \
-    clients/libclients.la \
+	clients/libclients.la \
 	ftp/libftp.la \
+	libsquid.la \
 	parser/libparser.la \
 	sbuf/libsbuf.la \
 	base/libbase.la \
