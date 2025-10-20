@@ -37,13 +37,15 @@ void
 TestFtpEpsv::testValidTupleParses()
 {
     uint16_t port = 0;
+    Parser::Tokenizer tok(SBuf("(|||12345|)"));
+    Parser::Tokenizer tok2(SBuf(tok2, "(***21*)"));
 
     // Classic '|' delimiter
-    CPPUNIT_ASSERT(Ftp::parseEPSV(SBuf("(|||12345|)"), port));
+    CPPUNIT_ASSERT(Ftp::parseEPSV(tok, port));
     CPPUNIT_ASSERT_EQUAL(static_cast<uint16_t>(12345), port);
 
     // Arbitrary non-digit delimiter
-    CPPUNIT_ASSERT(Ftp::parseEPSV(SBuf("(***21*)"), port));
+    CPPUNIT_ASSERT(Ftp::parseEPSV(tok2, port));
     CPPUNIT_ASSERT_EQUAL(static_cast<uint16_t>(21), port);
 }
 
@@ -51,33 +53,39 @@ void
 TestFtpEpsv::testRejectDigitDelimiter()
 {
     uint16_t port = 0;
+    Parser::Tokenizer tok(SBuf("(111123451)"));
     // EPSV delimiter must be a non-digit
-    CPPUNIT_ASSERT(!Ftp::parseEPSV(SBuf("(111123451)"), port));
+    CPPUNIT_ASSERT(!Ftp::parseEPSV(tok, port));
 }
 
 void
 TestFtpEpsv::testPortRange()
 {
     uint16_t port = 0;
+    Parser::Tokenizer tok(SBuf("(|||0|)"));
+    Parser::Tokenizer tok2(SBuf("(|||70000|)"));
     // Port must be 1..65535
-    CPPUNIT_ASSERT(!Ftp::parseEPSV(SBuf("(|||0|)"), port));
-    CPPUNIT_ASSERT(!Ftp::parseEPSV(SBuf("(|||70000|)"), port));
+    CPPUNIT_ASSERT(!Ftp::parseEPSV(tok, port));
+    CPPUNIT_ASSERT(!Ftp::parseEPSV(tok2, port));
 }
 
 void
 TestFtpEpsv::testTrailingGarbage()
 {
     uint16_t port = 0;
+    Parser::Tokenizer tok(SBuf("(|||123|)xyz"));
     // No extra junk after the closing delimiter
-    CPPUNIT_ASSERT(!Ftp::parseEPSV(SBuf("(|||123|)xyz"), port));
+    CPPUNIT_ASSERT(!Ftp::parseEPSV(tok, port));
 }
 
 void
 TestFtpEpsv::testOptionalWsAllowed()
 {
     uint16_t port = 0;
+    Parser::Tokenizer tok(SBuf("(|||8080|)\r\n"));
+
     // Allow network EOL after the tuple
-    CPPUNIT_ASSERT(Ftp::parseEPSV(SBuf("(|||8080|)\r\n"), port));
+    CPPUNIT_ASSERT(Ftp::parseEPSV(tok, port));
     CPPUNIT_ASSERT_EQUAL(static_cast<uint16_t>(8080), port);
 }
 

@@ -933,7 +933,8 @@ tests_testDns_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testFtpEpsv
 tests_testFtpEpsv_SOURCES = \
-	tests/testFtpEpsv.cc \
+	tests/testFtpEpsv.cc
+nodist_tests_testFtpEpsv_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc
 tests_testFtpEpsv_LDADD = \
@@ -941,8 +942,8 @@ tests_testFtpEpsv_LDADD = \
 	parser/libparser.la \
 	sbuf/libsbuf.la \
 	base/libbase.la \
-	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBCPPUNIT_LIBS) \
 	$(XTRA_LIBS)
 tests_testFtpEpsv_LDFLAGS = $(LIBADD_DL)
 
