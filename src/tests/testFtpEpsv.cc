@@ -38,7 +38,7 @@ TestFtpEpsv::testValidTupleParses()
 {
     uint16_t port = 0;
     Parser::Tokenizer tok(SBuf("(|||12345|)"));
-    Parser::Tokenizer tok2(SBuf(tok2, "(***21*)"));
+    Parser::Tokenizer tok2(SBuf("(***21*)"));
 
     // Classic '|' delimiter
     CPPUNIT_ASSERT(Ftp::parseEPSV(tok, port));
