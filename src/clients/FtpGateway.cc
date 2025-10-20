@@ -711,7 +711,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
                 const auto tm = static_cast<time_t>(seconds);
 
-                ssure(tmp > ct + 1); // saw at least one digit
+                Assure(tmp > ct + 1); // saw at least one digit
 
                 if (const auto cts = std::ctime(&tm)) {
                     xfree(p->date); // TODO: properly handle multiple p->name occurrences
