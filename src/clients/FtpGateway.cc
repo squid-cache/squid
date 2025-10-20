@@ -703,15 +703,16 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                 break;
 
             case 'm': {
-                char *tmp;
-                const auto seconds = strtol(ct + 1, &tmp, 10); // zero on errors
+                char *secondsEnd;
+                const auto secondsStart = ct + 1;
+                const auto seconds = strtol(secondsStart, &secondsEnd, 10); // zero on errors
 
                 if (seconds <= 0 || seconds > std::numeric_limits<time_t>::max())
                     break;
 
                 const auto tm = static_cast<time_t>(seconds);
 
-                Assure(tmp > ct + 1); // saw at least one digit
+                Assure(secondsEnd > secondsStart); // saw at least greater digit
 
                 if (const auto cts = std::ctime(&tm)) {
                     xfree(p->date); // TODO: properly handle multiple p->name occurrences
