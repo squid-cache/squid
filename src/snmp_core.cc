@@ -383,7 +383,7 @@ snmpHandleUdp(int sock, void *)
         int xerrno = errno;
         debugs(49, DBG_IMPORTANT, "ERROR: Cannot read an SNMP UDP query: " << xstrerr(xerrno));
     } else {
-        debugs(49, DBG_IMPORTANT, "WARNING: Ignoring empty SNMP UDP datagram from " << from");
+        debugs(49, DBG_IMPORTANT, "WARNING: Ignoring empty SNMP UDP datagram from " << from);
     }
 }
 
