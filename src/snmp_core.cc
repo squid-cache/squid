@@ -383,7 +383,7 @@ snmpHandleUdp(int sock, void *)
         int xerrno = errno;
         debugs(49, DBG_IMPORTANT, "FD " << sock << " recvfrom: " << xstrerr(xerrno));
     } else {
-        debugs(49, DBG_IMPORTANT, "empty UDP datagram from " << from << ", ignoring.");
+        debugs(49, DBG_IMPORTANT, "WARNING: Ignoring empty SNMP UDP datagram from " << from");
     }
 }
 
