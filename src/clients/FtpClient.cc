@@ -416,14 +416,6 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
     }
 
     unsigned int len =io.size + ctrl.offset;
-
-    if (len >= Config.maxReplyHeaderSize) {
-        debugs(9, DBG_IMPORTANT, "ERROR: FTP control reply exceeded cap: (" << len << " >= " << Config.maxReplyHeaderSize << ")");
-        failed(ERR_FTP_FAILURE, 0);
-        /* failed closes ctrl.conn and frees ftpState */
-        return;
-    }
-
     ctrl.offset = len;
     assert(len <= ctrl.size);
     if (Comm::IsConnOpen(ctrl.conn))
