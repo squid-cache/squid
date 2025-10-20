@@ -728,6 +728,7 @@ static void
 clientRedirectAccessCheckDone(Acl::Answer answer, void *data)
 {
     ClientRequestContext *context = (ClientRequestContext *)data;
+    ClientHttpRequest *http = context->http;
 
     if (answer.allowed())
         redirectStart(http, clientRedirectDoneWrapper, context);
