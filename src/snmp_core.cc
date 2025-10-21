@@ -1007,7 +1007,7 @@ snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * inst
     MemBuf tmp;
     debugs(49, 6, "snmpAddNode: Children : " << children << ", Oid : " << snmpDebugOid(name, len, tmp));
 
-    auto entry = (mib_tree_entry *)xmalloc(sizeof(mib_tree_entry));
+    const auto entry = (mib_tree_entry *)xmalloc(sizeof(mib_tree_entry));
     entry->name = name;
     entry->len = len;
     entry->parsefunction = parsefunction;
