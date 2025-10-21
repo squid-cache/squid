@@ -1014,10 +1014,11 @@ snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * inst
     entry->instancefunction = instancefunction;
     entry->children = children;
     entry->leaves = nullptr;
+    entry->parent = nullptr;
     entry->aggrType = aggrType;
 
     if (children > 0) {
-        entry->leaves = (mib_tree_entry **)xmalloc(sizeof(mib_tree_entry *) * children);
+        entry->leaves = static_cast<mib_tree_entry **>(xmalloc(sizeof(mib_tree_entry *) * children));
 
         va_list args;
         va_start(args, children);
