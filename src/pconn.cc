@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -223,8 +223,13 @@ IdleConnList::pop()
             continue;
 
         // our connection timeout handler is scheduled to run already. unsafe for now.
-        // TODO: cancel the pending timeout callback and allow re-use of the conn.
+        // TODO: cancel the pending timeout callback and allow reuse of the conn.
         if (fd_table[theList_[i]->fd].timeoutHandler == nullptr)
+            continue;
+
+        // the cache_peer has been removed from the configuration
+        // TODO: remove all such connections at once during reconfiguration
+        if (theList_[i]->toGoneCachePeer())
             continue;
 
         // finally, a match. pop and return it.
@@ -270,8 +275,13 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &aKey)
             continue;
 
         // our connection timeout handler is scheduled to run already. unsafe for now.
-        // TODO: cancel the pending timeout callback and allow re-use of the conn.
+        // TODO: cancel the pending timeout callback and allow reuse of the conn.
         if (fd_table[theList_[i]->fd].timeoutHandler == nullptr)
+            continue;
+
+        // the cache_peer has been removed from the configuration
+        // TODO: remove all such connections at once during reconfiguration
+        if (theList_[i]->toGoneCachePeer())
             continue;
 
         // finally, a match. pop and return it.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -528,7 +528,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
                                    &Var->type, TmpBuf, &Var->val_len);
             Var->val_len *= sizeof(oid);
             Var->val.objid = (oid *) xmalloc((unsigned) Var->val_len);
-            if (Var->val.integer == NULL) {
+            if (Var->val.objid == NULL) {
                 snmp_set_api_error(SNMPERR_OS_ERR);
                 PARSE_ERROR;
             }

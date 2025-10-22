@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -94,7 +94,7 @@ public:
      \retval false  Not configured or Configuration Error.
      *          No other module functions except Shutdown/Dump/Parse/FreeConfig will be called by Squid.
      */
-    virtual bool configured() const = 0;
+    virtual bool configured() const;
 
     /**
      * Shutdown just the auth helpers.

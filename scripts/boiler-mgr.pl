@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -74,7 +74,7 @@ my $reClaimPrefix = qr{
     Portions\s
 }xi;
 
-# We have persmission to move these frequent claims to CONTRIBUTORS.
+# We have permission to move these frequent claims to CONTRIBUTORS.
 my $reClaimsOkToMove = qr{
     Robert.Collins|<robertc\@squid-cache.org>|<rbtcollins\@hotmail.com>|
 

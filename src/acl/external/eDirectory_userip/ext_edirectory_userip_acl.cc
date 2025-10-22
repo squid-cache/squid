@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -459,7 +459,7 @@ DisplayConf()
     else
         local_printfx("	Binding DN: Anonymous\n");
     if (edui_conf.passwd[0] != '\0')
-        local_printfx("	Binding Password: %s\n", edui_conf.passwd);
+        local_printfx("	Binding Password: [redacted]\n");
     else
         local_printfx("	Binding Password: None\n");
     switch (edui_conf.scope) {
@@ -986,7 +986,7 @@ SearchFilterLDAP(edui_ldap_t *l, char *group)
 /*
  * SearchLDAP() - <edui_ldap_t> <scope> <filter> <attrib>
  *
- * Initate LDAP query, under <scope> levels, filtering matches with <filter> and optionally <attrib>
+ * Initiate LDAP query, under <scope> levels, filtering matches with <filter> and optionally <attrib>
  * <attrib> will generally be networkAddress ...
  *
  */

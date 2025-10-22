@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -294,7 +294,7 @@ log_quoted_string(const char *str, char *out)
     char *p = out;
 
     while (*str) {
-        int l = strcspn(str, "\"\\\r\n\t");
+        const auto l = strcspn(str, "\"\\\r\n\t");
         memcpy(p, str, l);
         str += l;
         p += l;
@@ -1074,7 +1074,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_REQUEST_URLPATH_OLD_31:
         case LFT_CLIENT_REQ_URLPATH:
             if (al->request) {
-                sb = al->request->url.path();
+                sb = al->request->url.absolutePath();
                 out = sb.c_str();
                 quote = 1;
             }
@@ -1149,7 +1149,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SERVER_REQ_URLPATH:
             if (al->adapted_request) {
-                sb = al->adapted_request->url.path();
+                sb = al->adapted_request->url.absolutePath();
                 out = sb.c_str();
                 quote = 1;
             }
@@ -1390,19 +1390,18 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             tmp[1] = '\0';
             if (fmt->data.header.header && *fmt->data.header.header) {
                 const char *separator = tmp;
-                static SBuf note;
 #if USE_ADAPTATION
                 Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
                 if (ah && ah->metaHeaders) {
-                    if (ah->metaHeaders->find(note, fmt->data.header.header, separator))
-                        sb.append(note);
+                    if (const auto note = ah->metaHeaders->find(fmt->data.header.header, separator))
+                        sb.append(*note);
                 }
 #endif
                 if (al->notes) {
-                    if (al->notes->find(note, fmt->data.header.header, separator)) {
+                    if (const auto note = al->notes->find(fmt->data.header.header, separator)) {
                         if (!sb.isEmpty())
                             sb.append(separator);
-                        sb.append(note);
+                        sb.append(*note);
                     }
                 }
                 out = sb.c_str();

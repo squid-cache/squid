@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -50,6 +50,25 @@ UserInfoChars()
     return userInfoValid;
 }
 
+/// Characters which are valid within a URI path section
+static const CharacterSet &
+PathChars()
+{
+    /*
+     * RFC 3986 section 3.3
+     *
+     *   path          = path-abempty    ; begins with "/" or is empty
+     * ...
+     *   path-abempty  = *( "/" segment )
+     *   segment       = *pchar
+     *   pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
+     */
+    static const auto pathValid = CharacterSet("path", "/:@-._~%!$&'()*+,;=") +
+                                  CharacterSet::ALPHA +
+                                  CharacterSet::DIGIT;
+    return pathValid;
+}
+
 /**
  * Governed by RFC 3986 section 2.1
  */
@@ -82,7 +101,7 @@ AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &ignore)
     return output;
 }
 
-SBuf
+std::optional<SBuf>
 AnyP::Uri::Decode(const SBuf &buf)
 {
     SBuf output;
@@ -95,14 +114,26 @@ AnyP::Uri::Decode(const SBuf &buf)
 
         // we are either at '%' or at end of input
         if (tok.skip('%')) {
+            const auto rawBytesAfterPercent = tok.remaining();
             int64_t hex1 = 0, hex2 = 0;
-            if (tok.int64(hex1, 16, false, 1) && tok.int64(hex2, 16, false, 1))
+            if (tok.int64(hex1, 16, false, 1) && tok.int64(hex2, 16, false, 1)) {
                 output.append(static_cast<char>((hex1 << 4) | hex2));
-            else
-                throw TextException("invalid pct-encoded triplet", Here());
+            } else {
+                // see TestUri::testEncoding() for invalid pct-encoding sequence examples
+                debugs(23, 3, "invalid pct-encoding sequence starting at %" << rawBytesAfterPercent);
+                return std::nullopt;
+            }
         }
     }
     return output;
+}
+
+SBuf
+AnyP::Uri::DecodeOrDupe(const SBuf &input)
+{
+    if (const auto decoded = Decode(input))
+        return *decoded;
+    return input;
 }
 
 const SBuf &
@@ -637,8 +668,20 @@ AnyP::Uri::parseHost(Parser::Tokenizer &tok) const
 
     // no brackets implies we are looking at IPv4address or reg-name
 
-    // XXX: This code does not detect/reject some bad host values (e.g. "!#$%&"
-    // and "1.2.3.4.5"). TODO: Add more checks here, after migrating the
+    static const CharacterSet IPv4chars = CharacterSet("period", ".") + CharacterSet::DIGIT;
+    SBuf ipv4ish; // IPv4address-ish
+    if (tok.prefix(ipv4ish, IPv4chars)) {
+        // This rejects non-IP addresses that our caller would have
+        // otherwise mistaken for a domain name (e.g., '127.0.0' or '1234.5').
+        Ip::Address ipCheck;
+        if (!ipCheck.fromHost(ipv4ish.c_str()))
+            throw TextException("malformed IP address in uri-host", Here());
+
+        return ipv4ish;
+    }
+
+    // XXX: This code does not detect/reject some bad host values (e.g. "!#$%&").
+    // TODO: Add more checks here, after migrating the
     // non-CONNECT uri-host parsing code to use us.
 
     SBuf otherHost; // IPv4address-ish or reg-name-ish;
@@ -683,6 +726,7 @@ AnyP::Uri::touch()
     absolute_.clear();
     authorityHttp_.clear();
     authorityWithPort_.clear();
+    absolutePath_.clear();
 }
 
 SBuf &
@@ -733,10 +777,21 @@ AnyP::Uri::absolute() const
             absolute_.append(host());
             absolute_.append(":", 1);
         }
-        absolute_.append(path()); // TODO: Encode each URI subcomponent in path_ as needed.
+        absolute_.append(absolutePath());
     }
 
     return absolute_;
+}
+
+SBuf &
+AnyP::Uri::absolutePath() const
+{
+    if (absolutePath_.isEmpty()) {
+        // TODO: Encode each URI subcomponent in path_ as needed.
+        absolutePath_ = Encode(path(), PathChars());
+    }
+
+    return absolutePath_;
 }
 
 /* XXX: Performance: This is an *almost* duplicate of HttpRequest::effectiveRequestUri(). But elides the query-string.

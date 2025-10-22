@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -141,8 +141,11 @@ protected:
 
     /// called by StoreEntry when it has more buffer space available
     void resumeBodyStorage();
-    /// called when the entire adapted response body is consumed
-    void endAdaptedBodyConsumption();
+
+    /// Reacts to adaptedBodySource-related changes. May end adapted body
+    /// consumption, adaptation as a whole, or forwarding. Safe to call multiple
+    /// times, including calls made after the end of adaptation.
+    void checkAdaptationWithBodyCompletion();
 #endif
 
 protected:
@@ -157,8 +160,6 @@ protected:
     void adaptOrFinalizeReply();
     void addVirginReplyBody(const char *buf, ssize_t len);
     void storeReplyBody(const char *buf, ssize_t len);
-    /// \deprecated use SBuf I/O API and calcBufferSpaceToReserve() instead
-    size_t replyBodySpace(const MemBuf &readBuf, const size_t minSpace) const;
     /// determine how much space the buffer needs to reserve
     size_t calcBufferSpaceToReserve(const size_t space, const size_t wantSpace) const;
 
@@ -189,13 +190,21 @@ protected:
     bool adaptationAccessCheckPending = false;
     bool startedAdaptation = false;
 
-    /// handleAdaptedBodyProductionEnded() was called
+    /// Whether the entire adapted response (including bodyless responses) has
+    /// been successfully produced. A successful end of body production does not
+    /// imply that we have consumed all of the produced body bytes.
     bool receivedWholeAdaptedReply = false;
+
+    bool adaptedReplyAborted = false; ///< handleAdaptedBodyProducerAborted() has been called
 #endif
     bool receivedWholeRequestBody = false; ///< handleRequestBodyProductionEnded called
 
     /// whether we are waiting for MemObject::delayRead() to call us back
     bool waitingForDelayAwareReadChance = false;
+
+    /// markParsedVirginReplyAsWhole() parameter (if that method was called) or nil;
+    /// points to a string literal which is used only for debugging
+    const char *markedParsedVirginReplyAsWhole = nullptr;
 
     /// whether we should not be talking to FwdState; XXX: clear fwd instead
     /// points to a string literal which is used only for debugging

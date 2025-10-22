@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -50,6 +50,7 @@ public:
                                        StoreEntry * entry,
                                        const AccessLogEntryPointer &al,
                                        HttpHeader * hdr_out,
+                                       const CachePeer *peer,
                                        const Http::StateFlags &flags);
 
     const Comm::ConnectionPointer & dataConnection() const override;

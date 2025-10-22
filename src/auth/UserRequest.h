@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -116,7 +116,7 @@ public:
 
     /**
      * Check a auth_user pointer for validity.
-     * Does not check passwords, just data sensability. Broken or Unknown auth_types are not valid for use...
+     * Does not check passwords, just data validity. Broken or Unknown auth_types are not valid for use...
      *
      * \retval false    User credentials are missing.
      * \retval false    User credentials use an unknown scheme type.

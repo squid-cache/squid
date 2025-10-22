@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -55,11 +55,8 @@ check_k5_err(krb5_context context, const char *function, krb5_error_code code);
 void
 align(int n)
 {
-    if ( bpos % n != 0 ) {
-        int al;
-        al = (bpos/n);
-        bpos = bpos+(bpos-n*al);
-    }
+    if (const auto r = bpos % n)
+        bpos += (n - r);
 }
 
 void

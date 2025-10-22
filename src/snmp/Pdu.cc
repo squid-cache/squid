@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -121,7 +121,7 @@ Snmp::Pdu::clearVars()
     while (var != nullptr) {
         variable_list* tmp = var;
         var = var->next_variable;
-        snmp_var_free(tmp);
+        delete static_cast<Var*>(tmp);
     }
     variables = nullptr;
 }

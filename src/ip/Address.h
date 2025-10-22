@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -296,7 +296,7 @@ public:
     void getAddrInfo(struct addrinfo *&ai, int force = AF_UNSPEC) const;
 
     /**
-     *  Equivalent to the sysem call freeaddrinfo() but for Ip::Address allocated data
+     *  Equivalent to the system call freeaddrinfo() but for Ip::Address allocated data
      */
     static void FreeAddr(struct addrinfo *&ai);
 
@@ -327,7 +327,7 @@ public:
      * when moving from converted code to unconverted
      * these functions can be used to convert this object
      * and pull out the data needed by the unconverted code
-     * they are intentionaly hard to use, use getAddrInfo() instead.
+     * they are intentionally hard to use, use getAddrInfo() instead.
      * these functions WILL NOT be in the final public API after transition.
      */
 

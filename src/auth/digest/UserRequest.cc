@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -362,9 +362,8 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
         digest_request->user()->credentials(Auth::Failed);
         digest_request->flags.invalid_password = true;
 
-        SBuf msgNote;
-        if (reply.notes.find(msgNote, "message")) {
-            digest_request->setDenyMessage(msgNote.c_str());
+        if (auto msgNote = reply.notes.find("message")) {
+            digest_request->setDenyMessage(msgNote->c_str());
         } else if (reply.other().hasContent()) {
             // old helpers did send ERR result but a bare message string instead of message= key name.
             // TODO deprecate and remove old auth digest helper protocol

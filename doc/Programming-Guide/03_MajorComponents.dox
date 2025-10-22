@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -179,14 +179,6 @@ TODO: decide what to do for comm_poll() since its either obsolete or uses other 
 	customized, may return a new URL to replace the original request.
 	Common applications for this feature are extended access controls
 	and local mirroring.  File: redirect.c.
-
-\section ASN Autonomous System Numbers
-\par
-	Squid supports Autonomous System (AS) numbers as another
-	access control element.  The routines in asn.c
-	query databases which map AS numbers into lists of CIDR
-	prefixes.  These results are stored in a radix tree which
-	allows fast searching of the AS number for a given IP address.
 
 \section ConfigurationFileParsing Configuration File Parsing
 \par

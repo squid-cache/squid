@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,6 +17,7 @@
 #include "SquidString.h"
 
 #include <iosfwd>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -225,10 +226,9 @@ public:
     /// Entries which already exist in the destination set are ignored.
     void appendNewOnly(const NotePairs *src);
 
-    /// \param resultNote a comma separated list of notes with key 'noteKey'.
-    /// \returns true if there are entries with the given 'noteKey'.
+    /// \returns a comma separated list of notes with key 'noteKey', if any.
     /// Use findFirst() instead when a unique kv-pair is needed.
-    bool find(SBuf &resultNote, const char *noteKey, const char *sep = ",") const;
+    std::optional<SBuf> find(const char *noteKey, const char *sep = ",") const;
 
     /// \returns the first note value for this key or an empty string.
     const char *findFirst(const char *noteKey) const;

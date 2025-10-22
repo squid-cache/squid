@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -88,7 +88,7 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
 
     spec->length = size_diff(last_pos + 1, spec->offset);
 
-    /* we managed to parse, check if the result makes sence */
+    /* we managed to parse, check if the result makes sense */
     if (spec->length <= 0) {
         debugs(68, 2, "invalid range (" << spec->offset << " += " <<
                (long int) spec->length << ") in resp-range-spec near: '" << field << "'");

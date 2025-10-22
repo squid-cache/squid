@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -72,9 +72,6 @@
 
 #elif defined(__APPLE__)
 #define _SQUID_APPLE_ 1
-
-#elif defined(sony_news) && defined(__svr4)
-#define _SQUID_NEWSOS6_ 1
 
 #elif defined(__QNX__)
 #define _SQUID_QNX_ 1

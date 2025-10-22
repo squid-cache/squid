@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,8 +16,8 @@
 #include "ClientDelayConfig.h"
 #include "DelayConfig.h"
 #endif
+#include "HeaderMangling.h"
 #include "helper/ChildConfig.h"
-#include "HttpHeaderTools.h"
 #include "ip/Address.h"
 #if USE_DELAY_POOLS
 #include "MessageDelayPools.h"

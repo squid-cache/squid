@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,10 +27,7 @@ xRefFree(T &thing)
 
 ACLDomainData::~ACLDomainData()
 {
-    if (domains) {
-        domains->destroy(xRefFree);
-        delete domains;
-    }
+    domains.destroy(xRefFree);
 }
 
 template<class T>
@@ -63,13 +60,13 @@ aclHostDomainCompare( char *const &a, char * const &b)
 bool
 ACLDomainData::match(char const *host)
 {
-    if (host == nullptr)
-        return 0;
+    if (!host)
+        return false;
 
     debugs(28, 3, "aclMatchDomainList: checking '" << host << "'");
 
     char *h = const_cast<char *>(host);
-    char const * const * result = domains->find(h, aclHostDomainCompare);
+    const auto result = domains.find(h, aclHostDomainCompare);
 
     debugs(28, 3, "aclMatchDomainList: '" << host << "' " << (result ? "found" : "NOT found"));
 
@@ -87,7 +84,7 @@ SBufList
 ACLDomainData::dump() const
 {
     AclDomainDataDumpVisitor visitor;
-    domains->visit(visitor);
+    domains.visit(visitor);
     return visitor.contents;
 }
 
@@ -158,18 +155,15 @@ Acl::SplayInserter<char*>::DestroyValue(Value v)
 void
 ACLDomainData::parse()
 {
-    if (!domains)
-        domains = new Splay<char *>();
-
     while (char *t = ConfigParser::strtokFile()) {
         Tolower(t);
-        Acl::SplayInserter<char*>::Merge(*domains, xstrdup(t));
+        Acl::SplayInserter<char*>::Merge(domains, xstrdup(t));
     }
 }
 
 bool
 ACLDomainData::empty() const
 {
-    return domains->empty();
+    return domains.empty();
 }
 

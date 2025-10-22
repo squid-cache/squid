@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -148,7 +148,7 @@ manage_request()
     BOOL Done = FALSE;
 
     do {
-        if (fgets(buf, HELPER_INPUT_BUFFER, stdin))
+        if (!fgets(buf, HELPER_INPUT_BUFFER, stdin))
             return 0;
 
         c = static_cast<char*>(memchr(buf, '\n', HELPER_INPUT_BUFFER));
@@ -168,7 +168,7 @@ manage_request()
     if ((strlen(buf) > 3) && Negotiate_packet_debug_enabled) {
         if (!token_decode(&decodedLen, decoded, buf+3))
             return 1;
-        strncpy(helper_command, buf, 2);
+        xstrncpy(helper_command, buf, sizeof(helper_command));
         debug("Got '%s' from Squid with data:\n", helper_command);
         hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
     } else

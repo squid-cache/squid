@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -18,7 +18,6 @@ AS_IF([test "x$enable_auth" != "xno"],[
     SQUID_CHECK_HELPER([RADIUS],[auth/basic])
     SQUID_CHECK_HELPER([SASL],[auth/basic])
     SQUID_CHECK_HELPER([SMB],[auth/basic])
-    SQUID_CHECK_HELPER([SMB_LM],[auth/basic])
     SQUID_CHECK_HELPER([SSPI],[auth/basic])
     SQUID_CHECK_HELPER([fake],[auth/basic])
     SQUID_CHECK_HELPER([getpwnam],[auth/basic])

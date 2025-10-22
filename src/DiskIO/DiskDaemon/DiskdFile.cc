@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,6 +59,13 @@ DiskdFile::open(int flags, mode_t, RefCount<IORequestor> callback)
     mode = flags;
     ssize_t shm_offset;
     char *buf = (char *)IO->shm.get(&shm_offset);
+    if (!buf) {
+        errorOccured = true;
+        ioRequestor->ioCompletedNotification();
+        ioRequestor = nullptr;
+        return;
+    }
+
     xstrncpy(buf, path_, SHMBUF_BLKSZ);
     ioAway();
     int x = IO->send(_MQD_OPEN,
@@ -90,6 +97,13 @@ DiskdFile::create(int flags, mode_t, RefCount<IORequestor> callback)
     mode = flags;
     ssize_t shm_offset;
     char *buf = (char *)IO->shm.get(&shm_offset);
+    if (!buf) {
+        errorOccured = true;
+        notifyClient();
+        ioRequestor = nullptr;
+        return;
+    }
+
     xstrncpy(buf, path_, SHMBUF_BLKSZ);
     ioAway();
     int x = IO->send(_MQD_CREATE,
@@ -120,7 +134,12 @@ DiskdFile::read(ReadRequest *aRead)
     assert (ioRequestor.getRaw() != nullptr);
     ssize_t shm_offset;
     char *rbuf = (char *)IO->shm.get(&shm_offset);
-    assert(rbuf);
+    if (!rbuf) {
+        errorOccured = true;
+        notifyClient();
+        ioRequestor = nullptr;
+        return;
+    }
     ioAway();
     int x = IO->send(_MQD_READ,
                      id,
@@ -281,6 +300,15 @@ DiskdFile::write(WriteRequest *aRequest)
     debugs(79, 3, "DiskdFile::write: this " << (void *)this << ", buf " << (void *)aRequest->buf << ", off " << aRequest->offset << ", len " << aRequest->len);
     ssize_t shm_offset;
     char *sbuf = (char *)IO->shm.get(&shm_offset);
+    if (!sbuf) {
+        errorOccured = true;
+        if (aRequest->free_func)
+            aRequest->free_func(const_cast<char *>(aRequest->buf));
+        notifyClient();
+        ioRequestor = nullptr;
+        return;
+    }
+
     memcpy(sbuf, aRequest->buf, aRequest->len);
 
     if (aRequest->free_func)

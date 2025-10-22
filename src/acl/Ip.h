@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,6 +44,8 @@ public:
 private:
 
     static bool DecodeMask(const char *asc, Ip::Address &mask, int string_format_type);
+
+    bool containsVetted(const Ip::Address &needle) const;
 };
 
 class ACLIP : public Acl::Node

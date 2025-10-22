@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,8 +11,6 @@
 
 /* big mask for http headers */
 typedef char HttpHeaderMask[12];
-
-void httpHeaderMaskInit(HttpHeaderMask * mask, int value);
 
 #endif /* SQUID_SRC_HTTPHEADERMASK_H */
 

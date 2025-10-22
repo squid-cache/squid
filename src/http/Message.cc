@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,7 +41,7 @@ Http::Message::putCc(const HttpHdrCc &otherCc)
 static int
 httpMsgIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end)
 {
-    int slen = strcspn(*parse_start, "\r\n");
+    const auto slen = strcspn(*parse_start, "\r\n");
 
     if (!(*parse_start)[slen])  /* no CRLF found */
         return 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -74,7 +74,7 @@ Store::Controller::create()
 {
     disks->create();
 
-#if !_SQUID_WINDOWS_
+#if !(_SQUID_WINDOWS_ || _SQUID_MINGW_)
     pid_t pid;
     do {
         PidStatus status;

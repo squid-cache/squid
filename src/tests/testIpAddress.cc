@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "compat/cppunit.h"
+#include "compat/netdb.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "unitTestMain.h"
@@ -20,9 +21,6 @@
 #endif
 #if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
-#endif
-#if HAVE_NETDB_H
-#include <netdb.h>
 #endif
 
 /*
@@ -235,13 +233,12 @@ TestIpAddress::testCopyConstructor()
 void
 TestIpAddress::testHostentConstructor()
 {
-    struct hostent *hp = nullptr;
     struct in_addr outval;
     struct in_addr expectval;
 
     expectval.s_addr = htonl(0xC0A8640C);
 
-    hp = gethostbyname("192.168.100.12");
+    const auto hp = xgethostbyname("192.168.100.12");
     CPPUNIT_ASSERT( hp != nullptr /* gethostbyname failure.*/ );
 
     Ip::Address anIPA(*hp);
