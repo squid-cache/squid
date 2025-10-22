@@ -668,23 +668,24 @@ AnyP::Uri::parseHost(Parser::Tokenizer &tok) const
 
     // no brackets implies we are looking at IPv4address or reg-name
 
+    // RFC 3986 disambiguation algorithm: If host matches the rule for
+    // IPv4address, then it should be considered an IPv4 address literal.
+
+    const auto savedTok = tok;
     static const CharacterSet IPv4chars = CharacterSet("period", ".") + CharacterSet::DIGIT;
     SBuf ipv4ish; // IPv4address-ish
-    if (tok.prefix(ipv4ish, IPv4chars)) {
-        // This rejects non-IP addresses that our caller would have
-        // otherwise mistaken for a domain name (e.g., '127.0.0' or '1234.5').
-        Ip::Address ipCheck;
-        if (!ipCheck.fromHost(ipv4ish.c_str()))
-            throw TextException("malformed IP address in uri-host", Here());
-
+    // This fromHost() check results in input like `1234.5`, `127.0.0`, and
+    // `127.0.0.1.` classified as reg-name.
+    if (tok.prefix(ipv4ish, IPv4chars) && Ip::Address().fromHost(ipv4ish.c_str())) {
         return ipv4ish;
     }
+    tok = savedTok;
 
     // XXX: This code does not detect/reject some bad host values (e.g. "!#$%&").
     // TODO: Add more checks here, after migrating the
     // non-CONNECT uri-host parsing code to use us.
 
-    SBuf otherHost; // IPv4address-ish or reg-name-ish;
+    SBuf otherHost; // reg-name-ish
     // ":" is not in TCHAR so we will stop before any port specification
     if (tok.prefix(otherHost, CharacterSet::TCHAR))
         return otherHost;
