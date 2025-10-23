@@ -1268,6 +1268,13 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
             debugs(78, 3, "idnsGrokReply: Query result: NXDOMAIN - " << q->name );
 
             if (q->domain < npc) {
+                const auto need = strlen(q->name) + 1 + strlen(searchpath[q->domain].domain);
+                if (need > NS_MAXDNAME) {
+                    debugs(23, DBG_IMPORTANT, "SECURITY ALERT: searchpath name for '" << q->name << "' too long.");
+                    rfc1035MessageDestroy(&message);
+                    idnsCallback(q, "searchpath name too long");
+                    return;
+                }
                 strcat(q->name, ".");
                 strcat(q->name, searchpath[q->domain].domain);
                 debugs(78, 3, "idnsGrokReply: searchpath used for " << q->name);
@@ -1783,6 +1790,13 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 
     if (q->do_searchpath && nd < ndots) {
         q->domain = 0;
+        const auto need = strlen(q->name) + 1 + strlen(searchpath[q->domain].domain);
+        if (need > NS_MAXDNAME) {
+            debugs(23, DBG_IMPORTANT, "SECURITY ALERT: searchpath name for '" << q->name << "' too long.");
+            idnsCallbackOnEarlyError(callback, data, "searchpath name too long");
+            delete q;
+            return;
+        }
         strcat(q->name, ".");
         strcat(q->name, searchpath[q->domain].domain);
         debugs(78, 3, "idnsALookup: searchpath used for " << q->name);
