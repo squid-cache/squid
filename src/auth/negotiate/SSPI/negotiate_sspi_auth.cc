@@ -233,14 +233,18 @@ manage_request()
         c = (char *) SSP_ValidateNegotiateCredentials(decoded, decodedLen, &Done, &status, cred);
 
         if (status == SSP_ERROR) {
-            FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                          FORMAT_MESSAGE_IGNORE_INSERTS,
-                          nullptr,
-                          GetLastError(),
-                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),    /* Default language */
-                          (LPTSTR) & ErrorMessage,
-                          0,
-                          nullptr);
+            const auto n = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                                         FORMAT_MESSAGE_IGNORE_INSERTS,
+                                         nullptr,
+                                         GetLastError(),
+                                         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),    /* Default language */
+                                         (LPTSTR) & ErrorMessage,
+                                         0,
+                                         nullptr);
+            if (!n) {
+                SEND2("NA * Windows error: %s", GetLastError());
+                return 1;
+            }
             if (ErrorMessage[strlen(ErrorMessage) - 1] == '\n')
                 ErrorMessage[strlen(ErrorMessage) - 1] = '\0';
             if (ErrorMessage[strlen(ErrorMessage) - 1] == '\r')
