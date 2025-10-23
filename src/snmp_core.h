@@ -33,17 +33,18 @@ class mib_tree_entry
     MEMPROXY_CLASS(mib_tree_entry);
 public:
     mib_tree_entry(oid *aName, int aLen, AggrType type) : name(aName), len(aLen), aggrType(type) {}
+    ~mib_tree_entry() = delete;
 
 public:
-    oid *name = nullptr;
-    const int len = 0;
-    oid_ParseFn *parsefunction = {};
-    instance_Fn *instancefunction = {};
+    oid * const name;
+    const int len;
+    oid_ParseFn *parsefunction = nullptr;
+    instance_Fn *instancefunction = nullptr;
     int children = 0;
 
     mib_tree_entry **leaves = nullptr;
     mib_tree_entry *parent = nullptr;
-    AggrType aggrType = atNone;
+    const AggrType aggrType;
 };
 
 struct snmp_pdu* snmpAgentResponse(struct snmp_pdu* PDU);
