@@ -272,16 +272,22 @@ snmp_msg_Decode(u_char * Packet, int *PacketLenP,
         snmplib_debug(4, "snmp_msg_Decode:Error decoding SNMP Message Header (Version)!\n");
         ASN_PARSE_ERROR(NULL);
     }
-    int terminatorPos = *CommLenP - 1;
     bufp = asn_parse_string(bufp, PacketLenP, &type, Community, CommLenP);
     if (bufp == NULL) {
         snmplib_debug(4, "snmp_msg_Decode:Error decoding SNMP Message Header (Community)!\n");
         ASN_PARSE_ERROR(NULL);
     }
-    if (*CommLenP < terminatorPos) {
-        terminatorPos = *CommLenP;
-    }
-    Community[terminatorPos] = '\0';
+
+    if (*CommLenP < 0)
+        *CommLenP = 0;
+    if (*CommLenP >= (int)sizeof(Community))
+        *CommLenP = (int)sizeof(Community) - 1;
+
+    const void *nul = memchr(Community, '\0', (size_t)*CommLenP);
+    if (nul)
+        *CommLenP = (int)((const char *)nul - (const char *)Community);
+
+    Community[*CommLenP] = '\0';
 
     if ((*Version != SNMP_VERSION_1) &&
             (*Version != SNMP_VERSION_2)) {
