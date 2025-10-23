@@ -1468,10 +1468,20 @@ htcpRecv(int fd, void *)
 
     len = comm_udp_recvfrom(fd, buf, sizeof(buf) - 1, 0, from);
 
+    if (len < 0) {
+        int xerrno = errno;
+        debugs(31, DBG_IMPORTANT, "FD " << fd << " recvfrom: " << xstrerr(xerrno));
+        return;
+    }
+
+    if (len == 0) {
+        debugs(31, DBG_IMPORTANT, "empty UDP datagram from " << from << ", ignoring.");
+        return;
+    }
+
     debugs(31, 3, "htcpRecv: FD " << fd << ", " << len << " bytes from " << from );
 
-    if (len)
-        ++statCounter.htcp.pkts_recv;
+    ++statCounter.htcp.pkts_recv;
 
     htcpHandleMsg(buf, len, from);
 
