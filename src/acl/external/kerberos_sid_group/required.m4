@@ -14,7 +14,3 @@ fi
 if test "x$PERL" != "x"; then
   BUILD_HELPER="kerberos_sid_group"
 fi
-if test "x$POD2MAN" = "x"; then
-  AC_MSG_WARN([pod2man not found. ext_kerberos_sid_group_acl man(8) page will not be built])
-fi
-

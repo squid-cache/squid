@@ -16,12 +16,8 @@ EXTRA_DIST= \
 storeid_file_rewrite: storeid_file_rewrite.pl.in
 	$(subst_perlshell)
 
-if ENABLE_POD2MAN_DOC
+if ENABLE_DOCUMENTATION
 man_MANS = storeid_file_rewrite.8
 CLEANFILES += storeid_file_rewrite.8
 EXTRA_DIST += storeid_file_rewrite.8
-
-storeid_file_rewrite.8: storeid_file_rewrite
-	pod2man --section=8 storeid_file_rewrite storeid_file_rewrite.8
-
 endif

@@ -8,7 +8,3 @@
 if test "x$PERL" != "x"; then
   BUILD_HELPER="LFS"
 fi
-if test "x$POD2MAN" = "x"; then
-  AC_MSG_WARN([pod2man not found. url_lfs_rewrite man(8) page will not be built])
-fi
-

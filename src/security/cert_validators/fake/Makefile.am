@@ -16,12 +16,8 @@ EXTRA_DIST= \
 security_fake_certverify: security_fake_certverify.pl.in
 	$(subst_perlshell)
 
-if ENABLE_POD2MAN_DOC
+if ENABLE_DOCUMENTATION
 man_MANS = security_fake_certverify.8
 CLEANFILES += security_fake_certverify.8
 EXTRA_DIST += security_fake_certverify.8
-
-security_fake_certverify.8: security_fake_certverify
-	pod2man --section=8 security_fake_certverify security_fake_certverify.8
-
 endif
