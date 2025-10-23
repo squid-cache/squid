@@ -122,7 +122,7 @@ IcmpPinger::Open(void)
         return -1;
     }
 
-    x = xsend(icmp_sock, buf, strlen(buf), 0);
+    x = xsend(icmp_sock, buf, x, 0);
     xerrno = errno;
 
     if (x < 3 || strncmp("OK\n", buf, 3)) {
@@ -152,10 +152,11 @@ void
 IcmpPinger::Close(void)
 {
 #if _SQUID_WINDOWS_
-
-    shutdown(icmp_sock, SD_BOTH);
-    xclose(icmp_sock);
-    icmp_sock = -1;
+    if (icmp_sock >= 0) {
+        shutdown(icmp_sock, SD_BOTH);
+        xclose(icmp_sock);
+        icmp_sock = -1;
+    }
 #endif
 
     /* also shutdown the helper engines */
