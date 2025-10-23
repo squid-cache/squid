@@ -176,8 +176,7 @@ main(int argc, char *argv[])
         }
 
         if (buflen > 3 && NTLM_packet_debug_enabled) {
-            strncpy(helper_command, buf, 2);
-            helper_command[2] = '\0';
+            xstrncpy(helper_command, buf, sizeof(helper_command));
             debug("Got '%s' from Squid with data:\n", helper_command);
             hex_dump((unsigned char *)decodedBuf, decodedLen);
         } else
