@@ -178,8 +178,11 @@ static int readSecret(const char *filename);
 static int
 squid_ldap_errno(LDAP * ld)
 {
-    int err = 0;
-    ldap_get_option(ld, LDAP_OPT_ERROR_NUMBER, &err);
+    auto err = 0;
+    if (ld)
+        ldap_get_option(ld, LDAP_OPT_ERROR_NUMBER, &err);
+    else
+        err = LDAP_OTHER;
     return err;
 }
 static void
@@ -221,7 +224,12 @@ squid_ldap_memfree(char *p)
 static int
 squid_ldap_errno(LDAP * ld)
 {
-    return ld->ld_errno;
+    auto err = 0;
+    if (ld)
+        err = ld->ld_errno;
+    else
+        err = LDAP_OTHER;
+    return err;
 }
 static void
 squid_ldap_set_aliasderef(LDAP * ld, int deref)
@@ -782,12 +790,12 @@ readSecret(const char *filename)
 
     if (!(f = fopen(filename, "r"))) {
         fprintf(stderr, PROGRAM_NAME " ERROR: Can not read secret file %s\n", filename);
-        return 1;
+        exit(EXIT_FAILURE);
     }
     if (!fgets(buf, sizeof(buf) - 1, f)) {
         fprintf(stderr, PROGRAM_NAME " ERROR: Secret file %s is empty\n", filename);
         fclose(f);
-        return 1;
+        exit(EXIT_FAILURE);
     }
     /* strip whitespaces on end */
     if ((e = strrchr(buf, '\n')))
