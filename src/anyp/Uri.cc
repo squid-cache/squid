@@ -668,8 +668,7 @@ AnyP::Uri::parseHost(Parser::Tokenizer &tok) const
 
     // no brackets implies we are looking at IPv4address or reg-name
 
-    // XXX: This code does not detect/reject some bad host values (e.g. `!#$%&`,
-    // `1.2.3.4.5`, `1234.5`, `127.0.0`, and `127.0.0.1.`).
+    // XXX: This code does not detect/reject some bad host values (e.g. `!#$%&`).
     // TODO: Add more checks here, after migrating the
     // non-CONNECT uri-host parsing code to use us.
 
