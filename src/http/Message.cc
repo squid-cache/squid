@@ -21,7 +21,8 @@
 
 Http::Message::Message(http_hdr_owner_type owner):
     http_ver(Http::ProtocolVersion()),
-    header(owner)
+    header(owner),
+    trailer(owner)
 {}
 
 Http::Message::~Message()

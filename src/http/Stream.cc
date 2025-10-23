@@ -573,7 +573,7 @@ Http::Stream::prepareReply(HttpReply *rep)
 
 /**
  * Packs bodyData into mb using chunked encoding.
- * Packs the last-chunk if bodyData is empty.
+ * Packs the last-chunk and trailer-section if bodyData is empty.
  */
 void
 Http::Stream::packChunk(const StoreIOBuffer &bodyData, MemBuf &mb)
@@ -584,6 +584,8 @@ Http::Stream::packChunk(const StoreIOBuffer &bodyData, MemBuf &mb)
 
     mb.appendf("%" PRIX64 "\r\n", length);
     mb.append(bodyData.data, length);
+    if (length == 0 && reply && reply->trailer.len > 0)
+        reply->trailer.packInto(&mb);
     mb.append("\r\n", 2);
 }
 
