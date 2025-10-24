@@ -127,10 +127,6 @@ private:
 /// \returns std::nullopt on errors
 ReceivedFrom comm_udp_recvfrom(int fd, void *buf, size_t len, int flags);
 
-/// recv() convenience wrapper that logs errors using level-3+ debugs() messages
-/// \returns number of bytes written to the given buffer (on success) or nil (otherwise)
-std::optional<size_t> comm_udp_recv(int fd, void *buffer, size_t len, int flags);
-
 ssize_t comm_udp_send(int s, const void *buf, size_t len, int flags);
 bool comm_has_incomplete_write(int);
 
