@@ -130,6 +130,8 @@ IcmpSquid::Recv()
         if (xerrno == EAGAIN)
             return;
 
+        debugs(37, DBG_IMPORTANT, MYNAME << "recv: " << xstrerr(xerrno));
+
         if (xerrno == ECONNREFUSED)
             Close();
 
