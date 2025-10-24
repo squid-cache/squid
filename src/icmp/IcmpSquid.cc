@@ -117,20 +117,18 @@ icmpSquidRecv(int, void *)
 void
 IcmpSquid::Recv()
 {
-    int n;
     static int fail_count = 0;
     pingerReplyData preply;
     static Ip::Address F;
 
     Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, nullptr, 0);
-    n = comm_udp_recv(icmp_sock,
-                      (char *) &preply,
-                      sizeof(pingerReplyData),
-                      0);
+    const auto received = comm_udp_recvfrom(icmp_sock, &preply, sizeof(pingerReplyData), 0);
 
-    if (n < 0 && EAGAIN != errno) {
-        int xerrno = errno;
-        debugs(37, DBG_IMPORTANT, MYNAME << "recv: " << xstrerr(xerrno));
+    if (!received) {
+        const auto xerrno = received.error();
+
+        if (xerrno == EAGAIN)
+            return;
 
         if (xerrno == ECONNREFUSED)
             Close();
@@ -147,9 +145,11 @@ IcmpSquid::Recv()
     fail_count = 0;
 
     /** If its a test probe from the pinger. Do nothing. */
-    if (n == 0) {
+    if (!received->length) {
         return;
     }
+
+    // XXX: Do not use truncated `preply` metadata/header data members.
 
     F = preply.from;
 

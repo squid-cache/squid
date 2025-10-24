@@ -1415,29 +1415,18 @@ static void
 htcpRecv(int fd, void *)
 {
     static char buf[8192];
-    int len;
-    static Ip::Address from;
 
     /* Receive up to 8191 bytes, leaving room for a null */
 
-    len = comm_udp_recvfrom(fd, buf, sizeof(buf) - 1, 0, from);
+    const auto received = comm_udp_recvfrom(fd, buf, sizeof(buf) - 1, 0);
 
-    if (len < 0) {
-        int xerrno = errno;
-        debugs(31, DBG_IMPORTANT, "FD " << fd << " recvfrom: " << xstrerr(xerrno));
-        return;
-    }
-
-    if (len == 0) {
-        debugs(31, DBG_IMPORTANT, "empty UDP datagram from " << from << ", ignoring.");
-        return;
-    }
-
-    debugs(31, 3, "htcpRecv: FD " << fd << ", " << len << " bytes from " << from );
+    if (!received || !received->length)
+        return; // XXX: Keep reading (or stop listening).
 
     ++statCounter.htcp.pkts_recv;
 
-    htcpHandleMsg(buf, len, from);
+    // TODO: Remove cast after fixing htcpHandleMsg() and related APIs.
+    htcpHandleMsg(buf, received->length, const_cast<Ip::Address&>(received->from));
 
     Comm::SetSelect(fd, COMM_SELECT_READ, htcpRecv, nullptr, 0);
 }

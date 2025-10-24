@@ -1320,10 +1320,8 @@ static void
 idnsRead(int fd, void *)
 {
     int *N = &incoming_sockets_accepted;
-    int len;
     int max = INCOMING_DNS_MAX;
     static char rbuf[SQUID_UDP_SO_RCVBUF];
-    Ip::Address from;
 
     debugs(78, 3, "idnsRead: starting with FD " << fd);
 
@@ -1331,26 +1329,12 @@ idnsRead(int fd, void *)
     // attacks on the DNS client.
     Comm::SetSelect(fd, COMM_SELECT_READ, idnsRead, nullptr, 0);
 
-    /* BUG (UNRESOLVED)
-     *  two code lines after returning from comm_udprecvfrom()
-     *  something overwrites the memory behind the from parameter.
-     *  NO matter where in the stack declaration list above it is placed
-     *  The cause of this is still unknown, however copying the data appears
-     *  to allow it to be passed further without this erasure.
-     */
-    Ip::Address bugbypass;
-
     while (max) {
         --max;
-        len = comm_udp_recvfrom(fd, rbuf, SQUID_UDP_SO_RCVBUF, 0, bugbypass);
+        const auto received = comm_udp_recvfrom(fd, rbuf, SQUID_UDP_SO_RCVBUF, 0);
 
-        from = bugbypass; // BUG BYPASS. see notes above.
-
-        if (len == 0)
-            break;
-
-        if (len < 0) {
-            int xerrno = errno;
+        if (!received) {
+            const auto xerrno = received.error();
             if (ignoreErrno(xerrno))
                 break;
 
@@ -1365,6 +1349,13 @@ idnsRead(int fd, void *)
 
             break;
         }
+
+        const auto len = received->length;
+
+        if (!len)
+            break;
+
+        const auto &from = received->from;
 
         fd_bytes(fd, len, IoDirection::Read);
 

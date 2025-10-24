@@ -57,8 +57,7 @@ AsyncCall::Pointer comm_add_close_handler(int, CLCB *, void *) STUB
 void comm_add_close_handler(int, AsyncCall::Pointer &) STUB
 void comm_remove_close_handler(int, CLCB *, void *) STUB
 void comm_remove_close_handler(int, AsyncCall::Pointer &)STUB
-int comm_udp_recvfrom(int, void *, size_t, int, Ip::Address &) STUB_RETVAL(-1)
-int comm_udp_recv(int, void *, size_t, int) STUB_RETVAL(-1)
+ReceivedFrom comm_udp_recvfrom(int, void *, size_t, int) STUB_RETVAL(ReceivedFrom(-1))
 ssize_t comm_udp_send(int, const void *, size_t, int) STUB_RETVAL(-1)
 bool comm_has_incomplete_write(int) STUB_RETVAL(false)
 void commStartHalfClosedMonitor(int) STUB

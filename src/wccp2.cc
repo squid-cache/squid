@@ -1224,26 +1224,13 @@ wccp2HandleUdp(int sock, void *)
 
     Comm::SetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, nullptr, 0);
 
-    // TODO: drop conversion boundary
-    Ip::Address from_tmp;
-    from_tmp.setIPv4();
-
-    const auto lenOrError = comm_udp_recvfrom(sock, &wccp2_i_see_you, WCCP_RESPONSE_SIZE, 0, from_tmp);
-
-    if (lenOrError < 0) {
-        int xerrno = errno;
-        debugs(80, DBG_IMPORTANT, "FD " << sock << " recvfrom: " << xstrerr(xerrno));
+    const auto received = comm_udp_recvfrom(sock, &wccp2_i_see_you, WCCP_RESPONSE_SIZE, 0);
+    if (!received)
         return;
-    }
-
-    if (lenOrError == 0) {
-        debugs(80, DBG_IMPORTANT, "empty UDP datagram from " << from_tmp << ", ignoring.");
-        return;
-    }
-
-    const auto len = static_cast<size_t>(lenOrError);
 
     try {
+        const auto len = received->length;
+
         // TODO: Remove wccp2_i_see_you.data and use a buffer to read messages.
         const auto message_header_size = sizeof(wccp2_i_see_you) - sizeof(wccp2_i_see_you.data);
         Must3(len >= message_header_size, "incomplete WCCP message header", Here());
@@ -1251,7 +1238,7 @@ wccp2HandleUdp(int sock, void *)
         Must3(ntohl(wccp2_i_see_you.type) == WCCP2_I_SEE_YOU, "WCCP packet type unsupported", Here());
 
         // XXX: drop conversion boundary
-        from_tmp.getSockAddr(from);
+        received->from.getSockAddr(from);
 
         debugs(80, 3, "Incoming WCCPv2 I_SEE_YOU length " << ntohs(wccp2_i_see_you.length) << ".");
 

@@ -613,26 +613,17 @@ icpHandleUdp(int sock, void *)
 {
     int *N = &incoming_sockets_accepted;
 
-    Ip::Address from;
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
-    int len;
     int icp_version;
     int max = INCOMING_UDP_MAX;
     Comm::SetSelect(sock, COMM_SELECT_READ, icpHandleUdp, nullptr, 0);
 
     while (max) {
         --max;
-        len = comm_udp_recvfrom(sock,
-                                buf,
-                                SQUID_UDP_SO_RCVBUF - 1,
-                                0,
-                                from);
+        const auto received = comm_udp_recvfrom(sock, buf, SQUID_UDP_SO_RCVBUF - 1, 0);
 
-        if (len == 0)
-            break;
-
-        if (len < 0) {
-            int xerrno = errno;
+        if (!received) {
+            const auto xerrno = received.error();
             if (ignoreErrno(xerrno))
                 break;
 
@@ -648,13 +639,21 @@ icpHandleUdp(int sock, void *)
             break;
         }
 
+        const auto len = received->length;
+
+        if (!len)
+            break;
+
+        // TODO: Make constant after fixing icpHandleIcpV2() and many related APIs.
+        auto &from = const_cast<Ip::Address&>(received->from);
+
         ++(*N);
-        icpCount(buf, RECV, (size_t) len, 0);
+        icpCount(buf, RECV, len, 0);
         buf[len] = '\0';
         debugs(12, 4, "icpHandleUdp: FD " << sock << ": received " <<
-               (unsigned long int)len << " bytes from " << from);
+               len << " bytes from " << from);
 
-        if ((size_t) len < sizeof(icp_common_t)) {
+        if (len < sizeof(icp_common_t)) {
             debugs(12, 4, "icpHandleUdp: Ignoring too-small UDP packet");
             break;
         }

@@ -121,27 +121,25 @@ comm_empty_os_read_buffers(int fd)
 #endif
 }
 
-/**
- * synchronous wrapper around udp socket functions
- */
-int
-comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from)
+ReceivedFrom
+comm_udp_recvfrom(const int fd, void * const buf, const size_t len, const int flags)
 {
     ++ statCounter.syscalls.sock.recvfroms;
-    debugs(5,8, "comm_udp_recvfrom: FD " << fd << " from " << from);
     struct addrinfo *AI = nullptr;
     Ip::Address::InitAddr(AI);
-    int x = xrecvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
-    from = *AI;
-    Ip::Address::FreeAddr(AI);
-    return x;
-}
+    const auto lengthOrError = xrecvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
+    const auto savedErrno = errno;
+    if (lengthOrError < 0) {
+        debugs(5, 3, "xrecvfrom(FD " << fd << ") failure: " << xstrerr(savedErrno));
+        Ip::Address::FreeAddr(AI);
+        return ReceivedFrom(int(savedErrno));
+    }
 
-int
-comm_udp_recv(int fd, void *buf, size_t len, int flags)
-{
-    Ip::Address nul;
-    return comm_udp_recvfrom(fd, buf, len, flags, nul);
+    const auto receivedLength = size_t(lengthOrError); // may be zero
+    const Ip::Address from = *AI;
+    debugs(5, 5, "xrecvfrom(FD " << fd << ") got " << receivedLength << " bytes from " << from);
+    Ip::Address::FreeAddr(AI);
+    return ReceivedFrom(FromAndLength(from, receivedLength));
 }
 
 ssize_t

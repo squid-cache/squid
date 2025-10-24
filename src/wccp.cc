@@ -190,30 +190,18 @@ DefineRunnerRegistrator(WccpRr);
 static void
 wccpHandleUdp(int sock, void *)
 {
-    Ip::Address from;
-    int len;
-
     debugs(80, 6, "wccpHandleUdp: Called.");
 
     Comm::SetSelect(sock, COMM_SELECT_READ, wccpHandleUdp, nullptr, 0);
 
     memset(&wccp_i_see_you, '\0', sizeof(wccp_i_see_you));
 
-    len = comm_udp_recvfrom(sock,
-                            (void *) &wccp_i_see_you,
-                            sizeof(wccp_i_see_you),
-                            0,
-                            from);
-    if (len < 0) {
-        int xerrno = errno;
-        debugs(80, DBG_IMPORTANT, "FD " << sock << " recvfrom: " << xstrerr(xerrno));
+    const auto received = comm_udp_recvfrom(sock, &wccp_i_see_you, sizeof(wccp_i_see_you), 0);
+    if (!received || received->length < sizeof(wccp_i_see_you))
         return;
-    }
 
-    if (len == 0) {
-        debugs(80, DBG_IMPORTANT, "empty UDP datagram from " << from << ", ignoring.");
-        return;
-    }
+    const auto len = received->length;
+    const auto &from = received->from;
 
     debugs(80, 3, "wccpHandleUdp: " << len << " bytes WCCP pkt from " << from <<
            ": type=" <<

@@ -13,6 +13,8 @@
 #include "CommCalls.h"
 #include "StoreIOBuffer.h"
 
+#include <variant>
+
 namespace Ip
 {
 class Address;
@@ -87,8 +89,48 @@ void comm_add_close_handler(int fd, AsyncCall::Pointer &);
 void comm_remove_close_handler(int fd, CLCB *, void *);
 void comm_remove_close_handler(int fd, AsyncCall::Pointer &);
 
-int comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from);
-int comm_udp_recv(int fd, void *buf, size_t len, int flags);
+/// metadata associated with a successful comm_udp_recvfrom() call outcome
+class FromAndLength
+{
+public:
+    FromAndLength(const Ip::Address &aFrom, const size_t aLength): from(aFrom), length(aLength) {}
+
+    /// The source address of the received message.
+    Ip::Address from;
+
+    /// The number of bytes written to the buffer given to comm_udp_recvfrom().
+    /// May be zero.
+    size_t length = 0;
+};
+
+/// Either a successful comm_udp_recvfrom() call outcome or an associated errno
+/// value. Mimics portions of std::expected<FromAndLength, int> API to
+/// facilitate migration to that C++23 API without caller changes (TODO).
+class ReceivedFrom
+{
+public:
+    /* std::expected<FromAndLength, int> API */
+    using value_type = FromAndLength;
+    using error_type = int;
+    template <typename ValueOrError = value_type>
+    explicit ReceivedFrom(ValueOrError &&ve) noexcept: storage_(std::forward<ValueOrError>(ve)) {}
+    explicit operator bool() const noexcept { return std::holds_alternative<value_type>(storage_); }
+    const value_type * operator->() const noexcept { return std::get_if<value_type>(&storage_); }
+    const value_type &value() const { return std::get<value_type>(storage_); }
+    const int &error() const { return std::get<error_type>(storage_); }
+
+private:
+    std::variant<value_type, int> storage_;
+};
+
+/// recvfrom(2) convenience wrapper that logs errors using level-3+ debugs() messages
+/// \returns std::nullopt on errors
+ReceivedFrom comm_udp_recvfrom(int fd, void *buf, size_t len, int flags);
+
+/// recv() convenience wrapper that logs errors using level-3+ debugs() messages
+/// \returns number of bytes written to the given buffer (on success) or nil (otherwise)
+std::optional<size_t> comm_udp_recv(int fd, void *buffer, size_t len, int flags);
+
 ssize_t comm_udp_send(int s, const void *buf, size_t len, int flags);
 bool comm_has_incomplete_write(int);
 

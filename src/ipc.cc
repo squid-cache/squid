@@ -279,11 +279,20 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
                 return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
-        if (type == IPC_UDP_SOCKET)
-            x = comm_udp_recv(prfd, hello_buf, sizeof(hello_buf)-1, 0);
-        else
+        if (type == IPC_UDP_SOCKET) {
+            if (const auto received = comm_udp_recvfrom(prfd, hello_buf, sizeof(hello_buf)-1, 0)) {
+                x = received->length;
+                xerrno = 0;
+            } else {
+                x = -1;
+                xerrno = received.error();
+            }
+        } else {
+            // TODO: Convert xread() to a Comm function returning length or errno
             x = xread(prfd, hello_buf, sizeof(hello_buf)-1);
-        xerrno = errno;
+            xerrno = errno;
+        }
+
         if (x >= 0)
             hello_buf[x] = '\0';
 
