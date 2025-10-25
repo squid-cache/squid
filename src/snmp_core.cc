@@ -993,17 +993,12 @@ snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * inst
     MemBuf tmp;
     debugs(49, 6, "snmpAddNode: Children : " << children << ", Oid : " << snmpDebugOid(name, len, tmp));
 
-    const auto entry = static_cast<mib_tree_entry *>(xmalloc(sizeof(mib_tree_entry)));
-    entry->name = name;
-    entry->len = len;
+    const auto entry = new mib_tree_entry(name, len, aggrType);
     entry->parsefunction = parsefunction;
     entry->instancefunction = instancefunction;
-    entry->children = children;
-    entry->leaves = nullptr;
-    entry->parent = nullptr;
-    entry->aggrType = aggrType;
 
     if (children > 0) {
+        entry->children = children;
         entry->leaves = static_cast<mib_tree_entry **>(xmalloc(sizeof(mib_tree_entry *) * children));
 
         va_list args;
