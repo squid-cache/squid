@@ -16,18 +16,17 @@ This new release is available for download from <url url="http://www.squid-cache
 
 <sect1>Known issues
 <p>Although this release is deemed good enough for use in many setups, please note the existence of
-<url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=@SQUID_RELEASE@" name="open bugs against Squid-@SQUID_RELEASE@">.
+ <url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=@SQUID_RELEASE@" name="open bugs against Squid-@SQUID_RELEASE@">.
 
 <p>Support for compiling on HPUX with the native HP <em>xcc</em> compiler has been removed.
-  To build on that OS/compiler combination, it is possible to pass these environment variables
-  to ./configure: <em>CC="cxx -Ae" RANLIB=":"</em>
+   To build on that OS/compiler combination, it is possible to pass these environment variables
+   to ./configure: <em>CC="cxx -Ae" RANLIB=":"</em>
 
 <p>This release adds a dependency on C++17 support in any compiler used to build Squid.
-  GCC 8+ and Clang 8+ support C++17.
+   GCC 8+ and Clang 8+ support C++17.
 
 <sect1>Changes since earlier releases of Squid-@SQUID_RELEASE@
-<p>
-The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squid-cache/squid/commits/v@SQUID_RELEASE@" name="viewed here">.
+<p>The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squid-cache/squid/commits/v@SQUID_RELEASE@" name="viewed here">.
 
 
 <sect>Major new features since Squid-@SQUID_RELEASE_OLD@
