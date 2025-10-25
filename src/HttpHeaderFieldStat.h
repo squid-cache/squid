@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPHEADERFIELDSTAT_H_
-#define SQUID_HTTPHEADERFIELDSTAT_H_
+#ifndef SQUID_SRC_HTTPHEADERFIELDSTAT_H
+#define SQUID_SRC_HTTPHEADERFIELDSTAT_H
 
 /// per field statistics. Currently a POD.
 class HttpHeaderFieldStat
@@ -18,9 +18,9 @@ public:
     int aliveCount;     /* created but not destroyed (count) */
     int seenCount;      /* number of fields we've seen */
     int parsCount;      /* number of parsing attempts */
-    int errCount;       /* number of pasring errors */
-    int repCount;       /* number of repetitons */
+    int errCount;       /* number of parsing errors */
+    int repCount;       /* number of repetitions */
 };
 
-#endif /* SQUID_HTTPHEADERFIELDSTAT_H_ */
+#endif /* SQUID_SRC_HTTPHEADERFIELDSTAT_H */
 

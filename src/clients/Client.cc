@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
@@ -59,9 +58,9 @@ Client::~Client()
     HTTPMSGUNLOCK(theVirginReply);
     HTTPMSGUNLOCK(theFinalReply);
 
-    if (responseBodyBuffer != NULL) {
+    if (responseBodyBuffer != nullptr) {
         delete responseBodyBuffer;
-        responseBodyBuffer = NULL;
+        responseBodyBuffer = nullptr;
     }
 }
 
@@ -69,7 +68,7 @@ void
 Client::swanSong()
 {
     // get rid of our piping obligations
-    if (requestBodySource != NULL)
+    if (requestBodySource != nullptr)
         stopConsumingFrom(requestBodySource);
 
 #if USE_ADAPTATION
@@ -116,7 +115,7 @@ Client::virginReply() const
 HttpReply *
 Client::setVirginReply(HttpReply *rep)
 {
-    debugs(11,5, HERE << this << " setting virgin reply to " << rep);
+    debugs(11,5, this << " setting virgin reply to " << rep);
     assert(!theVirginReply);
     assert(rep);
     theVirginReply = rep;
@@ -136,7 +135,7 @@ Client::finalReply()
 HttpReply *
 Client::setFinalReply(HttpReply *rep)
 {
-    debugs(11,5, HERE << this << " setting final reply to " << rep);
+    debugs(11,5, this << " setting final reply to " << rep);
 
     assert(!theFinalReply);
     assert(rep);
@@ -155,11 +154,19 @@ Client::setFinalReply(HttpReply *rep)
     return theFinalReply;
 }
 
+void
+Client::markParsedVirginReplyAsWhole(const char *reasonWeAreSure)
+{
+    assert(reasonWeAreSure);
+    debugs(11, 3, reasonWeAreSure);
+    markedParsedVirginReplyAsWhole = reasonWeAreSure;
+}
+
 // called when no more server communication is expected; may quit
 void
 Client::serverComplete()
 {
-    debugs(11,5,HERE << "serverComplete " << this);
+    debugs(11,5, "serverComplete " << this);
 
     if (!doneWithServer()) {
         closeServer();
@@ -167,12 +174,11 @@ Client::serverComplete()
     }
 
     completed = true;
-    originalRequest()->hier.stopPeerClock(true);
 
-    if (requestBodySource != NULL)
+    if (requestBodySource != nullptr)
         stopConsumingFrom(requestBodySource);
 
-    if (responseBodyBuffer != NULL)
+    if (responseBodyBuffer != nullptr)
         return;
 
     serverComplete2();
@@ -181,10 +187,10 @@ Client::serverComplete()
 void
 Client::serverComplete2()
 {
-    debugs(11,5,HERE << "serverComplete2 " << this);
+    debugs(11,5, "serverComplete2 " << this);
 
 #if USE_ADAPTATION
-    if (virginBodyDestination != NULL)
+    if (virginBodyDestination != nullptr)
         stopProducingFor(virginBodyDestination, true);
 
     if (!doneWithAdaptation())
@@ -209,8 +215,26 @@ bool Client::doneAll() const
 void
 Client::completeForwarding()
 {
-    debugs(11,5, HERE << "completing forwarding for "  << fwd);
-    assert(fwd != NULL);
+    debugs(11,5, "completing forwarding for "  << fwd);
+    assert(fwd != nullptr);
+
+    auto storedWholeReply = markedParsedVirginReplyAsWhole;
+#if USE_ADAPTATION
+    // This precondition is necessary for its two implications:
+    // * We cannot be waiting to decide whether to adapt this response. Thus,
+    //   the startedAdaptation check below correctly detects all adaptation
+    //   cases (i.e. it does not miss adaptationAccessCheckPending ones).
+    // * We cannot be waiting to consume/store received adapted response bytes.
+    //   Thus, receivedWholeAdaptedReply implies that we stored everything.
+    Assure(doneWithAdaptation());
+
+    if (startedAdaptation)
+        storedWholeReply = receivedWholeAdaptedReply ? "receivedWholeAdaptedReply" : nullptr;
+#endif
+
+    if (storedWholeReply)
+        fwd->markStoredReplyAsWhole(storedWholeReply);
+
     doneWithFwd = "completeForwarding()";
     fwd->complete();
 }
@@ -219,17 +243,17 @@ Client::completeForwarding()
 bool Client::startRequestBodyFlow()
 {
     HttpRequestPointer r(originalRequest());
-    assert(r->body_pipe != NULL);
+    assert(r->body_pipe != nullptr);
     requestBodySource = r->body_pipe;
     if (requestBodySource->setConsumerIfNotLate(this)) {
-        debugs(11,3, HERE << "expecting request body from " <<
+        debugs(11,3, "expecting request body from " <<
                requestBodySource->status());
         return true;
     }
 
-    debugs(11,3, HERE << "aborting on partially consumed request body: " <<
+    debugs(11,3, "aborting on partially consumed request body: " <<
            requestBodySource->status());
-    requestBodySource = NULL;
+    requestBodySource = nullptr;
     return false;
 }
 
@@ -240,7 +264,7 @@ Client::abortOnBadEntry(const char *abortReason)
     if (entry->isAccepting())
         return false;
 
-    debugs(11,5, HERE << "entry is not Accepting!");
+    debugs(11,5, "entry is not Accepting!");
     abortOnData(abortReason);
     return true;
 }
@@ -301,7 +325,7 @@ Client::handleMoreRequestBodyAvailable()
     if (!requestSender)
         sendMoreRequestBody();
     else
-        debugs(9,3, HERE << "waiting for request body write to complete");
+        debugs(9,3, "waiting for request body write to complete");
 }
 
 // there will be no more handleMoreRequestBodyAvailable calls
@@ -312,15 +336,15 @@ Client::handleRequestBodyProductionEnded()
     if (!requestSender)
         doneSendingRequestBody();
     else
-        debugs(9,3, HERE << "waiting for request body write to complete");
+        debugs(9,3, "waiting for request body write to complete");
 }
 
 // called when we are done sending request body; kids extend this
 void
 Client::doneSendingRequestBody()
 {
-    debugs(9,3, HERE << "done sending request body");
-    assert(requestBodySource != NULL);
+    debugs(9,3, "done sending request body");
+    assert(requestBodySource != nullptr);
     stopConsumingFrom(requestBodySource);
 
     // kids extend this
@@ -330,8 +354,8 @@ Client::doneSendingRequestBody()
 void
 Client::handleRequestBodyProducerAborted()
 {
-    if (requestSender != NULL)
-        debugs(9,3, HERE << "fyi: request body aborted while we were sending");
+    if (requestSender != nullptr)
+        debugs(9,3, "fyi: request body aborted while we were sending");
 
     fwd->dontRetry(true); // the problem is not with the server
     stopConsumingFrom(requestBodySource); // requestSender, if any, will notice
@@ -344,12 +368,12 @@ void
 Client::sentRequestBody(const CommIoCbParams &io)
 {
     debugs(11, 5, "sentRequestBody: FD " << io.fd << ": size " << io.size << ": errflag " << io.flag << ".");
-    debugs(32,3,HERE << "sentRequestBody called");
+    debugs(32,3, "sentRequestBody called");
 
-    requestSender = NULL;
+    requestSender = nullptr;
 
     if (io.size > 0) {
-        fd_bytes(io.fd, io.size, FD_WRITE);
+        fd_bytes(io.fd, io.size, IoDirection::Write);
         statCounter.server.all.kbytes_out += io.size;
         // kids should increment their counters
     }
@@ -358,7 +382,7 @@ Client::sentRequestBody(const CommIoCbParams &io)
         return;
 
     if (!requestBodySource) {
-        debugs(9,3, HERE << "detected while-we-were-sending abort");
+        debugs(9,3, "detected while-we-were-sending abort");
         return; // do nothing;
     }
 
@@ -366,7 +390,7 @@ Client::sentRequestBody(const CommIoCbParams &io)
     request->hier.notePeerWrite();
 
     if (io.flag) {
-        debugs(11, DBG_IMPORTANT, "sentRequestBody error: FD " << io.fd << ": " << xstrerr(io.xerrno));
+        debugs(11, DBG_IMPORTANT, "ERROR: sentRequestBody failure: FD " << io.fd << ": " << xstrerr(io.xerrno));
         ErrorState *err;
         err = new ErrorState(ERR_WRITE_ERROR, Http::scBadGateway, fwd->request, fwd->al);
         err->xerrno = io.xerrno;
@@ -385,31 +409,31 @@ Client::sentRequestBody(const CommIoCbParams &io)
     else if (receivedWholeRequestBody)
         doneSendingRequestBody();
     else
-        debugs(9,3, HERE << "waiting for body production end or abort");
+        debugs(9,3, "waiting for body production end or abort");
 }
 
 void
 Client::sendMoreRequestBody()
 {
-    assert(requestBodySource != NULL);
+    assert(requestBodySource != nullptr);
     assert(!requestSender);
 
     const Comm::ConnectionPointer conn = dataConnection();
 
     if (!Comm::IsConnOpen(conn)) {
-        debugs(9,3, HERE << "cannot send request body to closing " << conn);
+        debugs(9,3, "cannot send request body to closing " << conn);
         return; // wait for the kid's close handler; TODO: assert(closer);
     }
 
     MemBuf buf;
     if (getMoreRequestBody(buf) && buf.contentSize() > 0) {
-        debugs(9,3, HERE << "will write " << buf.contentSize() << " request body bytes");
+        debugs(9,3, "will write " << buf.contentSize() << " request body bytes");
         typedef CommCbMemFunT<Client, CommIoCbParams> Dialer;
         requestSender = JobCallback(93,3, Dialer, this, Client::sentRequestBody);
         Comm::Write(conn, &buf, requestSender);
     } else {
-        debugs(9,3, HERE << "will wait for more request body bytes or eof");
-        requestSender = NULL;
+        debugs(9,3, "will wait for more request body bytes or eof");
+        requestSender = nullptr;
     }
 }
 
@@ -418,11 +442,11 @@ bool
 Client::getMoreRequestBody(MemBuf &buf)
 {
     // default implementation does not encode request body content
-    Must(requestBodySource != NULL);
+    Must(requestBodySource != nullptr);
     return requestBodySource->getMoreData(buf);
 }
 
-// Compares hosts in urls, returns false if different, no sheme, or no host.
+// Compares hosts in urls, returns false if different, no scheme, or no host.
 static bool
 sameUrlHosts(const char *url1, const char *url2)
 {
@@ -478,7 +502,7 @@ purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, Http::Message *rep, H
                 // for this logic replace the entire request-target URI path
                 tmpUrl.path(hdrUrl);
             } else {
-                tmpUrl.addRelativePath(reqUrl);
+                tmpUrl.addRelativePath(hdrUrl);
             }
             absUrlMaker = tmpUrl.absolute();
             absUrl = absUrlMaker.c_str();
@@ -531,13 +555,12 @@ Client::haveParsedReplyHeaders()
 bool
 Client::blockCaching()
 {
-    if (const Acl::Tree *acl = Config.accessList.storeMiss) {
+    if (const auto acl = Config.accessList.storeMiss) {
         // This relatively expensive check is not in StoreEntry::checkCachable:
         // That method lacks HttpRequest and may be called too many times.
         ACLFilledChecklist ch(acl, originalRequest().getRaw());
-        ch.reply = const_cast<HttpReply*>(&entry->mem().freshestReply()); // ACLFilledChecklist API bug
-        HTTPMSGLOCK(ch.reply);
-        ch.al = fwd->al;
+        ch.updateAle(fwd->al);
+        ch.updateReply(&entry->mem().freshestReply());
         if (!ch.fastCheck().allowed()) { // when in doubt, block
             debugs(20, 3, "store_miss prohibits caching");
             return true;
@@ -567,7 +590,7 @@ Client::startAdaptation(const Adaptation::ServiceGroupPointer &group, HttpReques
     if (vrep->expectingBody(cause->method, size) && size) {
         virginBodyDestination = new BodyPipe(this);
         vrep->body_pipe = virginBodyDestination;
-        debugs(93, 6, HERE << "will send virgin reply body to " <<
+        debugs(93, 6, "will send virgin reply body to " <<
                virginBodyDestination << "; size: " << size);
         if (size > 0)
             virginBodyDestination->setBodySize(size);
@@ -583,14 +606,14 @@ Client::startAdaptation(const Adaptation::ServiceGroupPointer &group, HttpReques
 // may be called multiple times
 void Client::cleanAdaptation()
 {
-    debugs(11,5, HERE << "cleaning ICAP; ACL: " << adaptationAccessCheckPending);
+    debugs(11,5, "cleaning ICAP; ACL: " << adaptationAccessCheckPending);
 
-    if (virginBodyDestination != NULL)
+    if (virginBodyDestination != nullptr)
         stopProducingFor(virginBodyDestination, false);
 
     announceInitiatorAbort(adaptedHeadSource);
 
-    if (adaptedBodySource != NULL)
+    if (adaptedBodySource != nullptr)
         stopConsumingFrom(adaptedBodySource);
 
     if (!adaptationAccessCheckPending) // we cannot cancel a pending callback
@@ -611,7 +634,7 @@ Client::adaptVirginReplyBody(const char *data, ssize_t len)
     assert(startedAdaptation);
 
     if (!virginBodyDestination) {
-        debugs(11,3, HERE << "ICAP does not want more virgin body");
+        debugs(11,3, "ICAP does not want more virgin body");
         return;
     }
 
@@ -630,7 +653,7 @@ Client::adaptVirginReplyBody(const char *data, ssize_t len)
     if (responseBodyBuffer) {
         if (putSize == responseBodyBuffer->contentSize()) {
             delete responseBodyBuffer;
-            responseBodyBuffer = NULL;
+            responseBodyBuffer = nullptr;
         } else {
             responseBodyBuffer->consume(putSize);
         }
@@ -651,7 +674,7 @@ void
 Client::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 {
     if (responseBodyBuffer) {
-        addVirginReplyBody(NULL, 0); // kick the buffered fragment alive again
+        addVirginReplyBody(nullptr, 0); // kick the buffered fragment alive again
         if (completed && !responseBodyBuffer) {
             serverComplete2();
             return;
@@ -702,7 +725,7 @@ Client::handleAdaptedHeader(Http::Message *msg)
         // return. Tell the ICAP side that it is on its own.
         HttpReply *rep = dynamic_cast<HttpReply*>(msg);
         assert(rep);
-        if (rep->body_pipe != NULL)
+        if (rep->body_pipe != nullptr)
             rep->body_pipe->expectNoConsumption();
 
         return;
@@ -710,18 +733,21 @@ Client::handleAdaptedHeader(Http::Message *msg)
 
     HttpReply *rep = dynamic_cast<HttpReply*>(msg);
     assert(rep);
-    debugs(11,5, HERE << this << " setting adapted reply to " << rep);
+    debugs(11,5, this << " setting adapted reply to " << rep);
     setFinalReply(rep);
 
     assert(!adaptedBodySource);
-    if (rep->body_pipe != NULL) {
+    if (rep->body_pipe != nullptr) {
         // subscribe to receive adapted body
         adaptedBodySource = rep->body_pipe;
         // assume that ICAP does not auto-consume on failures
         const bool result = adaptedBodySource->setConsumerIfNotLate(this);
         assert(result);
+        checkAdaptationWithBodyCompletion();
     } else {
         // no body
+        Assure(!adaptedReplyAborted);
+        receivedWholeAdaptedReply = true;
         if (doneWithAdaptation()) // we may still be sending virgin response
             handleAdaptationCompleted();
     }
@@ -738,8 +764,7 @@ Client::resumeBodyStorage()
 
     handleMoreAdaptedBodyAvailable();
 
-    if (adaptedBodySource != NULL && adaptedBodySource->exhausted())
-        endAdaptedBodyConsumption();
+    checkAdaptationWithBodyCompletion();
 }
 
 // more adapted response body is available
@@ -767,18 +792,18 @@ Client::handleMoreAdaptedBodyAvailable()
     }
 
     if (!spaceAvailable)  {
-        debugs(11, 5, HERE << "NOT storing " << contentSize << " bytes of adapted " <<
+        debugs(11, 5, "NOT storing " << contentSize << " bytes of adapted " <<
                "response body at offset " << adaptedBodySource->consumedSize());
         return;
     }
 
     if (spaceAvailable < contentSize ) {
-        debugs(11, 5, HERE << "postponing storage of " <<
+        debugs(11, 5, "postponing storage of " <<
                (contentSize - spaceAvailable) << " body bytes");
         contentSize = spaceAvailable;
     }
 
-    debugs(11,5, HERE << "storing " << contentSize << " bytes of adapted " <<
+    debugs(11,5, "storing " << contentSize << " bytes of adapted " <<
            "response body at offset " << adaptedBodySource->consumedSize());
 
     BodyPipeCheckout bpc(*adaptedBodySource);
@@ -796,17 +821,36 @@ Client::handleAdaptedBodyProductionEnded()
     if (abortOnBadEntry("entry went bad while waiting for adapted body eof"))
         return;
 
-    // end consumption if we consumed everything
-    if (adaptedBodySource != NULL && adaptedBodySource->exhausted())
-        endAdaptedBodyConsumption();
-    // else resumeBodyStorage() will eventually consume the rest
+    Assure(!adaptedReplyAborted);
+    receivedWholeAdaptedReply = true;
+
+    checkAdaptationWithBodyCompletion();
 }
 
 void
-Client::endAdaptedBodyConsumption()
+Client::checkAdaptationWithBodyCompletion()
 {
+    if (!adaptedBodySource) {
+        debugs(11, 7, "not consuming; " << startedAdaptation);
+        return;
+    }
+
+    if (!receivedWholeAdaptedReply && !adaptedReplyAborted) {
+        // wait for noteBodyProductionEnded() or noteBodyProducerAborted()
+        // because completeForwarding() needs to know whether we receivedWholeAdaptedReply
+        debugs(11, 7, "waiting for adapted body production ending");
+        return;
+    }
+
+    if (!adaptedBodySource->exhausted()) {
+        debugs(11, 5, "waiting to consume the remainder of the adapted body from " << adaptedBodySource->status());
+        return; // resumeBodyStorage() should eventually consume the rest
+    }
+
     stopConsumingFrom(adaptedBodySource);
-    handleAdaptationCompleted();
+
+    if (doneWithAdaptation()) // we may still be sending virgin response
+        handleAdaptationCompleted();
 }
 
 // premature end of the adapted response body
@@ -815,26 +859,25 @@ void Client::handleAdaptedBodyProducerAborted()
     if (abortOnBadEntry("entry went bad while waiting for the now-aborted adapted body"))
         return;
 
+    Assure(!receivedWholeAdaptedReply);
+    adaptedReplyAborted = true;
     Must(adaptedBodySource != nullptr);
     if (!adaptedBodySource->exhausted()) {
         debugs(11,5, "waiting to consume the remainder of the aborted adapted body");
         return; // resumeBodyStorage() should eventually consume the rest
     }
 
-    stopConsumingFrom(adaptedBodySource);
-
     if (handledEarlyAdaptationAbort())
         return;
 
-    entry->lengthWentBad("body adaptation aborted");
-    handleAdaptationCompleted(); // the user should get a truncated response
+    checkAdaptationWithBodyCompletion(); // the user should get a truncated response
 }
 
 // common part of noteAdaptationAnswer and handleAdaptedBodyProductionEnded
 void
 Client::handleAdaptationCompleted()
 {
-    debugs(11,5, HERE << "handleAdaptationCompleted");
+    debugs(11,5, "handleAdaptationCompleted");
     cleanAdaptation();
 
     // We stop reading origin response because we have no place to put it(*) and
@@ -842,7 +885,7 @@ Client::handleAdaptationCompleted()
     // reuse more pconns, we can add code to discard unneeded origin responses.
     // (*) TODO: Is it possible that the adaptation xaction is still running?
     if (mayReadVirginReplyBody()) {
-        debugs(11,3, HERE << "closing origin conn due to ICAP completion");
+        debugs(11,3, "closing origin conn due to ICAP completion");
         closeServer();
     }
 
@@ -853,7 +896,7 @@ Client::handleAdaptationCompleted()
 void
 Client::handleAdaptationAborted(bool bypassable)
 {
-    debugs(11,5, HERE << "handleAdaptationAborted; bypassable: " << bypassable <<
+    debugs(11,5, "handleAdaptationAborted; bypassable: " << bypassable <<
            ", entry empty: " << entry->isEmpty());
 
     if (abortOnBadEntry("entry went bad while ICAP aborted"))
@@ -892,7 +935,9 @@ Client::handledEarlyAdaptationAbort()
 void
 Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
 {
-    debugs(11,5, HERE << answer.ruleId);
+    const auto blockedAnswer = answer.blockedToChecklistAnswer();
+
+    debugs(11,5, blockedAnswer.lastCheckDescription());
 
     if (abortOnBadEntry("entry went bad while ICAP aborted"))
         return;
@@ -906,10 +951,9 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
         return;
     }
 
-    debugs(11,7, HERE << "creating adaptation block response");
+    debugs(11,7, "creating adaptation block response");
 
-    err_type page_id =
-        aclGetDenyInfoPage(&Config.denyInfoList, answer.ruleId.termedBuf(), 1);
+    auto page_id = FindDenyInfoPage(blockedAnswer, true);
     if (page_id == ERR_NONE)
         page_id = ERR_ACCESS_DENIED;
 
@@ -939,7 +983,7 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
     // TODO: Should we check receivedBodyTooLarge as well?
 
     if (!group) {
-        debugs(11,3, HERE << "no adapation needed");
+        debugs(11, 3, "no adaptation needed");
         setFinalReply(virginReply());
         processReplyBody();
         return;
@@ -970,7 +1014,7 @@ Client::adaptOrFinalizeReply()
     adaptationAccessCheckPending = Adaptation::AccessCheck::Start(
                                        Adaptation::methodRespmod, Adaptation::pointPreCache,
                                        originalRequest().getRaw(), virginReply(), fwd->al, this);
-    debugs(11,5, HERE << "adaptationAccessCheckPending=" << adaptationAccessCheckPending);
+    debugs(11,5, "adaptationAccessCheckPending=" << adaptationAccessCheckPending);
     if (adaptationAccessCheckPending)
         return;
 #endif
@@ -992,6 +1036,18 @@ Client::adjustBodyBytesRead(const int64_t delta)
 
     // check for overflows ("infinite" response?) and underflows (a bug)
     Must(bodyBytesRead >= 0);
+}
+
+void
+Client::delayRead()
+{
+    Assure(!waitingForDelayAwareReadChance);
+    waitingForDelayAwareReadChance = true;
+
+    using DeferredReadDialer = NullaryMemFunT<Client>;
+    AsyncCall::Pointer call = asyncCall(11, 5, "Client::noteDelayAwareReadChance",
+                                        DeferredReadDialer(this, &Client::noteDelayAwareReadChance));
+    entry->mem().delayRead(call);
 }
 
 void
@@ -1032,7 +1088,7 @@ Client::calcBufferSpaceToReserve(size_t space, const size_t wantSpace) const
         return 0;   // Stop reading if already overflowed waiting for ICAP to catch up
     }
 
-    if (virginBodyDestination != NULL) {
+    if (virginBodyDestination != nullptr) {
         /*
          * BodyPipe buffer has a finite size limit.  We
          * should not read more data from the network than will fit
@@ -1048,47 +1104,6 @@ Client::calcBufferSpaceToReserve(size_t space, const size_t wantSpace) const
 
         if (adaptor_space < space)
             space = adaptor_space;
-    }
-#endif
-
-    return space;
-}
-
-size_t
-Client::replyBodySpace(const MemBuf &readBuf, const size_t minSpace) const
-{
-    size_t space = readBuf.spaceSize(); // available space w/o heroic measures
-    if (space < minSpace) {
-        const size_t maxSpace = readBuf.potentialSpaceSize(); // absolute best
-        space = min(minSpace, maxSpace); // do not promise more than asked
-    }
-
-#if USE_ADAPTATION
-    if (responseBodyBuffer) {
-        return 0;   // Stop reading if already overflowed waiting for ICAP to catch up
-    }
-
-    if (virginBodyDestination != NULL) {
-        /*
-         * BodyPipe buffer has a finite size limit.  We
-         * should not read more data from the network than will fit
-         * into the pipe buffer or we _lose_ what did not fit if
-         * the response ends sooner that BodyPipe frees up space:
-         * There is no code to keep pumping data into the pipe once
-         * response ends and serverComplete() is called.
-         *
-         * If the pipe is totally full, don't register the read handler.
-         * The BodyPipe will call our noteMoreBodySpaceAvailable() method
-         * when it has free space again.
-         */
-        size_t adaptation_space =
-            virginBodyDestination->buf().potentialSpaceSize();
-
-        debugs(11,9, "Client may read up to min(" <<
-               adaptation_space << ", " << space << ") bytes");
-
-        if (adaptation_space < space)
-            space = adaptation_space;
     }
 #endif
 

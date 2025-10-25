@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef STATHIST_H_
-#define STATHIST_H_
+#ifndef SQUID_SRC_STATHIST_H
+#define SQUID_SRC_STATHIST_H
 
 /* for StoreEntry */
 #include "Store.h"
@@ -74,7 +74,7 @@ public:
 
     /** Import values from another histogram
      *
-     * \note: the two histograms MUST have the same capicity, min and max or
+     * \note: the two histograms MUST have the same capacity, min and max or
      *      an exception will be raised
      */
     StatHist &operator += (const StatHist &B);
@@ -138,5 +138,5 @@ StatHist::operator =(const StatHist & src)
     return *this;
 }
 
-#endif /* STATHIST_H_ */
+#endif /* SQUID_SRC_STATHIST_H */
 

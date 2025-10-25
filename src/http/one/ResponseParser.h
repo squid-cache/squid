@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H
-#define _SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H
+#ifndef SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H
+#define SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H
 
 #include "http/one/Parser.h"
 #include "http/StatusCode.h"
@@ -21,9 +21,9 @@ namespace One {
  * upgrading HTTP/0.9 syntax responses to HTTP/1.1
  *
  * Works on a raw character I/O buffer and tokenizes the content into
- * the major CRLF delimited segments of an HTTP/1 respone message:
+ * the major CRLF delimited segments of an HTTP/1 response message:
  *
- * \li status-line (version SP status SP reash-phrase)
+ * \li status-line (version SP status SP reason-phrase)
  * \li mime-header (set of RFC2616 syntax header fields)
  */
 class ResponseParser : public Http1::Parser
@@ -34,14 +34,14 @@ public:
     ResponseParser &operator =(const ResponseParser &) = default;
     ResponseParser(ResponseParser &&) = default;
     ResponseParser &operator =(ResponseParser &&) = default;
-    virtual ~ResponseParser() {}
+    ~ResponseParser() override {}
 
     /* Http::One::Parser API */
-    virtual void clear() {*this=ResponseParser();}
-    virtual Http1::Parser::size_type firstLineSize() const;
-    virtual bool parse(const SBuf &aBuf);
+    void clear() override {*this=ResponseParser();}
+    Http1::Parser::size_type firstLineSize() const override;
+    bool parse(const SBuf &aBuf) override;
 
-    /* respone specific fields, read-only */
+    /* response specific fields, read-only */
     Http::StatusCode messageStatus() const { return statusCode_;}
     SBuf reasonPhrase() const { return reasonPhrase_;}
 
@@ -71,5 +71,5 @@ private:
 } // namespace One
 } // namespace Http
 
-#endif /* _SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H */
+#endif /* SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H */
 

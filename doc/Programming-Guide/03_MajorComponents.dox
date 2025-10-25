@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,7 @@
 \par
 	Here new client connections are accepted, parsed, and
 	reply data sent. Per-connection state information is held
-	in a data structure called ConnStateData.  Per-request 
+	in a data structure called ConnStateData.  Per-request
 	state information is stored in the clientSocketContext
 	structure. With HTTP/1.1 we may have multiple requests from
 	a single TCP connection.
@@ -29,14 +29,14 @@ TODO: find out what has replaced clientSocketContext since it seems to not exist
 	This is where requests are processed. We determine if the
 	request is to be redirected, if it passes access lists,
 	and setup the initial client stream for internal requests.
-	Temporary state for this processing is held in a 
+	Temporary state for this processing is held in a
 	clientRequestContext.
 TODO: find out what has replaced clientRequestContext since it seems not to exist now.
 
-\section ClientSideReply Client Side Reply	
+\section ClientSideReply Client Side Reply
 \par
-	This is where we determine if the request is cache HIT, 
-	REFRESH, MISS, etc. This involves querying the store 
+	This is where we determine if the request is cache HIT,
+	REFRESH, MISS, etc. This involves querying the store
 	(possibly multiple times) to work through Vary lists and
 	the list. Per-request state information is stored
 	in the clientReplyContext.
@@ -143,17 +143,14 @@ TODO: decide what to do for comm_poll() since its either obsolete or uses other 
 \section CacheManager Cache Manager
 \par
 	This provides access to certain information needed by the
-	cache administrator.  A companion program, cachemgr.cgi
-	can be used to make this information available via a Web
-	browser.  Cache manager requests to Squid are made with a
-	special URL of the form
+	cache administrator. Cache manager requests to Squid are
+	made with a special URL of the form
 \code
-	cache_object://hostname/operation
+	http://hostname:3128/squid-internal-mgr/menu
 \endcode
 	The cache manager provides essentially "read-only" access
 	to information.  It does not provide a method for configuring
 	Squid while it is running.
-TODO: get cachemgr.cgi documenting
 
 \section NetworkMeasurementDB Network Measurement Database
 \par
@@ -183,14 +180,6 @@ TODO: get cachemgr.cgi documenting
 	Common applications for this feature are extended access controls
 	and local mirroring.  File: redirect.c.
 
-\section ASN Autonomous System Numbers
-\par
-	Squid supports Autonomous System (AS) numbers as another
-	access control element.  The routines in asn.c
-	query databases which map AS numbers into lists of CIDR
-	prefixes.  These results are stored in a radix tree which
-	allows fast searching of the AS number for a given IP address.
-
 \section ConfigurationFileParsing Configuration File Parsing
 \par
 	The primary configuration file specification is in the file
@@ -218,7 +207,7 @@ TODO: get callback_data (object?) linking or replacement named.
 	Manual reference counting such as cbdata uses is error prone,
 	and time consuming for the programmer. C++'s operator overloading
 	allows us to create automatic reference counting pointers, that will
-	free objects when they are no longer needed. With some care these 
+	free objects when they are no longer needed. With some care these
 	objects can be passed to functions needed Callback Data pointers.
 TODO: get cbdata documenting and linking.
 
@@ -292,14 +281,6 @@ TODO: get debugs() documenting as if it was a function.
 	format.
 TODO: get RFCs linked from ietf
 
-\section IdentLookups Ident Lookups
-\par
-	These routines support RFC 931 (http://www.ietf.org/rfc/rfc931.txt)
-        "Ident" lookups.   An ident
-	server running on a host will report the user name associated
-	with a connected TCP socket.  Some sites use this facility for
-	access control and logging purposes.
-
 \section MemoryManagement Memory Management
 \par
 	These routines allocate and manage pools of memory for
@@ -331,7 +312,7 @@ TODO: get RFCs linked from ietf
 	These routines decide whether a cached object is stale or fresh,
 	based on the \em refresh_pattern configuration options.
 	If an object is fresh, it can be returned as a cache hit.
-	If it is stale, then it must be revalidated with an	
+	If it is stale, then it must be revalidated with an
 	If-Modified-Since request.
 
 \section SNMPSupport SNMP Support
@@ -348,12 +329,5 @@ TODO: get RFCs linked from ietf
 	of handling lists of mirror sites.  For more details, please
 	see (http://squid.nlanr.net/Squid/urn-support.html) URN Support in Squid
 	.
-
-\section ESI ESI
-\par
-	ESI is an implementation of Edge Side Includes (http://www.esi.org).
-	ESI is implemented as a client side stream and a small 
-	modification to client_side_reply.c to check whether
-	ESI should be inserted into the reply stream or not.
 
  */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_ANYP_URI_H
 #define SQUID_SRC_ANYP_URI_H
 
+#include "anyp/forward.h"
 #include "anyp/UriScheme.h"
 #include "ip/Address.h"
 #include "rfc2181.h"
@@ -32,29 +33,19 @@ class Uri
     MEMPROXY_CLASS(Uri);
 
 public:
-    Uri() : hostIsNumeric_(false), port_(0) {*host_=0;}
+    Uri(): hostIsNumeric_(false) { *host_ = 0; }
     Uri(AnyP::UriScheme const &aScheme);
-    Uri(const Uri &other) {
-        this->operator =(other);
-    }
-    Uri &operator =(const Uri &o) {
-        scheme_ = o.scheme_;
-        userInfo_ = o.userInfo_;
-        memcpy(host_, o.host_, sizeof(host_));
-        hostIsNumeric_ = o.hostIsNumeric_;
-        hostAddr_ = o.hostAddr_;
-        port_ = o.port_;
-        path_ = o.path_;
-        touch();
-        return *this;
-    }
+    Uri(const Uri &) = default;
+    Uri(Uri &&) = default;
+    Uri &operator =(const Uri &) = default;
+    Uri &operator =(Uri &&) = default;
 
     void clear() {
         scheme_=AnyP::PROTO_NONE;
         hostIsNumeric_ = false;
         *host_ = 0;
         hostAddr_.setEmpty();
-        port_ = 0;
+        port_ = std::nullopt;
         touch();
     }
     void touch(); ///< clear the cached URI display forms
@@ -86,13 +77,19 @@ public:
     int hostIsNumeric(void) const {return hostIsNumeric_;}
     Ip::Address const & hostIP(void) const {return hostAddr_;}
 
+    /// Successfully interpreted non-empty host subcomponent of the authority
+    /// component (if any). XXX: Remove hostOrIp() and print Host instead.
+    std::optional<Host> parsedHost() const;
+
     /// \returns the host subcomponent of the authority component
-    /// If the host is an IPv6 address, returns that IP address without
-    /// [brackets]! See RFC 3986 Section 3.2.2.
+    /// If the host is an IPv6 address, returns that IP address with
+    /// [brackets]. See RFC 3986 Section 3.2.2.
     SBuf hostOrIp() const;
 
-    void port(unsigned short p) {port_=p; touch();}
-    unsigned short port() const {return port_;}
+    /// reset authority port subcomponent
+    void port(const Port p) { port_ = p; touch(); }
+    /// \copydoc port_
+    Port port() const { return port_; }
     /// reset the port to the default port number for the current scheme
     void defaultPort() { port(getScheme().defaultPort()); }
 
@@ -105,9 +102,6 @@ public:
      * Implements RFC 3986 section 5.2.3
      *
      * The caller must ensure relUrl is a valid relative-path.
-     *
-     * NP: absolute-path are also accepted, but path() method
-     * should be used instead when possible.
      */
     void addRelativePath(const char *relUrl);
 
@@ -120,6 +114,17 @@ public:
     /// %-encode characters in a buffer which do not conform to
     /// the provided set of expected characters.
     static SBuf Encode(const SBuf &, const CharacterSet &expected);
+
+    /// %-decode the given buffer
+    /// \retval std::nullopt on decoding failures
+    /// \sa DecodeOrDupe()
+    static std::optional<SBuf> Decode(const SBuf &);
+
+    /// %-decode the given buffer
+    /// \retval decoded input if input obeys RFC 3986 Percent-Encoding rules
+    /// \retval an input copy if input violates RFC 3986 Percent-Encoding rules
+    /// \sa Decode()
+    static SBuf DecodeOrDupe(const SBuf &input);
 
     /**
      * The authority-form URI for currently stored values.
@@ -142,8 +147,17 @@ public:
      */
     SBuf &absolute() const;
 
+    /// RFC 3986 section 4.2 relative reference called 'absolute-path'.
+    SBuf &absolutePath() const;
+
+    /// The RFC 7230 origin-form URI for currently stored values.
+    SBuf &originForm() const { return absolutePath(); }
+
 private:
     void parseUrn(Parser::Tokenizer&);
+
+    SBuf parseHost(Parser::Tokenizer &) const;
+    int parsePort(Parser::Tokenizer &) const;
 
     /**
      \par
@@ -175,7 +189,7 @@ private:
     bool hostIsNumeric_;            ///< whether the authority 'host' is a raw-IP
     Ip::Address hostAddr_;          ///< binary representation of the URI authority if it is a raw-IP
 
-    unsigned short port_;   ///< URL port
+    Port port_; ///< authority port subcomponent
 
     // XXX: for now includes query-string.
     SBuf path_;     ///< URI path segment
@@ -184,26 +198,27 @@ private:
     mutable SBuf authorityHttp_;     ///< RFC 7230 section 5.3.3 authority, maybe without default-port
     mutable SBuf authorityWithPort_; ///< RFC 7230 section 5.3.3 authority with explicit port
     mutable SBuf absolute_;          ///< RFC 7230 section 5.3.2 absolute-URI
+    mutable SBuf absolutePath_; ///< RFC 3986 section 4.2 absolute-path
 };
 
-} // namespace AnyP
-
 inline std::ostream &
-operator <<(std::ostream &os, const AnyP::Uri &url)
+operator <<(std::ostream &os, const Uri &url)
 {
     // none means explicit empty string for scheme.
-    if (url.getScheme() != AnyP::PROTO_NONE)
+    if (url.getScheme() != PROTO_NONE)
         os << url.getScheme().image();
     os << ":";
 
     // no authority section on URN
-    if (url.getScheme() != AnyP::PROTO_URN)
+    if (url.getScheme() != PROTO_URN)
         os << "//" << url.authority();
 
     // path is what it is - including absent
-    os << url.path();
+    os << url.absolutePath();
     return os;
 }
+
+} // namespace AnyP
 
 /* Deprecated functions for Legacy code handling URLs */
 
@@ -260,7 +275,7 @@ enum MatchDomainNameFlags {
  * \retval -1 means the host is less than the domain
  */
 int matchDomainName(const char *host, const char *domain, MatchDomainNameFlags flags = mdnNone);
-int urlCheckRequest(const HttpRequest *);
+bool urlCheckRequest(const HttpRequest *);
 void urlExtMethodConfigure(void);
 
 #endif /* SQUID_SRC_ANYP_URI_H */

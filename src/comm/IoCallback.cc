@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,29 +16,34 @@
 #include "fde.h"
 #include "globals.h"
 
-Comm::CbEntry *Comm::iocb_table;
+namespace Comm
+{
 
-void
-Comm::CallbackTableInit()
+// XXX: Add API to react to Squid_MaxFD changes.
+/// Creates a new callback table using the current value of Squid_MaxFD.
+/// \sa fde::Init()
+static CbEntry *
+MakeCallbackTable()
 {
     // XXX: convert this to a std::map<> ?
-    iocb_table = static_cast<CbEntry*>(xcalloc(Squid_MaxFD, sizeof(CbEntry)));
+    // XXX: Stop bypassing CbEntry-associated constructors! Refactor to use new() instead.
+    const auto iocb_table = static_cast<CbEntry*>(xcalloc(Squid_MaxFD, sizeof(CbEntry)));
     for (int pos = 0; pos < Squid_MaxFD; ++pos) {
         iocb_table[pos].fd = pos;
         iocb_table[pos].readcb.type = IOCB_READ;
         iocb_table[pos].writecb.type = IOCB_WRITE;
     }
+    return iocb_table;
 }
 
-void
-Comm::CallbackTableDestruct()
+} // namespace Comm
+
+Comm::CbEntry &
+Comm::ioCallbacks(const int fd)
 {
-    // release any Comm::Connections being held.
-    for (int pos = 0; pos < Squid_MaxFD; ++pos) {
-        iocb_table[pos].readcb.conn = NULL;
-        iocb_table[pos].writecb.conn = NULL;
-    }
-    safe_free(iocb_table);
+    static const auto table = MakeCallbackTable();
+    assert(fd < Squid_MaxFD);
+    return table[fd];
 }
 
 /**
@@ -56,7 +61,7 @@ Comm::IoCallback::setCallback(Comm::iocb_type t, AsyncCall::Pointer &cb, char *b
 {
     assert(!active());
     assert(type == t);
-    assert(cb != NULL);
+    assert(cb != nullptr);
 
     callback = cb;
     buf = b;
@@ -85,18 +90,18 @@ Comm::IoCallback::cancel(const char *reason)
         return;
 
     callback->cancel(reason);
-    callback = NULL;
+    callback = nullptr;
     reset();
 }
 
 void
 Comm::IoCallback::reset()
 {
-    conn = NULL;
+    conn = nullptr;
     if (freefunc) {
         freefunc(buf);
-        buf = NULL;
-        freefunc = NULL;
+        buf = nullptr;
+        freefunc = nullptr;
     }
     xerrno = 0;
 
@@ -115,21 +120,21 @@ Comm::IoCallback::finish(Comm::Flag code, int xerrn)
     /* free data */
     if (freefunc && buf) {
         freefunc(buf);
-        buf = NULL;
-        freefunc = NULL;
+        buf = nullptr;
+        freefunc = nullptr;
     }
 
-    if (callback != NULL) {
+    if (callback != nullptr) {
         typedef CommIoCbParams Params;
         Params &params = GetCommParams<Params>(callback);
-        if (conn != NULL) params.fd = conn->fd; // for legacy write handlers...
+        if (conn != nullptr) params.fd = conn->fd; // for legacy write handlers...
         params.conn = conn;
         params.buf = buf;
         params.size = offset;
         params.flag = code;
         params.xerrno = xerrn;
         ScheduleCallHere(callback);
-        callback = NULL;
+        callback = nullptr;
     }
 
     /* Reset for next round. */

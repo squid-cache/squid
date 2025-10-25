@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_MEMBLOB_H_
-#define SQUID_MEMBLOB_H_
+#ifndef SQUID_SRC_SBUF_MEMBLOB_H
+#define SQUID_SRC_SBUF_MEMBLOB_H
 
 #define MEMBLOB_DEBUGSECTION 24
 
@@ -19,18 +19,16 @@
 class MemBlobStats
 {
 public:
-    MemBlobStats();
-
     /// dumps class-wide statistics
     std::ostream& dump(std::ostream& os) const;
 
     MemBlobStats& operator += (const MemBlobStats&);
 
 public:
-    uint64_t alloc;     ///< number of MemBlob instances created so far
-    uint64_t live;      ///< number of MemBlob instances currently alive
-    uint64_t append;    ///< number of MemBlob::append() calls
-    uint64_t liveBytes; ///< the total size of currently allocated storage
+    uint64_t alloc = 0;     ///< number of MemBlob instances created so far
+    uint64_t live = 0;      ///< number of MemBlob instances currently alive
+    uint64_t append = 0;    ///< number of MemBlob::append() calls
+    uint64_t liveBytes = 0; ///< the total size of currently allocated storage
 };
 
 /** Refcountable, fixed-size, content-agnostic memory buffer.
@@ -48,7 +46,11 @@ class MemBlob: public RefCountable
 
 public:
     typedef RefCount<MemBlob> Pointer;
-    typedef uint32_t size_type;
+
+    /* emulate std::basic_string API */
+    using value_type = char;
+    using size_type = uint32_t;
+    using const_pointer = const value_type *;
 
     /// obtain a const view of class-wide statistics
     static const MemBlobStats& GetStats();
@@ -56,10 +58,9 @@ public:
     /// create a new MemBlob with at least reserveSize capacity
     explicit MemBlob(const size_type reserveSize);
 
-    /// create a MemBlob containing a copy of the buffer of a given size
-    MemBlob(const char *buffer, const size_type bufferSize);
-
-    virtual ~MemBlob();
+    /* emulate std::basic_string API */
+    MemBlob(const_pointer, const size_type);
+    ~MemBlob() override;
 
     /// the number unused bytes at the end of the allocated blob
     size_type spaceSize() const { return capacity - size; }
@@ -89,12 +90,9 @@ public:
      * \param source raw buffer to be copied
      * \param n the number of bytes to copy from the source buffer
      */
-    void append(const char *source, const size_type n);
+    void append(const_pointer source, const size_type n);
 
     /* non-const methods below require exclusive object ownership */
-
-    /// extends the available space to the entire allocated blob
-    void clear() { size = 0; }
 
     /// keep the first n bytes and forget the rest of data
     /// cannot be used to increase our size; use append*() methods for that
@@ -107,16 +105,17 @@ public:
     /// dump debugging information
     std::ostream & dump(std::ostream &os) const;
 
+    /* emulate std::basic_string API */
+    void clear() { size = 0; }
+
 public:
     /* MemBlob users should avoid these and must treat them as read-only */
-    char *mem;          ///< raw allocated memory block
-    size_type capacity; ///< size of the raw allocated memory block
-    size_type size;     ///< maximum allocated memory in use by callers
+    value_type *mem = nullptr; ///< raw allocated memory block
+    size_type capacity = 0; ///< size of the raw allocated memory block
+    size_type size = 0; ///< maximum allocated memory in use by callers
     const InstanceId<MemBlob> id; ///< blob identifier
 
 private:
-    static MemBlobStats Stats; ///< class-wide statistics
-
     void memAlloc(const size_type memSize);
 
     /// whether the offset points to the end of the used area
@@ -130,5 +129,5 @@ private:
     MemBlob& operator =(const MemBlob &);
 };
 
-#endif /* SQUID_MEMBLOB_H_ */
+#endif /* SQUID_SRC_SBUF_MEMBLOB_H */
 

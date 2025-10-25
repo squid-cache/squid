@@ -843,7 +843,7 @@ msgid ""
 "example, you can not POST a Gopher request."
 msgstr ""
 "Το Squid δεν υποστηρίζει όλες τις μεθόδους αιτήσεων για όλα τα πρωτόκολλα "
-"πρόσβασης. Για παράδειγμα, το POST για Gopher δεν υποστηρίζεται."
+"πρόσβασης."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -852,7 +852,7 @@ msgid ""
 "is currently not supported."
 msgstr ""
 "Το Squid δεν υποστηρίζει όλες τις μεθόδους αιτήσεων για όλα τα πρωτόκολλα "
-"πρόσβασης. Για παράδειγμα, το POST για Gopher δεν υποστηρίζεται."
+"πρόσβασης."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_COMM_ACCEPT_LIMITER_H
-#define _SQUID_SRC_COMM_ACCEPT_LIMITER_H
+#ifndef SQUID_SRC_COMM_ACCEPTLIMITER_H
+#define SQUID_SRC_COMM_ACCEPTLIMITER_H
 
 #include "comm/TcpAcceptor.h"
 
@@ -43,13 +43,11 @@ public:
     void kick();
 
 private:
-    static AcceptLimiter Instance_;
-
     /** FIFO queue */
     std::deque<TcpAcceptor::Pointer> deferred_;
 };
 
 }; // namespace Comm
 
-#endif /* _SQUID_SRC_COMM_ACCEPT_LIMITER_H */
+#endif /* SQUID_SRC_COMM_ACCEPTLIMITER_H */
 

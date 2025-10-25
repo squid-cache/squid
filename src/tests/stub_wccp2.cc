@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,12 +13,8 @@
 #define STUB_API "wccp2.cc"
 #include "tests/STUB.h"
 
+#include "wccp2.h"
 class StoreEntry;
-
-void wccp2_add_service_list(int, int, int, int, int, int[], int, char *) STUB
-void wccp2Init(void) STUB
-void wccp2ConnectionOpen(void) STUB
-void wccp2ConnectionClose(void) STUB
 void dump_wccp2_method(StoreEntry *, const char *, int) STUB
 void free_wccp2_method(int *) STUB
 void parse_wccp2_amethod(int *) STUB

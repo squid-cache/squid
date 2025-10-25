@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -45,7 +45,7 @@ strListAdd(String &str, const SBuf &item, char delimiter)
 int
 strListIsMember(const String * list, const SBuf &m, char del)
 {
-    const char *pos = NULL;
+    const char *pos = nullptr;
     const char *item;
     int ilen = 0;
 
@@ -64,14 +64,6 @@ strListIsSubstr(const String * list, const char *s, char del)
 {
     assert(list && del);
     return (list->find(s) != String::npos);
-
-    /** \note
-     * Note: the original code with a loop is broken because it uses strstr()
-     * instead of strnstr(). If 's' contains a 'del', strListIsSubstr() may
-     * return true when it should not. If 's' does not contain a 'del', the
-     * implementation is equavalent to strstr()! Thus, we replace the loop with
-     * strstr() above until strnstr() is available.
-     */
 }
 
 /**

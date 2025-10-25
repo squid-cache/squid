@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,13 +9,14 @@
 /* DEBUG: section 65    HTTP Cache Control Header */
 
 #include "squid.h"
+#include "base/EnumIterator.h"
 #include "base/LookupTable.h"
 #include "HttpHdrCc.h"
 #include "HttpHeader.h"
-#include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
 #include "sbuf/SBuf.h"
+#include "SquidMath.h"
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"
@@ -23,10 +24,10 @@
 
 #include <map>
 #include <vector>
+#include <optional>
 #include <ostream>
 
-// invariant: row[j].id == j
-static LookupTable<HttpHdrCcType>::Record CcAttrs[] = {
+constexpr LookupTable<HttpHdrCcType>::Record attrsList[] = {
     {"public", HttpHdrCcType::CC_PUBLIC},
     {"private", HttpHdrCcType::CC_PRIVATE},
     {"no-cache", HttpHdrCcType::CC_NO_CACHE},
@@ -44,25 +45,47 @@ static LookupTable<HttpHdrCcType>::Record CcAttrs[] = {
     {"Other,", HttpHdrCcType::CC_OTHER}, /* ',' will protect from matches */
     {nullptr, HttpHdrCcType::CC_ENUM_END}
 };
-LookupTable<HttpHdrCcType> ccLookupTable(HttpHdrCcType::CC_OTHER,CcAttrs);
-std::vector<HttpHeaderFieldStat> ccHeaderStats(HttpHdrCcType::CC_ENUM_END);
+
+constexpr const auto &
+CcAttrs() {
+    // TODO: Move these compile-time checks into LookupTable
+    ConstexprForEnum<HttpHdrCcType::CC_PUBLIC, HttpHdrCcType::CC_ENUM_END>([](const auto ev) {
+        const auto idx = static_cast<std::underlying_type<HttpHdrCcType>::type>(ev);
+        // invariant: each row has a name except the last one
+        static_assert(!attrsList[idx].name == (ev == HttpHdrCcType::CC_ENUM_END));
+        // invariant: row[idx].id == idx
+        static_assert(attrsList[idx].id == ev);
+    });
+    return attrsList;
+}
+
+static auto
+ccTypeByName(const SBuf &name) {
+    const static auto table = new LookupTable<HttpHdrCcType>(HttpHdrCcType::CC_OTHER, CcAttrs());
+    return table->lookup(name);
+}
+
+/// Safely converts an integer into a Cache-Control directive name.
+/// \returns std::nullopt if the given integer is not a valid index of a named attrsList entry
+template <typename RawId>
+static std::optional<const char *>
+ccNameByType(const RawId rawId)
+{
+    // TODO: Store a by-ID index in (and move this functionality into) LookupTable.
+    if (!Less(rawId, 0) && Less(rawId, int(HttpHdrCcType::CC_ENUM_END))) {
+        const auto idx = static_cast<std::underlying_type<HttpHdrCcType>::type>(rawId);
+        return CcAttrs()[idx].name;
+    }
+    return std::nullopt;
+}
 
 /// used to walk a table of http_header_cc_type structs
-HttpHdrCcType &operator++ (HttpHdrCcType &aHeader)
+static HttpHdrCcType &
+operator++ (HttpHdrCcType &aHeader)
 {
     int tmp = (int)aHeader;
     aHeader = (HttpHdrCcType)(++tmp);
     return aHeader;
-}
-
-/// Module initialization hook
-void
-httpHdrCcInitModule(void)
-{
-    // check invariant on initialization table
-    for (unsigned int j = 0; CcAttrs[j].name != nullptr; ++j) {
-        assert (static_cast<int>(CcAttrs[j].id) == j);
-    }
 }
 
 void
@@ -95,7 +118,7 @@ HttpHdrCc::parse(const String & str)
 {
     const char *item;
     const char *p;      /* '=' parameter */
-    const char *pos = NULL;
+    const char *pos = nullptr;
     int ilen;
     int nlen;
 
@@ -112,13 +135,12 @@ HttpHdrCc::parse(const String & str)
         }
 
         /* find type */
-        const HttpHdrCcType type = ccLookupTable.lookup(SBuf(item,nlen));
+        const auto type = ccTypeByName(SBuf(item, nlen));
 
         // ignore known duplicate directives
         if (isSet(type)) {
             if (type != HttpHdrCcType::CC_OTHER) {
                 debugs(65, 2, "hdr cc: ignoring duplicate cache-directive: near '" << item << "' in '" << str << "'");
-                ++ ccHeaderStats[type].repCount;
                 continue;
             }
         }
@@ -257,7 +279,7 @@ HttpHdrCc::packInto(Packable * p) const
         if (isSet(flag) && flag != HttpHdrCcType::CC_OTHER) {
 
             /* print option name for all options */
-            p->appendf((pcount ? ", %s": "%s"), CcAttrs[flag].name);
+            p->appendf((pcount ? ", %s": "%s"), *ccNameByType(flag));
 
             /* for all options having values, "=value" after the name */
             switch (flag) {
@@ -331,22 +353,16 @@ httpHdrCcStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     extern const HttpHeaderStat *dump_stat; /* argh! */
     const int id = static_cast<int>(val);
-    const bool valid_id = id >= 0 && id < static_cast<int>(HttpHdrCcType::CC_ENUM_END);
-    const char *name = valid_id ? CcAttrs[id].name : "INVALID";
-
-    if (count || valid_id)
+    const auto name = ccNameByType(id);
+    if (count || name)
         storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
-                          id, name, count, xdiv(count, dump_stat->ccParsedCount));
+                          id, name.value_or("INVALID"), count, xdiv(count, dump_stat->ccParsedCount));
 }
 
 std::ostream &
 operator<< (std::ostream &s, HttpHdrCcType c)
 {
-    const unsigned char ic = static_cast<int>(c);
-    if (c < HttpHdrCcType::CC_ENUM_END)
-        s << CcAttrs[ic].name << '[' << ic << ']' ;
-    else
-        s << "*invalid hdrcc* [" << ic << ']';
+    s << ccNameByType(c).value_or("INVALID") << '[' << static_cast<int>(c) << ']';
     return s;
 }
 

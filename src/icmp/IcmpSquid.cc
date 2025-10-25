@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,8 +9,10 @@
 /* DEBUG: section 37    ICMP Routines */
 
 #include "squid.h"
+#include "base/Assure.h"
 #include "comm.h"
 #include "comm/Loops.h"
+#include "compat/socket.h"
 #include "defines.h"
 #include "fd.h"
 #include "icmp/IcmpConfig.h"
@@ -19,7 +21,6 @@
 #include "ip/tools.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
-#include "SquidTime.h"
 
 #include <cerrno>
 
@@ -56,7 +57,7 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     /** \li Does nothing if the pinger socket is not available. */
     if (icmp_sock < 0) {
-        debugs(37, 2, HERE << " Socket Closed. Aborted send to " << pecho.to << ", opcode " << opcode << ", len " << pecho.psize);
+        debugs(37, 2, " Socket Closed. Aborted send to " << pecho.to << ", opcode " << opcode << ", len " << pecho.psize);
         return;
     }
 
@@ -65,15 +66,16 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
         len = 0;
 
     /** \li Otherwise if len is 0, uses strlen() to detect length of payload.
-     \bug This will result in part of the payload being truncated if it contains a NULL character.
-     \bug Or it may result in a buffer over-run if the payload is not nul-terminated properly.
+     * XXX: This will result in part of the payload being truncated if it contains a NUL character.
+     *      Or it may result in a buffer over-read if the payload is not NUL-terminated properly.
      */
     else if (payload && len == 0)
         len = strlen(payload);
 
-    // XXX: If length specified or auto-detected is greater than the possible payload squid will die with an assert.
-    // TODO: This should perhapse be reduced to a truncated payload? or no payload. A WARNING is due anyway.
-    assert(len <= PINGER_PAYLOAD_SZ);
+    // All our callers supply a DNS name. PINGER_PAYLOAD_SZ must accommodate the
+    // longest DNS name Squid supports. TODO: Simplify and improve the rest of
+    // this code accordingly.
+    Assure(len <= PINGER_PAYLOAD_SZ);
 
     pecho.to = to;
 
@@ -86,7 +88,7 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     slen = sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ + pecho.psize;
 
-    debugs(37, 2, HERE << "to " << pecho.to << ", opcode " << opcode << ", len " << pecho.psize);
+    debugs(37, 2, "to " << pecho.to << ", opcode " << opcode << ", len " << pecho.psize);
 
     x = comm_udp_send(icmp_sock, (char *)&pecho, slen, 0);
 
@@ -102,14 +104,14 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
         }
         /** All other send errors are ignored. */
     } else if (x != slen) {
-        debugs(37, DBG_IMPORTANT, HERE << "Wrote " << x << " of " << slen << " bytes");
+        debugs(37, DBG_IMPORTANT, "Wrote " << x << " of " << slen << " bytes");
     }
 }
 
 // static Callback to wrap the squid-side ICMP handler.
 // the IcmpSquid::Recv cannot be declared both static and virtual.
 static void
-icmpSquidRecv(int unused1, void *unused2)
+icmpSquidRecv(int, void *)
 {
     icmpEngine.Recv();
 }
@@ -122,7 +124,7 @@ IcmpSquid::Recv()
     pingerReplyData preply;
     static Ip::Address F;
 
-    Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, NULL, 0);
+    Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, nullptr, 0);
     n = comm_udp_recv(icmp_sock,
                       (char *) &preply,
                       sizeof(pingerReplyData),
@@ -151,6 +153,32 @@ IcmpSquid::Recv()
         return;
     }
 
+    const auto base = static_cast<int>(sizeof(preply) - sizeof(preply.payload));
+    if (n < base) {
+        debugs(37, 2, "short reply header (" << n << " < " << base << "); dropping");
+        return;
+    }
+    const auto avail = n - base;
+    if (avail > static_cast<int>(sizeof(preply.payload))) {
+        debugs(37, 2, "oversized reply payload (" << avail << "); dropping");
+        return;
+    }
+    if (preply.psize < 0) {
+        debugs(37, 2, "negative psize (" << preply.psize << "); dropping");
+        return;
+    }
+    if (preply.psize > avail) {
+        debugs(37, 2, "truncated reply (psize=" << preply.psize << ", avail=" << avail << "); dropping");
+        return;
+    }
+    // Accept variable-length replies: base header + psize bytes.
+    // We already validated 'n >= base' and 'preply.psize <= avail'.
+    // If the datagram was truncated in transit, drop it.
+    if (n < (base + preply.psize)) {
+        debugs(37, 2, "truncated reply datagram; dropping");
+        return;
+    }
+
     F = preply.from;
 
     F.port(0);
@@ -158,16 +186,16 @@ IcmpSquid::Recv()
     switch (preply.opcode) {
 
     case S_ICMP_ECHO:
-        debugs(37,4, HERE << " ICMP_ECHO of " << preply.from << " gave: hops=" << preply.hops <<", rtt=" << preply.rtt);
+        debugs(37,4, " ICMP_ECHO of " << preply.from << " gave: hops=" << preply.hops <<", rtt=" << preply.rtt);
         break;
 
     case S_ICMP_DOM:
-        debugs(37,4, HERE << " DomainPing of " << preply.from << " gave: hops=" << preply.hops <<", rtt=" << preply.rtt);
+        debugs(37,4, " DomainPing of " << preply.from << " gave: hops=" << preply.hops <<", rtt=" << preply.rtt);
         netdbHandlePingReply(F, preply.hops, preply.rtt);
         break;
 
     default:
-        debugs(37, DBG_IMPORTANT, HERE << "Bad opcode: " << preply.opcode << " from " << F);
+        debugs(37, DBG_IMPORTANT, "ERROR: Bad opcode: " << preply.opcode << " from " << F);
         break;
     }
 }
@@ -178,8 +206,11 @@ void
 IcmpSquid::DomainPing(Ip::Address &to, const char *domain)
 {
 #if USE_ICMP
-    debugs(37, 4, HERE << "'" << domain << "' (" << to << ")");
+    debugs(37, 4, "'" << domain << "' (" << to << ")");
     SendEcho(to, S_ICMP_DOM, domain, 0);
+#else
+    (void)to;
+    (void)domain;
 #endif
 }
 
@@ -199,7 +230,7 @@ IcmpSquid::Open(void)
     }
 
     args[0] = "(pinger)";
-    args[1] = NULL;
+    args[1] = nullptr;
     localhost.setLocalhost();
 
     /*
@@ -225,11 +256,11 @@ IcmpSquid::Open(void)
 
     fd_note(icmp_sock, "pinger");
 
-    Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, NULL, 0);
+    Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, nullptr, 0);
 
     commUnsetFdTimeout(icmp_sock);
 
-    debugs(37, DBG_IMPORTANT, HERE << "Pinger socket opened on FD " << icmp_sock);
+    debugs(37, DBG_IMPORTANT, "Pinger socket opened on FD " << icmp_sock);
 
     /* Tests the pinger immediately using localhost */
     if (Ip::EnableIpv6)
@@ -239,7 +270,7 @@ IcmpSquid::Open(void)
 
 #if _SQUID_WINDOWS_
 
-    debugs(37, 4, HERE << "Pinger handle: 0x" << std::hex << hIpc << std::dec << ", PID: " << pid);
+    debugs(37, 4, "Pinger handle: 0x" << std::hex << hIpc << std::dec << ", PID: " << pid);
 
 #endif /* _SQUID_WINDOWS_ */
     return icmp_sock;
@@ -256,11 +287,11 @@ IcmpSquid::Close(void)
     if (icmp_sock < 0)
         return;
 
-    debugs(37, DBG_IMPORTANT, HERE << "Closing Pinger socket on FD " << icmp_sock);
+    debugs(37, DBG_IMPORTANT, "Closing Pinger socket on FD " << icmp_sock);
 
 #if _SQUID_WINDOWS_
 
-    send(icmp_sock, (const void *) "$shutdown\n", 10, 0);
+    xsend(icmp_sock, (const void *) "$shutdown\n", 10, 0);
 
 #endif
 
@@ -271,7 +302,7 @@ IcmpSquid::Close(void)
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 12000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(37, DBG_CRITICAL, HERE << "WARNING: (pinger," << pid << ") didn't exit in 12 seconds");
+            debugs(37, DBG_CRITICAL, "WARNING: (pinger," << pid << ") didn't exit in 12 seconds");
         }
 
         CloseHandle(hIpc);

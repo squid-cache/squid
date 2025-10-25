@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,8 @@
 /* DEBUG: section --    External DISKD process implementation. */
 
 #include "squid.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "DiskIO/DiskDaemon/diomsg.h"
 #include "hash.h"
 
@@ -45,7 +47,7 @@ struct _file_state {
     off_t offset;
 };
 
-static hash_table *hash = NULL;
+static hash_table *hash = nullptr;
 static pid_t mypid;
 static char *shmbuf;
 static int DebugLevel = 0;
@@ -53,12 +55,11 @@ static int DebugLevel = 0;
 static int
 do_open(diomsg * r, int, const char *buf)
 {
-    int fd;
     file_state *fs;
     /*
      * note r->offset holds open() flags
      */
-    fd = open(buf, r->offset, 0600);
+    const auto fd = xopen(buf, r->offset, 0600);
 
     if (fd < 0) {
         DEBUG(1) {
@@ -91,7 +92,7 @@ do_close(diomsg * r, int)
     file_state *fs;
     fs = (file_state *) hash_lookup(hash, &r->id);
 
-    if (NULL == fs) {
+    if (nullptr == fs) {
         errno = EBADF;
         DEBUG(1) {
             fprintf(stderr, "%d CLOSE id %d: ", (int) mypid, r->id);
@@ -111,18 +112,17 @@ do_close(diomsg * r, int)
                 fs);
     }
     xfree(fs);
-    return close(fd);
+    return xclose(fd);
 }
 
 static int
 do_read(diomsg * r, int, char *buf)
 {
-    int x;
     int readlen = r->size;
     file_state *fs;
     fs = (file_state *) hash_lookup(hash, &r->id);
 
-    if (NULL == fs) {
+    if (nullptr == fs) {
         errno = EBADF;
         DEBUG(1) {
             fprintf(stderr, "%d READ  id %d: ", (int) mypid, r->id);
@@ -145,7 +145,7 @@ do_read(diomsg * r, int, char *buf)
         }
     }
 
-    x = read(fs->fd, buf, readlen);
+    const auto x = xread(fs->fd, buf, readlen);
     DEBUG(2) {
         fprintf(stderr, "%d READ %d,%d,%" PRId64 " ret %d\n", (int) mypid,
                 fs->fd, readlen, (int64_t)r->offset, x);
@@ -168,11 +168,10 @@ static int
 do_write(diomsg * r, int, const char *buf)
 {
     int wrtlen = r->size;
-    int x;
     file_state *fs;
     fs = (file_state *) hash_lookup(hash, &r->id);
 
-    if (NULL == fs) {
+    if (nullptr == fs) {
         errno = EBADF;
         DEBUG(1) {
             fprintf(stderr, "%d WRITE id %d: ", (int) mypid, r->id);
@@ -195,7 +194,7 @@ do_write(diomsg * r, int, const char *buf)
         fprintf(stderr, "%d WRITE %d,%d,%" PRId64 "\n", (int) mypid,
                 fs->fd, wrtlen, (int64_t)r->offset);
     }
-    x = write(fs->fd, buf, wrtlen);
+    const auto x = xwrite(fs->fd, buf, wrtlen);
 
     if (x < 0) {
         DEBUG(1) {
@@ -231,7 +230,7 @@ do_unlink(diomsg * r, int, const char *buf)
 static void
 msg_handle(diomsg * r, int rl, diomsg * s)
 {
-    char *buf = NULL;
+    char *buf = nullptr;
     s->mtype = r->mtype;
     s->id = r->id;
     s->seq_no = r->seq_no;      /* optional, debugging */
@@ -312,8 +311,8 @@ main(int argc, char *argv[])
     char rbuf[512];
 
     struct sigaction sa;
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stderr, nullptr);
     mypid = getpid();
     assert(4 == argc);
     key = atoi(argv[1]);
@@ -340,7 +339,7 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    shmbuf = (char *)shmat(shmid, NULL, 0);
+    shmbuf = (char *)shmat(shmid, nullptr, 0);
 
     if (shmbuf == (void *) -1) {
         perror("shmat");
@@ -356,7 +355,7 @@ main(int argc, char *argv[])
     memset(&sa, '\0', sizeof(sa));
     sa.sa_handler = alarm_handler;
     sa.sa_flags = SA_RESTART;
-    sigaction(SIGALRM, &sa, NULL);
+    sigaction(SIGALRM, &sa, nullptr);
 
     for (;;) {
         alarm(1);
@@ -370,7 +369,7 @@ main(int argc, char *argv[])
 
         if (rlen < 0) {
             if (EINTR == errno) {
-                if (read(0, rbuf, 512) <= 0) {
+                if (xread(0, rbuf, 512) <= 0) {
                     if (EWOULDBLOCK == errno)
                         (void) 0;
                     else if (EAGAIN == errno)
@@ -401,16 +400,16 @@ main(int argc, char *argv[])
         fprintf(stderr, "%d diskd exiting\n", (int) mypid);
     }
 
-    if (msgctl(rmsgid, IPC_RMID, 0) < 0)
+    if (msgctl(rmsgid, IPC_RMID, nullptr) < 0)
         perror("msgctl IPC_RMID");
 
-    if (msgctl(smsgid, IPC_RMID, 0) < 0)
+    if (msgctl(smsgid, IPC_RMID, nullptr) < 0)
         perror("msgctl IPC_RMID");
 
     if (shmdt(shmbuf) < 0)
         perror("shmdt");
 
-    if (shmctl(shmid, IPC_RMID, 0) < 0)
+    if (shmctl(shmid, IPC_RMID, nullptr) < 0)
         perror("shmctl IPC_RMID");
 
     return EXIT_SUCCESS;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,6 @@
 #include "mgr/Registration.h"
 #include "rfc1738.h"
 #include "sbuf/SBuf.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "util.h"
 #include "wordlist.h"
@@ -37,7 +36,7 @@
 /* Basic Scheme */
 static AUTHSSTATS authenticateBasicStats;
 
-helper *basicauthenticators = NULL;
+Helper::ClientPointer basicauthenticators;
 
 static int authbasic_initialised = 0;
 
@@ -58,13 +57,7 @@ Auth::Basic::Config::active() const
 bool
 Auth::Basic::Config::configured() const
 {
-    if ((authenticateProgram != NULL) && (authenticateChildren.n_max != 0) && !realm.isEmpty()) {
-        debugs(29, 9, HERE << "returning configured");
-        return true;
-    }
-
-    debugs(29, 9, HERE << "returning unconfigured");
-    return false;
+    return (SchemeConfig::configured() && !realm.isEmpty());
 }
 
 const char *
@@ -110,8 +103,7 @@ Auth::Basic::Config::done()
         helperShutdown(basicauthenticators);
     }
 
-    delete basicauthenticators;
-    basicauthenticators = NULL;
+    basicauthenticators = nullptr;
 
     if (authenticateProgram)
         wordlistDestroy(&authenticateProgram);
@@ -137,7 +129,7 @@ Auth::Basic::Config::Config() :
 }
 
 void
-Auth::Basic::Config::parse(Auth::SchemeConfig * scheme, int n_configured, char *param_str)
+Auth::Basic::Config::parse(Auth::SchemeConfig * scheme, size_t n_configured, char *param_str)
 {
     if (strcmp(param_str, "casesensitive") == 0) {
         parse_onoff(&casesensitive);
@@ -191,7 +183,7 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const HttpReque
          * Don't allow NL or CR in the credentials.
          * Oezguer Kesim <oec@codeblau.de>
          */
-        debugs(29, 9, HERE << "'" << cleartext << "'");
+        debugs(29, 9, "'" << cleartext << "'");
 
         if (strcspn(cleartext, "\r\n") != strlen(cleartext)) {
             debugs(29, DBG_IMPORTANT, "WARNING: Bad characters in authorization header '" << httpAuthHeader << "'");
@@ -228,7 +220,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, 
 
     Auth::User::Pointer lb;
     /* permitted because local_basic is purely local function scope. */
-    Auth::Basic::User *local_basic = NULL;
+    Auth::Basic::User *local_basic = nullptr;
 
     char *separator = strchr(cleartext, ':');
 
@@ -244,12 +236,12 @@ Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, 
         Tolower(cleartext);
     local_basic->username(cleartext);
 
-    if (local_basic->passwd == NULL) {
-        debugs(29, 4, HERE << "no password in proxy authorization header '" << proxy_auth << "'");
+    if (local_basic->passwd == nullptr) {
+        debugs(29, 4, "no password in proxy authorization header '" << proxy_auth << "'");
         auth_user_request->setDenyMessage("no password was present in the HTTP [proxy-]authorization header. This is most likely a browser bug");
     } else {
         if (local_basic->passwd[0] == '\0') {
-            debugs(29, 4, HERE << "Disallowing empty password. User is '" << local_basic->username() << "'");
+            debugs(29, 4, "Disallowing empty password. User is '" << local_basic->username() << "'");
             safe_free(local_basic->passwd);
             auth_user_request->setDenyMessage("Request denied because you provided an empty password. Users MUST have a password.");
         }
@@ -269,7 +261,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, 
     if (!(auth_user = Auth::Basic::User::Cache()->lookup(lb->userKey()))) {
         /* the user doesn't exist in the username cache yet */
         /* save the credentials */
-        debugs(29, 9, HERE << "Creating new user '" << lb->username() << "'");
+        debugs(29, 9, "Creating new user '" << lb->username() << "'");
         /* set the auth_user type */
         lb->auth_type = Auth::AUTH_BASIC;
         lb->updateExpiration(Auth::Ttl::zero()); //  fresh until the end of the current second
@@ -280,7 +272,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, 
         lb->addToNameCache();
 
         auth_user = lb;
-        assert(auth_user != NULL);
+        assert(auth_user != nullptr);
     } else {
         /* replace the current cached password with the new one */
         Auth::Basic::User *basic_auth = dynamic_cast<Auth::Basic::User *>(auth_user.getRaw());
@@ -302,8 +294,8 @@ Auth::Basic::Config::init(Auth::SchemeConfig *)
     if (authenticateProgram) {
         authbasic_initialised = 1;
 
-        if (basicauthenticators == NULL)
-            basicauthenticators = new helper("basicauthenticator");
+        if (basicauthenticators == nullptr)
+            basicauthenticators = Helper::Client::Make("basicauthenticator");
 
         basicauthenticators->cmdline = authenticateProgram;
 
@@ -311,7 +303,7 @@ Auth::Basic::Config::init(Auth::SchemeConfig *)
 
         basicauthenticators->ipc_type = IPC_STREAM;
 
-        helperOpenServers(basicauthenticators);
+        basicauthenticators->openSessions();
     }
 }
 

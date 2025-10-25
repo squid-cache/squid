@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,11 +14,12 @@
 
 #if USE_ICMP
 
-#include "Debug.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
+#include "debug/Stream.h"
 #include "Icmp4.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
-#include "SquidTime.h"
 
 #include <cerrno>
 
@@ -50,39 +51,44 @@ IcmpPinger::Open(void)
 
     WSADATA wsaData;
     WSAPROTOCOL_INFO wpi;
-    char buf[sizeof(wpi)];
+    char buf[sizeof(wpi)+1];
     int x;
 
     struct sockaddr_in PS;
     int xerrno;
 
+    static_assert(sizeof(WSAPROTOCOL_INFO) >= sizeof(PS), "PS must fit into wpi-sized buf");
+
     WSAStartup(2, &wsaData);
     atexit(Win32SockCleanup);
 
     getCurrentTime();
-    _db_init(NULL, "ALL,1");
+
+    Debug::debugOptions = xstrdup("ALL,1");
+    Debug::BanCacheLogUse();
+
     setmode(0, O_BINARY);
     setmode(1, O_BINARY);
-    x = read(0, buf, sizeof(wpi));
+    x = xread(0, buf, sizeof(wpi));
 
     if (x < (int)sizeof(wpi)) {
         xerrno = errno;
         getCurrentTime();
         debugs(42, DBG_CRITICAL, MYNAME << " read: FD 0: " << xstrerr(xerrno));
-        write(1, "ERR\n", 4);
+        xwrite(1, "ERR\n", 4);
         return -1;
     }
 
     memcpy(&wpi, buf, sizeof(wpi));
 
-    write(1, "OK\n", 3);
-    x = read(0, buf, sizeof(PS));
+    xwrite(1, "OK\n", 3);
+    x = xread(0, buf, sizeof(PS));
 
     if (x < (int)sizeof(PS)) {
         xerrno = errno;
         getCurrentTime();
         debugs(42, DBG_CRITICAL, MYNAME << " read: FD 0: " << xstrerr(xerrno));
-        write(1, "ERR\n", 4);
+        xwrite(1, "ERR\n", 4);
         return -1;
     }
 
@@ -94,23 +100,23 @@ IcmpPinger::Open(void)
         xerrno = errno;
         getCurrentTime();
         debugs(42, DBG_CRITICAL, MYNAME << "WSASocket: " << xstrerr(xerrno));
-        write(1, "ERR\n", 4);
+        xwrite(1, "ERR\n", 4);
         return -1;
     }
 
-    x = connect(icmp_sock, (struct sockaddr *) &PS, sizeof(PS));
+    x = xconnect(icmp_sock, (struct sockaddr *) &PS, sizeof(PS));
 
-    if (SOCKET_ERROR == x) {
+    if (x != 0) {
         xerrno = errno;
         getCurrentTime();
         debugs(42, DBG_CRITICAL, MYNAME << "connect: " << xstrerr(xerrno));
-        write(1, "ERR\n", 4);
+        xwrite(1, "ERR\n", 4);
         return -1;
     }
 
-    write(1, "OK\n", 3);
+    xwrite(1, "OK\n", 3);
     memset(buf, 0, sizeof(buf));
-    x = recv(icmp_sock, (void *) buf, sizeof(buf), 0);
+    x = xrecv(icmp_sock, buf, sizeof(buf)-1, 0);
 
     if (x < 3) {
         xerrno = errno;
@@ -118,7 +124,7 @@ IcmpPinger::Open(void)
         return -1;
     }
 
-    x = send(icmp_sock, (const void *) buf, strlen(buf), 0);
+    x = xsend(icmp_sock, buf, x, 0);
     xerrno = errno;
 
     if (x < 3 || strncmp("OK\n", buf, 3)) {
@@ -127,7 +133,7 @@ IcmpPinger::Open(void)
     }
 
     getCurrentTime();
-    debugs(42, DBG_IMPORTANT, "pinger: Squid socket opened");
+    debugs(42, DBG_IMPORTANT, "Squid socket opened");
 
     /* windows uses a socket stream as a dual-direction channel */
     socket_to_squid = icmp_sock;
@@ -148,10 +154,11 @@ void
 IcmpPinger::Close(void)
 {
 #if _SQUID_WINDOWS_
-
-    shutdown(icmp_sock, SD_BOTH);
-    close(icmp_sock);
-    icmp_sock = -1;
+    if (icmp_sock >= 0) {
+        shutdown(icmp_sock, SD_BOTH);
+        xclose(icmp_sock);
+        icmp_sock = -1;
+    }
 #endif
 
     /* also shutdown the helper engines */
@@ -167,7 +174,7 @@ IcmpPinger::Recv(void)
     int guess_size;
 
     pecho = pingerEchoData();
-    n = recv(socket_from_squid, &pecho, sizeof(pecho), 0);
+    n = xrecv(socket_from_squid, &pecho, sizeof(pecho), 0);
 
     if (n < 0) {
         debugs(42, DBG_IMPORTANT, "Pinger exiting.");
@@ -186,14 +193,14 @@ IcmpPinger::Recv(void)
     guess_size = n - (sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ);
 
     if (guess_size != pecho.psize) {
-        debugs(42, 2, HERE << "size mismatch, guess=" << guess_size << ", psize=" << pecho.psize);
+        debugs(42, 2, "size mismatch, guess=" << guess_size << ", psize=" << pecho.psize);
         /* don't process this message, but keep running */
         return;
     }
 
     /* pass request for ICMPv6 handing */
     if (pecho.to.isIPv6()) {
-        debugs(42, 2, HERE << " Pass " << pecho.to << " off to ICMPv6 module.");
+        debugs(42, 2, " Pass " << pecho.to << " off to ICMPv6 module.");
         icmp6.SendEcho(pecho.to,
                        pecho.opcode,
                        pecho.payload,
@@ -202,24 +209,24 @@ IcmpPinger::Recv(void)
 
     /* pass the packet for ICMP handling */
     else if (pecho.to.isIPv4()) {
-        debugs(42, 2, HERE << " Pass " << pecho.to << " off to ICMPv4 module.");
+        debugs(42, 2, " Pass " << pecho.to << " off to ICMPv4 module.");
         icmp4.SendEcho(pecho.to,
                        pecho.opcode,
                        pecho.payload,
                        pecho.psize);
     } else {
-        debugs(42, DBG_IMPORTANT, HERE << " IP has unknown Type. " << pecho.to );
+        debugs(42, DBG_IMPORTANT, "ERROR: IP has unknown Type. " << pecho.to );
     }
 }
 
 void
 IcmpPinger::SendResult(pingerReplyData &preply, int len)
 {
-    debugs(42, 2, HERE << "return result to squid. len=" << len);
+    debugs(42, 2, "return result to squid. len=" << len);
 
-    if (send(socket_to_squid, &preply, len, 0) < 0) {
+    if (xsend(socket_to_squid, &preply, len, 0) < 0) {
         int xerrno = errno;
-        debugs(42, DBG_CRITICAL, "pinger: FATAL error on send: " << xstrerr(xerrno));
+        debugs(42, DBG_CRITICAL, "FATAL: send failure: " << xstrerr(xerrno));
         Close();
         exit(EXIT_FAILURE);
     }

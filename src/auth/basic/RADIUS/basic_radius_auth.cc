@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,7 +42,7 @@
  *
  * basic_radius_auth-1.0 is based on modules from the Cistron-radiusd-1.5.4.
  *
- * Currently you should only start 1 authentificator at a time because the
+ * Currently you should only start 1 authenticator at a time because the
  * the ID's of the different programs can start to conflict. I'm not sure it
  * would help anyway. I think the RADIUS server is close by and I don't think
  * it will handle requests in parallel anyway (correct me if I'm wrong here)
@@ -56,6 +56,11 @@
 #include "squid.h"
 #include "auth/basic/RADIUS/radius-util.h"
 #include "auth/basic/RADIUS/radius.h"
+#include "base/Random.h"
+#include "compat/netdb.h"
+#include "compat/select.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "helper/protocol_defines.h"
 #include "md5.h"
 
@@ -63,27 +68,14 @@
 #include <cerrno>
 #include <cstring>
 #include <ctime>
-#include <random>
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
 #endif
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
 #if _SQUID_WINDOWS_
 #include <io.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#if HAVE_NETDB_H
-#include <netdb.h>
 #endif
 #if HAVE_PWD_H
 #include <pwd.h>
@@ -143,7 +135,7 @@ static int
 time_since(const struct timeval *when)
 {
     struct timeval now;
-    gettimeofday(&now, NULL);
+    gettimeofday(&now, nullptr);
     return timeval_diff(when, &now);
 }
 
@@ -206,8 +198,8 @@ result_recv(char *buffer, int length)
 static void
 random_vector(char *aVector)
 {
-    static std::mt19937 mt(time(0));
-    static xuniform_int_distribution<uint8_t> dist;
+    static std::mt19937 mt(RandomSeed32());
+    static std::uniform_int_distribution<uint8_t> dist;
 
     for (int i = 0; i < AUTH_VECTOR_LEN; ++i)
         aVector[i] = static_cast<char>(dist(mt) & 0xFF);
@@ -227,11 +219,11 @@ rad_auth_config(const char *cfname)
     char line[MAXLINE];
     int srv = 0, crt = 0;
 
-    if ((cf = fopen(cfname, "r")) == NULL) {
+    if ((cf = fopen(cfname, "r")) == nullptr) {
         perror(cfname);
         return -1;
     }
-    while (fgets(line, MAXLINE, cf) != NULL) {
+    while (fgets(line, MAXLINE, cf) != nullptr) {
         if (!memcmp(line, "server", 6))
             srv = sscanf(line, "server %s", server);
         if (!memcmp(line, "secret", 6))
@@ -263,7 +255,7 @@ urldecode(char *dst, const char *src, int size)
             ++src;
             tmp[1] = *src;
             ++src;
-            *dst = strtol(tmp, NULL, 16);
+            *dst = strtol(tmp, nullptr, 16);
             ++dst;
         } else {
             *dst = *src;
@@ -416,8 +408,8 @@ authenticate(int socket_fd, const char *username, const char *passwd)
         /*
          *    Send the request we've built.
          */
-        gettimeofday(&sent, NULL);
-        if (send(socket_fd, (char *) auth, total_length, 0) < 0) {
+        gettimeofday(&sent, nullptr);
+        if (xsend(socket_fd, auth, total_length, 0) < 0) {
             int xerrno = errno;
             // EAGAIN is expected at high traffic, just retry
             // TODO: block/sleep a few ms to let the apparently full buffer drain ?
@@ -437,11 +429,11 @@ authenticate(int socket_fd, const char *username, const char *passwd)
             }
             FD_ZERO(&readfds);
             FD_SET(socket_fd, &readfds);
-            if (select(socket_fd + 1, &readfds, NULL, NULL, &tv) == 0)  /* Select timeout */
+            if (xselect(socket_fd + 1, &readfds, nullptr, nullptr, &tv) == 0)  /* Select timeout */
                 break;
             salen = sizeof(saremote);
-            len = recvfrom(socket_fd, recv_buffer, sizeof(i_recv_buffer),
-                           0, (struct sockaddr *) &saremote, &salen);
+            len = xrecvfrom(socket_fd, recv_buffer, sizeof(i_recv_buffer),
+                            0, (struct sockaddr *) &saremote, &salen);
 
             if (len < 0)
                 continue;
@@ -468,13 +460,12 @@ main(int argc, char **argv)
 {
     struct sockaddr_in salocal;
     struct sockaddr_in saremote;
-    struct servent *svp;
     unsigned short svc_port;
     char username[MAXPWNAM];
     char passwd[MAXPASS];
     char *ptr;
     char buf[HELPER_INPUT_BUFFER];
-    const char *cfname = NULL;
+    const char *cfname = nullptr;
     int err = 0;
     socklen_t salen;
     int c;
@@ -509,7 +500,7 @@ main(int argc, char **argv)
         }
     }
     /* make standard output line buffered */
-    if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
+    if (setvbuf(stdout, nullptr, _IOLBF, 0) != 0)
         exit(EXIT_FAILURE);
 
     if (cfname) {
@@ -536,8 +527,8 @@ main(int argc, char **argv)
     /*
      *    Open a connection to the server.
      */
-    svp = getservbyname(svc_name, "udp");
-    if (svp != NULL)
+    const auto svp = xgetservbyname(svc_name, "udp");
+    if (svp != nullptr)
         svc_port = ntohs((unsigned short) svp->s_port);
     else
         svc_port = atoi(svc_name);
@@ -549,7 +540,7 @@ main(int argc, char **argv)
         fprintf(stderr, "FATAL: %s: Couldn't find host %s\n", argv[0], server);
         exit(EXIT_FAILURE);
     }
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    sockfd = xsocket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {
         perror("socket");
         exit(EXIT_FAILURE);
@@ -559,12 +550,12 @@ main(int argc, char **argv)
     saremote.sin_addr.s_addr = htonl(auth_ipaddr);
     saremote.sin_port = htons(svc_port);
 
-    if (connect(sockfd, (struct sockaddr *) &saremote, sizeof(saremote)) < 0) {
+    if (xconnect(sockfd, (struct sockaddr *) &saremote, sizeof(saremote)) < 0) {
         perror("connect");
         exit(EXIT_FAILURE);
     }
     salen = sizeof(salocal);
-    if (getsockname(sockfd, (struct sockaddr *) &salocal, &salen) < 0) {
+    if (xgetsockname(sockfd, (struct sockaddr *) &salocal, &salen) < 0) {
         perror("getsockname");
         exit(EXIT_FAILURE);
     }
@@ -576,10 +567,10 @@ main(int argc, char **argv)
     }
 #endif
     nas_ipaddr = ntohl(salocal.sin_addr.s_addr);
-    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != nullptr) {
         char *end;
         /* protect me form to long lines */
-        if ((end = strchr(buf, '\n')) == NULL) {
+        if ((end = strchr(buf, '\n')) == nullptr) {
             err = 1;
             continue;
         }
@@ -599,7 +590,7 @@ main(int argc, char **argv)
         ptr = buf;
         while (isspace(*ptr))
             ++ptr;
-        if ((end = strchr(ptr, ' ')) == NULL) {
+        if ((end = strchr(ptr, ' ')) == nullptr) {
             SEND_ERR("No password");
             continue;
         }
@@ -612,7 +603,7 @@ main(int argc, char **argv)
 
         authenticate(sockfd, username, passwd);
     }
-    close(sockfd);
+    xclose(sockfd);
     return EXIT_SUCCESS;
 }
 

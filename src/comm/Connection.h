@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,8 +8,8 @@
 
 /* DEBUG: section 05    Socket Functions */
 
-#ifndef _SQUIDCONNECTIONDETAIL_H_
-#define _SQUIDCONNECTIONDETAIL_H_
+#ifndef SQUID_SRC_COMM_CONNECTION_H
+#define SQUID_SRC_COMM_CONNECTION_H
 
 #include "base/CodeContext.h"
 #include "base/InstanceId.h"
@@ -23,7 +23,7 @@
 #include "ip/Address.h"
 #include "ip/forward.h"
 #include "mem/forward.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 #include <iosfwd>
 #include <ostream>
@@ -51,7 +51,9 @@ namespace Comm
 #define COMM_INTERCEPTION       0x20  // arrived via NAT
 #define COMM_REUSEPORT          0x40 //< needs SO_REUSEPORT
 /// not registered with Comm and not owned by any connection-closing code
-#define COMM_ORPHANED           0x40
+#define COMM_ORPHANED           0x80
+/// Internal Comm optimization: Keep the source port unassigned until connect(2)
+#define COMM_DOBIND_PORT_LATER 0x100
 
 /**
  * Store data about the physical and logical attributes of a connection.
@@ -72,18 +74,17 @@ class Connection: public CodeContext
     MEMPROXY_CLASS(Comm::Connection);
 
 public:
-    Connection();
+    Connection() { noteStart(); }
 
     /** Clear the connection properties and close any open socket. */
-    virtual ~Connection();
+    ~Connection() override;
 
-    /// Create a new (closed) IDENT Connection object based on our from-Squid
-    /// connection properties.
-    ConnectionPointer cloneIdentDetails() const;
+    /// To prevent accidental copying of Connection objects that we started to
+    /// open or that are open, use cloneProfile() instead.
+    Connection(const Connection &&) = delete;
 
-    /// Create a new (closed) Connection object pointing to the same destination
-    /// as this from-Squid connection.
-    ConnectionPointer cloneDestinationDetails() const;
+    /// Create a new closed Connection with the same configuration as this one.
+    ConnectionPointer cloneProfile() const;
 
     /// close the still-open connection when its last reference is gone
     void enterOrphanage() { flags |= COMM_ORPHANED; }
@@ -115,6 +116,9 @@ public:
      */
     void setPeer(CachePeer * p);
 
+    /// whether this is a connection to a cache_peer that was removed during reconfiguration
+    bool toGoneCachePeer() const;
+
     /** The time the connection started */
     time_t startTime() const {return startTime_;}
 
@@ -137,19 +141,8 @@ public:
     const Security::NegotiationHistory *hasTlsNegotiations() const {return tlsHistory;}
 
     /* CodeContext API */
-    virtual ScopedId codeContextGist() const override;
-    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
-
-private:
-    /** These objects may not be exactly duplicated. Use cloneIdentDetails() or
-     * cloneDestinationDetails() instead.
-     */
-    Connection(const Connection &c);
-
-    /** These objects may not be exactly duplicated. Use cloneIdentDetails() or
-     * cloneDestinationDetails() instead.
-     */
-    Connection & operator =(const Connection &c);
+    ScopedId codeContextGist() const override;
+    std::ostream &detailCodeContext(std::ostream &os) const override;
 
 public:
     /** Address/Port for the Squid end of a TCP link. */
@@ -159,18 +152,18 @@ public:
     Ip::Address remote;
 
     /** Hierarchy code for this connection link */
-    hier_code peerType;
+    hier_code peerType = HIER_NONE;
 
     /** Socket used by this connection. Negative if not open. */
-    int fd;
+    int fd = -1;
 
     /** Quality of Service TOS values currently sent on this connection */
-    tos_t tos;
+    tos_t tos = 0;
 
     /** Netfilter MARK values currently sent on this connection
      * In case of FTP, the MARK will be sent on data connections as well.
      */
-    nfmark_t nfmark;
+    nfmark_t nfmark = 0;
 
     /** Netfilter CONNMARK value previously retrieved from this connection
      * In case of FTP, the CONNMARK will NOT be applied to data connections, for one main reason:
@@ -181,9 +174,7 @@ public:
     nfmark_t nfConnmark = 0;
 
     /** COMM flags set on this connection */
-    int flags;
-
-    char rfc931[USER_IDENT_SZ];
+    int flags = COMM_NONBLOCKING;
 
 #if USE_SQUID_EUI
     Eui::Eui48 remoteEui48;
@@ -194,26 +185,26 @@ public:
 
 private:
     /** cache_peer data object (if any) */
-    CachePeer *peer_;
+    CachePeer *peer_ = nullptr;
 
     /** The time the connection object was created */
     time_t startTime_;
 
     /** TLS connection details*/
-    Security::NegotiationHistory *tlsHistory;
+    Security::NegotiationHistory *tlsHistory = nullptr;
 };
 
-}; // namespace Comm
-
-std::ostream &operator << (std::ostream &os, const Comm::Connection &conn);
+std::ostream &operator <<(std::ostream &, const Connection &);
 
 inline std::ostream &
-operator << (std::ostream &os, const Comm::ConnectionPointer &conn)
+operator <<(std::ostream &os, const ConnectionPointer &conn)
 {
-    if (conn != NULL)
+    if (conn != nullptr)
         os << *conn;
     return os;
 }
 
-#endif
+} // namespace Comm
+
+#endif /* SQUID_SRC_COMM_CONNECTION_H */
 

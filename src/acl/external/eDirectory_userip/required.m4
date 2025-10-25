@@ -1,8 +1,10 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_CHECK_HEADERS([ldap.h winldap.h],[BUILD_HELPER="eDirectory_userip"])
+AS_IF([test "x$LIBLDAP_LIBS" != "x" -a "x$squid_host_os" != "xmingw"],[
+  BUILD_HELPER="eDirectory_userip"
+])

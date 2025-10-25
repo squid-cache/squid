@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,13 +12,15 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncCallbacks.h"
+#include "base/RunnersRegistry.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
-#include "comm/UdpOpenDialer.h"
 #include "compat/xalloc.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "globals.h"
 #include "htcp.h"
 #include "http.h"
@@ -26,18 +28,19 @@
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "ip/tools.h"
+#include "ipc/StartListening.h"
 #include "md5.h"
 #include "mem/forward.h"
 #include "MemBuf.h"
 #include "refresh.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store_key_md5.h"
 #include "StoreClient.h"
 #include "tools.h"
 
+#include <memory>
 typedef struct _Countstr Countstr;
 
 typedef struct _htcpHeader htcpHeader;
@@ -136,12 +139,12 @@ public:
     }
 
     /* CodeContext API */
-    virtual ScopedId codeContextGist() const; // override
-    virtual std::ostream &detailCodeContext(std::ostream &os) const; // override
+    ScopedId codeContextGist() const override; // override
+    std::ostream &detailCodeContext(std::ostream &os) const override; // override
 
     /* StoreClient API */
-    virtual LogTags *loggingTags() const;
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    LogTags *loggingTags() const override;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
 public:
     const char *method = nullptr;
@@ -233,11 +236,11 @@ enum {
     RR_RESPONSE
 };
 
-static void htcpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
+static void htcpIncomingConnectionOpened(Ipc::StartListeningAnswer&);
 static uint32_t msg_id_counter = 0;
 
-static Comm::ConnectionPointer htcpOutgoingConn = NULL;
-static Comm::ConnectionPointer htcpIncomingConn = NULL;
+static Comm::ConnectionPointer htcpOutgoingConn = nullptr;
+static Comm::ConnectionPointer htcpIncomingConn = nullptr;
 #define N_QUERIED_KEYS 8192
 static uint32_t queried_id[N_QUERIED_KEYS];
 static cache_key queried_keys[N_QUERIED_KEYS][SQUID_MD5_DIGEST_LENGTH];
@@ -305,7 +308,24 @@ htcpHexdump(const char *tag, const char *s, int sz)
 
         memset(hex, '\0', sizeof(hex));
     }
+#else
+    (void)tag;
+    (void)s;
+    (void)sz;
 #endif
+}
+
+static bool
+parseUint16(const char * const buf, const int sz, uint16_t &out, const char * const field)
+{
+    if (sz < 2) {
+        debugs(31, 3, "too short for " << field);
+        return false;
+    }
+
+    memcpy(&out, buf, 2);
+    out = ntohs(out);
+    return true;
 }
 
 /*
@@ -456,8 +476,15 @@ htcpBuildClrOpData(char *buf, size_t buflen, htcpStuff * stuff)
     case RR_REQUEST:
         debugs(31, 3, "htcpBuildClrOpData: RR_REQUEST");
         reason = htons((unsigned short)stuff->reason);
+        if (buflen < 2)
+            return -1;
         memcpy(buf, &reason, 2);
-        return htcpBuildSpecifier(buf + 2, buflen - 2, stuff) + 2;
+        {
+            const auto s = htcpBuildSpecifier(buf + 2, buflen - 2, stuff);
+            if (s < 0)
+                return s;
+            return s + 2;
+        }
     case RR_RESPONSE:
         break;
     default:
@@ -613,7 +640,10 @@ htcpUnpackSpecifier(char *buf, int sz)
     HttpRequestMethod method;
 
     /* Find length of METHOD */
-    uint16_t l = ntohs(*(uint16_t *) buf);
+    uint16_t l = 0;
+    if (!parseUint16(buf, sz, l, "METHOD length"))
+        return nil;
+
     sz -= 2;
     buf += 2;
 
@@ -629,7 +659,9 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: METHOD (" << l << "/" << sz << ") '" << s->method << "'");
 
     /* Find length of URI */
-    l = ntohs(*(uint16_t *) buf);
+    if (!parseUint16(buf, sz, l, "URI length"))
+        return nil;
+
     sz -= 2;
 
     if (l > sz) {
@@ -648,7 +680,9 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: URI (" << l << "/" << sz << ") '" << s->uri << "'");
 
     /* Find length of VERSION */
-    l = ntohs(*(uint16_t *) buf);
+    if (!parseUint16(buf, sz, l, "VERSION length"))
+        return nil;
+
     sz -= 2;
 
     if (l > sz) {
@@ -667,7 +701,9 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: VERSION (" << l << "/" << sz << ") '" << s->version << "'");
 
     /* Find length of REQ-HDRS */
-    l = ntohs(*(uint16_t *) buf);
+    if (!parseUint16(buf, sz, l, "REQ-HDRS length"))
+        return nil;
+
     sz -= 2;
 
     if (l > sz) {
@@ -698,7 +734,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     // Parse the request
     method.HttpRequestMethodXXX(s->method);
 
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initHtcp);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initHtcp>();
     s->request = HttpRequest::FromUrlXXX(s->uri, mx, method == Http::METHOD_NONE ? HttpRequestMethod(Http::METHOD_GET) : method);
     if (!s->request) {
         debugs(31, 3, "failed to create request. Invalid URI?");
@@ -715,17 +751,19 @@ htcpUnpackSpecifier(char *buf, int sz)
 static htcpDetail *
 htcpUnpackDetail(char *buf, int sz)
 {
-    htcpDetail *d = new htcpDetail;
+    auto d = std::make_unique<htcpDetail>();
 
     /* Find length of RESP-HDRS */
-    uint16_t l = ntohs(*(uint16_t *) buf);
+    uint16_t l = 0;
+    if (!parseUint16(buf, sz, l, "RESP-HDRS length"))
+        return nullptr;
+
     sz -= 2;
     buf += 2;
 
     if (l > sz) {
         debugs(31, 3, "htcpUnpackDetail: failed to unpack RESP_HDRS");
-        delete d;
-        return NULL;
+        return nullptr;
     }
 
     /* Set RESP-HDRS */
@@ -735,14 +773,14 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= l;
 
     /* Find length of ENTITY-HDRS */
-    l = ntohs(*(uint16_t *) buf);
+    if (!parseUint16(buf, sz, l, "ENTITY-HDRS length"))
+        return nullptr;
 
     sz -= 2;
 
     if (l > sz) {
         debugs(31, 3, "htcpUnpackDetail: failed to unpack ENTITY_HDRS");
-        delete d;
-        return NULL;
+        return nullptr;
     }
 
     /* Add terminating null to RESP-HDRS */
@@ -757,14 +795,14 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= l;
 
     /* Find length of CACHE-HDRS */
-    l = ntohs(*(uint16_t *) buf);
+    if (!parseUint16(buf, sz, l, "CACHE-HDRS length"))
+        return nullptr;
 
     sz -= 2;
 
     if (l > sz) {
         debugs(31, 3, "htcpUnpackDetail: failed to unpack CACHE_HDRS");
-        delete d;
-        return NULL;
+        return nullptr;
     }
 
     /* Add terminating null to ENTITY-HDRS */
@@ -787,7 +825,7 @@ htcpUnpackDetail(char *buf, int sz)
      */
     *buf = '\0';
 
-    return d;
+    return d.release();
 }
 
 static bool
@@ -797,7 +835,7 @@ htcpAccessAllowed(acl_access * acl, const htcpSpecifier::Pointer &s, Ip::Address
     if (!acl)
         return false;
 
-    ACLFilledChecklist checklist(acl, s->request.getRaw(), nullptr);
+    ACLFilledChecklist checklist(acl, s->request.getRaw());
     checklist.src_addr = from;
     checklist.my_addr.setNoAddr();
     return checklist.fastCheck().allowed();
@@ -976,10 +1014,10 @@ htcpSpecifier::checkHit()
         debugs(31, 3, "NO; public object not found");
     } else if (!e->validToSend()) {
         debugs(31, 3, "NO; entry not valid to send" );
-    } else if (refreshCheckHTCP(e, checkHitRequest.getRaw())) {
-        debugs(31, 3, "NO; cached response is stale");
     } else if (e->hittingRequiresCollapsing() && !startCollapsingOn(*e, false)) {
         debugs(31, 3, "NO; prohibited CF hit: " << *e);
+    } else if (!didCollapse && refreshCheckHTCP(e, checkHitRequest.getRaw())) {
+        debugs(31, 3, "NO; cached response is stale");
     } else {
         debugs(31, 3, "YES!?");
         hit = e;
@@ -1079,10 +1117,10 @@ static void
 htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 {
     HtcpReplyData htcpReply;
-    cache_key *key = NULL;
+    cache_key *key = nullptr;
 
     Ip::Address *peer;
-    htcpDetail *d = NULL;
+    htcpDetail *d = nullptr;
     char *t;
 
     if (queried_id[hdr->msg_id % N_QUERIED_KEYS] != hdr->msg_id) {
@@ -1123,7 +1161,7 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from
         debugs(31, 3, "htcpHandleTstResponse: HIT");
         d = htcpUnpackDetail(buf, sz);
 
-        if (d == NULL) {
+        if (d == nullptr) {
             debugs(31, 3, "htcpHandleTstResponse: bad DETAIL");
             return;
         }
@@ -1192,32 +1230,36 @@ htcpSpecifier::checkedHit(StoreEntry *e)
         htcpTstReply(dhdr, e, this, from);      /* hit */
         htcpLogHtcp(from, dhdr->opcode, LOG_UDP_HIT, uri, al);
     } else {
-        htcpTstReply(dhdr, NULL, NULL, from);   /* cache miss */
+        htcpTstReply(dhdr, nullptr, nullptr, from);   /* cache miss */
         htcpLogHtcp(from, dhdr->opcode, LOG_UDP_MISS, uri, al);
     }
 }
 
 static void
-htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
+htcpHandleClr(htcpDataHeader * const hdr, char * const buf, const int sz, Ip::Address &from)
 {
     /* buf[0/1] is reserved and reason */
-    int reason = buf[1] << 4;
+    if (sz < 2) {
+        debugs(31, 4, "too short for reserved+reason fields (sz=" << sz << ")");
+        htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str, nullptr);
+        return;
+    }
+    int reason = static_cast<unsigned char>(buf[1]) << 4;
     debugs(31, 2, "HTCP CLR reason: " << reason);
-    buf += 2;
-    sz -= 2;
 
-    /* buf should be a SPECIFIER */
+    const auto specifierStart = buf + 2;
+    const auto specifierSize = sz - 2;
 
     if (sz == 0) {
-        debugs(31, 4, "htcpHandleClr: nothing to do");
+        debugs(31, 4, "nothing to do");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str, nullptr);
         return;
     }
 
-    htcpSpecifier::Pointer s(htcpUnpackSpecifier(buf, sz));
+    const auto s = htcpUnpackSpecifier(specifierStart, specifierSize);
 
     if (!s) {
-        debugs(31, 3, "htcpHandleClr: htcpUnpackSpecifier failed");
+        debugs(31, 3, "htcpUnpackSpecifier failed");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str, nullptr);
         return;
     } else {
@@ -1226,13 +1268,13 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
     }
 
     if (!s->request) {
-        debugs(31, 3, "htcpHandleTstRequest: failed to parse request");
+        debugs(31, 3, "failed to parse request");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str, s->al);
         return;
     }
 
     if (!htcpAccessAllowed(Config.accessList.htcp_clr, s, from)) {
-        debugs(31, 3, "htcpHandleClr: Access denied");
+        debugs(31, 3, "Access denied");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_DENIED, s->uri, s->al);
         return;
     }
@@ -1259,18 +1301,11 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
     default:
         break;
     }
-}
 
-/*
- * Forward a CLR request to all peers who have requested that CLRs be
- * forwarded to them.
- */
-static void
-htcpForwardClr(char *buf, int sz)
-{
-    CachePeer *p;
-
-    for (p = Config.peers; p; p = p->next) {
+    // Forward this CLR request to all peers who have requested that CLRs be
+    // forwarded to them.
+    // TODO: Consider not forwarding requests with htcpClrStore() < 0.
+    for (const auto &p: CurrentCachePeers()) {
         if (!p->options.htcp) {
             continue;
         }
@@ -1343,8 +1378,17 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
     if (!old_squid_format) {
         memcpy(&hdr, hbuf, sizeof(hdr));
     } else {
+        // Old Squid format (minor==0) uses a wider struct due to bitfield layout.
+        // Never read more than available; zero-init then copy the safe prefix.
         htcpDataHeaderSquid hdrSquid;
-        memcpy(&hdrSquid, hbuf, sizeof(hdrSquid));
+        memset(&hdrSquid, 0, sizeof(hdrSquid));
+        if (static_cast<size_t>(hsz) >= sizeof(htcpDataHeaderSquid)) {
+            memcpy(&hdrSquid, hbuf, sizeof(htcpDataHeaderSquid));
+        } else {
+            // Guaranteed earlier: hsz >= sizeof(htcpDataHeader) (compact prefix).
+            memcpy(&hdrSquid, hbuf, sizeof(htcpDataHeader));
+        }
+
         hdr.length = hdrSquid.length;
         hdr.opcode = hdrSquid.opcode;
         hdr.response = hdrSquid.response;
@@ -1369,6 +1413,12 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
     debugs(31, 3, "htcpHandleData: F1 = " << hdr.F1);
     debugs(31, 3, "htcpHandleData: RR = " << hdr.RR);
     debugs(31, 3, "htcpHandleData: msg_id = " << hdr.msg_id);
+
+    // DATA length must include at least the data header itself
+    if (hdr.length < sizeof(htcpDataHeader)) {
+        debugs(31, 3, "invalid hdr.length " << hdr.length << " (< " << sizeof(htcpDataHeader) << ")");
+        return;
+    }
 
     if (hsz < hdr.length) {
         debugs(31, 3, "htcpHandleData: sz < hdr.length");
@@ -1401,7 +1451,6 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
         break;
     case HTCP_CLR:
         htcpHandleClr(&hdr, hbuf, hsz, from);
-        htcpForwardClr(buf, sz);
         break;
     default:
         break;
@@ -1426,18 +1475,15 @@ htcpRecv(int fd, void *)
 
     htcpHandleMsg(buf, len, from);
 
-    Comm::SetSelect(fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, htcpRecv, nullptr, 0);
 }
 
-/*
- * ======================================================================
- * PUBLIC FUNCTIONS
- * ======================================================================
- */
-
-void
-htcpOpenPorts(void)
+static void
+htcpOpenPorts()
 {
+    if (!IamWorkerProcess())
+        return;
+
     if (Config.Port.htcp <= 0) {
         debugs(31, Important(21), "HTCP Disabled.");
         return;
@@ -1456,10 +1502,7 @@ htcpOpenPorts(void)
         htcpIncomingConn->local.setIPv4();
     }
 
-    AsyncCall::Pointer call = asyncCall(31, 2,
-                                        "htcpIncomingConnectionOpened",
-                                        Comm::UdpOpenDialer(&htcpIncomingConnectionOpened));
-
+    auto call = asyncCallbackFun(31, 2, htcpIncomingConnectionOpened);
     Ipc::StartListening(SOCK_DGRAM,
                         IPPROTO_UDP,
                         htcpIncomingConn,
@@ -1486,7 +1529,7 @@ htcpOpenPorts(void)
         if (!Comm::IsConnOpen(htcpOutgoingConn))
             fatal("Cannot open Outgoing HTCP Socket");
 
-        Comm::SetSelect(htcpOutgoingConn->fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
+        Comm::SetSelect(htcpOutgoingConn->fd, COMM_SELECT_READ, htcpRecv, nullptr, 0);
 
         debugs(31, DBG_IMPORTANT, "Sending HTCP messages from " << htcpOutgoingConn->local);
     }
@@ -1494,12 +1537,14 @@ htcpOpenPorts(void)
 }
 
 static void
-htcpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int)
+htcpIncomingConnectionOpened(Ipc::StartListeningAnswer &answer)
 {
+    const auto &conn = answer.conn;
+
     if (!Comm::IsConnOpen(conn))
         fatal("Cannot open HTCP Socket");
 
-    Comm::SetSelect(conn->fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
+    Comm::SetSelect(conn->fd, COMM_SELECT_READ, htcpRecv, nullptr, 0);
 
     debugs(31, DBG_CRITICAL, "Accepting HTCP messages on " << conn->local);
 
@@ -1531,7 +1576,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
     stuff.S.method = sb.c_str();
     stuff.S.uri = (char *) e->url();
     stuff.S.version = vbuf;
-    HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
+    HttpStateData::httpBuildRequestHeader(req, e, nullptr, &hdr, p, flags);
     MemBuf mb;
     mb.init();
     hdr.packInto(&mb);
@@ -1586,13 +1631,13 @@ htcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &, CachePee
     stuff.S.uri = uri.c_str();
     stuff.S.version = vbuf;
     if (reason != HTCP_CLR_INVALIDATION) {
-        HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
+        HttpStateData::httpBuildRequestHeader(req, e, nullptr, &hdr, p, flags);
         mb.init();
         hdr.packInto(&mb);
         hdr.clean();
         stuff.S.req_hdrs = mb.buf;
     } else {
-        stuff.S.req_hdrs = NULL;
+        stuff.S.req_hdrs = nullptr;
     }
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
     if (reason != HTCP_CLR_INVALIDATION) {
@@ -1610,8 +1655,8 @@ htcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &, CachePee
  * htcpSocketShutdown only closes the 'in' socket if it is
  * different than the 'out' socket.
  */
-void
-htcpSocketShutdown(void)
+static void
+htcpSocketShutdown()
 {
     if (!Comm::IsConnOpen(htcpIncomingConn))
         return;
@@ -1623,7 +1668,7 @@ htcpSocketShutdown(void)
      * function from executing repeatedly.  When we are really ready to
      * exit or restart, main will comm_close the 'out' descriptor.
      */
-    htcpIncomingConn = NULL;
+    htcpIncomingConn = nullptr;
 
     /*
      * Normally we only write to the outgoing HTCP socket, but
@@ -1636,19 +1681,32 @@ htcpSocketShutdown(void)
      */
     assert(Comm::IsConnOpen(htcpOutgoingConn));
 
-    Comm::SetSelect(htcpOutgoingConn->fd, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(htcpOutgoingConn->fd, COMM_SELECT_READ, nullptr, nullptr, 0);
 }
 
-void
-htcpClosePorts(void)
+static void
+htcpClosePorts()
 {
+    if (!IamWorkerProcess())
+        return;
+
     htcpSocketShutdown();
 
-    if (htcpOutgoingConn != NULL) {
+    if (htcpOutgoingConn != nullptr) {
         debugs(12, DBG_IMPORTANT, "Stop sending HTCP from " << htcpOutgoingConn->local);
-        htcpOutgoingConn = NULL;
+        htcpOutgoingConn = nullptr;
     }
 }
+
+class HtcpRr : public RegisteredRunner
+{
+public:
+    void useConfig() override { htcpOpenPorts(); }
+    void startReconfigure() override { htcpClosePorts(); }
+    void syncConfig() override { htcpOpenPorts(); }
+    void startShutdown() override { htcpClosePorts(); }
+};
+DefineRunnerRegistrator(HtcpRr);
 
 static void
 htcpLogHtcp(Ip::Address &caddr, const int opcode, const LogTags_ot logcode, const char *url, AccessLogEntryPointer al)
@@ -1661,6 +1719,6 @@ htcpLogHtcp(Ip::Address &caddr, const int opcode, const LogTags_ot logcode, cons
     assert(logcode != LOG_TAG_NONE);
     al->cache.code.update(logcode);
 
-    accessLogLog(al, NULL);
+    accessLogLog(al, nullptr);
 }
 

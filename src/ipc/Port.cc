@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 #include "comm/Connection.h"
 #include "comm/Read.h"
 #include "CommCalls.h"
+#include "Instance.h"
 #include "ipc/Port.h"
 #include "sbuf/Stream.h"
 #include "tools.h"
@@ -36,7 +37,7 @@ void Ipc::Port::start()
 
 void Ipc::Port::doListen()
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, MYNAME);
     buf.prepForReading();
     typedef CommCbMemFunT<Port, CommIoCbParams> Dialer;
     AsyncCall::Pointer readHandler = JobCallback(54, 6,
@@ -52,9 +53,8 @@ bool Ipc::Port::doneAll() const
 String Ipc::Port::MakeAddr(const char* processLabel, int id)
 {
     assert(id >= 0);
-    String addr = channelPathPfx;
-    addr.append(service_name.c_str());
-    addr.append(processLabel);
+    String addr;
+    addr.append(Instance::NamePrefix(channelPathPfx, processLabel));
     addr.append('-');
     addr.append(xitoa(id));
     addr.append(".ipc");
@@ -66,9 +66,7 @@ Ipc::Port::CoordinatorAddr()
 {
     static String coordinatorAddr;
     if (!coordinatorAddr.size()) {
-        coordinatorAddr= channelPathPfx;
-        coordinatorAddr.append(service_name.c_str());
-        coordinatorAddr.append(coordinatorAddrLabel);
+        coordinatorAddr.append(Instance::NamePrefix(channelPathPfx, coordinatorAddrLabel));
         coordinatorAddr.append(".ipc");
     }
     return coordinatorAddr;
@@ -95,7 +93,7 @@ Ipc::Port::receiveOrIgnore(const TypedMsgHdr &message)
 
 void Ipc::Port::noteRead(const CommIoCbParams& params)
 {
-    debugs(54, 6, HERE << params.conn << " flag " << params.flag <<
+    debugs(54, 6, params.conn << " flag " << params.flag <<
            " [" << this << ']');
     if (params.flag == Comm::OK) {
         assert(params.buf == buf.raw());

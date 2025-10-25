@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,32 +15,29 @@
  */
 #if USE_DELAY_POOLS
 #include "acl/FilledChecklist.h"
+#include "base/DelayedAsyncCalls.h"
 #include "client_side_request.h"
-#include "CommRead.h"
 #include "DelayId.h"
 #include "DelayPool.h"
 #include "DelayPools.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 
-DelayId::DelayId () : pool_ (0), compositeId(NULL), markedAsNoDelay(false)
+DelayId::DelayId () : pool_ (0), compositeId(nullptr), markedAsNoDelay(false)
 {}
 
-DelayId::DelayId (unsigned short aPool) :
-    pool_ (aPool), compositeId (NULL), markedAsNoDelay (false)
+DelayId::DelayId(const unsigned short aPool, const DelayIdComposite::Pointer &aCompositeId):
+    pool_(aPool), compositeId(aCompositeId), markedAsNoDelay(false)
 {
+    assert(pool_);
+    assert(compositeId);
     debugs(77, 3, "DelayId::DelayId: Pool " << aPool << "u");
 }
 
 DelayId::~DelayId ()
 {}
-
-void
-DelayId::compositePosition(DelayIdComposite::Pointer newPosition)
-{
-    compositeId = newPosition;
-}
 
 unsigned short
 DelayId::pool() const
@@ -59,7 +56,7 @@ DelayId::operator == (DelayId const &rhs) const
 
 DelayId::operator bool() const
 {
-    return pool_ || compositeId.getRaw();
+    return compositeId && !markedAsNoDelay;
 }
 
 /* create a delay Id for a given request */
@@ -85,12 +82,9 @@ DelayId::DelayClient(ClientHttpRequest * http, HttpReply *reply)
             continue;
         }
 
-        ACLFilledChecklist ch(DelayPools::delay_data[pool].access, r, NULL);
+        ACLFilledChecklist ch(DelayPools::delay_data[pool].access, r);
         clientAclChecklistFill(ch, http);
-        if (!ch.reply && reply) {
-            ch.reply = reply;
-            HTTPMSGLOCK(reply);
-        }
+        ch.updateReply(reply);
         // overwrite ACLFilledChecklist acl_uses_indirect_client-based decision
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.delay_pool_uses_indirect_client)
@@ -100,16 +94,11 @@ DelayId::DelayClient(ClientHttpRequest * http, HttpReply *reply)
             ch.src_addr = r->client_addr;
 
         if (DelayPools::delay_data[pool].theComposite().getRaw() && ch.fastCheck().allowed()) {
-
-            DelayId result (pool + 1);
-            CompositePoolNode::CompositeSelectionDetails details;
-            details.src_addr = ch.src_addr;
+            CompositePoolNode::CompositeSelectionDetails details(ch.src_addr, StringToSBuf(r->tag));
 #if USE_AUTH
             details.user = r->auth_user_request;
 #endif
-            details.tag = r->tag;
-            result.compositePosition(DelayPools::delay_data[pool].theComposite()->id(details));
-            return result;
+            return DelayId(pool + 1, DelayPools::delay_data[pool].theComposite()->id(details));
         }
     }
 
@@ -129,18 +118,12 @@ DelayId::setNoDelay(bool const newValue)
 int
 DelayId::bytesWanted(int minimum, int maximum) const
 {
-    /* unlimited */
+    const auto maxBytes = max(minimum, maximum);
 
-    if (! (*this) || markedAsNoDelay)
-        return max(minimum, maximum);
+    if (! (*this))
+        return maxBytes;
 
-    /* limited */
-    int nbytes = max(minimum, maximum);
-
-    if (compositeId != NULL)
-        nbytes = compositeId->bytesWanted(minimum, nbytes);
-
-    return nbytes;
+    return compositeId->bytesWanted(minimum, maxBytes);
 }
 
 /*
@@ -154,19 +137,13 @@ DelayId::bytesIn(int qty)
     if (! (*this))
         return;
 
-    if (markedAsNoDelay)
-        return;
-
-    assert ((unsigned short)(pool() - 1) != 0xFFFF);
-
-    if (compositeId != NULL)
-        compositeId->bytesIn(qty);
+    compositeId->bytesIn(qty);
 }
 
 void
-DelayId::delayRead(DeferredRead const &aRead)
+DelayId::delayRead(const AsyncCall::Pointer &aRead)
 {
-    assert (compositeId != NULL);
+    assert (compositeId != nullptr);
     compositeId->delayRead(aRead);
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,7 +35,6 @@ static const LookupTable<http_hdr_sc_type>::Record ScAttrs[] {
     {nullptr, SC_ENUM_END} /* SC_ENUM_END taken as invalid value */
 };
 LookupTable<http_hdr_sc_type> scLookupTable(SC_ENUM_END, ScAttrs);
-std::vector<HttpHeaderFieldStat> scHeaderStats(SC_ENUM_END);
 
 // used when iterating over flags
 http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader)
@@ -63,7 +62,7 @@ httpHdrScParseCreate(const String & str)
 
     if (!sc->parse(&str)) {
         delete sc;
-        sc = NULL;
+        sc = nullptr;
     }
 
     return sc;
@@ -76,9 +75,9 @@ HttpHdrSc::parse(const String * str)
     HttpHdrSc * sc=this;
     const char *item;
     const char *p;      /* '=' parameter */
-    const char *pos = NULL;
-    const char *target = NULL; /* ;foo */
-    const char *temp = NULL; /* temp buffer */
+    const char *pos = nullptr;
+    const char *target = nullptr; /* ;foo */
+    const char *temp = nullptr; /* temp buffer */
     http_hdr_sc_type type;
     int ilen, vlen;
     int initiallen;
@@ -117,7 +116,7 @@ HttpHdrSc::parse(const String * str)
         temp = xstrndup (item, initiallen + 1);
 
         if (!((target = strrchr (temp, ';')) && !strchr (target, '"') && *(target + 1) != '\0'))
-            target = NULL;
+            target = nullptr;
         else
             ++target;
 
@@ -126,8 +125,7 @@ HttpHdrSc::parse(const String * str)
         if (!sct) {
             // XXX: if parse is left-to-right over field-value this should be emplace_back()
             // currently placing on the front reverses the order of headers passed on downstream.
-            targets.emplace_front(target);
-            sct = &targets.front();
+            sct = &targets.emplace_front(target);
         }
 
         safe_free (temp);
@@ -135,9 +133,6 @@ HttpHdrSc::parse(const String * str)
         if (sct->isSet(type)) {
             if (type != SC_OTHER)
                 debugs(90, 2, "ignoring duplicate control-directive near '" << item << "' in '" << *str << "'");
-
-            ++ scHeaderStats[type].repCount;
-
             continue;
         }
 
@@ -240,8 +235,7 @@ HttpHdrSc::setMaxAge(char const *target, int max_age)
     HttpHdrScTarget *sct = findTarget(target);
 
     if (!sct) {
-        targets.emplace_back(target);
-        sct = &targets.back();
+        sct = &targets.emplace_back(target);
     }
 
     sct->maxAge(max_age);
@@ -289,14 +283,14 @@ HttpHdrSc::findTarget(const char *target)
             return &sct;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 HttpHdrScTarget *
 HttpHdrSc::getMergedTarget(const char *ourtarget)
 {
     HttpHdrScTarget *sctus = findTarget(ourtarget);
-    HttpHdrScTarget *sctgeneric = findTarget(NULL);
+    HttpHdrScTarget *sctgeneric = findTarget(nullptr);
 
     /* W3C Edge Architecture Specification 1.0 section 3
      *
@@ -309,7 +303,7 @@ HttpHdrSc::getMergedTarget(const char *ourtarget)
      * XXX: the if statements below will *merge* the no-store and max-age settings.
      */
     if (sctgeneric || sctus) {
-        HttpHdrScTarget *sctusable = new HttpHdrScTarget(NULL);
+        HttpHdrScTarget *sctusable = new HttpHdrScTarget(nullptr);
 
         if (sctgeneric)
             sctusable->mergeWith(sctgeneric);
@@ -320,6 +314,6 @@ HttpHdrSc::getMergedTarget(const char *ourtarget)
         return sctusable;
     }
 
-    return NULL;
+    return nullptr;
 }
 

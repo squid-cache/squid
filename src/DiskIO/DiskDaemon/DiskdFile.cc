@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,12 +53,19 @@ void
 DiskdFile::open(int flags, mode_t, RefCount<IORequestor> callback)
 {
     debugs(79, 3, "DiskdFile::open: " << this << " opening for " << callback.getRaw());
-    assert(ioRequestor.getRaw() == NULL);
+    assert(ioRequestor.getRaw() == nullptr);
     ioRequestor = callback;
     assert(callback.getRaw());
     mode = flags;
     ssize_t shm_offset;
     char *buf = (char *)IO->shm.get(&shm_offset);
+    if (!buf) {
+        errorOccured = true;
+        ioRequestor->ioCompletedNotification();
+        ioRequestor = nullptr;
+        return;
+    }
+
     xstrncpy(buf, path_, SHMBUF_BLKSZ);
     ioAway();
     int x = IO->send(_MQD_OPEN,
@@ -67,14 +74,14 @@ DiskdFile::open(int flags, mode_t, RefCount<IORequestor> callback)
                      strlen(buf) + 1,
                      mode,
                      shm_offset,
-                     NULL);
+                     nullptr);
 
     if (x < 0) {
         ioCompleted();
         errorOccured = true;
         //        IO->shm.put (shm_offset);
         ioRequestor->ioCompletedNotification();
-        ioRequestor = NULL;
+        ioRequestor = nullptr;
     }
 
     ++diskd_stats.open.ops;
@@ -84,12 +91,19 @@ void
 DiskdFile::create(int flags, mode_t, RefCount<IORequestor> callback)
 {
     debugs(79, 3, "DiskdFile::create: " << this << " creating for " << callback.getRaw());
-    assert (ioRequestor.getRaw() == NULL);
+    assert (ioRequestor.getRaw() == nullptr);
     ioRequestor = callback;
     assert (callback.getRaw());
     mode = flags;
     ssize_t shm_offset;
     char *buf = (char *)IO->shm.get(&shm_offset);
+    if (!buf) {
+        errorOccured = true;
+        notifyClient();
+        ioRequestor = nullptr;
+        return;
+    }
+
     xstrncpy(buf, path_, SHMBUF_BLKSZ);
     ioAway();
     int x = IO->send(_MQD_CREATE,
@@ -98,7 +112,7 @@ DiskdFile::create(int flags, mode_t, RefCount<IORequestor> callback)
                      strlen(buf) + 1,
                      mode,
                      shm_offset,
-                     NULL);
+                     nullptr);
 
     if (x < 0) {
         int xerrno = errno;
@@ -107,7 +121,7 @@ DiskdFile::create(int flags, mode_t, RefCount<IORequestor> callback)
         //        IO->shm.put (shm_offset);
         debugs(79, DBG_IMPORTANT, "storeDiskdSend CREATE: " << xstrerr(xerrno));
         notifyClient();
-        ioRequestor = NULL;
+        ioRequestor = nullptr;
         return;
     }
 
@@ -117,10 +131,15 @@ DiskdFile::create(int flags, mode_t, RefCount<IORequestor> callback)
 void
 DiskdFile::read(ReadRequest *aRead)
 {
-    assert (ioRequestor.getRaw() != NULL);
+    assert (ioRequestor.getRaw() != nullptr);
     ssize_t shm_offset;
     char *rbuf = (char *)IO->shm.get(&shm_offset);
-    assert(rbuf);
+    if (!rbuf) {
+        errorOccured = true;
+        notifyClient();
+        ioRequestor = nullptr;
+        return;
+    }
     ioAway();
     int x = IO->send(_MQD_READ,
                      id,
@@ -137,7 +156,7 @@ DiskdFile::read(ReadRequest *aRead)
         //        IO->shm.put (shm_offset);
         debugs(79, DBG_IMPORTANT, "storeDiskdSend READ: " << xstrerr(xerrno));
         notifyClient();
-        ioRequestor = NULL;
+        ioRequestor = nullptr;
         return;
     }
 
@@ -156,7 +175,7 @@ DiskdFile::close()
                      0,
                      0,
                      -1,
-                     NULL);
+                     nullptr);
 
     if (x < 0) {
         int xerrno = errno;
@@ -164,7 +183,7 @@ DiskdFile::close()
         errorOccured = true;
         debugs(79, DBG_IMPORTANT, "storeDiskdSend CLOSE: " << xstrerr(xerrno));
         notifyClient();
-        ioRequestor = NULL;
+        ioRequestor = nullptr;
         return;
     }
 
@@ -281,6 +300,15 @@ DiskdFile::write(WriteRequest *aRequest)
     debugs(79, 3, "DiskdFile::write: this " << (void *)this << ", buf " << (void *)aRequest->buf << ", off " << aRequest->offset << ", len " << aRequest->len);
     ssize_t shm_offset;
     char *sbuf = (char *)IO->shm.get(&shm_offset);
+    if (!sbuf) {
+        errorOccured = true;
+        if (aRequest->free_func)
+            aRequest->free_func(const_cast<char *>(aRequest->buf));
+        notifyClient();
+        ioRequestor = nullptr;
+        return;
+    }
+
     memcpy(sbuf, aRequest->buf, aRequest->len);
 
     if (aRequest->free_func)
@@ -303,7 +331,7 @@ DiskdFile::write(WriteRequest *aRequest)
         debugs(79, DBG_IMPORTANT, "storeDiskdSend WRITE: " << xstrerr(xerrno));
         //        IO->shm.put (shm_offset);
         notifyClient();
-        ioRequestor = NULL;
+        ioRequestor = nullptr;
         return;
     }
 
@@ -340,7 +368,7 @@ DiskdFile::closeDone(diomsg * M)
     if (canNotifyClient())
         ioRequestor->closeCompleted();
 
-    ioRequestor = NULL;
+    ioRequestor = nullptr;
 }
 
 void
@@ -352,17 +380,17 @@ DiskdFile::readDone(diomsg * M)
     ReadRequest::Pointer readRequest = dynamic_cast<ReadRequest *>(M->requestor);
 
     /* remove the free protection */
-    if (readRequest != NULL) {
+    if (readRequest != nullptr) {
         const uint32_t lcount = readRequest->unlock();
         if (lcount == 0)
-            debugs(79, DBG_IMPORTANT, "invariant check failed: readRequest reference count is 0");
+            debugs(79, DBG_IMPORTANT, "ERROR: invariant check failed: readRequest reference count is 0");
     }
 
     if (M->status < 0) {
         ++diskd_stats.read.fail;
         ioCompleted();
         errorOccured = true;
-        ioRequestor->readCompleted(NULL, -1, DISK_ERROR, readRequest);
+        ioRequestor->readCompleted(nullptr, -1, DISK_ERROR, readRequest);
         return;
     }
 
@@ -381,10 +409,10 @@ DiskdFile::writeDone(diomsg *M)
     WriteRequest::Pointer writeRequest = dynamic_cast<WriteRequest *>(M->requestor);
 
     /* remove the free protection */
-    if (writeRequest != NULL) {
+    if (writeRequest != nullptr) {
         const uint32_t lcount = writeRequest->unlock();
         if (lcount == 0)
-            debugs(79, DBG_IMPORTANT, "invariant check failed: writeRequest reference count is 0");
+            debugs(79, DBG_IMPORTANT, "ERROR: invariant check failed: writeRequest reference count is 0");
     }
 
     if (M->status < 0) {

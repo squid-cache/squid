@@ -1,0 +1,1 @@
+skip-unless-autoconf-defines HAVE_AUTH_MODULE_BASIC

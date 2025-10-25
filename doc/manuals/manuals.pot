@@ -359,13 +359,13 @@ msgstr ""
 #: src/acl/external/AD_group/ext_ad_group_acl.8:258 src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:222 src/acl/external/file_userip/ext_file_userip_acl.8:101 src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:245 src/acl/external/LDAP_group/ext_ldap_group_acl.8:266 src/acl/external/LM_group/ext_lm_group_acl.8:190 src/acl/external/session/ext_session_acl.8:120 src/acl/external/time_quota/ext_time_quota_acl.8:238 src/acl/external/unix_group/ext_unix_group_acl.8:93 src/auth/basic/getpwnam/basic_getpwnam_auth.8:95 src/auth/basic/LDAP/basic_ldap_auth.8:329 src/auth/basic/NCSA/basic_ncsa_auth.8:85 src/auth/basic/PAM/basic_pam_auth.8:105 src/auth/basic/RADIUS/basic_radius_auth.8:120 src/auth/basic/SASL/basic_sasl_auth.8:101 src/auth/basic/SSPI/basic_sspi_auth.8:155 src/auth/digest/file/digest_file_auth.8:92 src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:121 src/auth/negotiate/SSPI/negotiate_sspi_auth.8:94 src/auth/ntlm/SSPI/ntlm_sspi_auth.8:122 src/security/cert_generators/file/security_file_certgen.8.in:167 src/squid.8.in:261
 msgid ""
 "Bug reports need to be made in English.  See "
-"http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you "
+"https://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you "
 "need to include with your bug report."
 msgstr ""
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:260 src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:224 src/acl/external/file_userip/ext_file_userip_acl.8:103 src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:247 src/acl/external/LDAP_group/ext_ldap_group_acl.8:268 src/acl/external/LM_group/ext_lm_group_acl.8:192 src/acl/external/session/ext_session_acl.8:122 src/acl/external/time_quota/ext_time_quota_acl.8:240 src/acl/external/unix_group/ext_unix_group_acl.8:95 src/auth/basic/getpwnam/basic_getpwnam_auth.8:97 src/auth/basic/LDAP/basic_ldap_auth.8:331 src/auth/basic/NCSA/basic_ncsa_auth.8:87 src/auth/basic/PAM/basic_pam_auth.8:107 src/auth/basic/RADIUS/basic_radius_auth.8:122 src/auth/basic/SASL/basic_sasl_auth.8:103 src/auth/basic/SSPI/basic_sspi_auth.8:157 src/auth/digest/file/digest_file_auth.8:94 src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:123 src/auth/negotiate/SSPI/negotiate_sspi_auth.8:96 src/auth/ntlm/SSPI/ntlm_sspi_auth.8:124 src/security/cert_generators/file/security_file_certgen.8.in:169 src/squid.8.in:263 tools/cachemgr.cgi.8.in:72 tools/purge/purge.1:278 tools/squidclient/squidclient.1:254
-msgid "Report bugs or bug fixes using http://bugs.squid-cache.org/"
+msgid "Report bugs or bug fixes using https://bugs.squid-cache.org/"
 msgstr ""
 
 #. type: Plain text
@@ -1628,10 +1628,10 @@ msgstr ""
 msgid ""
 "User is just a unique key value. The above example uses %LOGIN and the "
 "username but any of the B<external_acl_type> format tags can be substituted "
-"in its place.  B<%EXT_TAG> , B<%LOGIN> , B<%IDENT> , B<%EXT_USER> , B<%SRC> "
+"in its place.  B<%EXT_TAG> , B<%LOGIN> , B<%EXT_USER> , B<%SRC> "
 ", B<%SRCEUI48> , and B<%SRCEUI64> are all likely candidates for client "
 "identification.  The Squid wiki has more examples at "
-"http://wiki.squid-cache.org/ConfigExamples."
+"https://wiki.squid-cache.org/ConfigExamples."
 msgstr ""
 
 #. type: SH
@@ -3221,7 +3221,7 @@ msgstr ""
 msgid ""
 "This manual page only lists the command line arguments.  For details on how "
 "to configure Squid see the file B<@SYSCONFDIR@/squid.conf.documented,> the "
-"Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the "
+"Squid wiki FAQ and examples at https://wiki.squid-cache.org/ , or the "
 "configuration manual on the Squid home page"
 msgstr ""
 
@@ -3530,7 +3530,7 @@ msgstr ""
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:70 tools/purge/purge.1:276 tools/squidclient/squidclient.1:252
 msgid ""
-"See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what "
+"See https://wiki.squid-cache.org/SquidFaq/BugReporting for details of what "
 "you need to include with your bug report."
 msgstr ""
 

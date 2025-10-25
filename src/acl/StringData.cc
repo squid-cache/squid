@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,11 +12,7 @@
 #include "acl/Checklist.h"
 #include "acl/StringData.h"
 #include "ConfigParser.h"
-#include "Debug.h"
-
-ACLStringData::ACLStringData(ACLStringData const &old) : stringValues(old.stringValues)
-{
-}
+#include "debug/Stream.h"
 
 void
 ACLStringData::insert(const char *value)
@@ -27,7 +23,7 @@ ACLStringData::insert(const char *value)
 bool
 ACLStringData::match(const SBuf &tf)
 {
-    if (stringValues.empty() || tf.isEmpty())
+    if (stringValues.empty())
         return 0;
 
     debugs(28, 3, "aclMatchStringList: checking '" << tf << "'");
@@ -42,6 +38,11 @@ ACLStringData::match(const SBuf &tf)
 bool
 ACLStringData::match(char const *toFind)
 {
+    if (!toFind) {
+        // TODO: Check whether we can Assure(toFind) instead.
+        debugs(28, 3, "not matching a nil c-string");
+        return false;
+    }
     return match(SBuf(toFind));
 }
 
@@ -64,12 +65,5 @@ bool
 ACLStringData::empty() const
 {
     return stringValues.empty();
-}
-
-ACLData<char const *> *
-ACLStringData::clone() const
-{
-    /* Splay trees don't clone yet. */
-    return new ACLStringData(*this);
 }
 

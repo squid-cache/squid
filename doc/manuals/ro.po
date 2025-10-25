@@ -175,7 +175,7 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:85 helpers/basic_auth/LDAP/basic_ldap_auth.8:311 helpers/basic_auth/NCSA/basic_ncsa_auth.8:57 helpers/basic_auth/PAM/basic_pam_auth.8:99 helpers/basic_auth/RADIUS/basic_radius_auth.8:110 helpers/external_acl/ldap_group/squid_ldap_group.8:260 helpers/external_acl/session/squid_session.8:79 helpers/external_acl/unix_group/squid_unix_group.8:81 src/squid.8.in:250 tools/cachemgr.cgi.8.in:67 tools/squidclient.1:179
-msgid "Report bugs or bug fixes using http://bugs.squid-cache.org/"
+msgid "Report bugs or bug fixes using https://bugs.squid-cache.org/"
 msgstr ""
 
 #. type: Plain text
@@ -1226,7 +1226,7 @@ msgstr ""
 msgid ""
 "This manual page only lists the command line arguments.  For details on how "
 "to configure Squid see the file B<@SYSCONFDIR@/squid.conf.documented,> the "
-"Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the "
+"Squid wiki FAQ and examples at https://wiki.squid-cache.org/ , or the "
 "configuration manual on the Squid home page"
 msgstr ""
 

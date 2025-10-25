@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,17 +19,13 @@
 #include "dns/rfc2671.h"
 #include "util.h"
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cassert>
+#include <cstring>
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #if HAVE_MEMORY_H
 #include <memory.h>
-#endif
-#if HAVE_ASSERT_H
-#include <assert.h>
 #endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
@@ -104,10 +100,11 @@ rfc1035HeaderPack(char *buf, size_t sz, rfc1035_message * hdr)
 static int
 rfc1035LabelPack(char *buf, size_t sz, const char *label)
 {
+    assert(label);
+    assert(!strchr(label, '.'));
+
     int off = 0;
-    size_t len = label ? strlen(label) : 0;
-    if (label)
-        assert(!strchr(label, '.'));
+    auto len = strlen(label);
     if (len > RFC1035_MAXLABELSZ)
         len = RFC1035_MAXLABELSZ;
     assert(sz >= len + 1);
@@ -135,11 +132,15 @@ rfc1035NamePack(char *buf, size_t sz, const char *name)
     /*
      * NOTE: use of strtok here makes names like foo....com valid.
      */
-    for (t = strtok(copy, "."); t; t = strtok(NULL, "."))
+    for (t = strtok(copy, "."); t; t = strtok(nullptr, "."))
         off += rfc1035LabelPack(buf + off, sz - off, t);
     xfree(copy);
-    off += rfc1035LabelPack(buf + off, sz - off, NULL);
-    assert(off <= sz);
+
+    // add a terminating root (i.e. zero length) label
+    assert(off < sz);
+    buf[off] = 0;
+    ++off;
+
     return off;
 }
 
@@ -176,7 +177,7 @@ rfc1035QuestionPack(char *buf,
  * of the rfc1035_message structure.
  *
  * Updates the buffer offset, which is the same as number of
- * octects unpacked since the header starts at offset 0.
+ * octets unpacked since the header starts at offset 0.
  *
  * Returns 0 (success) or 1 (error)
  */
@@ -264,14 +265,14 @@ rfc1035NameUnpack(const char *buf, size_t sz, unsigned int *off, unsigned short 
                 RFC1035_UNPACK_DEBUG;
                 return 1;
             }
-            memcpy(&s, buf + (*off), sizeof(s));
-            s = ntohs(s);
-            (*off) += sizeof(s);
-            /* Sanity check */
-            if ((*off) > sz) {
+            /* before copying compression offset value, ensure it is inside the buffer */
+            if ((*off) + sizeof(s) > sz) {
                 RFC1035_UNPACK_DEBUG;
                 return 1;
             }
+            memcpy(&s, buf + (*off), sizeof(s));
+            s = ntohs(s);
+            (*off) += sizeof(s);
             ptr = s & 0x3FFF;
             /* Make sure the pointer is inside this message */
             if (ptr >= sz) {
@@ -353,7 +354,7 @@ rfc1035RRPack(char *buf, const size_t sz, const rfc1035_rr * RR)
     s = htons(RR->rdlength);
     memcpy(buf + off, &s, sizeof(s));
     off += sizeof(s);
-    memcpy(buf + off, &(RR->rdata), RR->rdlength);
+    memcpy(buf + off, RR->rdata, RR->rdlength);
     off += RR->rdlength;
     assert(off <= sz);
     return off;
@@ -376,7 +377,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
     unsigned int i;
     unsigned short rdlength;
     unsigned int rdata_off;
-    if (rfc1035NameUnpack(buf, sz, off, NULL, RR->name, RFC1035_MAXHOSTNAMESZ, 0)) {
+    if (rfc1035NameUnpack(buf, sz, off, nullptr, RR->name, RFC1035_MAXHOSTNAMESZ, 0)) {
         RFC1035_UNPACK_DEBUG;
         memset(RR, '\0', sizeof(*RR));
         return 1;
@@ -419,6 +420,8 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
         RR->rdlength = 0;   /* Filled in by rfc1035NameUnpack */
         if (rfc1035NameUnpack(buf, sz, &rdata_off, &RR->rdlength, RR->rdata, RFC1035_MAXHOSTNAMESZ, 0)) {
             RFC1035_UNPACK_DEBUG;
+            xfree(RR->rdata);
+            memset(RR, '\0', sizeof(*RR));
             return 1;
         }
         if (rdata_off > ((*off) + rdlength)) {
@@ -486,7 +489,7 @@ rfc1035ErrorMessage(int n)
 void
 rfc1035RRDestroy(rfc1035_rr ** rr, int n)
 {
-    if (*rr == NULL) {
+    if (*rr == nullptr) {
         return;
     }
 
@@ -495,7 +498,7 @@ rfc1035RRDestroy(rfc1035_rr ** rr, int n)
             xfree((*rr)[n].rdata);
     }
     xfree(*rr);
-    *rr = NULL;
+    *rr = nullptr;
 }
 
 /*
@@ -510,8 +513,8 @@ rfc1035RRDestroy(rfc1035_rr ** rr, int n)
 static int
 rfc1035QueryUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_query * query)
 {
-    unsigned short s;
-    if (rfc1035NameUnpack(buf, sz, off, NULL, query->name, RFC1035_MAXHOSTNAMESZ, 0)) {
+    uint16_t s;
+    if (rfc1035NameUnpack(buf, sz, off, nullptr, query->name, RFC1035_MAXHOSTNAMESZ, 0)) {
         RFC1035_UNPACK_DEBUG;
         memset(query, '\0', sizeof(*query));
         return 1;
@@ -521,11 +524,11 @@ rfc1035QueryUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_query 
         memset(query, '\0', sizeof(*query));
         return 1;
     }
-    memcpy(&s, buf + *off, 2);
-    *off += 2;
+    memcpy(&s, buf + *off, sizeof(s));
+    *off += sizeof(s);
     query->qtype = ntohs(s);
-    memcpy(&s, buf + *off, 2);
-    *off += 2;
+    memcpy(&s, buf + *off, sizeof(s));
+    *off += sizeof(s);
     query->qclass = ntohs(s);
     return 0;
 }
@@ -540,7 +543,7 @@ rfc1035MessageDestroy(rfc1035_message ** msg)
     if ((*msg)->answer)
         rfc1035RRDestroy(&(*msg)->answer, (*msg)->ancount);
     xfree(*msg);
-    *msg = NULL;
+    *msg = nullptr;
 }
 
 /*
@@ -592,9 +595,9 @@ rfc1035MessageUnpack(const char *buf,
     unsigned int off = 0;
     unsigned int i, j;
     unsigned int nr = 0;
-    rfc1035_message *msg = NULL;
-    rfc1035_rr *recs = NULL;
-    rfc1035_query *querys = NULL;
+    rfc1035_message *msg = nullptr;
+    rfc1035_rr *recs = nullptr;
+    rfc1035_query *querys = nullptr;
     msg = (rfc1035_message*)xcalloc(1, sizeof(*msg));
     if (rfc1035HeaderUnpack(buf + off, sz - off, &off, msg)) {
         RFC1035_UNPACK_DEBUG;
@@ -642,7 +645,7 @@ rfc1035MessageUnpack(const char *buf,
          * didn't actually get any.
          */
         rfc1035MessageDestroy(&msg);
-        *answer = NULL;
+        *answer = nullptr;
         return -rfc1035_unpack_error;
     }
     return nr;

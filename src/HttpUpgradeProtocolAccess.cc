@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,14 +9,13 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/Gadgets.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "globals.h"
 #include "HttpUpgradeProtocolAccess.h"
 #include "sbuf/Stream.h"
 
 #include <algorithm>
-
-const SBuf HttpUpgradeProtocolAccess::ProtoOther("OTHER");
 
 ProtocolView::ProtocolView(const char * const start, const size_t len):
     ProtocolView(SBuf(start, len))
@@ -50,9 +49,9 @@ HttpUpgradeProtocolAccess::configureGuard(ConfigParser &parser)
 {
     const auto rawProto = parser.NextToken();
     if (!rawProto)
-        throw TextException(ToSBuf("expected a protocol name or ", ProtoOther), Here());
+        throw TextException(ToSBuf("expected a protocol name or ", ProtoOther()), Here());
 
-    if (ProtoOther.cmp(rawProto) == 0) {
+    if (ProtoOther().cmp(rawProto) == 0) {
         aclParseAccessLine(cfg_directive, parser, &other);
         return;
     }

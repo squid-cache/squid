@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,18 +16,20 @@
 #if USE_OPENSSL
 
 #include "acl/FilledChecklist.h"
+#include "anyp/Host.h"
 #include "anyp/PortCfg.h"
 #include "anyp/Uri.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
+#include "ip/Address.h"
 #include "ipc/MemMap.h"
 #include "security/CertError.h"
+#include "security/Certificate.h"
 #include "security/ErrorDetail.h"
 #include "security/Session.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "ssl/bio.h"
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
@@ -39,9 +41,7 @@
 // TODO: Move ssl_ex_index_* global variables from global.cc here.
 static int ssl_ex_index_verify_callback_parameters = -1;
 
-static Ssl::CertsIndexedList SquidUntrustedCerts;
-
-const EVP_MD *Ssl::DefaultSignHash = NULL;
+const EVP_MD *Ssl::DefaultSignHash = nullptr;
 
 std::vector<const char *> Ssl::BumpModeStr = {
     "none",
@@ -55,13 +55,80 @@ std::vector<const char *> Ssl::BumpModeStr = {
     /*,"err"*/
 };
 
+namespace Ssl {
+
+/// GeneralNameMatcher for matching a single AnyP::Host given at construction time
+class OneNameMatcher: public GeneralNameMatcher
+{
+public:
+    explicit OneNameMatcher(const AnyP::Host &needle): needle_(needle) {}
+
+protected:
+    /* GeneralNameMatcher API */
+    bool matchDomainName(const Dns::DomainName &) const override;
+    bool matchIp(const Ip::Address &) const override;
+
+    AnyP::Host needle_; ///< a name we are looking for
+};
+
+static CertsIndexedList &
+SquidUntrustedCerts()
+{
+    static auto untrustedCerts = new CertsIndexedList();
+    return *untrustedCerts;
+}
+
+} // namespace Ssl
+
+bool
+Ssl::GeneralNameMatcher::match(const GeneralName &name) const
+{
+    if (const auto domain = name.domainName())
+        return matchDomainName(*domain);
+    if (const auto ip = name.ip())
+        return matchIp(*ip);
+    Assure(!"unreachable code: the above `if` statements must cover all name variants");
+    return false;
+}
+
+bool
+Ssl::OneNameMatcher::matchDomainName(const Dns::DomainName &rawName) const {
+    // TODO: Add debugs() stream manipulator to safely (i.e. without breaking
+    // cache.log message framing) dump raw input that may contain new lines. Use
+    // here and in similar contexts where we report such raw input.
+    debugs(83, 5, "needle=" << needle_ << " domain=" << rawName);
+    if (needle_.ip()) {
+        // for example, a 127.0.0.1 IP needle does not match DNS:127.0.0.1 SAN
+        debugs(83, 7, "needle is an IP; mismatch");
+        return false;
+    }
+
+    Assure(needle_.domainName());
+    auto domainNeedle = *needle_.domainName();
+
+    auto name = rawName;
+    if (name.length() > 0 && name[0] == '*')
+        name.consume(1);
+
+    return ::matchDomainName(domainNeedle.c_str(), name.c_str(), mdnRejectSubsubDomains) == 0;
+}
+
+bool
+Ssl::OneNameMatcher::matchIp(const Ip::Address &ip) const {
+    debugs(83, 5, "needle=" << needle_ << " ip=" << ip);
+    if (const auto needleIp = needle_.ip())
+        return (*needleIp == ip);
+    debugs(83, 7, "needle is not an IP; mismatch");
+    return false;
+}
+
 /**
  \defgroup ServerProtocolSSLInternal Server-Side SSL Internals
  \ingroup ServerProtocolSSLAPI
  */
 
 int
-Ssl::AskPasswordCb(char *buf, int size, int rwflag, void *userdata)
+Ssl::AskPasswordCb(char *buf, int size, int /* rwflag */, void *userdata)
 {
     FILE *in;
     int len = 0;
@@ -96,7 +163,7 @@ ssl_ask_password(SSL_CTX * context, const char * prompt)
 
 #if HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK
 static RSA *
-ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
+ssl_temp_rsa_cb(SSL *, int, int keylen)
 {
     static RSA *rsa_512 = nullptr;
     static RSA *rsa_1024 = nullptr;
@@ -107,7 +174,7 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
     if (!e) {
         e = BN_new();
         if (!e || !BN_set_word(e, RSA_F4)) {
-            debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Failed to set exponent for key " << keylen);
+            debugs(83, DBG_IMPORTANT, "ERROR: ssl_temp_rsa_cb: Failed to set exponent for key " << keylen);
             BN_free(e);
             e = nullptr;
             return nullptr;
@@ -147,18 +214,18 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
         break;
 
     default:
-        debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Unexpected key length " << keylen);
-        return NULL;
+        debugs(83, DBG_IMPORTANT, "ERROR: ssl_temp_rsa_cb: Unexpected key length " << keylen);
+        return nullptr;
     }
 
     if (rsa == NULL) {
-        debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Failed to generate key " << keylen);
-        return NULL;
+        debugs(83, DBG_IMPORTANT, "ERROR: ssl_temp_rsa_cb: Failed to generate key " << keylen);
+        return nullptr;
     }
 
     if (newkey) {
         if (Debug::Enabled(83, 5))
-            PEM_write_RSAPrivateKey(debug_log, rsa, NULL, NULL, 0, NULL, NULL);
+            PEM_write_RSAPrivateKey(DebugStream(), rsa, nullptr, nullptr, 0, nullptr, nullptr);
 
         debugs(83, DBG_IMPORTANT, "Generated ephemeral RSA key of length " << keylen);
     }
@@ -173,6 +240,8 @@ Ssl::MaybeSetupRsaCallback(Security::ContextPointer &ctx)
 #if HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK
     debugs(83, 9, "Setting RSA key generation callback.");
     SSL_CTX_set_tmp_rsa_callback(ctx.get(), ssl_temp_rsa_cb);
+#else
+    (void)ctx;
 #endif
 }
 
@@ -190,68 +259,85 @@ int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len)
     return write;
 }
 
-int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data))
+static std::optional<AnyP::Host>
+ParseSubjectAltName(const GENERAL_NAME &san)
 {
-    assert(peer_cert);
-
-    X509_NAME *name = X509_get_subject_name(peer_cert);
-
-    for (int i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
-
-        ASN1_STRING *cn_data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, i));
-
-        if ( (*check_func)(check_data, cn_data) == 0)
-            return 1;
+    switch(san.type) {
+    case GEN_DNS: {
+        Assure(san.d.dNSName);
+        // GEN_DNS is an IA5STRING. IA5STRING is a subset of ASCII that does not
+        // need to be converted to UTF-8 (or some such) before we parse it.
+        const auto buffer = Ssl::AsnToSBuf(*san.d.dNSName);
+        return AnyP::Host::ParseWildDomainName(buffer);
     }
 
-    STACK_OF(GENERAL_NAME) * altnames;
-    altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(peer_cert, NID_subject_alt_name, NULL, NULL);
+    case GEN_IPADD: {
+        // san.d.iPAddress is OpenSSL ASN1_OCTET_STRING
+        Assure(san.d.iPAddress);
 
-    if (altnames) {
-        int numalts = sk_GENERAL_NAME_num(altnames);
-        for (int i = 0; i < numalts; ++i) {
-            const GENERAL_NAME *check = sk_GENERAL_NAME_value(altnames, i);
-            if (check->type != GEN_DNS) {
-                continue;
-            }
-            ASN1_STRING *cn_data = check->d.dNSName;
+        // RFC 5280 section 4.2.1.6 signals IPv4/IPv6 address family using data length
 
-            if ( (*check_func)(check_data, cn_data) == 0) {
-                sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
-                return 1;
+        if (san.d.iPAddress->length == 4) {
+            struct in_addr addr;
+            static_assert(sizeof(addr.s_addr) == 4);
+            memcpy(&addr.s_addr, san.d.iPAddress->data, sizeof(addr.s_addr));
+            const Ip::Address ip(addr);
+            return AnyP::Host::ParseIp(ip);
+        }
+
+        if (san.d.iPAddress->length == 16) {
+            struct in6_addr addr;
+            static_assert(sizeof(addr.s6_addr) == 16);
+            memcpy(&addr.s6_addr, san.d.iPAddress->data, sizeof(addr.s6_addr));
+            const Ip::Address ip(addr);
+            return AnyP::Host::ParseIp(ip);
+        }
+
+        debugs(83, 3, "unexpected length of an IP address SAN: " << san.d.iPAddress->length);
+        return std::nullopt;
+    }
+
+    default:
+        debugs(83, 3, "unsupported SAN kind: " << san.type);
+        return std::nullopt;
+    }
+}
+
+bool
+Ssl::HasMatchingSubjectName(X509 &cert, const GeneralNameMatcher &matcher)
+{
+    const auto name = X509_get_subject_name(&cert);
+    for (int i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
+        debugs(83, 7, "checking CN at " << i);
+        if (const auto cn = ParseCommonNameAt(*name, i)) {
+            if (matcher.match(*cn))
+                return true;
+        }
+    }
+
+    const Ssl::GENERAL_NAME_STACK_Pointer sans(static_cast<STACK_OF(GENERAL_NAME)*>(
+                X509_get_ext_d2i(&cert, NID_subject_alt_name, nullptr, nullptr)));
+    if (sans) {
+        const auto sanCount = sk_GENERAL_NAME_num(sans.get());
+        for (int i = 0; i < sanCount; ++i) {
+            debugs(83, 7, "checking SAN at " << i);
+            const auto rawSan = sk_GENERAL_NAME_value(sans.get(), i);
+            Assure(rawSan);
+            if (const auto san = ParseSubjectAltName(*rawSan)) {
+                if (matcher.match(*san))
+                    return true;
             }
         }
-        sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
     }
-    return 0;
+
+    debugs(83, 7, "no matches");
+    return false;
 }
 
-static int check_domain( void *check_data, ASN1_STRING *cn_data)
+bool
+Ssl::HasSubjectName(X509 &cert, const AnyP::Host &host)
 {
-    char cn[1024];
-    const char *server = (const char *)check_data;
-
-    if (cn_data->length == 0)
-        return 1; // zero length cn, ignore
-
-    if (cn_data->length > (int)sizeof(cn) - 1)
-        return 1; //if does not fit our buffer just ignore
-
-    char *s = reinterpret_cast<char*>(cn_data->data);
-    char *d = cn;
-    for (int i = 0; i < cn_data->length; ++i, ++d, ++s) {
-        if (*s == '\0')
-            return 1; // always a domain mismatch. contains 0x00
-        *d = *s;
-    }
-    cn[cn_data->length] = '\0';
-    debugs(83, 4, "Verifying server domain " << server << " to certificate name/subjectAltName " << cn);
-    return matchDomainName(server, (cn[0] == '*' ? cn + 1 : cn), mdnRejectSubsubDomains);
-}
-
-bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
-{
-    return matchX509CommonNames(cert, (void *)server, check_domain);
+    return HasMatchingSubjectName(cert, OneNameMatcher(host));
 }
 
 /// adjusts OpenSSL validation results for each verified certificate in ctx
@@ -262,7 +348,6 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     // preserve original ctx->error before SSL_ calls can overwrite it
     Security::ErrorCode error_no = ok ? SSL_ERROR_NONE : X509_STORE_CTX_get_error(ctx);
 
-    char buffer[256] = "";
     SSL *ssl = (SSL *)X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
     SSL_CTX *sslctx = SSL_get_SSL_CTX(ssl);
     SBuf *server = (SBuf *)SSL_get_ex_data(ssl, ssl_ex_index_server);
@@ -271,8 +356,6 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     X509 *peeked_cert = (X509 *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_peeked_cert);
     Security::CertPointer peer_cert;
     peer_cert.resetAndLock(X509_STORE_CTX_get0_cert(ctx));
-
-    X509_NAME_oneline(X509_get_subject_name(peer_cert.get()), buffer, sizeof(buffer));
 
     // detect infinite loops
     uint32_t *validationCounter = static_cast<uint32_t *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_validation_counter));
@@ -288,16 +371,28 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         ok = 0; // or the validation loop will never stop
         error_no = SQUID_X509_V_ERR_INFINITE_VALIDATION;
         debugs(83, 2, "SQUID_X509_V_ERR_INFINITE_VALIDATION: " <<
-               *validationCounter << " iterations while checking " << buffer);
+               *validationCounter << " iterations while checking " << *peer_cert);
     }
 
     if (ok) {
-        debugs(83, 5, "SSL Certificate signature OK: " << buffer);
+        debugs(83, 5, "SSL Certificate signature OK: " << *peer_cert);
 
         // Check for domain mismatch only if the current certificate is the peer certificate.
         if (!dont_verify_domain && server && peer_cert.get() == X509_STORE_CTX_get_current_cert(ctx)) {
-            if (!Ssl::checkX509ServerValidity(peer_cert.get(), server->c_str())) {
-                debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << buffer << " does not match domainname " << server);
+            // XXX: This code does not know where the server name came from. The
+            // name may be valid but not compatible with requirements assumed or
+            // enforced by the AnyP::Host::ParseSimpleDomainName() call below.
+            // TODO: Store AnyP::Host (or equivalent) in ssl_ex_index_server.
+            if (const auto host = Ssl::ParseAsSimpleDomainNameOrIp(*server)) {
+                if (Ssl::HasSubjectName(*peer_cert, *host)) {
+                    debugs(83, 5, "certificate subject matches " << *host);
+                } else {
+                    debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << *peer_cert << " does not match domainname " << *host);
+                    ok = 0;
+                    error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
+                }
+            } else {
+                debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Cannot check whether certificate " << *peer_cert << " subject matches malformed domainname " << *server);
                 ok = 0;
                 error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
             }
@@ -307,7 +402,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     if (ok && peeked_cert) {
         // Check whether the already peeked certificate matches the new one.
         if (X509_cmp(peer_cert.get(), peeked_cert) != 0) {
-            debugs(83, 2, "SQUID_X509_V_ERR_CERT_CHANGE: Certificate " << buffer << " does not match peeked certificate");
+            debugs(83, 2, "SQUID_X509_V_ERR_CERT_CHANGE: Certificate " << *peer_cert << " does not match peeked certificate");
             ok = 0;
             error_no =  SQUID_X509_V_ERR_CERT_CHANGE;
         }
@@ -334,34 +429,34 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         if (!errs) {
             errs = new Security::CertErrors(Security::CertError(error_no, broken_cert, depth));
             if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_errors,  (void *)errs)) {
-                debugs(83, 2, "Failed to set ssl error_no in ssl_verify_cb: Certificate " << buffer);
+                debugs(83, 2, "Failed to set ssl error_no in ssl_verify_cb: Certificate " << *peer_cert);
                 delete errs;
-                errs = NULL;
+                errs = nullptr;
             }
         } else // remember another error number
             errs->push_back_unique(Security::CertError(error_no, broken_cert, depth));
 
-        if (const char *err_descr = Ssl::GetErrorDescr(error_no))
-            debugs(83, 5, err_descr << ": " << buffer);
+        if (const auto description = Ssl::GetErrorDescr(error_no))
+            debugs(83, 5, *description << ": " << *peer_cert);
         else
-            debugs(83, DBG_IMPORTANT, "SSL unknown certificate error " << error_no << " in " << buffer);
+            debugs(83, DBG_IMPORTANT, "ERROR: SSL unknown certificate error " << error_no << " in " << *peer_cert);
 
         // Check if the certificate error can be bypassed.
         // Infinity validation loop errors can not bypassed.
         if (error_no != SQUID_X509_V_ERR_INFINITE_VALIDATION) {
             if (check) {
                 ACLFilledChecklist *filledCheck = Filled(check);
-                assert(!filledCheck->sslErrors);
-                filledCheck->sslErrors = new Security::CertErrors(Security::CertError(error_no, broken_cert));
+                const auto savedErrors = filledCheck->sslErrors;
+                const auto sslErrors = std::make_unique<Security::CertErrors>(Security::CertError(error_no, broken_cert));
+                filledCheck->sslErrors = sslErrors.get();
                 filledCheck->serverCert = peer_cert;
                 if (check->fastCheck().allowed()) {
-                    debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
+                    debugs(83, 3, "bypassing SSL error " << error_no << " in " << *peer_cert);
                     ok = 1;
                 } else {
                     debugs(83, 5, "confirming SSL error " << error_no);
                 }
-                delete filledCheck->sslErrors;
-                filledCheck->sslErrors = NULL;
+                filledCheck->sslErrors = savedErrors;
                 filledCheck->serverCert.reset();
             }
             // If the certificate validator is used then we need to allow all errors and
@@ -396,7 +491,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         if (SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_detail, edp.get()))
             edp.release();
         else
-            debugs(83, 2, "failed to store a " << buffer << " error detail: " << *edp);
+            debugs(83, 2, "failed to store a " << *peer_cert << " error detail: " << *edp);
     }
 
     return ok;
@@ -410,7 +505,7 @@ Ssl::ConfigurePeerVerification(Security::ContextPointer &ctx, const Security::Pa
     // assume each flag is exclusive; flags creator must check this assumption
     if (flags & SSL_FLAG_DONT_VERIFY_PEER) {
         debugs(83, DBG_IMPORTANT, "SECURITY WARNING: Peer certificates are not verified for validity!");
-        debugs(83, DBG_IMPORTANT, "UPGRADE NOTICE: The DONT_VERIFY_PEER flag is deprecated. Remove the clientca= option to disable client certificates.");
+        debugs(83, DBG_IMPORTANT, "WARNING: UPGRADE: The DONT_VERIFY_PEER flag is deprecated. Remove the clientca= option to disable client certificates.");
         mode = SSL_VERIFY_NONE;
     }
     else if (flags & SSL_FLAG_DELAYED_AUTH) {
@@ -557,7 +652,11 @@ Ssl::VerifyCallbackParameters::At(Security::Connection &sconn)
 }
 
 // "dup" function for SSL_get_ex_new_index("cert_err_check")
-#if SQUID_USE_CONST_CRYPTO_EX_DATA_DUP
+#if OPENSSL_VERSION_MAJOR >= 3
+static int
+ssl_dupAclChecklist(CRYPTO_EX_DATA *, const CRYPTO_EX_DATA *, void **,
+                    int, long, void *)
+#elif SQUID_USE_CONST_CRYPTO_EX_DATA_DUP
 static int
 ssl_dupAclChecklist(CRYPTO_EX_DATA *, const CRYPTO_EX_DATA *, void *,
                     int, long, void *)
@@ -654,8 +753,12 @@ Ssl::Initialize(void)
 
     SQUID_OPENSSL_init_ssl();
 
-#if !defined(OPENSSL_NO_ENGINE)
     if (::Config.SSL.ssl_engine) {
+#if OPENSSL_VERSION_MAJOR < 3
+        debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Support for ssl_engine is deprecated " <<
+               "in Squids built with OpenSSL 1.x (like this Squid). " <<
+               "It is removed in Squids built with OpenSSL 3.0 or newer.");
+#if !defined(OPENSSL_NO_ENGINE)
         ENGINE_load_builtin_engines();
         ENGINE *e;
         if (!(e = ENGINE_by_id(::Config.SSL.ssl_engine)))
@@ -665,30 +768,33 @@ Ssl::Initialize(void)
             const auto ssl_error = ERR_get_error();
             fatalf("Failed to initialise SSL engine: %s\n", Security::ErrorString(ssl_error));
         }
-    }
-#else
-    if (::Config.SSL.ssl_engine)
-        fatalf("Your OpenSSL has no SSL engine support\n");
+#else /* OPENSSL_NO_ENGINE */
+        throw TextException("Cannot use ssl_engine in Squid built with OpenSSL configured to disable SSL engine support", Here());
 #endif
+
+#else /* OPENSSL_VERSION_MAJOR */
+        throw TextException("Cannot use ssl_engine in Squid built with OpenSSL 3.0 or newer", Here());
+#endif
+    }
 
     const char *defName = ::Config.SSL.certSignHash ? ::Config.SSL.certSignHash : SQUID_SSL_SIGN_HASH_IF_NONE;
     Ssl::DefaultSignHash = EVP_get_digestbyname(defName);
     if (!Ssl::DefaultSignHash)
         fatalf("Sign hash '%s' is not supported\n", defName);
 
-    ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, ssl_free_SBuf);
-    ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", NULL, NULL, NULL);
-    ssl_ex_index_cert_error_check = SSL_get_ex_new_index(0, (void *) "cert_error_check", NULL, &ssl_dupAclChecklist, &ssl_freeAclChecklist);
-    ssl_ex_index_ssl_error_detail = SSL_get_ex_new_index(0, (void *) "ssl_error_detail", NULL, NULL, &ssl_free_ErrorDetail);
-    ssl_ex_index_ssl_peeked_cert  = SSL_get_ex_new_index(0, (void *) "ssl_peeked_cert", NULL, NULL, &ssl_free_X509);
-    ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
-    ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", NULL, NULL, &ssl_free_CertChain);
-    ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
+    ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", nullptr, nullptr, ssl_free_SBuf);
+    ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", nullptr, nullptr, nullptr);
+    ssl_ex_index_cert_error_check = SSL_get_ex_new_index(0, (void *) "cert_error_check", nullptr, &ssl_dupAclChecklist, &ssl_freeAclChecklist);
+    ssl_ex_index_ssl_error_detail = SSL_get_ex_new_index(0, (void *) "ssl_error_detail", nullptr, nullptr, &ssl_free_ErrorDetail);
+    ssl_ex_index_ssl_peeked_cert  = SSL_get_ex_new_index(0, (void *) "ssl_peeked_cert", nullptr, nullptr, &ssl_free_X509);
+    ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", nullptr, nullptr, &ssl_free_SslErrors);
+    ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", nullptr, nullptr, &ssl_free_CertChain);
+    ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", nullptr, nullptr, &ssl_free_int);
     ssl_ex_index_verify_callback_parameters = SSL_get_ex_new_index(0, (void *) "verify_callback_parameters", nullptr, nullptr, &ssl_free_VerifyCallbackParameters);
 }
 
 bool
-Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
+Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &)
 {
     if (!ctx)
         return false;
@@ -703,7 +809,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
         return false;
 
     if (!peer.sslCipher.isEmpty()) {
-        debugs(83, 5, "Using chiper suite " << peer.sslCipher << ".");
+        debugs(83, 5, "Using cipher suite " << peer.sslCipher << ".");
 
         const char *cipher = peer.sslCipher.c_str();
         if (!SSL_CTX_set_cipher_list(ctx.get(), cipher)) {
@@ -717,7 +823,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
         // TODO: support loading multiple cert/key pairs
         auto &keys = peer.certs.front();
         if (!keys.certFile.isEmpty()) {
-            debugs(83, DBG_IMPORTANT, "Using certificate in " << keys.certFile);
+            debugs(83, 2, "loading client certificate from " << keys.certFile);
 
             const char *certfile = keys.certFile.c_str();
             if (!SSL_CTX_use_certificate_chain_file(ctx.get(), certfile)) {
@@ -726,7 +832,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
                        certfile, Security::ErrorString(ssl_error));
             }
 
-            debugs(83, DBG_IMPORTANT, "Using private key in " << keys.privateKeyFile);
+            debugs(83, 2, "loading private key from " << keys.privateKeyFile);
             const char *keyfile = keys.privateKeyFile.c_str();
             ssl_ask_password(ctx.get(), keyfile);
 
@@ -782,7 +888,7 @@ Ssl::GetX509UserAttribute(X509 * cert, const char *attribute_name)
     const char *ret;
 
     if (!cert)
-        return NULL;
+        return nullptr;
 
     name = X509_get_subject_name(cert);
 
@@ -796,12 +902,12 @@ Ssl::GetX509Fingerprint(X509 * cert, const char *)
 {
     static char buf[1024];
     if (!cert)
-        return NULL;
+        return nullptr;
 
     unsigned int n;
     unsigned char md[EVP_MAX_MD_SIZE];
     if (!X509_digest(cert, EVP_sha1(), md, &n))
-        return NULL;
+        return nullptr;
 
     assert(3 * n + 1 < sizeof(buf));
 
@@ -836,7 +942,7 @@ Ssl::GetX509CAAttribute(X509 * cert, const char *attribute_name)
     const char *ret;
 
     if (!cert)
-        return NULL;
+        return nullptr;
 
     name = X509_get_issuer_name(cert);
 
@@ -848,7 +954,7 @@ Ssl::GetX509CAAttribute(X509 * cert, const char *attribute_name)
 const char *sslGetUserAttribute(SSL *ssl, const char *attribute_name)
 {
     if (!ssl)
-        return NULL;
+        return nullptr;
 
     X509 *cert = SSL_get_peer_certificate(ssl);
 
@@ -861,7 +967,7 @@ const char *sslGetUserAttribute(SSL *ssl, const char *attribute_name)
 const char *sslGetCAAttribute(SSL *ssl, const char *attribute_name)
 {
     if (!ssl)
-        return NULL;
+        return nullptr;
 
     X509 *cert = SSL_get_peer_certificate(ssl);
 
@@ -989,7 +1095,7 @@ Ssl::configureUnconfiguredSslContext(Security::ContextPointer &ctx, Ssl::CertSig
 }
 
 bool
-Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &port)
+Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &)
 {
     Security::CertPointer cert;
     Security::PrivateKeyPointer pkey;
@@ -1012,7 +1118,7 @@ Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortC
 }
 
 bool
-Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::PortCfg &port)
+Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::PortCfg &)
 {
     Security::CertPointer cert;
     Security::PrivateKeyPointer pkey;
@@ -1032,7 +1138,7 @@ Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
 }
 
 bool
-Ssl::verifySslCertificate(const Security::ContextPointer &ctx, CertificateProperties const &properties)
+Ssl::verifySslCertificate(const Security::ContextPointer &ctx, CertificateProperties const &)
 {
 #if HAVE_SSL_CTX_GET0_CERTIFICATE
     X509 * cert = SSL_CTX_get0_certificate(ctx.get());
@@ -1042,7 +1148,7 @@ Ssl::verifySslCertificate(const Security::ContextPointer &ctx, CertificateProper
     X509 ***pCert = (X509 ***)ctx->cert;
     X509 * cert = pCert && *pCert ? **pCert : NULL;
 #elif SQUID_SSLGETCERTIFICATE_BUGGY
-    X509 * cert = NULL;
+    X509 * cert = nullptr;
     assert(0);
 #else
     // Temporary ssl for getting X509 certificate from SSL_CTX.
@@ -1082,7 +1188,7 @@ Ssl::findIssuerUri(X509 *cert)
     AUTHORITY_INFO_ACCESS *info;
     if (!cert)
         return nullptr;
-    info = static_cast<AUTHORITY_INFO_ACCESS *>(X509_get_ext_d2i(cert, NID_info_access, NULL, NULL));
+    info = static_cast<AUTHORITY_INFO_ACCESS *>(X509_get_ext_d2i(cert, NID_info_access, nullptr, nullptr));
     if (!info)
         return nullptr;
 
@@ -1109,20 +1215,17 @@ Ssl::findIssuerUri(X509 *cert)
 bool
 Ssl::loadCerts(const char *certsFile, Ssl::CertsIndexedList &list)
 {
-    BIO *in = BIO_new_file(certsFile, "r");
+    const BIO_Pointer in(BIO_new_file(certsFile, "r"));
     if (!in) {
-        debugs(83, DBG_IMPORTANT, "Failed to open '" << certsFile << "' to load certificates");
+        debugs(83, DBG_IMPORTANT, "ERROR: Failed to open '" << certsFile << "' to load certificates");
         return false;
     }
 
-    X509 *aCert;
-    while((aCert = PEM_read_bio_X509(in, NULL, NULL, NULL))) {
-        static char buffer[2048];
-        X509_NAME_oneline(X509_get_subject_name(aCert), buffer, sizeof(buffer));
-        list.insert(std::pair<SBuf, X509 *>(SBuf(buffer), aCert));
+    while (auto aCert = ReadOptionalCertificate(in)) {
+        const auto name = Security::SubjectName(*aCert);
+        list.insert(std::pair<SBuf, X509 *>(name, aCert.release()));
     }
     debugs(83, 4, "Loaded " << list.size() << " certificates from file: '" << certsFile << "'");
-    BIO_free(in);
     return true;
 }
 
@@ -1131,21 +1234,18 @@ Ssl::loadCerts(const char *certsFile, Ssl::CertsIndexedList &list)
 static X509 *
 findCertIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
 {
-    static char buffer[2048];
+    const auto name = Security::IssuerName(*cert);
+    if (name.isEmpty())
+        return nullptr;
 
-    if (X509_NAME *issuerName = X509_get_issuer_name(cert))
-        X509_NAME_oneline(issuerName, buffer, sizeof(buffer));
-    else
-        return NULL;
-
-    const auto ret = list.equal_range(SBuf(buffer));
+    const auto ret = list.equal_range(name);
     for (Ssl::CertsIndexedList::iterator it = ret.first; it != ret.second; ++it) {
         X509 *issuer = it->second;
-        if (X509_check_issued(issuer, cert) == X509_V_OK) {
+        if (Security::IssuedBy(*cert, *issuer)) {
             return issuer;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 /// slowly find the issuer certificate of a given cert using linear search
@@ -1158,7 +1258,7 @@ sk_x509_findIssuer(const STACK_OF(X509) *sk, X509 *cert)
     const auto certCount = sk_X509_num(sk);
     for (int i = 0; i < certCount; ++i) {
         const auto issuer = sk_X509_value(sk, i);
-        if (X509_check_issued(issuer, cert) == X509_V_OK)
+        if (Security::IssuedBy(*cert, *issuer))
             return issuer;
     }
     return nullptr;
@@ -1174,7 +1274,7 @@ findIssuerInCaDb(X509 *cert, const Security::ContextPointer &connContext)
 
     X509_STORE_CTX *storeCtx = X509_STORE_CTX_new();
     if (!storeCtx) {
-        debugs(83, DBG_IMPORTANT, "Failed to allocate STORE_CTX object");
+        debugs(83, DBG_IMPORTANT, "ERROR: Failed to allocate STORE_CTX object");
         return nullptr;
     }
 
@@ -1184,15 +1284,14 @@ findIssuerInCaDb(X509 *cert, const Security::ContextPointer &connContext)
         const auto ret = X509_STORE_CTX_get1_issuer(&issuer, storeCtx, cert);
         if (ret > 0) {
             assert(issuer);
-            char buffer[256];
-            debugs(83, 5, "found " << X509_NAME_oneline(X509_get_subject_name(issuer), buffer, sizeof(buffer)));
+            debugs(83, 5, "found " << *issuer);
         } else {
             debugs(83, ret < 0 ? 2 : 3, "not found or failure: " << ret);
             assert(!issuer);
         }
     } else {
         const auto ssl_error = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "Failed to initialize STORE_CTX object: " << Security::ErrorString(ssl_error));
+        debugs(83, DBG_IMPORTANT, "ERROR: Failed to initialize STORE_CTX object: " << Security::ErrorString(ssl_error));
     }
 
     X509_STORE_CTX_free(storeCtx);
@@ -1212,7 +1311,7 @@ Ssl::findIssuerCertificate(X509 *cert, const STACK_OF(X509) *serverCertificates,
     }
 
     // check untrusted certificates
-    if (const auto issuer = findCertIssuerFast(SquidUntrustedCerts, cert)) {
+    if (const auto issuer = findCertIssuerFast(SquidUntrustedCerts(), cert)) {
         X509_up_ref(issuer);
         return Security::CertPointer(issuer);
     }
@@ -1238,9 +1337,8 @@ Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) &
         if (const auto issuerUri = findIssuerUri(cert)) {
             URIs.push(SBuf(issuerUri));
         } else {
-            static char name[2048];
             debugs(83, 3, "Issuer certificate for " <<
-                   X509_NAME_oneline(X509_get_subject_name(cert), name, sizeof(name)) <<
+                   *cert <<
                    " is missing and its URI is not provided");
         }
     }
@@ -1254,7 +1352,7 @@ static void
 completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) &untrustedCerts)
 {
     debugs(83, 2,  "completing " << sk_X509_num(&untrustedCerts) <<
-           " OpenSSL untrusted certs using " << SquidUntrustedCerts.size() <<
+           " OpenSSL untrusted certs using " << Ssl::SquidUntrustedCerts().size() <<
            " configured untrusted certificates");
 
     const X509_VERIFY_PARAM *param = X509_STORE_CTX_get0_param(ctx);
@@ -1263,7 +1361,7 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) &untrustedCerts)
     current.resetAndLock(X509_STORE_CTX_get0_cert(ctx));
     int i = 0;
     for (i = 0; current && (i < depth); ++i) {
-        if (X509_check_issued(current.get(), current.get()) == X509_V_OK) {
+        if (Security::SelfSigned(*current)) {
             // either ctx->cert is itself self-signed or untrustedCerts
             // already contain the self-signed current certificate
             break;
@@ -1304,7 +1402,7 @@ VerifyCtxCertificates(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
 
     // If the local untrusted certificates internal database is used
     // run completeIssuers to add missing certificates if possible.
-    if (SquidUntrustedCerts.size() > 0)
+    if (Ssl::SquidUntrustedCerts().size() > 0)
         completeIssuers(ctx, *untrustedCerts);
 
     X509_STORE_CTX_set0_untrusted(ctx, untrustedCerts.get()); // No locking/unlocking, just sets ctx->untrusted
@@ -1342,23 +1440,23 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx, void *)
 void
 Ssl::useSquidUntrusted(SSL_CTX *sslContext)
 {
-    SSL_CTX_set_cert_verify_callback(sslContext, untrustedToStoreCtx_cb, NULL);
+    SSL_CTX_set_cert_verify_callback(sslContext, untrustedToStoreCtx_cb, nullptr);
 }
 
 bool
 Ssl::loadSquidUntrusted(const char *path)
 {
-    return Ssl::loadCerts(path, SquidUntrustedCerts);
+    return Ssl::loadCerts(path, SquidUntrustedCerts());
 }
 
 void
 Ssl::unloadSquidUntrusted()
 {
-    if (SquidUntrustedCerts.size()) {
-        for (Ssl::CertsIndexedList::iterator it = SquidUntrustedCerts.begin(); it != SquidUntrustedCerts.end(); ++it) {
-            X509_free(it->second);
+    if (SquidUntrustedCerts().size()) {
+        for (const auto &i: SquidUntrustedCerts()) {
+            X509_free(i.second);
         }
-        SquidUntrustedCerts.clear();
+        SquidUntrustedCerts().clear();
     }
 }
 
@@ -1415,7 +1513,7 @@ static int
 bio_sbuf_create(BIO* bio)
 {
     BIO_set_init(bio, 0);
-    BIO_set_data(bio, NULL);
+    BIO_set_data(bio, nullptr);
     return 1;
 }
 
@@ -1427,7 +1525,7 @@ bio_sbuf_destroy(BIO* bio)
     return 1;
 }
 
-int
+static int
 bio_sbuf_write(BIO* bio, const char* data, int len)
 {
     SBuf *buf = static_cast<SBuf *>(BIO_get_data(bio));
@@ -1436,8 +1534,8 @@ bio_sbuf_write(BIO* bio, const char* data, int len)
     return len;
 }
 
-int
-bio_sbuf_puts(BIO* bio, const char* data)
+static int
+bio_sbuf_puts(BIO *bio, const char *data)
 {
     // TODO: use bio_sbuf_write() instead
     SBuf *buf = static_cast<SBuf *>(BIO_get_data(bio));
@@ -1446,8 +1544,9 @@ bio_sbuf_puts(BIO* bio, const char* data)
     return buf->length() - oldLen;
 }
 
-long
-bio_sbuf_ctrl(BIO* bio, int cmd, long num, void* ptr) {
+static long
+bio_sbuf_ctrl(BIO *bio, int cmd, long /* num */, void *)
+{
     SBuf *buf = static_cast<SBuf *>(BIO_get_data(bio));
     switch (cmd) {
     case BIO_CTRL_RESET:

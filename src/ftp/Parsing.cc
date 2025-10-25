@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -61,6 +61,9 @@ Ftp::ParseProtoIpPort(const char *buf, Ip::Address &addr)
 
     s = e + 1;
     e = strchr(s, delim);
+    if (!e)
+        return false;
+
     char ip[MAX_IPSTRLEN];
     if (static_cast<size_t>(e - s) >= sizeof(ip))
         return false;

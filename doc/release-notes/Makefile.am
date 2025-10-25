@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -8,27 +8,31 @@
 # requires the linuxdoc tools
 if ENABLE_RELEASE_DOCS
 
-DOC= release-6
+DOC= release-$(SQUID_RELEASE)
 
-%.ps: %.sgml
-	linuxdoc -B latex -o ps $(DOC)
+SUFFIXES= .sgml.in .sgml
 
-#$(DOC).dvi: $(DOC).tex
-#	latex $(DOC).tex
-#	latex $(DOC).tex
-#	latex $(DOC).tex
-#
+.sgml.in.sgml:
+	sed \
+        -e "s%[@]SQUID_VERSION[@]%$(VERSION)%g" \
+        -e "s%[@]SQUID_RELEASE[@]%$(SQUID_RELEASE)%g" \
+        -e "s%[@]SQUID_RELEASE_OLD[@]%$$(( $(SQUID_RELEASE) - 1 ))%g" \
+        < $< >$@
+	test `grep -c "@SQUID" $@` -eq 0
 
-%.txt: %.sgml
+.sgml.txt:
 	linuxdoc -B txt --filter $<
 
-%.html: %.sgml
+.sgml.html:
 	linuxdoc -B html -T 2 --split=0 $<
 	perl -i -p -e "s%$@%%" $@
 	cp -p $@ $(top_builddir)/RELEASENOTES.html
 
-%.man: %.sgml
-	linuxdoc -B txt -T 2 -m $(DOC)
+.sgml.man:
+	linuxdoc -B txt --manpage $<
+
+.sgml.info:
+	linuxdoc -B info $<
 
 dist-hook: $(DOC).html
 	@if test -f $(builddir)/$(DOC).html; then \

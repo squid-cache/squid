@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FTP_ELEMENTS_H
-#define SQUID_FTP_ELEMENTS_H
+#ifndef SQUID_SRC_FTP_ELEMENTS_H
+#define SQUID_SRC_FTP_ELEMENTS_H
 
 #include "http/forward.h"
 #include "http/StatusCode.h"
@@ -27,7 +27,7 @@ AnyP::ProtocolVersion ProtocolVersion();
 /// Create an internal HttpReply structure to house FTP control response info.
 HttpReply *HttpReplyWrapper(const int ftpStatus, const char *ftpReason, const Http::StatusCode httpStatus, const int64_t clen);
 
-/* FTP Commands used by Squid. ALLCAPS case. Safe for static initializaton. */
+/* FTP Commands used by Squid. ALLCAPS case. Safe for static initialization. */
 const SBuf &cmdAppe();
 const SBuf &cmdAuth();
 const SBuf &cmdCwd();
@@ -54,5 +54,5 @@ inline bool Is1xx(const int sc) { return Http::scContinue <= sc && sc < Http::sc
 
 } // namespace Ftp
 
-#endif /* SQUID_FTP_ELEMENTS_H */
+#endif /* SQUID_SRC_FTP_ELEMENTS_H */
 

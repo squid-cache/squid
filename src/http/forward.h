@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,8 @@
 #define SQUID_SRC_HTTP_FORWARD_H
 
 #include "http/one/forward.h"
+
+#define HTTP_REQBUF_SZ  4096
 
 namespace Http
 {
@@ -36,6 +38,8 @@ typedef enum {
 } http_hdr_sc_type;
 
 class HttpHdrSc;
+
+class HttpHeader;
 
 class HttpRequestMethod;
 

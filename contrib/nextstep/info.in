@@ -1,7 +1,0 @@
-Title		Squid - Internet Object cache
-Version		--VERSION-- (--DATE--)
-Description	This package contains all executables, support files and documentation  necessary to run Squid. NOTE: this package should be installed as "root".
-DefaultLocation	/
-Relocatable	NO
-DisableStop	YES
-DiskName	Squid

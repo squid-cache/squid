@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,19 +8,15 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "Debug.h"
-#include "sbuf/DetailedStats.h"
+#include "debug/Stream.h"
 #include "sbuf/MemBlob.h"
+#include "sbuf/Stats.h"
 
 #include <iostream>
 
-MemBlobStats MemBlob::Stats;
 InstanceIdDefinitions(MemBlob, "blob");
 
 /* MemBlobStats */
-
-MemBlobStats::MemBlobStats(): alloc(0), live(0), append(0), liveBytes(0)
-{}
 
 MemBlobStats&
 MemBlobStats::operator += (const MemBlobStats& s)
@@ -46,21 +42,32 @@ MemBlobStats::dump(std::ostream &os) const
     return os;
 }
 
+static auto &
+WriteableStats()
+{
+    static const auto stats = new MemBlobStats();
+    return *stats;
+}
+
+const MemBlobStats &
+MemBlob::GetStats()
+{
+    return WriteableStats();
+}
+
 /* MemBlob */
 
-MemBlob::MemBlob(const MemBlob::size_type reserveSize) :
-    mem(NULL), capacity(0), size(0) // will be set by memAlloc
+MemBlob::MemBlob(const size_type reserveSize)
 {
-    debugs(MEMBLOB_DEBUGSECTION,9, HERE << "constructed, this="
+    debugs(MEMBLOB_DEBUGSECTION,9, "constructed, this="
            << static_cast<void*>(this) << " id=" << id
            << " reserveSize=" << reserveSize);
     memAlloc(reserveSize);
 }
 
-MemBlob::MemBlob(const char *buffer, const MemBlob::size_type bufSize) :
-    mem(NULL), capacity(0), size(0) // will be set by memAlloc
+MemBlob::MemBlob(const_pointer buffer, const size_type bufSize)
 {
-    debugs(MEMBLOB_DEBUGSECTION,9, HERE << "constructed, this="
+    debugs(MEMBLOB_DEBUGSECTION,9, "constructed, this="
            << static_cast<void*>(this) << " id=" << id
            << " buffer=" << static_cast<const void*>(buffer)
            << " bufSize=" << bufSize);
@@ -71,12 +78,13 @@ MemBlob::MemBlob(const char *buffer, const MemBlob::size_type bufSize) :
 MemBlob::~MemBlob()
 {
     if (mem || capacity)
-        memFreeString(capacity,mem);
-    Stats.liveBytes -= capacity;
-    --Stats.live;
-    recordMemBlobSizeAtDestruct(capacity);
+        memFreeBuf(capacity, mem);
+    auto &stats = WriteableStats();
+    stats.liveBytes -= capacity;
+    --stats.live;
+    SBufStats::RecordMemBlobSizeAtDestruct(capacity);
 
-    debugs(MEMBLOB_DEBUGSECTION,9, HERE << "destructed, this="
+    debugs(MEMBLOB_DEBUGSECTION,9, "destructed, this="
            << static_cast<void*>(this) << " id=" << id
            << " capacity=" << capacity
            << " size=" << size);
@@ -91,7 +99,7 @@ MemBlob::memAlloc(const size_type minSize)
     size_t actualAlloc = minSize;
 
     Must(!mem);
-    mem = static_cast<char*>(memAllocString(actualAlloc, &actualAlloc));
+    mem = static_cast<value_type *>(memAllocBuf(actualAlloc, &actualAlloc));
     Must(mem);
 
     capacity = actualAlloc;
@@ -99,9 +107,10 @@ MemBlob::memAlloc(const size_type minSize)
     debugs(MEMBLOB_DEBUGSECTION, 8,
            id << " memAlloc: requested=" << minSize <<
            ", received=" << capacity);
-    ++Stats.live;
-    ++Stats.alloc;
-    Stats.liveBytes += capacity;
+    auto &stats = WriteableStats();
+    ++stats.live;
+    ++stats.alloc;
+    stats.liveBytes += capacity;
 }
 
 void
@@ -109,11 +118,11 @@ MemBlob::appended(const size_type n)
 {
     Must(willFit(n));
     size += n;
-    ++Stats.append;
+    ++WriteableStats().append;
 }
 
 void
-MemBlob::append(const char *source, const size_type n)
+MemBlob::append(const_pointer source, const size_type n)
 {
     if (n > 0) { // appending zero bytes is allowed but only affects the stats
         Must(willFit(n));
@@ -121,7 +130,7 @@ MemBlob::append(const char *source, const size_type n)
         memmove(mem + size, source, n);
         size += n;
     }
-    ++Stats.append;
+    ++WriteableStats().append;
 }
 
 void
@@ -143,12 +152,6 @@ MemBlob::consume(const size_type rawN)
         if (size)
             memmove(mem, mem + n, size);
     }
-}
-
-const MemBlobStats&
-MemBlob::GetStats()
-{
-    return Stats;
 }
 
 std::ostream&

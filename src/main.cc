@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 //#include "acl/Acl.h"
-#include "acl/Asn.h"
 #include "acl/forward.h"
 #include "anyp/UriScheme.h"
 #include "auth/Config.h"
@@ -22,14 +21,14 @@
 #include "base/TextException.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
-#include "carp.h"
 #include "client_db.h"
 #include "client_side.h"
 #include "comm.h"
 #include "CommandLine.h"
+#include "compat/unistd.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "DiskIO/DiskIOModule.h"
 #include "dns/forward.h"
 #include "errorpage.h"
@@ -43,14 +42,12 @@
 #include "fs_io.h"
 #include "FwdState.h"
 #include "globals.h"
-#include "htcp.h"
 #include "http/Stream.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 #include "ICP.h"
-#include "ident/Ident.h"
 #include "Instance.h"
 #include "ip/tools.h"
 #include "ipc/Coordinator.h"
@@ -62,28 +59,23 @@
 #include "parser/Tokenizer.h"
 #include "Parsing.h"
 #include "pconn.h"
-#include "peer_sourcehash.h"
-#include "peer_userhash.h"
 #include "PeerSelectState.h"
-#include "profiler/Profiler.h"
+#include "protos.h"
 #include "redirect.h"
 #include "refresh.h"
 #include "sbuf/Stream.h"
 #include "SBufStatsAction.h"
-#include "send-announce.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "stat.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store/Disks.h"
 #include "store_log.h"
 #include "StoreFileSystem.h"
+#include "time/Engine.h"
 #include "tools.h"
 #include "unlinkd.h"
-#include "wccp.h"
-#include "wccp2.h"
-#include "WinSvc.h"
+#include "windows_service.h"
 
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
@@ -117,12 +109,6 @@
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
 #endif
-#if USE_SQUID_ESI
-#include "esi/Module.h"
-#endif
-#if SQUID_SNMP
-#include "snmp_core.h"
-#endif
 
 #include <cerrno>
 #if HAVE_GETOPT_H
@@ -146,7 +132,7 @@ void WINAPI WIN32_svcHandler(DWORD);
 #endif
 
 static int opt_signal_service = FALSE;
-static char *opt_syslog_facility = NULL;
+static char *opt_syslog_facility = nullptr;
 static int icpPortNumOverride = 1;  /* Want to detect "-u 0" */
 static int configured_once = 0;
 #if MALLOC_DBG
@@ -192,7 +178,7 @@ class StoreRootEngine : public AsyncEngine
 {
 
 public:
-    int checkEvents(int) {
+    int checkEvents(int) override {
         Store::Root().callback();
         return EVENT_IDLE;
     };
@@ -202,13 +188,7 @@ class SignalEngine: public AsyncEngine
 {
 
 public:
-#if KILL_PARENT_OPT
-    SignalEngine(): parentKillNotified(false) {
-        parentPid = getppid();
-    }
-#endif
-
-    virtual int checkEvents(int timeout);
+    int checkEvents(int timeout) override;
 
 private:
     static void StopEventLoop(void *) {
@@ -225,23 +205,16 @@ private:
         Auth::Scheme::FreeAll();
 #endif
 
-        eventAdd("SquidTerminate", &StopEventLoop, NULL, 0, 1, false);
+        eventAdd("SquidTerminate", &StopEventLoop, nullptr, 0, 1, false);
     }
 
     void doShutdown(time_t wait);
     void handleStoppedChild();
-
-#if KILL_PARENT_OPT
-    bool parentKillNotified;
-    pid_t parentPid;
-#endif
 };
 
 int
 SignalEngine::checkEvents(int)
 {
-    PROF_start(SignalEngine_checkEvents);
-
     if (do_reconfigure)
         mainReconfigureStart();
     else if (do_rotate)
@@ -250,7 +223,6 @@ SignalEngine::checkEvents(int)
         doShutdown(do_shutdown > 0 ? (int) Config.shutdownLifetime : 0);
     if (do_handle_stopped_child)
         handleStoppedChild();
-    PROF_stop(SignalEngine_checkEvents);
     return EVENT_IDLE;
 }
 
@@ -294,23 +266,10 @@ SignalEngine::doShutdown(time_t wait)
     debugs(1, Important(2), "Preparing for shutdown after " << statCounter.client_http.requests << " requests");
     debugs(1, Important(3), "Waiting " << wait << " seconds for active connections to finish");
 
-#if KILL_PARENT_OPT
-    if (!IamMasterProcess() && !parentKillNotified && ShutdownSignal > 0 && parentPid > 1) {
-        debugs(1, DBG_IMPORTANT, "Killing master process, pid " << parentPid);
-        if (kill(parentPid, ShutdownSignal) < 0) {
-            int xerrno = errno;
-            debugs(1, DBG_IMPORTANT, "kill " << parentPid << ": " << xstrerr(xerrno));
-        }
-        parentKillNotified = true;
-    }
-#endif
-
     if (shutting_down) {
-#if !KILL_PARENT_OPT
         // Already a shutdown signal has received and shutdown is in progress.
         // Shutdown as soon as possible.
         wait = 0;
-#endif
     } else {
         shutting_down = 1;
 
@@ -404,6 +363,7 @@ usage(void)
             "       -R        Do not set REUSEADDR on port.\n"
             "       -S        Double-check swap during rebuild.\n"
             "       -X        Force full debugging.\n"
+            "                 Add -d9 to also write full debugging to stderr.\n"
             "       -Y        Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.\n",
             APP_SHORTNAME, CACHE_HTTP_PORT, DEFAULT_CONFIG_FILE, CACHE_ICP_PORT);
     exit(EXIT_FAILURE);
@@ -429,11 +389,11 @@ static const char *shortOpStr =
 
 // long options
 static struct option squidOptions[] = {
-    {"foreground", no_argument, 0,  optForeground},
-    {"kid",        required_argument, 0, optKid},
-    {"help",       no_argument, 0, 'h'},
-    {"version",    no_argument, 0, 'v'},
-    {0, 0, 0, 0}
+    {"foreground", no_argument, nullptr,  optForeground},
+    {"kid",        required_argument, nullptr, optKid},
+    {"help",       no_argument, nullptr, 'h'},
+    {"version",    no_argument, nullptr, 'v'},
+    {nullptr, 0, nullptr, 0}
 };
 
 // handle a command line parameter
@@ -444,7 +404,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
 
     case 'C':
         /** \par C
-         * Unset/disabel global option for catchign signals. opt_catch_signals */
+         * Unset/disable global option for catchign signals. opt_catch_signals */
         opt_catch_signals = 0;
         break;
 
@@ -524,8 +484,9 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
 
     case 'd':
         /** \par d
-         * Set global option Debug::log_stderr to the number given following the option */
-        Debug::log_stderr = xatoi(optValue);
+         * debugs() messages with the given debugging level (and the more
+         * important ones) should be written to stderr */
+        Debug::ResetStderrLevel(xatoi(optValue));
         break;
 
     case 'f':
@@ -569,6 +530,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             /** \li On interrupt send SIGINT. */
             opt_send_signal = SIGINT;
         else if (!strncmp(optValue, "kill", strlen(optValue)))
+            // XXX: In SMP mode, uncatchable SIGKILL only kills the master process
             /** \li On kill send SIGKILL. */
             opt_send_signal = SIGKILL;
 
@@ -589,6 +551,10 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
         else
             usage();
 
+        // Cannot use cache.log: use stderr for important messages (by default)
+        // and stop expecting a Debug::UseCacheLog() call.
+        Debug::EnsureDefaultStderrLevel(DBG_IMPORTANT);
+        Debug::BanCacheLogUse();
         break;
 
     case 'm':
@@ -642,22 +608,14 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
          * then performs actions for -s option. */
         xfree(opt_syslog_facility); // ignore any previous options sent
         opt_syslog_facility = xstrdup(optValue);
+        Debug::ConfigureSyslog(opt_syslog_facility);
+        break;
 
     case 's':
         /** \par s
          * Initialize the syslog for output */
-#if HAVE_SYSLOG
-
-        _db_set_syslog(opt_syslog_facility);
-
+        Debug::ConfigureSyslog(opt_syslog_facility);
         break;
-
-#else
-
-        fatal("Logging to syslog not available on this platform");
-
-        /* NOTREACHED */
-#endif
 
     case 'u':
         /** \par u
@@ -679,7 +637,9 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             printf("%s\n",SQUID_BUILD_INFO);
 #if USE_OPENSSL
         printf("\nThis binary uses %s. ", OpenSSL_version(OPENSSL_VERSION));
+#if OPENSSL_VERSION_MAJOR < 3
         printf("For legal restrictions on distribution see https://www.openssl.org/source/license.html\n\n");
+#endif
 #endif
         printf( "configure options: %s\n", SQUID_CONFIGURE_OPTIONS);
 
@@ -695,9 +655,13 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
 
     case 'z':
         /** \par z
-         * Set global option Debug::log_stderr and opt_create_swap_dirs */
-        Debug::log_stderr = 1;
+         * Request cache_dir initialization */
         opt_create_swap_dirs = 1;
+        // We will use cache.log, but this command is often executed on the
+        // command line, so use stderr to show important messages (by default).
+        // TODO: Generalize/fix this -z-specific and sometimes faulty logic with
+        // "use stderr when it is a tty [until we GoIntoBackground()]" logic.
+        Debug::EnsureDefaultStderrLevel(DBG_IMPORTANT);
         break;
 
     case optForeground:
@@ -751,7 +715,7 @@ reconfigure(int sig)
 #endif
 }
 
-void
+static void
 master_revive_kids(int sig)
 {
     ReviveKidsSignal = sig;
@@ -765,7 +729,7 @@ master_revive_kids(int sig)
 }
 
 /// Shutdown signal handler for master process
-void
+static void
 master_shutdown(int sig)
 {
     do_shutdown = 1;
@@ -789,10 +753,8 @@ shut_down(int sig)
         shutdown_status = EXIT_FAILURE;
 #endif
 
-#if !_SQUID_WINDOWS_
-#if !HAVE_SIGACTION
+#if !defined(_SQUID_WINDOWS_) && !defined(HAVE_SIGACTION)
     signal(sig, shut_down);
-#endif
 #endif
 }
 
@@ -801,48 +763,24 @@ sig_child(int sig)
 {
     do_handle_stopped_child = 1;
 
-#if !_SQUID_WINDOWS_
-#if !HAVE_SIGACTION
+#if !defined(_SQUID_WINDOWS_) && !defined(HAVE_SIGACTION)
     signal(sig, sig_child);
-#endif
+#else
+    (void)sig;
 #endif
 }
 
 static void
 serverConnectionsOpen(void)
 {
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-        wccpConnectionOpen();
-#endif
-
-#if USE_WCCPv2
-
-        wccp2ConnectionOpen();
-#endif
-    }
     // start various proxying services if we are responsible for them
     if (IamWorkerProcess()) {
         clientOpenListenSockets();
         icpOpenPorts();
-#if USE_HTCP
-        htcpOpenPorts();
-#endif
-#if SQUID_SNMP
-        snmpOpenPorts();
-#endif
-
         icmpEngine.Open();
         netdbInit();
-        asnInit();
-        ACL::Initialize();
+        Acl::Node::Initialize();
         peerSelectInit();
-
-        carpInit();
-#if USE_AUTH
-        peerUserHashInit();
-#endif
-        peerSourceHashInit();
     }
 }
 
@@ -851,29 +789,10 @@ serverConnectionsClose(void)
 {
     assert(shutting_down || reconfiguring);
 
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-
-        wccpConnectionClose();
-#endif
-#if USE_WCCPv2
-
-        wccp2ConnectionClose();
-#endif
-    }
     if (IamWorkerProcess()) {
         clientConnectionsClose();
         icpConnectionShutdown();
-#if USE_HTCP
-        htcpSocketShutdown();
-#endif
-
         icmpEngine.Close();
-#if SQUID_SNMP
-        snmpClosePorts();
-#endif
-
-        asnFreeMemory();
     }
 }
 
@@ -891,11 +810,8 @@ mainReconfigureStart(void)
     // Initiate asynchronous closing sequence
     serverConnectionsClose();
     icpClosePorts();
-#if USE_HTCP
-    htcpClosePorts();
-#endif
 #if USE_OPENSSL
-    Ssl::TheGlobalContextStorage.reconfigureStart();
+    Ssl::TheGlobalContextStorage().reconfigureStart();
 #endif
 #if USE_AUTH
     authenticateReset();
@@ -909,8 +825,20 @@ mainReconfigureStart(void)
 #endif
     Security::CloseLogs();
 
-    eventAdd("mainReconfigureFinish", &mainReconfigureFinish, NULL, 0, 1,
+    eventAdd("mainReconfigureFinish", &mainReconfigureFinish, nullptr, 0, 1,
              false);
+}
+
+/// error message to log when Configuration::Parse() fails
+static SBuf
+ConfigurationFailureMessage()
+{
+    SBufStream out;
+    out << (reconfiguring ? "re" : "");
+    out << "configuration failure: " << CurrentException;
+    if (!opt_parse_cfg_only)
+        out << Debug::Extra << "advice: Run 'squid -k parse' and check for ERRORs.";
+    return out.buf();
 }
 
 static void
@@ -925,18 +853,13 @@ mainReconfigureFinish(void *)
     if (Config2.onoff.enable_purge)
         Config2.onoff.enable_purge = 2;
 
-    // parse the config returns a count of errors encountered.
     const int oldWorkers = Config.workers;
+
     try {
-        if (parseConfigFile(ConfigFile) != 0) {
-            // for now any errors are a fatal condition...
-            self_destruct();
-        }
+        Configuration::Parse();
     } catch (...) {
         // for now any errors are a fatal condition...
-        debugs(1, DBG_CRITICAL, "FATAL: Unhandled exception parsing config file. " <<
-               " Run squid -k parse and check for errors.");
-        self_destruct();
+        fatal(ConfigurationFailureMessage().c_str());
     }
 
     if (oldWorkers != Config.workers) {
@@ -953,9 +876,8 @@ mainReconfigureFinish(void *)
     CpuAffinityReconfigure();
 
     setUmask(Config.umask);
-    Mem::Report();
     setEffectiveUser();
-    _db_init(Debug::cache_log, Debug::debugOptions);
+    Debug::UseCacheLog();
     ipcache_restart();      /* clear stuck entries */
     fqdncache_restart();    /* sigh, fqdncache too */
     parseEtcHosts();
@@ -998,17 +920,6 @@ mainReconfigureFinish(void *)
 #endif
     externalAclInit();
 
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-
-        wccpInit();
-#endif
-#if USE_WCCPv2
-
-        wccp2Init();
-#endif
-    }
-
     serverConnectionsOpen();
 
     neighbors_init();
@@ -1023,14 +934,6 @@ mainReconfigureFinish(void *)
 #if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
-
-    if (Config.onoff.announce) {
-        if (!eventFind(start_announce, NULL))
-            eventAdd("start_announce", start_announce, NULL, 3600.0, 1);
-    } else {
-        if (eventFind(start_announce, NULL))
-            eventDelete(start_announce, NULL);
-    }
 
     reconfiguring = 0;
 }
@@ -1077,7 +980,7 @@ setEffectiveUser(void)
     if (geteuid() == 0) {
         debugs(0, DBG_CRITICAL, "Squid is not safe to run as root!  If you must");
         debugs(0, DBG_CRITICAL, "start Squid as root, then you must configure");
-        debugs(0, DBG_CRITICAL, "it to run as a non-priveledged user with the");
+        debugs(0, DBG_CRITICAL, "it to run as a non-privileged user with the");
         debugs(0, DBG_CRITICAL, "'cache_effective_user' option in the config file.");
         fatal("Don't run Squid as root, set 'cache_effective_user'!");
     }
@@ -1214,15 +1117,6 @@ mainInitialize(void)
     icapLogOpen();
 #endif
 
-#if USE_IDENT
-    Ident::Init();
-#endif
-
-#if SQUID_SNMP
-
-    snmpInit();
-
-#endif
 #if MALLOC_DBG
 
     malloc_debug(0, malloc_debug_level);
@@ -1243,10 +1137,9 @@ mainInitialize(void)
 #endif
 
     FwdState::initModule();
-    /* register the modules in the cache manager menus */
-
-    cbdataRegisterWithCacheManager();
     SBufStatsAction::RegisterWithCacheManager();
+
+    AsyncJob::RegisterWithCacheManager();
 
     /* These use separate calls so that the comm loops can eventually
      * coexist.
@@ -1257,18 +1150,6 @@ mainInitialize(void)
     // TODO: pconn is a good candidate for new-style registration
     // PconnModule::GetInstance()->registerWithCacheManager();
     // moved to PconnModule::PconnModule()
-
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-        wccpInit();
-
-#endif
-#if USE_WCCPv2
-
-        wccp2Init();
-
-#endif
-    }
 
     serverConnectionsOpen();
 
@@ -1303,8 +1184,6 @@ mainInitialize(void)
 
 #endif
 
-    memCheckInit();
-
 #if USE_LOADABLE_MODULES
     LoadableModulesConfigure(Config.loadable_module_names);
 #endif
@@ -1326,28 +1205,15 @@ mainInitialize(void)
     Adaptation::Config::Finalize(enableAdaptation);
 #endif
 
-#if USE_SQUID_ESI
-    Esi::Init();
-#endif
-
 #if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
 
     eventAdd("storeMaintain", Store::Maintain, nullptr, 1.0, 1);
 
-    if (Config.onoff.announce)
-        eventAdd("start_announce", start_announce, nullptr, 3600.0, 1);
-
     eventAdd("ipcache_purgelru", ipcache_purgelru, nullptr, 10.0, 1);
 
     eventAdd("fqdncache_purgelru", fqdncache_purgelru, nullptr, 15.0, 1);
-
-#if USE_XPROF_STATS
-
-    eventAdd("cpuProfiling", xprof_event, nullptr, 1.0, 1);
-
-#endif
 
     eventAdd("memPoolCleanIdlePools", Mem::CleanIdlePools, nullptr, 15.0, 1);
 
@@ -1363,7 +1229,9 @@ OnTerminate()
         return;
     terminating = true;
 
-    debugs(1, DBG_CRITICAL, "FATAL: Dying from an exception handling failure; exception: " << CurrentException);
+    debugs(1, DBG_CRITICAL, "FATAL: Dying after an undetermined failure" << CurrentExceptionExtra);
+
+    Debug::PrepareToDie();
     abort();
 }
 
@@ -1438,10 +1306,10 @@ ConfigureCurrentKid(const CommandLine &cmdLine)
         TheKidName.assign(APP_SHORTNAME);
         KidIdentifier = 0;
     }
+    Debug::NameThisKid(KidIdentifier);
 }
 
 /// Start directing debugs() messages to the configured cache.log.
-/// Until this function is called, all allowed messages go to stderr.
 static void
 ConfigureDebugging()
 {
@@ -1451,9 +1319,11 @@ ConfigureDebugging()
         fd_open(2, FD_LOG, "stderr");
     }
     // we should not create cache.log outside chroot environment, if any
-    // XXX: With Config.chroot_dir set, SMP master process never calls db_init().
+    // XXX: With Config.chroot_dir set, SMP master process calls Debug::BanCacheLogUse().
     if (!Config.chroot_dir || Chrooted)
-        _db_init(Debug::cache_log, Debug::debugOptions);
+        Debug::UseCacheLog();
+    else
+        Debug::BanCacheLogUse();
 }
 
 static void
@@ -1491,14 +1361,72 @@ StartUsingConfig()
     }
 }
 
+/// register all known modules for handling future RegisteredRunner events
+static void
+RegisterModules()
+{
+    // These registration calls do not represent a RegisteredRunner "event". The
+    // modules registered here should be initialized later, during those events.
+
+    // RegisteredRunner event handlers should not depend on handler call order
+    // and, hence, should not depend on the registration call order below.
+
+    CallRunnerRegistrator(CarpRr);
+    CallRunnerRegistrator(ClientDbRr);
+    CallRunnerRegistrator(CollapsedForwardingRr);
+    CallRunnerRegistrator(MemStoreRr);
+    CallRunnerRegistrator(PeerPoolMgrsRr);
+    CallRunnerRegistrator(PeerSourceHashRr);
+    CallRunnerRegistrator(SharedMemPagesRr);
+    CallRunnerRegistrator(SharedSessionCacheRr);
+    CallRunnerRegistrator(TransientsRr);
+    CallRunnerRegistratorIn(Dns, ConfigRr);
+
+#if HAVE_DISKIO_MODULE_IPCIO
+    CallRunnerRegistrator(IpcIoRr);
+#endif
+
+#if HAVE_AUTH_MODULE_NTLM
+    CallRunnerRegistrator(NtlmAuthRr);
+#endif
+
+#if USE_AUTH
+    CallRunnerRegistrator(PeerUserHashRr);
+#endif
+#if USE_HTCP
+    CallRunnerRegistrator(HtcpRr);
+#endif
+#if USE_OPENSSL
+    CallRunnerRegistrator(sslBumpCfgRr);
+#endif
+
+#if HAVE_FS_ROCK
+    CallRunnerRegistratorIn(Rock, SwapDirRr);
+#endif
+
+#if SQUID_SNMP
+    CallRunnerRegistrator(SnmpRr);
+#endif
+
+#if USE_WCCP
+    CallRunnerRegistrator(WccpRr);
+#endif
+#if USE_WCCPv2
+    CallRunnerRegistrator(Wccp2Rr);
+#endif
+}
+
 int
 SquidMain(int argc, char **argv)
 {
+    // We must register all modules before the first RunRegisteredHere() call.
+    // We do it ASAP/here so that we do not need to move this code when we add
+    // earlier hooks to the RegisteredRunner API.
+    RegisterModules();
+
     const CommandLine cmdLine(argc, argv, shortOpStr, squidOptions);
 
     ConfigureCurrentKid(cmdLine);
-
-    Debug::parseOptions(NULL);
 
 #if defined(SQUID_MAXFD_LIMIT)
 
@@ -1542,15 +1470,15 @@ SquidMain(int argc, char **argv)
     WIN32_svcstatusupdate(SERVICE_START_PENDING, 10000);
 
 #endif
+    AnyP::UriScheme::Init(); // needs to be before arg parsing, bug 5337
 
     cmdLine.forEachOption(mainHandleCommandLineOption);
 
+    Debug::SettleStderr();
+    Debug::SettleSyslog();
+
     if (opt_foreground && opt_no_daemon) {
         debugs(1, DBG_CRITICAL, "WARNING: --foreground command-line option has no effect with -N.");
-    }
-
-    if (opt_parse_cfg_only) {
-        Debug::parseOptions("ALL,1");
     }
 
 #if USE_WIN32_SERVICE
@@ -1575,8 +1503,6 @@ SquidMain(int argc, char **argv)
     /* parse configuration file
      * note: in "normal" case this used to be called from mainInitialize() */
     {
-        int parse_err;
-
         if (!ConfigFile)
             ConfigFile = xstrdup(DEFAULT_CONFIG_FILE);
 
@@ -1584,40 +1510,37 @@ SquidMain(int argc, char **argv)
 
         Mem::Init();
 
-        AnyP::UriScheme::Init();
-
         storeFsInit();      /* required for config parsing */
 
-        /* TODO: call the FS::Clean() in shutdown to do Fs cleanups */
         Fs::Init();
 
         /* May not be needed for parsing, have not audited for such */
         DiskIOModule::SetupAllModules();
 
-        /* Shouldn't be needed for config parsing, but have not audited for such */
-        StoreFileSystem::SetupAllFs();
-
         /* we may want the parsing process to set this up in the future */
-        Store::Init();
         Acl::Init();
         Auth::Init();      /* required for config parsing. NOP if !USE_AUTH */
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
         Format::Token::Init(); // XXX: temporary. Use a runners registry of pre-parse runners instead.
 
+        RunRegisteredHere(RegisteredRunner::bootstrapConfig);
+
         try {
-            parse_err = parseConfigFile(ConfigFile);
+            Configuration::Parse();
         } catch (...) {
-            // for now any errors are a fatal condition...
-            debugs(1, DBG_CRITICAL, "FATAL: Unhandled exception parsing config file." <<
-                   (opt_parse_cfg_only ? " Run squid -k parse and check for errors." : ""));
-            parse_err = 1;
+            auto msg = ConfigurationFailureMessage();
+            if (opt_parse_cfg_only) {
+                debugs(3, DBG_CRITICAL, "FATAL: " << msg);
+                return EXIT_FAILURE;
+            } else {
+                fatal(msg.c_str());
+                return EXIT_FAILURE; // unreachable
+            }
         }
 
-        Mem::Report();
-
-        if (opt_parse_cfg_only || parse_err > 0)
-            return parse_err;
+        if (opt_parse_cfg_only)
+            return EXIT_SUCCESS;
     }
     setUmask(Config.umask);
 
@@ -1707,7 +1630,7 @@ SquidMain(int argc, char **argv)
     mainLoop.setPrimaryEngine(&comm_engine);
 
     /* use the standard time service */
-    TimeEngine time_engine;
+    Time::Engine time_engine;
 
     mainLoop.setTimeService(&time_engine);
 
@@ -1734,8 +1657,6 @@ SquidMain(int argc, char **argv)
 static void
 sendSignal(void)
 {
-    StopUsingDebugLog();
-
 #if USE_WIN32_SERVICE
     // WIN32_sendSignal() does not need the PID value to signal,
     // but we must exit if there is no valid PID (TODO: Why?).
@@ -1782,7 +1703,7 @@ mainStartScript(const char *prog)
 
     if ((cpid = fork()) == 0) {
         /* child */
-        execl(script, squid_start_script, (char *)NULL);
+        execl(script, squid_start_script, (char *)nullptr);
         _exit(-1);
     } else {
         do {
@@ -1883,6 +1804,9 @@ GoIntoBackground()
         throw TexcHere(ToSBuf("failed to fork(2) the master process: ", xstrerr(xerrno)));
     } else if (pid > 0) {
         // parent
+        // The fork() effectively duped any saved debugs() messages. For
+        // simplicity sake, let the child process deal with them.
+        Debug::ForgetSaved();
         exit(EXIT_SUCCESS);
     }
     // child, running as a background daemon
@@ -1914,10 +1838,7 @@ watch_child(const CommandLine &masterCommand)
     pid_t pid;
 #ifdef TIOCNOTTY
 
-    int i;
 #endif
-
-    int nullfd;
 
     // TODO: zero values are not supported because they result in
     // misconfigured SMP Squid instances running forever, endlessly
@@ -1936,8 +1857,8 @@ watch_child(const CommandLine &masterCommand)
 
 #ifdef TIOCNOTTY
 
-    if ((i = open("/dev/tty", O_RDWR | O_TEXT)) >= 0) {
-        ioctl(i, TIOCNOTTY, NULL);
+    if ((const auto i = xopen("/dev/tty", O_RDWR | O_TEXT)) >= 0) {
+        ioctl(i, TIOCNOTTY, nullptr);
         close(i);
     }
 
@@ -1949,7 +1870,7 @@ watch_child(const CommandLine &masterCommand)
      * 1.1.3.  execvp had a bit overflow error in a loop..
      */
     /* Connect stdio to /dev/null in daemon mode */
-    nullfd = open(_PATH_DEVNULL, O_RDWR | O_TEXT);
+    const auto nullfd = xopen(_PATH_DEVNULL, O_RDWR | O_TEXT);
 
     if (nullfd < 0) {
         int xerrno = errno;
@@ -1958,7 +1879,7 @@ watch_child(const CommandLine &masterCommand)
 
     dup2(nullfd, 0);
 
-    if (Debug::log_stderr < 0) {
+    if (!Debug::StderrEnabled()) {
         dup2(nullfd, 1);
         dup2(nullfd, 2);
     }
@@ -2095,27 +2016,8 @@ SquidShutdown()
     redirectShutdown();
     externalAclShutdown();
     icpClosePorts();
-#if USE_HTCP
-    htcpClosePorts();
-#endif
-#if SQUID_SNMP
-    snmpClosePorts();
-#endif
-#if USE_WCCP
-
-    wccpConnectionClose();
-#endif
-#if USE_WCCPv2
-
-    wccp2ConnectionClose();
-#endif
-
     releaseServerSockets();
     commCloseAllSockets();
-
-#if USE_SQUID_ESI
-    Esi::Clean();
-#endif
 
 #if USE_DELAY_POOLS
     DelayPools::FreePools();
@@ -2142,24 +2044,7 @@ SquidShutdown()
     storeLogClose();
     accessLogClose();
     Store::Root().sync();       /* Flush log close */
-    StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
-#if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */
-
-    configFreeMemory();
-    storeFreeMemory();
-    /*stmemFreeMemory(); */
-    netdbFreeMemory();
-    ipcacheFreeMemory();
-    fqdncacheFreeMemory();
-    asnFreeMemory();
-    clientdbFreeMemory();
-    statFreeMemory();
-    eventFreeMemory();
-    mimeFreeMemory();
-    errorClean();
-#endif
-    Store::FreeMemory();
 
     fdDumpOpen();
 
@@ -2170,17 +2055,6 @@ SquidShutdown()
     memClean();
 
     debugs(1, Important(10), "Squid Cache (Version " << version_string << "): Exiting normally.");
-
-    /*
-     * DPW 2006-10-23
-     * We used to fclose(debug_log) here if it was set, but then
-     * we forgot to set it to NULL.  That caused some coredumps
-     * because exit() ends up calling a bunch of destructors and
-     * such.   So rather than forcing the debug_log to close, we'll
-     * leave it open so that those destructors can write some
-     * debugging if necessary.  The file will be closed anyway when
-     * the process truly exits.
-     */
 
     exit(shutdown_status);
 }

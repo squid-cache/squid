@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -61,6 +61,16 @@ int dict_lookup(struct ip_user_dict *, char *, char *);
 /** Size of lines read from the dictionary file */
 #define DICT_BUFFER_SIZE    8196
 
+static void
+free_dict(struct ip_user_dict *head) {
+    while (head) {
+        struct ip_user_dict *next = head->next_entry;
+        safe_free(head->username);
+        xfree(head);
+        head = next;
+    }
+}
+
 /** This function parses the dictionary file and loads it
  * in memory. All IP addresses are processed with a bitwise AND
  * with their netmasks before they are stored.
@@ -72,7 +82,7 @@ struct ip_user_dict *
 load_dict(FILE * FH) {
     struct ip_user_dict *current_entry; /* the structure used to
                        store data */
-    struct ip_user_dict *first_entry = NULL;    /* the head of the
+    struct ip_user_dict *first_entry = nullptr;    /* the head of the
                            linked list */
     char line[DICT_BUFFER_SIZE]; /* the buffer for the lines read
                    from the dict file */
@@ -80,37 +90,37 @@ load_dict(FILE * FH) {
                    bitwise AND */
 
     /* the pointer to the first entry in the linked list */
-    first_entry = static_cast<struct ip_user_dict*>(xmalloc(sizeof(struct ip_user_dict)));
+    first_entry = static_cast<struct ip_user_dict*>(xcalloc(1, sizeof(struct ip_user_dict)));
     current_entry = first_entry;
 
     unsigned int lineCount = 0;
-    while (fgets(line, sizeof(line), FH) != NULL) {
+    while (fgets(line, sizeof(line), FH) != nullptr) {
         ++lineCount;
         if (line[0] == '#') {
             continue;
         }
 
         char *cp; // a char pointer used to parse each line.
-        if ((cp = strchr (line, '\n')) != NULL) {
+        if ((cp = strchr (line, '\n')) != nullptr) {
             /* chop \n characters */
             *cp = '\0';
         }
-        if (strtok(line, "\t ") != NULL) {
+        if (strtok(line, "\t ") != nullptr) {
             // NP: line begins with IP/mask. Skipped to the end of it with this strtok()
 
             /* get the username */
             char *username;
-            if ((username = strtok(NULL, "\t ")) == NULL) {
+            if ((username = strtok(nullptr, "\t ")) == nullptr) {
                 debug("Missing username on line %u of dictionary file\n", lineCount);
                 continue;
             }
 
             /* look for a netmask */
-            if ((cp = strtok (line, "/")) != NULL) {
+            if ((cp = strtok (line, "/")) != nullptr) {
                 /* store the ip address in a temporary buffer */
                 tmpbuf = cp;
-                cp = strtok (NULL, "/");
-                if (cp != NULL) {
+                cp = strtok (nullptr, "/");
+                if (cp != nullptr) {
                     /* if we have a slash in the lhs, we have a netmask */
                     current_entry->netmask = (inet_addr(cp));
                     current_entry->address =
@@ -128,7 +138,7 @@ load_dict(FILE * FH) {
 
             /* get space and point current_entry to the new entry */
             current_entry->next_entry =
-                static_cast<struct ip_user_dict*>(xmalloc(sizeof(struct ip_user_dict)));
+                static_cast<struct ip_user_dict*>(xcalloc(1, sizeof(struct ip_user_dict)));
             current_entry = current_entry->next_entry;
         }
 
@@ -149,7 +159,7 @@ dict_lookup(struct ip_user_dict *first_entry, char *username,
     /* Move the pointer to the first entry of the linked list. */
     struct ip_user_dict *current_entry = first_entry;
 
-    while (current_entry->username != NULL) {
+    while (current_entry && current_entry->username) {
         debug("user: %s\naddr: %lu\nmask: %lu\n\n",
               current_entry->username, current_entry->address,
               current_entry->netmask);
@@ -158,7 +168,7 @@ dict_lookup(struct ip_user_dict *first_entry, char *username,
                 netmask) == current_entry->address) {
             /* If the username contains an @ we assume it?s a group and
                call the corresponding function */
-            if ((strchr (current_entry->username, '@')) == NULL) {
+            if ((strchr (current_entry->username, '@')) == nullptr) {
                 if ((match_user (current_entry->username, username)) == 1)
                     return 1;
             } else {
@@ -194,18 +204,17 @@ match_group(char *dict_group, char *username)
                    so we rip it off by incrementing
                    * the pointer by one */
 
-    if ((g = getgrnam(dict_group)) == NULL) {
-        debug("Group does not exist '%s'\n", dict_group);
+    g = getgrnam(dict_group);
+    if (!g || !g->gr_mem) {
+        debug("Group does not exist or has no members '%s'\n", dict_group);
         return 0;
-    } else {
-        while (*(g->gr_mem) != NULL) {
-            if (strcmp(*((g->gr_mem)++), username) == 0) {
-                return 1;
-            }
-        }
+    }
+
+    for (char * const *m = g->gr_mem; *m; ++m) {
+        if (strcmp(*m, username) == 0)
+            return 1;
     }
     return 0;
-
 }
 
 static void
@@ -218,7 +227,7 @@ usage(const char *program_name)
 int
 main (int argc, char *argv[])
 {
-    char *filename = NULL;
+    char *filename = nullptr;
     char *program_name = argv[0];
     char *cp;
     char *username, *address;
@@ -226,7 +235,7 @@ main (int argc, char *argv[])
     struct ip_user_dict *current_entry;
     int ch;
 
-    setvbuf (stdout, NULL, _IOLBF, 0);
+    setvbuf (stdout, nullptr, _IOLBF, 0);
     while ((ch = getopt(argc, argv, "df:h")) != -1) {
         switch (ch) {
         case 'f':
@@ -244,7 +253,7 @@ main (int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
     }
-    if (filename == NULL) {
+    if (filename == nullptr) {
         fprintf(stderr, "%s: FATAL: No Filename configured.", program_name);
         usage(program_name);
         exit(EXIT_FAILURE);
@@ -258,12 +267,12 @@ main (int argc, char *argv[])
     current_entry = load_dict(FH);
 
     while (fgets(line, HELPER_INPUT_BUFFER, stdin)) {
-        if ((cp = strchr (line, '\n')) == NULL) {
+        if ((cp = strchr (line, '\n')) == nullptr) {
             /* too large message received.. skip and deny */
             fprintf(stderr, "%s: ERROR: Input Too Large: %s\n", program_name, line);
             while (fgets(line, sizeof(line), stdin)) {
                 fprintf(stderr, "%s: ERROR: Input Too Large..: %s\n", program_name, line);
-                if (strchr(line, '\n') != NULL)
+                if (strchr(line, '\n') != nullptr)
                     break;
             }
             SEND_BH(HLP_MSG("Input Too Large."));
@@ -271,7 +280,7 @@ main (int argc, char *argv[])
         }
         *cp = '\0';
         address = strtok(line, " \t");
-        username = strtok(NULL, " \t");
+        username = strtok(nullptr, " \t");
         if (!address || !username) {
             debug("%s: unable to read tokens\n", program_name);
             SEND_BH(HLP_MSG("Invalid Input."));
@@ -289,6 +298,7 @@ main (int argc, char *argv[])
     }
 
     fclose (FH);
+    free_dict(current_entry);
     return EXIT_SUCCESS;
 }
 

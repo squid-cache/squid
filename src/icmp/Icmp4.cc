@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,10 +14,12 @@
 
 #if USE_ICMP
 
-#include "Debug.h"
+#include "base/Assure.h"
+#include "compat/socket.h"
+#include "debug/Stream.h"
 #include "Icmp4.h"
 #include "IcmpPinger.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 static const char *
 IcmpPacketType(uint8_t v)
@@ -65,7 +67,7 @@ Icmp4::~Icmp4()
 int
 Icmp4::Open(void)
 {
-    icmp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
+    icmp_sock = xsocket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
 
     if (icmp_sock < 0) {
         int xerrno = errno;
@@ -74,7 +76,7 @@ Icmp4::Open(void)
     }
 
     icmp_ident = getpid() & 0xffff;
-    debugs(42, DBG_IMPORTANT, "pinger: ICMP socket opened.");
+    debugs(42, DBG_IMPORTANT, "ICMP socket opened.");
 
     return icmp_sock;
 }
@@ -85,10 +87,12 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     int x;
     LOCAL_ARRAY(char, pkt, MAX_PKT4_SZ);
 
-    struct icmphdr *icmp = NULL;
+    struct icmphdr *icmp = nullptr;
     icmpEchoData *echo;
     size_t icmp_pktsize = sizeof(struct icmphdr);
-    struct addrinfo *S = NULL;
+    struct addrinfo *S = nullptr;
+
+    static_assert(sizeof(*icmp) + sizeof(*echo) <= sizeof(pkt), "our custom ICMPv4 Echo payload fits the packet buffer");
 
     memset(pkt, '\0', MAX_PKT4_SZ);
 
@@ -111,11 +115,11 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     ++icmp_pkts_sent;
 
     // Construct ICMP packet data content
-    echo = (icmpEchoData *) (icmp + 1);
+    echo = reinterpret_cast<icmpEchoData *>(reinterpret_cast<char *>(pkt) + sizeof(*icmp));
     echo->opcode = (unsigned char) opcode;
     memcpy(&echo->tv, &current_time, sizeof(struct timeval));
 
-    icmp_pktsize += sizeof(struct timeval) + sizeof(char);
+    icmp_pktsize += sizeof(icmpEchoData) - MAX_PAYLOAD;
 
     if (payload) {
         if (len > MAX_PAYLOAD)
@@ -128,25 +132,27 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     icmp->icmp_cksum = CheckSum((unsigned short *) icmp, icmp_pktsize);
 
-    to.getAddrInfo(S);
+    to.getAddrInfo(S, AF_INET);
+    Assure(S);
+
     ((sockaddr_in*)S->ai_addr)->sin_port = 0;
     assert(icmp_pktsize <= MAX_PKT4_SZ);
 
-    debugs(42, 5, HERE << "Send ICMP packet to " << to << ".");
+    debugs(42, 5, "Send ICMP packet to " << to << ".");
 
-    x = sendto(icmp_sock,
-               (const void *) pkt,
-               icmp_pktsize,
-               0,
-               S->ai_addr,
-               S->ai_addrlen);
+    x = xsendto(icmp_sock,
+                pkt,
+                icmp_pktsize,
+                0,
+                S->ai_addr,
+                S->ai_addrlen);
 
     if (x < 0) {
         int xerrno = errno;
-        debugs(42, DBG_IMPORTANT, MYNAME << "ERROR: sending to ICMP packet to " << to << ": " << xstrerr(xerrno));
+        debugs(42, DBG_IMPORTANT, "ERROR: sending ICMP packet to " << to << ": " << xstrerr(xerrno));
     }
 
-    Log(to, ' ', NULL, 0, 0);
+    Log(to, ' ', "", 0, 0);
     Ip::Address::FreeAddr(S);
 }
 
@@ -154,33 +160,33 @@ void
 Icmp4::Recv(void)
 {
     int n;
-    struct addrinfo *from = NULL;
+    struct addrinfo *from = nullptr;
     int iphdrlen = sizeof(iphdr);
-    struct iphdr *ip = NULL;
-    struct icmphdr *icmp = NULL;
-    static char *pkt = NULL;
+    struct iphdr *ip = nullptr;
+    struct icmphdr *icmp = nullptr;
+    static char *pkt = nullptr;
     struct timeval now;
     icmpEchoData *echo;
     static pingerReplyData preply;
 
     if (icmp_sock < 0) {
-        debugs(42, DBG_CRITICAL, HERE << "No socket! Recv() should not be called.");
+        debugs(42, DBG_CRITICAL, "No socket! Recv() should not be called.");
         return;
     }
 
-    if (pkt == NULL)
+    if (pkt == nullptr)
         pkt = (char *)xmalloc(MAX_PKT4_SZ);
 
     Ip::Address::InitAddr(from);
-    n = recvfrom(icmp_sock,
-                 (void *)pkt,
-                 MAX_PKT4_SZ,
-                 0,
-                 from->ai_addr,
-                 &from->ai_addrlen);
+    n = xrecvfrom(icmp_sock,
+                  pkt,
+                  MAX_PKT4_SZ,
+                  0,
+                  from->ai_addr,
+                  &from->ai_addrlen);
 
     if (n <= 0) {
-        debugs(42, DBG_CRITICAL, HERE << "Error when calling recvfrom() on ICMP socket.");
+        debugs(42, DBG_CRITICAL, "ERROR: when calling recvfrom() on ICMP socket.");
         Ip::Address::FreeAddr(from);
         return;
     }
@@ -193,13 +199,18 @@ Icmp4::Recv(void)
 
 #else
 
-    gettimeofday(&now, NULL);
+    gettimeofday(&now, nullptr);
 
 #endif
 
-    debugs(42, 8, HERE << n << " bytes from " << preply.from);
+    debugs(42, 8, n << " bytes from " << preply.from);
 
     ip = (struct iphdr *) (void *) pkt;
+    if (n < static_cast<int>(sizeof(*ip))) {
+        debugs(42, 2, "short packet: only " << n << " bytes; expecting at least " << sizeof(*ip) << "-byte IP header");
+        Ip::Address::FreeAddr(from);
+        return;
+    }
 
 #if HAVE_STRUCT_IPHDR_IP_HL
 
@@ -217,7 +228,18 @@ Icmp4::Recv(void)
 #endif
 #endif /* HAVE_STRUCT_IPHDR_IP_HL */
 
+    if (iphdrlen < 20 || n < iphdrlen) {
+        debugs(42, 2, "bogus IP header length " << iphdrlen << " in " << n << "-byte packet");
+        Ip::Address::FreeAddr(from);
+        return;
+    }
     icmp = (struct icmphdr *) (void *) (pkt + iphdrlen);
+    const int icmpAvail = n - iphdrlen;
+    if (icmpAvail < static_cast<int>(sizeof(*icmp))) {
+        debugs(42, 2, "short ICMP header: only " << icmpAvail << " bytes available; expecting at least " << sizeof(*icmp));
+        Ip::Address::FreeAddr(from);
+        return;
+    }
 
     if (icmp->icmp_type != ICMP_ECHOREPLY) {
         Ip::Address::FreeAddr(from);
@@ -231,6 +253,14 @@ Icmp4::Recv(void)
 
     echo = (icmpEchoData *) (void *) (icmp + 1);
 
+    const auto echoHdr = static_cast<int>(sizeof(icmpEchoData) - MAX_PAYLOAD);
+    const auto icmpDataLen = icmpAvail - sizeof(*icmp);
+    if (icmpDataLen < echoHdr) { // do not read past end of the packet
+        debugs(42, 2, "short ICMP echo data: " << icmpDataLen << " bytes; expecting " << echoHdr);
+        Ip::Address::FreeAddr(from);
+        return;
+    }
+
     preply.opcode = echo->opcode;
 
     preply.hops = ipHops(ip->ip_ttl);
@@ -239,15 +269,18 @@ Icmp4::Recv(void)
     memcpy(&tv, &echo->tv, sizeof(struct timeval));
     preply.rtt = tvSubMsec(tv, now);
 
-    preply.psize = n - iphdrlen - (sizeof(icmpEchoData) - MAX_PKT4_SZ);
+    // Payload length = (ICMP total data) - (opcode + timeval)
+    preply.psize = icmpDataLen - echoHdr;
+    if (preply.psize > MAX_PAYLOAD)
+        preply.psize = MAX_PAYLOAD;
 
     if (preply.psize < 0) {
-        debugs(42, DBG_CRITICAL, HERE << "Malformed ICMP packet.");
+        debugs(42, DBG_CRITICAL, "ERROR: Malformed ICMP packet.");
         Ip::Address::FreeAddr(from);
         return;
     }
 
-    control.SendResult(preply, (sizeof(pingerReplyData) - MAX_PKT4_SZ + preply.psize) );
+    control.SendResult(preply, (sizeof(pingerReplyData) - PINGER_PAYLOAD_SZ + preply.psize));
 
     Log(preply.from, icmp->icmp_type, IcmpPacketType(icmp->icmp_type), preply.rtt, preply.hops);
     Ip::Address::FreeAddr(from);

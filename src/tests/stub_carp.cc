@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,9 +11,7 @@
 #define STUB_API "carp.cc"
 #include "tests/STUB.h"
 
-class CachePeer;
-class PeerSelector;
+#include "carp.h"
 
-void carpInit(void) STUB
-CachePeer *carpSelectParent(PeerSelector *ps) STUB_RETVAL(nullptr)
+CachePeer *carpSelectParent(PeerSelector *) STUB_RETVAL(nullptr)
 

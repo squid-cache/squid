@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/Common.am
-include $(top_srcdir)/src/TestHeaders.am
 
 SUBDIRS= external
 
@@ -23,8 +22,10 @@ libapi_la_SOURCES = \
 	ChecklistFiller.h \
 	InnerNode.cc \
 	InnerNode.h \
+	Node.h \
 	Options.cc \
 	Options.h \
+	SplayInserter.h \
 	Tree.cc \
 	Tree.h \
 	forward.h
@@ -38,9 +39,7 @@ libstate_la_SOURCES = \
 	Data.h \
 	FilledChecklist.cc \
 	FilledChecklist.h \
-	Strategised.cc \
-	Strategised.h \
-	Strategy.h
+	ParameterizedNode.h
 
 ## data-specific ACLs
 libacls_la_SOURCES = \
@@ -57,8 +56,6 @@ libacls_la_SOURCES = \
 	AnnotationData.h \
 	AnyOf.cc \
 	AnyOf.h \
-	Asn.cc \
-	Asn.h \
 	AtStep.cc \
 	AtStep.h \
 	AtStepData.cc \
@@ -67,7 +64,6 @@ libacls_la_SOURCES = \
 	ConnMark.h \
 	ConnectionsEncrypted.cc \
 	ConnectionsEncrypted.h \
-	DestinationAsn.h \
 	DestinationDomain.cc \
 	DestinationDomain.h \
 	DestinationIp.cc \
@@ -128,7 +124,6 @@ libacls_la_SOURCES = \
 	ReplyMimeType.h \
 	RequestHeaderStrategy.h \
 	RequestMimeType.h \
-	SourceAsn.h \
 	SourceDomain.cc \
 	SourceDomain.h \
 	SourceIp.cc \
@@ -179,6 +174,8 @@ SSL_ACLS = \
 
 if ENABLE_SSL
 libacls_la_SOURCES += $(SSL_ACLS)
+else
+EXCLUDE_FROM_HDR_TESTING += $(SSL_ACLS)
 endif
 EXTRA_libacls_la_SOURCES += $(SSL_ACLS)
 
@@ -190,6 +187,8 @@ ADAPT_ACLS= \
 
 if ENABLE_ADAPTATION
 libacls_la_SOURCES += $(ADAPT_ACLS)
+else
+EXCLUDE_FROM_HDR_TESTING += $(ADAPT_ACLS)
 endif
 EXTRA_libacls_la_SOURCES += $(ADAPT_ACLS)
 
@@ -197,5 +196,7 @@ ARP_ACLS = Arp.cc Arp.h Eui64.cc Eui64.h
 
 if ENABLE_EUI
 libacls_la_SOURCES += $(ARP_ACLS)
+else
+EXCLUDE_FROM_HDR_TESTING += $(ARP_ACLS)
 endif
 EXTRA_libacls_la_SOURCES += $(ARP_ACLS)

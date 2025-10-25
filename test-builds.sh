@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 ##
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -122,8 +122,9 @@ buildtest() {
     # with the right parameters. TODO: Make less noisy.
     grep -E "BUILD" ${log}
 
-    errors="^ERROR|\ error:|\ Error\ |No\ such|assertion\ failed|FAIL:|:\ undefined"
-    grep -E "${errors}" ${log}
+    errors="^ERROR|[ ]error:|[ ]Error[ ]|No[ ]such|assertion[ ]failed|FAIL:|:[ ]undefined"
+    noterrors=" X?FAIL:  ?0$"
+    grep -E "${errors}" ${log} | grep -v -E "${noterrors}"
 
     if test $result -eq 0; then
 	# successful execution
@@ -170,7 +171,7 @@ else
 fi
 
 for t in $tests; do
-    if test -e "$t"; then 
+    if test -e "$t"; then
 	# A configuration file
         cfg="$t"
     elif test -e "$top/test-suite/buildtests/${t}.opts"; then

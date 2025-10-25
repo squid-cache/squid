@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "ExternalACLEntry.h"
 #include "http/Stream.h"
 #include "HttpReply.h"
@@ -25,20 +25,15 @@
 CBDATA_CLASS_INIT(ACLFilledChecklist);
 
 ACLFilledChecklist::ACLFilledChecklist() :
-    dst_rdns(NULL),
-    request (NULL),
-    reply (NULL),
+    dst_rdns(nullptr),
 #if USE_AUTH
-    auth_user_request (NULL),
+    auth_user_request (nullptr),
 #endif
 #if SQUID_SNMP
-    snmp_community(NULL),
-#endif
-#if USE_OPENSSL
-    sslErrors(NULL),
+    snmp_community(nullptr),
 #endif
     requestErrorType(ERR_MAX),
-    conn_(NULL),
+    conn_(nullptr),
     fd_(-1),
     destinationDomainChecked_(false),
     sourceDomainChecked_(false)
@@ -46,7 +41,6 @@ ACLFilledChecklist::ACLFilledChecklist() :
     my_addr.setEmpty();
     src_addr.setEmpty();
     dst_addr.setEmpty();
-    rfc931[0] = '\0';
 }
 
 ACLFilledChecklist::~ACLFilledChecklist()
@@ -55,17 +49,9 @@ ACLFilledChecklist::~ACLFilledChecklist()
 
     safe_free(dst_rdns); // created by xstrdup().
 
-    HTTPMSGUNLOCK(request);
-
-    HTTPMSGUNLOCK(reply);
-
     cbdataReferenceDone(conn_);
 
-#if USE_OPENSSL
-    cbdataReferenceDone(sslErrors);
-#endif
-
-    debugs(28, 4, HERE << "ACLFilledChecklist destroyed " << this);
+    debugs(28, 4, "ACLFilledChecklist destroyed " << this);
 }
 
 static void
@@ -76,7 +62,7 @@ showDebugWarning(const char *msg)
         return;
 
     ++count;
-    debugs(28, Important(58), "ALE missing " << msg);
+    debugs(28, Important(58), "ERROR: ALE missing " << msg);
 }
 
 void
@@ -96,13 +82,13 @@ ACLFilledChecklist::verifyAle() const
             showDebugWarning("HttpRequest object");
             // XXX: al->request should be original,
             // but the request may be already adapted
-            al->request = request;
+            al->request = request.getRaw();
             HTTPMSGLOCK(al->request);
         }
 
         if (!al->adapted_request) {
             showDebugWarning("adapted HttpRequest object");
-            al->adapted_request = request;
+            al->adapted_request = request.getRaw();
             HTTPMSGLOCK(al->adapted_request);
         }
 
@@ -114,17 +100,10 @@ ACLFilledChecklist::verifyAle() const
         }
     }
 
-    if (reply && !al->reply) {
+    if (hasReply() && !al->reply) {
         showDebugWarning("HttpReply object");
-        al->reply = reply;
+        al->reply = reply_;
     }
-
-#if USE_IDENT
-    if (*rfc931 && !al->cache.rfc931) {
-        showDebugWarning("IDENT");
-        al->cache.rfc931 = xstrdup(rfc931);
-    }
-#endif
 }
 
 void
@@ -207,32 +186,28 @@ ACLFilledChecklist::markSourceDomainChecked()
 /*
  * There are two common ACLFilledChecklist lifecycles paths:
  *
- * A) Using aclCheckFast(): The caller creates an ACLFilledChecklist object
- *    on stack and calls aclCheckFast().
+ * "Fast" (always synchronous or "blocking"): The user constructs an
+ *    ACLFilledChecklist object on stack, configures it as needed, and calls one
+ *    or both of its fastCheck() methods.
  *
- * B) Using aclNBCheck() and callbacks: The caller allocates an
- *    ACLFilledChecklist object (via operator new) and passes it to
- *    aclNBCheck(). Control eventually passes to ACLChecklist::checkCallback(),
- *    which will invoke the callback function as requested by the
- *    original caller of aclNBCheck().  This callback function must
- *    *not* delete the list.  After the callback function returns,
- *    checkCallback() will delete the list (i.e., self).
+ * "Slow" (usually asynchronous or "non-blocking"): The user allocates an
+ *    ACLFilledChecklist object on heap (via Make()), configures it as needed,
+ *    and passes it to NonBlockingCheck() while specifying the callback function
+ *    to call with check results. NonBlockingCheck() calls the callback function
+ *    (if the corresponding cbdata is still valid), either immediately/directly
+ *    (XXX) or eventually/asynchronously. After this callback obligations are
+ *    fulfilled, checkCallback() deletes the checklist object (i.e. "this").
  */
-ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request, const char *ident):
-    dst_rdns(NULL),
-    request(NULL),
-    reply(NULL),
+ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request):
+    dst_rdns(nullptr),
 #if USE_AUTH
-    auth_user_request(NULL),
+    auth_user_request(nullptr),
 #endif
 #if SQUID_SNMP
-    snmp_community(NULL),
-#endif
-#if USE_OPENSSL
-    sslErrors(NULL),
+    snmp_community(nullptr),
 #endif
     requestErrorType(ERR_MAX),
-    conn_(NULL),
+    conn_(nullptr),
     fd_(-1),
     destinationDomainChecked_(false),
     sourceDomainChecked_(false)
@@ -240,11 +215,9 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
     my_addr.setEmpty();
     src_addr.setEmpty();
     dst_addr.setEmpty();
-    rfc931[0] = '\0';
 
     changeAcl(A);
     setRequest(http_request);
-    setIdent(ident);
 }
 
 void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
@@ -252,7 +225,6 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
     assert(!request);
     if (httpRequest) {
         request = httpRequest;
-        HTTPMSGLOCK(request);
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.acl_uses_indirect_client)
             src_addr = request->indirect_client_addr;
@@ -267,12 +239,21 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
 }
 
 void
-ACLFilledChecklist::setIdent(const char *ident)
+ACLFilledChecklist::updateAle(const AccessLogEntry::Pointer &a)
 {
-#if USE_IDENT
-    assert(!rfc931[0]);
-    if (ident)
-        xstrncpy(rfc931, ident, USER_IDENT_SZ);
-#endif
+    if (!a)
+        return;
+
+    al = a; // could have been set already (to a different value)
+    if (!request)
+        setRequest(a->request);
+    updateReply(a->reply);
+}
+
+void
+ACLFilledChecklist::updateReply(const HttpReply::Pointer &r)
+{
+    if (r)
+        reply_ = r; // may already be set, including to r
 }
 

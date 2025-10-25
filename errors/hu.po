@@ -836,8 +836,7 @@ msgid ""
 "example, you can not POST a Gopher request."
 msgstr ""
 "A proxyszerver nem támogat minden létező kéréstípus és protokoll "
-"kombinációt, így pl. nem lehet POST kéréstípust használni egy Gopher "
-"kérésben."
+"kombinációt."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -846,8 +845,7 @@ msgid ""
 "is currently not supported."
 msgstr ""
 "A proxyszerver nem támogat minden létező kéréstípus és protokoll "
-"kombinációt, így pl. nem lehet POST kéréstípust használni egy Gopher "
-"kérésben."
+"kombinációt."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""

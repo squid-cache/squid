@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SQUIDCONFIG_H_
-#define SQUID_SQUIDCONFIG_H_
+#ifndef SQUID_SRC_SQUIDCONFIG_H
+#define SQUID_SRC_SQUIDCONFIG_H
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
@@ -16,20 +16,21 @@
 #include "ClientDelayConfig.h"
 #include "DelayConfig.h"
 #endif
+#include "HeaderMangling.h"
 #include "helper/ChildConfig.h"
-#include "HttpHeaderTools.h"
 #include "ip/Address.h"
 #if USE_DELAY_POOLS
 #include "MessageDelayPools.h"
 #endif
 #include "Notes.h"
+#include "security/Context.h"
 #include "security/forward.h"
-#include "SquidTime.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 #include "store/Disk.h"
 #include "store/forward.h"
+#include "time/gadgets.h"
 
 #include <chrono>
 
@@ -42,7 +43,8 @@ namespace Mgr
 {
 class ActionPasswordList;
 } // namespace Mgr
-class CachePeer;
+
+class CachePeers;
 class CustomLog;
 class CpuAffinityMap;
 class DebugMessages;
@@ -64,8 +66,8 @@ public:
     ~DiskConfig() { delete[] swapDirs; }
 
     RefCount<SwapDir> *swapDirs = nullptr;
-    int n_allocated = 0;
-    int n_configured = 0;
+    size_t n_allocated = 0;
+    size_t n_configured = 0;
     /// number of disk processes required to support all cache_dirs
     int n_strands = 0;
 };
@@ -225,15 +227,8 @@ public:
     char *etcHostsPath;
     char *visibleHostname;
     char *uniqueHostname;
-    wordlist *hostnameAliases;
+    SBufList hostnameAliases;
     char *errHtmlText;
-
-    struct {
-        char *host;
-        char *file;
-        time_t period;
-        unsigned short port;
-    } Announce;
 
     struct {
 
@@ -249,7 +244,7 @@ public:
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
     wordlist *mcast_group_list;
-    CachePeer *peers;
+    CachePeers *peers;
     int npeers;
 
     struct {
@@ -289,8 +284,6 @@ public:
         int buffered_logs;
         int common_log;
         int log_mime_hdrs;
-        int log_fqdn;
-        int announce;
         int mem_pools;
         int test_reachability;
         int half_closed_clients;
@@ -318,7 +311,6 @@ public:
 
         int vary_ignore_expire;
         int surrogate_is_remote;
-        int request_entities;
         int detect_broken_server_pconns;
         int relaxed_header_parser;
         int check_hostnames;
@@ -354,12 +346,14 @@ public:
 
     int pipeline_max_prefetch;
 
+    // these values are actually unsigned
+    // TODO: extend the parser to support more nuanced types
     int forward_max_tries;
     int connect_retries;
 
     std::chrono::nanoseconds paranoid_hit_validation;
 
-    class ACL *aclList;
+    Acl::NamedAcls *namedAcls; ///< acl aclname acltype ...
 
     struct {
         acl_access *http;
@@ -453,8 +447,8 @@ public:
     MessageDelayConfig MessageDelay;
 #endif
 
-    struct {
-        struct {
+    struct CommIncoming {
+        struct Measure {
             int average;
             int min_poll;
         } dns, udp, tcp;
@@ -462,16 +456,6 @@ public:
     int max_open_disk_fds;
     int uri_whitespace;
     AclSizeLimit *rangeOffsetLimit;
-#if MULTICAST_MISS_STREAM
-
-    struct {
-
-        Ip::Address addr;
-        int ttl;
-        unsigned short port;
-        char *encode_key;
-    } mcast_miss;
-#endif
 
     /// request_header_access and request_header_replace
     HeaderManglers *request_header_access;
@@ -519,7 +503,10 @@ public:
     external_acl *externalAclHelperList;
 
     struct {
-        Security::ContextPointer sslContext;
+        Security::FuturePeerContext *defaultPeerContext;
+        // TODO: Remove when FuturePeerContext above becomes PeerContext
+        /// \deprecated Legacy storage. Use defaultPeerContext instead.
+        Security::ContextPointer *sslContext_;
 #if USE_OPENSSL
         char *foreignIntermediateCertsPath;
         acl_access *cert_error;
@@ -535,7 +522,7 @@ public:
     CpuAffinityMap *cpuAffinityMap;
 
 #if USE_LOADABLE_MODULES
-    wordlist *loadable_module_names;
+    SBufList loadable_module_names;
 #endif
 
     int client_ip_max_connections;
@@ -560,8 +547,6 @@ public:
         int connect_gap;
         int connect_timeout;
     } happyEyeballs;
-
-    DebugMessages *debugMessages; ///< cache_log_message
 };
 
 extern SquidConfig Config;
@@ -582,5 +567,5 @@ public:
 
 extern SquidConfig2 Config2;
 
-#endif /* SQUID_SQUIDCONFIG_H_ */
+#endif /* SQUID_SRC_SQUIDCONFIG_H */
 

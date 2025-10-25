@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,8 +11,8 @@
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  */
 
-#ifndef SQUID_OS_MSWINDOWS_H
-#define SQUID_OS_MSWINDOWS_H
+#ifndef SQUID_COMPAT_OS_MSWINDOWS_H
+#define SQUID_COMPAT_OS_MSWINDOWS_H
 
 #if _SQUID_WINDOWS_
 
@@ -21,16 +21,6 @@
  * DO *NOT* MAKE ANY CHANGES below here unless you know what you're doing...*
  *--------------------------------------------------------------------------*
  ****************************************************************************/
-
-/* we target Windows XP and later - some API are missing otherwise */
-#if _SQUID_MINGW_
-#if WINVER < 0x0501
-#undef WINVER
-#define WINVER 0x0501
-#undef _WIN32_WINNT
-#define _WIN32_WINNT WINVER
-#endif
-#endif /* _SQUID_MINGW_ */
 
 #include "compat/initgroups.h"
 
@@ -54,19 +44,6 @@
 #pragma warning( disable : 4290 )
 #pragma warning( disable : 4996 )
 #endif
-#endif
-
-/* Some MinGW version defines min() and max() as macros
-   causing the fail of the build process. The following
-   #define will disable that definition
- */
-#if defined(__GNUC__) && !NOMINMAX
-#define NOMINMAX
-#endif
-
-/// some builds of MinGW do not define IPV6_V6ONLY socket option
-#if !defined(IPV6_V6ONLY)
-#define IPV6_V6ONLY 27
 #endif
 
 #if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
@@ -112,7 +89,7 @@ typedef unsigned long ino_t;
 #define vsnprintf _vsnprintf
 #endif
 
-/*  Microsoft C Compiler and CygWin need these. MinGW does not */
+/*  Microsoft C Compiler and CygWin need these. */
 #if defined(_MSC_VER) || _SQUID_CYGWIN_
 SQUIDCEXTERN int WIN32_ftruncate(int fd, off_t size);
 #define ftruncate WIN32_ftruncate
@@ -130,7 +107,21 @@ SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #define mkdir(p,F) mkdir((p))
 #define pclose _pclose
 #define popen _popen
-#define putenv _putenv
+
+inline int
+setenv(const char * const name, const char * const value, const int overwrite)
+{
+    if (!overwrite && getenv(name))
+        return 0;
+
+    // overwrite requested or the variable is not set
+
+    // XXX: Unlike POSIX.1 setenv(3) we want to emulate here, _putenv_s() treats
+    // `value` that points to an empty string specially: It removes the named
+    // variable (if any) and does not create a new variable with an empty value.
+    return (_putenv_s(name, value) == 0 ? 0 : -1);
+}
+
 #define setmode _setmode
 #define sleep(t) Sleep((t)*1000)
 #define umask _umask
@@ -237,12 +228,6 @@ SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #define SIGUSR1 30  /* user defined signal 1 */
 #define SIGUSR2 31  /* user defined signal 2 */
 
-#if _SQUID_MINGW_
-typedef unsigned char boolean;
-typedef unsigned char u_char;
-typedef unsigned int u_int;
-#endif
-
 #if defined(_MSC_VER)
 typedef int uid_t;
 typedef int gid_t;
@@ -281,8 +266,6 @@ struct timezone {
 #include <errno.h>
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
-#elif HAVE_WINSOCK_H
-#include <winsock.h>
 #endif
 
 #if !_SQUID_CYGWIN_
@@ -310,17 +293,6 @@ struct timezone {
 #endif
 
 #include <io.h>
-
-typedef char * caddr_t;
-
-#ifndef _PATH_DEVNULL
-#define _PATH_DEVNULL "NUL"
-#endif
-
-#undef FD_CLOSE
-#undef FD_OPEN
-#undef FD_READ
-#undef FD_WRITE
 
 #ifndef EISCONN
 #define EISCONN WSAEISCONN
@@ -426,77 +398,13 @@ SQUIDCEXTERN _CRTIMP ioinfo * __pioinfo[];
 SQUIDCEXTERN int __cdecl _free_osfhnd(int);
 #endif
 
-#if _SQUID_MINGW_
-__MINGW_IMPORT ioinfo * __pioinfo[];
-SQUIDCEXTERN int _free_osfhnd(int);
-#endif
-
 SQUIDCEXTERN THREADLOCAL int ws32_result;
 
 #if defined(__cplusplus)
 
-inline int
-close(int fd)
-{
-    char l_so_type[sizeof(int)];
-    int l_so_type_siz = sizeof(l_so_type);
-    SOCKET sock = _get_osfhandle(fd);
-
-    if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0) {
-        int result = 0;
-        if (closesocket(sock) == SOCKET_ERROR) {
-            errno = WSAGetLastError();
-            result = 1;
-        }
-        _free_osfhnd(fd);
-        _osfile(fd) = 0;
-        return result;
-    } else
-        return _close(fd);
-}
-
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 
-#ifndef _S_IREAD
-#define _S_IREAD 0x0100
 #endif
-
-#ifndef _S_IWRITE
-#define _S_IWRITE 0x0080
-#endif
-
-inline int
-open(const char *filename, int oflag, int pmode = 0)
-{
-    return _open(filename, oflag, pmode & (_S_IREAD | _S_IWRITE));
-}
-#endif
-
-inline int
-read(int fd, void * buf, size_t siz)
-{
-    char l_so_type[sizeof(int)];
-    int l_so_type_siz = sizeof(l_so_type);
-    SOCKET sock = _get_osfhandle(fd);
-
-    if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
-        return ::recv(sock, (char FAR *) buf, (int)siz, 0);
-    else
-        return _read(fd, buf, (unsigned int)siz);
-}
-
-inline int
-write(int fd, const void * buf, size_t siz)
-{
-    char l_so_type[sizeof(int)];
-    int l_so_type_siz = sizeof(l_so_type);
-    SOCKET sock = _get_osfhandle(fd);
-
-    if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
-        return ::send(sock, (char FAR *) buf, siz, 0);
-    else
-        return _write(fd, buf, siz);
-}
 
 // stdlib <functional> definitions are required before std API redefinitions.
 #include <functional>
@@ -508,7 +416,7 @@ namespace Squid
 
 /*
  * Each of these functions is defined in the Squid namespace so as not to
- * clash with the winsock.h and winsock2.h definitions.
+ * clash with the winsock2.h definitions.
  * It is then paired with a #define to cause these wrappers to be used by
  * the main code instead of those system definitions.
  *
@@ -518,129 +426,6 @@ namespace Squid
  * - map the FD value used by Squid to the socket handes used by Windows.
  */
 
-inline int
-accept(int s, struct sockaddr * a, socklen_t * l)
-{
-    SOCKET result;
-    if ((result = ::accept(_get_osfhandle(s), a, l)) == INVALID_SOCKET) {
-        if (WSAEMFILE == (errno = WSAGetLastError()))
-            errno = EMFILE;
-        return -1;
-    } else
-        return _open_osfhandle(result, 0);
-}
-#define accept(s,a,l) Squid::accept(s,a,reinterpret_cast<socklen_t*>(l))
-
-inline int
-bind(int s, const struct sockaddr * n, socklen_t l)
-{
-    if (::bind(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return 0;
-}
-#define bind(s,n,l) Squid::bind(s,n,l)
-
-inline int
-connect(int s, const struct sockaddr * n, socklen_t l)
-{
-    if (::connect(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
-        if (WSAEMFILE == (errno = WSAGetLastError()))
-            errno = EMFILE;
-        return -1;
-    } else
-        return 0;
-}
-#define connect(s,n,l) Squid::connect(s,n,l)
-
-inline struct hostent *
-gethostbyname(const char *n) {
-    HOSTENT FAR * result;
-    if ((result = ::gethostbyname(n)) == NULL)
-        errno = WSAGetLastError();
-    return result;
-}
-#define gethostbyname(n) Squid::gethostbyname(n)
-
-inline SERVENT FAR *
-getservbyname(const char * n, const char * p)
-{
-    SERVENT FAR * result;
-    if ((result = ::getservbyname(n, p)) == NULL)
-        errno = WSAGetLastError();
-    return result;
-}
-#define getservbyname(n,p) Squid::getservbyname(n,p)
-
-inline HOSTENT FAR *
-gethostbyaddr(const void * a, size_t l, int t)
-{
-    HOSTENT FAR * result;
-    if ((result = ::gethostbyaddr((const char*)a, l, t)) == NULL)
-        errno = WSAGetLastError();
-    return result;
-}
-#define gethostbyaddr(a,l,t) Squid::gethostbyaddr(a,l,t)
-
-inline int
-getsockname(int s, struct sockaddr * n, socklen_t * l)
-{
-    int i=*l;
-    if (::getsockname(_get_osfhandle(s), n, &i) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return 0;
-}
-#define getsockname(s,a,l) Squid::getsockname(s,a,reinterpret_cast<socklen_t*>(l))
-
-inline int
-gethostname(char * n, size_t l)
-{
-    if ((::gethostname(n, l)) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return 0;
-}
-#define gethostname(n,l) Squid::gethostname(n,l)
-
-inline int
-getsockopt(int s, int l, int o, void * v, socklen_t * n)
-{
-    Sleep(1);
-    if ((::getsockopt(_get_osfhandle(s), l, o,(char *) v, n)) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return 0;
-}
-#define getsockopt(s,l,o,v,n) Squid::getsockopt(s,l,o,v,n)
-
-inline char *
-inet_ntop(int af, const void *src, char *dst, size_t size)
-{
-#if HAVE_DECL_INETNTOPA
-    return (char*)InetNtopA(af, const_cast<void*>(src), dst, size);
-#else
-    return ::inet_ntop(af, src, dst, size);
-#endif
-}
-#define inet_ntop(a,s,d,l) Squid::inet_ntop(a,s,d,l)
-
-inline char *
-inet_pton(int af, const void *src, char *dst)
-{
-#if HAVE_DECL_INETPTONA
-    return (char*)InetPtonA(af, const_cast<void*>(src), dst);
-#else
-    return ::inet_pton(af, src, dst);
-#endif
-}
-#define inet_pton(a,s,d) Squid::inet_pton(a,s,d)
-
-/* Simple ioctl() emulation */
 inline int
 ioctl(int s, int c, void * a)
 {
@@ -664,94 +449,6 @@ ioctlsocket(int s, long c, u_long FAR * a)
 #define ioctlsocket(s,c,a) Squid::ioctlsocket(s,c,a)
 
 inline int
-listen(int s, int b)
-{
-    if (::listen(_get_osfhandle(s), b) == SOCKET_ERROR) {
-        if (WSAEMFILE == (errno = WSAGetLastError()))
-            errno = EMFILE;
-        return -1;
-    } else
-        return 0;
-}
-#define listen(s,b) Squid::listen(s,b)
-
-inline ssize_t
-recv(int s, void * b, size_t l, int f)
-{
-    ssize_t result;
-    if ((result = ::recv(_get_osfhandle(s), (char *)b, l, f)) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return result;
-}
-#define recv(s,b,l,f) Squid::recv(s,b,l,f)
-
-inline ssize_t
-recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, socklen_t * fl)
-{
-    ssize_t result;
-    int ifl=*fl;
-    if ((result = ::recvfrom(_get_osfhandle(s), (char *)b, l, f, fr, &ifl)) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return result;
-}
-#define recvfrom(s,b,l,f,r,n) Squid::recvfrom(s,b,l,f,r,reinterpret_cast<socklen_t*>(n))
-
-inline int
-select(int n, fd_set * r, fd_set * w, fd_set * e, struct timeval * t)
-{
-    int result;
-    if ((result = ::select(n,r,w,e,t)) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return result;
-}
-#define select(n,r,w,e,t) Squid::select(n,r,w,e,t)
-
-inline ssize_t
-send(int s, const char * b, size_t l, int f)
-{
-    ssize_t result;
-    if ((result = ::send(_get_osfhandle(s), b, l, f)) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return result;
-}
-#define send(s,b,l,f) Squid::send(s,reinterpret_cast<const char*>(b),l,f)
-
-inline ssize_t
-sendto(int s, const void * b, size_t l, int f, const struct sockaddr * t, socklen_t tl)
-{
-    ssize_t result;
-    if ((result = ::sendto(_get_osfhandle(s), (char *)b, l, f, t, tl)) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return result;
-}
-#define sendto(a,b,l,f,t,n) Squid::sendto(a,b,l,f,t,n)
-
-inline int
-setsockopt(SOCKET s, int l, int o, const void * v, socklen_t n)
-{
-    SOCKET socket;
-
-    socket = ((s == INVALID_SOCKET) ? s : (SOCKET)_get_osfhandle((int)s));
-
-    if (::setsockopt(socket, l, o, (const char *)v, n) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return 0;
-}
-#define setsockopt(s,l,o,v,n) Squid::setsockopt(s,l,o,v,n)
-
-inline int
 shutdown(int s, int h)
 {
     if (::shutdown(_get_osfhandle(s),h) == SOCKET_ERROR) {
@@ -761,37 +458,6 @@ shutdown(int s, int h)
         return 0;
 }
 #define shutdown(s,h) Squid::shutdown(s,h)
-
-inline int
-socket(int f, int t, int p)
-{
-    SOCKET result;
-    if ((result = ::socket(f, t, p)) == INVALID_SOCKET) {
-        if (WSAEMFILE == (errno = WSAGetLastError()))
-            errno = EMFILE;
-        return -1;
-    } else
-        return _open_osfhandle(result, 0);
-}
-#define socket(f,t,p) Squid::socket(f,t,p)
-
-inline int
-pipe(int pipefd[2])
-{
-    return _pipe(pipefd,4096,_O_BINARY);
-}
-#define pipe(a) Squid::pipe(a)
-
-inline int
-WSAAsyncSelect(int s, HWND h, unsigned int w, long e)
-{
-    if (::WSAAsyncSelect(_get_osfhandle(s), h, w, e) == SOCKET_ERROR) {
-        errno = WSAGetLastError();
-        return -1;
-    } else
-        return 0;
-}
-#define WSAAsyncSelect(s,h,w,e) Squid::WSAAsyncSelect(s,h,w,e)
 
 #undef WSADuplicateSocket
 inline int
@@ -830,33 +496,11 @@ WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
 } /* namespace Squid */
 
 #else /* #ifdef __cplusplus */
-#define connect(s,n,l) \
-    (SOCKET_ERROR == connect(_get_osfhandle(s),n,l) ? \
-    (WSAEMFILE == (errno = WSAGetLastError()) ? errno = EMFILE : -1, -1) : 0)
-#define gethostbyname(n) \
-    (NULL == ((HOSTENT FAR*)(ws32_result = (int)gethostbyname(n))) ? \
-    (errno = WSAGetLastError()), (HOSTENT FAR*)NULL : (HOSTENT FAR*)ws32_result)
-#define gethostname(n,l) \
-    (SOCKET_ERROR == gethostname(n,l) ? \
-    (errno = WSAGetLastError()), -1 : 0)
-#define recv(s,b,l,f) \
-    (SOCKET_ERROR == (ws32_result = recv(_get_osfhandle(s),b,l,f)) ? \
-    (errno = WSAGetLastError()), -1 : ws32_result)
-#define sendto(s,b,l,f,t,tl) \
-    (SOCKET_ERROR == (ws32_result = sendto(_get_osfhandle(s),b,l,f,t,tl)) ? \
-    (errno = WSAGetLastError()), -1 : ws32_result)
-#define select(n,r,w,e,t) \
-    (SOCKET_ERROR == (ws32_result = select(n,r,w,e,t)) ? \
-    (errno = WSAGetLastError()), -1 : ws32_result)
-#define socket(f,t,p) \
-    (INVALID_SOCKET == ((SOCKET)(ws32_result = (int)socket(f,t,p))) ? \
-    ((WSAEMFILE == (errno = WSAGetLastError()) ? errno = EMFILE : -1), -1) : \
-    (SOCKET)_open_osfhandle(ws32_result,0))
 #define write      _write /* Needed in util.c */
 #define open       _open /* Needed in win32lib.c */
 #endif /* #ifdef __cplusplus */
 
-/* provide missing definitions from resoruce.h */
+/* provide missing definitions from resource.h */
 /* NP: sys/resource.h and sys/time.h are apparently order-dependant. */
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
@@ -935,11 +579,6 @@ setgid (gid_t gid)
     return 0;
 }
 
-/* for some reason autoconf misdetects getpagesize.. */
-#if HAVE_GETPAGESIZE && _SQUID_MINGW_
-#undef HAVE_GETPAGESIZE
-#endif
-
 #if !HAVE_GETPAGESIZE
 /* And now we define a compatibility layer */
 size_t getpagesize();
@@ -949,15 +588,6 @@ size_t getpagesize();
 SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
 SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
 SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
-
-/* gcc doesn't recognize the Windows native 64 bit formatting tags causing
- * the compile fail, so we must disable the check on native Windows.
- */
-#if __GNUC__
-#define PRINTF_FORMAT_ARG1
-#define PRINTF_FORMAT_ARG2
-#define PRINTF_FORMAT_ARG3
-#endif
 
 /* XXX: the logic around this is a bit warped:
  *   we #define ACL unconditionally at the top of this file,
@@ -992,27 +622,6 @@ void openlog(const char *ident, int logopt, int facility);
 void syslog(int priority, const char *fmt, ...);
 #endif
 
-#if _SQUID_MINGW_
-/* MinGW missing bits from sys/wait.h */
-/* A status looks like:
- *  <2 bytes info> <2 bytes code>
- *
- *  <code> == 0, child has exited, info is the exit value
- *  <code> == 1..7e, child has exited, info is the signal number.
- *  <code> == 7f, child has stopped, info was the signal number.
- *  <code> == 80, there was a core dump.
- */
-#define WIFEXITED(w)    (((w) & 0xff) == 0)
-#define WIFSIGNALED(w)  (((w) & 0x7f) > 0 && (((w) & 0x7f) < 0x7f))
-#define WIFSTOPPED(w)   (((w) & 0xff) == 0x7f)
-#define WEXITSTATUS(w)  (((w) >> 8) & 0xff)
-#define WTERMSIG(w) ((w) & 0x7f)
-#define WSTOPSIG    WEXITSTATUS
-#endif
-
-/* prototypes */
-void WIN32_maperror(unsigned long WIN32_oserrno);
-
 #endif /* _SQUID_WINDOWS_ */
-#endif /* SQUID_OS_MSWINDOWS_H */
+#endif /* SQUID_COMPAT_OS_MSWINDOWS_H */
 

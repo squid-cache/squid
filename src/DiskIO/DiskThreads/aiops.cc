@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,16 +13,18 @@
 #endif
 
 #include "squid.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "DiskThreads.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 /*
  * struct stat and squidaio_xstrdup use explicit pool alloc()/freeOne().
  * XXX: convert to MEMPROXY_CLASS() API
  */
+#include "mem/Allocator.h"
 #include "mem/Pool.h"
 
 #include <cerrno>
@@ -103,7 +105,7 @@ static void *squidaio_do_opendir(squidaio_request_t *);
 static void squidaio_debug(squidaio_request_t *);
 static void squidaio_poll_queues(void);
 
-static squidaio_thread_t *threads = NULL;
+static squidaio_thread_t *threads = nullptr;
 static int squidaio_initialised = 0;
 
 #define AIO_LARGE_BUFS  16384
@@ -112,15 +114,15 @@ static int squidaio_initialised = 0;
 #define AIO_TINY_BUFS   AIO_LARGE_BUFS >> 3
 #define AIO_MICRO_BUFS  128
 
-static MemAllocator *squidaio_large_bufs = NULL;    /* 16K */
-static MemAllocator *squidaio_medium_bufs = NULL;   /* 8K */
-static MemAllocator *squidaio_small_bufs = NULL;    /* 4K */
-static MemAllocator *squidaio_tiny_bufs = NULL; /* 2K */
-static MemAllocator *squidaio_micro_bufs = NULL;    /* 128K */
+static Mem::Allocator *squidaio_large_bufs = nullptr; /* 16K */
+static Mem::Allocator *squidaio_medium_bufs = nullptr; /* 8K */
+static Mem::Allocator *squidaio_small_bufs = nullptr; /* 4K */
+static Mem::Allocator *squidaio_tiny_bufs = nullptr; /* 2K */
+static Mem::Allocator *squidaio_micro_bufs = nullptr; /* 128K */
 
-static int request_queue_len = 0;
-static MemAllocator *squidaio_request_pool = NULL;
-static MemAllocator *squidaio_thread_pool = NULL;
+static size_t request_queue_len = 0;
+static Mem::Allocator *squidaio_request_pool = nullptr;
+static Mem::Allocator *squidaio_thread_pool = nullptr;
 static squidaio_request_queue_t request_queue;
 
 static struct {
@@ -129,7 +131,7 @@ static struct {
 
 request_queue2 = {
 
-    NULL, &request_queue2.head
+    nullptr, &request_queue2.head
 };
 static squidaio_request_queue_t done_queue;
 
@@ -139,7 +141,7 @@ static struct {
 
 done_requests = {
 
-    NULL, &done_requests.head
+    nullptr, &done_requests.head
 };
 static pthread_attr_t globattr;
 #if HAVE_SCHED_H
@@ -148,7 +150,7 @@ static struct sched_param globsched;
 #endif
 static pthread_t main_thread;
 
-static MemAllocator *
+static Mem::Allocator *
 squidaio_get_pool(int size)
 {
     if (size <= AIO_LARGE_BUFS) {
@@ -164,16 +166,15 @@ squidaio_get_pool(int size)
             return squidaio_large_bufs;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void *
 squidaio_xmalloc(int size)
 {
     void *p;
-    MemAllocator *pool;
 
-    if ((pool = squidaio_get_pool(size)) != NULL) {
+    if (const auto pool = squidaio_get_pool(size)) {
         p = pool->alloc();
     } else
         p = xmalloc(size);
@@ -196,9 +197,7 @@ squidaio_xstrdup(const char *str)
 void
 squidaio_xfree(void *p, int size)
 {
-    MemAllocator *pool;
-
-    if ((pool = squidaio_get_pool(size)) != NULL) {
+    if (const auto pool = squidaio_get_pool(size)) {
         pool->freeOne(p);
     } else
         xfree(p);
@@ -207,10 +206,9 @@ squidaio_xfree(void *p, int size)
 static void
 squidaio_xstrfree(char *str)
 {
-    MemAllocator *pool;
     int len = strlen(str) + 1;
 
-    if ((pool = squidaio_get_pool(len)) != NULL) {
+    if (const auto pool = squidaio_get_pool(len)) {
         pool->freeOne(str);
     } else
         xfree(str);
@@ -219,7 +217,6 @@ squidaio_xstrfree(char *str)
 void
 squidaio_init(void)
 {
-    int i;
     squidaio_thread_t *threadp;
 
     if (squidaio_initialised)
@@ -260,13 +257,13 @@ squidaio_init(void)
     pthread_attr_setstacksize(&globattr, 256 * 1024);
 
     /* Initialize request queue */
-    if (pthread_mutex_init(&(request_queue.mutex), NULL))
+    if (pthread_mutex_init(&(request_queue.mutex), nullptr))
         fatal("Failed to create mutex");
 
-    if (pthread_cond_init(&(request_queue.cond), NULL))
+    if (pthread_cond_init(&(request_queue.cond), nullptr))
         fatal("Failed to create condition variable");
 
-    request_queue.head = NULL;
+    request_queue.head = nullptr;
 
     request_queue.tailp = &request_queue.head;
 
@@ -275,13 +272,13 @@ squidaio_init(void)
     request_queue.blocked = 0;
 
     /* Initialize done queue */
-    if (pthread_mutex_init(&(done_queue.mutex), NULL))
+    if (pthread_mutex_init(&(done_queue.mutex), nullptr))
         fatal("Failed to create mutex");
 
-    if (pthread_cond_init(&(done_queue.cond), NULL))
+    if (pthread_cond_init(&(done_queue.cond), nullptr))
         fatal("Failed to create condition variable");
 
-    done_queue.head = NULL;
+    done_queue.head = nullptr;
 
     done_queue.tailp = &done_queue.head;
 
@@ -298,10 +295,10 @@ squidaio_init(void)
 
     assert(NUMTHREADS != 0);
 
-    for (i = 0; i < NUMTHREADS; ++i) {
+    for (size_t i = 0; i < NUMTHREADS; ++i) {
         threadp = (squidaio_thread_t *)squidaio_thread_pool->alloc();
         threadp->status = _THREAD_STARTING;
-        threadp->current_req = NULL;
+        threadp->current_req = nullptr;
         threadp->requests = 0;
         threadp->next = threads;
         threads = threadp;
@@ -375,11 +372,11 @@ squidaio_thread_loop(void *ptr)
     sigaddset(&newSig, SIGTERM);
     sigaddset(&newSig, SIGINT);
     sigaddset(&newSig, SIGALRM);
-    pthread_sigmask(SIG_BLOCK, &newSig, NULL);
+    pthread_sigmask(SIG_BLOCK, &newSig, nullptr);
 
     while (1) {
-        threadp->current_req = request = NULL;
-        request = NULL;
+        threadp->current_req = request = nullptr;
+        request = nullptr;
         /* Get a request to process */
         threadp->status = _THREAD_WAITING;
         pthread_mutex_lock(&request_queue.mutex);
@@ -401,7 +398,7 @@ squidaio_thread_loop(void *ptr)
         /* process the request */
         threadp->status = _THREAD_BUSY;
 
-        request->next = NULL;
+        request->next = nullptr;
 
         threadp->current_req = request;
 
@@ -461,7 +458,7 @@ squidaio_thread_loop(void *ptr)
         ++ threadp->requests;
     }               /* while forever */
 
-    return NULL;
+    return nullptr;
 }               /* squidaio_thread_loop */
 
 static void
@@ -476,7 +473,7 @@ squidaio_queue_request(squidaio_request_t * request)
     request_queue_len += 1;
     request->resultp->_data = request;
     /* Play some tricks with the request_queue2 queue */
-    request->next = NULL;
+    request->next = nullptr;
 
     if (pthread_mutex_trylock(&request_queue.mutex) == 0) {
         if (request_queue2.head) {
@@ -496,7 +493,7 @@ squidaio_queue_request(squidaio_request_t * request)
 
         if (request_queue2.head) {
             /* Clear queue of blocked requests */
-            request_queue2.head = NULL;
+            request_queue2.head = nullptr;
             request_queue2.tailp = &request_queue2.head;
         }
     } else {
@@ -512,14 +509,14 @@ squidaio_queue_request(squidaio_request_t * request)
         if (++filter >= filter_limit) {
             filter_limit += filter;
             filter = 0;
-            debugs(43, DBG_IMPORTANT, "squidaio_queue_request: WARNING - Queue congestion (growing to " << filter_limit << ")");
+            debugs(43, DBG_IMPORTANT, "WARNING: squidaio_queue_request: Queue congestion (growing to " << filter_limit << ")");
         }
     }
 
     /* Warn if out of threads */
     if (request_queue_len > MAGIC1) {
         static int last_warn = 0;
-        static int queue_high, queue_low;
+        static size_t queue_high, queue_low;
 
         if (high_start == 0) {
             high_start = squid_curtime;
@@ -535,7 +532,7 @@ squidaio_queue_request(squidaio_request_t * request)
 
         if (squid_curtime >= (last_warn + 15) &&
                 squid_curtime >= (high_start + 5)) {
-            debugs(43, DBG_IMPORTANT, "squidaio_queue_request: WARNING - Disk I/O overloading");
+            debugs(43, DBG_IMPORTANT, "WARNING: squidaio_queue_request: Disk I/O overloading");
 
             if (squid_curtime >= (high_start + 15))
                 debugs(43, DBG_IMPORTANT, "squidaio_queue_request: Queue Length: current=" <<
@@ -583,7 +580,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
     case _AIO_OP_OPEN:
         if (cancelled && requestp->ret >= 0)
             /* The open() was cancelled but completed */
-            close(requestp->ret);
+            xclose(requestp->ret);
 
         squidaio_xstrfree(requestp->path);
 
@@ -592,7 +589,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
     case _AIO_OP_CLOSE:
         if (cancelled && requestp->ret < 0)
             /* The close() was cancelled and never got executed */
-            close(requestp->fd);
+            xclose(requestp->fd);
 
         break;
 
@@ -613,7 +610,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
         break;
     }
 
-    if (resultp != NULL && !cancelled) {
+    if (resultp != nullptr && !cancelled) {
         resultp->aio_return = requestp->ret;
         resultp->aio_errno = requestp->err;
     }
@@ -629,8 +626,8 @@ squidaio_cancel(squidaio_result_t * resultp)
     if (request && request->resultp == resultp) {
         debugs(43, 9, "squidaio_cancel: " << request << " type=" << request->request_type << " result=" << request->resultp);
         request->cancelled = 1;
-        request->resultp = NULL;
-        resultp->_data = NULL;
+        request->resultp = nullptr;
+        resultp->_data = nullptr;
         resultp->result_type = _AIO_OP_NONE;
         return 0;
     }
@@ -706,7 +703,7 @@ static void
 squidaio_do_read(squidaio_request_t * requestp)
 {
     if (lseek(requestp->fd, requestp->offset, requestp->whence) >= 0)
-        requestp->ret = read(requestp->fd, requestp->bufferp, requestp->buflen);
+        requestp->ret = xread(requestp->fd, requestp->bufferp, requestp->buflen);
     else
         requestp->ret = -1;
     requestp->err = errno;
@@ -745,7 +742,7 @@ squidaio_write(int fd, char *bufp, size_t bufs, off_t offset, int whence, squida
 static void
 squidaio_do_write(squidaio_request_t * requestp)
 {
-    requestp->ret = write(requestp->fd, requestp->bufferp, requestp->buflen);
+    requestp->ret = xwrite(requestp->fd, requestp->bufferp, requestp->buflen);
     requestp->err = errno;
 }
 
@@ -774,7 +771,7 @@ squidaio_close(int fd, squidaio_result_t * resultp)
 static void
 squidaio_do_close(squidaio_request_t * requestp)
 {
-    requestp->ret = close(requestp->fd);
+    requestp->ret = xclose(requestp->fd);
     requestp->err = errno;
 }
 
@@ -878,7 +875,7 @@ squidaio_poll_queues(void)
         request_queue.tailp = request_queue2.tailp;
         pthread_cond_signal(&request_queue.cond);
         pthread_mutex_unlock(&request_queue.mutex);
-        request_queue2.head = NULL;
+        request_queue2.head = nullptr;
         request_queue2.tailp = &request_queue2.head;
     }
 
@@ -886,7 +883,7 @@ squidaio_poll_queues(void)
     if (done_queue.head && pthread_mutex_trylock(&done_queue.mutex) == 0) {
 
         struct squidaio_request_t *requests = done_queue.head;
-        done_queue.head = NULL;
+        done_queue.head = nullptr;
         done_queue.tailp = &done_queue.head;
         pthread_mutex_unlock(&done_queue.mutex);
         *done_requests.tailp = requests;
@@ -912,7 +909,7 @@ squidaio_poll_done(void)
 AIO_REPOLL:
     request = done_requests.head;
 
-    if (request == NULL && !polled) {
+    if (request == nullptr && !polled) {
         CommIO::ResetNotifications();
         squidaio_poll_queues();
         polled = 1;
@@ -920,7 +917,7 @@ AIO_REPOLL:
     }
 
     if (!request) {
-        return NULL;
+        return nullptr;
     }
 
     debugs(43, 9, "squidaio_poll_done: " << request << " type=" << request->request_type << " result=" << request->resultp);
@@ -1003,7 +1000,6 @@ void
 squidaio_stats(StoreEntry * sentry)
 {
     squidaio_thread_t *threadp;
-    int i;
 
     if (!squidaio_initialised)
         return;
@@ -1014,8 +1010,8 @@ squidaio_stats(StoreEntry * sentry)
 
     threadp = threads;
 
-    for (i = 0; i < NUMTHREADS; ++i) {
-        storeAppendPrintf(sentry, "%i\t0x%lx\t%ld\n", i + 1, (unsigned long)threadp->thread, threadp->requests);
+    for (size_t i = 0; i < NUMTHREADS; ++i) {
+        storeAppendPrintf(sentry, "%zu\t0x%lx\t%ld\n", i + 1, (unsigned long)threadp->thread, threadp->requests);
         threadp = threadp->next;
     }
 }

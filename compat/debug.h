@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef COMPAT_DEBUG_H
-#define COMPAT_DEBUG_H
+#ifndef SQUID_COMPAT_DEBUG_H
+#define SQUID_COMPAT_DEBUG_H
 
 /*
  * A debug method for use of external helpers and tools.
@@ -20,16 +20,18 @@
 
 /* Debugging stuff */
 
-SQUIDCEXTERN int debug_enabled;
+extern int debug_enabled;
 
 /* the macro overload style is really a gcc-ism */
 #if defined(__GNUC__) || defined(__SUNPRO_CC)
 
 #define debug(X...) \
-                     if (debug_enabled) { \
-                         fprintf(stderr, "%s(%d): pid=%ld :", __FILE__, __LINE__, static_cast<long>(getpid())); \
-                         fprintf(stderr,X); \
-                     } else (void)0
+    do { \
+        if (debug_enabled) { \
+            fprintf(stderr, "%s(%d): pid=%ld :", __FILE__, __LINE__, static_cast<long>(getpid())); \
+            fprintf(stderr, X); \
+        } \
+    } while (/*CONSTCOND*/ 0)
 
 #define ndebug(content) ndebug_(__FILE__, __LINE__, content)
 #define ndebug_(file, line, content) if (debug_enabled) { \
@@ -43,5 +45,5 @@ SQUIDCEXTERN int debug_enabled;
 void debug(const char *format,...);
 #endif
 
-#endif /* COMPAT_DEBUG_H */
+#endif /* SQUID_COMPAT_DEBUG_H */
 

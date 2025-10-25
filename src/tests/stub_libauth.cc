@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,8 +15,8 @@
 #include "auth/SchemeConfig.h"
 namespace Auth
 {
-Auth::UserRequest::Pointer SchemeConfig::CreateAuthUser(const char *, AccessLogEntry::Pointer &al) STUB_RETVAL(NULL)
-Auth::SchemeConfig * SchemeConfig::Find(const char *) STUB_RETVAL(NULL)
+Auth::UserRequest::Pointer SchemeConfig::CreateAuthUser(const char *, AccessLogEntry::Pointer &) STUB_RETVAL(nullptr)
+Auth::SchemeConfig * SchemeConfig::Find(const char *) STUB_RETVAL(nullptr)
 void SchemeConfig::registerWithCacheManager(void) STUB_NOP
 Auth::ConfigVector TheConfig;
 }
@@ -30,10 +30,9 @@ void authenticateReset(void) STUB
 
 #include "auth/Scheme.h"
 #include <vector>
-std::vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = NULL;
 void Auth::Scheme::AddScheme(Auth::Scheme::Pointer) STUB
-Auth::Scheme::Pointer Auth::Scheme::Find(const char *) STUB_RETVAL(NULL)
-std::vector<Auth::Scheme::Pointer> & Auth::Scheme::GetSchemes() STUB_RETVAL(*_Schemes);
+Auth::Scheme::Pointer Auth::Scheme::Find(const char *) STUB_RETVAL(nullptr)
+std::vector<Auth::Scheme::Pointer> & Auth::Scheme::GetSchemes() STUB_RETREF(std::vector<Auth::Scheme::Pointer>)
 void Auth::Scheme::FreeAll() STUB
 
 #include "auth/SchemesConfig.h"
@@ -61,12 +60,13 @@ void Auth::UserRequest::operator delete (void *) STUB
 Auth::UserRequest::UserRequest() STUB
 Auth::UserRequest::~UserRequest() STUB
 void Auth::UserRequest::setDenyMessage(char const *) STUB
+bool Auth::UserRequest::authenticated() const STUB_RETVAL(false)
 char const * Auth::UserRequest::getDenyMessage() const STUB_RETVAL("stub")
 char const * Auth::UserRequest::denyMessage(char const * const) const STUB_RETVAL("stub")
 void authenticateAuthUserRequestRemoveIp(Auth::UserRequest::Pointer, Ip::Address const &) STUB
 void authenticateAuthUserRequestClearIp(Auth::UserRequest::Pointer) STUB
 int authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer) STUB_RETVAL(0)
-int authenticateUserAuthenticated(Auth::UserRequest::Pointer) STUB_RETVAL(0)
+bool authenticateUserAuthenticated(const Auth::UserRequest::Pointer&) STUB_RETVAL(false)
 Auth::Direction Auth::UserRequest::direction() STUB_RETVAL(Auth::CRED_ERROR)
 void Auth::UserRequest::addAuthenticationInfoHeader(HttpReply *, int) STUB
 void Auth::UserRequest::addAuthenticationInfoTrailer(HttpReply *, int) STUB
@@ -75,7 +75,7 @@ const char * Auth::UserRequest::connLastHeader() STUB_RETVAL("stub")
 AuthAclState Auth::UserRequest::authenticate(Auth::UserRequest::Pointer *, Http::HdrType, HttpRequest *, ConnStateData *, Ip::Address &, AccessLogEntry::Pointer &) STUB_RETVAL(AUTH_AUTHENTICATED)
 AuthAclState Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer *, Http::HdrType, HttpRequest *, ConnStateData *, Ip::Address &, AccessLogEntry::Pointer &) STUB_RETVAL(AUTH_AUTHENTICATED)
 void Auth::UserRequest::AddReplyAuthHeader(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int, int) STUB
-Auth::Scheme::Pointer Auth::UserRequest::scheme() const STUB_RETVAL(NULL)
+Auth::Scheme::Pointer Auth::UserRequest::scheme() const STUB_RETVAL(nullptr)
 
 #include "AuthReg.h"
 void Auth::Init() STUB_NOP

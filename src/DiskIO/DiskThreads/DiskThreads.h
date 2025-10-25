@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,8 +12,8 @@
  * Internal declarations for the DiskThreads routines
  */
 
-#ifndef __DISKTHREADS_H__
-#define __DISKTHREADS_H__
+#ifndef SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADS_H
+#define SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADS_H
 
 #include "dlink.h"
 #include "mem/forward.h"
@@ -70,7 +70,7 @@ class squidaio_ctrl_t
 {
     MEMPROXY_CLASS(squidaio_ctrl_t);
 public:
-    squidaio_ctrl_t() : done_handler(NULL), free_func(NULL) {}
+    squidaio_ctrl_t() : done_handler(nullptr), free_func(nullptr) {}
 
     squidaio_ctrl_t *next = nullptr;
     int fd = 0;
@@ -113,7 +113,7 @@ void aioRead(int, off_t offset, size_t size, AIOCB *, void *);
 
 void aioStat(char *, struct stat *, AIOCB *, void *);
 void aioUnlink(const char *, AIOCB *, void *);
-int aioQueueSize(void);
+size_t aioQueueSize(void);
 
 #include "DiskIO/DiskFile.h"
 
@@ -141,5 +141,5 @@ public:
 extern AIOCounts squidaio_counts;
 extern dlink_list used_list;
 
-#endif
+#endif /* SQUID_SRC_DISKIO_DISKTHREADS_DISKTHREADS_H */
 

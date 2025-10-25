@@ -1,16 +1,17 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPHDRSURROGATECONTROL_H
-#define SQUID_HTTPHDRSURROGATECONTROL_H
+#ifndef SQUID_SRC_HTTPHDRSC_H
+#define SQUID_SRC_HTTPHDRSC_H
 
 #include "http/forward.h"
 #include "HttpHdrScTarget.h"
+#include "mem/PoolingAllocator.h"
 #include "SquidString.h"
 
 #include <list>
@@ -43,5 +44,6 @@ void httpHdrScInitModule (void);
 HttpHdrSc *httpHdrScParseCreate(String const &);
 void httpHdrScSetMaxAge(HttpHdrSc *, char const *, int);
 
-#endif /* SQUID_HTTPHDRSURROGATECONTROL_H */
+http_hdr_sc_type &operator++(http_hdr_sc_type &);
+#endif /* SQUID_SRC_HTTPHDRSC_H */
 

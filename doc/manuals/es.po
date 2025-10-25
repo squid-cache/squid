@@ -196,7 +196,7 @@ msgstr "VEA TAMBIÉN"
 #~ msgid ""
 #~ "This manual page only lists the command line arguments.  For details on how "
 #~ "to configure B<squid> see the file B<@DEFAULT_CONFIG_FILE@.documented,> the "
-#~ "Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the "
+#~ "Squid wiki FAQ and examples at https://wiki.squid-cache.org/ , or the "
 #~ "configuration manual on the B<squid> home page http://www.squid-cache.org/"
 #~ "Doc/config/"
 #~ msgstr ""
@@ -492,7 +492,7 @@ msgstr "Correspondencia de tipos MIME para tráfico FTP"
 #~ msgstr ""
 
 #~ msgid ""
-#~ "B<The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq> B<The Squid "
+#~ "B<The Squid FAQ wiki https://wiki.squid-cache.org/SquidFaq> B<The Squid "
 #~ "Configuration Manual http://www.squid-cache.org/Doc/config/>"
 #~ msgstr ""
 
@@ -1233,8 +1233,8 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:88 helpers/basic_auth/LDAP/basic_ldap_auth.8:314 helpers/basic_auth/NCSA/basic_ncsa_auth.8:60 helpers/basic_auth/PAM/basic_pam_auth.8:102 helpers/basic_auth/RADIUS/basic_radius_auth.8:113 helpers/external_acl/ldap_group/squid_ldap_group.8:263 helpers/external_acl/session/squid_session.8:82 helpers/external_acl/unix_group/squid_unix_group.8:84 src/squid.8.in:253 tools/cachemgr.cgi.8.in:69 tools/squidclient.1:181
-msgid "Report bugs or bug fixes using http://bugs.squid-cache.org/"
-msgstr "Notifique errores o parches usando http://bugs.squid-cache.org/"
+msgid "Report bugs or bug fixes using https://bugs.squid-cache.org/"
+msgstr "Notifique errores o parches usando https://bugs.squid-cache.org/"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:241 helpers/external_acl/ldap_group/squid_ldap_group.8:82
@@ -2112,10 +2112,10 @@ msgstr ""
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:67 tools/squidclient.1:179
 msgid ""
-"See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what "
+"See https://wiki.squid-cache.org/SquidFaq/BugReporting for details of what "
 "you need to include with your bug report."
 msgstr ""
-"Vea http://wiki.squid-cache.org/SquidFaq/BugReporting para mayores detalles "
+"Vea https://wiki.squid-cache.org/SquidFaq/BugReporting para mayores detalles "
 "sobre lo que necesita incluir en el reporte de errores"
 
 #. type: Plain text
@@ -2356,11 +2356,11 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:86 helpers/basic_auth/LDAP/basic_ldap_auth.8:312 helpers/basic_auth/NCSA/basic_ncsa_auth.8:58 helpers/basic_auth/PAM/basic_pam_auth.8:100 helpers/basic_auth/RADIUS/basic_radius_auth.8:111 helpers/external_acl/ldap_group/squid_ldap_group.8:261 helpers/external_acl/session/squid_session.8:80 helpers/external_acl/unix_group/squid_unix_group.8:82 src/squid.8.in:251
 msgid ""
-"Bug reports need to be made in English.  See http://wiki.squid-"
+"Bug reports need to be made in English.  See https://wiki.squid-"
 "cache.org/SquidFaq/BugReporting for details of what you need to include with "
 "your bug report."
 msgstr ""
-"Los reportes de error deben ser escritos en inglés. Vea http://wiki.squid-"
+"Los reportes de error deben ser escritos en inglés. Vea https://wiki.squid-"
 "cache.org/SquidFaq/BugReporting para detalles de lo que necesita incluir en "
 "el reporte de errores"
 
@@ -2562,7 +2562,7 @@ msgid ""
 "blocking process."
 msgstr ""
 "B<squid> es servidor proxy-caché de alto rendimiento para clientes web que "
-"soporta FTP, gopher, ICAP, ICP, HTCP y objetos de datos HTTP. A diferencia "
+"soporta FTP, ICAP, ICP, HTCP y objetos de datos HTTP. A diferencia "
 "del software de caché tradicional, Squid maneja todas las solicitudes en un "
 "único proceso asíncrono"
 
@@ -2815,13 +2815,13 @@ msgstr "Este manual ha sido escrito por"
 msgid ""
 "This manual page only lists the command line arguments.  For details on how "
 "to configure Squid see the file B<@SYSCONFDIR@/squid.conf.documented,> the "
-"Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the "
+"Squid wiki FAQ and examples at https://wiki.squid-cache.org/ , or the "
 "configuration manual on the Squid home page"
 msgstr ""
 "Esta página de manual solo enumera los argumentos de línea de comandos. Para "
 "detalles sobre sobre configurar Squid vea el archivo "
 "B<@SYSCONFDIR@/squid.conf.documented,> la wiki, preguntas frecuentemente "
-"respondidas y ejemplos en http://wiki.squid-cache.org/ o el manual de "
+"respondidas y ejemplos en https://wiki.squid-cache.org/ o el manual de "
 "configuración en la página principal de Squid"
 
 #. type: Plain text

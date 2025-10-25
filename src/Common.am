@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -12,7 +12,6 @@
 
 ## Default variables
 DEFAULT_HTTP_PORT	= 3128
-DEFAULT_ICP_PORT	= 3130
 DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_DIR	= $(sysconfdir)
 DEFAULT_CONFIG_FILE	= $(DEFAULT_CONFIG_DIR)/squid.conf
@@ -43,7 +42,7 @@ DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" \
 
 ## so that others can always use += for these variables
 CLEANFILES =
-check_PROGRAMS = 
+check_PROGRAMS =
 TESTS =
 
 AM_CPPFLAGS = \
@@ -53,10 +52,6 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_builddir)/include \
 	$(LIBCPPUNIT_CFLAGS)
-
-## Kerberos headers require their include path.
-## Because we use libcompat for comm_err.h header protections ...
-AM_CPPFLAGS += $(KRB5INCS)
 
 ## Loadable Modules requires LTDL include paths.
 ## Because we need this to use the libray linking headers...
@@ -68,15 +63,10 @@ endif
 ## XXX: Do we really need this? Does auto-dependency tracking work?
 $(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
 
-## Internal profiler is used even by some of the compat library stuff.
-if ENABLE_XPROF_STATS
-LIBPROFILER = $(top_builddir)/lib/profiler/libprofiler.la
-else
-LIBPROFILER=
-endif
-
 ## Because compatibility is almost universal. And the link order is important.
 COMPAT_LIB = $(top_builddir)/compat/libcompatsquid.la $(LIBPROFILER)
 
 ## Some helpers are written in Perl and need the local shell defined properly
 subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(RM) -f $@ ; exit 1)
+
+include $(top_srcdir)/src/TestHeaders.am

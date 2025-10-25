@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,13 +8,12 @@
 
 #include "squid.h"
 
+#include "compat/unistd.h"
+
 #include <cassert>
 #include <cerrno>
 #include <csignal>
 #include <cstring>
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
@@ -104,16 +103,16 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     fp = fopen(argv[1], "a");
-    if (fp == NULL) {
+    if (fp == nullptr) {
         perror("fopen");
         exit(EXIT_FAILURE);
     }
-    setbuf(stdout, NULL);
+    setbuf(stdout, nullptr);
     /* XXX stderr should not be closed, but in order to support squid must be
      * able to collect and manage modules' stderr first.
      */
-    close(2);
-    t = open(_PATH_DEVNULL, O_RDWR);
+    xclose(2);
+    t = xopen(_PATH_DEVNULL, O_RDWR);
     assert(t > -1);
     dup2(t, 2);
 
@@ -135,7 +134,7 @@ main(int argc, char *argv[])
                         fclose(fp);
                         rotate(argv[1], rotate_count);
                         fp = fopen(argv[1], "a");
-                        if (fp == NULL) {
+                        if (fp == nullptr) {
                             perror("fopen");
                             exit(EXIT_FAILURE);
                         }
@@ -153,7 +152,7 @@ main(int argc, char *argv[])
             fclose(fp);
             rotate(argv[1], rotate_count);
             fp = fopen(argv[1], "a");
-            if (fp == NULL) {
+            if (fp == nullptr) {
                 perror("fopen");
                 exit(EXIT_FAILURE);
             }
@@ -180,7 +179,7 @@ main(int argc, char *argv[])
         }
     }
     fclose(fp);
-    fp = NULL;
+    fp = nullptr;
     return EXIT_SUCCESS;
 }
 

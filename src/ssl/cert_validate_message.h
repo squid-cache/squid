@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSL_CERT_VALIDATE_MESSAGE_H
-#define SQUID_SSL_CERT_VALIDATE_MESSAGE_H
+#ifndef SQUID_SRC_SSL_CERT_VALIDATE_MESSAGE_H
+#define SQUID_SRC_SSL_CERT_VALIDATE_MESSAGE_H
 
 #include "base/RefCount.h"
 #include "helper/ResultCode.h"
@@ -100,7 +100,7 @@ public:
     void composeRequest(CertValidationRequest const &vcert);
 
     /// Parse a response message and fill the resp object with parsed information
-    bool parseResponse(CertValidationResponse &resp, std::string &error);
+    bool parseResponse(CertValidationResponse &resp);
 
     /// Search a CertItems list for the certificate with ID "name"
     X509 *getCertByName(std::vector<CertItem> const &, std::string const & name);
@@ -123,9 +123,12 @@ public:
     static const std::string param_proto_version;
     /// Parameter name for SSL cipher
     static const std::string param_cipher;
+
+private:
+    void tryParsingResponse(CertValidationResponse &);
 };
 
 }//namespace Ssl
 
-#endif // SQUID_SSL_CERT_VALIDATE_MESSAGE_H
+#endif /* SQUID_SRC_SSL_CERT_VALIDATE_MESSAGE_H */
 

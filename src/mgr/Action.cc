@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,9 @@
 /* DEBUG: section 16    Cache Manager API */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "comm/Connection.h"
+#include "compat/unistd.h"
 #include "HttpReply.h"
 #include "ipc/Port.h"
 #include "mgr/Action.h"
@@ -19,13 +21,12 @@
 #include "mgr/Command.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 Mgr::Action::Action(const Command::Pointer &aCmd): cmd(aCmd)
 {
-    Must(cmd != NULL);
-    Must(cmd->profile != NULL);
+    Must(cmd != nullptr);
+    Must(cmd->profile != nullptr);
 }
 
 Mgr::Action::~Action()
@@ -35,7 +36,7 @@ Mgr::Action::~Action()
 const Mgr::Command &
 Mgr::Action::command() const
 {
-    Must(cmd != NULL);
+    Must(cmd != nullptr);
     return *cmd;
 }
 
@@ -45,10 +46,29 @@ Mgr::Action::atomic() const
     return command().profile->isAtomic;
 }
 
+Mgr::Format
+Mgr::Action::format() const
+{
+    return command().profile->format;
+}
+
 const char*
 Mgr::Action::name() const
 {
     return command().profile->name;
+}
+
+const char *
+Mgr::Action::contentType() const
+{
+    switch (format()) {
+    case Format::yaml:
+        return "application/yaml;charset=utf-8";
+    case Format::informal:
+        return "text/plain;charset=utf-8";
+    }
+    assert(!"unreachable code");
+    return "";
 }
 
 StoreEntry*
@@ -67,12 +87,12 @@ Mgr::Action::add(const Action &)
 void
 Mgr::Action::respond(const Request &request)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 
     // Assume most kid classes are fully aggregatable (i.e., they do not dump
     // local info at all). Do not import the remote HTTP fd into our Comm
     // space; collect and send an IPC msg with collected info to Coordinator.
-    ::close(request.conn->fd);
+    xclose(request.conn->fd);
     request.conn->fd = -1;
     collect();
     sendResponse(request.requestId);
@@ -90,7 +110,7 @@ Mgr::Action::sendResponse(const Ipc::RequestId requestId)
 void
 Mgr::Action::run(StoreEntry* entry, bool writeHttpHeader)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     collect();
     fillEntry(entry, writeHttpHeader);
 }
@@ -98,21 +118,17 @@ Mgr::Action::run(StoreEntry* entry, bool writeHttpHeader)
 void
 Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     entry->buffer();
 
     if (writeHttpHeader) {
         HttpReply *rep = new HttpReply;
-        rep->setHeaders(Http::scOkay, NULL, contentType(), -1, squid_curtime, squid_curtime);
-        // Allow cachemgr and other XHR scripts access to our version string
-        const ActionParams &params = command().params;
-        if (params.httpOrigin.size() > 0) {
-            rep->header.putExt("Access-Control-Allow-Origin", params.httpOrigin.termedBuf());
-#if HAVE_AUTH_MODULE_BASIC
-            rep->header.putExt("Access-Control-Allow-Credentials","true");
-#endif
-            rep->header.putExt("Access-Control-Expose-Headers","Server");
-        }
+        rep->setHeaders(Http::scOkay, nullptr, contentType(), -1, squid_curtime, squid_curtime);
+
+        const auto &origin = command().params.httpOrigin;
+        const auto originOrNil = origin.size() ? origin.termedBuf() : nullptr;
+        CacheManager::PutCommonResponseHeaders(*rep, originOrNil);
+
         entry->replaceHttpReply(rep);
     }
 
@@ -124,3 +140,26 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
         entry->complete();
 }
 
+void
+Mgr::OpenKidSection(StoreEntry * const entry, const Format format)
+{
+    switch (format) {
+    case Format::yaml:
+        return storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
+    case Format::informal:
+        return storeAppendPrintf(entry, "by kid%d {\n", KidIdentifier);
+    }
+    // unreachable code
+}
+
+void
+Mgr::CloseKidSection(StoreEntry * const entry, const Format format)
+{
+    switch (format) {
+    case Format::yaml:
+        return storeAppendPrintf(entry, "...\n");
+    case Format::informal:
+        return storeAppendPrintf(entry, "} by kid%d\n\n", KidIdentifier);
+    }
+    // unreachable code
+}

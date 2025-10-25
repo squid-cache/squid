@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,21 +10,14 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
-#include "Debug.h"
-#include "DebugMessages.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
+#include "debug/Messages.h"
+#include "debug/Stream.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
-#include "profiler/Profiler.h"
-#include "SquidTime.h"
-
-// Solaris and possibly others lack MSG_NOSIGNAL optimization
-// TODO: move this into compat/? Use a dedicated compat file to avoid dragging
-// sys/socket.h into the rest of Squid??
-#ifndef MSG_NOSIGNAL
-#define MSG_NOSIGNAL 0
-#endif
 
 int default_read_method(int, char *, int);
 int default_write_method(int, const char *, int);
@@ -88,8 +81,8 @@ fd_close(int fd)
     assert(F->flags.open);
 
     if (F->type == FD_FILE) {
-        assert(F->read_handler == NULL);
-        assert(F->write_handler == NULL);
+        assert(F->read_handler == nullptr);
+        assert(F->write_handler == nullptr);
     }
 
     debugs(51, 3, "fd_close FD " << fd << " " << F->desc);
@@ -105,79 +98,50 @@ fd_close(int fd)
 int
 socket_read_method(int fd, char *buf, int len)
 {
-    int i;
-    PROF_start(recv);
-    i = recv(fd, (void *) buf, len, 0);
-    PROF_stop(recv);
-    return i;
+    return xrecv(fd, (void *) buf, len, 0);
 }
 
 int
 file_read_method(int fd, char *buf, int len)
 {
-    int i;
-    PROF_start(read);
-    i = _read(fd, buf, len);
-    PROF_stop(read);
-    return i;
+    return _read(fd, buf, len);
 }
 
 int
 socket_write_method(int fd, const char *buf, int len)
 {
-    int i;
-    PROF_start(send);
-    i = send(fd, (const void *) buf, len, 0);
-    PROF_stop(send);
-    return i;
+    return xsend(fd, buf, len, 0);
 }
 
 int
 file_write_method(int fd, const char *buf, int len)
 {
-    int i;
-    PROF_start(write);
-    i = (_write(fd, buf, len));
-    PROF_stop(write);
-    return i;
+    return _write(fd, buf, len);
 }
 
 #else
 int
 default_read_method(int fd, char *buf, int len)
 {
-    int i;
-    PROF_start(read);
-    i = read(fd, buf, len);
-    PROF_stop(read);
-    return i;
+    return xread(fd, buf, len);
 }
 
 int
 default_write_method(int fd, const char *buf, int len)
 {
-    int i;
-    PROF_start(write);
-    i = write(fd, buf, len);
-    PROF_stop(write);
-    return i;
+    return xwrite(fd, buf, len);
 }
 
 int
 msghdr_read_method(int fd, char *buf, int)
 {
-    PROF_start(read);
-    const int i = recvmsg(fd, reinterpret_cast<msghdr*>(buf), MSG_DONTWAIT);
-    PROF_stop(read);
-    return i;
+    return recvmsg(fd, reinterpret_cast<msghdr*>(buf), MSG_DONTWAIT);
 }
 
 int
 msghdr_write_method(int fd, const char *buf, int len)
 {
-    PROF_start(write);
     const int i = sendmsg(fd, reinterpret_cast<const msghdr*>(buf), MSG_NOSIGNAL);
-    PROF_stop(write);
     return i > 0 ? len : i; // len is imprecise but the caller expects a match
 }
 
@@ -254,19 +218,21 @@ fd_note(int fd, const char *s)
 }
 
 void
-fd_bytes(int fd, int len, unsigned int type)
+fd_bytes(const int fd, const int len, const IoDirection direction)
 {
     fde *F = &fd_table[fd];
 
     if (len < 0)
         return;
 
-    assert(type == FD_READ || type == FD_WRITE);
-
-    if (type == FD_READ)
+    switch (direction) {
+    case IoDirection::Read:
         F->bytes_read += len;
-    else
+        break;
+    case IoDirection::Write:
         F->bytes_written += len;
+        break;
+    }
 }
 
 void
@@ -281,7 +247,7 @@ fdDumpOpen(void)
         if (!F->flags.open)
             continue;
 
-        if (i == fileno(debug_log))
+        if (i == fileno(DebugStream()))
             continue;
 
         debugs(51, Important(17), "Open FD "<< std::left<< std::setw(10) <<

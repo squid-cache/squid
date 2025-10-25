@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,17 +11,21 @@
 #include "squid.h"
 
 #if USE_UNLINKD
+#include "compat/select.h"
+#include "compat/unistd.h"
 #include "fd.h"
 #include "fde.h"
 #include "fs_io.h"
 #include "globals.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "store/Disk.h"
 #include "tools.h"
-#include "xusleep.h"
+#include "unlinkd.h"
+
+#include <chrono>
+#include <thread>
 
 /* This code gets linked to Squid */
 
@@ -38,7 +42,6 @@ unlinkdUnlink(const char *path)
 {
     char buf[MAXPATHLEN];
     int l;
-    int bytes_written;
     static int queuelen = 0;
 
     if (unlinkd_wfd < 0) {
@@ -60,7 +63,7 @@ unlinkdUnlink(const char *path)
          * We can't use fd_set when using epoll() or kqueue().  In
          * these cases we block for 10 ms.
          */
-        xusleep(10000);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
 #else
         /*
          * DPW 2007-04-23
@@ -72,7 +75,7 @@ unlinkdUnlink(const char *path)
         FD_SET(unlinkd_rfd, &R);
         to.tv_sec = 0;
         to.tv_usec = 100000;
-        select(unlinkd_rfd + 1, &R, NULL, NULL, &to);
+        xselect(unlinkd_rfd + 1, &R, nullptr, nullptr, &to);
 #endif
     }
 
@@ -83,10 +86,9 @@ unlinkdUnlink(const char *path)
     * decrement the queue size by the number of newlines read.
     */
     if (queuelen > 0) {
-        int bytes_read;
         int i;
         char rbuf[512];
-        bytes_read = read(unlinkd_rfd, rbuf, 511);
+        const auto bytes_read = xread(unlinkd_rfd, rbuf, 511);
 
         if (bytes_read > 0) {
             rbuf[bytes_read] = '\0';
@@ -104,11 +106,11 @@ unlinkdUnlink(const char *path)
     xstrncpy(buf, path, MAXPATHLEN);
     buf[l] = '\n';
     ++l;
-    bytes_written = write(unlinkd_wfd, buf, l);
+    const auto bytes_written = xwrite(unlinkd_wfd, buf, l);
 
     if (bytes_written < 0) {
         int xerrno = errno;
-        debugs(2, DBG_IMPORTANT, "unlinkdUnlink: write FD " << unlinkd_wfd << " failed: " << xstrerr(xerrno));
+        debugs(2, DBG_IMPORTANT, "ERROR: unlinkdUnlink: write FD " << unlinkd_wfd << " failed: " << xstrerr(xerrno));
         safeunlink(path, 0);
         return;
     } else if (bytes_written != l) {
@@ -148,7 +150,7 @@ unlinkdClose(void)
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(2, DBG_IMPORTANT, "unlinkdClose: WARNING: (unlinkd," << pid << "d) didn't exit in 5 seconds");
+            debugs(2, DBG_IMPORTANT, "WARNING: unlinkdClose: (unlinkd," << pid << "d) didn't exit in 5 seconds");
         }
 
         CloseHandle(hIpc);
@@ -178,7 +180,7 @@ bool
 unlinkdNeeded(void)
 {
     // we should start unlinkd if there are any cache_dirs using it
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+    for (size_t i = 0; i < Config.cacheSwap.n_configured; ++i) {
         const RefCount<SwapDir> sd = Config.cacheSwap.swapDirs[i];
         if (sd->unlinkdUseful())
             return true;
@@ -197,7 +199,7 @@ unlinkdInit(void)
     Ip::Address localhost;
 
     args[0] = "(unlinkd)";
-    args[1] = NULL;
+    args[1] = nullptr;
     localhost.setLocalhost();
 
     pid = ipcCreate(
@@ -222,7 +224,7 @@ unlinkdInit(void)
     if (pid < 0)
         fatal("Failed to create unlinkd subprocess");
 
-    xusleep(250000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
     fd_note(unlinkd_wfd, "squid -> unlinkd");
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,8 +11,9 @@
 
 #include "acl/Acl.h"
 #include "acl/ChecklistFiller.h"
-#include "base/AsyncCbdataCalls.h"
+#include "base/AsyncCallbacks.h"
 #include "base/AsyncJob.h"
+#include "base/JobWait.h"
 #include "CommCalls.h"
 #include "http/forward.h"
 #include "security/EncryptorAnswer.h"
@@ -25,7 +26,8 @@
 #include <iosfwd>
 #include <queue>
 
-class ErrorState;
+class Downloader;
+class DownloaderAnswer;
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
@@ -45,39 +47,29 @@ typedef RefCount<IoResult> IoResultPointer;
  */
 class PeerConnector: virtual public AsyncJob, public Acl::ChecklistFiller
 {
-    CBDATA_CLASS(PeerConnector);
+    CBDATA_INTERMEDIATE();
 
 public:
     typedef CbcPointer<PeerConnector> Pointer;
 
-    /// Callback dialer API to allow PeerConnector to set the answer.
-    class CbDialer
-    {
-    public:
-        virtual ~CbDialer() {}
-        /// gives PeerConnector access to the in-dialer answer
-        virtual Security::EncryptorAnswer &answer() = 0;
-    };
-
-public:
     PeerConnector(const Comm::ConnectionPointer &aServerConn,
-                  AsyncCall::Pointer &aCallback,
+                  const AsyncCallback<EncryptorAnswer> &,
                   const AccessLogEntryPointer &alp,
                   const time_t timeout = 0);
-    virtual ~PeerConnector();
+    ~PeerConnector() override;
 
     /// hack: whether the connection requires fwdPconnPool->noteUses()
     bool noteFwdPconnUse;
 
 protected:
     // AsyncJob API
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
-    virtual const char *status() const;
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
+    const char *status() const override;
 
     /* Acl::ChecklistFiller API */
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     /// The connection read timeout callback handler.
     void commTimeoutHandler(const CommTimeoutCbParams &);
@@ -100,7 +92,7 @@ protected:
     /// Called after each negotiation step to handle the result
     void handleNegotiationResult(const Security::IoResult &);
 
-    /// Called when the openSSL SSL_connect fnction request more data from
+    /// Called when the openSSL SSL_connect function request more data from
     /// the remote SSL server. Sets the read timeout and sets the
     /// Squid COMM_SELECT_READ handler.
     void noteWantRead();
@@ -123,7 +115,7 @@ protected:
     void startCertDownloading(SBuf &url);
 
     /// Called by Downloader after a certificate object downloaded.
-    void certDownloadingDone(SBuf &object, int status);
+    void certDownloadingDone(DownloaderAnswer &);
 #endif
 
     /// Called when the openSSL SSL_connect function needs to write data to
@@ -136,11 +128,11 @@ protected:
     /// Called when the SSL negotiation to the server completed and the certificates
     /// validated using the cert validator.
     /// \param error if not NULL the SSL negotiation was aborted with an error
-    virtual void noteNegotiationDone(ErrorState *error) {}
+    virtual void noteNegotiationDone(ErrorState *) {}
 
-    /// Must implemented by the kid classes to return the TLS context object to use
-    /// for building the encryption context objects.
-    virtual Security::ContextPointer getTlsContext() = 0;
+    /// peer's security context
+    /// \returns nil if Squid is built without TLS support (XXX: Prevent PeerConnector creation in those cases instead)
+    virtual FuturePeerContext *peerContext() const = 0;
 
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }
@@ -157,6 +149,9 @@ protected:
     /// a bail(), sendSuccess() helper: stops monitoring the connection
     void disconnect();
 
+    /// updates connection usage history before the connection is closed
+    void countFailingConnection();
+
     /// If called the certificates validator will not used
     void bypassCertValidator() {useCertValidator_ = false;}
 
@@ -164,10 +159,16 @@ protected:
     /// logging
     void recordNegotiationDetails();
 
+    /// convenience method to get to the answer fields
+    EncryptorAnswer &answer();
+
     HttpRequestPointer request; ///< peer connection trigger or cause
     Comm::ConnectionPointer serverConn; ///< TCP connection to the peer
     AccessLogEntryPointer al; ///< info for the future access.log entry
-    AsyncCall::Pointer callback; ///< we call this with the results
+
+    /// answer destination
+    AsyncCallback<EncryptorAnswer> callback;
+
 private:
     PeerConnector(const PeerConnector &); // not implemented
     PeerConnector &operator =(const PeerConnector &); // not implemented
@@ -176,7 +177,7 @@ private:
     unsigned int certDownloadNestingLevel() const;
 
     /// Process response from cert validator helper
-    void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
+    void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer &);
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, ErrorDetailPointer &);
@@ -211,6 +212,8 @@ private:
 
     /// outcome of the last (failed and) suspended negotiation attempt (or nil)
     Security::IoResultPointer suspendedError_;
+
+    JobWait<Downloader> certDownloadWait; ///< waits for the missing certificate to be downloaded
 };
 
 } // namespace Security

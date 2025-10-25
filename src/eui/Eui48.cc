@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,10 @@
 
 #if USE_SQUID_EUI
 
-#include "Debug.h"
+#include "base/IoManip.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
+#include "debug/Stream.h"
 #include "eui/Eui48.h"
 #include "globals.h"
 #include "ip/Address.h"
@@ -93,13 +96,37 @@ struct arpreq {
  *       Solaris code by R. Gancarz <radekg@solaris.elektrownia-lagisza.com.pl>
  */
 
+/// I/O manipulator to print EUI48 addresses
+template <typename HardwareAddress>
+class AsEui48 {
+public:
+    /// caller is responsible for the passed address storage lifetime
+    explicit AsEui48(const HardwareAddress * const a): hardwareAddress(a) {}
+    const HardwareAddress * const hardwareAddress;
+};
+
+template <typename HardwareAddress>
+static std::ostream &
+operator <<(std::ostream &os, const AsEui48<HardwareAddress> &manipulator)
+{
+    const auto &ha = *manipulator.hardwareAddress;
+    os <<
+       asHex(ha.sa_data[0] & 0xff).minDigits(2) << ':' <<
+       asHex(ha.sa_data[1] & 0xff).minDigits(2) << ':' <<
+       asHex(ha.sa_data[2] & 0xff).minDigits(2) << ':' <<
+       asHex(ha.sa_data[3] & 0xff).minDigits(2) << ':' <<
+       asHex(ha.sa_data[4] & 0xff).minDigits(2) << ':' <<
+       asHex(ha.sa_data[5] & 0xff).minDigits(2);
+    return os;
+}
+
 bool
 Eui::Eui48::decode(const char *asc)
 {
     int a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0;
 
     if (sscanf(asc, "%x:%x:%x:%x:%x:%x", &a1, &a2, &a3, &a4, &a5, &a6) != 6) {
-        debugs(28, DBG_CRITICAL, "Decode EUI-48: Invalid ethernet address '" << asc << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: Decode EUI-48: Invalid ethernet address '" << asc << "'");
         clear();
         return false;       /* This is not valid address */
     }
@@ -146,10 +173,10 @@ Eui::Eui48::lookup(const Ip::Address &c)
     int offset;
 
     /* IPv6 builds do not provide the first http_port as an IPv4 socket for ARP */
-    int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
+    auto tmpSocket = xsocket(AF_INET,SOCK_STREAM,0);
     if (tmpSocket < 0) {
         int xerrno = errno;
-        debugs(28, DBG_IMPORTANT, "Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));
+        debugs(28, DBG_IMPORTANT, "ERROR: Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));
         clear();
         return false;
     }
@@ -179,21 +206,15 @@ Eui::Eui48::lookup(const Ip::Address &c)
     debugs(28, 4, "id=" << (void*)this << " query ARP table");
     if (ioctl(tmpSocket, SIOCGARP, &arpReq) != -1) {
         /* Skip non-ethernet interfaces */
-        close(tmpSocket);
+        xclose(tmpSocket);
 
         if (arpReq.arp_ha.sa_family != ARPHRD_ETHER) {
-            debugs(28, 4, "id=" << (void*)this << " ... not an Ethernet interface: " << arpReq.arp_ha.sa_data);
+            debugs(28, 4, "id=" << (void*)this << " ... not an Ethernet interface, sa_family=" << arpReq.arp_ha.sa_family);
             clear();
             return false;
         }
 
-        debugs(28, 4, "id=" << (void*)this << " got address "<< std::setfill('0') << std::hex <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff));
+        debugs(28, 4, "id=" << static_cast<void*>(this) << " got address " << AsEui48(&arpReq.arp_ha));
 
         set(arpReq.arp_ha.sa_data, 6);
         return true;
@@ -206,16 +227,16 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
     if (ioctl(tmpSocket, SIOCGIFCONF, &ifc) < 0) {
         int xerrno = errno;
-        debugs(28, DBG_IMPORTANT, "Attempt to retrieve interface list failed: " << xstrerr(xerrno));
+        debugs(28, DBG_IMPORTANT, "ERROR: Attempt to retrieve interface list failed: " << xstrerr(xerrno));
         clear();
-        close(tmpSocket);
+        xclose(tmpSocket);
         return false;
     }
 
     if (ifc.ifc_len > (int)sizeof(ifbuffer)) {
         debugs(28, DBG_IMPORTANT, "Interface list too long - " << ifc.ifc_len);
         clear();
-        close(tmpSocket);
+        xclose(tmpSocket);
         return false;
     }
 
@@ -254,7 +275,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
             int xerrno = errno;
             //  Query failed.  Do not log failed lookups or "device not supported"
             if (ENXIO != xerrno && ENODEV != xerrno)
-                debugs(28, DBG_IMPORTANT, "ARP query " << ipAddr << " failed: " << ifr->ifr_name << ": " << xstrerr(xerrno));
+                debugs(28, DBG_IMPORTANT, "ERROR: ARP query " << ipAddr << " failed: " << ifr->ifr_name << ": " << xstrerr(xerrno));
 
             continue;
         }
@@ -265,14 +286,8 @@ Eui::Eui48::lookup(const Ip::Address &c)
             continue;
         }
 
-        debugs(28, 4, "id=" << (void*)this << " got address "<< std::setfill('0') << std::hex <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff)  << " on "<<
-               std::setfill(' ') << ifr->ifr_name);
+        debugs(28, 4, "id=" << static_cast<void*>(this) << " got address " << AsEui48(&arpReq.arp_ha) <<
+               " on " << ifr->ifr_name);
 
         set(arpReq.arp_ha.sa_data, 6);
 
@@ -282,19 +297,19 @@ Eui::Eui48::lookup(const Ip::Address &c)
          */
 
         /* AYJ: 2009-10-06: for now we have to. We can only store one EUI at a time. */
-        close(tmpSocket);
+        xclose(tmpSocket);
         return true;
     }
 
-    close(tmpSocket);
+    xclose(tmpSocket);
 
 #elif _SQUID_SOLARIS_
 
     /* IPv6 builds do not provide the first http_port as an IPv4 socket for ARP */
-    int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
+    auto tmpSocket = xsocket(AF_INET,SOCK_STREAM,0);
     if (tmpSocket < 0) {
         int xerrno = errno;
-        debugs(28, DBG_IMPORTANT, "Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));
+        debugs(28, DBG_IMPORTANT, "ERROR: Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));
         clear();
         return false;
     }
@@ -312,7 +327,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
         *  Solaris (at least 2.6/x86) does not use arp_ha.sa_family -
         * it returns 00:00:00:00:00:00 for non-ethernet media
         */
-        close(tmpSocket);
+        xclose(tmpSocket);
 
         if (arpReq.arp_ha.sa_data[0] == 0 &&
                 arpReq.arp_ha.sa_data[1] == 0 &&
@@ -323,18 +338,12 @@ Eui::Eui48::lookup(const Ip::Address &c)
             return false;
         }
 
-        debugs(28, 4, "Got address "<< std::setfill('0') << std::hex <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
-               std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff));
+        debugs(28, 4, "Got address " << AsEui48(&arpReq.arp_ha));
 
         set(arpReq.arp_ha.sa_data, 6);
         return true;
     } else {
-        close(tmpSocket);
+        xclose(tmpSocket);
     }
 
 #elif _SQUID_FREEBSD_ || _SQUID_NETBSD_ || _SQUID_OPENBSD_ || _SQUID_DRAGONFLY_ || _SQUID_KFREEBSD_
@@ -377,20 +386,20 @@ Eui::Eui48::lookup(const Ip::Address &c)
     mib[5] = RTF_LLINFO;
 #endif
 
-    if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
-        debugs(28, DBG_CRITICAL, "Can't estimate ARP table size!");
+    if (sysctl(mib, 6, nullptr, &needed, nullptr, 0) < 0) {
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot estimate ARP table size!");
         clear();
         return false;
     }
 
     if ((buf = (char *)xmalloc(needed)) == NULL) {
-        debugs(28, DBG_CRITICAL, "Can't allocate temporary ARP table!");
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot allocate temporary ARP table!");
         clear();
         return false;
     }
 
-    if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
-        debugs(28, DBG_CRITICAL, "Can't retrieve ARP table!");
+    if (sysctl(mib, 6, buf, &needed, nullptr, 0) < 0) {
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot retrieve ARP table!");
         xfree(buf);
         clear();
         return false;
@@ -429,13 +438,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
         return false;
     }
 
-    debugs(28, 4, "Got address "<< std::setfill('0') << std::hex <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff));
+    debugs(28, 4, "Got address " << AsEui48(&arpReq.arp_ha));
 
     set(arpReq.arp_ha.sa_data, 6);
     return true;
@@ -446,7 +449,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
     DWORD           ipNetTableLen = 0;
 
-    PMIB_IPNETTABLE NetTable = NULL;
+    PMIB_IPNETTABLE NetTable = nullptr;
 
     DWORD            i;
 
@@ -455,21 +458,21 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
     /* Get size of Windows ARP table */
     if (GetIpNetTable(NetTable, &ipNetTableLen, FALSE) != ERROR_INSUFFICIENT_BUFFER) {
-        debugs(28, DBG_CRITICAL, "Can't estimate ARP table size!");
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot estimate ARP table size!");
         clear();
         return false;
     }
 
     /* Allocate space for ARP table and assign pointers */
     if ((NetTable = (PMIB_IPNETTABLE)xmalloc(ipNetTableLen)) == NULL) {
-        debugs(28, DBG_CRITICAL, "Can't allocate temporary ARP table!");
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot allocate temporary ARP table!");
         clear();
         return false;
     }
 
     /* Get actual ARP table */
     if ((dwNetTable = GetIpNetTable(NetTable, &ipNetTableLen, FALSE)) != NO_ERROR) {
-        debugs(28, DBG_CRITICAL, "Can't retrieve ARP table!");
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot retrieve ARP table!");
         xfree(NetTable);
         clear();
         return false;
@@ -494,13 +497,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
         return false;
     }
 
-    debugs(28, 4, "Got address "<< std::setfill('0') << std::hex <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[0] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[1] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[2] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[3] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[4] & 0xff)  << ":" <<
-           std::setw(2) << (arpReq.arp_ha.sa_data[5] & 0xff));
+    debugs(28, 4, "Got address " << AsEui48(&arpReq.arp_ha));
 
     set(arpReq.arp_ha.sa_data, 6);
     return true;

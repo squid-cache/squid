@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,7 +51,7 @@ void Ipc::Strand::start()
 
 void Ipc::Strand::registerSelf()
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, MYNAME);
     Must(!isRegistered);
 
     StrandMessage::NotifyCoordinator(mtRegisterStrand, nullptr);
@@ -119,15 +119,9 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 void
 Ipc::Strand::handleRegistrationResponse(const StrandMessage &msg)
 {
-    // handle registration response from the coordinator; it could be stale
-    if (msg.strand.kidId == KidIdentifier && msg.strand.pid == getpid()) {
-        debugs(54, 6, "kid" << KidIdentifier << " registered");
-        clearTimeout(); // we are done
-    } else {
-        // could be an ACK to the registration message of our dead predecessor
-        debugs(54, 6, "kid" << KidIdentifier << " is not yet registered");
-        // keep listening, with a timeout
-    }
+    Assure(KidIdentifier == msg.strand.kidId);
+    debugs(54, 6, "kid" << KidIdentifier << " registered");
+    clearTimeout(); // we are done
 }
 
 void Ipc::Strand::handleCacheMgrRequest(const Mgr::Request& request)
@@ -145,20 +139,20 @@ void Ipc::Strand::handleCacheMgrResponse(const Mgr::Response& response)
 #if SQUID_SNMP
 void Ipc::Strand::handleSnmpRequest(const Snmp::Request& request)
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, MYNAME);
     Snmp::SendResponse(request.requestId, request.pdu);
 }
 
 void Ipc::Strand::handleSnmpResponse(const Snmp::Response& response)
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, MYNAME);
     Snmp::Forwarder::HandleRemoteAck(response.requestId);
 }
 #endif
 
 void Ipc::Strand::timedout()
 {
-    debugs(54, 6, HERE << isRegistered);
+    debugs(54, 6, isRegistered);
     if (!isRegistered)
         fatalf("kid%d registration timed out", KidIdentifier);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,8 +9,10 @@
 /* DEBUG: section 83    TLS I/O */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "fde.h"
 #include "security/Io.h"
+#include "ssl/gadgets.h"
 
 namespace Security {
 
@@ -22,10 +24,11 @@ typedef SessionPointer::element_type *ConnectionPointer;
 
 } // namespace Security
 
+/// common part of printGist() and printWithExtras()
 void
-Security::IoResult::print(std::ostream &os) const
+Security::IoResult::printDescription(std::ostream &os) const
 {
-    const char *strCat = "unknown";
+    const char *strCat = nullptr;
     switch (category) {
     case ioSuccess:
         strCat = "success";
@@ -37,27 +40,38 @@ Security::IoResult::print(std::ostream &os) const
         strCat = "want-write";
         break;
     case ioError:
-        strCat = "error";
+        strCat = errorDescription;
         break;
     }
-    os << strCat;
-
-    if (errorDescription)
-        os << ", " << errorDescription;
-
-    if (important)
-        os << ", important";
+    os << (strCat ? strCat : "unknown");
 }
 
-// TODO: Replace high-level ERR_get_error() calls with a new std::ostream
-// ReportErrors manipulator inside debugs(), followed by a ForgetErrors() call.
+void
+Security::IoResult::printGist(std::ostream &os) const
+{
+    printDescription(os);
+    if (important)
+        os << ", important";
+    // no errorDetail in this summary output
+}
+
+void
+Security::IoResult::printWithExtras(std::ostream &os) const
+{
+    printDescription(os);
+    if (errorDetail)
+        os << Debug::Extra << "error detail: " << errorDetail;
+    // this->important flag may affect caller debugs() level, but the flag
+    // itself is not reported to the admin explicitly
+}
+
+// TODO: Replace high-level ERR_get_error() calls with ForgetErrors() calls or
+// exceptions carrying ReportAndForgetErrors() reports.
 void
 Security::ForgetErrors()
 {
 #if USE_OPENSSL
-    unsigned int reported = 0; // efficiently marks ForgetErrors() call boundary
-    while (const auto errorToForget = ERR_get_error())
-        debugs(83, 7, '#' << (++reported) << ": " << asHex(errorToForget));
+    Ssl::ForgetErrors();
 #endif
 }
 
@@ -146,7 +160,7 @@ Security::Handshake(Comm::Connection &transport, const ErrorCode topError, Fun i
 
     return ioResult;
 
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
     if (callResult == GNUTLS_E_SUCCESS) {
         // TODO: Avoid gnutls_*() calls if debugging is off.
         const auto desc = gnutls_session_get_desc(connection);
@@ -182,8 +196,9 @@ Security::Handshake(Comm::Connection &transport, const ErrorCode topError, Fun i
     return ioResult;
 
 #else
+    (void)topError;
     // TLS I/O code path should never be reachable without a TLS/SSL library.
-    debugs(1, DBG_CRITICAL, ForceAlert << "BUG: " <<
+    debugs(1, DBG_CRITICAL, ForceAlert << "ERROR: Squid BUG: " <<
            "Unexpected TLS I/O in Squid built without a TLS/SSL library");
     assert(false); // we want a stack trace which fatal() does not produce
     return IoResult(nullptr); // not reachable
@@ -198,7 +213,7 @@ Security::Accept(Comm::Connection &transport)
     return Handshake(transport, SQUID_TLS_ERR_ACCEPT, [] (ConnectionPointer tlsConn) {
 #if USE_OPENSSL
         return SSL_accept(tlsConn);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         return gnutls_handshake(tlsConn);
 #else
         return sizeof(tlsConn); // the value is unused; should be unreachable
@@ -213,7 +228,7 @@ Security::Connect(Comm::Connection &transport)
     return Handshake(transport, SQUID_TLS_ERR_CONNECT, [] (ConnectionPointer tlsConn) {
 #if USE_OPENSSL
         return SSL_connect(tlsConn);
-#elif USE_GNUTLS
+#elif HAVE_LIBGNUTLS
         return gnutls_handshake(tlsConn);
 #else
         return sizeof(tlsConn); // the value is unused; should be unreachable

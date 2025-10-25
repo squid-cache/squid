@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,9 @@
 /* DEBUG: section 79    Squid-side DISKD I/O functions. */
 
 #include "squid.h"
+#include "comm.h"
 #include "comm/Loops.h"
+#include "compat/select.h"
 #include "ConfigOption.h"
 #include "diomsg.h"
 #include "DiskdFile.h"
@@ -18,7 +20,6 @@
 #include "fd.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "unlinkd.h"
@@ -65,7 +66,7 @@ int
 DiskdIOStrategy::load()
 {
     /* Calculate the storedir load relative to magic2 on a scale of 0 .. 1000 */
-    /* the parse function guarantees magic2 is positivie */
+    /* the parse function guarantees magic2 is positive */
     return away * 1000 / magic2;
 }
 
@@ -80,7 +81,7 @@ DiskdIOStrategy::newFile(char const *path)
 {
     if (shedLoad()) {
         openFailed();
-        return NULL;
+        return nullptr;
     }
 
     return new DiskdFile (path, this);
@@ -114,11 +115,16 @@ DiskdIOStrategy::unlinkFile(char const *path)
 
     buf = (char *)shm.get(&shm_offset);
 
+    if (!buf) {
+        unlinkdUnlink(path);
+        return;
+    }
+
     xstrncpy(buf, path, SHMBUF_BLKSZ);
 
     x = send(_MQD_UNLINK,
              0,
-             (StoreIOState::Pointer )NULL,
+             (StoreIOState::Pointer )nullptr,
              0,
              0,
              shm_offset);
@@ -172,7 +178,7 @@ DiskdIOStrategy::init()
     args[1] = skey1;
     args[2] = skey2;
     args[3] = skey3;
-    args[4] = NULL;
+    args[4] = nullptr;
     localhost.setLocalhost();
     pid = ipcCreate(IPC_STREAM,
                     Config.Program.diskd,
@@ -216,7 +222,7 @@ void *
 
 SharedMemory::get(ssize_t * shm_offset)
 {
-    char *aBuf = NULL;
+    char *aBuf = nullptr;
     int i;
 
     for (i = 0; i < nbufs; ++i) {
@@ -230,6 +236,11 @@ SharedMemory::get(ssize_t * shm_offset)
         aBuf = buf + (*shm_offset);
 
         break;
+    }
+
+    if (!aBuf) {
+        debugs(79, DBG_IMPORTANT, "ERROR: out of shared-memory buffers");
+        return nullptr;
     }
 
     assert(aBuf);
@@ -256,7 +267,7 @@ SharedMemory::init(int ikey, int magic2)
         fatal("shmget failed");
     }
 
-    buf = (char *)shmat(id, NULL, 0);
+    buf = (char *)shmat(id, nullptr, 0);
 
     if (buf == (void *) -1) {
         int xerrno = errno;
@@ -409,7 +420,7 @@ DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, size_t size, off_t offset, s
     struct timeval delay = {0, 1};
 
     while (away > magic2) {
-        select(0, NULL, NULL, NULL, &delay);
+        xselect(0, nullptr, nullptr, nullptr, &delay);
         Store::Root().callback();
 
         if (delay.tv_usec < 1000000)

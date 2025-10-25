@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_COMM_IOCALLBACK_H
-#define _SQUID_COMM_IOCALLBACK_H
+#ifndef SQUID_SRC_COMM_IOCALLBACK_H
+#define SQUID_SRC_COMM_IOCALLBACK_H
 
 #include "base/AsyncCall.h"
 #include "comm/Flag.h"
@@ -42,7 +42,7 @@ public:
     unsigned int quotaQueueReserv; ///< reservation ID from CommQuotaQueue
 #endif
 
-    bool active() const { return callback != NULL; }
+    bool active() const { return callback != nullptr; }
     void setCallback(iocb_type type, AsyncCall::Pointer &cb, char *buf, FREE *func, int sz);
 
     /// called when fd needs to write but may need to wait in line for its quota
@@ -58,7 +58,7 @@ private:
     void reset();
 };
 
-/// Entry nodes for the IO callback table: iocb_table
+/// Entry nodes for the IO callback table.
 /// Keyed off the FD which the event applies to.
 class CbEntry
 {
@@ -70,15 +70,12 @@ public:
 
 /// Table of scheduled IO events which have yet to be processed ??
 /// Callbacks which might be scheduled in future are stored in fd_table.
-extern CbEntry *iocb_table;
+CbEntry &ioCallbacks(int fd);
 
-void CallbackTableInit();
-void CallbackTableDestruct();
-
-#define COMMIO_FD_READCB(fd)    (&Comm::iocb_table[(fd)].readcb)
-#define COMMIO_FD_WRITECB(fd)   (&Comm::iocb_table[(fd)].writecb)
+#define COMMIO_FD_READCB(fd) (&(Comm::ioCallbacks(fd).readcb))
+#define COMMIO_FD_WRITECB(fd) (&(Comm::ioCallbacks(fd).writecb))
 
 } // namespace Comm
 
-#endif /* _SQUID_COMM_IOCALLBACK_H */
+#endif /* SQUID_SRC_COMM_IOCALLBACK_H */
 

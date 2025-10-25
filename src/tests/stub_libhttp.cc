@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "client_side.h"
 #include "comm/Connection.h"
-#include "SquidConfig.h"
 
 #define STUB_API "http/libhttp.la"
 #include "tests/STUB.h"
@@ -21,7 +20,7 @@ namespace Http
 Http::ContentLengthInterpreter::ContentLengthInterpreter():
     value(-1),
     headerWideProblem(nullptr),
-    debugLevel(Config.onoff.relaxed_header_parser <= 0 ? DBG_IMPORTANT : 2),
+    debugLevel(DBG_IMPORTANT),
     sawBad(false),
     needsSanitizing(false),
     sawGood(false),
@@ -37,12 +36,12 @@ bool ContentLengthInterpreter::checkList(const String &) STUB_RETVAL(false)
 #include "http/Message.h"
 namespace Http
 {
-Message::Message(http_hdr_owner_type) {STUB}
+Message::Message(const http_hdr_owner_type owner): header(owner) {STUB}
 Message::~Message() {STUB}
 void Message::packInto(Packable *, bool) const STUB
 void Message::setContentLength(int64_t) STUB
 bool Message::persistent() const STUB_RETVAL(false)
-void Message::putCc(const HttpHdrCc *) STUB
+void Message::putCc(const HttpHdrCc &) STUB
 bool Message::parse(const char *, const size_t, bool, Http::StatusCode *) STUB_RETVAL(false)
 bool Message::parseCharBuf(const char *, ssize_t) STUB_RETVAL(false)
 int Message::httpMsgParseStep(const char *, int, int) STUB_RETVAL(-1)
@@ -61,14 +60,13 @@ const SBuf MethodType_sb[1] = {SBuf()};
 #include "http/RegisteredHeaders.h"
 namespace Http
 {
-HeaderTableRecord::HeaderTableRecord() {STUB_NOP}
 HeaderTableRecord::HeaderTableRecord(const char *) {STUB_NOP}
 HeaderTableRecord::HeaderTableRecord(const char *, Http::HdrType, Http::HdrFieldType, int) {STUB}
 HeaderLookupTable_t::HeaderLookupTable_t() {STUB_NOP}
 const HeaderTableRecord& HeaderLookupTable_t::lookup(const char *, const std::size_t) const STUB_RETVAL(BadHdr)
 const HeaderLookupTable_t HeaderLookupTable;
 }
-std::ostream &operator<< (std::ostream&os, Http::HdrType) STUB_RETVAL(os)
+std::ostream &Http::operator <<(std::ostream &os, HdrType) STUB_RETVAL(os)
 
 #include "http/RequestMethod.h"
 HttpRequestMethod::HttpRequestMethod(const SBuf &) {STUB}
@@ -93,6 +91,7 @@ void StatusLine::init() STUB
 void StatusLine::clean() STUB
 void StatusLine::set(const AnyP::ProtocolVersion &, Http::StatusCode, const char *) STUB
 const char *StatusLine::reason() const STUB_RETVAL(nullptr)
+size_t StatusLine::packedLength() const STUB_RETVAL(0)
 void StatusLine::packInto(Packable *) const STUB
 bool StatusLine::parse(const String &, const char *, const char *) STUB_RETVAL(false)
 }

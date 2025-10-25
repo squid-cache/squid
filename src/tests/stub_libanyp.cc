@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,12 +31,13 @@ const SBuf &AnyP::Uri::Asterisk()
 }
 SBuf &AnyP::Uri::authority(bool) const STUB_RETVAL(nil)
 SBuf &AnyP::Uri::absolute() const STUB_RETVAL(nil)
+SBuf &AnyP::Uri::absolutePath() const STUB_RETVAL(nil)
 void urlInitialize() STUB
 const char *urlCanonicalFakeHttps(const HttpRequest *) STUB_RETVAL(nullptr)
 bool urlIsRelative(const char *) STUB_RETVAL(false)
 char *urlRInternal(const char *, unsigned short, const char *, const char *) STUB_RETVAL(nullptr)
 char *urlInternal(const char *, const char *) STUB_RETVAL(nullptr)
 int matchDomainName(const char *, const char *, enum MatchDomainNameFlags) STUB_RETVAL(0)
-int urlCheckRequest(const HttpRequest *) STUB_RETVAL(0)
+bool urlCheckRequest(const HttpRequest *) STUB_RETVAL(false)
 void urlExtMethodConfigure() STUB
 

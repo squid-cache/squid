@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,12 +11,15 @@
 #include "squid.h"
 
 #if USE_WCCP
+#include "base/RunnersRegistry.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "compat/socket.h"
 #include "event.h"
 #include "fatal.h"
 #include "SquidConfig.h"
+#include "tools.h"
 
 #define WCCP_PORT 2048
 #define WCCP_REVISION 0
@@ -78,17 +81,12 @@ static int wccpLowestIP(void);
 static EVH wccpHereIam;
 static void wccpAssignBuckets(void);
 
-/*
- * The functions used during startup:
- * wccpInit
- * wccpConnectionOpen
- * wccpConnectionShutdown
- * wccpConnectionClose
- */
-
-void
+static void
 wccpInit(void)
 {
+    if (!IamPrimaryProcess())
+        return;
+
     debugs(80, 5, "wccpInit: Called");
     memset(&wccp_here_i_am, '\0', sizeof(wccp_here_i_am));
     wccp_here_i_am.type = htonl(WCCP_HERE_I_AM);
@@ -100,13 +98,16 @@ wccpInit(void)
     number_caches = 0;
 
     if (!Config.Wccp.router.isAnyAddr())
-        if (!eventFind(wccpHereIam, NULL))
-            eventAdd("wccpHereIam", wccpHereIam, NULL, 5.0, 1);
+        if (!eventFind(wccpHereIam, nullptr))
+            eventAdd("wccpHereIam", wccpHereIam, nullptr, 5.0, 1);
 }
 
-void
+static void
 wccpConnectionOpen(void)
 {
+    if (!IamPrimaryProcess())
+        return;
+
     debugs(80, 5, "wccpConnectionOpen: Called");
 
     if (Config.Wccp.router.isAnyAddr()) {
@@ -136,7 +137,7 @@ wccpConnectionOpen(void)
     if (theWccpConnection < 0)
         fatal("Cannot open WCCP Port");
 
-    Comm::SetSelect(theWccpConnection, COMM_SELECT_READ, wccpHandleUdp, NULL, 0);
+    Comm::SetSelect(theWccpConnection, COMM_SELECT_READ, wccpHandleUdp, nullptr, 0);
 
     debugs(80, DBG_IMPORTANT, "Accepting WCCPv1 messages on " << Config.Wccp.address << ", FD " << theWccpConnection << ".");
 
@@ -144,27 +145,40 @@ wccpConnectionOpen(void)
 
     struct sockaddr_in router;
     Config.Wccp.router.getSockAddr(router);
-    if (connect(theWccpConnection, (struct sockaddr*)&router, sizeof(router)))
+    if (xconnect(theWccpConnection, (struct sockaddr*)&router, sizeof(router)))
         fatal("Unable to connect WCCP out socket");
 
     struct sockaddr_in local;
     memset(&local, '\0', sizeof(local));
     socklen_t slen = sizeof(local);
-    if (getsockname(theWccpConnection, (struct sockaddr*)&local, &slen))
+    if (xgetsockname(theWccpConnection, (struct sockaddr*)&local, &slen))
         fatal("Unable to getsockname on WCCP out socket");
 
     local_ip = local;
 }
 
-void
+static void
 wccpConnectionClose(void)
 {
+    if (!IamPrimaryProcess())
+        return;
+
     if (theWccpConnection > -1) {
         debugs(80, DBG_IMPORTANT, "FD " << theWccpConnection << " Closing WCCPv1 socket");
         comm_close(theWccpConnection);
         theWccpConnection = -1;
     }
 }
+
+class WccpRr : public RegisteredRunner
+{
+public:
+    void useConfig() override { wccpInit(); wccpConnectionOpen(); }
+    void startReconfigure() override { wccpConnectionClose(); }
+    void syncConfig() override { wccpConnectionOpen(); }
+    void startShutdown() override { wccpConnectionClose(); }
+};
+DefineRunnerRegistrator(WccpRr);
 
 /*
  * Functions for handling the requests.
@@ -181,7 +195,7 @@ wccpHandleUdp(int sock, void *)
 
     debugs(80, 6, "wccpHandleUdp: Called.");
 
-    Comm::SetSelect(sock, COMM_SELECT_READ, wccpHandleUdp, NULL, 0);
+    Comm::SetSelect(sock, COMM_SELECT_READ, wccpHandleUdp, nullptr, 0);
 
     memset(&wccp_i_see_you, '\0', sizeof(wccp_i_see_you));
 
@@ -286,8 +300,8 @@ wccpHereIam(void *)
         interval = 2.0;
     }
 
-    if (!eventFind(wccpHereIam, NULL))
-        eventAdd("wccpHereIam", wccpHereIam, NULL, interval, 1);
+    if (!eventFind(wccpHereIam, nullptr))
+        eventAdd("wccpHereIam", wccpHereIam, nullptr, interval, 1);
 }
 
 static void
