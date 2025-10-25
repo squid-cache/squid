@@ -120,8 +120,6 @@ private:
     std::optional<size_t> canBufferMoreReplyBytes() const;
     size_t maybeMakeSpaceAvailable(size_t maxReadSize);
 
-    // consuming request body
-    virtual void handleMoreRequestBodyAvailable();
     void handleRequestBodyProducerAborted() override;
 
     void writeReplyBody();

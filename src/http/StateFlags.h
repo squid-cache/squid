@@ -56,7 +56,6 @@ public:
     bool toOriginPeer() const { return toOrigin && peering && !tunneling; }
 
     bool keepalive_broken = false;
-    bool abuse_detected = false;
     bool request_sent = false;
     bool chunked = false;           ///< reading a chunked response; TODO: rename
     bool chunked_request = false;   ///< writing a chunked request
