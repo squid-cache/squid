@@ -24,7 +24,7 @@ class Scheme;
 class SchemeConfig;
 typedef std::vector<Auth::SchemeConfig *> ConfigVector;
 
-typedef std::chrono::seconds Ttl;
+using Ttl = std::chrono::seconds;
 
 } // namespace Auth
 
