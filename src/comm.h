@@ -112,7 +112,7 @@ public:
 using ReceivedFrom = Expected<FromAndLength, int>;
 std::ostream &operator <<(std::ostream &, const ReceivedFrom &);
 
-/// recvfrom(2) convenience wrapper that logs errors using level-3+ debugs() messages
+/// recvfrom(2) wrapper that logs outcome using level-3+ debugs() messages
 ReceivedFrom ReceiveFrom(int fd, void *buf, size_t len, int flags);
 
 } // namespace Comm
