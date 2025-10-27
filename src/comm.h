@@ -121,10 +121,10 @@ public:
     explicit operator bool() const noexcept { return std::holds_alternative<value_type>(storage_); }
     const value_type * operator->() const noexcept { return std::get_if<value_type>(&storage_); }
     const value_type &value() const { return std::get<value_type>(storage_); }
-    const int &error() const { return std::get<error_type>(storage_); }
+    const error_type &error() const { return std::get<error_type>(storage_); }
 
 private:
-    std::variant<value_type, int> storage_;
+    std::variant<value_type, error_type> storage_;
 };
 
 std::ostream &operator <<(std::ostream &, const ReceivedFrom &);
