@@ -250,10 +250,10 @@ Http::Message::persistent() const
 }
 
 void
-Http::Message::packInto(Packable *p, bool full_uri) const
+Http::Message::packInto(Packable *p, bool full_uri, const MaskSensitiveInfo mask) const
 {
     packFirstLineInto(p, full_uri);
-    header.packInto(p, MaskSensitiveInfo::off);
+    header.packInto(p, mask);
     p->append("\r\n", 2);
 }
 
