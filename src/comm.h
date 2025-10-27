@@ -9,12 +9,12 @@
 #ifndef SQUID_SRC_COMM_H
 #define SQUID_SRC_COMM_H
 
+#include "base/Expected.h"
 #include "comm/IoCallback.h"
 #include "CommCalls.h"
 #include "StoreIOBuffer.h"
 
 #include <iosfwd>
-#include <variant>
 
 namespace Ip
 {
@@ -107,26 +107,9 @@ public:
     size_t length = 0;
 };
 
-/// Either a successful ReceiveFrom() call outcome or an associated errno
-/// value. Mimics portions of std::expected<FromAndLength, int> API to
-/// facilitate migration to that C++23 API without caller changes (TODO).
-class ReceivedFrom
-{
-public:
-    /* std::expected<FromAndLength, int> API */
-    using value_type = FromAndLength;
-    using error_type = int;
-    template <typename ValueOrError = value_type>
-    explicit ReceivedFrom(ValueOrError &&ve) noexcept: storage_(std::forward<ValueOrError>(ve)) {}
-    explicit operator bool() const noexcept { return std::holds_alternative<value_type>(storage_); }
-    const value_type * operator->() const noexcept { return std::get_if<value_type>(&storage_); }
-    const value_type &value() const { return std::get<value_type>(storage_); }
-    const error_type &error() const { return std::get<error_type>(storage_); }
-
-private:
-    std::variant<value_type, error_type> storage_;
-};
-
+/// Either metadata produced by a successful ReceiveFrom() call or an errno
+/// value associated with that call failure.
+using ReceivedFrom = Expected<FromAndLength, int>;
 std::ostream &operator <<(std::ostream &, const ReceivedFrom &);
 
 /// recvfrom(2) convenience wrapper that logs errors using level-3+ debugs() messages

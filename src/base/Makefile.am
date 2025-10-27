@@ -35,6 +35,7 @@ libbase_la_SOURCES = \
 	DelayedAsyncCalls.cc \
 	DelayedAsyncCalls.h \
 	EnumIterator.h \
+	Expected.h \
 	File.cc \
 	File.h \
 	HardFun.h \
