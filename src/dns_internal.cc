@@ -1331,7 +1331,7 @@ idnsRead(int fd, void *)
 
     while (max) {
         --max;
-        const auto received = comm_udp_recvfrom(fd, rbuf, SQUID_UDP_SO_RCVBUF, 0);
+        const auto received = Comm::ReceiveFrom(fd, rbuf, SQUID_UDP_SO_RCVBUF, 0);
 
         if (!received) {
             const auto xerrno = received.error();

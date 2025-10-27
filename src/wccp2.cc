@@ -1224,7 +1224,7 @@ wccp2HandleUdp(int sock, void *)
 
     Comm::SetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, nullptr, 0);
 
-    const auto received = comm_udp_recvfrom(sock, &wccp2_i_see_you, WCCP_RESPONSE_SIZE, 0);
+    const auto received = Comm::ReceiveFrom(sock, &wccp2_i_see_you, WCCP_RESPONSE_SIZE, 0);
     if (!received)
         return;
 

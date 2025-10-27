@@ -620,7 +620,7 @@ icpHandleUdp(int sock, void *)
 
     while (max) {
         --max;
-        const auto received = comm_udp_recvfrom(sock, buf, SQUID_UDP_SO_RCVBUF - 1, 0);
+        const auto received = Comm::ReceiveFrom(sock, buf, SQUID_UDP_SO_RCVBUF - 1, 0);
 
         if (!received) {
             const auto xerrno = received.error();

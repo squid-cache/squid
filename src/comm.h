@@ -90,7 +90,10 @@ void comm_add_close_handler(int fd, AsyncCall::Pointer &);
 void comm_remove_close_handler(int fd, CLCB *, void *);
 void comm_remove_close_handler(int fd, AsyncCall::Pointer &);
 
-/// metadata associated with a successful comm_udp_recvfrom() call outcome
+namespace Comm
+{
+
+/// metadata associated with a successful ReceiveFrom() call outcome
 class FromAndLength
 {
 public:
@@ -99,12 +102,12 @@ public:
     /// The source address of the received message.
     Ip::Address from;
 
-    /// The number of bytes written to the buffer given to comm_udp_recvfrom().
+    /// The number of bytes written to the buffer given to ReceiveFrom().
     /// May be zero.
     size_t length = 0;
 };
 
-/// Either a successful comm_udp_recvfrom() call outcome or an associated errno
+/// Either a successful ReceiveFrom() call outcome or an associated errno
 /// value. Mimics portions of std::expected<FromAndLength, int> API to
 /// facilitate migration to that C++23 API without caller changes (TODO).
 class ReceivedFrom
@@ -127,7 +130,9 @@ private:
 std::ostream &operator <<(std::ostream &, const ReceivedFrom &);
 
 /// recvfrom(2) convenience wrapper that logs errors using level-3+ debugs() messages
-ReceivedFrom comm_udp_recvfrom(int fd, void *buf, size_t len, int flags);
+ReceivedFrom ReceiveFrom(int fd, void *buf, size_t len, int flags);
+
+} // namespace Comm
 
 ssize_t comm_udp_send(int s, const void *buf, size_t len, int flags);
 bool comm_has_incomplete_write(int);

@@ -1418,7 +1418,7 @@ htcpRecv(int fd, void *)
 
     /* Receive up to 8191 bytes, leaving room for a null */
 
-    const auto received = comm_udp_recvfrom(fd, buf, sizeof(buf) - 1, 0);
+    const auto received = Comm::ReceiveFrom(fd, buf, sizeof(buf) - 1, 0);
 
     if (!received || !received->length)
         return; // XXX: Keep reading (or stop listening).

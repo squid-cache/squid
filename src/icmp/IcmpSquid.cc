@@ -122,7 +122,7 @@ IcmpSquid::Recv()
     static Ip::Address F;
 
     Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, nullptr, 0);
-    const auto received = comm_udp_recvfrom(icmp_sock, &preply, sizeof(pingerReplyData), 0);
+    const auto received = Comm::ReceiveFrom(icmp_sock, &preply, sizeof(pingerReplyData), 0);
 
     if (!received) {
         const auto xerrno = received.error();

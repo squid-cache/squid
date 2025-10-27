@@ -196,7 +196,7 @@ wccpHandleUdp(int sock, void *)
 
     memset(&wccp_i_see_you, '\0', sizeof(wccp_i_see_you));
 
-    const auto received = comm_udp_recvfrom(sock, &wccp_i_see_you, sizeof(wccp_i_see_you), 0);
+    const auto received = Comm::ReceiveFrom(sock, &wccp_i_see_you, sizeof(wccp_i_see_you), 0);
     if (!received || received->length < sizeof(wccp_i_see_you))
         return;
 

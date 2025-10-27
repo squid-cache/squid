@@ -280,7 +280,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         }
 
         if (type == IPC_UDP_SOCKET) {
-            if (const auto received = comm_udp_recvfrom(prfd, hello_buf, sizeof(hello_buf)-1, 0)) {
+            if (const auto received = Comm::ReceiveFrom(prfd, hello_buf, sizeof(hello_buf)-1, 0)) {
                 x = received->length;
                 xerrno = 0;
             } else {

@@ -363,7 +363,7 @@ snmpHandleUdp(int sock, void *)
 
     memset(buf, '\0', sizeof(buf));
 
-    const auto received = comm_udp_recvfrom(sock, buf, sizeof(buf)-1, 0);
+    const auto received = Comm::ReceiveFrom(sock, buf, sizeof(buf)-1, 0);
 
     if (received && received->length) {
         snmp_rq = (SnmpRequest *)xcalloc(1, sizeof(SnmpRequest));
