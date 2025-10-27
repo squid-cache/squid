@@ -358,7 +358,7 @@ snmpHandleUdp(int sock, void *)
     SnmpRequest *snmp_rq;
     int len;
 
-    debugs(49, 5, "snmpHandleUdp: Called.");
+    debugs(49, 5, "FD " << sock);
 
     Comm::SetSelect(sock, COMM_SELECT_READ, snmpHandleUdp, nullptr, 0);
 
@@ -367,7 +367,7 @@ snmpHandleUdp(int sock, void *)
     len = comm_udp_recvfrom(sock, buf, sizeof(buf)-1, 0, from);
 
     if (len > 0) {
-        debugs(49, 3, "snmpHandleUdp: FD " << sock << ": received " << len << " bytes from " << from << ".");
+        debugs(49, 3, "FD " << sock << ": received " << len << " bytes from " << from << ".");
 
         snmp_rq = (SnmpRequest *)xcalloc(1, sizeof(SnmpRequest));
         snmp_rq->buf = (u_char *) buf;
@@ -378,9 +378,11 @@ snmpHandleUdp(int sock, void *)
         snmpDecodePacket(snmp_rq);
         xfree(snmp_rq->outbuf);
         xfree(snmp_rq);
-    } else {
+    } else if (len < 0) {
         int xerrno = errno;
-        debugs(49, DBG_IMPORTANT, "snmpHandleUdp: FD " << sock << " recvfrom: " << xstrerr(xerrno));
+        debugs(49, DBG_IMPORTANT, "ERROR: Cannot read an SNMP UDP query: " << xstrerr(xerrno));
+    } else {
+        debugs(49, DBG_IMPORTANT, "WARNING: Ignoring empty SNMP UDP datagram from " << from);
     }
 }
 
