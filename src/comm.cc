@@ -139,17 +139,11 @@ comm_udp_recvfrom(const int fd, void * const buf, const size_t len, const int fl
     Ip::Address::InitAddr(AI);
     const auto lengthOrError = xrecvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
     const auto savedErrno = errno;
-    if (lengthOrError < 0) {
-        debugs(5, 3, "xrecvfrom(FD " << fd << ") failure: " << xstrerr(savedErrno));
-        Ip::Address::FreeAddr(AI);
-        return ReceivedFrom(int(savedErrno));
-    }
-
-    const auto receivedLength = size_t(lengthOrError); // may be zero
-    const Ip::Address from = *AI;
-    debugs(5, 5, "xrecvfrom(FD " << fd << ") got " << receivedLength << " bytes from " << from);
+    const auto result = (lengthOrError < 0 ? ReceivedFrom(int(savedErrno)) : ReceivedFrom(FromAndLength(*AI, size_t(lengthOrError))));
+    const auto debugLevel = result ? 5 : 3;
+    debugs(5, debugLevel, "xrecvfrom(FD " << fd << ", " << len << "): " << result);
     Ip::Address::FreeAddr(AI);
-    return ReceivedFrom(FromAndLength(from, receivedLength));
+    return result;
 }
 
 ssize_t
