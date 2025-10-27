@@ -121,6 +121,16 @@ comm_empty_os_read_buffers(int fd)
 #endif
 }
 
+std::ostream &
+operator <<(std::ostream &os, const ReceivedFrom &received)
+{
+    if (received)
+        os << received->length << " bytes from " << received->from; // including 0 bytes
+    else
+        os << xstrerr(received.error());
+    return os;
+}
+
 ReceivedFrom
 comm_udp_recvfrom(const int fd, void * const buf, const size_t len, const int flags)
 {
