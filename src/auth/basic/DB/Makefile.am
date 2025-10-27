@@ -16,12 +16,8 @@ EXTRA_DIST= \
 basic_db_auth: basic_db_auth.pl.in
 	$(subst_perlshell)
 
-if ENABLE_POD2MAN_DOC
+if ENABLE_DOCUMENTATION
 man_MANS = basic_db_auth.8
 CLEANFILES += basic_db_auth.8
 EXTRA_DIST += basic_db_auth.8
-
-basic_db_auth.8: basic_db_auth
-	pod2man --section=8 basic_db_auth basic_db_auth.8
-
 endif

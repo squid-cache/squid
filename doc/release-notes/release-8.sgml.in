@@ -144,7 +144,8 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p>No new options in this version.
+	<tag>--enable-documentation</tag>
+	<p>Build optional documentation for Squid.
 
 </descrip>
 

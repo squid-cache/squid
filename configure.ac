@@ -135,20 +135,14 @@ AS_IF([test "x$PKG_CONFIG" = "x"],[
   AC_MSG_WARN([pkg-config not found. Many optional features with external dependencies will not be enabled by default, usually without further warnings.])
 ])
 
-
 AC_PATH_PROG(PERL, perl, none)
 AS_IF([test "x$ac_cv_path_PERL" = "xnone"],[
   AC_MSG_FAILURE([Perl is required to compile Squid. Please install Perl and then re-run configure ])
 ])
-AC_PATH_PROG(POD2MAN, pod2man, $FALSE)
-AM_CONDITIONAL(ENABLE_POD2MAN_DOC, test "x${ac_cv_path_POD2MAN}" != "x$FALSE")
 
 AC_PATH_PROG(AR, ar, $FALSE)
 AR_R="$AR r"
 AC_SUBST(AR_R)
-
-AC_PATH_PROG(LINUXDOC, linuxdoc, $FALSE)
-AM_CONDITIONAL(ENABLE_RELEASE_DOCS, test "x${ac_cv_path_LINUXDOC}" != "x$FALSE")
 
 SQUID_RELEASE=`echo $VERSION | cut -d. -f1`
 AC_SUBST(SQUID_RELEASE)
@@ -363,6 +357,25 @@ SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_arg_pipe"
 
 # possibly include some build info tag into squid -v
 SQUID_EMBED_BUILD_INFO
+
+AC_ARG_ENABLE(documentation,
+  AS_HELP_STRING([--enable-documentation],[
+    Build optional documentation.
+    Requires linuxdoc and pod2man.
+  ]),[
+  SQUID_YESNO([$enableval],[--enable-documentation])
+])
+AS_IF([test "x$enable_documentation" = "xyes"],[
+  AC_CHECK_TOOL([LINUXDOC],[linuxdoc],[:])
+  AS_IF([test "$LINUXDOC" = ":"],[
+    AC_MSG_FAILURE([linuxdoc is required to compile Squid documentation. Please install linuxdoc tools and then re-run configure.])
+  ])
+  AC_CHECK_TOOL([POD2MAN],[pod2man],[:])
+  AS_IF([test "$POD2MAN" = ":"],[
+    AC_MSG_FAILURE([pod2man is required to compile Squid documentation. Please install pod2man and then re-run configure.])
+  ])
+])
+AM_CONDITIONAL(ENABLE_DOCUMENTATION,[test "x$enable_documentation" = "xyes"])
 
 AC_ARG_ENABLE(optimizations,
   AS_HELP_STRING([--disable-optimizations],

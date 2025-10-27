@@ -6,7 +6,3 @@
 ##
 
 AS_IF([test "x$PERL" != "x"],[BUILD_HELPER="POP3"])
-AS_IF([test "x$POD2MAN" = "x"],[
-  AC_MSG_WARN([pod2man not found. basic_pop3_auth man(8) page will not be built])
-])
-

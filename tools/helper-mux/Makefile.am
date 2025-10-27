@@ -13,12 +13,8 @@ EXTRA_DIST= helper-mux.pl.in
 helper-mux: helper-mux.pl.in
 	$(subst_perlshell)
 
-if ENABLE_POD2MAN_DOC
+if ENABLE_DOCUMENTATION
 man_MANS = helper-mux.8
 CLEANFILES += helper-mux.8
 EXTRA_DIST += helper-mux.8
-
-helper-mux.8: helper-mux
-	pod2man --section=8 helper-mux helper-mux.8
-
 endif
