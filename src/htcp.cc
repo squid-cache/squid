@@ -257,7 +257,7 @@ static ssize_t htcpBuildOpData(char *buf, size_t buflen, htcpStuff * stuff);
 static ssize_t htcpBuildSpecifier(char *buf, size_t buflen, htcpStuff * stuff);
 static ssize_t htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff);
 
-static void htcpHandleMsg(char *buf, int sz, Ip::Address &from);
+static void htcpHandleMsg(char *buf, size_t sz, Ip::Address &from);
 
 static void htcpLogHtcp(Ip::Address &, const int, const LogTags_ot, const char *, AccessLogEntryPointer);
 static void htcpHandleTst(htcpDataHeader *, char *buf, int sz, Ip::Address &from);
@@ -1294,7 +1294,7 @@ htcpForwardClr(char *buf, int sz)
  * hands it off to other functions to break apart message-specific data.
  */
 static void
-htcpHandleMsg(char *buf, int sz, Ip::Address &from)
+htcpHandleMsg(char * const buf, const size_t sz, Ip::Address &from)
 {
     // TODO: function-scoped CodeContext::Reset(...("HTCP message from", from))
 
@@ -1303,11 +1303,13 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
     char *hbuf;
     int hsz;
 
-    if (sz < 0 || (size_t)sz < sizeof(htcpHeader)) {
+    if (sz < sizeof(htcpHeader)) {
         // These are highly likely to be attack packets. Should probably get a bigger warning.
         debugs(31, 2, "htcpHandle: msg size less than htcpHeader size from " << from);
         return;
     }
+
+    ++statCounter.htcp.pkts_recv;
 
     htcpHexdump("htcpHandle", buf, sz);
     memcpy(&htcpHdr, buf, sizeof(htcpHeader));
@@ -1415,18 +1417,11 @@ static void
 htcpRecv(int fd, void *)
 {
     static char buf[8192];
-
     /* Receive up to 8191 bytes, leaving room for a null */
-
-    const auto received = Comm::ReceiveFrom(fd, buf, sizeof(buf) - 1, 0);
-
-    if (!received || !received->length)
-        return; // XXX: Keep reading (or stop listening).
-
-    ++statCounter.htcp.pkts_recv;
-
-    // TODO: Remove cast after fixing htcpHandleMsg() and related APIs.
-    htcpHandleMsg(buf, received->length, const_cast<Ip::Address&>(received->from));
+    if (const auto received = Comm::ReceiveFrom(fd, buf, sizeof(buf) - 1, 0)) {
+        // TODO: Remove cast after fixing htcpHandleMsg() and related APIs.
+        htcpHandleMsg(buf, received->length, const_cast<Ip::Address&>(received->from));
+    }
 
     Comm::SetSelect(fd, COMM_SELECT_READ, htcpRecv, nullptr, 0);
 }
