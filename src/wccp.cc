@@ -197,11 +197,15 @@ wccpHandleUdp(int sock, void *)
     memset(&wccp_i_see_you, '\0', sizeof(wccp_i_see_you));
 
     const auto received = Comm::ReceiveFrom(sock, &wccp_i_see_you, sizeof(wccp_i_see_you), 0);
-    if (!received || received->length < sizeof(wccp_i_see_you))
+    if (!received)
         return;
 
     const auto len = received->length;
     const auto &from = received->from;
+
+    // XXX: When we received fewer bytes than sizeof(wccp_i_see_you), code below
+    // may accesses (zero-initialized) wccp_i_see_you data members that were not
+    // filled with received bytes. Note how `len` is not checked in code below.
 
     debugs(80, 3, "wccpHandleUdp: " << len << " bytes WCCP pkt from " << from <<
            ": type=" <<
