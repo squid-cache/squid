@@ -140,7 +140,7 @@ Comm::ReceiveFrom(const int fd, void * const buf, const size_t len, const int fl
     const auto lengthOrError = xrecvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
     const auto savedErrno = errno;
     if (lengthOrError < 0) {
-        const auto result = ReceivedFrom(int(savedErrno));
+        const auto result = ReceivedFrom(savedErrno);
         debugs(5, 3, "xrecvfrom(FD " << fd << ", " << len << ") failed: " << result);
         Ip::Address::FreeAddr(AI);
         return result;
