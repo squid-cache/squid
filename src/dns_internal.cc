@@ -1362,9 +1362,6 @@ idnsRead(int fd, void *)
         assert(N);
         ++(*N);
 
-        debugs(78, 3, "idnsRead: FD " << fd << ": received " << len << " bytes from " << from);
-
-        /* BUG: see above. Its here that it becomes apparent that the content of bugbypass is gone. */
         int nsn = idnsFromKnownNameserver(from);
 
         if (nsn >= 0) {
