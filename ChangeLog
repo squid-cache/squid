@@ -1,3 +1,13 @@
+Changes in squid-7.3 (28 Oct 2025):
+
+	- Regression Bug 5520: ERR_INVALID_URL for CONNECT host with leading digit
+	- Quit NTLM authenticate() on missing NTLM authorization header
+	- Fix Auth::User::absorb() IP list transfer logic
+	- Fix type mismatch in new/delete of addrinfo::ai_addr
+	- Fix libntlmauth string parsing on big-endian machines
+	- ... and some code cleanups
+	- ... and some CI improvements
+
 Changes in squid-7.2 (15 Oct 2025):
 
 	- Bug 3390: Proxy auth data visible to scripts
