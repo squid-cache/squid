@@ -776,7 +776,7 @@ AnyP::Uri::absolutePath() const
 {
     if (absolutePath_.isEmpty()) {
         // TODO: Encode each URI subcomponent in path_ as needed.
-        absolutePath_ = Encode(path(), PathChars());
+        absolutePath_ = path();
     }
 
     return absolutePath_;
