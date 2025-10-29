@@ -2327,7 +2327,9 @@ ftpTrySlashHack(Ftp::Gateway * ftpState)
     /* Build the new path */
     // XXX: Conversion to c-string effectively truncates where %00 was decoded
     safe_free(ftpState->filepath);
-    ftpState->filepath = SBufToCstring(ftpState->decodedRequestUriPath().value());
+    const auto path = SBufToCstring(ftpState->request->url.absolutePath());
+    rfc1738_unescape(path);
+    ftpState->filepath = path;
 
     /* And off we go */
     ftpGetFile(ftpState);
