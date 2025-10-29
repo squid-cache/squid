@@ -142,7 +142,6 @@ public:
 
     int checkAuth(const HttpHeader * req_hdr);
     void checkUrlpath();
-    std::optional<SBuf> decodedRequestUriPath() const;
     void buildTitleUrl();
     void writeReplyBody(const char *, size_t len);
     void completeForwarding() override;
@@ -2304,15 +2303,7 @@ ftpReadQuit(Ftp::Gateway * ftpState)
     ftpState->serverComplete();
 }
 
-/// absolute request URI path after successful decoding of all pct-encoding sequences
-std::optional<SBuf>
-Ftp::Gateway::decodedRequestUriPath() const
-{
-    return AnyP::Uri::Decode(request->url.absolutePath());
-}
-
 /// \prec !ftpState->flags.try_slash_hack
-/// \prec ftpState->decodedRequestUriPath()
 static void
 ftpTrySlashHack(Ftp::Gateway * ftpState)
 {
@@ -2384,15 +2375,13 @@ ftpFail(Ftp::Gateway *ftpState)
            " reply code " << code << "flags(" <<
            (ftpState->flags.isdir?"IS_DIR,":"") <<
            (ftpState->flags.try_slash_hack?"TRY_SLASH_HACK":"") << "), " <<
-           "decodable_filepath=" << bool(ftpState->decodedRequestUriPath()) << ' ' <<
            "mdtm=" << ftpState->mdtm << ", size=" << ftpState->theSize <<
            "slashhack=" << (slashHack? "T":"F"));
 
     /* Try the / hack to support "Netscape" FTP URL's for retrieving files */
     if (!ftpState->flags.isdir &&   /* Not a directory */
             !ftpState->flags.try_slash_hack && !slashHack && /* Not doing slash hack */
-            ftpState->mdtm <= 0 && ftpState->theSize < 0 && /* Not known as a file */
-            ftpState->decodedRequestUriPath()) {
+            ftpState->mdtm <= 0 && ftpState->theSize < 0) { /* Not known as a file */
 
         switch (ftpState->state) {
 
