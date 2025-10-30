@@ -224,15 +224,10 @@ AnyP::Uri::path() const
 const SBuf &
 AnyP::Uri::query() const
 {
-    /*
-     * RFC 3986 section 3.4:
-     *
-     *  query = *( pchar / "/" / "?" )
-     */
-
+    // FTP does not have a query section
     static SBuf empty;
     if (scheme_ == AnyP::PROTO_FTP)
-        return empty; // FTP does not have a query section
+        return empty;
 
     return query_;
 }
@@ -339,7 +334,7 @@ urlAppendDomain(char *host)
     return true;
 }
 
-/// returns whether whitespace has 'chopped' the URL apart.
+/// \returns whether whitespace has 'chopped' the URL apart.
 static bool
 StripAnyWsp(char *buf)
 {
