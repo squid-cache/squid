@@ -309,6 +309,7 @@ static EVH tunnelDelayedServerRead;
 static std::ostream &
 operator <<(std::ostream &os, const TunnelStateData::Connection &c)
 {
+    os << '{';
     os << c.side;
     if (c.conn)
         os << ' ' << c.conn->id;
@@ -318,6 +319,7 @@ operator <<(std::ostream &os, const TunnelStateData::Connection &c)
         os << " len=" << c.len;
     if (c.receivedEof)
         os << " rEOF";
+    os << '}';
     return os;
 }
 
@@ -687,7 +689,7 @@ TunnelStateData::readClient(char *, size_t len, Comm::Flag errcode, int xerrno)
 bool
 TunnelStateData::keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to)
 {
-    debugs(26, 3, "from={" << from << "}; writing to={" << to << "}");
+    debugs(26, 3, "from=" << from << "; writing to=" << to);
 
     /* I think this is to prevent free-while-in-a-callback behaviour
      * - RBC 20030229
@@ -968,7 +970,7 @@ tunnelDelayedServerRead(void *data)
 void
 TunnelStateData::copyRead(Connection &from, Connection &to, IOCB * const completion)
 {
-    debugs(26, 5, "from={" << from << "}; writing to={" << to << "}");
+    debugs(26, 5, "from=" << from << "; writing to=" << to);
 
     assert(from.len == 0);
     // If only the minimum permitted read size is going to be attempted
