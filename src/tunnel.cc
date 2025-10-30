@@ -311,7 +311,7 @@ operator <<(std::ostream &os, const TunnelStateData::Connection &c)
 {
     os << c.side;
     if (c.conn)
-        os << ' ' << *c.conn;
+        os << ' ' << c.conn->id;
     if (c.writer)
         os << " writing";
     if (c.len)
@@ -840,6 +840,7 @@ template <typename Method>
 void
 TunnelStateData::Connection::initConnection(const Comm::ConnectionPointer &aConn, Method method, const char *name, TunnelStateData *tunnelState)
 {
+    debugs(26, 3, *this << " uses " << aConn);
     Must(!Comm::IsConnOpen(conn));
     Must(!closer);
     Must(Comm::IsConnOpen(aConn));
