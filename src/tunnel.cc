@@ -313,10 +313,10 @@ operator <<(std::ostream &os, const TunnelStateData::Connection &c)
     os << c.side;
     if (c.conn)
         os << ' ' << c.conn->id;
+    if (c.len)
+        os << " buf=" << c.len;
     if (c.writer)
         os << " writing";
-    if (c.len)
-        os << " len=" << c.len;
     if (c.receivedEof)
         os << " rEOF";
     os << '}';
