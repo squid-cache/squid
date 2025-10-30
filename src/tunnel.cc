@@ -372,7 +372,7 @@ TunnelStateData::finishWritingAndDelete(Connection &remainingConnection)
     // move will unnecessary delay deleteThis().
 
     if (remainingConnection.writer) {
-        debugs(26, 5, "waiting to finish writing to " << remainingConnection.conn);
+        debugs(26, 5, "waiting to finish writing to " << remainingConnection);
         // the write completion callback must close its remainingConnection
         // after noticing that the other connection is gone
         return;
@@ -618,7 +618,7 @@ TunnelStateData::ReadServer(const Comm::ConnectionPointer &c, char *buf, size_t 
 void
 TunnelStateData::readServer(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
-    debugs(26, 3, server.conn << ", read " << len << " bytes, err=" << errcode);
+    debugs(26, 3, server << ", read " << len << " bytes, err=" << errcode);
     server.delayedLoops=0;
 
     /*
@@ -643,7 +643,7 @@ TunnelStateData::readServer(char *, size_t len, Comm::Flag errcode, int xerrno)
 void
 TunnelStateData::Connection::error(int const xerrno)
 {
-    debugs(50, debugLevelForError(xerrno), conn << ": read/write failure: " << xstrerr(xerrno));
+    debugs(50, debugLevelForError(xerrno), *this << ": read/write failure: " << xstrerr(xerrno));
 
     if (!ignoreErrno(xerrno))
         conn->close();
@@ -662,7 +662,7 @@ TunnelStateData::ReadClient(const Comm::ConnectionPointer &, char *buf, size_t l
 void
 TunnelStateData::readClient(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
-    debugs(26, 3, client.conn << ", read " << len << " bytes, err=" << errcode);
+    debugs(26, 3, client << ", read " << len << " bytes, err=" << errcode);
     client.delayedLoops=0;
 
     /*
@@ -765,7 +765,7 @@ TunnelStateData::WriteServerDone(const Comm::ConnectionPointer &, char *buf, siz
 void
 TunnelStateData::writeServerDone(char *, size_t len, Comm::Flag flag, int xerrno)
 {
-    debugs(26, 3, server.conn << ", " << len << " bytes written, flag=" << flag);
+    debugs(26, 3, server << ", " << len << " bytes written, flag=" << flag);
 
     if (flag == Comm::ERR_CLOSING)
         return;
@@ -867,7 +867,7 @@ TunnelStateData::Connection::noteEof()
 void
 TunnelStateData::writeClientDone(char *, size_t len, Comm::Flag flag, int xerrno)
 {
-    debugs(26, 3, client.conn << ", " << len << " bytes written, flag=" << flag);
+    debugs(26, 3, client << ", " << len << " bytes written, flag=" << flag);
 
     if (flag == Comm::ERR_CLOSING)
         return;
@@ -1064,7 +1064,7 @@ static void
 tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::Flag flag, int, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
-    debugs(26, 3, conn << ", flag=" << flag);
+    debugs(26, 3, tunnelState->client << ", flag=" << flag);
     tunnelState->client.writer = nullptr;
 
     if (flag != Comm::OK) {
