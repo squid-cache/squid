@@ -131,10 +131,7 @@ public:
     {
 
     public:
-        Connection() : len (0), buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(nullptr), delayedLoops(0),
-            dirty(false),
-            readPending(nullptr), readPendingFunc(nullptr) {}
-
+        explicit Connection(const char *aSide);
         ~Connection();
 
         /// initiates Comm::Connection ownership, including closure monitoring
@@ -143,6 +140,9 @@ public:
 
         /// reacts to the external closure of our connection
         void noteClosure();
+
+        /// reacts to a successful zero-size read(2)
+        void noteEof();
 
         int bytesWanted(int lower=0, int upper = INT_MAX) const;
         void bytesIn(int const &);
@@ -158,6 +158,10 @@ public:
         /// writes 'b' buffer, setting the 'writer' member to 'callback'.
         void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
         int len;
+
+        /// the role of the agent we are communicating with (for debugging)
+        const char * const side;
+
         char *buf;
         AsyncCall::Pointer writer; ///< pending Comm::Write callback
         uint64_t *size_ptr;      /* pointer to size in an ConnStateData for logging */
@@ -166,6 +170,8 @@ public:
         uint8_t delayedLoops; ///< how many times a read on this connection has been postponed.
 
         bool dirty; ///< whether write() has been called (at least once)
+
+        bool receivedEof = false; ///< whether read() has returned zero bytes
 
         // XXX: make these an AsyncCall when event API can handle them
         TunnelStateData *readPending;
@@ -214,7 +220,7 @@ public:
     /// Measures time spent on selecting and communicating with peers.
     PeeringActivityTimer peeringTimer;
 
-    void copyRead(Connection &from, IOCB *completion);
+    void copyRead(Connection &from, Connection &to, IOCB *completion);
 
     /// continue to set up connection to a peer, going async for SSL peers
     void connectToPeer(const Comm::ConnectionPointer &);
@@ -299,6 +305,21 @@ static CLCB tunnelClientClosed;
 static CTCB tunnelTimeout;
 static EVH tunnelDelayedClientRead;
 static EVH tunnelDelayedServerRead;
+
+static std::ostream &
+operator <<(std::ostream &os, const TunnelStateData::Connection &c)
+{
+    os << c.side;
+    if (c.conn)
+        os << ' ' << *c.conn;
+    if (c.writer)
+        os << " writing";
+    if (c.len)
+        os << " len=" << c.len;
+    if (c.receivedEof)
+        os << " rEOF";
+    return os;
+}
 
 /// TunnelStateData::serverClosed() wrapper
 static void
@@ -400,6 +421,8 @@ guaranteedRequest(const ClientHttpRequest * const cr)
 }
 
 TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
+    client("client"),
+    server("server"),
     startTime(squid_curtime),
     destinations(new ResolvedPeers()),
     destinationsFound(false),
@@ -439,6 +462,18 @@ TunnelStateData::~TunnelStateData()
     xfree(url);
     cancelStep("~TunnelStateData");
     delete savedError;
+}
+
+TunnelStateData::Connection::Connection(const char * const aSide):
+    len(0),
+    side(aSide),
+    buf(static_cast<char *>(xmalloc(SQUID_TCP_SO_RCVBUF))),
+    size_ptr(nullptr),
+    delayedLoops(0),
+    dirty(false),
+    readPending(nullptr),
+    readPendingFunc(nullptr)
+{
 }
 
 TunnelStateData::Connection::~Connection()
@@ -652,7 +687,7 @@ TunnelStateData::readClient(char *, size_t len, Comm::Flag errcode, int xerrno)
 bool
 TunnelStateData::keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to)
 {
-    debugs(26, 3, "from={" << from.conn << "}, to={" << to.conn << "}");
+    debugs(26, 3, "from={" << from << "}; writing to={" << to << "}");
 
     /* I think this is to prevent free-while-in-a-callback behaviour
      * - RBC 20030229
@@ -675,21 +710,36 @@ TunnelStateData::keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, 
         commSetConnTimeout(to.conn, Config.Timeout.read, timeoutCall);
     }
 
-    if (errcode)
+    if (errcode) {
         from.error (xerrno);
-    else if (len == 0 || !Comm::IsConnOpen(to.conn)) {
-        debugs(26, 3, "Nothing to write or client gone. Terminate the tunnel.");
+        return false;
+    }
+
+    if (len == 0) {
+        debugs(26, 3, "closing " << from << " after a zero-byte read");
         from.conn->close();
 
         /* Only close the remote end if we've finished queueing data to it */
         if (from.len == 0 && Comm::IsConnOpen(to.conn) ) {
             to.conn->close();
         }
-    } else if (cbdataReferenceValid(this)) {
-        return true;
+        return false;
     }
 
-    return false;
+    // Stop reading from source if the destination is gone. This both increases
+    // `from` chances to realize what happened at the `to` end and terminates an
+    // otherwise potentially infinite stream of incoming `from` bytes.
+    if (!Comm::IsConnOpen(to.conn)) {
+        debugs(26, 3, "closing " << from << " because " << to << " is gone");
+        from.conn->close();
+        return false;
+    }
+
+    if (!cbdataReferenceValid(this))
+        return false;
+
+    Assure(len > 0);
+    return true;
 }
 
 void
@@ -801,10 +851,17 @@ TunnelStateData::Connection::initConnection(const Comm::ConnectionPointer &aConn
 void
 TunnelStateData::Connection::noteClosure()
 {
-    debugs(26, 3, conn);
+    debugs(26, 3, *this);
     conn = nullptr;
     closer = nullptr;
     writer = nullptr; // may already be nil
+}
+
+void
+TunnelStateData::Connection::noteEof()
+{
+    debugs(26, 3, "from " << *this);
+    receivedEof = true;
 }
 
 void
@@ -817,7 +874,7 @@ TunnelStateData::writeClientDone(char *, size_t len, Comm::Flag flag, int xerrno
 
     /* Error? */
     if (flag != Comm::OK) {
-        debugs(26, 4, "from-client read failed: " << xerrno);
+        debugs(26, 4, "to-client write failed: " << xerrno);
         client.error(xerrno); // may call comm_close
         return;
     }
@@ -887,7 +944,7 @@ tunnelDelayedClientRead(void *data)
     tunnel->client.readPending = nullptr;
     static uint64_t counter=0;
     debugs(26, 7, "Client read(2) delayed " << ++counter << " times");
-    tunnel->copyRead(tunnel->client, TunnelStateData::ReadClient);
+    tunnel->copyRead(tunnel->client, tunnel->server, TunnelStateData::ReadClient);
     CodeContext::Reset(savedContext);
 }
 
@@ -903,13 +960,15 @@ tunnelDelayedServerRead(void *data)
     tunnel->server.readPending = nullptr;
     static uint64_t counter=0;
     debugs(26, 7, "Server read(2) delayed " << ++counter << " times");
-    tunnel->copyRead(tunnel->server, TunnelStateData::ReadServer);
+    tunnel->copyRead(tunnel->server, tunnel->client, TunnelStateData::ReadServer);
     CodeContext::Reset(savedContext);
 }
 
 void
-TunnelStateData::copyRead(Connection &from, IOCB *completion)
+TunnelStateData::copyRead(Connection &from, Connection &to, IOCB * const completion)
 {
+    debugs(26, 5, "from={" << from << "}; writing to={" << to << "}");
+
     assert(from.len == 0);
     // If only the minimum permitted read size is going to be attempted
     // then we schedule an event to try again in a few I/O cycles.
@@ -933,6 +992,7 @@ void
 TunnelStateData::copyClientBytes()
 {
     if (preReadClientData.length()) {
+        debugs(26, 7, "pre-read bytes: " << preReadClientData.length());
         size_t copyBytes = preReadClientData.length() > SQUID_TCP_SO_RCVBUF ? SQUID_TCP_SO_RCVBUF : preReadClientData.length();
         memcpy(client.buf, preReadClientData.rawContent(), copyBytes);
         preReadClientData.consume(copyBytes);
@@ -940,13 +1000,14 @@ TunnelStateData::copyClientBytes()
         if (keepGoingAfterRead(copyBytes, Comm::OK, 0, client, server))
             copy(copyBytes, client, server, TunnelStateData::WriteServerDone);
     } else
-        copyRead(client, ReadClient);
+        copyRead(client, server, ReadClient);
 }
 
 void
 TunnelStateData::copyServerBytes()
 {
     if (preReadServerData.length()) {
+        debugs(26, 7, "pre-read bytes: " << preReadServerData.length());
         size_t copyBytes = preReadServerData.length() > SQUID_TCP_SO_RCVBUF ? SQUID_TCP_SO_RCVBUF : preReadServerData.length();
         memcpy(server.buf, preReadServerData.rawContent(), copyBytes);
         preReadServerData.consume(copyBytes);
@@ -954,7 +1015,7 @@ TunnelStateData::copyServerBytes()
         if (keepGoingAfterRead(copyBytes, Comm::OK, 0, server, client))
             copy(copyBytes, server, client, TunnelStateData::WriteClientDone);
     } else
-        copyRead(server, ReadServer);
+        copyRead(server, client, ReadServer);
 }
 
 /**
