@@ -485,6 +485,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                 }
                 *dst = '\0';
                 chopped = StripAnyWsp(urlpath);
+                rfc1738_unescape(urlpath);
             } else {
                 // We should be looking at path-abempty. relative-path is not supported (yet).
                 urlpath[0] = '/';
@@ -508,6 +509,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                     *foundQuery = '\0';
                 else
                     chopped = StripAnyWsp(foundQuery);
+                rfc1738_unescape(foundQuery);
             }
             if (i > l)
                 return false;
