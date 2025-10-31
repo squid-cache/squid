@@ -311,14 +311,26 @@ operator <<(std::ostream &os, const TunnelStateData::Connection &c)
 {
     os << '{';
     os << c.side;
+
     if (c.conn)
         os << ' ' << c.conn->id;
+
     if (c.len)
         os << " buf=" << c.len;
+
     if (c.writer)
         os << " writing";
+    else if (!c.dirty)
+        os << " clean";
+
+    if (c.delayedLoops)
+        os << " delayedLoops=" << c.delayedLoops;
+    if (c.readPending)
+        os << " delaying";
+
     if (c.receivedEof)
         os << " rEOF";
+
     os << '}';
     return os;
 }
