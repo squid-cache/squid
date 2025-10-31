@@ -703,23 +703,23 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                 break;
 
             case 'm': {
-                char *secondsEnd;
+                char *secondsEnd = nullptr;
                 const auto secondsStart = ct + 1;
                 const auto seconds = strtol(secondsStart, &secondsEnd, 10); // zero on errors
 
-                if (seconds <= 0 || seconds > std::numeric_limits<time_t>::max())
+                if (secondsEnd == secondsStart) // no digits consumed
+                    break;
+                if (*secondsEnd && *secondsEnd != ',') // not ',' and not NUL
+                    break;
+                if (seconds <= 0 || seconds > (long)std::numeric_limits<time_t>::max()) // reject invalid seconds
                     break;
 
-                const auto tm = static_cast<time_t>(seconds);
-
-                Assure(secondsEnd > secondsStart); // positive `seconds` implies that we saw at least one digit
-
-                if (const auto cts = std::ctime(&tm)) {
+                const time_t tm = static_cast<time_t>(seconds);
+                if (const char *cts = std::ctime(&tm)) {
                     xfree(p->date); // TODO: properly handle multiple p->name occurrences
                     p->date = xstrndup(cts, strcspn(cts, "\n"));
                 }
-            }
-            break;
+                break;
 
             case '/':
                 p->type = 'd';
