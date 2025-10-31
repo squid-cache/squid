@@ -614,7 +614,7 @@ Fs::Ufs::UFSSwapDir::createDirectory(const char *aPath, int should_exist)
         } else {
             fatalf("Swap directory %s is not a directory.", aPath);
         }
-    } else if (0 == mkdir(aPath, 0755)) {
+    } else if (0 == mkdir(aPath, 0750)) {
         debugs(47, (should_exist ? DBG_IMPORTANT : 3), aPath << " created");
         created = 1;
     } else {
@@ -1338,7 +1338,7 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
         int xerrno = errno;
         if (xerrno == ENOENT) {
             debugs(36, DBG_CRITICAL, MYNAME << "WARNING: Creating " << p1);
-            if (mkdir(p1.c_str(), 0777) == 0)
+            if (mkdir(p1.c_str(), 0750) == 0)
                 return 0;
         }
 
