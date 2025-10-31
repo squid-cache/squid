@@ -719,7 +719,8 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                     xfree(p->date); // TODO: properly handle multiple p->name occurrences
                     p->date = xstrndup(cts, strcspn(cts, "\n"));
                 }
-                break;
+            }
+            break;
 
             case '/':
                 p->type = 'd';
