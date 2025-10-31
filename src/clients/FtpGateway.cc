@@ -712,7 +712,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
                 const auto tm = static_cast<time_t>(seconds);
 
-                Assure(secondsEnd > secondsStart); // saw at least greater digit
+                Assure(secondsEnd > secondsStart); // positive `seconds` implies that we saw at least one digit
 
                 if (const auto cts = std::ctime(&tm)) {
                     xfree(p->date); // TODO: properly handle multiple p->name occurrences
