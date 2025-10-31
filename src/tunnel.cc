@@ -159,7 +159,8 @@ public:
         void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
         int len;
 
-        /// the role of the agent we are communicating with (for debugging)
+        /// The role of the agent we are communicating with.
+        /// This string literal is only used for debugging.
         const char * const side;
 
         char *buf;
