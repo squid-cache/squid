@@ -707,15 +707,15 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                 const auto secondsStart = ct + 1;
                 const auto seconds = strtol(secondsStart, &secondsEnd, 10); // zero on errors
 
-                if (secondsEnd == secondsStart) // no digits consumed
-                    break;
-                if (*secondsEnd && *secondsEnd != ',') // not ',' and not NUL
-                    break;
-                if (seconds <= 0 || seconds > (long)std::numeric_limits<time_t>::max()) // reject invalid seconds
-                    break;
+                if (secondsEnd == secondsStart)
+                    break; // missing seconds value
+                if (*secondsEnd && *secondsEnd != ',')
+                    break; // trailing garbage after the seconds value
+                if (seconds <= 0 || seconds > (long)std::numeric_limits<time_t>::max())
+                    break; // invalid seconds value
 
-                const time_t tm = static_cast<time_t>(seconds);
-                if (const char *cts = std::ctime(&tm)) {
+                const auto tm = static_cast<time_t>(seconds);
+                if (const auto cts = std::ctime(&tm)) {
                     xfree(p->date); // TODO: properly handle multiple p->name occurrences
                     p->date = xstrndup(cts, strcspn(cts, "\n"));
                 }
