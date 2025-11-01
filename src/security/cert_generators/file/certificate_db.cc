@@ -59,20 +59,13 @@ void Ssl::Lock::lock()
         throw TextException(ToSBuf("Failed to open file ", filename), Here());
 
 #if _SQUID_WINDOWS_
-    if (!LockFile(hFile, 0, 0, 1, 0)) {
-        CloseHandle(hFile);
-        hFile = INVALID_HANDLE_VALUE;
+    if (!LockFile(hFile, 0, 0, 1, 0))
 #elif _SQUID_SOLARIS_
-    if (lockf(fd, F_LOCK, 0) != 0) {
-        xclose(fd);
-        fd = -1;
+    if (lockf(fd, F_LOCK, 0) != 0)
 #else
-    if (flock(fd, LOCK_EX) != 0) {
-        xclose(fd);
-        fd = -1;
+    if (flock(fd, LOCK_EX) != 0)
 #endif
         throw TextException(ToSBuf("Failed to get a lock of ", filename), Here());
-    }
 }
 
 void Ssl::Lock::unlock()
