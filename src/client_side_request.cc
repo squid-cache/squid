@@ -106,11 +106,6 @@ static void checkFailureRatio(err_type, hier_code);
 
 ClientRequestContext::~ClientRequestContext()
 {
-    /*
-     * Release our "lock" on our parent, ClientHttpRequest, if we
-     * still have one
-     */
-
     cbdataReferenceDone(http);
 
     delete error;
@@ -268,21 +263,6 @@ ClientHttpRequest::~ClientHttpRequest()
     dlinkDelete(&active, &ClientActiveRequests);
 }
 
-bool
-ClientRequestContext::httpStateIsValid()
-{
-    ClientHttpRequest *http_ = http;
-
-    if (cbdataReferenceValid(http_))
-        return true;
-
-    http = nullptr;
-
-    cbdataReferenceDone(http_);
-
-    return false;
-}
-
 #if FOLLOW_X_FORWARDED_FOR
 /**
  * clientFollowXForwardedForCheck() checks the content of X-Forwarded-For:
@@ -302,10 +282,6 @@ static void
 clientFollowXForwardedForCheck(Acl::Answer answer, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *) data;
-
-    if (!calloutContext->httpStateIsValid())
-        return;
-
     ClientHttpRequest *http = calloutContext->http;
     HttpRequest *request = http->request;
 
@@ -607,10 +583,6 @@ void
 clientAccessCheckDoneWrapper(Acl::Answer answer, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *) data;
-
-    if (!calloutContext->httpStateIsValid())
-        return;
-
     calloutContext->clientAccessCheckDone(answer);
 }
 
@@ -1024,10 +996,6 @@ void
 clientRedirectDoneWrapper(void *data, const Helper::Reply &result)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *)data;
-
-    if (!calloutContext->httpStateIsValid())
-        return;
-
     calloutContext->clientRedirectDone(result);
 }
 
@@ -1035,10 +1003,6 @@ void
 clientStoreIdDoneWrapper(void *data, const Helper::Reply &result)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *)data;
-
-    if (!calloutContext->httpStateIsValid())
-        return;
-
     calloutContext->clientStoreIdDone(result);
 }
 
@@ -1225,10 +1189,6 @@ static void
 checkNoCacheDoneWrapper(Acl::Answer answer, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *) data;
-
-    if (!calloutContext->httpStateIsValid())
-        return;
-
     calloutContext->checkNoCacheDone(answer);
 }
 
@@ -1321,18 +1281,12 @@ static void
 sslBumpAccessCheckDoneWrapper(Acl::Answer answer, void *data)
 {
     ClientRequestContext *calloutContext = static_cast<ClientRequestContext *>(data);
-
-    if (!calloutContext->httpStateIsValid())
-        return;
     calloutContext->sslBumpAccessCheckDone(answer);
 }
 
 void
 ClientRequestContext::sslBumpAccessCheckDone(const Acl::Answer &answer)
 {
-    if (!httpStateIsValid())
-        return;
-
     const Ssl::BumpMode bumpMode = answer.allowed() ?
                                    static_cast<Ssl::BumpMode>(answer.kind) : Ssl::bumpSplice;
     http->sslBumpNeed(bumpMode); // for processRequest() to bump if needed
@@ -1409,8 +1363,6 @@ SslBumpEstablish(const Comm::ConnectionPointer &, char *, size_t, Comm::Flag err
 {
     ClientHttpRequest *r = static_cast<ClientHttpRequest*>(data);
     debugs(85, 5, "responded to CONNECT: " << r << " ? " << errflag);
-
-    assert(r && cbdataReferenceValid(r));
     r->sslBumpEstablish(errflag);
 }
 
@@ -1612,11 +1564,6 @@ ClientHttpRequest::clearRequest()
  * Note that ClientRequestContext is created before the first call
  * to doCallouts().
  *
- * If one of the callouts notices that ClientHttpRequest is no
- * longer valid, it should call cbdataReferenceDone() so that
- * ClientHttpRequest's reference count goes to zero and it will get
- * deleted.  ClientHttpRequest will then delete ClientRequestContext.
- *
  * Note that we set the _done flags here before actually starting
  * the callout.  This is strictly for convenience.
  */
@@ -1768,7 +1715,6 @@ ClientHttpRequest::doCallouts()
         }
     }
 
-    cbdataReferenceDone(calloutContext->http);
     delete calloutContext;
     calloutContext = nullptr;
 
@@ -1872,7 +1818,6 @@ ClientHttpRequest::startAdaptation(const Adaptation::ServiceGroupPointer &g)
 void
 ClientHttpRequest::noteAdaptationAnswer(const Adaptation::Answer &answer)
 {
-    assert(cbdataReferenceValid(this));     // indicates bug
     clearAdaptation(virginHeadSource);
     assert(!adaptedBodySource);
 

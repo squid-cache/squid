@@ -33,7 +33,6 @@ public:
     ClientRequestContext(ClientHttpRequest *);
     ~ClientRequestContext() override;
 
-    bool httpStateIsValid();
     void hostHeaderVerify();
     void hostHeaderIpVerify(const ipcache_addrs *, const Dns::LookupDetails &);
     void hostHeaderVerifyFailed(const char *A, const char *B);
