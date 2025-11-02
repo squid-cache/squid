@@ -303,7 +303,7 @@ idns_query::makeNameToLookup()
             continue; // skip this searchpath
         }
         strcat(name, ".");
-        strcat(name, searchpath[q->domain].domain);
+        strcat(name, searchpath[domain].domain);
         debugs(78, 3, "searchpath used for " << name);
         ++domain;
         return; // try using this FQDN
