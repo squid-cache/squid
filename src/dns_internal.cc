@@ -173,29 +173,6 @@ InstanceIdDefinitions(idns_query,  "dns");
 
 CBDATA_CLASS_INIT(idns_query);
 
-void
-idns_query::makeNameToLookup()
-{
-    strcpy(name, orig); // default is always hostname-only.
-
-    // try to find the next suitable suffix to append
-    const auto prefixLen = strlen(orig) + 1 /* the joiner '.' */;
-    while (domain < npc) {
-        const auto need = prefixLen + strlen(searchpath[domain].domain);
-        if (need < NS_MAXDNAME) {
-            debugs(23, 3, "searchpath FQDN for '" << orig << "." << searchpath[domain].domain << "' too long. skip.");
-            ++domain;
-            continue; // skip this searchpath
-        }
-        strcat(name, ".");
-        strcat(name, searchpath[q->domain].domain);
-        debugs(78, 3, "searchpath used for " << name);
-        ++domain;
-        return; // try using this FQDN
-    }
-    // else use the default (orig only)
-}
-
 class nsvc
 {
     CBDATA_CLASS(nsvc);
@@ -310,6 +287,29 @@ static CLCB idnsVCClosed;
 static unsigned short idnsQueryID(void);
 static void idnsSendSlaveAAAAQuery(idns_query *q);
 static void idnsCallbackOnEarlyError(IDNSCB *callback, void *cbdata, const char *error);
+
+void
+idns_query::makeNameToLookup()
+{
+    strcpy(name, orig); // default is always hostname-only.
+
+    // try to find the next suitable suffix to append
+    const auto prefixLen = strlen(orig) + 1 /* the joiner '.' */;
+    while (domain < npc) {
+        const auto need = prefixLen + strlen(searchpath[domain].domain);
+        if (need < NS_MAXDNAME) {
+            debugs(23, 3, "searchpath FQDN for '" << orig << "." << searchpath[domain].domain << "' too long. skip.");
+            ++domain;
+            continue; // skip this searchpath
+        }
+        strcat(name, ".");
+        strcat(name, searchpath[q->domain].domain);
+        debugs(78, 3, "searchpath used for " << name);
+        ++domain;
+        return; // try using this FQDN
+    }
+    // else use the default (orig only)
+}
 
 static void
 idnsCheckMDNS(idns_query *q)
