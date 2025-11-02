@@ -128,6 +128,12 @@ public:
         cbdataReferenceDone(callback_data);
     }
 
+    /// Generate 'name' from requested hostname 'orig' and configured 'searchpath'.
+    /// Subsequent calls will generate alternative FQDN from the searchpath sequence.
+    /// Skips any FQDN which exceed NS_MAXDNAME.
+    void makeNameToLookup();
+
+public:
     hash_link hash;
     rfc1035_query query;
     char buf[RESOLV_BUFSZ];
@@ -166,6 +172,29 @@ public:
 InstanceIdDefinitions(idns_query,  "dns");
 
 CBDATA_CLASS_INIT(idns_query);
+
+void
+idns_query::makeNameToLookup()
+{
+    strcpy(name, orig); // default is always hostname-only.
+
+    // try to find the next suitable suffix to append
+    const auto prefixLen = strlen(orig) + 1 /* the joiner '.' */;
+    while (domain < npc) {
+        const auto need = prefixLen + strlen(searchpath[domain].domain);
+        if (need < NS_MAXDNAME) {
+            debugs(23, 3, "searchpath FQDN for '" << orig << "." << searchpath[domain].domain << "' too long. skip.");
+            ++domain;
+            continue; // skip this searchpath
+        }
+        strcat(name, ".");
+        strcat(name, searchpath[q->domain].domain);
+        debugs(78, 3, "searchpath used for " << name);
+        ++domain;
+        return; // try using this FQDN
+    }
+    // else use the default (orig only)
+}
 
 class nsvc
 {
@@ -1263,25 +1292,13 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
         // the record type.
         if (q->rcode == 3 && !q->master && q->do_searchpath && q->attempt < MAX_ATTEMPT) {
             assert(nullptr == message->answer);
-            strcpy(q->name, q->orig);
 
             debugs(78, 3, "idnsGrokReply: Query result: NXDOMAIN - " << q->name );
 
-            if (q->domain < npc) {
-                const auto need = strlen(q->name) + 1 + strlen(searchpath[q->domain].domain);
-                if (need > NS_MAXDNAME) {
-                    debugs(23, DBG_IMPORTANT, "SECURITY ALERT: searchpath name for '" << q->name << "' too long.");
-                    rfc1035MessageDestroy(&message);
-                    idnsCallback(q, "searchpath name too long");
-                    return;
-                }
-                strcat(q->name, ".");
-                strcat(q->name, searchpath[q->domain].domain);
-                debugs(78, 3, "idnsGrokReply: searchpath used for " << q->name);
-                ++ q->domain;
-            } else {
+            q->makeNameToLookup();
+            // when all searchpath have been checked, count the search attempt as completed.
+            if (q->domain >= npc)
                 ++ q->attempt;
-            }
 
             rfc1035MessageDestroy(&message);
 
@@ -1786,21 +1803,9 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     }
 
     strcpy(q->orig, name);
-    strcpy(q->name, q->orig);
 
-    if (q->do_searchpath && nd < ndots) {
-        q->domain = 0;
-        const auto need = strlen(q->name) + 1 + strlen(searchpath[q->domain].domain);
-        if (need > NS_MAXDNAME) {
-            debugs(23, DBG_IMPORTANT, "SECURITY ALERT: searchpath name for '" << q->name << "' too long.");
-            idnsCallbackOnEarlyError(callback, data, "searchpath name too long");
-            delete q;
-            return;
-        }
-        strcat(q->name, ".");
-        strcat(q->name, searchpath[q->domain].domain);
-        debugs(78, 3, "idnsALookup: searchpath used for " << q->name);
-    }
+    q->domain = (!q->do_searchpath || nd >= ndots) ? npc : 0;
+    q->makeNameToLookup();
 
     q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query);
 
