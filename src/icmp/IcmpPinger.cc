@@ -51,11 +51,13 @@ IcmpPinger::Open(void)
 
     WSADATA wsaData;
     WSAPROTOCOL_INFO wpi;
-    char buf[sizeof(wpi)];
+    char buf[sizeof(wpi)+1];
     int x;
 
     struct sockaddr_in PS;
     int xerrno;
+
+    static_assert(sizeof(WSAPROTOCOL_INFO) >= sizeof(PS), "PS must fit into wpi-sized buf");
 
     WSAStartup(2, &wsaData);
     atexit(Win32SockCleanup);
@@ -114,7 +116,7 @@ IcmpPinger::Open(void)
 
     xwrite(1, "OK\n", 3);
     memset(buf, 0, sizeof(buf));
-    x = xrecv(icmp_sock, buf, sizeof(buf), 0);
+    x = xrecv(icmp_sock, buf, sizeof(buf)-1, 0);
 
     if (x < 3) {
         xerrno = errno;
@@ -122,7 +124,7 @@ IcmpPinger::Open(void)
         return -1;
     }
 
-    x = xsend(icmp_sock, buf, strlen(buf), 0);
+    x = xsend(icmp_sock, buf, x, 0);
     xerrno = errno;
 
     if (x < 3 || strncmp("OK\n", buf, 3)) {
@@ -152,10 +154,11 @@ void
 IcmpPinger::Close(void)
 {
 #if _SQUID_WINDOWS_
-
-    shutdown(icmp_sock, SD_BOTH);
-    xclose(icmp_sock);
-    icmp_sock = -1;
+    if (icmp_sock >= 0) {
+        shutdown(icmp_sock, SD_BOTH);
+        xclose(icmp_sock);
+        icmp_sock = -1;
+    }
 #endif
 
     /* also shutdown the helper engines */

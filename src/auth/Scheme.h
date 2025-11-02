@@ -65,9 +65,6 @@ public:
 
 protected:
     bool initialised;
-
-private:
-    static std::vector<Scheme::Pointer> *_Schemes;
 };
 
 } // namespace Auth

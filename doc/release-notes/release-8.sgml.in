@@ -46,6 +46,17 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<p>Removed <em>ntlm_smb_lm_auth</em> NTLM authentication helper.
 	   Use the <em>ntlm_auth</em> helper from the Samba project instead.
 
+	<p>Updated <em>ext_ldap_group_acl</em> external ACL helper:
+	   now requires <tt>-B</tt> (user base DN) and <tt>-F</tt>
+	   (user search filter) to locate the user prior to evaluating
+	   group membership. Administrators who omitted one or both options
+	   must update their configurations to continue using this helper.
+
+	<p>Fixed <em>ext_ldap_group_acl</em> handling of LDAP referrals and
+	   placeholders: corrected referrals option processing and aligned the
+	   <tt>%v</tt> placeholder to mean the requested group name, matching
+	   the helper documentation/help-text.
+
 </descrip>
 
 <sect1>Cache Manager changes
@@ -94,6 +105,21 @@ This section gives an account of those changes in three categories:
 	<em>transaction_initiator</em> ACLs. After removing support for
 	<em>src_as</em> and <em>dst_as</em> ACLs, Squid no longer initiates ASN
 	lookups.
+
+	<tag>client_ip_max_connections</tag>
+
+	<p>Fixed off-by-one enforcement. Squid now allows at most <em>N</em>
+	concurrent connections per client IP (not <em>N</em>+1), where <em>N</em>
+	is the configured directive value. Deployments that relied on the extra
+	connection should increase the configured limit by one to preserve
+	previous behavior.
+
+	<tag>htcp_clr_access</tag>
+
+	<p>HTCP CLR requests denied by this directive are no longer forwarded to
+	cache_peers that are configured to receive forwarded CLR requests. Only
+	HTCP CLR requests allowed by this directive are forwarded to those
+	cache_peers.
 
 </descrip>
 

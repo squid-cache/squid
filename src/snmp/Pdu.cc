@@ -121,7 +121,7 @@ Snmp::Pdu::clearVars()
     while (var != nullptr) {
         variable_list* tmp = var;
         var = var->next_variable;
-        snmp_var_free(tmp);
+        delete static_cast<Var*>(tmp);
     }
     variables = nullptr;
 }
