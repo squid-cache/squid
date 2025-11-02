@@ -158,7 +158,7 @@ void Ssl::CertificateDb::Row::setValue(size_t cell, char const * value)
 {
     assert(cell < width);
     if (row[cell]) {
-        free(row[cell]);
+        OPENSSL_free(row[cell]);
     }
     if (value) {
         row[cell] = static_cast<char *>(OPENSSL_malloc(sizeof(char) * (strlen(value) + 1)));
