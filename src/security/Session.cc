@@ -13,9 +13,11 @@
 #include "base/RunnersRegistry.h"
 #include "CachePeer.h"
 #include "debug/Stream.h"
+#include "error/SysErrorDetail.h"
 #include "fd.h"
 #include "fde.h"
 #include "ipc/MemMap.h"
+#include "security/Io.h"
 #include "security/Session.h"
 #include "SquidConfig.h"
 #include "ssl/bio.h"
@@ -36,7 +38,18 @@ tls_read_method(int fd, char *buf, int len)
     debugs(83, 3, "started for session=" << (void*)session);
 
 #if USE_OPENSSL
+    // TODO: Export and use Security::PrepForIo() instead.
+    Security::ForgetErrors();
+    errno = 0;
+
     int i = SSL_read(session, buf, len);
+    const auto savedErrno = errno; // may not be set
+
+    if (i <= 0) {
+        debugs(83, 3, "SSL_get_error(FD " << fd << ", " << i << ") is " << SSL_get_error(session, i) << ReportSysError(savedErrno));
+        Security::ForgetErrors(); // will debugs() errors before forgetting them
+        errno = savedErrno;
+    }
 #elif HAVE_LIBGNUTLS
     int i = gnutls_record_recv(session, buf, len);
 #endif
