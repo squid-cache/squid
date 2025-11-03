@@ -38,12 +38,9 @@ tls_read_method(int fd, char *buf, int len)
     debugs(83, 3, "started for session=" << (void*)session);
 
 #if USE_OPENSSL
-    // TODO: Export and use Security::PrepForIo() instead.
-    Security::ForgetErrors();
-    errno = 0;
-
+    Security::PrepForIo();
     int i = SSL_read(session, buf, len);
-    const auto savedErrno = errno; // may not be set
+    const auto savedErrno = errno; // zero if SSL_read() does not set it
 
     if (i <= 0) {
         debugs(83, 3, "SSL_get_error(FD " << fd << ", " << i << ") is " << SSL_get_error(session, i) << ReportSysError(savedErrno));
