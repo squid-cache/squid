@@ -819,7 +819,7 @@ process_request(cachemgr_request * req)
     }
 
     if (!check_target_acl(req->hostname, req->port)) {
-        snprintf(buf, sizeof(buf), "target %s:%d not allowed in cachemgr.conf\n", req->hostname, req->port);
+        snprintf(buf, sizeof(buf), "target host not allowed in cachemgr.conf\n");
         error_html(buf);
         return 1;
     }
