@@ -37,8 +37,9 @@ tls_read_method(int fd, char *buf, int len)
     auto session = fd_table[fd].ssl.get();
     debugs(83, 5, "started for session=" << static_cast<void*>(session) << " FD " << fd << " buf.len=" << len);
 
-#if USE_OPENSSL
     Security::PrepForIo();
+
+#if USE_OPENSSL
     int i = SSL_read(session, buf, len);
     const auto savedErrno = errno; // zero if SSL_read() does not set it
 
@@ -49,6 +50,12 @@ tls_read_method(int fd, char *buf, int len)
     }
 #elif HAVE_LIBGNUTLS
     int i = gnutls_record_recv(session, buf, len);
+    const auto savedErrno = errno; // zero if gnutls_record_recv() does not set it
+
+    if (i < 0) {
+        debugs(83, 3, "gnutls_record_recv(FD " << fd << ") error(" << i << "): " << Security::ErrorString(i) << ReportSysError(savedErrno));
+        errno = savedErrno;
+    }
 #endif
 
     if (i > 0) {
@@ -83,8 +90,9 @@ tls_write_method(int fd, const char *buf, int len)
     }
 #endif
 
-#if USE_OPENSSL
     Security::PrepForIo();
+
+#if USE_OPENSSL
     int i = SSL_write(session, buf, len);
     const auto savedErrno = errno; // zero if SSL_write() does not set it
 
@@ -95,6 +103,12 @@ tls_write_method(int fd, const char *buf, int len)
     }
 #elif HAVE_LIBGNUTLS
     int i = gnutls_record_send(session, buf, len);
+    const auto savedErrno = errno; // zero if gnutls_record_send() does not set it
+
+    if (i < 0) {
+        debugs(83, 3, "gnutls_record_send(FD " << fd << ") error(" << i << "): " << Security::ErrorString(i) << ReportSysError(savedErrno));
+        errno = savedErrno;
+    }
 #endif
 
     if (i > 0) {
