@@ -73,17 +73,26 @@ static int
 tls_write_method(int fd, const char *buf, int len)
 {
     auto session = fd_table[fd].ssl.get();
-    debugs(83, 3, "started for session=" << (void*)session);
+    debugs(83, 5, "started for session=" << static_cast<void*>(session) << " FD " << fd << " buf.len=" << len);
 
 #if USE_OPENSSL
     if (!SSL_is_init_finished(session)) {
+        debugs(83, 3, "FD " << fd << " is not in TLS init_finished state");
         errno = ENOTCONN;
         return -1;
     }
 #endif
 
 #if USE_OPENSSL
+    Security::PrepForIo();
     int i = SSL_write(session, buf, len);
+    const auto savedErrno = errno; // zero if SSL_write() does not set it
+
+    if (i <= 0) {
+        debugs(83, 3, "SSL_get_error(FD " << fd << ", " << i << ") is " << SSL_get_error(session, i) << ReportSysError(savedErrno));
+        Security::ForgetErrors(); // will debugs() errors before forgetting them
+        errno = savedErrno;
+    }
 #elif HAVE_LIBGNUTLS
     int i = gnutls_record_send(session, buf, len);
 #endif
