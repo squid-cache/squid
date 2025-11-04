@@ -35,7 +35,7 @@ static int
 tls_read_method(int fd, char *buf, int len)
 {
     auto session = fd_table[fd].ssl.get();
-    debugs(83, 3, "started for session=" << (void*)session);
+    debugs(83, 5, "started for session=" << static_cast<void*>(session) << " FD " << fd << " buf.len=" << len);
 
 #if USE_OPENSSL
     Security::PrepForIo();
