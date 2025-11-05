@@ -13,9 +13,11 @@
 #include "base/RunnersRegistry.h"
 #include "CachePeer.h"
 #include "debug/Stream.h"
+#include "error/SysErrorDetail.h"
 #include "fd.h"
 #include "fde.h"
 #include "ipc/MemMap.h"
+#include "security/Io.h"
 #include "security/Session.h"
 #include "SquidConfig.h"
 #include "ssl/bio.h"
@@ -33,12 +35,27 @@ static int
 tls_read_method(int fd, char *buf, int len)
 {
     auto session = fd_table[fd].ssl.get();
-    debugs(83, 3, "started for session=" << (void*)session);
+    debugs(83, 5, "started for session=" << static_cast<void*>(session) << " FD " << fd << " buf.len=" << len);
+
+    Security::PrepForIo();
 
 #if USE_OPENSSL
     int i = SSL_read(session, buf, len);
+    const auto savedErrno = errno; // zero if SSL_read() does not set it
+
+    if (i <= 0) {
+        debugs(83, 3, "SSL_read(FD " << fd << ") error(" << i << "): " << SSL_get_error(session, i) << ReportSysError(savedErrno));
+        Security::ForgetErrors(); // will debugs() errors before forgetting them
+        errno = savedErrno;
+    }
 #elif HAVE_LIBGNUTLS
     int i = gnutls_record_recv(session, buf, len);
+    const auto savedErrno = errno; // zero if gnutls_record_recv() does not set it
+
+    if (i < 0) {
+        debugs(83, 3, "gnutls_record_recv(FD " << fd << ") error(" << i << "): " << Security::ErrorString(i) << ReportSysError(savedErrno));
+        errno = savedErrno;
+    }
 #endif
 
     if (i > 0) {
@@ -63,19 +80,35 @@ static int
 tls_write_method(int fd, const char *buf, int len)
 {
     auto session = fd_table[fd].ssl.get();
-    debugs(83, 3, "started for session=" << (void*)session);
+    debugs(83, 5, "started for session=" << static_cast<void*>(session) << " FD " << fd << " buf.len=" << len);
 
 #if USE_OPENSSL
     if (!SSL_is_init_finished(session)) {
+        debugs(83, 3, "FD " << fd << " is not in TLS init_finished state");
         errno = ENOTCONN;
         return -1;
     }
 #endif
 
+    Security::PrepForIo();
+
 #if USE_OPENSSL
     int i = SSL_write(session, buf, len);
+    const auto savedErrno = errno; // zero if SSL_write() does not set it
+
+    if (i <= 0) {
+        debugs(83, 3, "SSL_write(FD " << fd << ") error(" << i << "): " << SSL_get_error(session, i) << ReportSysError(savedErrno));
+        Security::ForgetErrors(); // will debugs() errors before forgetting them
+        errno = savedErrno;
+    }
 #elif HAVE_LIBGNUTLS
     int i = gnutls_record_send(session, buf, len);
+    const auto savedErrno = errno; // zero if gnutls_record_send() does not set it
+
+    if (i < 0) {
+        debugs(83, 3, "gnutls_record_send(FD " << fd << ") error(" << i << "): " << Security::ErrorString(i) << ReportSysError(savedErrno));
+        errno = savedErrno;
+    }
 #endif
 
     if (i > 0) {
