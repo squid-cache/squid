@@ -44,7 +44,7 @@ tls_read_method(int fd, char *buf, int len)
     const auto savedErrno = errno; // zero if SSL_read() does not set it
 
     if (i <= 0) {
-        debugs(83, 3, "SSL_get_error(FD " << fd << ", " << i << ") is " << SSL_get_error(session, i) << ReportSysError(savedErrno));
+        debugs(83, 3, "SSL_read(FD " << fd << ") error(" << i << "): " << SSL_get_error(session, i) << ReportSysError(savedErrno));
         Security::ForgetErrors(); // will debugs() errors before forgetting them
         errno = savedErrno;
     }
@@ -97,7 +97,7 @@ tls_write_method(int fd, const char *buf, int len)
     const auto savedErrno = errno; // zero if SSL_write() does not set it
 
     if (i <= 0) {
-        debugs(83, 3, "SSL_get_error(FD " << fd << ", " << i << ") is " << SSL_get_error(session, i) << ReportSysError(savedErrno));
+        debugs(83, 3, "SSL_write(FD " << fd << ") error(" << i << "): " << SSL_get_error(session, i) << ReportSysError(savedErrno));
         Security::ForgetErrors(); // will debugs() errors before forgetting them
         errno = savedErrno;
     }
