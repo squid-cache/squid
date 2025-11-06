@@ -275,7 +275,7 @@ snmp_msg_Decode(u_char * Packet, int *PacketLenP,
         ASN_PARSE_ERROR(NULL);
     }
 
-    const auto cap = *CommLenP;
+    const auto communityBufferLimit = *CommLenP;
 
     bufp = asn_parse_string(bufp, PacketLenP, &type, Community, CommLenP);
     if (bufp == NULL) {
@@ -283,18 +283,19 @@ snmp_msg_Decode(u_char * Packet, int *PacketLenP,
         ASN_PARSE_ERROR(NULL);
     }
 
+    if (*CommLenP == communityBufferLimit) {
+        snmplib_debug(4, "snmp_msg_Decode:Cannot zero-terminate a %d byte-long Community value\n", *CommLenP);
+        ASN_PARSE_ERROR(NULL);
+    }
     assert(*CommLenP >= 0);
-
-    if (*CommLenP > cap - 1)
-        *CommLenP = cap - 1;
+    assert(*CommLenP < communityBufferLimit);
+    Community[*CommLenP] = '\0';
 
     const void *nul = memchr(Community, '\0', (size_t)*CommLenP);
     if (nul) {
         snmplib_debug(4, "snmp_msg_Decode:Community contained nul!\n");
         return (NULL);
     }
-
-    Community[*CommLenP] = '\0';
 
     if ((*Version != SNMP_VERSION_1) &&
             (*Version != SNMP_VERSION_2)) {
