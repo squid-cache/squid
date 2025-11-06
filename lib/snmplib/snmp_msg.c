@@ -291,9 +291,8 @@ snmp_msg_Decode(u_char * Packet, int *PacketLenP,
     assert(*CommLenP < communityBufferLimit);
     Community[*CommLenP] = '\0';
 
-    const void *nul = memchr(Community, '\0', (size_t)*CommLenP);
-    if (nul) {
-        snmplib_debug(4, "snmp_msg_Decode:Community contained nul!\n");
+    if (memchr(Community, '\0', (size_t)*CommLenP)) {
+        snmplib_debug(4, "snmp_msg_Decode:Community contained an unsupported ASCII nul character\n");
         ASN_PARSE_ERROR(NULL);
     }
 
