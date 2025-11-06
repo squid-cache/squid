@@ -257,6 +257,7 @@ snmp_msg_Decode(u_char * Packet, int *PacketLenP,
 {
     u_char *bufp;
     u_char type;
+    int communityBufferLimit = *CommLenP;
 
     bufp = asn_parse_header(Packet, PacketLenP, &type);
     if (bufp == NULL) {
@@ -274,8 +275,6 @@ snmp_msg_Decode(u_char * Packet, int *PacketLenP,
         snmplib_debug(4, "snmp_msg_Decode:Error decoding SNMP Message Header (Version)!\n");
         ASN_PARSE_ERROR(NULL);
     }
-
-    const auto communityBufferLimit = *CommLenP;
 
     bufp = asn_parse_string(bufp, PacketLenP, &type, Community, CommLenP);
     if (bufp == NULL) {
