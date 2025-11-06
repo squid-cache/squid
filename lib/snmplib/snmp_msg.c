@@ -294,7 +294,7 @@ snmp_msg_Decode(u_char * Packet, int *PacketLenP,
     const void *nul = memchr(Community, '\0', (size_t)*CommLenP);
     if (nul) {
         snmplib_debug(4, "snmp_msg_Decode:Community contained nul!\n");
-        return (NULL);
+        ASN_PARSE_ERROR(NULL);
     }
 
     if ((*Version != SNMP_VERSION_1) &&
