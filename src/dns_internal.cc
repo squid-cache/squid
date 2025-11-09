@@ -297,14 +297,14 @@ idns_query::makeNameToLookup()
     const auto prefixLen = strlen(orig) + 1 /* the joiner '.' */;
     while (domain < npc) {
         const auto need = prefixLen + strlen(searchpath[domain].domain);
-        if (need < NS_MAXDNAME) {
+        if (need > NS_MAXDNAME) {
             debugs(23, 3, "searchpath FQDN for '" << orig << "." << searchpath[domain].domain << "' too long. skip.");
             ++domain;
             continue; // skip this searchpath
         }
         strcat(name, ".");
         strcat(name, searchpath[domain].domain);
-        debugs(78, 3, "searchpath used for " << name);
+        debugs(78, 3, "searchpath[" << domain << "] used to create " << name);
         ++domain;
         return; // try using this FQDN
     }
@@ -1296,7 +1296,6 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
             debugs(78, 3, "idnsGrokReply: Query result: NXDOMAIN - " << q->name );
 
             q->makeNameToLookup();
-            // when all searchpath have been checked, count the search attempt as completed.
             if (q->domain >= npc)
                 ++ q->attempt;
 
