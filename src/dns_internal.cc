@@ -1295,9 +1295,12 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
 
             debugs(78, 3, "idnsGrokReply: Query result: NXDOMAIN - " << q->name );
 
-            q->makeNameToLookup();
+            // ignore NXDOMAIN found while scanning searchpath.
+            // only count failures for the fallback (non-suffix) domain.
             if (q->domain >= npc)
                 ++ q->attempt;
+
+            q->makeNameToLookup();
 
             rfc1035MessageDestroy(&message);
 
