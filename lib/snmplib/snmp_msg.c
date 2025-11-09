@@ -87,6 +87,9 @@
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
+#if HAVE_ASSERT_H
+#include <assert.h>
+#endif
 
 #include "asn1.h"
 #include "snmp.h"
@@ -272,16 +275,26 @@ snmp_msg_Decode(u_char * Packet, int *PacketLenP,
         snmplib_debug(4, "snmp_msg_Decode:Error decoding SNMP Message Header (Version)!\n");
         ASN_PARSE_ERROR(NULL);
     }
-    int terminatorPos = *CommLenP - 1;
+    int communityBufferLimit = *CommLenP;
+
     bufp = asn_parse_string(bufp, PacketLenP, &type, Community, CommLenP);
     if (bufp == NULL) {
         snmplib_debug(4, "snmp_msg_Decode:Error decoding SNMP Message Header (Community)!\n");
         ASN_PARSE_ERROR(NULL);
     }
-    if (*CommLenP < terminatorPos) {
-        terminatorPos = *CommLenP;
+
+    if (*CommLenP == communityBufferLimit) {
+        snmplib_debug(4, "snmp_msg_Decode:Cannot zero-terminate a %d byte-long Community value\n", *CommLenP);
+        ASN_PARSE_ERROR(NULL);
     }
-    Community[terminatorPos] = '\0';
+    assert(*CommLenP >= 0);
+    assert(*CommLenP < communityBufferLimit);
+    Community[*CommLenP] = '\0';
+
+    if (memchr(Community, '\0', (size_t)*CommLenP)) {
+        snmplib_debug(4, "snmp_msg_Decode:Community contained an unsupported ASCII nul character\n");
+        ASN_PARSE_ERROR(NULL);
+    }
 
     if ((*Version != SNMP_VERSION_1) &&
             (*Version != SNMP_VERSION_2)) {
