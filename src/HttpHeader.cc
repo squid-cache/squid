@@ -1437,7 +1437,7 @@ HttpHeader::getAuthToken(Http::HdrType id, const char *auth_scheme) const
     char *decodedAuthToken = result.rawAppendStart(BASE64_DECODE_LENGTH(fieldLen));
     struct base64_decode_ctx ctx;
     base64_decode_init(&ctx);
-    size_t decodedLen = 0;
+    size_t decodedLen = BASE64_DECODE_LENGTH(fieldLen);
     if (!base64_decode_update(&ctx, &decodedLen, reinterpret_cast<uint8_t*>(decodedAuthToken), fieldLen, field) ||
             !base64_decode_final(&ctx)) {
         return nil;
