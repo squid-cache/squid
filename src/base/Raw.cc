@@ -32,10 +32,11 @@ Raw::print(std::ostream &os) const
         else if (useGap_)
             os << ' ';
         if (data_) {
+            const auto data = static_cast<const char *>(data_);
             if (useHex_)
-                PrintHex(os, data_, printLimit);
+                PrintHex(os, data, printLimit);
             else
-                os.write(data_, printLimit);
+                os.write(data, printLimit);
             if (printLimit < size_)
                 os << "[..." << (size_ - printLimit) << " bytes...]";
         } else {

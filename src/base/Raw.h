@@ -21,7 +21,7 @@
 class Raw
 {
 public:
-    Raw(const char *label, const char *data, const size_t size) :
+    Raw(const char *label, const void *data, const size_t size) :
         label_(label), data_(data), size_(size) {}
 
     /// limit data printing to at least the given debugging level
@@ -55,7 +55,7 @@ private:
     void printHex(std::ostream &os) const;
 
     const char *label_ = nullptr; ///< optional data name or ID; triggers size printing
-    const char *data_ = nullptr; ///< raw data to be printed
+    const void *data_ = nullptr; ///< raw data to be printed
     size_t size_ = 0; ///< data length
     size_t printableSize_ = 256; ///< do not print more data
     bool useHex_ = false; ///< whether hex() has been called
