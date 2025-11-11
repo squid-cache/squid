@@ -218,6 +218,9 @@ This new release is available for download from <url url="http://www.squid-cache
 	   dns_packet_max is set to a positive value). Rare deployments that must use
 	   buggy DNS resolvers should not set <em>dns_packet_max</em>.
 
+	<tag>email_err_data</tag>
+	<p>Since Squid-7.2, the default for this directive is <em>off</em>.
+
 	<tag>external_acl_type</tag>
 	<p>Removed <em>%IDENT</em> format code with Ident protocol support.
 
