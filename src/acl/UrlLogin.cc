@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,7 +24,7 @@ Acl::UrlLoginCheck::match(ACLChecklist * const ch)
         return 0; // nothing can match
     }
 
-    auto decodedUserInfo = AnyP::Uri::Decode(checklist->request->url.userInfo());
-    return data->match(decodedUserInfo.c_str());
+    // XXX: c_str() truncates where %00 was decoded
+    return data->match(AnyP::Uri::DecodeOrDupe(checklist->request->url.userInfo()).c_str());
 }
 

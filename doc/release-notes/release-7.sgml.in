@@ -47,13 +47,17 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <sect2>Removal of the <em>squidclient</em> tool.
 <p>Popular command-line tools such as <em>curl</em> or <em>wget</em>
-   provide equivalent features.
+   provide equivalent features. To access the cache manager, administrators
+   can use for instance the command
+   <em>curl -u user:&lt;cachemgr_passwd&gt; http://&lt;squid_hostname:squid_port&gt;/squid-internal-mgr/&lt;section&gt;</em>
+   where <em>section</em> is the name of the desired cache manager report.
+   To list available reports, use the report name <em>menu</em>.
 
 <sect2>Removal of the <em>cachemgr.cgi</em> tool.
 <p>Access to the Cache Manager API is available by sending HTTP(S) requests
-   directly to Squid with the URL-path prefix <em>/squid-internal-mgr/</em>.
-   A plethora of tools, such as curl, wget, or any web browser, can be used
-   instead of cachemgr.cgi.
+   directly to Squid with the URL-path prefix <em>/squid-internal-mgr/</em>
+   as described above. As Squid cache manager uses native HTTP(S),
+   it is now possible to access it directly with a web browser.
 
 <sect2>Removal of the <em>cache_object:</em> URI scheme.
 <p>This custom scheme does not conform to RFC 3986 URI sytax. It has been replaced
@@ -191,6 +195,9 @@ This section gives an account of those changes in three categories:
 	<tag>logformat</tag>
 	<p>Removed <em>%ui</em> format code with Ident protocol support.
 
+	<tag>email_err_data</tag>
+	<p>Since Squid-7.2, the default for this directive is <em>off</em>.
+
 	<tag>external_acl_type</tag>
 	<p>Removed <em>%IDENT</em> format code with Ident protocol support.
 
@@ -282,7 +289,16 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p>No build options have changed behaviour in this version.
+
+	<tag>--disable-arch-native</tag>
+	<p>The <em>-march=native</em> compiler option is no longer used by
+		default. It is possible to enable it by using the
+		<em>--enable-arch-native</em> option.
+		Using <em>-march=native</em> may cause problems when Squid is
+		run on a system with a different exact CPU model than the one
+		it is built on, or in some containerized environments.
+		The symptom is crashes with "illegal instruction" errors.
+		We do not recommend enabling this optimization in virtualized environments.
 
 </descrip>
 </p>
@@ -329,7 +345,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.

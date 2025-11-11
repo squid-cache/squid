@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -204,7 +204,7 @@ heap_extractmin(heap * hp)
 
 /*
  * Remove the last node in HP.  Frees the heap internal structure and
- * returns the data pointes to by the last node.
+ * returns the data pointed to by the last node.
  */
 heap_t
 heap_extractlast(heap * hp)

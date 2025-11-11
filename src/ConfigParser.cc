@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -146,8 +146,13 @@ ConfigParser::UnQuote(const char *token, const char **next)
     const char  *s = token + 1;
     char *d = UnQuoted;
     /* scan until the end of the quoted string, handling escape sequences*/
-    while (*s && *s != quoteChar && !errorStr && (size_t)(d - UnQuoted) < sizeof(UnQuoted)) {
+    while (*s && *s != quoteChar && !errorStr && (size_t)(d - UnQuoted) < sizeof(UnQuoted) - 1) {
         if (*s == '\\') {
+            if (s[1] == '\0') {
+                errorStr = "Unterminated escape sequence";
+                errorPos = s;
+                break;
+            }
             s++;
             switch (*s) {
             case 'r':

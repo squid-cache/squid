@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,20 +12,15 @@
 #include "acl/FilledChecklist.h"
 #include "acl/UrlPath.h"
 #include "HttpRequest.h"
-#include "rfc1738.h"
 
 int
 Acl::UrlPathCheck::match(ACLChecklist * const ch)
 {
     const auto checklist = Filled(ch);
+    auto urlPath = checklist->request->url.path();
 
-    if (checklist->request->url.path().isEmpty())
+    if (urlPath.isEmpty())
         return -1;
 
-    char *esc_buf = SBufToCstring(checklist->request->url.path());
-    rfc1738_unescape(esc_buf);
-    int result = data->match(esc_buf);
-    xfree(esc_buf);
-    return result;
+    return data->match(urlPath.c_str());
 }
-

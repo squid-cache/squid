@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,7 +39,7 @@ ACLServerNameData::match(const char *host)
     debugs(28, 3, "checking '" << host << "'");
 
     char *h = const_cast<char *>(host);
-    char const * const * result = domains->find(h, aclHostDomainCompare);
+    char const * const * result = domains.find(h, aclHostDomainCompare);
 
     debugs(28, 3, "'" << host << "' " << (result ? "found" : "NOT found"));
 

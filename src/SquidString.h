@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 
 #include "base/TextException.h"
 #include "debug/Stream.h"
+#include "sbuf/forward.h"
 
 #include <ostream>
 
@@ -98,6 +99,7 @@ public:
     void append(char const *buf);
     void append(char const);
     void append(String const &);
+    void append(const SBuf &); ///< adds the entire given buffer
     void absorb(String &old);
     const char * pos(char const *aString) const;
     const char * pos(char const ch) const;

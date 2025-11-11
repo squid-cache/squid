@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,6 @@ void Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &) STUB
 void Comm::AcceptLimiter::kick() STUB
 
 #include "comm/Connection.h"
-Comm::Connection::Connection() STUB
 Comm::Connection::~Connection() STUB
 Comm::ConnectionPointer Comm::Connection::cloneProfile() const STUB_RETVAL(nullptr)
 void Comm::Connection::close() STUB

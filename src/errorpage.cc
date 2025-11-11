@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -837,10 +837,10 @@ ErrorState::~ErrorState()
 
     safe_free(redirect_url);
     safe_free(url);
-    safe_free(request_hdrs);
     wordlistDestroy(&ftp.server_msg);
     safe_free(ftp.request);
     safe_free(ftp.reply);
+    safe_free(ftp.cwd_msg);
     safe_free(err_msg);
 #if USE_ERR_LOCALES
     if (err_language != Config.errorDefaultLanguage)
@@ -886,7 +886,7 @@ ErrorState::Dump(MemBuf * mb)
         body << "HTTP Request:\r\n";
         MemBuf r;
         r.init();
-        request->pack(&r);
+        request->pack(&r, true /* hide authorization data */);
         body << r.content();
     }
 
@@ -1141,25 +1141,17 @@ ErrorState::compileLegacyCode(Build &build)
     case 'R':
         if (building_deny_info_url) {
             if (request != nullptr) {
-                const SBuf &tmp = request->url.path();
+                const SBuf &tmp = request->url.absolutePath();
                 mb.append(tmp.rawContent(), tmp.length());
                 no_urlescape = 1;
             } else
                 p = "[no request]";
             break;
         }
-        if (request) {
-            mb.appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\n",
-                       SQUIDSBUFPRINT(request->method.image()),
-                       SQUIDSBUFPRINT(request->url.path()),
-                       AnyP::ProtocolType_str[request->http_ver.protocol],
-                       request->http_ver.major, request->http_ver.minor);
-            request->header.packInto(&mb, true); //hide authorization data
-        } else if (request_hdrs) {
-            p = request_hdrs;
-        } else {
+        else if (request)
+            request->pack(&mb, true /* hide authorization data */);
+        else
             p = "[no request]";
-        }
         break;
 
     case 's':

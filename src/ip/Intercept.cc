@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,8 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "fde.h"
 #include "ip/Intercept.h"
 #include "ip/tools.h"
@@ -75,7 +77,6 @@
 #endif /* IPF_TRANSPARENT required headers */
 
 #if PF_TRANSPARENT
-#include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <net/if.h>
@@ -130,11 +131,11 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
 
     /** \par
      * Try NAT lookup for REDIRECT or DNAT targets. */
-    if ( getsockopt(newConn->fd,
-                    newConn->local.isIPv6() ? IPPROTO_IPV6 : IPPROTO_IP,
-                    newConn->local.isIPv6() ? IP6T_SO_ORIGINAL_DST : SO_ORIGINAL_DST,
-                    &lookup,
-                    &len) != 0) {
+    if ( xgetsockopt(newConn->fd,
+                     newConn->local.isIPv6() ? IPPROTO_IPV6 : IPPROTO_IP,
+                     newConn->local.isIPv6() ? IP6T_SO_ORIGINAL_DST : SO_ORIGINAL_DST,
+                     &lookup,
+                     &len) != 0) {
         const auto xerrno = errno;
         debugs(89, DBG_IMPORTANT, "ERROR: NF getsockopt(ORIGINAL_DST) failed on " << newConn << ": " << xstrerr(xerrno));
         return false;
@@ -250,9 +251,9 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
         int save_errno;
         enter_suid();
 #ifdef IPNAT_NAME
-        natfd = open(IPNAT_NAME, O_RDONLY, 0);
+        natfd = xopen(IPNAT_NAME, O_RDONLY, 0);
 #else
-        natfd = open(IPL_NAT, O_RDONLY, 0);
+        natfd = xopen(IPL_NAT, O_RDONLY, 0);
 #endif
         save_errno = errno;
         leave_suid();
@@ -295,7 +296,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
         const auto xerrno = errno;
         if (xerrno != ESRCH) {
             debugs(89, DBG_IMPORTANT, "ERROR: IPF (IPFilter) NAT lookup failed: ioctl(SIOCGNATL) (v=" << IPFILTER_VERSION << "): " << xstrerr(xerrno));
-            close(natfd);
+            xclose(natfd);
             natfd = -1;
         }
 
@@ -335,7 +336,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
     static int pffd = -1;
 
     if (pffd < 0)
-        pffd = open("/dev/pf", O_RDONLY);
+        pffd = xopen("/dev/pf", O_RDONLY);
 
     if (pffd < 0) {
         const auto xerrno = errno;
@@ -365,7 +366,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
         const auto xerrno = errno;
         if (xerrno != ENOENT) {
             debugs(89, DBG_IMPORTANT, "ERROR: PF lookup failed: ioctl(DIOCNATLOOK): " << xstrerr(xerrno));
-            close(pffd);
+            xclose(pffd);
             pffd = -1;
         }
         debugs(89, 9, "address: " << newConn);
@@ -443,18 +444,18 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         tmp.port(0);
         tmp.getSockAddr(tmp_ip6);
 
-        if ( (tmp_sock = socket(PF_INET6, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
-                setsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&
-                bind(tmp_sock, (struct sockaddr*)&tmp_ip6, sizeof(struct sockaddr_in6)) == 0 ) {
+        if ( (tmp_sock = xsocket(PF_INET6, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
+                xsetsockopt(tmp_sock, soLevel, soFlag, &tos, sizeof(int)) == 0 &&
+                xbind(tmp_sock, (struct sockaddr*)&tmp_ip6, sizeof(struct sockaddr_in6)) == 0 ) {
 
             debugs(3, 3, "IPv6 TPROXY support detected. Using.");
-            close(tmp_sock);
+            xclose(tmp_sock);
             if (doneSuid)
                 leave_suid();
             return true;
         }
         if (tmp_sock >= 0) {
-            close(tmp_sock);
+            xclose(tmp_sock);
             tmp_sock = -1;
         }
     }
@@ -475,18 +476,18 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         tmp.port(0);
         tmp.getSockAddr(tmp_ip4);
 
-        if ( (tmp_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
-                setsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&
-                bind(tmp_sock, (struct sockaddr*)&tmp_ip4, sizeof(struct sockaddr_in)) == 0 ) {
+        if ( (tmp_sock = xsocket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
+                xsetsockopt(tmp_sock, soLevel, soFlag, &tos, sizeof(int)) == 0 &&
+                xbind(tmp_sock, (struct sockaddr*)&tmp_ip4, sizeof(struct sockaddr_in)) == 0 ) {
 
             debugs(3, 3, "IPv4 TPROXY support detected. Using.");
-            close(tmp_sock);
+            xclose(tmp_sock);
             if (doneSuid)
                 leave_suid();
             return true;
         }
         if (tmp_sock >= 0) {
-            close(tmp_sock);
+            xclose(tmp_sock);
         }
     }
 

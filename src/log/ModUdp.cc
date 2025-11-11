@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "compat/unistd.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fs_io.h"
@@ -40,8 +41,7 @@ static void
 logfile_mod_udp_write(Logfile * lf, const char *buf, size_t len)
 {
     l_udp_t *ll = (l_udp_t *) lf->data;
-    ssize_t s;
-    s = write(ll->fd, (char const *) buf, len);
+    const auto s = xwrite(ll->fd, buf, len);
     fd_bytes(ll->fd, s, IoDirection::Write);
 #if 0
     // TODO: Enable after polishing to properly log these errors.
@@ -145,6 +145,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
     lf->f_rotate = logfile_mod_udp_rotate;
 
     l_udp_t *ll = static_cast<l_udp_t*>(xcalloc(1, sizeof(*ll)));
+    ll->fd = -1;
     lf->data = ll;
 
     if (strncmp(path, "//", 2) == 0) {
@@ -178,7 +179,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
             debugs(50, DBG_IMPORTANT, "ERROR: Unable to open UDP socket for logging");
             return FALSE;
         }
-    } else if (!comm_connect_addr(ll->fd, addr)) {
+    } else if (comm_connect_addr(ll->fd, addr) == Comm::COMM_ERROR) {
         xerrno = errno;
         if (lf->flags.fatal) {
             fatalf("Unable to connect to %s for UDP log: %s\n", lf->path, xstrerr(xerrno));

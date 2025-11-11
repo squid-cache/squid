@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -259,6 +259,8 @@ squid_SOURCES = \
 	Generic.h \
 	HappyConnOpener.cc \
 	HappyConnOpener.h \
+	HeaderMangling.cc \
+	HeaderMangling.h \
 	HierarchyLogEntry.h \
 	HttpBody.cc \
 	HttpBody.h \
@@ -458,7 +460,6 @@ squid_SOURCES = \
 	urn.cc \
 	urn.h \
 	wccp.cc \
-	wccp.h \
 	wccp2.cc \
 	wccp2.h \
 	wordlist.cc \
@@ -510,10 +511,10 @@ squid_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	libsquid.la \
-	ip/libip.la \
 	fs/libfs.la \
 	DiskIO/libdiskio.la \
 	comm/libcomm.la \
+	ip/libip.la \
 	anyp/libanyp.la \
 	security/libsecurity.la \
 	$(SSL_LIBS) \
@@ -580,24 +581,6 @@ sysconf_DATA = \
 data_DATA = \
 	mib.txt
 
-LDADD = \
-	$(AUTH_ACL_LIBS) \
-	acl/libacls.la \
-	eui/libeui.la \
-	acl/libstate.la \
-	$(AUTH_LIBS) \
-	acl/libapi.la \
-	base/libbase.la \
-	libsquid.la \
-	ip/libip.la \
-	fs/libfs.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	$(EPOLL_LIBS) \
-	$(MINGW_LIBS) \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-
 include $(srcdir)/tests/Stub.am
 
 EXTRA_DIST = \
@@ -662,7 +645,6 @@ cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre $(top_builddi
 cf.data: cf.data.pre Makefile
 	sed \
 	-e "s%[@]DEFAULT_HTTP_PORT[@]%$(DEFAULT_HTTP_PORT)%g" \
-	-e "s%[@]DEFAULT_ICP_PORT[@]%$(DEFAULT_ICP_PORT)%g" \
 	-e "s%[@]DEFAULT_CACHE_EFFECTIVE_USER[@]%$(CACHE_EFFECTIVE_USER)%g" \
 	-e "s%[@]DEFAULT_MIME_TABLE[@]%$(DEFAULT_MIME_TABLE)%g" \
 	-e "s%[@]DEFAULT_SSL_CRTD[@]%$(DEFAULT_SSL_CRTD)%g" \
@@ -922,8 +904,8 @@ nodist_tests_testURL_SOURCES = \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc
 tests_testURL_LDADD = \
-	libsquid.la \
 	anyp/libanyp.la \
+	libsquid.la \
 	parser/libparser.la \
 	base/libbase.la \
 	ip/libip.la \
@@ -1051,6 +1033,7 @@ tests_testRock_SOURCES = \
 	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_Instance.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -1221,6 +1204,7 @@ tests_testUfs_SOURCES = \
 	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_Instance.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -1393,6 +1377,7 @@ tests_testStore_SOURCES = \
 	HttpHeaderTools.h \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_Instance.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
@@ -1556,6 +1541,7 @@ tests_testDiskIO_SOURCES = \
 	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_Instance.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -1769,238 +1755,24 @@ tests_testHtmlQuote_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpRange
 tests_testHttpRange_SOURCES = \
-	$(DELAY_POOL_SOURCE) \
-	$(DNSSOURCE) \
-	$(HTCPSOURCE) \
-	$(IPC_SOURCE) \
-	$(SNMP_SOURCE) \
-	$(UNLINKDSOURCE) \
-	$(WIN32_SOURCE) \
-	AccessLogEntry.cc \
-	AuthReg.h \
-	BodyPipe.cc \
-	tests/stub_CacheDigest.cc \
-	CacheDigest.h \
-	CachePeer.cc \
-	CachePeer.h \
-	CachePeers.cc \
-	CachePeers.h \
-	ClientInfo.h \
-	tests/stub_CollapsedForwarding.cc \
-	ConfigOption.cc \
-	ConfigParser.cc \
-	CpuAffinityMap.cc \
-	CpuAffinityMap.h \
-	CpuAffinitySet.cc \
-	CpuAffinitySet.h \
-	tests/stub_ETag.cc \
-	tests/stub_EventLoop.cc \
-	FadingCounter.cc \
-	FileMap.h \
-	FwdState.cc \
-	FwdState.h \
-	HappyConnOpener.cc \
-	HappyConnOpener.h \
-	HttpBody.cc \
-	HttpBody.h \
-	tests/stub_HttpControlMsg.cc \
-	HttpHdrCc.cc \
-	HttpHdrCc.h \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
-	HttpHdrSc.cc \
-	HttpHdrScTarget.cc \
-	HttpHeader.cc \
-	HttpHeader.h \
-	HttpHeaderFieldStat.h \
+	tests/stub_HttpHeader.cc \
 	HttpHeaderTools.cc \
-	HttpHeaderTools.h \
 	tests/testHttpRange.cc \
-	HttpReply.cc \
-	HttpRequest.cc \
-	tests/stub_HttpUpgradeProtocolAccess.cc \
-	IoStats.h \
-	tests/stub_IpcIoFile.cc \
-	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
-	MemBuf.cc \
-	MemObject.cc \
-	tests/stub_MemStore.cc \
-	Notes.cc \
-	Notes.h \
-	Parsing.cc \
-	PeerPoolMgr.cc \
-	PeerPoolMgr.h \
-	Pipeline.cc \
-	Pipeline.h \
-	RefreshPattern.h \
-	RemovalPolicy.cc \
-	RequestFlags.cc \
-	RequestFlags.h \
-	ResolvedPeers.cc \
-	ResolvedPeers.h \
-	SquidMath.cc \
-	SquidMath.h \
-	StatCounters.cc \
-	StatCounters.h \
-	StatHist.cc \
-	StatHist.h \
-	StoreFileSystem.cc \
-	StoreIOState.cc \
-	StoreSwapLogData.cc \
+	tests/stub_HttpReply.cc \
+	tests/stub_MemBuf.cc \
 	StrList.cc \
-	StrList.h \
 	String.cc \
-	Transients.cc \
-	tests/stub_cache_cf.cc \
-	cache_cf.h \
-	cache_manager.cc \
-	tests/stub_carp.cc \
-	carp.h \
-	cbdata.cc \
-	clientStream.cc \
-	tests/stub_client_db.cc \
-	client_side.cc \
-	client_side.h \
-	client_side_reply.cc \
-	client_side_request.cc \
-	dlink.cc \
-	dlink.h \
-	errorpage.cc \
-	event.cc \
-	tests/stub_external_acl.cc \
-	tests/stub_fatal.cc \
-	fatal.h \
-	fd.cc \
-	fd.h \
-	fde.cc \
-	filemap.cc \
-	fqdncache.cc \
-	fqdncache.h \
-	fs_io.cc \
-	fs_io.h \
-	helper.cc \
-	hier_code.h \
-	http.cc \
-	icp_v2.cc \
-	icp_v3.cc \
-	int.cc \
-	int.h \
-	internal.cc \
-	internal.h \
-	tests/stub_ipc_Forwarder.cc \
-	ipcache.cc \
-	tests/stub_libauth.cc \
-	tests/stub_libdiskio.cc \
-	tests/stub_liberror.cc \
-	tests/stub_libeui.cc \
-	tests/stub_libmem.cc \
-	tests/stub_libsecurity.cc \
-	tests/stub_libstore.cc \
-	tests/stub_main_cc.cc \
-	mem_node.cc \
-	mime.cc \
-	mime.h \
-	mime_header.cc \
-	mime_header.h \
-	multicast.cc \
-	multicast.h \
-	neighbors.cc \
-	neighbors.h \
-	pconn.cc \
-	peer_digest.cc \
-	peer_proxy_negotiate_auth.cc \
-	peer_proxy_negotiate_auth.h \
-	peer_select.cc \
-	peer_sourcehash.cc \
-	peer_sourcehash.h \
-	peer_userhash.cc \
-	peer_userhash.h \
-	tests/stub_redirect.cc \
-	redirect.h \
-	refresh.cc \
-	refresh.h \
-	repl_modules.h \
-	stat.cc \
-	stat.h \
-	stmem.cc \
-	store.cc \
-	store_client.cc \
-	tests/stub_store_digest.cc \
-	store_digest.h \
-	store_io.cc \
-	store_key_md5.cc \
-	store_key_md5.h \
-	store_log.cc \
-	store_log.h \
-	store_rebuild.cc \
-	store_rebuild.h \
-	tests/stub_store_stats.cc \
-	store_swapin.cc \
-	store_swapin.h \
-	store_swapout.cc \
-	tools.cc \
-	tools.h \
-	tests/stub_tunnel.cc \
-	tunnel.h \
-	urn.cc \
-	urn.h \
-	tests/stub_wccp2.cc \
-	wccp2.h \
-	wordlist.cc \
-	wordlist.h
-nodist_tests_testHttpRange_SOURCES = \
-	$(BUILT_SOURCES) \
-	tests/stub_libtime.cc
+	tests/stub_cbdata.cc \
+	tests/stub_debug.cc \
+	tests/stub_libhttp.cc \
+	tests/stub_libmem.cc
 tests_testHttpRange_LDADD = \
-	libsquid.la \
-	clients/libclients.la \
-	servers/libservers.la \
-	ftp/libftp.la \
-	helper/libhelper.la \
-	http/libhttp.la \
-	parser/libparser.la \
-	acl/libacls.la \
-	acl/libstate.la \
-	acl/libapi.la \
-	proxyp/libproxyp.la \
-	parser/libparser.la \
-	ip/libip.la \
-	fs/libfs.la \
-	anyp/libanyp.la \
-	icmp/libicmp.la \
-	comm/libcomm.la \
-	log/liblog.la \
-	format/libformat.la \
-	$(REPL_OBJS) \
-	$(ADAPTATION_LIBS) \
-	$(SSL_LIBS) \
-	ipc/libipc.la \
-	dns/libdns.la \
-	base/libbase.la \
-	mgr/libmgr.la \
-	html/libhtml.la \
 	sbuf/libsbuf.la \
-	debug/libdebug.la \
-	store/libstore.la \
-	$(SNMP_LIBS) \
-	$(top_builddir)/lib/libmisccontainers.la \
-	$(top_builddir)/lib/libmiscencoding.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	$(LIBCAP_LIBS) \
-	$(LIBGNUTLS_LIBS) \
-	$(LIBHEIMDAL_KRB5_LIBS) \
-	$(REGEXLIB) \
-	$(SSLLIB) \
+	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
-	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
-	$(LIBGSS_LIBS) \
-	$(LIBMIT_KRB5_LIBS) \
-	$(LIBNETFILTER_CONNTRACK_LIBS) \
-	$(LIBNETTLE_LIBS) \
-	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpRange_LDFLAGS = $(LIBADD_DL)
 
@@ -2079,6 +1851,7 @@ tests_testHttpReply_SOURCES = \
 	tests/testHttpReply.cc \
 	HttpReply.h \
 	tests/stub_HttpRequest.cc \
+	tests/stub_Instance.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
@@ -2156,238 +1929,67 @@ tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpRequest
 tests_testHttpRequest_SOURCES = \
-	$(DELAY_POOL_SOURCE) \
-	$(DNSSOURCE) \
-	$(HTCPSOURCE) \
-	$(IPC_SOURCE) \
-	$(SNMP_SOURCE) \
-	$(WIN32_SOURCE) \
-	AccessLogEntry.cc \
-	AuthReg.h \
-	BodyPipe.cc \
-	tests/stub_CacheDigest.cc \
-	CacheDigest.h \
-	CachePeer.cc \
-	CachePeer.h \
-	CachePeers.cc \
-	CachePeers.h \
-	ClientInfo.h \
-	tests/stub_CollapsedForwarding.cc \
-	ConfigOption.cc \
+	tests/testHttpRequest.cc \
+	tests/testHttpRequestMethod.cc
+nodist_tests_testHttpRequest_SOURCES = \
+	$(TESTSOURCES) \
+	tests/stub_ACLFilledChecklist.cc \
+	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
-	CpuAffinityMap.cc \
-	CpuAffinityMap.h \
-	CpuAffinitySet.cc \
-	CpuAffinitySet.h \
 	tests/stub_ETag.cc \
-	tests/stub_EventLoop.cc \
-	ExternalACLEntry.cc \
-	FadingCounter.cc \
-	FwdState.cc \
-	FwdState.h \
-	HappyConnOpener.cc \
-	HappyConnOpener.h \
-	HttpBody.cc \
-	HttpBody.h \
-	tests/stub_HttpControlMsg.cc \
+	tests/stub_HelperChildConfig.cc \
 	HttpHdrCc.cc \
-	HttpHdrCc.h \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpHeader.cc \
-	HttpHeader.h \
-	HttpHeaderFieldStat.h \
 	HttpHeaderTools.cc \
-	HttpHeaderTools.h \
-	HttpReply.cc \
+	tests/stub_HttpReply.cc \
 	HttpRequest.cc \
-	tests/testHttpRequest.cc \
-	tests/testHttpRequestMethod.cc \
-	tests/stub_HttpUpgradeProtocolAccess.cc \
-	IoStats.h \
-	tests/stub_IpcIoFile.cc \
-	LogTags.cc \
 	MasterXaction.cc \
-	MasterXaction.h \
 	MemBuf.cc \
-	MemObject.cc \
-	MemStore.cc \
 	Notes.cc \
-	Notes.h \
-	Parsing.cc \
-	PeerPoolMgr.cc \
-	PeerPoolMgr.h \
-	Pipeline.cc \
-	Pipeline.h \
-	RefreshPattern.h \
-	RemovalPolicy.cc \
 	RequestFlags.cc \
-	RequestFlags.h \
-	ResolvedPeers.cc \
-	ResolvedPeers.h \
-	SquidMath.cc \
-	SquidMath.h \
-	StatCounters.cc \
-	StatCounters.h \
 	StatHist.cc \
-	StatHist.h \
-	StoreFileSystem.cc \
-	StoreIOState.cc \
-	StoreSwapLogData.cc \
 	StrList.cc \
-	StrList.h \
 	String.cc \
-	Transients.cc \
+	tests/stub_access_log.cc \
+	tests/stub_acl.cc \
+	tests/stub_adaptation_History.cc \
 	tests/stub_cache_cf.cc \
-	cache_cf.h \
-	cache_manager.cc \
-	tests/stub_carp.cc \
-	carp.h \
-	cbdata.cc \
-	clientStream.cc \
-	tests/stub_client_db.cc \
-	client_side.cc \
-	client_side.h \
-	client_side_reply.cc \
-	client_side_request.cc \
-	dlink.cc \
-	dlink.h \
-	errorpage.cc \
-	event.cc \
-	external_acl.cc \
+	tests/stub_cache_manager.cc \
+	tests/stub_cbdata.cc \
+	tests/stub_client_side.cc \
+	tests/stub_debug.cc \
+	tests/stub_event.cc \
 	tests/stub_fatal.cc \
-	fatal.h \
-	fd.cc \
-	fd.h \
-	fde.cc \
-	fqdncache.cc \
-	fqdncache.h \
-	fs_io.cc \
-	fs_io.h \
-	helper.cc \
-	hier_code.h \
-	http.cc \
-	icp_v2.cc \
-	icp_v3.cc \
-	int.cc \
-	int.h \
-	internal.cc \
-	internal.h \
-	tests/stub_ipc_Forwarder.cc \
-	ipcache.cc \
-	tests/stub_libauth.cc \
-	tests/stub_libauth_acls.cc \
-	tests/stub_libdiskio.cc \
+	tests/stub_libdns.cc \
 	tests/stub_liberror.cc \
-	tests/stub_libeui.cc \
-	tests/stub_libmem.cc \
-	tests/stub_libsecurity.cc \
-	tests/stub_libstore.cc \
-	tests/stub_main_cc.cc \
-	mem_node.cc \
-	mime.cc \
-	mime.h \
+	tests/stub_libformat.cc \
+	tests/stub_liblog.cc \
+	tests/stub_libtime.cc \
 	mime_header.cc \
-	mime_header.h \
-	multicast.cc \
-	multicast.h \
-	neighbors.cc \
-	neighbors.h \
-	pconn.cc \
-	peer_digest.cc \
-	peer_proxy_negotiate_auth.cc \
-	peer_proxy_negotiate_auth.h \
-	peer_select.cc \
-	peer_sourcehash.cc \
-	peer_sourcehash.h \
-	peer_userhash.cc \
-	peer_userhash.h \
-	tests/stub_redirect.cc \
-	redirect.h \
-	refresh.cc \
-	refresh.h \
-	repl_modules.h \
-	stat.cc \
-	stat.h \
-	stmem.cc \
-	store.cc \
-	store_client.cc \
-	tests/stub_store_digest.cc \
-	store_digest.h \
-	store_io.cc \
-	store_key_md5.cc \
-	store_key_md5.h \
-	store_log.cc \
-	store_log.h \
-	store_rebuild.cc \
-	store_rebuild.h \
-	tests/stub_store_stats.cc \
-	store_swapin.cc \
-	store_swapin.h \
-	store_swapout.cc \
-	tools.cc \
-	tools.h \
-	tests/stub_tunnel.cc \
-	tunnel.h \
-	urn.cc \
-	urn.h \
-	tests/stub_wccp2.cc \
-	wccp2.h \
-	wordlist.cc \
-	wordlist.h
-nodist_tests_testHttpRequest_SOURCES = \
-	$(BUILT_SOURCES) \
-	tests/stub_libtime.cc
+	tests/stub_neighbors.cc \
+	tests/stub_store.cc \
+	tests/stub_store_stats.cc
 tests_testHttpRequest_LDADD = \
-	libsquid.la \
-	clients/libclients.la \
-	servers/libservers.la \
-	helper/libhelper.la \
-	ftp/libftp.la \
-	http/libhttp.la \
-	acl/libacls.la \
-	acl/libstate.la \
-	acl/libapi.la \
-	parser/libparser.la \
-	ip/libip.la \
-	fs/libfs.la \
-	$(SSL_LIBS) \
-	ipc/libipc.la \
-	proxyp/libproxyp.la \
-	parser/libparser.la \
-	dns/libdns.la \
 	base/libbase.la \
-	mgr/libmgr.la \
-	html/libhtml.la \
-	anyp/libanyp.la \
-	$(SNMP_LIBS) \
-	icmp/libicmp.la \
-	comm/libcomm.la \
-	log/liblog.la \
-	format/libformat.la \
-	store/libstore.la \
 	sbuf/libsbuf.la \
-	debug/libdebug.la \
-	$(REPL_OBJS) \
-	$(ADAPTATION_LIBS) \
-	$(top_builddir)/lib/libmisccontainers.la \
+	SquidConfig.o \
+	ip/libip.la \
+	parser/libparser.la \
+	mem/libmem.la \
+	http/libhttp.la \
+	anyp/libanyp.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(LIBCAP_LIBS) \
-	$(LIBGNUTLS_LIBS) \
-	$(LIBHEIMDAL_KRB5_LIBS) \
-	$(REGEXLIB) \
-	$(SSLLIB) \
-	$(LIBCPPUNIT_LIBS) \
-	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
-	$(LIBGSS_LIBS) \
-	$(LIBMIT_KRB5_LIBS) \
+	$(LIBCPPUNIT_LIBS) \
+	$(LIBGNUTLS_LIBS) \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
-	$(LIBPSAPI_LIBS) \
+	$(SSLLIB) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
@@ -2486,6 +2088,8 @@ tests_testCacheManager_SOURCES = \
 	FwdState.h \
 	HappyConnOpener.cc \
 	HappyConnOpener.h \
+	HeaderMangling.cc \
+	HeaderMangling.h \
 	HttpBody.cc \
 	HttpBody.h \
 	tests/stub_HttpControlMsg.cc \
@@ -2503,6 +2107,7 @@ tests_testCacheManager_SOURCES = \
 	HttpReply.cc \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
+	tests/stub_Instance.cc \
 	IoStats.h \
 	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
@@ -2649,9 +2254,9 @@ tests_testCacheManager_LDADD = \
 	acl/libapi.la \
 	dns/libdns.la \
 	base/libbase.la \
-	ip/libip.la \
 	fs/libfs.la \
 	comm/libcomm.la \
+	ip/libip.la \
 	eui/libeui.la \
 	icmp/libicmp.la \
 	log/liblog.la \

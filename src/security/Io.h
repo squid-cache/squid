@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -67,6 +67,10 @@ IoResult Connect(Comm::Connection &transport);
 
 /// clear any errors that a TLS library has accumulated in its global storage
 void ForgetErrors();
+
+/// perform the steps that are necessary to perform before the upcoming TLS I/O
+/// to correctly interpret/detail the outcome of that I/O; implies ForgetErrors()
+void PrepForIo();
 
 } // namespace Security
 

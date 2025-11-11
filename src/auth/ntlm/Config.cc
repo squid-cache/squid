@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -117,18 +117,6 @@ bool
 Auth::Ntlm::Config::active() const
 {
     return authntlm_initialised == 1;
-}
-
-bool
-Auth::Ntlm::Config::configured() const
-{
-    if ((authenticateProgram != nullptr) && (authenticateChildren.n_max != 0)) {
-        debugs(29, 9, "returning configured");
-        return true;
-    }
-
-    debugs(29, 9, "returning unconfigured");
-    return false;
 }
 
 /* NTLM Scheme */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -497,7 +497,7 @@ Adaptation::Ecap::XactionRep::updateHistory(Http::Message *adapted)
 
     // Store received meta headers for adapt::<last_h logformat code use.
     // If we already have stored headers from a previous adaptation transaction
-    // related to the same master transction, they will be replaced.
+    // related to the same master transaction, they will be replaced.
     Adaptation::History::Pointer ah = request->adaptLogHistory();
     if (ah != nullptr) {
         HttpHeader meta(hoReply);

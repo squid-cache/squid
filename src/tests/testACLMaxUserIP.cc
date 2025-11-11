@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -86,7 +86,7 @@ TestACLMaxUserIP::testParseLine()
         /* we want a maximum of one, and strict to be true */
         CPPUNIT_ASSERT_EQUAL(1, maxUserIpACL->getMaximum());
         CPPUNIT_ASSERT_EQUAL(true, static_cast<bool>(maxUserIpACL->beStrict));
-        /* the acl must be vaid */
+        /* the acl must be valid */
         CPPUNIT_ASSERT_EQUAL(true, maxUserIpACL->valid());
     }
     Acl::FreeNamedAcls(&Config.namedAcls);

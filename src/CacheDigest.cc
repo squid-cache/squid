@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -237,8 +237,6 @@ cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * se
                       hit_count, xpercent(hit_count, tot_count),
                       miss_count, xpercent(miss_count, tot_count),
                       tot_count, xpercent(tot_count, tot_count));
-    storeAppendPrintf(sentry, "\tclose_hits: %d ( %d%%) /* cd said hit, doc was in the peer cache, but we got a miss */\n",
-                      stats->closeHits, xpercentInt(stats->closeHits, stats->falseHits));
 }
 
 void

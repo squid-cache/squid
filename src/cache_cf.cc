@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,6 +28,8 @@
 #include "cache_cf.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
+#include "compat/netdb.h"
+#include "compat/socket.h"
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
@@ -39,7 +41,7 @@
 #include "fqdncache.h"
 #include "ftp/Elements.h"
 #include "globals.h"
-#include "HttpHeaderTools.h"
+#include "HeaderMangling.h"
 #include "HttpUpgradeProtocolAccess.h"
 #include "icmp/IcmpConfig.h"
 #include "ip/Intercept.h"
@@ -103,9 +105,6 @@
 #endif
 #if HAVE_GRP_H
 #include <grp.h>
-#endif
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
 #endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -920,19 +919,8 @@ configDoConfigure(void)
 
             Config2.effectiveGroupID = pwd->pw_gid;
 
-#if HAVE_PUTENV
-            if (pwd->pw_dir && *pwd->pw_dir) {
-                // putenv() leaks by design; avoid leaks when nothing changes
-                static SBuf lastDir;
-                if (lastDir.isEmpty() || lastDir.cmp(pwd->pw_dir) != 0) {
-                    lastDir = pwd->pw_dir;
-                    int len = strlen(pwd->pw_dir) + 6;
-                    char *env_str = (char *)xcalloc(len, 1);
-                    snprintf(env_str, len, "HOME=%s", pwd->pw_dir);
-                    putenv(env_str);
-                }
-            }
-#endif
+            if (pwd->pw_dir && *pwd->pw_dir)
+                (void)setenv("HOME", pwd->pw_dir, 1);
         }
     } else {
         Config2.effectiveUserID = geteuid();
@@ -2130,7 +2118,7 @@ GetService(const char *proto)
     }
     /** Returns either the service port number from /etc/services */
     if ( !isUnsignedNumeric(token, strlen(token)) )
-        port = getservbyname(token, proto);
+        port = xgetservbyname(token, proto);
     if (port != nullptr) {
         return ntohs((unsigned short)port->s_port);
     }

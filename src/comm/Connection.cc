@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,17 +28,6 @@ Comm::IsConnOpen(const Comm::ConnectionPointer &conn)
 {
     return conn != nullptr && conn->isOpen();
 }
-
-Comm::Connection::Connection() :
-    peerType(HIER_NONE),
-    fd(-1),
-    tos(0),
-    nfmark(0),
-    flags(COMM_NONBLOCKING),
-    peer_(nullptr),
-    startTime_(squid_curtime),
-    tlsHistory(nullptr)
-{}
 
 Comm::Connection::~Connection()
 {

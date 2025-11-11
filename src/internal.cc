@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,7 +34,7 @@ internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, 
     ErrorState *err;
 
     Assure(request);
-    const SBuf upath = request->url.path();
+    const SBuf upath = request->url.absolutePath();
     debugs(76, 3, clientConn << " requesting '" << upath << "'");
 
     Assure(request->flags.internal);

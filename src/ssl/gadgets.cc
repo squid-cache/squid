@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,52 @@
 #include "sbuf/Stream.h"
 #include "security/Io.h"
 #include "ssl/gadgets.h"
+
+/// whether to supply a digest algorithm name when calling X509_sign() with the given key
+static bool
+signWithDigest(const Security::PrivateKeyPointer &key) {
+#if HAVE_LIBCRYPTO_EVP_PKEY_GET_DEFAULT_DIGEST_NAME
+    Assure(key); // TODO: Add and use Security::PrivateKey (here and in caller).
+    const auto pkey = key.get();
+
+    // OpenSSL does not define a maximum name size, but does terminate longer
+    // names without returning an error to the caller. Many similar callers in
+    // OpenSSL sources use 80-byte buffers.
+    char defaultDigestName[80] = "";
+    const auto nameGetterResult = EVP_PKEY_get_default_digest_name(pkey, defaultDigestName, sizeof(defaultDigestName));
+    debugs(83, 3, "nameGetterResult=" << nameGetterResult << " defaultDigestName=" << defaultDigestName);
+    if (nameGetterResult <= 0) {
+        debugs(83, 3, "ERROR: EVP_PKEY_get_default_digest_name() failure: " << Ssl::ReportAndForgetErrors);
+        // Backward compatibility: On error, assume digest should be used.
+        // TODO: Return false for -2 nameGetterResult as it "indicates the
+        // operation is not supported by the public key algorithm"?
+        return true;
+    }
+
+    // The name "UNDEF" signifies that a digest must (for return value 2) or may
+    // (for return value 1) be left unspecified.
+    if (nameGetterResult == 2 && strcmp(defaultDigestName, "UNDEF") == 0)
+        return false;
+
+    // Defined mandatory algorithms and "may be left unspecified" cases mentioned above.
+    return true;
+
+#else
+    // TODO: Drop this legacy code when we stop supporting OpenSSL v1;
+    // EVP_PKEY_get_default_digest_name() is available starting with OpenSSL v3.
+    (void)key;
+
+    // assume that digest is required for all key types supported by older OpenSSL versions
+    return true;
+#endif // HAVE_LIBCRYPTO_EVP_PKEY_GET_DEFAULT_DIGEST_NAME
+}
+
+/// OpenSSL X509_sign() wrapper
+static auto
+Sign(Security::Certificate &cert, const Security::PrivateKeyPointer &key, const EVP_MD &availableDigest) {
+    const auto digestOrNil = signWithDigest(key) ? &availableDigest : nullptr;
+    return X509_sign(&cert, key.get(), digestOrNil);
+}
 
 void
 Ssl::ForgetErrors()
@@ -330,8 +376,8 @@ mimicAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mi
     if (addKeyId) {
         X509_EXTENSION *ext;
         // Check if the issuer has the Subject Key Identifier extension
-        const int indx = X509_get_ext_by_NID(issuerCert.get(), NID_subject_key_identifier, -1);
-        if (indx >= 0 && (ext = X509_get_ext(issuerCert.get(), indx))) {
+        const int index = X509_get_ext_by_NID(issuerCert.get(), NID_subject_key_identifier, -1);
+        if (index >= 0 && (ext = X509_get_ext(issuerCert.get(), index))) {
             issuerKeyId.reset((ASN1_OCTET_STRING *)X509V3_EXT_d2i(ext));
         }
     }
@@ -525,7 +571,7 @@ Ssl::ParseCommonNameAt(X509_NAME &name, const int cnIndex)
     return std::nullopt;
 }
 
-/// Adds a new subjectAltName extension contining Subject CN or returns false
+/// Adds a new subjectAltName extension containing Subject CN or returns false
 /// expects the caller to check for the existing subjectAltName extension
 static bool
 addAltNameWithSubjectCn(Security::CertPointer &cert)
@@ -677,9 +723,9 @@ static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Secu
     assert(hash);
     /*Now sign the request */
     if (properties.signAlgorithm != Ssl::algSignSelf && properties.signWithPkey.get())
-        ret = X509_sign(cert.get(), properties.signWithPkey.get(), hash);
+        ret = Sign(*cert, properties.signWithPkey, *hash);
     else //else sign with self key (self signed request)
-        ret = X509_sign(cert.get(), pkey.get(), hash);
+        ret = Sign(*cert, pkey, *hash);
 
     if (!ret)
         return false;

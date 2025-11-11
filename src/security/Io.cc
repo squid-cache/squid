@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,6 @@ namespace Security {
 
 template <typename Fun>
 static IoResult Handshake(Comm::Connection &, ErrorCode, Fun);
-static void PrepForIo();
 
 typedef SessionPointer::element_type *ConnectionPointer;
 
@@ -75,9 +74,7 @@ Security::ForgetErrors()
 #endif
 }
 
-/// the steps necessary to perform before the upcoming TLS I/O
-/// to correctly interpret/detail the outcome of that I/O
-static void
+void
 Security::PrepForIo()
 {
     // flush earlier errors that some call forgot to extract, so that we will

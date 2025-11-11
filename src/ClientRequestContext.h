@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,7 +33,6 @@ public:
     ClientRequestContext(ClientHttpRequest *);
     ~ClientRequestContext() override;
 
-    bool httpStateIsValid();
     void hostHeaderVerify();
     void hostHeaderIpVerify(const ipcache_addrs *, const Dns::LookupDetails &);
     void hostHeaderVerifyFailed(const char *A, const char *B);

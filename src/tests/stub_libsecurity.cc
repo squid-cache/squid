@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,6 +51,7 @@ Security::IoResult Security::Connect(Comm::Connection &) STUB_RETVAL(IoResult(Io
 void Security::IoResult::printGist(std::ostream &) const STUB
 void Security::IoResult::printWithExtras(std::ostream &) const STUB
 void Security::ForgetErrors() STUB
+void Security::PrepForIo() STUB
 
 #include "security/KeyData.h"
 namespace Security

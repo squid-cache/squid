@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,19 +10,14 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "debug/Messages.h"
 #include "debug/Stream.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
-
-// Solaris and possibly others lack MSG_NOSIGNAL optimization
-// TODO: move this into compat/? Use a dedicated compat file to avoid dragging
-// sys/socket.h into the rest of Squid??
-#ifndef MSG_NOSIGNAL
-#define MSG_NOSIGNAL 0
-#endif
 
 int default_read_method(int, char *, int);
 int default_write_method(int, const char *, int);
@@ -103,7 +98,7 @@ fd_close(int fd)
 int
 socket_read_method(int fd, char *buf, int len)
 {
-    return recv(fd, (void *) buf, len, 0);
+    return xrecv(fd, (void *) buf, len, 0);
 }
 
 int
@@ -115,7 +110,7 @@ file_read_method(int fd, char *buf, int len)
 int
 socket_write_method(int fd, const char *buf, int len)
 {
-    return send(fd, (const void *) buf, len, 0);
+    return xsend(fd, buf, len, 0);
 }
 
 int
@@ -128,13 +123,13 @@ file_write_method(int fd, const char *buf, int len)
 int
 default_read_method(int fd, char *buf, int len)
 {
-    return read(fd, buf, len);
+    return xread(fd, buf, len);
 }
 
 int
 default_write_method(int fd, const char *buf, int len)
 {
-    return write(fd, buf, len);
+    return xwrite(fd, buf, len);
 }
 
 int

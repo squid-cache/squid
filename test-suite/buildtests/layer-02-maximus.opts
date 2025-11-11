@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -49,6 +49,7 @@ MAKETEST="distcheck"
 #   --with-ldap \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
+#   --enable-arch-native \  can fail on virtualized environments
 #
 #
 # NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the

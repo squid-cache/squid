@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -162,8 +162,6 @@ public:
 
     char *peer_login;       /* Configured peer login:password */
 
-    char *peer_host;           /* Selected peer host*/
-
     time_t lastmod;     /* Used on refreshes */
 
     /// The variant second-stage cache key. Generated from Vary header pattern for this request.
@@ -206,7 +204,7 @@ public:
 
     void swapOut(StoreEntry * e);
 
-    void pack(Packable * p) const;
+    void pack(Packable * p, bool maskSensitiveInfo = false) const;
 
     static void httpRequestPack(void *obj, Packable *p);
 
