@@ -194,6 +194,7 @@ This section gives an account of those changes in three categories:
 	<item><ref id="newdirectives" name="New directives">
 	<item><ref id="modifieddirectives" name="Changes to existing directives">
 	<item><ref id="removeddirectives" name="Removed directives">
+	<item><ref id="otherchanges" name="Other changes">
 </itemize>
 <p>
 
@@ -277,6 +278,14 @@ This section gives an account of those changes in three categories:
 	   upgraded to an HTTP/1.1 message.
 </descrip>
 
+<sect1>Other changes<label id="otherchanges">
+<p>
+<descrip>
+	<tag>ext_time_quota_acl helper</tag>
+	<p>The <em>-l</em> option that enables logging of debug messages
+	   to a custom logfile has been removed, and their format has been
+	   changed to be in line with Squid <em>cache.log</em> format.
+</descrip>
 
 <sect>Changes to ./configure options since Squid-@SQUID_RELEASE_OLD@
 <p>
@@ -306,7 +315,9 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p>No ./configure options have been changed.
+	<tag>--disable-esi</tag>
+	<p>The ESI feature is now disabled by default.
+	   Use <em>--enable-esi</em> if needed.
 
 </descrip>
 </p>
