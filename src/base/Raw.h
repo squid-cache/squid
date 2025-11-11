@@ -22,7 +22,7 @@ class Raw
 {
 public:
     Raw(const char *label, const char *data, const size_t size) :
-        label_(label), data_(data), size_(size) { atMost(size); }
+        label_(label), data_(data), size_(size) {}
 
     /// limit data printing to at least the given debugging level
     Raw &minLevel(const int aLevel) { level = aLevel; return *this; }
