@@ -28,7 +28,7 @@ public:
     Raw &minLevel(const int aLevel) { level = aLevel; return *this; }
 
     /// print no more than n bytes of data
-    Raw &atMost(const size_t n) { printableSize_ = std::min(n, printableSize_); return *this; }
+    Raw &atMost(const size_t n) { printableSize_ = n; return *this; }
 
     /// do not limit output size; caller responsible for huge dumps
     Raw &whole() { printableSize_ = size_; return *this; }
