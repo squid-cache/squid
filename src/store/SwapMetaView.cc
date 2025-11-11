@@ -93,7 +93,7 @@ Store::operator <<(std::ostream &os, const SwapMetaView &meta)
     os << "type=" << int(meta.rawType);
     // XXX: Change Raw constructor to take void* data instead of casting here.
     const auto rawValue = reinterpret_cast<const char*>(meta.rawValue);
-    os << Raw("value", rawValue, meta.rawLength).minLevel(DBG_DATA).hex();
+    os << Raw("value", rawValue, meta.rawLength).whole().minLevel(DBG_DATA).hex();
     return os;
 }
 
