@@ -16,18 +16,17 @@ This new release is available for download from <url url="http://www.squid-cache
 
 <sect1>Known issues
 <p>Although this release is deemed good enough for use in many setups, please note the existence of
-<url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=@SQUID_RELEASE@" name="open bugs against Squid-@SQUID_RELEASE@">.
+ <url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=@SQUID_RELEASE@" name="open bugs against Squid-@SQUID_RELEASE@">.
 
 <p>Support for compiling on HPUX with the native HP <em>xcc</em> compiler has been removed.
-  To build on that OS/compiler combination, it is possible to pass these environment variables
-  to ./configure: <em>CC="cxx -Ae" RANLIB=":"</em>
+   To build on that OS/compiler combination, it is possible to pass these environment variables
+   to ./configure: <em>CC="cxx -Ae" RANLIB=":"</em>
 
 <p>This release adds a dependency on C++17 support in any compiler used to build Squid.
-  GCC 8+ and Clang 8+ support C++17.
+   GCC 8+ and Clang 8+ support C++17.
 
 <sect1>Changes since earlier releases of Squid-@SQUID_RELEASE@
-<p>
-The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squid-cache/squid/commits/v@SQUID_RELEASE@" name="viewed here">.
+<p>The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squid-cache/squid/commits/v@SQUID_RELEASE@" name="viewed here">.
 
 
 <sect>Major new features since Squid-@SQUID_RELEASE_OLD@
@@ -195,6 +194,7 @@ This section gives an account of those changes in three categories:
 	<item><ref id="newdirectives" name="New directives">
 	<item><ref id="modifieddirectives" name="Changes to existing directives">
 	<item><ref id="removeddirectives" name="Removed directives">
+	<item><ref id="otherchanges" name="Other changes">
 </itemize>
 <p>
 
@@ -278,6 +278,14 @@ This section gives an account of those changes in three categories:
 	   upgraded to an HTTP/1.1 message.
 </descrip>
 
+<sect1>Other changes<label id="otherchanges">
+<p>
+<descrip>
+	<tag>ext_time_quota_acl helper</tag>
+	<p>The <em>-l</em> option that enables logging of debug messages
+	   to a custom logfile has been removed, and their format has been
+	   changed to be in line with Squid <em>cache.log</em> format.
+</descrip>
 
 <sect>Changes to ./configure options since Squid-@SQUID_RELEASE_OLD@
 <p>
@@ -307,7 +315,9 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p>No ./configure options have been changed.
+	<tag>--disable-esi</tag>
+	<p>The ESI feature is now disabled by default.
+	   Use <em>--enable-esi</em> if needed.
 
 </descrip>
 </p>
