@@ -33,8 +33,8 @@ jobs:
           - debian-stable
           - debian-testing
           - debian-unstable
-          - fedora-41
           - fedora-42
+          - fedora-43
           - fedora-rawhide
           - gentoo
           - opensuse-leap
@@ -144,7 +144,7 @@ jobs:
     strategy:
       matrix:
         osversion:
-          - 14.2
+          - 14.3
 
     runs-on: ubuntu-24.04
     name: freebsd(${{ matrix.osversion }})
@@ -198,12 +198,12 @@ jobs:
         uses: vmactions/openbsd-vm@v1
         with:
           usesh: true
-          release: "7.6"
+          release: "7.7"
           prepare: |
             pkg_add \
-              autoconf-2.72p0 \
+              autoconf%2.72 \
               autoconf-archive \
-              automake-1.16.5 \
+              automake%1.16 \
               bash \
               coreutils \
               cppunit \

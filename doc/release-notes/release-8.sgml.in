@@ -126,6 +126,13 @@ This section gives an account of those changes in three categories:
 	connection should increase the configured limit by one to preserve
 	previous behavior.
 
+	<tag>htcp_clr_access</tag>
+
+	<p>HTCP CLR requests denied by this directive are no longer forwarded to
+	cache_peers that are configured to receive forwarded CLR requests. Only
+	HTCP CLR requests allowed by this directive are forwarded to those
+	cache_peers.
+
 	<tag>http_port</tag>
 	<p>Removed <em>sslversion=</em> option.
 	<p>Removed <em>tls-options=</em> support for <em>SSLREF2_REUSE_CERT_TYPE_BUG</em>,
@@ -136,7 +143,7 @@ This section gives an account of those changes in three categories:
 	<p>Removed <em>tls-options=</em> support for <em>SSLREF2_REUSE_CERT_TYPE_BUG</em>,
 	    <em>MICROSOFT_BIG_SSLV3_BUFFER</em> and <em>NO_SSLv3</em>.
 
-	<tag>tls_ougoing_options</tag>
+	<tag>tls_outgoing_options</tag>
 	<p>Removed <em>version=</em> option.
 	<p>Removed <em>options=</em> support for <em>SSLREF2_REUSE_CERT_TYPE_BUG</em>,
 	    <em>MICROSOFT_BIG_SSLV3_BUFFER</em> and <em>NO_SSLv3</em>.

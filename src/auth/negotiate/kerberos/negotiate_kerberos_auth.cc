@@ -348,12 +348,9 @@ main(int argc, char *const argv[])
     char default_keytab[MAXPATHLEN] = {};
 #if HAVE_KRB5_MEMORY_KEYTAB
     char *memory_keytab_name = nullptr;
-    char *memory_keytab_name_env = nullptr;
 #endif
     char *rcache_type = nullptr;
-    char *rcache_type_env = nullptr;
     char *rcache_dir = nullptr;
-    char *rcache_dir_env = nullptr;
     OM_uint32 major_status, minor_status;
     gss_ctx_id_t gss_context = GSS_C_NO_CONTEXT;
     gss_name_t client_name = GSS_C_NO_NAME;
@@ -507,28 +504,19 @@ main(int argc, char *const argv[])
     }
 
     if (rcache_type) {
-        rcache_type_env = (char *) xmalloc(strlen("KRB5RCACHETYPE=")+strlen(rcache_type)+1);
-        strcpy(rcache_type_env, "KRB5RCACHETYPE=");
-        strcat(rcache_type_env, rcache_type);
-        putenv(rcache_type_env);
+        (void)setenv("KRB5RCACHETYPE", rcache_type, 1);
         debug((char *) "%s| %s: INFO: Setting replay cache type to %s\n",
               LogTime(), PROGRAM, rcache_type);
     }
 
     if (rcache_dir) {
-        rcache_dir_env = (char *) xmalloc(strlen("KRB5RCACHEDIR=")+strlen(rcache_dir)+1);
-        strcpy(rcache_dir_env, "KRB5RCACHEDIR=");
-        strcat(rcache_dir_env, rcache_dir);
-        putenv(rcache_dir_env);
+        (void)setenv("KRB5RCACHEDIR", rcache_dir, 1);
         debug((char *) "%s| %s: INFO: Setting replay cache directory to %s\n",
               LogTime(), PROGRAM, rcache_dir);
     }
 
     if (keytab_name) {
-        keytab_name_env = (char *) xmalloc(strlen("KRB5_KTNAME=")+strlen(keytab_name)+1);
-        strcpy(keytab_name_env, "KRB5_KTNAME=");
-        strcat(keytab_name_env, keytab_name);
-        putenv(keytab_name_env);
+        (void)setenv("KRB5_KTNAME", keytab_name, 1);
     } else {
         keytab_name_env = getenv("KRB5_KTNAME");
         if (!keytab_name_env) {
@@ -558,10 +546,7 @@ main(int argc, char *const argv[])
                 debug((char *) "%s| %s: ERROR: Writing list into keytab %s\n",
                       LogTime(), PROGRAM, memory_keytab_name);
             } else {
-                memory_keytab_name_env = (char *) xmalloc(strlen("KRB5_KTNAME=")+strlen(memory_keytab_name)+1);
-                strcpy(memory_keytab_name_env, "KRB5_KTNAME=");
-                strcat(memory_keytab_name_env, memory_keytab_name);
-                putenv(memory_keytab_name_env);
+                (void)setenv("KRB5_KTNAME", memory_keytab_name, 1);
                 xfree(keytab_name);
                 keytab_name = xstrdup(memory_keytab_name);
                 debug((char *) "%s| %s: INFO: Changed keytab to %s\n",
@@ -639,15 +624,11 @@ main(int argc, char *const argv[])
             }
             xfree(token);
             xfree(rcache_type);
-            xfree(rcache_type_env);
             xfree(rcache_dir);
-            xfree(rcache_dir_env);
             xfree(keytab_name);
-            xfree(keytab_name_env);
 #if HAVE_KRB5_MEMORY_KEYTAB
             krb5_kt_close(context, memory_keytab);
             xfree(memory_keytab_name);
-            xfree(memory_keytab_name_env);
 #endif
             xfree(rfc_user);
             fprintf(stdout, "BH quit command\n");

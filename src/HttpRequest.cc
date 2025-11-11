@@ -340,14 +340,14 @@ HttpRequest::swapOut(StoreEntry * e)
 
 /* packs request-line and headers, appends <crlf> terminator */
 void
-HttpRequest::pack(Packable * p) const
+HttpRequest::pack(Packable * const p, const bool maskSensitiveInfo) const
 {
     assert(p);
     /* pack request-line */
     packFirstLineInto(p, false /* origin-form */);
     /* headers */
-    header.packInto(p);
-    /* trailer */
+    header.packInto(p, maskSensitiveInfo);
+    /* indicate the end of the header section */
     p->append("\r\n", 2);
 }
 

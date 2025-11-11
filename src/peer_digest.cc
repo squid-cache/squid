@@ -398,7 +398,7 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
          */
         newsize = fetch->bufofs - retsize;
 
-        memmove(fetch->buf, fetch->buf + retsize, fetch->bufofs - newsize);
+        memmove(fetch->buf, fetch->buf + retsize, newsize);
 
         fetch->bufofs = newsize;
 
