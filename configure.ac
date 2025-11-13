@@ -1200,7 +1200,9 @@ SQUID_CHECK_LIB_WORKS(gss,[
 SQUID_AUTO_LIB(ldap,[LDAP],[LIBLDAP])
 SQUID_CHECK_LIB_WORKS(ldap,[
   SQUID_STATE_SAVE(squid_ldap_state)
-  PKG_CHECK_MODULES([LIBLDAP],[ldap],[:],[
+  PKG_CHECK_MODULES([LIBLDAP],[ldap],[:],[:])
+  AS_IF([test "x$LIBLDAP_LIBS" = "x"],[
+    dnl hack for detecting OpenLDAP older than 2.5
     AC_CHECK_LIB(lber, ber_init, [LIBLBER="-llber"])
     AC_CHECK_LIB(ldap, ldap_init, [LIBLDAP_LIBS="-lldap $LIBLBER"])
   ])
