@@ -1434,10 +1434,10 @@ HttpHeader::getAuthToken(Http::HdrType id, const char *auth_scheme) const
 
     const auto fieldLen = strlen(field);
     SBuf result;
-    char *decodedAuthToken = result.rawAppendStart(BASE64_DECODE_LENGTH(fieldLen));
     struct base64_decode_ctx ctx;
     base64_decode_init(&ctx);
     size_t decodedLen = BASE64_DECODE_LENGTH(fieldLen);
+    char *decodedAuthToken = result.rawAppendStart(decodedLen);
     if (!base64_decode_update(&ctx, &decodedLen, reinterpret_cast<uint8_t*>(decodedAuthToken), fieldLen, field) ||
             !base64_decode_final(&ctx)) {
         return nil;
