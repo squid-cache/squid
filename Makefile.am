@@ -10,7 +10,6 @@ AUTOMAKE_OPTIONS = dist-bzip2 1.5 foreign
 SUBDIRS = \
 	compat \
 	contrib \
-	doc \
 	errors \
 	icons
 
@@ -24,6 +23,10 @@ SUBDIRS += \
 	src \
 	tools \
 	test-suite
+
+if ENABLE_DOCUMENTATION
+SUBDIRS += doc
+endif
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
 DEFAULT_PINGER = $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`

@@ -16,12 +16,8 @@ EXTRA_DIST= \
 ext_sql_session_acl: ext_sql_session_acl.pl.in
 	$(subst_perlshell)
 
-if ENABLE_POD2MAN_DOC
+if ENABLE_DOCUMENTATION
 man_MANS = ext_sql_session_acl.8
 CLEANFILES += ext_sql_session_acl.8
 EXTRA_DIST += ext_sql_session_acl.8
-
-ext_sql_session_acl.8: ext_sql_session_acl
-	pod2man --section=8 ext_sql_session_acl ext_sql_session_acl.8
-
 endif
