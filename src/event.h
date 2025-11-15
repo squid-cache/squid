@@ -11,7 +11,7 @@
 
 #include "AsyncEngine.h"
 #include "base/Packable.h"
-#include "mem/forward.h"
+#include "mem/AllocatorProxy.h"
 
 /* event scheduling facilities - run a callback after a given time period. */
 

@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_DLINK_H
 #define SQUID_SRC_DLINK_H
 
-#include "mem/forward.h"
+#include "mem/AllocatorProxy.h"
 
 class dlink_node
 {

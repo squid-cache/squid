@@ -18,7 +18,7 @@
 #include "hash.h"
 #include "ip/Address.h"
 #include "LogTags.h"
-#include "mem/forward.h"
+#include "mem/AllocatorProxy.h"
 #include "typedefs.h"
 
 #include <deque>

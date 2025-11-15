@@ -13,7 +13,6 @@
 #include "base/RefCount.h"
 #include "error/forward.h"
 #include "http/forward.h"
-#include "mem/forward.h"
 #include "sbuf/forward.h"
 
 /// interface for supplying additional information about a transaction failure

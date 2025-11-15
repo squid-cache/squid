@@ -33,7 +33,7 @@
  */
 
 #include "md5.h"
-#include "mem/forward.h"
+#include "mem/AllocatorProxy.h"
 #include "store/forward.h"
 
 /// maintains a 24-bit checksum over integer fields
