@@ -116,7 +116,15 @@ public:
     static SBuf Encode(const SBuf &, const CharacterSet &expected);
 
     /// %-decode the given buffer
-    static SBuf Decode(const SBuf &);
+    /// \retval std::nullopt on decoding failures
+    /// \sa DecodeOrDupe()
+    static std::optional<SBuf> Decode(const SBuf &);
+
+    /// %-decode the given buffer
+    /// \retval decoded input if input obeys RFC 3986 Percent-Encoding rules
+    /// \retval an input copy if input violates RFC 3986 Percent-Encoding rules
+    /// \sa Decode()
+    static SBuf DecodeOrDupe(const SBuf &input);
 
     /**
      * The authority-form URI for currently stored values.
