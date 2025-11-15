@@ -337,6 +337,11 @@ This section gives an account of those changes in three categories:
 <sect1>Other changes<label id="otherchanges">
 <p>
 <descrip>
+	<tag>digest_edirectory_auth</tag>
+	<p>LDAPS activation and referrals were broken, and memory could leak.
+	   LDAPS may now negotiate correctly, referrals honor configuration
+	   (use <em>-R</em> to disable), and memory is now properly freed.
+
 	<tag>Adjusted configuration and format of ext_time_quota_acl helper debugging</tag>
 	<p>The <em>-l</em> option that enables <em>ext_time_quota_acl</em> to log debug messages
 		to a custom logfile has been removed, and their format has been
