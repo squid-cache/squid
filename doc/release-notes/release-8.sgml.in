@@ -61,6 +61,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	   placeholders: corrected referrals option processing and aligned the
 	   <tt>%v</tt> placeholder to mean the requested group name, matching
 	   the helper documentation/help-text.
+
 </descrip>
 
 <sect1>Cache Manager changes
