@@ -51,12 +51,6 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 		LDAPS may now negotiate correctly, referrals honor configuration
 		(use <em>-R</em> to disable), and memory is now properly freed.
 
-	<p>Updated <em>ext_ldap_group_acl</em> external ACL helper:
-	   now requires <tt>-B</tt> (user base DN) and <tt>-F</tt>
-	   (user search filter) to locate the user prior to evaluating
-	   group membership. Administrators who omitted one or both options
-	   must update their configurations to continue using this helper.
-
 	<p>Fixed <em>ext_ldap_group_acl</em> handling of LDAP referrals and
 	   placeholders: corrected referrals option processing and aligned the
 	   <tt>%v</tt> placeholder to mean the requested group name, matching
