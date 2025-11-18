@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,12 +13,11 @@
 #include "fde.h"
 #include "globals.h"
 
-Comm::AcceptLimiter Comm::AcceptLimiter::Instance_;
-
 Comm::AcceptLimiter &
 Comm::AcceptLimiter::Instance()
 {
-    return Instance_;
+    static const auto Instance_ = new AcceptLimiter();
+    return *Instance_;
 }
 
 void

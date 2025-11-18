@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -338,7 +338,7 @@ validUsername(const char *user)
         return 0;
     while (p[0] && p[1]) {
         if (xisspace(p[0])) {
-            /* More than one consequitive space? */
+            /* More than one consecutive space? */
             if (xisspace(p[1]))
                 return 0;
             /* or odd space type character used? */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -64,10 +64,10 @@ whoisStart(FwdState * fwd)
     p->entry->lock("whoisStart");
     comm_add_close_handler(fwd->serverConnection()->fd, whoisClose, p);
 
-    size_t l = p->request->url.path().length() + 3;
+    size_t l = p->request->url.absolutePath().length() + 3;
     char *buf = (char *)xmalloc(l);
 
-    const SBuf str_print = p->request->url.path().substr(1);
+    const SBuf str_print = p->request->url.absolutePath().substr(1);
     snprintf(buf, l, SQUIDSBUFPH "\r\n", SQUIDSBUFPRINT(str_print));
 
     AsyncCall::Pointer writeCall = commCbCall(5,5, "whoisWriteComplete",

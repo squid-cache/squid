@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,24 +24,7 @@
 
 CBDATA_CLASS_INIT(ACLFilledChecklist);
 
-ACLFilledChecklist::ACLFilledChecklist() :
-    dst_rdns(nullptr),
-#if USE_AUTH
-    auth_user_request (nullptr),
-#endif
-#if SQUID_SNMP
-    snmp_community(nullptr),
-#endif
-    requestErrorType(ERR_MAX),
-    conn_(nullptr),
-    fd_(-1),
-    destinationDomainChecked_(false),
-    sourceDomainChecked_(false)
-{
-    my_addr.setEmpty();
-    src_addr.setEmpty();
-    dst_addr.setEmpty();
-}
+ACLFilledChecklist::ACLFilledChecklist() = default;
 
 ACLFilledChecklist::~ACLFilledChecklist()
 {
@@ -186,35 +169,20 @@ ACLFilledChecklist::markSourceDomainChecked()
 /*
  * There are two common ACLFilledChecklist lifecycles paths:
  *
- * A) Using aclCheckFast(): The caller creates an ACLFilledChecklist object
- *    on stack and calls aclCheckFast().
+ * "Fast" (always synchronous or "blocking"): The user constructs an
+ *    ACLFilledChecklist object on stack, configures it as needed, and calls one
+ *    or both of its fastCheck() methods.
  *
- * B) Using aclNBCheck() and callbacks: The caller allocates an
- *    ACLFilledChecklist object (via operator new) and passes it to
- *    aclNBCheck(). Control eventually passes to ACLChecklist::checkCallback(),
- *    which will invoke the callback function as requested by the
- *    original caller of aclNBCheck().  This callback function must
- *    *not* delete the list.  After the callback function returns,
- *    checkCallback() will delete the list (i.e., self).
+ * "Slow" (usually asynchronous or "non-blocking"): The user allocates an
+ *    ACLFilledChecklist object on heap (via Make()), configures it as needed,
+ *    and passes it to NonBlockingCheck() while specifying the callback function
+ *    to call with check results. NonBlockingCheck() calls the callback function
+ *    (if the corresponding cbdata is still valid), either immediately/directly
+ *    (XXX) or eventually/asynchronously. After this callback obligations are
+ *    fulfilled, checkCallback() deletes the checklist object (i.e. "this").
  */
-ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request):
-    dst_rdns(nullptr),
-#if USE_AUTH
-    auth_user_request(nullptr),
-#endif
-#if SQUID_SNMP
-    snmp_community(nullptr),
-#endif
-    requestErrorType(ERR_MAX),
-    conn_(nullptr),
-    fd_(-1),
-    destinationDomainChecked_(false),
-    sourceDomainChecked_(false)
+ACLFilledChecklist::ACLFilledChecklist(const acl_access * const A, HttpRequest * const http_request)
 {
-    my_addr.setEmpty();
-    src_addr.setEmpty();
-    dst_addr.setEmpty();
-
     changeAcl(A);
     setRequest(http_request);
 }

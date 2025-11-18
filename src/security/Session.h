@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,9 +31,13 @@
 
 namespace Security {
 
+// XXX: Should be only in src/security/forward.h (which should not include us
+// because that #include creates a circular reference and problems like this).
+class FuturePeerContext;
+
 /// Creates TLS Client connection structure (aka 'session' state) and initializes TLS/SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns false.
-bool CreateClientSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
+bool CreateClientSession(FuturePeerContext &, const Comm::ConnectionPointer &, const char *squidCtx);
 
 class PeerOptions;
 

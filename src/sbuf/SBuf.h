@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -491,7 +491,7 @@ public:
     /** Extract a part of the current SBuf.
      *
      * Return a fresh a fresh copy of a portion the current SBuf, which is
-     * left untouched. The same parameter convetions apply as for chop.
+     * left untouched. The same parameter conventions apply as for chop.
      * \see trim, chop
      */
     SBuf substr(size_type pos, size_type n = npos) const;

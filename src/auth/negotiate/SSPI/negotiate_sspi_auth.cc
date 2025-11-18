@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -70,8 +70,6 @@ static int have_serverblob;
 #define SEND3(X,Y,Z) debug("sending '" X "' to squid\n",Y,Z); printf(X "\n",Y,Z);
 #endif
 
-char *negotiate_check_auth(SSP_blobP auth, int auth_length);
-
 /*
  * options:
  * -d enable debugging.
@@ -79,7 +77,7 @@ char *negotiate_check_auth(SSP_blobP auth, int auth_length);
  */
 char *my_program_name = nullptr;
 
-void
+static void
 usage()
 {
     fprintf(stderr,
@@ -90,7 +88,7 @@ usage()
             my_program_name);
 }
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt, had_error = 0;
@@ -135,7 +133,7 @@ token_decode(size_t *decodedLen, uint8_t decoded[], const char *buf)
     return true;
 }
 
-int
+static int
 manage_request()
 {
     char buf[HELPER_INPUT_BUFFER];
@@ -150,7 +148,7 @@ manage_request()
     BOOL Done = FALSE;
 
     do {
-        if (fgets(buf, HELPER_INPUT_BUFFER, stdin))
+        if (!fgets(buf, HELPER_INPUT_BUFFER, stdin))
             return 0;
 
         c = static_cast<char*>(memchr(buf, '\n', HELPER_INPUT_BUFFER));
@@ -170,7 +168,7 @@ manage_request()
     if ((strlen(buf) > 3) && Negotiate_packet_debug_enabled) {
         if (!token_decode(&decodedLen, decoded, buf+3))
             return 1;
-        strncpy(helper_command, buf, 2);
+        xstrncpy(helper_command, buf, sizeof(helper_command));
         debug("Got '%s' from Squid with data:\n", helper_command);
         hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
     } else
@@ -235,14 +233,18 @@ manage_request()
         c = (char *) SSP_ValidateNegotiateCredentials(decoded, decodedLen, &Done, &status, cred);
 
         if (status == SSP_ERROR) {
-            FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                          FORMAT_MESSAGE_IGNORE_INSERTS,
-                          nullptr,
-                          GetLastError(),
-                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),    /* Default language */
-                          (LPTSTR) & ErrorMessage,
-                          0,
-                          nullptr);
+            const auto n = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                                         FORMAT_MESSAGE_IGNORE_INSERTS,
+                                         nullptr,
+                                         GetLastError(),
+                                         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),    /* Default language */
+                                         (LPTSTR) & ErrorMessage,
+                                         0,
+                                         nullptr);
+            if (!n) {
+                SEND2("NA * Windows error: %s", GetLastError());
+                return 1;
+            }
             if (ErrorMessage[strlen(ErrorMessage) - 1] == '\n')
                 ErrorMessage[strlen(ErrorMessage) - 1] = '\0';
             if (ErrorMessage[strlen(ErrorMessage) - 1] == '\r')

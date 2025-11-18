@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -19,7 +19,6 @@ DIST_SUBDIRS = \
         RADIUS \
         SASL \
         SMB \
-        SMB_LM \
         SSPI
 
 SUBDIRS = $(BASIC_AUTH_HELPERS)

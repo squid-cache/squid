@@ -1,11 +1,11 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[7.0.0-VCS],[https://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[8.0.0-VCS],[https://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -49,6 +49,16 @@ AS_IF([test -n "$squid_host_os_version"],[
 AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
 
+AS_IF([test -e /etc/os-release],[
+  squid_build_os_release_name=`grep '^PRETTY_NAME=' /etc/os-release | sed 's/^[[^"]]*"//;s/".*$//'`
+  AS_IF([test "x$squid_build_os_release_name" = "x"],[
+    squid_build_os_release_name=`grep '^NAME=' /etc/os-release | sed 's/^[[^"]]*"//;s/".*$//'`
+  ])
+  AS_IF([test "x$squid_build_os_release_name" != "x"],[
+    AC_MSG_NOTICE([Building on $squid_build_os_release_name])
+  ])
+])
+
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_CXX
@@ -58,19 +68,23 @@ AC_USE_SYSTEM_EXTENSIONS
 
 AC_LANG([C++])
 
-# Clang 3.2 on some CPUs requires -march-native to detect correctly.
-# GCC 4.3+ can also produce faster executables when its used.
+# Some compilers can produce faster executables when its used.
 # But building inside a virtual machine environment has been found to
 # cause random Illegal Instruction errors due to mis-detection of CPU.
 AC_ARG_ENABLE(arch-native,
-  AS_HELP_STRING([--disable-arch-native],[Some compilers offer CPU-specific
+  AS_HELP_STRING([--enable-arch-native],[Some compilers offer CPU-specific
                  optimizations with the -march=native parameter.
-                 This flag disables the optimization. The default is to
-                 auto-detect compiler support and use where available.]), [
+                 This flag enables the optimization, by default disabled,
+                 provided that the compiler supports it. Enabling this
+                 optimization may cause crashes due to illegal instruction errors
+                 when Squid is run on a CPU different from the one it is built on,
+                 and in some containerized or virtualized environments]), [
   SQUID_YESNO([$enableval],[--enable-arch-native])
 ])
-AC_MSG_NOTICE([CPU arch native optimization enabled: ${enable_arch_native:=auto}])
-AS_IF([test "x${enable_arch_native}" != "xno"],[
+AC_MSG_NOTICE([CPU arch native optimization enabled: ${enable_arch_native:=no}])
+AS_IF([test "x${enable_arch_native}" = "xyes"],[
+  # XXX: Fail if the explicitly requested native optimization is not available.
+  # TODO: Make this a tristate yes/no/auto.
   SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
 ])
 
@@ -117,6 +131,10 @@ dnl Libtool 2.2.6 requires: rm -f
 RM="$RM -f"
 
 PKG_PROG_PKG_CONFIG
+AS_IF([test "x$PKG_CONFIG" = "x"],[
+  AC_MSG_WARN([pkg-config not found. Many optional features with external dependencies will not be enabled by default, usually without further warnings.])
+])
+
 
 AC_PATH_PROG(PERL, perl, none)
 AS_IF([test "x$ac_cv_path_PERL" = "xnone"],[
@@ -387,13 +405,6 @@ AS_IF([test "x$squid_opt_aufs_threads" != "x"],[
   AC_MSG_NOTICE([With $squid_opt_aufs_threads aufs threads])
   AC_DEFINE_UNQUOTED(AUFS_IO_THREADS,$squid_opt_aufs_threads,
     [Defines how many threads aufs uses for I/O])
-])
-
-## TODO check if this is necessary, LT_INIT does these checks
-SQUID_AUTO_LIB(dl,[dynamic linking],[LIBDL])
-SQUID_CHECK_LIB_WORKS(dl,[
-  LDFLAGS="$LIBDL_PATH $LDFLAGS"
-  AC_CHECK_LIB(dl, dlopen,[LIBDL_LIBS="-ldl"])
 ])
 
 AC_DEFUN([LIBATOMIC_CHECKER],[
@@ -817,38 +828,6 @@ AC_ARG_ENABLE(delay-pools,
 dnl disable generic/common adaptation support by default
 squid_opt_use_adaptation=no
 
-AH_TEMPLATE([USE_SQUID_ESI],[whether to enable ESI processing])
-AC_ARG_ENABLE(esi,[
-  AS_HELP_STRING([--enable-esi],
-                 [Enable ESI for accelerators. ESI requires expat or xml2 library.
-                  Enabling ESI will cause squid reverse proxies to be capable
-                  of the Edge Acceleration Specification (www.esi.org).])
-],[
-  SQUID_DEFINE_BOOL(USE_SQUID_ESI,$enable_esi)
-])
-AC_MSG_NOTICE([Enable ESI processor: ${enable_esi:=no (auto)}])
-
-# ESI support libraries: expat
-SQUID_AUTO_LIB(expat,[ESI expat library],[LIBEXPAT])
-SQUID_CHECK_LIB_WORKS(expat,[
-  PKG_CHECK_MODULES([LIBEXPAT],[expat],[:],[:])
-  CPPFLAGS="$LIBEXPAT_CFLAGS $CPPFLAGS"
-  AC_CHECK_HEADERS(expat.h)
-])
-
-# ESI support libraries: xml2
-SQUID_AUTO_LIB(xml2,[ESI xml2 library],[LIBXML2])
-SQUID_CHECK_LIB_WORKS(xml2,[
-  PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[:],[:])
-  CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
-  AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
-])
-
-AS_IF([test "x$enable_esi" = "xyes" -a "x$LIBXML2_LIBS" = "x" -a "x$LIBEXPAT_LIBS" = "x"],[
-  AC_MSG_ERROR([ESI processor requires libxml2 or libexpat])
-])
-AM_CONDITIONAL(ENABLE_ESI,[test "x$enable_esi" = "xyes"])
-
 AC_ARG_ENABLE(icap-client,
   AS_HELP_STRING([--disable-icap-client],[Disable the ICAP client.]),[
   SQUID_YESNO([$enableval],[--enable-icap-client])
@@ -865,7 +844,7 @@ AC_ARG_ENABLE(ecap,
 dnl Perform configuration consistency checks for eCAP
 AS_IF([test "x$enable_ecap" != "xno"],[
   AS_IF([test "x$enable_shared" != "xyes"],[
-    AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-shared with --enable-ecap.])
+    AC_MSG_ERROR([eCAP support requires loadable modules (i.e. --enable-shared or equivalent).])
   ])
 
   PKG_CHECK_MODULES([EXT_LIBECAP],[libecap >= 1.0 libecap < 1.1],[:],[:])
@@ -1003,6 +982,21 @@ include <windows.h>
   [], [], [[
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
+#endif
+  ]])
+  AC_CHECK_MEMBER([struct arpreq.arp_pa],[],[
+    AS_IF([test "x$squid_host_os" != "xmingw" -a "x$squid_host_os" != "xcygwin"],[
+      AC_MSG_NOTICE([OS support for EUI seems incomplete, disabling it])
+      enable_eui=no
+    ])],[[
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#if HAVE_NET_IF_ARP_H
+#include <net/if_arp.h>
 #endif
   ]])
   SQUID_STATE_ROLLBACK(LIBEUI)
@@ -1187,7 +1181,11 @@ SQUID_CHECK_LIB_WORKS(ldap,[
     dnl On MinGW OpenLDAP is not available, try Windows LDAP libraries
     dnl TODO: use AC_CHECK_LIB
     LIBLDAP_LIBS="-lwldap32"
-    AC_CHECK_HEADERS(winldap.h)
+    AC_CHECK_HEADERS([windows.h winldap.h],,,[
+      #if HAVE_WINDOWS_H
+      #include <windows.h>
+      #endif
+    ])
   ])
   AC_CHECK_HEADERS(ldap.h lber.h)
   AC_CHECK_HEADERS(mozldap/ldap.h)
@@ -1529,7 +1527,6 @@ AC_MSG_NOTICE([Authentication support enabled: ${enable_auth:=yes}])
 SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,[Enable support for authentication])
 AM_CONDITIONAL(ENABLE_AUTH, test "x$enable_auth" != "xno")
 AUTH_MODULES=""
-require_smblib="no"
 require_sspi="no"
 
 AC_ARG_ENABLE(auth-basic,
@@ -1590,7 +1587,6 @@ for module in $AUTH_MODULES; do
 done
 AC_SUBST(AUTH_MODULES)
 AC_SUBST(AUTH_LIBS_TO_BUILD)
-AM_CONDITIONAL(ENABLE_SMBLIB, test "x$require_smblib" = "xyes")
 AM_CONDITIONAL(ENABLE_SSPI, test "x$require_sspi" = "xyes")
 
 dnl Select logging daemon helpers to build
@@ -2083,9 +2079,7 @@ assert(myBar != NULL);
     ])
   ],
 
-  [*-*-solaris2.[[0-4]]],[AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)],
-
-  [*-sony-newsos[[56]]*],[AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)]
+  [*-*-solaris2.[[0-4]]],[AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)]
 )
 
 dnl This has to be before AC_CHECK_FUNCS
@@ -2147,7 +2141,6 @@ AC_CHECK_FUNCS(\
 	pthread_attr_setscope \
 	pthread_setschedparam \
 	pthread_sigmask \
-	putenv \
 	regcomp \
 	regexec \
 	regfree \
@@ -2174,7 +2167,6 @@ AC_CHECK_FUNCS(\
 dnl ... and some we provide local replacements for
 AC_REPLACE_FUNCS(\
 	initgroups \
-	psignal \
 	strerror \
 	strtoll \
 	tempnam \
@@ -2494,11 +2486,7 @@ AC_CONFIG_FILES([
 	errors/Makefile
 	icons/Makefile
 	lib/Makefile
-	lib/libTrie/Makefile
-	lib/libTrie/test/Makefile
 	lib/ntlmauth/Makefile
-	lib/rfcnb/Makefile
-	lib/smblib/Makefile
 	lib/snmplib/Makefile
 	lib/sspi/Makefile
 	scripts/Makefile
@@ -2512,7 +2500,6 @@ AC_CONFIG_FILES([
 	src/acl/external/kerberos_ldap_group/Makefile
 	src/acl/external/kerberos_sid_group/Makefile
 	src/acl/external/LDAP_group/Makefile
-	src/acl/external/LM_group/Makefile
 	src/acl/external/session/Makefile
 	src/acl/external/SQL_session/Makefile
 	src/acl/external/unix_group/Makefile
@@ -2535,7 +2522,6 @@ AC_CONFIG_FILES([
 	src/auth/basic/RADIUS/Makefile
 	src/auth/basic/SASL/Makefile
 	src/auth/basic/SMB/Makefile
-	src/auth/basic/SMB_LM/Makefile
 	src/auth/basic/SSPI/Makefile
 	src/auth/digest/Makefile
 	src/auth/digest/eDirectory/Makefile
@@ -2547,8 +2533,6 @@ AC_CONFIG_FILES([
 	src/auth/negotiate/wrapper/Makefile
 	src/auth/ntlm/Makefile
 	src/auth/ntlm/fake/Makefile
-	src/auth/ntlm/SMB_LM/Makefile
-	src/auth/ntlm/SSPI/Makefile
 	src/base/Makefile
 	src/clients/Makefile
 	src/comm/Makefile
@@ -2562,7 +2546,6 @@ AC_CONFIG_FILES([
 	src/DiskIO/IpcIo/Makefile
 	src/DiskIO/Mmapped/Makefile
 	src/error/Makefile
-	src/esi/Makefile
 	src/eui/Makefile
 	src/format/Makefile
 	src/fs/Makefile

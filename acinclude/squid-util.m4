@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -211,7 +211,7 @@ unset squid_tmp_define
 dnl aborts with an error specified as the second argument if the first argument doesn't
 dnl contain either "yes" or "no"
 AC_DEFUN([SQUID_YESNO],[
-  AS_IF([test "$1" != "yes" -a "$1" != "no"],[AC_MSG_ERROR([Bad argument for $2: "$1". Expecting "yes", "no", or no argument.])])
+  AS_IF([test "$1" != "yes" -a "$1" != "no"],[AC_MSG_ERROR([[Bad argument for $2: '$1'. Expecting 'yes', 'no', or no argument.]])])
 ])
 
 dnl Check that a library is actually available, useable,
@@ -287,22 +287,18 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
     AS_CASE(["$enableval"],
       [no],[:],
       [yes],[
-        AS_IF([test -d "${srcdir}/.bzr"],[
-          AC_PATH_PROG(BZR,bzr,$FALSE)
-          squid_bzr_branch_nick=`cd ${srcdir} && ${BZR} nick 2>/dev/null`
-          AS_IF([test $? -eq 0 -a "x$squid_bzr_branch_nick" != "x"],[
-            squid_bzr_branch_revno=`cd ${srcdir} && ${BZR} revno 2>/dev/null | sed 's/\"//g'`
-          ])
-          AS_IF([test $? -eq 0 -a "x$squid_bzr_branch_revno" != "x"],[
-            sh -c "cd ${srcdir} && ${BZR} diff 2>&1 >/dev/null"
-            AS_IF([test $? -eq 1],[
-              squid_bzr_branch_revno="$squid_bzr_branch_revno+changes"
+        AC_PATH_PROG(GIT,git,$FALSE)
+        AS_IF([test "x$GIT" != "x$FALSE"],[
+          squid_git_branch="`cd ${srcdir} && ${GIT} branch --show-current 2>/dev/null`"
+          squid_git_revno="`cd ${srcdir} && ${GIT} rev-parse --short HEAD 2>/dev/null`"
+          AS_IF([test "x$squid_git_branch" != "x"], [:], [squid_git_branch="unknown"])
+          AS_IF([test "x$squid_git_revno" != "x"],[
+            AS_IF([cd ${srcdir} && ! ${GIT} diff --quiet HEAD],[ # there are uncommitted changes
+              squid_git_revno="$squid_git_revno plus changes"
             ])
           ])
-          AS_IF([test "x$squid_bzr_branch_revno" != "x"],[
-            squid_build_info="Built branch: ${squid_bzr_branch_nick}-r${squid_bzr_branch_revno}"
-          ])
         ])
+        squid_build_info="Git: branch ${squid_git_branch:-unavailable} revision ${squid_git_revno:-unavailable}"
       ],
       [squid_build_info=$enableval]
     )

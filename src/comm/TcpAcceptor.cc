@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,6 +20,7 @@
 #include "comm/Loops.h"
 #include "comm/TcpAcceptor.h"
 #include "CommCalls.h"
+#include "compat/socket.h"
 #include "eui/Config.h"
 #include "fd.h"
 #include "fde.h"
@@ -126,9 +127,8 @@ Comm::TcpAcceptor::status() const
     if (conn == nullptr)
         return "[nil connection]";
 
-    static char ipbuf[MAX_IPSTRLEN] = {'\0'};
-    if (ipbuf[0] == '\0')
-        conn->local.toHostStr(ipbuf, MAX_IPSTRLEN);
+    char ipbuf[MAX_IPSTRLEN];
+    conn->local.toHostStr(ipbuf, MAX_IPSTRLEN); // XXX: report port using toUrl()
 
     static MemBuf buf;
     buf.reset();
@@ -151,7 +151,7 @@ void
 Comm::TcpAcceptor::setListen()
 {
     errcode = errno = 0;
-    if (listen(conn->fd, Squid_MaxFD >> 2) < 0) {
+    if (xlisten(conn->fd, Squid_MaxFD >> 2) < 0) {
         errcode = errno;
         debugs(50, DBG_CRITICAL, "ERROR: listen(..., " << (Squid_MaxFD >> 2) << ") system call failed: " << xstrerr(errcode));
         return;
@@ -163,7 +163,7 @@ Comm::TcpAcceptor::setListen()
         bzero(&afa, sizeof(afa));
         debugs(5, DBG_IMPORTANT, "Installing accept filter '" << Config.accept_filter << "' on " << conn);
         xstrncpy(afa.af_name, Config.accept_filter, sizeof(afa.af_name));
-        if (setsockopt(conn->fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa)) < 0) {
+        if (xsetsockopt(conn->fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa)) < 0) {
             int xerrno = errno;
             debugs(5, DBG_CRITICAL, "WARNING: SO_ACCEPTFILTER '" << Config.accept_filter << "': '" << xstrerr(xerrno));
         }
@@ -171,7 +171,7 @@ Comm::TcpAcceptor::setListen()
         int seconds = 30;
         if (strncmp(Config.accept_filter, "data=", 5) == 0)
             seconds = atoi(Config.accept_filter + 5);
-        if (setsockopt(conn->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &seconds, sizeof(seconds)) < 0) {
+        if (xsetsockopt(conn->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &seconds, sizeof(seconds)) < 0) {
             int xerrno = errno;
             debugs(5, DBG_CRITICAL, "WARNING: TCP_DEFER_ACCEPT '" << Config.accept_filter << "': '" << xstrerr(xerrno));
         }
@@ -349,7 +349,7 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     errcode = 0; // reset local errno copy.
     struct sockaddr_storage remoteAddress = {};
     socklen_t remoteAddressSize = sizeof(remoteAddress);
-    const auto rawSock = accept(conn->fd, reinterpret_cast<struct sockaddr *>(&remoteAddress), &remoteAddressSize);
+    const auto rawSock = xaccept(conn->fd, reinterpret_cast<struct sockaddr *>(&remoteAddress), &remoteAddressSize);
     if (rawSock < 0) {
         errcode = errno; // store last accept errno locally.
         if (ignoreErrno(errcode) || errcode == ECONNABORTED) {
@@ -376,7 +376,7 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     // lookup the local-end details of this new connection
     struct sockaddr_storage localAddress = {};
     socklen_t localAddressSize = sizeof(localAddress);
-    if (getsockname(sock, reinterpret_cast<struct sockaddr *>(&localAddress), &localAddressSize) != 0) {
+    if (xgetsockname(sock, reinterpret_cast<struct sockaddr *>(&localAddress), &localAddressSize) != 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: Closing accepted TCP connection after failing to obtain its local IP address" <<
                Debug::Extra << "accepted connection: " << details <<
@@ -414,7 +414,7 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     details->nfConnmark = Ip::Qos::getNfConnmark(details, Ip::Qos::dirAccepted);
 
     if (Config.client_ip_max_connections >= 0) {
-        if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
+        if (clientdbEstablished(details->remote, 0) >= Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
             return false;
         }

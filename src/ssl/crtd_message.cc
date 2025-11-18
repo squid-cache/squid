@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -128,9 +128,7 @@ void Ssl::CrtdMessage::setCode(std::string const & aCode) { code = aCode; }
 std::string Ssl::CrtdMessage::compose() const
 {
     if (code.empty()) return std::string();
-    char buffer[10];
-    snprintf(buffer, sizeof(buffer), "%zd", body.length());
-    return code + ' ' + buffer + ' ' + body;
+    return code + ' ' + std::to_string(body.length()) + ' ' + body;
 }
 
 void Ssl::CrtdMessage::clear()

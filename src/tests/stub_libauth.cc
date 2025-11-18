@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,10 +30,9 @@ void authenticateReset(void) STUB
 
 #include "auth/Scheme.h"
 #include <vector>
-std::vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = nullptr;
 void Auth::Scheme::AddScheme(Auth::Scheme::Pointer) STUB
 Auth::Scheme::Pointer Auth::Scheme::Find(const char *) STUB_RETVAL(nullptr)
-std::vector<Auth::Scheme::Pointer> & Auth::Scheme::GetSchemes() STUB_RETVAL(*_Schemes);
+std::vector<Auth::Scheme::Pointer> & Auth::Scheme::GetSchemes() STUB_RETREF(std::vector<Auth::Scheme::Pointer>)
 void Auth::Scheme::FreeAll() STUB
 
 #include "auth/SchemesConfig.h"

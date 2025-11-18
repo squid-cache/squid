@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,6 +30,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
+#include "HeaderMangling.h"
 #include "http.h"
 #include "http/one/ResponseParser.h"
 #include "http/one/TeChunkedParser.h"
@@ -1216,7 +1217,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
             return; // wait for Client::noteMoreBodySpaceAvailable()
         }
 
-        if (virginBodyDestination && virginBodyDestination->buf().hasContent()) {
+        if (virginBodyDestination && !virginBodyDestination->buf().hasPotentialSpace()) {
             debugs(11, 5, "avoid delayRead() to give adaptation a chance to drain body pipe buffer: " << virginBodyDestination->buf().contentSize());
             return; // wait for Client::noteMoreBodySpaceAvailable()
         }
@@ -1699,7 +1700,7 @@ HttpStateData::maybeMakeSpaceAvailable(const size_t maxReadSize)
     // how much we want to read
     const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), maxReadSize);
 
-    if (read_size < 2) {
+    if (!read_size) {
         debugs(11, 7, "will not read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
         return 0;
     }
@@ -1790,10 +1791,14 @@ HttpStateData::doneWithServer() const
  * Fixup authentication request headers for special cases
  */
 static void
-httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, const Http::StateFlags &flags)
+httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, const CachePeer * const peer, const Http::StateFlags &flags)
 {
     /* Nothing to do unless we are forwarding to a peer */
     if (!flags.peering)
+        return;
+
+    // do nothing if our cache_peer was reconfigured away
+    if (!peer)
         return;
 
     // This request is going "through" rather than "to" our _peer.
@@ -1881,7 +1886,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         if (request->flags.auth_no_keytab) {
             negotiate_flags |= PEER_PROXY_NEGOTIATE_NOKEYTAB;
         }
-        Token = peer_proxy_negotiate_auth(PrincipalName, request->peer_host, negotiate_flags);
+        Token = peer_proxy_negotiate_auth(PrincipalName, peer->host, negotiate_flags);
         if (Token) {
             httpHeaderPutStrf(hdr_out, header, "Negotiate %s",Token);
         }
@@ -1905,6 +1910,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                                       StoreEntry * entry,
                                       const AccessLogEntryPointer &al,
                                       HttpHeader * hdr_out,
+                                      const CachePeer * const peer,
                                       const Http::StateFlags &flags)
 {
     /* building buffer for complex strings */
@@ -1950,12 +1956,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     if (request->flags.accelerated) {
         /* Append Surrogate-Capabilities */
         String strSurrogate(hdr_in->getList(Http::HdrType::SURROGATE_CAPABILITY));
-#if USE_SQUID_ESI
-        snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"", Config.Accel.surrogate_id);
-#else
         snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0\"", Config.Accel.surrogate_id);
-#endif
         strListAdd(&strSurrogate, bbuf, ',');
+        hdr_out->delById(Http::HdrType::SURROGATE_CAPABILITY);
         hdr_out->putStr(Http::HdrType::SURROGATE_CAPABILITY, strSurrogate.termedBuf());
     }
 
@@ -2027,7 +2030,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     }
 
     /* Fixup (Proxy-)Authorization special cases. Plain relaying dealt with above */
-    httpFixupAuthentication(request, hdr_in, hdr_out, flags);
+    httpFixupAuthentication(request, hdr_in, hdr_out, peer, flags);
 
     /* append Cache-Control, add max-age if not there already */
     {
@@ -2109,7 +2112,7 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
         Config.http_upgrade_request_protocols->forApplicable(offeredProto, [&ch, offeredStr, offeredStrLen, &upgradeOut] (const SBuf &cfgProto, const acl_access *guard) {
             debugs(11, 5, "checks " << cfgProto << " rule(s)");
             ch.changeAcl(guard);
-            const auto answer = ch.fastCheck();
+            const auto &answer = ch.fastCheck();
             if (answer.implicit)
                 return false; // keep looking for an explicit rule match
             if (answer.allowed())
@@ -2247,7 +2250,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case Http::HdrType::IF_NONE_MATCH:
         /** \par If-None-Match:
          * append if the wildcard '*' special case value is present, or
-         *   cache_miss_revalidate is disabled, or
+         *   cache_miss_revalidate is enabled, or
          *   the request is not cacheable in this proxy, or
          *   the request contains authentication credentials.
          * \note this header lists a set of responses for the server to elide sending. Squid added values are extending that set.
@@ -2371,7 +2374,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
      * not the one we are sending. Needs checking.
      */
     const AnyP::ProtocolVersion httpver = Http::ProtocolVersion();
-    const SBuf url(flags.toOrigin ? request->url.path() : request->effectiveRequestUri());
+    const SBuf url(flags.toOrigin ? request->url.originForm() : request->effectiveRequestUri());
     mb->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\r\n",
                 SQUIDSBUFPRINT(request->method.image()),
                 SQUIDSBUFPRINT(url),
@@ -2381,7 +2384,8 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     {
         HttpHeader hdr(hoRequest);
         forwardUpgrade(hdr); // before httpBuildRequestHeader() for CONNECTION
-        httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, flags);
+        const auto peer = cbdataReferenceValid(_peer) ? _peer : nullptr;
+        httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, peer, flags);
 
         if (request->flags.pinned && request->flags.connectionAuth)
             request->flags.authSent = true;
@@ -2480,7 +2484,6 @@ HttpStateData::sendRequest()
     }
 
     mb.init();
-    request->peer_host=_peer?_peer->host:nullptr;
     buildRequestPrefix(&mb);
 
     debugs(11, 2, "HTTP Server " << serverConnection);
@@ -2616,38 +2619,6 @@ HttpStateData::doneSendingRequestBody()
         return;
 
     sendComplete();
-}
-
-// more origin request body data is available
-void
-HttpStateData::handleMoreRequestBodyAvailable()
-{
-    if (eof || !Comm::IsConnOpen(serverConnection)) {
-        // XXX: we should check this condition in other callbacks then!
-        // TODO: Check whether this can actually happen: We should unsubscribe
-        // as a body consumer when the above condition(s) are detected.
-        debugs(11, DBG_IMPORTANT, "Transaction aborted while reading HTTP body");
-        return;
-    }
-
-    assert(requestBodySource != nullptr);
-
-    if (requestBodySource->buf().hasContent()) {
-        // XXX: why does not this trigger a debug message on every request?
-
-        if (flags.headers_parsed && !flags.abuse_detected) {
-            flags.abuse_detected = true;
-            debugs(11, DBG_IMPORTANT, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << request->client_addr << "' -> '" << entry->url() << "'" );
-
-            if (virginReply()->sline.status() == Http::scInvalidHeader) {
-                closeServer();
-                mustStop("HttpStateData::handleMoreRequestBodyAvailable");
-                return;
-            }
-        }
-    }
-
-    HttpStateData::handleMoreRequestBodyAvailable();
 }
 
 // premature end of the request body

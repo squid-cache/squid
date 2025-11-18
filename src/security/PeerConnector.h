@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -92,7 +92,7 @@ protected:
     /// Called after each negotiation step to handle the result
     void handleNegotiationResult(const Security::IoResult &);
 
-    /// Called when the openSSL SSL_connect fnction request more data from
+    /// Called when the openSSL SSL_connect function request more data from
     /// the remote SSL server. Sets the read timeout and sets the
     /// Squid COMM_SELECT_READ handler.
     void noteWantRead();
@@ -130,9 +130,9 @@ protected:
     /// \param error if not NULL the SSL negotiation was aborted with an error
     virtual void noteNegotiationDone(ErrorState *) {}
 
-    /// Must implemented by the kid classes to return the TLS context object to use
-    /// for building the encryption context objects.
-    virtual Security::ContextPointer getTlsContext() = 0;
+    /// peer's security context
+    /// \returns nil if Squid is built without TLS support (XXX: Prevent PeerConnector creation in those cases instead)
+    virtual FuturePeerContext *peerContext() const = 0;
 
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }

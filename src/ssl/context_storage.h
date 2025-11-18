@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -74,7 +74,7 @@ private:
 };
 
 /// Global cache for store all SSL server certificates.
-extern GlobalContextStorage TheGlobalContextStorage;
+GlobalContextStorage &TheGlobalContextStorage();
 } //namespace Ssl
 #endif // USE_OPENSSL
 

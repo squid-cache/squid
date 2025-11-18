@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,8 +48,8 @@ int comm_udp_sendto(int, const Ip::Address &, const void *, int) STUB_RETVAL(-1)
 void commCallCloseHandlers(int) STUB
 void commUnsetFdTimeout(int) STUB
 // int commSetTimeout(const Comm::ConnectionPointer &, int, AsyncCall::Pointer&) STUB_RETVAL(-1)
-int commSetConnTimeout(const Comm::ConnectionPointer &, time_t, AsyncCall::Pointer &) STUB_RETVAL(-1)
-int commUnsetConnTimeout(const Comm::ConnectionPointer &) STUB_RETVAL(-1)
+void commSetConnTimeout(const Comm::ConnectionPointer &, time_t, AsyncCall::Pointer &) STUB
+void commUnsetConnTimeout(const Comm::ConnectionPointer &) STUB
 int ignoreErrno(int) STUB_RETVAL(-1)
 void commCloseAllSockets(void) STUB
 void checkTimeouts(void) STUB

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,9 +9,12 @@
 /* DEBUG: section 43    Windows AIOPS */
 
 #include "squid.h"
+#include "compat/unistd.h"
+#include "compat/win32_maperror.h"
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "DiskThreads.h"
 #include "fd.h"
+#include "mem/Allocator.h"
 #include "mem/Pool.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -108,7 +111,7 @@ static Mem::Allocator *squidaio_small_bufs = nullptr; /* 4K */
 static Mem::Allocator *squidaio_tiny_bufs = nullptr; /* 2K */
 static Mem::Allocator *squidaio_micro_bufs = nullptr; /* 128K */
 
-static int request_queue_len = 0;
+static size_t request_queue_len = 0;
 static Mem::Allocator *squidaio_request_pool = nullptr;
 static Mem::Allocator *squidaio_thread_pool = nullptr;
 static squidaio_request_queue_t request_queue;
@@ -200,7 +203,6 @@ squidaio_xstrfree(char *str)
 void
 squidaio_init(void)
 {
-    int i;
     squidaio_thread_t *threadp;
 
     if (squidaio_initialised)
@@ -275,7 +277,7 @@ squidaio_init(void)
 
     assert(NUMTHREADS > 0);
 
-    for (i = 0; i < NUMTHREADS; ++i) {
+    for (size_t i = 0; i < NUMTHREADS; ++i) {
         threadp = (squidaio_thread_t *)squidaio_thread_pool->alloc();
         threadp->status = _THREAD_STARTING;
         threadp->current_req = nullptr;
@@ -319,7 +321,6 @@ void
 squidaio_shutdown(void)
 {
     squidaio_thread_t *threadp;
-    int i;
     HANDLE * hthreads;
 
     if (!squidaio_initialised)
@@ -334,7 +335,7 @@ squidaio_shutdown(void)
 
     threadp = threads;
 
-    for (i = 0; i < NUMTHREADS; ++i) {
+    for (size_t i = 0; i < NUMTHREADS; ++i) {
         threadp->exit = 1;
         hthreads[i] = threadp->thread;
         threadp = threadp->next;
@@ -348,7 +349,7 @@ squidaio_shutdown(void)
 
     WaitForMultipleObjects(NUMTHREADS, hthreads, TRUE, 2000);
 
-    for (i = 0; i < NUMTHREADS; ++i) {
+    for (size_t i = 0; i < NUMTHREADS; ++i) {
         CloseHandle(hthreads[i]);
     }
 
@@ -589,7 +590,7 @@ squidaio_queue_request(squidaio_request_t * request)
     /* Warn if out of threads */
     if (request_queue_len > MAGIC1) {
         static int last_warn = 0;
-        static int queue_high, queue_low;
+        static size_t queue_high, queue_low;
 
         if (high_start == 0) {
             high_start = (int)squid_curtime;
@@ -653,7 +654,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
     case _AIO_OP_OPEN:
         if (cancelled && requestp->ret >= 0)
             /* The open() was cancelled but completed */
-            close(requestp->ret);
+            xclose(requestp->ret);
 
         squidaio_xstrfree(requestp->path);
 
@@ -662,7 +663,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
     case _AIO_OP_CLOSE:
         if (cancelled && requestp->ret < 0)
             /* The close() was cancelled and never got executed */
-            close(requestp->fd);
+            xclose(requestp->fd);
 
         break;
 
@@ -853,9 +854,9 @@ squidaio_close(int fd, squidaio_result_t * resultp)
 static void
 squidaio_do_close(squidaio_request_t * requestp)
 {
-    if ((requestp->ret = close(requestp->fd)) < 0) {
+    if ((requestp->ret = xclose(requestp->fd)) < 0) {
         debugs(43, DBG_CRITICAL, "squidaio_do_close: FD " << requestp->fd << ", errno " << errno);
-        close(requestp->fd);
+        xclose(requestp->fd);
     }
 
     requestp->err = errno;
@@ -1099,7 +1100,6 @@ void
 squidaio_stats(StoreEntry * sentry)
 {
     squidaio_thread_t *threadp;
-    int i;
 
     if (!squidaio_initialised)
         return;
@@ -1110,8 +1110,8 @@ squidaio_stats(StoreEntry * sentry)
 
     threadp = threads;
 
-    for (i = 0; i < NUMTHREADS; ++i) {
-        storeAppendPrintf(sentry, "%i\t0x%lx\t%ld\n", i + 1, threadp->dwThreadId, threadp->requests);
+    for (size_t i = 0; i < NUMTHREADS; ++i) {
+        storeAppendPrintf(sentry, "%zu\t0x%lx\t%ld\n", i + 1, threadp->dwThreadId, threadp->requests);
         threadp = threadp->next;
     }
 }

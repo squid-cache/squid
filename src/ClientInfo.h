@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -79,7 +79,7 @@ public:
     bool hasQueue(const CommQuotaQueue*) const;  ///< has a given queue
     unsigned int quotaEnqueue(int fd); ///< client starts waiting in queue; create the queue if necessary
     int quotaPeekFd() const; ///< returns the next fd reservation
-    unsigned int quotaPeekReserv() const; ///< returns the next reserv. to pop
+    unsigned int quotaPeekReserv() const; ///< returns the next reservation to pop
     void quotaDequeue(); ///< pops queue head from queue
     void kickQuotaQueue(); ///< schedule commHandleWriteHelper call
     /// either selects the head descriptor for writing or calls quotaDequeue()

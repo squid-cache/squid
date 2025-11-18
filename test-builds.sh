@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 ##
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -123,7 +123,8 @@ buildtest() {
     grep -E "BUILD" ${log}
 
     errors="^ERROR|[ ]error:|[ ]Error[ ]|No[ ]such|assertion[ ]failed|FAIL:|:[ ]undefined"
-    grep -E "${errors}" ${log}
+    noterrors=" X?FAIL:  ?0$"
+    grep -E "${errors}" ${log} | grep -v -E "${noterrors}"
 
     if test $result -eq 0; then
 	# successful execution

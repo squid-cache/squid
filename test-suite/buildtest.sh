@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -15,6 +15,22 @@
 
 action="${1}"
 config="${2}"
+
+# Allow a layer to enable optional default-disabled features when
+# those features are supported in the current build environment
+# (and we can easily detect such support).
+if ${PKG_CONFIG:-pkg-config} --exists 'libecap >= 1.0 libecap < 1.1' 2>/dev/null
+then
+    CONFIGURE_FLAGS_MAYBE_ENABLE_ECAP="--enable-ecap"
+else
+    echo "WARNING: eCAP testing disabled" >&2
+fi
+if ${PKG_CONFIG:-pkg-config} --exists valgrind 2>/dev/null
+then
+    CONFIGURE_FLAGS_MAYBE_ENABLE_VALGRIND="--with-valgrind-debug"
+else
+    echo "WARNING: Valgrind testing disabled" >&2
+fi
 
 # cache_file may be set by environment variable
 configcache=""

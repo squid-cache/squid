@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -104,7 +104,9 @@ TestUri::testEncoding()
     };
 
     for (const auto &testCase: basicTestCases) {
-        CPPUNIT_ASSERT_EQUAL(testCase.first, AnyP::Uri::Decode(testCase.second));
+        const auto decoded = AnyP::Uri::Decode(testCase.second);
+        CPPUNIT_ASSERT(decoded);
+        CPPUNIT_ASSERT_EQUAL(testCase.first, *decoded);
         CPPUNIT_ASSERT_EQUAL(testCase.second, AnyP::Uri::Encode(testCase.first, CharacterSet::RFC3986_UNRESERVED()));
     };
 
@@ -112,6 +114,7 @@ TestUri::testEncoding()
         SBuf("%"),
         SBuf("%%"),
         SBuf("%%%"),
+        SBuf("%0"),
         SBuf("%1"),
         SBuf("%1Z"),
         SBuf("%1\000", 2),
@@ -122,10 +125,11 @@ TestUri::testEncoding()
 
     for (const auto &invalidEncoding: invalidEncodings) {
         // test various input positions of an invalid escape sequence
-        CPPUNIT_ASSERT_THROW(AnyP::Uri::Decode(invalidEncoding), TextException);
-        CPPUNIT_ASSERT_THROW(AnyP::Uri::Decode(ToSBuf("word", invalidEncoding)), TextException);
-        CPPUNIT_ASSERT_THROW(AnyP::Uri::Decode(ToSBuf(invalidEncoding, "word")), TextException);
-        CPPUNIT_ASSERT_THROW(AnyP::Uri::Decode(ToSBuf("word", invalidEncoding, "word")), TextException);
+        CPPUNIT_ASSERT(!AnyP::Uri::Decode(invalidEncoding));
+        CPPUNIT_ASSERT(!AnyP::Uri::Decode(ToSBuf("word", invalidEncoding)));
+        CPPUNIT_ASSERT(!AnyP::Uri::Decode(ToSBuf(invalidEncoding, "word")));
+        CPPUNIT_ASSERT(!AnyP::Uri::Decode(ToSBuf("word", invalidEncoding, "word")));
+        CPPUNIT_ASSERT_EQUAL(invalidEncoding, AnyP::Uri::DecodeOrDupe(invalidEncoding));
     };
 }
 

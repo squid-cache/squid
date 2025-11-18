@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,7 +24,7 @@ class Address;
  \par
  * There is no formal state-machine for transparency and interception
  * instead there is this neutral API which other connection state machines
- * and the comm layer use to co-ordinate their own state for transparency.
+ * and the comm layer use to coordinate their own state for transparency.
  */
 class Intercept
 {
@@ -33,6 +33,9 @@ public:
     ~Intercept() {};
 
     /// perform NAT lookups for the local address of the given connection
+    /// \return true to indicate a successful lookup
+    /// \return false on errors that do not warrant listening socket closure
+    /// \throw exception on errors that warrant listening socket closure
     bool LookupNat(const Comm::Connection &);
 
     /**
@@ -113,6 +116,8 @@ private:
      * \return         Whether successfully located the new address.
      */
     bool PfInterception(const Comm::ConnectionPointer &newConn);
+
+    bool UseInterceptionAddressesLookedUpEarlier(const char *, const Comm::ConnectionPointer &);
 
     int transparentActive_;
     int interceptActive_;

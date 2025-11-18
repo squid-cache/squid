@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -112,6 +112,8 @@ public: // treat these as private, they are for callbacks only
     void noteAdaptationAnswer(const Answer &answer) override;
 
     Security::ContextPointer sslContext;
+    // TODO: Remove sslContext above when FuturePeerContext below becomes PeerContext
+    Security::FuturePeerContext tlsContext;
     Security::SessionStatePointer sslSession;
 
 private:

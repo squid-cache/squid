@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -193,7 +193,6 @@ public:
         MemBuf *listing = nullptr;
     } ftp;
 
-    char *request_hdrs = nullptr;
     char *err_msg = nullptr; /* Preformatted error message from the cache */
 
     AccessLogEntryPointer ale; ///< transaction details (or nil)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,13 +22,11 @@ XactionInitiator::ParseInitiators(const char *name)
         {"client", initClient},
         {"peer-pool", initPeerPool},
         {"certificate-fetching", initCertFetcher},
-        {"esi", initEsi},
         {"cache-digest", initCacheDigest},
         {"server", initServer},
         {"htcp", initHtcp},
         {"icp", initIcp},
         {"icmp", initIcmp},
-        {"asn", initAsn},
         {"ipc", initIpc},
         {"adaptation", initAdaptation},
         {"icon", initIcon},

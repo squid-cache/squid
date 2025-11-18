@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,8 +10,6 @@
 #include "acl/Checklist.h"
 #include "acl/Tree.h"
 #include "wordlist.h"
-
-CBDATA_NAMESPACED_CLASS_INIT(Acl, Tree);
 
 Acl::Answer
 Acl::Tree::winningAction() const

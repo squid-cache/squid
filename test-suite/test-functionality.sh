@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2025 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -220,6 +220,7 @@ main() {
             upgrade-protocols
             cache-response
             proxy-collapsed-forwarding
+            hit-revalidation
             busy-restart
             truncated-responses
             malformed-request

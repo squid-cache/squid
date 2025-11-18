@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,14 +18,14 @@ class ACLDomainData : public ACLData<char const *>
     MEMPROXY_CLASS(ACLDomainData);
 
 public:
-    ACLDomainData() : domains(nullptr) {}
+    ACLDomainData() = default;
     ~ACLDomainData() override;
     bool match(char const *) override;
     SBufList dump() const override;
     void parse() override;
     bool empty() const override;
 
-    Splay<char *> *domains;
+    Splay<char *> domains;
 };
 
 #endif /* SQUID_SRC_ACL_DOMAINDATA_H */

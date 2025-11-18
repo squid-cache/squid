@@ -16,7 +16,7 @@ allocation.
 ## Reporting a Vulnerability
 
 To report security-sensitive bugs, please post to the squid-bugs mailing
-(list)[http://www.squid-cache.org/Support/mailing-lists.html#squid-bugs]. It
+[list](http://www.squid-cache.org/Support/mailing-lists.html#squid-bugs). It
 is a closed list (although anyone can post), and security related bug reports
 are treated in confidence at least until the impact has been established.
 

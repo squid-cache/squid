@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -115,7 +115,9 @@ Snmp::Inquirer::sendResponse()
     u_char buffer[SNMP_REQUEST_SIZE];
     int len = sizeof(buffer);
     Snmp::Request& req = static_cast<Snmp::Request&>(*request);
-    snmp_build(&req.session, &aggrPdu, buffer, &len);
-    comm_udp_sendto(conn->fd, req.address, buffer, len);
+    if (snmp_build(&req.session, &aggrPdu, buffer, &len) == 0)
+        comm_udp_sendto(conn->fd, req.address, buffer, len);
+    else
+        debugs(49, DBG_IMPORTANT, "ERROR: Failed to encode a response to SNMP agent query from " << req.address);
 }
 

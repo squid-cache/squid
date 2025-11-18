@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,10 +25,6 @@
 #include "store_key_md5.h"
 #include "StoreIOBuffer.h"
 #include "StoreStats.h"
-
-#if USE_SQUID_ESI
-#include "esi/Element.h"
-#endif
 
 #include <ostream>
 
@@ -253,10 +249,7 @@ public:
 
     void *operator new(size_t byteCount);
     void operator delete(void *address);
-#if USE_SQUID_ESI
 
-    ESIElement::Pointer cachedESITree;
-#endif
     int64_t objectLen() const { return mem().object_sz; }
     int64_t contentLen() const { return objectLen() - mem().baseReply().hdr_sz; }
 

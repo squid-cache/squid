@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,8 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
+#include "compat/pipe.h"
+#include "compat/unistd.h"
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "fd.h"
 #include "globals.h"
@@ -39,8 +41,8 @@ CommIO::NotifyIOClose()
 {
     /* Close done pipe signal */
     FlushPipe();
-    close(DoneFD);
-    close(DoneReadFD);
+    xclose(DoneFD);
+    xclose(DoneReadFD);
     fd_close(DoneFD);
     fd_close(DoneReadFD);
     Initialized = false;

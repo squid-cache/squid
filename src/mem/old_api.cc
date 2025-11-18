@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -262,7 +262,7 @@ memConfigure(void)
         new_pool_limit = Config.MemPools.limit;
     else {
         if (Config.MemPools.limit == 0)
-            debugs(13, DBG_IMPORTANT, "memory_pools_limit 0 has been chagned to memory_pools_limit none. Please update your config");
+            debugs(13, DBG_IMPORTANT, "memory_pools_limit 0 has been changed to memory_pools_limit none. Please update your config");
         new_pool_limit = -1;
     }
 
@@ -308,8 +308,6 @@ Mem::Init(void)
     memDataInit(MEM_32K_BUF, "32K Buffer", 32768, 10, false);
     memDataInit(MEM_64K_BUF, "64K Buffer", 65536, 10, false);
     // TODO: Carefully stop zeroing these objects memory and drop the doZero parameter
-    memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0, true);
-    memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0, true);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0, true);
     GetPool(MEM_MD5_DIGEST)->setChunkSize(512 * 1024);
 

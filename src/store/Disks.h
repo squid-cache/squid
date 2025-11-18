@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -60,8 +60,8 @@ public:
 
 private:
     /* migration logic */
-    SwapDir *store(int const x) const;
-    static SwapDir &Dir(int const idx);
+    SwapDir *store(size_t index) const;
+    static SwapDir &Dir(size_t index);
 
     int64_t largestMinimumObjectSize; ///< maximum of all Disk::minObjectSize()s
     int64_t largestMaximumObjectSize; ///< maximum of all Disk::maxObjectSize()s

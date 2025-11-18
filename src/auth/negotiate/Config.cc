@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -118,18 +118,6 @@ bool
 Auth::Negotiate::Config::active() const
 {
     return authnegotiate_initialised == 1;
-}
-
-bool
-Auth::Negotiate::Config::configured() const
-{
-    if (authenticateProgram && (authenticateChildren.n_max != 0)) {
-        debugs(29, 9, "returning configured");
-        return true;
-    }
-
-    debugs(29, 9, "returning unconfigured");
-    return false;
 }
 
 void

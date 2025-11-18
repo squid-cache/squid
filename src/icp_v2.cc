@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -170,10 +170,10 @@ ICPState::confirmAndPrepHit(const StoreEntry &e) const
     if (!e.validToSend())
         return false;
 
-    if (!Config.onoff.icp_hit_stale && refreshCheckICP(&e, request))
+    if (e.hittingRequiresCollapsing() && !startCollapsingOn(e, false))
         return false;
 
-    if (e.hittingRequiresCollapsing() && !startCollapsingOn(e, false))
+    if (!Config.onoff.icp_hit_stale && !didCollapse && refreshCheckICP(&e, request))
         return false;
 
     return true;

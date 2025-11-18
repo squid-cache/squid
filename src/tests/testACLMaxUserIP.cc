@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,6 +15,7 @@
 #include "auth/UserRequest.h"
 #include "compat/cppunit.h"
 #include "ConfigParser.h"
+#include "SquidConfig.h"
 #include "unitTestMain.h"
 
 #include <stdexcept>
@@ -74,19 +75,21 @@ TestACLMaxUserIP::testParseLine()
     char * line = xstrdup("test max_user_ip -s 1");
     /* seed the parser */
     ConfigParser::SetCfgLine(line);
-    Acl::Node *anACL = nullptr;
     ConfigParser LegacyParser;
-    Acl::Node::ParseAclLine(LegacyParser, &anACL);
+    Acl::Node::ParseNamedAcl(LegacyParser, Config.namedAcls);
+    CPPUNIT_ASSERT(Config.namedAcls);
+    const auto anACL = Acl::Node::FindByName(SBuf("test"));
+    CPPUNIT_ASSERT(anACL);
     ACLMaxUserIP *maxUserIpACL = dynamic_cast<ACLMaxUserIP *>(anACL);
     CPPUNIT_ASSERT(maxUserIpACL);
     if (maxUserIpACL) {
         /* we want a maximum of one, and strict to be true */
         CPPUNIT_ASSERT_EQUAL(1, maxUserIpACL->getMaximum());
         CPPUNIT_ASSERT_EQUAL(true, static_cast<bool>(maxUserIpACL->beStrict));
-        /* the acl must be vaid */
+        /* the acl must be valid */
         CPPUNIT_ASSERT_EQUAL(true, maxUserIpACL->valid());
     }
-    delete anACL;
+    Acl::FreeNamedAcls(&Config.namedAcls);
     xfree(line);
 }
 

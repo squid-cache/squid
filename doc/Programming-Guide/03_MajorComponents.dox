@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -180,14 +180,6 @@ TODO: decide what to do for comm_poll() since its either obsolete or uses other 
 	Common applications for this feature are extended access controls
 	and local mirroring.  File: redirect.c.
 
-\section ASN Autonomous System Numbers
-\par
-	Squid supports Autonomous System (AS) numbers as another
-	access control element.  The routines in asn.c
-	query databases which map AS numbers into lists of CIDR
-	prefixes.  These results are stored in a radix tree which
-	allows fast searching of the AS number for a given IP address.
-
 \section ConfigurationFileParsing Configuration File Parsing
 \par
 	The primary configuration file specification is in the file
@@ -337,12 +329,5 @@ TODO: get RFCs linked from ietf
 	of handling lists of mirror sites.  For more details, please
 	see (http://squid.nlanr.net/Squid/urn-support.html) URN Support in Squid
 	.
-
-\section ESI ESI
-\par
-	ESI is an implementation of Edge Side Includes (http://www.esi.org).
-	ESI is implemented as a client side stream and a small
-	modification to client_side_reply.c to check whether
-	ESI should be inserted into the reply stream or not.
 
  */

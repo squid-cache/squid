@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -106,12 +106,13 @@ Auth::User::absorb(Auth::User::Pointer from)
             }
 
             if (!found) {
-                /* This ip is not in the seen list. Add it. */
-                dlinkAddTail(&new_ipdata->node, &ipdata->node, &ip_list);
-                ++ipcount;
                 /* remove from the source list */
                 dlinkDelete(&new_ipdata->node, &(from->ip_list));
-                ++from->ipcount;
+                assert(from->ipcount);
+                --from->ipcount;
+                /* This ip is not in the seen list. Add it. */
+                dlinkAddTail(new_ipdata, &new_ipdata->node, &ip_list);
+                ++ipcount;
             }
         }
     }

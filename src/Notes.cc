@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -76,7 +76,7 @@ Note::match(HttpRequest *request, HttpReply *reply, const AccessLogEntry::Pointe
 
     for (const auto &v: values) {
         assert(v->aclList);
-        const auto ret = ch.fastCheck(v->aclList);
+        const auto &ret = ch.fastCheck(v->aclList);
         debugs(93, 5, "Check for header name: " << theKey << ": " << v->value() <<
                ", HttpRequest: " << request << " HttpReply: " << reply << " matched: " << ret);
         if (ret.allowed()) {
@@ -110,7 +110,7 @@ Note::printAsNoteDirective(StoreEntry * const entry, const char * const directiv
         os << directiveName << ' ' << key() << ' ' << ConfigParser::QuoteString(SBufToString(v->value()));
         if (v->aclList) {
             // TODO: Use Acl::dump() after fixing the XXX in dump_acl_list().
-            for (const auto &item: v->aclList->treeDump("", &Acl::AllowOrDeny)) {
+            for (const auto &item: ToTree(v->aclList).treeDump("", &Acl::AllowOrDeny)) {
                 if (item.isEmpty()) // treeDump("") adds this prefix
                     continue;
                 if (item.cmp("\n") == 0) // treeDump() adds this suffix
@@ -277,10 +277,11 @@ Notes::printAsAnnotationAclParameters(std::ostream &os) const
     }
 }
 
-bool
-NotePairs::find(SBuf &resultNote, const char *noteKey, const char *sep) const
+std::optional<SBuf>
+NotePairs::find(const char *noteKey, const char *sep) const
 {
-    resultNote.clear();
+    SBuf resultNote;
+
     for (const auto &e: entries) {
         if (!e->name().cmp(noteKey)) {
             if (!resultNote.isEmpty())
@@ -288,7 +289,11 @@ NotePairs::find(SBuf &resultNote, const char *noteKey, const char *sep) const
             resultNote.append(e->value());
         }
     }
-    return resultNote.length();
+
+    if (resultNote.isEmpty())
+        return std::nullopt;
+
+    return resultNote;
 }
 
 void
@@ -339,12 +344,12 @@ static void
 AppendTokens(NotePairs::Entries &entries, const SBuf &key, const SBuf &val, const CharacterSet &delimiters)
 {
     Parser::Tokenizer tok(val);
-    SBuf v;
-    while (tok.token(v, delimiters))
-        entries.push_back(new NotePairs::Entry(key, v));
-    v = tok.remaining();
-    if (!v.isEmpty())
-        entries.push_back(new NotePairs::Entry(key, v));
+    const auto tokenCharacters = delimiters.complement("non-delimiters");
+    do {
+        SBuf token;
+        (void)tok.prefix(token, tokenCharacters);
+        entries.push_back(new NotePairs::Entry(key, token)); // token may be empty
+    } while (tok.skipOne(delimiters));
 }
 
 const NotePairs::Entries &

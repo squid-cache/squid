@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,7 +17,7 @@ class ErrorState;
 namespace Security
 {
 
-/// A simple PeerConnector for SSL/TLS cache_peers. No SslBump capabilities.
+/// A PeerConnector for TLS cache_peers and origin servers. No SslBump capabilities.
 class BlindPeerConnector: public Security::PeerConnector {
     CBDATA_CHILD(BlindPeerConnector);
 public:
@@ -35,8 +35,7 @@ public:
     /// \returns true on successful initialization
     bool initialize(Security::SessionPointer &) override;
 
-    /// Return the configured TLS context object
-    Security::ContextPointer getTlsContext() override;
+    FuturePeerContext *peerContext() const override;
 
     /// On success, stores the used TLS session for later use.
     /// On error, informs the peer.

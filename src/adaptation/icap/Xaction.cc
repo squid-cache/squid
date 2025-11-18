@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,9 +54,7 @@ public:
     /* Security::PeerConnector API */
     bool initialize(Security::SessionPointer &) override;
     void noteNegotiationDone(ErrorState *error) override;
-    Security::ContextPointer getTlsContext() override {
-        return icapService->sslContext;
-    }
+    Security::FuturePeerContext *peerContext() const override { return &icapService->tlsContext; }
 
 private:
     /* Acl::ChecklistFiller API */
@@ -442,6 +440,7 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
 
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
+    rd.size = SQUID_TCP_SO_RCVBUF - readBuf.length();
 
     switch (Comm::ReadNow(rd, readBuf)) {
     case Comm::INPROGRESS:

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -147,14 +147,27 @@ public:
     bool encryptTransport = false;
 };
 
+// XXX: Remove this shim after upgrading legacy code to store PeerContext
+// objects instead of disjoint PeerOptons and Context objects (where PeerContext
+// is a class that creates and manages {PeerOptions, ContextPointer} pair).
+/// A combination of PeerOptions and the corresponding Context.
+class FuturePeerContext
+{
+public:
+    FuturePeerContext(PeerOptions &o, const ContextPointer &c): options(o), raw(c) {}
+
+    PeerOptions &options; ///< TLS context configuration
+    const ContextPointer &raw; ///< TLS context configured using options
+};
+
 /// configuration options for DIRECT server access
-extern PeerOptions ProxyOutgoingConfig;
+PeerOptions &ProxyOutgoingConfig();
 
 } // namespace Security
 
 // parse the tls_outgoing_options directive
 void parse_securePeerOptions(Security::PeerOptions *);
-#define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
+#define free_securePeerOptions(x) Security::ProxyOutgoingConfig().clear()
 #define dump_securePeerOptions(e,n,x) do { PackableStream os_(*(e)); os_ << n; (x).dumpCfg(os_,""); os_ << '\n'; } while (false)
 
 #endif /* SQUID_SRC_SECURITY_PEEROPTIONS_H */

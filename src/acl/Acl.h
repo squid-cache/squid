@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -124,6 +124,12 @@ operator <<(std::ostream &o, const Answer &a)
     }
     return o;
 }
+
+/// report the given list of "acl" directives (using squid.conf syntax)
+void DumpNamedAcls(std::ostream &, const char *directiveName, NamedAcls *);
+
+/// delete the given list of "acl" directives
+void FreeNamedAcls(NamedAcls **);
 
 } // namespace Acl
 

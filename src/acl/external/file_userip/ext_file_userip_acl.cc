@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -61,6 +61,16 @@ int dict_lookup(struct ip_user_dict *, char *, char *);
 /** Size of lines read from the dictionary file */
 #define DICT_BUFFER_SIZE    8196
 
+static void
+free_dict(struct ip_user_dict *head) {
+    while (head) {
+        struct ip_user_dict *next = head->next_entry;
+        safe_free(head->username);
+        xfree(head);
+        head = next;
+    }
+}
+
 /** This function parses the dictionary file and loads it
  * in memory. All IP addresses are processed with a bitwise AND
  * with their netmasks before they are stored.
@@ -80,7 +90,7 @@ load_dict(FILE * FH) {
                    bitwise AND */
 
     /* the pointer to the first entry in the linked list */
-    first_entry = static_cast<struct ip_user_dict*>(xmalloc(sizeof(struct ip_user_dict)));
+    first_entry = static_cast<struct ip_user_dict*>(xcalloc(1, sizeof(struct ip_user_dict)));
     current_entry = first_entry;
 
     unsigned int lineCount = 0;
@@ -128,7 +138,7 @@ load_dict(FILE * FH) {
 
             /* get space and point current_entry to the new entry */
             current_entry->next_entry =
-                static_cast<struct ip_user_dict*>(xmalloc(sizeof(struct ip_user_dict)));
+                static_cast<struct ip_user_dict*>(xcalloc(1, sizeof(struct ip_user_dict)));
             current_entry = current_entry->next_entry;
         }
 
@@ -149,7 +159,7 @@ dict_lookup(struct ip_user_dict *first_entry, char *username,
     /* Move the pointer to the first entry of the linked list. */
     struct ip_user_dict *current_entry = first_entry;
 
-    while (current_entry->username != nullptr) {
+    while (current_entry && current_entry->username) {
         debug("user: %s\naddr: %lu\nmask: %lu\n\n",
               current_entry->username, current_entry->address,
               current_entry->netmask);
@@ -194,18 +204,17 @@ match_group(char *dict_group, char *username)
                    so we rip it off by incrementing
                    * the pointer by one */
 
-    if ((g = getgrnam(dict_group)) == nullptr) {
-        debug("Group does not exist '%s'\n", dict_group);
+    g = getgrnam(dict_group);
+    if (!g || !g->gr_mem) {
+        debug("Group does not exist or has no members '%s'\n", dict_group);
         return 0;
-    } else {
-        while (*(g->gr_mem) != nullptr) {
-            if (strcmp(*((g->gr_mem)++), username) == 0) {
-                return 1;
-            }
-        }
+    }
+
+    for (char * const *m = g->gr_mem; *m; ++m) {
+        if (strcmp(*m, username) == 0)
+            return 1;
     }
     return 0;
-
 }
 
 static void
@@ -289,6 +298,7 @@ main (int argc, char *argv[])
     }
 
     fclose (FH);
+    free_dict(current_entry);
     return EXIT_SUCCESS;
 }
 

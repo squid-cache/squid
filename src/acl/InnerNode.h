@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,14 +15,13 @@
 namespace Acl
 {
 
-using Nodes = std::vector<Acl::Node*>; ///< a collection of nodes
+/// operands of a boolean ACL expression, in configuration/evaluation order
+using Nodes = std::vector<Node::Pointer>;
 
 /// An intermediate Acl::Node tree node. Manages a collection of child tree nodes.
 class InnerNode: public Acl::Node
 {
 public:
-    // No ~InnerNode() to delete children. They are aclRegister()ed instead.
-
     /// Resumes matching (suspended by an async call) at the given position.
     bool resumeMatchingAt(ACLChecklist *checklist, Acl::Nodes::const_iterator pos) const;
 
@@ -49,8 +48,7 @@ protected:
     /* Acl::Node API */
     int match(ACLChecklist *checklist) override;
 
-    // XXX: use refcounting instead of raw pointers
-    Nodes nodes; ///< children nodes of this intermediate node
+    Nodes nodes; ///< children of this intermediate node
 };
 
 } // namespace Acl

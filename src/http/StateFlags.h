@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -56,7 +56,6 @@ public:
     bool toOriginPeer() const { return toOrigin && peering && !tunneling; }
 
     bool keepalive_broken = false;
-    bool abuse_detected = false;
     bool request_sent = false;
     bool chunked = false;           ///< reading a chunked response; TODO: rename
     bool chunked_request = false;   ///< writing a chunked request

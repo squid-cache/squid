@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -99,8 +99,6 @@ section 49    SNMP support
 section 50    Log file handling
 section 51    Filedescriptor Functions
 section 52    URN Parsing
-section 53    AS Number handling
-section 53    Radix Tree data structure implementation
 section 54    Interprocess Communication
 section 54    Windows Interprocess Communication
 section 55    HTTP Header
@@ -130,6 +128,7 @@ section 80    WCCP Support
 section 81    Store HEAP Removal Policies
 section 81    aio_xxx() POSIX emulation on Windows
 section 82    External ACL
+section 82    External ACL Helpers
 section 83    SSL accelerator support
 section 83    SSL-Bump Server/Peer negotiation
 section 83    TLS I/O
@@ -137,8 +136,6 @@ section 83    TLS Server/Peer negotiation
 section 83    TLS session management
 section 84    Helper process maintenance
 section 85    Client-side Request Routines
-section 86    ESI Expressions
-section 86    ESI processing
 section 87    Client-side Stream routines.
 section 88    Client-side Reply Routines
 section 89    EUI-48 Lookup

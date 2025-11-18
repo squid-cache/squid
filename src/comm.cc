@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/AsyncFunCalls.h"
+#include "base/OnOff.h"
 #include "ClientInfo.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
@@ -20,6 +21,8 @@
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "compat/cmsg.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "DescriptorSet.h"
 #include "event.h"
 #include "fd.h"
@@ -78,7 +81,7 @@ static void commPlanHalfClosedCheck();
 static Comm::Flag commBind(int s, struct addrinfo &);
 static void commSetBindAddressNoPort(int);
 static void commSetReuseAddr(int);
-static void commSetNoLinger(int);
+static void commConfigureLinger(int fd, OnOff);
 #ifdef TCP_NODELAY
 static void commSetTcpNoDelay(int);
 #endif
@@ -128,7 +131,7 @@ comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from)
     debugs(5,8, "comm_udp_recvfrom: FD " << fd << " from " << from);
     struct addrinfo *AI = nullptr;
     Ip::Address::InitAddr(AI);
-    int x = recvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
+    int x = xrecvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
     from = *AI;
     Ip::Address::FreeAddr(AI);
     return x;
@@ -144,7 +147,7 @@ comm_udp_recv(int fd, void *buf, size_t len, int flags)
 ssize_t
 comm_udp_send(int s, const void *buf, size_t len, int flags)
 {
-    return send(s, buf, len, flags);
+    return xsend(s, buf, len, flags);
 }
 
 bool
@@ -182,7 +185,7 @@ comm_local_port(int fd)
 
     Ip::Address::InitAddr(addr);
 
-    if (getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
+    if (xgetsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: " << MYNAME << "Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerr(xerrno));
         Ip::Address::FreeAddr(addr);
@@ -210,7 +213,7 @@ commSetBindAddressNoPort(const int fd)
 {
 #if defined(IP_BIND_ADDRESS_NO_PORT)
     int flag = 1;
-    if (setsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, reinterpret_cast<char*>(&flag), sizeof(flag)) < 0) {
+    if (xsetsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, &flag, sizeof(flag)) < 0) {
         const auto savedErrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: setsockopt(IP_BIND_ADDRESS_NO_PORT) failure: " << xstrerr(savedErrno));
     }
@@ -224,7 +227,7 @@ commBind(int s, struct addrinfo &inaddr)
 {
     ++ statCounter.syscalls.sock.binds;
 
-    if (bind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0) {
+    if (xbind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0) {
         debugs(50, 6, "bind socket FD " << s << " to " << fd_table[s].local_addr);
         return Comm::OK;
     }
@@ -293,7 +296,7 @@ static void
 comm_set_v6only(int fd, int tos)
 {
 #ifdef IPV6_V6ONLY
-    if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0) {
+    if (xsetsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &tos, sizeof(int)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "setsockopt(IPV6_V6ONLY) " << (tos?"ON":"OFF") << " for FD " << fd << ": " << xstrerr(xerrno));
     }
@@ -335,7 +338,7 @@ comm_set_transparent(int fd)
 
 #if defined(soLevel) && defined(soFlag)
     int tos = 1;
-    if (setsockopt(fd, soLevel, soFlag, (char *) &tos, sizeof(int)) < 0) {
+    if (xsetsockopt(fd, soLevel, soFlag, &tos, sizeof(int)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "setsockopt(TPROXY) on FD " << fd << ": " << xstrerr(xerrno));
     } else {
@@ -377,7 +380,7 @@ comm_openex(int sock_type,
 
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
-    new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+    new_socket = xsocket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
     const auto firstErrNo = errno;
 
     /* under IPv6 there is the possibility IPv6 is present but disabled. */
@@ -390,7 +393,7 @@ comm_openex(int sock_type,
         AI->ai_socktype = sock_type;
         AI->ai_protocol = proto;
         debugs(50, 3, "Attempt fallback open socket for: " << addr );
-        new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+        new_socket = xsocket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
         // TODO: Report failures of this second socket() call.
         // if both socket() calls fail, we use firstErrNo
         debugs(50, 2, "attempt open " << note << " socket on: " << addr);
@@ -485,7 +488,7 @@ comm_apply_flags(int new_socket,
 #if _SQUID_WINDOWS_
         if (sock_type != SOCK_DGRAM)
 #endif
-            commSetNoLinger(new_socket);
+            commConfigureLinger(new_socket, OnOff::off);
 
         if (opt_reuseaddr)
             commSetReuseAddr(new_socket);
@@ -505,7 +508,7 @@ comm_apply_flags(int new_socket,
 #if defined(SO_REUSEPORT)
         if (flags & COMM_REUSEPORT) {
             int on = 1;
-            if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEPORT, reinterpret_cast<char*>(&on), sizeof(on)) < 0) {
+            if (xsetsockopt(new_socket, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0) {
                 const auto savedErrno = errno;
                 const auto errorMessage = ToSBuf("cannot enable SO_REUSEPORT socket option when binding to ",
                                                  addr, ": ", xstrerr(savedErrno));
@@ -555,16 +558,6 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
 
     comm_init_opened(conn, note, AI);
 
-    if (!(conn->flags & COMM_NOCLOEXEC))
-        fd_table[conn->fd].flags.close_on_exec = true;
-
-    if (conn->local.port() > (unsigned short) 0) {
-#if _SQUID_WINDOWS_
-        if (AI->ai_socktype != SOCK_DGRAM)
-#endif
-            fd_table[conn->fd].flags.nolinger = true;
-    }
-
     if ((conn->flags & COMM_TRANSPARENT))
         fd_table[conn->fd].flags.transparent = true;
 
@@ -597,7 +590,7 @@ commUnsetFdTimeout(int fd)
     F->timeout = 0;
 }
 
-int
+void
 commSetConnTimeout(const Comm::ConnectionPointer &conn, time_t timeout, AsyncCall::Pointer &callback)
 {
     debugs(5, 3, conn << " timeout " << timeout);
@@ -617,18 +610,16 @@ commSetConnTimeout(const Comm::ConnectionPointer &conn, time_t timeout, AsyncCal
             F->timeoutHandler = callback;
         }
 
-        F->timeout = squid_curtime + (time_t) timeout;
+        F->timeout = squid_curtime + timeout;
     }
-
-    return F->timeout;
 }
 
-int
+void
 commUnsetConnTimeout(const Comm::ConnectionPointer &conn)
 {
     debugs(5, 3, "Remove timeout for " << conn);
     AsyncCall::Pointer nil;
-    return commSetConnTimeout(conn, -1, nil);
+    commSetConnTimeout(conn, -1, nil);
 }
 
 /**
@@ -682,7 +673,8 @@ comm_connect_addr(int sock, const Ip::Address &address)
         ++ statCounter.syscalls.sock.connects;
 
         errno = 0;
-        if ((x = connect(sock, AI->ai_addr, AI->ai_addrlen)) < 0) {
+        x = xconnect(sock, AI->ai_addr, AI->ai_addrlen);
+        if (x < 0) {
             xerrno = errno;
             debugs(5,5, "sock=" << sock << ", addrinfo(" <<
                    " flags=" << AI->ai_flags <<
@@ -703,20 +695,8 @@ comm_connect_addr(int sock, const Ip::Address &address)
 
     } else {
         errno = 0;
-#if _SQUID_NEWSOS6_
-        /* Makoto MATSUSHITA <matusita@ics.es.osaka-u.ac.jp> */
-        if (connect(sock, AI->ai_addr, AI->ai_addrlen) < 0)
-            xerrno = errno;
-
-        if (xerrno == EINVAL) {
-            errlen = sizeof(err);
-            x = getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
-            if (x >= 0)
-                xerrno = x;
-        }
-#else
         errlen = sizeof(err);
-        x = getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
+        x = xgetsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
         if (x == 0)
             xerrno = err;
 
@@ -731,7 +711,6 @@ comm_connect_addr(int sock, const Ip::Address &address)
             xerrno = ENOTCONN;
         else
             xerrno = errno;
-#endif
 #endif
     }
 
@@ -783,6 +762,23 @@ commCallCloseHandlers(int fd)
     }
 }
 
+/// sets SO_LINGER socket(7) option
+/// \param enabled -- whether linger will be active (sets linger::l_onoff)
+static void
+commConfigureLinger(const int fd, const OnOff enabled)
+{
+    struct linger l = {};
+    l.l_onoff = (enabled == OnOff::on ? 1 : 0);
+    l.l_linger = 0; // how long to linger for, in seconds
+
+    fd_table[fd].flags.harshClosureRequested = (l.l_onoff && !l.l_linger); // close(2) sends TCP RST if true
+
+    if (xsetsockopt(fd, SOL_SOCKET, SO_LINGER, &l, sizeof(l)) < 0) {
+        const auto xerrno = errno;
+        debugs(50, DBG_CRITICAL, "ERROR: Failed to set closure behavior (SO_LINGER) for FD " << fd << ": " << xstrerr(xerrno));
+    }
+}
+
 /**
  * enable linger with time of 0 so that when the socket is
  * closed, TCP generates a RESET
@@ -790,30 +786,21 @@ commCallCloseHandlers(int fd)
 void
 comm_reset_close(const Comm::ConnectionPointer &conn)
 {
-    struct linger L;
-    L.l_onoff = 1;
-    L.l_linger = 0;
-
-    if (setsockopt(conn->fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_CRITICAL, "ERROR: Closing " << conn << " with TCP RST: " << xstrerr(xerrno));
+    if (Comm::IsConnOpen(conn)) {
+        commConfigureLinger(conn->fd, OnOff::on);
+        debugs(5, 7, conn->id);
+        conn->close();
     }
-    conn->close();
 }
 
 // Legacy close function.
 void
 old_comm_reset_close(int fd)
 {
-    struct linger L;
-    L.l_onoff = 1;
-    L.l_linger = 0;
-
-    if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_CRITICAL, "ERROR: Closing FD " << fd << " with TCP RST: " << xstrerr(xerrno));
+    if (fd >= 0) {
+        commConfigureLinger(fd, OnOff::on);
+        comm_close(fd);
     }
-    comm_close(fd);
 }
 
 static void
@@ -829,7 +816,7 @@ comm_close_complete(const int fd)
     F->ssl.reset();
     F->dynamicTlsContext.reset();
     fd_close(fd); /* update fdstat */
-    close(fd);
+    xclose(fd);
 
     ++ statCounter.syscalls.sock.closes;
 
@@ -880,7 +867,7 @@ _comm_close(int fd, char const *file, int line)
     // For simplicity sake, we remain in the caller's context while still
     // allowing individual advanced callbacks to overwrite it.
 
-    if (F->ssl) {
+    if (F->ssl && !F->flags.harshClosureRequested) {
         const auto startCall = asyncCall(5, 4, "commStartTlsClose",
                                          callDialer(commStartTlsClose, fd));
         ScheduleCallHere(startCall);
@@ -933,7 +920,7 @@ comm_udp_sendto(int fd,
 
     struct addrinfo *AI = nullptr;
     to_addr.getAddrInfo(AI, fd_table[fd].sock_family);
-    int x = sendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
+    int x = xsendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
     int xerrno = errno;
     Ip::Address::FreeAddr(AI);
 
@@ -1025,25 +1012,10 @@ comm_remove_close_handler(int fd, AsyncCall::Pointer &call)
 }
 
 static void
-commSetNoLinger(int fd)
-{
-
-    struct linger L;
-    L.l_onoff = 0;      /* off */
-    L.l_linger = 0;
-
-    if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_CRITICAL, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
-    }
-    fd_table[fd].flags.nolinger = true;
-}
-
-static void
 commSetReuseAddr(int fd)
 {
     int on = 1;
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
     }
@@ -1052,16 +1024,16 @@ commSetReuseAddr(int fd)
 static void
 commSetTcpRcvbuf(int fd, int size)
 {
-    if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(size)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
     }
-    if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *) &size, sizeof(size)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_SNDBUF, &size, sizeof(size)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
     }
 #ifdef TCP_WINDOW_CLAMP
-    if (setsockopt(fd, SOL_TCP, TCP_WINDOW_CLAMP, (char *) &size, sizeof(size)) < 0) {
+    if (xsetsockopt(fd, SOL_TCP, TCP_WINDOW_CLAMP, &size, sizeof(size)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
     }
@@ -1146,9 +1118,6 @@ commSetCloseOnExec(int fd)
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "ERROR: " << MYNAME << "FD " << fd << ": set close-on-exec failed: " << xstrerr(xerrno));
     }
-
-    fd_table[fd].flags.close_on_exec = true;
-
 #endif
 }
 
@@ -1158,7 +1127,7 @@ commSetTcpNoDelay(int fd)
 {
     int on = 1;
 
-    if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0) {
+    if (xsetsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
     }
@@ -1172,12 +1141,6 @@ void
 comm_init(void)
 {
     assert(fd_table);
-
-    /* make sure the accept() socket FIFO delay queue exists */
-    Comm::AcceptLimiter::Instance();
-
-    // make sure the IO pending callback table exists
-    Comm::CallbackTableInit();
 
     /* XXX account fd_table */
     /* Keep a few file descriptors free so that we don't run out of FD's
@@ -1196,8 +1159,6 @@ comm_exit(void)
 {
     delete TheHalfClosed;
     TheHalfClosed = nullptr;
-
-    Comm::CallbackTableDestruct();
 }
 
 #if USE_DELAY_POOLS
@@ -1738,7 +1699,7 @@ comm_open_uds(int sock_type,
 
     debugs(50, 3, "Attempt open socket for: " << addr->sun_path);
 
-    if ((new_socket = socket(AI.ai_family, AI.ai_socktype, AI.ai_protocol)) < 0) {
+    if ((new_socket = xsocket(AI.ai_family, AI.ai_socktype, AI.ai_protocol)) < 0) {
         int xerrno = errno;
         /* Increase the number of reserved fd's if calls to socket()
          * are failing because the open file table is full.  This

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,6 +28,8 @@
 #include "cache_cf.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
+#include "compat/netdb.h"
+#include "compat/socket.h"
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
@@ -39,7 +41,7 @@
 #include "fqdncache.h"
 #include "ftp/Elements.h"
 #include "globals.h"
-#include "HttpHeaderTools.h"
+#include "HeaderMangling.h"
 #include "HttpUpgradeProtocolAccess.h"
 #include "icmp/IcmpConfig.h"
 #include "ip/Intercept.h"
@@ -87,9 +89,6 @@
 #include "ssl/Config.h"
 #include "ssl/support.h"
 #endif
-#if USE_SQUID_ESI
-#include "esi/Parser.h"
-#endif
 #if SQUID_SNMP
 #include "snmp.h"
 #endif
@@ -106,9 +105,6 @@
 #endif
 #if HAVE_GRP_H
 #include <grp.h>
-#endif
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
 #endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -625,21 +621,15 @@ Configuration::Parse()
 
     defaults_postscriptum();
 
+    if (unrecognizedDirectives)
+        throw TextException(ToSBuf("Found ", unrecognizedDirectives, " unrecognized directive(s)"), Here());
+
     /*
      * We must call configDoConfigure() before leave_suid() because
      * configDoConfigure() is where we turn username strings into
      * uid values.
      */
     configDoConfigure();
-
-    // TODO: Throw before configDoConfigure(). Doing that would reduce the set
-    // of configuration errors Squid can detect in one execution, but we should
-    // not apply a clearly broken configuration, especially when we are going to
-    // quit anyway. While some legacy parse_foo() functions apply significant
-    // changes before configDoConfigure(), we cannot easily stop them. We can
-    // easily stop configDoConfigure().
-    if (unrecognizedDirectives)
-        throw TextException(ToSBuf("Found ", unrecognizedDirectives, " unrecognized directive(s)"), Here());
 
     if (opt_send_signal == -1) {
         Mgr::RegisterAction("config",
@@ -929,19 +919,8 @@ configDoConfigure(void)
 
             Config2.effectiveGroupID = pwd->pw_gid;
 
-#if HAVE_PUTENV
-            if (pwd->pw_dir && *pwd->pw_dir) {
-                // putenv() leaks by design; avoid leaks when nothing changes
-                static SBuf lastDir;
-                if (lastDir.isEmpty() || lastDir.cmp(pwd->pw_dir) != 0) {
-                    lastDir = pwd->pw_dir;
-                    int len = strlen(pwd->pw_dir) + 6;
-                    char *env_str = (char *)xcalloc(len, 1);
-                    snprintf(env_str, len, "HOME=%s", pwd->pw_dir);
-                    putenv(env_str);
-                }
-            }
-#endif
+            if (pwd->pw_dir && *pwd->pw_dir)
+                (void)setenv("HOME", pwd->pw_dir, 1);
         }
     } else {
         Config2.effectiveUserID = geteuid();
@@ -966,10 +945,12 @@ configDoConfigure(void)
         Ssl::loadSquidUntrusted(Config.ssl_client.foreignIntermediateCertsPath);
 #endif
 
-    if (Security::ProxyOutgoingConfig.encryptTransport) {
+    if (Security::ProxyOutgoingConfig().encryptTransport) {
         debugs(3, 2, "initializing https:// proxy context");
-        Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
-        if (!Config.ssl_client.sslContext) {
+
+        const auto rawSslContext = Security::ProxyOutgoingConfig().createClientContext(false);
+        Config.ssl_client.sslContext_ = rawSslContext ? new Security::ContextPointer(rawSslContext) : nullptr;
+        if (!Config.ssl_client.sslContext_) {
 #if USE_OPENSSL
             fatal("ERROR: Could not initialize https:// proxy context");
 #else
@@ -977,8 +958,9 @@ configDoConfigure(void)
 #endif
         }
 #if USE_OPENSSL
-        Ssl::useSquidUntrusted(Config.ssl_client.sslContext.get());
+        Ssl::useSquidUntrusted(Config.ssl_client.sslContext_->get());
 #endif
+        Config.ssl_client.defaultPeerContext = new Security::FuturePeerContext(Security::ProxyOutgoingConfig(), *Config.ssl_client.sslContext_);
     }
 
     for (const auto &p: CurrentCachePeers()) {
@@ -1118,7 +1100,7 @@ parse_obsolete(const char *name)
             throw TextException(ToSBuf("missing required parameter for obsolete directive: ", name), Here());
 
         tmp.append(token, strlen(token));
-        Security::ProxyOutgoingConfig.parse(tmp.c_str());
+        Security::ProxyOutgoingConfig().parse(tmp.c_str());
     }
 }
 
@@ -1486,26 +1468,23 @@ free_SBufList(SBufList *list)
 }
 
 static void
-dump_acl(StoreEntry * entry, const char *name, Acl::Node * ae)
+dump_acl(StoreEntry *entry, const char *directiveName, Acl::NamedAcls *config)
 {
     PackableStream os(*entry);
-    while (ae != nullptr) {
-        debugs(3, 3, "dump_acl: " << name << " " << ae->name);
-        ae->dumpWhole(name, os);
-        ae = ae->next;
-    }
+    Acl::DumpNamedAcls(os, directiveName, config);
 }
 
 static void
-parse_acl(Acl::Node ** ae)
+parse_acl(Acl::NamedAcls **config)
 {
-    Acl::Node::ParseAclLine(LegacyParser, ae);
+    assert(config);
+    Acl::Node::ParseNamedAcl(LegacyParser, *config);
 }
 
 static void
-free_acl(Acl::Node ** ae)
+free_acl(Acl::NamedAcls **config)
 {
-    aclDestroyAcls(ae);
+    Acl::FreeNamedAcls(config);
 }
 
 void
@@ -1513,14 +1492,14 @@ dump_acl_list(StoreEntry * entry, ACLList * head)
 {
     // XXX: Should dump ACL names like "foo !bar" but dumps parsing context like
     // "(clientside_tos 0x11 line)".
-    dump_SBufList(entry, head->dump());
+    dump_SBufList(entry, ToTree(head).dump());
 }
 
 void
 dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {
     if (head)
-        dump_SBufList(entry, head->treeDump(name, &Acl::AllowOrDeny));
+        dump_SBufList(entry, ToTree(head).treeDump(name, &Acl::AllowOrDeny));
 }
 
 static void
@@ -2011,7 +1990,7 @@ static void
 dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 {
     if (authSchemes)
-        dump_SBufList(entry, authSchemes->treeDump(name, [](const Acl::Answer &action) {
+        dump_SBufList(entry, ToTree(authSchemes).treeDump(name, [](const Acl::Answer &action) {
         return Auth::TheConfig.schemeLists.at(action.kind).rawSchemes;
     }));
 }
@@ -2019,13 +1998,17 @@ dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 #endif /* USE_AUTH */
 
 static void
-ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, Acl::Node *acl)
+ParseAclWithAction(acl_access **config, const Acl::Answer &action, const char *desc, Acl::Node *acl)
 {
-    assert(access);
-    if (!*access) {
-        *access = new Acl::Tree;
-        (*access)->context(ToSBuf('(', desc, " rules)"), config_input_line);
+    assert(config);
+    auto &access = *config;
+    if (!access) {
+        const auto tree = new Acl::Tree;
+        tree->context(ToSBuf('(', desc, " rules)"), config_input_line);
+        access = new acl_access(tree);
     }
+    assert(access);
+
     Acl::AndNode *rule = new Acl::AndNode;
     rule->context(ToSBuf('(', desc, " rule)"), config_input_line);
     if (acl)
@@ -2135,7 +2118,7 @@ GetService(const char *proto)
     }
     /** Returns either the service port number from /etc/services */
     if ( !isUnsignedNumeric(token, strlen(token)) )
-        port = getservbyname(token, proto);
+        port = xgetservbyname(token, proto);
     if (port != nullptr) {
         return ntohs((unsigned short)port->s_port);
     }
@@ -3918,7 +3901,10 @@ configFreeMemory(void)
 {
     free_all();
     Dns::ResolveClientAddressesAsap = false;
-    Config.ssl_client.sslContext.reset();
+    delete Config.ssl_client.defaultPeerContext;
+    Config.ssl_client.defaultPeerContext = nullptr;
+    delete Config.ssl_client.sslContext_;
+    Config.ssl_client.sslContext_ = nullptr;
 #if USE_OPENSSL
     Ssl::unloadSquidUntrusted();
 #endif
@@ -4485,7 +4471,7 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump)
 {
     if (ssl_bump)
-        dump_SBufList(entry, ssl_bump->treeDump(name, [](const Acl::Answer &action) {
+        dump_SBufList(entry, ToTree(ssl_bump).treeDump(name, [](const Acl::Answer &action) {
         return Ssl::BumpModeStr.at(action.kind);
     }));
 }
@@ -4729,7 +4715,7 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
 static void dump_ftp_epsv(StoreEntry *entry, const char *name, acl_access *ftp_epsv)
 {
     if (ftp_epsv)
-        dump_SBufList(entry, ftp_epsv->treeDump(name, Acl::AllowOrDeny));
+        dump_SBufList(entry, ToTree(ftp_epsv).treeDump(name, Acl::AllowOrDeny));
 }
 
 static void free_ftp_epsv(acl_access **ftp_epsv)
@@ -4900,7 +4886,7 @@ dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *ac
         "respond"
     };
     if (access) {
-        SBufList lines = access->treeDump(name, [](const Acl::Answer &action) {
+        const auto lines = ToTree(access).treeDump(name, [](const Acl::Answer &action) {
             return onErrorTunnelMode.at(action.kind);
         });
         dump_SBufList(entry, lines);
@@ -4934,7 +4920,7 @@ dump_http_upgrade_request_protocols(StoreEntry *entry, const char *rawName, Http
         SBufList line;
         line.push_back(name);
         line.push_back(proto);
-        const auto acld = acls->treeDump("", &Acl::AllowOrDeny);
+        const auto acld = ToTree(acls).treeDump("", &Acl::AllowOrDeny);
         line.insert(line.end(), acld.begin(), acld.end());
         dump_SBufList(entry, line);
     });

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,6 +25,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "sbuf/Stream.h"
 
 /* Generic Functions */
 
@@ -480,7 +481,7 @@ schemesConfig(HttpRequest *request, HttpReply *rep)
     if (!Auth::TheConfig.schemeLists.empty() && Auth::TheConfig.schemeAccess) {
         ACLFilledChecklist ch(nullptr, request);
         ch.updateReply(rep);
-        const auto answer = ch.fastCheck(Auth::TheConfig.schemeAccess);
+        const auto &answer = ch.fastCheck(Auth::TheConfig.schemeAccess);
         if (answer.allowed())
             return Auth::TheConfig.schemeLists.at(answer.kind).authConfigs;
     }
@@ -575,11 +576,11 @@ Auth::UserRequest::helperRequestKeyExtras(HttpRequest *request, AccessLogEntry::
 void
 Auth::UserRequest::denyMessageFromHelper(const char *proto, const Helper::Reply &reply)
 {
-    static SBuf messageNote;
-    if (!reply.notes.find(messageNote, "message")) {
-        messageNote.append(proto);
-        messageNote.append(" Authentication denied with no reason given");
-    }
-    setDenyMessage(messageNote.c_str());
-}
+    auto messageNote = reply.notes.find("message");
 
+    if (!messageNote) {
+        messageNote = ToSBuf(proto, " Authentication denied with no reason given");
+    }
+
+    setDenyMessage(messageNote->c_str());
+}

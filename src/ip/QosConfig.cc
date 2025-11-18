@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,7 @@
 #include "cache_cf.h"
 #include "comm/Connection.h"
 #include "compat/cmsg.h"
+#include "compat/socket.h"
 #include "ConfigParser.h"
 #include "fde.h"
 #include "globals.h"
@@ -51,10 +52,10 @@ Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
     tos_t tos = 1;
     int tos_len = sizeof(tos);
     clientFde->tosFromServer = 0;
-    if (setsockopt(server->fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0) {
+    if (xsetsockopt(server->fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0) {
         unsigned char buf[512];
         int len = 512;
-        if (getsockopt(server->fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0) {
+        if (xgetsockopt(server->fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0) {
             /* Parse the PKTOPTIONS structure to locate the TOS data message
              * prepared in the kernel by the ZPH incoming TCP TOS preserving
              * patch.
@@ -383,11 +384,12 @@ Ip::Qos::Config::parseConfigLine()
 
         } else if (strncmp(token, "miss=",5) == 0) {
 
-            char *end;
             if (mark) {
+                char *end = nullptr;
                 if (!xstrtoui(&token[5], &end, &markMiss, 0, std::numeric_limits<nfmark_t>::max())) {
                     throw TextException(ToSBuf("Bad mark miss value ", &token[5]), Here());
                 }
+                Assure(end);
                 if (*end == '/') {
                     if (!xstrtoui(end + 1, nullptr, &markMissMask, 0, std::numeric_limits<nfmark_t>::max())) {
                         debugs(3, DBG_CRITICAL, "ERROR: Bad mark miss mask value " << (end + 1) << ". Using 0xFFFFFFFF instead.");
@@ -397,11 +399,13 @@ Ip::Qos::Config::parseConfigLine()
                     markMissMask = 0xFFFFFFFF;
                 }
             } else {
+                char *end = nullptr;
                 unsigned int v = 0;
                 if (!xstrtoui(&token[5], &end, &v, 0, std::numeric_limits<tos_t>::max())) {
                     throw TextException(ToSBuf("Bad TOS miss value ", &token[5]), Here());
                 }
                 tosMiss = (tos_t)v;
+                Assure(end);
                 if (*end == '/') {
                     if (!xstrtoui(end + 1, nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
                         debugs(3, DBG_CRITICAL, "ERROR: Bad TOS miss mask value " << (end + 1) << ". Using 0xFF instead.");
@@ -523,7 +527,7 @@ Ip::Qos::setSockTos(const int fd, tos_t tos, int type)
 
     if (type == AF_INET) {
 #if defined(IP_TOS)
-        const int x = setsockopt(fd, IPPROTO_IP, IP_TOS, &bTos, sizeof(bTos));
+        const int x = xsetsockopt(fd, IPPROTO_IP, IP_TOS, &bTos, sizeof(bTos));
         if (x < 0) {
             int xerrno = errno;
             debugs(50, 2, "setsockopt(IP_TOS) on " << fd << ": " << xstrerr(xerrno));
@@ -535,7 +539,7 @@ Ip::Qos::setSockTos(const int fd, tos_t tos, int type)
 #endif
     } else { // type == AF_INET6
 #if defined(IPV6_TCLASS)
-        const int x = setsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, &bTos, sizeof(bTos));
+        const int x = xsetsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, &bTos, sizeof(bTos));
         if (x < 0) {
             int xerrno = errno;
             debugs(50, 2, "setsockopt(IPV6_TCLASS) on " << fd << ": " << xstrerr(xerrno));
@@ -563,7 +567,7 @@ Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
 {
 #if HAVE_LIBCAP && SO_MARK
     debugs(50, 3, "for FD " << fd << " to " << mark);
-    const int x = setsockopt(fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
+    const int x = xsetsockopt(fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
     if (x < 0) {
         int xerrno = errno;
         debugs(50, 2, "setsockopt(SO_MARK) on " << fd << ": " << xstrerr(xerrno));

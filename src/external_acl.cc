@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2025 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,6 @@
 #include "helper.h"
 #include "helper/Reply.h"
 #include "http/Stream.h"
-#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/tools.h"
@@ -592,6 +591,14 @@ copyResultsFromEntry(const HttpRequest::Pointer &req, const ExternalACLEntryPoin
 Acl::Answer
 ACLExternal::aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch) const
 {
+    // Despite its external_acl C++ type name, acl->def is not an ACL (i.e. not
+    // a reference-counted Acl::Node) and gets invalidated by reconfiguration.
+    // TODO: RefCount external_acl, so that we do not have to bail here.
+    if (!cbdataReferenceValid(acl->def)) {
+        debugs(82, 3, "cannot resume matching; external_acl gone");
+        return ACCESS_DUNNO;
+    }
+
     debugs(82, 9, "acl=\"" << acl->def->name << "\"");
     ExternalACLEntryPointer entry = ch->extacl_entry;
 
@@ -1050,7 +1057,7 @@ ACLExternal::startLookup(ACLFilledChecklist *ch, external_acl_data *acl, bool in
         state->queue = oldstate->queue;
         oldstate->queue = state;
     } else {
-        /* No pending lookup found. Sumbit to helper */
+        /* No pending lookup found. Submit to helper */
 
         MemBuf buf;
         buf.init();
