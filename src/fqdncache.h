@@ -12,6 +12,7 @@
 #define SQUID_SRC_FQDNCACHE_H
 
 #include "dns/forward.h"
+#include "ip/forward.h"
 #include "sbuf/forward.h"
 #include "store/forward.h"
 
