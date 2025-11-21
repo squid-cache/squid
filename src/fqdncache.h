@@ -22,11 +22,13 @@ namespace Dns
 extern bool ResolveClientAddressesAsap;
 }
 
-typedef void FQDNH(const char *, const Dns::LookupDetails &, void *);
+using FQDNH = void (const char *, const Dns::LookupDetails &, void *);
 
 void fqdncache_init(void);
 void fqdnStats(StoreEntry *);
-void fqdncache_restart(void);
+void fqdncache_init();
+void fqdnStats(StoreEntry *);
+void fqdncache_restart();
 void fqdncache_purgelru(void *);
 void fqdncacheAddEntryFromHosts(char *addr, SBufList &hostnames);
 
