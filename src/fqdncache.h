@@ -24,8 +24,6 @@ extern bool ResolveClientAddressesAsap;
 
 using FQDNH = void (const char *, const Dns::LookupDetails &, void *);
 
-void fqdncache_init(void);
-void fqdnStats(StoreEntry *);
 void fqdncache_init();
 void fqdnStats(StoreEntry *);
 void fqdncache_restart();
