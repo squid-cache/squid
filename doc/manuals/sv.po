@@ -3422,7 +3422,7 @@ msgstr "Om du vill göra mer än bara skriva ut cacheinnehållet måste du ange 
 #. type: Plain text
 #: tools/purge/purge.1:128
 msgid "B<no bit set:\tjust print>"
-msgstr "B<ingen bit inställd:\tbara utskrift>"
+msgstr "B<no bit set:\tjust print>"
 
 #. type: Plain text
 #: tools/purge/purge.1:130
