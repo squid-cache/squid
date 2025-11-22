@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2017-05-29 22:50+1200\n"
-"PO-Revision-Date: 2025-11-21 18:24+0100\n"
+"PO-Revision-Date: 2025-11-22 11:29+0100\n"
 "Last-Translator: Daniel Nylander <github@danielnylander.se>\n"
 "Language-Team: Swedish <sv@li.org>\n"
 "Language: sv\n"
@@ -2112,7 +2112,7 @@ msgstr "Använd en permanent LDAP-anslutning. Normalt är LDAP-anslutningen enda
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:176
 msgid "Only bind once per LDAP connection. Some LDAP servers do not allow re-binding as another user after a successful I<ldap_bind.> The use of this option always opens a new connection for each login attempt. If combined with the B<-P> option for persistent LDAP connection then the connection used for searching for the user DN is kept persistent but a new connection is opened to verify each users password once the DN is found."
-msgstr "Bind endast en gång per LDAP-anslutning. Vissa LDAP-servrar tillåter inte ombindning som en annan användare efter en lyckad I-<ldap_bind.> Användningen av denna flagga öppnar alltid en ny anslutning för varje inloggningsförsök. Om det kombineras med flaggan B<-P> för beständig LDAP-anslutning, behålls anslutningen som används för att söka efter användarens DN, men en ny anslutning öppnas för att verifiera varje användares lösenord när DN har hittats."
+msgstr "Bind endast en gång per LDAP-anslutning. Vissa LDAP-servrar tillåter inte ombindning som en annan användare efter en lyckad I<ldap_bind.> Användningen av denna flagga öppnar alltid en ny anslutning för varje inloggningsförsök. Om det kombineras med flaggan B<-P> för beständig LDAP-anslutning, behålls anslutningen som används för att söka efter användarens DN, men en ny anslutning öppnas för att verifiera varje användares lösenord när DN har hittats."
 
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:185
@@ -3779,7 +3779,7 @@ msgstr "Tyst. Skriv inte ut data till stdout."
 #. type: Plain text
 #: tools/squidclient/squidclient.1:161
 msgid "Trace I<count> HTTP relay or proxy hops"
-msgstr "Spåra I-<count> a HTTP-relä eller proxyhopp"
+msgstr "Spåra I<count> a HTTP-relä eller proxyhopp"
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:165
