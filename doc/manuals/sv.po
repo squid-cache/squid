@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2017-05-29 22:50+1200\n"
-"PO-Revision-Date: 2025-11-22 11:29+0100\n"
+"PO-Revision-Date: 2025-11-22 15:30+0100\n"
 "Last-Translator: Daniel Nylander <github@danielnylander.se>\n"
 "Language-Team: Swedish <sv@li.org>\n"
 "Language: sv\n"
@@ -3422,7 +3422,7 @@ msgstr "Om du vill göra mer än bara skriva ut cacheinnehållet måste du ange 
 #. type: Plain text
 #: tools/purge/purge.1:128
 msgid "B<no bit set:\tjust print>"
-msgstr "B<no bit set:\tjust print>"
+msgstr "B<<ingen bit inställd:\\tbara utskrift>"
 
 #. type: Plain text
 #: tools/purge/purge.1:130
