@@ -1539,8 +1539,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
 
     if (name_len > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        // TODO: update this to show proper name_len in Raw markup, but not print all that
-        debugs(55, 2, "ignoring huge header field (" << Raw("field_start", field_start, 100) << "...)");
+        debugs(55, 2, "ignoring huge " << Raw("field-name", field_start, name_len).atMost(100));
         return nullptr;
     }
 
@@ -1584,8 +1583,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
      */
     for (const char *pos = field_start; pos < (field_start+name_len); ++pos) {
         if (!CharacterSet::TCHAR[*pos]) {
-            debugs(55, 2, "found header with invalid characters in " <<
-                   Raw("field-name", field_start, min(name_len,100)) << "...");
+            debugs(55, 2, "found invalid characters in " << Raw("field-name", field_start, name_len).atMost(100));
             return nullptr;
         }
     }
