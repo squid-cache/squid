@@ -157,13 +157,13 @@ main(int argc, char **argv)
         if (parsed < 2 || !isspace((unsigned char)sep)) {
             username[0] = '\0';
             password[0] = '\0';
-            puts("ERR");
+            SEND_ERR("Cannot parse request");
             continue;
         }
         if (parsed == 4) {
             username[0] = '\0';
             password[0] = '\0';
-            puts("ERR");
+            SEND_ERR("Trailing garbage in request");
             continue;
         }
         if (parsed == 2)
