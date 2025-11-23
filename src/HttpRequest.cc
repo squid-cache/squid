@@ -334,19 +334,19 @@ HttpRequest::swapOut(StoreEntry * e)
 {
     assert(e);
     e->buffer();
-    pack(e);
+    pack(e, MaskSensitiveInfo::off);
     e->flush();
 }
 
 /* packs request-line and headers, appends <crlf> terminator */
 void
-HttpRequest::pack(Packable * const p, const bool maskSensitiveInfo) const
+HttpRequest::pack(Packable * const p, MaskSensitiveInfo mask) const
 {
     assert(p);
     /* pack request-line */
     packFirstLineInto(p, false /* origin-form */);
     /* headers */
-    header.packInto(p, maskSensitiveInfo);
+    header.packInto(p, mask);
     /* indicate the end of the header section */
     p->append("\r\n", 2);
 }
@@ -358,7 +358,7 @@ void
 httpRequestPack(void *obj, Packable *p)
 {
     HttpRequest *request = static_cast<HttpRequest*>(obj);
-    request->pack(p);
+    request->pack(p, MaskSensitiveInfo::off);
 }
 
 /* returns the length of request line + headers + crlf */

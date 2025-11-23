@@ -1004,7 +1004,7 @@ clientReplyContext::traceReply()
     http->storeEntry()->buffer();
     MemBuf content;
     content.init();
-    http->request->pack(&content, true /* hide authorization data */);
+    http->request->pack(&content, MaskSensitiveInfo::on);
     const HttpReplyPointer rep(new HttpReply);
     rep->setHeaders(Http::scOkay, nullptr, "message/http", content.contentSize(), 0, squid_curtime);
     rep->body.set(SBuf(content.buf, content.size));

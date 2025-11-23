@@ -886,7 +886,7 @@ ErrorState::Dump(MemBuf * mb)
         body << "HTTP Request:\r\n";
         MemBuf r;
         r.init();
-        request->pack(&r, true /* hide authorization data */);
+        request->pack(&r, MaskSensitiveInfo::on);
         body << r.content();
     }
 
@@ -1149,7 +1149,7 @@ ErrorState::compileLegacyCode(Build &build)
             break;
         }
         else if (request)
-            request->pack(&mb, true /* hide authorization data */);
+            request->pack(&mb, MaskSensitiveInfo::on);
         else
             p = "[no request]";
         break;
