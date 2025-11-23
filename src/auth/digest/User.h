@@ -28,7 +28,8 @@ class User : public Auth::User
 public:
     User(Auth::SchemeConfig *, const char *requestRealm);
     ~User() override;
-    int32_t ttl() const override;
+    int authenticated() const;
+    Auth::Ttl ttl() const override;
 
     /* Auth::User API */
     static CbcPointer<Auth::CredentialsCache> Cache();
