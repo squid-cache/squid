@@ -36,7 +36,7 @@ DiskIO::OIO::File::File(char const *aPath, Strategy *aStrategy)
 void
 DiskIO::OIO::File::open(int flags, mode_t, IORequestor::Pointer callback)
 {
-   if (flags & O_WRONLY)
+    if (flags & O_WRONLY)
         flags |= O_APPEND;
 
     flags |= O_BINARY;

@@ -10,11 +10,11 @@ include $(top_srcdir)/src/Common.am
 noinst_LTLIBRARIES = libOIO.la
 
 libOIO_la_SOURCES = \
-	aio_win32.h \
-	async_io.h \
 	File.cc \
 	File.h \
 	Module.cc \
 	Module.h \
 	Strategy.cc \
-	Strategy.h
+	Strategy.h \
+	aio_win32.h \
+	async_io.h
