@@ -27,6 +27,7 @@
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
+#include "SquidMath.h"
 #include "SquidString.h"
 #include "StatCounters.h"
 #include "tools.h"
@@ -444,7 +445,7 @@ Ftp::Client::handleControlReply()
             }
 
             const auto maxSize = std::numeric_limits<size_t>::max();
-            const auto aggressiveSize = NaturalSum(ctrl.size, ctrl.size).value_or(maxSize);
+            const auto aggressiveSize = NaturalSum<size_t>(ctrl.size, ctrl.size).value_or(maxSize);
             const auto newSize = std::min(aggressiveSize, Config.maxReplyHeaderSize);
             Assure(newSize > ctrl.size); // our parser rejects too-big responses
 
