@@ -329,8 +329,7 @@ snmpClosePorts()
     }
     snmpIncomingConn = nullptr;
 
-    if (Comm::IsConnOpen(snmpOutgoingConn) && snmpIncomingConn != snmpOutgoingConn) {
-        // Perform OUT port closure so as not to step on IN port when sharing a conn.
+    if (Comm::IsConnOpen(snmpOutgoingConn)) {
         debugs(49, DBG_IMPORTANT, "Closing SNMP sending port " << snmpOutgoingConn->local);
         snmpOutgoingConn->close();
     }
@@ -424,7 +423,9 @@ snmpDecodePacket(SnmpRequest * rq)
             snmp_free_pdu(PDU);
         }
         xfree(Community);
-
+        rq->community = nullptr;
+        rq->session.community = nullptr;
+        rq->session.community_len = 0;
     } else {
         debugs(49, DBG_IMPORTANT, "WARNING: Failed SNMP agent query from : " << rq->from);
         snmp_free_pdu(PDU);
@@ -453,8 +454,10 @@ snmpConstructReponse(SnmpRequest * rq)
     snmp_free_pdu(rq->PDU);
 
     if (RespPDU != nullptr) {
-        snmp_build(&rq->session, RespPDU, rq->outbuf, &rq->outlen);
-        comm_udp_sendto(rq->sock, rq->from, rq->outbuf, rq->outlen);
+        if (snmp_build(&rq->session, RespPDU, rq->outbuf, &rq->outlen) == 0)
+            comm_udp_sendto(rq->sock, rq->from, rq->outbuf, rq->outlen);
+        else
+            debugs(49, DBG_IMPORTANT, "ERROR: Failed to encode a response to SNMP agent query from " << rq->from);
         snmp_free_pdu(RespPDU);
     }
 }
@@ -763,6 +766,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
             instance = (oid *)xmalloc(sizeof(*name) * (current->len + 1 ));
             memcpy(instance, name, (sizeof(*name) * current->len ));
             instance[current->len] = no + 1 ; // i.e. the next index on cache_peeer table.
+            *len = current->len + 1;
         } else {
             debugs(49, 6, "snmp peer_Inst: We have " << i << " peers. Can't find #" << no);
             return (instance);
@@ -845,25 +849,11 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 static mib_tree_entry *
 snmpTreeSiblingEntry(oid entry, snint len, mib_tree_entry * current)
 {
-    mib_tree_entry *next = nullptr;
-    int count = 0;
-
-    while ((!next) && (count < current->children)) {
-        if (current->leaves[count]->name[len] == entry) {
-            next = current->leaves[count];
-        }
-
-        ++count;
+    for (int i = 0; i < current->children; ++i) {
+        if (current->leaves[i]->name[len] == entry)
+            return (i + 1 < current->children) ? current->leaves[i + 1] : nullptr;
     }
-
-    /* Exactly the sibling on right */
-    if (count < current->children) {
-        next = current->leaves[count];
-    } else {
-        next = nullptr;
-    }
-
-    return (next);
+    return nullptr;
 }
 
 /*
@@ -1002,34 +992,31 @@ snmpAddNodeStr(const char *base_str, int o, oid_ParseFn * parsefunction, instanc
 static mib_tree_entry *
 snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * instancefunction, AggrType aggrType, int children,...)
 {
-    va_list args;
-    int loop;
-    mib_tree_entry *entry = nullptr;
-    va_start(args, children);
-
     MemBuf tmp;
     debugs(49, 6, "snmpAddNode: Children : " << children << ", Oid : " << snmpDebugOid(name, len, tmp));
 
-    va_start(args, children);
-    entry = (mib_tree_entry *)xmalloc(sizeof(mib_tree_entry));
+    const auto entry = static_cast<mib_tree_entry *>(xmalloc(sizeof(mib_tree_entry)));
     entry->name = name;
     entry->len = len;
     entry->parsefunction = parsefunction;
     entry->instancefunction = instancefunction;
     entry->children = children;
     entry->leaves = nullptr;
+    entry->parent = nullptr;
     entry->aggrType = aggrType;
 
     if (children > 0) {
-        entry->leaves = (mib_tree_entry **)xmalloc(sizeof(mib_tree_entry *) * children);
+        entry->leaves = static_cast<mib_tree_entry **>(xmalloc(sizeof(mib_tree_entry *) * children));
 
-        for (loop = 0; loop < children; ++loop) {
+        va_list args;
+        va_start(args, children);
+        for (int loop = 0; loop < children; ++loop) {
             entry->leaves[loop] = va_arg(args, mib_tree_entry *);
             entry->leaves[loop]->parent = entry;
         }
+        va_end(args);
     }
 
-    va_end(args);
     return (entry);
 }
 /* End of tree utility functions */
@@ -1065,8 +1052,7 @@ snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf)
 {
     char mbuf[16];
     int x;
-    if (outbuf.isNull())
-        outbuf.init(16, MAX_IPSTRLEN);
+    outbuf.reset();
 
     for (x = 0; x < Len; ++x) {
         size_t bytes = snprintf(mbuf, sizeof(mbuf), ".%u", (unsigned int) Name[x]);

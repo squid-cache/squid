@@ -7,9 +7,7 @@
 
 include $(top_srcdir)/src/Common.am
 
-DIST_SUBDIRS = \
-	fake \
-	SSPI
+DIST_SUBDIRS = fake
 SUBDIRS= $(NTLM_AUTH_HELPERS)
 EXTRA_DIST= helpers.m4
 
