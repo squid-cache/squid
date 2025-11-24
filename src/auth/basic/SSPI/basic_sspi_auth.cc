@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "auth/basic/SSPI/valid.h"
+#include "compat/xis.h"
 #include "helper/protocol_defines.h"
 #include "rfc1738.h"
 #include "util.h"
@@ -115,7 +116,6 @@ main(int argc, char **argv)
     char sep = '\0', junk = '\0';
     char *p;
     int err = 0;
-    int parsed = 0;
 
     process_options(argc, argv);
 
@@ -148,28 +148,21 @@ main(int argc, char **argv)
             *p = '\0';      /* strip \n */
         if ((p = strchr(wstr, '\r')) != NULL)
             *p = '\0';      /* strip \r */
+
+        debug("Got %s from Squid\n", wstr);
+
         /* Clear any current settings */
         username[0] = '\0';
         password[0] = '\0';
 
-        parsed = sscanf(wstr, " %255s%1c%255s %c", username, &sep, password, &junk);
+        const auto parsed = sscanf(wstr, " %255s%1c%255s %c", username, &sep, password, &junk);
 
-        if (parsed < 2 || !isspace((unsigned char)sep)) {
+        if (parsed != 3 || !xisspace(sep)) {
             username[0] = '\0';
             password[0] = '\0';
             SEND_ERR("Cannot parse request");
             continue;
         }
-        if (parsed == 4) {
-            username[0] = '\0';
-            password[0] = '\0';
-            SEND_ERR("Trailing garbage in request");
-            continue;
-        }
-        if (parsed == 2)
-            password[0] = '\0';
-
-        debug("Got %s from Squid\n", wstr);
 
         /* Check for invalid or blank entries */
         if ((username[0] == '\0') || (password[0] == '\0')) {
