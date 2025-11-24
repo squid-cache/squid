@@ -7,13 +7,14 @@
 
 include $(top_srcdir)/src/Common.am
 
-noinst_LTLIBRARIES = libAIO.la
+noinst_LTLIBRARIES = libOIO.la
 
-libAIO_la_SOURCES = \
-	AIODiskFile.cc \
-	AIODiskFile.h \
-	AIODiskIOModule.cc \
-	AIODiskIOModule.h \
-	AIODiskIOStrategy.cc \
-	AIODiskIOStrategy.h \
-	async_io.h
+libOIO_la_SOURCES = \
+	aio_win32.h \
+	async_io.h \
+	File.cc \
+	File.h \
+	Module.cc \
+	Module.h \
+	Strategy.cc \
+	Strategy.h
