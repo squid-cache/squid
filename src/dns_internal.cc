@@ -129,8 +129,7 @@ public:
     }
 
     /// Generate 'name' from requested hostname 'orig' and configured 'searchpath'.
-    /// Subsequent calls will generate alternative FQDN from the searchpath sequence.
-    /// Skips any FQDN which exceed NS_MAXDNAME.
+    /// Each call generates an FQDN from the searchpath sequence.
     void makeNameToLookup();
 
 public:
@@ -1295,8 +1294,6 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
 
             debugs(78, 3, "idnsGrokReply: Query result: NXDOMAIN - " << q->name );
 
-            // ignore NXDOMAIN found while scanning searchpath.
-            // only count failures for the fallback (non-suffix) domain.
             if (q->domain >= npc)
                 ++ q->attempt;
 
