@@ -11,23 +11,22 @@
 #ifndef SQUID_SRC_FQDNCACHE_H
 #define SQUID_SRC_FQDNCACHE_H
 
-#include "ip/Address.h"
+#include "dns/forward.h"
+#include "ip/forward.h"
 #include "sbuf/forward.h"
+#include "store/forward.h"
 
-class StoreEntry;
 namespace Dns
 {
-class LookupDetails;
-
 /// whether to do reverse DNS lookups for source IPs of accepted connections
 extern bool ResolveClientAddressesAsap;
 }
 
-typedef void FQDNH(const char *, const Dns::LookupDetails &details, void *);
+using FQDNH = void (const char *, const Dns::LookupDetails &, void *);
 
-void fqdncache_init(void);
+void fqdncache_init();
 void fqdnStats(StoreEntry *);
-void fqdncache_restart(void);
+void fqdncache_restart();
 void fqdncache_purgelru(void *);
 void fqdncacheAddEntryFromHosts(char *addr, SBufList &hostnames);
 
