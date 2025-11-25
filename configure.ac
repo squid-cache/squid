@@ -678,7 +678,7 @@ for module in $squid_disk_module_candidates none; do
         DISK_MODULES="$DISK_MODULES OIO"
         AC_DEFINE([HAVE_DISKIO_MODULE_OIO],1,[Windows OIO Disk I/O module is built])
       ],[
-        AC_MSG_NOTICE([DiskIO Module OIO disabled. Missing Windows Overlapped/IO support.])
+        AC_MSG_NOTICE([DiskIO Module OIO disabled. Missing Windows Overlapped I/O support.])
         squid_disk_module_candidates_OIO=no
       ])
     ],
