@@ -489,7 +489,7 @@ SQUID_DEFINE_BOOL(USE_DISKIO,$enable_disk_io,[DiskIO modules are expected to be 
 dnl Some autoconf.h defines we might enable later...
 AC_ARG_WITH(pthreads,AS_HELP_STRING([--without-pthreads],[Disable POSIX Threads]))
 AC_ARG_WITH(aio, AS_HELP_STRING([--without-aio],[Do not use POSIX AIO. Default: auto-detect]))
-AC_ARG_WITH(oio, AS_HELP_STRING([--without-oio],[Do not use Windows OIO. Default: auto-detect]))
+AC_ARG_WITH(oio, AS_HELP_STRING([--without-oio],[Do not use Windows Overlapped I/O. Default: auto-detect]))
 ENABLE_WIN32_AIOPS=0
 squid_opt_use_aio=
 squid_opt_use_diskthreads=
