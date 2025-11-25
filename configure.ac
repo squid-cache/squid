@@ -666,7 +666,7 @@ for module in $squid_disk_module_candidates none; do
     ],
 
     [OIO],[
-      dnl Check for Windows Overlapped IO availability
+      dnl Check for Windows Overlapped I/O availability
       AS_IF([test "x$with_oio" = "xno"],[
         dnl nothing to do
       ],[test "$squid_host_os" != "mingw" -a "x$with_oio" = "xyes"],[

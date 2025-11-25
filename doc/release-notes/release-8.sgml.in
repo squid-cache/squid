@@ -144,7 +144,8 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p>No new options in this version.
+	<tag>--without-oio</tag>
+	<p>Controls automatic detection of Windows Overlapped I/O.
 
 </descrip>
 
@@ -158,6 +159,12 @@ This section gives an account of those changes in three categories:
 	<tag>--enable-auth-ntlm=</tag>
 	<p>Removed <em>SMB_LM</em> helper, in favour of the <em>ntlm_auth</em>
 	   alternative offered by the Samba project.
+
+	<tag>--enable-disk-io</tag>
+	<p>New module <em>OIO</em> to enable Windows Overlapped I/O support.
+	   Requires MinGW build environment.
+	<p>The <em>AIO</em> module for POSIX Asynchronous I/O support
+	   no longer auto-replaces with Windows Overlapped I/O.
 
 	<tag>--enable-external-acl-helpers=</tag>
 	<p>Removed <em>LM_Group</em> helper. The LM protocol is
