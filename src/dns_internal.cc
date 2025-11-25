@@ -307,7 +307,6 @@ idns_query::makeNameToLookup()
         ++domain;
         return; // try using this FQDN
     }
-    // else use the default (orig only)
 }
 
 static void
