@@ -9,11 +9,11 @@
 #ifndef SQUID_SRC_STORE_CONTROLLER_H
 #define SQUID_SRC_STORE_CONTROLLER_H
 
+#include "http/forward.h"
 #include "store/Storage.h"
 
 class MemObject;
 class RequestFlags;
-class HttpRequestMethod;
 
 namespace Store {
 
@@ -92,7 +92,7 @@ public:
     bool updateOnNotModified(StoreEntry *old, StoreEntry &e304);
 
     /// tries to make the entry available for collapsing future requests
-    bool allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
+    bool allowCollapsing(StoreEntry *, const RequestFlags &, const Http::RequestMethod &);
 
     /// register a being-read StoreEntry (to optimize concurrent cache reads
     /// and to receive remote DELETE events)
