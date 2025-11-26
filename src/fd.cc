@@ -87,6 +87,12 @@ fd_close(int fd)
 
     debugs(51, 3, "fd_close FD " << fd << " " << F->desc);
     Comm::ResetSelect(fd);
+#if _SQUID_WINDOWS_
+    if (F->win32.handle) {
+        CloseHandle(F->win32.handle);
+        F->win32.handle = static_cast<HANDLE>(nullptr);
+    }
+#endif
     F->flags.open = false;
     fdUpdateBiggest(fd, 0);
     --Number_FD;
