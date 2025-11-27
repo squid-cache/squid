@@ -307,9 +307,6 @@ Mem::Init(void)
     memDataInit(MEM_16K_BUF, "16K Buffer", 16384, 10, false);
     memDataInit(MEM_32K_BUF, "32K Buffer", 32768, 10, false);
     memDataInit(MEM_64K_BUF, "64K Buffer", 65536, 10, false);
-    // TODO: Carefully stop zeroing these objects memory and drop the doZero parameter
-    memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0, true);
-    GetPool(MEM_MD5_DIGEST)->setChunkSize(512 * 1024);
 
     // Test that all entries are initialized
     for (auto t = MEM_NONE; ++t < MEM_MAX;) {
