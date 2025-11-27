@@ -138,7 +138,7 @@ storeKeyPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& me
 cache_key *
 storeKeyDup(const cache_key * key)
 {
-    cache_key *dup = (cache_key *)memAllocate(MEM_MD5_DIGEST);
+    cache_key *dup = (cache_key *)xcalloc(1, SQUID_MD5_DIGEST_LENGTH+1);
     memcpy(dup, key, SQUID_MD5_DIGEST_LENGTH);
     return dup;
 }
@@ -153,7 +153,7 @@ storeKeyCopy(cache_key * dst, const cache_key * src)
 void
 storeKeyFree(const cache_key * key)
 {
-    memFree((void *) key, MEM_MD5_DIGEST);
+    xfree(key);
 }
 
 int
