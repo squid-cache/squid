@@ -124,10 +124,12 @@ token_decode(size_t *decodedLen, uint8_t decoded[], const char *buf)
 {
     struct base64_decode_ctx ctx;
     base64_decode_init(&ctx);
+    decodedLen = sizeof(decoded);
     if (!base64_decode_update(&ctx, decodedLen, decoded, strlen(buf), buf) ||
             !base64_decode_final(&ctx)) {
         SEND("BH base64 decode failed");
         fprintf(stderr, "ERROR: base64 decoding failed for: '%s'\n", buf);
+        decodedLen = 0;
         return false;
     }
     return true;

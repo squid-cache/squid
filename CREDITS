@@ -504,7 +504,7 @@ include/base64.h:
 lib/base64.c:
 
 /*
-   Copyright (C) 2002 Niels Möller, Dan Egnor
+   Copyright (C) 2002 Niels Möller
 
    This file is part of GNU Nettle.
 
