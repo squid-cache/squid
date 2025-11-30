@@ -739,8 +739,10 @@ icpIncomingConnectionOpened(Ipc::StartListeningAnswer &answer)
 
     Comm::SetSelect(conn->fd, COMM_SELECT_READ, icpHandleUdp, nullptr, 0);
 
-    for (auto &s : Config.mcast_group_list)
-        ipcache_nbgethostbyname(s.c_str(), mcastJoinGroups, nullptr); // XXX: pass the conn for mcastJoinGroups usage.
+    for (const auto &groupName : Config.mcast_group_list) {
+        SBuf tmp(groupName); // XXX: c_str() may reallocate
+        ipcache_nbgethostbyname(tmp.c_str(), mcastJoinGroups, nullptr); // XXX: pass the conn for mcastJoinGroups usage.
+    }
 
     debugs(12, DBG_IMPORTANT, "Accepting ICP messages on " << conn->local);
 
