@@ -8753,7 +8753,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: mcast_groups
-TYPE: wordlist
+TYPE: SBufList
 LOC: Config.mcast_group_list
 DEFAULT: none
 DOC_START
