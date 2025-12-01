@@ -113,7 +113,6 @@ main(int argc, char **argv)
     char wstr[HELPER_INPUT_BUFFER];
     char username[256];
     char password[256];
-    char sep = '\0', junk = '\0';
     char *p;
     int err = 0;
 
@@ -155,12 +154,16 @@ main(int argc, char **argv)
         username[0] = '\0';
         password[0] = '\0';
 
+        char sep = '\0', junk = '\0';
+        // XXX: sscanf silently skips series of isspace() characters in input
+        // XXX: "Alice \v\t Bob" produces identical results to "Alice Bob"
         const auto parsed = sscanf(wstr, " %255s%1c%255s %c", username, &sep, password, &junk);
 
         if (parsed != 3 || !xisspace(sep)) {
             username[0] = '\0';
             password[0] = '\0';
             SEND_ERR("Cannot parse request");
+            fflush(stdout);
             continue;
         }
 
