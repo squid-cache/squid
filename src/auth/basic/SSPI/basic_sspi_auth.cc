@@ -154,7 +154,8 @@ main(int argc, char **argv)
         username[0] = '\0';
         password[0] = '\0';
 
-        char sep = '\0', junk = '\0';
+        char sep = '\0';
+        char junk = '\0';
         // XXX: sscanf silently skips series of isspace() characters in input
         // XXX: "Alice \v\t Bob" produces identical results to "Alice Bob"
         const auto parsed = sscanf(wstr, " %255s%1c%255s %c", username, &sep, password, &junk);
