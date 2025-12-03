@@ -21,7 +21,7 @@
 class Raw
 {
 public:
-    Raw(const char *label, const void *data, const size_t size) :
+    Raw(const char *const label, const void *const data, const size_t size):
         label_(label), data_(data), size_(size) {}
 
     /// limit data printing to at least the given debugging level
