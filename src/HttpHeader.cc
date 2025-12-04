@@ -534,7 +534,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             if (memchr(this_line, '\r', field_end - this_line)) {
                 hasBareCr = "bare CR";
                 debugs(55, warnOnError, "WARNING: suspicious CR characters in " <<
-                       Raw("field", field_start, field_end-field_start).asHex().minLevel(warnOnError));
+                       Raw("field", field_start, field_end-field_start).hex().minLevel(warnOnError));
 
                 if (Config.onoff.relaxed_header_parser) {
                     char *p = (char *) this_line;   /* XXX Warning! This destroys original header content and violates specifications somewhat */
