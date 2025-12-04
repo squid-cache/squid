@@ -1063,7 +1063,7 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
 
         if (tunnelState->http.valid() && tunnelState->http->getConn() && !tunnelState->http->getConn()->inBuf.isEmpty()) {
             SBuf * const in = &tunnelState->http->getConn()->inBuf;
-            debugs(26, DBG_DATA, "Tunnel client PUSH Payload: \n" << *in << "\n----------");
+            debugs(26, DBG_DATA, "Tunnel client PUSH Payload: \n" << Raw("", *in, in->length()) << "\n----------");
             tunnelState->preReadClientData.append(*in);
             in->consume(); // ConnStateData buffer accounting after the shuffle.
         }
