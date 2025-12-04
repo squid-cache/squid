@@ -11,7 +11,6 @@
 #ifndef SQUID_SRC_BASE_RAW_H
 #define SQUID_SRC_BASE_RAW_H
 
-#include <algorithm>
 #include <iosfwd>
 
 /// Prints raw and/or non-terminated data safely, efficiently, and beautifully.
