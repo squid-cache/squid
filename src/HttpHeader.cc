@@ -486,7 +486,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
     int warnOnError = (Config.onoff.relaxed_header_parser <= 0 ? DBG_IMPORTANT : 2);
 
     assert(header_start && header_end);
-    debugs(55, 7, "parsing hdr: (" << this << ")" << std::endl << getStringPrefix(header_start, hdrLen));
+    debugs(55, 3, "parsing hdr: (" << this << ")" << std::endl << Raw("", header_start, hdrLen).minLevel(3).whole());
     ++ HttpHeaderStats[owner].parsedCount;
 
     char *nulpos;
@@ -613,8 +613,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
 
     if (clen.headerWideProblem) {
         debugs(55, warnOnError, "WARNING: " << clen.headerWideProblem <<
-               " Content-Length field values in" <<
-               Raw("header", header_start, hdrLen));
+               " Content-Length field values in header (hdr: " << this << ")");
     }
 
     String rawTe;
