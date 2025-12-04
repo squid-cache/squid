@@ -1513,15 +1513,7 @@ ErrorPage::BuildErrorPrinter::printLocation(std::ostream &os) const {
 std::ostream &
 ErrorPage::BuildErrorPrinter::print(std::ostream &os) const {
     printLocation(os) << ": " << msg << " near ";
-
-    // TODO: Add support for prefix printing to Raw
-    const size_t maxContextLength = 15; // plus "..."
-    if (strlen(errorLocation) > maxContextLength) {
-        os.write(errorLocation, maxContextLength);
-        os << "...";
-    } else {
-        os << errorLocation;
-    }
+    os << Raw("", errorLocation, strlen(errorLocation).atMost(15).minLevel(0);
 
     // XXX: We should not be converting (inner) exception to text if we are
     // going to throw again. See "add arbitrary (re)thrower-supplied details"
