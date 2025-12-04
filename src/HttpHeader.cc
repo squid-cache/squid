@@ -1528,7 +1528,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
 
     if (name_len > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, 2, "ignoring huge " << Raw("field-name", field_start, name_len));
+        debugs(55, 2, "ignoring field with huge " << Raw("field-name", field_start, name_len).minLevel(2));
         return nullptr;
     }
 
