@@ -50,8 +50,7 @@ Comm::AcceptLimiter::kick()
         deferred_.erase(deferred_.begin());
         if (const auto job = temp.valid()) {
             debugs(5, 5, "doing one.");
-            typedef CommCbMemFunT<Comm::TcpAcceptor, CommIoCbParams> Dialer;
-            AsyncCall::Pointer call = JobCallback(33, 5, Dialer, job, TcpAcceptor::acceptOne);
+            const auto call = JobCallback(33, 5, TcpAcceptor::IoDialer, job, TcpAcceptor::acceptOne);
             ScheduleCallHere(call);
         }
     }

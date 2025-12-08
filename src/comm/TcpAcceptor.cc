@@ -84,8 +84,7 @@ Comm::TcpAcceptor::start()
 
     // if no error so far start accepting connections.
     if (errcode == 0) {
-        typedef CommCbMemFunT<Comm::TcpAcceptor, CommIoCbParams> Dialer;
-        AsyncCall::Pointer reader = JobCallback(33, 5, Dialer, this, TcpAcceptor::acceptOne);
+        AsyncCall::Pointer reader = JobCallback(33, 5, IoDialer, this, TcpAcceptor::acceptOne);
         Comm::Read(conn, reader);
     }
 }
@@ -269,8 +268,7 @@ Comm::TcpAcceptor::acceptOne(const CommIoCbParams &io)
         if (done())
             return;
 
-        using Dialer = CommCbMemFunT<Comm::TcpAcceptor, CommIoCbParams>;
-        AsyncCall::Pointer reader = JobCallback(33, 5, Dialer, this, TcpAcceptor::acceptOne);
+        AsyncCall::Pointer reader = JobCallback(33, 5, IoDialer, this, TcpAcceptor::acceptOne);
         Comm::Read(conn, reader);
         return;
     } catch (...) {

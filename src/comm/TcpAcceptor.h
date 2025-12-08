@@ -39,7 +39,8 @@ class TcpAcceptor : public AsyncJob
     CBDATA_CHILD(TcpAcceptor);
 
 public:
-    typedef CbcPointer<Comm::TcpAcceptor> Pointer;
+    using Pointer = CbcPointer<Comm::TcpAcceptor>;
+    using IoDialer = CommCbMemFunT<Comm::TcpAcceptor, CommIoCbParams>;
 
 private:
     void start() override;
@@ -96,7 +97,7 @@ private:
     /// listen socket closure handler
     AsyncCall::Pointer closer_;
 
-    Comm::Flag oldAccept(Comm::ConnectionPointer &details);
+    Comm::Flag oldAccept(Comm::ConnectionPointer &);
     bool acceptInto(Comm::ConnectionPointer &);
     void setListen();
     void handleClosure(const CommCloseCbParams &io);
