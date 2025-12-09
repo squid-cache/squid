@@ -244,6 +244,8 @@ Comm::TcpAcceptor::acceptOne(const CommIoCbParams &io)
 
     if (!okToAccept()) {
         AcceptLimiter::Instance().defer(this);
+        AsyncCall::Pointer reader = JobCallback(33, 5, IoDialer, this, TcpAcceptor::acceptOne);
+        Comm::Read(conn, reader);
         return;
     }
 
@@ -266,6 +268,10 @@ Comm::TcpAcceptor::acceptOne(const CommIoCbParams &io)
         }
 
         if (done())
+            return;
+
+        // try to drain the deferred queue, if possible
+        if (okToAccept() && AcceptLimiter::Instance().kick())
             return;
 
         AsyncCall::Pointer reader = JobCallback(33, 5, IoDialer, this, TcpAcceptor::acceptOne);

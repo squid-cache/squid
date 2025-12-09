@@ -40,7 +40,7 @@ Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
     debugs(5,4, "Not found " << afd->conn << " in queue, size: " << deferred_.size());
 }
 
-void
+bool
 Comm::AcceptLimiter::kick()
 {
     debugs(5, 5, "size=" << deferred_.size());
@@ -52,8 +52,9 @@ Comm::AcceptLimiter::kick()
             debugs(5, 5, "doing one.");
             const auto call = JobCallback(33, 5, TcpAcceptor::IoDialer, job, TcpAcceptor::acceptOne);
             ScheduleCallHere(call);
-            break;
+            return true;
         }
     }
+    return false;
 }
 
