@@ -45,13 +45,14 @@ Comm::AcceptLimiter::kick()
 {
     debugs(5, 5, "size=" << deferred_.size());
     while (deferred_.size() > 0 && Comm::TcpAcceptor::okToAccept()) {
-        /* NP: shift() is equivalent to pop_front(). Giving us a FIFO queue. */
+        /* shift() is equivalent to pop_front(). Giving us a FIFO queue. */
         TcpAcceptor::Pointer temp = deferred_.front();
         deferred_.erase(deferred_.begin());
         if (const auto job = temp.valid()) {
             debugs(5, 5, "doing one.");
             const auto call = JobCallback(33, 5, TcpAcceptor::IoDialer, job, TcpAcceptor::acceptOne);
             ScheduleCallHere(call);
+            break;
         }
     }
 }
