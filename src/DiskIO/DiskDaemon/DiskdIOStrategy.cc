@@ -115,6 +115,11 @@ DiskdIOStrategy::unlinkFile(char const *path)
 
     buf = (char *)shm.get(&shm_offset);
 
+    if (!buf) {
+        unlinkdUnlink(path);
+        return;
+    }
+
     xstrncpy(buf, path, SHMBUF_BLKSZ);
 
     x = send(_MQD_UNLINK,
@@ -231,6 +236,11 @@ SharedMemory::get(ssize_t * shm_offset)
         aBuf = buf + (*shm_offset);
 
         break;
+    }
+
+    if (!aBuf) {
+        debugs(79, DBG_IMPORTANT, "ERROR: out of shared-memory buffers");
+        return nullptr;
     }
 
     assert(aBuf);

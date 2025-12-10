@@ -86,6 +86,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-auto-locale \
 	--disable-translation \
 	--disable-optimizations \
+	--disable-arch-native \
  \
 	--without-pthreads \
 	--without-aio \
