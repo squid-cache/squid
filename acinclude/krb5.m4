@@ -24,17 +24,17 @@ AC_DEFUN([SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H],[
 #         define HAVE_BROKEN_SOLARIS_KRB5_H 1
 #         include "compat/krb5.h"
         ]],[[int i;]])
-      ],[squid_cv_broken_krb5_h=yes],[squid_cv_broken_krb5_h=no])
+      ],[
+        squid_cv_broken_krb5_h=yes
+        AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
+        AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
+        AC_MSG_WARN([If you need Kerberos support you will have to patch])
+        AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
+      ],[squid_cv_broken_krb5_h=no])
     ])
     SQUID_STATE_ROLLBACK(squid_krb5_solaris_test)
   ])
-  AS_IF([test "x$squid_cv_broken_krb5_h" = "xyes"],[
-    SQUID_DEFINE_BOOL(HAVE_BROKEN_SOLARIS_KRB5_H,$squid_cv_broken_krb5_h,[Solaris krb5.h is broken for C++])
-    AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
-    AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
-    AC_MSG_WARN([If you need Kerberos support you will have to patch])
-    AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
-  ])
+  SQUID_DEFINE_BOOL(HAVE_BROKEN_SOLARIS_KRB5_H,$squid_cv_broken_krb5_h,[Solaris krb5.h is broken for C++])
 ]) dnl SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
 
 AC_DEFUN([SQUID_CHECK_SOLARIS_KRB5],[
