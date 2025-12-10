@@ -10,6 +10,9 @@ dnl and have mostly been lifted out of an inlined configure.ac.
 
 dnl checks for a broken solaris header file
 AC_DEFUN([SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H],[
+  AC_REQUIRE([SQUID_STATE_SAVE])
+  AC_REQUIRE([SQUID_STATE_ROLLBACK])
+  AC_REQUIRE([SQUID_DEFINE_BOOL])
   AC_CACHE_CHECK([for broken Solaris krb5.h],squid_cv_broken_krb5_h,[
     SQUID_STATE_SAVE(squid_krb5_solaris_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
@@ -26,7 +29,7 @@ AC_DEFUN([SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H],[
     SQUID_STATE_ROLLBACK(squid_krb5_solaris_test)
   ])
   AS_IF([test "x$squid_cv_broken_krb5_h" = "xyes"],[
-    AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H,1,[Define to 1 if Solaris krb5.h is broken for C++])
+    SQUID_DEFINE_BOOL(HAVE_BROKEN_SOLARIS_KRB5_H,$squid_cv_broken_krb5_h,[Solaris krb5.h is broken for C++])
     AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
     AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
     AC_MSG_WARN([If you need Kerberos support you will have to patch])
