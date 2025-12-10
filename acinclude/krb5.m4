@@ -24,7 +24,7 @@ AC_DEFUN([SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE],[
     SQUID_STATE_ROLLBACK(squid_krb5_test)
   ])
   SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_CACHE,$squid_cv_krb5_memory_cache,[kerberos has MEMORY: cache support])
-])
+]) dnl SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
 
 AC_DEFUN([SQUID_CHECK_SOLARIS_KRB5],[
   # no pkg-config for solaris native Kerberos
