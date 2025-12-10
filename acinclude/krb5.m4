@@ -17,10 +17,10 @@ AC_DEFUN([SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H],[
     SQUID_STATE_SAVE(squid_krb5_heimdal_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
     AC_LINK_IFELSE([
-      AC_LANG_SOURCE([[#include <krb5.h>]],[[krb5_context c; krb5_init_context(&c);]])
+      AC_LANG_PROGRAM([[#include <krb5.h>]],[[krb5_context c; krb5_init_context(&c);]])
     ],[squid_cv_broken_heimdal_krb5_h=no],[
       AC_LINK_IFELSE([
-        AC_LANG_SOURCE([[
+        AC_LANG_PROGRAM([[
 #         define HAVE_BROKEN_HEIMDAL_KRB5_H  1
 #         include "compat/krb5.h"
         ]],[[krb5_context c; krb5_init_context(&c);]])
