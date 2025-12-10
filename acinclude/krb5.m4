@@ -8,6 +8,29 @@
 dnl these checks must be performed in the same order as here defined,
 dnl and have mostly been lifted out of an inlined configure.ac.
 
+dnl checks for a broken Heimdal header file
+AC_DEFUN([SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H],[
+  AC_REQUIRE([SQUID_STATE_SAVE])
+  AC_REQUIRE([SQUID_STATE_ROLLBACK])
+  AC_REQUIRE([SQUID_DEFINE_BOOL])
+  AC_CACHE_CHECK([for broken Heimdal krb5.h],squid_cv_broken_heimdal_krb5_h,[
+    SQUID_STATE_SAVE(squid_krb5_heimdal_test)
+    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
+    AC_LINK_IFELSE([
+      AC_LANG_SOURCE([[#include <krb5.h>]],[[krb5_context c; krb5_init_context(&c);]])
+    ],[squid_cv_broken_heimdal_krb5_h=no],[
+      AC_LINK_IFELSE([
+        AC_LANG_SOURCE([[
+#         define HAVE_BROKEN_HEIMDAL_KRB5_H  1
+#         include "compat/krb5.h"
+        ]],[[krb5_context c; krb5_init_context(&c);]])
+      ],[squid_cv_broken_heimdal_krb5_h=yes],[squid_cv_broken_heimdal_krb5_h=no])
+    ])
+    SQUID_STATE_ROLLBACK(squid_krb5_heimdal_test)
+  ])
+  SQUID_DEFINE_BOOL(HAVE_BROKEN_HEIMDAL_KRB5_H,$squid_cv_broken_heimdal_krb5_h,[Heimdal krb5.h is broken for C++])
+]) dnl SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
+
 AC_DEFUN([SQUID_CHECK_SOLARIS_KRB5],[
   # no pkg-config for solaris native Kerberos
   AS_IF([test "$cross_compiling" = "no" -a "x$with_mit_krb5" != "xyes" -a "x$with_mit_krb5" != "xno"],[
@@ -72,38 +95,6 @@ int i;
     SQUID_STATE_ROLLBACK(squid_krb5_solaris_test)
   ])
 ]) dnl SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
-
-
-AC_DEFUN([SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H], [
-  AC_CACHE_CHECK([for broken Heimdal krb5.h],squid_cv_broken_heimdal_krb5_h, [
-    SQUID_STATE_SAVE(squid_krb5_heimdal_test)
-    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_LINK_IFELSE([AC_LANG_SOURCE([[
-#include <krb5.h>
-int
-main(void)
-{
-        krb5_context context;
-        krb5_init_context(&context);
-        return 0;
-}
-]])], [ squid_cv_broken_heimdal_krb5_h=no ], [
-    AC_LINK_IFELSE([AC_LANG_SOURCE([[
-#define HAVE_BROKEN_HEIMDAL_KRB5_H  1
-#include "compat/krb5.h"
-int
-main(void)
-{
-        krb5_context context;
-        krb5_init_context(&context);
-        return 0;
-}
-]])], [ squid_cv_broken_heimdal_krb5_h=yes ], [ squid_cv_broken_heimdal_krb5_h=no ])
-    ])
-    SQUID_STATE_ROLLBACK(squid_krb5_heimdal_test)
-  ])
-  SQUID_DEFINE_BOOL(HAVE_BROKEN_HEIMDAL_KRB5_H,$squid_cv_broken_heimdal_krb5_h,[Heimdal krb5.h is broken for C++])
-]) dnl SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
 
 dnl check whether the kerberos context has a memory cache. Sets
 dnl squid_cv_memory_cache if that's the case.
