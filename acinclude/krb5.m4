@@ -14,7 +14,7 @@ AC_DEFUN([SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE],[
     SQUID_STATE_SAVE(squid_krb5_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
     AC_RUN_IFELSE([
-      AC_LANG_SOURCE([[#include "compat/krb5.h"]],[[
+      AC_LANG_PROGRAM([[#include "compat/krb5.h"]],[[
         krb5_context c;
         krb5_ccache cc;
         krb5_init_context(&c);
