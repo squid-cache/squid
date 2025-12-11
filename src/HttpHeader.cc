@@ -664,6 +664,14 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
         }
     }
 
+    if (Config.onoff.ignore_vary) {
+        String rawVary;
+        if (getByIdIfPresent(Http::HdrType::VARY, &rawVary)) {
+            delById(Http::HdrType::VARY);
+            debugs(55, 5, "Ignoring Vary: " << rawVary);
+        }
+    }
+
     return 1;           /* even if no fields where found, it is a valid header */
 }
 

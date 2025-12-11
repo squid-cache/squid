@@ -310,6 +310,7 @@ public:
 #endif
 
         int vary_ignore_expire;
+        int ignore_vary;
         int surrogate_is_remote;
         int detect_broken_server_pconns;
         int relaxed_header_parser;
