@@ -26,10 +26,11 @@ AC_DEFUN([SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H],[
         ]],[[int i;]])
       ],[
         squid_cv_broken_krb5_h=yes
-        AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
-        AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
-        AC_MSG_WARN([If you need Kerberos support you will have to patch])
-        AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
+        AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.
+          If you need Kerberos support you will have to
+          upgrade to Solaris 10 patch rollup U11, or Solaris 11.4, or
+          apply patch in contrib/solaris/solaris-krb5-include.patch to your krb5.h
+        ])
       ],[squid_cv_broken_krb5_h=no])
     ])
     SQUID_STATE_ROLLBACK(squid_krb5_solaris_test)
