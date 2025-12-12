@@ -17,8 +17,7 @@ EXTRA_DIST = \
 	squid.options \
 	config.site \
 	user-agents.pl \
-	url-normalizer.pl \
-	solaris/solaris-krb5-include.patch
+	url-normalizer.pl
 
 all:
 

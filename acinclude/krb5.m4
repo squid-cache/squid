@@ -37,14 +37,6 @@ AC_DEFUN([SQUID_CHECK_SOLARIS_KRB5],[
   AS_IF([test "x$missing_required" = "xyes"],[LIBMIT_KRB5_LIBS=""],[
     LIBS="$LIBMIT_KRB5_LIBS $LIBS"
     AC_DEFINE(USE_SOLARIS_KRB5,1,[Solaris Kerberos support is available])
-    SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
-    AS_IF([test "x$squid_cv_broken_krb5_h" = "xyes"],[
-      AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if Solaris krb5.h is broken for C++])
-      AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
-      AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
-      AC_MSG_WARN([If you need Kerberos support you will have to patch])
-      AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
-    ])
     AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
     AC_CHECK_HEADERS(gssapi/gssapi_ext.h gssapi/gssapi_generic.h)
     AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
@@ -52,27 +44,6 @@ AC_DEFUN([SQUID_CHECK_SOLARIS_KRB5],[
     SQUID_CHECK_KRB5_FUNCS
   ])
 ])
-
-dnl checks for a broken solaris header file, and sets squid_cv_broken_krb5_h
-dnl to yes if that's the case
-AC_DEFUN([SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H], [
-  AC_CACHE_CHECK([for broken Solaris krb5.h],squid_cv_broken_krb5_h, [
-    SQUID_STATE_SAVE(squid_krb5_solaris_test)
-    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <krb5.h>
-int i;
-]])], [ squid_cv_broken_krb5_h=no ], [
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#define HAVE_BROKEN_SOLARIS_KRB5_H  1
-#include "compat/krb5.h"
-int i;
-]])], [ squid_cv_broken_krb5_h=yes ], [ squid_cv_broken_krb5_h=no ])
-    ])
-    SQUID_STATE_ROLLBACK(squid_krb5_solaris_test)
-  ])
-]) dnl SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
-
 
 AC_DEFUN([SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H], [
   AC_CACHE_CHECK([for broken Heimdal krb5.h],squid_cv_broken_heimdal_krb5_h, [
