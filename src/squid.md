@@ -63,7 +63,7 @@ details on how to configure Squid see the file
 > Use the given file instead of @SYSCONFDIR@/squid.conf .
   If the file name starts with a **!** or **|** then it is
   assumed to be an external command or command line. Can for
-  example be used to pre\-process the configuration before it is
+  example be used to preprocess the configuration before it is
   being read by Squid. To facilitate this Squid also understands
   the common #line notion to indicate the real source file.
 
