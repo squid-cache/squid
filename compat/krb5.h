@@ -18,10 +18,6 @@
  *
  * - Heimdal may lack the extern "C" syntax for building in C++
  *
- * - Solaris incorrectly implements its own the extern "C" replacement
- *   macros and as a result krb5.h contains a trailing '}'.
- *   see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512
- *
  * This file exists to fix those issues the best we can and to
  * ensure the logic is identical in Squid code, Squid helpers,
  * and autoconf tests. See acinclude/krb5.h for the latter.
@@ -35,12 +31,6 @@
 extern "C" {
 #      include <krb5.h>
 }
-#  elif HAVE_BROKEN_SOLARIS_KRB5_H && defined(__cplusplus)
-#    define KRB5INT_BEGIN_DECLS extern "C" {
-#    define KRB5INT_END_DECLS
-extern "C" {
-#      include <krb5.h>
-    /* broken Solaris krb5.h contains the closing } */
 #  else
 #    include <krb5.h>
 #  endif
