@@ -144,7 +144,9 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p>No new options in this version.
+	<tag>--with-pam</em>
+	<p>New option to detect PAM (Pluggable Authentication Modules)
+	   library for <em>basic_pam_auth</em> helper.
 
 </descrip>
 

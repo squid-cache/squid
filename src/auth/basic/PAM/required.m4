@@ -5,7 +5,5 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_CHECK_HEADERS([security/pam_appl.h],[
-  BUILD_HELPER="PAM"
-  CHECK_STRUCT_PAM_CONV
-])
+dnl requires libpam, indicated by --with-pam
+AS_IF([test "x$with_pam" = "xyes"],[BUILD_HELPER="PAM"])
