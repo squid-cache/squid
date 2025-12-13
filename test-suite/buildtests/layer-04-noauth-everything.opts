@@ -46,6 +46,7 @@ MAKETEST="distcheck"
 #   --enable-kqueue \
 #   --enable-win32-service \
 #   --with-ldap \
+#   --with-pam \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
 #
