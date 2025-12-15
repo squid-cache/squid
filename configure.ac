@@ -1020,11 +1020,9 @@ AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 # Cryptograhic libraries
 SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
 SQUID_CHECK_LIB_WORKS(nettle,[
-  SQUID_STATE_SAVE(squid_nettle_state)
   PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[:],[:])
   CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
   AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
-  SQUID_STATE_ROLLBACK(squid_nettle_state)
 ])
 
 dnl Check for libcrypt
@@ -1038,11 +1036,9 @@ AC_SUBST(CRYPTLIB)
 
 SQUID_AUTO_LIB(gnutls,[GnuTLS crypto],[LIBGNUTLS])
 SQUID_CHECK_LIB_WORKS(gnutls,[
-  SQUID_STATE_SAVE(squid_gnutls_state)
   PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.4.0],[:],[:])
   CPPFLAGS="$LIBGNUTLS_CFLAGS $CPPFLAGS"
   AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h)
-  SQUID_STATE_ROLLBACK(squid_gnutls_state)
 ])
 
 SSLLIB=""
@@ -1143,7 +1139,6 @@ SQUID_CHECK_LIB_WORKS(mit-krb5,[
 SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[LIBHEIMDAL_KRB5])
 SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
   AS_IF([test "x$LIBMIT_KRB5_LIBS" = "x"],[
-    SQUID_STATE_SAVE(squid_heimdal_krb5_save)
     PKG_CHECK_MODULES([LIBHEIMDAL_KRB5],[heimdal-krb5 heimdal-gssapi],[:],[:])
     CPPFLAGS="$LIBHEIMDAL_KRB5_CFLAGS $CPPFLAGS"
     AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
@@ -1151,7 +1146,6 @@ SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
     LIBS="$LIBHEIMDAL_KRB5_PATH $LIBHEIMDAL_KRB5_LIBS $LIBS"
     SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
     SQUID_CHECK_KRB5_FUNCS
-    SQUID_STATE_ROLLBACK(squid_heimdal_krb5_save)
   ])
 ])
 
@@ -1159,7 +1153,6 @@ SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
 SQUID_AUTO_LIB(gss,[GNU gss],[LIBGSS])
 SQUID_CHECK_LIB_WORKS(gss,[
   AS_IF([test "x$LIBMIT_KRB5_LIBS" = "x" -a "x$LIBHEIMDAL_KRB5_LIBS" = "x"],[
-    SQUID_STATE_SAVE(squid_gss_save)
     PKG_CHECK_MODULES([LIBGSS],[gss],[:],[:])
     CPPFLAGS="$LIBGSS_CFLAGS $CPPFLAGS"
     AC_CHECK_HEADERS(gss.h)
@@ -1170,7 +1163,6 @@ SQUID_CHECK_LIB_WORKS(gss,[
     SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
     SQUID_CHECK_WORKING_KRB5
     SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
-    SQUID_STATE_ROLLBACK(squid_gss_save)
   ])
 ])
 
@@ -1205,7 +1197,6 @@ SQUID_CHECK_LIB_WORKS(systemd,[
   PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd >= 209],[:],[:])
   LIBS="$LIBS $LIBSYSTEMD_PATH"
   AC_CHECK_HEADERS(systemd/sd-daemon.h)
-  SQUID_STATE_ROLLBACK(squid_systemd_state)
 ])
 
 AC_ARG_ENABLE(forw-via-db,
@@ -1724,7 +1715,6 @@ SQUID_AUTO_LIB(cppunit,[cppunit test framework],[LIBCPPUNIT])
 SQUID_CHECK_LIB_WORKS(cppunit,[
   PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[:],[:])
   AS_IF([test "x$LIBCPPUNIT_LIBS" != "x"],[
-    SQUID_STATE_SAVE(squid_cppunit_state)
     CXXFLAGS="${CXXFLAGS} ${LIBCPPUNIT_CFLAGS}"
     LIBS="${LIBS} ${LIBCPPUNIT_LIBS}"
     AC_CHECK_HEADERS(cppunit/extensions/HelperMacros.h)
