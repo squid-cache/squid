@@ -1,0 +1,61 @@
+#
+# Run Source Maintenance tasks as a github action
+#
+
+name: PR commit
+
+on:
+  push:
+    # test commits on this branch and staged commits
+    branches: [ "ci-maintenance-1" ]
+
+  pull_request:
+    # test PRs targeting this branch code
+    branches: [ "master" ]
+
+  # allows to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+concurrency:
+  # Cancel ongoing tests in case of push to the same PR or staging branch,
+  # but let previous master commit tests complete.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+env:
+  # empty except for pull_request events
+  PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+
+  # enables GitHub CLI (gh)
+  GH_TOKEN: ${{ github.token }}
+
+  # Full clones of Squid repository branches (depth=19000+) waste resources,
+  # while excessively shallow clones break tests that check for past commits
+  # (e.g., to skip a particular test until a known bug is fixed) or generate
+  # diffs against them (e.g., for `git diff --check`). This arbitrary limit
+  # tries to balance the two concerns.
+  CHECKOUT_FETCH_DEPTH: 1001
+
+jobs:
+
+  squid-code-style:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Install prerequisite packages
+        run: |
+          sudo apt-get --quiet=2 update
+          sudo apt-get --quiet=2 install astyle
+          sudo apt-get --quiet=2 install gperf
+          pip install \
+              --user \
+              --no-cache-dir \
+              --disable-pip-version-check \
+              --quiet \
+              --progress-bar off \
+              codespell==1.16 # TODO: Upgrade to codespell v2
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+
+      - run: ./test-suite/test-sources.sh
