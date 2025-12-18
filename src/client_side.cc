@@ -94,7 +94,6 @@
 #include "http/one/TeChunkedParser.h"
 #include "http/Stream.h"
 #include "HttpHdrContRange.h"
-#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "internal.h"
@@ -2026,7 +2025,7 @@ ConnStateData::handleChunkedRequestBody()
         return ERR_INVALID_REQ;
     }
 
-    debugs(33, 7, "need more chunked data" << *bodyPipe->status());
+    debugs(33, 7, "need more chunked data" << bodyPipe->status());
     return ERR_NONE;
 }
 

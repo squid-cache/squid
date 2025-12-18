@@ -142,6 +142,7 @@ public:
 
     int checkAuth(const HttpHeader * req_hdr);
     void checkUrlpath();
+    std::optional<SBuf> decodedRequestUriPath() const;
     void buildTitleUrl();
     void writeReplyBody(const char *, size_t len);
     void completeForwarding() override;
@@ -1078,6 +1079,8 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
 void
 Ftp::Gateway::checkUrlpath()
 {
+    // TODO: parse FTP URL syntax properly in AnyP::Uri::parse()
+
     // If typecode was specified, extract it and leave just the filename in
     // url.path. Tolerate trailing garbage or missing typecode value. Roughly:
     // [filename] ;type=[typecode char] [trailing garbage]
@@ -1126,7 +1129,7 @@ Ftp::Gateway::buildTitleUrl()
     SBuf authority = request->url.authority(request->url.getScheme() != AnyP::PROTO_FTP);
 
     title_url.append(authority);
-    title_url.append(request->url.path());
+    title_url.append(request->url.absolutePath());
 
     base_href = "ftp://";
 
@@ -1161,7 +1164,7 @@ Ftp::Gateway::start()
     checkUrlpath();
     buildTitleUrl();
     debugs(9, 5, "FD " << (ctrl.conn ? ctrl.conn->fd : -1) << " : host=" << request->url.host() <<
-           ", path=" << request->url.path() << ", user=" << user << ", passwd=" << password);
+           ", path=" << request->url.absolutePath() << ", user=" << user << ", passwd=" << password);
     state = BEGIN;
     Ftp::Client::start();
 }
@@ -2301,10 +2304,18 @@ ftpReadQuit(Ftp::Gateway * ftpState)
     ftpState->serverComplete();
 }
 
+/// absolute request URI path after successful decoding of all pct-encoding sequences
+std::optional<SBuf>
+Ftp::Gateway::decodedRequestUriPath() const
+{
+    return AnyP::Uri::Decode(request->url.absolutePath());
+}
+
+/// \prec !ftpState->flags.try_slash_hack
+/// \prec ftpState->decodedRequestUriPath()
 static void
 ftpTrySlashHack(Ftp::Gateway * ftpState)
 {
-    char *path;
     ftpState->flags.try_slash_hack = 1;
     /* Free old paths */
 
@@ -2313,14 +2324,10 @@ ftpTrySlashHack(Ftp::Gateway * ftpState)
     if (ftpState->pathcomps)
         wordlistDestroy(&ftpState->pathcomps);
 
+    /* Build the new path */
+    // XXX: Conversion to c-string effectively truncates where %00 was decoded
     safe_free(ftpState->filepath);
-
-    /* Build the new path (urlpath begins with /) */
-    path = SBufToCstring(ftpState->request->url.path());
-
-    rfc1738_unescape(path);
-
-    ftpState->filepath = path;
+    ftpState->filepath = SBufToCstring(ftpState->decodedRequestUriPath().value());
 
     /* And off we go */
     ftpGetFile(ftpState);
@@ -2375,13 +2382,15 @@ ftpFail(Ftp::Gateway *ftpState)
            " reply code " << code << "flags(" <<
            (ftpState->flags.isdir?"IS_DIR,":"") <<
            (ftpState->flags.try_slash_hack?"TRY_SLASH_HACK":"") << "), " <<
+           "decodable_filepath=" << bool(ftpState->decodedRequestUriPath()) << ' ' <<
            "mdtm=" << ftpState->mdtm << ", size=" << ftpState->theSize <<
            "slashhack=" << (slashHack? "T":"F"));
 
     /* Try the / hack to support "Netscape" FTP URL's for retrieving files */
     if (!ftpState->flags.isdir &&   /* Not a directory */
             !ftpState->flags.try_slash_hack && !slashHack && /* Not doing slash hack */
-            ftpState->mdtm <= 0 && ftpState->theSize < 0) { /* Not known as a file */
+            ftpState->mdtm <= 0 && ftpState->theSize < 0 && /* Not known as a file */
+            ftpState->decodedRequestUriPath()) {
 
         switch (ftpState->state) {
 
@@ -2610,7 +2619,7 @@ Ftp::UrlWith2f(HttpRequest * request)
         return nil;
     }
 
-    if (request->url.path()[0] == '/') {
+    if (request->url.path().startsWith(AnyP::Uri::SlashPath())) {
         newbuf.append(request->url.path());
         request->url.path(newbuf);
     } else if (!request->url.path().startsWith(newbuf)) {

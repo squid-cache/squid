@@ -51,6 +51,7 @@ Security::IoResult Security::Connect(Comm::Connection &) STUB_RETVAL(IoResult(Io
 void Security::IoResult::printGist(std::ostream &) const STUB
 void Security::IoResult::printWithExtras(std::ostream &) const STUB
 void Security::ForgetErrors() STUB
+void Security::PrepForIo() STUB
 
 #include "security/KeyData.h"
 namespace Security

@@ -6,11 +6,11 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_HTTPHEADERMASK_H
-#define SQUID_SRC_HTTPHEADERMASK_H
+#include "squid.h"
 
-/* big mask for http headers */
-typedef char HttpHeaderMask[12];
+#define STUB_API "dns/libdns.la"
+#include "tests/STUB.h"
 
-#endif /* SQUID_SRC_HTTPHEADERMASK_H */
+#include "dns/LookupDetails.h"
 
+std::ostream &Dns::LookupDetails::print(std::ostream &os) const STUB_RETVAL(os)

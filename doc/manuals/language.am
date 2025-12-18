@@ -20,4 +20,5 @@ LANGUAGE_FILES = \
 	oc.lang \
 	pt.lang \
 	ro.lang \
-	ru.lang
+	ru.lang \
+	sv.lang

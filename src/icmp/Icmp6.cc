@@ -14,6 +14,7 @@
 
 #if USE_ICMP
 
+#include "base/Assure.h"
 #include "compat/socket.h"
 #include "debug/Stream.h"
 #include "Icmp6.h"
@@ -166,7 +167,9 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     icmp->icmp6_cksum = CheckSum((unsigned short *) icmp, icmp6_pktsize);
 
-    to.getAddrInfo(S);
+    to.getAddrInfo(S, AF_INET6);
+    Assure(S);
+
     ((sockaddr_in6*)S->ai_addr)->sin6_port = 0;
 
     assert(icmp6_pktsize <= MAX_PKT6_SZ);
@@ -182,11 +185,11 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     if (x < 0) {
         int xerrno = errno;
-        debugs(42, DBG_IMPORTANT, MYNAME << "ERROR: sending to ICMPv6 packet to " << to << ": " << xstrerr(xerrno));
+        debugs(42, DBG_IMPORTANT, "ERROR: sending ICMPv6 packet to " << to << ": " << xstrerr(xerrno));
     }
     debugs(42,9, "x=" << x);
 
-    Log(to, 0, nullptr, 0, 0);
+    Log(to, 0, "", 0, 0);
     Ip::Address::FreeAddr(S);
 }
 
@@ -225,6 +228,10 @@ Icmp6::Recv(void)
 
     if (n <= 0) {
         debugs(42, DBG_CRITICAL, "ERROR: when calling recvfrom() on ICMPv6 socket.");
+        Ip::Address::FreeAddr(from);
+        return;
+    }
+    if (n < static_cast<int>(sizeof(struct icmp6_hdr))) {
         Ip::Address::FreeAddr(from);
         return;
     }
@@ -289,13 +296,18 @@ Icmp6::Recv(void)
         return;
     }
 
-    if (icmp6header->icmp6_id != icmp_ident) {
+    if (ntohs(icmp6header->icmp6_id) != static_cast<uint16_t>(icmp_ident)) {
         debugs(42, 8, "dropping Icmp6 read. IDENT check failed. ident=='" << icmp_ident << "'=='" << icmp6header->icmp6_id << "'");
         Ip::Address::FreeAddr(from);
         return;
     }
 
-    echo = (icmpEchoData *) (pkt + sizeof(icmp6_hdr));
+    const auto meta = static_cast<int>(sizeof(struct icmp6_hdr) + sizeof(struct timeval) + sizeof(unsigned char));
+    if (n < meta) {
+        Ip::Address::FreeAddr(from);
+        return;
+    }
+    echo = (icmpEchoData *)(pkt + sizeof(struct icmp6_hdr));
 
     preply.opcode = echo->opcode;
 
@@ -311,13 +323,14 @@ Icmp6::Recv(void)
      */
     preply.hops = 1;
 
-    preply.psize = n - /* sizeof(ip6_hdr) - */ sizeof(icmp6_hdr) - (sizeof(icmpEchoData) - MAX_PKT6_SZ);
+    auto payload_len = n - meta;
+    assert(payload_len >= 0);
+    if (payload_len > MAX_PAYLOAD)
+        payload_len = MAX_PAYLOAD;
 
-    /* Ensure the response packet has safe payload size */
-    if ( preply.psize > (unsigned short) MAX_PKT6_SZ) {
-        preply.psize = MAX_PKT6_SZ;
-    } else if ( preply.psize < (unsigned short)0) {
-        preply.psize = 0;
+    preply.psize = payload_len;
+    if (preply.psize > 0) {
+        memcpy(preply.payload, echo->payload, preply.psize);
     }
 
     Log(preply.from,

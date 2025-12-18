@@ -17,7 +17,6 @@
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
-#include "HttpHeaderTools.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/StringConvert.h"
 

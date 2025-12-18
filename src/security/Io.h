@@ -68,6 +68,10 @@ IoResult Connect(Comm::Connection &transport);
 /// clear any errors that a TLS library has accumulated in its global storage
 void ForgetErrors();
 
+/// perform the steps that are necessary to perform before the upcoming TLS I/O
+/// to correctly interpret/detail the outcome of that I/O; implies ForgetErrors()
+void PrepForIo();
+
 } // namespace Security
 
 #endif /* SQUID_SRC_SECURITY_IO_H */

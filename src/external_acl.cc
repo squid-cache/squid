@@ -23,7 +23,6 @@
 #include "helper.h"
 #include "helper/Reply.h"
 #include "http/Stream.h"
-#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/tools.h"

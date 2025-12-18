@@ -1634,10 +1634,9 @@ void Adaptation::Icap::ModXact::decideOnPreview()
         return;
     }
 
-    const SBuf urlPath(virginRequest().url.path());
     size_t wantedSize;
-    if (!service().wantsPreview(urlPath, wantedSize)) {
-        debugs(93, 5, "should not offer preview for " << urlPath);
+    if (!service().wantsPreview(virginRequest().url.absolutePath(), wantedSize)) {
+        debugs(93, 5, "should not offer preview for " << virginRequest().url.absolutePath());
         return;
     }
 
