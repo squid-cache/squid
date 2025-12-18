@@ -58,4 +58,13 @@ jobs:
         with:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
-      - run: ./test-suite/test-sources.sh
+      - name: Maintenance Enforcement checks
+        id: enforcement
+        run: ./test-suite/test-sources.sh
+        continue-on-error:
+
+      - name: Review Update
+        if: ${{ steps.enforcement.outcome }} != 'success'
+        run: |
+          DIFF=`git diff HEAD`
+          gh pr review ${{ env.PULL_REQUEST_NUMBER }} --request-changes --body "Changes are needed to pass Squid code styel checks:\n $DIFF"
