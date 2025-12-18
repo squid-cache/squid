@@ -10,12 +10,12 @@
 #define SQUID_SRC_ACCESSLOGENTRY_H
 
 #include "anyp/PortCfg.h"
-#include "base/CodeContext.h"
-#include "comm/Connection.h"
 #include "error/Error.h"
 #include "HierarchyLogEntry.h"
 #include "http/ProtocolVersion.h"
 #include "http/RequestMethod.h"
+#include "base/CodeContext.h"
+#include "comm/Connection.h"
 #include "HttpHeader.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
@@ -34,10 +34,10 @@
 
 /* forward decls */
 class HttpReply;
-class HttpRequest;
+      class HttpRequest;
 class CustomLog;
 
-class AccessLogEntry: public CodeContext
+class AccessLogEntry:      public CodeContext
 {
 
 public:
