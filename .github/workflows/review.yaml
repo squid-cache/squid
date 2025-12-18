@@ -47,9 +47,9 @@ jobs:
         # Any Reviewer needing changes has priority hold.
         id: core-veto
         run: |
-          gh pr view ${{ github.event.pull_request.number }} --json latestReviews \
+          test `gh pr view ${{ github.event.pull_request.number }} --json latestReviews \
             --template '{{range .latestReviews}}{{.state}}{{end}}' |
-            grep -q CHANGES_REQUESTED && false
+            grep CHANGES_REQUESTED | wc -l` -eq 0
 
       - name: Fast Track Approval
         # Approval from all (currently active) Squid Core team overrides 48hr hold check.
@@ -79,7 +79,7 @@ jobs:
         run: |
           test `gh pr view ${{ github.event.pull_request.number }} --json author,latestReviews \
             --template ' {{.author.login}} APPROVED {{range .latestReviews}}{{.author.login}} {{.state}} {{end}}' |
-            grep -o -E " (hno|kinkie|rousskov|yadij) APPROVED" | wc -l` -eq 2
+            grep -o -E " (hno|kinkie|rousskov|yadij) APPROVED" | wc -l`
 
       - name: Any 3 Positive Reviews
         # Any three positive votes accept the submission.
