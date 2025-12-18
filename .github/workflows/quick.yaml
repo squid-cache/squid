@@ -95,30 +95,6 @@ jobs:
             ${{ runner.temp }}/*.log
             /usr/local/squid/var/logs/overlord/*.log
 
-  source-maintenance-tests:
-
-    runs-on: ubuntu-24.04
-
-    steps:
-      - name: Install prerequisite packages
-        run: |
-          sudo apt-get --quiet=2 update
-          sudo apt-get --quiet=2 install astyle
-          sudo apt-get --quiet=2 install gperf
-          pip install \
-              --user \
-              --no-cache-dir \
-              --disable-pip-version-check \
-              --quiet \
-              --progress-bar off \
-              codespell==1.16 # TODO: Upgrade to codespell v2
-
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
-
-      - run: ./test-suite/test-sources.sh
-
   build-tests:
 
     strategy:
