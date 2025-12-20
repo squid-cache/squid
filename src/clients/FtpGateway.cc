@@ -1641,6 +1641,11 @@ ftpReadSize(Ftp::Gateway * ftpState)
             debugs(9, DBG_IMPORTANT, "WARNING: Malformed SIZE (no digits): " <<
                    ftpState->ctrl.last_reply << " on " << ftpState->title_url);
             ftpState->theSize = -1;
+        } else if (*end != '\0') {
+            // RFC 3659 says SIZE response is exactly "213 SP <size>"
+            debugs(9, DBG_IMPORTANT, "WARNING: Malformed SIZE (trailing junk): " <<
+                   ftpState->ctrl.last_reply << " on " << ftpState->title_url);
+            ftpState->theSize = -1;
         } else if ((errno == ERANGE && (parsed == LLONG_MIN || parsed == LLONG_MAX)) ||
                    parsed < 0) {
             debugs(9, DBG_IMPORTANT, "WARNING: Invalid SIZE (overflow/negative): " <<
