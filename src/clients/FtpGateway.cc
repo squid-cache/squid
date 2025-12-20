@@ -1632,6 +1632,13 @@ ftpReadSize(Ftp::Gateway * ftpState)
     if (code == 213) {
         ftpState->unhack();
 
+        /*
+         * RFC 3659 section 4.1:
+         *      size-response = "213" SP 1*DIGIT CRLF
+         *
+         *  The format MUST be exactly as specified.
+         *  Multi-line responses are not permitted.
+         */
         char *end = nullptr;
         errno = 0;
         const int64_t parsed = strtoll(ftpState->ctrl.last_reply, &end, 10);
