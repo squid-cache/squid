@@ -238,7 +238,7 @@ main(int argc, char *argv[])
 #else
 #include <cstdlib>
 int
-main(int argc, char *argv[])
+main(int, char **)
 {
     return -1;
 }
