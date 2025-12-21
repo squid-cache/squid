@@ -86,7 +86,7 @@ Henrik Nordstrom <hno@squid-cache.org>
  *
 
 
-		COPYRIGHT NOTICE RSA Data Security MD5 (md5.c)
+		COPYRIGHT NOTICE RSA Data Security MD5 (md5.cc)
 
 MD5C.C - RSA Data Security, Inc., MD5 message-digest algorithm
 
