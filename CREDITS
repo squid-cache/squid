@@ -545,7 +545,7 @@ lib/heap.c:
 ==============================================================================
 
 include/md5.h,
-lib/md5.c:
+lib/md5.cc:
 
  * The algorithm is due to Ron Rivest.  This code was
  * written by Colin Plumb in 1993, no copyright is claimed.

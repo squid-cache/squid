@@ -39,7 +39,7 @@ EXTRA_libmiscutil_la_SOURCES = \
 
 libmiscencoding_la_SOURCES = \
 	base64.cc \
-	md5.c \
+	md5.cc \
 	rfc1738.cc \
 	rfc2617.c
 
