@@ -13,9 +13,11 @@ AC_DEFUN([SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H],[
   AC_REQUIRE([SQUID_STATE_SAVE])
   AC_REQUIRE([SQUID_STATE_ROLLBACK])
   AC_REQUIRE([SQUID_DEFINE_BOOL])
+  AC_REQUIRE_CPP
   AC_CACHE_CHECK([for broken Heimdal krb5.h],squid_cv_broken_heimdal_krb5_h,[
     SQUID_STATE_SAVE(squid_krb5_heimdal_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
+    AC_LANG_ASSERT([C++])
     AC_LINK_IFELSE([
       AC_LANG_PROGRAM([[#include <krb5.h>]],[[krb5_context c; krb5_init_context(&c);]])
     ],[squid_cv_broken_heimdal_krb5_h=no],[
