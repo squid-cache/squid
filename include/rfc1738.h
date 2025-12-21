@@ -9,7 +9,6 @@
 #ifndef SQUID_INCLUDE_RFC1738_H
 #define SQUID_INCLUDE_RFC1738_H
 
-
 /* Encoder rfc1738_do_escape flag values. */
 #define RFC1738_ESCAPE_CTRLS       1
 #define RFC1738_ESCAPE_UNSAFE      2

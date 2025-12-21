@@ -501,7 +501,7 @@ lib/snmplib/snmp_vars.c:
 ==============================================================================
 
 include/base64.h:
-lib/base64.c:
+lib/base64.cc:
 
 /*
    Copyright (C) 2002 Niels Möller, Dan Egnor
@@ -624,7 +624,7 @@ include/snmp_util.h:
 
 ==============================================================================
 
-lib/base64.c::base64_encode():
+lib/base64.cc::base64_encode():
 
 Adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c.
 Modified to work with strings instead of files.
