@@ -41,7 +41,7 @@ libmiscencoding_la_SOURCES = \
 	base64.cc \
 	md5.cc \
 	rfc1738.cc \
-	rfc2617.c
+	rfc2617.cc
 
 libmisccontainers_la_SOURCES = \
 	hash.cc

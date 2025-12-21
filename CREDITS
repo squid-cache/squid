@@ -582,7 +582,7 @@ SOFTWARE.
 ==============================================================================
 
 include/rfc2617.h,
-lib/rfc2617.c:
+lib/rfc2617.cc:
 
  * The source in this file is derived from the reference implementation
  * in RFC 2617.
