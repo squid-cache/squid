@@ -1,0 +1,72 @@
+# Tests in this workflow file are slower or more expensive than build
+# tests in quick.yaml. These tests improve build environment coverage, but
+# most are unlikely to fail after quick.yaml tests succeed. Limiting these
+# tests execution to staged commits optimizes CI responsiveness and
+# costs while preserving decent quick.yaml problem detection probability.
+#
+# Anubis configuration must be kept in sync with the total number of
+# tests executed for "auto" branch commits, including tests in other
+# GitHub workflow file(s).
+
+name: FreeBSD Heimdal check
+
+on:
+  # allows to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+concurrency:
+  # Cancel ongoing tests in case of push to staging branch.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  freebsdheimdal:
+    strategy:
+      matrix:
+        osversion:
+          - 14.3
+
+    runs-on: ubuntu-24.04
+    name: freebsd(${{ matrix.osversion }})
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Run test-builds
+        id: test-builds
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          release: ${{ matrix.osversion }}
+          prepare: |
+            pkg update
+            pkg install -y \
+              autoconf \
+              autoconf-archive \
+              automake \
+              bash \
+              cppunit \
+              gmake \
+              libltdl \
+              libtool \
+              m4 \
+              nettle \
+              pkgconf \
+              translate-toolkit
+
+          run: |
+            export MAKE=gmake
+            ./bootstrap.sh
+            ./configure --without-mit-krb5 --with-heimdal-krb5
+            make -j`nproc` all
+            make -j`nproc` check
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-freebsd-${{ matrix.osversion }}
+          path: btlayer-*.log
+
