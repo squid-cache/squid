@@ -40,7 +40,7 @@ EXTRA_libmiscutil_la_SOURCES = \
 libmiscencoding_la_SOURCES = \
 	base64.c \
 	md5.c \
-	rfc1738.c \
+	rfc1738.cc \
 	rfc2617.c
 
 libmisccontainers_la_SOURCES = \

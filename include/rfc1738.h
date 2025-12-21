@@ -9,9 +9,6 @@
 #ifndef SQUID_INCLUDE_RFC1738_H
 #define SQUID_INCLUDE_RFC1738_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* Encoder rfc1738_do_escape flag values. */
 #define RFC1738_ESCAPE_CTRLS       1
@@ -64,8 +61,5 @@ extern char *rfc1738_do_escape(const char *url, int flags);
  */
 extern void rfc1738_unescape(char *url);
 
-#ifdef __cplusplus
-}
-#endif
 #endif /* SQUID_INCLUDE_RFC1738_H */
 
