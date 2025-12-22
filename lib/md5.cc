@@ -88,7 +88,7 @@ SquidMD5Init(struct SquidMD5Context *ctx)
 void
 SquidMD5Update(struct SquidMD5Context *ctx, const void *_buf, unsigned len)
 {
-    uint8_t const *buf = _buf;
+    auto *buf = static_cast<const uint8_t *>(_buf);
     uint32_t t;
 
     /* Update byte count */
@@ -180,7 +180,7 @@ SquidMD5Final(unsigned char digest[16], struct SquidMD5Context *ctx)
 void
 SquidMD5Transform(uint32_t buf[4], uint32_t const in[16])
 {
-    register uint32_t a, b, c, d;
+    uint32_t a, b, c, d;
 
     a = buf[0];
     b = buf[1];
