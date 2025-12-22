@@ -8,31 +8,6 @@
 dnl these checks must be performed in the same order as here defined,
 dnl and have mostly been lifted out of an inlined configure.ac.
 
-dnl checks for a broken Heimdal header file
-AC_DEFUN([SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H],[
-  AC_REQUIRE([SQUID_STATE_SAVE])
-  AC_REQUIRE([SQUID_STATE_ROLLBACK])
-  AC_REQUIRE([SQUID_DEFINE_BOOL])
-  AC_REQUIRE_CPP
-  AC_CACHE_CHECK([for broken Heimdal krb5.h],squid_cv_broken_heimdal_krb5_h,[
-    SQUID_STATE_SAVE(squid_krb5_heimdal_test)
-    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_LANG_ASSERT([C++])
-    AC_LINK_IFELSE([
-      AC_LANG_PROGRAM([[#include <krb5.h>]],[[krb5_context c; krb5_init_context(&c);]])
-    ],[squid_cv_broken_heimdal_krb5_h=no],[
-      AC_LINK_IFELSE([
-        AC_LANG_PROGRAM([[
-#         define HAVE_BROKEN_HEIMDAL_KRB5_H  1
-#         include "compat/krb5.h"
-        ]],[[krb5_context c; krb5_init_context(&c);]])
-      ],[squid_cv_broken_heimdal_krb5_h=yes],[squid_cv_broken_heimdal_krb5_h=no])
-    ])
-    SQUID_STATE_ROLLBACK(squid_krb5_heimdal_test)
-  ])
-  SQUID_DEFINE_BOOL(HAVE_BROKEN_HEIMDAL_KRB5_H,$squid_cv_broken_heimdal_krb5_h,[Heimdal krb5.h is broken for C++])
-]) dnl SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
-
 AC_DEFUN([SQUID_CHECK_SOLARIS_KRB5],[
   # no pkg-config for solaris native Kerberos
   AS_IF([test "$cross_compiling" = "no" -a "x$with_mit_krb5" != "xyes" -a "x$with_mit_krb5" != "xno"],[
