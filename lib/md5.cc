@@ -88,7 +88,7 @@ SquidMD5Init(struct SquidMD5Context *ctx)
 void
 SquidMD5Update(struct SquidMD5Context *ctx, const void *_buf, unsigned len)
 {
-    auto *buf = static_cast<const uint8_t *>(_buf);
+    auto buf = static_cast<const uint8_t *>(_buf);
     uint32_t t;
 
     /* Update byte count */
