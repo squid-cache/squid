@@ -28,6 +28,7 @@
 #if HAVE_DISKIO_MODULE_MMAPPED
 #include "DiskIO/Mmapped/MmappedDiskIOModule.h"
 #endif
+#include "DiskIO/OIO/Module.h"
 
 std::vector<DiskIOModule*> *DiskIOModule::_Modules = nullptr;
 
@@ -61,6 +62,9 @@ DiskIOModule::SetupAllModules()
 #endif
 #if HAVE_DISKIO_MODULE_MMAPPED
     MmappedDiskIOModule::GetInstance();
+#endif
+#if HAVE_DISKIO_MODULE_OIO
+    DiskIO::OIO::Module::GetInstance();
 #endif
 
     for (iterator i = GetModules().begin(); i != GetModules().end(); ++i)
@@ -128,6 +132,8 @@ DiskIOModule::FindDefault()
     result = Find("DiskThreads");
     if (nullptr == result)
         result = Find("DiskDaemon");
+    if (nullptr == result)
+        result = Find("OIO");
     if (nullptr == result)
         result = Find("AIO");
     if (nullptr == result)

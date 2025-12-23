@@ -57,3 +57,7 @@ SUBDIRS += Mmapped
 libdiskio_la_LIBADD += Mmapped/libMmapped.la
 endif
 
+if ENABLE_DISKIO_OIO
+SUBDIRS += OIO
+libdiskio_la_LIBADD += OIO/libOIO.la
+endif

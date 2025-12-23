@@ -489,6 +489,7 @@ SQUID_DEFINE_BOOL(USE_DISKIO,$enable_disk_io,[DiskIO modules are expected to be 
 dnl Some autoconf.h defines we might enable later...
 AC_ARG_WITH(pthreads,AS_HELP_STRING([--without-pthreads],[Disable POSIX Threads]))
 AC_ARG_WITH(aio, AS_HELP_STRING([--without-aio],[Do not use POSIX AIO. Default: auto-detect]))
+AC_ARG_WITH(oio, AS_HELP_STRING([--without-oio],[Do not use Windows Overlapped I/O. Default: auto-detect]))
 ENABLE_WIN32_AIOPS=0
 squid_opt_use_aio=
 squid_opt_use_diskthreads=
@@ -503,6 +504,7 @@ AH_TEMPLATE(HAVE_DISKIO_MODULE_DISKDAEMON, [Whether DiskDaemon Disk I/O module i
 AH_TEMPLATE(HAVE_DISKIO_MODULE_DISKTHREADS, [Whether DiskThreads Disk I/O module is built])
 AH_TEMPLATE(HAVE_DISKIO_MODULE_IPCIO, [Whether IpcIo Disk I/O module is built])
 AH_TEMPLATE(HAVE_DISKIO_MODULE_MMAPPED, [Whether Mmapped Disk I/O module is built])
+AH_TEMPLATE(HAVE_DISKIO_MODULE_OIO, [Whether Windows OIO Disk I/O module is built])
 for module in $squid_disk_module_candidates none; do
   # maybe not needed
   AS_IF([test "x$module" = "xnone"],[continue])
@@ -523,15 +525,8 @@ for module in $squid_disk_module_candidates none; do
           AC_MSG_NOTICE([Native POSIX AIO support detected.])
           squid_opt_use_aio="yes"
         ],[
-          dnl Windows does things differently. We provide wrappers.
-          dnl TODO: Windows really needs its own DiskIO module or its Overlaped IO
-          AS_IF([test "$squid_host_os" = "mingw"],[
-            squid_opt_use_aio="yes"
-            AC_MSG_NOTICE([Windows being built. Maybe-enable POSIX AIO.])
-          ],[
-            squid_opt_use_aio="no"
-            AC_MSG_NOTICE([Native POSIX AIO support not detected. AIO automatically disabled.])
-          ])
+          squid_opt_use_aio="no"
+          AC_MSG_NOTICE([Native POSIX AIO support not detected. AIO automatically disabled.])
         ])
       ],[
         AC_MSG_NOTICE([POSIX AIO support manually disabled.])
@@ -541,12 +536,7 @@ for module in $squid_disk_module_candidates none; do
       AS_IF([test "x$squid_opt_use_aio" = "xyes"],[
         DISK_MODULES="$DISK_MODULES AIO"
         AC_DEFINE([HAVE_DISKIO_MODULE_AIO],1,[POSIX AIO Disk I/O module is built])
-        AS_IF([test "$squid_host_os" = "mingw"],[
-          ENABLE_WIN32_AIO=1
-          AC_MSG_NOTICE([Replacing AIO DiskIO module with: Windows overlapped I/O support])
-        ],[
-          AC_MSG_NOTICE([Enabling AIO DiskIO module])
-        ])
+        AC_MSG_NOTICE([Enabling AIO DiskIO module])
       ],[
         AC_MSG_NOTICE([AIO DiskIO Module disabled. Missing POSIX AIO support.])
         squid_disk_module_candidates_AIO=no
@@ -675,6 +665,24 @@ for module in $squid_disk_module_candidates none; do
       ])
     ],
 
+    [OIO],[
+      dnl Check for Windows Overlapped I/O availability
+      AS_IF([test "x$with_oio" = "xno"],[
+        dnl nothing to do
+      ],[test "$squid_host_os" != "mingw" -a "x$with_oio" = "xyes"],[
+        AC_MSG_ERROR([DiskIO module OIO is only available on MinGW])
+      ],[test "$squid_host_os" != "mingw"],[
+        with_oio="no"
+      ])
+      AS_IF([test "x$with_oio" != "xno"],[
+        DISK_MODULES="$DISK_MODULES OIO"
+        AC_DEFINE([HAVE_DISKIO_MODULE_OIO],1,[Windows OIO Disk I/O module is built])
+      ],[
+        AC_MSG_NOTICE([DiskIO Module OIO disabled. Missing Windows Overlapped I/O support.])
+        squid_disk_module_candidates_OIO=no
+      ])
+    ],
+
     [
       AC_MSG_NOTICE([Enabling $module DiskIO module])
       DISK_LIBS="$DISK_LIBS lib${module}.la"
@@ -686,7 +694,6 @@ AC_SUBST(DISK_MODULES)
 AC_SUBST(DISK_LIBS)
 AM_CONDITIONAL(ENABLE_DISKIO_AIO, test "x$squid_disk_module_candidates_AIO" = "xyes")
 AC_SUBST(AIOLIB)
-AM_CONDITIONAL(ENABLE_WIN32_AIO, test "x$squid_disk_module_candidates_AIO" = "xyes" -a "x$ENABLE_WIN32_AIO" = "x1")
 AM_CONDITIONAL(ENABLE_DISKIO_BLOCKING, test "x$squid_disk_module_candidates_Blocking" = "xyes")
 AM_CONDITIONAL(ENABLE_DISKIO_DISKDAEMON, test "x$squid_disk_module_candidates_DiskDaemon" = "xyes")
 AM_CONDITIONAL(ENABLE_DISKIO_DISKTHREADS, test "x$squid_disk_module_candidates_DiskThreads" = "xyes")
@@ -694,6 +701,7 @@ AC_SUBST(LIBPTHREADS)
 AM_CONDITIONAL(ENABLE_WIN32_AIOPS, test "x$squid_disk_module_candidates_DiskThreads" = "xyes" -a "x$ENABLE_WIN32_AIOPS" = "x1")
 AM_CONDITIONAL(ENABLE_DISKIO_IPCIO, test "x$squid_disk_module_candidates_IpcIo" = "xyes")
 AM_CONDITIONAL(ENABLE_DISKIO_MMAPPED, test "x$squid_disk_module_candidates_Mmapped" = "xyes")
+AM_CONDITIONAL(ENABLE_DISKIO_OIO, test "x$squid_disk_module_candidates_OIO" = "xyes")
 
 dnl Check what Storage formats are wanted.
 dnl This version will error out with a message saying why if a required DiskIO is missing.
@@ -2573,6 +2581,7 @@ AC_CONFIG_FILES([
 	src/DiskIO/DiskThreads/Makefile
 	src/DiskIO/IpcIo/Makefile
 	src/DiskIO/Mmapped/Makefile
+	src/DiskIO/OIO/Makefile
 	src/error/Makefile
 	src/eui/Makefile
 	src/format/Makefile
