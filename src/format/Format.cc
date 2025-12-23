@@ -640,11 +640,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             const auto &timer = (!al->hier.totalPeeringTime.ran() && al->request) ?
                                 al->request->hier.totalPeeringTime : al->hier.totalPeeringTime;
             if (timer.ran()) {
-                using namespace std::chrono_literals;
-                const auto duration = timer.total();
-                outtv.tv_sec = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
-                const auto totalUsec = std::chrono::duration_cast<std::chrono::microseconds>(duration);
-                outtv.tv_usec = (totalUsec % std::chrono::microseconds(1s)).count();
+                outtv = ToTimeval(timer.total());
                 doMsec = 1;
             }
         }
