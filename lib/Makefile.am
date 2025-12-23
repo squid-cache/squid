@@ -38,10 +38,10 @@ EXTRA_libmiscutil_la_SOURCES = \
 	getopt.c
 
 libmiscencoding_la_SOURCES = \
-	base64.c \
-	md5.c \
-	rfc1738.c \
-	rfc2617.c
+	base64.cc \
+	md5.cc \
+	rfc1738.cc \
+	rfc2617.cc
 
 libmisccontainers_la_SOURCES = \
 	hash.cc
