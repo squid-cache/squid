@@ -6969,6 +6969,24 @@ DOC_START
 	varying objects not intended for caching to get cached.
 DOC_END
 
+NAME: ignore_vary
+COMMENT: on|off
+TYPE: onoff
+LOC: Config.onoff.ignore_vary
+DEFAULT: off
+DOC_START
+	Some HTTP servers send a Vary header even though the clients
+	never send requests with different request headers.  This
+	option causes Squid to completely ignore the Vary header and
+	go ahead and cache the response using normal rules.
+
+	WARNING: Doing this this VIOLATES the HTTP standard.  Enabling
+	this can cause varying responses not intended for caching to get
+	cached.  It is intended as a workaround until HTTP/1.1 is fully
+	implemented and only for use when client behavior is fully
+	controlled.
+DOC_END
+
 NAME: request_header_access
 IFDEF: USE_HTTP_VIOLATIONS
 TYPE: http_header_access
