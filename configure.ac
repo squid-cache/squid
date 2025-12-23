@@ -1167,7 +1167,11 @@ SQUID_CHECK_LIB_WORKS(mit-krb5,[
 SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[LIBHEIMDAL_KRB5])
 SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
   AS_IF([test "x$LIBMIT_KRB5_LIBS" = "x"],[
-    PKG_CHECK_MODULES([LIBHEIMDAL_KRB5],[heimdal-krb5 heimdal-gssapi],[
+    PKG_CHECK_MODULES([LIBHEIMDAL_KRB5],[heimdal-krb5 heimdal-gssapi],[:],[
+      dnl FreeBSD ports package name is just 'heimdal'
+      PKG_CHECK_MODULES([LIBHEIMDAL_KRB5],[heimdal heimdal-gssapi],[:],[:])
+    ])
+    AS_IF([test "x$LIBHEIMDAL_KRB5_LIBS" != "x" ],[
       CPPFLAGS="$LIBHEIMDAL_KRB5_CFLAGS $CPPFLAGS"
       AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
       AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
@@ -1175,7 +1179,7 @@ SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
       LIBS="$LIBHEIMDAL_KRB5_PATH $LIBHEIMDAL_KRB5_LIBS $LIBS"
       SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
       SQUID_CHECK_KRB5_FUNCS
-    ],[:])
+    ])
   ])
 ])
 
