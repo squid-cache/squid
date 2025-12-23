@@ -1176,7 +1176,7 @@ SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
       AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
       AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
 
-      LIBS="$LIBHEIMDAL_KRB5_PATH $LIBHEIMDAL_KRB5_LIBS $LIBKRB5_LIBS $LIBS"
+      LIBS="$LIBHEIMDAL_KRB5_PATH $LIBHEIMDAL_KRB5_LIBS $LIBS"
       SQUID_CHECK_KRB5_FUNCS
     ])
   ])
