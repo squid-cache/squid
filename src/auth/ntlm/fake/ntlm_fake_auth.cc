@@ -164,7 +164,7 @@ main(int argc, char *argv[])
         ntlmhdr *packet;
         struct base64_decode_ctx ctx;
         base64_decode_init(&ctx);
-        size_t dstLen = 0;
+        size_t dstLen = sizeof(decodedBuf);
         if (buflen > 3 &&
                 base64_decode_update(&ctx, &dstLen, decodedBuf, buflen-3, buf+3) &&
                 base64_decode_final(&ctx)) {
