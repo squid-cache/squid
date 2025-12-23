@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "auth/basic/SSPI/valid.h"
+#include "compat/xis.h"
 #include "helper/protocol_defines.h"
 #include "rfc1738.h"
 #include "util.h"
@@ -146,12 +147,26 @@ main(int argc, char **argv)
             *p = '\0';      /* strip \n */
         if ((p = strchr(wstr, '\r')) != NULL)
             *p = '\0';      /* strip \r */
+
+        debug("Got %s from Squid\n", wstr);
+
         /* Clear any current settings */
         username[0] = '\0';
         password[0] = '\0';
-        sscanf(wstr, "%s %s", username, password);  /* Extract parameters */
 
-        debug("Got %s from Squid\n", wstr);
+        char sep = '\0';
+        char junk = '\0';
+        // XXX: sscanf silently skips series of isspace() characters in input
+        // XXX: "Alice \v\t Bob" produces identical results to "Alice Bob"
+        const auto parsed = sscanf(wstr, " %255s%1c%255s %c", username, &sep, password, &junk);
+
+        if (parsed != 3 || !xisspace(sep)) {
+            username[0] = '\0';
+            password[0] = '\0';
+            SEND_ERR("Cannot parse request");
+            fflush(stdout);
+            continue;
+        }
 
         /* Check for invalid or blank entries */
         if ((username[0] == '\0') || (password[0] == '\0')) {
