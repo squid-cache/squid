@@ -14,6 +14,10 @@ on:
   push:
     branches: [ "auto" ]
 
+  # GitHub merge queue
+  merge_group:
+    branches: [ "master", "v7" ]
+
   # allows to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -144,7 +148,7 @@ jobs:
     strategy:
       matrix:
         osversion:
-          - 14.2
+          - 14.3
 
     runs-on: ubuntu-22.04
     name: freebsd(${{ matrix.osversion }})
