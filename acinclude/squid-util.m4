@@ -251,7 +251,6 @@ dnl check the build parameters for a library to auto-enable
 dnl Parameters for this macro are:
 dnl 1) binary library name (without 'lib' prefix)
 dnl 2) name of the library for human reading
-dnl 3) prefix used for pkg-check macros
 AC_DEFUN([SQUID_AUTO_LIB],[
   AC_PREREQ([2.61])
   m4_pushdef([VARIABLE], m4_toupper(m4_translit([LIB$1],[-+.],[___])))
