@@ -40,7 +40,7 @@
 
 #include "negotiate_kerberos.h"
 
-#if HAVE_GSSAPI && HAVE_PAC_SUPPORT
+#if HAVE_GSSAPI && HAVE_KRB5_PAC_SUPPORT
 
 #define LOGON_EXTRA_SIDS 0x0020
 #define LOGON_RESOURCE_GROUPS 0x0200
@@ -649,5 +649,5 @@ k5clean:
     krb5_free_data(context, ad_data);
     return nullptr;
 }
-#endif
 
+#endif /* HAVE_GSSAPI && HAVE_KRB5_PAC_SUPPORT */
