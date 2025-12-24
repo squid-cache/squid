@@ -5,9 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-dnl these checks must be performed in the same order as here defined,
-dnl and have mostly been lifted out of an inlined configure.ac.
-
 AC_DEFUN([SQUID_CHECK_SOLARIS_KRB5],[
   # no pkg-config for solaris native Kerberos
   AS_IF([test "$cross_compiling" = "no" -a "x$with_mit_krb5" != "xyes" -a "x$with_mit_krb5" != "xno"],[
