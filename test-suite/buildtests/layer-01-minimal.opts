@@ -103,6 +103,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-dns-cname \
 	--without-gnutls \
 	--without-openssl \
+	--without-pam \
 	--without-po2html \
 	--without-psapi \
 	--without-systemd \
