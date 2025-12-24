@@ -270,12 +270,8 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
     ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
   SQUID_STATE_ROLLBACK(squid_krb5_test)
 
-  AC_CHECK_FUNCS(gss_map_name_to_any,
-    AC_DEFINE(HAVE_GSS_MAP_ANY_TO_ANY,1,
-      [Define to 1 if you have gss_map_name_to_any]),)
-  AC_CHECK_FUNCS(gsskrb5_extract_authz_data_from_sec_context,
-    AC_DEFINE(HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT,1,
-      [Define to 1 if you have gsskrb5_extract_authz_data_from_sec_context]),)
+  AC_CHECK_FUNCS(gss_map_name_to_any)
+  AC_CHECK_FUNCS(gsskrb5_extract_authz_data_from_sec_context)
 
   SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
   SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_CACHE,$squid_cv_memory_cache,
