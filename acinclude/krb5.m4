@@ -88,6 +88,16 @@ int main(int argc, char *argv[])
   ])
 ])
 
+dnl check for PAC requirements
+AC_DEFUN([SQUID_CHECK_KRB5_PAC_SUPPORT],[
+  AC_CHECK_TYPE(krb5_pac,[
+    AC_CHECK_FUNC(gss_map_name_to_any)
+    AC_CHECK_FUNC(gsskrb5_extract_authz_data_from_sec_context)
+    AS_IF([test "x$ac_cv_func_gss_map_name_to_any" = "xyes" -o "x$ac_cv_func_gsskrb5_extract_authz_data_from_sec_context" = "xyes"],[
+      AC_DEFINE(HAVE_KRB5_PAC_SUPPORT,1,[Define to 1 if kerberos has PAC support])
+    ])
+  ],,[#include <krb5.h>])
+])
 
 dnl checks that gssapi is ok, and sets squid_cv_working_gssapi accordingly
 AC_DEFUN([SQUID_CHECK_WORKING_GSSAPI], [
@@ -121,7 +131,8 @@ main(void)
         return 0;
 }
   ]])],  [ squid_cv_working_gssapi=yes ], [ squid_cv_working_gssapi=no ], [:])])
-  AS_IF([test "x$squid_cv_working_gssapi" = "xno" -a `echo $LIBS | grep -i -c "(-)L"` -gt 0],[
+  AS_IF([test "x$squid_cv_working_gssapi" = "xyes"],[SQUID_CHECK_KRB5_PAC_SUPPORT],
+  [test "x$squid_cv_working_gssapi" = "xno" -a `echo $LIBS | grep -i -c "(-)L"` -gt 0],[
     AC_MSG_NOTICE([Check Runtime library path !])
   ])
 ])
@@ -225,10 +236,6 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
     AC_DEFINE(HAVE_KRB5_FREE_ERROR_STRING,1,
       [Define to 1 if you have krb5_free_error_string]),)
   AC_CHECK_DECLS(krb5_kt_free_entry,,,[#include <krb5.h>])
-  AC_CHECK_TYPE(krb5_pac,
-    AC_DEFINE(HAVE_KRB5_PAC,1,
-      [Define to 1 if you have krb5_pac]),,
-      [#include <krb5.h>])
   AC_CHECK_LIB(krb5,krb5_kt_free_entry,
     AC_DEFINE(HAVE_KRB5_KT_FREE_ENTRY,1,
       [Define to 1 if you have krb5_kt_free_entry]),)
@@ -266,13 +273,6 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
 	AC_MSG_RESULT(yes)
     ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
   SQUID_STATE_ROLLBACK(squid_krb5_test)
-
-  AC_CHECK_FUNCS(gss_map_name_to_any,
-    AC_DEFINE(HAVE_GSS_MAP_ANY_TO_ANY,1,
-      [Define to 1 if you have gss_map_name_to_any]),)
-  AC_CHECK_FUNCS(gsskrb5_extract_authz_data_from_sec_context,
-    AC_DEFINE(HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT,1,
-      [Define to 1 if you have gsskrb5_extract_authz_data_from_sec_context]),)
 
   SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
   SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_CACHE,$squid_cv_memory_cache,

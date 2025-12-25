@@ -324,7 +324,7 @@ main(int argc, char *const argv[])
     char *c, *p;
     char *user = nullptr;
     char *rfc_user = nullptr;
-#if HAVE_PAC_SUPPORT
+#if HAVE_KRB5_PAC_SUPPORT
     char ad_groups[MAX_PAC_GROUP_SIZE];
     char *ag=nullptr;
     krb5_pac pac;
@@ -333,7 +333,7 @@ main(int argc, char *const argv[])
 #else
     gss_buffer_desc type_id = GSS_C_EMPTY_BUFFER;
 #endif
-#endif
+#endif /* HAVE_KRB5_PAC_SUPPORT */
     krb5_context context = nullptr;
     krb5_error_code ret;
     long length = 0;
@@ -750,7 +750,7 @@ main(int argc, char *const argv[])
                 *p = '\0';
             }
 
-#if HAVE_PAC_SUPPORT
+#if HAVE_KRB5_PAC_SUPPORT
             ret = krb5_init_context(&context);
             if (!check_k5_err(context, "krb5_init_context", ret)) {
 #if HAVE_LIBHEIMDAL_KRB5
@@ -782,13 +782,15 @@ main(int argc, char *const argv[])
             if (ag) {
                 debug((char *) "%s| %s: DEBUG: Groups %s\n", LogTime(), PROGRAM, ag);
             }
-#endif
+#endif /* HAVE_KRB5_PAC_SUPPORT */
+
             rfc_user = rfc1738_escape(user);
-#if HAVE_PAC_SUPPORT
+#if HAVE_KRB5_PAC_SUPPORT
             fprintf(stdout, "OK token=%s user=%s %s\n", token, rfc_user, ag?ag:"group=");
 #else
             fprintf(stdout, "OK token=%s user=%s\n", token, rfc_user);
-#endif
+#endif /* HAVE_KRB5_PAC_SUPPORT */
+
             debug((char *) "%s| %s: DEBUG: OK token=%s user=%s\n", LogTime(), PROGRAM, token, rfc_user);
             if (log)
                 fprintf(stderr, "%s| %s: INFO: User %s authenticated\n", LogTime(),
@@ -825,11 +827,11 @@ main(int argc, char *const argv[])
                 *p = '\0';
             }
             rfc_user = rfc1738_escape(user);
-#if HAVE_PAC_SUPPORT
+#if HAVE_KRB5_PAC_SUPPORT
             fprintf(stdout, "OK token=%s user=%s %s\n", "AA==", rfc_user, ag?ag:"group=");
 #else
             fprintf(stdout, "OK token=%s user=%s\n", "AA==", rfc_user);
-#endif
+#endif /* HAVE_KRB5_PAC_SUPPORT */
             debug((char *) "%s| %s: DEBUG: OK token=%s user=%s\n", LogTime(), PROGRAM, "AA==", rfc_user);
             if (log)
                 fprintf(stderr, "%s| %s: INFO: User %s authenticated\n", LogTime(),

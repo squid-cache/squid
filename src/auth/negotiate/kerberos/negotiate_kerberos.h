@@ -112,9 +112,7 @@ int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
 
 char *gethost_name(void);
 
-#if (HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT || HAVE_GSS_MAP_NAME_TO_ANY) && HAVE_KRB5_PAC
-#define HAVE_PAC_SUPPORT 1
-
+#if HAVE_KRB5_PAC_SUPPORT
 /**
 * MAX_PAC_GROUP_SIZE limits the string length, wherein group membership per
 * authenticated user is reported back to Squid, to a reasonable number
@@ -148,9 +146,8 @@ char *xstrcpy( char *src, const char*dst);
 char *xstrcat( char *src, const char*dst);
 int checkustr(RPC_UNICODE_STRING *string);
 char *get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac);
-#else
-#define HAVE_PAC_SUPPORT 0
-#endif
+#endif /* HAVE_KRB5_PAC_SUPPORT */
+
 int check_k5_err(krb5_context context, const char *msg, krb5_error_code code);
 
 #endif /* SQUID_SRC_AUTH_NEGOTIATE_KERBEROS_NEGOTIATE_KERBEROS_H */
