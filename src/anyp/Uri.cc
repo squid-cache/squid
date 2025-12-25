@@ -323,7 +323,7 @@ urlAppendDomain(char *host)
  * then rather than a URL a hostname:port is looked for.
  */
 bool
-AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
+AnyP::Uri::parse(const Http::RequestMethod& method, const SBuf &rawUrl)
 {
     try {
 
@@ -787,7 +787,7 @@ AnyP::Uri::absolutePath() const
  *        and never copy the query-string part in the first place
  */
 char *
-urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method, const AnyP::UriScheme &scheme)
+urlCanonicalCleanWithoutRequest(const SBuf &url, const Http::RequestMethod &method, const AnyP::UriScheme &scheme)
 {
     LOCAL_ARRAY(char, buf, MAX_URL);
 
