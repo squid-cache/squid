@@ -86,6 +86,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-auto-locale \
 	--disable-translation \
 	--disable-optimizations \
+	--disable-arch-native \
  \
 	--without-pthreads \
 	--without-aio \
@@ -102,6 +103,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-dns-cname \
 	--without-gnutls \
 	--without-openssl \
+	--without-pam \
 	--without-po2html \
 	--without-psapi \
 	--without-systemd \

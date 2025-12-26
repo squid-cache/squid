@@ -13,7 +13,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 /* Being a C library code it is best bodily included and tested with C++ type-safe techniques. */
-#include "lib/rfc1738.c"
+#include "lib/rfc1738.cc"
 
 /**
  * Test the URL coder RFC 1738 Engine

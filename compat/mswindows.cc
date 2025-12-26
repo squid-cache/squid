@@ -24,6 +24,7 @@
 #include <cassert>
 #include <cstring>
 #include <fcntl.h>
+#include <memory>
 #include <sys/timeb.h>
 #if HAVE_PSAPI_H
 #include <psapi.h>
@@ -161,7 +162,6 @@ void
 syslog(int priority, const char *fmt, ...)
 {
     WORD logtype;
-    char *str=static_cast<char *>(xmalloc(SYSLOG_MAX_MSG_SIZE));
     int str_len;
     va_list ap;
 
@@ -169,7 +169,8 @@ syslog(int priority, const char *fmt, ...)
         return;
 
     va_start(ap, fmt);
-    str_len = vsnprintf(str, SYSLOG_MAX_MSG_SIZE-1, fmt, ap);
+    auto buf = std::make_unique<char[]>(SYSLOG_MAX_MSG_SIZE);
+    str_len = vsnprintf(buf.get(), SYSLOG_MAX_MSG_SIZE, fmt, ap);
     va_end(ap);
 
     if (str_len < 0) {
@@ -198,8 +199,9 @@ syslog(int priority, const char *fmt, ...)
     }
 
     //Windows API suck. They are overengineered
+    const auto strings[1] = { buf.get() };
     ReportEventA(ms_eventlog, logtype, 0, 0, nullptr, 1, 0,
-                 const_cast<const char **>(&str), nullptr);
+                 strings, nullptr);
 }
 
 /* note: this is all MSWindows-specific code; all of it should be conditional */

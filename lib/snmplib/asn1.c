@@ -675,11 +675,15 @@ asn_parse_objid(u_char * data, int *datalength,
     while (length > 0 && (*objidlength)-- > 0) {
         subidentifier = 0;
 
-        do {            /* shift and add in low order 7 bits */
+        do {
+            if (length-- <= 0) {
+                snmp_set_api_error(SNMPERR_ASN_DECODE);
+                return (NULL);
+            }
+            // shift and add in low order 7 bits
             subidentifier = (subidentifier << 7)
-                            + (*(u_char *) bufp & ~ASN_BIT8);
-            length--;
-        } while (*(u_char *) bufp++ & ASN_BIT8);
+                            | (*bufp & ~ASN_BIT8);
+        } while (*bufp++ & ASN_BIT8);
 
         /* while last byte has high bit clear */
         if (subidentifier > (u_int) MAX_SUBID) {
@@ -735,6 +739,7 @@ asn_build_objid(u_char * data, int *datalength,
      * lastbyte ::= 0 7bitvalue
      */
     u_char buf[MAX_OID_LEN];
+    u_char *bufEnd = buf + sizeof(buf);
     u_char *bp = buf;
     oid *op = objid;
     int asnlength;
@@ -753,6 +758,10 @@ asn_build_objid(u_char * data, int *datalength,
     while (objidlength-- > 0) {
         subid = *op++;
         if (subid < 127) {  /* off by one? */
+            if (bp >= bufEnd) {
+                snmp_set_api_error(SNMPERR_ASN_ENCODE);
+                return (NULL);
+            }
             *bp++ = subid;
         } else {
             mask = 0x7F;    /* handle subid == 0 case */
@@ -770,7 +779,15 @@ asn_build_objid(u_char * data, int *datalength,
                 /* fix a mask that got truncated above */
                 if (mask == 0x1E00000)
                     mask = 0xFE00000;
+                if (bp >= bufEnd) {
+                    snmp_set_api_error(SNMPERR_ASN_ENCODE);
+                    return (NULL);
+                }
                 *bp++ = (u_char) (((subid & mask) >> bits) | ASN_BIT8);
+            }
+            if (bp >= bufEnd) {
+                snmp_set_api_error(SNMPERR_ASN_ENCODE);
+                return (NULL);
             }
             *bp++ = (u_char) (subid & mask);
         }

@@ -1089,7 +1089,7 @@ strwordquote(MemBuf * mb, const char *str)
     }
 
     while (*str) {
-        int l = strcspn(str, "\"\\\n\r");
+        const auto l = strcspn(str, "\"\\\n\r");
         mb->append(str, l);
         str += l;
 

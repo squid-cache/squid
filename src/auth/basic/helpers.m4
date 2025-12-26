@@ -5,6 +5,8 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
+SQUID_CHECK_LIBPAM
+
 AS_IF([test "x$enable_auth" != "xno"],[
   BASIC_AUTH_HELPERS=""
   SQUID_HELPER_FEATURE_CHECK([auth_basic],[$enable_auth],[auth/basic],[

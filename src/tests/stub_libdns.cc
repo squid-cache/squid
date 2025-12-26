@@ -6,10 +6,11 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_LIB_SMBLIB_MD4_H
-#define SQUID_LIB_SMBLIB_MD4_H
+#include "squid.h"
 
-extern void mdfour(unsigned char *out, unsigned char *in, int n);
+#define STUB_API "dns/libdns.la"
+#include "tests/STUB.h"
 
-#endif /* SQUID_LIB_SMBLIB_MD4_H */
+#include "dns/LookupDetails.h"
 
+std::ostream &Dns::LookupDetails::print(std::ostream &os) const STUB_RETVAL(os)

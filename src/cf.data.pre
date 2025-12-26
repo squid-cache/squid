@@ -1245,8 +1245,29 @@ ENDIF
 
 	acl aclname url_regex [-i] ^http:// ...
 	  # POSIX extended regex matching on whole URL [fast]
+	  #
+	  # If request URL contains only valid pct-encoded triplets (RFC 3986),
+	  # all of them are decoded before matching (e.g., `%25` triplet is
+	  # replaced with a single `%` character). If request URL contains at
+	  # least one `%` character that does not start a valid pct-encoded
+	  # triplet (e.g., `%%`, `%X`, or `%2Y`), then the URL is not decoded at
+	  # all (i.e. the raw request URL is used for matching).
+	  #
+	  # If a request URL is decoded as described above, then all request URL
+	  # characters starting with the decoded `%00` pct-encoded triplet (if
+	  # any) are ignored during matching. There is currently no way to match
+	  # that triplet itself in a correctly percent-encoded URL.
+	  #
+	  # ACL parameters are not decoded.
+
 	acl aclname urllogin [-i] [^a-zA-Z0-9] ...
-	  # POSIX extended regex matching on URL login field
+	  # POSIX extended regex matching on URL login field [fast]
+	  #
+	  # This ACL does not match requests with a URL that lacks a login field.
+	  #
+	  # This ACL handles RFC 3986 pct-encoded triplets in the login field as
+	  # url_regex ACL handles those triplets in the entire request URL.
+
 	acl aclname urlpath_regex [-i] \.gif$ ...
 	  # POSIX extended regex matching on URL path [fast]
 
@@ -2037,22 +2058,24 @@ LOC: Config.accessList.htcp
 DEFAULT: none
 DEFAULT_DOC: Deny, unless rules exist in squid.conf.
 DOC_START
-	Allowing or Denying access to the HTCP port based on defined
-	access lists
+	Controls whether HTCP TST requests received on htcp_port are allowed.
 
 	htcp_access  allow|deny [!]aclname ...
 
-	See also htcp_clr_access for details on access control for
-	cache purge (CLR) HTCP messages.
+	This directive does not control whether HTCP CLR requests are allowed.
+	Use htcp_clr_access directive for that.
+
+	This directive does not control whether HTCP requests with other opcodes
+	are allowed (e.g., NOP, MON, and SET). Squid ignores those HTCP requests.
 
 	NOTE: The default if no htcp_access lines are present is to
-	deny all traffic. This default may cause problems with peers
+	deny all HTCP TST traffic. This default may cause problems with peers
 	using the htcp option.
 
 	This clause only supports fast acl types.
 	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
-# Allow HTCP queries from local networks only
+# Allow HTCP TST queries from local networks only
 #htcp_access allow localnet
 #htcp_access deny all
 DOC_END
@@ -2064,11 +2087,13 @@ LOC: Config.accessList.htcp_clr
 DEFAULT: none
 DEFAULT_DOC: Deny, unless rules exist in squid.conf.
 DOC_START
-	Allowing or Denying access to purge content using HTCP based
-	on defined access lists.
-	See htcp_access for details on general HTCP access control.
+	Controls whether HTCP CLR requests received on htcp_port are allowed.
+	See htcp_access for controlling other HTCP messages.
 
 	htcp_clr_access  allow|deny [!]aclname ...
+
+	HTCP CLR requests purge matching cached entries. They may be forwarded to
+	specially marked cache_peers (see cache_peer HTCP options for details).
 
 	This clause only supports fast acl types.
 	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
@@ -6027,6 +6052,12 @@ DOC_START
 		Location headers and embedded URLs after the helper rewrites
 		the request URL.
 
+		If Squid cannot parse the URL value returned by the helper, it logs a
+		critical cache.log ERROR message and uses the original request URL.
+		Supported URL format depends on the request method. For example,
+		CONNECT request URLs must use `host:port` form, while GET URLs start
+		with a `scheme:` prefix (e.g., `https://example.com/`).
+
 	  OK
 		Keep the client request intact.
 
@@ -8479,7 +8510,7 @@ DOC_START
 	and from neighbor caches.  The standard UDP port for ICP is 3130.
 
 	Example:
-		icp_port @DEFAULT_ICP_PORT@
+		icp_port 3130
 DOC_END
 
 NAME: htcp_port
@@ -8893,12 +8924,18 @@ NAME: email_err_data
 COMMENT: on|off
 TYPE: onoff
 LOC: Config.onoff.emailErrData
-DEFAULT: on
+DEFAULT: off
 DOC_START
 	If enabled, information about the occurred error will be
 	included in the mailto links of the ERR pages (if %W is set)
 	so that the email body contains the data.
 	Syntax is <A HREF="mailto:%w%W">%w</A>
+
+	SECURITY WARNING:
+		Request headers and other included facts may contain
+		sensitive information about transaction history, the
+		Squid instance, and its environment which would be
+		unavailable to error recipients otherwise.
 DOC_END
 
 NAME: deny_info

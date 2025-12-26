@@ -163,21 +163,4 @@ if test -f SPONSORS.list; then
   sed -e 's/@Squid-[0-9\.]*://' <SPONSORS.list > SPONSORS || (rm -f SPONSORS && exit 1)
 fi
 
-# Fixup autoconf recursion using --silent/--quiet option
-# autoconf should inherit this option when recursing into subdirectories
-# but it currently doesn't for some reason.
-if ! grep  "configure_args --quiet" configure >/dev/null; then
-echo "Fixing configure recursion"
-ed -s configure <<'EOS' >/dev/null || true
-/ac_sub_configure_args=/
-+1
-i
-  # Add --quiet option if used
-  test "$silent" = yes &&
-    ac_sub_configure_args="$ac_sub_configure_args --quiet"
-.
-w
-EOS
-fi
-
 echo "Autotool bootstrapping complete."
