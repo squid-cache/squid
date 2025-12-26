@@ -61,9 +61,6 @@ chroot(const char *dirname)
         return GetLastError();
 }
 
-
-
-
 #if !HAVE_GETTIMEOFDAY
 int
 gettimeofday(struct timeval *pcur_time, void *tzp)

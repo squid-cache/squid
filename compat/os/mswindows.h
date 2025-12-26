@@ -220,7 +220,6 @@ setenv(const char * const name, const char * const value, const int overwrite)
 #define S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
 #endif
 
-
 #if defined(_MSC_VER)
 typedef int uid_t;
 typedef int gid_t;
