@@ -5,9 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-dnl these checks must be performed in the same order as here defined,
-dnl and have mostly been lifted out of an inlined configure.ac.
-
 dnl check whether the Kerberos context has a memory cache
 AC_DEFUN([SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE],[
   AC_REQUIRE([SQUID_STATE_SAVE])

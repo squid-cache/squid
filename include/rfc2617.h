@@ -23,10 +23,6 @@
 #ifndef SQUID_INCLUDE_RFC2617_H
 #define SQUID_INCLUDE_RFC2617_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define HASHLEN 16
 typedef char HASH[HASHLEN];
 #define HASHHEXLEN 32
@@ -61,8 +57,5 @@ extern void CvtHex(const HASH Bin, HASHHEX Hex);
 
 extern void CvtBin(const HASHHEX Hex, HASH Bin);
 
-#ifdef __cplusplus
-}
-#endif
 #endif /* SQUID_INCLUDE_RFC2617_H */
 

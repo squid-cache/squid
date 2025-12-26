@@ -47,10 +47,6 @@
    not, see http://www.gnu.org/licenses/.
 */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Base64 encoding */
 
 /* Maximum length of output for base64_encode_update. NOTE: Doesn't
@@ -157,10 +153,6 @@ base64_decode_update(struct base64_decode_ctx *ctx,
 /* Returns 1 on success. */
 int
 base64_decode_final(struct base64_decode_ctx *ctx);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* HAVE_NETTLE_BASE64_H */
 
