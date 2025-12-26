@@ -2321,9 +2321,6 @@ DOC_START
 			Squid, and treat them as unencrypted HTTP messages,
 			becoming the man-in-the-middle.
 
-			The ssl_bump option is required to fully enable
-			bumping of CONNECT requests.
-
 	Omitting the mode flag causes default forward proxy mode to be used.
 
 
@@ -2595,6 +2592,10 @@ DOC_START
 	Not all http_port options are available for https_port.
 	Among the unavalable options:
 	- require-proxy-header
+
+	Certain functionalities require combinations of options.
+	Incomplete or wrong configurations will cause Squid to fail to start,
+	logging a FATAL message to cache.log
 DOC_END
 
 NAME: ftp_port
