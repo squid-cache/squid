@@ -5,40 +5,21 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_DEFUN([SQUID_CHECK_SOLARIS_KRB5],[
+dnl Solaris specific way to locate MIT Kerberos library details
+AC_DEFUN([SQUID_CHECK_SOLARIS_KRB5_PATHS],[
   # no pkg-config for solaris native Kerberos
-  AS_IF([test "$cross_compiling" = "no" -a "x$with_mit_krb5" != "xyes" -a "x$with_mit_krb5" != "xno"],[
-    AC_PATH_PROG(krb5_config,krb5-config,no,[$PATH:$with_mit_krb5/bin])
+  AS_IF([test "$cross_compiling" = "no"],[
+    base_path=`echo "$LIBMIT_KRB5_PATH" | sed -e 's/-L//g'`
+    AC_PATH_PROG([krb5_config],[krb5-config],[:],[$PATH$PATH_SEPARATOR${base_path}/bin])
   ])
   AC_MSG_NOTICE([Use krb5-config to get CFLAGS and LIBS])
-  LIBMIT_KRB5_CFLAGS="-I/usr/include/kerberosv5 `$ac_krb5_config --cflags krb5 2>/dev/null`"
-  LIBMIT_KRB5_LIBS="`$ac_krb5_config --libs krb5 2>/dev/null`"
+  LIBMIT_KRB5_CFLAGS="-I/usr/include/kerberosv5 `$krb5_config --cflags krb5 2>/dev/null`"
+  LIBMIT_KRB5_LIBS="`$krb5_config --libs krb5 2>/dev/null`"
   # Solaris 10 Update 11 patches the krb5-config tool to produce stderr messages on stdout.
-  SOLARIS_BROKEN_KRB5CONFIG_GSSAPI="`$ac_krb5_config --libs gssapi 2>/dev/null | grep "krb5-config"`"
+  SOLARIS_BROKEN_KRB5CONFIG_GSSAPI="`$krb5_config --libs gssapi 2>/dev/null | grep "krb5-config"`"
   AS_IF([test "x$SOLARIS_BROKEN_KRB5CONFIG_GSSAPI" = "x"],[
-    LIBMIT_KRB5_CFLAGS="$LIBMIT_KRB5_CFLAGS `$ac_krb5_config --cflags gssapi 2>/dev/null`"
-    LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS `$ac_krb5_config --libs gssapi 2>/dev/null`"
-  ])
-  CPPFLAGS="$LIBMIT_KRB5_CFLAGS $CPPFLAGS"
-  LIBS="$LIBMIT_KRB5_LIBS $LIBS"
-  missing_required=no
-  AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
-  AC_CHECK_LIB(krb5, [main], [LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS -lkrb5"],[
-    AC_MSG_WARN([library 'krb5' is required for Solaris Kerberos])
-    missing_required=yes
-  ])
-  AC_CHECK_LIB(gss, [main], [LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS -lgss"],[
-    AC_MSG_WARN([library 'gss' is required for Solaris Kerberos])
-    missing_required=yes
-  ])
-  AS_IF([test "x$missing_required" = "xyes"],[LIBMIT_KRB5_LIBS=""],[
-    LIBS="$LIBMIT_KRB5_LIBS $LIBS"
-    AC_DEFINE(USE_SOLARIS_KRB5,1,[Solaris Kerberos support is available])
-    AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-    AC_CHECK_HEADERS(gssapi/gssapi_ext.h gssapi/gssapi_generic.h)
-    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
-    AC_CHECK_HEADERS(profile.h)
-    SQUID_CHECK_KRB5_FUNCS
+    LIBMIT_KRB5_CFLAGS="$LIBMIT_KRB5_CFLAGS `$krb5_config --cflags gssapi 2>/dev/null`"
+    LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS `$krb5_config --libs gssapi 2>/dev/null`"
   ])
 ])
 
@@ -170,29 +151,23 @@ gss_OID gss_mech_spnego = &_gss_mech_spnego;
   [ squid_cv_have_spnego=yes ], [ squid_cv_have_spnego=no ],[:])])
 ])
 
-dnl checks that krb5 is functional. Sets squid_cv_working_krb5
-AC_DEFUN([SQUID_CHECK_WORKING_KRB5],[
-  AC_CACHE_CHECK([for working krb5], squid_cv_working_krb5, [
+dnl check whether krb5_get_init_creds_opt_free() requires a context
+AC_DEFUN([SQUID_CHECK_KRB5_GET_INIT_CREDS_FREE_CONTEXT],[
+  AC_CACHE_CHECK([for krb5_get_init_creds_free requires krb5_context],squid_cv_krb5_get_init_creds_free_context,[
     SQUID_STATE_SAVE(squid_krb5_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_LINK_IFELSE([AC_LANG_SOURCE([[
-#include "compat/krb5.h"
-int
-main(void)
-{
+    AC_COMPILE_IFELSE([
+      AC_LANG_PROGRAM([[#include "compat/krb5.h"]],[[
         krb5_context context;
-
-        krb5_init_context(&context);
-
-        return 0;
-}
-  ]])], [ squid_cv_working_krb5=yes ], [ squid_cv_working_krb5=no ],[:])])
-  SQUID_STATE_ROLLBACK(squid_krb5_test)
-  AS_IF([test "x$squid_cv_working_krb5" = "xno" -a `echo $LIBS | grep -i -c "(-)L"` -gt 0],[
-    AC_MSG_NOTICE([Check Runtime library path !])
+        krb5_get_init_creds_opt *options = nullptr;
+        krb5_get_init_creds_opt_free(context, options);
+      ]])],
+    [squid_cv_krb5_get_init_creds_free_context=yes],
+    [squid_cv_krb5_get_init_creds_free_context=no])
+    SQUID_STATE_ROLLBACK(squid_krb5_test)
   ])
-])
-
+  SQUID_DEFINE_BOOL(HAVE_KRB5_GET_INIT_CREDS_FREE_CONTEXT,$squid_cv_krb5_get_init_creds_free_context,[krb5_get_init_creds_free requires krb5_context])
+]) dnl SQUID_CHECK_KRB5_GET_INIT_CREDS_FREE_CONTEXT
 
 dnl checks for existence of krb5 functions
 AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
@@ -253,19 +228,6 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
   AC_CHECK_LIB(krb5, krb5_get_init_creds_opt_alloc,
     AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC,1,
       [Define to 1 if you have krb5_get_init_creds_opt_alloc]),)
-  AC_MSG_CHECKING([for krb5_get_init_creds_free requires krb5_context])
-  SQUID_STATE_SAVE(squid_krb5_test)
-  CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include "compat/krb5.h"
-    ]],[[krb5_context context;
-	 krb5_get_init_creds_opt *options;
-	 krb5_get_init_creds_opt_free(context, options)]])],[
-	AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_FREE_CONTEXT,1,
-		  [Define to 1 if you krb5_get_init_creds_free requires krb5_context])
-	AC_MSG_RESULT(yes)
-    ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
-  SQUID_STATE_ROLLBACK(squid_krb5_test)
 
   AC_CHECK_FUNCS(gss_map_name_to_any,
     AC_DEFINE(HAVE_GSS_MAP_ANY_TO_ANY,1,
@@ -274,21 +236,86 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
     AC_DEFINE(HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT,1,
       [Define to 1 if you have gsskrb5_extract_authz_data_from_sec_context]),)
 
-  SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
-  SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_CACHE,$squid_cv_memory_cache,
-       [Define if kerberos has MEMORY: cache support])
-
-  SQUID_CHECK_KRB5_CONTEXT_MEMORY_KEYTAB
-  SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_KEYTAB,$squid_cv_memory_keytab,
-       [Define if kerberos has MEMORY: keytab support])
-
-  SQUID_CHECK_WORKING_GSSAPI
-  SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
-
-  SQUID_CHECK_SPNEGO_SUPPORT
-  SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
-
-  SQUID_CHECK_WORKING_KRB5
-  SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
+  SQUID_CHECK_KRB5_GET_INIT_CREDS_FREE_CONTEXT
 ])
 
+dnl checks that krb5 is functional. Sets squid_cv_working_krb5
+AC_DEFUN([SQUID_CHECK_WORKING_KRB5],[
+  AC_REQUIRE([SQUID_CHECK_KRB5_FUNCS])
+  AC_REQUIRE([SQUID_STATE_SAVE])
+  AC_REQUIRE([SQUID_STATE_ROLLBACK])
+
+  missing_required=no
+  AS_IF([test "x$LIBMIT_KRB5_LIBS" = "x"],[
+    AS_CASE("$squid_host_os",
+      ["darwin"],[
+        AC_DEFINE(USE_APPLE_KRB5,1,[Apple Kerberos support is available])
+        AC_CHECK_LIB(resolv,[main],[LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS -lresolv"],[
+          AC_MSG_WARN([library 'resolv' is required for Apple Kerberos])
+          missing_required=yes
+        ])
+      ],
+      ["solaris"],[
+        SQUID_CHECK_SOLARIS_KRB5_PATHS
+        CPPFLAGS="$LIBMIT_KRB5_CFLAGS $CPPFLAGS"
+        LIBS="$LIBMIT_KRB5_PATH $LIBMIT_KRB5_LIBS $LIBS"
+        AC_CHECK_LIB(krb5,[main],[LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS -lkrb5"],[
+          AC_MSG_WARN([library 'krb5' is required for Solaris Kerberos])
+          missing_required=yes
+        ])
+        AC_CHECK_LIB(gss,[main],[LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS -lgss"],[
+          AC_MSG_WARN([library 'gss' is required for Solaris Kerberos])
+          missing_required=yes
+        ])
+        AS_IF([test "x$ac_cv_lib_krb5_main" = "xno" -o "x$ac_cv_lib_gss_main" = "xno"],[
+          LIBMIT_KRB5_LIBS=""
+        ],[
+          AC_DEFINE(USE_SOLARIS_KRB5,1,[Solaris Kerberos support is available])
+        ])
+      ]
+    )
+  ])
+
+  AS_IF([test "x$missing_required" = "xno"],[
+    dnl checks for headers shared by Kerberos flavours
+    AC_CHECK_HEADERS([ \
+        gssapi.h \
+        gssapi/gssapi.h \
+        gssapi/gssapi_krb5.h \
+        gssapi/gssapi_ext.h \
+        gssapi/gssapi_generic.h \
+        krb5.h \
+        com_err.h \
+        et/com_err.h \
+        profile.h \
+    ])
+
+    SQUID_CHECK_KRB5_FUNCS
+
+    SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
+    SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_CACHE,$squid_cv_memory_cache,[Define if kerberos has MEMORY: cache support])
+
+    SQUID_CHECK_KRB5_CONTEXT_MEMORY_KEYTAB
+    SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_KEYTAB,$squid_cv_memory_keytab,[Define if kerberos has MEMORY: keytab support])
+
+    SQUID_CHECK_WORKING_GSSAPI
+    SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
+
+    SQUID_CHECK_SPNEGO_SUPPORT
+    SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
+
+    AC_CACHE_CHECK([for working krb5],squid_cv_working_krb5,[
+      SQUID_STATE_SAVE(squid_krb5_test)
+      CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
+      AC_RUN_IFELSE([
+        AC_LANG_PROGRAM([[#include "compat/krb5.h"]],[[krb5_context c; krb5_init_context(&c);]])
+      ],[squid_cv_working_krb5=yes],[squid_cv_working_krb5=no],[:])
+      SQUID_STATE_ROLLBACK(squid_krb5_test)
+    ])
+    AS_IF([test "x$squid_cv_working_krb5" = "xyes"],[
+      SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
+    ],[test "x$squid_cv_working_krb5" = "xno" -a `echo $LIBS | grep -i -c "(-)L"` -gt 0],[
+      AC_MSG_NOTICE([Check Runtime library path !])
+    ])
+  ])
+]) dnl SQUID_CHECK_WORKING_KRB5

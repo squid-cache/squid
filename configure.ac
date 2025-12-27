@@ -1138,29 +1138,11 @@ AC_SUBST(SSLLIB)
 
 # Kerberos support libraries: MIT
 SQUID_AUTO_LIB(mit-krb5,[MIT Kerberos],[LIB_KRB5])
-AH_TEMPLATE(USE_APPLE_KRB5,[Apple Kerberos support is available])
-AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
 SQUID_CHECK_LIB_WORKS(mit-krb5,[
-  AS_IF([test "x$squid_host_os" = "xsolaris"],[
-    # pkg-config not available for Solaris krb5 implementation
-    SQUID_CHECK_SOLARIS_KRB5
-  ],[
-    PKG_CHECK_MODULES([LIBMIT_KRB5],[mit-krb5 mit-krb5-gssapi],[
-      AS_IF([test "x$squid_host_os" = "xdarwin"],[
-        AC_DEFINE(USE_APPLE_KRB5,1,[Apple Kerberos support is available])
-        AC_CHECK_LIB(resolv,[main],[LIBMIT_KRB5_LIBS="$LIBMIT_KRB5_LIBS -lresolv"],[
-          AC_MSG_ERROR([library 'resolv' is required for Apple Kerberos])
-        ])
-      ])
-      CPPFLAGS="$LIBMIT_KRB5_CFLAGS $CPPFLAGS"
-      LIBS="$LIBMIT_KRB5_PATH $LIBMIT_KRB5_LIBS $LIBS"
-      AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-      AC_CHECK_HEADERS(gssapi/gssapi_ext.h gssapi/gssapi_generic.h)
-      AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
-      AC_CHECK_HEADERS(profile.h)
-      SQUID_CHECK_KRB5_FUNCS
-    ],[:])
-  ])
+  PKG_CHECK_MODULES([LIBMIT_KRB5],[mit-krb5 mit-krb5-gssapi],[:],[:])
+  CPPFLAGS="$LIBMIT_KRB5_CFLAGS $CPPFLAGS"
+  LIBS="$LIBMIT_KRB5_PATH $LIBMIT_KRB5_LIBS $LIBS"
+  SQUID_CHECK_WORKING_KRB5
 ])
 
 # Kerberos support libraries: Heimdal
@@ -1173,11 +1155,8 @@ SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
     ])
     AS_IF([test "x$LIBHEIMDAL_KRB5_LIBS" != "x" ],[
       CPPFLAGS="$LIBHEIMDAL_KRB5_CFLAGS $CPPFLAGS"
-      AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-      AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
-
       LIBS="$LIBHEIMDAL_KRB5_PATH $LIBHEIMDAL_KRB5_LIBS $LIBS"
-      SQUID_CHECK_KRB5_FUNCS
+      SQUID_CHECK_WORKING_KRB5
     ])
   ])
 ])
@@ -1186,17 +1165,10 @@ SQUID_CHECK_LIB_WORKS(heimdal-krb5,[
 SQUID_AUTO_LIB(gss,[GNU gss],[LIBGSS])
 SQUID_CHECK_LIB_WORKS(gss,[
   AS_IF([test "x$LIBMIT_KRB5_LIBS" = "x" -a "x$LIBHEIMDAL_KRB5_LIBS" = "x"],[
-    PKG_CHECK_MODULES([LIBGSS],[gss],[
-      CPPFLAGS="$LIBGSS_CFLAGS $CPPFLAGS"
-      AC_CHECK_HEADERS(gss.h)
-      LIBS="$LIBGSS_PATH $LIBS"
-      SQUID_CHECK_WORKING_GSSAPI
-      SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
-      SQUID_CHECK_SPNEGO_SUPPORT
-      SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
-      SQUID_CHECK_WORKING_KRB5
-      SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
-    ],[:])
+    PKG_CHECK_MODULES([LIBGSS],[gss],[:],[:])
+    CPPFLAGS="$LIBGSS_CFLAGS $CPPFLAGS"
+    LIBS="$LIBGSS_PATH $LIBGSS_LIBS $LIBS"
+    SQUID_CHECK_WORKING_KRB5
   ])
 ])
 
