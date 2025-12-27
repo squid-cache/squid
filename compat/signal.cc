@@ -30,9 +30,6 @@ GetProcessName(pid_t pid, char *ProcessName)
 
     if (EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeeded)) {
         GetModuleBaseName(hProcess, hMod, ProcessName, sizeof(ProcessName));
-    } else {
-        CloseHandle(hProcess);
-        return;
     }
     CloseHandle(hProcess);
 }
