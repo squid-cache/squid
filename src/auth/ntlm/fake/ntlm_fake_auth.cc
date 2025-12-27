@@ -142,7 +142,6 @@ main(int argc, char *argv[])
     int decodedLen;
     char user[NTLM_MAX_FIELD_LENGTH], domain[NTLM_MAX_FIELD_LENGTH];
     char *p;
-    char helper_command[3];
     int len;
 
     setbuf(stdout, nullptr);
@@ -176,7 +175,8 @@ main(int argc, char *argv[])
         }
 
         if (buflen > 3 && NTLM_packet_debug_enabled) {
-            xstrncpy(helper_command, buf, 2);
+            char helper_command[3];
+            xstrncpy(helper_command, buf, sizeof(helper_command));
             helper_command[2] = '\0';
             debug("Got '%s' from Squid with data:\n", helper_command);
             hex_dump((unsigned char *)decodedBuf, decodedLen);
