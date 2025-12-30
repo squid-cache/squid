@@ -254,9 +254,10 @@ dnl 2) name of the library for human reading
 AC_DEFUN([SQUID_AUTO_LIB],[
   AC_PREREQ([2.61])
   m4_pushdef([VARIABLE], m4_toupper(m4_translit([LIB$1],[-+.],[___])))
-  m4_pushdef([OPTION], m4_ifdef([OPTOUT],[--with[]OPTOUT[]-$1],[--with-$1]))
+  m4_pushdef([OPTION], m4_ifdef([OPTOUT],[--with-$1],[--without-$1]))
+  m4_pushdef([OPTIONTXT], m4_ifdef([OPTOUT],[with],[without]))
   m4_pushdef([WITHVAR], m4_translit([with_$1],[-+.],[___]))
-  AC_ARG_WITH([$1],AS_HELP_STRING([OPTION],[Compile without the $2 library.]),[
+  AC_ARG_WITH([$1],AS_HELP_STRING([OPTION],[Compile OPTIONTXT the $2 library.]),[
     AS_CASE(["$withval"],[yes|no],,[
       AS_IF([test ! -d "$withval"],AC_MSG_ERROR([--with-$1 path does not point to a directory]))
       WITHVAR=yes
@@ -266,6 +267,8 @@ AC_DEFUN([SQUID_AUTO_LIB],[
     ])
   ])
   m4_popdef([WITHVAR])
+  m4_popdef([OPTIONTXT])
+  m4_popdef([OPTION])
   m4_popdef([VARIABLE])
 ])
 dnl same as SQUID_AUTO_LIB but for default-disabled libraries
