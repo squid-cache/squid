@@ -9,6 +9,7 @@
 /* DEBUG: section 37    ICMP Routines */
 
 #include "squid.h"
+#include "compat/unistd.h"
 #include "debug/Stream.h"
 #include "Icmp.h"
 #include "time/gadgets.h"
@@ -26,7 +27,7 @@ Icmp::Close()
 {
 #if USE_ICMP
     if (icmp_sock > 0)
-        close(icmp_sock);
+        xclose(icmp_sock);
     icmp_sock = -1;
     icmp_ident = 0;
 #endif

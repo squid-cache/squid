@@ -21,6 +21,8 @@
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "compat/cmsg.h"
+#include "compat/socket.h"
+#include "compat/unistd.h"
 #include "DescriptorSet.h"
 #include "event.h"
 #include "fd.h"
@@ -129,7 +131,7 @@ comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from)
     debugs(5,8, "comm_udp_recvfrom: FD " << fd << " from " << from);
     struct addrinfo *AI = nullptr;
     Ip::Address::InitAddr(AI);
-    int x = recvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
+    int x = xrecvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
     from = *AI;
     Ip::Address::FreeAddr(AI);
     return x;
@@ -145,7 +147,7 @@ comm_udp_recv(int fd, void *buf, size_t len, int flags)
 ssize_t
 comm_udp_send(int s, const void *buf, size_t len, int flags)
 {
-    return send(s, buf, len, flags);
+    return xsend(s, buf, len, flags);
 }
 
 bool
@@ -183,7 +185,7 @@ comm_local_port(int fd)
 
     Ip::Address::InitAddr(addr);
 
-    if (getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
+    if (xgetsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: " << MYNAME << "Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerr(xerrno));
         Ip::Address::FreeAddr(addr);
@@ -211,7 +213,7 @@ commSetBindAddressNoPort(const int fd)
 {
 #if defined(IP_BIND_ADDRESS_NO_PORT)
     int flag = 1;
-    if (setsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, reinterpret_cast<char*>(&flag), sizeof(flag)) < 0) {
+    if (xsetsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, &flag, sizeof(flag)) < 0) {
         const auto savedErrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: setsockopt(IP_BIND_ADDRESS_NO_PORT) failure: " << xstrerr(savedErrno));
     }
@@ -225,7 +227,7 @@ commBind(int s, struct addrinfo &inaddr)
 {
     ++ statCounter.syscalls.sock.binds;
 
-    if (bind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0) {
+    if (xbind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0) {
         debugs(50, 6, "bind socket FD " << s << " to " << fd_table[s].local_addr);
         return Comm::OK;
     }
@@ -294,7 +296,7 @@ static void
 comm_set_v6only(int fd, int tos)
 {
 #ifdef IPV6_V6ONLY
-    if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0) {
+    if (xsetsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &tos, sizeof(int)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "setsockopt(IPV6_V6ONLY) " << (tos?"ON":"OFF") << " for FD " << fd << ": " << xstrerr(xerrno));
     }
@@ -336,7 +338,7 @@ comm_set_transparent(int fd)
 
 #if defined(soLevel) && defined(soFlag)
     int tos = 1;
-    if (setsockopt(fd, soLevel, soFlag, (char *) &tos, sizeof(int)) < 0) {
+    if (xsetsockopt(fd, soLevel, soFlag, &tos, sizeof(int)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "setsockopt(TPROXY) on FD " << fd << ": " << xstrerr(xerrno));
     } else {
@@ -378,7 +380,7 @@ comm_openex(int sock_type,
 
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
-    new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+    new_socket = xsocket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
     const auto firstErrNo = errno;
 
     /* under IPv6 there is the possibility IPv6 is present but disabled. */
@@ -391,7 +393,7 @@ comm_openex(int sock_type,
         AI->ai_socktype = sock_type;
         AI->ai_protocol = proto;
         debugs(50, 3, "Attempt fallback open socket for: " << addr );
-        new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+        new_socket = xsocket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
         // TODO: Report failures of this second socket() call.
         // if both socket() calls fail, we use firstErrNo
         debugs(50, 2, "attempt open " << note << " socket on: " << addr);
@@ -506,7 +508,7 @@ comm_apply_flags(int new_socket,
 #if defined(SO_REUSEPORT)
         if (flags & COMM_REUSEPORT) {
             int on = 1;
-            if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEPORT, reinterpret_cast<char*>(&on), sizeof(on)) < 0) {
+            if (xsetsockopt(new_socket, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0) {
                 const auto savedErrno = errno;
                 const auto errorMessage = ToSBuf("cannot enable SO_REUSEPORT socket option when binding to ",
                                                  addr, ": ", xstrerr(savedErrno));
@@ -671,7 +673,8 @@ comm_connect_addr(int sock, const Ip::Address &address)
         ++ statCounter.syscalls.sock.connects;
 
         errno = 0;
-        if ((x = connect(sock, AI->ai_addr, AI->ai_addrlen)) < 0) {
+        x = xconnect(sock, AI->ai_addr, AI->ai_addrlen);
+        if (x < 0) {
             xerrno = errno;
             debugs(5,5, "sock=" << sock << ", addrinfo(" <<
                    " flags=" << AI->ai_flags <<
@@ -693,7 +696,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
     } else {
         errno = 0;
         errlen = sizeof(err);
-        x = getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
+        x = xgetsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
         if (x == 0)
             xerrno = err;
 
@@ -770,7 +773,7 @@ commConfigureLinger(const int fd, const OnOff enabled)
 
     fd_table[fd].flags.harshClosureRequested = (l.l_onoff && !l.l_linger); // close(2) sends TCP RST if true
 
-    if (setsockopt(fd, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_LINGER, &l, sizeof(l)) < 0) {
         const auto xerrno = errno;
         debugs(50, DBG_CRITICAL, "ERROR: Failed to set closure behavior (SO_LINGER) for FD " << fd << ": " << xstrerr(xerrno));
     }
@@ -813,7 +816,7 @@ comm_close_complete(const int fd)
     F->ssl.reset();
     F->dynamicTlsContext.reset();
     fd_close(fd); /* update fdstat */
-    close(fd);
+    xclose(fd);
 
     ++ statCounter.syscalls.sock.closes;
 
@@ -917,7 +920,7 @@ comm_udp_sendto(int fd,
 
     struct addrinfo *AI = nullptr;
     to_addr.getAddrInfo(AI, fd_table[fd].sock_family);
-    int x = sendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
+    int x = xsendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
     int xerrno = errno;
     Ip::Address::FreeAddr(AI);
 
@@ -1012,7 +1015,7 @@ static void
 commSetReuseAddr(int fd)
 {
     int on = 1;
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
     }
@@ -1021,16 +1024,16 @@ commSetReuseAddr(int fd)
 static void
 commSetTcpRcvbuf(int fd, int size)
 {
-    if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(size)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
     }
-    if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *) &size, sizeof(size)) < 0) {
+    if (xsetsockopt(fd, SOL_SOCKET, SO_SNDBUF, &size, sizeof(size)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
     }
 #ifdef TCP_WINDOW_CLAMP
-    if (setsockopt(fd, SOL_TCP, TCP_WINDOW_CLAMP, (char *) &size, sizeof(size)) < 0) {
+    if (xsetsockopt(fd, SOL_TCP, TCP_WINDOW_CLAMP, &size, sizeof(size)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ", SIZE " << size << ": " << xstrerr(xerrno));
     }
@@ -1124,7 +1127,7 @@ commSetTcpNoDelay(int fd)
 {
     int on = 1;
 
-    if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0) {
+    if (xsetsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
     }
@@ -1696,7 +1699,7 @@ comm_open_uds(int sock_type,
 
     debugs(50, 3, "Attempt open socket for: " << addr->sun_path);
 
-    if ((new_socket = socket(AI.ai_family, AI.ai_socktype, AI.ai_protocol)) < 0) {
+    if ((new_socket = xsocket(AI.ai_family, AI.ai_socktype, AI.ai_protocol)) < 0) {
         int xerrno = errno;
         /* Increase the number of reserved fd's if calls to socket()
          * are failing because the open file table is full.  This

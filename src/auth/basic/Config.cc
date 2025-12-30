@@ -57,13 +57,7 @@ Auth::Basic::Config::active() const
 bool
 Auth::Basic::Config::configured() const
 {
-    if ((authenticateProgram != nullptr) && (authenticateChildren.n_max != 0) && !realm.isEmpty()) {
-        debugs(29, 9, "returning configured");
-        return true;
-    }
-
-    debugs(29, 9, "returning unconfigured");
-    return false;
+    return (SchemeConfig::configured() && !realm.isEmpty());
 }
 
 const char *

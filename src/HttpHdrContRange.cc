@@ -88,7 +88,7 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
 
     spec->length = size_diff(last_pos + 1, spec->offset);
 
-    /* we managed to parse, check if the result makes sence */
+    /* we managed to parse, check if the result makes sense */
     if (spec->length <= 0) {
         debugs(68, 2, "invalid range (" << spec->offset << " += " <<
                (long int) spec->length << ") in resp-range-spec near: '" << field << "'");

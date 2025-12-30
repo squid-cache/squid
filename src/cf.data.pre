@@ -798,8 +798,8 @@ IF HAVE_AUTH_MODULE_BASIC
 		forced to lower case before user credentials are checked or stored.
 
 		Most user databases are case insensitive, allowing the same username to be
-		spelled using both lower and upper case letters. For such databases, any
-		casesenstive setting should work, but forcing usernames to lower case may
+		spelled using both lower and upper case letters. For such databases,
+		either setting should work, but forcing usernames to lower case may
 		still make a big difference for Squid internal caches like those used by
 		an external ACL with %un logformat code in FORMAT and a user_max_ip ACL.
 
@@ -1217,24 +1217,13 @@ ENDIF
 	acl aclname dstdomain [-n] .foo.com ...
 	  # Destination server from URL [fast]
 	acl aclname srcdom_regex [-i] \.foo\.com ...
-	  # regex matching client name [slow]
+	  # POSIX extended regex matching client name [slow]
 	acl aclname dstdom_regex [-n] [-i] \.foo\.com ...
-	  # regex matching server [fast]
+	  # POSIX extended regex matching server [fast]
 	  #
 	  # For dstdomain and dstdom_regex a reverse lookup is tried if a IP
 	  # based URL is used and no match is found. The name "none" is used
 	  # if the reverse lookup fails.
-
-	acl aclname src_as number ...
-	acl aclname dst_as number ...
-	  # [fast]
-	  # Except for access control, AS numbers can be used for
-	  # routing of requests to specific caches. Here's an
-	  # example for routing all requests for AS#1241 and only
-	  # those to mycache.mydomain.net:
-	  # acl asexample dst_as 1241
-	  # cache_peer_access mycache.mydomain.net allow asexample
-	  # cache_peer_access mycache_mydomain.net deny all
 
 	acl aclname peername myPeer ...
 	acl aclname peername_regex [-i] regex-pattern ...
@@ -1255,11 +1244,32 @@ ENDIF
 	  #  h1:m1 must be less than h2:m2
 
 	acl aclname url_regex [-i] ^http:// ...
-	  # regex matching on whole URL [fast]
+	  # POSIX extended regex matching on whole URL [fast]
+	  #
+	  # If request URL contains only valid pct-encoded triplets (RFC 3986),
+	  # all of them are decoded before matching (e.g., `%25` triplet is
+	  # replaced with a single `%` character). If request URL contains at
+	  # least one `%` character that does not start a valid pct-encoded
+	  # triplet (e.g., `%%`, `%X`, or `%2Y`), then the URL is not decoded at
+	  # all (i.e. the raw request URL is used for matching).
+	  #
+	  # If a request URL is decoded as described above, then all request URL
+	  # characters starting with the decoded `%00` pct-encoded triplet (if
+	  # any) are ignored during matching. There is currently no way to match
+	  # that triplet itself in a correctly percent-encoded URL.
+	  #
+	  # ACL parameters are not decoded.
+
 	acl aclname urllogin [-i] [^a-zA-Z0-9] ...
-	  # regex matching on URL login field
+	  # POSIX extended regex matching on URL login field [fast]
+	  #
+	  # This ACL does not match requests with a URL that lacks a login field.
+	  #
+	  # This ACL handles RFC 3986 pct-encoded triplets in the login field as
+	  # url_regex ACL handles those triplets in the entire request URL.
+
 	acl aclname urlpath_regex [-i] \.gif$ ...
-	  # regex matching on URL path [fast]
+	  # POSIX extended regex matching on URL path [fast]
 
 	acl aclname port 80 70 21 0-1024 ...
 	  # destination TCP port (or port range) of the request [fast]
@@ -1279,11 +1289,12 @@ ENDIF
 	acl aclname http_status 200 301 500- 400-403 ...
 	  # status code in reply [fast]
 
-	acl aclname browser [-i] regexp ...
-	  # pattern match on User-Agent header (see also req_header below) [fast]
+	acl aclname browser [-i] regex ...
+	  # POSIX extended regex match on User-Agent header
+	  # (see also req_header below) [fast]
 
-	acl aclname referer_regex [-i] regexp ...
-	  # pattern match on Referer header [fast]
+	acl aclname referer_regex [-i] regex ...
+	  # POSIX extended regex match on Referer header [fast]
 	  # Referer is highly unreliable, so use with care
 
 	acl aclname proxy_auth [-i] username ...
@@ -1297,8 +1308,8 @@ ENDIF
 	  # their parameter syntax and username matching algorithm.
 
 	acl aclname proxy_auth_regex [-i] username_pattern ...
-	  # perform http authentication challenge to the client and regex match
-	  # supplied username [slow]
+	  # perform http authentication challenge to the client and
+	  # POSIX extended regex match on supplied username [slow]
 	  #
 	  # Will use proxy authentication in forward-proxy scenarios, and plain
 	  # http authentication in reverse-proxy scenarios
@@ -1346,19 +1357,19 @@ ENDIF
 	  # or ratio of matches:non-matches (3:5).
 
 	acl aclname req_mime_type [-i] mime-type ...
-	  # regex match against the mime type of the request generated
+	  # POSIX extended regex match against the mime type of the request generated
 	  # by the client. Can be used to detect file upload or some
 	  # types HTTP tunneling requests [fast]
 	  # NOTE: This does NOT match the reply. You cannot use this
 	  # to match the returned file type.
 
 	acl aclname req_header header-name [-i] any\.regex\.here
-	  # regex match against any of the known request headers.  May be
+	  # POSIX extended regex match against any of the known request headers.  May be
 	  # thought of as a superset of "browser", "referer" and "mime-type"
 	  # ACL [fast]
 
 	acl aclname rep_mime_type [-i] mime-type ...
-	  # regex match against the mime type of the reply received by
+	  # POSIX extended regex match against the mime type of the reply received by
 	  # squid. Can be used to detect file download or some
 	  # types HTTP tunneling requests. [fast]
 	  # NOTE: This has no effect in http_access rules. It only has
@@ -1366,7 +1377,7 @@ ENDIF
 	  # http_reply_access.
 
 	acl aclname rep_header header-name [-i] any\.regex\.here
-	  # regex match against any of the known reply headers. May be
+	  # POSIX extended regex match against any of the known reply headers. May be
 	  # thought of as a superset of "browser", "referer" and "mime-type"
 	  # ACLs [fast]
 
@@ -1390,7 +1401,7 @@ ENDIF
 	  # syntax and username matching algorithm.
 
 	acl aclname ext_user_regex [-i] username_pattern ...
-	  # regex match on username returned by external acl helper [slow]
+	  # POSIX extended regex match on username returned by external acl helper [slow]
 
 	acl aclname tag tagvalue ...
 	  # string match on tag returned by external acl helper [fast]
@@ -1510,7 +1521,6 @@ ENDIF
 	  #  htcp: matches HTCP requests from peers
 	  #  icp: matches ICP requests to peers
 	  #  icmp: matches ICMP RTT database (NetDB) requests to peers
-	  #  asn: matches asns db requests
 	  #  internal: matches any of the above
 	  #  client: matches transactions containing an HTTP or FTP
 	  #     client request received at a Squid *_port
@@ -1641,7 +1651,7 @@ IF USE_OPENSSL
 	  # connection, this target is the destination IP address).
 
 	acl aclname ssl::server_name_regex [-i] \.foo\.com ...
-	  # regex matches server name obtained from various sources [fast]
+	  # POSIX extended regex matches server name obtained from various sources [fast]
 	  #
 	  # See ssl::server_name for details, including IPv6 address formatting
 	  # caveats. Use case-insensitive matching (i.e. -i option) to reduce
@@ -1697,7 +1707,6 @@ ENDIF
 
 	Examples:
 		acl macaddress arp 09:00:2b:23:45:67
-		acl myexample dst_as 1241
 		acl password proxy_auth REQUIRED
 		acl fileupload req_mime_type -i ^multipart/form-data$
 		acl javascript rep_mime_type -i ^application/x-javascript$
@@ -2049,22 +2058,24 @@ LOC: Config.accessList.htcp
 DEFAULT: none
 DEFAULT_DOC: Deny, unless rules exist in squid.conf.
 DOC_START
-	Allowing or Denying access to the HTCP port based on defined
-	access lists
+	Controls whether HTCP TST requests received on htcp_port are allowed.
 
 	htcp_access  allow|deny [!]aclname ...
 
-	See also htcp_clr_access for details on access control for
-	cache purge (CLR) HTCP messages.
+	This directive does not control whether HTCP CLR requests are allowed.
+	Use htcp_clr_access directive for that.
+
+	This directive does not control whether HTCP requests with other opcodes
+	are allowed (e.g., NOP, MON, and SET). Squid ignores those HTCP requests.
 
 	NOTE: The default if no htcp_access lines are present is to
-	deny all traffic. This default may cause problems with peers
+	deny all HTCP TST traffic. This default may cause problems with peers
 	using the htcp option.
 
 	This clause only supports fast acl types.
 	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
-# Allow HTCP queries from local networks only
+# Allow HTCP TST queries from local networks only
 #htcp_access allow localnet
 #htcp_access deny all
 DOC_END
@@ -2076,11 +2087,13 @@ LOC: Config.accessList.htcp_clr
 DEFAULT: none
 DEFAULT_DOC: Deny, unless rules exist in squid.conf.
 DOC_START
-	Allowing or Denying access to purge content using HTCP based
-	on defined access lists.
-	See htcp_access for details on general HTCP access control.
+	Controls whether HTCP CLR requests received on htcp_port are allowed.
+	See htcp_access for controlling other HTCP messages.
 
 	htcp_clr_access  allow|deny [!]aclname ...
+
+	HTCP CLR requests purge matching cached entries. They may be forwarded to
+	specially marked cache_peers (see cache_peer HTCP options for details).
 
 	This clause only supports fast acl types.
 	See https://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
@@ -5300,7 +5313,7 @@ DOC_START
 		Place: the filename and path to be written.
 
 	daemon	Very similar to stdio. But instead of writing to disk the log
-		line is passed to a daemon helper for asychronous handling instead.
+		line is passed to a daemon helper for asynchronous handling instead.
 		Place: varies depending on the daemon.
 
 		log_file_daemon Place: the file name and path to be written.
@@ -6038,6 +6051,12 @@ DOC_START
 		snippets of that state. For example, Squid does not adjust
 		Location headers and embedded URLs after the helper rewrites
 		the request URL.
+
+		If Squid cannot parse the URL value returned by the helper, it logs a
+		critical cache.log ERROR message and uses the original request URL.
+		Supported URL format depends on the request method. For example,
+		CONNECT request URLs must use `host:port` form, while GET URLs start
+		with a `scheme:` prefix (e.g., `https://example.com/`).
 
 	  OK
 		Keep the client request intact.
@@ -8491,7 +8510,7 @@ DOC_START
 	and from neighbor caches.  The standard UDP port for ICP is 3130.
 
 	Example:
-		icp_port @DEFAULT_ICP_PORT@
+		icp_port 3130
 DOC_END
 
 NAME: htcp_port
@@ -8905,12 +8924,18 @@ NAME: email_err_data
 COMMENT: on|off
 TYPE: onoff
 LOC: Config.onoff.emailErrData
-DEFAULT: on
+DEFAULT: off
 DOC_START
 	If enabled, information about the occurred error will be
 	included in the mailto links of the ERR pages (if %W is set)
 	so that the email body contains the data.
 	Syntax is <A HREF="mailto:%w%W">%w</A>
+
+	SECURITY WARNING:
+		Request headers and other included facts may contain
+		sensitive information about transaction history, the
+		Squid instance, and its environment which would be
+		unavailable to error recipients otherwise.
 DOC_END
 
 NAME: deny_info
@@ -10344,7 +10369,6 @@ DOC_START
 	Some valid actions are (see cache manager menu for a full list):
 		5min
 		60min
-		asndb
 		authenticator
 		cbdata
 		client_list

@@ -9,6 +9,7 @@
 /* DEBUG: section 43    Windows AIOPS */
 
 #include "squid.h"
+#include "compat/unistd.h"
 #include "compat/win32_maperror.h"
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "DiskThreads.h"
@@ -653,7 +654,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
     case _AIO_OP_OPEN:
         if (cancelled && requestp->ret >= 0)
             /* The open() was cancelled but completed */
-            close(requestp->ret);
+            xclose(requestp->ret);
 
         squidaio_xstrfree(requestp->path);
 
@@ -662,7 +663,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
     case _AIO_OP_CLOSE:
         if (cancelled && requestp->ret < 0)
             /* The close() was cancelled and never got executed */
-            close(requestp->fd);
+            xclose(requestp->fd);
 
         break;
 
@@ -853,9 +854,9 @@ squidaio_close(int fd, squidaio_result_t * resultp)
 static void
 squidaio_do_close(squidaio_request_t * requestp)
 {
-    if ((requestp->ret = close(requestp->fd)) < 0) {
+    if ((requestp->ret = xclose(requestp->fd)) < 0) {
         debugs(43, DBG_CRITICAL, "squidaio_do_close: FD " << requestp->fd << ", errno " << errno);
-        close(requestp->fd);
+        xclose(requestp->fd);
     }
 
     requestp->err = errno;

@@ -204,7 +204,7 @@ heap_extractmin(heap * hp)
 
 /*
  * Remove the last node in HP.  Frees the heap internal structure and
- * returns the data pointes to by the last node.
+ * returns the data pointed to by the last node.
  */
 heap_t
 heap_extractlast(heap * hp)

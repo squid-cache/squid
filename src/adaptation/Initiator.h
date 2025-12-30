@@ -14,7 +14,7 @@
 #include "base/CbcPointer.h"
 
 /*
- * The ICAP Initiator is an ICAP vectoring point that initates ICAP
+ * The ICAP Initiator is an ICAP vectoring point that initiates ICAP
  * transactions. This interface exists to allow ICAP transactions to
  * signal their initiators that they have the answer from the ICAP server
  * or that the ICAP query has aborted and there will be no answer. It

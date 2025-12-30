@@ -15,6 +15,7 @@
 #include "anyp/PortCfg.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "compat/select.h"
 #include "fde.h"
 #include "globals.h"
 #include "ICP.h"
@@ -156,7 +157,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 
     ++ statCounter.syscalls.selects;
 
-    if (select(maxfd, &read_mask, &write_mask, nullptr, &zero_tv) < 1)
+    if (xselect(maxfd, &read_mask, &write_mask, nullptr, &zero_tv) < 1)
         return incoming_sockets_accepted;
 
     for (i = 0; i < nfds; ++i) {
@@ -320,7 +321,7 @@ Comm::DoSelect(int msec)
             poll_time.tv_sec = msec / 1000;
             poll_time.tv_usec = (msec % 1000) * 1000;
             ++ statCounter.syscalls.selects;
-            num = select(maxfd, &readfds, &writefds, nullptr, &poll_time);
+            num = xselect(maxfd, &readfds, &writefds, nullptr, &poll_time);
             int xerrno = errno;
             ++ statCounter.select_loops;
 
@@ -528,7 +529,7 @@ Comm::SelectLoopInit(void)
  * I spend the day chasing this core dump that occurs when both the client
  * and the server side of a cache fetch simultaneoulsy abort the
  * connection.  While I haven't really studied the code to figure out how
- * it happens, the snippet below may prevent the cache from exitting:
+ * it happens, the snippet below may prevent the cache from exiting:
  *
  * Call this from where the select loop fails.
  */

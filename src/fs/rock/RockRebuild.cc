@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/AsyncJobCalls.h"
+#include "compat/unistd.h"
 #include "debug/Messages.h"
 #include "fs/rock/RockDbCell.h"
 #include "fs/rock/RockRebuild.h"
@@ -354,7 +355,7 @@ Rock::Rebuild::start()
         failure("cannot open db", errno);
 
     char hdrBuf[SwapDir::HeaderSize];
-    if (read(fd, hdrBuf, sizeof(hdrBuf)) != SwapDir::HeaderSize)
+    if (xread(fd, hdrBuf, sizeof(hdrBuf)) != SwapDir::HeaderSize)
         failure("cannot read db header", errno);
 
     // slot prefix of SM_PAGE_SIZE should fit both core entry header and ours

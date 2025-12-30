@@ -25,6 +25,8 @@
 #include "StatCounters.h"
 #include "StatHist.h"
 #include "Store.h"
+#include "store/Controller.h"
+#include "StoreStats.h"
 #include "tools.h"
 #include "util.h"
 
@@ -409,11 +411,14 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
                                       SMI_GAUGE32);
         break;
 
-    case PERF_SYS_NUMOBJCNT:
+    case PERF_SYS_NUMOBJCNT: {
+        StoreInfoStats stats;
+        Store::Root().getStats(stats);
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) StoreEntry::inUseCount(),
+                                      (snint) (stats.mem.count + stats.swap.count),
                                       SMI_GAUGE32);
         break;
+    }
 
     default:
         *ErrP = SNMP_ERR_NOSUCHNAME;

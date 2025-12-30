@@ -44,6 +44,8 @@ public:
 private:
 
     static bool DecodeMask(const char *asc, Ip::Address &mask, int string_format_type);
+
+    bool containsVetted(const Ip::Address &needle) const;
 };
 
 class ACLIP : public Acl::Node

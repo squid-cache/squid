@@ -18,6 +18,7 @@
 #include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "CommCalls.h"
+#include "compat/socket.h"
 #include "compat/strtoll.h"
 #include "errorpage.h"
 #include "fd.h"
@@ -141,6 +142,7 @@ public:
 
     int checkAuth(const HttpHeader * req_hdr);
     void checkUrlpath();
+    std::optional<SBuf> decodedRequestUriPath() const;
     void buildTitleUrl();
     void writeReplyBody(const char *, size_t len);
     void completeForwarding() override;
@@ -695,6 +697,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
             switch (*ct) {
 
             case '\t':
+                safe_free(p->name); // TODO: properly handle multiple p->name occurrences
                 p->name = xstrndup(ct + 1, l + 1);
                 break;
 
@@ -708,6 +711,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                 if (tmp != ct + 1)
                     break;  /* not a valid integer */
 
+                safe_free(p->date); // TODO: properly handle multiple p->name occurrences
                 p->date = xstrdup(ctime(&tm));
 
                 *(strstr(p->date, "\n")) = '\0';
@@ -1075,6 +1079,8 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
 void
 Ftp::Gateway::checkUrlpath()
 {
+    // TODO: parse FTP URL syntax properly in AnyP::Uri::parse()
+
     // If typecode was specified, extract it and leave just the filename in
     // url.path. Tolerate trailing garbage or missing typecode value. Roughly:
     // [filename] ;type=[typecode char] [trailing garbage]
@@ -1122,8 +1128,8 @@ Ftp::Gateway::buildTitleUrl()
 
     SBuf authority = request->url.authority(request->url.getScheme() != AnyP::PROTO_FTP);
 
-    title_url.append(authority.rawContent(), authority.length());
-    title_url.append(request->url.path().rawContent(), request->url.path().length());
+    title_url.append(authority);
+    title_url.append(request->url.absolutePath());
 
     base_href = "ftp://";
 
@@ -1138,8 +1144,8 @@ Ftp::Gateway::buildTitleUrl()
         base_href.append("@");
     }
 
-    base_href.append(authority.rawContent(), authority.length());
-    base_href.append(request->url.path().rawContent(), request->url.path().length());
+    base_href.append(authority);
+    base_href.append(request->url.path());
     base_href.append("/");
 }
 
@@ -1158,7 +1164,7 @@ Ftp::Gateway::start()
     checkUrlpath();
     buildTitleUrl();
     debugs(9, 5, "FD " << (ctrl.conn ? ctrl.conn->fd : -1) << " : host=" << request->url.host() <<
-           ", path=" << request->url.path() << ", user=" << user << ", passwd=" << password);
+           ", path=" << request->url.absolutePath() << ", user=" << user << ", passwd=" << password);
     state = BEGIN;
     Ftp::Client::start();
 }
@@ -1213,7 +1219,7 @@ ftpReadWelcome(Ftp::Gateway * ftpState)
 
 /**
  * Translate FTP login failure into HTTP error
- * this is an attmpt to get the 407 message to show up outside Squid.
+ * this is an attempt to get the 407 message to show up outside Squid.
  * its NOT a general failure. But a correct FTP response type.
  */
 void
@@ -1243,7 +1249,7 @@ Ftp::Gateway::loginFailed()
     }
 
     failed(ERR_NONE, ctrl.replycode, err);
-    // any other problems are general falures.
+    // any other problems are general failures.
 
     HttpReply *newrep = err->BuildHttpReply();
     delete err;
@@ -1777,8 +1783,8 @@ ftpOpenListenSocket(Ftp::Gateway * ftpState, int fallback)
     if (fallback) {
         int on = 1;
         errno = 0;
-        if (setsockopt(ftpState->ctrl.conn->fd, SOL_SOCKET, SO_REUSEADDR,
-                       (char *) &on, sizeof(on)) == -1) {
+        if (xsetsockopt(ftpState->ctrl.conn->fd, SOL_SOCKET, SO_REUSEADDR,
+                        &on, sizeof(on)) == -1) {
             int xerrno = errno;
             // SO_REUSEADDR is only an optimization, no need to be verbose about error
             debugs(9, 4, "setsockopt failed: " << xstrerr(xerrno));
@@ -2220,6 +2226,7 @@ Ftp::Gateway::completedListing()
     entry->lock("Ftp::Gateway");
     ErrorState ferr(ERR_DIR_LISTING, Http::scOkay, request.getRaw(), fwd->al);
     ferr.ftp.listing = &listing;
+    safe_free(ferr.ftp.cwd_msg);
     ferr.ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
     ferr.ftp.server_msg = ctrl.message;
     ctrl.message = nullptr;
@@ -2297,10 +2304,18 @@ ftpReadQuit(Ftp::Gateway * ftpState)
     ftpState->serverComplete();
 }
 
+/// absolute request URI path after successful decoding of all pct-encoding sequences
+std::optional<SBuf>
+Ftp::Gateway::decodedRequestUriPath() const
+{
+    return AnyP::Uri::Decode(request->url.absolutePath());
+}
+
+/// \prec !ftpState->flags.try_slash_hack
+/// \prec ftpState->decodedRequestUriPath()
 static void
 ftpTrySlashHack(Ftp::Gateway * ftpState)
 {
-    char *path;
     ftpState->flags.try_slash_hack = 1;
     /* Free old paths */
 
@@ -2309,14 +2324,10 @@ ftpTrySlashHack(Ftp::Gateway * ftpState)
     if (ftpState->pathcomps)
         wordlistDestroy(&ftpState->pathcomps);
 
+    /* Build the new path */
+    // XXX: Conversion to c-string effectively truncates where %00 was decoded
     safe_free(ftpState->filepath);
-
-    /* Build the new path (urlpath begins with /) */
-    path = SBufToCstring(ftpState->request->url.path());
-
-    rfc1738_unescape(path);
-
-    ftpState->filepath = path;
+    ftpState->filepath = SBufToCstring(ftpState->decodedRequestUriPath().value());
 
     /* And off we go */
     ftpGetFile(ftpState);
@@ -2371,13 +2382,15 @@ ftpFail(Ftp::Gateway *ftpState)
            " reply code " << code << "flags(" <<
            (ftpState->flags.isdir?"IS_DIR,":"") <<
            (ftpState->flags.try_slash_hack?"TRY_SLASH_HACK":"") << "), " <<
+           "decodable_filepath=" << bool(ftpState->decodedRequestUriPath()) << ' ' <<
            "mdtm=" << ftpState->mdtm << ", size=" << ftpState->theSize <<
            "slashhack=" << (slashHack? "T":"F"));
 
     /* Try the / hack to support "Netscape" FTP URL's for retrieving files */
     if (!ftpState->flags.isdir &&   /* Not a directory */
             !ftpState->flags.try_slash_hack && !slashHack && /* Not doing slash hack */
-            ftpState->mdtm <= 0 && ftpState->theSize < 0) { /* Not known as a file */
+            ftpState->mdtm <= 0 && ftpState->theSize < 0 && /* Not known as a file */
+            ftpState->decodedRequestUriPath()) {
 
         switch (ftpState->state) {
 
@@ -2606,7 +2619,7 @@ Ftp::UrlWith2f(HttpRequest * request)
         return nil;
     }
 
-    if (request->url.path()[0] == '/') {
+    if (request->url.path().startsWith(AnyP::Uri::SlashPath())) {
         newbuf.append(request->url.path());
         request->url.path(newbuf);
     } else if (!request->url.path().startsWith(newbuf)) {

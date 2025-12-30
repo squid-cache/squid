@@ -47,8 +47,10 @@ MAKETEST="distcheck"
 #   --with-heimdal-krb5 \
 #   --with-mit-krb5 \
 #   --with-ldap \
+#   --with-pam \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
+#   --enable-arch-native \  can fail on virtualized environments
 #
 #
 # NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the

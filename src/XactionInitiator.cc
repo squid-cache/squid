@@ -27,7 +27,6 @@ XactionInitiator::ParseInitiators(const char *name)
         {"htcp", initHtcp},
         {"icp", initIcp},
         {"icmp", initIcmp},
-        {"asn", initAsn},
         {"ipc", initIpc},
         {"adaptation", initAdaptation},
         {"icon", initIcon},

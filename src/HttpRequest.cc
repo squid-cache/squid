@@ -340,16 +340,14 @@ HttpRequest::swapOut(StoreEntry * e)
 
 /* packs request-line and headers, appends <crlf> terminator */
 void
-HttpRequest::pack(Packable * p) const
+HttpRequest::pack(Packable * const p, const bool maskSensitiveInfo) const
 {
     assert(p);
     /* pack request-line */
-    p->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " HTTP/%d.%d\r\n",
-               SQUIDSBUFPRINT(method.image()), SQUIDSBUFPRINT(url.path()),
-               http_ver.major, http_ver.minor);
+    packFirstLineInto(p, false /* origin-form */);
     /* headers */
-    header.packInto(p);
-    /* trailer */
+    header.packInto(p, maskSensitiveInfo);
+    /* indicate the end of the header section */
     p->append("\r\n", 2);
 }
 
@@ -368,7 +366,7 @@ int
 HttpRequest::prefixLen() const
 {
     return method.image().length() + 1 +
-           url.path().length() + 1 +
+           url.originForm().length() + 1 +
            4 + 1 + 3 + 2 +
            header.len + 2;
 }
@@ -470,7 +468,7 @@ HttpRequest::clearError()
 void
 HttpRequest::packFirstLineInto(Packable * p, bool full_uri) const
 {
-    const SBuf tmp(full_uri ? effectiveRequestUri() : url.path());
+    const SBuf tmp(full_uri ? effectiveRequestUri() : url.originForm());
 
     // form HTTP request-line
     p->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " HTTP/%d.%d\r\n",

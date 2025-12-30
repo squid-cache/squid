@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "comm/Loops.h"
+#include "compat/select.h"
 #include "ConfigOption.h"
 #include "diomsg.h"
 #include "DiskdFile.h"
@@ -65,7 +66,7 @@ int
 DiskdIOStrategy::load()
 {
     /* Calculate the storedir load relative to magic2 on a scale of 0 .. 1000 */
-    /* the parse function guarantees magic2 is positivie */
+    /* the parse function guarantees magic2 is positive */
     return away * 1000 / magic2;
 }
 
@@ -113,6 +114,11 @@ DiskdIOStrategy::unlinkFile(char const *path)
     char *buf;
 
     buf = (char *)shm.get(&shm_offset);
+
+    if (!buf) {
+        unlinkdUnlink(path);
+        return;
+    }
 
     xstrncpy(buf, path, SHMBUF_BLKSZ);
 
@@ -230,6 +236,11 @@ SharedMemory::get(ssize_t * shm_offset)
         aBuf = buf + (*shm_offset);
 
         break;
+    }
+
+    if (!aBuf) {
+        debugs(79, DBG_IMPORTANT, "ERROR: out of shared-memory buffers");
+        return nullptr;
     }
 
     assert(aBuf);
@@ -409,7 +420,7 @@ DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, size_t size, off_t offset, s
     struct timeval delay = {0, 1};
 
     while (away > magic2) {
-        select(0, nullptr, nullptr, nullptr, &delay);
+        xselect(0, nullptr, nullptr, nullptr, &delay);
         Store::Root().callback();
 
         if (delay.tv_usec < 1000000)

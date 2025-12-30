@@ -112,9 +112,21 @@ int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
 
 char *gethost_name(void);
 
-#if (HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT || HAVE_GSS_MAP_NAME_TO_ANY) && HAVE_KRB5_PAC
-#define HAVE_PAC_SUPPORT 1
-#define MAX_PAC_GROUP_SIZE 200*60
+#if HAVE_KRB5_PAC_SUPPORT
+/**
+* MAX_PAC_GROUP_SIZE limits the string length, wherein group membership per
+* authenticated user is reported back to Squid, to a reasonable number
+* of groups multiplied by the maximum encoded group entry size.
+*
+* A group value is reported as the base64 encoded binary representation
+* of the objectSID. The theoretical size limit of an objectSID is 68 bytes.
+* The base64 representation of this byte array would count max 91 characters.
+*
+* A single group membership entry gets reported by a key-value pair followed
+* by a whitespace character as a delimiter, adding 7 more characters per entry:
+* "group=<Base64 encoded binary group objectSID> ".
+*/
+#define MAX_PAC_GROUP_SIZE (1024*98)
 typedef struct {
     uint16_t length;
     uint16_t maxlength;
@@ -134,9 +146,8 @@ char *xstrcpy( char *src, const char*dst);
 char *xstrcat( char *src, const char*dst);
 int checkustr(RPC_UNICODE_STRING *string);
 char *get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac);
-#else
-#define HAVE_PAC_SUPPORT 0
-#endif
+#endif /* HAVE_KRB5_PAC_SUPPORT */
+
 int check_k5_err(krb5_context context, const char *msg, krb5_error_code code);
 
 #endif /* SQUID_SRC_AUTH_NEGOTIATE_KERBEROS_NEGOTIATE_KERBEROS_H */

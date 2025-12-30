@@ -39,7 +39,8 @@
 #define MAX_RETRIES 2
 
 /// Helpers input buffer size.
-const size_t ReadBufSize(32*1024);
+/// Keep in sync with MAX_PAC_GROUP_SIZE until converted to SBuf
+const size_t ReadBufSize(128*1024);
 
 static IOCB helperHandleRead;
 static IOCB helperStatefulHandleRead;
@@ -237,7 +238,7 @@ Helper::Client::openSessions()
     args[nargs] = nullptr;
     ++nargs;
 
-    assert(nargs <= HELPER_MAX_ARGS);
+    assert(nargs <= HELPER_MAX_ARGS + 1);
 
     int successfullyStarted = 0;
 
@@ -371,7 +372,7 @@ statefulhelper::openSessions()
     args[nargs] = nullptr;
     ++nargs;
 
-    assert(nargs <= HELPER_MAX_ARGS);
+    assert(nargs <= HELPER_MAX_ARGS + 1);
 
     int successfullyStarted = 0;
 

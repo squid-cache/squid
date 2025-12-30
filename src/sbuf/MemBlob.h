@@ -46,7 +46,11 @@ class MemBlob: public RefCountable
 
 public:
     typedef RefCount<MemBlob> Pointer;
-    typedef uint32_t size_type;
+
+    /* emulate std::basic_string API */
+    using value_type = char;
+    using size_type = uint32_t;
+    using const_pointer = const value_type *;
 
     /// obtain a const view of class-wide statistics
     static const MemBlobStats& GetStats();
@@ -54,9 +58,8 @@ public:
     /// create a new MemBlob with at least reserveSize capacity
     explicit MemBlob(const size_type reserveSize);
 
-    /// create a MemBlob containing a copy of the buffer of a given size
-    MemBlob(const char *buffer, const size_type bufferSize);
-
+    /* emulate std::basic_string API */
+    MemBlob(const_pointer, const size_type);
     ~MemBlob() override;
 
     /// the number unused bytes at the end of the allocated blob
@@ -87,12 +90,9 @@ public:
      * \param source raw buffer to be copied
      * \param n the number of bytes to copy from the source buffer
      */
-    void append(const char *source, const size_type n);
+    void append(const_pointer source, const size_type n);
 
     /* non-const methods below require exclusive object ownership */
-
-    /// extends the available space to the entire allocated blob
-    void clear() { size = 0; }
 
     /// keep the first n bytes and forget the rest of data
     /// cannot be used to increase our size; use append*() methods for that
@@ -105,11 +105,14 @@ public:
     /// dump debugging information
     std::ostream & dump(std::ostream &os) const;
 
+    /* emulate std::basic_string API */
+    void clear() { size = 0; }
+
 public:
     /* MemBlob users should avoid these and must treat them as read-only */
-    char *mem;          ///< raw allocated memory block
-    size_type capacity; ///< size of the raw allocated memory block
-    size_type size;     ///< maximum allocated memory in use by callers
+    value_type *mem = nullptr; ///< raw allocated memory block
+    size_type capacity = 0; ///< size of the raw allocated memory block
+    size_type size = 0; ///< maximum allocated memory in use by callers
     const InstanceId<MemBlob> id; ///< blob identifier
 
 private:

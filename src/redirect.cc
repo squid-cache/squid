@@ -100,7 +100,7 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
             size_t replySize = 0;
             if (const char *t = strchr(res, ' ')) {
                 static int warn = 0;
-                debugs(61, (!(warn++%50)? DBG_CRITICAL:2), "WARNING: UPGRADE: URL rewriter reponded with garbage '" << t <<
+                debugs(61, (!(warn++%50)? DBG_CRITICAL:2), "WARNING: UPGRADE: URL rewriter responded with garbage '" << t <<
                        "'. Future Squid will treat this as part of the URL.");
                 replySize = t - res;
             } else
@@ -230,20 +230,13 @@ constructHelperQuery(const char * const name, const Helper::Client::Pointer &hlp
     int sz;
     Http::StatusCode status;
 
-    /** TODO: create a standalone method to initialize
-     * the RedirectStateData for all the helpers.
-     */
-    RedirectStateData *r = new RedirectStateData(http->uri);
-    r->handler = handler;
-    r->data = cbdataReference(data);
-
     static MemBuf requestExtras;
     requestExtras.reset();
     if (requestExtrasFmt)
         requestExtrasFmt->assemble(requestExtras, http->al, 0);
 
     sz = snprintf(buf, MAX_REDIRECTOR_REQUEST_STRLEN, "%s%s%s\n",
-                  r->orig_url.c_str(),
+                  http->uri,
                   requestExtras.hasContent() ? " " : "",
                   requestExtras.hasContent() ? requestExtras.content() : "");
 
@@ -275,6 +268,13 @@ constructHelperQuery(const char * const name, const Helper::Client::Pointer &hlp
         clientStreamRead(node, http, node->readBuffer);
         return;
     }
+
+    /** TODO: create a standalone method to initialize
+     * the RedirectStateData for all the helpers.
+     */
+    const auto r = new RedirectStateData(http->uri);
+    r->handler = handler;
+    r->data = cbdataReference(data);
 
     debugs(61,6, "sending '" << buf << "' to the " << name << " helper");
     helperSubmit(hlp, buf, replyHandler, r);

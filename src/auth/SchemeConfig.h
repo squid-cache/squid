@@ -94,7 +94,7 @@ public:
      \retval false  Not configured or Configuration Error.
      *          No other module functions except Shutdown/Dump/Parse/FreeConfig will be called by Squid.
      */
-    virtual bool configured() const = 0;
+    virtual bool configured() const;
 
     /**
      * Shutdown just the auth helpers.

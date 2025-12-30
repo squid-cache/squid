@@ -86,7 +86,7 @@ TestACLMaxUserIP::testParseLine()
         /* we want a maximum of one, and strict to be true */
         CPPUNIT_ASSERT_EQUAL(1, maxUserIpACL->getMaximum());
         CPPUNIT_ASSERT_EQUAL(true, static_cast<bool>(maxUserIpACL->beStrict));
-        /* the acl must be vaid */
+        /* the acl must be valid */
         CPPUNIT_ASSERT_EQUAL(true, maxUserIpACL->valid());
     }
     Acl::FreeNamedAcls(&Config.namedAcls);

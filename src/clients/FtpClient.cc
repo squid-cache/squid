@@ -166,6 +166,7 @@ Ftp::DataChannel::DataChannel():
 
 Ftp::DataChannel::~DataChannel()
 {
+    xfree(host);
     delete readBuf;
 }
 
@@ -925,7 +926,9 @@ Ftp::Client::maybeReadVirginBody()
 
     initReadBuf();
 
-    const int read_sz = replyBodySpace(*data.readBuf, 0);
+    // XXX: We only use this call to decide whether to read; we never increase data.readBuf space.
+    // TODO: Upgrade data.readBuf to SBuf and merge this with similar HttpStateData::readReply() code.
+    const auto read_sz = calcBufferSpaceToReserve(data.readBuf->spaceSize(), data.readBuf->spaceSize());
 
     debugs(9, 9, "FTP may read up to " << read_sz << " bytes");
 
@@ -1163,6 +1166,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
 
         if (complete) {
             // use list->key for last_reply because s contains the new line
+            safe_free(ctrl.last_reply);
             ctrl.last_reply = xstrdup(list->key + 4);
             ctrl.replycode = atoi(list->key);
         }

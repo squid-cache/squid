@@ -116,7 +116,7 @@ public:
 
     /**
      * Check a auth_user pointer for validity.
-     * Does not check passwords, just data sensability. Broken or Unknown auth_types are not valid for use...
+     * Does not check passwords, just data validity. Broken or Unknown auth_types are not valid for use...
      *
      * \retval false    User credentials are missing.
      * \retval false    User credentials use an unknown scheme type.

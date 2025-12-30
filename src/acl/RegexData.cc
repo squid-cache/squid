@@ -87,7 +87,7 @@ removeUnnecessaryWildcards(char * t)
     if (strncmp(t, "^.*", 3) == 0)
         t += 3;
 
-    /* NOTE: an initial '.' might seem unnessary but is not;
+    /* NOTE: an initial '.' might seem unnecessary but is not;
      * it can be a valid requirement that cannot be optimised
      */
     while (*t == '.'  &&  *(t+1) == '*') {

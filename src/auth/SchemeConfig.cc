@@ -180,6 +180,12 @@ Auth::SchemeConfig::done()
 }
 
 bool
+Auth::SchemeConfig::configured() const
+{
+    return (authenticateProgram && authenticateChildren.n_max != 0);
+}
+
+bool
 Auth::SchemeConfig::isCP1251EncodingAllowed(const HttpRequest *request)
 {
     String hdr;

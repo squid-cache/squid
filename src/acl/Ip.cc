@@ -214,6 +214,21 @@ acl_ip_data::DecodeMask(const char *asc, Ip::Address &mask, int ctype)
     return false;
 }
 
+/// whether we have parsed and vetted an item with an addr1 field that matches the needle
+bool
+acl_ip_data::containsVetted(const Ip::Address &needle) const
+{
+    // XXX: FactoryParse() adds an item and only then checks its validity. This
+    // loop excludes the last (i.e. being vetted) item. TODO: Refactor parsing
+    // to use a temporary container of vetted items instead of the current
+    // acl_ip_data::next hack.
+    for (const auto *i = this; i && i->next; i = i->next) {
+        if (i->addr1 == needle)
+            return true;
+    }
+    return false;
+}
+
 /* Handle either type of address, IPv6 will be discarded with a warning if disabled */
 #define SCAN_ACL1_6       "%[0123456789ABCDEFabcdef:]-%[0123456789ABCDEFabcdef:]/%[0123456789]"
 #define SCAN_ACL2_6       "%[0123456789ABCDEFabcdef:]-%[0123456789ABCDEFabcdef:]%c"
@@ -290,7 +305,6 @@ acl_ip_data::FactoryParse(const char *t)
         debugs(28, 5, "aclIpParseIpData: Lookup Host/IP " << addr1);
         struct addrinfo *hp = nullptr, *x = nullptr;
         struct addrinfo hints;
-        Ip::Address *prev_addr = nullptr;
 
         memset(&hints, 0, sizeof(struct addrinfo));
 
@@ -314,17 +328,15 @@ acl_ip_data::FactoryParse(const char *t)
             if ((r = *Q) == nullptr)
                 r = *Q = new acl_ip_data;
 
-            /* getaddrinfo given a host has a nasty tendency to return duplicate addr's */
-            /* BUT sorted fortunately, so we can drop most of them easily */
             r->addr1 = *x;
             x = x->ai_next;
-            if ( prev_addr && r->addr1 == *prev_addr) {
+            if (q->containsVetted(r->addr1)) {
+                // getaddrinfo() returned duplicate ai_addr values; we have already added one of them
                 debugs(28, 3, "aclIpParseIpData: Duplicate host/IP: '" << r->addr1 << "' dropped.");
                 delete r;
                 *Q = nullptr;
                 continue;
-            } else
-                prev_addr = &r->addr1;
+            }
 
             debugs(28, 3, "aclIpParseIpData: Located host/IP: '" << r->addr1 << "'");
 

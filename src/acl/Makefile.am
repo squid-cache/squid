@@ -56,8 +56,6 @@ libacls_la_SOURCES = \
 	AnnotationData.h \
 	AnyOf.cc \
 	AnyOf.h \
-	Asn.cc \
-	Asn.h \
 	AtStep.cc \
 	AtStep.h \
 	AtStepData.cc \
@@ -66,7 +64,6 @@ libacls_la_SOURCES = \
 	ConnMark.h \
 	ConnectionsEncrypted.cc \
 	ConnectionsEncrypted.h \
-	DestinationAsn.h \
 	DestinationDomain.cc \
 	DestinationDomain.h \
 	DestinationIp.cc \
@@ -127,7 +124,6 @@ libacls_la_SOURCES = \
 	ReplyMimeType.h \
 	RequestHeaderStrategy.h \
 	RequestMimeType.h \
-	SourceAsn.h \
 	SourceDomain.cc \
 	SourceDomain.h \
 	SourceIp.cc \

@@ -107,13 +107,13 @@ extern "C" int password_conversation(int num_msg, PAM_CONV_FUNC_CONST_PARM struc
  * A simple "conversation" function returning the supplied password.
  * Has a bit to much error control, but this is my first PAM application
  * so I'd rather check everything than make any mistakes. The function
- * expects a single converstation message of type PAM_PROMPT_ECHO_OFF.
+ * expects a single conversation message of type PAM_PROMPT_ECHO_OFF.
  */
 int
 password_conversation(int num_msg, PAM_CONV_FUNC_CONST_PARM struct pam_message **msg, struct pam_response **resp, void *appdata_ptr)
 {
     if (num_msg != 1 || msg[0]->msg_style != PAM_PROMPT_ECHO_OFF) {
-        debug("ERROR: Unexpected PAM converstaion '%d/%s'\n", msg[0]->msg_style, msg[0]->msg);
+        debug("ERROR: Unexpected PAM conversation '%d/%s'\n", msg[0]->msg_style, msg[0]->msg);
         return PAM_CONV_ERR;
     }
 #if _SQUID_SOLARIS_

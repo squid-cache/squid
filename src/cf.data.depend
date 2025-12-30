@@ -4,8 +4,24 @@
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
+
+# The statements in this file enforce a partial order of directive definitions
+# in cf.data.pre. When adding a new directive TYPE to cf.data.pre, update this
+# file to list which directives (if any) must be defined before (i.e. above)
+# any directive of that new TYPE. For example, it is customary to define new
+# directives that use ACLs after (i.e. below) the "acl" directive definition.
 #
-# type			dependencies
+# See checkDepend() in cf_gen.cc for code that checks whether cf.data.pre
+# directive definition order complies with the partial order declared here.
+#
+# The order of directive definitions in cf.data.pre correspond to the order of
+# directive descriptions in generated cf.data.documented.
+#
+# This file does not affect Squid configuration parsing code and, hence, does
+# not restrict the order of directives in squid.conf.
+
+#
+# Directive TYPE	Dependencies (directive names)
 #
 access_log		acl	logformat
 acl			external_acl_type auth_param

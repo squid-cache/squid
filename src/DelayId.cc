@@ -28,20 +28,16 @@
 DelayId::DelayId () : pool_ (0), compositeId(nullptr), markedAsNoDelay(false)
 {}
 
-DelayId::DelayId (unsigned short aPool) :
-    pool_ (aPool), compositeId (nullptr), markedAsNoDelay (false)
+DelayId::DelayId(const unsigned short aPool, const DelayIdComposite::Pointer &aCompositeId):
+    pool_(aPool), compositeId(aCompositeId), markedAsNoDelay(false)
 {
+    assert(pool_);
+    assert(compositeId);
     debugs(77, 3, "DelayId::DelayId: Pool " << aPool << "u");
 }
 
 DelayId::~DelayId ()
 {}
-
-void
-DelayId::compositePosition(const DelayIdComposite::Pointer &newPosition)
-{
-    compositeId = newPosition;
-}
 
 unsigned short
 DelayId::pool() const
@@ -60,7 +56,7 @@ DelayId::operator == (DelayId const &rhs) const
 
 DelayId::operator bool() const
 {
-    return pool_ || compositeId.getRaw();
+    return compositeId && !markedAsNoDelay;
 }
 
 /* create a delay Id for a given request */
@@ -98,14 +94,11 @@ DelayId::DelayClient(ClientHttpRequest * http, HttpReply *reply)
             ch.src_addr = r->client_addr;
 
         if (DelayPools::delay_data[pool].theComposite().getRaw() && ch.fastCheck().allowed()) {
-
-            DelayId result (pool + 1);
             CompositePoolNode::CompositeSelectionDetails details(ch.src_addr, StringToSBuf(r->tag));
 #if USE_AUTH
             details.user = r->auth_user_request;
 #endif
-            result.compositePosition(DelayPools::delay_data[pool].theComposite()->id(details));
-            return result;
+            return DelayId(pool + 1, DelayPools::delay_data[pool].theComposite()->id(details));
         }
     }
 
@@ -125,18 +118,12 @@ DelayId::setNoDelay(bool const newValue)
 int
 DelayId::bytesWanted(int minimum, int maximum) const
 {
-    /* unlimited */
+    const auto maxBytes = max(minimum, maximum);
 
-    if (! (*this) || markedAsNoDelay)
-        return max(minimum, maximum);
+    if (! (*this))
+        return maxBytes;
 
-    /* limited */
-    int nbytes = max(minimum, maximum);
-
-    if (compositeId != nullptr)
-        nbytes = compositeId->bytesWanted(minimum, nbytes);
-
-    return nbytes;
+    return compositeId->bytesWanted(minimum, maxBytes);
 }
 
 /*
@@ -150,13 +137,7 @@ DelayId::bytesIn(int qty)
     if (! (*this))
         return;
 
-    if (markedAsNoDelay)
-        return;
-
-    assert ((unsigned short)(pool() - 1) != 0xFFFF);
-
-    if (compositeId != nullptr)
-        compositeId->bytesIn(qty);
+    compositeId->bytesIn(qty);
 }
 
 void

@@ -446,7 +446,7 @@ Client::getMoreRequestBody(MemBuf &buf)
     return requestBodySource->getMoreData(buf);
 }
 
-// Compares hosts in urls, returns false if different, no sheme, or no host.
+// Compares hosts in urls, returns false if different, no scheme, or no host.
 static bool
 sameUrlHosts(const char *url1, const char *url2)
 {
@@ -502,7 +502,7 @@ purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, Http::Message *rep, H
                 // for this logic replace the entire request-target URI path
                 tmpUrl.path(hdrUrl);
             } else {
-                tmpUrl.addRelativePath(reqUrl);
+                tmpUrl.addRelativePath(hdrUrl);
             }
             absUrlMaker = tmpUrl.absolute();
             absUrl = absUrlMaker.c_str();
@@ -983,7 +983,7 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
     // TODO: Should we check receivedBodyTooLarge as well?
 
     if (!group) {
-        debugs(11,3, "no adapation needed");
+        debugs(11, 3, "no adaptation needed");
         setFinalReply(virginReply());
         processReplyBody();
         return;
@@ -1104,47 +1104,6 @@ Client::calcBufferSpaceToReserve(size_t space, const size_t wantSpace) const
 
         if (adaptor_space < space)
             space = adaptor_space;
-    }
-#endif
-
-    return space;
-}
-
-size_t
-Client::replyBodySpace(const MemBuf &readBuf, const size_t minSpace) const
-{
-    size_t space = readBuf.spaceSize(); // available space w/o heroic measures
-    if (space < minSpace) {
-        const size_t maxSpace = readBuf.potentialSpaceSize(); // absolute best
-        space = min(minSpace, maxSpace); // do not promise more than asked
-    }
-
-#if USE_ADAPTATION
-    if (responseBodyBuffer) {
-        return 0;   // Stop reading if already overflowed waiting for ICAP to catch up
-    }
-
-    if (virginBodyDestination != nullptr) {
-        /*
-         * BodyPipe buffer has a finite size limit.  We
-         * should not read more data from the network than will fit
-         * into the pipe buffer or we _lose_ what did not fit if
-         * the response ends sooner that BodyPipe frees up space:
-         * There is no code to keep pumping data into the pipe once
-         * response ends and serverComplete() is called.
-         *
-         * If the pipe is totally full, don't register the read handler.
-         * The BodyPipe will call our noteMoreBodySpaceAvailable() method
-         * when it has free space again.
-         */
-        size_t adaptation_space =
-            virginBodyDestination->buf().potentialSpaceSize();
-
-        debugs(11,9, "Client may read up to min(" <<
-               adaptation_space << ", " << space << ") bytes");
-
-        if (adaptation_space < space)
-            space = adaptation_space;
     }
 #endif
 

@@ -177,7 +177,7 @@ rfc1035QuestionPack(char *buf,
  * of the rfc1035_message structure.
  *
  * Updates the buffer offset, which is the same as number of
- * octects unpacked since the header starts at offset 0.
+ * octets unpacked since the header starts at offset 0.
  *
  * Returns 0 (success) or 1 (error)
  */
@@ -354,7 +354,7 @@ rfc1035RRPack(char *buf, const size_t sz, const rfc1035_rr * RR)
     s = htons(RR->rdlength);
     memcpy(buf + off, &s, sizeof(s));
     off += sizeof(s);
-    memcpy(buf + off, &(RR->rdata), RR->rdlength);
+    memcpy(buf + off, RR->rdata, RR->rdlength);
     off += RR->rdlength;
     assert(off <= sz);
     return off;
@@ -420,6 +420,8 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
         RR->rdlength = 0;   /* Filled in by rfc1035NameUnpack */
         if (rfc1035NameUnpack(buf, sz, &rdata_off, &RR->rdlength, RR->rdata, RFC1035_MAXHOSTNAMESZ, 0)) {
             RFC1035_UNPACK_DEBUG;
+            xfree(RR->rdata);
+            memset(RR, '\0', sizeof(*RR));
             return 1;
         }
         if (rdata_off > ((*off) + rdlength)) {
@@ -511,7 +513,7 @@ rfc1035RRDestroy(rfc1035_rr ** rr, int n)
 static int
 rfc1035QueryUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_query * query)
 {
-    unsigned short s;
+    uint16_t s;
     if (rfc1035NameUnpack(buf, sz, off, nullptr, query->name, RFC1035_MAXHOSTNAMESZ, 0)) {
         RFC1035_UNPACK_DEBUG;
         memset(query, '\0', sizeof(*query));
@@ -522,11 +524,11 @@ rfc1035QueryUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_query 
         memset(query, '\0', sizeof(*query));
         return 1;
     }
-    memcpy(&s, buf + *off, 2);
-    *off += 2;
+    memcpy(&s, buf + *off, sizeof(s));
+    *off += sizeof(s);
     query->qtype = ntohs(s);
-    memcpy(&s, buf + *off, 2);
-    *off += 2;
+    memcpy(&s, buf + *off, sizeof(s));
+    *off += sizeof(s);
     query->qclass = ntohs(s);
     return 0;
 }

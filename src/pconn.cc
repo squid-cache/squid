@@ -223,7 +223,7 @@ IdleConnList::pop()
             continue;
 
         // our connection timeout handler is scheduled to run already. unsafe for now.
-        // TODO: cancel the pending timeout callback and allow re-use of the conn.
+        // TODO: cancel the pending timeout callback and allow reuse of the conn.
         if (fd_table[theList_[i]->fd].timeoutHandler == nullptr)
             continue;
 
@@ -275,7 +275,7 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &aKey)
             continue;
 
         // our connection timeout handler is scheduled to run already. unsafe for now.
-        // TODO: cancel the pending timeout callback and allow re-use of the conn.
+        // TODO: cancel the pending timeout callback and allow reuse of the conn.
         if (fd_table[theList_[i]->fd].timeoutHandler == nullptr)
             continue;
 
