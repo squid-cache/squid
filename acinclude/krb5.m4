@@ -5,6 +5,27 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
+dnl check whether the Kerberos context has a memory cache
+AC_DEFUN([SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE],[
+  AC_REQUIRE([SQUID_STATE_SAVE])
+  AC_REQUIRE([SQUID_STATE_ROLLBACK])
+  AC_REQUIRE([SQUID_DEFINE_BOOL])
+  AC_CACHE_CHECK([for Kerberos context memory cache],squid_cv_krb5_memory_cache,[
+    SQUID_STATE_SAVE(squid_krb5_test)
+    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
+    AC_RUN_IFELSE([
+      AC_LANG_PROGRAM([[#include "compat/krb5.h"]],[[
+        krb5_context c;
+        krb5_ccache cc;
+        krb5_init_context(&c);
+        return krb5_cc_resolve(c, "MEMORY:test_cache", &cc);
+      ]])
+    ],[squid_cv_krb5_memory_cache=yes],[squid_cv_krb5_memory_cache=no],[:])
+    SQUID_STATE_ROLLBACK(squid_krb5_test)
+  ])
+  SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_CACHE,$squid_cv_krb5_memory_cache,[kerberos has MEMORY: cache support])
+]) dnl SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
+
 AC_DEFUN([SQUID_CHECK_SOLARIS_KRB5],[
   # no pkg-config for solaris native Kerberos
   AS_IF([test "$cross_compiling" = "no" -a "x$with_mit_krb5" != "xyes" -a "x$with_mit_krb5" != "xno"],[
@@ -39,29 +60,6 @@ AC_DEFUN([SQUID_CHECK_SOLARIS_KRB5],[
     AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
     AC_CHECK_HEADERS(profile.h)
     SQUID_CHECK_KRB5_FUNCS
-  ])
-])
-
-dnl check whether the kerberos context has a memory cache. Sets
-dnl squid_cv_memory_cache if that's the case.
-AC_DEFUN([SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE],[
-  AC_CACHE_CHECK([for memory cache], squid_cv_memory_cache, [
-    SQUID_STATE_SAVE(squid_krb5_test)
-    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_RUN_IFELSE([
-      AC_LANG_SOURCE([[
-#include "compat/krb5.h"
-int main(int argc, char *argv[])
-{
-    krb5_context context;
-    krb5_ccache cc;
-
-    krb5_init_context(&context);
-    return krb5_cc_resolve(context, "MEMORY:test_cache", &cc);
-}
-      ]])
-    ], [ squid_cv_memory_cache=yes ], [ squid_cv_memory_cache=no ], [:])
-    SQUID_STATE_ROLLBACK(squid_krb5_test)
   ])
 ])
 
@@ -275,9 +273,6 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
   SQUID_STATE_ROLLBACK(squid_krb5_test)
 
   SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
-  SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_CACHE,$squid_cv_memory_cache,
-       [Define if kerberos has MEMORY: cache support])
-
   SQUID_CHECK_KRB5_CONTEXT_MEMORY_KEYTAB
   SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_KEYTAB,$squid_cv_memory_keytab,
        [Define if kerberos has MEMORY: keytab support])
