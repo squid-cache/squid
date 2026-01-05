@@ -17,6 +17,9 @@ on:
   # allows to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+  merge_group:
+    branches: [ "v7" ]
+
 concurrency:
   # Cancel ongoing tests in case of push to staging branch.
   group: ${{ github.workflow }}-${{ github.ref }}
