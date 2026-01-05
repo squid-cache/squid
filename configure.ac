@@ -1137,7 +1137,7 @@ AM_CONDITIONAL(ENABLE_SSL,[ test "x$with_openssl" = "xyes" ])
 AC_SUBST(SSLLIB)
 
 # Kerberos support libraries: MIT
-SQUID_AUTO_LIB(mit-krb5,[MIT Kerberos],[LIB_KRB5])
+SQUID_AUTO_LIB(mit-krb5,[MIT Kerberos],[LIBMIT_KRB5])
 AH_TEMPLATE(USE_APPLE_KRB5,[Apple Kerberos support is available])
 AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
 SQUID_CHECK_LIB_WORKS(mit-krb5,[
