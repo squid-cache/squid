@@ -89,7 +89,7 @@ public:
     {
 
     public:
-        HttpRequestMethod method;
+        Http::RequestMethod method;
         int code = 0;
         const char *content_type = nullptr;
         AnyP::ProtocolVersion version;
