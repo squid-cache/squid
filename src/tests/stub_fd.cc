@@ -32,8 +32,3 @@ const char *fdTypeStr[] = {
     "MsgHdr",
     "Unknown"
 };
-
-// XXX: should be in stub_fde.cc
-#include "fde.h"
-fde *fde::Table = nullptr;
-int fdNFree(void) STUB_RETVAL(-1)
