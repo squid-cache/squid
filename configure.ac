@@ -281,6 +281,26 @@ LT_LIB_DLLOAD
 AC_SUBST(INCLTDL)
 AC_SUBST(LIBLTDL)
 
+#
+# Section 3: Build Environment detection
+#
+# Check for which OS we are building on.
+#
+# Check for any OS-specific types, system includes, and toolchain
+# options needed for tests in later sections to be run.
+#
+# Check user-provided settings for custom integration with the
+# OS to be installed on.
+#
+# Settings found in this section will determine which components are
+# able to be detected in later sections.
+#
+# All tests in later sections should be able to include "compat/"
+# files and use their definitions.
+#
+# User settings should be provided as --with-default-LABEL=VALUE.
+#
+
 AC_MSG_CHECKING(whether to use loadable modules)
 AS_IF([test "x${enable_shared:=yes}" = "xyes"],[AC_DEFINE(USE_LOADABLE_MODULES,1,[Support Loadable Modules])])
 AM_CONDITIONAL(ENABLE_LOADABLE_MODULES, test "x${enable_shared:=yes}" = "xyes")
@@ -468,6 +488,17 @@ dnl Nasty hack to get autoconf 2.64 on Linux to run.
 dnl all other uses of RUN_IFELSE are wrapped inside CACHE_CHECK which breaks on 2.64
 AC_RUN_IFELSE([AC_LANG_SOURCE([[ int main(int argc, char **argv) { return 0; } ]])],[],[],[:])
 
+#
+# Section 4: Library detection
+#
+# Check for all libraries used by Squid.
+#
+# Which libraries are available will determine which features
+# can be enabled later.
+#
+# User settings should be provided as --with(out)-LIBRARY[=PATH]
+#
+
 AH_TEMPLATE(XMALLOC_STATISTICS,[Define to have malloc statistics])
 AC_ARG_ENABLE(xmalloc-statistics,
   AS_HELP_STRING([--enable-xmalloc-statistics],
@@ -544,6 +575,17 @@ AC_SEARCH_LIBS([shm_open], [rt])
 AS_IF([test "x$ac_cv_search_shm_open" != "xno"],[
   AC_DEFINE(HAVE_SHM,1,[Support shared memory features])
 ])
+
+#
+# Section 5: Feature detection
+#
+# Check which features can be built.
+#
+# User settings should be provided as --(en/dis)able-FEATURE[=LIST]
+#
+# Where LIST is a whitespace separated list of module or helper names
+# to build, (if any).
+#
 
 squid_disk_module_candidates=
 AC_ARG_ENABLE(disk-io,
