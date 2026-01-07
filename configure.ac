@@ -10,6 +10,12 @@ AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
+AC_COPYRIGHT([Copyright (C) 1996-2026 The Squid Software Foundation and contributors
+
+ Squid software is distributed under GPLv2+ license and includes
+ contributions from numerous individuals and organizations.
+ Please see the COPYING and CONTRIBUTORS files for details.
+])
 AM_INIT_AUTOMAKE([tar-ustar nostdinc subdir-objects dist-xz])
 AC_REVISION($Revision$)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
