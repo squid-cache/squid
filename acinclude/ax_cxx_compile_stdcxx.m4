@@ -1,54 +1,54 @@
-## Copyright (C) 1996-2026 The Squid Software Foundation and contributors
-##
-## Squid software is distributed under GPLv2+ license and includes
-## contributions from numerous individuals and organizations.
-## Please see the COPYING and CONTRIBUTORS files for details.
-##
+dnl Copyright (C) 1996-2026 The Squid Software Foundation and contributors
+dnl
+dnl Squid software is distributed under GPLv2+ license and includes
+dnl contributions from numerous individuals and organizations.
+dnl Please see the COPYING and CONTRIBUTORS files for details.
+dnl
 
-# ===========================================================================
-#  https://www.gnu.org/software/autoconf-archive/ax_cxx_compile_stdcxx.html
-# ===========================================================================
-#
-# SYNOPSIS
-#
-#   AX_CXX_COMPILE_STDCXX(VERSION, [ext|noext], [mandatory|optional])
-#
-# DESCRIPTION
-#
-#   Check for baseline language coverage in the compiler for the specified
-#   version of the C++ standard.  If necessary, add switches to CXX and
-#   CXXCPP to enable support.  VERSION may be '11', '14', '17', or '20' for
-#   the respective C++ standard version.
-#
-#   The second argument, if specified, indicates whether you insist on an
-#   extended mode (e.g. -std=gnu++11) or a strict conformance mode (e.g.
-#   -std=c++11).  If neither is specified, you get whatever works, with
-#   preference for no added switch, and then for an extended mode.
-#
-#   The third argument, if specified 'mandatory' or if left unspecified,
-#   indicates that baseline support for the specified C++ standard is
-#   required and that the macro should error out if no mode with that
-#   support is found.  If specified 'optional', then configuration proceeds
-#   regardless, after defining HAVE_CXX${VERSION} if and only if a
-#   supporting mode is found.
-#
-# LICENSE
-#
-#   Copyright (c) 2008 Benjamin Kosnik <bkoz@redhat.com>
-#   Copyright (c) 2012 Zack Weinberg <zackw@panix.com>
-#   Copyright (c) 2013 Roy Stogner <roystgnr@ices.utexas.edu>
-#   Copyright (c) 2014, 2015 Google Inc.; contributed by Alexey Sokolov <sokolov@google.com>
-#   Copyright (c) 2015 Paul Norman <penorman@mac.com>
-#   Copyright (c) 2015 Moritz Klammler <moritz@klammler.eu>
-#   Copyright (c) 2016, 2018 Krzesimir Nowak <qdlacz@gmail.com>
-#   Copyright (c) 2019 Enji Cooper <yaneurabeya@gmail.com>
-#   Copyright (c) 2020 Jason Merrill <jason@redhat.com>
-#   Copyright (c) 2021 Jörn Heusipp <osmanx@problemloesungsmaschine.de>
-#
-#   Copying and distribution of this file, with or without modification, are
-#   permitted in any medium without royalty provided the copyright notice
-#   and this notice are preserved.  This file is offered as-is, without any
-#   warranty.
+dnl ===========================================================================
+dnl  https://www.gnu.org/software/autoconf-archive/ax_cxx_compile_stdcxx.html
+dnl ===========================================================================
+dnl
+dnl SYNOPSIS
+dnl
+dnl   AX_CXX_COMPILE_STDCXX(VERSION, [ext|noext], [mandatory|optional])
+dnl
+dnl DESCRIPTION
+dnl
+dnl   Check for baseline language coverage in the compiler for the specified
+dnl   version of the C++ standard.  If necessary, add switches to CXX and
+dnl   CXXCPP to enable support.  VERSION may be '11', '14', '17', or '20' for
+dnl   the respective C++ standard version.
+dnl
+dnl   The second argument, if specified, indicates whether you insist on an
+dnl   extended mode (e.g. -std=gnu++11) or a strict conformance mode (e.g.
+dnl   -std=c++11).  If neither is specified, you get whatever works, with
+dnl   preference for no added switch, and then for an extended mode.
+dnl
+dnl   The third argument, if specified 'mandatory' or if left unspecified,
+dnl   indicates that baseline support for the specified C++ standard is
+dnl   required and that the macro should error out if no mode with that
+dnl   support is found.  If specified 'optional', then configuration proceeds
+dnl   regardless, after defining HAVE_CXX${VERSION} if and only if a
+dnl   supporting mode is found.
+dnl
+dnl LICENSE
+dnl
+dnl   Copyright (c) 2008 Benjamin Kosnik <bkoz@redhat.com>
+dnl   Copyright (c) 2012 Zack Weinberg <zackw@panix.com>
+dnl   Copyright (c) 2013 Roy Stogner <roystgnr@ices.utexas.edu>
+dnl   Copyright (c) 2014, 2015 Google Inc.; contributed by Alexey Sokolov <sokolov@google.com>
+dnl   Copyright (c) 2015 Paul Norman <penorman@mac.com>
+dnl   Copyright (c) 2015 Moritz Klammler <moritz@klammler.eu>
+dnl   Copyright (c) 2016, 2018 Krzesimir Nowak <qdlacz@gmail.com>
+dnl   Copyright (c) 2019 Enji Cooper <yaneurabeya@gmail.com>
+dnl   Copyright (c) 2020 Jason Merrill <jason@redhat.com>
+dnl   Copyright (c) 2021 Jörn Heusipp <osmanx@problemloesungsmaschine.de>
+dnl
+dnl   Copying and distribution of this file, with or without modification, are
+dnl   permitted in any medium without royalty provided the copyright notice
+dnl   and this notice are preserved.  This file is offered as-is, without any
+dnl   warranty.
 
 #serial 15
 
