@@ -16,7 +16,7 @@ AC_COPYRIGHT([Copyright (C) 1996-2026 The Squid Software Foundation and contribu
  contributions from numerous individuals and organizations.
  Please see the COPYING and CONTRIBUTORS files for details.
 ])
-AM_INIT_AUTOMAKE([tar-ustar nostdinc subdir-objects dist-xz])
+AM_INIT_AUTOMAKE([1.14 tar-ustar nostdinc subdir-objects dist-xz])
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -65,7 +65,6 @@ AS_IF([test -e /etc/os-release],[
 ])
 
 AC_PROG_CC
-AM_PROG_CC_C_O
 AC_PROG_CXX
 
 # AC_USE_SYSTEM_EXTENSIONS should be called before any macros that run the C compiler.
