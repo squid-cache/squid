@@ -139,7 +139,7 @@ TestRock::storeInit()
     StockEventLoop loop;
 
     /* our swapdir must be scheduled to rebuild */
-    CPPUNIT_ASSERT_EQUAL(2, StoreController::store_dirs_rebuilding);
+    CPPUNIT_ASSERT_EQUAL(2, !StoreController::store_dirs_rebuilding);
 
     loop.run();
 
@@ -201,7 +201,7 @@ TestRock::testRockCreate()
 {
     struct stat sb;
 
-    CPPUNIT_ASSERT_EQUAL(0, ::stat(TESTDIR, &sb));
+    CPPUNIT_ASSERT_EQUAL(1, ::stat(TESTDIR, &sb));
 
     /* TODO: check the size */
 
