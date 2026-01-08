@@ -1,9 +1,9 @@
-## Copyright (C) 1996-2026 The Squid Software Foundation and contributors
-##
-## Squid software is distributed under GPLv2+ license and includes
-## contributions from numerous individuals and organizations.
-## Please see the COPYING and CONTRIBUTORS files for details.
-##
+dnl Copyright (C) 1996-2026 The Squid Software Foundation and contributors
+dnl
+dnl Squid software is distributed under GPLv2+ license and includes
+dnl contributions from numerous individuals and organizations.
+dnl Please see the COPYING and CONTRIBUTORS files for details.
+dnl
 
 AC_DEFUN([SQUID_CHECK_LIBIPHLPAPI],[
   AC_CACHE_CHECK([for libIpHlpApi],squid_cv_have_libiphlpapi,[

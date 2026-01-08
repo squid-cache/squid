@@ -1,9 +1,9 @@
-## Copyright (C) 1996-2026 The Squid Software Foundation and contributors
-##
-## Squid software is distributed under GPLv2+ license and includes
-## contributions from numerous individuals and organizations.
-## Please see the COPYING and CONTRIBUTORS files for details.
-##
+dnl Copyright (C) 1996-2026 The Squid Software Foundation and contributors
+dnl
+dnl Squid software is distributed under GPLv2+ license and includes
+dnl contributions from numerous individuals and organizations.
+dnl Please see the COPYING and CONTRIBUTORS files for details.
+dnl
 
 dnl check for --with-tdb option
 AC_DEFUN_ONCE([SQUID_CHECK_LIBTDB],[
