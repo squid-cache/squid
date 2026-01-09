@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_TIME_GADGETS_H
 #define SQUID_SRC_TIME_GADGETS_H
 
+#include <chrono>
 #include <ctime>
 #include <iosfwd>
 
@@ -93,6 +94,22 @@ void tvAssignAdd(struct timeval &t, struct timeval const &add);
 inline long int tvToMsec(struct timeval &t)
 {
     return t.tv_sec * 1000 + t.tv_usec / 1000;
+}
+
+/// Converts std::chrono::duration to timeval. Input values up to ~68 years do
+/// not overflow timeval even if timeval::tv_sec (i.e. time_t) has only 32 bits.
+/// Input values with precision higher than microseconds decrease precision
+/// because timeval::tv_usec stores microseconds.
+template <typename Duration>
+timeval
+ToTimeval(const Duration duration)
+{
+    using namespace std::chrono_literals;
+    timeval out;
+    out.tv_sec = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+    const auto totalUsec = std::chrono::duration_cast<std::chrono::microseconds>(duration);
+    out.tv_usec = (totalUsec % std::chrono::microseconds(1s)).count();
+    return out;
 }
 
 /// prints <seconds>.<microseconds>
