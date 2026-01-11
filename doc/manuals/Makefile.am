@@ -15,6 +15,8 @@ EXTRA_DIST = \
 	language.am \
 	manuals.conf
 
+DISTCLEANFILES= manuals.conf
+
 manuals.conf: Makefile
 	( \
 	  echo "[po4a_langs] $(LANGUAGE_FILES)" | sed -e 's%[.]lang%%g'; \
