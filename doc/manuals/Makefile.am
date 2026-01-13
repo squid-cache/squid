@@ -15,7 +15,7 @@ EXTRA_DIST = \
 	language.am \
 	manuals.conf
 
-DISTCLEANFILES= manuals.conf
+DISTCLEANFILES = manuals.conf
 
 manuals.conf: Makefile
 	( \
@@ -23,7 +23,7 @@ manuals.conf: Makefile
 	  echo -n "[options] --no-translations -o groff_code=verbatim "; \
 	  echo " --package-name=$(PACKAGE) --package-version=$(VERSION) "; \
 	  echo "[po4a_paths] doc/manuals/manuals.pot \$$lang:doc/manuals/\$$lang.po"; \
-	  for fname in `cd $(top_srcdir) ; git ls-files *.8 *.8.in`; do \
+	  for fname in `cd $(top_srcdir) ; git ls-files '*.8' '*.8.in'`; do \
 	    manp=`basename $${fname}`; \
 	    echo "[type: man] $${fname} \$$lang:doc/manuals/\$$lang/$${manp}"; \
 	  done \
