@@ -18,6 +18,7 @@
 #include "security/ErrorDetail.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
+#include "src/base/IoManip.h"
 #include "ssl/bio.h"
 #include "ssl/PeekingPeerConnector.h"
 #include "ssl/ServerBump.h"
@@ -196,6 +197,23 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             srvBio->setClientFeatures(details, cltBio->rBufData());
             srvBio->recordInput(true);
             srvBio->mode(csd->sslBumpMode);
+
+#if defined(SSL_OP_LEGACY_SERVER_CONNECT)
+            // While peeking, Squid is not generating any TLS bytes, but we are
+            // still being driven by OpenSSL negotiation logic. We enable as
+            // many features and workarounds as possible to reduce cases where
+            // OpenSSL refuses to accept a valid TLS server response. This code
+            // assumes that an admin should not expect a peeking Squid to
+            // automatically enforce a particular set of TLS conditions (e.g.,
+            // "no legacy TLS servers"). When that assumption is invalidated, we
+            // will need to add a configuration directive to set peeking TLS
+            // options.
+            if (csd->sslBumpMode == Ssl::bumpPeek && SSL_OP_LEGACY_SERVER_CONNECT)
+            {
+                const auto adjustedOptions = SSL_set_options(serverSession.get(), SSL_OP_LEGACY_SERVER_CONNECT);
+                debugs(83, 5, "post-SSL_OP_LEGACY_SERVER_CONNECT options for session=" << serverSession << ": " << asHex(adjustedOptions));
+            }
+#endif
         } else {
             const bool redirected = request->flags.redirected && ::Config.onoff.redir_rewrites_host;
             const char *sniServer = (!hostName || redirected) ?
