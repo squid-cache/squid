@@ -19,12 +19,14 @@
 #include "anyp/Host.h"
 #include "anyp/PortCfg.h"
 #include "anyp/Uri.h"
+#include "base/Raw.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "ip/Address.h"
 #include "ipc/MemMap.h"
+#include "sbuf/Stream.h"
 #include "security/CertError.h"
 #include "security/Certificate.h"
 #include "security/ErrorDetail.h"
@@ -37,6 +39,10 @@
 #include "ssl/support.h"
 
 #include <cerrno>
+
+#if HAVE_OPENSSL_PROVIDER_H
+#include <openssl/provider.h>
+#endif
 
 // TODO: Move ssl_ex_index_* global variables from global.cc here.
 static int ssl_ex_index_verify_callback_parameters = -1;
@@ -743,6 +749,46 @@ ssl_free_VerifyCallbackParameters(void *, void *ptr, CRYPTO_EX_DATA *,
     delete static_cast<Ssl::VerifyCallbackParameters*>(ptr);
 }
 
+#if OPENSSL_VERSION_MAJOR >= 3
+static int
+DisplayProviderInfo(OSSL_PROVIDER *provider, void *)
+{
+    SBufStream out;
+    const auto params = OSSL_PROVIDER_gettable_params(provider);
+    for (int i = 0; params[i].key; ++i) {
+        out << (i > 0 ? ", " : "");
+
+        switch (params[i].data_type)
+        {
+        case OSSL_PARAM_INTEGER:
+            out << params[i].key << "=" << static_cast<int *>(params[i].data);
+            break;
+        case OSSL_PARAM_UNSIGNED_INTEGER:
+            out << params[i].key << "=" << static_cast<unsigned int *>(params[i].data);
+            break;
+        case OSSL_PARAM_REAL:
+            out << params[i].key << "=" << static_cast<float *>(params[i].data);
+            break;
+        case OSSL_PARAM_UTF8_STRING:
+        case OSSL_PARAM_OCTET_STRING:
+            out << Raw(params[i].key, static_cast<char *>(params[i].data), params[i].data_size);
+            break;
+        case OSSL_PARAM_UTF8_PTR:
+        case OSSL_PARAM_OCTET_PTR:
+            if (params[i].data)
+                out << Raw(params[i].key, *static_cast<char **>(params[i].data), params[i].data_size);
+            else
+                out << params[i].key;
+            break;
+        }
+    }
+
+    const auto name = OSSL_PROVIDER_get0_name(provider);
+    debugs(83, DBG_PARSE_NOTE(3), "Provider: " << name << "(" << out.buf() << ")");
+    return 0;
+}
+#endif /* OPENSSL_VERSION_MAJOR >= 3 */
+
 void
 Ssl::Initialize(void)
 {
@@ -776,6 +822,18 @@ Ssl::Initialize(void)
         throw TextException("Cannot use ssl_engine in Squid built with OpenSSL 3.0 or newer", Here());
 #endif
     }
+
+#if OPENSSL_VERSION_MAJOR >= 3
+    if (::Config.SSL.ssl_provider) {
+        OSSL_LIB_CTX *libctx = nullptr;
+        if (!OSSL_PROVIDER_load(libctx, ::Config.SSL.ssl_provider)) {
+            const auto ssl_error = ERR_get_error();
+            fatalf("Failed to load SSL provider: %s\n", Security::ErrorString(ssl_error));
+        }
+
+        OSSL_PROVIDER_do_all(libctx, &DisplayProviderInfo, nullptr);
+    }
+#endif /* OPENSSL_VERSION_MAJOR >= 3 */
 
     const char *defName = ::Config.SSL.certSignHash ? ::Config.SSL.certSignHash : SQUID_SSL_SIGN_HASH_IF_NONE;
     Ssl::DefaultSignHash = EVP_get_digestbyname(defName);
