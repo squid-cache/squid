@@ -10,8 +10,13 @@ AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
-AM_INIT_AUTOMAKE([tar-ustar nostdinc subdir-objects dist-xz])
-AC_REVISION($Revision$)dnl
+AC_COPYRIGHT([Copyright (C) 1996-2026 The Squid Software Foundation and contributors
+
+ Squid software is distributed under GPLv2+ license and includes
+ contributions from numerous individuals and organizations.
+ Please see the COPYING and CONTRIBUTORS files for details.
+])
+AM_INIT_AUTOMAKE([1.14 tar-ustar nostdinc subdir-objects dist-xz])
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
@@ -60,7 +65,6 @@ AS_IF([test -e /etc/os-release],[
 ])
 
 AC_PROG_CC
-AM_PROG_CC_C_O
 AC_PROG_CXX
 
 # AC_USE_SYSTEM_EXTENSIONS should be called before any macros that run the C compiler.
@@ -992,7 +996,8 @@ include <windows.h>
 #include <sys/param.h>
 #endif
   ]])
-  AC_CHECK_MEMBER([struct arpreq.arp_pa],[],[
+  AC_CHECK_HEADERS(sys/socket.h)
+  AC_CHECK_MEMBER([struct arpreq.arp_ha.sa_family],[],[
     AS_IF([test "x$squid_host_os" != "xmingw" -a "x$squid_host_os" != "xcygwin"],[
       AC_MSG_NOTICE([OS support for EUI seems incomplete, disabling it])
       enable_eui=no
