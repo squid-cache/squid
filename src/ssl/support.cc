@@ -825,14 +825,12 @@ Ssl::Initialize(void)
 
 #if OPENSSL_VERSION_MAJOR >= 3
     if (::Config.SSL.ssl_provider) {
-        OSSL_LIB_CTX *libctx = nullptr;
-        if (!OSSL_PROVIDER_load(libctx, ::Config.SSL.ssl_provider)) {
+        if (!OSSL_PROVIDER_load(nullptr, ::Config.SSL.ssl_provider)) {
             const auto ssl_error = ERR_get_error();
             fatalf("Failed to load SSL provider: %s\n", Security::ErrorString(ssl_error));
         }
-
-        OSSL_PROVIDER_do_all(libctx, &DisplayProviderInfo, nullptr);
     }
+    OSSL_PROVIDER_do_all(nullptr, &DisplayProviderInfo, nullptr);
 #endif /* OPENSSL_VERSION_MAJOR >= 3 */
 
     const char *defName = ::Config.SSL.certSignHash ? ::Config.SSL.certSignHash : SQUID_SSL_SIGN_HASH_IF_NONE;
