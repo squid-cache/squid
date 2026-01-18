@@ -756,36 +756,67 @@ DisplayProviderInfo(OSSL_PROVIDER *provider, void *)
     SBufStream out;
     const auto params = OSSL_PROVIDER_gettable_params(provider);
     for (int i = 0; params[i].key; ++i) {
-        out << (i > 0 ? ", " : "");
+        out << (i > 0 ? "," : "");
 
+        OSSL_PARAM detail[2] = {OSSL_PARAM_END, OSSL_PARAM_END};
         switch (params[i].data_type)
         {
-        case OSSL_PARAM_INTEGER:
-            out << params[i].key << "=" << static_cast<int *>(params[i].data);
+        case OSSL_PARAM_INTEGER: {
+            int value = 0;
+            detail[0] = OSSL_PARAM_construct_int(params[i].key, &value);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << ' ' << detail[0].key << '=' << value;
+            }
             break;
-        case OSSL_PARAM_UNSIGNED_INTEGER:
-            out << params[i].key << "=" << static_cast<unsigned int *>(params[i].data);
+        case OSSL_PARAM_UNSIGNED_INTEGER: {
+            unsigned int value = 0;
+            detail[0] = OSSL_PARAM_construct_uint(params[i].key, &value);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << ' ' << detail[0].key << '=' << value;
+            }
             break;
-        case OSSL_PARAM_REAL:
-            out << params[i].key << "=" << static_cast<float *>(params[i].data);
+        case OSSL_PARAM_REAL: {
+            double value = 0.0;
+            detail[0] = OSSL_PARAM_construct_double(params[i].key, &value);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << ' ' << detail[0].key << '=' << value;
+            }
             break;
-        case OSSL_PARAM_UTF8_STRING:
-        case OSSL_PARAM_OCTET_STRING:
-            out << Raw(params[i].key, static_cast<char *>(params[i].data), params[i].data_size);
+        case OSSL_PARAM_UTF8_STRING: {
+            char *value = nullptr;
+            detail[0] = OSSL_PARAM_construct_utf8_string(params[i].key, value, 0);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << Raw(detail[0].key, value, detail[0].return_size);
+            }
             break;
-        case OSSL_PARAM_UTF8_PTR:
-        case OSSL_PARAM_OCTET_PTR:
-            if (params[i].data)
-                out << Raw(params[i].key, *static_cast<char **>(params[i].data), params[i].data_size);
-            else
-                out << params[i].key;
+        case OSSL_PARAM_OCTET_STRING: {
+            char *value = nullptr;
+            detail[0] = OSSL_PARAM_construct_octet_string(params[i].key, static_cast<void*>(value), 0);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << Raw(detail[0].key, value, detail[0].return_size).hex();
+            }
+            break;
+        case OSSL_PARAM_UTF8_PTR: {
+            char *value = nullptr;
+            detail[0] = OSSL_PARAM_construct_utf8_ptr(params[i].key, &value, 0);
+            OSSL_PARAM_set_all_unmodified(detail);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << Raw(detail[0].key, value, detail[0].return_size);
+            }
+            break;
+        case OSSL_PARAM_OCTET_PTR: {
+            char *value = nullptr;
+            detail[0] = OSSL_PARAM_construct_octet_ptr(params[i].key, reinterpret_cast<void**>(&value), 0);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << Raw(detail[0].key, value, detail[0].return_size).hex();
+            }
             break;
         }
     }
 
     const auto name = OSSL_PROVIDER_get0_name(provider);
-    debugs(83, DBG_PARSE_NOTE(3), "Provider: " << name << "(" << out.buf() << ")");
-    return 0;
+    debugs(83, DBG_PARSE_NOTE(3), "Provider: " << name << '(' << out.buf() << " )");
+    return 1;
 }
 #endif /* OPENSSL_VERSION_MAJOR >= 3 */
 
