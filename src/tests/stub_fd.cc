@@ -7,18 +7,33 @@
  */
 
 #include "squid.h"
-#include "fd.h"
-#include "fde.h"
 
 #define STUB_API "fd.cc"
 #include "tests/STUB.h"
 
-fde *fde::Table = nullptr;
-
-int fdNFree(void) STUB_RETVAL(-1)
-void fd_open(int, unsigned int, const char *) STUB
+#include "fd.h"
 void fd_close(int) STUB
-void fd_bytes(int, int, IoDirection) STUB
+void fd_open(int, unsigned int, const char *) STUB
 void fd_note(int, const char *) STUB
+void fd_bytes(int, int, IoDirection) STUB
+void fdDumpOpen() STUB
+int fdUsageHigh() STUB
 void fdAdjustReserved() STUB
+int default_read_method(int, char *, int) STUB_RETVAL(0)
+int default_write_method(int, const char *, int) STUB_RETVAL(0)
 
+// XXX: global. keep in sync with fd.cc
+const char *fdTypeStr[] = {
+    "None",
+    "Log",
+    "File",
+    "Socket",
+    "Pipe",
+    "MsgHdr",
+    "Unknown"
+};
+
+// XXX: should be in stub_fde.cc
+#include "fde.h"
+fde *fde::Table = nullptr;
+int fdNFree(void) STUB_RETVAL(-1)
