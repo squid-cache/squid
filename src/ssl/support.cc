@@ -861,7 +861,8 @@ Ssl::Initialize(void)
             fatalf("Failed to load SSL provider: %s\n", Security::ErrorString(ssl_error));
         }
     }
-    OSSL_PROVIDER_do_all(nullptr, &DisplayProviderInfo, nullptr);
+    const auto debugResult = OSSL_PROVIDER_do_all(nullptr, &DisplayProviderInfo, nullptr);
+    assert(debugResult == 1); // paranoid check that DisplayProviderInfo() returns 1
 #endif /* OPENSSL_VERSION_MAJOR >= 3 */
 
     const char *defName = ::Config.SSL.certSignHash ? ::Config.SSL.certSignHash : SQUID_SSL_SIGN_HASH_IF_NONE;
