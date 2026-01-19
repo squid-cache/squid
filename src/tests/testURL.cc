@@ -13,7 +13,9 @@
 #include "base/TextException.h"
 #include "compat/cppunit.h"
 #include "debug/Stream.h"
+#include "http/RequestMethod.h"
 #include "sbuf/Stream.h"
+#include "SquidConfig.h"
 #include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
@@ -29,12 +31,14 @@ class TestUri : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testConstructScheme);
     CPPUNIT_TEST(testDefaultConstructor);
     CPPUNIT_TEST(testEncoding);
+    CPPUNIT_TEST(testParse);
     CPPUNIT_TEST_SUITE_END();
 
 protected:
     void testConstructScheme();
     void testDefaultConstructor();
     void testEncoding();
+    void testParse();
 };
 CPPUNIT_TEST_SUITE_REGISTRATION(TestUri);
 
@@ -131,6 +135,127 @@ TestUri::testEncoding()
         CPPUNIT_ASSERT(!AnyP::Uri::Decode(ToSBuf("word", invalidEncoding, "word")));
         CPPUNIT_ASSERT_EQUAL(invalidEncoding, AnyP::Uri::DecodeOrDupe(invalidEncoding));
     };
+}
+
+void
+TestUri::testParse()
+{
+    // we are testing the strict parse (whitespace is invalid)
+    Config.uri_whitespace = URI_WHITESPACE_DENY;
+
+    std::vector<AnyP::ProtocolType> validSchemes = {
+        AnyP::PROTO_HTTP,
+        AnyP::PROTO_HTTPS,
+        AnyP::PROTO_FTP
+    };
+
+    // TODO: test variations of (in)valid authority as well
+    const SBuf authority("localhost:3128");
+
+    const std::vector<const char *> validPaths = {
+        "",
+        "/",
+        "/abs",
+        "/./"
+    };
+
+    const std::vector<const char *> invalidPaths = {
+        // XXX: Uri::parse sees all pre-'/' as as a "port" and fails to detect non-DIGIT garbage
+        // XXX: "relative-path",
+        "/white space"
+    };
+
+    const std::vector<const char *> validQuery = {
+        "",
+        "?",
+        "?/",
+        "?foo",
+        "?/foo",
+        "?foo/",
+        "?foo=",
+        "?foo=&",
+        "?&",
+        "?&&&&&&&&&&&&",
+        "?foo=bar",
+        "?0123456789=bar",
+        "?foo=bar&",
+        "?foo=bar&&&&",
+        "?&foo=bar",
+        "?&&&&foo=bar",
+        "?&foo=bar&",
+        "?&&&&foo=bar&&&&",
+        "?foo=?_weird?~`:[]stuff&bar=okay&&&&&&",
+        "?intlist=1",
+        "?intlist=1,2,3,4,5",
+        "?string=1a",
+        "?string=1,2,3,4,z",
+        "?string=1,2,3,4,[0]",
+        "?intlist=1,2,3,4,5&string=1,2,3,4,y",
+        "?https://example.com:80/"
+        "?https://example.com:80/?foo=bar"
+    };
+
+    const std::vector<const char *> validFragments = {
+        "",
+        "#",
+        "##",
+        "#?a=b",
+        "#fragment"
+    };
+
+    const auto method = HttpRequestMethod(Http::METHOD_GET);
+
+    for (const auto &schemeType : validSchemes) {
+        AnyP::UriScheme scheme(schemeType);
+        // Check that the parser accepts valid URLs
+        for (const auto path: validPaths) {
+            for (const auto query: validQuery) {
+                for (const auto frag: validFragments) {
+                    SBuf bits;
+                    bits.append(scheme.image());
+                    bits.append("://", 3);
+                    bits.append(authority);
+                    bits.append(path);
+                    bits.append(query);
+                    bits.append(frag);
+
+                    AnyP::Uri url;
+                    CPPUNIT_ASSERT(url.parse(method, bits));
+                    CPPUNIT_ASSERT_EQUAL(scheme, url.getScheme());
+                    CPPUNIT_ASSERT_EQUAL(SBuf(authority), url.authority());
+                    CPPUNIT_ASSERT_EQUAL(AnyP::KnownPort(3128), url.port().value_or(0));
+
+                    if (path[0] == '\0') // path-empty
+                        CPPUNIT_ASSERT_EQUAL(AnyP::Uri::SlashPath(), url.path());
+                    else
+                        CPPUNIT_ASSERT_EQUAL(SBuf(path), url.path());
+
+                    if (scheme == AnyP::PROTO_FTP) // no query for ftp://
+                        CPPUNIT_ASSERT(url.query().isEmpty());
+                    else
+                        CPPUNIT_ASSERT_EQUAL(SBuf(query).substr(1), url.query());
+                }
+            }
+        }
+
+        // Check that the parser rejects URLs with invalid path
+        for (const auto path: invalidPaths) {
+            for (const auto query: validQuery) {
+                for (const auto frag: validFragments) {
+                    SBuf bits;
+                    bits.append(scheme.image());
+                    bits.append("://", 3);
+                    bits.append(authority);
+                    bits.append(path);
+                    bits.append(query);
+                    bits.append(frag);
+
+                    AnyP::Uri url;
+                    CPPUNIT_ASSERT(!url.parse(method, bits));
+                }
+            }
+        }
+    }
 }
 
 int
