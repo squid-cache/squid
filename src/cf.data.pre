@@ -3150,6 +3150,19 @@ DOC_START
 	Not supported in builds with OpenSSL 3.0 or newer.
 DOC_END
 
+NAME: ssl_provider
+IFDEF: USE_OPENSSL&&OPENSSL_VERSION_MAJOR>=3
+TYPE: string
+LOC: Config.SSL.ssl_provider
+DEFAULT: none
+DOC_START
+	The OpenSSL provider to use.
+
+	When configured, Squid will only uses this named provider with
+	no additional parameters. Provider settings configured in
+	openssl.conf are ignored.
+DOC_END
+
 NAME: sslproxy_session_ttl
 IFDEF: USE_OPENSSL
 DEFAULT: 300

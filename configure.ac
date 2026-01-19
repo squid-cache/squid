@@ -1082,6 +1082,7 @@ AS_IF([test "x$with_openssl" = "xyes"],[
     openssl/engine.h \
     openssl/txt_db.h \
     openssl/pem.h \
+    openssl/provider.h \
   )
 
   # User may have provided a custom location for OpenSSL. Otherwise...
