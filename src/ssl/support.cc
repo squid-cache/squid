@@ -766,51 +766,51 @@ DisplayProviderInfo(OSSL_PROVIDER *provider, void *)
             detail[0] = OSSL_PARAM_construct_int(params[i].key, &value);
             if (OSSL_PROVIDER_get_params(provider, detail))
                 out << ' ' << detail[0].key << '=' << value;
-            }
-            break;
+        }
+        break;
         case OSSL_PARAM_UNSIGNED_INTEGER: {
             unsigned int value = 0;
             detail[0] = OSSL_PARAM_construct_uint(params[i].key, &value);
             if (OSSL_PROVIDER_get_params(provider, detail))
                 out << ' ' << detail[0].key << '=' << value;
-            }
-            break;
+        }
+        break;
         case OSSL_PARAM_REAL: {
             double value = 0.0;
             detail[0] = OSSL_PARAM_construct_double(params[i].key, &value);
             if (OSSL_PROVIDER_get_params(provider, detail))
                 out << ' ' << detail[0].key << '=' << value;
-            }
-            break;
+        }
+        break;
         case OSSL_PARAM_UTF8_STRING: {
             char *value = nullptr;
             detail[0] = OSSL_PARAM_construct_utf8_string(params[i].key, value, 0);
             if (OSSL_PROVIDER_get_params(provider, detail))
                 out << Raw(detail[0].key, value, detail[0].return_size);
-            }
-            break;
+        }
+        break;
         case OSSL_PARAM_OCTET_STRING: {
             char *value = nullptr;
             detail[0] = OSSL_PARAM_construct_octet_string(params[i].key, static_cast<void*>(value), 0);
             if (OSSL_PROVIDER_get_params(provider, detail))
                 out << Raw(detail[0].key, value, detail[0].return_size).hex();
-            }
-            break;
+        }
+        break;
         case OSSL_PARAM_UTF8_PTR: {
             char *value = nullptr;
             detail[0] = OSSL_PARAM_construct_utf8_ptr(params[i].key, &value, 0);
             OSSL_PARAM_set_all_unmodified(detail);
             if (OSSL_PROVIDER_get_params(provider, detail))
                 out << Raw(detail[0].key, value, detail[0].return_size);
-            }
-            break;
+        }
+        break;
         case OSSL_PARAM_OCTET_PTR: {
             char *value = nullptr;
             detail[0] = OSSL_PARAM_construct_octet_ptr(params[i].key, reinterpret_cast<void**>(&value), 0);
             if (OSSL_PROVIDER_get_params(provider, detail))
                 out << Raw(detail[0].key, value, detail[0].return_size).hex();
-            }
-            break;
+        }
+        break;
         }
     }
 
