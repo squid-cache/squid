@@ -1,3 +1,20 @@
+Changes in squid-7.4 (19 Jan 2026):
+
+	- Do not create world-readable directories
+	- digest_edirectory_auth: Fix LDAPS memory leaks
+	- snmplib: Improve handling of zero-length ASN OCTET STRINGs
+	- Debug tls_read_method()/tls_write_method() errors
+	- ICMP: Harden echo paths, fix overflows, UB, and leaks
+	- Set SSL_OP_LEGACY_SERVER_CONNECT when peeking at servers
+	- security_file_certgen: Fix OPENSSL_malloc()/free(3) mismatch
+	- Detect FreeBSD ports Heimdal package
+	- Remove SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H macro
+	- Remove SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H macro
+	- ext_kerberos_ldap_group_acl: Do not prohibit all LDFLAGS
+	- negotiate_sspi_auth: Respond with ERR when FormatMessage() fails
+	- ... and some code cleanups
+	- ... and some CI improvements
+
 Changes in squid-7.3 (28 Oct 2025):
 
 	- Regression Bug 5520: ERR_INVALID_URL for CONNECT host with leading digit
