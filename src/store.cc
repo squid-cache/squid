@@ -24,7 +24,7 @@
 #endif
 #include "ETag.h"
 #include "event.h"
-#include "fde.h"
+#include "fd.h"
 #include "globals.h"
 #include "http.h"
 #include "HttpReply.h"
