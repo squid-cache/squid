@@ -1902,8 +1902,8 @@ tests_testHttpReply_SOURCES = \
 	wordlist.h
 nodist_tests_testHttpReply_SOURCES = \
 	$(TESTSOURCES) \
-	hier_code.cc \
 	tests/stub_fde.cc \
+	hier_code.cc \
 	tests/stub_libtime.cc
 tests_testHttpReply_LDADD=\
 	CommCalls.o \
