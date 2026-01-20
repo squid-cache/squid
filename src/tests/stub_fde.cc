@@ -21,4 +21,3 @@ char const *fde::remoteAddr() const STUB_RETVAL(nullptr)
 void fde::dumpStats(StoreEntry &, int) const STUB
 bool fde::readPending(int) const STUB_RETVAL(false)
 fde* fde::Table = nullptr;
-int fdNFree() STUB_RETVAL(-1)
