@@ -188,8 +188,6 @@ private:
 
 #define fd_table fde::Table
 
-int fdNFree(void);
-
 inline int
 FD_READ_METHOD(int fd, char *buf, int len)
 {

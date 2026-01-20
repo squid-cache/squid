@@ -49,6 +49,7 @@ STUB_SOURCE = \
 	tests/stub_external_acl.cc \
 	tests/stub_fatal.cc \
 	tests/stub_fd.cc \
+	tests/stub_fde.cc \
 	tests/stub_fqdncache.cc \
 	tests/stub_helper.cc \
 	tests/stub_http.cc \
