@@ -300,7 +300,9 @@ void
 Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 {
     Auth::StateData *replyData = static_cast<Auth::StateData *>(data);
-    debugs(29, 9, "reply=" << reply);
+    debugs(29, 5, "reply=" << reply);
+    if (reply.expires.has_value())
+        debugs(29, 5, "ignoring unexpected ttl=" << (reply.expires.value() - current_time.tv_sec));
 
     assert(replyData->auth_user_request != nullptr);
     Auth::UserRequest::Pointer auth_user_request = replyData->auth_user_request;
