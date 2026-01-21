@@ -461,7 +461,6 @@ HttpRequest *
 icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
 {
     if (strpbrk(url, w_space)) {
-        url = rfc1738_escape(url);
         icpCreateAndSend(ICP_ERR, 0, rfc1738_escape(url), reqnum, 0, fd, from, nullptr);
         return nullptr;
     }
@@ -481,8 +480,18 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
     int rtt = 0;
     int src_rtt = 0;
     uint32_t flags = 0;
-    /* We have a valid packet */
-    char *url = buf + sizeof(icp_common_t) + sizeof(uint32_t);
+    /* Ensure QUERY has space for the 32-bit field and at least one URL byte. */
+    const auto hdr = sizeof(icp_common_t);
+    const auto qhdr = hdr + sizeof(uint32_t);
+    const auto pkt_len = static_cast<size_t>(header.length);
+    if (pkt_len <= qhdr) {
+        debugs(12, 3, "icpHandleIcpV2: short ICP_QUERY from " << from);
+        return;
+    }
+    /* Guarantee an in-bounds NUL terminator for any downstream C-string use. */
+    buf[pkt_len - 1] = '\0';
+    auto url = buf + qhdr;
+
     HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
     if (!icp_request)
@@ -737,8 +746,6 @@ icpIncomingConnectionOpened(Ipc::StartListeningAnswer &answer)
     if (!Comm::IsConnOpen(conn))
         fatal("Cannot open ICP Port");
 
-    Comm::SetSelect(conn->fd, COMM_SELECT_READ, icpHandleUdp, nullptr, 0);
-
     for (const wordlist *s = Config.mcast_group_list; s; s = s->next)
         ipcache_nbgethostbyname(s->key, mcastJoinGroups, nullptr); // XXX: pass the conn for mcastJoinGroups usage.
 
@@ -750,6 +757,8 @@ icpIncomingConnectionOpened(Ipc::StartListeningAnswer &answer)
         icpOutgoingConn = conn;
         debugs(12, DBG_IMPORTANT, "Sending ICP messages from " << icpOutgoingConn->local);
     }
+
+    Comm::SetSelect(conn->fd, COMM_SELECT_READ, icpHandleUdp, nullptr, 0);
 }
 
 /**
