@@ -938,6 +938,7 @@ mainReconfigureFinish(void *)
     reconfiguring = 0;
 }
 
+/// rotates the logs of the worker and other kid processes; \sa masterRotate()
 static void
 mainRotate(void)
 {
@@ -1713,6 +1714,11 @@ mainStartScript(const char *prog)
     }
 }
 
+/*
+ * The master*() functions below are used by the master process in SMP
+ * configurations (i.e. where the master process is not also a worker process).
+ */
+
 /// Initiates shutdown sequence. Shutdown ends when the last running kids stops.
 static void
 masterShutdownStart()
@@ -1743,6 +1749,21 @@ masterReconfigureFinish()
     reconfiguring = 0;
 }
 
+/// Rotates master process logs; \sa mainRotate()
+static void
+masterRotate()
+{
+    if (AvoidSignalAction("log rotation", do_rotate))
+        return;
+
+    // XXX: When all SMP Squid processes use the same cache.log (default), each
+    // process, including this master process, rotates the same log file,
+    // resulting in K excessive rotations for K kid processes.
+    _db_rotate_log(); // cache.log
+
+    // master process should not have any other logs that mainRotate() rotates
+}
+
 /// Reacts to the kid revival alarm.
 static void
 masterReviveKids()
@@ -1761,6 +1782,8 @@ masterCheckAndBroadcastSignals()
         masterShutdownStart();
     if (do_reconfigure)
         masterReconfigureStart();
+    if (do_rotate)
+        masterRotate();
     if (do_revive_kids)
         masterReviveKids();
 
