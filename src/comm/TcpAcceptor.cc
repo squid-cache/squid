@@ -17,9 +17,8 @@
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
 #include "comm/Connection.h"
-#include "comm/Loops.h"
+#include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
-#include "CommCalls.h"
 #include "compat/socket.h"
 #include "eui/Config.h"
 #include "fd.h"
@@ -84,8 +83,10 @@ Comm::TcpAcceptor::start()
     conn->noteStart();
 
     // if no error so far start accepting connections.
-    if (errcode == 0)
-        SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
+    if (errcode == 0) {
+        AsyncCall::Pointer reader = JobCallback(33, 5, IoDialer, this, TcpAcceptor::acceptOne);
+        Comm::Read(conn, reader);
+    }
 }
 
 bool
@@ -198,37 +199,6 @@ Comm::TcpAcceptor::handleClosure(const CommCloseCbParams &)
     Must(done());
 }
 
-/**
- * This private callback is called whenever a filedescriptor is ready
- * to dupe itself and fob off an accept()ed connection
- *
- * It will either do that accept operation. Or if there are not enough FD
- * available to do the clone safely will push the listening FD into a list
- * of deferred operations. The list gets kicked and the dupe/accept() actually
- * done later when enough sockets become available.
- */
-void
-Comm::TcpAcceptor::doAccept(int fd, void *data)
-{
-    try {
-        debugs(5, 2, "New connection on FD " << fd);
-
-        Must(isOpen(fd));
-        TcpAcceptor *afd = static_cast<TcpAcceptor*>(data);
-
-        if (!okToAccept()) {
-            AcceptLimiter::Instance().defer(afd);
-        } else {
-            afd->acceptNext();
-        }
-
-    } catch (const std::exception &e) {
-        fatalf("FATAL: error while accepting new client connection: %s\n", e.what());
-    } catch (...) {
-        fatal("FATAL: error while accepting new client connection: [unknown]\n");
-    }
-}
-
 bool
 Comm::TcpAcceptor::okToAccept()
 {
@@ -262,13 +232,22 @@ Comm::TcpAcceptor::logAcceptError(const ConnectionPointer &tcpClient) const
 }
 
 void
-Comm::TcpAcceptor::acceptOne()
+Comm::TcpAcceptor::acceptOne(const CommIoCbParams &io)
 {
-    /*
-     * We don't worry about running low on FDs here.  Instead,
-     * doAccept() will use AcceptLimiter if we reach the limit
-     * there.
-     */
+    // Bail out. close handlers will clean up
+    if (io.flag == Comm::ERR_CLOSING) {
+        debugs(5, 0, "Listener socket closing on " << conn);
+        return;
+    }
+
+    debugs(5, 2, "new connection on " << conn);
+
+    if (!okToAccept()) {
+        AcceptLimiter::Instance().defer(this);
+        AsyncCall::Pointer reader = JobCallback(33, 5, IoDialer, this, TcpAcceptor::acceptOne);
+        Comm::Read(conn, reader);
+        return;
+    }
 
     /* Accept a new connection */
     ConnectionPointer newConnDetails = new Connection();
@@ -276,17 +255,27 @@ Comm::TcpAcceptor::acceptOne()
         if (acceptInto(newConnDetails)) {
             Assure(newConnDetails->isOpen());
             CallBack(newConnDetails, [&] {
+                CodeContext::Reset(newConnDetails);
                 debugs(5, 5, "Listener: " << conn <<
                        " accepted new connection " << newConnDetails <<
                        " handler Subscription: " << theCallSub);
                 notify(Comm::OK, newConnDetails);
+                CodeContext::Reset(listenPort_);
             });
         } else {
             debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
             newConnDetails->close(); // paranoid manual closure (and may already be closed)
         }
 
-        SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
+        if (done())
+            return;
+
+        // try to drain the deferred queue, if possible
+        if (okToAccept() && AcceptLimiter::Instance().kick())
+            return;
+
+        AsyncCall::Pointer reader = JobCallback(33, 5, IoDialer, this, TcpAcceptor::acceptOne);
+        Comm::Read(conn, reader);
         return;
     } catch (...) {
         const auto debugLevel = intendedForUserConnections() ? DBG_CRITICAL : 3;
@@ -304,17 +293,8 @@ Comm::TcpAcceptor::acceptOne()
         notify(Comm::COMM_ERROR, newConnDetails);
     });
 
-    // XXX: Not under AsyncJob call protections but, if placed there, may cause
-    // problems like making the corresponding HttpSockets entry (if any) stale.
+    // XXX: may cause problems like making the corresponding HttpSockets entry (if any) stale.
     mustStop("unrecoverable accept failure");
-}
-
-void
-Comm::TcpAcceptor::acceptNext()
-{
-    Must(IsConnOpen(conn));
-    debugs(5, 2, "connection on " << conn);
-    acceptOne();
 }
 
 void
@@ -355,6 +335,8 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
         if (ignoreErrno(errcode) || errcode == ECONNABORTED) {
             debugs(50, 5, status() << ": " << xstrerr(errcode));
             return false;
+        } else if (errcode == EBADF) {
+            throw TextException(ToSBuf("Listening socket closed: ", xstrerr(errcode)), Here());
         } else {
             throw TextException(ToSBuf("Failed to accept an incoming connection: ", xstrerr(errcode)), Here());
         }

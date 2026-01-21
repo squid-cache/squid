@@ -39,8 +39,9 @@ public:
     /** remove all records of an acceptor. Only to be called by the ConnAcceptor::swanSong() */
     void removeDead(const TcpAcceptor::Pointer &afd);
 
-    /** try to accept and begin processing any delayed client connections. */
-    void kick();
+    /// try to accept and begin processing any delayed client connections.
+    /// \retval true if a delayed AsyncCall was scheduled, false otherwise.
+    bool kick();
 
 private:
     /** FIFO queue */
