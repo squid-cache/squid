@@ -39,7 +39,7 @@ Content-Base, Http::HdrType::CONTENT_BASE, Http::HdrFieldType::ftStr, HdrKind::E
 Content-Disposition, Http::HdrType::CONTENT_DISPOSITION, Http::HdrFieldType::ftStr, HdrKind::None
 Content-Encoding, Http::HdrType::CONTENT_ENCODING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::EntityHeader
 Content-Language, Http::HdrType::CONTENT_LANGUAGE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::EntityHeader
-Content-Length, Http::HdrType::CONTENT_LENGTH, Http::HdrFieldType::ftInt64, HdrKind::EntityHeader
+Content-Length, Http::HdrType::CONTENT_LENGTH, Http::HdrFieldType::ftInt64, HdrKind::EntityHeader|HdrKind::DeniedTrailer
 Content-Location, Http::HdrType::CONTENT_LOCATION, Http::HdrFieldType::ftStr, HdrKind::EntityHeader
 Content-MD5, Http::HdrType::CONTENT_MD5, Http::HdrFieldType::ftStr, HdrKind::EntityHeader
 Content-Range, Http::HdrType::CONTENT_RANGE, Http::HdrFieldType::ftPContRange, HdrKind::EntityHeader
@@ -82,10 +82,10 @@ Retry-After, Http::HdrType::RETRY_AFTER, Http::HdrFieldType::ftStr, HdrKind::Rep
 Server, Http::HdrType::SERVER, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 Set-Cookie, Http::HdrType::SET_COOKIE, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 Set-Cookie2, Http::HdrType::SET_COOKIE2, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
-TE, Http::HdrType::TE, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader
+TE, Http::HdrType::TE, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader|HdrKind::DeniedTrailer
 Title, Http::HdrType::TITLE, Http::HdrFieldType::ftStr, HdrKind::None
-Trailer, Http::HdrType::TRAILER, Http::HdrFieldType::ftStr, HdrKind::HopByHopHeader
-Transfer-Encoding, Http::HdrType::TRANSFER_ENCODING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader
+Trailer, Http::HdrType::TRAILER, Http::HdrFieldType::ftStr, HdrKind::HopByHopHeader|HdrKind::DeniedTrailer
+Transfer-Encoding, Http::HdrType::TRANSFER_ENCODING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader|HdrKind::DeniedTrailer
 Translate, Http::HdrType::TRANSLATE, Http::HdrFieldType::ftStr, HdrKind::None
 Unless-Modified-Since, Http::HdrType::UNLESS_MODIFIED_SINCE, Http::HdrFieldType::ftStr, HdrKind::None
 Upgrade, Http::HdrType::UPGRADE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader
