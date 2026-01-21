@@ -1310,7 +1310,7 @@ Ftp::Server::handleRequest(HttpRequest *request)
     if (Debug::Enabled(9, 2)) {
         MemBuf mb;
         mb.init();
-        request->pack(&mb);
+        request->pack(&mb, MaskSensitiveInfo::off);
 
         debugs(9, 2, "FTP Client " << clientConnection);
         debugs(9, 2, "FTP Client REQUEST:\n---------\n" << mb.buf <<
