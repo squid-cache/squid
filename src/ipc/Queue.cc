@@ -52,46 +52,26 @@ Ipc::QueueReader::QueueReader(): popBlocked(false), popSignal(false),
 
 /* QueueReaders */
 
-Ipc::QueueReaders::QueueReaders(const int aCapacity): theCapacity(aCapacity),
-    theReaders(theCapacity)
-{
-    Must(theCapacity > 0);
-}
-
 size_t
-Ipc::QueueReaders::sharedMemorySize() const
-{
-    return SharedMemorySize(theCapacity);
-}
-
-size_t
-Ipc::QueueReaders::SharedMemorySize(const int capacity)
+Ipc::QueueReaders::SharedMemorySize(const size_t capacity)
 {
     return sizeof(QueueReaders) + sizeof(QueueReader) * capacity;
 }
 
 // OneToOneUniQueue
 
-Ipc::OneToOneUniQueue::OneToOneUniQueue(const unsigned int aMaxItemSize, const int aCapacity):
-    theIn(0), theOut(0), theSize(0), theMaxItemSize(aMaxItemSize),
+Ipc::OneToOneUniQueue::OneToOneUniQueue(const size_t aMaxItemSize, const size_t aCapacity):
+    theSize(0),
+    theMaxItemSize(aMaxItemSize),
     theCapacity(aCapacity)
 {
-    Must(theMaxItemSize > 0);
-    Must(theCapacity > 0);
+    assert(theMaxItemSize > 0);
+    assert(theCapacity > 0);
 }
 
-int
-Ipc::OneToOneUniQueue::Bytes2Items(const unsigned int maxItemSize, int size)
+size_t
+Ipc::OneToOneUniQueue::Items2Bytes(const size_t maxItemSize, const size_t size)
 {
-    assert(maxItemSize > 0);
-    size -= sizeof(OneToOneUniQueue);
-    return size >= 0 ? size / maxItemSize : 0;
-}
-
-int
-Ipc::OneToOneUniQueue::Items2Bytes(const unsigned int maxItemSize, const int size)
-{
-    assert(size >= 0);
     return sizeof(OneToOneUniQueue) + maxItemSize * size;
 }
 
@@ -99,7 +79,7 @@ Ipc::OneToOneUniQueue::Items2Bytes(const unsigned int maxItemSize, const int siz
 /// The labels reflect whether the caller owns theIn or theOut data member and,
 /// hence, cannot report the other value reliably.
 void
-Ipc::OneToOneUniQueue::statOpen(std::ostream &os, const char *inLabel, const char *outLabel, const uint32_t count) const
+Ipc::OneToOneUniQueue::statOpen(std::ostream &os, const char *inLabel, const char *outLabel, const size_t count) const
 {
     os << "{ size: " << count <<
        ", capacity: " << theCapacity <<
@@ -116,34 +96,35 @@ Ipc::OneToOneUniQueue::statClose(std::ostream &os) const
 
 /* OneToOneUniQueues */
 
-Ipc::OneToOneUniQueues::OneToOneUniQueues(const int aCapacity, const unsigned int maxItemSize, const int queueCapacity): theCapacity(aCapacity)
+Ipc::OneToOneUniQueues::OneToOneUniQueues(const size_t aCapacity, const size_t maxItemSize, const size_t queueCapacity) :
+    theCapacity(aCapacity)
 {
     Must(theCapacity > 0);
-    for (int i = 0; i < theCapacity; ++i)
+    for (size_t i = 0; i < theCapacity; ++i)
         new (&(*this)[i]) OneToOneUniQueue(maxItemSize, queueCapacity);
 }
 
 size_t
 Ipc::OneToOneUniQueues::sharedMemorySize() const
 {
+    // XXX: wrong when front() queue size != constructor maxItemSize
     return sizeof(*this) + theCapacity * front().sharedMemorySize();
 }
 
 size_t
-Ipc::OneToOneUniQueues::SharedMemorySize(const int capacity, const unsigned int maxItemSize, const int queueCapacity)
+Ipc::OneToOneUniQueues::SharedMemorySize(const size_t capacity, const size_t maxItemSize, const size_t queueCapacity)
 {
-    const int queueSize =
+    const auto queueSize =
         OneToOneUniQueue::Items2Bytes(maxItemSize, queueCapacity);
     return sizeof(OneToOneUniQueues) + queueSize * capacity;
 }
 
 const Ipc::OneToOneUniQueue &
-Ipc::OneToOneUniQueues::operator [](const int index) const
+Ipc::OneToOneUniQueues::operator [](const size_t index) const
 {
-    Must(0 <= index && index < theCapacity);
+    Must(index < theCapacity);
     const size_t queueSize = index ? front().sharedMemorySize() : 0;
-    const char *const queue =
-        reinterpret_cast<const char *>(this) + sizeof(*this) + index * queueSize;
+    const auto queue = reinterpret_cast<const char *>(this) + sizeof(*this) + index * queueSize;
     return *reinterpret_cast<const OneToOneUniQueue *>(queue);
 }
 
@@ -225,7 +206,7 @@ Ipc::BaseMultiQueue::remoteReader(const int remoteProcessId)
 // FewToFewBiQueue
 
 Ipc::FewToFewBiQueue::Owner *
-Ipc::FewToFewBiQueue::Init(const String &id, const int groupASize, const int groupAIdOffset, const int groupBSize, const int groupBIdOffset, const unsigned int maxItemSize, const int capacity)
+Ipc::FewToFewBiQueue::Init(const String &id, const size_t groupASize, const int groupAIdOffset, const size_t groupBSize, const int groupBIdOffset, const size_t maxItemSize, const size_t capacity)
 {
     return new Owner(id, groupASize, groupAIdOffset, groupBSize, groupBIdOffset, maxItemSize, capacity);
 }
@@ -237,8 +218,8 @@ Ipc::FewToFewBiQueue::FewToFewBiQueue(const String &id, const Group aLocalGroup,
     readers(shm_old(QueueReaders)(ReadersId(id).termedBuf())),
     theLocalGroup(aLocalGroup)
 {
-    Must(queues->theCapacity == metadata->theGroupASize * metadata->theGroupBSize * 2);
-    Must(readers->theCapacity == metadata->theGroupASize + metadata->theGroupBSize);
+    Must(queues->theCapacity == size_t(metadata->theGroupASize) * size_t(metadata->theGroupBSize) * 2);
+    Must(readers->theCapacity == size_t(metadata->theGroupASize) + size_t(metadata->theGroupBSize));
 
     debugs(54, 7, "queue " << id << " reader: " << localReader().id);
 }
@@ -255,10 +236,10 @@ Ipc::FewToFewBiQueue::validProcessId(const Group group, const int processId) con
     switch (group) {
     case groupA:
         return metadata->theGroupAIdOffset <= processId &&
-               processId < metadata->theGroupAIdOffset + metadata->theGroupASize;
+               size_t(processId) < metadata->theGroupAIdOffset + metadata->theGroupASize;
     case groupB:
         return metadata->theGroupBIdOffset <= processId &&
-               processId < metadata->theGroupBIdOffset + metadata->theGroupBSize;
+               size_t(processId) < metadata->theGroupBIdOffset + metadata->theGroupBSize;
     }
     return false;
 }
@@ -340,15 +321,17 @@ Ipc::FewToFewBiQueue::remotesIdOffset() const
            metadata->theGroupAIdOffset;
 }
 
-Ipc::FewToFewBiQueue::Metadata::Metadata(const int aGroupASize, const int aGroupAIdOffset, const int aGroupBSize, const int aGroupBIdOffset):
-    theGroupASize(aGroupASize), theGroupAIdOffset(aGroupAIdOffset),
-    theGroupBSize(aGroupBSize), theGroupBIdOffset(aGroupBIdOffset)
+Ipc::FewToFewBiQueue::Metadata::Metadata(const size_t aGroupASize, const int aGroupAIdOffset, const size_t aGroupBSize, const int aGroupBIdOffset):
+    theGroupASize(aGroupASize),
+    theGroupAIdOffset(aGroupAIdOffset),
+    theGroupBSize(aGroupBSize),
+    theGroupBIdOffset(aGroupBIdOffset)
 {
     Must(theGroupASize > 0);
     Must(theGroupBSize > 0);
 }
 
-Ipc::FewToFewBiQueue::Owner::Owner(const String &id, const int groupASize, const int groupAIdOffset, const int groupBSize, const int groupBIdOffset, const unsigned int maxItemSize, const int capacity):
+Ipc::FewToFewBiQueue::Owner::Owner(const String &id, const size_t groupASize, const int groupAIdOffset, const size_t groupBSize, const int groupBIdOffset, const size_t maxItemSize, const size_t capacity):
     metadataOwner(shm_new(Metadata)(MetadataId(id).termedBuf(), groupASize, groupAIdOffset, groupBSize, groupBIdOffset)),
     queuesOwner(shm_new(OneToOneUniQueues)(QueuesId(id).termedBuf(), groupASize*groupBSize*2, maxItemSize, capacity)),
     readersOwner(shm_new(QueueReaders)(ReadersId(id).termedBuf(), groupASize+groupBSize))
@@ -376,8 +359,8 @@ Ipc::MultiQueue::MultiQueue(const String &id, const int localProcessId):
     queues(shm_old(OneToOneUniQueues)(QueuesId(id).termedBuf())),
     readers(shm_old(QueueReaders)(ReadersId(id).termedBuf()))
 {
-    Must(queues->theCapacity == metadata->theProcessCount * metadata->theProcessCount);
-    Must(readers->theCapacity == metadata->theProcessCount);
+    Must(queues->theCapacity == size_t(metadata->theProcessCount) * size_t(metadata->theProcessCount));
+    Must(readers->theCapacity == size_t(metadata->theProcessCount));
 
     debugs(54, 7, "queue " << id << " reader: " << localReader().id);
 }
@@ -386,7 +369,7 @@ bool
 Ipc::MultiQueue::validProcessId(const int processId) const
 {
     return metadata->theProcessIdOffset <= processId &&
-           processId < metadata->theProcessIdOffset + metadata->theProcessCount;
+           size_t(processId) < metadata->theProcessIdOffset + metadata->theProcessCount;
 }
 
 const Ipc::OneToOneUniQueue &
@@ -444,8 +427,9 @@ Ipc::MultiQueue::remotesIdOffset() const
     return metadata->theProcessIdOffset;
 }
 
-Ipc::MultiQueue::Metadata::Metadata(const int aProcessCount, const int aProcessIdOffset):
-    theProcessCount(aProcessCount), theProcessIdOffset(aProcessIdOffset)
+Ipc::MultiQueue::Metadata::Metadata(const size_t aProcessCount, const int aProcessIdOffset):
+    theProcessCount(aProcessCount),
+    theProcessIdOffset(aProcessIdOffset)
 {
     Must(theProcessCount > 0);
 }
