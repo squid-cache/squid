@@ -9,6 +9,7 @@
 /* DEBUG: section 16    Cache Manager API */
 
 #include "squid.h"
+#include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
@@ -17,8 +18,10 @@
 #include "Store.h"
 #include "tools.h"
 
+#include <iosfwd>
+
 void GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours);
-void DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry);
+void DumpAvgStat(Mgr::IntervalActionData& stats, std::ostream&);
 
 Mgr::IntervalActionData::IntervalActionData()
 {
@@ -149,7 +152,8 @@ Mgr::IntervalAction::dump(StoreEntry* entry)
 {
     debugs(16, 5, MYNAME);
     Must(entry != nullptr);
-    DumpAvgStat(data, entry);
+    PackableStream yaml(*entry);
+    DumpAvgStat(data, yaml);
 }
 
 void
