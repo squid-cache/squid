@@ -77,7 +77,6 @@ BEGIN {
 	}
 	sub(/^[ ]*static /,"")
 	sub(/[;][ ]*[/]*STUB/," STUB")
-	sub(/[;]/,"")
 	sub(/^[ ]*/,"")
 	print
 }
