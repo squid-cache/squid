@@ -1521,7 +1521,7 @@ tests_testDiskIO_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	tests/testDiskIO.cc \
-	tests/stub_ETag.cc \
+	ETag.stub.cc \
 	EventLoop.cc \
 	FadingCounter.cc \
 	FileMap.h \
@@ -1826,7 +1826,7 @@ check_PROGRAMS += tests/testHttpReply
 tests_testHttpReply_SOURCES = \
 	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
-	tests/stub_ETag.cc \
+	ETag.stub.cc \
 	tests/stub_HelperChildConfig.cc \
 	HttpBody.cc \
 	HttpBody.h \
@@ -1936,7 +1936,7 @@ nodist_tests_testHttpRequest_SOURCES = \
 	tests/stub_ACLFilledChecklist.cc \
 	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
-	tests/stub_ETag.cc \
+	ETag.stub.cc \
 	tests/stub_HelperChildConfig.cc \
 	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
@@ -2079,7 +2079,7 @@ tests_testCacheManager_SOURCES = \
 	CpuAffinityMap.h \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
-	tests/stub_ETag.cc \
+	ETag.stub.cc \
 	tests/stub_EventLoop.cc \
 	ExternalACLEntry.cc \
 	FadingCounter.cc \
