@@ -538,6 +538,8 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
     if (const auto errorDetail = Ssl::ErrorDetailsManager::GetInstance().findDetail(error_no, request)) {
         detailEntry = *errorDetail;
         customFormat = detailEntry->detail;
+    } else {
+        detailEntry.clear();
     }
         
 #else
