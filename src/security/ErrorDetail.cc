@@ -535,7 +535,7 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
 {
     std::optional<SBuf> customFormat;
 #if USE_OPENSSL
-    detailEntry = *Ssl::ErrorDetailsManager::GetInstance().findDetail(error_no, request);
+    detailEntry = Ssl::ErrorDetailsManager::GetInstance().findDetail(error_no, request);
     if (detailEntry) 
         customFormat = detailEntry->detail;
 #else
