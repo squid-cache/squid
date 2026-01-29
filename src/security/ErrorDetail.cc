@@ -541,7 +541,6 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
     } else {
         detailEntry.reset();
     }
-        
 #else
     (void)request;
 #endif
