@@ -539,7 +539,7 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
         detailEntry = *errorDetail;
         customFormat = detailEntry->detail;
     } else {
-        detailEntry.clear();
+        detailEntry.reset();
     }
         
 #else
