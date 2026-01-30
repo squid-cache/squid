@@ -2482,7 +2482,7 @@ ConnStateData::postHttpsAccept()
         HttpRequest *request = new HttpRequest(mx);
         static char ip[MAX_IPSTRLEN];
         assert(clientConnection->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
-        request->url.host(clientConnection->local.toStr(ip, sizeof(ip)));
+        request->url.host(clientConnection->local.toHostStr(ip, sizeof(ip)));
         request->url.port(clientConnection->local.port());
         request->myportname = port->name;
         const AccessLogEntry::Pointer connectAle = new AccessLogEntry;
@@ -3107,7 +3107,7 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, const 
 #endif
     } else if (transparent()) {
         static char ip[MAX_IPSTRLEN];
-        connectHost = clientConnection->local.toStr(ip, sizeof(ip));
+        connectHost = clientConnection->local.toHostStr(ip, sizeof(ip));
         connectPort = clientConnection->local.port();
     }
 
