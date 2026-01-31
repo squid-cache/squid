@@ -3094,7 +3094,7 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, const 
 
     if (pinning.serverConnection != nullptr) {
         static char ip[MAX_IPSTRLEN];
-        connectHost = pinning.serverConnection->remote.toStr(ip, sizeof(ip));
+        connectHost = pinning.serverConnection->remote.toHostStr(ip, sizeof(ip));
         if (const auto remotePort = pinning.serverConnection->remote.port())
             connectPort = remotePort;
     } else if (cause) {
