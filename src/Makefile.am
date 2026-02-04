@@ -22,6 +22,7 @@ SUBDIRS = \
 	time \
 	debug \
 	base \
+	engines \
 	anyp \
 	helper \
 	dns \
@@ -536,6 +537,7 @@ squid_LDADD = \
 	$(ADAPTATION_LIBS) \
 	html/libhtml.la \
 	$(SNMP_LIBS) \
+	engines/libengines.la \
 	mem/libmem.la \
 	store/libstore.la \
 	time/libtime.la \
