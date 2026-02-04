@@ -9,13 +9,12 @@
 #ifndef SQUID_SRC_EVENTLOOP_H
 #define SQUID_SRC_EVENTLOOP_H
 
+#include "engines/AsyncEngine.h"
 #include "time/forward.h"
 
 #include <vector>
 
 #define EVENT_LOOP_TIMEOUT  1000 /* 1s timeout */
-
-class AsyncEngine;
 
 /** An event loop. An event loop is the core inner loop of squid.
  * The event loop can be run until exit, or once. After it finishes control

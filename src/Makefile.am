@@ -215,8 +215,6 @@ squid_SOURCES = \
 	$(WINSVC_SOURCE) \
 	AccessLogEntry.cc \
 	AccessLogEntry.h \
-	AsyncEngine.cc \
-	AsyncEngine.h \
 	AuthReg.h \
 	BodyPipe.cc \
 	BodyPipe.h \
