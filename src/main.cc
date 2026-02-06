@@ -1372,7 +1372,7 @@ RegisterModules()
 
 /// unsafe main routine -- may throw
 static int
-SquidMain(int argc, char **argv) noexcept(false)
+SquidMain(int argc, char **argv)
 {
     // We must register all modules before the first RunRegisteredHere() call.
     // We do it ASAP/here so that we do not need to move this code when we add
