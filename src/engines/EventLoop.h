@@ -28,47 +28,52 @@ class EventLoop
 public:
     EventLoop();
 
-    /** register an async engine which will be given the opportunity to perform
+    /**
+     * Register an engine which will be given the opportunity to perform
      * in-main-thread tasks each event loop.
      */
-    void registerEngine(AsyncEngine *engine);
+    void registerEngine(AsyncEngine *);
 
-    /** start the event loop running. The loop will run until it is stopped by
+    /**
+     * Start this event loop running. The loop will run until it is stopped by
      * calling stop(), or when the loop is completely idle - nothing
      * dispatched in a loop, and all engines idle.
      */
     void run();
 
-    /** run the loop once. This may not complete all events! It should therefor
-     * be used with care.
+    /**
+     * This may not complete all events! use with care.
      * TODO: signal in runOnce whether or not the loop is over - IDLE vs OK vs
      * TIMEOUT?
      */
     bool runOnce();
 
-    /** set the primary async engine. The primary async engine receives the
-     * lowest requested timeout gathered from the other engines each loop.
-     * (There is a default of 10ms if all engines are idle or request higher
-     * delays).
+    /**
+     * The primary async engine receives the lowest requested timeout gathered
+     * from the other engines each loop.
+     * There is a default of 10ms if all engines are idle or request higher
+     * delays.
+     *
      * If no primary has been nominated, the last async engine added is
      * implicitly the default.
      */
-    void setPrimaryEngine(AsyncEngine * engine);
+    void setPrimaryEngine(AsyncEngine *);
 
-    /** set the time service. There can be only one time service set at any
-     * time. The time service is invoked on each loop
+    /**
+     * Nominate a time service to invoke on each loop.
+     * There can be only one engine acting as time service.
      */
     void setTimeService(Time::Engine *);
 
-    /** stop the event loop - it will finish the current loop and then return to the
-     * caller of run().
-     */
+    /// Finish the current loop and then return to the caller of run().
     void stop();
 
     int errcount;
 
-    /// the [main program] loop running now; may be nil
-    /// for simplicity, we assume there are no concurrent loops
+    /**
+     * The [main program] loop running now; may be nil.
+     * For simplicity, we assume there are no concurrent loops
+     */
     static EventLoop *Running;
 
 private:
@@ -76,7 +81,7 @@ private:
     void prepareToRun();
 
     /** check an individual engine */
-    void checkEngine(AsyncEngine * engine, bool const primary);
+    void checkEngine(AsyncEngine *, const bool primary);
 
     /** dispatch calls and events scheduled during checkEngine() */
     bool dispatchCalls();
@@ -86,10 +91,15 @@ private:
     engine_vector engines;
     Time::Engine *timeService;
     AsyncEngine * primaryEngine;
-    int loop_delay; /**< the delay to be given to the primary engine */
-    bool error; /**< has an error occurred in this loop */
-    bool runOnceResult; /**< the result from runOnce */
+
+    /// the delay to be given to the primary engine
+    int loop_delay;
+
+    /// has an error occurred in this loop
+    bool error;
+
+    /// the result from runOnce
+    bool runOnceResult;
 };
 
-#endif /* SQUID_SRC_EVENTLOOP_H */
-
+#endif /* SQUID_SRC_ENGINES_EVENTLOOP_H */

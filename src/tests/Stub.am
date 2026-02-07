@@ -16,7 +16,6 @@ STUB_SOURCE = \
 	tests/stub_CommIO.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_ETag.cc \
-	tests/stub_EventLoop.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpControlMsg.cc \
 	tests/stub_HttpHeader.cc \
@@ -64,6 +63,7 @@ STUB_SOURCE = \
 	tests/stub_libcomm.cc \
 	tests/stub_libdiskio.cc \
 	tests/stub_libdns.cc \
+	tests/stub_libengines.cc \
 	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \

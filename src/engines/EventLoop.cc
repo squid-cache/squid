@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "base/AsyncCallQueue.h"
 #include "debug/Stream.h"
-#include "EventLoop.h"
+#include "engines/EventLoop.h"
 #include "fatal.h"
 #include "time/Engine.h"
 
@@ -168,4 +168,3 @@ EventLoop::stop()
 {
     last_loop = true;
 }
-

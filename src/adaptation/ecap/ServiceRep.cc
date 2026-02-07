@@ -15,7 +15,7 @@
 #include "adaptation/ecap/XactionRep.h"
 #include "base/TextException.h"
 #include "debug/Stream.h"
-#include "EventLoop.h"
+#include "engines/EventLoop.h"
 
 #if HAVE_LIBECAP_ADAPTER_SERVICE_H
 #include <libecap/adapter/service.h>

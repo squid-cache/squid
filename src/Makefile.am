@@ -245,8 +245,6 @@ squid_SOURCES = \
 	Downloader.h \
 	ETag.cc \
 	ETag.h \
-	EventLoop.cc \
-	EventLoop.h \
 	ExternalACL.h \
 	ExternalACLEntry.cc \
 	ExternalACLEntry.h \
@@ -998,6 +996,24 @@ tests_testString_LDADD = \
 	$(XTRA_LIBS)
 tests_testString_LDFLAGS = $(LIBADD_DL)
 
+# Tests of engines/*
+
+check_PROGRAMS += tests/testEventLoop
+tests_testEventLoop_SOURCES = \
+	tests/testEventLoop.cc
+nodist_tests_testEventLoop_SOURCES = \
+	tests/stub_SBuf.cc \
+	tests/stub_debug.cc \
+	tests/stub_fatal.cc \
+	tests/stub_libtime.cc
+tests_testEventLoop_LDADD = \
+	engines/libengines.la \
+	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
+
 ## Tests of fs/*
 
 if ENABLE_FS_ROCK
@@ -1015,7 +1031,6 @@ tests_testRock_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	ETag.cc \
-	EventLoop.cc \
 	FadingCounter.cc \
 	FileMap.h \
 	tests/stub_HelperChildConfig.cc \
@@ -1146,6 +1161,7 @@ tests_testRock_LDADD = \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	base/libbase.la \
+	engines/libengines.la \
 	mem/libmem.la \
 	store/libstore.la \
 	$(ADAPTATION_LIBS) \
@@ -1185,7 +1201,6 @@ tests_testUfs_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	ETag.cc \
-	EventLoop.cc \
 	FadingCounter.cc \
 	FileMap.h \
 	tests/stub_HelperChildConfig.cc \
@@ -1323,6 +1338,7 @@ tests_testUfs_LDADD = \
 	comm/libcomm.la \
 	dns/libdns.la \
 	base/libbase.la \
+	engines/libengines.la \
 	mem/libmem.la \
 	store/libstore.la \
 	$(ADAPTATION_LIBS) \
@@ -1359,7 +1375,6 @@ tests_testStore_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	ETag.cc \
-	EventLoop.cc \
 	FileMap.h \
 	tests/stub_HelperChildConfig.cc \
 	HttpBody.cc \
@@ -1486,6 +1501,7 @@ tests_testStore_LDADD= \
 	fs/libfs.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
+	engines/libengines.la \
 	mem/libmem.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
@@ -1522,7 +1538,6 @@ tests_testDiskIO_SOURCES = \
 	ConfigParser.cc \
 	tests/testDiskIO.cc \
 	tests/stub_ETag.cc \
-	EventLoop.cc \
 	FadingCounter.cc \
 	FileMap.h \
 	tests/stub_HelperChildConfig.cc \
@@ -1666,6 +1681,7 @@ tests_testDiskIO_LDADD = \
 	ipc/libipc.la \
 	dns/libdns.la \
 	base/libbase.la \
+	engines/libengines.la \
 	mem/libmem.la \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
@@ -2080,7 +2096,6 @@ tests_testCacheManager_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	tests/stub_ETag.cc \
-	tests/stub_EventLoop.cc \
 	ExternalACLEntry.cc \
 	FadingCounter.cc \
 	FileMap.h \
@@ -2183,6 +2198,7 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_libauth.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_libengines.cc \
 	tests/stub_liberror.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
@@ -2374,22 +2390,6 @@ tests_testEvent_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
-
-check_PROGRAMS += tests/testEventLoop
-tests_testEventLoop_SOURCES = \
-	tests/testEventLoop.cc
-nodist_tests_testEventLoop_SOURCES = \
-	EventLoop.cc \
-	tests/stub_SBuf.cc \
-	tests/stub_debug.cc \
-	tests/stub_fatal.cc \
-	tests/stub_libtime.cc
-tests_testEventLoop_LDADD = \
-	base/libbase.la \
-	$(LIBCPPUNIT_LIBS) \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testIoManip
 tests_testIoManip_SOURCES = \

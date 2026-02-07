@@ -10,5 +10,6 @@
 #define SQUID_SRC_ENGINES_FORWARD_H
 
 class AsyncEngine;
+class EventLoop;
 
 #endif /* SQUID_SRC_ENGINES_FORWARD_H */

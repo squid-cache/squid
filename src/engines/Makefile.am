@@ -11,8 +11,6 @@ noinst_LTLIBRARIES = libengines.la
 
 libengines_la_SOURCES = \
 	AsyncEngine.h \
+	EventLoop.cc \
+	EventLoop.h \
 	forward.h
-
-# XXX: autoconf only supplies CXXCOMPILE et al. properly when there is a .cc to build.
-# XXX: temporary workaround for make check testHeaders auto-build.
-EXCLUDE_FROM_HDR_TESTING += $(libengines_la_SOURCES)
