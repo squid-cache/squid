@@ -792,7 +792,7 @@ class IcpRr : public RegisteredRunner
     void useConfig() override { icpOpenPorts(); }
     void startReconfigure() override { icpClosePorts(); }
     void syncConfig() override { icpOpenPorts(); }
-    void startShutdown() override { icpClosePorts(); }
+    void endingShutdown() override { icpClosePorts(); }
 };
 DefineRunnerRegistrator(IcpRr);
 
