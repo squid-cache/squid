@@ -14,7 +14,10 @@
 
 #include <vector>
 
-#define EVENT_LOOP_TIMEOUT  1000 /* 1s timeout */
+#if !defined(EVENT_LOOP_TIMEOUT)
+/// Maximum timeout for loop checks of the primary engine, in milliseconds.
+#define EVENT_LOOP_TIMEOUT  1000
+#endif
 
 /** An event loop. An event loop is the core inner loop of squid.
  * The event loop can be run until exit, or once. After it finishes control
@@ -24,15 +27,12 @@
  */
 class EventLoop
 {
-
 public:
-    EventLoop();
-
     /**
      * Register an engine which will be given the opportunity to perform
      * in-main-thread tasks each event loop.
      */
-    void registerEngine(AsyncEngine *);
+    void registerEngine(AsyncEngine *e) { engines.emplace_back(e); }
 
     /**
      * Start this event loop running. The loop will run until it is stopped by
@@ -51,55 +51,57 @@ public:
     /**
      * The primary async engine receives the lowest requested timeout gathered
      * from the other engines each loop.
-     * There is a default of 10ms if all engines are idle or request higher
-     * delays.
+     * There is a default of EVENT_LOOP_TIMEOUT if all engines are idle,
+     * or request higher delays.
      *
      * If no primary has been nominated, the last async engine added is
      * implicitly the default.
      */
-    void setPrimaryEngine(AsyncEngine *);
+    void setPrimaryEngine(AsyncEngine * const);
 
     /**
      * Nominate a time service to invoke on each loop.
      * There can be only one engine acting as time service.
      */
-    void setTimeService(Time::Engine *);
+    void setTimeService(Time::Engine * const e) { timeService = e; }
 
     /// Finish the current loop and then return to the caller of run().
-    void stop();
+    void stop() { last_loop = true; }
 
-    int errcount;
-
+public:
     /**
      * The [main program] loop running now; may be nil.
      * For simplicity, we assume there are no concurrent loops
      */
     static EventLoop *Running;
 
+    /// How many errors have occured so far in this iteration of the loop.
+    int errcount = 0;
+
 private:
     /** setup state variables prior to running */
     void prepareToRun();
 
     /** check an individual engine */
-    void checkEngine(AsyncEngine *, const bool primary);
+    void checkEngine(AsyncEngine * const, const bool primary);
 
-    /** dispatch calls and events scheduled during checkEngine() */
-    bool dispatchCalls();
+    /** dispatch AsyncCalls scheduled during checkEngine() */
+    bool dispatchCalls() const;
 
-    bool last_loop;
-    typedef std::vector<AsyncEngine *> engine_vector;
-    engine_vector engines;
-    Time::Engine *timeService;
-    AsyncEngine * primaryEngine;
+private:
+    bool last_loop = false;
+    std::vector<AsyncEngine *> engines;
+    Time::Engine *timeService = nullptr;
+    AsyncEngine *primaryEngine = nullptr;
 
     /// the delay to be given to the primary engine
-    int loop_delay;
+    int loop_delay = EVENT_LOOP_TIMEOUT;
 
     /// has an error occurred in this loop
-    bool error;
+    bool error = false;
 
     /// the result from runOnce
-    bool runOnceResult;
+    bool runOnceResult = false;
 };
 
 #endif /* SQUID_SRC_ENGINES_EVENTLOOP_H */
