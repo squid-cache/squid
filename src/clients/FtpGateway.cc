@@ -2305,7 +2305,7 @@ ftpReadQuit(Ftp::Gateway * ftpState)
 std::optional<SBuf>
 Ftp::Gateway::decodedRequestUriPath() const
 {
-    return AnyP::Uri::Decode(request->url.absolutePath());
+    return AnyP::Uri::Decode(request->url.path());
 }
 
 /// \prec !ftpState->flags.try_slash_hack
