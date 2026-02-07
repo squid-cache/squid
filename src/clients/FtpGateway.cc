@@ -2313,7 +2313,6 @@ Ftp::Gateway::decodedRequestUriPath() const
 static void
 ftpTrySlashHack(Ftp::Gateway * ftpState)
 {
-    char *path;
     ftpState->flags.try_slash_hack = 1;
     /* Free old paths */
 
