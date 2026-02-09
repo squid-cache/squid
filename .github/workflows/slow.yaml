@@ -143,48 +143,83 @@ jobs:
 
   freebsd:
     strategy:
+      fail-fast: false
       matrix:
         osversion:
-          - 14.3
+          - "15.0"
+          - "14.3"
+          - "13.5"
+        platform:
+          - amd64
+          # - arm64 # too slow as of 2026-02
+          # - riscv64 # not working as of 2026-02
+    runs-on: ${{ matrix.platform != 'arm64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
 
-    runs-on: ubuntu-24.04
-    name: freebsd(${{ matrix.osversion }})
+    name: freebsd(${{ matrix.osversion }}, ${{ matrix.platform }})
 
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
+        with:
+          repository: squid-cache/squid
+          path: squid
+          ref: ${{ inputs.branch }}
+
+      - name: prep ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: ${{ github.job }}-${{ matrix.osversion }}-${{ matrix.platform }}
 
       - name: Run test-builds
         id: test-builds
         uses: vmactions/freebsd-vm@v1
         with:
           usesh: true
+          sync: rsync
+          copyback: true
           release: ${{ matrix.osversion }}
+          arch: ${{ matrix.platform }}
           prepare: |
-            pkg update
+            set -e
+            export BATCH=yes
+            which nproc >/dev/null && echo "MAKE_JOBS_NUMBER?=`nproc --all`" >>/etc/make.conf
+            echo "OPTIONS_UNSET=CUPS DEBUG DOCS FONTCONFIG NLS X11" >>/etc/make.conf
+            echo "WITHOUT_MODULES=sound ntfs linux" >> /etc/make.conf
+            echo "WITHOUT_X11=yes" >>/etc/make.conf
+            echo "NO_SENDMAIL=true" >>/etc/make.conf
+            echo "IGNORE_OSVERSION=yes" >>/usr/local/etc/pkg.conf
+
             pkg install -y \
-              autoconf \
-              autoconf-archive \
-              automake \
-              bash \
-              cppunit \
-              gmake \
-              libltdl \
-              libtool \
-              m4 \
-              nettle \
-              pkgconf
+                ccache \
+                git-tiny \
+                portmaster \
+                gmake \
+                pkgconf \
+                autoconf \
+                autoconf-archive \
+                automake \
+                cppunit \
+                libltdl \
+                libtool \
+                nettle
+            ccache --set-config=cache_dir="$GITHUB_WORKSPACE/.ccache"
+            ccache --set-config=max_size='500M'
+            ccache --set-config=compression=true
 
           run: |
+            set -e
             export MAKE=gmake
-            ./test-builds.sh
+            export CC='ccache cc'
+            export CXX='ccache c++'
+            cd squid
+            exec ./test-builds.sh layer-00-default layer-02-maximus
 
       - name: Publish build logs
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-freebsd-${{ matrix.osversion }}
-          path: "**/*.log"
+          name: freebsd-${{ matrix.osversion }}
+          path: squid/btlayer-*.log
 
   openbsd:
     runs-on: ubuntu-24.04
