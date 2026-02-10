@@ -480,17 +480,18 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
     int rtt = 0;
     int src_rtt = 0;
     uint32_t flags = 0;
-    /* Ensure QUERY has space for the 32-bit field and at least one URL byte. */
-    const auto hdr = sizeof(icp_common_t);
-    const auto qhdr = hdr + sizeof(uint32_t);
-    const auto pkt_len = static_cast<size_t>(header.length);
-    if (pkt_len <= qhdr) {
-        debugs(12, 3, "icpHandleIcpV2: short ICP_QUERY from " << from);
+
+    // Ensure QUERY has a 32-bit field and at least one URL byte.
+    const auto queryHeaderSize = sizeof(icp_common_t) + sizeof(uint32_t);
+    const auto receivedQuerySize = static_cast<size_t>(header.length);
+    if (receivedQuerySize <= queryHeaderSize) {
+        debugs(12, 3, "too small query from " << from << ": " << receivedQuerySize << " <= " << queryHeaderSize);
         return;
     }
+
     /* Guarantee an in-bounds NUL terminator for any downstream C-string use. */
-    buf[pkt_len - 1] = '\0';
-    auto url = buf + qhdr;
+    buf[receivedQuerySize - 1] = '\0';
+    auto url = buf + queryHeaderSize;
 
     HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
