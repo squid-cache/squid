@@ -160,10 +160,6 @@ jobs:
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
-        with:
-          repository: squid-cache/squid
-          path: squid
-          ref: ${{ inputs.branch }}
 
       - name: prep ccache
         uses: hendrikmuhs/ccache-action@v1
@@ -211,7 +207,6 @@ jobs:
             export MAKE=gmake
             export CC='ccache cc'
             export CXX='ccache c++'
-            cd squid
             exec ./test-builds.sh layer-00-default layer-02-maximus
 
       - name: Publish build logs
@@ -219,7 +214,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-logs-freebsd-${{ matrix.osversion }}-${{ matrix.platform }}
-          path: squid/**/*.log
+          path: **/*.log
 
   openbsd:
     runs-on: ubuntu-24.04
