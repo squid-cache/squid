@@ -218,8 +218,8 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: freebsd-${{ matrix.osversion }}
-          path: squid/btlayer-*.log
+          name: build-logs-freebsd-${{ matrix.osversion }}-${{ matrix.platform }}
+          path: squid/**/*.log
 
   openbsd:
     runs-on: ubuntu-24.04
@@ -277,5 +277,5 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-openbsd
-          path: "**/*.log"
+          name: build-logs-openbsd-${{ matrix.osversion }}-${{ matrix.platform }}
+          path: squid/**/*.log
