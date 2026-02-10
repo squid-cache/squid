@@ -490,9 +490,16 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
         return;
     }
 
-    /* Guarantee an in-bounds NUL terminator for any downstream C-string use. */
-    buf[receivedQuerySize - 1] = '\0';
-    const auto url = buf + queryHeaderSize;
+    // RFC 2186 requires query payload to end with a "Null-Terminated URL"
+    if (buf[receivedQuerySize - 1] != '\0') {
+        debugs(12, 3, "unterminated query URL or trailing garbage from " << from);
+        return;
+    }
+    const auto url = buf + queryHeaderSize; // c-string
+    if (queryHeaderSize + strlen(url) + 1 != receivedQuerySize) {
+        debugs(12, 3, "query URL with embedded NULs or trailing garbage from " << from);
+        return;
+    }
 
     HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
