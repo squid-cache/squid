@@ -665,6 +665,7 @@ Security::ErrorDetail::printNotBefore(std::ostream &os) const
 #if USE_OPENSSL
     if (const auto cert = certificateToReport()) {
         if (const auto tm = X509_getm_notBefore(cert)) {
+            // TODO: Add and use an ASN1_TIME printing operator instead.
             static char tmpBuffer[256]; // A temporary buffer
             Ssl::asn1timeToString(tm, tmpBuffer, sizeof(tmpBuffer));
             os << tmpBuffer;
@@ -682,6 +683,7 @@ Security::ErrorDetail::printNotAfter(std::ostream &os) const
 #if USE_OPENSSL
     if (const auto cert = certificateToReport()) {
         if (const auto tm = X509_getm_notAfter(cert)) {
+            // XXX: Reduce code duplication.
             static char tmpBuffer[256]; // A temporary buffer
             Ssl::asn1timeToString(tm, tmpBuffer, sizeof(tmpBuffer));
             os << tmpBuffer;
