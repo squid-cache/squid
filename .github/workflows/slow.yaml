@@ -190,18 +190,18 @@ jobs:
             echo "IGNORE_OSVERSION=yes" >>/usr/local/etc/pkg.conf
 
             pkg install -y \
-                ccache \
-                git-tiny \
-                portmaster \
-                gmake \
-                pkgconf \
                 autoconf \
                 autoconf-archive \
                 automake \
+                ccache \
                 cppunit \
+                git-tiny \
+                gmake \
                 libltdl \
                 libtool \
-                nettle
+                nettle \
+                pkgconf \
+                portmaster
             ccache --set-config=cache_dir="$GITHUB_WORKSPACE/.ccache"
             ccache --set-config=max_size='500M'
             ccache --set-config=compression=true
