@@ -491,7 +491,7 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
 
     /* Guarantee an in-bounds NUL terminator for any downstream C-string use. */
     buf[receivedQuerySize - 1] = '\0';
-    auto url = buf + queryHeaderSize;
+    const auto url = buf + queryHeaderSize;
 
     HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
