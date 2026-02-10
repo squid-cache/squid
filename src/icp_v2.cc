@@ -670,7 +670,7 @@ icpHandleUdp(int sock, void *)
 
         icp_version = (int) buf[1]; /* cheat! */
 
-        if (icpOutgoingConn->local == from)
+        if (icpOutgoingConn && icpOutgoingConn->local == from)
             // ignore ICP packets which loop back (multicast usually)
             debugs(12, 4, "icpHandleUdp: Ignoring UDP packet sent by myself");
         else if (icp_version == ICP_VERSION_2)
@@ -746,6 +746,8 @@ icpIncomingConnectionOpened(Ipc::StartListeningAnswer &answer)
     if (!Comm::IsConnOpen(conn))
         fatal("Cannot open ICP Port");
 
+    Comm::SetSelect(conn->fd, COMM_SELECT_READ, icpHandleUdp, nullptr, 0);
+
     for (const wordlist *s = Config.mcast_group_list; s; s = s->next)
         ipcache_nbgethostbyname(s->key, mcastJoinGroups, nullptr); // XXX: pass the conn for mcastJoinGroups usage.
 
@@ -757,8 +759,6 @@ icpIncomingConnectionOpened(Ipc::StartListeningAnswer &answer)
         icpOutgoingConn = conn;
         debugs(12, DBG_IMPORTANT, "Sending ICP messages from " << icpOutgoingConn->local);
     }
-
-    Comm::SetSelect(conn->fd, COMM_SELECT_READ, icpHandleUdp, nullptr, 0);
 }
 
 /**
