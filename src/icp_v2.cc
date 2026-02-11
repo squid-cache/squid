@@ -701,6 +701,9 @@ icpHandleUdp(int sock, void *)
 
         icp_version = (int) buf[1]; /* cheat! */
 
+        // XXX: The IP equality comparison below ignores port differences but
+        // should not. It also fails to detect loops when `local` is a wildcard
+        // address (e.g., [::]:3130) because `from` address is never a wildcard.
         if (icpOutgoingConn && icpOutgoingConn->local == from)
             // ignore ICP packets which loop back (multicast usually)
             debugs(12, 4, "icpHandleUdp: Ignoring UDP packet sent by myself");
