@@ -417,8 +417,14 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
                 debugs(83, 3, "bypassing SSL error " << i->error_no << " in " << "buffer");
             } else {
                 debugs(83, 5, "confirming SSL error " << i->error_no);
-                const auto &brokenCert = i->cert;
                 Security::CertPointer peerCert(SSL_get_peer_certificate(session.get()));
+
+                // Features/SslServerCertValidator docs do not specify whether
+                // error_cert_ID is an optional helper response field. For now,
+                // to preserve initial implementation behavior, we assume that
+                // it is optional and that it defaults to peerCert.
+                const auto &brokenCert = i->cert ? i->cert : peerCert;
+
                 const char *aReason = i->error_reason.empty() ? nullptr : i->error_reason.c_str();
                 errDetails = new ErrorDetail(i->error_no, peerCert, brokenCert, aReason);
             }
