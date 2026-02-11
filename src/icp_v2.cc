@@ -510,8 +510,10 @@ static void
 doV2Query(const int fd, Ip::Address &from, const char * const buf, icp_common_t header)
 {
     const auto url = icpGetUrl(from, buf, header);
-    if (!url)
+    if (!url) {
+        icpCreateAndSend(ICP_ERR, 0, "", header.reqnum, 0, fd, from, nullptr);
         return;
+    }
 
     HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
