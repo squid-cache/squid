@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "comm/Connection.h"
+#include "HttpRequest.h"
 #include "ICP.h"
 
 #define STUB_API "icp_*.cc"
@@ -29,8 +30,7 @@ Comm::ConnectionPointer icpIncomingConn;
 Comm::ConnectionPointer icpOutgoingConn;
 Ip::Address theIcpPublicHostID;
 
-HttpRequest* icpGetRequest(char *, int, int, Ip::Address &) STUB_RETVAL(nullptr)
-bool icpAccessAllowed(Ip::Address &, HttpRequest *) STUB_RETVAL(false)
+HttpRequest::Pointer icpGetRequest(char *, int, int, Ip::Address &) STUB_RETVAL(nullptr)
 void icpCreateAndSend(icp_opcode, int, char const *, int, int, int, const Ip::Address &, AccessLogEntryPointer) STUB
 icp_opcode icpGetCommonOpcode() STUB_RETVAL(ICP_INVALID)
 void icpDenyAccess(Ip::Address &, char *, int, int) STUB
