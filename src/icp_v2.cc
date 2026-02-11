@@ -587,6 +587,8 @@ icp_common_t::handleReply(char *buf, Ip::Address &from)
     }
 
     const auto url = icpGetUrl(from, buf, *this);
+    if (!url)
+        return;
     debugs(12, 3, "icpHandleIcpV2: " << icp_opcode_str[opcode] << " from " << from << " for '" << url << "'");
 
     const cache_key *key = icpGetCacheKey(url, (int) reqnum);
