@@ -499,7 +499,7 @@ icpGetUrl(const Ip::Address &from, const char * const buf, const icp_common_t &h
 
     const auto url = buf + urlOffset; // c-string
     if (urlOffset + strlen(url) + 1 != receivedPacketSize) {
-        debugs(12, 3, "URL with embedded NULs or trailing garbage from " << from);
+        debugs(12, 3, "URL with an embedded NUL or trailing garbage from " << from);
         return nullptr;
     }
 
