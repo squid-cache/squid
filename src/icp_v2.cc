@@ -463,24 +463,25 @@ icpGetUrl(const Ip::Address &from, const char * const buf, const icp_common_t &h
     const auto receivedPacketSize = static_cast<size_t>(header.length);
     const auto payloadOffset = sizeof(header);
 
-    // Query payload contains a "Requester Host Address" followed by URL.
+    // Query payload contains a "Requester Host Address" followed by a URL.
     // Payload of other ICP packets (with opcode that we recognize) is a URL.
     const auto urlOffset = payloadOffset + ((header.opcode == ICP_QUERY) ? sizeof(uint32_t) : 0);
 
-    // Ensure the packet has at least one URL byte.
+    // A URL field cannot be empty because it includes a terminating NUL char.
+    // Ensure that the packet has at least one URL field byte.
     if (urlOffset >= receivedPacketSize) {
         debugs(12, 3, "too small packet from " << from << ": " << urlOffset << " >= " << receivedPacketSize);
         return nullptr;
     }
 
-    // All ICP packets (with opcode that we recognize) end with a URL. RFC 2186
-    // requires all URIs to be "Null-Terminated".
+    // All ICP packets (with opcode that we recognize) _end_ with a URL field.
+    // RFC 2186 requires all URLs to be "Null-Terminated".
     if (buf[receivedPacketSize - 1] != '\0') {
         debugs(12, 3, "unterminated URL or trailing garbage from " << from);
         return nullptr;
     }
 
-    const auto url = buf + urlOffset; // c-string
+    const auto url = buf + urlOffset; // a possibly empty c-string
     if (urlOffset + strlen(url) + 1 != receivedPacketSize) {
         debugs(12, 3, "URL with an embedded NUL or trailing garbage from " << from);
         return nullptr;
