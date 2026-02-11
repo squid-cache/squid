@@ -89,9 +89,9 @@ extern Comm::ConnectionPointer icpIncomingConn;
 extern Comm::ConnectionPointer icpOutgoingConn;
 extern Ip::Address theIcpPublicHostID;
 
-/// A URI extracted from the given raw query buffer.
+/// A URI extracted from the given raw packet buffer.
 /// On errors, details the problems and returns nil.
-const char *icpGetQueryUrl(const Ip::Address &from, const char *buf, const icp_common_t &);
+const char *icpGetUrl(const Ip::Address &from, const char *buf, const icp_common_t &);
 
 /// \ingroup ServerProtocolICPAPI
 HttpRequest *icpGetRequest(const char *url, int reqnum, int fd, const Ip::Address &from);

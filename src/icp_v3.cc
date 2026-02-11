@@ -34,7 +34,7 @@ public:
 static void
 doV3Query(int fd, Ip::Address &from, const char * const buf, icp_common_t header)
 {
-    const auto url = icpGetQueryUrl(from, buf, header);
+    const auto url = icpGetUrl(from, buf, header);
     if (!url)
         return;
 

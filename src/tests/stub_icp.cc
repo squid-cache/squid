@@ -29,7 +29,7 @@ Comm::ConnectionPointer icpIncomingConn;
 Comm::ConnectionPointer icpOutgoingConn;
 Ip::Address theIcpPublicHostID;
 
-const char *icpGetQueryUrl(const Ip::Address &, const char *, const icp_common_t &) STUB_RETVAL(nullptr)
+const char *icpGetUrl(const Ip::Address &, const char *, const icp_common_t &) STUB_RETVAL(nullptr)
 HttpRequest* icpGetRequest(const char *, int, int, const Ip::Address &) STUB_RETVAL(nullptr)
 bool icpAccessAllowed(Ip::Address &, HttpRequest *) STUB_RETVAL(false)
 void icpCreateAndSend(icp_opcode, int, char const *, int, int, int, const Ip::Address &, AccessLogEntryPointer) STUB

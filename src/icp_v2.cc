@@ -475,25 +475,31 @@ icpGetRequest(const char * const url, const int reqnum, const int fd, const Ip::
 }
 
 const char *
-icpGetQueryUrl(const Ip::Address &from, const char * const buf, const icp_common_t &header)
+icpGetUrl(const Ip::Address &from, const char * const buf, const icp_common_t &header)
 {
-    // Ensure QUERY has a 32-bit field and at least one URL byte.
-    const auto queryHeaderSize = sizeof(icp_common_t) + sizeof(uint32_t);
-    const auto receivedQuerySize = static_cast<size_t>(header.length);
-    if (receivedQuerySize <= queryHeaderSize) {
-        debugs(12, 3, "too small query from " << from << ": " << receivedQuerySize << " <= " << queryHeaderSize);
+    const auto receivedPacketSize = static_cast<size_t>(header.length);
+    const auto payloadOffset = sizeof(header);
+
+    // Query payload contains a "Requester Host Address" followed by URL.
+    // Payload of other ICP packets (with opcode that we recognize) is a URL.
+    const auto urlOffset = payloadOffset + ((header.opcode == ICP_QUERY) ? sizeof(uint32_t) : 0);
+
+    // Ensure the packet has at least one URL byte.
+    if (urlOffset >= receivedPacketSize) {
+        debugs(12, 3, "too small packet from " << from << ": " << urlOffset << " >= " << receivedPacketSize);
         return nullptr;
     }
 
-    // RFC 2186 requires query payload to end with a "Null-Terminated URL"
-    if (buf[receivedQuerySize - 1] != '\0') {
-        debugs(12, 3, "unterminated query URL or trailing garbage from " << from);
+    // All ICP packets (with opcode that we recognize) end with a URL. RFC 2186
+    // requires all URIs to be "Null-Terminated".
+    if (buf[receivedPacketSize - 1] != '\0') {
+        debugs(12, 3, "unterminated URL or trailing garbage from " << from);
         return nullptr;
     }
 
-    const auto url = buf + queryHeaderSize; // c-string
-    if (queryHeaderSize + strlen(url) + 1 != receivedQuerySize) {
-        debugs(12, 3, "query URL with embedded NULs or trailing garbage from " << from);
+    const auto url = buf + urlOffset; // c-string
+    if (urlOffset + strlen(url) + 1 != receivedPacketSize) {
+        debugs(12, 3, "URL with embedded NULs or trailing garbage from " << from);
         return nullptr;
     }
 
@@ -503,7 +509,7 @@ icpGetQueryUrl(const Ip::Address &from, const char * const buf, const icp_common
 static void
 doV2Query(const int fd, Ip::Address &from, const char * const buf, icp_common_t header)
 {
-    const auto url = icpGetQueryUrl(from, buf, header);
+    const auto url = icpGetUrl(from, buf, header);
     if (!url)
         return;
 
@@ -578,7 +584,7 @@ icp_common_t::handleReply(char *buf, Ip::Address &from)
         neighbors_do_private_keys = 0;
     }
 
-    char *url = buf + sizeof(icp_common_t);
+    const auto url = icpGetUrl(from, buf, *this);
     debugs(12, 3, "icpHandleIcpV2: " << icp_opcode_str[opcode] << " from " << from << " for '" << url << "'");
 
     const cache_key *key = icpGetCacheKey(url, (int) reqnum);
