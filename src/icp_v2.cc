@@ -425,7 +425,7 @@ icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int 
 }
 
 void
-icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
+icpDenyAccess(const Ip::Address &from, const char * const url, const int reqnum, const int fd)
 {
     if (clientdbCutoffDenied(from)) {
         /*
@@ -458,10 +458,9 @@ icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
 }
 
 HttpRequest *
-icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
+icpGetRequest(const char * const url, const int reqnum, const int fd, const Ip::Address &from)
 {
     if (strpbrk(url, w_space)) {
-        url = rfc1738_escape(url);
         icpCreateAndSend(ICP_ERR, 0, rfc1738_escape(url), reqnum, 0, fd, from, nullptr);
         return nullptr;
     }
@@ -475,31 +474,38 @@ icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
 
 }
 
-static void
-doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
+const char *
+icpGetQueryUrl(const Ip::Address &from, const char * const buf, const icp_common_t &header)
 {
-    int rtt = 0;
-    int src_rtt = 0;
-    uint32_t flags = 0;
-
     // Ensure QUERY has a 32-bit field and at least one URL byte.
     const auto queryHeaderSize = sizeof(icp_common_t) + sizeof(uint32_t);
     const auto receivedQuerySize = static_cast<size_t>(header.length);
     if (receivedQuerySize <= queryHeaderSize) {
         debugs(12, 3, "too small query from " << from << ": " << receivedQuerySize << " <= " << queryHeaderSize);
-        return;
+        return nullptr;
     }
 
     // RFC 2186 requires query payload to end with a "Null-Terminated URL"
     if (buf[receivedQuerySize - 1] != '\0') {
         debugs(12, 3, "unterminated query URL or trailing garbage from " << from);
-        return;
+        return nullptr;
     }
+
     const auto url = buf + queryHeaderSize; // c-string
     if (queryHeaderSize + strlen(url) + 1 != receivedQuerySize) {
         debugs(12, 3, "query URL with embedded NULs or trailing garbage from " << from);
-        return;
+        return nullptr;
     }
+
+    return url;
+}
+
+static void
+doV2Query(const int fd, Ip::Address &from, const char * const buf, icp_common_t header)
+{
+    const auto url = icpGetQueryUrl(from, buf, header);
+    if (!url)
+        return;
 
     HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
@@ -513,6 +519,11 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
         HTTPMSGUNLOCK(icp_request);
         return;
     }
+
+    int rtt = 0;
+    int src_rtt = 0;
+    uint32_t flags = 0;
+
 #if USE_ICMP
     if (header.flags & ICP_FLAG_SRC_RTT) {
         rtt = netdbHostRtt(icp_request->url.host());

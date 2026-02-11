@@ -29,11 +29,12 @@ Comm::ConnectionPointer icpIncomingConn;
 Comm::ConnectionPointer icpOutgoingConn;
 Ip::Address theIcpPublicHostID;
 
-HttpRequest* icpGetRequest(char *, int, int, Ip::Address &) STUB_RETVAL(nullptr)
+const char *icpGetQueryUrl(const Ip::Address &, const char *, const icp_common_t &) STUB_RETVAL(nullptr)
+HttpRequest* icpGetRequest(const char *, int, int, const Ip::Address &) STUB_RETVAL(nullptr)
 bool icpAccessAllowed(Ip::Address &, HttpRequest *) STUB_RETVAL(false)
 void icpCreateAndSend(icp_opcode, int, char const *, int, int, int, const Ip::Address &, AccessLogEntryPointer) STUB
 icp_opcode icpGetCommonOpcode() STUB_RETVAL(ICP_INVALID)
-void icpDenyAccess(Ip::Address &, char *, int, int) STUB
+void icpDenyAccess(const Ip::Address &, const char *, int, int) STUB
 void icpHandleIcpV3(int, Ip::Address &, char *, int) STUB
 void icpConnectionShutdown(void) STUB
 int icpSetCacheKey(const cache_key *) STUB_RETVAL(0)
