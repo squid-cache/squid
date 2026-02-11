@@ -457,23 +457,6 @@ icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
     return false;
 }
 
-HttpRequest *
-icpGetRequest(const char * const url, const int reqnum, const int fd, const Ip::Address &from)
-{
-    if (strpbrk(url, w_space)) {
-        icpCreateAndSend(ICP_ERR, 0, rfc1738_escape(url), reqnum, 0, fd, from, nullptr);
-        return nullptr;
-    }
-
-    const auto mx = MasterXaction::MakePortless<XactionInitiator::initIcp>();
-    auto *result = HttpRequest::FromUrlXXX(url, mx);
-    if (!result)
-        icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from, nullptr);
-
-    return result;
-
-}
-
 const char *
 icpGetUrl(const Ip::Address &from, const char * const buf, const icp_common_t &header)
 {
@@ -504,6 +487,23 @@ icpGetUrl(const Ip::Address &from, const char * const buf, const icp_common_t &h
     }
 
     return url;
+}
+
+HttpRequest *
+icpGetRequest(const char * const url, const int reqnum, const int fd, const Ip::Address &from)
+{
+    if (strpbrk(url, w_space)) {
+        icpCreateAndSend(ICP_ERR, 0, rfc1738_escape(url), reqnum, 0, fd, from, nullptr);
+        return nullptr;
+    }
+
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initIcp>();
+    auto *result = HttpRequest::FromUrlXXX(url, mx);
+    if (!result)
+        icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from, nullptr);
+
+    return result;
+
 }
 
 static void
