@@ -510,6 +510,10 @@ icpGetRequest(const char * const url, const int reqnum, const int fd, const Ip::
 static void
 doV2Query(const int fd, Ip::Address &from, const char * const buf, icp_common_t header)
 {
+    int rtt = 0;
+    int src_rtt = 0;
+    uint32_t flags = 0;
+
     const auto url = icpGetUrl(from, buf, header);
     if (!url) {
         icpCreateAndSend(ICP_ERR, 0, "", header.reqnum, 0, fd, from, nullptr);
@@ -528,11 +532,6 @@ doV2Query(const int fd, Ip::Address &from, const char * const buf, icp_common_t 
         HTTPMSGUNLOCK(icp_request);
         return;
     }
-
-    int rtt = 0;
-    int src_rtt = 0;
-    uint32_t flags = 0;
-
 #if USE_ICMP
     if (header.flags & ICP_FLAG_SRC_RTT) {
         rtt = netdbHostRtt(icp_request->url.host());
