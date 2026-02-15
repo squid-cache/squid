@@ -22,6 +22,7 @@ void fd_open(int fd, unsigned int type, const char *);
 void fd_note(int fd, const char *);
 void fd_bytes(int fd, int len, IoDirection);
 void fdDumpOpen(void);
+int fdNFree(void);
 int fdUsageHigh(void);
 void fdAdjustReserved(void);
 int default_read_method(int, char *, int);

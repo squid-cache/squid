@@ -1503,6 +1503,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
                 const Security::ErrorDetail::Pointer errDetail = new Security::ErrorDetail(
                     SQUID_X509_V_ERR_DOMAIN_MISMATCH,
                     srvCert, nullptr);
+                err->detailError(errDetail);
                 updateError(ERR_SECURE_CONNECT_FAIL, errDetail);
                 repContext->setReplyToError(request->method, err);
                 assert(context->http->out.offset == 0);

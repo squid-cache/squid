@@ -18,6 +18,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "event.h"
+#include "fd.h"
 #include "fde.h"
 #include "format/Token.h"
 #include "globals.h"
