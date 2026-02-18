@@ -40,19 +40,13 @@ doV3Query(int fd, Ip::Address &from, const char * const buf, icp_common_t header
         return;
     }
 
-    HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, from);
+    const auto icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
     if (!icp_request)
         return;
 
-    if (!icpAccessAllowed(from, icp_request)) {
-        icpDenyAccess (from, url, header.reqnum, fd);
-        delete icp_request;
-        return;
-    }
-
     /* The peer is allowed to use this cache */
-    ICP3State state(header, icp_request);
+    ICP3State state(header, icp_request.getRaw());
     state.fd = fd;
     state.from = from;
     state.url = xstrdup(url);
