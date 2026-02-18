@@ -32,10 +32,14 @@ public:
 
 /// \ingroup ServerProtocolICPInternal3
 static void
-doV3Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
+doV3Query(int fd, Ip::Address &from, const char * const buf, icp_common_t header)
 {
-    /* We have a valid packet */
-    char *url = buf + sizeof(icp_common_t) + sizeof(uint32_t);
+    const auto url = icpGetUrl(from, buf, header);
+    if (!url) {
+        icpCreateAndSend(ICP_ERR, 0, "", header.reqnum, 0, fd, from, nullptr);
+        return;
+    }
+
     const auto icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
     if (!icp_request)

@@ -89,8 +89,12 @@ extern Comm::ConnectionPointer icpIncomingConn;
 extern Comm::ConnectionPointer icpOutgoingConn;
 extern Ip::Address theIcpPublicHostID;
 
+/// A URI extracted from the given raw packet buffer.
+/// On errors, details the problem and returns nil.
+const char *icpGetUrl(const Ip::Address &from, const char *, const icp_common_t &);
+
 /// \ingroup ServerProtocolICPAPI
-HttpRequestPointer icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
+HttpRequestPointer icpGetRequest(const char *url, int reqnum, int fd, const Ip::Address &from);
 
 /// \ingroup ServerProtocolICPAPI
 void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntryPointer);
@@ -99,7 +103,7 @@ void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pa
 icp_opcode icpGetCommonOpcode();
 
 /// \ingroup ServerProtocolICPAPI
-void icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd);
+void icpDenyAccess(const Ip::Address &from, const char *url, int reqnum, int fd);
 
 /// \ingroup ServerProtocolICPAPI
 PF icpHandleUdp;

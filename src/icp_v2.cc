@@ -425,7 +425,7 @@ icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int 
 }
 
 void
-icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
+icpDenyAccess(const Ip::Address &from, const char * const url, const int reqnum, const int fd)
 {
     if (clientdbCutoffDenied(from)) {
         /*
@@ -440,7 +440,7 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 
 /// icpGetRequest() helper that determines whether squid.conf allows the given ICP query
 static bool
-icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
+icpAccessAllowed(const Ip::Address &from, HttpRequest * icp_request)
 {
     if (!Config.accessList.icp) {
         debugs(12, 2, "Access Denied due to lack of ICP access rules.");
@@ -458,8 +458,41 @@ icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
     return false;
 }
 
+const char *
+icpGetUrl(const Ip::Address &from, const char * const buf, const icp_common_t &header)
+{
+    const auto receivedPacketSize = static_cast<size_t>(header.length);
+    const auto payloadOffset = sizeof(header);
+
+    // Query payload contains a "Requester Host Address" followed by a URL.
+    // Payload of other ICP packets (with opcode that we recognize) is a URL.
+    const auto urlOffset = payloadOffset + ((header.opcode == ICP_QUERY) ? sizeof(uint32_t) : 0);
+
+    // A URL field cannot be empty because it includes a terminating NUL char.
+    // Ensure that the packet has at least one URL field byte.
+    if (urlOffset >= receivedPacketSize) {
+        debugs(12, 3, "too small packet from " << from << ": " << urlOffset << " >= " << receivedPacketSize);
+        return nullptr;
+    }
+
+    // All ICP packets (with opcode that we recognize) _end_ with a URL field.
+    // RFC 2186 requires all URLs to be "Null-Terminated".
+    if (buf[receivedPacketSize - 1] != '\0') {
+        debugs(12, 3, "unterminated URL or trailing garbage from " << from);
+        return nullptr;
+    }
+
+    const auto url = buf + urlOffset; // a possibly empty c-string
+    if (urlOffset + strlen(url) + 1 != receivedPacketSize) {
+        debugs(12, 3, "URL with an embedded NUL or trailing garbage from " << from);
+        return nullptr;
+    }
+
+    return url;
+}
+
 HttpRequest::Pointer
-icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
+icpGetRequest(const char * const url, const int reqnum, const int fd, const Ip::Address &from)
 {
     if (strpbrk(url, w_space)) {
         icpCreateAndSend(ICP_ERR, 0, rfc1738_escape(url), reqnum, 0, fd, from, nullptr);
@@ -481,13 +514,18 @@ icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
 }
 
 static void
-doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
+doV2Query(const int fd, Ip::Address &from, const char * const buf, icp_common_t header)
 {
     int rtt = 0;
     int src_rtt = 0;
     uint32_t flags = 0;
-    /* We have a valid packet */
-    char *url = buf + sizeof(icp_common_t) + sizeof(uint32_t);
+
+    const auto url = icpGetUrl(from, buf, header);
+    if (!url) {
+        icpCreateAndSend(ICP_ERR, 0, "", header.reqnum, 0, fd, from, nullptr);
+        return;
+    }
+
     const auto icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
     if (!icp_request)
@@ -545,7 +583,9 @@ icp_common_t::handleReply(char *buf, Ip::Address &from)
         neighbors_do_private_keys = 0;
     }
 
-    char *url = buf + sizeof(icp_common_t);
+    const auto url = icpGetUrl(from, buf, *this);
+    if (!url)
+        return;
     debugs(12, 3, "icpHandleIcpV2: " << icp_opcode_str[opcode] << " from " << from << " for '" << url << "'");
 
     const cache_key *key = icpGetCacheKey(url, (int) reqnum);
@@ -657,7 +697,10 @@ icpHandleUdp(int sock, void *)
 
         icp_version = (int) buf[1]; /* cheat! */
 
-        if (icpOutgoingConn->local == from)
+        // XXX: The IP equality comparison below ignores port differences but
+        // should not. It also fails to detect loops when `local` is a wildcard
+        // address (e.g., [::]:3130) because `from` address is never a wildcard.
+        if (icpOutgoingConn && icpOutgoingConn->local == from)
             // ignore ICP packets which loop back (multicast usually)
             debugs(12, 4, "icpHandleUdp: Ignoring UDP packet sent by myself");
         else if (icp_version == ICP_VERSION_2)
