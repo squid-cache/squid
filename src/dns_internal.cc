@@ -430,7 +430,7 @@ idnsFreeSearchpath(void)
 static bool
 idnsParseNameservers(void)
 {
-    static const SBuf origin("squid.conf");
+    static const SBuf origin("squid.conf dns_nameservers");
     bool result = false;
     for (auto &i : Config.dns.nameservers) {
         idnsAddNameserver(i, origin);
