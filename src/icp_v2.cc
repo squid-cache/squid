@@ -438,8 +438,9 @@ icpDenyAccess(const Ip::Address &from, const char * const url, const int reqnum,
     }
 }
 
-bool
-icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
+/// icpGetRequest() helper that determines whether squid.conf allows the given ICP query
+static bool
+icpAccessAllowed(const Ip::Address &from, HttpRequest * icp_request)
 {
     if (!Config.accessList.icp) {
         debugs(12, 2, "Access Denied due to lack of ICP access rules.");
@@ -490,7 +491,7 @@ icpGetUrl(const Ip::Address &from, const char * const buf, const icp_common_t &h
     return url;
 }
 
-HttpRequest *
+HttpRequest::Pointer
 icpGetRequest(const char * const url, const int reqnum, const int fd, const Ip::Address &from)
 {
     if (strpbrk(url, w_space)) {
@@ -499,12 +500,17 @@ icpGetRequest(const char * const url, const int reqnum, const int fd, const Ip::
     }
 
     const auto mx = MasterXaction::MakePortless<XactionInitiator::initIcp>();
-    auto *result = HttpRequest::FromUrlXXX(url, mx);
-    if (!result)
-        icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from, nullptr);
+    if (const HttpRequest::Pointer request = HttpRequest::FromUrlXXX(url, mx)) {
+        if (!icpAccessAllowed(from, request.getRaw())) {
+            icpDenyAccess(from, url, reqnum, fd);
+            return nullptr;
+        }
 
-    return result;
+        return request;
+    }
 
+    icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from, nullptr);
+    return nullptr;
 }
 
 static void
@@ -520,18 +526,11 @@ doV2Query(const int fd, Ip::Address &from, const char * const buf, icp_common_t 
         return;
     }
 
-    HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, from);
+    const auto icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
     if (!icp_request)
         return;
 
-    HTTPMSGLOCK(icp_request);
-
-    if (!icpAccessAllowed(from, icp_request)) {
-        icpDenyAccess(from, url, header.reqnum, fd);
-        HTTPMSGUNLOCK(icp_request);
-        return;
-    }
 #if USE_ICMP
     if (header.flags & ICP_FLAG_SRC_RTT) {
         rtt = netdbHostRtt(icp_request->url.host());
@@ -544,7 +543,7 @@ doV2Query(const int fd, Ip::Address &from, const char * const buf, icp_common_t 
 #endif /* USE_ICMP */
 
     /* The peer is allowed to use this cache */
-    ICP2State state(header, icp_request);
+    ICP2State state(header, icp_request.getRaw());
     state.fd = fd;
     state.from = from;
     state.url = xstrdup(url);
@@ -573,8 +572,6 @@ doV2Query(const int fd, Ip::Address &from, const char * const buf, icp_common_t 
     }
 
     icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, state.al);
-
-    HTTPMSGUNLOCK(icp_request);
 }
 
 void
