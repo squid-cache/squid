@@ -10177,7 +10177,19 @@ DOC_START
 	taken from the Windows registry, both static and dynamic DHCP
 	configurations are supported.
 
-	Example: dns_nameservers 10.0.0.1 192.172.0.4
+	When a domain or hostname is used instead of IP address the
+	OS default resolver is used to lookup its first IP address.
+	Secondary IPs for nameservers are not yet supported.
+
+	NOTICE: The /etc/resolv.conf sortlist feature is not supported.
+		Name servers are contacted in the order given by this
+		directive with first configured treated as primary server.
+		Each use of this directive appends new name servers to the
+		list of known DNS servers.
+
+	Example:
+		dns_nameservers 10.0.0.1 fe80::1 [fe80::2]:54
+		dns_nameservers example.com:80 localhost
 DOC_END
 
 NAME: hosts_file
