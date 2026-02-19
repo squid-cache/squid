@@ -2578,6 +2578,7 @@ AC_CONFIG_FILES([
 	src/DiskIO/DiskThreads/Makefile
 	src/DiskIO/IpcIo/Makefile
 	src/DiskIO/Mmapped/Makefile
+	src/engines/Makefile
 	src/error/Makefile
 	src/eui/Makefile
 	src/format/Makefile
