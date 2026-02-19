@@ -1207,7 +1207,13 @@ SQUID_CHECK_LIB_WORKS(gss,[
 
 SQUID_AUTO_LIB(ldap,[LDAP],[LIBLDAP])
 SQUID_CHECK_LIB_WORKS(ldap,[
+  SQUID_STATE_SAVE(squid_ldap_state)
   PKG_CHECK_MODULES([LIBLDAP],[ldap],[:],[:])
+  AS_IF([test "x$LIBLDAP_LIBS" = "x"],[
+    dnl hack for detecting OpenLDAP older than 2.5
+    AC_CHECK_LIB(lber, ber_init, [LIBLBER="-llber"])
+    AC_CHECK_LIB(ldap, ldap_init, [LIBLDAP_LIBS="-lldap $LIBLBER"])
+  ])
   AS_IF([test "$squid_host_os" = "mingw" -a "x$LIBLDAP_LIBS" = "x"],[
     dnl On MinGW OpenLDAP is not available, try Windows LDAP libraries
     dnl TODO: use AC_CHECK_LIB
@@ -1221,6 +1227,7 @@ SQUID_CHECK_LIB_WORKS(ldap,[
   AC_CHECK_HEADERS(ldap.h lber.h)
   AC_CHECK_HEADERS(mozldap/ldap.h)
   SQUID_CHECK_LDAP_API
+  SQUID_STATE_ROLLBACK(squid_ldap_state)
 ])
 
 SQUID_AUTO_LIB(sasl,[Cyrus SASL],[LIBSASL])
