@@ -12,6 +12,9 @@
 #include "tests/STUB.h"
 
 #include "time/Engine.h"
+#include "time/YamlDateTime.h"
+
+#include <iosfwd>
 void Time::Engine::tick() STUB
 
 #include "time/gadgets.h"
@@ -33,5 +36,6 @@ const char *FormatRfc1123(time_t) STUB_RETVAL("")
 time_t ParseRfc1123(const char *) STUB_RETVAL(0)
 const char *FormatStrf(time_t) STUB_RETVAL("")
 const char *FormatHttpd(time_t) STUB_RETVAL("")
+void YamlDateTime::print(std::ostream &) const STUB
 }
 
