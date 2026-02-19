@@ -27,7 +27,7 @@ EventScheduler::~EventScheduler() STUB
 void EventScheduler::cancel(EVH *, void *) STUB
 int EventScheduler::timeRemaining() const STUB_RETVAL(1)
 void EventScheduler::clean() STUB
-void EventScheduler::dump(Packable *) STUB
+void EventScheduler::dump(std::ostream &) STUB
 bool EventScheduler::find(EVH *, void *) STUB_RETVAL(false)
 void EventScheduler::schedule(const char *, EVH *, void *, double, int, bool) STUB
 int EventScheduler::checkEvents(int) STUB_RETVAL(-1)
