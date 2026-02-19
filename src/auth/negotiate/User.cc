@@ -22,12 +22,6 @@ Auth::Negotiate::User::~User()
     debugs(29, 5, "doing nothing to clear Negotiate scheme data for '" << this << "'");
 }
 
-int32_t
-Auth::Negotiate::User::ttl() const
-{
-    return -1; // Negotiate cannot be cached.
-}
-
 CbcPointer<Auth::CredentialsCache>
 Auth::Negotiate::User::Cache()
 {
