@@ -29,7 +29,7 @@ Ipc::operator <<(std::ostream &os, const StartListeningAnswer &answer)
 }
 
 void
-Ipc::StartListening(int sock_type, int proto, const Comm::ConnectionPointer &listenConn,
+Ipc::StartListening(const Comm::ConnectionPointer &listenConn,
                     const FdNoteId fdNote, StartListeningCallback &callback)
 {
     auto &answer = callback.answer();
@@ -40,8 +40,7 @@ Ipc::StartListening(int sock_type, int proto, const Comm::ConnectionPointer &lis
         // Ask Coordinator for a listening socket.
         // All askers share one listening queue.
         OpenListenerParams p;
-        p.sock_type = sock_type;
-        p.proto = proto;
+        p.sock_type = listenConn->transport;
         p.addr = listenConn->local;
         p.flags = listenConn->flags;
         p.fdNote = fdNote;
@@ -50,7 +49,7 @@ Ipc::StartListening(int sock_type, int proto, const Comm::ConnectionPointer &lis
     }
 
     enter_suid();
-    comm_open_listener(sock_type, proto, answer.conn, FdNote(fdNote));
+    comm_open_listener(answer.conn, FdNote(fdNote));
     const auto savedErrno = errno;
     leave_suid();
 
