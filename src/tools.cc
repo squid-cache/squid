@@ -396,6 +396,8 @@ death(int sig)
 
     storeDirWriteCleanLogs(0);
 
+    RunRegisteredHere(RegisteredRunner::finishShutdown);
+
     if (!shutting_down) {
         PrintRusage();
 
