@@ -40,7 +40,6 @@ public:
     const char * type() const override;
 
 public:
-    time_t credentialsTTL;
     int casesensitive;
 
 private:

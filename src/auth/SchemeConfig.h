@@ -132,6 +132,9 @@ public:
     int keep_alive = 1; ///< whether to close the connection on auth challenges. default: on
     int utf8 = 0; ///< whether to accept UTF-8 characterset instead of ASCII. default: off
 
+    /// the auth_param 'credentialsttl' setting
+    Auth::Ttl credentialsTtl = Auth::Ttl::zero();
+
 protected:
     /**
      * Parse Accept-Language header and return whether a CP1251 encoding

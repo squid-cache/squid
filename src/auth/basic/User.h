@@ -31,7 +31,7 @@ class User : public Auth::User
 public:
     User(Auth::SchemeConfig *, const char *requestRealm);
     ~User() override;
-    bool authenticated() const;
+
     bool valid() const;
 
     /** Update the cached password for a username. */
@@ -39,6 +39,7 @@ public:
     int32_t ttl() const override;
 
     /* Auth::User API */
+    virtual Auth::Ttl ttl() const override;
     static CbcPointer<Auth::CredentialsCache> Cache();
     void addToNameCache() override;
 
