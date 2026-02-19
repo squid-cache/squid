@@ -323,7 +323,7 @@ ipcacheRelease(ipcache_entry * i, bool dofree)
 static ipcache_entry *
 ipcache_get(const char *name)
 {
-    if (ip_table != nullptr)
+    if (ip_table)
         return (ipcache_entry *) hash_lookup(ip_table, name);
     else
         return nullptr;
@@ -705,7 +705,7 @@ ipcache_init(void)
     ipcache_low = (long) (((float) Config.ipcache.size *
                            (float) Config.ipcache.low) / (float) 100);
     n = hashPrime(ipcache_high / 4);
-    ip_table = hash_create((HASHCMP *) strcmp, n, hash4);
+    ip_table = hash_create((HASHCMP *) strcasecmp, n, hash4);
 
     ipcacheRegisterWithCacheManager();
 }
