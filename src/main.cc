@@ -944,6 +944,8 @@ mainRotate(void)
     if (AvoidSignalAction("log rotation", do_rotate))
         return;
 
+    RunRegisteredHere(RegisteredRunner::rotateLogs);
+
     icmpEngine.Close();
     redirectShutdown();
 #if USE_AUTH
@@ -959,6 +961,9 @@ mainRotate(void)
 #if ICAP_CLIENT
     icapLogRotate();               /*icap.log*/
 #endif
+
+    RunRegisteredHere(RegisteredRunner::finishLogRotate);
+
     icmpEngine.Open();
     redirectInit();
 #if USE_AUTH
