@@ -777,7 +777,6 @@ serverConnectionsOpen(void)
     if (IamWorkerProcess()) {
         clientOpenListenSockets();
         icpOpenPorts();
-        icmpEngine.Open();
         netdbInit();
         Acl::Node::Initialize();
         peerSelectInit();
@@ -792,7 +791,6 @@ serverConnectionsClose(void)
     if (IamWorkerProcess()) {
         clientConnectionsClose();
         icpConnectionShutdown();
-        icmpEngine.Close();
     }
 }
 

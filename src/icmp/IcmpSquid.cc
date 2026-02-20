@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/Assure.h"
+#include "base/RunnersRegistry.h"
 #include "comm.h"
 #include "comm/Loops.h"
 #include "compat/socket.h"
@@ -314,3 +315,15 @@ IcmpSquid::Close(void)
 #endif
 }
 
+#if USE_ICMP
+class IcmpRr : public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    void useConfig() override { icmpEngine.Open(); }
+    void startReconfigure() override { icmpEngine.Close(); }
+    void syncConfig() override { icmpEngine.Open(); }
+    void startShutdown() override { icmpEngine.Close(); }
+};
+DefineRunnerRegistrator(IcmpRr);
+#endif /* USE_ICMP */
