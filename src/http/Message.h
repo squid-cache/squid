@@ -113,7 +113,7 @@ public:
 
     virtual int httpMsgParseError();
 
-    virtual bool expectingBody(const HttpRequestMethod&, int64_t&) const = 0;
+    virtual bool expectingBody(const Http::RequestMethod&, int64_t&) const = 0;
 
     void firstLineBuf(MemBuf&);
 

@@ -1818,7 +1818,7 @@ void Adaptation::Icap::ModXact::estimateVirginBody()
     Http::Message *msg = virgin.header;
     Must(msg);
 
-    HttpRequestMethod method;
+    Http::RequestMethod method;
 
     if (virgin.cause)
         method = virgin.cause->method;

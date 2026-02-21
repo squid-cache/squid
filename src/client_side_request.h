@@ -105,7 +105,7 @@ public:
 
     /// sets log_uri to a parsed request URI when Squid fails to parse or
     /// validate other request components, yielding no current request
-    void setLogUriToRawUri(const char *, const HttpRequestMethod &);
+    void setLogUriToRawUri(const char *, const Http::RequestMethod &);
 
     /// sets log_uri and uri to an internally-generated "error:..." URI when
     /// neither the current request nor the parsed request URI are known
