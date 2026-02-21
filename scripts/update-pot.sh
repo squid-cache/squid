@@ -64,31 +64,11 @@ cd ..
 
 ## begin doc/manuals updates
 
-# Build the po4a.conf
-cat doc/po4a.cnf >po4a.conf
-for f in `ls -1 \
-	src/*.8.in \
-	src/auth/*/*/*.8 \
-	src/acl/external/*/*.8 \
-	src/http/url_rewriters/*/*.8 \
-	src/log/*/*.8 \
-	src/security/*/*/*.8 \
-	src/security/*/*/*.8.in \
-	src/src/store/id_rewriters/*/*.8 \
-	tools/*/*.1 \
-	tools/*.8.in \
-` ; do
-	echo "" >>po4a.conf
-	manp=`basename ${f}`
-	echo "[type: man] ${f} \$lang:doc/manuals/\$lang/${manp}" >>po4a.conf
-done
-
 ## po4a conversion of all doc/manuals man files...
-po4a --no-translations -o groff_code=verbatim --verbose po4a.conf
+po4a --verbose doc/manuals/manuals.conf
 
 (
 	cat doc/manuals/manuals.pot |
-	sed s/PACKAGE\ VERSION/Squid-5/ |
 	sed s/LANGUAGE\ \<LL\@li\.org\>/Squid\ Developers\ \<squid-dev\@lists.squid-cache\.org\>/
 ) >doc/manuals/manuals.pot.tmp
 mv doc/manuals/manuals.pot.tmp doc/manuals/manuals.pot
