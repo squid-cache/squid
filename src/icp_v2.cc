@@ -722,6 +722,7 @@ icpOpenPorts(void)
         return;
 
     icpIncomingConn = new Comm::Connection;
+    icpIncomingConn->transport = AnyP::PROTO_UDP;
     icpIncomingConn->local = Config.Addrs.udp_incoming;
     icpIncomingConn->local.port(port);
 
@@ -735,13 +736,11 @@ icpOpenPorts(void)
     }
 
     auto call = asyncCallbackFun(12, 2, icpIncomingConnectionOpened);
-    Ipc::StartListening(SOCK_DGRAM,
-                        IPPROTO_UDP,
-                        icpIncomingConn,
-                        Ipc::fdnInIcpSocket, call);
+    Ipc::StartListening(icpIncomingConn, Ipc::fdnInIcpSocket, call);
 
     if ( !Config.Addrs.udp_outgoing.isNoAddr() ) {
         icpOutgoingConn = new Comm::Connection;
+        icpOutgoingConn->transport = AnyP::PROTO_UDP;
         icpOutgoingConn->local = Config.Addrs.udp_outgoing;
         icpOutgoingConn->local.port(port);
 
@@ -755,7 +754,7 @@ icpOpenPorts(void)
         }
 
         enter_suid();
-        comm_open_listener(SOCK_DGRAM, IPPROTO_UDP, icpOutgoingConn, "Outgoing ICP Port");
+        comm_open_listener(icpOutgoingConn, "Outgoing ICP Port");
         leave_suid();
 
         if (!Comm::IsConnOpen(icpOutgoingConn))

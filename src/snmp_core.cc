@@ -262,6 +262,7 @@ snmpOpenPorts()
         return;
 
     snmpIncomingConn = new Comm::Connection;
+    snmpIncomingConn->transport = AnyP::PROTO_UDP;
     snmpIncomingConn->local = Config.Addrs.snmp_incoming;
     snmpIncomingConn->local.port(Config.Port.snmp);
 
@@ -275,10 +276,11 @@ snmpOpenPorts()
     }
 
     auto call = asyncCallbackFun(49, 2, snmpPortOpened);
-    Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpIncomingConn, Ipc::fdnInSnmpSocket, call);
+    Ipc::StartListening(snmpIncomingConn, Ipc::fdnInSnmpSocket, call);
 
     if (!Config.Addrs.snmp_outgoing.isNoAddr()) {
         snmpOutgoingConn = new Comm::Connection;
+        snmpOutgoingConn->transport = AnyP::PROTO_UDP;
         snmpOutgoingConn->local = Config.Addrs.snmp_outgoing;
         snmpOutgoingConn->local.port(Config.Port.snmp);
 
@@ -292,7 +294,7 @@ snmpOpenPorts()
         }
         // TODO: Add/use snmpOutgoingPortOpened() instead of snmpPortOpened().
         auto c = asyncCallbackFun(49, 2, snmpPortOpened);
-        Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpOutgoingConn, Ipc::fdnOutSnmpSocket, c);
+        Ipc::StartListening(snmpOutgoingConn, Ipc::fdnOutSnmpSocket, c);
     } else {
         snmpOutgoingConn = snmpIncomingConn;
         debugs(1, DBG_IMPORTANT, "Sending SNMP messages from " << snmpOutgoingConn->local);
