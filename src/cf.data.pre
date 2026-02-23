@@ -2227,6 +2227,45 @@ DOC_START
 	See also: squid_error ACL
 DOC_END
 
+NAME: on_error
+TYPE: on_error
+LOC: Config.accessList.on_error
+DEFAULT: none
+DEFAULT_DOC: Respond with an error message to error traffic
+DOC_START
+	Determines Squid behavior when encountering an error.
+	
+	With the option set for squid_error ACLs, if an error occurred,
+	Squid will terminate (or reset)	the client session without
+	sending an error message.
+
+		on_error <action> [!]acl ...
+
+	The first matching action wins. Only fast ACLs are supported.
+
+	Supported actions are:
+
+	terminate: Terminate (FIN) the TCP session with the client.
+
+	reset: Reset (RST) the TCP session with the client.
+
+	respond: Respond with an error message. This is the default.
+
+	For example:
+	  # define in what Squid errors the connection should be terminated:
+	  acl terminate_on_error squid_error ERR_ZERO_SIZE_OBJECT
+	  # define in what Squid errors the connection should be reset:
+	  acl reset_on_error squid_error ERR_CONNECT_FAIL ERR_SECURE_CONNECT_FAIL
+	  # terminate the matching sessions:
+	      on_error terminate terminate_on_error
+	  # reset the matching sessions:
+	      on_error reset reset_on_error
+	  # in all other error cases, just send an HTTP "error page" response:
+	      on_error respond all
+
+	See also: squid_error ACL
+DOC_END
+
 NAME: auth_schemes
 TYPE: AuthSchemes
 IFDEF: USE_AUTH
