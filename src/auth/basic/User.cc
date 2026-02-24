@@ -25,14 +25,14 @@ Auth::Basic::User::~User()
     safe_free(passwd);
 }
 
-int32_t
+Auth::Ttl
 Auth::Basic::User::ttl() const
 {
     if (credentials() != Auth::Ok && credentials() != Auth::Pending)
-        return -1; // TTL is obsolete NOW.
+        return Auth::User::ttl(); // TTL is obsolete NOW.
 
-    int32_t basic_ttl = expiretime - squid_curtime + static_cast<Auth::Basic::Config*>(config)->credentialsTTL;
-    int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime + Auth::TheConfig.credentialsTtl);
+    const Ttl basic_ttl = expiretime - squid_curtime + static_cast<Auth::Basic::Config*>(config)->credentialsTTL;
+    const auto global_ttl = static_cast<Ttl>(expiretime - squid_curtime + Auth::TheConfig.credentialsTtl);
 
     return min(basic_ttl, global_ttl);
 }
