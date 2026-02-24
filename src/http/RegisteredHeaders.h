@@ -144,6 +144,7 @@ enum HdrKind {
     ReplyHeader = 1 << 2,
     HopByHopHeader = 1 << 3,
     Denied304Header = 1 << 4, //see comment in HttpReply.cc for meaning
+    DeniedTrailer = 1 << 5,
     GeneralHeader = RequestHeader | ReplyHeader,
     EntityHeader = RequestHeader | ReplyHeader
 };
@@ -164,6 +165,7 @@ public:
     bool reply = false; ///< header is a reply header
     bool hopbyhop = false; ///< header is hop by hop
     bool denied304 = false; ///< header is not to be updated on receiving a 304 in cache revalidation (see HttpReply.cc)
+    bool deniedtrailer = false; ///< header is not to be sent in HTTP Trailer section
 };
 
 /** Class for looking up registered header definitions

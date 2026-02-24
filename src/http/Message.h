@@ -73,6 +73,12 @@ public:
 
     HttpHeader header;
 
+    /// HTTP Trailer which cannot be merged into header
+    /// see RFC 9110 section 6.5
+    /// see RFC 9111 section 3.1
+    /// see RFC 9112 section 7.1.2
+    HttpHeader trailer;
+
     HttpHdrCc *cache_control = nullptr;
 
     /* Unsupported, writable, may disappear/change in the future

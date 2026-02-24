@@ -32,6 +32,7 @@
 #include "globals.h"
 #include "HeaderMangling.h"
 #include "http.h"
+#include "http/ContentLengthInterpreter.h"
 #include "http/one/ResponseParser.h"
 #include "http/one/TeChunkedParser.h"
 #include "http/StatusCode.h"
@@ -1461,6 +1462,7 @@ HttpStateData::decodeAndWriteReplyBody()
         addVirginReplyBody(decodedData.content(), decodedData.contentSize());
         if (doneParsing) {
             lastChunk = 1;
+            handleVirginReplyTrailers(virginReply()->trailer, httpChunkDecoder->mimeHeader());
             markParsedVirginReplyAsWhole("http parsed last-chunk");
         } else if (eof) {
             markPrematureReplyBodyEofFailure();
@@ -1471,6 +1473,35 @@ HttpStateData::decodeAndWriteReplyBody()
         debugs (11, 2, "de-chunking failure: " << CurrentException);
     }
     return false;
+}
+
+void
+HttpStateData::handleVirginReplyTrailers(HttpHeader &trailer, const SBuf &rawMime)
+{
+    if (rawMime.length() == 0)
+        return; // nothing to do
+
+    /* We know the whole response is in parser now */
+    debugs(11, 2, "HTTP Server " << serverConnection);
+    debugs(11, 2, "HTTP Server RESPONSE TRAILER:\n---------\n" << rawMime << "----------");
+
+    Http::ContentLengthInterpreter nil;
+    nil.applyTrailerRules();
+    trailer.parse(rawMime.rawContent(), rawMime.length(), nil);
+
+    // apply forbidden Trailer filter
+    std::list<Http::HdrType> toDrop;
+    for (const auto field : virginReply()->trailer.entries) {
+        if (Http::HeaderLookupTable.lookup(field->id).deniedtrailer) {
+            debugs(55, 3, field->name << " is prohibited in trailers");
+            toDrop.emplace_back(field->id);
+        }
+    }
+    for (const auto i : toDrop) {
+        trailer.delById(i);
+    }
+
+    // TODO: merge relevant trailers into reply->header
 }
 
 /**
@@ -2073,6 +2104,8 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         hdr_out->putStr(Http::HdrType::TRANSFER_ENCODING, "chunked");
     }
 
+    // TODO: ensure Trailers field-value lists any being sent
+
     /* Now mangle the headers. */
     httpHdrMangleList(hdr_out, request, al, ROR_REQUEST);
 
@@ -2180,11 +2213,25 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
 
     case Http::HdrType::CONNECTION:          /** \par Connection: */
-    case Http::HdrType::TE:                  /** \par TE: */
     case Http::HdrType::KEEP_ALIVE:          /** \par Keep-Alive: */
     case Http::HdrType::PROXY_AUTHENTICATE:  /** \par Proxy-Authenticate: */
-    case Http::HdrType::TRAILER:             /** \par Trailer: */
     case Http::HdrType::TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
+        break;
+
+    case Http::HdrType::TRAILER:
+        /** \par Trailer:
+         * Pass through only if chunked encoding is used */
+        if (flags.chunked_request)
+            hdr_out->addEntry(e->clone());
+        break;
+
+    case Http::HdrType::TE:
+        /** \par TE:
+         * Hop-by-Hop header, but advertise our Trailer support if client also does.
+         * Requires chunked encoding.
+         */
+        if (flags.chunked_request && request->header.hasListMember(Http::HdrType::TE, "trailers", ','))
+            hdr_out->putStr(Http::HdrType::TE, "trailers");
         break;
 
     /// \par Upgrade is hop-by-hop but forwardUpgrade() may send a filtered one
@@ -2438,6 +2485,9 @@ HttpStateData::sendRequest()
         // use chunked encoding if we do not know the length
         if (request->content_length < 0)
             flags.chunked_request = true;
+        // or if HTTP Trailer feature is being used
+        if (request->trailer.len > 0 || request->header.has(Http::HdrType::TRAILER) || request->header.hasListMember(Http::HdrType::TE, "trailers",','))
+            flags.chunked_request = true;
     } else {
         assert(!requestBodySource);
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
@@ -2508,8 +2558,12 @@ HttpStateData::getMoreRequestBody(MemBuf &buf)
 
     // optimization: pre-allocate buffer size that should be enough
     const mb_size_t rawDataSize = raw.contentSize();
-    // we may need to send: hex-chunk-size CRLF raw-data CRLF last-chunk
-    buf.init(16 + 2 + rawDataSize + 2 + 5, raw.max_capacity);
+    // we may need to send: hex-chunk-size CRLF raw-data CRLF last-chunk CRLF
+    const auto expectedSize = 16 + 2 // hex-chunk-size CRLF
+                              + rawDataSize + 2 //  raw-data CRLF
+                              + 1 + 2 // last-chunk CRLF
+                              + request->trailer.len + 2; // trailer-section CRLF
+    buf.init(expectedSize, raw.max_capacity);
 
     buf.appendf("%x\r\n", static_cast<unsigned int>(rawDataSize));
     buf.append(raw.content(), rawDataSize);
@@ -2518,13 +2572,22 @@ HttpStateData::getMoreRequestBody(MemBuf &buf)
     Must(rawDataSize > 0); // we did not accidentally created last-chunk above
 
     // Do not send last-chunk unless we successfully received everything
-    if (receivedWholeRequestBody) {
-        Must(!flags.sentLastChunk);
-        flags.sentLastChunk = true;
-        buf.append("0\r\n\r\n", 5);
-    }
+    if (receivedWholeRequestBody)
+        generateLastChunk(buf);
 
     return true;
+}
+
+void
+HttpStateData::generateLastChunk(MemBuf &buf)
+{
+    Must(!flags.sentLastChunk);
+    flags.sentLastChunk = true;
+
+    buf.append("0\r\n", 3);
+    if (request->trailer.len > 0)
+        request->trailer.packInto(&buf);
+    buf.append("\r\n", 2);
 }
 
 void
@@ -2598,11 +2661,15 @@ HttpStateData::finishingChunkedRequest()
     }
 
     Must(receivedWholeRequestBody); // or we should not be sending last-chunk
-    flags.sentLastChunk = true;
+
+    MemBuf buf;
+    // we may need to send: last-chunk CRLF [ trailer-section ] CRLF
+    buf.init(3 + request->trailer.len + 2, 64*1024);
+    generateLastChunk(buf);
 
     typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
     requestSender = JobCallback(11,5, Dialer, this, HttpStateData::wroteLast);
-    Comm::Write(serverConnection, "0\r\n\r\n", 5, requestSender, nullptr);
+    Comm::Write(serverConnection, &buf, requestSender);
     return true;
 }
 
