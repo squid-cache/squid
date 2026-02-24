@@ -2247,18 +2247,44 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
             hdr_out->addEntry(e->clone());
         break;
 
-    case Http::HdrType::IF_NONE_MATCH:
-        /** \par If-None-Match:
-         * append if the wildcard '*' special case value is present, or
+    case Http::HdrType::IF_MATCH:
+
+    case Http::HdrType::IF_NONE_MATCH: {
+        /** \par If-Match:, If-None-Match:
+         * Append if:
          *   cache_miss_revalidate is enabled, or
          *   the request is not cacheable in this proxy, or
-         *   the request contains authentication credentials.
-         * \note this header lists a set of responses for the server to elide sending. Squid added values are extending that set.
+         *   the request contains authentication credentials, or
+         *   (for If-Match) the If-None-Match header is using wildcard '*' special case value.
+         *   (for If-None-Match) the If-Match header is using wildcard '*' special case value.
+         *
+         * \note If-None-Match lists a set of responses for the server to elide sending.
+         *       Squid added values are extending that set, unless the wildcard '*' exists.
+         *
+         * \note If-Match lists a set of responses for the server to include sending.
+         *       Squid added values are extending that set, unless the wildcard '*' exists.
          */
+        const auto oppositeHeader = (e->id == Http::HdrType::IF_MATCH ? Http::HdrType::IF_NONE_MATCH : Http::HdrType::IF_MATCH);
+
         // XXX: need to check and cleanup the auth case so cacheable auth requests get cached.
-        if (hdr_out->hasListMember(Http::HdrType::IF_MATCH, "*", ',') || Config.onoff.cache_miss_revalidate || !request->flags.cachable || request->flags.auth)
+        if (Config.onoff.cache_miss_revalidate || !request->flags.cachable || request->flags.auth ||
+                hdr_out->hasListMember(oppositeHeader, "*", ',')) {
+
+            /*
+             * RFC 9110 section 13.1.1 [section 13.1.2]
+             *   Note that an If-[None-]Match header field with a list value containing "*" and
+             *   other values (including other instances of "*") is syntactically invalid (therefore
+             *   not allowed to be generated) and furthermore is unlikely to be interoperable.
+             */
+            if (e->value.cmp("*") == 0)
+                hdr_out->delById(e->id);
+            else if (hdr_out->hasListMember(e->id, "*", ','))
+                break;
+
             hdr_out->addEntry(e->clone());
-        break;
+        }
+    }
+    break;
 
     case Http::HdrType::MAX_FORWARDS:
         /** \par Max-Forwards:
