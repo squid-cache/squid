@@ -12,6 +12,7 @@
 #include "anyp/PortCfg.h"
 #include "base/Subscription.h"
 #include "client_side.h"
+#include "compat/signal.h"
 #include "compat/unistd.h"
 #include "fatal.h"
 #include "fde.h"
@@ -423,7 +424,7 @@ BroadcastSignalIfAny(int& sig)
             for (int i = TheKids.count() - 1; i >= 0; --i) {
                 const auto &kid = TheKids.get(i);
                 if (kid.running())
-                    kill(kid.getPid(), sig);
+                    xkill(kid.getPid(), sig);
             }
         }
         sig = -1;

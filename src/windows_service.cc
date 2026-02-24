@@ -9,6 +9,7 @@
 /* Inspired by previous work by Romeo Anghelache & Eric Stern. */
 
 #include "squid.h"
+#include "compat/signal.h"
 #include "debug/Stream.h"
 #include "globals.h"
 #include "protos.h"

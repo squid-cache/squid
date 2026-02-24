@@ -29,6 +29,7 @@
 #include "CachePeer.h"
 #include "CachePeers.h"
 #include "compat/netdb.h"
+#include "compat/signal.h"
 #include "compat/socket.h"
 #include "ConfigOption.h"
 #include "ConfigParser.h"

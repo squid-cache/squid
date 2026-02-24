@@ -69,6 +69,8 @@ libcompatsquid_la_SOURCES = \
 	select.h \
 	shm.cc \
 	shm.h \
+	signal.cc \
+	signal.h \
 	socket.cc \
 	socket.h \
 	statvfs.cc \
