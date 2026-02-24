@@ -115,10 +115,8 @@ void icpHandleIcpV3(int, Ip::Address &, char *, int);
 void icpOpenPorts(void);
 
 /// \ingroup ServerProtocolICPAPI
-void icpConnectionShutdown(void);
-
-/// \ingroup ServerProtocolICPAPI
-void icpClosePorts(void);
+/// Perform a graceful shutdown of ICP listening and sending ports (if any)
+void icpClosePorts();
 
 /// \ingroup ServerProtocolICPAPI
 int icpSetCacheKey(const cache_key * key);
