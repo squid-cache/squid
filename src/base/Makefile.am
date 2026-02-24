@@ -48,6 +48,7 @@ libbase_la_SOURCES = \
 	JobWait.h \
 	Lock.h \
 	LookupTable.h \
+	MaskSensitiveInfo.h \
 	OnOff.h \
 	Packable.h \
 	PackableStream.h \

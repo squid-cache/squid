@@ -865,7 +865,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
             hdr.putInt(Http::HdrType::AGE, 0);
         MemBuf mb;
         mb.init();
-        hdr.packInto(&mb);
+        hdr.packInto(&mb, MaskSensitiveInfo::off);
         stuff.D.resp_hdrs = xstrdup(mb.buf);
         stuff.D.respHdrsSz = mb.contentSize();
         debugs(31, 3, "htcpTstReply: resp_hdrs = {" << stuff.D.resp_hdrs << "}");
@@ -878,7 +878,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         if (e && e->lastModified() > -1)
             hdr.putTime(Http::HdrType::LAST_MODIFIED, e->lastModified());
 
-        hdr.packInto(&mb);
+        hdr.packInto(&mb, MaskSensitiveInfo::off);
 
         stuff.D.entity_hdrs = xstrdup(mb.buf);
         stuff.D.entityHdrsSz = mb.contentSize();
@@ -904,7 +904,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         }
 #endif /* USE_ICMP */
 
-        hdr.packInto(&mb);
+        hdr.packInto(&mb, MaskSensitiveInfo::off);
         stuff.D.cache_hdrs = xstrdup(mb.buf);
         stuff.D.cacheHdrsSz = mb.contentSize();
         debugs(31, 3, "htcpTstReply: cache_hdrs = {" << stuff.D.cache_hdrs << "}");
@@ -1579,7 +1579,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
     HttpStateData::httpBuildRequestHeader(req, e, nullptr, &hdr, p, flags);
     MemBuf mb;
     mb.init();
-    hdr.packInto(&mb);
+    hdr.packInto(&mb, MaskSensitiveInfo::off);
     hdr.clean();
     stuff.S.req_hdrs = mb.buf;
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
@@ -1633,7 +1633,7 @@ htcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &, CachePee
     if (reason != HTCP_CLR_INVALIDATION) {
         HttpStateData::httpBuildRequestHeader(req, e, nullptr, &hdr, p, flags);
         mb.init();
-        hdr.packInto(&mb);
+        hdr.packInto(&mb, MaskSensitiveInfo::off);
         hdr.clean();
         stuff.S.req_hdrs = mb.buf;
     } else {
