@@ -551,7 +551,7 @@ TemplateFile::loadFor(const HttpRequest *request)
 
         if (tryLoadTemplate(lang)) {
             /* store the language we found for the Content-Language reply header */
-            errLanguage = lang;
+            errLanguage_.emplace(lang);
             break;
         } else if (Config.errorLogMissingLanguages) {
             debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << lang);
@@ -842,10 +842,6 @@ ErrorState::~ErrorState()
     safe_free(ftp.reply);
     safe_free(ftp.cwd_msg);
     safe_free(err_msg);
-#if USE_ERR_LOCALES
-    if (err_language != Config.errorDefaultLanguage)
-#endif
-        safe_free(err_language);
 }
 
 int
@@ -1371,8 +1367,8 @@ ErrorState::BuildHttpReply()
         }
 
         /* add the Content-Language header according to RFC section 14.12 */
-        if (err_language) {
-            rep->header.putStr(Http::HdrType::CONTENT_LANGUAGE, err_language);
+        if (errLanguage) {
+            rep->header.updateOrAddStr(Http::HdrType::CONTENT_LANGUAGE, *errLanguage);
         } else
 #endif /* USE_ERROR_LOCALES */
         {
@@ -1392,6 +1388,7 @@ SBuf
 ErrorState::buildBody()
 {
     assert(page_id > ERR_NONE && page_id < error_page_count);
+    errLanguage.reset();
 
 #if USE_ERR_LOCALES
     /** error_directory option in squid.conf overrides translations.
@@ -1399,14 +1396,11 @@ ErrorState::buildBody()
      * Otherwise locate the Accept-Language header
      */
     if (!Config.errorDirectory && page_id < ERR_MAX) {
-        if (err_language && err_language != Config.errorDefaultLanguage)
-            safe_free(err_language);
-
         ErrorPageFile localeTmpl(err_type_str[page_id], static_cast<err_type>(page_id));
         if (localeTmpl.loadFor(request.getRaw())) {
             inputLocation = localeTmpl.filename;
-            assert(localeTmpl.language());
-            err_language = xstrdup(localeTmpl.language());
+            Assure(localeTmpl.errLanguage());
+            errLanguage = localeTmpl.errLanguage();
             return compileBody(localeTmpl.text(), true);
         }
     }
@@ -1417,8 +1411,8 @@ ErrorState::buildBody()
      * fall back to the old style squid.conf settings.
      */
 #if USE_ERR_LOCALES
-    if (!Config.errorDirectory)
-        err_language = Config.errorDefaultLanguage;
+    if (!Config.errorDirectory && Config.errorDefaultLanguage)
+        errLanguage.emplace(Config.errorDefaultLanguage);
 #endif
     debugs(4, 2, "No existing error page language negotiated for " << this << ". Using default error file.");
     return compileBody(error_text[page_id], true);
