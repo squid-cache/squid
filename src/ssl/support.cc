@@ -19,12 +19,14 @@
 #include "anyp/Host.h"
 #include "anyp/PortCfg.h"
 #include "anyp/Uri.h"
+#include "base/Raw.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "ip/Address.h"
 #include "ipc/MemMap.h"
+#include "sbuf/Stream.h"
 #include "security/CertError.h"
 #include "security/Certificate.h"
 #include "security/ErrorDetail.h"
@@ -37,6 +39,10 @@
 #include "ssl/support.h"
 
 #include <cerrno>
+
+#if HAVE_OPENSSL_PROVIDER_H
+#include <openssl/provider.h>
+#endif
 
 // TODO: Move ssl_ex_index_* global variables from global.cc here.
 static int ssl_ex_index_verify_callback_parameters = -1;
@@ -743,6 +749,77 @@ ssl_free_VerifyCallbackParameters(void *, void *ptr, CRYPTO_EX_DATA *,
     delete static_cast<Ssl::VerifyCallbackParameters*>(ptr);
 }
 
+#if OPENSSL_VERSION_MAJOR >= 3
+static int
+DisplayProviderInfo(OSSL_PROVIDER *provider, void *)
+{
+    SBufStream out;
+    const auto params = OSSL_PROVIDER_gettable_params(provider);
+    for (int i = 0; params[i].key; ++i) {
+        out << (i > 0 ? "," : "");
+
+        OSSL_PARAM detail[2] = {OSSL_PARAM_END, OSSL_PARAM_END};
+        switch (params[i].data_type)
+        {
+        case OSSL_PARAM_INTEGER: {
+            int value = 0;
+            detail[0] = OSSL_PARAM_construct_int(params[i].key, &value);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << ' ' << detail[0].key << '=' << value;
+        }
+        break;
+        case OSSL_PARAM_UNSIGNED_INTEGER: {
+            unsigned int value = 0;
+            detail[0] = OSSL_PARAM_construct_uint(params[i].key, &value);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << ' ' << detail[0].key << '=' << value;
+        }
+        break;
+        case OSSL_PARAM_REAL: {
+            double value = 0.0;
+            detail[0] = OSSL_PARAM_construct_double(params[i].key, &value);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << ' ' << detail[0].key << '=' << value;
+        }
+        break;
+        case OSSL_PARAM_UTF8_STRING: {
+            char *value = nullptr;
+            detail[0] = OSSL_PARAM_construct_utf8_string(params[i].key, value, 0);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << Raw(detail[0].key, value, detail[0].return_size);
+        }
+        break;
+        case OSSL_PARAM_OCTET_STRING: {
+            char *value = nullptr;
+            detail[0] = OSSL_PARAM_construct_octet_string(params[i].key, static_cast<void*>(value), 0);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << Raw(detail[0].key, value, detail[0].return_size).hex();
+        }
+        break;
+        case OSSL_PARAM_UTF8_PTR: {
+            char *value = nullptr;
+            detail[0] = OSSL_PARAM_construct_utf8_ptr(params[i].key, &value, 0);
+            OSSL_PARAM_set_all_unmodified(detail);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << Raw(detail[0].key, value, detail[0].return_size);
+        }
+        break;
+        case OSSL_PARAM_OCTET_PTR: {
+            char *value = nullptr;
+            detail[0] = OSSL_PARAM_construct_octet_ptr(params[i].key, reinterpret_cast<void**>(&value), 0);
+            if (OSSL_PROVIDER_get_params(provider, detail))
+                out << Raw(detail[0].key, value, detail[0].return_size).hex();
+        }
+        break;
+        }
+    }
+
+    const auto name = OSSL_PROVIDER_get0_name(provider);
+    debugs(83, DBG_PARSE_NOTE(3), "Provider: " << name << '(' << out.buf() << " )");
+    return 1;
+}
+#endif /* OPENSSL_VERSION_MAJOR >= 3 */
+
 void
 Ssl::Initialize(void)
 {
@@ -776,6 +853,17 @@ Ssl::Initialize(void)
         throw TextException("Cannot use ssl_engine in Squid built with OpenSSL 3.0 or newer", Here());
 #endif
     }
+
+#if OPENSSL_VERSION_MAJOR >= 3
+    if (::Config.SSL.ssl_provider) {
+        if (!OSSL_PROVIDER_load(nullptr, ::Config.SSL.ssl_provider)) {
+            const auto ssl_error = ERR_get_error();
+            fatalf("Failed to load SSL provider: %s\n", Security::ErrorString(ssl_error));
+        }
+    }
+    const auto debugResult = OSSL_PROVIDER_do_all(nullptr, &DisplayProviderInfo, nullptr);
+    assert(debugResult == 1); // paranoid check that DisplayProviderInfo() returns 1
+#endif /* OPENSSL_VERSION_MAJOR >= 3 */
 
     const char *defName = ::Config.SSL.certSignHash ? ::Config.SSL.certSignHash : SQUID_SSL_SIGN_HASH_IF_NONE;
     Ssl::DefaultSignHash = EVP_get_digestbyname(defName);
