@@ -28,7 +28,7 @@
 static const auto &
 MapLabel()
 {
-    static const auto label = new SBuf("transients_map");
+    static const auto label = new SBuf("transients");
     return *label;
 }
 
