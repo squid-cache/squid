@@ -13,10 +13,9 @@
 #include "adaptation/ecap/Host.h"
 #include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/ecap/XactionRep.h"
-#include "AsyncEngine.h"
 #include "base/TextException.h"
 #include "debug/Stream.h"
-#include "EventLoop.h"
+#include "engines/EventLoop.h"
 
 #if HAVE_LIBECAP_ADAPTER_SERVICE_H
 #include <libecap/adapter/service.h>
