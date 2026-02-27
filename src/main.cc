@@ -944,7 +944,6 @@ mainRotate(void)
 
     RunRegisteredHere(RegisteredRunner::rotateLogs);
 
-    icmpEngine.Close();
     redirectShutdown();
 #if USE_AUTH
     authenticateRotate();
@@ -962,7 +961,6 @@ mainRotate(void)
 
     RunRegisteredHere(RegisteredRunner::finishLogRotate);
 
-    icmpEngine.Open();
     redirectInit();
 #if USE_AUTH
     authenticateInit(&Auth::TheConfig.schemes);

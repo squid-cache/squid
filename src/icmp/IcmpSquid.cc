@@ -323,6 +323,8 @@ public:
     void useConfig() override { icmpEngine.Open(); }
     void startReconfigure() override { icmpEngine.Close(); }
     void syncConfig() override { icmpEngine.Open(); }
+    void rotateLogs() override { icmpEngine.Close(); }
+    void finishLogRotate() override { icmpEngine.Open(); }
     void startShutdown() override { icmpEngine.Close(); }
 };
 DefineRunnerRegistrator(IcmpRr);
