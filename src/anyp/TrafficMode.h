@@ -21,13 +21,21 @@ namespace AnyP
 class TrafficMode
 {
 public:
-    /** marks HTTP accelerator (reverse/surrogate proxy) traffic
+    /** marks HTTP Proxy (forward proxy) traffic
+     *
+     * Indicating the following are required:
+     *  - not gatewaySurrogate
+     *  - not isIntercepted()
+     */
+    bool forwardProxy = false;
+
+    /** marks HTTP Gateway (accelerator/reverse/surrogate proxy) traffic
      *
      * Indicating the following are required:
      *  - URL translation from relative to absolute form
      *  - restriction to origin peer relay recommended
      */
-    bool accelSurrogate = false;
+    bool gatewaySurrogate = false;
 
     /** marks ports receiving PROXY protocol traffic
      *
@@ -73,10 +81,11 @@ public:
      */
     bool tunnelSslBumping = false;
 
-    /** true if the traffic is in any way intercepted
-     *
-     */
-    bool isIntercepted() { return natIntercept||tproxyIntercept ;}
+    /// \returns true if the traffic is in any way intercepted
+    bool isIntercepted() const { return natIntercept||tproxyIntercept ;}
+
+    /// \returns true if the traffic is in any way intercepted
+    bool isForwardProxy() const { return forwardProxy || (!gatewaySurrogate && !isIntercepted()); }
 };
 
 } // namespace AnyP
