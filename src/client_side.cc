@@ -1292,7 +1292,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
            "\n----------");
 
     /* deny CONNECT via accelerated ports */
-    if (hp->method() == Http::METHOD_CONNECT && port != nullptr && port->flags.accelSurrogate) {
+    if (hp->method() == Http::METHOD_CONNECT && port != nullptr && port->flags.gatewaySurrogate) {
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << transferProtocol << " Accelerator port " << port->s.port());
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
         hp->parseStatusCode = Http::scMethodNotAllowed;
@@ -1341,19 +1341,19 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
 
     /* set url */
     debugs(33,5, "Prepare absolute URL from " <<
-           (transparent()?"intercept":(port->flags.accelSurrogate ? "accel":"")));
+           (transparent()?"intercept":(port->flags.gatewaySurrogate ? "gateway":"")));
     /* Rewrite the URL in transparent or accelerator mode */
     /* NP: there are several cases to traverse here:
-     *  - standard mode (forward proxy)
+     *  - proxy mode (forward proxy)
      *  - transparent mode (TPROXY)
      *  - transparent mode with failures
      *  - intercept mode (NAT)
      *  - intercept mode with failures
-     *  - accelerator mode (reverse proxy)
+     *  - gateway mode (reverse proxy)
      *  - internal relative-URL
      *  - mixed combos of the above with internal URL
      *  - remote interception with PROXY protocol
-     *  - remote reverse-proxy with PROXY protocol
+     *  - remote gateway (reverse-proxy) with PROXY protocol
      */
     if (switchedToHttps()) {
         http->uri = prepareTlsSwitchingURL(hp);
@@ -1367,7 +1367,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
         // that may mismatch the (yet unparsed) Host header in the request.
         http->uri = xstrdup(internalLocalUri(nullptr, hp->requestUri()));
 
-    } else if (port->flags.accelSurrogate) {
+    } else if (port->flags.gatewaySurrogate) {
         /* accelerator mode */
         http->uri = prepareAcceleratedURL(this, hp);
         http->flags.accel = true;
@@ -3335,7 +3335,7 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
            (s->flags.natIntercept ? "NAT intercepted " : "") <<
            (s->flags.tproxyIntercept ? "TPROXY intercepted " : "") <<
            (s->flags.tunnelSslBumping ? "SSL bumped " : "") <<
-           (s->flags.accelSurrogate ? "reverse-proxy " : "")
+           (s->flags.gatewaySurrogate ? "CDN gateway " : "")
            << FdNote(portTypeNote) << " connections at "
            << s->listenConn);
 
