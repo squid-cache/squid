@@ -22,11 +22,11 @@ public:
 };
 
 /* ETag */
-int etagParseInit(ETag * etag, const char *str);
+int etagParseInit(ETag *, const char *); //STUB_RETVAL(0)
 /// whether etags are strong-equal
-bool etagIsStrongEqual(const ETag &tag1, const ETag &tag2);
+bool etagIsStrongEqual(const ETag &, const ETag &); //STUB_RETVAL(false)
 /// whether etags are weak-equal
-bool etagIsWeakEqual(const ETag &tag1, const ETag &tag2);
+bool etagIsWeakEqual(const ETag &, const ETag &); //STUB_RETVAL(false)
 
 #endif /* SQUID_SRC_ETAG_H */
 
