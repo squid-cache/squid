@@ -81,7 +81,7 @@ public:
      */
     bool tunnelSslBumping = false;
 
-    /// \returns true if the traffic is in any way intercepted
+    /// whether the traffic is in any way intercepted
     bool isIntercepted() const { return natIntercept||tproxyIntercept ;}
 
     /// \returns true if the traffic is in any way intercepted
