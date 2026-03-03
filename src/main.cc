@@ -1235,52 +1235,6 @@ OnTerminate()
     abort();
 }
 
-/// unsafe main routine -- may throw
-int SquidMain(int argc, char **argv);
-/// unsafe main routine wrapper to catch exceptions
-static int SquidMainSafe(int argc, char **argv);
-
-#if USE_WIN32_SERVICE
-/* Entry point for Windows services */
-extern "C" void WINAPI
-SquidWinSvcMain(int argc, char **argv)
-{
-    SquidMainSafe(argc, argv);
-}
-#endif
-
-int
-main(int argc, char **argv)
-{
-#if USE_WIN32_SERVICE
-    SetErrorMode(SEM_NOGPFAULTERRORBOX);
-    if ((argc == 2) && strstr(argv[1], _WIN_SQUID_SERVICE_OPTION))
-        return WIN32_StartService(argc, argv);
-    else {
-        WIN32_run_mode = _WIN_SQUID_RUN_MODE_INTERACTIVE;
-        opt_no_daemon = 1;
-    }
-#endif
-
-    return SquidMainSafe(argc, argv);
-}
-
-static int
-SquidMainSafe(int argc, char **argv)
-{
-    (void)std::set_terminate(&OnTerminate);
-    // XXX: This top-level catch works great for startup, but, during runtime,
-    // it erases valuable stack info. TODO: Let stack-preserving OnTerminate()
-    // handle FATAL runtime errors by splitting main code into protected
-    // startup, unprotected runtime, and protected termination sections!
-    try {
-        return SquidMain(argc, argv);
-    } catch (...) {
-        debugs(1, DBG_CRITICAL, "FATAL: " << CurrentException);
-    }
-    return EXIT_FAILURE;
-}
-
 /// computes name and ID for the current kid process
 static void
 ConfigureCurrentKid(const CommandLine &cmdLine)
@@ -1416,7 +1370,8 @@ RegisterModules()
 #endif
 }
 
-int
+/// unsafe main routine -- may throw
+static int
 SquidMain(int argc, char **argv)
 {
     // We must register all modules before the first RunRegisteredHere() call.
@@ -1652,6 +1607,48 @@ SquidMain(int argc, char **argv)
 
     /* NOTREACHED */
     return 0;
+}
+
+/// unsafe main routine wrapper to catch exceptions
+static int
+SquidMainSafe(int argc, char **argv) noexcept
+{
+    (void)std::set_terminate(&OnTerminate);
+    // XXX: This top-level catch works great for startup, but, during runtime,
+    // it erases valuable stack info. TODO: Let stack-preserving OnTerminate()
+    // handle FATAL runtime errors by splitting main code into protected
+    // startup, unprotected runtime, and protected termination sections!
+    try {
+        return SquidMain(argc, argv);
+    } catch (...) {
+        debugs(1, DBG_CRITICAL, "FATAL: " << CurrentException);
+    }
+    return EXIT_FAILURE;
+}
+
+#if USE_WIN32_SERVICE
+/* Entry point for Windows services */
+extern "C" void WINAPI
+SquidWinSvcMain(int argc, char **argv)
+{
+    SquidMainSafe(argc, argv);
+}
+#endif
+
+int
+main(int argc, char **argv)
+{
+#if USE_WIN32_SERVICE
+    SetErrorMode(SEM_NOGPFAULTERRORBOX);
+    if ((argc == 2) && strstr(argv[1], _WIN_SQUID_SERVICE_OPTION))
+        return WIN32_StartService(argc, argv);
+    else {
+        WIN32_run_mode = _WIN_SQUID_RUN_MODE_INTERACTIVE;
+        opt_no_daemon = 1;
+    }
+#endif
+
+    return SquidMainSafe(argc, argv);
 }
 
 static void
