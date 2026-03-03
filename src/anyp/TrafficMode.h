@@ -24,8 +24,9 @@ public:
     /** marks HTTP Proxy (forward proxy) traffic
      *
      * Indicating the following are required:
-     *  - not gatewaySurrogate
-     *  - not isIntercepted()
+     *  - URL in absolute form (exceptions for CONNECT and OPTIONS methods)
+     *  - NAT is prohibited
+     *  - WWW-Auth* is restricted to cache manager
      */
     bool forwardProxy = false;
 
@@ -84,7 +85,7 @@ public:
     /// whether the traffic is in any way intercepted
     bool isIntercepted() const { return natIntercept||tproxyIntercept ;}
 
-    /// \returns true if the traffic is in any way intercepted
+    /// whether HTTP proxy (forward-proxy) traffic is expected
     bool isForwardProxy() const { return forwardProxy || (!gatewaySurrogate && !isIntercepted()); }
 };
 
