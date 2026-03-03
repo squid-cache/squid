@@ -20,7 +20,7 @@ class MemBlobStats
 {
 public:
     /// dumps class-wide statistics
-    std::ostream& dump(std::ostream& os) const;
+    void dump(std::ostream& os) const;
 
     MemBlobStats& operator += (const MemBlobStats&);
 
