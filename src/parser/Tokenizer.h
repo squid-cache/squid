@@ -109,6 +109,12 @@ public:
      */
     bool skipOne(const CharacterSet &discardables);
 
+    /** Skips a single character from the buffer.
+     *
+     * \return the character which was skipped
+     */
+    char skipOne();
+
     /** Skips all sequential characters from the set, in any order.
      *
      * \returns the number of skipped characters
