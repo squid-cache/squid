@@ -243,7 +243,7 @@ public:
     } Addrs;
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
-    wordlist *mcast_group_list;
+    SBufList mcast_group_list;
     CachePeers *peers;
     int npeers;
 
