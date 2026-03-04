@@ -125,17 +125,14 @@ CacheManager::WellKnownUrlPathPrefix()
 Mgr::Command::Pointer
 CacheManager::ParseUrl(const AnyP::Uri &uri)
 {
-    Parser::Tokenizer tok(uri.path());
-
-    Assure(tok.skip(WellKnownUrlPathPrefix()));
+    auto upath = uri.path();
+    Assure(upath.startsWith(WellKnownUrlPathPrefix()));
 
     Mgr::Command::Pointer cmd = new Mgr::Command();
     cmd->params.httpUri = SBufToString(uri.absolute());
 
-    static const auto fieldChars = CharacterSet("mgr-field", "?#").complement();
-
-    SBuf action;
-    if (!tok.prefix(action, fieldChars)) {
+    SBuf action = upath.substr(WellKnownUrlPathPrefix().length()); // path without the prefix
+    if (action.isEmpty()) {
         static const SBuf indexReport("index");
         action = indexReport;
     }
@@ -150,16 +147,9 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
         throw TextException(ToSBuf("action '", action, "' is ", prot), Here());
     cmd->profile = profile;
 
-    // TODO: fix when AnyP::Uri::parse() separates path?query#fragment
-    SBuf params;
-    if (tok.skip('?')) {
-        params = tok.remaining();
-        Mgr::QueryParams::Parse(tok, cmd->params.queryParams);
-    }
-
-    if (!tok.skip('#') && !tok.atEnd())
-        throw TextException("invalid characters in URL", Here());
-    // else ignore #fragment (if any)
+    SBuf params = uri.query();
+    if (!params.isEmpty())
+        Mgr::QueryParams::Parse(params, cmd->params.queryParams);
 
     debugs(16, 3, "MGR request: host=" << uri.host() << ", action=" << action << ", params=" << params);
 
