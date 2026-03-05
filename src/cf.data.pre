@@ -2984,9 +2984,6 @@ DOC_START
 		   to the client original destination instead of DIRECT.
 		   This overrides 'client_dst_passthru off'.
 
-		For now suspicious intercepted CONNECT requests are always
-		responded to with an HTTP 409 (Conflict) error page.
-
 
 	SECURITY NOTE:
 
