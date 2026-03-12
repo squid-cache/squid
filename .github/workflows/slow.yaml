@@ -206,7 +206,7 @@ jobs:
             export MAKE=gmake
             export CC='ccache cc'
             export CXX='ccache c++'
-            exec ./test-builds.sh layer-00-default layer-02-maximus
+            ./test-builds.sh layer-00-default layer-02-maximus
 
       - name: Publish build logs
         if: success() || failure()
