@@ -156,7 +156,7 @@ jobs:
           # We expect these problems to be solved some time soon.
     runs-on: "${{ matrix.platform != 'arm64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}"
 
-    name: freebsd(${{ matrix.osversion }}, ${{ matrix.platform }})
+    name: freebsd(${{ matrix.osversion }},${{ matrix.platform }})
 
     steps:
       - name: Checkout Sources
