@@ -1,3 +1,11 @@
+Changes in squid-7.5 (12 Mar 2026):
+
+	- Bug 5501: Squid may exit when ACLs decode an invalid URI
+	- ICP: Fix HttpRequest lifetime for ICP v3 queries
+	- ICP: Fix validation of packet sizes and URLs
+	- Do not escape malformed URI twice when sending ICP errors
+	- ... and some code, CI, and documentation cleanups
+
 Changes in squid-7.4 (19 Jan 2026):
 
 	- Do not create world-readable directories
