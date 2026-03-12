@@ -145,9 +145,9 @@ jobs:
     strategy:
       matrix:
         osversion:
-          - "15.0"
-          - "14.3"
-          - "13.5"
+          - 15.0
+          - 14.3
+          - 13.5
         platform:
           - amd64
           # We are ready to support multiple platforms, but
