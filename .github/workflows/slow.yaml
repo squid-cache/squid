@@ -181,12 +181,12 @@ jobs:
           arch: ${{ matrix.platform }}
           prepare: |
             export BATCH=yes
-            which nproc >/dev/null && echo "MAKE_JOBS_NUMBER?=`nproc --all`" >>/etc/make.conf
-            echo "OPTIONS_UNSET=CUPS DEBUG DOCS FONTCONFIG NLS X11" >>/etc/make.conf
+            which nproc > /dev/null && echo "MAKE_JOBS_NUMBER?=`nproc --all`" >> /etc/make.conf
+            echo "OPTIONS_UNSET=CUPS DEBUG DOCS FONTCONFIG NLS X11" >> /etc/make.conf
             echo "WITHOUT_MODULES=sound ntfs linux" >> /etc/make.conf
-            echo "WITHOUT_X11=yes" >>/etc/make.conf
-            echo "NO_SENDMAIL=true" >>/etc/make.conf
-            echo "IGNORE_OSVERSION=yes" >>/usr/local/etc/pkg.conf
+            echo "WITHOUT_X11=yes" >> /etc/make.conf
+            echo "NO_SENDMAIL=true" >> /etc/make.conf
+            echo "IGNORE_OSVERSION=yes" >> /usr/local/etc/pkg.conf
 
             pkg install -y \
               autoconf \
