@@ -192,7 +192,6 @@ jobs:
                 automake \
                 ccache \
                 cppunit \
-                git-tiny \
                 gmake \
                 libltdl \
                 libtool \
