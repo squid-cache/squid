@@ -180,7 +180,6 @@ jobs:
           release: ${{ matrix.osversion }}
           arch: ${{ matrix.platform }}
           prepare: |
-            set -e
             export BATCH=yes
             which nproc >/dev/null && echo "MAKE_JOBS_NUMBER?=`nproc --all`" >>/etc/make.conf
             echo "OPTIONS_UNSET=CUPS DEBUG DOCS FONTCONFIG NLS X11" >>/etc/make.conf
