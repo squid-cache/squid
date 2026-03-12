@@ -203,7 +203,6 @@ jobs:
             ccache --set-config=compression=true
 
           run: |
-            set -e
             export MAKE=gmake
             export CC='ccache cc'
             export CXX='ccache c++'
