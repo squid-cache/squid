@@ -150,10 +150,10 @@ jobs:
           - "13.5"
         platform:
           - amd64
-          # we are ready tu support multiple platforms, but:
-          # - arm64 # is too slow as of 2026-02 (> 6 hours per run, github times out)
-          # - riscv64 # not working as of 2026-02 as github image is incomplete
-          # we expect these problems to be solved some time soon
+          # We are ready to support multiple platforms, but
+          # - arm64 is too slow as of 2026-02 (> 6 hours per run, GitHub times out)
+          # - riscv64 not working as of 2026-02 (GitHub image is incomplete)
+          # We expect these problems to be solved some time soon.
     runs-on: "${{ matrix.platform != 'arm64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}"
 
     name: freebsd(${{ matrix.osversion }}, ${{ matrix.platform }})
