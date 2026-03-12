@@ -143,7 +143,6 @@ jobs:
 
   freebsd:
     strategy:
-      fail-fast: false
       matrix:
         osversion:
           - "15.0"
