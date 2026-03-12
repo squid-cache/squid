@@ -162,10 +162,13 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
-      - name: prep ccache
-        uses: hendrikmuhs/ccache-action@v1
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2.19
         with:
+          verbose: 2 # default 0
           key: ${{ github.job }}-${{ matrix.osversion }}-${{ matrix.platform }}
+          max-size: "250MB"
+          evict-old-files: "28d"
 
       - name: Run test-builds
         id: test-builds
