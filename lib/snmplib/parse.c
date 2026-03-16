@@ -157,6 +157,9 @@ int Line = 1;
 #define INDEX       36
 #define QUOTE       37
 
+/* Maximum token buffer size - must match caller's buffer size */
+#define MAX_TOKEN_SIZE 64
+
 struct tok {
     const char *name;           /* token name */
     int len;            /* length not counting nul */
@@ -482,7 +485,8 @@ get_token(register FILE *fp, register char *token)
                 ch == '"') {
             if (!xisspace(ch) && *token == 0) {
                 hash += ch;
-                *cp++ = ch;
+                if (cp - token < MAX_TOKEN_SIZE - 1)
+                    *cp++ = ch;
                 last = ' ';
             } else {
                 last = ch;
@@ -516,7 +520,8 @@ get_token(register FILE *fp, register char *token)
             return NUMBER;
         } else {
             hash += ch;
-            *cp++ = ch;
+            if (cp - token < MAX_TOKEN_SIZE - 1)
+                *cp++ = ch;
             if (ch == '\n')
                 Line++;
         }
@@ -752,18 +757,22 @@ parse_objecttype(register FILE *fp, char *name) {
     np->type = type;
     switch (type) {
     case SEQUENCE:
-        strcpy(syntax, token);
+        snprintf(syntax, sizeof(syntax), "%s", token);
         if (nexttype == OF) {
-            strcat(syntax, " ");
-            strcat(syntax, nexttoken);
+            size_t len = strlen(syntax);
+            if (len < sizeof(syntax) - 1) {
+                snprintf(syntax + len, sizeof(syntax) - len, " %s", nexttoken);
+            }
             nexttype = get_token(fp, nexttoken);
-            strcat(syntax, " ");
-            strcat(syntax, nexttoken);
+            len = strlen(syntax);
+            if (len < sizeof(syntax) - 1) {
+                snprintf(syntax + len, sizeof(syntax) - len, " %s", nexttoken);
+            }
             nexttype = get_token(fp, nexttoken);
         }
         break;
     case INTEGER:
-        strcpy(syntax, token);
+        snprintf(syntax, sizeof(syntax), "%s", token);
         if (nexttype == LEFTBRACKET) {
             /* if there is an enumeration list, parse it */
             while ((type = get_token(fp, token)) != ENDOFFILE) {
@@ -827,7 +836,7 @@ parse_objecttype(register FILE *fp, char *name) {
     case SNMP_OPAQUE:
     case NUL:
     case LABEL:
-        strcpy(syntax, token);
+        snprintf(syntax, sizeof(syntax), "%s", token);
         break;
     default:
         print_error("Bad syntax", token, type);
