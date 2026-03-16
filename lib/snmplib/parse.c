@@ -113,6 +113,7 @@ struct node {
 int Line = 1;
 
 /* types of tokens */
+#define PARSE_ERROR -2
 #define CONTINUE    -1
 #define ENDOFFILE   0
 #define LABEL       1
@@ -156,9 +157,6 @@ int Line = 1;
 #define DESCRIPTION 35
 #define INDEX       36
 #define QUOTE       37
-
-/* Maximum token buffer size - must match caller's buffer size */
-#define MAX_TOKEN_SIZE 64
 
 struct tok {
     const char *name;           /* token name */
@@ -274,6 +272,25 @@ print_error(const char *string, const char *token, int type)
         snmplib_debug(0, "%s(%s): On or around line %d\n", string, token, Line);
     else
         snmplib_debug(0, "%s: On or around line %d\n", string, Line);
+}
+
+static int
+append_to_token(char *token, const size_t tokenCapacity, char **cpp, const int ch)
+{
+    assert(token != NULL);
+    assert(tokenCapacity > 0);
+    assert(cpp != NULL);
+    assert(*cpp >= token);
+
+    if ((size_t)(*cpp - token) >= tokenCapacity - 1) {
+        **cpp = '\0';
+        print_error("Token too long", token, PARSE_ERROR);
+        return PARSE_ERROR;
+    }
+
+    *(*cpp)++ = (char)ch;
+    **cpp = '\0';
+    return 0;
 }
 
 int translation_table[40];
@@ -454,10 +471,10 @@ build_tree(struct node *nodes) {
 static char last = ' ';
 
 static int
-get_token(register FILE *fp, register char *token)
+get_token(register FILE *fp, register char *token, const size_t tokenCapacity)
 {
     register int ch;
-    register char *cp = token;
+    char *cp = token;
     register int hash = 0;
     register struct tok *tp;
 
@@ -485,13 +502,12 @@ get_token(register FILE *fp, register char *token)
                 ch == '"') {
             if (!xisspace(ch) && *token == 0) {
                 hash += ch;
-                if (cp - token < MAX_TOKEN_SIZE - 1)
-                    *cp++ = ch;
+                if (append_to_token(token, tokenCapacity, &cp, ch) == PARSE_ERROR)
+                    return PARSE_ERROR;
                 last = ' ';
             } else {
                 last = ch;
             }
-            *cp = '\0';
 
             for (tp = buckets[BUCKET(hash)]; tp; tp = tp->next) {
                 if ((tp->hash == hash) && (strcmp(tp->name, token) == 0))
@@ -512,7 +528,7 @@ get_token(register FILE *fp, register char *token)
                 if (ch == -1)
                     return ENDOFFILE;
                 last = ch;
-                return get_token(fp, token);
+                return get_token(fp, token, tokenCapacity);
             }
             for (cp = token; *cp; cp++)
                 if (!xisdigit(*cp))
@@ -520,8 +536,8 @@ get_token(register FILE *fp, register char *token)
             return NUMBER;
         } else {
             hash += ch;
-            if (cp - token < MAX_TOKEN_SIZE - 1)
-                *cp++ = ch;
+            if (append_to_token(token, tokenCapacity, &cp, ch) == PARSE_ERROR)
+                return PARSE_ERROR;
             if (ch == '\n')
                 Line++;
         }
@@ -529,6 +545,8 @@ get_token(register FILE *fp, register char *token)
     } while ((ch = getc(fp)) != -1);
     return ENDOFFILE;
 }
+
+#define GET_TOKEN(fp, token) get_token((fp), (token), sizeof(token))
 
 /*
  * Takes a list of the form:
@@ -546,11 +564,15 @@ getoid(register FILE *fp, register struct subid *SubOid, int length)
     char token[128];
     register char *cp;
 
-    if ((type = get_token(fp, token)) != LEFTBRACKET) {
+    if ((type = GET_TOKEN(fp, token)) == PARSE_ERROR)
+        return PARSE_ERROR;
+    if (type != LEFTBRACKET) {
         print_error("Expected \"{\"", token, type);
         return 0;
     }
-    type = get_token(fp, token);
+    type = GET_TOKEN(fp, token);
+    if (type == PARSE_ERROR)
+        return PARSE_ERROR;
     for (count = 0; count < length; count++, SubOid++) {
         SubOid->label = 0;
         SubOid->subid = -1;
@@ -565,12 +587,19 @@ getoid(register FILE *fp, register struct subid *SubOid, int length)
             cp = (char *) xmalloc((unsigned) strlen(token) + 1);
             strcpy(cp, token);
             SubOid->label = cp;
-            type = get_token(fp, token);
+            type = GET_TOKEN(fp, token);
+            if (type == PARSE_ERROR)
+                return PARSE_ERROR;
             if (type == LEFTPAREN) {
-                type = get_token(fp, token);
+                type = GET_TOKEN(fp, token);
+                if (type == PARSE_ERROR)
+                    return PARSE_ERROR;
                 if (type == NUMBER) {
                     SubOid->subid = atoi(token);
-                    if ((type = get_token(fp, token)) != RIGHTPAREN) {
+                    type = GET_TOKEN(fp, token);
+                    if (type == PARSE_ERROR)
+                        return PARSE_ERROR;
+                    if (type != RIGHTPAREN) {
                         print_error("Unexpected a closing parenthesis", token, type);
                         return 0;
                     }
@@ -585,7 +614,9 @@ getoid(register FILE *fp, register struct subid *SubOid, int length)
             /* this entry  has just an integer sub-identifier */
             SubOid->subid = atoi(token);
         }
-        type = get_token(fp, token);
+        type = GET_TOKEN(fp, token);
+        if (type == PARSE_ERROR)
+            return PARSE_ERROR;
     }
     return count;
 
@@ -631,12 +662,23 @@ parse_objectid(FILE *fp, char *name) {
     struct subid SubOid[32];
     struct node *np, *root, *oldnp = NULL;
 
-    type = get_token(fp, token);
+    memset(SubOid, 0, sizeof(SubOid));
+    type = GET_TOKEN(fp, token);
+    if (type == PARSE_ERROR)
+        return 0;
     if (type != EQUALS) {
         print_error("Bad format", token, type);
         return 0;
     }
-    if ((length = getoid(fp, SubOid, 32)) != 0) {
+    length = getoid(fp, SubOid, 32);
+    if (length == PARSE_ERROR) {
+        for (count = 0, op = SubOid; count < 32; ++count, ++op) {
+            if (op->label)
+                xfree(op->label);
+        }
+        return 0;
+    }
+    if (length != 0) {
         np = root = (struct node *) xmalloc(sizeof(struct node));
         memset((char *) np, '\0', sizeof(struct node));
         /*
@@ -715,15 +757,19 @@ parse_asntype(FILE *fp)
     int type;
     char token[64];
 
-    type = get_token(fp, token);
+    type = GET_TOKEN(fp, token);
+    if (type == PARSE_ERROR)
+        return PARSE_ERROR;
     if (type != SEQUENCE) {
         print_error("Not a sequence", token, type); /* should we handle this */
         return ENDOFFILE;
     }
-    while ((type = get_token(fp, token)) != ENDOFFILE) {
+    while ((type = GET_TOKEN(fp, token)) != ENDOFFILE && type != PARSE_ERROR) {
         if (type == RIGHTBRACKET)
             return type;
     }
+    if (type == PARSE_ERROR)
+        return PARSE_ERROR;
     print_error("Expected \"}\"", token, type);
     return ENDOFFILE;
 }
@@ -738,13 +784,14 @@ parse_objecttype(register FILE *fp, char *name) {
     char token[64];
     int count, length;
     struct subid SubOid[32];
-    char syntax[64];
     int nexttype;
     char nexttoken[64];
     register struct node *np = NULL;
     register struct enum_list *ep = NULL;
 
-    type = get_token(fp, token);
+    type = GET_TOKEN(fp, token);
+    if (type == PARSE_ERROR)
+        return 0;
     if (type != SYNTAX) {
         print_error("Bad format for OBJECT TYPE", token, type);
         return 0;
@@ -752,30 +799,36 @@ parse_objecttype(register FILE *fp, char *name) {
     np = (struct node *) xmalloc(sizeof(struct node));
     np->next = 0;
     np->enums = 0;
-    type = get_token(fp, token);
-    nexttype = get_token(fp, nexttoken);
+    type = GET_TOKEN(fp, token);
+    if (type == PARSE_ERROR) {
+        free_node(np);
+        return 0;
+    }
+    nexttype = GET_TOKEN(fp, nexttoken);
+    if (nexttype == PARSE_ERROR) {
+        free_node(np);
+        return 0;
+    }
     np->type = type;
     switch (type) {
     case SEQUENCE:
-        snprintf(syntax, sizeof(syntax), "%s", token);
         if (nexttype == OF) {
-            size_t len = strlen(syntax);
-            if (len < sizeof(syntax) - 1) {
-                snprintf(syntax + len, sizeof(syntax) - len, " %s", nexttoken);
+            nexttype = GET_TOKEN(fp, nexttoken);
+            if (nexttype == PARSE_ERROR) {
+                free_node(np);
+                return 0;
             }
-            nexttype = get_token(fp, nexttoken);
-            len = strlen(syntax);
-            if (len < sizeof(syntax) - 1) {
-                snprintf(syntax + len, sizeof(syntax) - len, " %s", nexttoken);
+            nexttype = GET_TOKEN(fp, nexttoken);
+            if (nexttype == PARSE_ERROR) {
+                free_node(np);
+                return 0;
             }
-            nexttype = get_token(fp, nexttoken);
         }
         break;
     case INTEGER:
-        snprintf(syntax, sizeof(syntax), "%s", token);
         if (nexttype == LEFTBRACKET) {
             /* if there is an enumeration list, parse it */
-            while ((type = get_token(fp, token)) != ENDOFFILE) {
+            while ((type = GET_TOKEN(fp, token)) != ENDOFFILE && type != PARSE_ERROR) {
                 if (type == RIGHTBRACKET)
                     break;
                 if (type == LABEL) {
@@ -792,20 +845,32 @@ parse_objecttype(register FILE *fp, char *name) {
                     /* a reasonable approximation for the length */
                     ep->label = (char *) xmalloc((unsigned) strlen(token) + 1);
                     strcpy(ep->label, token);
-                    type = get_token(fp, token);
+                    type = GET_TOKEN(fp, token);
+                    if (type == PARSE_ERROR) {
+                        free_node(np);
+                        return 0;
+                    }
                     if (type != LEFTPAREN) {
                         print_error("Expected \"(\"", token, type);
                         free_node(np);
                         return 0;
                     }
-                    type = get_token(fp, token);
+                    type = GET_TOKEN(fp, token);
+                    if (type == PARSE_ERROR) {
+                        free_node(np);
+                        return 0;
+                    }
                     if (type != NUMBER) {
                         print_error("Expected integer", token, type);
                         free_node(np);
                         return 0;
                     }
                     ep->value = atoi(token);
-                    type = get_token(fp, token);
+                    type = GET_TOKEN(fp, token);
+                    if (type == PARSE_ERROR) {
+                        free_node(np);
+                        return 0;
+                    }
                     if (type != RIGHTPAREN) {
                         print_error("Expected \")\"", token, type);
                         free_node(np);
@@ -813,17 +878,37 @@ parse_objecttype(register FILE *fp, char *name) {
                     }
                 }
             }
+            if (type == PARSE_ERROR) {
+                free_node(np);
+                return 0;
+            }
             if (type == ENDOFFILE) {
                 print_error("Expected \"}\"", token, type);
                 free_node(np);
                 return 0;
             }
-            nexttype = get_token(fp, nexttoken);
+            nexttype = GET_TOKEN(fp, nexttoken);
+            if (nexttype == PARSE_ERROR) {
+                free_node(np);
+                return 0;
+            }
         } else if (nexttype == LEFTPAREN) {
             /* ignore the "constrained integer" for now */
-            nexttype = get_token(fp, nexttoken);
-            nexttype = get_token(fp, nexttoken);
-            nexttype = get_token(fp, nexttoken);
+            nexttype = GET_TOKEN(fp, nexttoken);
+            if (nexttype == PARSE_ERROR) {
+                free_node(np);
+                return 0;
+            }
+            nexttype = GET_TOKEN(fp, nexttoken);
+            if (nexttype == PARSE_ERROR) {
+                free_node(np);
+                return 0;
+            }
+            nexttype = GET_TOKEN(fp, nexttoken);
+            if (nexttype == PARSE_ERROR) {
+                free_node(np);
+                return 0;
+            }
         }
         break;
     case OBJID:
@@ -836,7 +921,6 @@ parse_objecttype(register FILE *fp, char *name) {
     case SNMP_OPAQUE:
     case NUL:
     case LABEL:
-        snprintf(syntax, sizeof(syntax), "%s", token);
         break;
     default:
         print_error("Bad syntax", token, type);
@@ -848,20 +932,32 @@ parse_objecttype(register FILE *fp, char *name) {
         free_node(np);
         return 0;
     }
-    type = get_token(fp, token);
+    type = GET_TOKEN(fp, token);
+    if (type == PARSE_ERROR) {
+        free_node(np);
+        return 0;
+    }
     if (type != READONLY && type != READWRITE && type != WRITEONLY
             && type != NOACCESS) {
         print_error("Bad access type", nexttoken, nexttype);
         free_node(np);
         return 0;
     }
-    type = get_token(fp, token);
+    type = GET_TOKEN(fp, token);
+    if (type == PARSE_ERROR) {
+        free_node(np);
+        return 0;
+    }
     if (type != SNMP_STATUS) {
         print_error("Should be STATUS", token, nexttype);
         free_node(np);
         return 0;
     }
-    type = get_token(fp, token);
+    type = GET_TOKEN(fp, token);
+    if (type == PARSE_ERROR) {
+        free_node(np);
+        return 0;
+    }
     if (type != MANDATORY && type != SNMP_OPTIONAL && type != OBSOLETE && type != RECOMMENDED) {
         print_error("Bad status", token, type);
         free_node(np);
@@ -872,7 +968,11 @@ parse_objecttype(register FILE *fp, char *name) {
      * -> EQUALS (Old MIB format)
      * -> DESCRIPTION, INDEX (New MIB format)
      */
-    type = get_token(fp, token);
+    type = GET_TOKEN(fp, token);
+    if (type == PARSE_ERROR) {
+        free_node(np);
+        return 0;
+    }
     if ((type != DESCRIPTION) && (type != INDEX) && (type != EQUALS)) {
         print_error("Should be DESCRIPTION, INDEX, or EQUALS", token, nexttype);
         free_node(np);
@@ -880,7 +980,11 @@ parse_objecttype(register FILE *fp, char *name) {
     }
     if (type == DESCRIPTION) {
 
-        type = get_token(fp, token);
+        type = GET_TOKEN(fp, token);
+        if (type == PARSE_ERROR) {
+            free_node(np);
+            return 0;
+        }
         if (type != QUOTE) {
             print_error("Should be Description open quote", token, nexttype);
             free_node(np);
@@ -900,7 +1004,11 @@ parse_objecttype(register FILE *fp, char *name) {
             last = ' ';
         }
         /* ASSERT:  Done with description. */
-        type = get_token(fp, token);
+        type = GET_TOKEN(fp, token);
+        if (type == PARSE_ERROR) {
+            free_node(np);
+            return 0;
+        }
     }
     if ((type != INDEX) && (type != EQUALS)) {
         print_error("Should be INDEX, or EQUALS", token, nexttype);
@@ -911,7 +1019,11 @@ parse_objecttype(register FILE *fp, char *name) {
 
         /* Scarf INDEX */
 
-        type = get_token(fp, token);
+        type = GET_TOKEN(fp, token);
+        if (type == PARSE_ERROR) {
+            free_node(np);
+            return 0;
+        }
         if (type != LEFTBRACKET) {
             print_error("Should be INDEX left brace", token, type);
             free_node(np);
@@ -931,14 +1043,27 @@ parse_objecttype(register FILE *fp, char *name) {
             last = ' ';
         }
         /* ASSERT:  Done with INDEX. */
-        type = get_token(fp, token);
+        type = GET_TOKEN(fp, token);
+        if (type == PARSE_ERROR) {
+            free_node(np);
+            return 0;
+        }
     }
     if (type != EQUALS) {
         print_error("Bad format", token, type);
         free_node(np);
         return 0;
     }
+    memset(SubOid, 0, sizeof(SubOid));
     length = getoid(fp, SubOid, 32);
+    if (length == PARSE_ERROR) {
+        for (count = 0; count < 32; ++count) {
+            if (SubOid[count].label)
+                xfree(SubOid[count].label);
+        }
+        free_node(np);
+        return 0;
+    }
     if (length > 1 && length <= 32) {
         /* just take the last pair in the oid list */
         if (SubOid[length - 2].label) {
@@ -980,7 +1105,11 @@ parse(FILE *fp) {
     hash_init();
 
     while (type != ENDOFFILE) {
-        type = get_token(fp, token);
+        type = GET_TOKEN(fp, token);
+        if (type == PARSE_ERROR) {
+            free_node_list(root);
+            return NULL;
+        }
         if (type != LABEL) {
             if (type == ENDOFFILE) {
                 return root;
@@ -991,7 +1120,11 @@ parse(FILE *fp) {
         }
         strncpy(name, token, 64);
         name[63] = '\0';
-        type = get_token(fp, token);
+        type = GET_TOKEN(fp, token);
+        if (type == PARSE_ERROR) {
+            free_node_list(root);
+            return NULL;
+        }
         if (type == OBJTYPE) {
             if (root == NULL) {
                 /* first link in chain */
@@ -1032,6 +1165,10 @@ parse(FILE *fp) {
                 np = np->next;
         } else if (type == EQUALS) {
             type = parse_asntype(fp);
+            if (type == PARSE_ERROR) {
+                free_node_list(root);
+                return NULL;
+            }
         } else if (type == ENDOFFILE) {
             break;
         } else {
@@ -1079,4 +1216,3 @@ read_mib(char *filename) {
     tree = build_tree(nodes);
     return (tree);
 }
-
