@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,8 +21,10 @@ Acl::AnnotateTransactionCheck::match(ACLChecklist * const ch)
         const auto tdata = dynamic_cast<ACLAnnotationData*>(data.get());
         assert(tdata);
         tdata->annotate(request->notes(), &delimiters.value, checklist->al);
-        return 1;
+    } else {
+        debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL is used in context without " <<
+               "current transaction information. Did not annotate.");
     }
-    return 0;
+    return 1; // this is an "always matching" ACL
 }
 

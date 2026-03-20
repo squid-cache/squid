@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -95,7 +95,7 @@ public:
 };
 
 /// \ingroup ClientStreamAPI
-void clientStreamInit(dlink_list *, CSR *, CSD *, CSS *, ClientStreamData, CSCB *, CSD *, ClientStreamData, StoreIOBuffer tailBuffer);
+void clientStreamInit(dlink_list *, CSR *, CSD *, CSS *, const ClientStreamData &, CSCB *, CSD *, const ClientStreamData &, StoreIOBuffer tailBuffer);
 
 /// \ingroup ClientStreamAPI
 void clientStreamInsertHead(dlink_list *, CSR *, CSCB *, CSD *, CSS *, ClientStreamData);

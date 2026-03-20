@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "anyp/PortCfg.h"
 #include "base/Subscription.h"
 #include "client_side.h"
+#include "compat/unistd.h"
 #include "fatal.h"
 #include "fde.h"
 #include "fqdncache.h"
@@ -168,9 +169,9 @@ dumpMallocStats(void)
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
 
     struct mstats ms = mstats();
-    fprintf(debug_log, "\ttotal space in arena:  %6d KB\n",
+    fprintf(DebugStream(), "\ttotal space in arena:  %6d KB\n",
             (int) (ms.bytes_total >> 10));
-    fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
+    fprintf(DebugStream(), "\tTotal free:            %6d KB %d%%\n",
             (int) (ms.bytes_free >> 10),
             Math::intPercent(ms.bytes_free, ms.bytes_total));
 #endif
@@ -331,13 +332,13 @@ PrintRusage(void)
 
     struct rusage rusage;
     squid_getrusage(&rusage);
-    fprintf(debug_log, "CPU Usage: %.3f seconds = %.3f user + %.3f sys\n",
+    fprintf(DebugStream(), "CPU Usage: %.3f seconds = %.3f user + %.3f sys\n",
             rusage_cputime(&rusage),
             rusage.ru_utime.tv_sec + ((double) rusage.ru_utime.tv_usec / 1000000.0),
             rusage.ru_stime.tv_sec + ((double) rusage.ru_stime.tv_usec / 1000000.0));
-    fprintf(debug_log, "Maximum Resident Size: %d KB\n",
+    fprintf(DebugStream(), "Maximum Resident Size: %d KB\n",
             rusage_maxrss(&rusage));
-    fprintf(debug_log, "Page faults with physical i/o: %d\n",
+    fprintf(DebugStream(), "Page faults with physical i/o: %d\n",
             rusage_pagefaults(&rusage));
 }
 
@@ -355,8 +356,8 @@ death(int sig)
 #if _SQUID_HPUX_
     {
         extern void U_STACK_TRACE(void);    /* link with -lcl */
-        fflush(debug_log);
-        dup2(fileno(debug_log), 2);
+        fflush(DebugStream());
+        dup2(fileno(DebugStream()), 2);
         U_STACK_TRACE();
     }
 
@@ -364,8 +365,8 @@ death(int sig)
 #if _SQUID_SOLARIS_ && HAVE_LIBOPCOM_STACK
     {   /* get ftp://opcom.sun.ca/pub/tars/opcom_stack.tar.gz and */
         extern void opcom_stack_trace(void);    /* link with -lopcom_stack */
-        fflush(debug_log);
-        dup2(fileno(debug_log), fileno(stdout));
+        fflush(DebugStream());
+        dup2(fileno(DebugStream()), fileno(stdout));
         opcom_stack_trace();
         fflush(stdout);
     }
@@ -376,7 +377,7 @@ death(int sig)
         static void *callarray[8192];
         int n;
         n = backtrace(callarray, 8192);
-        backtrace_symbols_fd(callarray, n, fileno(debug_log));
+        backtrace_symbols_fd(callarray, n, fileno(DebugStream()));
     }
 
 #endif
@@ -508,7 +509,7 @@ getMyHostname(void)
     }
 
     // still no host. fallback to gethostname()
-    if (gethostname(host, SQUIDHOSTNAMELEN) < 0) {
+    if (xgethostname(host, SQUIDHOSTNAMELEN) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "WARNING: gethostname failed: " << xstrerr(xerrno));
     } else {
@@ -930,8 +931,8 @@ squid_signal(int sig, SIGHDLR * func, int flags)
 void
 logsFlush(void)
 {
-    if (debug_log)
-        fflush(debug_log);
+    if (DebugStream())
+        fflush(DebugStream());
 }
 
 void
@@ -1087,7 +1088,7 @@ strwordquote(MemBuf * mb, const char *str)
     }
 
     while (*str) {
-        int l = strcspn(str, "\"\\\n\r");
+        const auto l = strcspn(str, "\"\\\n\r");
         mb->append(str, l);
         str += l;
 

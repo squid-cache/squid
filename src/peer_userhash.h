@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,10 +12,8 @@
 #define SQUID_SRC_PEER_USERHASH_H
 
 class CachePeer;
-class HttpRequest;
 class PeerSelector;
 
-void peerUserHashInit(void);
 CachePeer * peerUserHashSelectParent(PeerSelector *);
 
 #endif /* SQUID_SRC_PEER_USERHASH_H */

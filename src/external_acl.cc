@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,6 @@
 #include "helper.h"
 #include "helper/Reply.h"
 #include "http/Stream.h"
-#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/tools.h"
@@ -43,9 +42,6 @@
 #include "auth/Acl.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
-#endif
-#if USE_IDENT
-#include "ident/AclIdent.h"
 #endif
 
 #ifndef DEFAULT_EXTERNAL_ACL_TTL
@@ -595,6 +591,14 @@ copyResultsFromEntry(const HttpRequest::Pointer &req, const ExternalACLEntryPoin
 Acl::Answer
 ACLExternal::aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch) const
 {
+    // Despite its external_acl C++ type name, acl->def is not an ACL (i.e. not
+    // a reference-counted Acl::Node) and gets invalidated by reconfiguration.
+    // TODO: RefCount external_acl, so that we do not have to bail here.
+    if (!cbdataReferenceValid(acl->def)) {
+        debugs(82, 3, "cannot resume matching; external_acl gone");
+        return ACCESS_DUNNO;
+    }
+
     debugs(82, 9, "acl=\"" << acl->def->name << "\"");
     ExternalACLEntryPointer entry = ch->extacl_entry;
 
@@ -791,17 +795,6 @@ ACLExternal::makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl
 
             ch->al->lastAclData = sb;
         }
-
-#if USE_IDENT
-        if (t->type == Format::LFT_USER_IDENT) {
-            if (!*ch->rfc931) {
-                // if we fail to go async, we still return NULL and the caller
-                // will detect the failure in ACLExternal::match().
-                (void)ch->goAsync(ACLIdent::StartLookup, *this);
-                return nullptr;
-            }
-        }
-#endif
     }
 
     // assemble the full helper lookup string
@@ -1026,7 +1019,7 @@ ACLExternal::startLookup(ACLFilledChecklist *ch, external_acl_data *acl, bool in
     external_acl *def = acl->def;
 
     const char *key = makeExternalAclKey(ch, acl);
-    assert(key); // XXX: will fail if EXT_ACL_IDENT case needs an async lookup
+    assert(key);
 
     debugs(82, 2, (inBackground ? "bg" : "fg") << " lookup in '" <<
            def->name << "' for '" << key << "'");
@@ -1064,7 +1057,7 @@ ACLExternal::startLookup(ACLFilledChecklist *ch, external_acl_data *acl, bool in
         state->queue = oldstate->queue;
         oldstate->queue = state;
     } else {
-        /* No pending lookup found. Sumbit to helper */
+        /* No pending lookup found. Submit to helper */
 
         MemBuf buf;
         buf.init();

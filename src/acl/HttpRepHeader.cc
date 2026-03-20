@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,6 @@
 int
 Acl::HttpRepHeaderCheck::match(ACLChecklist * const ch)
 {
-    return data->match(Filled(ch)->reply->header);
+    return data->match(Filled(ch)->reply().header);
 }
 

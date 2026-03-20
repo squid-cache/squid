@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -77,7 +77,6 @@ static TokenTableEntry TokenTable2C[] = {
     TokenTableEntry("ul", LFT_USER_LOGIN),
     /*TokenTableEntry( "ur", LFT_USER_REALM ), */
     /*TokenTableEntry( "us", LFT_USER_SCHEME ), */
-    TokenTableEntry("ui", LFT_USER_IDENT),
     TokenTableEntry("ue", LFT_USER_EXTERNAL),
 
     TokenTableEntry("Hs", LFT_HTTP_SENT_STATUS_CODE_OLD_30),
@@ -162,7 +161,6 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry("EXT_LOG", LFT_EXT_LOG),
     TokenTableEntry("EXT_TAG", LFT_TAG),
     TokenTableEntry("EXT_USER", LFT_USER_EXTERNAL),
-    TokenTableEntry("IDENT", LFT_USER_IDENT),
     TokenTableEntry("LOGIN", LFT_USER_LOGIN),
     TokenTableEntry("METHOD", LFT_CLIENT_REQ_METHOD),
     TokenTableEntry("MYADDR", LFT_LOCAL_LISTENING_IP),
@@ -185,10 +183,12 @@ static TokenTableEntry TokenTableMisc[] = {
 
 static TokenTableEntry TokenTableProxyProtocol[] = {
     TokenTableEntry(">h", LFT_PROXY_PROTOCOL_RECEIVED_HEADER),
+    TokenTableEntry(nullptr, LFT_NONE)           /* this must be last */
 };
 
 static TokenTableEntry TokenTableTransport[] = {
     TokenTableEntry(">connection_id", LFT_TRANSPORT_CLIENT_CONNECTION_ID),
+    TokenTableEntry(nullptr, LFT_NONE)           /* this must be last */
 };
 
 #if USE_ADAPTATION
@@ -356,9 +356,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
 {
     const char *cur = def;
 
-    int l;
-
-    l = strcspn(cur, "%");
+    auto l = strcspn(cur, "%");
 
     if (l > 0) {
         char *cp;
@@ -728,7 +726,8 @@ Format::Token::parse(const char *def, Quoting *quoting)
     case LFT_REQUEST_URLGROUP_OLD_2X:
         debugs(46, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: The \"rG\" formatting code is deprecated. Use \"note{urlgroup}\" instead.");
         type = LFT_NOTE;
-        data.header.header = xstrdup("urlgroup");
+        data.string = xstrdup("urlgroup");
+        data.header.header = data.string;
         break;
 
     default:

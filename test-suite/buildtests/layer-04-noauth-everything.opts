@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2026 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -42,12 +42,11 @@ MAKETEST="distcheck"
 #	We can't test them automatically everywhere without detecting those
 #	optional packages first.
 #
-#   --enable-ecap \
 #   --enable-epoll \
 #   --enable-kqueue \
 #   --enable-win32-service \
-#   --with-valgrind-debug \
 #   --with-ldap \
+#   --with-pam \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
 #
@@ -80,9 +79,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-poll \
 	--enable-select \
 	--enable-http-violations \
-	--enable-ipfw-transparent \
 	--enable-follow-x-forwarded-for \
-	--enable-ident-lookups \
 	--enable-internal-dns \
 	--enable-default-hostsfile \
 	--disable-auth \
@@ -102,7 +99,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-auto-locale \
 	--disable-translation \
 	--enable-zph-qos \
-	--enable-esi \
 	--with-aio \
 	--with-build-environment=default \
 	--with-dl \
@@ -113,6 +109,8 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--with-pic \
 	--with-pthreads \
 	--enable-build-info=squid\ test\ build \
+	$CONFIGURE_FLAGS_MAYBE_ENABLE_ECAP \
+	$CONFIGURE_FLAGS_MAYBE_ENABLE_VALGRIND \
 	"
 
 # Fix the distclean testing.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -60,7 +60,7 @@ private:
     RefCount<IORequestor> ioRequestor;
     void doClose();
 
-    void readDone(int fd, const char *buf, int len, int errflag, RefCount<ReadRequest> request);
+    void readDone(int fd, const char *buf, int len, int errflag, const RefCount<ReadRequest> &request);
     void writeDone(int fd, int errflag, size_t len, RefCount<WriteRequest> request);
 };
 

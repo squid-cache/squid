@@ -1,0 +1,6 @@
+expect-failure FATAL:.*Found.3.unrecognized.directive.*
+expect-messages <<END
+ERROR: unrecognized directive .*http_access
+ERROR: unrecognized directive .*debug_options
+ERROR: unrecognized directive .*forward.*max_tries
+END

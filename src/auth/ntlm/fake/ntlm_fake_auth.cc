@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -142,7 +142,6 @@ main(int argc, char *argv[])
     int decodedLen;
     char user[NTLM_MAX_FIELD_LENGTH], domain[NTLM_MAX_FIELD_LENGTH];
     char *p;
-    char helper_command[3];
     int len;
 
     setbuf(stdout, nullptr);
@@ -176,8 +175,8 @@ main(int argc, char *argv[])
         }
 
         if (buflen > 3 && NTLM_packet_debug_enabled) {
-            strncpy(helper_command, buf, 2);
-            helper_command[2] = '\0';
+            char helper_command[3];
+            xstrncpy(helper_command, buf, sizeof(helper_command));
             debug("Got '%s' from Squid with data:\n", helper_command);
             hex_dump((unsigned char *)decodedBuf, decodedLen);
         } else

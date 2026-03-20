@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
+#include "compat/unistd.h"
 #include "HttpReply.h"
 #include "ipc/Port.h"
 #include "mgr/Action.h"
@@ -45,10 +46,29 @@ Mgr::Action::atomic() const
     return command().profile->isAtomic;
 }
 
+Mgr::Format
+Mgr::Action::format() const
+{
+    return command().profile->format;
+}
+
 const char*
 Mgr::Action::name() const
 {
     return command().profile->name;
+}
+
+const char *
+Mgr::Action::contentType() const
+{
+    switch (format()) {
+    case Format::yaml:
+        return "application/yaml;charset=utf-8";
+    case Format::informal:
+        return "text/plain;charset=utf-8";
+    }
+    assert(!"unreachable code");
+    return "";
 }
 
 StoreEntry*
@@ -72,7 +92,7 @@ Mgr::Action::respond(const Request &request)
     // Assume most kid classes are fully aggregatable (i.e., they do not dump
     // local info at all). Do not import the remote HTTP fd into our Comm
     // space; collect and send an IPC msg with collected info to Coordinator.
-    ::close(request.conn->fd);
+    xclose(request.conn->fd);
     request.conn->fd = -1;
     collect();
     sendResponse(request.requestId);
@@ -120,3 +140,26 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
         entry->complete();
 }
 
+void
+Mgr::OpenKidSection(StoreEntry * const entry, const Format format)
+{
+    switch (format) {
+    case Format::yaml:
+        return storeAppendPrintf(entry, "---\nkid: %d\n", KidIdentifier);
+    case Format::informal:
+        return storeAppendPrintf(entry, "by kid%d {\n", KidIdentifier);
+    }
+    // unreachable code
+}
+
+void
+Mgr::CloseKidSection(StoreEntry * const entry, const Format format)
+{
+    switch (format) {
+    case Format::yaml:
+        return storeAppendPrintf(entry, "...\n");
+    case Format::informal:
+        return storeAppendPrintf(entry, "} by kid%d\n\n", KidIdentifier);
+    }
+    // unreachable code
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -264,7 +264,6 @@ Parser::Tokenizer::int64(int64_t & result, int base, bool allowSign, const SBuf:
     if (base == 0) {
         if ( *s == '0') {
             base = 8;
-            ++s;
         } else {
             base = 10;
         }

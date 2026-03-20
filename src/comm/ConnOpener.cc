@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,7 @@
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Loops.h"
+#include "compat/socket.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -429,18 +430,15 @@ Comm::ConnOpener::cancelSleep()
 void
 Comm::ConnOpener::lookupLocalAddress()
 {
-    struct addrinfo *addr = nullptr;
-    Ip::Address::InitAddr(addr);
-
-    if (getsockname(conn_->fd, addr->ai_addr, &(addr->ai_addrlen)) != 0) {
+    struct sockaddr_storage addr = {};
+    socklen_t len = sizeof(addr);
+    if (xgetsockname(conn_->fd, reinterpret_cast<struct sockaddr *>(&addr), &len) != 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: Failed to retrieve TCP/UDP details for socket: " << conn_ << ": " << xstrerr(xerrno));
-        Ip::Address::FreeAddr(addr);
         return;
     }
 
-    conn_->local = *addr;
-    Ip::Address::FreeAddr(addr);
+    conn_->local = addr;
     debugs(5, 6, conn_);
 }
 

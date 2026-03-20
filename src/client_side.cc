@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,6 +59,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "anyp/Host.h"
 #include "anyp/PortCfg.h"
 #include "base/AsyncCallbacks.h"
 #include "base/Subscription.h"
@@ -77,6 +78,7 @@
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "compat/socket.h"
 #include "debug/Messages.h"
 #include "error/ExceptionErrorDetail.h"
 #include "errorpage.h"
@@ -92,11 +94,8 @@
 #include "http/one/TeChunkedParser.h"
 #include "http/Stream.h"
 #include "HttpHdrContRange.h"
-#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "ident/Config.h"
-#include "ident/Ident.h"
 #include "internal.h"
 #include "ipc/FdNotes.h"
 #include "ipc/StartListening.h"
@@ -184,9 +183,6 @@ private:
 static void clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
 
 static IOACB httpAccept;
-#if USE_IDENT
-static IDCB clientIdentDone;
-#endif
 static int clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength);
 
 static void clientUpdateStatHistCounters(const LogTags &logType, int svc_time);
@@ -197,15 +193,6 @@ void prepareLogWithRequestDetails(HttpRequest *, const AccessLogEntryPointer &);
 static void ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferredRequest, ConnStateData * conn);
 
 char *skipLeadingSpace(char *aString);
-
-#if USE_IDENT
-static void
-clientIdentDone(const char *ident, void *data)
-{
-    ConnStateData *conn = (ConnStateData *)data;
-    xstrncpy(conn->clientConnection->rfc931, ident ? ident : dash_str, USER_IDENT_SZ);
-}
-#endif
 
 void
 clientUpdateStatCounters(const LogTags &logType)
@@ -435,7 +422,6 @@ ClientHttpRequest::logRequest()
 
 #endif
 
-    /* Add notes (if we have a request to annotate) */
     if (request) {
         SBuf matched;
         for (auto h: Config.notes) {
@@ -446,31 +432,21 @@ ClientHttpRequest::logRequest()
         }
         // The al->notes and request->notes must point to the same object.
         al->syncNotes(request);
-    }
 
-    ACLFilledChecklist checklist(nullptr, request, nullptr);
-    if (al->reply) {
-        checklist.reply = al->reply.getRaw();
-        HTTPMSGLOCK(checklist.reply);
-    }
-
-    if (request) {
         HTTPMSGUNLOCK(al->adapted_request);
         al->adapted_request = request;
         HTTPMSGLOCK(al->adapted_request);
     }
+
+    ACLFilledChecklist checklist(nullptr, request);
+    checklist.updateAle(al);
     // no need checklist.syncAle(): already synced
-    checklist.al = al;
     accessLogLog(al, &checklist);
 
     bool updatePerformanceCounters = true;
     if (Config.accessList.stats_collection) {
-        ACLFilledChecklist statsCheck(Config.accessList.stats_collection, request, nullptr);
-        statsCheck.al = al;
-        if (al->reply) {
-            statsCheck.reply = al->reply.getRaw();
-            HTTPMSGLOCK(statsCheck.reply);
-        }
+        ACLFilledChecklist statsCheck(Config.accessList.stats_collection, request);
+        statsCheck.updateAle(al);
         updatePerformanceCounters = statsCheck.fastCheck().allowed();
     }
 
@@ -758,7 +734,7 @@ clientPackRangeHdr(const HttpReplyPointer &rep, const HttpHdrRangeSpec * spec, S
 /** returns expected content length for multi-range replies
  * note: assumes that httpHdrRangeCanonize has already been called
  * warning: assumes that HTTP headers for individual ranges at the
- *          time of the actuall assembly will be exactly the same as
+ *          time of the actual assembly will be exactly the same as
  *          the headers when clientMRangeCLen() is called */
 int64_t
 ClientHttpRequest::mRangeCLen() const
@@ -1104,7 +1080,7 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
-    // XXX: re-use proper URL parser for this
+    // XXX: reuse proper URL parser for this
     SBuf url = hp->requestUri(); // use full provided URI if we abort
     do { // use a loop so we can break out of it
         ::Parser::Tokenizer tok(url);
@@ -1495,9 +1471,13 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
     // when we can extract the intended name from the bumped HTTP request.
     if (const Security::CertPointer &srvCert = sslServerBump->serverCert) {
         HttpRequest *request = http->request;
-        if (!Ssl::checkX509ServerValidity(srvCert.get(), request->url.host())) {
+        const auto host = request->url.parsedHost();
+        if (host && Ssl::HasSubjectName(*srvCert, *host)) {
+            debugs(33, 5, "certificate matches requested host: " << *host);
+            return false;
+        } else {
             debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " <<
-                   "does not match domainname " << request->url.host());
+                   "does not match request target " << RawPointer(host));
 
             bool allowDomainMismatch = false;
             if (Config.ssl_client.cert_error) {
@@ -1523,6 +1503,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
                 const Security::ErrorDetail::Pointer errDetail = new Security::ErrorDetail(
                     SQUID_X509_V_ERR_DOMAIN_MISMATCH,
                     srvCert, nullptr);
+                err->detailError(errDetail);
                 updateError(ERR_SECURE_CONNECT_FAIL, errDetail);
                 repContext->setReplyToError(request->method, err);
                 assert(context->http->out.offset == 0);
@@ -1553,7 +1534,7 @@ ConnStateData::tunnelOnError(const err_type requestError)
     ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, nullptr);
     checklist.requestErrorType = requestError;
     fillChecklist(checklist);
-    auto answer = checklist.fastCheck();
+    const auto &answer = checklist.fastCheck();
     if (answer.allowed() && answer.kind == 1) {
         debugs(33, 3, "Request will be tunneled to server");
         const auto context = pipeline.front();
@@ -1878,7 +1859,7 @@ ConnStateData::parseRequests()
                 break;
 
             // we have been waiting for PROXY to provide client-IP
-            // for some lookups, ie rDNS and IDENT.
+            // for some lookups, ie rDNS
             whenClientIpKnown();
 
             // Done with PROXY protocol which has cleared preservingClientData_.
@@ -1982,7 +1963,7 @@ ConnStateData::handleRequestBodyData()
         }
     } else { // identity encoding
         debugs(33,5, "handling plain request body for " << clientConnection);
-        const size_t putSize = bodyPipe->putMoreData(inBuf.c_str(), inBuf.length());
+        const auto putSize = bodyPipe->putMoreData(inBuf.rawContent(), inBuf.length());
         if (putSize > 0)
             consumeInput(putSize);
 
@@ -2045,7 +2026,7 @@ ConnStateData::handleChunkedRequestBody()
         return ERR_INVALID_REQ;
     }
 
-    debugs(33, 7, "need more chunked data" << *bodyPipe->status());
+    debugs(33, 7, "need more chunked data" << bodyPipe->status());
     return ERR_NONE;
 }
 
@@ -2109,7 +2090,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     * Just close the connection to not confuse browsers
     * using persistent connections. Some browsers open
     * a connection and then do not use it until much
-    * later (presumeably because the request triggering
+    * later (presumably because the request triggering
     * the open has already been completed on another
     * connection)
     */
@@ -2154,7 +2135,7 @@ ConnStateData::start()
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
         int i = IP_PMTUDISC_DONT;
-        if (setsockopt(clientConnection->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof(i)) < 0) {
+        if (xsetsockopt(clientConnection->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof(i)) < 0) {
             int xerrno = errno;
             debugs(33, 2, "WARNING: Path MTU discovery disabling failed on " << clientConnection << " : " << xstrerr(xerrno));
         }
@@ -2190,15 +2171,6 @@ ConnStateData::whenClientIpKnown()
     if (Dns::ResolveClientAddressesAsap)
         fqdncache_gethostbyaddr(clientConnection->remote, FQDN_LOOKUP_IF_MISS);
 
-#if USE_IDENT
-    if (Ident::TheConfig.identLookup) {
-        ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, nullptr, nullptr);
-        fillChecklist(identChecklist);
-        if (identChecklist.fastCheck().allowed())
-            Ident::Start(clientConnection, clientIdentDone, this);
-    }
-#endif
-
     clientdbEstablished(clientConnection->remote, 1);
 
 #if USE_DELAY_POOLS
@@ -2209,7 +2181,7 @@ ConnStateData::whenClientIpKnown()
 
     const auto &pools = ClientDelayPools::Instance()->pools;
     if (pools.size()) {
-        ACLFilledChecklist ch(nullptr, nullptr, nullptr);
+        ACLFilledChecklist ch(nullptr, nullptr);
         fillChecklist(ch);
         // TODO: we check early to limit error response bandwidth but we
         // should recheck when we can honor delay_pool_uses_indirect
@@ -2218,7 +2190,7 @@ ConnStateData::whenClientIpKnown()
             /* pools require explicit 'allow' to assign a client into them */
             if (pools[pool]->access) {
                 ch.changeAcl(pools[pool]->access);
-                auto answer = ch.fastCheck();
+                const auto &answer = ch.fastCheck();
                 if (answer.allowed()) {
 
                     /*  request client information from db after we did all checks
@@ -2322,8 +2294,8 @@ clientNegotiateSSL(int fd, void *data)
         return;
 
     case Security::IoResult::ioError:
-        debugs(83, (handshakeResult.important ? Important(62) : 2), "ERROR: " << handshakeResult.errorDescription <<
-               " while accepting a TLS connection on " << conn->clientConnection << ": " << handshakeResult.errorDetail);
+        debugs(83, (handshakeResult.important ? Important(62) : 2), "ERROR: Cannot accept a TLS connection" <<
+               Debug::Extra << "problem: " << WithExtras(handshakeResult));
         // TODO: No ConnStateData::tunnelOnError() on this forward-proxy code
         // path because we cannot know the intended connection target?
         conn->updateError(ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
@@ -2342,28 +2314,28 @@ clientNegotiateSSL(int fd, void *data)
         if (Debug::Enabled(83, 4)) {
             /* Write out the SSL session details.. actually the call below, but
              * OpenSSL headers do strange typecasts confusing GCC.. */
-            /* PEM_write_SSL_SESSION(debug_log, SSL_get_session(ssl)); */
+            /* PEM_write_SSL_SESSION(DebugStream(), SSL_get_session(ssl)); */
 #if defined(OPENSSL_VERSION_NUMBER) && OPENSSL_VERSION_NUMBER >= 0x00908000L
             PEM_ASN1_write(reinterpret_cast<i2d_of_void *>(i2d_SSL_SESSION),
-                           PEM_STRING_SSL_SESSION, debug_log,
+                           PEM_STRING_SSL_SESSION, DebugStream(),
                            reinterpret_cast<char *>(SSL_get_session(session.get())),
                            nullptr, nullptr, 0, nullptr, nullptr);
 
 #elif (ALLOW_ALWAYS_SSL_SESSION_DETAIL == 1)
 
             /* When using gcc 3.3.x and OpenSSL 0.9.7x sometimes a compile error can occur here.
-            * This is caused by an unpredicatble gcc behaviour on a cast of the first argument
+            * This is caused by an unpredictable gcc behaviour on a cast of the first argument
             * of PEM_ASN1_write(). For this reason this code section is disabled. To enable it,
             * define ALLOW_ALWAYS_SSL_SESSION_DETAIL=1.
             * Because there are two possible usable cast, if you get an error here, try the other
             * commented line. */
 
             PEM_ASN1_write((int(*)())i2d_SSL_SESSION, PEM_STRING_SSL_SESSION,
-                           debug_log,
+                           DebugStream(),
                            reinterpret_cast<char *>(SSL_get_session(session.get())),
                            nullptr, nullptr, 0, nullptr, nullptr);
             /* PEM_ASN1_write((int(*)(...))i2d_SSL_SESSION, PEM_STRING_SSL_SESSION,
-                           debug_log,
+                           DebugStream(),
                            reinterpret_cast<char *>(SSL_get_session(session.get())),
                            nullptr, nullptr, 0, nullptr, nullptr);
              */
@@ -2518,7 +2490,7 @@ ConnStateData::postHttpsAccept()
         CodeContext::Reset(connectAle);
         // TODO: Use these request/ALE when waiting for new bumped transactions.
 
-        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, nullptr);
+        auto acl_checklist = ACLFilledChecklist::Make(Config.accessList.ssl_bump, request);
         fillChecklist(*acl_checklist);
         // Build a local AccessLogEntry to allow requiresAle() acls work
         acl_checklist->al = connectAle;
@@ -2535,7 +2507,7 @@ ConnStateData::postHttpsAccept()
         ClientHttpRequest *http = context ? context->http : nullptr;
         const char *log_uri = http ? http->log_uri : nullptr;
         acl_checklist->syncAle(request, log_uri);
-        acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), httpsSslBumpAccessCheckDone, this);
 #else
         fatal("FATAL: SSL-Bump requires --with-openssl");
 #endif
@@ -2632,7 +2604,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
                 else if (ca->alg == Ssl::algSetValidBefore)
                     certProperties.setValidBefore = true;
 
-                debugs(33, 5, "Matches certificate adaptation aglorithm: " <<
+                debugs(33, 5, "Matches certificate adaptation algorithm: " <<
                        alg << " param: " << (param ? param : "-"));
             }
         }
@@ -2676,7 +2648,7 @@ Security::ContextPointer
 ConnStateData::getTlsContextFromCache(const SBuf &cacheKey, const Ssl::CertificateProperties &certProperties)
 {
     debugs(33, 5, "Finding SSL certificate for " << cacheKey << " in cache");
-    Ssl::LocalContextStorage * ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
+    const auto ssl_ctx_cache = Ssl::TheGlobalContextStorage().getLocalStorage(port->s);
     if (const auto ctx = ssl_ctx_cache ? ssl_ctx_cache->get(cacheKey) : nullptr) {
         if (Ssl::verifySslCertificate(*ctx, certProperties)) {
             debugs(33, 5, "Cached SSL certificate for " << certProperties.commonName << " is valid");
@@ -2693,7 +2665,7 @@ ConnStateData::getTlsContextFromCache(const SBuf &cacheKey, const Ssl::Certifica
 void
 ConnStateData::storeTlsContextToCache(const SBuf &cacheKey, Security::ContextPointer &ctx)
 {
-    Ssl::LocalContextStorage *ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
+    const auto ssl_ctx_cache = Ssl::TheGlobalContextStorage().getLocalStorage(port->s);
     if (!ssl_ctx_cache || !ssl_ctx_cache->add(cacheKey, ctx)) {
         // If it is not in storage delete after using. Else storage deleted it.
         fd_table[clientConnection->fd].dynamicTlsContext = ctx;
@@ -2836,7 +2808,7 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     // Fix timeout to request_start_timeout
     resetReadTimeout(Config.Timeout.request_start_timeout);
     // Also reset receivedFirstByte_ flag to allow this timeout work in the case we have
-    // a bumbed "connect" request on non transparent port.
+    // a bumped "connect" request on non transparent port.
     receivedFirstByte_ = false;
     // Get more data to peek at Tls
     parsingTlsHandshake = true;
@@ -3001,12 +2973,12 @@ ConnStateData::startPeekAndSplice()
         sslServerBump->step = XactionStep::tlsBump2;
         // Run a accessList check to check if want to splice or continue bumping
 
-        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw(), nullptr);
+        auto acl_checklist = ACLFilledChecklist::Make(Config.accessList.ssl_bump, sslServerBump->request.getRaw());
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpNone));
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpClientFirst));
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpServerFirst));
         fillChecklist(*acl_checklist);
-        acl_checklist->nonBlockingCheck(httpsSslBumpStep2AccessCheckDone, this);
+        ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), httpsSslBumpStep2AccessCheckDone, this);
         return;
     }
 
@@ -3070,8 +3042,8 @@ ConnStateData::handleSslBumpHandshakeError(const Security::IoResult &handshakeRe
     }
 
     case Security::IoResult::ioError:
-        debugs(83, (handshakeResult.important ? DBG_IMPORTANT : 2), "ERROR: " << handshakeResult.errorDescription <<
-               " while SslBump-accepting a TLS connection on " << clientConnection << ": " << handshakeResult.errorDetail);
+        debugs(83, (handshakeResult.important ? DBG_IMPORTANT : 2), "ERROR: Cannot SslBump-accept a TLS connection" <<
+               Debug::Extra << "problem: " << WithExtras(handshakeResult));
         updateError(errCategory = ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
         break;
 
@@ -3145,7 +3117,7 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, const 
         // TLS handshakes on non-bumping https_port. TODO: Discover these
         // problems earlier so that they can be classified/detailed better.
         debugs(33, 2, "Not able to compute URL, abort request tunneling for " << reason);
-        // TODO: throw when nonBlockingCheck() callbacks gain job protections
+        // TODO: throw when NonBlockingCheck() callbacks gain job protections
         static const auto d = MakeNamedErrorDetail("TUNNEL_TARGET");
         updateError(ERR_INVALID_REQ, d);
         return false;
@@ -3297,7 +3269,7 @@ clientHttpConnectionsOpen(void)
             }
             if (s->flags.tunnelSslBumping) {
                 // Create ssl_ctx cache for this port.
-                Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->secure.dynamicCertMemCacheSize);
+                Ssl::TheGlobalContextStorage().addLocalStorage(s->s, s->secure.dynamicCertMemCacheSize);
             }
         }
 #endif
@@ -3482,10 +3454,10 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
     }
 }
 
-ACLFilledChecklist *
+ACLFilledChecklist::MakingPointer
 clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 {
-    const auto checklist = new ACLFilledChecklist(acl, nullptr, nullptr);
+    auto checklist = ACLFilledChecklist::Make(acl, nullptr);
     clientAclChecklistFill(*checklist, http);
     return checklist;
 }
@@ -3499,12 +3471,8 @@ clientAclChecklistFill(ACLFilledChecklist &checklist, ClientHttpRequest *http)
         checklist.setRequest(http->request);
 
     if (!checklist.al && http->al) {
-        checklist.al = http->al;
+        checklist.updateAle(http->al);
         checklist.syncAle(http->request, http->log_uri);
-        if (!checklist.reply && http->al->reply) {
-            checklist.reply = http->al->reply.getRaw();
-            HTTPMSGLOCK(checklist.reply);
-        }
     }
 
     if (const auto conn = http->getConn())
@@ -3543,10 +3511,6 @@ ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &checklist) const
     if (!checklist.sslErrors && sslServerBump)
         checklist.sslErrors = sslServerBump->sslErrors();
 #endif
-
-    if (!checklist.rfc931[0]) // checklist creator may have supplied it already
-        checklist.setIdent(clientConnection->rfc931);
-
 }
 
 bool
@@ -3754,13 +3718,12 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, const Htt
     pinning.port = request.url.port();
     pinnedHost = pinning.host;
     pinning.pinned = true;
-    if (CachePeer *aPeer = pinServer->getPeer())
-        pinning.peer = cbdataReference(aPeer);
     pinning.auth = request.flags.connectionAuth;
     char stmp[MAX_IPSTRLEN];
     char desc[FD_DESC_SZ];
+    const auto peer = pinning.peer();
     snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s (%d)",
-             (pinning.auth || !pinning.peer) ? pinnedHost : pinning.peer->name,
+             (pinning.auth || !peer) ? pinnedHost : peer->name,
              clientConnection->remote.toUrl(stmp,MAX_IPSTRLEN),
              clientConnection->fd);
     fd_note(pinning.serverConnection->fd, desc);
@@ -3891,7 +3854,7 @@ ConnStateData::borrowPinnedConnection(HttpRequest *request, const AccessLogEntry
     if (pinning.port != request->url.port())
         throw pinningError(ERR_CANNOT_FORWARD); // or generalize ERR_CONFLICT_HOST
 
-    if (pinning.peer && !cbdataReferenceValid(pinning.peer))
+    if (pinning.serverConnection->toGoneCachePeer())
         throw pinningError(ERR_ZERO_SIZE_OBJECT);
 
     if (pinning.peerAccessDenied)
@@ -3917,8 +3880,6 @@ void
 ConnStateData::unpinConnection(const bool andClose)
 {
     debugs(33, 3, pinning.serverConnection);
-
-    cbdataReferenceDone(pinning.peer);
 
     if (Comm::IsConnOpen(pinning.serverConnection)) {
         if (pinning.closeHandler != nullptr) {

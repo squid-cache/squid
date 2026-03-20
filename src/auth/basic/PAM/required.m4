@@ -1,11 +1,9 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2026 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_CHECK_HEADERS([security/pam_appl.h],[
-  BUILD_HELPER="PAM"
-  CHECK_STRUCT_PAM_CONV
-])
+dnl requires libpam, indicated by --with-pam
+AS_IF([test "x$with_pam" = "xyes"],[BUILD_HELPER="PAM"])

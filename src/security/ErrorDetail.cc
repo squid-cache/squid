@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -468,7 +468,7 @@ Security::ErrorDetail::ErrorDetail(const ErrorCode anErrorCode, const CertPointe
 {
     errReason = aReason;
     peer_cert = cert;
-    broken_cert = broken ? broken : cert;
+    broken_cert = broken;
 }
 
 #if USE_OPENSSL
@@ -535,8 +535,12 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
 {
     std::optional<SBuf> customFormat;
 #if USE_OPENSSL
-    if (const auto errorDetail = Ssl::ErrorDetailsManager::GetInstance().findDetail(error_no, request))
-        customFormat = errorDetail->detail;
+    if (const auto errorDetail = Ssl::ErrorDetailsManager::GetInstance().findDetail(error_no, request)) {
+        detailEntry = *errorDetail;
+        customFormat = detailEntry->detail;
+    } else {
+        detailEntry.reset();
+    }
 #else
     (void)request;
 #endif
@@ -560,8 +564,8 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
 void
 Security::ErrorDetail::printSubject(std::ostream &os) const
 {
-    if (broken_cert) {
-        auto buf = SubjectName(*broken_cert);
+    if (const auto cert = certificateToReport()) {
+        auto buf = SubjectName(*cert);
         if (!buf.isEmpty()) {
             // TODO: Convert html_quote() into an std::ostream manipulator.
             // quote to avoid possible html code injection through
@@ -574,48 +578,53 @@ Security::ErrorDetail::printSubject(std::ostream &os) const
 }
 
 #if USE_OPENSSL
-/// a helper class to print CNs extracted using Ssl::matchX509CommonNames()
-class CommonNamesPrinter
+/// prints X.509 names extracted using Ssl::HasMatchingSubjectName()
+class CommonNamesPrinter: public Ssl::GeneralNameMatcher
 {
 public:
     explicit CommonNamesPrinter(std::ostream &os): os_(os) {}
 
-    /// Ssl::matchX509CommonNames() visitor that reports the given name (if any)
-    static int PrintName(void *, ASN1_STRING *);
+    /// the number of names printed so far
+    mutable size_t printed = 0;
 
-    /// whether any names have been printed so far
-    bool printed = false;
+protected:
+    /* GeneralNameMatcher API */
+    bool matchDomainName(const Dns::DomainName &) const override;
+    bool matchIp(const Ip::Address &) const override;
 
 private:
-    void printName(const ASN1_STRING *);
+    std::ostream &itemStream() const;
 
     std::ostream &os_; ///< destination for printed names
 };
 
-int
-CommonNamesPrinter::PrintName(void * const printer, ASN1_STRING * const name)
+bool
+CommonNamesPrinter::matchDomainName(const Dns::DomainName &domain) const
 {
-    assert(printer);
-    static_cast<CommonNamesPrinter*>(printer)->printName(name);
-    return 1;
+    // TODO: Convert html_quote() into an std::ostream manipulator accepting (buf, n).
+    itemStream() << html_quote(SBuf(domain).c_str());
+    return false; // keep going
 }
 
-/// prints an HTML-quoted version of the given common name (as a part of the
-/// printed names list)
-void
-CommonNamesPrinter::printName(const ASN1_STRING * const name)
+bool
+CommonNamesPrinter::matchIp(const Ip::Address &ip) const
 {
-    if (name && name->length) {
-        if (printed)
-            os_ << ", ";
-
-        // TODO: Convert html_quote() into an std::ostream manipulator accepting (buf, n).
-        SBuf buf(reinterpret_cast<const char *>(name->data), name->length);
-        os_ << html_quote(buf.c_str());
-
-        printed = true;
-    }
+    char hostStr[MAX_IPSTRLEN];
+    (void)ip.toStr(hostStr, sizeof(hostStr)); // no html_quote() is needed; no brackets
+    itemStream().write(hostStr, strlen(hostStr));
+    return false; // keep going
 }
+
+/// prints a comma in front of each item except for the very first one
+/// \returns a stream for printing the name
+std::ostream &
+CommonNamesPrinter::itemStream() const
+{
+    if (printed++)
+        os_ << ", ";
+    return os_;
+}
+
 #endif // USE_OPENSSL
 
 /// a list of the broken certificates CN and alternate names
@@ -623,9 +632,9 @@ void
 Security::ErrorDetail::printCommonName(std::ostream &os) const
 {
 #if USE_OPENSSL
-    if (broken_cert.get()) {
+    if (const auto cert = certificateToReport()) {
         CommonNamesPrinter printer(os);
-        Ssl::matchX509CommonNames(broken_cert.get(), &printer, printer.PrintName);
+        (void)Ssl::HasMatchingSubjectName(*cert, printer);
         if (printer.printed)
             return;
     }
@@ -637,8 +646,8 @@ Security::ErrorDetail::printCommonName(std::ostream &os) const
 void
 Security::ErrorDetail::printCaName(std::ostream &os) const
 {
-    if (broken_cert) {
-        auto buf = IssuerName(*broken_cert);
+    if (const auto cert = certificateToReport()) {
+        auto buf = IssuerName(*cert);
         if (!buf.isEmpty()) {
             // quote to avoid possible html code injection through
             // certificate issuer subject
@@ -654,8 +663,8 @@ void
 Security::ErrorDetail::printNotBefore(std::ostream &os) const
 {
 #if USE_OPENSSL
-    if (broken_cert.get()) {
-        if (const auto tm = X509_getm_notBefore(broken_cert.get())) {
+    if (const auto cert = certificateToReport()) {
+        if (const auto tm = X509_getm_notBefore(cert)) {
             // TODO: Add and use an ASN1_TIME printing operator instead.
             static char tmpBuffer[256]; // A temporary buffer
             Ssl::asn1timeToString(tm, tmpBuffer, sizeof(tmpBuffer));
@@ -672,8 +681,8 @@ void
 Security::ErrorDetail::printNotAfter(std::ostream &os) const
 {
 #if USE_OPENSSL
-    if (broken_cert.get()) {
-        if (const auto tm = X509_getm_notAfter(broken_cert.get())) {
+    if (const auto cert = certificateToReport()) {
+        if (const auto tm = X509_getm_notAfter(cert)) {
             // XXX: Reduce code duplication.
             static char tmpBuffer[256]; // A temporary buffer
             Ssl::asn1timeToString(tm, tmpBuffer, sizeof(tmpBuffer));
@@ -738,7 +747,7 @@ Security::ErrorDetail::printErrorLibError(std::ostream &os) const
  * %ssl_error_descr: A short description of the SSL error
  * %ssl_lib_error: human-readable low-level error string by ErrorString()
  *
- * Certificate information extracted from broken (not necessarily peer!) cert
+ * Peer or intermediate certificate info extracted from certificateToReport()
  * %ssl_cn: The comma-separated list of common and alternate names
  * %ssl_subject: The certificate subject
  * %ssl_ca_name: The certificate issuer name

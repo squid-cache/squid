@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,6 +15,7 @@
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "error/forward.h"
+#include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/Address.h"
 #if USE_AUTH
@@ -31,17 +32,34 @@ class ConnStateData;
  */
 class ACLFilledChecklist: public ACLChecklist
 {
-    CBDATA_CLASS(ACLFilledChecklist);
+    CBDATA_CLASS_WITH_MAKE(ACLFilledChecklist);
 
 public:
+    /// Unlike regular Foo::Pointer types, this smart pointer is meant for use
+    /// during checklist configuration only, when it provides exception safety.
+    /// Any other/long-term checklist storage requires CbcPointer or equivalent.
+    using MakingPointer = std::unique_ptr<ACLFilledChecklist>;
+
     ACLFilledChecklist();
-    ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident = nullptr);
+    ACLFilledChecklist(const acl_access *, HttpRequest *);
     ~ACLFilledChecklist() override;
+
+    /// Creates an ACLFilledChecklist object with given constructor arguments.
+    /// Callers are expected to eventually proceed with NonBlockingCheck().
+    static MakingPointer Make(const acl_access *a, HttpRequest *r) { return MakingPointer(new ACLFilledChecklist(a, r)); }
+
+    /// \copydoc ACLChecklist::nonBlockingCheck()
+    /// This public nonBlockingCheck() wrapper should be paired with Make(). The
+    /// pair prevents exception-caused Checklist memory leaks in caller code.
+    static void NonBlockingCheck(MakingPointer &&p, ACLCB *cb, void *data) { p->nonBlockingCheck(cb, data); (void)p.release(); }
 
     /// configure client request-related fields for the first time
     void setRequest(HttpRequest *);
-    /// configure rfc931 user identity for the first time
-    void setIdent(const char *userIdentity);
+
+    /// Remembers the given ALE (if it is not nil) or does nothing (otherwise).
+    /// When (and only when) remembering ALE, populates other still-unset fields
+    /// with ALE-derived information, so that the caller does not have to.
+    void updateAle(const AccessLogEntry::Pointer &);
 
 public:
     /// The client connection manager
@@ -55,6 +73,14 @@ public:
     /// set the client side FD
     void fd(int aDescriptor);
 
+    /// response added by updateReply()
+    /// \prec hasReply()
+    const HttpReply &reply() const { return *reply_; }
+
+    /// Remembers the given response (if it is not nil) or does nothing
+    /// (otherwise).
+    void updateReply(const HttpReply::Pointer &);
+
     bool destinationDomainChecked() const;
     void markDestinationDomainChecked();
     bool sourceDomainChecked() const;
@@ -62,7 +88,7 @@ public:
 
     // ACLChecklist API
     bool hasRequest() const override { return request != nullptr; }
-    bool hasReply() const override { return reply != nullptr; }
+    bool hasReply() const override { return reply_ != nullptr; }
     bool hasAle() const override { return al != nullptr; }
     void syncAle(HttpRequest *adaptedRequest, const char *logUri) const override;
     void verifyAle() const override;
@@ -72,17 +98,15 @@ public:
     Ip::Address dst_addr;
     Ip::Address my_addr;
     SBuf dst_peer_name;
-    char *dst_rdns;
+    char *dst_rdns = nullptr;
 
     HttpRequest::Pointer request;
-    HttpReply *reply;
 
-    char rfc931[USER_IDENT_SZ];
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
 #endif
 #if SQUID_SNMP
-    char *snmp_community;
+    char *snmp_community = nullptr;
 #endif
 
     // TODO: RefCount errors; do not ignore them because their "owner" is gone!
@@ -101,13 +125,16 @@ public:
 
     ExternalACLEntryPointer extacl_entry;
 
-    err_type requestErrorType;
+    err_type requestErrorType = ERR_MAX;
 
 private:
-    ConnStateData * conn_;          /**< hack for ident and NTLM */
-    int fd_;                        /**< may be available when conn_ is not */
-    bool destinationDomainChecked_;
-    bool sourceDomainChecked_;
+    ConnStateData *conn_ = nullptr; ///< hack: client-to-Squid connection manager (if any)
+    int fd_ = -1; /**< may be available when conn_ is not */
+
+    HttpReply::Pointer reply_; ///< response added by updateReply() or nil
+
+    bool destinationDomainChecked_ = false;
+    bool sourceDomainChecked_ = false;
     /// not implemented; will cause link failures if used
     ACLFilledChecklist(const ACLFilledChecklist &);
     /// not implemented; will cause link failures if used

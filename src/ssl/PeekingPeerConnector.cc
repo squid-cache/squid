@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@
 #include "security/ErrorDetail.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
+#include "src/base/IoManip.h"
 #include "ssl/bio.h"
 #include "ssl/PeekingPeerConnector.h"
 #include "ssl/ServerBump.h"
@@ -69,9 +70,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
 {
     handleServerCertificate();
 
-    ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(
-        ::Config.accessList.ssl_bump,
-        request.getRaw(), nullptr);
+    auto acl_checklist = ACLFilledChecklist::Make(::Config.accessList.ssl_bump, request.getRaw());
     acl_checklist->al = al;
     acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpNone));
     acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpPeek));
@@ -86,7 +85,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
     if (!srvBio->canBump())
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpBump));
     acl_checklist->syncAle(request.getRaw(), nullptr);
-    acl_checklist->nonBlockingCheck(Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone, this);
+    ACLFilledChecklist::NonBlockingCheck(std::move(acl_checklist), Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone, this);
 }
 
 void
@@ -142,10 +141,10 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceGuess() const
     return Ssl::bumpSplice;
 }
 
-Security::ContextPointer
-Ssl::PeekingPeerConnector::getTlsContext()
+Security::FuturePeerContext *
+Ssl::PeekingPeerConnector::peerContext() const
 {
-    return ::Config.ssl_client.sslContext;
+    return ::Config.ssl_client.defaultPeerContext;
 }
 
 bool
@@ -198,10 +197,23 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             srvBio->setClientFeatures(details, cltBio->rBufData());
             srvBio->recordInput(true);
             srvBio->mode(csd->sslBumpMode);
-        } else {
-            // Set client SSL options
-            ::Security::ProxyOutgoingConfig.updateSessionOptions(serverSession);
 
+#if defined(SSL_OP_LEGACY_SERVER_CONNECT)
+            // While peeking, Squid is not generating any TLS bytes, but we are
+            // still being driven by OpenSSL negotiation logic. We enable as
+            // many features and workarounds as possible to reduce cases where
+            // OpenSSL refuses to accept a valid TLS server response. This code
+            // assumes that an admin should not expect a peeking Squid to
+            // automatically enforce a particular set of TLS conditions (e.g.,
+            // "no legacy TLS servers"). When that assumption is invalidated, we
+            // will need to add a configuration directive to set peeking TLS
+            // options.
+            if (csd->sslBumpMode == Ssl::bumpPeek && SSL_OP_LEGACY_SERVER_CONNECT) {
+                const auto adjustedOptions = SSL_set_options(serverSession.get(), SSL_OP_LEGACY_SERVER_CONNECT);
+                debugs(83, 5, "post-SSL_OP_LEGACY_SERVER_CONNECT options for session=" << serverSession << ": " << asHex(adjustedOptions));
+            }
+#endif
+        } else {
             const bool redirected = request->flags.redirected && ::Config.onoff.redir_rewrites_host;
             const char *sniServer = (!hostName || redirected) ?
                                     request->url.host() :

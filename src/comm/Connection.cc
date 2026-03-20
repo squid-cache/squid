@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,19 +27,6 @@ bool
 Comm::IsConnOpen(const Comm::ConnectionPointer &conn)
 {
     return conn != nullptr && conn->isOpen();
-}
-
-Comm::Connection::Connection() :
-    peerType(HIER_NONE),
-    fd(-1),
-    tos(0),
-    nfmark(0),
-    flags(COMM_NONBLOCKING),
-    peer_(nullptr),
-    startTime_(squid_curtime),
-    tlsHistory(nullptr)
-{
-    *rfc931 = 0; // quick init the head. the rest does not matter.
 }
 
 Comm::Connection::~Connection()
@@ -81,7 +68,6 @@ Comm::Connection::cloneProfile() const
     c.nfConnmark = nfConnmark;
     // COMM_ORPHANED is not a part of connection opening instructions
     c.flags = flags & ~COMM_ORPHANED;
-    // rfc931 is excused
 
 #if USE_SQUID_EUI
     // These are currently only set when accepting connections and never used
@@ -140,6 +126,12 @@ Comm::Connection::setPeer(CachePeer *p)
     if (p) {
         peer_ = cbdataReference(p);
     }
+}
+
+bool
+Comm::Connection::toGoneCachePeer() const
+{
+    return peer_ && !cbdataReferenceValid(peer_);
 }
 
 time_t
@@ -205,10 +197,6 @@ Comm::operator << (std::ostream &os, const Connection &conn)
         os << " FD " << conn.fd;
     if (conn.flags != COMM_UNSET)
         os << " flags=" << conn.flags;
-#if USE_IDENT
-    if (*conn.rfc931)
-        os << " IDENT::" << conn.rfc931;
-#endif
     return os;
 }
 

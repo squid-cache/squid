@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -594,10 +594,8 @@ HttpReply::calcMaxBodySize(HttpRequest& request) const
     if (!Config.ReplyBodySize)
         return;
 
-    ACLFilledChecklist ch(nullptr, &request, nullptr);
-    // XXX: cont-cast becomes irrelevant when checklist is HttpReply::Pointer
-    ch.reply = const_cast<HttpReply *>(this);
-    HTTPMSGLOCK(ch.reply);
+    ACLFilledChecklist ch(nullptr, &request);
+    ch.updateReply(this);
     for (AclSizeLimit *l = Config.ReplyBodySize; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this size value */
         if (!l->aclList || ch.fastCheck(l->aclList).allowed()) {

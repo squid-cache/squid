@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,23 +32,21 @@ public:
 
 /// \ingroup ServerProtocolICPInternal3
 static void
-doV3Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
+doV3Query(int fd, Ip::Address &from, const char * const buf, icp_common_t header)
 {
-    /* We have a valid packet */
-    char *url = buf + sizeof(icp_common_t) + sizeof(uint32_t);
-    HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, from);
+    const auto url = icpGetUrl(from, buf, header);
+    if (!url) {
+        icpCreateAndSend(ICP_ERR, 0, "", header.reqnum, 0, fd, from, nullptr);
+        return;
+    }
+
+    const auto icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
     if (!icp_request)
         return;
 
-    if (!icpAccessAllowed(from, icp_request)) {
-        icpDenyAccess (from, url, header.reqnum, fd);
-        delete icp_request;
-        return;
-    }
-
     /* The peer is allowed to use this cache */
-    ICP3State state(header, icp_request);
+    ICP3State state(header, icp_request.getRaw());
     state.fd = fd;
     state.from = from;
     state.url = xstrdup(url);

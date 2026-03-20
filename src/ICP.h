@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -89,11 +89,12 @@ extern Comm::ConnectionPointer icpIncomingConn;
 extern Comm::ConnectionPointer icpOutgoingConn;
 extern Ip::Address theIcpPublicHostID;
 
-/// \ingroup ServerProtocolICPAPI
-HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
+/// A URI extracted from the given raw packet buffer.
+/// On errors, details the problem and returns nil.
+const char *icpGetUrl(const Ip::Address &from, const char *, const icp_common_t &);
 
 /// \ingroup ServerProtocolICPAPI
-bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request);
+HttpRequestPointer icpGetRequest(const char *url, int reqnum, int fd, const Ip::Address &from);
 
 /// \ingroup ServerProtocolICPAPI
 void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntryPointer);
@@ -102,7 +103,7 @@ void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pa
 icp_opcode icpGetCommonOpcode();
 
 /// \ingroup ServerProtocolICPAPI
-void icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd);
+void icpDenyAccess(const Ip::Address &from, const char *url, int reqnum, int fd);
 
 /// \ingroup ServerProtocolICPAPI
 PF icpHandleUdp;

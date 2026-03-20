@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -46,10 +46,6 @@
    the GNU Lesser General Public License along with this program.  If
    not, see http://www.gnu.org/licenses/.
 */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* Base64 encoding */
 
@@ -157,10 +153,6 @@ base64_decode_update(struct base64_decode_ctx *ctx,
 /* Returns 1 on success. */
 int
 base64_decode_final(struct base64_decode_ctx *ctx);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* HAVE_NETTLE_BASE64_H */
 

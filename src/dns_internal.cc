@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -232,13 +232,6 @@ static hash_table *idns_lookup_hash = nullptr;
 
 /*
  * Notes on EDNS:
- *
- * IPv4:
- *   EDNS as specified may be sent as an additional record for any request.
- *   early testing has revealed that it works on common devices, but cannot
- *   be reliably used on any A or PTR requet done for IPv4 addresses.
- *
- * As such the IPv4 packets are still hard-coded not to contain EDNS (0)
  *
  * Squid design:
  *   Squid is optimized to generate one packet and re-send it to all NS
@@ -857,6 +850,7 @@ idnsInitVCConnected(const Comm::ConnectionPointer &conn, Comm::Flag status, int,
         if (vc->ns < nameservers.size())
             nameservers[vc->ns].S.toStr(buf,MAX_IPSTRLEN);
         debugs(78, DBG_IMPORTANT, "ERROR: Failed to connect to nameserver " << buf << " using TCP.");
+        delete vc;
         return;
     }
 
@@ -885,7 +879,9 @@ nsvc::~nsvc()
 {
     delete queue;
     delete msg;
-    if (ns < nameservers.size()) // XXX: idnsShutdownAndFreeState may have freed nameservers[]
+    // we may outlive nameservers version that was pointing to us because
+    // reconfigurations repopulate nameservers
+    if (ns < nameservers.size() && nameservers[ns].vc == this)
         nameservers[ns].vc = nullptr;
 }
 
@@ -930,7 +926,20 @@ idnsSendQueryVC(idns_query * q, size_t nsn)
         return;
     }
 
-    vc->queue->reset();
+    if (vc->queue->isNull())
+        vc->queue->init();
+
+    const auto serialiedQuerySize = 2 + q->sz + 1; // payload_length + payload + terminate()
+    if (vc->queue->potentialSpaceSize() < serialiedQuerySize) {
+        // header + payload + MemBuf terminator exceed maximum space size
+        debugs(78, DBG_IMPORTANT, "ERROR: Dropping DNS query due to insufficient buffer space for DNS over TCP query queue" <<
+               Debug::Extra << "query: " << q->name <<
+               Debug::Extra << "nameserver: " << nameservers[nsn].S <<
+               Debug::Extra << "used space: " << vc->queue->contentSize() <<
+               Debug::Extra << "remaining space: " << vc->queue->potentialSpaceSize() <<
+               Debug::Extra << "required space: " << serialiedQuerySize);
+        return; // the query will timeout and either fail or be retried
+    }
 
     short head = htons(q->sz);
 
@@ -949,7 +958,7 @@ idnsSendQuery(idns_query * q)
     // sockets and server listening sockets) and the reconfigure completing
     // (Runner syncConfig() being run). Transactions which loose this race will
     // produce DNS timeouts (or whatever the caller set) as their queries never
-    // get queued to be re-tried after the DNS socekts are re-opened.
+    // get queued to be re-tried after the DNS sockets are re-opened.
 
     if (DnsSocketA < 0 && DnsSocketB < 0) {
         debugs(78, DBG_IMPORTANT, "WARNING: idnsSendQuery: Can't send query, no DNS socket!");
@@ -1280,8 +1289,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
             // Build new query
             q->query_id = idnsQueryID();
             debugs(78, 3, "idnsGrokReply: Trying A Query for " << q->name);
-            // see EDNS notes at top of file why this sends 0
-            q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query, 0);
+            q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query);
             if (q->sz < 0) {
                 /* problem with query data -- query not sent */
                 idnsCallback(q, "Internal error");
@@ -1724,7 +1732,7 @@ idnsSendSlaveAAAAQuery(idns_query *master)
     memcpy(q->orig, master->orig, sizeof(q->orig));
     q->master = master;
     q->query_id = idnsQueryID();
-    q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query, Config.dns.packet_max);
+    q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query);
 
     debugs(78, 3, "buf is " << q->sz << " bytes for " << q->name <<
            ", id = 0x" << asHex(q->query_id));
@@ -1780,8 +1788,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
         debugs(78, 3, "idnsALookup: searchpath used for " << q->name);
     }
 
-    // see EDNS notes at top of file why this sends 0
-    q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query, 0);
+    q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query);
 
     if (q->sz < 0) {
         /* problem with query data -- query not sent */
@@ -1813,12 +1820,11 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
     if (addr.isIPv6()) {
         struct in6_addr addr6;
         addr.getInAddr(addr6);
-        q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), q->query_id, &q->query, Config.dns.packet_max);
+        q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), q->query_id, &q->query);
     } else {
         struct in_addr addr4;
         addr.getInAddr(addr4);
-        // see EDNS notes at top of file why this sends 0
-        q->sz = rfc3596BuildPTRQuery4(addr4, q->buf, sizeof(q->buf), q->query_id, &q->query, 0);
+        q->sz = rfc3596BuildPTRQuery4(addr4, q->buf, sizeof(q->buf), q->query_id, &q->query);
     }
 
     if (q->sz < 0) {

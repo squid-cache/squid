@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2026 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -17,8 +17,7 @@ EXTRA_DIST = \
 	squid.options \
 	config.site \
 	user-agents.pl \
-	url-normalizer.pl \
-	solaris/solaris-krb5-include.patch
+	url-normalizer.pl
 
 all:
 

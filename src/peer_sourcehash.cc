@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 39    Peer source hash based selection */
 
 #include "squid.h"
+#include "base/RunnersRegistry.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
 #include "HttpRequest.h"
@@ -42,7 +43,7 @@ peerSortWeight(const void *a, const void *b)
     return (*p1)->weight - (*p2)->weight;
 }
 
-void
+static void
 peerSourceHashInit(void)
 {
     int W = 0;
@@ -126,6 +127,17 @@ peerSourceHashInit(void)
 
     SourceHashPeers().assign(rawSourceHashPeers.begin(), rawSourceHashPeers.end());
 }
+
+/// reacts to RegisteredRunner events relevant to this module
+class PeerSourceHashRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    void useConfig() override { peerSourceHashInit(); }
+    void syncConfig() override { peerSourceHashInit(); }
+};
+
+DefineRunnerRegistrator(PeerSourceHashRr);
 
 static void
 peerSourceHashRegisterWithCacheManager(void)

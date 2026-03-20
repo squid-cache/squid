@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -110,7 +110,7 @@ clientStreamNode::~clientStreamNode()
  */
 void
 clientStreamInit(dlink_list * list, CSR * func, CSD * rdetach, CSS * readstatus,
-                 ClientStreamData readdata, CSCB * callback, CSD * cdetach, ClientStreamData callbackdata,
+                 const ClientStreamData &readdata, CSCB * callback, CSD * cdetach, const ClientStreamData &callbackdata,
                  StoreIOBuffer tailBuffer)
 {
     clientStreamNode *temp = new clientStreamNode(func, nullptr, rdetach, readstatus, readdata);

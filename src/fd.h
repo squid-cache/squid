@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,6 +22,7 @@ void fd_open(int fd, unsigned int type, const char *);
 void fd_note(int fd, const char *);
 void fd_bytes(int fd, int len, IoDirection);
 void fdDumpOpen(void);
+int fdNFree(void);
 int fdUsageHigh(void);
 void fdAdjustReserved(void);
 int default_read_method(int, char *, int);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "comm/Connection.h"
+#include "HttpRequest.h"
 #include "ICP.h"
 
 #define STUB_API "icp_*.cc"
@@ -29,11 +30,11 @@ Comm::ConnectionPointer icpIncomingConn;
 Comm::ConnectionPointer icpOutgoingConn;
 Ip::Address theIcpPublicHostID;
 
-HttpRequest* icpGetRequest(char *, int, int, Ip::Address &) STUB_RETVAL(nullptr)
-bool icpAccessAllowed(Ip::Address &, HttpRequest *) STUB_RETVAL(false)
+const char *icpGetUrl(const Ip::Address &, const char *, const icp_common_t &) STUB_RETVAL(nullptr)
+HttpRequest::Pointer icpGetRequest(const char *, int, int, const Ip::Address &) STUB_RETVAL(nullptr)
 void icpCreateAndSend(icp_opcode, int, char const *, int, int, int, const Ip::Address &, AccessLogEntryPointer) STUB
 icp_opcode icpGetCommonOpcode() STUB_RETVAL(ICP_INVALID)
-void icpDenyAccess(Ip::Address &, char *, int, int) STUB
+void icpDenyAccess(const Ip::Address &, const char *, int, int) STUB
 void icpHandleIcpV3(int, Ip::Address &, char *, int) STUB
 void icpConnectionShutdown(void) STUB
 int icpSetCacheKey(const cache_key *) STUB_RETVAL(0)

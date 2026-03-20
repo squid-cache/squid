@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -88,7 +88,7 @@ Mgr::Inquirer::start()
         replyBuf.reset(reply->pack());
     } else {
         std::unique_ptr<HttpReply> reply(new HttpReply);
-        reply->setHeaders(Http::scOkay, nullptr, "text/plain", -1, squid_curtime, squid_curtime);
+        reply->setHeaders(Http::scOkay, nullptr, aggrAction->contentType(), -1, squid_curtime, squid_curtime);
         CacheManager::PutCommonResponseHeaders(*reply, originOrNil);
         reply->header.putStr(Http::HdrType::CONNECTION, "close"); // until we chunk response
         replyBuf.reset(reply->pack());

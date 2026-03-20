@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2026 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -15,5 +15,5 @@ basic_pam_auth_SOURCES = basic_pam_auth.cc
 basic_pam_auth_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
-	-lpam \
+	$(LIBPAM_LIBS) \
 	$(XTRA_LIBS)

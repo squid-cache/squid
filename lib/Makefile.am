@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2026 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -10,9 +10,6 @@ include $(top_srcdir)/src/Common.am
 SUBDIRS=
 EXTRA_DIST=
 
-if ENABLE_ESI
-SUBDIRS += libTrie
-endif
 if ENABLE_SNMP
 SUBDIRS += snmplib
 endif
@@ -28,10 +25,6 @@ noinst_LTLIBRARIES = \
 	libmisccontainers.la \
 	libmiscutil.la
 
-if ENABLE_SMBLIB
-# smblib is the only user of the rfcnb library
-SUBDIRS += rfcnb smblib
-endif
 if ENABLE_AUTH_NTLM
 SUBDIRS += ntlmauth
 endif
@@ -45,19 +38,17 @@ EXTRA_libmiscutil_la_SOURCES = \
 	getopt.c
 
 libmiscencoding_la_SOURCES = \
-	base64.c \
-	md5.c \
-	rfc1738.c \
-	rfc2617.c
+	base64.cc \
+	md5.cc \
+	rfc1738.cc \
+	rfc2617.cc
 
 libmisccontainers_la_SOURCES = \
 	hash.cc
 
 libmiscutil_la_SOURCES = \
-	$(SNPRINTFSOURCE) \
 	Splay.cc \
 	heap.c \
-	radix.c \
 	util.cc
 
 TESTS += tests/testRFC1738

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 39    Cache Array Routing Protocol */
 
 #include "squid.h"
+#include "base/RunnersRegistry.h"
 #include "CachePeer.h"
 #include "CachePeers.h"
 #include "carp.h"
@@ -47,7 +48,7 @@ carpRegisterWithCacheManager(void)
     Mgr::RegisterAction("carp", "CARP information", carpCachemgr, 0, 1);
 }
 
-void
+static void
 carpInit(void)
 {
     int W = 0;
@@ -134,6 +135,17 @@ carpInit(void)
     CarpPeers().assign(rawCarpPeers.begin(), rawCarpPeers.end());
 }
 
+/// reacts to RegisteredRunner events relevant to this module
+class CarpRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    void useConfig() override { carpInit(); }
+    void syncConfig() override { carpInit(); }
+};
+
+DefineRunnerRegistrator(CarpRr);
+
 CachePeer *
 carpSelectParent(PeerSelector *ps)
 {
@@ -174,13 +186,13 @@ carpSelectParent(PeerSelector *ps)
             }
             if (tp->options.carp_key.path) {
                 // XXX: fix when path and query are separate
-                key.append(request->url.path().substr(0,request->url.path().find('?'))); // 0..N
+                key.append(request->url.absolutePath().substr(0,request->url.absolutePath().find('?'))); // 0..N
             }
             if (tp->options.carp_key.params) {
                 // XXX: fix when path and query are separate
                 SBuf::size_type pos;
-                if ((pos=request->url.path().find('?')) != SBuf::npos)
-                    key.append(request->url.path().substr(pos)); // N..npos
+                if ((pos=request->url.absolutePath().find('?')) != SBuf::npos)
+                    key.append(request->url.absolutePath().substr(pos)); // N..npos
             }
         }
         // if the url-based key is empty, e.g. because the user is

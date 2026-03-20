@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,7 @@ class RebuildState
 public:
     static EVH RebuildStep;
 
-    RebuildState(RefCount<UFSSwapDir> sd);
+    RebuildState(const RefCount<UFSSwapDir> &sd);
     virtual ~RebuildState();
 
     virtual bool error() const;

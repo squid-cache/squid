@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,6 @@ public:
     /// \param[out] total time taken for all ICAP processing
     void processingTime(struct timeval &total) const;
 
-    String rfc931; ///< the username from ident
 #if USE_OPENSSL
     String ssluser; ///< the username from SSL
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -102,7 +102,7 @@ CredentialsCache::cleanup()
 }
 
 void
-CredentialsCache::insert(const SBuf &userKey, Auth::User::Pointer anAuth_user)
+CredentialsCache::insert(const SBuf &userKey, const Auth::User::Pointer &anAuth_user)
 {
     debugs(29, 6, "adding " << userKey << " (" << anAuth_user->username() << ")");
     store_[userKey] = anAuth_user;

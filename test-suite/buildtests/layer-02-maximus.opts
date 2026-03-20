@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2026 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -37,11 +37,9 @@ MAKETEST="distcheck"
 #	We can't test them automatically everywhere without detecting those
 #	optional packages first.
 #
-#   --enable-ecap \
 #   --enable-epoll \
 #   --enable-kqueue \
 #   --enable-win32-service \
-#   --with-valgrind-debug \
 #   --with-gnutls \
 #   --with-tdb \
 #   --with-cap \
@@ -49,8 +47,10 @@ MAKETEST="distcheck"
 #   --with-heimdal-krb5 \
 #   --with-mit-krb5 \
 #   --with-ldap \
+#   --with-pam \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
+#   --enable-arch-native \  can fail on virtualized environments
 #
 #
 # NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the
@@ -79,9 +79,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-poll \
 	--enable-select \
 	--enable-http-violations \
-	--enable-ipfw-transparent \
 	--enable-follow-x-forwarded-for \
-	--enable-ident-lookups \
 	--enable-default-hostsfile=/etc/hosts \
 	--enable-auth \
 	--enable-basic-auth-helpers \
@@ -100,7 +98,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-auto-locale \
 	--enable-translation \
 	--enable-zph-qos \
-	--enable-esi \
 	--with-aio \
 	--with-build-environment=default \
 	--with-dl \
@@ -113,6 +110,8 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-build-info=squid\ test\ build \
 	--enable-ssl-crtd \
 	--with-openssl \
+	$CONFIGURE_FLAGS_MAYBE_ENABLE_ECAP \
+	$CONFIGURE_FLAGS_MAYBE_ENABLE_VALGRIND \
 	"
 
 # Fix the distclean testing.

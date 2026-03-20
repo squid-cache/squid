@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,21 +38,6 @@ protected:
 
 private:
     OBJH *handler; ///< legacy function that collects and dumps info
-};
-
-/// creates FunAction using ActionCreator API
-class FunActionCreator: public ActionCreator
-{
-public:
-    explicit FunActionCreator(OBJH *aHandler): handler(aHandler) {}
-
-    /* ActionCreator API */
-    Action::Pointer create(const CommandPointer &cmd) const override {
-        return FunAction::Create(cmd, handler);
-    }
-
-private:
-    OBJH *handler; ///< legacy function to pass to the FunAction wrapper
 };
 
 } // namespace Mgr
