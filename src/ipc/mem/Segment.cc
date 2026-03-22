@@ -17,6 +17,7 @@
 #include "Instance.h"
 #include "ipc/mem/Segment.h"
 #include "sbuf/SBuf.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "tools.h"
 
@@ -270,28 +271,28 @@ Ipc::Mem::Segment::GenerateName(const char *id)
 {
     assert(BasePath && *BasePath);
     static const bool nameIsPath = shm_portable_segment_name_is_path();
-    String name;
+    static const size_t maxNameLength = shmSegmentNameMaxLength();
+
+    SBuf name;
     if (nameIsPath) {
         name.append(BasePath);
-        if (name[name.size()-1] != '/')
+        if (name[name.length()-1] != '/')
             name.append('/');
     } else {
         name.append(Instance::NamePrefix("/"));
         name.append('-');
     }
 
-    // append id, replacing slashes with dots
-    for (const char *slash = strchr(id, '/'); slash; slash = strchr(id, '/')) {
-        if (id != slash) {
-            name.append(id, slash - id);
-            name.append('.');
-        }
-        id = slash + 1;
+    if (strlen(id) > maxNameLength - name.length() - 5) { // 5 for ".shm" and null terminator
+        fatalf("ID too long for shared memory segment name: %s", id);
     }
-    name.append(id);
+
+    // append id, replacing slashes with dots
+    for (const char *c = id; *c; ++c)
+        name.append(*c != '/' ? *c : '.');
 
     name.append(".shm"); // to distinguish from non-segments when nameIsPath
-    return name;
+    return SBufToString(name);
 }
 
 #else // HAVE_SHM
