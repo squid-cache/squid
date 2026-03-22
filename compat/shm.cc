@@ -9,6 +9,10 @@
 #include "squid.h"
 #include "compat/shm.h"
 
+#if HAVE_LIMITS_H
+#include <limits.h>
+#endif
+
 #if _SQUID_FREEBSD_ && (__FreeBSD__ >= 7)
 #include <sys/sysctl.h>
 #endif
@@ -34,3 +38,12 @@ shm_portable_segment_name_is_path()
 #endif
 }
 
+size_t
+shmSegmentNameMaxLength()
+{
+#if defined(PSHMNAMLEN)
+    return PSHMNAMLEN;
+#else
+    return PATH_MAX;
+#endif
+}
