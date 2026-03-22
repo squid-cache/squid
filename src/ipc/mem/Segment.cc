@@ -16,6 +16,7 @@
 #include "fatal.h"
 #include "Instance.h"
 #include "ipc/mem/Segment.h"
+#include "md5.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
@@ -283,15 +284,21 @@ Ipc::Mem::Segment::GenerateName(const char *id)
         name.append('-');
     }
 
+    // if the ID is too long, hash it to fit into the name length limit
     if (strlen(id) > maxNameLength - name.length() - 5) { // 5 for ".shm" and null terminator
-        fatalf("ID too long for shared memory segment name: %s", id);
+        SquidMD5_CTX ctx;
+        SquidMD5Init(&ctx);
+        SquidMD5Update(&ctx, id, strlen(id));
+        uint8_t digest[16];
+        SquidMD5Final(digest, &ctx);
+        name.appendf("%02x%02x%02x%02x", digest[0], digest[1], digest[2], digest[3]);
+        name = name.chop(maxNameLength);
+    } else {
+        // append id, replacing slashes with dots
+        for (const char *c = id; *c; ++c)
+            name.append(*c != '/' ? *c : '.');
+        name.append(".shm"); // to distinguish from non-segments when nameIsPath
     }
-
-    // append id, replacing slashes with dots
-    for (const char *c = id; *c; ++c)
-        name.append(*c != '/' ? *c : '.');
-
-    name.append(".shm"); // to distinguish from non-segments when nameIsPath
     return SBufToString(name);
 }
 
