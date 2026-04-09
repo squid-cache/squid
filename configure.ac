@@ -2051,13 +2051,6 @@ SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
 dnl System-specific library modifications
 AH_TEMPLATE(GETTIMEOFDAY_NO_TZP,[Whether gettimeofday takes only one argument])
 AS_CASE(["$host"],
-  [*-pc-sco3.2*],[
-    # -lintl is needed on SCO version 3.2v4.2 for strftime()
-    # Robert Side <rside@aiinc.bc.ca>
-    # Mon, 18 Jan 1999 17:48:00 GMT
-    AC_CHECK_LIB(intl, strftime)
-  ],
-
   [i386-*-solaris2.*],[
     AS_IF([test "x$GCC" = "xyes"],[
       AC_MSG_NOTICE([Removing -O for gcc on $host])
