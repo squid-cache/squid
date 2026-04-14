@@ -35,7 +35,7 @@ Mgr::StringParam::unpackValue(const Ipc::TypedMsgHdr& msg)
     msg.getSBuf(str);
 }
 
-const SBuf&
+SBuf
 Mgr::StringParam::value() const
 {
     return str;

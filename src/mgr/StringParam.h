@@ -26,7 +26,7 @@ public:
     StringParam(const SBuf& aString);
     void pack(Ipc::TypedMsgHdr& msg) const override;
     void unpackValue(const Ipc::TypedMsgHdr& msg) override;
-    const SBuf& value() const;
+    SBuf value() const;
 
 private:
     SBuf str;
