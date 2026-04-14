@@ -6,8 +6,7 @@
 ##
 
 #
-# The layout of this file is intended to be modular with
-# the following sections:
+# Table of Contents:
 #
 # 1. Autoconf initialization
 #
@@ -15,9 +14,9 @@
 #
 # 3. Build Environment detection
 #
-# 4. Library detection
+# 4. Feature detection
 #
-# 5. Feature detection
+# 5. Library detection
 #
 # 6. Autoconf finalization
 #
@@ -42,6 +41,75 @@ AM_INIT_AUTOMAKE([1.14 tar-ustar nostdinc subdir-objects dist-xz])
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
+# TODO: move any more logic here
+
+#
+# Section 2: Toolchain detection
+#
+# Locate the binaries needed to compile, distribute and install Squid.
+#
+# Identify any special parameters need to run the tools correctly.
+# For example; "rm" vs "rm -f", "ar" vs "ar r", "grep -E" vs "egrep", or "-std=17"
+#
+# Does not check for availability of optional settings. That happens in section 3.
+#
+# User override should be provided as ./configure VARIABLE="VALUE"
+#
+
+# TODO: move logic here
+
+#
+# Section 3: Build Environment detection
+#
+# Check for which OS we are building on.
+#
+# Check for any OS-specific types, system includes, and toolchain
+# options needed for tests in later sections to be run.
+#
+# Check user-provided settings for custom integration with the
+# OS to be installed on.
+#
+# Settings found in this section will determine which components are
+# able to be detected in later sections.
+#
+# All tests in later sections should be able to include "compat/"
+# files and use their definitions.
+#
+# User settings should be provided as --with-default-LABEL=VALUE.
+#
+
+# TODO: move logic here
+
+#
+# Section 4: Feature detection
+#
+# Check which features can be built.
+#
+# User settings should be provided as --(en/dis)able-FEATURE[=LIST]
+#
+# Where LIST is a whitespace separated list of module or helper names
+# to build, (if any).
+#
+
+# TODO: move logic here
+
+#
+# Section 5: Library detection
+#
+# Check for all libraries used by Squid.
+#
+# Which libraries are available will determine which features
+# can be enabled later.
+#
+# User settings should be provided as --with(out)-LIBRARY[=PATH]
+#
+
+
+
+#
+# XXX: Legacy configure.ac layout to move around
+#
+
 # TODO: sort alphabetically, move library specific files to the libray section.
 m4_include([acinclude/ax_with_prog.m4])
 m4_include([acinclude/init.m4])
@@ -65,19 +133,6 @@ PRESET_LDFLAGS="$LDFLAGS"
 
 dnl Set default LDFLAGS
 AS_IF([test "x$LDFLAGS" = "x"],[LDFLAGS="-g"])
-
-#
-# Section 2: Toolchain detection
-#
-# Locate the binaries needed to compile, distribute and install Squid.
-#
-# Identify any special parameters need to run the tools correctly.
-# For example; "rm" vs "rm -f", "ar" vs "ar r", "grep -E" vs "egrep", or "-std=17"
-#
-# Does not check for availability of optional settings. That happens in section 3.
-#
-# User override should be provided as ./configure VARIABLE="VALUE"
-#
 
 dnl check for host OS detail
 AC_CANONICAL_HOST
@@ -225,26 +280,6 @@ LT_LIB_DLLOAD
 # Do we need these unconditionally for "make distcheck" to work?
 AC_SUBST(INCLTDL)
 AC_SUBST(LIBLTDL)
-
-#
-# Section 3: Build Environment detection
-#
-# Check for which OS we are building on.
-#
-# Check for any OS-specific types, system includes, and toolchain
-# options needed for tests in later sections to be run.
-#
-# Check user-provided settings for custom integration with the
-# OS to be installed on.
-#
-# Settings found in this section will determine which components are
-# able to be detected in later sections.
-#
-# All tests in later sections should be able to include "compat/"
-# files and use their definitions.
-#
-# User settings should be provided as --with-default-LABEL=VALUE.
-#
 
 AC_MSG_CHECKING(whether to use loadable modules)
 AS_IF([test "x${enable_shared:=yes}" = "xyes"],[AC_DEFINE(USE_LOADABLE_MODULES,1,[Support Loadable Modules])])
@@ -433,17 +468,6 @@ dnl Nasty hack to get autoconf 2.64 on Linux to run.
 dnl all other uses of RUN_IFELSE are wrapped inside CACHE_CHECK which breaks on 2.64
 AC_RUN_IFELSE([AC_LANG_SOURCE([[ int main(int argc, char **argv) { return 0; } ]])],[],[],[:])
 
-#
-# Section 4: Library detection
-#
-# Check for all libraries used by Squid.
-#
-# Which libraries are available will determine which features
-# can be enabled later.
-#
-# User settings should be provided as --with(out)-LIBRARY[=PATH]
-#
-
 AH_TEMPLATE(XMALLOC_STATISTICS,[Define to have malloc statistics])
 AC_ARG_ENABLE(xmalloc-statistics,
   AS_HELP_STRING([--enable-xmalloc-statistics],
@@ -520,17 +544,6 @@ AC_SEARCH_LIBS([shm_open], [rt])
 AS_IF([test "x$ac_cv_search_shm_open" != "xno"],[
   AC_DEFINE(HAVE_SHM,1,[Support shared memory features])
 ])
-
-#
-# Section 5: Feature detection
-#
-# Check which features can be built.
-#
-# User settings should be provided as --(en/dis)able-FEATURE[=LIST]
-#
-# Where LIST is a whitespace separated list of module or helper names
-# to build, (if any).
-#
 
 squid_disk_module_candidates=
 AC_ARG_ENABLE(disk-io,
@@ -2517,10 +2530,6 @@ AC_MSG_NOTICE([Multi-Language support enabled: ${enable_auto_locale:=yes}])
 SQUID_DEFINE_BOOL(USE_ERR_LOCALES,$enable_auto_locale,
    [Use multi-language support on error pages])
 
-#
-# Section 6. Autoconf finalization
-#
-
 dnl Need the debugging version of malloc if available
 XTRA_OBJS=''
 AS_IF([test "x$ac_cv_lib_malloc_main" = "xyes"],[
@@ -2539,6 +2548,10 @@ AC_SUBST(XTRA_LIBS)
 
 AC_SUBST(SQUID_CFLAGS)
 AC_SUBST(SQUID_CXXFLAGS)
+
+#
+# Section 6. Autoconf finalization
+#
 
 # Prerequisite: CXXFLAGS have been finalized.
 AC_ARG_VAR([BUILDCXXFLAGS],[C++ compiler flags for building compile-time tools. e.g. cf_gen])
