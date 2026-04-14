@@ -125,7 +125,7 @@ m4_include([acinclude/lib-checks.m4])
 m4_include([acinclude/ax_cxx_compile_stdcxx.m4])
 m4_include([acinclude/win32-sspi.m4])
 
-dnl BUG: auto-tools are not supposed to change user (C/CPP/CXX/LD)FLAGS variables.
+dnl XXX: Do not change and, hence, do not save user-controlled variables.
 dnl TODO: set AM_*FLAGS as-needed instead
 PRESET_CFLAGS="$CFLAGS"
 PRESET_CXXFLAGS="$CXXFLAGS"
