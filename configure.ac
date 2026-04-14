@@ -126,7 +126,7 @@ m4_include([acinclude/ax_cxx_compile_stdcxx.m4])
 m4_include([acinclude/win32-sspi.m4])
 
 dnl XXX: Do not change and, hence, do not save user-controlled variables.
-dnl TODO: set AM_*FLAGS as-needed instead
+dnl TODO: Remove the corresponding code or refactor it to set AM_*FLAGS where still warranted.
 PRESET_CFLAGS="$CFLAGS"
 PRESET_CXXFLAGS="$CXXFLAGS"
 PRESET_LDFLAGS="$LDFLAGS"
