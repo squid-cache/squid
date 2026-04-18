@@ -38,15 +38,6 @@ install-solaris2.4 install-solaris2.5:
 	@echo "set SQUID=0 in /etc/init.d/squid to disable squid at startup"
 	@echo "edit /etc/init.d/squid to change options"
 
-install-irix6.2:
-	$(INSTALL_BIN) $(SQUID_RC) /etc/init.d/squid
-	$(INSTALL_FILE) $(SQUID_OPTIONS) /var/config/squid.options
-	-$(LN_S) ../init.d/squid /etc/rc2.d/S99squid
-	-$(LN_S) ../init.d/squid /etc/rc0.d/K01squid
-	/sbin/chkconfig -f squid on
-	@echo "use 'chkconfig squid off' to disable squid at startup"
-	@echo "edit /var/config/squid.options to change options"
-
 install-osf3.2:
 	$(INSTALL_BIN) $(SQUID_RC) /sbin/init.d/squid
 	-$(LN_S) ../init.d/squid /sbin/rc2.d/S99squid
