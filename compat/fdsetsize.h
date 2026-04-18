@@ -17,9 +17,9 @@
 
 /*
  * On some systems, FD_SETSIZE is set to something lower than the
- * actual number of files which can be opened.  IRIX is one case,
- * NetBSD is another.  So here we increase FD_SETSIZE to our
- * configure-discovered maximum *before* any system includes.
+ * actual number of files which can be opened. NetBSD is one
+ * case. So here we increase FD_SETSIZE to our configure-discovered
+ * maximum *before* any system includes.
  */
 #define CHANGE_FD_SETSIZE 1
 
