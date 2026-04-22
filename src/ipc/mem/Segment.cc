@@ -16,9 +16,7 @@
 #include "fatal.h"
 #include "Instance.h"
 #include "ipc/mem/Segment.h"
-#include "md5.h"
 #include "sbuf/SBuf.h"
-#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "tools.h"
 
@@ -272,34 +270,28 @@ Ipc::Mem::Segment::GenerateName(const char *id)
 {
     assert(BasePath && *BasePath);
     static const bool nameIsPath = shm_portable_segment_name_is_path();
-    static const size_t maxNameLength = shmSegmentNameMaxLength();
-
-    SBuf name;
+    String name;
     if (nameIsPath) {
         name.append(BasePath);
-        if (name[name.length()-1] != '/')
+        if (name[name.size()-1] != '/')
             name.append('/');
     } else {
         name.append(Instance::NamePrefix("/"));
         name.append('-');
     }
 
-    // if the ID is too long, hash it to fit into the name length limit
-    if (strlen(id) > maxNameLength - name.length() - 5) { // 5 for ".shm" and null terminator
-        SquidMD5_CTX ctx;
-        SquidMD5Init(&ctx);
-        SquidMD5Update(&ctx, id, strlen(id));
-        uint8_t digest[16];
-        SquidMD5Final(digest, &ctx);
-        name.appendf("%02x%02x%02x%02x", digest[0], digest[1], digest[2], digest[3]);
-        name = name.chop(maxNameLength);
-    } else {
-        // append id, replacing slashes with dots
-        for (const char *c = id; *c; ++c)
-            name.append(*c != '/' ? *c : '.');
-        name.append(".shm"); // to distinguish from non-segments when nameIsPath
+    // append id, replacing slashes with dots
+    for (const char *slash = strchr(id, '/'); slash; slash = strchr(id, '/')) {
+        if (id != slash) {
+            name.append(id, slash - id);
+            name.append('.');
+        }
+        id = slash + 1;
     }
-    return SBufToString(name);
+    name.append(id);
+
+    name.append(".shm"); // to distinguish from non-segments when nameIsPath
+    return name;
 }
 
 #else // HAVE_SHM
@@ -310,7 +302,7 @@ typedef std::map<String, Ipc::Mem::Segment *> SegmentMap;
 static SegmentMap Segments;
 
 Ipc::Mem::Segment::Segment(const char *const id):
-    theName(GenerateName(id)), theMem(NULL), theSize(0), theReserved(0), doUnlink(false)
+    theName(id), theMem(NULL), theSize(0), theReserved(0), doUnlink(false)
 {
 }
 

@@ -48,8 +48,5 @@ extern "C" {
 /// Determines whether segment names are interpreted as full file paths.
 bool shm_portable_segment_name_is_path();
 
-/// Maximum length of a shared memory segment name, including the null terminator.
-size_t shmSegmentNameMaxLength();
-
 #endif /* SQUID_COMPAT_SHM_H */
 
