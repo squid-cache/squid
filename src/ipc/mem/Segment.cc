@@ -310,7 +310,7 @@ typedef std::map<String, Ipc::Mem::Segment *> SegmentMap;
 static SegmentMap Segments;
 
 Ipc::Mem::Segment::Segment(const char *const id):
-    theName(id), theMem(NULL), theSize(0), theReserved(0), doUnlink(false)
+    theName(GenerateName(id)), theMem(NULL), theSize(0), theReserved(0), doUnlink(false)
 {
 }
 
