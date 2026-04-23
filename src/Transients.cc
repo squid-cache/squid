@@ -50,7 +50,7 @@ Transients::init()
     assert(entryLimit > 0);
 
     Must(!map);
-    map = new TransientsMap(MapLabel());
+    map = new TransientsMap(SBuf(MapLabel()), "I004");
     map->cleaner = this;
     map->disableHitValidation(); // Transients lacks slices to validate
 
@@ -415,7 +415,7 @@ TransientsRr::create()
         return; // no SMP configured or a misconfiguration
 
     Must(!mapOwner);
-    mapOwner = TransientsMap::Init(MapLabel(), entryLimit);
+    mapOwner = TransientsMap::Init(SBuf(MapLabel()), "I005", entryLimit);
 }
 
 TransientsRr::~TransientsRr()

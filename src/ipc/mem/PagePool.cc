@@ -23,11 +23,11 @@ Ipc::Mem::PagePool::Init(const char *const shmId, const Ipc::Mem::PoolId stackId
     config.pageSize = pageSize; // the pages are stored in Ipc::Mem::Pages
     config.capacity = capacity;
     config.createFull = true; // all pages are initially available
-    return shm_new(PageStack)(shmId, config);
+    return shm_new(PageStack)(shmId, "001", config);
 }
 
 Ipc::Mem::PagePool::PagePool(const char *const id):
-    pageIndex(shm_old(PageStack)(id)),
+    pageIndex(shm_old(PageStack)(id, "001")),
     theLevels(reinterpret_cast<Levels_t *>(
                   reinterpret_cast<char *>(pageIndex.getRaw()) +
                   pageIndex->stackSize() + pageIndex->levelsPaddingSize())),

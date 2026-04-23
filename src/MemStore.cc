@@ -193,11 +193,11 @@ MemStore::init()
         }
     }
 
-    freeSlots = shm_old(Ipc::Mem::PageStack)(SpaceLabel);
-    extras = shm_old(Extras)(ExtrasLabel);
+    freeSlots = shm_old(Ipc::Mem::PageStack)(SpaceLabel, "I001");
+    extras = shm_old(Extras)(ExtrasLabel, "I002");
 
     Must(!map);
-    map = new MemStoreMap(SBuf(MapLabel));
+    map = new MemStoreMap(SBuf(MapLabel), "I003");
     map->cleaner = this;
 }
 
@@ -1047,11 +1047,11 @@ MemStoreRr::create()
     spaceConfig.capacity = entryLimit;
     spaceConfig.createFull = true; // all pages are initially available
     Must(!spaceOwner);
-    spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel, spaceConfig);
+    spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel, "001", spaceConfig);
     Must(!mapOwner);
-    mapOwner = MemStoreMap::Init(SBuf(MapLabel), entryLimit);
+    mapOwner = MemStoreMap::Init(SBuf(MapLabel), "001", entryLimit);
     Must(!extrasOwner);
-    extrasOwner = shm_new(MemStoreMapExtras)(ExtrasLabel, entryLimit);
+    extrasOwner = shm_new(MemStoreMapExtras)(ExtrasLabel, "001", entryLimit);
 }
 
 MemStoreRr::~MemStoreRr()
