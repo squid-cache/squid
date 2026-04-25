@@ -232,9 +232,9 @@ Ipc::FewToFewBiQueue::Init(const String &id, const int groupASize, const int gro
 
 Ipc::FewToFewBiQueue::FewToFewBiQueue(const String &id, const Group aLocalGroup, const int aLocalProcessId):
     BaseMultiQueue(aLocalProcessId),
-    metadata(shm_old(Metadata)(MetadataId(id).termedBuf(), "001")),
-    queues(shm_old(OneToOneUniQueues)(QueuesId(id).termedBuf(), "001")),
-    readers(shm_old(QueueReaders)(ReadersId(id).termedBuf(), "001")),
+    metadata(shm_old(Metadata)(MetadataId(id).termedBuf(), "M004")),
+    queues(shm_old(OneToOneUniQueues)(QueuesId(id).termedBuf(), "M005")),
+    readers(shm_old(QueueReaders)(ReadersId(id).termedBuf(), "M006")),
     theLocalGroup(aLocalGroup)
 {
     Must(queues->theCapacity == metadata->theGroupASize * metadata->theGroupBSize * 2);
@@ -349,9 +349,9 @@ Ipc::FewToFewBiQueue::Metadata::Metadata(const int aGroupASize, const int aGroup
 }
 
 Ipc::FewToFewBiQueue::Owner::Owner(const String &id, const int groupASize, const int groupAIdOffset, const int groupBSize, const int groupBIdOffset, const unsigned int maxItemSize, const int capacity):
-    metadataOwner(shm_new(Metadata)(MetadataId(id).termedBuf(), "001", groupASize, groupAIdOffset, groupBSize, groupBIdOffset)),
-    queuesOwner(shm_new(OneToOneUniQueues)(QueuesId(id).termedBuf(), "001", groupASize*groupBSize*2, maxItemSize, capacity)),
-    readersOwner(shm_new(QueueReaders)(ReadersId(id).termedBuf(), "001", groupASize+groupBSize))
+    metadataOwner(shm_new(Metadata)(MetadataId(id).termedBuf(), "M004", groupASize, groupAIdOffset, groupBSize, groupBIdOffset)),
+    queuesOwner(shm_new(OneToOneUniQueues)(QueuesId(id).termedBuf(), "M005", groupASize*groupBSize*2, maxItemSize, capacity)),
+    readersOwner(shm_new(QueueReaders)(ReadersId(id).termedBuf(), "M006", groupASize+groupBSize))
 {
 }
 
@@ -372,9 +372,9 @@ Ipc::MultiQueue::Init(const String &id, const int processCount, const int proces
 
 Ipc::MultiQueue::MultiQueue(const String &id, const int localProcessId):
     BaseMultiQueue(localProcessId),
-    metadata(shm_old(Metadata)(MetadataId(id).termedBuf(), "001")),
-    queues(shm_old(OneToOneUniQueues)(QueuesId(id).termedBuf(), "001")),
-    readers(shm_old(QueueReaders)(ReadersId(id).termedBuf(), "001"))
+    metadata(shm_old(Metadata)(MetadataId(id).termedBuf(), "M004")),
+    queues(shm_old(OneToOneUniQueues)(QueuesId(id).termedBuf(), "M005")),
+    readers(shm_old(QueueReaders)(ReadersId(id).termedBuf(), "M006"))
 {
     Must(queues->theCapacity == metadata->theProcessCount * metadata->theProcessCount);
     Must(readers->theCapacity == metadata->theProcessCount);
@@ -451,9 +451,9 @@ Ipc::MultiQueue::Metadata::Metadata(const int aProcessCount, const int aProcessI
 }
 
 Ipc::MultiQueue::Owner::Owner(const String &id, const int processCount, const int processIdOffset, const unsigned int maxItemSize, const int capacity):
-    metadataOwner(shm_new(Metadata)(MetadataId(id).termedBuf(), "001", processCount, processIdOffset)),
-    queuesOwner(shm_new(OneToOneUniQueues)(QueuesId(id).termedBuf(), "001", processCount*processCount, maxItemSize, capacity)),
-    readersOwner(shm_new(QueueReaders)(ReadersId(id).termedBuf(), "001", processCount))
+    metadataOwner(shm_new(Metadata)(MetadataId(id).termedBuf(), "M004", processCount, processIdOffset)),
+    queuesOwner(shm_new(OneToOneUniQueues)(QueuesId(id).termedBuf(), "M005", processCount*processCount, maxItemSize, capacity)),
+    readersOwner(shm_new(QueueReaders)(ReadersId(id).termedBuf(), "M006", processCount))
 {
 }
 
