@@ -5,10 +5,9 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# requires the linuxdoc tools
-if ENABLE_RELEASE_DOCS
+html: release-$(SQUID_RELEASE).html
 
-DOC= release-$(SQUID_RELEASE)
+EXTRA_DIST = release-$(SQUID_RELEASE).sgml.in
 
 SUFFIXES= .sgml.in .sgml
 
@@ -21,30 +20,19 @@ SUFFIXES= .sgml.in .sgml
 	test `grep -c "@SQUID" $@` -eq 0
 
 .sgml.txt:
-	linuxdoc -B txt --filter $<
+	$(LINUXDOC) -B txt --filter $<
 
 .sgml.html:
-	linuxdoc -B html -T 2 --split=0 $<
+	$(LINUXDOC) -B html -T 2 --split=0 $< && \
 	perl -i -p -e "s%$@%%" $@
-	cp -p $@ $(top_builddir)/RELEASENOTES.html
 
 .sgml.man:
-	linuxdoc -B txt --manpage $<
+	$(LINUXDOC) -B txt --manpage $<
 
 .sgml.info:
-	linuxdoc -B info $<
-
-dist-hook: $(DOC).html
-	@if test -f $(builddir)/$(DOC).html; then \
-	  cp -p $(builddir)/$(DOC).html $(top_distdir)/RELEASENOTES.html; \
-	fi
-
-EXTRA_DIST= $(DOC).html
+	$(LINUXDOC) -B info $<
 
 CLEANFILES= \
-	*.html \
+	*.html *.sgml \
 	*.tex *.ps *.dvi *.aux *.log *.toc \
-	*.txt *.man \
-	$(top_builddir)/RELEASENOTES.html
-
-endif
+	*.txt *.man

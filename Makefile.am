@@ -40,6 +40,11 @@ dist-hook:
 	  fi; \
 	done
 
+RELEASENOTES.html: html
+	cp -p $(builddir)/doc/release-notes/release-$(SQUID_RELEASE).html $@
+
+CLEANFILES = RELEASENOTES.html
+
 EXTRA_DIST = \
 	ChangeLog \
 	CONTRIBUTORS \
@@ -48,6 +53,7 @@ EXTRA_DIST = \
 	INSTALL \
 	QUICKSTART \
 	README \
+	RELEASENOTES.html \
 	SPONSORS \
 	bootstrap.sh \
 	po4a.conf
