@@ -58,7 +58,6 @@ libcompatsquid_la_SOURCES = \
 	os/openbsd.h \
 	os/os2.h \
 	os/qnx.h \
-	os/sgi.h \
 	os/solaris.h \
 	os/sunos.h \
 	osdetect.h \
