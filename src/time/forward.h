@@ -14,6 +14,7 @@ namespace Time
 {
 
 class Engine;
+class YamlDateTime;
 
 } // namespace Time
 
