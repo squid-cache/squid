@@ -24,7 +24,9 @@ class Segment
 {
 public:
     /// Create a shared memory segment.
-    Segment(const char *const id);
+    /// \param humanId a human-readable identifier (for debugging/logging)
+    /// \param machineId a machine-generated identifier (for uniqueness)
+    Segment(const char *const humanId, const char *const machineId);
     ~Segment();
 
     /// Whether shared memory support is available
@@ -62,7 +64,7 @@ private:
     void unlink(); ///< unlink the segment
     off_t statSize(const char *context) const;
 
-    static String GenerateName(const char *id);
+    static String GenerateName(const char *humanId, const char *machineId);
 
     int theFD; ///< shared memory segment file descriptor
 
