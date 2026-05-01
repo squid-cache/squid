@@ -151,7 +151,7 @@ AC_PATH_PROG(AR, ar, $FALSE)
 AR_R="$AR r"
 AC_SUBST(AR_R)
 
-AC_PATH_PROG(LINUXDOC, linuxdoc, [:])
+AC_PATH_PROG(LINUXDOC, linuxdoc, /usr/bin/linuxdoc)
 
 SQUID_RELEASE=`echo $VERSION | cut -d. -f1`
 AC_SUBST(SQUID_RELEASE)
