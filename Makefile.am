@@ -43,7 +43,7 @@ dist-hook:
 RELEASENOTES.html: html
 	cp -p $(builddir)/doc/release-notes/release-$(SQUID_RELEASE).html $@
 
-CLEANFILES = RELEASENOTES.html
+DISTCLEANFILES += RELEASENOTES.html
 
 EXTRA_DIST = \
 	ChangeLog \
