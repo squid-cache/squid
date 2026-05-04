@@ -344,8 +344,6 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
             commUnsetConnTimeout(data.conn);
         }
 
-        asser(ctrl.offset <= ctrl.size);
-
         if (ctrl.offset >= Config.maxReplyHeaderSize) {
             debugs(9, DBG_IMPORTANT, "FTP control reply exceeding reply_header_max_size=" << Config.maxReplyHeaderSize);
             failed(ERR_FTP_FAILURE, 0);
@@ -353,7 +351,8 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
         }
 
         if (ctrl.offset == ctrl.size) {
-            ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, ctrl.size << 1, &ctrl.size));
+            const auto newSize = min(ctrl.size << 1, Config.maxReplyHeaderSize);
+            ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, newSize, &ctrl.size));
         }
 
         const time_t tout = shortenReadTimeout ?
@@ -367,7 +366,9 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
 
         typedef CommCbMemFunT<Client, CommIoCbParams> Dialer;
         AsyncCall::Pointer reader = JobCallback(9, 5, Dialer, this, Ftp::Client::readControlReply);
-        comm_read(ctrl.conn, ctrl.buf + ctrl.offset, min(ctrl.size, Config.maxReplyHeaderSize) - ctrl.offset, reader);
+        auto const readLen = min(ctrl.size, Config.maxReplyHeaderSize) - ctrl.offset;
+        Assure(readLen > 0);
+        comm_read(ctrl.conn, ctrl.buf + ctrl.offset, readLen, reader);
     }
 }
 
