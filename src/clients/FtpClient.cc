@@ -142,7 +142,8 @@ Ftp::CtrlChannel::CtrlChannel():
     last_reply(nullptr),
     replycode(0)
 {
-    buf = static_cast<char*>(memAllocBuf(min(size_t{4096}, Config.maxReplyHeaderSize), &size));
+    // min() limits the initial read size when Config.maxReplyHeaderSize is huge
+    buf = static_cast<char*>(memAllocBuf(min(size_t(4096), Config.maxReplyHeaderSize), &size));
 }
 
 Ftp::CtrlChannel::~CtrlChannel()
@@ -345,7 +346,7 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
         }
 
         if (ctrl.offset >= Config.maxReplyHeaderSize) {
-            debugs(9, DBG_IMPORTANT, "FTP control reply exceeding reply_header_max_size=" << Config.maxReplyHeaderSize);
+            debugs(9, 2, "FTP control reply will exceed reply_header_max_size=" << Config.maxReplyHeaderSize);
             failed(ERR_FTP_FAILURE, 0);
             return;
         }
@@ -353,6 +354,7 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
         if (ctrl.offset == ctrl.size) {
             const auto newSize = min(ctrl.size << 1, Config.maxReplyHeaderSize);
             ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, newSize, &ctrl.size));
+            Assure(ctrl.offset < ctrl.size);
         }
 
         const time_t tout = shortenReadTimeout ?
@@ -366,8 +368,12 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
 
         typedef CommCbMemFunT<Client, CommIoCbParams> Dialer;
         AsyncCall::Pointer reader = JobCallback(9, 5, Dialer, this, Ftp::Client::readControlReply);
-        auto const readLen = min(ctrl.size, Config.maxReplyHeaderSize) - ctrl.offset;
-        Assure(readLen > 0);
+        // Do not accumulate more than Config.maxReplyHeaderSize bytes,
+        // even if we happened to have enough buffer space to do so.
+        const auto maxOffset = min(ctrl.size, Config.maxReplyHeaderSize);
+        Assure(endOffset > ctrl.offset); // we can make progress (and no underflows)
+        Assure(endOffset <= ctrl.size); // paranoid: we will not read beyond our buffer space
+        const auto maxReadSize = endOffset - ctrl.offset;
         comm_read(ctrl.conn, ctrl.buf + ctrl.offset, readLen, reader);
     }
 }
