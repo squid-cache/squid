@@ -347,7 +347,7 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
 
         const auto maxSize = min(Config.maxReplyHeaderSize, std::numeric_limits<decltype(ctrl.size)>::max());
         if (ctrl.offset >= maxSize) {
-            debugs(9, 2, "FTP control reply will exceed reply_header_max_size=" << Config.maxReplyHeaderSize);
+            debugs(9, 2, "FTP control reply size will exceed " << maxSize << "; reply_header_max_size=" << Config.maxReplyHeaderSize);
             failed(ERR_FTP_FAILURE, 0);
             return;
         }
