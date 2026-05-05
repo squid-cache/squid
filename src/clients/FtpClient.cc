@@ -371,9 +371,9 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
         // Do not accumulate more than Config.maxReplyHeaderSize bytes,
         // even if we happened to have enough buffer space to do so.
         const auto maxOffset = min(ctrl.size, Config.maxReplyHeaderSize);
-        Assure(endOffset > ctrl.offset); // we can make progress (and no underflows)
-        Assure(endOffset <= ctrl.size); // paranoid: we will not read beyond our buffer space
-        const auto maxReadSize = endOffset - ctrl.offset;
+        Assure(maxOffset > ctrl.offset); // we can make progress (and no underflows)
+        Assure(maxOffset <= ctrl.size); // paranoid: we will not read beyond our buffer space
+        const auto maxReadSize = maxOffset - ctrl.offset;
         comm_read(ctrl.conn, ctrl.buf + ctrl.offset, readLen, reader);
     }
 }
