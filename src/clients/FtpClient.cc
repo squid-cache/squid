@@ -345,14 +345,16 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
             commUnsetConnTimeout(data.conn);
         }
 
-        if (ctrl.offset >= Config.maxReplyHeaderSize) {
+        const auto maxSize = min(Config.maxReplyHeaderSize, std::numeric_limits<decltype(ctrl.size)>::max());
+        if (ctrl.offset >= maxSize) {
             debugs(9, 2, "FTP control reply will exceed reply_header_max_size=" << Config.maxReplyHeaderSize);
             failed(ERR_FTP_FAILURE, 0);
             return;
         }
 
         if (ctrl.offset == ctrl.size) {
-            const auto newSize = (ctrl.size > SIZE_MAX / 2) ? Config.maxReplyHeaderSize : min(ctrl.size*2, Config.maxReplyHeaderSize);
+            const auto maxSize = min(Config.maxReplyHeaderSize, std::numeric_limits<decltype(ctrl.size)>::max());
+            const auto newSize = (ctrl.size <= maxSize/2) ? (ctrl.size*2) : maxSize;
             Assure(newSize > ctrl.size);
             ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, newSize, &ctrl.size));
             Assure(ctrl.offset < ctrl.size);
