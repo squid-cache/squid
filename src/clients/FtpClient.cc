@@ -353,7 +353,6 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
         }
 
         if (ctrl.offset == ctrl.size) {
-            const auto maxSize = min(Config.maxReplyHeaderSize, std::numeric_limits<decltype(ctrl.size)>::max());
             const auto newSize = (ctrl.size <= maxSize/2) ? (ctrl.size*2) : maxSize;
             Assure(newSize > ctrl.size);
             ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, newSize, &ctrl.size));
