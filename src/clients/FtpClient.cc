@@ -352,7 +352,7 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
         }
 
         if (ctrl.offset == ctrl.size) {
-            const auto newSize = min(ctrl.size << 1, Config.maxReplyHeaderSize);
+            const auto newSize = min(ctrl.size*2, Config.maxReplyHeaderSize);
             ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, newSize, &ctrl.size));
             Assure(ctrl.offset < ctrl.size);
         }
@@ -374,7 +374,7 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
         Assure(maxOffset > ctrl.offset); // we can make progress (and no underflows)
         Assure(maxOffset <= ctrl.size); // paranoid: we will not read beyond our buffer space
         const auto maxReadSize = maxOffset - ctrl.offset;
-        comm_read(ctrl.conn, ctrl.buf + ctrl.offset, readLen, reader);
+        comm_read(ctrl.conn, ctrl.buf + ctrl.offset, maxReadSize, reader);
     }
 }
 
