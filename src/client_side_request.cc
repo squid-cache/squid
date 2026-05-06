@@ -1863,12 +1863,6 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
 
         request_satisfaction_mode = true;
         request_satisfaction_offset = 0;
-
-        // make sure that CONNECT will be closed
-        if (request->method == Http::METHOD_CONNECT) {
-            request->flags.proxyKeepalive = false;
-        }
-
         storeEntry()->replaceHttpReply(new_rep);
         storeEntry()->timestampsSet();
 
