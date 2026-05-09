@@ -108,6 +108,10 @@ accessLogLogTo(CustomLog *log, const AccessLogEntryPointer &al, ACLChecklist *ch
                 Log::Format::SquidUserAgent(al, log->logfile);
                 break;
 
+            case Log::Format::CLF_CEF:
+                Log::Format::SquidCEF(al, log->logfile);
+                break;
+
             case Log::Format::CLF_CUSTOM:
                 Log::Format::SquidCustom(al, log);
                 break;

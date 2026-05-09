@@ -70,6 +70,7 @@ void SquidNative(const AccessLogEntryPointer &, Logfile *) STUB
 void SquidIcap(const AccessLogEntryPointer &, Logfile *) STUB
 void SquidUserAgent(const AccessLogEntryPointer &, Logfile *) STUB
 void SquidReferer(const AccessLogEntryPointer &, Logfile *) STUB
+void SquidCEF(const AccessLogEntryPointer &, Logfile *) STUB
 void SquidCustom(const AccessLogEntryPointer &, CustomLog *) STUB
 void HttpdCommon(const AccessLogEntryPointer &, Logfile *) STUB
 void HttpdCombined(const AccessLogEntryPointer &, Logfile *) STUB

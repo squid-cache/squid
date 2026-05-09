@@ -25,6 +25,7 @@ namespace Format
 
 typedef enum {
     CLF_UNKNOWN,
+    CLF_CEF,
     CLF_COMBINED,
     CLF_COMMON,
     CLF_CUSTOM,
@@ -48,6 +49,9 @@ void SquidUserAgent(const AccessLogEntryPointer &al, Logfile * logfile);
 
 /// Display log details in Squid old refererlog format.
 void SquidReferer(const AccessLogEntryPointer &al, Logfile * logfile);
+
+/// Display log details in Squid CEF format.
+void SquidCEF(const AccessLogEntryPointer &al, Logfile * logfile);
 
 /// Log with a local custom format
 void SquidCustom(const AccessLogEntryPointer &al, CustomLog * log);

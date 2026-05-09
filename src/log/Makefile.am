@@ -25,6 +25,7 @@ liblog_la_SOURCES = \
 	FormatHttpdCommon.cc \
 	FormatSquidCustom.cc \
 	FormatSquidIcap.cc \
+	FormatSquidCEF.cc \
 	FormatSquidNative.cc \
 	FormatSquidReferer.cc \
 	FormatSquidUseragent.cc \
