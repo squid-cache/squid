@@ -29,7 +29,7 @@ namespace {
 
 /// Transport protocol Squid used for this transaction, derived from the log
 /// tag prefix (TCP_*, UDP_*, ICP_*).
-static char *
+static const char *
 CefTransport(const LogTags_ot tag)
 {
     switch (tag) {
