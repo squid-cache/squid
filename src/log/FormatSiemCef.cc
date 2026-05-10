@@ -96,7 +96,7 @@ CefSeverity(const AccessLogEntry &al)
     case LOG_TCP_REFRESH_UNMODIFIED:
     case LOG_TCP_REFRESH_FAIL_OLD:
     case LOG_UDP_HIT:
-        return 0;
+        return 1;
 
     case LOG_TCP_MISS:
     case LOG_TCP_REFRESH:
@@ -109,12 +109,12 @@ CefSeverity(const AccessLogEntry &al)
         return 1;
 
     case LOG_TCP_REDIRECT:
-        return 2;
+        return 1;
 
     case LOG_TCP_DENIED:
     case LOG_TCP_DENIED_REPLY:
         // 401/407 are routine auth handshakes; 403 et al. are policy blocks
-        return (httpCode == 401 || httpCode == 407) ? 2 : 3;
+        return (httpCode == 401 || httpCode == 407) ? 1 : 3;
 
     case LOG_UDP_DENIED:
         return 3;
@@ -131,7 +131,8 @@ CefSeverity(const AccessLogEntry &al)
 
     if (httpCode >= 500) return 4;
     if (httpCode >= 400) return 3;
-    return 1;
+    
+    return 0;
 }
 
 /// Stream `[data, data+len)` to `os`, escaping the CEF header-reserved bytes

@@ -5261,17 +5261,17 @@ logformat useragent  %>a [%tl] "%{User-Agent}>h"
 		Severity reflects what Squid did with the transaction
 		(LogTags and error category) rather than the upstream
 		HTTP status:
-		  0  cache hit (TCP_HIT and similar)
-		  1  forwarded traffic / cache miss (TCP_MISS, TCP_TUNNEL,
-		     refresh, ICP query, ...)
-		  2  TCP_REDIRECT, or TCP_DENIED with 401/407 auth challenge
+		  1  routine activity: cache hit (TCP_HIT and similar),
+		     forwarded traffic / cache miss (TCP_MISS, TCP_TUNNEL,
+		     refresh, ICP query, ...), TCP_REDIRECT, or TCP_DENIED
+		     with a 401/407 auth challenge
 		  3  TCP_DENIED policy block (e.g. 403), UDP_DENIED, or a
 		     Squid access/invalid-request error
 		  4  operational issue: connection/DNS/timeout failure,
 		     ICAP failure, swap failure, UDP_INVALID, or a 5xx with
 		     no other classification
 		Falls back to HTTP code only when no Squid signal is set
-		(>=500 -> 4, >=400 -> 3, otherwise 1).
+		(>=500 -> 4, >=400 -> 3, otherwise 0).
 
 		Extension fields (omitted when empty):
 		  rt          receipt time (ms since epoch)
