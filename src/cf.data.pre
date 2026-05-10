@@ -5247,7 +5247,7 @@ logformat combined   %>a - %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h
 logformat referrer   %ts.%03tu %>a %{Referer}>h %ru
 logformat useragent  %>a [%tl] "%{User-Agent}>h"
 
-	The "cef" format produces ArcSight Common Event Format (CEF) lines
+	The "cef" format produces Common Event Format (CEF) lines
 	for SIEM ingestion. It is emitted by Squid directly so that
 	CEF-reserved bytes ('|' and '\\' in the header, '=' / CR / LF in
 	extensions) are escaped per the spec, and so that values not

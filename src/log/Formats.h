@@ -50,9 +50,6 @@ void SquidUserAgent(const AccessLogEntryPointer &al, Logfile * logfile);
 /// Display log details in Squid old refererlog format.
 void SquidReferer(const AccessLogEntryPointer &al, Logfile * logfile);
 
-/// Display log details in Squid CEF format.
-void SquidCEF(const AccessLogEntryPointer &al, Logfile * logfile);
-
 /// Log with a local custom format
 void SquidCustom(const AccessLogEntryPointer &al, CustomLog * log);
 
@@ -61,6 +58,9 @@ void HttpdCommon(const AccessLogEntryPointer &al, Logfile * logfile);
 
 /// Log with Apache httpd combined format
 void HttpdCombined(const AccessLogEntryPointer &al, Logfile * logfile);
+
+/// Display log details in SIEM Common Event Format.
+void SiemCef(const AccessLogEntryPointer &al, Logfile * logfile);
 
 }; // namespace Format
 }; // namespace Log

@@ -6,7 +6,7 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 46    Access Log - Squid CEF format */
+/* DEBUG: section 46    Access Log - SIEM CEF format */
 
 #include "squid.h"
 #include "AccessLogEntry.h"
@@ -17,7 +17,7 @@
 #include "HttpRequest.h"
 #include "log/File.h"
 #include "log/Formats.h"
-#include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "time/gadgets.h"
 #include "tools.h"
 
@@ -29,8 +29,8 @@ namespace {
 
 /// Transport protocol Squid used for this transaction, derived from the log
 /// tag prefix (TCP_*, UDP_*, ICP_*).
-const char *
-cefTransport(const LogTags_ot tag)
+static char *
+CefTransport(const LogTags_ot tag)
 {
     switch (tag) {
     case LOG_UDP_HIT:
@@ -48,8 +48,8 @@ cefTransport(const LogTags_ot tag)
 /// CEF severity (0..10) describing what Squid did with the transaction.
 /// We prefer Squid's own signals (LogTags, error category) over the upstream
 /// HTTP status, since they reflect proxy behavior rather than origin replies.
-int
-cefSeverity(const AccessLogEntry &al)
+static int
+CefSeverity(const AccessLogEntry &al)
 {
     const auto httpCode = al.http.code;
 
@@ -134,112 +134,79 @@ cefSeverity(const AccessLogEntry &al)
     return 1;
 }
 
-/// Append `[data, data+len)` to `out`, escaping the CEF header-reserved bytes
+/// Stream `[data, data+len)` to `os`, escaping the CEF header-reserved bytes
 /// '\\' and '|' with a leading backslash.
 /// Reference: https://docs.microfocus.com/doc/2097/26.1/siemcefimplementationstandard#Character_encoding
 void
-appendHeader(SBuf &out, const char *data, const size_t len)
+appendHeader(std::ostream &os, const char *data, const size_t len)
 {
     if (!data) return;
     for (size_t i = 0; i < len; ++i) {
         const char c = data[i];
         if (c == '\\' || c == '|')
-            out.append('\\');
-        out.append(c);
+            os.put('\\');
+        os.put(c);
     }
 }
 
-void
-appendHeader(SBuf &out, const char *cstr)
+inline void
+appendHeader(std::ostream &os, const char *cstr)
 {
-    if (cstr) appendHeader(out, cstr, strlen(cstr));
-}
-
-/// Append `[data, data+len)` to `out`, escaping the CEF extension-reserved
-/// bytes '\\', '=', CR, LF.
-/// Reference: https://docs.microfocus.com/doc/2097/26.1/siemcefimplementationstandard#Character_encoding
-void
-appendExt(SBuf &out, const char *data, const size_t len)
-{
-    if (!data) return;
-    for (size_t i = 0; i < len; ++i) {
-        switch (data[i]) {
-        case '\\':
-            out.append("\\\\", 2);
-            break;
-        case '=':
-            out.append("\\=", 2);
-            break;
-        case '\r':
-            out.append("\\r", 2);
-            break;
-        case '\n':
-            out.append("\\n", 2);
-            break;
-        default:
-            out.append(data[i]);
-            break;
-        }
-    }
-}
-
-void
-appendExt(SBuf &out, const char *cstr)
-{
-    if (cstr) appendExt(out, cstr, strlen(cstr));
-}
-
-void
-appendExt(SBuf &out, const SBuf &s)
-{
-    appendExt(out, s.rawContent(), s.length());
+    if (cstr) appendHeader(os, cstr, strlen(cstr));
 }
 
 class FieldWriter
 {
 public:
-    explicit FieldWriter(SBuf &o): out(o) {}
+    explicit FieldWriter(std::ostream &o): out(o) {}
 
-    void str(const char *key, const char *value) {
-        if (!value || !*value) return;
-        prefix(key);
-        appendExt(out, value);
+    /// Writes ` key=value` for any value type that std::ostream knows how to
+    /// format (integers, const char* literals, etc.). Skips escaping; only
+    /// safe for caller-controlled values free of CEF-reserved bytes.
+    template <class T>
+    void put(const char *key, const T &value) {
+        out << ' ' << key << '=' << value;
     }
 
-    void str(const char *key, const SBuf &value) {
+    /// Writes ` key=value` with the value escaped per CEF extension rules.
+    void putStr(const char *key, const char *value) {
+        if (!value || !*value) return;
+        out << ' ' << key << '=';
+        appendExt(out, value, strlen(value));
+    }
+
+    void putStr(const char *key, const SBuf &value) {
         if (value.isEmpty()) return;
-        prefix(key);
-        appendExt(out, value);
-    }
-
-    void literal(const char *key, const char *value) {
-        if (!value || !*value) return;
-        prefix(key);
-        out.append(value);
-    }
-
-    void integer(const char *key, const int64_t value) {
-        prefix(key);
-        out.appendf("%" PRId64, value);
+        out << ' ' << key << '=';
+        appendExt(out, value.rawContent(), value.length());
     }
 
 private:
-    void prefix(const char *key) {
-        if (!first)
-            out.append(' ');
-        first = false;
-        out.append(key);
-        out.append('=');
-    }
+    std::ostream &out;
 
-    SBuf &out;
-    bool first = true;
+    /// Stream `[data, data+len)` to `os`, escaping the CEF extension-reserved
+    /// bytes '\\', '=', CR, LF.
+    /// Reference: https://docs.microfocus.com/doc/2097/26.1/siemcefimplementationstandard#Character_encoding
+    static void
+    appendExt(std::ostream &os, const char *data, const size_t len)
+    {
+        if (!data) return;
+        for (size_t i = 0; i < len; ++i) {
+            switch (data[i]) {
+            case '\\': os << "\\\\"; break;
+            case '=':  os << "\\=";  break;
+            case '\r': os << "\\r";  break;
+            case '\n': os << "\\n";  break;
+            default:   os.put(data[i]); break;
+            }
+        }
+    }
 };
 
 } // namespace
 
 void
-Log::Format::SquidCEF(const AccessLogEntry::Pointer &al, Logfile *logfile)
+Log::Format::SiemCef(const AccessLogEntry::Pointer &al, Logfile *logfile)
 {
     char clientIp[MAX_IPSTRLEN];
     al->getLogClientIp(clientIp, MAX_IPSTRLEN);
@@ -286,123 +253,113 @@ Log::Format::SquidCEF(const AccessLogEntry::Pointer &al, Logfile *logfile)
         appProto.appendf("/%u.%u", al->http.version.major, al->http.version.minor);
     }
 
-    const char *cacheCode = al->cache.code.c_str();
-    const char *hierCode = hier_code_str[al->hier.code];
+    const auto cacheCode = al->cache.code.c_str();
+    const auto hierCode = hier_code_str[al->hier.code];
 
     const auto startMs = static_cast<long long>(al->cache.start_time.tv_sec) * 1000LL +
                          (al->cache.start_time.tv_usec / 1000);
     const auto trtMs = tvToMsec(al->cache.trTime);
     const auto endMs = (trtMs >= 0) ? (startMs + trtMs) : -1;
 
-    SBuf out;
-    // Most CEF lines fall in the 512-1024 byte range; reserve once to avoid
-    // re-grow churn during the many small appends below.
-    // NOTE: The following things need to be considered:
-    // - Long URLs or User-Agent strings may exceed this reservation.
-    // - Estimation by sampling logs of single user browsing throughout one day.
-    out.reserveSpace(1024);
+    SBufStream out;
 
-    // CEF header field order per ArcSight CEF Implementation Standard:
+    // CEF header field order per CEF Implementation Standard:
     // https://docs.microfocus.com/doc/2097/26.1/siemcefimplementationstandard#Header_information
     /* Header: CEF:Version|Vendor|Product|DeviceVersion|SignatureID|Name|Severity| */
-    out.append("CEF:0|", 6);
-    appendHeader(out, "Squid");
-    out.append('|');
-    appendHeader(out, "Squid Cache");
-    out.append('|');
+    out << "CEF:0|Squid|Squid Cache|";
     appendHeader(out, VERSION);
-    out.append('|');
+    out << '|';
     appendHeader(out, cacheCode);
-    out.append('|');
-    appendHeader(out, "Proxy Request");
-    out.appendf("|%d|", cefSeverity(*al));
+    out << "|Proxy Request|" << CefSeverity(*al) << '|';
 
-    // CEF extensions are space-separated key=value pairs; key names are drawn
-    // from the ArcSight CEF Extensions dictionary:
+    // CEF extensions are space-separated key=value pairs; FieldWriter::put()
+    // emits the leading space for us. Key names are drawn from the CEF
+    // Extensions dictionary:
     // https://docs.microfocus.com/doc/2097/26.1/ab6eeee4916c_arcsight_extensions
     /* Extensions: key1=value1 key2=value2 ... */
     FieldWriter w(out);
 
     /* Time (rt = receipt time; start/end mark activity boundaries) */
     if (al->cache.start_time.tv_sec > 0) {
-        w.integer("rt", startMs);
-        w.integer("start", startMs);
+        w.put("rt", startMs);
+        w.put("start", startMs);
         if (endMs >= 0)
-            w.integer("end", endMs);
+            w.put("end", endMs);
     }
 
     /* Client side */
     if (clientIp[0] && !(clientIp[0] == '-' && clientIp[1] == '\0'))
-        w.str("src", clientIp);
+        w.putStr("src", clientIp);
     if (clientPort > 0)
-        w.integer("spt", clientPort);
+        w.put("spt", clientPort);
 
     /* Squid (device) end of the client TCP connection */
     if (dvcAddr[0])
-        w.str("dvc", dvcAddr);
-    w.str("dvchost", getMyHostname());
+        w.putStr("dvc", dvcAddr);
+    w.putStr("dvchost", getMyHostname());
 
     /* Server side */
     if (serverIp[0])
-        w.str("dst", serverIp);
+        w.putStr("dst", serverIp);
     if (serverPort > 0)
-        w.integer("dpt", serverPort);
-    w.str("dhost", urlHost);
+        w.put("dpt", serverPort);
+    w.putStr("dhost", urlHost);
 
     /* Protocol */
-    w.literal("proto", cefTransport(al->cache.code.oldType));
-    w.str("app", appProto);
+    w.put("proto", CefTransport(al->cache.code.oldType));
+    w.putStr("app", appProto);
 
     /* User */
-    w.str("suser", user);
+    w.putStr("suser", user);
 
     /* Request line */
-    w.str("requestMethod", method);
-    w.str("request", al->url);
-    w.str("requestClientApplication", agent);
+    w.putStr("requestMethod", method);
+    w.putStr("request", al->url);
+    w.putStr("requestClientApplication", agent);
 
     /* Bytes */
-    w.integer("in", static_cast<int64_t>(al->http.clientRequestSz.messageTotal()));
-    w.integer("out", static_cast<int64_t>(al->http.clientReplySz.messageTotal()));
+    w.put("in", al->http.clientRequestSz.messageTotal());
+    w.put("out", al->http.clientReplySz.messageTotal());
 
     /* Action / outcome */
-    w.str("act", cacheCode);
-    w.literal("outcome", al->http.code >= 400 ? "failure" : "success");
+    w.putStr("act", cacheCode);
+    w.put("outcome", al->http.code >= 400 ? "failure" : "success");
 
     /* Response time (ms). cn1 is a numeric custom field; cn1Label names it. */
     if (trtMs >= 0) {
-        w.integer("cn1", trtMs);
-        w.literal("cn1Label", "ResponseTime");
+        w.put("cn1", trtMs);
+        w.put("cn1Label", "ResponseTime");
     }
 
     /* HTTP status code (cn2) */
     if (al->http.code > 0) {
-        w.integer("cn2", al->http.code);
-        w.literal("cn2Label", "HttpStatus");
+        w.put("cn2", al->http.code);
+        w.put("cn2Label", "HttpStatus");
     }
 
     /* Referer (cs1) */
     if (referer && *referer) {
-        w.str("cs1", referer);
-        w.literal("cs1Label", "Referer");
+        w.putStr("cs1", referer);
+        w.put("cs1Label", "Referer");
     }
 
     /* Hierarchy code (cs2) */
     if (hierCode && *hierCode) {
-        w.str("cs2", hierCode);
-        w.literal("cs2Label", "Hierarchy");
+        w.putStr("cs2", hierCode);
+        w.put("cs2Label", "Hierarchy");
     }
 
     /* Response Content-Type */
-    w.str("fileType", al->http.content_type);
+    w.putStr("fileType", al->http.content_type);
 
     /* Reason for failure */
     if (const auto err = al->error()) {
         if (err->category != ERR_NONE)
-            w.str("reason", errorTypeName(err->category));
+            w.putStr("reason", errorTypeName(err->category));
     }
 
-    out.append('\n');
-    logfileWrite(logfile, out.rawContent(), out.length());
+    out << '\n';
+    const auto buf = out.buf();
+    logfileWrite(logfile, buf.rawContent(), buf.length());
 }
 

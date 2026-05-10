@@ -109,7 +109,7 @@ accessLogLogTo(CustomLog *log, const AccessLogEntryPointer &al, ACLChecklist *ch
                 break;
 
             case Log::Format::CLF_CEF:
-                Log::Format::SquidCEF(al, log->logfile);
+                Log::Format::SiemCef(al, log->logfile);
                 break;
 
             case Log::Format::CLF_CUSTOM:
