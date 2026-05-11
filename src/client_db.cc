@@ -417,8 +417,8 @@ clientdbStartGC(void)
 
 #if SQUID_SNMP
 
-Ip::Address *
-client_entry(Ip::Address *current)
+const Ip::Address *
+client_entry(const Ip::Address *current)
 {
     char key[MAX_IPSTRLEN];
     hash_first(client_table);
@@ -449,9 +449,9 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     MemBuf tmp;
     debugs(49, 6, "Current : length=" << Var->name_length << ": " << snmpDebugOid(Var->name, Var->name_length, tmp));
     if (Var->name_length == 16) {
-        oid2addr(&(Var->name[12]), keyIp, 4);
+        keyIp = oid2addr(&(Var->name[12]), 4).value();
     } else if (Var->name_length == 28) {
-        oid2addr(&(Var->name[12]), keyIp, 16);
+        keyIp = oid2addr(&(Var->name[12]), 16).value();
     } else {
         *ErrP = SNMP_ERR_NOSUCHNAME;
         return nullptr;
