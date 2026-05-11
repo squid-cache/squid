@@ -38,7 +38,7 @@ ClientInfo * clientdbGetInfo(const Ip::Address &addr);
 #endif
 
 #if SQUID_SNMP
-Ip::Address *client_entry(Ip::Address *current);
+const Ip::Address *client_entry(const Ip::Address *);
 variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif
 

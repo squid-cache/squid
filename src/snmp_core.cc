@@ -781,7 +781,7 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 {
     oid *instance = nullptr;
     Ip::Address laddr;
-    Ip::Address *aux;
+    const Ip::Address *aux;
     int size = 0;
     int newshift = 0;
 
@@ -807,9 +807,8 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
             *len += size ;
         }
     } else {
-        int shift = *len - current->len ; // i.e 4 or 16
-        oid2addr(&name[*len - shift], laddr,shift);
-        aux = client_entry(&laddr);
+        const auto ip = oid2addr(&name[current->len], *len - current->len);
+        aux = ip ? client_entry(&ip.value()) : nullptr;
         if (aux)
             laddr = *aux;
         else
@@ -1048,7 +1047,7 @@ snmpCreateOid(int length,...)
  * Debug calls, prints out the OID for debugging purposes.
  */
 const char *
-snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf)
+snmpDebugOid(const oid * const Name, const snint Len, MemBuf &outbuf)
 {
     char mbuf[16];
     int x;
@@ -1105,26 +1104,30 @@ addr2oid(Ip::Address &addr, oid * Dest)
    oid == 32.1.50.239.162.33.251.20.50.0.0.0.0.0.0.0.0.0.1 ==>
    IPv6 address : 20:01:32:ef:a2:21:fb:32:00:00:00:00:00:00:00:00:OO:01
 */
-void
-oid2addr(oid * id, Ip::Address &addr, u_int size)
+std::optional<Ip::Address>
+oid2addr(const oid * const id, const size_t size)
 {
+    MemBuf tmp;
+    debugs(49, 7, "oid=" << snmpDebugOid(id, size, tmp));
+
     struct in_addr i4addr;
     struct in6_addr i6addr;
     u_int i;
     u_char *cp;
     if ( size == sizeof(struct in_addr) )
         cp = (u_char *) &(i4addr.s_addr);
-    else
+    else if ( size == sizeof(struct in6_addr) )
         cp = (u_char *) &(i6addr);
-    MemBuf tmp;
-    debugs(49, 7, "oid2addr: id : " << snmpDebugOid(id, size, tmp) );
+    else
+        return std::nullopt;
+
     for (i=0 ; i<size; ++i) {
         cp[i] = id[i];
     }
     if ( size == sizeof(struct in_addr) )
-        addr = i4addr;
+        return i4addr;
     else
-        addr = i6addr;
+        return i6addr;
 }
 
 int
