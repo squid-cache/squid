@@ -823,10 +823,16 @@ Ftp::Client::dataClosed(const CommCloseCbParams &)
 void
 Ftp::Client::writeCommand(const char *buf)
 {
-    // Check that the command ends with "\r\n" and reject any CR or LF characters in the command.
-    const auto len = strlen(buf);
-    if (len < 2 || buf[len-2] != '\r' || buf[len-1] != '\n' || strcspn(buf, crlf) != len-2) {
-        debugs(9, 2, "refuse to write malformed FTP command");
+    const auto bufLen = strlen(buf);
+
+    // The caller must supply a non-empty command followed by CRLF.
+    // TODO: Move CRLF appending code from callers to here.
+    Assure(bufLen > 2);
+    Assure(buf[bufLen-2] == '\r');
+    Assure(buf[bufLen-1] != '\n');
+    const auto crlfIndex = strcspn(buf, crlf);
+    if (crlfIndex != bufLen-2) {
+        debugs(9, 2, "cannot write malformed FTP command: "<<buf[crlfIndex]<<" found at index "<<crlfIndex);
         failed(ERR_FTP_FAILURE, 0);
         return;
     }
