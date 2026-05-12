@@ -22,5 +22,5 @@ basic_radius_auth_LDADD= \
 	$(top_builddir)/src/base/libbase.la \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
-	$(SSLLIB) \
+	$(LIBOPENSSL_LIBS) \
 	$(XTRA_LIBS)

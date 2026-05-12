@@ -19,7 +19,7 @@
 AccessLogEntry::~AccessLogEntry() {STUB}
 void AccessLogEntry::getLogClientIp(char *, size_t) const STUB
 SBuf AccessLogEntry::getLogMethod() const STUB_RETVAL(SBuf())
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 AccessLogEntry::SslDetails::SslDetails() {STUB}
 #endif
 */

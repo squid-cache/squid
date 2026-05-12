@@ -15,7 +15,7 @@
 #include "Parsing.h"
 #include "security/PeerOptions.h"
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -74,7 +74,7 @@ Security::PeerOptions::parse(const char *token)
         caFiles.emplace_back(SBuf(token + 7));
     } else if (strncmp(token, "capath=", 7) == 0) {
         caDir = SBuf(token + 7);
-#if !USE_OPENSSL
+#if !HAVE_LIBOPENSSL
         debugs(3, DBG_PARSE_NOTE(1), "WARNING: capath= option requires --with-openssl.");
 #endif
     } else if (strncmp(token, "crlfile=", 8) == 0) {
@@ -165,7 +165,7 @@ Security::PeerOptions::updateTlsVersionLimits()
             // only account for TLS here - SSL versions are handled by options= parameter
             // avoid affecting options= parameter in cachemgr config report
             SBuf add;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
             if (v > 0)
                 add.append(":NO_TLSv1");
             if (v > 1)
@@ -201,28 +201,28 @@ Security::PeerOptions::updateTlsVersionLimits()
         const char *add = nullptr;
         switch (sslVersion) {
         case 3:
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
             add = ":NO_TLSv1:NO_TLSv1_1:NO_TLSv1_2:NO_TLSv1_3";
 #elif HAVE_LIBGNUTLS
             add = ":-VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2:-VERS-TLS1.3";
 #endif
             break;
         case 4:
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
             add = ":NO_SSLv3:NO_TLSv1_1:NO_TLSv1_2:NO_TLSv1_3";
 #elif HAVE_LIBGNUTLS
             add = ":+VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2:-VERS-TLS1.3";
 #endif
             break;
         case 5:
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
             add = ":NO_SSLv3:NO_TLSv1:NO_TLSv1_2:NO_TLSv1_3";
 #elif HAVE_LIBGNUTLS
             add = ":-VERS-TLS1.0:+VERS-TLS1.1:-VERS-TLS1.2:-VERS-TLS1.3";
 #endif
             break;
         case 6:
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
             add = ":NO_SSLv3:NO_TLSv1:NO_TLSv1_1:NO_TLSv1_3";
 #elif HAVE_LIBGNUTLS
             add = ":-VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.3";
@@ -246,7 +246,7 @@ Security::ContextPointer
 Security::PeerOptions::createBlankContext() const
 {
     Security::ContextPointer ctx;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::Initialize();
 
     SSL_CTX *t = SSL_CTX_new(TLS_client_method());
@@ -281,7 +281,7 @@ Security::PeerOptions::createClientContext(bool setOptions)
     if (t) {
         if (setOptions)
             updateContextOptions(t);
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
         Ssl::InitClientContext(t, *this, parsedFlags);
 #endif
@@ -294,7 +294,7 @@ Security::PeerOptions::createClientContext(bool setOptions)
     return t;
 }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 /// set of options we can parse and what they map to
 static struct ssl_option {
     const char *name;
@@ -437,7 +437,7 @@ static struct ssl_option {
         nullptr, 0
     }
 };
-#endif /* USE_OPENSSL */
+#endif /* HAVE_LIBOPENSSL */
 
 /**
  * Pre-parse TLS options= parameter to be applied when the TLS objects created.
@@ -458,7 +458,7 @@ Security::PeerOptions::parseOptions()
     str.append(sslOptions);
     str.append(tlsMinOptions);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     ::Parser::Tokenizer tok(str);
     ParsedOptions op = 0;
 
@@ -621,7 +621,7 @@ Security::PeerOptions::loadCrlFile()
     if (crlFile.isEmpty())
         return;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     BIO *in = BIO_new_file(crlFile.c_str(), "r");
     if (!in) {
         debugs(83, 2, "WARNING: Failed to open CRL file " << crlFile);
@@ -639,7 +639,7 @@ void
 Security::PeerOptions::updateContextOptions(Security::ContextPointer &ctx)
 {
     parseOptions();
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     SSL_CTX_set_options(ctx.get(), parsedOptions);
 #elif HAVE_LIBGNUTLS
     // NP: GnuTLS uses 'priorities' which are set only per-session instead.
@@ -649,7 +649,7 @@ Security::PeerOptions::updateContextOptions(Security::ContextPointer &ctx)
 #endif
 }
 
-#if USE_OPENSSL && defined(TLSEXT_TYPE_next_proto_neg)
+#if HAVE_LIBOPENSSL && defined(TLSEXT_TYPE_next_proto_neg)
 // Dummy next_proto_neg callback
 static int
 ssl_next_proto_cb(SSL *, unsigned char **out, unsigned char *outlen, const unsigned char *in, unsigned int inlen, void * /* arg */)
@@ -666,7 +666,7 @@ Security::PeerOptions::updateContextNpn(Security::ContextPointer &ctx)
     if (!flags.tlsNpn)
         return;
 
-#if USE_OPENSSL && defined(TLSEXT_TYPE_next_proto_neg)
+#if HAVE_LIBOPENSSL && defined(TLSEXT_TYPE_next_proto_neg)
     SSL_CTX_set_next_proto_select_cb(ctx.get(), &ssl_next_proto_cb, nullptr);
 #else
     // NOTE: GnuTLS does not support the obsolete NPN extension.
@@ -679,7 +679,7 @@ static const char *
 loadSystemTrustedCa(Security::ContextPointer &ctx)
 {
     debugs(83, 8, "Setting default system Trusted CA. ctx=" << (void*)ctx.get());
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (SSL_CTX_set_default_verify_paths(ctx.get()) == 0)
         return Security::ErrorString(ERR_get_error());
 
@@ -696,7 +696,7 @@ void
 Security::PeerOptions::updateContextCa(Security::ContextPointer &ctx)
 {
     debugs(83, 8, "Setting CA certificate locations.");
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (const char *path = caDir.isEmpty() ? nullptr : caDir.c_str()) {
         if (!SSL_CTX_load_verify_locations(ctx.get(), nullptr, path)) {
             const auto x = ERR_get_error();
@@ -705,7 +705,7 @@ Security::PeerOptions::updateContextCa(Security::ContextPointer &ctx)
     }
 #endif
     for (auto i : caFiles) {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         if (!SSL_CTX_load_verify_locations(ctx.get(), i.c_str(), nullptr)) {
             const auto x = ERR_get_error();
             debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate location " <<
@@ -731,7 +731,7 @@ Security::PeerOptions::updateContextCa(Security::ContextPointer &ctx)
 void
 Security::PeerOptions::updateContextCrl(Security::ContextPointer &ctx)
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     bool verifyCrl = false;
     X509_STORE *st = SSL_CTX_get_cert_store(ctx.get());
     if (parsedCrl.size()) {
@@ -750,15 +750,15 @@ Security::PeerOptions::updateContextCrl(Security::ContextPointer &ctx)
         X509_STORE_set_flags(st, X509_V_FLAG_CRL_CHECK);
 #endif
 
-#else /* USE_OPENSSL */
+#else /* HAVE_LIBOPENSSL */
     (void)ctx;
-#endif /* USE_OPENSSL */
+#endif /* HAVE_LIBOPENSSL */
 }
 
 void
 Security::PeerOptions::updateContextTrust(Security::ContextPointer &ctx)
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #if defined(X509_V_FLAG_PARTIAL_CHAIN)
     const auto st = SSL_CTX_get_cert_store(ctx.get());
     assert(st);
@@ -779,7 +779,7 @@ void
 Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
 {
     parseOptions();
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     debugs(83, 5, "set OpenSSL options for session=" << s << ", parsedOptions=" << parsedOptions);
     // XXX: Options already set before (via the context) are not cleared!
     SSL_set_options(s.get(), parsedOptions);

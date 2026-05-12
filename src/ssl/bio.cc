@@ -13,7 +13,7 @@
 #include "ssl/support.h"
 
 /* support.cc says this is needed */
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 
 #include "base/Raw.h"
 #include "comm.h"
@@ -628,5 +628,5 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
 #endif
 }
 
-#endif // USE_OPENSSL
+#endif // HAVE_LIBOPENSSL
 

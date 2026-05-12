@@ -11,7 +11,7 @@
 
 #include "security/PeerConnector.h"
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 
 namespace Ssl
 {
@@ -74,6 +74,6 @@ private:
 
 } // namespace Ssl
 
-#endif /* USE_OPENSSL */
+#endif /* HAVE_LIBOPENSSL */
 #endif /* SQUID_SRC_SSL_PEEKINGPEERCONNECTOR_H */
 

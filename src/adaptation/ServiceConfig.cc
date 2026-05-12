@@ -144,7 +144,7 @@ Adaptation::ServiceConfig::parse()
             grokked = grokBool(encrypt, name, value);
             connectionEncryption.configure(encrypt);
         } else if (strncmp(name, "ssl", 3) == 0 || strncmp(name, "tls-", 4) == 0) {
-#if !USE_OPENSSL
+#if !HAVE_LIBOPENSSL
             debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: adaptation option '" << name << "' requires --with-openssl. ICAP service option ignored.");
 #else
             // name prefix is "ssl" or "tls-"
@@ -246,7 +246,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
     }
 
     host.assign(s, len);
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (secure.sslDomain.isEmpty())
         secure.sslDomain.assign(host.rawBuf(), host.size());
 #endif

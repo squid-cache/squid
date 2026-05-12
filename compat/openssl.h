@@ -19,8 +19,8 @@
 #ifndef SQUID_COMPAT_OPENSSL_H
 #define SQUID_COMPAT_OPENSSL_H
 
-#if !USE_OPENSSL
-#error compat/openssl.h depends on USE_OPENSSL
+#if !HAVE_LIBOPENSSL
+#error compat/openssl.h depends on HAVE_LIBOPENSSL
 #endif
 
 #include <algorithm>

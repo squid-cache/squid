@@ -29,7 +29,7 @@
 #include "security/NegotiationHistory.h"
 #include "Store.h"
 #include "tools.h"
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/ErrorDetail.h"
 #include "ssl/ServerBump.h"
 #endif
@@ -951,7 +951,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             if (!out)
                 out = strOrNull(al->getExtUser());
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
             if (!out)
                 out = strOrNull(al->cache.ssluser);
 #endif
@@ -1225,7 +1225,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             dooff = 1;
             break;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         case LFT_SSL_BUMP_MODE: {
             const Ssl::BumpMode mode = static_cast<Ssl::BumpMode>(al->ssl.bumpMode);
             // for Ssl::bumpEnd, Ssl::bumpMode() returns NULL and we log '-'
