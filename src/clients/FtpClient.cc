@@ -142,7 +142,8 @@ Ftp::CtrlChannel::CtrlChannel():
     last_reply(nullptr),
     replycode(0)
 {
-    buf = static_cast<char*>(memAllocBuf(4096, &size));
+    // min() limits the initial read size when Config.maxReplyHeaderSize is huge
+    buf = static_cast<char*>(memAllocBuf(min(size_t(4096), Config.maxReplyHeaderSize), &size));
 }
 
 Ftp::CtrlChannel::~CtrlChannel()
@@ -344,6 +345,20 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
             commUnsetConnTimeout(data.conn);
         }
 
+        const auto maxSize = min(Config.maxReplyHeaderSize, std::numeric_limits<decltype(ctrl.size)>::max());
+        if (ctrl.offset >= maxSize) {
+            debugs(9, 2, "FTP control reply size will exceed " << maxSize << "; reply_header_max_size=" << Config.maxReplyHeaderSize);
+            failed(ERR_FTP_FAILURE, 0);
+            return;
+        }
+
+        if (ctrl.offset == ctrl.size) {
+            const auto newSize = (ctrl.size <= maxSize/2) ? (ctrl.size*2) : maxSize;
+            Assure(newSize > ctrl.size);
+            ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, newSize, &ctrl.size));
+            Assure(ctrl.offset < ctrl.size);
+        }
+
         const time_t tout = shortenReadTimeout ?
                             min(Config.Timeout.connect, Config.Timeout.read):
                             Config.Timeout.read;
@@ -355,7 +370,13 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
 
         typedef CommCbMemFunT<Client, CommIoCbParams> Dialer;
         AsyncCall::Pointer reader = JobCallback(9, 5, Dialer, this, Ftp::Client::readControlReply);
-        comm_read(ctrl.conn, ctrl.buf + ctrl.offset, ctrl.size - ctrl.offset, reader);
+        // Do not accumulate more than Config.maxReplyHeaderSize bytes,
+        // even if we happened to have enough buffer space to do so.
+        const auto maxOffset = min(ctrl.size, Config.maxReplyHeaderSize);
+        Assure(maxOffset > ctrl.offset); // we can make progress (and no underflows)
+        Assure(maxOffset <= ctrl.size); // paranoid: we will not read beyond our buffer space
+        const auto maxReadSize = maxOffset - ctrl.offset;
+        comm_read(ctrl.conn, ctrl.buf + ctrl.offset, maxReadSize, reader);
     }
 }
 
@@ -426,11 +447,6 @@ Ftp::Client::handleControlReply()
 
     if (!parseControlReply(bytes_used)) {
         /* didn't get complete reply yet */
-
-        if (ctrl.offset == ctrl.size) {
-            ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, ctrl.size << 1, &ctrl.size));
-        }
-
         scheduleReadControlReply(0);
         return;
     }
