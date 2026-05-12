@@ -827,7 +827,7 @@ Ftp::Client::writeCommand(const char *buf)
     const auto len = strlen(buf);
     Assure(len >= 2);
 
-    if(buf[len-2] != '\r' || buf[len-1] != '\n' || strcspn(buf, crlf) != len -2){
+    if(buf[len-2] != '\r' || buf[len-1] != '\n' || strcspn(buf, crlf) != len-2){
         debugs(9, 2, "refuse to write malformed FTP commands");
         failed(ERR_FTP_FAILURE, 0);
         return;
