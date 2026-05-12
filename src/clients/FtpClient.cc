@@ -822,10 +822,20 @@ Ftp::Client::dataClosed(const CommCloseCbParams &)
 
 void
 Ftp::Client::writeCommand(const char *buf)
-{
+{   
+    // Check that the command has the following format: <CMD> <argument>\r\n.
+    // Reject any CR or LF characters in the command.
+    const auto len = strlen(buf);
+    Assure(len >= 2);
+
+    if(buf[len-2] != '\r' || buf[len-1] != '\n' || strcspn(buf, crlf) != len -2){
+        debugs(9, 2, "refuse to write malformed FTP commands");
+        failed(ERR_FTP_FAILURE, 0);
+        return;
+    }
+
     char *ebuf;
     /* trace FTP protocol communications at level 2 */
-    debugs(9, 2, "ftp<< " << buf);
 
     if (Config.Ftp.telnet)
         ebuf = escapeIAC(buf);
