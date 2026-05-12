@@ -833,6 +833,7 @@ Ftp::Client::writeCommand(const char *buf)
 
     char *ebuf;
     /* trace FTP protocol communications at level 2 */
+    debugs(9, 2, "ftp<< " << buf);
 
     if (Config.Ftp.telnet)
         ebuf = escapeIAC(buf);
