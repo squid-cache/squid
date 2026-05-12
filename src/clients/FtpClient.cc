@@ -823,8 +823,7 @@ Ftp::Client::dataClosed(const CommCloseCbParams &)
 void
 Ftp::Client::writeCommand(const char *buf)
 {   
-    // Check that the command has the following format: <CMD> <argument>\r\n.
-    // Reject any CR or LF characters in the command.
+    // Check that the command ends with "\r\n" and reject any CR or LF characters in the command.
     const auto len = strlen(buf);
     Assure(len >= 2);
 
