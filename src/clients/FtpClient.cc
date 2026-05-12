@@ -829,7 +829,7 @@ Ftp::Client::writeCommand(const char *buf)
     // TODO: Move CRLF appending code from callers to here.
     Assure(bufLen > 2);
     Assure(buf[bufLen-2] == '\r');
-    Assure(buf[bufLen-1] != '\n');
+    Assure(buf[bufLen-1] == '\n');
     const auto crlfIndex = strcspn(buf, crlf);
     if (crlfIndex != bufLen-2) {
         debugs(9, 2, "cannot write malformed FTP command: "<<buf[crlfIndex]<<" found at index "<<crlfIndex);
