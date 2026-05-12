@@ -176,7 +176,7 @@ void Mgr::IoAction::dump(StoreEntry*) STUB
 Mgr::QueryParam::Pointer Mgr::QueryParams::get(const String&) const STUB_RETVAL(Mgr::QueryParam::Pointer(nullptr))
 void Mgr::QueryParams::pack(Ipc::TypedMsgHdr&) const STUB
 void Mgr::QueryParams::unpack(const Ipc::TypedMsgHdr&) STUB
-void Mgr::QueryParams::Parse(Parser::Tokenizer &, QueryParams &) STUB
+void Mgr::QueryParams::Parse(SBuf &, QueryParams &) STUB
 //private:
 //Params::const_iterator Mgr::QueryParams::find(const String&) const STUB_RETVAL(new Mgr::Params::const_iterator(*this))
 Mgr::QueryParam::Pointer Mgr::QueryParams::CreateParam(QueryParam::Type) STUB_RETVAL(Mgr::QueryParam::Pointer(nullptr))
