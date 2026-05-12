@@ -24,7 +24,7 @@ SysErrorDetail::brief() const
 }
 
 SBuf
-SysErrorDetail::verbose(const HttpRequestPointer &) const
+SysErrorDetail::verbose(const ErrorTemplateCompiler &) const
 {
     return SBuf(xstrerr(errorNo));
 }

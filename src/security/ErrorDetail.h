@@ -11,6 +11,7 @@
 
 #include "base/RefCount.h"
 #include "error/Detail.h"
+#include "errorpage.h"
 #include "http/forward.h"
 #include "security/forward.h"
 #include "SquidString.h"
@@ -36,7 +37,7 @@ namespace Security {
 /// * for certificate validation errors: validation failure reason
 /// * for non-validation errors: TLS library-reported error(s)
 /// * for non-validation errors: system call errno(3)
-class ErrorDetail: public ::ErrorDetail
+class ErrorDetail: public ::ErrorDetail, public ErrorPage::PercentCodeCompiler
 {
     MEMPROXY_CLASS(Security::ErrorDetail);
 
@@ -64,7 +65,7 @@ public:
 
     /* ErrorDetail API */
     SBuf brief() const override;
-    SBuf verbose(const HttpRequestPointer &) const override;
+    SBuf verbose(const ErrorTemplateCompiler &) const override;
 
     /// \returns error category; \see ErrorCode
     ErrorCode errorNo() const { return error_no; }
@@ -86,6 +87,9 @@ public:
 
 private:
     ErrorDetail(ErrorCode err, int aSysErrorNo);
+
+    /* ErrorPage::PercentCodeCompiler API */
+    bool compilePercentCode(ErrorPage::Build &) const override;
 
     /* methods for formatting error details using admin-configurable %codes */
     void printSubject(std::ostream &os) const;

@@ -31,7 +31,7 @@ public:
         return ToSBuf("exception=", asHex(exceptionId));
     }
 
-    SBuf verbose(const HttpRequestPointer &) const override {
+    SBuf verbose(const ErrorTemplateCompiler &) const override {
         return ToSBuf("Exception (ID=", asHex(exceptionId), ')');
     }
 

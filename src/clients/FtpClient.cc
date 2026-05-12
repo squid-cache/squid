@@ -78,7 +78,7 @@ Ftp::ErrorDetail::brief() const
 }
 
 SBuf
-Ftp::ErrorDetail::verbose(const HttpRequest::Pointer &) const
+Ftp::ErrorDetail::verbose(const ErrorTemplateCompiler &) const
 {
     return ToSBuf("FTP reply with completion code ", completionCode);
 }
