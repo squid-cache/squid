@@ -832,7 +832,8 @@ Ftp::Client::writeCommand(const char *buf)
     Assure(buf[bufLen-1] == '\n');
     const auto crlfIndex = strcspn(buf, crlf);
     if (crlfIndex != bufLen-2) {
-        debugs(9, 2, "cannot write malformed FTP command: "<<buf[crlfIndex]<<" found at index "<<crlfIndex);
+        const auto invalidChar = buf[crlfIndex] == '\r' ? "\\r" : "\\n";
+        debugs(9, 2, "cannot write malformed FTP command: "<<invalidChar<<" found at index "<<crlfIndex);
         failed(ERR_FTP_FAILURE, 0);
         return;
     }
