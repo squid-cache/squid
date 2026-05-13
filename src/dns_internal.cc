@@ -128,6 +128,11 @@ public:
         cbdataReferenceDone(callback_data);
     }
 
+    /// Generate 'name' from requested hostname 'orig' and configured 'searchpath'.
+    /// Each call generates an FQDN from the searchpath sequence.
+    void makeNameToLookup();
+
+public:
     hash_link hash;
     rfc1035_query query;
     char buf[RESOLV_BUFSZ];
@@ -281,6 +286,28 @@ static CLCB idnsVCClosed;
 static unsigned short idnsQueryID(void);
 static void idnsSendSlaveAAAAQuery(idns_query *q);
 static void idnsCallbackOnEarlyError(IDNSCB *callback, void *cbdata, const char *error);
+
+void
+idns_query::makeNameToLookup()
+{
+    strcpy(name, orig); // default is always hostname-only.
+
+    // try to find the next suitable suffix to append
+    const auto prefixLen = strlen(orig) + 1 /* the joiner '.' */;
+    while (domain < npc) {
+        const auto need = prefixLen + strlen(searchpath[domain].domain);
+        if (need > NS_MAXDNAME) {
+            debugs(23, 3, "searchpath FQDN for '" << orig << "." << searchpath[domain].domain << "' too long. skip.");
+            ++domain;
+            continue; // skip this searchpath
+        }
+        strcat(name, ".");
+        strcat(name, searchpath[domain].domain);
+        debugs(78, 3, "searchpath[" << domain << "] used to create " << name);
+        ++domain;
+        return; // try using this FQDN
+    }
+}
 
 static void
 idnsCheckMDNS(idns_query *q)
@@ -1263,18 +1290,13 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
         // the record type.
         if (q->rcode == 3 && !q->master && q->do_searchpath && q->attempt < MAX_ATTEMPT) {
             assert(nullptr == message->answer);
-            strcpy(q->name, q->orig);
 
             debugs(78, 3, "idnsGrokReply: Query result: NXDOMAIN - " << q->name );
 
-            if (q->domain < npc) {
-                strcat(q->name, ".");
-                strcat(q->name, searchpath[q->domain].domain);
-                debugs(78, 3, "idnsGrokReply: searchpath used for " << q->name);
-                ++ q->domain;
-            } else {
+            if (q->domain >= npc)
                 ++ q->attempt;
-            }
+
+            q->makeNameToLookup();
 
             rfc1035MessageDestroy(&message);
 
@@ -1779,14 +1801,9 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     }
 
     strcpy(q->orig, name);
-    strcpy(q->name, q->orig);
 
-    if (q->do_searchpath && nd < ndots) {
-        q->domain = 0;
-        strcat(q->name, ".");
-        strcat(q->name, searchpath[q->domain].domain);
-        debugs(78, 3, "idnsALookup: searchpath used for " << q->name);
-    }
+    q->domain = (!q->do_searchpath || nd >= ndots) ? npc : 0;
+    q->makeNameToLookup();
 
     q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query);
 
