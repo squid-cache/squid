@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "CacheManager.h"
+#include "compat/signal.h"
 #include "mgr/ActionCreator.h"
 #include "mgr/ActionProfile.h"
 #include "mgr/BasicActions.h"
