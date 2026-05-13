@@ -46,36 +46,26 @@ class PeerOptions;
 bool CreateServerSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, Security::PeerOptions &, const char *squidCtx);
 
 #if USE_OPENSSL
-typedef SSL Connection;
-
+using Connection = SSL;
 using Session = SSL_SESSION;
-
-typedef std::shared_ptr<SSL> SessionPointer;
-
-typedef std::unique_ptr<SSL_SESSION, HardFun<void, SSL_SESSION*, &SSL_SESSION_free>> SessionStatePointer;
+using SessionPointer = std::shared_ptr<Connection>;
+using SessionStatePointer = std::unique_ptr<Session, HardFun<void, Session*, &SSL_SESSION_free>>;
 
 #elif HAVE_LIBGNUTLS
-// to be finalized when it is actually needed/used
-struct Connection {};
+struct Connection {}; // to be finalized when it is actually needed/used
+struct Session {}; // to be finalized when it is actually needed/used
 
-// to be finalized when it is actually needed/used
-struct Session {};
-
-typedef std::shared_ptr<struct gnutls_session_int> SessionPointer;
+using SessionPointer = std::shared_ptr<struct gnutls_session_int>;
 
 // wrapper function to get around gnutls_free being a typedef
 inline void squid_gnutls_free(void *d) {gnutls_free(d);}
-typedef std::unique_ptr<gnutls_datum_t, HardFun<void, void*, &Security::squid_gnutls_free>> SessionStatePointer;
+using SessionStatePointer = std::unique_ptr<gnutls_datum_t, HardFun<void, void*, &Security::squid_gnutls_free>>;
 
 #else
-typedef std::nullptr_t Connection;
-
+using Connection = std::nullptr_t;
 struct Session {};
-
-typedef std::shared_ptr<void> SessionPointer;
-
-typedef std::unique_ptr<int> SessionStatePointer;
-
+using SessionPointer = std::shared_ptr<void>;
+using SessionStatePointer = std::unique_ptr<int>;
 #endif
 
 /// send the shutdown/bye notice for an active TLS session.
