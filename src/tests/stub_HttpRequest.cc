@@ -23,7 +23,6 @@ void HttpRequest::initHTTP(const HttpRequestMethod &, AnyP::ProtocolType, const 
 HttpRequest * HttpRequest::clone() const STUB_RETVAL(nullptr)
 bool HttpRequest::maybeCacheable() STUB_RETVAL(false)
 bool HttpRequest::conditional() const STUB_RETVAL(false)
-bool HttpRequest::canHandle1xx() const STUB_RETVAL(false)
 char * HttpRequest::canonicalCleanUrl() const STUB_RETVAL(nullptr)
 #if USE_ADAPTATION
 Adaptation::History::Pointer HttpRequest::adaptLogHistory() const STUB_RETVAL(Adaptation::History::Pointer())
