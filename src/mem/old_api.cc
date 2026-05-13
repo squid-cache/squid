@@ -512,6 +512,12 @@ Mem::PoolReport(const PoolStats *mp_st, const PoolMeter *AllMeter, std::ostream 
         stream << delim;
         stream << delim;
     }
+
+    auto AsHours = [](const auto &base) -> double {
+        const auto span = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - base);
+        return span.count() / 3600.0;
+    };
+
     /*
      *  Fragmentation calculation:
      *    needed = inuse.currentLevel() / chunk_capacity
@@ -524,13 +530,13 @@ Mem::PoolReport(const PoolStats *mp_st, const PoolMeter *AllMeter, std::ostream 
     stream << mp_st->items_alloc << delim;
     stream << toKB(mp_st->obj_size * pm->alloc.currentLevel()) << delim;
     stream << toKB(mp_st->obj_size * pm->alloc.peak()) << delim;
-    stream << std::setprecision(2) << ((squid_curtime - pm->alloc.peakTime()) / 3600.) << delim;
+    stream << std::setprecision(2) << AsHours(pm->alloc.peakTime()) << delim;
     stream << std::setprecision(3) << xpercent(mp_st->obj_size * pm->alloc.currentLevel(), AllMeter->alloc.currentLevel()) << delim;
     /* in use */
     stream << mp_st->items_inuse << delim;
     stream << toKB(mp_st->obj_size * pm->inuse.currentLevel()) << delim;
     stream << toKB(mp_st->obj_size * pm->inuse.peak()) << delim;
-    stream << std::setprecision(2) << ((squid_curtime - pm->inuse.peakTime()) / 3600.) << delim;
+    stream << std::setprecision(2) << AsHours(pm->inuse.peakTime()) << delim;
     stream << std::setprecision(3) << xpercent(pm->inuse.currentLevel(), pm->alloc.currentLevel()) << delim;
     /* idle */
     stream << mp_st->items_idle << delim;
