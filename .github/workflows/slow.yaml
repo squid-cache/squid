@@ -145,7 +145,7 @@ jobs:
     strategy:
       matrix:
         osversion:
-          - "15.0"
+          # - "15.0" # build issues on 15.0 as of 2026-04. Let's wait for 15.1
           - "14.3"
           - "13.5"
         platform:

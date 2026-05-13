@@ -18,18 +18,8 @@ export PATH
 
 config()
 {
-    # SGI IRIX 6.2
-    if [ -f /sbin/chkconfig ]
-    then if /sbin/chkconfig squid
-	 then if [ -f /var/config/squid.options ]
-	      then . /var/config/squid.options
-	      fi
-	      SQUID=1
-	 else SQUID=0
-	 fi
-
     # Digital UNIX
-    elif [ -f /usr/sbin/rcmgr ]
+    if [ -f /usr/sbin/rcmgr ]
     then SQUID=`/usr/sbin/rcmgr get SQUID 0`
 	 SQUID_OPTIONS=`/usr/sbin/rcmgr get SQUID_OPTIONS "-s"`
 	 SQUID_RESPAWN=`/usr/sbin/rcmgr get SQUID_RESPAWN 1`
