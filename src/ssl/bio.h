@@ -20,9 +20,6 @@
 
 #include <iosfwd>
 #include <list>
-#if HAVE_OPENSSL_BIO_H
-#include <openssl/bio.h>
-#endif
 #include <string>
 #include <type_traits>
 
