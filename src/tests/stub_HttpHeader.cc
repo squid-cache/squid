@@ -31,7 +31,7 @@ void HttpHeader::update(const HttpHeader *) STUB
 void HttpHeader::compact() STUB
 int HttpHeader::parse(const char *, size_t, Http::ContentLengthInterpreter &) STUB_RETVAL(-1)
 int HttpHeader::parse(const char *, size_t, bool, size_t &, Http::ContentLengthInterpreter &) STUB_RETVAL(-1)
-void HttpHeader::packInto(Packable *, bool) const STUB
+void HttpHeader::packInto(Packable *, MaskSensitiveInfo) const STUB
 HttpHeaderEntry *HttpHeader::getEntry(HttpHeaderPos *) const STUB_RETVAL(nullptr)
 HttpHeaderEntry *HttpHeader::findEntry(Http::HdrType) const STUB_RETVAL(nullptr)
 int HttpHeader::delByName(const SBuf &) STUB_RETVAL(0)
