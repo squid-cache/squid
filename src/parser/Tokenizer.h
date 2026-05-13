@@ -12,6 +12,8 @@
 #include "base/CharacterSet.h"
 #include "sbuf/SBuf.h"
 
+#include <optional>
+
 /// Generic protocol-agnostic parsing tools
 namespace Parser
 {
@@ -178,6 +180,14 @@ private:
 };
 
 } /* namespace Parser */
+
+/// Extracts the next "token" or "word" from Tokenizer::remaining() input using
+/// most of legacy strwordtok() decoding conventions. Uses CharacterSet::WSP
+/// rather than isspace(3) used by strwordtok() for identifying space
+/// characters, but may simplify upgrading strwordtok() callers to SBuf. The
+/// next token or word does not have to start with or contain double quotes.
+/// \returns std::nullopt when remaining input is zero or more CharacterSet::WSP characters
+std::optional<SBuf> NextWordWhileUnescapingQuotedStrings(Parser::Tokenizer &);
 
 #endif /* SQUID_SRC_PARSER_TOKENIZER_H */
 

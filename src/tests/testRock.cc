@@ -91,16 +91,12 @@ TestRock::setUp()
 
     char *path=xstrdup(TESTDIR);
 
-    char *config_line=xstrdup("10 max-size=16384");
-
-    ConfigParser::SetCfgLine(config_line);
+    ConfigParser::SetCfgLine(SBuf("10 max-size=16384"));
 
     store->parse(0, path);
     store_maxobjsize = 1024*1024*2;
 
     safe_free(path);
-
-    safe_free(config_line);
 
     /* ok, ready to create */
     store->create();
