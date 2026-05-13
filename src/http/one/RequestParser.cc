@@ -74,7 +74,7 @@ Http::One::RequestParser::parseMethodField(Tokenizer &tok)
         parseStatusCode = Http::scBadRequest;
         return false;
     }
-    method_ = HttpRequestMethod(methodFound);
+    method_ = RequestMethod(methodFound);
 
     if (!skipDelimiter(tok.skipAll(DelimiterCharacters()), "after method"))
         return false;

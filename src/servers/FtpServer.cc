@@ -722,7 +722,7 @@ Ftp::Server::parseOneRequest()
     if (!Ftp::SupportedCommand(cmd))
         return earlyError(EarlyErrorKind::UnsupportedCommand);
 
-    const HttpRequestMethod method =
+    const Http::RequestMethod method =
         cmd == cmdAppe() || cmd == cmdStor() || cmd == cmdStou() ?
         Http::METHOD_PUT : Http::METHOD_GET;
 
