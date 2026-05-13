@@ -27,6 +27,7 @@
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
+#include "SquidMath.h"
 #include "SquidString.h"
 #include "StatCounters.h"
 #include "tools.h"
@@ -331,6 +332,13 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
         /* We've already read some reply data */
         handleControlReply();
     } else {
+        /*  If we're at/over the configured cap OR out of space, give up. */
+        if (ctrl.offset >= Config.maxReplyHeaderSize || ctrl.offset == ctrl.size) {
+            debugs(9, DBG_IMPORTANT, "ERROR: Control Reply too large: " << ctrl.offset << " >= " << Config.maxReplyHeaderSize);
+            failed(ERR_FTP_FAILURE, 0);
+            /* failed closes ctrl.conn and frees ftpState */
+            return;
+        }
 
         if (!Comm::IsConnOpen(ctrl.conn)) {
             debugs(9, 3, "cannot read without ctrl " << ctrl.conn);
@@ -428,7 +436,20 @@ Ftp::Client::handleControlReply()
         /* didn't get complete reply yet */
 
         if (ctrl.offset == ctrl.size) {
-            ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, ctrl.size << 1, &ctrl.size));
+            // If we are already at/over the cap, abort instead of growing.
+            if (ctrl.size >= Config.maxReplyHeaderSize) {
+                debugs(9, DBG_IMPORTANT, "ERROR: FTP control reply too long (" << ctrl.size << " >= " << Config.maxReplyHeaderSize << ")");
+                failed(ERR_FTP_FAILURE, 0);
+                /* failed closes ctrl.conn and frees ftpState */
+                return;
+            }
+
+            const auto maxSize = std::numeric_limits<size_t>::max();
+            const auto aggressiveSize = NaturalSum<size_t>(ctrl.size, ctrl.size).value_or(maxSize);
+            const auto newSize = std::min(aggressiveSize, Config.maxReplyHeaderSize);
+            Assure(newSize > ctrl.size); // our parser rejects too-big responses
+
+            ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, newSize, &ctrl.size));
         }
 
         scheduleReadControlReply(0);
