@@ -25,6 +25,7 @@
 
 #include <type_traits>
 
+class SBuf;
 class String;
 
 namespace Ipc
@@ -57,6 +58,8 @@ public:
     /* access to message parts for selected commonly-used part types */
     void getString(String &s) const; ///< load variable-length string
     void putString(const String &s); ///< store variable-length string
+    void getSBuf(SBuf &s) const; ///< load variable-length SBuf
+    void putSBuf(const SBuf &s); ///< store variable-length SBuf
     int getInt() const; ///< load an integer
     void putInt(int n); ///< store an integer
     void getFixed(void *raw, size_t size) const; ///< always load size bytes
