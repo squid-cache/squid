@@ -49,8 +49,7 @@ EXTRA_DIST = \
 	QUICKSTART \
 	README \
 	SPONSORS \
-	bootstrap.sh \
-	po4a.conf
+	bootstrap.sh
 
 install-pinger:
 	chown root $(DESTDIR)$(DEFAULT_PINGER)
