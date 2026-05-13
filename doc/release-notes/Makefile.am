@@ -12,12 +12,11 @@ DOC= release-$(SQUID_RELEASE)
 
 SUFFIXES= .sgml.in .sgml
 
-.sgml.in.sgml:
-	sed \
-        -e "s%[@]SQUID_VERSION[@]%$(VERSION)%g" \
-        -e "s%[@]SQUID_RELEASE[@]%$(SQUID_RELEASE)%g" \
-        -e "s%[@]SQUID_RELEASE_OLD[@]%$$(( $(SQUID_RELEASE) - 1 ))%g" \
-        < $< >$@
+.sgml.in.sgml: mk-release-notes.awk
+	SQUID_VERSION="$(VERSION)" \
+	PACKAGE_VERSION="$(PACKAGE_VERSION)" \
+	SQUID_RELEASE="$(SQUID_RELEASE)" \
+	$(AWK) -f $(srcdir)/mk-release-notes.awk $< >$@ || ($(RM) -f $@ && exit 1)
 	test `grep -c "@SQUID" $@` -eq 0
 
 .sgml.txt:
@@ -39,7 +38,9 @@ dist-hook: $(DOC).html
 	  cp -p $(builddir)/$(DOC).html $(top_distdir)/RELEASENOTES.html; \
 	fi
 
-EXTRA_DIST= $(DOC).html
+EXTRA_DIST= \
+	$(DOC).html \
+	mk-release-notes.awk
 
 CLEANFILES= \
 	*.html \
