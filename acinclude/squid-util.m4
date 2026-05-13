@@ -251,30 +251,35 @@ dnl check the build parameters for a library to auto-enable
 dnl Parameters for this macro are:
 dnl 1) binary library name (without 'lib' prefix)
 dnl 2) name of the library for human reading
-dnl 3) prefix used for pkg-check macros
 AC_DEFUN([SQUID_AUTO_LIB],[
-  AC_ARG_WITH([$1],AS_HELP_STRING([--without-$1],[Compile without the $2 library.]),[
+  AC_PREREQ([2.61])
+  m4_pushdef([VARIABLE], m4_toupper(m4_translit([LIB$1],[-+.],[___])))
+  m4_pushdef([OPTION], m4_ifdef([OPTOUT],[--with-$1],[--without-$1]))
+  m4_pushdef([OPTIONTXT], m4_ifdef([OPTOUT],[with],[without]))
+  m4_pushdef([WITHVAR], m4_translit([with_$1],[-+.],[___]))
+  AC_ARG_WITH([$1],AS_HELP_STRING([OPTION],[Compile OPTIONTXT the $2 library.]),[
     AS_CASE(["$withval"],[yes|no],,[
       AS_IF([test ! -d "$withval"],AC_MSG_ERROR([--with-$1 path does not point to a directory]))
-      m4_translit([with_$1], [-+.], [___])=yes
-      AS_IF([test -d "$withval/lib64"],[$3_PATH="$$3_PATH -L$withval/lib64"])
-      AS_IF([test -d "$withval/lib"],[$3_PATH="$$3_PATH -L$withval/lib"])
-      AS_IF([test -d "$withval/include"],[$3_CFLAGS="$$3_CFLAGS -I$withval/include"])
+      WITHVAR=yes
+      AS_IF([test -d "$withval/lib64"],[VARIABLE[]_PATH="$[]VARIABLE[]_PATH -L$withval/lib64"])
+      AS_IF([test -d "$withval/lib"],[VARIABLE[]_PATH="$[]VARIABLE[]_PATH -L$withval/lib"])
+      AS_IF([test -d "$withval/include"],[VARIABLE[]_CFLAGS="$[]VARIABLE[]_CFLAGS -I$withval/include"])
     ])
   ])
+  m4_popdef([WITHVAR])
+  m4_popdef([OPTIONTXT])
+  m4_popdef([OPTION])
+  m4_popdef([VARIABLE])
 ])
 dnl same as SQUID_AUTO_LIB but for default-disabled libraries
 AC_DEFUN([SQUID_OPTIONAL_LIB],[
-  AC_ARG_WITH([$1],AS_HELP_STRING([--with-$1],[Compile with the $2 library.]),[
-    AS_CASE(["$withval"],[yes|no],,[
-      AS_IF([test ! -d "$withval"],AC_MSG_ERROR([--with-$1 path does not point to a directory]))
-      m4_translit([with_$1], [-+.], [___])=yes
-      AS_IF([test -d "$withval/lib64"],[$3_PATH="$$3_PATH -L$withval/lib64"])
-      AS_IF([test -d "$withval/lib"],[$3_PATH="$$3_PATH -L$withval/lib"])
-      AS_IF([test -d "$withval/include"],[$3_CFLAGS="$$3_CFLAGS -I$withval/include"])
-    ])
-  ])
-  AS_IF([test "x$withval" = "x"],[m4_translit([with_$1], [-+.], [___])=no])
+  AC_REQUIRE([SQUID_AUTO_LIB])
+  m4_pushdef([OPTOUT], [out])
+  m4_pushdef([RESULT], m4_translit([with_$1],[-+.],[___]))
+  SQUID_AUTO_LIB([$1],[$2])
+  AS_IF([test "x$[]RESULT" = "x"],[RESULT=no])
+  m4_popdef([RESULT])
+  m4_popdef([OPTOUT])
 ])
 
 AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
