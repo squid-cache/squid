@@ -958,7 +958,8 @@ ErrorState::compileLegacyCode(Build &build)
 
     const auto &building_deny_info_url = build.building_deny_info_url; // a change reduction hack
 
-    const auto letter = build.input[1];
+    Assure(*build.input == '%');
+    const auto letter = build.input[1]; // may be the terminating NUL
 
     switch (letter) {
 
@@ -1261,6 +1262,17 @@ ErrorState::compileLegacyCode(Build &build)
         p = "%";
         break;
 
+    case '\0':
+        // XXX: Partially duplicates error handling code of the `default:` case.
+        // TODO: Refactor bypassBuildErrorXXX() to accept `build` and determine the source of the error.
+        if (building_deny_info_url)
+            bypassBuildErrorXXX("Bare % at the end of deny_info", build.input);
+        else
+            bypassBuildErrorXXX("Bare % at the end of error page", build.input);
+        p = "%";
+        do_quote = 0;
+        break;
+
     default:
         if (building_deny_info_url)
             bypassBuildErrorXXX("Unsupported deny_info %code", build.input);
@@ -1268,6 +1280,7 @@ ErrorState::compileLegacyCode(Build &build)
             bypassBuildErrorXXX("Unsupported error page %code", build.input);
         // else too many "font-size: 100%;" template errors to report
 
+        Assure(build.input[1]);
         mb.append(build.input, 2);
         do_quote = 0;
         break;
@@ -1278,7 +1291,8 @@ ErrorState::compileLegacyCode(Build &build)
 
     assert(p);
 
-    debugs(4, 3, "%" << letter << " --> '" << p << "'" );
+    // TODO: Add an I/O manipulator to report non-printable chars better.
+    debugs(4, 3, "%" << (letter ? letter : '?') << " --> '" << p << "'" );
 
     if (do_quote)
         p = html_quote(p);
@@ -1288,7 +1302,9 @@ ErrorState::compileLegacyCode(Build &build)
 
     // TODO: Optimize by replacing mb with direct build.output usage.
     build.output.append(p, strlen(p));
-    build.input += 2;
+    ++build.input; // skip the parsed % character
+    if (letter)
+        ++build.input; // when it was present, skip the parsed letter after %
 }
 
 void

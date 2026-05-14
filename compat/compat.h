@@ -74,7 +74,6 @@
 #include "compat/os/openbsd.h"
 #include "compat/os/os2.h"
 #include "compat/os/qnx.h"
-#include "compat/os/sgi.h"
 #include "compat/os/solaris.h"
 #include "compat/os/sunos.h"
 

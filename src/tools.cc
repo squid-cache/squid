@@ -252,10 +252,7 @@ int
 
 rusage_maxrss(struct rusage *r)
 {
-#if _SQUID_SGI_ && _ABIAPI
-    return r->ru_pad[0];
-#elif _SQUID_SGI_|| _SQUID_OSF_ || _SQUID_AIX_ || defined(BSD4_4)
-
+#if _SQUID_OSF_ || _SQUID_AIX_ || defined(BSD4_4)
     return r->ru_maxrss;
 #elif defined(HAVE_GETPAGESIZE) && HAVE_GETPAGESIZE != 0
 
@@ -273,12 +270,7 @@ int
 
 rusage_pagefaults(struct rusage *r)
 {
-#if _SQUID_SGI_ && _ABIAPI
-    return r->ru_pad[5];
-#else
-
     return r->ru_majflt;
-#endif
 }
 
 /// Make the process traceable if possible. Call setTraceability() instead!
