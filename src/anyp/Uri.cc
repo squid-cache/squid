@@ -70,6 +70,19 @@ PathChars()
 }
 
 /**
+ * containsEscapedFtpCommandDelimiter is used to check for unescaped FTP command delimiters in the different components of a URI.
+ * The function unescapes the input string and checks for the presence of carriage return (\r) or line feed (\n) characters.
+ * \param s the string to check for unescaped FTP command delimiters
+ * \return true if the string contains unescaped FTP command delimiters, false otherwise
+ */
+static bool containsEscapedFtpCommandDelimiter(const char *s){
+    LOCAL_ARRAY(char, unescaped, MAX_URL);
+    xstrncpy(unescaped, s, MAX_URL);
+    rfc1738_unescape(unescaped);
+    return strpbrk(unescaped, "\r\n") != nullptr;
+}
+
+/**
  * Governed by RFC 3986 section 2.1
  */
 SBuf
@@ -567,6 +580,23 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                     ++t;
                 }
                 *q = '\0';
+            }
+        }
+
+        if(scheme == AnyP::PROTO_FTP){
+            if(strpbrk(login, "\r\n")){
+                debugs(23, 2, "error: FTP login contains unescaped FTP command delimiters");
+                return false;
+            }
+
+            if(containsEscapedFtpCommandDelimiter(urlpath)){
+                debugs(23, 2, "error: FTP path contains unescaped FTP command delimiters");
+                return false;
+            }
+
+            if(containsEscapedFtpCommandDelimiter(foundHost)){
+                debugs(23, 2, "error: FTP host contains unescaped FTP command delimiters");
+                return false;
             }
         }
 
