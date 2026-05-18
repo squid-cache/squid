@@ -77,7 +77,7 @@ PathChars()
  */
 static bool containsEscapedFtpCommandDelimiter(const char *s){
     const char *ftpDelimiter = "\r\n";
-    
+
     // s might already be unescped
     if(strpbrk(s, ftpDelimiter))
         return true;
