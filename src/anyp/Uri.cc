@@ -75,7 +75,7 @@ PathChars()
  * \param s the string to check for unescaped FTP command delimiters
  * \return true if the string contains unescaped FTP command delimiters, false otherwise
  */
-static bool containsEscapedFtpCommandDelimiter(const char *s){
+static bool containsEscapedFtpCommandDelimiter(const char *s) {
     const char *ftpDelimiter = "\r\n";
 
     // s might already be unescped
@@ -589,18 +589,18 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             }
         }
 
-        if(scheme == AnyP::PROTO_FTP){
-            if(containsEscapedFtpCommandDelimiter(login)){
+        if(scheme == AnyP::PROTO_FTP) {
+            if(containsEscapedFtpCommandDelimiter(login)) {
                 debugs(23, 2, "error: FTP login contains unescaped FTP command delimiters");
                 return false;
             }
 
-            if(containsEscapedFtpCommandDelimiter(urlpath)){
+            if(containsEscapedFtpCommandDelimiter(urlpath)) {
                 debugs(23, 2, "error: FTP path contains unescaped FTP command delimiters");
                 return false;
             }
 
-            if(containsEscapedFtpCommandDelimiter(foundHost)){
+            if(containsEscapedFtpCommandDelimiter(foundHost)) {
                 debugs(23, 2, "error: FTP host contains unescaped FTP command delimiters");
                 return false;
             }
