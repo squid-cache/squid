@@ -71,6 +71,9 @@ public:
     /// the useful content length is strictly less than this limit.
     static size_type SizeMaxXXX() { return SizeMax_; }
 
+    /// The maximum size of a raw token that can be safely stored in a String.
+    static size_type SafeRawTokenSizeMax() { return (SizeMaxXXX()+1)/3; }
+
     size_type size() const { return len_; }
 
     /// variant of size() suited to be used for printf-alikes.

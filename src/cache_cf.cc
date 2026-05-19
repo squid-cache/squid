@@ -998,13 +998,12 @@ configDoConfigure(void)
     // Warn about the dangers of exceeding String limits when manipulating HTTP
     // headers. Technically, we do not concatenate _requests_, so we could relax
     // their check, but we keep the two checks the same for simplicity sake.
-    const auto safeRawHeaderValueSizeMax = (String::SizeMaxXXX()+1)/3;
-    // TODO: static_assert(safeRawHeaderValueSizeMax >= 64*1024); // no WARNINGs for default settings
-    if (Config.maxRequestHeaderSize > safeRawHeaderValueSizeMax)
-        debugs(3, DBG_CRITICAL, "WARNING: Increasing request_header_max_size beyond " << safeRawHeaderValueSizeMax <<
+    // TODO: static_assert(String::SafeRawTokenSizeMax() >= 64*1024); // no WARNINGs for default settings
+    if (Config.maxRequestHeaderSize > String::SafeRawTokenSizeMax())
+        debugs(3, DBG_CRITICAL, "WARNING: Increasing request_header_max_size beyond " << String::SafeRawTokenSizeMax() <<
                " bytes makes Squid more vulnerable to denial-of-service attacks; configured value: " << Config.maxRequestHeaderSize << " bytes");
-    if (Config.maxReplyHeaderSize > safeRawHeaderValueSizeMax)
-        debugs(3, DBG_CRITICAL, "WARNING: Increasing reply_header_max_size beyond " << safeRawHeaderValueSizeMax <<
+    if (Config.maxReplyHeaderSize > String::SafeRawTokenSizeMax())
+        debugs(3, DBG_CRITICAL, "WARNING: Increasing reply_header_max_size beyond " << String::SafeRawTokenSizeMax() <<
                " bytes makes Squid more vulnerable to denial-of-service attacks; configured value: " << Config.maxReplyHeaderSize << " bytes");
 
     /*
