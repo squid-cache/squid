@@ -74,7 +74,8 @@ PathChars()
  * \param s the string to check for unescaped FTP command delimiters
  * \return true if s contains unescaped FTP command delimiters, false otherwise
  */
-static bool containsFtpCommandDelimiter(const SBuf &s){
+static bool containsFtpCommandDelimiter(const SBuf &s)
+{
     const auto crlf = CharacterSet("crlf", "\r\n");
 
     // s might already be unescaped
