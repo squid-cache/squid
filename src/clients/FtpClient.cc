@@ -444,10 +444,15 @@ Ftp::Client::handleControlReply()
 
     size_t bytes_used = 0;
     wordlistDestroy(&ctrl.message);
-
-    if (!parseControlReply(bytes_used)) {
-        /* didn't get complete reply yet */
-        scheduleReadControlReply(0);
+    try {
+        if (!parseControlReply(bytes_used)) {
+            /* didn't get complete reply yet */
+            scheduleReadControlReply(0);
+            return;
+        }
+    } catch (const TextException &ex) {
+        debugs(9, 2, "error parsing control reply: " << ex.what());
+        failed(ERR_FTP_FAILURE, 0);
         return;
     }
 
