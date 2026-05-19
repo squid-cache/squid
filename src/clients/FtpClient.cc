@@ -1167,6 +1167,13 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
 
         if (linelen < 2)
             break;
+        
+        if (linelen > String::SafeRawTokenSizeMax()) {
+            // TODO: Use std::unique_ptr to avoid manual memory management and leaks in this function.
+            safe_free(sbuf);
+            wordlistDestroy(&head);
+            throw TextException(ToSBuf("control reply line too long: ", linelen, " exceeds safe limit of ", String::SafeRawTokenSizeMax(), " bytes"), Here());
+        }
 
         if (linelen > 3)
             complete = (*s >= '0' && *s <= '9' && *(s + 3) == ' ');
