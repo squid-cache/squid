@@ -1127,7 +1127,6 @@ bool
 Ftp::Client::parseControlReply(size_t &bytesUsed)
 {
     char *s;
-    char *sbuf;
     char *end;
     int usable;
     int complete = 0;
@@ -1140,26 +1139,28 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
      * We need a NULL-terminated buffer for scanning, ick
      */
     const size_t len = ctrl.offset;
-    sbuf = (char *)xmalloc(len + 1);
-    xstrncpy(sbuf, ctrl.buf, len + 1);
-    end = sbuf + len - 1;
+    auto sbuf = std::unique_ptr<char[], void(*)(char*)>(
+        (char *)xmalloc(len + 1),
+        [](char* p) { safe_free(p); }
+    );
+    std::memcpy(sbuf.get(), ctrl.buf, len);
+    end = sbuf.get() + len - 1;
 
-    while (*end != '\r' && *end != '\n' && end > sbuf)
+    while (*end != '\r' && *end != '\n' && end > sbuf.get())
         --end;
 
-    usable = end - sbuf;
+    usable = end - sbuf.get();
 
     debugs(9, 3, "usable = " << usable);
 
     if (usable == 0) {
         debugs(9, 3, "didn't find end of line");
-        safe_free(sbuf);
         return false;
     }
 
     debugs(9, 3, len << " bytes to play with");
     ++end;
-    s = sbuf;
+    s = sbuf.get();
     s += strspn(s, crlf);
 
     for (; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
@@ -1175,7 +1176,6 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
         
         if (linelen > String::SafeRawTokenSizeMax()) {
             // TODO: Use std::unique_ptr to avoid manual memory management and leaks in this function.
-            safe_free(sbuf);
             wordlistDestroy(&head);
             throw TextException(ToSBuf("control reply line too long: ", linelen, " exceeds safe limit of ", String::SafeRawTokenSizeMax(), " bytes"), Here());
         }
@@ -1204,8 +1204,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
         tail = &list->next;
     }
 
-    bytesUsed = static_cast<size_t>(s - sbuf);
-    safe_free(sbuf);
+    bytesUsed = static_cast<size_t>(s - sbuf.get());
 
     if (!complete) {
         wordlistDestroy(&head);
