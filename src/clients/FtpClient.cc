@@ -1143,7 +1143,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
         (char *)xmalloc(len + 1),
         [](char* p) { safe_free(p); }
     );
-    std::memcpy(sbuf.get(), ctrl.buf, len);
+    xstrncpy(sbuf.get(), ctrl.buf, len + 1);
     end = sbuf.get() + len - 1;
 
     while (*end != '\r' && *end != '\n' && end > sbuf.get())
