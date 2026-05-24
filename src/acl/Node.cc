@@ -123,7 +123,7 @@ Acl::Node::FindByName(const char *name)
         if (!strcasecmp(a->name, name))
             return a;
 
-    debugs(28, 9, "found no match");
+    debugs(28, 5, "found no match");
     return nullptr;
 }
 
