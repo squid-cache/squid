@@ -590,17 +590,17 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         const auto loginInfo = SBuf(login);
         if(scheme == AnyP::PROTO_FTP) {
             if(containsFtpCommandDelimiter(loginInfo)) {
-                debugs(23, 2, "error: FTP login contains unescaped FTP command delimiters");
+                debugs(23, 2, "error: FTP login contains FTP command delimiters");
                 return false;
             }
 
             if(containsFtpCommandDelimiter(SBuf(urlpath))) {
-                debugs(23, 2, "error: FTP path contains unescaped FTP command delimiters");
+                debugs(23, 2, "error: FTP path contains FTP command delimiters");
                 return false;
             }
 
             if(containsFtpCommandDelimiter(SBuf(foundHost))) {
-                debugs(23, 2, "error: FTP host contains unescaped FTP command delimiters");
+                debugs(23, 2, "error: FTP host contains FTP command delimiters");
                 return false;
             }
         }
