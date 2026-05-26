@@ -450,8 +450,8 @@ Ftp::Client::handleControlReply()
             scheduleReadControlReply(0);
             return;
         }
-    } catch (const TextException &ex) {
-        debugs(9, 2, "error parsing control reply: " << ex.what());
+    } catch (...) {
+        debugs(9, 2, "error parsing control reply: " << CurrentException);
         failed(ERR_FTP_FAILURE, 0);
         return;
     }
