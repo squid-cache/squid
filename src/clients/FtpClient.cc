@@ -1162,6 +1162,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
     ++end;
     s = sbuf.get();
     s += strspn(s, crlf);
+    auto totalTokenLen = 0;
 
     for (; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
         if (complete)
@@ -1170,6 +1171,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
         debugs(9, 5, "s = {" << s << "}");
 
         linelen = strcspn(s, crlf) + 1;
+        totalTokenLen += linelen;
 
         if (linelen < 2)
             break;
@@ -1178,6 +1180,11 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
             // TODO: Use std::unique_ptr to avoid manual memory management and leaks in this function.
             wordlistDestroy(&head);
             throw TextException(ToSBuf("control reply line too long: ", linelen, " exceeds safe limit of ", String::SafeRawTokenSizeMax(), " bytes"), Here());
+        }
+
+        if (totalTokenLen > String::SafeRawTokenSizeMax()) {
+            wordlistDestroy(&head);
+            throw TextException(ToSBuf("control reply too long: ", totalTokenLen, " exceeds safe limit of ", String::SafeRawTokenSizeMax(), " bytes"), Here());
         }
 
         if (linelen > 3)
