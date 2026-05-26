@@ -1162,7 +1162,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
     ++end;
     s = sbuf.get();
     s += strspn(s, crlf);
-    auto totalTokenLen = 0;
+    size_t totalTokenLen = 0;
 
     for (; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
         if (complete)
