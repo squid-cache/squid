@@ -70,15 +70,15 @@ PathChars()
 }
 
 /**
- * containsFtpCommandDelimiter checks for unescaped FTP command delimiters in a string.
- * \param s the string to check for unescaped FTP command delimiters
- * \return true if s contains unescaped FTP command delimiters, false otherwise
+ * containsFtpCommandDelimiter checks for FTP command delimiters in a string.
+ * \param s the string to check for FTP command delimiters. s might already be decoded.
+ * \return true if s contains FTP command delimiters, false otherwise.
  */
 static bool containsFtpCommandDelimiter(const SBuf &s)
 {
     const auto crlf = CharacterSet("crlf", "\r\n");
 
-    // s might already be unescaped
+    // s might already be decoded
     if(s.findFirstOf(crlf) != SBuf::npos)
         return true;
 
