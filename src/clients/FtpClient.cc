@@ -1131,6 +1131,10 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
     int usable;
     int complete = 0;
     wordlist *head = nullptr;
+    auto headGuard = std::unique_ptr<wordlist, void(*)(wordlist*)>(
+        head,
+        [](wordlist* p) { wordlistDestroy(&p); }
+    );
     wordlist *list;
     wordlist **tail = &head;
     size_t linelen;
@@ -1177,13 +1181,10 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
             break;
         
         if (linelen > String::SafeRawTokenSizeMax()) {
-            // TODO: Use std::unique_ptr to avoid manual memory management and leaks in this function.
-            wordlistDestroy(&head);
             throw TextException(ToSBuf("control reply line too long: ", linelen, " exceeds safe limit of ", String::SafeRawTokenSizeMax(), " bytes"), Here());
         }
 
         if (totalTokenLen > String::SafeRawTokenSizeMax()) {
-            wordlistDestroy(&head);
             throw TextException(ToSBuf("control reply too long: ", totalTokenLen, " exceeds safe limit of ", String::SafeRawTokenSizeMax(), " bytes"), Here());
         }
 
@@ -1207,6 +1208,8 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
         }
 
         *tail = list;
+        if (!headGuard)
+            headGuard.reset(head);
 
         tail = &list->next;
     }
@@ -1214,11 +1217,10 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
     bytesUsed = static_cast<size_t>(s - sbuf.get());
 
     if (!complete) {
-        wordlistDestroy(&head);
         return false;
     }
 
-    ctrl.message = head;
+    ctrl.message = headGuard.release();
     assert(ctrl.replycode >= 0);
     assert(ctrl.last_reply);
     assert(ctrl.message);
