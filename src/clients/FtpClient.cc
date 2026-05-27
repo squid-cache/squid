@@ -1131,10 +1131,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
     int usable;
     int complete = 0;
     wordlist *head = nullptr;
-    auto headGuard = std::unique_ptr<wordlist, void(*)(wordlist*)>(
-        head,
-        [](wordlist* p) { wordlistDestroy(&p); }
-    );
+    auto headGuard = std::unique_ptr<wordlist, void(*)(wordlist*)>(head, wordlistDestroy);
     wordlist *list;
     wordlist **tail = &head;
     size_t linelen;

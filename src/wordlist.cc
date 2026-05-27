@@ -12,6 +12,10 @@
 #include "MemBuf.h"
 #include "wordlist.h"
 
+void wordlistDestroy(wordlist *list) {
+    wordlistDestroy(&list);
+}
+
 void
 wordlistDestroy(wordlist ** list)
 {
