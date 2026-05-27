@@ -83,7 +83,7 @@ static bool containsFtpCommandDelimiter(const SBuf &s)
 
         if (tk.skip('%')) {
             int64_t hex1 = 0, hex2 = 0;
-            if (tk.int64(hex1, 16, false, 1) && tk.int64(hex2, 16, false, 1)){
+            if (tk.int64(hex1, 16, false, 1) && tk.int64(hex2, 16, false, 1)) {
                 const auto decoded = static_cast<char>((hex1 << 4) | hex2);
                 if (decoded == '\r' || decoded == '\n')
                     return true;
