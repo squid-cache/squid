@@ -71,19 +71,26 @@ PathChars()
 
 /**
  * containsFtpCommandDelimiter checks for FTP command delimiters in a string.
- * \param s the string to check for FTP command delimiters. s might already be decoded.
+ * \param s the string to check for FTP command delimiters. s shouldn't not be decoded.
  * \return true if s contains FTP command delimiters, false otherwise.
  */
 static bool containsFtpCommandDelimiter(const SBuf &s)
 {
-    const auto crlf = CharacterSet("crlf", "\r\n");
+    Parser::Tokenizer tk(s);
+    const auto nonPercent = CharacterSet("percent", "%").complement("non-percent");
+    while (!tk.atEnd()) {
+        tk.skipAll(nonPercent);
 
-    // s might already be decoded
-    if(s.findFirstOf(crlf) != SBuf::npos)
-        return true;
-
-    const auto decoded = AnyP::Uri::Decode(s);
-    return decoded && decoded->findFirstOf(crlf) != SBuf::npos;
+        if (tk.skip('%')) {
+            int64_t hex1 = 0, hex2 = 0;
+            if (tk.int64(hex1, 16, false, 1) && tk.int64(hex2, 16, false, 1)){
+                const auto decoded = static_cast<char>((hex1 << 4) | hex2);
+                if (decoded == '\r' || decoded == '\n')
+                    return true;
+            }
+        }
+    }
+    return false;
 }
 
 /**
@@ -461,8 +468,6 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                 *t = 0;
                 strncpy((char *) foundHost, t + 1, sizeof(foundHost)-1);
                 foundHost[sizeof(foundHost)-1] = '\0';
-                // Bug 4498: URL-unescape the login info after extraction
-                rfc1738_unescape(login);
             }
 
             /* Is there any host information? (we should eventually parse it above) */
@@ -587,9 +592,8 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             }
         }
 
-        const auto loginInfo = SBuf(login);
         if(scheme == AnyP::PROTO_FTP) {
-            if(containsFtpCommandDelimiter(loginInfo)) {
+            if(containsFtpCommandDelimiter(SBuf(login))) {
                 debugs(23, 2, "error: FTP login contains FTP command delimiters");
                 return false;
             }
@@ -605,10 +609,14 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             }
         }
 
+        // Bug 4498: URL-unescape the login info after extraction
+        if (*login)
+            rfc1738_unescape(login);
+
         setScheme(scheme);
         path(urlpath);
         host(foundHost);
-        userInfo(loginInfo);
+        userInfo(SBuf(login));
         port(foundPort);
         return true;
 
