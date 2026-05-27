@@ -1143,17 +1143,15 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
      * We need a NULL-terminated buffer for scanning, ick
      */
     const size_t len = ctrl.offset;
-    auto sbuf = std::unique_ptr<char[], void(*)(char*)>(
-        (char *)xmalloc(len + 1),
-        [](char* p) { safe_free(p); }
-    );
-    xstrncpy(sbuf.get(), ctrl.buf, len + 1);
-    end = sbuf.get() + len - 1;
+    char *const sbuf = static_cast<char*>(xmalloc(len + 1));
+    auto sbufOwner = std::unique_ptr<char[], decltype(&xfree)>(sbuf, xfree);
+    xstrncpy(sbuf, ctrl.buf, len + 1);
+    end = sbuf + len - 1;
 
-    while (*end != '\r' && *end != '\n' && end > sbuf.get())
+    while (*end != '\r' && *end != '\n' && end > sbuf)
         --end;
 
-    usable = end - sbuf.get();
+    usable = end - sbuf;
 
     debugs(9, 3, "usable = " << usable);
 
@@ -1164,7 +1162,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
 
     debugs(9, 3, len << " bytes to play with");
     ++end;
-    s = sbuf.get();
+    s = sbuf;
     s += strspn(s, crlf);
     size_t totalTokenLen = 0;
 
@@ -1214,7 +1212,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
         tail = &list->next;
     }
 
-    bytesUsed = static_cast<size_t>(s - sbuf.get());
+    bytesUsed = static_cast<size_t>(s - sbuf);
 
     if (!complete) {
         return false;
