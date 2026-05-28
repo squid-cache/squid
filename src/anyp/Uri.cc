@@ -71,7 +71,7 @@ PathChars()
 
 /**
  * containsFtpCommandDelimiter checks for FTP command delimiters in a string.
- * \param s the string to check for FTP command delimiters. s shouldn't not be decoded.
+ * \param s the string to check for FTP command delimiters. s should not be decoded.
  * \return true if s contains FTP command delimiters, false otherwise.
  */
 static bool containsFtpCommandDelimiter(const SBuf &s)
