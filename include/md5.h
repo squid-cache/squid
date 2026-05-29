@@ -11,10 +11,7 @@
 
 #if HAVE_NETTLE_MD5_H
 #include <nettle/md5.h>
-
-#if HAVE_NETTLE_VERSION_H
 #include <nettle/version.h>
-#endif
 
 typedef struct md5_ctx SquidMD5_CTX;
 
