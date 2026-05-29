@@ -23,7 +23,7 @@ typedef struct md5_ctx SquidMD5_CTX;
 
 #if defined(NETTLE_VERSION_MAJOR) && NETTLE_VERSION_MAJOR >= 4
 #define SquidMD5Final(d,c)    md5_digest((c), (uint8_t *)(d))
-#else /* nettle <= 3 */
+#else
 #define SquidMD5Final(d,c)    md5_digest((c), MD5_DIGEST_SIZE, (uint8_t *)(d))
 #endif
 
