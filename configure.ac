@@ -1017,7 +1017,7 @@ SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
 SQUID_CHECK_LIB_WORKS(nettle,[
   PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[
     CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
-    AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
+    AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h nettle/version.h)
   ],[:])
 ])
 
