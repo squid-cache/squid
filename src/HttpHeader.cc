@@ -642,8 +642,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
 
         if (rawTe.caseCmp("chunked") == 0) {
             ; // leave header present for chunked() method
-        } else if (rawTe.caseCmp("identity") == 0) { // deprecated. no coding
-            delById(Http::HdrType::TRANSFER_ENCODING);
         } else {
             // This also rejects multiple encodings until we support them properly.
             debugs(55, warnOnError, "WARNING: unsupported Transfer-Encoding used by client: " << rawTe);
