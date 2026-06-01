@@ -81,12 +81,6 @@ void wordlistCat(const wordlist *, MemBuf *);
 /// destroy a wordlist
 void wordlistDestroy(wordlist **);
 
-/** Destroy a wordlist and all its elements.
- *
- * \note If the caller needs to set its pointer to nullptr, it should call wordlistDestroy(wordlist **) instead.
- */
-void wordlistDestroy(wordlist *);
-
 /**  Remove and destroy the first element while preserving and returning its key
  *
  * \note the returned key must be freed by the caller using safe_free
