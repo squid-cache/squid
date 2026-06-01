@@ -451,7 +451,7 @@ Ftp::Client::handleControlReply()
             return;
         }
     } catch (...) {
-        debugs(9, 2, "error parsing control reply: " << CurrentException);
+        debugs(9, 2, "ERROR: Cannot parse control reply: " << CurrentException);
         failed(ERR_FTP_FAILURE, 0);
         return;
     }
