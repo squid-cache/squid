@@ -1141,8 +1141,8 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
      * We need a NULL-terminated buffer for scanning, ick
      */
     const size_t len = ctrl.offset;
-    const auto sbuf = static_cast<char*>(xmalloc(len + 1));
-    const auto sbufOwner = std::unique_ptr<char[], decltype(&xfree)>(sbuf, xfree);
+    const auto sbufOwner = std::unique_ptr<void, decltype(&xfree)>(xmalloc(len + 1), xfree);
+    const auto sbuf = static_cast<char*>(sbufOwner.get());
     xstrncpy(sbuf, ctrl.buf, len + 1);
     end = sbuf + len - 1;
 
