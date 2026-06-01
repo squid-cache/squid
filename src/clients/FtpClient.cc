@@ -1141,7 +1141,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
      */
     const size_t len = ctrl.offset;
     char *const sbuf = static_cast<char*>(xmalloc(len + 1));
-    auto sbufOwner = std::unique_ptr<char[], decltype(&xfree)>(sbuf, xfree);
+    const auto sbufOwner = std::unique_ptr<char[], decltype(&xfree)>(sbuf, xfree);
     xstrncpy(sbuf, ctrl.buf, len + 1);
     end = sbuf + len - 1;
 
