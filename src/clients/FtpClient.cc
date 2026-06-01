@@ -1183,6 +1183,8 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
             complete = (*s >= '0' && *s <= '9' && *(s + 3) == ' ');
 
         list = new wordlist();
+        if (!headGuard)
+            headGuard.reset(list);
 
         list->key = (char *)xmalloc(linelen);
 
@@ -1199,8 +1201,6 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
         }
 
         *tail = list;
-        if (!headGuard)
-            headGuard.reset(head);
 
         tail = &list->next;
     }
