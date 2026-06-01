@@ -1162,7 +1162,9 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
     ++end;
     s = sbuf;
     s += strspn(s, crlf);
-    size_t totalTokenLen = 0;
+
+    // cumulative length of parsed control reply lines added to the list
+    size_t replyLength = 0;
 
     for (; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
         if (complete)
@@ -1171,13 +1173,13 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
         debugs(9, 5, "s = {" << s << "}");
 
         linelen = strcspn(s, crlf) + 1;
-        totalTokenLen += linelen;
+        replyLength += linelen;
 
         if (linelen < 2)
             break;
 
-        if (totalTokenLen > String::RawSizeMaxXXX())
-            throw TextException(ToSBuf("control reply too long: ", totalTokenLen, " exceeds safe limit of ", String::RawSizeMaxXXX(), " bytes"), Here());
+        if (replyLength > String::RawSizeMaxXXX())
+            throw TextException(ToSBuf("control reply too long: ", replyLength, " exceeds safe limit of ", String::RawSizeMaxXXX(), " bytes"), Here());
 
         if (linelen > 3)
             complete = (*s >= '0' && *s <= '9' && *(s + 3) == ' ');
