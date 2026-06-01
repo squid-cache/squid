@@ -1175,8 +1175,8 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
         if (linelen < 2)
             break;
 
-        if (totalTokenLen > String::SafeRawTokenSizeMax()) {
-            throw TextException(ToSBuf("control reply too long: ", totalTokenLen, " exceeds safe limit of ", String::SafeRawTokenSizeMax(), " bytes"), Here());
+        if (totalTokenLen > String::RawSizeMaxXXX()) {
+            throw TextException(ToSBuf("control reply too long: ", totalTokenLen, " exceeds safe limit of ", String::RawSizeMaxXXX(), " bytes"), Here());
         }
 
         if (linelen > 3)
