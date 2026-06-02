@@ -559,7 +559,7 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
      * we need to do the copy ourselves!
      */
     Assure(size >= 0);
-    Assure(pd->cd->mask_size > fetch->mask_offset);
+    Assure(pd->cd->mask_size >= fetch->mask_offset);
     if (static_cast<size_t>(size) > pd->cd->mask_size - fetch->mask_offset) {
         finishAndDeleteFetch(fetch, "peer digest mask data too large", true);
         return -1;
