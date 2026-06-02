@@ -18,6 +18,8 @@
 #include "ip/forward.h"
 #include "snmp_vars.h"
 
+#include <optional>
+
 class MemBuf;
 
 #define SNMP_REQUEST_SIZE 4096
@@ -47,9 +49,12 @@ AggrType snmpAggrType(oid* Current, snint CurrentLen);
 extern Comm::ConnectionPointer snmpOutgoingConn;
 
 extern PF snmpHandleUdp;
-const char * snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf);
+const char * snmpDebugOid(const oid *, snint Len, MemBuf &outbuf);
 void addr2oid(Ip::Address &addr, oid *Dest);
-void oid2addr(oid *Dest, Ip::Address &addr, u_int code);
+
+/// Parses raw OID suffix of a given size as an IP address.
+/// \returns nil if the suffix does not represent an IPv4 or IPv6 address
+std::optional<Ip::Address> oid2addr(const oid *, size_t);
 
 namespace Acl
 {

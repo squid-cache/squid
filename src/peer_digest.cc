@@ -558,6 +558,11 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
      * NOTENOTENOTENOTENOTE: buf doesn't point to pd->cd->mask anymore!
      * we need to do the copy ourselves!
      */
+    Assure(size >= 0);
+    if (fetch->mask_offset + size > static_cast<ssize_t>(pd->cd->mask_size)) {
+        finishAndDeleteFetch(fetch, "peer digest mask data too large", true);
+        return -1;
+    }
     memcpy(pd->cd->mask + fetch->mask_offset, buf, size);
 
     /* NOTE! buf points to the middle of pd->cd->mask! */
