@@ -269,9 +269,7 @@ Log::Format::SiemCef(const AccessLogEntry::Pointer &al, Logfile *logfile)
     /* Header: CEF:Version|Vendor|Product|DeviceVersion|SignatureID|Name|Severity| */
     out << "CEF:0|Squid|Squid Cache|";
     appendHeader(out, VERSION);
-    out << '|';
-    appendHeader(out, cacheCode);
-    out << "|Proxy Request|" << CefSeverity(*al) << '|';
+    out << '|' << cacheCode << "|Proxy Request|" << CefSeverity(*al) << '|';
 
     // CEF extensions are space-separated key=value pairs; FieldWriter::put()
     // emits the leading space for us. Key names are drawn from the CEF
