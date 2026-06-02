@@ -49,12 +49,15 @@ static TokenTableEntry TokenTable1C[] = {
 static TokenTableEntry TokenTable2C[] = {
 
     TokenTableEntry(">la", LFT_CLIENT_LOCAL_IP),
-    TokenTableEntry("la", LFT_LOCAL_LISTENING_IP),
+    TokenTableEntry(">lA", LFT_CLIENT_LOCAL_FQDN),
     TokenTableEntry(">lp", LFT_CLIENT_LOCAL_PORT),
-    TokenTableEntry("lp", LFT_LOCAL_LISTENING_PORT),
+
+    TokenTableEntry("la", LFT_LOCAL_LISTENING_IP),
     /*TokenTableEntry( "lA", LFT_LOCAL_NAME ), */
+    TokenTableEntry("lp", LFT_LOCAL_LISTENING_PORT),
 
     TokenTableEntry("<la", LFT_SERVER_LOCAL_IP),
+    TokenTableEntry("<lA", LFT_SERVER_LOCAL_FQDN),
     TokenTableEntry("oa", LFT_SERVER_LOCAL_IP_OLD_27),
     TokenTableEntry("<lp", LFT_SERVER_LOCAL_PORT),
 
