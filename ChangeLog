@@ -1,3 +1,15 @@
+Changes in squid-7.6 (04 Jun 2026):
+
+	- HTTP/1.1: Transfer-Encoding:identity is prohibited
+	- Harden peerDigestSwapInMask against invalid cache digest reply
+	- Fix parsing of legacy url_rewrite_program responses
+	- Fix handling of truncated legacy errorpage %codes
+	- Do not treat tiny virgin response buffer space specially
+	- Honor reply_header_max_size for received FTP control responses
+	- Improve parsing of certain FTP directory listing formats
+	- Support Nettle 4.0 md5_digest API
+	- .. and some cleanups
+
 Changes in squid-7.5 (12 Mar 2026):
 
 	- Bug 5501: Squid may exit when ACLs decode an invalid URI
