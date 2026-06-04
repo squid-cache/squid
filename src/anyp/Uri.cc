@@ -70,26 +70,20 @@ PathChars()
 }
 
 /**
- * containsFtpCommandDelimiter checks for FTP command delimiters in a string.
- * \param s the string to check for FTP command delimiters. s should not be decoded.
- * \return true if s contains FTP command delimiters, false otherwise.
+ * validateFtpUrlComponent validates that the given URL component does not contain delimiters in a FTP request.
+ * \param s the URL component to validate. s should not have been previously decoded.
+ * \return true if the URL component is invalid, i.e., contains delimiters, or cannot be decoded, false otherwise.
  */
-static bool containsFtpCommandDelimiter(const SBuf &s)
+static bool validateFtpUrlComponent(const SBuf &s)
 {
-    Parser::Tokenizer tk(s);
-    const auto nonPercent = CharacterSet("percent", "%").complement("non-percent");
-    while (!tk.atEnd()) {
-        tk.skipAll(nonPercent);
+    const auto crlf = CharacterSet("crlf", "\r\n");
+    const auto decoded = AnyP::Uri::Decode(s);
 
-        if (tk.skip('%')) {
-            int64_t hex1 = 0, hex2 = 0;
-            if (tk.int64(hex1, 16, false, 1) && tk.int64(hex2, 16, false, 1)) {
-                const auto decoded = static_cast<char>((hex1 << 4) | hex2);
-                if (decoded == '\r' || decoded == '\n')
-                    return true;
-            }
-        }
+    if(!decoded || decoded->findFirstOf(crlf) != SBuf::npos) {
+        debugs(23, 2, "ERROR: FTP URL is invalid; invalid component="<<s);
+        return true;
     }
+
     return false;
 }
 
@@ -593,18 +587,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         }
 
         if(scheme == AnyP::PROTO_FTP) {
-            if(containsFtpCommandDelimiter(SBuf(login))) {
-                debugs(23, 2, "error: FTP login contains FTP command delimiters");
-                return false;
-            }
-
-            if(containsFtpCommandDelimiter(SBuf(urlpath))) {
-                debugs(23, 2, "error: FTP path contains FTP command delimiters");
-                return false;
-            }
-
-            if(containsFtpCommandDelimiter(SBuf(foundHost))) {
-                debugs(23, 2, "error: FTP host contains FTP command delimiters");
+            if(validateFtpUrlComponent(SBuf(login)) || validateFtpUrlComponent(SBuf(urlpath))) {
                 return false;
             }
         }
