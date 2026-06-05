@@ -79,7 +79,7 @@ static bool containsFtpCommandDelimiter(const SBuf &s)
     static const auto crlf = CharacterSet::CR + CharacterSet::LF;
 
     if (s.findFirstOf(crlf) != SBuf::npos) {
-        debugs(23, 2, "ERROR: FTP URL is invalid; invalid component="<<s);
+        debugs(23, 2, "ERROR: FTP URL contains command delimiter characters");
         return true;
     }
 
