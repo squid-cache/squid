@@ -70,16 +70,15 @@ PathChars()
 }
 
 /**
- * validateFtpUrlComponent validates that the given URL component does not contain delimiters in a FTP request.
- * \param s the URL component to validate. s should not have been previously decoded.
- * \return true if the URL component is invalid, i.e., contains delimiters, or cannot be decoded, false otherwise.
+ * containsFtpCommandDelimiter validates that the given URL component does not contain delimiters in a FTP request.
+ * \param s the URL component to validate. s should have been previously decoded.
+ * \return true if the URL component contains FTP delimiters, false otherwise.
  */
-static bool validateFtpUrlComponent(const SBuf &s)
+static bool containsFtpCommandDelimiter(const SBuf &s)
 {
-    const auto crlf = CharacterSet("crlf", "\r\n");
-    const auto decoded = AnyP::Uri::Decode(s);
+    static const auto crlf = CharacterSet::CR + CharacterSet::LF;
 
-    if(!decoded || decoded->findFirstOf(crlf) != SBuf::npos) {
+    if(!s || s.findFirstOf(crlf) != SBuf::npos) {
         debugs(23, 2, "ERROR: FTP URL is invalid; invalid component="<<s);
         return true;
     }
@@ -462,6 +461,8 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                 *t = 0;
                 strncpy((char *) foundHost, t + 1, sizeof(foundHost)-1);
                 foundHost[sizeof(foundHost)-1] = '\0';
+                // Bug 4498: URL-unescape the login info after extraction
+                rfc1738_unescape(login);
             }
 
             /* Is there any host information? (we should eventually parse it above) */
@@ -586,20 +587,19 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             }
         }
 
+        const auto loginInfo = SBuf(login);
         if(scheme == AnyP::PROTO_FTP) {
-            if(validateFtpUrlComponent(SBuf(login)) || validateFtpUrlComponent(SBuf(urlpath))) {
+            // We do not need to validate the host because it cannot contain a raw CR or LF due to the initialization.
+            // Moreover the host is not used as a FTP command argument.
+            if(containsFtpCommandDelimiter(loginInfo) || containsFtpCommandDelimiter(AnyP::Uri::Decode(SBuf(urlpath)))) {
                 return false;
             }
         }
 
-        // Bug 4498: URL-unescape the login info after extraction
-        if (*login)
-            rfc1738_unescape(login);
-
         setScheme(scheme);
         path(urlpath);
         host(foundHost);
-        userInfo(SBuf(login));
+        userInfo(loginInfo);
         port(foundPort);
         return true;
 
