@@ -78,7 +78,7 @@ static bool containsFtpCommandDelimiter(const SBuf &s)
 {
     static const auto crlf = CharacterSet::CR + CharacterSet::LF;
 
-    if(!s || s.findFirstOf(crlf) != SBuf::npos) {
+    if (s.findFirstOf(crlf) != SBuf::npos) {
         debugs(23, 2, "ERROR: FTP URL is invalid; invalid component="<<s);
         return true;
     }
@@ -589,11 +589,12 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
 
         const auto loginInfo = SBuf(login);
         if(scheme == AnyP::PROTO_FTP) {
-            // We do not need to validate the host because it cannot contain a raw CR or LF due to the initialization.
-            // Moreover the host is not used as a FTP command argument.
-            if(containsFtpCommandDelimiter(loginInfo) || containsFtpCommandDelimiter(AnyP::Uri::Decode(SBuf(urlpath)))) {
+            // XXX: We do not need to validate the host because it cannot contain a raw CR or LF due to the way it is initialized.
+            //      Moreover, the host is not used in a FTP command argument.
+            //      Therefore, there is no risk of FTP command injection via the host component of a FTP URL.
+            const auto urlpathDecoded = AnyP::Uri::Decode(SBuf(urlpath));
+            if(!urlpathDecoded || containsFtpCommandDelimiter(urlpathDecoded.value()) || containsFtpCommandDelimiter(loginInfo))
                 return false;
-            }
         }
 
         setScheme(scheme);
