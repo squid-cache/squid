@@ -1,4 +1,4 @@
-Changes in squid-7.6 (04 Jun 2026):
+Changes in squid-7.6 (08 Jun 2026):
 
 	- HTTP/1.1: Transfer-Encoding:identity is prohibited
 	- Harden peerDigestSwapInMask against invalid cache digest reply
@@ -8,6 +8,7 @@ Changes in squid-7.6 (04 Jun 2026):
 	- Honor reply_header_max_size for received FTP control responses
 	- Improve parsing of certain FTP directory listing formats
 	- Support Nettle 4.0 md5_digest API
+    - Reject excessively large FTP control replies
 	- .. and some cleanups
 
 Changes in squid-7.5 (12 Mar 2026):
