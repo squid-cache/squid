@@ -115,7 +115,6 @@ public:
     char *filepath;
     char *dirpath;
     int64_t restart_offset;
-    char *proxy_host;
     size_t list_width;
     String cwd_message;
     char *old_filepath;
@@ -341,7 +340,6 @@ Ftp::Gateway::Gateway(FwdState *fwdState):
     filepath(nullptr),
     dirpath(nullptr),
     restart_offset(0),
-    proxy_host(nullptr),
     list_width(0),
     old_filepath(nullptr),
     typecode('\0')
@@ -1291,10 +1289,7 @@ ftpSendUser(Ftp::Gateway * ftpState)
     if (!ftpState || !ftpState->haveControlChannel("ftpSendUser"))
         return;
 
-    if (ftpState->proxy_host != nullptr)
-        snprintf(cbuf, CTRL_BUFLEN, "USER %s@%s\r\n", ftpState->user, ftpState->request->url.host());
-    else
-        snprintf(cbuf, CTRL_BUFLEN, "USER %s\r\n", ftpState->user);
+    snprintf(cbuf, CTRL_BUFLEN, "USER %s\r\n", ftpState->user);
 
     ftpState->writeCommand(cbuf);
 
