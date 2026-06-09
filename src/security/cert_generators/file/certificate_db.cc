@@ -336,7 +336,7 @@ Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Securi
     }
 
     const auto tm = X509_getm_notAfter(cert.get());
-    row.setValue(cnlExp_date, std::string(reinterpret_cast<char *>(tm->data), tm->length).c_str());
+    row.setValue(cnlExp_date, std::string(reinterpret_cast<const char *>(ASN1_STRING_get0_data(tm)), ASN1_STRING_length(tm)).c_str());
     const auto subject = OneLineSummary(*X509_get_subject_name(cert.get()));
     row.setValue(cnlName, subject.get());
     row.setValue(cnlKey, useKey.c_str());
