@@ -292,19 +292,6 @@ AS_IF([test "x$PRESET_CFLAGS" = "x"],[
       ],
       [CFLAGS="$squid_cv_cc_option_wall $CFLAGS"]
     )
-  ],[
-    AS_CASE(["$host"],
-      [*mips-sgi-irix6.*],[
-        # suggested by Rafael Seidl <rafaels@cthulhu.engr.sgi.com>
-        CFLAGS="$squid_cv_cc_option_optimize -OPT:Olimit=0:space=OFF \
-                -woff 1009,1014,1110,1116,1183,1185,1188,1204,1230,1233,1355 \
-                -Wl,-woff,85,-woff,84,-woff,134 \
-                -nostdinc -I/usr/include -D_BSD_SIGNALS $CFLAGS"
-        CXXFLAGS="$squid_cv_cc_option_optimize -OPT:Olimit=0:space=OFF \
-                  -woff 1009,1014,1110,1116,1183,1185,1188,1204,1230,1233,1355 \
-                  -Wl,-woff,85,-woff,84,-woff,134 \
-                  -nostdinc -I/usr/include -D_BSD_SIGNALS $CXXFLAGS"
-    ])
   ])
 ])
 
@@ -1035,7 +1022,7 @@ SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
 SQUID_CHECK_LIB_WORKS(nettle,[
   PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[
     CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
-    AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
+    AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h nettle/version.h)
   ],[:])
 ])
 
@@ -2060,26 +2047,11 @@ SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
 dnl System-specific library modifications
 AH_TEMPLATE(GETTIMEOFDAY_NO_TZP,[Whether gettimeofday takes only one argument])
 AS_CASE(["$host"],
-  [*-pc-sco3.2*],[
-    # -lintl is needed on SCO version 3.2v4.2 for strftime()
-    # Robert Side <rside@aiinc.bc.ca>
-    # Mon, 18 Jan 1999 17:48:00 GMT
-    AC_CHECK_LIB(intl, strftime)
-  ],
-
   [i386-*-solaris2.*],[
     AS_IF([test "x$GCC" = "xyes"],[
       AC_MSG_NOTICE([Removing -O for gcc on $host])
       CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9g]]*//'`"
     ])
-  ],
-
-  [*-sgi-irix*],[
-    AC_MSG_NOTICE([Removing -lsocket for IRIX...])
-    LIBS=`echo $LIBS | sed -e s/-lsocket//`
-    AC_MSG_NOTICE([Removing -lnsl for IRIX...])
-    LIBS=`echo $LIBS | sed -e s/-lnsl//`
-    ac_cv_lib_nsl_main=no
   ],
 
   [*-ibm-aix*],[

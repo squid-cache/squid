@@ -71,6 +71,10 @@ public:
     /// the useful content length is strictly less than this limit.
     static size_type SizeMaxXXX() { return SizeMax_; }
 
+    /// The size limit for input that is later fed to legacy processing/encoding
+    /// algorithms that grow the String without checking SizeMaxXXX().
+    static size_type RawSizeMaxXXX() { return (SizeMaxXXX()+1)/3; }
+
     size_type size() const { return len_; }
 
     /// variant of size() suited to be used for printf-alikes.

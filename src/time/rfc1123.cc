@@ -179,7 +179,7 @@ Time::ParseRfc1123(const char *str)
     t = mktime(tm);
     if (t != -1) {
         time_t dst = 0;
-#if !(defined(_TIMEZONE) || defined(_timezone) || _SQUID_AIX_ || _SQUID_WINDOWS_ || _SQUID_SGI_)
+#if !(defined(_TIMEZONE) || defined(_timezone) || _SQUID_AIX_ || _SQUID_WINDOWS_)
         extern long timezone;
 #endif
         /*

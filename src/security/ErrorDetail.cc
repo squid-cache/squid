@@ -468,7 +468,7 @@ Security::ErrorDetail::ErrorDetail(const ErrorCode anErrorCode, const CertPointe
 {
     errReason = aReason;
     peer_cert = cert;
-    broken_cert = broken ? broken : cert;
+    broken_cert = broken;
 }
 
 #if USE_OPENSSL
@@ -564,8 +564,8 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
 void
 Security::ErrorDetail::printSubject(std::ostream &os) const
 {
-    if (broken_cert) {
-        auto buf = SubjectName(*broken_cert);
+    if (const auto cert = certificateToReport()) {
+        auto buf = SubjectName(*cert);
         if (!buf.isEmpty()) {
             // TODO: Convert html_quote() into an std::ostream manipulator.
             // quote to avoid possible html code injection through
@@ -632,9 +632,9 @@ void
 Security::ErrorDetail::printCommonName(std::ostream &os) const
 {
 #if USE_OPENSSL
-    if (broken_cert.get()) {
+    if (const auto cert = certificateToReport()) {
         CommonNamesPrinter printer(os);
-        (void)Ssl::HasMatchingSubjectName(*broken_cert, printer);
+        (void)Ssl::HasMatchingSubjectName(*cert, printer);
         if (printer.printed)
             return;
     }
@@ -646,8 +646,8 @@ Security::ErrorDetail::printCommonName(std::ostream &os) const
 void
 Security::ErrorDetail::printCaName(std::ostream &os) const
 {
-    if (broken_cert) {
-        auto buf = IssuerName(*broken_cert);
+    if (const auto cert = certificateToReport()) {
+        auto buf = IssuerName(*cert);
         if (!buf.isEmpty()) {
             // quote to avoid possible html code injection through
             // certificate issuer subject
@@ -663,8 +663,8 @@ void
 Security::ErrorDetail::printNotBefore(std::ostream &os) const
 {
 #if USE_OPENSSL
-    if (broken_cert.get()) {
-        if (const auto tm = X509_getm_notBefore(broken_cert.get())) {
+    if (const auto cert = certificateToReport()) {
+        if (const auto tm = X509_getm_notBefore(cert)) {
             // TODO: Add and use an ASN1_TIME printing operator instead.
             static char tmpBuffer[256]; // A temporary buffer
             Ssl::asn1timeToString(tm, tmpBuffer, sizeof(tmpBuffer));
@@ -681,8 +681,8 @@ void
 Security::ErrorDetail::printNotAfter(std::ostream &os) const
 {
 #if USE_OPENSSL
-    if (broken_cert.get()) {
-        if (const auto tm = X509_getm_notAfter(broken_cert.get())) {
+    if (const auto cert = certificateToReport()) {
+        if (const auto tm = X509_getm_notAfter(cert)) {
             // XXX: Reduce code duplication.
             static char tmpBuffer[256]; // A temporary buffer
             Ssl::asn1timeToString(tm, tmpBuffer, sizeof(tmpBuffer));
@@ -747,7 +747,7 @@ Security::ErrorDetail::printErrorLibError(std::ostream &os) const
  * %ssl_error_descr: A short description of the SSL error
  * %ssl_lib_error: human-readable low-level error string by ErrorString()
  *
- * Certificate information extracted from broken (not necessarily peer!) cert
+ * Peer or intermediate certificate info extracted from certificateToReport()
  * %ssl_cn: The comma-separated list of common and alternate names
  * %ssl_subject: The certificate subject
  * %ssl_ca_name: The certificate issuer name

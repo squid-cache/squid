@@ -145,45 +145,75 @@ jobs:
     strategy:
       matrix:
         osversion:
-          - 14.3
+          # - "15.0" # build issues on 15.0 as of 2026-04. Let's wait for 15.1
+          - "14.3"
+          - "13.5"
+        platform:
+          - amd64
+          # We are ready to support multiple platforms, but
+          # - arm64 is too slow as of 2026-02 (> 6 hours per run, GitHub times out)
+          # - riscv64 not working as of 2026-02 (GitHub image is incomplete)
+          # We expect these problems to be solved some time soon.
+    runs-on: "${{ matrix.platform != 'arm64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}"
 
-    runs-on: ubuntu-24.04
-    name: freebsd(${{ matrix.osversion }})
+    name: freebsd(${{ matrix.osversion }},${{ matrix.platform }})
 
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2.19
+        with:
+          verbose: 2 # default 0
+          key: ${{ github.job }}-${{ matrix.osversion }}-${{ matrix.platform }}
+          max-size: "250MB"
+          evict-old-files: "28d"
 
       - name: Run test-builds
         id: test-builds
         uses: vmactions/freebsd-vm@v1
         with:
           usesh: true
-          release: ${{ matrix.osversion }}
+          sync: rsync
+          copyback: true
+          release: "${{ matrix.osversion }}"
+          arch: "${{ matrix.platform }}"
           prepare: |
-            pkg update
+            export BATCH=yes
+            which nproc > /dev/null && echo "MAKE_JOBS_NUMBER?=`nproc --all`" >> /etc/make.conf
+            echo "OPTIONS_UNSET=CUPS DEBUG DOCS FONTCONFIG NLS X11" >> /etc/make.conf
+            echo "WITHOUT_MODULES=sound ntfs linux" >> /etc/make.conf
+            echo "WITHOUT_X11=yes" >> /etc/make.conf
+            echo "NO_SENDMAIL=true" >> /etc/make.conf
+            echo "IGNORE_OSVERSION=yes" >> /usr/local/etc/pkg.conf
+
             pkg install -y \
               autoconf \
               autoconf-archive \
               automake \
-              bash \
+              ccache \
               cppunit \
               gmake \
               libltdl \
               libtool \
-              m4 \
               nettle \
               pkgconf
+            ccache --set-config=cache_dir="$GITHUB_WORKSPACE/.ccache"
+            ccache --set-config=max_size='250MB'
+            ccache --set-config=compression=true
 
           run: |
             export MAKE=gmake
-            ./test-builds.sh
+            export CC='ccache cc'
+            export CXX='ccache c++'
+            ./test-builds.sh layer-02-maximus
 
       - name: Publish build logs
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-freebsd-${{ matrix.osversion }}
+          name: build-logs-freebsd-${{ matrix.osversion }}-${{ matrix.platform }}
           path: "**/*.log"
 
   openbsd:
