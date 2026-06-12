@@ -53,7 +53,6 @@ static TokenTableEntry TokenTable2C[] = {
     TokenTableEntry(">lp", LFT_CLIENT_LOCAL_PORT),
 
     TokenTableEntry("la", LFT_LOCAL_LISTENING_IP),
-    /*TokenTableEntry( "lA", LFT_LOCAL_NAME ), */
     TokenTableEntry("lp", LFT_LOCAL_LISTENING_PORT),
 
     TokenTableEntry("<la", LFT_SERVER_LOCAL_IP),
