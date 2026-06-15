@@ -597,8 +597,11 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             // host component is not used in FTP command arguments.
             // Assure(!containsFtpCommandDelimiter(SBuf(foundHost)));
 
+            if (containsFtpCommandDelimiter(loginInfo))
+                return false;
+
             const auto urlpathDecoded = AnyP::Uri::Decode(SBuf(urlpath));
-            if(!urlpathDecoded || containsFtpCommandDelimiter(urlpathDecoded.value()) || containsFtpCommandDelimiter(loginInfo))
+            if(!urlpathDecoded || containsFtpCommandDelimiter(urlpathDecoded.value()))
                 return false;
         }
 
