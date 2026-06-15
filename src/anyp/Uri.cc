@@ -589,9 +589,13 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
 
         const auto loginInfo = SBuf(login);
         if(scheme == AnyP::PROTO_FTP) {
-            // XXX: We do not need to validate the host because it cannot contain a raw CR or LF due to the way it is initialized.
-            //      Moreover, the host is not used in a FTP command argument.
-            //      Therefore, there is no risk of FTP command injection via the host component of a FTP URL.
+            // For CONNECTS, a parseHost() call above ensures that foundHost has
+            // no FTP command delimiters. For other methods, "whitespace is also
+            // a hostname delimiter" loop above ensures that. Optimization: Do
+            // not create an SBuf just to assert that invariant here because the
+            // host component is not used in FTP command arguments.
+            // Assure(!containsFtpCommandDelimiter(SBuf(foundHost)));
+
             const auto urlpathDecoded = AnyP::Uri::Decode(SBuf(urlpath));
             if(!urlpathDecoded || containsFtpCommandDelimiter(urlpathDecoded.value()) || containsFtpCommandDelimiter(loginInfo))
                 return false;
