@@ -831,7 +831,7 @@ Ftp::Client::writeCommand(const char *buf)
     Assure(buf[bufLen-1] == '\n');
     // If this assertion fails, then the caller has assembled an FTP command
     // using input unchecked for embedded CRLF. For an example of such checks,
-    // see containsFtpCommandDelimiter() calls in AnyP::Uri::parse().
+    // see rejectFtpCommandDelimiters() calls in AnyP::Uri::parse().
     Assure(strcspn(buf, crlf) == bufLen-2);
 
     char *ebuf;
