@@ -586,7 +586,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         const auto loginCopy = SBuf(login);
         const auto urlpathCopy = SBuf(urlpath);
 
-        if(scheme == AnyP::PROTO_FTP) {
+        if (scheme == AnyP::PROTO_FTP) {
             // Some FTP URL components may be used to form FTP commands. FTP
             // does not have a standard, consistently supported way of encoding
             // CR and LF delimiters in command parameters, so we reject URIs
