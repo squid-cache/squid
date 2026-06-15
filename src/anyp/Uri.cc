@@ -588,8 +588,8 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         }
 
         // Optimization: Convert legacy c-strings to SBuf once.
-        const auto loginInfo = SBuf(login);
-        const auto urlpathInfo = SBuf(urlpath);
+        const auto loginCopy = SBuf(login);
+        const auto urlpathCopy = SBuf(urlpath);
 
         if(scheme == AnyP::PROTO_FTP) {
             // For CONNECTS, a parseHost() call above ensures that foundHost has
@@ -597,20 +597,20 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             // a hostname delimiter" loop above ensures that. Optimization: Do
             // not create an SBuf just to assert that invariant here because the
             // host component is not used in FTP command arguments.
-            // Assure(!containsFtpCommandDelimiter(SBuf(foundHost)));
+            // Assure(!containsFtpCommandDelimiter(foundHostCopy));
 
-            if (containsFtpCommandDelimiter(loginInfo))
+            if (containsFtpCommandDelimiter(loginCopy))
                 return false;
 
-            const auto urlpathDecoded = AnyP::Uri::Decode(urlpathInfo);
+            const auto urlpathDecoded = AnyP::Uri::Decode(urlpathCopy);
             if(!urlpathDecoded || containsFtpCommandDelimiter(urlpathDecoded.value()))
                 return false;
         }
 
         setScheme(scheme);
-        path(urlpathInfo);
+        path(urlpathCopy);
         host(foundHost);
-        userInfo(loginInfo);
+        userInfo(loginCopy);
         port(foundPort);
         return true;
 
