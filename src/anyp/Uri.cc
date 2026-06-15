@@ -69,21 +69,16 @@ PathChars()
     return pathValid;
 }
 
-/**
- * containsFtpCommandDelimiter validates that the given URL component does not contain delimiters in a FTP request.
- * \param s the URL component to validate. s should have been previously decoded.
- * \return true if the URL component contains FTP delimiters, false otherwise.
- */
-static bool containsFtpCommandDelimiter(const SBuf &s)
+/// Throws when the given URL component contains a CR or LF character.
+/// \param component is a URL part that needs to be checked
+/// \prec component is not percent-encoded (e.g., it was decoded after extracting it from an HTTP request target)
+static void
+rejectFtpCommandDelimiters(const SBuf &component)
 {
-    static const auto crlf = CharacterSet::CR + CharacterSet::LF;
+    static const auto delimiterCharacters = CharacterSet::CR + CharacterSet::LF;
 
-    if (s.findFirstOf(crlf) != SBuf::npos) {
-        debugs(23, 2, "ERROR: FTP URL contains command delimiter characters");
-        return true;
-    }
-
-    return false;
+    if (component.findFirstOf(delimiterCharacters) != SBuf::npos)
+        throw TextException("URL contains an FTP command delimiter character", Here());
 }
 
 /**
@@ -594,17 +589,16 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         if(scheme == AnyP::PROTO_FTP) {
             // For CONNECTS, a parseHost() call above ensures that foundHost has
             // no FTP command delimiters. For other methods, "whitespace is also
-            // a hostname delimiter" loop above ensures that. Optimization: Do
-            // not create an SBuf just to assert that invariant here because the
-            // host component is not used in FTP command arguments.
-            // Assure(!containsFtpCommandDelimiter(foundHostCopy));
+            // a hostname delimiter" loop above ensures that invariant as well.
+            // Optimization: Do not create an SBuf just to check that invariant
+            // because the host component is not used in FTP command arguments.
 
-            if (containsFtpCommandDelimiter(loginCopy))
-                return false;
+            rejectFtpCommandDelimiters(loginCopy);
 
-            const auto urlpathDecoded = AnyP::Uri::Decode(urlpathCopy);
-            if(!urlpathDecoded || containsFtpCommandDelimiter(urlpathDecoded.value()))
-                return false;
+            if (const auto urlpathDecoded = AnyP::Uri::Decode(urlpathCopy))
+                rejectFtpCommandDelimiters(*urlpathDecoded);
+            else
+                throw TextException("invalid percent-encoding in an FTP URL path", Here());
         }
 
         setScheme(scheme);
