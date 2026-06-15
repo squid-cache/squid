@@ -587,11 +587,17 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         const auto urlpathCopy = SBuf(urlpath);
 
         if(scheme == AnyP::PROTO_FTP) {
-            // For CONNECTS, a parseHost() call above ensures that foundHost has
-            // no FTP command delimiters. For other methods, "whitespace is also
-            // a hostname delimiter" loop above ensures that invariant as well.
-            // Optimization: Do not create an SBuf just to check that invariant
-            // because the host component is not used in FTP command arguments.
+            // Some FTP URL components may be used to form FTP commands. FTP
+            // does not have a standard, consistently supported way of encoding
+            // CR and LF delimiters in command parameters, so we reject URIs
+            // containing those delimiters in those components.
+
+            // These checks also apply to use cases where this Squid instance
+            // does not form an FTP command from the URL (e.g., we may forward
+            // the URL to another HTTP proxy instead). Even though doing so may
+            // break some "works without Squid" transactions, we cover those
+            // additional use cases to protect broken recipients because these
+            // delimiters affect command framing.
 
             rejectFtpCommandDelimiters(loginCopy);
 
@@ -599,6 +605,12 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                 rejectFtpCommandDelimiters(*urlpathDecoded);
             else
                 throw TextException("invalid percent-encoding in an FTP URL path", Here());
+
+            // For CONNECTS, a parseHost() call above ensures that foundHost has
+            // no FTP command delimiters. For other methods, "whitespace is also
+            // a hostname delimiter" loop above ensures that invariant as well.
+            // Optimization: Do not create an SBuf just to check that invariant
+            // because the host component is not used in FTP command arguments.
         }
 
         setScheme(scheme);
