@@ -75,9 +75,9 @@ PathChars()
 static void
 rejectFtpCommandDelimiters(const SBuf &component)
 {
-    static const auto delimiterCharacters = CharacterSet::CR + CharacterSet::LF;
+    static const auto delimiterChars = (CharacterSet::CR + CharacterSet::LF).rename("CRLF");
 
-    if (component.findFirstOf(delimiterCharacters) != SBuf::npos)
+    if (component.findFirstOf(delimiterChars) != SBuf::npos)
         throw TextException("URL contains an FTP command delimiter character", Here());
 }
 
