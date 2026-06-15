@@ -823,10 +823,9 @@ Ftp::Client::dataClosed(const CommCloseCbParams &)
 void
 Ftp::Client::writeCommand(const char *buf)
 {
-    const auto bufLen = strlen(buf);
-
     // The caller must supply a non-empty command followed by CRLF.
     // TODO: Move CRLF appending code from callers to here.
+    const auto bufLen = strlen(buf);
     Assure(bufLen > 2);
     Assure(buf[bufLen-2] == '\r');
     Assure(buf[bufLen-1] == '\n');
