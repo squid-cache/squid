@@ -588,6 +588,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         }
 
         const auto loginInfo = SBuf(login);
+
         if(scheme == AnyP::PROTO_FTP) {
             // For CONNECTS, a parseHost() call above ensures that foundHost has
             // no FTP command delimiters. For other methods, "whitespace is also
