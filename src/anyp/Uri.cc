@@ -587,7 +587,9 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             }
         }
 
+        // Optimization: Convert legacy c-strings to SBuf once.
         const auto loginInfo = SBuf(login);
+        const auto urlpathInfo = SBuf(urlpath);
 
         if(scheme == AnyP::PROTO_FTP) {
             // For CONNECTS, a parseHost() call above ensures that foundHost has
@@ -600,13 +602,13 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             if (containsFtpCommandDelimiter(loginInfo))
                 return false;
 
-            const auto urlpathDecoded = AnyP::Uri::Decode(SBuf(urlpath));
+            const auto urlpathDecoded = AnyP::Uri::Decode(urlpathInfo);
             if(!urlpathDecoded || containsFtpCommandDelimiter(urlpathDecoded.value()))
                 return false;
         }
 
         setScheme(scheme);
-        path(urlpath);
+        path(urlpathInfo);
         host(foundHost);
         userInfo(loginInfo);
         port(foundPort);
