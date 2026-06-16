@@ -1435,6 +1435,31 @@ FwdState::pinnedCanRetry() const
     if (request->flags.sslBumped)
         return false;
 
+    // Currently, all retries call useDestinations() which never calls
+    // usePinned() and usually calls connectStart(). The latter asserts that
+    // request->pinnedConnection() is nil.
+    if (request->pinnedConnection())
+        return false;
+
+    // XXX: The only case where the condition above is false despite true
+    // `request->flags.pinned` is when HttpRequest::clientConnectionManager job
+    // disappears. However, in that case, we should probably return `false`
+    // anyway to avoid retries with a gone client!
+
+    // XXX: FwdState never re-pins a failed connection. In other words, if
+    // FwdState fails while using a pinned connection, it never pins a new
+    // connection to the same HttpRequest::clientConnectionManager job. 2013
+    // commit 693cb033 removed most re-pinning code. 2019 commit 3dde9e52
+    // probably assumed that "FTP proxying and connection-based HTTP
+    // authentication" cases mentioned below might re-pin, so it added this
+    // method to avoid breaking those alleged cases, but that assumption was
+    // probably wrong then and/or is wrong now.
+
+    // TODO: Confirm that "connection-based HTTP authentication" does not need
+    // some other fix and remove this method. Also adjust peer selection code to
+    // avoid computing/returning regular destinations (that cannot be used)
+    // after selecting a PINNED connection.
+
     // The other pinned cases are FTP proxying and connection-based HTTP
     // authentication. TODO: Do these cases have restrictions?
     return true;
