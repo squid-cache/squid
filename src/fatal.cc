@@ -49,6 +49,8 @@ fatal(const char *message)
 
     storeDirWriteCleanLogs(0);
 
+    RunRegisteredHere(RegisteredRunner::finishShutdown);
+
     fatal_common(message);
 
     exit(EXIT_FAILURE);
@@ -94,6 +96,8 @@ fatal_dump(const char *message)
 
     if (opt_catch_signals)
         storeDirWriteCleanLogs(0);
+
+    RunRegisteredHere(RegisteredRunner::finishShutdown);
 
     Debug::PrepareToDie();
     abort();
