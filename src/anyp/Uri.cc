@@ -601,7 +601,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
 
             rejectFtpCommandDelimiters(loginCopy);
 
-            if (const auto urlpathDecoded = AnyP::Uri::Decode(urlpathCopy))
+            if (const auto urlpathDecoded = Decode(urlpathCopy))
                 rejectFtpCommandDelimiters(*urlpathDecoded);
             else
                 throw TextException("invalid percent-encoding in an FTP URL path", Here());
