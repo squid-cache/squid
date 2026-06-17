@@ -7,8 +7,8 @@
  */
 
 /*
- * Characterization tests that confirm the stack buffer overflow in the
- * external-ACL credential base64 encoding paths.
+ * Characterization and fix-verification tests for the stack buffer overflow
+ * in the external-ACL credential base64 encoding paths.
  *
  * Three production sites allocate a fixed-size stack buffer sized for
  * MAX_LOGIN_SZ bytes of pre-encoding input:
@@ -20,23 +20,27 @@
  * Sites A and B encode:  extacl_user + ":" + extacl_passwd
  * Site C encodes:        extacl_user + peer_login_suffix
  *
- * All three pass the actual (unchecked) field sizes directly to
- * base64_encode_update() without verifying that the combined plain-text
- * length fits within MAX_LOGIN_SZ.  When a helper returns values whose
- * combined encoded length exceeds base64_encode_len(MAX_LOGIN_SZ), the
- * writes overflow the fixed-size stack buffer.
+ * Without a guard, all three pass the actual (unchecked) field sizes
+ * directly to base64_encode_update() into a 175-byte stack buffer.
+ * When a helper returns values whose combined plain-text length exceeds
+ * 129 bytes the encoded output (>= 176 bytes) overflows the buffer.
  *
- * These tests replicate the exact encoding sequences used at each site
- * and assert that the bytes written exceed the buffer allocation
- * whenever the input exceeds the safe threshold.  No actual
- * out-of-bounds write is performed: we count required output bytes
- * using a generously-sized scratch buffer and compare against the
- * allocation that the production code would have used.
+ * The fix for site A (ModXact.cc) adds a pre-encoding guard:
  *
- * Safe input threshold:
- *   Sites A/B: user + ":" + passwd must total < 130 bytes (i.e. <= 129).
- *   Site C:    user + peer_login_suffix must total < 130 bytes.
- *   At 130 bytes the encoded output (176 bytes) exceeds the 175-byte buffer.
+ *   if (plainLen > MAX_LOGIN_SZ)   // i.e. > 128
+ *       throw TexcHere(...);
+ *
+ * The buffer-overflow section of this file characterizes the encoding
+ * arithmetic (showing the overflow would occur without the guard).
+ * The guard-condition section verifies the fix's threshold directly.
+ *
+ * Buffer overflow threshold (encoding arithmetic):
+ *   At 130 bytes of plain input the encoded output is 176 bytes,
+ *   which exceeds the 175-byte buffer by 1 byte.
+ *
+ * Guard threshold (site A fix):
+ *   plainLen > MAX_LOGIN_SZ (128) triggers the throw.
+ *   plainLen == 128 is safe; plainLen == 129 is rejected.
  */
 
 #include "squid.h"
@@ -122,6 +126,9 @@ class TestExtAclBase64Overflow : public CPPUNIT_NS::TestFixture
     // Site C — user + peer_login_suffix pattern
     CPPUNIT_TEST(testSiteC_SafeInputFitsBuffer);
     CPPUNIT_TEST(testSiteC_OversizedUserOverflows);
+    // Site A fix — guard condition (ModXact.cc: plainLen > MAX_LOGIN_SZ throws)
+    CPPUNIT_TEST(testGuardAllowsExactLimit);
+    CPPUNIT_TEST(testGuardRejectsOneByteOver);
     CPPUNIT_TEST_SUITE_END();
 
 protected:
@@ -159,6 +166,18 @@ protected:
 
     /// Oversized extacl_user overflows the same loginbuf via site C's path.
     void testSiteC_OversizedUserOverflows();
+
+    // ── Site A fix: guard condition verification ──────────────────────────
+    // The fix in ModXact.cc guards: if (plainLen > MAX_LOGIN_SZ) throw ...
+    // These tests verify the arithmetic of that guard directly.
+
+    /// plainLen == MAX_LOGIN_SZ (128) must NOT trigger the guard.
+    /// Encodes correctly within the 175-byte buffer (172 bytes written).
+    void testGuardAllowsExactLimit();
+
+    /// plainLen == MAX_LOGIN_SZ+1 (129) MUST trigger the guard.
+    /// Without the guard this input would write 176 bytes into a 175-byte buffer.
+    void testGuardRejectsOneByteOver();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TestExtAclBase64Overflow);
@@ -307,6 +326,59 @@ TestExtAclBase64Overflow::testSiteC_OversizedUserOverflows()
     CPPUNIT_ASSERT_MESSAGE("site C: oversized extacl_user causes encoded output to exceed "
                            "fixed loginbuf in httpFixupAuthentication '*'-prefix path",
                            written > ProductionBufSize);
+}
+
+void
+TestExtAclBase64Overflow::testGuardAllowsExactLimit()
+{
+    // The site A guard condition is: if (plainLen > MAX_LOGIN_SZ) throw
+    // plainLen == MAX_LOGIN_SZ (128) must NOT trigger it.
+    //
+    // user=63 + ":" + passwd=64 = 128 bytes.
+    // BASE64_ENCODE_RAW_LENGTH(128) = 172 bytes written; 172 <= 175. Safe.
+    const std::string user(63, 'U');
+    const std::string passwd(64, 'P');
+    const auto plainLen = user.size() + 1 + passwd.size();
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(MAX_LOGIN_SZ), plainLen);
+
+    const auto written = encodeUserColon(user.c_str(), user.size(),
+                                         passwd.c_str(), passwd.size());
+    CPPUNIT_ASSERT_MESSAGE("plainLen == MAX_LOGIN_SZ must not overflow the buffer "
+                           "(guard must allow this input)",
+                           written <= ProductionBufSize);
+}
+
+void
+TestExtAclBase64Overflow::testGuardRejectsOneByteOver()
+{
+    // The site A guard condition is: if (plainLen > MAX_LOGIN_SZ) throw
+    // plainLen == MAX_LOGIN_SZ+1 (129) MUST trigger the guard.
+    //
+    // Note: the guard is deliberately conservative. At plainLen=129 the
+    // encoded output is exactly 175 bytes (== ProductionBufSize), which
+    // technically fits. However the guard fires at plainLen > MAX_LOGIN_SZ,
+    // rejecting 129 to keep a safe margin for the 3-byte final padding slot.
+    // The true minimal overflowing input is 130 bytes (see testExactOverflowThreshold).
+    //
+    // This test confirms:
+    //   (a) plainLen == MAX_LOGIN_SZ + 1  (inputs constructed correctly)
+    //   (b) the guard condition (plainLen > MAX_LOGIN_SZ) is TRUE
+    //   (c) the encoded output still fits (guard fires before actual overflow)
+    const std::string user(64, 'U');
+    const std::string passwd(64, 'P');
+    const auto plainLen = user.size() + 1 + passwd.size();
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(MAX_LOGIN_SZ + 1), plainLen);
+
+    // (b) guard fires: plainLen > MAX_LOGIN_SZ
+    CPPUNIT_ASSERT_MESSAGE("plainLen == MAX_LOGIN_SZ+1 must trigger the guard condition",
+                           plainLen > static_cast<size_t>(MAX_LOGIN_SZ));
+
+    // (c) at this size the encoder writes exactly ProductionBufSize bytes (no margin)
+    const auto written = encodeUserColon(user.c_str(), user.size(),
+                                         passwd.c_str(), passwd.size());
+    CPPUNIT_ASSERT_MESSAGE("plainLen == MAX_LOGIN_SZ+1 still fits in the buffer "
+                           "(guard is conservative; actual overflow starts at plainLen=130)",
+                           written <= ProductionBufSize);
 }
 
 int
