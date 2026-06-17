@@ -641,15 +641,31 @@ Ftp::Server::parseOneRequest()
 {
     flags.readMore = false; // common for all but one case below
 
-    // OWS <command> [ RWS <parameter> ] OWS LF
+    // FTP command syntax is specified in RFC 959 Section 5.3. We generalize
+    // that grammar to parse all commands using the same code. We also relax the
+    // rules a little in hope to accommodate more real world use cases:
+    // * We allow ASCII HT, VT, and NP characters in various delimiters (in addition to SP).
+    // * We allow zero or more CR characters in command terminator (instead of exactly one).
+    // * We allow space characters before any command.
+    //
+    // command = BWS code [ RWS parameter ] OWS *CR LF
+    // code = 1*code_char
+    // parameter = 1*parameter_char ; without leading and trailing inner_space_chars
+    // code_char = ; any ASCII character other than space_char
+    // parameter_char = ; any ASCII character other than CR or LF
+    // BWS = 0*space_char ; optional "bad" space before the command code
+    // RWS = 1*inner_space_char ; required space before the command parameter
+    // OWS = 0*inner_space_char ; optional space after the command parameter
+    // inner_space_char = SP / HT / VT / NP ; space_char without CR and LF
+    // space_char = SP / HT / VT / NP / CR / LF; any isspace(3) character in "C" locale
 
-    // InlineSpaceChars are isspace(3) or RFC 959 Section 3.1.1.5.2, except
-    // for the LF character that we must exclude here (but see FullWhiteSpace).
-    static const char * const InlineSpaceChars = " \f\r\t\v";
+    static const auto InlineSpaceChars = " \f\t\v";
     static const CharacterSet InlineSpace = CharacterSet("Ftp::Inline", InlineSpaceChars);
-    static const CharacterSet FullWhiteSpace = (InlineSpace + CharacterSet::LF).rename("Ftp::FWS");
+    static const CharacterSet CrLfChars = (CharacterSet::CR + CharacterSet::LF).rename("CRLF");
+    static const CharacterSet FullWhiteSpace = (InlineSpace + CrLfChars).rename("Ftp::FWS");
     static const CharacterSet CommandChars = FullWhiteSpace.complement("Ftp::Command");
-    static const CharacterSet TailChars = CharacterSet::LF.complement("Ftp::Tail");
+    // RFC 959 Section 5.3.2 excludes both CR and LF from <char> and <pr-char> definitions
+    static const CharacterSet TailChars = CrLfChars.complement("Ftp::Tail");
 
     // This set is used to ignore empty commands without allowing an attacker
     // to keep us endlessly busy by feeding us whitespace or empty commands.
@@ -663,7 +679,7 @@ Ftp::Server::parseOneRequest()
     (void)tok.skipAll(LeadingSpace); // leading OWS and empty commands
     const bool parsed = tok.prefix(cmd, CommandChars); // required command
 
-    // note that the condition below will eat either RWS or trailing OWS
+    // note that the condition below eats leading RWS and trailing OWS, if any
     if (parsed && tok.skipAll(InlineSpace) && tok.prefix(params, TailChars)) {
         // now params may include trailing OWS
         // TODO: Support right-trimming using CharacterSet in Tokenizer instead
@@ -682,8 +698,21 @@ Ftp::Server::parseOneRequest()
         return earlyError(EarlyErrorKind::HugeRequest);
     }
 
+    if (parsed)
+        (void)tok.skipAll(CharacterSet::CR);
+
     // technically, we may skip multiple NLs below, but that is OK
     if (!parsed || !tok.skipAll(CharacterSet::LF)) { // did not find terminating LF yet
+
+        if (!tok.remaining().isEmpty()) {
+            // We always consume all valid input, so any leftovers imply that we
+            // found something that we cannot parse now and will never parse if
+            // more input becomes available later (e.g., `PWD\rQUIT\n`).
+            changeState(fssError, "bad FTP command syntax");
+            quitAfterError(nullptr);
+            return earlyError(EarlyErrorKind::MalformedCommand);
+        }
+
         // we need more data, but can we buffer more?
         if (inBuf.length() >= Config.maxRequestHeaderSize) {
             changeState(fssError, "huge req");
