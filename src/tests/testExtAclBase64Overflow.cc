@@ -129,6 +129,12 @@ class TestExtAclBase64Overflow : public CPPUNIT_NS::TestFixture
     // Site A fix — guard condition (ModXact.cc: plainLen > MAX_LOGIN_SZ throws)
     CPPUNIT_TEST(testGuardAllowsExactLimit);
     CPPUNIT_TEST(testGuardRejectsOneByteOver);
+    // Site B fix — guard condition (http.cc PASS/PROXYPASS: same three-segment pattern)
+    CPPUNIT_TEST(testSiteB_GuardAllowsExactLimit);
+    CPPUNIT_TEST(testSiteB_GuardRejectsOneByteOver);
+    // Site C fix — guard condition (http.cc '*'-prefix: two-segment pattern)
+    CPPUNIT_TEST(testSiteC_GuardAllowsExactLimit);
+    CPPUNIT_TEST(testSiteC_GuardRejectsOneByteOver);
     CPPUNIT_TEST_SUITE_END();
 
 protected:
@@ -178,6 +184,24 @@ protected:
     /// plainLen == MAX_LOGIN_SZ+1 (129) MUST trigger the guard.
     /// Without the guard this input would write 176 bytes into a 175-byte buffer.
     void testGuardRejectsOneByteOver();
+
+    // ── Site B fix: guard condition (http.cc PASS/PROXYPASS) ─────────────
+    // Identical three-segment encoding pattern to site A.
+
+    /// plainLen == MAX_LOGIN_SZ (128) must NOT trigger the site B guard.
+    void testSiteB_GuardAllowsExactLimit();
+
+    /// plainLen == MAX_LOGIN_SZ+1 (129) MUST trigger the site B guard.
+    void testSiteB_GuardRejectsOneByteOver();
+
+    // ── Site C fix: guard condition (http.cc '*'-prefix) ──────────────────
+    // Two-segment encoding: extacl_user + peer_login_suffix (no ':').
+
+    /// usernameLen + suffixLen == MAX_LOGIN_SZ (128) must NOT trigger the site C guard.
+    void testSiteC_GuardAllowsExactLimit();
+
+    /// usernameLen + suffixLen == MAX_LOGIN_SZ+1 (129) MUST trigger the site C guard.
+    void testSiteC_GuardRejectsOneByteOver();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TestExtAclBase64Overflow);
@@ -377,6 +401,82 @@ TestExtAclBase64Overflow::testGuardRejectsOneByteOver()
     const auto written = encodeUserColon(user.c_str(), user.size(),
                                          passwd.c_str(), passwd.size());
     CPPUNIT_ASSERT_MESSAGE("plainLen == MAX_LOGIN_SZ+1 still fits in the buffer "
+                           "(guard is conservative; actual overflow starts at plainLen=130)",
+                           written <= ProductionBufSize);
+}
+
+// ── Site B fix: http.cc PASS/PROXYPASS — identical three-segment pattern ─────
+
+void
+TestExtAclBase64Overflow::testSiteB_GuardAllowsExactLimit()
+{
+    // Site B guard: if (userLen + 1 + passwdLen > MAX_LOGIN_SZ) throw
+    // plainLen == MAX_LOGIN_SZ (128) must NOT fire — same arithmetic as site A.
+    const std::string user(63, 'U');
+    const std::string passwd(64, 'P');
+    const auto plainLen = user.size() + 1 + passwd.size();
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(MAX_LOGIN_SZ), plainLen);
+
+    const auto written = encodeUserColon(user.c_str(), user.size(),
+                                         passwd.c_str(), passwd.size());
+    CPPUNIT_ASSERT_MESSAGE("site B: plainLen == MAX_LOGIN_SZ must not overflow the buffer",
+                           written <= ProductionBufSize);
+}
+
+void
+TestExtAclBase64Overflow::testSiteB_GuardRejectsOneByteOver()
+{
+    // Site B guard fires at plainLen == MAX_LOGIN_SZ+1 (129).
+    // plainLen=129 produces exactly 175 encoded bytes — fills buffer but doesn't
+    // overflow; guard is conservative (fires before the 130-byte true overflow).
+    const std::string user(64, 'U');
+    const std::string passwd(64, 'P');
+    const auto plainLen = user.size() + 1 + passwd.size();
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(MAX_LOGIN_SZ + 1), plainLen);
+
+    CPPUNIT_ASSERT_MESSAGE("site B: plainLen == MAX_LOGIN_SZ+1 must trigger the guard",
+                           plainLen > static_cast<size_t>(MAX_LOGIN_SZ));
+
+    const auto written = encodeUserColon(user.c_str(), user.size(),
+                                         passwd.c_str(), passwd.size());
+    CPPUNIT_ASSERT_MESSAGE("site B: plainLen == MAX_LOGIN_SZ+1 still fits in the buffer "
+                           "(guard is conservative; actual overflow starts at plainLen=130)",
+                           written <= ProductionBufSize);
+}
+
+// ── Site C fix: http.cc '*'-prefix — two-segment pattern (no ':') ────────────
+
+void
+TestExtAclBase64Overflow::testSiteC_GuardAllowsExactLimit()
+{
+    // Site C guard: if (usernameLen + suffixLen > MAX_LOGIN_SZ) throw
+    // Combined == MAX_LOGIN_SZ (128) must NOT fire.
+    const std::string username(64, 'U');
+    const std::string suffix(64, 'S');
+    const auto plainLen = username.size() + suffix.size();
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(MAX_LOGIN_SZ), plainLen);
+
+    const auto written = encodeUserSuffix(username.c_str(), username.size(),
+                                          suffix.c_str(), suffix.size());
+    CPPUNIT_ASSERT_MESSAGE("site C: usernameLen+suffixLen == MAX_LOGIN_SZ must not overflow",
+                           written <= ProductionBufSize);
+}
+
+void
+TestExtAclBase64Overflow::testSiteC_GuardRejectsOneByteOver()
+{
+    // Site C guard fires at usernameLen + suffixLen == MAX_LOGIN_SZ+1 (129).
+    const std::string username(65, 'U');
+    const std::string suffix(64, 'S');
+    const auto plainLen = username.size() + suffix.size();
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(MAX_LOGIN_SZ + 1), plainLen);
+
+    CPPUNIT_ASSERT_MESSAGE("site C: usernameLen+suffixLen == MAX_LOGIN_SZ+1 must trigger the guard",
+                           plainLen > static_cast<size_t>(MAX_LOGIN_SZ));
+
+    const auto written = encodeUserSuffix(username.c_str(), username.size(),
+                                          suffix.c_str(), suffix.size());
+    CPPUNIT_ASSERT_MESSAGE("site C: plainLen == MAX_LOGIN_SZ+1 still fits in the buffer "
                            "(guard is conservative; actual overflow starts at plainLen=130)",
                            written <= ProductionBufSize);
 }
