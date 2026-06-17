@@ -829,10 +829,14 @@ Ftp::Client::writeCommand(const char *buf)
     Assure(bufLen > 2);
     Assure(buf[bufLen-2] == '\r');
     Assure(buf[bufLen-1] == '\n');
-    // If this assertion fails, then the caller has assembled an FTP command
-    // using input unchecked for embedded CRLF. For an example of such checks,
-    // see rejectFtpCommandDelimiters() calls in AnyP::Uri::parse().
-    Assure(strcspn(buf, crlf) == bufLen-2);
+
+    const auto crlfCharPosition = strcspn(buf, crlf);
+    if (crlfCharPosition != bufLen-2) {
+        const auto invalidCharName = buf[crlfCharPosition] == '\r' ? "CR" : "LF";
+        debugs(9, 2, "ERROR: Caller assembled a malformed FTP command. Found " << invalidCharName << " at position " << crlfCharPosition);
+        failed(ERR_FTP_FAILURE, 0);
+        return;
+    }
 
     char *ebuf;
     /* trace FTP protocol communications at level 2 */

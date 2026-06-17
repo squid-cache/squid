@@ -69,18 +69,6 @@ PathChars()
     return pathValid;
 }
 
-/// Throws when the given URL component contains a CR or LF character.
-/// \param component is a URL part that needs to be checked
-/// \prec component is not percent-encoded (e.g., it was decoded after extracting it from an HTTP request target)
-static void
-rejectFtpCommandDelimiters(const SBuf &component)
-{
-    static const auto delimiterChars = (CharacterSet::CR + CharacterSet::LF).rename("CRLF");
-
-    if (component.findFirstOf(delimiterChars) != SBuf::npos)
-        throw TextException("URL contains an FTP command delimiter character", Here());
-}
-
 /**
  * Governed by RFC 3986 section 2.1
  */
@@ -582,41 +570,10 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             }
         }
 
-        // Optimization: Convert legacy c-strings to SBuf once.
-        const auto loginCopy = SBuf(login);
-        const auto urlpathCopy = SBuf(urlpath);
-
-        if (scheme == AnyP::PROTO_FTP) {
-            // Ftp::Gateway uses some FTP URL components to form FTP commands.
-            // FTP does not have a standard, consistently supported way of
-            // encoding CR and LF delimiters in command parameters, so we reject
-            // URIs containing those delimiters in those components.
-
-            // These checks also apply to use cases where this Squid instance
-            // does not form an FTP command from the URL (e.g., we may forward
-            // the URL to another HTTP proxy instead). Even though doing so may
-            // break some "works without Squid" transactions, we cover those
-            // additional use cases to protect broken recipients because these
-            // delimiters affect FTP command framing.
-
-            rejectFtpCommandDelimiters(loginCopy);
-
-            if (const auto urlpathDecoded = Decode(urlpathCopy))
-                rejectFtpCommandDelimiters(*urlpathDecoded);
-            else
-                throw TextException("invalid percent-encoding in an FTP URL path", Here());
-
-            // For CONNECTS, a parseHost() call above ensures that foundHost has
-            // no FTP command delimiters. For other methods, "whitespace is also
-            // a hostname delimiter" loop above ensures that invariant as well.
-            // Optimization: Do not create an SBuf just to check that invariant
-            // because the host component is not used in FTP command arguments.
-        }
-
         setScheme(scheme);
-        path(urlpathCopy);
+        path(urlpath);
         host(foundHost);
-        userInfo(loginCopy);
+        userInfo(SBuf(login));
         port(foundPort);
         return true;
 
