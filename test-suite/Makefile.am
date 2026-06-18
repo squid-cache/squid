@@ -150,7 +150,7 @@ squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.de
 				sed s%$(srcdir)/squidconf/%% ; \
 		else break; fi; \
 	done; \
-	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; else exit 1; fi
+	if test "$$failed" -eq 0; then touch $@ ; else exit 1; fi
 
 CLEANFILES += \
 	squid-conf-tests \
