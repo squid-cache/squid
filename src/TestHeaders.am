@@ -15,7 +15,7 @@ EXCLUDE_FROM_HDR_TESTING =
 # headers to test
 
 testHeaders: $(SOURCES) $(noinst_HEADERS) $(EXTRA_DIST) $(top_srcdir)/test-suite/testHeader.cc.in
-	$(MAKE) $(^:.h=.hdrtest) && cp $(TRUE) $@
+	$(MAKE) $(^:.h=.hdrtest) && touch $@ && $(CHMOD) +x $@
 
 .h.hdrtest:
 	@SrcFilePath=`echo $< | $(SED) 's%^$(top_srcdir)/%%'`; \
