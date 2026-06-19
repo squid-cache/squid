@@ -708,7 +708,7 @@ FwdState::checkRetry()
     if (exhaustedTries())
         return false;
 
-    if (request->flags.pinned && !pinnedCanRetry())
+    if (request->flags.pinned)
         return false;
 
     if (!EnoughTimeToReForward(start_t))
@@ -1323,7 +1323,7 @@ FwdState::reforward()
 
     debugs(17, 3, e->url() << "?" );
 
-    if (request->flags.pinned && !pinnedCanRetry()) {
+    if (request->flags.pinned) {
         debugs(17, 3, "pinned connection; cannot retry");
         return 0;
     }
@@ -1416,53 +1416,6 @@ bool
 FwdState::exhaustedTries() const
 {
     return n_tries >= Config.forward_max_tries;
-}
-
-bool
-FwdState::pinnedCanRetry() const
-{
-    assert(request->flags.pinned);
-
-    // pconn race on pinned connection: Currently we do not have any mechanism
-    // to retry current pinned connection path.
-    if (pconnRace == raceHappened)
-        return false;
-
-    // If a bumped connection was pinned, then the TLS client was given our peer
-    // details. Do not retry because we do not ensure that those details stay
-    // constant. Step1-bumped connections do not get our TLS peer details, are
-    // never pinned, and, hence, never reach this method.
-    if (request->flags.sslBumped)
-        return false;
-
-    // Currently, all retries call useDestinations() which never calls
-    // usePinned() and usually calls connectStart(). The latter asserts that
-    // request->pinnedConnection() is nil.
-    if (request->pinnedConnection())
-        return false;
-
-    // XXX: The only case where the condition above is false despite true
-    // `request->flags.pinned` is when HttpRequest::clientConnectionManager job
-    // disappears. However, in that case, we should probably return `false`
-    // anyway to avoid retries with a gone client!
-
-    // XXX: FwdState never re-pins a failed connection. In other words, if
-    // FwdState fails while using a pinned connection, it never pins a new
-    // connection to the same HttpRequest::clientConnectionManager job. 2013
-    // commit 693cb033 removed most re-pinning code. 2019 commit 3dde9e52
-    // probably assumed that "FTP proxying and connection-based HTTP
-    // authentication" cases mentioned below might re-pin, so it added this
-    // method to avoid breaking those alleged cases, but that assumption was
-    // probably wrong then and/or is wrong now.
-
-    // TODO: Confirm that "connection-based HTTP authentication" does not need
-    // some other fix and remove this method. Also adjust peer selection code to
-    // avoid computing/returning regular destinations (that cannot be used)
-    // after selecting a PINNED connection.
-
-    // The other pinned cases are FTP proxying and connection-based HTTP
-    // authentication. TODO: Do these cases have restrictions?
-    return true;
 }
 
 time_t

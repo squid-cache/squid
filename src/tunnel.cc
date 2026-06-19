@@ -517,7 +517,7 @@ TunnelStateData::checkRetry()
     if (request->hier.peer_reply_status != Http::scNone && !Http::IsReforwardableStatus(request->hier.peer_reply_status))
         return "received HTTP status code is not reforwardable";
 
-    // TODO: check pinned connections; see FwdState::pinnedCanRetry()
+    // TODO: check pinned connections; see request->flags.pinned in FwdState::checkRetry()
     return nullptr;
 }
 

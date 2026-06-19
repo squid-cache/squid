@@ -161,10 +161,6 @@ private:
 
     void usePinned();
 
-    /// whether a pinned to-peer connection can be replaced with another one
-    /// (in order to retry or reforward a failed request)
-    bool pinnedCanRetry() const;
-
     template <typename StepStart>
     void advanceDestination(const char *stepDescription, const Comm::ConnectionPointer &conn, const StepStart &startStep);
 
