@@ -1404,7 +1404,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         // +1 for the ':' separator between user and passwd
         const auto plainLen = userLen + 1 + passwdLen;
         if (plainLen > MAX_LOGIN_SZ)
-            throw TexcHere("extacl credentials too long for Proxy-Authorization");
+            throw TextException("extacl credentials too long for Proxy-Authorization", Here());
         // plainLen <= MAX_LOGIN_SZ, so base64_encode_len(plainLen) fits
         // within the base64_encode_len(MAX_LOGIN_SZ) stack buffer.
         char base64buf[base64_encode_len(MAX_LOGIN_SZ)];

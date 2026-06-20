@@ -1853,7 +1853,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         const auto usernameLen = strlen(username);
         const auto suffixLen = strlen(request->peer_login + 1);
         if (usernameLen + suffixLen > MAX_LOGIN_SZ)
-            throw TexcHere("peer login credentials too long");
+            throw TextException("peer login credentials too long", Here());
         blen = base64_encode_update(&ctx, loginbuf, usernameLen, reinterpret_cast<const uint8_t*>(username));
         blen += base64_encode_update(&ctx, loginbuf+blen, suffixLen, reinterpret_cast<const uint8_t*>(request->peer_login +1));
         blen += base64_encode_final(&ctx, loginbuf+blen);
@@ -1870,7 +1870,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         const auto passwdLen = request->extacl_passwd.size();
         // +1 for the ':' separator between user and passwd
         if (userLen + 1 + passwdLen > MAX_LOGIN_SZ)
-            throw TexcHere("extacl credentials too long for peer login");
+            throw TextException("extacl credentials too long for peer login", Here());
         blen = base64_encode_update(&ctx, loginbuf, userLen, reinterpret_cast<const uint8_t*>(request->extacl_user.rawBuf()));
         blen += base64_encode_update(&ctx, loginbuf+blen, 1, reinterpret_cast<const uint8_t*>(":"));
         blen += base64_encode_update(&ctx, loginbuf+blen, passwdLen, reinterpret_cast<const uint8_t*>(request->extacl_passwd.rawBuf()));
@@ -1905,7 +1905,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
 
     const auto loginLen = strlen(request->peer_login);
     if (loginLen > MAX_LOGIN_SZ)
-        throw TexcHere("peer_login too long");
+        throw TextException("peer_login too long", Here());
     blen = base64_encode_update(&ctx, loginbuf, loginLen, reinterpret_cast<const uint8_t*>(request->peer_login));
     blen += base64_encode_final(&ctx, loginbuf+blen);
     httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)blen, loginbuf);
