@@ -1410,7 +1410,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         char base64buf[base64_encode_len(MAX_LOGIN_SZ)];
         struct base64_encode_ctx ctx;
         base64_encode_init(&ctx);
-        size_t resultLen = base64_encode_update(&ctx, base64buf, userLen, reinterpret_cast<const uint8_t*>(request->extacl_user.rawBuf()));
+        auto resultLen = base64_encode_update(&ctx, base64buf, userLen, reinterpret_cast<const uint8_t*>(request->extacl_user.rawBuf()));
         resultLen += base64_encode_update(&ctx, base64buf+resultLen, 1, reinterpret_cast<const uint8_t*>(":"));
         resultLen += base64_encode_update(&ctx, base64buf+resultLen, passwdLen, reinterpret_cast<const uint8_t*>(request->extacl_passwd.rawBuf()));
         resultLen += base64_encode_final(&ctx, base64buf+resultLen);
