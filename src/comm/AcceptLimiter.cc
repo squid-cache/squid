@@ -40,19 +40,21 @@ Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
     debugs(5,4, "Not found " << afd->conn << " in queue, size: " << deferred_.size());
 }
 
-void
+bool
 Comm::AcceptLimiter::kick()
 {
     debugs(5, 5, "size=" << deferred_.size());
     while (deferred_.size() > 0 && Comm::TcpAcceptor::okToAccept()) {
-        /* NP: shift() is equivalent to pop_front(). Giving us a FIFO queue. */
+        /* shift() is equivalent to pop_front(). Giving us a FIFO queue. */
         TcpAcceptor::Pointer temp = deferred_.front();
         deferred_.erase(deferred_.begin());
-        if (temp.valid()) {
+        if (const auto job = temp.valid()) {
             debugs(5, 5, "doing one.");
-            temp->acceptNext();
-            break;
+            const auto call = JobCallback(33, 5, TcpAcceptor::IoDialer, job, TcpAcceptor::acceptOne);
+            ScheduleCallHere(call);
+            return true;
         }
     }
+    return false;
 }
 
