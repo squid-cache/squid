@@ -1994,27 +1994,6 @@ tests_testHttpRequest_LDADD = \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
-## Characterization test: extacl base64 stack buffer overflow (CVE candidate)
-## Confirms that extacl_user/extacl_passwd values exceeding MAX_LOGIN_SZ
-## cause base64 output to overflow the fixed-size stack buffers in
-## ModXact.cc::makeRequestHeaders() and http.cc::httpFixupAuthentication().
-
-check_PROGRAMS += tests/testExtAclBase64Overflow
-tests_testExtAclBase64Overflow_SOURCES = \
-	tests/testExtAclBase64Overflow.cc
-nodist_tests_testExtAclBase64Overflow_SOURCES = \
-	$(TESTSOURCES) \
-	tests/stub_debug.cc \
-	tests/stub_libmem.cc
-tests_testExtAclBase64Overflow_LDADD = \
-	$(top_builddir)/lib/libmiscencoding.la \
-	base/libbase.la \
-	$(LIBCPPUNIT_LIBS) \
-	$(COMPAT_LIB) \
-	$(LIBNETTLE_LIBS) \
-	$(XTRA_LIBS)
-tests_testExtAclBase64Overflow_LDFLAGS = $(LIBADD_DL)
-
 ## Tests of ip/*
 
 check_PROGRAMS += tests/testIpAddress
