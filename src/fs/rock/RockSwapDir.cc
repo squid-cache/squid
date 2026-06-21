@@ -286,10 +286,10 @@ Rock::SwapDir::init()
     // are refcounted. We up our count once to avoid implicit delete's.
     lock();
 
-    freeSlots = shm_old(Ipc::Mem::PageStack)(freeSlotsPath());
+    freeSlots = shm_old(Ipc::Mem::PageStack)(freeSlotsPath(), "M009");
 
     Must(!map);
-    map = new DirMap(inodeMapPath());
+    map = new DirMap(inodeMapPath(), "M009");
     map->cleaner = this;
 
     const char *ioModule = needsDiskStrand() ? "IpcIo" : "Blocking";
@@ -1127,7 +1127,7 @@ void Rock::SwapDirRr::create()
             const int64_t capacity = sd->slotLimitActual();
 
             SwapDir::DirMap::Owner *const mapOwner =
-                SwapDir::DirMap::Init(sd->inodeMapPath(), capacity);
+                SwapDir::DirMap::Init(sd->inodeMapPath(), "M009", capacity);
             mapOwners.push_back(mapOwner);
 
             // TODO: somehow remove pool id and counters from PageStack?
@@ -1137,7 +1137,7 @@ void Rock::SwapDirRr::create()
             config.capacity = capacity;
             config.createFull = false; // Rebuild finds and pushes free slots
             Ipc::Mem::Owner<Ipc::Mem::PageStack> *const freeSlotsOwner =
-                shm_new(Ipc::Mem::PageStack)(sd->freeSlotsPath(), config);
+                shm_new(Ipc::Mem::PageStack)(sd->freeSlotsPath(), "M009", config);
             freeSlotsOwners.push_back(freeSlotsOwner);
         }
     }
