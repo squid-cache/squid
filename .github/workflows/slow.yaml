@@ -148,7 +148,6 @@ jobs:
         osversion:
           - "15.1"
           - "14.3"
-          - "13.5"
         platform:
           - amd64
           # We are ready to support multiple platforms, but
