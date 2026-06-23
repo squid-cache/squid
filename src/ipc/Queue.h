@@ -71,11 +71,13 @@ public:
 class QueueReaders
 {
 public:
-    QueueReaders(const int aCapacity);
-    size_t sharedMemorySize() const;
-    static size_t SharedMemorySize(const int capacity);
+    QueueReaders(const size_t n) : theCapacity(n), theReaders(n) {}
 
-    const int theCapacity; /// number of readers
+    static size_t SharedMemorySize(const size_t capacity);
+    size_t sharedMemorySize() const { return SharedMemorySize(theCapacity); }
+
+public:
+    const size_t theCapacity; /// number of readers
     Ipc::Mem::FlexibleArray<QueueReader> theReaders; /// readers
 };
 
@@ -96,47 +98,47 @@ public:
     class Full {};
     class ItemTooLarge {};
 
-    OneToOneUniQueue(const unsigned int aMaxItemSize, const int aCapacity);
+    OneToOneUniQueue(const size_t aMaxItemSize, const size_t aCapacity);
 
-    unsigned int maxItemSize() const { return theMaxItemSize; }
-    int size() const { return theSize; }
-    int capacity() const { return theCapacity; }
-    int sharedMemorySize() const { return Items2Bytes(theMaxItemSize, theCapacity); }
+    static size_t Items2Bytes(const size_t maxItemSize, const size_t size);
+
+    size_t maxItemSize() const { return theMaxItemSize; }
+    size_t size() const { return theSize; }
+    size_t capacity() const { return theCapacity; }
+    size_t sharedMemorySize() const { return Items2Bytes(theMaxItemSize, theCapacity); }
 
     bool empty() const { return !theSize; }
     bool full() const { return theSize == theCapacity; }
 
-    static int Bytes2Items(const unsigned int maxItemSize, int size);
-    static int Items2Bytes(const unsigned int maxItemSize, const int size);
-
     /// returns true iff the value was set; [un]blocks the reader as needed
-    template<class Value> bool pop(Value &value, QueueReader *const reader = nullptr);
+    template<class Value> bool pop(Value &, QueueReader * const = nullptr);
 
     /// returns true iff the caller must notify the reader of the pushed item
-    template<class Value> bool push(const Value &value, QueueReader *const reader = nullptr);
+    template<class Value> bool push(const Value &, QueueReader * const = nullptr);
 
     /// returns true iff the value was set; the value may be stale!
-    template<class Value> bool peek(Value &value) const;
+    template<class Value> bool peek(Value &) const;
 
     /// prints incoming queue state; suitable for cache manager reports
     template<class Value> void statIn(std::ostream &, int localProcessId, int remoteProcessId) const;
+
     /// prints outgoing queue state; suitable for cache manager reports
     template<class Value> void statOut(std::ostream &, int localProcessId, int remoteProcessId) const;
 
 private:
-    void statOpen(std::ostream &, const char *inLabel, const char *outLabel, uint32_t count) const;
+    void statOpen(std::ostream &, const char *inLabel, const char *outLabel, size_t count) const;
     void statClose(std::ostream &) const;
-    template<class Value> void statSamples(std::ostream &, unsigned int start, uint32_t size) const;
-    template<class Value> void statRange(std::ostream &, unsigned int start, uint32_t n) const;
+    template<class Value> void statSamples(std::ostream &, size_t start, size_t size) const;
+    template<class Value> void statRange(std::ostream &, size_t start, size_t n) const;
 
     // optimization: these non-std::atomic data members are in shared memory,
     // but each is used only by one process (aside from obscured reporting)
-    unsigned int theIn; ///< current push() position; reporting aside, used only in push()
-    unsigned int theOut; ///< current pop() position; reporting aside, used only in pop()/peek()
+    size_t theIn = 0; ///< current push() position; reporting aside, used only in push()
+    size_t theOut = 0; ///< current pop() position; reporting aside, used only in pop()/peek()
 
-    std::atomic<uint32_t> theSize; ///< number of items in the queue
-    const unsigned int theMaxItemSize; ///< maximum item size
-    const uint32_t theCapacity; ///< maximum number of items, i.e. theBuffer size
+    std::atomic<size_t> theSize; ///< number of items in the queue
+    const size_t theMaxItemSize; ///< maximum item size
+    const size_t theCapacity; ///< maximum number of items, i.e. theBuffer size
 
     char theBuffer[];
 };
@@ -145,19 +147,25 @@ private:
 class OneToOneUniQueues
 {
 public:
-    OneToOneUniQueues(const int aCapacity, const unsigned int maxItemSize, const int queueCapacity);
+    OneToOneUniQueues(const size_t aCapacity, const size_t maxItemSize, const size_t queueCapacity);
+
+    const OneToOneUniQueue &operator [](const size_t index) const;
+    OneToOneUniQueue &operator [](const size_t index) {
+        return const_cast<OneToOneUniQueue &>((*const_cast<const OneToOneUniQueues *>(this))[index]);
+    }
+
+    static size_t SharedMemorySize(const size_t capacity, const size_t maxItemSize, const size_t queueCapacity);
 
     size_t sharedMemorySize() const;
-    static size_t SharedMemorySize(const int capacity, const unsigned int maxItemSize, const int queueCapacity);
-
-    const OneToOneUniQueue &operator [](const int index) const;
-    inline OneToOneUniQueue &operator [](const int index);
-
 private:
-    inline const OneToOneUniQueue &front() const;
+    const OneToOneUniQueue &front() const {
+        // XXX: use Ipc::Mem::FlexibleArray instead of pointer magic
+        const auto queue = reinterpret_cast<const char *>(this) + sizeof(*this);
+        return *reinterpret_cast<const OneToOneUniQueue *>(queue);
+    }
 
 public:
-    const int theCapacity; /// number of OneToOneUniQueues
+    const size_t theCapacity; /// number of OneToOneUniQueues
 };
 
 /**
@@ -248,13 +256,13 @@ public:
 private:
     /// Shared metadata for FewToFewBiQueue
     struct Metadata {
-        Metadata(const int aGroupASize, const int aGroupAIdOffset, const int aGroupBSize, const int aGroupBIdOffset);
+        Metadata(const size_t aGroupASize, const int aGroupAIdOffset, const size_t aGroupBSize, const int aGroupBIdOffset);
         size_t sharedMemorySize() const { return sizeof(*this); }
-        static size_t SharedMemorySize(const int, const int, const int, const int) { return sizeof(Metadata); }
+        static size_t SharedMemorySize(const size_t, const int, const size_t, const int) { return sizeof(Metadata); }
 
-        const int theGroupASize;
+        const size_t theGroupASize;
         const int theGroupAIdOffset;
-        const int theGroupBSize;
+        const size_t theGroupBSize;
         const int theGroupBIdOffset;
     };
 
@@ -262,7 +270,7 @@ public:
     class Owner
     {
     public:
-        Owner(const String &id, const int groupASize, const int groupAIdOffset, const int groupBSize, const int groupBIdOffset, const unsigned int maxItemSize, const int capacity);
+        Owner(const String &id, const size_t groupASize, const int groupAIdOffset, const size_t groupBSize, const int groupBIdOffset, const size_t maxItemSize, const size_t capacity);
         ~Owner();
 
     private:
@@ -271,7 +279,7 @@ public:
         Mem::Owner<QueueReaders> *const readersOwner;
     };
 
-    static Owner *Init(const String &id, const int groupASize, const int groupAIdOffset, const int groupBSize, const int groupBIdOffset, const unsigned int maxItemSize, const int capacity);
+    static Owner *Init(const String &id, const size_t groupASize, const int groupAIdOffset, const size_t groupBSize, const int groupBIdOffset, const size_t maxItemSize, const size_t capacity);
 
     enum Group { groupA = 0, groupB = 1 };
     FewToFewBiQueue(const String &id, const Group aLocalGroup, const int aLocalProcessId);
@@ -322,11 +330,11 @@ public:
 private:
     /// Shared metadata for MultiQueue
     struct Metadata {
-        Metadata(const int aProcessCount, const int aProcessIdOffset);
+        Metadata(const size_t aProcessCount, const int aProcessIdOffset);
         size_t sharedMemorySize() const { return sizeof(*this); }
-        static size_t SharedMemorySize(const int, const int) { return sizeof(Metadata); }
+        static size_t SharedMemorySize(const size_t, const int) { return sizeof(Metadata); }
 
-        const int theProcessCount;
+        const size_t theProcessCount;
         const int theProcessIdOffset;
     };
 
@@ -391,7 +399,7 @@ OneToOneUniQueue::pop(Value &value, QueueReader *const reader)
     if (reader)
         reader->unblock();
 
-    const unsigned int pos = (theOut++ % theCapacity) * theMaxItemSize;
+    const auto pos = (theOut++ % theCapacity) * theMaxItemSize;
     memcpy(&value, theBuffer + pos, sizeof(value));
     --theSize;
 
@@ -465,7 +473,7 @@ OneToOneUniQueue::statOut(std::ostream &os, const int localProcessId, const int 
 /// report a sample of [start, start + size) items
 template <class Value>
 void
-OneToOneUniQueue::statSamples(std::ostream &os, const unsigned int start, const uint32_t count) const
+OneToOneUniQueue::statSamples(std::ostream &os, const size_t start, const size_t count) const
 {
     if (!count) {
         os << " ";
@@ -474,7 +482,7 @@ OneToOneUniQueue::statSamples(std::ostream &os, const unsigned int start, const 
 
     os << ", items: [\n";
     // report a few leading and trailing items, without repetitions
-    const auto sampleSize = std::min(3U, count); // leading (and max) sample
+    const auto sampleSize = std::min(size_t(3), count); // leading (and max) sample
     statRange<Value>(os, start, sampleSize);
     if (sampleSize < count) { // the first sample did not show some items
         // The `start` offset aside, the first sample reported all items
@@ -500,11 +508,11 @@ OneToOneUniQueue::statSamples(std::ostream &os, const unsigned int start, const 
 /// statSamples() helper that reports n items from start
 template <class Value>
 void
-OneToOneUniQueue::statRange(std::ostream &os, const unsigned int start, const uint32_t n) const
+OneToOneUniQueue::statRange(std::ostream &os, const size_t start, const size_t n) const
 {
     assert(sizeof(Value) <= theMaxItemSize);
     auto offset = start;
-    for (uint32_t i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         // XXX: Throughout this C++ header, these overflow wrapping tricks work
         // only because theCapacity currently happens to be a power of 2 (e.g.,
         // the highest offset (0xF...FFF) % 3 is 0 and so is the next offset).
@@ -515,22 +523,6 @@ OneToOneUniQueue::statRange(std::ostream &os, const unsigned int start, const ui
         value.stat(os);
         os << " },\n";
     }
-}
-
-// OneToOneUniQueues
-
-inline OneToOneUniQueue &
-OneToOneUniQueues::operator [](const int index)
-{
-    return const_cast<OneToOneUniQueue &>((*const_cast<const OneToOneUniQueues *>(this))[index]);
-}
-
-inline const OneToOneUniQueue &
-OneToOneUniQueues::front() const
-{
-    const char *const queue =
-        reinterpret_cast<const char *>(this) + sizeof(*this);
-    return *reinterpret_cast<const OneToOneUniQueue *>(queue);
 }
 
 // BaseMultiQueue
