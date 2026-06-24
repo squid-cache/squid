@@ -14,6 +14,7 @@
 #include "CacheManager.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "compat/signal.h"
 #include "compat/unistd.h"
 #include "ipc/Coordinator.h"
 #include "ipc/SharedListen.h"
@@ -289,7 +290,7 @@ void Ipc::Coordinator::broadcastSignal(int sig) const
     for (SCI iter = strands_.begin(); iter != strands_.end(); ++iter) {
         debugs(54, 5, "signal " << sig << " to kid" << iter->kidId <<
                ", PID=" << iter->pid);
-        kill(iter->pid, sig);
+        xkill(iter->pid, sig);
     }
 }
 
