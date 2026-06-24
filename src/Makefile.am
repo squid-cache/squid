@@ -22,6 +22,7 @@ SUBDIRS = \
 	time \
 	debug \
 	base \
+	base64 \
 	anyp \
 	helper \
 	dns \
@@ -981,6 +982,22 @@ tests_testSBufList_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testSBufList_LDFLAGS = $(LIBADD_DL)
+
+check_PROGRAMS += tests/testBase64Encoder
+tests_testBase64Encoder_SOURCES = \
+	tests/testBase64Encoder.cc
+nodist_tests_testBase64Encoder_SOURCES = \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc
+tests_testBase64Encoder_LDADD = \
+	sbuf/libsbuf.la \
+	base/libbase.la \
+	base64/libbase64.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS) \
+	$(LIBNETTLE_LIBS)
+tests_testBase64Encoder_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testString
 tests_testString_SOURCES = \

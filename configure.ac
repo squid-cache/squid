@@ -2573,6 +2573,7 @@ AC_CONFIG_FILES([
 	src/parser/Makefile
 	src/proxyp/Makefile
 	src/repl/Makefile
+	src/base64/Makefile
 	src/sbuf/Makefile
 	src/security/Makefile
 	src/security/cert_generators/Makefile
