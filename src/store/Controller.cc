@@ -724,8 +724,7 @@ Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
 }
 
 bool
-Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
-                                   const HttpRequestMethod &)
+Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags, const Http::RequestMethod &)
 {
     const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
     // set the flag now so that it gets copied into the Transients entry

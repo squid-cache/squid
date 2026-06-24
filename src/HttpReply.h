@@ -64,7 +64,7 @@ public:
 public:
     int httpMsgParseError() override;
 
-    bool expectingBody(const HttpRequestMethod&, int64_t&) const override;
+    bool expectingBody(const Http::RequestMethod&, int64_t&) const override;
 
     bool inheritProperties(const Http::Message *) override;
 
@@ -87,7 +87,7 @@ public:
 
     void redirect(Http::StatusCode, const char *);
 
-    int64_t bodySize(const HttpRequestMethod&) const;
+    int64_t bodySize(const Http::RequestMethod&) const;
 
     /** Checks whether received body exceeds known maximum size.
      * Requires a prior call to calcMaxBodySize().

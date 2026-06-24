@@ -62,7 +62,7 @@ private:
     void setReplyError(Http::StreamPointer &context, HttpRequest::Pointer &request, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes);
 
     Http1::RequestParserPointer parser_;
-    HttpRequestMethod method_; ///< parsed HTTP method
+    RequestMethod method_; ///< parsed HTTP method
 
     /// temporary hack to avoid creating a true HttpsServer class
     const bool isHttpsServer;

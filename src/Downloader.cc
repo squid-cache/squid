@@ -135,7 +135,7 @@ downloaderDetach(clientStreamNode * node, ClientHttpRequest * http)
 bool
 Downloader::buildRequest()
 {
-    const HttpRequestMethod method = Http::METHOD_GET;
+    const Http::RequestMethod method = Http::METHOD_GET;
 
     const auto request = HttpRequest::FromUrl(url_, masterXaction_, method);
     if (!request) {
