@@ -11,6 +11,7 @@
 #ifndef SQUID_SRC_COMM_CONNECTION_H
 #define SQUID_SRC_COMM_CONNECTION_H
 
+#include "anyp/ProtocolType.h"
 #include "base/CodeContext.h"
 #include "base/InstanceId.h"
 #include "comm/forward.h"
@@ -140,15 +141,21 @@ public:
     Security::NegotiationHistory *tlsNegotiations();
     const Security::NegotiationHistory *hasTlsNegotiations() const {return tlsHistory;}
 
+    /// The socket(2) SOCK_* type used by this connection FD
+    int sockTransport() const;
+
+    /// The socket(2) IPPROTO_* type used by this connection FD
+    int ipTransport() const;
+
     /* CodeContext API */
     ScopedId codeContextGist() const override;
     std::ostream &detailCodeContext(std::ostream &os) const override;
 
 public:
-    /** Address/Port for the Squid end of a TCP link. */
+    /** Address/Port for the Squid end of this connection */
     Ip::Address local;
 
-    /** Address for the Remote end of a TCP link. */
+    /** Address for the Remote end of this connection */
     Ip::Address remote;
 
     /** Hierarchy code for this connection link */
@@ -156,6 +163,10 @@ public:
 
     /** Socket used by this connection. Negative if not open. */
     int fd = -1;
+
+    /// Protocol used for lowest-level transport on this connection.
+    /// TCP, UDP, or ICMP currently supported by Squid.
+    AnyP::ProtocolType transport = AnyP::PROTO_UNKNOWN;
 
     /** Quality of Service TOS values currently sent on this connection */
     tos_t tos = 0;

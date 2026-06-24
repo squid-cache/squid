@@ -61,7 +61,7 @@ void comm_import_opened(const Comm::ConnectionPointer &, const char *note, struc
  * A reconfigure is needed to reset the stored IP in most cases and attempt a port re-open.
  */
 int comm_open_listener(int sock_type, int proto, Ip::Address &addr, int flags, const char *note);
-void comm_open_listener(int sock_type, int proto, Comm::ConnectionPointer &conn, const char *note);
+void comm_open_listener(Comm::ConnectionPointer &conn, const char *note);
 
 unsigned short comm_local_port(int fd);
 
