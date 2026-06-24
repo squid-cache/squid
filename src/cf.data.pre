@@ -4781,6 +4781,7 @@ DOC_START
 		>p	Client source port
 		>eui	Client source EUI (MAC address, EUI-48 or EUI-64 identifier)
 		>la	Local IP address the client connected to
+		>lA	Local FQDN for address the client connected to
 		>lp	Local port number the client connected to
 		>qos    Client connection TOS/DSCP value set by Squid
 		>nfmark Client connection netfilter packet MARK set by Squid
@@ -4805,6 +4806,7 @@ DOC_START
 		<A	Server FQDN or peer name
 		<p	Server port number of the last server or peer connection
 		<la	Local IP address of the last server or peer connection
+		<lA	Local FQDN for address of the last server or peer connection
 		<lp     Local port number of the last server or peer connection
 		<qos	Server connection TOS/DSCP value set by Squid
 		<nfmark Server connection netfilter packet MARK set by Squid
