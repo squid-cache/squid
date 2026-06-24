@@ -15,7 +15,6 @@ STUB_SOURCE = \
 	tests/stub_CollapsedForwarding.cc \
 	tests/stub_CommIO.cc \
 	tests/stub_DelayId.cc \
-	tests/stub_ETag.cc \
 	tests/stub_EventLoop.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpControlMsg.cc \
