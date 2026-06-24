@@ -180,7 +180,7 @@ Ssl::ClientBio::stateChanged(const SSL *ssl, int where, int ret)
     Ssl::Bio::stateChanged(ssl, where, ret);
     // detect client-initiated renegotiations DoS (CVE-2011-1473)
     if (where & SSL_CB_HANDSHAKE_START) {
-        const int reneg = renegotiations.count(1);
+        const auto reneg = renegotiations.count(1);
 
         if (abortReason)
             return; // already decided and informed the admin
