@@ -913,7 +913,6 @@ Ftp::Server::handlePasvReply(const HttpReply *reply, StoreIOBuffer)
                addr,
                static_cast<int>(localPort / 256),
                static_cast<int>(localPort % 256));
-    debugs(9, 3, Raw("writing", mb.buf, mb.size));
     writeReply(mb);
 }
 
@@ -1086,7 +1085,6 @@ Ftp::Server::handleEpsvReply(const HttpReply *reply, StoreIOBuffer)
     mb.init();
     mb.appendf("229 Entering Extended Passive Mode (|||%u|)\r\n", localPort);
 
-    debugs(9, 3, Raw("writing", mb.buf, mb.size));
     writeReply(mb);
 }
 
