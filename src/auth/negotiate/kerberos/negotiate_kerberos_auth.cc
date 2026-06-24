@@ -333,6 +333,7 @@ main(int argc, char *const argv[])
 #else
     gss_buffer_desc type_id = GSS_C_EMPTY_BUFFER;
 #endif
+    const char* group_attribute_name = "group";
 #endif /* HAVE_KRB5_PAC_SUPPORT */
     krb5_context context = nullptr;
     krb5_error_code ret;
@@ -366,7 +367,7 @@ main(int argc, char *const argv[])
     setbuf(stdout, nullptr);
     setbuf(stdin, nullptr);
 
-    while (-1 != (opt = getopt(argc, argv, "dirs:k:c:t:"))) {
+    while (-1 != (opt = getopt(argc, argv, "dirs:k:c:t:a:"))) {
         switch (opt) {
         case 'd':
             debug_enabled = 1;
@@ -462,9 +463,23 @@ main(int argc, char *const argv[])
                 exit(EXIT_FAILURE);
             }
             break;
+#if HAVE_KRB5_PAC_SUPPORT
+        case 'a':
+            if (optarg)
+                group_attribute_name = optarg;
+            else {
+                fprintf(stderr, "ERROR: '-a' value not given\n");
+                exit(EXIT_FAILURE);
+            }
+            break;
+#endif
         default:
             fprintf(stderr, "Usage: \n");
-            fprintf(stderr, "squid_kerb_auth [-d] [-i] [-s SPN] [-k keytab] [-c rcdir] [-t rctype]\n");
+            fprintf(stderr, "squid_kerb_auth [-d] [-i] [-s SPN] [-k keytab] [-c rcdir] [-t rctype]");
+#if HAVE_KRB5_PAC_SUPPORT
+            fprintf(stderr, " [-a name]");
+#endif
+            fprintf(stderr, "\n");
             fprintf(stderr, "-d full debug\n");
             fprintf(stderr, "-i informational messages\n");
             fprintf(stderr, "-r remove realm from username\n");
@@ -472,9 +487,13 @@ main(int argc, char *const argv[])
             fprintf(stderr, "-k keytab name\n");
             fprintf(stderr, "-c replay cache directory\n");
             fprintf(stderr, "-t replay cache type\n");
+#if HAVE_KRB5_PAC_SUPPORT
+            fprintf(stderr, "-a annotation name for reporting user groups (e.g., 'clt_conn_tag'); defaults to '%s'\n",
+                    group_attribute_name);
+#endif
             fprintf(stderr,
-                    "The SPN can be set to GSS_C_NO_NAME to allow any entry from keytab\n");
-            fprintf(stderr, "default SPN is HTTP/fqdn@DEFAULT_REALM\n");
+                    "\nThe SPN can be set to GSS_C_NO_NAME to allow any entry from keytab\n");
+            fprintf(stderr, "default SPN is HTTP/fqdn@DEFAULT_REALM\n\n");
             exit(EXIT_SUCCESS);
         }
     }
@@ -786,7 +805,7 @@ main(int argc, char *const argv[])
 
             rfc_user = rfc1738_escape(user);
 #if HAVE_KRB5_PAC_SUPPORT
-            fprintf(stdout, "OK token=%s user=%s %s\n", token, rfc_user, ag?ag:"group=");
+            fprintf(stdout, "OK token=%s user=%s %s=%s\n", token, rfc_user, group_attribute_name, ag?ag:"");
 #else
             fprintf(stdout, "OK token=%s user=%s\n", token, rfc_user);
 #endif /* HAVE_KRB5_PAC_SUPPORT */
@@ -828,7 +847,7 @@ main(int argc, char *const argv[])
             }
             rfc_user = rfc1738_escape(user);
 #if HAVE_KRB5_PAC_SUPPORT
-            fprintf(stdout, "OK token=%s user=%s %s\n", "AA==", rfc_user, ag?ag:"group=");
+            fprintf(stdout, "OK token=%s user=%s %s=%s\n", "AA==", rfc_user, group_attribute_name, ag?ag:"");
 #else
             fprintf(stdout, "OK token=%s user=%s\n", "AA==", rfc_user);
 #endif /* HAVE_KRB5_PAC_SUPPORT */

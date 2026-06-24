@@ -114,28 +114,23 @@ get1byt(void)
     return var;
 }
 
+
 static char *
-pstrcpy( char *src, const char *dst)
+pstrcat( char *dst, const char *src)
 {
-    if (dst) {
-        if (strlen(dst)>MAX_PAC_GROUP_SIZE)
+    if (src) {
+        if ( strlen(dst) + strlen(src) + 1 >= MAX_PAC_GROUP_SIZE )
             return nullptr;
         else
-            return strcpy(src,dst);
+            return strcat(dst, src);
     } else
-        return src;
+        return dst;
 }
 
 static char *
-pstrcat( char *src, const char *dst)
-{
-    if (dst) {
-        if (strlen(src)+strlen(dst)+1>MAX_PAC_GROUP_SIZE)
-            return nullptr;
-        else
-            return strcat(src,dst);
-    } else
-        return src;
+append_comma(char *buffer){
+  if ( buffer && buffer[0] ) return pstrcat(buffer, ",");
+  return buffer;
 }
 
 int
@@ -236,17 +231,8 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
             ag[1] = ag[1]+1;
             memcpy((void *)&ag[2],(const void*)&p[bpos+2],6+nauth*4);
             memcpy((void *)&ag[length],(const void*)Rids[l],4);
-            if (l==0) {
-                if (!pstrcpy(ad_groups,"group=")) {
-                    debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
-                          LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
-                }
-            } else {
-                if (!pstrcat(ad_groups," group=")) {
-                    debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
-                          LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
-                }
-            }
+
+            append_comma(ad_groups);
             struct base64_encode_ctx ctx;
             base64_encode_init(&ctx);
             const uint32_t expectedSz = base64_encode_len(length+4) +1 /* terminator */;
@@ -281,6 +267,12 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
 char *
 getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
 {
+    if (!ad_groups) {
+        debug((char *) "%s| %s: ERR: No space to store groups\n",
+              LogTime(), PROGRAM);
+        return nullptr;
+    }
+
     if (ExtraSids!= 0) {
         uint32_t ngroup;
         uint32_t *pa;
@@ -323,19 +315,8 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
                 size_t length = 1+1+6+nauth*4;
                 ag = (char *)xcalloc((length)*sizeof(char),1);
                 memcpy((void *)ag,(const void*)&p[bpos],length);
-                if (!ad_groups) {
-                    debug((char *) "%s| %s: ERR: No space to store groups\n",
-                          LogTime(), PROGRAM);
-                    xfree(pa);
-                    xfree(ag);
-                    return nullptr;
-                } else {
-                    if (!pstrcat(ad_groups," group=")) {
-                        debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
-                              LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
-                    }
-                }
 
+                append_comma(ad_groups);
                 struct base64_encode_ctx ctx;
                 base64_encode_init(&ctx);
                 const uint32_t expectedSz = base64_encode_len(length) +1 /* terminator */;
@@ -465,11 +446,7 @@ get_resource_groups(char *ad_groups, uint32_t ResourceGroupDomainSid,  uint32_t 
             uint32_t sauth;
             memcpy((void *)&st[group_domain_sid_len], (const void*)&p[bpos], 4);  // rid concatenation
 
-            if (!pstrcat(ad_groups, " group=")) {
-                debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
-                      LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
-            }
-
+            append_comma(ad_groups);
             struct base64_encode_ctx ctx;
             base64_encode_init(&ctx);
             const uint32_t expectedSz = base64_encode_len(length) + 1 /* terminator */;
@@ -525,6 +502,8 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
               LogTime(), PROGRAM);
         return nullptr;
     }
+
+    ad_groups[0] = '\0';
 
     ad_data = (krb5_data *)xcalloc(1,sizeof(krb5_data));
 
@@ -612,6 +591,8 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     if (checkustr(&LogonDomainName)<0)
         goto k5clean;
     ad_groups = getdomaingids(ad_groups,LogonDomainId,Rids,GroupCount);
+    if (!ad_groups)
+            goto k5clean;
 
     // https://learn.microsoft.com/en-us/previous-versions/aa302203(v=msdn.10)?redirectedfrom=MSDN#top-level-pac-structure
     if ((UserFlags&LOGON_EXTRA_SIDS) != 0) {
