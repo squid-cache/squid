@@ -18,7 +18,7 @@ namespace Security {
 /// a summary a TLS I/O operation outcome
 class IoResult: public RefCountable {
 public:
-    typedef RefCount<IoResult> Pointer;
+    using Pointer = RefCount<IoResult>;
 
     /// all possible outcome cases
     typedef enum { ioSuccess, ioWantRead, ioWantWrite, ioError } Category;
