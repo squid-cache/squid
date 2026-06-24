@@ -961,7 +961,7 @@ void Adaptation::Icap::ModXact::prepEchoing()
 
     // write the virgin message into a memory buffer
     httpBuf.init();
-    packHead(httpBuf, oldHead);
+    packHead(httpBuf, oldHead, MaskSensitiveInfo::off);
 
     // allocate the adapted message and copy metainfo
     Must(!adapted.header);
@@ -1615,15 +1615,15 @@ Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *section,
     }
 
     // pack polished HTTP header
-    packHead(httpBuf, headClone.getRaw());
+    packHead(httpBuf, headClone.getRaw(), MaskSensitiveInfo::off);
 
     // headClone unlocks and, hence, deletes the message we packed
 }
 
 void
-Adaptation::Icap::ModXact::packHead(MemBuf &httpBuf, const Http::Message *head)
+Adaptation::Icap::ModXact::packHead(MemBuf &httpBuf, const Http::Message *head, const MaskSensitiveInfo masking)
 {
-    head->packInto(&httpBuf, true);
+    head->packInto(&httpBuf, true, masking);
 }
 
 // decides whether to offer a preview and calculates its size

@@ -2399,7 +2399,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
             upgradeHeaderOut = new String(hdr.getList(Http::HdrType::UPGRADE));
         }
 
-        hdr.packInto(mb);
+        hdr.packInto(mb, MaskSensitiveInfo::off);
         hdr.clean();
     }
     /* append header terminator */
