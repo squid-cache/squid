@@ -46,7 +46,7 @@ Acl::NoteCheck::match(ACLChecklist * const ch)
 bool
 Acl::NoteCheck::matchNotes(const NotePairs *note) const
 {
-    const NotePairs::Entries &entries = note->expandListEntries(&delimiters.value);
+    const NotePairs::Entries &entries = note->expandListEntries(delimiters.value());
     for (auto e: entries)
         if (data->match(e.getRaw()))
             return true;
