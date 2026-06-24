@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "base/PackableStream.h"
+#include "base/RegexPattern.h"
 #include "clients/forward.h"
 #include "clients/FtpClient.h"
 #include "comm.h"
@@ -541,19 +542,10 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
     int n_tokens;
     static char tbuf[128];
     char *xbuf = nullptr;
-    static int scan_ftp_initialized = 0;
-    static regex_t scan_ftp_integer;
-    static regex_t scan_ftp_time;
-    static regex_t scan_ftp_dostime;
-    static regex_t scan_ftp_dosdate;
-
-    if (!scan_ftp_initialized) {
-        scan_ftp_initialized = 1;
-        regcomp(&scan_ftp_integer, "^[0123456789]+$", REG_EXTENDED | REG_NOSUB);
-        regcomp(&scan_ftp_time, "^[0123456789:]+$", REG_EXTENDED | REG_NOSUB);
-        regcomp(&scan_ftp_dosdate, "^[0123456789]+-[0123456789]+-[0123456789]+$", REG_EXTENDED | REG_NOSUB);
-        regcomp(&scan_ftp_dostime, "^[0123456789]+:[0123456789]+[AP]M$", REG_EXTENDED | REG_NOSUB | REG_ICASE);
-    }
+    static RegexPattern scan_ftp_integer(SBuf("^[0123456789]+$"), std::regex::extended);
+    static RegexPattern scan_ftp_time(SBuf("^[0123456789:]+$"), std::regex::extended);
+    static RegexPattern scan_ftp_dostime(SBuf("^[0123456789]+-[0123456789]+-[0123456789]+$"), std::regex::extended);
+    static RegexPattern scan_ftp_dosdate(SBuf("^[0123456789]+:[0123456789]+[AP]M$"), std::regex::extended|std::regex::icase);
 
     if (buf == nullptr)
         return nullptr;
@@ -592,13 +584,13 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
         if (!is_month(month))
             continue;
 
-        if (regexec(&scan_ftp_integer, size, 0, nullptr, 0) != 0)
+        if (!scan_ftp_integer.match(size))
             continue;
 
-        if (regexec(&scan_ftp_integer, day, 0, nullptr, 0) != 0)
+        if (!scan_ftp_integer.match(day))
             continue;
 
-        if (regexec(&scan_ftp_time, year, 0, nullptr, 0) != 0) /* Yr | hh:mm */
+        if (!scan_ftp_time.match(year)) /* Yr | hh:mm */
             continue;
 
         const auto *copyFrom = buf + tokens[i].pos;
@@ -652,8 +644,8 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
     /* try it as a DOS listing, 04-05-70 09:33PM ... */
     if (n_tokens > 3 &&
-            regexec(&scan_ftp_dosdate, tokens[0].token, 0, nullptr, 0) == 0 &&
-            regexec(&scan_ftp_dostime, tokens[1].token, 0, nullptr, 0) == 0) {
+            scan_ftp_dosdate.match(tokens[0].token) &&
+            scan_ftp_dostime.match(tokens[1].token)) {
         if (!strcasecmp(tokens[2].token, "<dir>")) {
             p->type = 'd';
         } else {

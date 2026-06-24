@@ -459,7 +459,7 @@ MimeEntry::MimeEntry(const SBuf &aPattern,
                      const char *aContentType, const char *aContentEncoding,
                      const char *aTransferMode, bool optionViewEnable,
                      bool optionDownloadEnable, const char *anIconName) :
-    pattern(aPattern, REG_EXTENDED|REG_NOSUB|REG_ICASE),
+    pattern(aPattern, std::regex::extended|std::regex::icase),
     content_type(xstrdup(aContentType)),
     content_encoding(xstrdup(aContentEncoding)),
     view_option(optionViewEnable),
