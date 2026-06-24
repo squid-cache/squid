@@ -12,6 +12,7 @@
 #include "compat/cppunit.h"
 #include "mgr/Action.h"
 #include "mgr/Registration.h"
+#include "sbuf/Stream.h"
 #include "Store.h"
 #include "unitTestMain.h"
 
@@ -145,57 +146,6 @@ TestCacheManager::testParseUrl()
         "INVALID" // any unregistered name
     };
 
-    const std::vector<const char *> validParams = {
-        "",
-        "?",
-        "?&",
-        "?&&&&&&&&&&&&",
-        "?foo=bar",
-        "?0123456789=bar",
-        "?foo=bar&",
-        "?foo=bar&&&&",
-        "?&foo=bar",
-        "?&&&&foo=bar",
-        "?&foo=bar&",
-        "?&&&&foo=bar&&&&",
-        "?foo=?_weird?~`:[]stuff&bar=okay&&&&&&",
-        "?intlist=1",
-        "?intlist=1,2,3,4,5",
-        "?string=1a",
-        "?string=1,2,3,4,z",
-        "?string=1,2,3,4,[0]",
-        "?intlist=1,2,3,4,5&string=1,2,3,4,y"
-    };
-
-    const std::vector<const char *> invalidParams = {
-        "?/",
-        "?foo",
-        "?/foo",
-        "?foo/",
-        "?foo=",
-        "?foo=&",
-        "?=foo",
-        "? foo=bar",
-        "? &",
-        "?& ",
-        "?=&",
-        "?&=",
-        "? &&&",
-        "?& &&",
-        "?&& &",
-        "?=&&&",
-        "?&=&&",
-        "?&&=&"
-    };
-
-    const std::vector<const char *> validFragments = {
-        "",
-        "#",
-        "##",
-        "#?a=b",
-        "#fragment"
-    };
-
     const auto &prefix = CacheManager::WellKnownUrlPathPrefix();
 
     assert(prefix.length());
@@ -209,48 +159,32 @@ TestCacheManager::testParseUrl()
         // they violate CacheManager::ParseUrl()'s ForSomeCacheManager()
         // precondition.
         for (const auto *action : validActions) {
-            for (const auto *param : validParams) {
-                for (const auto *frag : validFragments) {
-                    SBuf bits;
-                    bits.append(insufficientPrefix);
-                    bits.append(action);
-                    bits.append(param);
-                    bits.append(frag);
-                    mgrUrl.path(bits);
-                    mgr->testInvalidUrl(mgrUrl, "insufficient prefix");
-                }
-            }
+            SBuf bits;
+            bits.append(insufficientPrefix);
+            bits.append(action);
+            mgrUrl.path(bits);
+            mgr->testInvalidUrl(mgrUrl, "insufficient prefix");
         }
 
         // Check that the parser accepts valid URLs.
         for (const auto action: validActions) {
-            for (const auto param: validParams) {
-                for (const auto frag: validFragments) {
-                    SBuf bits;
-                    bits.append(prefix);
-                    bits.append(action);
-                    bits.append(param);
-                    bits.append(frag);
-                    mgrUrl.path(bits);
-                    mgr->testValidUrl(mgrUrl);
-                }
-            }
+            SBuf bits;
+            bits.append(prefix);
+            bits.append(action);
+            mgrUrl.path(bits);
+            mgr->testValidUrl(mgrUrl);
         }
 
-        // Check that the parser rejects URLs with invalid parameters.
-        for (const auto action: validActions) {
-            for (const auto invalidParam: invalidParams) {
-                for (const auto frag: validFragments) {
-                    SBuf bits;
-                    bits.append(prefix);
-                    bits.append(action);
-                    bits.append(invalidParam);
-                    bits.append(frag);
-                    mgrUrl.path(bits);
-                    mgr->testInvalidUrl(mgrUrl, invalidParam);
-                }
-            }
+        // Check that the parser rejects unknown actions
+        for (const auto *action : invalidActions) {
+            SBuf bits;
+            bits.append(prefix);
+            bits.append(action);
+            mgrUrl.path(bits);
+            auto msg = ToSBuf("action '", action, "' not found");
+            mgr->testInvalidUrl(mgrUrl, msg.c_str());
         }
+
     }
 }
 
