@@ -777,7 +777,6 @@ serverConnectionsOpen(void)
     if (IamWorkerProcess()) {
         clientOpenListenSockets();
         icpOpenPorts();
-        icmpEngine.Open();
         netdbInit();
         Acl::Node::Initialize();
         peerSelectInit();
@@ -792,7 +791,6 @@ serverConnectionsClose(void)
     if (IamWorkerProcess()) {
         clientConnectionsClose();
         icpConnectionShutdown();
-        icmpEngine.Close();
     }
 }
 
@@ -944,7 +942,8 @@ mainRotate(void)
     if (AvoidSignalAction("log rotation", do_rotate))
         return;
 
-    icmpEngine.Close();
+    RunRegisteredHere(RegisteredRunner::rotateLogs);
+
     redirectShutdown();
 #if USE_AUTH
     authenticateRotate();
@@ -959,7 +958,9 @@ mainRotate(void)
 #if ICAP_CLIENT
     icapLogRotate();               /*icap.log*/
 #endif
-    icmpEngine.Open();
+
+    RunRegisteredHere(RegisteredRunner::finishLogRotate);
+
     redirectInit();
 #if USE_AUTH
     authenticateInit(&Auth::TheConfig.schemes);
