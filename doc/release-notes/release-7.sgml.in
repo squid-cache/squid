@@ -6,7 +6,7 @@
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-@PACKAGE_VERSION@ for testing.
+<p>The Squid Team are pleased to announce the release of Squid-@SQUID_VERSION@ for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v@SQUID_RELEASE@/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
