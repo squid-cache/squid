@@ -1850,8 +1850,12 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
             username = request->auth_user_request->username();
 #endif
 
-        blen = base64_encode_update(&ctx, loginbuf, strlen(username), reinterpret_cast<const uint8_t*>(username));
-        blen += base64_encode_update(&ctx, loginbuf+blen, strlen(request->peer_login +1), reinterpret_cast<const uint8_t*>(request->peer_login +1));
+        const auto usernameLen = strlen(username);
+        const auto suffixLen = strlen(request->peer_login + 1);
+        if (usernameLen + suffixLen > MAX_LOGIN_SZ)
+            throw TextException("peer login credentials too long", Here());
+        blen = base64_encode_update(&ctx, loginbuf, usernameLen, reinterpret_cast<const uint8_t*>(username));
+        blen += base64_encode_update(&ctx, loginbuf+blen, suffixLen, reinterpret_cast<const uint8_t*>(request->peer_login +1));
         blen += base64_encode_final(&ctx, loginbuf+blen);
         httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)blen, loginbuf);
         return;
@@ -1862,9 +1866,14 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
             (strcmp(request->peer_login, "PASS") == 0 ||
              strcmp(request->peer_login, "PROXYPASS") == 0)) {
 
-        blen = base64_encode_update(&ctx, loginbuf, request->extacl_user.size(), reinterpret_cast<const uint8_t*>(request->extacl_user.rawBuf()));
+        const auto userLen = request->extacl_user.size();
+        const auto passwdLen = request->extacl_passwd.size();
+        // +1 for the ':' separator between user and passwd
+        if (userLen + 1 + passwdLen > MAX_LOGIN_SZ)
+            throw TextException("extacl credentials too long for peer login", Here());
+        blen = base64_encode_update(&ctx, loginbuf, userLen, reinterpret_cast<const uint8_t*>(request->extacl_user.rawBuf()));
         blen += base64_encode_update(&ctx, loginbuf+blen, 1, reinterpret_cast<const uint8_t*>(":"));
-        blen += base64_encode_update(&ctx, loginbuf+blen, request->extacl_passwd.size(), reinterpret_cast<const uint8_t*>(request->extacl_passwd.rawBuf()));
+        blen += base64_encode_update(&ctx, loginbuf+blen, passwdLen, reinterpret_cast<const uint8_t*>(request->extacl_passwd.rawBuf()));
         blen += base64_encode_final(&ctx, loginbuf+blen);
         httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)blen, loginbuf);
         return;
@@ -1894,7 +1903,10 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     }
 #endif /* HAVE_KRB5 && HAVE_GSSAPI */
 
-    blen = base64_encode_update(&ctx, loginbuf, strlen(request->peer_login), reinterpret_cast<const uint8_t*>(request->peer_login));
+    const auto loginLen = strlen(request->peer_login);
+    if (loginLen > MAX_LOGIN_SZ)
+        throw TextException("peer_login too long", Here());
+    blen = base64_encode_update(&ctx, loginbuf, loginLen, reinterpret_cast<const uint8_t*>(request->peer_login));
     blen += base64_encode_final(&ctx, loginbuf+blen);
     httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)blen, loginbuf);
     return;
