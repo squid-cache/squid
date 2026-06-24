@@ -109,7 +109,7 @@ public:
 protected:
     template<typename T>
     Security::ContextPointer convertContextFromRawPtr(T ctx) const {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         debugs(83, 5, "SSL_CTX construct, this=" << (void*)ctx);
         return ContextPointer(ctx, [](SSL_CTX *p) {
             debugs(83, 5, "SSL_CTX destruct, this=" << (void*)p);

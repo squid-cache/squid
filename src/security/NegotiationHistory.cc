@@ -10,13 +10,13 @@
 #include "MemBuf.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/bio.h"
 #include "ssl/support.h"
 #endif
 
 Security::NegotiationHistory::NegotiationHistory()
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     : cipher(nullptr)
 #endif
 {
@@ -33,7 +33,7 @@ Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion const &v) co
     return buf;
 }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 static AnyP::ProtocolVersion
 toProtocolVersion(const int v)
 {
@@ -71,7 +71,7 @@ toProtocolVersion(const int v)
 void
 Security::NegotiationHistory::retrieveNegotiatedInfo(const Security::SessionPointer &session)
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if ((cipher = SSL_get_current_cipher(session.get()))) {
         // Set the negotiated version only if the cipher negotiated
         // else probably the negotiation is not completed and version
@@ -103,7 +103,7 @@ Security::NegotiationHistory::retrieveParsedInfo(Security::TlsDetails::Pointer c
 const char *
 Security::NegotiationHistory::cipherName() const
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (!cipher)
         return nullptr;
 

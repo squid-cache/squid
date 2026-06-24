@@ -174,7 +174,7 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry("SRC", LFT_CLIENT_IP_ADDRESS), // keep after longer SRC* tokens
     TokenTableEntry("TAG", LFT_TAG),
     TokenTableEntry("URI", LFT_CLIENT_REQ_URI),
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     TokenTableEntry("USER_CERTCHAIN", LFT_EXT_ACL_USER_CERTCHAIN_RAW),
     TokenTableEntry("USER_CERT", LFT_EXT_ACL_USER_CERT_RAW),
 #endif
@@ -226,7 +226,7 @@ static TokenTableEntry TokenTableIcap[] = {
 };
 #endif
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 // TLS/SSL (tls:: or ssl::) tokens
 static TokenTableEntry TokenTableSsl[] = {
     TokenTableEntry("bump_mode", LFT_SSL_BUMP_MODE),
@@ -262,7 +262,7 @@ Format::Token::Init()
 #if ICAP_CLIENT
     TheConfig.registerTokens(SBuf("icap"),::Format::TokenTableIcap);
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     TheConfig.registerTokens(SBuf("tls"),::Format::TokenTableSsl);
     TheConfig.registerTokens(SBuf("ssl"),::Format::TokenTableSsl);
 #endif
@@ -715,7 +715,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
         break;
 #endif
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     case LFT_TLS_SERVER_NEGOTIATED_VERSION:
     case LFT_TLS_SERVER_RECEIVED_HELLO_VERSION:
     case LFT_TLS_SERVER_SUPPORTED_VERSION:

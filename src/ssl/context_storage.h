@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_SSL_CONTEXT_STORAGE_H
 #define SQUID_SRC_SSL_CONTEXT_STORAGE_H
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 
 #include "base/ClpMap.h"
 #include "CacheManager.h"
@@ -76,7 +76,7 @@ private:
 /// Global cache for store all SSL server certificates.
 GlobalContextStorage &TheGlobalContextStorage();
 } //namespace Ssl
-#endif // USE_OPENSSL
+#endif // HAVE_LIBOPENSSL
 
 #endif /* SQUID_SRC_SSL_CONTEXT_STORAGE_H */
 

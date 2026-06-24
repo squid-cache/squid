@@ -18,7 +18,7 @@
 
 Security::CommunicationSecrets::CommunicationSecrets(const Connection &sconn)
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     getClientRandom(sconn);
 
     if (const auto session = SSL_get_session(&sconn)) {
@@ -96,7 +96,7 @@ Security::CommunicationSecrets::record(std::ostream &os) const {
     }
 }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 /// Clears the given secret if it is likely to contain no secret information.
 /// When asked for a secret too early, OpenSSL (successfully!) returns a copy of
 /// the secret _storage_ (filled with zeros) rather than an actual secret.
@@ -154,5 +154,5 @@ Security::CommunicationSecrets::getMasterKey(const Session &session)
 
     IgnorePlaceholder(key);
 }
-#endif /* USE_OPENSSL */
+#endif /* HAVE_LIBOPENSSL */
 

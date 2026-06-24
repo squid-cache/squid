@@ -35,7 +35,7 @@ typedef enum {
 #endif
     hoRequest,
     hoReply,
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     hoErrorDetail,
 #endif
     hoEnd

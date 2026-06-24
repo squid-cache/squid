@@ -11,7 +11,7 @@
 #include "sbuf/SBuf.h"
 #include "security/Certificate.h"
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/gadgets.h"
 #endif
 
@@ -29,7 +29,7 @@ Security::IssuerName(Certificate &cert)
 {
     SBuf out;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::ForgetErrors();
     const auto name = Ssl::OneLineSummary(*X509_get_issuer_name(&cert));
     if (!name) {
@@ -69,7 +69,7 @@ Security::SubjectName(Certificate &cert)
 {
     SBuf out;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::ForgetErrors();
     const auto name = Ssl::OneLineSummary(*X509_get_subject_name(&cert));
     if (!name) {
@@ -107,7 +107,7 @@ Security::SubjectName(Certificate &cert)
 bool
 Security::IssuedBy(Certificate &cert, Certificate &issuer)
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::ForgetErrors();
     const auto result = X509_check_issued(&issuer, &cert);
     if (result == X509_V_OK)
