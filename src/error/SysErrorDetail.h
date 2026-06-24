@@ -30,7 +30,7 @@ public:
 
     /* ErrorDetail API */
     SBuf brief() const override;
-    SBuf verbose(const HttpRequestPointer &) const override;
+    SBuf verbose(const ErrorTemplateCompiler &) const override;
 
 private:
     // hidden by NewIfAny() to avoid creating SysErrorDetail from zero errno
