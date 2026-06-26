@@ -101,6 +101,29 @@ asn_build_header(u_char * data, /* IN - ptr to start of object */
 }
 
 /*
+ * asn_parse_type - extracts a one-byte type field, advancing input
+ *
+ * Returns NULL on any error.
+ * On success, returns a pointer to the first byte after the type field
+ * and decrements `datalength` by one.
+ */
+static u_char *
+asn_parse_type(u_char * data, int *datalength, u_char * type)
+/*    u_char  *data;       IN - input buffer */
+/*    int     *datalength; IN/OUT - number of bytes in input buffer */
+/*    u_char  *type;       OUT - ASN type of object */
+{
+    if (*datalength < 1) {
+        // not enough input for `type`
+        snmp_set_api_error(SNMPERR_ASN_DECODE);
+        return (NULL);
+    }
+    *type = *data++;
+    --*datalength;
+    return data;
+}
+
+/*
  * asn_parse_int - pulls an int out of an ASN int type.
  *  On entry, datalength is input as the number of valid bytes following
  *   "data".  On exit, it is returned as the number of valid bytes
@@ -132,25 +155,23 @@ asn_parse_int(u_char * data, int *datalength,
         return (NULL);
     }
     /* Type */
-    *type = *bufp++;
-
-    /* Extract length */
-    bufp = asn_parse_length(bufp, &asn_length);
+    bufp = asn_parse_type(bufp, datalength, type);
     if (bufp == NULL)
         return (NULL);
 
-    /* Make sure the entire int is in the buffer */
-    if (asn_length + (bufp - data) > *datalength) {
-        snmp_set_api_error(SNMPERR_ASN_DECODE);
+    /* Extract length */
+    bufp = asn_parse_length(bufp, datalength, &asn_length);
+    if (bufp == NULL)
         return (NULL);
-    }
+    assert(asn_length <= *datalength);
+
     /* Can we store this int? */
     if (asn_length > intsize) {
         snmp_set_api_error(SNMPERR_ASN_DECODE);
         return (NULL);
     }
     /* Remaining data */
-    *datalength -= (int) asn_length + (bufp - data);
+    *datalength -= (int) asn_length;
 
     /* Is the int negative? */
     if (*bufp & 0x80)
@@ -197,18 +218,16 @@ asn_parse_unsigned_int(u_char * data, int *datalength,
         return (NULL);
     }
     /* Type */
-    *type = *bufp++;
-
-    /* Extract length */
-    bufp = asn_parse_length(bufp, &asn_length);
+    bufp = asn_parse_type(bufp, datalength, type);
     if (bufp == NULL)
         return (NULL);
 
-    /* Make sure the entire int is in the buffer */
-    if (asn_length + (bufp - data) > *datalength) {
-        snmp_set_api_error(SNMPERR_ASN_DECODE);
+    /* Extract length */
+    bufp = asn_parse_length(bufp, datalength, &asn_length);
+    if (bufp == NULL)
         return (NULL);
-    }
+    assert(asn_length <= *datalength);
+
     /* Can we store this int? */
     if ((asn_length > (intsize + 1)) ||
             ((asn_length == intsize + 1) && *bufp != 0x00)) {
@@ -216,7 +235,7 @@ asn_parse_unsigned_int(u_char * data, int *datalength,
         return (NULL);
     }
     /* Remaining data */
-    *datalength -= (int) asn_length + (bufp - data);
+    *datalength -= (int) asn_length;
 
     /* Is the int negative? */
     if (*bufp & 0x80)
@@ -400,22 +419,22 @@ asn_parse_string(u_char * data, int *datalength,
     u_char *bufp = data;
     u_int asn_length;
 
-    *type = *bufp++;
-    bufp = asn_parse_length(bufp, &asn_length);
+    bufp = asn_parse_type(bufp, datalength, type);
     if (bufp == NULL)
         return (NULL);
 
-    if (asn_length + (bufp - data) > *datalength) {
-        snmp_set_api_error(SNMPERR_ASN_DECODE);
+    bufp = asn_parse_length(bufp, datalength, &asn_length);
+    if (bufp == NULL)
         return (NULL);
-    }
+    assert(asn_length <= *datalength);
+
     if (asn_length > *strlength) {
         snmp_set_api_error(SNMPERR_ASN_DECODE);
         return (NULL);
     }
     memcpy((char *) string, (char *) bufp, (int) asn_length);
     *strlength = (int) asn_length;
-    *datalength -= (int) asn_length + (bufp - data);
+    *datalength -= (int) asn_length;
     return (bufp + asn_length);
 }
 
@@ -473,7 +492,6 @@ asn_parse_header(u_char * data, int *datalength, u_char * type)
 /*    u_char  *type;       OUT - ASN type of object */
 {
     u_char *bufp = data;
-    int header_len;
     u_int asn_length;
 
     /* this only works on data types < 30, i.e. no extension octets */
@@ -481,13 +499,17 @@ asn_parse_header(u_char * data, int *datalength, u_char * type)
         snmp_set_api_error(SNMPERR_ASN_DECODE);
         return (NULL);
     }
-    *type = *bufp;
-    bufp = asn_parse_length(bufp + 1, &asn_length);
+
+    bufp = asn_parse_type(bufp, datalength, type);
     if (bufp == NULL)
         return (NULL);
 
-    header_len = bufp - data;
-    if (header_len + asn_length > *datalength || asn_length > (u_int)(2 << 18) ) {
+    bufp = asn_parse_length(bufp, datalength, &asn_length);
+    if (bufp == NULL)
+        return (NULL);
+    assert(asn_length <= *datalength);
+
+    if (asn_length > (u_int)(2 << 18)) {
         snmp_set_api_error(SNMPERR_ASN_DECODE);
         return (NULL);
     }
@@ -528,26 +550,38 @@ asn_build_header_with_truth(u_char * data, int *datalength,
 }
 
 /*
- * asn_parse_length - interprets the length of the current object.
- *  On exit, length contains the value of this length field.
+ * asn_parse_length - parses the length field in front of a variable-length ASN object.
  *
- *  Returns a pointer to the first byte after this length
- *  field (aka: the start of the data field).
- *  Returns NULL on any error.
+ * On success, returns a pointer to the first byte after this length field
+ * (i.e. the start of the variable-length ASN object).
+ *
+ * On error, returns NULL. Errors include "indefinite length" (i.e. 0x80) and
+ * truncated input (e.g., does not contain either all of the expected length
+ * field bytes or all of the expected variable-length object bytes). OUT
+ * values documented below are only meaningful for successful outcomes.
  */
 u_char *
-asn_parse_length(u_char * data, u_int * length)
+asn_parse_length(u_char *data, int *dataLength, u_int *length)
 /*    u_char  *data;   IN - pointer to start of length field */
+/*    int     *datalength;  IN/OUT - # of valid bytes in returned buffer */
 /*    u_int  *length; OUT - value of length field */
 {
-    const auto dataLength = *length;
+    // ASN.1 length ::= short-form | long-form
+    // short-form ::= octet ; bit 8 = 0
+    // long-form ::= first-octet <N subsequent octets>
+    // first-octet ::= octet ; bit 8 = 1, bits 7..1 = N
 
-    if (!dataLength) {
+    if (!*dataLength) {
+        // not enough data, even for the short-form
         snmp_set_api_error(SNMPERR_ASN_DECODE);
         return (NULL);
     }
 
     u_char lengthbyte = *data;
+
+    // consume either the entire short-form value or the first-octet of the long-form value
+    ++data;
+    --*dataLength;
 
     if (lengthbyte & ASN_LONG_LEN) {
         lengthbyte &= ~ASN_LONG_LEN;    /* turn MSb off */
@@ -561,23 +595,31 @@ asn_parse_length(u_char * data, u_int * length)
             return (NULL);
         }
 
-        // account for the lengthbyte itself (i.e. "+ 1" in memcpy() below)
-        if (dataLength <= lengthbyte) {
+        if (lengthbyte > *dataLength) {
+            // not enough data for "N subsequent octets"
             snmp_set_api_error(SNMPERR_ASN_DECODE);
             return (NULL);
         }
 
         *length = (u_int) 0;
-        memcpy((char *) (length), (char *) data + 1, (int) lengthbyte);
+        memcpy((char *) (length), (char *) data, (int) lengthbyte);
         *length = ntohl(*length);
         *length >>= (8 * ((sizeof *length) - lengthbyte));
-        return (data + lengthbyte + 1);
 
+        // consume "N subsequent octets"
+        data += lengthbyte;
+        *dataLength -= lengthbyte;
+    } else {
+        /* short-form */
+        *length = lengthbyte;
     }
-    /* short asnlength */
 
-    *length = (int) lengthbyte;
-    return (data + 1);
+    if (*length > *dataLength) {
+        // not enough data for the variable-length object after this length field
+        snmp_set_api_error(SNMPERR_ASN_DECODE);
+        return (NULL);
+    }
+    return data;
 }
 
 u_char *
@@ -669,16 +711,15 @@ asn_parse_objid(u_char * data, int *datalength,
     int length;
     u_int asn_length;
 
-    *type = *bufp++;
-    bufp = asn_parse_length(bufp, &asn_length);
+    bufp = asn_parse_type(bufp, datalength, type);
     if (bufp == NULL)
         return (NULL);
 
-    if (asn_length + (bufp - data) > *datalength) {
-        snmp_set_api_error(SNMPERR_ASN_DECODE);
+    bufp = asn_parse_length(bufp, datalength, &asn_length);
+    if (bufp == NULL)
         return (NULL);
-    }
-    *datalength -= (int) asn_length + (bufp - data);
+    assert(asn_length <= *datalength);
+    *datalength -= (int) asn_length;
 
     /* Handle invalid object identifier encodings of the form 06 00 robustly */
     if (asn_length == 0)

@@ -86,7 +86,7 @@ u_char *asn_build_string(u_char *, int *, u_char, u_char *, int);
 u_char *asn_parse_header(u_char *, int *, u_char *);
 u_char *asn_build_header_with_truth(u_char *, int *, u_char, int, int);
 
-u_char *asn_parse_length(u_char *, u_int *);
+u_char *asn_parse_length(u_char *, int *, u_int *);
 u_char *asn_build_length(u_char *, int *, int, int);
 u_char *asn_parse_objid(u_char *, int *, u_char *, oid *, int *);
 u_char *asn_build_objid(u_char *, int *, u_char, oid *, int);
