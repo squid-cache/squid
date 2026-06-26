@@ -540,6 +540,13 @@ asn_parse_length(u_char * data, u_int * length)
 /*    u_char  *data;   IN - pointer to start of length field */
 /*    u_int  *length; OUT - value of length field */
 {
+    const auto dataLength = *length;
+
+    if (!dataLength) {
+        snmp_set_api_error(SNMPERR_ASN_DECODE);
+        return (NULL);
+    }
+
     u_char lengthbyte = *data;
 
     if (lengthbyte & ASN_LONG_LEN) {
@@ -553,6 +560,13 @@ asn_parse_length(u_char * data, u_int * length)
             snmp_set_api_error(SNMPERR_ASN_DECODE);
             return (NULL);
         }
+
+        // account for the lengthbyte itself (i.e. "+ 1" in memcpy() below)
+        if (dataLength <= lengthbyte) {
+            snmp_set_api_error(SNMPERR_ASN_DECODE);
+            return (NULL);
+        }
+
         *length = (u_int) 0;
         memcpy((char *) (length), (char *) data + 1, (int) lengthbyte);
         *length = ntohl(*length);
