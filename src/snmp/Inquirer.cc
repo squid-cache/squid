@@ -111,12 +111,13 @@ Snmp::Inquirer::sendResponse()
         return; // client gone
 
     aggrPdu.fixAggregate();
-    aggrPdu.command = SNMP_PDU_RESPONSE;
+    aggrPdu.command = SNMP_MSG_RESPONSE;
     u_char buffer[SNMP_REQUEST_SIZE];
-    int len = sizeof(buffer);
+    auto len = sizeof(buffer);
+    size_t filled = 0;
     Snmp::Request& req = static_cast<Snmp::Request&>(*request);
-    if (snmp_build(&req.session, &aggrPdu, buffer, &len) == 0)
-        comm_udp_sendto(conn->fd, req.address, buffer, len);
+    if (snmp_build(reinterpret_cast<u_char**>(&buffer), &len, &filled, &req.session, &aggrPdu) == 0)
+        comm_udp_sendto(conn->fd, req.address, buffer, filled);
     else
         debugs(49, DBG_IMPORTANT, "ERROR: Failed to encode a response to SNMP agent query from " << req.address);
 }

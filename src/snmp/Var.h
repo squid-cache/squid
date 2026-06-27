@@ -13,7 +13,7 @@
 
 #include "base/Range.h"
 #include "ipc/forward.h"
-#include "snmp_vars.h"
+#include "compat/netsnmp.h"
 
 namespace Snmp
 {

@@ -43,29 +43,25 @@
 variable_list *
 snmp_sysFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = nullptr;
     MemBuf tmp;
     debugs(49, 5, "snmp_sysFn: Processing request:" << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;
 
+    int value = 0;
+    auto type = ASN_INTEGER; // most of these are Integer
     switch (Var->name[LEN_SQ_SYS]) {
 
     case SYSVMSIZ:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      mem_node::StoreMemSize() >> 10,
-                                      ASN_INTEGER);
+        value = (mem_node::StoreMemSize() >> 10);
         break;
 
     case SYSSTOR:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      Store::Root().currentSize() >> 10,
-                                      ASN_INTEGER);
+        value = (Store::Root().currentSize() >> 10);
         break;
 
     case SYS_UPTIME:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (int)(tvSubDsec(squid_start, current_time) * 100),
-                                      SMI_TIMETICKS);
+        value = (tvSubDsec(squid_start, current_time) * 100);
+        type = ASN_TIMETICKS;
         break;
 
     default:
@@ -73,7 +69,8 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
         break;
     }
 
-    return Answer;
+    variable_list *Answer = nullptr;
+    return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, type, &value, sizeof(value));
 }
 
 /*
@@ -83,59 +80,48 @@ variable_list *
 snmp_confFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = nullptr;
-    const char *cp = nullptr;
     debugs(49, 5, "snmp_confFn: Processing request with magic " << Var->name[8] << "!");
     *ErrP = SNMP_ERR_NOERROR;
 
+    char *value_str = nullptr;
+    size_t value_int = 0;
+    u_char type;
     switch (Var->name[LEN_SQ_CONF]) {
 
     case CONF_ADMIN:
-        Answer = snmp_var_new(Var->name, Var->name_length);
-        Answer->type = ASN_OCTET_STR;
-        Answer->val_len = strlen(Config.adminEmail);
-        Answer->val.string = (u_char *) xstrdup(Config.adminEmail);
+        type = ASN_OCTET_STR;
+        value_str = xstrdup(Config.adminEmail);
         break;
 
     case CONF_VERSION:
-        Answer = snmp_var_new(Var->name, Var->name_length);
-        Answer->type = ASN_OCTET_STR;
-        Answer->val_len = strlen(APP_SHORTNAME);
-        Answer->val.string = (u_char *) xstrdup(APP_SHORTNAME);
+        type = ASN_OCTET_STR;
+        value_str = xstrdup(APP_SHORTNAME);
         break;
 
     case CONF_VERSION_ID:
-        Answer = snmp_var_new(Var->name, Var->name_length);
-        Answer->type = ASN_OCTET_STR;
-        Answer->val_len = strlen(VERSION);
-        Answer->val.string = (u_char *) xstrdup(VERSION);
+        type = ASN_OCTET_STR;
+        value_str = xstrdup(VERSION);
         break;
 
     case CONF_STORAGE:
 
+        type = ASN_INTEGER; // these are all Integer
         switch (Var->name[LEN_SQ_CONF + 1]) {
 
         case CONF_ST_MMAXSZ:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) (Config.memMaxSize >> 20),
-                                          ASN_INTEGER);
+            value_int = (Config.memMaxSize >> 20);
             break;
 
         case CONF_ST_SWMAXSZ:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) (Store::Root().maxSize() >> 20),
-                                          ASN_INTEGER);
+            value_int = (Store::Root().maxSize() >> 20);
             break;
 
         case CONF_ST_SWHIWM:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) Config.Swap.highWaterMark,
-                                          ASN_INTEGER);
+            value_int = Config.Swap.highWaterMark;
             break;
 
         case CONF_ST_SWLOWM:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) Config.Swap.lowWaterMark,
-                                          ASN_INTEGER);
+            value_int = Config.Swap.lowWaterMark;
             break;
 
         default:
@@ -146,39 +132,27 @@ snmp_confFn(variable_list * Var, snint * ErrP)
         break;
 
     case CONF_LOG_FAC:
-        Answer = snmp_var_new(Var->name, Var->name_length);
-
-        if (!(cp = Debug::debugOptions))
-            cp = "None";
-
-        Answer->type = ASN_OCTET_STR;
-
-        Answer->val_len = strlen(cp);
-
-        Answer->val.string = (u_char *) xstrdup(cp);
-
+        if (auto cp = Debug::debugOptions)
+            value_str = xstrdup(cp);
+        else
+            value_str = xstrdup("None");
+        type = ASN_OCTET_STR;
         break;
 
     case CONF_UNIQNAME:
-        Answer = snmp_var_new(Var->name, Var->name_length);
-
-        cp = uniqueHostname();
-
-        Answer->type = ASN_OCTET_STR;
-
-        Answer->val_len = strlen(cp);
-
-        Answer->val.string = (u_char *) xstrdup(cp);
-
+        type = ASN_OCTET_STR;
+        value_str = xstrdup(uniqueHostname());
         break;
 
     default:
         *ErrP = SNMP_ERR_NOSUCHNAME;
-
-        break;
+        return nullptr;
     }
 
-    return Answer;
+    if (type == ASN_OCTET_STR)
+        return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, type, &value_str, strlen(value_str));
+
+    return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, type, &value_int, sizeof(value_int));
 }
 
 /*
@@ -189,14 +163,12 @@ variable_list *
 snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = nullptr;
-
     Ip::Address laddr;
-    char *cp = nullptr;
-    CachePeer *p = nullptr;
     debugs(49, 5, "snmp_meshPtblFn: peer " << Var->name[LEN_SQ_MESH + 3] << " requested!");
     *ErrP = SNMP_ERR_NOERROR;
 
     u_int index = Var->name[LEN_SQ_MESH + 3] ;
+    CachePeer *p = nullptr;
     for (const auto &peer: CurrentCachePeers()) {
         if (peer->index == index) {
             laddr = peer->in_addr ;
@@ -205,422 +177,378 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
         }
     }
 
-    if (p == nullptr) {
+    if (!p) {
         *ErrP = SNMP_ERR_NOSUCHNAME;
         return nullptr;
     }
 
+    size_t value = 0;
+    u_char type;
     switch (Var->name[LEN_SQ_MESH + 2]) {
-    case MESH_PTBL_INDEX: { // XXX: Should be visible?
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint)p->index, SMI_INTEGER);
+    case MESH_PTBL_INDEX:
+        value = p->index;
+        type = ASN_INTEGER;
+    break;
+
+    case MESH_PTBL_NAME: {
+        auto buf = xstrdup(p->host);
+        return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, ASN_OCTET_STR, &buf, strlen(buf));
     }
     break;
 
-    case MESH_PTBL_NAME:
-        cp = p->host;
-        Answer = snmp_var_new(Var->name, Var->name_length);
-        Answer->type = ASN_OCTET_STR;
-        Answer->val_len = strlen(cp);
-        Answer->val.string = (u_char *) xstrdup(cp);
-
-        break;
-
     case MESH_PTBL_ADDR_TYPE: {
-        int ival;
-        ival = laddr.isIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6 ;
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      ival, SMI_INTEGER);
+        value = laddr.isIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6;
+        type = ASN_INTEGER;
     }
     break;
     case MESH_PTBL_ADDR: {
-        Answer = snmp_var_new(Var->name, Var->name_length);
         // InetAddress doesn't have its own ASN.1 type,
         // like IpAddr does (SMI_IPADDRESS)
         // See: rfc4001.txt
-        Answer->type = ASN_OCTET_STR;
         char host[MAX_IPSTRLEN];
         laddr.toStr(host,MAX_IPSTRLEN);
-        Answer->val_len = strlen(host);
-        Answer->val.string =  (u_char *) xstrdup(host);
+        auto buf = xstrdup(host);
+        return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, ASN_OCTET_STR, &buf, strlen(buf));
     }
     break;
 
     case MESH_PTBL_HTTP:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) p->http_port,
-                                      ASN_INTEGER);
+        value = p->http_port;
+        type = ASN_INTEGER;
         break;
 
     case MESH_PTBL_ICP:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) p->icp.port,
-                                      ASN_INTEGER);
+        value = p->icp.port;
+        type = ASN_INTEGER;
         break;
 
     case MESH_PTBL_TYPE:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) p->type,
-                                      ASN_INTEGER);
+        value = p->type;
+        type = ASN_INTEGER;
         break;
 
     case MESH_PTBL_STATE:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) neighborUp(p),
-                                      ASN_INTEGER);
+        value = neighborUp(p);
+        type = ASN_INTEGER;
         break;
 
     case MESH_PTBL_SENT:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      p->stats.pings_sent,
-                                      SMI_COUNTER32);
+        value = p->stats.pings_sent;
+        type = ASN_COUNTER;
         break;
 
     case MESH_PTBL_PACKED:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      p->stats.pings_acked,
-                                      SMI_COUNTER32);
+        value = p->stats.pings_acked;
+        type = ASN_COUNTER;
         break;
 
     case MESH_PTBL_FETCHES:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      p->stats.fetches,
-                                      SMI_COUNTER32);
+        value = p->stats.fetches;
+        type = ASN_COUNTER;
         break;
 
     case MESH_PTBL_RTT:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      p->stats.rtt,
-                                      ASN_INTEGER);
+        value = p->stats.rtt;
+        type = ASN_INTEGER; // TODO: ASN_GUAGE ?
         break;
 
     case MESH_PTBL_IGN:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      p->stats.ignored_replies,
-                                      SMI_COUNTER32);
+        value = p->stats.ignored_replies;
+        type = ASN_COUNTER;
         break;
 
     case MESH_PTBL_KEEPAL_S:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      p->stats.n_keepalives_sent,
-                                      SMI_COUNTER32);
+        value = p->stats.n_keepalives_sent;
+        type = ASN_COUNTER;
         break;
 
     case MESH_PTBL_KEEPAL_R:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      p->stats.n_keepalives_recv,
-                                      SMI_COUNTER32);
+        value = p->stats.n_keepalives_recv;
+        type = ASN_COUNTER;
         break;
 
     default:
         *ErrP = SNMP_ERR_NOSUCHNAME;
-        break;
+        return nullptr;
     }
 
-    return Answer;
+    return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, type, &value, sizeof(value));
 }
 
 variable_list *
 snmp_prfSysFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = nullptr;
-
     static struct rusage rusage;
     debugs(49, 5, "snmp_prfSysFn: Processing request with magic " << Var->name[LEN_SQ_PRF + 1] << "!");
     *ErrP = SNMP_ERR_NOERROR;
 
+    size_t value = 0;
+    u_char type = ASN_INTEGER; // default for deprecated is value=0
     switch (Var->name[LEN_SQ_PRF + 1]) {
 
     case PERF_SYS_PF:
         squid_getrusage(&rusage);
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      rusage_pagefaults(&rusage),
-                                      SMI_COUNTER32);
+        value = rusage_pagefaults(&rusage);
+        type = ASN_COUNTER;
         break;
 
     case PERF_SYS_NUMR:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      IOStats.Http.reads,
-                                      SMI_COUNTER32);
+        value = IOStats.Http.reads;
+        type = ASN_COUNTER;
         break;
 
     case PERF_SYS_MEMUSAGE: {
         Mem::PoolStats stats;
         Mem::GlobalStats(stats);
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) stats.meter->alloc.currentLevel() >> 10,
-                                      ASN_INTEGER);
+        value = (stats.meter->alloc.currentLevel() >> 10);
+        type = ASN_INTEGER;
     }
     break;
 
     case PERF_SYS_CPUTIME:
         squid_getrusage(&rusage);
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) rusage_cputime(&rusage),
-                                      ASN_INTEGER);
+        value = rusage_cputime(&rusage);
+        type = ASN_INTEGER;
         break;
 
     case PERF_SYS_CPUUSAGE:
         squid_getrusage(&rusage);
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) Math::doublePercent(rusage_cputime(&rusage), tvSubDsec(squid_start, current_time)),
-                                      ASN_INTEGER);
+        value = Math::doublePercent(rusage_cputime(&rusage), tvSubDsec(squid_start, current_time));
+        type = ASN_INTEGER;
         break;
 
     case PERF_SYS_MAXRESSZ:
         squid_getrusage(&rusage);
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) rusage_maxrss(&rusage),
-                                      ASN_INTEGER);
-        break;
-
-    case PERF_SYS_CURLRUEXP:
-        /* No global LRU info anymore */
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      0,
-                                      SMI_TIMETICKS);
+        value = rusage_maxrss(&rusage);
+        type = ASN_INTEGER;
         break;
 
     case PERF_SYS_CURUNLREQ:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) statCounter.unlink.requests,
-                                      SMI_GAUGE32);
+        value = statCounter.unlink.requests;
+        type = ASN_GAUGE;
         break;
 
     case PERF_SYS_CURUNUSED_FD:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) Squid_MaxFD - Number_FD,
-                                      SMI_GAUGE32);
+        value = (Squid_MaxFD - Number_FD);
+        type = ASN_GAUGE;
         break;
 
     case PERF_SYS_CURRESERVED_FD:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) RESERVED_FD,
-                                      SMI_GAUGE32);
+        value = RESERVED_FD;
+        type = ASN_GAUGE;
         break;
 
     case PERF_SYS_CURUSED_FD:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) Number_FD,
-                                      SMI_GAUGE32);
+        value = Number_FD;
+        type = ASN_GAUGE;
         break;
 
     case PERF_SYS_CURMAX_FD:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) Biggest_FD,
-                                      SMI_GAUGE32);
+        value = Biggest_FD;
+        type = ASN_GAUGE;
         break;
 
     case PERF_SYS_NUMOBJCNT: {
         StoreInfoStats stats;
         Store::Root().getStats(stats);
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) (stats.mem.count + stats.swap.count),
-                                      SMI_GAUGE32);
+        value = (stats.mem.count + stats.swap.count);
+        type = ASN_GAUGE;
         break;
     }
+
+    // deprecated OIDs, not an error, just value=0
+    case PERF_SYS_CURLRUEXP:
+        break;
 
     default:
         *ErrP = SNMP_ERR_NOSUCHNAME;
         break;
     }
 
-    return Answer;
+    variable_list *Answer = nullptr;
+    return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, type, &value, sizeof(value));
+}
+
+static variable_list *
+CacheProtoAggregateStats(variable_list * Var, snint * ErrP)
+{
+    debugs(49, 5, "Processing request with magic " << Var->name[LEN_SQ_PRF + 2] << "!");
+    *ErrP = SNMP_ERR_NOERROR;
+
+    size_t value = 0;
+    auto type = ASN_COUNTER; // most of these are Counter32
+    switch (Var->name[LEN_SQ_PRF + 2]) {
+
+    case PERF_PROTOSTAT_AGGR_HTTP_REQ:
+        value = statCounter.client_http.requests;
+        break;
+
+    case PERF_PROTOSTAT_AGGR_HTTP_HITS:
+        value = statCounter.client_http.hits;
+        break;
+
+    case PERF_PROTOSTAT_AGGR_HTTP_ERRORS:
+        value = statCounter.client_http.errors;
+        break;
+
+    case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_IN:
+        value = statCounter.client_http.kbytes_in.kb;
+        break;
+
+    case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_OUT:
+        value = statCounter.client_http.kbytes_out.kb;
+        break;
+
+    case PERF_PROTOSTAT_AGGR_ICP_S:
+        value = statCounter.icp.pkts_sent;
+        break;
+
+    case PERF_PROTOSTAT_AGGR_ICP_R:
+        value = statCounter.icp.pkts_recv;
+        break;
+
+    case PERF_PROTOSTAT_AGGR_ICP_SKB:
+        value = statCounter.icp.kbytes_sent.kb;
+        break;
+
+    case PERF_PROTOSTAT_AGGR_ICP_RKB:
+        value = statCounter.icp.kbytes_recv.kb;
+        break;
+
+    case PERF_PROTOSTAT_AGGR_REQ:
+        value = statCounter.server.all.requests;
+        type = ASN_INTEGER; // TODO: can this be a Counter32 ?
+        break;
+
+    case PERF_PROTOSTAT_AGGR_ERRORS:
+        value = statCounter.server.all.errors;
+        type = ASN_INTEGER; // TODO: can this be a Counter32 ?
+        break;
+
+    case PERF_PROTOSTAT_AGGR_KBYTES_IN:
+        value = statCounter.server.all.kbytes_in.kb;
+        break;
+
+    case PERF_PROTOSTAT_AGGR_KBYTES_OUT:
+        value = statCounter.server.all.kbytes_out.kb;
+        break;
+
+    case PERF_PROTOSTAT_AGGR_CURSWAP:
+        value = (Store::Root().currentSize() >> 10);
+        type = ASN_GAUGE;
+        break;
+
+    case PERF_PROTOSTAT_AGGR_CLIENTS:
+        value = statCounter.client_http.clients;
+        type = ASN_GAUGE;
+        break;
+
+    default:
+        *ErrP = SNMP_ERR_NOSUCHNAME;
+        return nullptr;
+    }
+
+    variable_list *Answer = nullptr;
+    return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, type, &value, sizeof(value));
+}
+
+static variable_list *
+CacheProtoMedianStats(variable_list * Var, snint * ErrP)
+{
+    debugs(49, 5, "Processing request with magic " << Var->name[LEN_SQ_PRF + 3] << "!");
+    *ErrP = SNMP_ERR_NOERROR;
+
+    if (Var->name_length != LEN_SQ_PRF + 5) {
+        *ErrP = SNMP_ERR_GENERR;
+        return nullptr;
+    }
+
+    int minutes = Var->name[LEN_SQ_PRF + 4];
+    if ((minutes < 1) || (minutes > 60)) {
+        *ErrP = SNMP_ERR_BADVALUE;
+        return nullptr;
+    }
+
+    static auto f = snmpStatGet(0);
+    static auto l = snmpStatGet(minutes);
+
+    debugs(49, 8, "median: min= " << minutes << ", " << Var->name[LEN_SQ_PRF + 3] << " l= " << l << " , f = " << f);
+    debugs(49, 8, "median: l= " << l << " , f = " << f);
+
+    double value = 0.0;
+    auto type = ASN_INTEGER; // TODO: are these better as 64-bit Guage ?
+    switch (Var->name[LEN_SQ_PRF + 3]) {
+
+    case PERF_MEDIAN_TIME:
+        value = minutes;
+        break;
+
+    case PERF_MEDIAN_HTTP_ALL:
+        value = statHistDeltaMedian(l->client_http.allSvcTime, f->client_http.allSvcTime);
+        break;
+
+    case PERF_MEDIAN_HTTP_MISS:
+        value = statHistDeltaMedian(l->client_http.missSvcTime, f->client_http.missSvcTime);
+        break;
+
+    case PERF_MEDIAN_HTTP_NM:
+        value = statHistDeltaMedian(l->client_http.nearMissSvcTime, f->client_http.nearMissSvcTime);
+        break;
+
+    case PERF_MEDIAN_HTTP_HIT:
+        value = statHistDeltaMedian(l->client_http.hitSvcTime, f->client_http.hitSvcTime);
+        break;
+
+    case PERF_MEDIAN_ICP_QUERY:
+        value = statHistDeltaMedian(l->icp.querySvcTime, f->icp.querySvcTime);
+        break;
+
+    case PERF_MEDIAN_ICP_REPLY:
+        value = statHistDeltaMedian(l->icp.replySvcTime, f->icp.replySvcTime);
+        break;
+
+    case PERF_MEDIAN_DNS:
+        value = statHistDeltaMedian(l->dns.svcTime, f->dns.svcTime);
+        break;
+
+    case PERF_MEDIAN_RHR:
+        value = statRequestHitRatio(minutes);
+        break;
+
+    case PERF_MEDIAN_BHR:
+        value = statByteHitRatio(minutes);
+        break;
+
+    case PERF_MEDIAN_HTTP_NH:
+        value = statHistDeltaMedian(l->client_http.nearHitSvcTime, f->client_http.nearHitSvcTime);
+        break;
+
+    default:
+        *ErrP = SNMP_ERR_NOSUCHNAME;
+        return nullptr;
+    }
+
+    variable_list *Answer = nullptr;
+    return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, type, &value, sizeof(value));
 }
 
 variable_list *
 snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = nullptr;
-    static StatCounters *f = nullptr;
-    static StatCounters *l = nullptr;
-    double x;
-    int minutes;
     debugs(49, 5, "snmp_prfProtoFn: Processing request with magic " << Var->name[LEN_SQ_PRF] << "!");
     *ErrP = SNMP_ERR_NOERROR;
 
     switch (Var->name[LEN_SQ_PRF + 1]) {
 
-    case PERF_PROTOSTAT_AGGR:   /* cacheProtoAggregateStats */
-
-        switch (Var->name[LEN_SQ_PRF + 2]) {
-
-        case PERF_PROTOSTAT_AGGR_HTTP_REQ:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.client_http.requests,
-                                          SMI_COUNTER32);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_HTTP_HITS:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.client_http.hits,
-                                          SMI_COUNTER32);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_HTTP_ERRORS:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.client_http.errors,
-                                          SMI_COUNTER32);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_IN:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.client_http.kbytes_in.kb,
-                                          SMI_COUNTER32);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_HTTP_KBYTES_OUT:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.client_http.kbytes_out.kb,
-                                          SMI_COUNTER32);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_ICP_S:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.icp.pkts_sent,
-                                          SMI_COUNTER32);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_ICP_R:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.icp.pkts_recv,
-                                          SMI_COUNTER32);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_ICP_SKB:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.icp.kbytes_sent.kb,
-                                          SMI_COUNTER32);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_ICP_RKB:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.icp.kbytes_recv.kb,
-                                          SMI_COUNTER32);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_REQ:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.server.all.requests,
-                                          SMI_INTEGER);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_ERRORS:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.server.all.errors,
-                                          SMI_INTEGER);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_KBYTES_IN:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.server.all.kbytes_in.kb,
-                                          SMI_COUNTER32);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_KBYTES_OUT:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.server.all.kbytes_out.kb,
-                                          SMI_COUNTER32);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_CURSWAP:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) Store::Root().currentSize() >> 10,
-                                          SMI_GAUGE32);
-            break;
-
-        case PERF_PROTOSTAT_AGGR_CLIENTS:
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) statCounter.client_http.clients,
-                                          SMI_GAUGE32);
-            break;
-
-        default:
-            *ErrP = SNMP_ERR_NOSUCHNAME;
-            break;
-        }
-
-        return Answer;
+    case PERF_PROTOSTAT_AGGR:
+        return CacheProtoAggregateStats(Var, ErrP);
 
     case PERF_PROTOSTAT_MEDIAN:
+        return CacheProtoMedianStats(Var, ErrP);
 
-        if (Var->name_length == LEN_SQ_PRF + 5)
-            minutes = Var->name[LEN_SQ_PRF + 4];
-        else
-            break;
-
-        if ((minutes < 1) || (minutes > 60))
-            break;
-
-        f = snmpStatGet(0);
-
-        l = snmpStatGet(minutes);
-
-        debugs(49, 8, "median: min= " << minutes << ", " << Var->name[LEN_SQ_PRF + 3] << " l= " << l << " , f = " << f);
-        debugs(49, 8, "median: l= " << l << " , f = " << f);
-
-        switch (Var->name[LEN_SQ_PRF + 3]) {
-
-        case PERF_MEDIAN_TIME:
-            x = minutes;
-            break;
-
-        case PERF_MEDIAN_HTTP_ALL:
-            x = statHistDeltaMedian(l->client_http.allSvcTime,
-                                    f->client_http.allSvcTime);
-            break;
-
-        case PERF_MEDIAN_HTTP_MISS:
-            x = statHistDeltaMedian(l->client_http.missSvcTime,
-                                    f->client_http.missSvcTime);
-            break;
-
-        case PERF_MEDIAN_HTTP_NM:
-            x = statHistDeltaMedian(l->client_http.nearMissSvcTime,
-                                    f->client_http.nearMissSvcTime);
-            break;
-
-        case PERF_MEDIAN_HTTP_HIT:
-            x = statHistDeltaMedian(l->client_http.hitSvcTime,
-                                    f->client_http.hitSvcTime);
-            break;
-
-        case PERF_MEDIAN_ICP_QUERY:
-            x = statHistDeltaMedian(l->icp.querySvcTime, f->icp.querySvcTime);
-            break;
-
-        case PERF_MEDIAN_ICP_REPLY:
-            x = statHistDeltaMedian(l->icp.replySvcTime, f->icp.replySvcTime);
-            break;
-
-        case PERF_MEDIAN_DNS:
-            x = statHistDeltaMedian(l->dns.svcTime, f->dns.svcTime);
-            break;
-
-        case PERF_MEDIAN_RHR:
-            x = statRequestHitRatio(minutes);
-            break;
-
-        case PERF_MEDIAN_BHR:
-            x = statByteHitRatio(minutes);
-            break;
-
-        case PERF_MEDIAN_HTTP_NH:
-            x = statHistDeltaMedian(l->client_http.nearHitSvcTime,
-                                    f->client_http.nearHitSvcTime);
-            break;
-
-        default:
-            *ErrP = SNMP_ERR_NOSUCHNAME;
-            return nullptr;
-        }
-
-        return snmp_var_new_integer(Var->name, Var->name_length,
-                                    (snint) x,
-                                    SMI_INTEGER);
+    default:
+        *ErrP = SNMP_ERR_NOSUCHNAME;
+        return nullptr;
     }
-
-    *ErrP = SNMP_ERR_NOSUCHNAME;
-    return nullptr;
 }
 
