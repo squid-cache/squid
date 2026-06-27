@@ -13,4 +13,8 @@ libbase64_la_SOURCES = \
 	Base64Encoder.cc \
 	Base64Encoder.h
 
-libbase64_la_LIBADD = $(LIBNETTLE_LIBS)
+libbase64_la_LIBADD = \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(COMPAT_LIB) \
+	$(LIBNETTLE_LIBS) \
+	$(XTRA_LIBS)

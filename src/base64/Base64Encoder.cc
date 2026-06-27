@@ -168,7 +168,7 @@ Base64Encoder::Base64StreamBuf::xsputn(const char *s, std::streamsize n)
 
         encoder_.checkSizeLimit(toCopy);
 
-        std::memcpy(inputBuffer_ + inputBufferPos_, s, toCopy);
+        memcpy(inputBuffer_ + inputBufferPos_, s, toCopy);
         inputBufferPos_ += toCopy;
         s += toCopy;
         n -= toCopy;
