@@ -135,7 +135,7 @@ asn_parse_type(u_char * data, int *datalength, u_char * type)
  * values documented below are only meaningful for successful outcomes.
  */
 static u_char *
-asn_parse_length(u_char *data, int *dataLength, u_int *length)
+asn_parse_length(u_char *data, int *datalength, u_int *length)
 /*    u_char  *data;   IN - pointer to start of length field */
 /*    int     *datalength;  IN/OUT - # of valid bytes in returned buffer */
 /*    u_int  *length; OUT - value of length field */
@@ -145,7 +145,7 @@ asn_parse_length(u_char *data, int *dataLength, u_int *length)
     // long-form ::= first-octet <N subsequent octets>
     // first-octet ::= octet ; bit 8 = 1, bits 7..1 = N
 
-    if (!*dataLength) {
+    if (!*datalength) {
         // not enough data, even for the short-form
         snmp_set_api_error(SNMPERR_ASN_DECODE);
         return (NULL);
@@ -155,7 +155,7 @@ asn_parse_length(u_char *data, int *dataLength, u_int *length)
 
     // consume either the entire short-form value or the first-octet of the long-form value
     ++data;
-    --*dataLength;
+    --*datalength;
 
     if (lengthbyte & ASN_LONG_LEN) {
         lengthbyte &= ~ASN_LONG_LEN;    /* turn MSb off */
@@ -169,7 +169,7 @@ asn_parse_length(u_char *data, int *dataLength, u_int *length)
             return (NULL);
         }
 
-        if (lengthbyte > *dataLength) {
+        if (lengthbyte > *datalength) {
             // not enough data for "N subsequent octets"
             snmp_set_api_error(SNMPERR_ASN_DECODE);
             return (NULL);
@@ -182,13 +182,13 @@ asn_parse_length(u_char *data, int *dataLength, u_int *length)
 
         // consume "N subsequent octets"
         data += lengthbyte;
-        *dataLength -= lengthbyte;
+        *datalength -= lengthbyte;
     } else {
         /* short-form */
         *length = lengthbyte;
     }
 
-    if (*length > *dataLength) {
+    if (*length > *datalength) {
         // not enough data for the variable-length object after this length field
         snmp_set_api_error(SNMPERR_ASN_DECODE);
         return (NULL);
