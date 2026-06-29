@@ -47,6 +47,7 @@ libcompatsquid_la_SOURCES = \
 	mswindows.cc \
 	netdb.cc \
 	netdb.h \
+	netsnmp.h \
 	os/aix.h \
 	os/android.h \
 	os/dragonfly.h \
