@@ -124,6 +124,79 @@ asn_parse_type(u_char * data, int *datalength, u_char * type)
 }
 
 /*
+ * asn_parse_length - parses the length field in front of a variable-length ASN object.
+ *
+ * On success, returns a pointer to the first byte after this length field
+ * (i.e. the start of the variable-length ASN object).
+ *
+ * On error, returns NULL. Errors include "indefinite length" (i.e. 0x80) and
+ * truncated input (e.g., does not contain either all of the expected length
+ * field bytes or all of the expected variable-length object bytes). OUT
+ * values documented below are only meaningful for successful outcomes.
+ */
+static u_char *
+asn_parse_length(u_char *data, int *dataLength, u_int *length)
+/*    u_char  *data;   IN - pointer to start of length field */
+/*    int     *datalength;  IN/OUT - # of valid bytes in returned buffer */
+/*    u_int  *length; OUT - value of length field */
+{
+    // ASN.1 length ::= short-form | long-form
+    // short-form ::= octet ; bit 8 = 0
+    // long-form ::= first-octet <N subsequent octets>
+    // first-octet ::= octet ; bit 8 = 1, bits 7..1 = N
+
+    if (!*dataLength) {
+        // not enough data, even for the short-form
+        snmp_set_api_error(SNMPERR_ASN_DECODE);
+        return (NULL);
+    }
+
+    u_char lengthbyte = *data;
+
+    // consume either the entire short-form value or the first-octet of the long-form value
+    ++data;
+    --*dataLength;
+
+    if (lengthbyte & ASN_LONG_LEN) {
+        lengthbyte &= ~ASN_LONG_LEN;    /* turn MSb off */
+
+        if (lengthbyte == 0) {
+            snmp_set_api_error(SNMPERR_ASN_DECODE);
+            return (NULL);
+        }
+        if (lengthbyte > sizeof(int)) {
+            snmp_set_api_error(SNMPERR_ASN_DECODE);
+            return (NULL);
+        }
+
+        if (lengthbyte > *dataLength) {
+            // not enough data for "N subsequent octets"
+            snmp_set_api_error(SNMPERR_ASN_DECODE);
+            return (NULL);
+        }
+
+        *length = (u_int) 0;
+        memcpy((char *) (length), (char *) data, (int) lengthbyte);
+        *length = ntohl(*length);
+        *length >>= (8 * ((sizeof *length) - lengthbyte));
+
+        // consume "N subsequent octets"
+        data += lengthbyte;
+        *dataLength -= lengthbyte;
+    } else {
+        /* short-form */
+        *length = lengthbyte;
+    }
+
+    if (*length > *dataLength) {
+        // not enough data for the variable-length object after this length field
+        snmp_set_api_error(SNMPERR_ASN_DECODE);
+        return (NULL);
+    }
+    return data;
+}
+
+/*
  * asn_parse_int - pulls an int out of an ASN int type.
  *  On entry, datalength is input as the number of valid bytes following
  *   "data".  On exit, it is returned as the number of valid bytes
@@ -547,79 +620,6 @@ asn_build_header_with_truth(u_char * data, int *datalength,
     *data++ = type;
     (*datalength)--;
     return (asn_build_length(data, datalength, length, truth));
-}
-
-/*
- * asn_parse_length - parses the length field in front of a variable-length ASN object.
- *
- * On success, returns a pointer to the first byte after this length field
- * (i.e. the start of the variable-length ASN object).
- *
- * On error, returns NULL. Errors include "indefinite length" (i.e. 0x80) and
- * truncated input (e.g., does not contain either all of the expected length
- * field bytes or all of the expected variable-length object bytes). OUT
- * values documented below are only meaningful for successful outcomes.
- */
-u_char *
-asn_parse_length(u_char *data, int *dataLength, u_int *length)
-/*    u_char  *data;   IN - pointer to start of length field */
-/*    int     *datalength;  IN/OUT - # of valid bytes in returned buffer */
-/*    u_int  *length; OUT - value of length field */
-{
-    // ASN.1 length ::= short-form | long-form
-    // short-form ::= octet ; bit 8 = 0
-    // long-form ::= first-octet <N subsequent octets>
-    // first-octet ::= octet ; bit 8 = 1, bits 7..1 = N
-
-    if (!*dataLength) {
-        // not enough data, even for the short-form
-        snmp_set_api_error(SNMPERR_ASN_DECODE);
-        return (NULL);
-    }
-
-    u_char lengthbyte = *data;
-
-    // consume either the entire short-form value or the first-octet of the long-form value
-    ++data;
-    --*dataLength;
-
-    if (lengthbyte & ASN_LONG_LEN) {
-        lengthbyte &= ~ASN_LONG_LEN;    /* turn MSb off */
-
-        if (lengthbyte == 0) {
-            snmp_set_api_error(SNMPERR_ASN_DECODE);
-            return (NULL);
-        }
-        if (lengthbyte > sizeof(int)) {
-            snmp_set_api_error(SNMPERR_ASN_DECODE);
-            return (NULL);
-        }
-
-        if (lengthbyte > *dataLength) {
-            // not enough data for "N subsequent octets"
-            snmp_set_api_error(SNMPERR_ASN_DECODE);
-            return (NULL);
-        }
-
-        *length = (u_int) 0;
-        memcpy((char *) (length), (char *) data, (int) lengthbyte);
-        *length = ntohl(*length);
-        *length >>= (8 * ((sizeof *length) - lengthbyte));
-
-        // consume "N subsequent octets"
-        data += lengthbyte;
-        *dataLength -= lengthbyte;
-    } else {
-        /* short-form */
-        *length = lengthbyte;
-    }
-
-    if (*length > *dataLength) {
-        // not enough data for the variable-length object after this length field
-        snmp_set_api_error(SNMPERR_ASN_DECODE);
-        return (NULL);
-    }
-    return data;
 }
 
 u_char *
