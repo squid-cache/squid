@@ -160,8 +160,6 @@ Http::One::Parser::grabMimeBlock(const char *which, const size_t limit)
     const bool expectMime = (msgProtocol_.protocol == AnyP::PROTO_HTTP && msgProtocol_.major == 1) ||
                             msgProtocol_.protocol == AnyP::PROTO_ICY ||
                             hackExpectsMime_;
-    // XXX: clamp limit to prevent exceeding String limits.
-    const auto configLimit = min(limit, String::RawSizeMaxXXX());
 
     if (expectMime) {
         /* NOTE: HTTP/0.9 messages do not have a mime header block.
@@ -172,7 +170,7 @@ Http::One::Parser::grabMimeBlock(const char *which, const size_t limit)
         if (SBuf::size_type mimeHeaderBytes = headersEnd(buf_, containsObsFold)) {
 
             // Squid could handle these headers, but admin does not want to
-            if (firstLineSize() + mimeHeaderBytes >= configLimit) {
+            if (firstLineSize() + mimeHeaderBytes >= limit) {
                 debugs(33, 5, "Too large " << which);
                 parseStatusCode = Http::scHeaderTooLarge;
                 buf_.consume(mimeHeaderBytes);
@@ -188,7 +186,7 @@ Http::One::Parser::grabMimeBlock(const char *which, const size_t limit)
             debugs(74, 5, "mime header (0-" << mimeHeaderBytes << ") {" << mimeHeaderBlock_ << "}");
 
         } else { // headersEnd() == 0
-            if (buf_.length()+firstLineSize() >= configLimit) {
+            if (buf_.length()+firstLineSize() >= limit) {
                 debugs(33, 5, "Too large " << which);
                 parseStatusCode = Http::scHeaderTooLarge;
                 parsingStage_ = HTTP_PARSE_DONE;
