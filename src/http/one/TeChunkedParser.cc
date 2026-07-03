@@ -69,10 +69,7 @@ Http::One::TeChunkedParser::parse(const SBuf &aBuf)
         if (parsingStage_ == Http1::HTTP_PARSE_CHUNK && !parseChunkBody(tok))
             return false;
 
-        // XXX: The parser can be used in a request or response context.
-        //      We use the bigger of the two header size limits to avoid a false positive rejection.
-        const auto mimeBlockLimit = max(Config.maxRequestHeaderSize, Config.maxReplyHeaderSize);
-        if (parsingStage_ == Http1::HTTP_PARSE_MIME && !grabMimeBlock("Trailers", mimeBlockLimit))
+        if (parsingStage_ == Http1::HTTP_PARSE_MIME && !grabMimeBlock("Trailers", 64*1024 /* 64KB max */))
             return false;
 
         // loop for as many chunks as we can
