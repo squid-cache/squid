@@ -1933,6 +1933,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     const HttpHeaderEntry *e = nullptr;
     HttpHeaderPos pos = HttpHeaderInitPos;
     assert (hdr_out->owner == hoRequest);
+    Assure(request->url.userInfo().length() < MAX_URL*2);
 
     /* use our IMS header if the cached entry has Last-Modified time */
     if (request->lastmod > -1)
