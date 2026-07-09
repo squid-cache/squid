@@ -671,7 +671,7 @@ Ftp::Server::parseOneRequest()
         params.trim(bufWhiteSpace, false, true);
     }
 
-    const SBuf::size_type tokenMax = min(
+    const auto tokenMax = min(
                                          static_cast<SBuf::size_type>(String::RawSizeMaxXXX()),
                                          static_cast<SBuf::size_type>(Config.maxRequestHeaderSize));
     if (cmd.length() > tokenMax || params.length() > tokenMax) {

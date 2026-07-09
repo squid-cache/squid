@@ -140,7 +140,7 @@ Http::One::RequestParser::RequestTargetCharacters()
 bool
 Http::One::RequestParser::parseUriField(Tokenizer &tok)
 {
-    const size_t maxUriLength = String::RawSizeMaxXXX();
+    const auto maxUriLength = String::RawSizeMaxXXX();
 
     SBuf uriFound;
     if (!tok.prefix(uriFound, RequestTargetCharacters())) {
