@@ -111,7 +111,9 @@ ConfigParser::strtokFile()
             fclose(wordFile);
             wordFile = nullptr;
             fromFile = 0;
-            return nullptr;
+            t = buf;
+            *t = '\0';
+            // and resume parsing post-"file" input, if any
         } else {
             char *t2, *t3;
             t = buf;
