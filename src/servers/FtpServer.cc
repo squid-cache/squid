@@ -672,8 +672,9 @@ Ftp::Server::parseOneRequest()
     }
 
     const auto tokenMax = min(
-                                         static_cast<SBuf::size_type>(String::RawSizeMaxXXX()),
-                                         static_cast<SBuf::size_type>(Config.maxRequestHeaderSize));
+                              static_cast<SBuf::size_type>(String::RawSizeMaxXXX()),
+                              static_cast<SBuf::size_type>(Config.maxRequestHeaderSize));
+
     if (cmd.length() > tokenMax || params.length() > tokenMax) {
         changeState(fssError, "huge req token");
         quitAfterError(nullptr);
