@@ -243,7 +243,7 @@ fi
 
 errorLog="squid-stderr.log"
 
-# Run in $configFile directory so that Squid can find files included by $configFile
+# Run $squidExeFile from $configFile's directory, so that Squid can find files included by $configFile
 configFileDirName=`dirname $configFile`
 configFileBaseName=`basename $configFile`
 squidExeFile=`realpath $sbindir/squid`
