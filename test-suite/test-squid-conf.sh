@@ -243,7 +243,11 @@ fi
 
 errorLog="squid-stderr.log"
 
-$sbindir/squid -k parse -f $configFile 2> $errorLog
+# Run in $configFile directory so that Squid can find files included by $configFile
+configFileDirName=`dirname $configFile`
+configFileBaseName=`basename $configFile`
+squidExeFile=`realpath $sbindir/squid`
+(cd $configFileDirName && $squidExeFile -k parse -f $configFileBaseName) 2> $errorLog
 result=$?
 
 # this is the value we return to our caller;
