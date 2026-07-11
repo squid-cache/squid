@@ -547,7 +547,7 @@ char *peer_proxy_negotiate_auth(char *principal_name, const char * const proxy, 
         static char b64buf[8192]; // XXX: 8KB only because base64_encode_bin() used to.
         struct base64_encode_ctx ctx;
         base64_encode_init(&ctx);
-        Assure(output_token.length < sizeof(b64buf));
+        Assure(base64_encode_len(output_token.length) < sizeof(b64buf));
         size_t blen = base64_encode_update(&ctx, b64buf, output_token.length, reinterpret_cast<const uint8_t*>(output_token.value));
         blen += base64_encode_final(&ctx, b64buf+blen);
         b64buf[blen] = '\0';
