@@ -1926,7 +1926,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                                       const Http::StateFlags &flags)
 {
     /* building buffer for complex strings */
-    constexpr auto BBUF_SZ = MAX_URL + 32;
+#define BBUF_SZ (MAX_URL+32)
     LOCAL_ARRAY(char, bbuf, BBUF_SZ);
     LOCAL_ARRAY(char, ntoabuf, MAX_IPSTRLEN);
     const HttpHeader *hdr_in = &request->header;
