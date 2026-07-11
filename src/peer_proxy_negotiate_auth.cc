@@ -13,6 +13,7 @@
 #include "squid.h"
 
 #if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
+#include "base/Assure.h"
 #include "base64.h"
 #include "compat/krb5.h"
 #include "debug/Stream.h"
