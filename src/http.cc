@@ -1969,7 +1969,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
         // Detect unreasonably long header values. And paranoidly check String
         // limits: a String ought to accommodate two reasonable-length values.
-        if (strFwd.size() > 32*1024 || !strFwd.canGrowBy(strFwd.size())) {
+        if (strFwd.size() > String::RawSizeMaxXXX() || !strFwd.canGrowBy(strFwd.size())) {
             // There is probably a forwarding loop with Via detection disabled.
             // If we do nothing, String will assert on overflow soon.
             // TODO: Terminate all transactions with huge XFF?

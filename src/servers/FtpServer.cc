@@ -687,11 +687,9 @@ Ftp::Server::parseOneRequest()
         params.trim(bufWhiteSpace, false, true);
     }
 
-    // Why limit command line and parameters size? Did not we just parse them?
-    // XXX: Our good old String cannot handle very long strings.
-    const SBuf::size_type tokenMax = min(
-                                         static_cast<SBuf::size_type>(32*1024), // conservative
-                                         static_cast<SBuf::size_type>(Config.maxRequestHeaderSize));
+    const auto tokenMax = min(
+                              static_cast<SBuf::size_type>(String::RawSizeMaxXXX()),
+                              static_cast<SBuf::size_type>(Config.maxRequestHeaderSize));
     if (cmd.length() > tokenMax || params.length() > tokenMax) {
         changeState(fssError, "huge req token");
         quitAfterError(nullptr);
