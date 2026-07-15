@@ -29,7 +29,7 @@ inline void gnutls_datum_free(gnutls_datum_t *p) {
 }
 using CertFileRawPointer = std::unique_ptr<gnutls_datum_t, HardFun<void, gnutls_datum_t*, &gnutls_datum_free>>;
 #else
-using CertFileRawPointer = std::unique_ptr<nullptr_t>;
+using CertFileRawPointer = std::unique_ptr<std::nullptr_t>;
 #endif
 
 /// The SubjectName field of the given certificate (if found) or an empty SBuf.
