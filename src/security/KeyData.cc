@@ -76,12 +76,12 @@ Security::KeyData::loadCertificates()
         return false;
     }
 
-    if (SelfSigned(*cert))
-        debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << *cert);
-    else try {
-        loadX509ChainFromFile(bio);
-    }
-    catch (...) {
+    try {
+        if (SelfSigned(*cert))
+            debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << *cert);
+        else
+            loadX509ChainFromFile(bio);
+    } catch (...) {
         // TODO: Reject configs with malformed intermediate certs instead.
         debugs(83, DBG_IMPORTANT, "ERROR: Failure while loading intermediate certificate(s) from '" << certFile << "':" <<
                Debug::Extra << "problem: " << CurrentException);
