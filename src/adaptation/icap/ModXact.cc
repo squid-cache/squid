@@ -1399,12 +1399,18 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         String vh=virgin.header->header.getById(Http::HdrType::PROXY_AUTHORIZATION);
         buf.appendf("Proxy-Authorization: " SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(vh));
     } else if (request->extacl_user.size() > 0 && request->extacl_passwd.size() > 0) {
+        const auto userLen = request->extacl_user.size();
+        const auto passwdLen = request->extacl_passwd.size();
+        // +1 for the ':' separator between user and passwd
+        const auto plainLen = userLen + 1 + passwdLen;
+        if (plainLen > MAX_LOGIN_SZ)
+            throw TextException("extacl credentials too long for Proxy-Authorization", Here());
+        char base64buf[base64_encode_len(MAX_LOGIN_SZ)];
         struct base64_encode_ctx ctx;
         base64_encode_init(&ctx);
-        char base64buf[base64_encode_len(MAX_LOGIN_SZ)];
-        size_t resultLen = base64_encode_update(&ctx, base64buf, request->extacl_user.size(), reinterpret_cast<const uint8_t*>(request->extacl_user.rawBuf()));
+        auto resultLen = base64_encode_update(&ctx, base64buf, userLen, reinterpret_cast<const uint8_t*>(request->extacl_user.rawBuf()));
         resultLen += base64_encode_update(&ctx, base64buf+resultLen, 1, reinterpret_cast<const uint8_t*>(":"));
-        resultLen += base64_encode_update(&ctx, base64buf+resultLen, request->extacl_passwd.size(), reinterpret_cast<const uint8_t*>(request->extacl_passwd.rawBuf()));
+        resultLen += base64_encode_update(&ctx, base64buf+resultLen, passwdLen, reinterpret_cast<const uint8_t*>(request->extacl_passwd.rawBuf()));
         resultLen += base64_encode_final(&ctx, base64buf+resultLen);
         buf.appendf("Proxy-Authorization: Basic %.*s\r\n", (int)resultLen, base64buf);
     }

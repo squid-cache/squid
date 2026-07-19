@@ -500,6 +500,7 @@ const char * WINAPI SSP_MakeChallenge(PVOID PNegotiateBuf, int NegotiateLen)
         struct base64_encode_ctx ctx;
         base64_encode_init(&ctx);
         static char encoded[8192];
+        assert(base64_encode_len(cbOut) < sizeof(encoded));
         size_t dstLen = base64_encode_update(&ctx, encoded, cbOut, reinterpret_cast<const uint8_t*>(fResult));
         assert(dstLen < sizeof(encoded));
         dstLen += base64_encode_final(&ctx, encoded+dstLen);
