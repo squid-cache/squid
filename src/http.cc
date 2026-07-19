@@ -1933,7 +1933,6 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     const HttpHeaderEntry *e = nullptr;
     HttpHeaderPos pos = HttpHeaderInitPos;
     assert (hdr_out->owner == hoRequest);
-    Assure(request->url.userInfo().length() < MAX_URL*2);
 
     /* use our IMS header if the cached entry has Last-Modified time */
     if (request->lastmod > -1)
@@ -2031,6 +2030,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     /* append Authorization if known in URL, not in header and going direct */
     if (!hdr_out->has(Http::HdrType::AUTHORIZATION)) {
         if (flags.toOrigin && !request->url.userInfo().isEmpty()) {
+            Assure(request->url.userInfo().length() < MAX_URL*2);
             static char result[base64_encode_len(MAX_URL*2)]; // should be big enough for a single URI segment
             struct base64_encode_ctx ctx;
             base64_encode_init(&ctx);
