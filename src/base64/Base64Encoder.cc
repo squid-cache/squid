@@ -10,12 +10,17 @@
 #include "base64/Base64Encoder.h"
 #include "base64.h"
 
-SBuf Base64Encode(const SBuf &input)
+SBuf Base64Encode(const char *input, size_t length)
 {
     SBuf result;
-    const auto encodedLength = BASE64_ENCODE_RAW_LENGTH(input.length());
+    const auto encodedLength = BASE64_ENCODE_RAW_LENGTH(length);
     char *buf = result.rawAppendStart(encodedLength);
-    base64_encode_raw(buf, input.length(), reinterpret_cast<const uint8_t *>(input.rawContent()));
+    base64_encode_raw(buf, length, reinterpret_cast<const uint8_t *>(input));
     result.rawAppendFinish(buf, encodedLength);
     return result;
+}
+
+SBuf Base64Encode(const SBuf &input)
+{
+    return Base64Encode(input.rawContent(), input.length());
 }

@@ -11,6 +11,7 @@
 
 #include "sbuf/SBuf.h"
 
+SBuf Base64Encode(const char *input, size_t length);
 SBuf Base64Encode(const SBuf &input);
 
 #endif /* SQUID_SRC_BASE64_BASE64ENCODER_H */

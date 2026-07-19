@@ -511,6 +511,7 @@ squid_LDADD = \
 	http/libhttp.la \
 	dns/libdns.la \
 	base/libbase.la \
+	base64/libbase64.la \
 	libsquid.la \
 	fs/libfs.la \
 	DiskIO/libdiskio.la \
@@ -2278,6 +2279,7 @@ tests_testCacheManager_LDADD = \
 	eui/libeui.la \
 	icmp/libicmp.la \
 	log/liblog.la \
+	base64/libbase64.la \
 	format/libformat.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \

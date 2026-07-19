@@ -19,7 +19,7 @@
 #include "base/DelayedAsyncCalls.h"
 #include "base/Raw.h"
 #include "base/TextException.h"
-#include "base64.h"
+#include "base64/Base64Encoder.h"
 #include "CachePeer.h"
 #include "client_side.h"
 #include "comm/Connection.h"
@@ -1834,11 +1834,6 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         }
     }
 
-    char loginbuf[base64_encode_len(MAX_LOGIN_SZ)];
-    size_t blen;
-    struct base64_encode_ctx ctx;
-    base64_encode_init(&ctx);
-
     /* Special mode to pass the username to the upstream cache */
     if (*request->peer_login == '*') {
         const char *username = "-";
@@ -1850,10 +1845,10 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
             username = request->auth_user_request->username();
 #endif
 
-        blen = base64_encode_update(&ctx, loginbuf, strlen(username), reinterpret_cast<const uint8_t*>(username));
-        blen += base64_encode_update(&ctx, loginbuf+blen, strlen(request->peer_login +1), reinterpret_cast<const uint8_t*>(request->peer_login +1));
-        blen += base64_encode_final(&ctx, loginbuf+blen);
-        httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)blen, loginbuf);
+        SBuf toEncode(username);
+        toEncode.append(request->peer_login + 1);
+        SBuf encoded = Base64Encode(toEncode);
+        httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)encoded.length(), encoded.rawContent());
         return;
     }
 
@@ -1862,11 +1857,12 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
             (strcmp(request->peer_login, "PASS") == 0 ||
              strcmp(request->peer_login, "PROXYPASS") == 0)) {
 
-        blen = base64_encode_update(&ctx, loginbuf, request->extacl_user.size(), reinterpret_cast<const uint8_t*>(request->extacl_user.rawBuf()));
-        blen += base64_encode_update(&ctx, loginbuf+blen, 1, reinterpret_cast<const uint8_t*>(":"));
-        blen += base64_encode_update(&ctx, loginbuf+blen, request->extacl_passwd.size(), reinterpret_cast<const uint8_t*>(request->extacl_passwd.rawBuf()));
-        blen += base64_encode_final(&ctx, loginbuf+blen);
-        httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)blen, loginbuf);
+        SBuf toEncode;
+        toEncode.append(request->extacl_user.rawBuf(), request->extacl_user.size());
+        toEncode.append(':');
+        toEncode.append(request->extacl_passwd.rawBuf(), request->extacl_passwd.size());
+        SBuf encoded = Base64Encode(toEncode);
+        httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)encoded.length(), encoded.rawContent());
         return;
     }
     // if no external user credentials are available to fake authentication with PASS acts like PASSTHRU
@@ -1894,11 +1890,12 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     }
 #endif /* HAVE_KRB5 && HAVE_GSSAPI */
 
-    blen = base64_encode_update(&ctx, loginbuf, strlen(request->peer_login), reinterpret_cast<const uint8_t*>(request->peer_login));
-    blen += base64_encode_final(&ctx, loginbuf+blen);
-    httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)blen, loginbuf);
-    return;
-}
+    {
+        SBuf encoded = Base64Encode(SBuf(request->peer_login));
+        httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)encoded.length(), encoded.rawContent());
+        return;
+    }
+    }
 
 /*
  * build request headers and append them to a given MemBuf
@@ -2018,14 +2015,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     /* append Authorization if known in URL, not in header and going direct */
     if (!hdr_out->has(Http::HdrType::AUTHORIZATION)) {
         if (flags.toOrigin && !request->url.userInfo().isEmpty()) {
-            static char result[base64_encode_len(MAX_URL*2)]; // should be big enough for a single URI segment
-            struct base64_encode_ctx ctx;
-            base64_encode_init(&ctx);
-            size_t blen = base64_encode_update(&ctx, result, request->url.userInfo().length(), reinterpret_cast<const uint8_t*>(request->url.userInfo().rawContent()));
-            blen += base64_encode_final(&ctx, result+blen);
-            result[blen] = '\0';
-            if (blen)
-                httpHeaderPutStrf(hdr_out, Http::HdrType::AUTHORIZATION, "Basic %.*s", (int)blen, result);
+            auto encoded = Base64Encode(request->url.userInfo());
+            if (!encoded.isEmpty())
+                httpHeaderPutStrf(hdr_out, Http::HdrType::AUTHORIZATION, "Basic %.*s", (int)encoded.length(), encoded.rawContent());
         }
     }
 
