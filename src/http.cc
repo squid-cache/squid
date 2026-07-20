@@ -1895,7 +1895,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)encoded.length(), encoded.rawContent());
         return;
     }
-    }
+}
 
 /*
  * build request headers and append them to a given MemBuf
