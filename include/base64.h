@@ -76,12 +76,6 @@ base64_encode_init(struct base64_encode_ctx *ctx);
 void
 base64url_encode_init(struct base64_encode_ctx *ctx);
 
-/* Encodes a single byte. Returns amount of output (always 1 or 2). */
-size_t
-base64_encode_single(struct base64_encode_ctx *ctx,
-                     char *dst,
-                     uint8_t src);
-
 /* Returns the number of output characters. DST should point to an
  * area of size at least BASE64_ENCODE_LENGTH(length). */
 size_t

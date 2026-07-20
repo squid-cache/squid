@@ -236,7 +236,7 @@ base64_encode_init(struct base64_encode_ctx *ctx)
 }
 
 /* Encodes a single byte. */
-size_t
+static size_t
 base64_encode_single(struct base64_encode_ctx *ctx,
                      char *dst,
                      uint8_t src)
