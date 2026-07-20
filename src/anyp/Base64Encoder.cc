@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "anyp/Base64Encoder.h"
 #include "base64.h"
+#include "sbuf/SBuf.h"
 
 SBuf Base64Encode(const char *input, size_t length)
 {

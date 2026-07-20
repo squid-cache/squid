@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_BASE64_BASE64ENCODER_H
 #define SQUID_SRC_BASE64_BASE64ENCODER_H
 
-#include "sbuf/SBuf.h"
+#include "sbuf/forward.h"
 
 SBuf Base64Encode(const char *input, size_t length);
 SBuf Base64Encode(const SBuf &input);
