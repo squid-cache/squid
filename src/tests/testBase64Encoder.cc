@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "anyp/Base64Encoder.h"
 #include "compat/cppunit.h"
+#include "sbuf/SBuf.h"
 #include "unitTestMain.h"
 
 class TestBase64Encode : public CPPUNIT_NS::TestFixture
