@@ -15,11 +15,11 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "anyp/Base64Encoder.h"
 #include "base/AsyncJobCalls.h"
 #include "base/DelayedAsyncCalls.h"
 #include "base/Raw.h"
 #include "base/TextException.h"
-#include "base64/Base64Encoder.h"
 #include "CachePeer.h"
 #include "client_side.h"
 #include "comm/Connection.h"
