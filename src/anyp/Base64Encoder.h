@@ -6,12 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_BASE64_BASE64ENCODER_H
-#define SQUID_SRC_BASE64_BASE64ENCODER_H
+#ifndef SQUID_SRC_ANYP_BASE64ENCODER_H
+#define SQUID_SRC_ANYP_BASE64ENCODER_H
 
-#include "sbuf/SBuf.h"
+#include "sbuf/forward.h"
 
 SBuf Base64Encode(const char *input, size_t length);
 SBuf Base64Encode(const SBuf &input);
 
-#endif /* SQUID_SRC_BASE64_BASE64ENCODER_H */
+#endif /* SQUID_SRC_ANYP_BASE64ENCODER_H */
