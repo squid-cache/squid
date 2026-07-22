@@ -982,13 +982,13 @@ tests_testSBufList_LDADD = \
 	$(XTRA_LIBS)
 tests_testSBufList_LDFLAGS = $(LIBADD_DL)
 
-check_PROGRAMS += tests/testBase64Encoder
-tests_testBase64Encoder_SOURCES = \
-	tests/testBase64Encoder.cc
-nodist_tests_testBase64Encoder_SOURCES = \
+check_PROGRAMS += tests/testBase64
+tests_testBase64_SOURCES = \
+	tests/testBase64.cc
+nodist_tests_testBase64_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc
-tests_testBase64Encoder_LDADD = \
+tests_testBase64_LDADD = \
 	sbuf/libsbuf.la \
 	base/libbase.la \
 	anyp/libanyp.la \
@@ -997,7 +997,7 @@ tests_testBase64Encoder_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS) \
 	$(LIBNETTLE_LIBS)
-tests_testBase64Encoder_LDFLAGS = $(LIBADD_DL)
+tests_testBase64_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testString
 tests_testString_SOURCES = \

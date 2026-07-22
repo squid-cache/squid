@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "anyp/Base64Encoder.h"
+#include "anyp/Base64.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "error/Detail.h"

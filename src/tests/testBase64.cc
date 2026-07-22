@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "anyp/Base64Encoder.h"
+#include "anyp/Base64.h"
 #include "compat/cppunit.h"
 #include "sbuf/SBuf.h"
 #include "unitTestMain.h"

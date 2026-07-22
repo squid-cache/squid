@@ -15,7 +15,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "anyp/Base64Encoder.h"
+#include "anyp/Base64.h"
 #include "base/AsyncJobCalls.h"
 #include "base/DelayedAsyncCalls.h"
 #include "base/Raw.h"
