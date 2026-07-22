@@ -19,6 +19,7 @@
 #include "adaptation/icap/ModXact.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiator.h"
+#include "anyp/Base64.h"
 #include "auth/UserRequest.h"
 #include "base/TextException.h"
 #include "base64.h"
@@ -32,6 +33,7 @@
 #include "MasterXaction.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
+#include "sbuf/StringConvert.h"
 
 // flow and terminology:
 //     HTTP| --> receive --> encode --> write --> |network
@@ -1399,14 +1401,10 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         String vh=virgin.header->header.getById(Http::HdrType::PROXY_AUTHORIZATION);
         buf.appendf("Proxy-Authorization: " SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(vh));
     } else if (request->extacl_user.size() > 0 && request->extacl_passwd.size() > 0) {
-        struct base64_encode_ctx ctx;
-        base64_encode_init(&ctx);
-        char base64buf[base64_encode_len(MAX_LOGIN_SZ)];
-        size_t resultLen = base64_encode_update(&ctx, base64buf, request->extacl_user.size(), reinterpret_cast<const uint8_t*>(request->extacl_user.rawBuf()));
-        resultLen += base64_encode_update(&ctx, base64buf+resultLen, 1, reinterpret_cast<const uint8_t*>(":"));
-        resultLen += base64_encode_update(&ctx, base64buf+resultLen, request->extacl_passwd.size(), reinterpret_cast<const uint8_t*>(request->extacl_passwd.rawBuf()));
-        resultLen += base64_encode_final(&ctx, base64buf+resultLen);
-        buf.appendf("Proxy-Authorization: Basic %.*s\r\n", (int)resultLen, base64buf);
+        auto credentials=StringToSBuf(request->extacl_user);
+        credentials.append(':').append(request->extacl_passwd.rawBuf(), request->extacl_passwd.size());
+        const auto encoded = Base64Encode(credentials);
+        buf.appendf("Proxy-Authorization: Basic " SQUIDSBUFPH "\r\n", SQUIDSBUFPRINT(encoded));
     }
 
     // share the cross-transactional database records if needed
