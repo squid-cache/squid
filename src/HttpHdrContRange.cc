@@ -15,6 +15,7 @@
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
 
+#include <limits>
 /*
  *    Currently only byte ranges are supported
  *
@@ -181,6 +182,19 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
     // reject unsatisfied-range and such; we only use well-defined ranges today
     if (!known_spec(range->spec.offset) || !known_spec(range->spec.length)) {
         debugs(68, 2, "unwanted content-range-spec near: '" << str << "'");
+        return 0;
+    }
+
+    // We increase offset by the size of various objects/buffers (e.g., Store
+    // metadata, serialized HTTP headers, mem_node::data, and Store I/O buffer).
+    // Those increases do not check for overflows yet, so limit the offset here
+    // while assuming that none of those sizes would ever exceed maximumSize.
+    // We further assume that most offsets use int64_t or a larger type.
+    static_assert(std::numeric_limits<decltype(range->spec.offset)>::max() >= std::numeric_limits<int64_t>::max());
+    const auto maximumSize = int64_t(1024)*1024*1024*1024; // no in-memory Squid object/buffer size can exceed 1 TiB
+    const auto maximumOffset = std::numeric_limits<int64_t>::max() - maximumSize;
+    if (range->spec.length > maximumOffset || range->spec.offset > maximumOffset - range->spec.length) {
+        debugs(68, 2, "huge content-range-spec near: '" << str << "'");
         return 0;
     }
 
