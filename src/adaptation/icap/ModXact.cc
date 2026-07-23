@@ -1546,9 +1546,6 @@ void Adaptation::Icap::ModXact::makeAllowHeader(MemBuf &buf)
 void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, MemBuf &buf)
 {
 #if USE_AUTH
-    struct base64_encode_ctx ctx;
-    base64_encode_init(&ctx);
-
     const char *value = nullptr;
     if (request->auth_user_request != nullptr) {
         value = request->auth_user_request->username();
@@ -1558,10 +1555,8 @@ void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, M
 
     if (value) {
         if (TheConfig.client_username_encode) {
-            char base64buf[base64_encode_len(MAX_LOGIN_SZ)];
-            size_t resultLen = base64_encode_update(&ctx, base64buf, strlen(value), reinterpret_cast<const uint8_t*>(value));
-            resultLen += base64_encode_final(&ctx, base64buf+resultLen);
-            buf.appendf("%s: %.*s\r\n", TheConfig.client_username_header, (int)resultLen, base64buf);
+            const auto base64buf=Base64Encode(value,strlen(value));
+            buf.appendf("%s: " SQUIDSBUFPH "\r\n", TheConfig.client_username_header, SQUIDSBUFPRINT(base64buf));
         } else
             buf.appendf("%s: %s\r\n", TheConfig.client_username_header, value);
     }
