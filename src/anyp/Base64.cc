@@ -25,3 +25,27 @@ SBuf Base64Encode(const SBuf &input)
 {
     return Base64Encode(input.rawContent(), input.length());
 }
+
+SBuf Base64Decode(const char *input, size_t length)
+{
+    struct base64_decode_ctx ctx;
+    base64_decode_init(&ctx);
+
+    SBuf result;
+    const auto maxDecodedLength = BASE64_DECODE_LENGTH(length);
+    uint8_t *buf = reinterpret_cast<uint8_t *>(result.rawAppendStart(maxDecodedLength));
+
+    size_t decodedLength = 0;
+    if (!base64_decode_update(&ctx, &decodedLength, buf, length, input))
+        throw DecodeException("base64 decode error: invalid input", Here());
+    if (!base64_decode_final(&ctx))
+        throw DecodeException("base64 decode error: incomplete input", Here());
+
+    result.rawAppendFinish(reinterpret_cast<char *>(buf), decodedLength);
+    return result;
+}
+
+SBuf Base64Decode(const SBuf &input)
+{
+    return Base64Decode(input.rawContent(), input.length());
+}
