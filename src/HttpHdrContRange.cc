@@ -88,6 +88,11 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
         return 0;
     }
 
+    if (last_pos == std::numeric_limits<decltype(last_pos)>::max()) {
+        debugs(68, 2, "unsupported huge last-byte-pos resp-range-spec near:  '" << field << "'");
+        return 0;
+    }
+
     spec->length = size_diff(last_pos + 1, spec->offset);
 
     /* we managed to parse, check if the result makes sense */
