@@ -175,9 +175,6 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
         /* Additional paranoidal check for BUG2155 - entity-length MUST be > 0 */
         debugs(68, 2, "invalid (entity-length is negative) content-range-spec near: '" << str << "'");
         return 0;
-    } else if (known_spec(range->spec.length) && range->elength < (range->spec.offset + range->spec.length)) {
-        debugs(68, 2, "invalid (range is outside entity-length) content-range-spec near: '" << str << "'");
-        return 0;
     }
 
     // reject unsatisfied-range and such; we only use well-defined ranges today
@@ -196,6 +193,11 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
     const auto maximumOffset = std::numeric_limits<int64_t>::max() - maximumSize;
     if (range->spec.length > maximumOffset || range->spec.offset > maximumOffset - range->spec.length) {
         debugs(68, 2, "huge content-range-spec near: '" << str << "'");
+        return 0;
+    }
+
+    if (range->elength < (range->spec.offset + range->spec.length)) {
+        debugs(68, 2, "invalid (range is outside entity-length) content-range-spec near: '" << str << "'");
         return 0;
     }
 
