@@ -321,7 +321,9 @@ mem_hdr::write (StoreIOBuffer const &writeBuffer)
     while (len && (target = nodeToRecieve(currentOffset))) {
         size_t wrote = writeAvailable(target, currentOffset, len, currentSource);
         assert (wrote);
+        Assure(len >= wrote);
         len -= wrote;
+        Assure(currentOffset <= std::numeric_limits<decltype(currentOffset)>::max() - static_cast<decltype(currentOffset)>(wrote));
         currentOffset += wrote;
         currentSource += wrote;
     }
