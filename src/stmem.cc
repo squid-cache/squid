@@ -13,6 +13,7 @@
 #include "HttpReply.h"
 #include "mem_node.h"
 #include "MemObject.h"
+#include "SquidMath.h"
 #include "stmem.h"
 
 /*
@@ -311,7 +312,7 @@ mem_hdr::write (StoreIOBuffer const &writeBuffer)
         return false;
     }
 
-    assert (writeBuffer.offset >= 0);
+    Assure(IncreaseSum(writeBuffer.offset, writeBuffer.length));
 
     mem_node *target;
     int64_t currentOffset = writeBuffer.offset;
@@ -323,7 +324,6 @@ mem_hdr::write (StoreIOBuffer const &writeBuffer)
         assert (wrote);
         Assure(len >= wrote);
         len -= wrote;
-        Assure(currentOffset <= std::numeric_limits<decltype(currentOffset)>::max() - static_cast<decltype(currentOffset)>(wrote));
         currentOffset += wrote;
         currentSource += wrote;
     }
