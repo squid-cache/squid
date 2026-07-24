@@ -201,7 +201,7 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
         return 0;
     }
 
-    if (range->elength < (range->spec.offset + range->spec.length)) {
+    if (known_spec(range->elength) && range->elength < (range->spec.offset + range->spec.length)) {
         debugs(68, 2, "invalid (range is outside entity-length) content-range-spec near: '" << str << "'");
         return 0;
     }
