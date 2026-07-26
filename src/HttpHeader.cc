@@ -9,11 +9,11 @@
 /* DEBUG: section 55    HTTP Header */
 
 #include "squid.h"
+#include "anyp/Base64.h"
 #include "base/Assure.h"
 #include "base/CharacterSet.h"
 #include "base/EnumIterator.h"
 #include "base/Raw.h"
-#include "anyp/Base64.h"
 #include "globals.h"
 #include "http/ContentLengthInterpreter.h"
 #include "HttpHdrCc.h"
