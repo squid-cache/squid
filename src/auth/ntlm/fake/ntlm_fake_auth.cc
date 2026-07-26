@@ -34,10 +34,12 @@
 #define IGNORANCE_IS_BLISS
 
 #include "squid.h"
+#include "anyp/Base64.h"
 #include "base64.h"
 #include "helper/protocol_defines.h"
 #include "ntlmauth/ntlmauth.h"
 #include "ntlmauth/support_bits.cci"
+#include "sbuf/SBuf.h"
 
 #include <cctype>
 #include <chrono>
@@ -201,18 +203,14 @@ main(int argc, char *argv[])
 
             len = sizeof(chal) - sizeof(chal.payload) + le16toh(chal.target.maxlen);
 
-            struct base64_encode_ctx eCtx;
-            base64_encode_init(&eCtx);
-            char *data = static_cast<char *>(xcalloc(base64_encode_len(len), 1));
-            size_t blen = base64_encode_update(&eCtx, data, len, reinterpret_cast<const uint8_t *>(&chal));
-            blen += base64_encode_final(&eCtx, data+blen);
+            const auto base64EncodedChallenge=Base64Encode(reinterpret_cast<const char *>(&chal), len);
+
             if (NTLM_packet_debug_enabled) {
-                printf("TT %.*s\n", (int)blen, data);
+                printf("TT " SQUIDSBUFPH "\n", SQUIDSBUFPRINT(base64EncodedChallenge));
                 debug("sending 'TT' to squid with data:\n");
                 hex_dump((unsigned char *)&chal, len);
             } else
-                SEND3("TT %.*s", (int)blen, data);
-            safe_free(data);
+                SEND3("TT " SQUIDSBUFPH, SQUIDSBUFPRINT(base64EncodedChallenge));
 
         } else if (strncmp(buf, "KK ", 3) == 0) {
             if (!packet) {

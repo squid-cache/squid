@@ -9,11 +9,11 @@
 /* DEBUG: section 55    HTTP Header */
 
 #include "squid.h"
+#include "anyp/Base64.h"
 #include "base/Assure.h"
 #include "base/CharacterSet.h"
 #include "base/EnumIterator.h"
 #include "base/Raw.h"
-#include "base64.h"
 #include "globals.h"
 #include "http/ContentLengthInterpreter.h"
 #include "HttpHdrCc.h"
@@ -1430,18 +1430,11 @@ HttpHeader::getAuthToken(Http::HdrType id, const char *auth_scheme) const
     if (!*field)        /* no authorization cookie */
         return nil;
 
-    const auto fieldLen = strlen(field);
-    SBuf result;
-    char *decodedAuthToken = result.rawAppendStart(BASE64_DECODE_LENGTH(fieldLen));
-    struct base64_decode_ctx ctx;
-    base64_decode_init(&ctx);
-    size_t decodedLen = 0;
-    if (!base64_decode_update(&ctx, &decodedLen, reinterpret_cast<uint8_t*>(decodedAuthToken), fieldLen, field) ||
-            !base64_decode_final(&ctx)) {
+    try {
+        return Base64Decode(field, strlen(field));
+    } catch (const DecodeException &) {
         return nil;
     }
-    result.rawAppendFinish(decodedAuthToken, decodedLen);
-    return result;
 }
 
 ETag
