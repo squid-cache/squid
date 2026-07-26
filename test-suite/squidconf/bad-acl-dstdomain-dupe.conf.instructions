@@ -28,4 +28,8 @@ WARNING: Ignoring earlier .d.example.com because it is covered by .example.com
 WARNING: Ignoring .e.example.com because it is already covered by .example.com
     advice: Remove value .e.example.com from the ACL
     acl name: test42
+
+WARNING: Ignoring after-file.example.com because it is already covered by .example.com
+    advice: Remove value after-file.example.com from the ACL
+    acl name: test61
 END
