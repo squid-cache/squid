@@ -1299,6 +1299,14 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
         return abortRequestParsing("error:method-not-allowed");
     }
 
+    /* deny CONNECT via intercepted ports */
+    if (hp->method() == Http::METHOD_CONNECT && port != nullptr && port->flags.isIntercepted()) {
+        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << transferProtocol << " Intercept/TPROXY port " << port->s.port());
+        debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
+        hp->parseStatusCode = Http::scMethodNotAllowed;
+        return abortRequestParsing("error:method-not-allowed");
+    }
+
     /* HTTP/2 connection magic prefix starts with "PRI ".
      * Deny "PRI" method if used in HTTP/1.x or 0.9 versions.
      * If seen it signals a broken client or proxy has corrupted the traffic.
