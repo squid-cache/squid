@@ -1566,8 +1566,11 @@ void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, M
 
     if (value) {
         if (TheConfig.client_username_encode) {
+            const auto valueLen = strlen(value);
+            if (valueLen > MAX_LOGIN_SZ)
+                throw TextException("username too long for X-Client-Username header", Here());
             char base64buf[base64_encode_len(MAX_LOGIN_SZ)];
-            size_t resultLen = base64_encode_update(&ctx, base64buf, strlen(value), reinterpret_cast<const uint8_t*>(value));
+            size_t resultLen = base64_encode_update(&ctx, base64buf, valueLen, reinterpret_cast<const uint8_t*>(value));
             resultLen += base64_encode_final(&ctx, base64buf+resultLen);
             buf.appendf("%s: %.*s\r\n", TheConfig.client_username_header, (int)resultLen, base64buf);
         } else
