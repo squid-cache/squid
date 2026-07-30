@@ -1303,7 +1303,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
     if (hp->method() == Http::METHOD_CONNECT && port != nullptr && port->flags.isIntercepted()) {
         debugs(33, 2, "WARNING: Rejecting CONNECT request received on " << transferProtocol << " intercepting port " << port->s.port());
         static const auto d = MakeNamedErrorDetail("INTERCEPTED_CONNECT");
-        updateError(ERR_NONE, d); // The specific error is set later, during request processing, based on parseStatusCode.
+        updateError(ERR_NONE, d); // buildHttpRequest() sets ERR_UNSUP_REQ based on parseStatusCode set below
         hp->parseStatusCode = Http::scMethodNotAllowed;
         return abortRequestParsing("error:method-not-allowed");
     }
