@@ -1301,7 +1301,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
 
     /* deny CONNECT via intercepted ports */
     if (hp->method() == Http::METHOD_CONNECT && port != nullptr && port->flags.isIntercepted()) {
-        debugs(33, 2, "WARNING: Rejecting CONNECT request received on an intercepting port: " << *port);
+        debugs(33, 2, "WARNING: Rejecting CONNECT request received on an intercepting port: " << port->s.port());
         hp->parseStatusCode = Http::scMethodNotAllowed;
         return abortRequestParsing("error:method-not-allowed");
     }
