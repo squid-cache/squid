@@ -15,7 +15,7 @@ EXCLUDE_FROM_HDR_TESTING =
 # headers to test
 
 testHeaders: $(SOURCES) $(noinst_HEADERS) $(EXTRA_DIST) $(top_srcdir)/test-suite/testHeader.cc.in
-	$(MAKE) $(^:.h=.hdrtest) && touch $@ && $(CHMOD) +x $@
+	$(MAKE) $(filter %.hdrtest,$(^:.h=.hdrtest)) && touch $@ && $(CHMOD) +x $@
 
 .h.hdrtest:
 	@SrcFilePath=`echo $< | $(SED) 's%^$(top_srcdir)/%%'`; \
@@ -26,7 +26,7 @@ testHeaders: $(SOURCES) $(noinst_HEADERS) $(EXTRA_DIST) $(top_srcdir)/test-suite
 		exit 0; \
 	fi; \
 	$(SED) "s%[@]HEADER[@]%${<}%" "$(top_srcdir)/test-suite/testHeader.cc.in" >"$$TargetFileName.cc" && \
-	echo "$(CXXCOMPILE) -c -o" "$$TargetFileName" "$$TargetFileName.cc" && \
+	if test "$(V)" != "0" ; then echo "$(CXXCOMPILE) -c -o" "$$TargetFileName" "$$TargetFileName.cc" ; fi && \
 	if $(CXXCOMPILE) -c -o "$$TargetFileName" "$$TargetFileName.cc" ; \
 		then echo "header-test: ok - $$SrcFilePath"; $(RM) "$$TargetFileName.cc" "$$TargetFileName"; \
 		else echo "header-test: not ok - $$SrcFilePath"; exit 1; fi
