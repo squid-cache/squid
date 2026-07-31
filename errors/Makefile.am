@@ -68,7 +68,7 @@ NOTIDY=`$(PO2HTML) --help | grep -o "[-]-notidy"`
 	    echo "Done translating $$lang"; \
 	else \
 	    lang=$(@:.lang=); \
-		echo "Translation of $$lang disabled\n"; \
+		echo "Translation of $$lang disabled"; \
 	fi; \
 	touch $@
 
