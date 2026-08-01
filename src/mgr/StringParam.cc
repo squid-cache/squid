@@ -17,7 +17,7 @@ Mgr::StringParam::StringParam():
 {
 }
 
-Mgr::StringParam::StringParam(const String& aString):
+Mgr::StringParam::StringParam(const SBuf& aString):
     QueryParam(QueryParam::ptString), str(aString)
 {
 }
@@ -26,18 +26,11 @@ void
 Mgr::StringParam::pack(Ipc::TypedMsgHdr& msg) const
 {
     msg.putPod(type);
-    msg.putString(str);
+    msg.putSBuf(str);
 }
 
 void
 Mgr::StringParam::unpackValue(const Ipc::TypedMsgHdr& msg)
 {
-    msg.getString(str);
+    msg.getSBuf(str);
 }
-
-const String&
-Mgr::StringParam::value() const
-{
-    return str;
-}
-
