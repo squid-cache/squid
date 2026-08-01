@@ -25,7 +25,8 @@ HeaderTableRecord::HeaderTableRecord(const char *n, HdrType theId, HdrFieldType 
     name(n), id(theId), type(theType),
     list(theKind & HdrKind::ListHeader), request(theKind & HdrKind::RequestHeader),
     reply(theKind & HdrKind::ReplyHeader), hopbyhop(theKind & HdrKind::HopByHopHeader),
-    denied304(theKind & HdrKind::Denied304Header)
+    denied304(theKind & HdrKind::Denied304Header),
+    deniedtrailer(theKind & HdrKind::DeniedTrailer)
 {}
 
 const HeaderTableRecord&
