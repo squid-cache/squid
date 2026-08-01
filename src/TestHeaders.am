@@ -15,7 +15,7 @@ EXCLUDE_FROM_HDR_TESTING =
 # headers to test
 
 testHeaders: $(SOURCES) $(noinst_HEADERS) $(EXTRA_DIST) $(top_srcdir)/test-suite/testHeader.cc.in
-	$(AM_V_at)$(MAKE) `echo $(^:.h=.hdrtest) | $(AWK) '{for(i=1;i<=NF;i++) if($$i ~ /\.hdrtest/) printf "%s ", $$i}'` \
+	$(AM_V_at)$(MAKE) `echo $(^:.h=.hdrtest) | $(AWK) '{for(i=1;i<=NF;i++) if($$i ~ /\.hdrtest$$/) printf "%s ", $$i}'` \
 		&& touch $@ && $(CHMOD) +x $@
 
 .h.hdrtest:
