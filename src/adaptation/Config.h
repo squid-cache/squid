@@ -14,6 +14,7 @@
 #include "adaptation/forward.h"
 #include "base/AsyncCall.h"
 #include "event.h"
+#include "FadingCounter.h"
 #include "Notes.h"
 #include "SquidString.h"
 
@@ -52,7 +53,7 @@ public:
     // TODO: move ICAP-specific options to Icap::Config and add TheConfig
     int onoff;
     int service_failure_limit;
-    time_t oldest_service_failure;
+    FadingCounter::Horizon oldest_service_failure = FadingCounter::Horizon::max();
     int service_revival_delay;
 
     static Notes& metaHeaders(); ///< The list of configured meta headers
