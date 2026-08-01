@@ -31,6 +31,7 @@
 #include "icap_log.h"
 #include "ipcache.h"
 #include "pconn.h"
+#include "sbuf/StringConvert.h"
 #include "security/PeerConnector.h"
 #include "SquidConfig.h"
 
@@ -616,8 +617,8 @@ void Adaptation::Icap::Xaction::finalizeLogInfo()
 
     const Adaptation::Icap::ServiceRep &s = service();
     al.icap.hostAddr = s.cfg().host.termedBuf();
-    al.icap.serviceName = s.cfg().key;
-    al.icap.reqUri = s.cfg().uri;
+    al.icap.serviceName = StringToSBuf(s.cfg().key);
+    al.icap.reqUri = StringToSBuf(s.cfg().uri);
 
     tvSub(al.icap.ioTime, icap_tio_start, icap_tio_finish);
     tvSub(al.icap.trTime, icap_tr_start, current_time);
