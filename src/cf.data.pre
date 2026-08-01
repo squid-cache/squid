@@ -4671,7 +4671,7 @@ COMMENT_END
 NAME: logformat
 TYPE: logformat
 LOC: Log::TheConfig
-DEFAULT: none
+DEFAULT: referrer %ts.%03tu %>a %{Referer}http::>h %http::ru
 DEFAULT_DOC: The format definitions squid, common, combined, referrer, useragent are built in.
 DOC_START
 	Usage:
