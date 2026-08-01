@@ -38,8 +38,8 @@ libhttp_la_SOURCES = \
 libhttp_la_LIBADD= one/libhttp1.la
 
 MethodType.cc: MethodType.h $(top_srcdir)/src/mk-string-arrays.awk
-	($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk sbuf=1 < $(srcdir)/MethodType.h | \
-		sed -e 's%METHOD_%%' -e 's%_C%-C%' >$@) || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) ($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk sbuf=1 $(srcdir)/MethodType.h | \
+		$(SED) -e 's%METHOD_%%' -e 's%_C%-C%' >$@) || ($(RM) -f $@ && exit 1)
 
 CLEANFILES += MethodType.cc
 

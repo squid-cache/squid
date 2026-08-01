@@ -674,7 +674,7 @@ repl_modules.cc: repl_modules.sh Makefile
 include $(top_srcdir)/doc/manuals/Substitute.am
 
 squid.8: $(srcdir)/squid.8.in Makefile
-	$(AC_V_GEN) $(SUBSTITUTE) < $(srcdir)/squid.8.in > $@
+	$(AM_V_GEN) $(SUBSTITUTE) < $(srcdir)/squid.8.in > $@
 
 man_MANS = squid.8
 EXTRA_DIST += squid.8.in
