@@ -41,7 +41,7 @@ all: all-am
 translate: translate-warn $(TRANSLATE_LANGUAGES)
 
 translate-warn:
-	case "$(PO2HTML)" in \
+	@case "$(PO2HTML)" in \
 	off) \
 	    echo "WARNING: Translation is disabled."; \
 	    ;; \
