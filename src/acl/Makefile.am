@@ -172,7 +172,7 @@ SSL_ACLS = \
         SslErrorData.cc \
         SslErrorData.h
 
-if ENABLE_SSL
+if ENABLE_LIBOPENSSL
 libacls_la_SOURCES += $(SSL_ACLS)
 else
 EXCLUDE_FROM_HDR_TESTING += $(SSL_ACLS)

@@ -45,7 +45,7 @@ Security::BlindPeerConnector::initialize(Security::SessionPointer &serverSession
         // NP: domain may be a raw-IP but it is now always set
         assert(!peer->secure.sslDomain.isEmpty());
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         // const loss is okay here, ssl_ex_index_server is only read and not assigned a destructor
         SBuf *host = new SBuf(peer->secure.sslDomain);
         SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, host);

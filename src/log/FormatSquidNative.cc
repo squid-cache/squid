@@ -33,7 +33,7 @@ Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
     if (!user)
         user = ::Format::QuoteUrlEncodeUsername(al->getExtUser());
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (!user)
         user = ::Format::QuoteUrlEncodeUsername(al->cache.ssluser);
 #endif

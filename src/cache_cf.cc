@@ -85,7 +85,7 @@
 #if USE_ECAP
 #include "adaptation/ecap/Config.h"
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/Config.h"
 #include "ssl/support.h"
 #endif
@@ -110,7 +110,7 @@
 #include <sys/stat.h>
 #endif
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/gadgets.h"
 #endif
 
@@ -218,7 +218,7 @@ static void parsePortCfg(AnyP::PortCfgPointer *, const char *protocol);
 static void dump_PortCfg(StoreEntry *, const char *, const AnyP::PortCfgPointer &);
 #define free_PortCfg(h)  *(h)=NULL
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign);
 static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslproxy_cert_sign *cert_sign);
 static void free_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign);
@@ -228,7 +228,7 @@ static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt);
 static void parse_sslproxy_ssl_bump(acl_access **ssl_bump);
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump);
 static void free_sslproxy_ssl_bump(acl_access **ssl_bump);
-#endif /* USE_OPENSSL */
+#endif /* HAVE_LIBOPENSSL */
 
 static void parse_ftp_epsv(acl_access **ftp_epsv);
 static void dump_ftp_epsv(StoreEntry *entry, const char *name, acl_access *ftp_epsv);
@@ -940,7 +940,7 @@ configDoConfigure(void)
         Config2.effectiveGroupID = grp->gr_gid;
     }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (Config.ssl_client.foreignIntermediateCertsPath)
         Ssl::loadSquidUntrusted(Config.ssl_client.foreignIntermediateCertsPath);
 #endif
@@ -951,13 +951,13 @@ configDoConfigure(void)
         const auto rawSslContext = Security::ProxyOutgoingConfig().createClientContext(false);
         Config.ssl_client.sslContext_ = rawSslContext ? new Security::ContextPointer(rawSslContext) : nullptr;
         if (!Config.ssl_client.sslContext_) {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
             fatal("ERROR: Could not initialize https:// proxy context");
 #else
             debugs(3, DBG_IMPORTANT, "ERROR: proxying https:// currently still requires --with-openssl");
 #endif
         }
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         Ssl::useSquidUntrusted(Config.ssl_client.sslContext_->get());
 #endif
         Config.ssl_client.defaultPeerContext = new Security::FuturePeerContext(Security::ProxyOutgoingConfig(), *Config.ssl_client.sslContext_);
@@ -2330,7 +2330,7 @@ parse_peer(CachePeers **peers)
                 p->domain = xstrdup(token + 13);
 
         } else if (strncmp(token, "ssl", 3) == 0) {
-#if !USE_OPENSSL
+#if !HAVE_LIBOPENSSL
             debugs(0, DBG_CRITICAL, "WARNING: cache_peer option '" << token << "' requires --with-openssl");
 #else
             p->secure.parse(token+3);
@@ -3632,7 +3632,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
             ++t;
             s->tcp_keepalive.timeout = xatoui(t);
         }
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     } else if (strcmp(token, "sslBump") == 0) {
         debugs(3, DBG_PARSE_NOTE(1), "WARNING: '" << token << "' is deprecated " <<
                "in " << cfg_directive << ". Use 'ssl-bump' instead.");
@@ -3742,7 +3742,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
 
     if (s->transport.protocol == AnyP::PROTO_HTTPS) {
         s->secure.encryptTransport = true;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
         const bool hijacked = s->flags.isIntercepted();
         if (s->flags.tunnelSslBumping && !hijacked) {
@@ -3878,7 +3878,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
         }
     }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (s->flags.tunnelSslBumping)
         storeAppendPrintf(e, " ssl-bump");
 #endif
@@ -3905,7 +3905,7 @@ configFreeMemory(void)
     Config.ssl_client.defaultPeerContext = nullptr;
     delete Config.ssl_client.sslContext_;
     Config.ssl_client.sslContext_ = nullptr;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::unloadSquidUntrusted();
 #endif
 }
@@ -4237,7 +4237,7 @@ static void free_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
 }
 #endif
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 {
     auto *al = ConfigParser::NextToken();

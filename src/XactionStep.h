@@ -13,7 +13,7 @@ enum class XactionStep  {
     enumBegin_ = 0, // for WholeEnum iteration
     unknown = enumBegin_,
     generatingConnect,
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     tlsBump1,
     tlsBump2,
     tlsBump3,

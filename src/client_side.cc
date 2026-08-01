@@ -127,7 +127,7 @@
 #include "ClientInfo.h"
 #include "MessageDelayPools.h"
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/bio.h"
 #include "ssl/context_storage.h"
 #include "ssl/gadgets.h"
@@ -412,7 +412,7 @@ ClientHttpRequest::logRequest()
     if (request)
         prepareLogWithRequestDetails(request, al);
 
-#if USE_OPENSSL && 0
+#if HAVE_LIBOPENSSL && 0
 
     /* This is broken. Fails if the connection has been closed. Needs
      * to snarf the ssl details some place earlier..
@@ -659,7 +659,7 @@ ConnStateData::~ConnStateData()
 
     delete bodyParser; // TODO: pool
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     delete sslServerBump;
 #endif
 }
@@ -1201,7 +1201,7 @@ ConnStateData::prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp)
         return nullptr; /* already in good shape */
 
     char *uri = buildUrlFromHost(this, hp);
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (!uri) {
         Must(tlsConnectPort);
         Must(!tlsConnectHostOrIp.isEmpty());
@@ -1439,7 +1439,7 @@ ConnStateData::quitAfterError(HttpRequest *request)
     debugs(33,4, "Will close after error: " << clientConnection);
 }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 bool ConnStateData::serveDelayedError(Http::Stream *context)
 {
     ClientHttpRequest *http = context->http;
@@ -1515,7 +1515,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
 
     return false;
 }
-#endif // USE_OPENSSL
+#endif // HAVE_LIBOPENSSL
 
 /// initiate tunneling if possible or return false otherwise
 bool
@@ -1646,7 +1646,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         conn->flags.readMore = false;
     }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (conn->switchedToHttps() && conn->serveDelayedError(context)) {
         clientProcessRequestFinished(conn, request);
         return;
@@ -1734,7 +1734,7 @@ ConnStateData::concurrentRequestQueueFilled() const
 
     // default to the configured pipeline size.
     // add 1 because the head of pipeline is counted in concurrent requests and not prefetch queue
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     const int internalRequest = (transparent() && sslBumpMode == Ssl::bumpSplice) ? 1 : 0;
 #else
     const int internalRequest = 0;
@@ -1873,7 +1873,7 @@ ConnStateData::parseRequests()
             extendLifetime();
             context->registerWithConn();
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
             if (switchedToHttps())
                 parsedBumpedRequestCount++;
 #endif
@@ -1910,7 +1910,7 @@ ConnStateData::parseRequests()
 void
 ConnStateData::afterClientRead()
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (parsingTlsHandshake) {
         parseTlsHandshake();
         return;
@@ -2112,7 +2112,7 @@ ConnStateData::lifetimeTimeout(const CommTimeoutCbParams &io)
 ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     AsyncJob("ConnStateData"), // kids overwrite
     Server(xact)
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     , tlsParser(Security::HandshakeParser::fromClient)
 #endif
 {
@@ -2222,7 +2222,7 @@ ConnStateData::acceptTls()
 {
     const auto handshakeResult = Security::Accept(*clientConnection);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     // log ASAP, even if the handshake has not completed (or failed)
     const auto fd = clientConnection->fd;
     assert(fd >= 0);
@@ -2305,7 +2305,7 @@ clientNegotiateSSL(int fd, void *data)
 
     Security::SessionPointer session(fd_table[fd].ssl);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (Security::SessionIsResumed(session)) {
         debugs(83, 2, "Session " << SSL_get_session(session.get()) <<
                " reused on FD " << fd << " (" << fd_table[fd].ipaddr <<
@@ -2357,7 +2357,7 @@ clientNegotiateSSL(int fd, void *data)
     // Connection established. Retrieve TLS connection parameters for logging.
     conn->clientConnection->tlsNegotiations()->retrieveNegotiatedInfo(session);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     X509 *client_cert = SSL_get_peer_certificate(session.get());
 
     if (client_cert) {
@@ -2405,7 +2405,7 @@ httpsEstablish(ConnStateData *connState, const Security::ContextPointer &ctx)
     Comm::SetSelect(details->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
 }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 /**
  * A callback function to use with the ACLFilledChecklist callback.
  */
@@ -2466,7 +2466,7 @@ void
 ConnStateData::postHttpsAccept()
 {
     if (port->flags.tunnelSslBumping) {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         debugs(33, 5, "accept transparent connection: " << clientConnection);
 
         if (!Config.accessList.ssl_bump) {
@@ -2517,7 +2517,7 @@ ConnStateData::postHttpsAccept()
     }
 }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 void
 ConnStateData::sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply)
 {
@@ -3084,7 +3084,7 @@ ConnStateData::httpsPeeked(PinnedIdleContext pic)
     getSslContextStart();
 }
 
-#endif /* USE_OPENSSL */
+#endif /* HAVE_LIBOPENSSL */
 
 bool
 ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, const char *reason, const SBuf &payload)
@@ -3101,7 +3101,7 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, const 
     } else if (cause) {
         connectHost = cause->url.hostOrIp();
         connectPort = cause->url.port();
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     } else if (!tlsConnectHostOrIp.isEmpty()) {
         connectHost = tlsConnectHostOrIp;
         connectPort = tlsConnectPort;
@@ -3142,7 +3142,7 @@ ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
     assert(transparent());
     const unsigned short connectPort = clientConnection->local.port();
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (!tlsClientSni_.isEmpty())
         connectHost.assign(tlsClientSni_);
     else
@@ -3255,7 +3255,7 @@ clientHttpConnectionsOpen(void)
             continue;
         }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         if (s->flags.tunnelSslBumping) {
             if (!Config.accessList.ssl_bump) {
                 debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << scheme << "_port " << s->s);
@@ -3507,7 +3507,7 @@ ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &checklist) const
         checklist.my_addr = clientConnection->local; // TODO: or port->s?
     }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (!checklist.sslErrors && sslServerBump)
         checklist.sslErrors = sslServerBump->sslErrors();
 #endif
@@ -3761,7 +3761,7 @@ ConnStateData::stopPinnedConnectionMonitoring()
     }
 }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 bool
 ConnStateData::handleIdleClientPinnedTlsRead()
 {
@@ -3814,7 +3814,7 @@ ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
 
     Must(pinning.serverConnection == io.conn);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (handleIdleClientPinnedTlsRead())
         return;
 #endif
@@ -3924,7 +3924,7 @@ ConnStateData::terminateAll(const Error &rawError, const LogTagsErrors &lte)
         // error details, but that context may leave unparsed bytes behind.
         // Consume them to stop checkLogging() from logging them again later.
         const auto intputToConsume =
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
             parsingTlsHandshake ? "TLS handshake" : // more specific than CONNECT
 #endif
             bodyPipe ? "HTTP request body" :
@@ -3982,7 +3982,7 @@ ConnStateData::shouldPreserveClientData() const
     if (port->transport.protocol == AnyP::PROTO_FTP)
         return false;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (parsingTlsHandshake)
         return true;
 
