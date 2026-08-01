@@ -531,33 +531,19 @@ Security::ErrorDetail::brief() const
 }
 
 SBuf
-Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
+Security::ErrorDetail::verbose(const ErrorTemplateCompiler &compiler) const
 {
     std::optional<SBuf> customFormat;
 #if USE_OPENSSL
-    if (const auto errorDetail = Ssl::ErrorDetailsManager::GetInstance().findDetail(error_no, request)) {
+    if (const auto errorDetail = Ssl::ErrorDetailsManager::GetInstance().findDetail(error_no, compiler.request)) {
         detailEntry = *errorDetail;
         customFormat = detailEntry->detail;
     } else {
         detailEntry.reset();
     }
-#else
-    (void)request;
 #endif
     auto format = customFormat ? customFormat->c_str() : "SSL handshake error (%err_name)";
-
-    SBufStream os;
-    assert(format);
-    auto remainder = format;
-    while (auto p = strchr(remainder, '%')) {
-        os.write(remainder, p - remainder);
-        const auto formattingCodeLen = convertErrorCodeToDescription(++p, os);
-        if (!formattingCodeLen)
-            os << '%';
-        remainder = p + formattingCodeLen;
-    }
-    os << remainder;
-    return os.buf();
+    return compiler.compileDetail(format, this); // calls our compilePercentCode() as needed
 }
 
 /// textual representation of the subject of the broken certificate
@@ -739,6 +725,24 @@ Security::ErrorDetail::printErrorLibError(std::ostream &os) const
         os << "[No Error]";
 }
 
+bool
+Security::ErrorDetail::compilePercentCode(ErrorPage::Build &build) const
+{
+    Assure(build.input);
+    Assure(*build.input == '%');
+    const auto codeNameStart = build.input + 1;
+    SBufStream os;
+    if (const auto codeNameLength = convertErrorCodeToDescription(codeNameStart, os)) {
+        Assure(build.input < codeNameStart + codeNameLength); // making parsing progress
+        Assure(codeNameStart + codeNameLength <= build.input + strlen(build.input)); // still within bounds
+        build.input = codeNameStart + codeNameLength;
+        build.output.append(os.buf());
+        return true;
+    }
+
+    return false; // including bare/trailing '%' cases
+}
+
 /**
  * Converts the code to a string value. Supported formatting codes are:
  *
@@ -783,7 +787,6 @@ Security::ErrorDetail::convertErrorCodeToDescription(const char * const code, st
         }
     }
 
-    // TODO: Support logformat %codes.
     return 0;
 }
 

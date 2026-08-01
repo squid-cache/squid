@@ -102,16 +102,6 @@ private:
 
 namespace ErrorPage {
 
-/// state and parameters shared by several ErrorState::compile*() methods
-class Build
-{
-public:
-    SBuf output; ///< compilation result
-    const char *input = nullptr; ///< template bytes that need to be compiled
-    bool building_deny_info_url = false; ///< whether we compile deny_info URI
-    bool allowRecursion = false; ///< whether top-level compile() calls are OK
-};
-
 /// pretty-prints error page/deny_info building error
 class BuildErrorPrinter
 {
@@ -1002,9 +992,7 @@ ErrorState::compileLegacyCode(Build &build)
         if (!build.allowRecursion)
             p = "%D";  // if recursion is not allowed, do not convert
         else if (detail) {
-            auto rawDetail = detail->verbose(request);
-            // XXX: Performance regression. c_str() reallocates
-            const auto compiledDetail = compileBody(rawDetail.c_str(), false);
+            const auto compiledDetail = detail->verbose(*this);
             mb.append(compiledDetail.rawContent(), compiledDetail.length());
             do_quote = 0;
         }
@@ -1456,23 +1444,55 @@ ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRe
     build.allowRecursion = allowRecursion;
     build.input = input;
 
+    compile(build);
+    Assure(!*build.input); // compiled the whole template
+
+    return build.output;
+}
+
+SBuf
+ErrorState::compileDetail(const char * const format, const ErrorPage::PercentCodeCompiler * const secondaryCompiler) const
+{
+    Assure(format);
+
+    Build build;
+    build.input = format;
+    build.secondaryCompiler = secondaryCompiler; // may be nil
+
+    compile(build);
+    Assure(!*build.input); // compiled the whole template
+
+    return build.output;
+}
+
+/// Replaces all %code sequences found in build.input.
+/// Appends processed input to build.output.
+/// Consumes processed build.input.
+void
+ErrorState::compile(Build &build) const
+{
+    Assure(build.input);
+
+    // TODO: Instead of violating const-correctness with const_cast<ErrorState*>
+    // below, adjust compile*() methods to avoid ErrorState modifications.
+
     auto blockStart = build.input;
     while (const auto letter = *build.input) {
         if (letter == '%') {
             build.output.append(blockStart, build.input - blockStart);
-            compileLegacyCode(build);
+            if (!build.secondaryCompiler || !build.secondaryCompiler->compilePercentCode(build))
+                const_cast<ErrorState*>(this)->compileLegacyCode(build);
             blockStart = build.input;
         }
         else if (letter == '@' && LogformatMagic.cmp(build.input, LogformatMagic.length()) == 0) {
             build.output.append(blockStart, build.input - blockStart);
-            compileLogformatCode(build);
+            const_cast<ErrorState*>(this)->compileLogformatCode(build);
             blockStart = build.input;
         } else {
             ++build.input;
         }
     }
     build.output.append(blockStart, build.input - blockStart);
-    return build.output;
 }
 
 /// react to a compile() error

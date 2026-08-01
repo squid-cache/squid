@@ -11,6 +11,7 @@
 #ifndef SQUID_SRC_ERRORPAGE_H
 #define SQUID_SRC_ERRORPAGE_H
 
+#include "base/TypeTraits.h"
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "error/Detail.h"
@@ -78,18 +79,14 @@ class MemBuf;
 class StoreEntry;
 class wordlist;
 
-namespace ErrorPage {
-
-class Build;
-
-} // namespace ErrorPage
-
 /// \ingroup ErrorPageAPI
 class ErrorState
 {
     CBDATA_CLASS(ErrorState);
 
 public:
+    using Build = ErrorPage::Build;
+
     /// creates an error of type other than ERR_RELAY_REMOTE
     ErrorState(err_type type, Http::StatusCode, HttpRequest * request, const AccessLogEntryPointer &al);
     ErrorState() = delete; // not implemented.
@@ -113,12 +110,15 @@ public:
     /// ensures that a future BuildHttpReply() is likely to succeed
     void validate();
 
+    /// Replaces all %codes in the given ErrorDetail `format` template.
+    /// \param compiler is an optional handler for caller-specific template %code sequences
+    /// \sa compile()
+    SBuf compileDetail(const char *format, const ErrorPage::PercentCodeCompiler *compiler) const;
+
     /// the source of the error template (for reporting purposes)
     SBuf inputLocation;
 
 private:
-    typedef ErrorPage::Build Build;
-
     /// initializations shared by public constructors
     ErrorState(err_type, const AccessLogEntryPointer &);
 
@@ -141,7 +141,10 @@ private:
     /// \param building_deny_info_url  whether input is a deny_info URL parameter
     /// \param allowRecursion  whether to compile %codes which produce %codes
     /// \returns the given input with all %codes substituted
+    /// \sa compileDetail()
     SBuf compile(const char *input, bool building_deny_info_url, bool allowRecursion);
+
+    void compile(Build &build) const;
 
     /// React to a compile() error, throwing if buildContext allows.
     /// \param msg description of what went wrong
@@ -335,6 +338,41 @@ protected:
     String templateName; ///< The name of the template
     err_type templateCode; ///< The internal code for this template.
 };
+
+namespace ErrorPage {
+
+/// An API for recognizing and replacing a single %code sequence.
+class PercentCodeCompiler: public Interface {
+public:
+    /// Either recognizes a single %code sequence at the beginning of
+    /// `build.input` and appends its replacement to `build.output` OR does not
+    /// modify `build`.
+    /// \returns true when the leading %code was recognized
+    /// \prec `build.input` starts with a `%` character.
+    virtual bool compilePercentCode(Build &) const = 0;
+};
+
+/// State and parameters shared by several
+/// PercentCodeCompiler::compilePercentCode() and ErrorState::compile*() methods
+/// that convert an errorpage template fragment (or equivalent) into an error
+/// response body fragment. This conversion replaces legacy errorpage %code
+/// sequences, logformat %code sequences, and, in some cases,
+/// ErrorDetail-dependent %code sequences.
+class Build
+{
+public:
+    SBuf output; ///< compilation result
+    const char *input; ///< template bytes that need to be compiled; never nil
+
+    /// Handles context-dependent %code sequences unsupported by ErrorState.
+    /// Compiler object lifetime must exceed this Build object lifetime.
+    const PercentCodeCompiler *secondaryCompiler = nullptr;
+
+    bool building_deny_info_url = false; ///< whether we compile deny_info URI
+    bool allowRecursion = false; ///< whether top-level compile() calls are OK
+};
+
+} // namespace ErrorPage
 
 /**
  * Parses the Accept-Language header value and return one language item on

@@ -22,7 +22,7 @@ public:
 
     /* ErrorDetail API */
     SBuf brief() const override { return name; }
-    SBuf verbose(const HttpRequestPointer &) const override { return name; }
+    SBuf verbose(const ErrorTemplateCompiler &) const override { return name; }
 
 private:
     /// distinguishes us from all other NamedErrorDetail objects
