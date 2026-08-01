@@ -258,7 +258,8 @@ authTryGetUser(Auth::UserRequest::Pointer auth_user_request, ConnStateData * con
         // workaround by using anything already set in HttpRequest
         // OR use new and rely on a later Sync copying these to AccessLogEntry
 
-        UpdateRequestNotes(conn, *request, res->user()->notes);
+        auto schemeCfg = Auth::SchemeConfig::Find(res->scheme()->type()); // TODO: refactor to avoid this
+        UpdateRequestNotes(conn, *request, res->user()->notes, schemeCfg->authenticateChildren.clientConnectionTags);
     }
 
     return res;
