@@ -618,32 +618,32 @@ swap_log_op.cc: swap_log_op.h mk-string-arrays.awk
 ## other generated files...
 
 test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key_md5.o
-	$(CC) -o $@ $(LDFLAGS) $@.o CacheDigest.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
+	$(AM_V_C) $(CC) -o $@ $(LDFLAGS) $@.o CacheDigest.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
 
 ## If autodependency works well this is not needed anymore
 cache_cf.o: cf_parser.cci
 
 # cf_gen builds the configuration files.
 cf_gen$(EXEEXT): $(cf_gen_SOURCES) $(cf_gen_DEPENDENCIES) cf_gen_defines.cci
-	$(BUILDCXX) $(BUILDCXXFLAGS) -o $@ $(srcdir)/cf_gen.cc -I$(srcdir) -I$(top_builddir)/include/ -I$(top_builddir)/src
+	$(AM_V_CXX) $(BUILDCXX) $(BUILDCXXFLAGS) -o $@ $(srcdir)/cf_gen.cc -I$(srcdir) -I$(top_builddir)/include/ -I$(top_builddir)/src
 
 # squid.conf.default is built by cf_gen when making cf_parser.cci
 squid.conf.default squid.conf.documented: cf_parser.cci
 	true
 
 cf_parser.cci: cf.data cf_gen$(EXEEXT)
-	./cf_gen$(EXEEXT) cf.data $(srcdir)/cf.data.depend
+	$(AM_V_GEN) ./cf_gen$(EXEEXT) cf.data $(srcdir)/cf.data.depend
 
 # The cf_gen_defines.cci is auto-generated and does not exist when the
 # dependencies computed. We need to add its include files (autoconf.h) here
 cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre $(top_builddir)/include/autoconf.h
-	$(AM_V_GEN)$(AWK) -f $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
 
 
 ## TODO: generate a sed command file from configure. Then this doesn't
 ## depend on the Makefile.
 cf.data: cf.data.pre Makefile
-	sed \
+	$(AM_V_GEN) $(SED) \
 	-e "s%[@]DEFAULT_HTTP_PORT[@]%$(DEFAULT_HTTP_PORT)%g" \
 	-e "s%[@]DEFAULT_CACHE_EFFECTIVE_USER[@]%$(CACHE_EFFECTIVE_USER)%g" \
 	-e "s%[@]DEFAULT_MIME_TABLE[@]%$(DEFAULT_MIME_TABLE)%g" \
@@ -669,12 +669,12 @@ cf.data: cf.data.pre Makefile
 	< $(srcdir)/cf.data.pre >$@
 
 repl_modules.cc: repl_modules.sh Makefile
-	$(AM_V_GEN)$(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.cc
+	$(AM_V_GEN) $(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.cc
 
 include $(top_srcdir)/doc/manuals/Substitute.am
 
 squid.8: $(srcdir)/squid.8.in Makefile
-	$(AC_V_at)$(SUBSTITUTE) < $(srcdir)/squid.8.in > $@
+	$(AC_V_GEN) $(SUBSTITUTE) < $(srcdir)/squid.8.in > $@
 
 man_MANS = squid.8
 EXTRA_DIST += squid.8.in
@@ -712,7 +712,7 @@ CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 	test_tools.cc *.a
 
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
-	cp $(top_srcdir)/test-suite/test_tools.cc .
+	$(AM_V_GEN) cp $(top_srcdir)/test-suite/test_tools.cc .
 
 # stock tools for unit tests - library independent versions of dlink_list
 # etc.
