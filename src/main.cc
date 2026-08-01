@@ -30,14 +30,12 @@
 #include "CpuAffinity.h"
 #include "debug/Messages.h"
 #include "DiskIO/DiskIOModule.h"
-#include "dns/forward.h"
 #include "errorpage.h"
 #include "event.h"
 #include "EventLoop.h"
 #include "ExternalACL.h"
 #include "fd.h"
 #include "format/Token.h"
-#include "fqdncache.h"
 #include "fs/Module.h"
 #include "fs_io.h"
 #include "FwdState.h"
@@ -53,7 +51,6 @@
 #include "ipc/Coordinator.h"
 #include "ipc/Kids.h"
 #include "ipc/Strand.h"
-#include "ipcache.h"
 #include "mime.h"
 #include "neighbors.h"
 #include "parser/Tokenizer.h"
@@ -878,9 +875,6 @@ mainReconfigureFinish(void *)
     setUmask(Config.umask);
     setEffectiveUser();
     Debug::UseCacheLog();
-    ipcache_restart();      /* clear stuck entries */
-    fqdncache_restart();    /* sigh, fqdncache too */
-    parseEtcHosts();
     errorInitialize();      /* reload error pages */
     accessLogInit();
 
@@ -906,7 +900,6 @@ mainReconfigureFinish(void *)
     icapLogOpen();
 #endif
     storeLogOpen();
-    Dns::Init();
 #if USE_SSL_CRTD
     Ssl::Helper::Reconfigure();
 #endif
@@ -1083,14 +1076,6 @@ mainInitialize(void)
 
 #endif
 
-    ipcache_init();
-
-    fqdncache_init();
-
-    parseEtcHosts();
-
-    Dns::Init();
-
 #if USE_SSL_CRTD
     Ssl::Helper::Init();
 #endif
@@ -1210,10 +1195,6 @@ mainInitialize(void)
 #endif
 
     eventAdd("storeMaintain", Store::Maintain, nullptr, 1.0, 1);
-
-    eventAdd("ipcache_purgelru", ipcache_purgelru, nullptr, 10.0, 1);
-
-    eventAdd("fqdncache_purgelru", fqdncache_purgelru, nullptr, 15.0, 1);
 
     eventAdd("memPoolCleanIdlePools", Mem::CleanIdlePools, nullptr, 15.0, 1);
 
