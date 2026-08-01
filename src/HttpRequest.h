@@ -53,11 +53,11 @@ public:
     typedef RefCount<HttpRequest> Pointer;
 
     HttpRequest(const MasterXaction::Pointer &);
-    HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath, const MasterXaction::Pointer &);
+    HttpRequest(const Http::RequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath, const MasterXaction::Pointer &);
     ~HttpRequest() override;
     void reset() override;
 
-    void initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath);
+    void initHTTP(const Http::RequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath);
 
     HttpRequest *clone() const override;
 
@@ -111,7 +111,7 @@ protected:
     void init();
 
 public:
-    HttpRequestMethod method;
+    Http::RequestMethod method;
     AnyP::Uri url; ///< the request URI
 
 private:
@@ -196,7 +196,7 @@ public:
 
     bool parseFirstLine(const char *start, const char *end) override;
 
-    bool expectingBody(const HttpRequestMethod& unused, int64_t&) const override;
+    bool expectingBody(const Http::RequestMethod& unused, int64_t&) const override;
 
     bool bodyNibbled() const; // the request has a [partially] consumed body
 
@@ -208,10 +208,10 @@ public:
 
     static void httpRequestPack(void *obj, Packable *p);
 
-    static HttpRequest * FromUrl(const SBuf &url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
+    static HttpRequest * FromUrl(const SBuf &url, const MasterXaction::Pointer &, const Http::RequestMethod &method = Http::METHOD_GET);
 
     /// \deprecated use SBuf variant instead
-    static HttpRequest * FromUrlXXX(const char * url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
+    static HttpRequest * FromUrlXXX(const char * url, const MasterXaction::Pointer &, const Http::RequestMethod &method = Http::METHOD_GET);
 
     ConnStateData *pinnedConnection();
 
