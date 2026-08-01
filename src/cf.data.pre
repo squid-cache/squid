@@ -1347,7 +1347,7 @@ ENDIF
 	  # -s Squid will just annoy the user by "randomly" denying requests.
 	  # (the counter is reset each time the limit is reached and a
 	  # request is denied)
-	  # NOTE: in acceleration mode or where there is mesh of child proxies,
+	  # NOTE: in gateway mode or where there is mesh of child proxies,
 	  # clients may appear to come from multiple addresses if they are
 	  # going through proxy farms, so a limit of 1 may cause user problems.
 
@@ -2284,17 +2284,16 @@ LOC: HttpPortList
 DOC_START
 	Usage:	port [mode] [options]
 		hostname:port [mode] [options]
-		1.2.3.4:port [mode] [options]
+		IP:port [mode] [options]
 
 	The socket addresses where Squid will listen for HTTP client
-	requests.  You may specify multiple socket addresses.
-	There are three forms: port alone, hostname with port, and
-	IP address with port.  If you specify a hostname or IP
+	requests. There are three forms: port alone, hostname with port,
+	and IP address with port. If you specify a hostname or IP
 	address, Squid binds the socket to that specific
 	address. Most likely, you do not need to bind to a specific
 	address, so you can use the port number alone.
 
-	If you are running Squid in accelerator mode, you
+	If you are running Squid in gateway mode, you
 	probably want to listen on port 80 also, or instead.
 
 	The -a command line option may be used to specify additional
@@ -2305,17 +2304,25 @@ DOC_START
 
 	Modes:
 
-	   intercept	Support for IP-Layer NAT interception delivering
+	    proxy	The default. HTTP forward-proxy traffic syntax is
+			expected. SSL-Bump mode may be used in addition
+			to inspect CONNECT tunnels.
+
+	    gateway	HTTP reverse-proxy traffic syntax is expected.
+
+	    intercept	Support for IP-Layer NAT interception delivering
 			traffic to this Squid port.
-			NP: disables authentication on the port.
 
-	   tproxy	Support Linux TPROXY (or BSD divert-to) with spoofing
+			SECURITY NOTE: disables authentication on the port.
+
+	    tproxy	Support Linux TPROXY (or BSD divert-to) with spoofing
 			of outgoing connections using the client IP address.
-			NP: disables authentication on the port.
 
-	   accel	Accelerator / reverse proxy mode
+			SECURITY NOTE: disables authentication on the port.
 
-	   ssl-bump	For each CONNECT request allowed by ssl_bump ACLs,
+	    ssl-bump	Support inspection of TLS traffic received on this port.
+
+			For each CONNECT request allowed by ssl_bump ACLs,
 			establish secure connection with the client and with
 			the server, decrypt HTTPS messages as they pass through
 			Squid, and treat them as unencrypted HTTP messages,
@@ -2324,19 +2331,17 @@ DOC_START
 			The ssl_bump option is required to fully enable
 			bumping of CONNECT requests.
 
-	Omitting the mode flag causes default forward proxy mode to be used.
 
-
-	Accelerator Mode Options:
+	Gateway Mode Options:
 
 	   defaultsite=domainname
 			What to use for the Host: header if it is not present
 			in a request. Determines what site (not origin server)
-			accelerators should consider the default.
+			gateway should consider the default.
 
 	   no-vhost	Disable using HTTP/1.1 Host header for virtual domain support.
 
-	   protocol=	Protocol to reconstruct accelerated and intercepted
+	   protocol=	Protocol to reconstruct gateway and intercepted
 			requests with. Defaults to HTTP/1.1 for http_port and
 			HTTPS/1.1 for https_port.
 			When an unsupported value is configured Squid will
@@ -2357,19 +2362,18 @@ DOC_START
 	   ignore-cc	Ignore request Cache-Control headers.
 
 			WARNING: This option violates HTTP specifications if
-			used in non-accelerator setups.
+			used in non-gateway setups.
 
-	   allow-direct	Allow direct forwarding in accelerator mode. Normally
-			accelerated requests are denied direct forwarding as if
+	   allow-direct	Allow direct forwarding in gateway mode. Normally
+			gateway requests are denied direct forwarding as if
 			never_direct was used.
 
-			WARNING: this option opens accelerator mode to security
-			vulnerabilities usually only affecting in interception
+			WARNING: this option opens gateway mode to security
+			vulnerabilities usually only affecting interception
 			mode. Make sure to protect forwarding with suitable
 			http_access rules when using this.
 
-
-	SSL Bump Mode Options:
+	SSL-Bump Mode Options:
 	    In addition to these options ssl-bump requires TLS/SSL options.
 
 	   generate-host-certificates[=<on|off>]
@@ -2567,7 +2571,7 @@ DOC_START
 CONFIG_START
 
 # Squid normally listens to port 3128
-http_port @DEFAULT_HTTP_PORT@
+http_port @DEFAULT_HTTP_PORT@ proxy
 CONFIG_END
 DOC_END
 
@@ -2583,8 +2587,7 @@ DOC_START
 	over TLS or SSL connections. Commonly referred to as HTTPS.
 
 	This is most useful for situations where you are running squid in
-	accelerator mode and you want to do the TLS work at the accelerator
-	level.
+	gateway mode and need to do TLS termination at the gateway.
 
 	You may specify multiple socket addresses on multiple lines,
 	each with their own certificate and/or options.
@@ -2593,7 +2596,7 @@ DOC_START
 
 	See http_port for a list of modes and options.
 	Not all http_port options are available for https_port.
-	Among the unavalable options:
+	Among the unavailable options:
 	- require-proxy-header
 DOC_END
 
@@ -2634,7 +2637,7 @@ DOC_START
 
 	   tproxy	Support Linux TPROXY for spoofing outgoing
 			connections using the client IP address.
-			NP: disables authentication and maybe IPv6 on the port.
+			SECURITY NOTE: disables authentication and maybe IPv6 on the port.
 
 	By default (i.e., without an explicit mode option), Squid extracts the
 	FTP origin address from the login@origin parameter of the FTP USER
@@ -2651,7 +2654,7 @@ DOC_START
 			HTTP requests) to reflect the current FTP server
 			directory. Tracking is disabled by default.
 
-	   protocol=FTP	Protocol to reconstruct accelerated and intercepted
+	   protocol=FTP	Protocol to reconstruct gateway and intercepted
 			requests with. Defaults to FTP. No other accepted
 			values have been tested with. An unsupported value
 			results in a FATAL error. Accepted values are FTP,
@@ -3751,15 +3754,15 @@ DOC_START
 			scheme, host, port, path, params
 			Order is not important.
 
-	==== ACCELERATOR / REVERSE-PROXY OPTIONS ====
+	==== GATEWAY OPTIONS ====
 
 	originserver	Causes this parent to be contacted as an origin server.
-			Meant to be used in accelerator setups when the peer
+			Meant to be used in gateway setups when the peer
 			is a web server.
 
 	forceddomain=name
 			Set the Host header of requests forwarded to this peer.
-			Useful in accelerator setups where the server (peer)
+			Useful in gateway setups where the server (peer)
 			expects a certain domain name but clients may request
 			others. ie example.com or www.example.com
 
@@ -6170,7 +6173,7 @@ DOC_START
 	prevent Host: header forgery by redirectors Squid rewrites
 	any Host: header in redirected requests.
 
-	If you are running an accelerator this may not be a wanted
+	If you are running a CDN gateway this may not be a wanted
 	effect of a redirector. This directive enables you disable
 	Host: alteration in reverse-proxy traffic.
 
@@ -7660,7 +7663,7 @@ DOC_START
 DOC_END
 
 COMMENT_START
- HTTPD-ACCELERATOR OPTIONS
+ CDN GATEWAY OPTIONS
  -----------------------------------------------------------------------------
 COMMENT_END
 
@@ -7675,7 +7678,7 @@ DOC_START
 	a farm of surrogates may all perform the same tasks, they may share
 	an identification token.
 
-	When the surrogate is a reverse-proxy, this ID is also
+	When the surrogate is another gateway (reverse-proxy), this ID is also
 	used as cdn-id for CDN-Loop detection (RFC 8586).
 DOC_END
 
