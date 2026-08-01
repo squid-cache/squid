@@ -7,16 +7,14 @@
  */
 
 #include "squid.h"
-#include "EventLoop.h"
 
-#define STUB_API "EventLoop.cc"
+#define STUB_API "engines/libengines.la"
 #include "tests/STUB.h"
 
+#include "engines/AsyncEngine.h"
+
+#include "engines/EventLoop.h"
 EventLoop *EventLoop::Running = nullptr;
-
-EventLoop::EventLoop(): errcount(0), last_loop(false), timeService(nullptr),
-    primaryEngine(nullptr), loop_delay(0), error(false), runOnceResult(false)
-    STUB_NOP
-
-    void EventLoop::registerEngine(AsyncEngine *) STUB
-
+void EventLoop::run() STUB
+bool EventLoop::runOnce() STUB
+void EventLoop::setPrimaryEngine(AsyncEngine * const) STUB
