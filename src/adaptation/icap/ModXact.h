@@ -281,7 +281,7 @@ private:
     template<class Part>
     bool parsePart(Part *part, const char *description);
 
-    void packHead(MemBuf &httpBuf, const Http::Message *head);
+    void packHead(MemBuf &httpBuf, const Http::Message *head, const MaskSensitiveInfo);
     void encapsulateHead(MemBuf &icapBuf, const char *section, MemBuf &httpBuf, const Http::Message *head);
     bool gotEncapsulated(const char *section) const;
     /// whether ICAP response header indicates HTTP header presence
