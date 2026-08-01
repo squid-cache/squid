@@ -219,8 +219,8 @@ public:
         }
 
         Ip::Address hostAddr; ///< ICAP server IP address
-        String serviceName;        ///< ICAP service name
-        String reqUri;             ///< ICAP Request-URI
+        SBuf serviceName; ///< ICAP service name
+        SBuf reqUri; ///< ICAP Request-URI
         Adaptation::Icap::ICAP::Method reqMethod = Adaptation::methodNone; ///< ICAP request method
         int64_t bytesSent = 0;       ///< number of bytes sent to ICAP server so far
         int64_t bytesRead = 0;       ///< number of bytes read from ICAP server so far
