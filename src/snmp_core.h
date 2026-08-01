@@ -11,12 +11,10 @@
 #ifndef SQUID_SRC_SNMP_CORE_H
 #define SQUID_SRC_SNMP_CORE_H
 
-#include "acl/Data.h"
-#include "acl/ParameterizedNode.h"
 #include "cache_snmp.h"
 #include "comm/forward.h"
+#include "compat/netsnmp.h"
 #include "ip/forward.h"
-#include "snmp_vars.h"
 
 #include <optional>
 
@@ -55,19 +53,6 @@ void addr2oid(Ip::Address &addr, oid *Dest);
 /// Parses raw OID suffix of a given size as an IP address.
 /// \returns nil if the suffix does not represent an IPv4 or IPv6 address
 std::optional<Ip::Address> oid2addr(const oid *, size_t);
-
-namespace Acl
-{
-
-/// an "snmp_community" ACL
-class SnmpCommunityCheck: public ParameterizedNode< ACLData<const char *> >
-{
-public:
-    /* Acl::Node API */
-    int match(ACLChecklist *) override;
-};
-
-} // namespace Acl
 
 #endif /* SQUID_SRC_SNMP_CORE_H */
 

@@ -12,8 +12,12 @@
 #define SQUID_SRC_SNMP_PDU_H
 
 #include "base/Range.h"
+#include "compat/netsnmp.h"
 #include "ipc/forward.h"
-#include "snmp.h"
+
+#if HAVE_NET_SNMP_PDU_API_H
+#include <net-snmp/pdu_api.h>
+#endif
 
 namespace Snmp
 {

@@ -75,7 +75,7 @@ SNMP_ALL_SOURCE = \
 if ENABLE_SNMP
 SNMP_SOURCE = $(SNMP_ALL_SOURCE)
 SUBDIRS += snmp
-SNMP_LIBS = snmp/libsnmp.la $(SNMPLIB)
+SNMP_LIBS = snmp/libsnmp.la
 else
 SNMP_SOURCE =
 EXCLUDE_FROM_HDR_TESTING += $(SNMP_ALL_SOURCE)
@@ -553,6 +553,7 @@ squid_LDADD = \
 	$(LIBGSS_LIBS) \
 	$(LIBMIT_KRB5_LIBS) \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
+	$(LIBNETSNMP_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
@@ -596,7 +597,7 @@ EXTRA_DIST = \
 	mib.txt \
 	mime.conf.default
 
-snmp_core.o snmp_agent.o: ../lib/snmplib/libsnmplib.la $(top_srcdir)/include/cache_snmp.h
+snmp_core.o snmp_agent.o: $(top_srcdir)/include/cache_snmp.h
 
 globals.cc: globals.h mk-globals-c.awk
 	$(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@ || ($(RM) -f $@ && exit 1)
@@ -2289,6 +2290,7 @@ tests_testCacheManager_LDADD = \
 	$(LIBGSS_LIBS) \
 	$(LIBMIT_KRB5_LIBS) \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
+	$(LIBNETSNMP_LIBS) \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)

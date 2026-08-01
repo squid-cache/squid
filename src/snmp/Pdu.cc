@@ -98,20 +98,50 @@ Snmp::Pdu::clear()
 void
 Snmp::Pdu::assign(const Pdu& pdu)
 {
+// see https://github.com/net-snmp/net-snmp/blob/fb7534d9/include/net-snmp/types.h#L139-L247
+
+    // Protocol-version independent fields
+    version = pdu.version;
     command = pdu.command;
-    address.sin_addr.s_addr = pdu.address.sin_addr.s_addr;
     reqid = pdu.reqid;
+    msgid = pdu.msgid;
+    transid = pdu.transid;
+    sessid = pdu.sessid;
     errstat = pdu.errstat;
     errindex = pdu.errindex;
-    non_repeaters = pdu.non_repeaters;
-    max_repetitions = pdu.max_repetitions;
-    agent_addr.sin_addr.s_addr = pdu.agent_addr.sin_addr.s_addr;
+    time = pdu.time;
+    flags = pdu.flags;
+    securityModel = pdu.securityModel;
+    securityLevel = pdu.securityLevel;
+    msgParseModel = pdu.msgParseModel;
+    msgMaxSize = pdu.msgMaxSize;
+
+    // Transport-specific opaque data.
+    transport_data = nullptr;
+    if (pdu.transport_data_length > 0) {
+        transport_data = new char[pdu.transport_data_length];
+        memcpy(transport_data, pdu.transport_data, pdu.transport_data_length);
+    }
+    transport_data_length = pdu.transport_data_length;
+    tDomain = pdu.tDomain;
+    tDomainLen = pdu.tDomainLen;
+    setVars(pdu.variables);
+
+    // SNMPv1 & SNMPv2c fields
+    community = reinterpret_cast<u_char*>(xstrndup(reinterpret_cast<const char*>(pdu.community), pdu.community_len));
+    community_len = pdu.community_len;
+
+    // Trap information
+    setSystemOid(pdu.getSystemOid());
     trap_type = pdu.trap_type;
     specific_type = pdu.specific_type;
-    time = pdu.time;
+    memcpy(agent_addr, pdu.agent_addr, sizeof(pdu.agent_addr));
+
+    // SNMPv3 fields - not supported yet
+    // AgentX fields - not supported
+
+    // Squid object members
     aggrCount = pdu.aggrCount;
-    setSystemOid(pdu.getSystemOid());
-    setVars(pdu.variables);
 }
 
 void
@@ -166,22 +196,38 @@ Snmp::Pdu::setSystemOid(const Range<const oid*>& systemOid)
 void
 Snmp::Pdu::pack(Ipc::TypedMsgHdr& msg) const
 {
+    msg.putPod(version);
     msg.putPod(command);
-    msg.putPod(address);
     msg.putPod(reqid);
+    msg.putPod(msgid);
+    msg.putPod(transid);
+    msg.putPod(sessid);
     msg.putPod(errstat);
     msg.putPod(errindex);
-    msg.putPod(non_repeaters);
-    msg.putPod(max_repetitions);
+    msg.putPod(time);
+    msg.putPod(flags);
+    msg.putPod(securityModel);
+    msg.putPod(securityLevel);
+    msg.putPod(msgParseModel);
+    msg.putPod(msgMaxSize);
+    msg.putInt(transport_data_length);
+    if (transport_data_length > 0) {
+        Must(transport_data != nullptr);
+        msg.putFixed(transport_data, transport_data_length);
+    }
     msg.putInt(enterprise_length);
     if (enterprise_length > 0) {
         Must(enterprise != nullptr);
         msg.putFixed(enterprise, enterprise_length * sizeof(oid));
     }
-    msg.putPod(agent_addr);
+    msg.putInt(community_len);
+    if (community_len > 0) {
+        Must(community != nullptr);
+        msg.putFixed(community, community_len);
+    }
     msg.putPod(trap_type);
     msg.putPod(specific_type);
-    msg.putPod(time);
+    msg.putPod(agent_addr);
     msg.putInt(varCount());
     for (variable_list* var = variables; var != nullptr; var = var->next_variable)
         static_cast<Var*>(var)->pack(msg);
@@ -191,22 +237,38 @@ void
 Snmp::Pdu::unpack(const Ipc::TypedMsgHdr& msg)
 {
     clear();
+    msg.getPod(version);
     msg.getPod(command);
-    msg.getPod(address);
     msg.getPod(reqid);
+    msg.getPod(msgid);
+    msg.getPod(transid);
+    msg.getPod(sessid);
     msg.getPod(errstat);
     msg.getPod(errindex);
-    msg.getPod(non_repeaters);
-    msg.getPod(max_repetitions);
+    msg.getPod(time);
+    msg.getPod(flags);
+    msg.getPod(securityModel);
+    msg.getPod(securityLevel);
+    msg.getPod(msgParseModel);
+    msg.getPod(msgMaxSize);
+    transport_data_length = msg.getInt();
+    if (transport_data_length > 0) {
+        transport_data = static_cast<oid*>(xmalloc(transport_data_length));
+        msg.getFixed(transport_data, transport_data_length);
+    }
     enterprise_length = msg.getInt();
     if (enterprise_length > 0) {
         enterprise = static_cast<oid*>(xmalloc(enterprise_length * sizeof(oid)));
         msg.getFixed(enterprise, enterprise_length * sizeof(oid));
     }
-    msg.getPod(agent_addr);
+    community_len = msg.getInt();
+    if (community_len > 0) {
+        community = static_cast<u_char*>(xmalloc(community_len));
+        msg.getFixed(community, community_len);
+    }
     msg.getPod(trap_type);
     msg.getPod(specific_type);
-    msg.getPod(time);
+    msg.getPod(agent_addr);
     int count = msg.getInt();
     for (variable_list** p_var = &variables; count > 0;
             p_var = &(*p_var)->next_variable, --count) {
