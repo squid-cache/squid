@@ -136,7 +136,6 @@ public: // HTTP/1.x state data
     HttpReply *reply;
     char reqbuf[HTTP_REQBUF_SZ];
     struct {
-        unsigned deferred:1; ///< This is a pipelined request waiting for the current object to complete
         unsigned parsed_ok:1; ///< Was this parsed correctly?
     } flags;
 
@@ -147,12 +146,13 @@ public: // HTTP/1.x state data
         debugs(33, 3, "This " << this << " marked " << aBool);
     }
 
+    /// This is a pipelined request waiting for the current object to complete
     class DeferredParams
     {
 
     public:
         clientStreamNode *node;
-        HttpReply *rep;
+        HttpReplyPointer rep;
         StoreIOBuffer queuedBuffer;
     };
 
