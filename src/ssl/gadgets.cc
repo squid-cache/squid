@@ -1060,14 +1060,18 @@ static const char *getSubjectEntry(X509 *x509, int nid)
         return nullptr;
 
     // TODO: What if the entry is a UTF8String? See X509_NAME_get_index_by_NID(3ssl).
-    const int nameLen = X509_NAME_get_text_by_NID(
-                            X509_get_subject_name(x509),
-                            nid,  name, sizeof(name));
 
-    if (nameLen > 0)
-        return name;
+    const auto nm = X509_get_subject_name(x509);
+    int pos = -1;
+    pos = X509_NAME_get_index_by_NID(nm, nid, pos);
+    if (pos < 0) {
+        debugs(83, 3, (pos == -2 ? "Invalid" : "Missing") << " SSL certificate subject name");
+        return nullptr;
+    }
 
-    return nullptr;
+    const auto str = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(nm, pos));
+    xstrncpy(name, reinterpret_cast<const char *>(ASN1_STRING_get0_data(str)), sizeof(name));
+    return (*name ? name : nullptr);
 }
 
 const char *Ssl::CommonHostName(X509 *x509)
