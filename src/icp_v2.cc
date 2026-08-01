@@ -18,6 +18,7 @@
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
+#include "base/RunnersRegistry.h"
 #include "client_db.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -716,6 +717,9 @@ icpHandleUdp(int sock, void *)
 void
 icpOpenPorts(void)
 {
+    if (IamWorkerProcess())
+        return;
+
     uint16_t port;
 
     if ((port = Config.Port.icp) <= 0)
@@ -791,13 +795,12 @@ icpIncomingConnectionOpened(Ipc::StartListeningAnswer &answer)
     }
 }
 
-/**
- * icpConnectionShutdown only closes the 'in' socket if it is
- * different than the 'out' socket.
- */
 void
-icpConnectionShutdown(void)
+icpClosePorts()
 {
+    if (!IamWorkerProcess())
+        return;
+
     if (!Comm::IsConnOpen(icpIncomingConn))
         return;
 
@@ -815,21 +818,22 @@ icpConnectionShutdown(void)
      * to that specific interface.  During shutdown, we must
      * disable reading on the outgoing socket.
      */
-    assert(Comm::IsConnOpen(icpOutgoingConn));
+    if (Comm::IsConnOpen(icpOutgoingConn)) {
+        Comm::SetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, nullptr, nullptr, 0);
 
-    Comm::SetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, nullptr, nullptr, 0);
-}
-
-void
-icpClosePorts(void)
-{
-    icpConnectionShutdown();
-
-    if (icpOutgoingConn != nullptr) {
         debugs(12, DBG_IMPORTANT, "Stop sending ICP from " << icpOutgoingConn->local);
         icpOutgoingConn = nullptr;
     }
 }
+
+class IcpRr : public RegisteredRunner
+{
+    void useConfig() override { icpOpenPorts(); }
+    void startReconfigure() override { icpClosePorts(); }
+    void syncConfig() override { icpOpenPorts(); }
+    void endingShutdown() override { icpClosePorts(); }
+};
+DefineRunnerRegistrator(IcpRr);
 
 static void
 icpCount(void *buf, int which, size_t len, int delay)
