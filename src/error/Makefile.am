@@ -8,7 +8,7 @@
 include $(top_srcdir)/src/Common.am
 
 categories.cc: forward.h $(top_srcdir)/src/mk-string-arrays.awk
-	$(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk ifile=error/forward.h < $(srcdir)/forward.h > $@ || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk ifile=error/forward.h < $(srcdir)/forward.h > $@ || ($(RM) -f $@ && exit 1)
 
 BUILT_SOURCES = \
 	categories.cc

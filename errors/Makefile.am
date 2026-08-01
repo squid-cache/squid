@@ -65,7 +65,7 @@ NOTIDY=`$(PO2HTML) --help | grep -o "[-]-notidy"`
 		$(PO2HTML) $(NOTIDY) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/$$f >$(top_builddir)/errors/$$lang/$$page || exit 1; \
 	    done; \
 	    cp $(top_srcdir)/errors/templates/error-details.txt $(top_builddir)/errors/$$lang/error-details.txt || exit 1; \
-	else \
+	else \ 
 	    lang=$(@:.lang=); \
 		echo "Translation of $$lang disabled"; \
 	fi; \

@@ -25,6 +25,6 @@ libanyp_la_SOURCES = \
 	forward.h
 
 ProtocolType.cc: ProtocolType.h $(top_srcdir)/src/mk-string-arrays.awk
-	($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk <$(srcdir)/ProtocolType.h | sed -e 's%PROTO_%%' >$@) || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk $(srcdir)/ProtocolType.h | $(SED) -e 's%PROTO_%%' >$@
 
 CLEANFILES += ProtocolType.cc
