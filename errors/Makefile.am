@@ -72,16 +72,16 @@ NOTIDY=`$(PO2HTML) --help | grep -o "[-]-notidy"`
 	touch $@
 
 install-exec-local: translate
-	if test -f $(DESTDIR)$(DEFAULT_STYLESHEET) ; then \
+	$(AM_V_at)if test -f $(DESTDIR)$(DEFAULT_STYLESHEET) ; then \
 		echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_STYLESHEET)" ; \
 	else \
 		$(mkinstalldirs) $(DESTDIR)`dirname $(DEFAULT_STYLESHEET)` ; \
-		echo "$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET)"; \
+		$(AM_V_P) && echo "$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET)"; \
 		$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET); \
 	fi
 
 install-data-local: translate
-	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR) ; \
+	$(AM_V_at)$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR) ; \
 	for l in $(TRANSLATE_LANGUAGES) templates; do \
 	    l=`basename $$l .lang`; \
 	    echo "Located $$l for install..."; \
@@ -91,11 +91,11 @@ install-data-local: translate
 	    for f in $(ERROR_TEMPLATES) templates/error-details.txt; do \
 		page=`basename $$f`; \
 		if test -f $(builddir)/$$l/$$page; then \
-		    echo "$(INSTALL_DATA) $(builddir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
-			    $(INSTALL_DATA) $(builddir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
+		    $(AM_V_P) && echo "$(INSTALL_DATA) $(builddir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
+			$(INSTALL_DATA) $(builddir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
 		elif test -f $(srcdir)/$$l/$$page; then \
-		    echo "$(INSTALL_DATA) $(srcdir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
-			    $(INSTALL_DATA) $(srcdir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
+		    $(AM_V_P) && echo "$(INSTALL_DATA) $(srcdir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
+			$(INSTALL_DATA) $(srcdir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
 		fi; \
 	    done; \
 	done; \
@@ -105,7 +105,7 @@ install-data-local: translate
 	$(ALIAS_LINKER) "$(srcdir)/aliases" || exit 1 ;
 
 uninstall-local:
-	for l in $(TRANSLATE_LANGUAGES) templates; do \
+	$(AM_V_at)for l in $(TRANSLATE_LANGUAGES) templates; do \
 	  l=`basename $$l .lang`; \
 	  echo "Located $$l for uninstall ..."; \
 	  if test -d $(srcdir)/$$l; then \
