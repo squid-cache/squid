@@ -37,6 +37,9 @@ typedef enum {
     PROTO_ICY,
     PROTO_TLS,
     PROTO_SSL,
+    PROTO_TCP,
+    PROTO_UDP,
+    PROTO_ICMP,
     PROTO_AUTHORITY_FORM,
     PROTO_UNKNOWN,
     PROTO_MAX

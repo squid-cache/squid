@@ -256,24 +256,17 @@ comm_open(int sock_type,
 }
 
 void
-comm_open_listener(int sock_type,
-                   int proto,
-                   Comm::ConnectionPointer &conn,
-                   const char *note)
+comm_open_listener(Comm::ConnectionPointer &conn, const char *note)
 {
     /* all listener sockets require bind() */
     conn->flags |= COMM_DOBIND;
 
     /* attempt native enabled port. */
-    conn->fd = comm_openex(sock_type, proto, conn->local, conn->flags, note);
+    conn->fd = comm_openex(conn->sockTransport(), conn->ipTransport(), conn->local, conn->flags, note);
 }
 
 int
-comm_open_listener(int sock_type,
-                   int proto,
-                   Ip::Address &addr,
-                   int flags,
-                   const char *note)
+comm_open_listener(int sock_type, int proto, Ip::Address &addr, int flags, const char *note)
 {
     int sock = -1;
 

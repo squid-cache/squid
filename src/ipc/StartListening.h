@@ -35,8 +35,7 @@ using StartListeningCallback = AsyncCallback<StartListeningAnswer>;
 
 /// Depending on whether SMP is on, either ask Coordinator to send us
 /// the listening FD or open a listening socket directly.
-void StartListening(int sock_type, int proto, const Comm::ConnectionPointer &listenConn,
-                    FdNoteId, StartListeningCallback &);
+void StartListening(const Comm::ConnectionPointer &listenConn, FdNoteId, StartListeningCallback &);
 
 std::ostream &operator <<(std::ostream &, const StartListeningAnswer &);
 
