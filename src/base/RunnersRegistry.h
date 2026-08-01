@@ -70,6 +70,16 @@ public:
     /// Meant for adjusting the module state based on configuration changes.
     virtual void syncConfig() {}
 
+    /* Log Rotation events */
+
+    /// Called after receiving a log rotate request.
+    /// Meant for modules that manage log files to rename/rotate them.
+    virtual void rotateLogs() {}
+
+    /// Called after rotating log files.
+    /// Meant for modules that need to (re-)attach to log files after rotation.
+    virtual void finishLogRotate() {}
+
     /* Shutdown events */
 
     /// Called after receiving a shutdown request and before stopping the main
