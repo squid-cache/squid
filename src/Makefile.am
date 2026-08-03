@@ -599,20 +599,20 @@ EXTRA_DIST = \
 snmp_core.o snmp_agent.o: ../lib/snmplib/libsnmplib.la $(top_srcdir)/include/cache_snmp.h
 
 globals.cc: globals.h mk-globals-c.awk
-	$(AM_V_GEN)$(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@ || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@ || ($(RM) -f $@ && exit 1)
 
 ## Generate files containing string arrays for various enums....
 hier_code.cc: hier_code.h mk-string-arrays.awk
-	$(AM_V_GEN)$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/hier_code.h > $@ || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/hier_code.h > $@ || ($(RM) -f $@ && exit 1)
 
 lookup_t.cc: lookup_t.h mk-string-arrays.awk
-	$(AM_V_GEN)$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/lookup_t.h > $@ || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/lookup_t.h > $@ || ($(RM) -f $@ && exit 1)
 
 icp_opcode.cc: icp_opcode.h mk-string-arrays.awk
-	$(AM_V_GEN)$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/icp_opcode.h > $@ || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/icp_opcode.h > $@ || ($(RM) -f $@ && exit 1)
 
 swap_log_op.cc: swap_log_op.h mk-string-arrays.awk
-	$(AM_V_GEN)$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/swap_log_op.h > $@ || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/swap_log_op.h > $@ || ($(RM) -f $@ && exit 1)
 
 
 ## other generated files...
