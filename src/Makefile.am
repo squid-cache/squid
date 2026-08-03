@@ -618,7 +618,7 @@ swap_log_op.cc: swap_log_op.h mk-string-arrays.awk
 ## other generated files...
 
 test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key_md5.o
-	$(AM_V_C) $(CC) -o $@ $(LDFLAGS) $@.o CacheDigest.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
+	$(AM_V_CC) $(CC) -o $@ $(LDFLAGS) $@.o CacheDigest.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
 
 ## If autodependency works well this is not needed anymore
 cache_cf.o: cf_parser.cci
