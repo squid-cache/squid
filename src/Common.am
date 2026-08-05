@@ -67,6 +67,6 @@ $(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
 COMPAT_LIB = $(top_builddir)/compat/libcompatsquid.la $(LIBPROFILER)
 
 ## Some helpers are written in Perl and need the local shell defined properly
-subst_perlshell = $(SED) -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(RM) -f $@ ; exit 1)
+subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(RM) -f $@ ; exit 1)
 
 include $(top_srcdir)/src/TestHeaders.am
