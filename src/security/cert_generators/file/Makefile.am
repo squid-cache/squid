@@ -9,7 +9,7 @@ include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/doc/manuals/Substitute.am
 
 security_file_certgen.8: $(srcdir)/security_file_certgen.8.in Makefile
-	$(SUBSTITUTE) < $(srcdir)/security_file_certgen.8.in > $@
+	$(AM_V_GEN) $(SUBSTITUTE) < $(srcdir)/security_file_certgen.8.in > $@
 
 man_MANS = security_file_certgen.8
 CLEANFILES += security_file_certgen.8

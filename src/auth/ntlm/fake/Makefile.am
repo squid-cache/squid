@@ -20,7 +20,7 @@ ntlm_fake_auth_LDADD= \
 
 ## Demo using perl.
 ## ntlm_fake_auth.pl: ntlm_fake_auth.pl.in
-##	$(subst_perlshell)
+##	$(AM_V_GEN) $(subst_perlshell)
 
 EXTRA_DIST= \
 	ntlm_fake_auth.pl.in \
