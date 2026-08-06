@@ -15,7 +15,7 @@ jobs:
   coverity-scan:
     name: Scan with Coverity
     # only run the workflow on Squid's main repository
-    if: github.repository == 'squid-cache/squid'
+    if: github.repository == 'measurement-factory/squid'
 
     runs-on: ubuntu-24.04
 
