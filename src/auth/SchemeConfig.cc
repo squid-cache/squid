@@ -131,6 +131,10 @@ Auth::SchemeConfig::parse(Auth::SchemeConfig * scheme, size_t, char *param_str)
         parse_onoff(&keep_alive);
     } else if (strcmp(param_str, "utf8") == 0) {
         parse_onoff(&utf8);
+    } else if (strcmp(param_str, "credentialsttl") == 0) {
+        time_t tmp = 0;
+        parse_time_t(&tmp);
+        credentialsTtl = Auth::Ttl(tmp);
     } else {
         debugs(29, DBG_CRITICAL, "ERROR: Unrecognised " << scheme->type() << " auth scheme parameter '" << param_str << "'");
     }
@@ -167,6 +171,9 @@ Auth::SchemeConfig::dump(StoreEntry *entry, const char *name, Auth::SchemeConfig
 
     if (utf8) // default is off
         storeAppendPrintf(entry, "%s %s utf8 on\n", name, schemeType);
+
+    if (credentialsTtl.count() != 0) // default is 0
+        storeAppendPrintf(entry, "%s %s credentialsttl %ld seconds\n", name, schemeType, credentialsTtl.count());
 
     return true;
 }
