@@ -56,17 +56,13 @@ Auth::Basic::UserRequest::authenticate(HttpRequest *, ConnStateData *, Http::Hdr
         return;
 
     /* are we about to recheck the credentials externally? */
-    if ((user()->expiretime + static_cast<Auth::Basic::Config*>(Auth::SchemeConfig::Find("basic"))->credentialsTTL) <= squid_curtime) {
+    if (user()->expires <= current_time.tv_sec) {
         debugs(29, 4, "credentials expired - rechecking");
         return;
     }
 
     /* we have been through the external helper, and the credentials haven't expired */
     debugs(29, 9, "user '" << user()->username() << "' authenticated");
-
-    /* Decode now takes care of finding the AuthUser struct in the cache */
-    /* after external auth occurs anyway */
-    user()->expiretime = current_time.tv_sec;
 }
 
 Auth::Direction
@@ -83,7 +79,7 @@ Auth::Basic::UserRequest::module_direction()
         return Auth::CRED_LOOKUP;
 
     case Auth::Ok:
-        if (user()->expiretime + static_cast<Auth::Basic::Config*>(Auth::SchemeConfig::Find("basic"))->credentialsTTL <= squid_curtime)
+        if (user()->expires <= current_time.tv_sec)
             return Auth::CRED_LOOKUP;
         return Auth::CRED_VALID;
 
@@ -179,7 +175,7 @@ Auth::Basic::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
             r->auth_user_request->setDenyMessage(reply.other().content());
     }
 
-    basic_auth->expiretime = squid_curtime;
+    basic_auth->expires = reply.expires.value_or(current_time.tv_sec + static_cast<Auth::Basic::Config*>(Auth::SchemeConfig::Find("basic"))->credentialsTTL);
 
     if (cbdataReferenceValidDone(r->data, &cbdata))
         r->handler(cbdata);

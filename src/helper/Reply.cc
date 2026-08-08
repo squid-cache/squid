@@ -9,6 +9,7 @@
 /* DEBUG: section 84    Helper process maintenance */
 
 #include "squid.h"
+#include "base/CharacterSet.h"
 #include "ConfigParser.h"
 #include "debug/Messages.h"
 #include "debug/Stream.h"
@@ -234,9 +235,17 @@ Helper::Reply::parseResponseKeys()
         // TODO: Convert the above code to use Tokenizer and SBuf
         const SBuf parsedKey(key);
         const SBuf parsedValue(v); // allow empty values (!v or !*v)
-        CheckReceivedKey(parsedKey, parsedValue);
-        notes.add(parsedKey, parsedValue);
-
+        if (v && parsedKey.cmp("ttl") == 0) {
+            if (parsedValue.findFirstNotOf(CharacterSet::DIGIT) != SBuf::npos) {
+                debugs(84, DBG_IMPORTANT, "WARNING: Unexpected from-helper value: ttl=" << parsedValue);
+                continue;
+            }
+            char *end = v + parsedValue.length();
+            expires = current_time.tv_sec + strtoll(v, &end, 10);
+        } else {
+            CheckReceivedKey(parsedKey, parsedValue);
+            notes.add(parsedKey, parsedValue);
+        }
         other_.consume(p - other_.content());
         other_.consumeWhitespacePrefix();
     }
@@ -275,6 +284,9 @@ Helper::operator <<(std::ostream &os, const Reply &r)
         os << "Unknown";
         break;
     }
+
+    if (r.expires.has_value())
+        os << ", expires in " << (r.expires.value() - current_time.tv_sec) << " seconds";
 
     // dump the helper key=pair "notes" list
     if (!r.notes.empty()) {
