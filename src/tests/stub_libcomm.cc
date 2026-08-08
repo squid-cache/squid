@@ -69,7 +69,6 @@ void comm_read_cancel(int, IOCB *, void *) STUB
 //Comm::TcpAcceptor(const Comm::ConnectionPointer &, const char *, const Subscription::Pointer &) STUB
 void Comm::TcpAcceptor::subscribe(const Subscription::Pointer &) STUB
 void Comm::TcpAcceptor::unsubscribe(const char *) STUB
-void Comm::TcpAcceptor::acceptNext() STUB
 void Comm::TcpAcceptor::notify(const Comm::Flag, const Comm::ConnectionPointer &) const STUB
 
 #include "comm/Tcp.h"
