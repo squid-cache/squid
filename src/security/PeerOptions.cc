@@ -430,6 +430,11 @@ static struct ssl_option {
         "SINGLE_ECDH_USE", SSL_OP_SINGLE_ECDH_USE
     },
 #endif
+#if defined(SSL_OP_ENABLE_KTLS)
+    {
+        "ENABLE_KTLS", SSL_OP_ENABLE_KTLS
+    },
+#endif
     {
         "", 0
     },
@@ -805,6 +810,19 @@ Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
     (void)s;
 #endif
 }
+
+#if USE_OPENSSL && defined(SSL_OP_ENABLE_KTLS)
+void
+Security::PeerOptions::updateSessionOptionsOnlyKtls(Security::SessionPointer &s)
+{
+    parseOptions();
+
+    debugs(83, 5, "set OpenSSL options (KTLS only) for session=" << s << ", Options=" << (parsedOptions & SSL_OP_ENABLE_KTLS));
+    SSL_clear_options(s.get(), SSL_OP_ENABLE_KTLS);
+    SSL_set_options(s.get(), (parsedOptions & SSL_OP_ENABLE_KTLS));
+
+}
+#endif
 
 void
 parse_securePeerOptions(Security::PeerOptions *opt)
