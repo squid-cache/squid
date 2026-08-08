@@ -11,6 +11,7 @@ include $(top_srcdir)/src/Common.am
 AM_CPPFLAGS += -I$(srcdir)
 
 EXTRA_DIST = \
+	mk-tls-test-certs.sh \
 	$(srcdir)/squidconf/* \
 	test-functionality.sh \
 	test-sources.sh \
@@ -122,9 +123,30 @@ VirtualDeleteOperator_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
+CLEANFILES += \
+	ca-mid-root-rsa.pem \
+	ca-mid-rsa.crt \
+	ca-mid-rsa.pem \
+	ca-mid-rsa.pkey \
+	ca-root-rsa.crt \
+	ca-root-rsa.pem \
+	ca-root-rsa.pkey \
+	leaf-root-rsa.pem \
+	leaf-chain-nokey-rsa.pem \
+	leaf-key-rsa.pem \
+	leaf-rsa.crt \
+	leaf-rsa.pkey
+
+if ENABLE_CERT_TESTS
+generate-test-certificates:
+	$(srcdir)/mk-tls-test-certs.sh "$(OPENSSL_BIN)" "$(CERTTOOL_BIN)"
+else
+generate-test-certificates:
+endif
+
 installcheck-local: squid-conf-tests
 
-squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
+squid-conf-tests: generate-test-certificates $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
 	@instructionFiles="$(srcdir)/squidconf/*.conf.instructions"; \
 	for instructionFile in $$instructionFiles; do \
 		cfgBasename=`basename $$instructionFile .instructions`; \
@@ -158,3 +180,5 @@ CLEANFILES += \
 	squid-stderr.log \
 	squid-stderr.log.next \
 	squid-stderr.log.unmatched
+
+.PHONY: generate-test-certificates
