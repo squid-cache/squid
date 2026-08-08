@@ -40,22 +40,22 @@ StoreMapFileNosId(const SBuf &path)
 }
 
 Ipc::StoreMap::Owner *
-Ipc::StoreMap::Init(const SBuf &path, const int sliceLimit)
+Ipc::StoreMap::Init(const SBuf &path, const char *const machineId, const int sliceLimit)
 {
     assert(sliceLimit > 0); // we should not be created otherwise
     const int anchorLimit = min(sliceLimit, static_cast<int>(SwapFilenMax));
     Owner *owner = new Owner;
-    owner->fileNos = shm_new(FileNos)(StoreMapFileNosId(path).c_str(), anchorLimit);
-    owner->anchors = shm_new(Anchors)(StoreMapAnchorsId(path).c_str(), anchorLimit);
-    owner->slices = shm_new(Slices)(StoreMapSlicesId(path).c_str(), sliceLimit);
+    owner->fileNos = shm_new(FileNos)(StoreMapFileNosId(path).c_str(), machineId, anchorLimit);
+    owner->anchors = shm_new(Anchors)(StoreMapAnchorsId(path).c_str(), machineId, anchorLimit);
+    owner->slices = shm_new(Slices)(StoreMapSlicesId(path).c_str(), machineId, sliceLimit);
     debugs(54, 5, "created " << path << " with " << anchorLimit << '+' << sliceLimit);
     return owner;
 }
 
-Ipc::StoreMap::StoreMap(const SBuf &aPath): cleaner(nullptr), path(aPath),
-    fileNos(shm_old(FileNos)(StoreMapFileNosId(path).c_str())),
-    anchors(shm_old(Anchors)(StoreMapAnchorsId(path).c_str())),
-    slices(shm_old(Slices)(StoreMapSlicesId(path).c_str())),
+Ipc::StoreMap::StoreMap(const SBuf &aPath, const char *const machineId): cleaner(nullptr), path(aPath),
+    fileNos(shm_old(FileNos)(StoreMapFileNosId(path).c_str(), machineId)),
+    anchors(shm_old(Anchors)(StoreMapAnchorsId(path).c_str(), machineId)),
+    slices(shm_old(Slices)(StoreMapSlicesId(path).c_str(), machineId)),
     hitValidation(true)
 {
     debugs(54, 5, "attached " << path << " with " <<
