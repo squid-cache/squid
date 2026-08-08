@@ -18,6 +18,20 @@
 namespace Security
 {
 
+/// Content of a X.509 file before parsing.
+#if USE_OPENSSL
+using CertFileRawPointer = std::unique_ptr<BIO, HardFun<void, BIO*, &BIO_vfree>>;
+#elif HAVE_LIBGNUTLS
+inline void gnutls_datum_free(gnutls_datum_t *p) {
+    if (p && p->size > 0)
+        gnutls_free(p->data);
+    delete p;
+}
+using CertFileRawPointer = std::unique_ptr<gnutls_datum_t, HardFun<void, gnutls_datum_t*, &gnutls_datum_free>>;
+#else
+using CertFileRawPointer = std::unique_ptr<std::nullptr_t>;
+#endif
+
 /// The SubjectName field of the given certificate (if found) or an empty SBuf.
 SBuf SubjectName(Certificate &);
 
