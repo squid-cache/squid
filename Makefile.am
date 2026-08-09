@@ -32,7 +32,7 @@ dist-hook:
 	@ for subdir in include; do \
 	  if test "$$subdir" = .; then :; else \
 	    test -d $(distdir)/$$subdir \
-	    || mkdir $(distdir)/$$subdir \
+	    || $(MKDIR) $(distdir)/$$subdir \
 	    || exit 1; \
 	    cp -p $(srcdir)/$$subdir/*.h  $(distdir)/$$subdir \
 	      || exit 1; \

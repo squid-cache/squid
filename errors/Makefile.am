@@ -58,7 +58,7 @@ NOTIDY=`$(PO2HTML) --help | $(GREP) -o "[-]-notidy"`
 .po.lang:
 	@if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	    lang=$(@:.lang=); \
-	    mkdir -p $(top_builddir)/errors/$$lang; \
+	    $(MKDIR_P) $(top_builddir)/errors/$$lang; \
 	    $(AM_V_P) && echo "Translating $$lang"; \
 	    for f in $(ERROR_TEMPLATES); do \
 		page=`basename $$f`; \
@@ -132,7 +132,7 @@ dist-hook: translate
 	for lang in $(TRANSLATE_LANGUAGES); do \
 	  lang=`basename $$lang .lang`; \
 	  if test -d $$lang ; then \
-		mkdir -p $(distdir)/$$lang; \
+		$(MKDIR_P) $(distdir)/$$lang; \
 		cp -p $(top_builddir)/errors/$$lang/ERR_*  $(distdir)/$$lang || exit 1; \
 		cp -p $(top_builddir)/errors/$$lang/error-details.txt $(distdir)/$$lang || exit 1; \
 	  fi; \
