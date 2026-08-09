@@ -599,51 +599,51 @@ EXTRA_DIST = \
 snmp_core.o snmp_agent.o: ../lib/snmplib/libsnmplib.la $(top_srcdir)/include/cache_snmp.h
 
 globals.cc: globals.h mk-globals-c.awk
-	$(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@ || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@ || ($(RM) -f $@ && exit 1)
 
 ## Generate files containing string arrays for various enums....
 hier_code.cc: hier_code.h mk-string-arrays.awk
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/hier_code.h > $@ || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/hier_code.h > $@ || ($(RM) -f $@ && exit 1)
 
 lookup_t.cc: lookup_t.h mk-string-arrays.awk
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/lookup_t.h > $@ || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/lookup_t.h > $@ || ($(RM) -f $@ && exit 1)
 
 icp_opcode.cc: icp_opcode.h mk-string-arrays.awk
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/icp_opcode.h > $@ || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/icp_opcode.h > $@ || ($(RM) -f $@ && exit 1)
 
 swap_log_op.cc: swap_log_op.h mk-string-arrays.awk
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/swap_log_op.h > $@ || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/swap_log_op.h > $@ || ($(RM) -f $@ && exit 1)
 
 
 ## other generated files...
 
 test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key_md5.o
-	$(CC) -o $@ $(LDFLAGS) $@.o CacheDigest.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
+	$(AM_V_CC) $(CC) -o $@ $(LDFLAGS) $@.o CacheDigest.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
 
 ## If autodependency works well this is not needed anymore
 cache_cf.o: cf_parser.cci
 
 # cf_gen builds the configuration files.
 cf_gen$(EXEEXT): $(cf_gen_SOURCES) $(cf_gen_DEPENDENCIES) cf_gen_defines.cci
-	$(BUILDCXX) $(BUILDCXXFLAGS) -o $@ $(srcdir)/cf_gen.cc -I$(srcdir) -I$(top_builddir)/include/ -I$(top_builddir)/src
+	$(AM_V_GEN) $(BUILDCXX) $(BUILDCXXFLAGS) -o $@ $(srcdir)/cf_gen.cc -I$(srcdir) -I$(top_builddir)/include/ -I$(top_builddir)/src
 
 # squid.conf.default is built by cf_gen when making cf_parser.cci
 squid.conf.default squid.conf.documented: cf_parser.cci
 	true
 
 cf_parser.cci: cf.data cf_gen$(EXEEXT)
-	./cf_gen$(EXEEXT) cf.data $(srcdir)/cf.data.depend
+	$(AM_V_GEN) ./cf_gen$(EXEEXT) cf.data $(srcdir)/cf.data.depend
 
 # The cf_gen_defines.cci is auto-generated and does not exist when the
 # dependencies computed. We need to add its include files (autoconf.h) here
 cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre $(top_builddir)/include/autoconf.h
-	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
+	$(AM_V_GEN) $(AWK) -f $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
 
 
 ## TODO: generate a sed command file from configure. Then this doesn't
 ## depend on the Makefile.
 cf.data: cf.data.pre Makefile
-	sed \
+	$(AM_V_GEN) $(SED) \
 	-e "s%[@]DEFAULT_HTTP_PORT[@]%$(DEFAULT_HTTP_PORT)%g" \
 	-e "s%[@]DEFAULT_CACHE_EFFECTIVE_USER[@]%$(CACHE_EFFECTIVE_USER)%g" \
 	-e "s%[@]DEFAULT_MIME_TABLE[@]%$(DEFAULT_MIME_TABLE)%g" \
@@ -669,12 +669,12 @@ cf.data: cf.data.pre Makefile
 	< $(srcdir)/cf.data.pre >$@
 
 repl_modules.cc: repl_modules.sh Makefile
-	$(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.cc
+	$(AM_V_GEN) $(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.cc
 
 include $(top_srcdir)/doc/manuals/Substitute.am
 
 squid.8: $(srcdir)/squid.8.in Makefile
-	$(SUBSTITUTE) < $(srcdir)/squid.8.in > $@
+	$(AM_V_GEN) $(SUBSTITUTE) < $(srcdir)/squid.8.in > $@
 
 man_MANS = squid.8
 EXTRA_DIST += squid.8.in
@@ -684,18 +684,18 @@ install-data-local: install-sysconfDATA install-dataDATA
 	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
 	  echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_MIME_TABLE)" ; \
 	else \
-	  echo "$(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(DEFAULT_MIME_TABLE)" ;\
+	  $(AM_V_P) && echo "$(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(DEFAULT_MIME_TABLE)" ;\
 	  $(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(DEFAULT_MIME_TABLE); \
 	fi
 	@if test -f $(DESTDIR)$(DEFAULT_CONFIG_FILE) ; then \
 	  echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_CONFIG_FILE)" ; \
 	else \
-	  echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
+	  $(AM_V_P) && echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
 	  $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
 	fi
-	echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE).default"; \
+	$(AM_V_P) && echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE).default"; \
 	$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE).default; \
-	echo "$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented"; \
+	$(AM_V_P) && echo "$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented"; \
 	$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented; \
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX); \
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_SWAP_DIR); \
@@ -712,7 +712,7 @@ CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 	test_tools.cc *.a
 
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
-	cp $(top_srcdir)/test-suite/test_tools.cc .
+	$(AM_V_GEN) cp $(top_srcdir)/test-suite/test_tools.cc .
 
 # stock tools for unit tests - library independent versions of dlink_list
 # etc.
