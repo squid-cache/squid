@@ -13,7 +13,7 @@ DOC= release-$(SQUID_RELEASE)
 SUFFIXES= .sgml.in .sgml
 
 .sgml.in.sgml:
-	sed \
+	$(SED) \
         -e "s%[@]SQUID_VERSION[@]%$(VERSION)%g" \
         -e "s%[@]SQUID_RELEASE[@]%$(SQUID_RELEASE)%g" \
         -e "s%[@]SQUID_RELEASE_OLD[@]%$$(( $(SQUID_RELEASE) - 1 ))%g" \

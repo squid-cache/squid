@@ -140,14 +140,14 @@ squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.de
 	for cfg in $$cfglist ; do \
 		$(srcdir)/test-squid-conf.sh $(top_builddir) $(sbindir) $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
-				sed s%$(top_builddir)/src/%% | \
-				sed s%$(srcdir)/squidconf/%% ; \
+				$(SED) s%$(top_builddir)/src/%% | \
+				$(SED) s%$(srcdir)/squidconf/%% ; \
 				failed=1; break; \
 			}; \
 		if test "$$failed" -eq 0; then \
 			echo "PASS: squid.conf test: $$cfg" | \
-				sed s%$(top_builddir)/src/%% | \
-				sed s%$(srcdir)/squidconf/%% ; \
+				$(SED) s%$(top_builddir)/src/%% | \
+				$(SED) s%$(srcdir)/squidconf/%% ; \
 		else break; fi; \
 	done; \
 	if test "$$failed" -eq 0; then touch $@ ; else exit 1; fi
