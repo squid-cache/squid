@@ -25,7 +25,7 @@ SUFFIXES= .sgml.in .sgml
 
 .sgml.html:
 	linuxdoc -B html -T 2 --split=0 $<
-	perl -i -p -e "s%$@%%" $@
+	$(PERL) -i -p -e "s%$@%%" $@
 	cp -p $@ $(top_builddir)/RELEASENOTES.html
 
 .sgml.man:
