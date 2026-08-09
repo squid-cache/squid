@@ -124,9 +124,9 @@ uninstall-local:
 	  fi \
 	done;
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_STYLESHEET)
-	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
-	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/TRANSLATORS
-	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT
+	$(RM) $(DESTDIR)$(DEFAULT_STYLESHEET).default
+	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/TRANSLATORS
+	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT
 
 dist-hook: translate
 	for lang in $(TRANSLATE_LANGUAGES); do \
@@ -142,7 +142,7 @@ clean: clean-am
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	  for lang in $(TRANSLATE_LANGUAGES); do \
 	    lang=`basename $$lang .lang`; \
-	    rm -rf $$lang; \
+	    $(RM) -r $$lang; \
 	  done; \
 	fi
 

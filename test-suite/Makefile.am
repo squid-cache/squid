@@ -136,7 +136,7 @@ squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.de
 	done; \
 	failed=0; \
 	cfglist="$(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf"; \
-	rm -f $@ || $(TRUE); \
+	$(RM) $@ || $(TRUE); \
 	for cfg in $$cfglist ; do \
 		$(srcdir)/test-squid-conf.sh $(top_builddir) $(sbindir) $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
