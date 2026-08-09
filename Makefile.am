@@ -54,7 +54,7 @@ EXTRA_DIST = \
 
 install-pinger:
 	chown root $(DESTDIR)$(DEFAULT_PINGER)
-	chmod 4711 $(DESTDIR)$(DEFAULT_PINGER)
+	$(CHMOD) 4711 $(DESTDIR)$(DEFAULT_PINGER)
 
 ## hack to insert the test first, before building recursive child directories
 check: have-cppunit check-recursive

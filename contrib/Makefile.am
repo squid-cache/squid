@@ -51,6 +51,6 @@ install-linux:
 	$(INSTALL_BIN) $(SQUID_RC) /sbin/init.d/squid
 	-$(LN_S) ../squid /sbin/init.d/rc3.d/S90squid
 	-$(LN_S) ../squid /sbin/init.d/rc3.d/K10squid
-	grep '^SQUID=' /etc/rc.config || echo SQUID=1 >>/etc/rc.config
+	$(GREP) '^SQUID=' /etc/rc.config || echo SQUID=1 >>/etc/rc.config
 	@echo "set SQUID=0 in /etc/rc.config to disable squid at startup"
 	@echo "edit /sbin/init.d/squid to change options"

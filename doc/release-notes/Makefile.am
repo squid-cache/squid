@@ -18,7 +18,7 @@ SUFFIXES= .sgml.in .sgml
         -e "s%[@]SQUID_RELEASE[@]%$(SQUID_RELEASE)%g" \
         -e "s%[@]SQUID_RELEASE_OLD[@]%$$(( $(SQUID_RELEASE) - 1 ))%g" \
         < $< >$@
-	test `grep -c "@SQUID" $@` -eq 0
+	test `$(GREP) -c "@SQUID" $@` -eq 0
 
 .sgml.txt:
 	linuxdoc -B txt --filter $<
