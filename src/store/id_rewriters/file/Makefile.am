@@ -22,6 +22,6 @@ CLEANFILES += storeid_file_rewrite.8
 EXTRA_DIST += storeid_file_rewrite.8
 
 storeid_file_rewrite.8: storeid_file_rewrite
-	$(AM_V_GEN) pod2man --section=8 storeid_file_rewrite storeid_file_rewrite.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 storeid_file_rewrite storeid_file_rewrite.8
 
 endif

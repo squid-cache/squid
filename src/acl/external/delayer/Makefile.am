@@ -22,6 +22,6 @@ CLEANFILES += ext_delayer_acl.8
 EXTRA_DIST += ext_delayer_acl.8
 
 ext_delayer_acl.8: ext_delayer_acl
-	$(AM_V_GEN) pod2man --section=8 ext_delayer_acl ext_delayer_acl.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 ext_delayer_acl ext_delayer_acl.8
 
 endif

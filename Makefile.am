@@ -26,17 +26,17 @@ SUBDIRS += \
 	test-suite
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
-DEFAULT_PINGER = $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
+DEFAULT_PINGER = $(libexecdir)/`echo pinger | $(SED) '$(transform);s/$$/$(EXEEXT)/'`
 
 dist-hook:
 	@ for subdir in include; do \
 	  if test "$$subdir" = .; then :; else \
 	    test -d $(distdir)/$$subdir \
-	    || mkdir $(distdir)/$$subdir \
+	    || $(MKDIR) $(distdir)/$$subdir \
 	    || exit 1; \
 	    cp -p $(srcdir)/$$subdir/*.h  $(distdir)/$$subdir \
 	      || exit 1; \
-	    rm -f $(distdir)/$$subdir/autoconf.h; \
+	    $(RM) $(distdir)/$$subdir/autoconf.h; \
 	  fi; \
 	done
 
@@ -54,7 +54,7 @@ EXTRA_DIST = \
 
 install-pinger:
 	chown root $(DESTDIR)$(DEFAULT_PINGER)
-	chmod 4711 $(DESTDIR)$(DEFAULT_PINGER)
+	$(CHMOD) 4711 $(DESTDIR)$(DEFAULT_PINGER)
 
 ## hack to insert the test first, before building recursive child directories
 check: have-cppunit check-recursive

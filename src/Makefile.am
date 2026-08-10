@@ -629,7 +629,7 @@ cf_gen$(EXEEXT): $(cf_gen_SOURCES) $(cf_gen_DEPENDENCIES) cf_gen_defines.cci
 
 # squid.conf.default is built by cf_gen when making cf_parser.cci
 squid.conf.default squid.conf.documented: cf_parser.cci
-	true
+	$(TRUE)
 
 cf_parser.cci: cf.data cf_gen$(EXEEXT)
 	$(AM_V_GEN) ./cf_gen$(EXEEXT) cf.data $(srcdir)/cf.data.depend
@@ -706,7 +706,7 @@ uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE) squid.conf.default
 
 clean-local:
-	-rm -rf cf_gen.dSYM
+	$(RM) -r cf_gen.dSYM
 
 CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 	test_tools.cc *.a

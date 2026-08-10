@@ -22,6 +22,6 @@ CLEANFILES += ext_sql_session_acl.8
 EXTRA_DIST += ext_sql_session_acl.8
 
 ext_sql_session_acl.8: ext_sql_session_acl
-	$(AM_V_GEN) pod2man --section=8 ext_sql_session_acl ext_sql_session_acl.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 ext_sql_session_acl ext_sql_session_acl.8
 
 endif

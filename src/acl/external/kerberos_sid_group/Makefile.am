@@ -22,7 +22,7 @@ CLEANFILES += ext_kerberos_sid_group_acl.8
 EXTRA_DIST += ext_kerberos_sid_group_acl.8
 
 ext_kerberos_sid_group_acl.8: ext_kerberos_sid_group_acl
-	$(AM_V_GEN) pod2man --section=8 ext_kerberos_sid_group_acl ext_kerberos_sid_group_acl.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 ext_kerberos_sid_group_acl ext_kerberos_sid_group_acl.8
 
 endif
 

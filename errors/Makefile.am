@@ -53,12 +53,12 @@ translate-warn:
 
 $(TRANSLATE_LANGUAGES): $(ERROR_TEMPLATES)
 
-NOTIDY=`$(PO2HTML) --help | grep -o "[-]-notidy"`
+NOTIDY=`$(PO2HTML) --help | $(GREP) -o "[-]-notidy"`
 
 .po.lang:
 	@if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	    lang=$(@:.lang=); \
-	    mkdir -p $(top_builddir)/errors/$$lang; \
+	    $(MKDIR_P) $(top_builddir)/errors/$$lang; \
 	    $(AM_V_P) && echo "Translating $$lang"; \
 	    for f in $(ERROR_TEMPLATES); do \
 		page=`basename $$f`; \
@@ -124,15 +124,15 @@ uninstall-local:
 	  fi \
 	done;
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_STYLESHEET)
-	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
-	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/TRANSLATORS
-	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT
+	$(RM) $(DESTDIR)$(DEFAULT_STYLESHEET).default
+	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/TRANSLATORS
+	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT
 
 dist-hook: translate
 	for lang in $(TRANSLATE_LANGUAGES); do \
 	  lang=`basename $$lang .lang`; \
 	  if test -d $$lang ; then \
-		mkdir -p $(distdir)/$$lang; \
+		$(MKDIR_P) $(distdir)/$$lang; \
 		cp -p $(top_builddir)/errors/$$lang/ERR_*  $(distdir)/$$lang || exit 1; \
 		cp -p $(top_builddir)/errors/$$lang/error-details.txt $(distdir)/$$lang || exit 1; \
 	  fi; \
@@ -142,7 +142,7 @@ clean: clean-am
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	  for lang in $(TRANSLATE_LANGUAGES); do \
 	    lang=`basename $$lang .lang`; \
-	    rm -rf $$lang; \
+	    $(RM) -r $$lang; \
 	  done; \
 	fi
 

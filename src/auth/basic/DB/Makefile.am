@@ -22,6 +22,6 @@ CLEANFILES += basic_db_auth.8
 EXTRA_DIST += basic_db_auth.8
 
 basic_db_auth.8: basic_db_auth
-	$(AM_V_GEN) pod2man --section=8 basic_db_auth basic_db_auth.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 basic_db_auth basic_db_auth.8
 
 endif

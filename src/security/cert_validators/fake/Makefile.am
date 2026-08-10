@@ -22,6 +22,6 @@ CLEANFILES += security_fake_certverify.8
 EXTRA_DIST += security_fake_certverify.8
 
 security_fake_certverify.8: security_fake_certverify
-	$(AM_V_GEN) pod2man --section=8 security_fake_certverify security_fake_certverify.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 security_fake_certverify security_fake_certverify.8
 
 endif

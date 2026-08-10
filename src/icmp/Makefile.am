@@ -96,4 +96,4 @@ tests/STUB.h: $(top_srcdir)/src/tests/STUB.h | tests
 	$(AM_V_GEN) cp $(top_srcdir)/src/tests/STUB.h $@
 
 tests:
-	mkdir -p $@
+	$(MKDIR_P) $@

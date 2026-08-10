@@ -8,7 +8,7 @@
 ## DEFAULT_MIME_TABLE      = $(sysconfdir)/mime.conf
 ## DEFAULT_ERROR_DIR       = $(datadir)/errors
 
-SUBSTITUTE=sed "\
+SUBSTITUTE=$(SED) "\
 	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g;\
 	s%@DEFAULT_MIME_TABLE@%$(DEFAULT_MIME_TABLE)%g;\
 	s%@DEFAULT_SSL_CRTD@%$(DEFAULT_SSL_CRTD)%g;\
