@@ -5,46 +5,36 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# requires the linuxdoc tools
-if ENABLE_RELEASE_DOCS
+DOC = release-$(SQUID_RELEASE)
 
-DOC= release-$(SQUID_RELEASE)
-
-SUFFIXES= .sgml.in .sgml
+SUFFIXES = .sgml.in .sgml
 
 .sgml.in.sgml:
-	sed \
-        -e "s%[@]SQUID_VERSION[@]%$(VERSION)%g" \
-        -e "s%[@]SQUID_RELEASE[@]%$(SQUID_RELEASE)%g" \
-        -e "s%[@]SQUID_RELEASE_OLD[@]%$$(( $(SQUID_RELEASE) - 1 ))%g" \
-        < $< >$@
+	$(SED) \
+	  -e "s%[@]SQUID_VERSION[@]%$(VERSION)%g" \
+	  -e "s%[@]SQUID_RELEASE[@]%$(SQUID_RELEASE)%g" \
+	  -e "s%[@]SQUID_RELEASE_OLD[@]%$$(( $(SQUID_RELEASE) - 1 ))%g" \
+	  < $< >$@
 	test `grep -c "@SQUID" $@` -eq 0
 
 .sgml.txt:
-	linuxdoc -B txt --filter $<
+	$(LINUXDOC) -B txt --filter $<
 
 .sgml.html:
-	linuxdoc -B html -T 2 --split=0 $<
-	perl -i -p -e "s%$@%%" $@
-	cp -p $@ $(top_builddir)/RELEASENOTES.html
+	$(LINUXDOC) -B html -T 2 --split=0 $< && \
+	  $(PERL) -i -p -e "s%$@%%" $@
 
 .sgml.man:
-	linuxdoc -B txt --manpage $<
+	$(LINUXDOC) -B txt --manpage $<
 
 .sgml.info:
-	linuxdoc -B info $<
+	$(LINUXDOC) -B info $<
 
-dist-hook: $(DOC).html
-	@if test -f $(builddir)/$(DOC).html; then \
-	  cp -p $(builddir)/$(DOC).html $(top_distdir)/RELEASENOTES.html; \
-	fi
+html: $(DOC).html
 
-EXTRA_DIST= $(DOC).html
+EXTRA_DIST = $(DOC).sgml.in
 
-CLEANFILES= \
-	*.html \
+CLEANFILES = \
+	*.html *.sgml \
 	*.tex *.ps *.dvi *.aux *.log *.toc \
-	*.txt *.man \
-	$(top_builddir)/RELEASENOTES.html
-
-endif
+	*.txt *.man
