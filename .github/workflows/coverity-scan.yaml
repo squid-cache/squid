@@ -37,6 +37,7 @@ jobs:
         run: |
           cov-build --dir cov-int ./test-builds.sh layer-02-maximus
           tar -c -a -f cov-int.tar.xz cov-int
+          echo "original/packed: $(du -sh ./cov-int|cut -f1)/$(du -m ./cov-int.tar.xz|cut -f1)M"
           curl \
             --fail-with-body \
             --retry 5 \
