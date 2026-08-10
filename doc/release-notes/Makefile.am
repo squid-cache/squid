@@ -21,18 +21,18 @@ SUFFIXES= .sgml.in .sgml
 	test `$(GREP) -c "@SQUID" $@` -eq 0
 
 .sgml.txt:
-	linuxdoc -B txt --filter $<
+	$(LINUXDOC) -B txt --filter $<
 
 .sgml.html:
-	linuxdoc -B html -T 2 --split=0 $<
+	$(LINUXDOC) -B html -T 2 --split=0 $<
 	$(PERL) -i -p -e "s%$@%%" $@
 	cp -p $@ $(top_builddir)/RELEASENOTES.html
 
 .sgml.man:
-	linuxdoc -B txt --manpage $<
+	$(LINUXDOC) -B txt --manpage $<
 
 .sgml.info:
-	linuxdoc -B info $<
+	$(LINUXDOC) -B info $<
 
 dist-hook: $(DOC).html
 	@if test -f $(builddir)/$(DOC).html; then \

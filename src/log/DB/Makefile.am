@@ -24,6 +24,6 @@ CLEANFILES += log_db_daemon.8
 EXTRA_DIST += log_db_daemon.8
 
 log_db_daemon.8: log_db_daemon
-	$(AM_V_GEN) pod2man --section=8 log_db_daemon log_db_daemon.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 log_db_daemon log_db_daemon.8
 
 endif

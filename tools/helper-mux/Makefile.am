@@ -19,6 +19,6 @@ CLEANFILES += helper-mux.8
 EXTRA_DIST += helper-mux.8
 
 helper-mux.8: helper-mux
-	$(AM_V_GEN) pod2man --section=8 helper-mux helper-mux.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 helper-mux helper-mux.8
 
 endif

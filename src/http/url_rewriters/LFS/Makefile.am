@@ -28,6 +28,6 @@ CLEANFILES += url_lfs_rewrite.8
 EXTRA_DIST += url_lfs_rewrite.8
 
 url_lfs_rewrite.8: url_lfs_rewrite
-	$(AM_V_GEN) pod2man --section=8 url_lfs_rewrite url_lfs_rewrite.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 url_lfs_rewrite url_lfs_rewrite.8
 
 endif
