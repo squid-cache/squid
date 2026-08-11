@@ -12,23 +12,13 @@
 #define SQUID_SRC_DEBUG_STREAM_H
 
 #include "base/Here.h"
+#include "compat/assert.h"
 // XXX should be mem/forward.h once it removes dependencies on typedefs.h
 #include "mem/AllocatorProxy.h"
 
 #include <iostream>
-#undef assert
 #include <sstream>
 #include <iomanip>
-#if defined(assert)
-#undef assert
-#endif
-#if PURIFY
-#define assert(EX) ((void)0)
-#elif defined(NODEBUG)
-#define assert(EX) ((void)0)
-#else
-#define assert(EX)  ((EX)?((void)0):xassert( # EX , __FILE__, __LINE__))
-#endif
 
 /* defined debug section limits */
 #define MAX_DEBUG_SECTIONS 100
