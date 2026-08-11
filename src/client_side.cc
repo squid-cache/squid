@@ -2026,7 +2026,8 @@ ConnStateData::handleChunkedRequestBody()
         // if parser needs more space and we can consume nothing, we will stall
         Must(!bodyParser->needsMoreSpace() || bodyPipe->buf().hasContent());
     } catch (...) { // TODO: be more specific
-        debugs(33, 3, "malformed chunks" << bodyPipe->status());
+        debugs(33, 3, "parsing failure: " << CurrentException <<
+               Debug::Extra << "bodyPipe:" << bodyPipe->status());
         return ERR_INVALID_REQ;
     }
 
