@@ -39,7 +39,8 @@ public:
     /* Http::One::Parser API */
     void clear() override {*this=ResponseParser();}
     Http1::Parser::size_type firstLineSize() const override;
-    bool parse(const SBuf &aBuf) override;
+
+    bool parse2(const SBuf &aBuf);
 
     /* response specific fields, read-only */
     Http::StatusCode messageStatus() const { return statusCode_;}

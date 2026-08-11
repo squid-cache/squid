@@ -1261,7 +1261,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
         if (preservingClientData_)
             preservedClientData = inBuf;
 
-        const bool parsedOk = hp->parse(inBuf);
+        const bool parsedOk = hp->parse2(inBuf);
 
         // sync the buffers after parsing.
         inBuf = hp->remaining();
@@ -2002,7 +2002,7 @@ ConnStateData::handleChunkedRequestBody()
 
         BodyPipeCheckout bpc(*bodyPipe);
         bodyParser->setPayloadBuffer(&bpc.buf);
-        const bool parsed = bodyParser->parse(inBuf);
+        const bool parsed = bodyParser->parseOrThrowXXX(inBuf);
         inBuf = bodyParser->remaining(); // sync buffers
         bpc.checkIn();
 

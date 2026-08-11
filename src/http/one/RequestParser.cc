@@ -324,7 +324,7 @@ Http::One::RequestParser::parseRequestFirstLine()
 }
 
 bool
-Http::One::RequestParser::parse(const SBuf &aBuf)
+Http::One::RequestParser::parse2(const SBuf &aBuf)
 {
     const bool result = doParse(aBuf);
     if (preserveParsed_) {

@@ -1164,7 +1164,7 @@ void Adaptation::Icap::ModXact::parseBody()
     // the parser will throw on errors
     BodyPipeCheckout bpc(*adapted.body_pipe);
     bodyParser->setPayloadBuffer(&bpc.buf);
-    const bool parsed = bodyParser->parse(readBuf);
+    const bool parsed = bodyParser->parseOrThrowXXX(readBuf);
     readBuf = bodyParser->remaining(); // sync buffers after parse
     bpc.checkIn();
 

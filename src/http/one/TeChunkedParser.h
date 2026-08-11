@@ -65,7 +65,8 @@ public:
 
     /* Http1::Parser API */
     void clear() override;
-    bool parse(const SBuf &) override;
+
+    bool parseOrThrowXXX(const SBuf &);
     Parser::size_type firstLineSize() const override {return 0;} // has no meaning with multiple chunks
 
 private:

@@ -42,7 +42,7 @@ Http::One::TeChunkedParser::clear()
 }
 
 bool
-Http::One::TeChunkedParser::parse(const SBuf &aBuf)
+Http::One::TeChunkedParser::parseOrThrowXXX(const SBuf &aBuf)
 {
     buf_ = aBuf; // sync buffers first so calls to remaining() work properly if nothing done.
 

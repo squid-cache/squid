@@ -659,7 +659,7 @@ HttpStateData::processReplyHeader()
         if (hp == nullptr)
             hp = new Http1::ResponseParser;
 
-        bool parsedOk = hp->parse(inBuf);
+        bool parsedOk = hp->parse2(inBuf);
         // remember the actual received status-code before returning on errors,
         // overwriting any previously stored value from earlier forwarding attempts
         request->hier.peer_reply_status = hp->messageStatus(); // may still be scNone
@@ -1456,7 +1456,7 @@ HttpStateData::decodeAndWriteReplyBody()
         MemBuf decodedData;
         decodedData.init();
         httpChunkDecoder->setPayloadBuffer(&decodedData);
-        const bool doneParsing = httpChunkDecoder->parse(inBuf);
+        const bool doneParsing = httpChunkDecoder->parseOrThrowXXX(inBuf);
         inBuf = httpChunkDecoder->remaining(); // sync buffers after parse
         addVirginReplyBody(decodedData.content(), decodedData.contentSize());
         if (doneParsing) {
