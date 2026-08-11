@@ -46,6 +46,13 @@ Http::One::TeChunkedParser::parseOrThrowXXX(const SBuf &aBuf)
 {
     buf_ = aBuf; // sync buffers first so calls to remaining() work properly if nothing done.
 
+    // Only parseTrailerSection() can reach HTTP_PARSE_DONE stage (via
+    // grabMimeBlock()). When it does, we either return true or throw. In either
+    // case, we must not be called again as we cannot make further progress.
+    // XXX: This assertion cannot catch buggy post-throw calls if we throw
+    // before reaching HTTP_PARSE_DONE.
+    Assure(parsingStage_ != HTTP_PARSE_DONE);
+
     if (buf_.isEmpty()) // nothing to do (yet)
         return false;
 
