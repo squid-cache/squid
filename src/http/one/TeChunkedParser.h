@@ -70,6 +70,7 @@ public:
     Parser::size_type firstLineSize() const override {return 0;} // has no meaning with multiple chunks
 
 private:
+    bool parseTrailerSection();
     bool parseChunkSize(Tokenizer &tok);
     bool parseChunkMetadataSuffix(Tokenizer &);
     void parseChunkExtensions(Tokenizer &);

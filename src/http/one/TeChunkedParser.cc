@@ -69,7 +69,7 @@ Http::One::TeChunkedParser::parseOrThrowXXX(const SBuf &aBuf)
         if (parsingStage_ == Http1::HTTP_PARSE_CHUNK && !parseChunkBody(tok))
             return false;
 
-        if (parsingStage_ == Http1::HTTP_PARSE_MIME && !grabMimeBlock("Trailers", 64*1024 /* 64KB max */))
+        if (parsingStage_ == Http1::HTTP_PARSE_MIME && !parseTrailerSection())
             return false;
 
         // loop for as many chunks as we can
@@ -83,6 +83,25 @@ Http::One::TeChunkedParser::needsMoreSpace() const
 {
     assert(theOut);
     return parsingStage_ == Http1::HTTP_PARSE_CHUNK && !theOut->hasPotentialSpace();
+}
+
+/// RFC 9112 section 7.1.2:
+/// trailer-section = *( field-line CRLF )
+bool
+Http::One::TeChunkedParser::parseTrailerSection()
+{
+    // return grabMimeBlock("Trailers", 64*1024); // XXX: Remove this bug restoration.
+
+    // grabMimeBlock() uses our parent class error reporting approach: Errors
+    // are detected using a `!parse() && !needsMoreData()` condition. Convert
+    // that to our approach (expected by our users) where `!parse()` means "need
+    // more data or space" while all errors are reported via C++ exceptions.
+    if (grabMimeBlock("Trailers", 64*1024))
+        return true;
+    if (needsMoreData())
+        return false;
+    Assure(!needsMoreSpace()); // we are not parsing body chunks anymore
+    throw TextException("malformed trailer-section in chunked encoding", Here());
 }
 
 /// RFC 7230 section 4.1 chunk-size
