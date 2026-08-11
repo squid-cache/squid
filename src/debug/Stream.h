@@ -12,7 +12,6 @@
 #define SQUID_SRC_DEBUG_STREAM_H
 
 #include "base/Here.h"
-#include "compat/assert.h"
 // XXX should be mem/forward.h once it removes dependencies on typedefs.h
 #include "mem/AllocatorProxy.h"
 
