@@ -2012,16 +2012,18 @@ ConnStateData::handleChunkedRequestBody()
             return ERR_TOO_BIG;
 
         if (parsed) {
+            Assure(!bodyParser->needsMoreData());
             finishDechunkingRequest(true);
             Must(!bodyPipe);
             return ERR_NONE; // nil bodyPipe implies body end for the caller
         }
 
-        // parseOrThrowXXX() success is handled above; invalid input is reported via exceptions
-        Assure(bodyParser->needsMoreData() || bodyParser->needsMoreSpace());
-
+        // we have not finished parsing yet
+        Assure(bodyParser->needsMoreData());
         // if chunk parser needs data, then the body pipe must need it too
-        Must(!bodyParser->needsMoreData() || bodyPipe->mayNeedMoreData());
+        // because we currently stopProducingFor() after parsing the trailer (if
+        // any) rather than immediately after parsing the encoded body bytes
+        Assure(bodyPipe->mayNeedMoreData());
 
         // if parser needs more space and we can consume nothing, we will stall
         Must(!bodyParser->needsMoreSpace() || bodyPipe->buf().hasContent());

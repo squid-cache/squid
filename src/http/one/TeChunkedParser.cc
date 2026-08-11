@@ -82,7 +82,7 @@ Http::One::TeChunkedParser::parseOrThrowXXX(const SBuf &aBuf)
         // loop for as many chunks as we can
     } while (parsingStage_ == Http1::HTTP_PARSE_CHUNK_SZ && parseChunkSize(tok));
 
-    return !needsMoreData() && !needsMoreSpace();
+    return !needsMoreData();
 }
 
 bool
@@ -107,7 +107,6 @@ Http::One::TeChunkedParser::parseTrailerSection()
         return true;
     if (needsMoreData())
         return false;
-    Assure(!needsMoreSpace()); // we are not parsing body chunks anymore
     throw TextException("malformed trailer-section in chunked encoding", Here());
 }
 
@@ -241,7 +240,7 @@ Http::One::TeChunkedParser::parseChunkBody(Tokenizer &tok)
     if (theLeftBodySize == 0)
         return parseChunkEnd(tok);
     else
-        Must(needsMoreData() || needsMoreSpace());
+        Must(needsMoreData());
 
     return true;
 }
