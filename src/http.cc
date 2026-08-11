@@ -673,6 +673,7 @@ HttpStateData::processReplyHeader()
                 // fall through to handle this premature EOF as an error
             } else {
                 debugs(33, 5, "Incomplete response, waiting for end of response headers");
+                Assure(!parsedOk);
                 return;
             }
         }

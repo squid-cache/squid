@@ -1267,6 +1267,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
         inBuf = hp->remaining();
 
         if (hp->needsMoreData()) {
+            Assure(!parsedOk);
             debugs(33, 5, "Incomplete request, waiting for end of request line");
             return nullptr;
         }
@@ -2015,6 +2016,9 @@ ConnStateData::handleChunkedRequestBody()
             Must(!bodyPipe);
             return ERR_NONE; // nil bodyPipe implies body end for the caller
         }
+
+        // parseOrThrowXXX() success is handled above; invalid input is reported via exceptions
+        Assure(bodyParser->needsMoreData() || bodyParser->needsMoreSpace());
 
         // if chunk parser needs data, then the body pipe must need it too
         Must(!bodyParser->needsMoreData() || bodyPipe->mayNeedMoreData());
