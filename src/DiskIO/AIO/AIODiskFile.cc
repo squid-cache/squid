@@ -39,7 +39,7 @@ AIODiskFile::AIODiskFile(char const *aPath, AIODiskIOStrategy *aStrategy) :
     strategy(aStrategy)
 {
     assert(!path.isEmpty());
-    debugs(79, 3, "AIODiskFile::AIODiskFile: " << path);
+    debugs(79, 3, path);
 }
 
 AIODiskFile::~AIODiskFile()
