@@ -8,10 +8,6 @@
 
 #include "squid.h"
 
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-
 int
 main(int argc, char *argv[])
 {
