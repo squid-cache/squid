@@ -2058,7 +2058,10 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
         comm_reset_close(clientConnection);
     }
 #else
-    debugs(33, 3, "aborting chunked request without error " << error);
+    debugs(33, 3, "aborting chunked request without sending an error response: " << errorTypeName(error));
+    // TODO: Refactor handleChunkedRequestBody() to return an Error with a more specific detail instead.
+    static const auto d = MakeNamedErrorDetail("BAD_CHUNKED_REQUEST_BODY");
+    updateError(error, d);
     comm_reset_close(clientConnection);
 #endif
     flags.readMore = false;
