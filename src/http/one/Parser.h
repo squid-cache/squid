@@ -54,10 +54,8 @@ public:
     /// Will DROP any reference to a buffer (does not free).
     virtual void clear() = 0;
 
-    /** Whether the parser is waiting on more data to complete parsing a message.
-     * Use to distinguish between incomplete data and error results
-     * when parse() returns false.
-     */
+    /// Whether more input bytes are needed to complete parsing. XXX: A derived
+    /// class may have more conditions for a successful parse() completion.
     bool needsMoreData() const {return parsingStage_!=HTTP_PARSE_DONE;}
 
     /// size in bytes of the first line including CRLF terminator

@@ -66,6 +66,14 @@ public:
     /* Http1::Parser API */
     void clear() override;
 
+    /// Parse the given input bytes. Repeated calls may be used to supply
+    /// additional/new input bytes until the method returns true, provided
+    /// enough space for decoded body bytes is provided via setPayloadBuffer().
+    /// \returns whether a complete chunked body, including an optional trailer-section, was successfully parsed
+    /// XXX: Our API is different from the parent class method we override here:
+    /// Our method does not return false on errors; it throws instead. Also, our
+    /// callers must check needsMoreSpace() in addition to needsMoreData() to
+    /// disambiguate all "need more to finish" cases/conditions.
     bool parseOrThrowXXX(const SBuf &);
     Parser::size_type firstLineSize() const override {return 0;} // has no meaning with multiple chunks
 
