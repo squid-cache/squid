@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "unitTestMain.h"
 
-#include <cassert>
 #include <cppunit/extensions/HelperMacros.h>
 
 /* Being a C library code it is best bodily included and tested with C++ type-safe techniques. */

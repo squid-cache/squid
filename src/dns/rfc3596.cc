@@ -18,7 +18,6 @@
 #if HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#include <cassert>
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif

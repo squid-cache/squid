@@ -16,7 +16,6 @@
 #include "mem/PoolMalloc.h"
 #include "mem/Stats.h"
 
-#include <cassert>
 #include <cstring>
 
 extern time_t squid_curtime;
