@@ -14,7 +14,7 @@ EXTRA_DIST= \
 	required.m4
 
 ext_kerberos_sid_group_acl: ext_kerberos_sid_group_acl.pl.in
-	$(subst_perlshell)
+	$(AM_V_GEN) $(subst_perlshell)
 
 if ENABLE_POD2MAN_DOC
 man_MANS = ext_kerberos_sid_group_acl.8
@@ -22,7 +22,7 @@ CLEANFILES += ext_kerberos_sid_group_acl.8
 EXTRA_DIST += ext_kerberos_sid_group_acl.8
 
 ext_kerberos_sid_group_acl.8: ext_kerberos_sid_group_acl
-	pod2man --section=8 ext_kerberos_sid_group_acl ext_kerberos_sid_group_acl.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 ext_kerberos_sid_group_acl ext_kerberos_sid_group_acl.8
 
 endif
 

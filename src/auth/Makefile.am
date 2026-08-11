@@ -61,9 +61,9 @@ libacls_la_SOURCES = \
 	AuthAclState.h
 
 CredentialState.cc: CredentialState.h $(top_srcdir)/src/mk-string-arrays.awk
-	$(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk < $(srcdir)/CredentialState.h > $@ || (rm -f $@ ; exit 1)
+	$(AM_V_GEN) $(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk $(srcdir)/CredentialState.h > $@ || ($(RM) $@ ; exit 1)
 
 Type.cc: Type.h $(top_srcdir)/src/mk-string-arrays.awk
-	$(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk < $(srcdir)/Type.h > $@ || (rm -f $@ ; exit 1)
+	$(AM_V_GEN) $(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk $(srcdir)/Type.h > $@ || ($(RM) $@ ; exit 1)
 
 CLEANFILES += CredentialState.cc Type.cc
