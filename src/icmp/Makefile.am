@@ -84,16 +84,16 @@ CLEANFILES += $(COPIED_SOURCE)
 ## files we need to pull in from other locations
 ## copied like this to avoid subdir-objects collisions on 'make clean'
 globals.cc: $(top_srcdir)/src/globals.h
-	cp $(top_builddir)/src/globals.cc $@
+	$(AM_V_GEN) cp $(top_builddir)/src/globals.cc $@
 
 SquidConfig.cc: $(top_srcdir)/src/SquidConfig.cc
-	cp $(top_srcdir)/src/SquidConfig.cc $@
+	$(AM_V_GEN) cp $(top_srcdir)/src/SquidConfig.cc $@
 
 tests/stub_HelperChildConfig.cc: $(top_srcdir)/src/tests/stub_HelperChildConfig.cc | tests
-	cp $(top_srcdir)/src/tests/stub_HelperChildConfig.cc $@
+	$(AM_V_GEN) cp $(top_srcdir)/src/tests/stub_HelperChildConfig.cc $@
 
 tests/STUB.h: $(top_srcdir)/src/tests/STUB.h | tests
-	cp $(top_srcdir)/src/tests/STUB.h $@
+	$(AM_V_GEN) cp $(top_srcdir)/src/tests/STUB.h $@
 
 tests:
-	mkdir -p $@
+	$(MKDIR_P) $@

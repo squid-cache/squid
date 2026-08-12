@@ -14,7 +14,7 @@ EXTRA_DIST= \
 	ext_delayer_acl.pl.in
 
 ext_delayer_acl: ext_delayer_acl.pl.in
-	$(subst_perlshell)
+	$(AM_V_GEN) $(subst_perlshell)
 
 if ENABLE_POD2MAN_DOC
 man_MANS = ext_delayer_acl.8
@@ -22,6 +22,6 @@ CLEANFILES += ext_delayer_acl.8
 EXTRA_DIST += ext_delayer_acl.8
 
 ext_delayer_acl.8: ext_delayer_acl
-	pod2man --section=8 ext_delayer_acl ext_delayer_acl.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 ext_delayer_acl ext_delayer_acl.8
 
 endif

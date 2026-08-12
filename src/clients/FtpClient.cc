@@ -844,6 +844,21 @@ Ftp::Client::dataClosed(const CommCloseCbParams &)
 void
 Ftp::Client::writeCommand(const char *buf)
 {
+    // The caller must supply a non-empty command followed by CRLF.
+    // TODO: Move CRLF appending code from callers to here.
+    const auto bufLen = strlen(buf);
+    Assure(bufLen > 2);
+    Assure(buf[bufLen-2] == '\r');
+    Assure(buf[bufLen-1] == '\n');
+
+    const auto crlfCharPosition = strcspn(buf, crlf);
+    if (crlfCharPosition != bufLen-2) {
+        const auto invalidCharName = buf[crlfCharPosition] == '\r' ? "CR" : "LF";
+        debugs(9, 2, "ERROR: Caller assembled a malformed FTP command. Found " << invalidCharName << " at position " << crlfCharPosition);
+        failed(ERR_FTP_FAILURE, 0);
+        return;
+    }
+
     char *ebuf;
     /* trace FTP protocol communications at level 2 */
     debugs(9, 2, "ftp<< " << buf);

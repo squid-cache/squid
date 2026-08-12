@@ -41,7 +41,7 @@ all: all-am
 translate: translate-warn $(TRANSLATE_LANGUAGES)
 
 translate-warn:
-	case "$(PO2HTML)" in \
+	@case "$(PO2HTML)" in \
 	off) \
 	    echo "WARNING: Translation is disabled."; \
 	    ;; \
@@ -53,36 +53,35 @@ translate-warn:
 
 $(TRANSLATE_LANGUAGES): $(ERROR_TEMPLATES)
 
-NOTIDY=`$(PO2HTML) --help | grep -o "[-]-notidy"`
+NOTIDY=`$(PO2HTML) --help | $(GREP) -o "[-]-notidy"`
 
 .po.lang:
 	@if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	    lang=$(@:.lang=); \
-	    mkdir -p $(top_builddir)/errors/$$lang; \
-	    echo "Translating $$lang ..."; \
+	    $(MKDIR_P) $(top_builddir)/errors/$$lang; \
+	    $(AM_V_P) && echo "Translating $$lang"; \
 	    for f in $(ERROR_TEMPLATES); do \
 		page=`basename $$f`; \
 		$(PO2HTML) $(NOTIDY) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/$$f >$(top_builddir)/errors/$$lang/$$page || exit 1; \
 	    done; \
 	    cp $(top_srcdir)/errors/templates/error-details.txt $(top_builddir)/errors/$$lang/error-details.txt || exit 1; \
-	    echo "Done translating $$lang"; \
 	else \
 	    lang=$(@:.lang=); \
-		echo "Translation of $$lang disabled\n"; \
+		echo "Translation of $$lang disabled"; \
 	fi; \
 	touch $@
 
 install-exec-local: translate
-	if test -f $(DESTDIR)$(DEFAULT_STYLESHEET) ; then \
+	$(AM_V_at)if test -f $(DESTDIR)$(DEFAULT_STYLESHEET) ; then \
 		echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_STYLESHEET)" ; \
 	else \
 		$(mkinstalldirs) $(DESTDIR)`dirname $(DEFAULT_STYLESHEET)` ; \
-		echo "$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET)"; \
+		$(AM_V_P) && echo "$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET)"; \
 		$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET); \
 	fi
 
 install-data-local: translate
-	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR) ; \
+	$(AM_V_at)$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR) ; \
 	for l in $(TRANSLATE_LANGUAGES) templates; do \
 	    l=`basename $$l .lang`; \
 	    echo "Located $$l for install..."; \
@@ -92,11 +91,11 @@ install-data-local: translate
 	    for f in $(ERROR_TEMPLATES) templates/error-details.txt; do \
 		page=`basename $$f`; \
 		if test -f $(builddir)/$$l/$$page; then \
-		    echo "$(INSTALL_DATA) $(builddir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
-			    $(INSTALL_DATA) $(builddir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
+		    $(AM_V_P) && echo "$(INSTALL_DATA) $(builddir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
+			$(INSTALL_DATA) $(builddir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
 		elif test -f $(srcdir)/$$l/$$page; then \
-		    echo "$(INSTALL_DATA) $(srcdir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
-			    $(INSTALL_DATA) $(srcdir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
+		    $(AM_V_P) && echo "$(INSTALL_DATA) $(srcdir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
+			$(INSTALL_DATA) $(srcdir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
 		fi; \
 	    done; \
 	done; \
@@ -106,7 +105,7 @@ install-data-local: translate
 	$(ALIAS_LINKER) "$(srcdir)/aliases" || exit 1 ;
 
 uninstall-local:
-	for l in $(TRANSLATE_LANGUAGES) templates; do \
+	$(AM_V_at)for l in $(TRANSLATE_LANGUAGES) templates; do \
 	  l=`basename $$l .lang`; \
 	  echo "Located $$l for uninstall ..."; \
 	  if test -d $(srcdir)/$$l; then \
@@ -125,15 +124,15 @@ uninstall-local:
 	  fi \
 	done;
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_STYLESHEET)
-	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
-	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/TRANSLATORS
-	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT
+	$(RM) $(DESTDIR)$(DEFAULT_STYLESHEET).default
+	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/TRANSLATORS
+	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT
 
 dist-hook: translate
 	for lang in $(TRANSLATE_LANGUAGES); do \
 	  lang=`basename $$lang .lang`; \
 	  if test -d $$lang ; then \
-		mkdir -p $(distdir)/$$lang; \
+		$(MKDIR_P) $(distdir)/$$lang; \
 		cp -p $(top_builddir)/errors/$$lang/ERR_*  $(distdir)/$$lang || exit 1; \
 		cp -p $(top_builddir)/errors/$$lang/error-details.txt $(distdir)/$$lang || exit 1; \
 	  fi; \
@@ -143,7 +142,7 @@ clean: clean-am
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	  for lang in $(TRANSLATE_LANGUAGES); do \
 	    lang=`basename $$lang .lang`; \
-	    rm -rf $$lang; \
+	    $(RM) -r $$lang; \
 	  done; \
 	fi
 

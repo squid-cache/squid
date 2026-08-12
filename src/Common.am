@@ -16,17 +16,17 @@ DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_DIR	= $(sysconfdir)
 DEFAULT_CONFIG_FILE	= $(DEFAULT_CONFIG_DIR)/squid.conf
 DEFAULT_MIME_TABLE	= $(DEFAULT_CONFIG_DIR)/mime.conf
-DEFAULT_SSL_CRTD	= $(libexecdir)/`echo security_file_certgen | sed '$(transform);s/$$/$(EXEEXT)/'`
+DEFAULT_SSL_CRTD	= $(libexecdir)/`echo security_file_certgen | $(SED) '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOG_PREFIX	= $(DEFAULT_LOG_DIR)
 DEFAULT_CACHE_LOG	= $(DEFAULT_LOG_PREFIX)/cache.log
 DEFAULT_ACCESS_LOG	= $(DEFAULT_LOG_PREFIX)/access.log
 DEFAULT_STORE_LOG	= $(DEFAULT_LOG_PREFIX)/store.log
 DEFAULT_NETDB_FILE	= $(DEFAULT_SWAP_DIR)/netdb.state
 DEFAULT_SSL_DB_DIR	= $(DEFAULT_SWAP_DIR)/ssl_db
-DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
-DEFAULT_UNLINKD		= $(libexecdir)/`echo unlinkd | sed '$(transform);s/$$/$(EXEEXT)/'`
-DEFAULT_LOGFILED	= $(libexecdir)/`echo log_file_daemon | sed '$(transform);s/$$/$(EXEEXT)/'`
-DEFAULT_DISKD		= $(libexecdir)/`echo diskd | sed '$(transform);s/$$/$(EXEEXT)/'`
+DEFAULT_PINGER		= $(libexecdir)/`echo pinger | $(SED) '$(transform);s/$$/$(EXEEXT)/'`
+DEFAULT_UNLINKD		= $(libexecdir)/`echo unlinkd | $(SED) '$(transform);s/$$/$(EXEEXT)/'`
+DEFAULT_LOGFILED	= $(libexecdir)/`echo log_file_daemon | $(SED) '$(transform);s/$$/$(EXEEXT)/'`
+DEFAULT_DISKD		= $(libexecdir)/`echo diskd | $(SED) '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_ICON_DIR	= $(datadir)/icons
 DEFAULT_ERROR_DIR	= $(datadir)/errors
 
@@ -67,6 +67,6 @@ $(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
 COMPAT_LIB = $(top_builddir)/compat/libcompatsquid.la $(LIBPROFILER)
 
 ## Some helpers are written in Perl and need the local shell defined properly
-subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(RM) -f $@ ; exit 1)
+subst_perlshell = $(SED) -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(RM) -f $@ ; exit 1)
 
 include $(top_srcdir)/src/TestHeaders.am

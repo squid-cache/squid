@@ -14,7 +14,7 @@ EXTRA_DIST= \
 	required.m4
 
 security_fake_certverify: security_fake_certverify.pl.in
-	$(subst_perlshell)
+	$(AM_V_GEN) $(subst_perlshell)
 
 if ENABLE_POD2MAN_DOC
 man_MANS = security_fake_certverify.8
@@ -22,6 +22,6 @@ CLEANFILES += security_fake_certverify.8
 EXTRA_DIST += security_fake_certverify.8
 
 security_fake_certverify.8: security_fake_certverify
-	pod2man --section=8 security_fake_certverify security_fake_certverify.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 security_fake_certverify security_fake_certverify.8
 
 endif

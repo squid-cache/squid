@@ -739,11 +739,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_ICAP_SERV_NAME:
-            out = al->icap.serviceName.termedBuf();
+            out = al->icap.serviceName.c_str();
             break;
 
         case LFT_ICAP_REQUEST_URI:
-            out = al->icap.reqUri.termedBuf();
+            out = al->icap.reqUri.c_str();
             break;
 
         case LFT_ICAP_REQUEST_METHOD:

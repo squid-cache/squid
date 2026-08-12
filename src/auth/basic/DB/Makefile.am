@@ -14,7 +14,7 @@ EXTRA_DIST= \
 	required.m4
 
 basic_db_auth: basic_db_auth.pl.in
-	$(subst_perlshell)
+	$(AM_V_GEN) $(subst_perlshell)
 
 if ENABLE_POD2MAN_DOC
 man_MANS = basic_db_auth.8
@@ -22,6 +22,6 @@ CLEANFILES += basic_db_auth.8
 EXTRA_DIST += basic_db_auth.8
 
 basic_db_auth.8: basic_db_auth
-	pod2man --section=8 basic_db_auth basic_db_auth.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 basic_db_auth basic_db_auth.8
 
 endif

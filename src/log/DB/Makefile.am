@@ -16,7 +16,7 @@ EXTRA_DIST= \
 	log_db_daemon.pl.in
 
 log_db_daemon: log_db_daemon.pl.in
-	$(subst_perlshell)
+	$(AM_V_GEN) $(subst_perlshell)
 
 if ENABLE_POD2MAN_DOC
 man_MANS = log_db_daemon.8
@@ -24,6 +24,6 @@ CLEANFILES += log_db_daemon.8
 EXTRA_DIST += log_db_daemon.8
 
 log_db_daemon.8: log_db_daemon
-	pod2man --section=8 log_db_daemon log_db_daemon.8
+	$(AM_V_GEN) $(POD2MAN) --section=8 log_db_daemon log_db_daemon.8
 
 endif

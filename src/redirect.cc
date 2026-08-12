@@ -110,8 +110,9 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
             // parse it into status=, url= and rewrite-url= keys
             if (replySize) {
                 MemBuf replyBuffer;
-                replyBuffer.init(replySize, replySize);
-                replyBuffer.append(reply.other().content(), reply.other().contentSize());
+                replyBuffer.init(replySize + 1, replySize + 1); // with space for 0-terminator added by append()
+                Assure(replySize <= size_t(reply.other().contentSize()));
+                replyBuffer.append(reply.other().content(), replySize);
                 char * result = replyBuffer.content();
 
                 Helper::Reply newReply;
