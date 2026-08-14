@@ -195,7 +195,7 @@ Http::One::ResponseParser::parseResponseFirstLine()
 }
 
 bool
-Http::One::ResponseParser::parse2(const SBuf &aBuf)
+Http::One::ResponseParser::parse(const SBuf &aBuf)
 {
     buf_ = aBuf;
     debugs(74, DBG_DATA, "Parse buf={length=" << aBuf.length() << ", data='" << aBuf << "'}");

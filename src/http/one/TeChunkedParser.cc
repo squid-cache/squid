@@ -42,7 +42,7 @@ Http::One::TeChunkedParser::clear()
 }
 
 bool
-Http::One::TeChunkedParser::parseOrThrowXXX(const SBuf &aBuf)
+Http::One::TeChunkedParser::parse(const SBuf &aBuf)
 {
     buf_ = aBuf; // sync buffers first so calls to remaining() work properly if nothing done.
 
@@ -97,8 +97,6 @@ Http::One::TeChunkedParser::needsMoreSpace() const
 bool
 Http::One::TeChunkedParser::parseTrailerSection()
 {
-    // return grabMimeBlock("Trailers", 64*1024); // XXX: Remove this bug restoration.
-
     // grabMimeBlock() uses our parent class error reporting approach: Errors
     // are detected using a `!parse() && !needsMoreData()` condition. Convert
     // that to our approach (expected by our users) where `!parse()` means "need

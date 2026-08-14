@@ -65,22 +65,17 @@ public:
 
     /* Http1::Parser API */
     void clear() override;
-
-    /// Parse the given input bytes. Repeated calls may be used to supply
-    /// additional/new input bytes until the method returns true, provided
-    /// enough space for decoded body bytes is provided via setPayloadBuffer().
-    /// \returns whether a complete chunked body, including an optional trailer-section, was successfully parsed
-    bool parseOrThrowXXX(const SBuf &);
+    bool parse(const SBuf &) override;
     Parser::size_type firstLineSize() const override {return 0;} // has no meaning with multiple chunks
 
 private:
-    bool parseTrailerSection();
     bool parseChunkSize(Tokenizer &tok);
     bool parseChunkMetadataSuffix(Tokenizer &);
     void parseChunkExtensions(Tokenizer &);
     void parseOneChunkExtension(Tokenizer &);
     bool parseChunkBody(Tokenizer &tok);
     bool parseChunkEnd(Tokenizer &tok);
+    bool parseTrailerSection();
 
     MemBuf *theOut;
     uint64_t theChunkSize;

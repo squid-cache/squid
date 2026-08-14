@@ -41,8 +41,7 @@ public:
     /* Http::One::Parser API */
     void clear() override {*this = RequestParser();}
     Http1::Parser::size_type firstLineSize() const override;
-
-    bool parse2(const SBuf &aBuf);
+    bool parse(const SBuf &aBuf) override;
 
     /// the HTTP method if this is a request message
     const HttpRequestMethod & method() const {return method_;}

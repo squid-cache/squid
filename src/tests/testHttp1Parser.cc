@@ -115,7 +115,7 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
     (void)line;
 #endif
 
-    const bool parsed = output.parse2(input);
+    const bool parsed = output.parse(input);
 
 #ifdef SQUID_DEBUG_TESTS
     if (expect.parsed != parsed)

@@ -54,6 +54,11 @@ public:
     /// Will DROP any reference to a buffer (does not free).
     virtual void clear() = 0;
 
+    /// attempt to parse a message from the buffer
+    /// \retval true if a full message was found and parsed
+    /// \retval false if incomplete, invalid or no message was found
+    virtual bool parse(const SBuf &aBuf) = 0;
+
     /** Whether the parser is waiting on more data to complete parsing a message.
      * The returned value is not meaningful after parse() throws. In other cases:
      * Use to distinguish between incomplete data and error results
