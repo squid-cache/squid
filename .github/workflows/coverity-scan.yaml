@@ -15,7 +15,7 @@ jobs:
   coverity-scan:
     name: Scan with Coverity
     # only run the workflow on Squid's main repository
-    if: github.repository == 'measurement-factory/squid'
+    if: github.repository == 'squid-cache/squid'
 
     runs-on: ubuntu-24.04
 
@@ -37,7 +37,8 @@ jobs:
         run: |
           cov-build --dir cov-int ./test-builds.sh layer-02-maximus
           tar -c -a -f cov-int.tar.xz cov-int
-          echo "original/packed: $(du -sh ./cov-int|cut -f1)/$(du -m ./cov-int.tar.xz|cut -f1)M"
+          echo "cov-int size: " `du -s ./cov-int`
+          ls -l ./cov-int.tar.xz
           curl \
             --fail-with-body \
             --retry 5 \
