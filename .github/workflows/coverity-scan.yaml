@@ -37,8 +37,13 @@ jobs:
         run: |
           cov-build --dir cov-int ./test-builds.sh layer-02-maximus
           tar -c -a -f cov-int.tar.xz cov-int
+          echo "cov-int size: " `du -s ./cov-int`
+          ls -l ./cov-int.tar.xz
           curl \
             --fail-with-body \
+            --retry 5 \
+            --retry-delay 15 \
+            --retry-all-errors \
             --form email=${coverity_user} \
             --form token=${coverity_token} \
             --form version=coverity_scan \
