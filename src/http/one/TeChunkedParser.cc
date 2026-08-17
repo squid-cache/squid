@@ -237,10 +237,12 @@ Http::One::TeChunkedParser::parseChunkBody(Tokenizer &tok)
 
     if (theLeftBodySize == 0)
         return parseChunkEnd(tok);
-    else
-        Must(needsMoreData());
 
-    return true;
+    // Received input lacks some of the current chunk bytes (i.e. `availSize <
+    // theLeftBodySize` before `theLeftBodySize` decrement above), and/or
+    // `theOut` could not grow to accommodate received input bytes that belong
+    // to the current chunk (i.e. `safeSize < availSize`).
+    return false;
 }
 
 bool
