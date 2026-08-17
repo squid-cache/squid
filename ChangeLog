@@ -1,6 +1,6 @@
 Changes in squid-7.7 (17 Aug 2026):
 
-	- Fix size of several base64 encoding buffers
+	- Protect several base64 encoding buffers
 	- Fix support for squidconf directive parameter files
 	- FTP: Reject commands with parameters containing CR
 	- FTP: Do not send commands with embedded CRs or LFs
