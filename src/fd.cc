@@ -8,6 +8,10 @@
 
 /* DEBUG: section 51    Filedescriptor Functions */
 
+#ifdef _AIX
+#define MSG_DONTWAIT MSG_NONBLOCK
+#endif
+
 #include "squid.h"
 #include "comm/Loops.h"
 #include "compat/socket.h"
