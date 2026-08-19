@@ -49,9 +49,12 @@ int xsetsockopt(int socketFd, int level, int option, const void * value, socklen
 /// POSIX socket(2) equivalent
 int xsocket(int domain, int type, int protocol);
 
+// AIX and possibly others lack MSG_DONTWAIT but have a MSG_NONBLOCK equivalent
+#if !defined(MSG_DONTWAIT) && defined(MSG_NONBLOCK)
+#define MSG_DONTWAIT MSG_NONBLOCK
+#endif
+
 // Solaris and possibly others lack MSG_NOSIGNAL optimization
-// TODO: move this into compat/? Use a dedicated compat file to avoid dragging
-// sys/socket.h into the rest of Squid??
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
