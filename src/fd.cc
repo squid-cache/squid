@@ -8,11 +8,6 @@
 
 /* DEBUG: section 51    Filedescriptor Functions */
 
-// AIX and possibly others lack MSG_DONTWAIT but have a MSG_NONBLOCK equivalent
-#if !defined(MSG_DONTWAIT) && defined(MSG_NONBLOCK)
-#define MSG_DONTWAIT MSG_NONBLOCK
-#endif
-
 #include "squid.h"
 #include "comm/Loops.h"
 #include "compat/socket.h"
