@@ -1465,9 +1465,6 @@ ErrorState::compileDetail(const char * const format, const ErrorPage::PercentCod
     return build.output;
 }
 
-/// Replaces all %code sequences found in build.input.
-/// Appends processed input to build.output.
-/// Consumes processed build.input.
 void
 ErrorState::compile(Build &build) const
 {

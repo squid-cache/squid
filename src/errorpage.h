@@ -144,6 +144,9 @@ private:
     /// \sa compileDetail()
     SBuf compile(const char *input, bool building_deny_info_url, bool allowRecursion) const;
 
+    /// Replaces all %code sequences found in build.input.
+    /// Appends processed input to build.output.
+    /// Consumes processed build.input.
     void compile(Build &build) const;
 
     /// React to a compile() error, throwing if buildContext allows.
