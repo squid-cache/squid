@@ -116,25 +116,25 @@ public:
     SBuf compileDetail(const char *format, const ErrorPage::PercentCodeCompiler *compiler) const;
 
     /// the source of the error template (for reporting purposes)
-    SBuf inputLocation;
+    mutable SBuf inputLocation;
 
 private:
     /// initializations shared by public constructors
     ErrorState(err_type, const AccessLogEntryPointer &);
 
     /// locates the right error page template for this error and compiles it
-    SBuf buildBody();
+    SBuf buildBody() const;
 
     /// compiles error page or error detail template (i.e. anything but deny_url)
     /// \param input  the template text to be compiled
     /// \param allowRecursion  whether to compile %codes which produce %codes
-    SBuf compileBody(const char *text, bool allowRecursion);
+    SBuf compileBody(const char *text, bool allowRecursion) const;
 
     /// compile a single-letter %code like %D
-    void compileLegacyCode(Build &build);
+    void compileLegacyCode(Build &) const;
 
     /// compile @Squid{%code} sequence containing a single logformat %code
-    void compileLogformatCode(Build &build);
+    void compileLogformatCode(Build &) const;
 
     /// replaces all legacy and logformat %codes in the given input
     /// \param input  the template text to be converted
@@ -142,14 +142,14 @@ private:
     /// \param allowRecursion  whether to compile %codes which produce %codes
     /// \returns the given input with all %codes substituted
     /// \sa compileDetail()
-    SBuf compile(const char *input, bool building_deny_info_url, bool allowRecursion);
+    SBuf compile(const char *input, bool building_deny_info_url, bool allowRecursion) const;
 
     void compile(Build &build) const;
 
     /// React to a compile() error, throwing if buildContext allows.
     /// \param msg description of what went wrong
     /// \param errorLocation approximate start of the problematic input
-    void noteBuildError(const char *const msg, const char * const errorLocation) {
+    void noteBuildError(const char *const msg, const char * const errorLocation) const {
         noteBuildError_(msg, errorLocation, false);
     }
 
@@ -158,7 +158,7 @@ private:
     /// Should eventually be replaced with noteBuildError().
     /// \param msg description of what went wrong
     /// \param errorLocation approximate start of the problematic input
-    void bypassBuildErrorXXX(const char *const msg, const char * const errorLocation) {
+    void bypassBuildErrorXXX(const char *const msg, const char * const errorLocation) const {
         noteBuildError_(msg, errorLocation, true);
     }
 
@@ -167,12 +167,17 @@ private:
      * Writes output into the given MemBuf.
      \retval 0 successful completion.
      */
-    int Dump(MemBuf * mb);
+    int Dump(MemBuf *) const;
 
 public:
     err_type type = ERR_NONE;
-    int page_id = ERR_NONE;
-    char *err_language = nullptr;
+
+    // TODO: Instead of hiding const-correctness violations behind "mutable"
+    // move mutable data members holding build information into Build and adjust
+    // compile*()-related methods to avoid ErrorState object modifications.
+    mutable int page_id = ERR_NONE;
+    mutable char *err_language = nullptr;
+
     Http::StatusCode httpStatus = Http::scNone;
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
@@ -209,7 +214,7 @@ public:
     HttpReplyPointer response_;
 
 private:
-    void noteBuildError_(const char *msg, const char *errorLocation, bool forceBypass);
+    void noteBuildError_(const char *msg, const char *errorLocation, bool forceBypass) const;
 
     static const SBuf LogformatMagic; ///< marks each embedded logformat entry
 };
