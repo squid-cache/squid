@@ -1158,9 +1158,9 @@ static size_t
 CheckFieldDataLength(const FieldHeader *header, const size_t dataLength, const void *areaStart, const size_t areaSize, const char *error)
 {
     assert(header);
-    const auto dataStart = reinterpret_cast<const char*>(header) + sizeof(header);
+    const auto dataStart = reinterpret_cast<const char*>(header) + sizeof(*header);
     CheckSectionLength(dataStart, dataLength, areaStart, areaSize, error);
-    return sizeof(header) + dataLength; // no overflow after CheckSectionLength()
+    return sizeof(*header) + dataLength; // no overflow after CheckSectionLength()
 }
 
 /// Positions the given field at a given start within a given packet area.
