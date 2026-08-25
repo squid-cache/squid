@@ -21,7 +21,7 @@ class ErrorDetail: public RefCountable
 {
 public:
     using Pointer = ErrorDetailPointer;
-    using ErrorTemplateCompiler = ErrorState;
+    using TemplateCompiler = ErrorState;
 
     ~ErrorDetail() override {}
 
@@ -32,7 +32,7 @@ public:
     /// \returns all available details
     /// suitable for error pages and other output meant for human consumption
     /// Supports configurable templates populated by the given compiler.
-    virtual SBuf verbose(const ErrorTemplateCompiler &) const = 0;
+    virtual SBuf verbose(const TemplateCompiler &) const = 0;
 
     // Duplicate details for the same error typically happen when we update some
     // error storage (e.g., ALE) twice from the same detail source (e.g., the

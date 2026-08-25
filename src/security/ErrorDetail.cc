@@ -531,7 +531,7 @@ Security::ErrorDetail::brief() const
 }
 
 SBuf
-Security::ErrorDetail::verbose(const ErrorTemplateCompiler &compiler) const
+Security::ErrorDetail::verbose(const TemplateCompiler &compiler) const
 {
     std::optional<SBuf> customFormat;
 #if USE_OPENSSL

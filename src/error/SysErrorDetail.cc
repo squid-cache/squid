@@ -24,7 +24,7 @@ SysErrorDetail::brief() const
 }
 
 SBuf
-SysErrorDetail::verbose(const ErrorTemplateCompiler &) const
+SysErrorDetail::verbose(const TemplateCompiler &) const
 {
     return SBuf(xstrerr(errorNo));
 }

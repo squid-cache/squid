@@ -32,7 +32,7 @@ public:
 
     /* ErrorDetail API */
     SBuf brief() const override;
-    SBuf verbose(const ErrorTemplateCompiler &) const override;
+    SBuf verbose(const TemplateCompiler &) const override;
 
 private:
     int completionCode; ///< FTP reply completion code
