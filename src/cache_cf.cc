@@ -251,8 +251,11 @@ static void parse_configuration_includes_quoted_values(bool *recognizeQuotedValu
 static void dump_configuration_includes_quoted_values(StoreEntry *const entry, const char *const name, bool recognizeQuotedValues);
 static void free_configuration_includes_quoted_values(bool *recognizeQuotedValues);
 static void parse_on_unsupported_protocol(acl_access **access);
+static void parse_on_error(acl_access **access);
 static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
+static void dump_on_error(StoreEntry *entry, const char *name, acl_access *access);
 static void free_on_unsupported_protocol(acl_access **access);
+static void free_on_error(acl_access **access);
 static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, Acl::Node *acl = nullptr);
 static void parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuards);
 static void dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocolAccess *protoGuards);
@@ -4878,6 +4881,32 @@ parse_on_unsupported_protocol(acl_access **access)
 }
 
 static void
+parse_on_error(acl_access **access)
+{
+    char *tm;
+    if ((tm = ConfigParser::NextToken()) == nullptr) {
+        self_destruct();
+        return;
+    }
+
+    auto action = Acl::Answer(ACCESS_ALLOWED);
+    if (strcmp(tm, "terminate") == 0)
+        action.kind = 1;
+    else if (strcmp(tm, "reset") == 0)
+        action.kind = 2;
+    else if (strcmp(tm, "respond") == 0)
+        action.kind = 3;
+    else {
+        debugs(3, DBG_CRITICAL, "FATAL: unknown parse_on_error mode: " << tm);
+        self_destruct();
+        return;
+    }
+
+    // empty rule OK
+    ParseAclWithAction(access, action, "parse_on_error");
+}
+
+static void
 dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access)
 {
     static const std::vector<const char *> onErrorTunnelMode = {
@@ -4894,7 +4923,30 @@ dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *ac
 }
 
 static void
+dump_on_error(StoreEntry *entry, const char *name, acl_access *access)
+{
+    static const std::vector<const char *> onErrorMode = {
+        "none",
+        "terminate",
+        "reset",
+        "respond"
+    };
+    if (access) {
+        SBufList lines = access->treeDump(name, [](const Acl::Answer &action) {
+            return onErrorMode.at(action.kind);
+        });
+        dump_SBufList(entry, lines);
+    }
+}
+
+static void
 free_on_unsupported_protocol(acl_access **access)
+{
+    free_acl_access(access);
+}
+
+static void
+free_on_error(acl_access **access)
 {
     free_acl_access(access);
 }
