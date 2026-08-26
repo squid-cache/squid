@@ -219,7 +219,8 @@ inline typename T::Owner *
 createOwner(const char *dirPath, const char *sfx, const int64_t limit, const bool resuming)
 {
     auto id = Ipc::Mem::Segment::Name(SBuf(dirPath), sfx);
-    return resuming ? Ipc::Mem::Owner<T>::Old(id.c_str()) : shm_new(T)(id.c_str(), limit);
+    const char *machineId = "M008";
+    return resuming ? Ipc::Mem::Owner<T>::Old(id.c_str(), machineId) : shm_new(T)(id.c_str(), machineId, limit);
 }
 
 Rock::LoadingParts::LoadingParts(const SwapDir &dir, const bool resuming):
@@ -258,7 +259,7 @@ Rock::Rebuild::Stats::Path(const char *dirPath)
 Ipc::Mem::Owner<Rock::Rebuild::Stats>*
 Rock::Rebuild::Stats::Init(const SwapDir &dir)
 {
-    return shm_new(Stats)(Path(dir.path).c_str());
+    return shm_new(Stats)(Path(dir.path).c_str(), "M008");
 }
 
 bool
@@ -286,7 +287,7 @@ Rock::Rebuild::Start(SwapDir &dir)
         return false;
     }
 
-    const auto stats = shm_old(Rebuild::Stats)(Stats::Path(dir.path).c_str());
+    const auto stats = shm_old(Rebuild::Stats)(Stats::Path(dir.path).c_str(), "M008");
     if (stats->completed(dir)) {
         debugs(47, 2, "already indexed cache_dir #" <<
                dir.index << " from " << dir.filePath);
