@@ -15,8 +15,7 @@
 #include "base/Subscription.h"
 #include "comm/Flag.h"
 #include "comm/forward.h"
-
-class CommCloseCbParams;
+#include "CommCalls.h"
 
 namespace Comm
 {
@@ -40,39 +39,23 @@ class TcpAcceptor : public AsyncJob
     CBDATA_CHILD(TcpAcceptor);
 
 public:
-    typedef CbcPointer<Comm::TcpAcceptor> Pointer;
+    using Pointer = CbcPointer<Comm::TcpAcceptor>;
+    using IoDialer = CommCbMemFunT<Comm::TcpAcceptor, CommIoCbParams>;
 
-private:
-    void start() override;
-    bool doneAll() const override;
-    void swanSong() override;
-    const char *status() const override;
-
-    TcpAcceptor(const TcpAcceptor &); // not implemented.
-
-public:
-    TcpAcceptor(const Comm::ConnectionPointer &conn, const char *note, const Subscription::Pointer &aSub);
-    TcpAcceptor(const AnyP::PortCfgPointer &listenPort, const char *note, const Subscription::Pointer &aSub);
+    TcpAcceptor(const Comm::ConnectionPointer &, const char *note, const Subscription::Pointer &);
+    TcpAcceptor(const AnyP::PortCfgPointer &, const char *note, const Subscription::Pointer &);
 
 protected:
-    /** Subscribe a handler to receive calls back about new connections.
-     * Unsubscribes any existing subscribed handler.
-     */
-    void subscribe(const Subscription::Pointer &aSub);
+    /// Subscribe a handler to receive calls back about new connections.
+    /// Unsubscribes any existing subscribed handler.
+    void subscribe(const Subscription::Pointer &);
 
-    /** Remove the currently waiting callback subscription.
-     * Already scheduled callbacks remain scheduled.
-     */
+    /// Remove the currently waiting callback subscription.
+    /// Already scheduled callbacks remain scheduled.
     void unsubscribe(const char *reason);
 
-    /** Try and accept another connection (synchronous).
-     * If one is pending already the subscribed callback handler will be scheduled
-     * to handle it before this method returns.
-     */
-    void acceptNext();
-
     /// Call the subscribed callback handler with details about a new connection.
-    void notify(const Comm::Flag flag, const Comm::ConnectionPointer &details) const;
+    void notify(const Comm::Flag, const Comm::ConnectionPointer &) const;
 
     /// errno code of the last accept() or listen() action if one occurred.
     int errcode;
@@ -81,10 +64,31 @@ protected:
     /// if not the accept() will be postponed
     static bool okToAccept();
 
+    /// Accept a new connection now if possible, otherwise defer.
+    /// This read handler for the listening socket may also be called directly.
+    void acceptOne(const CommIoCbParams &);
+
     friend class AcceptLimiter;
 
 private:
-    Subscription::Pointer theCallSub;    ///< used to generate AsyncCalls handling our events.
+    TcpAcceptor(const TcpAcceptor &); // not implemented.
+    Comm::Flag oldAccept(Comm::ConnectionPointer &);
+    bool acceptInto(Comm::ConnectionPointer &);
+    void setListen();
+    void handleClosure(const CommCloseCbParams &);
+    /// whether we are listening on one of the squid.conf *ports
+    bool intendedForUserConnections() const { return bool(listenPort_); }
+    void logAcceptError(const ConnectionPointer &tcpClient) const;
+
+    /* AsyncJob API */
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
+    const char *status() const override;
+
+private:
+    /// used to generate AsyncCalls handling our events.
+    Subscription::Pointer theCallSub;
 
     /// conn being listened on for new connections
     /// Reserved for read-only use.
@@ -95,17 +99,6 @@ private:
 
     /// listen socket closure handler
     AsyncCall::Pointer closer_;
-
-    /// Method callback for whenever an FD is ready to accept a client connection.
-    static void doAccept(int fd, void *data);
-
-    void acceptOne();
-    bool acceptInto(Comm::ConnectionPointer &);
-    void setListen();
-    void handleClosure(const CommCloseCbParams &io);
-    /// whether we are listening on one of the squid.conf *ports
-    bool intendedForUserConnections() const { return bool(listenPort_); }
-    void logAcceptError(const ConnectionPointer &tcpClient) const;
 };
 
 } // namespace Comm
