@@ -2367,16 +2367,9 @@ clientNegotiateSSL(int fd, void *data)
     conn->clientConnection->tlsNegotiations()->retrieveNegotiatedInfo(session);
 
 #if USE_OPENSSL
-    X509 *client_cert = SSL_get_peer_certificate(session.get());
-
-    if (client_cert) {
-        debugs(83, 3, "FD " << fd << " client certificate: subject: " <<
-               Security::SubjectName(*client_cert));
-
-        debugs(83, 3, "FD " << fd << " client certificate: issuer: " <<
-               Security::IssuerName(*client_cert));
-
-        X509_free(client_cert);
+    if (const auto clientCert = Security::CertPointer(SSL_get_peer_certificate(session.get()))) {
+        debugs(83, 3, "FD " << fd << " client certificate: subject: " << *clientCert);
+        debugs(83, 3, "FD " << fd << " client certificate: issuer: " << Security::IssuerName(*clientCert));
     } else {
         debugs(83, 5, "FD " << fd << " has no client certificate.");
     }
