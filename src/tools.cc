@@ -794,6 +794,18 @@ setMaxFD(void)
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "ERROR: getrlimit: RLIMIT_NOFILE: " << xstrerr(xerrno));
     } else {
+        // Squid allocates several arrays proportional to Squid_MaxFD before
+        // it can serve requests. Do not let an unexpectedly large inherited
+        // ulimit trigger multi-gigabyte allocations (e.g. Kubernetes may
+        // provide a billion-descriptor soft limit). This guard runs before
+        // fde::Init() and Comm callback tables allocate descriptor storage.
+        if (Config.max_filedescriptors <= 0 &&
+            rl.rlim_cur > static_cast<rlim_t>(SQUID_MAXFD)) {
+            debugs(50, DBG_IMPORTANT, "WARNING: inherited RLIMIT_NOFILE (" <<
+                   rl.rlim_cur << ") exceeds Squid's compiled descriptor limit (" <<
+                   SQUID_MAXFD << "); limiting to " << SQUID_MAXFD);
+            rl.rlim_cur = SQUID_MAXFD;
+        }
         Squid_MaxFD = rl.rlim_cur;
     }
 
@@ -1203,4 +1215,3 @@ WindowsErrorMessage(DWORD errorId)
     return result;
 }
 #endif // _SQUID_WINDOWS_ || _SQUID_MINGW_
-
