@@ -1,2 +1,1 @@
-expect-failure ERROR:.configuration.failure:.POSIX.regcomp.*failure
-
+expect-failure ERROR:.configuration.failure:.Mismatched.'[(]'.and.'[)]'.in.regular.expression
