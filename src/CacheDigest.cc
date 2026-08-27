@@ -14,6 +14,8 @@
 #include "Store.h"
 #include "store_key_md5.h"
 
+#include <limits>
+
 #if USE_CACHE_DIGESTS
 
 #include "CacheDigest.h"
@@ -270,8 +272,9 @@ cacheDigestReport(CacheDigest * cd, const SBuf &label, StoreEntry * e)
 uint32_t
 CacheDigest::CalcMaskSize(uint64_t cap, uint8_t bpe)
 {
-    uint64_t bitCount = (cap * bpe) + 7;
-    assert(bitCount < INT_MAX); // do not 31-bit overflow later
+    const uint64_t bitCount = (cap * bpe) + 7;
+    if (bitCount >= std::numeric_limits<int>::max())
+        return 0; // overflow; caller must treat 0 as invalid
     return static_cast<uint32_t>(bitCount / 8);
 }
 
