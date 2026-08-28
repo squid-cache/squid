@@ -799,12 +799,14 @@ setMaxFD(void)
         // ulimit trigger multi-gigabyte allocations (e.g. Kubernetes may
         // provide a billion-descriptor soft limit). This guard runs before
         // fde::Init() and Comm callback tables allocate descriptor storage.
+        // Squid_MaxFD may already have been reduced by SQUID_MAXFD_LIMIT in
+        // SquidMain(), so preserve that effective compiled-in limit here.
         if (Config.max_filedescriptors <= 0 &&
-            rl.rlim_cur > static_cast<rlim_t>(SQUID_MAXFD)) {
+            rl.rlim_cur > static_cast<rlim_t>(Squid_MaxFD)) {
             debugs(50, DBG_IMPORTANT, "WARNING: inherited RLIMIT_NOFILE (" <<
-                   rl.rlim_cur << ") exceeds Squid's compiled descriptor limit (" <<
-                   SQUID_MAXFD << "); limiting to " << SQUID_MAXFD);
-            rl.rlim_cur = SQUID_MAXFD;
+                   rl.rlim_cur << ") exceeds Squid's descriptor limit (" <<
+                   Squid_MaxFD << "); limiting to " << Squid_MaxFD);
+            rl.rlim_cur = Squid_MaxFD;
         }
         Squid_MaxFD = rl.rlim_cur;
     }
