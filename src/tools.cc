@@ -804,6 +804,7 @@ setMaxFD(void)
 
         // No cap if max_filedescriptors was set because, in that case, the
         // limits are not coming from the OS -- we call setrlimit() above.
+        // XXX: But that call may fail!
         if (Config.max_filedescriptors <= 0 &&
             rl.rlim_cur > defaultCapForMaximumNumberOfFiles) {
             debugs(50, DBG_IMPORTANT, "WARNING: OS-provided soft limit (" << rl.rlim_cur << " RLIMIT_NOFILE) " <<
@@ -811,6 +812,9 @@ setMaxFD(void)
                    "setting that maximum to " << defaultCapForMaximumNumberOfFiles);
             rl.rlim_cur = defaultCapForMaximumNumberOfFiles;
         }
+        // XXX: rl.rlim_cur is often too small (e.g. 1024). In those cases, use a larger value if rl.rlim_max allows.
+        // XXX: The new value may make Squid_MaxFD different from SQUID_MAXFD still used by ModEpoll, ModPoll, and ipcCreate()!
+        // XXX: If this increases Squid_MaxFD, then the new value will violate any defined SQUID_MAXFD_LIMIT.
         Squid_MaxFD = rl.rlim_cur;
     }
 
