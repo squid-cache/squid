@@ -1217,3 +1217,4 @@ WindowsErrorMessage(DWORD errorId)
     return result;
 }
 #endif // _SQUID_WINDOWS_ || _SQUID_MINGW_
+
