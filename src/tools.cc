@@ -765,6 +765,8 @@ setMaxFD(void)
     struct rlimit rl;
 #endif
 
+    bool checkLimits = true;
+
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_NOFILE: " << xstrerr(xerrno));
@@ -788,6 +790,10 @@ setMaxFD(void)
                 xerrno = errno;
                 debugs(50, DBG_CRITICAL, "ERROR: setrlimit: RLIMIT_NOFILE: " << xstrerr(xerrno));
             }
+            // else: getrlimit() will still return two OS-originated rl.rlim_max limits that must be checked
+        } else {
+            // getrlimit() will now return admin-configured numbers, not OS-provided ones
+            checkLimits = false;
         }
     }
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
@@ -802,11 +808,10 @@ setMaxFD(void)
         // than this cap must set max_filedescriptors accordingly.
         const auto defaultCapForMaximumNumberOfFiles = rlim_t(100*1024); // ~42 MB fd_table
 
-        // No cap if max_filedescriptors was set because, in that case, the
-        // limits are not coming from the OS -- we call setrlimit() above.
-        // XXX: But that call may fail!
-        if (Config.max_filedescriptors <= 0 &&
-            rl.rlim_cur > defaultCapForMaximumNumberOfFiles) {
+        // No cap if setrlimit() changed the limits to match max_filedescriptors
+        // because, in that case, rl.rlim_cur is effectively set by the Squid
+        // admin (rather than reflecting OS configuration that we do not trust).
+        if (checkLimits && rl.rlim_cur > defaultCapForMaximumNumberOfFiles) {
             debugs(50, DBG_IMPORTANT, "WARNING: OS-provided soft limit (" << rl.rlim_cur << " RLIMIT_NOFILE) " <<
                    "is too big to use for calculating the maximum number of descriptors Squid may use; " <<
                    "setting that maximum to " << defaultCapForMaximumNumberOfFiles);
