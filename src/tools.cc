@@ -794,17 +794,22 @@ setMaxFD(void)
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "ERROR: getrlimit: RLIMIT_NOFILE: " << xstrerr(xerrno));
     } else {
-        // Squid allocates several arrays proportional to Squid_MaxFD before
-        // it can serve requests. Do not let an unexpectedly large inherited
-        // ulimit trigger multi-gigabyte allocations (e.g. Kubernetes may
-        // provide a billion-descriptor soft limit). This guard runs before
-        // fde::Init() and Comm callback tables allocate descriptor storage.
+        // An OS may supply us with huge RLIMIT_NOFILE limits (e.g., the soft
+        // limit may exceed one billion on Kubernets). We cap these OS-provided
+        // limits to protect deployments from accidentally or unknowingly
+        // allocating huge FD-indexed structures (e.g., ~432 GB fd_table on
+        // Kubernetes). Special deployments that really need more descriptors
+        // than this cap must set max_filedescriptors accordingly.
+        const auto defaultCapForMaximumNumberOfFiles = rlim_t(100*1024); // ~42 MB fd_table
+
+        // No cap if max_filedescriptors was set because, in that case, the
+        // limits are not coming from the OS -- we call setrlimit() above.
         if (Config.max_filedescriptors <= 0 &&
-            rl.rlim_cur > static_cast<rlim_t>(SQUID_MAXFD)) {
-            debugs(50, DBG_IMPORTANT, "WARNING: inherited RLIMIT_NOFILE (" <<
-                   rl.rlim_cur << ") exceeds Squid's compiled descriptor limit (" <<
-                   SQUID_MAXFD << "); limiting to " << SQUID_MAXFD);
-            rl.rlim_cur = SQUID_MAXFD;
+            rl.rlim_cur > defaultCapForMaximumNumberOfFiles) {
+            debugs(50, DBG_IMPORTANT, "WARNING: OS-provided soft limit (" << rl.rlim_cur << " RLIMIT_NOFILE) " <<
+                   "is too big to use for calculating the maximum number of descriptors Squid may use; " <<
+                   "setting that maximum to " << defaultCapForMaximumNumberOfFiles);
+            rl.rlim_cur = defaultCapForMaximumNumberOfFiles;
         }
         Squid_MaxFD = rl.rlim_cur;
     }
