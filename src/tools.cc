@@ -765,7 +765,7 @@ setMaxFD(void)
     struct rlimit rl;
 #endif
 
-    bool checkLimits = true;
+    auto checkLimits = true;
 
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
         int xerrno = errno;
