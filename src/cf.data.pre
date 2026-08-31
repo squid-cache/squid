@@ -10695,9 +10695,8 @@ DOC_START
 	states, especially in high-performance deployments that require a large
 	number of descriptors.
 
-	By default, Squid fails to start if `setrlimit(2)` is supported but fails to
-	set a soft limit to the value guessed at `./configure` time (e.g., see
-	`--with-filedescriptors`).
+	Squid fails to start if `setrlimit(2)` is supported but fails to set a soft
+	limit to the configured or guessed value.
 
 	Note: Changing this requires a restart of Squid. Also
 	not all I/O types supports large values (eg on Windows).
