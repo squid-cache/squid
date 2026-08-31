@@ -10681,14 +10681,32 @@ DOC_END
 NAME: max_filedescriptors max_filedesc
 TYPE: int
 DEFAULT: 0
-DEFAULT_DOC: Use operating system soft limit set by ulimit.
+DEFAULT_DOC: Guess a reasonable value (e.g., use soft limit set by ulimit).
 LOC: Config.max_filedescriptors
 DOC_START
-	Set the maximum number of filedescriptors, either below the
-	operating system default or up to the hard limit.
+	Sets the maximum number of file descriptors, up to the hard OS limit (where
+	supported).
 
-	Remove from squid.conf to inherit the current ulimit soft
-	limit setting.
+	Currently, the explicitly configured value is ignored when `setrlimit(2)` or
+	`RLIMIT_NOFILE` support was not detected at `./configure` time. A level-1
+	"WARNING" message is written to cache.log in such cases, but future Squid
+	versions will fail to start instead.
+
+	Currently, if `setrlimit(2)` fails to set the soft and hard limits to the
+	configured value, a level-0 "ERROR" message is written to cache.log, and
+	Squid attempts to raise the soft limit to match the hard limit instead. The
+	resulting soft limit (raised or not) is then used instead of the configured
+	value. Future Squid versions will fail to start in such cases.
+
+	By default, Squid tries to guess a reasonable value (e.g., the current
+	operating system soft limit set by `ulimit -n` or equivalent). The details
+	of the guessing algorithm may change. Use this directive to avoid exposure
+	to those changes and unwanted dependencies on build and runtime environment
+	states, especially in high-performance deployments that require a large
+	number of descriptors.
+
+	Squid fails to start if `setrlimit(2)` is supported but fails to set a soft
+	limit to the configured or guessed value.
 
 	Note: Changing this requires a restart of Squid. Also
 	not all I/O types supports large values (eg on Windows).
