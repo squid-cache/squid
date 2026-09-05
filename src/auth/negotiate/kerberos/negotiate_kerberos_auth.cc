@@ -658,7 +658,7 @@ main(int argc, char *const argv[])
 
         struct base64_decode_ctx ctx;
         base64_decode_init(&ctx);
-        size_t dstLen = 0;
+        size_t dstLen = sizeof(input_token.value);
         if (!base64_decode_update(&ctx, &dstLen, static_cast<uint8_t*>(input_token.value), srcLen, b64Token) ||
                 !base64_decode_final(&ctx)) {
             debug((char *) "%s| %s: ERROR: Invalid base64 token [%s]\n", LogTime(), PROGRAM, b64Token);

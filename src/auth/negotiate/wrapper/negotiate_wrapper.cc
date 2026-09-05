@@ -189,7 +189,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
 
         struct base64_decode_ctx ctx;
         base64_decode_init(&ctx);
-        size_t dstLen = 0;
+        size_t dstLen = sizeof(token);
         if (!base64_decode_update(&ctx, &dstLen, token, strlen(buf+3), buf+3) ||
                 !base64_decode_final(&ctx)) {
             if (debug_enabled)
