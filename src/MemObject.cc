@@ -73,7 +73,7 @@ MemObject::hasUris() const
 }
 
 void
-MemObject::setUris(char const *aStoreId, char const *aLogUri, const HttpRequestMethod &aMethod)
+MemObject::setUris(char const *aStoreId, char const *aLogUri, const Http::RequestMethod &aMethod)
 {
     if (hasUris())
         return;
