@@ -327,14 +327,14 @@ prepareLogWithRequestDetails(HttpRequest *request, const AccessLogEntryPointer &
     if (Config.onoff.log_mime_hdrs) {
         MemBuf mb;
         mb.init();
-        request->header.packInto(&mb);
+        request->header.packInto(&mb, MaskSensitiveInfo::off);
         //This is the request after adaptation or redirection
         aLogEntry->headers.adapted_request = xstrdup(mb.buf);
 
         // the virgin request is saved to aLogEntry->request
         if (aLogEntry->request) {
             mb.reset();
-            aLogEntry->request->header.packInto(&mb);
+            aLogEntry->request->header.packInto(&mb, MaskSensitiveInfo::off);
             aLogEntry->headers.request = xstrdup(mb.buf);
         }
 
@@ -342,7 +342,7 @@ prepareLogWithRequestDetails(HttpRequest *request, const AccessLogEntryPointer &
         const Adaptation::History::Pointer ah = request->adaptLogHistory();
         if (ah != nullptr) {
             mb.reset();
-            ah->lastMeta.packInto(&mb);
+            ah->lastMeta.packInto(&mb, MaskSensitiveInfo::off);
             aLogEntry->adapt.last_meta = xstrdup(mb.buf);
         }
 #endif
@@ -724,7 +724,7 @@ clientPackRangeHdr(const HttpReplyPointer &rep, const HttpHdrRangeSpec * spec, S
 
     httpHeaderAddContRange(&hdr, *spec, rep->content_length);
 
-    hdr.packInto(mb);
+    hdr.packInto(mb, MaskSensitiveInfo::off);
     hdr.clean();
 
     /* append <crlf> (we packed a header, not a reply) */
