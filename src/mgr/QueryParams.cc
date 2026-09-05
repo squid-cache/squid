@@ -98,7 +98,7 @@ ParseParamValue(const SBuf &rawValue)
     if (tok.atEnd())
         return new Mgr::IntParam(array);
     else
-        return new Mgr::StringParam(SBufToString(rawValue));
+        return new Mgr::StringParam(rawValue);
 }
 
 /**
