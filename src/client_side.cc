@@ -1267,6 +1267,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
         inBuf = hp->remaining();
 
         if (hp->needsMoreData()) {
+            Assure(!parsedOk);
             debugs(33, 5, "Incomplete request, waiting for end of request line");
             return nullptr;
         }
@@ -2020,18 +2021,24 @@ ConnStateData::handleChunkedRequestBody()
             return ERR_TOO_BIG;
 
         if (parsed) {
+            Assure(!bodyParser->needsMoreData());
             finishDechunkingRequest(true);
             Must(!bodyPipe);
             return ERR_NONE; // nil bodyPipe implies body end for the caller
         }
 
+        // we have not finished parsing yet
+        Assure(bodyParser->needsMoreData());
         // if chunk parser needs data, then the body pipe must need it too
-        Must(!bodyParser->needsMoreData() || bodyPipe->mayNeedMoreData());
+        // because we currently stopProducingFor() after parsing the trailer (if
+        // any) rather than immediately after parsing the encoded body bytes
+        Assure(bodyPipe->mayNeedMoreData());
 
         // if parser needs more space and we can consume nothing, we will stall
         Must(!bodyParser->needsMoreSpace() || bodyPipe->buf().hasContent());
     } catch (...) { // TODO: be more specific
-        debugs(33, 3, "malformed chunks" << bodyPipe->status());
+        debugs(33, 3, "parsing failure: " << CurrentException <<
+               Debug::Extra << "bodyPipe:" << bodyPipe->status());
         return ERR_INVALID_REQ;
     }
 
@@ -2067,7 +2074,10 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
         comm_reset_close(clientConnection);
     }
 #else
-    debugs(33, 3, "aborting chunked request without error " << error);
+    debugs(33, 3, "aborting chunked request without sending an error response: " << errorTypeName(error));
+    // TODO: Refactor handleChunkedRequestBody() to return an Error with a more specific detail instead.
+    static const auto d = MakeNamedErrorDetail("BAD_CHUNKED_REQUEST_BODY");
+    updateError(error, d);
     comm_reset_close(clientConnection);
 #endif
     flags.readMore = false;

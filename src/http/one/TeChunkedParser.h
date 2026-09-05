@@ -75,6 +75,7 @@ private:
     void parseOneChunkExtension(Tokenizer &);
     bool parseChunkBody(Tokenizer &tok);
     bool parseChunkEnd(Tokenizer &tok);
+    bool parseTrailerSection();
 
     MemBuf *theOut;
     uint64_t theChunkSize;
