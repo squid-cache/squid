@@ -1102,7 +1102,7 @@ DOC_END
 NAME: acl
 TYPE: acl
 LOC: Config.namedAcls
-IF USE_OPENSSL
+IF HAVE_LIBOPENSSL
 DEFAULT: ssl::certHasExpired ssl_error X509_V_ERR_CERT_HAS_EXPIRED
 DEFAULT: ssl::certNotYetValid ssl_error X509_V_ERR_CERT_NOT_YET_VALID
 DEFAULT: ssl::certDomainMismatch ssl_error SQUID_X509_V_ERR_DOMAIN_MISMATCH
@@ -1561,14 +1561,14 @@ ENDIF
 	  # match against the current request processing step [fast]
 	  # Valid steps are:
 	  #   GeneratingCONNECT: Generating HTTP CONNECT request headers
-IF USE_OPENSSL
+IF HAVE_LIBOPENSSL
 	  # The following ssl_bump processing steps are recognized:
 	  #   SslBump1: After getting TCP-level and HTTP CONNECT info.
 	  #   SslBump2: After getting SSL Client Hello info.
 	  #   SslBump3: After getting SSL Server Hello info.
 ENDIF
 
-IF USE_OPENSSL
+IF HAVE_LIBOPENSSL
 	acl aclname ssl_error errorname
 	  # match against SSL certificate validation error [fast]
 	  #
@@ -2572,7 +2572,7 @@ CONFIG_END
 DOC_END
 
 NAME: https_port
-IFDEF: HAVE_LIBGNUTLS||USE_OPENSSL
+IFDEF: HAVE_LIBGNUTLS||HAVE_LIBOPENSSL
 TYPE: PortCfg
 DEFAULT: none
 LOC: HttpPortList
@@ -3034,7 +3034,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: tls_outgoing_options
-IFDEF: HAVE_LIBGNUTLS||USE_OPENSSL
+IFDEF: HAVE_LIBGNUTLS||HAVE_LIBOPENSSL
 TYPE: securePeerOptions
 DEFAULT: min-version=1.0
 LOC: Security::ProxyOutgoingConfig()
@@ -3129,7 +3129,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: ssl_unclean_shutdown
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 TYPE: onoff
 DEFAULT: off
 LOC: Config.SSL.unclean_shutdown
@@ -3139,7 +3139,7 @@ DOC_START
 DOC_END
 
 NAME: ssl_engine
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 TYPE: string
 LOC: Config.SSL.ssl_engine
 DEFAULT: none
@@ -3151,7 +3151,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_session_ttl
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 DEFAULT: 300
 LOC: Config.SSL.session_ttl
 TYPE: int
@@ -3160,7 +3160,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_session_cache_size
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 DEFAULT: 2 MB
 LOC: Config.SSL.sessionCacheSize
 TYPE: b_size_t
@@ -3169,7 +3169,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_foreign_intermediate_certs
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 DEFAULT: none
 LOC: Config.ssl_client.foreignIntermediateCertsPath
 TYPE: string
@@ -3189,7 +3189,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_cert_sign_hash
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 DEFAULT: none
 LOC: Config.SSL.certSignHash
 TYPE: string
@@ -3207,7 +3207,7 @@ DOC_START
 DOC_END
 
 NAME: ssl_bump
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 TYPE: sslproxy_ssl_bump
 LOC: Config.accessList.ssl_bump
 DEFAULT_DOC: Become a TCP tunnel without decrypting proxied traffic.
@@ -3295,7 +3295,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_cert_error
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 DEFAULT: none
 DEFAULT_DOC: Server certificate errors terminate the transaction.
 LOC: Config.ssl_client.cert_error
@@ -3330,7 +3330,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_cert_sign
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 DEFAULT: none
 POSTSCRIPTUM: signUntrusted ssl::certUntrusted
 POSTSCRIPTUM: signSelf ssl::certSelfSigned
@@ -3376,7 +3376,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_cert_adapt
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 DEFAULT: none
 TYPE: sslproxy_cert_adapt
 LOC: Config.ssl_client.cert_adapt
@@ -3419,7 +3419,7 @@ DOC_START
 DOC_END
 
 NAME: sslpassword_program
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 DEFAULT: none
 LOC: Config.Program.ssl_password
 TYPE: string
@@ -3503,7 +3503,7 @@ DOC_END
 
 NAME: sslcrtvalidator_program
 TYPE: eol
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 DEFAULT: none
 LOC: Ssl::TheConfig.ssl_crt_validator
 DOC_START
@@ -3534,7 +3534,7 @@ DOC_END
 
 NAME: sslcrtvalidator_children
 TYPE: HelperChildConfig
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 DEFAULT: 32 startup=5 idle=1 concurrency=1
 LOC: Ssl::TheConfig.ssl_crt_validator_Children
 DOC_START
@@ -5657,7 +5657,7 @@ NAME: tls_key_log
 TYPE: Security::KeyLog*
 DEFAULT: none
 LOC: Config.Log.tlsKeys
-IFDEF: USE_OPENSSL
+IFDEF: HAVE_LIBOPENSSL
 DOC_START
 	Configures whether and where Squid records pre-master secret and
 	related encryption details for TLS connections accepted or established

@@ -12,7 +12,7 @@
 #include "comm.h"
 #include "fatal.h"
 #include "security/PeerOptions.h"
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/support.h"
 #endif
 

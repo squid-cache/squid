@@ -1337,7 +1337,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     // XXX: This reply (and other ALE members!) may have been needed earlier.
     al.reply = adapted_reply_;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (h->ssluser.size())
         al.cache.ssluser = h->ssluser.termedBuf();
 #endif

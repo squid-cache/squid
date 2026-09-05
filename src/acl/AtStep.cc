@@ -12,7 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "client_side.h"
 #include "http/Stream.h"
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/ServerBump.h"
 #endif
 
@@ -21,7 +21,7 @@ Acl::AtStepCheck::match(ACLChecklist * const ch)
 {
     const auto checklist = Filled(ch);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     // We use step1 for all these very different cases:
     // - The transaction is not subject to ssl_bump rules (if any).
     // - No ssl_bump action has matched yet.
@@ -37,7 +37,7 @@ Acl::AtStepCheck::match(ACLChecklist * const ch)
 
     if (data->match(currentSslBumpStep))
         return 1;
-#endif // USE_OPENSSL
+#endif // HAVE_LIBOPENSSL
 
     if (data->match(XactionStep::generatingConnect)) {
         if (!checklist->request)

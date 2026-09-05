@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_SSL_HELPER_H
 #define SQUID_SRC_SSL_HELPER_H
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 
 #include "base/AsyncJobCalls.h"
 #include "base/ClpMap.h"
@@ -61,6 +61,6 @@ public:
 
 } //namespace Ssl
 
-#endif /* USE_OPENSSL */
+#endif /* HAVE_LIBOPENSSL */
 #endif /* SQUID_SRC_SSL_HELPER_H */
 
