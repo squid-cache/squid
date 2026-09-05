@@ -43,8 +43,8 @@ typedef enum {
 
     /* client TCP connection local end details */
     LFT_CLIENT_LOCAL_IP,
+    LFT_CLIENT_LOCAL_FQDN,
     LFT_CLIENT_LOCAL_PORT,
-    /*LFT_CLIENT_LOCAL_FQDN, (rDNS) */
     LFT_CLIENT_LOCAL_TOS,
     LFT_CLIENT_LOCAL_NFMARK,
 
@@ -64,6 +64,7 @@ typedef enum {
 
     /* server TCP connection local end details */
     LFT_SERVER_LOCAL_IP,
+    LFT_SERVER_LOCAL_FQDN,
     LFT_SERVER_LOCAL_IP_OLD_27,
     LFT_SERVER_LOCAL_PORT,
     LFT_SERVER_LOCAL_TOS,
