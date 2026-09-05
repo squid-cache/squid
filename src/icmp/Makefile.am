@@ -51,7 +51,6 @@ pinger_SOURCES = \
 	IcmpPinger.h \
 	pinger.cc
 nodist_pinger_SOURCES = $(COPIED_SOURCE)
-pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
 	libicmpcore.la \
 	$(top_builddir)/src/ip/libip.la \
