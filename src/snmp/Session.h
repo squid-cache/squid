@@ -12,8 +12,11 @@
 #define SQUID_SRC_SNMP_SESSION_H
 
 #include "ipc/forward.h"
-#include "snmp.h"
-#include "snmp_session.h"
+#include "compat/netsnmp.h"
+
+#if HAVE_NET_SNMP_SESSION_API_H
+#include <net-snmp/session_api.h>
+#endif
 
 namespace Snmp
 {

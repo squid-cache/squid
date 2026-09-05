@@ -12,12 +12,10 @@
 #define SQUID_SRC_CLIENT_DB_H
 
 #include "anyp/ProtocolType.h"
+#include "cache_snmp.h"
+#include "compat/netsnmp.h"
 #include "ip/Address.h"
 #include "LogTags.h"
-#if SQUID_SNMP
-#include "cache_snmp.h"
-#include "snmp_vars.h"
-#endif
 
 namespace Ip
 {
