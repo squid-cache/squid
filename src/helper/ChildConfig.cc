@@ -7,13 +7,17 @@
  */
 
 #include "squid.h"
+#include "base/CharacterSet.h"
+#include "base/PackableStream.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "globals.h"
 #include "helper/ChildConfig.h"
 #include "Parsing.h"
-#include "sbuf/SBuf.h"
+#include "parser/Tokenizer.h"
+#include "sbuf/List.h"
+#include "Store.h"
 
 #include <cstring>
 
@@ -72,7 +76,7 @@ Helper::ChildConfig::needNew() const
 void
 Helper::ChildConfig::parseConfig()
 {
-    char const *token = ConfigParser::NextToken();
+    char *token = ConfigParser::NextToken();
 
     if (!token) {
         self_destruct();
@@ -89,22 +93,23 @@ Helper::ChildConfig::parseConfig()
     }
 
     /* Parse extension options */
-    for (; (token = ConfigParser::NextToken()) ;) {
-        if (strncmp(token, "startup=", 8) == 0) {
-            n_startup = xatoui(token + 8);
-        } else if (strncmp(token, "idle=", 5) == 0) {
-            n_idle = xatoui(token + 5);
+    char *value;
+    while (ConfigParser::NextKvPair(token, value)) {
+        if (strncmp(token, "startup", 7) == 0) {
+            n_startup = xatoui(value);
+        } else if (strncmp(token, "idle", 4) == 0) {
+            n_idle = xatoui(value);
             if (n_idle < 1) {
                 debugs(0, DBG_CRITICAL, "WARNING: OVERRIDE: Using idle=0 for helpers causes request failures. Overriding to use idle=1 instead.");
                 n_idle = 1;
             }
-        } else if (strncmp(token, "concurrency=", 12) == 0) {
-            concurrency = xatoui(token + 12);
-        } else if (strncmp(token, "queue-size=", 11) == 0) {
-            queue_size = xatoui(token + 11);
+        } else if (strncmp(token, "concurrency", 11) == 0) {
+            concurrency = xatoui(value);
+        } else if (strncmp(token, "queue-size", 10) == 0) {
+            queue_size = xatoui(value);
             defaultQueueSize = false;
-        } else if (strncmp(token, "on-persistent-overload=", 23) == 0) {
-            const SBuf action(token + 23);
+        } else if (strncmp(token, "on-persistent-overload", 22) == 0) {
+            const SBuf action(value);
             if (action.cmp("ERR") == 0)
                 onPersistentOverload = actErr;
             else if (action.cmp("die") == 0)
@@ -114,8 +119,10 @@ Helper::ChildConfig::parseConfig()
                 self_destruct();
                 return;
             }
-        } else if (strncmp(token, "reservation-timeout=", 20) == 0)
-            reservationTimeout = xatoui(token + 20);
+        } else if (strncmp(token, "reservation-timeout", 19) == 0)
+            reservationTimeout = xatoui(value);
+        else if (strncmp(token, "connection-notes", 16) == 0)
+            parseNotesList(SBuf(value));
         else {
             debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Undefined option: " << token << ".");
             self_destruct();
@@ -139,3 +146,56 @@ Helper::ChildConfig::parseConfig()
         queue_size = 2 * n_max;
 }
 
+/// parses comma-separated list of key names to be
+/// treated like clt_conn_tag
+void
+Helper::ChildConfig::parseNotesList(const SBuf &buf)
+{
+    ::Parser::Tokenizer tok(buf);
+
+    static const CharacterSet delims("comma", ",");
+    SBuf item;
+    while (tok.token(item, delims)) {
+        static const SBuf wsp(" ");
+        item.trim(wsp);
+        if (!item.isEmpty())
+            clientConnectionTags.emplace_back(item);
+    }
+}
+
+void
+Helper::ChildConfig::printConfig(StoreEntry *e, const char *directive)
+{
+    PackableStream os(*e);
+    os << "\n" << directive << " " << n_max;
+
+    if (n_startup != 0)
+        os << " startup=" << n_startup;
+
+    if (n_idle != 0)
+        os << " idle=" << n_idle;
+
+    if (concurrency != 0)
+        os << " concurrency=" << concurrency;
+
+    if (!defaultQueueSize)
+        os << " queue-size=" << queue_size;
+
+    switch (onPersistentOverload) {
+        case actErr:
+            os << " on-persistent-overload=ERR";
+            break;
+        case actDie: // defaults not printed
+            break;
+    }
+
+    if (reservationTimeout != 64)
+        os << " reservation-timeout=" << reservationTimeout;
+
+    static const SBuf comma(",");
+    auto cnotes = JoinContainerToSBuf(clientConnectionTags.begin(), clientConnectionTags.end(), comma);
+    if (cnotes.cmp("clt_conn_tags") != 0)
+        os << " connection-notes=\"" << cnotes << '"';
+
+    os << "\n";
+}
