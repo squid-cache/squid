@@ -4672,7 +4672,7 @@ NAME: logformat
 TYPE: logformat
 LOC: Log::TheConfig
 DEFAULT: none
-DEFAULT_DOC: The format definitions squid, common, combined, referrer, useragent are built in.
+DEFAULT_DOC: The format definitions squid, common, combined, referrer, useragent, cef are built in.
 DOC_START
 	Usage:
 
@@ -5038,6 +5038,14 @@ DOC_START
 			sent by Squid as a part of a master transaction do not increment
 			the counter logged for the received request.
 
+	Squid runtime format codes:
+
+		squid::hostname	The visible hostname of this Squid instance.
+				Returns visible_hostname when configured, otherwise the
+				hostname determined at startup.
+
+		squid::version	The Squid software version string (e.g., 8.0.0-VCS).
+
 	SSL-related format codes:
 
 		ssl::bump_mode	SslBump decision for the transaction:
@@ -5238,6 +5246,64 @@ logformat common     %>a - %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
 logformat combined   %>a - %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
 logformat referrer   %ts.%03tu %>a %{Referer}>h %ru
 logformat useragent  %>a [%tl] "%{User-Agent}>h"
+
+	The "cef" format produces Common Event Format (CEF) lines
+	for SIEM ingestion. It is emitted by Squid directly so that
+	CEF-reserved bytes ('|' and '\\' in the header, '=' / CR / LF in
+	extensions) are escaped per the spec, and so that values not
+	otherwise exposed to logformat (notably the derived severity) can
+	be included.
+
+	Reference: https://docs.microfocus.com/doc/2097/26.1/siemcefimplementationstandard
+
+		Header:	CEF:0|Squid|Squid Cache|<version>|<Squid-cache-code>|
+			Proxy Request|<severity>|
+		Severity reflects what Squid did with the transaction
+		(LogTags and error category) rather than the upstream
+		HTTP status:
+		  1  routine activity: cache hit (TCP_HIT and similar),
+		     forwarded traffic / cache miss (TCP_MISS, TCP_TUNNEL,
+		     refresh, ICP query, ...), TCP_REDIRECT, or TCP_DENIED
+		     with a 401/407 auth challenge
+		  3  TCP_DENIED policy block (e.g. 403), UDP_DENIED, or a
+		     Squid access/invalid-request error
+		  4  operational issue: connection/DNS/timeout failure,
+		     ICAP failure, swap failure, UDP_INVALID, or a 5xx with
+		     no other classification
+		Falls back to HTTP code only when no Squid signal is set
+		(>=500 -> 4, >=400 -> 3, otherwise 0).
+
+		Extension fields (omitted when empty):
+		  rt          receipt time (ms since epoch)
+		  start, end  activity start/end time (ms since epoch)
+		  src, spt    client IP and port
+		  dvc, dvchost  Squid local IP and visible_hostname
+		  dst, dpt    next-hop server IP and port
+		  dhost       request URL host
+		  proto       transport (TCP for HTTP/HTTPS, UDP for ICP/HTCP)
+		  app         URL scheme with HTTP version when known
+		              (e.g., "https/1.1")
+		  suser       authenticated or external-ACL user
+		  requestMethod, request, requestClientApplication
+		              method, URL, User-Agent
+		  in, out     client-request and client-reply byte totals
+		  act         Squid cache code (TCP_HIT, TCP_DENIED, ...)
+		  outcome     "success" (HTTP <400) or "failure"
+		  cn1/cn1Label  response time, ms ("ResponseTime")
+		  cn2/cn2Label  HTTP response status code ("HttpStatus")
+		  cs1/cs1Label  Referer header ("Referer")
+		  cs2/cs2Label  hierarchy code ("Hierarchy")
+		  fileType    response Content-Type
+		  reason      Squid err_type (when the transaction errored)
+
+		If the built-in "cef" format does not fit your SIEM schema,
+		you can build a CEF-shaped line yourself with logformat. The
+		example below is a minimal starting point; extend it as
+		needed. Note that pipe ('|') and backslash ('\\') in header
+		fields, and '=' in extension values, must be escaped per the
+		CEF spec - the built-in "cef" format does this for you.
+
+		logformat cef-min CEF:0|Squid|Squid Cache|%squid::version|%Ss|Proxy Request|1|rt=%ts%03tu src=%>a spt=%>p dst=%<a dpt=%<p dhost=%>rd app=%>rs/%>rv suser=%[un requestMethod=%rm request=%ru in=%>st out=%<st act=%Ss cn2=%>Hs cn2Label=HttpStatus dvchost=%squid::hostname
 
 	NOTE: When the log_mime_hdrs directive is set to ON.
 		The squid, common and combined formats have a safely encoded copy

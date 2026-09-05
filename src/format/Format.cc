@@ -1029,6 +1029,14 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             doint = 1;
             break;
 
+        case LFT_SQUID_HOSTNAME:
+            out = getMyHostname();
+            break;
+
+        case LFT_SQUID_VERSION:
+            out = VERSION;
+            break;
+
         case LFT_MIME_TYPE:
             out = al->http.content_type;
             break;
