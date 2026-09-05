@@ -45,6 +45,7 @@ public:
 
     /// calculate the size of mask required to digest up to
     /// a specified capacity and bitsize.
+    /// \returns 0 when inputs would overflow (invalid).
     static uint32_t CalcMaskSize(uint64_t cap, uint8_t bpe);
 
 private:
