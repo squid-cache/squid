@@ -148,6 +148,9 @@ HttpRequestMethod::isHttpSafe() const
     // RFC 9113 section 3.4
     case Http::METHOD_PRI:
 
+    // draft-ietf-httpbis-safe-method-w-body
+    case Http::METHOD_QUERY:
+
         return true;
 
     default:
@@ -196,6 +199,9 @@ HttpRequestMethod::isIdempotent() const
 
     // RFC 7540 section 11.6
     case Http::METHOD_PRI:
+
+    // draft-ietf-httpbis-safe-method-w-body
+    case Http::METHOD_QUERY:
 
         return true;
 
@@ -250,6 +256,11 @@ HttpRequestMethod::respMaybeCacheable() const
         // However, Squid may not implement the required revalidation checks yet
         return ??;
 #endif
+
+    // draft-ietf-httpbis-safe-method-w-body
+    case Http::METHOD_QUERY:
+        // TODO: To cache, add request content to our cache key (see Draft section 2.4).
+        return false;
 
     // Special Squid method tokens are not cacheable.
     // RFC 2616 defines all unregistered or unspecified methods as non-cacheable
@@ -307,6 +318,12 @@ HttpRequestMethod::purgesOthers() const
     case Http::METHOD_LOCK:
     case Http::METHOD_UNLOCK:
     case Http::METHOD_SEARCH:
+        return false;
+
+    // draft-ietf-httpbis-safe-method-w-body section 2:
+    //  The content returned in response to a QUERY cannot be assumed to be
+    //  a representation of the resource identified by the target URI.
+    case Http::METHOD_QUERY:
         return false;
 
     default:
