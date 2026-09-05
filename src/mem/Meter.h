@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_MEM_METER_H
 #define SQUID_SRC_MEM_METER_H
 
-#include "time/gadgets.h"
+#include <chrono>
 
 namespace Mem
 {
@@ -20,12 +20,14 @@ namespace Mem
 class Meter
 {
 public:
+    using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
+
     /// flush the meter level back to 0, but leave peak records
     void flush() {level=0;}
 
     ssize_t currentLevel() const {return level;}
     ssize_t peak() const {return hwater_level;}
-    time_t peakTime() const {return hwater_stamp;}
+    const Timestamp &peakTime() const {return hwater_stamp;}
 
     Meter &operator ++() {++level; checkHighWater(); return *this;}
     Meter &operator --() {--level; return *this;}
@@ -39,13 +41,13 @@ private:
     void checkHighWater() {
         if (hwater_level < level) {
             hwater_level = level;
-            hwater_stamp = squid_curtime ? squid_curtime : time(nullptr);
+            hwater_stamp = std::chrono::system_clock::now();
         }
     }
 
     ssize_t level = 0; ///< current level (count or volume)
     ssize_t hwater_level = 0; ///< high water mark
-    time_t hwater_stamp = 0; ///< timestamp of last high water mark change
+    Timestamp hwater_stamp; ///< timestamp of last high water mark change
 };
 
 /**
