@@ -4512,20 +4512,19 @@ static void parse_HeaderWithAclList(HeaderWithAclList **headers)
     if (hwa.fieldId == Http::HdrType::BAD_HDR)
         hwa.fieldId = Http::HdrType::OTHER;
 
-    Format::Format *nlf =  new ::Format::Format("hdrWithAcl");
     ConfigParser::EnableMacros();
-    String buf = ConfigParser::NextQuotedToken();
+    const auto fieldValue = ConfigParser::NextQuotedToken();
     ConfigParser::DisableMacros();
-    hwa.fieldValue = buf.termedBuf();
+    if (!fieldValue)
+        throw TextException("missing a required field-value parameter", Here());
+    hwa.fieldValue = fieldValue;
     hwa.quoted = ConfigParser::LastTokenWasQuoted();
     if (hwa.quoted) {
-        if (!nlf->parse(hwa.fieldValue.c_str())) {
-            self_destruct();
-            return;
-        }
-        hwa.valueFormat = nlf;
-    } else
-        delete nlf;
+        // XXX: We leak memory when parse() throws due to a parsing failure.
+        hwa.valueFormat = new ::Format::Format("hdrWithAcl");
+        const auto parsed = hwa.valueFormat->parse(hwa.fieldValue.c_str());
+        Assure(parsed); // parse() never returns false for a freshly created hwa.valueFormat
+    }
     aclParseAclList(LegacyParser, &hwa.aclList, (hwa.fieldName + ':' + hwa.fieldValue).c_str());
     (*headers)->push_back(hwa);
 }
