@@ -368,6 +368,7 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     const auto sock = rawSock;
     fd_open(sock, FD_SOCKET, "HTTP Request");
     details->fd = sock;
+    details->transport = conn->transport;
     details->enterOrphanage();
 
     Assure(remoteAddressSize <= socklen_t(sizeof(remoteAddress)));
