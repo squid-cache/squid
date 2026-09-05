@@ -25,6 +25,8 @@ typedef std::vector<Auth::SchemeConfig *> ConfigVector;
 
 class UserRequest;
 
+using Ttl = int32_t;
+
 } // namespace Auth
 
 #endif /* USE_AUTH */
