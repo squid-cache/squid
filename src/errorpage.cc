@@ -102,16 +102,6 @@ private:
 
 namespace ErrorPage {
 
-/// state and parameters shared by several ErrorState::compile*() methods
-class Build
-{
-public:
-    SBuf output; ///< compilation result
-    const char *input = nullptr; ///< template bytes that need to be compiled
-    bool building_deny_info_url = false; ///< whether we compile deny_info URI
-    bool allowRecursion = false; ///< whether top-level compile() calls are OK
-};
-
 /// pretty-prints error page/deny_info building error
 class BuildErrorPrinter
 {
@@ -851,7 +841,7 @@ ErrorState::~ErrorState()
 }
 
 int
-ErrorState::Dump(MemBuf * mb)
+ErrorState::Dump(MemBuf * const mb) const
 {
     PackableStream out(*mb);
     const auto &encoding = CharacterSet::RFC3986_UNRESERVED();
@@ -912,7 +902,7 @@ ErrorState::Dump(MemBuf * mb)
 #define CVT_BUF_SZ 512
 
 void
-ErrorState::compileLogformatCode(Build &build)
+ErrorState::compileLogformatCode(Build &build) const
 {
     assert(LogformatMagic.cmp(build.input, LogformatMagic.length()) == 0);
 
@@ -948,7 +938,7 @@ ErrorState::compileLogformatCode(Build &build)
 }
 
 void
-ErrorState::compileLegacyCode(Build &build)
+ErrorState::compileLegacyCode(Build &build) const
 {
     static MemBuf mb;
     const char *p = nullptr;   /* takes priority over mb if set */
@@ -1004,9 +994,7 @@ ErrorState::compileLegacyCode(Build &build)
         if (!build.allowRecursion)
             p = "%D";  // if recursion is not allowed, do not convert
         else if (detail) {
-            auto rawDetail = detail->verbose(request);
-            // XXX: Performance regression. c_str() reallocates
-            const auto compiledDetail = compileBody(rawDetail.c_str(), false);
+            const auto compiledDetail = detail->verbose(*this);
             mb.append(compiledDetail.rawContent(), compiledDetail.length());
             do_quote = 0;
         }
@@ -1245,7 +1233,7 @@ ErrorState::compileLegacyCode(Build &build)
     case 'z':
         if (building_deny_info_url) break;
         if (dnsError)
-            p = dnsError->c_str();
+            mb.append(dnsError->rawContent(), dnsError->length());
         else if (ftp.cwd_msg)
             p = ftp.cwd_msg;
         else
@@ -1407,7 +1395,7 @@ ErrorState::BuildHttpReply()
 }
 
 SBuf
-ErrorState::buildBody()
+ErrorState::buildBody() const
 {
     assert(page_id > ERR_NONE && page_id < error_page_count);
 
@@ -1443,13 +1431,13 @@ ErrorState::buildBody()
 }
 
 SBuf
-ErrorState::compileBody(const char *input, bool allowRecursion)
+ErrorState::compileBody(const char * const input, const bool allowRecursion) const
 {
     return compile(input, false, allowRecursion);
 }
 
 SBuf
-ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRecursion)
+ErrorState::compile(const char * const input, const bool building_deny_info_url, const bool allowRecursion) const
 {
     assert(input);
 
@@ -1458,11 +1446,38 @@ ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRe
     build.allowRecursion = allowRecursion;
     build.input = input;
 
+    compile(build);
+    Assure(!*build.input); // compiled the whole template
+
+    return build.output;
+}
+
+SBuf
+ErrorState::compileDetail(const char * const format, const ErrorPage::PercentCodeCompiler * const secondaryCompiler) const
+{
+    Assure(format);
+
+    Build build;
+    build.input = format;
+    build.secondaryCompiler = secondaryCompiler; // may be nil
+
+    compile(build);
+    Assure(!*build.input); // compiled the whole template
+
+    return build.output;
+}
+
+void
+ErrorState::compile(Build &build) const
+{
+    Assure(build.input);
+
     auto blockStart = build.input;
     while (const auto letter = *build.input) {
         if (letter == '%') {
             build.output.append(blockStart, build.input - blockStart);
-            compileLegacyCode(build);
+            if (!build.secondaryCompiler || !build.secondaryCompiler->compilePercentCode(build))
+                compileLegacyCode(build);
             blockStart = build.input;
         }
         else if (letter == '@' && LogformatMagic.cmp(build.input, LogformatMagic.length()) == 0) {
@@ -1474,7 +1489,6 @@ ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRe
         }
     }
     build.output.append(blockStart, build.input - blockStart);
-    return build.output;
 }
 
 /// react to a compile() error
@@ -1485,7 +1499,7 @@ ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRe
 /// successfully validated and deployed (i.e. the admin may not be
 /// able to fix this newly detected but old problem quickly)
 void
-ErrorState::noteBuildError_(const char *const msg, const char * const errorLocation, const bool forceBypass)
+ErrorState::noteBuildError_(const char * const msg, const char * const errorLocation, const bool forceBypass) const
 {
     using ErrorPage::BuildErrorPrinter;
     const auto runtime = !starting_up;
