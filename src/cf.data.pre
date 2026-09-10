@@ -1514,8 +1514,16 @@ ENDIF
 	  # Matches transaction's initiator [fast]
 	  #
 	  # Supported initiators are:
-	  #  certificate-fetching: matches transactions fetching
-	  #     a missing intermediate TLS certificate
+	  #
+	  #  certificate-fetching: Matches internal transactions fetching a missing
+	  #     intermediate TLS certificate. These transactions have a
+	  #     Squid-generated request for a URL extracted from the Authority
+	  #     Information Access X.509 certificate extension (AIA; RFC 5280).
+	  #     These transactions are not associated with client-to-Squid
+	  #     connections but go through the usual post-parsing request processing
+	  #     steps, including `http_access` controls and `cache_peer` selection.
+	  #     Squid has no built-in AIA-specific access or forwarding rules.
+	  #
 	  #  cache-digest: matches transactions fetching Cache Digests
 	  #     from a cache_peer
 	  #  htcp: matches HTCP requests from peers
@@ -1927,10 +1935,23 @@ LOC: Config.accessList.http
 DEFAULT_IF_NONE: deny all
 DEFAULT_DOC: Deny, unless rules exist in squid.conf.
 DOC_START
-	Allowing or Denying access based on defined access lists
+	Controls HTTP and FTP requests access to this Squid instance.
 
-	To allow or deny a message received on an HTTP, HTTPS, or FTP port:
 	http_access allow|deny [!]aclname ...
+
+	This directive applies to parsed requests received on an `http_port`,
+	`https_port`, or `ftp_port`, fake HTTP CONNECT requests representing
+	intercepted TLS connections (see `ssl_bump` directive, where available), and
+	internally-generated X.509 certificate-fetching requests (look for "AIA" in
+	`transaction_initiator` ACL documentation).
+
+	This directive does not apply to requests received from a REQMOD adaptation
+	service. Use `adapted_http_access` directive to control those requests.
+
+	This directive does not apply to internally-generated Cache Digests and
+	NetDB `cache_peer` requests. Those requests are deemed allowed when enabled
+	by the corresponding `cache_peer` configuration (they are enabled by
+	default; see `no-digest` and `no-netdb-exchange` options).
 
 	NOTE on default values:
 
