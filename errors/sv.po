@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-01-11 19:57+1300\n"
-"PO-Revision-Date: 2026-02-20 07:53+0100\n"
+"PO-Revision-Date: 2026-09-14 00:00+0200\n"
 "Last-Translator: Daniel Nylander <github@danielnylander.se>\n"
 "Language-Team: \n"
 "Language: sv\n"
@@ -126,33 +126,33 @@ msgstr "<a href=\"../\">Överordnad katalog</a> (<a href=\"/\">rotkatalog</a>)"
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
-msgstr "<b>Ogiltig begäran</b> fel uppstod vid försök att bearbeta begäran:"
+msgstr "Felet <b>Ogiltig begäran</b> uppstod vid försök att bearbeta begäran:"
 
 #: templates/ERR_INVALID_RESP%2Bhtml.body.div.p:21-1
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
-msgstr "<b>Ogiltigt svarsfel</b> uppstod vid försök att bearbeta begäran:"
+msgstr "Felet <b>Ogiltigt svar</b> uppstod vid försök att bearbeta begäran:"
 
 #: templates/ERR_READ_TIMEOUT%2Bhtml.body.div.p:29-1
 msgid ""
 "A Timeout occurred while waiting to read data from the network. The network "
 "or server may be down or congested. Please retry your request."
 msgstr ""
-"En tidsgräns överstegs medan du väntade på att läsa data från nätverket. "
-"Nätverket eller servern kan vara nere eller överbelastad. Försök igen."
+"Tidsgränsen överskreds i väntan på data från nätverket. Nätverket eller "
+"servern kan vara nere eller överbelastad. Försök igen."
 
 #: templates/ERR_URN_RESOLVE%2Bhtml.body.div.h2:16-1
 msgid "A URL for the requested URN could not be retrieved"
-msgstr "En URL för begärd URN kunde inte hämtas"
+msgstr "En URL för den begärda URN:en kunde inte hämtas"
 
 #: templates/ERR_GATEWAY_FAILURE%2Bhtml.body.div.p:27-1
 msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
 "request from being completed."
 msgstr ""
-"Ett icke-återhämtningsbart internt fel eller konfigurationsproblem "
-"förhindrar att denna begäran kan slutföras."
+"Ett internt fel som inte kan återhämtas från eller ett konfigurationsproblem"
+" förhindrar att denna begäran kan slutföras."
 
 #: templates/ERR_ACCESS_DENIED%2Bhtml.body.div.blockquote.p:24-1
 msgid "Access Denied."
@@ -164,8 +164,8 @@ msgid ""
 "this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"Konfigurationen av åtkomstkontrollen förhindrar att din begäran tillåts just "
-"nu. Kontakta din tjänsteleverantör om du anser att detta är felaktigt."
+"Inställningarna för åtkomstkontroll tillåter inte din begäran just nu. "
+"Kontakta din tjänsteleverantör om du anser att detta är felaktigt."
 
 #: templates/ERR_CANNOT_FORWARD%2Bhtml.body.div.ul.li:32-1
 msgid "All configured parent caches may be currently unreachable."
@@ -177,7 +177,7 @@ msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Ett FTP-autentiseringsfel inträffade när URL:en försökte hämtas: <a "
+"Ett FTP-autentiseringsfel uppstod vid försök att hämta URL:en: <a "
 "href=\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE%2Bhtml.body.div.p:21-1
@@ -186,8 +186,8 @@ msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Ett FTP-protokollfel uppstod när URL:en försökte hämtas: <a href=\"%U\">%U</"
-"a>"
+"Ett FTP-protokollfel uppstod vid försök att hämta URL:en: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE%2Bhtml.body.div.ul.li.p:34-5
 msgid "An Illegal response was received from the ICAP server."
@@ -198,8 +198,8 @@ msgid ""
 "An Internet connection needed to access this domains origin servers may be "
 "down."
 msgstr ""
-"Internetanslutningen som krävs för att komma åt domänens ursprungliga "
-"servrar kan vara nere."
+"Internetanslutningen som krävs för att nå domänens ursprungsservrar kan vara"
+" nere."
 
 #: templates/ERR_READ_ERROR%2Bhtml.body.div.p:29-1
 msgid ""
@@ -215,23 +215,27 @@ msgstr "Ett fel uppstod vid skrivning till nätverket. Försök igen."
 
 #: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:225
 msgid "Application verification failure"
-msgstr "Fel vid verifiering av applikation"
+msgstr "Applikationens verifiering misslyckades"
 
 #: templates/ERR_PRECONDITION_FAILED%2Bhtml.body.div.blockquote.p:29-5
 msgid ""
 "At least one precondition specified by the HTTP client in the request header "
 "has failed."
 msgstr ""
-"Minst en förutsättning som anges av HTTP-klienten i förfrågningsrubriken har "
-"misslyckats."
+"Minst ett förvillkor som HTTP-klienten angav i begärans huvud är inte "
+"uppfyllt."
 
 #: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:133
 msgid "Authority and issuer serial number mismatch"
-msgstr "Utfärdaren och utfärdarens serienummer stämmer inte överens"
+msgstr ""
+"Utfärdarnamnet eller serienumret i authorityKeyIdentifier stämmer inte "
+"överens med utfärdarcertifikatet"
 
 #: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:129
 msgid "Authority and subject key identifier mismatch"
-msgstr "Utfärdaren och ämnesnyckelidentifierare stämmer inte överens"
+msgstr ""
+"Nyckelidentifierarna authorityKeyIdentifier och subjectKeyIdentifier stämmer"
+" inte överens"
 
 #: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:57
 msgid "CRL has expired"
@@ -243,11 +247,11 @@ msgstr "CRL är ännu inte giltig"
 
 #: templates/error-details.txt+X509_V_ERR_CRL_PATH_VALIDATION_ERROR.descr:221
 msgid "CRL path validation error"
-msgstr "Valideringsfel i CRL-sökväg"
+msgstr "Fel vid validering av certifikatkedjan för CRL-utfärdaren"
 
 #: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:41
 msgid "CRL signature failure"
-msgstr "Fel i CRL-signatur"
+msgstr "Verifieringen av CRL-signaturen misslyckades"
 
 #: templates/ERR_CACHE_ACCESS_DENIED%2Bhtml.body.div.blockquote.p:24-1
 msgctxt "./templates/ERR_CACHE_ACCESS_DENIED+error.p:1-0"
@@ -262,12 +266,12 @@ msgstr "Cacheåtkomst nekad."
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED%2Bhtml.body.div.blockquote.p:24-1
 msgctxt "./templates/ERR_CACHE_MGR_ACCESS_DENIED+error.p:1-0"
 msgid "Cache Manager Access Denied."
-msgstr "Cachehanteraren har nekat åtkomst."
+msgstr "Åtkomst till cachehanteraren nekad."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED%2Bhtml.body.div.h2:16-1
 msgctxt "./templates/ERR_CACHE_MGR_ACCESS_DENIED+titles.h2:2-0"
 msgid "Cache Manager Access Denied."
-msgstr "Cachehanteraren har nekat åtkomst."
+msgstr "Åtkomst till cachehanteraren nekad."
 
 #: templates/ERR_URN_RESOLVE%2Bhtml.body.div.blockquote.p:24-1
 msgid "Cannot Resolve URN"
@@ -299,7 +303,7 @@ msgstr "Certifikatet är inte betrott"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:121
 msgid "Certificate rejected"
-msgstr "Certifikatet avvisat"
+msgstr "Certifikatet har avvisats"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:101
 msgid "Certificate revoked"
@@ -307,11 +311,11 @@ msgstr "Certifikatet är återkallat"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:37
 msgid "Certificate signature failure"
-msgstr "Certifikatets signatur misslyckades"
+msgstr "Verifieringen av certifikatets signatur misslyckades"
 
 #: templates/ERR_LIFETIME_EXP%2Bhtml.body.div.blockquote.p:24-1
 msgid "Connection Lifetime Expired"
-msgstr "Anslutningens livslängd har gått ut"
+msgstr "Anslutningens maximala livslängd har överskridits"
 
 #: templates/ERR_CONNECT_FAIL%2Bhtml.body.div.blockquote.p:24-1
 msgid "Connection to %I failed."
@@ -319,11 +323,11 @@ msgstr "Anslutningen till %I misslyckades."
 
 #: templates/ERR_INVALID_REQ%2Bhtml.body.div.ul.li.p:33-5
 msgid "Content-Length missing for POST or PUT requests."
-msgstr "Content-Length saknas för POST- eller PUT-förfrågningar."
+msgstr "Content-Length saknas för POST- eller PUT-begäranden."
 
 #: templates/error-details.txt+X509_V_ERR_DIFFERENT_CRL_SCOPE.descr:185
 msgid "Different CRL scope"
-msgstr "Olika CRL-omfattning"
+msgstr "CRL:en har en annan omfattning"
 
 #: templates/ERR_DIR_LISTING%2Bhtml.body.div.h4:20-1
 msgid "Directory Content:"
@@ -339,7 +343,7 @@ msgstr "Katalog: %U"
 
 #: templates/ERR_DIR_LISTING%2Bhtml.body.div.h2:15-1
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr "Katalog: <a href=\"%U\">%U/</a>"
+msgstr "Katalog: <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED%2Bhtml.body.div.h1:15-1
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED%2Bhtml.body.div.h1:15-1
@@ -433,7 +437,7 @@ msgstr "FEL: Den begärda URL-adressen kunde inte hämtas"
 
 #: templates/ERR_URN_RESOLVE%2Bhtml.head.title:5-1
 msgid "ERROR: The requested URN could not be retrieved"
-msgstr "FEL: Begärd URN kunde inte hämtas"
+msgstr "FEL: Den begärda URN:en kunde inte hämtas"
 
 #: templates/ERR_ESI%2Bhtml.body.div.blockquote.p:24-1
 msgid "ESI Processing failed."
@@ -475,17 +479,17 @@ msgstr "Filen uppdaterad"
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.div:27-1
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.div:27-1
 msgid "For Firefox browsers go to:"
-msgstr "För Firefox-webbläsare, gå till:"
+msgstr "I Firefox går du till:"
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.div:35-1
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.div:35-1
 msgid "For Internet Explorer browsers go to:"
-msgstr "För Internet Explorer-webbläsare, gå till:"
+msgstr "I Internet Explorer går du till:"
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.div:43-1
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.div:43-1
 msgid "For Opera browsers go to:"
-msgstr "För Opera-webbläsare, gå till:"
+msgstr "I Opera går du till:"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:69
 msgid "Format error in CRL's lastUpdate field"
@@ -560,7 +564,7 @@ msgstr "Genererades %T av %h (%s)"
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
-"HTTP/1.1 <q>Expect:</q>-funktionen begärs från en HTTP/1.0-programvara."
+"HTTP/1.1-funktionen <q>Expect:</q> begärs från en HTTP/1.0-programvara."
 
 #: templates/ERR_URN_RESOLVE%2Bhtml.body.div.p:27-1
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -597,7 +601,7 @@ msgstr "Ogiltigt tecken i värdnamn; understreck är inte tillåtna."
 
 #: templates/ERR_INVALID_URL%2Bhtml.body.div.ul.li.p:33-5
 msgid "Illegal double-escape in the URL-Path"
-msgstr "Ogiltigt dubbel-escape i URL-Path"
+msgstr "Ogiltig dubbel procentkodning i URL-sökvägen"
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.div.ul.li:31-1
 msgctxt "./templates/ERR_AGENT_CONFIGURE+firefox.ul.li:4-0"
@@ -628,26 +632,26 @@ msgstr "Nyckelanvändningen omfattar inte certifikatsignering"
 
 #: templates/ERR_INVALID_REQ%2Bhtml.body.div.ul.li.p:31-27
 msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr "Saknar HTTP-identifierare (HTTP/1.0)."
+msgstr "HTTP-identifierare (HTTP/1.0) saknas."
 
 #: templates/ERR_INVALID_REQ%2Bhtml.body.div.ul.li.p:30-22
 msgid "Missing URL."
-msgstr "Saknar URL."
+msgstr "URL saknas."
 
 #: templates/ERR_INVALID_URL%2Bhtml.body.div.ul.li.p:32-5
 msgid "Missing hostname"
-msgstr "Saknar värdnamn"
+msgstr "Värdnamn saknas"
 
 #: templates/ERR_INVALID_URL%2Bhtml.body.div.ul.li.p:31-5
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
-"Saknar eller felaktigt åtkomstprotokoll (bör vara <q>http://</q> eller "
+"Åtkomstprotokollet saknas eller är felaktigt (bör vara <q>http://</q> eller "
 "liknande)"
 
 #: templates/ERR_INVALID_REQ%2Bhtml.body.div.ul.li.p:29-25
 msgid "Missing or unknown request method."
-msgstr "Saknar eller okänd förfrågningsmetod."
+msgstr "Begärans metod saknas eller är okänd."
 
 #: templates/ERR_NO_RELAY%2Bhtml.body.div.blockquote.p:24-1
 msgid "No Wais Relay"
@@ -664,7 +668,7 @@ msgstr "Slut på minne"
 
 #: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:109
 msgid "Path length constraint exceeded"
-msgstr "Begränsning för sökvägens längd överstegs"
+msgstr "Begränsningen för certifikatkedjans längd har överskridits"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED%2Bhtml.body.div.p:29-1
 msgid ""
@@ -675,8 +679,8 @@ msgid ""
 msgstr ""
 "Kontakta <a href=\"mailto:%w%W\">cacheadministratören</a> om du har problem "
 "med att autentisera dig själv eller, om du <em>är</em> administratör, läs "
-"Squid-dokumentationen om cachehanteringsgränssnittet och kontrollera cache-"
-"loggen för mer detaljerade felmeddelanden."
+"Squid-dokumentationen om cachehanteringsgränssnittet och kontrollera "
+"cacheloggen för mer detaljerade felmeddelanden."
 
 #: templates/ERR_CACHE_ACCESS_DENIED%2Bhtml.body.div.p:29-1
 msgid ""
@@ -688,11 +692,13 @@ msgstr ""
 
 #: templates/ERR_PRECONDITION_FAILED%2Bhtml.body.div.blockquote.p:24-1
 msgid "Precondition Failed."
-msgstr "Förutsättning misslyckades."
+msgstr "Förvillkoret är inte uppfyllt."
 
 #: templates/error-details.txt+X509_V_ERR_UNNESTED_RESOURCE.descr:193
 msgid "RFC 3779 resource not subset of parent's resources"
-msgstr "RFC 3779-resursen är inte en del av överordnade resurser"
+msgstr ""
+"RFC 3779-resursen är inte en delmängd av det överordnade certifikatets "
+"resurser"
 
 #: templates/ERR_READ_ERROR%2Bhtml.body.div.blockquote.p:24-1
 msgid "Read Error"
@@ -700,7 +706,7 @@ msgstr "Läsfel"
 
 #: templates/ERR_READ_TIMEOUT%2Bhtml.body.div.blockquote.p:24-1
 msgid "Read Timeout"
-msgstr "Tidsgräns överstegs vid läsning"
+msgstr "Tidsgränsen överskreds vid läsning"
 
 #: templates/ERR_INVALID_REQ%2Bhtml.body.div.ul.li.p:32-5
 msgid "Request is too large."
@@ -720,14 +726,15 @@ msgid ""
 "SSL Certificate has invalid expiration date (the 'not after' field): "
 "%ssl_subject"
 msgstr ""
-"SSL-certifikatet har ett ogiltigt utgångsdatum (fältet \"inte efter\"): "
+"SSL-certifikatet har ett ogiltigt utgångsdatum (fältet notAfter): "
 "%ssl_subject"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:61
 msgid ""
 "SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
 msgstr ""
-"SSL-certifikatet har ogiltigt startdatum (fältet \"inte före\"): %ssl_subject"
+"SSL-certifikatet har ett ogiltigt startdatum (fältet notBefore): "
+"%ssl_subject"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:45
 msgid "SSL Certificate is not valid before: %ssl_notbefore"
@@ -739,7 +746,7 @@ msgstr "Välj Automatisk identifiering av proxyinställningar för detta nätver
 
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.div.ul.li:39-1
 msgid "Select Automatically detect settings"
-msgstr "Välj inställningar för Automatisk identifiering"
+msgstr "Välj automatisk identifiering av inställningar"
 
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.div.ul.li:47-1
 msgid "Select Use Automatic proxy configuration"
@@ -763,11 +770,11 @@ msgstr "Självsignerat SSL-certifikat: %ssl_subject"
 
 #: templates/ERR_SOCKET_FAILURE%2Bhtml.body.div.blockquote.p:24-1
 msgid "Socket Failure"
-msgstr "Uttagsfel"
+msgstr "Sockelfel"
 
 #: templates/ERR_INVALID_URL%2Bhtml.body.div.p:27-1
 msgid "Some aspect of the requested URL is incorrect."
-msgstr "Något i den begärda URL-adressen är felaktig."
+msgstr "Något i den begärda URL-adressen är felaktigt."
 
 #: templates/ERR_CANNOT_FORWARD%2Bhtml.body.div.p:29-1
 #: templates/ERR_CONFLICT_HOST%2Bhtml.body.div.p:29-1
@@ -782,25 +789,22 @@ msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
-"Tyvärr, du har för närvarande inte behörighet att begära %U från denna "
-"cachehanterare förrän du har autentiserat dig."
+"Du måste autentisera dig innan du får begära %U från denna cachehanterare."
 
 #: templates/ERR_CACHE_ACCESS_DENIED%2Bhtml.body.div.p:27-1
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
-msgstr ""
-"Tyvärr, du har för närvarande inte behörighet att begära %U från denna cache "
-"förrän du har autentiserat dig."
+msgstr "Du måste autentisera dig innan du får begära %U från denna cache."
 
 #: templates/ERR_ZERO_SIZE_OBJECT%2Bhtml.body.div.p:27-1
 msgid "Squid did not receive any data for this request."
-msgstr "Squid tog inte emot någon data för denna begäran."
+msgstr "Squid tog inte emot några data för denna begäran."
 
 #: templates/ERR_UNSUP_REQ%2Bhtml.body.div.p:27-1
 msgid "Squid does not support all request methods for all access protocols."
 msgstr ""
-"Squid har inte stöd för alla förfrågningsmetoder för alla åtkomstprotokoll."
+"Squid stöder inte alla kombinationer av begärans metod och åtkomstprotokoll."
 
 #: templates/ERR_PROTOCOL_UNKNOWN%2Bhtml.body.div.p:27-1
 msgid ""
@@ -815,15 +819,15 @@ msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 msgstr ""
-"Squid har avslutat begäran eftersom den har överskred den maximala livstiden "
-"för anslutningar."
+"Squid har avslutat begäran eftersom den maximala anslutningstiden har "
+"överskridits."
 
 #: templates/ERR_SOCKET_FAILURE%2Bhtml.body.div.p:29-1
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
-"Squid kan inte skapa ett TCP-uttag, troligen på grund av överbelastning. "
+"Squid kan inte skapa en TCP-sockel, troligen på grund av överbelastning. "
 "Försök igen."
 
 #: templates/ERR_FTP_FAILURE%2Bhtml.body.div.p:23-1
@@ -836,7 +840,9 @@ msgstr "Squid skickade följande FTP-kommando:"
 
 #: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:125
 msgid "Subject issuer mismatch"
-msgstr "Ämnesutfärdaren stämmer inte"
+msgstr ""
+"Certifikatets utfärdarnamn (issuer) stämmer inte överens med "
+"utfärdarcertifikatets subject-namn"
 
 #: templates/ERR_DNS_FAIL%2Bhtml.body.div.p:27-1
 msgid "The DNS server returned:"
@@ -848,16 +854,15 @@ msgstr "ESI-processorn returnerade:"
 
 #: templates/ERR_FTP_UNAVAILABLE%2Bhtml.body.div.p:21-1
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
-msgstr ""
-"FTP-servern var för upptagen för att hämta denna URL: <a href=\"%U\">%U</a>"
+msgstr "FTP-servern var för belastad för att hämta URL:en: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP%2Bhtml.body.div.p:27-1
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
-"HTTP-svarsmeddelandet som mottogs från den kontaktade servern kunde inte "
-"förstås eller var på annat sätt felaktigt. Kontakta webbplatsoperatören."
+"HTTP-svaret från den kontaktade servern kunde inte tolkas eller var "
+"felaktigt utformat på annat sätt. Kontakta webbplatsens ansvariga."
 
 #: templates/ERR_ICAP_FAILURE%2Bhtml.body.div.ul.li.p:33-5
 msgid "The ICAP server is not reachable."
@@ -868,8 +873,8 @@ msgid ""
 "The administrator may not allow this cache to make direct connections to "
 "origin servers."
 msgstr ""
-"Administratören får inte tillåta att denna cache gör direkta anslutningar "
-"till ursprungliga servrar."
+"Administratören kanske inte tillåter att denna cache ansluter direkt till "
+"ursprungsservrar."
 
 #: templates/ERR_CONFLICT_HOST%2Bhtml.body.div.ul.li:31-1
 msgid ""
@@ -924,7 +929,7 @@ msgstr ""
 
 #: templates/ERR_CONNECT_FAIL%2Bhtml.body.div.p:29-1
 msgid "The remote host or network may be down. Please try the request again."
-msgstr "Den fjärranslutna värden eller nätverket kan vara nere. Försök igen."
+msgstr "Fjärrvärden eller nätverket kan vara nere. Försök igen."
 
 #: templates/ERR_TOO_BIG%2Bhtml.body.div.blockquote.p:24-1
 msgid "The request or reply is too large."
@@ -1000,7 +1005,7 @@ msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
-"Det finns ingen WAIS-relävärd definierad för denna cache! Skäll på "
+"Det finns ingen WAIS-relävärd definierad för denna cache! Kontakta "
 "administratören."
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED%2Bhtml.body.div.p:28-1
@@ -1015,7 +1020,8 @@ msgstr ""
 
 #: templates/ERR_UNSUP_HTTPVERSION%2Bhtml.body.div.p:27-1
 msgid "This Squid does not accept the HTTP version you are attempting to use."
-msgstr "Denna Squid accepterar inte den HTTP-version du försöker använda."
+msgstr ""
+"Denna Squid-instans accepterar inte den HTTP-version du försöker använda."
 
 #: templates/ERR_FTP_DISABLED%2Bhtml.body.div.p:27-1
 msgid "This cache does not support FTP."
@@ -1036,8 +1042,8 @@ msgid ""
 "misconfigured."
 msgstr ""
 "Denna cache vidarebefordrar inte din begäran eftersom den försöker "
-"upprätthålla ett syskonförhållande. Kanske är klienten på %i en cache som "
-"har konfigurerats felaktigt."
+"upprätthålla en relation mellan syskoncachar. Klienten på %i kan vara en "
+"felkonfigurerad cache."
 
 #: templates/ERR_GATEWAY_FAILURE%2Bhtml.body.div.p:29-1
 msgid ""
@@ -1057,8 +1063,8 @@ msgid ""
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
 "Det betyder att FTP-servern kanske inte har behörighet eller utrymme att "
-"lagra filen. Kontrollera sökvägen, behörigheter och diskutrymmet och försök "
-"igen."
+"lagra filen. Kontrollera sökvägen, behörigheterna och diskutrymmet och "
+"försök igen."
 
 #: templates/ERR_DNS_FAIL%2Bhtml.body.div.p:32-1
 msgid ""
@@ -1073,8 +1079,8 @@ msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
-"Det betyder att surrogaten inte kunde bearbeta ESI-mallen. Rapportera detta "
-"fel till webbansvarig."
+"Det betyder att surrogatservern inte kunde bearbeta ESI-mallen. Rapportera "
+"detta fel till webbansvarig."
 
 #: templates/ERR_CONFLICT_HOST%2Bhtml.body.div.p:27-1
 msgid ""
@@ -1115,8 +1121,9 @@ msgid ""
 "This proxy limits your time online with a quota. Your time budget is now "
 "empty but will be refilled when the configured time period starts again."
 msgstr ""
-"Denna proxy begränsar din tid på nätet med en kvot. Din tidskvot är nu tom "
-"men kommer att fyllas på igen när den konfigurerade tidsperioden börjar om."
+"Denna proxy begränsar din tid på nätet med en kvot. Din tidskvot är nu "
+"förbrukad men kommer att fyllas på igen när den konfigurerade tidsperioden "
+"börjar om."
 
 #: templates/ERR_CANNOT_FORWARD%2Bhtml.body.div.p:27-1
 msgid ""
@@ -1128,7 +1135,7 @@ msgstr ""
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED%2Bhtml.body.div.blockquote.p:24-1
 msgid "Time Quota Exceeded."
-msgstr "Tidsgränsen överskreds."
+msgstr "Tidskvoten överskreds."
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.div.ul.li:38-1
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.div.ul.li:38-1
@@ -1167,11 +1174,11 @@ msgstr "Det går inte att avkoda utfärdarens publika nyckel"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:29
 msgid "Unable to decrypt CRL's signature"
-msgstr "Det går inte att avkryptera signaturen för denna CRL"
+msgstr "Det går inte att dekryptera CRL-signaturen"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:25
 msgid "Unable to decrypt certificate's signature"
-msgstr "Det går inte att avkryptera certifikatets signatur"
+msgstr "Det går inte att dekryptera certifikatets signatur"
 
 #: templates/ERR_DNS_FAIL%2Bhtml.body.div.blockquote.p:24-1
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -1191,7 +1198,7 @@ msgstr "Det går inte att hämta utfärdarens certifikat"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:89
 msgid "Unable to get local issuer certificate"
-msgstr "Det går inte att hämta lokalt utfärdarcertifikat"
+msgstr "Det går inte att hitta utfärdarens certifikat lokalt"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:93
 msgid "Unable to verify the first certificate"
@@ -1213,11 +1220,11 @@ msgstr "Protokollet stöds inte"
 
 #: templates/ERR_UNSUP_REQ%2Bhtml.body.div.blockquote.p:24-1
 msgid "Unsupported Request Method and Protocol"
-msgstr "Förfrågningsmetod och protokoll stöds inte"
+msgstr "Begärans metod och protokoll stöds inte"
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:113
 msgid "Unsupported certificate purpose"
-msgstr "Certifikatets syfte stöds inte"
+msgstr "Certifikatets användningsändamål stöds inte"
 
 #: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE.descr:189
 msgid "Unsupported extension feature"
@@ -1228,8 +1235,8 @@ msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
-"Giltigt dokument hittades inte i cachen och direktivet <q>only-if-cached</q> "
-"angavs."
+"Inget giltigt dokument hittades i cachen och direktivet <q>only-if-"
+"cached</q> angavs."
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.head.title:5-1
 #: templates/ERR_AGENT_WPAD%2Bhtml.head.title:5-1
@@ -1310,8 +1317,8 @@ msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
-"Din cacheadministratör kan vid behov ge dig mer information om problemets "
-"exakta natur."
+"Din cacheadministratör kan vid behov ge dig mer information om vad problemet"
+" beror på."
 
 #: templates/ERR_ESI%2Bhtml.body.div.p:34-1
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
@@ -1319,11 +1326,11 @@ msgstr "Din webbansvarige är <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT%2Bhtml.body.div.blockquote.p:24-1
 msgid "Zero Sized Reply"
-msgstr "Nollstorlekssvar"
+msgstr "Tomt svar"
 
 #: templates/error-details.txt+X509_V_ERR_EXCLUDED_VIOLATION.descr:201
 msgid "excluded subtree violation"
-msgstr "undantagen överträdelse i underträd"
+msgstr "överträdelse av begränsningen för undantagna underträd"
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_NON_CA.descr:157
 msgid "invalid non-CA certificate (has CA markings)"
@@ -1347,7 +1354,7 @@ msgstr "nyckelanvändningen omfattar inte digital signatur"
 
 #: templates/error-details.txt+X509_V_ERR_SUBTREE_MINMAX.descr:205
 msgid "name constraints minimum and maximum not supported"
-msgstr "namnbegränsningar minimum och maximum stöds inte"
+msgstr "minimi- och maximivärden för namnbegränsningar stöds inte"
 
 #: templates/error-details.txt+X509_V_ERR_NO_EXPLICIT_POLICY.descr:181
 msgid "no explicit policy"
@@ -1355,7 +1362,7 @@ msgstr "ingen explicit policy"
 
 #: templates/error-details.txt+X509_V_ERR_PERMITTED_VIOLATION.descr:197
 msgid "permitted subtree violation"
-msgstr "tillåten överträdelse av underträd"
+msgstr "överträdelse av begränsningen för tillåtna underträd"
 
 #: templates/error-details.txt+X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED.descr:169
 msgid "proxy certificates not allowed, please set the appropriate flag"
@@ -1363,7 +1370,7 @@ msgstr "proxycertifikat är inte tillåtna, ställ in lämplig flagga"
 
 #: templates/error-details.txt+X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED.descr:161
 msgid "proxy path length constraint exceeded"
-msgstr "begränsning för proxysökvägens längd överstegs"
+msgstr "begränsningen för proxycertifikatkedjans längd har överskridits"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER.descr:141
 msgid "unable to get CRL issuer certificate"
