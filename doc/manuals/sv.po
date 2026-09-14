@@ -1008,7 +1008,7 @@ msgstr "hela underträdet under basobjektet (B<sub>)"
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:121
 msgid "Set userid B<attribute .> Default is B<cn>"
-msgstr "Ange B<attribut> för användar-ID. Standardvärdet är B<cn>"
+msgstr "Ange B<attribute> för användar-ID. Standardvärdet är B<cn>"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:126
@@ -1023,7 +1023,7 @@ msgstr "Visa versionsinformation och avsluta."
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:135
 msgid "Specify binding B<password>"
-msgstr "Ange B<lösenord> för LDAP-bindningen"
+msgstr "Ange lösenord (B<password>) för LDAP-bindningen"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:139
@@ -1116,13 +1116,13 @@ msgstr ""
 #: src/acl/external/file_userip/ext_file_userip_acl.8:20
 msgid "It works by reading a pair composed by an IP address and an username on STDIN and matching it against a configuration file."
 msgstr ""
-"Det läser en IP-adress och ett användarnamn från standardinmatningen och "
+"Det läser en IP-adress och ett användarnamn från STDIN och "
 "matchar paret mot en konfigurationsfil."
 
 #. type: Plain text
 #: src/acl/external/file_userip/ext_file_userip_acl.8:31
 msgid "Configuration B<file> to load."
-msgstr "KonfigurationsB<fil> att läsa in."
+msgstr "Konfigurationsfil (B<file>) att läsa in."
 
 #. type: Plain text
 #: src/acl/external/file_userip/ext_file_userip_acl.8:41
@@ -3425,7 +3425,7 @@ msgstr "squid – cachande HTTP-webbproxyserver"
 #. type: Plain text
 #: src/squid.8.in:11
 msgid "facility"
-msgstr "syslog-kategori"
+msgstr "facility"
 
 #. type: Plain text
 #: src/squid.8.in:13
@@ -4218,7 +4218,7 @@ msgstr ""
 "B<squidclient> är ett kommandoradsverktyg för att hämta URL:er. Det är "
 "avsett för testning av webbservrar och proxyservrar med HTTP 0.9, 1.0 eller "
 "1.1. Verktyget kan kombineras med skript för att utföra grundläggande HTTP-"
-"åtgärder. Det har också funktioner för åtkomst till B<squids> objektcache "
+"åtgärder. Det har också funktioner för åtkomst till B<squid> objektcache "
 "och administrationsinformation."
 
 #. type: Plain text
