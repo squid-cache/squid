@@ -125,6 +125,15 @@
 #endif
 #endif
 
+#if HAVE___INT128
+#if !HAVE_INT128_t
+typedef __int128 int128_t;
+#endif
+#if !HAVE_UINT128_T
+typedef unsigned __int128 uint128_t;
+#endif
+#endif /* HAVE___INT128 */
+
 #ifndef HAVE_MODE_T
 typedef unsigned short mode_t;
 #endif

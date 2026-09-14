@@ -61,7 +61,6 @@ int64_t
 strtoll (const char *nptr, char **endptr, int base)
 {
     register const char *s = nptr;
-    register uint64_t acc;
     register int c;
     register uint64_t cutoff;
     register int neg = 0, any, cutlim;
@@ -107,6 +106,7 @@ strtoll (const char *nptr, char **endptr, int base)
     cutoff = neg ? -(uint64_t) INT64_MIN : INT64_MAX;
     cutlim = cutoff % (uint64_t) base;
     cutoff /= (uint64_t) base;
+    int128_t acc;
     for (acc = 0, any = 0;; c = *s++) {
         if (xisdigit(c))
             c -= '0';
@@ -131,6 +131,6 @@ strtoll (const char *nptr, char **endptr, int base)
         acc = -acc;
     if (endptr != 0)
         *endptr = (char *) (any ? s - 1 : nptr);
-    return acc;
+    return (int64_t) acc;
 }
 
