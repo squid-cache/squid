@@ -1743,6 +1743,7 @@ acl to_localnet dst 192.168.0.0/16 # RFC 1918 local private network (LAN)
 acl to_localnet dst 255.255.255.255 # RFC 919 broadcast on a local network (LAN)
 acl to_localnet dst fc00::/7       # RFC 4193 local private network range
 acl to_localnet dst fe80::/10      # RFC 4291 link-local (directly plugged) machines
+acl to_localnet dst ff00::/8       # RFC 4291 multicast addresses
 
 acl SSL_ports port 443
 acl Safe_ports port 80		# http
