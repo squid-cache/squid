@@ -1717,7 +1717,7 @@ CONFIG_START
 #
 
 # Define what "from your local network" means.
-# Adapt to list your (internal) IP networks.
+# Adapt to list your (internal) IP networks (LAN).
 # It is common to allow access from these addresses, but your needs may vary.
 # Be careful with negating this ACL: This ACL does not match Squid-generated
 # requests, so `!localnet` does _not_ mean an "external" request received
@@ -1997,7 +1997,10 @@ http_access deny to_linklocal
 # Protect services running inside your "local" networks. These services often
 # assume that only "local" users can access them. This rule also denies
 # internally-generated AIA requests for missing intermediate X.509
-# certificates when those requests target "local" services.
+# Protect services running inside your local network (LAN). These services often
+# assume that only LAN users can access them. This rule also denies
+# internally-generated AIA requests for missing intermediate X.509
+# certificates when those requests target LAN services.
 http_access deny !localnet to_localnet
 
 #
@@ -2005,7 +2008,7 @@ http_access deny !localnet to_localnet
 # The two examples below cover one common use case, but your needs may vary.
 #
 
-# Uncomment to allow access from "local" networks to any destination that was
+# Uncomment to allow access from local network (LAN) to any destination that was
 # not banned earlier (e.g., all `to_linklocal` destinations were banned).
 # http_access allow localnet
 
