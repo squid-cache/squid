@@ -1994,11 +1994,8 @@ http_access deny to_localhost
 # their server via certain well-known link-local (a.k.a. APIPA) addresses.
 http_access deny to_linklocal
 
-# Protect services running inside your "local" networks. These services often
-# assume that only "local" users can access them. This rule also denies
-# internally-generated AIA requests for missing intermediate X.509
-# Protect services running inside your local network (LAN). These services often
-# assume that only LAN users can access them. This rule also denies
+# Protect services running inside your local network (LAN). These services
+# often assume that only LAN users can access them. This rule also denies
 # internally-generated AIA requests for missing intermediate X.509
 # certificates when those requests target LAN services.
 http_access deny !localnet to_localnet
@@ -2008,8 +2005,8 @@ http_access deny !localnet to_localnet
 # The two examples below cover one common use case, but your needs may vary.
 #
 
-# Uncomment to allow access from local network (LAN) to any destination that was
-# not banned earlier (e.g., all `to_linklocal` destinations were banned).
+# Uncomment to allow access from local network (LAN) to any destination that
+# was not banned earlier (e.g., all `to_linklocal` destinations were banned).
 # http_access allow localnet
 
 # Uncomment to allow all internally-generated requests (e.g., AIA requests for
