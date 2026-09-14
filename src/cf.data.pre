@@ -1740,6 +1740,7 @@ acl to_localnet dst 100.64.0.0/10  # RFC 6598 shared address space (CGN)
 acl to_localnet dst 169.254.0.0/16 # RFC 3927 link-local (directly plugged) machines
 acl to_localnet dst 172.16.0.0/12  # RFC 1918 local private network (LAN)
 acl to_localnet dst 192.168.0.0/16 # RFC 1918 local private network (LAN)
+acl to_localnet dst 255.255.255.255 # RFC 919 broadcast on a local network (LAN)
 acl to_localnet dst fc00::/7       # RFC 4193 local private network range
 acl to_localnet dst fe80::/10      # RFC 4291 link-local (directly plugged) machines
 
