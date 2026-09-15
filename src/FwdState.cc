@@ -252,6 +252,35 @@ FwdState::updateAleWithFinalError()
     al->updateError(Error(err->type, err->detail));
 }
 
+/// return
+//   1: should terminate the error session
+//   2: should reset the error session
+//   other: do not terminate or reset
+int
+FwdState::OnError()
+{
+    if (!err) {
+        return 0;
+    }
+
+    const err_type requestError = err->type;
+
+    if (!Config.accessList.on_error) {
+        debugs(17, 5, "disabled; OnError: " << requestError);
+        return 0;
+    }
+    
+    ACLFilledChecklist checklist(Config.accessList.on_error, nullptr);
+    checklist.requestErrorType = requestError;
+    request->clientConnectionManager->fillChecklist(checklist);
+    auto answer = checklist.fastCheck();
+    if (answer.allowed()) {
+        return answer.kind;
+    }
+    debugs(17, 5, "denied; OnError: " << requestError);
+    return 0;
+}
+
 void
 FwdState::completed()
 {
@@ -265,6 +294,24 @@ FwdState::completed()
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         debugs(17, 3, "entry aborted");
         return ;
+    }
+
+    // on_error
+    switch (OnError()) {
+    case 1:
+        debugs(17, 3, "terminating the session (on_error)");
+        if (IsConnOpen(clientConn))
+            clientConn->close();
+        break;
+
+    case 2:
+        debugs(17, 3, "reseting the session (on_error)");
+        if (IsConnOpen(clientConn))
+            comm_reset_close(clientConn);
+        break;
+
+    default:
+        break;
     }
 
 #if URL_CHECKSUM_DEBUG
