@@ -25,17 +25,17 @@ template <class Class>
 class Owner
 {
 public:
-    static Owner *New(const char *const id);
+    static Owner *New(const char *const humanId, const char *const machineId);
     template <class P1>
-    static Owner *New(const char *const id, const P1 &p1);
+    static Owner *New(const char *const humanId, const char *const machineId, const P1 &p1);
     template <class P1, class P2>
-    static Owner *New(const char *const id, const P1 &p1, const P2 &p2);
+    static Owner *New(const char *const humanId, const char *const machineId, const P1 &p1, const P2 &p2);
     template <class P1, class P2, class P3>
-    static Owner *New(const char *const id, const P1 &p1, const P2 &p2, const P3 &p3);
+    static Owner *New(const char *const humanId, const char *const machineId, const P1 &p1, const P2 &p2, const P3 &p3);
     template <class P1, class P2, class P3, class P4>
-    static Owner *New(const char *const id, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4);
+    static Owner *New(const char *const humanId, const char *const machineId, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4);
     /// attaches to the existing shared memory segment, becoming its owner
-    static Owner *Old(const char *const id);
+    static Owner *Old(const char *const humanId, const char *const machineId);
 
     ~Owner();
 
@@ -43,8 +43,8 @@ public:
     Class *object() { return theObject; }
 
 private:
-    explicit Owner(const char *const id);
-    Owner(const char *const id, const off_t sharedSize);
+    explicit Owner(const char *const humanId, const char *const machineId);
+    Owner(const char *const humanId, const char *const machineId, const off_t sharedSize);
 
     // not implemented
     Owner(const Owner &);
@@ -61,10 +61,10 @@ template <class Class>
 class Object: public RefCountable
 {
 public:
-    static Pointer<Class> Old(const char *const id);
+    static Pointer<Class> Old(const char *const humanId, const char *const machineId);
 
 private:
-    explicit Object(const char *const id);
+    explicit Object(const char *const humanId, const char *const machineId);
 
     // not implemented
     Object(const Object &);
@@ -96,16 +96,16 @@ public:
 // Owner implementation
 
 template <class Class>
-Owner<Class>::Owner(const char *const id, const off_t sharedSize):
-    theSegment(id), theObject(nullptr)
+Owner<Class>::Owner(const char *const humanId, const char *const machineId, const off_t sharedSize):
+    theSegment(humanId, machineId), theObject(nullptr)
 {
     theSegment.create(sharedSize);
     Must(theSegment.mem());
 }
 
 template <class Class>
-Owner<Class>::Owner(const char *const id):
-    theSegment(id), theObject(nullptr)
+Owner<Class>::Owner(const char *const humanId, const char *const machineId):
+    theSegment(humanId, machineId), theObject(nullptr)
 {
     theSegment.open(true);
     Must(theSegment.mem());
@@ -120,9 +120,9 @@ Owner<Class>::~Owner()
 
 template <class Class>
 Owner<Class> *
-Owner<Class>::Old(const char *const id)
+Owner<Class>::Old(const char *const humanId, const char *const machineId)
 {
-    auto owner = new Owner(id);
+    auto owner = new Owner(humanId, machineId);
     owner->theObject = reinterpret_cast<Class*>(owner->theSegment.mem());
     Must(static_cast<off_t>(owner->theObject->sharedMemorySize()) <= owner->theSegment.size());
     return owner;
@@ -130,50 +130,50 @@ Owner<Class>::Old(const char *const id)
 
 template <class Class>
 Owner<Class> *
-Owner<Class>::New(const char *const id)
+Owner<Class>::New(const char *const humanId, const char *const machineId)
 {
     const off_t sharedSize = Class::SharedMemorySize();
-    Owner *const owner = new Owner(id, sharedSize);
+    Owner *const owner = new Owner(humanId, machineId, sharedSize);
     owner->theObject = new (owner->theSegment.reserve(sharedSize)) Class;
     return owner;
 }
 
 template <class Class> template <class P1>
 Owner<Class> *
-Owner<Class>::New(const char *const id, const P1 &p1)
+Owner<Class>::New(const char *const humanId, const char *const machineId, const P1 &p1)
 {
     const off_t sharedSize = Class::SharedMemorySize(p1);
-    Owner *const owner = new Owner(id, sharedSize);
+    Owner *const owner = new Owner(humanId, machineId, sharedSize);
     owner->theObject = new (owner->theSegment.reserve(sharedSize)) Class(p1);
     return owner;
 }
 
 template <class Class> template <class P1, class P2>
 Owner<Class> *
-Owner<Class>::New(const char *const id, const P1 &p1, const P2 &p2)
+Owner<Class>::New(const char *const humanId, const char *const machineId, const P1 &p1, const P2 &p2)
 {
     const off_t sharedSize = Class::SharedMemorySize(p1, p2);
-    Owner *const owner = new Owner(id, sharedSize);
+    Owner *const owner = new Owner(humanId, machineId, sharedSize);
     owner->theObject = new (owner->theSegment.reserve(sharedSize)) Class(p1, p2);
     return owner;
 }
 
 template <class Class> template <class P1, class P2, class P3>
 Owner<Class> *
-Owner<Class>::New(const char *const id, const P1 &p1, const P2 &p2, const P3 &p3)
+Owner<Class>::New(const char *const humanId, const char *const machineId, const P1 &p1, const P2 &p2, const P3 &p3)
 {
     const off_t sharedSize = Class::SharedMemorySize(p1, p2, p3);
-    Owner *const owner = new Owner(id, sharedSize);
+    Owner *const owner = new Owner(humanId, machineId, sharedSize);
     owner->theObject = new (owner->theSegment.reserve(sharedSize)) Class(p1, p2, p3);
     return owner;
 }
 
 template <class Class> template <class P1, class P2, class P3, class P4>
 Owner<Class> *
-Owner<Class>::New(const char *const id, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)
+Owner<Class>::New(const char *const humanId, const char *const machineId, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)
 {
     const off_t sharedSize = Class::SharedMemorySize(p1, p2, p3, p4);
-    Owner *const owner = new Owner(id, sharedSize);
+    Owner *const owner = new Owner(humanId, machineId, sharedSize);
     owner->theObject = new (owner->theSegment.reserve(sharedSize)) Class(p1, p2, p3, p4);
     return owner;
 }
@@ -181,7 +181,7 @@ Owner<Class>::New(const char *const id, const P1 &p1, const P2 &p2, const P3 &p3
 // Object implementation
 
 template <class Class>
-Object<Class>::Object(const char *const id): theSegment(id)
+Object<Class>::Object(const char *const humanId, const char *const machineId): theSegment(humanId, machineId)
 {
     theSegment.open(false);
     Must(theSegment.mem());
@@ -191,9 +191,9 @@ Object<Class>::Object(const char *const id): theSegment(id)
 
 template <class Class>
 Pointer<Class>
-Object<Class>::Old(const char *const id)
+Object<Class>::Old(const char *const humanId, const char *const machineId)
 {
-    return Pointer<Class>(new Object(id));
+    return Pointer<Class>(new Object(humanId, machineId));
 }
 
 // convenience macros for creating shared objects

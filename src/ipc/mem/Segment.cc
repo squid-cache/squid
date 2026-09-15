@@ -58,8 +58,8 @@ Ipc::Mem::Segment::Name(const SBuf &prefix, const char *suffix)
 
 #if HAVE_SHM
 
-Ipc::Mem::Segment::Segment(const char *const id):
-    theFD(-1), theName(GenerateName(id)), theMem(nullptr),
+Ipc::Mem::Segment::Segment(const char *const humanId, const char *const machineId):
+    theFD(-1), theName(GenerateName(humanId, machineId)), theMem(nullptr),
     theSize(0), theReserved(0), doUnlink(false)
 {
 }
@@ -264,9 +264,9 @@ Ipc::Mem::Segment::statSize(const char *context) const
 }
 
 /// Generate name for shared memory segment. Starts with a prefix required
-/// for cross-platform portability and replaces all slashes in ID with dots.
+/// for cross-platform portability and appends human ID + machine ID.
 String
-Ipc::Mem::Segment::GenerateName(const char *id)
+Ipc::Mem::Segment::GenerateName(const char *humanId, const char *machineId)
 {
     assert(BasePath && *BasePath);
     static const bool nameIsPath = shm_portable_segment_name_is_path();
@@ -280,15 +280,19 @@ Ipc::Mem::Segment::GenerateName(const char *id)
         name.append('-');
     }
 
-    // append id, replacing slashes with dots
-    for (const char *slash = strchr(id, '/'); slash; slash = strchr(id, '/')) {
-        if (id != slash) {
-            name.append(id, slash - id);
+    // append humanId, replacing slashes with dots
+    for (const char *slash = strchr(humanId, '/'); slash; slash = strchr(humanId, '/')) {
+        if (humanId != slash) {
+            name.append(humanId, slash - humanId);
             name.append('.');
         }
-        id = slash + 1;
+        humanId = slash + 1;
     }
-    name.append(id);
+    name.append(humanId);
+
+    // append machine ID
+    name.append('_');
+    name.append(machineId);
 
     name.append(".shm"); // to distinguish from non-segments when nameIsPath
     return name;
@@ -301,8 +305,8 @@ Ipc::Mem::Segment::GenerateName(const char *id)
 typedef std::map<String, Ipc::Mem::Segment *> SegmentMap;
 static SegmentMap Segments;
 
-Ipc::Mem::Segment::Segment(const char *const id):
-    theName(id), theMem(NULL), theSize(0), theReserved(0), doUnlink(false)
+Ipc::Mem::Segment::Segment(const char *const humanId, const char *const machineId):
+    theName(humanId), theMem(nullptr), theSize(0), theReserved(0), doUnlink(false)
 {
 }
 
