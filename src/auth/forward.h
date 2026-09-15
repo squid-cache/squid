@@ -13,6 +13,9 @@
 
 #include <vector>
 
+// TODO: make auth schedule AsyncCalls?
+typedef void AUTHCB(void*);
+
 /// HTTP Authentication
 namespace Auth
 {
